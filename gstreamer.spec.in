@@ -24,6 +24,52 @@ else media-related.  Its plugin-based architecture means that new data
 types or processing capabilities can be added simply by installing new 
 plugins.
 
+%files
+%defattr(-, root, root)
+%doc AUTHORS COPYING README
+%{prefix}/bin/gsteditor
+%{prefix}/bin/gstmediaplay
+%{prefix}/bin/gstreamer-complete
+%{prefix}/bin/gstreamer-compprep
+%{prefix}/bin/gstreamer-inspect
+%{prefix}/bin/gstreamer-launch
+%{prefix}/bin/gstreamer-register 
+%{prefix}/lib/lib*.so*
+%{prefix}/lib/gst/libadder*
+%{prefix}/lib/gst/libalaw*
+%{prefix}/lib/gst/libaudioscale*
+%{prefix}/lib/gst/libcutter*
+%{prefix}/lib/gst/libgstaudio*
+%{prefix}/lib/gst/libcolorspace*
+%{prefix}/lib/gst/libgstcolorspace*
+%{prefix}/lib/gst/libgstautoplug*
+%{prefix}/lib/gst/libgstelements*
+%{prefix}/lib/gst/libgstgetbits*
+%{prefix}/lib/gst/libgstidct*
+%{prefix}/lib/gst/libgstriff*
+%{prefix}/lib/gst/libgstjpeg*
+%{prefix}/lib/gst/libintfloatconvert*
+%{prefix}/lib/gst/liblevel*
+%{prefix}/lib/gst/libmedian*
+%{prefix}/lib/gst/libmono2stereo*
+%{prefix}/lib/gst/libmulaw*
+%{prefix}/lib/gst/libpassthrough*
+%{prefix}/lib/gst/librtjpe*
+%{prefix}/lib/gst/libstereo*
+%{prefix}/lib/gst/libsystem_*
+%{prefix}/lib/gst/libgstputbits*
+%{prefix}/lib/gst/libvideoscale*
+%{prefix}/lib/gst/libgstvideoscale*
+%{prefix}/lib/gst/libvol*
+%{prefix}/lib/gst/libxvideosink*
+%{prefix}/lib/gst/libgstparsewav*
+%{prefix}/lib/gst/libgststaticautoplug*
+%{prefix}/lib/gst/libgsttypes*
+%{prefix}/lib/gst/liblavencode*
+%{prefix}/share/gsteditor/*
+%{prefix}/share/gstmediaplay/*
+%{prefix}/man/man1/*
+
 %package devel
 Summary: Libraries and include files for GStreamer streaming-media framework
 Group: Development/Libraries
@@ -40,6 +86,15 @@ plugins.
 This package contains the libraries and includes files necessary to develop
 applications and plugins for GStreamer.
 
+%files devel
+%defattr(-, root, root)
+%{prefix}/bin/gstreamer-config
+%{prefix}/include/*
+%{prefix}/lib/lib*.la
+%{prefix}/lib/lib*.so
+%{prefix}/lib/pkgconfig/*
+%{prefix}/share/aclocal/*
+
 %package -n gstreamer-visualisation
 Summary: Gstreamer visualisations plugins
 Group: Libraries/Multimedia
@@ -47,6 +102,12 @@ Requires: %{name} = %{ver}
 
 %description -n gstreamer-visualisation
 Various plugins for visual effects to use with audio. Included are Smoothwave, Spectrum and vumeter
+
+%files -n gstreamer-visualisation
+%defattr(-, root, root)
+%{prefix}/lib/gst/libsmooth*
+%{prefix}/lib/gst/libgstspectrum*
+%{prefix}/lib/gst/libvu*
 
 %package -n gstreamer-esd
 Summary: Gstreamer plugin for ESD sound output
@@ -57,23 +118,9 @@ Requires: %{name} = %{ver}
 %description -n gstreamer-esd
 Output plugin for GStreamer for use with the esound package
 
-%package -n gstreamer-gsm
-Summary: Gstreamer plugin for GSM lossy audio format
-Group: Libraries/Multimedia
-Requires: gsm >= 1.0.10
-Requires: %{name} = %{ver}
-
-%description -n gstreamer-gsm
-Output plugin for GStreamer to convert to GSM lossy audio format.
-
-%package -n gstreamer-cdparanoia
-Summary: Gstreamer plugin for CD audio input using CDParanoia IV
-Group: Libraries/Multimedia
-Requires: cdparanoia >= alpha9.7
-Requires: %{name} = %{ver}
-
-%description -n gstreamer-cdparanoia
-Plugin for ripping audio tracks using cdparania under GStreamer
+%files -n gstreamer-esd
+%defattr(-, root, root)
+%{prefix}/lib/gst/libesd*
 
 %package -n gstreamer-aalib
 Summary: Gstreamer plugin for Ascii-art output
@@ -84,14 +131,48 @@ Requires: %{name} = %{ver}
 %description -n gstreamer-aalib
 Plugin for viewing movies in Ascii-art using aalib library.
 
-%package -n gstreamer-gnomevfs
-Summary: Gstreamer plugins for GNOME VFS input and output
+%files -n gstreamer-aalib
+%defattr(-, root, root)
+%{prefix}/lib/gst/libaa*
+
+%package -n gstreamer-afs
+Summary: Gstreamer plugin audiofile support
 Group: Libraries/Multimedia
-Requires: gnome-vfs > 1.0
+Requires: %{name} = %{ver}
+Requires: audiofile >= 0.2.1
+
+%description -n gstreamer-afs
+Plugin for supporting reading and writing all files audiofile support
+
+%files -n gstreamer-afs
+%defattr(-, root, root)
+%{prefix}/lib/gst/libafs*
+
+%package -n gstreamer-avi
+Summary: Gstreamer plugin for AVI format movie playback
+Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
 
-%description -n gstreamer-gnomevfs
-Plugins for reading and writing through GNOME VFS.
+%description -n gstreamer-avi
+Plugins for playback of AVI format media files.
+
+%files -n gstreamer-avi
+%defattr(-, root, root)
+%{prefix}/lib/gst/libavi*
+%{prefix}/lib/gst/libwin*
+
+%package -n gstreamer-cdparanoia
+Summary: Gstreamer plugin for CD audio input using CDParanoia IV
+Group: Libraries/Multimedia
+Requires: cdparanoia >= alpha9.7
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-cdparanoia
+Plugin for ripping audio tracks using cdparania under GStreamer
+
+%files -n gstreamer-cdparanoia
+%defattr(-, root, root)
+%{prefix}/lib/gst/libcdparanoia*
 
 %package -n gstreamer-flx
 Summary: Gstreamer plugin for FLI/FLX animation format
@@ -101,13 +182,95 @@ Requires: %{name} = %{ver}
 %description -n gstreamer-flx
 Plugin for playing FLI/FLX animations under GStreamer
 
-%package -n gstreamer-avi
-Summary: Gstreamer plugin for AVI format movie playback
+%files -n gstreamer-flx
+%defattr(-, root, root)
+%{prefix}/lib/gst/libflx*
+
+%package -n gstreamer-mpeg1
+Summary: GStreamer plugins for Mpeg level 1 video playback
 Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
 
-%description -n gstreamer-avi
-Plugins for playback of AVI format media files.
+%description -n gstreamer-mpeg1
+Plugins for playing mpeg level 1 encoded movies
+
+%files -n gstreamer-mpeg1
+%defattr(-, root, root)
+%{prefix}/lib/gst/libmpeg1*
+%{prefix}/lib/gst/libmpegaudio*
+%{prefix}/lib/gst/libmp1*
+%{prefix}/lib/gst/libmpeg_play*
+
+%package -n gstreamer-mpeg2
+Summary: GStreamer plugins for Mpeg level 2 playback
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-mpeg2
+Plugins for playing mpeg level 2 encoded movies
+
+%files -n gstreamer-mpeg2
+%defattr(-, root, root)
+%{prefix}/lib/gst/libmpeg2parse*
+%{prefix}/lib/gst/libmpeg2play*
+%{prefix}/lib/gst/libmpeg2enc*
+%{prefix}/lib/gst/libmpeg2subt*
+%{prefix}/lib/gst/libmp2videoparse*
+
+%package -n gstreamer-mpeg2dec
+Summary: GStreamer plugins for Mpeg level 2 playback
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+Requires: mpeg2dec >= 0.2.0
+
+%description -n gstreamer-mpeg2dec
+Plugins for playing mpeg level 2 encoded movies
+
+%files -n gstreamer-mpeg2dec
+%defattr(-, root, root)
+%{prefix}/lib/gst/libmpeg2dec*
+
+%package -n gstreamer-mp3
+Summary: GStreamer plugins for mp3 playback 
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-mp3
+Plugins for decoding mp3 files. We do recommend you
+use Ogg Vorbis format instead however since it is both free and
+better.
+
+%files -n gstreamer-mp3
+%defattr(-, root, root)
+%{prefix}/lib/gst/libmpg123*
+%{prefix}/lib/gst/libmp3parse*
+%{prefix}/lib/gst/libmp3types*
+
+%package -n gstreamer-gnomevfs
+Summary: GStreamer plugins for GNOME VFS input and output
+Group: Libraries/Multimedia
+Requires: gnome-vfs > 1.0
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-gnomevfs
+Plugins for reading and writing through GNOME VFS.
+
+%files -n gstreamer-gnomevfs
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgnomevfs*
+
+%package -n gstreamer-gsm
+Summary: Gstreamer plugin for GSM lossy audio format
+Group: Libraries/Multimedia
+Requires: gsm >= 1.0.10
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-gsm
+Output plugin for GStreamer to convert to GSM lossy audio format.
+
+%files -n gstreamer-gsm
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstgsm*
 
 %package -n gstreamer-vorbis
 Summary: Gstreamer plugin for encoding and decoding Ogg Vorbis audio files
@@ -119,6 +282,10 @@ Requires: %{name} = %{ver}
 %description -n gstreamer-vorbis
 Plugins for creating end playing Ogg Vorbis audio files.
 
+%files -n gstreamer-vorbis
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstvorbis*
+
 %package -n gstreamer-sdl
 Summary: Gstreamer plugin for outputing to SDL
 Group: Libraries/Multimedia
@@ -128,6 +295,10 @@ Requires: %{name} = %{ver}
 %description -n gstreamer-sdl
 Plugin for sending output to the Simple Direct Media architecture.
 (http://www.libsdl.org). Usefull for fullscreen playback.
+
+%files -n gstreamer-sdl
+%defattr(-, root, root)
+%{prefix}/lib/gst/libsdl*
 
 %package -n gstreamer-oss
 Summary: Gstreamer plugins for input and output using OSS
@@ -139,6 +310,10 @@ Plugins for output and input to the OpenSoundSytem audio
 drivers found in the Linux kernels or comercially available 
 from OpenSound.
 
+%files -n gstreamer-oss
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstoss*
+
 %package -n gstreamer-ac3dec
 Summary: Gstreamer plugin for VOB playback
 Group: Libraries/Multimedia
@@ -149,19 +324,18 @@ Requires: %{name} = %{ver}
 Plugin for the free AC-3 stream decoder from Linuxvideo.
 (http://linuxvideo.org/ac3dec/)
 
-%package -n gstreamer-afs
-Summary: Gstreamer plugin audiofile support
-Group: Libraries/Multimedia
-Requires: %{name} = %{ver}
-Requires: audiofile >= 0.2.1
-
-%description -n gstreamer-afs
-Plugin for supporting reading and writing all files audiofile support
+%files -n gstreamer-ac3dec
+%defattr(-, root, root)
+%{prefix}/lib/gst/libac3*
 
 %package -n gstreamer-ladspa
 Summary: Gstreamer wrapper for LADSPA plugins
 Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
+
+%files -n gstreamer-ladspa
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstladspa*
 
 %description -n gstreamer-ladspa
 Plugin which wraps LADSPA plugins for use by GStreamer applications.
@@ -175,6 +349,10 @@ Requires: mad >= 0.13.0
 %description -n gstreamer-mad
 Plugin for playback of mp3 songs using the very good MAD library
 
+%files -n gstreamer-mad
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstmad*
+
 %package -n gstreamer-v4l
 Summary: Gstreamer video for linux input plugin
 Group: Libraries/Multimedia
@@ -182,6 +360,10 @@ Requires: %{name} = %{ver}
 
 %description -n gstreamer-v4l
 Plugin for inputing video for Linux streams.
+
+%files -n gstreamer-v4l
+%defattr(-, root, root)
+%{prefix}/lib/gst/libv4l*
 
 %package -n gstreamer-synaesthesia
 Summary: GStreamer Synaesthesia effect plugin
@@ -191,6 +373,10 @@ Requires: %{name} = %{ver}
 %description -n gstreamer-synaesthesia
 Plugin for the very nice synaesthesia visual effect.
 
+%files -n gstreamer-synaesthesia
+%defattr(-, root, root)
+%{prefix}/lib/gst/libsynaesthesia*
+
 %package -n gstreamer-vcd
 Summary: GStreamer Video CD plugin 
 Group: Libraries/Multimedia
@@ -199,12 +385,20 @@ Requires: %{name} = %{ver}
 %description -n gstreamer-vcd
 Video CD playback plugin
 
+%files -n gstreamer-vcd
+%defattr(-, root, root)
+%{prefix}/lib/gst/libvcd*
+
 # %package -n gstreamer-alsa
 # Summary: GStreamer plugins for the ALSA sound architecture
 # Group: Libraries/Multimedia
 
 # %description -n gstreamer-alsa
 # Input and output plugin for the ALSA soundcard driver architecture.
+
+# %files -n gstreamer-alsa
+# %defattr(-, root, root)
+# %{prefix}/lib/gst/libalsa*
 
 %package -n gstreamer-au
 Summary: GStreamer au audiofile plugin
@@ -214,12 +408,15 @@ Requires: %{name} = %{ver}
 %description -n gstreamer-au
 Plugin for playback of the SUN au audio format.
 
-
+%files -n gstreamer-au
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstparseau*
 
 %changelog
 * Sat Jun 09 2001 Christian Schaller <Uraeus@linuxrising.org>
 - Continue regrouping files with
 - Visualisation plugins bundled out togheter
+- Moved files sections up close to their respective descriptions
 
 * Sat Jun 02 2001 Christian Schaller <Uraeus@linuxrising.org>
 - Split the package into separate RPMS, plutting most plugins out by themselves.
@@ -256,203 +453,76 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 
 %post
 /sbin/ldconfig
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-esd
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n  gstreamer-mpeg1
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n  gstreamer-mpeg2
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n  gstreamer-mp3
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n  gstreamer-mpeg2dec
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-visualisation
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-gsm
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-cdparanoia
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-aalib
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-gnomevfs
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-flx
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-avi
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-vorbis
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-sdl
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-oss
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n  gstreamer-ac3dec
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n  gstreamer-afs
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-ladspa
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-mad
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-au
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-v4l
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-vcd
-%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 # %post -n gstreamer-alsa
-# %{prefix}/bin/gstreamer-register
+# %{prefix}/bin/gstreamer-register --gst-mask=0
 
 %postun
 /sbin/ldconfig
-  
-%files
-%defattr(-, root, root)
-%doc AUTHORS COPYING README
-%{prefix}/bin/gsteditor
-%{prefix}/bin/gstmediaplay
-%{prefix}/bin/gstreamer-complete
-%{prefix}/bin/gstreamer-compprep
-%{prefix}/bin/gstreamer-inspect
-%{prefix}/bin/gstreamer-launch
-%{prefix}/bin/gstreamer-register
-%{prefix}/lib/lib*.so*
-%{prefix}/lib/gst/libadder*
-%{prefix}/lib/gst/libalaw*
-%{prefix}/lib/gst/libaudioscale*
-%{prefix}/lib/gst/libcutter*
-%{prefix}/lib/gst/libgstaudio*
-%{prefix}/lib/gst/libcolorspace*
-%{prefix}/lib/gst/libgstcolorspace*
-%{prefix}/lib/gst/libgstautoplug*
-%{prefix}/lib/gst/libgstelements*
-%{prefix}/lib/gst/libgstgetbits*
-%{prefix}/lib/gst/libgstidct*
-%{prefix}/lib/gst/libgstriff*
-%{prefix}/lib/gst/libgstjpeg*
-%{prefix}/lib/gst/libintfloatconvert*
-%{prefix}/lib/gst/liblevel*
-%{prefix}/lib/gst/libmedian*
-%{prefix}/lib/gst/libmono2stereo*
-%{prefix}/lib/gst/libmulaw*
-%{prefix}/lib/gst/libpassthrough*
-%{prefix}/lib/gst/librtjpe*
-%{prefix}/lib/gst/libstereo*
-%{prefix}/lib/gst/libsystem_*
-%{prefix}/lib/gst/libgstputbits*
-%{prefix}/lib/gst/libvideoscale*
-%{prefix}/lib/gst/libgstvideoscale*
-%{prefix}/lib/gst/libvol*
-%{prefix}/lib/gst/libxvideosink*
-%{prefix}/lib/gst/libgstparsewav*
-%{prefix}/lib/gst/libgststaticautoplug*
-%{prefix}/lib/gst/libgsttypes*
-%{prefix}/lib/gst/liblavencode*
-%{prefix}/lib/gst/libmp*
-%{prefix}/share/gsteditor/*
-%{prefix}/share/gstmediaplay/*
-%{prefix}/man/man1/*
-
-%files devel
-%defattr(-, root, root)
-%{prefix}/bin/gstreamer-config
-%{prefix}/include/*
-%{prefix}/lib/lib*.la
-%{prefix}/lib/lib*.so
-%{prefix}/lib/pkgconfig/*
-%{prefix}/share/aclocal/*
-
-%files -n gstreamer-visualisation
-%defattr(-, root, root)
-%{prefix}/lib/gst/libsmooth*
-%{prefix}/lib/gst/libgstspectrum*
-%{prefix}/lib/gst/libvu*
-
-%files -n gstreamer-esd
-%defattr(-, root, root)
-%{prefix}/lib/gst/libesd*
-
-%files -n gstreamer-gsm
-%defattr(-, root, root)
-%{prefix}/lib/gst/libgstgsm*
-
-%files -n gstreamer-cdparanoia
-%defattr(-, root, root)
-%{prefix}/lib/gst/libcdparanoia*
-
-%files -n gstreamer-aalib
-%defattr(-, root, root)
-%{prefix}/lib/gst/libaa*
-
-%files -n gstreamer-gnomevfs
-%defattr(-, root, root)
-%{prefix}/lib/gst/libgnomevfs*
-
-%files -n gstreamer-flx
-%defattr(-, root, root)
-%{prefix}/lib/gst/libflx*
-
-%files -n gstreamer-avi
-%defattr(-, root, root)
-%{prefix}/lib/gst/libavi*
-%{prefix}/lib/gst/libwin*
-
-%files -n gstreamer-vorbis
-%defattr(-, root, root)
-%{prefix}/lib/gst/libgstvorbis*
-
-%files -n gstreamer-sdl
-%defattr(-, root, root)
-%{prefix}/lib/gst/libsdl*
-
-%files -n gstreamer-oss
-%defattr(-, root, root)
-%{prefix}/lib/gst/libgstoss*
-
-%files -n gstreamer-ac3dec
-%defattr(-, root, root)
-%{prefix}/lib/gst/libac3*
-
-%files -n gstreamer-afs
-%defattr(-, root, root)
-%{prefix}/lib/gst/libafs*
-
-%files -n gstreamer-ladspa
-%defattr(-, root, root)
-%{prefix}/lib/gst/libgstladspa*
-
-%files -n gstreamer-mad
-%defattr(-, root, root)
-%{prefix}/lib/gst/libgstmad*
-
-%files -n gstreamer-au
-%defattr(-, root, root)
-%{prefix}/lib/gst/libgstparseau*
-
-%files -n gstreamer-v4l
-%defattr(-, root, root)
-%{prefix}/lib/gst/libv4l*
-
-%files -n gstreamer-synaesthesia
-%defattr(-, root, root)
-%{prefix}/lib/gst/libsynaesthesia*
-
-%files -n gstreamer-vcd
-%defattr(-, root, root)
-%{prefix}/lib/gst/libvcd*
-
-# %files -n gstreamer-alsa
-# %defattr(-, root, root)
-# %{prefix}/lib/gst/libalsa*
