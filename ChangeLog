@@ -1,5 +1,13 @@
 2004-01-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* sys/ximage/ximagesink.c: (gst_ximagesink_sinkconnect):
+	  Comment out internal resize. It doesn't handle the resulting
+	  XEvent internally, does another try_set_caps() which leads to
+	  a really nice loop.
+	  Real fix will come when Julien and Dave are awake. ;).
+
+2004-01-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/mpeg2enc/gstmpeg2enc.cc:
 	  fix const/nonconst compile issue.
 
