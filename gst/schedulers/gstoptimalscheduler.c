@@ -145,6 +145,7 @@ GstOptSchedulerGroupFlags;
 
 typedef enum
 {
+  GST_OPT_SCHEDULER_GROUP_UNKNOWN = 3,
   GST_OPT_SCHEDULER_GROUP_GET = 1,
   GST_OPT_SCHEDULER_GROUP_LOOP = 2,
 }
@@ -775,7 +776,7 @@ create_group (GstOptSchedulerChain * chain, GstElement * element,
   GstOptSchedulerGroup *group;
 
   group = g_new0 (GstOptSchedulerGroup, 1);
-  GST_LOG ("new group %p", group);
+  GST_LOG ("new group %p, type %d", group, type);
   group->refcount = 1;          /* float... */
   group->flags = GST_OPT_SCHEDULER_GROUP_DISABLED;
   group->type = type;
@@ -908,6 +909,8 @@ static void
 setup_group_scheduler (GstOptScheduler * osched, GstOptSchedulerGroup * group)
 {
   GroupScheduleFunction wrapper;
+
+  GST_DEBUG ("setup group %p scheduler, type %d", group, group->type);
 
   wrapper = unknown_group_schedule_function;
 
@@ -1219,7 +1222,10 @@ loop_group_schedule_function (int argc, char *argv[])
   GST_DEBUG ("calling loopfunc of element %s in group %p",
       GST_ELEMENT_NAME (entry), group);
 
-  entry->loopfunc (entry);
+  if (entry->loopfunc)
+    entry->loopfunc (entry);
+  else
+    group_error_handler (group);
 
   GST_LOG ("loopfunc ended of element %s in group %p",
       GST_ELEMENT_NAME (entry), group);
@@ -1923,9 +1929,10 @@ gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
       /* the two elements should be put into the same group, this also means
        * that they are in the same chain automatically, in case of a loop-based
        * src_element, there will be a group for src_element and sink_element
-       * will be added to it. */
+       * will be added to it. In the case a new group is created, we can't know
+       * the type so we pass UNKNOWN as an arg */
       group_elements (osched, src_element, sink_element,
-          GST_OPT_SCHEDULER_GROUP_LOOP);
+          GST_OPT_SCHEDULER_GROUP_UNKNOWN);
       break;
     case GST_OPT_GET_TO_LOOP:
       GST_LOG ("get to loop based link");

@@ -1,3 +1,11 @@
+2004-05-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/gstoptimalscheduler.c: (create_group),
+	(setup_group_scheduler), (loop_group_schedule_function),
+	(gst_opt_scheduler_pad_link):
+	Added some more debug info and fixed a bug where the group
+	type was set to LOOP but it was in fact unknown.
+
 2004-05-18  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/schedulers/entryscheduler.c: (gst_entry_scheduler_reset):
