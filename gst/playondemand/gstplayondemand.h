@@ -22,21 +22,20 @@
 #ifndef __GST_PLAYONDEMAND_H__
 #define __GST_PLAYONDEMAND_H__
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
 #include <gst/gst.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_PLAYONDEMAND \
   (gst_play_on_demand_get_type())
 #define GST_PLAYONDEMAND(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PLAYONDEMAND,GstPlayOnDemand))
 #define GST_PLAYONDEMAND_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstPlayOnDemand))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PLAYONDEMAND,GstPlayOnDemand))
 #define GST_IS_PLAYONDEMAND(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PLAYONDEMAND))
 #define GST_IS_PLAYONDEMAND_CLASS(obj) \
@@ -94,10 +93,6 @@ struct _GstPlayOnDemandClass {
 
 GType gst_play_on_demand_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_PLAYONDEMAND_H__ */

@@ -44,9 +44,9 @@
 /* element factory information */
 static GstElementDetails play_on_demand_details = {
   "Play On Demand",
-  "Filter/Audio/Effect",
-  "Plays a stream at specific times, or when it receives a signal",
-  "Leif Morgan Johnson <leif@ambient.2y.net>"
+  "Filter/Editor/Audio",
+  "Schedule a stream to play at specific times, or when a signal is received",
+  "Leif Morgan Johnson <leif@ambient.2y.net>",
 };
 
 
@@ -218,18 +218,23 @@ play_on_demand_class_init (GstPlayOnDemandClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_MUTE,
     g_param_spec_boolean("mute", "Silence output", "Do not output any sound",
                          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_BUFFER_TIME,
     g_param_spec_float("buffer-time", "Buffer length in seconds", "Number of seconds of audio the buffer holds",
                        0.0, G_MAXFLOAT, GST_POD_BUFFER_TIME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_MAX_PLAYS,
     g_param_spec_uint("max-plays", "Maximum simultaneous playbacks", "Maximum allowed number of simultaneous plays from the buffer",
                       1, G_MAXUINT, GST_POD_MAX_PLAYS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_TICK_RATE,
     g_param_spec_float("tick-rate", "Tick rate (ticks/second)", "The rate of musical ticks, the smallest time unit in a song",
                        0, G_MAXFLOAT, GST_POD_TICK_RATE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_TOTAL_TICKS,
     g_param_spec_uint("total-ticks", "Total number of ticks", "Total number of ticks in the tick array",
                       1, G_MAXUINT, 1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_TICKS,
     g_param_spec_pointer("ticks", "Ticks to play sample on", "An array of ticks (musical times) at which to play the sample",
 			 G_PARAM_READWRITE));
@@ -430,7 +435,8 @@ play_on_demand_loop (GstElement *elem)
 {
   GstPlayOnDemand *filter = GST_PLAYONDEMAND(elem);
   guint            num_in, num_out, num_filter;
-  GstBuffer       *in, *out;
+  GstData         *in = NULL;
+  GstBuffer       *out = NULL;
   static guint     last_tick = 0;
 
   g_return_if_fail(filter != NULL);
@@ -442,7 +448,7 @@ play_on_demand_loop (GstElement *elem)
     filter->bufpool = gst_buffer_pool_get_default(GST_POD_BUFPOOL_SIZE,
                                                   GST_POD_BUFPOOL_NUM);
 
-  in = GST_BUFFER (gst_pad_pull(filter->sinkpad));
+  in = (in == NULL && ! filter->eos) ? gst_pad_pull(filter->sinkpad) : NULL;
 
   if (filter->format == GST_PLAYONDEMAND_FORMAT_INT) {
     if (filter->width == 16) {

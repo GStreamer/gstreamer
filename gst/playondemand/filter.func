@@ -6,37 +6,36 @@ filter_data = (_TYPE_ *) filter->buffer;
 num_filter = filter->buffer_bytes / sizeof(_TYPE_);
 
 do {
-  if (in == NULL && ! filter->eos) in = GST_BUFFER (gst_pad_pull(filter->sinkpad));
-
-  /****************************************************************************/
   /* see if we've got any events coming through ... */
 
-  while (! filter->eos && GST_IS_EVENT(in)) {
-    if (GST_EVENT_TYPE(in) == GST_EVENT_EOS) {
-      gst_event_unref(in);
-      gst_buffer_free(in);
+  while (! filter->eos && in != NULL && GST_IS_EVENT (in)) {
+    GstEvent *event = GST_EVENT (in);
+    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+      gst_event_unref (event);
+      gst_data_free (in);
+      in = NULL;
       filter->eos = TRUE;
-    } else if ((GST_EVENT_TYPE(in) == GST_EVENT_SEEK) ||
-               (GST_EVENT_TYPE(in) == GST_EVENT_FLUSH)) {
-      gst_event_unref(in);
-      gst_buffer_free(in);
+    } else if ((GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS) ||
+               (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH)) {
+      gst_event_unref (event);
+      gst_data_free (in);
+      in = NULL;
       filter->eos = FALSE;
       filter->write = 0;
     } else {
-      gst_pad_push(filter->srcpad, GST_DATA (in));
+      gst_pad_push(filter->srcpad, in);
     }
 
-    in = GST_BUFFER (gst_pad_pull(filter->sinkpad));
+    in = (in == NULL && ! filter->eos) ? gst_pad_pull(filter->sinkpad) : NULL;
   }
 
-  /****************************************************************************/
   /* handle data from the input buffer. */
 
   if (! filter->eos) {
     register guint j, w = filter->write;
 
-    data_in = (_TYPE_ *) GST_BUFFER_DATA(in);
-    num_in = GST_BUFFER_SIZE(in) / sizeof(_TYPE_);
+    data_in = (_TYPE_ *) GST_BUFFER_DATA (GST_BUFFER (in));
+    num_in = GST_BUFFER_SIZE (in) / sizeof(_TYPE_);
 
     for (j = 0; (j < num_in) && (w+j < num_filter); j++)
       filter_data[w+j] = data_in[j];
@@ -45,14 +44,13 @@ do {
 
     if (filter->write >= num_filter) filter->eos = TRUE;
 
-    out = in;
+    out = GST_BUFFER (in);
   } else {
     out = gst_buffer_new_from_pool(filter->bufpool, 0, 0);
   }
 
   in = NULL;
 
-  /****************************************************************************/
   /* check to see if we have to add new play pointers. */
 
   if (filter->clock) {
@@ -60,12 +58,8 @@ do {
 
     guint total_ticks = filter->total_ticks;
     guint current_tick = \
-      ((guint) (gst_clock_get_time(filter->clock) * filter->tick_rate /
-                GST_SECOND)) % total_ticks;
-
-    /* for some reason modulo arithmetic isn't working for me here, i suspect
-       some unsigned/signed voodoo. but it's probably safe to do this with an if
-       statement since it doesn't happen all that often ... */
+      ((guint) (gst_clock_get_time(filter->clock) * \
+                filter->tick_rate / GST_SECOND)) % total_ticks;
 
     tick_offset = current_tick - last_tick;
     if (tick_offset < 0) tick_offset += total_ticks;
@@ -84,14 +78,13 @@ do {
     last_tick = current_tick;
   }
 
-  /****************************************************************************/
   /* handle output data. */
 
   {
     register guint k, p;
 
-    data_out = (_TYPE_ *) GST_BUFFER_DATA(out);
-    num_out = GST_BUFFER_SIZE(out) / sizeof(_TYPE_);
+    data_out = (_TYPE_ *) GST_BUFFER_DATA (out);
+    num_out = GST_BUFFER_SIZE (out) / sizeof(_TYPE_);
 
     for (k = 0; k < num_out; k++) data_out[k] = zero;
 
@@ -111,11 +104,12 @@ do {
     }
   }
 
-  /****************************************************************************/
-  /* push out the buffer. */
+  /* push out the buffer and get a new buffer if we're allowed to loop. */
 
   gst_pad_push(filter->srcpad, GST_DATA (out));
 
   if (gst_element_interrupt (GST_ELEMENT (filter))) break;
+
+  in = (in == NULL && ! filter->eos) ? gst_pad_pull(filter->sinkpad) : NULL;
 
 } while (TRUE);

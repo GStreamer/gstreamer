@@ -4,13 +4,14 @@
 #include <gst/gst.h>
 
 #define NUM_BEATS 12
+#define TICK_RATE(x) (x * 1e-6)
 
 GtkWidget *window, *vbox, *beat_box, *button_box;
 GtkWidget *play_button, *clear_button, *reset_button, *quit_button;
 GtkWidget **beat_button;
 GtkWidget *speed_scale;
 GtkObject *speed_adj;
-GstElement *src, *mad, *conv, *pod, *sink, *pipeline;
+GstElement *src, *dec, *pod, *sink, *pipeline;
 GstClock *element_clock;
 guint32 *beats;
 
@@ -63,36 +64,33 @@ beat (GtkToggleButton *button, gpointer data)
 void
 speed (GtkAdjustment *adjustment, gpointer data)
 {
-  g_signal_stop_emission_by_name(G_OBJECT(pod), "deep-notify");
-  g_object_set(G_OBJECT(pod), "tick-rate", adjustment->value, NULL);
+  /*g_signal_stop_emission_by_name(G_OBJECT(pod), "deep-notify");*/
+  g_object_set(G_OBJECT(pod), "tick-rate", TICK_RATE(adjustment->value), NULL);
   /*gst_clock_set_speed(element_clock, adjustment->value);*/
 }
 
 void
 setup_pipeline (gchar *filename)
 {
-  src = gst_element_factory_make("filesrc", "filesrc");
-  mad = gst_element_factory_make("mad", "mad");
-  conv = gst_element_factory_make("audioconvert", "audioconvert");
-  pod = gst_element_factory_make("playondemand", "playondemand");
-  sink = gst_element_factory_make("alsasink", "alsasink");
+  src = gst_element_factory_make("filesrc", "source");
+  dec = gst_element_factory_make("vorbisfile", "decoder");
+  pod = gst_element_factory_make("playondemand", "sequencer");
+  sink = gst_element_factory_make("alsasink", "sink");
 
-  g_object_set(G_OBJECT(src), "location", filename, NULL);
-  g_object_set(G_OBJECT(sink), "period-count", 64,
-                               "period-size", 512, NULL);
-  g_object_set(G_OBJECT(pod), "total-ticks", NUM_BEATS,
-                              "tick-rate", 1.0,
-                              "max-plays", NUM_BEATS * 2, NULL);
+  g_object_set(G_OBJECT (src), "location", filename, NULL);
+  g_object_set(G_OBJECT (sink), "period-count", 64, "period-size", 512, NULL);
+  g_object_set(G_OBJECT (pod), "total-ticks", NUM_BEATS,
+               "tick-rate", 1.0e-6, "max-plays", NUM_BEATS * 2, NULL);
 
-  g_object_get(G_OBJECT(pod), "ticks", &beats, NULL);
+  g_object_get(G_OBJECT (pod), "ticks", &beats, NULL);
 
   pipeline = gst_pipeline_new("app");
 
-  gst_bin_add_many(GST_BIN(pipeline), src, mad, conv, pod, sink, NULL);
-  gst_element_link_many(src, mad, conv, pod, sink, NULL);
+  gst_bin_add_many(GST_BIN (pipeline), src, dec, pod, sink, NULL);
+  gst_element_link_many(src, dec, pod, sink, NULL);
 
-  element_clock = gst_bin_get_clock(GST_BIN(pipeline));
-  gst_element_set_clock(GST_ELEMENT(pod), element_clock);
+  element_clock = gst_element_get_clock(GST_ELEMENT (sink));
+  gst_element_set_clock(GST_ELEMENT (pod), element_clock);
 }
 
 void
