@@ -105,14 +105,10 @@ if test "x$broken-plugins" = "$xyes"; then
   AC_MSG_WARN(building broken plugins)
   USE_ARTS="yes"
   USE_ARTSC="yes"
-  USE_LIBGSM="yes"
-  USE_FLACLIB="yes"
 else
   AC_MSG_NOTICE(not building broken plugins)
   USE_ARTS="no"
   USE_ARTSC="no"
-  USE_LIBGSM="no"
-  USE_FLACLIB="no"
 fi
 
 
@@ -490,12 +486,13 @@ GST_CHECK_FEATURE(LIBESD, [esound plugins], esdsrc esdsink, [
 ])
 
 dnl *** FLAC ***
-dnl dnl thomas : checking for compile with main instead of actual function,
-dnl dnl since that made autoconf break (for version 2.13)
-dnl translit(dnm, m, l) AM_CONDITIONAL(USE_LIBFLAC, true)
-dnl GST_CHECK_FEATURE(FLACLIB, [FLAC lossless audio], flacenc flacdec, [
-dnl GST_CHECK_LIBHEADER(FLACLIB, FLAC, main, -lm, FLAC/all.h, LIBFLAC_LIBS="-lFLAC")
-dnl ])
+dnl thomas : checking for compile with main instead of actual function,
+dnl since that made autoconf break (for version 2.13)
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBFLAC, true)
+GST_CHECK_FEATURE(FLACLIB, [FLAC lossless audio], flacenc flacdec, [
+  GST_CHECK_LIBHEADER(FLACLIB, FLAC, main, -lm, FLAC/all.h, LIBFLAC_LIBS="-lFLAC")
+])
+
 dnl 
 dnl *** Gnome VFS ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro with gnome-config vfs
