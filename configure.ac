@@ -157,51 +157,6 @@ esac
 dnl Determine endianness
 AC_C_BIGENDIAN
 
-dnl Check for MMX-capable compiler
-AC_MSG_CHECKING(for MMX-capable compiler)
-AC_TRY_RUN([
-#include "include/mmx.h"
-
-main()
-{ movq_r2r(mm0, mm1); return 0; }
-],
-[
-HAVE_LIBMMX="yes"
-AC_MSG_RESULT(yes)
-],
-HAVE_LIBMMX="no"
-AC_MSG_RESULT(no)
-,
-HAVE_LIBMMX="no"
-AC_MSG_RESULT(no)
-)
-
-dnl
-dnl We should really use AC_SYS_LARGEFILE, but the problem is
-dnl many of the plugins don't include "config.h".  To assure
-dnl binary compatibility, it is necessary that all gstreamer
-dnl code be compiled with the same sizeof(off_t), so we use
-dnl the following crude hack.
-dnl
-
-AC_MSG_CHECKING(for large file support)
-AC_TRY_RUN([
-#define _LARGEFILE_SOURCE
-#define _FILE_OFFSET_BITS 64
-#include <sys/types.h>
-int main () { return !(sizeof(off_t) == 8); }
-],
-[
-AC_MSG_RESULT(yes)
-GST_CFLAGS="$GST_CFLAGS -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
-],
-[
-AC_MSG_RESULT(no)
-],
-[
-AC_MSG_RESULT(no)
-])
-
 dnl Check for essential libraries first:
 dnl ====================================
 
@@ -229,7 +184,7 @@ AC_SUBST(GTK_CFLAGS)
 dnl Check for X11 extensions
 AC_PATH_XTRA
 if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
-  AC_MSG_ERROR(can not find X11)
+  AC_MSG_NOTICE([cannot find X11, the build system needs fixage])
 fi
 AC_SUBST(X_CFLAGS)
 AC_SUBST(X_PRE_LIBS)
@@ -675,60 +630,6 @@ AC_ARG_ENABLE(atomic,
 esac], 
 [USE_ATOMIC_H=$HAVE_ATOMIC_H]) dnl Default value
 
-AC_ARG_ENABLE(plugin-builddir,
-[  --enable-plugin-builddir     allow tests/demos to use non-installed plugins ],
-[case "${enableval}" in
-  yes) PLUGINS_USE_BUILDDIR=yes ;;
-  no)  PLUGINS_USE_BUILDDIR=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-builddir) ;;
-esac], 
-[PLUGINS_USE_BUILDDIR=no]) dnl Default value
-
-AC_ARG_ENABLE(debug,
-[  --enable-debug               compile with -g debugging info],
-[case "${enableval}" in
-  yes) USE_DEBUG=yes ;;
-  no)  USE_DEBUG=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
-esac], 
-[USE_DEBUG=yes]) dnl Default value
-
-AC_ARG_ENABLE(DEBUG,
-[  --enable-DEBUG               compiles in a large number of debugging messages],
-[case "${enableval}" in
-  yes) ENABLE_DEBUG=yes ;;
-  no)  ENABLE_DEBUG=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-DEBUG) ;;
-esac], 
-[ENABLE_DEBUG=yes]) dnl Default value
-if test x$ENABLE_DEBUG = xyes; then
-  AC_DEFINE(GST_DEBUG_ENABLED, 1, [Define if DEBUG statements should be compiled in])
-fi
-
-AC_ARG_ENABLE(INFO,
-[  --disable-INFO               disables compilation of informational messages],
-[case "${enableval}" in
-  yes) ENABLE_INFO=yes ;;
-  no)  ENABLE_INFO=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-INFO) ;;
-esac], 
-[ENABLE_INFO=yes]) dnl Default value
-if test x$ENABLE_INFO = xyes; then
-  AC_DEFINE(GST_INFO_ENABLED, 1, [Define if INFO statements should be compiled in])
-fi
-
-AC_ARG_ENABLE(debug-color,
-[  --disable-debug-color        disables color output of DEBUG and INFO output],
-[case "${enableval}" in
-  yes) ENABLE_DEBUG_COLOR=yes ;;
-  no)  ENABLE_DEBUG_COLOR=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug-color) ;;
-esac], 
-[ENABLE_DEBUG_COLOR=yes]) dnl Default value
-if test "x$ENABLE_DEBUG_COLOR" = xyes; then
-  AC_DEFINE(GST_DEBUG_COLOR, 1, [Define if debugging messages should be colorized])
-fi
-
 AC_ARG_ENABLE(profiling,
 [  --enable-profiling           adds -pg to compiler commandline, for profiling],
 [case "${enableval}" in
@@ -737,40 +638,6 @@ AC_ARG_ENABLE(profiling,
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-profiling) ;;
 esac], 
 [USE_PROFILING=no]) dnl Default value
-
-dnl default to building registry in the source tree if we are enabling plugin build dir
-if test "x$PLUGINS_USE_BUILDDIR"="xyes"; then
-  GST_CONFIG_DIR=`pwd`
-else
-  GST_CONFIG_DIR=/etc/gstreamer
-fi
-AC_ARG_WITH(configdir,
-[  --with-configdir             specify path to use for configdir],
-[case "${withval}" in
-  yes) AC_MSG_ERROR(bad value ${withval} for --with-configdir) ;;
-  no) AC_MSG_ERROR(bad value ${withval} for --with-configdir) ;;
-  *) GST_CONFIG_DIR="${withval}" ;;
-esac], 
-[:]) dnl Default value
-
-AC_ARG_ENABLE(docs-build,
-[  --enable-docs-build          enable building of documentation],
-[case "${enableval}" in
-  yes) if $HAVE_GTK_DOC; then BUILD_DOCS=yes; else AC_MSG_ERROR([you don't have gtk-doc, so don't use --docs-build]); fi; ;;
-  no)  BUILD_DOCS=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-docs-build) ;;
-esac], 
-[BUILD_DOCS=no]) dnl Default value
-
-AC_ARG_ENABLE(plugin-docs,
-[  --enable-plugin-docs         enable the building of plugin documentation
-                               (this is currently broken, so off by default)],
-[case "${enableval}" in
-  yes) BUILD_PLUGIN_DOCS=yes ;;
-  no)  BUILD_PLUGIN_DOCS=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-docs) ;;
-esac], 
-[BUILD_PLUGIN_DOCS=no]) dnl Default value
 
 AC_ARG_ENABLE(tests,
 [  --disable-tests              disable building test apps],
@@ -790,47 +657,6 @@ AC_ARG_ENABLE(examples,
 esac], 
 [BUILD_EXAMPLES=yes]) dnl Default value
 
-dnl Next, check for the optional components:
-dnl ========================================
-
-
-AC_DEFUN(GST_SUBSYSTEM_DISABLE,
-[dnl
-dnl Add a subsystem --disable flag and all the necessary symbols and substitions
-dnl
-AC_ARG_ENABLE(translit([$1], A-Z, a-z), 
-[  ]builtin(format, --disable-%-17s  disable %s, translit([$1], A-Z, a-z), $2),
-[ case "${enableval}" in
-    yes) GST_DISABLE_[$1]=no ;;
-    no) GST_DISABLE_[$1]=yes ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --enable-translit([$1], A-Z, a-z)) ;;
-  esac],
-[GST_DISABLE_[$1]=no]) dnl Default value
-if test x$GST_DISABLE_[$1] = xyes; then
-  AC_DEFINE(GST_DISABLE_[$1], 1, [Disable $2])
-  GST_DISABLE_[$1]_DEFINE=-DGST_DISABLE_[$1]
-fi
-AM_CONDITIONAL(GST_DISABLE_[$1], test x$GST_DISABLE_[$1] = xyes)
-AC_SUBST(GST_DISABLE_[$1]_DEFINE)
-GST_SUBSYSTEM_DISABLE_DEFINES="$GST_SUBSYTEM_DISABLE_DEFINES $GST_DISABLE_[$1]_DEFINE"
-])
-
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_LOADSAVE, true)
-GST_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_TYPEFIND, true)
-GST_SUBSYSTEM_DISABLE(TYPEFIND,[typefind plugin],)
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_AUTOPLUG, true)
-GST_SUBSYSTEM_DISABLE(AUTOPLUG,[autoplugger subsystem])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_PARSE, true)
-GST_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_TRACE, true)
-GST_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_REGISTRY, true)
-GST_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
-
-GST_CFLAGS="$GST_CFLAGS $GST_SUBSYSTEM_DISABLE_DEFINES"
-
-
 dnl ################################################
 dnl # Set defines according to variables set above #
 dnl ################################################
@@ -842,10 +668,6 @@ fi
 
 if test "x$USE_ATOMIC_H" = xyes; then
   AC_DEFINE(HAVE_ATOMIC_H, 1, [Define if atomic.h header file is available])
-fi
-
-if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
-  AC_DEFINE(PLUGINS_USE_BUILDDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
 fi
 
 dnl if test "x$USE_DEBUG" = xyes; then
@@ -862,14 +684,6 @@ fi
 dnl
 dnl AC_SUBST(FOMIT_FRAME_POINTER)
 dnl
-
-if test "x$HAVE_LIBMIKMOD" = xyes; then
-  AC_DEFINE(HAVE_LIBMIKMOD)
-fi
-
-if test "x$HAVE_LIBGSM" = xyes; then
-  AC_DEFINE(HAVE_LIBGSM)
-fi
 
 dnl #############################
 dnl # Set automake conditionals #
@@ -914,57 +728,9 @@ AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
 
 
-dnl ############################
-dnl # Set up some more defines #
-dnl ############################
-
-dnl Set location of configuration dir.
-AC_DEFINE_UNQUOTED(GST_CONFIG_DIR,"$GST_CONFIG_DIR")
-AC_SUBST(GST_CONFIG_DIR)
-
-dnl Set location of plugin directory
-if test "x${prefix}" = "xNONE"; then
-  PLUGINS_DIR=${ac_default_prefix}/lib/gst
-else
-  PLUGINS_DIR=${prefix}/lib/gst
-fi
-AC_DEFINE_UNQUOTED(PLUGINS_DIR,"$PLUGINS_DIR")
-AC_SUBST(PLUGINS_DIR)
-
-dnl Set location of uninstalled plugin directory
-PLUGINS_BUILDDIR=`pwd`
-AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR,"$PLUGINS_BUILDDIR")
-AC_SUBST(PLUGINS_BUILDDIR)
-
 GST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir)/gst-libs"
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
-
-dnl #############################
-dnl # Configure the subpackages #
-dnl #############################
-
-dnl AC_CONFIG_SUBDIRS(gist)
-dnl AC_CONFIG_SUBDIRS(plugins/mp3decode/xing/libxing)
-
-dnl ##################################################
-dnl # Prepare informative messages to display at end #
-dnl ##################################################
-
-infomessages=
-
-if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
-  infomessages="$infomessages
-*** Warning: You have configured using the --enable-plugin-builddir option.
-
-This option is for development purposes only: binaries built with
-it should be used with code in the build tree only.  To build an
-installable version, use ./configure without the --enable-plugin-builddir
-option.  Note that the autogen.sh script supplies the plugin builddir
-option automatically - it cannot be used to configure installable builds.
-
-"
-fi
 
 dnl #########################
 dnl # Make the output files #
