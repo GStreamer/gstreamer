@@ -84,7 +84,8 @@ typedef struct
     int usage;
 }codec_t;
 
-#define Win32Path "/usr/lib/win32/"
+//#define Win32Path "/usr/lib/win32/"
+#define Win32Path GST_WIN32_LIBDIR
 static codec_t avi_codecs[]={
  {0, Win32Path"divxc32.dll", 0},	//0
  {0, Win32Path"ir50_32.dll", 0},
