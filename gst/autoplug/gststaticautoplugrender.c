@@ -41,7 +41,7 @@ static GList*		gst_autoplug_func		(gpointer src, gpointer sink,
 
 
 static GstElement*	gst_static_autoplug_to_render	(GstAutoplug *autoplug, 
-						  	 GList *srccaps, GstElement *target, va_list args);
+						  	 GstCaps *srccaps, GstElement *target, va_list args);
 
 static GstAutoplugClass *parent_class = NULL;
 
@@ -118,7 +118,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 
       if (srctemp->direction == GST_PAD_SRC &&
           desttemp->direction == GST_PAD_SINK) {
-	if (gst_caps_list_check_compatibility (srctemp->caps, desttemp->caps)) {
+	if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (srctemp), GST_PADTEMPLATE_CAPS (desttemp))) {
 	  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,
 			  "factory \"%s\" can connect with factory \"%s\"", src->name, dest->name);
           return TRUE;
@@ -148,20 +148,14 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     GstPad *sinkpad = (GstPad *)sinkpads->data;
 
     // if we have a match, connect the pads
-    if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK &&
-        !GST_PAD_CONNECTED(sinkpad))
+    if (gst_pad_get_direction(sinkpad) == GST_PAD_SINK &&
+        !GST_PAD_CONNECTED (pad) && !GST_PAD_CONNECTED(sinkpad))
     {
-      if (gst_caps_list_check_compatibility (gst_pad_get_caps_list(pad), gst_pad_get_caps_list(sinkpad))) {
-        gst_pad_connect(pad, sinkpad);
-        GST_DEBUG (0,"gstpipeline: autoconnect pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
-		       GST_ELEMENT_NAME(src));
-        GST_DEBUG (0,"pad \"%s\" in element %s\n", GST_PAD_NAME (sinkpad),
-		      GST_ELEMENT_NAME(sink));
-        connected = TRUE;
-        break;
+      if ((connected = gst_pad_connect (pad, sinkpad))) {
+	break;
       }
       else {
-	GST_DEBUG (0,"pads incompatible %s, %s\n", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
+        GST_DEBUG (0,"pads incompatible %s, %s\n", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
       }
     }
     sinkpads = g_list_next(sinkpads);
@@ -171,33 +165,6 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     GST_DEBUG (0,"gstpipeline: no path to sinks for type\n");
   }
   return connected;
-}
-
-typedef struct {
-  GstElement *result;
-  GList *endcap;
-  gint i;
-} dynamic_pad_struct;
-
-static void
-autoplug_dynamic_pad (GstElement *element, GstPad *pad, gpointer data)
-{
-  dynamic_pad_struct *info = (dynamic_pad_struct *)data;
-  GList *pads = gst_element_get_pad_list (element);
-
-  GST_DEBUG (0,"attempting to dynamically create a ghostpad for %s=%s\n", GST_ELEMENT_NAME (element),
-		  GST_PAD_NAME (pad));
-
-  while (pads) {
-    GstPad *pad = GST_PAD (pads->data);
-    pads = g_list_next (pads);
-
-    if (gst_caps_list_check_compatibility (gst_pad_get_caps_list (pad), info->endcap)) {
-      gst_element_add_ghost_pad (info->result, pad, g_strdup_printf("src_%02d", info->i));
-      GST_DEBUG (0,"gstpipeline: new dynamic pad %s\n", GST_PAD_NAME (pad));
-      break;
-    }
-  }
 }
 
 static void
@@ -211,8 +178,11 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
   while (srcpads && !connected) {
     GstPad *srcpad = (GstPad *)srcpads->data;
 
-    if (gst_pad_get_direction(srcpad) == GST_PAD_SRC)
+    if (gst_pad_get_direction(srcpad) == GST_PAD_SRC) {
       connected = gst_autoplug_pads_autoplug_func (src, srcpad, sink);
+      if (connected)
+        break;
+    }
 
     srcpads = g_list_next(srcpads);
   }
@@ -234,8 +204,8 @@ gst_autoplug_elementfactory_get_list (gpointer data)
 }
 
 typedef struct {
-  GList *src;
-  GList *sink;
+  GstCaps *src;
+  GstCaps *sink;
 } caps_struct;
 
 #define IS_CAPS(cap) (((cap) == caps->src) || (cap) == caps->sink)
@@ -247,15 +217,15 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
   gboolean res;
 
   if (IS_CAPS (src) && IS_CAPS (dest)) {
-    res = gst_caps_list_check_compatibility ((GList *)src, (GList *)dest);
+    res = gst_caps_check_compatibility ((GstCaps *)src, (GstCaps *)dest);
     //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"caps %d to caps %d %d", ((GstCaps *)src)->id, ((GstCaps *)dest)->id, res);
   }
   else if (IS_CAPS (src)) {
-    res = gst_elementfactory_can_sink_caps_list ((GstElementFactory *)dest, (GList *)src);
+    res = gst_elementfactory_can_sink_caps ((GstElementFactory *)dest, (GstCaps *)src);
     //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to src caps %d %d", ((GstElementFactory *)dest)->name, ((GstCaps *)src)->id, res);
   }
   else if (IS_CAPS (dest)) {
-    res = gst_elementfactory_can_src_caps_list ((GstElementFactory *)src, (GList *)dest);
+    res = gst_elementfactory_can_src_caps ((GstElementFactory *)src, (GstCaps *)dest);
     //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to sink caps %d %d", ((GstElementFactory *)src)->name, ((GstCaps *)dest)->id, res);
   }
   else {
@@ -269,7 +239,7 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
 }
 
 static GstElement*
-gst_static_autoplug_to_render (GstAutoplug *autoplug, GList *srccaps, GstElement *target, va_list args)
+gst_static_autoplug_to_render (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *target, va_list args)
 {
   caps_struct caps;
   GstElement *targetelement;
@@ -292,10 +262,12 @@ gst_static_autoplug_to_render (GstAutoplug *autoplug, GList *srccaps, GstElement
   while (targetelement) {
     GList *elements;
     GstPad *pad;
+    GstPadTemplate *templ;
 
     pad = GST_PAD (gst_element_get_pad_list (targetelement)->data);
+    templ = GST_PAD_PADTEMPLATE (pad);
 
-    caps.sink = gst_pad_get_caps_list (pad);
+    caps.sink = GST_PADTEMPLATE_CAPS (templ);
 
     GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
 
@@ -381,8 +353,9 @@ gst_static_autoplug_to_render (GstAutoplug *autoplug, GList *srccaps, GstElement
 
       while (pads) {
 	GstPad *pad = GST_PAD (pads->data);
+	GstPadTemplate *templ = GST_PAD_PADTEMPLATE (pad);
 
-	if (gst_caps_list_check_compatibility (srccaps, gst_pad_get_caps_list (pad))) {
+	if (gst_caps_check_compatibility (srccaps, GST_PADTEMPLATE_CAPS (templ))) {
           gst_element_add_ghost_pad (result, pad, "sink");
 	  break;
 	}
@@ -435,8 +408,7 @@ differ:
       // this element suggests the use of a thread, so we set one up...
       if (GST_ELEMENT_IS_THREAD_SUGGESTED(element) || use_thread) {
         GstElement *queue;
-        GList *sinkpads;
-        GstPad *srcpad, *sinkpad;
+        GstPad *srcpad;
 
 	use_thread = FALSE;
 
@@ -453,22 +425,6 @@ differ:
 
         srcpad = gst_element_get_pad(queue, "src");
 
-        sinkpads = gst_element_get_pad_list(element);
-        while (sinkpads) {
-          sinkpad = (GstPad *)sinkpads->data;
-
-	  // FIXME connect matching pads, not just the first one...
-          if (gst_pad_get_direction(sinkpad) == GST_PAD_SINK &&
-	      !GST_PAD_CONNECTED(sinkpad)) {
-            GList *caps = gst_pad_get_caps_list (sinkpad);
-
-	    // the queue has the type of the elements it connects
-	    gst_pad_set_caps_list (srcpad, caps);
-            gst_pad_set_caps_list (gst_element_get_pad(queue, "sink"), caps);
-	    break;
-	  }
-          sinkpads = g_list_next(sinkpads);
-        }
         gst_autoplug_pads_autoplug(thesrcelement, queue);
 
 	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));

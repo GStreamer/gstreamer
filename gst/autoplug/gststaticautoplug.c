@@ -41,7 +41,7 @@ static GList*		gst_autoplug_func		(gpointer src, gpointer sink,
 
 
 static GstElement*	gst_static_autoplug_to_caps	(GstAutoplug *autoplug, 
-						  	 GList *srccaps, GList *sinkcaps, va_list args);
+						  	 GstCaps *srccaps, GstCaps *sinkcaps, va_list args);
 
 static GstAutoplugClass *parent_class = NULL;
 
@@ -118,7 +118,8 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 
       if (srctemp->direction == GST_PAD_SRC &&
           desttemp->direction == GST_PAD_SINK) {
-	if (gst_caps_list_check_compatibility (srctemp->caps, desttemp->caps)) {
+	if (gst_caps_check_compatibility (gst_padtemplate_get_caps (srctemp), 
+				gst_padtemplate_get_caps (desttemp))) {
 	  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,
 			  "factory \"%s\" can connect with factory \"%s\"", src->name, dest->name);
           return TRUE;
@@ -151,7 +152,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK &&
         !GST_PAD_CONNECTED(sinkpad))
     {
-      if (gst_caps_list_check_compatibility (gst_pad_get_caps_list(pad), gst_pad_get_caps_list(sinkpad))) {
+      if (gst_caps_check_compatibility (gst_pad_get_caps(pad), gst_pad_get_caps(sinkpad))) {
         gst_pad_connect(pad, sinkpad);
         GST_DEBUG (0,"gstpipeline: autoconnect pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
 		       GST_ELEMENT_NAME(src));
@@ -175,7 +176,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
 
 typedef struct {
   GstElement *result;
-  GList *endcap;
+  GstCaps *endcap;
   gint i;
 } dynamic_pad_struct;
 
@@ -190,9 +191,10 @@ autoplug_dynamic_pad (GstElement *element, GstPad *pad, gpointer data)
 
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
+    GstPadTemplate *templ = GST_PAD_PADTEMPLATE (pad);
     pads = g_list_next (pads);
 
-    if (gst_caps_list_check_compatibility (gst_pad_get_caps_list (pad), info->endcap)) {
+    if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (templ), info->endcap)) {
       gst_element_add_ghost_pad (info->result, pad, g_strdup_printf("src_%02d", info->i));
       GST_DEBUG (0,"gstpipeline: new dynamic pad %s\n", GST_PAD_NAME (pad));
       break;
@@ -232,8 +234,8 @@ gst_autoplug_elementfactory_get_list (gpointer data)
 }
 
 typedef struct {
-  GList *src;
-  GList *sink;
+  GstCaps *src;
+  GstCaps *sink;
 } caps_struct;
 
 #define IS_CAPS(cap) (((cap) == caps->src) || (cap) == caps->sink)
@@ -245,16 +247,13 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
   gboolean res;
 
   if (IS_CAPS (src) && IS_CAPS (dest)) {
-    res = gst_caps_list_check_compatibility ((GList *)src, (GList *)dest);
-    //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"caps %d to caps %d %d", ((GstCaps *)src)->id, ((GstCaps *)dest)->id, res);
+    res = gst_caps_check_compatibility ((GstCaps *)src, (GstCaps *)dest);
   }
   else if (IS_CAPS (src)) {
-    res = gst_elementfactory_can_sink_caps_list ((GstElementFactory *)dest, (GList *)src);
-    //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to src caps %d %d", ((GstElementFactory *)dest)->name, ((GstCaps *)src)->id, res);
+    res = gst_elementfactory_can_sink_caps ((GstElementFactory *)dest, (GstCaps *)src);
   }
   else if (IS_CAPS (dest)) {
-    res = gst_elementfactory_can_src_caps_list ((GstElementFactory *)src, (GList *)dest);
-    //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to sink caps %d %d", ((GstElementFactory *)src)->name, ((GstCaps *)dest)->id, res);
+    res = gst_elementfactory_can_src_caps ((GstElementFactory *)src, (GstCaps *)dest);
   }
   else {
     res = gst_autoplug_can_match ((GstElementFactory *)src, (GstElementFactory *)dest);
@@ -267,10 +266,10 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
 }
 
 static GstElement*
-gst_static_autoplug_to_caps (GstAutoplug *autoplug, GList *srccaps, GList *sinkcaps, va_list args)
+gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps, va_list args)
 {
   caps_struct caps;
-  GList *capslist;
+  GstCaps *capslist;
   GstElement *result = NULL, *srcelement = NULL;
   GList **factories;
   GList *chains = NULL;
@@ -307,7 +306,7 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GList *srccaps, GList *sinkc
     else {
     }
 
-    capslist = va_arg (args, GList *);
+    capslist = va_arg (args, GstCaps *);
   }
 
   /*
@@ -376,8 +375,9 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GList *srccaps, GList *sinkc
 
       while (pads) {
 	GstPad *pad = GST_PAD (pads->data);
+	GstPadTemplate *templ = GST_PAD_PADTEMPLATE (pad);
 
-	if (gst_caps_list_check_compatibility (srccaps, gst_pad_get_caps_list (pad))) {
+	if (gst_caps_check_compatibility (srccaps, GST_PADTEMPLATE_CAPS (templ))) {
           gst_element_add_ghost_pad (result, pad, "sink");
 	  break;
 	}
@@ -430,7 +430,7 @@ differ:
      * find a suitable pad to turn into a ghostpad
      */
     {
-      GList *endcap = (GList *)(endcaps->data);
+      GstCaps *endcap = (GstCaps *)(endcaps->data);
       GList *pads = gst_element_get_pad_list (thesrcelement);
       gboolean have_pad = FALSE;
       endcaps = g_list_next (endcaps);
@@ -439,9 +439,10 @@ differ:
 
       while (pads) {
 	GstPad *pad = GST_PAD (pads->data);
+	GstPadTemplate *templ = GST_PAD_PADTEMPLATE (pad);
 	pads = g_list_next (pads);
 
-	if (gst_caps_list_check_compatibility (gst_pad_get_caps_list (pad), endcap)) {
+	if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (templ), endcap)) {
           gst_element_add_ghost_pad (result, pad, g_strdup_printf("src_%02d", i));
 	  have_pad = TRUE;
 	  break;

@@ -222,17 +222,17 @@ gst_elementfactory_add_padtemplate (GstElementFactory *factory,
 }
 
 /**
- * gst_elementfactory_can_src_caps_list :
+ * gst_elementfactory_can_src_caps :
  * @factory: factory to query
- * @caps: the caps list to check
+ * @caps: the caps to check
  *
- * Checks if the factory can source the given capability list.
+ * Checks if the factory can source the given capability.
  *
  * Returns: true if it can src the capabilities
  */
 gboolean
-gst_elementfactory_can_src_caps_list (GstElementFactory *factory,
-		                      GList *caps)
+gst_elementfactory_can_src_caps (GstElementFactory *factory,
+		                 GstCaps *caps)
 {
   GList *templates;
 
@@ -245,7 +245,7 @@ gst_elementfactory_can_src_caps_list (GstElementFactory *factory,
     GstPadTemplate *template = (GstPadTemplate *)templates->data;
 
     if (template->direction == GST_PAD_SRC) {
-      if (gst_caps_list_check_compatibility (template->caps, caps))
+      if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (template), caps))
 	return TRUE;
     }
     templates = g_list_next (templates);
@@ -255,17 +255,17 @@ gst_elementfactory_can_src_caps_list (GstElementFactory *factory,
 }
 
 /**
- * gst_elementfactory_can_sink_caps_list :
+ * gst_elementfactory_can_sink_caps :
  * @factory: factory to query
- * @caps: the caps list to check
+ * @caps: the caps to check
  *
- * Checks if the factory can sink the given capability list.
+ * Checks if the factory can sink the given capability.
  *
  * Returns: true if it can sink the capabilities
  */
 gboolean
-gst_elementfactory_can_sink_caps_list (GstElementFactory *factory,
-		                       GList *caps)
+gst_elementfactory_can_sink_caps (GstElementFactory *factory,
+		                  GstCaps *caps)
 {
   GList *templates;
 
@@ -278,63 +278,13 @@ gst_elementfactory_can_sink_caps_list (GstElementFactory *factory,
     GstPadTemplate *template = (GstPadTemplate *)templates->data;
 
     if (template->direction == GST_PAD_SINK) {
-      if (gst_caps_list_check_compatibility (caps, template->caps))
+      if (gst_caps_check_compatibility (caps, GST_PADTEMPLATE_CAPS (template)))
 	return TRUE;
     }
     templates = g_list_next (templates);
   }
 
   return FALSE;
-}
-
-/**
- * gst_elementfactory_can_src_caps :
- * @factory: factory to query
- * @caps: the caps to check
- *
- * Checks if the factory can src the given capability.
- *
- * Returns: true if it can sink the capability
- */
-gboolean
-gst_elementfactory_can_src_caps (GstElementFactory *factory,
-		                 GstCaps *caps)
-{
-  GList *dummy;
-  gboolean ret;
-
-  dummy = g_list_prepend (NULL, caps);
-
-  ret = gst_elementfactory_can_src_caps_list (factory, dummy);
-
-  g_list_free (dummy);
-
-  return ret;
-}
-
-/**
- * gst_elementfactory_can_sink_caps :
- * @factory: factory to query
- * @caps: the caps to check
- *
- * Checks if the factory can sink the given capability.
- *
- * Returns: true if it can sink the capability
- */
-gboolean
-gst_elementfactory_can_sink_caps (GstElementFactory *factory,
-		                  GstCaps *caps)
-{
-  GList *dummy;
-  gboolean ret;
-
-  dummy = g_list_prepend (NULL, caps);
-
-  ret = gst_elementfactory_can_sink_caps_list (factory, dummy);
-
-  g_list_free (dummy);
-
-  return ret;
 }
 
 /**

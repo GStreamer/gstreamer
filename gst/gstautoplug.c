@@ -102,7 +102,7 @@ gst_autoplug_signal_new_object (GstAutoplug *autoplug, GstObject *object)
 
 
 GstElement*
-gst_autoplug_to_caps (GstAutoplug *autoplug, GList *srccaps, GList *sinkcaps, ...)
+gst_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps, ...)
 {
   GstAutoplugClass *oclass;
   GstElement *element = NULL;
@@ -120,7 +120,7 @@ gst_autoplug_to_caps (GstAutoplug *autoplug, GList *srccaps, GList *sinkcaps, ..
 }
 
 GstElement*
-gst_autoplug_to_renderers (GstAutoplug *autoplug, GList *srccaps, GstElement *target, ...)
+gst_autoplug_to_renderers (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *target, ...)
 {
   GstAutoplugClass *oclass;
   GstElement *element = NULL;

@@ -417,8 +417,9 @@ gst_audiosink_change_state (GstElement *element)
   /* otherwise (READY or higher) we need to open the sound card */
   } else {
     if (!GST_FLAG_IS_SET (element, GST_AUDIOSINK_OPEN)) {
-      if (!gst_audiosink_open_audio (GST_AUDIOSINK (element)))
-        return GST_STATE_FAILURE;
+      if (!gst_audiosink_open_audio (GST_AUDIOSINK (element))) {
+        //return GST_STATE_FAILURE;
+      }
     }
   }
       

@@ -329,14 +329,14 @@ gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element)
 
   while (pads) {
     GstPad *pad = (GstPad *)pads->data;
-    GList *caps = gst_pad_get_caps_list (pad);
+    GstCaps *caps = gst_pad_get_caps (pad);
     gchar *mime;
     gchar *data[2];
     GtkCTreeNode *padnode;
 
     if (caps) {
       GstType *type;
-      type = gst_type_find_by_id (((GstCaps *)caps->data)->id);
+      type = gst_type_find_by_id (caps->id);
       mime = type->mime;
     }
     else {
@@ -348,13 +348,8 @@ gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element)
     padnode = gtk_ctree_insert_node (GTK_CTREE (tree), NULL, NULL, data, 0, 
 		    NULL, NULL, NULL, NULL, FALSE, TRUE);
 
-    while (caps) {
-      GstCaps *cap = (GstCaps *)caps->data;
 
-      gst_editor_add_caps_to_tree (cap, tree, padnode);
-
-      caps = g_list_next (caps);
-    }
+    gst_editor_add_caps_to_tree (caps, tree, padnode);
 
     pads = g_list_next (pads);
   }

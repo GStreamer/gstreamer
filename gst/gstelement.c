@@ -461,14 +461,14 @@ gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *
     if (padtempl->direction == GST_PAD_SRC &&
       compattempl->direction == GST_PAD_SINK) {
       GST_DEBUG(0,"compatible direction: found src pad template\n");
-      compat = gst_caps_list_check_compatibility(padtempl->caps,
-						 compattempl->caps);
+      compat = gst_caps_check_compatibility(GST_PADTEMPLATE_CAPS (padtempl),
+					    GST_PADTEMPLATE_CAPS (compattempl));
       GST_DEBUG(0,"caps are %scompatible\n", (compat?"":"not "));
     } else if (padtempl->direction == GST_PAD_SINK &&
 	       compattempl->direction == GST_PAD_SRC) {
       GST_DEBUG(0,"compatible direction: found sink pad template\n");
-      compat = gst_caps_list_check_compatibility(compattempl->caps,
-						 padtempl->caps);
+      compat = gst_caps_check_compatibility(GST_PADTEMPLATE_CAPS (compattempl),
+					    GST_PADTEMPLATE_CAPS (padtempl));
       GST_DEBUG(0,"caps are %scompatible\n", (compat?"":"not "));
     }
 

@@ -72,6 +72,7 @@ gst_caps_new (const gchar *name, const gchar *mime)
   caps->name = g_strdup (name);
   caps->id = get_type_for_mime (mime);
   caps->properties = NULL;
+  caps->next = NULL;
 
   return caps;
 }
@@ -297,20 +298,77 @@ gst_caps_get_props (GstCaps *caps)
 }
 
 /**
- * gst_caps_check_compatibility:
- * @fromcaps: a capabilty
- * @tocaps: a capabilty
+ * gst_caps_append:
+ * @caps: a capabilty
+ * @capstoadd: the capability to append
  *
- * Checks whether two capabilities are compatible.
+ * Appends a capability to the existing capability.
  *
- * Returns: TRUE if compatible, FALSE otherwise
+ * Returns: the new capability
  */
-gboolean
-gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
+GstCaps*
+gst_caps_append (GstCaps *caps, GstCaps *capstoadd)
 {
-  g_return_val_if_fail (fromcaps != NULL, FALSE);
-  g_return_val_if_fail (tocaps != NULL, FALSE);
+  GstCaps *orig = caps;
 
+  if (caps == NULL)
+    return capstoadd;
+  
+  while (caps->next) {
+    caps = caps->next;
+  }
+  caps->next = capstoadd;
+
+  return orig;
+}
+
+/**
+ * gst_caps_prepend:
+ * @caps: a capabilty
+ * @capstoadd: a capabilty to prepend
+ *
+ * prepend the capability to the list of capabilities
+ *
+ * Returns: the new capability
+ */
+GstCaps*
+gst_caps_prepend (GstCaps *caps, GstCaps *capstoadd)
+{
+  GstCaps *orig = capstoadd;
+  
+  if (capstoadd == NULL)
+    return caps;
+
+  while (capstoadd->next) {
+    capstoadd = capstoadd->next;
+  }
+  capstoadd->next = caps;
+
+  return orig;
+}
+
+GstCaps*
+gst_caps_get_by_name (GstCaps *caps, const gchar *name)
+{
+  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+   
+  while (caps) {
+    if (!strcmp (caps->name, name)) 
+      return caps;
+    caps = caps->next;
+  }
+
+  return NULL;
+}
+                                                                                                                   
+static gboolean
+gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
+{
+  if (fromcaps == NULL ||
+      tocaps == NULL) 
+    return TRUE;
+	
   if (fromcaps->id != tocaps->id) {
     GST_DEBUG (0,"gstcaps: mime types differ (%d to %d)\n",
 	       fromcaps->id, tocaps->id);
@@ -343,21 +401,18 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
  * Returns: TRUE if compatible, FALSE otherwise
  */
 gboolean
-gst_caps_list_check_compatibility (GList *fromcaps, GList *tocaps)
+gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
 {
   while (fromcaps) {
-    GstCaps *fromcap = (GstCaps *)fromcaps->data;
-    GList *destcaps = tocaps;
+    GstCaps *destcaps = tocaps;
 
     while (destcaps) {
-      GstCaps *destcap = (GstCaps *)destcaps->data;
-
-      if (gst_caps_check_compatibility (fromcap, destcap))
+      if (gst_caps_check_compatibility_func (fromcaps, destcaps))
 	return TRUE;
 
-      destcaps = g_list_next (destcaps);
+      destcaps =  destcaps->next;
     }
-    fromcaps = g_list_next (fromcaps);
+    fromcaps =  fromcaps->next;
   }
   return FALSE;
 }
@@ -375,15 +430,20 @@ xmlNodePtr
 gst_caps_save_thyself (GstCaps *caps, xmlNodePtr parent)
 {
   xmlNodePtr subtree;
+  xmlNodePtr subsubtree;
 
-  g_return_val_if_fail (caps != NULL, NULL);
+  while (caps) {
+    subtree = xmlNewChild (parent, NULL, "capscomp", NULL);
 
-  xmlNewChild (parent, NULL, "name", caps->name);
-  xmlNewChild (parent, NULL, "type", gst_type_find_by_id (caps->id)->mime);
-  if (caps->properties) {
-    subtree = xmlNewChild (parent, NULL, "properties", NULL);
+    xmlNewChild (subtree, NULL, "name", caps->name);
+    xmlNewChild (subtree, NULL, "type", gst_type_find_by_id (caps->id)->mime);
+    if (caps->properties) {
+      subsubtree = xmlNewChild (subtree, NULL, "properties", NULL);
 
-    gst_props_save_thyself (caps->properties, subtree);
+      gst_props_save_thyself (caps->properties, subsubtree);
+    }
+
+    caps = caps->next;
   }
 
   return parent;
@@ -400,26 +460,36 @@ gst_caps_save_thyself (GstCaps *caps, xmlNodePtr parent)
 GstCaps*
 gst_caps_load_thyself (xmlNodePtr parent)
 {
-  GstCaps *caps = g_new0 (GstCaps, 1);
+  GstCaps *result = NULL;
   xmlNodePtr field = parent->xmlChildrenNode;
-  gchar *content;
 
   while (field) {
-    if (!strcmp (field->name, "name")) {
-      caps->name = xmlNodeGetContent (field);
-    }
-    if (!strcmp (field->name, "type")) {
-      content = xmlNodeGetContent (field);
-      caps->id = get_type_for_mime (content);
-      g_free (content);
-    }
-    else if (!strcmp (field->name, "properties")) {
-      caps->properties = gst_props_load_thyself (field);
+    if (!strcmp (field->name, "capscomp")) {
+      xmlNodePtr subfield = field->xmlChildrenNode;
+      GstCaps *caps = g_new0 (GstCaps, 1);
+      gchar *content;
+	
+      while (subfield) {
+        if (!strcmp (subfield->name, "name")) {
+          caps->name = xmlNodeGetContent (subfield);
+        }
+        if (!strcmp (subfield->name, "type")) {
+          content = xmlNodeGetContent (subfield);
+          caps->id = get_type_for_mime (content);
+          g_free (content);
+        }
+        else if (!strcmp (subfield->name, "properties")) {
+          caps->properties = gst_props_load_thyself (subfield);
+        }
+	
+        subfield = subfield->next;
+      }
+      result = gst_caps_append (result, caps);
     }
     field = field->next;
   }
 
-  return caps;
+  return result;
 }
 
 

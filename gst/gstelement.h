@@ -251,10 +251,10 @@ gboolean		gst_elementfactory_can_src_caps		(GstElementFactory *factory,
 								 GstCaps *caps);
 gboolean		gst_elementfactory_can_sink_caps	(GstElementFactory *factory,
 								 GstCaps *caps);
-gboolean		gst_elementfactory_can_src_caps_list	(GstElementFactory *factory,
-								 GList *caps);
-gboolean		gst_elementfactory_can_sink_caps_list	(GstElementFactory *factory,
-								 GList *caps);
+gboolean		gst_elementfactory_can_src_caps		(GstElementFactory *factory,
+								 GstCaps *caps);
+gboolean		gst_elementfactory_can_sink_caps	(GstElementFactory *factory,
+								 GstCaps *caps);
 
 GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
 								 const gchar *name);

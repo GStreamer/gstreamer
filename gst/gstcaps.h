@@ -49,6 +49,8 @@ struct _GstCaps {
   guint16 id;			/* type id (major type) */
 
   GstProps *properties;		/* properties for this capability */
+
+  GstCaps *next;
 };
 
 /* initialize the subsystem */
@@ -71,8 +73,12 @@ void		gst_caps_set_type_id			(GstCaps *caps, guint16 type_id);
 GstCaps*	gst_caps_set_props			(GstCaps *caps, GstProps *props);
 GstProps*	gst_caps_get_props			(GstCaps *caps);
 
+GstCaps*	gst_caps_get_by_name			(GstCaps *caps, const gchar *name);
+
+GstCaps*	gst_caps_append				(GstCaps *caps, GstCaps *capstoadd); 
+GstCaps*	gst_caps_prepend			(GstCaps *caps, GstCaps *capstoadd); 
+
 gboolean	gst_caps_check_compatibility		(GstCaps *fromcaps, GstCaps *tocaps);
-gboolean	gst_caps_list_check_compatibility	(GList *fromcaps, GList *tocaps);
 
 xmlNodePtr      gst_caps_save_thyself			(GstCaps *caps, xmlNodePtr parent);
 GstCaps*	gst_caps_load_thyself			(xmlNodePtr parent);

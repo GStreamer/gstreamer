@@ -285,7 +285,7 @@ gst_play_typefind (GstBin *bin, GstElement *element)
   if (found) {
     caps = gst_util_get_pointer_arg (GTK_OBJECT (typefind), "caps");
 
-    gst_pad_set_caps_list (gst_element_get_pad (element, "src"), g_list_prepend (NULL, caps));
+    gst_pad_set_caps (gst_element_get_pad (element, "src"), caps);
   }
 
   gst_pad_disconnect (gst_element_get_pad (element, "src"),
@@ -360,7 +360,7 @@ gst_play_set_uri (GstPlay *play,
   gtk_signal_connect (GTK_OBJECT (autoplug), "new_object", gst_play_object_added, play);
 
   new_element = gst_autoplug_to_renderers (autoplug,
-	   gst_pad_get_caps_list (gst_element_get_pad (priv->src, "src")),
+	   gst_pad_get_caps (gst_element_get_pad (priv->src, "src")),
 	   priv->video_element,
 	   priv->audio_element,
 	   NULL);
