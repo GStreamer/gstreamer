@@ -46,18 +46,15 @@ extern "C" {
 typedef struct _GstAviMux GstAviMux;
 typedef struct _GstAviMuxClass GstAviMuxClass;
 
-#define MAX_NUM_AUDIO_PADS 8
-#define MAX_NUM_VIDEO_PADS 8
-
 struct _GstAviMux {
   GstElement element;
 
   /* pads */
   GstPad *srcpad;
-  GstPad *audiosinkpad[MAX_NUM_AUDIO_PADS];
-  gint num_audio_pads, num_audio_pads_connected;
-  GstPad *videosinkpad[MAX_NUM_VIDEO_PADS];
-  gint num_video_pads, num_video_pads_connected;
+  GstPad *audiosinkpad;
+  gboolean audio_pad_connected, audio_pad_eos;
+  GstPad *videosinkpad;
+  gboolean video_pad_connected, video_pad_eos;
 
   /* timestamps of first and current frame + num_frames for fps calculation */
   gdouble framerate;
@@ -92,6 +89,10 @@ struct _GstAviMux {
 
   /* whether to use "large AVI files" or just stick to small indexed files */
   gboolean enable_large_avi;
+
+  /* in order to be usable as a loopbased element, we need an internal
+   * 'buffered' buffer for each pad, so one for audio, one for video */
+  GstBuffer *audio_buffer_queue, *video_buffer_queue;
 };
 
 struct _GstAviMuxClass {
