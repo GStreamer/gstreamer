@@ -184,6 +184,8 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
 			gst_caps_get_name (caps));
 	typefind->caps = caps;
 
+	gst_pad_set_caps (pad, caps);
+
 {
         int oldstate = GST_STATE(typefind);
 	gst_object_ref (GST_OBJECT (typefind));
@@ -196,8 +198,6 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
         }
 	gst_object_unref (GST_OBJECT (typefind));
 }
-
-	gst_pad_set_caps (pad, caps);
         goto end;
       }
       funcs = g_slist_next (funcs);

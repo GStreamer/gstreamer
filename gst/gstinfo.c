@@ -447,7 +447,7 @@ _gst_debug_nameof_funcptr (void *ptr)
   if (__gst_function_pointers) {
     if ((ptrname = g_hash_table_lookup(__gst_function_pointers,ptr)))
       return g_strdup(ptrname);
-  } else if (dladdr(ptr,&dlinfo)) {
+  } else if (dladdr(ptr,&dlinfo) && dlinfo.dli_sname) {
     return g_strdup(dlinfo.dli_sname);
   } else {
     return g_strdup_printf("%p",ptr);

@@ -554,8 +554,8 @@ gst_pad_disconnect (GstPad *srcpad,
   g_return_if_fail (sinkpad != NULL);
   g_return_if_fail (GST_IS_PAD (sinkpad));
 
-  GST_INFO (GST_CAT_ELEMENT_PADS, "disconnecting %s:%s(%p) and %s:%s",
-            GST_DEBUG_PAD_NAME(srcpad), srcpad, GST_DEBUG_PAD_NAME(sinkpad));
+  GST_INFO (GST_CAT_ELEMENT_PADS, "disconnecting %s:%s(%p) and %s:%s(%p)",
+            GST_DEBUG_PAD_NAME(srcpad), srcpad, GST_DEBUG_PAD_NAME(sinkpad), sinkpad);
 
   // now we need to deal with the real/ghost stuff
   realsrc = GST_PAD_REALIZE(srcpad);
@@ -614,6 +614,9 @@ gst_pad_connect (GstPad *srcpad,
   g_return_val_if_fail(GST_IS_PAD(srcpad), FALSE);
   g_return_val_if_fail(sinkpad != NULL, FALSE);
   g_return_val_if_fail(GST_IS_PAD(sinkpad), FALSE);
+
+  GST_INFO (GST_CAT_ELEMENT_PADS, "connecting %s:%s and %s:%s",
+            GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
 
   // now we need to deal with the real/ghost stuff
   realsrc = GST_PAD_REALIZE(srcpad);

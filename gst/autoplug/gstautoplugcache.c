@@ -223,11 +223,14 @@ gst_autoplugcache_loop (GstElement *element)
       if (cache->fire_empty) {
         int oldstate = GST_STATE(cache);
         fprintf(stderr,"at front of cache, about to pull, but firing signal\n");
+        gst_object_ref (GST_OBJECT (cache));
         gtk_signal_emit (GTK_OBJECT(cache), gst_autoplugcache_signals[CACHE_EMPTY], NULL);
         if (GST_STATE(cache) != oldstate) {
+          gst_object_ref (GST_OBJECT (cache));
           GST_DEBUG(GST_CAT_AUTOPLUG, "state changed during signal, aborting\n");
           cothread_switch(cothread_current_main());
         }
+        gst_object_unref (GST_OBJECT (cache));
       }
 
       // get a buffer
@@ -293,9 +296,10 @@ gst_autoplugcache_set_arg (GtkObject *object, GtkArg *arg, guint id)
   switch (id) {
     case ARG_CAPS_PROXY:
       cache->caps_proxy = GTK_VALUE_BOOL(*arg);
+GST_DEBUG(0,"caps_proxy is %d\n",cache->caps_proxy);
       if (cache->caps_proxy) {
-        gst_pad_set_negotiate_function (cache->sinkpad, gst_autoplugcache_nego_sink);
-        gst_pad_set_negotiate_function (cache->srcpad, gst_autoplugcache_nego_src);
+        gst_pad_set_negotiate_function (cache->sinkpad, GST_DEBUG_FUNCPTR(gst_autoplugcache_nego_sink));
+        gst_pad_set_negotiate_function (cache->srcpad, GST_DEBUG_FUNCPTR(gst_autoplugcache_nego_src));
       } else {
         gst_pad_set_negotiate_function (cache->sinkpad, NULL);
         gst_pad_set_negotiate_function (cache->srcpad, NULL);
