@@ -1,3 +1,4 @@
+debian/gstreamer/usr/share/man/man1/gstreamer-complete.1
+debian/gstreamer/usr/share/man/man1/gstreamer-compprep.1
 debian/gstreamer/usr/share/man/man1/gstreamer-inspect.1
 debian/gstreamer/usr/share/man/man1/gstreamer-launch.1
-debian/gstreamer/usr/share/man/man1/gstreamer-complete.1

@@ -1,3 +1,10 @@
+gstreamer (0.2.0-1) unstable; urgency=low
+
+  * Added gstreamer-compprep manpage
+  * Upgrade to 0.2.0
+
+ -- David I. Lehn <dlehn@vt.edu>  Thu,  7 Jun 2001 12:53:59 -0400
+
 gstreamer (0.2.0-0.3) unstable; urgency=low
 
   * GStreamer 0.2.0-pre3
