@@ -1811,10 +1811,10 @@ gst_element_get_event_masks (GstElement *element)
  * @element: a #GstElement to send the event to.
  * @event: the #GstEvent to send to the element.
  *
- * Sends an event to an element. If the element doesn't 
+ * Sends an event to an element. If the element doesn't
  * implement an event handler, the event will be forwarded
  * to a random sink pad.
- * 
+ *
  * Returns: TRUE if the event was handled.
  */
 gboolean
@@ -1831,10 +1831,14 @@ gst_element_send_event (GstElement *element, GstEvent *event)
     return oclass->send_event (element, event);
   else {
     GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
-    if (pad)
+    if (pad) {
+      GST_DEBUG (GST_CAT_ELEMENT_PADS, "sending event to random pad %s:%s",
+		 GST_DEBUG_PAD_NAME (pad));
       return gst_pad_send_event (GST_PAD_PEER (pad), event);
+    }
   }
-
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "can't send event on element %s",
+	     GST_ELEMENT_NAME (element));
   return FALSE;
 }
 
