@@ -6,5 +6,6 @@ Makefile.in
 .deps
 .libs
 
+bin
 locked
 parent

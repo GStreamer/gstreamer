@@ -8,3 +8,4 @@ Makefile.in
 *.bb
 *.bbg
 *.da
+*.def
