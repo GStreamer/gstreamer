@@ -19,25 +19,27 @@ else
 SUBDIRS_EXAMPLES =
 endif
 
+all-local: gst-element-check-@GST_MAJORMINOR@.m4
+
+gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
+	cp $(srcdir)/gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
+
+aclocaldir = $(datadir)/aclocal
+aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
+
 SUBDIRS = include gst libs tools \
-	$(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) $(SUBDIRS_DOCS)
+	$(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) $(SUBDIRS_DOCS) \
+	pkgconfig
 
 # These are all the possible subdirs
-DIST_SUBDIRS = include libs gst tools tests testsuite examples docs
+DIST_SUBDIRS = include libs gst \
+	tools \
+	tests testsuite \
+	examples \
+	docs \
+	pkgconfig
 
-all-local: gstreamer-@GST_MAJORMINOR@.pc gstreamer-@GST_MAJORMINOR@-uninstalled.pc
-
-gstreamer-@GST_MAJORMINOR@.pc: gstreamer.pc gstreamer.pc.in
-	cp gstreamer.pc gstreamer-@GST_MAJORMINOR@.pc
-gstreamer-@GST_MAJORMINOR@-uninstalled.pc: gstreamer-uninstalled.pc gstreamer-uninstalled.pc.in
-	cp gstreamer-uninstalled.pc gstreamer-@GST_MAJORMINOR@-uninstalled.pc
-
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = gstreamer-@GST_MAJORMINOR@.pc
-
-EXTRA_DIST = gstreamer.spec.in \
-	     gstreamer.pc.in \
-	     gstreamer-uninstalled.pc.in \
+EXTRA_DIST = gstreamer.spec.in gst-element-check.m4 \
 	     configure.ac autogen.sh depcomp \
 	     REQUIREMENTS ABOUT-NLS RELEASE DOCBUILDING DEVEL \
 	     idiottest.mak common

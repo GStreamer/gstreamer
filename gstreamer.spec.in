@@ -203,6 +203,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 # %{_libdir}/libgstreamer.a
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstcontrol-%{majorminor}.so
+%{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
 ## we specify the API docs as regular files since %docs doesn't fail when
 #  files aren't found anymore for RPM >= 4

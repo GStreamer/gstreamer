@@ -554,9 +554,12 @@ docs/pwg/Makefile
 docs/plugins/Makefile
 docs/plugins/gstreamer-plugins.types
 docs/xsl/Makefile
+pkgconfig/Makefile
 stamp.h
-gstreamer.pc
-gstreamer-uninstalled.pc
+pkgconfig/gstreamer.pc
+pkgconfig/gstreamer-uninstalled.pc
+pkgconfig/gstreamer-control.pc
+pkgconfig/gstreamer-control-uninstalled.pc
 gstreamer.spec,
 echo "$infomessages", infomessages="$infomessages"
 )
