@@ -247,29 +247,14 @@ plugin_times_older_than(GList *paths, time_t regtime)
 static gboolean
 gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
 {
-  gint ret, i;
-  gchar *str, *plugin_paths, **plugin_pathv;
-  GList *l, *paths = GST_REGISTRY (registry)->paths;
+  GList *paths = GST_REGISTRY (registry)->paths;
 
   if (mode == GST_XML_REGISTRY_READ) {
     if (!plugin_times_older_than (paths, get_time (registry->location))) {
-      plugin_pathv = g_new0 (gchar*, g_list_length (paths));
-      for (l=paths, i=0; l->next; i++, l=l->next)
-        plugin_pathv[i] = (gchar*) l->data;
-      plugin_paths = g_strjoinv (":", plugin_pathv);
-      g_free (plugin_pathv);
+      GST_INFO (GST_CAT_GST_INIT, "Registry out of date, rebuilding...");
       
-      str = g_strdup_printf ("gst-register --gst-registry=%s --gst-plugin-path=%s",
-                             registry->location, plugin_paths);
-      GST_INFO (GST_CAT_GST_INIT, "Registry out of date, running gst-register");
-      GST_DEBUG (GST_CAT_PLUGIN_LOADING, "gst-register command line: %s", str);
-
-      g_free (plugin_paths);
-      ret = system (str);
-      if (ret != 0) {
-        GST_INFO (GST_CAT_GST_INIT, "Running gst-register for registry %s failed", registry->location);
-        return FALSE;
-      }
+      gst_registry_rebuild (GST_REGISTRY (registry));
+      gst_registry_save (GST_REGISTRY (registry));
 
       if (!plugin_times_older_than (paths, get_time (registry->location))) {
         GST_INFO (GST_CAT_GST_INIT, "Registry still out of date, something is wrong...");
