@@ -645,7 +645,7 @@ cothread_switch (cothread_state * thread)
     longjmp (thread->jmp, 1);
   }
   else {
-#ifdef HAVE_MAKECONTEXT
+#ifdef USE_MAKECONTEXT
     ucontext_t ucp;
 
     GST_DEBUG (GST_CAT_COTHREADS, "making context");
