@@ -42,11 +42,8 @@
 static GstElementDetails timeoverlay_details = {
   "Video Filter Template",
   "Filter/Video",
-  "LGPL",
   "Template for a video filter",
-  VERSION,
   "David Schleef <ds@schleef.org>",
-  "(C) 2003",
 };
 
 /* GstTimeoverlay signals and args */
@@ -60,6 +57,7 @@ enum {
   /* FILL ME */
 };
 
+static void     gst_timeoverlay_base_init       (gpointer g_class);
 static void	gst_timeoverlay_class_init	(GstTimeoverlayClass *klass);
 static void	gst_timeoverlay_init		(GstTimeoverlay *timeoverlay);
 
@@ -80,7 +78,8 @@ gst_timeoverlay_get_type (void)
 
   if (!timeoverlay_type) {
     static const GTypeInfo timeoverlay_info = {
-      sizeof(GstTimeoverlayClass),      NULL,
+      sizeof(GstTimeoverlayClass),
+      gst_timeoverlay_base_init,
       NULL,
       (GClassInitFunc)gst_timeoverlay_class_init,
       NULL,
@@ -97,39 +96,6 @@ gst_timeoverlay_get_type (void)
 static GstVideofilterFormat gst_timeoverlay_formats[] = {
   { "I420", 12, gst_timeoverlay_planar411, },
 };
-
-static void
-gst_timeoverlay_class_init (GstTimeoverlayClass *klass)
-{
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstVideofilterClass *gstvideofilter_class;
-  int i;
-
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
-  gstvideofilter_class = (GstVideofilterClass *)klass;
-
-#if 0
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_METHOD,
-      g_param_spec_enum("method","method","method",
-      GST_TYPE_TIMEOVERLAY_METHOD, GST_TIMEOVERLAY_METHOD_90R,
-      G_PARAM_READWRITE));
-#endif
-
-  this_class = klass;
-  parent_class = g_type_class_ref(GST_TYPE_VIDEOFILTER);
-  element_class = g_type_class_ref(GST_TYPE_ELEMENT);
-
-  gobject_class->set_property = gst_timeoverlay_set_property;
-  gobject_class->get_property = gst_timeoverlay_get_property;
-
-  gstvideofilter_class->setup = gst_timeoverlay_setup;
-
-  for(i=0;i<G_N_ELEMENTS(gst_timeoverlay_formats);i++){
-    gst_videofilter_class_add_format(gstvideofilter_class, gst_timeoverlay_formats + i);
-  }
-}
 
 static GstCaps *gst_timeoverlay_get_capslist(void)
 {
@@ -174,6 +140,49 @@ gst_timeoverlay_sink_template_factory(void)
     templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
   }
   return templ;
+}
+
+static void
+gst_timeoverlay_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_timeoverlay_sink_template_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_timeoverlay_src_template_factory));
+  gst_element_class_set_details (element_class, &timeoverlay_details);
+}
+
+static void
+gst_timeoverlay_class_init (GstTimeoverlayClass *klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+  GstVideofilterClass *gstvideofilter_class;
+  int i;
+
+  gobject_class = (GObjectClass*)klass;
+  gstelement_class = (GstElementClass*)klass;
+  gstvideofilter_class = (GstVideofilterClass *)klass;
+
+#if 0
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_METHOD,
+      g_param_spec_enum("method","method","method",
+      GST_TYPE_TIMEOVERLAY_METHOD, GST_TIMEOVERLAY_METHOD_90R,
+      G_PARAM_READWRITE));
+#endif
+
+  this_class = klass;
+  parent_class = g_type_class_ref(GST_TYPE_VIDEOFILTER);
+  element_class = g_type_class_ref(GST_TYPE_ELEMENT);
+
+  gobject_class->set_property = gst_timeoverlay_set_property;
+  gobject_class->get_property = gst_timeoverlay_get_property;
+
+  gstvideofilter_class->setup = gst_timeoverlay_setup;
+
+  for(i=0;i<G_N_ELEMENTS(gst_timeoverlay_formats);i++){
+    gst_videofilter_class_add_format(gstvideofilter_class, gst_timeoverlay_formats + i);
+  }
 }
 
 static void
@@ -238,32 +247,28 @@ gst_timeoverlay_get_property (GObject *object, guint prop_id, GValue *value, GPa
   }
 }
 
-static gboolean plugin_init (GModule *module, GstPlugin *plugin)
+static gboolean plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   if(!gst_library_load("gstvideofilter"))
     return FALSE;
 
-  /* create an elementfactory for the timeoverlay element */
-  factory = gst_element_factory_new("timeoverlay",GST_TYPE_TIMEOVERLAY,
-                                   &timeoverlay_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_timeoverlay_sink_template_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_timeoverlay_src_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "timeoverlay", GST_RANK_NONE, GST_TYPE_TIMEOVERLAY))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "timeoverlay",
-  plugin_init
-};
+  "Time overlay",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
 
 static void gst_timeoverlay_setup(GstVideofilter *videofilter)
 {
