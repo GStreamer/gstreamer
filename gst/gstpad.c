@@ -1125,7 +1125,7 @@ gst_pad_link_intersect (GstPadLink * link)
     link->caps = pad_intersection;
   }
 
-  GST_DEBUG ("intersection %" GST_PTR_FORMAT, link->caps);
+  GST_DEBUG ("filtered intersection %" GST_PTR_FORMAT, link->caps);
 }
 
 static gboolean
@@ -1276,38 +1276,32 @@ gst_pad_link_call_link_functions (GstPadLink * link)
 
   /* If this doesn't run, the status is left to the default OK value. */
   if (link->srcnotify && GST_RPAD_LINKFUNC (link->srcpad)) {
-    GST_DEBUG ("calling link function on pad %s:%s",
-        GST_DEBUG_PAD_NAME (link->srcpad));
-
     /* call the link function */
+    GST_DEBUG_OBJECT (link->srcpad,
+        "calling link function with caps %" GST_PTR_FORMAT, link->caps);
     res = GST_RPAD_LINKFUNC (link->srcpad) (GST_PAD (link->srcpad), link->caps);
 
-    GST_DEBUG ("got reply %d from link function on pad %s:%s",
-        res, GST_DEBUG_PAD_NAME (link->srcpad));
+    GST_DEBUG_OBJECT (link->srcpad, "got reply %d from link function", res);
 
     if (GST_PAD_LINK_FAILED (res)) {
-      GST_CAT_INFO (GST_CAT_CAPS,
-          "pad %s:%s doesn't accept caps %" GST_PTR_FORMAT,
-          GST_DEBUG_PAD_NAME (link->srcpad), link->caps);
+      GST_CAT_INFO_OBJECT (GST_CAT_CAPS, link->srcpad,
+          "pad doesn't accept caps %" GST_PTR_FORMAT, link->caps);
     }
   }
 
   if (GST_PAD_LINK_SUCCESSFUL (res) &&
       link->sinknotify && GST_RPAD_LINKFUNC (link->sinkpad)) {
-    GST_DEBUG ("calling link function on pad %s:%s",
-        GST_DEBUG_PAD_NAME (link->sinkpad));
-
     /* call the link function */
+    GST_DEBUG_OBJECT (link->sinkpad,
+        "calling link function with caps %" GST_PTR_FORMAT, link->caps);
     res = GST_RPAD_LINKFUNC (link->sinkpad) (GST_PAD (link->sinkpad),
         link->caps);
 
-    GST_DEBUG ("got reply %d from link function on pad %s:%s",
-        res, GST_DEBUG_PAD_NAME (link->sinkpad));
+    GST_DEBUG_OBJECT (link->sinkpad, "got reply %d from link function");
 
     if (GST_PAD_LINK_FAILED (res)) {
-      GST_CAT_INFO (GST_CAT_CAPS,
-          "pad %s:%s doesn't accept caps %" GST_PTR_FORMAT,
-          GST_DEBUG_PAD_NAME (link->sinkpad), link->caps);
+      GST_CAT_INFO_OBJECT (GST_CAT_CAPS, link->sinkpad,
+          "pad doesn't accept caps %" GST_PTR_FORMAT, link->caps);
     }
   }
 
@@ -1333,8 +1327,9 @@ gst_pad_link_negotiate (GstPadLink * link)
   if (!gst_pad_link_ready_for_negotiation (link)) {
     return GST_PAD_LINK_DELAYED;
   }
-  GST_DEBUG ("trying to call link function on caps %" GST_PTR_FORMAT,
-      link->caps);
+  GST_DEBUG ("calling link_functions between %s:%s and %s:%s with caps %"
+      GST_PTR_FORMAT, GST_DEBUG_PAD_NAME (link->srcpad),
+      GST_DEBUG_PAD_NAME (link->sinkpad), link->caps);
 
   return gst_pad_link_call_link_functions (link);
 }
