@@ -1,3 +1,7 @@
+2004-06-04  David Schleef  <ds@schleef.org>
+
+	* autogen.sh: Add a temporary 'env' to test buildbot problems.
+
 2004-06-04  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* configure.ac:

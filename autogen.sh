@@ -1,6 +1,9 @@
 #!/bin/sh
 # Run this to generate all the initial makefiles, etc.
 
+env
+
+
 DIE=0
 package=gstreamer
 srcfile=gst/gst.c
