@@ -331,6 +331,7 @@ static void
 start_typefinding (GstTypeFindElement *typefind)
 {
   g_assert (typefind->caps == NULL);
+  g_assert (typefind->possibilities == NULL);
   
   GST_DEBUG_OBJECT (typefind, "starting typefinding");
   typefind->mode = MODE_TYPEFIND; 

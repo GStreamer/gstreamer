@@ -51,6 +51,18 @@ static void	gst_buffer_store_cleared_func	(GstBufferStore *	store);
 static GObjectClass *parent_class = NULL;
 static guint gst_buffer_store_signals[LAST_SIGNAL] = { 0 };
 
+G_GNUC_UNUSED static void
+debug_buffers (GstBufferStore *store)
+{
+  GList *walk = store->buffers;
+  
+  g_printerr ("BUFFERS in store:\n");
+  while (walk) {
+    g_print ("%15"G_GUINT64_FORMAT" - %7u\n", GST_BUFFER_OFFSET (walk->data), GST_BUFFER_SIZE (walk->data));
+    walk = g_list_next (walk);
+  }
+  g_printerr ("\n");
+}
 GType
 gst_buffer_store_get_type (void)
 {
@@ -424,11 +436,11 @@ gst_buffer_store_get_size (GstBufferStore *store, guint64 offset)
     cur_offset = 0;
   }
   while (walk) {
-    current = GST_BUFFER (walk->data);
     if (have_offset && counting && 
 	cur_offset + GST_BUFFER_SIZE (current) !=  GST_BUFFER_OFFSET (walk->data)) {
       break;
     }
+    current = GST_BUFFER (walk->data);
     if (have_offset) {
       cur_offset = GST_BUFFER_OFFSET (current);
     }
@@ -451,5 +463,3 @@ gst_buffer_store_get_size (GstBufferStore *store, guint64 offset)
   
   return ret;
 }
-
-
