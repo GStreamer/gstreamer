@@ -32,8 +32,6 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(identity,"src"),
 		  gst_element_get_pad(sink,"sink"));
 
-  g_print("--- creating a plan\n");
-  gst_bin_create_plan(GST_BIN(bin));
 
   g_print("--- starting up\n");
   gst_bin_iterate(GST_BIN(bin));

@@ -35,8 +35,6 @@ int main(int argc,char *argv[]) {
   g_print("--- setting up\n");
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_READY);
 
-  g_print("--- creating plan\n");
-  gst_bin_create_plan(bin);
   g_print("--- iterating\n");
   gst_bin_iterate(bin);
 }
