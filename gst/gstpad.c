@@ -1552,11 +1552,6 @@ gst_pad_can_link_filtered (GstPad *srcpad, GstPad *sinkpad,
   realsrc = GST_PAD_REALIZE (srcpad);
   realsink = GST_PAD_REALIZE (sinkpad);
 
-  g_return_val_if_fail (GST_RPAD_PEER (realsrc) == NULL, NULL);
-  g_return_val_if_fail (GST_RPAD_PEER (realsink) == NULL, NULL);
-  g_return_val_if_fail (GST_PAD_PARENT (realsrc) != NULL, NULL);
-  g_return_val_if_fail (GST_PAD_PARENT (realsink) != NULL, NULL);
-
   if ((GST_PAD (realsrc) != srcpad) || (GST_PAD (realsink) != sinkpad)) {
     GST_CAT_INFO (GST_CAT_PADS, "*actually* linking %s:%s and %s:%s",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
@@ -2087,6 +2082,60 @@ gst_pad_unnegotiate (GstPad *pad)
   link = GST_RPAD_LINK (GST_PAD_REALIZE (pad));
   if (link) 
     gst_pad_link_unnegotiate (link);
+}
+
+/* returning NULL indicates that the arguments are invalid */
+static GstPadLink*
+gst_pad_link_prepare (GstPad *srcpad, GstPad *sinkpad,
+                      const GstCaps *filtercaps)
+{
+  GstRealPad *realsrc, *realsink;
+  GstPadLink *link;
+
+  g_return_val_if_fail (GST_IS_PAD (srcpad), NULL);
+  g_return_val_if_fail (GST_IS_PAD (sinkpad), NULL);
+
+  realsrc = GST_PAD_REALIZE (srcpad);
+  realsink = GST_PAD_REALIZE (sinkpad);
+
+  if ((GST_PAD (realsrc) != srcpad) || (GST_PAD (realsink) != sinkpad)) {
+    GST_CAT_DEBUG (GST_CAT_PADS, "*actually* linking %s:%s and %s:%s",
+                   GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
+  }
+
+  g_return_val_if_fail (GST_RPAD_PEER (realsrc) == NULL, NULL);
+  g_return_val_if_fail (GST_RPAD_PEER (realsink) == NULL, NULL);
+  g_return_val_if_fail (GST_PAD_PARENT (realsrc) != NULL, NULL);
+  g_return_val_if_fail (GST_PAD_PARENT (realsink) != NULL, NULL);
+
+  if (!gst_pad_check_schedulers (realsrc, realsink)) {
+    g_warning ("linking pads with different scheds requires "
+               "exactly one decoupled element (such as queue)");
+    return NULL;
+  }
+  
+  if (GST_RPAD_DIRECTION (realsrc) == GST_RPAD_DIRECTION (realsink)) {
+    g_warning ("%s:%s and %s:%s are both %s pads, failed",
+               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink),
+               GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC ? "src" : "sink");
+    return NULL;
+  }    
+
+  link = gst_pad_link_new ();
+
+  if (GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) {
+    link->srcpad = GST_PAD (realsrc);
+    link->sinkpad = GST_PAD (realsink);
+  } else {
+    link->srcpad = GST_PAD (realsink);
+    link->sinkpad = GST_PAD (realsrc);
+  }
+
+  link->srccaps = gst_pad_get_caps (link->srcpad);
+  link->sinkcaps = gst_pad_get_caps (link->sinkpad);
+  if (filtercaps) link->filtercaps = gst_caps_copy (filtercaps);
+
+  return link;
 }
 
 /**

@@ -1,3 +1,9 @@
+2004-02-25  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.c (gst_pad_link_prepare): Re-add
+	gst_pad_link_prepare. Please email the list with specific reasons
+	for reverting.
+
 2004-02-24  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstelement.c (gst_element_dispose): Protect against multiple
