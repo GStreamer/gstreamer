@@ -362,6 +362,8 @@ gst_thread_change_state (GstElement *element)
 
         g_mutex_lock(thread->lock);
 
+        GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
+
         while (elements)
         {
           GstElement *e = GST_ELEMENT(elements->data);
