@@ -1,5 +1,13 @@
 2004-05-16  Benjamin Otte  <otte@gnome.org>
 
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_comment):
+	  don't write to memory we might not write to - g_convert does that
+	  for us anyway
+	(gst_asf_demux_audio_caps):
+	  conmment out gst_util_dump_mem
+
+2004-05-16  Benjamin Otte  <otte@gnome.org>
+
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_loop):
 	  compute correct expected timestamps after seek (broken since
 	  last commit)
