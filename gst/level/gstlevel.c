@@ -100,54 +100,49 @@ static GstElementClass *parent_class = NULL;
 /*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-gst_level_get_type(void) {
+gst_level_get_type (void) 
+{
   static GType level_type = 0;
 
-  if (!level_type) {
-    static const GTypeInfo level_info = {
-      sizeof(GstLevelClass),      NULL,
-      NULL,
-      (GClassInitFunc)gst_level_class_init,
-      NULL,
-      NULL,
-      sizeof(GstLevel),
-      0,
-      (GInstanceInitFunc)gst_level_init,
+  if (!level_type) 
+  {
+    static const GTypeInfo level_info = 
+    {
+      sizeof (GstLevelClass), NULL, NULL,
+      (GClassInitFunc) gst_level_class_init, NULL, NULL,
+      sizeof (GstLevel), 0,
+      (GInstanceInitFunc) gst_level_init
     };
-    level_type = g_type_register_static(GST_TYPE_ELEMENT, "GstLevel", &level_info, 0);
+    level_type = g_type_register_static (GST_TYPE_ELEMENT, "GstLevel", 
+	                                 &level_info, 0);
   }
   return level_type;
 }
 
-static void
-gst_level_class_init (GstLevelClass *klass)
+static GstPadConnectReturn
+gst_level_connect (GstPad *pad, GstCaps *caps)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstLevel *filter;
+  GstPad *otherpad;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
-
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
-
-  gobject_class->set_property = gst_level_set_property;
-  gobject_class->get_property = gst_level_get_property;
+  filter = GST_LEVEL (gst_pad_get_parent (pad));
+  g_return_val_if_fail (filter != NULL, GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (GST_IS_LEVEL (filter), GST_PAD_CONNECT_REFUSED);
+  otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
+	  
+  if (GST_CAPS_IS_FIXED (caps)) 
+  {
+    if (/* !volume_parse_caps (filter, caps) || */
+	!gst_pad_try_set_caps (otherpad, caps))
+      return GST_PAD_CONNECT_REFUSED;
+		    
+    return GST_PAD_CONNECT_OK;
+  }
+  return GST_PAD_CONNECT_DELAYED;
 }
 
 static void
-gst_level_init (GstLevel *filter)
-{
-  filter->sinkpad = gst_pad_new_from_template(level_sink_factory (),"sink");
-  filter->srcpad = gst_pad_new_from_template(level_src_factory (),"src");
-
-  gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
-  gst_pad_set_chain_function(filter->sinkpad,gst_level_chain);
-  filter->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
-}
-
-static void
-gst_level_chain (GstPad *pad,GstBuffer *buf)
+gst_level_chain (GstPad *pad, GstBuffer *buf)
 {
   GstLevel *filter;
   gint16 *in_data;
@@ -157,28 +152,28 @@ gst_level_chain (GstPad *pad,GstBuffer *buf)
 
   GstCaps *caps;
 
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
-  g_return_if_fail(buf != NULL);
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (buf != NULL);
 
-  filter = GST_LEVEL(GST_OBJECT_PARENT (pad));
-  g_return_if_fail(filter != NULL);
-  g_return_if_fail(GST_IS_LEVEL(filter));
+  filter = GST_LEVEL (GST_OBJECT_PARENT (pad));
+  g_return_if_fail (filter != NULL);
+  g_return_if_fail (GST_IS_LEVEL (filter));
 
   caps = NULL;
-  caps = GST_PAD_CAPS(pad);
+  caps = GST_PAD_CAPS (pad);
   if (caps == NULL)
   {
     /* FIXME : Please change this to a better warning method ! */
-    printf ("WARNING : chain : Could not get caps of pad !\n");
+    g_error ("WARNING: level: Could not get pad caps - caps nego failed !\n");
   }
 
-  gst_caps_get_int(caps, "width", &width);
+  gst_caps_get_int (caps, "width", &width);
 
-  in_data = (gint16 *)GST_BUFFER_DATA(buf);
-  outbuf=gst_buffer_new();
-  GST_BUFFER_DATA(outbuf) = (gchar*)g_new(gint16,GST_BUFFER_SIZE(buf)/2);
-  GST_BUFFER_SIZE(outbuf) = GST_BUFFER_SIZE(buf);
+  in_data = (gint16 *) GST_BUFFER_DATA(buf);
+  outbuf = gst_buffer_new();
+  GST_BUFFER_DATA (outbuf) = (gchar*) g_new (gint16, GST_BUFFER_SIZE(buf)/2);
+  GST_BUFFER_SIZE (outbuf) = GST_BUFFER_SIZE(buf);
 
   out_data = (gint16*)GST_BUFFER_DATA(outbuf);
   
@@ -233,6 +228,35 @@ gst_level_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_level_class_init (GstLevelClass *klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+
+  gobject_class = (GObjectClass*) klass;
+  gstelement_class = (GstElementClass*) klass;
+
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  gobject_class->set_property = gst_level_set_property;
+  gobject_class->get_property = gst_level_get_property;
+}
+
+static void
+gst_level_init (GstLevel *filter)
+{
+  filter->sinkpad = gst_pad_new_from_template (level_sink_factory (), "sink");
+  gst_pad_set_connect_function (filter->sinkpad, gst_level_connect);
+  filter->srcpad = gst_pad_new_from_template (level_src_factory (), "src");
+  gst_pad_set_connect_function (filter->srcpad, gst_level_connect);
+
+  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
+  gst_pad_set_chain_function (filter->sinkpad, gst_level_chain);
+  filter->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 }
 
 static gboolean
