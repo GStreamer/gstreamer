@@ -272,6 +272,10 @@ gst_ogg_get_pad_by_pad (GstOggDemux *ogg, GstPad *pad)
   GSList *walk;
   GstOggPad *cur;
   
+  if (ogg->current_chain == -1) {
+    GST_DEBUG_OBJECT (ogg, "no active chain, returning NULL");
+    return NULL;
+  }
   for (walk = CURRENT_CHAIN (ogg)->pads; walk; walk = g_slist_next (walk)) {
     cur = (GstOggPad *) walk->data;
     if (cur->pad == pad)
@@ -287,6 +291,9 @@ gst_ogg_demux_src_query (GstPad *pad, GstQueryType type,
   gboolean res = FALSE;
   GstOggDemux *ogg = GST_OGG_DEMUX (gst_pad_get_parent (pad));
   GstOggPad *cur = gst_ogg_get_pad_by_pad (ogg, pad);
+
+  if (!cur)
+    return FALSE;
 
   switch (type) {
     case GST_QUERY_TOTAL: {
