@@ -1,3 +1,10 @@
+2005-03-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Release 0.8.4 "Mellow on my fingers".
+
 2005-03-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
