@@ -1,5 +1,16 @@
 2004-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* Makefile.am:
+	* po/af.po:
+	* po/az.po:
+	* po/en_GB.po:
+	* po/nl.po:
+	* po/sr.po:
+	* po/sv.po:
+          Updated translations
+
+2004-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/audioconvert/gstaudioconvert.c: (_fixate_caps_to_int):
           refactor/comment code
 
