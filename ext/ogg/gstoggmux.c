@@ -714,6 +714,8 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     packet.packet = GST_BUFFER_DATA (buf);
     packet.bytes = GST_BUFFER_SIZE (buf);
     packet.granulepos = GST_BUFFER_OFFSET_END (buf);
+    if (packet.granulepos == -1)
+      packet.granulepos = 0;
     /* mark BOS and packet number */
     packet.b_o_s = (pad->packetno == 0);
     packet.packetno = pad->packetno++;
@@ -755,6 +757,8 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       packet.packet = GST_BUFFER_DATA (buf);
       packet.bytes = GST_BUFFER_SIZE (buf);
       packet.granulepos = GST_BUFFER_OFFSET_END (buf);
+      if (packet.granulepos == -1)
+        packet.granulepos = 0;
       /* mark BOS and packet number */
       packet.b_o_s = (pad->packetno == 0);
       packet.packetno = pad->packetno++;
@@ -910,6 +914,8 @@ gst_ogg_mux_loop (GstElement * element)
     packet.packet = GST_BUFFER_DATA (buf);
     packet.bytes = GST_BUFFER_SIZE (buf);
     packet.granulepos = GST_BUFFER_OFFSET_END (buf);
+    if (packet.granulepos == -1)
+      packet.granulepos = 0;
     /* mark BOS and packet number */
     packet.b_o_s = (pad->packetno == 0);
     packet.packetno = pad->packetno++;
