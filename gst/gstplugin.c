@@ -28,7 +28,7 @@
 
 #include "config.h"
 
-#undef PLUGINS_USE_SRCDIR
+//#undef PLUGINS_USE_SRCDIR
 
 /* list of loaded modules and its sequence number */
 GList *_gst_modules;
@@ -210,7 +210,7 @@ gboolean gst_plugin_load_absolute(gchar *name) {
   GstPluginInitFunc initfunc;
   GstPlugin *plugin;
   GList *plugins;
-
+  struct stat file_status;
 
   if (g_module_supported() == FALSE) {
     g_print("gstplugin: wow, you built this on a platform without dynamic loading???\n");
@@ -229,6 +229,11 @@ gboolean gst_plugin_load_absolute(gchar *name) {
     plugins = g_list_next(plugins);
   }
   //g_print("trying to absolute load '%s\n",name);
+
+  if (stat(name,&file_status)) {
+//    g_print("problem opening file %s\n",name);
+    return FALSE;
+  }
 
   module = g_module_open(name,G_MODULE_BIND_LAZY);
   if (module != NULL) {
