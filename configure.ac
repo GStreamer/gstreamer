@@ -139,6 +139,10 @@ esac
 dnl Determine endianness
 AC_C_BIGENDIAN
 
+dnl Check for fast float to int casting as defined in C99
+AC_C99_FUNC_LRINT()
+AC_C99_FUNC_LRINTF()
+
 dnl Check for essential libraries first:
 dnl ====================================
 
@@ -612,9 +616,6 @@ main() { atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0
   ])
 fi
 
-dnl Check for fast float to int casting as defined in C99
-AC_C99_FUNC_LRINT()
-AC_C99_FUNC_LRINTF()
 
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
@@ -840,6 +841,7 @@ gst-libs/gst/audio/Makefile
 gst-libs/gst/idct/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
+gst-libs/gst/floatcast/Makefile
 examples/capsfilter/Makefile
 examples/Makefile
 tools/Makefile
