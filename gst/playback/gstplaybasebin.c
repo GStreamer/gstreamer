@@ -325,6 +325,24 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   play_base_bin->streaminfo = g_list_append (play_base_bin->streaminfo, info);
 }
 
+static void
+state_change (GstElement * element,
+    GstElementState old_state, GstElementState new_state, gpointer data)
+{
+  GstPlayBaseBin *play_base_bin = GST_PLAY_BASE_BIN (data);
+
+  if (old_state > new_state) {
+    /* EOS or error occurred */
+    GST_DEBUG ("state changed downwards");
+    g_mutex_lock (play_base_bin->preroll_lock);
+    GST_DEBUG ("signal preroll done");
+    g_cond_signal (play_base_bin->preroll_cond);
+    GST_DEBUG ("signaled preroll done");
+    g_mutex_unlock (play_base_bin->preroll_lock);
+  }
+}
+
+
 static gboolean
 setup_source (GstPlayBaseBin * play_base_bin)
 {
@@ -351,7 +369,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
 
   {
     gboolean res;
-    gint sig1, sig2, sig3;
+    gint sig1, sig2, sig3, sig4;
     GstElement *old_dec;
 
     old_dec = play_base_bin->decoder;
@@ -385,6 +403,8 @@ setup_source (GstPlayBaseBin * play_base_bin)
         G_CALLBACK (no_more_pads), play_base_bin);
     sig3 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "unknown-type",
         G_CALLBACK (unknown_type), play_base_bin);
+    sig4 = g_signal_connect (G_OBJECT (play_base_bin->decoder),
+        "state-change", G_CALLBACK (state_change), play_base_bin);
 
     /* either when the queues are filled or when the decoder element has no more
      * dynamic streams, the cond is unlocked. We can remove the signal handlers then
@@ -396,6 +416,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
     GST_DEBUG ("preroll done !");
     g_mutex_unlock (play_base_bin->preroll_lock);
 
+    g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig4);
     g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig3);
     g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig2);
     g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig1);
@@ -403,7 +424,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
     play_base_bin->need_rebuild = FALSE;
   }
 
-  return TRUE;
+  return (GST_STATE (play_base_bin->thread) == GST_STATE_PLAYING);
 }
 
 static void
@@ -519,8 +540,9 @@ gst_play_base_bin_change_state (GstElement * element)
     case GST_STATE_READY_TO_PAUSED:
     {
       if (!setup_source (play_base_bin)) {
-        GST_ELEMENT_ERROR (GST_ELEMENT (play_base_bin), LIBRARY, TOO_LAZY,
-            (NULL), ("cannot handle uri \"%s\"", play_base_bin->uri));
+        GST_ELEMENT_ERROR (GST_ELEMENT (play_base_bin), STREAM,
+            CODEC_NOT_FOUND,
+            ("cannot open file \"%s\"", play_base_bin->uri), (NULL));
         ret = GST_STATE_FAILURE;
       } else {
         ret = gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
