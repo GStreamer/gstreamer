@@ -135,9 +135,13 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
       store->buffers &&
       GST_BUFFER_OFFSET_IS_VALID (store->buffers->data)) {
     /* we assumed valid offsets, but suddenly they are not anymore */
+    GST_DEBUG_OBJECT (store, "attempting to add buffer %p with invalid offset to store with valid offset, abort",
+	    buffer);
     return FALSE;
   } else if (store->buffers && !GST_BUFFER_OFFSET_IS_VALID (store->buffers->data)) {
     /* the starting buffer had an invalid offset, in that case we assume continuous buffers */
+    GST_LOG_OBJECT (store, "adding buffer %p with invalid offset and size %u",
+	    buffer, GST_BUFFER_SIZE (buffer));
     gst_data_ref (GST_DATA (buffer));
     g_list_append (store->buffers, buffer);
     return TRUE;
@@ -147,6 +151,8 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
     GstBuffer *current;
     
     g_assert (GST_BUFFER_OFFSET_IS_VALID (buffer));
+    GST_LOG_OBJECT (store, "attempting to add buffer %p with offset %"G_GUINT64_FORMAT" and size %u",
+	    buffer, GST_BUFFER_OFFSET (buffer), GST_BUFFER_SIZE (buffer));
     /* we keep a sorted list of non-overlapping buffers */
     walk = store->buffers;
     while (walk) {
@@ -163,8 +169,7 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
 	} else {
 	  needed_size = GST_BUFFER_SIZE (buffer);
 	}
-	if (needed_size <= GST_BUFFER_OFFSET (current)) {
-	  g_assert (needed_size == GST_BUFFER_OFFSET (current)); /* we have no overlapping data */
+	if (needed_size <= GST_BUFFER_SIZE (current)) {
 	  buffer = NULL;
 	} else {
 	  if (needed_size < GST_BUFFER_SIZE (buffer)) {
@@ -323,7 +328,7 @@ gst_buffer_store_get_buffer (GstBufferStore *store, guint64 offset, guint size)
       gst_data_ref (GST_DATA (ret));
       break;
     } else if (cur_offset + GST_BUFFER_SIZE (current) > offset) {
-      if (cur_offset + GST_BUFFER_SIZE (current) <= offset + size) {
+      if (cur_offset + GST_BUFFER_SIZE (current) >= offset + size) {
 	ret = gst_buffer_create_sub (current, offset - cur_offset, size);
 	GST_LOG_OBJECT (store, "created subbuffer %p from buffer %p for offset %llu and size %u",
 			ret, current,  offset, size);
@@ -396,11 +401,11 @@ gst_buffer_store_get_size (GstBufferStore *store, guint64 offset)
     cur_offset = 0;
   }
   while (walk) {
-    if (have_offset &&
+    current = GST_BUFFER (walk->data);
+    if (have_offset && counting && 
 	cur_offset + GST_BUFFER_SIZE (current) !=  GST_BUFFER_OFFSET (walk->data)) {
       break;
     }
-    current = GST_BUFFER (walk->data);
     if (have_offset) {
       cur_offset = GST_BUFFER_OFFSET (current);
     }

@@ -96,7 +96,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GST_DEBUG_CATEGORY_INIT (gst_shaper_debug,	"shaper",	0,	"shaper element");
   GST_DEBUG_CATEGORY_INIT (gst_statistics_debug, "statistics",	0,	"statistics element");
   GST_DEBUG_CATEGORY_INIT (gst_tee_debug,	"tee",		0,	"tee element");
-  GST_DEBUG_CATEGORY_INIT (gst_type_find_element_debug,	"typefind",	0,	"typefind element");
+  GST_DEBUG_CATEGORY_INIT (gst_type_find_element_debug,	"typefind", GST_DEBUG_BG_YELLOW | GST_DEBUG_FG_GREEN, "typefind element");
 
   while (_elements[i].name) {  
     factory = gst_element_factory_new (_elements[i].name,
