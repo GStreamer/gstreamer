@@ -1,3 +1,32 @@
+2005-02-02  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  Don't send things to NULL PAD_PEERs
+
+	* gst/deinterlace/gstdeinterlace.c: (gst_deinterlace_chain):
+	  Copy-on-write the incoming buffer.
+
+	* gst/mpegstream/gstdvddemux.h:
+	* gst/mpegstream/gstmpegclock.h:
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_syshead),
+	(normal_seek), (gst_mpeg_demux_handle_src_event):
+	* gst/mpegstream/gstmpegdemux.h:
+	* gst/mpegstream/gstmpegpacketize.h:
+	* gst/mpegstream/gstmpegparse.c:
+	(gst_mpeg_parse_update_streaminfo), (gst_mpeg_parse_reset),
+	(gst_mpeg_parse_handle_discont), (gst_mpeg_parse_parse_packhead),
+	(gst_mpeg_parse_loop), (gst_mpeg_parse_get_rate),
+	(gst_mpeg_parse_convert_src), (gst_mpeg_parse_handle_src_query),
+	(gst_mpeg_parse_handle_src_event), (gst_mpeg_parse_change_state):
+	* gst/mpegstream/gstmpegparse.h:
+	* gst/mpegstream/gstrfc2250enc.h:
+          Various changes to the way time is computed that make seeking and
+	  total time estimation much better here.
+	  Use G_BEGIN/END_DECLS instead of __cplusplus
+
+	* gst/videocrop/gstvideocrop.c: (gst_video_crop_chain):
+	  Use gst_buffer_stamp instead of only copying the TIMESTAMP
+
 2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/subparse/gstsubparse.c:
