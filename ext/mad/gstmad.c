@@ -64,7 +64,6 @@ struct _GstMad {
   /* info */
   struct mad_header header;
   gboolean	new_header;
-  gboolean	can_seek;
   guint		framecount;
   gint		vbr_average; /* average bitrate */
   guint64	vbr_rate; /* average * framecount */
@@ -711,10 +710,6 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
       break;
     /* the all-formats seek logic */
     case GST_EVENT_SEEK:
-      if (!mad->can_seek) {
-	g_warning ("MAD: can't seek now, seek ignored");
-	break;
-      }
       if (mad->index)
 	res = index_seek (mad, pad, event);
       else
@@ -1221,9 +1216,6 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       rate = mad->frame.header.samplerate;
 #endif
 
-      /* at this point we can accept seek events */
-      mad->can_seek = TRUE;
-
       gst_mad_update_info (mad);
 
       if (mad->channels != nchannels || mad->rate != rate) {
@@ -1369,7 +1361,6 @@ gst_mad_change_state (GstElement *element)
       mad_frame_init (&mad->frame);
       mad_synth_init (&mad->synth);
       mad->tempsize = 0;
-      mad->can_seek = FALSE;
       mad->total_samples = 0;
       mad->rate = 0;
       mad->channels = 0;
