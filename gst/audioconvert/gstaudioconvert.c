@@ -445,6 +445,8 @@ _fixate_caps_to_int (GstCaps ** caps, const gchar * field, gint value)
     } else {
       gst_caps_free (intersection);
     }
+  } else {
+    gst_caps_free (intersection);
   }
   gst_caps_free (try);
   for (i = 0; i < gst_caps_get_size (*caps); i++) {
