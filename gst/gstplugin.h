@@ -81,8 +81,7 @@ struct _GstPlugin {
   GST_STRUCT_PADDING
 };
 
-#ifndef GST_PLUGIN_STATIC				
-#define GST_PLUGIN_DEFINE_DYNAMIC(major,minor,name,description,init,version,license,copyright,package,origin)	\
+#define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,copyright,package,origin)	\
 GstPluginDesc gst_plugin_desc = {		      	\
   major,						\
   minor,						\
@@ -96,10 +95,8 @@ GstPluginDesc gst_plugin_desc = {		      	\
   package,						\
   origin,						\
   GST_STRUCT_PADDING_INIT				\
-};							
-#define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,copyright,package,origin)
-#else
-#define GST_PLUGIN_DEFINE_DYNAMIC(major,minor,name,description,init,version,license,copyright,package,origin)
+};
+
 #define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,copyright,package,origin)  \
 static void GST_GNUC_CONSTRUCTOR			\
 _gst_plugin_static_init__ ##init (void)			\
@@ -120,12 +117,7 @@ _gst_plugin_static_init__ ##init (void)			\
   };							\
   _gst_plugin_register_static (&plugin_desc_);		\
 }			
-#endif
 
-#define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,copyright,package,origin)\
-  GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,copyright,package,origin)\
-  GST_PLUGIN_DEFINE_DYNAMIC(major,minor,name,description,init,version,license,copyright,package,origin)
-  
 #define GST_LICENSE_UNKNOWN "unknown"
 
 /* function for filters */
