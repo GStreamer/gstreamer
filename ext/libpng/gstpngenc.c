@@ -236,8 +236,9 @@ gst_pngenc_chain (GstPad *pad, GstBuffer *buf)
   png_destroy_write_struct (&pngenc->png_struct_ptr, (png_infopp) NULL);
 
   gst_pad_push (pngenc->srcpad, pngenc->buffer_out);
-  /* send NEW MEDIA event, since a frame has been pushed out */
-  event = gst_event_new (GST_EVENT_NEW_MEDIA);
+
+  /* send EOS event, since a frame has been pushed out */
+  event = gst_event_new (GST_EVENT_EOS);
   gst_pad_push (pngenc->srcpad, GST_BUFFER (event));
 
   gst_buffer_unref (buf);

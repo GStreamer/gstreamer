@@ -348,9 +348,6 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 	gst_oss_clock_set_active (osssink->provided_clock, FALSE);
 	gst_pad_event_default (pad, event);
         return;
-      case GST_EVENT_NEW_MEDIA:
-	g_print ("new media\n");
-        break;
       case GST_EVENT_DISCONTINUOUS:
       {
 	gint64 value;
