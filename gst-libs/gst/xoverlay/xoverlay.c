@@ -103,7 +103,8 @@ gst_x_overlay_base_init (gpointer g_class)
  *
  * This will call the video overlay's set_xwindow_id method. You should
  * use this method to tell to a XOverlay to display video output to a
- * specific XWindow.
+ * specific XWindow. Passing 0 as the xwindow_id will tell the overlay to
+ * stop using that window and create an internal one.
  */
 void
 gst_x_overlay_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
@@ -182,4 +183,3 @@ gst_x_overlay_got_desired_size (GstXOverlay *overlay, guint width, guint height)
   g_signal_emit (G_OBJECT (overlay),
                  gst_x_overlay_signals[DESIRED_SIZE], 0, width, height);
 }
-

@@ -896,14 +896,12 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
     gst_clock_id_free (id);
   }
   
-#if 0
-  /* If we have a pool and the image is from this pool, simply put it. */
-  if ( (xvimagesink->bufferpool) &&
-       (GST_BUFFER_BUFFERPOOL (buf) == xvimagesink->bufferpool) )
+  /* If this buffer has been allocated using our buffer management we simply
+     put the ximage which is in the PRIVATE pointer */
+  if (GST_BUFFER_BUFFERPOOL (buf) == xvimagesink)
     gst_xvimagesink_xvimage_put (xvimagesink, GST_BUFFER_POOL_PRIVATE (buf));
   else /* Else we have to copy the data into our private image, */
     {  /* if we have one... */
-#endif
       if (xvimagesink->xvimage)
         {
           memcpy (xvimagesink->xvimage->xvimage->data, 
@@ -917,9 +915,8 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
           gst_element_error (GST_ELEMENT (xvimagesink), "no image to draw");
           return;
         }
-#if 0
     }
-#endif
+
   /* set correct time for next buffer */
   if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf) && xvimagesink->framerate > 0) {
     xvimagesink->time += GST_SECOND / xvimagesink->framerate;
@@ -930,72 +927,18 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
   gst_xvimagesink_handle_xevents (xvimagesink, pad);
 }
 
-#if 0
-static GstBuffer*
-gst_xvimagesink_buffer_new (GstBufferPool *pool,  
-                            gint64 location, guint size, gpointer user_data)
-{
-  GstXvImageSink *xvimagesink;
-  GstBuffer *buffer;
-  GstXvImage *xvimage = NULL;
-  gboolean not_found = TRUE;
-  
-  xvimagesink = GST_XVIMAGESINK (user_data);
-  
-  g_mutex_lock (xvimagesink->pool_lock);
-  
-  /* Walking through the pool cleaning unsuable images and searching for a
-     suitable one */
-  while (not_found && xvimagesink->image_pool)
-    {
-      xvimage = xvimagesink->image_pool->data;
-      
-      if (xvimage)
-        {
-          /* Removing from the pool */
-          xvimagesink->image_pool = g_slist_delete_link (xvimagesink->image_pool,
-                                                        xvimagesink->image_pool);
-          
-          if ( (xvimage->width != GST_VIDEOSINK_WIDTH (xvimagesink)) ||
-               (xvimage->height != GST_VIDEOSINK_HEIGHT (xvimagesink)) )
-            { /* This image is unusable. Destroying... */
-              gst_xvimagesink_xvimage_destroy (xvimagesink, xvimage);
-              xvimage = NULL;
-            }
-          else /* We found a suitable image */
-            break;
-        }
-    }
-   
-  g_mutex_unlock (xvimagesink->pool_lock);
-  
-  if (!xvimage) /* We found no suitable image in the pool. Creating... */
-    xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
-                                        GST_VIDEOSINK_WIDTH (xvimagesink),
-                                        GST_VIDEOSINK_HEIGHT (xvimagesink));
-  
-  if (xvimage)
-    {
-      buffer = gst_buffer_new ();
-      GST_BUFFER_POOL_PRIVATE (buffer) = xvimage;
-      GST_BUFFER_DATA (buffer) = xvimage->xvimage->data;
-      GST_BUFFER_SIZE (buffer) = xvimage->size;
-      return buffer;
-    }
-  else
-    return NULL;
-}
+/* Buffer management */
 
 static void
-gst_xvimagesink_buffer_free (GstBufferPool *pool,
-                            GstBuffer *buffer, gpointer user_data)
+gst_xvimagesink_buffer_free (GstData *data)
 {
   GstXvImageSink *xvimagesink;
   GstXvImage *xvimage;
+  GstBuffer *buffer;
   
-  xvimagesink = GST_XVIMAGESINK (user_data);
-  
-  xvimage = GST_BUFFER_POOL_PRIVATE (buffer);
+  xvimagesink = GST_BUFFER_BUFFERPOOL (data);
+  xvimage = GST_BUFFER_POOL_PRIVATE (data);
+  buffer = GST_BUFFER (data);
   
   /* If our geometry changed we can't reuse that image. */
   if ( (xvimage->width != GST_VIDEOSINK_WIDTH (xvimagesink)) ||
@@ -1013,7 +956,69 @@ gst_xvimagesink_buffer_free (GstBufferPool *pool,
 
   gst_buffer_default_free (buffer);
 }
-#endif
+
+static GstBuffer *
+gst_xvimagesink_buffer_alloc (GstPad *pad, guint64 offset, guint size)
+{
+  GstXvImageSink *xvimagesink;
+  GstBuffer *buffer;
+  GstXvImage *xvimage = NULL;
+  gboolean not_found = TRUE;
+  
+  xvimagesink = GST_XVIMAGESINK (gst_pad_get_parent (pad));
+
+  g_mutex_lock (xvimagesink->pool_lock);
+  
+  /* Walking through the pool cleaning unsuable images and searching for a
+     suitable one */
+  while (not_found && xvimagesink->image_pool)
+    {
+      xvimage = xvimagesink->image_pool->data;
+      
+      if (xvimage)
+        {
+          /* Removing from the pool */
+          xvimagesink->image_pool = g_slist_delete_link (xvimagesink->image_pool,
+                                                         xvimagesink->image_pool);
+          
+          if ( (xvimage->width != GST_VIDEOSINK_WIDTH (xvimagesink)) ||
+               (xvimage->height != GST_VIDEOSINK_HEIGHT (xvimagesink)) )
+            { /* This image is unusable. Destroying... */
+              gst_xvimagesink_xvimage_destroy (xvimagesink, xvimage);
+              xvimage = NULL;
+            }
+          else /* We found a suitable image */
+            {
+              break;
+            }
+        }
+    }
+   
+  g_mutex_unlock (xvimagesink->pool_lock);
+  
+  if (!xvimage) /* We found no suitable image in the pool. Creating... */
+    {
+      xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
+                                             GST_VIDEOSINK_WIDTH (xvimagesink),
+                                             GST_VIDEOSINK_HEIGHT (xvimagesink));
+    }
+  
+  if (xvimage)
+    {
+      buffer = gst_buffer_new ();
+      
+      /* Storing some pointers in the buffer (bit hackish) */
+      GST_BUFFER_BUFFERPOOL (buffer) = xvimagesink;
+      GST_BUFFER_POOL_PRIVATE (buffer) = xvimage;
+      
+      GST_BUFFER_DATA (buffer) = xvimage->xvimage->data;
+      GST_DATA_FREE_FUNC (buffer) = gst_xvimagesink_buffer_free;
+      GST_BUFFER_SIZE (buffer) = xvimage->size;
+      return buffer;
+    }
+  else
+    return NULL;
+}
 
 static void
 gst_xvimagesink_imagepool_clear (GstXvImageSink *xvimagesink)
@@ -1091,36 +1096,85 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
   g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   
+  /* If we already use that window return */
+  if (xvimagesink->xwindow && (xwindow_id == xvimagesink->xwindow->win))
+    return;
+  
+  /* If the element has not initialized the X11 context try to do so */
   if (!xvimagesink->xcontext)
     xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink);
   
-  if ( (xvimagesink->xwindow) && (xvimagesink->xvimage) )
-    { /* If we are replacing a window we destroy pictures and window as they
-         are associated */
-      gst_xvimagesink_xvimage_destroy (xvimagesink, xvimagesink->xvimage);
-      gst_xvimagesink_imagepool_clear (xvimagesink);
-      gst_xvimagesink_xwindow_destroy (xvimagesink, xvimagesink->xwindow);
+  if (!xvimagesink->xcontext)
+    {
+      g_warning ("xvimagesink was unable to obtain the X11 context.");
+      return;
     }
     
-  xwindow = g_new0 (GstXWindow, 1);
+  /* Clear image pool as the images are unusable anyway */
+  gst_xvimagesink_imagepool_clear (xvimagesink);
   
-  xwindow->win = xwindow_id;
+  /* Clear the xvimage */
+  if (xvimagesink->xvimage)
+    {
+      gst_xvimagesink_xvimage_destroy (xvimagesink, xvimagesink->xvimage);
+      xvimagesink->xvimage = NULL;
+    }
   
-  /* We get window geometry, set the event we want to receive, and create a GC */
-  g_mutex_lock (xvimagesink->x_lock);
-  XGetWindowAttributes (xvimagesink->xcontext->disp, xwindow->win, &attr);
-  xwindow->width = attr.width;
-  xwindow->height = attr.height;
-  xwindow->internal = FALSE;
-  XSelectInput (xvimagesink->xcontext->disp, xwindow->win, ExposureMask |
-                StructureNotifyMask | PointerMotionMask | KeyPressMask |
-                KeyReleaseMask);
-  
-  xwindow->gc = XCreateGC (xvimagesink->xcontext->disp,
-                           xwindow->win, 0, NULL);
-  g_mutex_unlock (xvimagesink->x_lock);
+  /* If a window is there already we destroy it */
+  if (xvimagesink->xwindow)
+    {
+      gst_xvimagesink_xwindow_destroy (xvimagesink, xvimagesink->xwindow);
+      xvimagesink->xwindow = NULL;
+    }
     
-  xvimagesink->xwindow = xwindow;
+  /* If the xid is 0 we go back to an internal window */
+  if (xwindow_id == 0)
+    {
+      /* If no width/height caps nego did not happen window will be created
+         during caps nego then */
+      if (GST_VIDEOSINK_WIDTH (xvimagesink) &&
+          GST_VIDEOSINK_HEIGHT (xvimagesink))
+        {
+          xwindow = gst_xvimagesink_xwindow_new (xvimagesink,
+                                            GST_VIDEOSINK_WIDTH (xvimagesink),
+                                            GST_VIDEOSINK_HEIGHT (xvimagesink));
+        }
+    }
+  else
+    {
+      xwindow = g_new0 (GstXWindow, 1);
+
+      xwindow->win = xwindow_id;
+  
+      /* We get window geometry, set the event we want to receive,
+         and create a GC */
+      g_mutex_lock (xvimagesink->x_lock);
+      XGetWindowAttributes (xvimagesink->xcontext->disp, xwindow->win, &attr);
+      xwindow->width = attr.width;
+      xwindow->height = attr.height;
+      xwindow->internal = FALSE;
+      XSelectInput (xvimagesink->xcontext->disp, xwindow->win, ExposureMask |
+                    StructureNotifyMask | PointerMotionMask | KeyPressMask |
+                    KeyReleaseMask);
+  
+      xwindow->gc = XCreateGC (xvimagesink->xcontext->disp,
+                               xwindow->win, 0, NULL);
+      g_mutex_unlock (xvimagesink->x_lock);
+    }
+  
+  /* Recreating our xvimage */
+  if (!xvimagesink->xvimage &&
+      GST_VIDEOSINK_WIDTH (xvimagesink) &&
+      GST_VIDEOSINK_HEIGHT (xvimagesink))
+    {
+      xvimagesink->xvimage = gst_xvimagesink_xvimage_new (
+                                            xvimagesink,
+                                            GST_VIDEOSINK_WIDTH (xvimagesink),
+                                            GST_VIDEOSINK_HEIGHT (xvimagesink));
+    }
+    
+  if (xwindow)
+    xvimagesink->xwindow = xwindow;
 }
 
 static void
@@ -1195,7 +1249,9 @@ gst_xvimagesink_init (GstXvImageSink *xvimagesink)
                                 gst_xvimagesink_getcaps);
   gst_pad_set_fixate_function (GST_VIDEOSINK_PAD (xvimagesink),
                                 gst_xvimagesink_fixate);
-
+  gst_pad_set_bufferalloc_function (GST_VIDEOSINK_PAD (xvimagesink),
+                                    gst_xvimagesink_buffer_alloc);
+  
   xvimagesink->xcontext = NULL;
   xvimagesink->xwindow = NULL;
   xvimagesink->xvimage = NULL;

@@ -370,9 +370,11 @@ gst_videoscale_chain (GstPad *pad, GstData *_data)
   g_return_if_fail (size == videoscale->from_buf_size);
 
   outbuf = gst_buffer_new();
-  /* FIXME: handle bufferpools */
-  GST_BUFFER_SIZE(outbuf) = videoscale->to_buf_size;
-  GST_BUFFER_DATA(outbuf) = g_malloc (videoscale->to_buf_size);
+  outbuf = gst_pad_alloc_buffer (gst_pad_get_peer (pad),
+                                 GST_BUFFER_OFFSET_NONE, videoscale->to_buf_size);
+  
+  /*GST_BUFFER_SIZE(outbuf) = videoscale->to_buf_size;*/
+  /*GST_BUFFER_DATA(outbuf) = g_malloc (videoscale->to_buf_size);*/
   GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
 
   g_return_if_fail(videoscale->format);

@@ -418,7 +418,7 @@ gst_videotestsrc_get (GstPad * pad)
 
   GST_DEBUG ("size=%ld %dx%d", newsize, videotestsrc->width, videotestsrc->height);
 
-  buf = gst_buffer_new_and_alloc (newsize);
+  buf = gst_pad_alloc_buffer (pad, GST_BUFFER_OFFSET_NONE, newsize);
   g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
 
   videotestsrc->make_image (videotestsrc, (void *) GST_BUFFER_DATA (buf),
