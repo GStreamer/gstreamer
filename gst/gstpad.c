@@ -900,7 +900,7 @@ gst_pad_unlink (GstPad *srcpad,
   src_sched = gst_pad_get_scheduler (GST_PAD (realsrc));
   sink_sched = gst_pad_get_scheduler (GST_PAD (realsink));
 
-  gst_pad_link_free (GST_RPAD_LINK (realsrc));
+  if (GST_RPAD_LINK (realsrc)) gst_pad_link_free (GST_RPAD_LINK (realsrc));
 
   /* first clear peers */
   GST_RPAD_PEER (realsrc) = NULL;
@@ -993,8 +993,6 @@ gst_pad_link_free (GstPadLink *link)
   if (link->sinkcaps) gst_caps_free (link->sinkcaps);
   if (link->filtercaps) gst_caps_free (link->filtercaps);
   if (link->caps) gst_caps_free (link->caps);
-  GST_RPAD_LINK (link->srcpad) = NULL;
-  GST_RPAD_LINK (link->sinkpad) = NULL;
 #ifdef USE_POISONING
   memset(link,0xff, sizeof(*link));
 #endif
@@ -2454,7 +2452,6 @@ gst_pad_get_peer (GstPad *pad)
 GstCaps*
 gst_pad_get_allowed_caps (GstPad *pad)
 {
-  GstRealPad *realpad;
   const GstCaps *mycaps;
   GstCaps *caps;
   GstCaps *peercaps;
@@ -2462,23 +2459,21 @@ gst_pad_get_allowed_caps (GstPad *pad)
   GstPadLink *link;
 
   g_return_val_if_fail (pad != NULL, NULL);
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  realpad = GST_PAD_REALIZE (pad);
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), NULL);
 
   GST_CAT_DEBUG (GST_CAT_PROPERTIES, "get allowed caps of %s:%s", 
              GST_DEBUG_PAD_NAME (pad));
 
   mycaps = gst_pad_get_pad_template_caps (pad);
-  if (GST_RPAD_PEER (realpad) == NULL) {
+  if (GST_RPAD_PEER (pad) == NULL) {
     return gst_caps_copy (mycaps);
   }
 
-  peercaps = gst_pad_get_caps (GST_PAD_PEER (realpad));
+  peercaps = gst_pad_get_caps (GST_PAD_PEER (pad));
   caps = gst_caps_intersect (mycaps, peercaps);
   gst_caps_free (peercaps);
 
-  link = GST_RPAD_LINK (realpad);
+  link = GST_RPAD_LINK (pad);
   if (link->filtercaps) {
     icaps = gst_caps_intersect (caps, link->filtercaps);
     gst_caps_free (caps);
