@@ -1,3 +1,15 @@
+2004-01-25  Julien MOUTTE  <julien@moutte.net>
+
+	* gst-libs/gst/play/gstplay.c: (gst_play_pipeline_setup),
+	(gst_play_identity_handoff), (gst_play_set_location),
+	(gst_play_set_visualization), (gst_play_connect_visualization): Another
+	try in visualization implementation. Still have an issue with switch
+	blocking when pulling from video_queue and only audio comes out of 
+	spider.
+	* gst/switch/gstswitch.c: (gst_switch_release_pad),
+	(gst_switch_poll_sinkpads), (gst_switch_class_init): Implementing pad
+	release method. And check if the pad is usable before pulling.
+
 2004-01-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/videofilter/gstvideobalance.c: (gst_videobalance_dispose),

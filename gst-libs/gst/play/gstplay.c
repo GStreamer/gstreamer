@@ -44,6 +44,8 @@ struct _GstPlayPrivate {
   
   guint tick_id;
   guint length_id;
+  
+  gulong handoff_hid;
 };
 
 static guint gst_play_signals[LAST_SIGNAL] = { 0 };
@@ -62,10 +64,13 @@ gst_play_pipeline_setup (GstPlay *play)
   /* Threads */
   GstElement *work_thread, *audio_thread, *video_thread;
   /* Main Thread elements */
-  GstElement *source, *autoplugger, *audioconvert, *volume, *tee, *vis_element;
+  GstElement *source, *autoplugger, *audioconvert, *volume, *tee, *identity;
+  GstElement *identity_cs;
+  /* Visualization bin */
+  GstElement *vis_bin, *vis_queue, *vis_element, *vis_cs;
   /* Video Thread elements */
-  GstElement *video_queue, *video_cs, *video_balance, *balance_cs;
-  GstElement *video_scaler, *video_sink;
+  GstElement *video_queue, *video_switch, *video_cs, *video_balance;
+  GstElement *balance_cs, *video_scaler, *video_sink;
   /* Audio Thread elements */
   GstElement *audio_queue, *audio_sink;
   /* Some useful pads */
@@ -74,8 +79,7 @@ gst_play_pipeline_setup (GstPlay *play)
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
   
-  /* Creating main thread and its elements 
-     { fakesrc ! spider ! audioconvert ! volume ! tee } */
+  /* Creating main thread and its elements */
   {
   work_thread = gst_element_factory_make ("thread", "work_thread");
   if (!GST_IS_ELEMENT (work_thread))
@@ -128,14 +132,62 @@ gst_play_pipeline_setup (GstPlay *play)
                     volume, tee, NULL);
   gst_element_link_many (source, autoplugger,/* audioconvert,*/ volume, tee, NULL);
   
-  /* Visualization element placeholder (note: it s not added to the pipeline
-     yet) */
+  /* identity ! colorspace ! switch  */
+  identity = gst_element_factory_make ("identity", "identity");
+  if (!GST_IS_ELEMENT (identity))
+    return FALSE;
+  
+  g_hash_table_insert (play->priv->elements, "identity", identity);
+  
+  identity_cs = gst_element_factory_make ("ffcolorspace", "identity_cs");
+  if (!GST_IS_ELEMENT (identity_cs)) {
+    identity_cs = gst_element_factory_make ("colorspace", "identity_cs");
+    if (!GST_IS_ELEMENT (identity_cs))
+      return FALSE;
+  }
+  
+  g_hash_table_insert (play->priv->elements, "identity_cs", identity_cs);
+    
+  gst_bin_add_many (GST_BIN (work_thread), identity, identity_cs,  NULL);
+  gst_element_link_many (autoplugger, identity, identity_cs, NULL);
+  }
+  
+  /* Visualization bin (note: it s not added to the pipeline yet) */
+  {
+  vis_bin = gst_bin_new ("vis_bin");
+  if (!GST_IS_ELEMENT (vis_bin))
+    return FALSE;
+  
+  g_hash_table_insert (play->priv->elements, "vis_bin", vis_bin);
+  
+  /* Buffer queue for video data */
+  vis_queue = gst_element_factory_make ("queue", "vis_queue");
+  if (!GST_IS_ELEMENT (vis_queue))
+    return FALSE;
+  
+  g_hash_table_insert (play->priv->elements, "vis_queue", vis_queue);
+  
+  /* Visualization element placeholder */
   vis_element = gst_element_factory_make ("identity", "vis_element");
   if (!GST_IS_ELEMENT (vis_element))
     return FALSE;
   
   g_hash_table_insert (play->priv->elements, "vis_element", vis_element);
   
+  /* Colorspace conversion */
+  vis_cs = gst_element_factory_make ("ffcolorspace", "vis_cs");
+  if (!GST_IS_ELEMENT (vis_cs)) {
+    vis_cs = gst_element_factory_make ("colorspace", "vis_cs");
+    if (!GST_IS_ELEMENT (vis_cs))
+      return FALSE;
+  }
+  
+  g_hash_table_insert (play->priv->elements, "vis_cs", vis_cs);
+  
+  gst_bin_add_many (GST_BIN (vis_bin), vis_queue, vis_element, vis_cs, NULL);
+  gst_element_link_many (vis_queue, vis_element, vis_cs, NULL);
+  gst_element_add_ghost_pad (vis_bin,
+                             gst_element_get_pad (vis_cs, "src"), "src");
   }
   /* Creating our video output bin */
   {
@@ -152,6 +204,12 @@ gst_play_pipeline_setup (GstPlay *play)
     return FALSE;
   
   g_hash_table_insert (play->priv->elements, "video_queue", video_queue);
+  
+  video_switch = gst_element_factory_make ("switch", "video_switch");
+  if (!GST_IS_ELEMENT (video_switch))
+    return FALSE;
+  
+  g_hash_table_insert (play->priv->elements, "video_switch", video_switch);
   
   /* Colorspace conversion */
   video_cs = gst_element_factory_make ("ffcolorspace", "video_cs");
@@ -196,14 +254,14 @@ gst_play_pipeline_setup (GstPlay *play)
   
   g_hash_table_insert (play->priv->elements, "video_sink", video_sink);
   
-  gst_bin_add_many (GST_BIN (video_thread), video_queue, video_cs,
+  gst_bin_add_many (GST_BIN (video_thread), video_queue, video_switch, video_cs,
                     video_balance, balance_cs, video_scaler, video_sink, NULL);
-  gst_element_link_many (video_queue, video_cs, video_balance, balance_cs,
-                         video_scaler, video_sink, NULL);
+  gst_element_link_many (video_queue, video_switch, video_cs, video_balance,
+                         balance_cs, video_scaler, video_sink, NULL);
   gst_element_add_ghost_pad (video_thread,
                              gst_element_get_pad (video_queue, "sink"),
                              "sink");
-  gst_element_link (autoplugger, video_thread);
+  gst_element_link (identity_cs, video_thread);
   }
   /* Creating our audio output bin 
      { queue ! fakesink } */
@@ -365,6 +423,14 @@ gst_play_state_change (GstElement *element, GstElementState old,
     GST_ELEMENT_CLASS (parent_class)->state_change (element, old, state);
 }
 
+static void
+gst_play_identity_handoff (GstElement *identity, GstBuffer *buf, GstPlay *play)
+{
+  g_signal_handler_disconnect (G_OBJECT (identity), play->priv->handoff_hid);
+  play->priv->handoff_hid = 0;
+  gst_play_connect_visualization (play, FALSE);
+}
+
 /* =========================================== */
 /*                                             */
 /*         Init & Dispose & Class init         */
@@ -465,7 +531,7 @@ gboolean
 gst_play_set_location (GstPlay *play, const char *location)
 {
   GstElement *work_thread, *source, *autoplugger;
-  GstElement *audioconvert, *video_thread;
+  GstElement *audioconvert, *identity;
   
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
@@ -490,14 +556,14 @@ gst_play_set_location (GstPlay *play, const char *location)
   audioconvert = g_hash_table_lookup (play->priv->elements, "audioconvert");
   if (!GST_IS_ELEMENT (audioconvert))
     return FALSE;
-  video_thread = g_hash_table_lookup (play->priv->elements, "video_thread");
-  if (!GST_IS_ELEMENT (video_thread))
+  identity = g_hash_table_lookup (play->priv->elements, "identity");
+  if (!GST_IS_ELEMENT (identity))
     return FALSE;
   
   /* Spider can autoplugg only once. We remove the actual one and put a new
      autoplugger */
   gst_element_unlink (source, autoplugger);
-  gst_element_unlink (autoplugger, video_thread);
+  gst_element_unlink (autoplugger, identity);
   gst_element_unlink (autoplugger, audioconvert);
   gst_bin_remove (GST_BIN (work_thread), autoplugger);
   
@@ -507,7 +573,7 @@ gst_play_set_location (GstPlay *play, const char *location)
   
   gst_bin_add (GST_BIN (work_thread), autoplugger);
   gst_element_link (source, autoplugger);
-  gst_element_link (autoplugger, video_thread);
+  gst_element_link (autoplugger, identity);
   gst_element_link (autoplugger, audioconvert);
   
   g_hash_table_replace (play->priv->elements, "autoplugger", autoplugger);
@@ -760,8 +826,7 @@ gst_play_set_audio_sink (GstPlay *play, GstElement *audio_sink)
 gboolean
 gst_play_set_visualization (GstPlay *play, GstElement *vis_element)
 {
-  GstElement *work_thread, *old_vis_element, *video_thread;
-  GstPad *tee_pad1;
+  GstElement *vis_bin, *vis_queue, *old_vis_element, *vis_cs;
   gboolean was_playing = FALSE;
   
   g_return_val_if_fail (play != NULL, FALSE);
@@ -770,47 +835,30 @@ gst_play_set_visualization (GstPlay *play, GstElement *vis_element)
   g_return_val_if_fail (GST_IS_ELEMENT (vis_element), FALSE);
   
   /* Getting needed objects */
-  work_thread = g_hash_table_lookup (play->priv->elements, "work_thread");
-  if (!GST_IS_ELEMENT (work_thread))
+  vis_bin = g_hash_table_lookup (play->priv->elements, "vis_bin");
+  if (!GST_IS_ELEMENT (vis_bin))
+    return FALSE;
+  vis_queue = g_hash_table_lookup (play->priv->elements, "vis_queue");
+  if (!GST_IS_ELEMENT (vis_queue))
     return FALSE;
   old_vis_element = g_hash_table_lookup (play->priv->elements,
                                          "vis_element");
   if (!GST_IS_ELEMENT (old_vis_element))
     return FALSE;
-  tee_pad1 = g_hash_table_lookup (play->priv->elements, "tee_pad1");
-  if (!GST_IS_PAD (tee_pad1))
-    return FALSE;
-  video_thread = g_hash_table_lookup (play->priv->elements, "video_thread");
-  if (!GST_IS_ELEMENT (video_thread))
+  vis_cs = g_hash_table_lookup (play->priv->elements, "vis_cs");
+  if (!GST_IS_ELEMENT (vis_cs))
     return FALSE;
   
-  /* Let's check if the current vis element has a managing bin. If yes that
-     means the element is inside the pipeline and need to be unlinked and 
-     removed. We also need to pause the pipeline if it is currently playing. */
-  if (gst_element_get_managing_bin (old_vis_element)) {
-    GstPad *vis_element_pad;
+  /* We bring back the pipeline to PAUSED */
+  if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING) {
+    gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+    was_playing = TRUE;
+  }
 
-    /* We bring back the pipeline to PAUSED */
-    if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING) {
-      gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
-      was_playing = TRUE;
-    }
-    
-    /* Unlinking, removing the old element then adding and linking the new one */
-    vis_element_pad = gst_element_get_pad (old_vis_element, "sink");
-    if (GST_IS_PAD (vis_element_pad))
-      gst_pad_unlink (tee_pad1, vis_element_pad);
-    gst_element_unlink (old_vis_element, video_thread);
-    gst_bin_remove (GST_BIN (work_thread), old_vis_element);
-    gst_bin_add (GST_BIN (work_thread), vis_element);
-    vis_element_pad = gst_element_get_pad (vis_element, "sink");
-    if (GST_IS_PAD (vis_element_pad))
-      gst_pad_link (tee_pad1, vis_element_pad);
-    gst_element_link (vis_element, video_thread);
-  }
-  else {
-    gst_object_unref (GST_OBJECT (old_vis_element));
-  }
+  gst_element_unlink_many (vis_queue, old_vis_element, vis_cs, NULL);
+  gst_bin_remove (GST_BIN (vis_bin), old_vis_element);
+  gst_bin_add (GST_BIN (vis_bin), vis_element);
+  gst_element_link_many (vis_queue, vis_element, vis_cs, NULL);
   
   g_hash_table_replace (play->priv->elements, "vis_element", vis_element);
   
@@ -833,121 +881,88 @@ gst_play_set_visualization (GstPlay *play, GstElement *vis_element)
 gboolean
 gst_play_connect_visualization (GstPlay * play, gboolean connect)
 {
-  GstElement *work_thread, *vis_element, *autoplugger, *video_thread;
-  GstElement *audioconvert, *source;
-  GstPad *tee_pad1, *vis_element_pad;
+  GstElement *video_thread, *vis_queue, *vis_bin, *video_switch, *identity;
+  GstPad *tee_pad1, *vis_queue_pad, *vis_bin_pad, *switch_pad;
+  gboolean was_playing = FALSE;
   
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
   
   /* Getting needed objects */
-  work_thread = g_hash_table_lookup (play->priv->elements, "work_thread");
-  if (!GST_IS_ELEMENT (work_thread))
+  video_thread = g_hash_table_lookup (play->priv->elements, "video_thread");
+  if (!GST_IS_ELEMENT (video_thread))
     return FALSE;
-  vis_element = g_hash_table_lookup (play->priv->elements, "vis_element");
-  if (!GST_IS_ELEMENT (vis_element))
+  vis_bin = g_hash_table_lookup (play->priv->elements, "vis_bin");
+  if (!GST_IS_ELEMENT (vis_bin))
+    return FALSE;
+  vis_queue = g_hash_table_lookup (play->priv->elements, "vis_queue");
+  if (!GST_IS_ELEMENT (vis_queue))
+    return FALSE;
+  video_switch = g_hash_table_lookup (play->priv->elements, "video_switch");
+  if (!GST_IS_ELEMENT (video_switch))
+    return FALSE;
+  identity = g_hash_table_lookup (play->priv->elements, "identity");
+  if (!GST_IS_ELEMENT (identity))
     return FALSE;
   tee_pad1 = g_hash_table_lookup (play->priv->elements, "tee_pad1");
   if (!GST_IS_PAD (tee_pad1))
     return FALSE;
-  video_thread = g_hash_table_lookup (play->priv->elements, "video_thread");
-  if (!GST_IS_ELEMENT (video_thread))
-    return FALSE;
-  autoplugger = g_hash_table_lookup (play->priv->elements, "autoplugger");
-  if (!GST_IS_ELEMENT (autoplugger))
-    return FALSE;
-  source = g_hash_table_lookup (play->priv->elements, "source");
-  if (!GST_IS_ELEMENT (source))
-    return FALSE;
-  audioconvert = g_hash_table_lookup (play->priv->elements, "audioconvert");
-  if (!GST_IS_ELEMENT (audioconvert))
-    return FALSE;
-
+  
+  vis_queue_pad = gst_element_get_pad (vis_queue, "sink");
+  
   /* Check if the vis element is in the pipeline. That means visualization is
      connected already */
-  if (gst_element_get_managing_bin (vis_element)) {
+  if (gst_element_get_managing_bin (vis_bin)) {
     
     /* If we are supposed to connect then nothing to do we return */
     if (connect) {
       return TRUE;
     }
     
-    /* We have to modify the pipeline. Changing autoplugger requires going to
-       READY */
-    gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+    /* Disconnecting visualization */
     
-    /* Otherwise we unlink and remove the vis element refing it  so that
-       it won't be destroyed when removed from the bin. */
-    vis_element_pad = gst_element_get_pad (vis_element, "sink");
-    if (GST_IS_PAD (vis_element_pad))
-      gst_pad_unlink (tee_pad1, vis_element_pad);
-    gst_element_unlink (vis_element, video_thread);
-    gst_object_ref (GST_OBJECT (vis_element));
-    gst_bin_remove (GST_BIN (work_thread), vis_element);
+    /* We bring back the pipeline to PAUSED */
+    if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING) {
+      gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+      was_playing = TRUE;
+    }
     
-    /* Removing autoplugger */
-    gst_element_unlink (source, autoplugger);
-    gst_element_unlink (autoplugger, audioconvert);
-    gst_bin_remove (GST_BIN (work_thread), autoplugger);
-  
-    autoplugger = gst_element_factory_make ("spider", "autoplugger");
-    if (!GST_IS_ELEMENT (autoplugger))
-      return FALSE;
-  
-    /* Adding and connecting a new autoplugger connected to video_thread */
-    gst_bin_add (GST_BIN (work_thread), autoplugger);
-    gst_element_link (source, autoplugger);
-    gst_element_link (autoplugger, video_thread);
-    gst_element_link (autoplugger, audioconvert);
-    
-    g_hash_table_replace (play->priv->elements, "autoplugger", autoplugger);
+    /* Unlinking, removing */
+    gst_pad_unlink (tee_pad1, vis_queue_pad);
+    vis_bin_pad = gst_element_get_pad (vis_bin, "src");
+    switch_pad = gst_pad_get_peer (vis_bin_pad);
+    gst_pad_unlink (vis_bin_pad, switch_pad);
+    gst_element_release_request_pad (video_switch, switch_pad);
+    gst_object_ref (GST_OBJECT (vis_bin));
+    gst_bin_remove (GST_BIN (video_thread), vis_bin);
   }
   else {
-    GstCaps *filtered_caps;
     
     /* If we are supposed to disconnect then nothing to do we return */
     if (!connect) {
       return TRUE;
     }
     
-    /* We have to modify the pipeline. Changing autoplugger requires going to
-       READY */
-    gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+    /* Connecting visualization */
     
-    /* Removing autoplugger */
-    gst_element_unlink (source, autoplugger);
-    gst_element_unlink (autoplugger, video_thread);
-    gst_element_unlink (autoplugger, audioconvert);
-    gst_bin_remove (GST_BIN (work_thread), autoplugger);
-  
-    autoplugger = gst_element_factory_make ("spider", "autoplugger");
-    if (!GST_IS_ELEMENT (autoplugger))
-      return FALSE;
-  
-    /* Adding and connecting a new autoplugger */
-    gst_bin_add (GST_BIN (work_thread), autoplugger);
-    gst_element_link (source, autoplugger);
-    gst_element_link (autoplugger, audioconvert);
+    /* We bring back the pipeline to PAUSED */
+    if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING) {
+      gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+      was_playing = TRUE;
+    }
     
-    g_hash_table_replace (play->priv->elements, "autoplugger", autoplugger);
-    
-    /* Otherwise we add the element to the bin and link it to video_thread */
-    gst_bin_add (GST_BIN (work_thread), vis_element);
-    vis_element_pad = gst_element_get_pad (vis_element, "sink");
-    if (GST_IS_PAD (vis_element_pad))
-      gst_pad_link (tee_pad1, vis_element_pad);
-    
-    filtered_caps = gst_caps_from_string ("video/x-raw-rgb, "
-                                            "framerate = 30.0; "
-                                          "video/x-raw-yuv, "
-                                            "framerate = 30.0");
-    
-    if (!gst_element_link_filtered (vis_element, video_thread, filtered_caps))
-      g_message ("failed linking filtered vis with video thread");
-    
-    gst_caps_free (filtered_caps);
+    /* Adding, linking */
+    play->priv->handoff_hid = g_signal_connect (G_OBJECT (identity),
+                                "handoff",
+                                G_CALLBACK (gst_play_identity_handoff), play);
+    gst_bin_add (GST_BIN (video_thread), vis_bin);
+    gst_pad_link (tee_pad1, vis_queue_pad);
+    gst_element_link (vis_bin, video_switch);
   }
 
+  if (was_playing)
+    gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
+  
   return TRUE;
 }
 
