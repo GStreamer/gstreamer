@@ -116,6 +116,7 @@
 /* IDs in the cluster master */
 #define GST_MATROSKA_ID_CLUSTERTIMECODE 0xE7
 #define GST_MATROSKA_ID_BLOCKGROUP 0xA0
+#define GST_MATROSKA_ID_REFERENCEBLOCK 0xFB
 
 /* IDs in the blockgroup master */
 #define GST_MATROSKA_ID_BLOCK      0xA1

@@ -1063,6 +1063,10 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEEK:
       return gst_matroska_demux_send_event (GST_ELEMENT (demux), event);
 
+      /* events we don't need to handle */
+    case GST_EVENT_NAVIGATION:
+      break;
+
     default:
       GST_WARNING ("Unhandled event of type %d", GST_EVENT_TYPE (event));
       res = FALSE;
@@ -1927,6 +1931,18 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
         GST_WARNING ("FIXME: implement support for BlockDuration");
         break;
       }
+      case GST_MATROSKA_ID_REFERENCEBLOCK:{
+        /* FIXME: this segfaults
+           gint64 num;
+           if (!gst_ebml_read_sint (ebml, &id, &num)) {
+           res = FALSE;
+           break;
+           }
+           GST_WARNING ("FIXME: implement support for ReferenceBlock");
+         */
+        break;
+      }
+
 
       default:
         GST_WARNING ("Unknown entry 0x%x in blockgroup data", id);
