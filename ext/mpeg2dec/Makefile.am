@@ -1,6 +1,6 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgstmpeg2dec.la
+plugin_LTLIBRARIES = libgstmpeg2dec.la
 
 if HAVE_CPU_I386
 ARCHFLAGS = -m486
@@ -9,13 +9,13 @@ ARCHFLAGS =
 endif
 
 libgstmpeg2dec_la_SOURCES = gstmpeg2dec.c
-libgstmpeg2dec_la_LIBADD = -lmpeg2 -lmpeg2dec
 libgstmpeg2dec_la_CFLAGS = $(GST_CFLAGS) -O3 $(ARCHFLAGS) $(FOMIT_FRAME_POINTER) -ffast-math
+libgstmpeg2dec_la_LIBADD = $(GST_LIBS) -lmpeg2 -lmpeg2dec
 
 #
 # Use the following if you use mpeg2dec from CVS
 #
-#libgstmpeg2dec_la_LIBADD = -lmpeg2 -lcpuaccel
+#libgstmpeg2dec_la_LIBADD = $(GST_LIBS) -lmpeg2 -lcpuaccel
 
 noinst_HEADERS = gstmpeg2dec.h
 
@@ -27,4 +27,3 @@ noinst_HEADERS = gstmpeg2dec.h
 
 #CFLAGS += -pg -Wall -fprofile-arcs -ftest-coverage
 #CFLAGS += -pg -Wall -O3
-

@@ -1,10 +1,10 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgstsynaesthesia.la
+plugin_LTLIBRARIES = libgstsynaesthesia.la
 
 libgstsynaesthesia_la_SOURCES = core.c gstsynaesthesia.c
 libgstsynaesthesia_la_CFLAGS = $(GST_CFLAGS) $(GTK_CFLAGS)
-libgstsynaesthesia_la_LIBADD = $(GTK_LIBS)
+libgstsynaesthesia_la_LIBADD = $(GST_LIBS) $(GTK_LIBS)
 
 noinst_HEADERS = core.h gstsynaesthesia.h
 

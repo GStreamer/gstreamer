@@ -6,8 +6,8 @@ plugin_LTLIBRARIES = libdvdsrc.la
 ## AM_CFLAGS = -D_LARGEFILE64_SOURCE $(LIBDVDREADCFLAGS)
 
 libdvdsrc_la_SOURCES = dvdsrc.c
-libdvdsrc_la_LDFLAGS = $(DVDREAD_LIBS)
 libdvdsrc_la_CFLAGS = $(GST_CFLAGS)
+libdvdsrc_la_LIBADD = $(GST_LIBS) $(DVDREAD_LIBS)
 
 noinst_HEADERS = dvdsrc.h
 
@@ -18,7 +18,5 @@ noinst_HEADERS = dvdsrc.h
 #demo_play_SOURCES = demo-play.c
 #demo_play_CFLAGS  = $(GST_CFLAGS) $(GNOME_CFLAGS)
 #demo_play_LDFLAGS = $(GST_LIBS) $(GNOME_LIBS)
-
-#EXTRA_DIST = README
 
 EXTRA_DIST = demo-play.c README
