@@ -129,7 +129,7 @@ gst_file_pad_chain (GstPad * gst_pad, GstData * data)
             GST_INFO_OBJECT (pad, "got discont to %" G_GINT64_FORMAT, value);
             pad->position = value;
           } else {
-            GST_WARNING_OBJECT (pad, "got discont without position");
+            GST_ERROR_OBJECT (pad, "got discont without position");
             if (pad->position == -1) {
               GST_WARNING_OBJECT (pad,
                   "need to reset position to 0 because we have no position info");

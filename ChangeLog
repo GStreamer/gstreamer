@@ -1,3 +1,13 @@
+2004-06-28  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstpad.c: (gst_pad_get_caps):
+	  throw an error if the getcaps function does not return a subset of
+	  the template caps.
+	* libs/gst/bytestream/filepad.c: (gst_file_pad_chain):
+	  make disconts without position info an error in debugging
+	* tests/spidey_bench.c: (handoff), (main):
+	  don't count first try when averaging
+
 2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/Makefile.am:

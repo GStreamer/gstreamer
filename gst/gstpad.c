@@ -2625,13 +2625,33 @@ gst_pad_get_caps (GstPad * pad)
 
     if (caps == NULL) {
       g_critical ("pad %s:%s returned NULL caps from getcaps function\n",
-          GST_ELEMENT_NAME (GST_PAD_PARENT (GST_PAD (realpad))),
-          GST_PAD_NAME (realpad));
-      caps = gst_caps_new_any ();
-    }
+          GST_DEBUG_PAD_NAME (realpad));
+    } else {
+#ifndef G_DISABLE_ASSERT
+      /* check that the returned caps are a real subset of the template caps */
+      if (GST_PAD_PAD_TEMPLATE (realpad)) {
+        const GstCaps *templ_caps =
+            GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (realpad));
+        if (!gst_caps_is_subset (caps, templ_caps)) {
+          GstCaps *temp;
 
-    return caps;
-  } else if (GST_PAD_PAD_TEMPLATE (realpad)) {
+          GST_CAT_ERROR_OBJECT (GST_CAT_CAPS, pad,
+              "pad returned caps %" GST_PTR_FORMAT
+              " which are not a real subset of its template caps %"
+              GST_PTR_FORMAT, caps, templ_caps);
+          g_warning
+              ("pad %s:%s returned caps that are not a real subset of its template caps",
+              GST_DEBUG_PAD_NAME (realpad));
+          temp = gst_caps_intersect (templ_caps, caps);
+          gst_caps_free (caps);
+          caps = temp;
+        }
+      }
+#endif
+      return caps;
+    }
+  }
+  if (GST_PAD_PAD_TEMPLATE (realpad)) {
     GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (realpad);
     const GstCaps *caps;
 

@@ -21,6 +21,7 @@
 static GTimeVal start_time;
 gboolean done = FALSE;
 GstClockTime total = 0;
+guint counted = 0;
 
 static void
 handoff (GstElement * fakesink, GstBuffer * data)
@@ -37,7 +38,9 @@ handoff (GstElement * fakesink, GstBuffer * data)
   g_print ("time to launch spider pipeline: %" GST_TIME_FORMAT "\n",
       GST_TIME_ARGS (diff));
   done = TRUE;
-  total += diff;
+  /* don't count first try, it loads the plugins */
+  if (counted++)
+    total += diff;
 }
 
 gint
@@ -61,7 +64,7 @@ main (gint argc, gchar * argv[])
       ("filesrc location=\"%s\" ! spider ! audio/x-raw-int ! fakesink name = sink",
       file);
 
-  for (i = 0; i < count; i++) {
+  for (i = 0; i <= count; i++) {
     GstElement *sink;
 
     g_get_current_time (&start_time);
