@@ -39,6 +39,7 @@ static GstElementDetails gst_osssink_details = {
 
 static void 			gst_osssink_class_init		(GstOssSinkClass *klass);
 static void 			gst_osssink_init		(GstOssSink *osssink);
+static void 			gst_osssink_dispose		(GObject *object);
 static void 			gst_osssink_finalize		(GObject *object);
 
 static GstElementStateReturn 	gst_osssink_change_state	(GstElement *element);
@@ -148,6 +149,16 @@ gst_osssink_get_bufferpool (GstPad *pad)
 }
 
 static void
+gst_osssink_dispose (GObject *object)
+{
+  GstOssSink *osssink = (GstOssSink *) object;
+
+  gst_object_unparent (GST_OBJECT (osssink->provided_clock));
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
 gst_osssink_finalize (GObject *object)
 {
   GstOssSink *osssink = (GstOssSink *) object;
@@ -192,6 +203,7 @@ gst_osssink_class_init (GstOssSinkClass *klass)
   
   gobject_class->set_property = gst_osssink_set_property;
   gobject_class->get_property = gst_osssink_get_property;
+  gobject_class->dispose      = gst_osssink_dispose;
   gobject_class->finalize     = gst_osssink_finalize;
   
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_osssink_change_state);
@@ -223,6 +235,7 @@ gst_osssink_init (GstOssSink *osssink)
   osssink->sync = TRUE;
   osssink->sinkpool = NULL;
   osssink->provided_clock = GST_CLOCK (gst_oss_clock_new ("ossclock", gst_osssink_get_time, osssink));
+  gst_object_set_parent (GST_OBJECT (osssink->provided_clock), GST_OBJECT (osssink));
   osssink->handled = 0;
 
   GST_FLAG_SET (osssink, GST_ELEMENT_THREAD_SUGGESTED);
@@ -623,4 +636,3 @@ gst_osssink_factory_init (GstPlugin *plugin)
 
   return TRUE;
 }
-

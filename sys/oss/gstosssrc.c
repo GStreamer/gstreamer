@@ -87,6 +87,8 @@ GST_PAD_TEMPLATE_FACTORY (osssrc_src_factory,
 
 static void 			gst_osssrc_class_init	(GstOssSrcClass *klass);
 static void 			gst_osssrc_init		(GstOssSrc *osssrc);
+static void 			gst_osssrc_dispose	(GObject *object);
+static void 			gst_osssrc_finalize	(GObject *object);
 
 static GstPadLinkReturn 	gst_osssrc_srcconnect 	(GstPad *pad, GstCaps *caps);
 static const GstFormat* 	gst_osssrc_get_formats 	(GstPad *pad);
@@ -162,6 +164,8 @@ gst_osssrc_class_init (GstOssSrcClass *klass)
   
   gobject_class->set_property = gst_osssrc_set_property;
   gobject_class->get_property = gst_osssrc_get_property;
+  gobject_class->dispose      = gst_osssrc_dispose;
+  gobject_class->finalize     = gst_osssrc_finalize;
 
   gstelement_class->change_state = gst_osssrc_change_state;
   gstelement_class->send_event = gst_osssrc_send_event;
@@ -195,8 +199,29 @@ gst_osssrc_init (GstOssSrc *osssrc)
   osssrc->provided_clock = GST_CLOCK (gst_oss_clock_new ("ossclock",
 							 gst_osssrc_get_time,
 							 osssrc));
+  gst_object_set_parent (GST_OBJECT (osssrc->provided_clock), GST_OBJECT (osssrc));
+  
   osssrc->clock = NULL;
 }
+static void
+gst_osssrc_dispose (GObject *object)
+{
+  GstOssSrc *osssrc = (GstOssSrc *) object;
+
+  gst_object_unparent (GST_OBJECT (osssrc->provided_clock));
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+static void
+gst_osssrc_finalize (GObject *object)
+{
+  GstOssSrc *osssrc = (GstOssSrc *) object;
+
+  g_free (osssrc->common.device);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 
 static GstPadLinkReturn 
 gst_osssrc_srcconnect (GstPad *pad, GstCaps *caps)
