@@ -11,4 +11,3 @@ libgstosshelper_la_SOURCES = gstosshelper.c
 libgstosshelper_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstosssink.h gstosssrc.h gstossgst.h gstosshelper.h gstossclock.h
-
