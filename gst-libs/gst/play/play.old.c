@@ -33,8 +33,9 @@ enum {
 	HAVE_XID,
 	HAVE_VIS_XID,
 	HAVE_VIDEO_SIZE,
-	LAST_SIGNAL,
 	PIPELINE_ERROR,
+	/* put additional signals before this comment */
+	LAST_SIGNAL,
 };
 
 /* this struct is used to decouple signals coming out of threaded pipelines */
