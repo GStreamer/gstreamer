@@ -27,11 +27,8 @@
 static GstElementDetails overlay_details = {
   "Video Overlay",
   "Filter/Video",
-  "LGPL",
   "Overlay multiple video streams",
-  VERSION,
-  "David Schleef <ds@schleef.org>",
-  "(C) 2002, 2003",
+  "David Schleef <ds@schleef.org>"
 };
 
 GST_PAD_TEMPLATE_FACTORY (overlay_src_factory,
@@ -102,6 +99,7 @@ enum {
 
 
 static void	gst_overlay_class_init		(GstOverlayClass *klass);
+static void	gst_overlay_base_init		(GstOverlayClass *klass);
 static void	gst_overlay_init			(GstOverlay *overlay);
 
 static void	gst_overlay_loop			(GstElement *element);
@@ -122,7 +120,7 @@ gst_overlay_get_type (void)
   if (!overlay_type) {
     static const GTypeInfo overlay_info = {
       sizeof(GstOverlayClass),      
-      NULL,
+      (GBaseInitFunc)gst_overlay_base_init,
       NULL,
       (GClassInitFunc)gst_overlay_class_init,
       NULL,
@@ -134,6 +132,22 @@ gst_overlay_get_type (void)
     overlay_type = g_type_register_static(GST_TYPE_ELEMENT, "GstOverlay", &overlay_info, 0);
   }
   return overlay_type;
+}
+
+static void
+gst_overlay_base_init (GstOverlayClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (overlay_sink1_factory));
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (overlay_sink2_factory));
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (overlay_sink3_factory));
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (overlay_src_factory));
+  gst_element_class_set_details (element_class, &overlay_details);
 }
 
 static void
@@ -368,32 +382,21 @@ gst_overlay_get_property (GObject *object, guint prop_id,
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("overlay",GST_TYPE_OVERLAY,
-                                   &overlay_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (overlay_sink1_factory));
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (overlay_sink2_factory));
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (overlay_sink3_factory));
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (overlay_src_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "overlay",
+			       GST_RANK_NONE, GST_TYPE_OVERLAY);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "overlay",
-  plugin_init
-};
-
+  "Overlay multiple video streams",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
