@@ -376,7 +376,6 @@ SUBDIRS=\
 	$(HERMES_DIR) \
 	$(JACK_DIR) \
 	$(JPEG_DIR) \
-	$(KIO_DIR) \
 	$(LADSPA_DIR) \
 	$(LAME_DIR) \
 	$(LCS_DIR) \
