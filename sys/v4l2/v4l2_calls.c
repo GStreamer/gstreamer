@@ -84,7 +84,7 @@ gst_v4l2_fill_lists (GstV4l2Element *v4l2element)
 	if (pads && g_list_length ((GList *) pads) == 1)
 		dir = GST_PAD_DIRECTION (GST_PAD (pads->data));
 
-	if (dir == GST_PAD_SINK) {
+	if (dir != GST_PAD_SINK) {
 	/* and now, the inputs */
 		for (n=0;;n++) {
 			struct v4l2_input input;
