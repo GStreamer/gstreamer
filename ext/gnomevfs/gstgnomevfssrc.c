@@ -999,7 +999,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 	}
 
 	GST_BUFFER_TIMESTAMP (buf) = -1;
-	src->in_first_get = FALSE;
+
 	/* we're done, return the buffer */
 	return buf;
 }
@@ -1041,20 +1041,11 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 	
 	info = gnome_vfs_file_info_new ();
 	if (gnome_vfs_get_file_info_from_handle (src->handle, info,
-						 GNOME_VFS_FILE_INFO_DEFAULT | GNOME_VFS_FILE_INFO_GET_MIME_TYPE)
+						 GNOME_VFS_FILE_INFO_DEFAULT)
 	    == GNOME_VFS_OK)
 	{
 		if (info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_SIZE)
 			src->size = info->size;
-		if (info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE)
-		{
-			GstCaps *caps = gst_caps_new ("gnomevfssrc", info->mime_type, NULL);
-			GST_DEBUG (0, "got MIME type \"%s\", setting caps",
-				   info->mime_type);
-			gst_pad_try_set_caps (src->srcpad, caps);
-		}
-		else
-			GST_DEBUG (0, "No mime type available");
 	}
 	else
 		GST_DEBUG (0, "getting info failed: %s", gnome_vfs_result_to_string (result));
