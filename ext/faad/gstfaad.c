@@ -157,7 +157,8 @@ gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps)
     guchar channels;
 
     buf = g_value_get_boxed (value);
-    if (faacDecInit2 (faad->handle, GST_BUFFER_DATA (buf),
+    /* someone forgot that char can be unsigned when writing the API */
+    if ((gint8) faacDecInit2 (faad->handle, GST_BUFFER_DATA (buf),
             GST_BUFFER_SIZE (buf), &samplerate, &channels) < 0)
       return GST_PAD_LINK_REFUSED;
 
