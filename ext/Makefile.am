@@ -172,22 +172,10 @@ else
 MIKMOD_DIR=
 endif
 
-if USE_MJPEGTOOLS
-MJPEGTOOLS_DIR=mjpegtools
-else
-MJPEGTOOLS_DIR=
-endif
-
 if USE_MPEG2DEC
 MPEG2DEC_DIR=mpeg2dec
 else
 MPEG2DEC_DIR=
-endif
-
-if USE_OPENQUICKTIME
-OPENQUICKTIME_DIR=openquicktime
-else
-OPENQUICKTIME_DIR=
 endif
 
 if USE_RAW1394
@@ -256,12 +244,6 @@ else
 XVID_DIR=
 endif
 
-if USE_XMMS
-XMMS_DIR=xmms
-else
-XMMS_DIR=
-endif
-
 if USE_LIBPNG
 SNAPSHOT_DIR=snapshot
 else
@@ -276,22 +258,19 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(HERMES_DIR) $(JACK_DIR) $(JPEG_DIR) \
 	$(LADSPA_DIR) $(LAME_DIR) $(LCS_DIR) \
 	$(LIBDV_DIR) $(LIBFAME_DIR) $(LIBPNG_DIR) \
-	$(MAD_DIR) $(MIKMOD_DIR) $(MJPEGTOOLS_DIR) $(MPEG2DEC_DIR) \
-	$(OPENQUICKTIME_DIR) $(RAW1394_DIR) \
-	$(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
+	$(MAD_DIR) $(MIKMOD_DIR) $(MPEG2DEC_DIR) \
+	$(RAW1394_DIR) $(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
 	$(SMOOTHWAVE_DIR) $(SWFDEC_DIR) $(TARKIN_DIR) \
-	$(VORBIS_DIR) $(XVID_DIR) $(XMMS_DIR) $(SNAPSHOT_DIR)
+	$(VORBIS_DIR) $(XVID_DIR) $(SNAPSHOT_DIR)
 
 DIST_SUBDIRS=\
-	a52dec aalib alsa \
-	arts artsd \
+	a52dec aalib alsa arts artsd \
 	audiofile cdparanoia divx dv \
 	dvdread dvdnav esd mas ffmpeg \
 	flac gdk_pixbuf gnomevfs gsm \
 	hermes ivorbis jack jpeg \
 	ladspa lame lcs libfame libpng \
-	mad mikmod mjpegtools mpeg2dec \
-	openquicktime raw1394 \
+	mad mikmod mpeg2dec raw1394 \
 	sdl snapshot shout shout2 sidplay \
 	smoothwave swfdec tarkin vorbis \
-	xmms xvid 
+	xvid 
