@@ -67,6 +67,12 @@ typedef struct {
   GstPad *target;
 } dyn_connect;
 
+static void have_eos (void)
+{
+  DEBUG ("I have eos on the first element\n");
+  exit (0);
+}
+
 static void
 dynamic_connect (GstElement *element, GstPad *newpad, gpointer data)
 {
@@ -284,6 +290,13 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
       }
       
 
+      // thomas: if we're the first element, connect eos signal
+      if (elementcount == 1) 
+      {
+        gtk_signal_connect (GTK_OBJECT (element), "eos",
+                      GTK_SIGNAL_FUNC (have_eos), NULL);
+
+      }
       // if we're the first element, ghost all the sinkpads
       if (elementcount == 1) {
         DEBUG("first element, ghosting all of %s's sink pads to parent %s\n",
@@ -451,3 +464,4 @@ gst_parse_launch(const gchar *cmdline,GstBin *parent)
 
   return i;
 }
+
