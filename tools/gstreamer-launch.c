@@ -190,7 +190,7 @@ gint parse_cmdline(int argc,char *argv[],GstBin *parent) {
         DEBUG("attempting to create element '%s'\n",arg);
         element = gst_elementfactory_make(arg,unique_name(arg));
         if (!element) {
-          fprintf(stderr,"Couldn't create a '%s', no such element or need to run gstraemer-register?\n",arg);
+          fprintf(stderr,"Couldn't create a '%s', no such element or need to run gstreamer-register?\n",arg);
           exit(-1);
         }
         VERBOSE("CREATED element %s\n",gst_element_get_name(element));
