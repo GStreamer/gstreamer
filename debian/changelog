@@ -9,7 +9,7 @@ gstreamer (0.1.0-2) unstable; urgency=low
 
   * debian/rules: call configure instead of autogen.sh
 
- -- David I. Lehn <dlehn@crib.corepower.com>  Sat, 24 Feb 2001 18:31:36 -0500
+ -- David I. Lehn <dlehn@vt.edu>  Sat, 24 Feb 2001 18:31:36 -0500
 
 gstreamer (0.1.0-1) unstable; urgency=low
 
