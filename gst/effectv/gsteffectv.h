@@ -27,5 +27,8 @@ extern GstElementDetails gst_dicetv_details;
 GType gst_warptv_get_type (void);
 extern GstElementDetails gst_warptv_details;
 
+GType gst_shagadelictv_get_type (void);
+extern GstElementDetails gst_shagadelictv_details;
+
 extern GstPadTemplate *gst_effectv_sink_factory ();
 extern GstPadTemplate *gst_effectv_src_factory ();
