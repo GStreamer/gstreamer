@@ -185,6 +185,7 @@ gst_divxdec_init (GstDivxDec *divxdec)
 
   /* bitrate, etc. */
   divxdec->width = divxdec->height = divxdec->csp = divxdec->bitcnt = -1;
+  divxdec->version = 0;
 
   /* set divx handle to NULL */
   divxdec->handle = NULL;
@@ -213,7 +214,20 @@ gst_divxdec_setup (GstDivxDec *divxdec)
   /* initialize the handle */
   memset(&xinit, 0, sizeof(DEC_INIT));
   xinit.smooth_playback = 0;
-  xinit.codec_version = 500;
+  switch (divxdec->version) {
+    case 3:
+      xinit.codec_version = 311;
+      break;
+    case 4:
+      xinit.codec_version = 400;
+      break;
+    case 5:
+      xinit.codec_version = 500;
+      break;
+    default:
+      xinit.codec_version = 0;
+      break;
+  }
   if ((ret = decore(&handle, DEC_OPT_INIT, &xinit, NULL)) != 0) {
     gst_element_error (divxdec, LIBRARY, INIT, NULL,
                        ("divx library error: %s (%d)", gst_divxdec_error (ret), ret));
@@ -439,6 +453,7 @@ gst_divxdec_connect (GstPad        *pad,
   gst_structure_get_int(structure, "width", &divxdec->width);
   gst_structure_get_int(structure, "height", &divxdec->height);
   gst_structure_get_double(structure, "framerate", &divxdec->fps);
+  gst_structure_get_int(structure, "divxversion", &divxdec->version);
 
   return gst_divxdec_negotiate(divxdec);
 }

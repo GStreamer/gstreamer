@@ -54,6 +54,7 @@ struct _GstDivxDec {
   /* video (output) settings */
   guint32 csp;
   int bitcnt, bpp;
+  int version;
   int width, height;
   gdouble fps;
 };
