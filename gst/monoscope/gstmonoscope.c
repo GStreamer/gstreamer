@@ -35,11 +35,12 @@
 typedef struct _GstMonoscope GstMonoscope;
 typedef struct _GstMonoscopeClass GstMonoscopeClass;
 
-struct _GstMonoscope {
+struct _GstMonoscope
+{
   GstElement element;
 
   /* pads */
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad, *srcpad;
 
   /* the timestamp of the next frame */
   guint64 next_time;
@@ -52,14 +53,15 @@ struct _GstMonoscope {
   gboolean first_buffer;
 
   /* visualisation state */
-  struct monoscope_state * visstate;
+  struct monoscope_state *visstate;
 };
 
-struct _GstMonoscopeClass {
+struct _GstMonoscopeClass
+{
   GstElementClass parent_class;
 };
 
-GType gst_monoscope_get_type(void);
+GType gst_monoscope_get_type (void);
 
 
 /* elementfactory information */
@@ -71,41 +73,39 @@ static GstElementDetails gst_monoscope_details = {
 };
 
 /* signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   /* FILL ME */
 };
 
-static GstStaticPadTemplate src_template =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN)
-);
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN)
+    );
 
-static GstStaticPadTemplate sink_template =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS)
-);
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS)
+    );
 
 
-static void	gst_monoscope_class_init	(GstMonoscopeClass *klass);
-static void	gst_monoscope_base_init		(GstMonoscopeClass *klass);
-static void	gst_monoscope_init		(GstMonoscope *monoscope);
+static void gst_monoscope_class_init (GstMonoscopeClass * klass);
+static void gst_monoscope_base_init (GstMonoscopeClass * klass);
+static void gst_monoscope_init (GstMonoscope * monoscope);
 
-static void	gst_monoscope_chain		(GstPad *pad, GstData *_data);
+static void gst_monoscope_chain (GstPad * pad, GstData * _data);
 
 static GstPadLinkReturn
-		gst_monoscope_srcconnect 	(GstPad *pad, const GstCaps *caps);
+gst_monoscope_srcconnect (GstPad * pad, const GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -116,9 +116,9 @@ gst_monoscope_get_type (void)
 
   if (!type) {
     static const GTypeInfo info = {
-      sizeof (GstMonoscopeClass),      
-      (GBaseInitFunc) gst_monoscope_base_init,      
-      NULL,      
+      sizeof (GstMonoscopeClass),
+      (GBaseInitFunc) gst_monoscope_base_init,
+      NULL,
       (GClassInitFunc) gst_monoscope_class_init,
       NULL,
       NULL,
@@ -132,37 +132,39 @@ gst_monoscope_get_type (void)
 }
 
 static void
-gst_monoscope_base_init (GstMonoscopeClass *klass)
+gst_monoscope_base_init (GstMonoscopeClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		gst_static_pad_template_get (&src_template));
+      gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (element_class,
-		gst_static_pad_template_get (&sink_template));
+      gst_static_pad_template_get (&sink_template));
   gst_element_class_set_details (element_class, &gst_monoscope_details);
 }
 
 static void
-gst_monoscope_class_init(GstMonoscopeClass *klass)
+gst_monoscope_class_init (GstMonoscopeClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*) klass;
-  gstelement_class = (GstElementClass*) klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 }
 
 static void
-gst_monoscope_init (GstMonoscope *monoscope)
+gst_monoscope_init (GstMonoscope * monoscope)
 {
   /* create the sink and src pads */
-  monoscope->sinkpad = gst_pad_new_from_template (
-		  gst_static_pad_template_get (&sink_template ), "sink");
-  monoscope->srcpad = gst_pad_new_from_template (
-		  gst_static_pad_template_get (&src_template ), "src");
+  monoscope->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
+      "sink");
+  monoscope->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
+      "src");
   gst_element_add_pad (GST_ELEMENT (monoscope), monoscope->sinkpad);
   gst_element_add_pad (GST_ELEMENT (monoscope), monoscope->srcpad);
 
@@ -175,11 +177,11 @@ gst_monoscope_init (GstMonoscope *monoscope)
   monoscope->first_buffer = TRUE;
   monoscope->width = 256;
   monoscope->height = 128;
-  monoscope->fps = 25.; /* desired frame rate */
+  monoscope->fps = 25.;		/* desired frame rate */
 }
 
 static GstPadLinkReturn
-gst_monoscope_srcconnect (GstPad *pad, const GstCaps *caps)
+gst_monoscope_srcconnect (GstPad * pad, const GstCaps * caps)
 {
   GstMonoscope *monoscope = GST_MONOSCOPE (gst_pad_get_parent (pad));
   GstStructure *structure;
@@ -194,7 +196,7 @@ gst_monoscope_srcconnect (GstPad *pad, const GstCaps *caps)
 }
 
 static void
-gst_monoscope_chain (GstPad *pad, GstData *_data)
+gst_monoscope_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *bufin = GST_BUFFER (_data);
   GstMonoscope *monoscope;
@@ -213,25 +215,26 @@ gst_monoscope_chain (GstPad *pad, GstData *_data)
 
   /* FIXME: should really select the first 1024 samples after the timestamp. */
   if (GST_BUFFER_TIMESTAMP (bufin) < monoscope->next_time || samples_in < 1024) {
-    GST_DEBUG ("timestamp is %" G_GUINT64_FORMAT ": want >= %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP (bufin), monoscope->next_time);
+    GST_DEBUG ("timestamp is %" G_GUINT64_FORMAT ": want >= %" G_GUINT64_FORMAT,
+	GST_BUFFER_TIMESTAMP (bufin), monoscope->next_time);
     gst_buffer_unref (bufin);
     return;
   }
 
   data = (gint16 *) GST_BUFFER_DATA (bufin);
   /* FIXME: Select samples in a better way. */
-  for (i=0; i < 512; i++) {
+  for (i = 0; i < 512; i++) {
     monoscope->datain[i] = *data++;
   }
 
   if (monoscope->first_buffer) {
     monoscope->visstate = monoscope_init (monoscope->width, monoscope->height);
-    g_assert(monoscope->visstate != 0);
+    g_assert (monoscope->visstate != 0);
     GST_DEBUG ("making new pad");
     if (!gst_pad_is_negotiated (monoscope->srcpad)) {
       if (gst_pad_renegotiate (monoscope->srcpad) <= 0) {
-        GST_ELEMENT_ERROR (monoscope, CORE, NEGOTIATION, (NULL), (NULL));
-        return;
+	GST_ELEMENT_ERROR (monoscope, CORE, NEGOTIATION, (NULL), (NULL));
+	return;
       }
     }
     monoscope->first_buffer = FALSE;
@@ -239,7 +242,8 @@ gst_monoscope_chain (GstPad *pad, GstData *_data)
 
   bufout = gst_buffer_new ();
   GST_BUFFER_SIZE (bufout) = monoscope->width * monoscope->height * 4;
-  GST_BUFFER_DATA (bufout) = (guchar *) monoscope_update (monoscope->visstate, monoscope->datain);
+  GST_BUFFER_DATA (bufout) =
+      (guchar *) monoscope_update (monoscope->visstate, monoscope->datain);
   GST_BUFFER_TIMESTAMP (bufout) = monoscope->next_time;
   GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_DONTFREE);
 
@@ -254,20 +258,14 @@ gst_monoscope_chain (GstPad *pad, GstData *_data)
 }
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register(plugin, "monoscope",
-			      GST_RANK_NONE, GST_TYPE_MONOSCOPE);
+  return gst_element_register (plugin, "monoscope",
+      GST_RANK_NONE, GST_TYPE_MONOSCOPE);
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "monoscope",
-  "Monoscope visualization",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "monoscope",
+    "Monoscope visualization",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

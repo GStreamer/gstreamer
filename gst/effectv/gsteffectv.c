@@ -31,45 +31,37 @@
 #include "gsteffectv.h"
 
 
-struct _elements_entry {
+struct _elements_entry
+{
   gchar *name;
-  GType (*type) (void);
+    GType (*type) (void);
 };
 
 static struct _elements_entry _elements[] = {
-  { "edgeTV",  		gst_edgetv_get_type }, 
-  { "agingTV", 		gst_agingtv_get_type },
-  { "diceTV",  		gst_dicetv_get_type },
-  { "warpTV",  		gst_warptv_get_type },
-  { "shagadelicTV",  	gst_shagadelictv_get_type },
-  { "vertigoTV",  	gst_vertigotv_get_type },
-  { "revTV",  		gst_revtv_get_type },
-  { "quarkTV", 		gst_quarktv_get_type },
-  { NULL, 0 },
+  {"edgeTV", gst_edgetv_get_type},
+  {"agingTV", gst_agingtv_get_type},
+  {"diceTV", gst_dicetv_get_type},
+  {"warpTV", gst_warptv_get_type},
+  {"shagadelicTV", gst_shagadelictv_get_type},
+  {"vertigoTV", gst_vertigotv_get_type},
+  {"revTV", gst_revtv_get_type},
+  {"quarkTV", gst_quarktv_get_type},
+  {NULL, 0},
 };
 
 
-GstStaticPadTemplate gst_effectv_src_template =
-GST_STATIC_PAD_TEMPLATE (
-    "src",
+GstStaticPadTemplate gst_effectv_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ( 
-	    		GST_VIDEO_CAPS_BGRx "; "
-	    		GST_VIDEO_CAPS_RGBx
-	    	    )
-);
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_RGBx)
+    );
 
 GstStaticPadTemplate gst_effectv_sink_template =
-GST_STATIC_PAD_TEMPLATE (
-    "sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ( 
-	    		GST_VIDEO_CAPS_BGRx "; "
-	    		GST_VIDEO_CAPS_RGBx
-	    	    )
-);
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_RGBx)
+    );
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -81,7 +73,7 @@ plugin_init (GstPlugin * plugin)
 
   while (_elements[i].name) {
     if (!gst_element_register (plugin, _elements[i].name,
-	  GST_RANK_NONE, (_elements[i].type) ()))
+	    GST_RANK_NONE, (_elements[i].type) ()))
       return FALSE;
     i++;
   }
@@ -89,14 +81,8 @@ plugin_init (GstPlugin * plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "effectv",
-  "effect plugins from the effectv project",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-);
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "effectv",
+    "effect plugins from the effectv project",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN);

@@ -24,11 +24,12 @@
 
 #include <gst/gst.h>
 
-typedef enum {
-  GST_RIFF_OK 	    =  0,		
+typedef enum
+{
+  GST_RIFF_OK = 0,
   GST_RIFF_ENOTRIFF = -1,
-  GST_RIFF_EINVAL   = -2,
-  GST_RIFF_ENOMEM   = -3
+  GST_RIFF_EINVAL = -2,
+  GST_RIFF_ENOMEM = -3
 } GstRiffReturn;
 
 #define MAKE_FOUR_CC(a,b,c,d) GST_MAKE_FOURCC(a,b,c,d)
@@ -81,29 +82,29 @@ typedef enum {
 #define GST_RIFF_FCCH_MSVC MAKE_FOUR_CC('M','S','V','C')
 
 /* INFO types - see http://www.saettler.com/RIFFMCI/riffmci.html */
-#define GST_RIFF_INFO_IARL MAKE_FOUR_CC('I','A','R','L') /* location */
-#define GST_RIFF_INFO_IART MAKE_FOUR_CC('I','A','R','T') /* artist */
-#define GST_RIFF_INFO_ICMS MAKE_FOUR_CC('I','C','M','S') /* commissioned */
-#define GST_RIFF_INFO_ICMT MAKE_FOUR_CC('I','C','M','T') /* comment */
-#define GST_RIFF_INFO_ICOP MAKE_FOUR_CC('I','C','O','P') /* copyright */
-#define GST_RIFF_INFO_ICRD MAKE_FOUR_CC('I','C','R','D') /* creation date */
-#define GST_RIFF_INFO_ICRP MAKE_FOUR_CC('I','C','R','P') /* cropped */
-#define GST_RIFF_INFO_IDIM MAKE_FOUR_CC('I','D','I','M') /* dimensions */
-#define GST_RIFF_INFO_IDPI MAKE_FOUR_CC('I','D','P','I') /* dots-per-inch */
-#define GST_RIFF_INFO_IENG MAKE_FOUR_CC('I','E','N','G') /* engineer(s) */
-#define GST_RIFF_INFO_IGNR MAKE_FOUR_CC('I','G','N','R') /* genre */
-#define GST_RIFF_INFO_IKEY MAKE_FOUR_CC('I','K','E','Y') /* keywords */
-#define GST_RIFF_INFO_ILGT MAKE_FOUR_CC('I','L','G','T') /* lightness */
-#define GST_RIFF_INFO_IMED MAKE_FOUR_CC('I','M','E','D') /* medium */
-#define GST_RIFF_INFO_INAM MAKE_FOUR_CC('I','N','A','M') /* name */
-#define GST_RIFF_INFO_IPLT MAKE_FOUR_CC('I','P','L','T') /* palette setting */
-#define GST_RIFF_INFO_IPRD MAKE_FOUR_CC('I','P','R','D') /* product */
-#define GST_RIFF_INFO_ISBJ MAKE_FOUR_CC('I','S','B','J') /* subject */
-#define GST_RIFF_INFO_ISFT MAKE_FOUR_CC('I','S','F','T') /* software */
-#define GST_RIFF_INFO_ISHP MAKE_FOUR_CC('I','S','H','P') /* sharpness */
-#define GST_RIFF_INFO_ISRC MAKE_FOUR_CC('I','S','R','C') /* source */
-#define GST_RIFF_INFO_ISRF MAKE_FOUR_CC('I','S','R','F') /* source form */
-#define GST_RIFF_INFO_ITCH MAKE_FOUR_CC('I','T','C','H') /* technician(s) */
+#define GST_RIFF_INFO_IARL MAKE_FOUR_CC('I','A','R','L')	/* location */
+#define GST_RIFF_INFO_IART MAKE_FOUR_CC('I','A','R','T')	/* artist */
+#define GST_RIFF_INFO_ICMS MAKE_FOUR_CC('I','C','M','S')	/* commissioned */
+#define GST_RIFF_INFO_ICMT MAKE_FOUR_CC('I','C','M','T')	/* comment */
+#define GST_RIFF_INFO_ICOP MAKE_FOUR_CC('I','C','O','P')	/* copyright */
+#define GST_RIFF_INFO_ICRD MAKE_FOUR_CC('I','C','R','D')	/* creation date */
+#define GST_RIFF_INFO_ICRP MAKE_FOUR_CC('I','C','R','P')	/* cropped */
+#define GST_RIFF_INFO_IDIM MAKE_FOUR_CC('I','D','I','M')	/* dimensions */
+#define GST_RIFF_INFO_IDPI MAKE_FOUR_CC('I','D','P','I')	/* dots-per-inch */
+#define GST_RIFF_INFO_IENG MAKE_FOUR_CC('I','E','N','G')	/* engineer(s) */
+#define GST_RIFF_INFO_IGNR MAKE_FOUR_CC('I','G','N','R')	/* genre */
+#define GST_RIFF_INFO_IKEY MAKE_FOUR_CC('I','K','E','Y')	/* keywords */
+#define GST_RIFF_INFO_ILGT MAKE_FOUR_CC('I','L','G','T')	/* lightness */
+#define GST_RIFF_INFO_IMED MAKE_FOUR_CC('I','M','E','D')	/* medium */
+#define GST_RIFF_INFO_INAM MAKE_FOUR_CC('I','N','A','M')	/* name */
+#define GST_RIFF_INFO_IPLT MAKE_FOUR_CC('I','P','L','T')	/* palette setting */
+#define GST_RIFF_INFO_IPRD MAKE_FOUR_CC('I','P','R','D')	/* product */
+#define GST_RIFF_INFO_ISBJ MAKE_FOUR_CC('I','S','B','J')	/* subject */
+#define GST_RIFF_INFO_ISFT MAKE_FOUR_CC('I','S','F','T')	/* software */
+#define GST_RIFF_INFO_ISHP MAKE_FOUR_CC('I','S','H','P')	/* sharpness */
+#define GST_RIFF_INFO_ISRC MAKE_FOUR_CC('I','S','R','C')	/* source */
+#define GST_RIFF_INFO_ISRF MAKE_FOUR_CC('I','S','R','F')	/* source form */
+#define GST_RIFF_INFO_ITCH MAKE_FOUR_CC('I','T','C','H')	/* technician(s) */
 
 /*********Chunk Names***************/
 #define GST_RIFF_FF00 MAKE_FOUR_CC(0xFF,0xFF,0x00,0x00)
@@ -182,7 +183,7 @@ typedef enum {
 #define GST_RIFF_v422 MAKE_FOUR_CC( 'v', '4', '2', '2')
 #define GST_RIFF_V422 MAKE_FOUR_CC( 'V', '4', '2', '2')
 #define GST_RIFF_mvi1 MAKE_FOUR_CC( 'm', 'v', 'i', '1')
-#define GST_RIFF_MPIX MAKE_FOUR_CC(0x04,0x00, 'i', '1')     /* MotionPixels munged their id */
+#define GST_RIFF_MPIX MAKE_FOUR_CC(0x04,0x00, 'i', '1')	/* MotionPixels munged their id */
 #define GST_RIFF_AURA MAKE_FOUR_CC( 'A', 'U', 'R', 'A')
 #define GST_RIFF_DMB1 MAKE_FOUR_CC( 'D', 'M', 'B', '1')
 #define GST_RIFF_dmb1 MAKE_FOUR_CC( 'd', 'm', 'b', '1')
@@ -218,7 +219,7 @@ typedef enum {
 
 #define GST_RIFF_rpza MAKE_FOUR_CC( 'r', 'p', 'z', 'a')
 /* And this here's the mistakes that need to be supported */
-#define GST_RIFF_azpr MAKE_FOUR_CC( 'a', 'z', 'p', 'r')  /* recognize Apple's rpza mangled? */
+#define GST_RIFF_azpr MAKE_FOUR_CC( 'a', 'z', 'p', 'r')	/* recognize Apple's rpza mangled? */
 
 /*********** FND in MJPG **********/
 #define GST_RIFF_ISFT MAKE_FOUR_CC( 'I', 'S', 'F', 'T')
@@ -231,21 +232,22 @@ typedef enum {
 #define GST_RIFF_rec  MAKE_FOUR_CC( 'r', 'e', 'c', ' ')
 
 /* common data structures */
-struct _gst_riff_avih {
-  guint32 us_frame;          /* microsec per frame */
-  guint32 max_bps;           /* byte/s overall */
-  guint32 pad_gran;          /* pad_gran (???) */
+struct _gst_riff_avih
+{
+  guint32 us_frame;		/* microsec per frame */
+  guint32 max_bps;		/* byte/s overall */
+  guint32 pad_gran;		/* pad_gran (???) */
   guint32 flags;
 /* flags values */
-#define GST_RIFF_AVIH_HASINDEX       0x00000010 /* has idx1 chunk */
-#define GST_RIFF_AVIH_MUSTUSEINDEX   0x00000020 /* must use idx1 chunk to determine order */
-#define GST_RIFF_AVIH_ISINTERLEAVED  0x00000100 /* AVI file is interleaved */
-#define GST_RIFF_AVIH_WASCAPTUREFILE 0x00010000 /* specially allocated used for capturing real time video */
-#define GST_RIFF_AVIH_COPYRIGHTED    0x00020000 /* contains copyrighted data */
-  guint32 tot_frames;        /* # of frames (all) */
-  guint32 init_frames;       /* initial frames (???) */
+#define GST_RIFF_AVIH_HASINDEX       0x00000010	/* has idx1 chunk */
+#define GST_RIFF_AVIH_MUSTUSEINDEX   0x00000020	/* must use idx1 chunk to determine order */
+#define GST_RIFF_AVIH_ISINTERLEAVED  0x00000100	/* AVI file is interleaved */
+#define GST_RIFF_AVIH_WASCAPTUREFILE 0x00010000	/* specially allocated used for capturing real time video */
+#define GST_RIFF_AVIH_COPYRIGHTED    0x00020000	/* contains copyrighted data */
+  guint32 tot_frames;		/* # of frames (all) */
+  guint32 init_frames;		/* initial frames (???) */
   guint32 streams;
-  guint32 bufsize;           /* suggested buffer size */
+  guint32 bufsize;		/* suggested buffer size */
   guint32 width;
   guint32 height;
   guint32 scale;
@@ -254,26 +256,28 @@ struct _gst_riff_avih {
   guint32 length;
 };
 
-struct _gst_riff_strh {
-  guint32 type;             /* stream type */
-  guint32 fcc_handler;       /* fcc_handler */
+struct _gst_riff_strh
+{
+  guint32 type;			/* stream type */
+  guint32 fcc_handler;		/* fcc_handler */
   guint32 flags;
 /* flags values */
 #define GST_RIFF_STRH_DISABLED        0x000000001
 #define GST_RIFF_STRH_VIDEOPALCHANGES 0x000010000
   guint32 priority;
-  guint32 init_frames;       /* initial frames (???) */
+  guint32 init_frames;		/* initial frames (???) */
   guint32 scale;
   guint32 rate;
   guint32 start;
   guint32 length;
-  guint32 bufsize;           /* suggested buffer size */
+  guint32 bufsize;		/* suggested buffer size */
   guint32 quality;
   guint32 samplesize;
   /* XXX 16 bytes ? */
 };
 
-struct _gst_riff_strf_vids {       /* == BitMapInfoHeader */
+struct _gst_riff_strf_vids
+{				/* == BitMapInfoHeader */
   guint32 size;
   guint32 width;
   guint32 height;
@@ -283,13 +287,14 @@ struct _gst_riff_strf_vids {       /* == BitMapInfoHeader */
   guint32 image_size;
   guint32 xpels_meter;
   guint32 ypels_meter;
-  guint32 num_colors;        /* used colors */
-  guint32 imp_colors;        /* important colors */
+  guint32 num_colors;		/* used colors */
+  guint32 imp_colors;		/* important colors */
   /* may be more for some codecs */
 };
 
 
-struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
+struct _gst_riff_strf_auds
+{				/* == WaveHeader (?) */
   guint16 format;
 /**** from public Microsoft RIFF docs ******/
 #define GST_RIFF_WAVE_FORMAT_UNKNOWN        (0x0000)
@@ -328,7 +333,8 @@ struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
   guint16 size;
 };
 
-struct _gst_riff_strf_iavs {    
+struct _gst_riff_strf_iavs
+{
   guint32 DVAAuxSrc;
   guint32 DVAAuxCtl;
   guint32 DVAAuxSrc1;
@@ -339,26 +345,30 @@ struct _gst_riff_strf_iavs {
   guint32 DVReserved2;
 };
 
-struct _gst_riff_riff {  
+struct _gst_riff_riff
+{
   guint32 id;
   guint32 size;
   guint32 type;
 };
 
-struct _gst_riff_list {  
+struct _gst_riff_list
+{
   guint32 id;
   guint32 size;
   guint32 type;
 };
 
-struct _gst_riff_labl {
+struct _gst_riff_labl
+{
   guint32 id;
   guint32 size;
 
   guint32 identifier;
 };
 
-struct _gst_riff_ltxt {
+struct _gst_riff_ltxt
+{
   guint32 id;
   guint32 size;
 
@@ -371,14 +381,16 @@ struct _gst_riff_ltxt {
   guint16 codepage;
 };
 
-struct _gst_riff_note {
+struct _gst_riff_note
+{
   guint32 id;
   guint32 size;
 
   guint32 identifier;
 };
 
-struct _gst_riff_cuepoints {
+struct _gst_riff_cuepoints
+{
   guint32 identifier;
   guint32 position;
   guint32 id;
@@ -387,19 +399,22 @@ struct _gst_riff_cuepoints {
   guint32 offset;
 };
 
-struct _gst_riff_cue {
+struct _gst_riff_cue
+{
   guint32 id;
   guint32 size;
 
-  guint32 cuepoints; /* Number of cue points held in the data */
+  guint32 cuepoints;		/* Number of cue points held in the data */
 };
 
-struct _gst_riff_chunk {  
+struct _gst_riff_chunk
+{
   guint32 id;
   guint32 size;
 };
 
-struct _gst_riff_index_entry {  
+struct _gst_riff_index_entry
+{
   guint32 id;
   guint32 flags;
 #define GST_RIFF_IF_LIST		(0x00000001L)
@@ -410,29 +425,31 @@ struct _gst_riff_index_entry {
   guint32 size;
 };
 
-struct _gst_riff_dmlh {
+struct _gst_riff_dmlh
+{
   guint32 totalframes;
 };
 
-typedef struct _gst_riff_riff 		gst_riff_riff;
-typedef struct _gst_riff_list 		gst_riff_list;
-typedef struct _gst_riff_chunk 		gst_riff_chunk;
-typedef struct _gst_riff_index_entry 	gst_riff_index_entry;
+typedef struct _gst_riff_riff gst_riff_riff;
+typedef struct _gst_riff_list gst_riff_list;
+typedef struct _gst_riff_chunk gst_riff_chunk;
+typedef struct _gst_riff_index_entry gst_riff_index_entry;
 
-typedef struct _gst_riff_avih 		gst_riff_avih;
-typedef struct _gst_riff_strh 		gst_riff_strh;
-typedef struct _gst_riff_strf_vids 	gst_riff_strf_vids;
-typedef struct _gst_riff_strf_auds 	gst_riff_strf_auds;
-typedef struct _gst_riff_strf_iavs 	gst_riff_strf_iavs;
-typedef struct _gst_riff_dmlh           gst_riff_dmlh;
-typedef struct _GstRiffChunk 		GstRiffChunk;
+typedef struct _gst_riff_avih gst_riff_avih;
+typedef struct _gst_riff_strh gst_riff_strh;
+typedef struct _gst_riff_strf_vids gst_riff_strf_vids;
+typedef struct _gst_riff_strf_auds gst_riff_strf_auds;
+typedef struct _gst_riff_strf_iavs gst_riff_strf_iavs;
+typedef struct _gst_riff_dmlh gst_riff_dmlh;
+typedef struct _GstRiffChunk GstRiffChunk;
 
-struct _GstRiffChunk {
+struct _GstRiffChunk
+{
   gulong offset;
 
   guint32 id;
   guint32 size;
-  guint32 form; /* for list chunks */
+  guint32 form;			/* for list chunks */
 
   gchar *data;
 };

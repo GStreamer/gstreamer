@@ -27,8 +27,9 @@
 #include <FLAC/all.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 #define GST_TYPE_FLACENC flacenc_get_type()
 #define GST_FLACENC(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_FLACENC, FlacEnc)
@@ -36,40 +37,42 @@ extern "C" {
 #define GST_IS_FLACENC(obj) G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_FLACENC)
 #define GST_IS_FLACENC_CLASS(obj) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_FLACENC)
 
-typedef struct _FlacEnc FlacEnc;
-typedef struct _FlacEncClass FlacEncClass;
+  typedef struct _FlacEnc FlacEnc;
+  typedef struct _FlacEncClass FlacEncClass;
 
-struct _FlacEnc {
-  GstElement 	 element;
+  struct _FlacEnc
+  {
+    GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+    GstPad *sinkpad, *srcpad;
 
-  gboolean 	 first;
-  GstBuffer	*first_buf;
-  gboolean 	 eos;
-  gint 		 channels;
-  gint 		 depth;
-  gint 		 sample_rate;
-  gboolean	 negotiated;
-  gint 		 quality;
-  gboolean	 stopped;
-  FLAC__int32 	*data;
+    gboolean first;
+    GstBuffer *first_buf;
+    gboolean eos;
+    gint channels;
+    gint depth;
+    gint sample_rate;
+    gboolean negotiated;
+    gint quality;
+    gboolean stopped;
+    FLAC__int32 *data;
 
-  FLAC__SeekableStreamEncoder *encoder;
-  FLAC__StreamMetadata **meta;
+    FLAC__SeekableStreamEncoder *encoder;
+    FLAC__StreamMetadata **meta;
 
-  GstTagList *	   tags;
-};
+    GstTagList *tags;
+  };
 
-struct _FlacEncClass {
-  GstElementClass parent_class;
-};
+  struct _FlacEncClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType flacenc_get_type(void);
+  GType flacenc_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
-#endif /* __FLACENC_H__ */
+#endif				/* __FLACENC_H__ */

@@ -25,8 +25,9 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,45 +55,48 @@ extern "C" {
 #define GST_IS_UDPSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_UDPSINK))
 
-typedef struct _GstUDPSink GstUDPSink;
-typedef struct _GstUDPSinkClass GstUDPSinkClass;
+  typedef struct _GstUDPSink GstUDPSink;
+  typedef struct _GstUDPSinkClass GstUDPSinkClass;
 
-typedef enum {
-  GST_UDPSINK_OPEN             = GST_ELEMENT_FLAG_LAST,
+  typedef enum
+  {
+    GST_UDPSINK_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  GST_UDPSINK_FLAG_LAST        = GST_ELEMENT_FLAG_LAST + 2,
-} GstUDPSinkFlags;
+    GST_UDPSINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
+  } GstUDPSinkFlags;
 
-struct _GstUDPSink {
-  GstElement element;
+  struct _GstUDPSink
+  {
+    GstElement element;
 
-  /* pads */
-  GstPad *sinkpad,*srcpad;
+    /* pads */
+    GstPad *sinkpad, *srcpad;
 
-  int sock;
-  struct sockaddr_in theiraddr;
-  struct ip_mreq multi_addr;
+    int sock;
+    struct sockaddr_in theiraddr;
+    struct ip_mreq multi_addr;
 
-  gint port;
-  Gst_UDP_Control control;
-  gchar *host;
-    
-  guint mtu;
-    
-  GstClock *clock;
-};
+    gint port;
+    Gst_UDP_Control control;
+    gchar *host;
 
-struct _GstUDPSinkClass {
-  GstElementClass parent_class;
+    guint mtu;
 
-};
+    GstClock *clock;
+  };
 
-GType gst_udpsink_get_type(void);
+  struct _GstUDPSinkClass
+  {
+    GstElementClass parent_class;
+
+  };
+
+  GType gst_udpsink_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_UDPSINK_H__ */
+#endif				/* __GST_UDPSINK_H__ */

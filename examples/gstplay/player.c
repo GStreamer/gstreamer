@@ -16,14 +16,14 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
 #include <gst/play/play.h>
 
 static GMainLoop *loop = NULL;
 static gint64 length = 0;
 
 static void
-print_tag (const GstTagList *list, const gchar *tag, gpointer unused)
+print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
 {
   gint i, count;
 
@@ -31,14 +31,14 @@ print_tag (const GstTagList *list, const gchar *tag, gpointer unused)
 
   for (i = 0; i < count; i++) {
     gchar *str;
-    
+
     if (gst_tag_get_type (tag) == G_TYPE_STRING) {
       g_assert (gst_tag_list_get_string_index (list, tag, i, &str));
     } else {
-      str = g_strdup_value_contents (
-	      gst_tag_list_get_value_index (list, tag, i));
+      str =
+	  g_strdup_value_contents (gst_tag_list_get_value_index (list, tag, i));
     }
-  
+
     if (i == 0) {
       g_print ("%15s: %s\n", gst_tag_get_nick (tag), str);
     } else {
@@ -50,46 +50,46 @@ print_tag (const GstTagList *list, const gchar *tag, gpointer unused)
 }
 
 static void
-got_found_tag (GstPlay *play,GstElement *source, GstTagList *tag_list)
+got_found_tag (GstPlay * play, GstElement * source, GstTagList * tag_list)
 {
   gst_tag_list_foreach (tag_list, print_tag, NULL);
 }
 
 static void
-got_time_tick (GstPlay *play, gint64 time_nanos)
+got_time_tick (GstPlay * play, gint64 time_nanos)
 {
   g_print ("time tick %f\n", time_nanos / (float) GST_SECOND);
 }
 
 static void
-got_stream_length (GstPlay *play, gint64 length_nanos)
+got_stream_length (GstPlay * play, gint64 length_nanos)
 {
   g_print ("got length %llu\n", length_nanos);
   length = length_nanos;
 }
 
 static void
-got_video_size (GstPlay *play, gint width, gint height)
+got_video_size (GstPlay * play, gint width, gint height)
 {
   g_print ("got video size %d, %d\n", width, height);
 }
 
 static void
-got_eos (GstPlay *play)
+got_eos (GstPlay * play)
 {
   g_print ("End Of Stream\n");
   g_main_loop_quit (loop);
 }
 
 static gboolean
-seek_timer (GstPlay *play)
+seek_timer (GstPlay * play)
 {
   gst_play_seek_to_time (play, length / 2);
   return FALSE;
 }
 
 static gboolean
-idle_iterate (GstPlay *play)
+idle_iterate (GstPlay * play)
 {
   gst_bin_iterate (GST_BIN (play));
   return (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING);
@@ -114,8 +114,7 @@ main (int argc, char *argv[])
 
   /* Creating the GstPlay object */
   play = gst_play_new (&error);
-  if (error)
-  {
+  if (error) {
     g_print ("Error: could not create play object:\n%s\n", error->message);
     g_error_free (error);
     return 1;
@@ -140,17 +139,16 @@ main (int argc, char *argv[])
   /* gst_xml_write_file (GST_ELEMENT (play), stdout); */
 
   g_signal_connect (G_OBJECT (play), "time_tick",
-                    G_CALLBACK (got_time_tick), NULL);
+      G_CALLBACK (got_time_tick), NULL);
   g_signal_connect (G_OBJECT (play), "stream_length",
-                    G_CALLBACK (got_stream_length), NULL);
+      G_CALLBACK (got_stream_length), NULL);
   g_signal_connect (G_OBJECT (play), "have_video_size",
-                    G_CALLBACK (got_video_size), NULL);
+      G_CALLBACK (got_video_size), NULL);
   g_signal_connect (G_OBJECT (play), "found_tag",
-                    G_CALLBACK (got_found_tag), NULL);
+      G_CALLBACK (got_found_tag), NULL);
   g_signal_connect (G_OBJECT (play), "error",
-                    G_CALLBACK (gst_element_default_error), NULL);
-  g_signal_connect (G_OBJECT (play), "eos",
-                    G_CALLBACK (got_eos), NULL);
+      G_CALLBACK (gst_element_default_error), NULL);
+  g_signal_connect (G_OBJECT (play), "eos", G_CALLBACK (got_eos), NULL);
 
   /* Change state to PLAYING */
   gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
@@ -163,9 +161,9 @@ main (int argc, char *argv[])
   g_print ("setting pipeline to ready\n");
 
   gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
-  
+
   /* unref 
-  gst_object_unref (GST_OBJECT (play)); */
+     gst_object_unref (GST_OBJECT (play)); */
 
   exit (0);
 }

@@ -26,8 +26,9 @@
 
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_MEDIAN \
@@ -41,31 +42,33 @@ extern "C" {
 #define GST_IS_MEDIAN_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MEDIAN))
 
-typedef struct _GstMedian GstMedian;
-typedef struct _GstMedianClass GstMedianClass;
+  typedef struct _GstMedian GstMedian;
+  typedef struct _GstMedianClass GstMedianClass;
 
-struct _GstMedian {
-  GstElement element;
+  struct _GstMedian
+  {
+    GstElement element;
 
-  int format;
-  int width;
-  int height;
+    int format;
+    int width;
+    int height;
 
-  int filtersize;
+    int filtersize;
 
-  gboolean active;
-  gboolean lum_only;
+    gboolean active;
+    gboolean lum_only;
 
-  GstPad *sinkpad,*srcpad;
-};
+    GstPad *sinkpad, *srcpad;
+  };
 
-struct _GstMedianClass {
-  GstElementClass parent_class;
-};
+  struct _GstMedianClass
+  {
+    GstElementClass parent_class;
+  };
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_MEDIAN_H__ */
+#endif				/* __GST_MEDIAN_H__ */

@@ -3,8 +3,6 @@
 
 #include <glib.h>
 
-void
-mulaw_encode(gint16* in, guint8* out, gint numsamples);
-void
-mulaw_decode(guint8* in,gint16* out,gint numsamples);
+void mulaw_encode (gint16 * in, guint8 * out, gint numsamples);
+void mulaw_decode (guint8 * in, gint16 * out, gint numsamples);
 #endif

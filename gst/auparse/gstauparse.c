@@ -32,72 +32,71 @@
 #include <gst/audio/audio.h>
 
 /* elementfactory information */
-static GstElementDetails gst_auparse_details = GST_ELEMENT_DETAILS (
-  ".au parser",
-  "Codec/Parser/Audio",
-  "Parse an .au file into raw audio",
-  "Erik Walthinsen <omega@cse.ogi.edu>"
-);
+static GstElementDetails gst_auparse_details =
+GST_ELEMENT_DETAILS (".au parser",
+    "Codec/Parser/Audio",
+    "Parse an .au file into raw audio",
+    "Erik Walthinsen <omega@cse.ogi.edu>");
 
 static GstStaticPadTemplate gst_auparse_sink_template =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ( "audio/x-au" )
-);
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-au")
+    );
 
 static GstStaticPadTemplate gst_auparse_src_template =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (
-    GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-    "audio/x-alaw, "
-      "rate = (int) [ 8000, 48000 ], "
-      "channels = (int) [ 1, 2 ]"
-  )
-);
+    GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
+	"audio/x-alaw, "
+	"rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
+    );
 
 /* AuParse signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   /* FILL ME */
 };
 
-static void 	gst_auparse_base_init		(gpointer g_class);
-static void 	gst_auparse_class_init		(GstAuParseClass *klass);
-static void 	gst_auparse_init		(GstAuParse *auparse);
+static void gst_auparse_base_init (gpointer g_class);
+static void gst_auparse_class_init (GstAuParseClass * klass);
+static void gst_auparse_init (GstAuParse * auparse);
 
-static void 	gst_auparse_chain		(GstPad *pad,GstData *_data);
+static void gst_auparse_chain (GstPad * pad, GstData * _data);
 
 static GstElementClass *parent_class = NULL;
+
 /*static guint gst_auparse_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-gst_auparse_get_type (void) 
+gst_auparse_get_type (void)
 {
   static GType auparse_type = 0;
 
   if (!auparse_type) {
     static const GTypeInfo auparse_info = {
-      sizeof(GstAuParseClass),
+      sizeof (GstAuParseClass),
       gst_auparse_base_init,
       NULL,
       (GClassInitFunc) gst_auparse_class_init,
       NULL,
       NULL,
-      sizeof(GstAuParse),
+      sizeof (GstAuParse),
       0,
       (GInstanceInitFunc) gst_auparse_init,
     };
-    auparse_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAuParse", &auparse_info, 0);
+    auparse_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstAuParse", &auparse_info,
+	0);
   }
   return auparse_type;
 }
@@ -116,25 +115,27 @@ gst_auparse_base_init (gpointer g_class)
 }
 
 static void
-gst_auparse_class_init (GstAuParseClass *klass) 
+gst_auparse_class_init (GstAuParseClass * klass)
 {
   GstElementClass *gstelement_class;
 
-  gstelement_class = (GstElementClass*) klass;
+  gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 }
 
-static void 
-gst_auparse_init (GstAuParse *auparse) 
+static void
+gst_auparse_init (GstAuParse * auparse)
 {
-  auparse->sinkpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&gst_auparse_sink_template), "sink");
+  auparse->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gst_auparse_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->sinkpad);
   gst_pad_set_chain_function (auparse->sinkpad, gst_auparse_chain);
 
-  auparse->srcpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&gst_auparse_src_template), "src");
+  auparse->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gst_auparse_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
   gst_pad_use_explicit_caps (auparse->srcpad);
 
@@ -145,8 +146,8 @@ gst_auparse_init (GstAuParse *auparse)
   auparse->channels = 0;
 }
 
-static void 
-gst_auparse_chain (GstPad *pad, GstData *_data) 
+static void
+gst_auparse_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstAuParse *auparse;
@@ -161,9 +162,9 @@ gst_auparse_chain (GstPad *pad, GstData *_data)
   g_return_if_fail (buf != NULL);
 
   auparse = GST_AUPARSE (gst_pad_get_parent (pad));
-  
+
   GST_DEBUG ("gst_auparse_chain: got buffer in '%s'",
-          gst_element_get_name (GST_ELEMENT (auparse)));
+      gst_element_get_name (GST_ELEMENT (auparse)));
 
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
@@ -171,53 +172,55 @@ gst_auparse_chain (GstPad *pad, GstData *_data)
   /* if we haven't seen any data yet... */
   if (auparse->size == 0) {
     GstBuffer *newbuf;
-    guint32 *head = (guint32 *)data;
+    guint32 *head = (guint32 *) data;
 
     /* normal format is big endian (au is a Sparc format) */
     if (GUINT32_FROM_BE (*head) == 0x2e736e64) {
       head++;
       auparse->le = 0;
-      auparse->offset 		= GUINT32_FROM_BE (*head);
+      auparse->offset = GUINT32_FROM_BE (*head);
       head++;
-      auparse->size 		= GUINT32_FROM_BE (*head);
+      auparse->size = GUINT32_FROM_BE (*head);
       head++;
-      auparse->encoding 	= GUINT32_FROM_BE (*head);
+      auparse->encoding = GUINT32_FROM_BE (*head);
       head++;
-      auparse->frequency 	= GUINT32_FROM_BE (*head);
+      auparse->frequency = GUINT32_FROM_BE (*head);
       head++;
-      auparse->channels 	= GUINT32_FROM_BE (*head);
+      auparse->channels = GUINT32_FROM_BE (*head);
       head++;
 
-    /* and of course, someone had to invent a little endian
-     * version.  Used by DEC systems. */
+      /* and of course, someone had to invent a little endian
+       * version.  Used by DEC systems. */
     } else if (GUINT32_FROM_LE (*head) == 0x0064732E) {
       auparse->le = 1;
       head++;
       auparse->le = 0;
-      auparse->offset 		= GUINT32_FROM_LE (*head);
+      auparse->offset = GUINT32_FROM_LE (*head);
       head++;
-      auparse->size 		= GUINT32_FROM_LE (*head);
+      auparse->size = GUINT32_FROM_LE (*head);
       head++;
-      auparse->encoding 	= GUINT32_FROM_LE (*head);
+      auparse->encoding = GUINT32_FROM_LE (*head);
       head++;
-      auparse->frequency 	= GUINT32_FROM_LE (*head);
+      auparse->frequency = GUINT32_FROM_LE (*head);
       head++;
-      auparse->channels 	= GUINT32_FROM_LE (*head);
+      auparse->channels = GUINT32_FROM_LE (*head);
       head++;
 
     } else {
       g_warning ("help, dunno what I'm looking at!\n");
-      gst_buffer_unref(buf);
+      gst_buffer_unref (buf);
       return;
     }
 
-    g_print ("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld\n",
-             auparse->offset,auparse->size,auparse->encoding,
-             auparse->frequency,auparse->channels);
-    GST_DEBUG ("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld",
-             auparse->offset,auparse->size,auparse->encoding,
-             auparse->frequency,auparse->channels);
-    
+    g_print
+	("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld\n",
+	auparse->offset, auparse->size, auparse->encoding, auparse->frequency,
+	auparse->channels);
+    GST_DEBUG
+	("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld",
+	auparse->offset, auparse->size, auparse->encoding, auparse->frequency,
+	auparse->channels);
+
     switch (auparse->encoding) {
       case 1:
 	law = 1;
@@ -246,11 +249,10 @@ gst_auparse_chain (GstPad *pad, GstData *_data)
     } else {
       tempcaps = gst_caps_new_simple ("audio/x-raw-int",
 	  "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-	  "rate",       G_TYPE_INT, auparse->frequency,
-	  "channels",   G_TYPE_INT, auparse->channels,
-	  "depth",      G_TYPE_INT, depth,
-	  "width",      G_TYPE_INT, depth,
-	  "signed",     G_TYPE_BOOLEAN, sign, NULL);
+	  "rate", G_TYPE_INT, auparse->frequency,
+	  "channels", G_TYPE_INT, auparse->channels,
+	  "depth", G_TYPE_INT, depth,
+	  "width", G_TYPE_INT, depth, "signed", G_TYPE_BOOLEAN, sign, NULL);
     }
 
     if (!gst_pad_set_explicit_caps (auparse->srcpad, tempcaps)) {
@@ -259,9 +261,9 @@ gst_auparse_chain (GstPad *pad, GstData *_data)
     }
 
     newbuf = gst_buffer_new ();
-    GST_BUFFER_DATA (newbuf) = (gpointer) malloc (size-(auparse->offset));
-    memcpy (GST_BUFFER_DATA (newbuf), data+24, size-(auparse->offset));
-    GST_BUFFER_SIZE (newbuf) = size-(auparse->offset);
+    GST_BUFFER_DATA (newbuf) = (gpointer) malloc (size - (auparse->offset));
+    memcpy (GST_BUFFER_DATA (newbuf), data + 24, size - (auparse->offset));
+    GST_BUFFER_SIZE (newbuf) = size - (auparse->offset);
 
     gst_buffer_unref (buf);
 
@@ -274,25 +276,17 @@ gst_auparse_chain (GstPad *pad, GstData *_data)
 
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "auparse", GST_RANK_SECONDARY,
-        GST_TYPE_AUPARSE)) {
+	  GST_TYPE_AUPARSE)) {
     return FALSE;
   }
 
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "auparse",
-  "parses au streams",
-  plugin_init,
-  VERSION,
-  "GPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-)
-
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "auparse",
+    "parses au streams", plugin_init, VERSION, "GPL", GST_PACKAGE, GST_ORIGIN)

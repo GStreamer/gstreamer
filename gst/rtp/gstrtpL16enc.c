@@ -45,42 +45,40 @@ enum
 };
 
 static GstStaticPadTemplate gst_rtpL16enc_sink_template =
-GST_STATIC_PAD_TEMPLATE (
-    "sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ( "audio/x-raw-int, "
-      "endianness = (int) BYTE_ORDER, "
-      "signed = (boolean) true, "
-      "width = (int) 16, "
-      "depth = (int) 16, "
-      "rate = (int) [ 1000, 48000 ], "
-      "channels = (int) [ 1, 2 ]"
-    )
-);
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"endianness = (int) BYTE_ORDER, "
+	"signed = (boolean) true, "
+	"width = (int) 16, "
+	"depth = (int) 16, "
+	"rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
+    );
 
 static GstStaticPadTemplate gst_rtpL16enc_src_template =
-GST_STATIC_PAD_TEMPLATE (
-    "src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp")
-);
+    );
 
 static void gst_rtpL16enc_class_init (GstRtpL16EncClass * klass);
 static void gst_rtpL16enc_base_init (GstRtpL16EncClass * klass);
 static void gst_rtpL16enc_init (GstRtpL16Enc * rtpL16enc);
-static void gst_rtpL16enc_chain (GstPad * pad, GstData *_data);
+static void gst_rtpL16enc_chain (GstPad * pad, GstData * _data);
 static void gst_rtpL16enc_set_property (GObject * object, guint prop_id,
-				   const GValue * value, GParamSpec * pspec);
+    const GValue * value, GParamSpec * pspec);
 static void gst_rtpL16enc_get_property (GObject * object, guint prop_id,
-				   GValue * value, GParamSpec * pspec);
-static GstPadLinkReturn gst_rtpL16enc_sinkconnect (GstPad * pad, const GstCaps * caps);
+    GValue * value, GParamSpec * pspec);
+static GstPadLinkReturn gst_rtpL16enc_sinkconnect (GstPad * pad,
+    const GstCaps * caps);
 static GstElementStateReturn gst_rtpL16enc_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
-static GType gst_rtpL16enc_get_type (void)
+static GType
+gst_rtpL16enc_get_type (void)
 {
   static GType rtpL16enc_type = 0;
 
@@ -97,7 +95,9 @@ static GType gst_rtpL16enc_get_type (void)
       (GInstanceInitFunc) gst_rtpL16enc_init,
     };
 
-    rtpL16enc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Enc", &rtpL16enc_info, 0);
+    rtpL16enc_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Enc",
+	&rtpL16enc_info, 0);
   }
   return rtpL16enc_type;
 }
@@ -134,10 +134,12 @@ gst_rtpL16enc_class_init (GstRtpL16EncClass * klass)
 static void
 gst_rtpL16enc_init (GstRtpL16Enc * rtpL16enc)
 {
-  rtpL16enc->sinkpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&gst_rtpL16enc_sink_template), "sink");
-  rtpL16enc->srcpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&gst_rtpL16enc_src_template), "src");
+  rtpL16enc->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gst_rtpL16enc_sink_template), "sink");
+  rtpL16enc->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gst_rtpL16enc_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (rtpL16enc), rtpL16enc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (rtpL16enc), rtpL16enc->srcpad);
   gst_pad_set_chain_function (rtpL16enc->sinkpad, gst_rtpL16enc_chain);
@@ -146,7 +148,7 @@ gst_rtpL16enc_init (GstRtpL16Enc * rtpL16enc)
   rtpL16enc->frequency = 44100;
   rtpL16enc->channels = 2;
 
-  rtpL16enc->next_time = 0; 
+  rtpL16enc->next_time = 0;
   rtpL16enc->time_interval = 0;
 
   rtpL16enc->seq = 0;
@@ -167,31 +169,33 @@ gst_rtpL16enc_sinkconnect (GstPad * pad, const GstCaps * caps)
   ret = gst_structure_get_int (structure, "rate", &rtpL16enc->frequency);
   ret &= gst_structure_get_int (structure, "channels", &rtpL16enc->channels);
 
-  if (!ret) return GST_PAD_LINK_REFUSED;
+  if (!ret)
+    return GST_PAD_LINK_REFUSED;
 
   /* Pre-calculate what we can */
-  rtpL16enc->time_interval = GST_SECOND / (2 * rtpL16enc->channels * rtpL16enc->frequency);
+  rtpL16enc->time_interval =
+      GST_SECOND / (2 * rtpL16enc->channels * rtpL16enc->frequency);
 
   return GST_PAD_LINK_OK;
 }
 
 
 void
-gst_rtpL16enc_htons (GstBuffer *buf)
+gst_rtpL16enc_htons (GstBuffer * buf)
 {
   gint16 *i, *len;
 
   /* FIXME: is this code correct or even sane at all? */
-  i = (gint16 *) GST_BUFFER_DATA(buf); 
+  i = (gint16 *) GST_BUFFER_DATA (buf);
   len = i + GST_BUFFER_SIZE (buf) / sizeof (gint16 *);
 
-  for (; i<len; i++) {
-      *i = g_htons (*i);
+  for (; i < len; i++) {
+    *i = g_htons (*i);
   }
 }
 
 static void
-gst_rtpL16enc_chain (GstPad * pad, GstData *_data)
+gst_rtpL16enc_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstRtpL16Enc *rtpL16enc;
@@ -212,12 +216,12 @@ gst_rtpL16enc_chain (GstPad * pad, GstData *_data)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
-	GST_DEBUG ("discont"); 
-        rtpL16enc->next_time = 0;
-        gst_pad_event_default (pad, event);
+	GST_DEBUG ("discont");
+	rtpL16enc->next_time = 0;
+	gst_pad_event_default (pad, event);
 	return;
       default:
-        gst_pad_event_default (pad, event);
+	gst_pad_event_default (pad, event);
 	return;
     }
   }
@@ -232,41 +236,47 @@ gst_rtpL16enc_chain (GstPad * pad, GstData *_data)
   rtp_packet_set_marker (packet, 0);
   rtp_packet_set_ssrc (packet, g_htonl (rtpL16enc->ssrc));
   rtp_packet_set_seq (packet, g_htons (rtpL16enc->seq));
-  rtp_packet_set_timestamp (packet, g_htonl ((guint32) rtpL16enc->next_time / GST_SECOND));
+  rtp_packet_set_timestamp (packet,
+      g_htonl ((guint32) rtpL16enc->next_time / GST_SECOND));
 
   if (rtpL16enc->channels == 1) {
-     rtp_packet_set_payload_type (packet, (guint8) PAYLOAD_L16_MONO);
+    rtp_packet_set_payload_type (packet, (guint8) PAYLOAD_L16_MONO);
   }
 
   else {
-     rtp_packet_set_payload_type (packet, (guint8) PAYLOAD_L16_STEREO);
+    rtp_packet_set_payload_type (packet, (guint8) PAYLOAD_L16_STEREO);
   }
 
   /* FIXME: According to RFC 1890, this is required, right? */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-     gst_rtpL16enc_htons (buf);
+  gst_rtpL16enc_htons (buf);
 #endif
 
   outbuf = gst_buffer_new ();
-  GST_BUFFER_SIZE (outbuf) = rtp_packet_get_packet_len (packet) + GST_BUFFER_SIZE (buf);
+  GST_BUFFER_SIZE (outbuf) =
+      rtp_packet_get_packet_len (packet) + GST_BUFFER_SIZE (buf);
   GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
   GST_BUFFER_TIMESTAMP (outbuf) = rtpL16enc->next_time;
 
-  memcpy (GST_BUFFER_DATA (outbuf), packet->data, rtp_packet_get_packet_len (packet));
-  memcpy (GST_BUFFER_DATA (outbuf) + rtp_packet_get_packet_len(packet), GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  memcpy (GST_BUFFER_DATA (outbuf), packet->data,
+      rtp_packet_get_packet_len (packet));
+  memcpy (GST_BUFFER_DATA (outbuf) + rtp_packet_get_packet_len (packet),
+      GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
-  GST_DEBUG ("gst_rtpL16enc_chain: pushing buffer of size %d", GST_BUFFER_SIZE(outbuf));
+  GST_DEBUG ("gst_rtpL16enc_chain: pushing buffer of size %d",
+      GST_BUFFER_SIZE (outbuf));
   gst_pad_push (rtpL16enc->srcpad, GST_DATA (outbuf));
 
   ++rtpL16enc->seq;
   rtpL16enc->next_time += rtpL16enc->time_interval * GST_BUFFER_SIZE (buf);
-  
+
   rtp_packet_free (packet);
   gst_buffer_unref (buf);
 }
 
 static void
-gst_rtpL16enc_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec)
+gst_rtpL16enc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstRtpL16Enc *rtpL16enc;
 
@@ -281,7 +291,8 @@ gst_rtpL16enc_set_property (GObject * object, guint prop_id, const GValue * valu
 }
 
 static void
-gst_rtpL16enc_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec)
+gst_rtpL16enc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstRtpL16Enc *rtpL16enc;
 
@@ -330,5 +341,5 @@ gboolean
 gst_rtpL16enc_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpL16enc",
-			       GST_RANK_NONE, GST_TYPE_RTP_L16_ENC);
+      GST_RANK_NONE, GST_TYPE_RTP_L16_ENC);
 }

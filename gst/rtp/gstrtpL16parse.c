@@ -42,43 +42,41 @@ enum
 };
 
 static GstStaticPadTemplate gst_rtpL16parse_src_template =
-GST_STATIC_PAD_TEMPLATE (
-    "src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ( "audio/x-raw-int, "
-      "endianness = (int) BYTE_ORDER, "
-      "signed = (boolean) true, "
-      "width = (int) 16, "
-      "depth = (int) 16, "
-      "rate = (int) [ 1000, 48000 ], "
-      "channels = (int) [ 1, 2 ]"
-    )
-);
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"endianness = (int) BYTE_ORDER, "
+	"signed = (boolean) true, "
+	"width = (int) 16, "
+	"depth = (int) 16, "
+	"rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
+    );
 
 static GstStaticPadTemplate gst_rtpL16parse_sink_template =
-GST_STATIC_PAD_TEMPLATE (
-    "sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp")
-);
+    );
 
 static void gst_rtpL16parse_class_init (GstRtpL16ParseClass * klass);
 static void gst_rtpL16parse_base_init (GstRtpL16ParseClass * klass);
 static void gst_rtpL16parse_init (GstRtpL16Parse * rtpL16parse);
 
-static void gst_rtpL16parse_chain (GstPad * pad, GstData *_data);
+static void gst_rtpL16parse_chain (GstPad * pad, GstData * _data);
 
 static void gst_rtpL16parse_set_property (GObject * object, guint prop_id,
-				   const GValue * value, GParamSpec * pspec);
+    const GValue * value, GParamSpec * pspec);
 static void gst_rtpL16parse_get_property (GObject * object, guint prop_id,
-				   GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_rtpL16parse_change_state (GstElement * element);
+    GValue * value, GParamSpec * pspec);
+static GstElementStateReturn gst_rtpL16parse_change_state (GstElement *
+    element);
 
 static GstElementClass *parent_class = NULL;
 
-static GType gst_rtpL16parse_get_type (void)
+static GType
+gst_rtpL16parse_get_type (void)
 {
   static GType rtpL16parse_type = 0;
 
@@ -95,7 +93,9 @@ static GType gst_rtpL16parse_get_type (void)
       (GInstanceInitFunc) gst_rtpL16parse_init,
     };
 
-    rtpL16parse_type = g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Parse", &rtpL16parse_info, 0);
+    rtpL16parse_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Parse",
+	&rtpL16parse_info, 0);
   }
   return rtpL16parse_type;
 }
@@ -123,12 +123,12 @@ gst_rtpL16parse_class_init (GstRtpL16ParseClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PAYLOAD_TYPE, 
-		g_param_spec_int ("payload_type", "payload_type", "payload type", 
-			G_MININT, G_MAXINT, PAYLOAD_L16_STEREO, G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY, 
-		g_param_spec_int ("frequency", "frequency", "frequency", 
-			G_MININT, G_MAXINT, 44100, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PAYLOAD_TYPE,
+      g_param_spec_int ("payload_type", "payload_type", "payload type",
+	  G_MININT, G_MAXINT, PAYLOAD_L16_STEREO, G_PARAM_READABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY,
+      g_param_spec_int ("frequency", "frequency", "frequency",
+	  G_MININT, G_MAXINT, 44100, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_rtpL16parse_set_property;
   gobject_class->get_property = gst_rtpL16parse_get_property;
@@ -139,10 +139,12 @@ gst_rtpL16parse_class_init (GstRtpL16ParseClass * klass)
 static void
 gst_rtpL16parse_init (GstRtpL16Parse * rtpL16parse)
 {
-  rtpL16parse->srcpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&gst_rtpL16parse_src_template), "src");
-  rtpL16parse->sinkpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&gst_rtpL16parse_sink_template), "sink");
+  rtpL16parse->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gst_rtpL16parse_src_template), "src");
+  rtpL16parse->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gst_rtpL16parse_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (rtpL16parse), rtpL16parse->srcpad);
   gst_element_add_pad (GST_ELEMENT (rtpL16parse), rtpL16parse->sinkpad);
   gst_pad_set_chain_function (rtpL16parse->sinkpad, gst_rtpL16parse_chain);
@@ -154,25 +156,27 @@ gst_rtpL16parse_init (GstRtpL16Parse * rtpL16parse)
 }
 
 void
-gst_rtpL16parse_ntohs (GstBuffer *buf)
+gst_rtpL16parse_ntohs (GstBuffer * buf)
 {
   gint16 *i, *len;
 
   /* FIXME: is this code correct or even sane at all? */
-  i = (gint16 *) GST_BUFFER_DATA(buf); 
+  i = (gint16 *) GST_BUFFER_DATA (buf);
   len = i + GST_BUFFER_SIZE (buf) / sizeof (gint16 *);
 
-  for (; i<len; i++) {
-      *i = g_ntohs (*i);
+  for (; i < len; i++) {
+    *i = g_ntohs (*i);
   }
 }
 
 void
-gst_rtpL16_caps_nego (GstRtpL16Parse *rtpL16parse)
+gst_rtpL16_caps_nego (GstRtpL16Parse * rtpL16parse)
 {
   GstCaps *caps;
 
-  caps = gst_caps_copy(gst_static_caps_get (&gst_rtpL16parse_src_template.static_caps));
+  caps =
+      gst_caps_copy (gst_static_caps_get (&gst_rtpL16parse_src_template.
+	  static_caps));
 
   gst_caps_set_simple (caps,
       "rate", G_TYPE_INT, rtpL16parse->frequency,
@@ -182,26 +186,27 @@ gst_rtpL16_caps_nego (GstRtpL16Parse *rtpL16parse)
 }
 
 void
-gst_rtpL16parse_payloadtype_change (GstRtpL16Parse *rtpL16parse, rtp_payload_t pt)
+gst_rtpL16parse_payloadtype_change (GstRtpL16Parse * rtpL16parse,
+    rtp_payload_t pt)
 {
   rtpL16parse->payload_type = pt;
-  
+
   switch (pt) {
-	case PAYLOAD_L16_MONO:
-      		rtpL16parse->channels = 1;
-		break;
-	case PAYLOAD_L16_STEREO:
-      		rtpL16parse->channels = 2;
-		break;
-	default:
-		g_warning ("unknown payload_t %d\n", pt);
+    case PAYLOAD_L16_MONO:
+      rtpL16parse->channels = 1;
+      break;
+    case PAYLOAD_L16_STEREO:
+      rtpL16parse->channels = 2;
+      break;
+    default:
+      g_warning ("unknown payload_t %d\n", pt);
   }
 
   gst_rtpL16_caps_nego (rtpL16parse);
 }
 
 static void
-gst_rtpL16parse_chain (GstPad * pad, GstData *_data)
+gst_rtpL16parse_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstRtpL16Parse *rtpL16parse;
@@ -220,8 +225,9 @@ gst_rtpL16parse_chain (GstPad * pad, GstData *_data)
 
   if (GST_IS_EVENT (buf)) {
     GstEvent *event = GST_EVENT (buf);
+
     gst_pad_event_default (pad, event);
-  
+
     return;
   }
 
@@ -229,26 +235,30 @@ gst_rtpL16parse_chain (GstPad * pad, GstData *_data)
     gst_rtpL16_caps_nego (rtpL16parse);
   }
 
-  packet = rtp_packet_new_copy_data (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  packet =
+      rtp_packet_new_copy_data (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
   pt = rtp_packet_get_payload_type (packet);
 
   if (pt != rtpL16parse->payload_type) {
-	gst_rtpL16parse_payloadtype_change (rtpL16parse, pt);
+    gst_rtpL16parse_payloadtype_change (rtpL16parse, pt);
   }
 
   outbuf = gst_buffer_new ();
   GST_BUFFER_SIZE (outbuf) = rtp_packet_get_payload_len (packet);
   GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
-  GST_BUFFER_TIMESTAMP (outbuf) = g_ntohl (rtp_packet_get_timestamp (packet)) * GST_SECOND;
+  GST_BUFFER_TIMESTAMP (outbuf) =
+      g_ntohl (rtp_packet_get_timestamp (packet)) * GST_SECOND;
 
-  memcpy (GST_BUFFER_DATA (outbuf), rtp_packet_get_payload (packet), GST_BUFFER_SIZE (outbuf));
-        
-  GST_DEBUG ("gst_rtpL16parse_chain: pushing buffer of size %d", GST_BUFFER_SIZE(outbuf));
+  memcpy (GST_BUFFER_DATA (outbuf), rtp_packet_get_payload (packet),
+      GST_BUFFER_SIZE (outbuf));
+
+  GST_DEBUG ("gst_rtpL16parse_chain: pushing buffer of size %d",
+      GST_BUFFER_SIZE (outbuf));
 
   /* FIXME: According to RFC 1890, this is required, right? */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-     gst_rtpL16parse_ntohs (outbuf);
+  gst_rtpL16parse_ntohs (outbuf);
 #endif
 
   gst_pad_push (rtpL16parse->srcpad, GST_DATA (outbuf));
@@ -258,7 +268,8 @@ gst_rtpL16parse_chain (GstPad * pad, GstData *_data)
 }
 
 static void
-gst_rtpL16parse_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec)
+gst_rtpL16parse_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstRtpL16Parse *rtpL16parse;
 
@@ -279,7 +290,8 @@ gst_rtpL16parse_set_property (GObject * object, guint prop_id, const GValue * va
 }
 
 static void
-gst_rtpL16parse_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec)
+gst_rtpL16parse_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstRtpL16Parse *rtpL16parse;
 
@@ -331,5 +343,5 @@ gboolean
 gst_rtpL16parse_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpL16parse",
-			       GST_RANK_NONE, GST_TYPE_RTP_L16_PARSE);
+      GST_RANK_NONE, GST_TYPE_RTP_L16_PARSE);
 }

@@ -47,29 +47,32 @@ enum
   ARG_0
 };
 
-static void     gst_pngenc_base_init    (gpointer g_class);
-static void	gst_pngenc_class_init	(GstPngEncClass *klass);
-static void	gst_pngenc_init		(GstPngEnc *pngenc);
+static void gst_pngenc_base_init (gpointer g_class);
+static void gst_pngenc_class_init (GstPngEncClass * klass);
+static void gst_pngenc_init (GstPngEnc * pngenc);
 
-static void	gst_pngenc_chain	(GstPad *pad, GstData *_data);
+static void gst_pngenc_chain (GstPad * pad, GstData * _data);
 
 GstPadTemplate *pngenc_src_template, *pngenc_sink_template;
 
 static GstElementClass *parent_class = NULL;
 
 
-static void user_error_fn (png_structp png_ptr, png_const_charp error_msg)
+static void
+user_error_fn (png_structp png_ptr, png_const_charp error_msg)
 {
-  g_warning("%s", error_msg);
+  g_warning ("%s", error_msg);
 }
 
-static void user_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
+static void
+user_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 {
-  g_warning("%s", warning_msg);
+  g_warning ("%s", warning_msg);
 }
 
 
-GType gst_pngenc_get_type (void)
+GType
+gst_pngenc_get_type (void)
 {
   static GType pngenc_type = 0;
 
@@ -87,25 +90,24 @@ GType gst_pngenc_get_type (void)
     };
 
     pngenc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstPngEnc",
-		                          &pngenc_info, 0);
+	&pngenc_info, 0);
   }
   return pngenc_type;
 }
 
-static GstCaps*
+static GstCaps *
 png_caps_factory (void)
 {
   return gst_caps_new_simple ("video/x-png",
-      "width",     GST_TYPE_INT_RANGE, 16, 4096,
-      "height",    GST_TYPE_INT_RANGE, 16, 4096,
-      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
-      NULL);
+      "width", GST_TYPE_INT_RANGE, 16, 4096,
+      "height", GST_TYPE_INT_RANGE, 16, 4096,
+      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
 }
 
 
-static GstCaps*
+static GstCaps *
 raw_caps_factory (void)
-{ 
+{
   return gst_caps_from_string (GST_VIDEO_CAPS_RGB);
 }
 
@@ -114,25 +116,23 @@ gst_pngenc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstCaps *raw_caps, *png_caps;
-  
+
   raw_caps = raw_caps_factory ();
   png_caps = png_caps_factory ();
 
   pngenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
-					       GST_PAD_ALWAYS,
-					       raw_caps);
-  
+      GST_PAD_ALWAYS, raw_caps);
+
   pngenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC,
-					      GST_PAD_ALWAYS,
-					      png_caps);
-  
+      GST_PAD_ALWAYS, png_caps);
+
   gst_element_class_add_pad_template (element_class, pngenc_sink_template);
   gst_element_class_add_pad_template (element_class, pngenc_src_template);
   gst_element_class_set_details (element_class, &gst_pngenc_details);
 }
 
 static void
-gst_pngenc_class_init (GstPngEncClass *klass)
+gst_pngenc_class_init (GstPngEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -145,7 +145,7 @@ gst_pngenc_class_init (GstPngEncClass *klass)
 
 
 static GstPadLinkReturn
-gst_pngenc_sinklink (GstPad *pad, const GstCaps *caps)
+gst_pngenc_sinklink (GstPad * pad, const GstCaps * caps)
 {
   GstPngEnc *pngenc;
   gdouble fps;
@@ -161,8 +161,8 @@ gst_pngenc_sinklink (GstPad *pad, const GstCaps *caps)
 
   caps = gst_caps_new_simple ("video/x-png",
       "framerate", G_TYPE_DOUBLE, fps,
-      "width",     G_TYPE_INT, pngenc->width,
-      "height",    G_TYPE_INT, pngenc->height, NULL);
+      "width", G_TYPE_INT, pngenc->width,
+      "height", G_TYPE_INT, pngenc->height, NULL);
 
   return gst_pad_try_set_caps (pngenc->srcpad, caps);
 }
@@ -184,9 +184,10 @@ gst_pngenc_init (GstPngEnc * pngenc)
 
 }
 
-void user_flush_data (png_structp png_ptr)
+void
+user_flush_data (png_structp png_ptr)
 {
-GstPngEnc *pngenc;
+  GstPngEnc *pngenc;
 
   pngenc = (GstPngEnc *) png_get_io_ptr (png_ptr);
 
@@ -194,31 +195,31 @@ GstPngEnc *pngenc;
 }
 
 
-void user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
+void
+user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
 {
   GstBuffer *buffer;
   GstPngEnc *pngenc;
 
   pngenc = (GstPngEnc *) png_get_io_ptr (png_ptr);
 
-  buffer = gst_buffer_new();
+  buffer = gst_buffer_new ();
   GST_BUFFER_DATA (buffer) = g_memdup (data, length);
   GST_BUFFER_SIZE (buffer) = length;
 
-  if (pngenc->buffer_out)
-  {
+  if (pngenc->buffer_out) {
     GstBuffer *merge;
+
     merge = gst_buffer_merge (pngenc->buffer_out, buffer);
     gst_buffer_unref (buffer);
     gst_buffer_unref (pngenc->buffer_out);
     pngenc->buffer_out = merge;
-  }
-  else
+  } else
     pngenc->buffer_out = buffer;
 }
 
 static void
-gst_pngenc_chain (GstPad *pad, GstData *_data)
+gst_pngenc_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstPngEnc *pngenc;
@@ -229,56 +230,50 @@ gst_pngenc_chain (GstPad *pad, GstData *_data)
   pngenc = GST_PNGENC (gst_pad_get_parent (pad));
 
   pngenc->buffer_out = NULL;
-  if (!GST_PAD_IS_USABLE (pngenc->srcpad))
-  {
+  if (!GST_PAD_IS_USABLE (pngenc->srcpad)) {
     gst_buffer_unref (buf);
     return;
   }
 
   /* initialize png struct stuff */
   pngenc->png_struct_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
-		           (png_voidp) NULL, user_error_fn, user_warning_fn);
+      (png_voidp) NULL, user_error_fn, user_warning_fn);
   /* FIXME: better error handling */
   if (pngenc->png_struct_ptr == NULL)
-     g_warning ("Failed to initialize png structure");
+    g_warning ("Failed to initialize png structure");
 
   pngenc->png_info_ptr = png_create_info_struct (pngenc->png_struct_ptr);
-  if (!pngenc->png_info_ptr)
-  {
+  if (!pngenc->png_info_ptr) {
     png_destroy_read_struct (&(pngenc->png_struct_ptr), (png_infopp) NULL,
-		             (png_infopp) NULL);
+	(png_infopp) NULL);
   }
 
   /* non-0 return is from a longjmp inside of libpng */
-  if (setjmp (pngenc->png_struct_ptr->jmpbuf) != 0)
-  {
+  if (setjmp (pngenc->png_struct_ptr->jmpbuf) != 0) {
     GST_DEBUG ("returning from longjmp");
     png_destroy_write_struct (&pngenc->png_struct_ptr, &pngenc->png_info_ptr);
     return;
   }
 
   png_set_filter (pngenc->png_struct_ptr, 0,
-		  PNG_FILTER_NONE | PNG_FILTER_VALUE_NONE);
+      PNG_FILTER_NONE | PNG_FILTER_VALUE_NONE);
   png_set_compression_level (pngenc->png_struct_ptr, 9);
 
-  png_set_IHDR(
-    pngenc->png_struct_ptr,
-    pngenc->png_info_ptr,
-    pngenc->width,
-    pngenc->height,
-    pngenc->bpp / 3,
-    PNG_COLOR_TYPE_RGB,
-    PNG_INTERLACE_NONE,
-    PNG_COMPRESSION_TYPE_DEFAULT,
-    PNG_FILTER_TYPE_DEFAULT
-  );
+  png_set_IHDR (pngenc->png_struct_ptr,
+      pngenc->png_info_ptr,
+      pngenc->width,
+      pngenc->height,
+      pngenc->bpp / 3,
+      PNG_COLOR_TYPE_RGB,
+      PNG_INTERLACE_NONE,
+      PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
   png_set_write_fn (pngenc->png_struct_ptr, pngenc,
-		    (png_rw_ptr) user_write_data, user_flush_data);
+      (png_rw_ptr) user_write_data, user_flush_data);
 
   for (row_index = 0; row_index < pngenc->height; row_index++)
     row_pointers[row_index] = GST_BUFFER_DATA (buf) +
-	                      (pngenc->width * row_index * pngenc->bpp / 8);
+	(pngenc->width * row_index * pngenc->bpp / 8);
 
   png_write_info (pngenc->png_struct_ptr, pngenc->png_info_ptr);
   png_write_image (pngenc->png_struct_ptr, row_pointers);

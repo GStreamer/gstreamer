@@ -40,12 +40,14 @@ static GstElementDetails esdsink_details = {
 };
 
 /* Signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_MUTE,
   ARG_HOST,
@@ -53,41 +55,36 @@ enum {
   ARG_FALLBACK,
 };
 
-static GstStaticPadTemplate sink_factory = 
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (
-    "audio/x-raw-int, "
-      "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-      "signed = (boolean) TRUE, "
-      "width = (int) 16, "
-      "depth = (int) 16, "
-      "rate = 44100, "
-      "channels = 2"
-  )
-);
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
+	"signed = (boolean) TRUE, "
+	"width = (int) 16, "
+	"depth = (int) 16, " "rate = 44100, " "channels = 2")
+    );
 
-static void                     gst_esdsink_base_init           (gpointer g_class);
-static void			gst_esdsink_class_init		(gpointer g_class, gpointer class_data);
-static void			gst_esdsink_init		(GTypeInstance *instance, gpointer g_class);
+static void gst_esdsink_base_init (gpointer g_class);
+static void gst_esdsink_class_init (gpointer g_class, gpointer class_data);
+static void gst_esdsink_init (GTypeInstance * instance, gpointer g_class);
 
-static gboolean			gst_esdsink_open_audio		(GstEsdsink *sink);
-static void			gst_esdsink_close_audio		(GstEsdsink *sink);
-static GstElementStateReturn	gst_esdsink_change_state	(GstElement *element);
+static gboolean gst_esdsink_open_audio (GstEsdsink * sink);
+static void gst_esdsink_close_audio (GstEsdsink * sink);
+static GstElementStateReturn gst_esdsink_change_state (GstElement * element);
 
-static GstClockTime		gst_esdsink_get_time		(GstClock *clock, gpointer data);
-static GstClock *		gst_esdsink_get_clock		(GstElement *element);
-static void                     gst_esdsink_set_clock           (GstElement *element, GstClock *clock);
-static void			gst_esdsink_chain		(GstPad *pad, GstData *_data);
+static GstClockTime gst_esdsink_get_time (GstClock * clock, gpointer data);
+static GstClock *gst_esdsink_get_clock (GstElement * element);
+static void gst_esdsink_set_clock (GstElement * element, GstClock * clock);
+static void gst_esdsink_chain (GstPad * pad, GstData * _data);
 
-static void			gst_esdsink_set_property	(GObject *object, guint prop_id, 
-								 const GValue *value, GParamSpec *pspec);
-static void			gst_esdsink_get_property	(GObject *object, guint prop_id, 
-								 GValue *value, GParamSpec *pspec);
+static void gst_esdsink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_esdsink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstElementClass *parent_class = NULL;
+
 /*static guint gst_esdsink_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
@@ -97,17 +94,19 @@ gst_esdsink_get_type (void)
 
   if (!esdsink_type) {
     static const GTypeInfo esdsink_info = {
-      sizeof(GstEsdsinkClass),
+      sizeof (GstEsdsinkClass),
       gst_esdsink_base_init,
       NULL,
       gst_esdsink_class_init,
       NULL,
       NULL,
-      sizeof(GstEsdsink),
+      sizeof (GstEsdsink),
       0,
       gst_esdsink_init,
     };
-    esdsink_type = g_type_register_static(GST_TYPE_ELEMENT, "GstEsdsink", &esdsink_info, 0);
+    esdsink_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstEsdsink", &esdsink_info,
+	0);
   }
   return esdsink_type;
 }
@@ -117,7 +116,7 @@ gst_esdsink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, 
+  gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &esdsink_details);
 }
@@ -130,64 +129,64 @@ gst_esdsink_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (g_class);
 
-  g_object_class_install_property(gobject_class, ARG_MUTE,
-    g_param_spec_boolean("mute","mute","mute",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(gobject_class, ARG_HOST,
-    g_param_spec_string("host","host","host",
-                        NULL, G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(gobject_class, ARG_SYNC,
-    g_param_spec_boolean("sync","sync","Synchronize output to clock",
-                         TRUE,G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_MUTE, g_param_spec_boolean ("mute", "mute", "mute", TRUE, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_HOST, g_param_spec_string ("host", "host", "host", NULL, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_SYNC,
+      g_param_spec_boolean ("sync", "sync", "Synchronize output to clock",
+	  TRUE, G_PARAM_READWRITE));
 #if 0
   /* This option is disabled because it is dumb in GStreamer's architecture. */
-  g_object_class_install_property(gobject_class, ARG_FALLBACK,
-    g_param_spec_boolean("fallback","fallback","Fall back to using OSS if Esound daemon is not present",
-                         FALSE,G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_FALLBACK,
+      g_param_spec_boolean ("fallback", "fallback",
+	  "Fall back to using OSS if Esound daemon is not present", FALSE,
+	  G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_esdsink_set_property;
   gobject_class->get_property = gst_esdsink_get_property;
 
   gstelement_class->change_state = gst_esdsink_change_state;
-  gstelement_class->set_clock    = gst_esdsink_set_clock;
-  gstelement_class->get_clock    = gst_esdsink_get_clock;
+  gstelement_class->set_clock = gst_esdsink_set_clock;
+  gstelement_class->get_clock = gst_esdsink_get_clock;
 }
 
 static void
-gst_esdsink_init(GTypeInstance *instance, gpointer g_class)
+gst_esdsink_init (GTypeInstance * instance, gpointer g_class)
 {
   GstEsdsink *esdsink = GST_ESDSINK (instance);
-  
-  esdsink->sinkpad = gst_pad_new_from_template (
-      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (instance), "sink"), 
-      "sink");
-  gst_element_add_pad(GST_ELEMENT(esdsink), esdsink->sinkpad);
-  gst_pad_set_chain_function(esdsink->sinkpad, GST_DEBUG_FUNCPTR(gst_esdsink_chain));
+
+  esdsink->sinkpad =
+      gst_pad_new_from_template (gst_element_class_get_pad_template
+      (GST_ELEMENT_GET_CLASS (instance), "sink"), "sink");
+  gst_element_add_pad (GST_ELEMENT (esdsink), esdsink->sinkpad);
+  gst_pad_set_chain_function (esdsink->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_esdsink_chain));
 
   GST_FLAG_SET (esdsink, GST_ELEMENT_EVENT_AWARE);
 
   esdsink->mute = FALSE;
   esdsink->fd = -1;
   /* FIXME: get default from somewhere better than just putting them inline. */
-  /*esdsink->negotiated = FALSE;*/
+  /*esdsink->negotiated = FALSE; */
   /* we have static caps on our template, so it always is negotiated */
   esdsink->negotiated = TRUE;
   esdsink->format = 16;
   esdsink->depth = 16;
   esdsink->channels = 2;
   esdsink->frequency = 44100;
-  esdsink->bytes_per_sample = esdsink->channels * (esdsink->depth/8);
+  esdsink->bytes_per_sample = esdsink->channels * (esdsink->depth / 8);
   esdsink->host = getenv ("ESPEAKER");
-  esdsink->provided_clock = gst_audio_clock_new("esdclock", gst_esdsink_get_time, esdsink);
-  gst_object_set_parent(GST_OBJECT(esdsink->provided_clock), GST_OBJECT(esdsink));
+  esdsink->provided_clock =
+      gst_audio_clock_new ("esdclock", gst_esdsink_get_time, esdsink);
+  gst_object_set_parent (GST_OBJECT (esdsink->provided_clock),
+      GST_OBJECT (esdsink));
   esdsink->sync = TRUE;
   esdsink->fallback = FALSE;
 }
 
 #ifdef unused
 static GstPadLinkReturn
-gst_esdsink_link (GstPad *pad, const GstCaps *caps)
+gst_esdsink_link (GstPad * pad, const GstCaps * caps)
 {
   GstEsdsink *esdsink;
   GstStructure *structure;
@@ -199,7 +198,7 @@ gst_esdsink_link (GstPad *pad, const GstCaps *caps)
   gst_structure_get_int (structure, "channels", &esdsink->channels);
   gst_structure_get_int (structure, "rate", &esdsink->frequency);
 
-  esdsink->bytes_per_sample = esdsink->channels * (esdsink->depth/8);
+  esdsink->bytes_per_sample = esdsink->channels * (esdsink->depth / 8);
 
   gst_esdsink_close_audio (esdsink);
   if (gst_esdsink_open_audio (esdsink)) {
@@ -215,29 +214,29 @@ gst_esdsink_link (GstPad *pad, const GstCaps *caps)
 #endif
 
 static GstClockTime
-gst_esdsink_get_time (GstClock *clock, gpointer data)
+gst_esdsink_get_time (GstClock * clock, gpointer data)
 {
-  GstEsdsink *esdsink = GST_ESDSINK(data);
+  GstEsdsink *esdsink = GST_ESDSINK (data);
   GstClockTime res;
 
   res = (esdsink->handled * GST_SECOND) / esdsink->frequency;
-    //- GST_SECOND * 2;
+  //- GST_SECOND * 2;
 
   return res;
 }
 
 static GstClock *
-gst_esdsink_get_clock (GstElement *element)
+gst_esdsink_get_clock (GstElement * element)
 {
   GstEsdsink *esdsink;
 
   esdsink = GST_ESDSINK (element);
 
-  return GST_CLOCK(esdsink->provided_clock);
+  return GST_CLOCK (esdsink->provided_clock);
 }
 
 static void
-gst_esdsink_set_clock (GstElement *element, GstClock *clock)
+gst_esdsink_set_clock (GstElement * element, GstClock * clock)
 {
   GstEsdsink *esdsink;
 
@@ -247,7 +246,7 @@ gst_esdsink_set_clock (GstElement *element, GstClock *clock)
 }
 
 static void
-gst_esdsink_chain (GstPad *pad, GstData *_data)
+gst_esdsink_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstEsdsink *esdsink;
@@ -256,24 +255,24 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
 
   if (!esdsink->negotiated) {
     GST_ELEMENT_ERROR (esdsink, CORE, NEGOTIATION, (NULL),
-                       ("element wasn't negotiated before chain function"));
+	("element wasn't negotiated before chain function"));
     goto done;
   }
 
-  if (GST_IS_EVENT(buf)){
-    GstEvent *event = GST_EVENT(buf);
+  if (GST_IS_EVENT (buf)) {
+    GstEvent *event = GST_EVENT (buf);
 
-    switch(GST_EVENT_TYPE(event)){
+    switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
 	gst_audio_clock_set_active (GST_AUDIO_CLOCK (esdsink->provided_clock),
 	    FALSE);
 	gst_pad_event_default (pad, event);
 	return;
       default:
-	gst_pad_event_default(pad, event);
+	gst_pad_event_default (pad, event);
 	return;
     }
-    gst_event_unref(event);
+    gst_event_unref (event);
     return;
   }
 
@@ -286,17 +285,17 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
       to_write = size;
 
       GST_LOG ("fd=%d data=%p size=%d",
-                esdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-      while (to_write > 0){
+	  esdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+      while (to_write > 0) {
 	int done;
 
-        done = write (esdsink->fd, data, to_write);
+	done = write (esdsink->fd, data, to_write);
 
-	if(done < 0){
-	  if(errno==EINTR){
+	if (done < 0) {
+	  if (errno == EINTR) {
 	    goto done;
 	  }
-	  g_assert_not_reached();
+	  g_assert_not_reached ();
 	}
 
 	to_write -= done;
@@ -307,7 +306,7 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
     }
   }
 
-  gst_audio_clock_update_time ((GstAudioClock *)esdsink->provided_clock,
+  gst_audio_clock_update_time ((GstAudioClock *) esdsink->provided_clock,
       gst_esdsink_get_time (esdsink->provided_clock, esdsink));
 
 done:
@@ -315,24 +314,25 @@ done:
 }
 
 static void
-gst_esdsink_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_esdsink_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
 {
   GstEsdsink *esdsink;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_ESDSINK(object));
-  esdsink = GST_ESDSINK(object);
+  g_return_if_fail (GST_IS_ESDSINK (object));
+  esdsink = GST_ESDSINK (object);
 
   switch (prop_id) {
     case ARG_MUTE:
       esdsink->mute = g_value_get_boolean (value);
       break;
     case ARG_HOST:
-      g_free(esdsink->host);
+      g_free (esdsink->host);
       if (g_value_get_string (value) == NULL)
-	  esdsink->host = NULL;
+	esdsink->host = NULL;
       else
-	  esdsink->host = g_strdup (g_value_get_string (value));
+	esdsink->host = g_strdup (g_value_get_string (value));
       break;
     case ARG_SYNC:
       esdsink->sync = g_value_get_boolean (value);
@@ -346,11 +346,12 @@ gst_esdsink_set_property (GObject *object, guint prop_id, const GValue *value, G
 }
 
 static void
-gst_esdsink_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_esdsink_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstEsdsink *esdsink;
 
-  esdsink = GST_ESDSINK(object);
+  esdsink = GST_ESDSINK (object);
 
   switch (prop_id) {
     case ARG_MUTE:
@@ -372,50 +373,58 @@ gst_esdsink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 }
 
 gboolean
-gst_esdsink_factory_init (GstPlugin *plugin)
+gst_esdsink_factory_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "esdsink", GST_RANK_NONE, GST_TYPE_ESDSINK))
+  if (!gst_element_register (plugin, "esdsink", GST_RANK_NONE,
+	  GST_TYPE_ESDSINK))
     return FALSE;
 
   return TRUE;
 }
 
 static gboolean
-gst_esdsink_open_audio (GstEsdsink *sink)
+gst_esdsink_open_audio (GstEsdsink * sink)
 {
   /* Name used by esound for this connection. */
-  const char * connname = "GStreamer";
+  const char *connname = "GStreamer";
 
   /* Bitmap describing audio format. */
   esd_format_t esdformat = ESD_STREAM | ESD_PLAY;
 
   g_return_val_if_fail (sink->fd == -1, FALSE);
 
-  if (sink->depth == 16) esdformat |= ESD_BITS16;
-  else if (sink->depth == 8) esdformat |= ESD_BITS8;
+  if (sink->depth == 16)
+    esdformat |= ESD_BITS16;
+  else if (sink->depth == 8)
+    esdformat |= ESD_BITS8;
   else {
     GST_ELEMENT_ERROR (sink, STREAM, FORMAT, (NULL),
-                       ("invalid bit depth (%d)", sink->depth));
+	("invalid bit depth (%d)", sink->depth));
     return FALSE;
   }
 
-  if (sink->channels == 2) esdformat |= ESD_STEREO;
-  else if (sink->channels == 1) esdformat |= ESD_MONO;
+  if (sink->channels == 2)
+    esdformat |= ESD_STEREO;
+  else if (sink->channels == 1)
+    esdformat |= ESD_MONO;
   else {
     GST_ELEMENT_ERROR (sink, STREAM, FORMAT, (NULL),
-                       ("invalid number of channels (%d)", sink->channels));
+	("invalid number of channels (%d)", sink->channels));
     return FALSE;
   }
 
   GST_INFO ("attempting to open connection to esound server");
-  if(sink->fallback){
-    sink->fd = esd_play_stream_fallback(esdformat, sink->frequency, sink->host, connname);
-  }else{
-    sink->fd = esd_play_stream(esdformat, sink->frequency, sink->host, connname);
+  if (sink->fallback) {
+    sink->fd =
+	esd_play_stream_fallback (esdformat, sink->frequency, sink->host,
+	connname);
+  } else {
+    sink->fd =
+	esd_play_stream (esdformat, sink->frequency, sink->host, connname);
   }
-  if ( sink->fd < 0 ) {
+  if (sink->fd < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
-                       ("can't open connection to esound server"));
+	("can't open connection to esound server"));
     return FALSE;
   }
   GST_INFO ("successfully opened connection to esound server");
@@ -424,19 +433,19 @@ gst_esdsink_open_audio (GstEsdsink *sink)
 }
 
 static void
-gst_esdsink_close_audio (GstEsdsink *sink)
+gst_esdsink_close_audio (GstEsdsink * sink)
 {
-  if (sink->fd < 0) 
+  if (sink->fd < 0)
     return;
 
-  close(sink->fd);
+  close (sink->fd);
   sink->fd = -1;
 
   GST_INFO ("esdsink: closed sound device");
 }
 
 static GstElementStateReturn
-gst_esdsink_change_state (GstElement *element)
+gst_esdsink_change_state (GstElement * element)
 {
   GstEsdsink *esdsink;
 
@@ -445,7 +454,7 @@ gst_esdsink_change_state (GstElement *element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if (!gst_esdsink_open_audio (GST_ESDSINK (element))) {
-        return GST_STATE_FAILURE;
+	return GST_STATE_FAILURE;
       }
       break;
     case GST_STATE_READY_TO_PAUSED:
@@ -473,4 +482,3 @@ gst_esdsink_change_state (GstElement *element)
 
   return GST_STATE_SUCCESS;
 }
-

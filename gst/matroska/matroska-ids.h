@@ -148,25 +148,28 @@
  * value to what it actually means).
  */
 
-typedef enum {
-  GST_MATROSKA_TRACK_TYPE_VIDEO    = 0x1,
-  GST_MATROSKA_TRACK_TYPE_AUDIO    = 0x2,
-  GST_MATROSKA_TRACK_TYPE_COMPLEX  = 0x3,
-  GST_MATROSKA_TRACK_TYPE_LOGO     = 0x10,
+typedef enum
+{
+  GST_MATROSKA_TRACK_TYPE_VIDEO = 0x1,
+  GST_MATROSKA_TRACK_TYPE_AUDIO = 0x2,
+  GST_MATROSKA_TRACK_TYPE_COMPLEX = 0x3,
+  GST_MATROSKA_TRACK_TYPE_LOGO = 0x10,
   GST_MATROSKA_TRACK_TYPE_SUBTITLE = 0x11,
-  GST_MATROSKA_TRACK_TYPE_CONTROL  = 0x20,
+  GST_MATROSKA_TRACK_TYPE_CONTROL = 0x20,
 } GstMatroskaTrackType;
 
-typedef enum {
-  GST_MATROSKA_EYE_MODE_MONO  = 0x0,
+typedef enum
+{
+  GST_MATROSKA_EYE_MODE_MONO = 0x0,
   GST_MATROSKA_EYE_MODE_RIGHT = 0x1,
-  GST_MATROSKA_EYE_MODE_LEFT  = 0x2,
-  GST_MATROSKA_EYE_MODE_BOTH  = 0x3,
+  GST_MATROSKA_EYE_MODE_LEFT = 0x2,
+  GST_MATROSKA_EYE_MODE_BOTH = 0x3,
 } GstMatroskaEyeMode;
 
-typedef enum {
-  GST_MATROSKA_ASPECT_RATIO_MODE_FREE  = 0x0,
-  GST_MATROSKA_ASPECT_RATIO_MODE_KEEP  = 0x1,
+typedef enum
+{
+  GST_MATROSKA_ASPECT_RATIO_MODE_FREE = 0x0,
+  GST_MATROSKA_ASPECT_RATIO_MODE_KEEP = 0x1,
   GST_MATROSKA_ASPECT_RATIO_MODE_FIXED = 0x2,
 } GstMatroskaAspectRatioMode;
 
@@ -175,64 +178,71 @@ typedef enum {
  * it's just something I use in the muxer/demuxer.
  */
 
-typedef enum {
-  GST_MATROSKA_TRACK_ENABLED = (1<<0),
-  GST_MATROSKA_TRACK_DEFAULT = (1<<1),
-  GST_MATROSKA_TRACK_LACING  = (1<<2),
-  GST_MATROSKA_TRACK_SHIFT   = (1<<16)
+typedef enum
+{
+  GST_MATROSKA_TRACK_ENABLED = (1 << 0),
+  GST_MATROSKA_TRACK_DEFAULT = (1 << 1),
+  GST_MATROSKA_TRACK_LACING = (1 << 2),
+  GST_MATROSKA_TRACK_SHIFT = (1 << 16)
 } GstMatroskaTrackFlags;
 
-typedef enum {
-  GST_MATROSKA_VIDEOTRACK_INTERLACED = (GST_MATROSKA_TRACK_SHIFT<<0)
+typedef enum
+{
+  GST_MATROSKA_VIDEOTRACK_INTERLACED = (GST_MATROSKA_TRACK_SHIFT << 0)
 } GstMatroskaVideoTrackFlags;
 
-typedef struct _GstMatroskaTrackContext {
-  GstPad       *pad;
-  GstCaps      *caps;
-  guint 	index;
+typedef struct _GstMatroskaTrackContext
+{
+  GstPad *pad;
+  GstCaps *caps;
+  guint index;
 
   /* some often-used info */
-  gchar        *codec_id, *codec_name, *name, *language;
-  gpointer      codec_priv;
-  guint         codec_priv_size;
+  gchar *codec_id, *codec_name, *name, *language;
+  gpointer codec_priv;
+  guint codec_priv_size;
   GstMatroskaTrackType type;
-  guint         uid, num;
+  guint uid, num;
   GstMatroskaTrackFlags flags;
-  guint64       default_duration;
+  guint64 default_duration;
 } GstMatroskaTrackContext;
 
-typedef struct _GstMatroskaTrackVideoContext {
+typedef struct _GstMatroskaTrackVideoContext
+{
   GstMatroskaTrackContext parent;
 
-  guint         pixel_width, pixel_height,
-                display_width, display_height;
+  guint pixel_width, pixel_height, display_width, display_height;
   GstMatroskaEyeMode eye_mode;
   GstMatroskaAspectRatioMode asr_mode;
-  guint32       fourcc;
+  guint32 fourcc;
 } GstMatroskaTrackVideoContext;
 
-typedef struct _GstMatroskaTrackAudioContext {
+typedef struct _GstMatroskaTrackAudioContext
+{
   GstMatroskaTrackContext parent;
 
-  guint         samplerate, channels, bitdepth;
+  guint samplerate, channels, bitdepth;
 } GstMatroskaTrackAudioContext;
 
-typedef struct _GstMatroskaTrackComplexContext {
+typedef struct _GstMatroskaTrackComplexContext
+{
   GstMatroskaTrackContext parent;
 
   /* nothing special goes here, apparently */
 } GstMatroskaTrackComplexContext;
 
-typedef struct _GstMatroskaTrackSubtitleContext {
+typedef struct _GstMatroskaTrackSubtitleContext
+{
   GstMatroskaTrackContext parent;
 
   /* or here... */
 } GstMatroskaTrackSubtitleContext;
 
-typedef struct _GstMatroskaIndex {
-  guint64        pos;   /* of the corresponding *cluster*! */
-  guint16        track; /* reference to 'num' */
-  guint64        time;  /* in nanoseconds */
+typedef struct _GstMatroskaIndex
+{
+  guint64 pos;			/* of the corresponding *cluster*! */
+  guint16 track;		/* reference to 'num' */
+  guint64 time;			/* in nanoseconds */
 } GstMatroskaIndex;
 
 #endif /* __GST_MATROSKA_IDS_H__ */

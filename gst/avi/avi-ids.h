@@ -22,21 +22,22 @@
 
 #include <gst/gst.h>
 
-typedef struct _gst_riff_avih {
-  guint32 us_frame;          /* microsec per frame */
-  guint32 max_bps;           /* byte/s overall */
-  guint32 pad_gran;          /* pad_granularity */
+typedef struct _gst_riff_avih
+{
+  guint32 us_frame;		/* microsec per frame */
+  guint32 max_bps;		/* byte/s overall */
+  guint32 pad_gran;		/* pad_granularity */
   guint32 flags;
 /* flags values */
-#define GST_RIFF_AVIH_HASINDEX       0x00000010 /* has idx1 chunk */
-#define GST_RIFF_AVIH_MUSTUSEINDEX   0x00000020 /* must use idx1 chunk to determine order */
-#define GST_RIFF_AVIH_ISINTERLEAVED  0x00000100 /* AVI file is interleaved */
-#define GST_RIFF_AVIH_WASCAPTUREFILE 0x00010000 /* specially allocated used for capturing real time video */
-#define GST_RIFF_AVIH_COPYRIGHTED    0x00020000 /* contains copyrighted data */
-  guint32 tot_frames;        /* # of frames (all) */
-  guint32 init_frames;       /* initial frames (???) */
+#define GST_RIFF_AVIH_HASINDEX       0x00000010	/* has idx1 chunk */
+#define GST_RIFF_AVIH_MUSTUSEINDEX   0x00000020	/* must use idx1 chunk to determine order */
+#define GST_RIFF_AVIH_ISINTERLEAVED  0x00000100	/* AVI file is interleaved */
+#define GST_RIFF_AVIH_WASCAPTUREFILE 0x00010000	/* specially allocated used for capturing real time video */
+#define GST_RIFF_AVIH_COPYRIGHTED    0x00020000	/* contains copyrighted data */
+  guint32 tot_frames;		/* # of frames (all) */
+  guint32 init_frames;		/* initial frames (???) */
   guint32 streams;
-  guint32 bufsize;           /* suggested buffer size */
+  guint32 bufsize;		/* suggested buffer size */
   guint32 width;
   guint32 height;
   guint32 scale;

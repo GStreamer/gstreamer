@@ -29,7 +29,6 @@
 
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_TIMEOVERLAY \
   (gst_timeoverlay_get_type())
 #define GST_TIMEOVERLAY(obj) \
@@ -40,11 +39,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TIMEOVERLAY))
 #define GST_IS_TIMEOVERLAY_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TIMEOVERLAY))
-
 typedef struct _GstTimeoverlay GstTimeoverlay;
 typedef struct _GstTimeoverlayClass GstTimeoverlayClass;
 
-struct _GstTimeoverlay {
+struct _GstTimeoverlay
+{
   GstVideofilter videofilter;
 
   PangoFontDescription *font_description;
@@ -52,13 +51,12 @@ struct _GstTimeoverlay {
 
 };
 
-struct _GstTimeoverlayClass {
+struct _GstTimeoverlayClass
+{
   GstVideofilterClass parent_class;
 };
 
-GType gst_timeoverlay_get_type(void);
+GType gst_timeoverlay_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_TIMEOVERLAY_H__ */
-

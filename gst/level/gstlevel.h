@@ -31,8 +31,9 @@
 #include "gstlevel-marshal.h"
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_LEVEL \
@@ -46,46 +47,48 @@ extern "C" {
 #define GST_IS_LEVEL_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LEVEL))
 
-typedef struct _GstLevel GstLevel;
-typedef struct _GstLevelClass GstLevelClass;
+  typedef struct _GstLevel GstLevel;
+  typedef struct _GstLevelClass GstLevelClass;
 
-struct _GstLevel {
-  GstElement element;
+  struct _GstLevel
+  {
+    GstElement element;
 
-  GstPad *sinkpad, *srcpad;
-  gboolean signal;		/* whether or not to emit signals */
-  gboolean inited;              /* whether or not the element is initialized */
-  gdouble interval;		/* how many seconds between emits */
+    GstPad *sinkpad, *srcpad;
+    gboolean signal;		/* whether or not to emit signals */
+    gboolean inited;		/* whether or not the element is initialized */
+    gdouble interval;		/* how many seconds between emits */
 
-  gint rate;			/* caps variables */
-  gint width;
-  gint channels;
+    gint rate;			/* caps variables */
+    gint width;
+    gint channels;
 
-  gdouble decay_peak_ttl;	/* time to live for peak in seconds */
-  gdouble decay_peak_falloff;	/* falloff in dB/sec */
-  gdouble num_samples;		/* cumulative sample count */
+    gdouble decay_peak_ttl;	/* time to live for peak in seconds */
+    gdouble decay_peak_falloff;	/* falloff in dB/sec */
+    gdouble num_samples;	/* cumulative sample count */
 
-  /* per-channel arrays for intermediate values */
-  gdouble *CS;			/* normalized Cumulative Square */
-  gdouble *peak;		/* normalized Peak value over buffer */
-  gdouble *last_peak;		/* last normalized Peak value over interval */
-  gdouble *decay_peak;		/* running decaying normalized Peak */
-  gdouble *MS;			/* normalized Mean Square of buffer */
-  gdouble *RMS_dB;		/* RMS in dB to emit */
-  gdouble *decay_peak_age;	/* age of last peak */
-};
+    /* per-channel arrays for intermediate values */
+    gdouble *CS;		/* normalized Cumulative Square */
+    gdouble *peak;		/* normalized Peak value over buffer */
+    gdouble *last_peak;		/* last normalized Peak value over interval */
+    gdouble *decay_peak;	/* running decaying normalized Peak */
+    gdouble *MS;		/* normalized Mean Square of buffer */
+    gdouble *RMS_dB;		/* RMS in dB to emit */
+    gdouble *decay_peak_age;	/* age of last peak */
+  };
 
-struct _GstLevelClass {
-  GstElementClass parent_class;
-  void (*level) (GstElement *element, gdouble time, gint channel,
-                 gdouble RMS_dB, gdouble peak_dB, gdouble decay_peak_dB);
-};
+  struct _GstLevelClass
+  {
+    GstElementClass parent_class;
+    void (*level) (GstElement * element, gdouble time, gint channel,
+	gdouble RMS_dB, gdouble peak_dB, gdouble decay_peak_dB);
+  };
 
-GType gst_level_get_type(void);
+  GType gst_level_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_STEREO_H__ */
+#endif				/* __GST_STEREO_H__ */

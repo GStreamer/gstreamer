@@ -69,27 +69,28 @@ enum
   ARG_0,
 };
 
-static void 	gst_edgetv_base_init 		(gpointer g_class);
-static void 	gst_edgetv_class_init 		(gpointer g_class, gpointer class_data);
-static void	gst_edgetv_init			(GTypeInstance *instance, gpointer g_class);
+static void gst_edgetv_base_init (gpointer g_class);
+static void gst_edgetv_class_init (gpointer g_class, gpointer class_data);
+static void gst_edgetv_init (GTypeInstance * instance, gpointer g_class);
 
-static void 	gst_edgetv_set_property 	(GObject * object, guint prop_id,
-					  	 const GValue * value, GParamSpec * pspec);
-static void 	gst_edgetv_get_property 	(GObject * object, guint prop_id,
-					  	 GValue * value, GParamSpec * pspec);
+static void gst_edgetv_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_edgetv_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static void     gst_edgetv_setup		(GstVideofilter *videofilter);
-static void     gst_edgetv_rgb32 		(GstVideofilter *videofilter, void *d, void *s);
+static void gst_edgetv_setup (GstVideofilter * videofilter);
+static void gst_edgetv_rgb32 (GstVideofilter * videofilter, void *d, void *s);
 
 /*static guint gst_edgetv_signals[LAST_SIGNAL] = { 0 }; */
 
-GType gst_edgetv_get_type (void)
+GType
+gst_edgetv_get_type (void)
 {
   static GType edgetv_type = 0;
 
   if (!edgetv_type) {
     static const GTypeInfo edgetv_info = {
-      sizeof (GstEdgeTVClass), 
+      sizeof (GstEdgeTVClass),
       gst_edgetv_base_init,
       NULL,
       (GClassInitFunc) gst_edgetv_class_init,
@@ -100,34 +101,35 @@ GType gst_edgetv_get_type (void)
       (GInstanceInitFunc) gst_edgetv_init,
     };
 
-    edgetv_type = g_type_register_static (GST_TYPE_VIDEOFILTER, "GstEdgeTV", &edgetv_info, 0);
+    edgetv_type =
+	g_type_register_static (GST_TYPE_VIDEOFILTER, "GstEdgeTV", &edgetv_info,
+	0);
   }
   return edgetv_type;
 }
 
 static GstVideofilterFormat gst_edgetv_formats[] = {
-  { "RGB ", 32, gst_edgetv_rgb32, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000, 0xff000000 }
+  {"RGB ", 32, gst_edgetv_rgb32, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000,
+      0xff000000}
 };
 
 static void
 gst_edgetv_base_init (gpointer g_class)
 {
   /* elementfactory information */
-  static GstElementDetails gst_edgetv_details = GST_ELEMENT_DETAILS (
-    "EdgeTV",
-    "Filter/Effect/Video",
-    "Apply edge detect on video",
-    "Wim Taymans <wim.taymans@chello.be>"
-  );
+  static GstElementDetails gst_edgetv_details = GST_ELEMENT_DETAILS ("EdgeTV",
+      "Filter/Effect/Video",
+      "Apply edge detect on video",
+      "Wim Taymans <wim.taymans@chello.be>");
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
   int i;
-  
+
   gst_element_class_set_details (element_class, &gst_edgetv_details);
 
-  for(i=0; i < G_N_ELEMENTS(gst_edgetv_formats); i++) {
-    gst_videofilter_class_add_format(videofilter_class,
+  for (i = 0; i < G_N_ELEMENTS (gst_edgetv_formats); i++) {
+    gst_videofilter_class_add_format (videofilter_class,
 	gst_edgetv_formats + i);
   }
 
@@ -150,14 +152,15 @@ gst_edgetv_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
-gst_edgetv_init (GTypeInstance *instance, gpointer g_class)
+gst_edgetv_init (GTypeInstance * instance, gpointer g_class)
 {
   GstEdgeTV *edgetv = GST_EDGETV (instance);
 
   edgetv->map = NULL;
 }
 
-static void gst_edgetv_setup(GstVideofilter *videofilter)
+static void
+gst_edgetv_setup (GstVideofilter * videofilter)
 {
   GstEdgeTV *edgetv;
   int width = gst_videofilter_get_input_width (videofilter);
@@ -173,12 +176,15 @@ static void gst_edgetv_setup(GstVideofilter *videofilter)
   edgetv->video_width_margin = width % 4;
 
   g_free (edgetv->map);
-  edgetv->map = (guint32 *)g_malloc (edgetv->map_width * edgetv->map_height * sizeof (guint32) * 2);
-  memset(edgetv->map, 0, edgetv->map_width * edgetv->map_height * sizeof (guint32) * 2);
+  edgetv->map =
+      (guint32 *) g_malloc (edgetv->map_width * edgetv->map_height *
+      sizeof (guint32) * 2);
+  memset (edgetv->map, 0,
+      edgetv->map_width * edgetv->map_height * sizeof (guint32) * 2);
 }
 
-static void     
-gst_edgetv_rgb32 (GstVideofilter *videofilter, void *d, void *s)
+static void
+gst_edgetv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
 {
   GstEdgeTV *filter;
   int x, y;
@@ -191,10 +197,10 @@ gst_edgetv_rgb32 (GstVideofilter *videofilter, void *d, void *s)
 
   src = (guint32 *) s;
   dest = (guint32 *) d;
-  
+
   src += filter->width * 4 + 4;
   dest += filter->width * 4 + 4;
-  
+
   for (y = 1; y < filter->map_height - 1; y++) {
     for (x = 1; x < filter->map_width - 1; x++) {
 
@@ -272,7 +278,8 @@ gst_edgetv_rgb32 (GstVideofilter *videofilter, void *d, void *s)
 }
 
 static void
-gst_edgetv_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec)
+gst_edgetv_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
 {
   GstEdgeTV *filter;
 
@@ -288,7 +295,8 @@ gst_edgetv_set_property (GObject * object, guint prop_id, const GValue * value, 
 }
 
 static void
-gst_edgetv_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec)
+gst_edgetv_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstEdgeTV *filter;
 

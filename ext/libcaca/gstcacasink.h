@@ -28,8 +28,9 @@
 #include <caca.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 #define GST_CACA_DEFAULT_SCREEN_WIDTH 80
 #define GST_CACA_DEFAULT_SCREEN_HEIGHT 25
@@ -53,44 +54,47 @@ extern "C" {
 #define GST_IS_CACASINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CACASINK))
 
-typedef enum {
-  GST_CACASINK_OPEN              = GST_ELEMENT_FLAG_LAST,
+  typedef enum
+  {
+    GST_CACASINK_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  GST_CACASINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-} GstCACASinkFlags;
+    GST_CACASINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
+  } GstCACASinkFlags;
 
-typedef struct _GstCACASink GstCACASink;
-typedef struct _GstCACASinkClass GstCACASinkClass;
+  typedef struct _GstCACASink GstCACASink;
+  typedef struct _GstCACASinkClass GstCACASinkClass;
 
-struct _GstCACASink {
-  GstVideoSink videosink;
+  struct _GstCACASink
+  {
+    GstVideoSink videosink;
 
-  GstPad *sinkpad;
+    GstPad *sinkpad;
 
-  gulong format;
-  gint screen_width, screen_height;
-  guint bpp;
-  guint dither;
-  gboolean antialiasing;
-  guint red_mask, green_mask, blue_mask;
+    gulong format;
+    gint screen_width, screen_height;
+    guint bpp;
+    guint dither;
+    gboolean antialiasing;
+    guint red_mask, green_mask, blue_mask;
 
-  gint64 correction;
-  GstClockID id;
+    gint64 correction;
+    GstClockID id;
 
-  struct caca_bitmap *bitmap;
-};
+    struct caca_bitmap *bitmap;
+  };
 
-struct _GstCACASinkClass {
-  GstVideoSinkClass parent_class;
+  struct _GstCACASinkClass
+  {
+    GstVideoSinkClass parent_class;
 
-  /* signals */
-};
+    /* signals */
+  };
 
-GType gst_cacasink_get_type(void);
+  GType gst_cacasink_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_CACASINKE_H__ */
+#endif				/* __GST_CACASINKE_H__ */

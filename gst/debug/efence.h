@@ -8,8 +8,9 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 /* #define's don't like whitespacey bits */
 #define GST_TYPE_EFENCE \
@@ -23,27 +24,27 @@ extern "C" {
 #define GST_IS_EFENCE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EFENCE))
 
-typedef struct _GstEFence      GstEFence;
-typedef struct _GstEFenceClass GstEFenceClass;
+  typedef struct _GstEFence GstEFence;
+  typedef struct _GstEFenceClass GstEFenceClass;
 
-struct _GstEFence
-{
-  GstElement element;
+  struct _GstEFence
+  {
+    GstElement element;
 
-  GstPad *sinkpad, *srcpad;
+    GstPad *sinkpad, *srcpad;
 
-  gboolean fence_top;
-};
+    gboolean fence_top;
+  };
 
-struct _GstEFenceClass 
-{
-  GstElementClass parent_class;
-};
+  struct _GstEFenceClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType gst_gst_efence_get_type (void);
+  GType gst_gst_efence_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
-#endif /* __GST_EFENCE_H__ */
+#endif				/* __GST_EFENCE_H__ */

@@ -24,24 +24,21 @@
 #include "gstspeexenc.h"
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "speexenc", GST_RANK_NONE, GST_TYPE_SPEEXENC))
+  if (!gst_element_register (plugin, "speexenc", GST_RANK_NONE,
+	  GST_TYPE_SPEEXENC))
     return FALSE;
 
-  if (!gst_element_register (plugin, "speexdec", GST_RANK_PRIMARY, GST_TYPE_SPEEXDEC))
+  if (!gst_element_register (plugin, "speexdec", GST_RANK_PRIMARY,
+	  GST_TYPE_SPEEXDEC))
     return FALSE;
-  
+
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "speex",
-  "Speex plugin library",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "speex",
+    "Speex plugin library",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

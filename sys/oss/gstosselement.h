@@ -30,7 +30,6 @@ GST_DEBUG_CATEGORY_EXTERN (oss_debug);
 #define GST_CAT_DEFAULT oss_debug
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_OSSELEMENT \
   (gst_osselement_get_type())
 #define GST_OSSELEMENT(obj) \
@@ -43,16 +42,17 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSSELEMENT))
 #define GST_OSSELEMENT_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_OSSELEMENT, GstOssElementClass))
-
 typedef struct _GstOssElement GstOssElement;
 typedef struct _GstOssElementClass GstOssElementClass;
 
-typedef enum {
+typedef enum
+{
   GST_OSSELEMENT_READ,
   GST_OSSELEMENT_WRITE,
 } GstOssOpenMode;
 
-typedef struct _GstOssDeviceCombination {
+typedef struct _GstOssDeviceCombination
+{
   gchar *dsp, *mixer;
   dev_t dev;
 } GstOssDeviceCombination;
@@ -60,65 +60,57 @@ typedef struct _GstOssDeviceCombination {
 struct _GstOssElement
 {
   /* yes, we're a gstelement too */
-  GstElement     parent;
+  GstElement parent;
 
-  gchar		*device,
-		*mixer_dev;
+  gchar *device, *mixer_dev;
 
   /* device state */
-  int		 fd;
-  int		 caps; /* the capabilities */
-  gint		 format;
-  gint		 fragment;
-  guint64	 fragment_time;
-  gint		 fragment_size;
+  int fd;
+  int caps;			/* the capabilities */
+  gint format;
+  gint fragment;
+  guint64 fragment_time;
+  gint fragment_size;
   GstOssOpenMode mode;
 
   /* stats bytes per *second* */
-  guint		 bps;
+  guint bps;
 
   /* parameters */
-  gint 		 law;
-  gint 		 endianness;
-  gboolean	 sign;
-  gint		 width;
-  gint		 depth;
-  gint		 channels;
-  gint		 rate;
+  gint law;
+  gint endianness;
+  gboolean sign;
+  gint width;
+  gint depth;
+  gint channels;
+  gint rate;
 
   /* mixer stuff */
-  GList		*tracklist;
-  guint32	 stereomask,
-		 recdevs,
-		 recmask,
-		 mixcaps;
-  gint		 mixer_fd;
-  gchar		*device_name;
+  GList *tracklist;
+  guint32 stereomask, recdevs, recmask, mixcaps;
+  gint mixer_fd;
+  gchar *device_name;
 };
 
-struct _GstOssElementClass {
+struct _GstOssElementClass
+{
   GstElementClass klass;
 
-  GList		*device_combinations;
+  GList *device_combinations;
 };
 
-GType		gst_osselement_get_type		(void);
+GType gst_osselement_get_type (void);
 
 /* some useful functions */
-gboolean 	gst_osselement_parse_caps 	(GstOssElement *oss,
-						 const GstCaps      *caps);
-gboolean	gst_osselement_merge_fixed_caps (GstOssElement *oss,
-						 GstCaps      *caps);
-	
-gboolean 	gst_osselement_sync_parms 	(GstOssElement *oss);
-void		gst_osselement_reset 		(GstOssElement *oss);
+gboolean gst_osselement_parse_caps (GstOssElement * oss, const GstCaps * caps);
+gboolean gst_osselement_merge_fixed_caps (GstOssElement * oss, GstCaps * caps);
 
-gboolean 	gst_osselement_convert 	 	(GstOssElement *oss, 
-						 GstFormat      src_format,
-						 gint64         src_value,
-		                       		 GstFormat     *dest_format,
-						 gint64        *dest_value);
+gboolean gst_osselement_sync_parms (GstOssElement * oss);
+void gst_osselement_reset (GstOssElement * oss);
+
+gboolean gst_osselement_convert (GstOssElement * oss,
+    GstFormat src_format,
+    gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
 G_END_DECLS
-
 #endif /* __GST_OSS_ELEMENT_H__ */

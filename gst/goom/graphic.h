@@ -5,7 +5,7 @@ typedef unsigned int Uint;
 
 typedef struct
 {
-  unsigned short r,v,b;
+  unsigned short r, v, b;
 }
 Color;
 
@@ -18,7 +18,7 @@ extern const Color YELLOW;
 extern const Color ORANGE;
 extern const Color VIOLET;
 
-inline void setPixelRGB (Uint *buffer, Uint x, Uint y, Color c) ;
-inline void getPixelRGB (Uint *buffer, Uint x, Uint y, Color *c) ;
+inline void setPixelRGB (Uint * buffer, Uint x, Uint y, Color c);
+inline void getPixelRGB (Uint * buffer, Uint x, Uint y, Color * c);
 
-#endif /*GRAPHIC_H*/
+#endif /*GRAPHIC_H */

@@ -36,7 +36,6 @@ extern "C"
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
-#endif /* __GST_UDP_H__ */
-
+#endif				/* __GST_UDP_H__ */

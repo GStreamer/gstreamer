@@ -26,8 +26,9 @@
 #include <aalib.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_AASINK \
@@ -41,48 +42,51 @@ extern "C" {
 #define GST_IS_AASINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AASINK))
 
-typedef enum {
-  GST_AASINK_OPEN              = GST_ELEMENT_FLAG_LAST,
+  typedef enum
+  {
+    GST_AASINK_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  GST_AASINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-} GstAASinkFlags;
+    GST_AASINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
+  } GstAASinkFlags;
 
-typedef struct _GstAASink GstAASink;
-typedef struct _GstAASinkClass GstAASinkClass;
+  typedef struct _GstAASink GstAASink;
+  typedef struct _GstAASinkClass GstAASinkClass;
 
-struct _GstAASink {
-  GstElement element;
+  struct _GstAASink
+  {
+    GstElement element;
 
-  GstPad *sinkpad;
+    GstPad *sinkpad;
 
-  gulong format;
-  gint width, height;
+    gulong format;
+    gint width, height;
 
-  gint frames_displayed;
-  guint64 frame_time;
+    gint frames_displayed;
+    guint64 frame_time;
 
-  GstClock *clock;
+    GstClock *clock;
 
-  aa_context *context;
-  struct aa_hardware_params ascii_surf;
-  struct aa_renderparams ascii_parms;
-  aa_palette palette;
-  gint aa_driver;
-};
+    aa_context *context;
+    struct aa_hardware_params ascii_surf;
+    struct aa_renderparams ascii_parms;
+    aa_palette palette;
+    gint aa_driver;
+  };
 
-struct _GstAASinkClass {
-  GstElementClass parent_class;
+  struct _GstAASinkClass
+  {
+    GstElementClass parent_class;
 
-  /* signals */
-  void (*frame_displayed) (GstElement *element);
-  void (*have_size) 	  (GstElement *element, guint width, guint height);
-};
+    /* signals */
+    void (*frame_displayed) (GstElement * element);
+    void (*have_size) (GstElement * element, guint width, guint height);
+  };
 
-GType gst_aasink_get_type(void);
+  GType gst_aasink_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_AASINKE_H__ */
+#endif				/* __GST_AASINKE_H__ */

@@ -28,26 +28,26 @@
 #include "ebml-read.h"
 #include "ebml-ids.h"
 
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-static void gst_ebml_read_class_init   (GstEbmlReadClass *klass);
-static void gst_ebml_read_init         (GstEbmlRead      *ebml);
-static GstElementStateReturn
-	    gst_ebml_read_change_state (GstElement       *element);
+static void gst_ebml_read_class_init (GstEbmlReadClass * klass);
+static void gst_ebml_read_init (GstEbmlRead * ebml);
+static GstElementStateReturn gst_ebml_read_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
 GType
-gst_ebml_read_get_type (void) 
+gst_ebml_read_get_type (void)
 {
   static GType gst_ebml_read_type = 0;
 
   if (!gst_ebml_read_type) {
     static const GTypeInfo gst_ebml_read_info = {
-      sizeof (GstEbmlReadClass),      
+      sizeof (GstEbmlReadClass),
       NULL,
       NULL,
       (GClassInitFunc) gst_ebml_read_class_init,
@@ -60,14 +60,14 @@ gst_ebml_read_get_type (void)
 
     gst_ebml_read_type =
 	g_type_register_static (GST_TYPE_ELEMENT, "GstEbmlRead",
-				&gst_ebml_read_info, 0);
+	&gst_ebml_read_info, 0);
   }
 
   return gst_ebml_read_type;
 }
 
 static void
-gst_ebml_read_class_init (GstEbmlReadClass *klass) 
+gst_ebml_read_class_init (GstEbmlReadClass * klass)
 {
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
@@ -77,7 +77,7 @@ gst_ebml_read_class_init (GstEbmlReadClass *klass)
 }
 
 static void
-gst_ebml_read_init (GstEbmlRead *ebml)
+gst_ebml_read_init (GstEbmlRead * ebml)
 {
   ebml->sinkpad = NULL;
   ebml->bs = NULL;
@@ -85,23 +85,23 @@ gst_ebml_read_init (GstEbmlRead *ebml)
 }
 
 static GstElementStateReturn
-gst_ebml_read_change_state (GstElement *element)
+gst_ebml_read_change_state (GstElement * element)
 {
   GstEbmlRead *ebml = GST_EBML_READ (element);
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_READY_TO_PAUSED:
       if (!ebml->sinkpad)
-        return GST_STATE_FAILURE;
+	return GST_STATE_FAILURE;
       ebml->bs = gst_bytestream_new (ebml->sinkpad);
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_bytestream_destroy (ebml->bs);
       while (ebml->level) {
-        GstEbmlLevel *level = ebml->level->data;
+	GstEbmlLevel *level = ebml->level->data;
 
-        ebml->level = g_list_remove (ebml->level, level);
-        g_free (level);
+	ebml->level = g_list_remove (ebml->level, level);
+	g_free (level);
       }
       break;
     default:
@@ -122,7 +122,7 @@ gst_ebml_read_change_state (GstElement *element)
  */
 
 static guint
-gst_ebml_read_element_level_up (GstEbmlRead *ebml)
+gst_ebml_read_element_level_up (GstEbmlRead * ebml)
 {
   guint num = 0;
   guint64 pos = gst_bytestream_tell (ebml->bs);
@@ -148,9 +148,7 @@ gst_ebml_read_element_level_up (GstEbmlRead *ebml)
  */
 
 static gint
-gst_ebml_read_element_id (GstEbmlRead *ebml,
-			  guint32     *id,
-			  guint       *level_up)
+gst_ebml_read_element_id (GstEbmlRead * ebml, guint32 * id, guint * level_up)
 {
   guint8 *data;
   gint len_mask = 0x80, read = 1, n = 1;
@@ -166,10 +164,10 @@ gst_ebml_read_element_id (GstEbmlRead *ebml,
       gst_pad_event_default (ebml->sinkpad, event);
     } else {
       guint64 pos = gst_bytestream_tell (ebml->bs);
+
       gst_event_unref (event);
       GST_ELEMENT_ERROR (ebml, RESOURCE, READ, (NULL),
-			 ("Read error at position %llu (0x%llx)",
-			 pos, pos));
+	  ("Read error at position %llu (0x%llx)", pos, pos));
       return -1;
     }
   }
@@ -180,16 +178,18 @@ gst_ebml_read_element_id (GstEbmlRead *ebml,
   }
   if (read > 4) {
     guint64 pos = gst_bytestream_tell (ebml->bs);
+
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
-		       ("Invalid EBML ID size tag (0x%x) at position %llu (0x%llx)",
-		       data[0], pos, pos));
+	("Invalid EBML ID size tag (0x%x) at position %llu (0x%llx)",
+	    data[0], pos, pos));
     return -1;
   }
 
   if (gst_bytestream_peek_bytes (ebml->bs, &data, read) != read) {
     guint64 pos = gst_bytestream_tell (ebml->bs);
+
     GST_ELEMENT_ERROR (ebml, RESOURCE, READ, (NULL),
-		       ("Read error at position %llu (0x%llx)", pos, pos));
+	("Read error at position %llu (0x%llx)", pos, pos));
     return -1;
   }
   while (n < read)
@@ -210,8 +210,7 @@ gst_ebml_read_element_id (GstEbmlRead *ebml,
  */
 
 static gint
-gst_ebml_read_element_length (GstEbmlRead *ebml,
-			      guint64     *length)
+gst_ebml_read_element_length (GstEbmlRead * ebml, guint64 * length)
 {
   guint8 *data;
   gint len_mask = 0x80, read = 1, n = 1, num_ffs = 0;
@@ -219,8 +218,9 @@ gst_ebml_read_element_length (GstEbmlRead *ebml,
 
   if (gst_bytestream_peek_bytes (ebml->bs, &data, 1) != 1) {
     guint64 pos = gst_bytestream_tell (ebml->bs);
+
     GST_ELEMENT_ERROR (ebml, RESOURCE, READ, (NULL),
-		       ("Read error at position %llu (0x%llx)", pos, pos));
+	("Read error at position %llu (0x%llx)", pos, pos));
     return -1;
   }
   total = data[0];
@@ -230,9 +230,10 @@ gst_ebml_read_element_length (GstEbmlRead *ebml,
   }
   if (read > 8) {
     guint64 pos = gst_bytestream_tell (ebml->bs);
+
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
-		       ("Invalid EBML length size tag (0x%x) at position %llu (0x%llx)",
-		       data[0], pos, pos));
+	("Invalid EBML length size tag (0x%x) at position %llu (0x%llx)",
+	    data[0], pos, pos));
     return -1;
   }
 
@@ -240,8 +241,9 @@ gst_ebml_read_element_length (GstEbmlRead *ebml,
     num_ffs++;
   if (gst_bytestream_peek_bytes (ebml->bs, &data, read) != read) {
     guint64 pos = gst_bytestream_tell (ebml->bs);
+
     GST_ELEMENT_ERROR (ebml, RESOURCE, READ, (NULL),
-		       ("Read error at position %llu (0x%llx)", pos, pos));
+	("Read error at position %llu (0x%llx)", pos, pos));
     return -1;
   }
   while (n < read) {
@@ -265,15 +267,15 @@ gst_ebml_read_element_length (GstEbmlRead *ebml,
  */
 
 static GstBuffer *
-gst_ebml_read_element_data (GstEbmlRead *ebml,
-			    guint64      length)
+gst_ebml_read_element_data (GstEbmlRead * ebml, guint64 length)
 {
   GstBuffer *buf = NULL;
 
   if (gst_bytestream_peek (ebml->bs, &buf, length) != length) {
     guint64 pos = gst_bytestream_tell (ebml->bs);
+
     GST_ELEMENT_ERROR (ebml, RESOURCE, READ, (NULL),
-		       ("Read error at position %llu (0x%llx)", pos, pos));
+	("Read error at position %llu (0x%llx)", pos, pos));
     if (buf)
       gst_buffer_unref (buf);
     return NULL;
@@ -291,8 +293,7 @@ gst_ebml_read_element_data (GstEbmlRead *ebml,
  */
 
 guint32
-gst_ebml_peek_id (GstEbmlRead *ebml,
-		  guint       *level_up)
+gst_ebml_peek_id (GstEbmlRead * ebml, guint * level_up)
 {
   guint32 id;
 
@@ -309,8 +310,7 @@ gst_ebml_peek_id (GstEbmlRead *ebml,
  */
 
 GstEvent *
-gst_ebml_read_seek (GstEbmlRead *ebml,
-		    guint64      offset)
+gst_ebml_read_seek (GstEbmlRead * ebml, guint64 offset)
 {
   guint32 remaining;
   GstEvent *event = NULL;
@@ -328,7 +328,7 @@ gst_ebml_read_seek (GstEbmlRead *ebml,
   /* now seek */
   if (!gst_bytestream_seek (ebml->bs, offset, GST_SEEK_METHOD_SET)) {
     GST_ELEMENT_ERROR (ebml, RESOURCE, SEEK, (NULL),
-		       ("Seek to position %llu (0x%llx) failed", offset, offset));
+	("Seek to position %llu (0x%llx) failed", offset, offset));
     return NULL;
   }
 
@@ -359,7 +359,7 @@ gst_ebml_read_seek (GstEbmlRead *ebml,
  */
 
 gboolean
-gst_ebml_read_skip (GstEbmlRead *ebml)
+gst_ebml_read_skip (GstEbmlRead * ebml)
 {
   gint bytes;
   guint32 id, remaining;
@@ -385,7 +385,7 @@ gst_ebml_read_skip (GstEbmlRead *ebml)
     return gst_bytestream_flush (ebml->bs, length);
 
   if (!(event = gst_ebml_read_seek (ebml,
-			gst_bytestream_tell (ebml->bs) + length)))
+	      gst_bytestream_tell (ebml->bs) + length)))
     return FALSE;
 
   gst_event_unref (event);
@@ -398,9 +398,7 @@ gst_ebml_read_skip (GstEbmlRead *ebml)
  */
 
 gboolean
-gst_ebml_read_buffer (GstEbmlRead *ebml,
-		      guint32     *id,
-		      GstBuffer  **buf)
+gst_ebml_read_buffer (GstEbmlRead * ebml, guint32 * id, GstBuffer ** buf)
 {
   gint bytes;
   guint64 length;
@@ -421,9 +419,7 @@ gst_ebml_read_buffer (GstEbmlRead *ebml,
  */
 
 gboolean
-gst_ebml_read_uint (GstEbmlRead *ebml,
-		    guint32     *id,
-		    guint64     *num)
+gst_ebml_read_uint (GstEbmlRead * ebml, guint32 * id, guint64 * num)
 {
   GstBuffer *buf;
   guint8 *data;
@@ -436,8 +432,8 @@ gst_ebml_read_uint (GstEbmlRead *ebml,
   size = GST_BUFFER_SIZE (buf);
   if (size < 1 || size > 8) {
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
-		       ("Invalid integer element size %d at position %llu (0x%llu)",
-		       size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf)));
+	("Invalid integer element size %d at position %llu (0x%llu)",
+	    size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf)));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -457,9 +453,7 @@ gst_ebml_read_uint (GstEbmlRead *ebml,
  */
 
 gboolean
-gst_ebml_read_sint (GstEbmlRead *ebml,
-		    guint32     *id,
-		    gint64      *num)
+gst_ebml_read_sint (GstEbmlRead * ebml, guint32 * id, gint64 * num)
 {
   GstBuffer *buf;
   guint8 *data;
@@ -472,8 +466,8 @@ gst_ebml_read_sint (GstEbmlRead *ebml,
   size = GST_BUFFER_SIZE (buf);
   if (size < 1 || size > 8) {
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
-		       ("Invalid integer element size %d at position %llu (0x%llx)",
-		       size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf)));
+	("Invalid integer element size %d at position %llu (0x%llx)",
+	    size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf)));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -501,9 +495,7 @@ gst_ebml_read_sint (GstEbmlRead *ebml,
  */
 
 gboolean
-gst_ebml_read_float (GstEbmlRead *ebml,
-		     guint32     *id,
-		     gdouble     *num)
+gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
 {
   GstBuffer *buf;
   guint8 *data;
@@ -517,15 +509,15 @@ gst_ebml_read_float (GstEbmlRead *ebml,
 
   if (size != 4 && size != 8 && size != 10) {
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
-		       ("Invalid float element size %d at position %llu (0x%llx)",
-		       size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf)));
+	("Invalid float element size %d at position %llu (0x%llx)",
+	    size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf)));
     gst_buffer_unref (buf);
     return FALSE;
   }
 
   if (size == 10) {
     GST_ELEMENT_ERROR (ebml, CORE, NOT_IMPLEMENTED, (NULL),
-		       ("FIXME! 10-byte floats unimplemented"));
+	("FIXME! 10-byte floats unimplemented"));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -534,10 +526,10 @@ gst_ebml_read_float (GstEbmlRead *ebml,
     gfloat f;
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-    f = * (gfloat *) data;
+    f = *(gfloat *) data;
 #else
     while (size > 0) {
-      ((guint8 *) &f)[size - 1] = data[4 - size];
+      ((guint8 *) & f)[size - 1] = data[4 - size];
       size--;
     }
 #endif
@@ -547,10 +539,10 @@ gst_ebml_read_float (GstEbmlRead *ebml,
     gdouble d;
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-    d = * (gdouble *) data;
+    d = *(gdouble *) data;
 #else
     while (size > 0) {
-      ((guint8 *) &d)[size - 1] = data[8 - size];
+      ((guint8 *) & d)[size - 1] = data[8 - size];
       size--;
     }
 #endif
@@ -568,9 +560,7 @@ gst_ebml_read_float (GstEbmlRead *ebml,
  */
 
 gboolean
-gst_ebml_read_ascii (GstEbmlRead *ebml,
-		     guint32     *id,
-		     gchar      **str)
+gst_ebml_read_ascii (GstEbmlRead * ebml, guint32 * id, gchar ** str)
 {
   GstBuffer *buf;
 
@@ -591,9 +581,7 @@ gst_ebml_read_ascii (GstEbmlRead *ebml,
  */
 
 gboolean
-gst_ebml_read_utf8 (GstEbmlRead *ebml,
-		    guint32     *id,
-		    gchar      **str)
+gst_ebml_read_utf8 (GstEbmlRead * ebml, guint32 * id, gchar ** str)
 {
   return gst_ebml_read_ascii (ebml, id, str);
 }
@@ -603,9 +591,7 @@ gst_ebml_read_utf8 (GstEbmlRead *ebml,
  */
 
 gboolean
-gst_ebml_read_date (GstEbmlRead *ebml,
-		    guint32     *id,
-		    gint64      *date)
+gst_ebml_read_date (GstEbmlRead * ebml, guint32 * id, gint64 * date)
 {
   return gst_ebml_read_sint (ebml, id, date);
 }
@@ -616,8 +602,7 @@ gst_ebml_read_date (GstEbmlRead *ebml,
  */
 
 gboolean
-gst_ebml_read_master (GstEbmlRead *ebml,
-		      guint32     *id)
+gst_ebml_read_master (GstEbmlRead * ebml, guint32 * id)
 {
   gint bytes;
   guint64 length;
@@ -645,10 +630,8 @@ gst_ebml_read_master (GstEbmlRead *ebml,
  */
 
 gboolean
-gst_ebml_read_binary (GstEbmlRead *ebml,
-		      guint32     *id,
-		      guint8     **binary,
-		      guint64     *length)
+gst_ebml_read_binary (GstEbmlRead * ebml,
+    guint32 * id, guint8 ** binary, guint64 * length)
 {
   GstBuffer *buf;
 
@@ -668,9 +651,7 @@ gst_ebml_read_binary (GstEbmlRead *ebml,
  */
 
 gboolean
-gst_ebml_read_header (GstEbmlRead *ebml,
-		      gchar      **doctype,
-		      guint       *version)
+gst_ebml_read_header (GstEbmlRead * ebml, gchar ** doctype, guint * version)
 {
   /* this function is the first to be called */
   guint32 id;
@@ -701,79 +682,79 @@ gst_ebml_read_header (GstEbmlRead *ebml,
       break;
 
     switch (id) {
-      /* is our read version uptodate? */
-      case GST_EBML_ID_EBMLREADVERSION: {
-        guint64 num;
+	/* is our read version uptodate? */
+      case GST_EBML_ID_EBMLREADVERSION:{
+	guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num))
-          return FALSE;
-        g_assert (id == GST_EBML_ID_EBMLREADVERSION);
-        if (num != GST_EBML_VERSION)
-          return FALSE;
-        break;
+	if (!gst_ebml_read_uint (ebml, &id, &num))
+	  return FALSE;
+	g_assert (id == GST_EBML_ID_EBMLREADVERSION);
+	if (num != GST_EBML_VERSION)
+	  return FALSE;
+	break;
       }
 
-      /* we only handle 8 byte lengths at max */
-      case GST_EBML_ID_EBMLMAXSIZELENGTH: {
-        guint64 num;
+	/* we only handle 8 byte lengths at max */
+      case GST_EBML_ID_EBMLMAXSIZELENGTH:{
+	guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num))
-          return FALSE;
-        g_assert (id == GST_EBML_ID_EBMLMAXSIZELENGTH);
-        if (num != sizeof (guint64))
-          return FALSE;
-        break;
+	if (!gst_ebml_read_uint (ebml, &id, &num))
+	  return FALSE;
+	g_assert (id == GST_EBML_ID_EBMLMAXSIZELENGTH);
+	if (num != sizeof (guint64))
+	  return FALSE;
+	break;
       }
 
-      /* we handle 4 byte IDs at max */
-      case GST_EBML_ID_EBMLMAXIDLENGTH: {
-        guint64 num;
+	/* we handle 4 byte IDs at max */
+      case GST_EBML_ID_EBMLMAXIDLENGTH:{
+	guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num))
-          return FALSE;
-        g_assert (id == GST_EBML_ID_EBMLMAXIDLENGTH);
-        if (num != sizeof (guint32))
-          return FALSE;
-        break;
+	if (!gst_ebml_read_uint (ebml, &id, &num))
+	  return FALSE;
+	g_assert (id == GST_EBML_ID_EBMLMAXIDLENGTH);
+	if (num != sizeof (guint32))
+	  return FALSE;
+	break;
       }
 
-      case GST_EBML_ID_DOCTYPE: {
-        gchar *text;
+      case GST_EBML_ID_DOCTYPE:{
+	gchar *text;
 
-        if (!gst_ebml_read_ascii (ebml, &id, &text))
-          return FALSE;
-        g_assert (id == GST_EBML_ID_DOCTYPE); 
-        if (doctype) {
-          if (doctype)
-            g_free (*doctype);
-          *doctype = text;
-        } else
-          g_free (text);
-        break;
+	if (!gst_ebml_read_ascii (ebml, &id, &text))
+	  return FALSE;
+	g_assert (id == GST_EBML_ID_DOCTYPE);
+	if (doctype) {
+	  if (doctype)
+	    g_free (*doctype);
+	  *doctype = text;
+	} else
+	  g_free (text);
+	break;
       }
 
-      case GST_EBML_ID_DOCTYPEREADVERSION: {
-        guint64 num;
+      case GST_EBML_ID_DOCTYPEREADVERSION:{
+	guint64 num;
 
-        if (!gst_ebml_read_uint (ebml, &id, &num))
-          return FALSE;
-        g_assert (id == GST_EBML_ID_DOCTYPEREADVERSION); 
-        if (version)
-          *version = num;
-        break;
+	if (!gst_ebml_read_uint (ebml, &id, &num))
+	  return FALSE;
+	g_assert (id == GST_EBML_ID_DOCTYPEREADVERSION);
+	if (version)
+	  *version = num;
+	break;
       }
 
       default:
-        GST_WARNING ("Unknown data type 0x%x in EBML header (ignored)", id);
-        /* pass-through */
+	GST_WARNING ("Unknown data type 0x%x in EBML header (ignored)", id);
+	/* pass-through */
 
-      /* we ignore these two, as they don't tell us anything we care about */
+	/* we ignore these two, as they don't tell us anything we care about */
       case GST_EBML_ID_VOID:
       case GST_EBML_ID_EBMLVERSION:
       case GST_EBML_ID_DOCTYPEVERSION:
-        if (!gst_ebml_read_skip (ebml))
-          return FALSE;
-        break;
+	if (!gst_ebml_read_skip (ebml))
+	  return FALSE;
+	break;
     }
   }
 

@@ -27,8 +27,9 @@
 #include <gst/bytestream/bytestream.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_WAVPARSE \
@@ -44,59 +45,62 @@ extern "C" {
 
 
 #define GST_WAVPARSE_UNKNOWN	0	/* initialized state */
-#define GST_WAVPARSE_START      1       /* At the start */
+#define GST_WAVPARSE_START      1	/* At the start */
 #define GST_WAVPARSE_DATA	2	/* in data region */
 #define GST_WAVPARSE_OTHER	3	/* in unknown region */
-  
-typedef struct _GstWavParse GstWavParse;
-typedef struct _GstWavParseClass GstWavParseClass;
 
-struct _GstWavParse {
-  GstElement element;
+  typedef struct _GstWavParse GstWavParse;
+  typedef struct _GstWavParseClass GstWavParseClass;
 
-  GstByteStream *bs;
-  /* pads */
-  GstPad *sinkpad,*srcpad;
+  struct _GstWavParse
+  {
+    GstElement element;
 
-  /* WAVE decoding state */
-  gint state;
+    GstByteStream *bs;
+    /* pads */
+    GstPad *sinkpad, *srcpad;
 
-  /* format of audio, see defines below */
-  gint format;
+    /* WAVE decoding state */
+    gint state;
 
-  /* useful audio data */
-  gint bps;
-  gint rate;
-  gint channels;
-  gint width;
+    /* format of audio, see defines below */
+    gint format;
 
-  int dataleft;
-  int byteoffset;
-  
-  gboolean seek_pending;
-  guint64 seek_offset;
-  
-  GstBuffer *buf;
-};
+    /* useful audio data */
+    gint bps;
+    gint rate;
+    gint channels;
+    gint width;
 
-struct _GstWavParseClass {
-  GstElementClass parent_class;
-};
+    int dataleft;
+    int byteoffset;
 
-GType gst_wavparse_get_type(void);
+    gboolean seek_pending;
+    guint64 seek_offset;
 
-typedef struct _GstWavParseFormat GstWavParseFormat;
+    GstBuffer *buf;
+  };
 
-struct _GstWavParseFormat {
-  gint16 wFormatTag;
-  guint16 wChannels;
-  guint32 dwSamplesPerSec;
-  guint32 dwAvgBytesPerSec;
-  guint16 wBlockAlign;
-  guint16 wBitsPerSample;
-};
-  
-  
+  struct _GstWavParseClass
+  {
+    GstElementClass parent_class;
+  };
+
+  GType gst_wavparse_get_type (void);
+
+  typedef struct _GstWavParseFormat GstWavParseFormat;
+
+  struct _GstWavParseFormat
+  {
+    gint16 wFormatTag;
+    guint16 wChannels;
+    guint32 dwSamplesPerSec;
+    guint32 dwAvgBytesPerSec;
+    guint16 wBlockAlign;
+    guint16 wBitsPerSample;
+  };
+
+
 /**** from public Microsoft RIFF docs ******/
 #define GST_RIFF_WAVE_FORMAT_UNKNOWN        (0x0000)
 #define GST_RIFF_WAVE_FORMAT_PCM            (0x0001)
@@ -129,7 +133,7 @@ struct _GstWavParseFormat {
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_WAVPARSE_H__ */
+#endif				/* __GST_WAVPARSE_H__ */

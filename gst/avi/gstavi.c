@@ -29,7 +29,7 @@
 #include "gstavimux.h"
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_library_load ("riff"))
     return FALSE;
@@ -40,21 +40,13 @@ plugin_init (GstPlugin *plugin)
 #endif /* ENABLE_NLS */
 
   return (gst_element_register (plugin, "avidemux",
-				GST_RANK_PRIMARY,
-				GST_TYPE_AVI_DEMUX) &&
-	  gst_element_register (plugin, "avimux",
-				GST_RANK_NONE,
-				GST_TYPE_AVIMUX));
+	  GST_RANK_PRIMARY,
+	  GST_TYPE_AVI_DEMUX) &&
+      gst_element_register (plugin, "avimux", GST_RANK_NONE, GST_TYPE_AVIMUX));
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "avi",
-  "AVI stream handling",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "avi",
+    "AVI stream handling",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

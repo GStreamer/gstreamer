@@ -34,11 +34,12 @@
 typedef struct _GstGOOM GstGOOM;
 typedef struct _GstGOOMClass GstGOOMClass;
 
-struct _GstGOOM {
+struct _GstGOOM
+{
   GstElement element;
 
   /* pads */
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad, *srcpad;
 
   /* the timestamp of the next frame */
   guint64 next_time;
@@ -52,11 +53,12 @@ struct _GstGOOM {
   gboolean srcnegotiated;
 };
 
-struct _GstGOOMClass {
+struct _GstGOOMClass
+{
   GstElementClass parent_class;
 };
 
-GType gst_goom_get_type(void);
+GType gst_goom_get_type (void);
 
 
 /* elementfactory information */
@@ -68,53 +70,50 @@ static GstElementDetails gst_goom_details = {
 };
 
 /* signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   /* FILL ME */
 };
 
-static GstStaticPadTemplate src_template =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ( GST_VIDEO_CAPS_xRGB_HOST_ENDIAN )
-);
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN)
+    );
 
-static GstStaticPadTemplate sink_template =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",				/* the name of the pads */
-  GST_PAD_SINK,				/* type of the pad */
-  GST_PAD_ALWAYS,			/* ALWAYS/SOMETIMES */
-  GST_STATIC_CAPS ( "audio/x-raw-int, "
-    "endianness = (int) BYTE_ORDER, "
-    "signed = (boolean) TRUE, "
-    "width = (int) 16, "
-    "depth = (int) 16, "
-    "rate = (int) [ 8000, 96000 ], "
-    "channels = (int) [ 1, 2 ]"
-  )
-);
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",	/* the name of the pads */
+    GST_PAD_SINK,		/* type of the pad */
+    GST_PAD_ALWAYS,		/* ALWAYS/SOMETIMES */
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"endianness = (int) BYTE_ORDER, "
+	"signed = (boolean) TRUE, "
+	"width = (int) 16, "
+	"depth = (int) 16, "
+	"rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 2 ]")
+    );
 
 
-static void		gst_goom_class_init	(GstGOOMClass *klass);
-static void		gst_goom_base_init	(GstGOOMClass *klass);
-static void		gst_goom_init		(GstGOOM *goom);
-static void		gst_goom_dispose	(GObject *object);
+static void gst_goom_class_init (GstGOOMClass * klass);
+static void gst_goom_base_init (GstGOOMClass * klass);
+static void gst_goom_init (GstGOOM * goom);
+static void gst_goom_dispose (GObject * object);
 
-static GstElementStateReturn
-			gst_goom_change_state 	(GstElement *element);
+static GstElementStateReturn gst_goom_change_state (GstElement * element);
 
-static void		gst_goom_chain		(GstPad *pad, GstData *_data);
+static void gst_goom_chain (GstPad * pad, GstData * _data);
 
-static GstPadLinkReturn gst_goom_sinkconnect 	(GstPad *pad, const GstCaps *caps);
-static GstPadLinkReturn gst_goom_srcconnect 	(GstPad *pad, const GstCaps *caps);
-static GstCaps *        gst_goom_src_fixate 	(GstPad *pad, const GstCaps *caps);
+static GstPadLinkReturn gst_goom_sinkconnect (GstPad * pad,
+    const GstCaps * caps);
+static GstPadLinkReturn gst_goom_srcconnect (GstPad * pad,
+    const GstCaps * caps);
+static GstCaps *gst_goom_src_fixate (GstPad * pad, const GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -125,9 +124,9 @@ gst_goom_get_type (void)
 
   if (!type) {
     static const GTypeInfo info = {
-      sizeof (GstGOOMClass),      
-      (GBaseInitFunc) gst_goom_base_init,      
-      NULL,      
+      sizeof (GstGOOMClass),
+      (GBaseInitFunc) gst_goom_base_init,
+      NULL,
       (GClassInitFunc) gst_goom_class_init,
       NULL,
       NULL,
@@ -141,41 +140,43 @@ gst_goom_get_type (void)
 }
 
 static void
-gst_goom_base_init (GstGOOMClass *klass)
+gst_goom_base_init (GstGOOMClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_set_details (element_class, &gst_goom_details);
   gst_element_class_add_pad_template (element_class,
-	gst_static_pad_template_get (&sink_template));
+      gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
-	gst_static_pad_template_get (&src_template));
+      gst_static_pad_template_get (&src_template));
 }
 
 static void
-gst_goom_class_init(GstGOOMClass *klass)
+gst_goom_class_init (GstGOOMClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*) klass;
-  gstelement_class = (GstElementClass*) klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class->dispose	= gst_goom_dispose;
+  gobject_class->dispose = gst_goom_dispose;
 
   gstelement_class->change_state = gst_goom_change_state;
 }
 
 static void
-gst_goom_init (GstGOOM *goom)
+gst_goom_init (GstGOOM * goom)
 {
   /* create the sink and src pads */
-  goom->sinkpad = gst_pad_new_from_template (
-		  gst_static_pad_template_get (&sink_template ), "sink");
-  goom->srcpad = gst_pad_new_from_template (
-		  gst_static_pad_template_get (&src_template ), "src");
+  goom->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
+      "sink");
+  goom->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
+      "src");
   gst_element_add_pad (GST_ELEMENT (goom), goom->sinkpad);
   gst_element_add_pad (GST_ELEMENT (goom), goom->srcpad);
 
@@ -189,22 +190,22 @@ gst_goom_init (GstGOOM *goom)
 
   goom->width = 320;
   goom->height = 200;
-  goom->fps = 25.; /* desired frame rate */
+  goom->fps = 25.;		/* desired frame rate */
   goom->channels = 0;
   /* set to something */
   goom_init (50, 50);
 }
 
 static void
-gst_goom_dispose (GObject *object)
+gst_goom_dispose (GObject * object)
 {
   goom_close ();
-  
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static GstPadLinkReturn
-gst_goom_sinkconnect (GstPad *pad, const GstCaps *caps)
+gst_goom_sinkconnect (GstPad * pad, const GstCaps * caps)
 {
   GstGOOM *goom;
   GstStructure *structure;
@@ -219,7 +220,7 @@ gst_goom_sinkconnect (GstPad *pad, const GstCaps *caps)
 }
 
 static GstPadLinkReturn
-gst_goom_srcconnect (GstPad *pad, const GstCaps *caps)
+gst_goom_srcconnect (GstPad * pad, const GstCaps * caps)
 {
   GstGOOM *goom;
   GstStructure *structure;
@@ -239,12 +240,13 @@ gst_goom_srcconnect (GstPad *pad, const GstCaps *caps)
 }
 
 static GstCaps *
-gst_goom_src_fixate (GstPad *pad, const GstCaps *caps)
+gst_goom_src_fixate (GstPad * pad, const GstCaps * caps)
 {
   GstCaps *newcaps;
   GstStructure *structure;
 
-  if (!gst_caps_is_simple (caps)) return NULL;
+  if (!gst_caps_is_simple (caps))
+    return NULL;
 
   newcaps = gst_caps_copy (caps);
   structure = gst_caps_get_structure (newcaps, 0);
@@ -256,7 +258,7 @@ gst_goom_src_fixate (GstPad *pad, const GstCaps *caps)
     return newcaps;
   }
   if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
-        30.0)) {
+	  30.0)) {
     return newcaps;
   }
 
@@ -266,7 +268,7 @@ gst_goom_src_fixate (GstPad *pad, const GstCaps *caps)
 }
 
 static void
-gst_goom_chain (GstPad *pad, GstData *_data)
+gst_goom_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *bufin = GST_BUFFER (_data);
   GstGOOM *goom;
@@ -289,7 +291,7 @@ gst_goom_chain (GstPad *pad, GstData *_data)
 
 	gst_event_discont_get_value (event, GST_FORMAT_TIME, &value);
 
-        goom->next_time = value;
+	goom->next_time = value;
       }
       default:
 	gst_pad_event_default (pad, event);
@@ -300,7 +302,7 @@ gst_goom_chain (GstPad *pad, GstData *_data)
 
   if (goom->channels == 0) {
     GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
-                       ("format wasn't negotiated before chain function"));
+	("format wasn't negotiated before chain function"));
 
     goto done;
   }
@@ -318,13 +320,12 @@ gst_goom_chain (GstPad *pad, GstData *_data)
 
   data = (gint16 *) GST_BUFFER_DATA (bufin);
   if (goom->channels == 2) {
-    for (i=0; i < 512; i++) {
+    for (i = 0; i < 512; i++) {
       goom->datain[0][i] = *data++;
       goom->datain[1][i] = *data++;
     }
-  }
-  else {
-    for (i=0; i < 512; i++) {
+  } else {
+    for (i = 0; i < 512; i++) {
       goom->datain[0][i] = *data;
       goom->datain[1][i] = *data++;
     }
@@ -347,15 +348,15 @@ done:
 }
 
 static GstElementStateReturn
-gst_goom_change_state (GstElement *element)
-{ 
+gst_goom_change_state (GstElement * element)
+{
   GstGOOM *goom = GST_GOOM (element);
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
-      break; 
+      break;
     case GST_STATE_READY_TO_PAUSED:
       goom->next_time = 0;
       goom->srcnegotiated = FALSE;
@@ -374,20 +375,13 @@ gst_goom_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "goom",
-			       GST_RANK_NONE, GST_TYPE_GOOM);
+  return gst_element_register (plugin, "goom", GST_RANK_NONE, GST_TYPE_GOOM);
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "goom",
-  "GOOM visualization filter",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "goom",
+    "GOOM visualization filter",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

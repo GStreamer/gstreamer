@@ -21,7 +21,8 @@
 #define CONVOLVE_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* convolve_match takes two blocks, one twice the size of the other.  The
@@ -31,14 +32,13 @@ extern "C" {
 #define CONVOLVE_BIG (CONVOLVE_SMALL * 2)
 
 /* Convolution stuff */
-typedef struct _struct_convolve_state convolve_state;
+  typedef struct _struct_convolve_state convolve_state;
 
-convolve_state *convolve_init (void);
-void convolve_close (convolve_state * state);
+  convolve_state *convolve_init (void);
+  void convolve_close (convolve_state * state);
 
-int convolve_match (const int * lastchoice,
-		    const short int * input,
-		    convolve_state * state);
+  int convolve_match (const int *lastchoice,
+      const short int *input, convolve_state * state);
 
 #ifdef __cplusplus
 }

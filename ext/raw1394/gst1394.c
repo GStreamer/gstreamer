@@ -27,23 +27,17 @@
 #include "gstdv1394src.h"
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register(plugin, "dv1394src", GST_RANK_NONE, GST_TYPE_DV1394SRC))
+  if (!gst_element_register (plugin, "dv1394src", GST_RANK_NONE,
+	  GST_TYPE_DV1394SRC))
     return FALSE;
 
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE(
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gst1394",
-  "Source for DV data via IEEE1394 interface",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-);
-
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "gst1394",
+    "Source for DV data via IEEE1394 interface",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN);

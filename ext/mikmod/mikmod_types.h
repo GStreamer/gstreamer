@@ -20,25 +20,26 @@
 #define __MIKMOD_TYPES_H__
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
-gboolean MOD_CheckType (GstBuffer *buf);
-gboolean Mod_669_CheckType (GstBuffer *buf);
-gboolean Amf_CheckType (GstBuffer *buf);
-gboolean Dsm_CheckType (GstBuffer *buf);
-gboolean Fam_CheckType (GstBuffer *buf);
-gboolean Gdm_CheckType (GstBuffer *buf);
-gboolean Imf_CheckType (GstBuffer *buf);
-gboolean It_CheckType (GstBuffer *buf);
-gboolean M15_CheckType (GstBuffer *buf);
-gboolean Mtm_CheckType (GstBuffer *buf);
-gboolean Okt_CheckType (GstBuffer *buf);
-gboolean S3m_CheckType (GstBuffer *buf);
-gboolean Xm_CheckType (GstBuffer *buf);
+  gboolean MOD_CheckType (GstBuffer * buf);
+  gboolean Mod_669_CheckType (GstBuffer * buf);
+  gboolean Amf_CheckType (GstBuffer * buf);
+  gboolean Dsm_CheckType (GstBuffer * buf);
+  gboolean Fam_CheckType (GstBuffer * buf);
+  gboolean Gdm_CheckType (GstBuffer * buf);
+  gboolean Imf_CheckType (GstBuffer * buf);
+  gboolean It_CheckType (GstBuffer * buf);
+  gboolean M15_CheckType (GstBuffer * buf);
+  gboolean Mtm_CheckType (GstBuffer * buf);
+  gboolean Okt_CheckType (GstBuffer * buf);
+  gboolean S3m_CheckType (GstBuffer * buf);
+  gboolean Xm_CheckType (GstBuffer * buf);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
-#endif /* __MIKMOD_TYPES_H__ */
+#endif				/* __MIKMOD_TYPES_H__ */

@@ -25,25 +25,20 @@
 #include "gstudpsink.h"
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "udpsink", GST_RANK_NONE, GST_TYPE_UDPSINK))
+  if (!gst_element_register (plugin, "udpsink", GST_RANK_NONE,
+	  GST_TYPE_UDPSINK))
     return FALSE;
-  
+
   if (!gst_element_register (plugin, "udpsrc", GST_RANK_NONE, GST_TYPE_UDPSRC))
     return FALSE;
 
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "udp",
-  "transfer data via UDP",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "udp",
+    "transfer data via UDP",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

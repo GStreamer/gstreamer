@@ -27,8 +27,9 @@
 
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_MULAWENC \
@@ -42,27 +43,29 @@ extern "C" {
 #define GST_IS_MULAWENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULAWENC))
 
-typedef struct _GstMuLawEnc GstMuLawEnc;
-typedef struct _GstMuLawEncClass GstMuLawEncClass;
+  typedef struct _GstMuLawEnc GstMuLawEnc;
+  typedef struct _GstMuLawEncClass GstMuLawEncClass;
 
-struct _GstMuLawEnc {
-  GstElement element;
+  struct _GstMuLawEnc
+  {
+    GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+    GstPad *sinkpad, *srcpad;
 
-  /*MetaAudioRaw meta; */
+    /*MetaAudioRaw meta; */
 
-};
+  };
 
-struct _GstMuLawEncClass {
-  GstElementClass parent_class;
-};
+  struct _GstMuLawEncClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType gst_mulawenc_get_type(void);
+  GType gst_mulawenc_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_STEREO_H__ */
+#endif				/* __GST_STEREO_H__ */

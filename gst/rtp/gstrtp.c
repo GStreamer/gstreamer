@@ -27,7 +27,7 @@
 #include "gstrtpgsmparse.h"
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_rtpL16enc_plugin_init (plugin) ||
       !gst_rtpL16parse_plugin_init (plugin) ||
@@ -38,14 +38,8 @@ plugin_init (GstPlugin *plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "rtp",
-  "Real-time protocol plugins",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "rtp",
+    "Real-time protocol plugins",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

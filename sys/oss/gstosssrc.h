@@ -29,7 +29,6 @@
 #include "gstosselement.h"
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_OSSSRC \
   (gst_osssrc_get_type())
 #define GST_OSSSRC(obj) \
@@ -40,38 +39,39 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSSSRC))
 #define GST_IS_OSSSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSSSRC))
+    typedef enum
+{
+  GST_OSSSRC_OPEN = GST_ELEMENT_FLAG_LAST,
 
-typedef enum {
-  GST_OSSSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
-
-  GST_OSSSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
+  GST_OSSSRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
 } GstOssSrcFlags;
 
 typedef struct _GstOssSrc GstOssSrc;
 typedef struct _GstOssSrcClass GstOssSrcClass;
 
-struct _GstOssSrc {
-  GstOssElement  element;
+struct _GstOssSrc
+{
+  GstOssElement element;
 
   /* pads */
-  GstPad 	*srcpad;
+  GstPad *srcpad;
 
-  gboolean	 need_eos; /* Do we need to emit an EOS? */
-  
+  gboolean need_eos;		/* Do we need to emit an EOS? */
+
   /* blocking */
-  gulong 	 curoffset;
-  gulong 	 buffersize;
+  gulong curoffset;
+  gulong buffersize;
 
   /* clocks */
   GstClock *provided_clock, *clock;
 };
 
-struct _GstOssSrcClass {
+struct _GstOssSrcClass
+{
   GstOssElementClass parent_class;
 };
 
-GType gst_osssrc_get_type(void);
+GType gst_osssrc_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_OSSSRC_H__ */

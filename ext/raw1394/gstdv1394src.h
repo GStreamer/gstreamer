@@ -27,8 +27,9 @@
 
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_DV1394SRC \
@@ -42,45 +43,47 @@ extern "C" {
 #define GST_IS_DV1394SRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DV1394SRC))
 
-typedef struct _GstDV1394Src GstDV1394Src;
-typedef struct _GstDV1394SrcClass GstDV1394SrcClass;
+  typedef struct _GstDV1394Src GstDV1394Src;
+  typedef struct _GstDV1394SrcClass GstDV1394SrcClass;
 
-struct _GstDV1394Src {
-  GstElement element;
+  struct _GstDV1394Src
+  {
+    GstElement element;
 
-  GstPad *srcpad;
+    GstPad *srcpad;
 
-  // consecutive=2, skip=4 will skip 4 frames, then let 2 consecutive ones thru
-  gint consecutive;
-  gint skip;
-  gboolean drop_incomplete;
+    // consecutive=2, skip=4 will skip 4 frames, then let 2 consecutive ones thru
+    gint consecutive;
+    gint skip;
+    gboolean drop_incomplete;
 
-  int numcards,numports;
-  int card,port,channel;
+    int numcards, numports;
+    int card, port, channel;
 
-  struct raw1394_portinfo pinfo[16];
-  raw1394handle_t handle;
+    struct raw1394_portinfo pinfo[16];
+    raw1394handle_t handle;
 
-  gboolean started;
-  GstBuffer *buf;
-  
-  GstBuffer *frame;
-  guint frameSize;
-  guint bytesInFrame;
-  guint frameSequence;
+    gboolean started;
+    GstBuffer *buf;
 
-  gboolean negotiated;
-};
+    GstBuffer *frame;
+    guint frameSize;
+    guint bytesInFrame;
+    guint frameSequence;
 
-struct _GstDV1394SrcClass {
-  GstElementClass parent_class;
-};
+    gboolean negotiated;
+  };
 
-GType gst_dv1394src_get_type(void);
+  struct _GstDV1394SrcClass
+  {
+    GstElementClass parent_class;
+  };
+
+  GType gst_dv1394src_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_GST1394_H__ */
+#endif				/* __GST_GST1394_H__ */

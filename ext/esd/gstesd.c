@@ -27,30 +27,27 @@
 GST_DEBUG_CATEGORY (esd_debug);
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
 
-  if (!gst_library_load ("gstaudio")) return FALSE;
+  if (!gst_library_load ("gstaudio"))
+    return FALSE;
 
-  ret = gst_esdsink_factory_init(plugin);
-  if(ret == FALSE) return FALSE;
+  ret = gst_esdsink_factory_init (plugin);
+  if (ret == FALSE)
+    return FALSE;
 
-  ret = gst_esdmon_factory_init(plugin);
-  if(ret == FALSE) return FALSE;
+  ret = gst_esdmon_factory_init (plugin);
+  if (ret == FALSE)
+    return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (esd_debug, "esd", 0, "ESounD elements");
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "esdsink",
-  "ESD Element Plugins",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN)
-
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "esdsink",
+    "ESD Element Plugins",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

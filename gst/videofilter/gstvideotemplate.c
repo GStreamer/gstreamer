@@ -47,36 +47,44 @@
 typedef struct _GstVideotemplate GstVideotemplate;
 typedef struct _GstVideotemplateClass GstVideotemplateClass;
 
-struct _GstVideotemplate {
+struct _GstVideotemplate
+{
   GstVideofilter videofilter;
 
 };
 
-struct _GstVideotemplateClass {
+struct _GstVideotemplateClass
+{
   GstVideofilterClass parent_class;
 };
 
 
 /* GstVideotemplate signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   /* FILL ME */
 };
 
-static void	gst_videotemplate_base_init	(gpointer g_class);
-static void	gst_videotemplate_class_init	(gpointer g_class, gpointer class_data);
-static void	gst_videotemplate_init		(GTypeInstance *instance, gpointer g_class);
+static void gst_videotemplate_base_init (gpointer g_class);
+static void gst_videotemplate_class_init (gpointer g_class,
+    gpointer class_data);
+static void gst_videotemplate_init (GTypeInstance * instance, gpointer g_class);
 
-static void	gst_videotemplate_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_videotemplate_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void gst_videotemplate_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_videotemplate_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static void gst_videotemplate_planar411(GstVideofilter *videofilter, void *dest, void *src);
-static void gst_videotemplate_setup(GstVideofilter *videofilter);
+static void gst_videotemplate_planar411 (GstVideofilter * videofilter,
+    void *dest, void *src);
+static void gst_videotemplate_setup (GstVideofilter * videofilter);
 
 GType
 gst_videotemplate_get_type (void)
@@ -85,44 +93,43 @@ gst_videotemplate_get_type (void)
 
   if (!videotemplate_type) {
     static const GTypeInfo videotemplate_info = {
-      sizeof(GstVideotemplateClass),
+      sizeof (GstVideotemplateClass),
       gst_videotemplate_base_init,
       NULL,
       gst_videotemplate_class_init,
       NULL,
       NULL,
-      sizeof(GstVideotemplate),
+      sizeof (GstVideotemplate),
       0,
       gst_videotemplate_init,
     };
-    videotemplate_type = g_type_register_static(GST_TYPE_VIDEOFILTER,
-        "GstVideotemplate", &videotemplate_info, 0);
+    videotemplate_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
+	"GstVideotemplate", &videotemplate_info, 0);
   }
   return videotemplate_type;
 }
 
 static GstVideofilterFormat gst_videotemplate_formats[] = {
-  { "I420", 12, gst_videotemplate_planar411, },
+  {"I420", 12, gst_videotemplate_planar411,},
 };
 
-  
+
 static void
 gst_videotemplate_base_init (gpointer g_class)
 {
-  static GstElementDetails videotemplate_details = GST_ELEMENT_DETAILS (
-    "Video Filter Template",
-    "Filter/Effect/Video",
-    "Template for a video filter",
-    "David Schleef <ds@schleef.org>"
-  );
+  static GstElementDetails videotemplate_details =
+      GST_ELEMENT_DETAILS ("Video Filter Template",
+      "Filter/Effect/Video",
+      "Template for a video filter",
+      "David Schleef <ds@schleef.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
   int i;
-  
+
   gst_element_class_set_details (element_class, &videotemplate_details);
 
-  for(i=0;i<G_N_ELEMENTS(gst_videotemplate_formats);i++){
-    gst_videofilter_class_add_format(videofilter_class,
+  for (i = 0; i < G_N_ELEMENTS (gst_videotemplate_formats); i++) {
+    gst_videofilter_class_add_format (videofilter_class,
 	gst_videotemplate_formats + i);
   }
 
@@ -139,10 +146,10 @@ gst_videotemplate_class_init (gpointer g_class, gpointer class_data)
   videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
 #if 0
-  g_object_class_install_property(gobject_class, ARG_METHOD,
-      g_param_spec_enum("method","method","method",
-      GST_TYPE_VIDEOTEMPLATE_METHOD, GST_VIDEOTEMPLATE_METHOD_1,
-      G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_METHOD,
+      g_param_spec_enum ("method", "method", "method",
+	  GST_TYPE_VIDEOTEMPLATE_METHOD, GST_VIDEOTEMPLATE_METHOD_1,
+	  G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_videotemplate_set_property;
@@ -152,28 +159,29 @@ gst_videotemplate_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
-gst_videotemplate_init (GTypeInstance *instance, gpointer g_class)
+gst_videotemplate_init (GTypeInstance * instance, gpointer g_class)
 {
   GstVideotemplate *videotemplate = GST_VIDEOTEMPLATE (instance);
   GstVideofilter *videofilter;
 
-  GST_DEBUG("gst_videotemplate_init");
+  GST_DEBUG ("gst_videotemplate_init");
 
-  videofilter = GST_VIDEOFILTER(videotemplate);
+  videofilter = GST_VIDEOFILTER (videotemplate);
 
   /* do stuff */
 }
 
 static void
-gst_videotemplate_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_videotemplate_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstVideotemplate *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_VIDEOTEMPLATE(object));
-  src = GST_VIDEOTEMPLATE(object);
+  g_return_if_fail (GST_IS_VIDEOTEMPLATE (object));
+  src = GST_VIDEOTEMPLATE (object);
 
-  GST_DEBUG("gst_videotemplate_set_property");
+  GST_DEBUG ("gst_videotemplate_set_property");
   switch (prop_id) {
 #if 0
     case ARG_METHOD:
@@ -186,13 +194,14 @@ gst_videotemplate_set_property (GObject *object, guint prop_id, const GValue *va
 }
 
 static void
-gst_videotemplate_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_videotemplate_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstVideotemplate *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_VIDEOTEMPLATE(object));
-  src = GST_VIDEOTEMPLATE(object);
+  g_return_if_fail (GST_IS_VIDEOTEMPLATE (object));
+  src = GST_VIDEOTEMPLATE (object);
 
   switch (prop_id) {
 #if 0
@@ -206,50 +215,45 @@ gst_videotemplate_get_property (GObject *object, guint prop_id, GValue *value, G
   }
 }
 
-static gboolean plugin_init (GstPlugin *plugin)
+static gboolean
+plugin_init (GstPlugin * plugin)
 {
-  if(!gst_library_load("gstvideofilter"))
+  if (!gst_library_load ("gstvideofilter"))
     return FALSE;
 
   return gst_element_register (plugin, "videotemplate", GST_RANK_NONE,
       GST_TYPE_VIDEOTEMPLATE);
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "videotemplate",
-  "Template for a video filter",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "videotemplate",
+    "Template for a video filter",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
 
-static void gst_videotemplate_setup(GstVideofilter *videofilter)
+     static void gst_videotemplate_setup (GstVideofilter * videofilter)
 {
   GstVideotemplate *videotemplate;
 
-  g_return_if_fail(GST_IS_VIDEOTEMPLATE(videofilter));
-  videotemplate = GST_VIDEOTEMPLATE(videofilter);
+  g_return_if_fail (GST_IS_VIDEOTEMPLATE (videofilter));
+  videotemplate = GST_VIDEOTEMPLATE (videofilter);
 
   /* if any setup needs to be done, do it here */
 
 }
 
-static void gst_videotemplate_planar411(GstVideofilter *videofilter,
+static void
+gst_videotemplate_planar411 (GstVideofilter * videofilter,
     void *dest, void *src)
 {
   GstVideotemplate *videotemplate;
-  int width = gst_videofilter_get_input_width(videofilter);
-  int height = gst_videofilter_get_input_height(videofilter);
+  int width = gst_videofilter_get_input_width (videofilter);
+  int height = gst_videofilter_get_input_height (videofilter);
 
-  g_return_if_fail(GST_IS_VIDEOTEMPLATE(videofilter));
-  videotemplate = GST_VIDEOTEMPLATE(videofilter);
+  g_return_if_fail (GST_IS_VIDEOTEMPLATE (videofilter));
+  videotemplate = GST_VIDEOTEMPLATE (videofilter);
 
   /* do something interesting here.  This simply copies the source
    * to the destination. */
-  memcpy(dest,src,width * height + (width/2) * (height/2) * 2);
+  memcpy (dest, src, width * height + (width / 2) * (height / 2) * 2);
 }
-

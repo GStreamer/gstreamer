@@ -4,8 +4,8 @@
 #define NB_RAND 0x10000
 
 /* in graphic.c */
-extern int * rand_tab ;
-extern unsigned short rand_pos ;
+extern int *rand_tab;
+extern unsigned short rand_pos;
 
 #define RAND_INIT(i) \
 	srand (i) ;\
@@ -25,5 +25,5 @@ extern unsigned short rand_pos ;
 
 /*#define iRAND(i) ((guint32)((float)i * RAND()/RAND_MAX)) */
 #define iRAND(i) (RAND()%i)
-	
+
 #endif

@@ -40,29 +40,29 @@ static GstElementDetails level_details = {
 /* pad templates */
 
 static GstStaticPadTemplate sink_template_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "level_sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
-);
+GST_STATIC_PAD_TEMPLATE ("level_sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+    );
 
 static GstStaticPadTemplate src_template_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "level_src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
-);
+GST_STATIC_PAD_TEMPLATE ("level_src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+    );
 
 /* Filter signals and args */
-enum {
+enum
+{
   /* FILL ME */
   SIGNAL_LEVEL,
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_SIGNAL_LEVEL,
   ARG_SIGNAL_INTERVAL,
@@ -70,42 +70,42 @@ enum {
   ARG_PEAK_FALLOFF
 };
 
-static void		gst_level_class_init		(GstLevelClass *klass);
-static void		gst_level_base_init		(GstLevelClass *klass);
-static void		gst_level_init			(GstLevel *filter);
+static void gst_level_class_init (GstLevelClass * klass);
+static void gst_level_base_init (GstLevelClass * klass);
+static void gst_level_init (GstLevel * filter);
 
-static GstElementStateReturn gst_level_change_state     (GstElement *element);
-static void		gst_level_set_property			(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		gst_level_get_property			(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static GstElementStateReturn gst_level_change_state (GstElement * element);
+static void gst_level_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_level_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static void		gst_level_chain			(GstPad *pad, GstData *_data);
+static void gst_level_chain (GstPad * pad, GstData * _data);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
 
 GType
-gst_level_get_type (void) 
+gst_level_get_type (void)
 {
   static GType level_type = 0;
 
-  if (!level_type) 
-  {
-    static const GTypeInfo level_info = 
-    {
+  if (!level_type) {
+    static const GTypeInfo level_info = {
       sizeof (GstLevelClass),
       (GBaseInitFunc) gst_level_base_init, NULL,
       (GClassInitFunc) gst_level_class_init, NULL, NULL,
       sizeof (GstLevel), 0,
       (GInstanceInitFunc) gst_level_init
     };
-    level_type = g_type_register_static (GST_TYPE_ELEMENT, "GstLevel", 
-	                                 &level_info, 0);
+    level_type = g_type_register_static (GST_TYPE_ELEMENT, "GstLevel",
+	&level_info, 0);
   }
   return level_type;
 }
 
 static GstPadLinkReturn
-gst_level_link (GstPad *pad, const GstCaps *caps)
+gst_level_link (GstPad * pad, const GstCaps * caps)
 {
   GstLevel *filter;
   GstPad *otherpad;
@@ -118,7 +118,7 @@ gst_level_link (GstPad *pad, const GstCaps *caps)
   g_return_val_if_fail (filter != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_IS_LEVEL (filter), GST_PAD_LINK_REFUSED);
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
-	  
+
   res = gst_pad_try_set_caps (otherpad, caps);
   /* if ok, set filter */
   if (res != GST_PAD_LINK_OK && res != GST_PAD_LINK_DONE) {
@@ -126,22 +126,30 @@ gst_level_link (GstPad *pad, const GstCaps *caps)
   }
 
   filter->num_samples = 0;
-  
+
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_int (structure, "rate", &filter->rate);
   ret &= gst_structure_get_int (structure, "width", &filter->width);
   ret &= gst_structure_get_int (structure, "channels", &filter->channels);
 
-  if (!ret) return GST_PAD_LINK_REFUSED;
+  if (!ret)
+    return GST_PAD_LINK_REFUSED;
 
   /* allocate channel variable arrays */
-  if (filter->CS) g_free (filter->CS);
-  if (filter->peak) g_free (filter->peak);
-  if (filter->last_peak) g_free (filter->last_peak);
-  if (filter->decay_peak) g_free (filter->decay_peak);
-  if (filter->decay_peak_age) g_free (filter->decay_peak_age);
-  if (filter->MS) g_free (filter->MS);
-  if (filter->RMS_dB) g_free (filter->RMS_dB);
+  if (filter->CS)
+    g_free (filter->CS);
+  if (filter->peak)
+    g_free (filter->peak);
+  if (filter->last_peak)
+    g_free (filter->last_peak);
+  if (filter->decay_peak)
+    g_free (filter->decay_peak);
+  if (filter->decay_peak_age)
+    g_free (filter->decay_peak_age);
+  if (filter->MS)
+    g_free (filter->MS);
+  if (filter->RMS_dB)
+    g_free (filter->RMS_dB);
   filter->CS = g_new (double, filter->channels);
   filter->peak = g_new (double, filter->channels);
   filter->last_peak = g_new (double, filter->channels);
@@ -149,10 +157,11 @@ gst_level_link (GstPad *pad, const GstCaps *caps)
   filter->decay_peak_age = g_new (double, filter->channels);
   filter->MS = g_new (double, filter->channels);
   filter->RMS_dB = g_new (double, filter->channels);
+
   for (i = 0; i < filter->channels; ++i) {
     filter->CS[i] = filter->peak[i] = filter->last_peak[i] =
-                    filter->decay_peak[i] = filter->decay_peak_age[i] = 
-                    filter->MS[i] = filter->RMS_dB[i] = 0.0;
+	filter->decay_peak[i] = filter->decay_peak_age[i] =
+	filter->MS[i] = filter->RMS_dB[i] = 0.0;
   }
 
   filter->inited = TRUE;
@@ -161,17 +170,14 @@ gst_level_link (GstPad *pad, const GstCaps *caps)
 }
 
 static void inline
-gst_level_fast_16bit_chain (gint16* in, guint num, gint channels, 
-                            gint resolution, double *CS, double *peak)
+gst_level_fast_16bit_chain (gint16 * in, guint num, gint channels,
+    gint resolution, double *CS, double *peak)
 #include "filter.func"
-
-static void inline
-gst_level_fast_8bit_chain (gint8* in, guint num, gint channels, 
-                           gint resolution, double *CS, double *peak)
+     static void inline
+	 gst_level_fast_8bit_chain (gint8 * in, guint num, gint channels,
+    gint resolution, double *CS, double *peak)
 #include "filter.func"
-
-static void
-gst_level_chain (GstPad *pad, GstData *_data)
+     static void gst_level_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstLevel *filter;
@@ -191,27 +197,24 @@ gst_level_chain (GstPad *pad, GstData *_data)
 
   for (i = 0; i < filter->channels; ++i)
     filter->CS[i] = filter->peak[i] = filter->MS[i] = filter->RMS_dB[i] = 0.0;
-  
+
   in_data = (gint16 *) GST_BUFFER_DATA (buf);
-  
+
   num_samples = GST_BUFFER_SIZE (buf) / (filter->width / 8);
   if (num_samples % filter->channels != 0)
-    g_warning ("WARNING: level: programming error, data not properly interleaved");
+    g_warning
+	("WARNING: level: programming error, data not properly interleaved");
 
-  for (i = 0; i < filter->channels; ++i)
-  {
-    switch (filter->width)
-    {
+  for (i = 0; i < filter->channels; ++i) {
+    switch (filter->width) {
       case 16:
-	  gst_level_fast_16bit_chain (in_data + i, num_samples,
-                                      filter->channels, filter->width - 1,
-                                      &CS, &filter->peak[i]);
-	  break;
+	gst_level_fast_16bit_chain (in_data + i, num_samples,
+	    filter->channels, filter->width - 1, &CS, &filter->peak[i]);
+	break;
       case 8:
-	  gst_level_fast_8bit_chain (((gint8 *) in_data) + i, num_samples,
-                                     filter->channels, filter->width - 1,
-                                     &CS, &filter->peak[i]);
-	  break;
+	gst_level_fast_8bit_chain (((gint8 *) in_data) + i, num_samples,
+	    filter->channels, filter->width - 1, &CS, &filter->peak[i]);
+	break;
     }
     /* g_print ("DEBUG: CS %f, peak %f\n", CS, filter->peak[i]); */
     filter->CS[i] += CS;
@@ -221,91 +224,86 @@ gst_level_chain (GstPad *pad, GstData *_data)
 
   filter->num_samples += num_samples;
 
-  for (i = 0; i < filter->channels; ++i)
-  {
+  for (i = 0; i < filter->channels; ++i) {
     filter->decay_peak_age[i] += num_samples;
     /* g_print ("filter peak info [%d]: peak %f, age %f\n", i, 
-             filter->last_peak[i], filter->decay_peak_age[i]); */
+       filter->last_peak[i], filter->decay_peak_age[i]); */
     /* update running peak */
     if (filter->peak[i] > filter->last_peak[i])
-        filter->last_peak[i] = filter->peak[i];
+      filter->last_peak[i] = filter->peak[i];
 
     /* update decay peak */
-    if (filter->peak[i] >= filter->decay_peak[i])
-    {
-       /* g_print ("new peak, %f\n", filter->peak[i]); */
-       filter->decay_peak[i] = filter->peak[i];
-       filter->decay_peak_age[i] = 0;
-    }
-    else
-    {
+    if (filter->peak[i] >= filter->decay_peak[i]) {
+      /* g_print ("new peak, %f\n", filter->peak[i]); */
+      filter->decay_peak[i] = filter->peak[i];
+      filter->decay_peak_age[i] = 0;
+    } else {
       /* make decay peak fall off if too old */
-      if (filter->decay_peak_age[i] > filter->rate * filter->decay_peak_ttl)
-      {
-        double falloff_dB;
-        double falloff;
-        double length;		/* length of buffer in seconds */
+      if (filter->decay_peak_age[i] > filter->rate * filter->decay_peak_ttl) {
+	double falloff_dB;
+	double falloff;
+	double length;		/* length of buffer in seconds */
 
- 
-        length = (double) num_samples / (filter->channels * filter->rate);
-        falloff_dB = filter->decay_peak_falloff * length;
-        falloff = pow (10, falloff_dB / -20.0);
 
-        /* g_print ("falloff: length %f, dB falloff %f, falloff factor %e\n",
-                 length, falloff_dB, falloff); */
-        filter->decay_peak[i] *= falloff;
-        /* g_print ("peak is %f samples old, decayed with factor %e to %f\n",
-                 filter->decay_peak_age[i], falloff, filter->decay_peak[i]); */
+	length = (double) num_samples / (filter->channels * filter->rate);
+	falloff_dB = filter->decay_peak_falloff * length;
+	falloff = pow (10, falloff_dB / -20.0);
+
+	/* g_print ("falloff: length %f, dB falloff %f, falloff factor %e\n",
+	   length, falloff_dB, falloff); */
+	filter->decay_peak[i] *= falloff;
+	/* g_print ("peak is %f samples old, decayed with factor %e to %f\n",
+	   filter->decay_peak_age[i], falloff, filter->decay_peak[i]); */
       }
     }
   }
 
   /* do we need to emit ? */
-  
-  if (filter->num_samples >= filter->interval * (gdouble) filter->rate)
-  {
-    if (filter->signal)
-    {
-      gdouble RMS, peak, endtime;
-      for (i = 0; i < filter->channels; ++i)
-      {
-        RMS = sqrt (filter->CS[i] / (filter->num_samples / filter->channels));
-        peak = filter->last_peak[i];
-        num_samples = GST_BUFFER_SIZE (buf) / (filter->width / 8);
-        endtime = (double) GST_BUFFER_TIMESTAMP (buf) / GST_SECOND
-                + (double) num_samples / (double) filter->rate;
 
-        g_signal_emit (G_OBJECT (filter), gst_filter_signals[SIGNAL_LEVEL], 0,
-                       endtime, i,
-                       20 * log10 (RMS), 20 * log10 (filter->last_peak[i]),
-                       20 * log10 (filter->decay_peak[i]));
-        /* we emitted, so reset cumulative and normal peak */
-        filter->CS[i] = 0.0;
-        filter->last_peak[i] = 0.0;
+  if (filter->num_samples >= filter->interval * (gdouble) filter->rate) {
+    if (filter->signal) {
+      gdouble RMS, peak, endtime;
+
+      for (i = 0; i < filter->channels; ++i) {
+	RMS = sqrt (filter->CS[i] / (filter->num_samples / filter->channels));
+	peak = filter->last_peak[i];
+	num_samples = GST_BUFFER_SIZE (buf) / (filter->width / 8);
+	endtime = (double) GST_BUFFER_TIMESTAMP (buf) / GST_SECOND
+	    + (double) num_samples / (double) filter->rate;
+
+	g_signal_emit (G_OBJECT (filter), gst_filter_signals[SIGNAL_LEVEL], 0,
+	    endtime, i,
+	    20 * log10 (RMS), 20 * log10 (filter->last_peak[i]),
+	    20 * log10 (filter->decay_peak[i]));
+	/* we emitted, so reset cumulative and normal peak */
+	filter->CS[i] = 0.0;
+	filter->last_peak[i] = 0.0;
       }
     }
     filter->num_samples = 0;
   }
 }
 
-static GstElementStateReturn gst_level_change_state (GstElement *element)
+static GstElementStateReturn
+gst_level_change_state (GstElement * element)
 {
   GstLevel *filter = GST_LEVEL (element);
 
-  switch(GST_STATE_TRANSITION(element)){
+  switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_PLAYING:
-      if (!filter->inited) return GST_STATE_FAILURE;
+      if (!filter->inited)
+	return GST_STATE_FAILURE;
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 }
 
 static void
-gst_level_set_property (GObject *object, guint prop_id, 
-                        const GValue *value, GParamSpec *pspec)
+gst_level_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstLevel *filter;
 
@@ -332,8 +330,8 @@ gst_level_set_property (GObject *object, guint prop_id,
 }
 
 static void
-gst_level_get_property (GObject *object, guint prop_id, 
-                        GValue *value, GParamSpec *pspec)
+gst_level_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   GstLevel *filter;
 
@@ -345,7 +343,7 @@ gst_level_get_property (GObject *object, guint prop_id,
     case ARG_SIGNAL_LEVEL:
       g_value_set_boolean (value, filter->signal);
       break;
-      case ARG_SIGNAL_INTERVAL:
+    case ARG_SIGNAL_INTERVAL:
       g_value_set_double (value, filter->interval);
       break;
     case ARG_PEAK_TTL:
@@ -354,71 +352,73 @@ gst_level_get_property (GObject *object, guint prop_id,
     case ARG_PEAK_FALLOFF:
       g_value_set_double (value, filter->decay_peak_falloff);
       break;
-   default:
+    default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
 static void
-gst_level_base_init (GstLevelClass *klass)
+gst_level_base_init (GstLevelClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-	gst_static_pad_template_get (&sink_template_factory));
+      gst_static_pad_template_get (&sink_template_factory));
   gst_element_class_add_pad_template (element_class,
-	gst_static_pad_template_get (&src_template_factory));
+      gst_static_pad_template_get (&src_template_factory));
   gst_element_class_set_details (element_class, &level_details);
 
   element_class->change_state = gst_level_change_state;
 }
 
 static void
-gst_level_class_init (GstLevelClass *klass)
+gst_level_class_init (GstLevelClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*) klass;
-  gstelement_class = (GstElementClass*) klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIGNAL_LEVEL,
-    g_param_spec_boolean ("signal", "Signal",
-                          "Emit level signals for each interval",
-                          TRUE, G_PARAM_READWRITE));
+      g_param_spec_boolean ("signal", "Signal",
+	  "Emit level signals for each interval", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIGNAL_INTERVAL,
-    g_param_spec_double ("interval", "Interval",
-                         "Interval between emissions (in seconds)",
-                         0.01, 100.0, 0.1, G_PARAM_READWRITE));
+      g_param_spec_double ("interval", "Interval",
+	  "Interval between emissions (in seconds)",
+	  0.01, 100.0, 0.1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PEAK_TTL,
-    g_param_spec_double ("peak_ttl", "Peak TTL",
-                         "Time To Live of decay peak before it falls back",
-                         0, 100.0, 0.3, G_PARAM_READWRITE));
+      g_param_spec_double ("peak_ttl", "Peak TTL",
+	  "Time To Live of decay peak before it falls back",
+	  0, 100.0, 0.3, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PEAK_FALLOFF,
-    g_param_spec_double ("peak_falloff", "Peak Falloff",
-                         "Decay rate of decay peak after TTL (in dB/sec)",
-                         0.0, G_MAXDOUBLE, 10.0, G_PARAM_READWRITE));
+      g_param_spec_double ("peak_falloff", "Peak Falloff",
+	  "Decay rate of decay peak after TTL (in dB/sec)",
+	  0.0, G_MAXDOUBLE, 10.0, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_level_set_property;
   gobject_class->get_property = gst_level_get_property;
 
-  gst_filter_signals[SIGNAL_LEVEL] = 
-    g_signal_new ("level", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstLevelClass, level), NULL, NULL,
-                  gstlevel_cclosure_marshal_VOID__DOUBLE_INT_DOUBLE_DOUBLE_DOUBLE,
-                  G_TYPE_NONE, 5,
-                  G_TYPE_DOUBLE, G_TYPE_INT,
-                  G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
+  gst_filter_signals[SIGNAL_LEVEL] =
+      g_signal_new ("level", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstLevelClass, level), NULL, NULL,
+      gstlevel_cclosure_marshal_VOID__DOUBLE_INT_DOUBLE_DOUBLE_DOUBLE,
+      G_TYPE_NONE, 5,
+      G_TYPE_DOUBLE, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
 }
 
 static void
-gst_level_init (GstLevel *filter)
+gst_level_init (GstLevel * filter)
 {
-  filter->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get (&sink_template_factory), "sink");
+  filter->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&sink_template_factory), "sink");
   gst_pad_set_link_function (filter->sinkpad, gst_level_link);
-  filter->srcpad = gst_pad_new_from_template (gst_static_pad_template_get (&src_template_factory), "src");
+  filter->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&src_template_factory), "src");
   gst_pad_set_link_function (filter->srcpad, gst_level_link);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
@@ -441,20 +441,13 @@ gst_level_init (GstLevel *filter)
 }
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "level",
-			       GST_RANK_NONE, GST_TYPE_LEVEL);
+  return gst_element_register (plugin, "level", GST_RANK_NONE, GST_TYPE_LEVEL);
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "level",
-  "Audio level plugin",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "level",
+    "Audio level plugin",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

@@ -42,39 +42,37 @@ enum
 };
 
 static GstStaticPadTemplate gst_rtpgsmparse_src_template =
-GST_STATIC_PAD_TEMPLATE (
-    "src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
-    GST_PAD_ALWAYS, 
-    GST_STATIC_CAPS ( "audio/x-gsm, "
-      "rate = (int) [ 1000, 48000 ]"
-    )
-);
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-gsm, " "rate = (int) [ 1000, 48000 ]")
+    );
 
 static GstStaticPadTemplate gst_rtpgsmparse_sink_template =
-GST_STATIC_PAD_TEMPLATE (
-    "sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
-    GST_PAD_ALWAYS, 
+    GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp")
-);
+    );
 
 
 static void gst_rtpgsmparse_class_init (GstRtpGSMParseClass * klass);
 static void gst_rtpgsmparse_base_init (GstRtpGSMParseClass * klass);
 static void gst_rtpgsmparse_init (GstRtpGSMParse * rtpgsmparse);
 
-static void gst_rtpgsmparse_chain (GstPad * pad, GstData *_data);
+static void gst_rtpgsmparse_chain (GstPad * pad, GstData * _data);
 
 static void gst_rtpgsmparse_set_property (GObject * object, guint prop_id,
-				   const GValue * value, GParamSpec * pspec);
+    const GValue * value, GParamSpec * pspec);
 static void gst_rtpgsmparse_get_property (GObject * object, guint prop_id,
-				   GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_rtpgsmparse_change_state (GstElement * element);
+    GValue * value, GParamSpec * pspec);
+static GstElementStateReturn gst_rtpgsmparse_change_state (GstElement *
+    element);
 
 static GstElementClass *parent_class = NULL;
 
-static GType gst_rtpgsmparse_get_type (void)
+static GType
+gst_rtpgsmparse_get_type (void)
 {
   static GType rtpgsmparse_type = 0;
 
@@ -91,7 +89,9 @@ static GType gst_rtpgsmparse_get_type (void)
       (GInstanceInitFunc) gst_rtpgsmparse_init,
     };
 
-    rtpgsmparse_type = g_type_register_static (GST_TYPE_ELEMENT, "GstRtpGSMParse", &rtpgsmparse_info, 0);
+    rtpgsmparse_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstRtpGSMParse",
+	&rtpgsmparse_info, 0);
   }
   return rtpgsmparse_type;
 }
@@ -102,9 +102,9 @@ gst_rtpgsmparse_base_init (GstRtpGSMParseClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get(&gst_rtpgsmparse_src_template));
+      gst_static_pad_template_get (&gst_rtpgsmparse_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get(&gst_rtpgsmparse_sink_template));
+      gst_static_pad_template_get (&gst_rtpgsmparse_sink_template));
   gst_element_class_set_details (element_class, &gst_rtp_gsmparse_details);
 }
 
@@ -119,9 +119,9 @@ gst_rtpgsmparse_class_init (GstRtpGSMParseClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY, 
-		g_param_spec_int ("frequency", "frequency", "frequency", 
-			G_MININT, G_MAXINT, 8000, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY,
+      g_param_spec_int ("frequency", "frequency", "frequency",
+	  G_MININT, G_MAXINT, 8000, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_rtpgsmparse_set_property;
   gobject_class->get_property = gst_rtpgsmparse_get_property;
@@ -132,10 +132,12 @@ gst_rtpgsmparse_class_init (GstRtpGSMParseClass * klass)
 static void
 gst_rtpgsmparse_init (GstRtpGSMParse * rtpgsmparse)
 {
-  rtpgsmparse->srcpad = gst_pad_new_from_template (
-      gst_static_pad_template_get(&gst_rtpgsmparse_src_template), "src");
-  rtpgsmparse->sinkpad = gst_pad_new_from_template (
-      gst_static_pad_template_get(&gst_rtpgsmparse_sink_template), "sink");
+  rtpgsmparse->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gst_rtpgsmparse_src_template), "src");
+  rtpgsmparse->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gst_rtpgsmparse_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (rtpgsmparse), rtpgsmparse->srcpad);
   gst_element_add_pad (GST_ELEMENT (rtpgsmparse), rtpgsmparse->sinkpad);
   gst_pad_set_chain_function (rtpgsmparse->sinkpad, gst_rtpgsmparse_chain);
@@ -144,32 +146,32 @@ gst_rtpgsmparse_init (GstRtpGSMParse * rtpgsmparse)
 }
 
 void
-gst_rtpgsmparse_ntohs (GstBuffer *buf)
+gst_rtpgsmparse_ntohs (GstBuffer * buf)
 {
   gint16 *i, *len;
 
   /* FIXME: is this code correct or even sane at all? */
-  i = (gint16 *) GST_BUFFER_DATA(buf); 
+  i = (gint16 *) GST_BUFFER_DATA (buf);
   len = i + GST_BUFFER_SIZE (buf) / sizeof (gint16 *);
 
-  for (; i<len; i++) {
-      *i = g_ntohs (*i);
+  for (; i < len; i++) {
+    *i = g_ntohs (*i);
   }
 }
 
 void
-gst_rtpgsm_caps_nego (GstRtpGSMParse *rtpgsmparse)
+gst_rtpgsm_caps_nego (GstRtpGSMParse * rtpgsmparse)
 {
   GstCaps *caps;
 
   caps = gst_caps_new_simple ("audio/x-gsm",
-       "rate", G_TYPE_INT, rtpgsmparse->frequency);
+      "rate", G_TYPE_INT, rtpgsmparse->frequency);
 
   gst_pad_try_set_caps (rtpgsmparse->srcpad, caps);
 }
 
 static void
-gst_rtpgsmparse_chain (GstPad * pad, GstData *_data)
+gst_rtpgsmparse_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstRtpGSMParse *rtpgsmparse;
@@ -188,8 +190,9 @@ gst_rtpgsmparse_chain (GstPad * pad, GstData *_data)
 
   if (GST_IS_EVENT (buf)) {
     GstEvent *event = GST_EVENT (buf);
+
     gst_pad_event_default (pad, event);
-  
+
     return;
   }
 
@@ -197,7 +200,8 @@ gst_rtpgsmparse_chain (GstPad * pad, GstData *_data)
     gst_rtpgsm_caps_nego (rtpgsmparse);
   }
 
-  packet = rtp_packet_new_copy_data (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  packet =
+      rtp_packet_new_copy_data (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
   pt = rtp_packet_get_payload_type (packet);
 
@@ -211,15 +215,18 @@ gst_rtpgsmparse_chain (GstPad * pad, GstData *_data)
   outbuf = gst_buffer_new ();
   GST_BUFFER_SIZE (outbuf) = rtp_packet_get_payload_len (packet);
   GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
-  GST_BUFFER_TIMESTAMP (outbuf) = g_ntohl (rtp_packet_get_timestamp (packet)) * GST_SECOND;
+  GST_BUFFER_TIMESTAMP (outbuf) =
+      g_ntohl (rtp_packet_get_timestamp (packet)) * GST_SECOND;
 
-  memcpy (GST_BUFFER_DATA (outbuf), rtp_packet_get_payload (packet), GST_BUFFER_SIZE (outbuf));
-        
-  GST_DEBUG ("gst_rtpgsmparse_chain: pushing buffer of size %d", GST_BUFFER_SIZE(outbuf));
+  memcpy (GST_BUFFER_DATA (outbuf), rtp_packet_get_payload (packet),
+      GST_BUFFER_SIZE (outbuf));
+
+  GST_DEBUG ("gst_rtpgsmparse_chain: pushing buffer of size %d",
+      GST_BUFFER_SIZE (outbuf));
 
 /* FIXME: According to RFC 1890, this is required, right? */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-     gst_rtpgsmparse_ntohs (outbuf);
+  gst_rtpgsmparse_ntohs (outbuf);
 #endif
 
   gst_pad_push (rtpgsmparse->srcpad, GST_DATA (outbuf));
@@ -229,7 +236,8 @@ gst_rtpgsmparse_chain (GstPad * pad, GstData *_data)
 }
 
 static void
-gst_rtpgsmparse_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec)
+gst_rtpgsmparse_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstRtpGSMParse *rtpgsmparse;
 
@@ -247,7 +255,8 @@ gst_rtpgsmparse_set_property (GObject * object, guint prop_id, const GValue * va
 }
 
 static void
-gst_rtpgsmparse_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec)
+gst_rtpgsmparse_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstRtpGSMParse *rtpgsmparse;
 
@@ -296,5 +305,5 @@ gboolean
 gst_rtpgsmparse_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpgsmparse",
-			       GST_RANK_NONE, GST_TYPE_RTP_GSM_PARSE);
+      GST_RANK_NONE, GST_TYPE_RTP_GSM_PARSE);
 }

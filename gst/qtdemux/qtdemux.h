@@ -26,8 +26,9 @@
 #include <gst/getbits/getbits.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_QTDEMUX \
@@ -43,43 +44,45 @@ extern "C" {
 
 #define GST_QTDEMUX_MAX_STREAMS		8
 
-typedef struct _GstQTDemux GstQTDemux;
-typedef struct _GstQTDemuxClass GstQTDemuxClass;
-typedef struct _QtDemuxStream QtDemuxStream;
+  typedef struct _GstQTDemux GstQTDemux;
+  typedef struct _GstQTDemuxClass GstQTDemuxClass;
+  typedef struct _QtDemuxStream QtDemuxStream;
 
-struct _GstQTDemux {
-  GstElement element;
+  struct _GstQTDemux
+  {
+    GstElement element;
 
-  /* pads */
-  GstPad *sinkpad;
+    /* pads */
+    GstPad *sinkpad;
 
-  QtDemuxStream *streams[GST_QTDEMUX_MAX_STREAMS];
-  int n_streams;
-  int n_video_streams;
-  int n_audio_streams;
+    QtDemuxStream *streams[GST_QTDEMUX_MAX_STREAMS];
+    int n_streams;
+    int n_video_streams;
+    int n_audio_streams;
 
-  GstByteStream *bs;
+    GstByteStream *bs;
 
-  GNode *moov_node;
-  GNode *moov_node_compressed;
+    GNode *moov_node;
+    GNode *moov_node_compressed;
 
-  guint32 timescale;
-  guint32 duration;
+    guint32 timescale;
+    guint32 duration;
 
-  int state;
+    int state;
 
-  int offset;
+    int offset;
 
-  /* track stuff */
+    /* track stuff */
 
-};
+  };
 
-struct _GstQTDemuxClass {
-  GstElementClass parent_class;
-};
+  struct _GstQTDemuxClass
+  {
+    GstElementClass parent_class;
+  };
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
-#endif /* __GST_QTDEMUX_H__ */
+#endif				/* __GST_QTDEMUX_H__ */

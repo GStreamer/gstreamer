@@ -30,8 +30,9 @@
 #include <jpeglib.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_JPEGENC \
@@ -45,48 +46,50 @@ extern "C" {
 #define GST_IS_JPEGENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_JPEGENC))
 
-typedef struct _GstJpegEnc GstJpegEnc;
-typedef struct _GstJpegEncClass GstJpegEncClass;
+  typedef struct _GstJpegEnc GstJpegEnc;
+  typedef struct _GstJpegEncClass GstJpegEncClass;
 
-struct _GstJpegEnc {
-  GstElement element;
+  struct _GstJpegEnc
+  {
+    GstElement element;
 
-  /* pads */
-  GstPad *sinkpad,*srcpad;
+    /* pads */
+    GstPad *sinkpad, *srcpad;
 
-  /* video state */
-  gint format;
-  gint width;
-  gint height;
-  gdouble fps;
-  /* the video buffer */
-  gint bufsize;
-  GstBuffer *buffer;
-  guint row_stride;
-  /* the jpeg line buffer */
-  guchar **line[3];
+    /* video state */
+    gint format;
+    gint width;
+    gint height;
+    gdouble fps;
+    /* the video buffer */
+    gint bufsize;
+    GstBuffer *buffer;
+    guint row_stride;
+    /* the jpeg line buffer */
+    guchar **line[3];
 
-  struct jpeg_compress_struct cinfo;
-  struct jpeg_error_mgr jerr;
-  struct jpeg_destination_mgr jdest;
+    struct jpeg_compress_struct cinfo;
+    struct jpeg_error_mgr jerr;
+    struct jpeg_destination_mgr jdest;
 
-  int quality;
-  int smoothing;
-};
+    int quality;
+    int smoothing;
+  };
 
-struct _GstJpegEncClass {
-  GstElementClass parent_class;
+  struct _GstJpegEncClass
+  {
+    GstElementClass parent_class;
 
-  /* signals */
-  void (*frame_encoded) (GstElement *element);
-};
+    /* signals */
+    void (*frame_encoded) (GstElement * element);
+  };
 
-GType gst_jpegenc_get_type(void);
+  GType gst_jpegenc_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_JPEGENC_H__ */
+#endif				/* __GST_JPEGENC_H__ */

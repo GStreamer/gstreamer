@@ -43,39 +43,37 @@
  ******************************************************/
 
 gboolean
-gst_v4l2_set_display (GstV4l2Element *v4l2element)
+gst_v4l2_set_display (GstV4l2Element * v4l2element)
 {
-	gchar *buff;
+  gchar *buff;
 
-	if (v4l2element->display)
-		g_free(v4l2element->display);
-	v4l2element->display = g_strdup(g_getenv("DISPLAY"));
+  if (v4l2element->display)
+    g_free (v4l2element->display);
+  v4l2element->display = g_strdup (g_getenv ("DISPLAY"));
 
-	DEBUG("trying to set overlay to '%s'", v4l2element->display);
+  DEBUG ("trying to set overlay to '%s'", v4l2element->display);
 
-	/* start v4l-conf */
-	buff = g_strdup_printf("v4l-conf -q -c %s -d %s",
-		v4l2element->device, v4l2element->display);
+  /* start v4l-conf */
+  buff = g_strdup_printf ("v4l-conf -q -c %s -d %s",
+      v4l2element->device, v4l2element->display);
 
-	switch (system(buff)) {
-		case -1:
-			GST_ELEMENT_ERROR (v4l2element, RESOURCE, FAILED,
-                                           (_("Could not start v4l-conf.")),
-                                           GST_ERROR_SYSTEM);
-			g_free(buff);
-			return FALSE;
-		case 0:
-			break;
-		default:
-			GST_ELEMENT_ERROR (v4l2element, RESOURCE, FAILED,
-                                           (_("Executing v4l-conf failed.")),
-                                           GST_ERROR_SYSTEM);
-			g_free(buff);
-			return FALSE;
-	}
+  switch (system (buff)) {
+    case -1:
+      GST_ELEMENT_ERROR (v4l2element, RESOURCE, FAILED,
+	  (_("Could not start v4l-conf.")), GST_ERROR_SYSTEM);
+      g_free (buff);
+      return FALSE;
+    case 0:
+      break;
+    default:
+      GST_ELEMENT_ERROR (v4l2element, RESOURCE, FAILED,
+	  (_("Executing v4l-conf failed.")), GST_ERROR_SYSTEM);
+      g_free (buff);
+      return FALSE;
+  }
 
-	g_free(buff);
-	return TRUE;
+  g_free (buff);
+  return TRUE;
 }
 
 
@@ -86,38 +84,33 @@ gst_v4l2_set_display (GstV4l2Element *v4l2element)
  ******************************************************/
 
 gboolean
-gst_v4l2_set_window (GstElement       *element,
-                     gint              x,
-                     gint              y,
-                     gint              w,
-                     gint              h,
-                     struct v4l2_clip *clips,
-                     gint              num_clips)
+gst_v4l2_set_window (GstElement * element,
+    gint x, gint y, gint w, gint h, struct v4l2_clip * clips, gint num_clips)
 {
-	struct v4l2_format fmt;
-	GstV4l2Element *v4l2element = GST_V4L2ELEMENT(element);
+  struct v4l2_format fmt;
+  GstV4l2Element *v4l2element = GST_V4L2ELEMENT (element);
 
-	DEBUG("trying to set video window to %dx%d,%d,%d", x,y,w,h);
-	GST_V4L2_CHECK_OVERLAY(v4l2element);
-	GST_V4L2_CHECK_OPEN(v4l2element);
+  DEBUG ("trying to set video window to %dx%d,%d,%d", x, y, w, h);
+  GST_V4L2_CHECK_OVERLAY (v4l2element);
+  GST_V4L2_CHECK_OPEN (v4l2element);
 
-	fmt.type = V4L2_CAP_VIDEO_OVERLAY;
-	fmt.fmt.win.clipcount = 0;
-	fmt.fmt.win.w.left = x;
-	fmt.fmt.win.w.top = y;
-	fmt.fmt.win.w.width = w;
-	fmt.fmt.win.w.height = h;
-	fmt.fmt.win.clips = clips;
-	fmt.fmt.win.clipcount = num_clips;
-	fmt.fmt.win.bitmap = NULL;
+  fmt.type = V4L2_CAP_VIDEO_OVERLAY;
+  fmt.fmt.win.clipcount = 0;
+  fmt.fmt.win.w.left = x;
+  fmt.fmt.win.w.top = y;
+  fmt.fmt.win.w.width = w;
+  fmt.fmt.win.w.height = h;
+  fmt.fmt.win.clips = clips;
+  fmt.fmt.win.clipcount = num_clips;
+  fmt.fmt.win.bitmap = NULL;
 
-	if (ioctl(v4l2element->video_fd, VIDIOC_S_FMT, &fmt) < 0) {
-		GST_ELEMENT_ERROR (v4l2element, RESOURCE, TOO_LAZY, (NULL),
-			("Failed to set the video window: %s", g_strerror (errno)));
-		return FALSE;
-	}
+  if (ioctl (v4l2element->video_fd, VIDIOC_S_FMT, &fmt) < 0) {
+    GST_ELEMENT_ERROR (v4l2element, RESOURCE, TOO_LAZY, (NULL),
+	("Failed to set the video window: %s", g_strerror (errno)));
+    return FALSE;
+  }
 
-	return TRUE;
+  return TRUE;
 }
 
 
@@ -128,21 +121,20 @@ gst_v4l2_set_window (GstElement       *element,
  ******************************************************/
 
 gboolean
-gst_v4l2_enable_overlay (GstV4l2Element *v4l2element,
-                         gboolean        enable)
+gst_v4l2_enable_overlay (GstV4l2Element * v4l2element, gboolean enable)
 {
-	gint doit = enable?1:0;
+  gint doit = enable ? 1 : 0;
 
-	DEBUG("trying to %s overlay display", enable?"enable":"disable");
-	GST_V4L2_CHECK_OPEN(v4l2element);
-	GST_V4L2_CHECK_OVERLAY(v4l2element);
+  DEBUG ("trying to %s overlay display", enable ? "enable" : "disable");
+  GST_V4L2_CHECK_OPEN (v4l2element);
+  GST_V4L2_CHECK_OVERLAY (v4l2element);
 
-	if (ioctl(v4l2element->video_fd, VIDIOC_OVERLAY, &doit) < 0) {
-		GST_ELEMENT_ERROR (v4l2element, RESOURCE, TOO_LAZY, (NULL),
-			("Failed to %s overlay display: %s",
-			 enable?"enable":"disable", g_strerror (errno)));
-		return FALSE;
-	}
+  if (ioctl (v4l2element->video_fd, VIDIOC_OVERLAY, &doit) < 0) {
+    GST_ELEMENT_ERROR (v4l2element, RESOURCE, TOO_LAZY, (NULL),
+	("Failed to %s overlay display: %s",
+	    enable ? "enable" : "disable", g_strerror (errno)));
+    return FALSE;
+  }
 
-	return TRUE;
+  return TRUE;
 }

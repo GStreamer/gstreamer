@@ -31,7 +31,6 @@
 #include <gst/audio/audioclock.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_OSSSINK \
   (gst_osssink_get_type())
 #define GST_OSSSINK(obj) \
@@ -42,41 +41,42 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSSSINK))
 #define GST_IS_OSSSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSSSINK))
+    typedef enum
+{
+  GST_OSSSINK_OPEN = GST_ELEMENT_FLAG_LAST,
 
-typedef enum {
-  GST_OSSSINK_OPEN		= GST_ELEMENT_FLAG_LAST,
-
-  GST_OSSSINK_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
+  GST_OSSSINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
 } GstOssSinkFlags;
 
 typedef struct _GstOssSink GstOssSink;
 typedef struct _GstOssSinkClass GstOssSinkClass;
 
-struct _GstOssSink {
-  GstOssElement	 element;
+struct _GstOssSink
+{
+  GstOssElement element;
 
-  GstPad 	*sinkpad;
+  GstPad *sinkpad;
 
-  GstClock 	*provided_clock;
-  GstClock 	*clock;
-  gboolean	 resync;
-  gboolean	 sync;
-  guint64	 handled;
+  GstClock *provided_clock;
+  GstClock *clock;
+  gboolean resync;
+  gboolean sync;
+  guint64 handled;
 
-  gboolean 	 mute;
-  guint 	 bufsize;
-  guint 	 chunk_size;
+  gboolean mute;
+  guint bufsize;
+  guint chunk_size;
 };
 
-struct _GstOssSinkClass {
+struct _GstOssSinkClass
+{
   GstOssElementClass parent_class;
 
   /* signals */
-  void (*handoff) (GstElement *element,GstPad *pad);
+  void (*handoff) (GstElement * element, GstPad * pad);
 };
 
-GType gst_osssink_get_type(void);
+GType gst_osssink_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_OSSSINK_H__ */

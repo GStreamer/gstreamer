@@ -28,7 +28,7 @@
 #include "flac_compat.h"
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
@@ -37,25 +37,23 @@ plugin_init (GstPlugin *plugin)
   if (!gst_plugin_load ("gsttags"))
     return FALSE;
 
-  if (!gst_element_register (plugin, "flacenc", GST_RANK_NONE, GST_TYPE_FLACENC))
+  if (!gst_element_register (plugin, "flacenc", GST_RANK_NONE,
+	  GST_TYPE_FLACENC))
     return FALSE;
 
-  if (!gst_element_register (plugin, "flacdec", GST_RANK_PRIMARY, GST_TYPE_FLACDEC))
+  if (!gst_element_register (plugin, "flacdec", GST_RANK_PRIMARY,
+	  GST_TYPE_FLACDEC))
     return FALSE;
 
-  if (!gst_element_register (plugin, "flactag", GST_RANK_PRIMARY, gst_flac_tag_get_type ())) 
+  if (!gst_element_register (plugin, "flactag", GST_RANK_PRIMARY,
+	  gst_flac_tag_get_type ()))
     return FALSE;
-  
+
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "flac",
-  "The FLAC Lossless compressor Codec",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "flac",
+    "The FLAC Lossless compressor Codec",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

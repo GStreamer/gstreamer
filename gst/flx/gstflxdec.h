@@ -27,42 +27,46 @@
 
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
-typedef enum {
-  GST_FLXDEC_READ_HEADER,
-  GST_FLXDEC_PLAYING,
-} GstFlxDecState;
-	
+  typedef enum
+  {
+    GST_FLXDEC_READ_HEADER,
+    GST_FLXDEC_PLAYING,
+  } GstFlxDecState;
+
 
 /* Definition of structure storing data for this element. */
-typedef struct _GstFlxDec  GstFlxDec;
+  typedef struct _GstFlxDec GstFlxDec;
 
-struct _GstFlxDec {
-  GstElement element;
+  struct _GstFlxDec
+  {
+    GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+    GstPad *sinkpad, *srcpad;
 
-  gboolean active, new_meta;
+    gboolean active, new_meta;
 
-  GstBuffer *delta, *frame;
-  GstByteStream *bs;
-  gulong size;
-  GstFlxDecState state;
-  glong frame_time;
-  gint64 next_time;
+    GstBuffer *delta, *frame;
+    GstByteStream *bs;
+    gulong size;
+    GstFlxDecState state;
+    glong frame_time;
+    gint64 next_time;
 
-  FlxColorSpaceConverter *converter;
+    FlxColorSpaceConverter *converter;
 
-  FlxHeader hdr;
-};
+    FlxHeader hdr;
+  };
 
 /* Standard definition defining a class for this element. */
-typedef struct _GstFlxDecClass GstFlxDecClass;
-struct _GstFlxDecClass {
-  GstElementClass parent_class;
-};
+  typedef struct _GstFlxDecClass GstFlxDecClass;
+  struct _GstFlxDecClass
+  {
+    GstElementClass parent_class;
+  };
 
 /* Standard macros for defining types for this element.  */
 #define GST_TYPE_FLXDEC \
@@ -77,12 +81,12 @@ struct _GstFlxDecClass {
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FLXDEC))
 
 /* Standard function returning type information. */
-GType gst_flxdec_get_type(void);
+  GType gst_flxdec_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_FLX_DECODER_H__ */
+#endif				/* __GST_FLX_DECODER_H__ */

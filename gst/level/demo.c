@@ -33,8 +33,8 @@ GtkWidget *elapsed;
 GtkWidget *scale[2][3];
 
 static void
-level_callback (GstElement *element, gdouble time, gint channel,
-                gdouble rms, gdouble peak, gdouble decay)
+level_callback (GstElement * element, gdouble time, gint channel,
+    gdouble rms, gdouble peak, gdouble decay)
 {
   gchar *label;
 
@@ -50,6 +50,7 @@ static gboolean
 idler (gpointer data)
 {
   GstElement *pipeline = GST_ELEMENT (data);
+
   g_print ("+");
   if (gst_bin_iterate (GST_BIN (pipeline)))
     return TRUE;
@@ -79,8 +80,7 @@ setup_gui ()
   gtk_container_add (GTK_CONTAINER (hbox), elapsed);
   gtk_container_add (GTK_CONTAINER (vbox), hbox);
 
-  for (c = 0; c < 2; ++c)
-  {
+  for (c = 0; c < 2; ++c) {
     /* RMS */
     hbox = gtk_hbox_new (TRUE, 0);
     label = gtk_label_new ("RMS");
@@ -110,8 +110,8 @@ setup_gui ()
   gtk_widget_show_all (GTK_WIDGET (window));
 }
 
-int main
-(int argc, char *argv[])
+int
+main (int argc, char *argv[])
 {
 
   GstElement *pipeline = NULL;
@@ -122,8 +122,7 @@ int main
   gtk_init (&argc, &argv);
 
   pipeline = gst_parse_launchv ((const gchar **) &argv[1], &error);
-  if (error)
-  {
+  if (error) {
     g_print ("pipeline could not be constructed: %s\n", error->message);
     g_print ("Please give a complete pipeline  with a 'level' element.\n");
     g_print ("Example: sinesrc ! level ! osssink\n");
@@ -132,8 +131,7 @@ int main
   }
 
   level = gst_bin_get_by_name (GST_BIN (pipeline), "level0");
-  if (level == NULL)
-  {
+  if (level == NULL) {
     g_print ("Please give a pipeline with a 'level' element in it\n");
     return 1;
   }
@@ -141,7 +139,7 @@ int main
   g_object_set (level, "signal", TRUE, NULL);
   g_signal_connect (level, "level", G_CALLBACK (level_callback), NULL);
 
-  
+
   /* setup GUI */
   setup_gui ();
 
@@ -155,4 +153,3 @@ int main
 
   return 0;
 }
-

@@ -46,38 +46,36 @@ enum
 };
 
 static GstStaticPadTemplate gst_rtpgsmenc_sink_template =
-GST_STATIC_PAD_TEMPLATE (
-    "sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ( "audio/x-gsm, "
-      "rate = (int) [ 1000, 48000 ]"
-    )
-);
+    GST_STATIC_CAPS ("audio/x-gsm, " "rate = (int) [ 1000, 48000 ]")
+    );
 
 static GstStaticPadTemplate gst_rtpgsmenc_src_template =
-GST_STATIC_PAD_TEMPLATE (
-    "src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp")
-);
+    );
 
 
 static void gst_rtpgsmenc_class_init (GstRtpGSMEncClass * klass);
 static void gst_rtpgsmenc_base_init (GstRtpGSMEncClass * klass);
 static void gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc);
-static void gst_rtpgsmenc_chain (GstPad * pad, GstData *_data);
+static void gst_rtpgsmenc_chain (GstPad * pad, GstData * _data);
 static void gst_rtpgsmenc_set_property (GObject * object, guint prop_id,
-				   const GValue * value, GParamSpec * pspec);
+    const GValue * value, GParamSpec * pspec);
 static void gst_rtpgsmenc_get_property (GObject * object, guint prop_id,
-				   GValue * value, GParamSpec * pspec);
-static GstPadLinkReturn gst_rtpgsmenc_sinkconnect (GstPad * pad, const GstCaps * caps);
+    GValue * value, GParamSpec * pspec);
+static GstPadLinkReturn gst_rtpgsmenc_sinkconnect (GstPad * pad,
+    const GstCaps * caps);
 static GstElementStateReturn gst_rtpgsmenc_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
-static GType gst_rtpgsmenc_get_type (void)
+static GType
+gst_rtpgsmenc_get_type (void)
 {
   static GType rtpgsmenc_type = 0;
 
@@ -94,7 +92,9 @@ static GType gst_rtpgsmenc_get_type (void)
       (GInstanceInitFunc) gst_rtpgsmenc_init,
     };
 
-    rtpgsmenc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstRtpGSMEnc", &rtpgsmenc_info, 0);
+    rtpgsmenc_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstRtpGSMEnc",
+	&rtpgsmenc_info, 0);
   }
   return rtpgsmenc_type;
 }
@@ -131,10 +131,12 @@ gst_rtpgsmenc_class_init (GstRtpGSMEncClass * klass)
 static void
 gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc)
 {
-  rtpgsmenc->sinkpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&gst_rtpgsmenc_sink_template), "sink");
-  rtpgsmenc->srcpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&gst_rtpgsmenc_sink_template), "src");
+  rtpgsmenc->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gst_rtpgsmenc_sink_template), "sink");
+  rtpgsmenc->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gst_rtpgsmenc_sink_template), "src");
   gst_element_add_pad (GST_ELEMENT (rtpgsmenc), rtpgsmenc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (rtpgsmenc), rtpgsmenc->srcpad);
   gst_pad_set_chain_function (rtpgsmenc->sinkpad, gst_rtpgsmenc_chain);
@@ -142,7 +144,7 @@ gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc)
 
   rtpgsmenc->frequency = 8000;
 
-  rtpgsmenc->next_time = 0; 
+  rtpgsmenc->next_time = 0;
   rtpgsmenc->time_interval = 0;
 
   rtpgsmenc->seq = 0;
@@ -161,7 +163,8 @@ gst_rtpgsmenc_sinkconnect (GstPad * pad, const GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   ret = gst_structure_get_int (structure, "rate", &rtpgsmenc->frequency);
-  if (!ret) return GST_PAD_LINK_REFUSED;
+  if (!ret)
+    return GST_PAD_LINK_REFUSED;
 
   /* Pre-calculate what we can */
   rtpgsmenc->time_interval = GST_SECOND / (2 * rtpgsmenc->frequency);
@@ -171,21 +174,21 @@ gst_rtpgsmenc_sinkconnect (GstPad * pad, const GstCaps * caps)
 
 
 void
-gst_rtpgsmenc_htons (GstBuffer *buf)
+gst_rtpgsmenc_htons (GstBuffer * buf)
 {
   gint16 *i, *len;
 
   /* FIXME: is this code correct or even sane at all? */
-  i = (gint16 *) GST_BUFFER_DATA(buf); 
+  i = (gint16 *) GST_BUFFER_DATA (buf);
   len = i + GST_BUFFER_SIZE (buf) / sizeof (gint16 *);
 
-  for (; i<len; i++) {
-      *i = g_htons (*i);
+  for (; i < len; i++) {
+    *i = g_htons (*i);
   }
 }
 
 static void
-gst_rtpgsmenc_chain (GstPad * pad, GstData *_data)
+gst_rtpgsmenc_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstRtpGSMEnc *rtpgsmenc;
@@ -206,12 +209,12 @@ gst_rtpgsmenc_chain (GstPad * pad, GstData *_data)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
-	GST_DEBUG ("discont"); 
-        rtpgsmenc->next_time = 0;
-        gst_pad_event_default (pad, event);
+	GST_DEBUG ("discont");
+	rtpgsmenc->next_time = 0;
+	gst_pad_event_default (pad, event);
 	return;
       default:
-        gst_pad_event_default (pad, event);
+	gst_pad_event_default (pad, event);
 	return;
     }
   }
@@ -226,7 +229,8 @@ gst_rtpgsmenc_chain (GstPad * pad, GstData *_data)
   rtp_packet_set_marker (packet, 0);
   rtp_packet_set_ssrc (packet, g_htonl (rtpgsmenc->ssrc));
   rtp_packet_set_seq (packet, g_htons (rtpgsmenc->seq));
-  rtp_packet_set_timestamp (packet, g_htonl ((guint32) rtpgsmenc->next_time / GST_SECOND));
+  rtp_packet_set_timestamp (packet,
+      g_htonl ((guint32) rtpgsmenc->next_time / GST_SECOND));
   rtp_packet_set_payload_type (packet, (guint8) PAYLOAD_GSM);
 
   /* FIXME: According to RFC 1890, this is required, right? */
@@ -235,25 +239,30 @@ gst_rtpgsmenc_chain (GstPad * pad, GstData *_data)
 #endif
 
   outbuf = gst_buffer_new ();
-  GST_BUFFER_SIZE (outbuf) = rtp_packet_get_packet_len (packet) + GST_BUFFER_SIZE (buf);
+  GST_BUFFER_SIZE (outbuf) =
+      rtp_packet_get_packet_len (packet) + GST_BUFFER_SIZE (buf);
   GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
   GST_BUFFER_TIMESTAMP (outbuf) = rtpgsmenc->next_time;
 
-  memcpy (GST_BUFFER_DATA (outbuf), packet->data, rtp_packet_get_packet_len (packet));
-  memcpy (GST_BUFFER_DATA (outbuf) + rtp_packet_get_packet_len(packet), GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  memcpy (GST_BUFFER_DATA (outbuf), packet->data,
+      rtp_packet_get_packet_len (packet));
+  memcpy (GST_BUFFER_DATA (outbuf) + rtp_packet_get_packet_len (packet),
+      GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
-  GST_DEBUG ("gst_rtpgsmenc_chain: pushing buffer of size %d", GST_BUFFER_SIZE(outbuf));
+  GST_DEBUG ("gst_rtpgsmenc_chain: pushing buffer of size %d",
+      GST_BUFFER_SIZE (outbuf));
   gst_pad_push (rtpgsmenc->srcpad, GST_DATA (outbuf));
 
   ++rtpgsmenc->seq;
   rtpgsmenc->next_time += rtpgsmenc->time_interval * GST_BUFFER_SIZE (buf);
-  
+
   rtp_packet_free (packet);
   gst_buffer_unref (buf);
 }
 
 static void
-gst_rtpgsmenc_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec)
+gst_rtpgsmenc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstRtpGSMEnc *rtpgsmenc;
 
@@ -268,7 +277,8 @@ gst_rtpgsmenc_set_property (GObject * object, guint prop_id, const GValue * valu
 }
 
 static void
-gst_rtpgsmenc_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec)
+gst_rtpgsmenc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstRtpGSMEnc *rtpgsmenc;
 
@@ -317,5 +327,5 @@ gboolean
 gst_rtpgsmenc_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpgsmenc",
-			       GST_RANK_NONE, GST_TYPE_RTP_GSM_ENC);
+      GST_RANK_NONE, GST_TYPE_RTP_GSM_ENC);
 }

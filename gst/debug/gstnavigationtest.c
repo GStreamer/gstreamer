@@ -33,26 +33,34 @@
 #include <math.h>
 
 /* GstNavigationtest signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   /* FILL ME */
 };
 
-static void	gst_navigationtest_base_init	(gpointer g_class);
-static void	gst_navigationtest_class_init	(gpointer g_class, gpointer class_data);
-static void	gst_navigationtest_init		(GTypeInstance *instance, gpointer g_class);
+static void gst_navigationtest_base_init (gpointer g_class);
+static void gst_navigationtest_class_init (gpointer g_class,
+    gpointer class_data);
+static void gst_navigationtest_init (GTypeInstance * instance,
+    gpointer g_class);
 
-static gboolean gst_navigationtest_handle_src_event    (GstPad *pad, GstEvent *event);
-static void	gst_navigationtest_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_navigationtest_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static gboolean gst_navigationtest_handle_src_event (GstPad * pad,
+    GstEvent * event);
+static void gst_navigationtest_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_navigationtest_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static void gst_navigationtest_planar411(GstVideofilter *videofilter, void *dest, void *src);
-static void gst_navigationtest_setup(GstVideofilter *videofilter);
+static void gst_navigationtest_planar411 (GstVideofilter * videofilter,
+    void *dest, void *src);
+static void gst_navigationtest_setup (GstVideofilter * videofilter);
 
 GType
 gst_navigationtest_get_type (void)
@@ -61,44 +69,43 @@ gst_navigationtest_get_type (void)
 
   if (!navigationtest_type) {
     static const GTypeInfo navigationtest_info = {
-      sizeof(GstNavigationtestClass),
+      sizeof (GstNavigationtestClass),
       gst_navigationtest_base_init,
       NULL,
       gst_navigationtest_class_init,
       NULL,
       NULL,
-      sizeof(GstNavigationtest),
+      sizeof (GstNavigationtest),
       0,
       gst_navigationtest_init,
     };
-    navigationtest_type = g_type_register_static(GST_TYPE_VIDEOFILTER,
-        "GstNavigationtest", &navigationtest_info, 0);
+    navigationtest_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
+	"GstNavigationtest", &navigationtest_info, 0);
   }
   return navigationtest_type;
 }
 
 static GstVideofilterFormat gst_navigationtest_formats[] = {
-  { "I420", 12, gst_navigationtest_planar411, },
+  {"I420", 12, gst_navigationtest_planar411,},
 };
 
-  
+
 static void
 gst_navigationtest_base_init (gpointer g_class)
 {
-  static GstElementDetails navigationtest_details = GST_ELEMENT_DETAILS (
-    "Video Filter Template",
-    "Filter/Video",
-    "Template for a video filter",
-    "David Schleef <ds@schleef.org>"
-  );
+  static GstElementDetails navigationtest_details =
+      GST_ELEMENT_DETAILS ("Video Filter Template",
+      "Filter/Video",
+      "Template for a video filter",
+      "David Schleef <ds@schleef.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
   int i;
-  
+
   gst_element_class_set_details (element_class, &navigationtest_details);
 
-  for(i=0;i<G_N_ELEMENTS(gst_navigationtest_formats);i++){
-    gst_videofilter_class_add_format(videofilter_class,
+  for (i = 0; i < G_N_ELEMENTS (gst_navigationtest_formats); i++) {
+    gst_videofilter_class_add_format (videofilter_class,
 	gst_navigationtest_formats + i);
   }
 
@@ -115,10 +122,10 @@ gst_navigationtest_class_init (gpointer g_class, gpointer class_data)
   videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
 #if 0
-  g_object_class_install_property(gobject_class, ARG_METHOD,
-      g_param_spec_enum("method","method","method",
-      GST_TYPE_NAVIGATIONTEST_METHOD, GST_NAVIGATIONTEST_METHOD_1,
-      G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_METHOD,
+      g_param_spec_enum ("method", "method", "method",
+	  GST_TYPE_NAVIGATIONTEST_METHOD, GST_NAVIGATIONTEST_METHOD_1,
+	  G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_navigationtest_set_property;
@@ -128,14 +135,14 @@ gst_navigationtest_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
-gst_navigationtest_init (GTypeInstance *instance, gpointer g_class)
+gst_navigationtest_init (GTypeInstance * instance, gpointer g_class)
 {
   GstNavigationtest *navigationtest = GST_NAVIGATIONTEST (instance);
   GstVideofilter *videofilter;
 
-  GST_DEBUG("gst_navigationtest_init");
+  GST_DEBUG ("gst_navigationtest_init");
 
-  videofilter = GST_VIDEOFILTER(navigationtest);
+  videofilter = GST_VIDEOFILTER (navigationtest);
 
   gst_pad_set_event_function (videofilter->srcpad,
       gst_navigationtest_handle_src_event);
@@ -145,7 +152,7 @@ gst_navigationtest_init (GTypeInstance *instance, gpointer g_class)
 }
 
 static gboolean
-gst_navigationtest_handle_src_event (GstPad *pad, GstEvent *event)
+gst_navigationtest_handle_src_event (GstPad * pad, GstEvent * event)
 {
   GstNavigationtest *navigationtest;
 
@@ -153,10 +160,10 @@ gst_navigationtest_handle_src_event (GstPad *pad, GstEvent *event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
-      gst_structure_get_double(event->event_data.structure.structure,
-          "pointer_x", &navigationtest->x);
-      gst_structure_get_double(event->event_data.structure.structure,
-          "pointer_y", &navigationtest->y);
+      gst_structure_get_double (event->event_data.structure.structure,
+	  "pointer_x", &navigationtest->x);
+      gst_structure_get_double (event->event_data.structure.structure,
+	  "pointer_y", &navigationtest->y);
       break;
     default:
       break;
@@ -165,15 +172,16 @@ gst_navigationtest_handle_src_event (GstPad *pad, GstEvent *event)
 }
 
 static void
-gst_navigationtest_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_navigationtest_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstNavigationtest *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_NAVIGATIONTEST(object));
-  src = GST_NAVIGATIONTEST(object);
+  g_return_if_fail (GST_IS_NAVIGATIONTEST (object));
+  src = GST_NAVIGATIONTEST (object);
 
-  GST_DEBUG("gst_navigationtest_set_property");
+  GST_DEBUG ("gst_navigationtest_set_property");
   switch (prop_id) {
 #if 0
     case ARG_METHOD:
@@ -186,13 +194,14 @@ gst_navigationtest_set_property (GObject *object, guint prop_id, const GValue *v
 }
 
 static void
-gst_navigationtest_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_navigationtest_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   GstNavigationtest *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_NAVIGATIONTEST(object));
-  src = GST_NAVIGATIONTEST(object);
+  g_return_if_fail (GST_IS_NAVIGATIONTEST (object));
+  src = GST_NAVIGATIONTEST (object);
 
   switch (prop_id) {
 #if 0
@@ -206,89 +215,85 @@ gst_navigationtest_get_property (GObject *object, guint prop_id, GValue *value, 
   }
 }
 
-static gboolean plugin_init (GstPlugin *plugin)
+static gboolean
+plugin_init (GstPlugin * plugin)
 {
-  if(!gst_library_load("gstvideofilter"))
+  if (!gst_library_load ("gstvideofilter"))
     return FALSE;
 
   return gst_element_register (plugin, "navigationtest", GST_RANK_NONE,
       GST_TYPE_NAVIGATIONTEST);
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "navigationtest",
-  "Template for a video filter",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "navigationtest",
+    "Template for a video filter",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
 
-static void gst_navigationtest_setup(GstVideofilter *videofilter)
+     static void gst_navigationtest_setup (GstVideofilter * videofilter)
 {
   GstNavigationtest *navigationtest;
 
-  g_return_if_fail(GST_IS_NAVIGATIONTEST(videofilter));
-  navigationtest = GST_NAVIGATIONTEST(videofilter);
+  g_return_if_fail (GST_IS_NAVIGATIONTEST (videofilter));
+  navigationtest = GST_NAVIGATIONTEST (videofilter);
 
   /* if any setup needs to be done, do it here */
 
 }
 
-static void gst_navigationtest_planar411(GstVideofilter *videofilter,
+static void
+gst_navigationtest_planar411 (GstVideofilter * videofilter,
     void *dest, void *src)
 {
   GstNavigationtest *navigationtest;
-  int width = gst_videofilter_get_input_width(videofilter);
-  int height = gst_videofilter_get_input_height(videofilter);
-  int x,y;
+  int width = gst_videofilter_get_input_width (videofilter);
+  int height = gst_videofilter_get_input_height (videofilter);
+  int x, y;
   int x1, x2, y1, y2;
 
-  g_return_if_fail(GST_IS_NAVIGATIONTEST(videofilter));
-  navigationtest = GST_NAVIGATIONTEST(videofilter);
+  g_return_if_fail (GST_IS_NAVIGATIONTEST (videofilter));
+  navigationtest = GST_NAVIGATIONTEST (videofilter);
 
   /* do something interesting here.  This simply copies the source
    * to the destination. */
-  memcpy(dest,src,width * height + (width/2) * (height/2) * 2);
+  memcpy (dest, src, width * height + (width / 2) * (height / 2) * 2);
 
-  x = rint(navigationtest->x);
-  y = rint(navigationtest->y);
+  x = rint (navigationtest->x);
+  y = rint (navigationtest->y);
 
-  if(x<0 || y<0 || x>=width || y>=height)return;
+  if (x < 0 || y < 0 || x >= width || y >= height)
+    return;
 
-  x1 = MAX(x-5, 0);
-  x2 = MIN(x+5, width);
-  y1 = MAX(y-5, 0);
-  y2 = MIN(y+5, height);
+  x1 = MAX (x - 5, 0);
+  x2 = MIN (x + 5, width);
+  y1 = MAX (y - 5, 0);
+  y2 = MIN (y + 5, height);
 
-  for(y=y1;y<y2;y++){
-    for(x=x1;x<x2;x++){
-      ((guint8 *)dest)[y*width + x] = 0;
+  for (y = y1; y < y2; y++) {
+    for (x = x1; x < x2; x++) {
+      ((guint8 *) dest)[y * width + x] = 0;
     }
   }
 
-  dest += height*width;
+  dest += height * width;
   width /= 2;
   height /= 2;
   x1 /= 2;
   x2 /= 2;
   y1 /= 2;
   y2 /= 2;
-  for(y=y1;y<y2;y++){
-    for(x=x1;x<x2;x++){
-      ((guint8 *)dest)[y*width + x] = 128;
+  for (y = y1; y < y2; y++) {
+    for (x = x1; x < x2; x++) {
+      ((guint8 *) dest)[y * width + x] = 128;
     }
   }
 
-  dest += height*width;
-  for(y=y1;y<y2;y++){
-    for(x=x1;x<x2;x++){
-      ((guint8 *)dest)[y*width + x] = 128;
+  dest += height * width;
+  for (y = y1; y < y2; y++) {
+    for (x = x1; x < x2; x++) {
+      ((guint8 *) dest)[y * width + x] = 128;
     }
   }
 
 }
-

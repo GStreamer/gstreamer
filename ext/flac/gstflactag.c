@@ -36,17 +36,19 @@
 typedef struct _GstFlacTag GstFlacTag;
 typedef struct _GstFlacTagClass GstFlacTagClass;
 
-static inline 
-gint min (gint a, gint b) {
+static inline gint
+min (gint a, gint b)
+{
   if (a < b) {
     return a;
   } else {
     return b;
   }
 }
-  
 
-typedef enum {
+
+typedef enum
+{
   GST_FLAC_TAG_STATE_INIT,
   GST_FLAC_TAG_STATE_METADATA_BLOCKS,
   GST_FLAC_TAG_STATE_METADATA_NEXT_BLOCK,
@@ -57,77 +59,78 @@ typedef enum {
 } GstFlacTagState;
 
 
-struct _GstFlacTag {
-  GstElement	 element;
+struct _GstFlacTag
+{
+  GstElement element;
 
   /* pads */
-  GstPad *		sinkpad;
-  GstPad *		srcpad;
+  GstPad *sinkpad;
+  GstPad *srcpad;
 
-  GstFlacTagState       state;
+  GstFlacTagState state;
 
-  GstBuffer *		buffer;
-  GstBuffer *           vorbiscomment;
-  GstTagList *          tags;
+  GstBuffer *buffer;
+  GstBuffer *vorbiscomment;
+  GstTagList *tags;
 
-  guint                 metadata_bytes_remaining;
-  gboolean              metadata_last_block;  
+  guint metadata_bytes_remaining;
+  gboolean metadata_last_block;
 
-  gboolean              only_output_tags;
+  gboolean only_output_tags;
 };
 
-struct _GstFlacTagClass {
+struct _GstFlacTagClass
+{
   GstElementClass parent_class;
 };
 
 /* elementfactory information */
-static GstElementDetails gst_flac_tag_details = GST_ELEMENT_DETAILS (
-  "flac rettager",
-  "Tag",
-  "Rewrite tags in a FLAC file",
-  "Christope Fergeau <teuf@gnome.org>"
-);
+static GstElementDetails gst_flac_tag_details =
+GST_ELEMENT_DETAILS ("flac rettager",
+    "Tag",
+    "Rewrite tags in a FLAC file",
+    "Christope Fergeau <teuf@gnome.org>");
 
 
 /* signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   /* FILL ME */
 };
 
 static GstStaticPadTemplate flac_tag_src_template =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("audio/x-flac; application/x-gst-tags")
-);
+    GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-flac; application/x-gst-tags")
+    );
 
 static GstStaticPadTemplate flac_tag_sink_template =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("audio/x-flac")
-);
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-flac")
+    );
 
 
-static void		gst_flac_tag_base_init	(gpointer		g_class);
-static void		gst_flac_tag_class_init	(GstFlacTagClass *	klass);
-static void		gst_flac_tag_init	(GstFlacTag *		tag);
+static void gst_flac_tag_base_init (gpointer g_class);
+static void gst_flac_tag_class_init (GstFlacTagClass * klass);
+static void gst_flac_tag_init (GstFlacTag * tag);
 
-static void		gst_flac_tag_chain	(GstPad *		pad,
-						 GstData *		data);
+static void gst_flac_tag_chain (GstPad * pad, GstData * data);
 
-static GstElementStateReturn gst_flac_tag_change_state	(GstElement * element);
+static GstElementStateReturn gst_flac_tag_change_state (GstElement * element);
 
 
 static GstElementClass *parent_class = NULL;
+
 /* static guint gst_flac_tag_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
@@ -152,11 +155,14 @@ gst_flac_tag_get_type (void)
       NULL,
       NULL
     };
-    
-    flac_tag_type = g_type_register_static(GST_TYPE_ELEMENT, "GstFlacTag", &flac_tag_info, 0);
 
-    g_type_add_interface_static (flac_tag_type, GST_TYPE_TAG_SETTER, &tag_setter_info);
-    
+    flac_tag_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstFlacTag", &flac_tag_info,
+	0);
+
+    g_type_add_interface_static (flac_tag_type, GST_TYPE_TAG_SETTER,
+	&tag_setter_info);
+
   }
   return flac_tag_type;
 }
@@ -170,29 +176,29 @@ gst_flac_tag_base_init (gpointer g_class)
   gst_element_class_set_details (element_class, &gst_flac_tag_details);
 
   gst_element_class_add_pad_template (element_class,
-		  gst_static_pad_template_get (&flac_tag_sink_template));
+      gst_static_pad_template_get (&flac_tag_sink_template));
   gst_element_class_add_pad_template (element_class,
-		  gst_static_pad_template_get (&flac_tag_src_template));
+      gst_static_pad_template_get (&flac_tag_src_template));
 }
 
 
-static void 
-send_eos (GstFlacTag *tag)
+static void
+send_eos (GstFlacTag * tag)
 {
   gst_element_set_eos (GST_ELEMENT (tag));
   gst_pad_push (tag->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
   /* Seek to end of sink stream */
   if (gst_pad_send_event (GST_PAD_PEER (tag->sinkpad),
-			  gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_END | 
-					      GST_SEEK_FLAG_FLUSH, 0))) {
+	  gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_END |
+	      GST_SEEK_FLAG_FLUSH, 0))) {
   } else {
     g_warning ("Couldn't seek to eos on sinkpad\n");
   }
 }
 
 
-static gboolean 
-caps_nego (GstFlacTag *tag)
+static gboolean
+caps_nego (GstFlacTag * tag)
 {
   /* do caps nego */
   GstCaps *caps;
@@ -202,8 +208,8 @@ caps_nego (GstFlacTag *tag)
     tag->only_output_tags = FALSE;
     GST_LOG_OBJECT (tag, "normal operation, using audio/x-flac output");
   } else {
-    if (gst_pad_try_set_caps (tag->srcpad, gst_caps_new_simple (
-            "application/x-gst-tags", NULL))
+    if (gst_pad_try_set_caps (tag->srcpad,
+	    gst_caps_new_simple ("application/x-gst-tags", NULL))
 	!= GST_PAD_LINK_REFUSED) {
       tag->only_output_tags = TRUE;
       GST_LOG_OBJECT (tag, "fast operation, just outputting tags");
@@ -211,36 +217,39 @@ caps_nego (GstFlacTag *tag)
     } else {
       return FALSE;
     }
-  }  
+  }
   return TRUE;
 }
 
 static void
-gst_flac_tag_class_init (GstFlacTagClass *klass)
+gst_flac_tag_class_init (GstFlacTagClass * klass)
 {
   GstElementClass *gstelement_class;
   GObjectClass *gobject_class;
-  
-  gstelement_class = (GstElementClass*) klass;
-  gobject_class = (GObjectClass*) klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  gstelement_class = (GstElementClass *) klass;
+  gobject_class = (GObjectClass *) klass;
+
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gstelement_class->change_state = gst_flac_tag_change_state;
 }
 
 
 static void
-gst_flac_tag_init (GstFlacTag *tag)
+gst_flac_tag_init (GstFlacTag * tag)
 {
   /* create the sink and src pads */
-  tag->sinkpad = gst_pad_new_from_template(
-		  gst_static_pad_template_get (&flac_tag_sink_template), "sink");
+  tag->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&flac_tag_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (tag), tag->sinkpad);
-  gst_pad_set_chain_function (tag->sinkpad, GST_DEBUG_FUNCPTR (gst_flac_tag_chain));
+  gst_pad_set_chain_function (tag->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_flac_tag_chain));
 
-  tag->srcpad = gst_pad_new_from_template(
-		  gst_static_pad_template_get (&flac_tag_src_template), "src");
+  tag->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&flac_tag_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (tag), tag->srcpad);
 
   tag->buffer = NULL;
@@ -250,11 +259,11 @@ gst_flac_tag_init (GstFlacTag *tag)
 #define FLAC_MAGIC_SIZE (sizeof (FLAC_MAGIC) - 1)
 
 static void
-gst_flac_tag_chain (GstPad *pad, GstData *data)
+gst_flac_tag_chain (GstPad * pad, GstData * data)
 {
   GstBuffer *buffer;
   GstFlacTag *tag;
-  
+
   if (GST_IS_EVENT (data)) {
     g_print ("Unhandled event\n");
     return;
@@ -265,6 +274,7 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
 
   if (tag->buffer) {
     GstBuffer *merge;
+
     merge = gst_buffer_merge (tag->buffer, buffer);
     gst_buffer_unref (buffer);
     gst_buffer_unref (tag->buffer);
@@ -284,13 +294,17 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
       return;
     }
 
-    if (strncmp (GST_BUFFER_DATA (tag->buffer), FLAC_MAGIC, FLAC_MAGIC_SIZE) == 0) {
+    if (strncmp (GST_BUFFER_DATA (tag->buffer), FLAC_MAGIC,
+	    FLAC_MAGIC_SIZE) == 0) {
       GstBuffer *sub;
+
       tag->state = GST_FLAC_TAG_STATE_METADATA_BLOCKS;
       sub = gst_buffer_create_sub (tag->buffer, 0, FLAC_MAGIC_SIZE);
-	      
+
       gst_pad_push (tag->srcpad, GST_DATA (sub));
-      sub = gst_buffer_create_sub (tag->buffer, FLAC_MAGIC_SIZE, GST_BUFFER_SIZE (tag->buffer) - FLAC_MAGIC_SIZE);
+      sub =
+	  gst_buffer_create_sub (tag->buffer, FLAC_MAGIC_SIZE,
+	  GST_BUFFER_SIZE (tag->buffer) - FLAC_MAGIC_SIZE);
       gst_buffer_unref (tag->buffer);
       /* We do a copy because we need a writable buffer, and _create_sub
        * sets the buffer it uses to read-only
@@ -332,10 +346,9 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
     }
 
     type = (GST_BUFFER_DATA (tag->buffer)[0]) & 0x7F;
-    size = 
-      ((GST_BUFFER_DATA (tag->buffer)[1]) << 16) 
-      | ((GST_BUFFER_DATA (tag->buffer)[2]) << 8)
-      | (GST_BUFFER_DATA (tag->buffer)[3]);
+    size = ((GST_BUFFER_DATA (tag->buffer)[1]) << 16)
+	| ((GST_BUFFER_DATA (tag->buffer)[2]) << 8)
+	| (GST_BUFFER_DATA (tag->buffer)[3]);
 
     /* The 4 bytes long header isn't included in the metadata size */
     tag->metadata_bytes_remaining = size + 4;
@@ -352,14 +365,14 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
 
   /* Reads a metadata block */
   if ((tag->state == GST_FLAC_TAG_STATE_WRITING_METADATA_BLOCK) ||
-  (tag->state == GST_FLAC_TAG_STATE_VC_METADATA_BLOCK)) {
-    GstBuffer *sub;    
+      (tag->state == GST_FLAC_TAG_STATE_VC_METADATA_BLOCK)) {
+    GstBuffer *sub;
     guint bytes_to_push;
 
     g_assert (tag->metadata_bytes_remaining != 0);
 
-    bytes_to_push = min (tag->metadata_bytes_remaining, 
-			 GST_BUFFER_SIZE (tag->buffer));
+    bytes_to_push = min (tag->metadata_bytes_remaining,
+	GST_BUFFER_SIZE (tag->buffer));
 
     sub = gst_buffer_create_sub (tag->buffer, 0, bytes_to_push);
 
@@ -370,6 +383,7 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
 	tag->vorbiscomment = sub;
       } else {
 	GstBuffer *merge;
+
 	merge = gst_buffer_merge (tag->vorbiscomment, sub);
 	gst_buffer_unref (tag->vorbiscomment);
 	gst_buffer_unref (sub);
@@ -382,8 +396,8 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
     if (GST_BUFFER_SIZE (tag->buffer) > bytes_to_push) {
       GstBuffer *sub;
 
-      sub = gst_buffer_create_sub (tag->buffer, bytes_to_push, 
-				   GST_BUFFER_SIZE (tag->buffer) - bytes_to_push);
+      sub = gst_buffer_create_sub (tag->buffer, bytes_to_push,
+	  GST_BUFFER_SIZE (tag->buffer) - bytes_to_push);
       gst_buffer_unref (tag->buffer);
 
       /* We make a copy because we need a writable buffer, and _create_sub
@@ -415,10 +429,9 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
     if (tag->vorbiscomment != NULL) {
       /* We found some tags, try to parse them and notify the other elements
        * that we encoutered some tags
-       */      
-      tag->tags = gst_tag_list_from_vorbiscomment_buffer (tag->vorbiscomment, 
-							  GST_BUFFER_DATA (tag->vorbiscomment),
-							  4, NULL);
+       */
+      tag->tags = gst_tag_list_from_vorbiscomment_buffer (tag->vorbiscomment,
+	  GST_BUFFER_DATA (tag->vorbiscomment), 4, NULL);
       if (tag->tags != NULL) {
 	gst_element_found_tags (GST_ELEMENT (tag), tag->tags);
       }
@@ -431,7 +444,7 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
 	return;
       }
     }
-    
+
     /* Skip to next state */
     if (tag->metadata_last_block == FALSE) {
       tag->state = GST_FLAC_TAG_STATE_METADATA_BLOCKS;
@@ -461,9 +474,9 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
     g_assert (tag->only_output_tags == FALSE);
 
     user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (tag));
-    merged_tags = gst_tag_list_merge (tag->tags, user_tags, 
-				      gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
-    
+    merged_tags = gst_tag_list_merge (tag->tags, user_tags,
+	gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
+
     if (merged_tags == NULL) {
       /* If we get a NULL list of tags, we must generate a padding block
        * which is marked as the last metadata block, otherwise we'll
@@ -473,23 +486,25 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
       buffer = gst_buffer_new_and_alloc (12);
       if (buffer == NULL) {
 	GST_ELEMENT_ERROR (tag, CORE, TOO_LAZY, (NULL),
-			   ("Error creating 12-byte buffer for padding block"));
+	    ("Error creating 12-byte buffer for padding block"));
       }
       memset (GST_BUFFER_DATA (buffer), 0, GST_BUFFER_SIZE (buffer));
-      GST_BUFFER_DATA (buffer)[0] = 0x81; /* 0x80 = Last metadata block, 
-					   * 0x01 = padding block
-					   */
+      GST_BUFFER_DATA (buffer)[0] = 0x81;	/* 0x80 = Last metadata block, 
+						 * 0x01 = padding block
+						 */
     } else {
       guchar header[4];
+
       memset (header, 0, sizeof (header));
-      header[0] = 0x84; /* 0x80 = Last metadata block, 
-			 * 0x04 = vorbiscomment block
-			 */
-      buffer = gst_tag_list_to_vorbiscomment_buffer (merged_tags, header, 
-						     sizeof (header), NULL);
+      header[0] = 0x84;		/* 0x80 = Last metadata block, 
+				 * 0x04 = vorbiscomment block
+				 */
+      buffer = gst_tag_list_to_vorbiscomment_buffer (merged_tags, header,
+	  sizeof (header), NULL);
       gst_tag_list_free (merged_tags);
       if (buffer == NULL) {
-	GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL), ("Error converting tag list to vorbiscomment buffer"));
+	GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
+	    ("Error converting tag list to vorbiscomment buffer"));
 	return;
       }
       size = GST_BUFFER_SIZE (buffer) - 4;
@@ -498,9 +513,10 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
 	 * while the vorbis specs allow more than that. Shouldn't 
 	 * be a real world problem though
 	 */
-	GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL), ("Vorbis comment of size %d too long", size));
+	GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
+	    ("Vorbis comment of size %d too long", size));
 	return;
-      } 
+      }
     }
 
     /* The 4 byte metadata block header isn't accounted for in the total
@@ -509,8 +525,8 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
     size = GST_BUFFER_SIZE (buffer) - 4;
 
     GST_BUFFER_DATA (buffer)[1] = ((size & 0xFF0000) >> 16);
-    GST_BUFFER_DATA (buffer)[2] = ((size & 0x00FF00) >>  8);
-    GST_BUFFER_DATA (buffer)[3] =  (size & 0x0000FF);
+    GST_BUFFER_DATA (buffer)[2] = ((size & 0x00FF00) >> 8);
+    GST_BUFFER_DATA (buffer)[3] = (size & 0x0000FF);
     gst_pad_push (tag->srcpad, GST_DATA (buffer));
     tag->state = GST_FLAC_TAG_STATE_AUDIO_DATA;
   }
@@ -525,7 +541,7 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
 
 
 static GstElementStateReturn
-gst_flac_tag_change_state (GstElement *element)
+gst_flac_tag_change_state (GstElement * element)
 {
   GstFlacTag *tag;
 
@@ -543,7 +559,7 @@ gst_flac_tag_change_state (GstElement *element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (tag->buffer) {
-        gst_buffer_unref (tag->buffer);
+	gst_buffer_unref (tag->buffer);
 	tag->buffer = NULL;
       }
       if (tag->vorbiscomment) {

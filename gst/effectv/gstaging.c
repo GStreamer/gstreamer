@@ -62,13 +62,14 @@ typedef struct _scratch
   gint init;
 } scratch;
 
-static int dx[8] = { 1, 1, 0, -1, -1, -1,  0, 1};
-static int dy[8] = { 0, -1, -1, -1, 0, 1, 1, 1};
+static int dx[8] = { 1, 1, 0, -1, -1, -1, 0, 1 };
+static int dy[8] = { 0, -1, -1, -1, 0, 1, 1, 1 };
 
 typedef struct _GstAgingTV GstAgingTV;
 typedef struct _GstAgingTVClass GstAgingTVClass;
 
-struct _GstAgingTV {
+struct _GstAgingTV
+{
   GstVideofilter videofilter;
 
   gint width, height;
@@ -82,29 +83,34 @@ struct _GstAgingTV {
 
 };
 
-struct _GstAgingTVClass {
+struct _GstAgingTVClass
+{
   GstVideofilterClass parent_class;
 };
 
 /* GstAgingTV signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   /* FILL ME */
 };
 
-static void	gst_agingtv_base_init	(gpointer g_class);
-static void	gst_agingtv_class_init	(gpointer g_class, gpointer class_data);
-static void	gst_agingtv_init	(GTypeInstance *instance, gpointer g_class);
-static void     gst_agingtv_setup	(GstVideofilter *videofilter);
+static void gst_agingtv_base_init (gpointer g_class);
+static void gst_agingtv_class_init (gpointer g_class, gpointer class_data);
+static void gst_agingtv_init (GTypeInstance * instance, gpointer g_class);
+static void gst_agingtv_setup (GstVideofilter * videofilter);
 
-static void	gst_agingtv_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_agingtv_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
-static void     gst_agingtv_rgb32 	(GstVideofilter *videofilter, void *d, void *s);
+static void gst_agingtv_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_agingtv_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_agingtv_rgb32 (GstVideofilter * videofilter, void *d, void *s);
 
 GType
 gst_agingtv_get_type (void)
@@ -113,43 +119,42 @@ gst_agingtv_get_type (void)
 
   if (!agingtv_type) {
     static const GTypeInfo agingtv_info = {
-      sizeof(GstAgingTVClass),
+      sizeof (GstAgingTVClass),
       gst_agingtv_base_init,
       NULL,
       gst_agingtv_class_init,
       NULL,
       NULL,
-      sizeof(GstAgingTV),
+      sizeof (GstAgingTV),
       0,
       gst_agingtv_init,
     };
-    agingtv_type = g_type_register_static(GST_TYPE_VIDEOFILTER,
-        "GstAgingTV", &agingtv_info, 0);
+    agingtv_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
+	"GstAgingTV", &agingtv_info, 0);
   }
   return agingtv_type;
 }
 
 static GstVideofilterFormat gst_agingtv_formats[] = {
-  { "RGB ", 32, gst_agingtv_rgb32, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000, 0xff000000 }
+  {"RGB ", 32, gst_agingtv_rgb32, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000,
+      0xff000000}
 };
-  
+
 static void
 gst_agingtv_base_init (gpointer g_class)
 {
-  static GstElementDetails agingtv_details = GST_ELEMENT_DETAILS (
-    "AgingTV",
-    "Filter/Effect/Video",
-    "AgingTV adds age to video input using scratches and dust",
-    "Sam Lantinga <slouken@devolution.com>"
-  );
+  static GstElementDetails agingtv_details = GST_ELEMENT_DETAILS ("AgingTV",
+      "Filter/Effect/Video",
+      "AgingTV adds age to video input using scratches and dust",
+      "Sam Lantinga <slouken@devolution.com>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
   int i;
-  
+
   gst_element_class_set_details (element_class, &agingtv_details);
 
-  for(i=0;i<G_N_ELEMENTS(gst_agingtv_formats);i++){
-    gst_videofilter_class_add_format(videofilter_class,
+  for (i = 0; i < G_N_ELEMENTS (gst_agingtv_formats); i++) {
+    gst_videofilter_class_add_format (videofilter_class,
 	gst_agingtv_formats + i);
   }
 
@@ -166,10 +171,9 @@ gst_agingtv_class_init (gpointer g_class, gpointer class_data)
   videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
 #if 0
-  g_object_class_install_property(gobject_class, ARG_METHOD,
-      g_param_spec_enum("method","method","method",
-      GST_TYPE_AGINGTV_METHOD, GST_AGINGTV_METHOD_1,
-      G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_METHOD,
+      g_param_spec_enum ("method", "method", "method",
+	  GST_TYPE_AGINGTV_METHOD, GST_AGINGTV_METHOD_1, G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_agingtv_set_property;
@@ -179,26 +183,27 @@ gst_agingtv_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
-gst_agingtv_init (GTypeInstance *instance, gpointer g_class)
+gst_agingtv_init (GTypeInstance * instance, gpointer g_class)
 {
   GstAgingTV *agingtv = GST_AGINGTV (instance);
   GstVideofilter *videofilter;
 
-  GST_DEBUG("gst_agingtv_init");
+  GST_DEBUG ("gst_agingtv_init");
 
-  videofilter = GST_VIDEOFILTER(agingtv);
+  videofilter = GST_VIDEOFILTER (agingtv);
 
   /* do stuff */
 }
 
-static void gst_agingtv_setup(GstVideofilter *videofilter)
+static void
+gst_agingtv_setup (GstVideofilter * videofilter)
 {
   GstAgingTV *agingtv;
-  int width = gst_videofilter_get_input_width(videofilter);
-  int height = gst_videofilter_get_input_height(videofilter);
+  int width = gst_videofilter_get_input_width (videofilter);
+  int height = gst_videofilter_get_input_height (videofilter);
 
-  g_return_if_fail(GST_IS_AGINGTV(videofilter));
-  agingtv = GST_AGINGTV(videofilter);
+  g_return_if_fail (GST_IS_AGINGTV (videofilter));
+  agingtv = GST_AGINGTV (videofilter);
 
   /* if any setup needs to be done, do it here */
 
@@ -206,7 +211,7 @@ static void gst_agingtv_setup(GstVideofilter *videofilter)
   agingtv->height = height;
 }
 
-static unsigned int 
+static unsigned int
 fastrand (void)
 {
   static unsigned int fastrand_val;
@@ -215,8 +220,8 @@ fastrand (void)
 }
 
 
-static void 
-coloraging (guint32 *src, guint32 *dest, gint video_area)
+static void
+coloraging (guint32 * src, guint32 * dest, gint video_area)
 {
   guint32 a, b;
   gint i;
@@ -229,8 +234,9 @@ coloraging (guint32 *src, guint32 *dest, gint video_area)
 }
 
 
-static void 
-scratching (scratch *scratches, gint scratch_lines, guint32 *dest, gint width, gint height)
+static void
+scratching (scratch * scratches, gint scratch_lines, guint32 * dest, gint width,
+    gint height)
 {
   gint i, y, y1, y2;
   guint32 *p, a, b;
@@ -241,7 +247,7 @@ scratching (scratch *scratches, gint scratch_lines, guint32 *dest, gint width, g
 
     if (scratch->life) {
       scratch->x = scratch->x + scratch->dx;
-      
+
       if (scratch->x < 0 || scratch->x > width * 256) {
 	scratch->life = 0;
 	break;
@@ -277,8 +283,9 @@ scratching (scratch *scratches, gint scratch_lines, guint32 *dest, gint width, g
   }
 }
 
-static void 
-dusts (guint32 *dest, gint width, gint height, gint dust_interval, gint area_scale)
+static void
+dusts (guint32 * dest, gint width, gint height, gint dust_interval,
+    gint area_scale)
 {
   int i, j;
   int dnum;
@@ -291,8 +298,8 @@ dusts (guint32 *dest, gint width, gint height, gint dust_interval, gint area_sca
     }
     return;
   }
-  dnum = area_scale * 4 + (fastrand() >> 27);
-  
+  dnum = area_scale * 4 + (fastrand () >> 27);
+
   for (i = 0; i < dnum; i++) {
     x = fastrand () % width;
     y = fastrand () % height;
@@ -303,7 +310,8 @@ dusts (guint32 *dest, gint width, gint height, gint dust_interval, gint area_sca
       y += dy[d];
       x += dx[d];
 
-      if (y >= height || x >= width) break;
+      if (y >= height || x >= width)
+	break;
 
       d = (d + fastrand () % 3 - 1) & 7;
     }
@@ -311,8 +319,9 @@ dusts (guint32 *dest, gint width, gint height, gint dust_interval, gint area_sca
   dust_interval--;
 }
 
-static void 
-pits (guint32 *dest, gint width, gint height, gint area_scale, gint pits_interval)
+static void
+pits (guint32 * dest, gint width, gint height, gint area_scale,
+    gint pits_interval)
 {
   int i, j;
   int pnum, size, pnumscale;
@@ -340,46 +349,50 @@ pits (guint32 *dest, gint width, gint height, gint area_scale, gint pits_interva
       x = x + fastrand () % 3 - 1;
       y = y + fastrand () % 3 - 1;
 
-      if (y >= height || x >= width) break;
+      if (y >= height || x >= width)
+	break;
 
       dest[y * width + x] = 0xc0c0c0;
     }
   }
 }
 
-static void     
-gst_agingtv_rgb32 (GstVideofilter *videofilter, void *d, void *s)
+static void
+gst_agingtv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
 {
   GstAgingTV *agingtv;
-  int width = gst_videofilter_get_input_width(videofilter);
-  int height = gst_videofilter_get_input_height(videofilter);
+  int width = gst_videofilter_get_input_width (videofilter);
+  int height = gst_videofilter_get_input_height (videofilter);
   int video_size = width * height;
   guint32 *src = s;
   guint32 *dest = d;
   gint area_scale = width * height / 64 / 480;
-  if (area_scale <= 0) area_scale = 1;
 
-  g_return_if_fail(GST_IS_AGINGTV(videofilter));
-  agingtv = GST_AGINGTV(videofilter);
+  if (area_scale <= 0)
+    area_scale = 1;
+
+  g_return_if_fail (GST_IS_AGINGTV (videofilter));
+  agingtv = GST_AGINGTV (videofilter);
 
   coloraging (src, dest, video_size);
   scratching (agingtv->scratches, agingtv->scratch_lines, dest, width, height);
   pits (dest, width, height, area_scale, agingtv->pits_interval);
-  if(area_scale > 1)
+  if (area_scale > 1)
     dusts (dest, width, height, agingtv->dust_interval, area_scale);
-  
+
 }
 
 static void
-gst_agingtv_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_agingtv_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
 {
   GstAgingTV *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_AGINGTV(object));
-  src = GST_AGINGTV(object);
+  g_return_if_fail (GST_IS_AGINGTV (object));
+  src = GST_AGINGTV (object);
 
-  GST_DEBUG("gst_agingtv_set_property");
+  GST_DEBUG ("gst_agingtv_set_property");
   switch (prop_id) {
 #if 0
     case ARG_METHOD:
@@ -392,13 +405,14 @@ gst_agingtv_set_property (GObject *object, guint prop_id, const GValue *value, G
 }
 
 static void
-gst_agingtv_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_agingtv_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstAgingTV *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_AGINGTV(object));
-  src = GST_AGINGTV(object);
+  g_return_if_fail (GST_IS_AGINGTV (object));
+  src = GST_AGINGTV (object);
 
   switch (prop_id) {
 #if 0
@@ -411,4 +425,3 @@ gst_agingtv_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       break;
   }
 }
-
