@@ -1,3 +1,15 @@
+2004-02-22  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstpad.c:
+	  revert last patch from Andy, it makes gst_pad_can_link_filtered much
+	  too noisy
+	* gst/gsttag.c: (_gst_tag_initialize):
+	* gst/gsttag.h:
+	  add GST_TAG_ALBUM_VOLUME_{COUNT,NUMBER}
+	* libs/gst/control/dparam.c: (gst_dparam_attach):
+	* libs/gst/control/dparammanager.c: (gst_dpman_attach_dparam):
+	  check that types for attached dparams match
+
 2004-02-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/elements/gstfilesink.c: (gst_filesink_open_file):

@@ -233,6 +233,8 @@ GstTagList *	gst_event_tag_get_list		(GstEvent *		tag_event);
 #define GST_TAG_COMMENT			"comment"
 #define GST_TAG_TRACK_NUMBER		"track-number"
 #define GST_TAG_TRACK_COUNT		"track-count"
+#define GST_TAG_ALBUM_VOLUME_NUMBER	"album-disc-number"
+#define GST_TAG_ALBUM_VOLUME_COUNT	"album-disc-count"
 #define GST_TAG_LOCATION		"location"
 #define GST_TAG_DESCRIPTION		"description"
 #define GST_TAG_VERSION			"version"

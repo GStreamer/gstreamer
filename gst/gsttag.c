@@ -116,6 +116,16 @@ _gst_tag_initialize (void)
 		    _("track count"),
 		    _("count of tracks inside collection this track belongs to"), 
 		    gst_tag_merge_use_first);
+  gst_tag_register (GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_FLAG_META,
+		    G_TYPE_UINT,
+		    _("disc number"),
+		    _("disc number inside a collection"),
+		    gst_tag_merge_use_first);
+  gst_tag_register (GST_TAG_ALBUM_VOLUME_COUNT, GST_TAG_FLAG_META,
+		    G_TYPE_UINT,
+		    _("disc count"),
+		    _("count of discs inside collection this disc belongs to"), 
+		    gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_LOCATION, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("location"),
