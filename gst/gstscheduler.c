@@ -157,6 +157,29 @@ gst_schedule_pushfunc_proxy (GstPad *pad, GstBuffer *buf)
   GST_DEBUG (GST_CAT_DATAFLOW,"done switching\n");
 }
 
+static void
+gst_schedule_select_proxy (GstPad *pad, GstBuffer *buf)
+{
+  GstRealPad *peer = GST_RPAD_PEER(pad);
+
+  g_print ("select proxy (%s:%s)\n",GST_DEBUG_PAD_NAME(pad));
+
+  GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+  GST_DEBUG (GST_CAT_DATAFLOW,"putting buffer %p in peer's pen\n",buf);
+
+  g_assert (GST_RPAD_BUFPEN(GST_RPAD_PEER(pad)) == NULL);
+  // now fill the bufferpen and switch so it can be consumed
+  GST_RPAD_BUFPEN(GST_RPAD_PEER(pad)) = buf;
+  GST_DEBUG (GST_CAT_DATAFLOW,"switching to %p\n",GST_ELEMENT (GST_PAD_PARENT (pad))->threadstate);
+  g_print ("%p %s\n", GST_ELEMENT (GST_PAD_PARENT (pad)), gst_element_get_name (GST_ELEMENT (GST_PAD_PARENT (pad))));
+  GST_ELEMENT (GST_PAD_PARENT (pad))->select_pad = pad;
+  cothread_switch (GST_ELEMENT (GST_PAD_PARENT (pad))->threadstate);
+
+  g_print ("done switching\n");
+  GST_DEBUG (GST_CAT_DATAFLOW,"done switching\n");
+}
+
+
 static GstBuffer*
 gst_schedule_pullfunc_proxy (GstPad *pad)
 {
@@ -836,6 +859,7 @@ gst_schedule_init (GstSchedule *schedule)
   schedule->unlock_element = GST_DEBUG_FUNCPTR(gst_schedule_unlock_element);
   schedule->pad_connect = GST_DEBUG_FUNCPTR(gst_schedule_pad_connect);
   schedule->pad_disconnect = GST_DEBUG_FUNCPTR(gst_schedule_pad_disconnect);
+  schedule->pad_select = GST_DEBUG_FUNCPTR(gst_schedule_pad_select);
   schedule->iterate = GST_DEBUG_FUNCPTR(gst_schedule_iterate);
 }
 
@@ -1164,6 +1188,32 @@ gst_schedule_pad_disconnect (GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad
   }
 }
 
+GstPad*
+gst_schedule_pad_select (GstSchedule *sched, GList *padlist)
+{
+  GstPad *pad = NULL;
+  GST_INFO (GST_CAT_SCHEDULING, "performing select");
+
+  while (padlist) {
+    pad = GST_PAD (padlist->data);
+
+    GST_RPAD_PUSHFUNC(pad) = GST_DEBUG_FUNCPTR(gst_schedule_select_proxy);
+
+    padlist = g_list_next (padlist);
+  }
+  if (pad != NULL) {
+    GstRealPad *peer = GST_RPAD_PEER(pad);
+    
+    cothread_switch (GST_ELEMENT (GST_PAD_PARENT (peer))->threadstate);
+
+    g_print ("%p %s\n", GST_ELEMENT (GST_PAD_PARENT (pad)), gst_element_get_name (GST_ELEMENT (GST_PAD_PARENT (pad))));
+    pad = GST_ELEMENT (GST_PAD_PARENT (pad))->select_pad;
+
+    g_assert (pad != NULL);
+    g_print ("back from select (%s:%s)\n", GST_DEBUG_PAD_NAME (pad));
+  }
+  return pad;
+}
 
 void
 gst_schedule_add_element (GstSchedule *sched, GstElement *element)
@@ -1350,9 +1400,11 @@ GST_DEBUG(GST_CAT_SCHEDULING,"there are %d elements in this chain\n",chain->num_
 
         } else {
           GST_INFO (GST_CAT_DATAFLOW,"NO ENTRY INTO CHAIN!");
+	  eos = TRUE;
         }
       } else {
         GST_INFO (GST_CAT_DATAFLOW,"NO ENABLED ELEMENTS IN CHAIN!!");
+	eos = TRUE;
       }
 
 /*                
