@@ -1,3 +1,8 @@
+2004-06-24  Benjamin Otte  <otte@gnome.org>
+
+	* gst/parse/grammar.y:
+	  don't try to link elements before they have been added to bins
+
 2004-06-24  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* libs/gst/bytestream/filepad.c: (gst_file_pad_available),

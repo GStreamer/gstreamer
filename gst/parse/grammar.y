@@ -599,12 +599,7 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						}
 						
 						if ($1->back) {
-						  if (!$1->back->sink || !$1->back->src) {
-						    ((graph_t *) graph)->links = g_slist_prepend (((graph_t *) graph)->links, $1->back);
-						    $1->back = NULL;
-						  } else {
-						    gst_parse_perform_link ($1->back, (graph_t *) graph);
-						  }
+						  ((graph_t *) graph)->links = g_slist_prepend (((graph_t *) graph)->links, $1->back);
 						}
 						$1->last = $2->last;
 						$1->back = $2->back;
