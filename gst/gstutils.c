@@ -20,6 +20,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
+
+#include "gstextratypes.h"
 
 #include "gstutils.h"
 
@@ -182,4 +185,79 @@ void gst_util_dump_mem(guchar *mem, guint size) {
     i++;
   }
   g_print("\n");
+}
+
+void gst_util_set_object_arg (GtkObject *object, guchar *name, gchar *value) 
+{
+  if (name && value) {
+    GtkType type = GTK_OBJECT_TYPE (object);
+    GtkArgInfo *info;
+    gchar *result;
+
+    result = gtk_object_arg_get_info (type, name, &info);
+
+    if (result) {
+      g_print("gstutil: %s\n", result);
+    }
+    else if (info->arg_flags & GTK_ARG_WRITABLE) {
+      switch (info->type) {
+        case GTK_TYPE_STRING:
+          gtk_object_set (GTK_OBJECT (object), name, value, NULL);
+          break;
+        case GTK_TYPE_INT: {
+          gint i;
+          sscanf (value, "%d", &i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_LONG: {
+	  glong i;
+	  sscanf (value, "%ld", &i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_ULONG: {
+	  gulong i;
+	  sscanf (value, "%lu", &i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_BOOL: {
+	  gboolean i = FALSE;
+	  if (!strcmp ("true", value)) i = TRUE;
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_CHAR: {
+	  gchar i;
+	  sscanf (value, "%c", &i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_UCHAR: {
+	  guchar i;
+	  sscanf (value, "%c", &i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_FLOAT: {
+	  gfloat i;
+	  sscanf (value, "%f", &i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_DOUBLE: {
+	  gdouble i;
+	  sscanf (value, "%g", (float *)&i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        default:
+	  if (info->type == GST_TYPE_FILENAME) {
+            gtk_object_set (GTK_OBJECT (object), name, value, NULL);
+	  }
+	  break;
+      }
+    }
+  }
 }
