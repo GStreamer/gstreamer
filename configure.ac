@@ -205,7 +205,7 @@ GST_PLUGINS_ALL="\
         mpegaudio mpegaudioparse mpegstream mpegtypes\
         passthrough playondemand rtjpeg silence sine\
         smooth spectrum speed stereo stereomono\
-        synaesthesia udp videoscale volenv volume vumeter wavparse y4m"
+        synaesthesia udp videoscale volenv volume vumeter wavparse y4m goom"
 
 AC_SUBST(GST_PLUGINS_ALL)
 
@@ -794,6 +794,7 @@ gst/volume/Makefile
 gst/vumeter/Makefile
 gst/wavparse/Makefile
 gst/y4m/Makefile
+gst/goom/Makefile
 sys/Makefile
 sys/oss/Makefile
 sys/qcam/Makefile
