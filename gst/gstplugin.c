@@ -42,10 +42,17 @@ static GList *_gst_plugin_static = NULL;
 /* list of valid licenses.
  * One of these must be specified or the plugin won't be loaded 
  * Contact gstreamer-devel@lists.sourceforge.net if your license should be 
- * added. */
+ * added.
+ *
+ * GPL: http://www.gnu.org/copyleft/gpl.html
+ * LGPL: http://www.gnu.org/copyleft/lesser.html
+ * QPL: http://www.trolltech.com/licenses/qpl.html
+ */
 static gchar *valid_licenses[] = {
   "LGPL",			/* GNU Lesser General Public License */
   "GPL",			/* GNU General Public License */
+  "QPL",			/* Trolltech Qt Public License */
+  "GPL/QPL",			/* Combi-license of GPL + QPL */
   GST_LICENSE_UNKNOWN,		/* some other license */
   NULL
 };
