@@ -234,7 +234,6 @@ gst_filesink_open_file (GstFileSink *sink)
   if (!gst_filesink_getcurrentfilename(sink))
   {
     /* Out of files */
-    gst_element_set_eos(GST_ELEMENT(sink));
     return FALSE;
   }
   sink->file = fopen (gst_filesink_getcurrentfilename(sink), "w");
@@ -322,7 +321,11 @@ gst_filesink_handle_event (GstPad *pad, GstEvent *event)
       /* we need to open a new file! */
       gst_filesink_close_file(filesink);
       filesink->filenum++;
-      if (!gst_filesink_open_file(filesink)) return FALSE;
+      if (!gst_filesink_open_file(filesink)) {
+	/* no more files, give EOS */
+        gst_element_set_eos(GST_ELEMENT(filesink));
+	return FALSE;
+      }
       break;
     case GST_EVENT_FLUSH:
       if (fflush(filesink->file))
