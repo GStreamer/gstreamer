@@ -1,3 +1,10 @@
+2004-11-08  Wim Taymans  <wim@fluendo.com>
+
+	* gst/videomixer/videomixer.c: (gst_videomixer_blend_ayuv_ayuv),
+	(gst_videomixer_fill_checker), (gst_videomixer_fill_color),
+	(gst_videomixer_blend_buffers), (gst_videomixer_loop):
+	Only mix AYUV for maximum quality.
+
 2004-11-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ogg/gstoggdemux.c: (get_relative), (gst_ogg_demux_src_query),

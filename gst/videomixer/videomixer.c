@@ -380,7 +380,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv,"
-        "format = (fourcc) I420,"
+        "format = (fourcc) AYUV,"
         "width = (int) [ 16, 4096 ],"
         "height = (int) [ 16, 4096 ]," "framerate = (double) [ 0, max ]")
     );
@@ -753,28 +753,18 @@ gst_videomixer_handle_src_event (GstPad * pad, GstEvent * event)
 /* note that this function does packing conversion and blending at the
  * same time */
 static void
-gst_videomixer_blend_ayuv_i420 (guint8 * src, gint xpos, gint ypos,
+gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
     gint src_width, gint src_height, gdouble src_alpha,
     guint8 * dest, gint dest_width, gint dest_height)
 {
-  gint dest_size, dest_size2;
   gint alpha, b_alpha;
-  guint8 *destY1, *destY2, *destU, *destV;
-  gint accumU;
-  gint accumV;
   gint i, j;
-  gint src_stride;
-  gint src_add, destY_add, destC_add;
-  guint8 *src1, *src2;
+  gint src_stride, dest_stride;
+  gint src_add, dest_add;
   gint Y, U, V;
-  gint dest_stride, dest_stride2;
 
   src_stride = ROUND_UP_2 (src_width) * 4;
-
-  dest_stride = ROUND_UP_4 (dest_width);
-  dest_size = dest_stride * ROUND_UP_2 (dest_height);
-  dest_stride2 = ROUND_UP_8 (dest_width) / 2;
-  dest_size2 = dest_stride2 * ROUND_UP_2 (dest_height) / 2;
+  dest_stride = ROUND_UP_2 (dest_width) * 4;
 
   b_alpha = (gint) (src_alpha * 255);
 
@@ -797,63 +787,27 @@ gst_videomixer_blend_ayuv_i420 (guint8 * src, gint xpos, gint ypos,
     src_height = dest_height - ypos;
   }
 
-  src_add = 2 * src_stride - (8 * ROUND_UP_2 (src_width) / 2);
-  destY_add = 2 * dest_stride - (2 * (ROUND_UP_2 (src_width) / 2));
-  destC_add = dest_stride2 - (ROUND_UP_2 (src_width) / 2);
+  src_add = src_stride - (4 * ROUND_UP_2 (src_width));
+  dest_add = dest_stride - (4 * ROUND_UP_2 (src_width));
 
-  destY1 = dest + xpos + (ypos * dest_stride);
-  destY2 = destY1 + dest_stride;
-  destU = dest + dest_size + (xpos / 2) + ((ypos / 2) * dest_stride2);
-  destV = destU + dest_size2;
-
-  src1 = src;
-  src2 = src + src_stride;
+  dest = dest + 4 * xpos + (ypos * dest_stride);
 
   /* we convert a square of 2x2 samples to generate 4 Luma and 2 chroma samples */
-  for (i = 0; i < ROUND_UP_2 (src_height) / 2; i++) {
-    for (j = 0; j < ROUND_UP_2 (src_width) / 2; j++) {
-      alpha = (src1[0] * b_alpha) >> 8;
-      BLEND_MODE (destY1[0], destU[0], destV[0], src1[1], src1[2], src1[3],
+  for (i = 0; i < ROUND_UP_2 (src_height); i++) {
+    for (j = 0; j < ROUND_UP_2 (src_width); j++) {
+      alpha = (src[0] * b_alpha) >> 8;
+      BLEND_MODE (dest[1], dest[2], dest[3], src[1], src[2], src[3],
           alpha, Y, U, V);
-      destY1[0] = Y;
-      accumU = U;
-      accumV = V;
-      alpha = (src1[4] * b_alpha) >> 8;
-      BLEND_MODE (destY1[1], destU[0], destV[0], src1[5], src1[6], src1[7],
-          alpha, Y, U, V);
-      destY1[1] = Y;
-      accumU += U;
-      accumV += V;
-      alpha = (src2[0] * b_alpha) >> 8;
-      BLEND_MODE (destY2[0], destU[0], destV[0], src2[1], src2[2], src2[3],
-          alpha, Y, U, V);
-      destY2[0] = Y;
-      accumU += U;
-      accumV += V;
-      alpha = (src2[4] * b_alpha) >> 8;
-      BLEND_MODE (destY2[1], destU[0], destV[0], src2[5], src2[6], src2[7],
-          alpha, Y, U, V);
-      destY2[1] = Y;
-      accumU += U;
-      accumV += V;
+      dest[0] = 0xff;
+      dest[1] = Y;
+      dest[2] = U;
+      dest[3] = V;
 
-      /* take the average of the 4 chroma samples to get the final value */
-      destU[0] = (accumU + 2) >> 2;
-      destV[0] = (accumV + 2) >> 2;
-
-      src1 += 8;
-      src2 += 8;
-      destY1 += 2;
-      destY2 += 2;
-      destU += 1;
-      destV += 1;
+      src += 4;
+      dest += 4;
     }
-    src1 += src_add;
-    src2 += src_add;
-    destY1 += destY_add;
-    destY2 += destY_add;
-    destU += destC_add;
-    destV += destC_add;
+    src += src_add;
+    dest += dest_add;
   }
 }
 
@@ -877,35 +831,39 @@ gst_videomixer_sort_pads (GstVideoMixer * mix)
 static void
 gst_videomixer_fill_checker (guint8 * dest, gint width, gint height)
 {
-  gint size, size2;
   gint stride;
   gint i, j;
   static int tab[] = { 80, 160, 80, 160 };
 
-  stride = ROUND_UP_4 (width);
-  size = stride * height;
-  size2 = ROUND_UP_4 ((width + 1) >> 1) * ((height + 1) >> 1);
+  stride = ROUND_UP_2 (width);
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < stride; j++) {
+      *dest++ = 0xff;
       *dest++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];
+      *dest++ = 128;
+      *dest++ = 128;
     }
   }
-  memset (dest, 128, 2 * size2);
 }
 
 static void
 gst_videomixer_fill_color (guint8 * dest, gint width, gint height,
     gint colY, gint colU, gint colV)
 {
-  gint size, size2;
+  gint stride;
+  gint i, j;
 
-  size = ROUND_UP_4 (width) * height;
-  size2 = ROUND_UP_4 ((width + 1) >> 1) * ((height + 1) >> 1);
+  stride = ROUND_UP_2 (width);
 
-  memset (dest, colY, size);
-  memset (dest + size, colU, size2);
-  memset (dest + size + size2, colV, size2);
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < stride; j++) {
+      *dest++ = 0xff;
+      *dest++ = colY;
+      *dest++ = colU;
+      *dest++ = colV;
+    }
+  }
 }
 
 /* try to get a buffer on all pads. As long as the queued value is
@@ -1003,7 +961,7 @@ gst_videomixer_blend_buffers (GstVideoMixer * mix, GstBuffer * outbuf)
     walk = g_slist_next (walk);
 
     if (pad->buffer != NULL) {
-      gst_videomixer_blend_ayuv_i420 (GST_BUFFER_DATA (pad->buffer),
+      gst_videomixer_blend_ayuv_ayuv (GST_BUFFER_DATA (pad->buffer),
           pad->xpos, pad->ypos,
           pad->in_width, pad->in_height,
           pad->alpha,
@@ -1085,7 +1043,7 @@ gst_videomixer_loop (GstElement * element)
     newcaps =
         gst_caps_copy (gst_pad_get_negotiated_caps (GST_PAD (mix->master)));
     gst_caps_set_simple (newcaps, "format", GST_TYPE_FOURCC,
-        GST_STR_FOURCC ("I420"), "width", G_TYPE_INT, new_width, "height",
+        GST_STR_FOURCC ("AYUV"), "width", G_TYPE_INT, new_width, "height",
         G_TYPE_INT, new_height, NULL);
 
     if (GST_PAD_LINK_FAILED (gst_pad_try_set_caps (mix->srcpad, newcaps))) {
@@ -1097,8 +1055,7 @@ gst_videomixer_loop (GstElement * element)
     mix->out_height = new_height;
   }
 
-  outsize = ROUND_UP_4 (mix->out_width) * ROUND_UP_2 (mix->out_height) +
-      2 * ROUND_UP_8 (mix->out_width) / 2 * ROUND_UP_2 (mix->out_height);
+  outsize = ROUND_UP_2 (mix->out_width) * ROUND_UP_2 (mix->out_height) * 4;
 
   outbuf = gst_pad_alloc_buffer (mix->srcpad, GST_BUFFER_OFFSET_NONE, outsize);
   switch (mix->background) {
