@@ -449,6 +449,10 @@ dnl Check for libdv
 AC_MSG_CHECKING(libdv)
 AC_CHECK_LIB(dv, dv_init, HAVE_LIBDV=yes, HAVE_LIBDV=no, -lm $GLIB_LIBS $GLIB_CFLAGS)
 
+dnl Check for aalib
+AC_MSG_CHECKING(aalib)
+AC_CHECK_LIB(aa, aa_init, HAVE_LIBAA=yes, HAVE_LIBAA=no, )
+
 
 dnl check if css-auth.c exists (FIXME)
 AC_MSG_CHECKING(DVD CSS code)
@@ -715,6 +719,7 @@ AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x%HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x%HAVE_LIBDV" = "xyes")
+AM_CONDITIONAL(HAVE_LIBAA,          test "x%HAVE_LIBAA" = "xyes")
 
 
 
@@ -809,6 +814,7 @@ libs/putbits/Makefile
 libs/winloader/Makefile
 libs/idct/Makefile
 plugins/Makefile
+plugins/aasink/Makefile
 plugins/alsa/Makefile
 plugins/au/Makefile
 plugins/audioscale/Makefile
