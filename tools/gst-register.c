@@ -62,7 +62,7 @@ spawn_all_in_dir(const char *dirname)
   if (dir == NULL) return;
 
   while( (file = g_dir_read_name (dir)) ){
-    argv[0] = g_build_filename(dirname, file);
+    argv[0] = g_build_filename(dirname, file, NULL);
     g_print("running %s\n",argv[0]);
     g_spawn_sync (NULL, argv, NULL, G_SPAWN_FILE_AND_ARGV_ZERO, NULL, NULL, NULL, NULL, NULL, NULL);
     g_free(argv[0]);
