@@ -1,3 +1,8 @@
+2005-01-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/faad/gstfaad.c: (gst_faad_chain):
+	  Only increment timestamp if it's valid. Fixes raw AAC streams.
+
 2005-01-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* configure.ac:
