@@ -1,5 +1,5 @@
 plugin_LTLIBRARIES = libgstgetbits.la
-AS_LIBTOOL_LIB = libgstgstgetbits
+AS_LIBTOOL_LIB = libgstgetbits
 
 EXTRA_DIST = $(as_libtool_EXTRA_DIST)
 noinst_DATA = $(as_libtool_noinst_DATA_files)
