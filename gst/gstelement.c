@@ -49,8 +49,6 @@ enum {
   /* FILL ME */
 };
 
-#define CLASS(element)	GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element))
-
 static void			gst_element_class_init		(GstElementClass *klass);
 static void			gst_element_init		(GstElement *element);
 static void			gst_element_base_class_init	(GstElementClass *klass);
@@ -186,7 +184,7 @@ gst_element_init (GstElement *element)
 static void
 gst_element_real_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-  GstElementClass *oclass = CLASS (object);
+  GstElementClass *oclass = GST_ELEMENT_GET_CLASS (object);
 
   if (oclass->set_property)
     (oclass->set_property) (object, prop_id, value, pspec);
@@ -195,7 +193,7 @@ gst_element_real_set_property (GObject *object, guint prop_id, const GValue *val
 static void
 gst_element_real_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-  GstElementClass *oclass = CLASS (object);
+  GstElementClass *oclass = GST_ELEMENT_GET_CLASS (object);
 
   if (oclass->get_property)
     (oclass->get_property) (object, prop_id, value, pspec);
@@ -641,7 +639,8 @@ gst_element_request_pad (GstElement *element, GstPadTemplate *templ, const gchar
   GstPad *newpad = NULL;
   GstElementClass *oclass;
 
-  oclass = CLASS (element);
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
   if (oclass->request_new_pad)
     newpad = (oclass->request_new_pad)(element, templ, name);
 
@@ -664,7 +663,8 @@ gst_element_release_request_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (GST_IS_PAD (pad));
 
-  oclass = CLASS (element);
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
   if (oclass->release_pad)
     (oclass->release_pad) (element, pad);
 }
@@ -682,7 +682,7 @@ gst_element_requires_clock (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  return (CLASS (element)->set_clock != NULL);
+  return (GST_ELEMENT_GET_CLASS (element)->set_clock != NULL);
 }
 
 /**
@@ -698,7 +698,7 @@ gst_element_provides_clock (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  return (CLASS (element)->get_clock != NULL);
+  return (GST_ELEMENT_GET_CLASS (element)->get_clock != NULL);
 }
 
 /**
@@ -711,10 +711,14 @@ gst_element_provides_clock (GstElement *element)
 void
 gst_element_set_clock (GstElement *element, GstClock *clock)
 {
+  GstElementClass *oclass;
+
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  if (CLASS (element)->set_clock)
-    CLASS (element)->set_clock (element, clock);
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  if (oclass->set_clock)
+    oclass->set_clock (element, clock);
 
   element->clock = clock;
 }
@@ -730,11 +734,14 @@ gst_element_set_clock (GstElement *element, GstClock *clock)
 GstClock*
 gst_element_get_clock (GstElement *element)
 {
-  g_return_val_if_fail (element != NULL, NULL);
+  GstElementClass *oclass;
+
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
+  oclass = GST_ELEMENT_GET_CLASS (element);
   
-  if (CLASS (element)->get_clock)
-    return CLASS (element)->get_clock (element);
+  if (oclass->get_clock)
+    return oclass->get_clock (element);
 
   return NULL;
 }
@@ -779,7 +786,7 @@ gst_element_is_indexable (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  return (CLASS (element)->set_index != NULL);
+  return (GST_ELEMENT_GET_CLASS (element)->set_index != NULL);
 }
 
 /**
@@ -792,11 +799,15 @@ gst_element_is_indexable (GstElement *element)
 void
 gst_element_set_index (GstElement *element, GstIndex *index)
 {
+  GstElementClass *oclass;
+
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (GST_IS_INDEX (index));
 
-  if (CLASS (element)->set_index)
-    CLASS (element)->set_index (element, index);
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  if (oclass->set_index)
+    oclass->set_index (element, index);
 }
 
 /**
@@ -811,10 +822,14 @@ gst_element_set_index (GstElement *element, GstIndex *index)
 GstIndex*
 gst_element_get_index (GstElement *element)
 {
+  GstElementClass *oclass;
+
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  if (CLASS (element)->get_index)
-    return CLASS (element)->get_index (element);
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  if (oclass->get_index)
+    return oclass->get_index (element);
 
   return NULL;
 }
@@ -831,10 +846,14 @@ gst_element_get_index (GstElement *element)
 gboolean
 gst_element_release_locks (GstElement *element)
 {
+  GstElementClass *oclass;
+
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  if (CLASS (element)->release_locks)
-    return CLASS (element)->release_locks (element);
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  if (oclass->release_locks)
+    return oclass->release_locks (element);
   
   return TRUE;
 }
@@ -1171,7 +1190,7 @@ gst_element_get_pad_template_list (GstElement *element)
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
-  return CLASS (element)->padtemplates;
+  return GST_ELEMENT_GET_CLASS (element)->padtemplates;
 }
 
 /**
@@ -1778,11 +1797,15 @@ gst_element_send_event_default (GstElement *element, GstEvent *event)
 gboolean
 gst_element_send_event (GstElement *element, GstEvent *event)
 {
+  GstElementClass *oclass;
+
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
   
-  if (CLASS (element)->send_event)
-    return CLASS (element)->send_event (element, event);
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  if (oclass->send_event)
+    return oclass->send_event (element, event);
 
   return FALSE;
 }
@@ -1827,12 +1850,16 @@ gboolean
 gst_element_query (GstElement *element, GstPadQueryType type,
 		   GstFormat *format, gint64 *value)
 {
+  GstElementClass *oclass;
+
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (format != NULL, FALSE);
   g_return_val_if_fail (value != NULL, FALSE);
+
+  oclass = GST_ELEMENT_GET_CLASS (element);
   
-  if (CLASS (element)->query)
-    return CLASS (element)->query (element, type, format, value);
+  if (oclass->query)
+    return oclass->query (element, type, format, value);
 
   return FALSE;
 }
@@ -1956,7 +1983,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
     }
 
     /* call the state change function so it can set the state */
-    oclass = CLASS (element);
+    oclass = GST_ELEMENT_GET_CLASS (element);
     if (oclass->change_state)
       return_val = (oclass->change_state) (element);
 
@@ -2168,13 +2195,9 @@ failure:
 GstElementFactory*
 gst_element_get_factory (GstElement *element)
 {
-  GstElementClass *oclass;
-
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
-  oclass = CLASS (element);
-
-  return oclass->elementfactory;
+  return GST_ELEMENT_GET_CLASS (element)->elementfactory;
 }
 
 static void
@@ -2249,7 +2272,7 @@ gst_element_save_thyself (GstObject *object,
 
   element = GST_ELEMENT (object);
 
-  oclass = CLASS (element);
+  oclass = GST_ELEMENT_GET_CLASS (element);
 
   xmlNewChild(parent, NULL, "name", GST_ELEMENT_NAME(element));
 
@@ -2352,8 +2375,8 @@ gst_element_restore_thyself (GstObject *object, xmlNodePtr self)
     children = children->next;
   }
 
-  if (GST_OBJECT_CLASS(parent_class)->restore_thyself)
-    (GST_OBJECT_CLASS(parent_class)->restore_thyself) (object, self);
+  if (GST_OBJECT_CLASS (parent_class)->restore_thyself)
+    (GST_OBJECT_CLASS (parent_class)->restore_thyself) (object, self);
 }
 #endif /* GST_DISABLE_LOADSAVE */
 

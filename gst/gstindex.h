@@ -30,11 +30,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_INDEX		(gst_index_get_type ())
-#define GST_INDEX(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_INDEX, GstIndex))
-#define GST_INDEX_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_INDEX, GstIndexClass))
-#define GST_IS_INDEX(obj)	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_INDEX))
-#define GST_IS_INDEX_CLASS(obj)	(GST_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_INDEX))
+#define GST_TYPE_INDEX			(gst_index_get_type ())
+#define GST_INDEX(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_INDEX, GstIndex))
+#define GST_IS_INDEX(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_INDEX))
+#define GST_INDEX_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_INDEX, GstIndexClass))
+#define GST_IS_INDEX_CLASS(klass)	(GST_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_INDEX))
+#define GST_INDEX_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_INDEX, GstIndexClass))
 
 typedef struct _GstIndexEntry GstIndexEntry;
 typedef struct _GstIndexGroup GstIndexGroup;
@@ -61,9 +62,9 @@ typedef enum {
 } GstIndexLookupMethod;
 
 #define GST_INDEX_NASSOCS(entry)		((entry)->data.assoc.nassocs)
-#define GST_INDEX_ASSOC_FLAGS(entry)	((entry)->data.assoc.flags)
-#define GST_INDEX_ASSOC_FORMAT(entry,i)	((entry)->data.assoc.assocs[(i)].format)
-#define GST_INDEX_ASSOC_VALUE(entry,i)	((entry)->data.assoc.assocs[(i)].value)
+#define GST_INDEX_ASSOC_FLAGS(entry)		((entry)->data.assoc.flags)
+#define GST_INDEX_ASSOC_FORMAT(entry,i)		((entry)->data.assoc.assocs[(i)].format)
+#define GST_INDEX_ASSOC_VALUE(entry,i)		((entry)->data.assoc.assocs[(i)].value)
 
 typedef struct _GstIndexAssociation GstIndexAssociation;
 
@@ -77,10 +78,10 @@ typedef enum {
   GST_ACCOCIATION_FLAG_KEY_UNIT = (1 << 0),
 } GstAssocFlags;
 
-#define GST_INDEX_FORMAT_FORMAT(entry)	((entry)->data.format.format)
-#define GST_INDEX_FORMAT_KEY(entry)	((entry)->data.format.key)
+#define GST_INDEX_FORMAT_FORMAT(entry)		((entry)->data.format.format)
+#define GST_INDEX_FORMAT_KEY(entry)		((entry)->data.format.key)
 
-#define GST_INDEX_ID_DESCRIPTION(entry)	((entry)->data.id.description)
+#define GST_INDEX_ID_DESCRIPTION(entry)		((entry)->data.id.description)
 
 struct _GstIndexEntry {
   GstIndexEntryType	 type;
@@ -145,6 +146,8 @@ struct _GstIndex {
 
   GHashTable		*writers;
   gint			 last_id;
+
+  gpointer		 dummy[8];
 };
 
 struct _GstIndexClass {
@@ -163,6 +166,8 @@ struct _GstIndexClass {
 					 gpointer user_data); 
   /* signals */
   void		(*entry_added)		(GstIndex *index, GstIndexEntry *entry);
+
+  gpointer		 dummy[8];
 };
 
 GType			gst_index_get_type		(void);
@@ -208,16 +213,12 @@ gboolean		gst_index_entry_assoc_map	(GstIndexEntry *entry,
  * creating indexs
  *
  */
-#define GST_TYPE_INDEX_FACTORY \
-  (gst_index_factory_get_type())
-#define GST_INDEX_FACTORY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_INDEX_FACTORY,GstIndexFactory))
-#define GST_INDEX_FACTORY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_INDEX_FACTORY,GstIndexFactoryClass))
-#define GST_IS_INDEX_FACTORY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_INDEX_FACTORY))
-#define GST_IS_INDEX_FACTORY_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_INDEX_FACTORY))
+#define GST_TYPE_INDEX_FACTORY  		(gst_index_factory_get_type())
+#define GST_INDEX_FACTORY(obj) 			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_INDEX_FACTORY, GstIndexFactory))
+#define GST_IS_INDEX_FACTORY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_INDEX_FACTORY))
+#define GST_INDEX_FACTORY_CLASS(klass) 		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_INDEX_FACTORY, GstIndexFactoryClass))
+#define GST_IS_INDEX_FACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_INDEX_FACTORY))
+#define GST_INDEX_FACTORY_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_INDEX_FACTORY, GstIndexFactoryClass))
 
 typedef struct _GstIndexFactory GstIndexFactory;
 typedef struct _GstIndexFactoryClass GstIndexFactoryClass;

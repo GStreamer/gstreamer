@@ -31,7 +31,7 @@
 G_BEGIN_DECLS
 
 /* type of function used to check a stream for equality with type */
-typedef GstCaps *(*GstTypeFindFunc) (GstBuffer *buf, gpointer priv);
+typedef GstCaps*	(*GstTypeFindFunc) 	(GstBuffer *buf, gpointer priv);
 
 typedef struct _GstType GstType;
 typedef struct _GstTypeDefinition GstTypeDefinition;
@@ -54,27 +54,27 @@ struct _GstTypeDefinition {
   GstTypeFindFunc typefindfunc;
 };
 
-#define GST_TYPE_TYPE_FACTORY \
-  (gst_type_factory_get_type())
-#define GST_TYPE_FACTORY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TYPE_FACTORY,GstTypeFactory))
-#define GST_TYPE_FACTORY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TYPE_FACTORY,GstTypeFactoryClass))
-#define GST_IS_TYPE_FACTORY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TYPE_FACTORY))
-#define GST_IS_TYPE_FACTORY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TYPE_FACTORY))
+#define GST_TYPE_TYPE_FACTORY 			(gst_type_factory_get_type ())
+#define GST_TYPE_FACTORY(obj) 			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TYPE_FACTORY, GstTypeFactory))
+#define GST_IS_TYPE_FACTORY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TYPE_FACTORY))
+#define GST_TYPE_FACTORY_CLASS(klass) 		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TYPE_FACTORY, GstTypeFactoryClass))
+#define GST_IS_TYPE_FACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TYPE_FACTORY))
+#define GST_TYPE_FACTORY_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_TYPE_FACTORY, GstTypeFactoryClass))
 
 struct _GstTypeFactory {
-  GstPluginFeature feature;
+  GstPluginFeature 	 feature;
 
-  gchar *mime;
-  gchar *exts;
-  GstTypeFindFunc typefindfunc;
+  gchar 		*mime;
+  gchar 		*exts;
+  GstTypeFindFunc 	 typefindfunc;
+
+  gpointer		 dummy[8];
 };
 
 struct _GstTypeFactoryClass {
   GstPluginFeatureClass parent;
+
+  gpointer		 dummy[8];
 };
 
 

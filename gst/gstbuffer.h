@@ -56,6 +56,7 @@ extern GType _gst_buffer_pool_type;
 #define GST_BUFFER_SIZE(buf)			(GST_BUFFER(buf)->size)
 #define GST_BUFFER_MAXSIZE(buf)			(GST_BUFFER(buf)->maxsize)
 #define GST_BUFFER_TIMESTAMP(buf)		(GST_BUFFER(buf)->timestamp)
+#define GST_BUFFER_FORMAT(buf)			(GST_BUFFER(buf)->format)
 #define GST_BUFFER_OFFSET(buf)			(GST_BUFFER(buf)->offset)
 #define GST_BUFFER_BUFFERPOOL(buf)		(GST_BUFFER(buf)->pool)
 #define GST_BUFFER_POOL_PRIVATE(buf)		(GST_BUFFER(buf)->pool_private)
@@ -79,7 +80,9 @@ struct _GstBuffer {
   guint 		 size;			/* size of buffer data */
   guint64		 maxsize;		/* max size of this buffer */
 
+  /* timestamp */
   guint64		 timestamp;		
+  /* media specific offset */
   guint64		 offset;
 
   /* this is a pointer to the buffer pool (if any) */
@@ -90,9 +93,14 @@ struct _GstBuffer {
 
 /* bufferpools */
 
-typedef GstBuffer*	(*GstBufferPoolBufferNewFunction)	(GstBufferPool *pool, guint64 offset, guint size, gpointer user_data);
-typedef GstBuffer* 	(*GstBufferPoolBufferCopyFunction)	(GstBufferPool *pool, const GstBuffer *buffer, gpointer user_data);
-typedef void	 	(*GstBufferPoolBufferFreeFunction)	(GstBufferPool *pool, GstBuffer *buffer, gpointer user_data);
+typedef GstBuffer*	(*GstBufferPoolBufferNewFunction)	(GstBufferPool *pool, gint64 offset, 
+								 guint size, gpointer user_data);
+typedef GstBuffer* 	(*GstBufferPoolBufferCopyFunction)	(GstBufferPool *pool, 
+								 const GstBuffer *buffer, 
+								 gpointer user_data);
+typedef void	 	(*GstBufferPoolBufferFreeFunction)	(GstBufferPool *pool, 
+								 GstBuffer *buffer, 
+								 gpointer user_data);
 
 struct _GstBufferPool {
   GstData 				data;
@@ -106,22 +114,13 @@ struct _GstBufferPool {
   gpointer				user_data;
 };
 
-
-/*< private >*/
-void		_gst_buffer_initialize		(void);
-
-/* functions used by subclasses and bufferpools */
-void		gst_buffer_default_free 	(GstBuffer *buffer);
-GstBuffer*	gst_buffer_default_copy 	(GstBuffer *buffer);
-
-void		gst_buffer_print_stats		(void);
-
 /* allocation */
 GstBuffer*	gst_buffer_new	 		(void);
 GstBuffer*	gst_buffer_new_and_alloc	(guint size);
 
 /* creating a new buffer from a pool */
-GstBuffer*	gst_buffer_new_from_pool 	(GstBufferPool *pool, guint64 offset, guint size);
+GstBuffer*	gst_buffer_new_from_pool 	(GstBufferPool *pool, 
+						 gint64 offset, guint size);
 
 #define		gst_buffer_set_data(buf, data, size) 	\
 G_STMT_START { 					     	\
@@ -147,6 +146,15 @@ GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
 GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
 
+/* --- private --- */
+void		_gst_buffer_initialize		(void);
+
+/* functions used by subclasses and bufferpools */
+void		gst_buffer_default_free 	(GstBuffer *buffer);
+GstBuffer*	gst_buffer_default_copy 	(GstBuffer *buffer);
+
+void		gst_buffer_print_stats		(void);
+
 
 /* creating a new buffer pools */
 GstBufferPool*	gst_buffer_pool_new			(GstDataFreeFunction free,
@@ -159,6 +167,7 @@ GstBufferPool*	gst_buffer_pool_new			(GstDataFreeFunction free,
 /* function used by subclasses and bufferpools */
 void		gst_buffer_pool_default_free		(GstBufferPool *pool);
 
+/* check if pool is usable */
 gboolean	gst_buffer_pool_is_active		(GstBufferPool *pool);
 void		gst_buffer_pool_set_active		(GstBufferPool *pool, gboolean active);
 

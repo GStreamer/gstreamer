@@ -62,16 +62,12 @@ typedef enum {
 } GstRegistryFlags;
 
   
-#define GST_TYPE_REGISTRY \
-  (gst_registry_get_type())
-#define GST_REGISTRY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_REGISTRY,GstRegistry))
-#define GST_REGISTRY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_REGISTRY,GstRegistryClass))
-#define GST_IS_REGISTRY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_REGISTRY))
-#define GST_IS_REGISTRY_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_REGISTRY))
+#define GST_TYPE_REGISTRY 		(gst_registry_get_type ())
+#define GST_REGISTRY(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REGISTRY, GstRegistry))
+#define GST_IS_REGISTRY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_REGISTRY))
+#define GST_REGISTRY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_REGISTRY, GstRegistryClass))
+#define GST_IS_REGISTRY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_REGISTRY))
+#define GST_REGISTRY_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_REGISTRY, GstRegistryClass))
 
 typedef struct _GstRegistry GstRegistry;
 typedef struct _GstRegistryClass GstRegistryClass;
@@ -89,6 +85,8 @@ struct _GstRegistry {
   GList		*plugins;
 
   GList 	*paths;
+
+  gpointer	 dummy[8];
 };
 
 struct _GstRegistryClass {
@@ -106,6 +104,8 @@ struct _GstRegistryClass {
 
   /* signals */
   void 			(*plugin_added)		(GstRegistry *registry, GstPlugin *plugin);
+
+  gpointer	 dummy[8];
 };
 
 

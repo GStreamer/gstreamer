@@ -27,16 +27,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CLOCK \
-  (gst_clock_get_type())
-#define GST_CLOCK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CLOCK,GstClock))
-#define GST_CLOCK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CLOCK,GstClockClass))
-#define GST_IS_CLOCK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CLOCK))
-#define GST_IS_CLOCK_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CLOCK))
+/* --- standard type macros --- */
+#define GST_TYPE_CLOCK  		(gst_clock_get_type ())
+#define GST_CLOCK(clock) 		(G_TYPE_CHECK_INSTANCE_CAST ((clock), GST_TYPE_CLOCK, GstClock))
+#define GST_IS_CLOCK(clock)  		(G_TYPE_CHECK_INSTANCE_TYPE ((clock), GST_TYPE_CLOCK))
+#define GST_CLOCK_CLASS(cclass)  	(G_TYPE_CHECK_CLASS_CAST ((cclass), GST_TYPE_CLOCK, GstClockClass))
+#define GST_IS_CLOCK_CLASS(cclass) 	(G_TYPE_CHECK_CLASS_TYPE ((cclass), GST_TYPE_CLOCK))
+#define GST_CLOCK_GET_CLASS(clock) 	(G_TYPE_INSTANCE_GET_CLASS ((clock), GST_TYPE_CLOCK, GstClockClass))
 	
 typedef guint64 	GstClockTime;
 typedef gint64 		GstClockTimeDiff;
@@ -61,6 +58,7 @@ typedef struct _GstClockEntry 	GstClockEntry;
 typedef struct _GstClock 	GstClock;
 typedef struct _GstClockClass 	GstClockClass;
 
+/* --- prototype for async callbacks --- */
 typedef gboolean 	(*GstClockCallback) 	(GstClock *clock, GstClockTime time, 
 						 GstClockID id, gpointer user_data);
 
@@ -121,11 +119,11 @@ struct _GstClock {
 
   GstClockFlags	 flags;
 
-  /*< protected >*/
+  /* --- protected --- */
   GstClockTime	 start_time;
   GstClockTime	 last_time;
 
-  /*< private >*/
+  /* --- private --- */
   gboolean 	 accept_discont;
   gdouble 	 speed;
   guint64	 resolution;
@@ -134,6 +132,8 @@ struct _GstClock {
   GMutex	*active_mutex;
   GCond		*active_cond;
   gboolean	 stats;
+
+  gpointer 	 dummy[4];
 };
 
 struct _GstClockClass {
@@ -151,14 +151,9 @@ struct _GstClockClass {
 
   /* waiting on an ID */
   GstClockEntryStatus   (*wait)        		(GstClock *clock, GstClockEntry *entry);
-  GstClockEntryStatus   (*wait_async)           (GstClock *clock, GstClockEntry *entry,
-		                                 GstClockCallback func, gpointer user_data);
+  GstClockEntryStatus   (*wait_async)           (GstClock *clock, GstClockEntry *entry);
   void                  (*unschedule)        	(GstClock *clock, GstClockEntry *entry);
   void                  (*unlock)            	(GstClock *clock, GstClockEntry *entry);
-
-  /* signals */
-  void                  (*object_sync)          (GstClock *clock, GstObject *object, 
-		   				 GstClockID id);
 };
 
 GType           	gst_clock_get_type 		(void);

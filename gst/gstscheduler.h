@@ -30,16 +30,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SCHEDULER \
-  (gst_scheduler_get_type())
-#define GST_SCHEDULER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SCHEDULER,GstScheduler))
-#define GST_SCHEDULER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SCHEDULER,GstSchedulerClass))
-#define GST_IS_SCHEDULER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SCHEDULER))
-#define GST_IS_SCHEDULER_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SCHEDULER))
+#define GST_TYPE_SCHEDULER 		(gst_scheduler_get_type ())
+#define GST_SCHEDULER(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SCHEDULER, GstScheduler))
+#define GST_IS_SCHEDULER(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SCHEDULER))
+#define GST_SCHEDULER_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SCHEDULER,GstSchedulerClass))
+#define GST_IS_SCHEDULER_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SCHEDULER))
+#define GST_SCHEDULER_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_SCHEDULER, GstSchedulerClass))
 
 typedef enum {
   /* this scheduler works with a fixed clock */
@@ -75,6 +71,8 @@ struct _GstScheduler {
   GList			*clock_receivers;
 
   GList			*schedulers;
+
+  gpointer		dummy[8];
 };
 
 struct _GstSchedulerClass {
@@ -106,6 +104,8 @@ struct _GstSchedulerClass {
   /* signals */
   void                  (*object_sync)          (GstScheduler *sched, GstClock *clock, GstObject *object,
 			                         GstClockID id);
+
+  gpointer		dummy[8];
 };
 
 GType			gst_scheduler_get_type		(void);
@@ -144,16 +144,12 @@ void			gst_scheduler_show		(GstScheduler *sched);
  * creating schedulers
  *
  */
-#define GST_TYPE_SCHEDULER_FACTORY \
-  (gst_scheduler_factory_get_type ())
-#define GST_SCHEDULER_FACTORY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SCHEDULER_FACTORY, GstSchedulerFactory))
-#define GST_SCHEDULER_FACTORY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SCHEDULER_FACTORY, GstSchedulerFactoryClass))
-#define GST_IS_SCHEDULER_FACTORY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SCHEDULER_FACTORY))
-#define GST_IS_SCHEDULER_FACTORY_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SCHEDULER_FACTORY))
+#define GST_TYPE_SCHEDULER_FACTORY 		(gst_scheduler_factory_get_type ())
+#define GST_SCHEDULER_FACTORY(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SCHEDULER_FACTORY, GstSchedulerFactory))
+#define GST_IS_SCHEDULER_FACTORY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SCHEDULER_FACTORY))
+#define GST_SCHEDULER_FACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SCHEDULER_FACTORY, GstSchedulerFactoryClass))
+#define GST_IS_SCHEDULER_FACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SCHEDULER_FACTORY))
+#define GST_SCHEDULER_FACTORY_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_SCHEDULER_FACTORY, GstSchedulerFactoryClass))
 
 typedef struct _GstSchedulerFactory GstSchedulerFactory;
 typedef struct _GstSchedulerFactoryClass GstSchedulerFactoryClass;

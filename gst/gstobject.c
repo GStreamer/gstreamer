@@ -147,8 +147,8 @@ gst_object_class_init (GstObjectClass *klass)
   klass->path_string_separator = "/";
 
   klass->signal_object = g_object_new (gst_signal_object_get_type (), NULL);
-    /* see the comments at gst_element_dispatch_properties_changed */
 
+  /* see the comments at gst_element_dispatch_properties_changed */
   gobject_class->dispatch_properties_changed
 	        = GST_DEBUG_FUNCPTR (gst_object_dispatch_properties_changed);
 
@@ -555,7 +555,8 @@ gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
   g_return_val_if_fail (GST_IS_OBJECT (object), parent);
   g_return_val_if_fail (parent != NULL, parent);
 
-  oclass = (GstObjectClass *)G_OBJECT_GET_CLASS(object);
+  oclass = GST_OBJECT_GET_CLASS (object);
+
   if (oclass->save_thyself)
     oclass->save_thyself (object, parent);
 
@@ -580,7 +581,8 @@ gst_object_restore_thyself (GstObject *object, xmlNodePtr self)
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (self != NULL);
 
-  oclass = (GstObjectClass *) G_OBJECT_GET_CLASS(object);
+  oclass = GST_OBJECT_GET_CLASS (object);
+
   if (oclass->restore_thyself)
     oclass->restore_thyself (object, self);
 }
@@ -683,7 +685,7 @@ gst_object_get_path_string (GstObject *object)
   parents = parentage;
   while (parents) {
     if (GST_IS_OBJECT (parents->data)) {
-      GstObjectClass *oclass = (GstObjectClass *)G_OBJECT_GET_CLASS(parents->data);
+      GstObjectClass *oclass = GST_OBJECT_GET_CLASS (parents->data);
 
       component = gst_object_get_name (parents->data);
       separator = oclass->path_string_separator;
@@ -757,10 +759,10 @@ gst_signal_object_class_init (GstSignalObjectClass *klass)
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   gst_signal_object_signals[SO_OBJECT_LOADED] =
-    g_signal_new("object_loaded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("object_loaded", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
-                  gst_marshal_VOID__OBJECT_POINTER,G_TYPE_NONE,2,
-                  G_TYPE_OBJECT,G_TYPE_POINTER);
+                  gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
+                  G_TYPE_OBJECT, G_TYPE_POINTER);
 #endif
 }
 
@@ -805,7 +807,7 @@ gst_class_signal_emit_by_name (GstObject *object,
 {
   GstObjectClass *oclass;
 
-  oclass = (GstObjectClass *)G_OBJECT_GET_CLASS(object);
+  oclass = GST_OBJECT_GET_CLASS (object);
 
   g_signal_emit_by_name (oclass->signal_object, name, object, self);
 }

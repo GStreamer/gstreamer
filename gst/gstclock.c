@@ -34,8 +34,6 @@ enum {
   ARG_STATS,
 };
 
-#define CLASS(clock)  GST_CLOCK_CLASS (G_OBJECT_GET_CLASS (clock))
-
 static GstMemChunk *_gst_clock_entries_chunk;
 
 static void		gst_clock_class_init		(GstClockClass *klass);
@@ -151,6 +149,7 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff *jitter)
   GstClock *clock;
   GstClockReturn res = GST_CLOCK_UNSUPPORTED;
   GstClockTime requested;
+  GstClockClass *cclass;
   
   g_return_val_if_fail (id != NULL, GST_CLOCK_ERROR);
 
@@ -163,12 +162,13 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff *jitter)
   }
   
   clock = GST_CLOCK_ENTRY_CLOCK (entry);
+  cclass = GST_CLOCK_GET_CLASS (clock);
   
-  if (CLASS (clock)->wait) {
+  if (cclass->wait) {
     GstClockTime now;
 
     do {
-      res = CLASS (clock)->wait (clock, entry);
+      res = cclass->wait (clock, entry);
     }
     while (res == GST_CLOCK_ENTRY_RESTART);
 
@@ -208,6 +208,7 @@ gst_clock_id_wait_async (GstClockID id,
   GstClockEntry *entry;
   GstClock *clock;
   GstClockReturn res = GST_CLOCK_UNSUPPORTED;
+  GstClockClass *cclass;
   
   g_return_val_if_fail (id != NULL, GST_CLOCK_ERROR);
   g_return_val_if_fail (func != NULL, GST_CLOCK_ERROR);
@@ -220,8 +221,13 @@ gst_clock_id_wait_async (GstClockID id,
     return GST_CLOCK_TIMEOUT;
   }
 
-  if (CLASS (clock)->wait_async) {
-    res = CLASS (clock)->wait_async (clock, entry, func, user_data);
+  cclass = GST_CLOCK_GET_CLASS (clock);
+
+  if (cclass->wait_async) {
+    entry->func = func;
+    entry->user_data = user_data;
+
+    res = cclass->wait_async (clock, entry);
   }
 
   return res;
@@ -238,14 +244,17 @@ gst_clock_id_unschedule (GstClockID id)
 {
   GstClockEntry *entry;
   GstClock *clock;
+  GstClockClass *cclass;
   
   g_return_if_fail (id != NULL);
 
   entry = (GstClockEntry *) id;
   clock = entry->clock;
 
-  if (CLASS (clock)->unschedule)
-    CLASS (clock)->unschedule (clock, entry);
+  cclass = GST_CLOCK_GET_CLASS (clock);
+
+  if (cclass->unschedule)
+    cclass->unschedule (clock, entry);
 }
 
 /**
@@ -273,14 +282,17 @@ gst_clock_id_unlock (GstClockID id)
 {
   GstClockEntry *entry;
   GstClock *clock;
+  GstClockClass *cclass;
   
   g_return_if_fail (id != NULL);
 
   entry = (GstClockEntry *) id;
   clock = entry->clock;
 
-  if (CLASS (clock)->unlock)
-    CLASS (clock)->unlock (clock, entry);
+  cclass = GST_CLOCK_GET_CLASS (clock);
+
+  if (cclass->unlock)
+    cclass->unlock (clock, entry);
 }
 
 
@@ -368,10 +380,14 @@ gst_clock_init (GstClock *clock)
 gdouble
 gst_clock_set_speed (GstClock *clock, gdouble speed)
 {
+  GstClockClass *cclass;
+
   g_return_val_if_fail (GST_IS_CLOCK (clock), 0.0);
 
-  if (CLASS (clock)->change_speed)
-    clock->speed = CLASS (clock)->change_speed (clock, clock->speed, speed);
+  cclass = GST_CLOCK_GET_CLASS (clock);
+
+  if (cclass->change_speed)
+    clock->speed = cclass->change_speed (clock, clock->speed, speed);
 
   return clock->speed;
 }
@@ -404,11 +420,15 @@ gst_clock_get_speed (GstClock *clock)
 guint64
 gst_clock_set_resolution (GstClock *clock, guint64 resolution)
 {
+  GstClockClass *cclass;
+
   g_return_val_if_fail (GST_IS_CLOCK (clock), 0LL);
   g_return_val_if_fail (resolution != 0, 0LL);
 
-  if (CLASS (clock)->change_resolution)
-    clock->resolution = CLASS (clock)->change_resolution (clock, clock->resolution, resolution);
+  cclass = GST_CLOCK_GET_CLASS (clock);
+
+  if (cclass->change_resolution)
+    clock->resolution = cclass->change_resolution (clock, clock->resolution, resolution);
 
   return clock->resolution;
 }
@@ -424,10 +444,14 @@ gst_clock_set_resolution (GstClock *clock, guint64 resolution)
 guint64
 gst_clock_get_resolution (GstClock *clock)
 {
+  GstClockClass *cclass;
+
   g_return_val_if_fail (GST_IS_CLOCK (clock), 0LL);
 
-  if (CLASS (clock)->get_resolution)
-    return CLASS (clock)->get_resolution (clock);
+  cclass = GST_CLOCK_GET_CLASS (clock);
+
+  if (cclass->get_resolution)
+    return cclass->get_resolution (clock);
 
   return 1LL;
 }
@@ -444,13 +468,16 @@ void
 gst_clock_set_active (GstClock *clock, gboolean active)
 {
   GstClockTime time = 0LL;
+  GstClockClass *cclass;
 
   g_return_if_fail (GST_IS_CLOCK (clock));
 
   clock->active = active;
+
+  cclass = GST_CLOCK_GET_CLASS (clock);
 	        
-  if (CLASS (clock)->get_internal_time) {
-    time = CLASS (clock)->get_internal_time (clock);
+  if (cclass->get_internal_time) {
+    time = cclass->get_internal_time (clock);
   }
 
   GST_LOCK (clock);
@@ -495,11 +522,14 @@ void
 gst_clock_reset (GstClock *clock)
 {
   GstClockTime time = 0LL;
+  GstClockClass *cclass;
 
   g_return_if_fail (GST_IS_CLOCK (clock));
 
-  if (CLASS (clock)->get_internal_time) {
-    time = CLASS (clock)->get_internal_time (clock);
+  cclass = GST_CLOCK_GET_CLASS (clock);
+	        
+  if (cclass->get_internal_time) {
+    time = cclass->get_internal_time (clock);
   }
 
   GST_LOCK (clock);
@@ -534,8 +564,12 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
 
   GST_LOCK (clock);
   if (clock->accept_discont) {
-    if (CLASS (clock)->get_internal_time) {
-      itime = CLASS (clock)->get_internal_time (clock);
+    GstClockClass *cclass;
+
+    cclass = GST_CLOCK_GET_CLASS (clock);
+	  
+    if (cclass->get_internal_time) {
+      itime = cclass->get_internal_time (clock);
     }
   }
   else {
@@ -582,8 +616,12 @@ gst_clock_get_time (GstClock *clock)
     ret = clock->last_time;
   }
   else {
-    if (CLASS (clock)->get_internal_time) {
-      ret = CLASS (clock)->get_internal_time (clock) - clock->start_time;
+    GstClockClass *cclass;
+
+    cclass = GST_CLOCK_GET_CLASS (clock);
+
+    if (cclass->get_internal_time) {
+      ret = cclass->get_internal_time (clock) - clock->start_time;
     }
     /* make sure the time is increasing, else return last_time */
     if ((gint64) ret < (gint64) clock->last_time) {

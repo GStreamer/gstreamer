@@ -32,16 +32,12 @@ G_BEGIN_DECLS
 
 extern GstElementDetails gst_type_find_details;
 
-#define GST_TYPE_TYPE_FIND \
-  (gst_type_find_get_type())
-#define GST_TYPE_FIND(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TYPE_FIND,GstTypeFind))
-#define GST_TYPE_FIND_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TYPE_FIND,GstTypeFindClass))
-#define GST_IS_TYPE_FIND(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TYPE_FIND))
-#define GST_IS_TYPE_FIND_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TYPE_FIND))
+#define GST_TYPE_TYPE_FIND 		(gst_type_find_get_type ())
+#define GST_TYPE_FIND(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TYPE_FIND, GstTypeFind))
+#define GST_IS_TYPE_FIND(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TYPE_FIND))
+#define GST_TYPE_FIND_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TYPE_FIND, GstTypeFindClass))
+#define GST_IS_TYPE_FIND_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TYPE_FIND))
+#define GST_TYPE_FIND_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_TYPE_FIND, GstTypeFindClass))
 
 typedef struct _GstTypeFind 		GstTypeFind;
 typedef struct _GstTypeFindClass 	GstTypeFindClass;

@@ -41,8 +41,9 @@ G_BEGIN_DECLS
 extern GType _gst_object_type;
 
 #define GST_TYPE_OBJECT                 (_gst_object_type)
-# define GST_IS_OBJECT(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_OBJECT))
-# define GST_IS_OBJECT_CLASS(obj)       (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_OBJECT))
+#define GST_IS_OBJECT(obj)             	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_OBJECT))
+#define GST_IS_OBJECT_CLASS(klass)     	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_OBJECT))
+#define GST_OBJECT_GET_CLASS(obj)    	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_OBJECT, GstObjectClass))
 
 #define GST_OBJECT_CAST(obj)            ((GstObject*)(obj))
 #define GST_OBJECT_CLASS_CAST(klass)    ((GstObjectClass*)(klass))
@@ -54,9 +55,6 @@ extern GType _gst_object_type;
 # define GST_OBJECT                     GST_OBJECT_CAST
 # define GST_OBJECT_CLASS               GST_OBJECT_CLASS_CAST
 #endif
-
-/*typedef struct _GstObject GstObject; */ 
-/*typedef struct _GstObjectClass GstObjectClass; */
 
 typedef enum
 {
@@ -101,6 +99,8 @@ struct _GstObjectClass {
   xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
   void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
 #endif
+
+  gpointer	dummy[4];
 };
 
 #define GST_FLAGS(obj)			(GST_OBJECT_CAST (obj)->flags)
@@ -115,10 +115,10 @@ struct _GstObjectClass {
 #define GST_OBJECT_FLOATING(obj)	(GST_FLAG_IS_SET (obj, GST_FLOATING))
 
 /* CR1: object locking - GObject 2.0 doesn't have threadsafe locking */
-#define GST_LOCK(obj)		(g_mutex_lock(GST_OBJECT_CAST(obj)->lock))
-#define GST_TRYLOCK(obj)	(g_mutex_trylock(GST_OBJECT_CAST(obj)->lock))
-#define GST_UNLOCK(obj)		(g_mutex_unlock(GST_OBJECT_CAST(obj)->lock))
-#define GST_GET_LOCK(obj)	(GST_OBJECT_CAST(obj)->lock)
+#define GST_LOCK(obj)			(g_mutex_lock(GST_OBJECT_CAST(obj)->lock))
+#define GST_TRYLOCK(obj)		(g_mutex_trylock(GST_OBJECT_CAST(obj)->lock))
+#define GST_UNLOCK(obj)			(g_mutex_unlock(GST_OBJECT_CAST(obj)->lock))
+#define GST_GET_LOCK(obj)		(GST_OBJECT_CAST(obj)->lock)
 
 
 /* normal GObject stuff */

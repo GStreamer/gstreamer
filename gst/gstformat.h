@@ -41,6 +41,7 @@ typedef enum {
 } GstFormat;
 
 typedef struct _GstFormatDefinition GstFormatDefinition;
+
 struct _GstFormatDefinition 
 {
   GstFormat  value;

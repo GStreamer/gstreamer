@@ -58,7 +58,8 @@ extern GType _gst_element_type;
 #define GST_ELEMENT_CAST(obj)		((GstElement*)(obj))
 #define GST_ELEMENT_CLASS_CAST(klass)	((GstElementClass*)(klass))
 #define GST_IS_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_ELEMENT))
-#define GST_IS_ELEMENT_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_ELEMENT))
+#define GST_IS_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_ELEMENT))
+#define GST_ELEMENT_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_ELEMENT, GstElementClass))
 
 #ifdef GST_TYPE_PARANOID
 # define GST_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_ELEMENT, GstElement))
@@ -119,11 +120,12 @@ struct _GstElement {
   /* element state  and scheduling */
   guint8 		current_state;
   guint8 		pending_state;
-  GstElement 		*manager;
   GstElementLoopFunction loopfunc;
 
   GstScheduler 		*sched;
   gpointer		sched_private;
+
+  /* allocated clock */
   GstClock		*clock;
   GstClockTime		 base_time;
 
@@ -132,7 +134,6 @@ struct _GstElement {
   guint16 		numsrcpads;
   guint16 		numsinkpads;
   GList 		*pads;
-  GstPad 		*select_pad;
 
   GMutex 		*state_mutex;
   GCond 		*state_cond;
@@ -141,6 +142,8 @@ struct _GstElement {
   GstElementPostRunFunction post_run_func;
   GAsyncQueue		*prop_value_queue;
   GMutex		*property_mutex;
+
+  gpointer		dummy[8];
 };
 
 struct _GstElementClass {
@@ -179,6 +182,8 @@ struct _GstElementClass {
   /* index */
   GstIndex*		(*get_index)		(GstElement *element);
   void			(*set_index)		(GstElement *element, GstIndex *index);
+
+  gpointer		dummy[8];
 };
 
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);

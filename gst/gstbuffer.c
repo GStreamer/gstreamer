@@ -219,7 +219,8 @@ gst_buffer_new_and_alloc (guint size)
  * Returns: the new #GstBuffer, or NULL if there was an error.
  */
 GstBuffer*
-gst_buffer_new_from_pool (GstBufferPool *pool, guint64 offset, guint size)
+gst_buffer_new_from_pool (GstBufferPool *pool, 
+		          gint64 offset, guint size)
 {
   GstBuffer *buffer;
   

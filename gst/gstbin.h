@@ -31,9 +31,10 @@ G_BEGIN_DECLS
 extern GstElementDetails gst_bin_details;
 extern GType _gst_bin_type;
 
-#define GST_TYPE_BIN                 (_gst_bin_type)
-# define GST_IS_BIN(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_BIN))
-# define GST_IS_BIN_CLASS(obj)       (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_BIN))
+#define GST_TYPE_BIN             (_gst_bin_type)
+#define GST_IS_BIN(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_BIN))
+#define GST_IS_BIN_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_BIN))
+#define GST_BIN_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BIN, GstBinClass))
 
 #define GST_BIN_CAST(obj)            ((GstBin*)(obj))
 #define GST_BIN_CLASS_CAST(klass)    ((GstBinClass*)(klass))
@@ -46,7 +47,7 @@ extern GType _gst_bin_type;
 # define GST_BIN_CLASS               GST_BIN_CLASS_CAST
 #endif
 
-typedef void 		(*GstBinPrePostIterateFunction) 	(GstBin *bin, gpointer data);
+typedef void 		(*GstBinPrePostIterateFunction) 	(GstBin *bin, gpointer user_data);
 
 typedef enum {
   /* this bin is a manager of child elements, i.e. a pipeline or thread */
@@ -76,12 +77,12 @@ struct _GstBin {
 
   GstElementState child_states[GST_NUM_STATES];
 
-  gpointer 	 sched_private;
-
   GstBinPrePostIterateFunction  pre_iterate_func;
   GstBinPrePostIterateFunction post_iterate_func;
-  gpointer	            pre_iterate_private;
-  gpointer	            post_iterate_private;
+  gpointer	            pre_iterate_data;
+  gpointer	            post_iterate_data;
+
+  gpointer	 dummy[8];
 };
 
 struct _GstBinClass {
@@ -90,13 +91,15 @@ struct _GstBinClass {
   /* vtable */
   void		(*add_element)		(GstBin *bin, GstElement);
   void		(*remove_element)	(GstBin *bin, GstElement);
+
   /* run a full iteration of operation */
   gboolean	(*iterate)		(GstBin *bin);
 
   /* signals */
-  void		(*object_added)		(GstObject *object, GstObject *child);
-  void		(*object_removed)	(GstObject *object, GstObject *child);
+  void		(*element_added)	(GstBin *bin, GstElement *child);
+  void		(*element_removed)	(GstBin *bin, GstElement *child);
 
+  gpointer	 dummy[8];
 };
 
 GType		gst_bin_get_type		(void);
@@ -121,11 +124,15 @@ void		gst_bin_auto_clock		(GstBin *bin);
 
 /* internal */
 /* one of our childs signaled a state change */
-void 		gst_bin_child_state_change 	(GstBin *bin, GstElementState oldstate, 
-						 GstElementState newstate, GstElement *child);
+void 		gst_bin_child_state_change 		(GstBin *bin, GstElementState oldstate, 
+							 GstElementState newstate, GstElement *child);
 
-void		gst_bin_set_pre_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer func_data);
-void		gst_bin_set_post_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer func_data);
+void		gst_bin_set_pre_iterate_function 	(GstBin *bin, 
+							 GstBinPrePostIterateFunction func, 
+							 gpointer user_data);
+void		gst_bin_set_post_iterate_function 	(GstBin *bin, 
+							 GstBinPrePostIterateFunction func, 
+							 gpointer user_data);
 
 G_END_DECLS
 

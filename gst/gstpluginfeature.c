@@ -116,7 +116,7 @@ gst_plugin_feature_unload_thyself (GstPluginFeature *feature)
   g_return_if_fail (feature != NULL);
   g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
   
-  oclass = (GstPluginFeatureClass *)G_OBJECT_GET_CLASS (feature);
+  oclass = GST_PLUGIN_FEATURE_GET_CLASS (feature);
 
   if (oclass->unload_thyself)
     oclass->unload_thyself (feature);

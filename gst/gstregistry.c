@@ -33,8 +33,6 @@
 #include "gstlog.h"
 #include "gstmarshal.h"
 
-#define CLASS(registry)  GST_REGISTRY_CLASS (G_OBJECT_GET_CLASS (registry))
-
 /* Element signals and args */
 enum {
   PLUGIN_ADDED,
@@ -112,10 +110,14 @@ gst_registry_init (GstRegistry *registry)
 gboolean
 gst_registry_load (GstRegistry *registry)
 {
+  GstRegistryClass *rclass;
+
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
 
-  if (CLASS (registry)->load)
-    return CLASS (registry)->load (registry);
+  rclass = GST_REGISTRY_GET_CLASS (registry);
+
+  if (rclass->load)
+    return rclass->load (registry);
 
   return FALSE;
 }
@@ -147,10 +149,14 @@ gst_registry_is_loaded (GstRegistry *registry)
 gboolean
 gst_registry_save (GstRegistry *registry)
 {
+  GstRegistryClass *rclass;
+
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
 
-  if (CLASS (registry)->save)
-    return CLASS (registry)->save (registry);
+  rclass = GST_REGISTRY_GET_CLASS (registry);
+
+  if (rclass->save)
+    return rclass->save (registry);
 
   return FALSE;
 }
@@ -166,10 +172,14 @@ gst_registry_save (GstRegistry *registry)
 gboolean
 gst_registry_rebuild (GstRegistry *registry)
 {
+  GstRegistryClass *rclass;
+
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
 
-  if (CLASS (registry)->rebuild)
-    return CLASS (registry)->rebuild (registry);
+  rclass = GST_REGISTRY_GET_CLASS (registry);
+
+  if (rclass->rebuild)
+    return rclass->rebuild (registry);
 
   return FALSE;
 }
@@ -185,10 +195,14 @@ gst_registry_rebuild (GstRegistry *registry)
 gboolean
 gst_registry_unload (GstRegistry *registry)
 {
+  GstRegistryClass *rclass;
+
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
 
-  if (CLASS (registry)->unload)
-    return CLASS (registry)->unload (registry);
+  rclass = GST_REGISTRY_GET_CLASS (registry);
+
+  if (rclass->unload)
+    return rclass->unload (registry);
 
   return FALSE;
 }
@@ -381,10 +395,14 @@ gst_registry_find_feature (GstRegistry *registry, const gchar *name, GType type)
 GstRegistryReturn
 gst_registry_load_plugin (GstRegistry *registry, GstPlugin *plugin)
 {
+  GstRegistryClass *rclass;
+
   g_return_val_if_fail (GST_IS_REGISTRY (registry), GST_REGISTRY_PLUGIN_LOAD_ERROR);
 
-  if (CLASS (registry)->load_plugin)
-    return CLASS (registry)->load_plugin (registry, plugin);
+  rclass = GST_REGISTRY_GET_CLASS (registry);
+
+  if (rclass->load_plugin)
+    return rclass->load_plugin (registry, plugin);
 
   return GST_REGISTRY_PLUGIN_LOAD_ERROR;
 }
@@ -401,10 +419,14 @@ gst_registry_load_plugin (GstRegistry *registry, GstPlugin *plugin)
 GstRegistryReturn
 gst_registry_unload_plugin (GstRegistry *registry, GstPlugin *plugin)
 {
+  GstRegistryClass *rclass;
+
   g_return_val_if_fail (GST_IS_REGISTRY (registry), GST_REGISTRY_PLUGIN_LOAD_ERROR);
 
-  if (CLASS (registry)->unload_plugin)
-    return CLASS (registry)->unload_plugin (registry, plugin);
+  rclass = GST_REGISTRY_GET_CLASS (registry);
+
+  if (rclass->unload_plugin)
+    return rclass->unload_plugin (registry, plugin);
 
   return GST_REGISTRY_PLUGIN_LOAD_ERROR;
 }
@@ -421,10 +443,14 @@ gst_registry_unload_plugin (GstRegistry *registry, GstPlugin *plugin)
 GstRegistryReturn
 gst_registry_update_plugin (GstRegistry *registry, GstPlugin *plugin)
 {
+  GstRegistryClass *rclass;
+
   g_return_val_if_fail (GST_IS_REGISTRY (registry), GST_REGISTRY_PLUGIN_LOAD_ERROR);
 
-  if (CLASS (registry)->update_plugin)
-    return CLASS (registry)->update_plugin (registry, plugin);
+  rclass = GST_REGISTRY_GET_CLASS (registry);
+
+  if (rclass->update_plugin)
+    return rclass->update_plugin (registry, plugin);
 
   return GST_REGISTRY_PLUGIN_LOAD_ERROR;
 }

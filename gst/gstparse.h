@@ -47,6 +47,7 @@ GstBin*		gst_parse_launchv	(const gchar **argv, GError **error);
 #else /* GST_DISABLE_PARSE */
 
 #pragma GCC poison gst_parse_launch
+#pragma GCC poison gst_parse_launchv
 
 #endif /* GST_DISABLE_PARSE */
 

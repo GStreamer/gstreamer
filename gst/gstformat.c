@@ -130,7 +130,7 @@ gst_format_get_by_nick (const gchar *nick)
  *
  * Returns: The #GstFormatDefinition for @format or NULL on failure.
  */
-const GstFormatDefinition *
+const GstFormatDefinition*
 gst_format_get_details (GstFormat format)
 {
   return g_hash_table_lookup (_format_to_nick, GINT_TO_POINTER (format));
@@ -143,7 +143,7 @@ gst_format_get_details (GstFormat format)
  *
  * Returns: A GList of #GstFormatDefinition.
  */
-const GList *
+const GList*
 gst_format_get_definitions (void)
 {
   return _gst_formats;

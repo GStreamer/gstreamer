@@ -30,6 +30,7 @@
 #include "gstlog.h"
 
 #include "gstscheduler.h"
+#include "gstindex.h"
 
 GstElementDetails gst_bin_details = {
   "Generic bin",
@@ -48,6 +49,8 @@ static void 			gst_bin_dispose 		(GObject * object);
 static GstElementStateReturn	gst_bin_change_state		(GstElement *element);
 static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
 
+static void 			gst_bin_set_index 		(GstBin *bin, GstIndex *index);
+
 static gboolean 		gst_bin_iterate_func 		(GstBin * bin);
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -58,7 +61,8 @@ static void 			gst_bin_restore_thyself 	(GstObject * object, xmlNodePtr self);
 /* Bin signals and args */
 enum
 {
-  OBJECT_ADDED,
+  ELEMENT_ADDED,
+  ELEMENT_REMOVED,
   LAST_SIGNAL
 };
 
@@ -109,11 +113,16 @@ gst_bin_class_init (GstBinClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gst_bin_signals[OBJECT_ADDED] =
-    g_signal_new ("object_added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
-		  G_STRUCT_OFFSET (GstBinClass, object_added), NULL, NULL,
+  gst_bin_signals[ELEMENT_ADDED] =
+    g_signal_new ("element_added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
+		  G_STRUCT_OFFSET (GstBinClass, element_added), NULL, NULL,
+		  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
+  gst_bin_signals[ELEMENT_REMOVED] =
+    g_signal_new ("element_removed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
+		  G_STRUCT_OFFSET (GstBinClass, element_removed), NULL, NULL,
 		  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
 
+  gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_bin_dispose);
   gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_bin_dispose);
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -122,6 +131,7 @@ gst_bin_class_init (GstBinClass * klass)
 #endif
 
   gstelement_class->change_state 	= GST_DEBUG_FUNCPTR (gst_bin_change_state);
+  gstelement_class->set_index	 	= GST_DEBUG_FUNCPTR (gst_bin_set_index);
 
   klass->iterate 			= GST_DEBUG_FUNCPTR (gst_bin_iterate_func);
 }
@@ -137,8 +147,8 @@ gst_bin_init (GstBin * bin)
   
   bin->pre_iterate_func = NULL;
   bin->post_iterate_func = NULL;
-  bin->pre_iterate_private = NULL;
-  bin->post_iterate_private = NULL;
+  bin->pre_iterate_data = NULL;
+  bin->post_iterate_data = NULL;
 }
 
 /**
@@ -210,16 +220,31 @@ gst_bin_auto_clock (GstBin *bin)
 }
 
 static void
-gst_bin_set_element_sched (GstElement *element, GstScheduler *sched)
+gst_bin_set_index (GstBin *bin, GstIndex *index)
 {
   GList *children;
-  GstElement *child;
+  
+  g_return_if_fail (GST_IS_BIN (bin));
 
+  children = bin->children;
+  while (children) {
+    GstElement *child = GST_ELEMENT (children->data);
+    children = g_list_next (children);
+
+    gst_element_set_index (child, index);
+  }
+}
+
+static void
+gst_bin_set_element_sched (GstElement *element, GstScheduler *sched)
+{
   GST_INFO (GST_CAT_SCHEDULING, "setting element \"%s\" sched to %p", GST_ELEMENT_NAME (element),
 	    sched);
 
   /* if it's actually a Bin */
   if (GST_IS_BIN (element)) {
+    GList *children;
+
     if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_MANAGER)) {
       GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "child is already a manager, not resetting");
       if (GST_ELEMENT_SCHED (element))
@@ -233,7 +258,7 @@ gst_bin_set_element_sched (GstElement *element, GstScheduler *sched)
     /* set the children's schedule */
     children = GST_BIN (element)->children;
     while (children) {
-      child = GST_ELEMENT (children->data);
+      GstElement *child = GST_ELEMENT (children->data);
       children = g_list_next (children);
 
       gst_bin_set_element_sched (child, sched);
@@ -431,7 +456,7 @@ gst_bin_add (GstBin *bin, GstElement *element)
 
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "added child \"%s\"", GST_ELEMENT_NAME (element));
 
-  g_signal_emit (G_OBJECT (bin), gst_bin_signals[OBJECT_ADDED], 0, element);
+  g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_ADDED], 0, element);
 }
 
 /**
@@ -486,6 +511,8 @@ gst_bin_remove (GstBin *bin, GstElement *element)
 
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "removed child %s", GST_ELEMENT_NAME (element));
 
+  /* ref as we're going to emit a signal */
+  gst_object_ref (GST_OBJECT (element));
   gst_object_unparent (GST_OBJECT (element));
 
   /* if we're down to zero children, force state to NULL */
@@ -493,6 +520,10 @@ gst_bin_remove (GstBin *bin, GstElement *element)
     GST_STATE_PENDING (bin) = GST_STATE_NULL;
     gst_bin_change_state_norecurse (bin);
   }
+  g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_REMOVED], 0, element);
+
+  /* element is really out of our control now */
+  gst_object_unref (GST_OBJECT (element));
 }
 
 /**
@@ -860,16 +891,16 @@ gst_bin_iterate (GstBin *bin)
   g_return_val_if_fail (bin != NULL, FALSE);
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
 
-  oclass = GST_BIN_CLASS (G_OBJECT_GET_CLASS (bin));
+  oclass = GST_BIN_GET_CLASS (bin);
 
   if (bin->pre_iterate_func)
-    (bin->pre_iterate_func) (bin, bin->pre_iterate_private);
+    (bin->pre_iterate_func) (bin, bin->pre_iterate_data);
 
   if (oclass->iterate)
     running = (oclass->iterate) (bin);
 
   if (bin->post_iterate_func)
-    (bin->post_iterate_func) (bin, bin->post_iterate_private);
+    (bin->post_iterate_func) (bin, bin->post_iterate_data);
 
   GST_DEBUG_LEAVE ("(\"%s\") %d", GST_ELEMENT_NAME (bin), running);
 
@@ -891,13 +922,13 @@ gst_bin_iterate (GstBin *bin)
  * gst_bin_set_pre_iterate_function:
  * @bin: #Gstbin to attach to
  * @func: callback function to call
- * @func_data: private data to put in the function call
+ * @user_data: user data to put in the function call
  *
  * Attaches a callback which will be run before every iteration of the bin
  *
  */
 void
-gst_bin_set_pre_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer func_data)
+gst_bin_set_pre_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer user_data)
 {
   g_return_if_fail (GST_IS_BIN (bin));
 
@@ -905,20 +936,20 @@ gst_bin_set_pre_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func
     g_warning ("setting pre_iterate on a non MANAGER bin has no effect");
   
   bin->pre_iterate_func = func;
-  bin->pre_iterate_private = func_data;
+  bin->pre_iterate_data = user_data;
 }
 
 /**
  * gst_bin_set_post_iterate_function:
  * @bin: #Gstbin to attach to
  * @func: callback function to call
- * @func_data: private data to put in the function call
+ * @user_data: user data to put in the function call
  *
  * Attaches a callback which will be run after every iteration of the bin
  *
  */
 void
-gst_bin_set_post_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer func_data)
+gst_bin_set_post_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer user_data)
 {
   g_return_if_fail (GST_IS_BIN (bin));
 
@@ -926,6 +957,6 @@ gst_bin_set_post_iterate_function (GstBin *bin, GstBinPrePostIterateFunction fun
     g_warning ("setting post_iterate on a non MANAGER bin has no effect");
 
   bin->post_iterate_func = func;
-  bin->post_iterate_private = func_data;
+  bin->post_iterate_data = user_data;
 }
 

@@ -469,7 +469,8 @@ gst_basic_scheduler_select_proxy (GstPad * pad, GstBuffer * buf)
   GST_RPAD_BUFPEN (GST_RPAD_PEER (pad)) = buf;
   GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p",
 	     GST_ELEMENT_THREADSTATE (parent));
-  parent->select_pad = pad;
+  /* FIXME temporarily diabled */
+  /* parent->select_pad = pad; */
 
   do_element_switch (parent);
   
@@ -1250,7 +1251,8 @@ gst_basic_scheduler_pad_select (GstScheduler * sched, GList * padlist)
 
     do_element_switch (GST_PAD_PARENT (peer));
 
-    pad = GST_ELEMENT (GST_PAD_PARENT (pad))->select_pad;
+    /* FIXME disabled for now */
+    /* pad = GST_ELEMENT (GST_PAD_PARENT (pad))->select_pad;*/
 
     g_assert (pad != NULL);
   }

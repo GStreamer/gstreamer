@@ -40,8 +40,6 @@ enum {
 static void		gst_index_class_init	(GstIndexClass *klass);
 static void		gst_index_init		(GstIndex *index);
 
-#define CLASS(index)  GST_INDEX_CLASS (G_OBJECT_GET_CLASS (index))
-
 static GstObject *parent_class = NULL;
 static guint gst_index_signals[LAST_SIGNAL] = { 0 };
 
@@ -293,6 +291,7 @@ gst_index_add_format (GstIndex *index, gint id, GstFormat format)
 {
   GstIndexEntry *entry;
   const GstFormatDefinition* def;
+  GstIndexClass *iclass;
 
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (format != 0, NULL);
@@ -301,11 +300,14 @@ gst_index_add_format (GstIndex *index, gint id, GstFormat format)
   entry->type = GST_INDEX_ENTRY_FORMAT;
   entry->id = id;
   entry->data.format.format = format;
+
   def = gst_format_get_details (format);
   entry->data.format.key = def->nick;
+
+  iclass = GST_INDEX_GET_CLASS (index);
   
-  if (CLASS (index)->add_entry)
-    CLASS (index)->add_entry (index, entry);
+  if (iclass->add_entry)
+    iclass->add_entry (index, entry);
 
   g_signal_emit (G_OBJECT (index), gst_index_signals[ENTRY_ADDED], 0, entry);
 
@@ -326,6 +328,7 @@ GstIndexEntry*
 gst_index_add_id (GstIndex *index, gint id, gchar *description)
 {
   GstIndexEntry *entry;
+  GstIndexClass *iclass;
 
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (description != NULL, NULL);
@@ -335,8 +338,10 @@ gst_index_add_id (GstIndex *index, gint id, gchar *description)
   entry->id = id;
   entry->data.id.description = description;
 
-  if (CLASS (index)->add_entry)
-    CLASS (index)->add_entry (index, entry);
+  iclass = GST_INDEX_GET_CLASS (index);
+
+  if (iclass->add_entry)
+    iclass->add_entry (index, entry);
   
   g_signal_emit (G_OBJECT (index), gst_index_signals[ENTRY_ADDED], 0, entry);
 
@@ -364,6 +369,7 @@ gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
   gchar *writer_string = NULL;
   gboolean success = FALSE;
   GstIndexEntry *entry;
+  GstIndexClass *iclass;
 
   g_return_val_if_fail (GST_IS_INDEX (index), FALSE);
   g_return_val_if_fail (GST_IS_OBJECT (writer), FALSE);
@@ -382,8 +388,10 @@ gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
     g_hash_table_insert (index->writers, writer, entry);
   }
 
-  if (CLASS (index)->resolve_writer) {
-    success = CLASS (index)->resolve_writer (index, writer, id, &writer_string);
+  iclass = GST_INDEX_GET_CLASS (index);
+
+  if (iclass->resolve_writer) {
+    success = iclass->resolve_writer (index, writer, id, &writer_string);
   }
 
   if (index->resolver) {
@@ -419,6 +427,7 @@ gst_index_add_association (GstIndex *index, gint id, GstAssocFlags flags,
   gint nassocs = 0;
   GstFormat cur_format;
   volatile gint64 dummy;
+  GstIndexClass *iclass;
 
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (format != 0, NULL);
@@ -460,8 +469,10 @@ gst_index_add_association (GstIndex *index, gint id, GstAssocFlags flags,
   }
   va_end (args);
 
-  if (CLASS (index)->add_entry)
-    CLASS (index)->add_entry (index, entry);
+  iclass = GST_INDEX_GET_CLASS (index);
+
+  if (iclass->add_entry)
+    iclass->add_entry (index, entry);
 
   g_signal_emit (G_OBJECT (index), gst_index_signals[ENTRY_ADDED], 0, entry);
 
@@ -542,10 +553,14 @@ gst_index_get_assoc_entry_full (GstIndex *index, gint id,
 			        GCompareDataFunc func,
 			        gpointer user_data)
 {
+  GstIndexClass *iclass;
+
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
 
-  if (CLASS(index)->get_assoc_entry)
-    return CLASS (index)->get_assoc_entry (index, id, method, format, value, func, user_data);
+  iclass = GST_INDEX_GET_CLASS (index);
+
+  if (iclass->get_assoc_entry)
+    return iclass->get_assoc_entry (index, id, method, format, value, func, user_data);
   
   return NULL;
 }

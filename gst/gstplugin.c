@@ -436,11 +436,9 @@ gst_plugin_load (const gchar *name)
   GError *error = NULL;
 
   plugin = gst_registry_pool_find_plugin (name);
-  if (plugin)
-  {
+  if (plugin) {
     gboolean result = gst_plugin_load_plugin (plugin, &error);
-    if (error)
-    {
+    if (error) {
       GST_DEBUG (GST_CAT_PLUGIN_LOADING, "load_plugin error: %s\n",
 	         error->message);
       g_error_free (error);

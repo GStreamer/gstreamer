@@ -27,8 +27,6 @@
 
 #include "gstsystemclock.h"
 
-#define CLASS(clock)  GST_SYSTEM_CLOCK_CLASS (G_OBJECT_GET_CLASS (clock))
-
 static GstClock *_the_system_clock = NULL;
 
 static void			gst_system_clock_class_init	(GstSystemClockClass *klass);
