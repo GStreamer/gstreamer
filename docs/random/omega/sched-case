@@ -1,0 +1,20 @@
+Case 1:
+
+
+---------------------------------------------------
+| pipeline                                        |
+| ---------------                ---------------- |
+| | bin         |                | thread       | |
+| | ----------- |  ------------  | ------------ | |
+| | | fakesrc | |  | queue    |  | | fakesink | | |
+| | |     src>|-|--|<sink src>|--|-|<sink     | | |
+| | ----------- |  ------------  | ------------ | |
+| ---------------                ---------------- |
+---------------------------------------------------
+
+Pipeline manages: fakesrc, queue
+Thread manages: fakesink
+Both forced to use cothreads.
+
+First thing the thread does is try to pull from the queue.  Because it's a chain function, it runs in
+_chain_wrapper, which calls gst_pad_pull().

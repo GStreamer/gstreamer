@@ -1,0 +1,21 @@
+Plugin Registry:
+Have a web-accessible database of plugins from everywhere, including their merit values.  gstplugin.c
+and the autoplug code (should we abstract out autoplug into a special file?  I think so) can make use of
+this database via another module (gstwebregistry.c?) to look up stuff.  A copy of the registry (gzip'd
+XML) could even be cached.  System and user options would determine whether this registry is checked
+and/or updated automatically.  The registry could simply be merged with the local machine and user
+registries, with the state bit set to "don't even have it".  Autodownload/install code should be
+provided, though designed such that it's not toolkit/OS specific.
+
+Merit:
+Plugins and even type definition should carry merit values, allowing the system to determine which
+plugin or type definition is better.  This can be tied into the web registry setup, where merit values
+can be updated without requiring an update of the plugins themselves.  They can also be guaranteed
+unique if there's a range reserved for registered objects.  Unfortunately, that might get us into some
+political wars.  We could leave that up to the users via some voting system.
+
+Scheduling state:
+All the scheduling info for a Bin should be contained in a single object of some form.  This can be
+saved off and restored seamlessly at some point in the future.  This would be ideal for some autoplug
+cases, where the rest of the pipeline simply ceases to exist temporarily, and scheduling entry points
+may need to be modified until the autoplug stage is finished.

@@ -1,0 +1,39 @@
+72)
+ 
+ [-pipeline---------------------------------------------------------------------------------------------]
+ ! [-bin-----------------------------]                                               [-thread---------] !
+ ! ! [--------]        [---------]   !     [------]      [---------]      [------]   !    [--------]  ! !
+ ! ! !faksesrc!        !identity1!   !     !queue1!      !identity2!      !queue2!   !    !fakesink!  ! !
+ ! ! !       src --- sink  *     src --- sink n  src -- sink     src -- sink    src --  sink       !  ! !
+ ! ! [--------]        [---------]   !     [------]      [---------]      [------]   !    [--------]  ! !
+ ! [---------------------------------]                                               [----------------] !
+ [------------------------------------------------------------------------------------------------------]
+
+
+-----
+Ideally, you'd end up with the following sub-pipelines
+
+pipeline:
+fakesrc -> identity1 -> queue1
+queue1 -> identity2 -> queue2
+
+thread:
+queue2 -> fakesink
+
+
+They'd be scheduled as following:
+
+fakesrc: passive chained, pulled by identity1
+identity1: loopfunc cothreaded, ENTRY
+queue1:sink: passive chained, pushed by identity1
+
+queue1:src: _get-based iteration, ENTRY
+identity2: chained by queue1
+queue2:src: passively chained, pushed by identity2
+
+queue2:sink: passively chained, pulled by fakesink
+fakesink: loopfunc cothreaded, ENTRY
+
+
+-----
+Most likely, we'd end up with the following

@@ -1,0 +1,19 @@
+disksrc -> mp3parse -> mpg123 -> audiosink
+
+disksrc reads last 4K chunk from disk.  Sets EOS on the buffer, pushes buffer out to peer.
+disksrc:src sets itself to EOS and chains to mp3parse.
+
+ mp3parse takes the buffer and slices it up into several.
+ Each buffer gets chained off to mpg123.
+
+  mpg123 decoders each frame and sends it to audiosink.
+
+   audiosink dumps the audio data to the sound card.
+
+  mpg123 returns from the chain, and returns.
+
+ mp3parse returns from each of the several chains,a nd returns.
+
+disksrc:src returns from the chain, signals EOS, and sets disksrc's EOS flag
+
+At this point the pipeline state code takes over and starts to set everyone to READY

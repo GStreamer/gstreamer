@@ -1,0 +1,3 @@
+A very useful feature would be a FilterFactory, i.e. some system whereby filter writers can avoid
+getting their hands messy with the details of building and operating a G[tk]Object.  A couple of
+structures and a couple of functions should do it.

@@ -1,0 +1,61 @@
+GStreamer polices for various forms of library output, including error cases.
+
+
+g_return_...
+============
+The parameters of a function are checked for validity (non-NULL, correct type, etc.) with g_return[_val]_if_fail, i.e.:
+
+gst_element_connect (GstElement *src, gchar *srcpadname,
+                     GstElement *dest, gchar *destpadname) {
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (GST_IS_ELEMENT(src));
+  g_return_if_fail (srcpadname != NULL);
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (GST_IS_ELEMENT(dest));
+  g_return_if_fail (destpadname != NULL);
+
+This will inform the user of the library of any basic problems with the arguments they pass, such as a NULL pointer.
+
+
+ERROR
+=====
+The ERROR macro will be used whenever there is some other type of flaw in the data passed, at a GStreamer-specific 
+level:
+
+  srcpad = gst_element_get_pad (src, srcpadname);
+  if (srcpad == NULL) {
+    ERROR(src,"source element has no pad \"%s\"",srcpadname);
+    return;
+  }
+
+An ERROR will generally cause ceasation of the application, and ideally launch gdb.
+
+
+INFO
+====
+The INFO macro will be used to output any interesting state from the library, such as plugin loading and various events 
+of interest.  They will be separated into categories that can be individually enabled and disabled.
+
+Categories (first draft of list, unordered):
+
+cothreads			[cothreads.c]
+gst initialization		[gst.c]
+autoplug results		[autoplug.c]
+autoplug attempts		[autoplug.c]
+bin parentage issues		[gstbin.c]
+plan generation			[gstbin.c]
+schedule generation		[gstschedule.c]
+schedule implementation		[gstpad.c, gstbin.c, etc.]
+buffer operations		[gstbuffer.h]
+caps matching			[gstcaps.c]
+clock stuff			[gstclock.c]
+element pad operations		[gstelement.c]
+elementfactory operations	[gstelementfactory.c]
+pad creation/connection		[gstpad.c]
+pipeline stuff			[gstpipeline.c]
+plugin loading			[gstplugin.c]
+plugin loading errors		[gstplugin.c]
+properties operations		[gstprops.c]
+thread creation/management	[gstthread.c]
+type operations			[gsttype.c]
+XML load/save			[gstxml.c]

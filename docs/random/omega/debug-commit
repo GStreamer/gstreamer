@@ -1,0 +1,30 @@
+Changes made to the DEBUG system.  New header file gstdebug.h holds the stuff to keep it out of gst.h's
+hair.  DEBUG prints out the process id, cothread id, source filename and line number.  Two new macros
+DEBUG_ENTER and DEBUG_LEAVE are used to show the entry and exit of a given function.  This eventually
+might be used to construct call trace graphs, even taking cothreads into account.  This would be quite
+useful in visualizing the scheduling mechanism.
+
+Minor changes to various debug messages.
+
+Also sitting in gstdebug.h is a prototypical DEBUG_ENTER that's capable of performing DEBUG_LEAVE
+automatically.  It does this by utilizing a little-known GCC extension that allows one to call a
+function with the same parameters as the current function.  The macro uses this to basically call
+itself.  A boolean is used to ensure that when it calls itself it actually runs the body of the
+function.  In the meantime it prints stuff out before and after the real function, as well as
+constructing a debugging string.  This can be used eventually to provide call-wide data on the DEBUG
+lines, instead of having to replicate data on each call to DEBUG.  More research is needed into how this
+would most cleanly be fit into some other chunk of code, like GStreamer (I think of this DEBUG trick as
+a separate project, sorta).
+
+Unfortunately, the aforementioned DEBUG trick interacts quite poorly with cothreads.  Almost any time
+it's used in a function that has anything remotely to do with a cothread context (as in, it runs in
+one), a segfault results from the __builtin_apply call, which is the heart of the whole thing.  If
+someone who really knows assembly could analyze the resulting code to see what's really going on, we
+might find a way to fix either the macro or the cothreads (I'm thinking that there's something we missed
+in constructing the cothreads themselves) so this works in all cases.
+
+In the meantime, please insert both DEBUG_ENTER and DEBUG_LEAVE in your functions.  Be sure to put
+DEBUG_ENTER after your variable declarations and before any functional code, not to put the function
+name in any DEBUG strings (it's already there, trust me), and put a DEBUG_LEAVE if you care enough.
+
+Changes are going to happen in the way DEBUGs and other printouts occur, so stay tuned.

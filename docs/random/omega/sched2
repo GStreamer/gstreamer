@@ -1,0 +1,13 @@
+Currently, when an element wants to push or pull, they call gst_pad_*.  These functions then decide what
+to do based on the selection of pointers in the pad.  There are at least 2 options for each, plus some
+header stuff to do various checking of flags.  Unfortunately, because of the selection of pointers in
+the pad, there is at least one case where scheduling has to be tricked, by providing a pointer to a
+function with no body.
+
+What I propse is that these functionos be replaced with macros that call a function pointer directly.
+The default functions (provided by GstPad) would be capable of chaining, that's about it.  When a
+schedule is formed, these get replaced with more specific functions, provided by GstBin or a subclass.
+
+In the chain case, the pad_push_func might even be replaced brute force with the chain function, since
+they have the same prototype.  In the cothreaded case, various functions would provide the ability to
+switch, deal with bufpens, etc.
