@@ -27,6 +27,8 @@ gst_play_default_set_data_src (	GstPlay *play,
 								GstElement *datasrc,
 								GstElement* parent)
 {
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (datasrc != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (datasrc), FALSE);
 	
@@ -125,7 +127,7 @@ static gboolean
 gst_play_audiot_setup (	GstPlay *play,
 						GError **error)
 {
-	
+	g_return_val_if_fail (play != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	
 	/* creating gst_thread */
@@ -183,6 +185,8 @@ static gboolean
 gst_play_audiot_set_audio (	GstPlay *play,
 							GstElement *audio_sink)
 {
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (audio_sink != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (audio_sink), FALSE);
 	
@@ -219,7 +223,8 @@ static gboolean
 gst_play_audiot_set_auto (	GstPlay *play,
 							GstElement *autoplugger)
 {
-
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (autoplugger != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (autoplugger), FALSE);
 	
@@ -251,6 +256,7 @@ gst_play_audioht_setup (	GstPlay *play,
 {
 	GstElement *audio_thread, *audio_queue;
 
+	g_return_val_if_fail (play != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	
 /*
@@ -337,6 +343,8 @@ gst_play_audioht_set_audio (	GstPlay *play,
 {
 	GstElement *audio_thread;
 	
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (audio_sink != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (audio_sink), FALSE);
 
@@ -377,6 +385,8 @@ gst_play_audioht_set_auto (	GstPlay *play,
 {
 	GstElement *audio_thread;
 	
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (autoplugger != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (autoplugger), FALSE);
 
@@ -413,6 +423,7 @@ gst_play_video_setup (	GstPlay *play,
 	GstElement *video_queue, *video_bin;
 	GstElement *work_thread, *colorspace;
 
+	g_return_val_if_fail (play != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	
 	/* creating pipeline */	
@@ -558,7 +569,10 @@ gst_play_video_set_data_src (	GstPlay *play,
 								GstElement *datasrc)
 {
 	GstElement *work_thread;
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (datasrc != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
+	g_return_val_if_fail (GST_IS_ELEMENT(datasrc), FALSE);
 
 	work_thread = g_hash_table_lookup(play->other_elements, "work_thread");
 	return gst_play_default_set_data_src(play, datasrc, work_thread);
@@ -572,6 +586,7 @@ gst_play_video_set_auto (	GstPlay *play,
 	GstElement *audio_bin, *video_bin, *work_thread;
 
 	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (autoplugger != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (autoplugger), FALSE);
 
@@ -607,6 +622,8 @@ gst_play_video_set_video (	GstPlay *play,
 {
 	GstElement *video_mate, *video_bin;
 	
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (video_sink != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (video_sink), FALSE);
 
@@ -651,6 +668,8 @@ gst_play_video_set_audio (	GstPlay *play,
 {
 	GstElement *audio_bin;
 	
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (audio_sink != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (audio_sink), FALSE);
 	
@@ -1172,6 +1191,7 @@ gst_play_connect_visualisation (	GstPlay *play,
 									gboolean connect)
 {
 	GstPad *tee_vis_pad, *vis_video_thread_pad;
+	gboolean connected = FALSE;
 	
 	g_return_val_if_fail (play != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
@@ -1181,10 +1201,15 @@ gst_play_connect_visualisation (	GstPlay *play,
 	vis_video_thread_pad = g_hash_table_lookup(	play->other_elements,
 												"vis_video_thread_pad");
 	
-	if (connect) {
+	if (gst_pad_get_peer (vis_video_thread_pad) != NULL)
+		connected = TRUE;
+	else
+		connected = FALSE;
+	
+	if ( (connect) && (!connected) ) {
 		gst_pad_link (tee_vis_pad, vis_video_thread_pad);
 	}
-	else {
+	else if ( (!connect) && (connected) ){
 		gst_pad_unlink (tee_vis_pad, vis_video_thread_pad);
 	}
 	
