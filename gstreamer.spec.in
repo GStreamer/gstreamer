@@ -44,8 +44,6 @@ BuildRequires:	transfig
 BuildRequires:  xfig
 BuildRequires:  netpbm-progs
 BuildRequires:  ghostscript
-Obsoletes:	gstreamer
-Provides:	gstreamer
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
