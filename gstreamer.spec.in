@@ -3,7 +3,7 @@ Name: 		gstreamer
 Version: 	@VERSION@
 Release: 	@GST_VERSION_RELEASE@
 
-Copyright: 	LGPL
+License: 	LGPL
 Group: 		Libraries/Multimedia
 Source: 	%{name}-%{version}.tar.gz
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
@@ -34,39 +34,13 @@ else media-related.  Its plugin-based architecture means that new data
 types or processing capabilities can be added simply by installing new 
 plugins.
 
-%files
-%defattr(-, root, root)
-%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING 
-%{_bindir}/gst-complete
-%{_bindir}/gst-compprep
-%{_bindir}/gst-inspect
-%{_bindir}/gst-launch
-%{_bindir}/gst-register
-%{_libdir}/libgstreamer-%{version}.so.*
-%{_libdir}/gst/libgstautoplugcache*.so*
-%{_libdir}/gst/libgstautoplugger*.so*
-%{_libdir}/gst/libgstbasicscheduler*.so*
-%{_libdir}/gst/libgststandardscheduler*.so*
-%{_libdir}/gst/libgstelements*.so*
-%{_libdir}/gst/libgsttypes*.so*
-%{_libdir}/gst/libgststaticautoplug*.so*
-%{_libdir}/gst/libgstcontrol*.so*
-%{_libdir}/gst/libgstbytestream*.so*
-%{_libdir}/gst/libgstgetbits*.so*
-%{_libdir}/gst/libgstputbits*.so*
-%{_libdir}/gst/libgstspider*.so*
-%{_mandir}/man1/gst-complete.*
-%{_mandir}/man1/gst-compprep.*
-%{_mandir}/man1/gst-inspect.*
-%{_mandir}/man1/gst-launch.*
-%{_mandir}/man1/gst-register.*
-
 %package devel
-Summary: Libraries and include files for GStreamer streaming-media framework
-Group: Development/Libraries
-Requires: %{name} = %{version}
-Requires: glib2-devel >= %_glib2
-Requires: libxml2-devel >= %_libxml2
+Summary: 	Libraries/include files for GStreamer streaming media framework
+Group: 		Development/Libraries
+
+Requires: 	%{name} = %{version}-%{release}
+Requires: 	glib2-devel >= %_glib2
+Requires: 	libxml2-devel >= %_libxml2
 
 %description devel
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -78,86 +52,6 @@ plugins.
 
 This package contains the libraries and includes files necessary to develop
 applications and plugins for GStreamer.
-
-%files devel
-%defattr(-, root, root)
-%{_includedir}/gst
-%{_libdir}/libgstreamer.a
-%{_libdir}/libgstreamer.la
-%{_libdir}/libgstreamer.so
-%{_libdir}/pkgconfig/*
-%{_datadir}/gtk-doc/html/*
-%{_datadir}/devhelp/specs/gstreamer.devhelp
-%{_datadir}/devhelp/specs/gstreamer-libs.devhelp
-
-
-%changelog
-* Mon Apr 29 2002 Thomas Vander Stichele <thomas@apestaart.org>
-- moved html docs to gtk-doc standard directory
-
-* Tue Mar 5 2002 Thomas Vander Stichele <thomas@apestaart.org>
-- move version defines of glib2 and libxml2 to configure.ac
-- add BuildRequires for these two libs
-
-* Sun Mar 3 2002 Thomas Vander Stichele <thomas@apestaart.org>
-- put html docs in canonical place, avoiding %doc erasure
-- added devhelp support, current install of it is hackish
-
-* Sat Mar 2 2002 Christian Schaller <Uraeus@linuxrising.org>
-- Added documentation to build
-
-* Mon Feb 11 2002 Thomas Vander Stichele <thomas@apestaart.org>
-- added libgstbasicscheduler
-- renamed libgst to libgstreamer
-
-* Fri Jan 04 2002 Christian Schaller <Uraeus@linuxrising.org>
-- Added configdir parameter as it seems the configdir gets weird otherwise
-
-* Thu Jan 03 2002 Thomas Vander Stichele <thomas@apestaart.org>
-- split off gstreamer-editor from core
-- removed gstreamer-gnome-apps
-
-* Sat Dec 29 2001 Rodney Dawes <dobey@free.fr>
-- Cleaned up the spec file for the gstreamer core/plug-ins split
-- Improve spec file
-
-* Sat Dec 15 2001 Christian Schaller <Uraeus@linuxrising.org>
-- Splitt of more plugins from the core and put them into their own modules
-- Includes colorspace, xfree and wav
-- Improved package Require lines
-- Added mp3encode (lame based) to the SPEC
-
-* Wed Dec 12 2001 Christian Schaller <Uraeus@linuxrising.org>
-- Thomas merged mpeg plugins into one
-* Sat Dec 08 2001 Christian Schaller <Uraeus@linuxrising.org>
-- More minor cleanups including some fixed descriptions from Andrew Mitchell
-
-* Fri Dec 07 2001 Christian Schaller <Uraeus@linuxrising.org>
-- Added logging to the make statement
-
-* Wed Dec 05 2001 Christian Schaller <Uraeus@linuxrising.org>
-- Updated in preparation for 0.3.0 release
-
-* Fri Jun 29 2001 Christian Schaller <Uraeus@linuxrising.org>
-- Updated for 0.2.1 release
-- Split out the GUI packages into their own RPM
-- added new plugins (FLAC, festival, quicktime etc.)
-
-* Sat Jun 09 2001 Christian Schaller <Uraeus@linuxrising.org>
-- Visualisation plugins bundled out togheter
-- Moved files sections up close to their respective descriptions
-
-* Sat Jun 02 2001 Christian Schaller <Uraeus@linuxrising.org>
-- Split the package into separate RPMS, plutting most plugins out by themselves.
-
-* Fri Jun 01 2001 Christian Schaller <Uraeus@linuxrising.org>
-- Updated with change suggestions from Dennis Bjorklund
-
-* Tue Jan 09 2001 Erik Walthinsen <omega@cse.ogi.edu>
-- updated to build -devel package as well
-
-* Sun Jan 30 2000 Erik Walthinsen <omega@cse.ogi.edu>
-- first draft of spec file
 
 %prep
 %setup
@@ -184,7 +78,8 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   --enable-debug \
   --with-configdir=/etc/gstreamer \
   --disable-tests --disable-examples --disable-debug-color \
-  --enable-docs-build
+  --enable-docs-build --with-html-dir=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
+
 if [ "$SMP" != "" ]; then
   (make "MAKE=make -k -j $SMP"; exit 0)
 else
@@ -215,3 +110,169 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 %postun
 /sbin/ldconfig
+
+%files
+%defattr(-, root, root)
+%doc AUTHORS COPYING README TODO \
+     COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING 
+%{_bindir}/gst-complete
+%{_bindir}/gst-compprep
+%{_bindir}/gst-inspect
+%{_bindir}/gst-launch
+%{_bindir}/gst-register
+%{_libdir}/libgstreamer-%{version}.so.*
+%{_libdir}/gst/libgstautoplugcache*.so*
+%{_libdir}/gst/libgstautoplugger*.so*
+%{_libdir}/gst/libgstbasicscheduler*.so*
+%{_libdir}/gst/libgststandardscheduler*.so*
+%{_libdir}/gst/libgstelements*.so*
+%{_libdir}/gst/libgsttypes*.so*
+%{_libdir}/gst/libgststaticautoplug*.so*
+%{_libdir}/gst/libgstcontrol*.so*
+%{_libdir}/gst/libgstbytestream*.so*
+%{_libdir}/gst/libgstgetbits*.so*
+%{_libdir}/gst/libgstputbits*.so*
+%{_libdir}/gst/libgstspider*.so*
+%{_mandir}/man1/gst-complete.*
+%{_mandir}/man1/gst-compprep.*
+%{_mandir}/man1/gst-inspect.*
+%{_mandir}/man1/gst-launch.*
+%{_mandir}/man1/gst-register.*
+
+
+%files devel
+%defattr(-, root, root)
+%{_includedir}/gst
+%{_libdir}/libgstreamer.a
+%{_libdir}/libgstreamer.la
+%{_libdir}/libgstreamer.so
+%{_libdir}/pkgconfig/*
+## we specify the API docs as regular files since %docs doesn't fail when
+## files aren't found anymore for RPM >= 4
+## we list all of the files we really need to trap incomplete doc builds
+## gstreamer API
+%{_datadir}/gtk-doc/html/gstreamer/autopluggers.html
+%{_datadir}/gtk-doc/html/gstreamer/book1.html
+%{_datadir}/gtk-doc/html/gstreamer/element-types.html
+%{_datadir}/gtk-doc/html/gstreamer/gstautoplugfactory.html
+%{_datadir}/gtk-doc/html/gstreamer/gstautoplug.html
+%{_datadir}/gtk-doc/html/gstreamer/gstbin.html
+%{_datadir}/gtk-doc/html/gstreamer/gstclock.html
+%{_datadir}/gtk-doc/html/gstreamer/gstelement.html
+%{_datadir}/gtk-doc/html/gstreamer/gst-index.html
+%{_datadir}/gtk-doc/html/gstreamer/gstobject.html
+%{_datadir}/gtk-doc/html/gstreamer/gstpad.html
+%{_datadir}/gtk-doc/html/gstreamer/gstpipeline.html
+%{_datadir}/gtk-doc/html/gstreamer/gstpluginfeature.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-cothreads.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstbuffer.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstbufferpool.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstcaps.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstcpu.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstdata.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstevent.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gst.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstinfo.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstpad-template.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstparse.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstplugin.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstprops.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gststaticautoplug.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gststaticautoplugrender.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gsttee.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gsttype.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstutils.html
+%{_datadir}/gtk-doc/html/gstreamer/gstreamer.html
+%{_datadir}/gtk-doc/html/gstreamer/gstschedulerfactory.html
+%{_datadir}/gtk-doc/html/gstreamer/gstscheduler.html
+%{_datadir}/gtk-doc/html/gstreamer/gstthread.html
+%{_datadir}/gtk-doc/html/gstreamer/gsttimecache.html
+%{_datadir}/gtk-doc/html/gstreamer/gsttypefactory.html
+%{_datadir}/gtk-doc/html/gstreamer/gstxml.html
+%{_datadir}/gtk-doc/html/gstreamer/index.sgml
+## gstreamer-libs API
+%{_datadir}/gtk-doc/html/gstreamer-libs/book1.html
+%{_datadir}/gtk-doc/html/gstreamer-libs/gstreamer-libs-gstcolorspace.html
+%{_datadir}/gtk-doc/html/gstreamer-libs/gstreamer-libs-gstgetbits.html
+%{_datadir}/gtk-doc/html/gstreamer-libs/gstreamer-libs.html
+%{_datadir}/gtk-doc/html/gstreamer-libs/index.sgml
+## this catches all of the rest of the docs we might have forgotten
+%{_datadir}/gtk-doc/html/*
+%{_datadir}/devhelp/specs/gstreamer.devhelp
+%{_datadir}/devhelp/specs/gstreamer-libs.devhelp
+
+
+%changelog
+* Fri Jun 07 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- added release of gstreamer to req of gstreamer-devel
+- changed location of API docs to be in gtk-doc like other gtk-doc stuff
+- reordered SPEC file
+
+* Mon Apr 29 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- moved html docs to gtk-doc standard directory
+
+* Tue Mar 5 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- move version defines of glib2 and libxml2 to configure.ac
+- add BuildRequires for these two libs
+
+* Sun Mar 3 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- put html docs in canonical place, avoiding %doc erasure
+- added devhelp support, current install of it is hackish
+
+* Sat Mar 2 2002 Christian Schaller <Uraeus@linuxrising.org>
+- Added documentation to build
+
+* Mon Feb 11 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- added libgstbasicscheduler
+- renamed libgst to libgstreamer
+
+* Fri Jan 04 2002 Christian Schaller <Uraeus@linuxrising.org>
+- Added configdir parameter as it seems the configdir gets weird otherwise
+
+* Thu Jan 03 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- split off gstreamer-editor from core
+- removed gstreamer-gnome-apps
+
+* Sat Dec 29 2001 Rodney Dawes <dobey@free.fr>
+- Cleaned up the spec file for the gstreamer core/plug-ins split
+- Improve spec file
+
+* Sat Dec 15 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Split of more plugins from the core and put them into their own modules
+- Includes colorspace, xfree and wav
+- Improved package Require lines
+- Added mp3encode (lame based) to the SPEC
+
+* Wed Dec 12 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Thomas merged mpeg plugins into one
+* Sat Dec 08 2001 Christian Schaller <Uraeus@linuxrising.org>
+- More minor cleanups including some fixed descriptions from Andrew Mitchell
+
+* Fri Dec 07 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Added logging to the make statement
+
+* Wed Dec 05 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Updated in preparation for 0.3.0 release
+
+* Fri Jun 29 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Updated for 0.2.1 release
+- Split out the GUI packages into their own RPM
+- added new plugins (FLAC, festival, quicktime etc.)
+
+* Sat Jun 09 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Visualisation plugins bundled out togheter
+- Moved files sections up close to their respective descriptions
+
+* Sat Jun 02 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Split the package into separate RPMS, 
+  putting most plugins out by themselves.
+
+* Fri Jun 01 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Updated with change suggestions from Dennis Bjorklund
+
+* Tue Jan 09 2001 Erik Walthinsen <omega@cse.ogi.edu>
+- updated to build -devel package as well
+
+* Sun Jan 30 2000 Erik Walthinsen <omega@cse.ogi.edu>
+- first draft of spec file
+
