@@ -140,7 +140,7 @@ gst_play_pipeline_setup (GstPlay *play)
                              gst_element_get_pad (video_queue, "sink"),
 			     "sink");
   
-  video_switch = gst_element_factory_make ("videoswitch",
+  video_switch = gst_element_factory_make ("switch",
                                            "video_switch");
   if (!GST_IS_ELEMENT (video_switch))
     return FALSE;
@@ -149,9 +149,10 @@ gst_play_pipeline_setup (GstPlay *play)
   
   gst_bin_add (GST_BIN (work_thread), video_switch);
   
-  /* Connecting autoplugger to video switch and video switch to video output */
+  /* Connecting autoplugger to video switch and video switch to video output 
   gst_element_link (autoplugger, video_switch);
-  gst_element_link (video_switch, video_thread);
+  gst_element_link (video_switch, video_thread);*/
+  gst_element_link (autoplugger, video_thread);
   
   /* Creating our audio output bin 
      { queue ! volume ! tee ! { queue ! goom } ! fakesink } */
@@ -261,11 +262,10 @@ gst_play_tick_callback (GstPlay *play)
   
   g_return_val_if_fail (play != NULL, FALSE);
   
-  if (!GST_IS_PLAY (play))
-    {
-      play->priv->tick_id = 0;
-      return FALSE;
-    }
+  if (!GST_IS_PLAY (play)) {
+    play->priv->tick_id = 0;
+    return FALSE;
+  }
   
   clock = gst_bin_get_clock (GST_BIN (play));
   play->priv->time_nanos = gst_clock_get_time (clock);
@@ -275,11 +275,10 @@ gst_play_tick_callback (GstPlay *play)
   
   if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING)
     return TRUE;
-  else
-    {
-      play->priv->tick_id = 0;
-      return FALSE;
-    }
+  else {
+    play->priv->tick_id = 0;
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -299,11 +298,10 @@ gst_play_get_length_callback (GstPlay *play)
   video_sink_element = g_hash_table_lookup (play->priv->elements,
                                             "video_sink_element");
   if (!GST_IS_ELEMENT (audio_sink_element) &&
-      !GST_IS_ELEMENT (video_sink_element))
-    {
-      play->priv->length_id = 0;
-      return FALSE;
-    }
+      !GST_IS_ELEMENT (video_sink_element)) {
+    play->priv->length_id = 0;
+    return FALSE;
+  }
   
   /* Audio first and then Video */
   q = gst_element_query (audio_sink_element, GST_QUERY_TOTAL, &format, &value);
@@ -311,23 +309,21 @@ gst_play_get_length_callback (GstPlay *play)
     q = gst_element_query (video_sink_element, GST_QUERY_TOTAL, &format,
                            &value);
    
-  if (q)
-    {
-      play->priv->length_nanos = value;
-      g_signal_emit (G_OBJECT (play), gst_play_signals[STREAM_LENGTH],
-                     0,play->priv->length_nanos);
-      play->priv->length_id = 0;
-      return FALSE;
-    }
+  if (q) {
+    play->priv->length_nanos = value;
+    g_signal_emit (G_OBJECT (play), gst_play_signals[STREAM_LENGTH],
+                   0,play->priv->length_nanos);
+    play->priv->length_id = 0;
+    return FALSE;
+  }
   
   play->priv->get_length_attempt++;
   
   /* We try 16 times */
-  if (play->priv->get_length_attempt > 15)
-    {
-      play->priv->length_id = 0;
-      return FALSE;
-    }
+  if (play->priv->get_length_attempt > 15) {
+    play->priv->length_id = 0;
+    return FALSE;
+  }
   else
     return TRUE;
 }
@@ -343,30 +339,27 @@ gst_play_state_change (GstElement *element, GstElementState old,
   
   play = GST_PLAY (element);
   
-  if (state == GST_STATE_PLAYING)
-    {
-      if (play->priv->tick_id)
-        {
-          g_source_remove (play->priv->tick_id);
-          play->priv->tick_id = 0;
-        }
-        
-      play->priv->tick_id = g_timeout_add (200,
-                                           (GSourceFunc) gst_play_tick_callback,
-                                           play);
-      
-      play->priv->get_length_attempt = 0;
-      
-      if (play->priv->length_id)
-        {
-          g_source_remove (play->priv->length_id);
-          play->priv->length_id = 0;
-        }
-        
-      play->priv->length_id = g_timeout_add (200,
-                                     (GSourceFunc) gst_play_get_length_callback,
-                                     play);
+  if (state == GST_STATE_PLAYING) {
+    if (play->priv->tick_id) {
+      g_source_remove (play->priv->tick_id);
+      play->priv->tick_id = 0;
     }
+        
+    play->priv->tick_id = g_timeout_add (200,
+                                         (GSourceFunc) gst_play_tick_callback,
+                                         play);
+      
+    play->priv->get_length_attempt = 0;
+    
+    if (play->priv->length_id) {
+      g_source_remove (play->priv->length_id);
+      play->priv->length_id = 0;
+    }
+        
+    play->priv->length_id = g_timeout_add (200,
+                                   (GSourceFunc) gst_play_get_length_callback,
+                                   play);
+  }
     
   if (GST_ELEMENT_CLASS (parent_class)->state_change)
     GST_ELEMENT_CLASS (parent_class)->state_change (element, old, state);
@@ -388,29 +381,25 @@ gst_play_dispose (GObject *object)
   
   play = GST_PLAY (object);
   
-  if (play->priv->length_id)
-    {
-      g_source_remove (play->priv->length_id);
-      play->priv->length_id = 0;
-    }
+  if (play->priv->length_id) {
+    g_source_remove (play->priv->length_id);
+    play->priv->length_id = 0;
+  }
     
-  if (play->priv->tick_id)
-    {
-      g_source_remove (play->priv->tick_id);
-      play->priv->tick_id = 0;
-    }
+  if (play->priv->tick_id) {
+    g_source_remove (play->priv->tick_id);
+    play->priv->tick_id = 0;
+  }
     
-  if (play->priv->location)
-    {
-      g_free (play->priv->location);
-      play->priv->location = NULL;
-    }
+  if (play->priv->location) {
+    g_free (play->priv->location);
+    play->priv->location = NULL;
+  }
   
-  if (play->priv->elements)
-    {
-      g_hash_table_destroy (play->priv->elements);
-      play->priv->elements = NULL;
-    }
+  if (play->priv->elements) {
+    g_hash_table_destroy (play->priv->elements);
+    play->priv->elements = NULL;
+  }
     
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -560,30 +549,44 @@ gst_play_get_location (GstPlay *play)
 gboolean
 gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
 {
-  GstElement *audio_sink_element;
+  GstElement *audio_sink_element, *video_sink_element;
   
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  
+  g_message ("trying to seek");
   
   if (time_nanos < 0LL)
     time_nanos = 0LL;
   
   audio_sink_element = g_hash_table_lookup (play->priv->elements,
                                             "audio_sink_element");
-  if (GST_IS_ELEMENT (audio_sink_element))
-    {
-      gboolean s = FALSE;
-      GstClock *clock = gst_bin_get_clock (GST_BIN (play));
-      s = gst_element_seek (audio_sink_element, GST_FORMAT_TIME |
+  video_sink_element = g_hash_table_lookup (play->priv->elements,
+                                            "video_sink_element");
+  
+  if (GST_IS_ELEMENT (audio_sink_element) &&
+      GST_IS_ELEMENT (video_sink_element)) {
+    gboolean s = FALSE;
+    
+    s = gst_element_seek (audio_sink_element, GST_FORMAT_TIME |
+                          GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH,
+                          time_nanos);
+    if (!s) {
+      s = gst_element_seek (video_sink_element, GST_FORMAT_TIME |
                             GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH,
                             time_nanos);
-      if (s)
-        {
-          play->priv->time_nanos = gst_clock_get_time (clock);
-          g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
-                         0,play->priv->time_nanos);
-        }
     }
+    
+    if (s) {
+      GstClock *clock = gst_bin_get_clock (GST_BIN (play));
+      play->priv->time_nanos = gst_clock_get_time (clock);
+      g_message ("seek succeeded");
+      g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
+                     0,play->priv->time_nanos);
+    }
+    else
+      g_message ("seek failed");
+  }
   
   return TRUE;
 }
@@ -676,14 +679,12 @@ gst_play_set_video_sink (GstPlay *play, GstElement *video_sink)
   
   video_sink_element = gst_play_get_sink_element (play, video_sink,
                                                   GST_PLAY_SINK_TYPE_VIDEO);
-  if (GST_IS_ELEMENT (video_sink_element))
-    {
-      g_hash_table_replace (play->priv->elements, "video_sink_element",
-                            video_sink_element);
-      g_signal_connect (G_OBJECT (video_sink_element), "have_video_size",
-                        G_CALLBACK (gst_play_have_video_size), play);
-    }
-  
+  if (GST_IS_ELEMENT (video_sink_element)) {
+    g_hash_table_replace (play->priv->elements, "video_sink_element",
+                          video_sink_element);
+    g_signal_connect (G_OBJECT (video_sink_element), "have_video_size",
+                      G_CALLBACK (gst_play_have_video_size), play);
+  } 
   
   return TRUE;
 }
@@ -742,11 +743,10 @@ gst_play_set_audio_sink (GstPlay *play, GstElement *audio_sink)
   
   audio_sink_element = gst_play_get_sink_element (play, audio_sink,
                                                   GST_PLAY_SINK_TYPE_AUDIO);
-  if (GST_IS_ELEMENT (audio_sink_element))
-    {
-      g_hash_table_replace (play->priv->elements, "audio_sink_element",
-                            audio_sink_element);
-    }
+  if (GST_IS_ELEMENT (audio_sink_element)) {
+    g_hash_table_replace (play->priv->elements, "audio_sink_element",
+                          audio_sink_element);
+  }
   
   return TRUE;
 }
@@ -763,18 +763,17 @@ gst_play_set_audio_sink (GstPlay *play, GstElement *audio_sink)
 gboolean
 gst_play_set_visualization (GstPlay *play, GstElement *vis_element)
 {
-  GstElement *old_vis_element, *vis_thread, *vis_queue, *video_switch;
+  GstElement *old_vis_element, *vis_thread, *vis_queue/*, *video_switch*/;
   gboolean was_playing = FALSE;
   
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
   
   /* We bring back the pipeline to READY */
-  if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING)
-    {
-      gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
-      was_playing = TRUE;
-    }
+  if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING) {
+    gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+    was_playing = TRUE;
+  }
   
   /* Getting needed objects */
   vis_thread = g_hash_table_lookup (play->priv->elements, "vis_thread");
@@ -787,17 +786,17 @@ gst_play_set_visualization (GstPlay *play, GstElement *vis_element)
   vis_queue = g_hash_table_lookup (play->priv->elements, "vis_queue");
   if (!GST_IS_ELEMENT (vis_queue))
     return FALSE;
-  video_switch = g_hash_table_lookup (play->priv->elements, "video_switch");
+  /*video_switch = g_hash_table_lookup (play->priv->elements, "video_switch");
   if (!GST_IS_ELEMENT (video_switch))
-    return FALSE;
+    return FALSE;*/
     
   /* Unlinking, removing the old element then adding and linking the new one */
   gst_element_unlink (vis_queue, old_vis_element);
-  gst_element_unlink (old_vis_element, video_switch);
+  /*gst_element_unlink (old_vis_element, video_switch);*/
   gst_bin_remove (GST_BIN (vis_thread), old_vis_element);
   gst_bin_add (GST_BIN (vis_thread), vis_element);
   gst_element_link (vis_queue, vis_element);
-  gst_element_link (vis_element, video_switch);
+  /*gst_element_link (vis_element, video_switch);*/
   
   if (was_playing)
     gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
@@ -833,11 +832,10 @@ gst_play_connect_visualization (GstPlay * play, gboolean connect)
   if (!GST_IS_PAD (audio_tee_pad2))
     return FALSE;
   
-  if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING)
-    {
-      gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
-      was_playing = TRUE;
-    }
+  if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING) {
+    gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+    was_playing = TRUE;
+  }
     
   if (gst_pad_get_peer (vis_thread_pad) != NULL)
     connected = TRUE;
@@ -845,13 +843,9 @@ gst_play_connect_visualization (GstPlay * play, gboolean connect)
     connected = FALSE;
 
   if ((connect) && (!connected))
-    {
-      gst_pad_link (audio_tee_pad2, vis_thread_pad);
-    }
+    gst_pad_link (audio_tee_pad2, vis_thread_pad);
   else if ((!connect) && (connected))
-    {
-      gst_pad_unlink (audio_tee_pad2, vis_thread_pad);
-    }
+    gst_pad_unlink (audio_tee_pad2, vis_thread_pad);
   
   if (was_playing)
     gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
@@ -883,98 +877,88 @@ gst_play_get_sink_element (GstPlay *play,
   g_return_val_if_fail (GST_IS_PLAY (play), NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
-  if (!GST_IS_BIN (element))
-    {
-      /* since its not a bin, we'll presume this 
-       * element is a sink element */
-      return element;
-    }
+  if (!GST_IS_BIN (element)) {
+    /* since its not a bin, we'll presume this 
+     * element is a sink element */
+    return element;
+  }
 
   elements = (GList *) gst_bin_get_list (GST_BIN (element));
 
   /* traverse all elements looking for a src pad */
 
-  while (elements)
-    {
+  while (elements) {
+    element = GST_ELEMENT (elements->data);
 
-      element = GST_ELEMENT (elements->data);
+    /* Recursivity :) */
 
-      /* Recursivity :) */
-
-      if (GST_IS_BIN (element))
-	{
-	  element = gst_play_get_sink_element (play, element, sink_type);
-	  if (GST_IS_ELEMENT (element))
-	    {
-	      return element;
-	    }
-	}
-      else
-	{
-
-	  pads = gst_element_get_pad_list (element);
-	  has_src = FALSE;
-	  has_correct_type = FALSE;
-	  while (pads)
-	    {
-	      /* check for src pad */
-	      if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == GST_PAD_SRC)
-		{
-		  has_src = TRUE;
-		  break;
-		}
-	      else
-		{
-		  /* If not a src pad checking caps */
-		  GstCaps *caps;
-		  caps = gst_pad_get_caps (GST_PAD (pads->data));
-		  while (caps)
-		    {
-		      gboolean has_video_cap = FALSE, has_audio_cap = FALSE;
-		      if (g_ascii_strcasecmp (gst_caps_get_mime (caps),
-					      "audio/x-raw-int") == 0)
-			{
-			  has_audio_cap = TRUE;
-			}
-		      if ((g_ascii_strcasecmp (gst_caps_get_mime (caps),
-					      "video/x-raw-yuv") == 0) ||
-			  (g_ascii_strcasecmp (gst_caps_get_mime (caps),
-					       "video/x-raw-rgb") == 0))
-									 
-			{
-			  has_video_cap = TRUE;
-			}
-
-		      switch (sink_type)
-			{
-			case GST_PLAY_SINK_TYPE_AUDIO:
-			  if (has_audio_cap)
-			    has_correct_type = TRUE;
-			  break;;
-			case GST_PLAY_SINK_TYPE_VIDEO:
-			  if (has_video_cap)
-			    has_correct_type = TRUE;
-			  break;;
-			case GST_PLAY_SINK_TYPE_ANY:
-			  if ((has_video_cap) || (has_audio_cap))
-			    has_correct_type = TRUE;
-			  break;;
-			default:
-			  has_correct_type = FALSE;
-			}
-		      caps = caps->next;
-		    }
-		}
-	      pads = g_list_next (pads);
-	    }
-	  if ((!has_src) && (has_correct_type))
-	    {
-	      return element;
-	    }
-	}
-      elements = g_list_next (elements);
+    if (GST_IS_BIN (element)) {
+      element = gst_play_get_sink_element (play, element, sink_type);
+      if (GST_IS_ELEMENT (element))
+        return element;
     }
+    else {
+      pads = gst_element_get_pad_list (element);
+      has_src = FALSE;
+      has_correct_type = FALSE;
+      while (pads) {
+        /* check for src pad */
+        if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == GST_PAD_SRC) {
+          has_src = TRUE;
+          break;
+        }
+        else {
+          /* If not a src pad checking caps */
+          GstCaps *caps;
+          caps = gst_pad_get_caps (GST_PAD (pads->data));
+          while (caps) {
+            gboolean has_video_cap = FALSE, has_audio_cap = FALSE;
+            if (g_ascii_strcasecmp (gst_caps_get_mime (caps),
+                                    "audio/x-raw-int") == 0) {
+              has_audio_cap = TRUE;
+            }
+            
+            if ((g_ascii_strcasecmp (gst_caps_get_mime (caps),
+                                     "video/x-raw-yuv") == 0) ||
+                (g_ascii_strcasecmp (gst_caps_get_mime (caps),
+                                     "video/x-raw-rgb") == 0)) {
+              has_video_cap = TRUE;
+            }
+
+            switch (sink_type) {
+              case GST_PLAY_SINK_TYPE_AUDIO:
+                if (has_audio_cap)
+                  has_correct_type = TRUE;
+                break;;
+              case GST_PLAY_SINK_TYPE_VIDEO:
+                if (has_video_cap)
+                  has_correct_type = TRUE;
+                break;;
+              case GST_PLAY_SINK_TYPE_ANY:
+                if ((has_video_cap) || (has_audio_cap))
+                  has_correct_type = TRUE;
+                break;;
+              default:
+                has_correct_type = FALSE;
+            }
+            
+            caps = caps->next;
+          }
+        }
+        
+        pads = g_list_next (pads);
+        
+      }
+      
+      if ((!has_src) && (has_correct_type))
+        return element;
+    }
+    
+    elements = g_list_next (elements);
+  }
+  
   /* we didn't find a sink element */
+  
   return NULL;
 }
 
@@ -997,24 +981,23 @@ gst_play_get_type (void)
 {
   static GType play_type = 0;
 
-  if (!play_type)
-    {
-      static const GTypeInfo play_info = {
-	sizeof (GstPlayClass),
-	NULL,
-	NULL,
-	(GClassInitFunc) gst_play_class_init,
-	NULL,
-        NULL,
-        sizeof (GstPlay),
-	0,
-        (GInstanceInitFunc) gst_play_init,
-	NULL
-      };
+  if (!play_type) {
+    static const GTypeInfo play_info = {
+      sizeof (GstPlayClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_play_class_init,
+      NULL,
+      NULL,
+      sizeof (GstPlay),
+      0,
+      (GInstanceInitFunc) gst_play_init,
+      NULL
+    };
       
-      play_type = g_type_register_static (GST_TYPE_PIPELINE, "GstPlay",
-                                          &play_info, 0);
-    }
+    play_type = g_type_register_static (GST_TYPE_PIPELINE, "GstPlay",
+                                        &play_info, 0);
+  }
 
   return play_type;
 }
