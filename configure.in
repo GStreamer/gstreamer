@@ -248,7 +248,7 @@ dnl Do a compile to check that it has atomic_set (eg, linux 2.0 didn't)
 if test x$HAVE_ATOMIC_H = xyes; then
   AC_TRY_RUN([
 #include "asm/atomic.h"
-main() { atomic_t t; atomic_set(&t,0); return 0;}
+main() { atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0;}
   ],, [
     # Not successful
     if test x$HAVE_ATOMIC_H = xyes; then
