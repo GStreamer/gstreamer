@@ -2,11 +2,12 @@
 GstVersion
 
 <!-- ##### SECTION Short_Description ##### -->
-GStreamer version macros
+GStreamer version macros.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+Use these macros e.g. when defining own plugins.
+The version macros get defined by including "gst/gst.h".
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

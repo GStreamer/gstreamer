@@ -1,3 +1,16 @@
+2004-10-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/tmpl/gstobject.sgml:
+	* docs/gst/tmpl/gstplugin.sgml:
+	* docs/gst/tmpl/gstpluginfeature.sgml:
+	* docs/gst/tmpl/gstregistry.sgml:
+	* docs/gst/tmpl/gstversion.sgml:
+	* gst/gstbin.c:
+	  more api documentation
+	* gst/gstplugin.c: (gst_plugin_register_func),
+	(gst_plugin_check_file), (gst_plugin_load_file):
+	  better error signaling and logging
+
 2004-10-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstqueue.c: (gst_queue_init), (gst_queue_handle_src_query):

@@ -152,12 +152,13 @@ One would use this macro to define a local plugin that can only be used by the o
 
 <!-- ##### USER_FUNCTION GstPluginFilter ##### -->
 <para>
-
+A function that can be used with e.g. gst_registry_plugin_filter()
+to get a list of plugins that match certain criteria.
 </para>
 
-@plugin: 
-@user_data: 
-@Returns: 
+@plugin: the plugin to check
+@user_data: the user_data that has been passed on e.g. gst_registry_plugin_filter()
+@Returns: TRUE for a positive match, FALSE otherwise
 
 
 <!-- ##### FUNCTION gst_plugin_get_name ##### -->

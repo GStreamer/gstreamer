@@ -509,7 +509,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
  * @element: #GstElement to add to bin
  *
  * Adds the given element to the bin.  Sets the element's parent, and thus
- * adds a reference.
+ * takes ownership of the element. An element can only be added to one bin.
  */
 void
 gst_bin_add (GstBin * bin, GstElement * element)

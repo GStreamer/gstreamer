@@ -204,6 +204,9 @@ gst_plugin_register_func (GstPlugin * plugin, GModule * module,
     return FALSE;
   }
 
+  if (GST_CAT_DEFAULT)
+    GST_LOG ("plugin \"%s\" looks good", GST_STR_NULL (plugin->filename));
+
   gst_plugin_desc_copy (&plugin->desc, desc);
   plugin->module = module;
 
@@ -423,7 +426,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
       plugin, filename);
 
   if (g_module_symbol (module, "plugin_init", &ptr)) {
-    g_print
+    GST_WARNING
         ("plugin %p from file \"%s\" exports a symbol named plugin_init\n",
         plugin, plugin->filename);
     g_set_error (error, GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_NAME_MISMATCH,
@@ -433,6 +436,9 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   /* this is where we load the actual .so, so let's trap SIGSEGV */
   _gst_plugin_fault_handler_setup ();
   _gst_plugin_fault_handler_filename = plugin->filename;
+
+  GST_LOG ("Plugin %p for file \"%s\" prepared, registering...",
+      plugin, filename);
 
   if (gst_plugin_register_func (plugin, module, desc)) {
     /* remove signal handler */

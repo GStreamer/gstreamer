@@ -2,11 +2,12 @@
 GstRegistry
 
 <!-- ##### SECTION Short_Description ##### -->
-Abstract base class for management of #GstPlugin objects
+Abstract base class for management of #GstPlugin objects.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-The registry holds the available plugins in the system.
+One registry holds the metadata of a set of plugins.
+All registries build the #GstRegistryPool.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
