@@ -33,6 +33,7 @@
 #undef HAVE_CSSAUTH
 #undef HAVE_VORBIS
 #undef HAVE_LIBMAD
+#undef HAVE_LIBMIKMOD
 #undef HAVE_LIBJPEG
 #undef HAVE_LIBGSM
 #undef HAVE_LIBSDL

@@ -494,6 +494,42 @@ AC_CHECK_LIB(mad, mad_decoder_finish,
   HAVE_LIBMAD=no,
 )
 
+dnl Check for libmiikmod
+AC_MSG_CHECKING(Mikmod library)
+AC_CHECK_LIB(mikmod, MikMod_Init,
+  HAVE_LIBMIKMOD=yes
+  AC_DEFINE(HAVE_LIBMIKMOD, 1, [Define if libmikmod is available]),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: mad
+)
+  HAVE_LIBMIKMOD=no,
+)
+
+
+dnl Check for libmiikmod
+AC_MSG_CHECKING(Mikmod library)
+AC_CHECK_LIB(mikmod, MikMod_Init,
+  HAVE_LIBMIKMOD=yes
+  AC_DEFINE(HAVE_LIBMIKMOD, 1, [Define if libmikmod is available]),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: mad
+)
+  HAVE_LIBMIKMOD=no,
+)
+
+
+dnl Check for libmiikmod
+AC_MSG_CHECKING(Mikmod library)
+AC_CHECK_LIB(mikmod, MikMod_Init,
+  HAVE_LIBMIKMOD=yes
+  AC_DEFINE(HAVE_LIBMIKMOD, 1, [Define if libmikmod is available]),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: mad
+)
+  HAVE_LIBMIKMOD=no,
+)
+
+
 dnl Check for libvorbis
 AC_MSG_CHECKING(Vorbis library)
 AC_CHECK_LIB(vorbis, ogg_sync_init,
@@ -896,6 +932,18 @@ if test "x$HAVE_LIBMAD" = xyes; then
   AC_DEFINE(HAVE_LIBMAD)
 fi
 
+if test "x$HAVE_LIBMIKMOD" = xyes; then
+  AC_DEFINE(HAVE_LIBMIKMOD)
+fi
+
+if test "x$HAVE_LIBMIKMOD" = xyes; then
+  AC_DEFINE(HAVE_LIBMIKMOD)
+fi
+
+if test "x$HAVE_LIBMIKMOD" = xyes; then
+  AC_DEFINE(HAVE_LIBMIKMOD)
+fi
+
 if test "x$HAVE_VORBIS" = xyes; then
   AC_DEFINE(HAVE_VORBIS)
 fi
@@ -952,6 +1000,7 @@ AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(HAVE_OSS,            test "x$HAVE_OSS" = "xyes")
 AM_CONDITIONAL(HAVE_XAUDIO,         test "x$HAVE_XAUDIO" = "xyes")
 AM_CONDITIONAL(HAVE_LIBMAD,         test "x$HAVE_LIBMAD" = "xyes")
+AM_CONDITIONAL(HAVE_LIBMIKMOD,      test "x$HAVE_LIBMIKMOD" = "xyes")
 AM_CONDITIONAL(HAVE_LINUX_CDROM,    test "x$HAVE_LINUX_CDROM" = "xyes")
 AM_CONDITIONAL(HAVE_LINUX_VIDEODEV, test "x$HAVE_LINUX_VIDEODEV" = "xyes")
 AM_CONDITIONAL(HAVE_CSSAUTH,        test "x$HAVE_CSSAUTH" = "xyes")
@@ -1135,6 +1184,9 @@ plugins/mp3decode/mad/Makefile
 plugins/mp3decode/parse/Makefile
 plugins/mp3encode/Makefile
 plugins/mp3encode/lame/Makefile
+plugins/mikmod/Makefile
+plugins/mikmod/decoder/Makefile
+plugins/mikmod/types/Makefile
 plugins/mpeg2/Makefile
 plugins/mpeg2/parse/Makefile
 plugins/mpeg2/ac3parse/Makefile
