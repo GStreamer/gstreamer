@@ -191,7 +191,7 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_AUDIOFILE_TRUE@
 @USE_AUDIOFILE_TRUE@%files -n gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@%defattr(-, root, root)
-@USE_AUDIOFILE_TRUE@%{_libdir}/gst/libgstafs*
+@USE_AUDIOFILE_TRUE@%{_libdir}/gst/libgstaudiofile*
 @USE_AUDIOFILE_TRUE@
 @USE_AUDIOFILE_TRUE@%post -n  gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
@@ -515,7 +515,7 @@ Element for text-to-speech using the festival server.
 @USE_OSS_TRUE@%files -n gstreamer-oss
 @USE_OSS_TRUE@%defattr(-, root, root)
 @USE_OSS_TRUE@%{_libdir}/gst/libgstossaudio*
-@USE_OSS_TRUE@%{_libdir}/gst/libgstosshelper*
+# @USE_OSS_TRUE@%{_libdir}/gst/libgstosshelper*
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%post -n gstreamer-oss
 @USE_OSS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
@@ -920,7 +920,7 @@ and so on.
 %{_libdir}/gst/libgstmulaw*
 %{_libdir}/gst/libgstpassthrough*
 %{_libdir}/gst/libgstrtjpeg*
-%{_libdir}/gst/libgstfloatcast*
+# %{_libdir}/gst/libgstfloatcast*
 %{_libdir}/gst/libgstcutter*
 
 %post -n gstreamer-misc
