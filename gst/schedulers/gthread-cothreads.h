@@ -21,6 +21,7 @@
  */
 
 #include <glib.h>
+#include <gst/gstthread.h>
 
 /* the name of this cothreads */
 #define COTHREADS_NAME		"gthread"
@@ -44,6 +45,7 @@ struct _cothread_context {
   cothread *            main;
   cothread *            current;
   GMutex *              mutex;
+  GstThread *		gst_thread; /* the GstThread we're running from */
 };
 
 struct _cothread {
@@ -101,6 +103,7 @@ do_cothread_context_init (void)
   ret->mutex = g_mutex_new ();
   ret->cothreads = NULL;
   ret->current = ret->main;
+  ret->gst_thread = gst_thread_get_current();
   g_mutex_lock (ret->mutex);
   
   return ret;
@@ -132,6 +135,7 @@ run_new_thread (gpointer data)
   cothread *self = (cothread *) data;
   
   g_mutex_lock (self->context->mutex);
+  g_private_set (gst_thread_current, self->context->gst_thread);
   g_cond_signal (self->creator->cond);
   g_cond_wait (self->cond, self->context->mutex);
   if (self->die)
@@ -217,7 +221,3 @@ do_cothread_destroy (cothread *thread)
 
 #define do_cothread_get_current(context) ((context)->current)
 #define do_cothread_get_main(context) ((context)->main)
-  
-  
-  
-  
