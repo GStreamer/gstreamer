@@ -239,13 +239,13 @@ gst_adder_link (GstPad *pad, GstCaps *caps)
       }
       while (remove) {
         gst_element_remove_pad (GST_ELEMENT (adder),
-                                GST_PAD_CAST (remove->data));
+                                GST_PAD (remove->data));
       restart:
         channels = adder->input_channels;
         while (channels) {
           GstAdderInputChannel *channel;
 	  channel = (GstAdderInputChannel*) channels->data;
-          if (channel->sinkpad == GST_PAD_CAST (remove->data)) {
+          if (channel->sinkpad == GST_PAD (remove->data)) {
             gst_bytestream_destroy (channel->bytestream);
             adder->input_channels =
               g_slist_remove_link (adder->input_channels, channels);
