@@ -494,8 +494,8 @@ gst_v4lsrc_try_capture (GstV4lSrc * v4lsrc, gint width, gint height,
   vmmap.frame = frame;
   if (ioctl (GST_V4LELEMENT (v4lsrc)->video_fd, VIDIOCMCAPTURE, &vmmap) < 0) {
     if (errno != EINVAL)        /* our format failed! */
-      GST_ELEMENT_ERROR (v4lsrc, RESOURCE, OPEN_READ_WRITE, (NULL),
-          ("Error queueing our try-out buffer: %s", g_strerror (errno)));
+      GST_ERROR_OBJECT (v4lsrc,
+          "Error queueing our try-out buffer: %s", g_strerror (errno));
     munmap (buffer, vmbuf.size);
     return FALSE;
   }
