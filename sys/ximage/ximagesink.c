@@ -342,15 +342,15 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                       "red_mask",   G_TYPE_INT, ximagesink->xcontext->visual->red_mask,
                       "green_mask", G_TYPE_INT, ximagesink->xcontext->visual->green_mask,
                       "blue_mask",  G_TYPE_INT, ximagesink->xcontext->visual->blue_mask,
-                      "width",      G_TYPE_INT, e.xconfigure.width & ~3,
-                      "height",     G_TYPE_INT, e.xconfigure.height & ~3,
+                      "width",      G_TYPE_INT, e.xconfigure.width,
+                      "height",     G_TYPE_INT, e.xconfigure.height,
                       "framerate",  G_TYPE_DOUBLE, ximagesink->framerate,
                       NULL));
                 
                 if ( (r == GST_PAD_LINK_OK) || (r == GST_PAD_LINK_DONE) )
                   {
-                    GST_VIDEOSINK_WIDTH (ximagesink) = e.xconfigure.width & ~3;
-                    GST_VIDEOSINK_HEIGHT (ximagesink) = e.xconfigure.height & ~3;
+                    GST_VIDEOSINK_WIDTH (ximagesink) = e.xconfigure.width;
+                    GST_VIDEOSINK_HEIGHT (ximagesink) = e.xconfigure.height;
                 
                     if ( (ximagesink->ximage) &&
                          ( (GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->ximage->width) ||
@@ -521,7 +521,7 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
       "blue_mask",  G_TYPE_INT, xcontext->visual->blue_mask,
       "width",      GST_TYPE_INT_RANGE, 0, G_MAXINT,
       "height",     GST_TYPE_INT_RANGE, 0, G_MAXINT,
-      "framerate",  GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
+      "framerate",  GST_TYPE_DOUBLE_RANGE, 1.0, 100.0,
       NULL);
  
   g_mutex_unlock (ximagesink->x_lock);
@@ -587,7 +587,7 @@ gst_ximagesink_getcaps (GstPad *pad)
     return gst_caps_copy (ximagesink->xcontext->caps);
 
   return gst_caps_from_string ("video/x-raw-rgb, "
-      "framerate = (double) [ 0, MAX ], "
+      "framerate = (double) [ 1, 100 ], "
       "width = (int) [ 0, MAX ], "
       "height = (int) [ 0, MAX ]");
 }
@@ -1013,16 +1013,16 @@ gst_ximagesink_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
                    "red_mask",   G_TYPE_INT, ximagesink->xcontext->visual->red_mask,
                    "green_mask", G_TYPE_INT, ximagesink->xcontext->visual->green_mask,
                    "blue_mask",  G_TYPE_INT, ximagesink->xcontext->visual->blue_mask,
-                   "width",      G_TYPE_INT, xwindow->width & ~3,
-                   "height",     G_TYPE_INT, xwindow->height & ~3,
+                   "width",      G_TYPE_INT, xwindow->width,
+                   "height",     G_TYPE_INT, xwindow->height,
                    "framerate",  G_TYPE_DOUBLE, ximagesink->framerate,
                    NULL));
           
           /* If caps nego succeded updating our size */
           if ( (r == GST_PAD_LINK_OK) || (r == GST_PAD_LINK_DONE) )
             {
-              GST_VIDEOSINK_WIDTH (ximagesink) = xwindow->width & ~3;
-              GST_VIDEOSINK_HEIGHT (ximagesink) = xwindow->height & ~3;
+              GST_VIDEOSINK_WIDTH (ximagesink) = xwindow->width;
+              GST_VIDEOSINK_HEIGHT (ximagesink) = xwindow->height;
             }
         }
     }

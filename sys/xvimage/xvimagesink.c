@@ -559,7 +559,7 @@ gst_xvimagesink_get_xv_support (GstXContext *xcontext)
                       "red_mask", G_TYPE_INT, formats[i].blue_mask,
                       "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
                       "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
-                      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
+                      "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0,
                       NULL);
                   
                   /* For RGB caps we store them and the image 
@@ -585,7 +585,7 @@ gst_xvimagesink_get_xv_support (GstXContext *xcontext)
                     "format", GST_TYPE_FOURCC,formats[i].id,
                     "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
                     "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
-                    "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
+                    "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0,
                     NULL);
                 break;
               default:
@@ -863,7 +863,7 @@ gst_xvimagesink_getcaps (GstPad *pad)
 
   return gst_caps_from_string(
     "video/x-raw-rgb, "
-      "framerate = (double) [ 0, MAX ], "
+      "framerate = (double) [ 1.0, 100.0 ], "
       "width = (int) [ 0, MAX ], "
       "height = (int) [ 0, MAX ]; "
     "video/x-raw-yuv, "
