@@ -107,3 +107,12 @@ object hierarchy:
   - all bitrates should be bits per second, since they're specified
     as integers
 
+
+- categorization of plugins:
+  - categories were intended from the start as a list of keywords, instead
+    of an implicit tree.
+  - this makes a lot more sense and probably fixes our constant discussion
+    about categorizing
+  - make this explicit by having a list of keywords instead of a fixed string
+    with slashes
+  - fix the editor/el browser to display this nicely
