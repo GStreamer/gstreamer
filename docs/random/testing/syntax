@@ -20,6 +20,7 @@ tcP: pipeline of the testcase in gst_parse_launch () syntax.
 tcS: id1, element, signalname (attach to signal in an element)
 tcS: id2, element, signalname
 ...
+tcI: the number of iterations on the top bin 
 tcR: id1,1,id2,1,.. (the pattern of signals trigered)
 or 
 tcR: id1==id2,... (denote an equal number of signals)
@@ -28,6 +29,8 @@ tcR: id1==id2,... (denote an equal number of signals)
 
 signal trigger patterns
 -----------------------
+
+
 
 
 
