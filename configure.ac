@@ -1349,6 +1349,23 @@ GST_CHECK_FEATURE(VORBIS, [vorbis plug-in], vorbisenc vorbisdec, [
   XIPH_PATH_VORBIS(HAVE_VORBIS=yes, HAVE_VORBIS=no)
   AS_SCRUB_INCLUDE(VORBIS_CFLAGS)
 ])
+if test "x$HAVE_VORBIS" = "xyes"; then
+  ac_cflags_save="$CFLAGS"
+  CFLAGS="-Wall -Werror"
+  AC_COMPILE_IFELSE(
+    AC_LANG_PROGRAM([
+#include <vorbis/codec.h>
+                     ],[
+vorbis_dsp_state *v;
+
+vorbis_synthesis_restart (v);
+                     ]), HAVE_VSR=yes, HAVE_VSR=no)
+  if test "x$HAVE_VSR" = "xyes"; then
+    AC_DEFINE_UNQUOTED(HAVE_VORBIS_SYNTHESIS_RESTART, 1,
+                       [defined if vorbis_synthesis_restart is present])
+  fi
+  CFLAGS="$ac_cflags_save"
+fi
 
 dnl *** XVID ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
