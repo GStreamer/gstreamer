@@ -1,3 +1,7 @@
+2004-01-30  David I. Lehn  <dlehn@users.sourceforge.net>
+
+	* examples/gstplay/player.c: s/gstplay.h/play.h/
+
 2004-01-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/play/Makefile.am:
