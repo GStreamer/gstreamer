@@ -1,6 +1,4 @@
-librarydir = $(libdir)
-
-library_LTLIBRARIES = libgstmedia-info-@GST_MAJORMINOR@.la
+lib_LTLIBRARIES = libgstmedia-info-@GST_MAJORMINOR@.la
 
 libgstmedia_info_@GST_MAJORMINOR@_la_SOURCES = media-info.c media-info-priv.c
 
