@@ -405,8 +405,9 @@ gst_colorspace_chain (GstPad *pad,GstData *_data)
   dest_bytes = ((space->destbpp+7)/8);
   src_bytes = ((space->srcbpp+7)/8);
 
-  outbuf = gst_buffer_new_and_alloc ((size * space->destbpp)/8);
-
+  outbuf = gst_pad_alloc_buffer (gst_pad_get_peer (pad), GST_BUFFER_OFFSET_NONE,
+                                 (size * space->destbpp)/8);
+  
   if (space->type == GST_COLORSPACE_YUV_RGB) {
     gst_colorspace_convert (space->converter, GST_BUFFER_DATA (buf), GST_BUFFER_DATA (outbuf));
   }
@@ -528,4 +529,3 @@ GST_PLUGIN_DEFINE (
   "LGPL",
   GST_PACKAGE,
   GST_ORIGIN)
-
