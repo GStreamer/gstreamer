@@ -693,7 +693,7 @@ gst_avi_demux_video_caps (guint32 codec_fcc,
                   "video/x-dv",
                     "systemstream", GST_PROPS_BOOLEAN (FALSE)
                 );
-      codecname = g_strdup_printf("Digital Video (" GST_FOURCC_FORMAT ")",
+      codecname = g_strdup_printf("Digital Video type 2 (" GST_FOURCC_FORMAT ")",
                                   GST_FOURCC_ARGS(codec_fcc));
       break;
 
@@ -726,7 +726,7 @@ gst_avi_demux_video_caps (guint32 codec_fcc,
   }
 
   /* set video codec info on streaminfo caps */
-  if (strf != NULL && codecname != NULL) {
+  if (avi_demux != NULL && codecname != NULL) {
     GstPropsEntry *entry;
     entry = gst_props_entry_new("videocodec",
 				GST_PROPS_STRING(codecname));
@@ -943,7 +943,7 @@ gst_avi_demux_audio_caps (guint16 codec_id,
       break;
   }
 
-  if (strf != NULL && codecname != NULL) {
+  if (avi_demux != NULL && codecname != NULL) {
     /* set audio codec in streaminfo */
     GstPropsEntry *entry;
     entry = gst_props_entry_new("audiocodec",
@@ -1028,6 +1028,7 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
   GstByteStream  *bs = avi_demux->bs;
   guint32 got_bytes;
   gchar *padname;
+  GstPropsEntry *entry;
 
   got_bytes = gst_bytestream_peek_bytes (bs, &strfdata, sizeof (gst_riff_strf_iavs));
   strf = (gst_riff_strf_iavs *) strfdata;
@@ -1050,6 +1051,9 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
   g_free (padname);
 
   caps = gst_avi_demux_iavs_caps ();
+  entry = gst_props_entry_new("videocodec",
+                              GST_PROPS_STRING("Digital Video type 1"));
+  gst_props_add_entry(avi_demux->streaminfo->properties, entry);
 
   if (caps != NULL) {
     gst_pad_try_set_caps(srcpad, caps);
