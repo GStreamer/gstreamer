@@ -14,6 +14,8 @@ struct _Probe
   int format;
   int n_channels;
   GArray *rates;
+  int min;
+  int max;
 };
 
 typedef struct _Range Range;
@@ -25,15 +27,14 @@ struct _Range
 
 static gboolean probe_check (Probe * probe);
 static int check_rate (Probe * probe, int irate);
-static GList *add_range (GList * list, int min, int max);
+static void add_range (GQueue * queue, int min, int max);
 static void add_rate (GArray * array, int rate);
+static int int_compare (gconstpointer a, gconstpointer b);
 
 int
 main (int argc, char *argv[])
 {
   int fd;
-  int n;
-  int *rates;
   int i;
   Probe *probe;
 
@@ -49,9 +50,13 @@ main (int argc, char *argv[])
   probe->n_channels = 2;
 
   probe_check (probe);
+  g_array_sort (probe->rates, int_compare);
   for (i = 0; i < probe->rates->len; i++) {
     g_print ("%d\n", g_array_index (probe->rates, int, i));
   }
+
+  g_array_free (probe->rates, TRUE);
+  g_free (probe);
 
 #if 0
   probe = g_new0 (Probe, 1);
@@ -91,64 +96,56 @@ main (int argc, char *argv[])
 static gboolean
 probe_check (Probe * probe)
 {
-  GList *item;
   Range *range;
-  GList *new_ranges;
-  GList *ranges;
-  int i;
-  int min, max;
+  GQueue *ranges;
   int exact_rates = 0;
   gboolean checking_exact_rates = TRUE;
   int n_checks = 0;
+  gboolean result = TRUE;
+
+  ranges = g_queue_new ();
 
   probe->rates = g_array_new (FALSE, FALSE, sizeof (int));
 
-  min = check_rate (probe, 1000);
-  add_rate (probe->rates, min);
+  probe->min = check_rate (probe, 1000);
   n_checks++;
-  max = check_rate (probe, 100000);
-  add_rate (probe->rates, max);
+  probe->max = check_rate (probe, 100000);
   n_checks++;
-  ranges = add_range (NULL, min + 1, max - 1);
+  add_range (ranges, probe->min + 1, probe->max - 1);
 
-  for (i = 0; i < 20; i++) {
-    new_ranges = NULL;
+  while ((range = g_queue_pop_head (ranges))) {
+    int min1;
+    int max1;
+    int mid;
+    int mid_ret;
 
-    if (ranges == NULL) {
-      g_print ("no more ranges, probe complete\n");
-      g_print ("n_checks = %d\n", n_checks);
+    g_print ("checking [%d,%d]\n", range->min, range->max);
 
-      return TRUE;
-    }
-    for (item = ranges; item; item = item->next) {
-      int min1;
-      int max1;
-      int mid;
-      int mid_ret;
+    mid = (range->min + range->max) / 2;
+    mid_ret = check_rate (probe, mid);
+    n_checks++;
 
-      range = item->data;
+    if (mid == mid_ret && checking_exact_rates) {
+      int max_exact_matches = 100;
 
-      g_print ("checking [%d,%d]\n", range->min, range->max);
-
-      mid = (range->min + range->max) / 2;
-      mid_ret = check_rate (probe, mid);
-      n_checks++;
-
-      if (mid == mid_ret && checking_exact_rates) {
-        exact_rates++;
-        if (exact_rates > 100) {
-          g_print ("got 100 exact rates, assuming all are exact\n");
-          return 0;
-        }
-      } else {
-        checking_exact_rates = FALSE;
+      exact_rates++;
+      if (exact_rates > max_exact_matches) {
+        g_print ("got %d exact rates, assuming all are exact\n",
+            max_exact_matches);
+        result = FALSE;
+        g_free (range);
+        break;
       }
+    } else {
+      checking_exact_rates = FALSE;
+    }
 
-      add_rate (probe->rates, mid_ret);
-
-#if 1
-      /* Assume that the rate is arithmetically rounded to the nearest
-       * supported rate. */
+    /* Assume that the rate is arithmetically rounded to the nearest
+     * supported rate. */
+    if (mid == mid_ret) {
+      min1 = mid - 1;
+      max1 = mid + 1;
+    } else {
       if (mid < mid_ret) {
         min1 = mid - (mid_ret - mid);
         max1 = mid_ret + 1;
@@ -156,42 +153,35 @@ probe_check (Probe * probe)
         min1 = mid_ret - 1;
         max1 = mid + (mid - mid_ret);
       }
-#else
-      /* Assume that the rate is not rounded past a supported rate */
-      if (mid < mid_ret) {
-        min1 = mid - 1;
-        max1 = mid_ret + 1;
-      } else {
-        min1 = mid_ret - 1;
-        max1 = mid + 1;
-      }
-#endif
-
-      if (range->min < min1) {
-        new_ranges = add_range (new_ranges, range->min, min1);
-      }
-      if (max1 < range->max) {
-        new_ranges = add_range (new_ranges, max1, range->max);
-      }
     }
 
-    /* leak ranges */
+    add_range (ranges, range->min, min1);
+    add_range (ranges, max1, range->max);
 
-    ranges = new_ranges;
+    g_free (range);
   }
 
-  return 0;
+  while ((range = g_queue_pop_head (ranges))) {
+    g_free (range);
+  }
+  g_queue_free (ranges);
+
+  return result;
 }
 
-static GList *
-add_range (GList * list, int min, int max)
+static void
+add_range (GQueue * queue, int min, int max)
 {
-  Range *range = g_new0 (Range, 1);
+  g_print ("trying to add [%d,%d]\n", min, max);
+  if (min <= max) {
+    Range *range = g_new0 (Range, 1);
 
-  range->min = min;
-  range->max = max;
+    range->min = min;
+    range->max = max;
 
-  return g_list_append (list, range);
+    g_queue_push_tail (queue, range);
+    //g_queue_push_head (queue, range);
+  }
 }
 
 static int
@@ -214,6 +204,7 @@ check_rate (Probe * probe, int irate)
   if (rate == irate - 1 || rate == irate + 1) {
     rate = irate;
   }
+  add_rate (probe->rates, rate);
   return rate;
 }
 
@@ -231,4 +222,17 @@ add_rate (GArray * array, int rate)
   }
   g_print ("supported rate: %d\n", rate);
   g_array_append_val (array, rate);
+}
+
+static int
+int_compare (gconstpointer a, gconstpointer b)
+{
+  const int *va = (const int *) a;
+  const int *vb = (const int *) b;
+
+  if (*va < *vb)
+    return -1;
+  if (*va > *vb)
+    return 1;
+  return 0;
 }
