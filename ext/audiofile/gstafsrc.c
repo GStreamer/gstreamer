@@ -240,8 +240,8 @@ gst_afsrc_get (GstPad * pad)
   src->framestamp += gst_audio_frame_length (src->srcpad, buf);
   GST_BUFFER_TIMESTAMP (buf) = src->framestamp * 1E9
       / gst_audio_frame_rate (src->srcpad);
-  printf ("DEBUG: afsrc: timestamp set on output buffer: %f sec\n",
-      GST_BUFFER_TIMESTAMP (buf) / 1E9);
+  /* printf ("DEBUG: afsrc: timestamp set on output buffer: %f sec\n", 
+     GST_BUFFER_TIMESTAMP (buf) / 1E9); */
 
 /*  g_print("DEBUG: gstafsrc: pushed buffer of %ld bytes\n", readbytes); */
   return GST_DATA (buf);

@@ -162,9 +162,9 @@ gst_videodrop_getcaps (GstPad * pad)
     gst_structure_set (structure,
         "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
   }
-  if (negotiated) {
-    for (i = 0; i < gst_caps_get_size (caps); i++) {
-      structure = gst_caps_get_structure (caps, i);
+  if ((negotiated) && (videodrop->speed != 1.0)) {
+    for (i = 0; i < gst_caps_get_size (copy2); i++) {
+      structure = gst_caps_get_structure (copy2, i);
 
       gst_structure_set (structure,
           "framerate", G_TYPE_DOUBLE, otherfps * videodrop->speed, NULL);
@@ -195,14 +195,30 @@ gst_videodrop_link (GstPad * pad, const GstCaps * caps)
   ret = gst_structure_get_double (structure, "framerate", &fps);
   if (!ret)
     return GST_PAD_LINK_REFUSED;
+
   if (pad == videodrop->srcpad) {
-    videodrop->from_fps = fps;
-  } else {
     videodrop->to_fps = fps;
+  } else {
+    videodrop->from_fps = fps;
   }
 
   if (gst_pad_is_negotiated (otherpad)) {
-    gst_pad_renegotiate (otherpad);
+    /* 
+     * Ensure that the other side talks the format we're trying to set
+     */
+    GstCaps *newcaps = gst_caps_copy (caps);
+
+    if (pad == videodrop->srcpad) {
+      gst_caps_set_simple (newcaps,
+          "framerate", G_TYPE_DOUBLE, videodrop->from_fps, NULL);
+    } else {
+      gst_caps_set_simple (newcaps,
+          "framerate", G_TYPE_DOUBLE, videodrop->to_fps, NULL);
+    }
+    ret = gst_pad_try_set_caps (otherpad, newcaps);
+    if (GST_PAD_LINK_FAILED (ret)) {
+      return GST_PAD_LINK_REFUSED;
+    }
   }
 
   return GST_PAD_LINK_OK;
