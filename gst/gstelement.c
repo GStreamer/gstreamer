@@ -44,6 +44,7 @@ enum
   ERROR,
   EOS,
   FOUND_TAG,
+  NO_MORE_PADS,
   /* add more above */
   LAST_SIGNAL
 };
@@ -147,6 +148,10 @@ gst_element_class_init (GstElementClass * klass)
       G_STRUCT_OFFSET (GstElementClass, found_tag), NULL, NULL,
       gst_marshal_VOID__OBJECT_BOXED, G_TYPE_NONE, 2, GST_TYPE_ELEMENT,
       GST_TYPE_TAG_LIST);
+  gst_element_signals[FOUND_TAG] =
+      g_signal_new ("no-more-pads", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, no_more_pads), NULL,
+      NULL, gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gobject_class->set_property =
       GST_DEBUG_FUNCPTR (gst_element_real_set_property);
@@ -1220,6 +1225,23 @@ gst_element_remove_ghost_pad (GstElement * element, GstPad * pad)
   gst_element_remove_pad (element, pad);
 }
 
+/**
+ * gst_element_no_more_pads:
+ * @element: a #GstElement
+ *
+ * Use this function to signal that the element does not expect any more pads
+ * to show up in the current pipeline. This function should be called whenever
+ * pads have been added by the element itself. Elements with GST_PAD_SOMETIMES 
+ * pad templates use this in combination with autopluggers to figure out that 
+ * the element is done initializing its pads.
+ */
+void
+gst_element_no_more_pads (GstElement * element)
+{
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  g_signal_emit (element, gst_element_signals[NO_MORE_PADS], 0);
+}
 
 /**
  * gst_element_get_pad:

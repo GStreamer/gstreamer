@@ -245,7 +245,11 @@ struct _GstElementClass {
   void			(*set_index)		(GstElement *element, GstIndex *index);
 
   GstElementStateReturn	(*set_state)		(GstElement *element, GstElementState state);
-  gpointer _gst_reserved[GST_PADDING];
+
+  /* FIXME 0.9: move up to signals */
+  void			(*no_more_pads)		(GstElement *element);
+  
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);
@@ -313,7 +317,10 @@ GstScheduler*		gst_element_get_scheduler	(GstElement *element);
 void			gst_element_add_pad		(GstElement *element, GstPad *pad);
 void			gst_element_remove_pad		(GstElement *element, GstPad *pad);
 GstPad *		gst_element_add_ghost_pad	(GstElement *element, GstPad *pad, const gchar *name);
+#ifndef GST_DISABLE_DEPRECATED
 void			gst_element_remove_ghost_pad	(GstElement *element, GstPad *pad);
+#endif
+void			gst_element_no_more_pads	(GstElement *element);
 
 GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_static_pad	(GstElement *element, const gchar *name);
