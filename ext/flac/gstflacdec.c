@@ -237,7 +237,7 @@ gst_flacdec_update_metadata (FlacDec *flacdec, const FLAC__StreamMetadata *metad
   for (cursor = 0; cursor < number_of_comments; cursor++)
   {			
     str_ptr = metadata->data.vorbis_comment.comments[cursor].entry;
-    str_len = GUINT32_FROM_LE (metadata->data.vorbis_comment.comments[cursor].length);
+    str_len = metadata->data.vorbis_comment.comments[cursor].length;
     p_value = g_strstr_len ( str_ptr, str_len , "=" );
     if (p_value)
     {			

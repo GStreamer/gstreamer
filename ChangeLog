@@ -1,3 +1,9 @@
+2004-01-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/flac/gstflacdec.c: (gst_flacdec_update_metadata):
+	  length is already host endian, no need to convert. Fixes playback of
+	  tagged files on PPC.
+
 2004-01-13  Julien MOUTTE <julien@moutte.net>
 
 	* gst-libs/gst/colorbalance/colorbalance.h: Adding a type to the
