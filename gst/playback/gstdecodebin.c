@@ -422,7 +422,8 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
   /* first see if this is raw. If the type is raw, we can
    * create a ghostpad for this pad. */
   if (g_str_has_prefix (mimetype, "video/x-raw") ||
-      g_str_has_prefix (mimetype, "audio/x-raw")) {
+      g_str_has_prefix (mimetype, "audio/x-raw") ||
+      g_str_has_prefix (mimetype, "text/plain")) {
     gchar *padname;
     GstPad *ghost;
 

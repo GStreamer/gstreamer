@@ -39,6 +39,10 @@ GST_DEBUG_CATEGORY_STATIC (gst_ogm_parse_debug);
 #define GST_IS_OGM_AUDIO_PARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_OGM_AUDIO_PARSE))
 
+#define GST_TYPE_OGM_TEXT_PARSE (gst_ogm_text_parse_get_type())
+#define GST_IS_OGM_TEXT_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_OGM_TEXT_PARSE))
+
 #define GST_TYPE_OGM_PARSE (gst_ogm_parse_get_type())
 #define GST_OGM_PARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_OGM_PARSE, GstOgmParse))
@@ -87,6 +91,7 @@ typedef struct _stream_header
   {
     stream_header_video video;
     stream_header_audio audio;
+    /* text has no additional data */
   } s;
 } stream_header;
 
@@ -116,22 +121,31 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
 static GstStaticPadTemplate ogm_audio_parse_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-ogm-audio"));
-static GstPadTemplate *video_src_templ, *audio_src_templ;
+static GstStaticPadTemplate ogm_text_parse_sink_template_factory =
+GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-ogm-text"));
+static GstPadTemplate *video_src_templ, *audio_src_templ, *text_src_templ;
 
 static GType gst_ogm_audio_parse_get_type (void);
 static GType gst_ogm_video_parse_get_type (void);
+static GType gst_ogm_text_parse_get_type (void);
 static GType gst_ogm_parse_get_type (void);
 
 static void gst_ogm_audio_parse_base_init (GstOgmParseClass * klass);
 static void gst_ogm_video_parse_base_init (GstOgmParseClass * klass);
+static void gst_ogm_text_parse_base_init (GstOgmParseClass * klass);
 static void gst_ogm_parse_class_init (GstOgmParseClass * klass);
 static void gst_ogm_parse_init (GstOgmParse * ogm);
 static void gst_ogm_video_parse_init (GstOgmParse * ogm);
 static void gst_ogm_audio_parse_init (GstOgmParse * ogm);
+static void gst_ogm_text_parse_init (GstOgmParse * ogm);
 
 static const GstFormat *gst_ogm_parse_get_sink_formats (GstPad * pad);
+static const GstQueryType *gst_ogm_parse_get_sink_querytypes (GstPad * pad);
 static gboolean gst_ogm_parse_sink_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
+static gboolean gst_ogm_parse_sink_query (GstPad * pad, GstQueryType type,
+    GstFormat * fmt, gint64 * val);
 
 static void gst_ogm_parse_chain (GstPad * pad, GstData * data);
 
@@ -217,6 +231,32 @@ gst_ogm_video_parse_get_type (void)
   return ogm_video_parse_type;
 }
 
+GType
+gst_ogm_text_parse_get_type (void)
+{
+  static GType ogm_text_parse_type = 0;
+
+  if (!ogm_text_parse_type) {
+    static const GTypeInfo ogm_text_parse_info = {
+      sizeof (GstOgmParseClass),
+      (GBaseInitFunc) gst_ogm_text_parse_base_init,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      sizeof (GstOgmParse),
+      0,
+      (GInstanceInitFunc) gst_ogm_text_parse_init,
+    };
+
+    ogm_text_parse_type =
+        g_type_register_static (GST_TYPE_OGM_PARSE,
+        "GstOgmTextParse", &ogm_text_parse_info, 0);
+  }
+
+  return ogm_text_parse_type;
+}
+
 static void
 gst_ogm_audio_parse_base_init (GstOgmParseClass * klass)
 {
@@ -255,6 +295,26 @@ gst_ogm_video_parse_base_init (GstOgmParseClass * klass)
   video_src_templ = gst_pad_template_new ("src",
       GST_PAD_SRC, GST_PAD_SOMETIMES, caps);
   gst_element_class_add_pad_template (element_class, video_src_templ);
+}
+
+static void
+gst_ogm_text_parse_base_init (GstOgmParseClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  static GstElementDetails gst_ogm_text_parse_details =
+      GST_ELEMENT_DETAILS ("OGM text stream parser",
+      "Codec/Decoder/Subtitle",
+      "parse an OGM text header and stream",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+  GstCaps *caps = gst_caps_new_simple ("text/plain", NULL);
+
+  gst_element_class_set_details (element_class, &gst_ogm_text_parse_details);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&ogm_text_parse_sink_template_factory));
+  text_src_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_SOMETIMES, caps);
+  gst_element_class_add_pad_template (element_class, text_src_templ);
 }
 
 static void
@@ -317,6 +377,30 @@ gst_ogm_video_parse_init (GstOgmParse * ogm)
   ogm->srcpadtempl = video_src_templ;
 }
 
+static void
+gst_ogm_text_parse_init (GstOgmParse * ogm)
+{
+  GstPadTemplate *templ;
+
+  /* create the pads */
+  templ = gst_static_pad_template_get (&ogm_text_parse_sink_template_factory);
+  ogm->sinkpad = gst_pad_new_from_template (templ, "sink");
+  gst_pad_set_convert_function (ogm->sinkpad, gst_ogm_parse_sink_convert);
+  gst_pad_set_formats_function (ogm->sinkpad, gst_ogm_parse_get_sink_formats);
+  gst_pad_set_query_type_function (ogm->sinkpad,
+      gst_ogm_parse_get_sink_querytypes);
+  gst_pad_set_query_function (ogm->sinkpad, gst_ogm_parse_sink_query);
+  gst_pad_set_chain_function (ogm->sinkpad, gst_ogm_parse_chain);
+  gst_element_add_pad (GST_ELEMENT (ogm), ogm->sinkpad);
+
+#if 0
+  ogm->srcpad = gst_pad_new_from_template (text_src_templ, "src");
+  gst_pad_use_explicit_caps (ogm->srcpad);
+  gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
+#endif
+  ogm->srcpadtempl = text_src_templ;
+}
+
 static const GstFormat *
 gst_ogm_parse_get_sink_formats (GstPad * pad)
 {
@@ -327,6 +411,17 @@ gst_ogm_parse_get_sink_formats (GstPad * pad)
   };
 
   return formats;
+}
+
+static const GstQueryType *
+gst_ogm_parse_get_sink_querytypes (GstPad * pad)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_POSITION,
+    0
+  };
+
+  return types;
 }
 
 static gboolean
@@ -347,8 +442,31 @@ gst_ogm_parse_sink_convert (GstPad * pad,
               res = TRUE;
               break;
             case 'v':
+            case 't':
               *dest_value = (GST_SECOND / 10000000) *
                   ogm->hdr.time_unit * src_value;
+              res = TRUE;
+              break;
+            default:
+              break;
+          }
+          break;
+        default:
+          break;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          switch (ogm->hdr.streamtype[0]) {
+            case 'a':
+              *dest_value = ogm->hdr.samples_per_unit * src_value / GST_SECOND;
+              res = TRUE;
+              break;
+            case 'v':
+            case 't':
+              *dest_value = src_value /
+                  ((GST_SECOND / 10000000) * ogm->hdr.time_unit);
               res = TRUE;
               break;
             default:
@@ -364,6 +482,21 @@ gst_ogm_parse_sink_convert (GstPad * pad,
   }
 
   return res;
+}
+
+static gboolean
+gst_ogm_parse_sink_query (GstPad * pad,
+    GstQueryType type, GstFormat * fmt, gint64 * val)
+{
+  GstOgmParse *ogm = GST_OGM_PARSE (gst_pad_get_parent (pad));
+
+  if (type != GST_QUERY_POSITION)
+    return FALSE;
+  if (*fmt != GST_FORMAT_DEFAULT && *fmt != GST_FORMAT_TIME)
+    return FALSE;
+
+  return gst_pad_convert (pad,
+      GST_FORMAT_DEFAULT, ogm->next_granulepos, fmt, val);
 }
 
 static void
@@ -394,6 +527,8 @@ gst_ogm_parse_chain (GstPad * pad, GstData * dat)
         ogm->hdr.s.audio.channels = GST_READ_UINT32_LE (&data[45]);
         ogm->hdr.s.audio.blockalign = GST_READ_UINT32_LE (&data[47]);
         ogm->hdr.s.audio.avgbytespersec = GST_READ_UINT32_LE (&data[49]);
+      } else if (!memcmp (&data[1], "text\000\000\000\000", 8)) {
+        /* nothing here */
       } else {
         GST_ELEMENT_ERROR (ogm, STREAM, WRONG_TYPE,
             ("Unknown stream type"), (NULL));
@@ -448,6 +583,13 @@ gst_ogm_parse_chain (GstPad * pad, GstData * dat)
               "framerate", G_TYPE_DOUBLE, 10000000. / ogm->hdr.time_unit, NULL);
           break;
         }
+        case 't':
+          GST_LOG_OBJECT (ogm, "Type: %s, s/u: %" G_GINT64_FORMAT
+              ", timeunit=%" G_GINT64_FORMAT,
+              ogm->hdr.streamtype, ogm->hdr.samples_per_unit,
+              ogm->hdr.time_unit);
+          caps = gst_caps_new_simple ("text/plain", NULL);
+          break;
         default:
           g_assert_not_reached ();
       }
@@ -491,15 +633,19 @@ gst_ogm_parse_chain (GstPad * pad, GstData * dat)
           ogm->next_granulepos = GST_BUFFER_OFFSET_END (buf);
         }
         switch (ogm->hdr.streamtype[0]) {
-          case 'v':
+          case 't':
+          case 'v':{
+            gint samples = (ogm->hdr.streamtype[0] == 'v') ? 1 : xsize;
+
             if (keyframe)
               GST_BUFFER_FLAG_SET (sbuf, GST_BUFFER_KEY_UNIT);
             GST_BUFFER_TIMESTAMP (sbuf) = (GST_SECOND / 10000000) *
                 ogm->next_granulepos * ogm->hdr.time_unit;
             GST_BUFFER_DURATION (sbuf) = (GST_SECOND / 10000000) *
-                ogm->hdr.time_unit;
-            ogm->next_granulepos++;
+                ogm->hdr.time_unit * samples;
+            ogm->next_granulepos += samples;
             break;
+          }
           case 'a':
             GST_BUFFER_TIMESTAMP (sbuf) = GST_SECOND *
                 ogm->next_granulepos / ogm->hdr.samples_per_unit;
@@ -508,9 +654,13 @@ gst_ogm_parse_chain (GstPad * pad, GstData * dat)
             ogm->next_granulepos += xsize;
             break;
           default:
-            g_assert_not_reached ();
+            gst_buffer_unref (sbuf);
+            sbuf = NULL;
+            GST_ELEMENT_ERROR (ogm, RESOURCE, SYNC, (NULL), (NULL));
+            break;
         }
-        gst_pad_push (ogm->srcpad, GST_DATA (sbuf));
+        if (sbuf)
+          gst_pad_push (ogm->srcpad, GST_DATA (sbuf));
       } else {
         GST_ELEMENT_ERROR (ogm, STREAM, WRONG_TYPE,
             ("Wrong packet startcode 0x%02x", data[0]), (NULL));
@@ -548,7 +698,9 @@ gst_ogm_parse_plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_ogm_parse_debug, "ogmparse", 0, "ogm parser");
 
   return gst_element_register (plugin, "ogmaudioparse", GST_RANK_PRIMARY,
-      GST_TYPE_OGM_AUDIO_PARSE)
-      && gst_element_register (plugin, "ogmvideoparse", GST_RANK_PRIMARY,
-      GST_TYPE_OGM_VIDEO_PARSE);
+      GST_TYPE_OGM_AUDIO_PARSE) &&
+      gst_element_register (plugin, "ogmvideoparse", GST_RANK_PRIMARY,
+      GST_TYPE_OGM_VIDEO_PARSE) &&
+      gst_element_register (plugin, "ogmtextparse", GST_RANK_PRIMARY,
+      GST_TYPE_OGM_TEXT_PARSE);
 }

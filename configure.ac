@@ -408,6 +408,7 @@ GST_PLUGINS_ALL="\
 	spectrum \
 	speed \
 	stereo \
+	subparse \
 	switch \
 	synaesthesia \
 	tags \
@@ -1972,6 +1973,7 @@ gst/smpte/Makefile
 gst/spectrum/Makefile
 gst/speed/Makefile
 gst/stereo/Makefile
+gst/subparse/Makefile
 gst/switch/Makefile
 gst/synaesthesia/Makefile
 gst/tags/Makefile

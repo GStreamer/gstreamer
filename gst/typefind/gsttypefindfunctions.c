@@ -1348,6 +1348,21 @@ ogmaudio_type_find (GstTypeFind * tf, gpointer private)
   }
 }
 
+static GstStaticCaps ogmtext_caps = GST_STATIC_CAPS ("application/x-ogm-text");
+
+#define OGMTEXT_CAPS (gst_static_caps_get(&ogmtext_caps))
+static void
+ogmtext_type_find (GstTypeFind * tf, gpointer private)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 9);
+
+  if (data) {
+    if (memcmp (data, "\001text\000\000\000\000", 9) != 0)
+      return;
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, OGMTEXT_CAPS);
+  }
+}
+
 /*** audio/x-speex ***********************************************************/
 
 static GstStaticCaps speex_caps = GST_STATIC_CAPS ("audio/x-speex");
@@ -1615,6 +1630,8 @@ plugin_init (GstPlugin * plugin)
       ogmvideo_type_find, NULL, OGMVIDEO_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-ogm-audio", GST_RANK_PRIMARY,
       ogmaudio_type_find, NULL, OGMAUDIO_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-ogm-text", GST_RANK_PRIMARY,
+      ogmtext_type_find, NULL, OGMTEXT_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-speex", GST_RANK_PRIMARY,
       speex_type_find, NULL, SPEEX_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY, m4a_type_find,

@@ -614,12 +614,10 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
 
       GST_OGG_SET_STATE (ogg, GST_OGG_STATE_SEEK);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
         FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-            pad->flags |= GST_OGG_PAD_NEEDS_FLUSH;
-            );
+            pad->flags |= GST_OGG_PAD_NEEDS_FLUSH;);
       }
       GST_DEBUG_OBJECT (ogg,
           "initiating seeking to format %d, offset %" G_GUINT64_FORMAT, format,
@@ -694,8 +692,7 @@ gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       GST_FLAG_UNSET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       break;
     default:
       gst_pad_event_default (pad, event);
@@ -981,8 +978,7 @@ _find_chain_get_unknown_part (GstOggDemux * ogg, gint64 * start, gint64 * end)
   *end = G_MAXINT64;
 
   g_assert (ogg->current_chain >= 0);
-  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset);
-      );
+  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset););
 
   if (ogg->setup_state == SETUP_FIND_LAST_CHAIN) {
     *end = gst_file_pad_get_length (ogg->sinkpad);
@@ -1111,8 +1107,7 @@ _find_streams_check (GstOggDemux * ogg)
   } else {
     endpos = G_MAXINT64;
     FOR_PAD_IN_CHAIN (ogg, pad, ogg->chains->len - 1,
-        endpos = MIN (endpos, pad->start_offset);
-        );
+        endpos = MIN (endpos, pad->start_offset););
   }
   if (!ogg->seek_skipped || gst_ogg_demux_position (ogg) >= endpos) {
     /* have we found the endposition for all streams yet? */
@@ -1308,6 +1303,7 @@ gst_ogg_pad_new (GstOggDemux * ogg, int serial)
   ret->start_offset = ret->end_offset = -1;
   ret->start = -1;
   ret->start_found = ret->end_found = FALSE;
+  ret->offset = GST_BUFFER_OFFSET_NONE;
 
   return ret;
 }
@@ -1461,6 +1457,37 @@ gst_ogg_demux_push (GstOggDemux * ogg, ogg_page * page)
     cur->pad = NULL;
   }
 }
+
+static void
+gst_ogg_sync (GstOggDemux * ogg, GstOggPad * cur)
+{
+  gint64 bias, time;
+  GstFormat fmt = GST_FORMAT_TIME;
+
+  time = get_relative (ogg, cur, cur->offset, GST_FORMAT_TIME);
+  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
+      if (pad->pad && GST_PAD_PEER (pad->pad) &&
+          pad->offset != GST_BUFFER_OFFSET_NONE) {
+        if (gst_pad_query (GST_PAD_PEER (pad->pad),
+                GST_QUERY_POSITION, &fmt, &bias) && bias + GST_SECOND < time) {
+          GstEvent * event;
+          gint64 val = 0;
+          GstFormat fmt = GST_FORMAT_DEFAULT;
+          event = gst_event_new_filler_stamped (bias,
+              time - bias - GST_SECOND / 2);
+          GST_DEBUG ("Syncing stream %d at time %" GST_TIME_FORMAT
+              " and duration %" GST_TIME_FORMAT,
+              pad->serial, GST_TIME_ARGS (bias),
+              GST_TIME_ARGS (time - bias - GST_SECOND / 2));
+          gst_pad_push (pad->pad, GST_DATA (event));
+          gst_pad_convert (GST_PAD_PEER (pad->pad),
+              GST_FORMAT_TIME, bias, &fmt, &val);
+          /* hmm... */
+        pad->offset = pad->start + val;}
+      }
+  );
+}
+
 static void
 gst_ogg_pad_push (GstOggDemux * ogg, GstOggPad * pad)
 {
@@ -1554,6 +1581,7 @@ gst_ogg_pad_push (GstOggDemux * ogg, GstOggPad * pad)
             } else {
               event = gst_event_new_discontinuous (FALSE,
                   GST_FORMAT_DEFAULT, discont, GST_FORMAT_UNDEFINED);
+              pad->offset = discont;
             }
           } else {
             event = gst_event_new_discontinuous (FALSE,
@@ -1577,6 +1605,7 @@ gst_ogg_pad_push (GstOggDemux * ogg, GstOggPad * pad)
         if (packet.granulepos != -1 && pos != -1)
           GST_BUFFER_OFFSET_END (buf) = pos;
         pad->offset = packet.granulepos;
+        gst_ogg_sync (ogg, pad);
         if (GST_PAD_IS_USABLE (pad->pad))
           gst_pad_push (pad->pad, GST_DATA (buf));
         break;

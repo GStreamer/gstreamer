@@ -429,6 +429,44 @@ done:
   return element;
 }
 
+/* make an element for playback of video with subtitles embedded.
+ *
+ *  +--------------------------------------------------+
+ *  | tbin                  +-------------+            |
+ *  |          +-----+      | textoverlay |   +------+ |
+ *  |          | csp | +--video_sink      |   | vbin | |
+ * video_sink-sink  src+ +-text_sink     src-sink    | |
+ *  |          +-----+   |  +-------------+   +------+ |
+ * text_sink-------------+                             |
+ *  +--------------------------------------------------+
+ */
+
+static GstElement *
+gen_text_element (GstPlayBin * play_bin)
+{
+  GstElement *element, *csp, *overlay, *vbin;
+
+  overlay = gst_element_factory_make ("textoverlay", "overlay");
+  g_object_set (G_OBJECT (overlay),
+      "halign", "center", "valign", "bottom", NULL);
+  vbin = gen_video_element (play_bin);
+  if (!overlay) {
+    g_warning ("No overlay (pango) element, subtitles disabled");
+    return vbin;
+  }
+  csp = gst_element_factory_make ("ffmpegcolorspace", "subtitlecsp");
+  element = gst_bin_new ("textbin");
+  gst_element_link_many (csp, overlay, vbin, NULL);
+  gst_bin_add_many (GST_BIN (element), csp, overlay, vbin, NULL);
+
+  gst_element_add_ghost_pad (element,
+      gst_element_get_pad (overlay, "text_sink"), "text_sink");
+  gst_element_add_ghost_pad (element,
+      gst_element_get_pad (csp, "sink"), "sink");
+
+  return element;
+}
+
 /* make the element (bin) that contains the elements needed to perform
  * audio playback. 
  *
@@ -520,7 +558,7 @@ done:
  *  |   |  |      |                                      +-------------------+ |
  *  |   |  +------+                                                            |
  * sink-+                                                                      |
- *  +--------------------------------------------------------------------------+
+   +--------------------------------------------------------------------------+
  */
 static GstElement *
 gen_vis_element (GstPlayBin * play_bin)
@@ -641,7 +679,10 @@ setup_sinks (GstPlayBaseBin * play_base_bin)
   GList *s;
   gint num_audio = 0;
   gint num_video = 0;
+  gint num_text = 0;
   gboolean need_vis = FALSE;
+  gboolean need_text = FALSE;
+  GstPad *textsrcpad = NULL, *textsinkpad = NULL;
 
   /* FIXME: do this nicer, like taking a look at the installed
    * bins and figuring out if we can simply reconnect them, remove
@@ -675,15 +716,20 @@ setup_sinks (GstPlayBaseBin * play_base_bin)
       num_audio++;
     } else if (type == 2) {
       num_video++;
+    } else if (type == 3) {
+      num_text++;
     }
   }
   /* no video, use vis */
   if (num_video == 0 && num_audio > 0 && play_bin->visualisation) {
     need_vis = TRUE;
+  } else if (num_video > 0 && num_text > 0) {
+    need_text = TRUE;
   }
 
   num_audio = 0;
   num_video = 0;
+  num_text = 0;
 
   /* now actually connect everything */
   for (s = streaminfo; s; s = g_list_next (s)) {
@@ -727,8 +773,21 @@ setup_sinks (GstPlayBaseBin * play_base_bin)
         g_warning ("two video streams found, playing first one");
         mute = TRUE;
       } else {
-        sink = gen_video_element (play_bin);
+        if (need_text) {
+          sink = gen_text_element (play_bin);
+          textsinkpad = gst_element_get_pad (sink, "text_sink");
+        } else {
+          sink = gen_video_element (play_bin);
+        }
         num_video++;
+      }
+    } else if (type == 3) {
+      if (num_text > 0) {
+        g_warning ("two subtitle streams found, playing first one");
+        mute = TRUE;
+      } else {
+        textsrcpad = srcpad;
+        num_text++;
       }
     } else if (type == 4) {
       /* we can ignore these streams here */
@@ -768,6 +827,11 @@ setup_sinks (GstPlayBaseBin * play_base_bin)
        * so that it does not take any resources */
       g_object_set (G_OBJECT (obj), "mute", TRUE, NULL);
     }
+  }
+
+  /* if subtitles, link */
+  if (textsrcpad && num_video > 0) {
+    gst_pad_link (textsrcpad, textsinkpad);
   }
 }
 

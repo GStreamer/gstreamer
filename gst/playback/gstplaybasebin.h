@@ -54,6 +54,7 @@ typedef struct
 
   gint		 naudiopads;
   gint		 nvideopads;
+  gint		 ntextpads;
   gint		 nunknownpads;
 
   GList		*preroll_elems;
@@ -71,6 +72,7 @@ struct _GstPlayBaseBin {
   gchar 	*uri;
   GstElement	*source;
   GstElement	*decoder;
+  GList		*subtitles; /* additional filesrc ! subparse bins */
   gboolean	 need_rebuild;
 
   /* group management */

@@ -195,6 +195,7 @@ gst_play_base_bin_init (GstPlayBaseBin * play_base_bin)
   play_base_bin->need_rebuild = TRUE;
   play_base_bin->source = NULL;
   play_base_bin->decoder = NULL;
+  play_base_bin->subtitles = NULL;
 
   play_base_bin->group_lock = g_mutex_new ();
   play_base_bin->group_cond = g_cond_new ();
@@ -402,12 +403,10 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin, GstPad * pad)
 
   name = g_strdup_printf ("preroll_%s", gst_pad_get_name (pad));
   element = gst_element_factory_make ("queue", name);
-  g_object_set (G_OBJECT (element), "max-size-buffers", 0, NULL);
-  g_object_set (G_OBJECT (element), "max-size-bytes", 0, NULL);
-  g_object_set (G_OBJECT (element), "max-size-time", play_base_bin->queue_size,
-      NULL);
-  sig =
-      g_signal_connect (G_OBJECT (element), "overrun",
+  g_object_set (G_OBJECT (element),
+      "max-size-buffers", 0, "max-size-bytes", 10 * 1024 * 1024,
+      "max-size-time", play_base_bin->queue_size, NULL);
+  sig = g_signal_connect (G_OBJECT (element), "overrun",
       G_CALLBACK (queue_overrun), play_base_bin);
   /* keep a ref to the signal id so that we can disconnect the signal callback
    * when we are done with the preroll */
@@ -420,7 +419,7 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin, GstPad * pad)
 static void
 remove_groups (GstPlayBaseBin * play_base_bin)
 {
-  GList *groups;
+  GList *groups, *item;
 
   /* first destroy the group we were building if any */
   if (play_base_bin->building_group) {
@@ -437,6 +436,13 @@ remove_groups (GstPlayBaseBin * play_base_bin)
   }
   g_list_free (play_base_bin->queued_groups);
   play_base_bin->queued_groups = NULL;
+
+  /* clear subs */
+  for (item = play_base_bin->subtitles; item; item = item->next) {
+    gst_bin_remove (GST_BIN (play_base_bin->thread), item->data);
+  }
+  g_list_free (play_base_bin->subtitles);
+  play_base_bin->subtitles = NULL;
 }
 
 /* Add/remove a single stream to current  building group.
@@ -456,6 +462,9 @@ add_stream (GstPlayBaseGroup * group, GstStreamInfo * info)
       break;
     case GST_STREAM_TYPE_VIDEO:
       group->nvideopads++;
+      break;
+    case GST_STREAM_TYPE_TEXT:
+      group->ntextpads++;
       break;
     default:
       group->nunknownpads++;
@@ -684,6 +693,12 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
     if (group->nvideopads == 0) {
       need_preroll = TRUE;
     }
+  } else if (g_str_has_prefix (mimetype, "text/")) {
+    type = GST_STREAM_TYPE_TEXT;
+    /* first text pad gets a preroll element */
+    if (group->ntextpads == 0) {
+      need_preroll = TRUE;
+    }
   } else {
     type = GST_STREAM_TYPE_UNKNOWN;
   }
@@ -835,18 +850,65 @@ buffer_overrun (GstElement * queue, GstPlayBaseBin * play_base_bin)
 }
 
 /*
+ * Generate source ! subparse bins.
+ */
+
+static GList *
+setup_subtitles (GstPlayBaseBin * play_base_bin, gchar * sub_uri[])
+{
+  GstElement *source, *subparse, *bin;
+  gint n;
+  gchar *name;
+  GList *subtitles = NULL;
+
+  for (n = 0; sub_uri[n]; n++) {
+    source = gst_element_make_from_uri (GST_URI_SRC, sub_uri[n], NULL);
+    if (!source)
+      continue;
+
+    subparse = gst_element_factory_make ("subparse", NULL);
+    name = g_strdup_printf ("subbin%d", n);
+    bin = gst_thread_new (name);
+    g_free (name);
+
+    gst_bin_add_many (GST_BIN (bin), source, subparse, NULL);
+    gst_element_link (source, subparse);
+    gst_element_add_ghost_pad (bin,
+        gst_element_get_pad (subparse, "src"), "src");
+    subtitles = g_list_append (subtitles, bin);
+  }
+
+  return subtitles;
+}
+
+/*
  * Generate a source element that does caching for network streams.
  */
 
 static GstElement *
-gen_source_element (GstPlayBaseBin * play_base_bin)
+gen_source_element (GstPlayBaseBin * play_base_bin, GList ** subbins)
 {
   GstElement *source, *queue, *bin;
   GstProbe *probe;
   gboolean is_stream;
+  gchar **src, **subs, *uri;
 
-  source =
-      gst_element_make_from_uri (GST_URI_SRC, play_base_bin->uri, "source");
+  /* create subtitle elements */
+  src = g_strsplit (play_base_bin->uri, "#", 2);
+  if (!src[0])
+    return NULL;
+  if (src[1]) {
+    subs = g_strsplit (src[1], ",", 8);
+    *subbins = setup_subtitles (play_base_bin, subs);
+    g_strfreev (subs);
+  } else {
+    *subbins = NULL;
+  }
+  uri = src[0];
+  src[0] = NULL;
+  g_strfreev (src);
+
+  source = gst_element_make_from_uri (GST_URI_SRC, uri, "source");
   if (!source)
     return NULL;
 
@@ -889,6 +951,7 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
   GstElement *old_src;
   GstElement *old_dec;
   GstPad *srcpad = NULL;
+  GList *new_subs, *item;
 
   if (!play_base_bin->need_rebuild)
     return TRUE;
@@ -899,7 +962,7 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
   old_src = play_base_bin->source;
 
   /* create and configure an element that can handle the uri */
-  play_base_bin->source = gen_source_element (play_base_bin);
+  play_base_bin->source = gen_source_element (play_base_bin, &new_subs);
 
   if (!play_base_bin->source) {
     /* whoops, could not create the source element */
@@ -934,6 +997,20 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
 
   /* remove our previous preroll queues */
   remove_groups (play_base_bin);
+
+  /* do subs */
+  if (new_subs) {
+    play_base_bin->subtitles = new_subs;
+    for (item = play_base_bin->subtitles; item; item = item->next) {
+      GstElement *bin = item->data;
+
+      /* don't add yet, because we will preroll, and subs shouldn't
+       * preroll (we shouldn't preroll more than once source). */
+      new_decoded_pad (bin, gst_element_get_pad (bin, "src"), FALSE,
+          play_base_bin);
+      gst_element_set_state (bin, GST_STATE_PAUSED);
+    }
+  }
 
   /* now see if the source element emits raw audio/video all by itself,
    * if so, we can create streams for the pads and be done with it.
@@ -1054,6 +1131,11 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
     g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig4);
 
     play_base_bin->need_rebuild = FALSE;
+  }
+
+  /* make subs iterate from now on */
+  for (item = play_base_bin->subtitles; item; item = item->next) {
+    gst_bin_add (GST_BIN (play_base_bin->thread), item->data);
   }
 
   return TRUE;

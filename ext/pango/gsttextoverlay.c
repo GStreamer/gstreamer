@@ -24,6 +24,9 @@
 #include <gst/gst.h>
 #include "gsttextoverlay.h"
 
+GST_DEBUG_CATEGORY_STATIC (pango_debug);
+#define GST_CAT_DEFAULT pango_debug
+
 static GstElementDetails textoverlay_details = {
   "Text Overlay",
   "Filter/Editor/Video",
@@ -224,23 +227,78 @@ render_text (GstTextOverlay * overlay)
 /*     return GST_PAD_LINK_DONE; */
 /* } */
 
-
-static GstPadLinkReturn
-gst_textoverlay_video_sinkconnect (GstPad * pad, const GstCaps * caps)
+static GList *
+gst_textoverlay_linkedpads (GstPad * pad)
 {
+  GstPad *otherpad;
   GstTextOverlay *overlay;
-  GstStructure *structure;
 
   overlay = GST_TEXTOVERLAY (gst_pad_get_parent (pad));
+  if (pad == overlay->text_sinkpad)
+    return NULL;
+  otherpad = (pad == overlay->video_sinkpad) ?
+      overlay->srcpad : overlay->video_sinkpad;
+
+  return g_list_append (NULL, otherpad);
+}
+
+static GstPadLinkReturn
+gst_textoverlay_link (GstPad * pad, const GstCaps * caps)
+{
+  GstPad *otherpad;
+  GstTextOverlay *overlay;
+  GstStructure *structure;
+  GstPadLinkReturn ret;
+
+  overlay = GST_TEXTOVERLAY (gst_pad_get_parent (pad));
+  otherpad = (pad == overlay->video_sinkpad) ?
+      overlay->srcpad : overlay->video_sinkpad;
+
+  ret = gst_pad_try_set_caps (otherpad, caps);
+  if (GST_PAD_LINK_FAILED (ret))
+    return ret;
 
   structure = gst_caps_get_structure (caps, 0);
   overlay->width = overlay->height = 0;
   gst_structure_get_int (structure, "width", &overlay->width);
   gst_structure_get_int (structure, "height", &overlay->height);
 
-  return gst_pad_try_set_caps (overlay->srcpad, caps);
+  return ret;
 }
 
+static GstCaps *
+gst_textoverlay_getcaps (GstPad * pad)
+{
+  GstPad *otherpad;
+  GstTextOverlay *overlay;
+  GstCaps *caps, *rcaps;
+  const GstCaps *tcaps;
+
+  overlay = GST_TEXTOVERLAY (gst_pad_get_parent (pad));
+  otherpad = (pad == overlay->video_sinkpad) ?
+      overlay->srcpad : overlay->video_sinkpad;
+
+  caps = gst_pad_get_allowed_caps (otherpad);
+  tcaps = gst_pad_get_pad_template_caps (pad);
+  rcaps = gst_caps_intersect (caps, tcaps);
+  gst_caps_free (caps);
+
+  return rcaps;
+}
+
+static gboolean
+gst_textoverlay_event (GstPad * pad, GstEvent * event)
+{
+  GstTextOverlay *overlay = GST_TEXTOVERLAY (gst_pad_get_parent (pad));
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK &&
+      GST_PAD_IS_LINKED (overlay->text_sinkpad)) {
+    gst_event_ref (event);
+    gst_pad_send_event (GST_PAD_PEER (overlay->text_sinkpad), event);
+  }
+
+  return gst_pad_send_event (GST_PAD_PEER (overlay->video_sinkpad), event);
+}
 
 static void
 gst_text_overlay_blit_yuv420 (GstTextOverlay * overlay, FT_Bitmap * bitmap,
@@ -353,9 +411,9 @@ gst_textoverlay_video_chain (GstPad * pad, GstData * _data)
   y0 = overlay->y0;
   switch (overlay->valign) {
     case GST_TEXT_OVERLAY_VALIGN_BOTTOM:
-      y0 += overlay->bitmap.rows;
+      y0 = overlay->height - overlay->bitmap.rows - y0;
       break;
-    case GST_TEXT_OVERLAY_VALIGN_BASELINE:
+    case GST_TEXT_OVERLAY_VALIGN_BASELINE:     /* ? */
       y0 -= (overlay->bitmap.rows - overlay->baseline_y);
       break;
     case GST_TEXT_OVERLAY_VALIGN_TOP:
@@ -366,10 +424,10 @@ gst_textoverlay_video_chain (GstPad * pad, GstData * _data)
     case GST_TEXT_OVERLAY_HALIGN_LEFT:
       break;
     case GST_TEXT_OVERLAY_HALIGN_RIGHT:
-      x0 -= overlay->bitmap.width;
+      x0 = overlay->width - overlay->bitmap.width - x0;
       break;
     case GST_TEXT_OVERLAY_HALIGN_CENTER:
-      x0 -= overlay->bitmap.width / 2;
+      x0 = (overlay->width - overlay->bitmap.width) / 2;
       break;
   }
 
@@ -379,10 +437,19 @@ gst_textoverlay_video_chain (GstPad * pad, GstData * _data)
   gst_pad_push (overlay->srcpad, GST_DATA (buf));
 }
 
-#define PAST_END(buffer, time) \
-  (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE && \
-   GST_BUFFER_DURATION (buffer) != GST_CLOCK_TIME_NONE && \
-   GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer) \
+#define GST_DATA_TIMESTAMP(data) \
+  (GST_IS_EVENT (data) ? \
+     GST_EVENT_TIMESTAMP (GST_EVENT (data)) : \
+     GST_BUFFER_TIMESTAMP (GST_BUFFER (data)))
+#define GST_DATA_DURATION(data) \
+  (GST_IS_EVENT (data) ? \
+     gst_event_filler_get_duration (GST_EVENT (data)) : \
+     GST_BUFFER_DURATION (GST_BUFFER (data)))
+
+#define PAST_END(data, time) \
+  (GST_DATA_TIMESTAMP (data) != GST_CLOCK_TIME_NONE && \
+   GST_DATA_DURATION (data) != GST_CLOCK_TIME_NONE && \
+   GST_DATA_TIMESTAMP (data) + GST_DATA_DURATION (data) \
      < (time))
 
 static void
@@ -396,8 +463,36 @@ gst_textoverlay_loop (GstElement * element)
   g_return_if_fail (GST_IS_TEXTOVERLAY (element));
   overlay = GST_TEXTOVERLAY (element);
 
-  video_frame = GST_BUFFER (gst_pad_pull (overlay->video_sinkpad));
+  do {
+    GST_DEBUG ("Attempting to pull next video frame");
+    video_frame = GST_BUFFER (gst_pad_pull (overlay->video_sinkpad));
+    if (GST_IS_EVENT (video_frame)) {
+      GstEvent *event = GST_EVENT (video_frame);
+      GstEventType type = GST_EVENT_TYPE (event);
+
+      gst_pad_event_default (overlay->video_sinkpad, event);
+      GST_DEBUG ("Received event of type %d", type);
+      if (type == GST_EVENT_INTERRUPT)
+        return;
+      else if (type == GST_EVENT_EOS) {
+        /* EOS text stream */
+        GstData *data = NULL;
+
+        do {
+          if (data)
+            gst_data_unref (data);
+          data = gst_pad_pull (overlay->text_sinkpad);
+        } while (!GST_IS_EVENT (data) ||
+            GST_EVENT_TYPE (data) == GST_EVENT_EOS);
+        gst_data_unref (data);
+
+        return;
+      }
+      video_frame = NULL;
+    }
+  } while (!video_frame);
   now = GST_BUFFER_TIMESTAMP (video_frame);
+  GST_DEBUG ("Got video frame, time=%" GST_TIME_FORMAT, GST_TIME_ARGS (now));
 
   /*
    * This state machine has a bug that can't be resolved easily.
@@ -410,49 +505,89 @@ gst_textoverlay_loop (GstElement * element)
    * buffer timestamps and durations correctly.  (I think)
    */
 
-  while (overlay->next_buffer == NULL) {
-    GST_DEBUG ("attempting to pull a buffer");
+  while ((!overlay->current_data ||
+          PAST_END (overlay->current_data, now)) &&
+      overlay->next_data == NULL) {
+    GST_DEBUG ("attempting to pull text data");
 
     /* read all text buffers until we get one "in the future" */
     if (!GST_PAD_IS_USABLE (overlay->text_sinkpad)) {
       break;
     }
-    overlay->next_buffer = GST_BUFFER (gst_pad_pull (overlay->text_sinkpad));
-    if (!overlay->next_buffer)
-      break;
+    do {
+      overlay->next_data = gst_pad_pull (overlay->text_sinkpad);
+      if (GST_IS_EVENT (overlay->next_data) &&
+          GST_EVENT_TYPE (overlay->next_data) != GST_EVENT_FILLER) {
+        GstEvent *event = GST_EVENT (overlay->next_data);
+        GstEventType type = GST_EVENT_TYPE (event);
 
-    if (PAST_END (overlay->next_buffer, now)) {
-      gst_buffer_unref (overlay->next_buffer);
-      overlay->next_buffer = NULL;
+        gst_event_unref (event);
+        if (type == GST_EVENT_EOS)
+          break;
+        else if (type == GST_EVENT_INTERRUPT)
+          return;
+        overlay->next_data = NULL;
+      }
+    } while (!overlay->next_data);
+
+    if (PAST_END (overlay->next_data, now)) {
+      GST_DEBUG ("Received %s is past end (%" GST_TIME_FORMAT " + %"
+          GST_TIME_FORMAT " < %" GST_TIME_FORMAT ")",
+          GST_IS_EVENT (overlay->next_data) ? "event" : "buffer",
+          GST_TIME_ARGS (GST_DATA_TIMESTAMP (overlay->next_data)),
+          GST_TIME_ARGS (GST_DATA_DURATION (overlay->next_data)),
+          GST_TIME_ARGS (now));
+      gst_data_unref (overlay->next_data);
+      overlay->next_data = NULL;
+    } else {
+      GST_DEBUG ("Received new text %s of time %" GST_TIME_FORMAT
+          "and duration %" GST_TIME_FORMAT,
+          GST_IS_EVENT (overlay->next_data) ? "event" : "buffer",
+          GST_TIME_ARGS (GST_DATA_TIMESTAMP (overlay->next_data)),
+          GST_TIME_ARGS (GST_DATA_DURATION (overlay->next_data)));
     }
   }
 
-  if (overlay->next_buffer &&
-      (GST_BUFFER_TIMESTAMP (overlay->next_buffer) <= now ||
-          GST_BUFFER_TIMESTAMP (overlay->next_buffer) == GST_CLOCK_TIME_NONE)) {
-    GST_DEBUG ("using new buffer");
+  if (overlay->next_data &&
+      (GST_DATA_TIMESTAMP (overlay->next_data) <= now ||
+          GST_DATA_TIMESTAMP (overlay->next_data) == GST_CLOCK_TIME_NONE)) {
+    GST_DEBUG ("using new %s",
+        GST_IS_EVENT (overlay->next_data) ? "event" : "buffer");
 
-    if (overlay->current_buffer) {
-      gst_buffer_unref (overlay->current_buffer);
+    if (overlay->current_data) {
+      gst_data_unref (overlay->current_data);
     }
-    overlay->current_buffer = overlay->next_buffer;
-    overlay->next_buffer = NULL;
+    overlay->current_data = overlay->next_data;
+    overlay->next_data = NULL;
 
-    GST_DEBUG ("rendering '%*s'",
-        GST_BUFFER_SIZE (overlay->current_buffer),
-        GST_BUFFER_DATA (overlay->current_buffer));
-    pango_layout_set_markup (overlay->layout,
-        GST_BUFFER_DATA (overlay->current_buffer),
-        GST_BUFFER_SIZE (overlay->current_buffer));
+    if (GST_IS_BUFFER (overlay->current_data)) {
+      guint size = GST_BUFFER_SIZE (overlay->current_data);
+      guint8 *data = GST_BUFFER_DATA (overlay->current_data);
+
+      while (size > 0 &&
+          (data[size - 1] == '\r' ||
+              data[size - 1] == '\n' || data[size - 1] == '\0'))
+        size--;
+
+      GST_DEBUG ("rendering '%*s'", size,
+          GST_BUFFER_DATA (overlay->current_data));
+      /* somehow pango barfs over "\0" buffers... */
+      pango_layout_set_markup (overlay->layout,
+          GST_BUFFER_DATA (overlay->current_data), size);
+    } else {
+      GST_DEBUG ("Filler - no data");
+      pango_layout_set_markup (overlay->layout, "", 0);
+    }
     render_text (overlay);
     overlay->need_render = FALSE;
   }
 
-  if (overlay->current_buffer && PAST_END (overlay->current_buffer, now)) {
-    GST_DEBUG ("dropping old buffer");
+  if (overlay->current_data && PAST_END (overlay->current_data, now)) {
+    GST_DEBUG ("dropping old %s",
+        GST_IS_EVENT (overlay->current_data) ? "event" : "buffer");
 
-    gst_buffer_unref (overlay->current_buffer);
-    overlay->current_buffer = NULL;
+    gst_buffer_unref (overlay->current_data);
+    overlay->current_data = NULL;
 
     overlay->need_render = TRUE;
   }
@@ -515,22 +650,30 @@ gst_textoverlay_init (GstTextOverlay * overlay)
   overlay->video_sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&video_sink_template_factory), "video_sink");
-/*     gst_pad_set_chain_function(overlay->video_sinkpad, gst_textoverlay_video_chain); */
-  gst_pad_set_link_function (overlay->video_sinkpad,
-      gst_textoverlay_video_sinkconnect);
+  gst_pad_set_link_function (overlay->video_sinkpad, gst_textoverlay_link);
+  gst_pad_set_getcaps_function (overlay->video_sinkpad,
+      gst_textoverlay_getcaps);
+  gst_pad_set_internal_link_function (overlay->video_sinkpad,
+      gst_textoverlay_linkedpads);
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->video_sinkpad);
 
   /* text sink */
   overlay->text_sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&text_sink_template_factory), "text_sink");
-/*     gst_pad_set_link_function(overlay->text_sinkpad, gst_textoverlay_text_sinkconnect); */
+  gst_pad_set_internal_link_function (overlay->text_sinkpad,
+      gst_textoverlay_linkedpads);
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->text_sinkpad);
 
   /* (video) source */
   overlay->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&textoverlay_src_template_factory), "src");
+  gst_pad_set_link_function (overlay->srcpad, gst_textoverlay_link);
+  gst_pad_set_getcaps_function (overlay->srcpad, gst_textoverlay_getcaps);
+  gst_pad_set_internal_link_function (overlay->srcpad,
+      gst_textoverlay_linkedpads);
+  gst_pad_set_event_function (overlay->srcpad, gst_textoverlay_event);
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);
 
   overlay->layout =
@@ -539,12 +682,14 @@ gst_textoverlay_init (GstTextOverlay * overlay)
 
   overlay->halign = GST_TEXT_OVERLAY_HALIGN_CENTER;
   overlay->valign = GST_TEXT_OVERLAY_VALIGN_BASELINE;
-  overlay->x0 = overlay->y0 = 0;
+  overlay->x0 = overlay->y0 = 25;
 
   overlay->default_text = g_strdup ("");
   overlay->need_render = TRUE;
 
   gst_element_set_loop_function (GST_ELEMENT (overlay), gst_textoverlay_loop);
+
+  GST_FLAG_SET (overlay, GST_ELEMENT_EVENT_AWARE);
 }
 
 
@@ -647,6 +792,9 @@ plugin_init (GstPlugin * plugin)
 
   /*texttestsrc_plugin_init(module, plugin); */
   /*subparse_plugin_init(module, plugin); */
+
+  GST_DEBUG_CATEGORY_INIT (pango_debug, "pango", 0, "Pango elements");
+
   return TRUE;
 }
 
