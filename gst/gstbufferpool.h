@@ -49,6 +49,8 @@ struct _GstBufferPool {
   GstBufferPoolDestroyFunction destroy_buffer;
 };
 
+void _gst_buffer_pool_initialize (void);
+
 /* creating a new buffer pool from scratch */
 GstBufferPool*		gst_buffer_pool_new			(void);
 
