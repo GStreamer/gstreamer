@@ -23,6 +23,9 @@
 #include "string.h"
 #include "gstlame.h"
 
+GST_DEBUG_CATEGORY_STATIC (debug);
+#define GST_CAT_DEFAULT debug
+
 /* elementfactory information */
 static GstElementDetails gst_lame_details = {
   "L.A.M.E. mp3 encoder",
@@ -354,8 +357,9 @@ gst_lame_sink_link (GstPad * pad, const GstCaps * caps)
   lame = GST_LAME (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "rate", &lame->samplerate);
-  gst_structure_get_int (structure, "channels", &lame->num_channels);
+  if (!gst_structure_get_int (structure, "rate", &lame->samplerate) ||
+      !gst_structure_get_int (structure, "channels", &lame->num_channels))
+    g_return_val_if_reached (GST_PAD_LINK_REFUSED);
 
   if (!gst_lame_setup (lame)) {
     GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
@@ -429,7 +433,7 @@ gst_lame_init (GstLame * lame)
   lame->ath_lower = lame_get_ATHlower (lame->lgf);
   lame->cwlimit = 8.8717;       /* lame_get_cwlimit (lame->lgf); => 0 */
   lame->allow_diff_short = lame_get_allow_diff_short (lame->lgf);
-  lame->no_short_blocks = lame_get_no_short_blocks (lame->lgf);
+  lame->no_short_blocks = TRUE; /* lame_get_no_short_blocks (lame->lgf); */
   lame->emphasis = lame_get_emphasis (lame->lgf);
   lame->tags = gst_tag_list_new ();
 
@@ -799,10 +803,18 @@ gst_lame_chain (GstPad * pad, GstData * _data)
         ((GST_BUFFER_SIZE (buf) / (2 + lame->num_channels)) * 1.25) + 7200;
     mp3_data = g_malloc (mp3_buffer_size);
 
-    mp3_size = lame_encode_buffer_interleaved (lame->lgf,
-        (short int *) (GST_BUFFER_DATA (buf)),
-        GST_BUFFER_SIZE (buf) / 2 / lame->num_channels,
-        mp3_data, mp3_buffer_size);
+    /* lame seems to be too stupid to get mono interleaved going */
+    if (lame->num_channels == 1) {
+      mp3_size = lame_encode_buffer (lame->lgf,
+          (short int *) (GST_BUFFER_DATA (buf)),
+          (short int *) (GST_BUFFER_DATA (buf)),
+          GST_BUFFER_SIZE (buf) / 2, mp3_data, mp3_buffer_size);
+    } else {
+      mp3_size = lame_encode_buffer_interleaved (lame->lgf,
+          (short int *) (GST_BUFFER_DATA (buf)),
+          GST_BUFFER_SIZE (buf) / 2 / lame->num_channels,
+          mp3_data, mp3_buffer_size);
+    }
 
     GST_DEBUG ("encoded %d bytes of audio to %d bytes of mp3",
         GST_BUFFER_SIZE (buf), mp3_size);
@@ -852,13 +864,21 @@ gst_lame_chain (GstPad * pad, GstData * _data)
 static gboolean
 gst_lame_setup (GstLame * lame)
 {
+#define CHECK_ERROR(command) G_STMT_START {\
+  if ((command) < 0) { \
+    GST_ERROR_OBJECT (lame, "setup failed: " G_STRINGIFY (command)); \
+    return FALSE; \
+  } \
+}G_STMT_END
   GST_DEBUG_OBJECT (lame, "starting setup");
 
   /* check if we're already initialized; if we are, we might want to check
    * if this initialization is compatible with the previous one */
   /* FIXME: do this */
-  if (lame->initialized)
-    g_warning ("already initialized");
+  if (lame->initialized) {
+    GST_WARNING_OBJECT (lame, "already initialized");
+    lame->initialized = FALSE;
+  }
 
   /* copy the parameters over */
   lame_set_in_samplerate (lame->lgf, lame->samplerate);
@@ -867,43 +887,45 @@ gst_lame_setup (GstLame * lame)
   if (lame->num_channels == 1)
     lame->mode = 3;
 
-  lame_set_brate (lame->lgf, lame->bitrate);
-  lame_set_compression_ratio (lame->lgf, lame->compression_ratio);
-  lame_set_quality (lame->lgf, lame->quality);
-  lame_set_mode (lame->lgf, lame->mode);
-  lame_set_force_ms (lame->lgf, lame->force_ms);
-  lame_set_free_format (lame->lgf, lame->free_format);
-  lame_set_copyright (lame->lgf, lame->copyright);
-  lame_set_original (lame->lgf, lame->original);
-  lame_set_error_protection (lame->lgf, lame->error_protection);
-  lame_set_padding_type (lame->lgf, lame->padding_type);
-  lame_set_extension (lame->lgf, lame->extension);
-  lame_set_strict_ISO (lame->lgf, lame->strict_iso);
-  lame_set_disable_reservoir (lame->lgf, lame->disable_reservoir);
-  lame_set_VBR_q (lame->lgf, lame->vbr);
-  lame_set_VBR_mean_bitrate_kbps (lame->lgf, lame->vbr_mean_bitrate);
-  lame_set_VBR_min_bitrate_kbps (lame->lgf, lame->vbr_min_bitrate);
-  lame_set_VBR_max_bitrate_kbps (lame->lgf, lame->vbr_max_bitrate);
-  lame_set_VBR_hard_min (lame->lgf, lame->vbr_hard_min);
-  lame_set_lowpassfreq (lame->lgf, lame->lowpass_freq);
-  lame_set_lowpasswidth (lame->lgf, lame->lowpass_width);
-  lame_set_highpassfreq (lame->lgf, lame->highpass_freq);
-  lame_set_highpasswidth (lame->lgf, lame->highpass_width);
-  lame_set_ATHonly (lame->lgf, lame->ath_only);
-  lame_set_ATHshort (lame->lgf, lame->ath_short);
-  lame_set_noATH (lame->lgf, lame->no_ath);
-  lame_set_ATHlower (lame->lgf, lame->ath_lower);
-  lame_set_cwlimit (lame->lgf, lame->cwlimit);
-  lame_set_allow_diff_short (lame->lgf, lame->allow_diff_short);
-  lame_set_no_short_blocks (lame->lgf, lame->no_short_blocks);
-  lame_set_emphasis (lame->lgf, lame->emphasis);
+  CHECK_ERROR (lame_set_num_channels (lame->lgf, lame->num_channels));
+  CHECK_ERROR (lame_set_brate (lame->lgf, lame->bitrate));
+  CHECK_ERROR (lame_set_compression_ratio (lame->lgf, lame->compression_ratio));
+  CHECK_ERROR (lame_set_quality (lame->lgf, lame->quality));
+  CHECK_ERROR (lame_set_mode (lame->lgf, lame->mode));
+  CHECK_ERROR (lame_set_force_ms (lame->lgf, lame->force_ms));
+  CHECK_ERROR (lame_set_free_format (lame->lgf, lame->free_format));
+  CHECK_ERROR (lame_set_copyright (lame->lgf, lame->copyright));
+  CHECK_ERROR (lame_set_original (lame->lgf, lame->original));
+  CHECK_ERROR (lame_set_error_protection (lame->lgf, lame->error_protection));
+  CHECK_ERROR (lame_set_padding_type (lame->lgf, lame->padding_type));
+  CHECK_ERROR (lame_set_extension (lame->lgf, lame->extension));
+  CHECK_ERROR (lame_set_strict_ISO (lame->lgf, lame->strict_iso));
+  CHECK_ERROR (lame_set_disable_reservoir (lame->lgf, lame->disable_reservoir));
+  CHECK_ERROR (lame_set_VBR_q (lame->lgf, lame->vbr));
+  CHECK_ERROR (lame_set_VBR_mean_bitrate_kbps (lame->lgf,
+          lame->vbr_mean_bitrate));
+  CHECK_ERROR (lame_set_VBR_min_bitrate_kbps (lame->lgf,
+          lame->vbr_min_bitrate));
+  CHECK_ERROR (lame_set_VBR_max_bitrate_kbps (lame->lgf,
+          lame->vbr_max_bitrate));
+  CHECK_ERROR (lame_set_VBR_hard_min (lame->lgf, lame->vbr_hard_min));
+  CHECK_ERROR (lame_set_lowpassfreq (lame->lgf, lame->lowpass_freq));
+  CHECK_ERROR (lame_set_lowpasswidth (lame->lgf, lame->lowpass_width));
+  CHECK_ERROR (lame_set_highpassfreq (lame->lgf, lame->highpass_freq));
+  CHECK_ERROR (lame_set_highpasswidth (lame->lgf, lame->highpass_width));
+  CHECK_ERROR (lame_set_ATHonly (lame->lgf, lame->ath_only));
+  CHECK_ERROR (lame_set_ATHshort (lame->lgf, lame->ath_short));
+  CHECK_ERROR (lame_set_noATH (lame->lgf, lame->no_ath));
+  CHECK_ERROR (lame_set_ATHlower (lame->lgf, lame->ath_lower));
+  CHECK_ERROR (lame_set_cwlimit (lame->lgf, lame->cwlimit));
+  CHECK_ERROR (lame_set_allow_diff_short (lame->lgf, lame->allow_diff_short));
+  CHECK_ERROR (lame_set_no_short_blocks (lame->lgf, lame->no_short_blocks));
+  CHECK_ERROR (lame_set_emphasis (lame->lgf, lame->emphasis));
 
   gst_lame_set_metadata (lame);
 
   /* initialize the lame encoder */
-  if (lame_init_params (lame->lgf) < 0) {
-    lame->initialized = FALSE;
-  } else {
+  if (lame_init_params (lame->lgf) >= 0) {
     lame->initialized = TRUE;
     /* FIXME: it would be nice to print out the mode here */
     GST_INFO ("lame encoder initialized (%d kbit/s, %d Hz, %d channels)",
@@ -913,6 +935,7 @@ gst_lame_setup (GstLame * lame)
   GST_DEBUG_OBJECT (lame, "done with setup");
 
   return lame->initialized;
+#undef CHECK_ERROR
 }
 
 static GstElementStateReturn
@@ -933,6 +956,7 @@ gst_lame_change_state (GstElement * element)
     case GST_STATE_READY_TO_NULL:
       if (lame->initialized) {
         lame_close (lame->lgf);
+        lame->lgf = lame_init ();
         lame->initialized = FALSE;
       }
       break;
@@ -953,6 +977,7 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "lame", GST_RANK_NONE, GST_TYPE_LAME))
     return FALSE;
 
+  GST_DEBUG_CATEGORY_INIT (debug, "lame", 0, "lame mp3 encoder");
   return TRUE;
 }
 
