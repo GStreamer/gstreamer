@@ -21,17 +21,24 @@ int main(int argc,char *argv[]) {
   gst_element_connect(identity,"src",sink,"sink");
 
   g_print("\n\nAssembling things:\n");
-  g_print("\nAdding src to thread:\n");
-  gst_bin_add(thread,src);
-  g_print("there are %d managed elements in thread\n",thread->num_managed_elements);
+  g_print("\nAdding src to bin:\n");
+  gst_bin_add(bin,src);
+  g_print("there are %d managed elements in bin\n",bin->num_managed_elements);
 
-  g_print("\nAdding identity to thread:\n");
-  gst_bin_add(thread,identity);
-  g_print("there are %d managed elements in thread\n",thread->num_managed_elements);
+  g_print("\nAdding identity to bin:\n");
+  gst_bin_add(bin,identity);
+  g_print("there are %d managed elements in bin\n",bin->num_managed_elements);
 
-  g_print("\nAdding sink to thread:\n");
-  gst_bin_add(thread,sink);
-  g_print("there are %d managed elements in thread\n",thread->num_managed_elements);
+  g_print("\nAdding sink to bin:\n");
+  gst_bin_add(bin,sink);
+  g_print("there are %d managed elements in bin\n",bin->num_managed_elements);
+
+  g_print("\n\nDisconnecting sink:\n");
+  gst_element_disconnect(identity,"src",sink,"sink");
+
+  g_print("\nRemoving sink from bin:\n");
+  gst_bin_remove(bin,sink);
+  g_print("there are %d managed elements in bin\n",bin->num_managed_elements);
 
 //  g_print("\nAdding bin to thread:\n");
 //  gst_bin_add(thread,bin);

@@ -754,13 +754,13 @@ static GstSchedule *sched = &realsched;
 /* this function will look at a pad and determine if the peer parent is
  * a possible candidate for connecting up in the same chain. */
 GstElement *gst_schedule_check_pad (GstSchedule *schedule, GstPad *pad) {
-  GstPad *peer;
+  GstRealPad *peer;
   GstElement *peerelement;
 
   GST_INFO (GST_CAT_SCHEDULING, "checking pad %s:%s for peer in scheduler",
             GST_DEBUG_PAD_NAME(pad));
 
-  peer = GST_PAD(GST_PAD_PEER (pad));
+  peer = GST_PAD_PEER (pad);
   if (peer == NULL) return NULL;
   peerelement = GST_ELEMENT(GST_PAD_PARENT (peer));
 
@@ -816,7 +816,9 @@ gst_schedule_chain_elements (GstSchedule *schedule, GstElement *element1, GstEle
     GST_INFO (GST_CAT_SCHEDULING, "creating new chain to hold two new elements");
     chain = gst_schedule_chain_new (sched);
     chain->elements = g_list_prepend (chain->elements, element1);
+    // FIXME chain changed here
     chain->elements = g_list_prepend (chain->elements, element2);
+    // FIXME chain changed here
     chain->num_elements = 2;
 
     sched->chains = g_list_prepend (sched->chains, chain);
@@ -827,6 +829,7 @@ gst_schedule_chain_elements (GstSchedule *schedule, GstElement *element1, GstEle
     GST_INFO (GST_CAT_SCHEDULING, "joining two existing chains together");
     // take the contents of chain2 and merge them into chain1
     chain1->elements = g_list_concat (chain1->elements, chain2->elements);
+    // FIXME chain changed here
     chain1->num_elements += chain2->num_elements;
 
     g_free(chain2);
@@ -839,6 +842,7 @@ gst_schedule_chain_elements (GstSchedule *schedule, GstElement *element1, GstEle
 
     GST_INFO (GST_CAT_SCHEDULING, "adding element to existing chain");
     chain->elements = g_list_prepend (chain->elements, element);
+    // FIXME chain changed here
     chain->num_elements++;
   }
 }
@@ -878,12 +882,30 @@ gst_schedule_add_element (GstSchedule *schedule, GstElement *element)
 void
 gst_schedule_remove_element (GstSchedule *schedule, GstElement *element)
 {
+  GList *chains;
+  GstScheduleChain *chain;
+
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT(element));
 
   if (g_list_find (sched->elements, element)) {
     GST_INFO (GST_CAT_SCHEDULING, "removing element \"%s\" from schedule",
       GST_ELEMENT_NAME(element));
+
+    // find which chain it's in and remove it from that chain
+    chains = sched->chains;
+    while (chains) {
+      chain = (GstScheduleChain *)(chains->data);
+      chains = g_list_next(chains);
+
+      if (g_list_find (chain->elements, element)) {
+        GST_INFO (GST_CAT_SCHEDULING, "removing element from chain");
+        chain->elements = g_list_remove (chain->elements, element);
+        // FIXME chain changed here
+        break;
+      }
+    }
+
     sched->elements = g_list_remove (sched->elements, element);
     sched->num_elements--;
   }

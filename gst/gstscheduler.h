@@ -25,7 +25,6 @@
 #define __GST_SCHEDULER_H__
 
 #include <gst/gstelement.h>
-/// ACK!
 #include <gst/gstbin.h>
 
 
