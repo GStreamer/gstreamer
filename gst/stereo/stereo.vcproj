@@ -32,7 +32,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="glib-2.0.lib gmodule-2.0.lib gthread-2.0.lib gobject-2.0.lib GStreamer-0.8.lib gstbytestream.lib iconv.lib intl.lib"
+				AdditionalDependencies="glib-2.0.lib gmodule-2.0.lib gthread-2.0.lib gobject-2.0.lib libgstreamer.lib gstbytestream.lib iconv.lib intl.lib"
 				OutputFile="$(OutDir)/gststereo.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/Debug;../../../glib/glib;../../../glib/gmodule;../../../glib/gthread;../../../glib/gobject;../../../gettext/lib;../../../libiconv/lib"
@@ -84,7 +84,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="glib-2.0.lib gmodule-2.0.lib gthread-2.0.lib gobject-2.0.lib GStreamer-0.8.lib gstbytestream.lib iconv.lib intl.lib"
+				AdditionalDependencies="glib-2.0.lib gmodule-2.0.lib gthread-2.0.lib gobject-2.0.lib libgstreamer.lib gstbytestream.lib iconv.lib intl.lib"
 				OutputFile="$(OutDir)/gststereo.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/Release;../../../glib/glib;../../../glib/gmodule;../../../glib/gthread;../../../glib/gobject;../../../gettext/lib;../../../libiconv/lib"
