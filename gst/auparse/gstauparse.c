@@ -340,6 +340,7 @@ Samples :
     }
 
     if (!gst_pad_set_explicit_caps (auparse->srcpad, tempcaps)) {
+      GST_ELEMENT_ERROR (auparse, CORE, NEGOTIATION, (NULL), (NULL));
       gst_buffer_unref (buf);
       gst_object_unref (GST_OBJECT (auparse->srcpad));
       auparse->srcpad = NULL;
