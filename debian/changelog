@@ -1,3 +1,53 @@
+gst-plugins (0.4.0-4) unstable; urgency=low
+
+  * Fixes from CVS for gstgnomevfssrc.c and endian issue in vorbisfile.c
+
+ -- David I. Lehn <dlehn@vt.edu>  Fri,  2 Aug 2002 20:51:38 -0400
+
+gst-plugins (0.4.0-3) unstable; urgency=low
+
+  * Add ladspa-sdk to Build-Depends
+  * Removed qcam plugin from -misc.
+    It's i386 only and probably not widely used.  Will figure out how to
+    package in the future if someone needs it.
+
+ -- David I. Lehn <dlehn@vt.edu>  Mon, 29 Jul 2002 16:32:33 -0400
+
+gst-plugins (0.4.0-2) unstable; urgency=low
+
+  * Clean up the Build-Depends:
+    - stricter versioning
+    - remove gnome deps (used for examples which are not build now)
+  * Fix segfault in vorbis.m4 check
+
+ -- David I. Lehn <dlehn@vt.edu>  Mon, 29 Jul 2002 10:47:12 -0400
+
+gst-plugins (0.4.0-1) unstable; urgency=low
+
+  * New upstream
+  * FLAC compile fixes from CVS
+  * DV comiled fixes
+  * Upated ltmain hack
+  * autogen.sh with more recent tools
+  * Update config.{guess,sub}
+  * Added plugin packages: -gconf, -http, -jack, -dv
+  * Added dvdnav plugin to -dvd
+  * Removed osshelper plugin from -oss
+  * Added xvideosink back to -x
+  * Added effectv, filter, and qtdemux plugins to -misc
+  * Rename gstreamer-lib-misc{-dev} to gstreamer-plugin-libs{-dev} to match
+    gstreamer core.
+  * Added gstreamer-plugin-apps package for a lonely 2 scripts
+  * Renamed gstreamer-all to gstreamer-plugins
+
+ -- David I. Lehn <dlehn@vt.edu>  Tue, 16 Jul 2002 02:10:07 -0400
+
+gst-plugins (0.3.4-2) unstable; urgency=low
+
+  * Rebuild for new avifile
+
+ -- David I. Lehn <dlehn@vt.edu>  Wed, 24 Apr 2002 14:06:46 -0400
+
 gst-plugins (0.3.4-1) unstable; urgency=low
 
   * New upstream

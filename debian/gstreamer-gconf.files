@@ -1,0 +1,3 @@
+etc/gconf/schemas/gstreamer.schemas
+usr/include/gst-plugins-*/gst/gconf
+usr/lib/gst/libgstgconf.so

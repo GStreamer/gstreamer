@@ -3,8 +3,8 @@
 set -e
 
 if [ "$1" = "remove" ]; then
-   gst-register --gst-mask=0 || true
-   gst-compprep --gst-mask=0 || true
+   gst-register --gst-mask=0 > /dev/null || true
+   gst-compprep --gst-mask=0 > /dev/null || true
 fi
 
 #DEBHELPER#
