@@ -1,3 +1,10 @@
+2003-12-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* testsuite/spider/spider1.c: (main):
+	* testsuite/spider/spider2.c: (main):
+	* testsuite/spider/spider3.c: (main):
+	  Make tests compile again. They probably don't work.
+
 2003-12-24  Colin Walters  <walters@verbum.org>
 
 	* sys/oss/gstosssink.c (gst_osssink_sink_fixate): Return NULL if
