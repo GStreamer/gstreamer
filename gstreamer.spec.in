@@ -57,3 +57,4 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/bin/*
 %{prefix}/lib/*
 %{prefix}/include/*
+%{prefix}/share/*
