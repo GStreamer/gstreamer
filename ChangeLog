@@ -1,5 +1,12 @@
 2004-09-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstelement.c: (gst_element_threadsafe_properties_pre_run),
+	(gst_element_threadsafe_properties_post_run),
+	(gst_element_set_state), (gst_element_change_state):
+	Added extra refcounting around various places. 
+
+2004-09-06  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_pad_link_call_link_functions):
 	Fix debug info.
 

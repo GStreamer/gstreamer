@@ -296,6 +296,9 @@ element_get_property (GstElement * element, const GParamSpec * pspec,
 static void
 gst_element_threadsafe_properties_pre_run (GstElement * element)
 {
+  /* need to ref the object because we don't want to lose the object
+   * before the post run function is called */
+  gst_object_ref (GST_OBJECT (element));
   GST_DEBUG ("locking element %s", GST_OBJECT_NAME (element));
   g_mutex_lock (element->property_mutex);
   gst_element_set_pending_properties (element);
@@ -306,6 +309,7 @@ gst_element_threadsafe_properties_post_run (GstElement * element)
 {
   GST_DEBUG ("unlocking element %s", GST_OBJECT_NAME (element));
   g_mutex_unlock (element->property_mutex);
+  gst_object_unref (GST_OBJECT (element));
 }
 
 /**
@@ -2722,14 +2726,20 @@ GstElementStateReturn
 gst_element_set_state (GstElement * element, GstElementState state)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
+  GstElementStateReturn ret;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
   GST_DEBUG_OBJECT (element, "setting state to %s",
       gst_element_state_get_name (state));
   klass = GST_ELEMENT_GET_CLASS (element);
-  /* a set_state function is mandatory */
   g_return_val_if_fail (klass->set_state, GST_STATE_FAILURE);
-  return klass->set_state (element, state);
+
+  /* a set_state function is mandatory */
+  gst_object_ref (GST_OBJECT (element));
+  ret = klass->set_state (element, state);
+  gst_object_unref (GST_OBJECT (element));
+
+  return ret;
 }
 
 static GstElementStateReturn
@@ -3004,7 +3014,6 @@ gst_element_change_state (GstElement * element)
        * - a new state was added
        * - somehow the element was asked to jump across an intermediate state
        */
-      g_assert_not_reached ();
       break;
   }
 
@@ -3036,9 +3045,7 @@ gst_element_change_state (GstElement * element)
       0, old_state, GST_STATE (element));
 
   /* signal the state change in case somebody is waiting for us */
-  g_mutex_lock (element->state_mutex);
   g_cond_signal (element->state_cond);
-  g_mutex_unlock (element->state_mutex);
 
   gst_object_unref (GST_OBJECT (element));
   return GST_STATE_SUCCESS;
