@@ -68,6 +68,7 @@ struct _GstWavParse {
   guint16 depth;
   gint rate;
   guint16 channels;
+  guint16 blockalign;
   guint16 width;
   guint32 bps;
 
