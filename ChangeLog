@@ -1,5 +1,12 @@
 2004-03-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/LINGUAS:
+	* po/sv.po:
+	* po/af.po:
+          adding Swedish (Christian Rose) and Afrikaans (Petri Jooste)
+
+2004-03-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am: use common/release.mak
 
 2004-03-17  Thomas Vander Stichele  <thomas at apestaart dot org>
