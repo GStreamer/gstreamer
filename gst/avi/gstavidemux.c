@@ -464,52 +464,6 @@ gst_avi_demux_src_getcaps (GstPad * pad)
   return gst_caps_copy (stream->caps);
 }
 
-static gint32
-gst_avi_demux_sync_streams (GstAviDemux * avi, guint64 time)
-{
-  gint i;
-  guint32 min_index = G_MAXUINT;
-  avi_stream_context *stream;
-  gst_avi_index_entry *entry;
-
-  for (i = 0; i < avi->num_streams; i++) {
-    stream = &avi->stream[i];
-
-    GST_DEBUG ("finding %d for time %" G_GINT64_FORMAT, i, time);
-
-    entry = gst_avi_demux_index_entry_for_time (avi, stream->num, time,
-        GST_RIFF_IF_KEYFRAME);
-    if (entry) {
-      min_index = MIN (entry->index_nr, min_index);
-    }
-  }
-  GST_DEBUG ("first index at %d", min_index);
-
-  /* now we know the entry we need to sync on. calculate number of frames to
-   * skip fro there on and the stream stats */
-  for (i = 0; i < avi->num_streams; i++) {
-    gst_avi_index_entry *next_entry;
-
-    stream = &avi->stream[i];
-
-    /* next entry */
-    next_entry = gst_avi_demux_index_next (avi, stream->num, min_index, 0);
-    /* next entry with keyframe */
-    entry = gst_avi_demux_index_next (avi, stream->num, min_index,
-        GST_RIFF_IF_KEYFRAME);
-
-    stream->current_byte = next_entry->bytes_before;
-    stream->current_frame = next_entry->frames_before;
-    stream->skip = entry->frames_before - next_entry->frames_before;
-
-    GST_DEBUG ("%d skip %d", stream->num, stream->skip);
-  }
-
-  GST_DEBUG ("final index at %d", min_index);
-
-  return min_index;
-}
-
 static gboolean
 gst_avi_demux_send_event (GstElement * element, GstEvent * event)
 {
@@ -571,10 +525,9 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
         case GST_FORMAT_BYTES:
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_TIME:{
-          gst_avi_index_entry *seek_entry, *entry = NULL;
+          gst_avi_index_entry *entry = NULL;
           gint64 desired_offset = GST_EVENT_SEEK_OFFSET (event);
           guint32 flags;
-          guint64 min_index;
 
           /* no seek on audio yet */
           if (stream->strh->type == GST_RIFF_FCC_auds) {
@@ -600,10 +553,7 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
           }
 
           if (entry) {
-            min_index = gst_avi_demux_sync_streams (avi, entry->ts);
-            seek_entry = &avi->index_entries[min_index];
-
-            avi->seek_offset = seek_entry->offset + avi->index_offset;
+            avi->seek_offset = entry->offset + avi->index_offset;
             avi->last_seek = entry->ts;
             avi->seek_flush =
                 (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH);
@@ -613,6 +563,7 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
                 G_GINT64_FORMAT, GST_EVENT_SEEK_FORMAT (event), desired_offset);
             res = FALSE;
           }
+          GST_LOG ("seek done\n");
           break;
         }
         default:
