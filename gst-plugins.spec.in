@@ -243,6 +243,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_AVIFILE_TRUE@Requires: gstreamer >= %{ver}
 @USE_AVIFILE_TRUE@Requires: gstreamer-plugin-libs = %{ver}
 @USE_AVIFILE_TRUE@Requires: avifile = 0.6.20011111DD
+@USE_AVIFILE_TRUE@Requires: gstreamer-colorspace >= %{ver}
 @USE_AVIFILE_TRUE@
 @USE_AVIFILE_TRUE@%description -n gstreamer-avi
 @USE_AVIFILE_TRUE@Plugins for playback of AVI format media files.
@@ -653,7 +654,8 @@ Plugins for UDP transport
 Summary: Gstreamer plugin for FLI/FLX animation format
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
-
+Requires: gstreamer-plugin-libs = %{ver}
+Requires: gstreamer-colorspace >= %{ver}
 %description -n gstreamer-flx
 Plugin for playing FLI/FLX animations under GStreamer
 
@@ -742,6 +744,7 @@ and so on.
 Summary: Gstreamer audio format plugin
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
+Requires: gstreamer-plugin-libs = %{ver}
 %description -n gstreamer-audioformats
 Plugin for playback of wav, au and mp3 audio files
 
@@ -758,6 +761,8 @@ Plugin for playback of wav, au and mp3 audio files
 @USE_SHOUT_TRUE@Summary: Gstreamer Icecast broadcasting plugin
 @USE_SHOUT_TRUE@Group: Libraries/Multimedia
 @USE_SHOUT_TRUE@Requires: gstreamer >= %{ver}
+@USE_SHOUT_TRUE@Requires: gstreamer-plugin-libs = %{ver}
+@USE_SHOUT_TRUE@Requires: libshout >= 1.0.5
 @USE_SHOUT_TRUE@%description -n gstreamer-icecast
 @USE_SHOUT_TRUE@Plugin for broadcasting audio with the Icecast server
 
