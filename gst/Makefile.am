@@ -66,6 +66,7 @@ libgstinclude_HEADERS =	\
 	gsttype.h	\
 	gstcaps.h	\
 	gstprops.h	\
+	gstpropsprivate.h	\
 	gstplugin.h	\
 	gstutils.h	\
 	gsttrace.h	\
