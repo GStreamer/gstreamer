@@ -117,38 +117,49 @@ int
 main (int argc, char *argv[]) 
 {
   gboolean testret;
+  gint ret = 0;
 
   gst_init (&argc, &argv);
 
   testret = gst_caps_is_always_compatible (GST_CAPS_GET (mp1parsecaps), GST_CAPS_GET (rawcaps));
   g_print ("4 <-> 2 == %d (invalid, wrong major type)\n", testret);
+  ret = ret + (testret == FALSE) ? 0 : 1;
   
   testret = gst_caps_is_always_compatible (GST_CAPS_GET (mp1parsecaps), GST_CAPS_GET (sinkcaps));
   g_print ("4 <-> 1 == %d (valid, subset)\n", testret);
+  ret = ret + (testret == TRUE) ? 0 : 1;
   
   testret = gst_caps_is_always_compatible (GST_CAPS_GET (sinkcaps), GST_CAPS_GET (mp1parsecaps));
   g_print ("1 <-> 4 == %d (invalid, superset)\n", testret);
+  ret = ret + (testret == FALSE) ? 0 : 1;
 
   testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps), GST_CAPS_GET (rawcaps2));
   g_print ("2 <-> 3 == %d (invalid, ranges)\n", testret);
+  ret = ret + (testret == FALSE) ? 0 : 1;
 
   testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps), GST_CAPS_GET (rawcaps3));
   g_print ("2 <-> 5 == %d (valid)\n", testret);
+  ret = ret + (testret == TRUE) ? 0 : 1;
 
   testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps3), GST_CAPS_GET (rawcaps));
   g_print ("5 <-> 2 == %d (invalid)\n", testret);
+  ret = ret + (testret == FALSE) ? 0 : 1;
 
   testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps2), GST_CAPS_GET (rawcaps3));
   g_print ("3 <-> 5 == %d (valid)\n", testret);
+  ret = ret + (testret == TRUE) ? 0 : 1;
 
   testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps2), GST_CAPS_GET (rawcaps));
   g_print ("3 <-> 2 == %d (invalid, property missing in source)\n", testret);
+  ret = ret + (testret == FALSE) ? 0 : 1;
 
   testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps), GST_CAPS_GET (rawcaps));
   g_print ("2 <-> 2 == %d (valid, same caps)\n", testret);
+  ret = ret + (testret == TRUE) ? 0 : 1;
 
   testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps6), GST_CAPS_GET (rawcaps7));
   g_print ("6 <-> 7 == %d (invalid, second caps doesn't fit)\n", testret);
+  ret = ret + (testret == FALSE) ? 0 : 1;
 
-  return 0;
+  return ret;
 }
