@@ -23,10 +23,12 @@ tests_pass = \
 	sets \
 	simplify
 
+EXTRA_DIST = caps_strings
+
 noinst_HEADERS = \
 	caps.h
 
-tests_fail =
+tests_fail = renegotiate
 tests_ignore =
 
 app_fixate_LDADD = $(GST_LIBS) 

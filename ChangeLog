@@ -1,3 +1,10 @@
+2004-05-04  David Schleef  <ds@schleef.org>
+
+	The "once more, with feeling" check-in.
+	* testsuite/caps/Makefile.am: dist caps_strings
+	* testsuite/caps/renegotiate.c: (main): This test triggers a
+	  segfault in the core.  Marking as failing.
+
 2004-05-03  David Schleef  <ds@schleef.org>
 
 	* testsuite/caps/deserialize.c: (main): Fix problems noticed

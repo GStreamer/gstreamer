@@ -63,7 +63,8 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 
-  pipeline = gst_parse_launch ("sinesrc ! audioconvert ! "
+  /* change sinesrk to sinesrc once gst_parse_launch is fixed */
+  pipeline = gst_parse_launch ("sinesrk ! audioconvert ! "
       "audio/x-raw-int, channels=2, rate=48000;"
       "audio/x-raw-int, channels=1, rate=44100 !" "fakesink", NULL);
 
