@@ -2,9 +2,6 @@
 
 	* testsuite/Rules:
           fix gst-register rules
-	* testsuite/plugin/Makefile.am:
-          move gst-register as a test to only plugin, since it's the only
-          one needing it
 
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
