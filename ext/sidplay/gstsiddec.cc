@@ -312,7 +312,7 @@ update_metadata (GstSidDec *siddec)
       gst_props_add_entry (props, entry);
     }
 
-    siddec->metadata = gst_caps_new ("mad_metadata",
+    siddec->metadata = gst_caps_new ("sid_metadata",
                                      "application/x-gst-metadata",
 			              props);
 
