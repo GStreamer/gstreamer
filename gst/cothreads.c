@@ -341,12 +341,14 @@ cothread_stub (void)
   GST_DEBUG_ENTER ("");
 
   thread->flags |= COTHREAD_STARTED;
-/* #ifdef COTHREAD_ATOMIC 
+/* 
+ * ifdef COTHREAD_ATOMIC 
  *   do something here to lock
- * #else
+ * else
  *  g_mutex_lock(thread->lock);
- * #endif
+ * endif
  */
+
   while (TRUE) {
     thread->func (thread->argc, thread->argv);
     /* we do this to avoid ever returning, we just switch to 0th thread */

@@ -85,7 +85,7 @@ typedef enum {
   GST_BUFFER_ORIGINAL,
   GST_BUFFER_DONTFREE,
 
-} GstBufferFlags;
+} GstBufferFlag;
 
 
 typedef struct _GstBuffer GstBuffer;
