@@ -248,9 +248,6 @@ element_set_property (GstElement *element, const GParamSpec *pspec, const GValue
 {
   prop_value_t *prop_value = g_new0 (prop_value_t, 1);
 
-  g_message ("Setting property %s::%s to %s for object %s\n", G_OBJECT_TYPE_NAME (element),
-             pspec->name, g_strdup_value_contents (value), GST_OBJECT_NAME (element));
-
   prop_value->pspec = pspec;
   prop_value->value = value;
 
@@ -260,9 +257,6 @@ element_set_property (GstElement *element, const GParamSpec *pspec, const GValue
 static void
 element_get_property (GstElement *element, const GParamSpec *pspec, GValue *value)
 {
-  g_message ("Getting property %s::%s to %s for object %s\n", G_OBJECT_TYPE_NAME (element),
-             pspec->name, g_strdup_value_contents (value), GST_OBJECT_NAME (element));
-
   g_mutex_lock (element->property_mutex);
   g_object_get_property ((GObject*)element, pspec->name, value);
   g_mutex_unlock (element->property_mutex);
