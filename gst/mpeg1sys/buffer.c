@@ -34,7 +34,15 @@
 
 #define CLOCKS                  90000.0 
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#define DEBUG(...) g_print (__VA_ARGS__)
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #define DEBUG(a, b...) g_print (##b)
+
+#endif
 
 /* This must match decoder and encoder tables */
 static double picture_rates [16] = 
