@@ -597,7 +597,7 @@ gst_asf_demux_process_segment (GstASFDemux       *asf_demux,
     
     /* It's uncompressed with replic data*/
     if (replic_size < 8) {
-      gst_element_error (asf_demux, STREAM, DEMUX, NULL, ("The payload has replicated data but the size is less than 8"));
+      GST_ELEMENT_ERROR (asf_demux, STREAM, DEMUX, NULL, ("The payload has replicated data but the size is less than 8"));
       return FALSE;
     }
     _read_replicated_data (asf_demux, &replicated_data_header);
@@ -644,7 +644,7 @@ gst_asf_demux_process_segment (GstASFDemux       *asf_demux,
       segment_info.segment_size = segment_info.chunk_size;
 
       if (segment_info.chunk_size > packet_info->size_left) {
-	gst_element_error (asf_demux, STREAM, DEMUX, NULL, ("Payload chunk overruns packet size."));
+	GST_ELEMENT_ERROR (asf_demux, STREAM, DEMUX, NULL, ("Payload chunk overruns packet size."));
 	return FALSE;
       }
 
@@ -823,7 +823,7 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *obj_size)
       gst_bytestream_flush (asf_demux->bs, object.stream_specific_size);
       break;
     default:
-      gst_element_error (asf_demux, STREAM, DEMUX, NULL, ("Audio stream using unknown error correction"));
+      GST_ELEMENT_ERROR (asf_demux, STREAM, DEMUX, NULL, ("Audio stream using unknown error correction"));
       return FALSE;
     }
 
@@ -853,7 +853,7 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *obj_size)
     }
     break;
   default:
-    gst_element_error (asf_demux, STREAM, WRONG_TYPE, NULL, NULL);
+    GST_ELEMENT_ERROR (asf_demux, STREAM, WRONG_TYPE, NULL, NULL);
     return FALSE;
   }
 
@@ -965,7 +965,7 @@ gst_asf_demux_get_stream (GstASFDemux *asf_demux,
   }
 
   /* Base case if we haven't found one at all */
-  gst_element_error (asf_demux, STREAM, DEMUX, NULL, ("Segment found for undefined stream: (%d)", id));
+  GST_ELEMENT_ERROR (asf_demux, STREAM, DEMUX, NULL, ("Segment found for undefined stream: (%d)", id));
 
   return NULL;
 }

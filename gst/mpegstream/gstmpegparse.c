@@ -500,7 +500,7 @@ gst_mpeg_parse_loop (GstElement *element)
 	      "systemstream", G_TYPE_BOOLEAN, TRUE,
 	      "parsed",       G_TYPE_BOOLEAN, TRUE, NULL)) < 0)
       {
-	gst_element_error (mpeg_parse, CORE, NEGOTIATION, NULL, NULL);
+	GST_ELEMENT_ERROR (mpeg_parse, CORE, NEGOTIATION, NULL, NULL);
 	return;
       }
     }

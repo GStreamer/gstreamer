@@ -1,3 +1,8 @@
+2004-01-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+        * just about every source file:
+          gst_element_error -> GST_ELEMENT_ERROR
+
 2004-01-29  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_get): Fixing seeking

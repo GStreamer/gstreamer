@@ -614,7 +614,7 @@ gst_id3_tag_handle_event (GstPad *pad, GstEvent *event)
 	  gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value);
 	  if (value != (tag->buffer ? GST_BUFFER_OFFSET (tag->buffer) + GST_BUFFER_SIZE (tag->buffer)
 				    : 0))
-	    gst_element_error (tag, CORE, EVENT, NULL, ("Seek during ID3v2 tag reading"));
+	    GST_ELEMENT_ERROR (tag, CORE, EVENT, NULL, ("Seek during ID3v2 tag reading"));
 	  gst_data_unref (GST_DATA (event));
 	  break;
 	}
@@ -623,7 +623,7 @@ gst_id3_tag_handle_event (GstPad *pad, GstEvent *event)
 	  gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_READING_V1_TAG);
 	  break;
 	case GST_ID3_TAG_STATE_READING_V1_TAG:
-	  gst_element_error (tag, CORE, EVENT, NULL, ("Seek during ID3v1 tag reading"));
+	  GST_ELEMENT_ERROR (tag, CORE, EVENT, NULL, ("Seek during ID3v1 tag reading"));
 	  gst_data_unref (GST_DATA (event));
 	  break;
 	case GST_ID3_TAG_STATE_SEEKING_TO_NORMAL:
@@ -747,7 +747,7 @@ gst_id3_tag_do_typefind (GstID3Tag *tag, GstBuffer *buffer)
   if (find.best_probability > 0) {
     return find.caps;
   } else {
-    gst_element_error (tag, CORE, CAPS, NULL, ("no caps found"));
+    GST_ELEMENT_ERROR (tag, CORE, CAPS, NULL, ("no caps found"));
     return NULL;
   }
 }
@@ -875,7 +875,7 @@ gst_id3_tag_chain (GstPad *pad, GstData *data)
 						    GST_SEEK_FLAG_FLUSH, tag->v2tag_size))) {
 	  gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_SEEKING_TO_NORMAL);
 	} else {
-	  gst_element_error (tag, CORE, SEEK, NULL, ("can't seek back to beginning from reading ID3v1 tag"));
+	  GST_ELEMENT_ERROR (tag, CORE, SEEK, NULL, ("can't seek back to beginning from reading ID3v1 tag"));
 	}
       } else {
 	gst_id3_tag_send_tag_event (tag);
