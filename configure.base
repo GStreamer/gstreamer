@@ -969,9 +969,6 @@ LIBS="$CORE_LIBS $LIBS"
 AC_SUBST(CORE_LIBS)
 AC_SUBST(CORE_CFLAGS)
 
-dnl FIXME: having to AC_SUBST these is messy.  Not sure if CPPFLAGS and LDFLAGS
-dnl need it, either.
-
 dnl Vars for everyone else
 GST_LIBS="\$(top_builddir)/gst/libgst.la"
 GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include"
@@ -986,11 +983,20 @@ AC_SUBST(LIBGST_CFLAGS)
 
 dnl CFLAGS for everyone else
 CFLAGS="$CFLAGS $GST_CFLAGS"
+
+dnl Needed to make automake 1.4g happy.
+dnl FIXME: find as properly, rather than just using CC
+AS="\$(CC)"
+
+dnl Having to AC_SUBST these is messy, but doesn't seem to do any harm.
+dnl I'm not sure whether it's really necessary, but it removes some warnings
+dnl when automake 1.4g runs, and may be beneficial elsewhere.
 AC_SUBST(LIBS)
 AC_SUBST(CFLAGS)
-
-dnl AC_SUBST(CPPFLAGS)
-dnl AC_SUBST(LDFLAGS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(LDFLAGS)
+AC_SUBST(AS)
+AC_SUBST(ASFLAGS)
 
 
 dnl #############################
