@@ -111,7 +111,7 @@ enum
 
 enum
 {
-  ARG_0,
+  ARG_0
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",

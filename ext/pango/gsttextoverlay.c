@@ -25,7 +25,7 @@ enum
   ARG_HALIGN,
   ARG_X0,
   ARG_Y0,
-  ARG_FONT_DESC,
+  ARG_FONT_DESC
 };
 
 

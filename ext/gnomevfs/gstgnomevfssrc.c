@@ -73,7 +73,7 @@ typedef enum
 {
   GST_GNOMEVFSSRC_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  GST_GNOMEVFSSRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
+  GST_GNOMEVFSSRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
 }
 GstGnomeVFSSrcFlags;
 
@@ -191,7 +191,7 @@ enum
   ARG_IRADIO_GENRE,
   ARG_IRADIO_URL,
   ARG_IRADIO_TITLE,
-  ARG_SEEKABLE,
+  ARG_SEEKABLE
 };
 
 static void gst_gnomevfssrc_base_init (gpointer g_class);

@@ -57,7 +57,7 @@ enum
   ARG_QUALITY,
   ARG_SERIAL,
   ARG_MANAGED,
-  ARG_LAST_MESSAGE,
+  ARG_LAST_MESSAGE
 };
 
 static const GstFormat *
