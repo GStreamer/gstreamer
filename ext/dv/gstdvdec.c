@@ -798,8 +798,6 @@ static void
 gst_dvdec_push (GstDVDec * dvdec, GstBuffer * outbuf, GstPad * pad,
     GstClockTime ts)
 {
-  GST_BUFFER_TIMESTAMP (outbuf) = ts;
-
   if ((dvdec->need_discont) || (dvdec->new_media)) {
     GstEvent *discont;
 
@@ -827,7 +825,7 @@ gst_dvdec_loop (GstElement * element)
   guint8 *inframe;
   gint height;
   guint32 length, got_bytes;
-  guint64 ts;
+  GstClockTime ts, duration;
   gdouble fps;
 
   dvdec = GST_DVDEC (element);
@@ -874,13 +872,13 @@ gst_dvdec_loop (GstElement * element)
 
   ts = dvdec->next_ts;
   dvdec->next_ts += GST_SECOND / dvdec->framerate;
+  duration = dvdec->next_ts - ts;
 
   dv_parse_packs (dvdec->decoder, GST_BUFFER_DATA (buf));
   if (dv_is_new_recording (dvdec->decoder, GST_BUFFER_DATA (buf)))
     dvdec->new_media = TRUE;
   if (GST_PAD_IS_LINKED (dvdec->audiosrcpad)) {
-    gint16 *a_ptr;
-    gint i, j;
+    gint num_samples;
 
     dv_decode_full_audio (dvdec->decoder, GST_BUFFER_DATA (buf),
         dvdec->audio_buffers);
@@ -905,7 +903,12 @@ gst_dvdec_loop (GstElement * element)
       dvdec->channels = dv_get_num_channels (dvdec->decoder);
     }
 
-    if (dv_get_num_samples (dvdec->decoder) > 0) {
+    num_samples = dv_get_num_samples (dvdec->decoder);
+
+    if (num_samples) {
+      gint16 *a_ptr;
+      gint i, j;
+
       outbuf = gst_buffer_new ();
       GST_BUFFER_SIZE (outbuf) = dv_get_num_samples (dvdec->decoder) *
           sizeof (gint16) * dv_get_num_channels (dvdec->decoder);
@@ -913,11 +916,18 @@ gst_dvdec_loop (GstElement * element)
 
       a_ptr = (gint16 *) GST_BUFFER_DATA (outbuf);
 
-      for (i = 0; i < dv_get_num_samples (dvdec->decoder); i++) {
+      for (i = 0; i < num_samples; i++) {
         for (j = 0; j < dv_get_num_channels (dvdec->decoder); j++) {
           *(a_ptr++) = dvdec->audio_buffers[j][i];
         }
       }
+
+      GST_BUFFER_TIMESTAMP (outbuf) = ts;
+      GST_BUFFER_DURATION (outbuf) = duration;
+      GST_BUFFER_OFFSET (outbuf) = dvdec->audio_offset;
+      dvdec->audio_offset += num_samples;
+      GST_BUFFER_OFFSET_END (outbuf) = dvdec->audio_offset;
+
       gst_dvdec_push (dvdec, outbuf, dvdec->audiosrcpad, ts);
     }
   } else {
@@ -959,6 +969,9 @@ gst_dvdec_loop (GstElement * element)
     dv_decode_full_frame (dvdec->decoder, GST_BUFFER_DATA (buf),
         dvdec->space, outframe_ptrs, outframe_pitches);
 
+    GST_BUFFER_TIMESTAMP (outbuf) = ts;
+    GST_BUFFER_DURATION (outbuf) = duration;
+
     gst_dvdec_push (dvdec, outbuf, dvdec->videosrcpad, ts);
   } else {
     dvdec->height = height;
@@ -989,6 +1002,7 @@ gst_dvdec_change_state (GstElement * element)
       dvdec->decoder =
           dv_decoder_new (0, dvdec->clamp_luma, dvdec->clamp_chroma);
       dvdec->decoder->quality = qualities[dvdec->quality];
+      dvdec->audio_offset = 0;
       /* 
        * Enable this function call when libdv2 0.100 or higher is more
        * common

@@ -64,6 +64,7 @@ struct _GstDVDec {
   
   gint 		 length;
   guint64	 next_ts;
+  guint64	 audio_offset;
   guint64	 end_position;
   gboolean	 need_discont;
   gboolean	 new_media;
