@@ -63,7 +63,7 @@ plugins.
 %{prefix}/lib/gst/libgstcontrol*
 %{prefix}/lib/gst/libplayondemand*
 %{prefix}/lib/gst/libspeed*
-%{prefix}/man/man1/*
+%{prefix}/share/man/man1/*
 
 %package devel
 Summary: Libraries and include files for GStreamer streaming-media framework
@@ -282,6 +282,9 @@ Output plugin for GStreamer to convert to GSM lossy audio format.
 Summary: GStreamer plugins for MPEG video playback and encoding
 Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
+Requires: mpeg2dec => 0.2.0
+Obsoletes: gstreamer-mpeg1
+Obsoletes: gstreamer-mpeg2
 
 %description -n gstreamer-mpeg
 Plugins for playing and encoding MPEG video
@@ -559,7 +562,7 @@ Plugin for accessing a Quickcam source
 Summary: GStreamer Sid C64 music plugin
 Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
-
+Requires: libsidplay => 1.36.0
 %description -n gstreamer-sid
 Plugin for playback of C64 SID format music files
 
@@ -629,6 +632,8 @@ Library for transfering data with the RTP protocol
 %{prefix}/lib/gst/libgstrtp*
 
 %changelog
+* Wed Dec 12 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Thomas merged mpeg plugins into one
 * Sat Dec 08 2001 Christian Schaller <Uraeus@linuxrising.org>
 - More minor cleanups including some fixed descriptions from Andrew Mitchell
 
@@ -663,7 +668,7 @@ Library for transfering data with the RTP protocol
 %setup
 
 %build
-CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir}
+CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir} --mandir=%{prefix}/share/man
 
 if [ "$SMP" != "" ]; then
   (make "MAKE=make -k -j $SMP"; exit 0)
