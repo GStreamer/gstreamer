@@ -805,6 +805,7 @@ iterate (gpointer data)
   if (!GST_FLAG_IS_SET (GST_OBJECT (data), GST_BIN_SELF_SCHEDULABLE)) {
     res = gst_bin_iterate (GST_BIN (data));
   } else {
+    g_usleep (500);
     res = gst_element_get_state (GST_ELEMENT (data)) == GST_STATE_PLAYING;
   }
 
