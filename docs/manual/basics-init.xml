@@ -39,7 +39,7 @@ main (int argc, char *argv[])
   <para>
     It is also possible to call the <function>gst_init</function> function
     with two <symbol>NULL</symbol> arguments, in which case no command line
-    options will parsed by <application>GStreamer</application>.
+    options will be parsed by <application>GStreamer</application>.
   </para>
   <sect1>
     <title>The popt interface</title>
