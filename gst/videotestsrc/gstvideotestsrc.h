@@ -67,8 +67,9 @@ struct _GstVideotestsrc {
   /* private */
   gint64 timestamp;
   gint64 interval;
+  gint bpp;
 
-  guchar *temp;
+  void (*make_image)(GstVideotestsrc *v, unsigned char *dest, int w, int h);
 };
 
 struct _GstVideotestsrcClass {

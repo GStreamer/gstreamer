@@ -57,7 +57,11 @@ GST_PAD_TEMPLATE_FACTORY (src_templ,
   GST_CAPS_NEW (
     "videotestsrc_caps",
     "video/raw",
-      "format",		GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+      "format",		GST_PROPS_LIST(
+			  GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+			  GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')),
+			  GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R','G','B',' '))
+			),
       "width",		GST_PROPS_INT(640),
       "height",		GST_PROPS_INT(480)
   )
@@ -93,7 +97,9 @@ static GstElementClass *parent_class = NULL;
 
 void gst_videotestsrc_setup (GstVideotestsrc *v);
 static void random_chars(unsigned char *dest, int nbytes);
-static void gst_videotestsrc_random_yuv (GstVideotestsrc *v, unsigned char *dest, int w, int h);
+void gst_videotestsrc_smpte_I420 (GstVideotestsrc *v, unsigned char *dest, int w, int h);
+void gst_videotestsrc_smpte_YV12 (GstVideotestsrc *v, unsigned char *dest, int w, int h);
+void gst_videotestsrc_smpte_RGB (GstVideotestsrc *v, unsigned char *dest, int w, int h);
 
 
 GType
@@ -161,7 +167,28 @@ gst_videotestsrc_srcconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "width", &videotestsrc->width);
   gst_caps_get_int (caps, "height", &videotestsrc->height);
 
-  gst_videotestsrc_setup(videotestsrc);
+  GST_DEBUG (0,"format is 0x%08x\n",videotestsrc->format);
+
+  switch(videotestsrc->format){
+  case GST_MAKE_FOURCC('R','G','B',' '):
+	  videotestsrc->make_image = gst_videotestsrc_smpte_RGB;
+	  videotestsrc->bpp = 16;
+	  break;
+  case GST_MAKE_FOURCC('I','4','2','0'):
+	  videotestsrc->make_image = gst_videotestsrc_smpte_I420;
+	  videotestsrc->bpp = 12;
+	  break;
+  case GST_MAKE_FOURCC('Y','U','Y','V'):
+	  //videotestsrc->make_image = gst_videotestsrc_smpte_YUYV;
+	  return GST_PAD_CONNECT_REFUSED;
+	  break;
+  case GST_MAKE_FOURCC('Y','V','1','2'):
+	  videotestsrc->make_image = gst_videotestsrc_smpte_YV12;
+	  videotestsrc->bpp = 12;
+	  break;
+  default:
+	  return GST_PAD_CONNECT_REFUSED;
+  }
 
   GST_DEBUG (0,"size %d x %d",videotestsrc->width, videotestsrc->height);
 
@@ -184,6 +211,14 @@ gst_videotestsrc_init (GstVideotestsrc *videotestsrc)
   gst_pad_set_get_function(videotestsrc->srcpad,gst_videotestsrc_get);
   gst_pad_set_connect_function(videotestsrc->srcpad,gst_videotestsrc_srcconnect);
 
+#if 0
+      "bpp",		GST_PROPS_INT(16),
+      "depth",		GST_PROPS_INT(16),
+      "endianness",	GST_PROPS_INT(1234),
+      "red_mask",	GST_PROPS_INT(63488),
+      "green_mask",	GST_PROPS_INT(2016),
+      "blue_mask",	GST_PROPS_INT(31),
+#endif
   videotestsrc->width = 640;
   videotestsrc->height = 480;
 
@@ -206,14 +241,18 @@ gst_videotestsrc_get (GstPad *pad)
 
   videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
 
+#if 0
+  /* XXX this is wrong for anything but I420 */
   newsize = videotestsrc->width*videotestsrc->height + 
 	  videotestsrc->width*videotestsrc->height/2;
+#endif
+  /* XXX this is wrong for anything but RGB16 */
+  newsize = (videotestsrc->width*videotestsrc->height*videotestsrc->bpp)>>3;
 
   GST_DEBUG(0,"size=%ld %dx%d",newsize,
 	videotestsrc->width, videotestsrc->height);
 
   buf = gst_buffer_new();
-  /* XXX this is wrong for anything but I420 */
   GST_BUFFER_SIZE(buf) = newsize;
   GST_BUFFER_DATA(buf) = g_malloc (newsize);
   g_return_val_if_fail(GST_BUFFER_DATA(buf) != NULL, NULL);
@@ -221,7 +260,7 @@ gst_videotestsrc_get (GstPad *pad)
   videotestsrc->timestamp += videotestsrc->interval;
   GST_BUFFER_TIMESTAMP(buf) = videotestsrc->timestamp;
 
-  gst_videotestsrc_random_yuv(videotestsrc, (void *)GST_BUFFER_DATA(buf),
+  videotestsrc->make_image(videotestsrc, (void *)GST_BUFFER_DATA(buf),
 		  videotestsrc->width, videotestsrc->height);
 
   return buf;
@@ -349,32 +388,55 @@ paint_rect (unsigned char *dest, int stride, int x, int y, int w, int h, unsigne
 	}
 }
 
+static void
+paint_rect2 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char *col)
+{
+	unsigned char *d = dest + stride*y + x*2;
+	unsigned char *dp;
+	int i,j;
+
+	for(i=0;i<h;i++){
+		dp = d;
+		for(j=0;j<w;j++){
+			*dp++ = col[0];
+			*dp++ = col[1];
+		}
+		d += stride;
+	}
+}
+static void
+paint_rect3 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char *col)
+{
+	unsigned char *d = dest + stride*y + x*3;
+	unsigned char *dp;
+	int i,j;
+
+	for(i=0;i<h;i++){
+		dp = d;
+		for(j=0;j<w;j++){
+			*dp++ = col[0];
+			*dp++ = col[1];
+			*dp++ = col[2];
+		}
+		d += stride;
+	}
+}
+
 /*                        wht  yel  cya  grn  mag  red  blu  blk   -I    Q */
 static int y_colors[] = { 255, 226, 179, 150, 105,  76,  29,  16,  16,   0 };
 static int u_colors[] = { 128,   0, 170,  46, 212,  85, 255, 128,   0, 128 };
 static int v_colors[] = { 128, 155,   0,  21, 235, 255, 107, 128, 128, 255 };
 
-static void
-gst_videotestsrc_random_yuv (GstVideotestsrc *v, unsigned char *dest, int w, int h)
+void
+gst_videotestsrc_smpte_I420 (GstVideotestsrc *v, unsigned char *dest, int w, int h)
 {
 	unsigned char *yp = dest;
 	unsigned char *up = dest + w*h;
-	unsigned char *vp = up + w*h/4;
+	unsigned char *vp = dest + w*h + w*h/4;
 	//int h24 = h/24;
 	//int j,k;
 	int i;
 	int y1,y2;
-
-#if 0
-	//memset(dest,255,w*h/2);
-	random_chars(dest + w*h/2,w*h/2);
-
-	//random_chars(dest + w*h, w*h/4);
-	memset(dest + w*h, 128, w*h/4);
-	
-	//random_chars(dest + w*h + w*h/4, w*h/4);
-	memset(dest + w*h + w*h/4, 128, w*h/4);
-#endif
 
 	y1 = h/3;
 	y2 = h*0.375;
@@ -424,6 +486,134 @@ gst_videotestsrc_random_yuv (GstVideotestsrc *v, unsigned char *dest, int w, int
 		paint_rect_random(yp, w, x1*2, y2*2, (x2-x1)*2, h-y2*2);
 		paint_rect(up, w/2, x1, y2, x2-x1, h/2-y2, u_colors[0]);
 		paint_rect(vp, w/2, x1, y2, x2-x1, h/2-y2, v_colors[0]);
+	}
+}
+
+/* same as I420, but with U and V swapped */
+void
+gst_videotestsrc_smpte_YV12 (GstVideotestsrc *v, unsigned char *dest, int w, int h)
+{
+	unsigned char *yp = dest;
+	unsigned char *up = dest + w*h + w*h/4;
+	unsigned char *vp = dest + w*h;
+	//int h24 = h/24;
+	//int j,k;
+	int i;
+	int y1,y2;
+
+	y1 = h/3;
+	y2 = h*0.375;
+
+	/* color bars */
+	for(i=0;i<7;i++){
+		int x1 = i*(w/2)/7;
+		int x2 = (i+1)*(w/2)/7;
+		paint_rect(yp, w, x1*2, 0, (x2-x1)*2, y1*2, y_colors[i]);
+		paint_rect(up, w/2, x1, 0, x2-x1, y1, u_colors[i]);
+		paint_rect(vp, w/2, x1, 0, x2-x1, y1, v_colors[i]);
+	}
+
+	/* inverse blue bars */
+	for(i=0;i<7;i++){
+		int x1 = i*(w/2)/7;
+		int x2 = (i+1)*(w/2)/7;
+		int k;
+		if(i&1){
+			k = 7;
+		}else{
+			k = 6-i;
+		}
+		paint_rect(yp, w, x1*2, y1*2, (x2-x1)*2, (y2-y1)*2, y_colors[k]);
+		paint_rect(up, w/2, x1, y1, x2-x1, y2-y1, u_colors[k]);
+		paint_rect(vp, w/2, x1, y1, x2-x1, y2-y1, v_colors[k]);
+	}
+
+	/* -I, white, Q regions */
+	for(i=0;i<3;i++){
+		int x1 = i*(w/2)/6;
+		int x2 = (i+1)*(w/2)/6;
+		int k;
+
+		if(i==0){ k = 8; }
+		else if(i==1){ k = 0; }
+		else k = 9;
+
+		paint_rect(yp, w, x1*2, y2*2, (x2-x1)*2, h-y2*2, y_colors[k]);
+		paint_rect(up, w/2, x1, y2, x2-x1, h/2-y2, u_colors[k]);
+		paint_rect(vp, w/2, x1, y2, x2-x1, h/2-y2, v_colors[k]);
+	}
+
+	{
+		int x1 = 3*(w/2)/6;
+		int x2 = w/2;
+		paint_rect_random(yp, w, x1*2, y2*2, (x2-x1)*2, h-y2*2);
+		paint_rect(up, w/2, x1, y2, x2-x1, h/2-y2, u_colors[0]);
+		paint_rect(vp, w/2, x1, y2, x2-x1, h/2-y2, v_colors[0]);
+	}
+}
+
+/*                        wht  yel  cya  grn  mag  red  blu  blk   -I    Q */
+static int r_colors[] = { 255, 255,   0,   0, 255, 255,   0,   0,   0,   0 };
+static int g_colors[] = { 255, 255, 255, 255,   0,   0,   0,   0,   0, 128 };
+static int b_colors[] = { 255,   0, 255,   0, 255,   0, 255,   0, 128, 255 };
+
+void
+gst_videotestsrc_smpte_RGB (GstVideotestsrc *v, unsigned char *dest, int w, int h)
+{
+	int i;
+	int y1,y2;
+
+	y1 = h*2/3;
+	y2 = h*0.75;
+
+	/* color bars */
+	for(i=0;i<7;i++){
+		int x1 = i*w/7;
+		int x2 = (i+1)*w/7;
+		unsigned char col[2];
+
+		col[0] = (g_colors[i]&0xe0) | (b_colors[i]>>3);
+		col[1] = (r_colors[i]&0xf8) | (g_colors[i]>>5);
+		paint_rect2(dest, w*2, x1, 0, x2-x1, y1, col);
+	}
+
+	/* inverse blue bars */
+	for(i=0;i<7;i++){
+		int x1 = i*w/7;
+		int x2 = (i+1)*w/7;
+		unsigned char col[2];
+		int k;
+
+		if(i&1){
+			k = 7;
+		}else{
+			k = 6-i;
+		}
+		col[0] = (g_colors[k]&0xe0) | (b_colors[k]>>3);
+		col[1] = (r_colors[k]&0xf8) | (g_colors[k]>>5);
+		paint_rect2(dest, w*2, x1, y1, x2-x1, y2-y1, col);
+	}
+
+	/* -I, white, Q regions */
+	for(i=0;i<3;i++){
+		int x1 = i*w/6;
+		int x2 = (i+1)*w/6;
+		unsigned char col[2];
+		int k;
+
+		if(i==0){ k = 8; }
+		else if(i==1){ k = 0; }
+		else k = 9;
+
+		col[0] = (g_colors[k]&0xe0) | (b_colors[k]>>3);
+		col[1] = (r_colors[k]&0xf8) | (g_colors[k]>>5);
+		paint_rect2(dest, w*2, x1, y2, x2-x1, h-y2, col);
+	}
+
+	{
+		int x1 = w/2;
+		int x2 = w-1;
+		paint_rect_random(dest, w*2, x1*2, y2, (x2-x1)*2, h-y2);
 	}
 }
 
