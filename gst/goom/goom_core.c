@@ -5,7 +5,7 @@
 #include "filters.h"
 #include "lines.h"
 
-//#define VERBOSE
+/*#define VERBOSE */
 
 #ifdef VERBOSE
 #include <stdio.h>
@@ -63,21 +63,21 @@ void goom_set_resolution (guint32 resx, guint32 resy)
 
 guint32 * goom_update (gint16 data [2][512])
 {
-    static int	lockvar = 0 ; // pour empecher de nouveaux changements
-    static int 	goomvar = 0 ; // boucle des gooms
-    static int 	totalgoom = 0 ; // nombre de gooms par seconds
-    static int 	agoom = 0 ; // un goom a eu lieu..	
-    static int 	loopvar = 0 ; // mouvement des points
-    static int 	speedvar = 0 ; // vitesse des particules
-    static int	lineMode = 0 ; // l'effet lineaire a dessiner
+    static int	lockvar = 0 ; /* pour empecher de nouveaux changements */
+    static int 	goomvar = 0 ; /* boucle des gooms */
+    static int 	totalgoom = 0 ; /* nombre de gooms par seconds */
+    static int 	agoom = 0 ; /* un goom a eu lieu..	 */
+    static int 	loopvar = 0 ; /* mouvement des points */
+    static int 	speedvar = 0 ; /* vitesse des particules */
+    static int	lineMode = 0 ; /* l'effet lineaire a dessiner */
     guint32 * return_val;
     guint32 pointWidth;
     guint32 pointHeight;
-    int 	incvar ; // volume du son
-    int 	accelvar ; // acceleration des particules
+    int 	incvar ; /* volume du son */
+    int 	accelvar ; /* acceleration des particules */
     int 	i ;
-    float 	largfactor ; // elargissement de l'intervalle d'évolution des points
-    static char	goomlimit = 2 ; // sensibilité du goom
+    float 	largfactor ; /* elargissement de l'intervalle d'évolution des points */
+    static char	goomlimit = 2 ; /* sensibilité du goom */
     static 	ZoomFilterData zfd =
     {
 	128,	8,	16,
@@ -143,26 +143,26 @@ guint32 * goom_update (gint16 data [2][512])
 				66.0f, 74.0f, loopvar + i * 500);
   }
 
-    // par défaut pas de changement de zoom
+    /* par défaut pas de changement de zoom */
     pzfd = NULL ;
 	
-    // diminuer de 1 le temps de lockage
-    // note pour ceux qui n'ont pas suivis : le lockvar permet d'empecher un
-    // changement d'etat du plugins juste apres un autre changement d'etat. oki ?
+    /* diminuer de 1 le temps de lockage */
+    /* note pour ceux qui n'ont pas suivis : le lockvar permet d'empecher un */
+    /* changement d'etat du plugins juste apres un autre changement d'etat. oki ? */
     if (--lockvar < 0) lockvar = 0 ;
 
-    // temps du goom
+    /* temps du goom */
     if (--agoom < 0) agoom = 0 ;
 
-    // on verifie qu'il ne se pas un truc interressant avec le son.
+    /* on verifie qu'il ne se pas un truc interressant avec le son. */
     if ((accelvar>goomlimit) || (accelvar<-goomlimit))
     {
-        // UN GOOM !!! YAHOO !
+        /* UN GOOM !!! YAHOO ! */
         totalgoom ++ ;
-        agoom = 20 ; // mais pdt 20 cycles, il n'y en aura plus.
-        lineMode = (lineMode + 1)%20; // Tous les 10 gooms on change de mode lineaire
+        agoom = 20 ; /* mais pdt 20 cycles, il n'y en aura plus. */
+        lineMode = (lineMode + 1)%20; /* Tous les 10 gooms on change de mode lineaire */
 
-        // changement eventuel de mode
+        /* changement eventuel de mode */
         switch (iRAND(10))
         {
         case 0:
@@ -190,20 +190,20 @@ guint32 * goom_update (gint16 data [2][512])
         }
     }
 
-    // tout ceci ne sera fait qu'en cas de non-blocage
+    /* tout ceci ne sera fait qu'en cas de non-blocage */
     if (lockvar == 0)
     {
-        // reperage de goom (acceleration forte de l'acceleration du volume)
-        // -> coup de boost de la vitesse si besoin..
+        /* reperage de goom (acceleration forte de l'acceleration du volume) */
+        /* -> coup de boost de la vitesse si besoin.. */
         if ( (accelvar>goomlimit) || (accelvar<-goomlimit) )
         {
             goomvar ++ ;
-            //if (goomvar % 1 == 0)
+            /*if (goomvar % 1 == 0) */
             {
                 guint32 vtmp ;
                 guint32 newvit ;
                 newvit = STOP_SPEED - speedvar / 2 ;
-                // retablir le zoom avant..
+                /* retablir le zoom avant.. */
                 if ((zfd.reverse) &&
                         (!(cycle%12)) &&
                         (rand ()%3==0))
@@ -218,7 +218,7 @@ guint32 * goom_update (gint16 data [2][512])
                     lockvar = 100;
                 }
 
-                // changement de milieu..
+                /* changement de milieu.. */
                 switch (iRAND(20))
                 {
                     case 0:
@@ -299,7 +299,7 @@ guint32 * goom_update (gint16 data [2][512])
                     zfd.hPlaneEffect = iRAND (2) ? 0 : zfd.hPlaneEffect;
                 }
 
-                if (newvit < zfd.vitesse) // on accelere
+                if (newvit < zfd.vitesse) /* on accelere */
                 {
                     pzfd = &zfd;
                     if ( ( (newvit < STOP_SPEED - 7) &&
@@ -318,7 +318,7 @@ guint32 * goom_update (gint16 data [2][512])
                 }
             }
         }
-	  // mode mega-lent
+	  /* mode mega-lent */
 	  if (iRAND(1000) == 0)
 		{
 		  /* 
@@ -333,7 +333,7 @@ guint32 * goom_update (gint16 data [2][512])
 		}
 	}
 	
-  // gros frein si la musique est calme
+  /* gros frein si la musique est calme */
   if ((speedvar < 1) && (zfd.vitesse < STOP_SPEED - 4) && (cycle % 16 == 0))
 	{
 	  /*
@@ -349,7 +349,7 @@ guint32 * goom_update (gint16 data [2][512])
 	  */
 	}
 	
-  // baisser regulierement la vitesse...
+  /* baisser regulierement la vitesse... */
   if ( (cycle % 73 == 0) && (zfd.vitesse < STOP_SPEED - 5))
 	{
 	  /*
@@ -359,7 +359,7 @@ guint32 * goom_update (gint16 data [2][512])
 	  zfd.vitesse ++ ;
 	}
 	
-  // arreter de decrémenter au bout d'un certain temps
+  /* arreter de decrémenter au bout d'un certain temps */
   if ((cycle % 101 == 0) && (zfd.pertedec == 7))
 	{
 	  pzfd = &zfd ;
@@ -374,10 +374,10 @@ guint32 * goom_update (gint16 data [2][512])
 	}
 #endif
 
-    // Zoom here !
+    /* Zoom here ! */
     zoomFilterFastRGB (p1, p2, pzfd, resolx, resoly) ;
 
-    // si on est dans un goom : afficher les lignes...
+    /* si on est dans un goom : afficher les lignes... */
     if (agoom > 15) goom_lines
 					  (data,
 					   ((zfd.middleX==resolx/2) && (zfd.middleY==resoly/2) && (zfd.mode!=WATER_MODE))
@@ -389,16 +389,16 @@ guint32 * goom_update (gint16 data [2][512])
     p1=p2;
     p2=tmp;
 
-    // affichage et swappage des buffers..
+    /* affichage et swappage des buffers.. */
     cycle++;
 	
-    // tous les 100 cycles : vérifier si le taux de goom est correct
-    // et le modifier sinon..
+    /* tous les 100 cycles : vérifier si le taux de goom est correct */
+    /* et le modifier sinon.. */
     if (!(cycle%100))
     {
         if (totalgoom>15)
         {
-            //	printf ("less gooms\n") ;
+            /*	printf ("less gooms\n") ; */
             goomlimit ++ ;
         }
         else

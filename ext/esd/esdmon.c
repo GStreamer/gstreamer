@@ -210,10 +210,10 @@ gst_esdmon_class_init (GstEsdmonClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BYTESPERREAD,
     g_param_spec_ulong("bytes_per_read","bytes_per_read","bytes_per_read",
-                       0,G_MAXULONG,0,G_PARAM_READWRITE)); // CHECKME
+                       0,G_MAXULONG,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CUROFFSET,
     g_param_spec_ulong("curoffset","curoffset","curoffset",
-                       0,G_MAXULONG,0,G_PARAM_READABLE)); // CHECKME
+                       0,G_MAXULONG,0,G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEPTH,
     g_param_spec_enum("depth","depth","depth",
                       GST_TYPE_ESDMON_DEPTHS,16,G_PARAM_READWRITE)); /* CHECKME! */
@@ -299,9 +299,9 @@ gst_esdmon_get (GstPad *pad)
                       "oss_src",
                       "audio/raw",
                         "format",       GST_PROPS_STRING ("int"),
-                          "law",        GST_PROPS_INT (0),              //FIXME
-                          "endianness", GST_PROPS_INT (G_BYTE_ORDER),   //FIXME
-                          "signed",     GST_PROPS_BOOLEAN (TRUE),       //FIXME
+                          "law",        GST_PROPS_INT (0),              /*FIXME */
+                          "endianness", GST_PROPS_INT (G_BYTE_ORDER),   /*FIXME */
+                          "signed",     GST_PROPS_BOOLEAN (TRUE),       /*FIXME */
                           "width",      GST_PROPS_INT (esdmon->depth),
                           "depth",      GST_PROPS_INT (esdmon->depth),
                           "rate",       GST_PROPS_INT (esdmon->frequency),

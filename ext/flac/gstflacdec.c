@@ -20,7 +20,7 @@
 #include <string.h>
 #include <sys/soundcard.h>
 
-//#define DEBUG_ENABLED
+/*#define DEBUG_ENABLED */
 #include "gstflacdec.h"
 
 
@@ -65,7 +65,7 @@ static FLAC__StreamDecoderWriteStatus 	gst_flacdec_write 	(const FLAC__StreamDec
 								 void *client_data);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_flacdec_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_flacdec_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 flacdec_get_type(void) {
@@ -153,7 +153,7 @@ gst_flacdec_read (const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], unsig
   }
 
   if (*bytes < insize) {
-    // we have more than we can handle
+    /* we have more than we can handle */
     flacdec->data_left = inbuf;
     flacdec->offset_left += *bytes;
     inbuf = NULL;

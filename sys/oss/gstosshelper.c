@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define DSP_DEBUG 
+/*#define DSP_DEBUG  */
 
 /* This lets you run multiple instances of x11amp by setting the X11AMPNUM
    environment variable. Only works on glibc2.
@@ -208,7 +208,7 @@ write (int fd, const void *buf, size_t len)
   (*func) (HELPER_MAGIC_OUT, &cmd, sizeof(command));
   (*func) (HELPER_MAGIC_OUT, buf, len);
 
-  //return (*func) (fd, buf, len);
+  /*return (*func) (fd, buf, len); */
 
   return len;
 }

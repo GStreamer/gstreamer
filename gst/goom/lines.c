@@ -27,14 +27,14 @@ void goom_lines(gint16 data [2][512], unsigned int ID,unsigned int* p, guint32 p
 
     switch (ID)
     {
-        case 0: // Horizontal stereo lines
+        case 0: /* Horizontal stereo lines */
         {
             color1 = 0x0000AA00;
             color2 = 0x00AA0000;
             break;
         }
 
-        case 1: // Stereo circles
+        case 1: /* Stereo circles */
         {
             color1 = 0x00AA33DD;
             color2 = 0x00AA33DD;
@@ -55,7 +55,7 @@ void goom_lines(gint16 data [2][512], unsigned int ID,unsigned int* p, guint32 p
     
     switch (ID)
     {
-        case 0: // Horizontal stereo lines
+        case 0: /* Horizontal stereo lines */
         {
             unsigned int i;
             for (i=0;i<512;i++)
@@ -71,7 +71,7 @@ void goom_lines(gint16 data [2][512], unsigned int ID,unsigned int* p, guint32 p
             break;
         }
 
-        case 1: // Stereo circles
+        case 1: /* Stereo circles */
         {
             float z;
             unsigned int monX = resolx/2;
@@ -79,7 +79,7 @@ void goom_lines(gint16 data [2][512], unsigned int ID,unsigned int* p, guint32 p
             float monY2 = resoly/2;
             for (z=0;z<6.2832f; z+=1.0f/monY)
             {
-               // float offset1 = 128+data[1][(unsigned int)(z*81.33f)])/200000;
+               /* float offset1 = 128+data[1][(unsigned int)(z*81.33f)])/200000; */
                 p[ monX + (unsigned int)( (monY + ((float)resoly) * (128+data[1][(unsigned int)(z*81.33f)])/200000) * cos (z) + resolx * (unsigned int)( monY2 + (monY + ((float)resoly)*(128+data[1][(unsigned int)(z*81.33f)])/400000) * sin (z)))] = color1;
                 p[ monX + (unsigned int)((monY - ((float)resoly) * (128+data[0][(unsigned int)(z*81.33f)])/200000) * cos (z) + resolx * (unsigned int)( monY2 + (monY - ((float)resoly)*(128+data[0][(unsigned int)(z*81.33f)])/400000) * sin (z)))] = color2;
             }

@@ -120,17 +120,17 @@ gst_cutter_class_init (GstCutterClass *klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_THRESHOLD,
     g_param_spec_double ("threshold", "threshold", "threshold",
-                         -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE)); // CHECKME
+                         -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_THRESHOLD_DB,
     g_param_spec_double ("threshold_dB", "threshold_dB", "threshold_dB",
-                         -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE)); // CHECKME
+                         -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RUN_LENGTH,
     g_param_spec_double ("runlength", "runlength", "runlength",
-                        -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE)); // CHECKME
+                        -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE)); /* CHECKME */
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PRE_LENGTH,
     g_param_spec_double ("prelength", "prelength", "prelength",
-                        -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE)); // CHECKME
+                        -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE)); /* CHECKME */
   gst_cutter_signals[CUT_START] = 
 	g_signal_new ("cut_start", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
 			G_STRUCT_OFFSET (GstCutterClass, cut_start), NULL, NULL,
@@ -214,7 +214,7 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
   /* if RMS below threshold, add buffer length to silent run length count 
    * if not, reset
    */
-  //g_print ("DEBUG: cutter: ms %f, RMS %f\n", ms, RMS);
+  /*g_print ("DEBUG: cutter: ms %f, RMS %f\n", ms, RMS); */
   if (RMS < filter->threshold_level)
     filter->silent_run_length += gst_audio_length (filter->srcpad, buf);
   else
@@ -234,12 +234,12 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
   {
     if (filter->silent)
     {
-//      g_print ("DEBUG: cutter: cut to here, turning off out\n");
+/*      g_print ("DEBUG: cutter: cut to here, turning off out\n"); */
       gtk_signal_emit (G_OBJECT (filter), gst_cutter_signals[CUT_STOP]);
     }
     else
     {
-//      g_print ("DEBUG: cutter: start from here, turning on out\n");
+/*      g_print ("DEBUG: cutter: start from here, turning on out\n"); */
       /* first of all, flush current buffer */
       gtk_signal_emit (G_OBJECT (filter), gst_cutter_signals[CUT_START]);
       g_print ("DEBUG: cutter: flushing buffer ");
@@ -386,7 +386,7 @@ gst_cutter_get_caps (GstPad *pad, GstCutter* filter)
   GstCaps *caps = NULL;
 
   caps = GST_PAD_CAPS (pad);
-    // FIXME : Please change this to a better warning method !
+    /* FIXME : Please change this to a better warning method ! */
   if (caps == NULL)
     printf ("WARNING: cutter: get_caps: Could not get caps of pad !\n");
   filter->width = gst_caps_get_int (caps, "width");

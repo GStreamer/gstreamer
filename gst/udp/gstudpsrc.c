@@ -57,7 +57,7 @@ static void 		gst_udpsrc_get_property 	(GObject *object, guint prop_id,
 							 GValue *value, GParamSpec *pspec);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_udpsrc_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_udpsrc_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_udpsrc_get_type (void)
@@ -230,13 +230,13 @@ gst_udpsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
   }
 }
 
-// create a socket for sending to remote machine
+/* create a socket for sending to remote machine */
 static gboolean
 gst_udpsrc_init_receive (GstUDPSrc *src)
 {
   bzero (&src->myaddr, sizeof (src->myaddr));
-  src->myaddr.sin_family = AF_INET;         // host byte order
-  src->myaddr.sin_port = htons (src->port);     // short, network byte order
+  src->myaddr.sin_family = AF_INET;         /* host byte order */
+  src->myaddr.sin_port = htons (src->port);     /* short, network byte order */
   src->myaddr.sin_addr.s_addr = INADDR_ANY;
 
   if ((src->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1) {

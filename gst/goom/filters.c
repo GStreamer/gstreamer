@@ -10,7 +10,7 @@
  *		la vitesse est maintenant comprise dans [0..128] au lieu de [0..100]
 */
 
-//#define _DEBUG_PIXEL;
+/*#define _DEBUG_PIXEL; */
 
 #include "filters.h"
 #include "graphic.h"
@@ -51,8 +51,8 @@ unsigned int ppcsize4;
 #endif /* PowerPC */
 
 unsigned int *coeffs = 0, *freecoeffs = 0;
-guint32 *expix1 = 0; // pointeur exporte vers p1
-guint32 *expix2 = 0; // pointeur exporte vers p2
+guint32 *expix1 = 0; /* pointeur exporte vers p1 */
+guint32 *expix2 = 0; /* pointeur exporte vers p2 */
 guint32 zoom_width;
 
 #endif /* ASM */
@@ -70,7 +70,7 @@ static unsigned char sqrtperte = 16 ;
 static int * firedec = 0 ;
 
 
-// retourne x>>s , en testant le signe de x
+/* retourne x>>s , en testant le signe de x */
 inline int ShiftRight (int x, const unsigned char s)
 {
   if (x<0)
@@ -151,16 +151,16 @@ inline void calculatePXandPY (int x, int y, int *px, int *py)
     }
 }
 
-//#define _DEBUG
+/*#define _DEBUG */
 
 inline void setPixelRGB(Uint *buffer, Uint x, Uint y, Color c)
 {
-//		buffer[ y*WIDTH + x ] = (c.r<<16)|(c.v<<8)|c.b
+/*		buffer[ y*WIDTH + x ] = (c.r<<16)|(c.v<<8)|c.b */
 #ifdef _DEBUG_PIXEL
   if ( x+y*resolx >= resolx * resoly)
 	{
 	  fprintf (stderr,"setPixel ERROR : hors du tableau... %i, %i\n", x,y) ;
-	  //exit (1) ;
+	  /*exit (1) ; */
 	}
 #endif
   
@@ -214,7 +214,7 @@ inline void getPixelRGB (Uint *buffer, Uint x, Uint y, Color *c)
 	c->b = *(unsigned char *)(tmp8 = (unsigned char*)(buffer + (x + y*resolx)));
 	c->v = *(unsigned char *)(++tmp8);
 	c->r = *(unsigned char *)(++tmp8);
-//	*c = (Color) buffer[x+y*WIDTH] ;
+/*	*c = (Color) buffer[x+y*WIDTH] ; */
 #endif
 }
 
@@ -242,7 +242,7 @@ inline void getPixelRGB_ (Uint *buffer, Uint x, Color *c)
 	c->b = *(unsigned char *)(tmp8 = (unsigned char*)(buffer + x));
 	c->v = *(unsigned char *)(++tmp8);
 	c->r = *(unsigned char *)(++tmp8);
-//	*c = (Color) buffer[x+y*WIDTH] ;
+/*	*c = (Color) buffer[x+y*WIDTH] ; */
 #endif
 }
 
@@ -255,14 +255,14 @@ void zoomFilterFastRGB (Uint *pix1,
 {
   static guint32 prevX = 0, prevY = 0;
 
-  static char reverse = 0 ; //vitesse inversé..(zoom out)
-  //	static int perte = 100; // 100 = normal
+  static char reverse = 0 ; /*vitesse inversé..(zoom out) */
+  /*	static int perte = 100; // 100 = normal */
   static unsigned char pertedec = 8 ;
   static char firstTime = 1;
   
   Uint x, y;
 
-//  static unsigned int prevX = 0, prevY = 0;
+/*  static unsigned int prevX = 0, prevY = 0; */
   
 #ifdef USE_ASM
   expix1 = pix1 ;
@@ -322,7 +322,7 @@ void zoomFilterFastRGB (Uint *pix1,
 	if (firstTime || zf)
 	  {
 		
-		// generation d'une table de sinus
+		/* generation d'une table de sinus */
 		if (firstTime)
 		  {
 			unsigned short us ;
@@ -387,15 +387,15 @@ void zoomFilterFastRGB (Uint *pix1,
 		  }
 		
 		
-		// generation du buffer
+		/* generation du buffer */
 		for (y = 0 ; y < prevY ; y++)
 		  for (x = 0; x < prevX ; x++)
 			{
 			  int px,py;
 			  unsigned char coefv,coefh;
 			  
-			  // calculer px et py en fonction de
-			  //   x,y,middleX,middleY et theMode
+			  /* calculer px et py en fonction de */
+			  /*   x,y,middleX,middleY et theMode */
 			  calculatePXandPY (x,y,&px, &py) ;
 			  if ((px == x << 4) && (py == y << 4))
 				py += 8 ;

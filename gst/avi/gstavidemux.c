@@ -233,7 +233,7 @@ gst_avi_demux_init (GstAviDemux *avi_demux)
   avi_demux->state = GST_AVI_DEMUX_UNKNOWN;
   avi_demux->num_audio_pads = 0;
   avi_demux->num_video_pads = 0;
-  //avi_demux->next_time = 500000;
+  /*avi_demux->next_time = 500000; */
   avi_demux->next_time = 0;
   avi_demux->init_audio = 0;
   avi_demux->flags = 0;
@@ -803,7 +803,7 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 		    chunkid, *chunksize);
 
       if (avi_demux->init_audio) {
-	//avi_demux->next_time += (*chunksize) * 1000000LL / avi_demux->audio_rate;
+	/*avi_demux->next_time += (*chunksize) * 1000000LL / avi_demux->audio_rate; */
 	avi_demux->init_audio--;
       }
 

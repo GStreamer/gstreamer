@@ -60,7 +60,7 @@ static void 	gst_flacenc_metadata_callback 	(const FLAC__StreamEncoder *encoder,
 						 void *client_data);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_flacenc_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_flacenc_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 flacenc_get_type (void)
@@ -95,7 +95,7 @@ gst_flacenc_class_init (FlacEncClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
   
-  // we have no properties atm so this is a bit silly
+  /* we have no properties atm so this is a bit silly */
   gobject_class->set_property = gst_flacenc_set_property;
   gobject_class->get_property = gst_flacenc_get_property;
 }

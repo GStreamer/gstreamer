@@ -140,10 +140,10 @@ gst_ossgst_class_init (GstOssGstClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTE,
     g_param_spec_boolean("mute","mute","mute",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PROGRAM,
     g_param_spec_string("command","command","command",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_ossgst_set_property;
   gobject_class->get_property = gst_ossgst_get_property;
@@ -368,16 +368,16 @@ gst_ossgst_spawn_process (GstOssGst *ossgst)
 
     setenv ("LD_PRELOAD", ld_preload, TRUE);
 
-    // child
+    /* child */
     dup2(ossgst->fdin[0], HELPER_MAGIC_IN);  /* set the childs input stream */
     dup2(ossgst->fdout[1], HELPER_MAGIC_OUT);  /* set the childs output stream */
     
-    // split the arguments 
+    /* split the arguments  */
     args = g_strsplit (ossgst->command, " ", 0);
 
     execvp(args[0], args);
 
-    // will only reach if error
+    /* will only reach if error */
     perror("exec");
     gst_element_error(GST_ELEMENT(ossgst),"starting child process");
     return FALSE;
@@ -422,8 +422,8 @@ gst_ossgst_factory_init (GstPlugin *plugin)
   gchar **path;
   gint i =0;
 
-  // get the path of this plugin, we assume the helper progam lives in the
-  // same directory.
+  /* get the path of this plugin, we assume the helper progam lives in the */
+  /* same directory. */
   path = g_strsplit (plugin->filename, G_DIR_SEPARATOR_S, 0);
   while (path[i]) {
     i++;

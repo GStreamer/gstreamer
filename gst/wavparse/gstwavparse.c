@@ -97,7 +97,7 @@ enum {
 };
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_wavparse_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_wavparse_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_wavparse_get_type (void) 
@@ -262,9 +262,9 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 			"parsewav_src",
 			"audio/raw",
 			"format",	GST_PROPS_STRING ("int"),
-			  "law",	GST_PROPS_INT (0),		//FIXME
+			  "law",	GST_PROPS_INT (0),		/*FIXME */
 			  "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-        		  "signed",     GST_PROPS_BOOLEAN (TRUE), //FIXME
+        		  "signed",     GST_PROPS_BOOLEAN (TRUE), /*FIXME */
 			  "width",	GST_PROPS_INT (format->wBitsPerSample),
 			  "depth",	GST_PROPS_INT (format->wBitsPerSample),
 			  "rate",	GST_PROPS_INT (format->dwSamplesPerSec),

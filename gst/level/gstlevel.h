@@ -24,7 +24,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
-// #include <gst/meta/audioraw.h>
+/* #include <gst/meta/audioraw.h> */
 
 
 #ifdef __cplusplus
@@ -51,7 +51,7 @@ struct _GstLevel {
 
   GstPad *sinkpad,*srcpad;
 
-  //MetaAudioRaw meta;
+  /*MetaAudioRaw meta; */
 
 };
 

@@ -240,7 +240,7 @@ gst_oss_clock_set_time (GstClock *clock, GstClockTime time)
 
   time += oss_clock->base_time;
 
-  //g_print ("set time %llu\n", time);
+  /*g_print ("set time %llu\n", time); */
 
   oss_clock->current_time = time;
 

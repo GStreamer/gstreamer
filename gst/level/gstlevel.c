@@ -97,7 +97,7 @@ static void inline 	gst_level_fast_8bit_chain		(gint8* data, gint8** out_data,
                                 				 guint numsamples);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_level_get_type(void) {
@@ -169,7 +169,7 @@ gst_level_chain (GstPad *pad,GstBuffer *buf)
   caps = GST_PAD_CAPS(pad);
   if (caps == NULL)
   {
-    // FIXME : Please change this to a better warning method !
+    /* FIXME : Please change this to a better warning method ! */
     printf ("WARNING : chain : Could not get caps of pad !\n");
   }
 

@@ -80,7 +80,7 @@ int need_sync;
 
 GType gst_mikmod_get_type(void);
 
-// symbols for mikmod_reader.h
+/* symbols for mikmod_reader.h */
 struct _GST_READER
 {
   MREADER core;
@@ -95,7 +95,7 @@ typedef struct _GST_READER GST_READER;
 
 MREADER *GST_READER_new( GstMikMod *mik );
 
-// symbols for drv_gst.c
+/* symbols for drv_gst.c */
 extern MDRIVER drv_gst;
 
 #ifdef __cplusplus

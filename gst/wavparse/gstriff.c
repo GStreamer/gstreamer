@@ -56,7 +56,7 @@ gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
       return riff->state;
     }
     riff->form = words[2];
-//    g_print("form is 0x%08x '%s'\n",words[2],gst_riff_id_to_fourcc(words[2]));
+/*    g_print("form is 0x%08x '%s'\n",words[2],gst_riff_id_to_fourcc(words[2])); */
     riff->nextlikely = 12;	/* skip 'RIFF', length, and form */
   }
 
@@ -64,14 +64,14 @@ gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
   while ((riff->nextlikely+8) < last) {
     gulong *words = (gulong *)((guchar *)GST_BUFFER_DATA(buf) + riff->nextlikely);
 
-//    g_print("next likely chunk is at offset 0x%08x\n",riff->nextlikely);
+/*    g_print("next likely chunk is at offset 0x%08x\n",riff->nextlikely); */
     chunk = (GstRiffChunk *)malloc(sizeof(GstRiffChunk));
     g_return_val_if_fail(chunk != NULL,0);
     chunk->offset = riff->nextlikely+8;	/* point to the actual data */
     chunk->id = words[0];
     chunk->size = words[1];
-//    g_print("chunk id is 0x%08x '%s' and is 0x%08x long\n",words[0],
-//            gst_riff_id_to_fourcc(words[0]),words[1]);
+/*    g_print("chunk id is 0x%08x '%s' and is 0x%08x long\n",words[0], */
+/*            gst_riff_id_to_fourcc(words[0]),words[1]); */
     riff->nextlikely += 8 + chunk->size;	/* doesn't include hdr */
     riff->chunks = g_list_prepend(riff->chunks,chunk);
   }

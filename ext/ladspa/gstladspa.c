@@ -492,7 +492,7 @@ gst_ladspa_set_property (GObject *object, guint prop_id, const GValue *value, GP
 
 /*
   if (id == ARG_LOOP_BASED) {
-    // we can only do this in NULL state
+    * we can only do this in NULL state *
     g_return_if_fail (GST_STATE(object) != GST_STATE_NULL);
     ladspa->loopbased = g_value_get_boolean (value);
     if (ladspa->loopbased) {

@@ -96,7 +96,7 @@ static void 			gst_osssrc_sync_parms	(GstOssSrc *osssrc);
 static GstBuffer *		gst_osssrc_get		(GstPad *pad);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_osssrc_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_osssrc_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_osssrc_get_type (void) 
@@ -133,19 +133,19 @@ gst_osssrc_class_init (GstOssSrcClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BYTESPERREAD,
     g_param_spec_ulong("bytes_per_read","bytes_per_read","bytes_per_read",
-                       0,G_MAXULONG,0,G_PARAM_READWRITE)); // CHECKME
+                       0,G_MAXULONG,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CUROFFSET,
     g_param_spec_ulong("curoffset","curoffset","curoffset",
-                       0,G_MAXULONG,0,G_PARAM_READABLE)); // CHECKME
+                       0,G_MAXULONG,0,G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORMAT,
     g_param_spec_int("format","format","format",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
     g_param_spec_int("channels","channels","channels",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
     g_param_spec_int("frequency","frequency","frequency",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE,
     g_param_spec_string("device","device","oss device (/dev/dspN usually)",
                         "default",G_PARAM_READWRITE));
@@ -210,9 +210,9 @@ gst_osssrc_get (GstPad *pad)
     		      "oss_src",
 		      "audio/raw",
         		"format",       GST_PROPS_STRING ("int"),
-		          "law",        GST_PROPS_INT (0),              //FIXME
-		          "endianness", GST_PROPS_INT (G_BYTE_ORDER),   //FIXME
-		          "signed",     GST_PROPS_BOOLEAN (TRUE),	//FIXME
+		          "law",        GST_PROPS_INT (0),              /*FIXME */
+		          "endianness", GST_PROPS_INT (G_BYTE_ORDER),   /*FIXME */
+		          "signed",     GST_PROPS_BOOLEAN (TRUE),	/*FIXME */
 		          "width",      GST_PROPS_INT (src->format),
 		          "depth",      GST_PROPS_INT (src->format),
 		          "rate",       GST_PROPS_INT (src->frequency),

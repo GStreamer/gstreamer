@@ -15,7 +15,7 @@ main (int argc,char *argv[])
   GstElement *bin;
   GstElement *src;
   GstElement *dvdec;
-  //GstElement *cspace;
+  /*GstElement *cspace; */
   GstElement *deint;
   GstElement *videosink;
 
@@ -40,7 +40,7 @@ main (int argc,char *argv[])
   }
   dvdec = gst_elementfactory_make ("dvdec", "decoder");
   if (!dvdec) fprintf(stderr,"no dvdec\n"),exit(1);
-//  cspace = gst_elementfactory_make ("colorspace", "cspace");
+/*  cspace = gst_elementfactory_make ("colorspace", "cspace"); */
   deint = gst_elementfactory_make ("deinterlace", "deinterlace");
   videosink = gst_elementfactory_make ("xvideosink", "videosink");
   if (!videosink) fprintf(stderr,"no dvdec\n"),exit(1);
@@ -48,12 +48,12 @@ main (int argc,char *argv[])
 
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(dvdec));
-//  gst_bin_add(GST_BIN(bin),GST_ELEMENT(cspace));
+/*  gst_bin_add(GST_BIN(bin),GST_ELEMENT(cspace)); */
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(videosink));
 
   gst_element_connect(src,"src",dvdec,"sink");
-//  gst_element_connect(cspace,"src",videosink,"sink");
-//  gst_element_connect(dvdec,"video",cspace,"sink");
+/*  gst_element_connect(cspace,"src",videosink,"sink"); */
+/*  gst_element_connect(dvdec,"video",cspace,"sink"); */
   gst_element_connect(dvdec,"video",deint,"sink");
   gst_element_connect(deint,"src",videosink,"sink");
 
@@ -62,7 +62,7 @@ main (int argc,char *argv[])
   vbox1 = gtk_vbox_new (FALSE, 0);
   gtk_widget_show (vbox1);
 
-  button = gtk_button_new_with_label(_("test"));//_with_label (_("chup"));
+  button = gtk_button_new_with_label(_("test"));/*_with_label (_("chup")); */
   gtk_widget_show (button);
   gtk_box_pack_start (GTK_BOX (vbox1), button, FALSE, FALSE, 0);
 

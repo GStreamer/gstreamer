@@ -23,7 +23,7 @@ extern unsigned short rand_pos ;
 	rand_tab = 0;
 
 
-//#define iRAND(i) ((guint32)((float)i * RAND()/RAND_MAX))
+/*#define iRAND(i) ((guint32)((float)i * RAND()/RAND_MAX)) */
 #define iRAND(i) (RAND()%i)
 	
 #endif

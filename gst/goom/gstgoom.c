@@ -38,11 +38,11 @@ struct _GstGOOM {
   GstPad *sinkpad,*srcpad;
   GstBufferPool *peerpool;
 
-  // the timestamp of the next frame
+  /* the timestamp of the next frame */
   guint64 next_time;
   gint16 datain[2][512];
 
-  // video state
+  /* video state */
   gint fps;
   gint width;
   gint height;
@@ -198,11 +198,11 @@ gst_goom_init (GstGOOM *goom)
   goom->next_time = 0;
   goom->peerpool = NULL;
 
-  // reset the initial video state
+  /* reset the initial video state */
   goom->first_buffer = TRUE;
   goom->width = 320;
   goom->height = 200;
-  goom->fps = 25; // desired frame rate
+  goom->fps = 25; /* desired frame rate */
 
 }
 

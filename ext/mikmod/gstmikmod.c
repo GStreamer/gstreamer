@@ -535,7 +535,7 @@ gst_mikmod_set_property (GObject *object, guint id, const GValue *value, GParamS
       filter->stereo = g_value_get_boolean (value);
       break;
     default:
-//      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+/*      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec); */
       break;
   }
 }
@@ -593,7 +593,7 @@ gst_mikmod_get_property (GObject *object, guint id, GValue *value, GParamSpec *p
       g_value_set_boolean (value, filter->stereo);
       break;
     default:
-//      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+/*      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec); */
       break;
   }
 }

@@ -65,7 +65,7 @@ void gst_spectrum_window(fixed fr[], int n);
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_spectrum_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_spectrum_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_spectrum_get_type (void)
@@ -99,7 +99,7 @@ gst_spectrum_class_init (GstSpectrumClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_WIDTH,
     g_param_spec_int("width","width","width",
-                     G_MININT,G_MAXINT,0,G_PARAM_WRITABLE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_WRITABLE)); /* CHECKME */
 
   gobject_class->set_property = gst_spectrum_set_property;
 }
@@ -151,32 +151,8 @@ gst_spectrum_chain (GstPad *pad, GstBuffer *buf)
 
   spectrum = GST_SPECTRUM (GST_OBJECT_PARENT (pad));
 
-  /* first deal with audio metadata */
-//  FIXME
-//  if (buf->meta) {
-//    if (spectrum->meta != NULL) {
-//      /* FIXME: need to unref the old metadata so it goes away */
-//    }
-//    /* we just make a copy of the pointer */
-//    spectrum->meta = (MetaAudioRaw *)(buf->data);
-//    /* FIXME: now we have to ref the metadata so it does go away */
-//  }
-
-  //g_return_if_fail(spectrum->meta != NULL);
-
-  //samplecount = GST_BUFFER_SIZE(buf) /
-  //              (spectrum->meta->channels * sizeof(gint16));
-//  samples = (gint16 *)g_malloc(buf->datasize);
-//  g_return_if_fail(samples != NULL);
-//  memcpy(samples,(gint16
-//*)GST_BUFFER_DATA(buf),GST_BUFFER_DATASIZE(buf));
-//  gst_buffer_unref(buf);
   samples = (gint16 *)GST_BUFFER_DATA(buf);
 
-//  return;
-//  spec_base = (gint) (log(samplecount) / log(2));
-//  if (spec_base > 10) spec_base = 10;
-//  spec_len = (gint) pow(2, spec_base);
   spec_base = 8;
   spec_len = 1024;
 
@@ -186,12 +162,12 @@ gst_spectrum_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail(loud != NULL);
 
   memset(im,0,spec_len * sizeof(gint16));
-  //if (spectrum->meta->channels == 2) {
+  /*if (spectrum->meta->channels == 2) { */
     re = g_malloc(spec_len * sizeof(gint16));
     for (i=0;i<spec_len;i++)
       re[i] = (samples[(i*2)] + samples[(i*2)+1]) >> 1;
-  //} else
-  //  re = samples;
+  /*} else */
+  /*  re = samples; */
   gst_spectrum_window(re,spec_len);
   gst_spectrum_fix_fft(re,im,spec_base,FALSE);
   gst_spectrum_fix_loud(loud,re,im,spec_len,0);
@@ -204,12 +180,12 @@ gst_spectrum_chain (GstPad *pad, GstBuffer *buf)
       spect[i] = (loud[pos] + 60) / 2;
     else
       spect[i] = 0;
-//    if (spect[i] > 15);
-//      spect[i] = 15;
+/*    if (spect[i] > 15); */
+/*      spect[i] = 15; */
   }
   g_free(loud);
   gst_buffer_unref(buf);
-//  g_free(samples);
+/*  g_free(samples); */
 
   newbuf = gst_buffer_new();
   g_return_if_fail(newbuf != NULL);

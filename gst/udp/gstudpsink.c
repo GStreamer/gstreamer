@@ -60,7 +60,7 @@ static void 		gst_udpsink_get_property 	(GObject *object, guint prop_id,
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_udpsink_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_udpsink_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_udpsink_get_type (void)
@@ -247,15 +247,15 @@ gst_udpsink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 }
 
 
-// create a socket for sending to remote machine
+/* create a socket for sending to remote machine */
 static gboolean
 gst_udpsink_init_send (GstUDPSink *sink)
 {
   struct hostent *he;
 
   bzero (&sink->theiraddr, sizeof (sink->theiraddr));
-  sink->theiraddr.sin_family = AF_INET;         // host byte order
-  sink->theiraddr.sin_port = htons (sink->port);     // short, network byte order
+  sink->theiraddr.sin_family = AF_INET;         /* host byte order */
+  sink->theiraddr.sin_port = htons (sink->port);     /* short, network byte order */
   if ((he = gethostbyname (sink->host)) == NULL) {
     perror("gethostbyname");
     return FALSE;

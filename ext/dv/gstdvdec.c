@@ -142,7 +142,7 @@ static GstElementClass *parent_class = NULL;
 /* This array holds the ids of the signals registered for this object.
  * The array indexes are based on the enum up above.
  */
-//static guint gst_dvdec_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_dvdec_signals[LAST_SIGNAL] = { 0 }; */
 
 /* This function is used to register and subsequently return the type
  * identifier for this object class.  On first invocation, it will
@@ -198,7 +198,7 @@ gst_dvdec_class_init (GstDVDecClass *klass)
 
   gstelement_class->change_state = gst_dvdec_change_state;
 
-  // table initialization, only do once
+  /* table initialization, only do once */
   dv_init();
 }
 

@@ -63,7 +63,7 @@ static GstElementStateReturn	gst_dv1394src_change_state	(GstElement *element);
 static GstBuffer *	gst_dv1394src_get			(GstPad *pad);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_dv1394src_get_type(void) {
@@ -152,7 +152,7 @@ int gst_dv1394src_iso_receive(raw1394handle_t handle,int channel,size_t len,quad
   GstBuffer *buf;
 
   if (len > 16) {
-//fprintf(stderr,"section_type %d, dif_sequence %d, dif_block %d\n",ptr[0] >> 5,ptr[1] >> 4,ptr[2]);
+/*fprintf(stderr,"section_type %d, dif_sequence %d, dif_block %d\n",ptr[0] >> 5,ptr[1] >> 4,ptr[2]); */
 fprintf(stderr,".");
     if (((ptr[0] >> 5) == 0) &&
         ((ptr[1] >> 4) == 0) && (ptr[2] == 0)) dv1394src->started = TRUE;
