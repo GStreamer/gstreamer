@@ -52,13 +52,13 @@ typedef enum {
   GST_INDEX_ENTRY_ID,
   GST_INDEX_ENTRY_ASSOCIATION,
   GST_INDEX_ENTRY_OBJECT,
-  GST_INDEX_ENTRY_FORMAT,
+  GST_INDEX_ENTRY_FORMAT
 } GstIndexEntryType;
 
 typedef enum {
   GST_INDEX_LOOKUP_EXACT,
   GST_INDEX_LOOKUP_BEFORE,
-  GST_INDEX_LOOKUP_AFTER,
+  GST_INDEX_LOOKUP_AFTER
 } GstIndexLookupMethod;
 
 #define GST_INDEX_NASSOCS(entry)		((entry)->data.assoc.nassocs)
@@ -78,7 +78,7 @@ typedef enum {
   GST_ASSOCIATION_FLAG_KEY_UNIT = (1 << 0),
 
   /* new flags should start here */
-  GST_ASSOCIATION_FLAG_LAST	= (1 << 8),
+  GST_ASSOCIATION_FLAG_LAST	= (1 << 8)
 } GstAssocFlags;
 
 #define GST_INDEX_FORMAT_FORMAT(entry)		((entry)->data.format.format)

@@ -59,6 +59,6 @@ GList *					gst_autoplug_factories_filters_with_sink_caps(GList *factories);
 GList *                             	gst_autoplug_factories_at_most_templates(GList *factories, GstPadDirection dir, guint maxtemplates);
 
 /* shortest path algorithm */
-GList *                             	gst_autoplug_sp                         (GstCaps *src_caps, GstCaps *sink_caps, GList *factories);
+GList *                             	gst_autoplug_sp                         (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories);
 
 #endif /* __GST_SEARCHFUNCS_H__ */

@@ -44,7 +44,7 @@ GstElementDetails gst_multidisksrc_details;
 typedef enum {
   GST_MULTIDISKSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
 
-  GST_MULTIDISKSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST + 2,
+  GST_MULTIDISKSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST + 2
 } GstMultiDiskSrcFlags;
 
 typedef struct _GstMultiDiskSrc GstMultiDiskSrc;

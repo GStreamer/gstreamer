@@ -45,7 +45,7 @@ g_list_free_list_and_elements (GList *list)
  *
  * Checks if the given caps have a non-null intersection.
  *
- * Return: TRUE, if both caps intersect.
+ * Returns: TRUE, if both caps intersect.
  */
 gboolean
 gst_autoplug_caps_intersect (GstCaps *src, GstCaps *sink)
@@ -75,7 +75,7 @@ gst_autoplug_caps_intersect (GstCaps *src, GstCaps *sink)
  *
  * Checks if a factory's sink can connect to the given caps
  *
- * Return: TRUE, if a connection can be established.
+ * Returns: #GstPadTemplate that can connect to the given caps
  */
 GstPadTemplate *
 gst_autoplug_can_connect_src (GstElementFactory *fac, GstCaps *src)
@@ -100,11 +100,11 @@ gst_autoplug_can_connect_src (GstElementFactory *fac, GstCaps *src)
 /**
  * gst_autoplug_can_connect_sink:
  * @fac: factory to connect to
- * @src: caps to check
+ * @sink: caps to check
  *
  * Checks if a factory's src can connect to the given caps
  *
- * Return: TRUE, if a connection can be established.
+ * Returns: #GstPadTemplate that can connect to the given caps
  */
 GstPadTemplate *
 gst_autoplug_can_connect_sink (GstElementFactory *fac, GstCaps *sink)

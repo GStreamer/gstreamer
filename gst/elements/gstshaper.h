@@ -46,7 +46,7 @@ GstElementDetails gst_shaper_details;
 
 typedef enum {
   SHAPER_POLICY_TIMESTAMPS = 1,
-  SHAPER_POLICY_BUFFERSIZE,
+  SHAPER_POLICY_BUFFERSIZE
 } GstShaperPolicyType;
 
 typedef struct _GstShaper GstShaper;

@@ -44,7 +44,7 @@ G_BEGIN_DECLS
 typedef enum {
   GST_FILESRC_OPEN              = GST_ELEMENT_FLAG_LAST,
 
-  GST_FILESRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
+  GST_FILESRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
 } GstFileSrcFlags;
 
 typedef struct _GstFileSrc GstFileSrc;
