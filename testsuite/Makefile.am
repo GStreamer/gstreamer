@@ -25,6 +25,7 @@ tests =  \
         test_interface.py \
 	test_pad.py \
         test_pipeline.py \
+        test_probe.py \
         test_registry.py \
         test_struct.py \
 	test_xml.py

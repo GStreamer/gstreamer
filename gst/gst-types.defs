@@ -181,6 +181,12 @@
   (gtype-id "GST_TYPE_CAPS")
 )
 
+(define-boxed Probe
+  (in-module "Gst")
+  (c-name "GstProbe")
+  (gtype-id "GST_TYPE_PROBE")
+)
+
 ; Defined in arg-types.py
 ;(define-boxed Data
 ;  (in-module "Gst")

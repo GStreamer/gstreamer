@@ -1,3 +1,12 @@
+2005-01-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* gst/arg-types.py:
+	* gst/gst-types.defs:
+	* gst/gst.override:
+	* testsuite/test_probe.py:
+	  first pass at wrapping GstProbe
+
 2005-01-01  Johan Dahlin  <johan@gnome.org>
 
 	* gst/Makefile.am:

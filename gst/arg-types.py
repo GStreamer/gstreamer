@@ -102,8 +102,7 @@ class XmlDocArg(XmlNodeArg):
 			"xwrap":"libxml_xmlDocPtrWrap"}
 			
 			
-arg = GstDataPtrArg()
-matcher.register('GstData*', arg)
+matcher.register('GstData*', GstDataPtrArg())
 matcher.register('GstClockTime', UInt64Arg())
 matcher.register('GstClockTimeDiff', Int64Arg())
 matcher.register('xmlNodePtr', XmlNodeArg())
