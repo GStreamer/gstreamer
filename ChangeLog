@@ -1,3 +1,10 @@
+2005-04-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
+	(gst_ffmpegdec_open), (gst_ffmpegdec_frame),
+	(gst_ffmpegdec_handle_event):
+	  Implement keyframe syncing.
+
 2005-03-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpeg.c: (plugin_init):

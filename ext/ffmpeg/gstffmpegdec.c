@@ -57,6 +57,7 @@ struct _GstFFMpegDec
       gint channels, samplerate;
     } audio;
   } format;
+  gboolean waiting_for_key;
   guint64 next_ts;
 
   /* parsing */
@@ -273,6 +274,7 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->pcache = NULL;
   ffmpegdec->par = NULL;
   ffmpegdec->opened = FALSE;
+  ffmpegdec->waiting_for_key = FALSE;
   ffmpegdec->hurry_up = ffmpegdec->lowres = 0;
 
   GST_FLAG_SET (ffmpegdec, GST_ELEMENT_EVENT_AWARE);
@@ -413,6 +415,7 @@ gst_ffmpegdec_open (GstFFMpegDec *ffmpegdec)
     default:
       break;
   }
+  ffmpegdec->waiting_for_key = TRUE;
   ffmpegdec->next_ts = 0;
 
   return TRUE;
@@ -631,7 +634,10 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       GST_DEBUG_OBJECT (ffmpegdec,
           "Decode video: len=%d, have_data=%d", len, have_data);
 
-      if (len >= 0 && have_data > 0) {
+      if (ffmpegdec->waiting_for_key &&
+          ffmpegdec->picture->pict_type != FF_I_TYPE) {
+        have_data = 0;
+      } else if (len >= 0 && have_data > 0) {
         /* libavcodec constantly crashes on stupid buffer allocation
          * errors inside. This drives me crazy, so we let it allocate
          * it's own buffers and copy to our own buffer afterwards... */
@@ -639,6 +645,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
         gint fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
             ffmpegdec->context->width, ffmpegdec->context->height);
 
+        ffmpegdec->waiting_for_key = FALSE;
         outbuf = gst_buffer_new_and_alloc (fsize);
 
         /* original ffmpeg code does not handle odd sizes correctly.
@@ -812,6 +819,7 @@ gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
       }
       if (ffmpegdec->opened) {
         avcodec_flush_buffers (ffmpegdec->context);
+        ffmpegdec->waiting_for_key = TRUE;
       }
       /* fall-through */
     }
