@@ -565,11 +565,13 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
                               "application/x-ogg",
                               NULL);
       break;
-    case GST_RIFF_WAVE_FORMAT_A52: 
+      /* put this in first before uncommenting
+    case GST_RIFF_WAVE_FORMAT_A52:
       newcaps = gst_caps_new ("avidemux_audio_src",
                               "audio/a52",
                               NULL);
       break;
+      */
     default:
       g_warning ("avidemux: unkown audio format %d", GUINT16_FROM_LE(strf->format));
       break;
