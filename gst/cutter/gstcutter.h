@@ -27,9 +27,8 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_CUTTER \
@@ -43,44 +42,44 @@ extern "C"
 #define GST_IS_CUTTER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CUTTER))
 
-  typedef struct _GstCutter GstCutter;
-  typedef struct _GstCutterClass GstCutterClass;
+typedef struct _GstCutter GstCutter;
+typedef struct _GstCutterClass GstCutterClass;
 
-  struct _GstCutter
-  {
-    GstElement element;
+struct _GstCutter
+{
+  GstElement element;
 
-    GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad, *srcpad;
 
-    double threshold_level;	/* level below which to cut */
-    double threshold_length;	/* how long signal has to remain
+  double threshold_level;	/* level below which to cut */
+  double threshold_length;	/* how long signal has to remain
 				 * below this level before cutting */
 
-    double silent_run_length;	/* how long has it been below threshold ? */
-    gboolean silent;
+  double silent_run_length;	/* how long has it been below threshold ? */
+  gboolean silent;
 
-    double pre_length;		/* how long can the pre-record buffer be ? */
-    double pre_run_length;	/* how long is it currently ? */
-    GList *pre_buffer;		/* list of GstBuffers in pre-record buffer */
-    gboolean leaky;		/* do we leak an overflowing prebuffer ? */
+  double pre_length;		/* how long can the pre-record buffer be ? */
+  double pre_run_length;        /* how long is it currently ? */
+  GList *pre_buffer;		/* list of GstBuffers in pre-record buffer */
+  gboolean leaky;		/* do we leak an overflowing prebuffer ? */
 
-    gboolean have_caps;		/* did we get the needed caps yet ? */
-    gint width;			/* bit width of data */
-    long max_sample;		/* maximum sample value */
-  };
+  gboolean have_caps;		/* did we get the needed caps yet ? */
+  gint width;			/* bit width of data */
+  long max_sample;		/* maximum sample value */
+};
 
-  struct _GstCutterClass
-  {
-    GstElementClass parent_class;
-    void (*cut_start) (GstCutter * filter);
-    void (*cut_stop) (GstCutter * filter);
-  };
+struct _GstCutterClass
+{
+  GstElementClass parent_class;
+  void (*cut_start) (GstCutter* filter);
+  void (*cut_stop) (GstCutter* filter);
+};
 
-  GType gst_cutter_get_type (void);
+GType gst_cutter_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_STEREO_H__ */
+#endif /* __GST_STEREO_H__ */

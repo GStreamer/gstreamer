@@ -23,24 +23,24 @@
 
 #include "gstvideoflip.h"
 
-struct videoflip_format_struct
-{
-  char *fourcc;
-  int depth;
-  void (*scale) (GstVideoflip *, unsigned char *dest, unsigned char *src);
-  int bpp;
-  unsigned int endianness;
-  unsigned int red_mask;
-  unsigned int green_mask;
-  unsigned int blue_mask;
+struct videoflip_format_struct {
+	char *fourcc;
+	int depth;
+	void (*scale)(GstVideoflip *,unsigned char *dest, unsigned char *src);
+	int bpp;
+	unsigned int endianness;
+	unsigned int red_mask;
+	unsigned int green_mask;
+	unsigned int blue_mask;
 };
 
 extern struct videoflip_format_struct videoflip_formats[];
 extern int videoflip_n_formats;
 
-GstStructure *videoflip_get_cap (struct videoflip_format_struct *format);
+GstStructure *videoflip_get_cap(struct videoflip_format_struct *format);
 
-struct videoflip_format_struct *videoflip_find_by_caps (const GstCaps * caps);
+struct videoflip_format_struct *videoflip_find_by_caps(const GstCaps *caps);
 
 
 #endif
+

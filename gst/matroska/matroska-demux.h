@@ -29,6 +29,7 @@
 #include "matroska-ids.h"
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_MATROSKA_DEMUX \
   (gst_matroska_demux_get_type ())
 #define GST_MATROSKA_DEMUX(obj) \
@@ -39,69 +40,71 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MATROSKA_DEMUX))
 #define GST_IS_MATROSKA_DEMUX_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MATROSKA_DEMUX))
-#define GST_MATROSKA_DEMUX_MAX_STREAMS 64
-    typedef enum
-{
+
+#define GST_MATROSKA_DEMUX_MAX_STREAMS 64	
+
+typedef enum {
   GST_MATROSKA_DEMUX_STATE_START,
   GST_MATROSKA_DEMUX_STATE_HEADER,
   GST_MATROSKA_DEMUX_STATE_DATA
 } GstMatroskaDemuxState;
 
-typedef struct _GstMatroskaDemuxIndex
-{
-  guint64 pos;			/* of the corresponding *cluster*! */
-  guint16 track;		/* reference to 'num' */
-  guint64 time;			/* in nanoseconds */
+typedef struct _GstMatroskaDemuxIndex {
+  guint64        pos;   /* of the corresponding *cluster*! */
+  guint16        track; /* reference to 'num' */
+  guint64        time;  /* in nanoseconds */
 } GstMatroskaDemuxIndex;
 
-typedef struct _GstMatroskaDemux
-{
-  GstEbmlRead parent;
+typedef struct _GstMatroskaDemux {
+  GstEbmlRead    parent;
 
   /* pads */
-  GstPad *sinkpad;
+  GstPad 	*sinkpad;
   GstMatroskaTrackContext *src[GST_MATROSKA_DEMUX_MAX_STREAMS];
-  guint num_streams, num_v_streams, num_a_streams, num_t_streams;
-  GstClock *clock;
+  guint          num_streams,
+                 num_v_streams, num_a_streams, num_t_streams;
+  GstClock	*clock;
 
   /* metadata */
-  GstCaps *metadata;
-  GstCaps *streaminfo;
-  gchar *muxing_app, *writing_app;
-  gint64 created;
+  GstCaps      *metadata;
+  GstCaps	*streaminfo;
+  gchar         *muxing_app, *writing_app;
+  gint64         created;
 
   /* state */
   GstMatroskaDemuxState state;
-  guint level_up;
+  guint          level_up;
 
   /* did we parse metadata/cues already? */
-  gboolean metadata_parsed, index_parsed;
+  gboolean       metadata_parsed,
+		 index_parsed;
 
   /* start-of-segment */
-  guint64 segment_start;
+  guint64        segment_start;
 
   /* a cue (index) table */
   GstMatroskaIndex *index;
-  guint num_indexes;
+  guint          num_indexes;
 
   /* timescale in the file */
-  guint64 time_scale;
+  guint64        time_scale;
 
   /* length, position (time, ns) */
-  guint64 duration, pos;
+  guint64        duration,
+		 pos;
 
   /* a possible pending seek */
-  guint64 seek_pending;
+  guint64        seek_pending;
 } GstMatroskaDemux;
 
-typedef struct _GstMatroskaDemuxClass
-{
+typedef struct _GstMatroskaDemuxClass {
   GstEbmlReadClass parent;
 } GstMatroskaDemuxClass;
 
-GType gst_matroska_demux_get_type (void);
+GType    gst_matroska_demux_get_type    (void);
 
-gboolean gst_matroska_demux_plugin_init (GstPlugin * plugin);
+gboolean gst_matroska_demux_plugin_init (GstPlugin *plugin);
 
 G_END_DECLS
+
 #endif /* __GST_MATROSKA_DEMUX_H__ */

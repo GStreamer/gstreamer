@@ -27,6 +27,7 @@
 #include "gstosselement.h"
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_OSSMIXER_TRACK \
   (gst_ossmixer_track_get_type ())
 #define GST_OSSMIXER_TRACK(obj) \
@@ -39,25 +40,25 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_OSSMIXER_TRACK))
 #define GST_IS_OSSMIXER_TRACK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_OSSMIXER_TRACK))
-    typedef struct _GstOssMixerTrack
-{
+
+typedef struct _GstOssMixerTrack {
   GstMixerTrack parent;
 
-  gint lvol, rvol;
-  gint track_num;
+  gint          lvol, rvol;
+  gint          track_num;
 } GstOssMixerTrack;
 
-typedef struct _GstOssMixerTrackClass
-{
+typedef struct _GstOssMixerTrackClass {
   GstMixerTrackClass parent;
 } GstOssMixerTrackClass;
 
-GType gst_ossmixer_track_get_type (void);
+GType	gst_ossmixer_track_get_type	(void);
 
-void gst_ossmixer_interface_init (GstMixerClass * klass);
-void gst_oss_interface_init (GstImplementsInterfaceClass * klass);
-void gst_ossmixer_build_list (GstOssElement * oss);
-void gst_ossmixer_free_list (GstOssElement * oss);
+void	gst_ossmixer_interface_init	(GstMixerClass *klass);
+void	gst_oss_interface_init		(GstImplementsInterfaceClass *klass);
+void	gst_ossmixer_build_list		(GstOssElement *oss);
+void	gst_ossmixer_free_list		(GstOssElement *oss);
 
 G_END_DECLS
+
 #endif /* __GST_OSS_MIXER_H__ */

@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_WAVENC \
   (gst_wavenc_get_type())
 #define GST_WAVENC(obj) \
@@ -35,17 +36,17 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WAVENC))
 #define GST_IS_WAVENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WAVENC))
+
 typedef struct _GstWavEnc GstWavEnc;
 typedef struct _GstWavEncClass GstWavEncClass;
 
 #define WAV_HEADER_LEN 44
 
-struct _GstWavEnc
-{
+struct _GstWavEnc {
   GstElement element;
 
   /* pads */
-  GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
   /* useful audio data */
   guint bits;
@@ -53,15 +54,15 @@ struct _GstWavEnc
   guint channels;
   guint width;
   guint32 length;
-
+  
   gboolean setup, flush_header, pad_eos;
   guchar header[WAV_HEADER_LEN];
 };
 
-struct _GstWavEncClass
-{
+struct _GstWavEncClass {
   GstElementClass parent_class;
 };
 
 G_END_DECLS
+
 #endif /* __GST_ENC_H__ */

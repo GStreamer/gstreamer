@@ -30,9 +30,8 @@
 #include <jpeglib.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_JPEGDEC \
@@ -46,48 +45,46 @@ extern "C"
 #define GST_IS_JPEGDEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_JPEGDEC))
 
-  typedef struct _GstJpegDec GstJpegDec;
-  typedef struct _GstJpegDecClass GstJpegDecClass;
+typedef struct _GstJpegDec GstJpegDec;
+typedef struct _GstJpegDecClass GstJpegDecClass;
 
-  struct _GstJpegDec
-  {
-    GstElement element;
+struct _GstJpegDec {
+  GstElement element;
 
-    /* pads */
-    GstPad *sinkpad, *srcpad;
+  /* pads */
+  GstPad *sinkpad,*srcpad;
 
-    int parse_state;
-    /* the timestamp of the next frame */
-    guint64 next_time;
-    /* the interval between frames */
-    guint64 time_interval;
+  int parse_state;
+  /* the timestamp of the next frame */
+  guint64 next_time;
+  /* the interval between frames */
+  guint64 time_interval;
 
-    /* video state */
-    gint format;
-    gint width;
-    gint height;
-    gdouble fps;
-    /* the size of the output buffer */
-    gint outsize;
-    /* the jpeg line buffer */
-    guchar **line[3];
+  /* video state */
+  gint format;
+  gint width;
+  gint height;
+  gdouble fps;
+  /* the size of the output buffer */
+  gint outsize;
+  /* the jpeg line buffer */
+  guchar **line[3];
 
-    struct jpeg_decompress_struct cinfo;
-    struct jpeg_error_mgr jerr;
-    struct jpeg_source_mgr jsrc;
-  };
+  struct jpeg_decompress_struct cinfo;
+  struct jpeg_error_mgr jerr;
+  struct jpeg_source_mgr jsrc;
+};
 
-  struct _GstJpegDecClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstJpegDecClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_jpegdec_get_type (void);
+GType gst_jpegdec_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_JPEGDEC_H__ */
+#endif /* __GST_JPEGDEC_H__ */

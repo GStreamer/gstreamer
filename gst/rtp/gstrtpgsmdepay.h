@@ -30,23 +30,23 @@ extern "C"
 #endif				/* __cplusplus */
 
 /* Definition of structure storing data for this element. */
-  typedef struct _GstRtpGSMParse GstRtpGSMParse;
-  struct _GstRtpGSMParse
-  {
-    GstElement element;
+typedef struct _GstRtpGSMParse GstRtpGSMParse;
+struct _GstRtpGSMParse
+{
+  GstElement element;
 
-    GstPad *sinkpad;
-    GstPad *srcpad;
+  GstPad *sinkpad;
+  GstPad *srcpad;
 
-    guint frequency;
-  };
+  guint frequency;
+};
 
 /* Standard definition defining a class for this element. */
-  typedef struct _GstRtpGSMParseClass GstRtpGSMParseClass;
-  struct _GstRtpGSMParseClass
-  {
-    GstElementClass parent_class;
-  };
+typedef struct _GstRtpGSMParseClass GstRtpGSMParseClass;
+struct _GstRtpGSMParseClass
+{
+  GstElementClass parent_class;
+};
 
 /* Standard macros for defining types for this element.  */
 #define GST_TYPE_RTP_GSM_PARSE \
@@ -60,7 +60,7 @@ extern "C"
 #define GST_IS_RTP_GSM_PARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_GSM_PARSE))
 
-  gboolean gst_rtpgsmparse_plugin_init (GstPlugin * plugin);
+gboolean gst_rtpgsmparse_plugin_init (GstPlugin * plugin);
 
 #ifdef __cplusplus
 }

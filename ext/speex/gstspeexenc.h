@@ -28,9 +28,8 @@
 #include <speex_header.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_SPEEXENC \
@@ -44,45 +43,44 @@ extern "C"
 #define GST_IS_SPEEXENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SPEEXENC))
 
-  typedef struct _GstSpeexEnc GstSpeexEnc;
-  typedef struct _GstSpeexEncClass GstSpeexEncClass;
+typedef struct _GstSpeexEnc GstSpeexEnc;
+typedef struct _GstSpeexEncClass GstSpeexEncClass;
 
-  struct _GstSpeexEnc
-  {
-    GstElement element;
+struct _GstSpeexEnc {
+  GstElement 	element;
 
-    /* pads */
-    GstPad *sinkpad, *srcpad;
+  /* pads */
+  GstPad 	*sinkpad,
+  		*srcpad;
 
-    gint packet_count;
-    gint n_packets;
+  gint		 packet_count;
+  gint		 n_packets;
 
-    SpeexBits bits;
-    SpeexHeader header;
-    SpeexMode *mode;
-    void *state;
-    gint frame_size;
-    gint16 buffer[2000];
-    gint bufsize;
-    guint64 next_ts;
+  SpeexBits 	 bits;
+  SpeexHeader 	 header;
+  SpeexMode 	*mode;
+  void 		*state;
+  gint		 frame_size;
+  gint16	 buffer[2000];
+  gint		 bufsize;
+  guint64	 next_ts;
 
-    gint rate;
-  };
+  gint		 rate;
+};
 
-  struct _GstSpeexEncClass
-  {
-    GstElementClass parent_class;
+struct _GstSpeexEncClass {
+  GstElementClass parent_class;
 
-    /* signals */
-    void (*frame_encoded) (GstElement * element);
-  };
+  /* signals */
+  void (*frame_encoded) (GstElement *element);
+};
 
-  GType gst_speexenc_get_type (void);
+GType gst_speexenc_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_SPEEXENC_H__ */
+#endif /* __GST_SPEEXENC_H__ */

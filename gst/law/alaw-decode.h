@@ -27,9 +27,8 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_ALAWDEC \
@@ -43,29 +42,27 @@ extern "C"
 #define GST_IS_ALAWDEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALAWDEC))
 
-  typedef struct _GstALawDec GstALawDec;
-  typedef struct _GstALawDecClass GstALawDecClass;
+typedef struct _GstALawDec GstALawDec;
+typedef struct _GstALawDecClass GstALawDecClass;
 
-  struct _GstALawDec
-  {
-    GstElement element;
+struct _GstALawDec {
+  GstElement element;
 
-    GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
-    /*MetaAudioRaw meta; */
+  /*MetaAudioRaw meta; */
 
-  };
+};
 
-  struct _GstALawDecClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstALawDecClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_alawdec_get_type (void);
+GType gst_alawdec_get_type(void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_STEREO_H__ */
+#endif /* __GST_STEREO_H__ */

@@ -28,6 +28,7 @@
 
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_NAVIGATIONTEST \
   (gst_navigationtest_get_type())
 #define GST_NAVIGATIONTEST(obj) \
@@ -38,23 +39,24 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_NAVIGATIONTEST))
 #define GST_IS_NAVIGATIONTEST_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_NAVIGATIONTEST))
+
 typedef struct _GstNavigationtest GstNavigationtest;
 typedef struct _GstNavigationtestClass GstNavigationtestClass;
 
-struct _GstNavigationtest
-{
+struct _GstNavigationtest {
   GstVideofilter videofilter;
 
   double x;
   double y;
 };
 
-struct _GstNavigationtestClass
-{
+struct _GstNavigationtestClass {
   GstVideofilterClass parent_class;
 };
 
-GType gst_navigationtest_get_type (void);
+GType gst_navigationtest_get_type(void);
 
 G_END_DECLS
+
 #endif /* __GST_NAVIGATIONTEST_H__ */
+

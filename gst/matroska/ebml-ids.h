@@ -23,10 +23,13 @@
 #define __GST_EBML_IDS_H__
 
 G_BEGIN_DECLS
+
 /* EBML version supported */
 #define GST_EBML_VERSION 1
+
 /* top-level master-IDs */
 #define GST_EBML_ID_HEADER             0x1A45DFA3
+
 /* IDs in the HEADER master */
 #define GST_EBML_ID_EBMLVERSION        0x4286
 #define GST_EBML_ID_EBMLREADVERSION    0x42F7
@@ -35,7 +38,10 @@ G_BEGIN_DECLS
 #define GST_EBML_ID_DOCTYPE            0x4282
 #define GST_EBML_ID_DOCTYPEVERSION     0x4287
 #define GST_EBML_ID_DOCTYPEREADVERSION 0x4285
+
 /* general EBML types */
 #define GST_EBML_ID_VOID               0xEC
-    G_END_DECLS
+
+G_END_DECLS
+
 #endif /* __GST_EBML_IDS_H__ */

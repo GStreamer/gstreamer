@@ -25,6 +25,7 @@
 #include <gst/audio/audioclock.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_ESDSINK \
   (gst_esdsink_get_type())
 #define GST_ESDSINK(obj) \
@@ -35,41 +36,41 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ESDSINK))
 #define GST_IS_ESDSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ESDSINK))
+
 typedef struct _GstEsdsink GstEsdsink;
 typedef struct _GstEsdsinkClass GstEsdsinkClass;
 
-struct _GstEsdsink
-{
-  GstElement element;
+struct _GstEsdsink {
+  GstElement 	 element;
 
-  GstPad *sinkpad;
+  GstPad 	*sinkpad;
 
-  GstClock *provided_clock;
-  GstClock *clock;
+  GstClock	*provided_clock;
+  GstClock	*clock;
 
-  gboolean mute;
-  int fd;
-  gint format;
-  gint depth;
-  gint channels;
-  gint frequency;
-  gboolean negotiated;
-  gchar *host;
-  int handled;
-  int bytes_per_sample;
-  gboolean sync;
-  gboolean resync;
-  gboolean fallback;
+  gboolean 	 mute;
+  int 		 fd;
+  gint 		 format;
+  gint 		 depth;
+  gint 		 channels;
+  gint 		 frequency;
+  gboolean 	 negotiated;
+  gchar		*host;
+  int		 handled;
+  int		 bytes_per_sample;
+  gboolean	 sync;
+  gboolean	 resync;
+  gboolean	 fallback;
 };
 
-struct _GstEsdsinkClass
-{
+struct _GstEsdsinkClass {
   GstElementClass parent_class;
 };
 
-GType gst_esdsink_get_type (void);
-gboolean gst_esdsink_factory_init (GstPlugin * plugin);
+GType gst_esdsink_get_type(void);
+gboolean gst_esdsink_factory_init (GstPlugin *plugin);
 
 
 G_END_DECLS
+
 #endif /* __GST_ESDSINK_H__ */

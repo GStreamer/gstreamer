@@ -17,8 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-typedef enum
-{
+typedef enum {
   FLX_COLORSPACE_RGB8,
   FLX_COLORSPACE_RGB32,
 } FlxColorSpaceType;
@@ -26,20 +25,19 @@ typedef enum
 
 typedef struct _FlxColorSpaceConverter FlxColorSpaceConverter;
 
-struct _FlxColorSpaceConverter
-{
-  guint width;
-  guint height;
-  guchar palvec[768];
+struct _FlxColorSpaceConverter {
+  guint      width;
+  guint      height;
+  guchar      palvec[768];
 };
 
 
-void flx_colorspace_converter_destroy (FlxColorSpaceConverter * flxpal);
-void flx_colorspace_convert (FlxColorSpaceConverter * flxpal, guchar * src,
-    guchar * dest);
-FlxColorSpaceConverter *flx_colorspace_converter_new (gint width, gint height);
+void flx_colorspace_converter_destroy(FlxColorSpaceConverter *flxpal);
+void flx_colorspace_convert(FlxColorSpaceConverter *flxpal, guchar *src, guchar *dest);
+FlxColorSpaceConverter * flx_colorspace_converter_new(gint width, gint height);
 
-void flx_set_palette_vector (FlxColorSpaceConverter * flxpal, guint start,
-    guint num, guchar * newpal, gint scale);
-void flx_set_color (FlxColorSpaceConverter * flxpal, guint colr, guint red,
-    guint green, guint blue, gint scale);
+void flx_set_palette_vector(FlxColorSpaceConverter *flxpal, guint start, guint num, 
+          guchar *newpal, gint scale);
+void flx_set_color(FlxColorSpaceConverter *flxpal, guint colr, guint red, guint green,
+          guint blue, gint scale);
+

@@ -24,9 +24,8 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #include <libdv/dv.h>
@@ -34,55 +33,55 @@ extern "C"
 
 
 /* This is the definition of the element's object structure. */
-  typedef struct _GstDVDec GstDVDec;
+typedef struct _GstDVDec GstDVDec;
 
 /* The structure itself is derived from GstElement, as can be seen by the
  * fact that there's a complete instance of the GstElement structure at
  * the beginning of the object.  This allows the element to be cast to
  * an Element or even an Object.
  */
-  struct _GstDVDec
-  {
-    GstElement element;
+struct _GstDVDec {
+  GstElement 	 element;
 
-    /* We need to keep track of our pads, so we do so here. */
-    GstPad *sinkpad, *videosrcpad, *audiosrcpad;
+  /* We need to keep track of our pads, so we do so here. */
+  GstPad 	*sinkpad,
+  		*videosrcpad,
+		  *audiosrcpad;
 
-    dv_decoder_t *decoder;
-    gboolean clamp_luma;
-    gboolean clamp_chroma;
-    gint quality;
+  dv_decoder_t 	*decoder;
+  gboolean	 clamp_luma;
+  gboolean	 clamp_chroma;
+  gint		 quality;
 
-    GstByteStream *bs;
-    dv_color_space_t space;
-    gint bpp;
-    gboolean PAL;
-    gdouble framerate;
-    gint height;
-    gint frequency;
-    gint channels;
+  GstByteStream *bs;
+  dv_color_space_t space;
+  gint 		 bpp;
+  gboolean PAL;
+  gdouble	 framerate;
+  gint		 height;
+  gint     frequency;
+  gint     channels;
+  
+  gint 		 length;
+  guint64	 next_ts;
+  guint64	 end_position;
+  gboolean	 need_discont;
+  gboolean	 loop;
+  
+  gboolean found_header;
 
-    gint length;
-    guint64 next_ts;
-    guint64 end_position;
-    gboolean need_discont;
-    gboolean loop;
-
-    gboolean found_header;
-
-    gint16 *audio_buffers[4];
-  };
+  gint16 	*audio_buffers[4];
+};
 
 /* The other half of the object is its class.  The class also derives from
  * the same parent, though it must be the class structure this time.
  * Function pointers for polymophic methods and signals are placed in this
  * structure. */
-  typedef struct _GstDVDecClass GstDVDecClass;
+typedef struct _GstDVDecClass GstDVDecClass;
 
-  struct _GstDVDecClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstDVDecClass {
+  GstElementClass parent_class;
+};
 
 /* Five standard preprocessing macros are used in the Gtk+ object system.
  * The first uses the object's _get_type function to return the GType
@@ -108,12 +107,12 @@ extern "C"
 /* This is the only prototype needed, because it is used in the above
  * GST_TYPE_DVDEC macro.
  */
-  GType gst_dvdec_get_type (void);
+GType gst_dvdec_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_DVDEC_H__ */
+#endif /* __GST_DVDEC_H__ */

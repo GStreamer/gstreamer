@@ -24,9 +24,8 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 #include <errno.h>
 #include <string.h>
@@ -50,47 +49,44 @@ extern "C"
 #define GST_IS_UDPSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_UDPSRC))
 
-  typedef struct _GstUDPSrc GstUDPSrc;
-  typedef struct _GstUDPSrcClass GstUDPSrcClass;
+typedef struct _GstUDPSrc GstUDPSrc;
+typedef struct _GstUDPSrcClass GstUDPSrcClass;
 
-  typedef enum
-  {
-    GST_UDPSRC_OPEN = GST_ELEMENT_FLAG_LAST,
+typedef enum {
+  GST_UDPSRC_OPEN             = GST_ELEMENT_FLAG_LAST,
 
-    GST_UDPSRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-  } GstUDPSrcFlags;
+  GST_UDPSRC_FLAG_LAST        = GST_ELEMENT_FLAG_LAST + 2,
+} GstUDPSrcFlags;
 
-  struct _GstUDPSrc
-  {
-    GstElement element;
+struct _GstUDPSrc {
+  GstElement element;
 
-    /* pads */
-    GstPad *sinkpad, *srcpad;
+  /* pads */
+  GstPad *sinkpad,*srcpad;
 
-    int port;
-    int sock;
-    int control_sock;
-    Gst_UDP_Control control;
-    gchar *multi_group;
+  int port;
+  int sock;
+  int control_sock;
+  Gst_UDP_Control control;
+  gchar *multi_group;
 
-    struct sockaddr_in myaddr;
-    struct ip_mreq multi_addr;
-    GstClock *clock;
+  struct sockaddr_in myaddr;
+  struct ip_mreq multi_addr;
+  GstClock *clock;
 
-    gboolean first_buf;
-  };
+  gboolean first_buf;
+};
 
-  struct _GstUDPSrcClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstUDPSrcClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_udpsrc_get_type (void);
+GType gst_udpsrc_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_UDPSRC_H__ */
+#endif /* __GST_UDPSRC_H__ */

@@ -25,14 +25,13 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_MIKMOD \
   (gst_mikmod_get_type())
-
+  
 #define GST_MIKMOD(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MIKMOD,GstMikMod))
 #define GST_MIKMOD_CLASS(klass) \
@@ -41,70 +40,68 @@ extern "C"
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MIKMOD))
 #define GST_IS_MIKMOD_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MIKMOD))
+  
+struct _GstMikMod {
+  GstElement element;
+  GstPad *sinkpad, *srcpad;
+  GstBuffer *Buffer;
 
-  struct _GstMikMod
-  {
-    GstElement element;
-    GstPad *sinkpad, *srcpad;
-    GstBuffer *Buffer;
+  gchar *songname;
+  gchar *modtype;
+  gint musicvolume;
+  gint pansep;
+  gint reverb;
+  gint sndfxvolume;
+  gint volume;
+  gint mixfreq;
+  gint mode;
+  gboolean interp;
+  gboolean reverse;
+  gboolean surround;
+  gboolean _16bit;
+  gboolean hqmixer;
+  gboolean soft_music;
+  gboolean soft_sndfx;
+  gboolean stereo;
 
-    gchar *songname;
-    gchar *modtype;
-    gint musicvolume;
-    gint pansep;
-    gint reverb;
-    gint sndfxvolume;
-    gint volume;
-    gint mixfreq;
-    gint mode;
-    gboolean interp;
-    gboolean reverse;
-    gboolean surround;
-    gboolean _16bit;
-    gboolean hqmixer;
-    gboolean soft_music;
-    gboolean soft_sndfx;
-    gboolean stereo;
+  gboolean initialized;
+};
 
-    gboolean initialized;
-  };
+struct _GstMikModClass {
+  GstElementClass parent_class;
+};
 
-  struct _GstMikModClass
-  {
-    GstElementClass parent_class;
-  };
+typedef struct _GstMikMod GstMikMod;
+typedef struct _GstMikModClass GstMikModClass;
 
-  typedef struct _GstMikMod GstMikMod;
-  typedef struct _GstMikModClass GstMikModClass;
+extern MODULE *module;
+extern MREADER *reader;
+extern GstPad *srcpad;
+extern GstClockTime timestamp;
+extern int need_sync;
 
-  extern MODULE *module;
-  extern MREADER *reader;
-  extern GstPad *srcpad;
-  extern GstClockTime timestamp;
-  extern int need_sync;
-
-  GType gst_mikmod_get_type (void);
+GType gst_mikmod_get_type(void);
 
 /* symbols for mikmod_reader.h */
-  struct _GST_READER
-  {
-    MREADER core;
-    GstMikMod *mik;
-    guint64 offset;
-    gshort eof;
-  };
+struct _GST_READER
+{
+  MREADER core;
+  GstMikMod *mik;
+  guint64 offset;
+  gshort  eof;
+};
 
 
-  typedef struct _GST_READER GST_READER;
+typedef struct _GST_READER GST_READER;
 
 
-  MREADER *GST_READER_new (GstMikMod * mik);
+MREADER *GST_READER_new( GstMikMod *mik );
 
 /* symbols for drv_gst.c */
-  extern MDRIVER drv_gst;
+extern MDRIVER drv_gst;
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
-#endif				/* __GST_MIKMOD_H__ */
+#endif /* __GST_MIKMOD_H__ */

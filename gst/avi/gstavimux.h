@@ -28,9 +28,8 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_AVIMUX \
@@ -45,67 +44,65 @@ extern "C"
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVIMUX))
 
 
-  typedef struct _GstAviMux GstAviMux;
-  typedef struct _GstAviMuxClass GstAviMuxClass;
+typedef struct _GstAviMux GstAviMux;
+typedef struct _GstAviMuxClass GstAviMuxClass;
 
-  struct _GstAviMux
-  {
-    GstElement element;
+struct _GstAviMux {
+  GstElement element;
 
-    /* pads */
-    GstPad *srcpad;
-    GstPad *audiosinkpad;
-    gboolean audio_pad_connected, audio_pad_eos;
-    GstPad *videosinkpad;
-    gboolean video_pad_connected, video_pad_eos;
+  /* pads */
+  GstPad *srcpad;
+  GstPad *audiosinkpad;
+  gboolean audio_pad_connected, audio_pad_eos;
+  GstPad *videosinkpad;
+  gboolean video_pad_connected, video_pad_eos;
 
-    /* the AVI header */
-    gst_riff_avih avi_hdr;
-    guint32 total_frames;	/* total number of frames */
-    guint64 total_data;		/* amount of total data */
-    guint32 data_size, datax_size;	/* amount of data (bytes) in the AVI/AVIX block */
-    guint32 num_frames, numx_frames;	/* num frames in the AVI/AVIX block */
-    guint32 header_size;
-    gboolean write_header;
-    gboolean restart;
-    guint32 audio_size;
-    guint64 audio_time;
+  /* the AVI header */
+  gst_riff_avih avi_hdr;
+  guint32 total_frames; /* total number of frames */
+  guint64 total_data; /* amount of total data */
+  guint32 data_size, datax_size; /* amount of data (bytes) in the AVI/AVIX block */
+  guint32 num_frames, numx_frames; /* num frames in the AVI/AVIX block */
+  guint32 header_size;
+  gboolean write_header;
+  gboolean restart;
+  guint32 audio_size;
+  guint64 audio_time;
 
-    /* video header */
-    gst_riff_strh vids_hdr;
-    gst_riff_strf_vids vids;
+  /* video header */
+  gst_riff_strh vids_hdr;
+  gst_riff_strf_vids vids;
 
-    /* audio header */
-    gst_riff_strh auds_hdr;
-    gst_riff_strf_auds auds;
+  /* audio header */
+  gst_riff_strh auds_hdr;
+  gst_riff_strf_auds auds;
 
-    /* information about the AVI index ('idx') */
-    gst_riff_index_entry *idx;
-    gint idx_index, idx_count;
-    guint32 idx_offset, idx_size;
+  /* information about the AVI index ('idx') */
+  gst_riff_index_entry *idx;
+  gint idx_index, idx_count;
+  guint32 idx_offset, idx_size;
 
-    /* are we a big file already? */
-    gboolean is_bigfile;
-    guint64 avix_start;
+  /* are we a big file already? */
+  gboolean is_bigfile;
+  guint64 avix_start;
 
-    /* whether to use "large AVI files" or just stick to small indexed files */
-    gboolean enable_large_avi;
+  /* whether to use "large AVI files" or just stick to small indexed files */
+  gboolean enable_large_avi;
 
-    /* in order to be usable as a loopbased element, we need an internal
-     * 'buffered' buffer for each pad, so one for audio, one for video */
-    GstBuffer *audio_buffer_queue, *video_buffer_queue;
-  };
+  /* in order to be usable as a loopbased element, we need an internal
+   * 'buffered' buffer for each pad, so one for audio, one for video */
+  GstBuffer *audio_buffer_queue, *video_buffer_queue;
+};
 
-  struct _GstAviMuxClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstAviMuxClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_avimux_get_type (void);
+GType gst_avimux_get_type(void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_AVIMUX_H__ */
+#endif /* __GST_AVIMUX_H__ */

@@ -30,26 +30,26 @@ extern "C"
 #endif				/* __cplusplus */
 
 /* Definition of structure storing data for this element. */
-  typedef struct _GstRtpL16Parse GstRtpL16Parse;
-  struct _GstRtpL16Parse
-  {
-    GstElement element;
+typedef struct _GstRtpL16Parse GstRtpL16Parse;
+struct _GstRtpL16Parse
+{
+  GstElement element;
 
-    GstPad *sinkpad;
-    GstPad *srcpad;
+  GstPad *sinkpad;
+  GstPad *srcpad;
 
-    guint frequency;
-    guint channels;
+  guint frequency;
+  guint channels;
 
-    rtp_payload_t payload_type;
-  };
+  rtp_payload_t payload_type;
+};
 
 /* Standard definition defining a class for this element. */
-  typedef struct _GstRtpL16ParseClass GstRtpL16ParseClass;
-  struct _GstRtpL16ParseClass
-  {
-    GstElementClass parent_class;
-  };
+typedef struct _GstRtpL16ParseClass GstRtpL16ParseClass;
+struct _GstRtpL16ParseClass
+{
+  GstElementClass parent_class;
+};
 
 /* Standard macros for defining types for this element.  */
 #define GST_TYPE_RTP_L16_PARSE \
@@ -63,7 +63,7 @@ extern "C"
 #define GST_IS_RTP_L16_PARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_L16_PARSE))
 
-  gboolean gst_rtpL16parse_plugin_init (GstPlugin * plugin);
+gboolean gst_rtpL16parse_plugin_init (GstPlugin * plugin);
 
 #ifdef __cplusplus
 }

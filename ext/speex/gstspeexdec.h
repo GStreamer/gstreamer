@@ -26,9 +26,8 @@
 #include <speex.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_SPEEXDEC \
@@ -42,28 +41,26 @@ extern "C"
 #define GST_IS_SPEEXDEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SPEEXDEC))
 
-  typedef struct _GstSpeexDec GstSpeexDec;
-  typedef struct _GstSpeexDecClass GstSpeexDecClass;
+typedef struct _GstSpeexDec GstSpeexDec;
+typedef struct _GstSpeexDecClass GstSpeexDecClass;
 
-  struct _GstSpeexDec
-  {
-    GstElement element;
+struct _GstSpeexDec {
+  GstElement element;
 
-    /* pads */
-    GstPad *sinkpad, *srcpad;
-  };
+  /* pads */
+  GstPad *sinkpad,*srcpad;
+};
 
-  struct _GstSpeexDecClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstSpeexDecClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_speexdec_get_type (void);
+GType gst_speexdec_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_SPEEXDEC_H__ */
+#endif /* __GST_SPEEXDEC_H__ */

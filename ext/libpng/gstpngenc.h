@@ -25,9 +25,8 @@
 #include <png.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_PNGENC  	(gst_pngenc_get_type())
@@ -36,37 +35,37 @@ extern "C"
 #define GST_IS_PNGENC(obj) 	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PNGENC))
 #define GST_IS_PNGENC_CLASS(obj)(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PNGENC))
 
-  typedef struct _GstPngEnc GstPngEnc;
-  typedef struct _GstPngEncClass GstPngEncClass;
+typedef struct _GstPngEnc GstPngEnc;
+typedef struct _GstPngEncClass GstPngEncClass;
 
-  extern GstPadTemplate *pngenc_src_template, *pngenc_sink_template;
+extern GstPadTemplate *pngenc_src_template, *pngenc_sink_template;
 
-  struct _GstPngEnc
-  {
-    GstElement element;
+struct _GstPngEnc
+{
+  GstElement element;
 
-    GstPad *sinkpad, *srcpad;
-    GstBuffer *buffer_out;
+  GstPad *sinkpad, *srcpad;
+  GstBuffer *buffer_out;
 
-    png_structp png_struct_ptr;
-    png_infop png_info_ptr;
+  png_structp png_struct_ptr;
+  png_infop png_info_ptr;
 
-    gint width;
-    gint height;
-    gint bpp;
-  };
+  gint width;
+  gint height;
+  gint bpp;
+};
 
-  struct _GstPngEncClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstPngEncClass
+{
+  GstElementClass parent_class;
+};
 
-  GType gst_pngenc_get_type (void);
+GType gst_pngenc_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_PNGENC_H__ */
+#endif /* __GST_PNGENC_H__ */

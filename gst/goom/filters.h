@@ -7,17 +7,17 @@
 
 typedef struct
 {
-  int vitesse;
-  unsigned char pertedec;
-  unsigned char sqrtperte;
-  int middleX, middleY;
-  char reverse;
-  char mode;
+	int vitesse ;
+	unsigned char pertedec ;
+	unsigned char sqrtperte ;
+	int middleX,middleY ;
+	char reverse ;
+	char mode ;
 	/** @since June 2001 */
-  int hPlaneEffect;
-  int vPlaneEffect;
-  char noisify;
-} ZoomFilterData;
+	int hPlaneEffect ;
+	int vPlaneEffect ;
+	char noisify ;
+} ZoomFilterData ;
 
 
 #define NORMAL_MODE 0
@@ -27,8 +27,9 @@ typedef struct
 #define AMULETTE_MODE 4
 #define WATER_MODE 5
 
-void pointFilter (guint32 * pix1, Color c,
-    float t1, float t2, float t3, float t4, guint32 cycle);
+void pointFilter(guint32 *pix1, Color c,
+				 float t1, float t2, float t3, float t4,
+				 guint32 cycle);
 
 /* filtre de zoom :
  le contenu de pix1 est copie dans pix2, avec l'effet appliqué
@@ -41,8 +42,10 @@ Uint middleX,
 Uint middleY);
 */
 
-void zoomFilterFastRGB (guint32 * pix1,
-    guint32 * pix2, ZoomFilterData * zf, guint32 resx, guint32 resy);
+void zoomFilterFastRGB (guint32 *pix1,
+						guint32 *pix2,
+						ZoomFilterData *zf,
+						guint32 resx, guint32 resy);
 
 
 /* filtre sin :

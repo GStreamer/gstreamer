@@ -28,9 +28,8 @@
 #include <FLAC/all.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_FLACDEC flacdec_get_type()
@@ -39,42 +38,40 @@ extern "C"
 #define GST_IS_FLACDEC(obj) G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_FLACDEC)
 #define GST_IS_FLACDEC_CLASS(obj) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_FLACDEC)
 
-  typedef struct _FlacDec FlacDec;
-  typedef struct _FlacDecClass FlacDecClass;
+typedef struct _FlacDec FlacDec;
+typedef struct _FlacDecClass FlacDecClass;
 
-  struct _FlacDec
-  {
-    GstElement element;
+struct _FlacDec {
+  GstElement 	 element;
 
-    GstPad *sinkpad, *srcpad;
-    GstByteStream *bs;
+  GstPad 	*sinkpad,*srcpad;
+  GstByteStream *bs;
 
-    FLAC__SeekableStreamDecoder *decoder;
-    gint channels;
-    gint depth;
-    gint frequency;
+  FLAC__SeekableStreamDecoder *decoder;
+  gint		 channels;
+  gint		 depth;
+  gint		 frequency;
 
-    gboolean need_discont;
-    gboolean seek_pending;
-    gint64 seek_value;
+  gboolean	 need_discont;
+  gboolean 	 seek_pending;
+  gint64	 seek_value;
 
-    gboolean init;
-    guint64 total_samples;
-    guint64 stream_samples;
+  gboolean	 init;
+  guint64	 total_samples;
+  guint64	 stream_samples;
 
-    gboolean eos;
-  };
+  gboolean	 eos;
+};
 
-  struct _FlacDecClass
-  {
-    GstElementClass parent_class;
-  };
+struct _FlacDecClass {
+  GstElementClass parent_class;
+};
 
-  GType flacdec_get_type (void);
+GType flacdec_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
-#endif				/* __FLACDEC_H__ */
+#endif /* __FLACDEC_H__ */

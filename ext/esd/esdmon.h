@@ -26,6 +26,7 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_ESDMON \
   (gst_esdmon_get_type())
 #define GST_ESDMON(obj) \
@@ -36,22 +37,21 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ESDMON))
 #define GST_IS_ESDMON_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ESDMON))
-    typedef enum
-{
-  GST_ESDMON_OPEN = GST_ELEMENT_FLAG_LAST,
-  GST_ESDMON_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
+
+typedef enum {
+  GST_ESDMON_OPEN            = GST_ELEMENT_FLAG_LAST,
+  GST_ESDMON_FLAG_LAST       = GST_ELEMENT_FLAG_LAST+2,
 } GstEsdSrcFlags;
 
 typedef struct _GstEsdmon GstEsdmon;
 typedef struct _GstEsdmonClass GstEsdmonClass;
 
-struct _GstEsdmon
-{
+struct _GstEsdmon {
   GstElement element;
 
   GstPad *srcpad;
 
-  gchar *host;
+  gchar* host;
 
   int fd;
 
@@ -65,13 +65,14 @@ struct _GstEsdmon
   guint64 bytes_per_read;
 };
 
-struct _GstEsdmonClass
-{
+struct _GstEsdmonClass {
   GstElementClass parent_class;
 };
 
-GType gst_esdmon_get_type (void);
-gboolean gst_esdmon_factory_init (GstPlugin * plugin);
+GType gst_esdmon_get_type(void);
+gboolean gst_esdmon_factory_init(GstPlugin *plugin);
 
 G_END_DECLS
+
 #endif /* __GST_ESDMON_H__ */
+

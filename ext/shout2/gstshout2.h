@@ -25,51 +25,47 @@
 #include <shout/shout.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
   /* Protocol type enum */
-  typedef enum
-  {
-    SHOUT2SEND_PROTOCOL_ICE = 1,
-    SHOUT2SEND_PROTOCOL_XAUDIOCAST,
-    SHOUT2SEND_PROTOCOL_ICY,
-    SHOUT2SEND_PROTOCOL_HTTP
-  } GstShout2SendProtocol;
+typedef enum {
+  SHOUT2SEND_PROTOCOL_ICE = 1,
+  SHOUT2SEND_PROTOCOL_XAUDIOCAST,
+  SHOUT2SEND_PROTOCOL_ICY,
+  SHOUT2SEND_PROTOCOL_HTTP
+} GstShout2SendProtocol;
 
 
 /* Definition of structure storing data for this element. */
-  typedef struct _GstShout2send GstShout2send;
-  struct _GstShout2send
-  {
-    GstElement element;
+typedef struct _GstShout2send GstShout2send;
+struct _GstShout2send {
+  GstElement element;
 
-    GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
-    GstShout2SendProtocol protocol;
+  GstShout2SendProtocol protocol;
 
-    shout_t *conn;
+  shout_t *conn;
 
-    gchar *ip;
-    guint port;
-    gchar *password;
-    gchar *name;
-    gchar *description;
-    gchar *genre;
-    gchar *mount;
-    gchar *url;
+  gchar *ip;
+  guint port;
+  gchar *password;
+  gchar *name;
+  gchar *description;
+  gchar *genre;
+  gchar *mount;
+  gchar *url;
 
-  };
+};
 
 
 
 /* Standard definition defining a class for this element. */
-  typedef struct _GstShout2sendClass GstShout2sendClass;
-  struct _GstShout2sendClass
-  {
-    GstElementClass parent_class;
-  };
+typedef struct _GstShout2sendClass GstShout2sendClass;
+struct _GstShout2sendClass {
+  GstElementClass parent_class;
+};
 
 /* Standard macros for defining types for this element.  */
 #define GST_TYPE_SHOUT2SEND \
@@ -84,12 +80,12 @@ extern "C"
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SHOUT2SEND))
 
 /* Standard function returning type information. */
-  GType gst_shout2send_get_type (void);
+GType gst_shout2send_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_SHOUT2SEND_H__ */
+#endif /* __GST_SHOUT2SEND_H__ */

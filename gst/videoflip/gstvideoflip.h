@@ -25,8 +25,9 @@
 #include <gst/gst.h>
 
 
-G_BEGIN_DECLS typedef enum
-{
+G_BEGIN_DECLS
+
+typedef enum {
   GST_VIDEOFLIP_METHOD_IDENTITY,
   GST_VIDEOFLIP_METHOD_90R,
   GST_VIDEOFLIP_METHOD_180,
@@ -52,11 +53,10 @@ G_BEGIN_DECLS typedef enum
 typedef struct _GstVideoflip GstVideoflip;
 typedef struct _GstVideoflipClass GstVideoflipClass;
 
-struct _GstVideoflip
-{
+struct _GstVideoflip {
   GstElement element;
 
-  GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
   gboolean force_size;
   gint forced_width;
@@ -78,16 +78,16 @@ struct _GstVideoflip
   gint to_buf_size;
 };
 
-struct _GstVideoflipClass
-{
+struct _GstVideoflipClass {
   GstElementClass parent_class;
 };
 
-GType gst_videoflip_get_type (void);
+GType gst_videoflip_get_type(void);
 
-void gst_videoflip_setup (GstVideoflip *);
-
+void gst_videoflip_setup(GstVideoflip *);
 #define gst_videoflip_scale(scale, src, dest) (scale)->scale_cc((scale), (src), (dest))
 
 G_END_DECLS
+
 #endif /* __GST_VIDEOFLIP_H__ */
+

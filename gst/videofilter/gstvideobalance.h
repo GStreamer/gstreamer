@@ -28,6 +28,7 @@
 
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_VIDEOBALANCE \
   (gst_videobalance_get_type())
 #define GST_VIDEOBALANCE(obj) \
@@ -38,30 +39,30 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEOBALANCE))
 #define GST_IS_VIDEOBALANCE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEOBALANCE))
+
 typedef struct _GstVideobalance GstVideobalance;
 typedef struct _GstVideobalanceClass GstVideobalanceClass;
 
-struct _GstVideobalance
-{
+struct _GstVideobalance {
   GstVideofilter videofilter;
 
-  guint8 *tabley, **tableu, **tablev;
+  guint8   *tabley, **tableu, **tablev;
   gboolean needupdate;
 
   gdouble contrast;
   gdouble brightness;
   gdouble hue;
   gdouble saturation;
-
+  
   GList *channels;
 };
 
-struct _GstVideobalanceClass
-{
+struct _GstVideobalanceClass {
   GstVideofilterClass parent_class;
 };
 
-GType gst_videobalance_get_type (void);
+GType gst_videobalance_get_type(void);
 
 G_END_DECLS
+
 #endif /* __GST_VIDEOBALANCE_H__ */

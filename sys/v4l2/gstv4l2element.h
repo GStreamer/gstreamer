@@ -55,53 +55,53 @@
 		(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_V4L2ELEMENT, GstV4l2ElementClass))
 
 
-typedef struct _GstV4l2Element GstV4l2Element;
-typedef struct _GstV4l2ElementClass GstV4l2ElementClass;
+typedef	struct _GstV4l2Element		GstV4l2Element;
+typedef	struct _GstV4l2ElementClass	GstV4l2ElementClass;
 
-struct _GstV4l2Element
-{
-  GstElement element;
+struct _GstV4l2Element {
+	GstElement element;
 
-  /* the video device */
-  char *device;
+	/* the video device */
+	char *device;
 
-  /* the video-device's file descriptor */
-  gint video_fd;
+	/* the video-device's file descriptor */
+	gint video_fd;
 
-  /* the video buffer (mmap()'ed) */
-  guint8 **buffer;
+	/* the video buffer (mmap()'ed) */
+	guint8 **buffer;
 
-  /* the video-device's capabilities */
-  struct v4l2_capability vcap;
+	/* the video-device's capabilities */
+	struct v4l2_capability vcap;
 
-  /* the toys available to us */
-  GList *channels;
-  GList *norms;
-  GList *colors;
+	/* the toys available to us */
+	GList *channels;
+	GList *norms;
+	GList *colors;
 
-  /* X-overlay */
-  GstXWindowListener *overlay;
-  XID xwindow_id;
+	/* X-overlay */
+	GstXWindowListener *overlay;
+	XID xwindow_id;
 
-  /* properties */
-  gchar *norm;
-  gchar *channel;
-  gulong frequency;
+	/* properties */
+	gchar *norm;
+	gchar *channel;
+	gulong frequency;
 
-  /* caching values */
-  gchar *display;
+	/* caching values */
+	gchar *display;
 };
 
-struct _GstV4l2ElementClass
-{
-  GstElementClass parent_class;
+struct _GstV4l2ElementClass {
+	GstElementClass parent_class;
 
-  /* probed devices */
-  GList *devices;
+	/* probed devices */
+	GList *devices;
 
-  /* signals */
-  void (*open) (GstElement * element, const gchar * device);
-  void (*close) (GstElement * element, const gchar * device);
+	/* signals */
+	void     (*open)            (GstElement  *element,
+	                             const gchar *device);
+	void     (*close)           (GstElement  *element,
+	                             const gchar *device);
 };
 
 

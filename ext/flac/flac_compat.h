@@ -16,7 +16,7 @@
 /* FIXME when there's a autoconf symbol */
 #ifndef FLAC_VERSION
 
-#ifndef FLAC__VERSION_STRING	/* removed in 1.0.4 */
+#ifndef FLAC__VERSION_STRING /* removed in 1.0.4 */
 #define FLAC_VERSION 0x010004
 #else
 #ifdef FLAC__REFERENCE_CODEC_MAX_BITS_PER_SAMPLE

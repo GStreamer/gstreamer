@@ -27,8 +27,9 @@
 #include "gstvideofilter.h"
 
 
-G_BEGIN_DECLS typedef enum
-{
+G_BEGIN_DECLS
+
+typedef enum {
   GST_VIDEOFLIP_METHOD_IDENTITY,
   GST_VIDEOFLIP_METHOD_90R,
   GST_VIDEOFLIP_METHOD_180,
@@ -53,19 +54,19 @@ G_BEGIN_DECLS typedef enum
 typedef struct _GstVideoflip GstVideoflip;
 typedef struct _GstVideoflipClass GstVideoflipClass;
 
-struct _GstVideoflip
-{
+struct _GstVideoflip {
   GstVideofilter videofilter;
 
   GstVideoflipMethod method;
 };
 
-struct _GstVideoflipClass
-{
+struct _GstVideoflipClass {
   GstVideofilterClass parent_class;
 };
 
-GType gst_videoflip_get_type (void);
+GType gst_videoflip_get_type(void);
 
 G_END_DECLS
+
 #endif /* __GST_VIDEOFLIP_H__ */
+
