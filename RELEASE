@@ -1,46 +1,25 @@
 
-                  GStreamer "Hottest Pick" 0.6.0 released[*]
+                     GStreamer "Wild Rover" 0.6.2 released
 
-   The  GStreamer  team is happy to announce our first ABI stable release
-   series. The 0.6.x series of the GStreamer streaming-media framework.
+   The  GStreamer  team  is  proud  to announce an updated version in the
+   ABI-stable 0.6.x series.
 
    At  this  point  in  time  GStreamer  is fully functional for creating
    audio-based   applications,   as   shown   by   applications  such  as
-   gnome-sound-recorder, Rhythmbox and nautilus-media.
+   gnome-sound-recorder,     [1]net-rhythmbox,     [2]sound-juicer    and
+   nautilus-media.
 
-   Video-based  applications  still  have  some  issues  at  this  point,
-   especially in the area of audio/video sync and seeking, but we plan on
-   solving those issues during the 0.6.x series.
+   The  video part is known to be somewhat less functional than the audio
+   part,  but  applications  such as [3]gst-player works very well, and a
+   port of [4]Totem is in progress in GNOME CVS.
 
    We  will  also be releasing a development 0.7 release series, in which
-   we  will  work  on  such  things as the remaining video issues and the
+   we  will  work  on  such  things  as the remaining issues, such as the
    interactivity  support  which is needed for DVD menus and SWF (Flash).
    This  means  developers working on apps needing these services can use
    the  0.7  series  for development and then enable 0.6 support as these
    additions  optionally  get  backported to 0.6 once they are stable and
    work well.
-
-  Thread issues and GStreamer
-
-   Many  of GStreamer's features relies heavily on threads. Unfortunately
-   everything  is  not  rosy in the Linux world of threads. If you have a
-   glibc version installed compiled with i686 optimizations (which uses a
-   different  codepath  than standard i386 glibc), there is a good chance
-   you   will   experience   thread-related  crashes  in  gstreamer-based
-   applications. There are a few workarounds to this available.
-     * You can use an i386 glibc package instead. (Since this is the only
-       one  shipping  with  Debian,  debian  users do not experience this
-       issue.)
-     * You  can  also  try running the gstreamer-based applications using
-       the command-line option --gst-scheduler=opt, which invokes a newly
-       created  scheduler  that  does  not use threads. This scheduler is
-       very  new  however  so you might encounter other issues when using
-       it. Please report issues to our bugzilla.
-
-   People  using  the first Red Hat beta called Phoebe are recommended to
-   update  to  glibc from Rawhide or from the second Phoebe release. This
-   solves  all  thread issues, thanks to the new NTPL thread library that
-   is included there.
 
    The  GStreamer  applications we ship all check for both gstreamer-0.6,
    gstreamer-libs-0.6  and  gstreamer-play-0.6; if those aren't found the
@@ -49,7 +28,7 @@
 
    We are starting to have a really nice collection of applications under
    development using GStreamer. If you are looking for something specific
-   check out our [1]applications status page.
+   check out our [5]applications status page.
 
 Features
 
@@ -70,15 +49,70 @@ Features
      * Easy  for  applications  to  ship their own plugins to the core as
        needed
      * Compiles with both GCC and Forte compilers
+     * Tested to run on Linux, FreeBSD and Solaris
+
+Updates since 0.6.1
+
+     * gstreamer (core)
+
+     * #112116:  [6][0.6.2]  if  you  don't have a registry, it shouldn't
+       crash
+     * #114385: [7][0.6.2] fix gst_event_new_discontinuous
+     * #114529: [8][0.6.2] gst-typefind addition
+     * #113195:  [9][0.6.2]  API  docs  should  build  in xml for devhelp
+       generation
+     * #114512:  [10][0.6.2]  Use  proper  min  and  max  values  for the
+       value_float pr
+     * #114668:  [11][0.6.2]  state_change  functions  have some problems
+       (recursion
+     * #93861: [12][0.6.2] gst-compprep needs X display to run
+     * #112579: [13][0.6.2] pngenc: event on source pad misrouted
+     * #114130: [14][0.6.2] refcounting for ghost and real pads is broken
+       and cr
+     * #114519: [15][0.6.2] make md5sink md5 functions static
+     * #110757: [16][0.6.2] memory corruption fix
+     * #112607:  [17][0.6.2]  fails to build gstgetbits_i386.s on Solaris
+       x86 w/o
+
+     gst-plugins:
+     * #110542: [18][PATCH] - wave files are little endian
+     * #112329: [19][0.6.2] gst-compprep seg faults because of aasink
+     * #111632: [20][0.6.2] videotestsrc ! xvideosink crash
+     * #110964: [21][0.6.2] xvideosink caps ref in get_caps
+     * #111692: [22][0.6.2 candidate] Fix wavparse
+     * #112608:  [23][0.6.2] fails to build gst/videoscale on Solaris x86
+       w/o gas
+     * #112943: [24]videotestsrc failure
+     * #113421: [25]libgstplay should link to libgstcontrol
+     * #114315: [26][0.6.2] quiet a ladspa g_warning
+     * #111498: [27][0.6.2] infinite loop on truncated ogg file
+     * #112657: [28][0.6.2] cutter plug-in needed updating
+     * #112890: [29][0.6.2] lame timestamp fix
+     * #113018: [30][0.6.2] avimux/avidemux audio/raw mixup
+     * #114134: [31][0.6.2] libgstplay doesn't do error reporting.
+     * #114664:  [32][0.6.2]  play library doesn't check return values of
+       gst_elem
+     * #107967:  [33][PATCH] - Fix for autogen.sh so that args are passed
+       to ./co
+     * #110963: [34][0.6.2] implement refcounting in colorspace
+     * #112595: [35][0.6.2] videoscale backport
+     * #112711:  [36][0.6.2]  [PATCH]  videotestsrc  doesn't ref caps and
+       doesn't ch
+     * #112895: [37][0.6.2] wavenc pad template only accepts 16 bit audio
+     * #113304: [38][0.6.2] flac metadata support
+     * #114158: [39]compile of 0.6.x branch fails in flac
+     * #112829:  [40][0.6.2]  wavenc  is in a different category to other
+       audio enc
+     * #109069: [41][0.6.2] Fix for X window leak in xvideosink plugin
 
 GStreamer Homepage
 
    More  details on these features can be found on the project's website,
-   [2]http://gstreamer.net/.
+   [42]http://gstreamer.net/.
 
 Support and Bugs
 
-   We  use  [3]Gnome's Bugzilla for bug reports and feature requests. The
+   We  use [43]Gnome's Bugzilla for bug reports and feature requests. The
    "product  name"  is  GStreamer  (capital  G).  Please do the following
    before writing a bug report :
 gst-feedback &> feedback 2>&1
@@ -88,7 +122,7 @@ gst-feedback &> feedback 2>&1
 
 Developers
 
-   GStreamer  is  [4]hosted on SourceForge. All code is in CVS and can be
+   GStreamer  is [44]hosted on SourceForge. All code is in CVS and can be
    checked  out  from  there.  Interested developers of the core library,
    plug-ins,  and  applications  should  subscribe to the gstreamer-devel
    list.  If  there  is  sufficient interest we will create more lists as
@@ -101,42 +135,73 @@ Developers
 
 Contributors to this release
 
-  Patches to the core of Gstreamer
+  Patches to the core of GStreamer
 
      * Wim Taymans <wim.taymans(AT)chello.be>
-     * Erik Walthinsen <omega(AT)temple-baptist.com>
      * Thomas Vander Stichele <thomas(AT)apestaart.org>
-     * David I. Lehn <dlehn(AT)vt.edu>
+     * Ronald Bultje <rbultje(AT)ronald.bitfreak.net>
+     * Benjamin Otte <in7y118(AT)public.uni-hamburg.de>
      * David Schleef <ds(AT)schleef.org>
-     * Brian Cameron <brian.cameron(AT)sun.com>
+     * David I. Lehn <dlehn(AT)vt.edu>
+     * Hidetoshi Tajima <hidetoshi.tajima(AT)sun.com>
      * Joshua N Pritikin <vishnu(AT)pobox.com>
+     * Christophe Fergeau <teuf(AT)users.sourceforge.net>
 
   Plugins and Sample Applications
 
      * Julien MOUTTE <jmoutte(AT)electronic-group.com>
-     * Cameron Hutchison <camh+gst(AT)xdna.net>
-     * Ronald Bultje <rbultje(AT)ronald.bitfreak.net>
-     * Steve Baker <stevebaker_org(AT)yahoo.co.uk>
-     * Iain Holmes <iain(AT)prettypeople.org>
+     * Zeeshan Ali Khattak <zak147(AT)yahoo.com>
      * Jérémy Simon <jsimon13(AT)yahoo.fr>
-     * Jan Schmidt <thaytan(AT)mad.scientist.com>
-     * Daniel Fischer <dan(AT)f3c.com>
-     * Martin Schlemmer <azarah(AT)gentoo.org>
-     * Andrew Turner <zombie(AT)4free.co.nz>
-     * Owen Fraser-Green <owen(AT)discobabe.net>
-     * Leif Morgan Johnson <lmjohns3(AT)eos.ncsu.edu>
-     * Benjamin Otte <in7y118(AT)public.uni-hamburg.de>
+     * Ross Burton <r.burton(AT)180sw.com>
+     * Martin Janzen <janzen(AT)pixelmetrix.com>
 
   Misc
 
      * Christian Fredrik Kalager Schaller <Uraeus(AT)gnome.org>
-     * Alp Toker <alp(AT)atoker.com>
-
-   [*]: GStreamer is Hottest Pick in the UK Linux Format #36, out now !
 
 References
 
-   1. http://www.gstreamer.net/status/?category=2
-   2. http://gstreamer.net/
-   3. http://bugzilla.gnome.org/
-   4. http://gstreamer.sf.net/
+   1. http://web.verbum.org/net-rhythmbox/
+   2. http://mail.gnome.org/archives/gnome-announce-list/2003-April/msg00046.html
+   3. http://gstreamer.net/releases/gst-player/0.5.0/
+   4. http://www.hadess.net/totem.php3
+   5. http://www.gstreamer.net/status/?category=2
+   6. http://bugzilla.gnome.org/show_bug.cgi?id=112116
+   7. http://bugzilla.gnome.org/show_bug.cgi?id=114385
+   8. http://bugzilla.gnome.org/show_bug.cgi?id=114529
+   9. http://bugzilla.gnome.org/show_bug.cgi?id=113195
+  10. http://bugzilla.gnome.org/show_bug.cgi?id=114512
+  11. http://bugzilla.gnome.org/show_bug.cgi?id=114668
+  12. http://bugzilla.gnome.org/show_bug.cgi?id=93861
+  13. http://bugzilla.gnome.org/show_bug.cgi?id=112579
+  14. http://bugzilla.gnome.org/show_bug.cgi?id=114130
+  15. http://bugzilla.gnome.org/show_bug.cgi?id=114519
+  16. http://bugzilla.gnome.org/show_bug.cgi?id=110757
+  17. http://bugzilla.gnome.org/show_bug.cgi?id=112607
+  18. http://bugzilla.gnome.org/show_bug.cgi?id=110542
+  19. http://bugzilla.gnome.org/show_bug.cgi?id=112329
+  20. http://bugzilla.gnome.org/show_bug.cgi?id=111632
+  21. http://bugzilla.gnome.org/show_bug.cgi?id=110964
+  22. http://bugzilla.gnome.org/show_bug.cgi?id=111692
+  23. http://bugzilla.gnome.org/show_bug.cgi?id=112608
+  24. http://bugzilla.gnome.org/show_bug.cgi?id=112943
+  25. http://bugzilla.gnome.org/show_bug.cgi?id=113421
+  26. http://bugzilla.gnome.org/show_bug.cgi?id=114315
+  27. http://bugzilla.gnome.org/show_bug.cgi?id=111498
+  28. http://bugzilla.gnome.org/show_bug.cgi?id=112657
+  29. http://bugzilla.gnome.org/show_bug.cgi?id=112890
+  30. http://bugzilla.gnome.org/show_bug.cgi?id=113018
+  31. http://bugzilla.gnome.org/show_bug.cgi?id=114134
+  32. http://bugzilla.gnome.org/show_bug.cgi?id=114664
+  33. http://bugzilla.gnome.org/show_bug.cgi?id=107967
+  34. http://bugzilla.gnome.org/show_bug.cgi?id=110963
+  35. http://bugzilla.gnome.org/show_bug.cgi?id=112595
+  36. http://bugzilla.gnome.org/show_bug.cgi?id=112711
+  37. http://bugzilla.gnome.org/show_bug.cgi?id=112895
+  38. http://bugzilla.gnome.org/show_bug.cgi?id=113304
+  39. http://bugzilla.gnome.org/show_bug.cgi?id=114158
+  40. http://bugzilla.gnome.org/show_bug.cgi?id=112829
+  41. http://bugzilla.gnome.org/show_bug.cgi?id=109069
+  42. http://gstreamer.net/
+  43. http://bugzilla.gnome.org/
+  44. http://gstreamer.sf.net/
