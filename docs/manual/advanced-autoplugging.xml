@@ -587,55 +587,5 @@ type_found (GstElement *typefind, GstCaps* caps)
     that can handle this particular caps structure, or we can also use the
     autoplugger to link this caps structure to, for example, a videosink.
   </para>
-
   </sect1>
-
-  <sect1 id="section-autoplugging-spider">
-    <title>Another approach to autoplugging</title>
-    <para>
-      The autoplug API is interesting, but often impractical. It is static;
-      it cannot deal with dynamic pipelines. An element that will
-      automatically figure out and decode the type is more useful.
-      Enter the spider.
-    </para>
-    <sect2>
-      <title>The spider element</title>
-      <para>
-        The spider element is a generalized autoplugging element. At this point (April 2002), it's
-        the best we've got; it can be inserted anywhere within a pipeline to perform caps
-        conversion, if possible. Consider the following gst-launch line:
-        <programlisting>
-          $ gst-launch filesrc location=my.mp3 ! spider ! osssink
-        </programlisting>
-        The spider will detect the type of the stream, autoplug it to the osssink's caps, and play
-        the pipeline. It's neat.
-      </para>
-    </sect2>
-    <sect2>
-      <title>Spider features</title>
-      <para>
-        <orderedlist>
-          <listitem>
-            <para>
-              Automatically typefinds the incoming stream.
-            </para>
-          </listitem>
-         <listitem>
-            <para>
-              Has request pads on the source side. This means that it can
-              autoplug one source stream into many sink streams. For example,
-              an MPEG1 system stream can have audio as well as video; that
-              pipeline would be represented in gst-launch syntax as
-
-              <programlisting>
-                $ gst-launch filesrc location=my.mpeg1 ! spider ! { queue ! osssink } spider.src_%d!
-                             { queue ! xvideosink }
-              </programlisting>
-            </para>
-          </listitem>
-        </orderedlist>
-      </para>
-    </sect2>
-  </sect1>
-
 </chapter>

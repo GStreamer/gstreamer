@@ -231,6 +231,23 @@ main (gint   argc,
     <!-- example-end decodebin.c --></programlisting>
 
     <para>
+      Decodebin, similar to playbin, supports the following features:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          Can decode an unlimited number of contained streams to decoded
+          output pads.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Is handled as a <classname>GstElement</classname> in all ways,
+          including tag or error forwarding and state handling.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>
       Although decodebin is a good autoplugger, there's a whole lot of
       things that it does not do and is not intended to do:
     </para>
@@ -253,13 +270,40 @@ main (gint   argc,
         </para>
       </listitem>
     </itemizedlist>
+    <para>
+      Decodebin can be easily tested on the commandline, e.g. by using the
+      command <command>gst-launch-0.8 filesrc location=file.ogg ! decodebin
+      ! audioconvert ! audioscale ! alsasink</command>.
+    </para>
   </sect1>
 
   <sect1 id="section-components-spider">
     <title>Spider</title>
 
     <para>
-      Bla
+      Spider is an autoplugger that looks and feels very much like decodebin.
+      On the commandline, you can literally switch between spider and
+      decodebin and it'll mostly just work. Try, for example,
+      <command>gst-launch-0.8 filesrc location=file.ogg ! spider !
+      audioconvert ! audioscale ! alsasink</command>. Although the two may
+      seem very much alike from the outside, they are very different from
+      the inside. Those internal differences are the main reason why spider
+      is currently considered deprecated (along with the fact that it was
+      hard to maintain).
+    </para>
+    <para>
+      As opposed to decodebin, spider does not decode pads and emit signals
+      for each detected stream. Instead, you have to add output sinks to
+      spider by create source request pads and connecting those to sink
+      elements. This means that streams decoded by spider cannot be dynamic.
+      Also, spider uses many loop-based elements internally, which is rather
+      heavy scheduler-wise.
+    </para>
+    <para>
+      Code for using spider would look almost identical to the code of
+      decodebin, and is therefore omitted. Also, featureset and limitations
+      are very much alike, except for the above-mentioned extra limitations
+      for spider with respect to decodebin.
     </para>
   </sect1>
 
