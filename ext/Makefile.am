@@ -430,7 +430,6 @@ DIST_SUBDIRS=\
 	ivorbis \
 	jack \
 	jpeg \
-	kio \
 	ladspa \
 	lame \
 	lcs \
