@@ -34,11 +34,31 @@ G_BEGIN_DECLS
  *
  * Check GError API docs for rationale for naming.
  */
-/* Core errors are anything that can go wrong in or using
- * the core GStreamer library */
+/**
+ * GstCoreError:
+ * @GST_CORE_ERROR_FAILED: a general error which doesn't fit in any other
+ * category.  Make sure you add a custom message to the error call.
+ * @GST_CORE_ERROR_TOO_LAZY: do not use this except as a placeholder for
+ * deciding where to go while developing code.
+ * @GST_CORE_ERROR_NOT_IMPLEMENTED: use this when you do not want to implement
+ * this functionality yet.
+ * @GST_CORE_ERROR_STATE_CHANGE: used for state change errors.
+ * @GST_CORE_ERROR_PAD: used for pad-related errors.
+ * @GST_CORE_ERROR_THREAD: used for thread-related errors.
+ * @GST_CORE_ERROR_SCHEDULER: used for scheduler-related errors.
+ * @GST_CORE_ERROR_NEGOTIATION: used for negotiation-related errors.
+ * @GST_CORE_ERROR_EVENT: used for event-related errors.
+ * @GST_CORE_ERROR_SEEK: used for seek-related errors.
+ * @GST_CORE_ERROR_CAPS: used for caps-related errors.
+ * @GST_CORE_ERROR_TAG: used for negotiation-related errors.
+ * @GST_CORE_ERROR_NUM_ERRORS: the number of core error types.
+ *
+ * Core errors are errors inside the core GStreamer library.
+ * the core GStreamer library
+ */
 /* FIXME: should we divide in numerical blocks so we can easily add
           for example PAD errors later ? */
-    typedef enum
+typedef enum
 {
   GST_CORE_ERROR_FAILED = 1,
   GST_CORE_ERROR_TOO_LAZY,
@@ -53,11 +73,23 @@ G_BEGIN_DECLS
   GST_CORE_ERROR_CAPS,
   GST_CORE_ERROR_TAG,
   GST_CORE_ERROR_NUM_ERRORS
-}
-GstCoreError;
+} GstCoreError;
 
-/* Library errors are for errors from the library being used by elements
-   initializing, closing, ... */
+/**
+ * GstLibraryError:
+ * @GST_LIBRARY_ERROR_FAILED: a general error which doesn't fit in any other
+ * category.  Make sure you add a custom message to the error call.
+ * @GST_LIBRARY_ERROR_TOO_LAZY: do not use this except as a placeholder for
+ * deciding where to go while developing code.
+ * @GST_LIBRARY_ERROR_INIT: used when the library could not be opened.
+ * @GST_LIBRARY_ERROR_SHUTDOWN: used when the library could not be closed.
+ * @GST_LIBRARY_ERROR_SETTINGS: used when the library doesn't accept settings.
+ * @GST_LIBRARY_ERROR_ENCODE: used when the library generated an encoding error.
+ * @GST_LIBRARY_ERROR_NUM_ERRORS: the number of library error types.
+ *
+ * Library errors are for errors from the library being used by elements
+ * (initializing, finalizing, settings, ...)
+ */
 typedef enum
 {
   GST_LIBRARY_ERROR_FAILED = 1,
@@ -67,12 +99,32 @@ typedef enum
   GST_LIBRARY_ERROR_SETTINGS,
   GST_LIBRARY_ERROR_ENCODE,
   GST_LIBRARY_ERROR_NUM_ERRORS
-}
-GstLibraryError;
+} GstLibraryError;
 
-/* Resource errors are for anything external used by an element:
-   memory, files, network connections, process space, ...
-   They're typically used by source and sink elements */
+/**
+ * GstResourceError:
+ * @GST_RESOURCE_ERROR_FAILED: a general error which doesn't fit in any other
+ * category.  Make sure you add a custom message to the error call.
+ * @GST_RESOURCE_ERROR_TOO_LAZY: do not use this except as a placeholder for
+ * deciding where to go while developing code.
+ * @GST_RESOURCE_ERROR_NOT_FOUND: used when the resource could not be found.
+ * @GST_RESOURCE_ERROR_BUSY: used when resource is busy.
+ * @GST_RESOURCE_ERROR_OPEN_READ: used when resource fails to open for reading.
+ * @GST_RESOURCE_ERROR_OPEN_WRITE: used when resource fails to open for writing.
+ * @GST_RESOURCE_ERROR_OPEN_READ_WRITE: used when resource cannot be opened for
+ * both reading and writing, or either (but unspecified which).
+ * @GST_RESOURCE_ERROR_CLOSE: used when the resource can't be closed.
+ * @GST_RESOURCE_ERROR_READ: used when the resource can't be read from.
+ * @GST_RESOURCE_ERROR_WRITE: used when the resource can't be written to.
+ * @GST_RESOURCE_ERROR_SEEK: used when a seek on the resource fails.
+ * @GST_RESOURCE_ERROR_SYNC: used when a synchronize on the resource fails.
+ * @GST_RESOURCE_ERROR_SETTINGS: used when settings can't be manipulated on
+ * @GST_RESOURCE_ERROR_NUM_ERRORS: the number of library error types.
+ *
+ * Resource errors are for any resource used by an element:
+ * memory, files, network connections, process space, ...
+ * They're typically used by source and sink elements.
+ */
 typedef enum
 {
   GST_RESOURCE_ERROR_FAILED = 1,
@@ -89,12 +141,34 @@ typedef enum
   GST_RESOURCE_ERROR_SYNC,
   GST_RESOURCE_ERROR_SETTINGS,
   GST_RESOURCE_ERROR_NUM_ERRORS
-}
-GstResourceError;
+} GstResourceError;
 
-/* Stream errors are for anything related to the stream being processed:
-   format errors, media type errors, ...
-   They're typically used by decoders, demuxers, converters, ... */
+/**
+ * GstStreamError:
+ * @GST_STREAM_ERROR_FAILED: a general error which doesn't fit in any other
+ * category.  Make sure you add a custom message to the error call.
+ * @GST_STREAM_ERROR_TOO_LAZY: do not use this except as a placeholder for
+ * deciding where to go while developing code.
+ * @GST_STREAM_ERROR_NOT_IMPLEMENTED: use this when you do not want to implement
+ * this functionality yet.
+ * @GST_STREAM_ERROR_TYPE_NOT_FOUND: used when the element doesn't know the
+ * stream's type.
+ * @GST_STREAM_ERROR_WRONG_TYPE: used when the element doesn't handle this type
+ * of stream.
+ * @GST_STREAM_ERROR_CODEC_NOT_FOUND: used when there's no codec to handle the
+ * stream's type.
+ * @GST_STREAM_ERROR_DECODE: used when decoding fails.
+ * @GST_STREAM_ERROR_ENCODE: used when encoding fails.
+ * @GST_STREAM_ERROR_DEMUX: used when demuxing fails.
+ * @GST_STREAM_ERROR_MUX: used when muxing fails.
+ * @GST_STREAM_ERROR_FORMAT: used when the stream is of the wrong format
+ * (for example, wrong caps).
+ * @GST_STREAM_ERROR_NUM_ERRORS: the number of library error types.
+ *
+ * Stream errors are for anything related to the stream being processed:
+ * format errors, media type errors, ...
+ * They're typically used by decoders, demuxers, converters, ...
+ */
 typedef enum
 {
   GST_STREAM_ERROR_FAILED = 1,
@@ -102,7 +176,6 @@ typedef enum
   GST_STREAM_ERROR_NOT_IMPLEMENTED,
   GST_STREAM_ERROR_TYPE_NOT_FOUND,
   GST_STREAM_ERROR_WRONG_TYPE,
-  GST_STREAM_ERROR_INVALID_DATA,
   GST_STREAM_ERROR_CODEC_NOT_FOUND,
   GST_STREAM_ERROR_DECODE,
   GST_STREAM_ERROR_ENCODE,
@@ -110,8 +183,7 @@ typedef enum
   GST_STREAM_ERROR_MUX,
   GST_STREAM_ERROR_FORMAT,
   GST_STREAM_ERROR_NUM_ERRORS
-}
-GstStreamError;
+} GstStreamError;
 
 /* This should go away once we convinced glib people to register GError */
 #define GST_TYPE_G_ERROR    (gst_g_error_get_type ())

@@ -1,3 +1,10 @@
+2005-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gsterror.c:
+	* gst/gsterror.h:
+	  merge docs from HEAD
+	  remove unused and unneeded error to combat inflation
+
 2005-02-11  Andy Wingo  <wingo@pobox.com>
 
 	* check/gst/gstcaps.c: New test suite. Only one test at the moment

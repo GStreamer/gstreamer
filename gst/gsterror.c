@@ -151,8 +151,6 @@ _gst_stream_errors_init (void)
   TABLE (t, STREAM, TYPE_NOT_FOUND, N_("Could not determine type of stream."));
   TABLE (t, STREAM, WRONG_TYPE,
       N_("The stream is of a different type than handled by this element."));
-  TABLE (t, STREAM, INVALID_DATA,
-      N_("The stream contained invalid data and cannot be processed."));
   TABLE (t, STREAM, CODEC_NOT_FOUND,
       N_("There is no codec present that can handle the stream's type."));
   TABLE (t, STREAM, DECODE, N_("Could not decode stream."));
