@@ -561,9 +561,7 @@ gst_swfdec_change_state (GstElement * element)
       break;
   }
 
-  GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 }
 
 static void
