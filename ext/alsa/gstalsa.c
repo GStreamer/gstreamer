@@ -1100,9 +1100,6 @@ gst_alsa_change_state (GstElement * element)
         return GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_PAUSED:
-      if (!(GST_FLAG_IS_SET (element, GST_ALSA_RUNNING) ||
-              gst_alsa_start_audio (this)))
-        return GST_STATE_FAILURE;
       this->played = 0;
       this->captured = 0;
       break;
@@ -1113,8 +1110,14 @@ gst_alsa_change_state (GstElement * element)
               snd_strerror (err));
           return GST_STATE_FAILURE;
         }
-      } else if (!(GST_FLAG_IS_SET (element, GST_ALSA_RUNNING) ||
-              gst_alsa_start_audio (this))) {
+      }
+      /* If we were already negotiated, but we are not running, then
+       * we stopped (probably because we paused), so re-start. If
+       * there's no format, we didn't negotiate yet so don't do
+       * anything because ALSA will crash (#151288, #153227, etc.). */
+      else if (this->format != NULL &&
+          !GST_FLAG_IS_SET (element, GST_ALSA_RUNNING) &&
+          !gst_alsa_start_audio (this)) {
         return GST_STATE_FAILURE;
       }
       gst_alsa_clock_start (this->clock);
