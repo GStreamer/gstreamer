@@ -32,6 +32,7 @@ contain the definitive tarball for that version.
 
 TODO :
   - Decide on the next version number (major, minor or micro upgrade ?)
+  - Get a fresh copy to do the necessary tests on
   - Create branch; with 0.3.3 as an example, tag is BRANCH-RELEASE-0_3_3
       cvs tag BRANCH-RELEASE-0_3_3-ROOT
       cvs tag -b BRANCH-RELEASE-0_3_3
@@ -55,10 +56,6 @@ TODO :
   - while (IS_PRERELEASE)
     {
       - increase the nano number (starting with 2)
-      - FIXME: do the devhelp stuff
-        go into docs/devhelp, rm *.devhelp, make devhelp
-        check if ok, and commit to cvs
-
       - check out a fresh anonymous copy
         cvs -d:pserver:anonymous@cvs.gstreamer.sf.net:/cvsroot/gstreamer \
             co -rBRANCH-RELEASE-0_3_3 gstreamer
@@ -94,7 +91,7 @@ TODO :
   - FIXME: run a build and generate devhelp stuff
   - tag tree
     - policy is at http://gstreamer.net/dev/cvs.php
-    - decide on a tag name : RELEASE_(VERSION)_(CODE)
+    - decide on a tag name : RELEASE-(VERSION)-(CODE)
     - tag; for example for 0.3.3 :
            cvs tag RELEASE-0_3_3-GUADECBYFOOT
   - add tag codename in www/dev/cvs.php
