@@ -523,6 +523,7 @@ static gboolean
 gst_queue_handle_src_event (GstPad *pad, GstEvent *event)
 {
   GstQueue *queue;
+  gboolean res = TRUE;
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
@@ -534,19 +535,23 @@ gst_queue_handle_src_event (GstPad *pad, GstEvent *event)
     return FALSE;
   }
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH:
-      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "FLUSH event, flushing queue\n");
-      gst_queue_locked_flush (queue);
-      break;
-    case GST_EVENT_SEEK:
-      gst_queue_locked_flush (queue);
-    default:
-      gst_pad_event_default (pad, event); 
-      break;
+  res = gst_pad_event_default (pad, event); 
+  if (res) { 
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_FLUSH:
+        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "FLUSH event, flushing queue\n");
+        gst_queue_locked_flush (queue);
+        break;
+      case GST_EVENT_SEEK:
+	if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH)
+          gst_queue_locked_flush (queue);
+      default:
+        break;
+    }
   }
   g_mutex_unlock (queue->qlock);
-  return TRUE;
+
+  return res;
 }
 
 static gboolean
