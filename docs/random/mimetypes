@@ -110,9 +110,9 @@ Container formats
     Formatter: wavenc
 
 6 - RealMedia (Real)
-    MIME type: video/x-pn-realvideo
+    MIME type: application/vnd.rn-realmedia
     Properties: 'systemstream' = TRUE (BOOLEAN)
-    Parser: rmdemux
+    Parser: rmdemux, ffdemux_rm
     Formatter:
 
 7 - DV (Digital Video)
@@ -245,9 +245,9 @@ framerate = 0 - MAXFLOAT (FLOAT)
 7 - RealVideo (Real)
     MIME type: video/x-pn-realvideo
     Properties: systemstream = FALSE (BOOLEAN)
-    Known fourccs: RV10, RV20, RV30
-    Encoder:
-    Decoder:
+    Known fourccs: RV10, RV20, RV30, RV40
+    Encoder: ffenc_rv10
+    Decoder: ffdec_rv10, ffdec_rv20
 
 8 - Digital Video (DV)
     MIME type: video/x-dv
@@ -421,8 +421,9 @@ channels = 1 - MAXINT (INT, number of audio channels)
 11 - RealAudio (Real)
      MIME type: audio/x-pn-realaudio
      Properties: bitrate = 14400/28800 (INT)
+     Known fourccs: .ra4, .ra5
      Encoder:
-     Decoder:
+     Decoder: ffdec_real_144 / ffdec_real_288
 
 12 - DV Audio
      MIME type: audio/x-dv
@@ -439,6 +440,8 @@ channels = 1 - MAXINT (INT, number of audio channels)
 14 - Speex audio
      MIME type: audio/x-speex
      Properties:
+     Encoder: speexenc
+     Decoder: speexdec
 
 15 - QDM2
      MIME type: audio/x-qdm2
