@@ -3,8 +3,11 @@
 /* threadb.c
  * this tests if we can make a GstThread, put some stuff in it,
  * dispatch it, and let it run from a main gst loop
+ * we repeat the main loop a hundred times to test thread reuse
+ * underneath GstThread
  */
 
+gboolean running = FALSE;
 
 static void
 construct_pipeline (GstElement *pipeline) 
@@ -28,7 +31,6 @@ construct_pipeline (GstElement *pipeline)
 void
 state_changed (GstElement *el, gint arg1, gint arg2, gpointer user_data)
 {
-  static gboolean running = FALSE;
   GstElementState state = gst_element_get_state (el);
   
   g_print ("element %s has changed state to %s\n", 
@@ -42,24 +44,35 @@ state_changed (GstElement *el, gint arg1, gint arg2, gpointer user_data)
 int
 main (gint argc, gchar *argv[])
 {
+  int runs = 100;
+  int i;
+  gulong id;
   GstElement *thread;
   
   gst_init (&argc, &argv);
 
-  thread = gst_thread_new ("main_thread");
-  g_assert (thread);
+  for (i = 0; i < runs; ++i)
+  {
+    thread = gst_thread_new ("main_thread");
+    g_assert (thread);
 
-  /* connect state change signal */
-  g_signal_connect (G_OBJECT (thread), "state_change", 
-		    G_CALLBACK (state_changed), NULL);
-  construct_pipeline (thread);
+    /* connect state change signal */
+    id = g_signal_connect (G_OBJECT (thread), "state_change", 
+		           G_CALLBACK (state_changed), NULL);
+    construct_pipeline (thread);
 
-  g_print ("Setting thread to play\n");
-  gst_element_set_state (thread, GST_STATE_PLAYING);
+    g_print ("Setting thread to play\n");
+    gst_element_set_state (thread, GST_STATE_PLAYING);
 
-  g_print ("Going into the main GStreamer loop\n");
-  gst_main (); 
-  g_print ("Coming out of the main GStreamer loop\n");
+    g_print ("Going into the main GStreamer loop\n");
+    gst_main (); 
+    g_print ("Coming out of the main GStreamer loop\n");
+    g_signal_handler_disconnect (G_OBJECT (thread), id);
+    gst_element_set_state (thread, GST_STATE_NULL);
+    g_print ("Unreffing thread\n");
+    g_object_unref (G_OBJECT (thread));
+    running = FALSE;
+  }
 
   return 0;
 }
