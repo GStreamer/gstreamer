@@ -21,9 +21,9 @@
 #include <string.h>
 #include <gstwavenc.h>
 
-static void gst_wavenc_class_init (GstWavEncClass *klass);
-static void gst_wavenc_init (GstWavEnc *wavenc);
-static void gst_wavenc_chain (GstPad *pad, GstBuffer *buf);
+static void 	gst_wavenc_class_init 	(GstWavEncClass *klass);
+static void 	gst_wavenc_init 	(GstWavEnc *wavenc);
+static void 	gst_wavenc_chain 	(GstPad *pad, GstBuffer *buf);
 
 #define WAVE_FORMAT_PCM 0x0001
 
@@ -36,30 +36,30 @@ static void gst_wavenc_chain (GstPad *pad, GstBuffer *buf);
 *((buf)+1) = (unsigned char)((x>>8)&0xff);
 
 struct riff_struct {
-  unsigned char id[4]; /* RIFF */
-  unsigned int len;
-  unsigned char wav_id[4]; /* WAVE */
+  guint8 	id[4]; 		/* RIFF */
+  guint32 	len;
+  guint8	wav_id[4]; 	/* WAVE */
 };
 
 struct chunk_struct {
-  unsigned char id[4];
-  unsigned int len;
+  guint8 	id[4];
+  guint32  	len;
 };
 
 struct common_struct {
-  unsigned short wFormatTag;
-  unsigned short wChannels;
-  unsigned int dwSamplesPerSec;
-  unsigned int dwAvgBytesPerSec;
-  unsigned short wBlockAlign;
-  unsigned short wBitsPerSample; /* Only for PCM */
+  guint16 	wFormatTag;
+  guint16 	wChannels;
+  guint32	dwSamplesPerSec;
+  guint32	dwAvgBytesPerSec;
+  guint16 	wBlockAlign;
+  guint16 	wBitsPerSample; 	/* Only for PCM */
 };
 
 struct wave_header {
-  struct riff_struct riff;
-  struct chunk_struct format;
-  struct common_struct common;
-  struct chunk_struct data;
+  struct riff_struct 	riff;
+  struct chunk_struct 	format;
+  struct common_struct 	common;
+  struct chunk_struct 	data;
 };
 
 static GstElementDetails gst_wavenc_details = {
@@ -74,50 +74,53 @@ static GstElementDetails gst_wavenc_details = {
 
 static GstPadTemplate *srctemplate, *sinktemplate;
 
-static GstPadTemplate *
-sink_factory (void)
-{
-  return gst_pad_template_new ("wavenc_sink",
-			       GST_PAD_SINK,
-			       GST_PAD_ALWAYS,
-			       gst_caps_new ("wavenc_raw",
-					     "audio/raw",
-					     gst_props_new ("format", GST_PROPS_STRING ("int"),
-							    "law", GST_PROPS_INT (0),
-							    "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-							    "signed", GST_PROPS_BOOLEAN (TRUE),
-							    "width", GST_PROPS_INT (16),
-							    "depth", GST_PROPS_INT (16),
-							    "rate", GST_PROPS_INT_RANGE (8000, 48000),
-							    "channels", GST_PROPS_INT_RANGE (1, 2),
-							    NULL)),
-			       NULL);
-}
+GST_PAD_TEMPLATE_FACTORY (sink_factory,
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "wavenc_raw",
+    "audio/raw",
+      "format",   GST_PROPS_STRING ("int"),
+      "law",         GST_PROPS_INT (0),
+      "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
+      "signed",      GST_PROPS_BOOLEAN (TRUE),
+      "width",       GST_PROPS_INT (16),
+      "depth",       GST_PROPS_INT (16),
+      "rate",        GST_PROPS_INT_RANGE (8000, 48000),
+      "channels",    GST_PROPS_INT_RANGE (1, 2)
+  )
+)
 
-static GstPadTemplate *
-src_factory (void)
-{
-  return gst_pad_template_new ("wavenc_src",
-			       GST_PAD_SRC,
-			       GST_PAD_ALWAYS,
-			       gst_caps_new ("wavenc_wav",
-					     "audio/x-wav",
-					     NULL),
-			       NULL);
-}
+GST_PAD_TEMPLATE_FACTORY (src_factory,
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "wavenc_wav",
+    "audio/x-wav",
+    NULL
+  )
+)
 
 static GstElementClass *parent_class = NULL;
 
-GType
+static GType
 gst_wavenc_get_type (void)
 {
   static GType type = 0;
 
   if (type == 0) {
     static const GTypeInfo info = {
-      sizeof (GstWavEncClass), NULL, NULL,
-      (GClassInitFunc) gst_wavenc_class_init, NULL, NULL,
-      sizeof (GstWavEnc), 0, (GInstanceInitFunc) gst_wavenc_init
+      sizeof (GstWavEncClass), 
+      NULL, 
+      NULL,
+      (GClassInitFunc) gst_wavenc_class_init, 
+      NULL, 
+      NULL,
+      sizeof (GstWavEnc), 
+      0, 
+      (GInstanceInitFunc) gst_wavenc_init
     };
 
     type = g_type_register_static (GST_TYPE_ELEMENT, "GstWavEnc", &info, 0);
@@ -132,13 +135,13 @@ gst_wavenc_change_state (GstElement *element)
   GstWavEnc *wavenc = GST_WAVENC (element);
   
   switch (GST_STATE_TRANSITION (element)) {
-  case GST_STATE_NULL_TO_READY:
-  case GST_STATE_PAUSED_TO_READY:
-	  wavenc->setup = FALSE;
-    break;
-
-  default:
-    break;
+    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_READY_TO_PAUSED:
+      wavenc->setup = FALSE;
+      wavenc->flush_header = TRUE;
+      break;
+    default:
+      break;
   }
 
   if (parent_class->change_state) {
@@ -163,7 +166,7 @@ static gboolean
 gst_wavenc_setup (GstWavEnc *wavenc)
 {
   struct wave_header wave;
-  int size = 0x7fffffff; /* Use a bogus size initially */
+  gint size = 0x7fffffff; /* Use a bogus size initially */
 
   wave.common.wChannels = wavenc->channels;
   wave.common.wBitsPerSample = wavenc->bits;
@@ -256,41 +259,39 @@ gst_wavenc_chain (GstPad *pad,
     GstEvent *event = GST_EVENT (buf);
 
     switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      /* Should do something... */
-      gst_event_unref (event);
+      case GST_EVENT_EOS:
+        /* Should do something... */
+        gst_event_unref (event);
 
-      gst_pad_push (wavenc->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
-      gst_element_set_eos (GST_ELEMENT (wavenc));
-      break;
-
-    default:
-      gst_pad_event_default (pad, event);
-      return;
+        if (GST_PAD_IS_USABLE (wavenc->srcpad))
+          gst_pad_push (wavenc->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+        gst_element_set_eos (GST_ELEMENT (wavenc));
+        break;
+      default:
+        gst_pad_event_default (pad, event);
+        return;
     }
-  } else {
+  } 
+  else {
     if (!wavenc->setup) {
       gst_buffer_unref (buf);
       gst_element_error (GST_ELEMENT (wavenc), "encoder not initialised (input is not audio?)");
       return;
     }
 
-    if (wavenc->flush_header) {
-      GstBuffer *outbuf;
+    if (GST_PAD_IS_USABLE (wavenc->srcpad)) {
+      if (wavenc->flush_header) {
+        GstBuffer *outbuf;
 
-      outbuf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
-      memcpy (GST_BUFFER_DATA (outbuf), wavenc->header, WAV_HEADER_LEN);
+        outbuf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
+        memcpy (GST_BUFFER_DATA (outbuf), wavenc->header, WAV_HEADER_LEN);
 
-      if (GST_PAD_IS_USABLE (wavenc->srcpad)) {
 	gst_pad_push (wavenc->srcpad, outbuf);
-      } else {
-	gst_buffer_unref (outbuf);
+        wavenc->flush_header = FALSE;
       }
-
-      wavenc->flush_header = FALSE;
-    }
     
-    gst_pad_push (wavenc->srcpad, buf);
+      gst_pad_push (wavenc->srcpad, buf);
+    }
   }
 }
 
