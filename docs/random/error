@@ -24,8 +24,8 @@ Some notes on the error handling introduced after 0.7.3
   - message is either NULL (to signal the standard error message for the
     given domain and code), or a printf-like set with the format being
     marked for translation.
-    The string should start with a capital and not end in a period
-    (FIXME: this is something we may want to change).
+    The string should start with a capital and end in a period so it forms
+    a complete sentence.
     The string can/should be shown to the user of an application.
   - debug is either NULL or a non-translated debug string, which can be used
     to diagnose errors after they've happened.

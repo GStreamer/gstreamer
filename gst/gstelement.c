@@ -236,7 +236,7 @@ gst_element_default_error (GObject *object, GstObject *source, GError *error, gc
 {
   gchar *name = gst_object_get_path_string (source);
 
-  g_print (_("ERROR: from element %s: %s.\n"), name, error->message);
+  g_print (_("ERROR: from element %s: %s\n"), name, error->message);
   if (debug)
     g_print (_("Additional debug info:\n%s\n"), debug);
 
