@@ -97,6 +97,7 @@ typedef struct {
 
   gboolean caps_sent;
   gboolean streamheader_sent;
+  gboolean need_keyunit;
 
   /* stats */
   guint64 bytes_sent;
@@ -142,6 +143,7 @@ struct _GstMultiFdSink {
   gint units_soft_max;	/* max units a client can lag before recovery starts */
   GstRecoverPolicy recover_policy;
   GstClockTime timeout;	/* max amount of nanoseconds to remain idle */
+  gboolean sync_clients;/* sync clients to keyframe */
 
   /* stats */
   gint buffers_queued;	/* number of queued buffers */

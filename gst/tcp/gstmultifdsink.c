@@ -94,6 +94,7 @@ enum
 #define DEFAULT_UNITS_SOFT_MAX		-1
 #define DEFAULT_RECOVER_POLICY		 GST_RECOVER_POLICY_NONE
 #define DEFAULT_TIMEOUT			 0
+#define DEFAULT_SYNC_CLIENTS		 FALSE
 
 enum
 {
@@ -113,6 +114,7 @@ enum
 
   ARG_RECOVER_POLICY,
   ARG_TIMEOUT,
+  ARG_SYNC_CLIENTS,
   ARG_BYTES_TO_SERVE,
   ARG_BYTES_SERVED,
 };
@@ -303,7 +305,11 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
           "Maximum inactivity timeout in nanoseconds for a client (0 = no limit)",
-          0, G_MAXUINT64, DEFAULT_TIMEOUT, G_PARAM_READABLE));
+          0, G_MAXUINT64, DEFAULT_TIMEOUT, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC_CLIENTS,
+      g_param_spec_boolean ("sync-clients", "Sync clients",
+          "Sync clients to a keyframe",
+          DEFAULT_SYNC_CLIENTS, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BYTES_TO_SERVE,
       g_param_spec_uint64 ("bytes-to-serve", "Bytes to serve",
           "Number of bytes received to serve to clients", 0, G_MAXUINT64, 0,
@@ -377,6 +383,7 @@ gst_multifdsink_init (GstMultiFdSink * this)
   this->recover_policy = DEFAULT_RECOVER_POLICY;
 
   this->timeout = DEFAULT_TIMEOUT;
+  this->sync_clients = DEFAULT_SYNC_CLIENTS;
 }
 
 void
@@ -397,6 +404,7 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
   client->bytes_sent = 0;
   client->dropped_buffers = 0;
   client->avg_queue_size = 0;
+  client->need_keyunit = sink->sync_clients;
 
   /* update start time */
   g_get_current_time (&now);
@@ -708,6 +716,14 @@ static gboolean
 gst_multifdsink_client_queue_buffer (GstMultiFdSink * sink,
     GstTCPClient * client, GstBuffer * buffer)
 {
+  if (client->need_keyunit) {
+    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DELTA_UNIT)) {
+      return TRUE;
+    } else if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_IN_CAPS)) {
+      client->need_keyunit = FALSE;
+    }
+  }
+
   if (sink->protocol == GST_TCP_PROTOCOL_TYPE_GDP) {
     guint8 *header;
     guint len;
@@ -1270,6 +1286,9 @@ gst_multifdsink_set_property (GObject * object, guint prop_id,
     case ARG_TIMEOUT:
       multifdsink->timeout = g_value_get_uint64 (value);
       break;
+    case ARG_SYNC_CLIENTS:
+      multifdsink->sync_clients = g_value_get_boolean (value);
+      break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1322,6 +1341,9 @@ gst_multifdsink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_TIMEOUT:
       g_value_set_uint64 (value, multifdsink->timeout);
+      break;
+    case ARG_SYNC_CLIENTS:
+      g_value_set_boolean (value, multifdsink->sync_clients);
       break;
     case ARG_BYTES_TO_SERVE:
       g_value_set_uint64 (value, multifdsink->bytes_to_serve);
