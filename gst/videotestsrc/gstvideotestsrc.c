@@ -52,6 +52,7 @@ enum
   ARG_0,
   ARG_TYPE,
   ARG_SYNC,
+  ARG_NUM_BUFFERS,
   /* FILL ME */
 };
 
@@ -162,6 +163,10 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Synchronize to clock", TRUE,
           G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_BUFFERS,
+      g_param_spec_int ("num-buffers", "num-buffers",
+          "Number of buffers to output before sending EOS", -1, G_MAXINT,
+          0, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -263,6 +268,7 @@ gst_videotestsrc_change_state (GstElement * element)
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
+      videotestsrc->num_buffers_left = videotestsrc->num_buffers;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -352,6 +358,8 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
 
   gst_videotestsrc_set_pattern (videotestsrc, GST_VIDEOTESTSRC_SMPTE);
 
+  videotestsrc->num_buffers = -1;
+  videotestsrc->num_buffers_left = -1;
   videotestsrc->sync = TRUE;
 }
 
@@ -447,6 +455,14 @@ gst_videotestsrc_get (GstPad * pad)
   }
   GST_BUFFER_DURATION (buf) = GST_SECOND / (double) videotestsrc->rate;
 
+  if (videotestsrc->num_buffers_left == 0) {
+    gst_element_set_eos (GST_ELEMENT (videotestsrc));
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+  } else {
+    if (videotestsrc->num_buffers_left > 0)
+      videotestsrc->num_buffers_left--;
+  }
+
   return GST_DATA (buf);
 }
 
@@ -489,6 +505,9 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id,
     case ARG_SYNC:
       src->sync = g_value_get_boolean (value);
       break;
+    case ARG_NUM_BUFFERS:
+      src->num_buffers = g_value_get_int (value);
+      break;
     default:
       break;
   }
@@ -510,6 +529,9 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_SYNC:
       g_value_set_boolean (value, src->sync);
+      break;
+    case ARG_NUM_BUFFERS:
+      g_value_set_int (value, src->num_buffers);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

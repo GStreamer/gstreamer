@@ -68,6 +68,7 @@ struct _GstVideotestsrc {
   gdouble rate;
   int type;
   GstClock *clock;
+  gint num_buffers, num_buffers_left;
 
   void (*make_image)(GstVideotestsrc *v, unsigned char *dest, int w, int h);
 };
