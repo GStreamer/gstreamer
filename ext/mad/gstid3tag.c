@@ -117,7 +117,7 @@ GST_STATIC_PAD_TEMPLATE (
   GST_PAD_SRC,
   /* FIXME: for spider - GST_PAD_ALWAYS, */
   GST_PAD_SOMETIMES,
-  GST_STATIC_CAPS ("application/x-id3; application/x-gst-tags")
+  GST_STATIC_CAPS ("ANY")
 );
 
 static GstStaticPadTemplate id3_tag_sink_template_factory =
@@ -153,6 +153,8 @@ static gboolean		gst_id3_tag_src_query		(GstPad *		pad,
 
 static void		gst_id3_tag_chain		(GstPad *		pad,
 							 GstData *		data);
+static GstPadLinkReturn	gst_id3_tag_src_link		(GstPad *		pad,
+							 const GstCaps *	caps);
 
 static GstElementStateReturn gst_id3_tag_change_state	(GstElement *		element);
 
@@ -247,6 +249,7 @@ gst_id3_tag_get_caps (GstPad *pad)
 static void
 gst_id3_tag_add_src_pad (GstID3Tag *tag)
 {
+  g_assert (tag->srcpad == NULL);
   tag->srcpad = gst_pad_new_from_template (gst_static_pad_template_get (
         &id3_tag_src_template_factory), "src");
   gst_pad_set_event_function (tag->srcpad, GST_DEBUG_FUNCPTR (gst_id3_tag_src_event));
@@ -254,6 +257,7 @@ gst_id3_tag_add_src_pad (GstID3Tag *tag)
   gst_pad_set_query_function (tag->srcpad, GST_DEBUG_FUNCPTR (gst_id3_tag_src_query));
   gst_pad_set_query_type_function (tag->srcpad, GST_DEBUG_FUNCPTR (gst_id3_tag_get_query_types));
   gst_pad_set_getcaps_function (tag->srcpad, GST_DEBUG_FUNCPTR (gst_id3_tag_get_caps));
+  gst_pad_set_link_function (tag->srcpad, GST_DEBUG_FUNCPTR (gst_id3_tag_src_link));
   gst_element_add_pad (GST_ELEMENT (tag), tag->srcpad);
 }
 static void
@@ -742,8 +746,6 @@ gst_id3_tag_do_typefind (GstID3Tag *tag, GstBuffer *buffer)
 static gboolean
 gst_id3_tag_do_caps_nego (GstID3Tag *tag, GstBuffer *buffer)
 {
-  GstCaps *caps;
-
   if (buffer != NULL) {
     g_assert (tag->found_caps == NULL);
     tag->found_caps = gst_id3_tag_do_typefind (tag, buffer);
@@ -751,41 +753,36 @@ gst_id3_tag_do_caps_nego (GstID3Tag *tag, GstBuffer *buffer)
       return FALSE;
     } 
   }
-	
   if (!tag->srcpad)
     gst_id3_tag_add_src_pad (tag);
+  return gst_pad_renegotiate (tag->srcpad) != GST_PAD_LINK_REFUSED;
+}
 
-  do {
-    caps = gst_caps_new_simple ("application/x-id3", NULL);
-    if (gst_pad_try_set_caps (tag->srcpad, caps) != GST_PAD_LINK_REFUSED) {
-      tag->parse_mode = GST_ID3_TAG_PARSE_WRITE;
-      GST_LOG_OBJECT (tag, "normal operation, using application/x-id3 output");
-    } else {
-      caps = gst_caps_new_simple ("application/x-gst-tags", NULL);
-      if (gst_pad_try_set_caps (tag->srcpad, caps) != GST_PAD_LINK_REFUSED) {
-	tag->parse_mode = GST_ID3_TAG_PARSE_TAG;
-	GST_LOG_OBJECT (tag, "fast operation, just outputting tags");
-      } else {
-	g_assert (tag->found_caps);
-	if (gst_pad_try_set_caps (tag->srcpad, tag->found_caps) != GST_PAD_LINK_REFUSED) {
-	  tag->parse_mode = GST_ID3_TAG_PARSE_PARSE;
-	  GST_LOG_OBJECT (tag, "parsing operation, extracting tags"); 
-	} else {
-	  caps = gst_caps_from_string ("application/x-id3; "
-              "application/x-gst-tags");
-	  gst_caps_append (caps, tag->found_caps);
-	  if (gst_pad_recover_caps_error (tag->srcpad, caps)) {
-	    tag->parse_mode = GST_ID3_TAG_PARSE_UNKNOWN;
-	    continue;
-	  } else {
-	    return FALSE;
-	  }
-	}
-      }
-    }
-  } while (FALSE);
+static GstPadLinkReturn
+gst_id3_tag_src_link (GstPad *pad, const GstCaps *caps)
+{
+  GstID3Tag *tag;
+  const gchar *mimetype;
+
+  tag = GST_ID3_TAG (gst_pad_get_parent (pad));
+
+  if (!tag->found_caps)
+    return GST_PAD_LINK_DELAYED;
   
-  return TRUE;
+  mimetype = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+
+  if (strcmp (mimetype, "application/x-id3") == 0) {
+    tag->parse_mode = GST_ID3_TAG_PARSE_WRITE;
+    GST_LOG_OBJECT (tag, "normal operation, using application/x-id3 output");
+  } else if (strcmp (mimetype, "application/x-gst-tags") == 0) {
+    tag->parse_mode = GST_ID3_TAG_PARSE_TAG;
+    GST_LOG_OBJECT (tag, "fast operation, just outputting tags");
+  } else {
+    tag->parse_mode = GST_ID3_TAG_PARSE_PARSE;
+    GST_LOG_OBJECT (tag, "parsing operation, extracting tags"); 
+  }
+
+  return GST_PAD_LINK_OK;
 }
 static void
 gst_id3_tag_send_tag_event (GstID3Tag *tag)
