@@ -5,7 +5,25 @@ DIE=0
 package=GStreamer
 srcfile=gst/gstobject.h
 #DEBUG=defined
-if test "x$1" = "x-d"; then echo "+ debug output enabled"; DEBUG=defined; fi
+
+for i in $@; do
+    if test "$i" = "--autogen-noconfigure"; then
+        NOCONFIGURE=defined
+        echo "+ configure run disabled"
+    elif test "$i" = "--autogen-nocheck"; then
+        NOCHECK=defined
+        echo "+ autotools version check disabled"
+    elif test "$i" = "--autogen-debug"; then
+        DEBUG=defined
+        echo "+ debug output enabled"
+    elif test "$i" = "--help"; then
+        echo "autogen.sh help options: "
+        echo " --autogen-noconfigure    don't run the configure script"
+        echo " --autogen-nocheck        don't do version checks"
+        echo " --autogen-debug          debug the autogen process"
+        echo "continuing with the autogen in order to get configure help messages..."
+    fi
+done
 
 debug ()
 # print out a debug message if DEBUG is a defined variable
@@ -36,7 +54,14 @@ version_check ()
   if test ! -z "$MICRO"; then VERSION=$VERSION.$MICRO; else MICRO=0; fi
 
   debug "major $MAJOR minor $MINOR micro $MICRO"
-  echo -n "+ checking for $1 >= $VERSION ... "
+  
+  test -z "$NOCHECK" && {
+      echo -n "+ checking for $1 >= $VERSION ... "
+  } || {
+      echo "+ NOT checking for $1 >= $VERSION, as requested ..."
+      return 0
+  }
+  
   ($PACKAGE --version) < /dev/null > /dev/null 2>&1 || 
   {
 	echo
@@ -148,11 +173,13 @@ automake -a -c || {
 	exit 1
 }
 
-# now remove the cache, because it can be considered dangerous in this case
-#echo "+ removing config.cache ... "
-#rm -f config.cache
-
 CONFIGURE_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG'
+
+test -n "$NOCONFIGURE" && {
+    echo "skipping configure stage for package $package, as requested."
+    echo "autogen.sh done."
+    exit 0
+}
 
 echo "+ running configure ... "
 echo "./configure default flags: $CONFIGURE_OPT"
