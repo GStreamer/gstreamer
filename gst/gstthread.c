@@ -424,6 +424,9 @@ gst_thread_change_state (GstElement *element)
         gst_element_enable_threadsafe_properties ((GstElement*)elements->data);
         elements = g_list_next (elements);
       }
+      /* reset self to spinning */
+      if (thread == gst_thread_get_current()) 
+        GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
       break;
     }
     case GST_STATE_PLAYING_TO_PAUSED:
