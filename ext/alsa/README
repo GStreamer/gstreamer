@@ -3,7 +3,8 @@
 
 This plugin was originally written by Thomas Nyberg <thomas@codefactory.se> for
 ALSA 0.5.x. It was updated and changed quite a bit in September 2001 by Andy
-Wingo for use with ALSA 0.9.x.
+Wingo for use with ALSA 0.9.x. It was rewritten in great part again by Benjamin 
+Otte in January/February 2003.
 
 1.0 Introduction
 ----------------
@@ -44,21 +45,18 @@ My particular card has 4 channel out and 2 channel in. As you can see, each of
 these devices are stereo. The alsasink and alsasrc elements correspond to the
 default alsa devices.
 
-3.0 License
+3.0 Where to look for other ALSA drivers
+----------------------------------------
+
+ALSA 0.9 isn't very well documented, so we had to rely on a number of different
+sources for guidance. Sources of inspiration include JACK's alsa driver 
+(available in jack's cvs tree, http://jack.sourceforge.net/), the alsa2 driver 
+of mplayer (http://www.mplayerhq.hu) and the pcm.c example from the ALSA library
+itself.
+(http://www.alsa-project.org/alsa-doc/alsa-lib/_2test_2pcm_8c-example.html)
+
+4.0 License
 -----------
 
-ALSA 0.9.x isn't very well documented, so I had to rely on a number of different
-sources for guidance. One of the main sources of inspiration was Paul Davis'
-audioengine (available in quasimodo's cvs tree,
-http://quasimodo.sourceforge.net/), from which I took a large amount of code.
-Since that project is licensed under the GPL, it was only right that I license
-the updated version of this plugin under the GPL as well. What, in my
-understanding, this means for the end user is that you cannot use the ALSA
-plugin with a non-GPL program. If in doubt, please refer to the COPYING file
-located in this directory.
-
-
-
-
-
-
+This plugin is licensed under the Lesser General Public License (LGPL). See the
+file COPYING in the top source directory.

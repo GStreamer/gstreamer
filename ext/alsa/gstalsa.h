@@ -2,6 +2,7 @@
  * Copyright (C) 2001 CodeFactory AB
  * Copyright (C) 2001 Thomas Nyberg <thomas@codefactory.se>
  * Copyright (C) 2001-2002 Andy Wingo <apwingo@eos.ncsu.edu>
+ * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,10 +22,15 @@
 #ifndef __GST_ALSA_H__
 #define __GST_ALSA_H__
 
+#define ALSA_PCM_NEW_HW_PARAMS_API
+#define ALSA_PCM_NEW_SW_PARAMS_API
+
 #include <alsa/asoundlib.h>
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 #include <glib.h>
+
+#define GST_ALSA_MAX_CHANNELS 64 /* we don't support more than 64 channels */
 
 #define GST_ALSA(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_ALSA, GstAlsa)
 #define GST_ALSA_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_ALSA, GstAlsaClass)
@@ -44,8 +50,6 @@
 #define GST_IS_ALSA_SRC_CLASS(klass) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_ALSA_SRC)
 #define GST_TYPE_ALSA_SRC gst_alsa_src_get_type()
 
-#define GST_ALSA_PAD(obj) ((GstAlsaPad*)obj->data) /* obj is a GList */
-
 /* I would have preferred to avoid this variety of trickery, but without it i
  * can't tell whether I'm a source or a sink upon creation. */
 
@@ -62,59 +66,32 @@ enum {
   GST_ALSA_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 3,
 };
 
-typedef gboolean (*GstAlsaProcessFunc) (GstAlsa *, snd_pcm_uframes_t frames);
-
 typedef struct {
-  gint channel;
   GstPad *pad;
   GstByteStream *bs;
-
-  /* buf and offset are only used for src elements to hold data from the sound
-     card, while we're waiting for an entire period_frames data. */
-  char *buf;
-  snd_pcm_uframes_t offset;
+  guint8 *data;
 } GstAlsaPad;
 
 struct _GstAlsa {
   GstElement parent;
 
-  /* list of GstAlsaPads */
-  GList *pads;
+  /* array of GstAlsaPads */
+  GstAlsaPad pads[GST_ALSA_MAX_CHANNELS];
 
   gchar *device;
   snd_pcm_stream_t stream;
   snd_pcm_t *handle;
   snd_output_t *out;
 
-  /* our mmap'd data areas */
-  gboolean mmap_open;
-  const snd_pcm_channel_area_t *mmap_areas;
-  char **access_addr;
-  snd_pcm_uframes_t offset;
-  snd_pcm_sframes_t avail;
-
-  GstAlsaProcessFunc process;
-
   snd_pcm_format_t format;
   guint rate;
   gint channels;
-  guint32 mute; /* bitmask. */
 
-  /* the gstreamer data */
-  gboolean data_interleaved;
-  gboolean autorecover;
+  /* latency / performance parameters */
+  snd_pcm_uframes_t period_size;
+  unsigned int period_count;
 
-  /* access to the hardware */
-  gboolean access_interleaved;
-  guint sample_bytes;
-  guint interleave_unit;
-  guint interleave_skip;
-
-  guint buffer_frames;
-  guint period_count; /* 'number of fragments' in oss-speak */
-  guint period_frames;
-
-  gboolean debug;
+  gboolean autorecover; 
 };
 
 struct _GstAlsaClass {
