@@ -30,6 +30,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   gboolean ret;
 
+  if (!gst_library_load ("gstaudio")) return FALSE;
+
   ret = gst_esdsink_factory_init(plugin);
   if(ret == FALSE) return FALSE;
 

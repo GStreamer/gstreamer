@@ -22,6 +22,7 @@
 #define __GST_ESDSINK_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audioclock.h>
 
 G_BEGIN_DECLS
 
@@ -44,6 +45,7 @@ struct _GstEsdsink {
 
   GstPad 	*sinkpad;
 
+  GstClock	*provided_clock;
   GstClock	*clock;
 
   gboolean 	 mute;
@@ -54,6 +56,11 @@ struct _GstEsdsink {
   gint 		 frequency;
   gboolean 	 negotiated;
   gchar		*host;
+  int		 handled;
+  int		 bytes_per_sample;
+  gboolean	 sync;
+  gboolean	 resync;
+  gboolean	 fallback;
 };
 
 struct _GstEsdsinkClass {
