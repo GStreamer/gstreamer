@@ -550,7 +550,11 @@ gst_multifdsink_get_stats (GstMultiFdSink * sink, int fd)
   return result;
 }
 
-/* should be called with the clientslock held */
+/* should be called with the clientslock held.
+ * Note that we don't close the fd as we didn't open it in the first
+ * place. An application should connect to the client-removed signal and
+ * close the fd itself.
+ */
 static void
 gst_multifdsink_remove_client_link (GstMultiFdSink * sink, GList * link)
 {
@@ -590,10 +594,6 @@ gst_multifdsink_remove_client_link (GstMultiFdSink * sink, GList * link)
   }
 
   gst_fdset_remove_fd (sink->fdset, &client->fd);
-  if (close (fd) != 0) {
-    /* this is not really an error */
-    GST_DEBUG_OBJECT (sink, "error closing fd %d: %s", fd, g_strerror (errno));
-  }
 
   g_get_current_time (&now);
   client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
@@ -1105,8 +1105,8 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
     if (result < 0) {
       GST_WARNING_OBJECT (sink, "wait failed: %s", g_strerror (errno));
       if (errno == EBADF) {
-        /* ok, so one of the fds is invalid. We loop over them to find one
-         * that gives an error to the F_GETFL fcntl.  */
+        /* ok, so one or more of the fds is invalid. We loop over them to find 
+         * the ones that give an error to the F_GETFL fcntl. */
         g_mutex_lock (sink->clientslock);
         for (clients = sink->clients; clients; clients = next) {
           GstTCPClient *client;
@@ -1469,7 +1469,7 @@ gst_multifdsink_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-      if (!GST_FLAG_IS_SET (element, GST_MULTIFDSINK_OPEN)) {
+      if (!GST_FLAG_IS_SET (sink, GST_MULTIFDSINK_OPEN)) {
         if (!gst_multifdsink_init_send (sink))
           return GST_STATE_FAILURE;
         GST_FLAG_SET (sink, GST_MULTIFDSINK_OPEN);
@@ -1484,7 +1484,7 @@ gst_multifdsink_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
-      if (GST_FLAG_IS_SET (element, GST_MULTIFDSINK_OPEN)) {
+      if (GST_FLAG_IS_SET (sink, GST_MULTIFDSINK_OPEN)) {
         gst_multifdsink_close (GST_MULTIFDSINK (element));
         GST_FLAG_UNSET (sink, GST_MULTIFDSINK_OPEN);
       }
