@@ -1234,7 +1234,6 @@ plugins/mpeg1video/Makefile
 plugins/mpeg1video/parse/Makefile
 plugins/oss/Makefile
 plugins/rtp/Makefile
-plugins/rtp/rtpsend/Makefile
 plugins/mulaw/Makefile
 plugins/alaw/Makefile
 dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
