@@ -166,14 +166,20 @@ AC_ARG_ENABLE(translit([$1], A-Z, a-z),
 dnl *** If it's enabled
 if test x$USE_[$1] = xyes; then
   gst_check_save_LIBS=$LIBS
+  gst_check_save_LDFLAGS=$LDFLAGS
   gst_check_save_CFLAGS=$CFLAGS
+  gst_check_save_CPPFLAGS=$CPPFLAGS
+  gst_check_save_CXXFLAGS=$CXXFLAGS
   $4
   LIBS=$gst_check_save_LIBS
+  LDFLAGS=$gst_check_save_LDFLAGS
   CFLAGS=$gst_check_save_CFLAGS
+  CPPFLAGS=$gst_check_save_CPPFLAGS
+  CXXFLAGS=$gst_check_save_CXXFLAGS
 
   dnl If it isn't found, unset USE_[$1]
   if test x$HAVE_[$1] = xno; then
-    USE_[$1]=yes
+    USE_[$1]=no
   fi
 fi
 dnl *** Warn if it's disabled or not found

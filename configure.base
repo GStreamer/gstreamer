@@ -326,44 +326,11 @@ fi
 dnl AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 
 
-dnl Check for libasound
-dnl alsa_save also used in ALSA macro, use our own namespace
-gst_alsa_save_LIBS=$LIBS
-gst_alsa_save_LDFLAGS=$LDFLAGS
-gst_alsa_save_CFLAGS=$CFLAGS
-AM_PATH_ALSA(0.5.0,
-  HAVE_LIBASOUND=yes,
-  HAVE_LIBASOUND=no
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: gstalsa
-))
-LIBS=$gst_alsa_save_LIBS
-LDFLAGS=$gst_alsa_save_LDFLAGS
-CFLAGS=$gst_alsa_save_CFLAGS
-if test x$HAVE_LIBASOUND = xyes;then
-  gst_alsa_save_LIBS=$LIBS
-  gst_alsa_save_LDFLAGS=$LDFLAGS
-  gst_alsa_save_CFLAGS=$CFLAGS
-  AM_PATH_ALSA(0.9.0,
-    HAVE_LIBASOUND=no
-    AC_MSG_WARN(Alsa 0.9.x not yet supported.
-***** NOTE: These plugins won't be built: gstalsa
-)
-    ,:)
-  LIBS=$gst_alsa_save_LIBS
-  LDFLAGS=$gst_alsa_save_LDFLAGS
-  CFLAGS=$gst_alsa_save_CFLAGS
-fi
-
-AC_ARG_ENABLE(alsasink,
-[  --enable-alsasink          enable the building of the alsasink],
-[case "${enableval}" in
-        yes) HAVE_LIBASOUND=$HAVE_LIBASOUND ;;
-        no) HAVE_LIBASOUND=no ;;
-        *) AC_MSG_ERROR(bad value ${enableval} for --enable-alsasink) ;;
-esac],
-[HAVE_LIBASOUND=$HAVE_LIBASOUND])
-
+dnl Check for alsa
+GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
+  AM_PATH_ALSA(0.5.0, HAVE_ALSA=yes, HAVE_ALSA=no)
+  AM_PATH_ALSA(0.9.0, HAVE_ALSA=no; AC_MSG_WARN(Alsa 0.9.x not yet supported),:)
+])
 
 dnl Check for libaudiofile
 AC_PATH_PROG(AUDIOFILE_CONFIG, audiofile-config, no)
@@ -1112,7 +1079,6 @@ AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_ARTSC,          test "x$HAVE_ARTSC" = "xyes")
-AM_CONDITIONAL(HAVE_LIBASOUND,      test "x$HAVE_LIBASOUND" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXMMS,        test "x$HAVE_LIBXMMS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
