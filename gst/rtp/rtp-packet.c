@@ -23,15 +23,13 @@
 #include <config.h>
 #endif
 
-#include "rtp-packet.h"
-
-#include <glib.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <string.h>
 #include <errno.h>
+#include <netinet/in.h>
+#include <glib.h>
+
+#include "rtp-packet.h"
 
 Rtp_Packet
 rtp_packet_new_take_data(gpointer data, guint data_len)

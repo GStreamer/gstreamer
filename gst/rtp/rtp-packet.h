@@ -22,8 +22,14 @@
 #ifndef _RTP_PACKET_H
 #define _RTP_PACKET_H 1
 
-#include <glib.h>
 #include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <glib.h>
+
+#ifdef __sun
+#include <sys/uio.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
