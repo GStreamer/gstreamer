@@ -127,6 +127,8 @@ struct _GstXvImageSink {
   
   /* Unused */
   gint pixel_width, pixel_height;
+
+  GstClockTime time;
  
   GstBufferPool *bufferpool;
   GMutex *pool_lock;

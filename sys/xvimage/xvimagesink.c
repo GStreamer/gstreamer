@@ -750,12 +750,14 @@ gst_xvimagesink_change_state (GstElement *element)
         return GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_PAUSED:
+      xvimagesink->time = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      xvimagesink->framerate = 0;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -768,10 +770,9 @@ gst_xvimagesink_change_state (GstElement *element)
 }
 
 static void
-gst_xvimagesink_chain (GstPad *pad, GstData *_data)
+gst_xvimagesink_chain (GstPad *pad, GstData *data)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
-  GstClockTime time = GST_BUFFER_TIMESTAMP (buf);
+  GstBuffer *buf;
   GstXvImageSink *xvimagesink;
   
   g_return_if_fail (pad != NULL);
@@ -780,9 +781,9 @@ gst_xvimagesink_chain (GstPad *pad, GstData *_data)
 
   xvimagesink = GST_XVIMAGESINK (gst_pad_get_parent (pad));
     
-  if (GST_IS_EVENT (buf))
+  if (GST_IS_EVENT (data))
     {
-      GstEvent *event = GST_EVENT (buf);
+      GstEvent *event = GST_EVENT (data);
       gint64 offset;
 
       switch (GST_EVENT_TYPE (event))
@@ -799,11 +800,16 @@ gst_xvimagesink_chain (GstPad *pad, GstData *_data)
       return;
     }
   
-  GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT, time);
+  buf = GST_BUFFER (data);
+  /* update time */
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    xvimagesink->time = GST_BUFFER_TIMESTAMP (buf);
+  }
+  GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT, xvimagesink->time);
   
   if (GST_VIDEOSINK_CLOCK (xvimagesink)) {
     GstClockID id;
-    id = gst_clock_new_single_shot_id (GST_VIDEOSINK_CLOCK (xvimagesink), time);
+    id = gst_clock_new_single_shot_id (GST_VIDEOSINK_CLOCK (xvimagesink), xvimagesink->time);
     gst_element_clock_wait (GST_ELEMENT (xvimagesink), id, NULL);
     gst_clock_id_free (id);
   }
@@ -828,7 +834,11 @@ gst_xvimagesink_chain (GstPad *pad, GstData *_data)
           return;
         }
     }
-  
+  /* set correct time for next buffer */
+  if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf) && xvimagesink->framerate > 0) {
+    xvimagesink->time += GST_SECOND / xvimagesink->framerate;
+  }
+
   gst_buffer_unref (buf);
     
   gst_xvimagesink_handle_xevents (xvimagesink, pad);
