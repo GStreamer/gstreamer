@@ -29,6 +29,9 @@ else
 	confflags += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
 endif
 
+debian/control: debian/control.in debian/build-deps
+	debian/mk.control >debian/control
+
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
