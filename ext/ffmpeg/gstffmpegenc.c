@@ -286,6 +286,8 @@ gst_ffmpegenc_connect (GstPad  *pad,
 		       const GstCaps *caps)
 {
   GstCaps *other_caps;
+  GstCaps *allowed_caps;
+  GstCaps *icaps;
   enum PixelFormat pix_fmt;
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) gst_pad_get_parent (pad);
   GstFFMpegEncClass *oclass = (GstFFMpegEncClass *) G_OBJECT_GET_CLASS(ffmpegenc);
@@ -342,6 +344,24 @@ gst_ffmpegenc_connect (GstPad  *pad,
     avcodec_close (ffmpegenc->context);
     GST_DEBUG ("Unsupported codec - no caps found");
     return GST_PAD_LINK_REFUSED;
+  }
+
+  allowed_caps = gst_pad_get_allowed_caps (ffmpegenc->srcpad);
+  icaps = gst_caps_intersect (allowed_caps, other_caps);
+  gst_caps_free (allowed_caps);
+  gst_caps_free (other_caps);
+
+  if (gst_caps_is_empty (icaps)) {
+    gst_caps_free (icaps);
+    return GST_PAD_LINK_REFUSED;
+  }
+
+  if (gst_caps_get_size (icaps) > 1) {
+    GstCaps *newcaps;
+
+    newcaps = gst_caps_new_full (gst_caps_get_structure (icaps, 0), NULL);
+    gst_caps_free (icaps);
+    icaps = newcaps;
   }
 
   /* FIXME set_explicit_caps is not supposed to be used in a pad link
