@@ -61,8 +61,8 @@ static gchar *_gst_parse_escape (const gchar *str)
  * @error: pointer to a #GError
  *
  * Create a new element based on command line syntax.
- * #error will contain an error message if pipeline creation fails and can
- * contain an error message, when a recoverable error happened.
+ * #error will contain an error message if an erroneuos pipeline is specified.
+ * An error does not mean that the pipeline could not be constructed.
  *
  * Returns: a new element on success and NULL on failure.
  */
@@ -99,12 +99,16 @@ gst_parse_launchv (const gchar **argv, GError **error)
 /**
  * gst_parse_launch:
  * @pipeline_description: the command line describing the pipeline
- * @error: the error message in case of a failure
+ * @error: the error message in case of an erroneous pipeline.
  *
  * Create a new pipeline based on command line syntax.
+ * Please note that you might get a return value that is not NULL even though
+ * the error is set. In this case there was a recoverable parsing error and you
+ * can try to play the pipeline.
  *
- * Returns: a new bin on success, NULL on failure. By default the bin is
- * a GstPipeline, but it depends on the pipeline_description.
+ * Returns: a new element on success, NULL on failure. If more than one toplevel
+ * element is specified by the pipeline_description, all elements are put into
+ * a #GstPipeline ant that is returned.
  */
 GstElement *
 gst_parse_launch (const gchar * pipeline_description, GError **error)
