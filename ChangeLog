@@ -1,3 +1,13 @@
+2004-06-09  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_init),
+	(gst_ogg_mux_next_buffer), (gst_ogg_mux_buffer_from_page),
+	(gst_ogg_mux_push_page), (gst_ogg_mux_get_headers),
+	(gst_ogg_mux_set_header_on_caps), (gst_ogg_mux_send_headers),
+	(gst_ogg_mux_loop):
+	Use stream caps to setup the initial pages in the ogg stream.
+	Correctly set the streamheader caps on the srcpad.
+
 2004-06-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_get_fps_list),
