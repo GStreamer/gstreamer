@@ -28,11 +28,13 @@
 static void gst_dpman_base_class_init (GstDParamManagerClass *klass);
 static void gst_dpman_class_init (GstDParamManagerClass *klass);
 static void gst_dpman_init (GstDParamManager *dpman);
+static GstDParamWrapper* gst_dpman_new_wrapper(GstDParamManager *dpman, gchar *dparam_name, GType type, GstDPMUpdateMethod update_method);
+static GstDParamWrapper* gst_dpman_get_wrapper(GstDParamManager *dpman, gchar *dparam_name);
 static void gst_dpman_state_change (GstElement *element, gint state, GstDParamManager *dpman);
 static void gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDParamManager *dpman);
-static guint gst_dpman_first_countdown_synchronous(GstDParamManager *dpman, guint frames, gint64 timestamp);
-static guint gst_dpman_first_countdown_noop(GstDParamManager *dpman, guint frames, gint64 timestamp);
-static guint gst_dpman_countdown_noop(GstDParamManager *dpman, guint frame_count);
+static guint gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 timestamp);
+static guint gst_dpman_preprocess_noop(GstDParamManager *dpman, guint frames, gint64 timestamp);
+static guint gst_dpman_process_noop(GstDParamManager *dpman, guint frame_count);
 
 GType
 gst_dpman_get_type (void)
@@ -77,11 +79,11 @@ gst_dpman_class_init (GstDParamManagerClass *klass)
 	klass->modes = g_hash_table_new(g_str_hash,g_str_equal);
 
 	gst_dpman_register_mode (klass, "synchronous", 
-	                       gst_dpman_first_countdown_synchronous, gst_dpman_countdown_noop, NULL, NULL);
+	                       gst_dpman_preprocess_synchronous, gst_dpman_process_noop, NULL, NULL);
 	gst_dpman_register_mode (klass, "asynchronous", 
-	                       gst_dpman_first_countdown_noop, gst_dpman_countdown_noop, NULL, NULL);
+	                       gst_dpman_preprocess_noop, gst_dpman_process_noop, NULL, NULL);
 	gst_dpman_register_mode (klass, "disabled", 
-	                       gst_dpman_first_countdown_noop, gst_dpman_countdown_noop, NULL, NULL);
+	                       gst_dpman_preprocess_noop, gst_dpman_process_noop, NULL, NULL);
 
 }
 
@@ -122,7 +124,7 @@ gst_dpman_new (gchar *name, GstElement *parent)
 }
 
 /**
- * gst_dpman_add_required_dparam:
+ * gst_dpman_add_required_dparam_callback:
  * @dpman: GstDParamManager instance
  * @dparam_name: a parameter name unique to this GstDParamManager
  * @type: the GValue type that this parameter will store
@@ -132,33 +134,91 @@ gst_dpman_new (gchar *name, GstElement *parent)
  * Returns: true if it was successfully added
  */
 gboolean 
-gst_dpman_add_required_dparam (GstDParamManager *dpman, 
-                                gchar *dparam_name, 
-                                GType type, 
-                                GstDpmUpdateFunction update_func, 
-                                gpointer update_data)
+gst_dpman_add_required_dparam_callback (GstDParamManager *dpman, 
+                                        gchar *dparam_name, 
+                                        GType type, 
+                                        GstDPMUpdateFunction update_func, 
+                                        gpointer update_data)
 {
 	GstDParamWrapper* dpwrap;
 
 	g_return_val_if_fail (dpman != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), FALSE);
-	g_return_val_if_fail (dparam_name != NULL, FALSE);
 	g_return_val_if_fail (update_func != NULL, FALSE);
 
-	g_return_val_if_fail(g_hash_table_lookup(GST_DPMAN_DPARAMS(dpman), dparam_name) == NULL, FALSE);
+	dpwrap = gst_dpman_new_wrapper(dpman, dparam_name, type, GST_DPMAN_CALLBACK);
 
-	GST_DEBUG(GST_CAT_PARAMS,"adding required dparam: %s\n", dparam_name);
-	
-	dpwrap = g_new0(GstDParamWrapper,1);
-	dpwrap->dparam_name = dparam_name;
+	g_return_val_if_fail (dpwrap != NULL, FALSE);
+
+	GST_DEBUG(GST_CAT_PARAMS,"adding required callback dparam '%s' of type %s\n", dparam_name, g_type_name(type));
+
 	dpwrap->update_func = update_func;
 	dpwrap->update_data = update_data;
-	dpwrap->value = g_new0(GValue,1);
-	g_value_init(dpwrap->value, type);
 
-	g_hash_table_insert(GST_DPMAN_DPARAMS(dpman), dparam_name, dpwrap);
-	GST_DPMAN_DPARAMS_LIST(dpman) = g_slist_append(GST_DPMAN_DPARAMS_LIST(dpman), dpwrap);
-	
+	return TRUE;	
+}
+
+/**
+ * gst_dpman_add_required_dparam_direct:
+ * @dpman: GstDParamManager instance
+ * @dparam_name: a parameter name unique to this GstDParamManager
+ * @type: the GValue type that this parameter will store
+ * @update_data: pointer to the member to be updated
+ *
+ * Returns: true if it was successfully added
+ */
+gboolean 
+gst_dpman_add_required_dparam_direct (GstDParamManager *dpman, 
+                                        gchar *dparam_name, 
+                                        GType type, 
+                                        gpointer update_data)
+{
+	GstDParamWrapper* dpwrap;
+
+	g_return_val_if_fail (dpman != NULL, FALSE);
+	g_return_val_if_fail (GST_IS_DPMAN (dpman), FALSE);
+	g_return_val_if_fail (update_data != NULL, FALSE);
+
+	dpwrap = gst_dpman_new_wrapper(dpman, dparam_name, type, GST_DPMAN_DIRECT);
+
+	g_return_val_if_fail (dpwrap != NULL, FALSE);
+
+	GST_DEBUG(GST_CAT_PARAMS,"adding required direct dparam '%s' of type %s\n", dparam_name, g_type_name(type));
+
+	dpwrap->update_data = update_data;
+
+	return TRUE;	
+}
+
+/**
+ * gst_dpman_add_required_dparam_array:
+ * @dpman: GstDParamManager instance
+ * @dparam_name: a parameter name unique to this GstDParamManager
+ * @type: the GValue type that this parameter will store
+ * @update_data: pointer to where the array will be stored
+ *
+ * Returns: true if it was successfully added
+ */
+gboolean 
+gst_dpman_add_required_dparam_array (GstDParamManager *dpman, 
+                                        gchar *dparam_name, 
+                                        GType type, 
+                                        gpointer update_data)
+{
+	GstDParamWrapper* dpwrap;
+
+	g_return_val_if_fail (dpman != NULL, FALSE);
+	g_return_val_if_fail (GST_IS_DPMAN (dpman), FALSE);
+	g_return_val_if_fail (update_data != NULL, FALSE);
+
+	dpwrap = gst_dpman_new_wrapper(dpman, dparam_name, type, GST_DPMAN_ARRAY);
+
+	g_return_val_if_fail (dpwrap != NULL, FALSE);
+
+	GST_DEBUG(GST_CAT_PARAMS,"adding required array dparam '%s' of type %s\n", dparam_name, g_type_name(type));
+
+	dpwrap->update_data = update_data;
+
 	return TRUE;	
 }
 
@@ -177,8 +237,8 @@ gst_dpman_remove_required_dparam (GstDParamManager *dpman, gchar *dparam_name)
 	g_return_if_fail (GST_IS_DPMAN (dpman));
 	g_return_if_fail (dparam_name != NULL);
 
-	dpwrap = g_hash_table_lookup(GST_DPMAN_DPARAMS(dpman), dparam_name);
-
+	dpwrap = gst_dpman_get_wrapper(dpman, dparam_name);
+	
 	g_return_if_fail(dpwrap != NULL);
 	g_return_if_fail(dpwrap->dparam == NULL);
 
@@ -211,7 +271,7 @@ gst_dpman_attach_dparam (GstDParamManager *dpman, gchar *dparam_name, GstDParam 
 	g_return_val_if_fail (GST_IS_DPARAM (dparam), FALSE);
 	g_return_val_if_fail (dparam != NULL, FALSE);
 
-	dpwrap = g_hash_table_lookup(GST_DPMAN_DPARAMS(dpman), dparam_name);
+	dpwrap = gst_dpman_get_wrapper(dpman, dparam_name);
 
 	g_return_val_if_fail(dpwrap != NULL, FALSE);
 	g_return_val_if_fail(dpwrap->value != NULL, FALSE);
@@ -239,7 +299,7 @@ gst_dpman_dettach_dparam (GstDParamManager *dpman, gchar *dparam_name)
 	g_return_if_fail (GST_IS_DPMAN (dpman));
 	g_return_if_fail (dparam_name != NULL);
 	
-	dpwrap = g_hash_table_lookup(GST_DPMAN_DPARAMS(dpman), dparam_name);
+	dpwrap = gst_dpman_get_wrapper(dpman, dparam_name);
 
 	g_return_if_fail(dpwrap);
 	
@@ -274,11 +334,33 @@ gst_dpman_get_dparam (GstDParamManager *dpman, gchar *name)
 }
 
 /**
+ * gst_dpman_get_dparam_type:
+ * @dpman: GstDParamManager instance
+ * @name: the name of dparam
+ *
+ * Returns: the type that this dparam requires/uses
+ */
+GType
+gst_dpman_get_dparam_type (GstDParamManager *dpman, gchar *name)
+{
+	GstDParamWrapper* dpwrap;
+
+	g_return_val_if_fail (dpman != NULL, 0);
+	g_return_val_if_fail (GST_IS_DPMAN (dpman), 0);
+	g_return_val_if_fail (name != NULL, 0);
+	
+	dpwrap = g_hash_table_lookup(GST_DPMAN_DPARAMS(dpman), name);
+	g_return_val_if_fail (dpwrap != NULL, 0);
+	
+	return G_VALUE_TYPE(dpwrap->value);
+}
+
+/**
  * gst_dpman_register_mode
  * @klass: GstDParamManagerClass class instance
  * @modename: the unique name of the new mode
- * @firstcountdownfunc: the function which will be called before each buffer is processed
- * @countdownfunc: the function which may be called throughout the processing of a buffer
+ * @preprocessfunc: the function which will be called before each buffer is processed
+ * @processfunc: the function which may be called throughout the processing of a buffer
  * @setupfunc: the function which initialises the mode when activated
  * @teardownfunc: the function which frees any resources the mode uses
  *
@@ -286,21 +368,21 @@ gst_dpman_get_dparam (GstDParamManager *dpman, gchar *name)
 void
 gst_dpman_register_mode (GstDParamManagerClass *klass,
                          gchar *modename, 
-                         GstDpmModeFirstCountdownFunction firstcountdownfunc,
-                         GstDpmModeCountdownFunction countdownfunc,
-                         GstDpmModeSetupFunction setupfunc,
-                         GstDpmModeTeardownFunction teardownfunc)
+                         GstDPMModePreProcessFunction preprocessfunc,
+                         GstDPMModeProcessFunction processfunc,
+                         GstDPMModeSetupFunction setupfunc,
+                         GstDPMModeTeardownFunction teardownfunc)
 {
-	GstDpmMode *mode;
+	GstDPMMode *mode;
 
 	g_return_if_fail (klass != NULL);
 	g_return_if_fail (modename != NULL);
 	g_return_if_fail (GST_IS_DPMAN_CLASS (klass));
 	
-	mode = g_new0(GstDpmMode,1);
+	mode = g_new0(GstDPMMode,1);
 
-	mode->firstcountdownfunc = firstcountdownfunc;
-	mode->countdownfunc = countdownfunc;
+	mode->preprocessfunc = preprocessfunc;
+	mode->processfunc = processfunc;
 	mode->setupfunc = setupfunc;
 	mode->teardownfunc = teardownfunc;
 	
@@ -318,7 +400,7 @@ gst_dpman_register_mode (GstDParamManagerClass *klass,
 gboolean
 gst_dpman_set_mode(GstDParamManager *dpman, gchar *modename)
 {
-	GstDpmMode *mode=NULL;
+	GstDPMMode *mode=NULL;
 	GstDParamManagerClass *oclass;
 	
 	g_return_val_if_fail (dpman != NULL, FALSE);
@@ -380,6 +462,40 @@ gst_dpman_set_rate_change_pad(GstDParamManager *dpman, GstPad *pad)
 	                 G_CALLBACK (gst_dpman_caps_changed), dpman);
 }
 
+static GstDParamWrapper* 
+gst_dpman_get_wrapper(GstDParamManager *dpman, gchar *dparam_name)
+{
+	g_return_val_if_fail (dpman != NULL, NULL);
+	g_return_val_if_fail (GST_IS_DPMAN (dpman), NULL);
+	g_return_val_if_fail (dparam_name != NULL, NULL);
+	
+	return g_hash_table_lookup(GST_DPMAN_DPARAMS(dpman), dparam_name);
+}
+
+static GstDParamWrapper* 
+gst_dpman_new_wrapper(GstDParamManager *dpman, gchar *dparam_name, GType type, GstDPMUpdateMethod update_method)
+{
+	GstDParamWrapper* dpwrap;
+
+	g_return_val_if_fail (dpman != NULL, NULL);
+	g_return_val_if_fail (GST_IS_DPMAN (dpman), NULL);
+	g_return_val_if_fail (dparam_name != NULL, NULL);
+
+	g_return_val_if_fail(gst_dpman_get_wrapper(dpman, dparam_name) == NULL, NULL);
+
+	dpwrap = g_new0(GstDParamWrapper,1);
+	dpwrap->dparam_name = dparam_name;
+	dpwrap->update_method = update_method;
+	dpwrap->value = g_new0(GValue,1);
+	g_value_init(dpwrap->value, type);
+
+	g_hash_table_insert(GST_DPMAN_DPARAMS(dpman), dparam_name, dpwrap);
+	GST_DPMAN_DPARAMS_LIST(dpman) = g_slist_append(GST_DPMAN_DPARAMS_LIST(dpman), dpwrap);
+	
+	return dpwrap;	
+}
+
+
 static void 
 gst_dpman_state_change (GstElement *element, gint state, GstDParamManager *dpman)
 {
@@ -419,11 +535,12 @@ gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDParamManager *dpman)
 }
 
 static guint 
-gst_dpman_first_countdown_synchronous(GstDParamManager *dpman, guint frames, gint64 timestamp)
+gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 timestamp)
 {
 	GSList *dwraps;
-	GstDParam *dparam;
+   	GstDParam *dparam;
 	GstDParamWrapper *dpwrap;
+	int x;
 
 	g_return_val_if_fail (dpman != NULL, frames);
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), frames);
@@ -433,26 +550,127 @@ gst_dpman_first_countdown_synchronous(GstDParamManager *dpman, guint frames, gin
 	while (dwraps){
 		dpwrap = (GstDParamWrapper*)dwraps->data;
 		dparam = dpwrap->dparam;
-		
+
 		if (dparam && (GST_DPARAM_READY_FOR_UPDATE(dparam) || 
 		              (GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) < timestamp))){
+		              	
+		    // this will make dpwrap->value contain the latest value.
+		    // now we just need to get it to the element
 			GST_DPARAM_DO_UPDATE(dparam, timestamp);
-			GST_DPMAN_DO_UPDATE(dpwrap);
+			
+			switch (dpwrap->update_method) {
+				
+				// direct method - set the value directly in the struct of the element
+				case GST_DPMAN_DIRECT:
+					GST_DEBUG(GST_CAT_PARAMS, "doing direct update\n");
+					switch (G_VALUE_TYPE(dpwrap->value)){
+						case G_TYPE_CHAR:
+							*(gchar*)dpwrap->update_data = g_value_get_char(dpwrap->value);
+						case G_TYPE_UCHAR:
+							*(guchar*)dpwrap->update_data = g_value_get_uchar(dpwrap->value);
+						case G_TYPE_BOOLEAN:
+							*(gboolean*)dpwrap->update_data = g_value_get_boolean(dpwrap->value);
+						case G_TYPE_INT:
+							*(gint*)dpwrap->update_data = g_value_get_int(dpwrap->value);
+						case G_TYPE_UINT:
+							*(guint*)dpwrap->update_data = g_value_get_uint(dpwrap->value);
+						case G_TYPE_LONG:
+							*(glong*)dpwrap->update_data = g_value_get_long(dpwrap->value);
+						case G_TYPE_ULONG:
+							*(gulong*)dpwrap->update_data = g_value_get_ulong(dpwrap->value);
+						case G_TYPE_FLOAT:
+							*(gfloat*)dpwrap->update_data = g_value_get_float(dpwrap->value);
+						case G_TYPE_DOUBLE:
+							*(gdouble*)dpwrap->update_data = g_value_get_double(dpwrap->value);
+						case G_TYPE_POINTER:
+							*(gpointer*)dpwrap->update_data = g_value_get_pointer(dpwrap->value);
+						default:
+							break;
+					}
+					break;
+
+				// callback method - call the element's callback so it can do what it likes
+				case GST_DPMAN_CALLBACK:
+					GST_DEBUG(GST_CAT_PARAMS, "doing callback update\n");
+					GST_DPMAN_DO_UPDATE(dpwrap);
+					break;
+					
+				// array method - generate an array of the right size 
+				// with each value being the same (in synchronous update mode)
+				case GST_DPMAN_ARRAY:
+					GST_DEBUG(GST_CAT_PARAMS, "doing array update\n");
+					switch (G_VALUE_TYPE(dpwrap->value)){
+						case G_TYPE_CHAR:
+							(gchar*)dpwrap->update_data = g_new(gchar, frames);
+							*(gchar*)dpwrap->update_data = g_value_get_char(dpwrap->value);
+							for (x = 1 ; x < frames ; x++)
+								((gchar*)dpwrap->update_data)[x] = *(gchar*)dpwrap->update_data;
+						case G_TYPE_UCHAR:
+							(guchar*)dpwrap->update_data = g_new(guchar, frames);
+							*(guchar*)dpwrap->update_data = g_value_get_uchar(dpwrap->value);
+							for (x = 1 ; x < frames ; x++)
+								((guchar*)dpwrap->update_data)[x] = *(guchar*)dpwrap->update_data;
+						case G_TYPE_BOOLEAN:
+							(gboolean*)dpwrap->update_data = g_new(gboolean, frames);
+							*(gboolean*)dpwrap->update_data = g_value_get_boolean(dpwrap->value);
+							for (x = 1 ; x < frames ; x++)
+								((gboolean*)dpwrap->update_data)[x] = *(gboolean*)dpwrap->update_data;
+						case G_TYPE_INT:
+							(gint*)dpwrap->update_data = g_new(gint, frames);
+							*(gint*)dpwrap->update_data = g_value_get_int(dpwrap->value);
+							for (x = 1 ; x < frames ; x++)
+								((gint*)dpwrap->update_data)[x] = *(gint*)dpwrap->update_data;
+						case G_TYPE_UINT:
+							(guint*)dpwrap->update_data = g_new(guint, frames);
+							*(guint*)dpwrap->update_data = g_value_get_uint(dpwrap->value);
+							for (x = 1 ; x < frames ; x++)
+								((guint*)dpwrap->update_data)[x] = *(guint*)dpwrap->update_data;
+						case G_TYPE_LONG:
+							(glong*)dpwrap->update_data = g_new(glong, frames);
+							*(glong*)dpwrap->update_data = g_value_get_long(dpwrap->value);
+							for (x = 1 ; x < frames ; x++)
+								((glong*)dpwrap->update_data)[x] = *(glong*)dpwrap->update_data;
+						case G_TYPE_ULONG:
+							(gulong*)dpwrap->update_data = g_new(gulong, frames);
+							*(gulong*)dpwrap->update_data = g_value_get_ulong(dpwrap->value);
+							for (x = 1 ; x < frames ; x++)
+								((gulong*)dpwrap->update_data)[x] = *(gulong*)dpwrap->update_data;
+						case G_TYPE_FLOAT:
+							(gfloat*)dpwrap->update_data = g_new(gfloat, frames);
+							*(gfloat*)dpwrap->update_data = g_value_get_float(dpwrap->value);
+							for (x = 1 ; x < frames ; x++)
+								((gfloat*)dpwrap->update_data)[x] = *(gfloat*)dpwrap->update_data;
+						case G_TYPE_DOUBLE:
+							(gdouble*)dpwrap->update_data = g_new(gdouble, frames);
+							*(gdouble*)dpwrap->update_data = g_value_get_double(dpwrap->value);
+							for (x = 1 ; x < frames ; x++)
+								((gdouble*)dpwrap->update_data)[x] = *(gdouble*)dpwrap->update_data;
+						case G_TYPE_POINTER:
+							(gpointer*)dpwrap->update_data = g_new(gpointer, frames);
+							*(gpointer*)dpwrap->update_data = g_value_get_pointer(dpwrap->value);
+							for (x = 1 ; x < frames ; x++)
+								((gpointer*)dpwrap->update_data)[x] = *(gpointer*)dpwrap->update_data;
+						default:
+							break;
+					}
+					break;
+				default:
+					break;
+			}
 		}
 		dwraps = g_slist_next(dwraps);
 	}
-	
 	return frames;
 }
 
 static guint 
-gst_dpman_first_countdown_noop(GstDParamManager *dpman, guint frames, gint64 timestamp)
+gst_dpman_preprocess_noop(GstDParamManager *dpman, guint frames, gint64 timestamp)
 {
 	return frames;
 }
 
 static guint 
-gst_dpman_countdown_noop(GstDParamManager *dpman, guint frame_count)
+gst_dpman_process_noop(GstDParamManager *dpman, guint frame_count)
 {
 	return 0;
 }
