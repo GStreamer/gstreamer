@@ -1727,11 +1727,15 @@ gst_element_unlink (GstElement *src, GstElement *dest)
   while (srcpads) {
     pad = GST_PAD_CAST (srcpads->data);
 
-    if (GST_IS_REAL_PAD (pad) && GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
+    /* we only care about real src pads */
+    if (GST_IS_REAL_PAD (pad) && GST_PAD_IS_SRC (pad)) {
       GstPad *peerpad = GST_PAD_PEER (pad);
 
-      if (peerpad &&
-	  (GST_OBJECT_PARENT (GST_PAD_PEER (peerpad)) == (GstObject*) src)) {
+      /* see if the pad is connected and is really a pad
+       * of dest */
+      if (peerpad && 
+	  (GST_OBJECT_PARENT (peerpad) == (GstObject*) dest)) 
+      {
         gst_pad_unlink (pad, peerpad);
       }
     }
