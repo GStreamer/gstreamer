@@ -1,3 +1,12 @@
+2004-12-19  Edward Hervey  <bilboed@bilboed.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/videorate/gstvideorate.c: (gst_videorate_blank_data),
+	(gst_videorate_init), (gst_videorate_chain),
+	(gst_videorate_change_state):
+	  Event handling (fixes #159986).
+
 2004-12-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/riff/riff-media.c:
