@@ -14,3 +14,17 @@ A more complex pipeline looks like:
 
 ./launch disksrc redpill.vob | css-descramble | private_stream_1.0| \
 (ac3parse | ac3dec | audioink-oss) video_0| (mpeg2dec | videosink)
+
+gstreamer-complete
+==================
+
+This is a simple utility which provides custom bash completion when
+typing gstreamer-launch commands.
+
+Simply run "gstreamer-compprep" to build the registry of completions, and
+then put, in your .bashrc,
+"complete -C gstreamer-complete gstreamer-launch"
+(ensuring that gstreamer-complete is on your path).
+
+You can then enjoy context sensitive tab-completion of gstreamer-launch
+commands.
