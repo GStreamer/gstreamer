@@ -203,7 +203,7 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
         ac3parse adder audioscale auparse avi cdxaparse chart\
         cutter deinterlace effectv festival filter flx goom\
-        interleaving intfloat law level\
+        intfloat law level\
         median mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
         mpegaudio mpegaudioparse mpegstream mpegtypes modplug\
         monoscope passthrough playondemand qtdemux rtjpeg silence sine\
@@ -817,7 +817,6 @@ gst/festival/Makefile
 gst/filter/Makefile
 gst/flx/Makefile
 gst/goom/Makefile
-gst/interleaving/Makefile
 gst/intfloat/Makefile
 gst/law/Makefile
 gst/level/Makefile
