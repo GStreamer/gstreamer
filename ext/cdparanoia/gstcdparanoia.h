@@ -32,8 +32,15 @@ extern "C" {
 
 #define size16 gint16
 #define size32 gint32
-#include <cdda_interface.h>
-#include <cdda_paranoia.h>
+
+#ifdef CDPARANOIA_HEADERS_IN_DIR
+  #include <cdda/cdda_interface.h>
+  #include <cdda/cdda_paranoia.h>
+#else
+  #include <cdda_interface.h>
+  #include <cdda_paranoia.h>
+#endif
+  
 
 
 /*#define CDPARANOIA_BASEOFFSET 0xf1d2 */
