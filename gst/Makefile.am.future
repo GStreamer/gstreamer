@@ -16,8 +16,8 @@ endif
 EXTRA_libgst_la_SOURCES = gstcpuid_i386.s
 
 
-libcothreads_la_CFLAGS = $(CFLAGS) $(LIBGST_CFLAGS) -O2
-libgst_la_CFLAGS = $(CFLAGS) $(LIBGST_CFLAGS)
+libcothreads_la_CFLAGS = $(CFLAGS) $(LIBGST_CFLAGS) -O2 -D_GNU_SOURCE
+libgst_la_CFLAGS = $(CFLAGS) $(LIBGST_CFLAGS) -D_GNU_SOURCE
 CFLAGS =
 
 libcothreads_la_SOURCES = cothreads.c
@@ -55,6 +55,7 @@ libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
 	cothreads.h		\
 	gst.h			\
+	gsttypes.h		\
 	gstautoplug.h		\
 	gstbin.h		\
 	gstbuffer.h		\
