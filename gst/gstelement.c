@@ -1630,7 +1630,7 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
   }
 
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
-      GST_RPAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
+      GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
   foundpad = gst_element_request_compatible_pad (element, templ);
   gst_object_unref (GST_OBJECT (templ));
 
@@ -1642,7 +1642,7 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
   //g_warning("got here");
   //if (filtercaps == NULL) {
     templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
-        GST_RPAD_DIRECTION (pad), GST_PAD_ALWAYS, gst_caps_new_any());
+        GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, gst_caps_new_any());
     foundpad = gst_element_request_compatible_pad (element, templ);
     gst_object_unref (GST_OBJECT (templ));
 
@@ -1712,7 +1712,7 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
       GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no pad %s:%s", GST_ELEMENT_NAME (src), srcpadname);    
       return FALSE;
     } else {
-      if (!(GST_RPAD_DIRECTION (srcpad) == GST_PAD_SRC)) {
+      if (!(GST_PAD_DIRECTION (srcpad) == GST_PAD_SRC)) {
         GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is no src pad", GST_DEBUG_PAD_NAME (srcpad));    
         return FALSE;
       }
@@ -1732,7 +1732,7 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
       GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no pad %s:%s", GST_ELEMENT_NAME (dest), destpadname);    
       return FALSE;
     } else {
-      if (!(GST_RPAD_DIRECTION (destpad) == GST_PAD_SINK)) {
+      if (!(GST_PAD_DIRECTION (destpad) == GST_PAD_SINK)) {
         GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is no sink pad", GST_DEBUG_PAD_NAME (destpad));    
         return FALSE;
       }
@@ -1758,7 +1758,7 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
     do {
       GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "trying src pad %s:%s", 
 		 GST_DEBUG_PAD_NAME (srcpad));
-      if ((GST_RPAD_DIRECTION (srcpad) == GST_PAD_SRC) &&
+      if ((GST_PAD_DIRECTION (srcpad) == GST_PAD_SRC) &&
           (GST_PAD_PEER (srcpad) == NULL)) {
         GstPad *temp = gst_element_get_compatible_pad_filtered (dest, srcpad, 
                                                                 filtercaps);
@@ -1786,7 +1786,7 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
     do {
       GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "trying dest pad %s:%s", 
 		 GST_DEBUG_PAD_NAME (destpad));
-      if ((GST_RPAD_DIRECTION (destpad) == GST_PAD_SINK) &&
+      if ((GST_PAD_DIRECTION (destpad) == GST_PAD_SINK) &&
           (GST_PAD_PEER (destpad) == NULL)) {
         GstPad *temp = gst_element_get_compatible_pad_filtered (src, destpad, 
 	                                                  filtercaps);

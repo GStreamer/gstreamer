@@ -1,5 +1,11 @@
 2004-01-15  David Schleef  <ds@schleef.org>
 
+	* gst/gstelement.c: (gst_element_get_compatible_pad_filtered),
+	(gst_element_link_pads_filtered): Use GST_PAD_ macros instead
+	of GST_RPAD_, since we don't know if it's a real or ghost pad.
+
+2004-01-15  David Schleef  <ds@schleef.org>
+
 	* gst/gstqueue.c:
 	* gst/gstqueue.h:
 	Fix the spelling of "treshold" and make min_threshold actually
