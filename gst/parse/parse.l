@@ -22,7 +22,7 @@
 #  ifdef GST_DEBUG_ENABLED
 #    define PRINT(a...) GST_DEBUG (GST_CAT_PIPELINE, "flex: "##a)
 #  endif
-#endif // G_HAVE_ISO_VARARGS
+#endif /* G_HAVE_ISO_VARARGS */
 
 #define YY_DECL int _gst_parse_yylex (YYSTYPE *lvalp)
 %}

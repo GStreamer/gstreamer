@@ -126,13 +126,22 @@ typedef struct {
 #  define YYDEBUG 1
 #endif
 
-#endif // G_HAVE_ISO_VARARGS
+#endif /* G_HAVE_ISO_VARARGS */
 
-#define GST_BIN_MAKE(res, type, chain, assign) G_STMT_START{ \
+#define GST_BIN_MAKE(res, type, chainval, assign) G_STMT_START{ \
+  chain_t *chain = chainval; \
   GSList *walk; \
   GstBin *bin = (GstBin *) gst_element_factory_make (type, NULL); \
-  if (!bin) { \
-    ERROR (GST_PARSE_ERROR_NO_SUCH_ELEMENT, "No bin \"%s\"", type); \
+  if (!chain) { \
+    ERROR (GST_PARSE_ERROR_EMPTY_BIN, "Specified empty bin \"%s\", not allowed", type); \
+    g_slist_foreach (assign, (GFunc) gst_parse_strfree, NULL); \
+    g_slist_free (assign); \
+    YYERROR; \
+  } else if (!bin) { \
+    ERROR (GST_PARSE_ERROR_NO_SUCH_ELEMENT, "No bin \"%s\", omitting...", type); \
+    g_slist_foreach (assign, (GFunc) gst_parse_strfree, NULL); \
+    g_slist_free (assign); \
+    res = chain; \
   } else { \
     walk = chain->elements; \
     while (walk) { \
@@ -499,8 +508,11 @@ static int yyerror (const char *s);
 %%
 
 element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL); 
-						if (!$$) ERROR (GST_PARSE_ERROR_NO_SUCH_ELEMENT, "No element \"%s\"", $1);
+						if (!$$)
+						  ERROR (GST_PARSE_ERROR_NO_SUCH_ELEMENT, "No element \"%s\"", $1);
 						gst_parse_strfree ($1);
+						if (!$$)
+						  YYERROR;
                                               }
 	|	element ASSIGNMENT	      { gst_parse_element_set ($2, $1, graph);
 						$$ = $1;
@@ -513,6 +525,16 @@ assignments:	/* NOP */		      { $$ = NULL; }
 bin:	        '{' assignments chain '}'     { GST_BIN_MAKE ($$, "thread", $3, $2); }
         |       '(' assignments chain ')'     { GST_BIN_MAKE ($$, "bin", $3, $2); }
         |       BINREF assignments chain ')'  { GST_BIN_MAKE ($$, $1, $3, $2); 
+						gst_parse_strfree ($1);
+					      }
+	|	'{' assignments '}'	      { GST_BIN_MAKE ($$, "thread", NULL, $2); }
+	|	'(' assignments '}'	      { GST_BIN_MAKE ($$, "thread", NULL, $2); }
+        |       BINREF assignments ')'	      { GST_BIN_MAKE ($$, $1, NULL, $2); 
+						gst_parse_strfree ($1);
+					      }
+	|	'{' assignments error '}'     { GST_BIN_MAKE ($$, "thread", NULL, $2); }
+	|	'(' assignments error '}'     { GST_BIN_MAKE ($$, "thread", NULL, $2); }
+        |       BINREF assignments error ')'  { GST_BIN_MAKE ($$, $1, NULL, $2); 
 						gst_parse_strfree ($1);
 					      }
 	;
@@ -533,6 +555,7 @@ reference:	REF 			      { MAKE_REF ($$, $1, NULL); }
 linkpart:	reference		      { $$ = $1; }
 	|	pads			      { MAKE_REF ($$, NULL, $1); }
 	|	/* NOP */		      { MAKE_REF ($$, NULL, NULL); }
+	|	linkpart error		      { $$ = $1; }
 	;
 	
 link:		linkpart '!' linkpart	      { $$ = $1;
@@ -544,6 +567,7 @@ link:		linkpart '!' linkpart	      { $$ = $1;
 	
 linklist:	link			      { $$ = g_slist_prepend (NULL, $1); }
 	|	link linklist		      { $$ = g_slist_prepend ($2, $1); }
+	|	linklist error		      { $$ = $1; }
 	;	
 	
 chain:   	element			      { $$ = gst_parse_chain_new ();
@@ -635,6 +659,7 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						g_slist_free ($2);
 						$$ = $1;
 					      }
+	|	chain error		      { $$ = $1; }
 	;
 	
 graph:		chain			      { $$ = (graph_t *) graph;
@@ -701,7 +726,7 @@ _gst_parse_launch (const gchar *str, GError **error)
   dstr = g_strdup (str);
   _gst_parse_yy_scan_string (dstr);
 
-#ifdef DEBUG
+#ifdef GST_DEBUG_ENABLED
   yydebug = 1;
 #endif
 
