@@ -448,7 +448,7 @@ _wrap_gst_props_entry_get_list(PyObject *self)
 	list = NULL;
 	ret = gst_props_entry_get_list(pyg_boxed_get(self, GstPropsEntry), &list);
 	if (ret == TRUE) {
-		tuple = PyTuple_New(g_list_length(list));
+		tuple = PyTuple_New(g_list_length((GList *) list));
 		for (i = 0; list != NULL; i++, list = g_list_next(list)) {
 			obj = pyg_boxed_new(GST_TYPE_PROPS_ENTRY, list->data, TRUE, TRUE);
 			PyTuple_SET_ITEM(tuple, i, obj);
