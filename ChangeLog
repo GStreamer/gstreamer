@@ -1,5 +1,11 @@
 2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
 
+	* sys/osxvideo/Makefile.am:
+        Workaround so that the osxvideo .so file gets linked with the
+        Cocoa, OpenGL and QuickTime frameworks
+
+2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+
 	* sys/osxaudio/Makefile.am:
         Workaround so that the osxaudio .so file gets linked with the
         CoreAudio framework
