@@ -27,6 +27,9 @@
 
 #include <string.h>
 #include <stdlib.h>
+#ifdef HAVE_LIBOIL
+#include <liboil/liboil.h>
+#endif
 
 
 
@@ -512,6 +515,10 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value, 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#ifdef HAVE_LIBOIL
+  oil_init();
+#endif
+
   return gst_element_register (plugin, "videotestsrc", GST_RANK_NONE, GST_TYPE_VIDEOTESTSRC);
 }
 
