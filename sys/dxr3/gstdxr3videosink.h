@@ -69,7 +69,7 @@ struct _GstDxr3VideoSinkClass {
 GType gst_dxr3_video_sink_get_type(void);
 
 
-GST_PADTEMPLATE_FACTORY (dxr3_video_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (dxr3_video_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,

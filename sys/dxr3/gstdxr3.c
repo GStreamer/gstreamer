@@ -16,10 +16,10 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *video_factory;
 
-  video_factory = gst_elementfactory_new("dxr3videosink", GST_TYPE_DXR3_VIDEO_SINK, &dxr3_video_sink_details);
+  video_factory = gst_element_factory_new("dxr3videosink", GST_TYPE_DXR3_VIDEO_SINK, &dxr3_video_sink_details);
   g_return_val_if_fail(video_factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (video_factory, GST_PADTEMPLATE_GET (dxr3_video_sink_factory));
+  gst_element_factory_add_pad_template (video_factory, GST_PAD_TEMPLATE_GET (dxr3_video_sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (video_factory));
 

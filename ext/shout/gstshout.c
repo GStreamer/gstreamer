@@ -70,7 +70,7 @@ sink_template_factory (void)
   static GstPadTemplate *template = NULL;
   
   if (!template) {
-    template = gst_padtemplate_new (
+    template = gst_pad_template_new (
       "sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
@@ -452,10 +452,10 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("icecastsend", GST_TYPE_ICECASTSEND, &icecastsend_details);
+  factory = gst_element_factory_new("icecastsend", GST_TYPE_ICECASTSEND, &icecastsend_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, sink_template_factory ());
+  gst_element_factory_add_pad_template (factory, sink_template_factory ());
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

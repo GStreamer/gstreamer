@@ -209,7 +209,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("stereo",GST_TYPE_STEREO,
+  factory = gst_element_factory_new("stereo",GST_TYPE_STEREO,
                                    &stereo_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));

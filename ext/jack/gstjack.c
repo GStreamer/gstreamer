@@ -157,7 +157,7 @@ gst_jack_src_request_pad_factory(void)
     static GstPadTemplate *template = NULL;
     
     if (!template)
-        template = gst_padtemplate_new("%s", GST_PAD_SRC, GST_PAD_REQUEST, 
+        template = gst_pad_template_new("%s", GST_PAD_SRC, GST_PAD_REQUEST, 
                                        gst_caps_new("src", "audio/raw",
                                                     GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS),
                                        NULL);
@@ -171,7 +171,7 @@ gst_jack_sink_request_pad_factory(void)
     static GstPadTemplate *template = NULL;
     
     if (!template)
-        template = gst_padtemplate_new("%s", GST_PAD_SINK, GST_PAD_REQUEST, 
+        template = gst_pad_template_new("%s", GST_PAD_SINK, GST_PAD_REQUEST, 
                                        gst_caps_new("sink", "audio/raw",
                                                     GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS),
                                        NULL);
@@ -574,7 +574,7 @@ static void
 shutdown (void *arg)
 {
     GstJackClient *client = (GstJackClient*) arg;
-    printf ("shutdown\n");
+    printf ("shutdown %p\n", client);
 /*    gst_element_set_state (GST_ELEMENT (client->manager), GST_STATE_READY); */
 }
 
@@ -588,14 +588,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
         return FALSE;
     }
     
-    factory = gst_elementfactory_new ("jacksrc", GST_TYPE_JACK_SRC, &gst_jack_src_details);
+    factory = gst_element_factory_new ("jacksrc", GST_TYPE_JACK_SRC, &gst_jack_src_details);
     g_return_val_if_fail (factory != NULL, FALSE);
-    gst_elementfactory_add_padtemplate (factory, gst_jack_src_request_pad_factory());
+    gst_element_factory_add_pad_template (factory, gst_jack_src_request_pad_factory());
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
     
-    factory = gst_elementfactory_new ("jacksink", GST_TYPE_JACK_SINK, &gst_jack_sink_details);
+    factory = gst_element_factory_new ("jacksink", GST_TYPE_JACK_SINK, &gst_jack_sink_details);
     g_return_val_if_fail (factory != NULL, FALSE);
-    gst_elementfactory_add_padtemplate (factory, gst_jack_sink_request_pad_factory());
+    gst_element_factory_add_pad_template (factory, gst_jack_sink_request_pad_factory());
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
     
     gst_plugin_set_longname(plugin, "JACK plugin library");

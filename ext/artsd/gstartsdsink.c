@@ -47,7 +47,7 @@ enum {
   ARG_NAME,
 };
 
-GST_PADTEMPLATE_FACTORY (sink_factory,
+GST_PAD_TEMPLATE_FACTORY (sink_factory,
   "sink",					/* the name of the pads */
   GST_PAD_SINK,				/* type of the pad */
   GST_PAD_ALWAYS,				/* ALWAYS/SOMETIMES */
@@ -186,7 +186,7 @@ static void
 gst_artsdsink_init(GstArtsdsink *artsdsink)
 {
   artsdsink->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(artsdsink), artsdsink->sinkpad);
   gst_pad_set_chain_function(artsdsink->sinkpad, gst_artsdsink_chain);
 
@@ -323,11 +323,11 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("artsdsink", GST_TYPE_ARTSDSINK,
+  factory = gst_element_factory_new("artsdsink", GST_TYPE_ARTSDSINK,
 				   &artsdsink_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate(factory, GST_PADTEMPLATE_GET (sink_factory));
+  gst_element_factory_add_pad_template(factory, GST_PAD_TEMPLATE_GET (sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

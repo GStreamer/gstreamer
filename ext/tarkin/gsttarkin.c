@@ -24,7 +24,7 @@
 extern GstElementDetails tarkinenc_details;
 extern GstElementDetails tarkindec_details;
 
-static GstCaps* 	tarkin_typefind 	(GstBuffer *buf, gpointer private);
+static GstCaps* 	tarkin_type_find 	(GstBuffer *buf, gpointer private);
 
 GstPadTemplate *enc_src_template, *enc_sink_template;
 GstPadTemplate *dec_src_template, *dec_sink_template;
@@ -63,11 +63,11 @@ static GstTypeDefinition tarkindefinition =
   "tarkin_video/x-ogg",
   "video/x-ogg",
   ".ogg",
-  tarkin_typefind,
+  tarkin_type_find,
 };
 
 static GstCaps* 
-tarkin_typefind (GstBuffer *buf, gpointer private) 
+tarkin_type_find (GstBuffer *buf, gpointer private) 
 {
   gulong head = GULONG_FROM_BE (*((gulong *)GST_BUFFER_DATA (buf)));
 
@@ -77,7 +77,7 @@ tarkin_typefind (GstBuffer *buf, gpointer private)
   if (head  != 0x4F676753)
     return NULL;
 
-  return gst_caps_new ("tarkin_typefind", "video/x-ogg", NULL);
+  return gst_caps_new ("tarkin_type_find", "video/x-ogg", NULL);
 }
 
 
@@ -91,7 +91,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_plugin_set_longname (plugin, "The OGG Vorbis Codec");
 
   /* create an elementfactory for the tarkinenc element */
-  enc = gst_elementfactory_new ("tarkinenc", GST_TYPE_TARKINENC,
+  enc = gst_element_factory_new ("tarkinenc", GST_TYPE_TARKINENC,
                                 &tarkinenc_details);
   g_return_val_if_fail (enc != NULL, FALSE);
 
@@ -99,25 +99,25 @@ plugin_init (GModule *module, GstPlugin *plugin)
   tarkin_caps = tarkin_caps_factory ();
 
   /* register sink pads */
-  enc_sink_template = gst_padtemplate_new ("sink", 
+  enc_sink_template = gst_pad_template_new ("sink", 
 		  			   GST_PAD_SINK, 
 		                           GST_PAD_ALWAYS, 
 					   raw_caps, 
 					   NULL);
-  gst_elementfactory_add_padtemplate (enc, enc_sink_template);
+  gst_element_factory_add_pad_template (enc, enc_sink_template);
 
   /* register src pads */
-  enc_src_template = gst_padtemplate_new ("src", 
+  enc_src_template = gst_pad_template_new ("src", 
 		                          GST_PAD_SRC, 
 		                          GST_PAD_ALWAYS, 
 					  tarkin_caps, 
 					  NULL);
-  gst_elementfactory_add_padtemplate (enc, enc_src_template);
+  gst_element_factory_add_pad_template (enc, enc_src_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
 
   /* create an elementfactory for the tarkindec element */
-  dec = gst_elementfactory_new ("tarkindec", GST_TYPE_TARKINDEC,
+  dec = gst_element_factory_new ("tarkindec", GST_TYPE_TARKINDEC,
                                 &tarkindec_details);
   g_return_val_if_fail (dec != NULL, FALSE);
 
@@ -125,24 +125,24 @@ plugin_init (GModule *module, GstPlugin *plugin)
   tarkin_caps = tarkin_caps_factory ();
 
   /* register sink pads */
-  dec_sink_template = gst_padtemplate_new ("sink", 
+  dec_sink_template = gst_pad_template_new ("sink", 
 		  			   GST_PAD_SINK, 
 		                           GST_PAD_ALWAYS, 
 					   tarkin_caps, 
 					   NULL);
-  gst_elementfactory_add_padtemplate (dec, dec_sink_template);
+  gst_element_factory_add_pad_template (dec, dec_sink_template);
 
   /* register src pads */
-  dec_src_template = gst_padtemplate_new ("src", 
+  dec_src_template = gst_pad_template_new ("src", 
 		                          GST_PAD_SRC, 
 		                          GST_PAD_ALWAYS, 
 					  raw_caps, 
 					  NULL);
-  gst_elementfactory_add_padtemplate (dec, dec_src_template);
+  gst_element_factory_add_pad_template (dec, dec_src_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
 
-  type = gst_typefactory_new (&tarkindefinition);
+  type = gst_type_factory_new (&tarkindefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;

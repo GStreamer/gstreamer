@@ -36,11 +36,11 @@ int main(int argc, char **argv)
     gtk_signal_connect(GTK_OBJECT(button), "clicked", gtk_main_quit, NULL);
     gtk_widget_show(button);
     
-    filesrc = gst_elementfactory_make("filesrc", "filesrc");
-    mad = gst_elementfactory_make("mad", "mad");
-    stereo2mono = gst_elementfactory_make("stereo2mono", "stereo2mono");
-    speed = gst_elementfactory_make("speed", "speed");
-    osssink = gst_elementfactory_make("osssink", "osssink");
+    filesrc = gst_element_factory_make("filesrc", "filesrc");
+    mad = gst_element_factory_make("mad", "mad");
+    stereo2mono = gst_element_factory_make("stereo2mono", "stereo2mono");
+    speed = gst_element_factory_make("speed", "speed");
+    osssink = gst_element_factory_make("osssink", "osssink");
     gtk_object_set(GTK_OBJECT(osssink), "fragment", 0x00180008, NULL);
     
     gtk_signal_connect(GTK_OBJECT(gtk_range_get_adjustment(GTK_RANGE(hscale))),

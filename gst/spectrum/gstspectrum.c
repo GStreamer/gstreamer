@@ -192,7 +192,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the spectrum element */
-  factory = gst_elementfactory_new ("spectrum",GST_TYPE_SPECTRUM,
+  factory = gst_element_factory_new ("spectrum",GST_TYPE_SPECTRUM,
                                     &gst_spectrum_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 

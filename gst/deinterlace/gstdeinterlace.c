@@ -47,7 +47,7 @@ enum {
   ARG_EDGE_DETECT,
 };
 
-GST_PADTEMPLATE_FACTORY (deinterlace_src_factory,
+GST_PAD_TEMPLATE_FACTORY (deinterlace_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -60,7 +60,7 @@ GST_PADTEMPLATE_FACTORY (deinterlace_src_factory,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (deinterlace_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (deinterlace_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -357,14 +357,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("deinterlace",GST_TYPE_DEINTERLACE,
+  factory = gst_element_factory_new("deinterlace",GST_TYPE_DEINTERLACE,
                                    &deinterlace_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   
-  gst_elementfactory_add_padtemplate (factory, 
-		  GST_PADTEMPLATE_GET (deinterlace_src_factory));
-  gst_elementfactory_add_padtemplate (factory, 
-		  GST_PADTEMPLATE_GET (deinterlace_sink_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (deinterlace_src_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (deinterlace_sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

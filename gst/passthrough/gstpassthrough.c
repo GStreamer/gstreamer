@@ -54,7 +54,7 @@ passthrough_sink_factory (void)
   static GstPadTemplate *template = NULL; 
                                           
   if (! template) {                        
-    template = gst_padtemplate_new 
+    template = gst_pad_template_new 
       ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       gst_caps_append (gst_caps_new ("sink_int",  "audio/raw",
                                      GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
@@ -71,7 +71,7 @@ passthrough_src_factory (void)
   static GstPadTemplate *template = NULL;
   
   if (! template)
-    template = gst_padtemplate_new 
+    template = gst_pad_template_new 
       ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
        gst_caps_append (gst_caps_new ("src_float", "audio/raw",
                                       GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS),
@@ -312,11 +312,11 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new ("passthrough", GST_TYPE_PASSTHROUGH, &passthrough_details);
+  factory = gst_element_factory_new ("passthrough", GST_TYPE_PASSTHROUGH, &passthrough_details);
   g_return_val_if_fail (factory != NULL, FALSE);
   
-  gst_elementfactory_add_padtemplate (factory, passthrough_src_factory ());
-  gst_elementfactory_add_padtemplate (factory, passthrough_sink_factory ());
+  gst_element_factory_add_pad_template (factory, passthrough_src_factory ());
+  gst_element_factory_add_pad_template (factory, passthrough_sink_factory ());
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

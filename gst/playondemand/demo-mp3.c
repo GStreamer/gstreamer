@@ -26,10 +26,10 @@ int main(int argc, char **argv)
     exit(-1);
   }
     
-  src = gst_elementfactory_make("filesrc", "filesrc");
-  mad = gst_elementfactory_make("mad", "mad");
-  pod = gst_elementfactory_make("playondemand", "playondemand");
-  osssink = gst_elementfactory_make("osssink", "osssink");
+  src = gst_element_factory_make("filesrc", "filesrc");
+  mad = gst_element_factory_make("mad", "mad");
+  pod = gst_element_factory_make("playondemand", "playondemand");
+  osssink = gst_element_factory_make("osssink", "osssink");
 
   g_object_set(G_OBJECT(src), "location", argv[1], NULL);
   g_object_set(G_OBJECT(osssink), "fragment", 0x00180008, NULL);

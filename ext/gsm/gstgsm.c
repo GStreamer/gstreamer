@@ -58,7 +58,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstCaps *raw_caps, *gsm_caps;
 
   /* create an elementfactory for the gsmdec element */
-  enc = gst_elementfactory_new("gsmenc",GST_TYPE_GSMENC,
+  enc = gst_element_factory_new("gsmenc",GST_TYPE_GSMENC,
                                    &gst_gsmenc_details);
   g_return_val_if_fail(enc != NULL, FALSE);
 
@@ -66,35 +66,35 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gsm_caps = GST_CAPS_GET (gsm_caps_factory);
 
   /* register sink pads */
-  gsmenc_sink_template = gst_padtemplate_new ("sink", GST_PAD_SINK, 
+  gsmenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                              GST_PAD_ALWAYS, 
 					      raw_caps, NULL);
-  gst_elementfactory_add_padtemplate (enc, gsmenc_sink_template);
+  gst_element_factory_add_pad_template (enc, gsmenc_sink_template);
 
   /* register src pads */
-  gsmenc_src_template = gst_padtemplate_new ("src", GST_PAD_SRC, 
+  gsmenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                             GST_PAD_ALWAYS, 
 					     gsm_caps, NULL);
-  gst_elementfactory_add_padtemplate (enc, gsmenc_src_template);
+  gst_element_factory_add_pad_template (enc, gsmenc_src_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
 
   /* create an elementfactory for the gsmdec element */
-  dec = gst_elementfactory_new("gsmdec",GST_TYPE_GSMDEC,
+  dec = gst_element_factory_new("gsmdec",GST_TYPE_GSMDEC,
                                    &gst_gsmdec_details);
   g_return_val_if_fail(dec != NULL, FALSE);
  
   /* register sink pads */
-  gsmdec_sink_template = gst_padtemplate_new ("sink", GST_PAD_SINK, 
+  gsmdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                              GST_PAD_ALWAYS, 
 					      gsm_caps, NULL);
-  gst_elementfactory_add_padtemplate (dec, gsmdec_sink_template);
+  gst_element_factory_add_pad_template (dec, gsmdec_sink_template);
 
   /* register src pads */
-  gsmdec_src_template = gst_padtemplate_new ("src", GST_PAD_SRC, 
+  gsmdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                             GST_PAD_ALWAYS, 
 					     raw_caps, NULL);
-  gst_elementfactory_add_padtemplate (dec, gsmdec_src_template);
+  gst_element_factory_add_pad_template (dec, gsmdec_src_template);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
 

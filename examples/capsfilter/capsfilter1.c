@@ -39,20 +39,20 @@ main (gint argc, gchar *argv[])
   }
 
   pipeline = gst_pipeline_new ("main_pipeline");
-  filesrc = gst_elementfactory_make ("filesrc", "filesrc");
+  filesrc = gst_element_factory_make ("filesrc", "filesrc");
   g_return_val_if_fail (filesrc, -1);
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
-  demux = gst_elementfactory_make ("mpegdemux", "demux");
+  demux = gst_element_factory_make ("mpegdemux", "demux");
   g_return_val_if_fail (demux, -1);
   g_signal_connect (G_OBJECT (demux), "new_pad", G_CALLBACK (new_pad_func), pipeline);
 
   thread = gst_thread_new ("thread");
-  queue = gst_elementfactory_make ("queue", "queue");
-  mpeg2dec = gst_elementfactory_make ("mpeg2dec", "mpeg2dec");
+  queue = gst_element_factory_make ("queue", "queue");
+  mpeg2dec = gst_element_factory_make ("mpeg2dec", "mpeg2dec");
   g_return_val_if_fail (mpeg2dec, -1);
-  colorspace = gst_elementfactory_make ("colorspace", "colorspace");
+  colorspace = gst_element_factory_make ("colorspace", "colorspace");
   g_return_val_if_fail (colorspace, -1);
-  xvideosink = gst_elementfactory_make ("xvideosink", "xvideosink");
+  xvideosink = gst_element_factory_make ("xvideosink", "xvideosink");
   g_return_val_if_fail (xvideosink, -1);
   g_object_set (G_OBJECT (xvideosink), "toplevel", TRUE, NULL);
 

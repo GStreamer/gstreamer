@@ -86,7 +86,7 @@ src_template_factory (void)
   static GstPadTemplate *template = NULL;
   
   if (!template) {
-    template = gst_padtemplate_new (
+    template = gst_pad_template_new (
   	"src",
   	GST_PAD_SRC,
   	GST_PAD_ALWAYS,
@@ -127,7 +127,7 @@ sink_template_factory (void)
   static GstPadTemplate *template = NULL;
 
   if (!template) {
-    template = gst_padtemplate_new (
+    template = gst_pad_template_new (
   	"sink",					/* the name of the pads */
   	GST_PAD_SINK,				/* type of the pad */
   	GST_PAD_ALWAYS,				/* ALWAYS/SOMETIMES */
@@ -420,12 +420,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the chart element */
-  factory = gst_elementfactory_new("chart",GST_TYPE_CHART,
+  factory = gst_element_factory_new("chart",GST_TYPE_CHART,
                                    &gst_chart_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, src_template_factory ());
-  gst_elementfactory_add_padtemplate (factory, sink_template_factory ());
+  gst_element_factory_add_pad_template (factory, src_template_factory ());
+  gst_element_factory_add_pad_template (factory, sink_template_factory ());
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

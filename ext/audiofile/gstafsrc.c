@@ -50,7 +50,7 @@ enum {
 
 /* added a src factory function to force audio/raw MIME type */
 /* I think the caps can be broader, we need to change that somehow */
-GST_PADTEMPLATE_FACTORY (afsrc_src_factory,
+GST_PAD_TEMPLATE_FACTORY (afsrc_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -276,11 +276,11 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   
-  factory = gst_elementfactory_new ("afsrc", GST_TYPE_AFSRC,
+  factory = gst_element_factory_new ("afsrc", GST_TYPE_AFSRC,
                                     &afsrc_details);
   g_return_val_if_fail (factory != NULL, FALSE);
   
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (afsrc_src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (afsrc_src_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

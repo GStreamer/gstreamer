@@ -426,7 +426,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the mpeg2subt element */
-  factory = gst_elementfactory_new("mpeg2subt",GST_TYPE_MPEG2SUBT,
+  factory = gst_element_factory_new("mpeg2subt",GST_TYPE_MPEG2SUBT,
                                    &mpeg2subt_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 

@@ -17,7 +17,7 @@ class ArtsStereoSink_impl : virtual public ArtsStereoSink_skel,
 {
 
   GstPad *sinkpad;
-  long remainingsamples;
+  unsigned long remainingsamples;
   GstBuffer *inbuf;
   unsigned char *dataptr;
 

@@ -24,14 +24,14 @@ int main(int argc,char *argv[]) {
 
   bin = gst_bin_new("bin");
 
-  srcfactory = gst_elementfactory_find("audiosrc");
+  srcfactory = gst_element_factory_find("audiosrc");
   g_return_val_if_fail(srcfactory != NULL, -1);
-  wavefactory = gst_elementfactory_find("smoothwave");
+  wavefactory = gst_element_factory_find("smoothwave");
   g_return_val_if_fail(wavefactory != NULL, -1);
 
-  src = gst_elementfactory_create(srcfactory,"src");
+  src = gst_element_factory_create(srcfactory,"src");
   gtk_object_set(GTK_OBJECT(src),"bytes_per_read",(gulong)2048,NULL);
-  wave = gst_elementfactory_create(wavefactory,"wave");
+  wave = gst_element_factory_create(wavefactory,"wave");
   gtk_object_set(GTK_OBJECT(wave),"width",256,"height",100,NULL);
 
 

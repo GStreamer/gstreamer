@@ -25,12 +25,12 @@ int main(int argc,char *argv[]) {
 
   bin = gst_bin_new("bin");
 
-  srcfactory = gst_elementfactory_find("osssrc");
-  spectrumfactory = gst_elementfactory_find("gstspectrum");
+  srcfactory = gst_element_factory_find("osssrc");
+  spectrumfactory = gst_element_factory_find("gstspectrum");
 
-  src = gst_elementfactory_create(srcfactory,"src");
+  src = gst_element_factory_create(srcfactory,"src");
   gtk_object_set(GTK_OBJECT(src),"bytes_per_read",(gulong)1024,NULL);
-  spectrum = gst_elementfactory_create(spectrumfactory,"spectrum");
+  spectrum = gst_element_factory_create(spectrumfactory,"spectrum");
   gtk_object_set(GTK_OBJECT(spectrum),"width",256,NULL);
 
 

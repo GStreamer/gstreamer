@@ -51,7 +51,7 @@ enum {
 
 /* added a sink factory function to force audio/raw MIME type */
 /* I think the caps can be broader, we need to change that somehow */
-GST_PADTEMPLATE_FACTORY (afsink_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (afsink_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -178,7 +178,7 @@ gst_afsink_init (GstAFSink *afsink)
   /* GstPad *pad;   this is now done in the struct */
 
   afsink->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (afsink_sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (afsink_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (afsink), afsink->sinkpad);
 
   gst_pad_set_chain_function (afsink->sinkpad, gst_afsink_chain);
@@ -259,11 +259,11 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   
-  factory = gst_elementfactory_new ("afsink", GST_TYPE_AFSINK,
+  factory = gst_element_factory_new ("afsink", GST_TYPE_AFSINK,
                                     &afsink_details);
   g_return_val_if_fail (factory != NULL, FALSE);
   
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (afsink_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (afsink_sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
   
@@ -499,7 +499,7 @@ gst_afsink_factory_init (GstElementFactory *factory)
 {
   GstPadTemplate *sink_pt;
   sink_pt = afsink_sink_factory();
-  gst_elementfactory_add_padtemplate (factory, sink_pt);
+  gst_element_factory_add_pad_template (factory, sink_pt);
     
   return TRUE;  
 

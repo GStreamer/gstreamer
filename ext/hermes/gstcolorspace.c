@@ -45,7 +45,7 @@ enum {
   ARG_DEST,
 };
 
-GST_PADTEMPLATE_FACTORY (colorspace_src_template_factory,
+GST_PAD_TEMPLATE_FACTORY (colorspace_src_template_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -62,7 +62,7 @@ GST_PADTEMPLATE_FACTORY (colorspace_src_template_factory,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (colorspace_sink_template_factory,
+GST_PAD_TEMPLATE_FACTORY (colorspace_sink_template_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -250,7 +250,7 @@ gst_colorspace_getcaps (GstPad *pad, GstCaps *caps)
   /* we can do everything our peer can... */
   peercaps = gst_caps_copy (gst_pad_get_allowed_caps (space->srcpad));
   /* and our own template of course */
-  ourcaps = gst_caps_copy (gst_pad_get_padtemplate_caps (pad));
+  ourcaps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
 
   /* merge them together, we prefer the peercaps first */
   result = gst_caps_prepend (ourcaps, peercaps);
@@ -397,7 +397,7 @@ static void
 gst_colorspace_init (GstColorspace *space)
 {
   space->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (colorspace_sink_template_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (colorspace_sink_template_factory), "sink");
   gst_pad_set_connect_function (space->sinkpad, gst_colorspace_sinkconnect);
   gst_pad_set_getcaps_function (space->sinkpad, gst_colorspace_getcaps);
   gst_pad_set_bufferpool_function (space->sinkpad, colorspace_get_bufferpool);
@@ -405,7 +405,7 @@ gst_colorspace_init (GstColorspace *space)
   gst_element_add_pad(GST_ELEMENT(space),space->sinkpad);
 
   space->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (colorspace_src_template_factory), "src");
+		  GST_PAD_TEMPLATE_GET (colorspace_src_template_factory), "src");
   gst_element_add_pad(GST_ELEMENT(space),space->srcpad);
   gst_pad_set_connect_function (space->srcpad, gst_colorspace_srcconnect);
 
@@ -558,14 +558,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail (hermes_res != 0, FALSE);
 #endif
 
-  factory = gst_elementfactory_new ("colorspace", GST_TYPE_COLORSPACE,
+  factory = gst_element_factory_new ("colorspace", GST_TYPE_COLORSPACE,
                                     &colorspace_details);
   g_return_val_if_fail (factory != NULL, FALSE);
   
-  gst_elementfactory_add_padtemplate (factory, 
-		  GST_PADTEMPLATE_GET (colorspace_src_template_factory));
-  gst_elementfactory_add_padtemplate (factory, 
-		  GST_PADTEMPLATE_GET (colorspace_sink_template_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (colorspace_src_template_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (colorspace_sink_template_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

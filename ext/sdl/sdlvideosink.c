@@ -580,7 +580,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
                      };
 
   /* create an elementfactory for the sdlvideosink element */
-  factory = gst_elementfactory_new("sdlvideosink",GST_TYPE_SDLVIDEOSINK,
+  factory = gst_element_factory_new("sdlvideosink",GST_TYPE_SDLVIDEOSINK,
                                    &gst_sdlvideosink_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
@@ -598,13 +598,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
     capslist = gst_caps_append(capslist, caps);
   }
 
-  sink_template = gst_padtemplate_new (
+  sink_template = gst_pad_template_new (
 		  "sink",
                   GST_PAD_SINK,
   		  GST_PAD_ALWAYS,
 		  capslist, NULL);
 
-  gst_elementfactory_add_padtemplate (factory, sink_template);
+  gst_element_factory_add_pad_template (factory, sink_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

@@ -45,7 +45,7 @@ enum {
   ARG_LUM_ONLY
 };
 
-GST_PADTEMPLATE_FACTORY (smooth_src_factory,
+GST_PAD_TEMPLATE_FACTORY (smooth_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -56,7 +56,7 @@ GST_PADTEMPLATE_FACTORY (smooth_src_factory,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (smooth_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (smooth_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -147,13 +147,13 @@ static void
 gst_smooth_init (GstSmooth *smooth)
 {
   smooth->sinkpad = gst_pad_new_from_template (
-                  GST_PADTEMPLATE_GET (smooth_sink_factory), "sink");
+                  GST_PAD_TEMPLATE_GET (smooth_sink_factory), "sink");
   gst_pad_set_connect_function (smooth->sinkpad, gst_smooth_sinkconnect);
   gst_pad_set_chain_function (smooth->sinkpad, gst_smooth_chain);
   gst_element_add_pad (GST_ELEMENT (smooth), smooth->sinkpad);
 
   smooth->srcpad = gst_pad_new_from_template (
-                  GST_PADTEMPLATE_GET (smooth_src_factory), "src");
+                  GST_PAD_TEMPLATE_GET (smooth_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (smooth), smooth->srcpad);
 
   smooth->active = TRUE;
@@ -322,12 +322,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("smooth",GST_TYPE_SMOOTH,
+  factory = gst_element_factory_new("smooth",GST_TYPE_SMOOTH,
                                    &smooth_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (smooth_sink_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (smooth_src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (smooth_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (smooth_src_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

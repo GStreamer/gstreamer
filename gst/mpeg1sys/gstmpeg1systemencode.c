@@ -48,7 +48,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (src_factory,
+GST_PAD_TEMPLATE_FACTORY (src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -59,7 +59,7 @@ GST_PADTEMPLATE_FACTORY (src_factory,
       "systemstream",   GST_PROPS_BOOLEAN (TRUE)
   )
 )
-GST_PADTEMPLATE_FACTORY (video_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (video_sink_factory,
   "video_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
@@ -71,7 +71,7 @@ GST_PADTEMPLATE_FACTORY (video_sink_factory,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (audio_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
   "audio_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
@@ -141,7 +141,7 @@ static void
 gst_system_encode_init (GstMPEG1SystemEncode *system_encode)
 {
   system_encode->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (system_encode), system_encode->srcpad);
 
   system_encode->video_buffer = mpeg1mux_buffer_new (BUFFER_TYPE_VIDEO, 0xE0);
@@ -179,7 +179,7 @@ gst_system_encode_request_new_pad (GstElement *element, GstPadTemplate *templ, c
   }
   system_encode = GST_SYSTEM_ENCODE (element);
 
-  if (templ == GST_PADTEMPLATE_GET (audio_sink_factory)) {
+  if (templ == GST_PAD_TEMPLATE_GET (audio_sink_factory)) {
     name = g_strdup_printf ("audio_%02d", system_encode->num_audio_pads);
     g_print ("%s\n", name);
     newpad = gst_pad_new_from_template (templ, name);
@@ -189,7 +189,7 @@ gst_system_encode_request_new_pad (GstElement *element, GstPadTemplate *templ, c
     system_encode->num_audio_pads++;
     system_encode->which_streams |= STREAMS_AUDIO;
   }
-  else if (templ == GST_PADTEMPLATE_GET (video_sink_factory)) {
+  else if (templ == GST_PAD_TEMPLATE_GET (video_sink_factory)) {
     name = g_strdup_printf ("video_%02d", system_encode->num_video_pads);
     g_print ("%s\n", name);
     newpad = gst_pad_new_from_template (templ, name);
@@ -551,13 +551,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
   }
 
   /* create an elementfactory for the system_encode element */
-  factory = gst_elementfactory_new("system_encode",GST_TYPE_SYSTEM_ENCODE,
+  factory = gst_element_factory_new("system_encode",GST_TYPE_SYSTEM_ENCODE,
                                    &system_encode_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (audio_sink_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (video_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (audio_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

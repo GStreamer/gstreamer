@@ -284,7 +284,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the smoothwave element */
-  factory = gst_elementfactory_new("smoothwave",GST_TYPE_SMOOTHWAVE,
+  factory = gst_element_factory_new("smoothwave",GST_TYPE_SMOOTHWAVE,
                                    &gst_smoothwave_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 

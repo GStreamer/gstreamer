@@ -54,7 +54,7 @@ gst_qcamsrc_details =
 #define DEF_PORT		0x378
 #define DEF_AUTOEXP		AE_NONE
 
-GST_PADTEMPLATE_FACTORY (gst_qcamsrc_src_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_qcamsrc_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -201,7 +201,7 @@ static void
 gst_qcamsrc_init (GstQCamSrc *qcamsrc)
 {
   qcamsrc->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (gst_qcamsrc_src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (gst_qcamsrc_src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(qcamsrc),qcamsrc->srcpad);
   gst_pad_set_get_function (qcamsrc->srcpad,gst_qcamsrc_get);
 
@@ -423,12 +423,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the qcamsrcparse element */
-  factory = gst_elementfactory_new("qcamsrc",GST_TYPE_QCAMSRC,
+  factory = gst_element_factory_new("qcamsrc",GST_TYPE_QCAMSRC,
                                    &gst_qcamsrc_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory,
-	     GST_PADTEMPLATE_GET (gst_qcamsrc_src_factory));
+  gst_element_factory_add_pad_template (factory,
+	     GST_PAD_TEMPLATE_GET (gst_qcamsrc_src_factory));
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

@@ -380,7 +380,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the vcdsrc element */
-  factory = gst_elementfactory_new("vcdsrc",GST_TYPE_VCDSRC,
+  factory = gst_element_factory_new("vcdsrc",GST_TYPE_VCDSRC,
                                    &vcdsrc_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
