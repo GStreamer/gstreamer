@@ -19,14 +19,14 @@ int main(int argc,char *argv[]) {
   doc = xmlNewDoc("1.0");
   doc->xmlRootNode = xmlNewDocNode(doc, NULL, "GST-CompletionRegistry", NULL);
 
-  plugins = gst_registry_pool_plugin_list();
+  plugins = g_list_copy(gst_registry_pool_plugin_list());
   while (plugins) {
     GstPlugin *plugin;
 
     plugin = (GstPlugin *)(plugins->data);
     plugins = g_list_next (plugins);
 
-    features = gst_plugin_get_feature_list(plugin);
+    features = g_list_copy(gst_plugin_get_feature_list(plugin));
     while (features) {
       GstPluginFeature *feature;
       GstElementFactory *factory;
@@ -40,9 +40,10 @@ int main(int argc,char *argv[]) {
       factory = GST_ELEMENT_FACTORY (feature);
 
       factorynode = xmlNewChild (doc->xmlRootNode, NULL, "element", NULL);
-      xmlNewChild (factorynode, NULL, "name", gst_object_get_name (GST_OBJECT (factory)));
+      xmlNewChild (factorynode, NULL, "name", 
+		GST_PLUGIN_FEATURE_NAME(GST_PLUGIN_FEATURE(factory)));
 
-      element = gst_element_factory_create(factory,"element");
+      element = gst_element_factory_create(factory,NULL);
       GST_DEBUG(GST_CAT_PLUGIN_LOADING, "adding factory %s", 
               gst_object_get_name (GST_OBJECT (factory)));
       if (element == NULL) {
