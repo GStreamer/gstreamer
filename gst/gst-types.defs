@@ -205,6 +205,12 @@
    '("gchar*" "message"))
 )
 
+(define-boxed Plugin
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstPlugin")
+  (gtype-id "GST_TYPE_PLUGIN")
+)
 
 (define-boxed Structure
   (in-module "Gst")

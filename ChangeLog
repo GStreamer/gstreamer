@@ -1,5 +1,13 @@
 2004-07-15  Johan Dahlin  <johan@gnome.org>
 
+	* testsuite/registry.py: Add some basic tests 
+
+	* gst/gst.override: Don't ignore all gst_registry_* symbols
+	(_wrap_gst_registry_pool_plugin_list): Impl.
+	(_wrap_gst_registry_pool_feature_list): Impl.
+
+	* gst/gst-types.defs (Plugin): Add as a boxed
+
 	* gst/__init__.py: Use DLFCN instead of dl to help python
 	installations without the dl module (gentoo for instance)
 
