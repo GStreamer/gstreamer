@@ -529,8 +529,8 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
   gint i;
   gsize in, out;
   GstTagList *taglist;
-  const GList *padlist;
   GValue value = { 0 };
+  gboolean have_tags = FALSE;
 
   GST_INFO ("Object is a comment.");
 
@@ -562,6 +562,7 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
   g_value_init (&value, G_TYPE_STRING);
   for (i = 0; i < 5; i++) {
     if (utf8_comments[i] && tags[i]) {
+      have_tags = TRUE;
       g_value_set_string (&value, utf8_comments[i]);
       gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
           tags[i], &value, NULL);
@@ -570,14 +571,25 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
   }
   g_value_unset (&value);
 
-  for (padlist = gst_element_get_pad_list (GST_ELEMENT (asf_demux));
-      padlist != NULL; padlist = padlist->next) {
-    if (GST_PAD_IS_SRC (padlist->data) && GST_PAD_IS_USABLE (padlist->data)) {
-      gst_pad_push (GST_PAD (padlist->data),
-          GST_DATA (gst_event_new_tag (taglist)));
+  if (have_tags) {
+    GstElement *element = GST_ELEMENT (asf_demux);
+    GstEvent *event = gst_event_new_tag (taglist);
+    const GList *padlist;
+
+    for (padlist = gst_element_get_pad_list (element);
+        padlist != NULL; padlist = padlist->next) {
+      if (GST_PAD_IS_SRC (padlist->data) && GST_PAD_IS_USABLE (padlist->data)) {
+        gst_event_ref (event);
+        gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
+      }
     }
+
+    gst_element_found_tags (element, taglist);
+
+    gst_event_unref (event);
+  } else {
+    gst_tag_list_free (taglist);
   }
-  gst_element_found_tags (GST_ELEMENT (asf_demux), taglist);
 
   return TRUE;
 
