@@ -828,7 +828,7 @@ gst_v4lsrc_set_clock (GstElement *element,
 
 
 gboolean
-gst_v4lsrc_init_init (GstPlugin *plugin)
+gst_v4lsrc_factory_init (GstPlugin *plugin)
 {
   GstElementFactory *factory;
 

@@ -94,7 +94,7 @@ struct _GstV4lSrcClass {
 
 GType gst_v4lsrc_get_type(void);
 
-gboolean gst_v4lsrc_init_init (GstPlugin *plugin);
+gboolean gst_v4lsrc_factory_init (GstPlugin *plugin);
 
 #ifdef __cplusplus
 }
