@@ -155,12 +155,25 @@ gst_tee_init (GstTee *tee)
   tee->silent = FALSE;
 }
 
+/* helper compare function */
+gint name_pad_compare (gconstpointer a, gconstpointer b)
+{
+  GstPad* pad = (GstPad*) a;
+  gchar *name = (gchar *) b;
+  
+  g_assert (GST_IS_PAD (pad));
+
+  return g_strcasecmp (name, gst_pad_get_name (pad)); /* returns 0 if match */
+}
+
 static GstPad*
 gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar *unused) 
 {
   gchar *name;
   GstPad *srcpad;
   GstTee *tee;
+  int i = 0;
+  GList *pads;
 
   g_return_val_if_fail (GST_IS_TEE (element), NULL);
 
@@ -171,7 +184,22 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
 
   tee = GST_TEE (element);
 
-  name = g_strdup_printf ("src%d", GST_ELEMENT (tee)->numsrcpads);
+  /* try names in order and find one that's not in use atm */
+  pads = gst_element_get_pad_list (element);
+    
+  name = NULL;
+  while (!name)
+  {
+    name = g_strdup_printf ("src%d", i);
+    if (g_list_find_custom (pads, (gconstpointer) name, name_pad_compare) != NULL)
+    {
+      /* this name is taken, use the next one */
+      ++i;
+      g_free (name);
+      name = NULL;
+    }
+  }
+  gst_element_info (GST_ELEMENT (tee), "new pad %s", name);
   
   srcpad = gst_pad_new_from_template (templ, name);
   gst_element_add_pad (GST_ELEMENT (tee), srcpad);
