@@ -170,7 +170,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_datadir}/gtk-doc/html/gstreamer/gstpad.html
 %{_datadir}/gtk-doc/html/gstreamer/gstpipeline.html
 %{_datadir}/gtk-doc/html/gstreamer/gstpluginfeature.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-cothreads.html
+# %{_datadir}/gtk-doc/html/gstreamer/gstreamer-cothreads.html
 %{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstbuffer.html
 %{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstbufferpool.html
 %{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstcaps.html
