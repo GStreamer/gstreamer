@@ -1,3 +1,9 @@
+2004-11-07  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/autoplug/gstspideridentity.c:
+	(gst_spider_identity_sink_loop_type_finding):
+	  Don't crash if that function is not implemented.
+
 2004-11-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced-types.xml:

@@ -537,6 +537,7 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity * ident)
   find.best_probability = 0;
   find.caps = NULL;
   gst_find.data = &find;
+  gst_find.get_length = NULL;
   gst_find.peek = spider_find_peek;
   gst_find.suggest = spider_find_suggest;
   while (walk) {
