@@ -126,7 +126,7 @@ all-local: html-build.stamp
 scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
 	@echo '*** Scanning header files ***'
 	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null ; then \
-	    if test x"$(srcdir)" != x"$(builddir)" ; then \
+	    if test x"$(srcdir)" != x. ; then \
 	        cp $(srcdir)/$(DOC_MODULE).types . ; \
 	    fi ; \
 	    ls ; \
@@ -147,7 +147,7 @@ $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
 
 tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_OVERRIDES)
 	@echo '*** Rebuilding template files ***'
-	if test x"$(srcdir)" != x"$(builddir)" ; then \
+	if test x"$(srcdir)" != x. ; then \
 	    cp $(srcdir)/$(DOC_MODULE)-decl.txt . ; \
 	    cp $(srcdir)/$(DOC_MODULE)-sections.txt . ; \
 	fi
@@ -201,7 +201,7 @@ distclean-local: clean
 	rm -rf tmpl/*.sgml.bak
 	rm -f $(DOC_MODULE).hierarchy
 	rm -f *.stamp || true
-	if test x"$(srcdir)" != x"$(builddir)" ; then \
+	if test x"$(srcdir)" != x. ; then \
 	    rm -f $(DOC_MODULE)-docs.sgml ; \
 	    rm -f $(DOC_MODULE).types ; \
 	    rm -f $(DOC_MODULE).interfaces ; \
