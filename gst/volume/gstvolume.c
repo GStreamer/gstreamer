@@ -421,6 +421,8 @@ volume_chain_float (GstPad * pad, GstData * _data)
   filter = GST_VOLUME (GST_OBJECT_PARENT (pad));
   g_return_if_fail (GST_IS_VOLUME (filter));
 
+  GST_LOG_OBJECT (filter, "processing incoming float buffer with refcount %d",
+      GST_BUFFER_REFCOUNT_VALUE (buf));
   out_buf = gst_buffer_copy_on_write (buf);
 
   data = (gfloat *) GST_BUFFER_DATA (out_buf);
@@ -453,7 +455,7 @@ volume_chain_int16 (GstPad * pad, GstData * _data)
   filter = GST_VOLUME (GST_OBJECT_PARENT (pad));
   g_return_if_fail (GST_IS_VOLUME (filter));
 
-  GST_LOG_OBJECT (filter, "processing incoming buffer with refcount %d",
+  GST_LOG_OBJECT (filter, "processing incoming int16 buffer with refcount %d",
       GST_BUFFER_REFCOUNT_VALUE (buf));
   out_buf = gst_buffer_copy_on_write (buf);
 

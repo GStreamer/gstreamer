@@ -153,8 +153,13 @@ gst_ximagesink_check_xshm_calls (GstXContext * xcontext)
   XSync (xcontext->disp, 0);
 
   XShmDetach (xcontext->disp, &ximage->SHMInfo);
+  XSync (xcontext->disp, FALSE);
+
   shmdt (ximage->SHMInfo.shmaddr);
   shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
+
+  /* To be sure, reset the SHMInfo entry */
+  ximage->SHMInfo.shmaddr = ((void *) -1);
 
   /* store whether we succeeded in result and reset error_caught */
   result = !error_caught;
