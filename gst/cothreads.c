@@ -88,8 +88,11 @@ cothread_context_init (void)
   /* if there already is a cotread context for this thread,
    * just return it */
   ctx = g_private_get (_cothread_ctx_key);
-  if (ctx) 
+  if (ctx) {
+    GST_INFO (GST_CAT_COTHREADS, 
+	      "returning private _cothread_ctx_key %p", ctx);
     return ctx;
+  }
 
   /*
    * initalize the whole of the cothreads context 
@@ -114,10 +117,11 @@ cothread_context_init (void)
   }
 
   /* set this thread's context pointer */
+  GST_INFO (GST_CAT_COTHREADS, "setting private _cothread_ctx_key to %p",
+	    ctx);
   g_private_set (_cothread_ctx_key, ctx);
 
   /* clear the cothread data */
-
   memset (ctx->cothreads, 0, sizeof (ctx->cothreads));
 
   sp = CURRENT_STACK_FRAME;
@@ -172,6 +176,8 @@ cothread_context_free (cothread_context *ctx)
     }
   }
   g_hash_table_destroy (ctx->data);
+  /* make sure we free the private key for cothread context */
+  g_private_set (_cothread_ctx_key, NULL);
   g_free (ctx);
 }
 
@@ -223,7 +229,7 @@ cothread_create (cothread_context *ctx)
   /* FIXME: an assumption is made that the stack segment is STACK_SIZE
    * aligned. */
   stack_top = ((gulong) sp | (STACK_SIZE - 1)) + 1;
-  GST_DEBUG (GST_CAT_COTHREADS, "stack top is %lu", stack_top);
+  GST_DEBUG (GST_CAT_COTHREADS, "stack top is 0x%lx", stack_top);
 #endif
 
   /* cothread stack space of the thread is mapped in reverse, with cothread 0
@@ -240,7 +246,8 @@ cothread_create (cothread_context *ctx)
    * ie. we state explicitly that we are going to use it */
   /* FIXME: maybe we should map slightly less than COTHREAD_STACKSIZE,
    * so that stack overruns possibly could segfault ? */
-  mmaped = mmap ((void *) cothread, COTHREAD_STACKSIZE,
+  mmaped = mmap ((void *) (cothread), 
+		 COTHREAD_STACKSIZE,
                  PROT_READ | PROT_WRITE | PROT_EXEC,
                  MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   GST_DEBUG (GST_CAT_COTHREADS, "coming out of mmap");
@@ -253,9 +260,9 @@ cothread_create (cothread_context *ctx)
     return NULL;
   }
 
+  cothread->magic_number = COTHREAD_MAGIC_NUMBER;
   GST_DEBUG (GST_CAT_COTHREADS, "create  cothread %d with magic number 0x%x",
              slot, cothread->magic_number);
-  cothread->magic_number = COTHREAD_MAGIC_NUMBER;
   cothread->ctx = ctx;
   cothread->cothreadnum = slot;
   cothread->flags = 0;
@@ -327,12 +334,13 @@ cothread_destroy (cothread_state *cothread)
 	{
 	  cothread_destroy (ctx->cothreads[i]);
 	  GST_INFO (GST_CAT_COTHREADS,
-	            "destroyed cothread %d, %d cothreads left\n", 
+	            "destroyed cothread %d, %d cothreads left",
 		    i, ctx->ncothreads);
 	}
       }
     }
     g_assert (ctx->ncothreads == 1);
+    GST_INFO (GST_CAT_COTHREADS, "freeing 0th cothread");
     g_free (cothread);
   }
   else {
@@ -368,7 +376,7 @@ cothread_destroy (cothread_state *cothread)
       }
     }
   }
-  GST_DEBUG (GST_CAT_COTHREADS, "munmap done\n");
+  GST_DEBUG (GST_CAT_COTHREADS, "munmap done");
 
   ctx->cothreads[cothreadnum] = NULL;
   ctx->ncothreads--;
