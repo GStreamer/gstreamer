@@ -88,6 +88,8 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gst/*.la
 rm -f $RPM_BUILD_ROOT%{_libdir}/gst/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
+rm -f $RPM_BUILD_ROOT%{_includedir}/gst-plugins-%{version}/gst/media-info/media-info.h
+rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info.so.0.0.0
 
 
 %clean
@@ -1119,6 +1121,7 @@ Plug-ins for playback of AVI format media files.
 Summary: 	GStreamer audio effects plug-in.
 Group: 		Libraries/Multimedia
 Requires: 	gstreamer-plugins = %{version}
+@USE_LIBPNG_TRUE@Requires:	libpng
 Obsoletes:	gstreamer-misc
 
 %description -n gstreamer-audio-effects
@@ -1149,6 +1152,7 @@ integer to float conversion, LAW conversion and level detection plug-ins.
 %{_libdir}/gst/libgstcutter.so
 %{_libdir}/gst/libgstfilter.so
 %{_libdir}/gst/libmixmatrix.so
+@USE_LIBPNG_TRUE@%{_libdir}/gst/libgstpng.so
 
 %post -n gstreamer-audio-effects
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1502,6 +1506,10 @@ This package contains a basic audio and video playback library.
 /sbin/ldconfig
 
 %changelog
+* Thu Nov 28 2002 Christian Schaller <Uraeus@linuxrising.org>
+- Put in libgstpng plugin
+- rm the libgstmedia-info stuff until thomas think they are ready
+
 * Fri Nov 01 2002 Thomas Vander Stichele <thomas at apestaart dot org>
 - don't use compprep until ABI issues can be fixed
 
