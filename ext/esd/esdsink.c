@@ -89,6 +89,7 @@ static void			gst_esdsink_close_audio		(GstEsdsink *sink);
 static GstElementStateReturn	gst_esdsink_change_state	(GstElement *element);
 static GstPadLinkReturn		gst_esdsink_sinkconnect		(GstPad *pad, GstCaps *caps);
 
+static void                     gst_esdsink_set_clock           (GstElement *element, GstClock *clock);
 static void			gst_esdsink_chain		(GstPad *pad, GstBuffer *buf);
 
 static void			gst_esdsink_set_property	(GObject *object, guint prop_id, 
@@ -142,6 +143,8 @@ gst_esdsink_class_init (GstEsdsinkClass *klass)
   gobject_class->get_property = gst_esdsink_get_property;
 
   gstelement_class->change_state = gst_esdsink_change_state;
+  gstelement_class->set_clock    = gst_esdsink_set_clock;
+  //gstelement_class->get_clock    = gst_esdsink_get_clock;
 }
 
 static void
@@ -152,6 +155,8 @@ gst_esdsink_init(GstEsdsink *esdsink)
   gst_element_add_pad(GST_ELEMENT(esdsink), esdsink->sinkpad);
   gst_pad_set_chain_function(esdsink->sinkpad, GST_DEBUG_FUNCPTR(gst_esdsink_chain));
   gst_pad_set_link_function(esdsink->sinkpad, gst_esdsink_sinkconnect);
+
+  GST_FLAG_SET (esdsink, GST_ELEMENT_EVENT_AWARE);
 
   esdsink->mute = FALSE;
   esdsink->fd = -1;
@@ -187,6 +192,28 @@ gst_esdsink_sinkconnect (GstPad *pad, GstCaps *caps)
   return GST_PAD_LINK_REFUSED;
 }
 
+#if 0
+static GstClock *
+gst_esdsink_get_clock (GstElement *element)
+{
+  GstEsdsink *esdsink;
+
+  esdsink = GET_ESDSINK (element);
+
+  return GST_CLOCK(esdsink->provided_clock);
+}
+#endif
+
+static void
+gst_esdsink_set_clock (GstElement *element, GstClock *clock)
+{
+  GstEsdsink *esdsink;
+
+  esdsink = GST_ESDSINK (element);
+
+  esdsink->clock = clock;
+}
+
 static void
 gst_esdsink_chain (GstPad *pad, GstBuffer *buf)
 {
@@ -197,6 +224,35 @@ gst_esdsink_chain (GstPad *pad, GstBuffer *buf)
   if (!esdsink->negotiated) {
     gst_element_error (GST_ELEMENT (esdsink), "not negotiated");
     goto done;
+  }
+
+  if (GST_IS_EVENT(buf)){
+    GstEvent *event = GST_EVENT(buf);
+
+    g_print("got event\n");
+
+    switch(GST_EVENT_TYPE(event)){
+      case GST_EVENT_EOS:
+	break;
+      case GST_EVENT_DISCONTINUOUS:
+      {
+	gint64 value;
+
+	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
+	  if (!gst_clock_handle_discont (esdsink->clock, value)){
+	    //gst_esdsink_clock_set_active (osssink->provided_clock, FALSE);
+	  }
+	  //esdsink->handled = 0;
+	}
+	//esdsink->resync = TRUE;
+	break;
+      }
+      default:
+	gst_pad_event_default(pad, event);
+	break;
+    }
+    gst_event_unref(event);
+    return;
   }
 
   if (GST_BUFFER_DATA (buf) != NULL) {

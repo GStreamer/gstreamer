@@ -44,6 +44,8 @@ struct _GstEsdsink {
 
   GstPad 	*sinkpad;
 
+  GstClock	*clock;
+
   gboolean 	 mute;
   int 		 fd;
   gint 		 format;
