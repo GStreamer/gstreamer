@@ -365,10 +365,6 @@ gst_caps_get_by_name (GstCaps *caps, const gchar *name)
 static gboolean
 gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
 {
-  if (fromcaps == NULL ||
-      tocaps == NULL) 
-    return TRUE;
-	
   if (fromcaps->id != tocaps->id) {
     GST_DEBUG (0,"gstcaps: mime types differ (%d to %d)\n",
 	       fromcaps->id, tocaps->id);
@@ -403,6 +399,12 @@ gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
 gboolean
 gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
 {
+  if (fromcaps == NULL ||
+      tocaps == NULL) {
+    GST_DEBUG (0,"gstcaps: no caps\n");
+    return TRUE;
+  }
+
   while (fromcaps) {
     GstCaps *destcaps = tocaps;
 
