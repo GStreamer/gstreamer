@@ -16,6 +16,12 @@ else
 ALSA_DIR=
 endif
 
+if USE_AMRNB
+AMRNB_DIR=amrnb
+else
+AMRNB=
+endif
+
 if USE_ARTS
 ARTS_DIR=arts
 else
@@ -398,6 +404,8 @@ SUBDIRS=\
 	$(A52DEC_DIR) \
 	$(AALIB_DIR) \
 	$(ALSA_DIR) \
+	$(AMRNB_DIR) \
+	$(AMRWB_DIR) \
 	$(ARTS_DIR) \
 	$(ARTSC_DIR) \
 	$(AUDIOFILE_DIR) \
@@ -464,6 +472,7 @@ DIST_SUBDIRS=\
 	a52dec \
 	aalib \
 	alsa \
+	amrnb \
 	arts \
 	artsd \
 	audiofile \
