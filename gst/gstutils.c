@@ -211,6 +211,7 @@ void
 gst_util_dump_mem (guchar * mem, guint size)
 {
   guint i, j;
+  GString *string = g_string_sized_new (80);
 
   i = j = 0;
   while (i < size) {
@@ -219,22 +220,24 @@ gst_util_dump_mem (guchar * mem, guint size)
 	guint k;
 
 	for (k = i - 16; k < i; k++) {
-          if (mem[k]>'a' && mem[k] < 'Z')
-            g_print ("%c", mem[k]);
+          if (g_ascii_isprint (mem[k]))
+            g_string_append_printf (string, "%c", mem[k]);
 	  else 
-            g_print (".");
+            g_string_append_printf (string, ".");
 	}
-        g_print ("\n");
+        g_print ("%s\n", string->str);
+	g_string_set_size (string, 0);
       }
-      g_print ("%08x (%p): ", i, mem+i);
+      g_string_append_printf (string, "%08x (%p): ", i, mem+i);
       j = 15;
     }
     else {
       j--;
     }
-    g_print ("%02x ", mem[i]);
+    g_string_append_printf (string, "%02x ", mem[i]);
     i++;
   }
+  g_string_free (string, TRUE);
   g_print ("\n");
 }
 
