@@ -671,6 +671,7 @@ gst_swfdec_init (GstSwfdec *swfdec)
 
   /* initialize the swfdec decoder state */
   swfdec->state = swf_init();
+  g_return_if_fail(swfdec->state != NULL);
 
   swfdec->state->colorspace = SWF_COLORSPACE_RGB888;
 
