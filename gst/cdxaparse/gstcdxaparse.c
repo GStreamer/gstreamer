@@ -250,9 +250,10 @@ gst_cdxa_parse_loop (GstElement *element)
   if (cdxa_parse->state == CDXA_PARSE_HEADER) {
     guint32 fmt_size;
     guint8 *buf;
+    guint32 got_bytes;
 
-    header = (CDXAParseHeader *) gst_bytestream_peek_bytes (cdxa_parse->bs, 20);
-    if (!header)
+    got_bytes = gst_bytestream_peek_bytes (cdxa_parse->bs, (guint8**)&header, 20);
+    if (got_bytes < 20)
       return;
 
     cdxa_parse->riff_size = GUINT32_FROM_LE (header->riff_size);
@@ -263,8 +264,8 @@ gst_cdxa_parse_loop (GstElement *element)
       return;
     
     /* get the data size */
-    buf = gst_bytestream_peek_bytes (cdxa_parse->bs, 4);
-    if (!buf)
+    got_bytes = gst_bytestream_peek_bytes (cdxa_parse->bs, (guint8**)&buf, 4);
+    if (got_bytes < 4)
       return;
     cdxa_parse->data_size = GUINT32_FROM_LE (*((guint32 *)buf));
 
@@ -282,9 +283,10 @@ gst_cdxa_parse_loop (GstElement *element)
   else {
     GstBuffer *buf;
     GstBuffer *outbuf;
+    guint32 got_bytes;
 
-    buf = gst_bytestream_read (cdxa_parse->bs, CDXA_SECTOR_SIZE);
-    if (!buf) {
+    got_bytes = gst_bytestream_read (cdxa_parse->bs, &buf, CDXA_SECTOR_SIZE);
+    if (got_bytes < CDXA_SECTOR_SIZE) {
       gst_cdxa_parse_handle_event (cdxa_parse);
       return;
     }
