@@ -29,8 +29,7 @@
       <listitem>
         <para>
           If creating a new type, discuss it first with the other &GStreamer;
-          developers, on at least one of: IRC, mailing lists, the &GStreamer;
-          wiki.
+          developers, on at least one of: IRC, mailing lists.
         </para>
       </listitem>
       <listitem>
