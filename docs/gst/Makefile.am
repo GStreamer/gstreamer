@@ -106,8 +106,14 @@ html: sgml
 clean-local:
 	rm -rf *~ *.bak *.signals *-unused.txt *.args *.o *.lo .libs sgml html
 
+# FIXME : thomas added all sgml files and some other things to make
+# make distcheck work
 distclean-local: clean
 	rm -rf $(DOC_MODULE)-decl-list.txt
+	rm -rf gstreamer-*.txt
+	rm -rf tmpl/*.sgml
+	rm gstreamer.hierarchy
+	rm *.stamp	
 
 install-data-local: html/book1.html
 	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
