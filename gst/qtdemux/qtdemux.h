@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
+#include <gst/getbits/getbits.h>
 
 #ifdef __cplusplus
 extern "C" {
