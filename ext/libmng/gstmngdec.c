@@ -234,16 +234,24 @@ static void
 gst_mngdec_loop (GstElement * element)
 {
   GstMngDec *mngdec;
+  mng_retcode ret;
 
   mngdec = GST_MNGDEC (element);
 
   if (mngdec->first) {
     GST_DEBUG ("display");
-    mng_readdisplay (mngdec->mng);
+    ret = mng_readdisplay (mngdec->mng);
     mngdec->first = FALSE;
   } else {
     GST_DEBUG ("resume");
-    mng_display_resume (mngdec->mng);
+    ret = mng_display_resume (mngdec->mng);
+  }
+  if (ret == MNG_NEEDTIMERWAIT) {
+    /* libmng needs more data later on */
+  } else {
+    /* assume EOS here */
+    gst_pad_push (mngdec->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
+    gst_element_set_eos (element);
   }
 }
 
@@ -386,7 +394,6 @@ mngdec_gettickcount (mng_handle mng)
   GTimeVal time;
   guint32 val;
 
-
   g_get_current_time (&time);
 
   val = time.tv_sec * 1000 + time.tv_usec;
@@ -411,11 +418,23 @@ static mng_bool
 mngdec_processheader (mng_handle mng, mng_uint32 width, mng_uint32 height)
 {
   GstMngDec *mngdec;
+  guint32 playtime;
+  guint32 framecount;
+  guint32 ticks;
 
   mngdec = GST_MNGDEC (mng_get_userdata (mng));
 
-  g_print ("process header %d %d\n", width, height);
   GST_DEBUG ("process header %d %d", width, height);
+
+  playtime = mng_get_playtime (mng);
+  framecount = mng_get_framecount (mng);
+  ticks = mng_get_ticks (mng);
+
+  if (playtime == 0) {
+    mngdec->fps = ticks;
+  } else {
+    mngdec->fps = ((gfloat) ticks) / playtime;
+  }
 
   if (mngdec->width != width || mngdec->height != height) {
     mngdec->width = width;
@@ -451,8 +470,11 @@ mngdec_refresh (mng_handle mng, mng_uint32 x, mng_uint32 y,
     mng_uint32 w, mng_uint32 h)
 {
   GstMngDec *mngdec;
+  guint32 current;
 
   mngdec = GST_MNGDEC (mng_get_userdata (mng));
+
+  current = mng_get_currentplaytime (mng);
 
   GST_DEBUG ("refresh %d %d %d %d", x, y, w, h);
   if (h == mngdec->height) {
@@ -494,7 +516,6 @@ gst_mngdec_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_PAUSED:
       mngdec->first = TRUE;
-      mngdec->fps = 10.0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
