@@ -617,10 +617,7 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
     if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsink), GST_ELEMENT_DECOUPLED))
       num_decoupled++;
 
-    if (realsrc->sched == realsink->sched && num_decoupled != 0) {
-      g_warning ("cannot connect pads from decoupled elements with the same sched\n");
-      return FALSE;
-    } else if (realsrc->sched != realsink->sched && num_decoupled != 1) {
+    if (realsrc->sched != realsink->sched && num_decoupled != 1) {
       g_warning ("connecting pads with different scheds requires exactly one decoupled element (queue)\n");
       return FALSE;
     }
