@@ -147,10 +147,11 @@ static void synaescope_coreGo(void) {
   do {
     /*Bytewize version was: *(ptr++) -= *ptr+(*ptr>>1)>>4; */
     if (*ptr)
-
-      if (*ptr & 0xf0f0f0f0)
+    {
+      if (*ptr & 0xf0f0f0f0) 
+      {
         *ptr = *ptr - ((*ptr & 0xf0f0f0f0) >> 4) - ((*ptr & 0xe0e0e0e0) >> 5);
-      else {
+      } else {
         *ptr = (*ptr * 14 >> 4) & 0x0f0f0f0f;
             /*Should be 29/32 to be consistent. Who cares. This is totally */
             /* hacked anyway.  */
@@ -160,12 +161,13 @@ static void synaescope_coreGo(void) {
         /*subptr[2] = (int)subptr[0] * 29 / 32; */
         /*subptr[3] = (int)subptr[0] * 29 / 32; */
       }
+    }
     ptr++;
   } while(ptr < end);
 
   heightFactor = FFT_BUFFER_SIZE/2 / syn_height + 1;
   actualHeight = FFT_BUFFER_SIZE/2 / heightFactor;
-  heightAdd = syn_height + actualHeight >> 1;
+  heightAdd = (syn_height + actualHeight) >> 1;
 
   /* Correct for window size */
   brightFactor2 = (brightFactor/65536.0/FFT_BUFFER_SIZE)*
