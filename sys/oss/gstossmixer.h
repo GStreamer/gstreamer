@@ -1,5 +1,8 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wim.taymans@chello.be>
+ *
+ * gstossmixer.h: mixer interface implementation for OSS
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,35 +20,26 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef __GST_OSS_MIXER_H__
+#define __GST_OSS_MIXER_H__
 
+#include <gst/gst.h>
+#include <gst/mixer/mixer.h>
 #include "gstosselement.h"
-#include "gstosssink.h"
-#include "gstosssrc.h"
-#include "gstossgst.h"
 
-static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
-{
-  if (!gst_library_load ("gstaudio"))
-    return FALSE;
+G_BEGIN_DECLS
 
-  if (!gst_osselement_factory_init (plugin) ||
-      !gst_osssrc_factory_init (plugin) ||
-      !gst_osssink_factory_init (plugin) ||
-      !gst_ossgst_factory_init (plugin)) {
-    g_warning ("Failed to register OSS elements!");
-    return FALSE;
-  }
+typedef struct _GstOssMixerChannel {
+  GstMixerChannel parent;
+  gint            lvol, rvol;
+  gint            channel_num;
+} GstOssMixerChannel;
 
-  return TRUE;
-}
+void		gst_ossmixer_interface_init	(GstMixerClass *klass);
+void		gst_oss_interface_init		(GstInterfaceClass *klass);
+void		gst_ossmixer_build_list		(GstOssElement *oss);
+void		gst_ossmixer_free_list		(GstOssElement *oss);
 
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "ossaudio",
-  plugin_init
-};
+G_END_DECLS
+
+#endif /* __GST_OSS_MIXER_H__ */

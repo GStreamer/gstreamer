@@ -33,7 +33,7 @@
 #include <string.h>
 
 #include <gstosssrc.h>
-#include <gstosscommon.h>
+#include <gstosselement.h>
 #include <gst/audio/audioclock.h>
 
 /* elementfactory information */
@@ -56,7 +56,6 @@ enum {
 
 enum {
   ARG_0,
-  ARG_DEVICE,
   ARG_BUFFERSIZE,
   ARG_FRAGMENT,
 };
@@ -89,7 +88,6 @@ GST_PAD_TEMPLATE_FACTORY (osssrc_src_factory,
 static void 			gst_osssrc_class_init	(GstOssSrcClass *klass);
 static void 			gst_osssrc_init		(GstOssSrc *osssrc);
 static void 			gst_osssrc_dispose	(GObject *object);
-static void 			gst_osssrc_finalize	(GObject *object);
 
 static GstPadLinkReturn 	gst_osssrc_srcconnect 	(GstPad *pad, GstCaps *caps);
 static const GstFormat* 	gst_osssrc_get_formats 	(GstPad *pad);
@@ -136,7 +134,7 @@ gst_osssrc_get_type (void)
       0,
       (GInstanceInitFunc)gst_osssrc_init,
     };
-    osssrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstOssSrc", &osssrc_info, 0);
+    osssrc_type = g_type_register_static (GST_TYPE_OSSELEMENT, "GstOssSrc", &osssrc_info, 0);
   }
   return osssrc_type;
 }
@@ -150,14 +148,11 @@ gst_osssrc_class_init (GstOssSrcClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_OSSELEMENT);
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFFERSIZE,
     g_param_spec_ulong ("buffersize","Buffer Size","The size of the buffers with samples",
                         0, G_MAXULONG, 0, G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE,
-    g_param_spec_string ("device", "device", "oss device (/dev/dspN usually)",
-                         "default", G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAGMENT,
     g_param_spec_int ("fragment", "Fragment",
                       "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
@@ -166,7 +161,6 @@ gst_osssrc_class_init (GstOssSrcClass *klass)
   gobject_class->set_property = gst_osssrc_set_property;
   gobject_class->get_property = gst_osssrc_get_property;
   gobject_class->dispose      = gst_osssrc_dispose;
-  gobject_class->finalize     = gst_osssrc_finalize;
 
   gstelement_class->change_state = gst_osssrc_change_state;
   gstelement_class->send_event = gst_osssrc_send_event;
@@ -192,8 +186,6 @@ gst_osssrc_init (GstOssSrc *osssrc)
 
   gst_element_add_pad (GST_ELEMENT (osssrc), osssrc->srcpad);
 
-  gst_osscommon_init (&osssrc->common);
-
   osssrc->buffersize = 4096;
   osssrc->curoffset = 0;
 
@@ -202,6 +194,7 @@ gst_osssrc_init (GstOssSrc *osssrc)
   
   osssrc->clock = NULL;
 }
+
 static void
 gst_osssrc_dispose (GObject *object)
 {
@@ -211,16 +204,6 @@ gst_osssrc_dispose (GObject *object)
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
-static void
-gst_osssrc_finalize (GObject *object)
-{
-  GstOssSrc *osssrc = (GstOssSrc *) object;
-
-  g_free (osssrc->common.device);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
 
 static GstPadLinkReturn 
 gst_osssrc_srcconnect (GstPad *pad, GstCaps *caps)
@@ -232,10 +215,10 @@ gst_osssrc_srcconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_LINK_DELAYED;
 
-  if (!gst_osscommon_parse_caps (&src->common, caps))
+  if (!gst_osselement_parse_caps (GST_OSSELEMENT (src), caps))
     return GST_PAD_LINK_REFUSED;
 
-  if (!gst_osscommon_sync_parms (&src->common))
+  if (!gst_osselement_sync_parms (GST_OSSELEMENT (src)))
     return GST_PAD_LINK_REFUSED;
 
   return GST_PAD_LINK_OK;
@@ -251,10 +234,10 @@ gst_osssrc_negotiate (GstPad *pad)
 
   allowed = gst_pad_get_allowed_caps (pad);
 
-  if (!gst_osscommon_merge_fixed_caps (&src->common, allowed))
+  if (!gst_osselement_merge_fixed_caps (GST_OSSELEMENT (src), allowed))
     return FALSE;
 
-  if (!gst_osscommon_sync_parms (&src->common))
+  if (!gst_osselement_sync_parms (GST_OSSELEMENT (src)))
     return FALSE;
     
   /* set caps on src pad */
@@ -262,12 +245,12 @@ gst_osssrc_negotiate (GstPad *pad)
 	GST_CAPS_NEW (
     	  "oss_src",
 	  "audio/x-raw-int",
-	    "endianness", GST_PROPS_INT (src->common.endianness),
-	    "signed",     GST_PROPS_BOOLEAN (src->common.sign),
-	    "width",      GST_PROPS_INT (src->common.width),
-	    "depth",      GST_PROPS_INT (src->common.depth),
-	    "rate",       GST_PROPS_INT (src->common.rate),
-	    "channels",   GST_PROPS_INT (src->common.channels)
+	    "endianness", GST_PROPS_INT (GST_OSSELEMENT (src)->endianness),
+	    "signed",     GST_PROPS_BOOLEAN (GST_OSSELEMENT (src)->sign),
+	    "width",      GST_PROPS_INT (GST_OSSELEMENT (src)->width),
+	    "depth",      GST_PROPS_INT (GST_OSSELEMENT (src)->depth),
+	    "rate",       GST_PROPS_INT (GST_OSSELEMENT (src)->rate),
+	    "channels",   GST_PROPS_INT (GST_OSSELEMENT (src)->channels)
         )) <= 0) 
   {
     return FALSE;
@@ -281,13 +264,13 @@ gst_osssrc_get_time (GstClock *clock, gpointer data)
   GstOssSrc *osssrc = GST_OSSSRC (data);
   audio_buf_info info;
 
-  if (!osssrc->common.bps)
+  if (!GST_OSSELEMENT (osssrc)->bps)
     return 0;
 
-  if (ioctl(osssrc->common.fd, SNDCTL_DSP_GETISPACE, &info) < 0)
+  if (ioctl(GST_OSSELEMENT (osssrc)->fd, SNDCTL_DSP_GETISPACE, &info) < 0)
     return 0;
 
-  return (osssrc->curoffset + info.bytes) * GST_SECOND / osssrc->common.bps;
+  return (osssrc->curoffset + info.bytes) * GST_SECOND / GST_OSSELEMENT (osssrc)->bps;
 }
 
 static GstClock*
@@ -336,13 +319,13 @@ gst_osssrc_get (GstPad *pad)
       return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
     }
   }
-  if (src->common.bps == 0) {
+  if (GST_OSSELEMENT (src)->bps == 0) {
     gst_buffer_unref (buf);
     gst_element_error (GST_ELEMENT (src), "no format negotiated");
     return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
   }
 
-  readbytes = read (src->common.fd,GST_BUFFER_DATA (buf),
+  readbytes = read (GST_OSSELEMENT (src)->fd,GST_BUFFER_DATA (buf),
                     src->buffersize);
   if (readbytes < 0) {
     gst_buffer_unref (buf);
@@ -361,7 +344,9 @@ gst_osssrc_get (GstPad *pad)
   GST_BUFFER_OFFSET (buf) = src->curoffset;
 
   /* FIXME: we are falsely assuming that we are the master clock here */
-  GST_BUFFER_TIMESTAMP (buf) = src->curoffset * GST_SECOND / src->common.bps;
+  GST_BUFFER_TIMESTAMP (buf) = src->curoffset * GST_SECOND / GST_OSSELEMENT (src)->bps;
+  GST_BUFFER_DURATION (buf) = (GST_SECOND * GST_BUFFER_SIZE (buf)) /
+                              (GST_OSSELEMENT (src)->bps * GST_OSSELEMENT (src)->rate);
 
   src->curoffset += readbytes;
 
@@ -382,13 +367,9 @@ gst_osssrc_set_property (GObject *object, guint prop_id, const GValue *value, GP
     case ARG_BUFFERSIZE:
       src->buffersize = g_value_get_ulong (value);
       break;
-    case ARG_DEVICE:
-      g_free(src->common.device);
-      src->common.device = g_strdup (g_value_get_string (value));
-      break;
     case ARG_FRAGMENT:
-      src->common.fragment = g_value_get_int (value);
-      gst_osscommon_sync_parms (&src->common);
+      GST_OSSELEMENT (src)->fragment = g_value_get_int (value);
+      gst_osselement_sync_parms (GST_OSSELEMENT (src));
       break; 
     default:
       break;
@@ -406,11 +387,8 @@ gst_osssrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
     case ARG_BUFFERSIZE:
       g_value_set_ulong (value, src->buffersize);
       break;
-    case ARG_DEVICE:
-      g_value_set_string (value, src->common.device);
-      break;
     case ARG_FRAGMENT:
-      g_value_set_int (value, src->common.fragment);
+      g_value_set_int (value, GST_OSSELEMENT (src)->fragment);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -426,17 +404,6 @@ gst_osssrc_change_state (GstElement *element)
   GST_DEBUG ("osssrc: state change");
 
   switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
-      if (!GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN)) { 
-	gchar *error;
-        if (!gst_osscommon_open_audio (&osssrc->common, GST_OSSCOMMON_READ, &error)) {
-	  gst_element_error (GST_ELEMENT (osssrc), error);
-	  g_free (error);
-          return GST_STATE_FAILURE;
-	}
-        GST_FLAG_SET (osssrc, GST_OSSSRC_OPEN);
-      }
-      break;
     case GST_STATE_READY_TO_PAUSED:
       osssrc->curoffset = 0;
       break;
@@ -448,14 +415,9 @@ gst_osssrc_change_state (GstElement *element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN))
-        ioctl (osssrc->common.fd, SNDCTL_DSP_RESET, 0);
+        ioctl (GST_OSSELEMENT (osssrc)->fd, SNDCTL_DSP_RESET, 0);
       break;
-    case GST_STATE_READY_TO_NULL:
-      if (GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN)) {
-        gst_osscommon_close_audio (&osssrc->common);
-        GST_FLAG_UNSET (osssrc, GST_OSSSRC_OPEN);
-      }
-      gst_osscommon_init (&osssrc->common);
+    default:
       break;
   }
 
@@ -485,7 +447,7 @@ gst_osssrc_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
 
   osssrc = GST_OSSSRC (gst_pad_get_parent (pad));
 
-  return gst_osscommon_convert (&osssrc->common, src_format, src_value,
+  return gst_osselement_convert (GST_OSSELEMENT (osssrc), src_format, src_value,
                                 dest_format, dest_value);
 }
 
@@ -521,10 +483,10 @@ gst_osssrc_src_event (GstPad *pad, GstEvent *event)
       format = GST_FORMAT_BYTES;
       
       /* convert to bytes */
-      if (gst_osscommon_convert (&osssrc->common, 
-			         GST_EVENT_SIZE_FORMAT (event), 
-				 GST_EVENT_SIZE_VALUE (event),
-                                 &format, &value)) 
+      if (gst_osselement_convert (GST_OSSELEMENT (osssrc), 
+			          GST_EVENT_SIZE_FORMAT (event), 
+				  GST_EVENT_SIZE_VALUE (event),
+                                  &format, &value)) 
       {
         osssrc->buffersize = GST_EVENT_SIZE_VALUE (event);
         g_object_notify (G_OBJECT (osssrc), "buffersize");
@@ -567,9 +529,9 @@ gst_osssrc_src_query (GstPad *pad, GstQueryType type, GstFormat *format, gint64 
 	        
   switch (type) {
     case GST_QUERY_POSITION:
-      res = gst_osscommon_convert (&osssrc->common, 
-		      		   GST_FORMAT_BYTES, osssrc->curoffset,
-                                   format, value); 
+      res = gst_osselement_convert (GST_OSSELEMENT (osssrc), 
+		      		    GST_FORMAT_BYTES, osssrc->curoffset,
+                                    format, value); 
       break;
     default:
       break;

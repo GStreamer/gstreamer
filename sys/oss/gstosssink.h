@@ -27,7 +27,7 @@
 
 #include <gst/gst.h>
 
-#include "gstosscommon.h"
+#include "gstosselement.h"
 #include <gst/audio/audioclock.h>
 
 G_BEGIN_DECLS
@@ -53,7 +53,7 @@ typedef struct _GstOssSink GstOssSink;
 typedef struct _GstOssSinkClass GstOssSinkClass;
 
 struct _GstOssSink {
-  GstElement 	 element;
+  GstOssElement	 element;
 
   GstPad 	*sinkpad;
   GstBufferPool *sinkpool;
@@ -64,12 +64,9 @@ struct _GstOssSink {
   gboolean	 sync;
   guint64	 handled;
 
-  GstOssCommon	 common;
-
   gboolean 	 mute;
   guint 	 bufsize;
   guint 	 chunk_size;
-
 };
 
 struct _GstOssSinkClass {

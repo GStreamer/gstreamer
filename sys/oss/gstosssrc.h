@@ -26,7 +26,7 @@
 
 
 #include <gst/gst.h>
-#include "gstosscommon.h"
+#include "gstosselement.h"
 
 G_BEGIN_DECLS
 
@@ -51,12 +51,10 @@ typedef struct _GstOssSrc GstOssSrc;
 typedef struct _GstOssSrcClass GstOssSrcClass;
 
 struct _GstOssSrc {
-  GstElement 	 element;
+  GstOssElement  element;
 
   /* pads */
   GstPad 	*srcpad;
-
-  GstOssCommon	 common;
 
   gboolean	 need_eos; /* Do we need to emit an EOS? */
   
