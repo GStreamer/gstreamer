@@ -24,6 +24,8 @@
 
 #include <gst/gst.h>
 #include <libgnomevfs/gnome-vfs.h>
+#include <string.h>
+#include <errno.h>
 
 GstElementDetails gst_gnomevfssink_details;
 
@@ -243,8 +245,7 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink *sink)
   /* create the GnomeVFSURI from the url */
   sink->uri = gnome_vfs_uri_new(sink->filename);
   if (!sink->uri) {
-    perror ("open");
-    gst_element_error (GST_ELEMENT (sink), g_strconcat("opening file \"", sink->filename, "\"", NULL));
+    gst_element_error (GST_ELEMENT (sink), "opening file \"%s\" (%s)", sink->filename, strerror (errno));
     return FALSE;
   }
 
@@ -260,8 +261,7 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink *sink)
           gst_gnomevfssink_signals[SIGNAL_ERASE_ASK], 0,
           sink->erase);
     }
-    perror ("open");
-    gst_element_error (GST_ELEMENT (sink), g_strconcat("opening file \"", sink->filename, "\"", NULL));
+    gst_element_error (GST_ELEMENT (sink), "opening file \"%s\" (%s)", sink->filename, strerror (errno));
     return FALSE;
   } 
 
@@ -286,8 +286,7 @@ gst_gnomevfssink_close_file (GstGnomeVFSSink *sink)
 
   if (result != GNOME_VFS_OK)
   {
-    perror ("close");
-    gst_element_error (GST_ELEMENT (sink), g_strconcat("closing file \"", sink->filename, "\"", NULL));
+    gst_element_error (GST_ELEMENT (sink), "closing file \"%s\" (%s)", sink->filename, strerror (errno));
   }
   else {
     GST_FLAG_UNSET (sink, GST_GNOMEVFSSINK_OPEN);

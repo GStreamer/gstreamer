@@ -29,6 +29,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <errno.h>
+#include <string.h>
 
 #include <gst/gst.h>
 #include <libgnomevfs/gnome-vfs.h>
@@ -86,9 +88,6 @@ struct _GstGnomeVFSSrc {
 
 struct _GstGnomeVFSSrcClass {
 	GstElementClass parent_class;
-#ifdef BROKEN_SIG
-	void (*eos_hack) (GstGnomeVFSSrc * src);
-#endif
 };
 
 GstElementDetails gst_gnomevfssrc_details = {
@@ -102,9 +101,6 @@ GstElementDetails gst_gnomevfssrc_details = {
 
 /* GnomeVFSSrc signals and args */
 enum {
-#ifdef BROKEN_SIG
-	EOS_HACK,
-#endif
 	LAST_SIGNAL
 };
 
@@ -133,9 +129,6 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src);
 
 
 static GstElementClass *parent_class = NULL;
-#ifdef BROKEN_SIG
-static guint gst_gnomevfssrc_signals[LAST_SIGNAL] = { 0 };
-#endif
 
 GType gst_gnomevfssrc_get_type(void)
 {
@@ -176,14 +169,6 @@ static void gst_gnomevfssrc_class_init(GstGnomeVFSSrcClass *klass)
                "location",     ARG_LOCATION,     G_PARAM_READWRITE,
                NULL);
 
-#ifdef BROKEN_SIG
-	gst_gnomevfssrc_signals[EOS_HACK] =
-		g_signal_new("eos-hack", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_FIRST,
-			G_STRUCT_OFFSET(GstGnomeVFSSrcClass, eos_hack), NULL, NULL,
-			g_cclosure_marshal_VOID__VOID, G_TYPE_NONE,0);
-
-#endif /* BROKEN_SIG */
-
 	gstelement_class->set_property = gst_gnomevfssrc_set_property;
 	gstelement_class->get_property = gst_gnomevfssrc_get_property;
 
@@ -196,7 +181,6 @@ static void gst_gnomevfssrc_class_init(GstGnomeVFSSrcClass *klass)
 
 static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
 {
-/*  GST_FLAG_SET (gnomevfssrc, GST_SRC_); */
 
 	gnomevfssrc->srcpad = gst_pad_new("src", GST_PAD_SRC);
 	gst_pad_set_get_function(gnomevfssrc->srcpad, gst_gnomevfssrc_get);
@@ -308,12 +292,8 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 	/* deal with EOF state */
 	if ((src->curoffset >= src->size) && (src->size != 0))
 	{
-#ifdef BROKEN_SIG
-		g_signal_emit(G_OBJECT(src),
-			      gst_gnomevfssrc_signals[EOS_HACK], 0);
-#endif /* BROKEN_SIG */
-		/*gst_pad_set_eos (pad); */
-		return NULL;
+		gst_element_set_state (GST_ELEMENT (src), GST_STATE_PAUSED);
+		return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
 	}
 
 	/* create the buffer */
@@ -333,12 +313,6 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		if ((src->curoffset + src->bytes_per_read) > src->size)
 		{
 			GST_BUFFER_SIZE (buf) = src->size - src->curoffset;
-			/* set the buffer's EOF bit here */
-#ifdef BROKEN_SIG
-			g_signal_emit(G_OBJECT(src),
-				      gst_gnomevfssrc_signals[EOS_HACK], 0);
-#endif /* BROKEN_SIG */
-			GST_BUFFER_FLAG_SET(buf, GST_BUFFER_EOS);
 		} else {
 			GST_BUFFER_SIZE (buf) = src->bytes_per_read;
 		}
@@ -375,30 +349,15 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		if (readbytes == 0)
 		{
 			gst_buffer_unref(buf);
-			GST_BUFFER_FLAG_SET(buf, GST_BUFFER_EOS);
-			gst_element_signal_eos(GST_ELEMENT(src));
-#ifdef BROKEN_SIG
-			g_signal_emit(G_OBJECT(src),
-				      gst_gnomevfssrc_signals[EOS_HACK], 0);
-#endif /* BROKEN_SIG */
-			return NULL;
+
+			gst_element_set_state (GST_ELEMENT (src), GST_STATE_PAUSED);
+
+			return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
 		}
 		
-		/* if we didn't get as many bytes as we asked for, we're at
-		 * EOF */
-		if (readbytes < src->bytes_per_read)
-		{
-			/* set the buffer's EOF bit here */
-			GST_BUFFER_FLAG_SET(buf, GST_BUFFER_EOS);
-#ifdef BROKEN_SIG
-			g_signal_emit(G_OBJECT(src),
-					gst_gnomevfssrc_signals[EOS_HACK], 0);
-#endif /* BROKEN_SIG */
-		}
 		GST_BUFFER_OFFSET(buf) = src->curoffset;
 		GST_BUFFER_SIZE(buf) = readbytes;
 		src->curoffset += readbytes;
-
 	}
 
 	/* we're done, return the buffer */
@@ -416,10 +375,9 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 	/* create the uri */
 	src->uri = gnome_vfs_uri_new(src->filename);
 	if (!src->uri) {
-		perror("open");
 		gst_element_error(GST_ELEMENT(src),
-				  g_strconcat("creating uri \"",
-					      src->filename, "\"", NULL));
+				  "creating uri \"%s\" (%s)",
+				  	src->filename, strerror (errno));
 		return FALSE;
 	}
 
@@ -432,11 +390,9 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 		src->fd = open(src->local_name, O_RDONLY);
 		if (src->fd < 0)
 		{
-			perror("open");
 			gst_element_error(GST_ELEMENT(src),
-					g_strconcat("opening local file \"",
-						src->filename, "\"",
-						NULL));
+					  "opening local file \"%s\" (%s)",
+						src->filename, strerror (errno));
 			return FALSE;
 		}
 
@@ -461,12 +417,10 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 				       GNOME_VFS_OPEN_READ);
 		if (result != GNOME_VFS_OK)
 		{
-			perror("open");
 			gst_element_error(GST_ELEMENT(src),
-				  g_strconcat("opening vfs file \"",
-				      src->filename, "\": ",
-				      gnome_vfs_result_to_string(result),
-				      NULL));
+				  "opening vfs file \"%s\" (%s)",
+				      src->filename, 
+				      gnome_vfs_result_to_string(result));
 			return FALSE;
 		}
 
