@@ -749,8 +749,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_spider_debug, "spider", 0,
       "spider autoplugging element");
 
-  if (!gst_element_register (plugin, "spider", GST_RANK_SECONDARY,
-          GST_TYPE_SPIDER))
+  if (!gst_element_register (plugin, "spider", GST_RANK_NONE, GST_TYPE_SPIDER))
     return FALSE;
   if (!gst_element_register (plugin, "spideridentity", GST_RANK_NONE,
           GST_TYPE_SPIDER_IDENTITY))
