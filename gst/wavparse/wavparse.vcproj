@@ -136,9 +136,6 @@
 			<File
 				RelativePath=".\gstwavparse.h">
 			</File>
-			<File
-				RelativePath=".\riff.h">
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
