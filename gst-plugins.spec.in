@@ -31,6 +31,8 @@ plugins.
 %defattr(-, root, root)
 %doc AUTHORS COPYING README  
 %{_bindir}/gst-launch-ext
+%{_mandir}/man1/gst-launch-ext.*
+
 %prep
 %setup -n gst-plugins-%{ver}
 %build
