@@ -81,7 +81,7 @@ gst_play_cache_empty (GstElement *element, GstElement *pipeline)
   GstElement *cache;
   GstElement *new_element;
 
-  g_print (have cache empty\n");
+  g_print ("have cache empty\n");
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
