@@ -375,11 +375,12 @@ gst_md5sink_get_type (void)
       (GClassInitFunc) gst_md5sink_class_init,
       NULL,
       NULL,
-      sizeof(GstMD5Sink),
+      sizeof (GstMD5Sink),
       0,
       (GInstanceInitFunc) gst_md5sink_init,
     };
-    md5sink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstMD5Sink", &md5sink_info, 0);
+    md5sink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstMD5Sink", 
+	                                   &md5sink_info, 0);
   }
   return md5sink_type;
 }
@@ -396,8 +397,8 @@ gst_md5sink_class_init (GstMD5SinkClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MD5,
-    g_param_spec_pointer ("md5", "md5", "current value of the md5 sum",
-                          G_PARAM_READABLE)); 
+    g_param_spec_string ("md5", "md5", "current value of the md5 sum",
+                         "", G_PARAM_READABLE)); 
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR(gst_md5sink_change_state);
 
@@ -456,9 +457,19 @@ gst_md5sink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
   
   switch (prop_id) {
     case ARG_MD5:
-      /* you could actually get a value for the current md5. This is currently disabled.
-       * md5_read_ctx (sink, sink->md5); */
-      g_value_set_pointer (value, sink->md5);
+      {
+        /* you could actually get a value for the current md5. 
+	 * This is currently disabled.
+         * md5_read_ctx (sink, sink->md5); */
+	/* md5 is a guchar[16] */
+	int i;
+	guchar *md5string = g_malloc0 (33);
+
+	for (i = 0; i < 16; ++i)
+	  sprintf (md5string + i * 2, "%02x", sink->md5[i]);
+        g_value_set_string (value, md5string);
+        g_free (md5string);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
