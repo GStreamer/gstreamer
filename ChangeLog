@@ -1,3 +1,11 @@
+2004-07-12  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_get_capslist),
+	(gst_gdk_pixbuf_chain):
+	  Add svg and pcx to template caps, and ensure that getcaps returns a subset
+	  of the template caps.
+	  Copy each row manually for output, as gdkpixbuf may pad the
+	  rowstride to a 32-bit word boundary.
+
 2004-07-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps),
