@@ -6,7 +6,7 @@ AC_CANONICAL_TARGET
 
 m4_define(pygst_major_version, 0)
 m4_define(pygst_minor_version, 7)
-m4_define(pygst_micro_version, 90)
+m4_define(pygst_micro_version, 91)
 m4_define(pygst_version, pygst_major_version.pygst_minor_version.pygst_micro_version)
 
 AM_INIT_AUTOMAKE(gst-python, pygst_version)

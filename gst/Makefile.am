@@ -38,7 +38,7 @@ nodist__gst_la_SOURCES = gst.c
 GST_OVERRIDES = gst.override gstpad-handlers.override
 GST_DEFS = gst.defs gst-types.defs
 CLEANFILES = gst.c
-EXTRA_DIST += $(GST_OVERRIDES)
+EXTRA_DIST += $(GST_DEFS) $(GST_OVERRIDES)
 gst.c: $(GST_DEFS) $(GST_OVERRIDES)
 
 # gst-play bindings
@@ -50,7 +50,7 @@ nodist_play_la_SOURCES = play.c
 PLAY_OVERRIDES = play.override
 PLAY_DEFS = play.defs
 CLEANFILES += play.c
-EXTRA_DIST += $(PLAY_OVERRIDES)
+EXTRA_DIST += $(PLAY_DEFS) $(PLAY_OVERRIDES) 
 play.c: $(PLAY_DEFS) $(PLAY_OVERRIDES)
 
 # GStreamer interfaces bindings
@@ -62,7 +62,7 @@ nodist_interfaces_la_SOURCES = interfaces.c
 INTERFACES_OVERRIDES = interfaces.override xoverlay.override
 INTERFACES_DEFS = interfaces.defs xoverlay.defs xwindowlistener.defs
 CLEANFILES += interfaces.c
-EXTRA_DIST += $(INTERFACES_OVERRIDES)
+EXTRA_DIST += $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) 
 interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES)
 
 .defs.c:

@@ -1,5 +1,9 @@
 2004-03-31  Johan Dahlin  <johan@gnome.org>
 
+	* configure.ac (ACLOCAL): Bump version
+
+	* gst/Makefile.am (EXTRA_DIST): And make sure we have all defs here.
+
 	* gst/ltihooks.py: New file
 
 	* gst/__init__.py: try to import ltihooks.py
