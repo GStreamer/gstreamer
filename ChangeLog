@@ -1,3 +1,13 @@
+2004-03-25  David Schleef  <ds@schleef.org>
+
+	* docs/gst/gstreamer-docs.sgml: More fine tuning.
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstautoplug.sgml:
+	* docs/gst/tmpl/gststaticautoplug.sgml:
+	* docs/gst/tmpl/gststaticautoplugrender.sgml:
+	* docs/gst/tmpl/gstutils.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+
 2004-03-24  David Schleef  <ds@schleef.org>
 
 	* docs/gst/gstreamer-docs.sgml:  I got tired of the reference

@@ -14,7 +14,6 @@
 <!ENTITY GstCpu SYSTEM "xml/gstcpu.xml">
 <!ENTITY GstData SYSTEM "xml/gstdata.xml">
 <!ENTITY GstElement SYSTEM "xml/gstelement.xml">
-<!ENTITY GstElementFactory SYSTEM "xml/gstelementfactory.xml">
 <!ENTITY GstError SYSTEM "xml/gsterror.xml">
 <!ENTITY GstEvent SYSTEM "xml/gstevent.xml">
 <!ENTITY GstFormat SYSTEM "xml/gstformat.xml">
@@ -41,12 +40,9 @@
 <!ENTITY GstThread SYSTEM "xml/gstthread.xml">
 <!ENTITY GstTrace SYSTEM "xml/gsttrace.xml">
 <!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
-<!ENTITY GstTypeFindFactory SYSTEM "xml/gsttypefindfactory.xml">
 <!ENTITY GstUtils SYSTEM "xml/gstutils.xml">
 <!ENTITY GstUri SYSTEM "xml/gsturi.xml">
-<!-- not commented properly yet
 <!ENTITY GstValue SYSTEM "xml/gstvalue.xml">
--->
 <!ENTITY GstXML SYSTEM "xml/gstxml.xml">
 <!-- these are elements without API docs
 <!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
@@ -92,7 +88,6 @@ with some more specialized elements.</para>
     &GstCpu;
     &GstData;
     &GstElement;
-<!--    &GstElementFactory; -->
     &GstError;
     &GstEvent;
     &GstFormat;
@@ -118,12 +113,9 @@ with some more specialized elements.</para>
     &GstTagInterface;
     &GstThread;
     &GstTypeFind;
-<!--    &GstTypeFindFactory; -->
     &GstUri;
     &GstUtils;
-<!-- not commented properly yet
     &GstValue;
--->
     &GstXML;
 
   </chapter>
