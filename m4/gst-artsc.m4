@@ -10,8 +10,7 @@ dnl
 AC_DEFUN(GST_CHECK_ARTSC,
 [ 
   AC_PATH_PROG(ARTSC_CONFIG, artsc-config, no)
-  if test x$ARTSC_CONFIG = xno; then
-  if test x$ARTSC_CONFIG = xno; then
+  if test "x$ARTSC_CONFIG" = "xno"; then
     AC_MSG_WARN([Couldn't find artsc-config])
     HAVE_ARTSC=no
     ARTSC_LIBS=

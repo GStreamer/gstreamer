@@ -95,8 +95,8 @@ if test x$USE_[$1] = xyes; then
   ifelse([$6], , :, [$6])
   GST_PLUGINS_YES="$GST_PLUGINS_YES \n\t[$3]"
 else
-  ifelse([$3], , :, [AC_MSG_WARN(
-***** NOTE: These plugins won't be built: [$3]
+  ifelse([$3], , :, [AC_MSG_NOTICE(
+These plugins will not be built: [$3]
 )])
   GST_PLUGINS_NO="$GST_PLUGINS_NO \n\t[$3]"
   ifelse([$7], , :, [$7])

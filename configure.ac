@@ -69,42 +69,29 @@ dnl # Super Duper options for plugin building #
 dnl ###########################################
 
 dnl experimental plugins; stuff that hasn't had the dust settle yet
-AC_ARG_ENABLE(experimental,
-[  --enable-experimental          enable building of experimental plugins],
-[case "${enableval}" in
-  yes) EXPERIMENTAL="yes" ;;
-  no) EXPERIMENTAL="no" ;;
-esac], 
-[EXPERIMENTAL=no]) dnl Default value
-
-if test "x$EXPERIMENTAL" = "$xyes"; then
+GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
+[HAVE_EXPERIMENTAL=yes],disabled,
+[
   AC_MSG_WARN(building experimental plugins)
   USE_LIBMIKMOD="yes"
-else
-  AC_MSG_NOTICE(not building experimental plugins)
-  USE_LIBMIKMOD="no"
-fi
-
-dnl broken plugins; stuff that doesn't seem to build at the moment
-AC_ARG_ENABLE(broken,
-[  --enable-broken          enable building of broken plugins],
-[case "${enableval}" in
-  yes) BROKEN="yes" ;;
-  no) BROKEN="no" ;;
-esac], 
-[BROKEN=no]) dnl Default value
-
-if test "x$broken-plugins" = "$xyes"; then
-  AC_MSG_WARN(building broken plugins)
   USE_ARTS="yes"
   USE_ARTSC="yes"
-else
-  AC_MSG_NOTICE(not building broken plugins)
+],[
+  AC_MSG_NOTICE(not building experimental plugins)
+  USE_LIBMIKMOD="no"
   USE_ARTS="no"
   USE_ARTSC="no"
-fi
+])
 
-
+dnl broken plugins; stuff that doesn't seem to build at the moment
+GST_CHECK_FEATURE(BROKEN, [enable building of broken plugins],,
+HAVE_BROKEN=yes,disabled,
+[
+  AC_MSG_WARN(building broken plugins)
+  AC_MSG_NOTICE(actually there are no broken plugins at the moment)
+],[
+  AC_MSG_NOTICE(not building broken plugins)
+])
 
 dnl ##############################
 dnl # Do automated configuration #
@@ -345,63 +332,7 @@ AC_SUBST(LIBXML_PKG)
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
 
-dnl ==========================================================================
-dnl ========================= Macro definitions ==============================
-dnl ==========================================================================
-
-dnl These macros should be moved out to separate files (acinclude.m4?), but
-dnl can't currently be because of the SUBSTFOR magic.
-
-dnl Perform a check for existence of ARTS
-dnl Richard Boulton <richard-alsa@tartarus.org>
-dnl Last modification: 26/06/2001
-dnl GST_CHECK_FEATURE(FEATURE-NAME, FEATURE-DESCRIPTION,
-dnl                   DEPENDENT-PLUGINS, TEST-FOR-FEATURE)
-dnl
-dnl This check was written for GStreamer: it should be renamed and checked
-dnl for portability if you decide to use it elsewhere.
-dnl
-AC_DEFUN(GST_CHECK_ARTS,
-[
-dnl Set the flags
-ARTS_LIBS="-L/usr/local/lib -L/usr/lib -lmcop -lartsflow -lartsflow_idl"
-ARTS_CFLAGS="-I/usr/local/include/arts -I/usr/include/kde/arts -I/usr/include/arts"
-ARTS_MCOPFLAGS=$ARTS_CFLAGS
-dnl There's no arts-config script, so we make a guess based on the artsc-config
-AC_PATH_PROG(ARTSC_CONFIG, artsc-config, no)
-if test x$ARTSC_CONFIG = xyes; then
-  ARTS_ARTSC_CFLAGS=`artsc-config --cflags | sed 's/artsc/arts/g'`
-  ARTS_CFLAGS="$ARTS_CFLAGS $ARTS_ARTSC_CFLAGS"
-  ARTS_MCOPFLAGS="$ARTS_MCOPFLAGS $ARTS_ARTSC_CFLAGS"
-fi
-AC_SUBST(ARTS_LIBS)
-AC_SUBST(ARTS_CFLAGS)
-AC_SUBST(ARTS_MCOPFLAGS)
-
-dnl Now check if it exists
-AC_LANG_PUSH(C++)
-HAVE_ARTS=yes
-dnl FIXME: Can't get this test to pass, so commented it out.  Rely on header check.
-dnl AC_CHECK_LIB(artsflow, convert_stereo_2float_i16le, :, HAVE_ARTS=no, $LIBS)
-
-dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
-dnl FIXME: ensure only suitable flags result from artsc-config --cflags
-AC_CHECK_HEADER(artsflow.h, :, HAVE_ARTS=no)
-
-AC_LANG_POP(C++)
-dnl Check for the idl generator
-AC_CHECK_PROG(HAVE_MCOPIDL, mcopidl, yes, no)
-if test x$HAVE_MCOPIDL = xno; then
-  HAVE_ARTS=no
-fi
-])
-
-dnl ==========================================================================
-dnl ========================= End macro definitions ==========================
-dnl ==========================================================================
-
-
-dnl Next, check for the optional libraries:
+dnl Check for optional libraries
 dnl These are all libraries used in building plugins
 dnl ================================================
 dnl let's try and sort them alphabetically, shall we ?
@@ -429,12 +360,16 @@ AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
 ])
 
 dnl *** arts ***
-dnl translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
-dnl GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
+translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
+GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [
+AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
+])
 
 dnl *** artsc ***
-dnl translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
-dnl GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [GST_CHECK_ARTSC()])
+translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
+GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [
+GST_CHECK_ARTSC()
+])
 
 dnl *** audiofile ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro
