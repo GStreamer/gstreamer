@@ -518,6 +518,18 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
             ("Vorbis comment of size %d too long", size));
         return;
       }
+
+      /* Get rid of the framing bit at the end of the vorbiscomment buffer 
+       * if it exists since libFLAC seems to lose sync because of this
+       * bit in gstflacdec
+       */
+      if (GST_BUFFER_DATA (buffer)[GST_BUFFER_SIZE (buffer) - 1] == 1) {
+        GstBuffer *sub;
+
+        sub = gst_buffer_create_sub (buffer, 0, GST_BUFFER_SIZE (buffer) - 1);
+        gst_buffer_unref (buffer);
+        buffer = sub;
+      }
     }
 
     /* The 4 byte metadata block header isn't accounted for in the total
