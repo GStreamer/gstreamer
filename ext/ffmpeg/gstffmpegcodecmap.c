@@ -224,7 +224,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 	}
 
         caps = GST_FF_VID_CAPS_NEW ("ffmpeg_dvvideo",
-                                    "video/dv",
+                                    "video/dv"
                                    );
 	gst_props_add_entry(caps->properties, normentry);
       }
