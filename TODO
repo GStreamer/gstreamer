@@ -26,9 +26,10 @@ target release ! description
 	       ! (docs/random/wtay/scheduler_entry)
     	       !  (API: moderatly EASY, scheduler implementation MEDIUM)
 	       !
-    ?	       ! create a design doc for a timecache implementation, 
-	       !  (docs/wtay/random/timecache)
+   0.6.0       ! create a design doc for a timecache implementation, 
+   (done)      ! (docs/wtay/random/timecache)
     	       !  (API: MEDIUM, needs lots of discussion, plugin implementation MEDIUM to HARD)
+	       ! (done: implemented using GstIndex base class + subclasses)
 	       !
     ?	       ! implement a QoS event and a policy for handling the event.
                !  (API: kindof EASY, plugins MEDIUM to very HARD)
@@ -41,6 +42,10 @@ target release ! description
 	       ! create a library with usefull higher level function for people who don't want
 	       ! to deal with the lowlevel stuff.
 	       ! (HARD, need to negotiate with people :))
+	       !
+    ?	       ! use GMarkup to load/save objects, remove dependency on libxml2
+               ! (MEDIUM) breaks API/ABI compatibility
+	       !
 	       
 
 shortterm core feature enhancements
@@ -86,12 +91,17 @@ Policy definition is closely related to a HOWTO but sometimes needs some thinkin
 	       ! 
     ?	       ! figure out a policy for the NEW_MEDIA event
 	       ! (MEDIUM to HARD)
+	       !
+    ?          ! figure out how to better handle clock resync
+	       ! (MEDIUM to HARD)
+	       !
+            
 
 midterm feature enhancement
 ---------------------------
    
-    ?          | Define and implement a syntax in gst_parse to handle filtered pad connections.
-               | (MEDIUM)
+  0.6.0        | Define and implement a syntax in gst_parse to handle filtered pad connections.
+  (done)       | (MEDIUM)
 	       |
     ?          | Figure out a way to set properties on schedulers (and bins?) from gst_parse.
                | (MEDIUM)
