@@ -72,6 +72,13 @@
 </para>
 
 
+<!-- ##### ARG GstHttpSrc:bytesperread ##### -->
+<para>
+Specify how many bytes to read at a time.
+
+</para>
+
+
 <!-- ##### STRUCT GstBinClass ##### -->
 <para>
 
@@ -1487,6 +1494,12 @@ GstElement
 </para>
 
 @klass: 
+
+<!-- ##### ARG GstHttpSrc:location ##### -->
+<para>
+Specify the location of the file. The location must be a fully qualified URL.
+</para>
+
 
 <!-- ##### MACRO GST_IS_AUDIOSINK ##### -->
 <para>

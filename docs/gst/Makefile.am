@@ -12,6 +12,8 @@ DOC_SOURCE_DIR=$(top_srcdir)/gst
 CFLAGS = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir)
 LDFLAGS = $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/libgst.la $(top_srcdir)/gst/elements/libgstelements.la
 
+EXTRA_DIST=gstreamer.types.in
+
 HTML_DIR=$(datadir)/gstreamer/gst/html
 
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
@@ -85,7 +87,7 @@ sgml/gstreamer-doc.bottom: $(tmpl_sources)
 gstreamer-decl.txt:
 	$(MAKE) scan
 
-scanobj:
+scanobj: $(srcdir)/$(DOC_MODULE).types
 	env CC="$(LIBTOOL) --mode=link $(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
 		gtkdoc-scanobj --module=$(DOC_MODULE) \
 		--types=$(srcdir)/$(DOC_MODULE).types

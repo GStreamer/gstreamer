@@ -359,64 +359,6 @@ GstBuffer *buffer
 <RETURNS>void  </RETURNS>
 GstBuffer *buffer,GstMeta *meta
 </FUNCTION>
-<TYPEDEF>
-<NAME>GstClockTime</NAME>
-typedef guint64 GstClockTime;
-</TYPEDEF>
-<TYPEDEF>
-<NAME>GstClockTimeDiff</NAME>
-typedef gint64 GstClockTimeDiff;
-</TYPEDEF>
-<MACRO>
-<NAME>GST_CLOCK_DIFF</NAME>
-#define GST_CLOCK_DIFF(s, e) (GstClockTimeDiff)((s)-(e))
-</MACRO>
-<STRUCT>
-<NAME>GstClock</NAME>
-</STRUCT>
-<STRUCT>
-<NAME>GstClock</NAME>
-struct GstClock {
-  gchar *name;
-  GstClockTime start_time;
-  GstClockTime current_time;
-  GstClockTimeDiff adjust;
-  gboolean locking;
-  GList *sinkobjects;
-  GMutex *sinkmutex;
-  GMutex *lock;
-};
-</STRUCT>
-<FUNCTION>
-<NAME>gst_clock_new</NAME>
-<RETURNS>GstClock  *</RETURNS>
-gchar *name
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_clock_get_system</NAME>
-<RETURNS>GstClock  *</RETURNS>
-void
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_clock_register</NAME>
-<RETURNS>void  </RETURNS>
-GstClock *clock, GstObject *obj
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_clock_set</NAME>
-<RETURNS>void  </RETURNS>
-GstClock *clock, GstClockTime time
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_clock_reset</NAME>
-<RETURNS>void  </RETURNS>
-GstClock *clock
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_clock_wait</NAME>
-<RETURNS>void  </RETURNS>
-GstClock *clock, GstClockTime time, GstObject *obj
-</FUNCTION>
 <MACRO>
 <NAME>GST_TYPE_CONNECTION</NAME>
 #define GST_TYPE_CONNECTION \
@@ -1824,6 +1766,64 @@ GtkObject *object,guchar *argname
 <NAME>gst_xml_write</NAME>
 <RETURNS>xmlDocPtr  </RETURNS>
 GstElement *element
+</FUNCTION>
+<TYPEDEF>
+<NAME>GstClockTime</NAME>
+typedef guint64 GstClockTime;
+</TYPEDEF>
+<TYPEDEF>
+<NAME>GstClockTimeDiff</NAME>
+typedef gint64 GstClockTimeDiff;
+</TYPEDEF>
+<MACRO>
+<NAME>GST_CLOCK_DIFF</NAME>
+#define GST_CLOCK_DIFF(s, e) (GstClockTimeDiff)((s)-(e))
+</MACRO>
+<STRUCT>
+<NAME>GstClock</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstClock</NAME>
+struct GstClock {
+  gchar *name;
+  GstClockTime start_time;
+  GstClockTime current_time;
+  GstClockTimeDiff adjust;
+  gboolean locking;
+  GList *sinkobjects;
+  GMutex *sinkmutex;
+  GMutex *lock;
+};
+</STRUCT>
+<FUNCTION>
+<NAME>gst_clock_new</NAME>
+<RETURNS>GstClock  *</RETURNS>
+gchar *name
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_get_system</NAME>
+<RETURNS>GstClock  *</RETURNS>
+void
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_register</NAME>
+<RETURNS>void  </RETURNS>
+GstClock *clock, GstObject *obj
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_set</NAME>
+<RETURNS>void  </RETURNS>
+GstClock *clock, GstClockTime time
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_reset</NAME>
+<RETURNS>void  </RETURNS>
+GstClock *clock
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_wait</NAME>
+<RETURNS>void  </RETURNS>
+GstClock *clock, GstClockTime time, GstObject *obj
 </FUNCTION>
 <MACRO>
 <NAME>GST_TYPE_ASYNCDISKSRC</NAME>

@@ -63,19 +63,25 @@ XML_CFLAGS=`xml-config --cflags`
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
 
-dnl Check for libgdb-pixbuf
-AC_PATH_PROG(GDK_PIXBUF_CONFIG, gdk-pixbuf-config, no)
-if test x$GDK_PIXBUF_CONFIG = xno; then
-  AC_MSG_ERROR(Couldn't find gdk-pixbuf-config)
-fi
-GDK_PIXBUF_LIBS=`gdk-pixbuf-config --libs`
-GDK_PIXBUF_CFLAGS=`gdk-pixbuf-config --cflags`
-AC_SUBST(GDK_PIXBUF_LIBS)
-AC_SUBST(GDK_PIXBUF_CFLAGS)
-
 
 dnl Next, check for the optional libraries:
 dnl =======================================
+
+dnl Check for libgdk-pixbuf
+AC_PATH_PROG(GDK_PIXBUF_CONFIG, gdk-pixbuf-config, no)
+if test x$GDK_PIXBUF_CONFIG = xno; then
+  AC_MSG_WARN(Couldn't find gdk-pixbuf-config)
+  GDK_PIXBUF_LIBS=
+  GDK_PIXBUF_CFLAGS=
+  HAVE_GDK_PIXBUF=no
+else
+  GDK_PIXBUF_LIBS=`gdk-pixbuf-config --libs`
+  GDK_PIXBUF_CFLAGS=`gdk-pixbuf-config --cflags`
+  HAVE_GDK_PIXBUF=yes
+fi
+AC_SUBST(GDK_PIXBUF_LIBS)
+AC_SUBST(GDK_PIXBUF_CFLAGS)
+
 
 dnl Check for gtk
 AM_PATH_GTK(1.2.0)
@@ -83,14 +89,17 @@ AM_PATH_GTK(1.2.0)
 dnl Check for libghttp
 AC_CHECK_LIB(ghttp, ghttp_request_new,
   [GHTTP_LIBS="-lghttp"
+   GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
    HAVE_LIBGHTTP=yes
   ],
   [AC_MSG_WARN(Cannot find libghttp: can't build gsthttpsrc)
    GHTTP_LIBS=
+   GST_HTTPSRC_GET_TYPE=
    HAVE_LIBGHTTP=no
   ],
   $LIBS)
 AC_SUBST(GHTTP_LIBS)
+AC_SUBST(GST_HTTPSRC_GET_TYPE)
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
@@ -172,6 +181,15 @@ dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
 
+AC_ARG_ENABLE(gdk-pixbuf,
+[  --enable-gdk-pixbuf          use gdk pixbuf, if available],
+[case "${enableval}" in
+  yes) USE_GDK_PIXBUF=$HAVE_GDK_PIXBUF ;;
+  no)  USE_GDK_PIXBUF=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-gdk-pixbuf) ;;
+esac], 
+[USE_GDK_PIXBUF=$HAVE_GDK_PIXBUF]) dnl Default value
+
 AC_ARG_ENABLE(libghttp,
 [  --enable-libghttp            use the ghttp library, if available],
 [case "${enableval}" in
@@ -234,6 +252,10 @@ dnl ################################################
 
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
+if test "x$USE_GDK_PIXBUF" = xyes; then
+  AC_DEFINE(HAVE_GDK_PIXBUF)
+fi
+
 if test "x$USE_LIBGHTTP" = xyes; then
   AC_DEFINE(HAVE_LIBGHTTP)
 fi
@@ -265,6 +287,7 @@ dnl #############################
 
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
+AM_CONDITIONAL(HAVE_GDK_PIXBUF, test "x$USE_GDK_PIXBUF" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGHTTP,   test "x$USE_LIBGHTTP" = "xyes")
 AM_CONDITIONAL(HAVE_LIBMMX,     test "x$USE_LIBMMX" = "xyes")
 AM_CONDITIONAL(HAVE_ATOMIC_H,   test "x$USE_ATOMIC_H" = "xyes")
@@ -346,6 +369,7 @@ editor/Makefile
 tools/Makefile
 docs/Makefile
 docs/gst/Makefile
+docs/gst/gstreamer.types
 stamp.h
 gstreamer-config
 gstreamer.spec])
