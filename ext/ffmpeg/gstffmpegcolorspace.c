@@ -176,8 +176,12 @@ gst_ffmpegcsp_pad_link (GstPad * pad, const GstCaps * caps)
   GstPadLinkReturn ret;
   int height, width;
   double framerate;
+  const GValue *par = NULL;
 
   space = GST_FFMPEGCSP (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (space, "pad_link on %s:%s with caps %" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (pad), caps);
 
   otherpad = (pad == space->srcpad) ? space->sinkpad : space->srcpad;
 
@@ -185,6 +189,7 @@ gst_ffmpegcsp_pad_link (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
   gst_structure_get_double (structure, "framerate", &framerate);
+  par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
   /* FIXME attempt and/or check for passthru */
 
@@ -218,6 +223,12 @@ gst_ffmpegcsp_pad_link (GstPad * pad, const GstCaps * caps)
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         "framerate", G_TYPE_DOUBLE, framerate, NULL);
+    if (par) {
+      gst_caps_set_simple (caps,
+          "pixel-aspect-ratio", GST_TYPE_FRACTION,
+          gst_value_get_fraction_numerator (par),
+          gst_value_get_fraction_denominator (par), NULL);
+    }
     ret = gst_pad_try_set_caps (otherpad, caps);
     if (GST_PAD_LINK_FAILED (ret)) {
       return ret;
