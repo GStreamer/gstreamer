@@ -63,16 +63,7 @@
   <bookinfo>
     <title>GStreamer Core Reference Manual</title>
   </bookinfo>
-  <chapter id="gstreamer-support">
-    <title>GStreamer Core Support</title>
-    <para>
-    </para>
 
-    &cothreads;
-    &GstAtomic;
-    &GstMemChunk;
-
-  </chapter>
   <chapter id="gstreamer">
     <title>GStreamer Core Library</title>
 
@@ -117,6 +108,18 @@ with some more specialized elements.</para>
 
   </chapter>
 
+  <chapter id="gstreamer-support">
+    <title>GStreamer Core Support</title>
+    <para>
+    </para>
+
+    &cothreads;
+    &GstAtomic;
+    &GstMemChunk;
+
+  </chapter>
+
+<!--
   <chapter id="element-types">
     <title>GStreamer Standard Elements</title>
 
@@ -126,7 +129,6 @@ with some more specialized elements.</para>
       g_object_set() functions and the GStreamer Core Library functions.
     </para>
 
-<!--
     &GstAggregator;
 
     &GstFakeSrc;
@@ -145,8 +147,8 @@ with some more specialized elements.</para>
     &GstMD5Sink;
 
     &GstTee;
-    -->
   </chapter>
+    -->
 
 <!--
   <chapter id="gst-index">
