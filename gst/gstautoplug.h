@@ -60,6 +60,8 @@ struct _GstAutoplugClass {
 GtkType 	gst_autoplug_get_type			(void);
 
 GList* 		gst_autoplug_caps 			(GstCaps *srccaps, GstCaps *sinkcaps);
+GList* 		gst_autoplug_caps_list 			(GList *srccaps, GList *sinkcaps);
+GList* 		gst_autoplug_pads 			(GstPad *srcpad, GstPad *sinkpad);
 
 
 #ifdef __cplusplus

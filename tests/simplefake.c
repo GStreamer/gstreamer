@@ -2,7 +2,7 @@
 #include <assert.h>
 
 int main(int argc,char *argv[]) {
-  GstPipeline *pipeline;
+  GstElement *pipeline;
   GstElement *src,*identity,*sink;
   int i;
 
@@ -39,4 +39,6 @@ int main(int argc,char *argv[]) {
     fprintf(stderr,"\n");
     gst_bin_iterate(GST_BIN(pipeline));
   }
+
+  exit (0);
 }

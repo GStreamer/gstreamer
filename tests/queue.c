@@ -13,7 +13,7 @@ int main(int argc,char *argv[]) {
 //  thr1 = gst_bin_new("thr1");
   g_return_val_if_fail(2,thr1 != NULL);
 //  thr2 = GST_BIN(gst_thread_new("thr2"));
-  thr2 = gst_bin_new("thr2");
+  thr2 = GST_BIN(gst_bin_new("thr2"));
   g_return_val_if_fail(3,thr2 != NULL);
 fprintf(stderr,"QUEUE: fakesrc\n");
   src = gst_elementfactory_make("fakesrc","src");
@@ -41,8 +41,8 @@ fprintf(stderr,"QUEUE: fakesink\n");
   gst_bin_add(pipeline,GST_ELEMENT(queue));
   gst_bin_add(pipeline,GST_ELEMENT(thr2));
   fprintf(stderr,"QUEUE: connecting elements\n");
-  gst_element_connect(thr1,"src",queue,"sink");
-  gst_element_connect(queue,"src",thr2,"sink");
+  gst_element_connect(GST_ELEMENT(thr1),"src",queue,"sink");
+  gst_element_connect(queue,"src",GST_ELEMENT(thr2),"sink");
 //  gst_pad_connect(gst_element_get_pad(src,"src"),gst_element_get_pad(queue,"sink"));
 //  gst_pad_connect(gst_element_get_pad(queue,"src"),gst_element_get_pad(sink,"sink"));
   fprintf(stderr,"QUEUE: constructed outer pipeline\n");
@@ -59,4 +59,6 @@ fprintf(stderr,"QUEUE: fakesink\n");
 //  fflush(stdout);
 //  fflush(stderr);
 //  gst_bin_iterate(thr2);
+//
+  exit (0);
 }

@@ -74,14 +74,17 @@ static GstPadFactory audiosink_sink_factory = {
   "sink",
   GST_PAD_FACTORY_SINK,
   GST_PAD_FACTORY_ALWAYS,
-  "audio/raw",
-  "format",   GST_PROPS_INT (AFMT_S16_LE),
-  "depth",    GST_PROPS_LIST (
-		  GST_PROPS_INT (8),
+  GST_PAD_FACTORY_CAPS (
+  "audiosink_sink",
+    "audio/raw",
+    "format",   GST_PROPS_INT (AFMT_S16_LE),
+    "depth",    GST_PROPS_LIST (
+ 		  GST_PROPS_INT (8),
 		  GST_PROPS_INT (16)
-		  ),
-  "rate",     GST_PROPS_INT_RANGE (8000, 48000),
-  "channels", GST_PROPS_INT_RANGE (1, 2),
+		),
+    "rate",     GST_PROPS_INT_RANGE (8000, 48000),
+    "channels", GST_PROPS_INT_RANGE (1, 2)
+  ),
   NULL
 };
 

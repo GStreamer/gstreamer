@@ -82,7 +82,7 @@ struct _GstPad {
   GstObject object;
 
   gchar *name;
-  GstCaps *caps;
+  GList *caps;
 
   cothread_state *threadstate;
 
@@ -134,7 +134,7 @@ struct _GstPadTemplate {
   gchar           *name_template;
   GstPadDirection direction;
   GstPadPresence  presence;
-  GstCaps  	  *caps;
+  GList  	  *caps;
 };
 
 struct _GstPadTemplateClass {
@@ -148,11 +148,14 @@ struct _GstPadTemplateClass {
 /* factory */
 typedef gpointer GstPadFactoryEntry;
 typedef GstPadFactoryEntry GstPadFactory[];
+
 #define GST_PAD_FACTORY_ALWAYS 		GINT_TO_POINTER(GST_PAD_ALWAYS)
 #define GST_PAD_FACTORY_SOMETIMES 	GINT_TO_POINTER(GST_PAD_SOMETIMES)
 
 #define GST_PAD_FACTORY_SRC	 	GINT_TO_POINTER(GST_PAD_SRC)
 #define GST_PAD_FACTORY_SINK 		GINT_TO_POINTER(GST_PAD_SINK)
+
+#define GST_PAD_FACTORY_CAPS(a...) 	GINT_TO_POINTER(1),##a,NULL
 
 GtkType 		gst_pad_get_type		(void);
 
@@ -167,8 +170,10 @@ void 			gst_pad_set_get_function	(GstPad *pad, GstPadGetFunction get);
 void			gst_pad_set_getregion_function	(GstPad *pad, GstPadGetRegionFunction getregion);
 void 			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
 
-void	 		gst_pad_set_caps		(GstPad *pad, GstCaps *caps);
-GstCaps* 		gst_pad_get_caps		(GstPad *pad);
+void	 		gst_pad_set_caps_list		(GstPad *pad, GList *caps);
+GList* 			gst_pad_get_caps_list		(GstPad *pad);
+GstCaps* 		gst_pad_get_caps_by_name	(GstPad *pad, gchar *name);
+gboolean 		gst_pad_check_compatibility	(GstPad *srcpad, GstPad *sinkpad);
 
 void 			gst_pad_set_name		(GstPad *pad, const gchar *name);
 const gchar*		gst_pad_get_name		(GstPad *pad);
@@ -213,7 +218,7 @@ GtkType 		gst_padtemplate_get_type	(void);
 GstPadTemplate*		gst_padtemplate_new		(GstPadFactory *factory);
 GstPadTemplate*		gst_padtemplate_create		(gchar *name_template, 
 		                                         GstPadDirection direction, GstPadPresence presence,
-							 GstCaps *caps);
+							 GList *caps);
 
 xmlNodePtr 		gst_padtemplate_save_thyself	(GstPadTemplate *pad, xmlNodePtr parent);
 GstPadTemplate*		gst_padtemplate_load_thyself	(xmlNodePtr parent);

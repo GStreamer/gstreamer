@@ -36,6 +36,7 @@
 #include <gst/gstpipeline.h>
 #include <gst/gstthread.h>
 #include <gst/gsttype.h>
+#include <gst/gstautoplug.h>
 #include <gst/gstcaps.h>
 #include <gst/gstprops.h>
 #include <gst/gstplugin.h>

@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define GST_DEBUG_ENABLED
+//#define GST_DEBUG_ENABLED
 #include "gst_private.h"
 
 #include "gstcaps.h"
@@ -54,6 +54,7 @@ get_type_for_mime (gchar *mime)
 
 /**
  * gst_caps_new:
+ * @name: the name of this capability
  * @mime: the mime type to attach to the capability
  *
  * create a new capability with the given mime type
@@ -61,13 +62,14 @@ get_type_for_mime (gchar *mime)
  * Returns: a new capability
  */
 GstCaps*
-gst_caps_new (gchar *mime)
+gst_caps_new (gchar *name, gchar *mime)
 {
   GstCaps *caps;
 
   g_return_val_if_fail (mime != NULL, NULL);
   
   caps = g_new0 (GstCaps, 1);
+  caps->name = g_strdup (name);
   caps->id = get_type_for_mime (mime);
   caps->properties = NULL;
   
@@ -76,6 +78,7 @@ gst_caps_new (gchar *mime)
 
 /**
  * gst_caps_new_with_props:
+ * @name: the name of this capability
  * @mime: the mime type to attach to the capability
  * @props: the properties for this capability
  *
@@ -85,11 +88,11 @@ gst_caps_new (gchar *mime)
  * Returns: a new capability
  */
 GstCaps*
-gst_caps_new_with_props (gchar *mime, GstProps *props)
+gst_caps_new_with_props (gchar *name, gchar *mime, GstProps *props)
 {
   GstCaps *caps;
   
-  caps = gst_caps_new (mime);
+  caps = gst_caps_new (name, mime);
   caps->properties = props;
 
   return caps;
@@ -106,15 +109,37 @@ gst_caps_new_with_props (gchar *mime, GstProps *props)
 GstCaps*
 gst_caps_register (GstCapsFactory *factory)
 {
+  guint dummy;
+
+  return gst_caps_register_count (factory, &dummy);
+}
+
+/**
+ * gst_caps_register_count:
+ * @factory: the factory to register
+ * @counter: count how many entries were consumed
+ *
+ * Register the factory. 
+ *
+ * Returns: The registered capability
+ */
+GstCaps*
+gst_caps_register_count (GstCapsFactory *factory, guint *counter)
+{
   GstCapsFactoryEntry tag;
   gint i = 0;
   guint16 typeid;
+  gchar *name;
   GstCaps *caps;
-  
+
   g_return_val_if_fail (factory != NULL, NULL);
 
   tag = (*factory)[i++];
+  g_return_val_if_fail (tag != NULL, NULL);
 
+  name = tag;
+
+  tag = (*factory)[i++];
   g_return_val_if_fail (tag != NULL, NULL);
   
   typeid = get_type_for_mime ((gchar *)tag);
@@ -122,8 +147,11 @@ gst_caps_register (GstCapsFactory *factory)
   caps = g_new0 (GstCaps, 1);
   g_return_val_if_fail (caps != NULL, NULL);
 
+  caps->name = g_strdup (name);
   caps->id = typeid;
-  caps->properties = gst_props_register (&(*factory)[i]);
+  caps->properties = gst_props_register_count (&(*factory)[i], counter);
+
+  *counter += 2;
 
   return caps;
 }
@@ -160,7 +188,7 @@ gst_caps_set_props (GstCaps *caps, GstProps *props)
 GstProps*
 gst_caps_get_props (GstCaps *caps)
 {
-  g_return_val_if_fail (caps != NULL, caps);
+  g_return_val_if_fail (caps != NULL, NULL);
 
   return caps->properties;
 }
@@ -201,6 +229,34 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
   }
 }
 
+/**
+ * gst_caps_list_check_compatibility:
+ * @fromcaps: a capabilty
+ * @tocaps: a capabilty
+ *
+ * Checks whether two capability lists are compatible
+ *
+ * Returns: true if compatible, false otherwise
+ */
+gboolean
+gst_caps_list_check_compatibility (GList *fromcaps, GList *tocaps)
+{
+  while (fromcaps) {
+    GstCaps *fromcap = (GstCaps *)fromcaps->data;
+    GList *destcaps = tocaps;
+
+    while (destcaps) {
+      GstCaps *destcap = (GstCaps *)destcaps->data;
+
+      if (gst_caps_check_compatibility (fromcap, destcap))
+	return TRUE;
+
+      destcaps = g_list_next (destcaps);
+    }
+    fromcaps = g_list_next (fromcaps);
+  }
+  return FALSE;
+}
 
 /**
  * gst_caps_save_thyself:
@@ -218,6 +274,7 @@ gst_caps_save_thyself (GstCaps *caps, xmlNodePtr parent)
 
   g_return_val_if_fail (caps != NULL, NULL);
 
+  xmlNewChild (parent, NULL, "name", caps->name);
   xmlNewChild (parent, NULL, "type", gst_type_find_by_id (caps->id)->mime);
   if (caps->properties) {
     subtree = xmlNewChild (parent, NULL, "properties", NULL);
@@ -243,6 +300,9 @@ gst_caps_load_thyself (xmlNodePtr parent)
   xmlNodePtr field = parent->childs;
 
   while (field) {
+    if (!strcmp (field->name, "name")) {
+      caps->name = g_strdup (xmlNodeGetContent (field));
+    }
     if (!strcmp (field->name, "type")) {
       caps->id = get_type_for_mime (xmlNodeGetContent (field));
     }

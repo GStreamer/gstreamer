@@ -32,24 +32,28 @@ typedef gpointer GstCapsFactoryEntry;
 typedef GstCapsFactoryEntry GstCapsFactory[];
 
 struct _GstCaps {
+  gchar *name;			/* the name of this caps */
+
   guint16 id;			/* type id (major type) */
 
   GstProps *properties;		/* properties for this capability */
 };
 
 /* initialize the subsystem */
-void 		_gst_caps_initialize		(void);
+void 		_gst_caps_initialize			(void);
 
-GstCaps*	gst_caps_new			(gchar *mime);
-GstCaps*	gst_caps_new_with_props		(gchar *mime, GstProps *props);
-GstCaps*	gst_caps_register		(GstCapsFactory *factory);
+GstCaps*	gst_caps_new				(gchar *name, gchar *mime);
+GstCaps*	gst_caps_new_with_props			(gchar *name, gchar *mime, GstProps *props);
+GstCaps*	gst_caps_register			(GstCapsFactory *factory);
+GstCaps*	gst_caps_register_count			(GstCapsFactory *factory, guint *count);
 
-GstCaps*	gst_caps_set_props		(GstCaps *caps, GstProps *props);
-GstProps*	gst_caps_get_props		(GstCaps *caps);
+GstCaps*	gst_caps_set_props			(GstCaps *caps, GstProps *props);
+GstProps*	gst_caps_get_props			(GstCaps *caps);
 
-gboolean 	gst_caps_check_compatibility 	(GstCaps *fromcaps, GstCaps *tocaps);
+gboolean 	gst_caps_check_compatibility 		(GstCaps *fromcaps, GstCaps *tocaps);
+gboolean 	gst_caps_list_check_compatibility 	(GList *fromcaps, GList *tocaps);
 
-xmlNodePtr      gst_caps_save_thyself    	(GstCaps *caps, xmlNodePtr parent);
-GstCaps* 	gst_caps_load_thyself    	(xmlNodePtr parent);
+xmlNodePtr      gst_caps_save_thyself    		(GstCaps *caps, xmlNodePtr parent);
+GstCaps* 	gst_caps_load_thyself    		(xmlNodePtr parent);
 
 #endif /* __GST_CAPS_H__ */

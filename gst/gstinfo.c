@@ -33,7 +33,8 @@ GHashTable *__gst_function_pointers = NULL;
 
 /***** INFO system *****/
 GstInfoHandler _gst_info_handler = gst_default_info_handler;
-guint32 _gst_info_categories = 0xffffffff;
+//guint32 _gst_info_categories = 0xffffffff;
+guint32 _gst_info_categories = 0x00000000;
 
 static gchar *_gst_info_category_strings[] = {
   "GST_INIT",

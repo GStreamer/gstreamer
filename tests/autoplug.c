@@ -5,8 +5,8 @@ autoplug_caps (gchar *mime1, gchar *mime2)
 {
   GstCaps *caps1, *caps2;
 
-  caps1 = gst_caps_new (mime1);
-  caps2 = gst_caps_new (mime2);
+  caps1 = gst_caps_new ("tescaps1", mime1);
+  caps2 = gst_caps_new ("tescaps2", mime2);
 
   return gst_autoplug_caps (caps1, caps2);
 }
@@ -39,21 +39,25 @@ int main(int argc,char *argv[])
 
   factories = gst_autoplug_caps (
 		  gst_caps_new_with_props(
+			  "testcaps3",
 			  "video/mpeg",
 			  gst_props_new ( 
 			      "mpegversion",  GST_PROPS_INT (1),
 			      "systemstream", GST_PROPS_BOOLEAN (TRUE),
 			      NULL)),
-		  gst_caps_new("audio/raw"));
+		  gst_caps_new("testcaps4","audio/raw"));
   dump_factories (factories);
 
   factories = gst_autoplug_caps (
 		  gst_caps_new_with_props(
+			  "testcaps5",
 			  "video/mpeg",
 			  gst_props_new ( 
 			      "mpegversion",  GST_PROPS_INT (1),
 			      "systemstream", GST_PROPS_BOOLEAN (FALSE),
 			      NULL)),
-		  gst_caps_new("video/raw"));
+		  gst_caps_new("testcaps6", "video/raw"));
   dump_factories (factories);
+
+  exit (0);
 }

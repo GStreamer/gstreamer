@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define GST_DEBUG_ENABLED
+//#define GST_DEBUG_ENABLED
 #include "gst_private.h"
 
 #include "gstprops.h"
@@ -108,16 +108,33 @@ props_compare_func (gconstpointer a,
 GstProps *
 gst_props_register (GstPropsFactory factory)
 {
+  guint dummy;
+
+  return gst_props_register_count (factory, &dummy);
+}
+
+/**
+ * gst_props_register_count:
+ * @factory: the factory to register
+ * @counter: count how many fields were consumed
+ *
+ * Register the factory. 
+ *
+ * Returns: The new property created from the factory
+ */
+GstProps *
+gst_props_register_count (GstPropsFactory factory, guint *counter)
+{
   GstPropsFactoryEntry tag;
   gint i = 0;
-  GstProps *props;
+  GstProps *props = NULL;
   gint skipped;
   
   g_return_val_if_fail (factory != NULL, NULL);
 
   tag = factory[i++];
 
-  if (!tag) return NULL;
+  if (!tag) goto end;
 
   props = g_new0 (GstProps, 1);
   g_return_val_if_fail (props != NULL, NULL);
@@ -128,6 +145,11 @@ gst_props_register (GstPropsFactory factory)
     GQuark quark;
     GstPropsEntry *entry;
     
+    if (tag < GST_PROPS_LAST_ID) {
+      g_warning ("properties seem to be wrong\n");
+      return NULL;
+    }
+      
     quark = g_quark_from_string ((gchar *)tag);
 
     tag = factory[i];
@@ -166,6 +188,9 @@ gst_props_register (GstPropsFactory factory)
      
     tag = factory[i++];
   }
+
+end:
+  *counter = i;
 
   return props;
 }

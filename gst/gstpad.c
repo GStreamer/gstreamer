@@ -471,16 +471,19 @@ gst_pad_connect (GstPad *srcpad,
  
   /* chack pad compatibility */
   if (srcpad->caps && sinkpad->caps) {
-    if (!gst_caps_check_compatibility (srcpad->caps, sinkpad->caps))
+    if (!gst_caps_check_compatibility (srcpad->caps, sinkpad->caps)) {
       g_warning ("gstpad: connecting incompatible pads (%s:%s) and (%s:%s)\n",
 		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
-    else
+    }
+    else {
       DEBUG ("gstpad: connecting compatible pads (%s:%s) and (%s:%s)\n",
 		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+    }
   }
-  else
+  else {
     DEBUG ("gstpad: could not check capabilities of pads (%s:%s) and (%s:%s)\n", 
 		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+  }
 
   /* first set peers */
   srcpad->peer = sinkpad;
@@ -592,15 +595,15 @@ gst_pad_get_ghost_parents (GstPad *pad)
 }
 
 /**
- * gst_pad_set_caps:
+ * gst_pad_set_caps_list:
  * @pad: the pad to set the caps to
- * @caps: the caps to attach to this pad 
+ * @caps: the capslist to attach to this pad 
  *
  * set the capabilities of this pad
  */
 void 
-gst_pad_set_caps (GstPad *pad, 
-		  GstCaps *caps) 
+gst_pad_set_caps_list (GstPad *pad, 
+		       GList *caps) 
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -608,15 +611,15 @@ gst_pad_set_caps (GstPad *pad,
   pad->caps = caps;
 }
 /**
- * gst_pad_get_caps:
+ * gst_pad_get_caps_list:
  * @pad: the pad to get the capabilities from
  *
  * get the capabilities of this pad
  *
- * Returns: the capabilities of this pad
+ * Returns: a list of capabilities of this pad
  */
-GstCaps * 
-gst_pad_get_caps (GstPad *pad) 
+GList * 
+gst_pad_get_caps_list (GstPad *pad) 
 {
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
@@ -821,6 +824,7 @@ gst_padtemplate_new (GstPadFactory *factory)
   GstPadTemplate *new;
   GstPadFactoryEntry tag;
   gint i = 0;
+  guint counter = 0;
 
   g_return_val_if_fail (factory != NULL, NULL);
 
@@ -836,7 +840,13 @@ gst_padtemplate_new (GstPadFactory *factory)
   tag = (*factory)[i++];
   new->presence = GPOINTER_TO_UINT (tag);
 
-  new->caps = gst_caps_register ((GstCapsFactory *)&(*factory)[i]);
+  tag = (*factory)[i++];
+
+  while (GPOINTER_TO_INT (tag) == 1) {
+    new->caps = g_list_append (new->caps, gst_caps_register_count ((GstCapsFactory *)&(*factory)[i], &counter));
+    i+=counter;
+    tag = (*factory)[i++];
+  }
 
   return new;
 }
@@ -846,7 +856,7 @@ gst_padtemplate_new (GstPadFactory *factory)
  * @name_template: the name template 
  * @direction: the direction for the template
  * @presence: the presence of the pad
- * @caps: the capabilities for the template
+ * @caps: a list of capabilities for the template
  *
  * creates a new padtemplate from the given arguments
  *
@@ -855,7 +865,7 @@ gst_padtemplate_new (GstPadFactory *factory)
 GstPadTemplate*
 gst_padtemplate_create (gchar *name_template,
 		        GstPadDirection direction, GstPadPresence presence,
-		        GstCaps *caps)
+		        GList *caps)
 {
   GstPadTemplate *new;
   
@@ -883,13 +893,21 @@ xmlNodePtr
 gst_padtemplate_save_thyself (GstPadTemplate *pad, xmlNodePtr parent)
 {
   xmlNodePtr subtree;
+  GList *caps;
 
   xmlNewChild(parent,NULL,"nametemplate", pad->name_template);
   xmlNewChild(parent,NULL,"direction", (pad->direction == GST_PAD_SINK? "sink":"src"));
   xmlNewChild(parent,NULL,"presence", (pad->presence == GST_PAD_ALWAYS? "always":"sometimes"));
-  subtree = xmlNewChild(parent,NULL,"caps", NULL);
 
-  gst_caps_save_thyself (pad->caps, subtree);
+  caps = pad->caps;
+  while (caps) {
+    GstCaps *cap = (GstCaps *)caps->data;
+    
+    subtree = xmlNewChild(parent,NULL,"caps", NULL);
+    gst_caps_save_thyself (cap, subtree);
+
+    caps = g_list_next (caps);
+  }
 
   return parent;
 }
@@ -934,7 +952,7 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
       }
     }
     else if (!strcmp(field->name, "caps")) {
-      factory->caps = gst_caps_load_thyself (field);
+      factory->caps = g_list_append(factory->caps, gst_caps_load_thyself (field));
     }
     field = field->next;
   }

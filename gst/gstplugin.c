@@ -459,6 +459,7 @@ gst_plugin_load_typefactory (gchar *mime)
 	  gchar *pluginname = g_strdup (plugin->name);
 	  
           INFO(GST_INFO_PLUGIN_LOADING,"loading type factory for \"%s\" from plugin %s",mime,plugin->name);
+	  plugin->loaded = TRUE;
 	  gst_plugin_remove(plugin);
 	  if (!gst_plugin_load_absolute(filename)) {
 	    DEBUG("gstplugin: error loading type factory \"%s\" from plugin %s\n", mime, pluginname);

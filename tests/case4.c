@@ -4,7 +4,6 @@
 int main(int argc,char *argv[]) {
   GstBin *thread;
   GstElement *src,*identity,*sink;
-  int i;
 
   DEBUG_ENTER("(%d)",argc);
 
@@ -31,4 +30,6 @@ int main(int argc,char *argv[]) {
 
   gst_bin_iterate(thread);
   gst_bin_iterate(thread);
+
+  exit(0);
 }

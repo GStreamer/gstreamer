@@ -4,6 +4,8 @@ gboolean state_change(GstElement *element,GstElementState state) {
   g_print(">STATES: element '%s' state set to %d(%s)\n",
 	gst_element_get_name(element),state,_gst_print_statename(state));
   g_print(">STATES: element state is actually %d\n",GST_STATE(element));
+
+  return TRUE;
 }
 
 int main(int argc,char *argv[]) {
@@ -61,4 +63,6 @@ int main(int argc,char *argv[]) {
   gst_element_set_state (bin, GST_STATE_PLAYING);
 
   gst_bin_iterate (GST_BIN (bin));
+
+  exit (0);
 }

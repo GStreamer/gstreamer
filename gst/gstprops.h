@@ -40,6 +40,7 @@ typedef enum {
    GST_PROPS_INT_RANGE_ID_NUM,
    GST_PROPS_FOURCC_ID_NUM,
    GST_PROPS_BOOL_ID_NUM,
+   GST_PROPS_LAST_ID_NUM = GST_PROPS_END_ID_NUM + 16,
 } GstPropsId;
 
 #define GST_PROPS_END_ID GINT_TO_POINTER(GST_PROPS_END_ID_NUM)
@@ -48,6 +49,7 @@ typedef enum {
 #define GST_PROPS_INT_RANGE_ID GINT_TO_POINTER(GST_PROPS_INT_RANGE_ID_NUM)
 #define GST_PROPS_FOURCC_ID GINT_TO_POINTER(GST_PROPS_FOURCC_ID_NUM)
 #define GST_PROPS_BOOL_ID GINT_TO_POINTER(GST_PROPS_BOOL_ID_NUM)
+#define GST_PROPS_LAST_ID GINT_TO_POINTER(GST_PROPS_LAST_ID_NUM)
 
 #define GST_PROPS_LIST(a...) GST_PROPS_LIST_ID,##a,NULL
 #define GST_PROPS_INT(a) GST_PROPS_INT_ID,(GINT_TO_POINTER(a))
@@ -65,6 +67,7 @@ struct _GstProps {
 void 		_gst_props_initialize		(void);
 
 GstProps*	gst_props_register		(GstPropsFactory factory);
+GstProps*	gst_props_register_count	(GstPropsFactory factory, guint *counter);
 
 GstProps*	gst_props_new			(GstPropsFactoryEntry entry, ...);
 

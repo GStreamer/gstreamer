@@ -1,12 +1,7 @@
 #include <gst/gst.h>
 
-static GstTypeFactory mpegfactory = {
-  "video/mpeg",		// major type
-  ".mpg .mpeg",		// extenstions
-  NULL,			// typefind function
-};
-
 static GstCapsFactory mpeg2dec_sink_caps = {
+  "mpeg2dec_sink",
   "video/mpeg",
   "mpegtype", GST_PROPS_LIST (
                      GST_PROPS_INT(1),
@@ -16,6 +11,7 @@ static GstCapsFactory mpeg2dec_sink_caps = {
 };
 
 static GstCapsFactory mp1parse_src_caps = {
+  "mp1parse_src",
   "video/mpeg",
   "mpegtype", GST_PROPS_LIST (
                      GST_PROPS_INT(1)
@@ -24,6 +20,7 @@ static GstCapsFactory mp1parse_src_caps = {
 };
 
 static GstCapsFactory mpeg2dec_src_caps = {
+  "mpeg2dec_src",
   "video/raw",
   "fourcc", 	GST_PROPS_LIST (
                         GST_PROPS_FOURCC ('Y','V','1','2'), 
@@ -35,6 +32,7 @@ static GstCapsFactory mpeg2dec_src_caps = {
 };
 
 static GstCapsFactory raw_sink_caps = {
+  "raw_sink_caps",
   "video/raw",
   "fourcc", 	GST_PROPS_LIST (
                         GST_PROPS_FOURCC_INT (0x32315659)
@@ -44,6 +42,7 @@ static GstCapsFactory raw_sink_caps = {
 };
 
 static GstCapsFactory raw2_sink_caps = {
+  "raw2_sink_caps",
   "video/raw",
   "fourcc", 	GST_PROPS_LIST (
                         GST_PROPS_FOURCC_INT (0x32315659),
@@ -58,7 +57,6 @@ static GstCaps *sinkcaps = NULL,
                *rawcaps = NULL, 
                *rawcaps2 = NULL, 
                *rawcaps3 = NULL, 
-               *sinkcapslist = NULL, 
 	       *mp1parsecaps = NULL;
 
 int main(int argc,char *argv[]) 
