@@ -48,7 +48,7 @@ thread (void)
   int i;
   GstElement *pipeline;
 
-  for (i = 0; i < runs; ++i)
+  for (i = 50; i < runs; ++i)
   {
     pipeline = gst_pipeline_new ("main_pipeline");
     g_assert (pipeline);

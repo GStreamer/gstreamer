@@ -8,7 +8,7 @@ gboolean running = FALSE;
 gboolean can_quit = FALSE;
 
 static void
-construct_pipeline (GstElement *pipeline, gint identities) 
+construct_pipeline (GstElement *pipeline, gint identities)
 {
   GstElement *src, *sink, *identity;
   GstElement *from;
@@ -31,7 +31,7 @@ construct_pipeline (GstElement *pipeline, gint identities)
   }
   gst_element_connect (identity, sink);
 
-  g_object_set (G_OBJECT (src), "num_buffers", 10, "sizetype", 3, NULL);
+  g_object_set (G_OBJECT (src), "num_buffers", 2, "sizetype", 3, NULL);
 }
 
 void
@@ -56,7 +56,7 @@ state_changed (GstElement *el, gint arg1, gint arg2, gpointer user_data)
 int
 main (gint argc, gchar *argv[])
 {
-  int runs = 130;
+  int runs = 290;
   int i;
   gulong id;
   GstElement *thread;
@@ -69,12 +69,13 @@ main (gint argc, gchar *argv[])
     g_assert (thread);
 
     /* connect state change signal */
-    id = g_signal_connect (G_OBJECT (thread), "state_change", 
+    id = g_signal_connect (G_OBJECT (thread), "state_change",
 		           G_CALLBACK (state_changed), NULL);
     construct_pipeline (thread, i / 10 + 1);
 
     g_print ("Setting thread to play with %d identities\n", i / 10 + 1);
-    gst_element_set_state (thread, GST_STATE_PLAYING);
+    if (gst_element_set_state (thread, GST_STATE_PLAYING) == GST_STATE_FAILURE)
+      g_error ("Failed setting thread to play\n");
 
     g_print ("Going into the main GStreamer loop\n");
     can_quit = TRUE; /* we don't want gst_main_quit called before gst_main */

@@ -24,7 +24,7 @@ main (gint argc, gchar *argv[])
     GstElement *bin;
     GstElement *fakesink;
 
-    fprintf (stderr, "+");
+    g_print ("+");
 
     bin = gst_bin_new ("bin");
 
@@ -41,11 +41,11 @@ main (gint argc, gchar *argv[])
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
 
-    fprintf (stderr, "-");
+    g_print ("-");
     gst_bin_remove (GST_BIN (pipeline), GST_ELEMENT (bin));
 
   }
-  fprintf (stderr, "\n");
+  g_print ("\n");
   g_mem_chunk_info ();
 
   return 0;

@@ -296,7 +296,10 @@ cothread_free (cothread_state *cothread)
             cothread->cothreadnum);
 
   /* we simply flag the cothread for destruction here */
-  cothread->flags |= COTHREAD_DESTROYED;
+  if (cothread)
+    cothread->flags |= COTHREAD_DESTROYED;
+  else
+    g_warning ("somebody set up us the bomb");
 }
 
 static void
