@@ -130,6 +130,9 @@ static void		gst_synaesthesia_get_property	(GObject *object, guint prop_id,
 
 static void		gst_synaesthesia_chain		(GstPad *pad, GstBuffer *buf);
 
+static GstElementStateReturn
+			gst_synaesthesia_change_state	(GstElement *element);
+
 static GstPadLinkReturn 
 			gst_synaesthesia_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
@@ -180,6 +183,8 @@ gst_synaesthesia_class_init(GstSynaesthesiaClass *klass)
 
   gobject_class->set_property = gst_synaesthesia_set_property;
   gobject_class->get_property = gst_synaesthesia_get_property;
+
+  gstelement_class->change_state = gst_synaesthesia_change_state;
 }
 
 static void
@@ -196,11 +201,9 @@ gst_synaesthesia_init (GstSynaesthesia *synaesthesia)
   gst_pad_set_chain_function (synaesthesia->sinkpad, gst_synaesthesia_chain);
   gst_pad_set_link_function (synaesthesia->sinkpad, gst_synaesthesia_sinkconnect);
 
-  synaesthesia->next_time = 0;
-  synaesthesia->peerpool = NULL;
+  GST_FLAG_SET (synaesthesia, GST_ELEMENT_EVENT_AWARE);
 
   /* reset the initial video state */
-  synaesthesia->first_buffer = TRUE;
   synaesthesia->width = 320;
   synaesthesia->height = 200;
   synaesthesia->fps = 25; /* desired frame rate */
@@ -232,6 +235,23 @@ gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
   synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
 
   GST_DEBUG (0, "Synaesthesia: chainfunc called");
+
+  if (GST_IS_EVENT (bufin)) {
+    GstEvent *event = GST_EVENT (bufin);
+
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_DISCONTINUOUS:
+      {
+        gint64 value = 0;
+        gst_event_discont_get_value (event, GST_FORMAT_TIME, &value);
+        synaesthesia->next_time = value;
+      }
+      default:
+        gst_pad_event_default (pad, event);
+        break;
+    }
+    return;     
+  }
 
   samples_in = GST_BUFFER_SIZE (bufin) / sizeof (gint16);
 
@@ -341,6 +361,28 @@ gst_synaesthesia_get_property (GObject *object, guint prop_id, GValue *value, GP
       break;
   }
 }
+
+static GstElementStateReturn
+gst_synaesthesia_change_state (GstElement *element)
+{
+  GstSynaesthesia *synaesthesia;
+
+  synaesthesia = GST_SYNAESTHESIA (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_READY_TO_PAUSED:
+      synaesthesia->next_time = 0;
+      synaesthesia->peerpool = NULL;
+      synaesthesia->first_buffer = TRUE;
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
+}
+
 
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
