@@ -9,6 +9,8 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 # The directory containing the source code (if it contains documentation).
 DOC_SOURCE_DIR=$(top_srcdir)/libs
 
+EXTRA_DIST = $(DOC_MODULE)-docs.sgml $(DOC_MODULE)-sections.txt
+
 HTML_DIR=$(datadir)/gstreamer/html
 
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)

@@ -4,7 +4,7 @@
 DOC_MODULE=gstreamer
 
 # The top-level SGML file.
-DOC_MAIN_SGML_FILE=gstreamer-docs.sgml
+DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 
 # The directory containing the source code (if it contains documentation).
 DOC_SOURCE_DIR=$(top_srcdir)/gst
@@ -12,7 +12,7 @@ DOC_SOURCE_DIR=$(top_srcdir)/gst
 CFLAGS = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir)
 LDFLAGS = $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/.libs/libgst.so $(top_srcdir)/gst/elements/.libs/libgstelements.so
 
-EXTRA_DIST=gstreamer.types.in
+EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt
 
 HTML_DIR=$(datadir)/gstreamer/html
 
@@ -63,9 +63,9 @@ tmpl_sources =				\
 gstreamer_docdir = $(HTML_DIR)
 gstreamer_doc_DATA =		\
 	gstreamer.html		\
-	gstreamer.hierarchy	\
 	gstreamer.types		\
 	gstreamer-decl.txt	\
+	gstreamer.hierarchy	\
 	gstreamer-sections.txt
 
 SCANOBJS_FILES =		\
