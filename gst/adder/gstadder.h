@@ -20,12 +20,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_ADDER_H__
 #define __GST_ADDER_H__
 
 #include <gst/gst.h>
-
+#include <gst/bytestream/bytestream.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,34 +43,57 @@ extern GstElementDetails gst_adder_details;
 #define GST_IS_ADDER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ADDER))
 
-typedef struct _GstAdder 		GstAdder;
-typedef struct _GstAdderClass 	GstAdderClass;
+typedef struct _GstAdder             GstAdder;
+typedef struct _GstAdderClass        GstAdderClass;
+typedef struct _GstAdderInputChannel GstAdderInputChannel;
+typedef enum   _GstAdderFormat       GstAdderFormat;
 
-typedef struct {
-  GstPad *sinkpad;
+enum _GstAdderFormat {
+  GST_ADDER_FORMAT_UNSET,
+  GST_ADDER_FORMAT_INT,
+  GST_ADDER_FORMAT_FLOAT
+};
 
-  GstBuffer *input_buffer; 		/* input buffer */ 
-  gint16 *p_input_data;		    /* pointer to current position in input buffer */
-  guint16 bytes_waiting;	    /* how many bytes are still left in input buffer ? */
-} adder_input_channel_t;
+struct _GstAdderInputChannel {
+  GstPad        *sinkpad;
+  GstByteStream *bytestream;
+};
 
 struct _GstAdder {
-  GstElement element;
+  GstElement      element;
 
-  GstPad *srcpad;
-
+  GstPad         *srcpad;
+  GstBufferPool  *bufpool;
+  
   /* keep track of the sinkpads */
-  gint numsinkpads;
-  GSList *input_channels;
+  guint           numsinkpads;
+  GSList         *input_channels;
+
+  /* the next three are valid for both int and float */
+  GstAdderFormat  format;
+  guint           rate;
+  guint           channels;
+  
+  /* the next five are valid only for format == GST_PLAYONDEMAND_FORMAT_INT */
+  guint           width;
+  guint           depth;
+  guint           endianness;
+  guint           law;
+  gboolean        is_signed;
+  
+  /* the next three are valid only for format == GST_PLAYONDEMAND_FORMAT_FLOAT */
+  const gchar    *layout;
+  gfloat          slope;
+  gfloat          intercept;
+
 };
 
 struct _GstAdderClass {
   GstElementClass parent_class;
 };
 
-GType 	gst_adder_get_type	(void);
-
-gboolean 	gst_adder_factory_init 	(GstElementFactory *factory);
+GType    gst_adder_get_type (void);
+gboolean gst_adder_factory_init (GstElementFactory *factory);
 
 #ifdef __cplusplus
 }

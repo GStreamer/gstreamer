@@ -23,7 +23,8 @@
 
 #include "gstadder.h"
 
-//#define DEBUG
+#define GST_ADDER_BUFFER_SIZE 4096
+#define GST_ADDER_NUM_BUFFERS 8
 
 GstElementDetails adder_details = {
   "Adder",
@@ -46,12 +47,12 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (adder_src_template_factory,
+GST_PADTEMPLATE_FACTORY (gst_adder_src_template_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
-    "test_src",
+    "int_src",
     "audio/raw",
       "format",             GST_PROPS_STRING ("int"),
         "law",              GST_PROPS_INT (0),
@@ -59,17 +60,27 @@ GST_PADTEMPLATE_FACTORY (adder_src_template_factory,
         "signed",           GST_PROPS_BOOLEAN (TRUE),
         "width",            GST_PROPS_INT_RANGE (8, 16),
         "depth",            GST_PROPS_INT_RANGE (8, 16),
-        "rate",             GST_PROPS_INT_RANGE (4000, 48000), //FIXME
+        "rate",             GST_PROPS_INT_RANGE (4000, 48000), /* FIXME */
+        "channels",         GST_PROPS_INT_RANGE (1, 2)
+  ),
+  GST_CAPS_NEW (
+    "float_src",
+    "audio/raw",
+      "format",             GST_PROPS_STRING("float"),
+        "layout",           GST_PROPS_STRING ("gfloat"),
+        "intercept",        GST_PROPS_FLOAT (0.0),
+        "slope",            GST_PROPS_FLOAT (1.0),
+        "rate",             GST_PROPS_INT_RANGE (4000, 96000),
         "channels",         GST_PROPS_INT_RANGE (1, 2)
   )
 );  
 
-GST_PADTEMPLATE_FACTORY (adder_sink_template_factory,
+GST_PADTEMPLATE_FACTORY (gst_adder_sink_template_factory,
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
-    "test_sink",
+    "int_sink",
     "audio/raw",
       "format",             GST_PROPS_STRING ("int"),
         "law",              GST_PROPS_INT (0),
@@ -77,7 +88,17 @@ GST_PADTEMPLATE_FACTORY (adder_sink_template_factory,
         "signed",           GST_PROPS_BOOLEAN (TRUE),
         "width",            GST_PROPS_INT_RANGE (8, 16),
         "depth",            GST_PROPS_INT_RANGE (8, 16),
-        "rate",             GST_PROPS_INT_RANGE (4000, 48000), //FIXME
+        "rate",             GST_PROPS_INT_RANGE (4000, 48000), /* FIXME */
+        "channels",         GST_PROPS_INT_RANGE (1, 2)
+  ),
+  GST_CAPS_NEW (
+    "float_sink",
+    "audio/raw",
+      "format",             GST_PROPS_STRING("float"),
+        "layout",           GST_PROPS_STRING ("gfloat"),
+        "intercept",        GST_PROPS_FLOAT (0.0),
+        "slope",            GST_PROPS_FLOAT (1.0),
+        "rate",             GST_PROPS_INT_RANGE (4000, 96000),
         "channels",         GST_PROPS_INT_RANGE (1, 2)
   )
 );  
@@ -95,7 +116,7 @@ static GstPad* 		gst_adder_request_new_pad 	(GstElement *element, GstPadTemplate
 static void 		gst_adder_loop  		(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_adder_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_adder_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_adder_get_type(void) {
@@ -117,6 +138,60 @@ gst_adder_get_type(void) {
   return adder_type;
 }
 
+static GstPadConnectReturn
+gst_adder_sinkpad_connect (GstPad *pad, GstCaps *caps)
+{
+  const gchar *format;
+  GstAdder *adder;
+  
+  g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_DELAYED);
+  g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_DELAYED);
+
+  adder = GST_ADDER (GST_PAD_PARENT (pad));
+
+  format = gst_caps_get_string (caps, "format");
+
+  if (adder->format == GST_ADDER_FORMAT_UNSET) {
+    /* the caps haven't been set yet at all, so we need to go ahead and set all
+       the relevant values. */
+    if (strcmp (format, "int") == 0) {
+      adder->format     = GST_ADDER_FORMAT_INT;
+      adder->width      = gst_caps_get_int (caps, "width");
+      adder->depth      = gst_caps_get_int (caps, "depth");
+      adder->law        = gst_caps_get_int (caps, "law");
+      adder->endianness = gst_caps_get_int (caps, "endianness");
+      adder->is_signed  = gst_caps_get_int (caps, "signed");
+    } else if (strcmp (format, "float") == 0) {
+      adder->format     = GST_ADDER_FORMAT_FLOAT;
+      adder->layout     = gst_caps_get_string (caps, "layout");
+      adder->intercept  = gst_caps_get_float  (caps, "intercept");
+      adder->slope      = gst_caps_get_float  (caps, "slope");
+    }
+  } else {
+    /* otherwise, a previously-connected pad has set all the values. we should
+       barf if some of the attempted new values don't match. */
+    if (strcmp (format, "int") == 0) {
+      if ((adder->format != GST_ADDER_FORMAT_INT) ||
+          (adder->width  != gst_caps_get_int (caps, "width")) ||
+          (adder->is_signed != gst_caps_get_int (caps, "signed"))) {
+        return GST_PAD_CONNECT_REFUSED;
+      }
+    } else if (strcmp (format, "float") == 0) {
+      if (adder->format != GST_ADDER_FORMAT_FLOAT) {
+        return GST_PAD_CONNECT_REFUSED;
+      }
+    } else {
+      /* whoa, we don't know what's trying to connect with us ! barf ! */
+      return GST_PAD_CONNECT_REFUSED;
+    }
+  }
+
+  if (GST_CAPS_IS_FIXED (caps) && ! gst_pad_try_set_caps (adder->srcpad, caps))
+    return GST_PAD_CONNECT_REFUSED;
+  
+  return GST_PAD_CONNECT_DELAYED;
+}
+
 static void
 gst_adder_class_init (GstAdderClass *klass) 
 {
@@ -130,7 +205,7 @@ gst_adder_class_init (GstAdderClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUM_PADS,
     g_param_spec_int("num_pads","num_pads","num_pads",
-                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME
+                     G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
 
   gobject_class->get_property = gst_adder_get_property;
 
@@ -140,9 +215,11 @@ gst_adder_class_init (GstAdderClass *klass)
 static void 
 gst_adder_init (GstAdder *adder) 
 {
-  adder->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  adder->srcpad = gst_pad_new_from_template (gst_adder_src_template_factory (), "src");
   gst_element_add_pad (GST_ELEMENT (adder), adder->srcpad);
   gst_element_set_loop_function (GST_ELEMENT (adder), gst_adder_loop);
+
+  adder->format = GST_ADDER_FORMAT_UNSET;
 
   /* keep track of the sinkpads requested */
  
@@ -153,9 +230,9 @@ gst_adder_init (GstAdder *adder)
 static GstPad*
 gst_adder_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar *unused) 
 {
-  gchar *name;
-  adder_input_channel_t *input_channel;
-  GstAdder *adder;
+  gchar                *name;
+  GstAdder             *adder;
+  GstAdderInputChannel *input;
 
   g_return_val_if_fail (GST_IS_ADDER (element), NULL);
 
@@ -164,29 +241,31 @@ gst_adder_request_new_pad (GstElement *element, GstPadTemplate *templ, const gch
     return NULL;
   }
 
-  adder = GST_ADDER (element);
-
   /* allocate space for the input_channel */
 
-  input_channel = (adder_input_channel_t *) g_malloc (sizeof (adder_input_channel_t));
-  if (input_channel == NULL)
-    printf ("Could not allocate memory for adder input channel !\n");
-     
+  input = (GstAdderInputChannel *) g_malloc (sizeof (GstAdderInputChannel));
+  if (input == NULL) {
+    g_warning ("gstadder: could not allocate memory for adder input channel !\n");
+    return NULL;
+  }
+  
+  adder = GST_ADDER (element);
+
   /* fill in input_channel structure */
 
-  name = g_strdup_printf ("sink%d",adder->numsinkpads);
-  input_channel->sinkpad = gst_pad_new_from_template (templ, name);
-  gst_element_add_pad (GST_ELEMENT (adder), input_channel->sinkpad);
-  input_channel->bytes_waiting = 0;
-  input_channel->p_input_data = NULL;
-  input_channel->input_buffer = NULL;
+  name = g_strdup_printf ("sink%d", adder->numsinkpads);
+  input->sinkpad = gst_pad_new_from_template (templ, name);
+  input->bytestream = gst_bytestream_new (input->sinkpad);
+
+  gst_element_add_pad (GST_ELEMENT (adder), input->sinkpad);
+  gst_pad_set_connect_function(input->sinkpad, gst_adder_sinkpad_connect);
 
   /* add the input_channel to the list of input channels */
   
-  adder->input_channels = g_slist_append (adder->input_channels, input_channel);
+  adder->input_channels = g_slist_append (adder->input_channels, input);
   adder->numsinkpads++;
   
-  return input_channel->sinkpad;
+  return input->sinkpad;
 }
 
 static void
@@ -208,7 +287,6 @@ gst_adder_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
   }
 }
 
-
 /* use this loop */
 static void
 gst_adder_loop (GstElement *element)
@@ -216,152 +294,125 @@ gst_adder_loop (GstElement *element)
   /*
    * combine channels by adding sample values
    * basic algorithm :
-   * - each input pipe has a bytes_waiting to it
+   * - request an output buffer from the pool
    * - repeat for each input pipe :
-   *   - if bytes_waiting is zero, request a new buffer
-   *   - check which input pipe has the smalles bytes_waiting
-   * - allocate an output buffer of that size
-   * - repeat for each input pipe :
-   *   - get this much data from each of the input channels
-   *   - clear each buffer that has been depleted completely and set it's value
-   *     to 0
-   *   - add this to the output buffer
+   *   - get number of bytes from the channel's bytestream to fill output buffer
+   *   - if there's an EOS event, remove the input channel
+   *   - otherwise add the gotten bytes to the output buffer
    * - push out the output buffer
    */
     
-  GstAdder *adder;
-  
-  GSList *p_input_channel_GSL;
-  adder_input_channel_t *p_input_channel;
-  
-  GstBuffer *buf_in, *buf_out;
-  GstPad *sinkpad;
-  
-  guint i;
+  GstAdder  *adder;
+  GstBuffer *buf_out;
+  GstEvent  *event = NULL;
 
-  guint pad_number, smallest_pad_size;
+  GSList               *inputs;
+  GstAdderInputChannel *input;
 
-  gint16 *data_out, *data_in;
+  gint8     *raw_in, *zero_out;
+  guint32    waiting;
+  register guint i;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ADDER (element));
   
   adder = GST_ADDER (element);
-
-#ifdef DEBUG
-  printf ("DEBUG : gst_adder_loop iteration\n");
-#endif
-
-  /* first, request all buffers that have a zero bytes_waiting value */
-
-
-#ifdef DEBUG
-  printf ("\tDEBUG : gst_adder_loop : getting needed input buffers\n");
-#endif
-    
-  pad_number = 0;
-  p_input_channel_GSL = adder->input_channels;
-  smallest_pad_size = 0;
-
-  while (p_input_channel_GSL)
-  {
-    guint16 bw;
-
-    p_input_channel = (adder_input_channel_t *) p_input_channel_GSL->data;
-      
-    ++pad_number;
-    bw = p_input_channel->bytes_waiting;
-    sinkpad = p_input_channel->sinkpad;
-      
-#ifdef DEBUG
-    printf ("\tDEBUG : gst_adder_loop : input channel %d has %d bytes left\n",
-     		  pad_number, bw);
-#endif  
-    if (bw == 0)
-    {
-      /* QUESTION : maybe free previous buffer ? where do we do this ? */
-        
-      /* no more data left; get more */
-      buf_in = gst_pad_pull (sinkpad);
-      if (buf_in == NULL)
-        printf ("ERROR : could not get input buffer !\n");
-      bw = GST_BUFFER_SIZE (buf_in);
-      p_input_channel->bytes_waiting = bw;
-      p_input_channel->input_buffer = buf_in;
-      p_input_channel->p_input_data = (guint16 *) GST_BUFFER_DATA (buf_in);
-
-#ifdef DEBUG
-      printf ("\tDEBUG : gst_adder_loop : input channel %d got %d new bytes\n",
-        		  pad_number, bw);
-#endif  
-    }
-    /* update smallest pad size */
-    if (smallest_pad_size == 0)
-    {
-      /* not set yet, set it ! */
-      smallest_pad_size = bw;
-    }
-    if (bw < smallest_pad_size) smallest_pad_size = bw;
-      
-    p_input_channel_GSL = g_slist_next (p_input_channel_GSL);
+  adder->bufpool = gst_pad_get_bufferpool (adder->srcpad);
+  if (adder->bufpool == NULL) {
+    adder->bufpool = gst_buffer_pool_get_default(GST_ADDER_BUFFER_SIZE, GST_ADDER_NUM_BUFFERS);
   }
+  
+  do {
+    /* get new output buffer */
+    buf_out = gst_buffer_new_from_pool (adder->bufpool, 0, 0);
+  
+    if (buf_out == NULL)
+      GST_ERROR (0, "could not get new output buffer !\n");
 
-#ifdef DEBUG
-  printf ("\tDEBUG : gst_adder_loop : smallest pad size %d\n",
-			smallest_pad_size);
-#endif  
+    /* initialize the output data to 0 */
+    zero_out = (gint8 *) GST_BUFFER_DATA (buf_out);      
+    for (i = 0; i < GST_BUFFER_SIZE (buf_out); i++)
+      zero_out[i] = 0;
 
-  /* get new output buffer */
+    /* get data from all of the sinks */
+    inputs = adder->input_channels;
 
-  buf_out = gst_buffer_new ();
-  if (buf_out == NULL)
-    printf ("ERROR : could not get new output buffer !\n");
+    GST_DEBUG (0, "starting to cycle through channels\n");
 
-  GST_BUFFER_SIZE (buf_out) = smallest_pad_size;
-  GST_BUFFER_DATA (buf_out) = g_malloc0 (smallest_pad_size);
+    while (inputs) {
+      input = (GstAdderInputChannel *) inputs->data;
 
-  data_out = (guint16 *) GST_BUFFER_DATA (buf_out);
-  if (data_out == NULL)
-    printf ("ERROR : could not allocate output buffer !\n");
-
-  /* get data from all of the sinks */
-
-  pad_number = 0;
-  p_input_channel_GSL = adder->input_channels;
-
-  while (p_input_channel_GSL)
-  {
-    ++pad_number;
-    p_input_channel = (adder_input_channel_t *) p_input_channel_GSL->data;
-    data_out = (gint16 *) GST_BUFFER_DATA (buf_out);
-
-    data_in = p_input_channel->p_input_data;
-
-    /* add to the output buffer */
-    for (i = 0; i < smallest_pad_size / 2; ++i, ++data_out, ++data_in)
-    {
-      *data_out += *data_in;
-    }
-    /* adjust bytes_waiting and data pointer */
-    p_input_channel->bytes_waiting -= smallest_pad_size;
-    if (p_input_channel->bytes_waiting == 0)
-    {
-#ifdef DEBUG
-      printf ("\tDEBUG : gst_adder_loop : channel %d is empty, unref...\n",
-		pad_number);
-#endif 
-      gst_buffer_unref (p_input_channel->input_buffer);
-      p_input_channel->p_input_data = NULL;
-    }
-    p_input_channel->p_input_data = data_in;
+      GST_DEBUG (0, "looking into channel %p\n", input);
       
-    p_input_channel_GSL = g_slist_next (p_input_channel_GSL);
-  }
+      /* get data from the bytestream of each input channel. we need to check for
+         events before passing on the data to the output buffer. */
+      raw_in = gst_bytestream_peek_bytes (input->bytestream, GST_BUFFER_SIZE (buf_out));
 
-  /* send it out */
-  GST_DEBUG (0, "pushing buf_out\n");
-  gst_pad_push (adder->srcpad, buf_out);
-  GST_DEBUG (0, "pushed buf_out\n");
+      if (raw_in == NULL) {
+        /* we need to check for an event. */
+        gst_bytestream_get_status (input->bytestream, &waiting, &event);
+
+        if (event) {
+          if (GST_EVENT_TYPE(event) == GST_EVENT_EOS) {
+            /* if we get an EOS event from one of our sink pads, we assume that
+               pad's finished handling data. delete the bytestream, free up the
+               pad, and free up the memory associated with the input channel. */
+            GST_DEBUG (0, "got an EOS event\n");
+
+            gst_bytestream_destroy (input->bytestream);
+            gst_pad_unref (input->sinkpad);
+            g_free (input);
+
+            adder->input_channels = g_slist_delete_link (inputs, inputs);
+            inputs = adder->input_channels;
+
+            break;
+          }
+        }
+      } else {
+        /* here's where the data gets copied. this is a little nasty looking
+           because it's the same code pretty much 3 times, except each time uses
+           different data types and clamp limits. */
+        GST_DEBUG (0, "copying %d bytes from channel %p to output data %p in buffer %p\n",
+                   GST_BUFFER_SIZE (buf_out), input, GST_BUFFER_DATA (buf_out), buf_out);
+
+        if (adder->format == GST_ADDER_FORMAT_INT) {
+          if (adder->width == 16) {
+            gint16 *in  = (gint16 *) raw_in;
+            gint16 *out = (gint16 *) GST_BUFFER_DATA (buf_out);      
+            for (i = 0; i < GST_BUFFER_SIZE (buf_out) / 2; i++)
+              out[i] = CLAMP(out[i] + in[i], -32768, 32767);
+          } else if (adder->width == 8) {
+            gint8 *in  = (gint8 *) raw_in;
+            gint8 *out = (gint8 *) GST_BUFFER_DATA (buf_out);      
+            for (i = 0; i < GST_BUFFER_SIZE (buf_out); i++)
+              out[i] = CLAMP(out[i] + in[i], -128, 127);
+          } else {
+            GST_ERROR (0, "invalid width (%d) for int format in gstadder\n", adder->width);
+          }
+        } else if (adder->format == GST_ADDER_FORMAT_FLOAT) {
+          gfloat *in  = (gfloat *) raw_in;
+          gfloat *out = (gfloat *) GST_BUFFER_DATA (buf_out);
+          for (i = 0; i < GST_BUFFER_SIZE (buf_out) / sizeof (gfloat); i++)
+            out[i] += in[i];
+        } else {
+          GST_ERROR (0, "invalid audio format (%d) in gstadder\n", adder->format);
+        }
+
+        gst_bytestream_flush (input->bytestream, GST_BUFFER_SIZE (buf_out));
+
+        GST_DEBUG (0, "done copying data\n");
+      }
+      
+      inputs = g_slist_next (inputs);
+    }
+
+    /* send it out */
+
+    GST_DEBUG (0, "pushing buf_out\n");
+    gst_pad_push (adder->srcpad, buf_out);
+
+  } while (TRUE);
 }
 
 static gboolean
@@ -373,8 +424,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
                                    &adder_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (adder_src_template_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (adder_sink_template_factory));
+  if (! gst_library_load ("gstbytestream")) {
+    gst_info ("gstadder: could not load support library: 'gstbytestream'\n");
+    return FALSE;
+  }
+    
+  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (gst_adder_src_template_factory));
+  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (gst_adder_sink_template_factory));
       
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
     
