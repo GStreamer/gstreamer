@@ -30,6 +30,9 @@
 
 #include "gstgdkpixbuf.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_gdk_pixbuf_debug);
+#define GST_CAT_DEFAULT gst_gdk_pixbuf_debug
+
 static GstElementDetails plugin_details = {
   "GdkPixbuf image decoder",
   "Codec/Decoder/Image",
@@ -445,7 +448,9 @@ static gboolean
 plugin_init (GstPlugin *plugin)
 {
   GstCaps *caps;
-  
+
+  GST_DEBUG_CATEGORY_INIT (gst_gdk_pixbuf_debug, "gdkpixbuf", 0, "gdk pixbuf loader");
+
   if (!gst_element_register (plugin, "gdkpixbufdec", GST_RANK_NONE, GST_TYPE_GDK_PIXBUF))
     return FALSE;
 
