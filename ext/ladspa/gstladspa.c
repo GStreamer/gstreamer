@@ -469,7 +469,7 @@ gst_ladspa_init (GstLADSPA *ladspa)
   else if (sinkcount==0 && srccount == 0){
     /* for some reason these plugins exist - we'll just ignore them */
   } else {
-    g_warning("%d sink pads, %d src pads not yet supported", sinkcount, srccount);
+    GST_DEBUG (0, "%d sink pads, %d src pads not yet supported", sinkcount, srccount);
   }
 
   gst_ladspa_instantiate (ladspa);
