@@ -1,5 +1,5 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) <1999> Erik Walthinsen <omega@temple-baptist.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,7 +18,7 @@
  */
 
 
-//#define GST_DEBUG_ENABLED
+/* #define GST_DEBUG_ENABLED */
 #include <string.h>
 
 #include "gstavidemux.h"
@@ -108,7 +108,7 @@ static void     gst_avi_demux_get_property      (GObject *object, guint prop_id,
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_avi_demux_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_avi_demux_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_avi_demux_get_type(void) 
@@ -143,13 +143,13 @@ gst_avi_demux_class_init (GstAviDemuxClass *klass)
 
   g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_BITRATE,
     g_param_spec_long ("bitrate","bitrate","bitrate",
-                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); // CHECKME
+                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_MEDIA_TIME,
     g_param_spec_long ("media_time","media_time","media_time",
-                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); // CHECKME
+                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_CURRENT_TIME,
     g_param_spec_long ("current_time","current_time","current_time",
-                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); // CHECKME
+                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
   
@@ -180,7 +180,7 @@ gst_avi_demux_init (GstAviDemux *avi_demux)
   avi_demux->index_size = 0;
   avi_demux->resync_offset = 0;
 
-  //GST_FLAG_SET( GST_OBJECT (avi_demux), GST_ELEMENT_NO_SEEK);
+  /*GST_FLAG_SET( GST_OBJECT (avi_demux), GST_ELEMENT_NO_SEEK); */
 
   for(i=0; i<GST_AVI_DEMUX_MAX_AUDIO_PADS; i++) 
     avi_demux->audio_pad[i] = NULL;
@@ -540,7 +540,7 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
       guint32 datashowed;
       guint32 subchunksize = 0;	/* size of a read subchunk             */
 
-      // flush the form type
+      /* flush the form type */
       if (!gst_bytestream_flush (bs, sizeof (guint32)))
 	return FALSE;
 

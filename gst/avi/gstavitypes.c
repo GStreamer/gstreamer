@@ -18,7 +18,7 @@
  */
 
 
-//#define GST_DEBUG_ENABLED
+/*#define GST_DEBUG_ENABLED */
 #include <string.h>
 
 #include "gstavitypes.h"
@@ -128,7 +128,7 @@ static void     gst_avi_types_get_property      (GObject *object, guint prop_id,
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_avi_types_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_avi_types_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_avi_types_get_type(void) 
@@ -311,7 +311,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
                                     &gst_avi_types_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  //gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_templ));
+  /*gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_templ)); */
   gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_templ));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));

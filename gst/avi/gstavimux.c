@@ -94,7 +94,7 @@ static void     gst_avimux_get_property         (GObject *object, guint prop_id,
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_avimux_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_avimux_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_avimux_get_type (void) 
@@ -309,7 +309,7 @@ gst_avimux_chain (GstPad *pad, GstBuffer *buf)
       break;
   }
 
-  //gst_buffer_unref(buf);
+  /*gst_buffer_unref(buf); */
 }
 
 static void 

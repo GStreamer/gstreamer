@@ -18,7 +18,7 @@
  */
 
 
-//#define GST_DEBUG_ENABLED
+/*#define GST_DEBUG_ENABLED */
 #include <string.h>
 
 #include "gstavidecoder.h"
@@ -123,7 +123,7 @@ static void     gst_avi_decoder_get_property    (GObject *object, guint prop_id,
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_avi_decoder_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_avi_decoder_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_avi_decoder_get_type(void) 
@@ -158,13 +158,13 @@ gst_avi_decoder_class_init (GstAviDecoderClass *klass)
 
   g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_BITRATE,
     g_param_spec_long ("bitrate","bitrate","bitrate",
-                     G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); // CHECKME
+                     G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_MEDIA_TIME,
     g_param_spec_long ("media_time","media_time","media_time",
-                     G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); // CHECKME
+                     G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_CURRENT_TIME,
     g_param_spec_long ("current_time","current_time","current_time",
-                     G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); // CHECKME
+                     G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
 
   parent_class = g_type_class_ref (GST_TYPE_BIN);
   
@@ -241,14 +241,14 @@ gst_avi_decoder_new_pad (GstElement *element, GstPad *pad, GstAviDecoder *avi_de
 
       padname = "src_00";
     }
-#endif // GST_DISABLE_AUTOPLUG
+#endif /* GST_DISABLE_AUTOPLUG */
   }
 
   if (!new_element && (media_type == AVI_TYPE_VIDEO)) {
     padname = "src";
   }
   else if (!new_element && (media_type == AVI_TYPE_AUDIO)) {
-    //FIXME
+    /*FIXME */
     padname = "src";
   }
 

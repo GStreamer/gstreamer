@@ -103,7 +103,7 @@ static GstElementStateReturn
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_cdxa_parse_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_cdxa_parse_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_cdxa_parse_get_type(void) 
@@ -138,13 +138,13 @@ gst_cdxa_parse_class_init (GstCDXAParseClass *klass)
 
   g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_BITRATE,
     g_param_spec_long ("bitrate","bitrate","bitrate",
-                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); // CHECKME
+                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_MEDIA_TIME,
     g_param_spec_long ("media_time","media_time","media_time",
-                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); // CHECKME
+                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_CURRENT_TIME,
     g_param_spec_long ("current_time","current_time","current_time",
-                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); // CHECKME
+                       G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
   

@@ -19,7 +19,7 @@
 
 
 
-//#define DEBUG_ENABLED
+/*#define DEBUG_ENABLED */
 
 
 #include <wine/winbase.h>
@@ -172,7 +172,7 @@ static GstPad *gst_avi_decoder_get_audio_srcpad_winloader(GstAviDecoder *avi_dec
   gst_pad_connect(newpad, sinkpad);
   gst_pad_set_chain_function (newpad, GST_RPAD_CHAINFUNC (sinkpad));
 
-  //gst_pad_connect(newpad, sinkpad);
+  /*gst_pad_connect(newpad, sinkpad); */
   avi_decoder->audio_pad[pad_nr] = newpad;
 
   data->out = sinkpad;

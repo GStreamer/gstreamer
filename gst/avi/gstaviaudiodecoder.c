@@ -18,7 +18,7 @@
  */
 
 
-//#define GST_DEBUG_ENABLED
+/*#define GST_DEBUG_ENABLED */
 #include <string.h>
 
 #include "gstaviaudiodecoder.h"
@@ -86,7 +86,7 @@ static void     gst_avi_audio_decoder_get_property      (GObject *object, guint 
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_avi_audio_decoder_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_avi_audio_decoder_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_avi_audio_decoder_get_type(void) 
