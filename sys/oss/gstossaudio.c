@@ -27,6 +27,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   gboolean ret;
 
+  if (!gst_library_load ("gstaudio"))
+    return FALSE;
+
   ret = gst_osssink_factory_init (plugin);
   g_return_val_if_fail (ret == TRUE, FALSE);
 

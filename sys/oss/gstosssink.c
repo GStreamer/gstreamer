@@ -243,7 +243,7 @@ gst_osssink_init (GstOssSink *osssink)
   osssink->mute = FALSE;
   osssink->sync = TRUE;
   osssink->sinkpool = NULL;
-  osssink->provided_clock = GST_CLOCK (gst_oss_clock_new ("ossclock", gst_osssink_get_time, osssink));
+  osssink->provided_clock = gst_audio_clock_new ("ossclock", gst_osssink_get_time, osssink);
   gst_object_set_parent (GST_OBJECT (osssink->provided_clock), GST_OBJECT (osssink));
   osssink->handled = 0;
 
@@ -348,7 +348,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
         ioctl (osssink->common.fd, SNDCTL_DSP_SYNC);
-	gst_oss_clock_set_active (osssink->provided_clock, FALSE);
+	gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssink->provided_clock), FALSE);
 	gst_pad_event_default (pad, event);
         return;
       case GST_EVENT_DISCONTINUOUS:
@@ -358,7 +358,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
         ioctl (osssink->common.fd, SNDCTL_DSP_RESET);
 	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
           if (!gst_clock_handle_discont (osssink->clock, value))
-	    gst_oss_clock_set_active (osssink->provided_clock, FALSE);
+	    gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssink->provided_clock), FALSE);
 	  osssink->handled = 0;
 	}
 	osssink->resync = TRUE;
@@ -403,7 +403,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 	  if (jitter >= 0) {
             gst_clock_handle_discont (osssink->clock, buftime - queued + jitter);
 	    to_write = size;
-	    gst_oss_clock_set_active (osssink->provided_clock, TRUE);
+	    gst_audio_clock_set_active ((GstAudioClock*)osssink->provided_clock, TRUE);
 	    osssink->resync = FALSE;
 	  }
 	}
@@ -439,8 +439,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
     }
   }
 
-  if (osssink->clock)
-    gst_oss_clock_update_time (osssink->clock, buftime);
+  gst_audio_clock_update_time ((GstAudioClock*)osssink->provided_clock, buftime);
 
   gst_buffer_unref (buf);
 }
@@ -627,7 +626,7 @@ gst_osssink_change_state (GstElement *element)
     {
       if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN)) 
         ioctl (osssink->common.fd, SNDCTL_DSP_RESET, 0);
-      gst_oss_clock_set_active (osssink->provided_clock, FALSE);
+      gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssink->provided_clock), FALSE);
       osssink->resync = TRUE;
       break;
     }

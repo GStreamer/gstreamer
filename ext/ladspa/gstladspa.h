@@ -60,12 +60,11 @@ struct _GstLADSPA {
   GstPad **sinkpads, 
          **srcpads;
 
-         
   GstBufferPool *bufpool;
 
-  gboolean newcaps, activated;
+  gboolean activated;
 
-  gint samplerate, buffersize, numbuffers;
+  gint samplerate, buffer_frames;
   gint64 timestamp;
   gboolean inplace_broken;
 };

@@ -28,7 +28,7 @@
 #include <gst/gst.h>
 
 #include "gstosscommon.h"
-#include "gstossclock.h"
+#include <gst/audio/audioclock.h>
 
 G_BEGIN_DECLS
 

@@ -34,7 +34,7 @@
 
 #include <gstosssrc.h>
 #include <gstosscommon.h>
-#include <gstossclock.h>
+#include <gst/audio/audioclock.h>
 
 /* elementfactory information */
 static GstElementDetails gst_osssrc_details = {
@@ -197,9 +197,7 @@ gst_osssrc_init (GstOssSrc *osssrc)
   osssrc->buffersize = 4096;
   osssrc->curoffset = 0;
 
-  osssrc->provided_clock = GST_CLOCK (gst_oss_clock_new ("ossclock",
-							 gst_osssrc_get_time,
-							 osssrc));
+  osssrc->provided_clock = gst_audio_clock_new ("ossclock", gst_osssrc_get_time, osssrc);
   gst_object_set_parent (GST_OBJECT (osssrc->provided_clock), GST_OBJECT (osssrc));
   
   osssrc->clock = NULL;
@@ -443,10 +441,10 @@ gst_osssrc_change_state (GstElement *element)
       osssrc->curoffset = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      gst_oss_clock_set_active (osssrc->provided_clock, TRUE);
+      gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssrc->provided_clock), TRUE);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
-      gst_oss_clock_set_active (osssrc->provided_clock, FALSE);
+      gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssrc->provided_clock), FALSE);
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN))
