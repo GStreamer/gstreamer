@@ -178,8 +178,12 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
       {
 	GstSpiderConnection *conn = (GstSpiderConnection *) list->data;
 	list = g_list_next (list);
-	gst_element_set_eos (GST_ELEMENT (conn->src));
-        gst_pad_push (conn->src->src, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));  
+        if (conn->current != (GstElement *) conn->src) {
+          GST_DEBUG (GST_CAT_AUTOPLUG, "sending EOS to unconnected element %s from %s", 
+	       GST_ELEMENT_NAME (conn->src), GST_ELEMENT_NAME (ident));
+          gst_element_set_eos (GST_ELEMENT (conn->src));
+          gst_pad_push (conn->src->src, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));  
+	}
       }
     }
     /* end hack for current event stuff here */
