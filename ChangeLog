@@ -1,3 +1,40 @@
+2004-05-26  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/Makefile.am:
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_interface_init),
+	(gst_alsa_mixer_build_list), (gst_alsa_mixer_get_volume),
+	(gst_alsa_mixer_set_volume), (gst_alsa_mixer_set_mute),
+	(gst_alsa_mixer_set_record), (gst_alsa_mixer_set_option),
+	(gst_alsa_mixer_get_option):
+	* ext/alsa/gstalsamixer.h:
+	* ext/alsa/gstalsamixeroptions.c:
+	(gst_alsa_mixer_options_get_type),
+	(gst_alsa_mixer_options_class_init), (gst_alsa_mixer_options_init),
+	(gst_alsa_mixer_options_new):
+	* ext/alsa/gstalsamixeroptions.h:
+	* ext/alsa/gstalsamixertrack.c: (gst_alsa_mixer_track_new):
+	* ext/alsa/gstalsamixertrack.h:
+	  Add enumerations (as GstMixerOptions). Make correct distinction
+	  between input/output tracks. Add capture/playback private flag.
+	  Use flag to decide on whether to set capture or playback volumes
+	  or switches. Use playback and record switches.
+	* gst-libs/gst/mixer/Makefile.am:
+	* gst-libs/gst/mixer/mixer-marshal.list:
+	* gst-libs/gst/mixer/mixer.c: (gst_mixer_class_init),
+	(gst_mixer_set_option), (gst_mixer_get_option),
+	(gst_mixer_mute_toggled), (gst_mixer_record_toggled),
+	(gst_mixer_volume_changed), (gst_mixer_option_changed):
+	* gst-libs/gst/mixer/mixer.h:
+	* gst-libs/gst/mixer/mixeroptions.c: (gst_mixer_options_get_type),
+	(gst_mixer_options_class_init), (gst_mixer_options_init),
+	(gst_mixer_options_dispose):
+	* gst-libs/gst/mixer/mixeroptions.h:
+	  Add GstMixerOptions.
+	* sys/oss/gstosselement.c: (gst_osselement_class_probe_devices):
+	  Rename Audio Mixer to OSS Mixer (similar to Alsa Mixer). Fix
+	  broken device detection on computers with multiple OSS sound
+	  cards.
+
 2004-05-26  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_fixate):

@@ -49,7 +49,7 @@ enum
 
 /* elementfactory information */
 static GstElementDetails gst_osselement_details =
-GST_ELEMENT_DETAILS ("Audio Mixer (OSS)",
+GST_ELEMENT_DETAILS ("OSS Mixer",
     "Generic/Audio",
     "OSS-based mixer element",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>");
@@ -300,6 +300,7 @@ gst_osselement_class_probe_devices (GstOssElementClass * klass, gboolean check)
           combi = g_new0 (GstOssDeviceCombination, 1);
           combi->dsp = dsp;
           combi->mixer = mixer;
+          combi->dev = mixer ? mixer_dev : dsp_dev;
           device_combinations = device_combination_append (device_combinations,
               combi);
         } else {
