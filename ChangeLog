@@ -1,3 +1,17 @@
+2004-02-14  Julien MOUTTE  <julien@moutte.net>
+
+	* gst-libs/gst/play/play.c: (gst_play_connect_visualization): Disable
+	visualization until i find a way to fix switch correctly.
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head): Fix a bug when
+	EOS arrives.
+	* gst/switch/gstswitch.c: (gst_switch_release_pad),
+	(gst_switch_request_new_pad), (gst_switch_poll_sinkpads),
+	(gst_switch_loop), (gst_switch_dispose), (gst_switch_class_init):
+	Reworked switch to get a more correct behaviour with events and refing
+	of data stored in sinkpads.
+	* gst/switch/gstswitch.h: Adding an eos flag for every sinkpad so that
+	we don't pull from a pad in EOS.
+
 2004-02-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_chain):
