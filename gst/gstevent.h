@@ -142,7 +142,8 @@ typedef enum {
 typedef struct
 {
   GstFormat	format;
-  gint64	value;
+  gint64	start_value;
+  gint64	end_value;
 } GstFormatValue;
 
 #define GST_EVENT_SEEK_TYPE(event)		(GST_EVENT(event)->event_data.seek.type)
@@ -153,7 +154,7 @@ typedef struct
 #define GST_EVENT_SEEK_ENDOFFSET(event)		(GST_EVENT(event)->event_data.seek.endoffset)
 #define GST_EVENT_SEEK_ACCURACY(event)		(GST_EVENT(event)->event_data.seek.accuracy)
 
-#define GST_EVENT_DISCONT_NEW_MEDIA(event)	(GST_EVENT(event)->event_data.discont.new_media)
+#define GST_EVENT_DISCONT_RATE(event)		(GST_EVENT(event)->event_data.discont.rate)
 #define GST_EVENT_DISCONT_OFFSET(event,i)	(GST_EVENT(event)->event_data.discont.offsets[i])
 #define GST_EVENT_DISCONT_OFFSET_LEN(event)	(GST_EVENT(event)->event_data.discont.noffsets)
 
@@ -182,7 +183,7 @@ struct _GstEvent {
     struct {
       GstFormatValue	offsets[8];
       gint		noffsets;
-      gboolean		new_media;
+      gdouble		rate;
     } discont;
     struct {
       gboolean		done;
@@ -227,12 +228,13 @@ GstEvent*	gst_event_new_segment_seek	(GstSeekType type, gint64 start, gint64 sto
 GstEvent*	gst_event_new_size		(GstFormat format, gint64 value);
 
 /* discontinous event */
-GstEvent*	gst_event_new_discontinuous	(gboolean new_media,
+GstEvent*	gst_event_new_discontinuous	(gdouble rate,
 						 GstFormat format1, ...);
-GstEvent*	gst_event_new_discontinuous_valist	(gboolean new_media,
+GstEvent*	gst_event_new_discontinuous_valist	(gdouble rate,
 						 GstFormat format1,
 						 va_list var_args);
-gboolean	gst_event_discont_get_value	(GstEvent *event, GstFormat format, gint64 *value);
+gboolean	gst_event_discont_get_value	(GstEvent *event, GstFormat format, 
+						 gint64 *start_value, gint64 *end_value);
 
 #define		gst_event_new_filler()		gst_event_new(GST_EVENT_FILLER)
 

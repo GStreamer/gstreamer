@@ -2957,7 +2957,6 @@ no_function:
   }
 }
 
-
 /**
  * gst_pad_check_pull_range:
  * @pad: a sink #GstRealPad.

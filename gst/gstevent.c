@@ -223,20 +223,23 @@ gst_event_new_seek (GstSeekType type, gint64 offset)
  * Returns: A new discontinuous event.
  */
 GstEvent *
-gst_event_new_discontinuous_valist (gboolean new_media, GstFormat format1,
+gst_event_new_discontinuous_valist (gdouble rate, GstFormat format1,
     va_list var_args)
 {
   GstEvent *event;
   gint count = 0;
 
   event = gst_event_new (GST_EVENT_DISCONTINUOUS);
-  GST_EVENT_DISCONT_NEW_MEDIA (event) = new_media;
+  GST_EVENT_DISCONT_RATE (event) = rate;
 
   while (format1 != GST_FORMAT_UNDEFINED && count < 8) {
 
     GST_EVENT_DISCONT_OFFSET (event, count).format =
         format1 & GST_SEEK_FORMAT_MASK;
-    GST_EVENT_DISCONT_OFFSET (event, count).value = va_arg (var_args, gint64);
+    GST_EVENT_DISCONT_OFFSET (event, count).start_value =
+        va_arg (var_args, gint64);
+    GST_EVENT_DISCONT_OFFSET (event, count).end_value =
+        va_arg (var_args, gint64);
 
     format1 = va_arg (var_args, GstFormat);
 
@@ -262,14 +265,14 @@ gst_event_new_discontinuous_valist (gboolean new_media, GstFormat format1,
  * Returns: A new discontinuous event.
  */
 GstEvent *
-gst_event_new_discontinuous (gboolean new_media, GstFormat format1, ...)
+gst_event_new_discontinuous (gdouble rate, GstFormat format1, ...)
 {
   va_list var_args;
   GstEvent *event;
 
   va_start (var_args, format1);
 
-  event = gst_event_new_discontinuous_valist (new_media, format1, var_args);
+  event = gst_event_new_discontinuous_valist (rate, format1, var_args);
 
   va_end (var_args);
 
@@ -288,18 +291,21 @@ gst_event_new_discontinuous (gboolean new_media, GstFormat format1, ...)
  * format/value pair.
  */
 gboolean
-gst_event_discont_get_value (GstEvent * event, GstFormat format, gint64 * value)
+gst_event_discont_get_value (GstEvent * event, GstFormat format,
+    gint64 * start_value, gint64 * end_value)
 {
   gint i, n;
 
   g_return_val_if_fail (event != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
+  g_return_val_if_fail (start_value != NULL, FALSE);
+  g_return_val_if_fail (end_value != NULL, FALSE);
 
   n = GST_EVENT_DISCONT_OFFSET_LEN (event);
 
   for (i = 0; i < n; i++) {
     if (GST_EVENT_DISCONT_OFFSET (event, i).format == format) {
-      *value = GST_EVENT_DISCONT_OFFSET (event, i).value;
+      *start_value = GST_EVENT_DISCONT_OFFSET (event, i).start_value;
+      *end_value = GST_EVENT_DISCONT_OFFSET (event, i).end_value;
       return TRUE;
     }
   }
