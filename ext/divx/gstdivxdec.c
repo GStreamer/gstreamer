@@ -221,10 +221,9 @@ gst_divxdec_setup (GstDivxDec *divxdec)
   /* initialize the handle */
   memset(&xinit, 0, sizeof(DEC_INIT));
   if ((ret = decore(&handle, DEC_OPT_INIT, &xinit, NULL)) != 0) {
-    gst_element_gerror(GST_ELEMENT(divxdec), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("Error initializing divx decoding library: %s (%d)",
-                      gst_divxdec_error(ret), ret));
+    gst_element_error(GST_ELEMENT(divxdec),
+                      "Error initializing divx decoding library: %s (%d)",
+                      gst_divxdec_error(ret), ret);
     return FALSE;
   }
 
@@ -241,10 +240,9 @@ gst_divxdec_setup (GstDivxDec *divxdec)
 
   if ((ret = decore(divxdec->handle, DEC_OPT_SETOUT,
                     &output, NULL)) != 0) {
-    gst_element_gerror(GST_ELEMENT(divxdec), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("Error setting output format: %s (%d)",
-                      gst_divxdec_error(ret), ret));
+    gst_element_error(GST_ELEMENT(divxdec),
+                      "Error setting output format: %s (%d)",
+                      gst_divxdec_error(ret), ret);
     gst_divxdec_unset(divxdec);
     return FALSE;
   }
@@ -279,9 +277,8 @@ gst_divxdec_chain (GstPad    *pad,
 
   if (!divxdec->handle) {
     if (gst_divxdec_negotiate(divxdec) <= 0) {
-      gst_element_gerror(GST_ELEMENT(divxdec), GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("No format set - aborting"));
+      gst_element_error(GST_ELEMENT(divxdec),
+                        "No format set - aborting");
       gst_buffer_unref(buf);
       return;
     }
@@ -304,10 +301,9 @@ gst_divxdec_chain (GstPad    *pad,
 
   if ((ret = decore(divxdec->handle, DEC_OPT_FRAME,
                     &xframe, NULL))) {
-    gst_element_gerror(GST_ELEMENT(divxdec), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("Error decoding divx frame: %s (%d)",
-                      gst_divxdec_error(ret), ret));
+    gst_element_error(GST_ELEMENT(divxdec),
+                      "Error decoding divx frame: %s (%d)",
+                      gst_divxdec_error(ret), ret);
     gst_buffer_unref(buf);
     return;
   }

@@ -156,9 +156,7 @@ gst_tarkindec_chain (GstPad *pad, GstBuffer *buf)
   tarkindec = GST_TARKINDEC (gst_pad_get_parent (pad));
 
   if (!tarkindec->setup) {
-    gst_element_gerror(GST_ELEMENT (tarkindec), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("decoder not initialized (input is not audio?)"));
+    gst_element_error (GST_ELEMENT (tarkindec), "decoder not initialized (input is not audio?)");
     if (GST_IS_BUFFER (buf))
       gst_buffer_unref (buf);
     else
@@ -227,9 +225,7 @@ gst_tarkindec_chain (GstPad *pad, GstBuffer *buf)
 					"framerate",  GST_PROPS_FLOAT (0.) /* FIXME!!! */
 				       )) <= 0)
 	      {
-		gst_element_gerror(GST_ELEMENT (tarkindec), GST_ERROR_UNKNOWN,
-		  g_strdup ("unconverted error, file a bug"),
-		  g_strdup_printf("could not output format"));
+		gst_element_error (GST_ELEMENT (tarkindec), "could not output format");
 		gst_buffer_unref (buf);
 		return;
 	      }

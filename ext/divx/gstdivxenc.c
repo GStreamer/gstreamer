@@ -302,10 +302,9 @@ gst_divxenc_setup (GstDivxEnc *divxenc)
   output.spatial_passes = 0;
 
   if ((ret = encore(&handle, ENC_OPT_INIT, &input, &output))) {
-    gst_element_gerror(GST_ELEMENT(divxenc), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("Error setting up divx encoder: %s (%d)",
-                      gst_divxenc_error(ret), ret));
+    gst_element_error(GST_ELEMENT(divxenc),
+                      "Error setting up divx encoder: %s (%d)",
+                      gst_divxenc_error(ret), ret);
     return FALSE;
   }
 
@@ -364,10 +363,9 @@ gst_divxenc_chain (GstPad    *pad,
 
   if ((ret = encore(divxenc->handle, ENC_OPT_ENCODE,
                     &xframe, &xres))) {
-    gst_element_gerror(GST_ELEMENT(divxenc), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("Error encoding divx frame: %s (%d)",
-                      gst_divxenc_error(ret), ret));
+    gst_element_error(GST_ELEMENT(divxenc),
+                      "Error encoding divx frame: %s (%d)",
+                      gst_divxenc_error(ret), ret);
     gst_buffer_unref(buf);
     return;
   }

@@ -372,9 +372,8 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
 				      "height",	    GST_PROPS_INT (chart->height),
 				      "framerate",  GST_PROPS_FLOAT (chart->framerate));
 	    if (gst_pad_try_set_caps (chart->srcpad, newcaps) <= 0) {
-	      gst_element_gerror(GST_ELEMENT (chart), GST_ERROR_UNKNOWN,
-	        g_strdup ("unconverted error, file a bug"),
-	        g_strdup ("chart: could not negotiate format"));
+	      gst_element_error (GST_ELEMENT (chart),
+				 "chart: could not negotiate format");
 	      return;
 	    }
           }

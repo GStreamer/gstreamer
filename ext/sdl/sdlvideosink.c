@@ -159,10 +159,9 @@ gst_sdlvideosink_get_sdl_from_fourcc (GstSDLVideoSink *sdlvideosink,
     case GST_MAKE_FOURCC('Y','V','Y','U'):
       return SDL_YVYU_OVERLAY;
     default: {
-      gst_element_gerror(GST_ELEMENT(sdlvideosink), GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("Unsupported format %08lx (" GST_FOURCC_FORMAT ")",
-        code, GST_FOURCC_ARGS(code)));
+      gst_element_error(GST_ELEMENT(sdlvideosink),
+        "Unsupported format %08lx (" GST_FOURCC_FORMAT ")",
+        code, GST_FOURCC_ARGS(code));
       return 0;
     }
   }
@@ -177,17 +176,15 @@ gst_sdlvideosink_lock (GstSDLVideoSink *sdlvideosink)
   {
     if (SDL_LockSurface(sdlvideosink->screen) < 0)
     {
-      gst_element_gerror(GST_ELEMENT(sdlvideosink), GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("SDL: couldn\'t lock the SDL video window: %s", SDL_GetError()));
+      gst_element_error(GST_ELEMENT(sdlvideosink),
+        "SDL: couldn\'t lock the SDL video window: %s", SDL_GetError());
       return FALSE;
     }
   }
   if (SDL_LockYUVOverlay(sdlvideosink->yuv_overlay) < 0)
   {
-    gst_element_gerror(GST_ELEMENT(sdlvideosink), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("SDL: couldn\'t lock the SDL YUV overlay: %s", SDL_GetError()));
+    gst_element_error(GST_ELEMENT(sdlvideosink),
+      "SDL: couldn\'t lock the SDL YUV overlay: %s", SDL_GetError());
     return FALSE;
   }
 
@@ -224,10 +221,9 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
       GST_VIDEOSINK_HEIGHT (sdlvideosink), 0, SDL_SWSURFACE | SDL_RESIZABLE);
   if ( sdlvideosink->screen == NULL)
   {
-    gst_element_gerror(GST_ELEMENT(sdlvideosink), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("SDL: Couldn't set %dx%d: %s", GST_VIDEOSINK_WIDTH (sdlvideosink),
-      GST_VIDEOSINK_HEIGHT (sdlvideosink), SDL_GetError()));
+    gst_element_error(GST_ELEMENT(sdlvideosink),
+      "SDL: Couldn't set %dx%d: %s", GST_VIDEOSINK_WIDTH (sdlvideosink),
+      GST_VIDEOSINK_HEIGHT (sdlvideosink), SDL_GetError());
     return FALSE;
   }
 
@@ -238,11 +234,10 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
     GST_VIDEOSINK_WIDTH (sdlvideosink), sdlvideosink->format, sdlvideosink->screen);
   if ( sdlvideosink->yuv_overlay == NULL )
   {
-    gst_element_gerror(GST_ELEMENT(sdlvideosink), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("SDL: Couldn't create SDL_yuv_overlay (%dx%d \'" GST_FOURCC_FORMAT "\'): %s",
+    gst_element_error(GST_ELEMENT(sdlvideosink),
+      "SDL: Couldn't create SDL_yuv_overlay (%dx%d \'" GST_FOURCC_FORMAT "\'): %s",
       GST_VIDEOSINK_WIDTH (sdlvideosink), GST_VIDEOSINK_HEIGHT (sdlvideosink),
-      GST_FOURCC_ARGS(sdlvideosink->format), SDL_GetError()));
+      GST_FOURCC_ARGS(sdlvideosink->format), SDL_GetError());
     return FALSE;
   }
   else
@@ -488,9 +483,7 @@ gst_sdlvideosink_change_state (GstElement *element)
       }
       if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0 )
       {
-        gst_element_gerror(element, GST_ERROR_UNKNOWN,
-          g_strdup ("unconverted error, file a bug"),
-          g_strdup_printf("Couldn't initialize SDL: %s", SDL_GetError()));
+        gst_element_error(element, "Couldn't initialize SDL: %s", SDL_GetError());
         return GST_STATE_FAILURE;
       }
       GST_FLAG_SET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);

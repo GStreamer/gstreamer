@@ -306,9 +306,8 @@ gst_afsrc_open_file (GstAFSrc *src)
   {
     g_print ("ERROR: gstafsrc: Could not open file %s for reading\n",
 		src->filename);
-    gst_element_gerror(GST_ELEMENT (src), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf ("error opening file %s", src->filename));
+    gst_element_error (GST_ELEMENT (src), g_strconcat ("opening file \"",
+			src->filename, "\"", NULL));
     return FALSE;
   }
 
@@ -328,11 +327,13 @@ gst_afsrc_open_file (GstAFSrc *src)
 	    break;
 	  case AF_SAMPFMT_FLOAT:
 	  case AF_SAMPFMT_DOUBLE:
-	    GST_DEBUG ("ERROR: float data not supported yet !\n");
+	    GST_DEBUG (
+	    		   "ERROR: float data not supported yet !\n");
 	}
 	src->rate = (guint) afGetRate (src->file, AF_DEFAULT_TRACK);		
     src->width = sampleWidth;
-    GST_DEBUG ("input file: %d channels, %d width, %d rate, signed %s\n",
+    GST_DEBUG (
+    		   "input file: %d channels, %d width, %d rate, signed %s\n",
 	  			src->channels, src->width, src->rate,
 	  			src->is_signed ? "yes" : "no");
   }
@@ -368,9 +369,7 @@ gst_afsrc_close_file (GstAFSrc *src)
   {
     g_print ("WARNING: afsrc: oops, error closing !\n");
     perror ("close");
-    gst_element_gerror(GST_ELEMENT (src), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("error closing file %s", src->filename));
+    gst_element_error (GST_ELEMENT (src), g_strconcat("closing file \"", src->filename, "\"", NULL));
   }
   else {
     GST_FLAG_UNSET (src, GST_AFSRC_OPEN);

@@ -496,9 +496,7 @@ gst_ivorbisfile_loop (GstElement *element)
     /* open our custom ivorbisfile data object with the callbacks we provide */
     if (ov_open_callbacks (ivorbisfile, &ivorbisfile->vf, NULL, 0, 
 			   ivorbisfile_ov_callbacks) < 0) {
-      gst_element_gerror(element, GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("this is not a vorbis file"));
+      gst_element_error (element, "this is not a vorbis file");
       return;
     }
     ivorbisfile->need_discont = TRUE;
@@ -562,9 +560,7 @@ gst_ivorbisfile_loop (GstElement *element)
   /* we update the caps for each logical stream */
   if (ivorbisfile->vf.current_link != ivorbisfile->current_link) {
     if (!gst_ivorbisfile_new_link (ivorbisfile, ivorbisfile->vf.current_link)) {
-      gst_element_gerror(GST_ELEMENT (ivorbisfile), GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("could not negotiate format"));
+      gst_element_error (GST_ELEMENT (ivorbisfile), "could not negotiate format");
     }
     return;
   }

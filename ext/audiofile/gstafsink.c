@@ -294,9 +294,7 @@ gst_afsink_open_file (GstAFSink *sink)
   sink->file = fopen (sink->filename, "w");
   if (sink->file == NULL) {
     perror ("open");
-    gst_element_gerror(GST_ELEMENT (sink), g_strconcat("opening file \"", sink->filename, "\"", GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf(NULL)));
+    gst_element_error (GST_ELEMENT (sink), g_strconcat("opening file \"", sink->filename, "\"", NULL));
     return FALSE;
   } 
 */
@@ -353,9 +351,7 @@ gst_afsink_open_file (GstAFSink *sink)
   if (sink->file == AF_NULL_FILEHANDLE)
   {
     perror ("open");
-    gst_element_gerror(GST_ELEMENT (sink), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("error openning file %s", sink->filename));
+    gst_element_error (GST_ELEMENT (sink), g_strconcat("opening file \"", sink->filename, "\"", NULL));
     return FALSE;
   } 
 
@@ -378,9 +374,7 @@ gst_afsink_close_file (GstAFSink *sink)
   {
     g_print ("WARNING: afsink: oops, error closing !\n");
     perror ("close");
-    gst_element_gerror(GST_ELEMENT (sink), GST_ERROR_UNKNOWN,
-      g_strdup ("unconverted error, file a bug"),
-      g_strdup_printf("error closing file %s", sink->filename));
+    gst_element_error (GST_ELEMENT (sink), g_strconcat("closing file \"", sink->filename, "\"", NULL));
   }
   else {
     GST_FLAG_UNSET (sink, GST_AFSINK_OPEN);
