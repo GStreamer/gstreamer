@@ -66,13 +66,6 @@ static const char *palette_name[] = {
   "YUV-4:1:0 (planar)"         /* VIDEO_PALETTE_YUV410P */
 };
 
-enum {
-  QUEUE_STATE_ERROR = -1,
-  QUEUE_STATE_READY_FOR_QUEUE,
-  QUEUE_STATE_QUEUED,
-  QUEUE_STATE_SYNCED,
-};
-
 /******************************************************
  * gst_v4lsrc_queue_frame():
  *   queue a frame for capturing
@@ -263,6 +256,7 @@ gst_v4lsrc_capture_start (GstV4lSrc *v4lsrc)
     }
   }
 
+  v4lsrc->is_capturing = TRUE;
   g_mutex_unlock(v4lsrc->mutex_queue_state);
 
   return TRUE;
@@ -291,9 +285,8 @@ gst_v4lsrc_grab_frame (GstV4lSrc *v4lsrc, gint *num)
     while (v4lsrc->frame_queue_state[v4lsrc->queue_frame] !=
              QUEUE_STATE_READY_FOR_QUEUE &&
            !v4lsrc->quit) {
-      GST_DEBUG (
-                "Waiting for frames to become available (%d < %d)",
-                v4lsrc->num_queued, MIN_BUFFERS_QUEUED);
+      GST_DEBUG ("Waiting for frames to become available (%d < %d)",
+                 v4lsrc->num_queued, MIN_BUFFERS_QUEUED);
       g_cond_wait(v4lsrc->cond_queue_state,
                   v4lsrc->mutex_queue_state);
     }
@@ -391,6 +384,7 @@ gst_v4lsrc_capture_stop (GstV4lSrc *v4lsrc)
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
   g_mutex_lock(v4lsrc->mutex_queue_state);
+  v4lsrc->is_capturing = FALSE;
 
   /* make an optional pending wait stop */
   v4lsrc->quit = TRUE;

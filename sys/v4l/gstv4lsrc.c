@@ -60,6 +60,12 @@ static void		     gst_v4lsrc_base_init    (gpointer g_class);
 static void                  gst_v4lsrc_class_init   (GstV4lSrcClass *klass);
 static void                  gst_v4lsrc_init         (GstV4lSrc      *v4lsrc);
 
+/* parent class virtual functions */
+static void                  gst_v4lsrc_open         (GstElement     *element,
+						      const gchar    *device);
+static void                  gst_v4lsrc_close        (GstElement     *element,
+                                                      const gchar    *device);
+
 /* pad/info functions */
 static gboolean              gst_v4lsrc_src_convert  (GstPad         *pad,
                                                       GstFormat      src_format,
@@ -140,14 +146,17 @@ gst_v4lsrc_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (gstelement_class, src_template);
 }
+
 static void
 gst_v4lsrc_class_init (GstV4lSrcClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstV4lElementClass *v4lelement_class;
 
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
+  v4lelement_class = (GstV4lElementClass *) klass;
 
   parent_class = g_type_class_ref(GST_TYPE_V4LELEMENT);
 
@@ -186,6 +195,9 @@ gst_v4lsrc_class_init (GstV4lSrcClass *klass)
   gstelement_class->change_state = gst_v4lsrc_change_state;
 
   gstelement_class->set_clock = gst_v4lsrc_set_clock;
+
+  v4lelement_class->open  = gst_v4lsrc_open;
+  v4lelement_class->close = gst_v4lsrc_close;
 }
 
 
@@ -213,10 +225,53 @@ gst_v4lsrc_init (GstV4lSrc *v4lsrc)
   /* no clock */
   v4lsrc->clock = NULL;
 
+  /* no colourspaces */
+  v4lsrc->colourspaces = NULL;
+
   /* fps */
   v4lsrc->use_fixed_fps = TRUE;
+
+  v4lsrc->is_capturing = FALSE;
 }
 
+static void
+gst_v4lsrc_open (GstElement  *element,
+                 const gchar *device)
+{
+  GstV4lSrc *v4lsrc = GST_V4LSRC (element);
+  int palette[] = {
+    VIDEO_PALETTE_YUV422,
+    VIDEO_PALETTE_YUV420P,
+    VIDEO_PALETTE_UYVY,
+    VIDEO_PALETTE_YUV411P,
+    VIDEO_PALETTE_YUV422P,
+    VIDEO_PALETTE_YUV410P,
+    VIDEO_PALETTE_YUV411,
+    VIDEO_PALETTE_RGB555,
+    VIDEO_PALETTE_RGB565,
+    VIDEO_PALETTE_RGB24,
+    VIDEO_PALETTE_RGB32,
+    -1
+  }, i;
+
+  for (i = 0; palette[i] != -1; i++) {
+    /* try palette out */
+    if (!gst_v4lsrc_try_palette(v4lsrc, palette[i]))
+      continue;
+    v4lsrc->colourspaces = g_list_append (v4lsrc->colourspaces,
+					  GINT_TO_POINTER (palette[i]));
+  }
+}
+
+static void
+gst_v4lsrc_close (GstElement  *element,
+                  const gchar *device)
+{
+  GstV4lSrc *v4lsrc = GST_V4LSRC (element);
+
+  g_list_free (v4lsrc->colourspaces);
+  v4lsrc->colourspaces = NULL;
+}
 
 static gfloat
 gst_v4lsrc_get_fps (GstV4lSrc *v4lsrc)
@@ -327,7 +382,7 @@ gst_v4lsrc_src_query (GstPad      *pad,
 }
 
 static GstCaps *
-gst_v4lsrc_palette_to_caps (int            palette)
+gst_v4lsrc_palette_to_caps (int palette)
 {
   guint32 fourcc;
   GstCaps *caps;
@@ -424,18 +479,22 @@ gst_v4lsrc_srcconnect (GstPad  *pad, const GstCaps *vscapslist)
   gint bpp, depth, w, h, palette = -1;
   gdouble fps;
   GstStructure *structure;
+  gboolean was_capturing;
 
   v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
+  was_capturing = v4lsrc->is_capturing;
 
   /* in case the buffers are active (which means that we already
    * did capsnego before and didn't clean up), clean up anyways */
   if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lsrc)))
   {
+    if (was_capturing) {
+      if (!gst_v4lsrc_capture_stop(v4lsrc))
+        return GST_PAD_LINK_REFUSED;
+    }
     if (!gst_v4lsrc_capture_deinit(v4lsrc))
       return GST_PAD_LINK_REFUSED;
-  }
-  else if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lsrc)))
-  {
+  } else if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lsrc))) {
     return GST_PAD_LINK_DELAYED;
   }
 
@@ -449,9 +508,6 @@ gst_v4lsrc_srcconnect (GstPad  *pad, const GstCaps *vscapslist)
   gst_structure_get_int (structure, "width", &w);
   gst_structure_get_int (structure, "height", &h);
   gst_structure_get_double (structure, "framerate", &fps);
-
-  if (fps != gst_v4lsrc_get_fps(v4lsrc))
-    return GST_PAD_LINK_REFUSED;
 
   switch (fourcc)
   {
@@ -527,6 +583,11 @@ gst_v4lsrc_srcconnect (GstPad  *pad, const GstCaps *vscapslist)
   if (!gst_v4lsrc_capture_init(v4lsrc))
     return GST_PAD_LINK_REFUSED;
 
+  if (was_capturing) {
+    if (!gst_v4lsrc_capture_start(v4lsrc))
+      return GST_PAD_LINK_REFUSED;
+  }
+
   return GST_PAD_LINK_OK;
 }
 
@@ -536,37 +597,21 @@ gst_v4lsrc_getcaps (GstPad  *pad)
 {
   GstCaps *list;
   GstV4lSrc *v4lsrc = GST_V4LSRC(gst_pad_get_parent(pad));
-  int palette[] = {
-    VIDEO_PALETTE_YUV422,
-    VIDEO_PALETTE_YUV420P,
-    VIDEO_PALETTE_UYVY,
-    VIDEO_PALETTE_YUV411P,
-    VIDEO_PALETTE_YUV422P,
-    VIDEO_PALETTE_YUV410P,
-    VIDEO_PALETTE_YUV411,
-    VIDEO_PALETTE_RGB555,
-    VIDEO_PALETTE_RGB565,
-    VIDEO_PALETTE_RGB24,
-    VIDEO_PALETTE_RGB32,
-  }, i;
   struct video_capability *vcap = &GST_V4LELEMENT(v4lsrc)->vcap;
+  GList *item;
 
   if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lsrc))) {
     return gst_caps_new_any ();
-  } else if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lsrc))) {
-    return gst_caps_copy(GST_PAD_CAPS(v4lsrc->srcpad));
   }
 
   list = gst_caps_new_empty();
-  for (i = 0; i < 8; i++) {
+  for (item = v4lsrc->colourspaces; item != NULL; item = item->next) {
     GstCaps *one;
 
-    /* try palette out */
-    if (!gst_v4lsrc_try_palette(v4lsrc, palette[i]))
-      continue;
-
-    one = gst_v4lsrc_palette_to_caps(palette[i]);
-    if (!one) g_print ("Palette %d gave no caps\n", palette[i]);
+    one = gst_v4lsrc_palette_to_caps(GPOINTER_TO_INT (item->data));
+    if (!one)
+      g_print ("Palette %d gave no caps\n",
+	       GPOINTER_TO_INT (item->data));
     gst_caps_set_simple (one,
 	"width", GST_TYPE_INT_RANGE, vcap->minwidth,  vcap->maxwidth,
 	"height", GST_TYPE_INT_RANGE, vcap->minheight, vcap->maxheight,
@@ -840,4 +885,3 @@ gst_v4lsrc_set_clock (GstElement *element,
 {
   GST_V4LSRC(element)->clock = clock;
 }
-

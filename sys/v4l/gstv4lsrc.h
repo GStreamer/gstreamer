@@ -38,6 +38,13 @@ G_BEGIN_DECLS
 typedef struct _GstV4lSrc GstV4lSrc;
 typedef struct _GstV4lSrcClass GstV4lSrcClass;
 
+enum {
+  QUEUE_STATE_ERROR = -1,
+  QUEUE_STATE_READY_FOR_QUEUE,
+  QUEUE_STATE_QUEUED,
+  QUEUE_STATE_SYNCED,
+};
+
 struct _GstV4lSrc {
   GstV4lElement v4lelement;
 
@@ -57,6 +64,7 @@ struct _GstV4lSrc {
   GCond *cond_queue_state;
   gint num_queued;
   gint sync_frame, queue_frame;
+  gboolean is_capturing;
 
   /* True if we want to stop */
   gboolean quit;
@@ -74,6 +82,9 @@ struct _GstV4lSrc {
 
   /* how often are we going to use each frame? */
   gint *use_num_times;
+
+  /* list of supported colourspaces (as integers) */
+  GList *colourspaces;
 
   /* how are we going to push buffers? */
   gboolean use_fixed_fps;
