@@ -668,7 +668,7 @@ AC_CHECK_LIB(dvdread, DVDOpen, HAVE_LIBDVDREAD=yes, HAVE_LIBDVDREAD=no, )
 AC_CHECK_HEADER(dvdread/dvd_reader.h, :, HAVE_LIBDVDREAD=no)
 
 dnl Check for SDL library
-AM_PATH_SDL( , , HAVE_LIBSDL=no)
+AM_PATH_SDL( ,HAVE_LIBSDL=yes, HAVE_LIBSDL=no)
 
 if test "x$HAVE_LIBSDL" = "xno"; then
   AC_MSG_WARN(
