@@ -1,3 +1,11 @@
+2005-01-08  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstelement.c: (gst_element_link_many):
+	  fix up g_return_if_fail's
+	* po/LINGUAS:
+	* po/de.po:
+	  add German translation, that was somehow not included
+
 2005-01-08  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* docs/random/mimetypes:

@@ -2024,9 +2024,8 @@ gst_element_link_many (GstElement * element_1, GstElement * element_2, ...)
 {
   va_list args;
 
-  g_return_val_if_fail (element_1 != NULL && element_2 != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_ELEMENT (element_1) &&
-      GST_IS_ELEMENT (element_2), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element_1), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element_2), FALSE);
 
   va_start (args, element_2);
 
