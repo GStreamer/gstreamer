@@ -323,7 +323,7 @@ gst_faad_srcgetcaps (GstPad * pad)
     guchar *supported_fpos = g_new0 (guchar, num_supported_positions);
     gint n;
 
-    for (n = 0; n <= num_supported_positions; n++) {
+    for (n = 0; n < num_supported_positions; n++) {
       supported_fpos[n] = n + FRONT_CHANNEL_CENTER;
     }
     supported_positions = gst_faad_chanpos_to_gst (supported_fpos,
