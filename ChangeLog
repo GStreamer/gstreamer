@@ -1,3 +1,11 @@
+2004-12-16  Christophe Fergeau  <teuf@gnome.org>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstdecodebin.c: (new_pad), (close_link):
+	* gst/playback/gstplaybasebin.c: (new_decoded_pad):
+	  Fix memleaks (#157233).
+
 2004-12-16  Sebastien Cote  <sc5@hermes.usherb.ca>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

@@ -637,11 +637,15 @@ static void
 new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic)
 {
   GstDecodeBin *decode_bin = dynamic->decode_bin;
+  GstCaps *caps;
 
   /* see if any more pending dynamic connections exist */
   gboolean more = gst_decode_bin_is_dynamic (decode_bin);
 
-  close_pad_link (element, pad, gst_pad_get_caps (pad), decode_bin, more);
+  caps = gst_pad_get_caps (pad);
+  close_pad_link (element, pad, caps, decode_bin, more);
+  if (caps)
+    gst_caps_free (caps);
 }
 
 /* this signal is fired when an element signals the no_more_pads signal.
@@ -813,6 +817,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
   /* now loop over all the pads we need to connect */
   for (pads = to_connect; pads; pads = g_list_next (pads)) {
     GstPad *pad = GST_PAD (pads->data);
+    GstCaps *caps;
 
     /* we have more pads if we have more than 1 pad to connect or
      * dynamics. If we have only 1 pad and no dynamics, more will be
@@ -824,7 +829,10 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
         gst_pad_get_name (pad));
 
     /* continue autoplugging on the pads */
-    close_pad_link (element, pad, gst_pad_get_caps (pad), decode_bin, more);
+    caps = gst_pad_get_caps (pad);
+    close_pad_link (element, pad, caps, decode_bin, more);
+    if (caps)
+      gst_caps_free (caps);
   }
 
   g_list_free (to_connect);

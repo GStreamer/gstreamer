@@ -657,6 +657,8 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   caps = gst_pad_get_caps (pad);
   if (caps == NULL || gst_caps_is_empty (caps)) {
     g_warning ("no type on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+    if (caps)
+      gst_caps_free (caps);
     return;
   }
 
@@ -717,6 +719,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   }
   /* add the stream to the list */
   info = gst_stream_info_new (GST_OBJECT (srcpad), type, NULL, caps);
+  gst_caps_free (caps);
   info->origin = GST_OBJECT (pad);
   add_stream (group, info);
 
