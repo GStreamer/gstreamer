@@ -210,7 +210,7 @@ gst_gconf_get_default_audio_sink (void)
     if (!ret)
       g_warning ("No GConf default audio sink key and osssink doesn't work");
     else
-      g_print ("GConf audio sink not found, using osssink");
+      g_print ("GConf audio sink not found, using osssink\n");
   }
 
   return ret;
@@ -236,7 +236,7 @@ gst_gconf_get_default_video_sink (void)
     if (!ret)
       g_warning ("No GConf default video sink key and xvideosink doesn't work");
     else
-      g_print ("GConf video sink not found, using xvideosink");
+      g_print ("GConf video sink not found, using xvideosink\n");
   }
 
   return ret;
@@ -262,7 +262,7 @@ gst_gconf_get_default_audio_src (void)
     if (!ret)
       g_warning ("No GConf default audio src key and osssrc doesn't work");
     else
-      g_print ("GConf audio src not found, using osssrc");
+      g_print ("GConf audio src not found, using osssrc\n");
   }
 
   return ret;
@@ -289,7 +289,7 @@ gst_gconf_get_default_video_src (void)
     if (!ret)
       g_warning ("No GConf default video src key and videotestrc doesn't work");
     else
-      g_print ("GConf video src not found, using videotestrc");
+      g_print ("GConf video src not found, using videotestrc\n");
   }
 
   return ret;
@@ -315,7 +315,7 @@ gst_gconf_get_default_visualization_element (void)
     if (!ret)
       g_warning ("No GConf default visualization plugin key and goom doesn't work");
     else
-      g_print ("GConf visualization plugin not found, using goom");
+      g_print ("GConf visualization plugin not found, using goom\n");
   }
 
   return ret;
