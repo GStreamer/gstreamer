@@ -8,5 +8,5 @@ Description: Streaming-media framework, interfaces library
 Requires: gstreamer-@GST_MAJORMINOR@
 Version: @VERSION@
 
-Libs: -L${libdir} -lgstplay-@GST_MAJORMINOR@
+Libs: -L${libdir} -lgstinterfaces-@GST_MAJORMINOR@
 Cflags: -I${includedir}

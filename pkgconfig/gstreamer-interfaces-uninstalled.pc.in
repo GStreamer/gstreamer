@@ -9,5 +9,5 @@ Description: Streaming-media framework, interfaces library, not installed
 Requires: gstreamer >= @VERSION@
 Version: @VERSION@
 
-Libs: ${pcfiledir}/../gst-libs/gst/libgst-interfaces-@GST_MAJORMINOR@.la
+Libs: ${pcfiledir}/../gst-libs/gst/libgstinterfaces-@GST_MAJORMINOR@.la
 Cflags: -I${pcfiledir}/../gst-libs
