@@ -171,6 +171,8 @@ gint parse_cmdline(int argc,char *argv[],GstBin *parent) {
 	DEBUG("attempting to set argument '%s'\n", arg);
 	gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
 	g_free(argname);
+	i++;
+	continue;
       } else {
 	// we have an element
         DEBUG("attempting to create element '%s'\n",arg);
@@ -329,6 +331,7 @@ gint parse(int argc,char *argv[],GstBin *parent) {
 int main(int argc,char *argv[]) {
   GstElement *pipeline;
   int firstarg;
+  guint i;
 
   gst_init(&argc,&argv);
 
@@ -348,7 +351,8 @@ int main(int argc,char *argv[]) {
 
   VERBOSE("RUNNING pipeline\n");
   gst_element_set_state(pipeline,GST_STATE_PLAYING);
-  gst_bin_iterate (GST_BIN (pipeline));
+  for (i=0; i < 1000; i++)
+    gst_bin_iterate (GST_BIN (pipeline));
 
   fprintf(stderr,"\n");
 
