@@ -58,9 +58,8 @@ struct _GstDiskSrc {
   /* pads */
   GstPad *srcpad;
 
-  /* filename */
+  /* file state */
   gchar *filename;
-  /* fd */
   gint fd;
 
   gulong curoffset;			/* current offset in file */

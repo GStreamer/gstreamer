@@ -59,8 +59,7 @@ static void gst_asyncdisksrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_asyncdisksrc_push(GstSrc *src);
 static void gst_asyncdisksrc_push_region(GstSrc *src,gulong offset,
                                          gulong size);
-static gboolean gst_asyncdisksrc_change_state(GstElement *element,
-                                              GstElementState state);
+static GstElementStateReturn gst_asyncdisksrc_change_state(GstElement *element);
 
 
 static GstSrcClass *parent_class = NULL;
@@ -142,17 +141,16 @@ static void gst_asyncdisksrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   switch(id) {
     case ARG_LOCATION:
       /* the element must be stopped in order to do this */
-      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_ASYNCDISKSRC_OPEN));
+      g_return_if_fail(GST_STATE(src) < GST_STATE_PLAYING);
 
       if (src->filename) g_free(src->filename);
       /* clear the filename if we get a NULL (is that possible?) */
       if (GTK_VALUE_STRING(*arg) == NULL) {
+        gst_element_set_state(GST_ELEMENT(object),GST_STATE_NULL);
         src->filename = NULL;
-        gst_element_set_state(GST_ELEMENT(object),~GST_STATE_COMPLETE);
       /* otherwise set the new filename */
       } else {
         src->filename = g_strdup(GTK_VALUE_STRING(*arg));
-        gst_element_set_state(GST_ELEMENT(object),GST_STATE_COMPLETE);
       }
       break;
     case ARG_BYTESPERREAD:
@@ -251,7 +249,7 @@ void gst_asyncdisksrc_push_region(GstSrc *src,gulong offset,gulong size) {
 
   g_return_if_fail(src != NULL);
   g_return_if_fail(GST_IS_ASYNCDISKSRC(src));
-  g_return_if_fail(GST_FLAG_IS_SET(src,GST_STATE_RUNNING));
+  g_return_if_fail(GST_FLAG_IS_SET(src,GST_STATE_READY));
   asyncdisksrc = GST_ASYNCDISKSRC(src);
 
   /* deal with EOF state */
@@ -282,7 +280,7 @@ void gst_asyncdisksrc_push_region(GstSrc *src,gulong offset,gulong size) {
 }
 
 
-/* open the file and mmap it, necessary to go to RUNNING state */
+/* open the file and mmap it, necessary to go to READY state */
 static gboolean gst_asyncdisksrc_open_file(GstAsyncDiskSrc *src) {
   g_return_val_if_fail(!GST_FLAG_IS_SET(src,GST_ASYNCDISKSRC_OPEN), FALSE);
 
@@ -329,23 +327,21 @@ static void gst_asyncdisksrc_close_file(GstAsyncDiskSrc *src) {
 }
 
 
-static gboolean gst_asyncdisksrc_change_state(GstElement *element,
-                                              GstElementState state) {
-  g_return_val_if_fail(GST_IS_ASYNCDISKSRC(element), FALSE);
+static GstElementStateReturn gst_asyncdisksrc_change_state(GstElement *element) {
+  g_return_val_if_fail(GST_IS_ASYNCDISKSRC(element),GST_STATE_FAILURE);
 
-  switch (state) {
-    case GST_STATE_RUNNING:
-      if (!gst_asyncdisksrc_open_file(GST_ASYNCDISKSRC(element)))
-        return FALSE;
-      break;
-    case ~GST_STATE_RUNNING:
+  if (GST_STATE_PENDING(element) == GST_STATE_NULL) {
+    if (GST_FLAG_IS_SET(element,GST_ASYNCDISKSRC_OPEN))
       gst_asyncdisksrc_close_file(GST_ASYNCDISKSRC(element));
-      break;
-    default:
-      break;
+  } else {
+    if (!GST_FLAG_IS_SET(element,GST_ASYNCDISKSRC_OPEN)) {
+      if (!gst_asyncdisksrc_open_file(GST_ASYNCDISKSRC(element))) 
+        return GST_STATE_FAILURE;
+    }
   }
 
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element,state);
-  return TRUE;
+    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+
+  return GST_STATE_SUCCESS;
 }

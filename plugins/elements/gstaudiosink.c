@@ -41,11 +41,7 @@ GstElementDetails gst_audiosink_details = {
 
 static gboolean gst_audiosink_open_audio(GstAudioSink *sink);
 static void gst_audiosink_close_audio(GstAudioSink *sink);
-static gboolean gst_audiosink_start(GstElement *element,
-                                    GstElementState state);
-static gboolean gst_audiosink_stop(GstElement *element);
-static gboolean gst_audiosink_change_state(GstElement *element,
-                                           GstElementState state);
+static GstElementStateReturn gst_audiosink_change_state(GstElement *element);
 
 static void gst_audiosink_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_audiosink_get_arg(GtkObject *object,GtkArg *arg,guint id);
@@ -131,8 +127,6 @@ gst_audiosink_class_init(GstAudioSinkClass *klass) {
   gtk_object_class_add_signals(gtkobject_class,gst_audiosink_signals,
                                LAST_SIGNAL);
 
-  gstelement_class->start = gst_audiosink_start;
-  gstelement_class->stop = gst_audiosink_stop;
   gstelement_class->change_state = gst_audiosink_change_state;
 }
 
@@ -177,7 +171,6 @@ void gst_audiosink_sync_parms(GstAudioSink *audiosink) {
 GstElement *gst_audiosink_new(gchar *name) {
   GstElement *audiosink = GST_ELEMENT(gtk_type_new(GST_TYPE_AUDIOSINK));
   gst_element_set_name(GST_ELEMENT(audiosink),name);
-  gst_element_set_state(GST_ELEMENT(audiosink),GST_STATE_COMPLETE);
   return audiosink;
 }
 
@@ -335,42 +328,23 @@ static void gst_audiosink_close_audio(GstAudioSink *sink) {
   g_print("audiosink: closed sound device\n");
 }
 
-static gboolean gst_audiosink_start(GstElement *element,
-                                    GstElementState state) {
+
+static GstElementStateReturn gst_audiosink_change_state(GstElement *element) {
   g_return_val_if_fail(GST_IS_AUDIOSINK(element), FALSE);
 
-  if (gst_audiosink_open_audio(GST_AUDIOSINK(element)) == TRUE) {
-    gst_element_set_state(element,GST_STATE_RUNNING | state);
-    return TRUE;
-  }
-  return FALSE;
-}
-
-static gboolean gst_audiosink_stop(GstElement *element) {
-  g_return_val_if_fail(GST_IS_AUDIOSINK(element), FALSE);
-
-  gst_audiosink_close_audio(GST_AUDIOSINK(element));
-  gst_element_set_state(element,~GST_STATE_RUNNING);
-  return TRUE;
-}
-
-static gboolean gst_audiosink_change_state(GstElement *element,
-                                           GstElementState state) {
-  g_return_val_if_fail(GST_IS_AUDIOSINK(element), FALSE);
-      
-  switch (state) {
-    case GST_STATE_RUNNING:
-      if (!gst_audiosink_open_audio(GST_AUDIOSINK(element)))
-        return FALSE;
-      break;  
-    case ~GST_STATE_RUNNING:
+  /* if going down into NULL state, close the file if it's open */ 
+  if (GST_STATE_PENDING(element) == GST_STATE_NULL) {
+    if (GST_FLAG_IS_SET(element,GST_AUDIOSINK_OPEN))
       gst_audiosink_close_audio(GST_AUDIOSINK(element));
-      break;
-    default:
-      break;
-  }     
+  /* otherwise (READY or higher) we need to open the sound card */
+  } else {
+    if (!GST_FLAG_IS_SET(element,GST_AUDIOSINK_OPEN)) {
+      if (!gst_audiosink_open_audio(GST_AUDIOSINK(element)))
+        return GST_STATE_FAILURE;
+    }
+  }
       
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element,state);
+    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
   return TRUE;
 }

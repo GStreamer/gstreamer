@@ -57,8 +57,8 @@ static void gst_audiosrc_class_init(GstAudioSrcClass *klass);
 static void gst_audiosrc_init(GstAudioSrc *audiosrc);
 static void gst_audiosrc_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_audiosrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
-static gboolean gst_audiosrc_change_state(GstElement *element,
-                                          GstElementState state);
+static GstElementStateReturn gst_audiosrc_change_state(GstElement *element);
+
 static void gst_audiosrc_close_audio(GstAudioSrc *src);
 static gboolean gst_audiosrc_open_audio(GstAudioSrc *src);
 void gst_audiosrc_sync_parms(GstAudioSrc *audiosrc);
@@ -224,29 +224,28 @@ static void gst_audiosrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   }
 }
 
-static gboolean gst_audiosrc_change_state(GstElement *element,
-                                          GstElementState state) {
+static GstElementStateReturn gst_audiosrc_change_state(GstElement *element) {
   g_return_val_if_fail(GST_IS_AUDIOSRC(element), FALSE);
 
-  switch (state) {
-    case GST_STATE_RUNNING:
-      if (!gst_audiosrc_open_audio(GST_AUDIOSRC(element)))
-        return FALSE;
-      break;
-    case ~GST_STATE_RUNNING:
+  /* if going down into NULL state, close the file if it's open */
+  if (GST_STATE_PENDING(element) == GST_STATE_NULL) {
+    if (GST_FLAG_IS_SET(element,GST_AUDIOSRC_OPEN))
       gst_audiosrc_close_audio(GST_AUDIOSRC(element));
-      break;
-    default:
-      break;
+  /* otherwise (READY or higher) we need to open the sound card */
+  } else {
+    if (!GST_FLAG_IS_SET(element,GST_AUDIOSRC_OPEN)) { 
+      if (!gst_audiosrc_open_audio(GST_AUDIOSRC(element)))
+        return GST_STATE_FAILURE;
+    }
   }
 
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element,state);
+    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
   return TRUE;
 }
 
 static gboolean gst_audiosrc_open_audio(GstAudioSrc *src) {
-  g_return_val_if_fail(src->fd == -1, FALSE);
+  g_return_val_if_fail(!GST_FLAG_IS_SET(src,GST_AUDIOSRC_OPEN), FALSE);
 
   /* first try to open the sound card */
   src->fd = open("/dev/dsp",O_RDONLY);
@@ -260,6 +259,7 @@ static gboolean gst_audiosrc_open_audio(GstAudioSrc *src) {
     /* set card state */
     gst_audiosrc_sync_parms(src);
     DEBUG("opened audio\n");
+    GST_FLAG_SET(src,GST_AUDIOSRC_OPEN);
     return TRUE;
   }
 
@@ -267,10 +267,12 @@ static gboolean gst_audiosrc_open_audio(GstAudioSrc *src) {
 }
 
 static void gst_audiosrc_close_audio(GstAudioSrc *src) {
-  g_return_if_fail(src->fd >= 0);
+  g_return_if_fail(GST_FLAG_IS_SET(src,GST_AUDIOSRC_OPEN));
 
   close(src->fd);
   src->fd = -1;
+
+  GST_FLAG_UNSET(src,GST_AUDIOSRC_OPEN);
 }
 
 void gst_audiosrc_sync_parms(GstAudioSrc *audiosrc) {

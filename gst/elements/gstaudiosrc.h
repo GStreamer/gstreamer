@@ -46,6 +46,11 @@ GstElementDetails gst_audiosrc_details;
 #define GST_IS_AUDIOSRC_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSRC)))
 
+// NOTE: per-element flags start with 16 for now
+typedef enum {
+  GST_AUDIOSRC_OPEN		= (1 < 16),
+} GstAudioSrcFlags;
+
 typedef struct _GstAudioSrc GstAudioSrc;
 typedef struct _GstAudioSrcClass GstAudioSrcClass;
 

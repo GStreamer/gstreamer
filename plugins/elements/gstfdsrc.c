@@ -129,18 +129,17 @@ static void gst_fdsrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
 
   switch(id) {
     case ARG_LOCATION:
-      /* the element must be stopped in order to do this */
-      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING));
+      /* the element must not be playing in order to do this */
+      g_return_if_fail(GST_STATE(src) < GST_STATE_PLAYING);
 
       /* if we get a NULL, consider it to be a fd of 0 */
       if (GTK_VALUE_STRING(*arg) == NULL) {
+        gst_element_set_state(GST_ELEMENT(object),GST_STATE_NULL);
         src->fd = 0;
-        gst_element_set_state(GST_ELEMENT(object),~GST_STATE_COMPLETE);
       /* otherwise set the new filename */
       } else {
         if (sscanf(GTK_VALUE_STRING(*arg),"%d",&fd))
           src->fd = fd;
-        gst_element_set_state(GST_ELEMENT(object),GST_STATE_COMPLETE);
       }
       break;
     case ARG_BYTESPERREAD:

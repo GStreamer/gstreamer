@@ -57,8 +57,7 @@ static void gst_disksrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
 static void gst_disksrc_push(GstSrc *src);
 //static void gst_disksrc_push_region(GstSrc *src,gulong offset,gulong size);
-static gboolean gst_disksrc_change_state(GstElement *element,
-                                         GstElementState state);
+static GstElementStateReturn gst_disksrc_change_state(GstElement *element);
 
 
 static GstSrcClass *parent_class = NULL;
@@ -138,18 +137,17 @@ static void gst_disksrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
 
   switch(id) {
     case ARG_LOCATION:
-      /* the element must be stopped in order to do this */
-//      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING));
+      /* the element must not be playing in order to do this */
+      g_return_if_fail(GST_STATE(src) < GST_STATE_PLAYING);
 
       if (src->filename) g_free(src->filename);
       /* clear the filename if we get a NULL (is that possible?) */
       if (GTK_VALUE_STRING(*arg) == NULL) {
+        gst_element_set_state(GST_ELEMENT(object),GST_STATE_NULL);
         src->filename = NULL;
-        gst_element_set_state(GST_ELEMENT(object),~GST_STATE_COMPLETE);
       /* otherwise set the new filename */
       } else {
-        src->filename = g_strdup(GTK_VALUE_STRING(*arg));  
-        gst_element_set_state(GST_ELEMENT(object),GST_STATE_COMPLETE);
+        src->filename = g_strdup(GTK_VALUE_STRING(*arg));
       }
       break;
     case ARG_BYTESPERREAD:
@@ -199,6 +197,7 @@ void gst_disksrc_push(GstSrc *src) {
   g_return_if_fail(src != NULL);
   g_return_if_fail(GST_IS_DISKSRC(src));
   g_return_if_fail(GST_FLAG_IS_SET(src,GST_DISKSRC_OPEN));
+  g_return_if_fail(GST_STATE(src) >= GST_STATE_READY);
   disksrc = GST_DISKSRC(src);
 
   /* create the buffer */
@@ -237,7 +236,7 @@ void gst_disksrc_push(GstSrc *src) {
   GST_BUFFER_SIZE(buf) = readbytes;
   disksrc->curoffset += readbytes;
 
-  DEBUG("pushing with offset %lu\n", GST_BUFFER_OFFSET(buf));
+  DEBUG("pushing with offset %d\n", GST_BUFFER_OFFSET(buf));
   /* we're done, push the buffer off now */
   gst_pad_push(disksrc->srcpad,buf);
 }
@@ -246,7 +245,9 @@ void gst_disksrc_push(GstSrc *src) {
 /* open the file, necessary to go to RUNNING state */
 static gboolean gst_disksrc_open_file(GstDiskSrc *src) {
   struct stat f_stat;
+
   g_return_val_if_fail(!GST_FLAG_IS_SET(src,GST_DISKSRC_OPEN), FALSE);
+  g_return_val_if_fail(src->filename != NULL, FALSE);
 
   /* open the file */
   src->fd = open(src->filename,O_RDONLY);
@@ -282,23 +283,24 @@ static void gst_disksrc_close_file(GstDiskSrc *src) {
   GST_FLAG_UNSET(src,GST_DISKSRC_OPEN);
 }
 
-static gboolean gst_disksrc_change_state(GstElement *element,
-                                         GstElementState state) {
-  g_return_val_if_fail(GST_IS_DISKSRC(element), FALSE);
+static GstElementStateReturn gst_disksrc_change_state(GstElement *element) {
+  g_return_val_if_fail(GST_IS_DISKSRC(element),GST_STATE_FAILURE);
 
-  switch (state) {
-    case GST_STATE_RUNNING:
-      if (!gst_disksrc_open_file(GST_DISKSRC(element)))
-        return FALSE;
-      break;  
-    case ~GST_STATE_RUNNING:
+  /* if going down into NULL state, close the file if it's open */
+  if (GST_STATE_PENDING(element) == GST_STATE_NULL) {
+    if (GST_FLAG_IS_SET(element,GST_DISKSRC_OPEN))
       gst_disksrc_close_file(GST_DISKSRC(element));
-      break;
-    default:
-      break;
-  }     
-      
+  /* otherwise (READY or higher) we need to open the file */
+  } else {
+    if (!GST_FLAG_IS_SET(element,GST_DISKSRC_OPEN)) {
+      if (!gst_disksrc_open_file(GST_DISKSRC(element)))
+        return GST_STATE_FAILURE;
+    }
+  }
+
+  /* if we haven't failed already, give the parent class a chance to ;-) */
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element,state);
-  return TRUE;
+    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+
+  return GST_STATE_SUCCESS;
 }

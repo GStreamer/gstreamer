@@ -33,11 +33,6 @@ extern "C" {
 
 GstElementDetails gst_pipefilter_details;
 
-// NOTE: per-element flags start with 16 for now
-typedef enum {
-  GST_PIPEFILTER_OPEN              = (1 << 16),
-} GstPipefilterFlags;
-
 #define GST_TYPE_PIPEFILTER \
   (gst_pipefilter_get_type())
 #define GST_PIPEFILTER(obj) \
@@ -48,6 +43,11 @@ typedef enum {
   (GTK_CHECK_TYPE((obj),GST_TYPE_PIPEFILTER))
 #define GST_IS_PIPEFILTER_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPEFILTER))
+
+// NOTE: per-element flags start with 16 for now
+typedef enum {
+  GST_PIPEFILTER_OPEN		= (1 << 16 ),
+} GstPipeFilterFlags;
 
 typedef struct _GstPipefilter GstPipefilter;
 typedef struct _GstPipefilterClass GstPipefilterClass;

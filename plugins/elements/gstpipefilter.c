@@ -59,8 +59,7 @@ static void gst_pipefilter_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
 void gst_pipefilter_chain(GstPad *pad,GstBuffer *buf);
 
-static gboolean gst_pipefilter_change_state(GstElement *element,
-                                         GstElementState state);
+static GstElementStateReturn gst_pipefilter_change_state(GstElement *element);
 
 static GstFilterClass *parent_class = NULL;
 //static guint gst_pipefilter_signals[LAST_SIGNAL] = { 0 };
@@ -287,23 +286,22 @@ static void gst_pipefilter_close_file(GstPipefilter *src) {
   GST_FLAG_UNSET(src,GST_PIPEFILTER_OPEN);
 }
 
-static gboolean gst_pipefilter_change_state(GstElement *element,
-                                         GstElementState state) {
+static GstElementStateReturn gst_pipefilter_change_state(GstElement *element) {
   g_return_val_if_fail(GST_IS_PIPEFILTER(element), FALSE);
 
-  switch (state) {
-    case GST_STATE_RUNNING:
-      if (!gst_pipefilter_open_file(GST_PIPEFILTER(element)))
-        return FALSE;
-      break;  
-    case ~GST_STATE_RUNNING:
+  /* if going down into NULL state, close the file if it's open */ 
+  if (GST_STATE_PENDING(element) == GST_STATE_NULL) {
+    if (GST_FLAG_IS_SET(element,GST_PIPEFILTER_OPEN))
       gst_pipefilter_close_file(GST_PIPEFILTER(element));
-      break;
-    default:
-      break;
-  }     
+  /* otherwise (READY or higher) we need to open the file */
+  } else {
+    if (!GST_FLAG_IS_SET(element,GST_PIPEFILTER_OPEN)) {
+      if (!gst_disksrc_open_file(GST_PIPEFILTER(element)))
+        return GST_STATE_FAILURE;
+    }
+  }
       
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element,state);
+    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
   return TRUE;
 }
