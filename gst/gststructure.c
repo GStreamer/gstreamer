@@ -224,6 +224,7 @@ gst_structure_free (GstStructure * structure)
       g_value_unset (&field->value);
     }
   }
+  g_array_free (structure->fields, TRUE);
 #ifdef USE_POISONING
   memset (structure, 0xff, sizeof (GstStructure));
 #endif

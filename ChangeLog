@@ -1,3 +1,10 @@
+2004-04-03  Tim-Phillip Müller  <t.i.m@zen.co.uk>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* gst/gststructure.c: (gst_structure_free):
+	  memleak fix: free fields array (partial fix for #134839)
+
 2004-04-01  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/random/ds/0.9-suggested-changes:
