@@ -1,3 +1,9 @@
+2005-01-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-element-check.m4:
+	  Only check for gst-inspect if we haven't already
+	  found it in previous element check runs
+
 2005-01-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/Makefile.am:
