@@ -211,7 +211,7 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
     GST_DEBUG (GST_CAT_CLOCK, "added clock receiver %s", GST_ELEMENT_NAME (element));
   }
 
-  gst_element_set_scheduler (element, sched);
+  /* gst_element_set_scheduler (element, sched); */
 
   if (CLASS (sched)->add_element)
     CLASS (sched)->add_element (sched, element);
@@ -233,7 +233,7 @@ gst_scheduler_remove_element (GstScheduler *sched, GstElement *element)
   sched->clock_providers = g_list_remove (sched->clock_providers, element);
   sched->clock_receivers = g_list_remove (sched->clock_receivers, element);
 
-  gst_element_set_scheduler (element, NULL);
+  /* gst_element_set_scheduler (element, NULL); */
 
   if (CLASS (sched)->remove_element)
     CLASS (sched)->remove_element (sched, element);
