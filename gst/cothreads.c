@@ -92,6 +92,7 @@ cothread_context_init (void)
   ctx->threads[0]->func = NULL;
   ctx->threads[0]->argc = 0;
   ctx->threads[0]->argv = NULL;
+  ctx->threads[0]->priv = NULL;
   ctx->threads[0]->flags = COTHREAD_STARTED;
   ctx->threads[0]->sp = (void *) CURRENT_STACK_FRAME;
   ctx->threads[0]->pc = 0;
@@ -185,6 +186,7 @@ cothread_create (cothread_context *ctx)
   thread->ctx = ctx;
   thread->threadnum = slot;
   thread->flags = 0;
+  thread->priv = NULL;
   thread->sp = ((guchar *) thread + COTHREAD_STACKSIZE);
   thread->top_sp = thread->sp; /* for debugging purposes to detect stack overruns */
 

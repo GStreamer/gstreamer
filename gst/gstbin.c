@@ -434,6 +434,8 @@ gst_bin_remove (GstBin * bin, GstElement * element)
   gint state_idx = 0;
   GstElementState state;
 
+  GST_DEBUG_ELEMENT (GST_CAT_PARENTAGE, bin, "trying to remove child %s\n", GST_ELEMENT_NAME (element));
+
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
   g_return_if_fail (element != NULL);
