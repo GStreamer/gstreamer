@@ -68,11 +68,11 @@ static guint 			gst_md5sink_signals[LAST_SIGNAL] = { 0 }; */
 
 
 /* MD5 stuff */
-void				md5_init_ctx 			(GstMD5Sink *ctx);
-gpointer			md5_read_ctx			(GstMD5Sink *ctx, gpointer resbuf);
-gpointer			md5_finish_ctx			(GstMD5Sink *ctx, gpointer resbuf);
-void				md5_process_bytes		(const void *buffer, size_t len, GstMD5Sink *ctx);
-void				md5_process_block		(const void *buffer, size_t len, GstMD5Sink *ctx);
+static void			md5_init_ctx 			(GstMD5Sink *ctx);
+static gpointer			md5_read_ctx			(GstMD5Sink *ctx, gpointer resbuf);
+static gpointer			md5_finish_ctx			(GstMD5Sink *ctx, gpointer resbuf);
+static void			md5_process_bytes		(const void *buffer, size_t len, GstMD5Sink *ctx);
+static void			md5_process_block		(const void *buffer, size_t len, GstMD5Sink *ctx);
 
 /* This array contains the bytes used to pad the buffer to the next
    64-byte boundary.  (RFC 1321, 3.1: Step 1)  */
@@ -81,7 +81,7 @@ static const guchar 		fillbuf[64] = { 0x80, 0 /* , 0, 0, ...  */ };
 /* MD5 functions */
 /* Initialize structure containing state of computation.
    (RFC 1321, 3.3: Step 3)  */
-void
+static void
 md5_init_ctx (GstMD5Sink *ctx)
 {
   ctx->A = 0x67452301;
@@ -97,7 +97,7 @@ md5_init_ctx (GstMD5Sink *ctx)
 
    IMPORTANT: On some systems it is required that RESBUF is correctly
    aligned for a 32 bits value.  */
-gpointer
+static gpointer
 md5_finish_ctx (GstMD5Sink *ctx, gpointer resbuf)
 {
   /* Take yet unprocessed bytes into account.  */
@@ -127,7 +127,7 @@ md5_finish_ctx (GstMD5Sink *ctx, gpointer resbuf)
 
    IMPORTANT: On some systems it is required that RESBUF is correctly
    aligned for a 32 bits value.  */
-gpointer
+static gpointer
 md5_read_ctx (GstMD5Sink *ctx, gpointer resbuf)
 {
   ((guint32 *) resbuf)[0] = GUINT32_TO_LE (ctx->A);
@@ -138,7 +138,7 @@ md5_read_ctx (GstMD5Sink *ctx, gpointer resbuf)
   return resbuf;
 }
 
-void
+static void
 md5_process_bytes (const void *buffer, size_t len, GstMD5Sink *ctx)
 {
   /*const void aligned_buffer = buffer; */
@@ -213,7 +213,7 @@ md5_process_bytes (const void *buffer, size_t len, GstMD5Sink *ctx)
 
 /* Process LEN bytes of BUFFER, accumulating context into CTX.
    It is assumed that LEN % 64 == 0.  */
-void
+static void
 md5_process_block (const void *buffer, size_t len, GstMD5Sink *ctx)
 {
   guint32 correct_words[16];
