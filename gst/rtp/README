@@ -1,0 +1,53 @@
+
+TODO
+----
+
+- implement packing up to the MTU.
+- discont events in the case of packet loss
+- figure out the clocking.
+- implement various RFCs dealing with different payload types. 
+  (as modules?)
+- Throw-out the the caps-nego & other session control things to the 
+  Application Developer( App ), by turning rtcp work into, signals 
+  in gstrtpsend & props/args in gstrtprecv.
+  The App would then be free to use any sort of session control 
+  protocal like RTSP.( done )
+
+
+Relevant RFCs
+-------------
+
+1889 RTP: A Transport Protocol for Real-Time Applications.
+
+2198 RTP Payload for Redundant Audio Data.
+3119 A More Loss-Tolerant RTP Payload Format for MP3 Audio.
+
+2793 RTP Payload for Text Conversation.
+
+2032 RTP Payload Format for H.261 Video Streams.
+2190 RTP Payload Format for H.263 Video Streams.
+2250 RTP Payload Format for MPEG1/MPEG2 Video.
+2343 RTP Payload Format for Bundled MPEG.
+2429 RTP Payload Format for the 1998 Version of ITU-T Rec. H.263 Video
+2431 RTP Payload Format for BT.656 Video Encoding.
+2435 RTP Payload Format for JPEG-compressed Video.
+3016 RTP Payload Format for MPEG-4 Audio/Visual Streams.
+3047 RTP Payload Format for ITU-T Recommendation G.722.1.
+
+2733 An RTP Payload Format for Generic Forward Error Correction.
+2833 RTP Payload for DTMF Digits, Telephony Tones and Telephony
+     Signals.
+2862 RTP Payload Format for Real-Time Pointers.
+1890 RTP Profile for Audio and Video Conferences with Minimal Control.
+2508 Compressing IP/UDP/RTP Headers for Low-Speed Serial Links.
+
+
+do we care?
+-----------
+
+2029 RTP Payload Format of Sun's CellB Video Encoding.
+
+usefull
+-------
+
+http://www.iana.org/assignments/rtp-parameters
