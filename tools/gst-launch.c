@@ -187,13 +187,15 @@ int
 main(int argc, char *argv[])
 {
   /* options */
-  gboolean silent = FALSE;
+  gboolean silent = TRUE;
   gboolean no_fault = FALSE;
   gchar *savefile = NULL;
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
     {"silent",	's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &silent,   0,
      "do not output status information", NULL},
+    {"verbose", 'v',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &silent,   1,
+     "report various status information", NULL},
     {"exclude", 'X',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &exclude_args,  0,
      "do not output status information of TYPE", "TYPE1,TYPE2,..."},
     {"output",	'o',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &savefile, 0,
