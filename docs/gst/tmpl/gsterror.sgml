@@ -1,0 +1,35 @@
+<!-- ##### SECTION Title ##### -->
+GstError
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GstCoreError ##### -->
+<para>
+
+</para>
+
+@GST_CORE_ERROR_FAILED: 
+@GST_CORE_ERROR_TOO_LAZY: 
+@GST_CORE_ERROR_NOT_IMPLEMENTED: 
+@GST_CORE_ERROR_STATE_CHANGE: 
+@GST_CORE_ERROR_PAD: 
+@GST_CORE_ERROR_THREAD: 
+@GST_CORE_ERROR_SCHEDULER: 
+@GST_CORE_ERROR_NEGOTIATION: 
+@GST_CORE_ERROR_EVENT: 
+@GST_CORE_ERROR_SEEK: 
+@GST_CORE_ERROR_CAPS: 
+@GST_CORE_ERROR_TAG: 
+@GST_CORE_ERROR_NUM_ERRORS: 
+

@@ -87,6 +87,8 @@ gst_implements_interface_supported_default (GstImplementsInterface *interface,
  *
  * Test whether the given element implements a certain interface of type
  * iface_type, and test whether it is supported for this specific instance.
+ *
+ * Returns: whether or not the element implements the interface.
  */
 
 gboolean
@@ -118,6 +120,8 @@ gst_element_implements_interface (GstElement *element,
  *
  * cast a given object to an interface type, and check whether this
  * interface is supported for this specific instance.
+ *
+ * Returns: a gpointer to the interface type
  */
 
 gpointer
@@ -144,12 +148,14 @@ gst_implements_interface_cast (gpointer from,
 }
 
 /**
- * gst_implements_interface_cast:
+ * gst_implements_interface_check:
  * @from: the object (any sort) from which to check from for the interface
  * @type: the interface type to check for
  *
  * check a given object for an interface implementation, and check
  * whether this interface is supported for this specific instance.
+ *
+ * Returns: whether or not the object implements the given interface
  */
 
 gboolean

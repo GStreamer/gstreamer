@@ -4,42 +4,50 @@
 <!ENTITY Gst SYSTEM "xml/gst.xml">
 <!ENTITY GstAtomic SYSTEM "xml/gstatomic.xml">
 <!ENTITY GstBin SYSTEM "xml/gstbin.xml">
-<!ENTITY GstConfig SYSTEM "xml/gstconfig.xml">
-<!ENTITY GstData SYSTEM "xml/gstdata.xml">
 <!ENTITY GstBuffer SYSTEM "xml/gstbuffer.xml">
-<!ENTITY GstEvent SYSTEM "xml/gstevent.xml">
-<!ENTITY GstBufferPool SYSTEM "xml/gstbuffer.xml">
+<!ENTITY GstCaps SYSTEM "xml/gstcaps.xml">
+<!ENTITY GstClock SYSTEM "xml/gstclock.xml">
+<!ENTITY GstConfig SYSTEM "xml/gstconfig.xml">
 <!ENTITY GstCpu SYSTEM "xml/gstcpu.xml">
+<!ENTITY GstData SYSTEM "xml/gstdata.xml">
 <!ENTITY GstElement SYSTEM "xml/gstelement.xml">
+<!ENTITY GstElementFactory SYSTEM "xml/gstelementfactory.xml">
+<!ENTITY GstError SYSTEM "xml/gsterror.xml">
+<!ENTITY GstEvent SYSTEM "xml/gstevent.xml">
 <!ENTITY GstFormat SYSTEM "xml/gstformat.xml">
+<!ENTITY GstIndex SYSTEM "xml/gstindex.xml">
 <!ENTITY GstInfo SYSTEM "xml/gstinfo.xml">
+<!ENTITY GstInterface SYSTEM "xml/gstinterface.xml">
 <!ENTITY GstLog SYSTEM "xml/gstlog.xml">
 <!ENTITY GstMemChunk SYSTEM "xml/gstmemchunk.xml">
 <!ENTITY GstObject SYSTEM "xml/gstobject.xml">
 <!ENTITY GstPad SYSTEM "xml/gstpad.xml">
 <!ENTITY GstParse SYSTEM "xml/gstparse.xml">
-<!ENTITY GstProbe SYSTEM "xml/gstprobe.xml">
 <!ENTITY GstPipeline SYSTEM "xml/gstpipeline.xml">
 <!ENTITY GstPlugin SYSTEM "xml/gstplugin.xml">
 <!ENTITY GstPluginFeature SYSTEM "xml/gstpluginfeature.xml">
+<!ENTITY GstProbe SYSTEM "xml/gstprobe.xml">
 <!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
-<!ENTITY GstThread SYSTEM "xml/gstthread.xml">
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
 <!ENTITY GstRegistryPool SYSTEM "xml/gstregistrypool.xml">
 <!ENTITY GstScheduler SYSTEM "xml/gstscheduler.xml">
+<!ENTITY GstStructure SYSTEM "xml/gststructure.xml">
+<!ENTITY GstSystemClock SYSTEM "xml/gstsystemclock.xml">
+<!ENTITY GstTag SYSTEM "xml/gsttag.xml">
+<!ENTITY GstTagInterface SYSTEM "xml/gsttaginterface.xml">
+<!ENTITY GstThread SYSTEM "xml/gstthread.xml">
 <!ENTITY GstTrace SYSTEM "xml/gsttrace.xml">
 <!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
 <!ENTITY GstTypeFindFactory SYSTEM "xml/gsttypefindfactory.xml">
-<!ENTITY GstCaps SYSTEM "xml/gstcaps.xml">
-<!ENTITY GstClock SYSTEM "xml/gstclock.xml">
-<!ENTITY GstSystemClock SYSTEM "xml/gstsystemclock.xml">
 <!ENTITY GstUtils SYSTEM "xml/gstutils.xml">
 <!ENTITY GstUri SYSTEM "xml/gsturi.xml">
+<!-- not commented properly yet
+<!ENTITY GstValue SYSTEM "xml/gstvalue.xml">
+-->
 <!ENTITY GstXML SYSTEM "xml/gstxml.xml">
 <!-- these are elements without API docs
 <!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
 -->
-<!ENTITY GstIndex SYSTEM "xml/gstindex.xml">
 <!ENTITY cothreads SYSTEM "xml/cothreads.xml">
 
 <!ENTITY GstAggregator SYSTEM "xml/gstaggregator.xml">
@@ -81,10 +89,13 @@ with some more specialized elements.</para>
     &GstCpu;
     &GstData;
     &GstElement;
+    &GstElementFactory;
+    &GstError;
     &GstEvent;
     &GstFormat;
     &GstIndex;
     &GstInfo;
+    &GstInterface;
     &GstObject;
     &GstPad;
     &GstParse;
@@ -98,12 +109,18 @@ with some more specialized elements.</para>
     &GstRegistry;
     &GstRegistryPool;
     &GstScheduler;
+    &GstStructure;
     &GstSystemClock;
+    &GstTag;
+    &GstTagInterface;
     &GstThread;
     &GstTypeFind;
     &GstTypeFindFactory;
     &GstUri;
     &GstUtils;
+<!-- not commented properly yet
+    &GstValue;
+-->
     &GstXML;
 
   </chapter>

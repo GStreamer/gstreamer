@@ -1,0 +1,105 @@
+<!-- ##### SECTION Title ##### -->
+GstTagInterface
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gst_tag_setter_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_tag_setter_merge ##### -->
+<para>
+
+</para>
+
+@setter: 
+@list: 
+@mode: 
+
+
+<!-- ##### FUNCTION gst_tag_setter_add ##### -->
+<para>
+
+</para>
+
+@setter: 
+@mode: 
+@tag: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_tag_setter_add_values ##### -->
+<para>
+
+</para>
+
+@setter: 
+@mode: 
+@tag: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_tag_setter_add_valist ##### -->
+<para>
+
+</para>
+
+@setter: 
+@mode: 
+@tag: 
+@var_args: 
+
+
+<!-- ##### FUNCTION gst_tag_setter_add_valist_values ##### -->
+<para>
+
+</para>
+
+@setter: 
+@mode: 
+@tag: 
+@var_args: 
+
+
+<!-- ##### FUNCTION gst_tag_setter_get_list ##### -->
+<para>
+
+</para>
+
+@setter: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_tag_setter_set_merge_mode ##### -->
+<para>
+
+</para>
+
+@setter: 
+@mode: 
+
+
+<!-- ##### FUNCTION gst_tag_setter_get_merge_mode ##### -->
+<para>
+
+</para>
+
+@setter: 
+@Returns: 
+
+

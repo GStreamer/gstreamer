@@ -96,6 +96,10 @@ GTK-DOC NOTES
   - tmpl/
   (FIXME: describe what each of these files do)
 
+* what to do when adding a new piece of API:
+  - add both an entity and use the entity in gstreamer-docs.sgml
+  - add a new section to gstreamer-sections.txt
+  - add all documented symbols to gstreamer-sections.txt in the proper section
 * checklist:
   - make sure -sections.txt has a <TITLE> set for each <FILE>
 

@@ -1,3 +1,24 @@
+2004-01-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/README:
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gsterror.sgml:
+	* docs/gst/tmpl/gstinterface.sgml:
+	* docs/gst/tmpl/gstreamer-unused.sgml:
+	* docs/gst/tmpl/gststructure.sgml:
+	* docs/gst/tmpl/gsttag.sgml:
+	* docs/gst/tmpl/gsttaginterface.sgml:
+	* docs/gst/tmpl/gstvalue.sgml:
+	make sure all API ends up in the built docs
+	* gst/gstinterface.c:
+	* gst/gststructure.c: (gst_structure_id_set_value),
+	(gst_structure_set_value), (gst_structure_id_get_value):
+	* gst/gststructure.h:
+	* gst/gstvalue.h:
+        sync .h with .c declarations
+
 2004-01-30  Julien Moutte  <julien@moutte.net>
 
 	* libs/gst/bytestream/bytestream.c: Reverting my event handling patch.

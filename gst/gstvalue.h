@@ -104,7 +104,7 @@ double gst_value_get_double_range_max (const GValue *value);
 /* caps */
 
 G_CONST_RETURN GstCaps *gst_value_get_caps (const GValue *value);
-void gst_value_set_caps (GValue *calue, const GstCaps *caps);
+void gst_value_set_caps (GValue *value, const GstCaps *caps);
 
 /* compare */
 

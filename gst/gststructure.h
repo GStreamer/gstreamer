@@ -57,16 +57,16 @@ void gst_structure_set_name(GstStructure *structure, const gchar *name);
 
 void gst_structure_id_set_value(GstStructure *structure, GQuark field,
     const GValue *value);
-void gst_structure_set_value(GstStructure *structure, const gchar *field,
+void gst_structure_set_value(GstStructure *structure, const gchar *fieldname,
     const GValue *value);
-void gst_structure_set(GstStructure *structure, const gchar *field, ...);
-void gst_structure_set_valist(GstStructure *structure, const gchar *field,
+void gst_structure_set(GstStructure *structure, const gchar *fieldname, ...);
+void gst_structure_set_valist(GstStructure *structure, const gchar *fieldname,
     va_list varargs);
 G_CONST_RETURN GValue *gst_structure_id_get_value(const GstStructure *structure,
     GQuark field);
 G_CONST_RETURN GValue *gst_structure_get_value(const GstStructure *structure,
-    const gchar *field);
-void gst_structure_remove_field(GstStructure *structure, const gchar *field);
+    const gchar *fieldname);
+void gst_structure_remove_field(GstStructure *structure, const gchar *fieldname);
 void gst_structure_remove_fields(GstStructure *structure, 
     const gchar *fieldname, ...);
 void gst_structure_remove_fields_valist(GstStructure *structure, 
@@ -74,26 +74,26 @@ void gst_structure_remove_fields_valist(GstStructure *structure,
 void gst_structure_remove_all_fields(GstStructure *structure);
 
 GType gst_structure_get_field_type(const GstStructure *structure,
-    const gchar *field);
+    const gchar *fieldname);
 gboolean gst_structure_foreach (GstStructure *structure,
     GstStructureForeachFunc func, gpointer user_data);
 gint gst_structure_n_fields(const GstStructure *structure);
-gboolean gst_structure_has_field(const GstStructure *structure, const gchar *field);
+gboolean gst_structure_has_field(const GstStructure *structure, const gchar *fieldname);
 gboolean gst_structure_has_field_typed(const GstStructure *structure,
-    const gchar *field, GType type);
+    const gchar *fieldname, GType type);
 
 /* utility functions */
 
-gboolean gst_structure_get_boolean(const GstStructure *structure, const gchar *field,
+gboolean gst_structure_get_boolean(const GstStructure *structure, const gchar *fieldname,
     gboolean *value);
-gboolean gst_structure_get_int(const GstStructure *structure, const gchar *field,
+gboolean gst_structure_get_int(const GstStructure *structure, const gchar *fieldname,
     gint *value);
-gboolean gst_structure_get_fourcc(const GstStructure *structure, const gchar *field,
+gboolean gst_structure_get_fourcc(const GstStructure *structure, const gchar *fieldname,
     guint32 *value);
-gboolean gst_structure_get_double(const GstStructure *structure, const gchar *field,
+gboolean gst_structure_get_double(const GstStructure *structure, const gchar *fieldname,
     gdouble *value);
 G_CONST_RETURN gchar *gst_structure_get_string(const GstStructure *structure,
-    const gchar *field);
+    const gchar *fieldname);
 
 gchar * gst_structure_to_string(const GstStructure *structure);
 GstStructure * gst_structure_from_string (const gchar *string, gchar **end);

@@ -1,0 +1,46 @@
+<!-- ##### SECTION Title ##### -->
+GstInterface
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gst_element_implements_interface ##### -->
+<para>
+
+</para>
+
+@element: 
+@iface_type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_implements_interface_cast ##### -->
+<para>
+
+</para>
+
+@from: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_implements_interface_check ##### -->
+<para>
+
+</para>
+
+@from: 
+@type: 
+@Returns: 
+
+

@@ -1254,6 +1254,26 @@ GstTimeCache
 gsttypes
 
 
+<!-- ##### SECTION ./tmpl/gstvalue.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstvalue.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstvalue.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstvalue.sgml:Title ##### -->
+GstValue
+
+
 <!-- ##### SECTION ./tmpl/gstversion.sgml:Long_Description ##### -->
 <para>
 
@@ -3872,6 +3892,41 @@ A type that can be used to indicate a filename.
 
 </para>
 
+
+<!-- ##### MACRO GST_VALUE_HOLDS_CAPS ##### -->
+<para>
+
+</para>
+
+@x: 
+
+<!-- ##### MACRO GST_VALUE_HOLDS_DOUBLE_RANGE ##### -->
+<para>
+
+</para>
+
+@x: 
+
+<!-- ##### MACRO GST_VALUE_HOLDS_FOURCC ##### -->
+<para>
+
+</para>
+
+@x: 
+
+<!-- ##### MACRO GST_VALUE_HOLDS_INT_RANGE ##### -->
+<para>
+
+</para>
+
+@x: 
+
+<!-- ##### MACRO GST_VALUE_HOLDS_LIST ##### -->
+<para>
+
+</para>
+
+@x: 
 
 <!-- ##### MACRO GType ##### -->
 <para>
@@ -10678,6 +10733,237 @@ Destroy the scheduler
 @object: 
 @argname: 
 @arg_type: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_can_compare ##### -->
+<para>
+
+</para>
+
+@value1: 
+@value2: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_can_intersect ##### -->
+<para>
+
+</para>
+
+@value1: 
+@value2: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_can_union ##### -->
+<para>
+
+</para>
+
+@value1: 
+@value2: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_compare ##### -->
+<para>
+
+</para>
+
+@value1: 
+@value2: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_deserialize ##### -->
+<para>
+
+</para>
+
+@dest: 
+@src: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_get_caps ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_get_double_range_max ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_get_double_range_min ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_get_fourcc ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_get_int_range_max ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_get_int_range_min ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_init_and_copy ##### -->
+<para>
+
+</para>
+
+@dest: 
+@src: 
+
+<!-- ##### FUNCTION gst_value_intersect ##### -->
+<para>
+
+</para>
+
+@dest: 
+@value1: 
+@value2: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_list_append_value ##### -->
+<para>
+
+</para>
+
+@value: 
+@append_value: 
+
+<!-- ##### FUNCTION gst_value_list_concat ##### -->
+<para>
+
+</para>
+
+@dest: 
+@value1: 
+@value2: 
+
+<!-- ##### FUNCTION gst_value_list_get_size ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_list_get_value ##### -->
+<para>
+
+</para>
+
+@value: 
+@index: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_list_prepend_value ##### -->
+<para>
+
+</para>
+
+@value: 
+@prepend_value: 
+
+<!-- ##### FUNCTION gst_value_register ##### -->
+<para>
+
+</para>
+
+@table: 
+
+<!-- ##### FUNCTION gst_value_register_intersect_func ##### -->
+<para>
+
+</para>
+
+@type1: 
+@type2: 
+@func: 
+
+<!-- ##### FUNCTION gst_value_register_union_func ##### -->
+<para>
+
+</para>
+
+@type1: 
+@type2: 
+@func: 
+
+<!-- ##### FUNCTION gst_value_serialize ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_value_set_caps ##### -->
+<para>
+
+</para>
+
+@value: 
+@caps: 
+@calue: 
+
+<!-- ##### FUNCTION gst_value_set_double_range ##### -->
+<para>
+
+</para>
+
+@value: 
+@start: 
+@end: 
+
+<!-- ##### FUNCTION gst_value_set_fourcc ##### -->
+<para>
+
+</para>
+
+@value: 
+@fourcc: 
+
+<!-- ##### FUNCTION gst_value_set_int_range ##### -->
+<para>
+
+</para>
+
+@value: 
+@start: 
+@end: 
+
+<!-- ##### FUNCTION gst_value_union ##### -->
+<para>
+
+</para>
+
+@dest: 
+@value1: 
+@value2: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_xml_new_from_memory ##### -->

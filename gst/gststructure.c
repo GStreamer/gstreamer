@@ -44,7 +44,7 @@ static void gst_structure_set_field (GstStructure *structure,
 static GstStructureField *gst_structure_get_field(const GstStructure *structure,
         const gchar *fieldname);
 static GstStructureField *gst_structure_id_get_field(const GstStructure *structure,
-        GQuark fieldname);
+        GQuark field);
 
 static void _gst_structure_transform_to_string(const GValue *src_value,
     GValue *dest_value);
@@ -99,7 +99,7 @@ void _gst_structure_initialize(void)
 
 /**
  * gst_structure_id_empty_new:
- * @name: name of new structure
+ * @quark: name of new structure
  *
  * Creates a new, empty #GstStructure with the given name.
  *
@@ -173,7 +173,7 @@ GstStructure *gst_structure_new(const gchar *name,
  * gst_structure_new_valist:
  * @name: name of new structure
  * @firstfield: name of first field to set
- * @varags: variable argument list
+ * @varargs: variable argument list
  *
  * Creates a new #GstStructure with the given name.  Structure fields
  * are set according to the varargs in a manner similar to
@@ -288,14 +288,14 @@ void gst_structure_set_name(GstStructure *structure, const gchar *name)
 /**
  * gst_structure_id_set_value:
  * @structure: a #GstStructure
- * @field_id: a #GQuark representing a field
+ * @field: a #GQuark representing a field
  * @value: the new value of the field
  *
  * Sets the field with the given ID to the provided value.  If the field
  * does not exist, it is created.  If the field exists, the previous
  * value is freed.
  */
-void gst_structure_id_set_value(GstStructure *structure, GQuark fieldname,
+void gst_structure_id_set_value(GstStructure *structure, GQuark field,
     const GValue *value)
 {
   GstStructureField field = { 0, { 0, } };
@@ -312,14 +312,14 @@ void gst_structure_id_set_value(GstStructure *structure, GQuark fieldname,
 /**
  * gst_structure_set_value:
  * @structure: a #GstStructure
- * @field: the name of the field to set
+ * @fieldname: the name of the field to set
  * @value: the new value of the field
  *
  * Sets the field with the given name to the provided value.  If the field
  * does not exist, it is created.  If the field exists, the previous
  * value is freed.
  */
-void gst_structure_set_value(GstStructure *structure, const gchar *field,
+void gst_structure_set_value(GstStructure *structure, const gchar *fieldname,
     const GValue *value)
 {
   g_return_if_fail(structure != NULL);
@@ -332,7 +332,7 @@ void gst_structure_set_value(GstStructure *structure, const gchar *field,
 /**
  * gst_structure_set:
  * @structure: a #GstStructure
- * @field: the name of the field to set
+ * @fieldname: the name of the field to set
  * @...: variable arguments
  *
  * Parses the variable arguments and sets fields accordingly.
@@ -355,7 +355,7 @@ void gst_structure_set(GstStructure *structure, const gchar *field, ...)
 /**
  * gst_structure_set_valist:
  * @structure: a #GstStructure
- * @field: the name of the field to set
+ * @fieldname: the name of the field to set
  * @varargs: variable arguments
  *
  * va_list form of #gst_structure_set.
@@ -459,7 +459,7 @@ static void gst_structure_set_field(GstStructure *structure, GstStructureField *
   g_array_append_val(structure->fields, *field);
 }
 
-/**
+/* FIXME: is this private ? if so remove gtk-doc
  * gst_structure_id_get_field:
  * @structure: a #GstStructure
  * @field_id: the GQuark of the field to get
@@ -532,7 +532,7 @@ gst_structure_get_value(const GstStructure *structure, const gchar *fieldname)
 /**
  * gst_structure_id_get_value:
  * @structure: a #GstStructure
- * @id: the #GQuark of the field to get
+ * @field: the #GQuark of the field to get
  *
  * Accessor function.
  *
@@ -540,7 +540,7 @@ gst_structure_get_value(const GstStructure *structure, const gchar *fieldname)
  *          identifier.
  */
 const GValue *
-gst_structure_id_get_value(const GstStructure *structure, GQuark id)
+gst_structure_id_get_value(const GstStructure *structure, GQuark field)
 {
   GstStructureField *field;
 
@@ -704,6 +704,9 @@ gst_structure_n_fields(const GstStructure *structure)
  * @user_data: private data
  *
  * Calls the provided function once for each field in the #GstStructure.
+ *
+ * Returns: TRUE if the supplied function returns TRUE For each of the fields,
+ * FALSE otherwise.
  */
 gboolean
 gst_structure_foreach (GstStructure *structure,
@@ -746,7 +749,7 @@ gst_structure_has_field(const GstStructure *structure, const gchar *fieldname)
 }
 
 /**
- * gst_structure_has_field:
+ * gst_structure_has_field_typed:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
  * @type: the type of a value
@@ -777,9 +780,9 @@ gst_structure_has_field_typed(const GstStructure *structure, const gchar *fieldn
  * gst_structure_get_boolean:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
- * @ptr: a pointer to a #gboolean to set
+ * @value: a pointer to a #gboolean to set
  *
- * Sets the boolean pointed to by @ptr corresponding to the value of the
+ * Sets the boolean pointed to by @value corresponding to the value of the
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
@@ -808,9 +811,9 @@ gst_structure_get_boolean(const GstStructure *structure, const gchar *fieldname,
  * gst_structure_get_int:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
- * @ptr: a pointer to an int to set
+ * @value: a pointer to an int to set
  *
- * Sets the int pointed to by @ptr corresponding to the value of the
+ * Sets the int pointed to by @value corresponding to the value of the
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
@@ -840,9 +843,9 @@ gst_structure_get_int(const GstStructure *structure, const gchar *fieldname,
  * gst_structure_get_fourcc:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
- * @ptr: a pointer to a #GstFourcc to set
+ * @value: a pointer to a #GstFourcc to set
  *
- * Sets the #GstFourcc pointed to by @ptr corresponding to the value of the
+ * Sets the #GstFourcc pointed to by @value corresponding to the value of the
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
@@ -872,9 +875,9 @@ gst_structure_get_fourcc(const GstStructure *structure, const gchar *fieldname,
  * gst_structure_get_double:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
- * @ptr: a pointer to a #GstFourcc to set
+ * @value: a pointer to a #GstFourcc to set
  *
- * Sets the double pointed to by @ptr corresponding to the value of the
+ * Sets the double pointed to by @value corresponding to the value of the
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
@@ -903,7 +906,6 @@ gboolean gst_structure_get_double(const GstStructure *structure,
  * gst_structure_get_string:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
- * @ptr: a pointer to a #GstFourcc to set
  *
  * Finds the field corresponding to @fieldname, and returns the string
  * contained in the field's value.  Caller is responsible for making
@@ -1320,7 +1322,8 @@ _gst_structure_parse_value (gchar *str, gchar **after, GValue *value,
 
 /**
  * gst_structure_from_string:
- * @structure: a #GstStructure
+ * @string: a string representation of a #GstStructure.
+ * @end: FIXME, deduce from code
  *
  * Creates a #GstStructure from a string representation.
  * 
