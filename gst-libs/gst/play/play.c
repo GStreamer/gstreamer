@@ -237,7 +237,12 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     gst_bin_add_many (GST_BIN (output_bin), identity, identity_cs, NULL);
     if (!gst_element_link_many (autoplugger, identity, identity_cs, NULL))
       GST_PLAY_ERROR_RETURN (error, "Could not link work thread elements");
+    /* we ref the output bin so we can put it in and out the work_thread
+     * whenever we want */
+    gst_object_ref (GST_OBJECT (output_bin));
+    GST_DEBUG_OBJECT (play, "adding output bin to work thread in setup");
     gst_bin_add (GST_BIN (work_thread), output_bin);
+
   }
 
   /* Visualization bin (note: it s not added to the pipeline yet) */
@@ -579,6 +584,9 @@ gst_play_audio_fixate (GstPad * pad, const GstCaps * caps, gpointer user_data)
   return NULL;
 }
 
+/* this is a signal handler because we want this called AFTER the state
+ * change has passed. FIXME: core should rename signal to state-changed
+ * to make this clear. */
 static void
 gst_play_state_change (GstElement * element, GstElementState old,
     GstElementState state)
@@ -642,6 +650,7 @@ static void
 gst_play_dispose (GObject * object)
 {
   GstPlay *play;
+  GstElement *output_bin;
 
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_PLAY (object));
@@ -662,6 +671,10 @@ gst_play_dispose (GObject * object)
     g_free (play->priv->location);
     play->priv->location = NULL;
   }
+  /* since we reffed our output bin to keep it around, unref it here */
+  output_bin = g_hash_table_lookup (play->priv->elements, "output_bin");
+  if (output_bin)
+    gst_object_unref (GST_OBJECT (output_bin));
 
   if (play->priv->elements) {
     g_hash_table_destroy (play->priv->elements);
@@ -751,8 +764,10 @@ gst_play_set_location (GstPlay * play, const char *location)
     GstElementStateReturn ret;
 
     ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
-    if (ret == GST_STATE_FAILURE)
+    if (ret == GST_STATE_FAILURE) {
+      GST_ERROR_OBJECT (play, "failed setting to READY");
       return FALSE;
+    }
   }
 
   GST_PLAY_HASH_LOOKUP (work_thread, "work_thread", FALSE);
@@ -892,8 +907,10 @@ gst_play_set_data_src (GstPlay * play, GstElement * data_src)
     GstElementStateReturn ret;
 
     ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
-    if (ret == GST_STATE_FAILURE)
+    if (ret == GST_STATE_FAILURE) {
+      GST_ERROR_OBJECT (play, "failed setting to READY");
       return FALSE;
+    }
   }
 
   /* Getting needed objects */
@@ -907,7 +924,10 @@ gst_play_set_data_src (GstPlay * play, GstElement * data_src)
   gst_element_unlink (old_data_src, autoplugger);
   gst_bin_remove (GST_BIN (work_thread), old_data_src);
   gst_bin_add (GST_BIN (work_thread), data_src);
-  gst_element_link (data_src, autoplugger);
+  if (!gst_element_link (data_src, autoplugger)) {
+    GST_ERROR_OBJECT (play, "could not link source to autoplugger");
+    return FALSE;
+  }
 
   g_hash_table_replace (play->priv->elements, "source", data_src);
 
@@ -939,8 +959,10 @@ gst_play_set_video_sink (GstPlay * play, GstElement * video_sink)
     GstElementStateReturn ret;
 
     ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
-    if (ret == GST_STATE_FAILURE)
+    if (ret == GST_STATE_FAILURE) {
+      GST_ERROR_OBJECT (play, "failed setting to READY");
       return FALSE;
+    }
   }
 
   /* Getting needed objects */
@@ -953,7 +975,10 @@ gst_play_set_video_sink (GstPlay * play, GstElement * video_sink)
   gst_element_unlink (video_scaler, old_video_sink);
   gst_bin_remove (GST_BIN (video_thread), old_video_sink);
   gst_bin_add (GST_BIN (video_thread), video_sink);
-  gst_element_link (video_scaler, video_sink);
+  if (!gst_element_link (video_scaler, video_sink)) {
+    GST_ERROR_OBJECT (play, "could not link video_scaler to video_sink");
+    return FALSE;
+  }
 
   g_hash_table_replace (play->priv->elements, "video_sink", video_sink);
 
@@ -969,8 +994,10 @@ gst_play_set_video_sink (GstPlay * play, GstElement * video_sink)
   }
 
   ret = gst_element_set_state (video_sink, GST_STATE (GST_ELEMENT (play)));
-  if (ret == GST_STATE_FAILURE)
+  if (ret == GST_STATE_FAILURE) {
+    GST_ERROR_OBJECT (play, "failed setting to READY");
     return FALSE;
+  }
 
   return TRUE;
 }
@@ -1000,8 +1027,10 @@ gst_play_set_audio_sink (GstPlay * play, GstElement * audio_sink)
     GstElementStateReturn ret;
 
     ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
-    if (ret == GST_STATE_FAILURE)
+    if (ret == GST_STATE_FAILURE) {
+      GST_ERROR_OBJECT (play, "failed setting to READY");
       return FALSE;
+    }
   }
 
   /* Getting needed objects */
@@ -1014,7 +1043,10 @@ gst_play_set_audio_sink (GstPlay * play, GstElement * audio_sink)
   gst_element_unlink (volume, old_audio_sink);
   gst_bin_remove (GST_BIN (audio_thread), old_audio_sink);
   gst_bin_add (GST_BIN (audio_thread), audio_sink);
-  gst_element_link (volume, audio_sink);
+  if (!gst_element_link (volume, audio_sink)) {
+    GST_ERROR_OBJECT (play, "could not link volume to audio_sink");
+    return FALSE;
+  }
 
   g_hash_table_replace (play->priv->elements, "audio_sink", audio_sink);
 
@@ -1026,8 +1058,10 @@ gst_play_set_audio_sink (GstPlay * play, GstElement * audio_sink)
   }
 
   ret = gst_element_set_state (audio_sink, GST_STATE (GST_ELEMENT (play)));
-  if (ret == GST_STATE_FAILURE)
+  if (ret == GST_STATE_FAILURE) {
+    GST_ERROR_OBJECT (play, "failed setting to READY");
     return FALSE;
+  }
 
   return TRUE;
 }
@@ -1063,15 +1097,20 @@ gst_play_set_visualization (GstPlay * play, GstElement * vis_element)
     GstElementStateReturn ret;
 
     ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
-    if (ret == GST_STATE_FAILURE)
+    if (ret == GST_STATE_FAILURE) {
+      GST_ERROR_OBJECT (play, "failed setting to READY");
       return FALSE;
+    }
     was_playing = TRUE;
   }
 
   gst_element_unlink_many (vis_queue, old_vis_element, vis_cs, NULL);
   gst_bin_remove (GST_BIN (vis_bin), old_vis_element);
   gst_bin_add (GST_BIN (vis_bin), vis_element);
-  gst_element_link_many (vis_queue, vis_element, vis_cs, NULL);
+  if (!gst_element_link_many (vis_queue, vis_element, vis_cs, NULL)) {
+    GST_ERROR_OBJECT (play, "could not link vis bin elements");
+    return FALSE;
+  }
 
   g_hash_table_replace (play->priv->elements, "vis_element", vis_element);
 
@@ -1079,8 +1118,10 @@ gst_play_set_visualization (GstPlay * play, GstElement * vis_element)
     GstElementStateReturn ret;
 
     ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
-    if (ret == GST_STATE_FAILURE)
+    if (ret == GST_STATE_FAILURE) {
+      GST_ERROR_OBJECT (play, "failed setting to READY");
       return FALSE;
+    }
   }
 
   return TRUE;
@@ -1136,8 +1177,10 @@ gst_play_connect_visualization (GstPlay * play, gboolean connect)
       GstElementStateReturn ret;
 
       ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
-      if (ret == GST_STATE_FAILURE)
+      if (ret == GST_STATE_FAILURE) {
+        GST_ERROR_OBJECT (play, "failed setting to READY");
         return FALSE;
+      }
       was_playing = TRUE;
     }
 
@@ -1163,8 +1206,10 @@ gst_play_connect_visualization (GstPlay * play, gboolean connect)
       GstElementStateReturn ret;
 
       ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
-      if (ret == GST_STATE_FAILURE)
+      if (ret == GST_STATE_FAILURE) {
+        GST_ERROR_OBJECT (play, "failed setting to READY");
         return FALSE;
+      }
       was_playing = TRUE;
     }
 
@@ -1173,15 +1218,20 @@ gst_play_connect_visualization (GstPlay * play, gboolean connect)
         "handoff", G_CALLBACK (gst_play_identity_handoff), play);
     gst_bin_add (GST_BIN (video_thread), vis_bin);
     gst_pad_link (tee_pad1, vis_queue_pad);
-    gst_element_link (vis_bin, video_switch);
+    if (!gst_element_link (vis_bin, video_switch)) {
+      GST_ERROR_OBJECT (play, "could not link vis bin to video switch");
+      return FALSE;
+    }
   }
 
   if (was_playing) {
     GstElementStateReturn ret;
 
     ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
-    if (ret == GST_STATE_FAILURE)
+    if (ret == GST_STATE_FAILURE) {
+      GST_ERROR_OBJECT (play, "failed setting to READY");
       return FALSE;
+    }
   }
 
   return TRUE;
@@ -1354,6 +1404,24 @@ gst_play_get_sink_element (GstPlay * play,
   /* we didn't find a sink element */
 
   return NULL;
+}
+
+/**
+ * gst_play_get_all_by_interface:
+ * @play: a #GstPlay.
+ * @interface: an interface.
+ *
+ * Returns all elements that are used by @play implementing the given interface.
+ *
+ * Returns: a #GList of #GstElement implementing the interface.
+ */
+GList *
+gst_play_get_all_by_interface (GstPlay * play, GType interface)
+{
+  GstElement *output_bin;
+
+  GST_PLAY_HASH_LOOKUP (output_bin, "output_bin", NULL);
+  return gst_bin_get_all_by_interface (GST_BIN (output_bin), interface);
 }
 
 GstPlay *
