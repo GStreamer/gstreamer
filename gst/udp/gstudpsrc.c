@@ -73,6 +73,7 @@ static void 		gst_udpsrc_set_property 	(GObject *object, guint prop_id,
 							 const GValue *value, GParamSpec *pspec);
 static void 		gst_udpsrc_get_property 	(GObject *object, guint prop_id, 
 							 GValue *value, GParamSpec *pspec);
+static void 		gst_udpsrc_set_clock 		(GstElement *element, GstClock *clock);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_udpsrc_signals[LAST_SIGNAL] = { 0 }; */
@@ -123,8 +124,18 @@ gst_udpsrc_class_init (GstUDPSrc *klass)
   gobject_class->get_property = gst_udpsrc_get_property;
 
   gstelement_class->change_state = gst_udpsrc_change_state;
+  gstelement_class->set_clock = gst_udpsrc_set_clock;
 }
 
+static void
+gst_udpsrc_set_clock (GstElement *element, GstClock *clock)
+{
+  GstUDPSrc *udpsrc;
+	      
+  udpsrc = GST_UDPSRC (element);
+
+  udpsrc->clock = clock;
+}
 
 static void
 gst_udpsrc_init (GstUDPSrc *udpsrc)
@@ -136,6 +147,9 @@ gst_udpsrc_init (GstUDPSrc *udpsrc)
 
   udpsrc->port = UDP_DEFAULT_PORT;
   udpsrc->control = CONTROL_UDP;
+  udpsrc->clock = NULL;
+
+  udpsrc->first_buf = TRUE;
 }
 
 static GstBuffer*
@@ -216,6 +230,28 @@ gst_udpsrc_get (GstPad *pad)
       GST_BUFFER_DATA (outbuf) = g_malloc (24000);
       GST_BUFFER_SIZE (outbuf) = 24000;
 
+      if (udpsrc->first_buf) {
+  	if (udpsrc->clock) {
+	   GstClockTime current_time;
+
+	   current_time = gst_clock_get_time (udpsrc->clock);
+      	   
+	   GST_BUFFER_TIMESTAMP (outbuf) = current_time;
+      	   GstEvent *discont;
+
+      	   discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
+				current_time, NULL);
+
+      	   gst_pad_push (udpsrc->srcpad, GST_BUFFER (discont));
+	}
+
+	udpsrc->first_buf = FALSE;
+      }
+      
+      else {
+      	GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
+      }
+
       numbytes = recvfrom (udpsrc->sock, GST_BUFFER_DATA (outbuf),
 		  GST_BUFFER_SIZE (outbuf), 0, (struct sockaddr *)&tmpaddr, &len);
 
@@ -287,8 +323,8 @@ gst_udpsrc_init_receive (GstUDPSrc *src)
 {
   guint bc_val;
   bzero (&src->myaddr, sizeof (src->myaddr));
-  src->myaddr.sin_family = AF_INET;         /* host byte order */
-  src->myaddr.sin_port = htons (src->port);     /* short, network byte order */
+  src->myaddr.sin_family = AF_INET;           /* host byte order */
+  src->myaddr.sin_port = htons (src->port);   /* short, network byte order */
   src->myaddr.sin_addr.s_addr = INADDR_ANY;
 
   if ((src->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1) {

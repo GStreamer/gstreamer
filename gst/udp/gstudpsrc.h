@@ -67,6 +67,9 @@ struct _GstUDPSrc {
   int control_sock;
   Gst_UDP_Control control;
   struct sockaddr_in myaddr;
+  GstClock *clock;
+
+  gboolean first_buf;
 };
 
 struct _GstUDPSrcClass {
