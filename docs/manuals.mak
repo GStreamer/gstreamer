@@ -170,12 +170,12 @@ check-local:
 ### this is a website upload target
 
 upload: html ps pdf
-	export RSYNC_RSH=ssh
+	@export RSYNC_RSH=ssh
 	if test "x$$GST_PLUGINS_VERSION_NANO" = x0; then \
             export DOCVERSION=$(VERSION); \
         else export DOCVERSION=cvs; \
         fi; \
-	echo $$DOCVERSION; \
+	echo Uploading docs to htdocs/docs/$$DOCVERSION; \
 	ssh $(USERNAME)@shell.sf.net mkdir -p /home/groups/g/gs/gstreamer/htdocs/docs/$$DOCVERSION/$(DOC); \
 	rsync -arv $(DOC).ps $(DOC).pdf html $(USERNAME)@shell.sf.net:/home/groups/g/gs/gstreamer/htdocs/docs/$$DOCVERSION/$(DOC)
 
