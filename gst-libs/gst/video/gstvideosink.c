@@ -213,29 +213,6 @@ gst_video_sink_set_video_out (GstVideoSink *videosink, gpointer video_out)
 }
 
 /**
- * gst_video_sink_push_ui_event:
- * @videosink: a #GstVideoSink to push the event to.
- * @event: the #GstEvent to be pushed.
- *
- * This will push an event to the video sink. That event is supposed to be
- * a user interface event and will be forwarded upstream to provide
- * interactivity support.
- */
-void
-gst_video_sink_push_ui_event (GstVideoSink *videosink, GstEvent *event)
-{
-  GstVideoSinkClass *class;
-  
-  g_return_if_fail (videosink != NULL);
-  g_return_if_fail (GST_IS_VIDEOSINK (videosink));
-  
-  class = GST_VIDEOSINK_GET_CLASS (videosink);
-  
-  if (class->push_ui_event)
-    class->push_ui_event (videosink, event);
-}
-
-/**
  * gst_video_sink_set_geometry:
  * @videosink: a #GstVideoSink which geometry will be set.
  * @width: a width as a #gint.
