@@ -67,11 +67,23 @@ GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  gst_caps_new (
+  GST_CAPS_NEW (
     "fameenc_sink_caps",
     "video/x-raw-yuv",
-      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
-		GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')))
+      "format",
+	GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+      "width",        GST_PROPS_INT_RANGE (16, 4096),
+      "height",       GST_PROPS_INT_RANGE (16, 4096),
+      "framerate",    GST_PROPS_LIST (
+			GST_PROPS_FLOAT (24/1.001),
+			GST_PROPS_FLOAT (24.),
+			GST_PROPS_FLOAT (25.),
+			GST_PROPS_FLOAT (30/1.001),
+			GST_PROPS_FLOAT (30.),
+			GST_PROPS_FLOAT (50.),
+			GST_PROPS_FLOAT (60/1.001),
+			GST_PROPS_FLOAT (60.)
+		      )
   )
 )
 
