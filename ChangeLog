@@ -1,3 +1,26 @@
+2004-05-09  Edward Hervey  <bilboed@bilboed.com>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/divx/gstdivxdec.c:
+	* ext/divx/gstdivxenc.c:
+	* ext/dts/gstdtsdec.c: (gst_dtsdec_base_init):
+	* ext/faac/gstfaac.c: (gst_faac_base_init):
+	* ext/faad/gstfaad.c: (gst_faad_base_init):
+	* ext/ivorbis/vorbisfile.c:
+	* ext/lame/gstlame.c:
+	* ext/libfame/gstlibfame.c:
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	* ext/musicbrainz/gsttrm.c: (gst_musicbrainz_base_init):
+	* ext/sidplay/gstsiddec.cc:
+	* ext/speex/gstspeexdec.c:
+	* ext/speex/gstspeexenc.c:
+	* ext/xvid/gstxviddec.c:
+	* ext/xvid/gstxvidenc.c:
+	  correct klasses. Mostly s,Codec/(Audio|Video),\1/Codec,
+	  (fixes #142193)
+
 2004-05-08  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/alsa/gstalsa.c: (device_list),

@@ -26,7 +26,7 @@
 /* elementfactory information */
 static GstElementDetails gst_lame_details = {
   "L.A.M.E. mp3 encoder",
-  "Codec/Audio/Encoder",
+  "Codec/Encoder/Audio",
   "High-quality free MP3 encoder",
   "Erik Walthinsen <omega@cse.ogi.edu>",
 };

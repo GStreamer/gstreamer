@@ -34,7 +34,7 @@
 /* elementfactory information */
 static GstElementDetails gst_a52dec_details = {
   "ATSC A/52 audio decoder",
-  "Codec/Audio/Decoder",
+  "Codec/Decoder/Audio",
   "Decodes ATSC A/52 encoded audio streams",
   "David I. Lehn <dlehn@users.sourceforge.net>",
 };

@@ -162,7 +162,7 @@ gst_siddec_base_init (gpointer g_class)
 {
   static GstElementDetails gst_siddec_details =
       GST_ELEMENT_DETAILS ("Sid decoder",
-      "Codec/Audio/Decoder",
+      "Codec/Decoder/Audio",
       "Use sidplay to decode SID audio tunes",
       "Wim Taymans <wim.taymans@chello.be> ");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
