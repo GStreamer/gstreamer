@@ -46,6 +46,12 @@ else
 ESD_DIR=
 endif
 
+if USE_FESTIVAL
+FESTIVAL_DIR=festival
+else
+FESTIVAL_DIR=
+endif
+
 if USE_LAME
 LAME_DIR=lame
 else
@@ -78,8 +84,8 @@ endif
 
 SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) $(AUDIOFILE_DIR) \
 	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
-        $(LAME_DIR) $(MAD_DIR) $(MPEG2DEC_DIR) \
+        $(FESTIVAL_DIR) $(LAME_DIR) $(MAD_DIR) $(MPEG2DEC_DIR) \
 	$(SDL_DIR) $(VORBIS_DIR)
 
 DIST_SUBDIRS=a52 aalib alsa avifile audiofile cdparanoia dvdread esd \
-	     lame mad mpeg2dec sdl vorbis
+	     festival lame mad mpeg2dec sdl vorbis
