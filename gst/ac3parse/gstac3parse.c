@@ -75,7 +75,7 @@ static struct frmsize_s frmsizecod_tbl[] = {
 /* elementfactory information */
 static GstElementDetails ac3parse_details = GST_ELEMENT_DETAILS (
   "AC3 Parser",
-  "Codec/Parser",
+  "Codec/Parser/Audio",
   "Parses and frames AC3 audio streams, provides seek",
   "Erik Walthinsen <omega@cse.ogi.edu>"
 );

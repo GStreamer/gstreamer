@@ -41,7 +41,7 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
 /* elementfactory information */
 static GstElementDetails gst_mpeg2dec_details = {
   "mpeg1 and mpeg2 video decoder",
-  "Codec/Video/Decoder",
+  "Codec/Decoder/Video",
   "Uses libmpeg2 to decode MPEG video streams",
   "Wim Taymans <wim.taymans@chello.be>",
 };
