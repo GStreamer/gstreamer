@@ -11,7 +11,7 @@ libgstossaudio_la_SOURCES = gstossaudio.c	\
 			    gstossgst.c
 
 libgstossaudio_la_CFLAGS = $(GST_CFLAGS)
-libgstossaudio_la_LIBADD = $(top_builddir)/gst-libs/gst/mixer/libgstmixer.la
+libgstossaudio_la_LIBADD = $(top_builddir)/gst-libs/gst/libgstinterfaces-@GST_MAJORMINOR@.la
 libgstossaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 libgstosshelper_la_SOURCES = gstosshelper.c
