@@ -647,7 +647,7 @@ gst_avi_demux_parse_index (GstAviDemux *avi_demux,
     GstEvent *event;
   
     gst_bytestream_get_status (avi_demux->bs, &remaining, &event);
-    gst_data_unref (GST_DATA (event));
+    gst_event_unref (event);
 
     got_bytes = gst_bytestream_read (avi_demux->bs, &buf, 8);
   }
