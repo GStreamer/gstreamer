@@ -87,6 +87,19 @@ Policy definition is closely related to a HOWTO but sometimes needs some thinkin
     ?	       ! figure out a policy for the NEW_MEDIA event
 	       ! (MEDIUM to HARD)
 
+midterm feature enhancement
+---------------------------
+   
+    ?          | Define and implement a syntax in gst_parse to handle filtered pad connections.
+               | (MEDIUM)
+	       |
+    ?          | Figure out a way to set properties on schedulers (and bins?) from gst_parse.
+               | (MEDIUM)
+	       |
+    ?          | Make gst-inspect do inspection of plugins, schedulers, autopluggers, types.
+               | (MEDIUM to EASY)
+	       |
+
 
 midterm (longterm) optimisations
 --------------------------------
@@ -94,7 +107,7 @@ midterm (longterm) optimisations
 These optimisations can be done without changing the existing API.
 
 
-    ?          ! implement an optimal scheduler that uses chaining when possible
+ (in progress) ! implement an optimal scheduler that uses chaining when possible
                ! (HARD, requires detailed knowledge of element scheduling)
 	       !
     ?	       ! alternatively optimisations to the current scheduler can be done such
