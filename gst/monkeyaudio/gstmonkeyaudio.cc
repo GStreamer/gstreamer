@@ -45,7 +45,7 @@ raw_caps_factory (void)
                        gst_props_new (
                          "format",      GST_PROPS_STRING ("int"),
                          "law",         GST_PROPS_INT (0),
-                         "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
+                         "endianness",  GST_PROPS_INT (G_LITTLE_ENDIAN),
                          "signed",      GST_PROPS_BOOLEAN (TRUE),
                          "width",       GST_PROPS_INT (16),
                          "depth",       GST_PROPS_INT (16), 
