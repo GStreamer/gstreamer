@@ -3,7 +3,7 @@
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *disksrc, *osssink, *parse, *decode, *queue;
+  GstElement *filesrc, *osssink, *parse, *decode, *queue;
   GstElement *bin;
   GstElement *thread;
 
@@ -23,9 +23,9 @@ int main(int argc,char *argv[])
   g_assert(bin != NULL);
 
   /* create a disk reader */
-  disksrc = gst_elementfactory_make("disksrc", "disk_source");
-  g_assert(disksrc != NULL);
-  g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
+  filesrc = gst_elementfactory_make("filesrc", "disk_source");
+  g_assert(filesrc != NULL);
+  g_object_set(G_OBJECT(filesrc),"location", argv[1],NULL);
 
   parse = gst_elementfactory_make("mp3parse", "parse");
   decode = gst_elementfactory_make("mpg123", "decode");
@@ -37,7 +37,7 @@ int main(int argc,char *argv[])
   g_assert(osssink != NULL);
 
   /* add objects to the main pipeline */
-  gst_bin_add(GST_BIN(bin), disksrc);
+  gst_bin_add(GST_BIN(bin), filesrc);
   gst_bin_add(GST_BIN(bin), parse);
   gst_bin_add(GST_BIN(bin), decode);
   gst_bin_add(GST_BIN(bin), queue);
@@ -46,7 +46,7 @@ int main(int argc,char *argv[])
 
   gst_bin_add(GST_BIN(bin), thread);
   
-  gst_pad_connect(gst_element_get_pad(disksrc,"src"),
+  gst_pad_connect(gst_element_get_pad(filesrc,"src"),
                   gst_element_get_pad(parse,"sink"));
   gst_pad_connect(gst_element_get_pad(parse,"src"),
                   gst_element_get_pad(decode,"sink"));

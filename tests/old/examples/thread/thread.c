@@ -14,7 +14,7 @@ void eos(GstElement *element, gpointer data)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *disksrc, *osssink;
+  GstElement *filesrc, *osssink;
   GstElement *pipeline;
   GstElement *thread;
 
@@ -34,10 +34,10 @@ int main(int argc,char *argv[])
   g_assert(pipeline != NULL);
 
   /* create a disk reader */
-  disksrc = gst_elementfactory_make("disksrc", "disk_source");
-  g_assert(disksrc != NULL);
-  g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
-  g_signal_connect(G_OBJECT(disksrc),"eos",
+  filesrc = gst_elementfactory_make("filesrc", "disk_source");
+  g_assert(filesrc != NULL);
+  g_object_set(G_OBJECT(filesrc),"location", argv[1],NULL);
+  g_signal_connect(G_OBJECT(filesrc),"eos",
                      G_CALLBACK(eos), thread);
 
   /* and an audio sink */
@@ -46,7 +46,7 @@ int main(int argc,char *argv[])
 
   /* add objects to the main pipeline */
   /*
-  gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
+  gst_pipeline_add_src(GST_PIPELINE(pipeline), filesrc);
   gst_pipeline_add_sink(GST_PIPELINE(pipeline), osssink);
 
   if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
@@ -55,9 +55,9 @@ int main(int argc,char *argv[])
   }
   */
 
-  //gst_bin_remove(GST_BIN(pipeline), disksrc);
+  //gst_bin_remove(GST_BIN(pipeline), filesrc);
 
-  //gst_bin_add(GST_BIN(thread), disksrc);
+  //gst_bin_add(GST_BIN(thread), filesrc);
   gst_bin_add(GST_BIN(thread), GST_ELEMENT(pipeline));
 
   /* make it ready */

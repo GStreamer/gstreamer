@@ -5,7 +5,7 @@
 
 typedef struct 
 {
-  GstElement *pipe, *disksrc, *volenv;
+  GstElement *pipe, *filesrc, *volenv;
   
   char *location;
   int channel_id;

@@ -4,7 +4,7 @@ int
 main (int argc, char *argv[]) 
 {
   GstElement *pipeline;
-  GstElement *disksrc;
+  GstElement *filesrc;
 
   gst_init (&argc, &argv);
 
@@ -14,10 +14,10 @@ main (int argc, char *argv[])
   }
   pipeline = gst_pipeline_new ("my_pipeline");
 
-  gst_parse_launch ("disksrc[my_disksrc] ! mp3parse ! mpg123 ! osssink", GST_BIN (pipeline));
+  gst_parse_launch ("filesrc[my_filesrc] ! mp3parse ! mpg123 ! osssink", GST_BIN (pipeline));
 
-  disksrc = gst_bin_get_by_name (GST_BIN (pipeline), "my_disksrc");
-  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
+  filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "my_filesrc");
+  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 

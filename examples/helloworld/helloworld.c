@@ -13,7 +13,7 @@ void eos(GstElement *element)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *bin, *disksrc, *parse, *decoder, *downmix, *mulaw, *mulawdec, *osssink;
+  GstElement *bin, *filesrc, *parse, *decoder, *downmix, *mulaw, *mulawdec, *osssink;
 
   gst_init(&argc,&argv);
 
@@ -26,9 +26,9 @@ int main(int argc,char *argv[])
   bin = gst_pipeline_new("pipeline");
 
   /* create a disk reader */
-  disksrc = gst_elementfactory_make("disksrc", "disk_source");
-  g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
-  g_signal_connect(G_OBJECT(disksrc),"eos",
+  filesrc = gst_elementfactory_make("filesrc", "disk_source");
+  g_object_set(G_OBJECT(filesrc),"location", argv[1],NULL);
+  g_signal_connect(G_OBJECT(filesrc),"eos",
                      G_CALLBACK(eos),NULL);
 
   /* now it's time to get the parser */
@@ -41,7 +41,7 @@ int main(int argc,char *argv[])
   osssink = gst_elementfactory_make("osssink", "play_audio");
 
   /* add objects to the main pipeline */
-  gst_bin_add(GST_BIN(bin), disksrc);
+  gst_bin_add(GST_BIN(bin), filesrc);
   gst_bin_add(GST_BIN(bin), parse);
   gst_bin_add(GST_BIN(bin), decoder);
   gst_bin_add(GST_BIN(bin), downmix);
@@ -50,7 +50,7 @@ int main(int argc,char *argv[])
   gst_bin_add(GST_BIN(bin), osssink);
 
   /* connect src to sink */
-  gst_pad_connect(gst_element_get_pad(disksrc,"src"),
+  gst_pad_connect(gst_element_get_pad(filesrc,"src"),
                   gst_element_get_pad(parse,"sink"));
   gst_pad_connect(gst_element_get_pad(parse,"src"),
                   gst_element_get_pad(decoder,"sink"));
@@ -81,7 +81,7 @@ int main(int argc,char *argv[])
   gst_object_destroy(GST_OBJECT(downmix));
   gst_object_destroy(GST_OBJECT(mulaw));
   gst_object_destroy(GST_OBJECT(mulawdec));
-  gst_object_destroy(GST_OBJECT(disksrc));
+  gst_object_destroy(GST_OBJECT(filesrc));
   gst_object_destroy(GST_OBJECT(bin));
 
   exit(0);

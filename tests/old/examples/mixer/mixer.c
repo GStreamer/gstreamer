@@ -264,20 +264,20 @@ create_input_channel (int id, char* location)
     
   /* create elements */
 
-  GST_DEBUG(0, "c_i_p : creating disksrc\n");
+  GST_DEBUG(0, "c_i_p : creating filesrc\n");
 
-  sprintf (buffer, "disksrc%d", id);
-  channel->disksrc = gst_elementfactory_make ("disksrc", buffer);
-  g_assert(channel->disksrc != NULL);    
+  sprintf (buffer, "filesrc%d", id);
+  channel->filesrc = gst_elementfactory_make ("filesrc", buffer);
+  g_assert(channel->filesrc != NULL);    
 
   GST_DEBUG(0, "c_i_p : setting location\n");
-  g_object_set(G_OBJECT(channel->disksrc),"location", location, NULL);
+  g_object_set(G_OBJECT(channel->filesrc),"location", location, NULL);
 
-  /* add disksrc to the bin before autoplug */
-  gst_bin_add(GST_BIN(channel->pipe), channel->disksrc);
+  /* add filesrc to the bin before autoplug */
+  gst_bin_add(GST_BIN(channel->pipe), channel->filesrc);
 
-  /* connect signal to eos of disksrc */
-  g_signal_connect (G_OBJECT(channel->disksrc),"eos",
+  /* connect signal to eos of filesrc */
+  g_signal_connect (G_OBJECT(channel->filesrc),"eos",
                      G_CALLBACK(eos),NULL);
 
 
@@ -296,7 +296,7 @@ create_input_channel (int id, char* location)
 #endif
 
 #ifdef WITH_BUG
-  srccaps = gst_play_typefind (GST_BIN (channel->pipe), channel->disksrc);
+  srccaps = gst_play_typefind (GST_BIN (channel->pipe), channel->filesrc);
 #endif
 #ifdef WITH_BUG2
   {
@@ -364,7 +364,7 @@ create_input_channel (int id, char* location)
   gst_bin_add (GST_BIN(channel->pipe), channel->volenv);
   gst_bin_add (GST_BIN (channel->pipe), new_element);
   
-  gst_element_connect (channel->disksrc, "src", new_element, "sink");
+  gst_element_connect (channel->filesrc, "src", new_element, "sink");
   gst_element_connect (new_element, "src_00", channel->volenv, "sink");
   
   /* add a ghost pad */

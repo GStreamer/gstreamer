@@ -17,14 +17,14 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   GstAutoplug *autoplug;
   GtkWidget *socket;
   GstElement *autobin;
-  GstElement *disksrc;
+  GstElement *filesrc;
   GstElement *cache;
 
   GST_DEBUG (0,"GstPipeline: play have type\n");
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
-  disksrc = gst_bin_get_by_name (GST_BIN (pipeline), "disk_source");
+  filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "disk_source");
   autobin = gst_bin_get_by_name (GST_BIN (pipeline), "autobin");
   cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
 
@@ -109,7 +109,7 @@ static void
 gst_play_cache_empty (GstElement *element, GstElement *pipeline)
 {
   GstElement *autobin;
-  GstElement *disksrc;
+  GstElement *filesrc;
   GstElement *cache;
   GstElement *new_element;
 
@@ -117,15 +117,15 @@ gst_play_cache_empty (GstElement *element, GstElement *pipeline)
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
-  disksrc = gst_bin_get_by_name (GST_BIN (pipeline), "disk_source");
+  filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "disk_source");
   autobin = gst_bin_get_by_name (GST_BIN (pipeline), "autobin");
   cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
   new_element = gst_bin_get_by_name (GST_BIN (autobin), "new_element");
 
-  gst_element_disconnect (disksrc, "src", cache, "sink");
+  gst_element_disconnect (filesrc, "src", cache, "sink");
   gst_element_disconnect (cache, "src", new_element, "sink");
   gst_bin_remove (GST_BIN (autobin), cache);
-  gst_element_connect (disksrc, "src", new_element, "sink");
+  gst_element_connect (filesrc, "src", new_element, "sink");
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
@@ -134,7 +134,7 @@ gst_play_cache_empty (GstElement *element, GstElement *pipeline)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *disksrc;
+  GstElement *filesrc;
   GstElement *pipeline;
   GstElement *autobin;
   GstElement *typefind;
@@ -154,10 +154,10 @@ int main(int argc,char *argv[])
   g_assert(pipeline != NULL);
 
   /* create a disk reader */
-  disksrc = gst_elementfactory_make("disksrc", "disk_source");
-  g_assert(disksrc != NULL);
-  gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
-  gst_bin_add (GST_BIN (pipeline), disksrc);
+  filesrc = gst_elementfactory_make("filesrc", "disk_source");
+  g_assert(filesrc != NULL);
+  gtk_object_set(GTK_OBJECT(filesrc),"location", argv[1],NULL);
+  gst_bin_add (GST_BIN (pipeline), filesrc);
 
   autobin = gst_bin_new ("autobin");
   cache = gst_elementfactory_make ("autoplugcache", "cache");
@@ -172,7 +172,7 @@ int main(int argc,char *argv[])
   gst_element_add_ghost_pad (autobin, gst_element_get_pad (cache, "sink"), "sink");
 
   gst_bin_add (GST_BIN( pipeline), autobin);
-  gst_element_connect (disksrc, "src", autobin, "sink");
+  gst_element_connect (filesrc, "src", autobin, "sink");
 
   /* start playing */
   gst_element_set_state( GST_ELEMENT (pipeline), GST_STATE_PLAYING);

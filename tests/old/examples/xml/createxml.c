@@ -15,7 +15,7 @@ object_saved (GstObject *object, xmlNodePtr parent, gpointer data)
 
 int main(int argc,char *argv[])
 {
-  GstElement *disksrc, *osssink, *queue, *queue2, *parse, *decode;
+  GstElement *filesrc, *osssink, *queue, *queue2, *parse, *decode;
   GstElement *bin;
   GstElement *thread, *thread2;
 
@@ -48,9 +48,9 @@ int main(int argc,char *argv[])
   g_assert(bin != NULL);
 
   /* create a disk reader */
-  disksrc = gst_elementfactory_make("disksrc", "disk_source");
-  g_assert(disksrc != NULL);
-  g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
+  filesrc = gst_elementfactory_make("filesrc", "disk_source");
+  g_assert(filesrc != NULL);
+  g_object_set(G_OBJECT(filesrc),"location", argv[1],NULL);
 
   queue = gst_elementfactory_make("queue", "queue");
   queue2 = gst_elementfactory_make("queue", "queue2");
@@ -63,7 +63,7 @@ int main(int argc,char *argv[])
   decode = gst_elementfactory_make("mpg123", "decode");
 
   /* add objects to the main bin */
-  gst_bin_add(GST_BIN(bin), disksrc);
+  gst_bin_add(GST_BIN(bin), filesrc);
   gst_bin_add(GST_BIN(bin), queue);
 
   gst_bin_add(GST_BIN(thread), parse);
@@ -72,7 +72,7 @@ int main(int argc,char *argv[])
 
   gst_bin_add(GST_BIN(thread2), osssink);
 
-  gst_pad_connect(gst_element_get_pad(disksrc,"src"),
+  gst_pad_connect(gst_element_get_pad(filesrc,"src"),
                   gst_element_get_pad(queue,"sink"));
 
   gst_pad_connect(gst_element_get_pad(queue,"src"),

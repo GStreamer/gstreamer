@@ -13,7 +13,7 @@ void eos(GstElement *element, gpointer data)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *disksrc, *osssink, *queue, *parse, *decode;
+  GstElement *filesrc, *osssink, *queue, *parse, *decode;
   GstElement *bin;
   GstElement *thread;
 
@@ -33,10 +33,10 @@ int main(int argc,char *argv[])
   g_assert(bin != NULL);
 
   /* create a disk reader */
-  disksrc = gst_elementfactory_make("disksrc", "disk_source");
-  g_assert(disksrc != NULL);
-  g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
-  g_signal_connect(G_OBJECT(disksrc),"eos",
+  filesrc = gst_elementfactory_make("filesrc", "disk_source");
+  g_assert(filesrc != NULL);
+  g_object_set(G_OBJECT(filesrc),"location", argv[1],NULL);
+  g_signal_connect(G_OBJECT(filesrc),"eos",
                      G_CALLBACK(eos), thread);
 
   queue = gst_elementfactory_make("queue", "queue");
@@ -49,14 +49,14 @@ int main(int argc,char *argv[])
   decode = gst_elementfactory_make("mpg123", "decode");
 
   /* add objects to the main bin */
-  gst_bin_add(GST_BIN(bin), disksrc);
+  gst_bin_add(GST_BIN(bin), filesrc);
   gst_bin_add(GST_BIN(bin), queue);
 
   gst_bin_add(GST_BIN(thread), parse);
   gst_bin_add(GST_BIN(thread), decode);
   gst_bin_add(GST_BIN(thread), osssink);
   
-  gst_pad_connect(gst_element_get_pad(disksrc,"src"),
+  gst_pad_connect(gst_element_get_pad(filesrc,"src"),
                   gst_element_get_pad(queue,"sink"));
 
   gst_pad_connect(gst_element_get_pad(queue,"src"),
