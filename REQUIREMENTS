@@ -84,12 +84,13 @@ avifile		(for the avi windows decoder plugins)
 			from http://divx.euro.ru/ and put the .dll files 
 			in /usr/lib/win32/
 		>= 	0.6.0 (cvs)
-swfdec		(for the swfdec plugin)
-			ftp://ftp.comedi.org/pub/swfdec/
+libswfdec	(for the swfdec plugin)
+			ftp://ftp.comedi.org/pub/libswfdec/
+		>=	0.1.1
 
 flac		(for the FLAC lossless audio format)
 			http://flac.sourceforge.net
-                >= 1.0.3
+                >= 1.0.3 preferred, 1.0.2 should work
 
 Optional debian packages:
 =========================
