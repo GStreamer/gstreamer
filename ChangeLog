@@ -1,3 +1,27 @@
+2004-10-04  Wim Taymans  <wim@fluendo.com>
+
+	* ext/libmng/Makefile.am:
+	* ext/libmng/gstmng.c: (plugin_init):
+	* ext/libmng/gstmng.h:
+	* ext/libmng/gstmngdec.c: (gst_mngdec_get_type),
+	(gst_mngdec_base_init), (gst_mngdec_class_init),
+	(gst_mngdec_sinklink), (gst_mngdec_init), (gst_mngdec_src_getcaps),
+	(gst_mngdec_loop), (gst_mngdec_get_property),
+	(gst_mngdec_set_property), (mngdec_error), (mngdec_openstream),
+	(mngdec_closestream), (mngdec_handle_sink_event),
+	(mngdec_readdata), (mngdec_gettickcount), (mngdec_settimer),
+	(mngdec_processheader), (mngdec_getcanvasline), (mngdec_refresh),
+	(gst_mngdec_change_state):
+	* ext/libmng/gstmngdec.h:
+	* ext/libmng/gstmngenc.c: (gst_mngenc_get_type),
+	(mng_caps_factory), (raw_caps_factory), (gst_mngenc_base_init),
+	(gst_mngenc_class_init), (gst_mngenc_sinklink), (gst_mngenc_init),
+	(gst_mngenc_chain), (gst_mngenc_get_property),
+	(gst_mngenc_set_property):
+	* ext/libmng/gstmngenc.h:
+	Added basic MNG decoder. Needs more work. The encoder does
+	not work yet.
+
 2004-10-04  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_handle_sink_event),
