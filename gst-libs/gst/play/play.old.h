@@ -142,6 +142,9 @@ struct _GstPlayClass
 	void (*information)		(	GstPlay* play,
 								GstElement* element,
 								GParamSpec *param);
+	void (*pipeline_error)	(	GstPlay* play,
+								GstElement* element,
+								gchar *error);
 	void (*state_changed)	(	GstPlay* play,
 								GstElementState old_state,
 								GstElementState new_state);
