@@ -1,3 +1,13 @@
+2004-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpegdec_init_source),
+	(gst_jpegdec_fill_input_buffer), (gst_jpegdec_skip_input_data),
+	(gst_jpegdec_resync_to_restart), (gst_jpegdec_term_source),
+	(gst_jpegdec_init), (gst_jpegdec_chain):
+	* gst/multipart/multipartdemux.c: (gst_multipart_demux_init),
+	(gst_multipart_demux_chain), (gst_multipart_demux_change_state):
+	  cleanups, debugging fixes and memleak plugging
+
 2004-08-09  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoradec.c: (gst_theora_dec_class_init),
