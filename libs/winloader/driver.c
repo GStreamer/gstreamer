@@ -6,7 +6,7 @@
 #include <wine/vfw.h>
 #include <registry.h>
 
-#include <config.h>
+#include "config.h"
 
 #define STORE_ALL \
     __asm__ ( \
@@ -25,6 +25,7 @@
     "pop %%ebx\n\t"::)
 
 
+#define WIN32_PATH GST_WIN32_LIBDIR
 
 typedef struct {
     UINT             uDriverSignature;
@@ -86,18 +87,21 @@ typedef struct
     int usage;
 }codec_t;
 
-//#define Win32Path "/usr/lib/win32/"
-#define Win32Path GST_WIN32_LIBDIR
 static codec_t avi_codecs[]={
- {0, Win32Path"/divxc32.dll", 0},	//0
- {0, Win32Path"/ir50_32.dll", 0},
- {0, Win32Path"/ir41_32.dll", 0},
- {0, Win32Path"/ir32_32.dll", 0},    
- {0, Win32Path"/mpg4c32.dll", 0},
- {0, Win32Path"/iccvid.dll", 0},		//5
- {0, Win32Path"/libvideodll.so", 0},
- {0, Win32Path"/divxa32.acm", 0},	//7
- {0, Win32Path"/msadp32.acm", 0},
+ {0, WIN32_PATH"/divxc32.dll", 0},	//0
+ {0, WIN32_PATH"/ir50_32.dll", 0},
+ {0, WIN32_PATH"/ir41_32.dll", 0},
+ {0, WIN32_PATH"/ir32_32.dll", 0},    
+ {0, WIN32_PATH"/mpg4c32.dll", 0},
+ {0, WIN32_PATH"/iccvid.dll", 0},	//5
+ {0, WIN32_PATH"/libvideodll.so", 0},
+ {0, WIN32_PATH"/divxa32.acm", 0},	
+ {0, WIN32_PATH"/msadp32.acm", 0},
+ {0, WIN32_PATH"/ativcr1.dll", 0},
+ {0, WIN32_PATH"/ativcr2.dll", 0},	//10
+ {0, WIN32_PATH"/i263_32.drv", 0},
+ {0, WIN32_PATH"/l3codeca.acm", 0},
+// {0, WIN32_PATH"/atiyvu9.dll", 0},
 };
 
                                                                                                                     
@@ -155,6 +159,9 @@ DrvOpen(LPARAM lParam2)
 	case mmioFOURCC('D', 'I', 'V', '4'):
 	case mmioFOURCC('d', 'i', 'v', '3'):
         case mmioFOURCC('d', 'i', 'v', '4'):
+	case mmioFOURCC('M', 'P', '4', '1'):
+	case mmioFOURCC('M', 'P', '4', '2'):
+	case mmioFOURCC('M', 'P', '4', '3'):
 	    printf("Video in DivX ;-) format\n");
 	    drv_id=0;
 	    break;
@@ -178,9 +185,6 @@ DrvOpen(LPARAM lParam2)
 	case mmioFOURCC('m', 'p', '4', '2'):
         case mmioFOURCC('m', 'p', '4', '3'):
 	case mmioFOURCC('M', 'P', 'G', '4'):
-	case mmioFOURCC('M', 'P', '4', '1'):
-	case mmioFOURCC('M', 'P', '4', '2'):
-	case mmioFOURCC('M', 'P', '4', '3'):
 	    printf("Video in Microsoft MPEG-4 format\n");   
 	    drv_id=4;
 	    break;
@@ -188,6 +192,19 @@ DrvOpen(LPARAM lParam2)
 	    printf("Video in Cinepak format\n");   
 	    drv_id=5;
 	    break;	
+	case mmioFOURCC('V', 'C', 'R', '1'):
+	    drv_id=9;
+	    break;
+	case mmioFOURCC('V', 'C', 'R', '2'):
+	    drv_id=10;
+	    break;
+	case mmioFOURCC('i', '2', '6', '3'):
+	case mmioFOURCC('I', '2', '6', '3'):
+	    drv_id=11;
+	    break;	    	  
+//	case mmioFOURCC('Y', 'V', 'U', '9'):
+//	    drv_id=12;
+//	    break;  
 	default:
 	    printf("Unknown codec %X='%c%c%c%c'\n", fccHandler, 
 	    fccHandler&0xFF, (fccHandler&0xFF00)>>8,
@@ -203,6 +220,10 @@ DrvOpen(LPARAM lParam2)
 	    break;
 	case 0x2://MS ADPCM
 	    drv_id=8;
+	    break;
+	case 0x55://MPEG Layer 3
+	printf("MPEG Layer 3 ( 0x55 )\n");
+	    drv_id=12;
 	    break;
 	default:
 	    printf("Unknown ACM codec 0x%X\n", fccHandler);

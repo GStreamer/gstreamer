@@ -134,39 +134,6 @@ This macro releases a lock on the object.
 <!-- ##### ENUM GstBufferFlags ##### -->
 <para>
 
-FIXME this is strange.
-
-<informaltable pgwide=1 frame="none" role="enum">
-<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
-<tbody>
-<row>
-<entry>GST_BUFFER_READONLY</entry>
-<entry>the buffer is read only</entry>
-</row>
-
-<row>
-<entry>GST_BUFFER_EOS</entry>
-<entry>this buffer is the last one in the stream</entry>
-</row>
-
-<row>
-<entry>GST_BUFFER_ORIGINAL</entry>
-<entry>this buffer not a copy</entry>
-</row>
-
-<row>
-<entry>GST_BUFFER_DONTFREE</entry>
-<entry>do not try to free the data when this buffer is unref-ed</entry>
-</row>
-
-<row>
-<entry>GST_BUFFER_FLUSH</entry>
-<entry>this buffer is not related to previous buffers. This flag is mainly
-used when data in a stream has been skipped</entry>
-</row>
-
-</tbody></tgroup></informaltable>
-
 </para>
 
 @GST_BUFFER_READONLY: the buffer is read only
@@ -175,7 +142,7 @@ used when data in a stream has been skipped</entry>
 @GST_BUFFER_FLUSH: this buffer is not related to previous buffers. This flag is mainly
 used when data in a stream has been skipped
 @GST_BUFFER_EOS: this buffer is the last one in the stream
-@GST_BUFFER_DISCONTINUOUS: 
+@GST_BUFFER_DISCONTINUOUS: The buffer has a discontinuity
 
 <!-- ##### STRUCT GstBuffer ##### -->
 <para>

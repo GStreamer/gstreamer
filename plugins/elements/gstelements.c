@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstelements.c: 
+ * gstelements.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -50,7 +50,6 @@ struct _elements_entry {
 static struct _elements_entry _elements[] = {
   { "fakesrc", 	    gst_fakesrc_get_type, 	&gst_fakesrc_details,		NULL },
   { "fakesink",     gst_fakesink_get_type, 	&gst_fakesink_details,		NULL },
-  { "asyncdisksrc", gst_disksrc_get_type, 	&gst_disksrc_details, 		NULL },
   { "audiosink",    gst_audiosink_get_type, 	&gst_audiosink_details,		gst_audiosink_factory_init },
   { "audiosrc",     gst_audiosrc_get_type, 	&gst_audiosrc_details,		NULL },
   { "disksrc", 	    gst_disksrc_get_type, 	&gst_disksrc_details,		NULL },
@@ -62,13 +61,13 @@ static struct _elements_entry _elements[] = {
   { "tee",     	    gst_tee_get_type, 		&gst_tee_details,		gst_tee_factory_init },
 
 #if HAVE_LIBGHTTP
-  { "httpsrc", 	    gst_httpsrc_get_type, 	&gst_httpsrc_details,      NULL },
+  { "httpsrc",	    gst_httpsrc_get_type,	&gst_httpsrc_details,      NULL },
 #endif /* HAVE_LIBGHTTP */
-  
+
   { NULL, 0 },
 };
 
-GstPlugin *plugin_init (GModule *module) 
+GstPlugin *plugin_init (GModule *module)
 {
   GstPlugin *plugin;
   GstElementFactory *factory;

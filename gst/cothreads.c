@@ -268,6 +268,9 @@ cothread_switch (cothread_state *thread)
   ctx->current = thread->threadnum;
 
   /* save the current stack pointer, frame pointer, and pc */
+#ifdef GST_ARCH_PRESETJMP
+  GST_ARCH_PRESETJMP();
+#endif
   enter = setjmp(current->jmp);
   if (enter != 0) {
     GST_DEBUG (0,"enter thread #%d %d %p<->%p (%d)\n",current->threadnum, enter, 

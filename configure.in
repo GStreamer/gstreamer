@@ -7,7 +7,7 @@ AM_CONFIG_HEADER(config.h)
 dnl FIXME this should be GSTREAMER_ now
 STREAMER_MAJOR_VERSION=0
 STREAMER_MINOR_VERSION=1
-STREAMER_MICRO_VERSION=0
+STREAMER_MICRO_VERSION=1
 STREAMER_VERSION=$STREAMER_MAJOR_VERSION.$STREAMER_MINOR_VERSION.$STREAMER_MICRO_VERSION
 
 PACKAGE=gstreamer
@@ -41,16 +41,22 @@ AC_SUBST(GSTREAMER_LIBVERSION)
 
 AM_MAINTAINER_MODE
 
-AC_ISC_POSIX
 AC_PROG_CC
+AC_ISC_POSIX
 AC_STDC_HEADERS
 AC_ARG_PROGRAM
 
+dnl We disable static building for development, for time savings
+dnl *NOTE*: dnl this line before release, so release does static too
 AM_DISABLE_STATIC
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 
 CFLAGS=""
+
+dnl This is used for the -config script...
+builddir=`pwd`
+AC_SUBST(builddir)
 
 dnl ##############################
 dnl # Do automated configuration #
@@ -118,6 +124,8 @@ case "x${target_cpu}" in
              AC_DEFINE(HAVE_CPU_ALPHA) ;;
   xarm*)     HAVE_CPU_ARM=yes ;
              AC_DEFINE(HAVE_CPU_ARM) ;;
+  xsparc*)   HAVE_CPU_SPARC=yes ;
+             AC_DEFINE(HAVE_CPU_SPARC) ;;
 esac
 
 dnl Determine endianness
@@ -153,16 +161,16 @@ AM_PATH_GLIB(1.2.0,,
             AC_MSG_ERROR(Cannot find glib: Is glib-config in path?),
             glib gmodule gthread)
 dnl Put the glib flags into $LIBS and $CFLAGS since we always use them
-LIBS="$LIBS $GLIB_LIBS"
-CFLAGS="$CFLAGS $GLIB_CFLAGS"
+CORE_LIBS="$GLIB_LIBS"
+CORE_CFLAGS="$GLIB_CFLAGS"
 
 
 dnl Check for gtk
 AM_PATH_GTK(1.2.0,,
             AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
 dnl Put the gtk flags into $LIBS and $CFLAGS since we always use them
-LIBS="$LIBS $GTK_LIBS"
-CFLAGS="$CFLAGS $GTK_CFLAGS"
+CORE_LIBS="$CORE_LIBS $GTK_LIBS"
+CORE_CFLAGS="$CORE_CFLAGS $GTK_CFLAGS"
 
 
 dnl Check for libxml
@@ -174,8 +182,8 @@ XML_LIBS=`xml-config --libs`
 XML_CFLAGS=`xml-config --cflags`
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
-LIBS="$LIBS $XML_LIBS"
-CFLAGS="$CFLAGS $XML_CFLAGS"
+CORE_LIBS="$CORE_LIBS $XML_LIBS"
+CORE_CFLAGS="$CORE_CFLAGS $XML_CFLAGS"
 
 
 dnl Next, check for the optional libraries:
@@ -184,6 +192,8 @@ dnl =======================================
 
 dnl Check for libesd
 AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
+
+AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 
 dnl Check for libasound
 alsa_save_LIBS=$LIBS
@@ -254,8 +264,8 @@ else
   LIBGLADE_GNOME_CFLAGS=`libglade-config --cflags gnome`
   libglade_save_CFLAGS="$CFLAGS"
   libglade_save_LIBS="$LIBS"
-  CFLAGS="$CFLAGS $LIBGLADE_GNOME_CFLAGS"
-  LIBS="$LIBS $LIBGLADE_GNOME_LIBS"
+  CFLAGS="$CFLAGS $LIBGLADE_GNOME_CFLAGS $GTK_CFLAGS"
+  LIBS="$LIBS $LIBGLADE_GNOME_LIBS $GTK_LIBS"
   HAVE_LIBGLADE_GNOME="no"
   AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
 	      HAVE_LIBGLADE_GNOME="yes",
@@ -345,12 +355,17 @@ AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 dnl Check for liblame
 AC_MSG_CHECKING(LAME library)
 AC_CHECK_LIB(mp3lame, lame_init, HAVE_LIBLAME=yes, HAVE_LIBLAME=no, )
-AC_CHECK_HEADER(lame.h, :, HAVE_LIBLAME=no)
+AC_CHECK_HEADER(lame/lame.h, :, HAVE_LIBLAME=no)
 
 dnl Check for libshout
 AC_MSG_CHECKING(Shout library)
 AC_CHECK_LIB(shout, shout_init_connection, HAVE_LIBSHOUT=yes, HAVE_LIBSHOUT=no, )
 AC_CHECK_HEADER(shout/shout.h, :, HAVE_LIBSHOUT=no)
+
+dnl Check for mpeg2dec
+AC_MSG_CHECKING(mpeg2dec library)
+AC_CHECK_LIB(mpeg2, mpeg2_init, HAVE_MPEG2DEC=yes, HAVE_MPEG2DEC=no, )
+AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
 
 
 dnl check if css-auth.c exists (FIXME)
@@ -558,6 +573,7 @@ AM_CONDITIONAL(HAVE_CPU_I386,       test "x$HAVE_CPU_I386" = "xyes")
 AM_CONDITIONAL(HAVE_CPU_PPC,        test "x$HAVE_CPU_PPC" = "xyes")
 AM_CONDITIONAL(HAVE_CPU_ALPHA,      test "x$HAVE_CPU_ALPHA" = "xyes")
 AM_CONDITIONAL(HAVE_CPU_ARM,        test "x$HAVE_CPU_ARM" = "xyes")
+AM_CONDITIONAL(HAVE_CPU_SPARC,      test "x$HAVE_CPU_SPARC" = "xyes")
 AM_CONDITIONAL(HAVE_GDK_PIXBUF,     test "x$USE_GDK_PIXBUF" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGHTTP,       test "x$USE_LIBGHTTP" = "xyes")
 AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")
@@ -582,6 +598,8 @@ AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_LIBESD,         test "x$HAVE_LIBESD" = "xyes")
 AM_CONDITIONAL(HAVE_LIBASOUND,      test "x$HAVE_LIBASOUND" = "xyes")
+AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
+AM_CONDITIONAL(HAVE_LIBXMMS,        test "x$HAVE_LIBXMMS" = "xyes")
 
 
 
@@ -617,7 +635,10 @@ dnl ##############################
 dnl # Set up the defaults cflags #
 dnl ##############################
 dnl CC="kgcc"
-CFLAGS="$CFLAGS -O6 -Wall"
+CFLAGS="$CORE_CFLAGS $CFLAGS -O6 -Wall"
+LIBS="$CORE_LIBS $LIBS"
+AC_SUBST(CORE_LIBS)
+AC_SUBST(CORE_CFLAGS)
 
 dnl FIXME: having to AC_SUBST these is messy.  Not sure if CPPFLAGS and LDFLAGS
 dnl need it, either.
@@ -662,6 +683,7 @@ gst/Makefile
 gst/types/Makefile
 gst/meta/Makefile
 gst/elements/Makefile
+gst/autoplug/Makefile
 libs/Makefile
 libs/riff/Makefile
 libs/colorspace/Makefile
@@ -728,6 +750,7 @@ plugins/capture/v4l/Makefile
 plugins/cdparanoia/Makefile
 plugins/esd/Makefile
 plugins/esd/esdsink/Makefile
+plugins/xmms/Makefile
 gstplay/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 test/Makefile
@@ -762,6 +785,7 @@ docs/plugins/Makefile
 docs/plugins/gstreamer-plugins.types
 docs/manual/Makefile
 docs/fwg/Makefile
+debian/Makefile
 stamp.h
 gstreamer-config
 gstreamer.spec])

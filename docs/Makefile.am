@@ -1,4 +1,4 @@
-SUBDIRS = manual fwg gst libs
+SUBDIRS = manual fwg gst libs plugins
 
 EXTRA_DIST = random slides manuals.mak
 

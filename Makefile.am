@@ -18,7 +18,7 @@ SUBDIRS = include gst libs plugins tools test tests examples \
 $(SUBDIRS_LGG) $(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
-DIST_SUBDIRS = include gst libs plugins tools test tests examples gstplay editor docs
+DIST_SUBDIRS = include gst libs plugins tools test tests examples gstplay editor docs debian
 
 
 bin_SCRIPTS = gstreamer-config
@@ -26,7 +26,7 @@ bin_SCRIPTS = gstreamer-config
 m4datadir = $(datadir)/aclocal
 m4data_DATA = gstreamer.m4
 
-EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 LICENSE REQUIREMENTS ABOUT-NLS
+EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 LICENSE REQUIREMENTS 
 
 dist-hook:
 	cp gstreamer.spec $(distdir)

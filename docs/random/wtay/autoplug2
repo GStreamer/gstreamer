@@ -42,22 +42,26 @@ any intermediate steps to accomplish this conversion.
 
 The API for the user apps should be no more then this:
 
-  GstElement* gst_autoplug_construct (GstAutoplug *autoplug, 
-                                      GstCaps *incaps, 
-			              GstCaps *outcaps, ...);
+  GstElement* gst_autoplug_caps_list (GstAutoplug *autoplug, 
+                                      GList *incaps, 
+			              GList *outcaps, ...);
 
   autoplug is a reference to the autoplug implementation
-  incaps is a GstCaps handle for the source pad, the last set
-  of arguments is a va_list of destination caps.
+  incaps is a GList of GstCaps* for the source pad, the last set
+  of arguments is a va_list of destination caps lists.
 
 A handle to the autoplugger implementation can be obtained 
 with
 
-  GList* gst_autoplug_get_list (void);
+  GList* gst_autoplugfactory_get_list (void);
   
 which will return a GList* of autopluggers.
 
-  GstAutoplug* gst_autoplug_get ("name");
+  GstAutoplug* gst_autoplugfactory_make ("name");
+  
+or
+
+  GstAutoplug* gst_autoplugfactory_create (GstAutoplugFactory *autoplug);
 
 is used to get an autoplugger.
 
@@ -72,9 +76,10 @@ overriding various methods.
 the autoplugger can be registered with:
 
   gst_plugin_add_autoplugger (GstPlugin *plugin,
-                              GstAutoplug *autoplug);
+                              GstAutoplugFactory *autoplug);
 
 This will allow us to only load the autoplugger when needed.
+
 
 
 4) implementation
@@ -108,10 +113,8 @@ properties:
 
  - name, description, more text to identify the autoplugger.
 
- - a class method autoplug_construct that has to be implemented by
+ - a class method autoplug_caps_list that has to be implemented by
    the real autoplugger.
-
- - possible PadTemplates that this autoplugger can handle well?
 
 optionally, the core autoplugger code can provide convenience 
 functions to implement custom autopluggers. The shortest path
@@ -124,8 +127,9 @@ A possible use case would be to let gstmediaplay perform an
 autoplug on the media stream and insert a custom sound/video
 effect in the pipeline when an appropriate element is created.
 
+the "new_object" signal will be fired by the autoplugger whenever
+a new object has been created. This signal can be caught by the
+user app to perform an introspection on the newly created object.
 
-comments?
 
-Wim
- 
+

@@ -155,14 +155,14 @@ struct _GstEditorElement {
 struct _GstEditorElementClass {
   GnomeCanvasGroupClass parent_class;
 
-  void (*name_changed) 		(GstEditorElement *element);
-  void (*position_changed) 	(GstEditorElement *element);
-  void (*size_changed) 		(GstEditorElement *element);
-  void (*realize) 		(GstEditorElement *element);
-  gint (*event) 		(GnomeCanvasItem *item,GdkEvent *event,
-                	 	 GstEditorElement *element);
-  gint (*button_event) 		(GnomeCanvasItem *item,GdkEvent *event,
-                         	 GstEditorElement *element);
+  void (*name_changed)		(GstEditorElement *element);
+  void (*position_changed)	(GstEditorElement *element);
+  void (*size_changed)		(GstEditorElement *element);
+  void (*realize)		(GstEditorElement *element);
+  gint (*event)			(GnomeCanvasItem *item,GdkEvent *event,
+				 GstEditorElement *element);
+  gint (*button_event)		(GnomeCanvasItem *item,GdkEvent *event,
+				 GstEditorElement *element);
 };
 
 
@@ -188,11 +188,11 @@ const gchar *gst_editor_element_get_name(GstEditorElement *element);
   (GTK_CHECK_TYPE((obj),GST_TYPE_EDITOR_BIN))
 #define GST_IS_EDITOR_BIN_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_BIN))
-  
+
 struct _GstEditorBin {
   GstEditorElement element;
 
-  /* lists of GUI elements and connections */ 
+  /* lists of GUI elements and connections */
   GList *elements, *connections;
 
   /* connection state */
@@ -213,11 +213,11 @@ struct _GstEditorBinClass {
 GtkType gst_editor_bin_get_type();
 
 GstEditorBin*	gst_editor_bin_new		(GstBin *bin, const gchar *first_arg_name,...);
-void 		gst_editor_bin_add 		(GstEditorBin *bin, GstEditorElement *element);
-	
-void 		gst_editor_bin_connection_drag	(GstEditorBin *bin,
-                                    		 gdouble wx,gdouble wy);
-void 		gst_editor_bin_start_banding	(GstEditorBin *bin,GstEditorPad *pad);
+void		gst_editor_bin_add		(GstEditorBin *bin, GstEditorElement *element);
+
+void		gst_editor_bin_connection_drag	(GstEditorBin *bin,
+						 gdouble wx,gdouble wy);
+void		gst_editor_bin_start_banding	(GstEditorBin *bin,GstEditorPad *pad);
 
 
 #define GST_TYPE_EDITOR_CANVAS \
@@ -246,8 +246,8 @@ struct _GstEditorCanvasClass {
 GstEditorCanvas*	gst_editor_canvas_new			(void);
 GstEditorCanvas*	gst_editor_canvas_new_with_bin		(GstEditorBin *bin);
 
-void 			gst_editor_canvas_set_bin		(GstEditorCanvas *canvas, 
-		    						 GstEditorBin *element);
+void			gst_editor_canvas_set_bin		(GstEditorCanvas *canvas,
+								 GstEditorBin *element);
 GstEditorElement*	gst_editor_canvas_get_bin		(GstEditorCanvas *canvas);
 
 
@@ -263,7 +263,7 @@ GstEditorElement*	gst_editor_canvas_get_bin		(GstEditorCanvas *canvas);
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_PAD))
 
 struct _GstEditorPad {
-  GtkObject object; 
+  GtkObject object;
 
   /* parent element */
   GstEditorElement *parent;
@@ -291,7 +291,7 @@ struct _GstEditorPad {
   gdouble width,height;				// actual size
   gdouble boxwidth,boxheight;			// size of pad box
   gboolean resize;				// does it need resizing?
-  
+
   /* interaction state */
   gboolean dragging,resizing,moved;
   gdouble dragx,dragy;
@@ -300,13 +300,13 @@ struct _GstEditorPad {
 //  GnomeCanvasItem *connection;		// can't use
 //GstEditorConnection
 };
-  
+
 struct _GstEditorPadClass {
   GtkObjectClass parent_class;
 
   void (*realize) (GstEditorPad *pad);
 };
-  
+
 GtkType gst_editor_pad_get_type();
 GstEditorPad *gst_editor_pad_new(GstEditorElement *parent,GstPad *pad,
                                  const gchar *first_arg_name, ...);
@@ -329,7 +329,7 @@ void gst_editor_pad_repack(GstEditorPad *pad);
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_PADTEMPLATE))
 
 struct _GstEditorPadTemplate {
-  GtkObject object; 
+  GtkObject object;
 
   /* parent element */
   GstEditorElement *parent;
@@ -361,7 +361,7 @@ struct _GstEditorPadTemplate {
   gdouble width,height;				// actual size
   gdouble boxwidth,boxheight;			// size of padtemplate box
   gboolean resize;				// does it need resizing?
-  
+
   /* interaction state */
   gboolean dragging,resizing,moved;
   gdouble dragx,dragy;
@@ -370,13 +370,13 @@ struct _GstEditorPadTemplate {
 //  GnomeCanvasItem *connection;		// can't use
 //GstEditorConnection
 };
-  
+
 struct _GstEditorPadTemplateClass {
   GtkObjectClass parent_class;
 
   void (*realize) (GstEditorPadTemplate *padtemplate);
 };
-  
+
 GtkType gst_editor_padtemplate_get_type();
 GstEditorPadTemplate *gst_editor_padtemplate_new(GstEditorElement *parent,GstPadTemplate *padtemplate,
                                  const gchar *first_arg_name, ...);

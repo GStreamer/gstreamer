@@ -35,11 +35,13 @@
 #include "gsttypefind.h"
 
 
+#define MAX_PATH_SPLIT	16
 
 gchar *_gst_progname;
 
 
 extern gint _gst_trace_on;
+extern gboolean _gst_plugin_spew;
 
 
 static gboolean 	gst_init_check 		(int *argc, gchar ***argv);
@@ -88,6 +90,31 @@ gst_init (int *argc, char **argv[])
   }
 }
 
+static void
+gst_add_paths_func (gchar *pathlist) 
+{
+  gchar **paths;
+  gint j = 0;
+  gchar *lastpath = g_strdup (pathlist);
+
+  while (lastpath) {
+    paths = g_strsplit (lastpath, G_SEARCHPATH_SEPARATOR_S, MAX_PATH_SPLIT);
+    g_free (lastpath);
+    lastpath = NULL;
+
+    while (paths[j]) {
+      GST_INFO (GST_CAT_GST_INIT, "Adding plugin path: \"%s\"", paths[j]);
+      gst_plugin_add_path (paths[j]);
+      if (++j == MAX_PATH_SPLIT) {
+        lastpath = g_strdup (paths[j]);
+        g_strfreev (paths); 
+        j=0;
+        break;
+      }
+    }
+  }
+}
+
 /* returns FALSE if the program can be aborted */
 static gboolean
 gst_init_check (int     *argc,
@@ -128,6 +155,16 @@ gst_init_check (int     *argc,
 
 	(*argv)[i] = NULL;
       }
+      else if (!strncmp ("--gst-plugin-spew", (*argv)[i], 17)) {
+        _gst_plugin_spew = TRUE;
+
+        (*argv)[i] = NULL;
+      }
+      else if (!strncmp ("--gst-plugin-path=", (*argv)[i], 17)) {
+	gst_add_paths_func ((*argv)[i]+18);
+
+        (*argv)[i] = NULL;
+      }
       else if (!strncmp ("--help", (*argv)[i], 6)) {
 	showhelp = TRUE;
       }
@@ -147,20 +184,33 @@ gst_init_check (int     *argc,
     }
   }
 
+
+  /* check for ENV variables */
+  {
+    gchar *plugin_path = g_getenv("GST_PLUGIN_PATH");
+
+    gst_add_paths_func (plugin_path);
+  }
+
   if (showhelp) {
     guint i;
 
-    g_print ("usage %s [OPTION...]\n", (*argv)[0]);
+    g_print ("usage %s [OPTION...]\n", _gst_progname);
 
     g_print ("\nGStreamer options\n");
-    g_print ("  --gst-info-mask=FLAGS               Gst info flags to set (current %08x)\n", gst_info_get_categories());
-    g_print ("  --gst-debug-mask=FLAGS              Gst debugging flags to set\n");
+    g_print ("  --gst-info-mask=FLAGS               GST info flags to set (current %08x)\n", gst_info_get_categories());
+    g_print ("  --gst-debug-mask=FLAGS              GST debugging flags to set\n");
+    g_print ("  --gst-plugin-spew                   Enable printout of errors while loading GST plugins\n");
+    g_print ("  --gst-plugin-path=PATH              Add directories separated with '%s' to the plugin search path\n",
+		    G_SEARCHPATH_SEPARATOR_S);
 
-    g_print ("\nGStreamer info/debug FLAGS (to be OR'ed)\n");
+    g_print ("\n  Mask (to be OR'ed)   info/debug         FLAGS   \n");
+    g_print ("--------------------------------------------------------\n");
 
     for (i = 0; i<GST_CAT_MAX_CATEGORY; i++) {
-      g_print ("   0x%08x    %s     %s\n", 1<<i, 
+      g_print ("   0x%08x     %s%s     %s\n", 1<<i, 
                   (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
+                  (gst_debug_get_categories() & (1<<i)?"/(enabled)":"/         "),
 		   gst_get_category_name (i));
     }
 

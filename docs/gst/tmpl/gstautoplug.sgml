@@ -15,60 +15,18 @@ to convert a certain GstCaps to another one.
 
 </para>
 
-<!-- ##### MACRO GST_AUTOPLUG_MAX_COST ##### -->
-<para>
-The maximum cost of a certain connection.
-</para>
-
-
-
-<!-- ##### USER_FUNCTION GstAutoplugCostFunction ##### -->
-<para>
-Calculate the cost between two elements.
-</para>
-
-@src: the source element
-@dest: the destination element
-@data: optional user data
-@Returns: the cost for a connection between the two elements
-
-
-<!-- ##### USER_FUNCTION GstAutoplugListFunction ##### -->
-<para>
-Get a list of all elements. These elements will be used in autoplugging.
-</para>
-
-@data: user data
-@Returns: a GList of elements
-
-
-<!-- ##### FUNCTION gst_autoplug_caps ##### -->
-<para>
-
-</para>
-
-@srccaps: 
-@sinkcaps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_autoplug_pads ##### -->
-<para>
-
-</para>
-
-@srcpad: 
-@sinkpad: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_autoplug_caps_list ##### -->
 <para>
 
 </para>
 
+@autoplug: 
+@srcpad: 
+@sinkpad: 
+@Varargs: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @srccaps: 
 @sinkcaps: 
-@Returns: 
 
 

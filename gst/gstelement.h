@@ -58,11 +58,11 @@ typedef enum {
 
 static inline char *_gst_print_statename(int state) {
   switch (state) {
-    case GST_STATE_NONE_PENDING: return "none pending";break;
-    case GST_STATE_NULL: return "null";break;
-    case GST_STATE_READY: return "ready";break;
-    case GST_STATE_PLAYING: return "playing";break;
-    case GST_STATE_PAUSED: return "paused";break;
+    case GST_STATE_NONE_PENDING: return "NONE_PENDING";break;
+    case GST_STATE_NULL: return "NULL";break;
+    case GST_STATE_READY: return "READY";break;
+    case GST_STATE_PLAYING: return "PLAYING";break;
+    case GST_STATE_PAUSED: return "PAUSED";break;
     default: return "";
   }
   return "";
@@ -122,6 +122,7 @@ typedef enum {
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
+#define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
 typedef struct _GstElement GstElement;
 typedef struct _GstElementClass GstElementClass;
@@ -250,10 +251,10 @@ gboolean		gst_elementfactory_can_src_caps		(GstElementFactory *factory,
 								 GstCaps *caps);
 gboolean		gst_elementfactory_can_sink_caps	(GstElementFactory *factory,
 								 GstCaps *caps);
-gboolean		gst_elementfactory_can_src_caps_list	(GstElementFactory *factory,
-								 GList *caps);
-gboolean		gst_elementfactory_can_sink_caps_list	(GstElementFactory *factory,
-								 GList *caps);
+gboolean		gst_elementfactory_can_src_caps		(GstElementFactory *factory,
+								 GstCaps *caps);
+gboolean		gst_elementfactory_can_sink_caps	(GstElementFactory *factory,
+								 GstCaps *caps);
 
 GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
 								 const gchar *name);

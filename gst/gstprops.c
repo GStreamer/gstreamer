@@ -54,23 +54,23 @@ gst_props_create_entry (GstPropsFactory factory, gint *skipped)
 
   tag = factory[i++];
   switch (GPOINTER_TO_INT (tag)) {
-    case GST_PROPS_INT_ID:
+    case GST_PROPS_INT_ID_NUM:
       entry->propstype = GST_PROPS_INT_ID_NUM;
       entry->data.int_data = GPOINTER_TO_INT (factory[i++]);
       break;
-    case GST_PROPS_INT_RANGE_ID:
+    case GST_PROPS_INT_RANGE_ID_NUM:
       entry->propstype = GST_PROPS_INT_RANGE_ID_NUM;
       entry->data.int_range_data.min = GPOINTER_TO_INT (factory[i++]);
       entry->data.int_range_data.max = GPOINTER_TO_INT (factory[i++]);
       break;
-    case GST_PROPS_FOURCC_ID:
+    case GST_PROPS_FOURCC_ID_NUM:
       entry->propstype = GST_PROPS_FOURCC_ID_NUM;
       entry->data.fourcc_data = GPOINTER_TO_INT (factory[i++]);
       break;
-    case GST_PROPS_LIST_ID:
+    case GST_PROPS_LIST_ID_NUM:
       g_print("gstprops: list not allowed in list\n");
       break;
-    case GST_PROPS_BOOL_ID:
+    case GST_PROPS_BOOL_ID_NUM:
       entry->propstype = GST_PROPS_BOOL_ID_NUM;
       entry->data.bool_data = GPOINTER_TO_INT (factory[i++]);
       break;
@@ -154,7 +154,7 @@ gst_props_register_count (GstPropsFactory factory, guint *counter)
 
     tag = factory[i];
     switch (GPOINTER_TO_INT (tag)) {
-      case GST_PROPS_LIST_ID: 
+      case GST_PROPS_LIST_ID_NUM: 
       {
         GstPropsEntry *list_entry;
 
@@ -241,13 +241,13 @@ gst_props_new (GstPropsFactoryEntry entry, ...)
       value = va_arg (var_args, GstPropsFactoryEntry);
     }
     switch (GPOINTER_TO_INT (value)) {
-      case GST_PROPS_END_ID: 
+      case GST_PROPS_END_ID_NUM: 
 	g_assert (inlist == TRUE);
 
 	inlist = FALSE;
 	skip = 0;
 	break;
-      case GST_PROPS_LIST_ID: 
+      case GST_PROPS_LIST_ID_NUM: 
       {
 	g_assert (inlist == FALSE);
 
@@ -601,6 +601,10 @@ gst_props_load_thyself_func (xmlNodePtr field)
     sscanf (prop, "%08x", &entry->data.fourcc_data);
     g_free (prop);
   }
+  else {
+    g_free (entry);
+    entry = NULL;
+  }
 
   return entry;
 }
@@ -634,7 +638,8 @@ gst_props_load_thyself (xmlNodePtr parent)
       while (subfield) {
         GstPropsEntry *subentry = gst_props_load_thyself_func (subfield);
 
-	entry->data.list_data.entries = g_list_prepend (entry->data.list_data.entries, subentry);
+	if (subentry)
+	  entry->data.list_data.entries = g_list_prepend (entry->data.list_data.entries, subentry);
 
         subfield = subfield->next;
       }

@@ -2,12 +2,11 @@
 GstDiskSrc
 
 <!-- ##### SECTION Short_Description ##### -->
-Synchronous read from a file (disksrc)
+Asynchronous read from a file (disksrc)
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Synchonously read buffers from a file. If you need asynchronous reading
-with seeking capabilities use a <classname>GstAsynDiskSrc</classname> instead.
+Asynchonously read buffers from a file. 
 
 </para>
 
@@ -45,11 +44,11 @@ Specify how many bytes to read at a time.
 
 <!-- ##### ARG GstDiskSrc:offset ##### -->
 <para>
-Get the current offset in the file.
+Get/set the current offset in the file.
 </para>
 
 <!-- ##### ARG GstDiskSrc:size ##### -->
 <para>
-
+Get the size of the file.
 </para>
 

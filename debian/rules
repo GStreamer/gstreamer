@@ -1,0 +1,146 @@
+#!/usr/bin/make -f
+# Sample debian/rules that uses debhelper. 
+# GNU copyright 1997 by Joey Hess.
+#
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This is the debhelper compatability version to use.
+export DH_COMPAT=2
+
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
+
+# The plugins are basically the same.
+# Link special names to a template file.
+# still need "*.files" to be done by hand
+
+PLUGINS=cdparanoia common elements esd lame mpg123 vorbis
+
+setup-links:
+	for i in $(PLUGINS); do \
+		ln -fs debian/gstreamer-plugin-template.postinst \
+			debian/gstreamer-$$i.postinst; \
+		ln -fs debian/gstreamer-plugin-template.prerm \
+			debian/gstreamer-$$i.prerm; \
+	done
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	# Add here commands to configure the package.
+	./configure \
+		--prefix=/usr \
+		--mandir=\$${prefix}/share/man \
+		--infodir=\$${prefix}/share/info \
+		--with-configdir=/etc/gstreamer \
+		--disable-plugin-srcdir \
+		--disable-docs-build
+
+	touch configure-stamp
+
+build: configure-stamp build-stamp
+build-stamp:
+	dh_testdir
+
+	# Add here commands to compile the package.
+	$(MAKE)
+
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+
+	# Add here commands to clean up after the build process.
+	-$(MAKE) distclean
+
+	dh_clean
+
+	for i in $(PLUGINS); do \
+		rm -f debian/gstreamer-$$i.postinst; \
+		rm -f debian/gstreamer-$$i.prerm; \
+	done
+
+install: DH_OPTIONS=
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	# Add here commands to install the package into debian/gstreamer.
+	$(MAKE) install prefix=$(CURDIR)/debian/gstreamer/usr
+
+	dh_movefiles --sourcedir=debian/gstreamer
+
+# Build architecture-independent files here.
+# Pass -i to all debhelper commands in this target to reduce clutter.
+binary-indep: DH_OPTIONS=-i
+binary-indep: build install
+# Need this version of debhelper for DH_OPTIONS to work.
+	dh_testdir
+	dh_testroot
+#	dh_installdebconf
+	dh_installdocs
+	dh_installexamples
+	dh_installmenu
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installinit
+#	dh_installcron
+#	dh_installmanpages
+#	dh_installinfo
+#	dh_undocumented
+	dh_installchangelogs ChangeLog
+	dh_strip
+#	dh_link
+	dh_compress
+	dh_fixperms
+# You may want to make some executables suid here.
+#	dh_suidregister
+	dh_installdeb
+#	dh_makeshlibs
+#	dh_perl
+#	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+# Build architecture-dependent files here.
+# Pass -a to all debhelper commands in this target to reduce clutter.
+binary-arch: DH_OPTIONS=-a
+binary-arch: build install setup-links
+# Need this version of debhelper for DH_OPTIONS to work.
+	dh_testdir
+	dh_testroot
+#	dh_installdebconf
+	dh_installdocs
+	dh_installexamples
+	dh_installmenu
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installinit
+#	dh_installcron
+#	dh_installmanpages
+#	dh_installinfo
+	dh_undocumented
+	dh_installchangelogs ChangeLog
+	dh_strip
+#	dh_link
+	dh_compress
+	dh_fixperms
+# You may want to make some executables suid here.
+#	dh_suidregister
+	dh_installdeb
+	dh_makeshlibs
+#	dh_perl
+	dh_shlibdeps -l`pwd`/debian/libgst0/usr/lib:`pwd`/debian/libgstmediaplay0/usr/lib:`pwd`/debian/libgsteditor0/usr/lib
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure

@@ -124,12 +124,17 @@ The function that will be called when pulling a buffer.
 <!-- ##### USER_FUNCTION GstPadGetRegionFunction ##### -->
 <para>
 The function that will be called when pulling a region buffer.
+You can specify which buffer to get using an offset/length pair or
+a start/stop timecode pair.
 </para>
 
 @pad: the pad to get a buffer from
+@type: the type of region to get (time or offset based)
 @offset: the offset of the region to get
-@size: the size of the region to get
+@len: the length of the region to get
 @Returns: a #GstBuffer
+<!-- # Unused Parameters # -->
+@size: the size of the region to get
 
 
 <!-- ##### USER_FUNCTION GstPadQoSFunction ##### -->
@@ -169,15 +174,28 @@ The function that will be called when pulling buffers.
 @Returns: a GstBuffer
 
 
+<!-- ##### ENUM GstRegionType ##### -->
+<para>
+the region types for #gst_pad_pullregion.
+</para>
+
+@GST_REGION_NONE: no type specified
+@GST_REGION_OFFSET_LEN: an offet/length pair
+@GST_REGION_TIME_LEN: a time start/length pair
+
 <!-- ##### USER_FUNCTION GstPadPullRegionFunction ##### -->
 <para>
 The function that will be called when pulling a region buffer.
+You can specify which buffer to get using an offset/length pair or
+a start/stop timecode pair.
 </para>
 
-@pad: the pad to pull
-@offset: the offset of the region to pull
-@size: the size of the region to pull
-@Returns: a GstBuffer
+@pad: the pad to get a buffer from
+@type: the type of region to get (time or offset based)
+@offset: the offset of the region to get
+@len: the length of the region to get
+@Returns: a #GstBuffer
+</para>
 
 
 <!-- ##### ENUM GstPadDirection ##### -->
@@ -434,6 +452,8 @@ Destroy the pad.
 </para>
 
 @pad: 
+@buf: 
+<!-- # Unused Parameters # -->
 @buffer: 
 
 
@@ -446,35 +466,18 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_pull_region ##### -->
+<!-- ##### FUNCTION gst_pad_pullregion ##### -->
 <para>
 
 </para>
 
 @pad: 
+@type: 
 @offset: 
-@size: 
+@len: 
 @Returns: 
-
-
-<!-- ##### MACRO gst_pad_pullregion ##### -->
-<para>
-
-</para>
-
-@pad: 
-@offset: 
+<!-- # Unused Parameters # -->
 @size: 
-
-
-<!-- ##### FUNCTION gst_pad_select ##### -->
-<para>
-
-</para>
-
-@nextpad: 
-@Varargs: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_set_eos ##### -->
@@ -515,6 +518,30 @@ Call the EOS function of the pad
 @elements: 
 
 
+<!-- ##### MACRO GST_RPAD_LEN ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_RPAD_OFFSET ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_RPAD_REGIONTYPE ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
 <!-- ##### STRUCT GstRealPad ##### -->
 <para>
 
@@ -526,6 +553,9 @@ Call the EOS function of the pad
 @threadstate: 
 @peer: 
 @bufpen: 
+@regiontype: 
+@offset: 
+@len: 
 @chainfunc: 
 @getfunc: 
 @getregionfunc: 

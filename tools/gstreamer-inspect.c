@@ -42,7 +42,7 @@ void print_prop(GstPropsEntry *prop,gboolean showname,gchar *pfx) {
       g_free(longprefix);
       break;
     default:
-      printf("\n");
+      printf("unknown props %d\n", prop->propstype);
   }
 }
 
@@ -59,30 +59,9 @@ void print_props(GstProps *properties,gchar *pfx) {
   }
 }
 
-/*
-struct _GstPropsEntry {
-  GQuark    propid;
-  GstPropsId propstype;
-
-  union {
-    // flat values
-    gboolean bool_data;
-    guint32  fourcc_data;
-    gint     int_data;
-
-    // structured values
-    struct {
-      GList *entries;
-    } list_data;
-    struct {
-      gint min;
-      gint max;
-    } int_range_data;
-  } data;
-};
-*/
-
-gint print_element_info(GstElementFactory *factory) {
+gint
+print_element_info (GstElementFactory *factory)
+{
   GstElement *element;
   GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
@@ -322,11 +301,9 @@ void print_element_list() {
   }
 }
 
-
-void print_plugin_info(GstPlugin *plugin) {
-  GList *factories;
-  GstElementFactory *factory;
-
+void
+print_plugin_info (GstPlugin *plugin)
+{
   printf("Plugin Details:\n");
   printf("  Name:\t\t%s\n",plugin->name);
   printf("  Long Name:\t%s\n",plugin->longname);
@@ -334,6 +311,9 @@ void print_plugin_info(GstPlugin *plugin) {
   printf("\n");
 
   if (plugin->numelements) {
+    GList *factories;
+    GstElementFactory *factory;
+
     printf("Element Factories:\n");
 
     factories = gst_plugin_get_factory_list(plugin);
@@ -342,6 +322,36 @@ void print_plugin_info(GstPlugin *plugin) {
       factories = g_list_next(factories);
 
       printf("  %s: %s\n",factory->name,factory->details->longname);
+    }
+  }
+  if (plugin->numautopluggers) {
+    GList *factories;
+    GstAutoplugFactory *factory;
+
+    printf("Autpluggers:\n");
+
+    factories = gst_plugin_get_autoplug_list(plugin);
+    while (factories) {
+      factory = (GstAutoplugFactory*)(factories->data);
+      factories = g_list_next(factories);
+
+      printf("  %s: %s\n", factory->name, factory->longdesc);
+    }
+  }
+  if (plugin->numtypes) {
+    GList *factories;
+    GstTypeFactory *factory;
+
+    printf("Types:\n");
+
+    factories = gst_plugin_get_type_list(plugin);
+    while (factories) {
+      factory = (GstTypeFactory*)(factories->data);
+      factories = g_list_next(factories);
+
+      printf("  %s: %s\n", factory->mime, factory->exts);
+      if (factory->typefindfunc)
+        printf("      Has typefind function: %s\n",GST_DEBUG_FUNCPTR_NAME(factory->typefindfunc));
     }
   }
   printf("\n");
@@ -357,7 +367,7 @@ int main(int argc,char *argv[]) {
 
   // if no arguments, print out list of elements
   if (argc == 1) {
-    print_element_list(); 
+    print_element_list();
 
   // else we try to get a factory
   } else {

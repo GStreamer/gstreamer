@@ -26,6 +26,13 @@
 
 #include <parser.h> // NOTE: This is xml-config's fault
 
+// Include compatability defines: if libxml hasn't already defined these,
+// we have an old version 1.x
+#ifndef xmlChildrenNode
+#define xmlChildrenNode childs
+#define xmlRootNode root
+#endif
+
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
 #include <gst/cothreads.h>
@@ -215,13 +222,18 @@ typedef enum {
   GST_PAD_REQUEST,
 } GstPadPresence;
 
+#define GST_PADTEMPLATE_NAME_TEMPLATE(templ)	(((GstPadTemplate *)(templ))->name_template)
+#define GST_PADTEMPLATE_DIRECTION(templ)	(((GstPadTemplate *)(templ))->direction)
+#define GST_PADTEMPLATE_PRESENCE(templ)		(((GstPadTemplate *)(templ))->presence)
+#define GST_PADTEMPLATE_CAPS(templ)		(((GstPadTemplate *)(templ))->caps)
+
 struct _GstPadTemplate {
   GstObject	  object;
 
   gchar           *name_template;
   GstPadDirection direction;
   GstPadPresence  presence;
-  GList		  *caps;
+  GstCaps	  *caps;
 };
 
 struct _GstPadTemplateClass {
@@ -243,7 +255,8 @@ typedef GstPadFactoryEntry GstPadFactory[];
 #define GST_PAD_FACTORY_SRC		GINT_TO_POINTER(GST_PAD_SRC)
 #define GST_PAD_FACTORY_SINK		GINT_TO_POINTER(GST_PAD_SINK)
 
-#define GST_PAD_FACTORY_CAPS(a...)	GINT_TO_POINTER(1),##a,NULL
+#define GST_PAD_FACTORY_CAPS_ID		1
+#define GST_PAD_FACTORY_CAPS(a...)	GINT_TO_POINTER(GST_PAD_FACTORY_CAPS_ID),##a,NULL
 
 
 GtkType			gst_pad_get_type		(void);
@@ -275,20 +288,24 @@ const gchar*		gst_pad_get_name		(GstPad *pad);
 
 void			gst_pad_set_parent		(GstPad *pad, GstObject *parent);
 GstObject*		gst_pad_get_parent		(GstPad *pad);
+GstObject*		gst_pad_get_real_parent		(GstPad *pad);
 
 void			gst_pad_add_ghost_pad		(GstPad *pad, GstPad *ghostpad);
 void			gst_pad_remove_ghost_pad	(GstPad *pad, GstPad *ghostpad);
 GList*			gst_pad_get_ghost_pad_list	(GstPad *pad);
 
+GstPadTemplate*		gst_pad_get_padtemplate		(GstPad *pad);
+
 GstPad*			gst_pad_get_peer		(GstPad *pad);
 
-void			gst_pad_connect			(GstPad *srcpad, GstPad *sinkpad);
+gboolean		gst_pad_connect			(GstPad *srcpad, GstPad *sinkpad);
 void			gst_pad_disconnect		(GstPad *srcpad, GstPad *sinkpad);
 
 gboolean		gst_pad_renegotiate		(GstPad *pad);
+GstCaps*		gst_pad_negotiate_proxy		(GstPad *pad, GstCaps* caps, gint count);
 
 #if 1
-void			gst_pad_push			(GstPad *pad, GstBuffer *buffer);
+void			gst_pad_push			(GstPad *pad, GstBuffer *buf);
 #else
 #define gst_pad_push(pad,buf) G_STMT_START{ \
   if ((pad)->peer->pushfunc) ((pad)->peer->pushfunc)((pad)->peer,(buf)); \
@@ -303,8 +320,6 @@ GstBuffer*		gst_pad_pullregion		(GstPad *pad, GstRegionType type, guint64 offset
 #define gst_pad_pullregion(pad,type,offset,len) \
   (((pad)->peer->pullregionfunc) ? ((pad)->peer->pullregionfunc)((pad)->peer,(type),(offset),(len)) : NULL)
 #endif
-
-GstPad *		gst_pad_select			(GstPad *nextpad, ...);
 
 #define			gst_pad_eos(pad)		(GST_RPAD_EOSFUNC(GST_RPAD_PEER(pad))(GST_PAD(GST_RPAD_PEER(pad))))
 gboolean		gst_pad_set_eos			(GstPad *pad);
@@ -325,7 +340,10 @@ GtkType			gst_padtemplate_get_type	(void);
 GstPadTemplate*		gst_padtemplate_new		(GstPadFactory *factory);
 GstPadTemplate*		gst_padtemplate_create		(gchar *name_template,
 		                                         GstPadDirection direction, GstPadPresence presence,
-							 GList *caps);
+							 GstCaps *caps);
+
+GstCaps*		gst_padtemplate_get_caps	(GstPadTemplate *templ);
+GstCaps*		gst_padtemplate_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
 
 xmlNodePtr		gst_padtemplate_save_thyself	(GstPadTemplate *templ, xmlNodePtr parent);
 GstPadTemplate*		gst_padtemplate_load_thyself	(xmlNodePtr parent);

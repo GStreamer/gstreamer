@@ -28,7 +28,6 @@ int main(int argc,char *argv[])
   pipeline = gst_pipeline_new("pipeline");
   g_assert(pipeline != NULL);
 
-  gst_bin_add(GST_BIN(thread), pipeline);
 
   /* create a disk reader */
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
@@ -42,6 +41,7 @@ int main(int argc,char *argv[])
   g_assert(audiosink != NULL);
 
   /* add objects to the main pipeline */
+  /*
   gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
   gst_pipeline_add_sink(GST_PIPELINE(pipeline), audiosink);
 
@@ -49,9 +49,13 @@ int main(int argc,char *argv[])
     g_print("unable to handle stream\n");
     exit(-1);
   }
+  */
 
-  /* make it ready */
-  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_READY);
+  // hmmmm hack? FIXME
+  GST_FLAG_UNSET (pipeline, GST_BIN_FLAG_MANAGER);
+ 
+  gst_bin_add(GST_BIN(thread), pipeline);
+
   /* start playing */
   gst_element_set_state(GST_ELEMENT(thread), GST_STATE_PLAYING);
 

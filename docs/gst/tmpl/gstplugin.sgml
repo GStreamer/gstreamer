@@ -27,6 +27,8 @@ GStreamer is extensible so <classname>GstElements</classname> can be loaded at r
 @numtypes: 
 @elements: 
 @numelements: 
+@autopluggers: 
+@numautopluggers: 
 @loaded: 
 
 <!-- ##### STRUCT GstPluginElement ##### -->
@@ -133,6 +135,14 @@ by the loader at statup.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_plugin_add_path ##### -->
+<para>
+
+</para>
+
+@path: 
+
+
 <!-- ##### FUNCTION gst_library_load ##### -->
 <para>
 
@@ -192,15 +202,6 @@ by the loader at statup.
 </para>
 
 @plugin: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_find_elementfactory ##### -->
-<para>
-
-</para>
-
-@name: 
 @Returns: 
 
 

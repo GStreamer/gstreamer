@@ -55,7 +55,7 @@
 #include <wine/module.h>
 #include <wine/debugtools.h>
 
-#include "externals.h"
+#include "win32.h"
 
 #define RVA(x) ((void *)((char *)load_addr+(unsigned int)(x)))
 

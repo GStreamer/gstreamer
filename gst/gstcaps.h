@@ -37,7 +37,11 @@
 
 typedef struct _GstCaps GstCaps;
 typedef gpointer GstCapsFactoryEntry;
+#ifdef __cplusplus
+typedef GstCapsFactoryEntry * GstCapsFactory;
+#else // C++ was unable to compile with this
 typedef GstCapsFactoryEntry GstCapsFactory[];
+#endif
 
 struct _GstCaps {
   gchar *name;			/* the name of this caps */
@@ -45,10 +49,12 @@ struct _GstCaps {
   guint16 id;			/* type id (major type) */
 
   GstProps *properties;		/* properties for this capability */
+
+  GstCaps *next;
 };
 
 /* initialize the subsystem */
-void 		_gst_caps_initialize			(void);
+void		_gst_caps_initialize			(void);
 
 GstCaps*	gst_caps_new				(const gchar *name, const gchar *mime);
 GstCaps*	gst_caps_new_with_props			(const gchar *name, const gchar *mime, GstProps *props);
@@ -56,21 +62,25 @@ GstCaps*	gst_caps_register			(GstCapsFactory *factory);
 GstCaps*	gst_caps_register_count			(GstCapsFactory *factory, guint *counter);
 
 const gchar*	gst_caps_get_name			(GstCaps *caps);
-void 		gst_caps_set_name			(GstCaps *caps, const gchar *name);
+void		gst_caps_set_name			(GstCaps *caps, const gchar *name);
 
 const gchar*	gst_caps_get_mime			(GstCaps *caps);
-void 		gst_caps_set_mime			(GstCaps *caps, const gchar *mime);
+void		gst_caps_set_mime			(GstCaps *caps, const gchar *mime);
 
-guint16 	gst_caps_get_type_id			(GstCaps *caps);
-void 		gst_caps_set_type_id			(GstCaps *caps, guint16 typeid);
+guint16		gst_caps_get_type_id			(GstCaps *caps);
+void		gst_caps_set_type_id			(GstCaps *caps, guint16 type_id);
 
 GstCaps*	gst_caps_set_props			(GstCaps *caps, GstProps *props);
 GstProps*	gst_caps_get_props			(GstCaps *caps);
 
-gboolean 	gst_caps_check_compatibility 		(GstCaps *fromcaps, GstCaps *tocaps);
-gboolean 	gst_caps_list_check_compatibility 	(GList *fromcaps, GList *tocaps);
+GstCaps*	gst_caps_get_by_name			(GstCaps *caps, const gchar *name);
 
-xmlNodePtr      gst_caps_save_thyself    		(GstCaps *caps, xmlNodePtr parent);
-GstCaps* 	gst_caps_load_thyself    		(xmlNodePtr parent);
+GstCaps*	gst_caps_append				(GstCaps *caps, GstCaps *capstoadd); 
+GstCaps*	gst_caps_prepend			(GstCaps *caps, GstCaps *capstoadd); 
+
+gboolean	gst_caps_check_compatibility		(GstCaps *fromcaps, GstCaps *tocaps);
+
+xmlNodePtr      gst_caps_save_thyself			(GstCaps *caps, xmlNodePtr parent);
+GstCaps*	gst_caps_load_thyself			(xmlNodePtr parent);
 
 #endif /* __GST_CAPS_H__ */

@@ -48,29 +48,53 @@ static gchar *stringcat (gchar *a,gchar *b) {
   return c;
 }
 
+
 void 
 _gst_cpu_initialize (void) 
 {
   gchar *featurelist = NULL;
+  gboolean AMD;
 
   long eax=0, ebx=0, ecx=0, edx=0;
+
+  gst_cpuid(0, &eax, &ebx, &ecx, &edx);
+
+  AMD = (ebx == 0x68747541) && (ecx == 0x444d4163) && (edx == 0x69746e65);
 
   gst_cpuid(1, &eax, &ebx, &ecx, &edx);
 
   if (edx & (1<<23)) {
     _gst_cpu_flags |= GST_CPU_FLAG_MMX;
     featurelist = stringcat(featurelist,"MMX ");
-  }
-  if (edx & (1<<25)) {
-    _gst_cpu_flags |= GST_CPU_FLAG_SSE;
-    featurelist = stringcat(featurelist,"SSE ");
+    
+    if (edx & (1<<25)) {
+      _gst_cpu_flags |= GST_CPU_FLAG_SSE;
+      _gst_cpu_flags |= GST_CPU_FLAG_MMXEXT;
+      featurelist = stringcat(featurelist,"SSE ");
+    }
+
+    gst_cpuid(0x80000000, &eax, &ebx, &ecx, &edx);
+
+    if (eax >= 0x80000001) {
+
+      gst_cpuid(0x80000001, &eax, &ebx, &ecx, &edx);
+
+      if (edx & (1<<31)) {
+        _gst_cpu_flags |= GST_CPU_FLAG_3DNOW;
+        featurelist = stringcat(featurelist,"3DNOW ");
+      }
+      if (AMD && (edx & (1<<22))) {
+        _gst_cpu_flags |= GST_CPU_FLAG_MMXEXT;
+        featurelist = stringcat(featurelist,"MMXEXT ");
+      }
+    }
   }
 
   if (!_gst_cpu_flags) {
     featurelist = stringcat(featurelist,"NONE");
   }
 
-  GST_INFO (GST_CAT_GST_INIT, "CPU features: %s",featurelist);
+  GST_INFO (GST_CAT_GST_INIT, "CPU features: (%08lx) %s",edx, featurelist);
   g_free(featurelist);
 }
 

@@ -26,6 +26,7 @@
 #include "gstelement.h"
 #include "gstextratypes.h"
 #include "gstbin.h"
+#include "gstutils.h"
 
 
 /* Element signals and args */
@@ -460,14 +461,14 @@ gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *
     if (padtempl->direction == GST_PAD_SRC &&
       compattempl->direction == GST_PAD_SINK) {
       GST_DEBUG(0,"compatible direction: found src pad template\n");
-      compat = gst_caps_list_check_compatibility(padtempl->caps,
-						 compattempl->caps);
+      compat = gst_caps_check_compatibility(GST_PADTEMPLATE_CAPS (padtempl),
+					    GST_PADTEMPLATE_CAPS (compattempl));
       GST_DEBUG(0,"caps are %scompatible\n", (compat?"":"not "));
     } else if (padtempl->direction == GST_PAD_SINK &&
 	       compattempl->direction == GST_PAD_SRC) {
       GST_DEBUG(0,"compatible direction: found sink pad template\n");
-      compat = gst_caps_list_check_compatibility(compattempl->caps,
-						 padtempl->caps);
+      compat = gst_caps_check_compatibility(GST_PADTEMPLATE_CAPS (compattempl),
+					    GST_PADTEMPLATE_CAPS (padtempl));
       GST_DEBUG(0,"caps are %scompatible\n", (compat?"":"not "));
     }
 
@@ -518,7 +519,7 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
   g_return_val_if_fail (templ != NULL, NULL);
 
   templ_new = gst_element_get_padtemplate_by_compatible (element, templ);
-  if (templ_new != NULL) 
+  if (templ_new != NULL)
       pad = gst_element_request_pad (element, templ_new);
 
   return pad;
@@ -901,13 +902,15 @@ gst_element_save_thyself (GstObject *object,
     type = gtk_type_parent (type);
   }
 
-  pads = element->pads;
+  pads = GST_ELEMENT_PADS (element);
+
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
-    xmlNodePtr padtag = xmlNewChild (parent, NULL, "pad", NULL);
     // figure out if it's a direct pad or a ghostpad
-    if (GST_ELEMENT (GST_OBJECT_PARENT (pad)) == element)
+    if (GST_ELEMENT (GST_OBJECT_PARENT (pad)) == element) {
+      xmlNodePtr padtag = xmlNewChild (parent, NULL, "pad", NULL);
       gst_object_save_thyself (GST_OBJECT (pad), padtag);
+    }
     pads = g_list_next (pads);
   }
 
@@ -972,78 +975,7 @@ gst_element_load_thyself (xmlNodePtr self, GstObject *parent)
 	}
         child = child->next;
       }
-      if (name && value) {
-        GtkType type = GTK_OBJECT_TYPE (element);
-	GtkArgInfo *info;
-	gchar *result;
-
-	result = gtk_object_arg_get_info (type, name, &info);
-
-	if (result) {
-          g_print("gstelement: %s\n", result);
-	}
-	else if (info->arg_flags & GTK_ARG_WRITABLE) {
-          switch (info->type) {
-            case GTK_TYPE_STRING:
-              gtk_object_set (GTK_OBJECT (element), name, value, NULL);
-	      break;
-            case GTK_TYPE_INT: {
-	      gint i;
-	      sscanf (value, "%d", &i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_LONG: {
-	      glong i;
-	      sscanf (value, "%ld", &i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_ULONG: {
-	      gulong i;
-	      sscanf (value, "%lu", &i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_BOOL: {
-	      gboolean i = FALSE;
-	      if (!strcmp ("true", value)) i = TRUE;
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_CHAR: {
-	      gchar i;
-	      sscanf (value, "%c", &i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_UCHAR: {
-	      guchar i;
-	      sscanf (value, "%c", &i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_FLOAT: {
-	      gfloat i;
-	      sscanf (value, "%f", &i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_DOUBLE: {
-	      gdouble i;
-	      sscanf (value, "%g", (float *)&i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            default:
-	      if (info->type == GST_TYPE_FILENAME) {
-                gtk_object_set (GTK_OBJECT (element), name, value, NULL);
-	      }
-	      break;
-	  }
-
-	}
-      }
+      gst_util_set_object_arg (GTK_OBJECT (element), name, value);
     }
     children = children->next;
   }

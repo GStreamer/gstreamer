@@ -1,5 +1,5 @@
-launch
-======
+gstreamer-launch
+================
 
 This is a tool that will construct pipelines based on a command-line
 syntax.  The syntax is rather complex to enable all the features I want it

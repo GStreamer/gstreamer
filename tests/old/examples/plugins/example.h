@@ -28,36 +28,61 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-/* Definition of structure storing data for this element. */
+/* This is the definition of the element's object structure. */
 typedef struct _GstExample GstExample;
 
+/* The structure itself is derived from GstElement, as can be seen by the
+ * fact that there's a complete instance of the GstElement structure at
+ * the beginning of the object.  This allows the element to be cast to
+ * an Element or even an Object.
+ */
 struct _GstExample {
   GstElement element;
 
+  /* We need to keep track of our pads, so we do so here. */
   GstPad *sinkpad,*srcpad;
 
-  gint8 active;
+  /* We'll use this to decide whether to do anything to the data we get. */
+  gboolean active;
 };
 
-/* Standard definition defining a class for this element. */
+/* The other half of the object is its class.  The class also derives from
+ * the same parent, though it must be the class structure this time.
+ * Function pointers for polymophic methods and signals are placed in this
+ * structure. */
 typedef struct _GstExampleClass GstExampleClass;
+
 struct _GstExampleClass {
   GstElementClass parent_class;
+
+  /* signals */
+  void (*asdf) (GstElement *element, GstExample *example);
 };
 
-/* Standard macros for defining types for this element.  */
+/* Five standard preprocessing macros are used in the Gtk+ object system.
+ * The first uses the object's _get_type function to return the GtkType
+ * of the object.
+ */
 #define GST_TYPE_EXAMPLE \
   (gst_example_get_type())
+/* The second is a checking cast to the correct type.  If the object passed
+ * is not the right type, a warning will be generated on stderr.
+ */
 #define GST_EXAMPLE(obj) \
   (GTK_CHECK_CAST((obj),GST_TYPE_EXAMPLE,GstExample))
+/* The third is a checking cast of the class instead of the object. */
 #define GST_EXAMPLE_CLASS(klass) \
   (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_EXAMPLE,GstExample))
+/* The last two simply check to see if the passed pointer is an object or
+ * class of the correct type. */
 #define GST_IS_EXAMPLE(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_EXAMPLE))
 #define GST_IS_EXAMPLE_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EXAMPLE))
 
-/* Standard function returning type information. */
+/* This is the only prototype needed, because it is used in the above
+ * GST_TYPE_EXAMPLE macro.
+ */
 GtkType gst_example_get_type(void);
 
 
