@@ -1323,7 +1323,8 @@ gst_xml_registry_save_props_func (GstPropsEntry *entry,
     {
       guint32 fourcc;
       gst_props_entry_get_fourcc_int (entry, &fourcc);
-      CLASS (xmlregistry)->save_func (xmlregistry, "<!--%4.4s-->\n", (gchar *)&fourcc);
+      CLASS (xmlregistry)->save_func (xmlregistry, "<!-- "GST_FOURCC_FORMAT" -->\n", 
+				      GST_FOURCC_ARGS (fourcc));
       CLASS (xmlregistry)->save_func (xmlregistry, "<fourcc name=\"%s\" hexvalue=\"%08x\"/>\n", name, fourcc);
       break;
     }
