@@ -1,3 +1,10 @@
+2005-01-07  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstprobe.c: (gst_probe_dispatcher_dispatch):
+	  Check for existence of probe after performing the probe before
+	  re-accessing it to prevent segfaults caused by removal of the
+	  probe in the callback.
+
 2005-01-05  David Schleef  <ds@schleef.org>
 
 	* testsuite/registry/Makefile.am:

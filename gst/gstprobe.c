@@ -218,7 +218,8 @@ gst_probe_dispatcher_dispatch (GstProbeDispatcher * disp, GstData ** data)
     walk = g_slist_next (walk);
 
     res &= gst_probe_perform (probe, data);
-    if (probe->single_shot) {
+    /* it might have disappeared in the callback */
+    if (g_slist_find (disp->probes, probe) && probe->single_shot) {
       disp->probes = g_slist_remove (disp->probes, probe);
 
       gst_probe_destroy (probe);
