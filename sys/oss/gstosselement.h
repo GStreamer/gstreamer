@@ -79,6 +79,9 @@ struct _GstOssElement
   /* stats bytes per *second* */
   guint		 bps;
 
+  /* sample width in bytes */
+  guint		 sample_width;
+
   /* parameters */
   gint 		 law;
   gint 		 endianness;

@@ -456,6 +456,7 @@ gst_osselement_reset (GstOssElement * oss)
   oss->rate = 44100;
   oss->fragment = 0;
   oss->bps = 0;
+  oss->sample_width = 0;
 
 /* AFMT_*_BE not available on all OSS includes (e.g. FBSD) */
 #ifdef WORDS_BIGENDIAN
@@ -545,6 +546,7 @@ gst_osselement_parse_caps (GstOssElement * oss, const GstCaps * caps)
   gst_structure_get_int (structure, "channels", &oss->channels);
   gst_structure_get_int (structure, "rate", &oss->rate);
 
+  oss->sample_width = bps * oss->channels;
   oss->bps = bps * oss->channels * oss->rate;
   oss->format = format;
 
