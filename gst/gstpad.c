@@ -2796,7 +2796,7 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
   rpad = GST_PAD_REALIZE (pad);
 
   /* don't send events on usuable pads */
-  if (GST_PAD_IS_SINK (rpad) && !GST_PAD_IS_USABLE (rpad)) {
+  if (GST_PAD_IS_SINK (rpad) && !GST_PAD_IS_ACTIVE (rpad)) {
     GST_DEBUG (GST_CAT_EVENT, "pad %s:%s is not usable", 
 	       GST_DEBUG_PAD_NAME (rpad));
     return FALSE;
