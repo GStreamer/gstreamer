@@ -422,7 +422,7 @@ xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent) {
   while (pads) {
     pad = GST_PAD(pads->data);
     // figure out if it's a direct pad or a ghostpad
-    if (pad->parent == element)
+    if (GST_ELEMENT(pad->parent) == element)
       gst_pad_save_thyself(pad,self);
     pads = g_list_next(pads);
   }
@@ -535,6 +535,7 @@ void gst_element_set_loop_function(GstElement *element,
                                    GstElementLoopFunction loop) {
   element->loopfunc = loop;
   if (element->threadstate != NULL)
+    // note that this casts a GstElement * to a char **.  Ick.
     cothread_setfunc(element->threadstate,gst_element_loopfunc_wrapper,
-                     0,element);
+                     0,(char **)element);
 }

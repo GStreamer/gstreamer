@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <gst/gstplugin.h>
 

@@ -86,13 +86,23 @@ dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
 dnl defines the wrong default symbol as well (HAVE_ASM_ATOMIC_H)
 AC_CHECK_HEADER(asm/atomic.h, HAVE_ATOMIC_H=yes, HAVE_ATOMIC_H=no)
-AC_EGREP_HEADER(atomic_set, asm/atomic.h,, 
-  [
-   if test x$HAVE_ATOMIC_H = xyes; then
-     AC_MSG_WARN("Atomic reference counting is out of date: doing without.")
-   fi
-   HAVE_ATOMIC_H=no
-])
+dnl Do a compile to check that it has atomic_set (eg, linux 2.0 didn't)
+if test x$HAVE_ATOMIC_H = xyes; then
+  AC_TRY_RUN([
+#include "asm/atomic.h"
+main() { atomic_t t; atomic_set(&t,0); return 0;}
+  ],, [
+    # Not successful
+    if test x$HAVE_ATOMIC_H = xyes; then
+      AC_MSG_WARN(Atomic reference counting is out of date: doing without.)
+    fi
+    HAVE_ATOMIC_H=no
+  ], [
+    # Cross compiling
+    AC_MSG_RESULT(yes)
+    AC_MSG_WARN(Can't check properly for atomic reference counting.  Assuming OK.)
+  ])
+fi
 
 dnl Check for MMX capable compiler
 AC_MSG_CHECKING(Checking MMX compilation)
