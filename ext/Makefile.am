@@ -370,6 +370,7 @@ SUBDIRS=\
 	$(DIRAC_DIR) \
 	$(DIVX_DIR) \
 	$(DTS_DIR) \
+	$(DV1394_DIR) \
 	$(DVDREAD_DIR) \
 	$(DVDNAV_DIR) \
 	$(ESD_DIR) \
@@ -401,7 +402,6 @@ SUBDIRS=\
 	$(MUSICBRAINZ_DIR) \
 	$(OGG_DIR) \
 	$(PANGO_DIR) \
-	$(RAW1394_DIR) \
 	$(SDL_DIR) \
 	$(SHOUT_DIR) \
 	$(SHOUT2_DIR) \
