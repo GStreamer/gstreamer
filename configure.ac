@@ -147,6 +147,15 @@ fi
 dnl Check for a way to display the function name in debug output
 GST_CHECK_FUNCTION()
 
+dnl check if we should use -Wa,-mregnames on PowerPC, so we can use
+dnl symbolic register names in inline asm
+if test x$HAVE_CPU_PPC = xyes ; then
+  AS_COMPILER_FLAG(["-Wa,-mregnames"],
+    [GST_INT_CFLAGS="$GST_INT_CFLAGS -Wa,-mregnames"],
+    true)
+fi
+
+
 dnl Check for essential libraries first:
 dnl ====================================
 
@@ -617,3 +626,4 @@ pkgconfig/gstreamer-control-uninstalled.pc
 gstreamer.spec,
 echo "$infomessages", infomessages="$infomessages"
 )
+
