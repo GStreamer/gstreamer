@@ -32,11 +32,8 @@
 static GstElementDetails snapshot_details = {
   "snapshot",
   "Filter/Video",
-  "LGPL",
   "Dump a frame to a png file",
-  VERSION,
   "Jeremy SIMON <jsimon13@yahoo.fr>",
-  "(C) 2002",
 };
 
 GST_PAD_TEMPLATE_FACTORY (snapshot_src_factory,
@@ -84,6 +81,7 @@ enum {
 };
 
 static GType 	gst_snapshot_get_type 	(void);
+static void     gst_snapshot_base_init  (gpointer g_class);
 static void	gst_snapshot_class_init	(GstSnapshotClass *klass);
 static void	gst_snapshot_init	(GstSnapshot *snapshot);
 
@@ -115,7 +113,10 @@ gst_snapshot_get_type (void)
 
   if (!snapshot_type) {
     static const GTypeInfo snapshot_info = {
-      sizeof(GstSnapshotClass),      NULL,      NULL,      (GClassInitFunc)gst_snapshot_class_init,
+      sizeof(GstSnapshotClass),
+      gst_snapshot_base_init,
+      NULL,
+      (GClassInitFunc)gst_snapshot_class_init,
       NULL,
       NULL,
       sizeof(GstSnapshot),
@@ -125,6 +126,17 @@ gst_snapshot_get_type (void)
     snapshot_type = g_type_register_static(GST_TYPE_ELEMENT, "GstSnapshot", &snapshot_info, 0);
   }
   return snapshot_type;
+}
+
+static void
+gst_snapshot_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (snapshot_sink_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (snapshot_src_factory));
+
+  gst_element_class_set_details (element_class, &snapshot_details);
 }
 
 static void
@@ -377,27 +389,22 @@ gst_snapshot_get_property (GObject *object, guint prop_id, GValue *value, GParam
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("snapshot",GST_TYPE_SNAPSHOT,
-                                   &snapshot_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (snapshot_sink_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (snapshot_src_factory));
-  
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
+  if (!gst_element_register (plugin, "snapshot", GST_RANK_NONE, GST_TYPE_SNAPSHOT))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "snapshot",
-  plugin_init
-};
-
+  "Dump a frame to a png file",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
