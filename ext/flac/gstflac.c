@@ -23,6 +23,7 @@
 
 #include "gstflacenc.h"
 #include "gstflacdec.h"
+#include "gstflactag.h"
 
 #include "flac_compat.h"
 
@@ -40,6 +41,8 @@ plugin_init (GstPlugin *plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "flacdec", GST_RANK_PRIMARY, GST_TYPE_FLACDEC))
+    return FALSE;
+  if (!gst_element_register (plugin, "flactag", GST_RANK_PRIMARY, gst_flac_tag_get_type ())) 
     return FALSE;
   
   return TRUE;
