@@ -238,7 +238,7 @@ gst_pngenc_chain (GstPad *pad, GstBuffer *buf)
   gst_pad_push (pngenc->srcpad, pngenc->buffer_out);
   /* send NEW MEDIA event, since a frame has been pushed out */
   event = gst_event_new (GST_EVENT_NEW_MEDIA);
-  gst_pad_send_event (pngenc->srcpad, event);
+  gst_pad_push (pngenc->srcpad, GST_BUFFER (event));
 
   gst_buffer_unref (buf);
 }
