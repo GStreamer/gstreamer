@@ -87,6 +87,15 @@ gst_pipeline_class_init(GstPipelineClass *klass) {
 static void gst_pipeline_init(GstPipeline *pipeline) {
 }
 
+
+/**
+ * gst_pipeline_new:
+ * @name: name of new pipeline
+ *
+ * Create a new pipeline with the given name.
+ *
+ * Returns: newly created GstPipeline
+ */
 GstPipeline *gst_pipeline_new(guchar *name) {
   GstPipeline *pipeline;
 
@@ -128,6 +137,12 @@ static gboolean gst_pipeline_change_state(GstElement *element,
 }
 
 
+/**
+ * gst_pipeline_iterate:
+ * @pipeline: GstPipeline to iterate
+ *
+ * Cause the pipeline's contents to be run through one full 'iteration'.
+ */
 void gst_pipeline_iterate(GstPipeline *pipeline) {
   g_return_if_fail(pipeline != NULL);
   g_return_if_fail(GST_IS_PIPELINE(pipeline));

@@ -2,24 +2,27 @@
 GstPipeline
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Top-level bin with scheduling and pipeline management functionality.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+In almost all cases, you'll want to use a GstPipeline when creating a
+filter graph.  The GstPipeline will manage all the scheduling issues,
+including threading, as well as provide simple interfaces to common
+functions, like 'Play'.
 </para>
+
+<para>FIXME: this is entirely blue-sky</para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
 
-<!-- ##### MACRO GST_PIPELINE ##### -->
+<!-- ##### STRUCT GstPipeline ##### -->
 <para>
 
 </para>
-
-@obj: 
 
 
 <!-- ##### FUNCTION gst_pipeline_new ##### -->

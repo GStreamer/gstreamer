@@ -28,9 +28,16 @@ simpler to connect pads of two elements together.
 
 </para>
 
-<!-- ##### ENUM GstElementState ##### -->
+<!-- ##### STRUCT GstElement ##### -->
 <para>
 
+</para>
+
+
+<!-- ##### ENUM GstElementState ##### -->
+<para>
+This enum defines the standard states an element may be in.  GST_STATE_MAX
+is the highest bit that can be set, and is used internally.
 </para>
 
 @GST_STATE_COMPLETE: 
@@ -43,50 +50,43 @@ simpler to connect pads of two elements together.
 
 <!-- ##### MACRO GST_STATE ##### -->
 <para>
-
+This macro returns the entire state of the element.
 </para>
 
-@obj: 
+@obj: Element to return state for.
 
 
 <!-- ##### MACRO GST_STATE_IS_SET ##### -->
 <para>
-
+This macro checks to see if the given state is set.
 </para>
 
-@obj: 
-@flag: 
+@obj: Element to check for state.
+@flag: State to check for, must be a single bit in guint32.
 
 
 <!-- ##### MACRO GST_STATE_SET ##### -->
 <para>
-
+This macro sets the given state on the element.
 </para>
 
-@obj: 
-@flag: 
+@obj: Element to set state of.
+@flag: State to set, can be any number of bits in guint32.
 
 
 <!-- ##### MACRO GST_STATE_UNSET ##### -->
 <para>
-
+This macro unsets the given state on the element.
 </para>
 
-@obj: 
-@flag: 
-
-
-<!-- ##### MACRO GST_ELEMENT ##### -->
-<para>
-
-</para>
-
-@obj: 
+@obj: Element to unset state of.
+@flag: State to unset, can be any number of bits in guint32.
 
 
 <!-- ##### STRUCT GstElementDetails ##### -->
 <para>
-
+This struct is used to define public information about the element.  It
+describes the element, mostly for the benefit of editors.
 </para>
 
 @longname: 
@@ -98,7 +98,9 @@ simpler to connect pads of two elements together.
 
 <!-- ##### STRUCT GstElementFactory ##### -->
 <para>
-
+This factory is used when registering the element, and contains the name
+of the element, the GtkType value for it, as well as a pointer to the
+GstElementDetails struct for the element.
 </para>
 
 @name: 
@@ -107,10 +109,12 @@ simpler to connect pads of two elements together.
 
 <!-- ##### USER_FUNCTION GstElementLoopFunction ##### -->
 <para>
-
+This function type is used to specify a loop function for the element.  It
+is passed the element in question, and is expect to return only in error
+circumstances.
 </para>
 
-@element: 
+@element: The element in question.
 
 
 <!-- ##### FUNCTION gst_element_new ##### -->
@@ -317,16 +321,6 @@ simpler to connect pads of two elements together.
 
 @factoryname: 
 @name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_loopfunc_wrapper ##### -->
-<para>
-
-</para>
-
-@argc: 
-@argv: 
 @Returns: 
 
 

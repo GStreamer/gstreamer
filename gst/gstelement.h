@@ -128,10 +128,10 @@ struct _GstElementDetails {
 };
 
 struct _GstElementFactory {
-  gchar *name;
-  GtkType type;
+  gchar *name;			/* name of element */
+  GtkType type;			/* unique GtkType of element */
 
-  GstElementDetails *details;
+  GstElementDetails *details;	/* pointer to details struct */
 };
 
 

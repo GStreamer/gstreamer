@@ -88,7 +88,7 @@ static void gst_object_init(GstObject *object) {
 /**
  * gst_object_new:
  *
- * Create a new object with
+ * Create a new, empty object.  Not very useful, should never be used.
  *
  * Returns: new object
  */
@@ -150,6 +150,12 @@ void gst_object_unparent(GstObject *object) {
   gst_object_unref(object);
 }
 
+/**
+ * gst_object_ref:
+ * @object: GstObject to reference
+ *
+ * Increments the refence count on the object.
+ */
 #ifndef gst_object_ref
 void gst_object_ref (GstObject *object) {
   g_return_if_fail(object != NULL);
@@ -167,6 +173,13 @@ void gst_object_ref (GstObject *object) {
 }
 #endif /* gst_object_ref */
 
+/**
+ * gst_object_unref:
+ * @object: GstObject to unreference
+ *
+ * Decrements the refence count on the object.  If reference count hits
+ * zero, destroy the object.
+ */
 #ifndef gst_object_unref
 void gst_object_unref (GstObject *object) {
   int reftest;
@@ -209,6 +222,14 @@ void gst_object_unref (GstObject *object) {
 }
 #endif /* gst_object_unref */
 
+/**
+ * gst_object_sink:
+ * @object: GstObject to sink
+ *
+ * Removes floating reference on an object.  Any newly created object has
+ * a refcount of 1 and is FLOATING.  This function should be used when
+ * creating a new object to symbolically 'take ownership of' the object.
+ */
 #ifndef gst_object_sink
 void gst_object_sink(GstObject *object) {
   g_return_if_fail(object != NULL);

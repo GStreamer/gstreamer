@@ -188,20 +188,20 @@ esac],
 AC_ARG_ENABLE(debug,
 [  --enable-debug               spews lots of useless info at runtime],
 [case "${enableval}" in
-  yes) use_debug=yes ;;
-  no)  use_debug=no ;;
+  yes) USE_DEBUG=yes ;;
+  no)  USE_DEBUG=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
 esac], 
-[use_debug=no]) dnl Default value
+[USE_DEBUG=no]) dnl Default value
 
 AC_ARG_ENABLE(profiling,
 [  --enable-profiling           adds -pg to compiler commandline, for profiling],
 [case "${enableval}" in
-  yes) use_profiling=yes ;;
-  no)  use_profiling=no ;;
+  yes) USE_PROFILING=yes ;;
+  no)  UES_PROFILING=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-profiling) ;;
 esac], 
-[use_profiling=no]) dnl Default value
+[USE_PROFILING=no]) dnl Default value
 
 
 dnl ################################################

@@ -110,7 +110,7 @@ static void gst_element_init(GstElement *element) {
 /**
  * gst_element_new:
  *
- * Create a new element.
+ * Create a new element.  Should never be used, as it does no good.
  *
  * Returns: new element
  */
@@ -256,6 +256,14 @@ void gst_element_connect(GstElement *src,gchar *srcpadname,
   }
 }
 
+/**
+ * gst_element_error:
+ * @element: Element with the error
+ * @error: String describing the error
+ *
+ * This function is used internally by elements to signal an error
+ * condition.  It results in the "error" signal.
+ */
 void gst_element_error(GstElement *element,gchar *error) {
   g_error("error in element '%s': %s\n",element->name,error);
 
@@ -484,10 +492,26 @@ xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent) {
   return self;
 }
 
+/**
+ * gst_element_set_manager:
+ * @element: Element to set manager of.
+ * @manager: Element to be the manager.
+ *
+ * Sets the manager of the element.  For internal use only, unless you're
+ * writing a new bin subclass.
+ */
 void gst_element_set_manager(GstElement *element,GstElement *manager) {
   element->manager = manager;
 }
 
+/**
+ * gst_element_get_manager:
+ * @element: Element to get manager of.
+ *
+ * Returns the manager of the element.
+ *
+ * Returns: Element's manager
+ */
 GstElement *gst_element_get_manager(GstElement *element) {
   return element->manager;
 }
@@ -498,6 +522,15 @@ int gst_element_loopfunc_wrapper(int argc,char **argv) {
   element->loopfunc(element);
 }
 
+/**
+ * gst_element_set_loop_function:
+ * @element: Element to set loop function of.
+ * @loop: Pointer to loop function.
+ *
+ * This sets the loop function for the element.  The function pointed to
+ * can deviate from the GstElementLoopFunction definition in type of
+ * pointer only.
+ */
 void gst_element_set_loop_function(GstElement *element,
                                    GstElementLoopFunction loop) {
   element->loopfunc = loop;

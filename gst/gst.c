@@ -26,8 +26,8 @@ extern gint _gst_trace_on;
  * @argc: pointer to application's argc
  * @argv: pointer to application's argv
  *
- * Initializes the GStreamer system, setting up internal lists and loading
- * standard plugins.
+ * Initializes the GStreamer library, setting up internal path lists,
+ * registering built-in elements, and loading standard plugins.
  */
 void gst_init(int *argc,char **argv[]) {
   GstTrace *gst_trace;
