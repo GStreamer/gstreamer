@@ -31,7 +31,5 @@ noinst_HEADERS = \
 	gstplayprivate.h
 
 
-CFLAGS += -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
-
 gstmediaplay_CFLAGS = $(LIBGLADE_GNOME_CFLAGS)
-gstmediaplay_LDADD = $(LIBGLADE_GNOME_LIBS) libgstmediaplay.la
+gstmediaplay_LDADD = $(GST_LIBS) $(LIBGLADE_GNOME_LIBS) libgstmediaplay.la
