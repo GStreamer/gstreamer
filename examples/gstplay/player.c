@@ -100,7 +100,7 @@ main (int argc, char *argv[])
 {
   GstPlay *play;
   GstElement *data_src, *video_sink, *audio_sink, *vis_element;
-  GError *error;
+  GError *error = NULL;
 
   /* Initing GStreamer library */
   gst_init (&argc, &argv);
