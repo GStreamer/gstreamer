@@ -117,8 +117,6 @@ struct _GstPlay
  	gint64 time_nanos;
  	gint64 length_nanos;
 	
-	/*fixored by dolphy */
-	
 	guint tick_timeout_id;
 	guint idle_timeout_id;
 	guint idle_signal_id;
