@@ -266,9 +266,9 @@ buffer_frames_convert_link (GstPad * pad, const GstCaps * caps)
   gst_caps_set_simple (othercaps, "buffer-frames", GST_TYPE_INT_RANGE, 0,
       G_MAXINT, NULL);
   ret = gst_pad_try_set_caps_nonfixed (otherpad, othercaps);
+  gst_caps_free (othercaps);
   if (GST_PAD_LINK_FAILED (ret))
     return ret;
-  gst_caps_free (othercaps);
   othercaps = gst_caps_copy (gst_pad_get_negotiated_caps (otherpad));
 
   /* it's ok, let's record our data */
@@ -284,6 +284,7 @@ buffer_frames_convert_link (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (sinkstructure, "channels", &numchannels);
   this->in_buffer_samples *= numchannels;
   this->out_buffer_samples *= numchannels;
+  gst_caps_free (othercaps);
 
   if (this->out_buffer_samples == 0)
     this->passthrough = TRUE;
