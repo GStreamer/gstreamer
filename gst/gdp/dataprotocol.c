@@ -186,9 +186,10 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
   GST_WRITE_UINT64_BE (h + 32, GST_BUFFER_OFFSET_END (buffer));
 
   /* data flags */
-  /* we only copy KEY_UNIT and IN_CAPS flags */
+  /* we only copy KEY_UNIT,DELTA_UNIT and IN_CAPS flags */
   flags_mask = GST_DATA_FLAG_SHIFT (GST_BUFFER_KEY_UNIT) |
-      GST_DATA_FLAG_SHIFT (GST_BUFFER_IN_CAPS);
+      GST_DATA_FLAG_SHIFT (GST_BUFFER_IN_CAPS) |
+      GST_DATA_FLAG_SHIFT (GST_BUFFER_DELTA_UNIT);
 
   GST_WRITE_UINT16_BE (h + 40, GST_BUFFER_FLAGS (buffer) & flags_mask);
 
