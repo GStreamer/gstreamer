@@ -15,10 +15,6 @@
 
 /***** Deal with XML stuff, we have to handle both loadsave and registry *****/
 
-// TEMPORARY!!
-#define GST_DISABLE_LOADSAVE
-#define GST_DISABLE_REGISTRY
-
 #if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) )
   #include <parser.h>
  
