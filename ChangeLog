@@ -1,3 +1,8 @@
+2004-07-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: update GStreamer requirement to 0.8.4 because of
+	  GstFraction.
+
 2004-07-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_fmt),
@@ -32,14 +37,14 @@
 	* gst/wavenc/gstwavenc.c:
 	* gst/wavparse/gstwavparse.c:
 	  fix local includes and 64 bits constants
-    
+
 2004-07-27  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/gst.sln:
 	* gst-libs/gst/*/*.vcproj:
 	* gst/*/*.vcproj:
 	  more working plugins
-    
+
 2004-07-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* testsuite/alsa/Makefile.am:
