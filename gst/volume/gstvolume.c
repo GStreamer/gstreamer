@@ -136,6 +136,7 @@ volume_connect (GstPad *pad, GstCaps *caps)
 {
   GstVolume *filter;
   GstPad *otherpad;
+  gint rate;
   
   filter = GST_VOLUME (gst_pad_get_parent (pad));
   g_return_val_if_fail (filter != NULL, GST_PAD_CONNECT_REFUSED);
@@ -146,6 +147,9 @@ volume_connect (GstPad *pad, GstCaps *caps)
     if (!volume_parse_caps (filter, caps) || !gst_pad_try_set_caps (otherpad, caps))
       return GST_PAD_CONNECT_REFUSED;
     
+    if (gst_caps_get_int (caps, "rate", &rate)){
+      gst_dpman_set_rate(filter->dpman, rate);
+    }
     return GST_PAD_CONNECT_OK;
   }
   
@@ -263,7 +267,7 @@ volume_chain_float (GstPad *pad, GstBuffer *buf)
   GstVolume *filter;
   GstBuffer *out_buf;
   gfloat *data;
-  gint i, sample_countdown, num_samples;
+  gint i, num_samples;
 
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
@@ -281,10 +285,10 @@ volume_chain_float (GstPad *pad, GstBuffer *buf)
 
   data = (gfloat *)GST_BUFFER_DATA(out_buf);
   num_samples = GST_BUFFER_SIZE(out_buf)/sizeof(gfloat);
-  sample_countdown = GST_DPMAN_PREPROCESS(filter->dpman, num_samples, GST_BUFFER_TIMESTAMP(out_buf));
+  GST_DPMAN_PREPROCESS(filter->dpman, num_samples, GST_BUFFER_TIMESTAMP(out_buf));
   i = 0;
     
-  while(GST_DPMAN_PROCESS_COUNTDOWN(filter->dpman, sample_countdown, i)) {
+  while(GST_DPMAN_PROCESS(filter->dpman, i)) {
     data[i++] *= filter->real_vol_f;
   }
   
@@ -298,7 +302,7 @@ volume_chain_int16 (GstPad *pad, GstBuffer *buf)
   GstVolume *filter;
   GstBuffer *out_buf;
   gint16 *data;
-  gint i, sample_countdown, num_samples;
+  gint i, num_samples;
 
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
@@ -316,14 +320,25 @@ volume_chain_int16 (GstPad *pad, GstBuffer *buf)
 
   data = (gint16 *)GST_BUFFER_DATA(out_buf);
   num_samples = GST_BUFFER_SIZE(out_buf)/sizeof(gint16);
-  sample_countdown = GST_DPMAN_PREPROCESS(filter->dpman, num_samples, GST_BUFFER_TIMESTAMP(out_buf));
+  GST_DPMAN_PREPROCESS(filter->dpman, num_samples, GST_BUFFER_TIMESTAMP(out_buf));
   i = 0;
-    
-  while(GST_DPMAN_PROCESS_COUNTDOWN(filter->dpman, sample_countdown, i)) {
-    data[i] = (gint16)(filter->real_vol_i * (gint)data[i] / 8192);
-    i++;
+ 
+  while(GST_DPMAN_PROCESS(filter->dpman, i)) {
+    /* only clamp if the gain is greater than 1.0 */
+    if (filter->real_vol_i > 8192){
+      while (i < GST_DPMAN_NEXT_UPDATE_FRAME(filter->dpman)){
+        data[i] = (gint16)CLAMP(filter->real_vol_i * (gint)data[i] / 8192, -32768, 32767);
+	i++;
+      }
+    }
+    else {
+      while (i < GST_DPMAN_NEXT_UPDATE_FRAME(filter->dpman)){
+        data[i] = (gint16)(filter->real_vol_i * (gint)data[i] / 8192);
+        i++;
+      }
+    }
   }
-  
+
   gst_pad_push(filter->srcpad,out_buf);   
   
 }
