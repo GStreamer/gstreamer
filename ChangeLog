@@ -1,3 +1,7 @@
+2002-12-22  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* configure.ac: fix include dir check and fail if not found
+
 2002-12-21  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* gstreamer/gstreamer.override (call_connect_function,

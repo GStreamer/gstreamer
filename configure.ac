@@ -81,9 +81,12 @@ dnl check to make sure we can find gstreamer
 PKG_CHECK_MODULES(GST, gstreamer-gstreamer_majorminor >= gstreamer_required_version, HAVE_GST="yes", HAVE_GST="no")
 
 AC_MSG_CHECKING(for gstreamer include dir)
-GST_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer`
+GST_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer-gstreamer_majorminor`
 AC_SUBST(GST_INCLUDEDIR)
 AC_MSG_RESULT($GST_INCLUDEDIR)
+if test "x$GST_INCLUDEDIR" = "x"; then
+  AC_MSG_ERROR(no gstreamer include dir found)
+fi
 
 if test "x$HAVE_GST" = "xno"; then
   AC_MSG_ERROR(need GStreamer gstreamer_required_version)
