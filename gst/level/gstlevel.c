@@ -99,6 +99,7 @@ static void		gst_level_class_init		(GstLevelClass *klass);
 static void		gst_level_base_init		(GstLevelClass *klass);
 static void		gst_level_init			(GstLevel *filter);
 
+static GstElementStateReturn gst_level_change_state     (GstElement *element);
 static void		gst_level_set_property			(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		gst_level_get_property			(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
@@ -129,7 +130,7 @@ gst_level_get_type (void)
 }
 
 static GstPadLinkReturn
-gst_level_connect (GstPad *pad, GstCaps *caps)
+gst_level_link (GstPad *pad, GstCaps *caps)
 {
   GstLevel *filter;
   GstPad *otherpad;
@@ -141,47 +142,49 @@ gst_level_connect (GstPad *pad, GstCaps *caps)
   g_return_val_if_fail (GST_IS_LEVEL (filter), GST_PAD_LINK_REFUSED);
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
 	  
-  if (GST_CAPS_IS_FIXED (caps)) 
-  {
-    /* yep, got them */
-    res = gst_pad_try_set_caps (otherpad, caps);
-    /* if ok, set filter */
-    if (res == GST_PAD_LINK_OK)
-    {
-      filter->num_samples = 0;
-      /* FIXME: error handling */
-      if (! gst_caps_get_int (caps, "rate", &(filter->rate)))
-        g_warning ("WARNING: level: Could not get rate from caps\n");
-      if (!gst_caps_get_int (caps, "width", &(filter->width)))
-        g_warning ("WARNING: level: Could not get width from caps\n");
-      if (!gst_caps_get_int (caps, "channels", &(filter->channels)))
-        g_warning ("WARNING: level: Could not get number of channels from caps\n");
+  if (!GST_CAPS_IS_FIXED (caps)) {
+    return GST_PAD_LINK_DELAYED;
+  }
 
-      /* allocate channel variable arrays */
-      if (filter->CS) g_free (filter->CS);
-      if (filter->peak) g_free (filter->peak);
-      if (filter->last_peak) g_free (filter->last_peak);
-      if (filter->decay_peak) g_free (filter->decay_peak);
-      if (filter->decay_peak_age) g_free (filter->decay_peak_age);
-      if (filter->MS) g_free (filter->MS);
-      if (filter->RMS_dB) g_free (filter->RMS_dB);
-      filter->CS = g_new (double, filter->channels);
-      filter->peak = g_new (double, filter->channels);
-      filter->last_peak = g_new (double, filter->channels);
-      filter->decay_peak = g_new (double, filter->channels);
-      filter->decay_peak_age = g_new (double, filter->channels);
-      filter->MS = g_new (double, filter->channels);
-      filter->RMS_dB = g_new (double, filter->channels);
-      for (i = 0; i < filter->channels; ++i)
-      {
-        filter->CS[i] = filter->peak[i] = filter->last_peak[i] =
-                        filter->decay_peak[i] = filter->decay_peak_age[i] = 
-                        filter->MS[i] = filter->RMS_dB[i] = 0.0;
-      }
-    }
+  res = gst_pad_try_set_caps (otherpad, caps);
+  /* if ok, set filter */
+  if (res != GST_PAD_LINK_OK && res != GST_PAD_LINK_DONE) {
     return res;
   }
-  return GST_PAD_LINK_DELAYED;
+
+  filter->num_samples = 0;
+  
+  if (!gst_caps_get_int (caps, "rate", &(filter->rate)))
+    return GST_PAD_LINK_REFUSED;
+  if (!gst_caps_get_int (caps, "width", &(filter->width)))
+    return GST_PAD_LINK_REFUSED;
+  if (!gst_caps_get_int (caps, "channels", &(filter->channels)))
+    return GST_PAD_LINK_REFUSED;
+
+  /* allocate channel variable arrays */
+  if (filter->CS) g_free (filter->CS);
+  if (filter->peak) g_free (filter->peak);
+  if (filter->last_peak) g_free (filter->last_peak);
+  if (filter->decay_peak) g_free (filter->decay_peak);
+  if (filter->decay_peak_age) g_free (filter->decay_peak_age);
+  if (filter->MS) g_free (filter->MS);
+  if (filter->RMS_dB) g_free (filter->RMS_dB);
+  filter->CS = g_new (double, filter->channels);
+  filter->peak = g_new (double, filter->channels);
+  filter->last_peak = g_new (double, filter->channels);
+  filter->decay_peak = g_new (double, filter->channels);
+  filter->decay_peak_age = g_new (double, filter->channels);
+  filter->MS = g_new (double, filter->channels);
+  filter->RMS_dB = g_new (double, filter->channels);
+  for (i = 0; i < filter->channels; ++i) {
+    filter->CS[i] = filter->peak[i] = filter->last_peak[i] =
+                    filter->decay_peak[i] = filter->decay_peak_age[i] = 
+                    filter->MS[i] = filter->RMS_dB[i] = 0.0;
+  }
+
+  filter->inited = TRUE;
+
+  return GST_PAD_LINK_OK;
 }
 
 static void inline
@@ -208,7 +211,6 @@ gst_level_chain (GstPad *pad, GstData *_data)
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
-
 
   filter = GST_LEVEL (GST_OBJECT_PARENT (pad));
   g_return_if_fail (filter != NULL);
@@ -313,6 +315,20 @@ gst_level_chain (GstPad *pad, GstData *_data)
   }
 }
 
+static GstElementStateReturn gst_level_change_state (GstElement *element)
+{
+  GstLevel *filter = GST_LEVEL (element);
+
+  switch(GST_STATE_TRANSITION(element)){
+    case GST_STATE_PAUSED_TO_PLAYING:
+      if (!filter->inited) return GST_STATE_FAILURE;
+      break;
+    default:
+      break;
+  }
+
+  return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+}
 
 static void
 gst_level_set_property (GObject *object, guint prop_id, 
@@ -381,6 +397,8 @@ gst_level_base_init (GstLevelClass *klass)
   gst_element_class_add_pad_template (element_class,
 	GST_PAD_TEMPLATE_GET (src_template_factory));
   gst_element_class_set_details (element_class, &level_details);
+
+  element_class->change_state = gst_level_change_state;
 }
 
 static void
@@ -426,9 +444,9 @@ static void
 gst_level_init (GstLevel *filter)
 {
   filter->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
-  gst_pad_set_link_function (filter->sinkpad, gst_level_connect);
+  gst_pad_set_link_function (filter->sinkpad, gst_level_link);
   filter->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_template_factory), "src");
-  gst_pad_set_link_function (filter->srcpad, gst_level_connect);
+  gst_pad_set_link_function (filter->srcpad, gst_level_link);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_level_chain);

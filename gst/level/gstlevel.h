@@ -54,6 +54,7 @@ struct _GstLevel {
 
   GstPad *sinkpad, *srcpad;
   gboolean signal;		/* whether or not to emit signals */
+  gboolean inited;              /* whether or not the element is initialized */
   gdouble interval;		/* how many seconds between emits */
 
   gint rate;			/* caps variables */
