@@ -60,7 +60,8 @@ typedef enum {
   GST_MIXER_TRACK_OUTPUT = (1<<1),
   GST_MIXER_TRACK_MUTE   = (1<<2),
   GST_MIXER_TRACK_RECORD = (1<<3),
-  GST_MIXER_TRACK_MASTER = (1<<4)
+  GST_MIXER_TRACK_MASTER = (1<<4),
+  GST_MIXER_TRACK_SOFTWARE = (1<<5)
 } GstMixerTrackFlags;
 
 #define GST_MIXER_TRACK_HAS_FLAG(channel, flag) \

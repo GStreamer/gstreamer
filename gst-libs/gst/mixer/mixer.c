@@ -96,6 +96,8 @@ gst_mixer_class_init (GstMixerClass *klass)
     initialized = TRUE;
   }
 
+  klass->mixer_type = GST_MIXER_SOFTWARE;
+  
   /* default virtual functions */
   klass->list_tracks = NULL;
   klass->set_volume = NULL;

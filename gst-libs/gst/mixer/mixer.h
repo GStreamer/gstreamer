@@ -40,11 +40,21 @@ G_BEGIN_DECLS
 #define GST_MIXER_GET_CLASS(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_MIXER, GstMixerClass))
 
+#define GST_MIXER_TYPE(klass) (klass->mixer_type)
+
 typedef struct _GstMixer GstMixer;
+
+typedef enum
+{
+  GST_MIXER_HARDWARE,
+  GST_MIXER_SOFTWARE
+} GstMixerType;
 
 typedef struct _GstMixerClass {
   GTypeInterface klass;
 
+  GstMixerType mixer_type;
+  
   /* virtual functions */
   const GList *  (* list_tracks)   (GstMixer      *mixer);
 

@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include <gst/control/control.h>
+#include <gst/mixer/mixer.h>
 #include "gstvolume.h"
 
 
@@ -108,8 +109,124 @@ static gboolean		volume_parse_caps          (GstVolume *filter, GstStructure *st
 static void		volume_chain_float         (GstPad *pad, GstData *_data);
 static void		volume_chain_int16         (GstPad *pad, GstData *_data);
 
+static void gst_volume_interface_init (GstImplementsInterfaceClass *klass);
+static void gst_volume_mixer_init (GstMixerClass *iface);
+
 static GstElementClass *parent_class = NULL;
 /*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
+
+static gboolean
+gst_volume_interface_supported (GstImplementsInterface *iface, GType type)
+{
+  g_assert (type == GST_TYPE_MIXER);
+  return TRUE;
+}
+
+static void
+gst_volume_interface_init (GstImplementsInterfaceClass *klass)
+{
+  klass->supported = gst_volume_interface_supported;
+}
+
+static const GList *
+gst_volume_list_tracks (GstMixer *mixer)
+{
+  GstVolume *filter = GST_VOLUME (mixer);
+  
+  g_return_val_if_fail (filter != NULL, NULL);
+  g_return_val_if_fail (GST_IS_VOLUME (filter), NULL);
+  
+  return filter->tracklist;
+}
+
+static void
+gst_volume_set_volume (GstMixer *mixer, GstMixerTrack *track,
+                       gint *volumes)
+{
+  GstVolume *filter = GST_VOLUME (mixer);
+  
+  g_return_if_fail (filter != NULL);
+  g_return_if_fail (GST_IS_VOLUME (filter));
+  
+  gst_dpman_bypass_dparam (filter->dpman, "volume");
+  
+  filter->volume_f       = (gfloat) volumes[0] / 10;
+  filter->volume_i       = filter->volume_f * 8192;
+  
+  if (filter->mute) {
+    filter->real_vol_f = 0.0;
+    filter->real_vol_i = 0;
+  }
+  else {
+    filter->real_vol_f = filter->volume_f;
+    filter->real_vol_i = filter->volume_i;
+  }
+}
+
+static void
+gst_volume_get_volume (GstMixer *mixer, GstMixerTrack *track,
+                       gint *volumes)
+{
+  GstVolume *filter = GST_VOLUME (mixer);
+  
+  g_return_if_fail (filter != NULL);
+  g_return_if_fail (GST_IS_VOLUME (filter));
+  
+  volumes[0] = (gint) filter->volume_f * 10;
+}
+
+static void
+gst_volume_set_mute (GstMixer *mixer, GstMixerTrack *track,
+                     gboolean mute)
+{
+  GstVolume *filter = GST_VOLUME (mixer);
+  
+  g_return_if_fail (filter != NULL);
+  g_return_if_fail (GST_IS_VOLUME (filter));
+  
+  gst_dpman_bypass_dparam (filter->dpman, "volume");
+  
+  filter->mute = mute;
+  
+  if (filter->mute) {
+    filter->real_vol_f = 0.0;
+    filter->real_vol_i = 0;
+  }
+  else {
+    filter->real_vol_f = filter->volume_f;
+    filter->real_vol_i = filter->volume_i;
+  }
+}
+
+static void
+gst_volume_mixer_init (GstMixerClass *klass)
+{
+  GST_MIXER_TYPE (klass) = GST_MIXER_SOFTWARE;
+  
+  /* default virtual functions */
+  klass->list_tracks = gst_volume_list_tracks;
+  klass->set_volume = gst_volume_set_volume;
+  klass->get_volume = gst_volume_get_volume;
+  klass->set_mute = gst_volume_set_mute;
+}
+
+static void
+gst_volume_dispose (GObject *object)
+{
+  GstVolume *volume;
+
+  volume = GST_VOLUME (object);
+  
+  if (volume->tracklist)
+    {
+      if (volume->tracklist->data)
+        g_object_unref (volume->tracklist->data);
+      g_list_free (volume->tracklist);
+      volume->tracklist = NULL;
+    }
+    
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
 
 static GstPadLinkReturn
 volume_connect (GstPad *pad, const GstCaps *caps)
@@ -178,9 +295,26 @@ gst_volume_get_type(void) {
       NULL,
       sizeof(GstVolume),
       0,
-      (GInstanceInitFunc)volume_init,
+      (GInstanceInitFunc)volume_init
     };
+    static const GInterfaceInfo voliface_info = {
+      (GInterfaceInitFunc) gst_volume_interface_init,
+      NULL,
+      NULL
+    };
+    static const GInterfaceInfo volmixer_info = {
+      (GInterfaceInitFunc) gst_volume_mixer_init,
+      NULL,
+      NULL
+    };
+    
     volume_type = g_type_register_static(GST_TYPE_ELEMENT, "GstVolume", &volume_info, 0);
+    g_type_add_interface_static (volume_type,
+                                 GST_TYPE_IMPLEMENTS_INTERFACE,
+                                 &voliface_info);
+    g_type_add_interface_static (volume_type,
+                                 GST_TYPE_MIXER,
+                                 &volmixer_info);
   }
   return volume_type;
 }
@@ -216,28 +350,35 @@ volume_class_init (GstVolumeClass *klass)
   
   gobject_class->set_property = volume_set_property;
   gobject_class->get_property = volume_get_property;
+  gobject_class->dispose = gst_volume_dispose;
 }
 
 static void
 volume_init (GstVolume *filter)
 {
-  filter->sinkpad = gst_pad_new_from_template(
-      gst_static_pad_template_get (&volume_sink_factory),"sink");
+  GstMixerTrack *track = NULL;
+  
+  filter->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&volume_sink_factory), "sink");
   gst_pad_set_getcaps_function (filter->sinkpad, gst_pad_proxy_getcaps);
-  gst_pad_set_link_function(filter->sinkpad,volume_connect);
-  filter->srcpad = gst_pad_new_from_template(
-      gst_static_pad_template_get (&volume_src_factory),"src");
+  gst_pad_set_link_function (filter->sinkpad, volume_connect);
+  
+  filter->srcpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&volume_src_factory), "src");
   gst_pad_set_getcaps_function (filter->srcpad, gst_pad_proxy_getcaps);
   gst_pad_set_link_function(filter->srcpad,volume_connect);
   
-  gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
-  gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
-  gst_pad_set_chain_function(filter->sinkpad,volume_chain_int16);
+  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
+  gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
+  
+  gst_pad_set_chain_function (filter->sinkpad, volume_chain_int16);
+  
   filter->mute = FALSE;
   filter->volume_i = 8192;
   filter->volume_f = 1.0;
   filter->real_vol_i = 8192;
   filter->real_vol_f = 1.0;
+  filter->tracklist = NULL;
 
   filter->dpman = gst_dpman_new ("volume_dpman", GST_ELEMENT(filter));
   gst_dpman_add_required_dparam_callback (
@@ -256,7 +397,18 @@ volume_init (GstVolume *filter)
     volume_update_volume, 
     filter
   );
-
+  
+  track = g_object_new (GST_TYPE_MIXER_TRACK, NULL);
+  
+  if (GST_IS_MIXER_TRACK (track))
+    {
+      track->label = g_strdup ("volume");
+      track->num_channels = 1;
+      track->min_volume = 0;
+      track->max_volume = 40;
+      track->flags = GST_MIXER_TRACK_SOFTWARE;
+      filter->tracklist = g_list_append (filter->tracklist, track);
+    }
 }
 
 static void

@@ -921,9 +921,7 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
     
   if (GST_IS_EVENT (data))
     {
-      GstEvent *event = GST_EVENT (data);
-      
-      gst_pad_event_default (pad, event);
+      gst_pad_event_default (pad, GST_EVENT (data));
       return;
     }
   

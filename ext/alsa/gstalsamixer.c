@@ -188,6 +188,8 @@ gst_alsa_interface_init (GstImplementsInterfaceClass *klass)
 static void
 gst_alsa_mixer_interface_init (GstMixerClass *klass)
 {
+  GST_MIXER_TYPE (klass) = GST_MIXER_HARDWARE;
+  
   /* set up the interface hooks */
   klass->list_tracks = gst_alsa_mixer_list_tracks;
   klass->set_volume = gst_alsa_mixer_set_volume;
