@@ -28,81 +28,81 @@ import time
 from identity import Identity
 
 def update(sender, *args):
-   print sender.get_name(), args
+    print sender.get_name(), args
 
 def build(filters, b):
-   # create a new bin to hold the elements
-   bin = Pipeline('pipeline')
+    # create a new bin to hold the elements
+    bin = Pipeline('pipeline')
 
-   src = Element('fakesrc', 'source');
-   src.set_property('silent', 1)
-   src.set_property('num_buffers', b)
+    src = Element('fakesrc', 'source');
+    src.set_property('silent', 1)
+    src.set_property('num_buffers', b)
 
-   sink = Element('fakesink', 'sink')
-   sink.set_property('silent', 1)
+    sink = Element('fakesink', 'sink')
+    sink.set_property('silent', 1)
 
-   elements = [src] + filters + [sink]
-   #  add objects to the main pipeline
-   for e in elements: 
-      bin.add(e)
+    elements = [src] + filters + [sink]
+    #  add objects to the main pipeline
+    for e in elements: 
+        bin.add(e)
 
-   # link the elements
-   previous = None
-   for e in elements:
-      if previous:
-         previous.link(e)
-      previous = e
+    # link the elements
+    previous = None
+    for e in elements:
+        if previous:
+            previous.link(e)
+        previous = e
 
-   return bin
+    return bin
 
 def filter(bin):
-   bin.set_state(STATE_PLAYING);
-   while bin.iterate(): pass
-   bin.set_state(STATE_NULL)
+    bin.set_state(STATE_PLAYING);
+    while bin.iterate(): pass
+    bin.set_state(STATE_NULL)
 
 ccnt = 0
 def c():
-   global ccnt
-   id = Element ('identity', 'c identity %d' % ccnt);
-   id.set_property('silent', 1)
-   id.set_property('loop_based', 0)
-   ccnt += 1
-   return id
+    global ccnt
+    id = Element ('identity', 'c identity %d' % ccnt);
+    id.set_property('silent', 1)
+    id.set_property('loop_based', 0)
+    ccnt += 1
+    return id
 
 pcnt = 0
 def py():
-   id = Identity()
-   assert id
-   global pcnt
-   id.set_name('py identity %d' % pcnt)
-   pcnt += 1
-   return id
+    id = Identity()
+    assert id
+    global pcnt
+    id.set_name('py identity %d' % pcnt)
+    pcnt += 1
+    return id
 
 def check(f, n, b):
-   fs = []
-   for i in range(n):
-      fs.append(f())
+    fs = []
+    for i in range(n):
+        fs.append(f())
 
-   pipe = build(fs, b)
+    pipe = build(fs, b)
 
-   start = time.time()
-   ret = filter(pipe)
-   end = time.time()
-   print '%s b:%d i:%d t:%f' % (f, b, n, end - start)
-   return ret
+    start = time.time()
+    ret = filter(pipe)
+    end = time.time()
+    print '%s b:%d i:%d t:%f' % (f, b, n, end - start)
+    return ret
 
 def main():
-   "Identity timer and latency check"
-   gst_debug_set_categories(0L)
+    "Identity timer and latency check"
+    gst_debug_set_categories(0L)
 
-   if len(sys.argv) < 3:
-      print 'usage: %s identites buffers' % (sys.argv[0],)
-      return -1
-   n = int(sys.argv[1])
-   b = int(sys.argv[2])
-   for f in (c, py):
-      check(f, n, b)
+    if len(sys.argv) < 3:
+        print 'usage: %s identites buffers' % (sys.argv[0],)
+        return -1
+    n = int(sys.argv[1])
+    b = int(sys.argv[2])
+    for f in (c, py):
+        check(f, n, b)
 
 if __name__ == '__main__':
-   ret = main()
-   sys.exit (ret)
+    ret = main()
+    sys.exit (ret)

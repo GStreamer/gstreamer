@@ -5,6 +5,8 @@
 	*  gstreamer/Makefile.am: fix libtool 1.5 build by fixing export
 	symbol typo s/initgstreamer/init_gstreamer/
 
+	* gstreamer/examples/ilat.py: 4 space indents
+
 2003-10-05  Thomas Vander Stichele <thomas at apestaart dot org>
 
         * examples/gstreamer/*.py: use Element over gst_element_factory_make
