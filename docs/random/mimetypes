@@ -28,6 +28,9 @@ GstCaps *caps = GST_CAPS_NEW("video_mpeg_type",
 Obviously, mimetypes and their corresponding properties are of major
 importance in GStreamer for uniquely identifying media streams.
 
+Official MIME media types are assigned by the IANA.  Current
+assignments are at http://www.iana.org/assignments/media-types/.
+
 2) The problems
 ---------------
 Some streams may have mimetypes or GstCaps that do not fully describe
@@ -57,7 +60,7 @@ There are several types of media streams. The most important distinction
 will be container formats, audio codecs and video codecs. Container
 formats are bytestreams that contain one or more substreams inside it,
 and don't provide any direct media data itself. Examples are Quicktime,
-AVI or MPEG (bytestream). They mostly contain of a set of headers that
+AVI or MPEG System Stream. They mostly contain of a set of headers that
 define the media stream(s) that is packed inside the container and the
 media data itself.
 Video codecs and audio codecs describe encoded audio or video data.
@@ -116,6 +119,7 @@ Preface - (optional) properties for all video formats:
   mimetype: video/x-raw-yuv
   properties: 'format' = 'XXXX' (fourcc)
   known fourccs: YUY2, I420, Y41P, YVYU, UYVY, etc.
+  properties 'width' and 'height' are required
 
   Note: some raw video formats have implicit alignment rules.  We should
         discuss this more.
@@ -147,6 +151,7 @@ Preface - (optional) properties for all video formats:
               'red_mask' = bitmask (0x..) (INT) <- red pixel mask
               'green_mask' = bitmask (0x..) (INT) <- green pixel mask
               'blue_mask' = bitmask (0x..) (INT) <- blue pixel mask
+  properties 'width' and 'height' are required
 
   'bpp' is the number of bits of memory used for each pixel.  'depth'
   is the color depth.
@@ -216,7 +221,8 @@ Preface - (optional) properties for all video formats:
   known fourccs: H263, i263, M263, x263, VDOW, VIVO
 
 9 - RealVideo (Real)
-  mimetype: video/x-real
+  mimetype: video/x-pn-realvideo
+  known fourccs: RV10, RV20, RV30
 
 10 - Digital Video (DV)
   mimetype: video/dv
@@ -327,7 +333,7 @@ Preface - (optional) properties for all audio formats:
         refer to technical documentation.
 
 13 - RealAudio (Real)
-  mimetype: audio/x-real
+  mimetype: audio/x-pn-realaudio
   properties: 'bitrate' = 14400/28800 (INT)
 
 14 - DV Audio
