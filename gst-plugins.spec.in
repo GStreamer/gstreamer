@@ -397,6 +397,24 @@ Element for text-to-speech using the festival server.
 @USE_LAME_TRUE@%post -n gstreamer-lame
 @USE_LAME_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
+### LIBFAME ###
+@USE_LIBFAME_TRUE@%package -n gstreamer-libfame
+@USE_LIBFAME_TRUE@Summary: GStreamer plugin to encode MPEG1/MPEG4 video
+@USE_LIBFAME_TRUE@Group: Libraries/Multimedia
+@USE_LIBFAME_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_LIBFAME_TRUE@Requires: libfame >= 0.9.0 
+@USE_LIBFAME_TRUE@BuildRequires: libfame >= 0.9.0 
+@USE_LIBFAME_TRUE@
+@USE_LIBFAME_TRUE@%description -n gstreamer-libfame
+@USE_LIBFAME_TRUE@Plugin for encoding MPEG1/MPEG4 video using libfame
+@USE_LIBFAME_TRUE@
+@USE_LIBFAME_TRUE@%files -n gstreamer-libfame
+@USE_LIBFAME_TRUE@%defattr(-, root, root)
+@USE_LIBFAME_TRUE@%{_libdir}/gst/libgstlibfame*
+@USE_LIBFAME_TRUE@
+@USE_LIBFAME_TRUE@%post -n gstreamer-libfame
+@USE_LIBFAME_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
+
 ### MAD ###
 @USE_MAD_TRUE@%package -n gstreamer-mad  
 @USE_MAD_TRUE@Summary: Plugin using MAD for mp3 decoding
@@ -967,9 +985,12 @@ Plugin for playback of wav, au and mod audio files as well as mp3 type
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
 %changelog
+* Mon Jun 03 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- Added libfame package
+
 * Mon May 12 2002 Christian Fredrik Kalager Schaller <Uraeus@linuxrising.org>
 - Added jack, dxr3, http packages
-- Added visualisation plugins effecttv and synathesia
+- Added visualisation plugins, effecttv and synaesthesia
 - Created devel package
 - Removed gstreamer-plugins-libs package (moved it into gstreamer-plugins)
 - Replaced prefix/dirname with _macros
