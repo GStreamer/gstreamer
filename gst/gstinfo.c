@@ -1126,6 +1126,17 @@ _gst_info_printf_extension_arginfo (const struct printf_info *info, size_t n,
 #endif /* HAVE_PRINTF_EXTENSION */
 
 #else /* !GST_DISABLE_GST_DEBUG */
+guint
+gst_debug_remove_log_function (GstLogFunction func)
+{
+  return 0;
+}
+
+guint
+gst_debug_remove_log_function_by_data (gpointer data)
+{
+  return 0;
+}
 
 gboolean
 __gst_in_valgrind (void)

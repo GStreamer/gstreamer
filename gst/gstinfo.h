@@ -616,9 +616,9 @@ G_CONST_RETURN gchar *
 #define gst_debug_get_default_threshold()		(GST_LEVEL_NONE)
 
 #define gst_debug_level_get_name(level)			("NONE")
-#define gst_debug_add_log_function(func,data)		(FALSE)
-#define gst_debug_remove_log_function(func)		(0)
-#define gst_debug_remove_log_function_by_data(data)	(0)
+#define gst_debug_add_log_function(func,data)		/* NOP */
+guint		gst_debug_remove_log_function	(GstLogFunction		func);
+guint		gst_debug_remove_log_function_by_data (gpointer		data);
 #define gst_debug_set_active(active)			/* NOP */
 #define gst_debug_is_active()				(FALSE)
 #define gst_debug_set_colored(colored)			/* NOP */
