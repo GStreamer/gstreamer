@@ -572,7 +572,7 @@ add_index_associations (CDParanoia *src)
 
 		sector = cdda_track_firstsector (src->d, i + 1);
 		gst_index_add_association (src->index, src->index_id,
-															 GST_ACCOCIATION_FLAG_KEY_UNIT,
+															 GST_ASSOCIATION_FLAG_KEY_UNIT,
 															 track_format, i,
 															 sector_format, sector,
 															 GST_FORMAT_TIME, (gint64) (((CD_FRAMESIZE_RAW >> 2) * sector * GST_SECOND) / 44100),
