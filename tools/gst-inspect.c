@@ -406,7 +406,8 @@ print_element_info (GstElementFactory *factory)
     GstClock *clock;
 
     clock = gst_element_get_clock (element);
-    printf("  element provides a clock: %s\n", GST_OBJECT_NAME(clock));
+    if (clock)
+      printf("  element provides a clock: %s\n", GST_OBJECT_NAME(clock));
     have_flags = TRUE;
   }
   if (!have_flags) {
