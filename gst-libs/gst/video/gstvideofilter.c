@@ -175,7 +175,6 @@ gst_videofilter_sink_getcaps (GstPad *pad, GstCaps *caps)
 
   /* get list of peer's caps */
   peercaps = gst_pad_get_allowed_caps (videofilter->srcpad);
-  //g_print("peercaps: %s\n", gst_caps_to_string(peercaps));
 
   /* FIXME videofilter doesn't allow passthru of video formats it
    * doesn't understand. */
@@ -186,8 +185,6 @@ gst_videofilter_sink_getcaps (GstPad *pad, GstCaps *caps)
     GstCaps *icaps;
     GstCaps *fromcaps = gst_videofilter_format_get_caps(g_ptr_array_index(
 	  klass->formats,i));
-
-    //g_print("testing caps: %s\n", gst_caps_to_string(fromcaps));
 
     icaps = gst_caps_intersect(fromcaps, peercaps);
     //if(gst_caps_is_always_compatible(fromcaps, peercaps)){
@@ -308,22 +305,6 @@ gst_videofilter_init (GTypeInstance *instance, gpointer g_class)
   GstPadTemplate *pad_template;
 
   GST_DEBUG("gst_videofilter_init");
-
-  {
-    GList *list;
-
-    list = gst_element_class_get_pad_template_list (GST_ELEMENT_CLASS(g_class));
-g_print("getting pad templates from %s\n",
-      g_type_name(G_TYPE_FROM_CLASS(g_class)));
-    g_print("pad template list:");
-    while(list){
-      GstPadTemplate *padtempl = (GstPadTemplate*) list->data;
-      g_print(" %p \"%s\",", padtempl, padtempl->name_template);
-      list = g_list_next(list);
-    }
-    g_print("\n");
-  }
-
 
   pad_template = gst_element_class_get_pad_template(GST_ELEMENT_CLASS(g_class),
       "sink");
@@ -548,8 +529,6 @@ void gst_videofilter_class_add_pad_templates (GstVideofilterClass *videofilter_c
 {
   GstCaps *caps;
   GstElementClass *element_class = GST_ELEMENT_CLASS (videofilter_class);
-
-g_print("adding pad templates to %s\n",g_type_name(G_TYPE_FROM_CLASS(videofilter_class)));
 
   caps = GST_CAPS_NEW("src","video/x-raw-yuv",
 		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
