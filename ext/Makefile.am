@@ -52,10 +52,22 @@ endif
 FESTIVAL_DIR=
 ## endif
 
+if USE_GSM
+GSM_DIR=gsm
+else
+GSM_DIR=
+endif
+
 if USE_FLAC
 FLAC_DIR=flac
 else
 FLAC_DIR=
+endif
+
+if USE_HERMES
+HERMES_DIR=hermes
+else
+HERMES_DIR=
 endif
 
 if USE_LAME
@@ -90,9 +102,9 @@ endif
 
 SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) $(AUDIOFILE_DIR) \
 	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
-        $(FESTIVAL_DIR) $(FLAC_DIR) \
+        $(FESTIVAL_DIR) $(FLAC_DIR) $(GSM_DIR) $(HERMES_DIR) \
 	$(LAME_DIR) $(MAD_DIR) $(MPEG2DEC_DIR) \
 	$(SDL_DIR) $(VORBIS_DIR)
 
 DIST_SUBDIRS=a52 aalib alsa avifile audiofile cdparanoia dvdread esd \
-	     festival flac lame mad mpeg2dec sdl vorbis
+	     festival flac gsm hermes lame mad mpeg2dec sdl vorbis
