@@ -1,3 +1,19 @@
+2003-02-05  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* configure.ac: require GStreamer core 0.6.0
+
+	* examples/gstreamer/bps.py: added buffers-per-second test
+
+	* gstreamer/gstreamer-fixes.[ch]: add functions for optimized bin
+	iteration (may move or rename):
+	  - id add_iterate_bin(bin)
+	  - remove_iterate_bin(id)
+	  - iterate_bin_all(bin)
+
+2003-01-22  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* configure.ac: require GStreamer core 0.5.2
+
 2003-01-09  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* examples/gstreamer/*, gstreamer/gstreamer.override: update to new
