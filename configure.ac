@@ -93,7 +93,8 @@ dnl ====================================
 
 dnl === GLib 2 ===
 dnl Minimum required version of GLib2
-GLIB2_REQ="1.3.12"
+dnl required for compilation without warnings
+GLIB2_REQ="2.0.1"
 AC_SUBST(GLIB2_REQ)
 
 dnl Check for glib2
@@ -339,7 +340,7 @@ GST_LIBS="$GST_EXT_LIBS $XML_LIBS $GLIB_LIBS -lpopt"
 
 dnl Private vars for libgst only
 LIBGST_LIBS="$GST_LIBS"
-LIBGST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir) -Wall"
+LIBGST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir) -Wall -Werror"
 AC_SUBST(LIBGST_LIBS)
 AC_SUBST(LIBGST_CFLAGS)
 
