@@ -863,26 +863,56 @@ gst_avi_demux_add_stream (GstAviDemux *avi)
   /* create stream name + pad */
   switch (strh->type) {
     case GST_RIFF_FCC_vids:
+    {
+      char *codec_name = NULL;
+      GstTagList *list = gst_tag_list_new ();
       padname = g_strdup_printf ("video_%02d", avi->num_v_streams);
       templ = gst_element_class_get_pad_template (klass, "video_%02d");
-      caps = gst_riff_create_video_caps (strf.vids->compression, strh, strf.vids);
+      caps = gst_riff_create_video_caps (strf.vids->compression, strh,
+                                         strf.vids, &codec_name);
+      gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
+                        codec_name, NULL);
+      gst_element_found_tags (GST_ELEMENT (avi), list);
+      gst_tag_list_free (list);
+      if (codec_name) g_free (codec_name);
       g_free (strf.vids);
       avi->num_v_streams++;
       break;
+    }
     case GST_RIFF_FCC_auds:
+    {
+      char *codec_name = NULL;
+      GstTagList *list = gst_tag_list_new ();
       padname = g_strdup_printf ("audio_%02d", avi->num_a_streams);
       templ = gst_element_class_get_pad_template (klass, "audio_%02d");
-      caps = gst_riff_create_audio_caps (strf.auds->format, strh, strf.auds);
+      caps = gst_riff_create_audio_caps (strf.auds->format, strh, strf.auds,
+                                         &codec_name);
+      gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
+                        codec_name, NULL);
+      gst_element_found_tags (GST_ELEMENT (avi), list);
+      gst_tag_list_free (list);
+      if (codec_name) g_free (codec_name);
       g_free (strf.auds);
       avi->num_a_streams++;
       break;
+    }
     case GST_RIFF_FCC_iavs:
+    {
+      char *codec_name = NULL;
+      GstTagList *list = gst_tag_list_new ();
       padname = g_strdup_printf ("video_%02d", avi->num_v_streams);
       templ = gst_element_class_get_pad_template (klass, "video_%02d");
-      caps = gst_riff_create_iavs_caps (strh->fcc_handler, strh, strf.iavs);
+      caps = gst_riff_create_iavs_caps (strh->fcc_handler, strh, strf.iavs,
+                                        &codec_name);
+      gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
+                        codec_name, NULL);
+      gst_element_found_tags (GST_ELEMENT (avi), list);
+      gst_tag_list_free (list);
+      if (codec_name) g_free (codec_name);
       g_free (strf.iavs);
       avi->num_v_streams++;
       break;
+    }
     default:
       g_assert (0);
   }
