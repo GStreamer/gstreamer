@@ -104,6 +104,24 @@ GstElementDetails gst_gnomevfssrc_details = {
 	"(C) 2001",
 };
 
+GST_FORMATS_FUNCTION (gst_gnomevfssrc_get_formats,
+	GST_FORMAT_BYTES
+)
+
+GST_PAD_QUERY_TYPE_FUNCTION (gst_gnomevfssrc_get_query_types,
+	GST_PAD_QUERY_TOTAL,
+	GST_PAD_QUERY_POSITION
+)
+
+GST_EVENT_MASK_FUNCTION (gst_gnomevfssrc_get_event_mask,
+  { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR |
+                    GST_SEEK_METHOD_SET |
+                    GST_SEEK_METHOD_END |
+                    GST_SEEK_FLAG_FLUSH },
+  { GST_EVENT_FLUSH, 0 },
+  { GST_EVENT_SIZE, 0 }
+)
+
 /* GnomeVFSSrc signals and args */
 enum {
 	LAST_SIGNAL
@@ -138,8 +156,6 @@ static gboolean 	gst_gnomevfssrc_open_file	(GstGnomeVFSSrc *src);
 static gboolean 	gst_gnomevfssrc_srcpad_event 	(GstPad *pad, GstEvent *event);
 static gboolean 	gst_gnomevfssrc_srcpad_query 	(GstPad *pad, GstPadQueryType type,
 		              				 GstFormat *format, gint64 *value);
-
-
 static GstElementClass *parent_class = NULL;
 
 GType gst_gnomevfssrc_get_type(void)
@@ -197,10 +213,16 @@ static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
 {
 	gnomevfssrc->srcpad = gst_pad_new("src", GST_PAD_SRC);
 	gst_pad_set_get_function(gnomevfssrc->srcpad, gst_gnomevfssrc_get);
+	gst_pad_set_event_mask_function (gnomevfssrc->srcpad, 
+			gst_gnomevfssrc_get_event_mask);
 	gst_pad_set_event_function (gnomevfssrc->srcpad,
 			gst_gnomevfssrc_srcpad_event);
+	gst_pad_set_query_type_function (gnomevfssrc->srcpad, 
+			gst_gnomevfssrc_get_query_types);
 	gst_pad_set_query_function (gnomevfssrc->srcpad,
 			gst_gnomevfssrc_srcpad_query);
+	gst_pad_set_formats_function (gnomevfssrc->srcpad, 
+			gst_gnomevfssrc_get_formats);
 	gst_element_add_pad(GST_ELEMENT(gnomevfssrc), gnomevfssrc->srcpad);
 
 	gnomevfssrc->filename = NULL;
@@ -601,6 +623,7 @@ static gboolean plugin_init(GModule *module, GstPlugin *plugin)
 	return TRUE;
 }
 
+
 static gboolean
 gst_gnomevfssrc_srcpad_query (GstPad *pad, GstPadQueryType type,
 		              GstFormat *format, gint64 *value)
@@ -638,6 +661,7 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 		gint64 desired_offset;
 
 		if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
+			gst_event_unref (event);
 			return FALSE;
 		}
 		switch (GST_EVENT_SEEK_METHOD (event)) {
@@ -651,6 +675,7 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 			desired_offset = src->size - ABS (GST_EVENT_SEEK_OFFSET (event));
 			break;
 		default:
+			gst_event_unref (event);
 			return FALSE;
 			break;
 		}
@@ -663,6 +688,7 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 					gnome_vfs_result_to_string(result));
 			
 			if (result != GNOME_VFS_OK) {
+				gst_event_unref (event);
 				return FALSE;
 			}
 		}
@@ -674,6 +700,7 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 	}
 	case GST_EVENT_SIZE:
 		if (GST_EVENT_SIZE_FORMAT (event) != GST_FORMAT_BYTES) {
+			gst_event_unref (event);
 			return FALSE;
 		}
 		src->bytes_per_read = GST_EVENT_SIZE_VALUE (event);
@@ -684,9 +711,11 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 		src->need_flush = TRUE;
 		break;
 	default:
+		gst_event_unref (event);
 		return FALSE;
 		break;
 	}
+	gst_event_unref (event);
 
 	return TRUE;
 }
