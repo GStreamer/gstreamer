@@ -242,10 +242,10 @@ gst_filesink_open_file (GstFileSink *sink)
   g_return_val_if_fail (!GST_FLAG_IS_SET (sink, GST_FILESINK_OPEN), FALSE);
 
   /* open the file */
-  if (!sink->filename)
+  if (sink->filename == NULL || sink->filename[0] == '\0')
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
-                       (_("No filename specified.")), (NULL));
+                         (_("No file name specified for writing.")), (NULL));
     return FALSE;
   }
 

@@ -670,17 +670,10 @@ gst_filesrc_open_file (GstFileSrc *src)
 {
   g_return_val_if_fail (!GST_FLAG_IS_SET (src ,GST_FILESRC_OPEN), FALSE);
 
-  if (src->filename == NULL)
+  if (src->filename == NULL || src->filename[0] == '\0')
   {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-	                 (_("No filename specified.")), (NULL));
-    return FALSE;
-  }
-
-  if (src->filename == NULL)
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-	                 (_("No file specified for reading.")), (NULL));
+	                 (_("No file name specified for reading.")), (NULL));
     return FALSE;
   }
 

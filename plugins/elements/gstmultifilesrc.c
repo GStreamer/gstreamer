@@ -236,9 +236,15 @@ gboolean gst_multifilesrc_open_file (GstMultiFileSrc *src, GstPad *srcpad)
 {
   g_return_val_if_fail (!GST_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN), FALSE);
 
+  if (src->currentfilename == NULL || src->currentfilename[0] == '\0')
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+                       (_("No file name specified for reading.")), (NULL));
+    return FALSE;
+  }
+
   /* open the file */
   src->fd = open ((const char *) src->currentfilename, O_RDONLY);
-
   if (src->fd < 0) {
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
                          (_("Could not open file \"%s\" for reading."), src->currentfilename),

@@ -1,3 +1,9 @@
+2004-02-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/elements/gstfilesink.c: (gst_filesink_open_file):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_open_file):
+	* gst/elements/gstmultifilesrc.c: (gst_multifilesrc_open_file):
+
 2004-02-20  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbin.c:
