@@ -385,10 +385,11 @@ Makefile
 include/Makefile
 gst/Makefile
 gst/gstversion.h
-gst/types/Makefile
-gst/elements/Makefile
 gst/autoplug/Makefile
+gst/elements/Makefile
+gst/parse/Makefile
 gst/schedulers/Makefile
+gst/types/Makefile
 libs/Makefile
 libs/gst/Makefile
 libs/gst/bytestream/Makefile
