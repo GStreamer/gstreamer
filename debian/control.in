@@ -38,8 +38,8 @@ Recommends: libgstreamer-dev (= ${Source-Version})
 Description: Core GStreamer documentation
  Core GStreamer documentation
  .
- Gstreamer Manual
- Gstreamer Plugin Writers Guide
+ GStreamer Manual
+ GStreamer Plugin Writers Guide
  Various API docs
 
 Package: gstreamer-tools

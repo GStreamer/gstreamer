@@ -72,7 +72,7 @@ being 0.
 .B  \-\-gst\-debug\-no\-color
 \fIGStreamer\fP normally prints debugging messages so that the
 messages are color-coded when printed to a terminal that handles
-ANSI escape sequences.  Using this option causes \fIGstreamer\fP
+ANSI escape sequences.  Using this option causes \fIGStreamer\fP
 to print messages without color.
 .TP 8
 .B  \-\-gst\-disable\-debug
