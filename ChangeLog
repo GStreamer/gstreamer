@@ -1,3 +1,9 @@
+2004-08-23 Iain <iaingnome@gmail.com>
+
+	* ext/mad/gstid3tag.c (gst_mad_id3_to_tag_list): Special case COMM
+	tags. They appear to be handled differently to normal.
+	(tag_list_to_id3_tag_foreach): Ditto.
+
 2004-08-22  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_next_buffer),
