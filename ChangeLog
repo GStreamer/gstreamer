@@ -1,3 +1,9 @@
+2005-01-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/swfdec/gstswfdec.c: (gst_swfdec_change_state):
+	  Don't return state change success when the parent
+	  failed.
+
 2005-01-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/avi/gstavimux.c: (gst_avimux_handle_event):
