@@ -512,7 +512,6 @@ gst_vorbisfile_new_link (VorbisFile *vorbisfile, gint link)
 {
   vorbis_info *vi = ov_info (&vorbisfile->vf, link);
   GstCaps *caps;
-  gboolean res = TRUE;
 
   /* new logical bitstream */
   vorbisfile->current_link = link;
