@@ -1308,10 +1308,6 @@ gst_pad_link_negotiate (GstPadLink * link)
   GST_DEBUG ("negotiating link from pad %s:%s to pad %s:%s",
       GST_DEBUG_PAD_NAME (link->srcpad), GST_DEBUG_PAD_NAME (link->sinkpad));
 
-  if (!gst_pad_link_ready_for_negotiation (link)) {
-    return GST_PAD_LINK_DELAYED;
-  }
-
   gst_pad_link_intersect (link);
   if (gst_caps_is_empty (link->caps))
     return GST_PAD_LINK_REFUSED;
@@ -1319,6 +1315,10 @@ gst_pad_link_negotiate (GstPadLink * link)
   gst_pad_link_fixate (link);
   if (gst_caps_is_empty (link->caps))
     return GST_PAD_LINK_REFUSED;
+
+  if (!gst_pad_link_ready_for_negotiation (link)) {
+    return GST_PAD_LINK_DELAYED;
+  }
 
   return gst_pad_link_call_link_functions (link);
 }

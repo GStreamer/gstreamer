@@ -16,11 +16,11 @@ endif
 SUBDIRS = bins bytestream cleanup dynparams ghostpads \
 	caps plugin elements clock refcounting tags threads \
 	indexers debug $(GST_PARSE_DIRS) $(GST_DEBUG_DIRS) \
-	dlopen
+	dlopen negotiation
 
 DIST_SUBDIRS = bins bytestream caps cleanup clock dynparams elements indexers \
 		plugin refcounting tags threads parse debug ghostpads \
-		dlopen
+		dlopen negotiation
 
 tests_pass = test_gst_init
 tests_fail = 

@@ -1,3 +1,14 @@
+2004-04-21  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstpad.c: (gst_pad_link_negotiate):
+	  refuse to link if the link is not possible
+	* configure.ac:
+	* testsuite/Makefile.am:
+	* testsuite/negotiation/.cvsignore:
+	* testsuite/negotiation/Makefile.am:
+	* testsuite/negotiation/pad_link.c: (main):
+	  add test that checks the above behaviour
+
 2004-04-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:
