@@ -40,8 +40,8 @@ sub read_config
   {
     print "No configuration file $config_file found.  You might want to create one.\n";
   }
-  if (!defined $cfg{AUDIOSRC})   { $cfg{AUDIOSRC} = "esdmon"; }
-  if (!defined $cfg{VIDEOSINK})  { $cfg{VIDEOSINK} = "sdlvideosink"; }
+  if (!defined $cfg{AUDIOSRC})   { $cfg{AUDIOSRC} = "osssrc"; }
+  if (!defined $cfg{VIDEOSINK})  { $cfg{VIDEOSINK} = "xvimagesink"; }
   if (!defined $cfg{CVS_PATH})   { $cfg{CVS_PATH} =  `echo -n ~`."/gst/cvs"; }
 }
 
@@ -54,7 +54,7 @@ sub visualise(@)
     my $pipe;
     $pipe = $vis unless $pipe = $pipes{$vis};
 
-    $command = "gst-launch-@GST_MAJORMINOR@ $cfg{AUDIOSRC} ! $pipe ! { queue ! colorspace ! $cfg{VIDEOSINK} }";
+    $command = "gst-launch-@GST_MAJORMINOR@ $cfg{AUDIOSRC} ! $pipe ! { queue ! ffmpegcolorspace ! $cfg{VIDEOSINK} }";
     print "Running $command\n";
     system ("PATH=\$PATH:".$cfg{CVS_PATH}."/gstreamer/tools $command");
 }
@@ -65,9 +65,9 @@ read_config ();
 
 %pipes = ( 
   "goom", "goom",
-  "chart", "stereo2mono ! chart",
+  "chart", "audioconvert ! chart",
   "synaesthesia", "synaesthesia",
-  "monoscope", "stereo2mono ! monoscope"
+  "monoscope", "audioconvert ! monoscope"
 );
 
 if ($#ARGV > 0) {
