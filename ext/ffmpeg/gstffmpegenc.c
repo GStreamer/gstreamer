@@ -520,7 +520,7 @@ gst_ffmpegenc_register (GstPlugin *plugin)
     /* no quasi codecs, please */
     if (in_plugin->id == CODEC_ID_RAWVIDEO ||
 	(in_plugin->id >= CODEC_ID_PCM_S16LE &&
-	 in_plugin->id >= CODEC_ID_PCM_ALAW)) {
+	 in_plugin->id <= CODEC_ID_PCM_ALAW)) {
       goto next;
     }
 
@@ -550,7 +550,8 @@ gst_ffmpegenc_register (GstPlugin *plugin)
 
     /* construct the element details struct */
     details = g_new0 (GstElementDetails,1);
-    details->longname = g_strdup(in_plugin->name);
+    details->longname = g_strdup_printf("FFMPEG %s encoder",
+					in_plugin->name);
     details->klass = g_strdup_printf("Codec/%s/Encoder",
 				     (in_plugin->type == CODEC_TYPE_VIDEO) ?
 				     "Video" : "Audio");
