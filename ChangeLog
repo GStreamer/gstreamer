@@ -1,3 +1,11 @@
+2004-07-15  Benjamin Otte  <otte@gnome.org>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_open_audio),
+	(gst_alsa_sw_params_dump), (gst_alsa_hw_params_dump),
+	(gst_alsa_close_audio):
+	  disable some of the debugging code for now. Writing debugging to a
+	  buffer is broken in current alsalib releases.
+
 2004-07-12  Benjamin Otte  <otte@gnome.org>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_alloc_buffer):
