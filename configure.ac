@@ -405,6 +405,17 @@ dnl ==========================================================================
 dnl ========================= End macro definitions ==========================
 dnl ==========================================================================
 
+
+dnl Check for X11 extensions
+AC_PATH_XTRA
+if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
+  AC_MSG_ERROR(can not find X11)
+fi
+AC_SUBST(X_CFLAGS)
+AC_SUBST(X_PRE_LIBS)
+AC_SUBST(X_EXTRA_LIBS)
+AC_SUBST(X_LIBS)
+
 dnl ==========================================================================
 dnl ============================= sys plugins ================================
 dnl ==========================================================================
@@ -415,6 +426,10 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
 GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
   AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS="yes", HAVE_OSS="no")
 ])
+
+dnl *** QuickCam ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_QCAM, true)
+GST_CHECK_FEATURE(QCAM, [QuickCam], qcamsrc, HAVE_QCAM="yes")
 
 dnl *** Video 4 Linux ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_V4L, true)
@@ -434,7 +449,11 @@ GST_CHECK_FEATURE(VGA, [VGA], vgavideosink, [
   AC_CHECK_HEADER(asm/vga.h, HAVE_VGA="yes", HAVE_VGA="no")
 ])
 
-
+dnl *** XVideo ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
+GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink, [
+  GST_CHECK_LIBHEADER(XVIDEO, Xv, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h)
+])
 
 dnl Next, check for the optional libraries:
 dnl These are all libraries used in building plugins
@@ -746,28 +765,6 @@ main() { atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0
   ])
 fi
 
-
-dnl Check for X11 extensions
-AC_PATH_XTRA
-if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
-  AC_MSG_ERROR(can not find X11)
-fi
-AC_SUBST(X_CFLAGS)
-AC_SUBST(X_PRE_LIBS)
-AC_SUBST(X_EXTRA_LIBS)
-AC_SUBST(X_LIBS)
-
-
-dnl Check for the Xv library
-xvsave_LIBS=${LIBS}
-AC_CHECK_LIB(Xv, XvQueryExtension,
-  HAVE_LIBXV=yes,
-  HAVE_LIBXV=no,
-  $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS
-)
-LIBS=${xvsave_LIBS}
-AC_CHECK_HEADER(X11/extensions/Xv.h, :, HAVE_LIBXV=no)
-AC_CHECK_HEADER(X11/extensions/Xvlib.h, :, HAVE_LIBXV=no)
 
 
 dnl ######################################################################
