@@ -161,7 +161,7 @@ static void gst_gnomevfssrc_class_init(GstGnomeVFSSrcClass *klass)
 
 	parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-      	gst_element_install_std_props (
+      	gst_element_class_install_std_props (
                GST_ELEMENT_CLASS (klass),
                "offset",       ARG_OFFSET,       G_PARAM_READWRITE,
                "filesize",     ARG_FILESIZE,     G_PARAM_READABLE,
