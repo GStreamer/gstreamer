@@ -1,5 +1,11 @@
 2004-07-11  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstbin.c (gst_bin_add_func): If we're adding an element
+	whose state is higher than the bin state, raise the bin state to
+	ensure that bin state := highest child state.
+	
+2004-07-11  Andy Wingo  <wingo@pobox.com>
+
 	* gst/gstbin.c (gst_bin_foreach): New static function. Calls a
 	procedure on the children of a bin. Assumes that the procedure can
 	change the set of children.

@@ -455,6 +455,12 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
     return;
   }
 
+  if (GST_STATE (element) > GST_STATE (bin)) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+        "setting state to receive element \"%s\"", GST_OBJECT_NAME (element));
+    gst_element_set_state ((GstElement *) bin, GST_STATE (element));
+  }
+
   /* set the element's parent and add the element to the bin's list of children */
   gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
 
