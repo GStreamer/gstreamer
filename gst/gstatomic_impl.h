@@ -297,7 +297,7 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 
   ptr = &aint->counter;
 
-#if 0 __GNUC__ > 3 || (__GNUC__ >=3 && __GNUC_MINOR__ >= 2)
+#if __GNUC__ > 3 || (__GNUC__ >=3 && __GNUC_MINOR__ >= 2)
   __asm__ __volatile__("1: ldstub [%[ptr] + 3], %[lock]\n"
 		       "\torcc %[lock], 0, %[ignore]\n"
 		       "\tbne 1b\n" /* go back until we have the lock */
