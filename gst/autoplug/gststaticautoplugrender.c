@@ -140,8 +140,8 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
   GList *sinkpads;
   gboolean connected = FALSE;
 
-  GST_DEBUG (0,"gstpipeline: autoplug pad connect function for \"%s\" to \"%s\"\n",
-		  GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
+  GST_DEBUG (0,"gstpipeline: autoplug pad connect function for %s %s:%s to \"%s\"\n",
+		  GST_ELEMENT_NAME (src), GST_DEBUG_PAD_NAME(pad), GST_ELEMENT_NAME(sink));
 
   sinkpads = gst_element_get_pad_list(sink);
   while (sinkpads) {

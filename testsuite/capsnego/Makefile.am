@@ -1,6 +1,6 @@
 SUBDIRS =
 
-testprogs = capsnego converter
+testprogs = capsnego converter converter2
 
 TESTS = $(testprogs)
 

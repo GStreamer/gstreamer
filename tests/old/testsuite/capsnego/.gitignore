@@ -7,3 +7,4 @@ Makefile.in
 .libs
 capsnego
 converter
+converter2
