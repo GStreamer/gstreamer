@@ -1,3 +1,14 @@
+2004-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/alsa/gstalsasrc.c: (gst_alsa_src_get_time):
+          avoid a segfault
+	* gst/tcp/gsttcp.c: (gst_tcp_socket_write), (gst_tcp_socket_read),
+	(gst_tcp_gdp_read_header), (gst_tcp_gdp_read_caps):
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_gdp_read_caps),
+	(gst_tcpserversrc_gdp_read_header):
+         use ssize_t over size_t since the former is signed and thus the
+         check for error codes can work
+
 2004-06-02  Wim Taymans  <wim@fluendo.com>
 
 	reviewed by: Johan
