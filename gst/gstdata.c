@@ -42,6 +42,8 @@
 void
 gst_data_init (GstData *data, GType type, guint16 flags, GstDataFreeFunction free, GstDataCopyFunction copy)
 {
+  g_return_if_fail (data != NULL);
+
   _GST_DATA_INIT (data, type, flags, free, copy);
 }
 
@@ -57,6 +59,7 @@ gst_data_init (GstData *data, GType type, guint16 flags, GstDataFreeFunction fre
 void
 gst_data_copy_into (const GstData *data, GstData *target)
 {
+  g_return_if_fail (data != NULL);
 }
 
 /**
@@ -69,6 +72,8 @@ gst_data_copy_into (const GstData *data, GstData *target)
 void
 gst_data_dispose (GstData *data)
 {
+  g_return_if_fail (data != NULL);
+
   _GST_DATA_DISPOSE (data);
 }
 
@@ -86,6 +91,8 @@ gst_data_dispose (GstData *data)
 GstData*
 gst_data_copy (const GstData *data) 
 {
+  g_return_val_if_fail (data != NULL, NULL);
+
   if (data->copy)
     return data->copy (data); 
 
@@ -103,6 +110,8 @@ gboolean
 gst_data_needs_copy_on_write (GstData *data) 
 {
   gint refcount;
+
+  g_return_val_if_fail (data != NULL, FALSE);
 
   GST_ATOMIC_INT_READ (&data->refcount, &refcount);
 
@@ -130,6 +139,8 @@ gst_data_copy_on_write (GstData *data)
 {
   gint refcount;
 
+  g_return_val_if_fail (data != NULL, NULL);
+
   GST_ATOMIC_INT_READ (&data->refcount, &refcount);
 
   if (refcount == 1 && !GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
@@ -154,6 +165,9 @@ gst_data_copy_on_write (GstData *data)
 void
 gst_data_free (GstData *data) 
 {
+  if (!data)
+    return;
+
   if (data->free)
     data->free (data); 
 }

@@ -107,6 +107,8 @@ _gst_buffer_sub_free (GstBuffer *buffer)
 void
 gst_buffer_default_free (GstBuffer *buffer)
 {
+  g_return_if_fail (buffer != NULL);
+
   /* free our data */
   if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE) && GST_BUFFER_DATA (buffer)) 
     g_free (GST_BUFFER_DATA (buffer));
@@ -140,6 +142,8 @@ GstBuffer*
 gst_buffer_default_copy (GstBuffer *buffer)
 {
   GstBuffer *copy;
+
+  g_return_val_if_fail (buffer != NULL, NULL);
 
   /* create a fresh new buffer */
   copy = gst_buffer_new ();
@@ -317,6 +321,7 @@ GstBuffer*
 gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
 {
   GstBuffer *result;
+
   /* we're just a specific case of the more general gst_buffer_span() */
   result = gst_buffer_span (buf1, 0, buf2, buf1->size + buf2->size);
 
@@ -337,6 +342,7 @@ gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
 gboolean
 gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
 {
+  g_return_val_if_fail (buf1 != NULL && buf2 != NULL, FALSE);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf1) > 0, FALSE);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf2) > 0, FALSE);
 
@@ -372,6 +378,7 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 {
   GstBuffer *newbuf;
 
+  g_return_val_if_fail (buf1 != NULL && buf2 != NULL, FALSE);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf1) > 0, NULL);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf2) > 0, NULL);
   g_return_val_if_fail (len > 0, NULL);
@@ -409,6 +416,8 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 void
 gst_buffer_pool_default_free (GstBufferPool *pool)
 {
+  g_return_if_fail (pool != NULL);
+
   _GST_DATA_DISPOSE (GST_DATA (pool));
   g_free (pool);
   _gst_buffer_pool_live--;
@@ -475,6 +484,8 @@ gst_buffer_pool_new (GstDataFreeFunction free,
 gboolean
 gst_buffer_pool_is_active (GstBufferPool *pool)
 {
+  g_return_val_if_fail (pool != NULL, FALSE);
+
   return pool->active;
 }
 
@@ -489,6 +500,8 @@ gst_buffer_pool_is_active (GstBufferPool *pool)
 void
 gst_buffer_pool_set_active (GstBufferPool *pool, gboolean active)
 {
+  g_return_if_fail (pool != NULL);
+
   pool->active = active;
 }
 
@@ -502,6 +515,8 @@ gst_buffer_pool_set_active (GstBufferPool *pool, gboolean active)
 void
 gst_buffer_pool_set_user_data (GstBufferPool *pool, gpointer user_data)
 {
+  g_return_if_fail (pool != NULL);
+
   pool->user_data = user_data;
 }
 
@@ -516,6 +531,8 @@ gst_buffer_pool_set_user_data (GstBufferPool *pool, gpointer user_data)
 gpointer
 gst_buffer_pool_get_user_data (GstBufferPool *pool)
 {
+  g_return_val_if_fail (pool != NULL, NULL);
+
   return pool->user_data;
 }
 

@@ -194,8 +194,8 @@ gst_event_discont_get_value (GstEvent *event, GstFormat format, gint64 *value)
 {
   gint i, n;
 
-  g_return_val_if_fail (event, FALSE);
-  g_return_val_if_fail (value, FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
 
   n = GST_EVENT_DISCONT_OFFSET_LEN (event);
 
