@@ -119,7 +119,7 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
   gint hintdesc;
   gint argtype,argperms;
   GParamSpec *paramspec = NULL;
-  gchar *argname;
+  gchar *argname, *tempstr;
 
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
@@ -254,10 +254,16 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
 
     klass->control_info[i].name = g_strdup(desc->PortNames[current_portnum]);
     argname = g_strdup(klass->control_info[i].name);
-    // this is the same thing that param_spec_* will do
+    /* this is the same thing that param_spec_* will do */
     g_strcanon (argname, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
+    /* satisfy glib2 (argname[0] must be [A-Za-z]) */
+    if (!((argname[0] >= 'a' && argname[0] <= 'z') || (argname[0] >= 'A' && argname[0] <= 'Z'))) {
+      tempstr = argname;
+      argname = g_strconcat("param-", argname, NULL);
+      g_free (tempstr);
+    }
     
-    // check for duplicate property names
+    /* check for duplicate property names */
     if (g_object_class_find_property(G_OBJECT_CLASS(klass), argname) != NULL){
       gint numarg=1;
       gchar *numargname = g_strdup_printf("%s_%d",argname,numarg++);
@@ -267,6 +273,8 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
       }
       argname = numargname;
     }
+    
+    g_print("adding arg %s from %s\n",argname, klass->control_info[i].name);
     
     if (argtype==G_TYPE_BOOLEAN){
       paramspec = g_param_spec_boolean(argname,argname,argname, FALSE, argperms);
@@ -278,9 +286,8 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
         klass->control_info[i].lowerbound, klass->control_info[i].upperbound, 
         (klass->control_info[i].lowerbound + klass->control_info[i].upperbound) / 2.0f, argperms);
     }
-    g_object_class_install_property(G_OBJECT_CLASS(klass), i+ARG_LAST, paramspec);
     
-    g_print("added arg %s from %s\n",argname, klass->control_info[i].name);
+    g_object_class_install_property(G_OBJECT_CLASS(klass), i+ARG_LAST, paramspec);
   }
 }
 
