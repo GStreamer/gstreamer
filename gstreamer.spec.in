@@ -30,6 +30,10 @@ plugins.
 %{_libdir}/libgst.so.*
 %{_libdir}/gst/*.so.*
 %{_libdir}/gst/*.so
+%{_libdir}/gst/libgstcontrol*.so*
+%{_libdir}/gst/libgstbytestream*.so*
+%{_libdir}/gst/libgstgetbits*.so*
+%{_libdir}/gst/libgstputbits*.so*
 %{_mandir}/man1/gst-complete.*
 %{_mandir}/man1/gst-compprep.*
 %{_mandir}/man1/gst-inspect.*
