@@ -352,13 +352,13 @@ gst_buffer_copy (GstBuffer *buffer)
 {
   GstBuffer *newbuf;
 
-  // allocate a new buffer
-  newbuf = gst_buffer_new();
-
   // if a copy function exists, use it, else copy the bytes
   if (buffer->copy != NULL) {
     newbuf = (buffer->copy)(buffer);
   } else {
+    // allocate a new buffer
+    newbuf = gst_buffer_new();
+
     // copy the absolute size
     newbuf->size = buffer->size;
     // allocate space for the copy
