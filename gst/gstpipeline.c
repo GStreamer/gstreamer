@@ -105,7 +105,7 @@ GstPipeline *gst_pipeline_new(guchar *name) {
 }
 
 static void gst_pipeline_prepare(GstPipeline *pipeline) {
-  g_print("preparing pipeline for playing\n");
+  g_print("GstPipeline: preparing pipeline \"%s\" for playing\n", gst_element_get_name(GST_ELEMENT(pipeline)));
 }
 
 
@@ -119,13 +119,14 @@ static gboolean gst_pipeline_change_state(GstElement *element,
   switch (state) {
     case GST_STATE_RUNNING:
       /* we need to set up internal state */
-      g_print("preparing pipeline \"%s\" for iterations:\n",
+      g_print("GstPipeline: preparing pipeline \"%s\" for iterations:\n",
               gst_element_get_name(GST_ELEMENT(element)));
       gst_pipeline_prepare(pipeline);
       break;
     case ~GST_STATE_RUNNING:
       /* tear down the internal state */
-      g_print("tearing down pipelines's iteration state\n");
+      g_print("GstPipeline: tearing down pipelines's \"%s\" iteration state\n",
+              gst_element_get_name(GST_ELEMENT(element)));
       break;
     default:
       break;

@@ -54,7 +54,7 @@ struct _GstAudioSink {
 
   GstPad *sinkpad;
 
-  GstClockTime clocktime;
+  //GstClockTime clocktime;
   GstClock *clock;
   /* soundcard state */
   int fd;

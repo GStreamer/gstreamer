@@ -43,7 +43,7 @@ GstElementDetails gst_queue_details;
 #define GST_IS_QUEUE(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_QUEUE))
 #define GST_IS_QUEUE_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE))
 
 typedef struct _GstQueue GstQueue;
 typedef struct _GstQueueClass GstQueueClass;

@@ -21,6 +21,8 @@
 #ifndef __GST_H__
 #define __GST_H__
 
+#include <unistd.h>
+
 #include <gtk/gtk.h>
 
 #include <gst/gstlog.h>
@@ -51,9 +53,9 @@ void gst_init(int *argc,char **argv[]);
 /* debugging */
 #ifndef DEBUG
 #ifdef DEBUG_ENABLED
-#define DEBUG(format,args...) g_print("DEBUG: " format, ##args)
+#define DEBUG(format, args...) g_print("DEBUG:(%d) " format, getpid() , ##args)
 #else
-#define DEBUG(format,args...)
+#define DEBUG(format, args...)
 #endif
 #endif
 

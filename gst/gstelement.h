@@ -52,11 +52,11 @@ typedef enum {
 #define GST_STATE_IS_SET(obj,flag)	(GST_STATE (obj) & (flag))
 #define GST_STATE_SET(obj,flag) \
 G_STMT_START{ (GST_STATE (obj) |= (flag)); \
-gst_info("set '%s' state %d\n",gst_element_get_name(obj),flag); \
+gst_info("GstElement: set '%s' state %d\n",gst_element_get_name(obj),flag); \
 }G_STMT_END
 #define GST_STATE_UNSET(obj,flag) \
 G_STMT_START{ (GST_STATE (obj) &= ~(flag)); \
-gst_info("unset '%s' state %d\n",gst_element_get_name(obj),flag); \
+gst_info("GstElement: unset '%s' state %d\n",gst_element_get_name(obj),flag); \
 }G_STMT_END
 
 

@@ -18,6 +18,8 @@
  */
 
 
+//#define DEBUG_ENABLED
+#include <gst/gst.h>
 #include <gst/gstpad.h>
 #include <gst/gstelement.h>
 #include <gst/gsttype.h>
@@ -80,6 +82,7 @@ static void gst_pad_init(GstPad *pad) {
   pad->peer = NULL;
   pad->chain = NULL;
   pad->pull = NULL;
+  pad->qos = NULL;
   pad->parent = NULL;
   pad->ghostparents = NULL;
 }
@@ -166,6 +169,13 @@ void gst_pad_set_chain_function(GstPad *pad,GstPadChainFunction chain) {
   pad->chain = chain;
 }
 
+void gst_pad_set_qos_function(GstPad *pad,GstPadQoSFunction qos) {
+  g_return_if_fail(pad != NULL);
+  g_return_if_fail(GST_IS_PAD(pad));
+  
+  pad->qos = qos;
+}
+
 void gst_pad_push(GstPad *pad,GstBuffer *buffer) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -179,9 +189,9 @@ void gst_pad_push(GstPad *pad,GstBuffer *buffer) {
   // else we're likely going to have to coroutine it
   else {
     pad->peer->bufpen = buffer;
-    g_print("would switch to a coroutine here...\n");
+    g_print("GstPad: would switch to a coroutine here...\n");
     if (!GST_IS_ELEMENT(pad->peer->parent))
-      g_print("eek, this isn't an element!\n");
+      g_print("GstPad: eek, this isn't an element!\n");
     if (GST_ELEMENT(pad->peer->parent)->threadstate != NULL)
       cothread_switch(GST_ELEMENT(pad->peer->parent)->threadstate);
   }
@@ -195,12 +205,12 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
   g_return_val_if_fail(pad != NULL, NULL);
   g_return_val_if_fail(GST_IS_PAD(pad), NULL);
 
-	// if the pull function exists for the pad, call it directly
-	if (pad->pull) {
-		return (pad->pull)(pad->peer);
+  // if the pull function exists for the pad, call it directly
+  if (pad->pull) {
+    return (pad->pull)(pad->peer);
   // else we're likely going to have to coroutine it
-	} else if (pad->bufpen == NULL) {
-    g_print("no buffer available, will have to do something about it\n");
+  } else if (pad->bufpen == NULL) {
+    g_print("GstPad: no buffer available, will have to do something about it\n");
     peerparent = GST_ELEMENT(pad->peer->parent);
     // if they're a cothread too, we can just switch to them
     if (peerparent->threadstate != NULL) {
@@ -208,11 +218,11 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
     // otherwise we have to switch to the main thread
     } else {
       state = cothread_main(GST_ELEMENT(pad->parent)->threadstate->ctx);
-      g_print("switching to supposed 0th thread at %p\n",state);
+      g_print("GstPad: switching to supposed 0th thread at %p\n",state);
       cothread_switch(state);
     }
   } else {
-    g_print("buffer available, pulling\n");
+    g_print("GstPad: buffer available, pulling\n");
     buf = pad->bufpen;
     pad->bufpen = NULL;
     return buf;
@@ -228,6 +238,41 @@ void gst_pad_chain(GstPad *pad) {
 
   if (pad->bufpen)
     (pad->chain)(pad,pad->bufpen);
+}
+
+/**
+ * gst_pad_handle_qos:
+ * @element: element to change state of
+ * @state: new element state
+ *
+ */
+void gst_pad_handle_qos(GstPad *pad,
+	               glong qos_message)
+{
+  GstElement *element;
+  GList *pads;
+  GstPad *target_pad;
+
+  DEBUG("gst_pad_handle_qos(\"%s\",%08ld)\n", GST_ELEMENT(pad->parent)->name,qos_message);
+
+  if (pad->qos) {
+    (pad->qos)(pad,qos_message);
+  }
+  else {
+    element = GST_ELEMENT(pad->peer->parent);
+
+    pads = element->pads;
+    DEBUG("gst_pad_handle_qos recurse(\"%s\",%08ld)\n", element->name,qos_message);
+    while (pads) {
+      target_pad = GST_PAD(pads->data);
+      if (target_pad->direction == GST_PAD_SINK) {
+        gst_pad_handle_qos(target_pad, qos_message);
+      }
+      pads = g_list_next(pads);
+    }
+  }
+
+  return;
 }
 
 void gst_pad_disconnect(GstPad *srcpad,GstPad *sinkpad) {

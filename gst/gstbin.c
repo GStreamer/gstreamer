@@ -151,7 +151,7 @@ void gst_bin_add(GstBin *bin,GstElement *element) {
      the children are, I think. */
 //  if (GST_STATE_IS_SET(element,GST_STATE_COMPLETE)) {
     if (!GST_STATE_IS_SET(bin,GST_STATE_COMPLETE)) {
-      g_print("GstBin: adding complete element - ");
+      g_print("GstBin: adding complete element - \n");
       gst_bin_change_state_norecurse(GST_ELEMENT(bin),GST_STATE_COMPLETE);
     }
 //  } else {
@@ -199,10 +199,10 @@ static gboolean gst_bin_change_state(GstElement *element,
   children = bin->children;
   while (children) {
     child = GST_ELEMENT(children->data);
-//    g_print("gst_bin_change_state setting state on \"%s\"\n",
-//            gst_object_get_name(GST_OBJECT(child)));
+    //g_print("gst_bin_change_state setting state on \"%s\"\n",
+    //        gst_element_get_name(GST_ELEMENT(child)));
     if (!gst_element_set_state(child,state)) {
-      g_print("child %p failed to set state 0x%08x\n",child,state);
+      g_print("GstBin: child %p failed to set state 0x%08x\n",child,state);
       return FALSE;
     }
 //    g_print("\n");
@@ -255,7 +255,6 @@ static gboolean gst_bin_change_state_type(GstBin *bin,
 //    g_print("\n");
     children = g_list_next(children);
   }
-//  g_print("<-- \"%s\"\n",gst_object_get_name(GST_OBJECT(bin)));
   if (type == GST_TYPE_BIN)
     gst_element_change_state(GST_ELEMENT(bin),state);
 
@@ -394,7 +393,7 @@ static void gst_bin_create_plan_func(GstBin *bin) {
 
   bin->numentries = 0;
 
-  g_print("attempting to create a plan for bin %p\n",bin);
+  g_print("GstBin: attempting to create a plan for bin %p\n",bin);
 
   /* walk through all the elements to figure out all kinds of things */
   elements = GST_BIN(bin)->children;
@@ -404,11 +403,11 @@ static void gst_bin_create_plan_func(GstBin *bin) {
     // have to use cothreads if any elements use loop functions
     if (element->loopfunc != NULL) {
       if (bin->threadcontext == NULL) {
-        g_print("initializing cothread context\n");
+        g_print("GstBin: initializing cothread context\n");
         bin->threadcontext = cothread_init();
       }
       if (element->threadstate == NULL) {
-        g_print("creating thread state for element\n");
+        g_print("GstBin: creating thread state for element\n");
         element->threadstate = cothread_create(bin->threadcontext);
         cothread_setfunc(element->threadstate,gst_element_loopfunc_wrapper, 
                          0,element);
@@ -417,7 +416,7 @@ static void gst_bin_create_plan_func(GstBin *bin) {
 
     /* we need to find all the entry points into the bin */
     if (GST_IS_SRC(element)) {
-      g_print("element '%s' is a source entry point for the bin\n",
+      g_print("GstBin: element '%s' is a source entry point for the bin\n",
               gst_element_get_name(GST_ELEMENT(element)));
       bin->entries = g_list_prepend(bin->entries,element);
       bin->numentries++;
@@ -437,7 +436,7 @@ static void gst_bin_create_plan_func(GstBin *bin) {
           /* if it's a connection and it's not ours... */
           if (GST_IS_CONNECTION(outside) &&
               (gst_object_get_parent(GST_OBJECT(outside)) != GST_OBJECT(bin))) {
-            g_print("element '%s' is the external source Connection \
+            g_print("GstBin: element '%s' is the external source Connection \
 for internal element '%s'\n",
                     gst_element_get_name(GST_ELEMENT(outside)),
                     gst_element_get_name(GST_ELEMENT(element)));
@@ -450,7 +449,7 @@ for internal element '%s'\n",
     }
     elements = g_list_next(elements);
   }
-  g_print("have %d entries into bin\n",bin->numentries);
+  g_print("GstBin: have %d entries into bin\n",bin->numentries);
 }
 
 void gst_bin_iterate_func(GstBin *bin) {
@@ -464,7 +463,7 @@ void gst_bin_iterate_func(GstBin *bin) {
   
   entries = bin->entries;  
 
-  g_print("iterating\n");
+  g_print("GstBin: iterating\n");
 
   while (entries) {
     entry = GST_ELEMENT(entries->data);

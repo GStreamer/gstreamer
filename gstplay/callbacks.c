@@ -52,6 +52,8 @@ void
 on_play2_activate                      (GtkMenuItem     *menuitem,
                                         gpointer         user_data)
 {
+  update_buttons(0);
+  change_state(GSTPLAY_PLAYING);
 
 }
 
@@ -60,6 +62,8 @@ void
 on_pause1_activate                     (GtkMenuItem     *menuitem,
                                         gpointer         user_data)
 {
+  update_buttons(1);
+  change_state(GSTPLAY_PAUSE);
 
 }
 
@@ -68,6 +72,8 @@ void
 on_stop1_activate                      (GtkMenuItem     *menuitem,
                                         gpointer         user_data)
 {
+  update_buttons(2);
+  change_state(GSTPLAY_STOPPED);
 
 }
 

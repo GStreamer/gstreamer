@@ -20,7 +20,7 @@
 //#define DEBUG_ENABLED
 //#define STATUS_ENABLED
 #ifdef STATUS_ENABLED
-#define STATUS(A) g_print(A)
+#define STATUS(A) DEBUG(A, gst_element_get_name(GST_ELEMENT(queue)))
 #else
 #define STATUS(A) 
 #endif
@@ -144,6 +144,12 @@ static GstBuffer *gst_queue_pull(GstPad *pad) {
   else return NULL;
 }
 
+static void gst_queue_cleanup_buffers(gpointer data, gpointer user_data) 
+{
+  DEBUG("queue: %s cleaning buffer %p\n", (gchar *)user_data, data);
+  gst_buffer_unref(GST_BUFFER(data));
+}
+
 void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   GstQueue *queue;
   gboolean tosignal = FALSE;
@@ -157,8 +163,19 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   name = gst_element_get_name(GST_ELEMENT(queue));
 
   /* we have to lock the queue since we span threads */
+
+  DEBUG("queue: %s adding buffer %p\n", name, buf);
   
   GST_LOCK(queue);
+
+  if (GST_BUFFER_FLAG_IS_SET(buf, GST_BUFFER_FLUSH)) {
+    g_list_foreach(queue->queue, gst_queue_cleanup_buffers, name); 
+    g_list_free(queue->queue);
+    queue->queue = NULL;
+    queue->level_buffers = 0;
+  }
+
+
   DEBUG("queue: %s: chain %d %p\n", name, queue->level_buffers, buf);
 
   if (queue->level_buffers >= queue->max_buffers) {
@@ -166,7 +183,7 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
     while (queue->level_buffers >= queue->max_buffers) {
       GST_UNLOCK(queue);
       g_mutex_lock(queue->fulllock);
-      STATUS("O");
+      STATUS("%s: O\n");
       g_cond_wait(queue->fullcond,queue->fulllock);
       g_mutex_unlock(queue->fulllock);
       GST_LOCK(queue);
@@ -186,7 +203,7 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
 //    queue->tail = g_list_next(queue->tail);
     queue->queue = g_list_append(queue->queue,buf);
   }
-  STATUS("+");
+  STATUS("%s: +\n");
 
   /* if we were empty, but aren't any more, signal a condition */
   tosignal = (queue->level_buffers <= 0);
@@ -213,19 +230,17 @@ void gst_queue_push(GstConnection *connection) {
   
   name = gst_element_get_name(GST_ELEMENT(queue));
 
+  DEBUG("queue: %s push %d\n", name, queue->level_buffers);
   /* have to lock for thread-safety */
   GST_LOCK(queue);
-  DEBUG("queue: %s push %d\n", name, queue->level_buffers);
 
-  if (!queue->level_buffers) {
-    while (!queue->level_buffers) {
-      GST_UNLOCK(queue);
-      g_mutex_lock(queue->emptylock);
-      STATUS("U");
-      g_cond_wait(queue->emptycond,queue->emptylock);
-      g_mutex_unlock(queue->emptylock);
-      GST_LOCK(queue);
-    }
+  while (!queue->level_buffers) {
+    GST_UNLOCK(queue);
+    g_mutex_lock(queue->emptylock);
+    STATUS("%s: U\n");
+    g_cond_wait(queue->emptycond,queue->emptylock);
+    g_mutex_unlock(queue->emptylock);
+    GST_LOCK(queue);
   }
 
   front = queue->queue;
@@ -233,7 +248,7 @@ void gst_queue_push(GstConnection *connection) {
   queue->queue = g_list_remove_link(queue->queue,front);
   g_list_free(front);
   queue->level_buffers--;
-  STATUS("-");
+  STATUS("%s: -\n");
   tosignal = queue->level_buffers < queue->max_buffers;
   GST_UNLOCK(queue);
 

@@ -30,8 +30,7 @@ extern "C" {
 
 
 #define GST_BUFFER(buf) \
-	((GstBuffer *)(buf))
-
+  ((GstBuffer *)(buf))
 
 #define GST_BUFFER_FLAGS(buf) \
   (GST_BUFFER(buf)->flags)

@@ -43,6 +43,7 @@ struct _GstClock {
   GstClockTimeDiff adjust;
   gboolean locking;
   GList *sinkobjects;
+  gint num, num_locked;
   GMutex *sinkmutex;
   GMutex *lock;
 };
@@ -54,6 +55,7 @@ void gst_clock_register(GstClock *clock, GstObject *obj);
 void gst_clock_set(GstClock *clock, GstClockTime time);
 void gst_clock_reset(GstClock *clock);
 void gst_clock_wait(GstClock *clock, GstClockTime time, GstObject *obj);
+GstClockTimeDiff gst_clock_current_diff(GstClock *clock, GstClockTime time);
 
 #ifdef __cplusplus
 }

@@ -147,9 +147,8 @@ static void gst_audiosink_init(GstAudioSink *audiosink) {
   audiosink->fd = -1;
   audiosink->clock = gst_clock_get_system();
   gst_clock_register(audiosink->clock, GST_OBJECT(audiosink));
-  audiosink->clocktime = 0LL;
+  //audiosink->clocktime = 0LL;
 
-  gst_element_set_state(GST_ELEMENT(audiosink),GST_STATE_COMPLETE);
 }
 
 void gst_audiosink_sync_parms(GstAudioSink *audiosink) {
@@ -173,19 +172,20 @@ void gst_audiosink_sync_parms(GstAudioSink *audiosink) {
           audiosink->frequency,audiosink->format,
           (audiosink->channels == 2) ? "stereo" : "mono",ospace.bytes, frag);
 
-
 }
 
 GstElement *gst_audiosink_new(gchar *name) {
   GstElement *audiosink = GST_ELEMENT(gtk_type_new(GST_TYPE_AUDIOSINK));
   gst_element_set_name(GST_ELEMENT(audiosink),name);
+  gst_element_set_state(GST_ELEMENT(audiosink),GST_STATE_COMPLETE);
   return audiosink;
 }
 
 void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
   GstAudioSink *audiosink;
   MetaAudioRaw *meta;
-  count_info info;
+  gboolean in_flush;
+  audio_buf_info ospace;
 
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -196,6 +196,12 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
 //gst_audiosink_type_audio);
   audiosink = GST_AUDIOSINK(pad->parent);
 //  g_return_if_fail(GST_FLAG_IS_SET(audiosink,GST_STATE_RUNNING));
+
+  if (in_flush = GST_BUFFER_FLAG_IS_SET(buf, GST_BUFFER_FLUSH)) {
+    DEBUG("audiosink: flush\n");
+    ioctl(audiosink->fd,SNDCTL_DSP_RESET,0);
+  }
+
 
   meta = (MetaAudioRaw *)gst_buffer_get_first_meta(buf);
   if (meta != NULL) {
@@ -217,20 +223,20 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
     gst_trace_add_entry(NULL,0,buf,"audiosink: writing to soundcard");
     //g_print("audiosink: writing to soundcard\n");
     if (audiosink->fd > 2) {
-      if (audiosink->clocktime == 0LL) 
-	      gst_clock_wait(audiosink->clock, audiosink->clocktime, GST_OBJECT(audiosink));
-      ioctl(audiosink->fd,SNDCTL_DSP_GETOPTR,&info);
-      audiosink->clocktime = (info.bytes*1000000LL)/(audiosink->frequency*audiosink->channels);
-      //g_print("audiosink: bytes sent %d time %llu\n", info.bytes, audiosink->clocktime);
-      gst_clock_set(audiosink->clock, audiosink->clocktime);
-      if (!audiosink->mute)
-        write(audiosink->fd,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
-      //audiosink->clocktime +=  (1000000LL*GST_BUFFER_SIZE(buf)/(audiosink->channels*
-//		              (audiosink->format/8)*(audiosink->frequency)));
-    //g_print("audiosink: writing to soundcard ok\n");
+      if (!audiosink->mute) {
+        if (gst_clock_current_diff(audiosink->clock, GST_BUFFER_TIMESTAMP(buf)) > 500000) {
+	}
+	else {
+          gst_clock_wait(audiosink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(audiosink));
+          ioctl(audiosink->fd,SNDCTL_DSP_GETOSPACE,&ospace);
+          DEBUG("audiosink: (%d bytes buffer)\n", ospace.bytes);
+          write(audiosink->fd,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
+          //gst_clock_set(audiosink->clock, GST_BUFFER_TIMESTAMP(buf));
+	}
+      }
     }
   }
-
+end:
   //g_print("a unref\n");
   gst_buffer_unref(buf);
   //g_print("a done\n");

@@ -39,7 +39,6 @@ static void gst_element_class_init(GstElementClass *klass);
 static void gst_element_init(GstElement *element);
 static void gst_element_real_destroy(GtkObject *object);
 
-
 static GstObjectClass *parent_class = NULL;
 static guint gst_element_signals[LAST_SIGNAL] = { 0 };
 
@@ -265,7 +264,7 @@ void gst_element_connect(GstElement *src,gchar *srcpadname,
  * condition.  It results in the "error" signal.
  */
 void gst_element_error(GstElement *element,gchar *error) {
-  g_error("error in element '%s': %s\n",element->name,error);
+  g_error("GstElement: error in element '%s': %s\n",element->name,error);
 
   gtk_signal_emit(GTK_OBJECT(element),gst_element_signals[ERROR],error);
 }
@@ -331,7 +330,7 @@ gboolean gst_element_change_state(GstElement *element,
 //          element->name,state);
 
   /* deal with the inverted state */
-//  g_print("changing element state, was %08lx",GST_STATE(element));
+  //g_print("changing element state, was %08lx\n",GST_STATE(element));
   if (state & GST_STATE_MAX)
     GST_STATE_UNSET(element,~state);
   else
@@ -497,7 +496,7 @@ xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent) {
             break;
           case GTK_TYPE_DOUBLE:
             xmlNewChild(arg,NULL,"value",
-                        g_strdup_printf("%lf",GTK_VALUE_DOUBLE(args[i])));
+                        g_strdup_printf("%g",GTK_VALUE_DOUBLE(args[i])));
             break;
           case GTK_TYPE_STRING:
             xmlNewChild(arg,NULL,"value",GTK_VALUE_STRING(args[i]));

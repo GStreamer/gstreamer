@@ -53,6 +53,7 @@ typedef struct _GstPadClass GstPadClass;
 typedef void (*GstPadChainFunction) (GstPad *pad,GstBuffer *buf);
 typedef GstBuffer *(*GstPadPullFunction) (GstPad *pad);
 typedef void (*GstPadPushFunction) (GstPad *pad);
+typedef void (*GstPadQoSFunction) (GstPad *pad, glong qos_message);
 
 typedef enum {
   GST_PAD_UNKNOWN,
@@ -77,6 +78,7 @@ struct _GstPad {
 
   GstPadChainFunction chain;
   GstPadPullFunction pull;
+  GstPadQoSFunction qos;
 
   GstObject *parent;
   GList *ghostparents;
@@ -93,6 +95,7 @@ void gst_pad_destroy(GstPad *pad);
 GstPadDirection gst_pad_get_direction(GstPad *pad);
 void gst_pad_set_chain_function(GstPad *pad,GstPadChainFunction chain);
 void gst_pad_set_pull_function(GstPad *pad, GstPadPullFunction pull);
+void gst_pad_set_qos_function(GstPad *pad, GstPadQoSFunction qos);
 
 guint16 gst_pad_get_type_id(GstPad *pad);
 void gst_pad_set_type_id(GstPad *pad,guint16 id);
@@ -114,6 +117,7 @@ void gst_pad_disconnect(GstPad *srcpad,GstPad *sinkpad);
 
 void gst_pad_push(GstPad *pad,GstBuffer *buffer);
 GstBuffer *gst_pad_pull(GstPad *pad);
+void gst_pad_handle_qos(GstPad *pad, glong qos_message);
 
 xmlNodePtr gst_pad_save_thyself(GstPad *pad,xmlNodePtr parent);
 
