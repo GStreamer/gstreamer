@@ -1,3 +1,8 @@
+2001-12-15 23:43  thomasvs
+
+	* configure.ac : major overhaul
+	* m4/ dir added with lots of checks in it
+
 2001-08-15 23:43  cael
 
 	* gstplay/: ChangeLog, gstmediaplay.c, gstplay.c: Added hacky check
