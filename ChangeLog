@@ -1,5 +1,12 @@
 2004-01-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst-libs/gst/video/video.h:
+	  Fix 32bit caps. Issue remaining: The macro names are chosen poorly.
+	  They should probably be like
+	  GST_VIDEO_PAD_TEMPLATE_CAPS_{RGB,BGR,RGBx,BGRx}.
+
+2004-01-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
 	(qtdemux_parse_trak):
 	  fix audio chunk size/timestamp calculation
