@@ -291,7 +291,7 @@ gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
     }
     if (v4lsrc->quit) {
       g_mutex_unlock (v4lsrc->mutex_queue_state);
-      return TRUE;              /* it won't get through anyway */
+      return FALSE;
     }
     if (!gst_v4lsrc_queue_frame (v4lsrc, v4lsrc->queue_frame)) {
       g_mutex_unlock (v4lsrc->mutex_queue_state);

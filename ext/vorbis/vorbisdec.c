@@ -552,6 +552,8 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
       GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
       GST_BUFFER_TIMESTAMP (out) = vd->granulepos * GST_SECOND / vd->vi.rate;
       GST_BUFFER_DURATION (out) = sample_count * GST_SECOND / vd->vi.rate;
+      GST_DEBUG ("Pushing data of time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out)));
       gst_pad_push (vd->srcpad, GST_DATA (out));
       vorbis_synthesis_read (&vd->vd, sample_count);
       vd->granulepos += sample_count;
