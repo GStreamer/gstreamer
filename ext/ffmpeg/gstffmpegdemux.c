@@ -321,12 +321,14 @@ gst_ffmpegdemux_loop (GstElement *element)
 
     /* store pad internally */
     ffmpegdemux->srcpads[pkt.stream_index] = pad;
-    gst_element_add_pad (GST_ELEMENT (ffmpegdemux), pad);
 
     /* get caps that belongs to this stream */
     caps = gst_ffmpeg_codecid_to_caps (st->codec.codec_id,
 				       &st->codec);
     gst_pad_set_explicit_caps (pad, caps);
+
+    gst_element_add_pad (GST_ELEMENT (ffmpegdemux), pad);
+
     /* we continue here, in the next pad-is-usable check,
      * we'll return nonetheless */
   }
