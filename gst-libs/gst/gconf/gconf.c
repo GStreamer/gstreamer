@@ -57,6 +57,14 @@ gst_bin_find_unconnected_pad (GstBin *bin, GstPadDirection direction)
 
 /* external functions */
 
+/**
+ * gst_gconf_get_string:
+ * @key: a #gchar corresponding to the key you want to get.
+ *
+ * Get GConf key @key's string value.
+ *
+ * Returns: a #gchar string containing @key's value.
+ */
 gchar *
 gst_gconf_get_string (const gchar *key)
 {
@@ -77,6 +85,13 @@ gst_gconf_get_string (const gchar *key)
   return value;
 }
 
+/**
+ * gst_gconf_set_string:
+ * @key: a #gchar corresponding to the key you want to set.
+ * @value: a #gchar containing key value.
+ *
+ * Set GConf key @key to string value @value.
+ */
 void
 gst_gconf_set_string (const gchar *key, const gchar *value)
 {
@@ -92,8 +107,14 @@ gst_gconf_set_string (const gchar *key, const gchar *value)
   g_free (full_key);
 }
 
-/* this function renders the given description to a bin,
- * and ghosts at most one unconnected src pad and one unconnected sink pad */
+/**
+ * gst_gconf_render_bin_from_description:
+ * @description: a #gchar string describing the bin.
+ *
+ * Render bin from description @description.
+ *
+ * Returns: a #GstElement containing the rendered bin.
+ */
 GstElement *
 gst_gconf_render_bin_from_description (const gchar *description)
 {
@@ -124,8 +145,14 @@ gst_gconf_render_bin_from_description (const gchar *description)
   return bin;
 }
 
-/* this function reads the gconf key, parses the pipeline bit to a bin,
- * and ghosts at most one unconnected src pad and one unconnected sink pad */
+/**
+ * gst_gconf_render_bin_from_key:
+ * @key: a #gchar string corresponding to a GConf key.
+ *
+ * Render bin from GConf key @key.
+ *
+ * Returns: a #GstElement containing the rendered bin.
+ */
 GstElement *
 gst_gconf_render_bin_from_key (const gchar *key)
 {
@@ -138,12 +165,15 @@ gst_gconf_render_bin_from_key (const gchar *key)
   return bin;
 }
 
-/*
-guint		gst_gconf_notify_add		(const gchar *key,
-    						 GConfClientNotifyFunc func,
-						 gpointer user_data);
-*/
-
+/**
+ * gst_gconf_get_default_audio_sink:
+ *
+ * Render audio output bin from GStreamer GConf key : "default/audiosink".
+ * If key is invalid osssink is used as default output plugin.
+ *
+ * Returns: a #GstElement containing the audio output bin, or NULL if
+ * everything failed.
+ */
 GstElement *
 gst_gconf_get_default_audio_sink (void)
 {
@@ -161,6 +191,15 @@ gst_gconf_get_default_audio_sink (void)
   return ret;
 }
 
+/**
+ * gst_gconf_get_default_video_sink:
+ *
+ * Render video output bin from GStreamer GConf key : "default/videosink".
+ * If key is invalid xvideosink is used as default output plugin.
+ *
+ * Returns: a #GstElement containing the video output bin, or NULL if
+ * everything failed.
+ */
 GstElement *
 gst_gconf_get_default_video_sink (void)
 {
@@ -178,6 +217,15 @@ gst_gconf_get_default_video_sink (void)
   return ret;
 }
 
+/**
+ * gst_gconf_get_default_audio_src:
+ *
+ * Render audio acquisition bin from GStreamer GConf key : "default/audiosrc".
+ * If key is invalid osssrc is used as default source.
+ *
+ * Returns: a #GstElement containing the audio source bin, or NULL if
+ * everything failed.
+ */
 GstElement *
 gst_gconf_get_default_audio_src (void)
 {
@@ -195,6 +243,16 @@ gst_gconf_get_default_audio_src (void)
   return ret;
 }
 
+/**
+ * gst_gconf_get_default_video_src:
+ *
+ * Render video acquisition bin from GStreamer GConf key :
+ * "default/videosrc". If key is invalid videotestsrc
+ * is used as default source.
+ *
+ * Returns: a #GstElement containing the video source bin, or NULL if
+ * everything failed.
+ */
 GstElement *
 gst_gconf_get_default_video_src (void)
 {
@@ -207,6 +265,32 @@ gst_gconf_get_default_video_src (void)
       g_warning ("No GConf default video src key and videotestrc doesn't work");
     else
       g_warning ("GConf video src not found, using videotestrc");
+  }
+
+  return ret;
+}
+
+/**
+ * gst_gconf_get_default_visualisation_element:
+ *
+ * Render visualisation bin from GStreamer GConf key : "default/visualisation".
+ * If key is invalid goom is used as default visualisation element.
+ *
+ * Returns: a #GstElement containing the visualisation bin, or NULL if
+ * everything failed.
+ */
+GstElement *
+gst_gconf_get_default_visualisation_element (void)
+{
+  GstElement *ret = gst_gconf_render_bin_from_key ("default/visualisation");
+  
+  if (!ret) {
+    ret = gst_element_factory_make ("goom", NULL);
+  
+    if (!ret)
+      g_warning ("No GConf default visualisation plugin key and goom doesn't work");
+    else
+      g_warning ("GConf visualisation plugin not found, using goom");
   }
 
   return ret;
