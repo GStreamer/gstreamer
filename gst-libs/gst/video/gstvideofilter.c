@@ -322,7 +322,12 @@ gst_videofilter_chain (GstPad *pad, GstData *_data)
   	size, videofilter->from_buf_size,
   	videofilter->to_buf_size);
 
-  g_return_if_fail (size == videofilter->from_buf_size);
+  g_return_if_fail (size >= videofilter->from_buf_size);
+
+  if (size > videofilter->from_buf_size) {
+    GST_INFO("buffer size %ld larger than expected (%d)",
+  	size, videofilter->from_buf_size);
+  }
 
   outbuf = gst_buffer_new();
   /* FIXME: handle bufferpools */

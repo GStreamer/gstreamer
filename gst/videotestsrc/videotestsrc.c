@@ -287,10 +287,12 @@ static void paint_setup_UYVY (paintinfo * p, char *dest);
 static void paint_setup_YVYU (paintinfo * p, char *dest);
 static void paint_setup_IYU2 (paintinfo * p, char *dest);
 static void paint_setup_Y800 (paintinfo * p, char *dest);
+#if 0
 static void paint_setup_IMC1 (paintinfo * p, char *dest);
 static void paint_setup_IMC2 (paintinfo * p, char *dest);
 static void paint_setup_IMC3 (paintinfo * p, char *dest);
 static void paint_setup_IMC4 (paintinfo * p, char *dest);
+#endif
 static void paint_setup_YUV9 (paintinfo * p, char *dest);
 static void paint_setup_YVU9 (paintinfo * p, char *dest);
 static void paint_setup_xRGB8888 (paintinfo * p, char *dest);
@@ -306,7 +308,9 @@ static void paint_hline_I420 (paintinfo * p, int x, int y, int w);
 static void paint_hline_YUY2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_IYU2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y800 (paintinfo * p, int x, int y, int w);
+#if 0
 static void paint_hline_IMC1 (paintinfo * p, int x, int y, int w);
+#endif
 static void paint_hline_YUV9 (paintinfo * p, int x, int y, int w);
 static void paint_hline_str4 (paintinfo * p, int x, int y, int w);
 static void paint_hline_str3 (paintinfo * p, int x, int y, int w);
@@ -352,6 +356,7 @@ struct fourcc_list_struct fourcc_list[] = {
   {"I420", "I420", 12, paint_setup_I420, paint_hline_I420},
   /* NV12 */
   /* NV21 */
+#if 0
   /* IMC1 */
   {"IMC1", "IMC1", 16, paint_setup_IMC1, paint_hline_IMC1},
   /* IMC2 */
@@ -360,6 +365,7 @@ struct fourcc_list_struct fourcc_list[] = {
   {"IMC3", "IMC3", 16, paint_setup_IMC3, paint_hline_IMC1},
   /* IMC4 */
   {"IMC4", "IMC4", 12, paint_setup_IMC4, paint_hline_IMC1},
+#endif
   /* CLPL */
   /* Y41B */
   /* Y42B */
@@ -504,6 +510,24 @@ GstStructure *paint_get_structure(struct fourcc_list_struct *format)
 	"format", GST_TYPE_FOURCC, fourcc,
         NULL);
   }
+}
+
+int
+gst_videotestsrc_get_size (GstVideotestsrc * v, int w, int h)
+{
+  paintinfo pi = { 0 };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return 0;
+
+  fourcc->paint_setup (p, NULL);
+
+  return (unsigned long)p->endptr;
 }
 
 void
@@ -673,12 +697,20 @@ gst_videotestsrc_black (GstVideotestsrc * v, unsigned char *dest, int w, int h)
   }
 }
 
+#define ROUND_UP_2(x)  (((x)+1)&~1)
+#define ROUND_UP_4(x)  (((x)+3)&~3)
+#define ROUND_UP_8(x)  (((x)+7)&~7)
+
 static void
 paint_setup_I420 (paintinfo * p, char *dest)
 {
   p->yp = dest;
-  p->up = dest + p->width * p->height;
-  p->vp = dest + p->width * p->height + p->width * p->height / 4;
+  p->ystride = ROUND_UP_4(p->width);
+  p->up = p->yp + p->ystride * ROUND_UP_2(p->height);
+  p->ustride = ROUND_UP_8(p->width)/2;
+  p->vp = p->up + p->ustride * ROUND_UP_2 (p->height) / 2;
+  p->vstride = ROUND_UP_8(p->ystride)/2;
+  p->endptr = p->vp + p->vstride * ROUND_UP_2 (p->height) / 2;
 }
 
 static void
@@ -686,8 +718,8 @@ paint_hline_I420 (paintinfo * p, int x, int y, int w)
 {
   int x1 = x / 2;
   int x2 = (x + w) / 2;
-  int offset = y * p->width;
-  int offset1 = (y / 2) * (p->width / 2);
+  int offset = y * p->ystride;
+  int offset1 = (y / 2) * p->ustride;
 
   memset (p->yp + offset + x, p->color->Y, w);
   memset (p->up + offset1 + x1, p->color->U, x2 - x1);
@@ -698,8 +730,12 @@ static void
 paint_setup_YV12 (paintinfo * p, char *dest)
 {
   p->yp = dest;
-  p->up = dest + p->width * p->height + p->width * p->height / 4;
-  p->vp = dest + p->width * p->height;
+  p->ystride = ROUND_UP_4(p->width);
+  p->vp = p->yp + p->ystride * ROUND_UP_2(p->height);
+  p->vstride = ROUND_UP_8(p->ystride)/2;
+  p->up = p->vp + p->vstride * ROUND_UP_2(p->height) / 2;
+  p->ustride = ROUND_UP_8(p->ystride)/2;
+  p->endptr = p->up + p->ustride * ROUND_UP_2(p->height) / 2;
 }
 
 static void
@@ -708,6 +744,8 @@ paint_setup_YUY2 (paintinfo * p, char *dest)
   p->yp = dest;
   p->up = dest + 1;
   p->vp = dest + 3;
+  p->ystride = ROUND_UP_2(p->width) * 2;
+  p->endptr = dest + p->ystride * p->height;
 }
 
 static void
@@ -716,6 +754,8 @@ paint_setup_UYVY (paintinfo * p, char *dest)
   p->yp = dest + 1;
   p->up = dest;
   p->vp = dest + 2;
+  p->ystride = ROUND_UP_2(p->width) * 2;
+  p->endptr = dest + p->ystride * p->height;
 }
 
 static void
@@ -724,6 +764,8 @@ paint_setup_YVYU (paintinfo * p, char *dest)
   p->yp = dest;
   p->up = dest + 3;
   p->vp = dest + 1;
+  p->ystride = ROUND_UP_2(p->width * 2);
+  p->endptr = dest + p->ystride * p->height;
 }
 
 static void
@@ -733,7 +775,7 @@ paint_hline_YUY2 (paintinfo * p, int x, int y, int w)
   int x2 = (x + w) / 2;
   int offset;
 
-  offset = y * p->width * 2;
+  offset = y * p->ystride;
   memset_str2 (p->yp + offset + x * 2, p->color->Y, w);
   memset_str4 (p->up + offset + x1 * 4, p->color->U, x2 - x1);
   memset_str4 (p->vp + offset + x1 * 4, p->color->V, x2 - x1);
@@ -742,9 +784,12 @@ paint_hline_YUY2 (paintinfo * p, int x, int y, int w)
 static void
 paint_setup_IYU2 (paintinfo * p, char *dest)
 {
+  /* untested */
   p->yp = dest + 1;
   p->up = dest + 0;
   p->vp = dest + 2;
+  p->ystride = ROUND_UP_4(p->width * 3);
+  p->endptr = dest + p->ystride * p->height;
 }
 
 static void
@@ -752,7 +797,7 @@ paint_hline_IYU2 (paintinfo * p, int x, int y, int w)
 {
   int offset;
 
-  offset = y * p->width * 3;
+  offset = y * p->ystride;
   memset_str3 (p->yp + offset + x * 3, p->color->Y, w);
   memset_str3 (p->up + offset + x * 3, p->color->U, w);
   memset_str3 (p->vp + offset + x * 3, p->color->V, w);
@@ -761,17 +806,21 @@ paint_hline_IYU2 (paintinfo * p, int x, int y, int w)
 static void
 paint_setup_Y800 (paintinfo * p, char *dest)
 {
+  /* untested */
   p->yp = dest;
+  p->ystride = ROUND_UP_4 (p->width);
+  p->endptr = dest + p->ystride * p->height;
 }
 
 static void
 paint_hline_Y800 (paintinfo * p, int x, int y, int w)
 {
-  int offset = y * p->width;
+  int offset = y * p->ystride;
 
   memset (p->yp + offset + x, p->color->Y, w);
 }
 
+#if 0
 static void
 paint_setup_IMC1 (paintinfo * p, char *dest)
 {
@@ -816,21 +865,33 @@ paint_hline_IMC1 (paintinfo * p, int x, int y, int w)
   memset (p->up + offset1 + x1, p->color->U, x2 - x1);
   memset (p->vp + offset1 + x1, p->color->V, x2 - x1);
 }
+#endif
 
 static void
 paint_setup_YVU9 (paintinfo * p, char *dest)
 {
+  int h = ROUND_UP_4(p->height);
   p->yp = dest;
-  p->vp = dest + p->width * p->height;
-  p->up = dest + p->width * p->height + (p->width/4) * (p->height/4);
+  p->ystride = ROUND_UP_4(p->width);
+  p->vp = p->yp + p->ystride * ROUND_UP_4(p->height);
+  p->vstride = ROUND_UP_4(p->ystride/4);
+  p->up = p->vp + p->vstride * ROUND_UP_4(h/4);
+  p->ustride = ROUND_UP_4(p->ystride/4);
+  p->endptr = p->up + p->ustride * ROUND_UP_4(h/4);
 }
 
 static void
 paint_setup_YUV9 (paintinfo * p, char *dest)
 {
+  /* untested */
+  int h = ROUND_UP_4(p->height);
   p->yp = dest;
-  p->up = dest + p->width * p->height;
-  p->vp = dest + p->width * p->height + (p->width/4) * (p->height/4);
+  p->ystride = ROUND_UP_4(p->width);
+  p->up = p->yp + p->ystride * h;
+  p->ustride = ROUND_UP_4(p->ystride/4);
+  p->vp = p->up + p->ustride * ROUND_UP_4(h/4);
+  p->vstride = ROUND_UP_4(p->ystride/4);
+  p->endptr = p->vp + p->vstride * ROUND_UP_4(h/4);
 }
 
 static void
@@ -838,8 +899,8 @@ paint_hline_YUV9 (paintinfo * p, int x, int y, int w)
 {
   int x1 = x / 4;
   int x2 = (x + w) / 4;
-  int offset = y * p->width;
-  int offset1 = (y / 4) * (p->width / 4);
+  int offset = y * p->ystride;
+  int offset1 = (y / 4) * p->ustride;
 
   memset (p->yp + offset + x, p->color->Y, w);
   memset (p->up + offset1 + x1, p->color->U, x2 - x1);
@@ -852,6 +913,8 @@ paint_setup_xRGB8888 (paintinfo * p, char *dest)
   p->yp = dest + 1;
   p->up = dest + 2;
   p->vp = dest + 3;
+  p->ystride = p->width*4;
+  p->endptr = p->dest + p->ystride * p->height;
 }
 
 static void
@@ -860,6 +923,8 @@ paint_setup_xBGR8888 (paintinfo * p, char *dest)
   p->yp = dest + 3;
   p->up = dest + 2;
   p->vp = dest + 1;
+  p->ystride = p->width*4;
+  p->endptr = p->dest + p->ystride * p->height;
 }
 
 static void
@@ -868,6 +933,8 @@ paint_setup_RGBx8888 (paintinfo * p, char *dest)
   p->yp = dest + 0;
   p->up = dest + 1;
   p->vp = dest + 2;
+  p->ystride = p->width*4;
+  p->endptr = p->dest + p->ystride * p->height;
 }
 
 static void
@@ -876,6 +943,8 @@ paint_setup_BGRx8888 (paintinfo * p, char *dest)
   p->yp = dest + 2;
   p->up = dest + 1;
   p->vp = dest + 0;
+  p->ystride = p->width*4;
+  p->endptr = p->dest + p->ystride * p->height;
 }
 
 static void
@@ -884,7 +953,8 @@ paint_setup_RGB888 (paintinfo * p, char *dest)
   p->yp = dest + 0;
   p->up = dest + 1;
   p->vp = dest + 2;
-  p->stride = (p->width*3 + 1)&(~0x3);
+  p->ystride = ROUND_UP_4(p->width*3);
+  p->endptr = p->dest + p->ystride * p->height;
 }
 
 static void
@@ -893,13 +963,14 @@ paint_setup_BGR888 (paintinfo * p, char *dest)
   p->yp = dest + 2;
   p->up = dest + 1;
   p->vp = dest + 0;
-  p->stride = (p->width*3 + 1)&(~0x3);
+  p->ystride = ROUND_UP_4(p->width*3);
+  p->endptr = p->dest + p->ystride * p->height;
 }
 
 static void
 paint_hline_str4 (paintinfo * p, int x, int y, int w)
 {
-  int offset = y * p->width * 4;
+  int offset = y * p->ystride;
 
   memset_str4 (p->yp + offset + x * 4, p->color->R, w);
   memset_str4 (p->up + offset + x * 4, p->color->G, w);
@@ -909,7 +980,7 @@ paint_hline_str4 (paintinfo * p, int x, int y, int w)
 static void
 paint_hline_str3 (paintinfo * p, int x, int y, int w)
 {
-  int offset = y * p->stride;
+  int offset = y * p->ystride;
 
   memset_str3 (p->yp + offset + x * 3, p->color->R, w);
   memset_str3 (p->up + offset + x * 3, p->color->G, w);
@@ -920,13 +991,14 @@ static void
 paint_setup_RGB565 (paintinfo * p, char *dest)
 {
   p->yp = dest;
-  p->stride = (p->width*2 + 1)&(~0x3);
+  p->ystride = ROUND_UP_4(p->width*2);
+  p->endptr = p->dest + p->ystride * p->height;
 }
 
 static void
 paint_hline_RGB565 (paintinfo * p, int x, int y, int w)
 {
-  int offset = y * p->stride;
+  int offset = y * p->ystride;
   unsigned int a,b;
 
   a = (p->color->R&0xf8) | (p->color->G>>5);
@@ -945,13 +1017,14 @@ static void
 paint_setup_xRGB1555 (paintinfo * p, char *dest)
 {
   p->yp = dest;
-  p->stride = (p->width*2 + 1)&(~0x3);
+  p->ystride = ROUND_UP_4(p->width*2);
+  p->endptr = p->dest + p->ystride * p->height;
 }
 
 static void
 paint_hline_xRGB1555 (paintinfo * p, int x, int y, int w)
 {
-  int offset = y * p->stride;
+  int offset = y * p->ystride;
   unsigned int a,b;
 
   a = ((p->color->R>>1)&0x7c) | (p->color->G>>6);
@@ -965,144 +1038,4 @@ paint_hline_xRGB1555 (paintinfo * p, int x, int y, int w)
   memset_str2 (p->yp + offset + x * 2 + 1, b, w);
 #endif
 }
-
-#if 0
-#ifdef unused
-static void
-gst_videotestsrc_smpte_RGB (GstVideotestsrc * v, unsigned char *dest, int w, int h)
-{
-  int i;
-  int y1, y2;
-
-  y1 = h * 2 / 3;
-  y2 = h * 0.75;
-
-  /* color bars */
-  for (i = 0; i < 7; i++) {
-    int x1 = i * w / 7;
-    int x2 = (i + 1) * w / 7;
-    unsigned char col[2];
-
-    col[0] = (g_colors[i] & 0xe0) | (b_colors[i] >> 3);
-    col[1] = (r_colors[i] & 0xf8) | (g_colors[i] >> 5);
-    paint_rect2 (dest, w * 2, x1, 0, x2 - x1, y1, col);
-  }
-
-  /* inverse blue bars */
-  for (i = 0; i < 7; i++) {
-    int x1 = i * w / 7;
-    int x2 = (i + 1) * w / 7;
-    unsigned char col[2];
-    int k;
-
-    if (i & 1) {
-      k = 7;
-    } else {
-      k = 6 - i;
-    }
-    col[0] = (g_colors[k] & 0xe0) | (b_colors[k] >> 3);
-    col[1] = (r_colors[k] & 0xf8) | (g_colors[k] >> 5);
-    paint_rect2 (dest, w * 2, x1, y1, x2 - x1, y2 - y1, col);
-  }
-
-  /* -I, white, Q regions */
-  for (i = 0; i < 3; i++) {
-    int x1 = i * w / 6;
-    int x2 = (i + 1) * w / 6;
-    unsigned char col[2];
-    int k;
-
-    if (i == 0) {
-      k = 8;
-    } else if (i == 1) {
-      k = 0;
-    } else {
-      k = 9;
-    }
-
-    col[0] = (g_colors[k] & 0xe0) | (b_colors[k] >> 3);
-    col[1] = (r_colors[k] & 0xf8) | (g_colors[k] >> 5);
-    paint_rect2 (dest, w * 2, x1, y2, x2 - x1, h - y2, col);
-  }
-
-  {
-    int x1 = w / 2;
-    int x2 = w - 1;
-
-    paint_rect_random (dest, w * 2, x1 * 2, y2, (x2 - x1) * 2, h - y2);
-  }
-}
-#endif
-
-static void
-gst_videotestsrc_smpte_RGB (GstVideotestsrc * v, unsigned char *dest, int w, int h)
-{
-  int i;
-  int y1, y2;
-
-  y1 = h * 2 / 3;
-  y2 = h * 0.75;
-
-  /* color bars */
-  for (i = 0; i < 7; i++) {
-    int x1 = i * w / 7;
-    int x2 = (i + 1) * w / 7;
-    unsigned char col[2];
-
-    col[0] = 0;
-    col[1] = r_colors[i];
-    col[2] = g_colors[i];
-    col[3] = b_colors[i];
-    paint_rect4 (dest, w * 4, x1, 0, x2 - x1, y1, col);
-  }
-
-  /* inverse blue bars */
-  for (i = 0; i < 7; i++) {
-    int x1 = i * w / 7;
-    int x2 = (i + 1) * w / 7;
-    unsigned char col[2];
-    int k;
-
-    if (i & 1) {
-      k = 7;
-    } else {
-      k = 6 - i;
-    }
-    col[0] = 0;
-    col[1] = r_colors[k];
-    col[2] = g_colors[k];
-    col[3] = b_colors[k];
-    paint_rect4 (dest, w * 4, x1, y1, x2 - x1, y2 - y1, col);
-  }
-
-  /* -I, white, Q regions */
-  for (i = 0; i < 3; i++) {
-    int x1 = i * w / 6;
-    int x2 = (i + 1) * w / 6;
-    unsigned char col[2];
-    int k;
-
-    if (i == 0) {
-      k = 8;
-    } else if (i == 1) {
-      k = 0;
-    } else {
-      k = 9;
-    }
-
-    col[0] = 0;
-    col[1] = r_colors[k];
-    col[2] = g_colors[k];
-    col[3] = b_colors[k];
-    paint_rect4 (dest, w * 4, x1, y2, x2 - x1, h - y2, col);
-  }
-
-  {
-    int x1 = w / 2;
-    int x2 = w - 1;
-
-    paint_rect_random (dest, w * 4, x1 * 4, y2, (x2 - x1) * 4, h - y2);
-  }
-}
-#endif
 

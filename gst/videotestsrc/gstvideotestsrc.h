@@ -53,16 +53,12 @@ struct _GstVideotestsrc {
   GstPad *sinkpad,*srcpad;
 
   /* parameters */
-  gint default_width;
-  gint default_height;
   gboolean sync;
-  double default_rate;
 
   /* video state */
   char *format_name;
   gint width;
   gint height;
-  char *forced_format;
   struct fourcc_list_struct *fourcc;
   
   /* private */

@@ -97,6 +97,7 @@ gst_videoscale_sink_template_factory(void)
 static void	gst_videoscale_base_init	(gpointer g_class);
 static void	gst_videoscale_class_init	(GstVideoscaleClass *klass);
 static void	gst_videoscale_init		(GstVideoscale *videoscale);
+static gboolean gst_videoscale_handle_src_event (GstPad *pad, GstEvent *event);
 
 static void	gst_videoscale_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_videoscale_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -286,6 +287,7 @@ gst_videoscale_init (GstVideoscale *videoscale)
 		  gst_videoscale_src_template_factory(),
 		  "src");
   gst_element_add_pad(GST_ELEMENT(videoscale),videoscale->srcpad);
+  gst_pad_set_event_function (videoscale->srcpad, gst_videoscale_handle_src_event);
   gst_pad_set_link_function(videoscale->srcpad,gst_videoscale_link);
   gst_pad_set_getcaps_function(videoscale->srcpad,gst_videoscale_getcaps);
 
@@ -296,6 +298,38 @@ gst_videoscale_init (GstVideoscale *videoscale)
   /*videoscale->method = GST_VIDEOSCALE_POINT_SAMPLE; */
 }
 
+static gboolean
+gst_videoscale_handle_src_event (GstPad *pad, GstEvent *event)
+{
+  GstVideoscale *videoscale;
+  double a;
+  GstStructure *structure;
+  GstEvent *new_event;
+
+  videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NAVIGATION:
+      structure = gst_structure_copy (event->event_data.structure.structure);
+      if (gst_structure_get_double (event->event_data.structure.structure,
+          "pointer_x", &a)) {
+        gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
+            a*videoscale->from_width/videoscale->to_width, NULL);
+      }
+      if (gst_structure_get_double (event->event_data.structure.structure,
+          "pointer_y", &a)) {
+        gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
+            a*videoscale->from_height/videoscale->to_height, NULL);
+      }
+      new_event = gst_event_new (GST_EVENT_NAVIGATION);
+      new_event->event_data.structure.structure = structure;
+      gst_pad_send_event (gst_pad_get_peer (videoscale->sinkpad), new_event);
+      break;
+    default:
+      break;
+  }
+  return TRUE;
+}
 
 static void
 gst_videoscale_chain (GstPad *pad, GstData *_data)

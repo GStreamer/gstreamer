@@ -48,10 +48,6 @@ enum
 enum
 {
   ARG_0,
-  ARG_WIDTH,
-  ARG_HEIGHT,
-  ARG_FOURCC,
-  ARG_RATE,
   ARG_TYPE,
   ARG_SYNC,
   /* FILL ME */
@@ -155,18 +151,6 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH,
-      g_param_spec_int ("width", "width", "Default width",
-        1, G_MAXINT, 320, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT,
-      g_param_spec_int ("height", "height", "Default height",
-        1, G_MAXINT, 240, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FOURCC,
-      g_param_spec_string ("fourcc", "fourcc", "fourcc",
-        NULL, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RATE,
-      g_param_spec_double ("fps", "FPS", "Default frame rate",
-        0., G_MAXDOUBLE, 30., G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE,
       g_param_spec_enum ("pattern", "Pattern", "Type of test pattern to generate",
         GST_TYPE_VIDEOTESTSRC_PATTERN, 1, G_PARAM_READWRITE));
@@ -361,9 +345,6 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
   gst_videotestsrc_set_pattern(videotestsrc, GST_VIDEOTESTSRC_SMPTE);
 
   videotestsrc->sync = TRUE;
-  videotestsrc->default_width = 320;
-  videotestsrc->default_height = 240;
-  videotestsrc->default_rate = 30.;
 }
 
 
@@ -431,7 +412,8 @@ gst_videotestsrc_get (GstPad * pad)
     return NULL;
   }
 
-  newsize = (videotestsrc->width * videotestsrc->height * videotestsrc->bpp) >> 3;
+  newsize = gst_videotestsrc_get_size (videotestsrc, videotestsrc->width,
+      videotestsrc->height);
   g_return_val_if_fail (newsize > 0, NULL);
 
   GST_DEBUG ("size=%ld %dx%d", newsize, videotestsrc->width, videotestsrc->height);
@@ -494,7 +476,6 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * v
 			       GParamSpec * pspec)
 {
   GstVideotestsrc *src;
-  const char *format;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VIDEOTESTSRC (object));
@@ -502,24 +483,6 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * v
 
   GST_DEBUG ("gst_videotestsrc_set_property");
   switch (prop_id) {
-    case ARG_WIDTH:
-      src->default_width = g_value_get_int (value);
-      break;
-    case ARG_HEIGHT:
-      src->default_height = g_value_get_int (value);
-      break;
-    case ARG_FOURCC:
-      format = g_value_get_string (value);
-      if(paintrect_find_name (format) != NULL){
-        src->forced_format = g_strdup(format);
-        GST_DEBUG ("forcing format to \"%s\"\n", format);
-      }else{
-        GST_DEBUG ("unknown format \"%s\"\n", format);
-      }
-      break;
-    case ARG_RATE:
-      src->default_rate = g_value_get_double (value);
-      break;
     case ARG_TYPE:
       gst_videotestsrc_set_pattern (src, g_value_get_enum (value));
       break;
@@ -541,18 +504,6 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value, 
   src = GST_VIDEOTESTSRC (object);
 
   switch (prop_id) {
-    case ARG_WIDTH:
-      g_value_set_int (value, src->default_width);
-      break;
-    case ARG_HEIGHT:
-      g_value_set_int (value, src->default_height);
-      break;
-    case ARG_FOURCC:
-      g_value_set_string (value, src->forced_format);
-      break;
-    case ARG_RATE:
-      g_value_set_double (value, src->default_rate);
-      break;
     case ARG_TYPE:
       g_value_set_enum (value, src->type);
       break;

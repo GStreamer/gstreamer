@@ -40,6 +40,7 @@ sub check_bad_casts();
 sub check_old_plugin();
 sub check_signal_new();
 sub check_gnuc_const();
+sub check_caps();
 
 sub m_check_plugindir();
 sub m_check_interfaces();
@@ -74,6 +75,7 @@ foreach $filename (<FIND>) {
 	check_old_plugin();
 	check_signal_new();
     check_gnuc_const();
+	check_caps();
 }
 
 open FIND, "find . -name \"Makefile.am\" -print|";
@@ -432,6 +434,16 @@ sub check_gnuc_const()
 
 			print "E: get_type function does not have G_GNUC_CONST attribute\n";
 		}
+	}
+}
+
+#
+# Check caps usage
+#
+sub check_caps()
+{
+	if (grep { /gst_pad_get_caps/ } @lines) {
+		print "E: elements should not call gst_pad_get_caps(), use gst_pad_get_allowed_caps()\n";
 	}
 }
 
