@@ -139,8 +139,6 @@ typedef enum {
 #define GST_ELEMENT_CLOCK(obj)			(((GstElement*)(obj))->clock)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
-gchar * _gst_element_error_printf (const gchar *format, ...);
-
 #define gst_element_error(el, domain, code, message, debug) G_STMT_START { \
   gst_element_error_extended (GST_ELEMENT(el), \
   GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code, \
@@ -367,7 +365,7 @@ void			gst_element_found_tags_for_pad	(GstElement *element, GstPad *pad, GstCloc
 
 void			gst_element_set_eos		(GstElement *element);
 
-gchar *			gst_element_error_printf 	(const gchar *format, ...);
+gchar *			_gst_element_error_printf 	(const gchar *format, ...);
 void			gst_element_error_extended	(GstElement *element, GQuark domain, gint code, gchar *message, gchar *debug, const gchar *file, const gchar *function, gint line);
 
 gboolean		gst_element_is_locked_state	(GstElement *element);

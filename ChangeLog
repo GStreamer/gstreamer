@@ -1,3 +1,7 @@
+2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstelement.h: fix _gst_element_error_printf prototype
+
 2004-01-20  David Schleef  <ds@schleef.org>
 
 	* gst/gststructure.c: (gst_structure_to_string):
@@ -16,12 +20,6 @@
 	* gst/gsterror.h: xvidenc.c needs GST_LIBRARY_ERROR_ENCODE. Dunno if
 	we want to keep that one in the future or change xvidenc.c to use 
 	another error.
-
-2004-01-19  Julien MOUTTE  <julien@moutte.net>
-
-	* gst/gstelement.h: Temporary fixing core build breakage due to 
-	_gst_element_error_printf being undeclared before the macro. Thomas
-	please fix that soon !
 
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
