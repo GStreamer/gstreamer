@@ -1,3 +1,10 @@
+2004-01-29  Julien MOUTTE <julien@moutte.net>
+
+	* docs/pwg/advanced-events.xml: Adding documentation on advanced event
+	handling (up and downstream).
+	* docs/pwg/advanced-interfaces.xml: Make it coherent with the
+	my_filter thing.
+
 2004-01-29  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced-tagging.xml:

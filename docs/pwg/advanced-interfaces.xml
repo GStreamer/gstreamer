@@ -490,31 +490,31 @@ gst_my_filter_probe_interface_init (GstPropertyProbeInterface *iface)
     </para>
     <programlisting><![CDATA[
 static void
-gst_myplugin_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
+gst_my_filter_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
 {
-  GstMyPlugin *my_plugin = GST_MYPLUGIN (overlay);
-  
-  if (my_plugin->window)
-    gst_myplugin_destroy_window (myplugin->window);
+  GstMyFilter *my_filter = GST_MY_FILTER (overlay);
+
+  if (my_filter->window)
+    gst_my_filter_destroy_window (my_filter->window);
     
-  myplugin->window = xwindow_id;
+  my_filter->window = xwindow_id;
 }
 
 static void
-gst_myplugin_get_desired_size (GstXOverlay *overlay,
-                             guint *width, guint *height)
+gst_my_filter_get_desired_size (GstXOverlay *overlay,
+                                guint *width, guint *height)
 {
-  GstMyPlugin *my_plugin = GST_MYPLUGIN (overlay);
+  GstMyFilter *my_filter = GST_MY_FILTER (overlay);
 
-  *width = my_plugin->width;
-  *height = my_plugin->height;
+  *width = my_filter->width;
+  *height = my_filter->height;
 }
 
 static void
-gst_myplugin_xoverlay_init (GstXOverlayClass *iface)
+gst_my_filter_xoverlay_init (GstXOverlayClass *iface)
 {
-  iface->set_xwindow_id = gst_myplugin_set_xwindow_id;
-  iface->get_desired_size = gst_myplugin_get_desired_size;
+  iface->set_xwindow_id = gst_my_filter_set_xwindow_id;
+  iface->get_desired_size = gst_my_filter_get_desired_size;
 }
     ]]></programlisting>
     <para>
@@ -523,18 +523,18 @@ gst_myplugin_xoverlay_init (GstXOverlayClass *iface)
       geometry and maybe create the window.
     </para>
     <programlisting><![CDATA[
-static MyPluginWindow *
-gst_myplugin_window_create (GstMyPlugin *my_plugin, gint width, gint height)
+static MyFilterWindow *
+gst_my_filter_window_create (GstMyFilter *my_filter, gint width, gint height)
 {
-  MyPluginWindow *window = g_new (MyPluginWindow, 1);
+  MyFilterWindow *window = g_new (MyFilterWindow, 1);
   ...
-  gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (my_plugin), window->win);
+  gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (my_filter), window->win);
 }
 
 static GstPadLinkReturn
-gst_myplugin_sinkconnect (GstPad *pad, const GstCaps *caps)
+gst_my_filter_sink_link (GstPad *pad, const GstCaps *caps)
 {
-  GstMyPlugin *my_plugin = GST_MYPLUGIN (overlay);
+  GstMyFilter *my_filter = GST_MY_FILTER (overlay);
   gint width, height;
   gboolean ret;
   ...
@@ -542,10 +542,10 @@ gst_myplugin_sinkconnect (GstPad *pad, const GstCaps *caps)
   ret &= gst_structure_get_int (structure, "height", &height);
   if (!ret) return GST_PAD_LINK_REFUSED;
   
-  if (!my_plugin->window)
-    my_plugin->window = gst_myplugin_create_window (my_plugin, width, height);
+  if (!my_filter->window)
+    my_filter->window = gst_my_filter_create_window (my_filter, width, height);
 
-  gst_x_overlay_got_desired_size (GST_X_OVERLAY (my_plugin),
+  gst_x_overlay_got_desired_size (GST_X_OVERLAY (my_filter),
                                   width, height);
   ...
 }
