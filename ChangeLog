@@ -1,5 +1,12 @@
 2005-01-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (setup_substreams):
+	  Don't disable streamtype if the stream doesn't exist, since
+	  then playing a video after audio will disable both and nothing
+	  will happen. Fixes the testsuite.
+
+2005-01-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* sys/v4l/gstv4lxoverlay.c: (gst_v4l_xoverlay_interface_init),
 	(gst_v4l_xoverlay_set_xwindow_id):
 	* sys/v4l2/gstv4l2xoverlay.c: (gst_v4l2_xoverlay_interface_init),
