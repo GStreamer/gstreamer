@@ -382,8 +382,9 @@ setup_sinks (GstPlayBin * play_bin)
     GObject *obj = G_OBJECT (s->data);
     int type;
     GstPad *srcpad, *sinkpad;
-    GstElement *sink;
+    GstElement *sink = NULL;
     gboolean res;
+    gboolean mute = FALSE;
 
     g_object_get (obj, "type", &type, NULL);
     g_object_get (obj, "pad", &srcpad, NULL);
@@ -394,7 +395,7 @@ setup_sinks (GstPlayBin * play_bin)
     if (type == 1) {
       if (have_audio) {
         g_warning ("two audio streams found, playing first one");
-        continue;
+        mute = TRUE;
       } else {
         sink = gen_audio_element (play_bin);
         have_audio = TRUE;
@@ -402,29 +403,36 @@ setup_sinks (GstPlayBin * play_bin)
     } else if (type == 2) {
       if (have_video) {
         g_warning ("two video streams found, playing first one");
-        continue;
+        mute = TRUE;
       } else {
         sink = gen_video_element (play_bin);
         have_video = TRUE;
       }
     } else {
       g_warning ("unknown stream found");
-      continue;
+      mute = TRUE;
     }
 
-    gst_bin_add (GST_BIN (play_bin), sink);
-    sinkpad = gst_element_get_pad (sink, "sink");
-    res = gst_pad_link (srcpad, sinkpad);
-    if (!res) {
-      gchar *capsstr;
+    if (sink != NULL) {
+      gst_bin_add (GST_BIN (play_bin), sink);
+      sinkpad = gst_element_get_pad (sink, "sink");
+      res = gst_pad_link (srcpad, sinkpad);
+      if (!res) {
+        gchar *capsstr;
 
-      capsstr = gst_caps_to_string (gst_pad_get_caps (srcpad));
-      g_warning ("could not link %s", capsstr);
-      g_free (capsstr);
-      GST_LOG ("removing sink %p", sink);
-      gst_bin_remove (GST_BIN (play_bin), sink);
-    } else {
-      play_bin->sinks = g_list_prepend (play_bin->sinks, sink);
+        capsstr = gst_caps_to_string (gst_pad_get_caps (srcpad));
+        g_warning ("could not link %s", capsstr);
+        g_free (capsstr);
+        GST_LOG ("removing sink %p", sink);
+        gst_bin_remove (GST_BIN (play_bin), sink);
+        mute = TRUE;
+      } else {
+        play_bin->sinks = g_list_prepend (play_bin->sinks, sink);
+      }
+    }
+    if (mute) {
+      gst_play_base_bin_mute_stream (GST_PLAY_BASE_BIN (play_bin),
+          GST_STREAM_INFO (obj), TRUE);
     }
   }
 }

@@ -739,17 +739,69 @@ gst_play_base_bin_found_tag (GstElement * element,
   gst_object_unref (parent);
 }
 
+static void
+play_base_bin_mute_pad (GstPlayBaseBin * play_base_bin,
+    GstPad * pad, gboolean mute)
+{
+  GList *int_links;
+  gboolean activate = !mute;
+  gchar *debug_str = (activate ? "activate" : "inactivate");
+
+  GST_DEBUG_OBJECT (play_base_bin, "%s %s:%s", debug_str,
+      GST_DEBUG_PAD_NAME (pad));
+  gst_pad_set_active (pad, activate);
+
+  for (int_links = gst_pad_get_internal_links (pad);
+      int_links; int_links = g_list_next (int_links)) {
+    GstPad *pad = GST_PAD (int_links->data);
+    GstPad *peer = gst_pad_get_peer (pad);
+    GstElement *peer_elem = gst_pad_get_parent (peer);
+
+    GST_DEBUG_OBJECT (play_base_bin, "%s internal pad %s:%s",
+        debug_str, GST_DEBUG_PAD_NAME (pad));
+
+    gst_pad_set_active (pad, activate);
+
+    if (peer_elem->numsrcpads == 1) {
+      GST_DEBUG_OBJECT (play_base_bin, "recursing element %s on pad %s:%s",
+          gst_element_get_name (peer_elem), GST_DEBUG_PAD_NAME (peer));
+      play_base_bin_mute_pad (play_base_bin, peer, mute);
+    } else {
+      GST_DEBUG_OBJECT (play_base_bin, "%s final pad %s:%s",
+          debug_str, GST_DEBUG_PAD_NAME (peer));
+      gst_pad_set_active (peer, activate);
+    }
+  }
+}
+
+/* muting a stream follows the flow downstream and dis/enables all
+ * pads it encounters until an element with more than one source pad 
+ * (a demuxer or equivalent) is met.
+ */
 void
 gst_play_base_bin_mute_stream (GstPlayBaseBin * play_base_bin,
     GstStreamInfo * info, gboolean mute)
 {
-  GST_DEBUG ("mute");
+  GST_DEBUG ("mute stream");
+
+  g_return_if_fail (play_base_bin != NULL);
+  g_return_if_fail (GST_IS_PLAY_BASE_BIN (play_base_bin));
+  g_return_if_fail (info != NULL);
+  g_return_if_fail (GST_IS_STREAM_INFO (info));
+
+  /* check if info contains a pad */
+  if (info->pad == NULL)
+    return;
+
+  play_base_bin_mute_pad (play_base_bin, info->pad, mute);
 }
 
 void
 gst_play_base_bin_link_stream (GstPlayBaseBin * play_base_bin,
     GstStreamInfo * info, GstPad * pad)
 {
+  GST_DEBUG ("link stream");
+
   if (info == NULL) {
     GList *streams;
 
