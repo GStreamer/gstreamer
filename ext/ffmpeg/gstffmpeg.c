@@ -35,7 +35,7 @@
 extern gboolean gst_ffmpegdemux_register (GstPlugin *plugin);
 extern gboolean gst_ffmpegdec_register (GstPlugin *plugin);
 extern gboolean gst_ffmpegenc_register (GstPlugin *plugin);
-extern gboolean gst_ffmpegtypes_register (GstPlugin *plugin);
+extern gboolean gst_ffmpegmux_register (GstPlugin *plugin);
 	
 extern URLProtocol gstreamer_protocol;
 
@@ -51,7 +51,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_ffmpegenc_register (plugin);
   gst_ffmpegdec_register (plugin);
-  gst_ffmpegdemux_register (plugin);
+  /*gst_ffmpegdemux_register (plugin);*/
+  //gst_ffmpegmux_register (plugin);
 
   register_protocol (&gstreamer_protocol);
 
