@@ -201,7 +201,7 @@ realmedia_type_find (GstBuffer *buf, gpointer private)
 
   g_return_val_if_fail (data != NULL, NULL);
   
-  if(GST_BUFFER_SIZE(buf) < 8){
+  if(GST_BUFFER_SIZE(buf) < 4){
     return NULL;
   }
   if (strncmp (data, ".RMF", 4)==0) {
