@@ -10,8 +10,10 @@ GST_VERSION_MAJOR=0
 GST_VERSION_MINOR=3
 GST_VERSION_MICRO=1
 
-dnl we use the release tag during CVS development
-GST_VERSION_RELEASE=`date +%Y%m%d`
+dnl we use a datestamped release tag during CVS development
+dnl GST_VERSION_RELEASE=`date +%Y%m%d`
+dnl we use a normal release tag increased manually when releasing
+GST_VERSION_RELEASE=1
 
 GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
