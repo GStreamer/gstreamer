@@ -571,6 +571,8 @@ gst_queue_handle_src_event (GstPad *pad, GstEvent *event)
 {
   GstQueue *queue;
   gboolean res;
+  gint event_type;
+  gint flag_flush = 0;
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
@@ -586,14 +588,19 @@ gst_queue_handle_src_event (GstPad *pad, GstEvent *event)
     return FALSE;
   }
 
+  event_type = GST_EVENT_TYPE (event);
+  if (event_type == GST_EVENT_SEEK)
+    flag_flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
+
   res = gst_pad_event_default (pad, event); 
-  switch (GST_EVENT_TYPE (event)) {
+
+  switch (event_type) {
     case GST_EVENT_FLUSH:
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "FLUSH event, flushing queue\n");
       gst_queue_locked_flush (queue);
       break;
     case GST_EVENT_SEEK:
-      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
+      if (flag_flush) {
         gst_queue_locked_flush (queue);
       }
     default:
