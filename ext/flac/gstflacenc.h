@@ -46,6 +46,7 @@ struct _FlacEnc {
 
   gboolean 	 first;
   GstBuffer	*first_buf;
+  guint64	 offset;
   gboolean 	 eos;
   gint 		 channels;
   gint 		 depth;

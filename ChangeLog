@@ -1,5 +1,16 @@
 2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* configure.ac:
+	* ext/flac/gstflacenc.c: (gst_flacenc_init),
+	(gst_flacenc_seek_callback), (gst_flacenc_write_callback),
+	(gst_flacenc_tell_callback), (gst_flacenc_chain),
+	(gst_flacenc_change_state):
+	* ext/flac/gstflacenc.h:
+	  Update for API change in flac-1.1.1. Update requirement in
+	  configure.ac. Fixes #162974.
+
+2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstplaybasebin.c: (group_destroy):
 	  Remove hack to get rid of assert and get rid of unlinked
 	  signals properly.

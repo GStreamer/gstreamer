@@ -329,6 +329,7 @@ gst_flacenc_init (FlacEnc * flacenc)
   flacenc->encoder = FLAC__seekable_stream_encoder_new ();
 
   flacenc->negotiated = FALSE;
+  flacenc->offset = 0;
   flacenc->first = TRUE;
   flacenc->first_buf = NULL;
   flacenc->data = NULL;
@@ -442,8 +443,10 @@ gst_flacenc_seek_callback (const FLAC__SeekableStreamEncoder * encoder,
       gst_event_new_seek ((GstSeekType) (int) (GST_FORMAT_BYTES |
           GST_SEEK_METHOD_SET), absolute_byte_offset);
 
-  if (event)
+  if (event) {
     gst_pad_push (flacenc->srcpad, GST_DATA (event));
+    flacenc->offset = absolute_byte_offset;
+  }
 
   return FLAC__STREAM_ENCODER_OK;
 }
@@ -472,6 +475,18 @@ gst_flacenc_write_callback (const FLAC__SeekableStreamEncoder * encoder,
   }
 
   gst_pad_push (flacenc->srcpad, GST_DATA (outbuf));
+  flacenc->offset += bytes;
+
+  return FLAC__STREAM_ENCODER_OK;
+}
+
+static FLAC__SeekableStreamEncoderTellStatus
+gst_flacenc_tell_callback (const FLAC__SeekableStreamEncoder * encoder,
+    FLAC__uint64 * absolute_byte_offset, void *client_data)
+{
+  FlacEnc *flacenc = GST_FLACENC (client_data);
+
+  *absolute_byte_offset = flacenc->offset;
 
   return FLAC__STREAM_ENCODER_OK;
 }
@@ -579,6 +594,8 @@ gst_flacenc_chain (GstPad * pad, GstData * _data)
         gst_flacenc_write_callback);
     FLAC__seekable_stream_encoder_set_seek_callback (flacenc->encoder,
         gst_flacenc_seek_callback);
+    FLAC__seekable_stream_encoder_set_tell_callback (flacenc->encoder,
+        gst_flacenc_tell_callback);
 
     FLAC__seekable_stream_encoder_set_client_data (flacenc->encoder, flacenc);
 
@@ -782,6 +799,7 @@ gst_flacenc_change_state (GstElement * element)
         FLAC__seekable_stream_encoder_finish (flacenc->encoder);
       }
       flacenc->negotiated = FALSE;
+      flacenc->offset = 0;
       if (flacenc->first_buf)
         gst_buffer_unref (flacenc->first_buf);
       flacenc->first_buf = NULL;
