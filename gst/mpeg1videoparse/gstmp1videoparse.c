@@ -138,12 +138,10 @@ static void
 gst_mp1videoparse_init (Mp1VideoParse *mp1videoparse)
 {
   mp1videoparse->sinkpad = gst_pad_new_from_template (sink_template, "sink");
-  gst_pad_set_caps (mp1videoparse->sinkpad, gst_pad_get_padtemplate_caps (mp1videoparse->sinkpad));
   gst_element_add_pad(GST_ELEMENT(mp1videoparse),mp1videoparse->sinkpad);
   gst_pad_set_chain_function(mp1videoparse->sinkpad,gst_mp1videoparse_chain);
 
   mp1videoparse->srcpad = gst_pad_new_from_template (src_template, "src");
-  gst_pad_set_caps (mp1videoparse->srcpad, gst_pad_get_padtemplate_caps (mp1videoparse->srcpad));
   gst_element_add_pad(GST_ELEMENT(mp1videoparse),mp1videoparse->srcpad);
 
   mp1videoparse->partialbuf = NULL;

@@ -26,7 +26,7 @@
 #include <gst/gst.h>
 #include "yuv2rgb.h"
 
-#ifdef HAVE_LIBHERMES
+#ifdef HAVE_HERMES
 #  include <Hermes/Hermes.h>
 #endif
 
@@ -57,6 +57,8 @@ typedef enum {
   GST_COLORSPACE_HERMES,
   GST_COLORSPACE_YUV_RGB,
   GST_COLORSPACE_YUY2_I420,
+  GST_COLORSPACE_RGB32_I420,
+  GST_COLORSPACE_RGB32_YV12,
 } GstColorSpaceConverterType;
 
 struct _GstColorspace {
@@ -64,7 +66,7 @@ struct _GstColorspace {
 
   GstPad *sinkpad,*srcpad;
 
-#ifdef HAVE_LIBHERMES
+#ifdef HAVE_HERMES
   HermesHandle h_handle;
   HermesFormat source, dest;
 #endif
@@ -74,8 +76,8 @@ struct _GstColorspace {
   GstColorSpaceConverterType type;
   gint width, height;
   gint srcbpp, destbpp;
+  gboolean disabled;
 
-  GstCaps *srccaps;
   GstCaps *sinkcaps;
 
   GstBufferPool *pool;

@@ -45,11 +45,11 @@ enum {
   /* FILL ME */
 };
 
-static void	gst_gsmdec_class_init	(GstGSMDec *klass);
-static void	gst_gsmdec_init		(GstGSMDec *gsmdec);
+static void			gst_gsmdec_class_init	(GstGSMDec *klass);
+static void			gst_gsmdec_init		(GstGSMDec *gsmdec);
 
-static void	gst_gsmdec_chain	(GstPad *pad, GstBuffer *buf);
-static void 	gst_gsmdec_newcaps 	(GstPad *pad, GstCaps *caps);
+static void			gst_gsmdec_chain	(GstPad *pad, GstBuffer *buf);
+static GstPadConnectReturn	gst_gsmdec_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_gsmdec_signals[LAST_SIGNAL] = { 0 };
@@ -93,7 +93,7 @@ gst_gsmdec_init (GstGSMDec *gsmdec)
   gsmdec->sinkpad = gst_pad_new_from_template (gsmdec_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->sinkpad);
   gst_pad_set_chain_function (gsmdec->sinkpad, gst_gsmdec_chain);
-  gst_pad_set_newcaps_function (gsmdec->sinkpad, gst_gsmdec_newcaps);
+  gst_pad_set_connect_function (gsmdec->sinkpad, gst_gsmdec_sinkconnect);
 
   gsmdec->srcpad = gst_pad_new_from_template (gsmdec_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->srcpad);
@@ -102,13 +102,18 @@ gst_gsmdec_init (GstGSMDec *gsmdec)
   gsmdec->bufsize = 0;
 }
 
-static void
-gst_gsmdec_newcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_gsmdec_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstGSMDec *gsmdec;
   
   gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
-  gst_pad_set_caps (gsmdec->srcpad, GST_CAPS_NEW (
+
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
+  
+  if (gst_pad_try_set_caps (gsmdec->srcpad, 
+		      GST_CAPS_NEW (
 	  		"gsm_raw",
 			"audio/raw",
 			  "format",       GST_PROPS_STRING ("int"),
@@ -119,7 +124,11 @@ gst_gsmdec_newcaps (GstPad *pad, GstCaps *caps)
 			    "depth",      GST_PROPS_INT (16),
 			    "rate",       GST_PROPS_INT (gst_caps_get_int (caps, "rate")),
 			    "channels",   GST_PROPS_INT (1)
-			   ));
+			   )))
+  {
+    return GST_PAD_CONNECT_OK;
+  }
+  return GST_PAD_CONNECT_REFUSED;
 }
 
 static void

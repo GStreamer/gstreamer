@@ -44,6 +44,7 @@ struct _GstChart {
   gint depth;
   gint width;
   gint height;
+  gboolean first_buffer;
 
   gint samplerate;
   gint framerate; // desired frame rate
@@ -162,10 +163,10 @@ static void	gst_chart_get_property	(GObject *object, guint prop_id, GValue *valu
 
 static void	gst_chart_chain		(GstPad *pad, GstBuffer *buf);
 
-static GstElementClass *parent_class = NULL;
+static GstPadConnectReturn 
+		gst_chart_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
-static void gst_chart_newsinkcaps (GstPad *pad, GstCaps *caps);
-static void gst_chart_newsrccaps (GstPad *pad, GstCaps *caps);
+static GstElementClass *parent_class = NULL;
 
 GType
 gst_chart_get_type (void)
@@ -211,9 +212,7 @@ gst_chart_init (GstChart *chart)
   gst_element_add_pad (GST_ELEMENT (chart), chart->srcpad);
 
   gst_pad_set_chain_function (chart->sinkpad, gst_chart_chain);
-  gst_pad_set_newcaps_function (chart->sinkpad, gst_chart_newsinkcaps);
-  gst_pad_set_newcaps_function (chart->srcpad, gst_chart_newsrccaps);
-
+  gst_pad_set_connect_function (chart->sinkpad, gst_chart_sinkconnect);
 
   chart->next_time = 0;
   chart->peerpool = NULL;
@@ -221,8 +220,9 @@ gst_chart_init (GstChart *chart)
   // reset the initial video state
   chart->bpp = 16;
   chart->depth = 16;
-  chart->width = -1;
-  chart->height = -1;
+  chart->first_buffer = TRUE;
+  chart->width = 256;
+  chart->height = 128;
 
   chart->samplerate = -1;
   chart->framerate = 25; // desired frame rate
@@ -230,8 +230,8 @@ gst_chart_init (GstChart *chart)
   chart->samples_since_last_frame = 0;
 }
 
-static void
-gst_chart_newsinkcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_chart_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstChart *chart;
   chart = GST_CHART (gst_pad_get_parent (pad));
@@ -242,22 +242,8 @@ gst_chart_newsinkcaps (GstPad *pad, GstCaps *caps)
   GST_DEBUG (0, "CHART: new sink caps: rate %d\n",
 	     chart->samplerate);
   //gst_chart_sync_parms (chart);
-}
-
-static void
-gst_chart_newsrccaps (GstPad *pad, GstCaps *caps)
-{
-  GstChart *chart;
-  chart = GST_CHART (gst_pad_get_parent (pad));
-
-  chart->bpp = gst_caps_get_int (caps, "bpp");
-  chart->depth = gst_caps_get_int (caps, "depth");
-  chart->width = gst_caps_get_int (caps, "width");
-  chart->height = gst_caps_get_int (caps, "height");
-
-  GST_DEBUG (0, "CHART: new src caps: bpp %d, depth %d, width %d, height %d\n",
-	     chart->bpp, chart->depth, chart->width, chart->height);
-  //gst_chart_sync_parms (chart);
+  //
+  return GST_PAD_CONNECT_OK;
 }
 
 static void
@@ -347,28 +333,6 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
   if (chart->samples_between_frames <= chart->samples_since_last_frame) {
       chart->samples_since_last_frame = 0;
 
-      // Check if we need to renegotiate size.
-      if (chart->width == -1 || chart->height == -1) {
-	  chart->width = 256;
-	  chart->height = 128;
-	  GST_DEBUG (0, "making new pad\n");
-	  gst_pad_set_caps (chart->srcpad,
-			    gst_caps_new (
-					  "chartsrc",
-					  "video/raw",
-					  gst_props_new (
-							 "format",	GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R','G','B',' ')),
-							 "bpp",		GST_PROPS_INT (chart->bpp),
-							 "depth",	GST_PROPS_INT (chart->depth),
-							 "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-							 "red_mask",	GST_PROPS_INT (0xf800),
-							 "green_mask",	GST_PROPS_INT (0x07e0),
-							 "blue_mask",	GST_PROPS_INT (0x001f),
-							 "width",	GST_PROPS_INT (chart->width),
-							 "height",	GST_PROPS_INT (chart->height),
-							 NULL)));
-      }
-
       // get data to draw into buffer
       if (samples_in >= chart->width) {
 	  // make a new buffer for the output
@@ -384,8 +348,34 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
 	  // FIXME: call different routines for different properties
 	  draw_chart_16bpp(dataout, chart->width, chart->height, (gint16 *)datain, samples_in);
 
+          gst_buffer_unref(bufin);
+
 	  // set timestamp
 	  GST_BUFFER_TIMESTAMP (bufout) = chart->next_time;
+
+          // Check if we need to renegotiate size.
+          if (chart->first_buffer) {
+	    GST_DEBUG (0, "making new pad\n");
+	    if (!gst_pad_try_set_caps (chart->srcpad,
+			    GST_CAPS_NEW (
+			      "chartsrc",
+			      "video/raw",
+				"format",	GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R','G','B',' ')),
+				"bpp",		GST_PROPS_INT (chart->bpp),
+				"depth",	GST_PROPS_INT (chart->depth),
+				"endianness",	GST_PROPS_INT (G_BYTE_ORDER),
+				"red_mask",	GST_PROPS_INT (0xf800),
+				"green_mask",	GST_PROPS_INT (0x07e0),
+				"blue_mask",	GST_PROPS_INT (0x001f),
+				"width",	GST_PROPS_INT (chart->width),
+				"height",	GST_PROPS_INT (chart->height)
+			    )))
+	    {
+	      gst_element_error (GST_ELEMENT (chart), "could not set caps");
+	      return;
+	    }
+	    chart->first_buffer = FALSE;
+          }
 
 	  GST_DEBUG (0, "CHART: outputting buffer\n");
 	  // output buffer
@@ -394,9 +384,9 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
       }
   } else {
       GST_DEBUG (0, "CHART: skipping buffer\n");
+      gst_buffer_unref(bufin);
   }
 
-  gst_buffer_unref(bufin);
   GST_DEBUG (0, "CHART: exiting chainfunc\n");
 }
 

@@ -23,23 +23,35 @@
 #include <gst/gst.h>
 
 #include "flx_color.h"
+#include <gst/bytestream/bytestream.h>
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+typedef enum {
+  GST_FLXDEC_READ_HEADER,
+  GST_FLXDEC_PLAYING,
+} GstFlxDecState;
+	
 
 /* Definition of structure storing data for this element. */
 typedef struct _GstFlxDec  GstFlxDec;
+
 struct _GstFlxDec {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
 
-  gboolean active, new_meta, new_buf;
+  gboolean active, new_meta;
 
   GstBuffer *buf, *out, *delta, *frame;
-  gulong offset, size;
+  GstByteStream *bs;
+  gulong size;
+  GstFlxDecState state;
+  glong frame_time;
+  gint64 next_time;
 
   FlxColorSpaceConverter *converter;
 
@@ -63,9 +75,6 @@ struct _GstFlxDecClass {
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FLXDEC))
 #define GST_IS_FLXDEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FLXDEC))
-
-#define FLXDEC_BUFSIZE(buf, offset) \
-  ((GST_BUFFER_OFFSET(buf) + GST_BUFFER_SIZE(buf)) - offset)
 
 /* Standard function returning type information. */
 GType gst_flxdec_get_type(void);

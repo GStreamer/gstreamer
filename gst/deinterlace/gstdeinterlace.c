@@ -54,7 +54,9 @@ GST_PADTEMPLATE_FACTORY (deinterlace_src_factory,
   GST_CAPS_NEW (
    "deinterlace_src",
    "video/raw",
-     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
+     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+     "width",    GST_PROPS_INT_POSITIVE,
+     "height",   GST_PROPS_INT_POSITIVE
   )
 )
 
@@ -65,7 +67,9 @@ GST_PADTEMPLATE_FACTORY (deinterlace_sink_factory,
   GST_CAPS_NEW (
    "deinterlace_src",
    "video/raw",
-     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
+     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+     "width",    GST_PROPS_INT_POSITIVE,
+     "height",   GST_PROPS_INT_POSITIVE
   )
 )
 
@@ -74,35 +78,15 @@ static GType 		gst_deinterlace_get_type		(void);
 static void		gst_deinterlace_class_init		(GstDeInterlaceClass *klass);
 static void		gst_deinterlace_init			(GstDeInterlace *filter);
 
-static void		gst_deinterlace_set_property			(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		gst_deinterlace_get_property			(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void		gst_deinterlace_set_property		(GObject *object, guint prop_id, 
+								 const GValue *value, GParamSpec *pspec);
+static void		gst_deinterlace_get_property		(GObject *object, guint prop_id, 
+								 GValue *value, GParamSpec *pspec);
 
 static void		gst_deinterlace_chain			(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
-
-static GstPadNegotiateReturn
-deinterlace_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstDeInterlace* filter = GST_DEINTERLACE (gst_pad_get_parent (pad));
-  
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad,filter->sinkpad,caps);
-}
-
-static GstPadNegotiateReturn
-deinterlace_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstDeInterlace* filter = GST_DEINTERLACE (gst_pad_get_parent (pad));
-  
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad,filter->srcpad,caps);
-}		
 
 static GType
 gst_deinterlace_get_type(void) {
@@ -152,12 +136,15 @@ gst_deinterlace_class_init (GstDeInterlaceClass *klass)
   gobject_class->get_property = gst_deinterlace_get_property;
 }
 
-static void
-gst_deinterlace_newcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_deinterlace_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstDeInterlace *filter;
 
   filter = GST_DEINTERLACE(gst_pad_get_parent (pad));
+  
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
 
   filter->width = gst_caps_get_int (caps, "width");
   filter->height = gst_caps_get_int (caps, "height");
@@ -168,19 +155,21 @@ gst_deinterlace_newcaps (GstPad *pad, GstCaps *caps)
     filter->picsize = filter->width*filter->height;
     filter->src = g_malloc(filter->picsize);
   }
+  if (gst_pad_try_set_caps (filter->srcpad, caps)) {
+    return GST_PAD_CONNECT_OK;
+  }
+  return GST_PAD_CONNECT_REFUSED;
 }
 
 static void
 gst_deinterlace_init (GstDeInterlace *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(deinterlace_sink_factory (),"sink");
-  gst_pad_set_negotiate_function(filter->sinkpad,deinterlace_negotiate_sink);
   gst_pad_set_chain_function(filter->sinkpad,gst_deinterlace_chain);
-  gst_pad_set_newcaps_function(filter->sinkpad,gst_deinterlace_newcaps);
+  gst_pad_set_connect_function(filter->sinkpad,gst_deinterlace_sinkconnect);
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
 
   filter->srcpad = gst_pad_new_from_template(deinterlace_src_factory (),"src");
-  gst_pad_set_negotiate_function(filter->srcpad,deinterlace_negotiate_src);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
 
   filter->show_deinterlaced_area_only = FALSE;

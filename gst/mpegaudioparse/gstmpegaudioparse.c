@@ -142,7 +142,6 @@ static void
 gst_mp3parse_init (GstMPEGAudioParse *mp3parse)
 {
   mp3parse->sinkpad = gst_pad_new_from_template(sink_temp, "sink");
-  //gst_pad_set_caps(mp3parse->sinkpad, gst_pad_get_padtemplate_caps (mp3parse->sinkpad));
   gst_element_add_pad(GST_ELEMENT(mp3parse),mp3parse->sinkpad);
 
 #if 1	// set this to one to use the old chaining code

@@ -350,21 +350,20 @@ gst_afsrc_open_file (GstAFSrc *src)
   
   /* set caps on src */
   //FIXME: add all the possible formats, especially float ! */
-  gst_pad_set_caps (src->srcpad, gst_caps_new (
-    "af_src",
-    "audio/raw",
-    gst_props_new (
-        "format",       GST_PROPS_STRING ("int"),
-          "law",        GST_PROPS_INT (0),              //FIXME
-          "endianness", GST_PROPS_INT (G_BYTE_ORDER),   //FIXME
-          "signed",     GST_PROPS_BOOLEAN (src->is_signed),
-          "width",      GST_PROPS_INT (src->width),
-          "depth",      GST_PROPS_INT (src->width),
-          "rate",       GST_PROPS_INT (src->rate),
-          "channels",   GST_PROPS_INT (src->channels),
-          NULL
-        )
-      ));
+  gst_pad_try_set_caps (src->srcpad, 
+		  GST_CAPS_NEW (
+    		    "af_src",
+                    "audio/raw",
+                      "format",     GST_PROPS_STRING ("int"),
+                      "law",        GST_PROPS_INT (0),              //FIXME
+                      "endianness", GST_PROPS_INT (G_BYTE_ORDER),   //FIXME
+                      "signed",     GST_PROPS_BOOLEAN (src->is_signed),
+                      "width",      GST_PROPS_INT (src->width),
+                      "depth",      GST_PROPS_INT (src->width),
+                      "rate",       GST_PROPS_INT (src->rate),
+                      "channels",   GST_PROPS_INT (src->channels)
+        	   )
+                 );
 
   GST_FLAG_SET (src, GST_AFSRC_OPEN);
 

@@ -80,28 +80,6 @@ static void	gst_smooth_get_property	(GObject *object, guint prop_id, GValue *val
 static GstElementClass *parent_class = NULL;
 //static guint gst_smooth_signals[LAST_SIGNAL] = { 0 };
 
-static GstPadNegotiateReturn
-smooth_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstSmooth* filter = GST_SMOOTH (gst_pad_get_parent (pad));
-
-  if (*caps==NULL)
-    return GST_PAD_NEGOTIATE_FAIL;
-
-  return gst_pad_negotiate_proxy (pad, filter->sinkpad, caps);
-}
-
-static GstPadNegotiateReturn
-smooth_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstSmooth* filter = GST_SMOOTH (gst_pad_get_parent (pad));
-
-  if (*caps==NULL)
-    return GST_PAD_NEGOTIATE_FAIL;
-
-  return gst_pad_negotiate_proxy (pad, filter->srcpad, caps);
-}
-
 GType
 gst_smooth_get_type (void)
 {
@@ -149,15 +127,20 @@ gst_smooth_class_init (GstSmoothClass *klass)
 
 }
 
-static void
-gst_smooth_newcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_smooth_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstSmooth *filter;
 
   filter = GST_SMOOTH (gst_pad_get_parent (pad));
 
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
+
   filter->width = gst_caps_get_int (caps, "width");
   filter->height = gst_caps_get_int (caps, "height");
+
+  return GST_PAD_CONNECT_OK;
 }
 
 static void
@@ -165,14 +148,12 @@ gst_smooth_init (GstSmooth *smooth)
 {
   smooth->sinkpad = gst_pad_new_from_template (
                   GST_PADTEMPLATE_GET (smooth_sink_factory), "sink");
-  gst_pad_set_negotiate_function (smooth->sinkpad, smooth_negotiate_sink);
-  gst_pad_set_newcaps_function (smooth->sinkpad, gst_smooth_newcaps);
+  gst_pad_set_connect_function (smooth->sinkpad, gst_smooth_sinkconnect);
   gst_pad_set_chain_function (smooth->sinkpad, gst_smooth_chain);
   gst_element_add_pad (GST_ELEMENT (smooth), smooth->sinkpad);
 
   smooth->srcpad = gst_pad_new_from_template (
                   GST_PADTEMPLATE_GET (smooth_src_factory), "src");
-  gst_pad_set_negotiate_function (smooth->srcpad, smooth_negotiate_src);
   gst_element_add_pad (GST_ELEMENT (smooth), smooth->srcpad);
 
   smooth->active = TRUE;

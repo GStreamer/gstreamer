@@ -117,6 +117,7 @@ play_on_demand_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool(filter->srcpad);
 }
 
+/*
 static GstPadNegotiateReturn
 play_on_demand_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
 {
@@ -144,6 +145,7 @@ play_on_demand_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
   
   return gst_pad_negotiate_proxy(pad, filter->srcpad, caps);
 }	
+*/
 
 static gint
 play_on_demand_parse_caps (GstPlayOnDemand *filter, GstCaps *caps)
@@ -264,11 +266,11 @@ play_on_demand_init (GstPlayOnDemand *filter)
   guint i;
   
   filter->sinkpad = gst_pad_new_from_template(play_on_demand_sink_factory(), "sink");
-  gst_pad_set_negotiate_function(filter->sinkpad, play_on_demand_negotiate_sink);
+  //gst_pad_set_negotiate_function(filter->sinkpad, play_on_demand_negotiate_sink);
   gst_pad_set_bufferpool_function(filter->sinkpad, play_on_demand_get_bufferpool);
 
   filter->srcpad = gst_pad_new_from_template(play_on_demand_src_factory(), "src");
-  gst_pad_set_negotiate_function(filter->srcpad, play_on_demand_negotiate_src);
+  //gst_pad_set_negotiate_function(filter->srcpad, play_on_demand_negotiate_src);
   
   gst_element_add_pad(GST_ELEMENT(filter), filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter), filter->srcpad);

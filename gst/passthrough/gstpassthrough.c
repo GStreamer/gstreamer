@@ -107,6 +107,7 @@ passthrough_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool (filter->srcpad);
 }
 
+/*
 static GstPadNegotiateReturn
 passthrough_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
 {
@@ -134,6 +135,7 @@ passthrough_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
   
   return gst_pad_negotiate_proxy(pad,filter->srcpad,caps);
 }	
+*/
 
 static gint
 passthrough_parse_caps (GstPassthrough *filter, GstCaps *caps)
@@ -222,10 +224,10 @@ static void
 passthrough_init (GstPassthrough *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(passthrough_sink_factory (),"sink");
-  gst_pad_set_negotiate_function(filter->sinkpad,passthrough_negotiate_sink);
+  //gst_pad_set_negotiate_function(filter->sinkpad,passthrough_negotiate_sink);
   gst_pad_set_bufferpool_function(filter->sinkpad,passthrough_get_bufferpool);
   filter->srcpad = gst_pad_new_from_template(passthrough_src_factory (),"src");
-  gst_pad_set_negotiate_function(filter->srcpad,passthrough_negotiate_src);
+  //gst_pad_set_negotiate_function(filter->srcpad,passthrough_negotiate_src);
   
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);

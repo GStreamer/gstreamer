@@ -115,15 +115,20 @@ gst_lavencode_class_init (GstLavEncodeClass *klass)
   gobject_class->get_property = gst_lavencode_get_property;
 }
 
-static void
-gst_lavencode_newcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_lavencode_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstLavEncode *filter;
 
   filter = GST_LAVENCODE (gst_pad_get_parent (pad));
 
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
+
   filter->width = gst_caps_get_int (caps, "width");
   filter->height = gst_caps_get_int (caps, "height");
+
+  return GST_PAD_CONNECT_OK;
 }
 
 static void
@@ -133,7 +138,7 @@ gst_lavencode_init (GstLavEncode *filter)
 		  GST_PADTEMPLATE_GET (lavencode_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_lavencode_chain);
-  gst_pad_set_newcaps_function (filter->sinkpad, gst_lavencode_newcaps);
+  gst_pad_set_connect_function (filter->sinkpad, gst_lavencode_sinkconnect);
 
   filter->srcpad = gst_pad_new_from_template(
 		  GST_PADTEMPLATE_GET (lavencode_src_factory), "src");

@@ -245,7 +245,7 @@ gst_qcamsrc_get (GstPad *pad)
 
   qc_set (qcamsrc->qcam);
   if (!GST_PAD_CAPS (pad)) {
-    gst_pad_set_caps (pad, GST_CAPS_NEW (
+    gst_pad_try_set_caps (pad, GST_CAPS_NEW (
 			    "qcam_caps",
 			    "video/raw",
 			      "format",		GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),

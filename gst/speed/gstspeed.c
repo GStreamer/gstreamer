@@ -109,6 +109,7 @@ static void		speed_loop              (GstElement *element);
 static GstElementClass *parent_class = NULL;
 //static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
 
+/*
 static GstPadNegotiateReturn
 speed_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
 {
@@ -136,6 +137,7 @@ speed_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
   
   return gst_pad_negotiate_proxy(pad,filter->srcpad,caps);
 }	
+*/
 
 static gint
 speed_parse_caps (GstSpeed *filter, GstCaps *caps)
@@ -228,10 +230,10 @@ static void
 speed_init (GstSpeed *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(speed_sink_factory (),"sink");
-  gst_pad_set_negotiate_function(filter->sinkpad,speed_negotiate_sink);
+  //gst_pad_set_negotiate_function(filter->sinkpad,speed_negotiate_sink);
   gst_pad_set_bufferpool_function (filter->sinkpad, speed_sink_get_bufferpool);
   filter->srcpad = gst_pad_new_from_template(speed_src_factory (),"src");
-  gst_pad_set_negotiate_function(filter->srcpad,speed_negotiate_src);
+  //gst_pad_set_negotiate_function(filter->srcpad,speed_negotiate_src);
   
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
