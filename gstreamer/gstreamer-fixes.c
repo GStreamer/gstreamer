@@ -22,5 +22,3 @@
 #include <gst/gst.h>
 
 #include "gstreamer-fixes.h"
-
-#include "tmp-enum-types.c"

@@ -27,7 +27,7 @@ from gstreamer import *
 from gobject import GObject
 import gtk
 
-class DVDPlay(object):
+class DVDPlayer(object):
    def __init__(self):
       pass
 
@@ -77,8 +77,22 @@ class DVDPlay(object):
       if ret:
          return ret
 
-      ret = self.run()
-      return ret
+      return self.run()
+
+   def run(self):
+      print 'setting to PLAYING state'
+
+      self.pipeline.set_state(STATE_PLAYING)
+
+      gtk.idle_add(self.idle,self.pipeline)
+
+      #gtk.threads_enter()
+      gtk.main()
+      #gtk.threads_leave()
+
+      self.pipeline.set_state(STATE_NULL)
+
+      return 0
 
    def build_video_thread(self):
       # ***** pre-construct the video thread *****
@@ -94,15 +108,43 @@ class DVDPlay(object):
       self.color = gst_element_factory_make('colorspace','color')
       assert self.color
 
-      self.show = gst_element_factory_make('sdlvideosink','show')
+      self.efx = gst_element_factory_make('identity','identity')
+      #self.efx = gst_element_factory_make('edgeTV','EdgeTV')
+      #self.efx = gst_element_factory_make('agingTV','AgingTV')
+      #effectv:  diceTV: DiceTV
+      #effectv:  warpTV: WarpTV
+      #effectv:  shagadelicTV: ShagadelicTV
+      #effectv:  vertigoTV: VertigoTV
+      #self.efx = gst_element_factory_make('revTV','RevTV')
+      #self.efx = gst_element_factory_make('quarkTV','QuarkTV')
+      assert self.efx
+
+      self.color2 = gst_element_factory_make('colorspace','color2')
+      assert self.color2
+
+      self.show = gst_element_factory_make('videosink','show')
+      #self.show = gst_element_factory_make('sdlvideosink','show')
+      #self.show = gst_element_factory_make('fakesink','fakesinkv')
       assert self.show
+      #self.show.set_property('silent', 0)
+      #self.show.set_property('sync', 1)
 
-      for e in (self.v_queue, self.v_decode, self.color, self.show):
+      #self.deinterlace = gst_element_factory_make('deinterlace','deinterlace')
+      self.deinterlace = gst_element_factory_make('identity','deinterlace')
+      assert self.deinterlace
+
+      last = None
+      for e in (self.v_queue, self.v_decode, self.color, self.efx, self.color2,  self.deinterlace, self.show):
          self.v_thread.add(e)
+         if last:
+            last.connect(e)
+         last = e
 
-      self.v_queue.connect(self.v_decode)
-      self.v_decode.connect(self.color)
-      self.color.connect(self.show)
+      #self.v_queue.connect(self.v_decode)
+      #self.v_decode.connect(self.color)
+      #self.color.connect(self.efx)
+      #self.efx.connect(self.color2)
+      #self.color2.connect(self.show)
 
    def build_audio_thread(self):
       # ***** pre-construct the audio thread *****
@@ -116,7 +158,10 @@ class DVDPlay(object):
       assert self.a_decode
 
       self.osssink = gst_element_factory_make('osssink','osssink')
+      #self.osssink = gst_element_factory_make('fakesink','fakesinka')
       assert self.osssink
+      #self.osssink.set_property('silent', 0)
+      #self.osssink.set_property('sync', 0)
 
       for e in (self.a_queue, self.a_decode, self.osssink):
          self.a_thread.add(e)
@@ -129,9 +174,10 @@ class DVDPlay(object):
       self.pipeline = gst_pipeline_new('pipeline')
       assert self.pipeline
 
-      self.src = gst_element_factory_make('dvdsrc','src');
+      self.src = gst_element_factory_make('dvdreadsrc','src');
       assert self.src
 
+      #GObject.connect(self.src,'deep_notify',self.dnprint)
       self.src.set_property('location', self.location)
       self.src.set_property('title', self.title)
       self.src.set_property('chapter', self.chapter)
@@ -139,6 +185,7 @@ class DVDPlay(object):
 
       self.parse = gst_element_factory_make('mpegdemux','parse')
       assert self.parse
+      self.parse.set_property('sync', 0)
 
       self.pipeline.add(self.src)
       self.pipeline.add(self.parse)
@@ -166,26 +213,21 @@ class DVDPlay(object):
       GObject.connect(self.src,'eos',self.eof)
       #GObject.connect(show,'have_size',self.mpegparse_have_size, self.pipeline)
 
-      return 0
-
-   def run(self):
-      print 'setting to PLAYING state'
-
-      self.pipeline.set_state(STATE_PLAYING)
-
-      gtk.idle_add(self.idle,self.pipeline)
-
-      #gtk.threads_enter()
-      gtk.main()
-      #gtk.threads_leave()
-
-      self.pipeline.set_state(STATE_NULL)
+      #GObject.connect(self.pipeline,'error',self.pipeline_error)
+      #GObject.connect(self.pipeline,'deep_notify',self.dnprint)
 
       return 0
+
+   def pipeline_error(self, sender, obj, error):
+      print "(%s) ERROR: %s: %s" % (self, obj.name(), error)
+
+   def dnprint(self, sender, obj, param):
+      str = obj.get_property(param.name)
+      print '%s: %s = %s' % (sender.get_name(), param.name, str)
 
 if __name__ == '__main__':
-   #gst_debug_set_categories(-1)
-   #gst_info_set_categories(-1)
-   player = DVDPlay()
+   #gst_debug_set_categories(0xFFFFFFFFL)
+   #gst_info_set_categories(0xFFFFFFFFL)
+   player = DVDPlayer()
    ret = player.main()
    sys.exit(ret)

@@ -58,6 +58,11 @@ PYGTK_DEFSDIR=`$PKG_CONFIG --variable=defsdir pygtk-2.0`
 AC_SUBST(PYGTK_DEFSDIR)
 AC_MSG_RESULT($PYGTK_DEFSDIR)
 
+AC_MSG_CHECKING(for pygtk h2def)
+PYGTK_H2DEF=`$PKG_CONFIG --variable=datadir pygtk-2.0`/pygtk/2.0/codegen/h2def.py
+AC_SUBST(PYGTK_H2DEF)
+AC_MSG_RESULT($PYGTK_H2DEF)
+
 dnl required version substitutions for use in the spec file
 PYGTK_VERSION=pygtk_required_version
 GTK_VERSION=gtk_required_version
@@ -73,6 +78,11 @@ AM_PATH_GTK_2_0(gtk_required_version,,[AC_MSG_ERROR(maybe you want the gtk-gnome
 
 dnl check to make sure we can find gstreamer
 PKG_CHECK_MODULES(GST, gstreamer >= gstreamer_required_version, HAVE_GST="yes", HAVE_GST="no")
+
+AC_MSG_CHECKING(for gstreamer include dir)
+GST_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer`
+AC_SUBST(GST_INCLUDEDIR)
+AC_MSG_RESULT($GST_INCLUDEDIR)
 
 if test "x$HAVE_GST" = "xno"; then
   AC_MSG_ERROR(need GStreamer $gstreamer_required_version)

@@ -44,9 +44,9 @@ def filter(filters):
       return -1
    filesrc.set_property('location', sys.argv[1])
 
-   filesink = gst_element_factory_make ('disksink', 'sink')
+   filesink = gst_element_factory_make ('filesink', 'sink')
    if not filesink:
-      print 'could not find plugin \"disksink\"'
+      print 'could not find plugin \"filesink\"'
       return -1
    filesink.set_property('location', sys.argv[2])
 

@@ -18,11 +18,3 @@
     '("char*" "data")
   )
 )
-
-(define-function gst_info_set_categories
-  (c-name "gst_info_set_categories")
-  (return-type "none")
-  (parameters
-    '("guint32" "categories")
-  )
-)

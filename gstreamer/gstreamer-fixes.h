@@ -24,4 +24,3 @@
 
 #include <gst/gstqueue.h>
 #include <gst/gsttypefind.h>
-#include "tmp-enum-types.h"
