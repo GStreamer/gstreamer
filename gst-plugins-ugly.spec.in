@@ -523,72 +523,75 @@ GStreamer support libraries header files.
 # Here are all the packages depending on external libs #
 
 ### ALSA ###
-@USE_ALSA_TRUE@%package -n gstreamer-alsa
+@USE_ALSA_TRUE@%package -n gstreamer-plugins-alsa
 @USE_ALSA_TRUE@Summary:  GStreamer plug-ins for the ALSA sound system.
 @USE_ALSA_TRUE@Group:    Applications/Multimedia
 @USE_ALSA_TRUE@Requires: gstreamer-plugins = %{version}
+@USE_ALSA_TRUE@Obsoletes:gstreamer-alsa
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@Provides:	gstreamer-audiosrc
 @USE_ALSA_TRUE@Provides:	gstreamer-audiosink
 @USE_ALSA_TRUE@
-@USE_ALSA_TRUE@%description -n gstreamer-alsa
+@USE_ALSA_TRUE@%description -n gstreamer-plugins-alsa
 @USE_ALSA_TRUE@Input and output plug-in for the ALSA soundcard driver system. 
 @USE_ALSA_TRUE@This plug-in depends on Alsa 0.9.x or higher.
 @USE_ALSA_TRUE@
-@USE_ALSA_TRUE@%files -n gstreamer-alsa
+@USE_ALSA_TRUE@%files -n gstreamer-plugins-alsa
 @USE_ALSA_TRUE@%defattr(-, root, root)
 @USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsa.so
 @USE_ALSA_TRUE@
-@USE_ALSA_TRUE@%post -n gstreamer-alsa
+@USE_ALSA_TRUE@%post -n gstreamer-plugins-alsa
 @USE_ALSA_TRUE@%{register}
-@USE_ALSA_TRUE@%postun -n gstreamer-alsa
+@USE_ALSA_TRUE@%postun -n gstreamer-plugins-alsa
 @USE_ALSA_TRUE@%{register}
 
 ## DXR3 ###
-@USE_DXR3_TRUE@%package -n gstreamer-dxr3
+@USE_DXR3_TRUE@%package -n gstreamer-plugins-dxr3
 @USE_DXR3_TRUE@Summary:       GStreamer plug-in for playback using dxr3 card.
 @USE_DXR3_TRUE@Group:         Applications/Multimedia
 @USE_DXR3_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_DXR3_TRUE@Requires:      em8300 >= 0.12.0
 @USE_DXR3_TRUE@BuildRequires: em8300-devel >= 0.12.0
+@USE_DXR3_TRUE@Obsoletes:     gstreamer-dxr3
 @USE_DXR3_TRUE@
-@USE_DXR3_TRUE@%description -n gstreamer-dxr3
+@USE_DXR3_TRUE@%description -n gstreamer-plugins-dxr3
 @USE_DXR3_TRUE@Plug-in supporting DVD playback using cards
 @USE_DXR3_TRUE@with the dxr3 chipset like Hollywood Plus
 @USE_DXR3_TRUE@and Creative Labs DVD cards.
 @USE_DXR3_TRUE@
-@USE_DXR3_TRUE@%files -n gstreamer-dxr3
+@USE_DXR3_TRUE@%files -n gstreamer-plugins-dxr3
 @USE_DXR3_TRUE@%defattr(-, root, root)
 @USE_DXR3_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdxr3.so
 @USE_DXR3_TRUE@
-@USE_DXR3_TRUE@%post -n gstreamer-dxr3
+@USE_DXR3_TRUE@%post -n gstreamer-plugins-dxr3
 @USE_DXR3_TRUE@%{register}
 @USE_DXR3_TRUE@
-@USE_DXR3_TRUE@%postun -n gstreamer-dxr3
+@USE_DXR3_TRUE@%postun -n gstreamer-plugins-dxr3
 @USE_DXR3_TRUE@%{register}
 
 ### FAAC ###
-@USE_FAAC_TRUE@%package -n gstreamer-faac
+@USE_FAAC_TRUE@%package -n gstreamer-plugins-faac
 @USE_FAAC_TRUE@Summary:GStreamer plug-ins for AAC audio playback.
 @USE_FAAC_TRUE@Group:         Applications/Multimedia
 @USE_FAAC_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_FAAC_TRUE@Requires:      faac >= 1.23
 @USE_FAAC_TRUE@BuildRequires: faac-devel >= 1.23
+@USE_FAAC_TRUE@Obsoletes:     gstreamer-faac
 @USE_FAAC_TRUE@
-@USE_FAAC_TRUE@%description -n gstreamer-faac
+@USE_FAAC_TRUE@%description -n gstreamer-plugins-faac
 @USE_FAAC_TRUE@Plug-ins for playing AAC audio
 @USE_FAAC_TRUE@
-@USE_FAAC_TRUE@%files -n gstreamer-faac
+@USE_FAAC_TRUE@%files -n gstreamer-plugins-faac
 @USE_FAAC_TRUE@%defattr(-, root, root)
 @USE_FAAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
 @USE_FAAC_TRUE@%post -n  gstreamer-faac
 @USE_FAAC_TRUE@%{register}
 @USE_FAAC_TRUE@
-@USE_FAAC_TRUE@%postun -n  gstreamer-faac
+@USE_FAAC_TRUE@%postun -n  gstreamer-plugins-faac
 @USE_FAAC_TRUE@%{register}
 
 #### JACK AUDIO CONNECTION KIT ###
-@USE_JACK_TRUE@%package -n gstreamer-jack
+@USE_JACK_TRUE@%package -n gstreamer-plugins-jack
 @USE_JACK_TRUE@Summary:  GStreamer plug-in for the Jack Sound Server.
 @USE_JACK_TRUE@Group:    Applications/Multimedia
 @USE_JACK_TRUE@Requires: gstreamer-plugins = %{version}
@@ -596,102 +599,110 @@ GStreamer support libraries header files.
 @USE_JACK_TRUE@
 @USE_JACK_TRUE@Provides:	gstreamer-audiosrc
 @USE_JACK_TRUE@Provides:	gstreamer-audiosink
+@USE_JACK_TRUE@Obsoletes:	gstreamer-jack
 @USE_JACK_TRUE@
-@USE_JACK_TRUE@%description -n gstreamer-jack
+@USE_JACK_TRUE@%description -n gstreamer-plugins-jack
 @USE_JACK_TRUE@Plug-in for the JACK professional sound server.
 @USE_JACK_TRUE@
-@USE_JACK_TRUE@%files -n gstreamer-jack
+@USE_JACK_TRUE@%files -n gstreamer-plugins-jack
 @USE_JACK_TRUE@%defattr(-, root, root)
 @USE_JACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjack.so
 @USE_JACK_TRUE@
-@USE_JACK_TRUE@%post -n gstreamer-jack
+@USE_JACK_TRUE@%post -n gstreamer-plugins-jack
 @USE_JACK_TRUE@%{register}
 @USE_JACK_TRUE@
-@USE_JACK_TRUE@%postun -n gstreamer-jack
+@USE_JACK_TRUE@%postun -n gstreamer-plugins-jack
 @USE_JACK_TRUE@%{register}
 
 #### NETWORK AUDIO SYSTEM  ###
-@USE_NAS_TRUE@%package -n gstreamer-nas
+@USE_NAS_TRUE@%package -n gstreamer-plugins-nas
 @USE_NAS_TRUE@Summary:  GStreamer plug-in for the Network Audio System.
 @USE_NAS_TRUE@Group:    Applications/Multimedia
 @USE_NAS_TRUE@Requires: gstreamer-plugins = %{version}
 @USE_NAS_TRUE@Requires: libnas2 >= 1.6
+@USE_NAS_TRUE@Obsolotes:gstreamer-nas
 @USE_NAS_TRUE@
-@USE_NAS_TRUE@%description -n gstreamer-nas
+@USE_NAS_TRUE@%description -n gstreamer-plugins-nas
 @USE_NAS_TRUE@Plug-in for the Network Audio System sound server.
 @USE_NAS_TRUE@
-@USE_NAS_TRUE@%files -n gstreamer-nas
+@USE_NAS_TRUE@%files -n gstreamer-plugins-nas
 @USE_NAS_TRUE@%defattr(-, root, root)
 @USE_NAS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstnassink.so
 @USE_NAS_TRUE@
-@USE_NAS_TRUE@%post -n gstreamer-nas
+@USE_NAS_TRUE@%post -n gstreamer-plugins-nas
 @USE_NAS_TRUE@%{register}
 @USE_NAS_TRUE@
-@USE_NAS_TRUE@%postun -n gstreamer-nas
+@USE_NAS_TRUE@%postun -n gstreamer-plugins-nas
 @USE_NAS_TRUE@%{register}
 
 #### MMS Protocol support ####
-@USE_LIBMMS_TRUE@%package -n gstreamer-mms
+@USE_LIBMMS_TRUE@%package -n gstreamer-plugins-mms
 @USE_LIBMMS_TRUE@Summary:  GStreamer plug-in for MMS protocol support 
 @USE_LIBMMS_TRUE@Group:    Applications/Multimedia
 @USE_LIBMMS_TRUE@Requires: gstreamer-plugins = %{version}
 @USE_LIBMMS_TRUE@Requires: libmms >= 0.1
+@USE_LIBMMS_TRUE@Obsoletes:gstreamer-mms
 @USE_LIBMMS_TRUE@
-@USE_LIBMMS_TRUE@%description -n gstreamer-mms
+@USE_LIBMMS_TRUE@%description -n gstreamer-plugins-mms
 @USE_LIBMMS_TRUE@Plug-in for the MMS protocol used by Microsoft
 @USE_LIBMMS_TRUE@
-@USE_LIBMMS_TRUE@%files -n gstreamer-mms
+@USE_LIBMMS_TRUE@%files -n gstreamer-plugins-mms
 @USE_LIBMMS_TRUE@%defattr(-, root, root)
 @USE_LIBMMS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmms.so
 @USE_LIBMMS_TRUE@
-@USE_LIBMMS_TRUE@%post -n gstreamer-mms
+@USE_LIBMMS_TRUE@%post -n gstreamer-plugins-mms
 @USE_LIBMMS_TRUE@%{register}
 @USE_LIBMMS_TRUE@
-@USE_LIBMMS_TRUE@%postun -n gstreamer-mms
+@USE_LIBMMS_TRUE@%postun -n gstreamer-plugins-mms
 @USE_LIBMMS_TRUE@%{register}
 
 ### VIDEO 4 LINUX 2 ###
-@USE_GST_V4L2_TRUE@%package -n gstreamer-v4l2
+@USE_GST_V4L2_TRUE@%package -n gstreamer-plugins-v4l2
 @USE_GST_V4L2_TRUE@Summary:       GStreamer Video for Linux 2 plug-in.
 @USE_GST_V4L2_TRUE@Group:         Applications/Multimedia
 @USE_GST_V4L2_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_GST_V4L2_TRUE@BuildRequires: glibc-devel
+@USE_GST_V4L2_TRUE@Obsoletes:	  gstreamer-v4l2
 @USE_GST_V4L2_TRUE@
-@USE_GST_V4L2_TRUE@%description -n gstreamer-v4l2
+@USE_GST_V4L2_TRUE@%description -n gstreamer-plugins-v4l2
 @USE_GST_V4L2_TRUE@Plug-in for accessing Video for Linux devices.
 @USE_GST_V4L2_TRUE@
-@USE_GST_V4L2_TRUE@%files -n gstreamer-v4l2
+@USE_GST_V4L2_TRUE@%files -n gstreamer-plugins-v4l2
 @USE_GST_V4L2_TRUE@%defattr(-, root, root)
 @USE_GST_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
 @USE_GST_V4L2_TRUE@
-@USE_GST_V4L2_TRUE@%post -n gstreamer-v4l2
+@USE_GST_V4L2_TRUE@%post -n gstreamer-plugins-v4l2
 @USE_GST_V4L2_TRUE@%{register}
 @USE_GST_V4L2_TRUE@
-@USE_GST_V4L2_TRUE@%postun -n gstreamer-v4l2
+@USE_GST_V4L2_TRUE@%postun -n gstreamer-plugins-v4l2
 @USE_GST_V4L2_TRUE@%{register}
 
 ### XVID ###
-@USE_XVID_TRUE@%package -n gstreamer-xvid
+@USE_XVID_TRUE@%package -n gstreamer-plugins-xvid
 @USE_XVID_TRUE@Summary:       GStreamer XVID plug-in.
 @USE_XVID_TRUE@Group:         Applications/Multimedia
 @USE_XVID_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_XVID_TRUE@BuildRequires: glibc-devel
+@USE_XVID_TRUE@Obsoletes:     gstreamer-xvid
 @USE_XVID_TRUE@
-@USE_XVID_TRUE@%description -n gstreamer-xvid
+@USE_XVID_TRUE@%description -n gstreamer-plugins-xvid
 @USE_XVID_TRUE@Plug-in for decoding XVID files.
 @USE_XVID_TRUE@
-@USE_XVID_TRUE@%files -n gstreamer-xvid
+@USE_XVID_TRUE@%files -n gstreamer-plugins-xvid
 @USE_XVID_TRUE@%defattr(-, root, root)
 @USE_XVID_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 @USE_XVID_TRUE@
-@USE_XVID_TRUE@%post -n gstreamer-xvid
-@USE_XVID_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_XVID_TRUE@%post -n gstreamer-plugins-xvid
+@USE_XVID_TRUE@%{register}
 @USE_XVID_TRUE@
-@USE_XVID_TRUE@%postun -n gstreamer-xvid
-@USE_XVID_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_XVID_TRUE@%postun -n gstreamer-plugins-xvid
+@USE_XVID_TRUE@%{register}
 
 
 %changelog
+* Wed Dec 22 2004 Christian Schaller <christian at fluendo dot com>
+- Add -plugins- to plugin names
+
 * Thu Dec 9  2004 Christian Schaller <christian a fluendo dot com>
 - Add the mms plugin
 
