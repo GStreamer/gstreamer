@@ -28,6 +28,15 @@
 <section id="news">
 <title>News</title>
 
+<section role="notintoc" id="release-0.7.90">
+  <title>2004-03-17 - 0.7.90 - Johan Dahlin <email>johan@gnome.org</email></title>
+  <para>
+    <itemizedlist>
+      <listitem><para>Updated for 0.8.0</para></listitem>
+    </itemizedlist>
+  </para>
+</section>
+
 <section role="notintoc" id="release-0.1.0">
   <title>2003-07-10 - 0.1.0 - David I. Lehn <email>dlehn@users.sourceforge.net</email></title>
   <para>
