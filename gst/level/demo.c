@@ -25,12 +25,18 @@
 #include <gtk/gtk.h>
 
 /* global array for the scale widgets, we'll assume stereo */
+GtkWidget *elapsed;
 GtkWidget *scale[2][3];
 
 static void
 level_callback (GstElement *element, gdouble time, gint channel,
                 gdouble rms, gdouble peak, gdouble decay)
 {
+  gchar *label;
+
+  label = g_strdup_printf ("%.3f", time);
+  gtk_label_set (GTK_LABEL (elapsed), label);
+  g_free (label);
   gtk_range_set_value (GTK_RANGE (scale[channel][0]), rms);
   gtk_range_set_value (GTK_RANGE (scale[channel][1]), peak);
   gtk_range_set_value (GTK_RANGE (scale[channel][2]), decay);
@@ -52,6 +58,7 @@ setup_gui ()
 {
   GtkWidget *window;
   GtkWidget *vbox;
+  GtkWidget *label, *hbox;
   int c;
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -59,10 +66,17 @@ setup_gui ()
 
   vbox = gtk_vbox_new (TRUE, 0);
   gtk_container_add (GTK_CONTAINER (window), vbox);
+
+  /* elapsed widget */
+  hbox = gtk_hbox_new (TRUE, 0);
+  label = gtk_label_new ("Elapsed");
+  elapsed = gtk_label_new ("0.000");
+  gtk_container_add (GTK_CONTAINER (hbox), label);
+  gtk_container_add (GTK_CONTAINER (hbox), elapsed);
+  gtk_container_add (GTK_CONTAINER (vbox), hbox);
+
   for (c = 0; c < 2; ++c)
   {
-    GtkWidget *label, *hbox;
-
     /* RMS */
     hbox = gtk_hbox_new (TRUE, 0);
     label = gtk_label_new ("RMS");
