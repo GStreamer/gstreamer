@@ -1,3 +1,8 @@
+2004-09-16 Iain <iaingnome@gmail.com>
+
+	* gst/audioconvert/gstaudioconvert.c (_fixate_caps_to_int): Free the
+	try caps.
+
 2004-09-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_get_audio_stream):

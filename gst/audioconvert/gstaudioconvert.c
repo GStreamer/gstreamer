@@ -462,6 +462,7 @@ _fixate_caps_to_int (GstCaps ** caps, const gchar * field, gint value)
     gst_caps_append (try, gst_caps_new_simple ("audio/x-raw-float", field,
             GST_TYPE_INT_RANGE, value, G_MAXINT, NULL));
     isect_higher = gst_caps_intersect (*caps, try);
+    gst_caps_free (try);
     /* FIXME: why choose to end up with the higher range, and not the fixed
      * value ? */
     if (!gst_caps_is_empty (isect_higher)) {
