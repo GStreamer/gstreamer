@@ -491,10 +491,13 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList *list, const guint8 *id_d
   *((guint32 *) data) = GUINT32_TO_LE (my_data.count);
   data += 4;
   for (i = 0; i < my_data.count; i++) {
+    guint size;
+    gchar *cur;
+
     g_assert (l != NULL);
-    gchar *cur = l->data;
+    cur = l->data;
     l = g_list_next (l);
-    guint size = strlen (cur);
+    size = strlen (cur);
     *((guint32 *) data) = GUINT32_TO_LE (size);
     data += 4;
     memcpy (data, cur, size);
