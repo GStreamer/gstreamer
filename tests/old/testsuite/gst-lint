@@ -11,10 +11,9 @@
 # Future ideas:
 # - spell check comments
 # - check each function for at least one assertion (?)
-# - run indent and compare the results
 # - check parameters that init/set/get have consistent types
-# - check for config.h in exported headers
 # - check for gst_caps_set() without check for writeability
+# - check .so files for stray symbols
 #
 
 #
@@ -33,6 +32,7 @@ sub check_glibisms();
 sub check_indentation();
 sub check_gst_props_set();
 sub check_deprecated();
+sub check_config_h();
 
 open FIND, "find . -name \"*.[ch]\" -print|";
 
@@ -55,6 +55,7 @@ foreach $filename (<FIND>) {
 	#check_indentation();
 	check_gst_props_set();
 	check_deprecated();
+	check_config_h();
 }
 
 #
@@ -112,15 +113,6 @@ sub check_bad_includes()
 	#
 	if (grep { /^#include\s+<malloc.h>/; } @lines) {
 		print "E: bad header: malloc.h\n"
-	}
-
-	#
-	# config.h should be wrapped
-	#
-	if (grep { /^#include\s+["<]config.h[">]/; } @lines) {
-		if(!grep { /^#ifdef HAVE_CONFIG_H/; } @lines) {
-			print "E: #include <config.h> not surrounded by #ifdef HAVE_CONFIG_H\n"
-		}
 	}
 
 	#
@@ -240,5 +232,41 @@ sub check_deprecated()
 	if (grep { /GST_INFO\s*\(\s+\d/; } @lines) {
 		print "E: old-style GST_DEBUG()\n";
 	}
+	if (grep { /GstEventFlags/; } @lines) {
+		print "W: who uses GstEventFlags\n";
+	}
+
+}
+
+#
+# Every .c file should include config.h before any other headers
+# No .h file should include config.h
+#
+sub check_config_h()
+{
+	if($filename =~ /\.c$/){
+		#
+		# config.h should be wrapped
+		#
+		my @includes = grep { /^#include/; } @lines;
+	
+		if (!grep { /^#include\s+["<]config.h[">]/; } @includes) {
+			print "E: #include <config.h> missing\n";
+		}else{
+			if (!($includes[0] =~ /^#include\s+["<]config.h[">]/)){
+				print "E: #include <config.h> is not first include\n";
+			}
+			if(!grep { /^#ifdef HAVE_CONFIG_H/; } @lines) {
+				print "E: #include <config.h> not surrounded by #ifdef HAVE_CONFIG_H\n";
+			}
+		}
+	}
+
+	if($filename =~ /\.h$/){
+		if (grep { /^#include\s+["<]config.h[">]/; } @lines) {
+			print "E: headers should not #include <config.h>\n";
+		}
+	}
+
 }
 
