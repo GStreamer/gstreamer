@@ -821,7 +821,7 @@ gst_bin_dispose (GObject * object)
   GList *children, *orig;
   GstElement *child;
 
-  GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "dispose");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
   if (gst_element_get_state (GST_ELEMENT (object)) == GST_STATE_PLAYING)
     gst_element_set_state (GST_ELEMENT (object), GST_STATE_PAUSED);
