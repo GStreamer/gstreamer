@@ -698,6 +698,8 @@ static void _gst_caps_value_copy (const GValue *src, GValue *dest)
 {
   if (dest->data[0].v_pointer) {
     gst_caps_free (dest->data[0].v_pointer);
+  }
+  if (src->data[0].v_pointer) {
     dest->data[0].v_pointer = gst_caps_copy (src->data[0].v_pointer);
   } else {
     dest->data[0].v_pointer = NULL;
