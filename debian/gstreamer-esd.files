@@ -1,2 +1,2 @@
-usr/lib/gst/libesdsink.so
-usr/lib/gst/libesdmon.so
+usr/lib/gst/libgstesdsink.so
+usr/lib/gst/libgstesdmon.so

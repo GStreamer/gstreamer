@@ -1,1 +1,2 @@
-usr/lib/gst/libgstdvdsrc.so
+usr/lib/gst/libgstdvdreadsrc.so
+usr/lib/gst/libgstdvdnavsrc.so
