@@ -319,6 +319,10 @@ device_list (snd_pcm_stream_t stream, GstAlsaClass * klass)
   int card, err, dev;
   snd_ctl_card_info_t *info;
   snd_pcm_info_t *pcminfo;
+  gboolean mixer = (stream == -1);
+
+  if (stream == -1)
+    stream = 0;
 
   snd_ctl_card_info_alloca (&info);
   snd_pcm_info_alloca (&pcminfo);
@@ -340,24 +344,27 @@ device_list (snd_pcm_stream_t stream, GstAlsaClass * klass)
       goto next_card;
     }
 
-    dev = -1;
-    while (1) {
+    if (mixer) {
+      klass->devices = g_list_append (klass->devices, g_strdup (name));
+    } else {
+      dev = -1;
+      while (1) {
+        gchar *gst_device;
 
-      gchar *gst_device;
+        snd_ctl_pcm_next_device (handle, &dev);
 
-      snd_ctl_pcm_next_device (handle, &dev);
+        if (dev < 0)
+          break;
+        snd_pcm_info_set_device (pcminfo, dev);
+        snd_pcm_info_set_subdevice (pcminfo, 0);
+        snd_pcm_info_set_stream (pcminfo, stream);
+        if ((err = snd_ctl_pcm_info (handle, pcminfo)) < 0) {
+          continue;
+        }
 
-      if (dev < 0)
-        break;
-      snd_pcm_info_set_device (pcminfo, dev);
-      snd_pcm_info_set_subdevice (pcminfo, 0);
-      snd_pcm_info_set_stream (pcminfo, stream);
-      if ((err = snd_ctl_pcm_info (handle, pcminfo)) < 0) {
-        continue;
+        gst_device = g_strdup_printf ("hw:%d,%d", card, dev);
+        klass->devices = g_list_append (klass->devices, gst_device);
       }
-
-      gst_device = g_strdup_printf ("hw:%d,%d", card, dev);
-      klass->devices = g_list_append (klass->devices, gst_device);
     }
     snd_ctl_close (handle);
   next_card:
@@ -377,7 +384,7 @@ gst_alsa_class_probe_devices (GstAlsaClass * klass, gboolean check)
    * do function-wise look-ups. */
 
   if (!init && !check) {
-    snd_pcm_stream_t mode = 0;
+    snd_pcm_stream_t mode = -1;
     const GList *templates;
 
     /* we assume one pad template at max [zero=mixer] */

@@ -132,6 +132,7 @@ gst_alsa_mixer_open (GstAlsaMixer * mixer)
 {
   gint err, device;
   GstAlsa *alsa = GST_ALSA (mixer);
+  gchar *nocomma;
 
   mixer->mixer_handle = (snd_mixer_t *) - 1;
 
@@ -143,9 +144,13 @@ gst_alsa_mixer_open (GstAlsaMixer * mixer)
     return FALSE;
   }
 
-  if ((err = snd_mixer_attach (mixer->mixer_handle, alsa->device)) < 0) {
+  nocomma = g_strdup (alsa->device);
+  if (strchr (nocomma, ','))
+    strchr (nocomma, ',')[0] = '\0';
+
+  if ((err = snd_mixer_attach (mixer->mixer_handle, nocomma)) < 0) {
     GST_ERROR_OBJECT (GST_OBJECT (mixer),
-        "Cannot attach mixer to sound device `%s'.", alsa->device);
+        "Cannot attach mixer to sound device `%s'.", nocomma);
     goto error;
   }
 
@@ -161,18 +166,21 @@ gst_alsa_mixer_open (GstAlsaMixer * mixer)
 
   /* I don't know how to get a device name from a mixer handle. So on
    * to the ugly hacks here, then... */
-  if (sscanf (alsa->device, "hw:%d", &device) == 1) {
+  if (sscanf (nocomma, "hw:%d", &device) == 1) {
     gchar *name;
 
     if (!snd_card_get_name (device, &name))
       alsa->cardname = name;
   }
 
+  g_free (nocomma);
+
   return TRUE;
 
 error:
   snd_mixer_close (mixer->mixer_handle);
   mixer->mixer_handle = (snd_mixer_t *) - 1;
+  g_free (nocomma);
   return FALSE;
 }
 
