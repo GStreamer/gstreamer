@@ -613,7 +613,6 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
 {
   GstElement *element;
   GList *plugpath;
-  GList *templist;
   gboolean result = TRUE;
   GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (conn->src);
   GstElement *startelement = conn->current;
