@@ -368,7 +368,7 @@ gst_ffmpegcsp_chain (GstPad * pad, GstData * data)
         GST_BUFFER_DATA (inbuf),
         space->from_pixfmt, space->width, space->height);
     if (space->palette)
-      space->from_frame.data[1] = (uint8_t *) space->palette;
+      space->from_frame.data[1] = (uint8_t *) space->palette->palette;
     gst_ffmpegcsp_avpicture_fill (&space->to_frame,
         GST_BUFFER_DATA (outbuf),
         space->to_pixfmt, space->width, space->height);
