@@ -1,7 +1,7 @@
 2004-04-17  Benjamin Otte  <otte@gnome.org>
 
 	* docs/gst/Makefile.am:
-	  ignore gst/parse directory when building docs
+	  ignore gst/parse directory when building docs (fixes #140205)
 
 2004-04-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
