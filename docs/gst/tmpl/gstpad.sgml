@@ -191,6 +191,8 @@ A function that will be called when chaining buffers.
 </para>
 
 @pad: the #GstPad that performed the chain.
+@data: 
+<!-- # Unused Parameters # -->
 @buf: the #GstBuffer that is chained.
 
 
@@ -680,6 +682,8 @@ Flags for the pad.
 </para>
 
 @pad: 
+@data: 
+<!-- # Unused Parameters # -->
 @buf: 
 
 
