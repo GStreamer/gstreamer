@@ -78,9 +78,6 @@ struct _GstQueue {
   gboolean flush;
 
   GMutex *qlock;	/* lock for queue (vs object lock) */
-  /* we are single reader and single writer queue */
-  gboolean reader;	/* reader waiting on empty queue */
-  gboolean writer;	/* writer waiting on full queue */
   GCond *not_empty;	/* signals buffers now available for reading */
   GCond *not_full;	/* signals space now available for writing */
 
