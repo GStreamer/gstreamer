@@ -1375,6 +1375,11 @@ gst_pad_negotiate_proxy (GstPad *srcpad, GstPad *destpad, GstCaps **caps)
       return GST_PAD_NEGOTIATE_FAIL;
     }
   }
+  else {
+    GST_PAD_CAPS (destpad) = *caps;
+    if (GST_RPAD_NEWCAPSFUNC (destpad))
+      GST_RPAD_NEWCAPSFUNC (destpad) (GST_PAD (destpad), *caps);
+  }
 
   return GST_PAD_NEGOTIATE_AGREE;
 }
