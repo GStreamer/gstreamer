@@ -41,5 +41,10 @@ gboolean	gst_v4l2src_capture_deinit	(GstV4l2Src *v4l2src);
 gboolean	gst_v4l2src_fill_format_list	(GstV4l2Src *v4l2src);
 gboolean	gst_v4l2src_empty_format_list	(GstV4l2Src *v4l2src);
 
+/* hacky */
+gboolean	gst_v4l2src_get_size_limits	(GstV4l2Src *v4l2src,
+						 struct v4l2_fmtdesc *fmt,
+						 gint *min_w, gint *max_w,
+						 gint *min_h, gint *max_h);
 
 #endif /* __V4L2_SRC_CALLS_H__ */

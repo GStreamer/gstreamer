@@ -413,3 +413,48 @@ gst_v4l2src_capture_deinit (GstV4l2Src *v4l2src)
 
 	return TRUE;
 }
+
+
+/*
+
+ */
+
+gboolean
+gst_v4l2src_get_size_limits (GstV4l2Src          *v4l2src,
+			     struct v4l2_fmtdesc *format,
+			     gint *min_w, gint *max_w,
+			     gint *min_h, gint *max_h)
+{
+	struct v4l2_format fmt;
+
+	/* get size delimiters */
+	memset(&fmt, 0, sizeof(fmt));
+	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	fmt.fmt.pix.width = 0;
+	fmt.fmt.pix.height = 0;
+	fmt.fmt.pix.pixelformat = format->pixelformat;
+	fmt.fmt.pix.field = V4L2_FIELD_ANY;
+	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd,
+		  VIDIOC_TRY_FMT, &fmt) < 0) {
+		return FALSE;
+	}
+
+	if (min_w)
+		*min_w = fmt.fmt.pix.width;
+	if (min_h)
+		*min_h = fmt.fmt.pix.height;
+
+	fmt.fmt.pix.width = G_MAXINT;
+	fmt.fmt.pix.height = G_MAXINT;
+	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd,
+		  VIDIOC_TRY_FMT, &fmt) < 0) {
+		return FALSE;
+	}
+
+	if (max_w)
+		*max_w = fmt.fmt.pix.width;
+	if (max_h)
+		*max_h = fmt.fmt.pix.height;
+
+	return TRUE;
+}
