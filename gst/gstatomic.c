@@ -22,4 +22,3 @@
 
 #include "gstatomic.h"
 #include "gstatomic_impl.h"
-

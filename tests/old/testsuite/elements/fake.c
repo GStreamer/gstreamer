@@ -19,12 +19,10 @@ element_create (char *name, char *element)
   GstElement *el = NULL;
 
   el = (GstElement *) gst_element_factory_make (element, name);
-  if (el == NULL)
-  {
+  if (el == NULL) {
     fprintf (stderr, "Could not create element %s (%s) !\n", name, element);
     return NULL;
-  }
-  else
+  } else
     return el;
 }
 
@@ -43,12 +41,15 @@ main (int argc, char *argv[])
   pipeline = gst_pipeline_new ("pipeline");
 
   g_print ("Connecting signals to pipeline\n");
-  g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), NULL);
+  g_signal_connect (pipeline, "deep_notify",
+      G_CALLBACK (property_change_callback), NULL);
   g_print ("Creating elements\n");
-  if (!(src = element_create ("src", "fakesrc"))) return 1;
+  if (!(src = element_create ("src", "fakesrc")))
+    return 1;
   g_object_set (G_OBJECT (src), "sizetype", 2, NULL);
-  if (!(sink = element_create ("sink", "fakesink"))) return 1;
- 
+  if (!(sink = element_create ("sink", "fakesink")))
+    return 1;
+
   /* add */
   g_print ("Adding elements to bin\n");
   gst_bin_add (GST_BIN (pipeline), src);
@@ -59,22 +60,21 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   /* we expect this to give an error */
-  if (gst_bin_iterate (GST_BIN (pipeline)) != FALSE)
-  {
-    g_warning ("Iterating a bin with unlinked elements should return FALSE !\n");
+  if (gst_bin_iterate (GST_BIN (pipeline)) != FALSE) {
+    g_warning
+	("Iterating a bin with unlinked elements should return FALSE !\n");
     retval = 1;
   }
 
   gst_pad_link (gst_element_get_pad (src, "src"),
-		gst_element_get_pad (sink, "sink"));
+      gst_element_get_pad (sink, "sink"));
 
   /* set to play */
   g_print ("Doing 1 iteration\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   /* we expect this to work */
-  if (gst_bin_iterate (GST_BIN (pipeline)) != TRUE)
-  {
+  if (gst_bin_iterate (GST_BIN (pipeline)) != TRUE) {
     g_error ("Iterating a bin with linked elements should return TRUE !\n");
     retval = 1;
   }
@@ -82,4 +82,3 @@ main (int argc, char *argv[])
   g_print ("Done !\n");
   return retval;
 }
-

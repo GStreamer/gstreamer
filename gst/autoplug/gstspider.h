@@ -19,17 +19,16 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
 #ifndef __GST_SPIDER_H__
 #define __GST_SPIDER_H__
 
 #include <gst/gst.h>
 #include "gstspideridentity.h"
 
-G_BEGIN_DECLS
-	
-extern GstElementDetails gst_spider_details;
-GST_DEBUG_CATEGORY_EXTERN(gst_spider_debug);
+G_BEGIN_DECLS extern GstElementDetails gst_spider_details;
+
+GST_DEBUG_CATEGORY_EXTERN (gst_spider_debug);
 
 /*
  * Theory of operation:
@@ -46,7 +45,8 @@ GST_DEBUG_CATEGORY_EXTERN(gst_spider_debug);
  * are refcounted once for every path.
  * A GstSpider keeps a list of all GstSpiderConnections in it.
  */
-typedef struct {
+typedef struct
+{
   GstSpiderIdentity *src;
   /* dunno if the path should stay here or if its too much load.
    * it's at least easier then always searching it */
@@ -60,35 +60,36 @@ typedef struct {
 #define GST_SPIDER(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SPIDER,GstSpider))
 #define GST_SPIDER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SPIDER,GstSpiderClass)) 
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SPIDER,GstSpiderClass))
 #define GST_IS_SPIDER(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SPIDER))
 #define GST_IS_SPIDER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SPIDER))
-	
+
 typedef struct _GstSpider GstSpider;
 typedef struct _GstSpiderClass GstSpiderClass;
 
-struct _GstSpider {
-  GstBin        parent;
-	
-  GstSpiderIdentity *sink_ident;
-  GList *     	factories; /* factories to use for plugging */
+struct _GstSpider
+{
+  GstBin parent;
 
-  GList *	links; /* GStSpiderConnection list of all links */
+  GstSpiderIdentity *sink_ident;
+  GList *factories;		/* factories to use for plugging */
+
+  GList *links;			/* GStSpiderConnection list of all links */
 };
-	
-struct _GstSpiderClass {
+
+struct _GstSpiderClass
+{
   GstBinClass parent_class;
 };
 
 /* default initialization stuff */
-GType         	gst_spider_get_type             (void);
+GType gst_spider_get_type (void);
 
 /* private link functions to be called by GstSpiderIdentity */
-void		gst_spider_identity_plug	(GstSpiderIdentity *ident);
-void		gst_spider_identity_unplug	(GstSpiderIdentity *ident);
+void gst_spider_identity_plug (GstSpiderIdentity * ident);
+void gst_spider_identity_unplug (GstSpiderIdentity * ident);
 
 G_END_DECLS
-
 #endif /* __GST_SPIDER_H__ */

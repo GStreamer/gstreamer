@@ -26,16 +26,15 @@
 GST_DEBUG_CATEGORY_STATIC (gst_type_find_debug);
 #define GST_CAT_DEFAULT gst_type_find_debug
 
-static void		gst_type_find_factory_class_init	(gpointer		g_class,
-								 gpointer		class_data);
-static void		gst_type_find_factory_init		(GTypeInstance *	instance,
-								 gpointer		g_class);
-static void		gst_type_find_factory_dispose		(GObject *		object);
+static void gst_type_find_factory_class_init (gpointer g_class,
+    gpointer class_data);
+static void gst_type_find_factory_init (GTypeInstance * instance,
+    gpointer g_class);
+static void gst_type_find_factory_dispose (GObject * object);
 
-static void		gst_type_find_factory_unload_thyself	(GstPluginFeature *	feature);
+static void gst_type_find_factory_unload_thyself (GstPluginFeature * feature);
 
-static void		gst_type_find_load_plugin		(GstTypeFind *		find,
-								 gpointer		data);
+static void gst_type_find_load_plugin (GstTypeFind * find, gpointer data);
 
 static GstPluginFeatureClass *parent_class = NULL;
 
@@ -43,7 +42,7 @@ GType
 gst_type_find_factory_get_type (void)
 {
   static GType typefind_type = 0;
-    
+
   if (!typefind_type) {
     static const GTypeInfo typefind_info = {
       sizeof (GstTypeFindFactoryClass),
@@ -58,10 +57,9 @@ gst_type_find_factory_get_type (void)
       NULL
     };
     typefind_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
-		                            "GstTypeFindFactory",
-					    &typefind_info, 0);
-    GST_DEBUG_CATEGORY_INIT (gst_type_find_debug, "GST_TYPEFIND", 
-			     GST_DEBUG_FG_GREEN, "typefinding subsystem");
+	"GstTypeFindFactory", &typefind_info, 0);
+    GST_DEBUG_CATEGORY_INIT (gst_type_find_debug, "GST_TYPEFIND",
+	GST_DEBUG_FG_GREEN, "typefinding subsystem");
   }
 
   return typefind_type;
@@ -69,17 +67,19 @@ gst_type_find_factory_get_type (void)
 static void
 gst_type_find_factory_class_init (gpointer g_class, gpointer class_data)
 {
-  GstPluginFeatureClass *gstpluginfeature_class = GST_PLUGIN_FEATURE_CLASS (g_class);
+  GstPluginFeatureClass *gstpluginfeature_class =
+      GST_PLUGIN_FEATURE_CLASS (g_class);
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
-    
+
   parent_class = g_type_class_peek_parent (g_class);
-  
+
   object_class->dispose = gst_type_find_factory_dispose;
-  
-  gstpluginfeature_class->unload_thyself = GST_DEBUG_FUNCPTR (gst_type_find_factory_unload_thyself);
+
+  gstpluginfeature_class->unload_thyself =
+      GST_DEBUG_FUNCPTR (gst_type_find_factory_unload_thyself);
 }
 static void
-gst_type_find_factory_init (GTypeInstance *instance, gpointer g_class)
+gst_type_find_factory_init (GTypeInstance * instance, gpointer g_class)
 {
   GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (instance);
 
@@ -87,7 +87,7 @@ gst_type_find_factory_init (GTypeInstance *instance, gpointer g_class)
   factory->function = gst_type_find_load_plugin;
 }
 static void
-gst_type_find_factory_dispose (GObject *object)
+gst_type_find_factory_dispose (GObject * object)
 {
   GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (object);
 
@@ -101,7 +101,7 @@ gst_type_find_factory_dispose (GObject *object)
   }
 }
 static void
-gst_type_find_factory_unload_thyself (GstPluginFeature *feature)
+gst_type_find_factory_unload_thyself (GstPluginFeature * feature)
 {
   GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
 
@@ -109,22 +109,25 @@ gst_type_find_factory_unload_thyself (GstPluginFeature *feature)
   factory->user_data = factory;
 }
 static void
-gst_type_find_load_plugin (GstTypeFind *find, gpointer data)
+gst_type_find_load_plugin (GstTypeFind * find, gpointer data)
 {
   GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (data);
 
-  GST_DEBUG_OBJECT (factory, "need to load typefind function %s",  GST_PLUGIN_FEATURE_NAME (factory));
-  
+  GST_DEBUG_OBJECT (factory, "need to load typefind function %s",
+      GST_PLUGIN_FEATURE_NAME (factory));
+
   if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
     if (factory->function == gst_type_find_load_plugin) {
       /* looks like we didn't get a real typefind function */
-      g_warning ("could not load valid typefind function for feature '%s'\n", GST_PLUGIN_FEATURE_NAME (factory));
+      g_warning ("could not load valid typefind function for feature '%s'\n",
+	  GST_PLUGIN_FEATURE_NAME (factory));
     } else {
       g_assert (factory->function);
       gst_type_find_factory_call_function (factory, find);
     }
   }
 }
+
 /**
  * gst_type_find_factory_get_list:
  *
@@ -138,6 +141,7 @@ gst_type_find_factory_get_list (void)
 {
   return gst_registry_pool_feature_list (GST_TYPE_TYPE_FIND_FACTORY);
 }
+
 /**
  * gst_type_find_factory_get_caps:
  * @factory: a factory
@@ -147,12 +151,13 @@ gst_type_find_factory_get_list (void)
  * Returns: the #GstCaps associated with this factory
  */
 const GstCaps *
-gst_type_find_factory_get_caps (const GstTypeFindFactory *factory)
+gst_type_find_factory_get_caps (const GstTypeFindFactory * factory)
 {
   g_return_val_if_fail (GST_IS_TYPE_FIND_FACTORY (factory), NULL);
 
   return factory->caps;
 }
+
 /**
  * gst_type_find_factory_get_extensions:
  * @factory: a factory
@@ -165,12 +170,13 @@ gst_type_find_factory_get_caps (const GstTypeFindFactory *factory)
  * Returns: a NULL-terminated array of extensions associated with this factory
  */
 gchar **
-gst_type_find_factory_get_extensions (const GstTypeFindFactory *factory)
+gst_type_find_factory_get_extensions (const GstTypeFindFactory * factory)
 {
   g_return_val_if_fail (GST_IS_TYPE_FIND_FACTORY (factory), NULL);
 
   return factory->extensions;
 }
+
 /**
  * gst_type_find_factory_call_function:
  * @factory: a factory
@@ -180,7 +186,8 @@ gst_type_find_factory_get_extensions (const GstTypeFindFactory *factory)
  * Calls the typefinding function associated with this factory.
  */
 void
-gst_type_find_factory_call_function (const GstTypeFindFactory *factory, GstTypeFind *find)
+gst_type_find_factory_call_function (const GstTypeFindFactory * factory,
+    GstTypeFind * find)
 {
   g_return_if_fail (GST_IS_TYPE_FIND_FACTORY (factory));
   g_return_if_fail (find != NULL);
@@ -192,6 +199,7 @@ gst_type_find_factory_call_function (const GstTypeFindFactory *factory, GstTypeF
 
   factory->function (find, factory->user_data);
 }
+
 /**
  * gst_type_find_register:
  * @plugin: the GstPlugin to register with
@@ -210,18 +218,20 @@ gst_type_find_factory_call_function (const GstTypeFindFactory *factory, GstTypeF
  * Returns: TRUE on success, FALSE otherwise
  */
 gboolean
-gst_type_find_register (GstPlugin *plugin, const gchar *name, guint rank,
-			GstTypeFindFunction func, gchar **extensions,
-			const GstCaps *possible_caps, gpointer data)
+gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
+    GstTypeFindFunction func, gchar ** extensions,
+    const GstCaps * possible_caps, gpointer data)
 {
   GstTypeFindFactory *factory;
-  
+
   g_return_val_if_fail (plugin != NULL, FALSE);
   g_return_val_if_fail (name != NULL, FALSE);
   g_return_val_if_fail (func != NULL, FALSE);
 
   GST_INFO ("registering typefind function for %s", name);
-  factory = GST_TYPE_FIND_FACTORY (gst_registry_pool_find_feature (name, GST_TYPE_TYPE_FIND_FACTORY));
+  factory =
+      GST_TYPE_FIND_FACTORY (gst_registry_pool_find_feature (name,
+	  GST_TYPE_TYPE_FIND_FACTORY));
   if (!factory) {
     factory = g_object_new (GST_TYPE_TYPE_FIND_FACTORY, NULL);
     GST_DEBUG_OBJECT (factory, "using new typefind factory for %s", name);
@@ -236,7 +246,7 @@ gst_type_find_register (GstPlugin *plugin, const gchar *name, guint rank,
     g_strfreev (factory->extensions);
 
   factory->extensions = g_strdupv (extensions);
-  gst_caps_replace (&factory->caps, gst_caps_copy(possible_caps));
+  gst_caps_replace (&factory->caps, gst_caps_copy (possible_caps));
   factory->function = func;
   factory->user_data = data;
 
@@ -263,12 +273,13 @@ gst_type_find_register (GstPlugin *plugin, const gchar *name, guint rank,
  * Returns: the requested data or NULL if that data is not available.
  */
 guint8 *
-gst_type_find_peek (GstTypeFind *find, gint64 offset, guint size)
+gst_type_find_peek (GstTypeFind * find, gint64 offset, guint size)
 {
   g_return_val_if_fail (find->peek != NULL, NULL);
 
   return find->peek (find->data, offset, size);
 }
+
 /**
  * gst_type_find_suggest:
  * @find: the find object the function was called with
@@ -281,7 +292,8 @@ gst_type_find_peek (GstTypeFind *find, gint64 offset, guint size)
  * It is up to the caller of the typefind function to interpret these values.
  */
 void
-gst_type_find_suggest (GstTypeFind *find, guint probability, const GstCaps *caps)
+gst_type_find_suggest (GstTypeFind * find, guint probability,
+    const GstCaps * caps)
 {
   g_return_if_fail (find->suggest != NULL);
   g_return_if_fail (probability <= 100);
@@ -290,6 +302,7 @@ gst_type_find_suggest (GstTypeFind *find, guint probability, const GstCaps *caps
 
   find->suggest (find->data, probability, caps);
 }
+
 /**
  * gst_type_find_get_length:
  * @find: the find object the function was called with
@@ -299,11 +312,10 @@ gst_type_find_suggest (GstTypeFind *find, guint probability, const GstCaps *caps
  * Returns: the length of the data stream or 0 if it is not available.
  */
 guint64
-gst_type_find_get_length (GstTypeFind *find)
+gst_type_find_get_length (GstTypeFind * find)
 {
   if (find->get_length == NULL)
     return 0;
 
-  return find->get_length(find->data);
+  return find->get_length (find->data);
 }
-

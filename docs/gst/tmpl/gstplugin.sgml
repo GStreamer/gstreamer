@@ -41,14 +41,6 @@ The error quark
 
 
 
-<!-- ##### FUNCTION gst_plugin_error_quark ##### -->
-<para>
-Get the error quark
-</para>
-
-@Returns: The error quark used in GError messages
-
-
 <!-- ##### ENUM GstPluginError ##### -->
 <para>
 The plugin loading errors

@@ -22,7 +22,7 @@
 
 /* use the old cothreads implementation in gst/cothreads.[ch] */
 #if defined(_COTHREADS_OMEGA)
- 
+
 #include "../cothreads.h"
 
 /* the name of this cothreads type */
@@ -38,7 +38,7 @@ typedef cothread_state cothread;
 /* define functions
  * the macros are prepended with "do_" 
  */
-#define do_cothreads_init(x) 			/* NOP */
+#define do_cothreads_init(x)	/* NOP */
 
 #define do_cothreads_stackquery(stack,size)	cothread_stackquery(stack,size)
 
@@ -54,27 +54,27 @@ typedef cothread_state cothread;
 
 #define do_cothread_setfunc(cothread, context, func, argc, argv)        \
   cothread_setfunc ((cothread), (func), (argc), (argv))
-  
+
 #define do_cothread_destroy(cothread)		cothread_free(cothread)
 
 #define do_cothread_context_init()		(cothread_context_init ())
 #define do_cothread_context_destroy(context)	cothread_context_free (context)
-  
+
 #define do_cothread_lock(cothread)		cothread_lock(cothread)
 #define do_cothread_unlock(cothread)		cothread_unlock(cothread)
 
 #define do_cothread_get_current(context)		(cothread_current())
 #define do_cothread_get_main(context)		(cothread_current_main())
-  
-  
-  
-  
+
+
+
+
 /* use the gthread-based cothreads implementation */
 #elif defined(_COTHREADS_GTHREAD)
 
 #include "gthread-cothreads.h"
-  
-  
+
+
 /* bail out with an error if no cothreads package is defined */
 #else
 #error "No cothreads package defined"

@@ -34,22 +34,22 @@
 GST_DEBUG_CATEGORY_STATIC (gst_identity_debug);
 #define GST_CAT_DEFAULT gst_identity_debug
 
-GstElementDetails gst_identity_details = GST_ELEMENT_DETAILS (
-  "Identity",
-  "Generic",
-  "Pass data without modification",
-  "Erik Walthinsen <omega@cse.ogi.edu>"
-);
+GstElementDetails gst_identity_details = GST_ELEMENT_DETAILS ("Identity",
+    "Generic",
+    "Pass data without modification",
+    "Erik Walthinsen <omega@cse.ogi.edu>");
 
 
 /* Identity signals and args */
-enum {
+enum
+{
   SIGNAL_HANDOFF,
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_LOOP_BASED,
   ARG_SLEEP_TIME,
@@ -65,12 +65,15 @@ enum {
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_identity_debug, "identity", 0, "identity element");
 
-GST_BOILERPLATE_FULL (GstIdentity, gst_identity, GstElement, GST_TYPE_ELEMENT, _do_init);
+GST_BOILERPLATE_FULL (GstIdentity, gst_identity, GstElement, GST_TYPE_ELEMENT,
+    _do_init);
 
-static void gst_identity_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void gst_identity_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void gst_identity_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_identity_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static void gst_identity_chain		(GstPad *pad, GstData *_data);
+static void gst_identity_chain (GstPad * pad, GstData * _data);
 
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
@@ -78,11 +81,11 @@ static void
 gst_identity_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  
+
   gst_element_class_set_details (gstelement_class, &gst_identity_details);
 }
-static void 
-gst_identity_class_init (GstIdentityClass *klass) 
+static void
+gst_identity_class_init (GstIdentityClass * klass)
 {
   GObjectClass *gobject_class;
 
@@ -90,50 +93,52 @@ gst_identity_class_init (GstIdentityClass *klass)
 
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOOP_BASED,
-    g_param_spec_boolean ("loop-based", "Loop-based", 
-	    		  "Set to TRUE to use loop-based rather than chain-based scheduling",
-                          TRUE, G_PARAM_READWRITE)); 
+      g_param_spec_boolean ("loop-based", "Loop-based",
+	  "Set to TRUE to use loop-based rather than chain-based scheduling",
+	  TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SLEEP_TIME,
-    g_param_spec_uint ("sleep-time", "Sleep time", "Microseconds to sleep between processing",
-                       0, G_MAXUINT, 0, G_PARAM_READWRITE));
+      g_param_spec_uint ("sleep-time", "Sleep time",
+	  "Microseconds to sleep between processing", 0, G_MAXUINT, 0,
+	  G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUPLICATE,
-    g_param_spec_uint ("duplicate", "Duplicate Buffers", "Push the buffers N times",
-                       0, G_MAXUINT, 1, G_PARAM_READWRITE));
+      g_param_spec_uint ("duplicate", "Duplicate Buffers",
+	  "Push the buffers N times", 0, G_MAXUINT, 1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ERROR_AFTER,
-    g_param_spec_int ("error_after", "Error After", "Error after N buffers",
-                       G_MININT, G_MAXINT, -1, G_PARAM_READWRITE));
+      g_param_spec_int ("error_after", "Error After", "Error after N buffers",
+	  G_MININT, G_MAXINT, -1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DROP_PROBABILITY,
-    g_param_spec_float ("drop_probability", "Drop Probability", "The Probability a buffer is dropped",
-                        0.0, 1.0, 0.0, G_PARAM_READWRITE));
+      g_param_spec_float ("drop_probability", "Drop Probability",
+	  "The Probability a buffer is dropped", 0.0, 1.0, 0.0,
+	  G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
-    g_param_spec_boolean ("silent", "silent", "silent",
-                          FALSE, G_PARAM_READWRITE)); 
+      g_param_spec_boolean ("silent", "silent", "silent", FALSE,
+	  G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
-    g_param_spec_string ("last-message", "last-message", "last-message",
-                         NULL, G_PARAM_READABLE)); 
+      g_param_spec_string ("last-message", "last-message", "last-message", NULL,
+	  G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
-    g_param_spec_boolean("dump", "Dump", "Dump buffer contents",
-                         FALSE, G_PARAM_READWRITE));
+      g_param_spec_boolean ("dump", "Dump", "Dump buffer contents", FALSE,
+	  G_PARAM_READWRITE));
 
   gst_identity_signals[SIGNAL_HANDOFF] =
-    g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET (GstIdentityClass, handoff), NULL, NULL,
-                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                   GST_TYPE_BUFFER);
+      g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstIdentityClass, handoff), NULL, NULL,
+      gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, GST_TYPE_BUFFER);
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);  
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
 }
 
-static void 
-gst_identity_init (GstIdentity *identity) 
+static void
+gst_identity_init (GstIdentity * identity)
 {
   identity->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
-  gst_pad_set_chain_function (identity->sinkpad, GST_DEBUG_FUNCPTR (gst_identity_chain));
+  gst_pad_set_chain_function (identity->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_identity_chain));
   gst_pad_set_link_function (identity->sinkpad, gst_pad_proxy_pad_link);
   gst_pad_set_getcaps_function (identity->sinkpad, gst_pad_proxy_getcaps);
-  
+
   identity->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
   gst_pad_set_link_function (identity->srcpad, gst_pad_proxy_pad_link);
@@ -150,8 +155,8 @@ gst_identity_init (GstIdentity *identity)
   identity->srccaps = NULL;
 }
 
-static void 
-gst_identity_chain (GstPad *pad, GstData *_data) 
+static void
+gst_identity_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstIdentity *identity;
@@ -168,20 +173,20 @@ gst_identity_chain (GstPad *pad, GstData *_data)
     if (identity->error_after == 0) {
       gst_buffer_unref (buf);
       GST_ELEMENT_ERROR (identity, CORE, FAILED,
-                           (_("Failed after iterations as requested.")),
-                           (NULL));
+	  (_("Failed after iterations as requested.")), (NULL));
       return;
     }
   }
 
   if (identity->drop_probability > 0.0) {
-    if ((gfloat)(1.0*rand()/(RAND_MAX)) < identity->drop_probability) {
+    if ((gfloat) (1.0 * rand () / (RAND_MAX)) < identity->drop_probability) {
       if (identity->last_message != NULL) {
 	g_free (identity->last_message);
       }
-      identity->last_message = g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, %"
-                                                G_GINT64_FORMAT ")",
-	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+      identity->last_message =
+	  g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, %"
+	  G_GINT64_FORMAT ")", GST_DEBUG_PAD_NAME (identity->sinkpad),
+	  GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
       g_object_notify (G_OBJECT (identity), "last-message");
       gst_buffer_unref (buf);
       return;
@@ -194,16 +199,17 @@ gst_identity_chain (GstPad *pad, GstData *_data)
   for (i = identity->duplicate; i; i--) {
     if (!identity->silent) {
       g_free (identity->last_message);
-      identity->last_message = g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, %"
-                                                G_GINT64_FORMAT ")",
-	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+      identity->last_message =
+	  g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, %"
+	  G_GINT64_FORMAT ")", GST_DEBUG_PAD_NAME (identity->sinkpad),
+	  GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
       g_object_notify (G_OBJECT (identity), "last-message");
     }
 
     g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
-	                       buf);
+	buf);
 
-    if (i>1) 
+    if (i > 1)
       gst_buffer_ref (buf);
 
     gst_pad_push (identity->srcpad, GST_DATA (buf));
@@ -213,8 +219,8 @@ gst_identity_chain (GstPad *pad, GstData *_data)
   }
 }
 
-static void 
-gst_identity_loop (GstElement *element) 
+static void
+gst_identity_loop (GstElement * element)
 {
   GstIdentity *identity;
   GstBuffer *buf;
@@ -223,43 +229,42 @@ gst_identity_loop (GstElement *element)
   g_return_if_fail (GST_IS_IDENTITY (element));
 
   identity = GST_IDENTITY (element);
-  
+
   buf = GST_BUFFER (gst_pad_pull (identity->sinkpad));
   if (GST_IS_EVENT (buf)) {
     GstEvent *event = GST_EVENT (buf);
 
     if (GST_EVENT_IS_INTERRUPT (event)) {
       gst_event_unref (event);
-    }
-    else {
+    } else {
       gst_pad_event_default (identity->sinkpad, event);
     }
-  }
-  else {
+  } else {
     gst_identity_chain (identity->sinkpad, GST_DATA (buf));
   }
 }
 
-static void 
-gst_identity_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) 
+static void
+gst_identity_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstIdentity *identity;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_IDENTITY (object));
-  
+
   identity = GST_IDENTITY (object);
 
   switch (prop_id) {
     case ARG_LOOP_BASED:
       identity->loop_based = g_value_get_boolean (value);
       if (identity->loop_based) {
-        gst_element_set_loop_function (GST_ELEMENT (identity), gst_identity_loop);
-        gst_pad_set_chain_function (identity->sinkpad, NULL);
-      }
-      else {
-        gst_pad_set_chain_function (identity->sinkpad, gst_identity_chain);
-        gst_element_set_loop_function (GST_ELEMENT (identity), NULL);
+	gst_element_set_loop_function (GST_ELEMENT (identity),
+	    gst_identity_loop);
+	gst_pad_set_chain_function (identity->sinkpad, NULL);
+      } else {
+	gst_pad_set_chain_function (identity->sinkpad, gst_identity_chain);
+	gst_element_set_loop_function (GST_ELEMENT (identity), NULL);
       }
       break;
     case ARG_SLEEP_TIME:
@@ -285,12 +290,15 @@ gst_identity_set_property (GObject *object, guint prop_id, const GValue *value, 
   }
 }
 
-static void gst_identity_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) {
+static void
+gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
   GstIdentity *identity;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_IDENTITY (object));
-  
+
   identity = GST_IDENTITY (object);
 
   switch (prop_id) {

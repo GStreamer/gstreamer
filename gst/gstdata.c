@@ -31,12 +31,11 @@ GType
 gst_data_get_type (void)
 {
   static GType type = 0;
-  
+
   if (!type)
     type = g_boxed_type_register_static ("GstData",
-					 (GBoxedCopyFunc) gst_data_copy,
-					 (GBoxedFreeFunc) gst_data_unref);
-    return type;
+	(GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
+  return type;
 }
 
 /**
@@ -51,7 +50,8 @@ gst_data_get_type (void)
  * function will be called when this data is freed or copied respectively.
  */
 void
-gst_data_init (GstData *data, GType type, guint16 flags, GstDataFreeFunction free, GstDataCopyFunction copy)
+gst_data_init (GstData * data, GType type, guint16 flags,
+    GstDataFreeFunction free, GstDataCopyFunction copy)
 {
   g_return_if_fail (data != NULL);
 
@@ -68,7 +68,7 @@ gst_data_init (GstData *data, GType type, guint16 flags, GstDataFreeFunction fre
  * the relevant GstData info.
  */
 void
-gst_data_copy_into (const GstData *data, GstData *target)
+gst_data_copy_into (const GstData * data, GstData * target)
 {
   g_return_if_fail (data != NULL);
 }
@@ -81,7 +81,7 @@ gst_data_copy_into (const GstData *data, GstData *target)
  * mainly used by subclass implementors.
  */
 void
-gst_data_dispose (GstData *data)
+gst_data_dispose (GstData * data)
 {
   g_return_if_fail (data != NULL);
 
@@ -99,13 +99,13 @@ gst_data_dispose (GstData *data)
  * of the original buffer is not changed so you should unref it when you don't
  * need it anymore.
  */
-GstData*
-gst_data_copy (const GstData *data) 
+GstData *
+gst_data_copy (const GstData * data)
 {
   g_return_val_if_fail (data != NULL, NULL);
 
   if (data->copy)
-    return data->copy (data); 
+    return data->copy (data);
 
   return NULL;
 }
@@ -120,7 +120,7 @@ gst_data_copy (const GstData *data)
  * be copied before it can be modified safely.
  */
 gboolean
-gst_data_is_writable (GstData *data) 
+gst_data_is_writable (GstData * data)
 {
   gint refcount;
 
@@ -147,8 +147,8 @@ gst_data_is_writable (GstData *data)
  * is decreased when a copy is made, so you are not supposed to use it after a
  * call to this function.
  */
-GstData*
-gst_data_copy_on_write (GstData *data) 
+GstData *
+gst_data_copy_on_write (GstData * data)
 {
   gint refcount;
 
@@ -158,11 +158,12 @@ gst_data_copy_on_write (GstData *data)
 
   if (refcount == 1 && !GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
     return GST_DATA (data);
-	
+
   if (data->copy) {
-    GstData *copy = data->copy (data); 
+    GstData *copy = data->copy (data);
+
     gst_data_unref (data);
-    return copy; 
+    return copy;
   }
 
   return NULL;
@@ -176,15 +177,15 @@ gst_data_copy_on_write (GstData *data)
  *
  * Returns: the data
  */
-GstData* 
-gst_data_ref (GstData *data) 
+GstData *
+gst_data_ref (GstData * data)
 {
   g_return_val_if_fail (data != NULL, NULL);
-  g_return_val_if_fail (GST_DATA_REFCOUNT_VALUE(data) > 0, NULL);
+  g_return_val_if_fail (GST_DATA_REFCOUNT_VALUE (data) > 0, NULL);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "%p %d->%d", data,
-               GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) + 1);
-  
+      GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) + 1);
+
   gst_atomic_int_inc (&data->refcount);
 
   return data;
@@ -199,15 +200,15 @@ gst_data_ref (GstData *data)
  *
  * Returns: the data
  */
-GstData* 
-gst_data_ref_by_count (GstData *data, gint count)
+GstData *
+gst_data_ref_by_count (GstData * data, gint count)
 {
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (count >= 0, NULL);
-  g_return_val_if_fail (GST_DATA_REFCOUNT_VALUE(data) > 0, NULL);
+  g_return_val_if_fail (GST_DATA_REFCOUNT_VALUE (data) > 0, NULL);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "%p %d->%d", data,
-               GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) + count);
+      GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) + count);
 
   gst_atomic_int_add (&data->refcount, count);
 
@@ -225,22 +226,22 @@ gst_data_ref_by_count (GstData *data, gint count)
  * data.  When the data has been used by some plugin, it must unref()s it.
  * Applications usually don't need to unref() anything.
  */
-void 
-gst_data_unref (GstData *data) 
+void
+gst_data_unref (GstData * data)
 {
   gint zero;
 
   g_return_if_fail (data != NULL);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "%p %d->%d", data,
-               GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) - 1);
+      GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) - 1);
   g_return_if_fail (GST_DATA_REFCOUNT_VALUE (data) > 0);
 
   zero = gst_atomic_int_dec_and_test (&data->refcount);
 
   /* if we ended up with the refcount at zero, free the data */
   if (zero) {
-    if (data->free) 
-      data->free (data); 
+    if (data->free)
+      data->free (data);
   }
 }

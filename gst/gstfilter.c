@@ -19,8 +19,9 @@
 
 #include <gst/gstfilter.h>
 
-GList*
-gst_filter_run (const GList *list, GstFilterFunc func, gboolean first, gpointer user_data)
+GList *
+gst_filter_run (const GList * list, GstFilterFunc func, gboolean first,
+    gpointer user_data)
 {
   const GList *walk = list;
   GList *result = NULL;
@@ -30,7 +31,7 @@ gst_filter_run (const GList *list, GstFilterFunc func, gboolean first, gpointer 
     gpointer data = walk->data;
 
     walk = g_list_next (walk);
-    
+
     if (func)
       res = func (data, user_data);
 

@@ -12,21 +12,20 @@ gboolean running = FALSE;
 gboolean done = FALSE;
 
 static void
-construct_pipeline (GstElement *pipeline, gint identities)
+construct_pipeline (GstElement * pipeline, gint identities)
 {
   GstElement *src, *sink, *identity = NULL;
   GstElement *from;
   int i;
 
-  src      = gst_element_factory_make ("fakesrc",  NULL);
-  sink     = gst_element_factory_make ("fakesink", NULL);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
   g_assert (src);
   g_assert (sink);
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
   from = src;
 
-  for (i = 0; i < identities; ++i)
-  {
+  for (i = 0; i < identities; ++i) {
     identity = gst_element_factory_make ("identity", NULL);
     g_assert (identity);
     gst_bin_add (GST_BIN (pipeline), identity);
@@ -39,29 +38,29 @@ construct_pipeline (GstElement *pipeline, gint identities)
 }
 
 static void
-iterator (GstElement *bin)
+iterator (GstElement * bin)
 {
   gst_element_set_state (bin, GST_STATE_PLAYING);
-  while (gst_bin_iterate (GST_BIN (bin))) g_print ("+");
+  while (gst_bin_iterate (GST_BIN (bin)))
+    g_print ("+");
   gst_element_set_state (bin, GST_STATE_NULL);
   g_print ("\n");
   done = TRUE;
 }
 
 int
-main (gint argc, gchar *argv[])
+main (gint argc, gchar * argv[])
 {
   int runs = MAX_IDENTITIES * RUNS_PER_IDENTITY;
   int i;
   GstElement *pipeline;
 
-  alarm(10);
+  alarm (10);
 
   g_thread_init (NULL);
   gst_init (&argc, &argv);
 
-  for (i = 0; i < runs; ++i)
-  {
+  for (i = 0; i < runs; ++i) {
     pipeline = gst_pipeline_new ("main_pipeline");
     g_assert (pipeline);
 
@@ -73,7 +72,8 @@ main (gint argc, gchar *argv[])
     g_print ("Created GThread\n");
 
     g_print ("Waiting for thread PLAYING->PAUSED\n");
-    while (!done) /* do nothing */;
+    while (!done)		/* do nothing */
+      ;
     running = FALSE;
     g_print ("Unreffing pipeline\n");
     g_object_unref (G_OBJECT (pipeline));
@@ -81,4 +81,3 @@ main (gint argc, gchar *argv[])
 
   return 0;
 }
-

@@ -1,56 +1,32 @@
 #include <gst/gst.h>
 
 /* these caps all have a non empty intersection */
-GstStaticCaps sinkcaps = GST_STATIC_CAPS (
-  "video/mpeg, "
+GstStaticCaps sinkcaps = GST_STATIC_CAPS ("video/mpeg, "
     "fourcc=(fourcc){\"YV12\",\"YUY2\"}, "
-    "foo1=(int)[20,40], "
-    "foo2=(int)[20,40], "
-    "foo3=(int)[10,20]"
-);
+    "foo1=(int)[20,40], " "foo2=(int)[20,40], " "foo3=(int)[10,20]");
 
-GstStaticCaps mp1parsecaps = GST_STATIC_CAPS (
-  "video/mpeg, "
-    "fourcc=(fourcc){\"YV12\",\"YUY2\"}, "
-    "foo4=(fourcc){\"YV12\",\"YUY2\"}"
-);
+GstStaticCaps mp1parsecaps = GST_STATIC_CAPS ("video/mpeg, "
+    "fourcc=(fourcc){\"YV12\",\"YUY2\"}, " "foo4=(fourcc){\"YV12\",\"YUY2\"}");
 
-GstStaticCaps rawcaps = GST_STATIC_CAPS (
-  "video/raw, "
+GstStaticCaps rawcaps = GST_STATIC_CAPS ("video/raw, "
     "width=(int)[16,4096], "
-    "height=(int)[16,4096], "
-    "fourcc=(fourcc){\"YV12\",\"YUY2\"}"
-);
+    "height=(int)[16,4096], " "fourcc=(fourcc){\"YV12\",\"YUY2\"}");
 
-GstStaticCaps rawcaps2 = GST_STATIC_CAPS (
-  "video/raw, "
+GstStaticCaps rawcaps2 = GST_STATIC_CAPS ("video/raw, "
+    "width=(int)[16,256], "
+    "height=(int)16; " "video/raw, " "width=(int)[16,256], " "height=(int)16");
+
+GstStaticCaps rawcaps3 = GST_STATIC_CAPS ("video/raw, "
     "width=(int)[16,256], "
     "height=(int)16; "
-  "video/raw, "
-    "width=(int)[16,256], "
-    "height=(int)16"
-);
-
-GstStaticCaps rawcaps3 = GST_STATIC_CAPS (
-  "video/raw, "
+    "video/raw, "
     "width=(int)[16,256], "
     "height=(int)16; "
-  "video/raw, "
-    "width=(int)[16,256], "
-    "height=(int)16; "
-  "video/raw, "
-    "fourcc=(fourcc){\"YV12\",\"YUY2\"}, "
-    "height=(int)[16,4096]"
-);
+    "video/raw, "
+    "fourcc=(fourcc){\"YV12\",\"YUY2\"}, " "height=(int)[16,4096]");
 
-GstStaticCaps rawcaps4 = GST_STATIC_CAPS (
-  "x, "
-    "y=(int){1,2}, "
-    "z=(int){3,4}; "
-  "a, "
-    "b=(int){5,6}, "
-    "c=(int){7,8}"
-);
+GstStaticCaps rawcaps4 = GST_STATIC_CAPS ("x, "
+    "y=(int){1,2}, " "z=(int){3,4}; " "a, " "b=(int){5,6}, " "c=(int){7,8}");
 
 /* defined, not used
 GST_CAPS_FACTORY (rawcaps4,
@@ -79,8 +55,8 @@ GST_CAPS_FACTORY (rawcaps5,
 );
 */
 
-int 
-main (int argc, char *argv[]) 
+int
+main (int argc, char *argv[])
 {
   GstCaps *caps;
 

@@ -6,7 +6,7 @@ create_pipeline (void)
   GstElement *fakesrc, *fakesink;
   GstElement *pipeline;
 
-  
+
   pipeline = gst_pipeline_new ("main_pipeline");
 
   fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
@@ -22,13 +22,13 @@ create_pipeline (void)
 }
 
 gint
-main (gint argc, gchar *argv[])
+main (gint argc, gchar * argv[])
 {
   GstElement *pipeline;
   gint i = 1000;
   gint step = 100;
 
-  free (malloc(8)); /* -lefence */
+  free (malloc (8));		/* -lefence */
 
   gst_init (&argc, &argv);
 
@@ -37,7 +37,7 @@ main (gint argc, gchar *argv[])
     if (i % step == 0)
       fprintf (stderr, "%10d\r", i);
     pipeline = create_pipeline ();
-	  
+
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
     while (gst_bin_iterate (GST_BIN (pipeline)));

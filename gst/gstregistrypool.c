@@ -31,6 +31,7 @@
 
 /* list of registries in the pool */
 static GList *_gst_registry_pool = NULL;
+
 /* list of plugins without a registry, like statically linked
  * plugins */
 static GList *_gst_registry_pool_plugins = NULL;
@@ -42,7 +43,7 @@ static GList *_gst_registry_pool_plugins = NULL;
  *
  * Returns: a Glist of GstRegistries, g_list_free after use.
  */
-GList*
+GList *
 gst_registry_pool_list (void)
 {
   return g_list_copy (_gst_registry_pool);
@@ -63,13 +64,15 @@ gst_registry_compare_func (gconstpointer a, gconstpointer b)
  * Add the registry to the pool with the given priority.
  */
 void
-gst_registry_pool_add (GstRegistry *registry, guint priority)
+gst_registry_pool_add (GstRegistry * registry, guint priority)
 {
   g_return_if_fail (GST_IS_REGISTRY (registry));
 
   registry->priority = priority;
 
-  _gst_registry_pool = g_list_insert_sorted (_gst_registry_pool, registry, gst_registry_compare_func);
+  _gst_registry_pool =
+      g_list_insert_sorted (_gst_registry_pool, registry,
+      gst_registry_compare_func);
 }
 
 /**
@@ -79,7 +82,7 @@ gst_registry_pool_add (GstRegistry *registry, guint priority)
  * Remove the registry from the pool.
  */
 void
-gst_registry_pool_remove (GstRegistry *registry)
+gst_registry_pool_remove (GstRegistry * registry)
 {
   g_return_if_fail (GST_IS_REGISTRY (registry));
 
@@ -94,14 +97,15 @@ gst_registry_pool_remove (GstRegistry *registry)
  * Add the plugin to the global pool of plugins.
  */
 void
-gst_registry_pool_add_plugin (GstPlugin *plugin)
+gst_registry_pool_add_plugin (GstPlugin * plugin)
 {
-  _gst_registry_pool_plugins = g_list_prepend (_gst_registry_pool_plugins, plugin);
+  _gst_registry_pool_plugins =
+      g_list_prepend (_gst_registry_pool_plugins, plugin);
 }
 
 #ifndef GST_DISABLE_REGISTRY
 static void
-_registry_load_func (GstRegistry *registry, gpointer user_data)
+_registry_load_func (GstRegistry * registry, gpointer user_data)
 {
   if (!(registry->flags & GST_REGISTRY_DELAYED_LOADING)) {
     gst_registry_load (registry);
@@ -130,7 +134,7 @@ gst_registry_pool_load_all (void)
  * 
  * Returns: a GList of plugins, g_list_free after use.
  */
-GList*
+GList *
 gst_registry_pool_plugin_list (void)
 {
   return gst_registry_pool_plugin_filter (NULL, FALSE, NULL);
@@ -148,12 +152,13 @@ gst_registry_pool_plugin_list (void)
  *
  * Returns: a GList of plugins, g_list_free after use.
  */
-GList*
-gst_registry_pool_plugin_filter (GstPluginFilter filter, gboolean first, gpointer user_data)
+GList *
+gst_registry_pool_plugin_filter (GstPluginFilter filter, gboolean first,
+    gpointer user_data)
 {
   GList *result = NULL;
   GList *temp;
-  
+
 #ifndef GST_DISABLE_REGISTRY
   GList *walk;
 
@@ -167,12 +172,14 @@ gst_registry_pool_plugin_filter (GstPluginFilter filter, gboolean first, gpointe
       return temp;
 
     result = g_list_concat (result, temp);
-    
+
     walk = g_list_next (walk);
   }
 #endif /* GST_DISABLE_REGISTRY */
 
-  temp = gst_filter_run (_gst_registry_pool_plugins, (GstFilterFunc) filter, first, user_data);
+  temp =
+      gst_filter_run (_gst_registry_pool_plugins, (GstFilterFunc) filter, first,
+      user_data);
 
   result = g_list_concat (result, temp);
 
@@ -187,7 +194,7 @@ gst_registry_pool_plugin_filter (GstPluginFilter filter, gboolean first, gpointe
  * 
  * Returns: a GList of pluginfeatures, g_list_free after use.
  */
-GList*
+GList *
 gst_registry_pool_feature_list (GType type)
 {
   GstTypeNameData data;
@@ -196,9 +203,8 @@ gst_registry_pool_feature_list (GType type)
   data.type = type;
 
   return gst_registry_pool_feature_filter (
-		  (GstPluginFeatureFilter) gst_plugin_feature_type_name_filter, 
-		  FALSE,
-		  &data);
+      (GstPluginFeatureFilter) gst_plugin_feature_type_name_filter,
+      FALSE, &data);
 }
 
 /**
@@ -214,14 +220,16 @@ gst_registry_pool_feature_list (GType type)
  * 
  * Returns: a GList of pluginfeatures, g_list_free after use.
  */
-GList*
-gst_registry_pool_feature_filter (GstPluginFeatureFilter filter, gboolean first, gpointer user_data)
+GList *
+gst_registry_pool_feature_filter (GstPluginFeatureFilter filter, gboolean first,
+    gpointer user_data)
 {
   GList *result = NULL;
   GList *temp;
-  
+
 #ifndef GST_DISABLE_REGISTRY
   GList *walk;
+
   walk = _gst_registry_pool;
 
   while (walk) {
@@ -232,12 +240,14 @@ gst_registry_pool_feature_filter (GstPluginFeatureFilter filter, gboolean first,
       return temp;
 
     result = g_list_concat (result, temp);
-    
+
     walk = g_list_next (walk);
   }
 #endif /* GST_DISABLE_REGISTRY */
 
-  temp = gst_plugin_list_feature_filter (_gst_registry_pool_plugins, filter, first, user_data);
+  temp =
+      gst_plugin_list_feature_filter (_gst_registry_pool_plugins, filter, first,
+      user_data);
 
   result = g_list_concat (result, temp);
 
@@ -253,21 +263,23 @@ gst_registry_pool_feature_filter (GstPluginFeatureFilter filter, gboolean first,
  * Returns: The plugin with the given name or NULL if the plugin 
  * was not found.
  */
-GstPlugin*
-gst_registry_pool_find_plugin (const gchar *name)
+GstPlugin *
+gst_registry_pool_find_plugin (const gchar * name)
 {
   GstPlugin *result = NULL;
   GList *walk;
 
   g_return_val_if_fail (name != NULL, NULL);
-  
-  walk = gst_registry_pool_plugin_filter ((GstPluginFilter) gst_plugin_name_filter, TRUE, (gpointer) name);
+
+  walk =
+      gst_registry_pool_plugin_filter ((GstPluginFilter) gst_plugin_name_filter,
+      TRUE, (gpointer) name);
 
   if (walk)
     result = GST_PLUGIN (walk->data);
 
   g_list_free (walk);
-  
+
   return result;
 }
 
@@ -282,8 +294,8 @@ gst_registry_pool_find_plugin (const gchar *name)
  * Returns: A pluginfeature with the given name and type or NULL if the feature
  * was not found.
  */
-GstPluginFeature*
-gst_registry_pool_find_feature (const gchar *name, GType type)
+GstPluginFeature *
+gst_registry_pool_find_feature (const gchar * name, GType type)
 {
   GstPluginFeature *result = NULL;
   GList *walk;
@@ -294,10 +306,11 @@ gst_registry_pool_find_feature (const gchar *name, GType type)
   data.type = type;
   data.name = name;
 
-  walk = gst_registry_pool_feature_filter ((GstPluginFeatureFilter) gst_plugin_feature_type_name_filter,
-		                           TRUE, &data);
-  
-  if (walk) 
+  walk =
+      gst_registry_pool_feature_filter ((GstPluginFeatureFilter)
+      gst_plugin_feature_type_name_filter, TRUE, &data);
+
+  if (walk)
     result = GST_PLUGIN_FEATURE (walk->data);
 
   g_list_free (walk);
@@ -313,7 +326,7 @@ gst_registry_pool_find_feature (const gchar *name, GType type)
  * 
  * Returns: The registry with the flags.
  */
-GstRegistry*
+GstRegistry *
 gst_registry_pool_get_prefered (GstRegistryFlags flags)
 {
 #ifndef GST_DISABLE_REGISTRY
@@ -324,7 +337,7 @@ gst_registry_pool_get_prefered (GstRegistryFlags flags)
 
     if (registry->flags & flags)
       return registry;
-    
+
     walk = g_list_next (walk);
   }
 #endif /* GST_DISABLE_REGISTRY */

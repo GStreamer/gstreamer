@@ -20,16 +20,6 @@ You'll get a bitmask of flags with gst_cpu_get_flags().
 
 </para>
 
-<!-- ##### ENUM GstCPUFlags ##### -->
-<para>
-Flags that represent cpu capabilities
-</para>
-
-@GST_CPU_FLAG_MMX: The cpu is mmx enabled
-@GST_CPU_FLAG_SSE: The cpu is sse enabled
-@GST_CPU_FLAG_MMXEXT: The cpu has extended mmx instructions
-@GST_CPU_FLAG_3DNOW: The cpu is 3DNOW enabled
-
 <!-- ##### FUNCTION gst_cpu_get_flags ##### -->
 <para>
 Request a set of bits specifiying the features of the CPU.

@@ -32,19 +32,19 @@ typedef struct _GstMemChunkElement GstMemChunkElement;
 
 struct _GstMemChunkElement
 {
-  GstTrashStackElement   elem;		/* make sure we can safely push it on the trashstack */
-  gpointer	 	 area;		/* pointer to data areas */
+  GstTrashStackElement elem;	/* make sure we can safely push it on the trashstack */
+  gpointer area;		/* pointer to data areas */
 };
 
 struct _GstMemChunk
 {
-  GstTrashStack  stack;
+  GstTrashStack stack;
 
-  gchar         *name;
-  gulong         area_size;
-  gulong         chunk_size;
-  gulong         atom_size;
-  gboolean       cleanup;
+  gchar *name;
+  gulong area_size;
+  gulong chunk_size;
+  gulong atom_size;
+  gboolean cleanup;
 };
 
 /*******************************************************
@@ -59,17 +59,17 @@ struct _GstMemChunk
  *
  */
 static gboolean
-populate (GstMemChunk *mem_chunk) 
+populate (GstMemChunk * mem_chunk)
 {
   guint8 *area;
   gint i;
 
   if (mem_chunk->cleanup)
     return FALSE;
- 
+
   area = (guint8 *) g_malloc0 (mem_chunk->area_size);
 
-  for (i=0; i < mem_chunk->area_size; i += mem_chunk->chunk_size) { 
+  for (i = 0; i < mem_chunk->area_size; i += mem_chunk->chunk_size) {
     GST_MEM_CHUNK_AREA (area + i) = area;
     gst_trash_stack_push (&mem_chunk->stack, area + i);
   }
@@ -90,8 +90,8 @@ populate (GstMemChunk *mem_chunk)
  *
  * Returns: a new #GstMemChunk
  */
-GstMemChunk*
-gst_mem_chunk_new (gchar* name, gint atom_size, gulong area_size, gint type)
+GstMemChunk *
+gst_mem_chunk_new (gchar * name, gint atom_size, gulong area_size, gint type)
 {
   GstMemChunk *mem_chunk;
 
@@ -101,7 +101,7 @@ gst_mem_chunk_new (gchar* name, gint atom_size, gulong area_size, gint type)
   mem_chunk = g_malloc (sizeof (GstMemChunk));
 
   mem_chunk->chunk_size = atom_size + sizeof (GstMemChunkElement);
-  area_size = (area_size/atom_size) * mem_chunk->chunk_size;
+  area_size = (area_size / atom_size) * mem_chunk->chunk_size;
 
   mem_chunk->name = g_strdup (name);
   mem_chunk->atom_size = atom_size;
@@ -129,7 +129,7 @@ free_area (gpointer key, gpointer value, gpointer user_data)
  * Free the memory allocated by the memchunk
  */
 void
-gst_mem_chunk_destroy (GstMemChunk *mem_chunk) 
+gst_mem_chunk_destroy (GstMemChunk * mem_chunk)
 {
   GHashTable *elements = g_hash_table_new (NULL, NULL);
   gpointer data;
@@ -140,10 +140,10 @@ gst_mem_chunk_destroy (GstMemChunk *mem_chunk)
   while (data) {
     GstMemChunkElement *elem = GST_MEM_CHUNK_LINK (data);
 
-    g_hash_table_insert (elements, GST_MEM_CHUNK_AREA (elem), NULL); 
-    
+    g_hash_table_insert (elements, GST_MEM_CHUNK_AREA (elem), NULL);
+
     data = gst_mem_chunk_alloc (mem_chunk);
-  } 
+  }
   g_hash_table_foreach_remove (elements, free_area, NULL);
 
   g_hash_table_destroy (elements);
@@ -162,10 +162,10 @@ gst_mem_chunk_destroy (GstMemChunk *mem_chunk)
  * Returns: a pointer to the allocated memory region.
  */
 gpointer
-gst_mem_chunk_alloc (GstMemChunk *mem_chunk)
+gst_mem_chunk_alloc (GstMemChunk * mem_chunk)
 {
   GstMemChunkElement *chunk;
-  
+
   g_return_val_if_fail (mem_chunk != NULL, NULL);
 
 again:
@@ -174,7 +174,7 @@ again:
   if (!chunk) {
     if (populate (mem_chunk))
       goto again;
-    else 
+    else
       return NULL;
   }
 
@@ -192,13 +192,13 @@ again:
  * Returns: a pointer to the allocated memory region.
  */
 gpointer
-gst_mem_chunk_alloc0 (GstMemChunk *mem_chunk)
+gst_mem_chunk_alloc0 (GstMemChunk * mem_chunk)
 {
   gpointer mem = gst_mem_chunk_alloc (mem_chunk);
 
   if (mem)
     memset (mem, 0, mem_chunk->atom_size);
-  
+
   return mem;
 }
 
@@ -210,10 +210,10 @@ gst_mem_chunk_alloc0 (GstMemChunk *mem_chunk)
  * Free the memeory region allocated from the chunk.
  */
 void
-gst_mem_chunk_free (GstMemChunk *mem_chunk, gpointer mem)
+gst_mem_chunk_free (GstMemChunk * mem_chunk, gpointer mem)
 {
   GstMemChunkElement *chunk;
-  
+
   g_return_if_fail (mem_chunk != NULL);
   g_return_if_fail (mem != NULL);
 

@@ -26,9 +26,8 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
-typedef enum {
+G_BEGIN_DECLS typedef enum
+{
   GST_QUERY_NONE = 0,
   GST_QUERY_TOTAL,
   GST_QUERY_POSITION,
@@ -46,9 +45,9 @@ typedef struct _GstQueryTypeDefinition GstQueryTypeDefinition;
 
 struct _GstQueryTypeDefinition
 {
-  GstQueryType   value;
-  gchar     	*nick;
-  gchar     	*description;
+  GstQueryType value;
+  gchar *nick;
+  gchar *description;
 };
 
 #ifdef G_HAVE_ISO_VARARGS
@@ -75,22 +74,21 @@ functionname (type object)                          	\
 }
 #endif
 
-void            	_gst_query_type_initialize     (void);
+void _gst_query_type_initialize (void);
 
 /* register a new query */
-GstQueryType    	gst_query_type_register        (const gchar *nick, 
-		                                     	const gchar *description);
-GstQueryType    	gst_query_type_get_by_nick     (const gchar *nick);
+GstQueryType gst_query_type_register (const gchar * nick,
+    const gchar * description);
+GstQueryType gst_query_type_get_by_nick (const gchar * nick);
 
 /* check if a query is in an array of querys */
-gboolean        	gst_query_types_contains       (const GstQueryType *types, GstQueryType type);
+gboolean gst_query_types_contains (const GstQueryType * types,
+    GstQueryType type);
 
 /* query for query details */
-G_CONST_RETURN GstQueryTypeDefinition*      
-                	gst_query_type_get_details     (GstQueryType type);
-G_CONST_RETURN GList*   gst_query_type_get_definitions (void);
+G_CONST_RETURN GstQueryTypeDefinition *gst_query_type_get_details (GstQueryType
+    type);
+G_CONST_RETURN GList *gst_query_type_get_definitions (void);
 
 G_END_DECLS
-
 #endif /* __GST_QUERY_H__ */
-

@@ -27,11 +27,9 @@
 #include <gst/gstdata.h>
 #include <gst/gstclock.h>
 
-G_BEGIN_DECLS
+G_BEGIN_DECLS typedef struct _GstBuffer GstBuffer;
 
-typedef struct _GstBuffer GstBuffer;
-
-typedef void (*GstBufferFreeDataFunc) (GstBuffer *buffer);
+typedef void (*GstBufferFreeDataFunc) (GstBuffer * buffer);
 
 #define GST_BUFFER_TRACE_NAME		"GstBuffer"
 
@@ -74,27 +72,29 @@ extern GType _gst_buffer_type;
 #define GST_BUFFER_OFFSET_END_IS_VALID(buffer)	(GST_BUFFER_OFFSET_END (buffer) != GST_BUFFER_OFFSET_NONE)
 #define GST_BUFFER_MAXSIZE_IS_VALID(buffer)	(GST_BUFFER_MAXSIZE (buffer) != GST_BUFFER_MAXSIZE_NONE)
 
-typedef enum {
-  GST_BUFFER_READONLY   = GST_DATA_READONLY,
-  GST_BUFFER_SUBBUFFER  = GST_DATA_FLAG_LAST,
+typedef enum
+{
+  GST_BUFFER_READONLY = GST_DATA_READONLY,
+  GST_BUFFER_SUBBUFFER = GST_DATA_FLAG_LAST,
   GST_BUFFER_ORIGINAL,
   GST_BUFFER_DONTFREE,
   GST_BUFFER_KEY_UNIT,
   GST_BUFFER_DONTKEEP,
-  GST_BUFFER_FLAG_LAST 	= GST_DATA_FLAG_LAST + 8
+  GST_BUFFER_FLAG_LAST = GST_DATA_FLAG_LAST + 8
 } GstBufferFlag;
 
-struct _GstBuffer {
-  GstData 		 data_type;
+struct _GstBuffer
+{
+  GstData data_type;
 
   /* pointer to data and its size */
-  guint8 		*data;			/* pointer to buffer data */
-  guint 		 size;			/* size of buffer data */
-  guint			 maxsize;		/* max size of this buffer */
+  guint8 *data;			/* pointer to buffer data */
+  guint size;			/* size of buffer data */
+  guint maxsize;		/* max size of this buffer */
 
   /* timestamp */
-  GstClockTime		 timestamp;		
-  GstClockTime		 duration;		
+  GstClockTime timestamp;
+  GstClockTime duration;
 
   /* media specific offset
    * for video frames, this could be the number of frames,
@@ -103,19 +103,19 @@ struct _GstBuffer {
    * offset_end is the last offset contained in the buffer. The format specifies
    * the meaning of both of them exactly.
    */
-  guint64		 offset;
-  guint64		 offset_end;
+  guint64 offset;
+  guint64 offset_end;
 
-  GstBufferFreeDataFunc  free_data;
-  gpointer 		 buffer_private;
+  GstBufferFreeDataFunc free_data;
+  gpointer buffer_private;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
 /* allocation */
-GType		gst_buffer_get_type		(void);
-GstBuffer*	gst_buffer_new	 		(void);
-GstBuffer*	gst_buffer_new_and_alloc	(guint size);
+GType gst_buffer_get_type (void);
+GstBuffer *gst_buffer_new (void);
+GstBuffer *gst_buffer_new_and_alloc (guint size);
 
 #define		gst_buffer_set_data(buf, data, size) 	\
 G_STMT_START { 					     	\
@@ -128,25 +128,26 @@ G_STMT_START { 					     	\
 #define		gst_buffer_ref_by_count(buf,c)	GST_BUFFER (gst_data_ref_by_count (GST_DATA (buf), c))
 #define		gst_buffer_unref(buf)		gst_data_unref (GST_DATA (buf))
 /* copy buffer */
-void		gst_buffer_stamp		(GstBuffer *dest, const GstBuffer *src);
+void gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src);
+
 #define		gst_buffer_copy(buf)		GST_BUFFER (gst_data_copy (GST_DATA (buf)))
 #define		gst_buffer_is_writable(buf)	gst_data_is_writable (GST_DATA (buf))
 #define		gst_buffer_copy_on_write(buf)   GST_BUFFER (gst_data_copy_on_write (GST_DATA (buf)))
 
 /* creating a subbuffer */
-GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint offset, guint size);
+GstBuffer *gst_buffer_create_sub (GstBuffer * parent, guint offset, guint size);
 
 /* merge, span, or append two buffers, intelligently */
-GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
-gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
-GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
+GstBuffer *gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2);
+gboolean gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2);
+GstBuffer *gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
+    guint32 len);
 
 /* --- private --- */
-void		_gst_buffer_initialize		(void);
+void _gst_buffer_initialize (void);
 
-void		gst_buffer_default_free 	(GstBuffer *buffer);
-GstBuffer*	gst_buffer_default_copy 	(GstBuffer *buffer);
+void gst_buffer_default_free (GstBuffer * buffer);
+GstBuffer *gst_buffer_default_copy (GstBuffer * buffer);
 
 G_END_DECLS
-
 #endif /* __GST_BUFFER_H__ */

@@ -3,7 +3,7 @@
 #define ITERS 100
 #include <stdlib.h>
 
-static GstElement*
+static GstElement *
 create_bin (void)
 {
   GstElement *bin;
@@ -20,7 +20,7 @@ create_bin (void)
   return bin;
 }
 
-static GstElement*
+static GstElement *
 create_bin_ghostpads (void)
 {
   GstElement *bin;
@@ -32,7 +32,8 @@ create_bin_ghostpads (void)
   element2 = gst_element_factory_make ("fakesink", NULL);
   gst_bin_add (GST_BIN (bin), element2);
   gst_element_link_pads (element1, "src", element2, "sink");
-  gst_element_add_ghost_pad (bin, gst_element_get_pad (element1, "sink"), "ghost_sink");
+  gst_element_add_ghost_pad (bin, gst_element_get_pad (element1, "sink"),
+      "ghost_sink");
 
   return bin;
 }
@@ -132,7 +133,7 @@ add_remove_test4 (void)
 #endif
 
 int
-main (int argc, gchar *argv[])
+main (int argc, gchar * argv[])
 {
   GstElement *bin;
   int usage1;
@@ -155,13 +156,14 @@ main (int argc, gchar *argv[])
 
   bin = gst_bin_new ("somebin");
   gst_object_unref (GST_OBJECT (bin));
-  g_print ("create/unref new bin %d\n", gst_alloc_trace_live_all ()-usage1);
+  g_print ("create/unref new bin %d\n", gst_alloc_trace_live_all () - usage1);
 
-  for (i=0; i<iters;i++) {
+  for (i = 0; i < iters; i++) {
     bin = gst_bin_new ("somebin");
     gst_object_unref (GST_OBJECT (bin));
   }
-  g_print ("create/unref %d bins %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+  g_print ("create/unref %d bins %d\n", iters,
+      gst_alloc_trace_live_all () - usage1);
 
   bin = gst_bin_new ("somebin");
   g_assert (GST_OBJECT_FLOATING (bin));
@@ -169,16 +171,18 @@ main (int argc, gchar *argv[])
   gst_object_sink (GST_OBJECT (bin));
   g_assert (!GST_OBJECT_FLOATING (bin));
   gst_object_unref (GST_OBJECT (bin));
-  g_print ("create/ref/sink/unref new bin %d\n", gst_alloc_trace_live_all ()-usage1);
+  g_print ("create/ref/sink/unref new bin %d\n",
+      gst_alloc_trace_live_all () - usage1);
 
 
-  for (i=0; i<iters;i++) {
+  for (i = 0; i < iters; i++) {
     bin = gst_bin_new ("somebin");
     gst_object_ref (GST_OBJECT (bin));
     gst_object_sink (GST_OBJECT (bin));
     gst_object_unref (GST_OBJECT (bin));
   }
-  g_print ("create/ref/sink/unref %d bins %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+  g_print ("create/ref/sink/unref %d bins %d\n", iters,
+      gst_alloc_trace_live_all () - usage1);
 
   bin = gst_bin_new ("somebin");
   g_assert (!GST_OBJECT_DESTROYED (bin));
@@ -187,30 +191,34 @@ main (int argc, gchar *argv[])
   g_assert (GST_OBJECT_DESTROYED (bin));
   gst_object_unref (GST_OBJECT (bin));
 #endif
-  g_print ("create/destroy/unref new bin %d\n", gst_alloc_trace_live_all ()-usage1);
-  
-  for (i=0; i<iters;i++) {
+  g_print ("create/destroy/unref new bin %d\n",
+      gst_alloc_trace_live_all () - usage1);
+
+  for (i = 0; i < iters; i++) {
     bin = gst_bin_new ("somebin");
     gst_object_unref (GST_OBJECT (bin));
 #if 0
     gst_object_unref (GST_OBJECT (bin));
 #endif
   }
-  g_print ("create/destroy/unref %d bin %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+  g_print ("create/destroy/unref %d bin %d\n", iters,
+      gst_alloc_trace_live_all () - usage1);
 
   bin = gst_bin_new ("somebin");
   gst_object_ref (GST_OBJECT (bin));
   gst_object_unref (GST_OBJECT (bin));
   gst_object_unref (GST_OBJECT (bin));
-  g_print ("create/ref/unref/unref new bin %d\n", gst_alloc_trace_live_all ()-usage1);
-  
-  for (i=0; i<iters;i++) {
+  g_print ("create/ref/unref/unref new bin %d\n",
+      gst_alloc_trace_live_all () - usage1);
+
+  for (i = 0; i < iters; i++) {
     bin = gst_bin_new ("somebin");
     gst_object_ref (GST_OBJECT (bin));
     gst_object_unref (GST_OBJECT (bin));
     gst_object_unref (GST_OBJECT (bin));
   }
-  g_print ("create/ref/unref/unref %d bin %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+  g_print ("create/ref/unref/unref %d bin %d\n", iters,
+      gst_alloc_trace_live_all () - usage1);
 
   bin = gst_bin_new ("somebin");
   gst_object_ref (GST_OBJECT (bin));
@@ -219,9 +227,10 @@ main (int argc, gchar *argv[])
 #if 0
   gst_object_unref (GST_OBJECT (bin));
 #endif
-  g_print ("craete/ref/destroy/unref/unref new bin %d\n", gst_alloc_trace_live_all ()-usage1);
-  
-  for (i=0; i<iters;i++) {
+  g_print ("craete/ref/destroy/unref/unref new bin %d\n",
+      gst_alloc_trace_live_all () - usage1);
+
+  for (i = 0; i < iters; i++) {
     bin = gst_bin_new ("somebin");
     gst_object_ref (GST_OBJECT (bin));
     gst_object_unref (GST_OBJECT (bin));
@@ -230,9 +239,10 @@ main (int argc, gchar *argv[])
     gst_object_unref (GST_OBJECT (bin));
 #endif
   }
-  g_print ("craete/ref/destroy/unref/unref %d bins %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+  g_print ("craete/ref/destroy/unref/unref %d bins %d\n", iters,
+      gst_alloc_trace_live_all () - usage1);
 
-  for (i=0; i<iters;i++) {
+  for (i = 0; i < iters; i++) {
     bin = gst_bin_new ("somebin");
     gst_object_ref (GST_OBJECT (bin));
     gst_element_set_name (bin, "testing123");
@@ -243,54 +253,62 @@ main (int argc, gchar *argv[])
     gst_object_unref (GST_OBJECT (bin));
 #endif
   }
-  g_print ("craete/ref/destroy/unref/unref %d bins with name %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+  g_print ("craete/ref/destroy/unref/unref %d bins with name %d\n", iters,
+      gst_alloc_trace_live_all () - usage1);
 
   bin = gst_bin_new ("somebin");
-  for (i=0; i<iters;i++) {
+  for (i = 0; i < iters; i++) {
     gst_element_set_name (bin, "testing");
   }
   gst_object_unref (GST_OBJECT (bin));
-  g_print ("set name %d times %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+  g_print ("set name %d times %d\n", iters,
+      gst_alloc_trace_live_all () - usage1);
 
-  for (i=0; i<iters;i++) {
-    bin = create_bin();
+  for (i = 0; i < iters; i++) {
+    bin = create_bin ();
     gst_object_unref (GST_OBJECT (bin));
   }
-  g_print ("create/unref %d bin with children %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+  g_print ("create/unref %d bin with children %d\n", iters,
+      gst_alloc_trace_live_all () - usage1);
 
-  for (i=0; i<iters/2;i++) {
-    bin = create_bin_ghostpads();
+  for (i = 0; i < iters / 2; i++) {
+    bin = create_bin_ghostpads ();
     gst_object_unref (GST_OBJECT (bin));
   }
-  g_print ("create/unref %d bin with children and ghostpads %d\n", iters/2, gst_alloc_trace_live_all ()-usage1);
+  g_print ("create/unref %d bin with children and ghostpads %d\n", iters / 2,
+      gst_alloc_trace_live_all () - usage1);
 
-  for (i=0; i<iters;i++) {
-    add_remove_test1();
+  for (i = 0; i < iters; i++) {
+    add_remove_test1 ();
   }
-  g_print ("add/remove test1 %d in bin %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+  g_print ("add/remove test1 %d in bin %d\n", iters,
+      gst_alloc_trace_live_all () - usage1);
 
-  for (i=0; i<iters;i++) {
-    add_remove_test2();
+  for (i = 0; i < iters; i++) {
+    add_remove_test2 ();
   }
-  g_print ("add/remove test2 %d in bin %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+  g_print ("add/remove test2 %d in bin %d\n", iters,
+      gst_alloc_trace_live_all () - usage1);
 
 #if 0
-  for (i=0; i<iters;i++) {
-    add_remove_test3();
+  for (i = 0; i < iters; i++) {
+    add_remove_test3 ();
   }
-  g_print ("add/destroy/remove test3 %d in bin %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+  g_print ("add/destroy/remove test3 %d in bin %d\n", iters,
+      gst_alloc_trace_live_all () - usage1);
 #endif
 
 #if 0
-  for (i=0; i<iters;i++) {
-    add_remove_test4();
+  for (i = 0; i < iters; i++) {
+    add_remove_test4 ();
   }
-  g_print ("add/destroy/remove test4 %d in bin %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+  g_print ("add/destroy/remove test4 %d in bin %d\n", iters,
+      gst_alloc_trace_live_all () - usage1);
 #endif
 
-  g_print ("leaked: %d\n", gst_alloc_trace_live_all ()-usage1);
+  g_print ("leaked: %d\n", gst_alloc_trace_live_all () - usage1);
 
   //gst_alloc_trace_print_all ();
 
-  return (gst_alloc_trace_live_all ()-usage1 ? -1 : 0);
+  return (gst_alloc_trace_live_all () - usage1 ? -1 : 0);
 }

@@ -32,11 +32,12 @@ static guint32 _gst_cpu_flags = 0;
 
 #ifdef HAVE_CPU_I386
 #define _gst_cpu_initialize_arch _gst_cpu_initialize_i386
-void gst_cpuid_i386 (int, unsigned long *, unsigned long *, unsigned long *, unsigned long *);
-gboolean _gst_cpu_initialize_i386 (gulong *flags, GString *featurelist);
+void gst_cpuid_i386 (int, unsigned long *, unsigned long *, unsigned long *,
+    unsigned long *);
+gboolean _gst_cpu_initialize_i386 (gulong * flags, GString * featurelist);
 #else
 #define _gst_cpu_initialize_arch _gst_cpu_initialize_none
-gboolean _gst_cpu_initialize_none (gulong *flags, GString *featurelist);
+gboolean _gst_cpu_initialize_none (gulong * flags, GString * featurelist);
 #endif
 
 
@@ -45,26 +46,27 @@ _gst_cpu_initialize (gboolean opt)
 {
   GString *featurelist = g_string_new ("");
   gulong flags = 0;
-  
+
   if (opt) {
     if (!_gst_cpu_initialize_arch (&flags, featurelist))
       g_string_append (featurelist, "NONE");
   } else
     g_string_append (featurelist, "(DISABLED)");
 
-  GST_CAT_INFO (GST_CAT_GST_INIT, "CPU features: (%08lx) %s", flags, featurelist->str);
+  GST_CAT_INFO (GST_CAT_GST_INIT, "CPU features: (%08lx) %s", flags,
+      featurelist->str);
   g_string_free (featurelist, TRUE);
 }
 
 gboolean
-_gst_cpu_initialize_none (gulong *flags, GString *featurelist)
+_gst_cpu_initialize_none (gulong * flags, GString * featurelist)
 {
   return FALSE;
 }
 
 #ifdef HAVE_CPU_I386
 gboolean
-_gst_cpu_initialize_i386 (gulong *flags, GString *featurelist)
+_gst_cpu_initialize_i386 (gulong * flags, GString * featurelist)
 {
   gboolean AMD;
   gulong eax = 0, ebx = 0, ecx = 0, edx = 0;

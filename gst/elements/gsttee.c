@@ -31,21 +31,21 @@
 GST_DEBUG_CATEGORY_STATIC (gst_tee_debug);
 #define GST_CAT_DEFAULT gst_tee_debug
 
-GstElementDetails gst_tee_details = GST_ELEMENT_DETAILS (
-  "Tee pipe fitting",
-  "Generic",
-  "1-to-N pipe fitting",
-  "Erik Walthinsen <omega@cse.ogi.edu>, "
-  "Wim Taymans <wim.taymans@chello.be>"
-);
+GstElementDetails gst_tee_details = GST_ELEMENT_DETAILS ("Tee pipe fitting",
+    "Generic",
+    "1-to-N pipe fitting",
+    "Erik Walthinsen <omega@cse.ogi.edu>, "
+    "Wim Taymans <wim.taymans@chello.be>");
 
 /* Tee signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_SILENT,
   ARG_NUM_PADS,
@@ -53,89 +53,93 @@ enum {
   /* FILL ME */
 };
 
-GstStaticPadTemplate tee_src_template = GST_STATIC_PAD_TEMPLATE (
-  "src%d",
-  GST_PAD_SRC,
-  GST_PAD_REQUEST,
-  GST_STATIC_CAPS_ANY
-);
+GstStaticPadTemplate tee_src_template = GST_STATIC_PAD_TEMPLATE ("src%d",
+    GST_PAD_SRC,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS_ANY);
 
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_tee_debug, "tee", 0, "tee element");
 
 GST_BOILERPLATE_FULL (GstTee, gst_tee, GstElement, GST_TYPE_ELEMENT, _do_init);
 
-static GstPad* 	gst_tee_request_new_pad (GstElement *element, GstPadTemplate *temp, const gchar *unused);
+static GstPad *gst_tee_request_new_pad (GstElement * element,
+    GstPadTemplate * temp, const gchar * unused);
 
-static void 	gst_tee_set_property 	(GObject *object, guint prop_id, 
-					 const GValue *value, GParamSpec *pspec);
-static void 	gst_tee_get_property 	(GObject *object, guint prop_id, 
-					 GValue *value, GParamSpec *pspec);
+static void gst_tee_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_tee_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static void  	gst_tee_chain 		(GstPad *pad, GstData *_data);
+static void gst_tee_chain (GstPad * pad, GstData * _data);
 
 
 static void
 gst_tee_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  
+
   gst_element_class_set_details (gstelement_class, &gst_tee_details);
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&tee_src_template));
 }
 static void
-gst_tee_class_init (GstTeeClass *klass) 
+gst_tee_class_init (GstTeeClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_PADS,
-    g_param_spec_int ("num_pads", "num_pads", "num_pads",
-                      0, G_MAXINT, 0, G_PARAM_READABLE)); 
+      g_param_spec_int ("num_pads", "num_pads", "num_pads",
+	  0, G_MAXINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
-    g_param_spec_boolean ("silent", "silent", "silent",
-                      TRUE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+      g_param_spec_boolean ("silent", "silent", "silent",
+	  TRUE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
-    g_param_spec_string ("last_message", "last_message", "last_message",
-			 NULL, G_PARAM_READABLE));
-  
+      g_param_spec_string ("last_message", "last_message", "last_message",
+	  NULL, G_PARAM_READABLE));
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR(gst_tee_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR(gst_tee_get_property);
 
-  gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_tee_request_new_pad);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_tee_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_tee_get_property);
+
+  gstelement_class->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_tee_request_new_pad);
 }
 
-static void 
-gst_tee_init (GstTee *tee) 
+static void
+gst_tee_init (GstTee * tee)
 {
   tee->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
-  gst_pad_set_link_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
-  gst_pad_set_getcaps_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_pad_set_link_function (tee->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
+  gst_pad_set_getcaps_function (tee->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
 
   tee->last_message = NULL;
 }
 
 /* helper compare function */
-gint name_pad_compare (gconstpointer a, gconstpointer b)
+gint
+name_pad_compare (gconstpointer a, gconstpointer b)
 {
-  GstPad* pad = (GstPad*) a;
+  GstPad *pad = (GstPad *) a;
   gchar *name = (gchar *) b;
-  
+
   g_assert (GST_IS_PAD (pad));
 
-  return strcmp (name, gst_pad_get_name (pad)); /* returns 0 if match */
+  return strcmp (name, gst_pad_get_name (pad));	/* returns 0 if match */
 }
 
-static GstPad*
-gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar *unused) 
+static GstPad *
+gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
+    const gchar * unused)
 {
   gchar *name;
   GstPad *srcpad;
@@ -144,7 +148,7 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
   const GList *pads;
 
   g_return_val_if_fail (GST_IS_TEE (element), NULL);
-  
+
   if (templ->direction != GST_PAD_SRC) {
     g_warning ("gsttee: request new pad that is not a SRC pad\n");
     return NULL;
@@ -154,13 +158,12 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
 
   /* try names in order and find one that's not in use atm */
   pads = gst_element_get_pad_list (element);
-    
+
   name = NULL;
-  while (!name)
-  {
+  while (!name) {
     name = g_strdup_printf ("src%d", i);
-    if (g_list_find_custom ((GList *)pads, (gconstpointer) name, name_pad_compare) != NULL)
-    {
+    if (g_list_find_custom ((GList *) pads, (gconstpointer) name,
+	    name_pad_compare) != NULL) {
       /* this name is taken, use the next one */
       ++i;
       g_free (name);
@@ -172,11 +175,13 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
     tee->last_message = g_strdup_printf ("new pad %s", name);
     g_object_notify (G_OBJECT (tee), "last_message");
   }
-  
+
   srcpad = gst_pad_new_from_template (templ, name);
   g_free (name);
-  gst_pad_set_link_function (srcpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
-  gst_pad_set_getcaps_function (srcpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_pad_set_link_function (srcpad,
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
+  gst_pad_set_getcaps_function (srcpad,
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_element_add_pad (GST_ELEMENT (tee), srcpad);
   GST_PAD_ELEMENT_PRIVATE (srcpad) = NULL;
 
@@ -188,7 +193,8 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
 }
 
 static void
-gst_tee_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_tee_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
 {
   GstTee *tee;
 
@@ -209,7 +215,8 @@ gst_tee_set_property (GObject *object, guint prop_id, const GValue *value, GPara
 }
 
 static void
-gst_tee_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_tee_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstTee *tee;
 
@@ -241,8 +248,8 @@ gst_tee_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
  *
  * Chain a buffer on a pad.
  */
-static void 
-gst_tee_chain (GstPad *pad, GstData *_data) 
+static void
+gst_tee_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstTee *tee;
@@ -255,11 +262,12 @@ gst_tee_chain (GstPad *pad, GstData *_data)
   tee = GST_TEE (gst_pad_get_parent (pad));
 
   gst_buffer_ref_by_count (buf, GST_ELEMENT (tee)->numsrcpads - 1);
-  
+
   pads = gst_element_get_pad_list (GST_ELEMENT (tee));
 
   while (pads) {
     GstPad *outpad = GST_PAD (pads->data);
+
     pads = g_list_next (pads);
 
     if (GST_PAD_DIRECTION (outpad) != GST_PAD_SRC)
@@ -267,9 +275,10 @@ gst_tee_chain (GstPad *pad, GstData *_data)
 
     if (!tee->silent) {
       g_free (tee->last_message);
-      tee->last_message = g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %"
-					   G_GUINT64_FORMAT ") %p",
-              GST_DEBUG_PAD_NAME (outpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
+      tee->last_message =
+	  g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %"
+	  G_GUINT64_FORMAT ") %p", GST_DEBUG_PAD_NAME (outpad),
+	  GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
       g_object_notify (G_OBJECT (tee), "last_message");
     }
 
@@ -279,4 +288,3 @@ gst_tee_chain (GstPad *pad, GstData *_data)
       gst_buffer_unref (buf);
   }
 }
-

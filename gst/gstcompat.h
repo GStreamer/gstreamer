@@ -26,10 +26,8 @@
 #define __GSTCOMPAT_H__
 
 G_BEGIN_DECLS
-
 #ifndef GST_DISABLE_DEPRECATED
 /* 0.5.2 changes */
-
 /* element functions */
 #define	gst_element_connect(a,b)	gst_element_link(a,b)
 #define	gst_element_connect_pads(a,b,c,d) \
@@ -43,7 +41,6 @@ G_BEGIN_DECLS
 #define	gst_element_connect_filtered(a,b,c) \
 					gst_element_link_filtered(a,b,c)
 #define	gst_element_disconnect(a,b)	gst_element_unlink(a,b)
-
 /* pad functions */
 #define gst_pad_connect(a,b)		gst_pad_link(a,b)
 #define gst_pad_connect_filtered(a,b,c)	gst_pad_link_filtered(a,b,c)
@@ -51,19 +48,17 @@ G_BEGIN_DECLS
 #define gst_pad_proxy_connect(a,b)	gst_pad_proxy_link(a,b)
 #define gst_pad_set_connect_function(a,b) \
 					gst_pad_set_link_function(a,b)
-
 /* pad macros */
 #define GST_PAD_IS_CONNECTED(a)		GST_PAD_IS_LINKED(a)
-
 /* pad enums */
 #define GST_PAD_CONNECT_REFUSED		GST_PAD_LINK_REFUSED
 #define GST_PAD_CONNECT_DELAYED		GST_PAD_LINK_DELAYED
 #define GST_PAD_CONNECT_OK		GST_PAD_LINK_OK
 #define GST_PAD_CONNECT_DONE		GST_PAD_LINK_DONE
-typedef GstPadLinkReturn		GstPadConnectReturn;
+typedef GstPadLinkReturn GstPadConnectReturn;
 
 /* pad function types */
-typedef GstPadLinkFunction		GstPadConnectFunction;
+typedef GstPadLinkFunction GstPadConnectFunction;
 
 /* probably not used */
 /*
@@ -72,5 +67,4 @@ typedef GstPadLinkFunction		GstPadConnectFunction;
 #endif /* not GST_DISABLE_DEPRECATED */
 
 G_END_DECLS
-
 #endif /* __GSTCOMPAT_H__ */

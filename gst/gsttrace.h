@@ -28,12 +28,11 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
+G_BEGIN_DECLS typedef struct _GstTrace GstTrace;
+typedef struct _GstTraceEntry GstTraceEntry;
 
-typedef struct _GstTrace 	GstTrace;
-typedef struct _GstTraceEntry 	GstTraceEntry;
-
-struct _GstTrace {
+struct _GstTrace
+{
   /* where this trace is going */
   gchar *filename;
   int fd;
@@ -44,7 +43,8 @@ struct _GstTrace {
   gint bufoffset;
 };
 
-struct _GstTraceEntry {
+struct _GstTraceEntry
+{
   gint64 timestamp;
   guint32 sequence;
   guint32 data;
@@ -53,49 +53,52 @@ struct _GstTraceEntry {
 
 
 
-GstTrace*	gst_trace_new			(gchar *filename, gint size);
+GstTrace *gst_trace_new (gchar * filename, gint size);
 
-void 		gst_trace_destroy		(GstTrace *trace);
-void 		gst_trace_flush			(GstTrace *trace);
-void 		gst_trace_text_flush		(GstTrace *trace);
+void gst_trace_destroy (GstTrace * trace);
+void gst_trace_flush (GstTrace * trace);
+void gst_trace_text_flush (GstTrace * trace);
+
 #define 	gst_trace_get_size(trace) 	((trace)->bufsize)
 #define 	gst_trace_get_offset(trace) 	((trace)->bufoffset)
 #define 	gst_trace_get_remaining(trace) 	((trace)->bufsize - (trace)->bufoffset)
-void 		gst_trace_set_default		(GstTrace *trace);
+void gst_trace_set_default (GstTrace * trace);
 
-void 		_gst_trace_add_entry		(GstTrace *trace, guint32 seq, 
-						 guint32 data, gchar *msg);
+void _gst_trace_add_entry (GstTrace * trace, guint32 seq,
+    guint32 data, gchar * msg);
 
-void 		gst_trace_read_tsc		(gint64 *dst);
+void gst_trace_read_tsc (gint64 * dst);
 
 
 typedef enum
 {
-  GST_ALLOC_TRACE_LIVE		= (1 << 0),
-  GST_ALLOC_TRACE_MEM_LIVE	= (1 << 1)
+  GST_ALLOC_TRACE_LIVE = (1 << 0),
+  GST_ALLOC_TRACE_MEM_LIVE = (1 << 1)
 } GstAllocTraceFlags;
 
-typedef struct _GstAllocTrace 	GstAllocTrace;
+typedef struct _GstAllocTrace GstAllocTrace;
 
-struct _GstAllocTrace {
-  gchar		*name;
-  gint		 flags;
+struct _GstAllocTrace
+{
+  gchar *name;
+  gint flags;
 
-  gint		 live;
-  GSList	*mem_live;
+  gint live;
+  GSList *mem_live;
 };
 
-gboolean		gst_alloc_trace_available	(void);
-G_CONST_RETURN GList*	gst_alloc_trace_list		(void);
-GstAllocTrace*		_gst_alloc_trace_register	(const gchar *name);
+gboolean gst_alloc_trace_available (void);
+G_CONST_RETURN GList *gst_alloc_trace_list (void);
+GstAllocTrace *_gst_alloc_trace_register (const gchar * name);
 
-int			gst_alloc_trace_live_all	(void);
-void			gst_alloc_trace_print_all	(void);
-void			gst_alloc_trace_set_flags_all	(GstAllocTraceFlags flags);
+int gst_alloc_trace_live_all (void);
+void gst_alloc_trace_print_all (void);
+void gst_alloc_trace_set_flags_all (GstAllocTraceFlags flags);
 
-GstAllocTrace*		gst_alloc_trace_get		(const gchar *name);
-void			gst_alloc_trace_print		(const GstAllocTrace *trace);
-void			gst_alloc_trace_set_flags	(GstAllocTrace *trace, GstAllocTraceFlags flags);
+GstAllocTrace *gst_alloc_trace_get (const gchar * name);
+void gst_alloc_trace_print (const GstAllocTrace * trace);
+void gst_alloc_trace_set_flags (GstAllocTrace * trace,
+    GstAllocTraceFlags flags);
 
 
 #ifndef GST_DISABLE_ALLOC_TRACE
@@ -127,6 +130,7 @@ G_STMT_START {						\
 
 #ifndef GST_DISABLE_TRACE
 extern gint _gst_trace_on;
+
 #define gst_trace_add_entry(trace,seq,data,msg) \
   if (_gst_trace_on) { \
     _gst_trace_add_entry(trace,(guint32)seq,(guint32)data,msg); \
@@ -137,7 +141,7 @@ extern gint _gst_trace_on;
 
 #else /* GST_DISABLE_TRACE */
 
-#pragma GCC poison 	gst_trace_new	
+#pragma GCC poison 	gst_trace_new
 #pragma GCC poison	gst_trace_destroy
 #pragma GCC poison 	gst_trace_flush
 #pragma GCC poison	gst_trace_text_flush
@@ -150,16 +154,16 @@ extern gint _gst_trace_on;
 #pragma GCC poison 	gst_trace_add_entry
 
 #define		gst_alloc_trace_register(name)
-#define		gst_alloc_trace_new(trace, mem) 
+#define		gst_alloc_trace_new(trace, mem)
 #define		gst_alloc_trace_free(trace, mem)
 
 #define		gst_alloc_trace_available()	(FALSE)
 #define		gst_alloc_trace_list()		(NULL)
 #define		_gst_alloc_trace_register(name)	(NULL)
-                                                                                                                     
-#define		gst_alloc_trace_print_all()	
+
+#define		gst_alloc_trace_print_all()
 #define		gst_alloc_trace_set_flags_all(flags)
-                                                                                                                    
+
 #define		gst_alloc_trace_get(name)	(NULL)
 #define		gst_alloc_trace_print(trace)
 #define		gst_alloc_trace_set_flags(trace,flags)
@@ -168,5 +172,4 @@ extern gint _gst_trace_on;
 #endif /* GST_DISABLE_TRACE */
 
 G_END_DECLS
-
 #endif /* __GST_TRACE_H__ */

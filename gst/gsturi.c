@@ -34,7 +34,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_uri_handler_debug);
 #define GST_CAT_DEFAULT gst_uri_handler_debug
 
-static void	gst_uri_handler_base_init	(gpointer g_class);
+static void gst_uri_handler_base_init (gpointer g_class);
 
 GType
 gst_uri_handler_get_type (void)
@@ -55,9 +55,10 @@ gst_uri_handler_get_type (void)
       NULL
     };
     urihandler_type = g_type_register_static (G_TYPE_INTERFACE,
-	    "GstURIHandler", &urihandler_info, 0);
+	"GstURIHandler", &urihandler_info, 0);
 
-    GST_DEBUG_CATEGORY_INIT (gst_uri_handler_debug, "GST_URI", GST_DEBUG_BOLD, "handling of URIs");
+    GST_DEBUG_CATEGORY_INIT (gst_uri_handler_debug, "GST_URI", GST_DEBUG_BOLD,
+	"handling of URIs");
   }
   return urihandler_type;
 }
@@ -68,27 +69,29 @@ gst_uri_handler_base_init (gpointer g_class)
 
   if (!initialized) {
     g_signal_new ("new-uri", GST_TYPE_URI_HANDLER, G_SIGNAL_RUN_LAST,
-	    G_STRUCT_OFFSET (GstURIHandlerInterface, new_uri), NULL, NULL,
-	    gst_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
+	G_STRUCT_OFFSET (GstURIHandlerInterface, new_uri), NULL, NULL,
+	gst_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
     initialized = TRUE;
   }
 }
 
 static void
-gst_uri_protocol_check_internal (const gchar *uri, gchar **endptr)
+gst_uri_protocol_check_internal (const gchar * uri, gchar ** endptr)
 {
   gchar *check = (gchar *) uri;
-  
+
   g_assert (uri != NULL);
   g_assert (endptr != NULL);
 
   if (g_ascii_isalpha (*check)) {
     check++;
-    while (g_ascii_isalnum (*check)) check++;
+    while (g_ascii_isalnum (*check))
+      check++;
   }
 
   *endptr = check;
 }
+
 /**
  * gst_uri_protocol_is_valid:
  * @protocol: string to check
@@ -99,16 +102,17 @@ gst_uri_protocol_check_internal (const gchar *uri, gchar **endptr)
  * Returns: TRUE if the string is a valid protocol identifier
  */
 gboolean
-gst_uri_protocol_is_valid (const gchar *protocol)
+gst_uri_protocol_is_valid (const gchar * protocol)
 {
   gchar *endptr;
-  
+
   g_return_val_if_fail (protocol != NULL, FALSE);
-  
+
   gst_uri_protocol_check_internal (protocol, &endptr);
 
   return *endptr == '\0' && endptr != protocol;
 }
+
 /**
  * gst_uri_is_valid:
  * @protocol: string to check
@@ -119,18 +123,17 @@ gst_uri_protocol_is_valid (const gchar *protocol)
  * Returns: TRUE if the string is a valid URI
  */
 gboolean
-gst_uri_is_valid (const gchar *uri)
+gst_uri_is_valid (const gchar * uri)
 {
   gchar *endptr;
-  
+
   g_return_val_if_fail (uri != NULL, FALSE);
-  
+
   gst_uri_protocol_check_internal (uri, &endptr);
 
-  return (*endptr == ':' &&
-	  *(endptr + 1) == '/' &&
-	  *(endptr + 2) == '/');
+  return (*endptr == ':' && *(endptr + 1) == '/' && *(endptr + 2) == '/');
 }
+
 /**
  * gst_uri_get_protocol:
  * @uri: URI to get protocol from
@@ -141,10 +144,10 @@ gst_uri_is_valid (const gchar *uri)
  * Returns: The protocol for this URI.
  */
 gchar *
-gst_uri_get_protocol (const gchar *uri)
+gst_uri_get_protocol (const gchar * uri)
 {
   gchar *colon;
-  
+
   g_return_val_if_fail (uri != NULL, NULL);
   g_return_val_if_fail (gst_uri_is_valid (uri), NULL);
 
@@ -152,6 +155,7 @@ gst_uri_get_protocol (const gchar *uri)
 
   return g_strndup (uri, colon - uri);
 }
+
 /**
  * gst_uri_get_location:
  * @uri: URI to get the location from
@@ -163,10 +167,10 @@ gst_uri_get_protocol (const gchar *uri)
  * Returns: The location for this URI.
  */
 gchar *
-gst_uri_get_location (const gchar *uri)
+gst_uri_get_location (const gchar * uri)
 {
   gchar *colon;
-  
+
   g_return_val_if_fail (uri != NULL, NULL);
   g_return_val_if_fail (gst_uri_is_valid (uri), NULL);
 
@@ -174,6 +178,7 @@ gst_uri_get_location (const gchar *uri)
 
   return g_strdup (colon + 3);
 }
+
 /**
  * gst_uri_construct:
  * @protocol: protocol for URI
@@ -184,19 +189,20 @@ gst_uri_get_location (const gchar *uri)
  * Returns: a new string for this URI
  */
 gchar *
-gst_uri_construct (const gchar *protocol, const gchar *location)
+gst_uri_construct (const gchar * protocol, const gchar * location)
 {
   g_return_val_if_fail (gst_uri_protocol_is_valid (protocol), NULL);
   g_return_val_if_fail (location != NULL, NULL);
 
   return g_strdup_printf ("%s://%s", protocol, location);
 }
-typedef struct{
-  GstURIType	type;
-  gchar *	protocol;
+typedef struct
+{
+  GstURIType type;
+  gchar *protocol;
 } SearchEntry;
 static gboolean
-search_by_entry (GstPluginFeature *feature, gpointer search_entry)
+search_by_entry (GstPluginFeature * feature, gpointer search_entry)
 {
   gchar **protocols;
   GstElementFactory *factory;
@@ -208,7 +214,7 @@ search_by_entry (GstPluginFeature *feature, gpointer search_entry)
 
   if (gst_element_factory_get_uri_type (factory) != entry->type)
     return FALSE;
-  
+
   protocols = gst_element_factory_get_uri_protocols (factory);
   /* must be set when uri type is valid */
   g_assert (protocols);
@@ -219,14 +225,17 @@ search_by_entry (GstPluginFeature *feature, gpointer search_entry)
   }
   return FALSE;
 }
+
 static gint
 sort_by_rank (gconstpointer a, gconstpointer b)
 {
   GstPluginFeature *first = GST_PLUGIN_FEATURE (a);
   GstPluginFeature *second = GST_PLUGIN_FEATURE (b);
 
-  return gst_plugin_feature_get_rank (second) - gst_plugin_feature_get_rank (first);
+  return gst_plugin_feature_get_rank (second) -
+      gst_plugin_feature_get_rank (first);
 }
+
 /**
  * gst_element_make_from_uri:
  * @type: wether to create a source or a sink
@@ -238,7 +247,8 @@ sort_by_rank (gconstpointer a, gconstpointer b)
  * Returns: a new element or NULL if none could be created
  */
 GstElement *
-gst_element_make_from_uri (const GstURIType type, const gchar *uri, const gchar *elementname)
+gst_element_make_from_uri (const GstURIType type, const gchar * uri,
+    const gchar * elementname)
 {
   GList *possibilities, *walk;
   SearchEntry entry;
@@ -249,20 +259,23 @@ gst_element_make_from_uri (const GstURIType type, const gchar *uri, const gchar 
 
   entry.type = type;
   entry.protocol = gst_uri_get_protocol (uri);
-  possibilities = gst_registry_pool_feature_filter (search_by_entry, FALSE, &entry);
+  possibilities =
+      gst_registry_pool_feature_filter (search_by_entry, FALSE, &entry);
   g_free (entry.protocol);
 
   if (!possibilities) {
-    GST_DEBUG ("No %s for URI '%s'", type == GST_URI_SINK ? "sink" : "source", uri);
+    GST_DEBUG ("No %s for URI '%s'", type == GST_URI_SINK ? "sink" : "source",
+	uri);
     return NULL;
   }
-  
+
   possibilities = g_list_sort (possibilities, sort_by_rank);
   walk = possibilities;
   while (walk) {
-    if ((ret = gst_element_factory_create (GST_ELEMENT_FACTORY (walk->data), 
-		  elementname)) != NULL) {
+    if ((ret = gst_element_factory_create (GST_ELEMENT_FACTORY (walk->data),
+		elementname)) != NULL) {
       GstURIHandler *handler = GST_URI_HANDLER (ret);
+
       if (gst_uri_handler_set_uri (handler, uri))
 	break;
       g_object_unref (ret);
@@ -271,9 +284,11 @@ gst_element_make_from_uri (const GstURIType type, const gchar *uri, const gchar 
   }
   g_list_free (possibilities);
 
-  GST_LOG_OBJECT (ret, "created %s for URL '%s'", type == GST_URI_SINK ? "sink" : "source", uri);
+  GST_LOG_OBJECT (ret, "created %s for URL '%s'",
+      type == GST_URI_SINK ? "sink" : "source", uri);
   return ret;
 }
+
 /**
  * gst_uri_handler_get_uri_type:
  * @handler: Handler to query type of
@@ -283,11 +298,11 @@ gst_element_make_from_uri (const GstURIType type, const gchar *uri, const gchar 
  * Returns: the type of the URI handler
  */
 guint
-gst_uri_handler_get_uri_type (GstURIHandler *handler)
+gst_uri_handler_get_uri_type (GstURIHandler * handler)
 {
   GstURIHandlerInterface *iface;
   guint ret;
-  
+
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), GST_URI_UNKNOWN);
 
   iface = GST_URI_HANDLER_GET_INTERFACE (handler);
@@ -298,6 +313,7 @@ gst_uri_handler_get_uri_type (GstURIHandler *handler)
 
   return ret;
 }
+
 /**
  * gst_uri_handler_get_protocols:
  * @handler: Handler to get protocols for
@@ -308,11 +324,11 @@ gst_uri_handler_get_uri_type (GstURIHandler *handler)
  * Returns: the supported protocols
  */
 gchar **
-gst_uri_handler_get_protocols (GstURIHandler *handler)
+gst_uri_handler_get_protocols (GstURIHandler * handler)
 {
   GstURIHandlerInterface *iface;
   gchar **ret;
-  
+
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), NULL);
 
   iface = GST_URI_HANDLER_GET_INTERFACE (handler);
@@ -323,6 +339,7 @@ gst_uri_handler_get_protocols (GstURIHandler *handler)
 
   return ret;
 }
+
 /**
  * gst_uri_handler_get_uri:
  * @handler: handler to query URI of
@@ -332,11 +349,11 @@ gst_uri_handler_get_protocols (GstURIHandler *handler)
  * Returns: the URI
  */
 G_CONST_RETURN gchar *
-gst_uri_handler_get_uri (GstURIHandler *handler)
+gst_uri_handler_get_uri (GstURIHandler * handler)
 {
   GstURIHandlerInterface *iface;
   const gchar *ret;
-  
+
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), NULL);
 
   iface = GST_URI_HANDLER_GET_INTERFACE (handler);
@@ -345,9 +362,10 @@ gst_uri_handler_get_uri (GstURIHandler *handler)
   ret = iface->get_uri (handler);
   if (ret != NULL)
     g_return_val_if_fail (gst_uri_is_valid (ret), NULL);
-    
+
   return ret;
 }
+
 /**
  * gst_uri_handler_set_uri:
  * @handler: handler to set URI of
@@ -358,10 +376,10 @@ gst_uri_handler_get_uri (GstURIHandler *handler)
  * Returns: TRUE, if the URI was set successfully
  */
 gboolean
-gst_uri_handler_set_uri (GstURIHandler *handler, const gchar *uri)
+gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   GstURIHandlerInterface *iface;
-  
+
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), FALSE);
   g_return_val_if_fail (gst_uri_is_valid (uri), FALSE);
 
@@ -370,6 +388,7 @@ gst_uri_handler_set_uri (GstURIHandler *handler, const gchar *uri)
   g_return_val_if_fail (iface->set_uri != NULL, FALSE);
   return iface->set_uri (handler, uri);
 }
+
 /**
  * gst_uri_handler_new_uri:
  * @handler: handler with a new URI
@@ -379,7 +398,7 @@ gst_uri_handler_set_uri (GstURIHandler *handler, const gchar *uri)
  * This function should only be called by URI handlers themselves.
  */
 void
-gst_uri_handler_new_uri (GstURIHandler *handler, const gchar *uri)
+gst_uri_handler_new_uri (GstURIHandler * handler, const gchar * uri)
 {
   g_return_if_fail (GST_IS_URI_HANDLER (handler));
 

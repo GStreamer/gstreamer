@@ -1,13 +1,14 @@
 #include <gst/gst.h>
 
-int main(int argc,char *argv[]) 
+int
+main (int argc, char *argv[])
 {
   GstElement *bin, *element;
   gint i = 1000;
   gint step = 100;
-  
 
-  free (malloc(8)); /* -lefence */
+
+  free (malloc (8));		/* -lefence */
 
   gst_init (&argc, &argv);
 
@@ -15,15 +16,14 @@ int main(int argc,char *argv[])
 
   bin = gst_pipeline_new ("pipeline");
 
-  while (i--)
-  {
+  while (i--) {
     GstPad *pad;
 
     if (i % step == 0)
       fprintf (stderr, "\r%10d", i);
 
     element = gst_element_factory_make ("tee", "tee");
-    if (!element) 
+    if (!element)
       break;
 
     pad = gst_element_get_request_pad (element, "src%d");

@@ -23,11 +23,10 @@
 #include <glib.h>
 
 G_BEGIN_DECLS
+    typedef gboolean (*GstFilterFunc) (gpointer obj, gpointer user_data);
 
-typedef gboolean (*GstFilterFunc)	(gpointer obj, gpointer user_data);
-
-GList*	gst_filter_run 	(const GList *list, GstFilterFunc func, gboolean first, gpointer user_data);
+GList *gst_filter_run (const GList * list, GstFilterFunc func, gboolean first,
+    gpointer user_data);
 
 G_END_DECLS
-
 #endif /* __GST_FILTER_H_ */

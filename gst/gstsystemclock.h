@@ -27,37 +27,35 @@
 #include <gst/gstclock.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_SYSTEM_CLOCK 			(gst_system_clock_get_type ())
 #define GST_SYSTEM_CLOCK(obj) 			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SYSTEM_CLOCK, GstSystemClock))
 #define GST_IS_SYSTEM_CLOCK(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SYSTEM_CLOCK))
 #define GST_SYSTEM_CLOCK_CLASS(klass) 		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SYSTEM_CLOCK, GstSystemClockClass))
 #define GST_IS_SYSTEM_CLOCK_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SYSTEM_CLOCK))
 #define GST_SYSTEM_CLOCK_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_SYSTEM_CLOCK, GstSystemClockClass))
-
-
 typedef struct _GstSystemClock GstSystemClock;
 typedef struct _GstSystemClockClass GstSystemClockClass;
 
-struct _GstSystemClock {
-  GstClock 	 clock;
+struct _GstSystemClock
+{
+  GstClock clock;
 
-  GMutex *	 mutex;
-  GCond *	 cond;
-
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-struct _GstSystemClockClass {
-  GstClockClass  parent_class;
+  GMutex *mutex;
+  GCond *cond;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType 			gst_system_clock_get_type 	(void);
+struct _GstSystemClockClass
+{
+  GstClockClass parent_class;
 
-GstClock*		gst_system_clock_obtain		(void);
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+GType gst_system_clock_get_type (void);
+
+GstClock *gst_system_clock_obtain (void);
 
 G_END_DECLS
-
 #endif /* __GST_SYSTEM_CLOCK_H__ */

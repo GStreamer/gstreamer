@@ -1,13 +1,14 @@
 #include <gst/gst.h>
 
-int main (int argc, char *argv[]) 
+int
+main (int argc, char *argv[])
 {
   GstElement *pipeline, *thread, *queue, *src, *adder, *sink;
   GstPad *sinkpad;
 
   gst_init (&argc, &argv);
 
-  free (malloc (8)); /* -lefence */
+  free (malloc (8));		/* -lefence */
 
   pipeline = gst_pipeline_new ("pipeline");
 
@@ -15,11 +16,11 @@ int main (int argc, char *argv[])
   g_object_set (G_OBJECT (src), "sizetype", 2, NULL);
 
   thread = gst_thread_new ("thread");
-  
+
   queue = gst_element_factory_make ("queue", "queue");
   adder = gst_element_factory_make ("adder", "adder");
   sink = gst_element_factory_make ("fakesink", "sink");
-    
+
   gst_bin_add (GST_BIN (thread), queue);
   gst_bin_add (GST_BIN (thread), adder);
   gst_bin_add (GST_BIN (thread), sink);

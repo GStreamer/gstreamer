@@ -25,9 +25,7 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
-extern const char             *g_log_domain_gstreamer;
+G_BEGIN_DECLS extern const char *g_log_domain_gstreamer;
 
 #ifdef G_HAVE_ISO_VARARGS
 
@@ -51,5 +49,4 @@ extern const char             *g_log_domain_gstreamer;
 #endif
 
 G_END_DECLS
-
 #endif /* __GST_LOG_H__ */

@@ -8,12 +8,13 @@
 
 #include <gst/gst.h>
 void
-gst_clock_debug (GstClock *clock, GstElement *fakesink)
+gst_clock_debug (GstClock * clock, GstElement * fakesink)
 {
-  g_print ("Clock info: time %"G_GUINT64_FORMAT" - Element info: time %"G_GUINT64_FORMAT"\n",
-	   gst_clock_get_time (clock), gst_element_get_time (fakesink));
+  g_print ("Clock info: time %" G_GUINT64_FORMAT " - Element info: time %"
+      G_GUINT64_FORMAT "\n", gst_clock_get_time (clock),
+      gst_element_get_time (fakesink));
 }
-  
+
 int
 main (int argc, char *argv[])
 {
@@ -35,14 +36,14 @@ main (int argc, char *argv[])
   gst_bin_add_many (GST_BIN (pipeline), fakesink, fakesrc, NULL);
   gst_element_link (fakesrc, fakesink);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  
+
   gst_clock_debug (clock, fakesink);
   g_usleep (G_USEC_PER_SEC);
   gst_clock_debug (clock, fakesink);
 
   gst_element_wait (fakesink, 2 * GST_SECOND);
   gst_clock_debug (clock, fakesink);
-  
+
   gst_element_wait (fakesink, 5 * GST_SECOND);
   gst_clock_debug (clock, fakesink);
 

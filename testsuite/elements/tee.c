@@ -27,12 +27,10 @@ element_create (char *name, char *element)
   GstElement *el = NULL;
 
   el = (GstElement *) gst_element_factory_make (element, name);
-  if (el == NULL)
-  {
+  if (el == NULL) {
     fprintf (stderr, "Could not create element %s (%s) !\n", name, element);
     return NULL;
-  }
-  else
+  } else
     return el;
 }
 
@@ -42,6 +40,7 @@ main (int argc, char *argv[])
   GstElement *pipeline = NULL;
   GstElement *tee, *src, *sink1, *sink2;
   GstPad *tee_src1, *tee_src2;
+
 #if 0
   GstCaps *src_caps = NULL;
   GstCaps *sink_caps = NULL;
@@ -57,15 +56,20 @@ main (int argc, char *argv[])
   pipeline = gst_pipeline_new ("pipeline");
 
   g_print ("Connecting signals to pipeline\n");
-  g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), NULL);
-    
+  g_signal_connect (pipeline, "deep_notify",
+      G_CALLBACK (property_change_callback), NULL);
+
   g_print ("Creating elements\n");
-  if (!(tee = element_create ("tee", "tee"))) return 1;
-  if (!(src = element_create ("src", "fakesrc"))) return 1;
+  if (!(tee = element_create ("tee", "tee")))
+    return 1;
+  if (!(src = element_create ("src", "fakesrc")))
+    return 1;
   g_object_set (G_OBJECT (src), "sizetype", 2, NULL);
-  if (!(sink1 = element_create ("sink1", "fakesink"))) return 1;
-  if (!(sink2 = element_create ("sink2", "fakesink"))) return 1;
- 
+  if (!(sink1 = element_create ("sink1", "fakesink")))
+    return 1;
+  if (!(sink2 = element_create ("sink2", "fakesink")))
+    return 1;
+
   /* add */
   g_print ("Adding elements to bin\n");
   gst_bin_add (GST_BIN (pipeline), src);
@@ -74,8 +78,8 @@ main (int argc, char *argv[])
   /* link input part */
   g_print ("Linking input elements\n");
   gst_pad_link (gst_element_get_pad (src, "src"),
-                gst_element_get_pad (tee, "sink"));
-   
+      gst_element_get_pad (tee, "sink"));
+
   /* request one pad from tee */
   g_print ("Requesting first pad\n");
   tee_src1 = gst_element_get_request_pad (tee, "src%d");
@@ -93,7 +97,7 @@ main (int argc, char *argv[])
   tee_src2 = gst_element_get_request_pad (tee, "src%d");
   gst_bin_add (GST_BIN (pipeline), sink2);
   gst_pad_link (tee_src2, gst_element_get_pad (sink2, "sink"));
-  
+
   /* now we have two fakesinks linked, iterate */
   g_print ("Doing 1 iteration\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -118,30 +122,32 @@ main (int argc, char *argv[])
   sink_caps = gst_pad_get_caps (gst_element_get_pad (sink1, "sink"));
   if (sink_caps && gst_caps_is_fixed (sink_caps)) {
     structure = gst_caps_get_structure (sink_caps, 0);
-  }else {
+  } else {
     structure = NULL;
     g_print ("sink_caps is not fixed\n");
   }
   if (structure == NULL || !(gst_structure_has_field (structure, "rate"))) {
-    g_print ("Hm, rate has not been propagated to sink1.\n"); 
+    g_print ("Hm, rate has not been propagated to sink1.\n");
     return 1;
   } else {
     int rate;
+
     gst_structure_get_int (structure, "rate", &rate);
     g_print ("Rate of pad on sink1 : %d\n", rate);
   }
   sink_caps = gst_pad_get_caps (gst_element_get_pad (sink2, "sink"));
   structure = gst_caps_get_structure (sink_caps, 0);
-  if (structure != NULL && ! (gst_structure_has_field (structure, "rate"))) {
-    g_print ("Hm, rate has not been propagated to sink2.\n"); 
+  if (structure != NULL && !(gst_structure_has_field (structure, "rate"))) {
+    g_print ("Hm, rate has not been propagated to sink2.\n");
     return 1;
   } else {
     int rate;
+
     gst_structure_get_int (structure, "rate", &rate);
     g_print ("Rate of pad on sink2 : %d\n", rate);
   }
 #endif
-   
+
   /* remove the first one, iterate */
   g_print ("Removing first sink\n");
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
@@ -158,7 +164,7 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
   /* in 0.3.2 the next statement gives an assert error */
   tee_src1 = gst_element_get_request_pad (tee, "src%d");
-  
+
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   g_print ("Done !\n");

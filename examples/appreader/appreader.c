@@ -20,21 +20,21 @@
 #include <gst/gst.h>
 
 static void
-fill_queue (GstElement *queue, gint level, GstBin *pipeline)
+fill_queue (GstElement * queue, gint level, GstBin * pipeline)
 {
   /* this needs to iterate till something is pushed 
    * in the queue */
   gst_bin_iterate (pipeline);
 }
 
-gint 
-main (gint argc, gchar *argv[])
+gint
+main (gint argc, gchar * argv[])
 {
   GstElement *queue, *src, *pipeline;
   GstBuffer *buffer;
   gboolean done = FALSE;
   GstPad *pad;
-	  
+
   gst_init (&argc, &argv);
 
   queue = gst_element_factory_make ("queue", "queue");
@@ -50,19 +50,19 @@ main (gint argc, gchar *argv[])
   gst_element_link_many (src, queue, NULL);
 
   pad = gst_element_get_pad (queue, "src");
-  g_signal_connect (G_OBJECT (queue), "low_watermark", G_CALLBACK (fill_queue), pipeline);
+  g_signal_connect (G_OBJECT (queue), "low_watermark", G_CALLBACK (fill_queue),
+      pipeline);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  do { 
+  do {
     /* get buffer into the app */
     buffer = GST_RPAD_GETFUNC (pad) (pad);
 
     /* just exit on any event */
     if (GST_IS_EVENT (buffer)) {
       done = TRUE;
-    }
-    else {
+    } else {
       gst_util_dump_mem (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
     }
     gst_data_unref (GST_DATA (buffer));
@@ -71,6 +71,6 @@ main (gint argc, gchar *argv[])
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (GST_OBJECT (pipeline));
-  
+
   return 0;
 }

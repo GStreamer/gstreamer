@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
- 
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -26,46 +26,49 @@
 GST_DEBUG_CATEGORY (cat);
 GST_DEBUG_CATEGORY_STATIC (cat_static);
 
-static const gchar* lines[] = {
+static const gchar *lines[] = {
   "--gst-debug-disable",
   "--gst-debug-no-color",
   "--gst-debug-level=4",
   "--gst-debug=cat:4,cat_*:3",
-  "--gst-debug-level=4 --gst-debug=cat_*:5"  
+  "--gst-debug-level=4 --gst-debug=cat_*:5"
 };
 
 static void
-debug_not_reached (GstDebugCategory *category, GstDebugLevel level, const gchar *file,
-                   const gchar *function, gint line, GObject *object, GstDebugMessage *message,
-		   gpointer thread)
+debug_not_reached (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line, GObject * object,
+    GstDebugMessage * message, gpointer thread)
 {
   g_assert_not_reached ();
 }
-gint 
-main (gint argc, gchar *argv[]) 
+
+gint
+main (gint argc, gchar * argv[])
 {
   if (argc == 1) {
     /* this is the main run that calls the others */
     gint i, runs, exit;
     gchar *command;
-	  
+
     unsetenv ("GST_DEBUG");
     gst_init (&argc, &argv);
     runs = G_N_ELEMENTS (lines);
     for (i = 0; i < runs; i++) {
       command = g_strdup_printf ("%s %s %d", argv[0], lines[i], i);
       g_print ("running \"%s\"\n", command);
-      g_assert (g_spawn_command_line_sync (command, NULL, NULL, &exit, NULL) == TRUE);
+      g_assert (g_spawn_command_line_sync (command, NULL, NULL, &exit,
+	      NULL) == TRUE);
       g_assert (exit == 0);
       g_print ("\"%s\" worked as expected.\n", command);
       g_free (command);
     }
-     
+
     return 0;
   } else {
     gst_init (&argc, &argv);
     if (argc != 2) {
-      g_print ("something funny happened to the command line arguments, aborting.\n");
+      g_print
+	  ("something funny happened to the command line arguments, aborting.\n");
       return 1;
     }
     gst_debug_remove_log_function (gst_debug_log_default);
@@ -78,7 +81,7 @@ main (gint argc, gchar *argv[])
 	GST_ERROR ("This will not be seen");
 	return 0;
       case '1':
-	return gst_debug_is_colored () ? 1 : 0;
+	return gst_debug_is_colored ()? 1 : 0;
       case '2':
 	g_assert (gst_debug_get_default_threshold () == 4);
 	g_assert (gst_debug_category_get_threshold (cat) == 4);
@@ -98,5 +101,5 @@ main (gint argc, gchar *argv[])
 	return -1;
     }
   }
-  g_assert_not_reached ();  
+  g_assert_not_reached ();
 }

@@ -14,20 +14,6 @@ GstTag
 
 </para>
 
-<!-- ##### ENUM GstTagMergeMode ##### -->
-<para>
-
-</para>
-
-@GST_TAG_MERGE_UNDEFINED: 
-@GST_TAG_MERGE_REPLACE_ALL: 
-@GST_TAG_MERGE_REPLACE: 
-@GST_TAG_MERGE_APPEND: 
-@GST_TAG_MERGE_PREPEND: 
-@GST_TAG_MERGE_KEEP: 
-@GST_TAG_MERGE_KEEP_ALL: 
-@GST_TAG_MERGE_COUNT: 
-
 <!-- ##### ENUM GstTagFlag ##### -->
 <para>
 

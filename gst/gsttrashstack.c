@@ -21,4 +21,3 @@
 #define __GST_TRASH_STACK_C__
 
 #include "gsttrashstack.h"
-

@@ -4,34 +4,37 @@
 gboolean playing;
 
 static void
-object_saved (GstObject *object, xmlNodePtr parent, gpointer data)
+object_saved (GstObject * object, xmlNodePtr parent, gpointer data)
 {
   xmlNodePtr child;
   xmlNsPtr ns;
-  
+
   /* first see if the namespace is already known */
-  ns = xmlSearchNsByHref (parent->doc, parent, "http://gstreamer.net/gst-test/1.0/");
+  ns = xmlSearchNsByHref (parent->doc, parent,
+      "http://gstreamer.net/gst-test/1.0/");
   if (ns == NULL) {
     xmlNodePtr root = xmlDocGetRootElement (parent->doc);
+
     /* add namespace to root node */
     ns = xmlNewNs (root, "http://gstreamer.net/gst-test/1.0/", "test");
   }
-  child = xmlNewChild(parent, ns, "comment", NULL);
-  
-  xmlNewChild(child, NULL, "text", (gchar *)data);
+  child = xmlNewChild (parent, ns, "comment", NULL);
+
+  xmlNewChild (child, NULL, "text", (gchar *) data);
 }
 
-int main(int argc,char *argv[])
+int
+main (int argc, char *argv[])
 {
   GstElement *filesrc, *osssink, *queue, *queue2, *decode;
   GstElement *pipeline;
   GstElement *thread, *thread2;
 
-  gst_init(&argc,&argv);
+  gst_init (&argc, &argv);
 
   if (argc != 2) {
-    g_print("usage: %s <filename>\n", argv[0]);
-    exit(-1);
+    g_print ("usage: %s <filename>\n", argv[0]);
+    exit (-1);
   }
 
   /* create new threads to hold the elements */
@@ -42,12 +45,10 @@ int main(int argc,char *argv[])
 
   /* these signals will allow us to save custom tags with the gst xml output */
   g_signal_connect (G_OBJECT (thread), "object_saved",
-		    G_CALLBACK (object_saved),
-		    g_strdup ("decoder thread"));
+      G_CALLBACK (object_saved), g_strdup ("decoder thread"));
   g_signal_connect (G_OBJECT (thread2), "object_saved",
-		    G_CALLBACK (object_saved),
-		    g_strdup ("render thread"));
-  
+      G_CALLBACK (object_saved), g_strdup ("render thread"));
+
   /* create a new bin to hold the elements */
   pipeline = gst_pipeline_new ("pipeline");
   g_assert (pipeline != NULL);
@@ -89,4 +90,3 @@ int main(int argc,char *argv[])
 
   exit (0);
 }
-

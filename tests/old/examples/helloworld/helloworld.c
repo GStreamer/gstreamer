@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <gst/gst.h>
 
-int main (int argc, char *argv[]) 
+int
+main (int argc, char *argv[])
 {
   GstElement *bin, *filesrc, *decoder, *osssink;
 
@@ -36,7 +37,7 @@ int main (int argc, char *argv[])
 
   /* link the elements */
   gst_element_link_many (filesrc, decoder, osssink, NULL);
-  
+
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);
 
@@ -47,4 +48,3 @@ int main (int argc, char *argv[])
 
   exit (0);
 }
-

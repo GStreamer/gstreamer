@@ -6,20 +6,13 @@
 #include <gst/gst.h>
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "testplugin2",
-  "another testplugin for testing",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-);
-
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "testplugin2",
+    "another testplugin for testing",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN);

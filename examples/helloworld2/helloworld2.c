@@ -1,7 +1,8 @@
 #include <gst/gst.h>
 
 static void
-gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
+gst_play_have_type (GstElement * typefind, GstCaps * caps,
+    GstElement * pipeline)
 {
   GstElement *osssink;
   GstElement *new_element;
@@ -21,18 +22,15 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   /* unlink_pads the typefind from the pipeline and remove it */
   gst_element_unlink_pads (cache, "src", typefind, "sink");
   gst_bin_remove (GST_BIN (autobin), typefind);
-      
+
   /* and an audio sink */
-  osssink = gst_element_factory_make("osssink", "play_audio");
-  g_assert(osssink != NULL);
+  osssink = gst_element_factory_make ("osssink", "play_audio");
+  g_assert (osssink != NULL);
 
   autoplug = gst_autoplug_factory_make ("staticrender");
   g_assert (autoplug != NULL);
 
-  new_element = gst_autoplug_to_renderers (autoplug,
-           caps,
-           osssink,
-           NULL);
+  new_element = gst_autoplug_to_renderers (autoplug, caps, osssink, NULL);
 
   if (!new_element) {
     g_print ("could not autoplug, no suitable codecs found...\n");
@@ -51,7 +49,7 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
 }
 
 static void
-gst_play_cache_empty (GstElement *element, GstElement *pipeline)
+gst_play_cache_empty (GstElement * element, GstElement * pipeline)
 {
   GstElement *autobin;
   GstElement *filesrc;
@@ -77,8 +75,8 @@ gst_play_cache_empty (GstElement *element, GstElement *pipeline)
   fprintf (stderr, "done with cache_empty\n");
 }
 
-int 
-main (int argc, char *argv[]) 
+int
+main (int argc, char *argv[])
 {
   GstElement *filesrc;
   GstElement *pipeline;
@@ -105,23 +103,24 @@ main (int argc, char *argv[])
 
   autobin = gst_bin_new ("autobin");
   cache = gst_element_factory_make ("autoplugcache", "cache");
-  g_signal_connect (G_OBJECT (cache), "cache_empty", 
-		     G_CALLBACK (gst_play_cache_empty), pipeline);
+  g_signal_connect (G_OBJECT (cache), "cache_empty",
+      G_CALLBACK (gst_play_cache_empty), pipeline);
 
   typefind = gst_element_factory_make ("typefind", "typefind");
-  g_signal_connect (G_OBJECT (typefind), "have_type", 
-		     G_CALLBACK (gst_play_have_type), pipeline);
+  g_signal_connect (G_OBJECT (typefind), "have_type",
+      G_CALLBACK (gst_play_have_type), pipeline);
   gst_bin_add (GST_BIN (autobin), cache);
   gst_bin_add (GST_BIN (autobin), typefind);
 
   gst_element_link_pads (cache, "src", typefind, "sink");
-  gst_element_add_ghost_pad (autobin, gst_element_get_pad (cache, "sink"), "sink");
+  gst_element_add_ghost_pad (autobin, gst_element_get_pad (cache, "sink"),
+      "sink");
 
-  gst_bin_add (GST_BIN( pipeline), autobin);
+  gst_bin_add (GST_BIN (pipeline), autobin);
   gst_element_link_pads (filesrc, "src", autobin, "sink");
 
   /* start playing */
-  gst_element_set_state( GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
   while (gst_bin_iterate (GST_BIN (pipeline)));
 
@@ -130,6 +129,5 @@ main (int argc, char *argv[])
 
   gst_object_unref (GST_OBJECT (pipeline));
 
-  exit(0);
+  exit (0);
 }
-

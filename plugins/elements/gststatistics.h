@@ -27,8 +27,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
-
 #define GST_TYPE_STATISTICS \
   (gst_statistics_get_type())
 #define GST_STATISTICS(obj) \
@@ -39,19 +37,20 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_STATISTICS))
 #define GST_IS_STATISTICS_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_STATISTICS))
-
 typedef struct _GstStatistics GstStatistics;
 typedef struct _GstStatisticsClass GstStatisticsClass;
 
 typedef struct _stats stats;
 
-struct _stats {
+struct _stats
+{
   gint64 buffers;
   gint64 bytes;
   gint64 events;
 };
 
-struct _GstStatistics {
+struct _GstStatistics
+{
   GstElement element;
 
   GstPad *sinkpad;
@@ -65,20 +64,20 @@ struct _GstStatistics {
   stats update_count;
   stats update_freq;
 
-  gboolean update_on_eos; 
+  gboolean update_on_eos;
   gboolean update;
   gboolean silent;
 };
 
-struct _GstStatisticsClass {
+struct _GstStatisticsClass
+{
   GstElementClass parent_class;
 
   /* signals */
-  void (*update) (GstElement *element);
+  void (*update) (GstElement * element);
 };
 
-GType gst_statistics_get_type(void);
+GType gst_statistics_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_STATISTICS_H__ */

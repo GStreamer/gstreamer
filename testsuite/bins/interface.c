@@ -21,13 +21,13 @@
 
 /* tests if gst_bin_get_(all_)by_interface works */
 
-gint 
-main (gint argc, gchar *argv[])
+gint
+main (gint argc, gchar * argv[])
 {
   GstBin *bin, *bin2;
   GList *list;
   GstElement *filesrc;
-  
+
   gst_init (&argc, &argv);
 
   bin = GST_BIN (gst_bin_new (NULL));
@@ -37,18 +37,17 @@ main (gint argc, gchar *argv[])
   g_assert (filesrc);
   g_assert (GST_IS_URI_HANDLER (filesrc));
   gst_bin_add (bin, filesrc);
-  
+
   g_assert (gst_bin_get_by_interface (bin, GST_TYPE_URI_HANDLER) == filesrc);
   list = gst_bin_get_all_by_interface (bin, GST_TYPE_URI_HANDLER);
   g_assert (g_list_length (list) == 1);
   g_assert (list->data == (gpointer) filesrc);
   g_list_free (list);
-  
-  gst_bin_add_many (bin, 
+
+  gst_bin_add_many (bin,
       gst_element_factory_make ("identity", NULL),
-      gst_element_factory_make ("identity", NULL), 
       gst_element_factory_make ("identity", NULL),
-      NULL);
+      gst_element_factory_make ("identity", NULL), NULL);
   g_assert (gst_bin_get_by_interface (bin, GST_TYPE_URI_HANDLER) == filesrc);
   list = gst_bin_get_all_by_interface (bin, GST_TYPE_URI_HANDLER);
   g_assert (g_list_length (list) == 1);
@@ -61,9 +60,7 @@ main (gint argc, gchar *argv[])
   gst_bin_add_many (bin,
       gst_element_factory_make ("identity", NULL),
       gst_element_factory_make ("identity", NULL),
-      GST_ELEMENT (bin2),
-      gst_element_factory_make ("identity", NULL),
-      NULL);
+      GST_ELEMENT (bin2), gst_element_factory_make ("identity", NULL), NULL);
   g_assert (gst_bin_get_by_interface (bin, GST_TYPE_URI_HANDLER) == filesrc);
   list = gst_bin_get_all_by_interface (bin, GST_TYPE_URI_HANDLER);
   g_assert (g_list_length (list) == 1);

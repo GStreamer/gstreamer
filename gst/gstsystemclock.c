@@ -29,18 +29,20 @@
 
 static GstClock *_the_system_clock = NULL;
 
-static void			gst_system_clock_class_init	(GstSystemClockClass *klass);
-static void			gst_system_clock_init		(GstSystemClock *clock);
-static void 			gst_system_clock_dispose 	(GObject *object);
+static void gst_system_clock_class_init (GstSystemClockClass * klass);
+static void gst_system_clock_init (GstSystemClock * clock);
+static void gst_system_clock_dispose (GObject * object);
 
-static GstClockTime		gst_system_clock_get_internal_time	(GstClock *clock);
-static guint64			gst_system_clock_get_resolution (GstClock *clock);
-static GstClockEntryStatus	gst_system_clock_wait		(GstClock *clock, GstClockEntry *entry);
-static void 			gst_system_clock_unlock 	(GstClock *clock, GstClockEntry *entry);
+static GstClockTime gst_system_clock_get_internal_time (GstClock * clock);
+static guint64 gst_system_clock_get_resolution (GstClock * clock);
+static GstClockEntryStatus gst_system_clock_wait (GstClock * clock,
+    GstClockEntry * entry);
+static void gst_system_clock_unlock (GstClock * clock, GstClockEntry * entry);
 
 static GStaticMutex _gst_sysclock_mutex = G_STATIC_MUTEX_INIT;
 
 static GstClockClass *parent_class = NULL;
+
 /* static guint gst_system_clock_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
@@ -61,42 +63,42 @@ gst_system_clock_get_type (void)
       (GInstanceInitFunc) gst_system_clock_init,
       NULL
     };
-    clock_type = g_type_register_static (GST_TYPE_CLOCK, "GstSystemClock", 
-		    			 &clock_info, 0);
+    clock_type = g_type_register_static (GST_TYPE_CLOCK, "GstSystemClock",
+	&clock_info, 0);
   }
   return clock_type;
 }
 
 static void
-gst_system_clock_class_init (GstSystemClockClass *klass)
+gst_system_clock_class_init (GstSystemClockClass * klass)
 {
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
   GstClockClass *gstclock_class;
 
-  gobject_class = (GObjectClass*) klass;
-  gstobject_class = (GstObjectClass*) klass;
-  gstclock_class = (GstClockClass*) klass;
+  gobject_class = (GObjectClass *) klass;
+  gstobject_class = (GstObjectClass *) klass;
+  gstclock_class = (GstClockClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_CLOCK);
 
-  gobject_class->dispose	 	= gst_system_clock_dispose;
+  gobject_class->dispose = gst_system_clock_dispose;
 
-  gstclock_class->get_internal_time 	= gst_system_clock_get_internal_time;
-  gstclock_class->get_resolution 	= gst_system_clock_get_resolution;
-  gstclock_class->wait		 	= gst_system_clock_wait;
-  gstclock_class->unlock		= gst_system_clock_unlock;
+  gstclock_class->get_internal_time = gst_system_clock_get_internal_time;
+  gstclock_class->get_resolution = gst_system_clock_get_resolution;
+  gstclock_class->wait = gst_system_clock_wait;
+  gstclock_class->unlock = gst_system_clock_unlock;
 }
 
 static void
-gst_system_clock_init (GstSystemClock *clock)
+gst_system_clock_init (GstSystemClock * clock)
 {
-  clock->mutex = g_mutex_new();
+  clock->mutex = g_mutex_new ();
   clock->cond = g_cond_new ();
 }
 
 static void
-gst_system_clock_dispose (GObject *object)
+gst_system_clock_dispose (GObject * object)
 {
   GstClock *clock = (GstClock *) object;
   GstSystemClock *sysclock = (GstSystemClock *) object;
@@ -122,7 +124,7 @@ gst_system_clock_dispose (GObject *object)
  *
  * Returns: the default clock.
  */
-GstClock*
+GstClock *
 gst_system_clock_obtain (void)
 {
   GstClock *clock = _the_system_clock;
@@ -134,9 +136,9 @@ gst_system_clock_obtain (void)
       g_static_mutex_unlock (&_gst_sysclock_mutex);
       goto have_clock;
     }
-      
+
     clock = GST_CLOCK (g_object_new (GST_TYPE_SYSTEM_CLOCK, NULL));
-    
+
     gst_object_set_name (GST_OBJECT (clock), "GstSystemClock");
 
     gst_object_ref (GST_OBJECT (clock));
@@ -152,23 +154,23 @@ have_clock:
 }
 
 static GstClockTime
-gst_system_clock_get_internal_time (GstClock *clock)
+gst_system_clock_get_internal_time (GstClock * clock)
 {
   GTimeVal timeval;
 
   g_get_current_time (&timeval);
-  
+
   return GST_TIMEVAL_TO_TIME (timeval);
 }
 
 static guint64
-gst_system_clock_get_resolution (GstClock *clock)
+gst_system_clock_get_resolution (GstClock * clock)
 {
   return 1 * GST_USECOND;
 }
 
 static GstClockEntryStatus
-gst_system_clock_wait (GstClock *clock, GstClockEntry *entry)
+gst_system_clock_wait (GstClock * clock, GstClockEntry * entry)
 {
   GstClockEntryStatus res;
   GstClockTime current, target;
@@ -183,15 +185,14 @@ gst_system_clock_wait (GstClock *clock, GstClockEntry *entry)
 	"s (max allowed is %" G_GINT64_FORMAT "s", -diff, clock->max_diff);
     return GST_CLOCK_ENTRY_EARLY;
   }
-  
+
   target = gst_system_clock_get_internal_time (clock) + diff;
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "real_target %" G_GUINT64_FORMAT
-		            " target %" G_GUINT64_FORMAT
-			    " now %" G_GUINT64_FORMAT,
-                            target, GST_CLOCK_ENTRY_TIME (entry), current);
+      " target %" G_GUINT64_FORMAT
+      " now %" G_GUINT64_FORMAT, target, GST_CLOCK_ENTRY_TIME (entry), current);
 
-  if (((gint64)target) > 0) {
+  if (((gint64) target) > 0) {
     GTimeVal tv;
 
     GST_TIME_TO_TIMEVAL (target, tv);
@@ -199,15 +200,14 @@ gst_system_clock_wait (GstClock *clock, GstClockEntry *entry)
     g_cond_timed_wait (sysclock->cond, sysclock->mutex, &tv);
     g_mutex_unlock (sysclock->mutex);
     res = entry->status;
-  }
-  else {
+  } else {
     res = GST_CLOCK_ENTRY_EARLY;
   }
   return res;
 }
 
 static void
-gst_system_clock_unlock (GstClock *clock, GstClockEntry *entry)
+gst_system_clock_unlock (GstClock * clock, GstClockEntry * entry)
 {
   GstSystemClock *sysclock = GST_SYSTEM_CLOCK (clock);
 

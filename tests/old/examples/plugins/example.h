@@ -24,7 +24,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 /* This is the definition of the element's object structure. */
 typedef struct _GstExample GstExample;
 
@@ -33,11 +32,12 @@ typedef struct _GstExample GstExample;
  * the beginning of the object.  This allows the element to be cast to
  * an Element or even an Object.
  */
-struct _GstExample {
+struct _GstExample
+{
   GstElement element;
 
   /* We need to keep track of our pads, so we do so here. */
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad, *srcpad;
 
   /* We'll use this to decide whether to do anything to the data we get. */
   gboolean active;
@@ -49,11 +49,12 @@ struct _GstExample {
  * structure. */
 typedef struct _GstExampleClass GstExampleClass;
 
-struct _GstExampleClass {
+struct _GstExampleClass
+{
   GstElementClass parent_class;
 
   /* signals */
-  void (*asdf) (GstElement *element, GstExample *example);
+  void (*asdf) (GstElement * element, GstExample * example);
 };
 
 /* Five standard preprocessing macros are used in the Gtk+ object system.
@@ -80,8 +81,7 @@ struct _GstExampleClass {
 /* This is the only prototype needed, because it is used in the above
  * GST_TYPE_EXAMPLE macro.
  */
-GType gst_example_get_type(void);
+GType gst_example_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_EXAMPLE_H__ */

@@ -8,12 +8,12 @@
 
 #include <gst/gst.h>
 void
-gst_clock_debug (GstClock *clock)
+gst_clock_debug (GstClock * clock)
 {
-  g_print ("Clock info: time %"G_GUINT64_FORMAT"\n",
-	   gst_clock_get_time (clock));
+  g_print ("Clock info: time %" G_GUINT64_FORMAT "\n",
+      gst_clock_get_time (clock));
 }
-  
+
 int
 main (int argc, char *argv[])
 {
@@ -22,24 +22,20 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 
-  if ((src = gst_element_factory_make ("fakesrc", "source")) == NULL)
-  {
+  if ((src = gst_element_factory_make ("fakesrc", "source")) == NULL) {
     g_print ("Could not create a fakesrc element !\n");
     return 1;
   }
-  if ((id = gst_element_factory_make ("identity", "filter")) == NULL)
-  {
+  if ((id = gst_element_factory_make ("identity", "filter")) == NULL) {
     g_print ("Could not create a identity element !\n");
     return 1;
   }
-  if ((sink = gst_element_factory_make ("fakesink", "sink")) == NULL)
-  {
+  if ((sink = gst_element_factory_make ("fakesink", "sink")) == NULL) {
     g_print ("Could not create a fakesink element !\n");
     return 1;
   }
 
-  if ((pipeline = gst_pipeline_new ("pipeline")) == NULL)
-  {
+  if ((pipeline = gst_pipeline_new ("pipeline")) == NULL) {
     g_print ("Could not create a pipeline element !\n");
     return 1;
   }

@@ -25,51 +25,50 @@
 #include "dparam.h"
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_DPSMOOTH			(gst_dpsmooth_get_type ())
 #define GST_DPSMOOTH(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DPSMOOTH,GstDParamSmooth))
 #define GST_DPSMOOTH_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DPSMOOTH,GstDParamSmooth))
 #define GST_IS_DPSMOOTH(obj)			(G_TYPE_CHECK_INSTANCE_TYPE	((obj), GST_TYPE_DPSMOOTH))
 #define GST_IS_DPSMOOTH_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DPSMOOTH))
-
 typedef struct _GstDParamSmoothClass GstDParamSmoothClass;
 typedef struct _GstDParamSmooth GstDParamSmooth;
 
-struct _GstDParamSmooth {
-	GstDParam		dparam;
+struct _GstDParamSmooth
+{
+  GstDParam dparam;
 
-	gint64 start_interp;
-	gint64 end_interp;
-	gint64 duration_interp;
+  gint64 start_interp;
+  gint64 end_interp;
+  gint64 duration_interp;
 
-	gfloat start_float;
-	gfloat diff_float;
-	gfloat current_float;
-	gdouble start_double;
-	gdouble diff_double;
-	gdouble current_double;
+  gfloat start_float;
+  gfloat diff_float;
+  gfloat current_float;
+  gdouble start_double;
+  gdouble diff_double;
+  gdouble current_double;
 
-	gint64 update_period;
-	gint64 slope_time;
-	gfloat slope_delta_float;
-	gdouble slope_delta_double;
+  gint64 update_period;
+  gint64 slope_time;
+  gfloat slope_delta_float;
+  gdouble slope_delta_double;
 
-	gboolean need_interp_times;
+  gboolean need_interp_times;
 
-        gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
-struct _GstDParamSmoothClass {
-	GstDParamClass parent_class;
+struct _GstDParamSmoothClass
+{
+  GstDParamClass parent_class;
 
-	/* signal callbacks */
-        gpointer _gst_reserved[GST_PADDING];
+  /* signal callbacks */
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_dpsmooth_get_type (void);
 
-GstDParam* gst_dpsmooth_new (GType type);
+GstDParam *gst_dpsmooth_new (GType type);
 
 G_END_DECLS
-
 #endif /* __GST_DPSMOOTH_H__ */

@@ -59,11 +59,11 @@
 #define COTHREAD_MAXTHREADS 16
 #define COTHREAD_STACKSIZE (STACK_SIZE/COTHREAD_MAXTHREADS)
 
-static void 	cothread_destroy 	(cothread_state *cothread);
+static void cothread_destroy (cothread_state * cothread);
 
 struct _cothread_context
 {
-  cothread_state *cothreads[COTHREAD_MAXTHREADS]; /* array of cothread states */
+  cothread_state *cothreads[COTHREAD_MAXTHREADS];	/* array of cothread states */
   int ncothreads;
   int current;
   unsigned long stack_top;
@@ -92,10 +92,10 @@ cothread_get_current_context (void)
   cothread_context *ctx;
 
   ctx = g_static_private_get (&_cothread_ctx_key);
-  g_assert(ctx);
+  g_assert (ctx);
 
 #ifdef COTHREAD_PARANOID
-  g_assert (ctx->thread == g_thread_self());
+  g_assert (ctx->thread == g_thread_self ());
 #endif
 
   return ctx;
@@ -112,15 +112,15 @@ cothread_context *
 cothread_context_init (void)
 {
   char __csf;
-  void *current_stack_frame = &__csf;  /* Get pointer inside current stack frame */
+  void *current_stack_frame = &__csf;	/* Get pointer inside current stack frame */
   cothread_context *ctx;
 
   /* if there already is a cotread context for this thread,
    * just return it */
   ctx = g_static_private_get (&_cothread_ctx_key);
   if (ctx) {
-    GST_CAT_INFO (GST_CAT_COTHREADS, 
-	      "returning private _cothread_ctx_key %p", ctx);
+    GST_CAT_INFO (GST_CAT_COTHREADS,
+	"returning private _cothread_ctx_key %p", ctx);
     return ctx;
   }
 
@@ -133,16 +133,17 @@ cothread_context_init (void)
   ctx->ncothreads = 1;
   ctx->current = 0;
   ctx->data = g_hash_table_new (g_str_hash, g_str_equal);
-  ctx->thread = g_thread_self();
+  ctx->thread = g_thread_self ();
 
   GST_CAT_INFO (GST_CAT_COTHREADS, "initializing cothreads");
 
   /* set this thread's context pointer */
-  GST_CAT_INFO (GST_CAT_COTHREADS, "setting private _cothread_ctx_key to %p in thread %p",
-	    ctx,g_thread_self());
+  GST_CAT_INFO (GST_CAT_COTHREADS,
+      "setting private _cothread_ctx_key to %p in thread %p", ctx,
+      g_thread_self ());
   g_static_private_set (&_cothread_ctx_key, ctx, NULL);
 
-  g_assert(ctx == cothread_get_current_context());
+  g_assert (ctx == cothread_get_current_context ());
 
   /* clear the cothread data */
   memset (ctx->cothreads, 0, sizeof (ctx->cothreads));
@@ -170,8 +171,8 @@ cothread_context_init (void)
   ctx->cothreads[0]->flags = COTHREAD_STARTED;
   ctx->cothreads[0]->sp = (void *) current_stack_frame;
 
-  GST_CAT_INFO (GST_CAT_COTHREADS, "0th cothread is %p at sp:%p", 
-            ctx->cothreads[0], ctx->cothreads[0]->sp);
+  GST_CAT_INFO (GST_CAT_COTHREADS, "0th cothread is %p at sp:%p",
+      ctx->cothreads[0], ctx->cothreads[0]->sp);
 
   return ctx;
 }
@@ -183,12 +184,12 @@ cothread_context_init (void)
  * Free the cothread context.
  */
 void
-cothread_context_free (cothread_context *ctx)
+cothread_context_free (cothread_context * ctx)
 {
   gint i;
 
   g_return_if_fail (ctx != NULL);
-  g_assert (ctx->thread == g_thread_self());
+  g_assert (ctx->thread == g_thread_self ());
   g_assert (ctx->current == 0);
 
   GST_CAT_INFO (GST_CAT_COTHREADS, "free cothread context");
@@ -199,13 +200,14 @@ cothread_context_free (cothread_context *ctx)
     }
   }
   if (ctx->cothreads[0]) {
-    g_free(ctx->cothreads[0]);
+    g_free (ctx->cothreads[0]);
     ctx->cothreads[0] = NULL;
   }
   g_hash_table_destroy (ctx->data);
   /* make sure we free the private key for cothread context */
-  GST_CAT_INFO (GST_CAT_COTHREADS, "setting private _cothread_ctx_key to NULL in thread %p",
-	    g_thread_self());
+  GST_CAT_INFO (GST_CAT_COTHREADS,
+      "setting private _cothread_ctx_key to NULL in thread %p",
+      g_thread_self ());
   g_static_private_set (&_cothread_ctx_key, NULL, NULL);
   g_free (ctx);
 }
@@ -218,8 +220,8 @@ cothread_context_free (cothread_context *ctx)
  *
  * Returns: the new cothread state or NULL on error
  */
-cothread_state*
-cothread_create (cothread_context *ctx)
+cothread_state *
+cothread_create (cothread_context * ctx)
 {
   cothread_state *cothread;
   void *mmaped = 0;
@@ -228,8 +230,8 @@ cothread_create (cothread_context *ctx)
 
   g_return_val_if_fail (ctx != NULL, NULL);
 
-  GST_CAT_DEBUG (GST_CAT_COTHREADS, "manager sef %p, cothread self %p", 
-		    ctx->thread, g_thread_self());
+  GST_CAT_DEBUG (GST_CAT_COTHREADS, "manager sef %p, cothread self %p",
+      ctx->thread, g_thread_self ());
 
   if (ctx->ncothreads == COTHREAD_MAXTHREADS) {
     /* this is pretty fatal */
@@ -241,7 +243,7 @@ cothread_create (cothread_context *ctx)
     if (ctx->cothreads[slot] == NULL)
       break;
     else if (ctx->cothreads[slot]->flags & COTHREAD_DESTROYED &&
-		    slot != ctx->current) {
+	slot != ctx->current) {
       cothread_destroy (ctx->cothreads[slot]);
       break;
     }
@@ -251,66 +253,69 @@ cothread_create (cothread_context *ctx)
 
   /* cothread stack space of the thread is mapped in reverse, with cothread 0
    * stack space at the top */
-  cothread = (cothread_state *) (ctx->stack_top - (slot + 1) * COTHREAD_STACKSIZE);
+  cothread =
+      (cothread_state *) (ctx->stack_top - (slot + 1) * COTHREAD_STACKSIZE);
   GST_CAT_DEBUG (GST_CAT_COTHREADS, "cothread pointer is %p", cothread);
 
 #if 0
   /* This tests to see whether or not we can grow down the stack */
   {
     unsigned long ptr;
-    for(ptr=ctx->stack_top - 4096; ptr > (unsigned long)cothread; ptr -= 4096){
+
+    for (ptr = ctx->stack_top - 4096; ptr > (unsigned long) cothread;
+	ptr -= 4096) {
       GST_CAT_DEBUG (GST_CAT_COTHREADS, "touching location 0x%08lx", ptr);
-      *(volatile unsigned int *)ptr = *(volatile unsigned int *)ptr;
-      GST_CAT_DEBUG (GST_CAT_COTHREADS, "ok (0x%08x)", *(unsigned int *)ptr);
+      *(volatile unsigned int *) ptr = *(volatile unsigned int *) ptr;
+      GST_CAT_DEBUG (GST_CAT_COTHREADS, "ok (0x%08x)", *(unsigned int *) ptr);
     }
   }
 #endif
 
 #ifdef _SC_PAGESIZE
-  page_size = sysconf(_SC_PAGESIZE);
+  page_size = sysconf (_SC_PAGESIZE);
 #else
-  page_size = getpagesize();
+  page_size = getpagesize ();
 #endif
 
   /* The mmap is necessary on Linux/i386, and possibly others, since the
    * kernel is picky about when we can expand our stack. */
   GST_CAT_DEBUG (GST_CAT_COTHREADS, "mmaping %p, size 0x%08x", cothread,
-             COTHREAD_STACKSIZE);
+      COTHREAD_STACKSIZE);
   /* Remap with a guard page. This decreases our stack size by 8 kB (for
    * 4 kB pages) and also wastes almost 4 kB for the cothreads
    * structure */
-  munmap((void *)cothread, COTHREAD_STACKSIZE);
+  munmap ((void *) cothread, COTHREAD_STACKSIZE);
   mmaped = mmap ((void *) cothread, page_size,
-                 PROT_READ | PROT_WRITE,
-                 MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      PROT_READ | PROT_WRITE, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   mmaped = mmap (((void *) cothread) + page_size * 2,
-		 COTHREAD_STACKSIZE - page_size * 2,
-                 PROT_READ | PROT_WRITE | PROT_EXEC,
-                 MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      COTHREAD_STACKSIZE - page_size * 2,
+      PROT_READ | PROT_WRITE | PROT_EXEC,
+      MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   GST_CAT_DEBUG (GST_CAT_COTHREADS, "coming out of mmap");
   if (mmaped == MAP_FAILED) {
     perror ("mmap'ing cothread stack space");
     return NULL;
   }
-  if (mmaped != (void *)cothread + page_size * 2) {
+  if (mmaped != (void *) cothread + page_size * 2) {
     g_warning ("could not mmap requested memory for cothread");
     return NULL;
   }
 
   cothread->magic_number = COTHREAD_MAGIC_NUMBER;
-  GST_CAT_DEBUG (GST_CAT_COTHREADS, "create  cothread %d with magic number 0x%x",
-             slot, cothread->magic_number);
+  GST_CAT_DEBUG (GST_CAT_COTHREADS,
+      "create  cothread %d with magic number 0x%x", slot,
+      cothread->magic_number);
   cothread->ctx = ctx;
   cothread->cothreadnum = slot;
   cothread->flags = 0;
   cothread->priv = NULL;
   cothread->sp = ((guchar *) cothread + COTHREAD_STACKSIZE);
   cothread->stack_size = COTHREAD_STACKSIZE - page_size * 2;
-  cothread->stack_base = (void *)cothread + 2 * page_size;
+  cothread->stack_base = (void *) cothread + 2 * page_size;
 
-  GST_CAT_INFO (GST_CAT_COTHREADS, 
-            "created cothread #%d in slot %d: %p at sp:%p", 
-	    ctx->ncothreads, slot, cothread, cothread->sp);
+  GST_CAT_INFO (GST_CAT_COTHREADS,
+      "created cothread #%d in slot %d: %p at sp:%p",
+      ctx->ncothreads, slot, cothread, cothread->sp);
 
   ctx->cothreads[slot] = cothread;
   ctx->ncothreads++;
@@ -325,12 +330,12 @@ cothread_create (cothread_context *ctx)
  * Free the given cothread state
  */
 void
-cothread_free (cothread_state *cothread)
+cothread_free (cothread_state * cothread)
 {
   g_return_if_fail (cothread != NULL);
 
-  GST_CAT_INFO (GST_CAT_COTHREADS, "flag cothread %d for destruction", 
-            cothread->cothreadnum);
+  GST_CAT_INFO (GST_CAT_COTHREADS, "flag cothread %d for destruction",
+      cothread->cothreadnum);
 
   /* we simply flag the cothread for destruction here */
   if (cothread)
@@ -340,7 +345,7 @@ cothread_free (cothread_state *cothread)
 }
 
 static void
-cothread_destroy (cothread_state *cothread)
+cothread_destroy (cothread_state * cothread)
 {
   cothread_context *ctx;
   gint cothreadnum;
@@ -349,27 +354,28 @@ cothread_destroy (cothread_state *cothread)
 
   cothreadnum = cothread->cothreadnum;
   ctx = cothread->ctx;
-  g_assert (ctx->thread == g_thread_self());
-  g_assert (ctx == cothread_get_current_context());
+  g_assert (ctx->thread == g_thread_self ());
+  g_assert (ctx == cothread_get_current_context ());
 
-  GST_CAT_INFO (GST_CAT_COTHREADS, "destroy cothread %d %p %d", 
-            cothreadnum, cothread, ctx->current);
+  GST_CAT_INFO (GST_CAT_COTHREADS, "destroy cothread %d %p %d",
+      cothreadnum, cothread, ctx->current);
 
   /* cothread 0 needs to be destroyed specially */
-  g_assert(cothreadnum != 0);
+  g_assert (cothreadnum != 0);
 
   /* we have to unlock here because we might be switched out 
    * with the lock held */
   cothread_unlock (cothread);
 
   /* doing cleanups of the cothread create */
-  GST_CAT_DEBUG (GST_CAT_COTHREADS, "destroy cothread %d with magic number 0x%x",
-           cothreadnum, cothread->magic_number);
+  GST_CAT_DEBUG (GST_CAT_COTHREADS,
+      "destroy cothread %d with magic number 0x%x", cothreadnum,
+      cothread->magic_number);
   g_assert (cothread->magic_number == COTHREAD_MAGIC_NUMBER);
 
   g_assert (cothread->priv == NULL);
 
-  memset(cothread,0,sizeof(*cothread));
+  memset (cothread, 0, sizeof (*cothread));
 
   ctx->cothreads[cothreadnum] = NULL;
   ctx->ncothreads--;
@@ -385,7 +391,8 @@ cothread_destroy (cothread_state *cothread)
  * Set the cothread function
  */
 void
-cothread_setfunc (cothread_state* cothread, cothread_func func, int argc, char **argv)
+cothread_setfunc (cothread_state * cothread, cothread_func func, int argc,
+    char **argv)
 {
   cothread->func = func;
   cothread->argc = argc;
@@ -399,7 +406,7 @@ cothread_setfunc (cothread_state* cothread, cothread_func func, int argc, char *
  * Stop the cothread and reset the stack and program counter.
  */
 void
-cothread_stop (cothread_state* cothread)
+cothread_stop (cothread_state * cothread)
 {
   cothread->flags &= ~COTHREAD_STARTED;
 }
@@ -412,13 +419,13 @@ cothread_stop (cothread_state* cothread)
  *
  * Returns: the #cothread_state of the main (0th) cothread.
  */
-cothread_state*
-cothread_main (cothread_context* ctx)
+cothread_state *
+cothread_main (cothread_context * ctx)
 {
-  g_assert (ctx->thread == g_thread_self());
+  g_assert (ctx->thread == g_thread_self ());
 
-  GST_CAT_DEBUG (GST_CAT_COTHREADS, "returning %p, the 0th cothread", 
-             ctx->cothreads[0]);
+  GST_CAT_DEBUG (GST_CAT_COTHREADS, "returning %p, the 0th cothread",
+      ctx->cothreads[0]);
   return ctx->cothreads[0];
 }
 
@@ -429,10 +436,10 @@ cothread_main (cothread_context* ctx)
  *
  * Returns: the #cothread_state of the main (0th) thread in the current GThread
  */
-cothread_state*
+cothread_state *
 cothread_current_main (void)
 {
-  cothread_context *ctx = cothread_get_current_context();
+  cothread_context *ctx = cothread_get_current_context ();
 
   return ctx->cothreads[0];
 }
@@ -444,10 +451,10 @@ cothread_current_main (void)
  *
  * Returns: the #cothread_state of the current cothread
  */
-cothread_state*
+cothread_state *
 cothread_current (void)
 {
-  cothread_context *ctx = cothread_get_current_context();
+  cothread_context *ctx = cothread_get_current_context ();
 
   return ctx->cothreads[ctx->current];
 }
@@ -455,9 +462,10 @@ cothread_current (void)
 static void
 cothread_stub (void)
 {
-  cothread_context *ctx = cothread_get_current_context();
+  cothread_context *ctx = cothread_get_current_context ();
   cothread_state *cothread = ctx->cothreads[ctx->current];
-#ifndef GST_DISABLE_GST_DEBUG 
+
+#ifndef GST_DISABLE_GST_DEBUG
   char __csf;
   void *current_stack_frame = &__csf;
 #endif
@@ -469,11 +477,13 @@ cothread_stub (void)
   while (TRUE) {
     cothread->func (cothread->argc, cothread->argv);
 
-    GST_CAT_DEBUG (GST_CAT_COTHREADS, "cothread[%d] thread->func exited", ctx->current);
+    GST_CAT_DEBUG (GST_CAT_COTHREADS, "cothread[%d] thread->func exited",
+	ctx->current);
 
     GST_CAT_DEBUG (GST_CAT_COTHREADS, "sp=%p", current_stack_frame);
-    GST_CAT_DEBUG (GST_CAT_COTHREADS, "ctx=%p current=%p", ctx,cothread_get_current_context());
-    g_assert (ctx == cothread_get_current_context());
+    GST_CAT_DEBUG (GST_CAT_COTHREADS, "ctx=%p current=%p", ctx,
+	cothread_get_current_context ());
+    g_assert (ctx == cothread_get_current_context ());
 
     g_assert (ctx->current != 0);
 
@@ -489,12 +499,13 @@ cothread_stub (void)
  *
  * Returns: the current cothread id
  */
-int cothread_getcurrent (void) G_GNUC_NO_INSTRUMENT;
-
 int
 cothread_getcurrent (void)
+    G_GNUC_NO_INSTRUMENT;
+
+     int cothread_getcurrent (void)
 {
-  cothread_context *ctx = cothread_get_current_context();
+  cothread_context *ctx = cothread_get_current_context ();
 
   if (!ctx)
     return -1;
@@ -510,7 +521,7 @@ cothread_getcurrent (void)
  * set private data for the cothread.
  */
 void
-cothread_set_private (cothread_state *cothread, gpointer data)
+cothread_set_private (cothread_state * cothread, gpointer data)
 {
   cothread->priv = data;
 }
@@ -524,9 +535,10 @@ cothread_set_private (cothread_state *cothread, gpointer data)
  * adds data to a cothread
  */
 void
-cothread_context_set_data (cothread_state *cothread, gchar *key, gpointer data)
+cothread_context_set_data (cothread_state * cothread, gchar * key,
+    gpointer data)
 {
-  cothread_context *ctx = cothread_get_current_context();
+  cothread_context *ctx = cothread_get_current_context ();
 
   g_hash_table_insert (ctx->data, key, data);
 }
@@ -540,7 +552,7 @@ cothread_context_set_data (cothread_state *cothread, gchar *key, gpointer data)
  * Returns: the private data of the cothread
  */
 gpointer
-cothread_get_private (cothread_state *cothread)
+cothread_get_private (cothread_state * cothread)
 {
   return cothread->priv;
 }
@@ -555,9 +567,9 @@ cothread_get_private (cothread_state *cothread)
  * Returns: the data associated with the key
  */
 gpointer
-cothread_context_get_data (cothread_state *cothread, gchar *key)
+cothread_context_get_data (cothread_state * cothread, gchar * key)
 {
-  cothread_context *ctx = cothread_get_current_context();
+  cothread_context *ctx = cothread_get_current_context ();
 
   return g_hash_table_lookup (ctx->data, key);
 }
@@ -569,7 +581,7 @@ cothread_context_get_data (cothread_state *cothread, gchar *key)
  * Switches to the given cothread state
  */
 void
-cothread_switch (cothread_state *cothread)
+cothread_switch (cothread_state * cothread)
 {
   cothread_context *ctx;
   cothread_state *current;
@@ -582,7 +594,7 @@ cothread_switch (cothread_state *cothread)
   ctx = cothread->ctx;
 
   /* paranoia check to make sure we're in the right thread */
-  g_assert (ctx->thread == g_thread_self());
+  g_assert (ctx->thread == g_thread_self ());
 
 #ifdef COTHREAD_PARANOID
   if (ctx == NULL)
@@ -599,9 +611,9 @@ cothread_switch (cothread_state *cothread)
 
 
   /* find the number of the thread to switch to */
-  GST_CAT_INFO (GST_CAT_COTHREAD_SWITCH, 
-            "switching from cothread #%d to cothread #%d",
-	    ctx->current, cothread->cothreadnum);
+  GST_CAT_INFO (GST_CAT_COTHREAD_SWITCH,
+      "switching from cothread #%d to cothread #%d",
+      ctx->current, cothread->cothreadnum);
   ctx->current = cothread->cothreadnum;
 
   /* save the current stack pointer, frame pointer, and pc */
@@ -610,13 +622,13 @@ cothread_switch (cothread_state *cothread)
 #endif
   enter = setjmp (current->jmp);
   if (enter != 0) {
-    GST_CAT_DEBUG (GST_CAT_COTHREADS, 
-	       "enter cothread #%d %d sp=%p jmpbuf=%p", 
-	       current->cothreadnum, enter, current->sp, current->jmp);
+    GST_CAT_DEBUG (GST_CAT_COTHREADS,
+	"enter cothread #%d %d sp=%p jmpbuf=%p",
+	current->cothreadnum, enter, current->sp, current->jmp);
     return;
   }
-  GST_CAT_DEBUG (GST_CAT_COTHREADS, "exit cothread #%d %d sp=%p jmpbuf=%p", 
-             current->cothreadnum, enter, current->sp, current->jmp);
+  GST_CAT_DEBUG (GST_CAT_COTHREADS, "exit cothread #%d %d sp=%p jmpbuf=%p",
+      current->cothreadnum, enter, current->sp, current->jmp);
   enter = 1;
 
   if (current->flags & COTHREAD_DESTROYED) {
@@ -629,22 +641,21 @@ cothread_switch (cothread_state *cothread)
     GST_CAT_DEBUG (GST_CAT_COTHREADS, "via longjmp() jmpbuf %p", cothread->jmp);
     /* switch to it */
     longjmp (cothread->jmp, 1);
-  }
-  else {
+  } else {
 #ifdef HAVE_MAKECONTEXT
     ucontext_t ucp;
 
     GST_CAT_DEBUG (GST_CAT_COTHREADS, "making context");
 
-    g_assert (cothread != cothread_main(ctx));
+    g_assert (cothread != cothread_main (ctx));
 
     getcontext (&ucp);
-    ucp.uc_stack.ss_sp = (void *)cothread->stack_base;
+    ucp.uc_stack.ss_sp = (void *) cothread->stack_base;
     ucp.uc_stack.ss_size = cothread->stack_size;
     makecontext (&ucp, cothread_stub, 0);
     setcontext (&ucp);
 #else
-    GST_ARCH_SETUP_STACK ((char*)cothread->sp);
+    GST_ARCH_SETUP_STACK ((char *) cothread->sp);
     GST_ARCH_SET_SP (cothread->sp);
     /* start it */
     GST_ARCH_CALL (cothread_stub);
@@ -668,7 +679,8 @@ nocurrent:
   exit (2);
 #endif /* COTHREAD_PARANOID */
 selfswitch:
-  g_warning ("cothread: trying to switch to same thread, legal but not necessary");
+  g_warning
+      ("cothread: trying to switch to same thread, legal but not necessary");
   return;
 }
 
@@ -679,7 +691,7 @@ selfswitch:
  * Locks the cothread state.
  */
 void
-cothread_lock (cothread_state *cothread)
+cothread_lock (cothread_state * cothread)
 {
 }
 
@@ -692,7 +704,7 @@ cothread_lock (cothread_state *cothread)
  * Returns: TRUE if the cothread could be locked.
  */
 gboolean
-cothread_trylock (cothread_state *cothread)
+cothread_trylock (cothread_state * cothread)
 {
   return TRUE;
 }
@@ -704,6 +716,6 @@ cothread_trylock (cothread_state *cothread)
  * Unlock the cothread state.
  */
 void
-cothread_unlock (cothread_state *cothread)
+cothread_unlock (cothread_state * cothread)
 {
 }

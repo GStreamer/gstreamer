@@ -44,42 +44,44 @@
 #include "gsttypefind.h"
 
 
-struct _elements_entry {
+struct _elements_entry
+{
   gchar *name;
   guint rank;
-  GType (*type) (void);
+    GType (*type) (void);
 };
 
 
-extern GType gst_filesrc_get_type(void);
+extern GType gst_filesrc_get_type (void);
 extern GstElementDetails gst_filesrc_details;
 
 static struct _elements_entry _elements[] = {
-  { "aggregator",   GST_RANK_NONE,	gst_aggregator_get_type		},
-  { "fakesrc", 	    GST_RANK_NONE,	gst_fakesrc_get_type		},
-  { "fakesink",     GST_RANK_NONE,	gst_fakesink_get_type		},
-  { "fdsink",       GST_RANK_NONE,	gst_fdsink_get_type		},
-  { "fdsrc", 	    GST_RANK_NONE,	gst_fdsrc_get_type		},
-  { "filesrc", 	    GST_RANK_NONE,	gst_filesrc_get_type		},
-  { "filesink",	    GST_RANK_NONE,	gst_filesink_get_type		},
-  { "identity",     GST_RANK_NONE,	gst_identity_get_type		},
-  { "md5sink",      GST_RANK_NONE,	gst_md5sink_get_type		},
-  { "multifilesrc", GST_RANK_NONE,	gst_multifilesrc_get_type	},
-  { "pipefilter",   GST_RANK_NONE,	gst_pipefilter_get_type		},
-  { "shaper",       GST_RANK_NONE,	gst_shaper_get_type		},
-  { "statistics",   GST_RANK_NONE,	gst_statistics_get_type		},
-  { "tee",     	    GST_RANK_NONE,	gst_tee_get_type		},
-  { "typefind",     GST_RANK_NONE,	gst_type_find_element_get_type	},
-  { NULL, 0 },
+  {"aggregator", GST_RANK_NONE, gst_aggregator_get_type},
+  {"fakesrc", GST_RANK_NONE, gst_fakesrc_get_type},
+  {"fakesink", GST_RANK_NONE, gst_fakesink_get_type},
+  {"fdsink", GST_RANK_NONE, gst_fdsink_get_type},
+  {"fdsrc", GST_RANK_NONE, gst_fdsrc_get_type},
+  {"filesrc", GST_RANK_NONE, gst_filesrc_get_type},
+  {"filesink", GST_RANK_NONE, gst_filesink_get_type},
+  {"identity", GST_RANK_NONE, gst_identity_get_type},
+  {"md5sink", GST_RANK_NONE, gst_md5sink_get_type},
+  {"multifilesrc", GST_RANK_NONE, gst_multifilesrc_get_type},
+  {"pipefilter", GST_RANK_NONE, gst_pipefilter_get_type},
+  {"shaper", GST_RANK_NONE, gst_shaper_get_type},
+  {"statistics", GST_RANK_NONE, gst_statistics_get_type},
+  {"tee", GST_RANK_NONE, gst_tee_get_type},
+  {"typefind", GST_RANK_NONE, gst_type_find_element_get_type},
+  {NULL, 0},
 };
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   struct _elements_entry *my_elements = _elements;
-  
-  while ((*my_elements).name) {  
-    if (!gst_element_register (plugin, (*my_elements).name, (*my_elements).rank, ((*my_elements).type) ()))
+
+  while ((*my_elements).name) {
+    if (!gst_element_register (plugin, (*my_elements).name, (*my_elements).rank,
+	    ((*my_elements).type) ()))
       return FALSE;
     my_elements++;
   }
@@ -87,15 +89,8 @@ plugin_init (GstPlugin *plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gstelements",
-  "standard GStreamer elements",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
-
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "gstelements",
+    "standard GStreamer elements",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

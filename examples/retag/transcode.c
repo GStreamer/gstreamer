@@ -16,11 +16,11 @@
 #include <string.h>
 
 int
-main (int argc, char *argv[]) 
+main (int argc, char *argv[])
 {
   GstElement *bin, *filesrc, *decoder, *encoder, *filesink;
   gchar *artist, *title, *ext, *filename;
-  
+
   /* initialize GStreamer */
   gst_init (&argc, &argv);
 
@@ -36,7 +36,8 @@ main (int argc, char *argv[])
     artist = argv[1];
   artist = g_strdup (artist);
   ext = strrchr (artist, '.');
-  if (ext) *ext = '\0';
+  if (ext)
+    *ext = '\0';
   title = strstr (artist, " - ");
   if (title == NULL) {
     g_print ("The format of the mp3 file is invalid.\n");
@@ -45,8 +46,8 @@ main (int argc, char *argv[])
   }
   *title = '\0';
   title += 3;
-  
-  
+
+
   /* create a new bin to hold the elements */
   bin = gst_pipeline_new ("pipeline");
   g_assert (bin);
@@ -68,13 +69,13 @@ main (int argc, char *argv[])
     g_print ("cound not find plugin \"vorbisenc\"");
     return 1;
   }
-  
+
   /* and a file writer */
   filesink = gst_element_factory_make ("filesink", "filesink");
   g_assert (filesink);
 
   /* set the filenames */
-  filename = g_strdup_printf ("%s.ogg", argv[1]); /* easy solution */
+  filename = g_strdup_printf ("%s.ogg", argv[1]);	/* easy solution */
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
   g_object_set (G_OBJECT (filesink), "location", filename, NULL);
   g_free (filename);
@@ -84,16 +85,14 @@ main (int argc, char *argv[])
   gst_tag_setter_set_merge_mode (GST_TAG_SETTER (encoder), GST_TAG_MERGE_KEEP);
   /* set the tagging information */
   gst_tag_setter_add (GST_TAG_SETTER (encoder), GST_TAG_MERGE_REPLACE,
-		      GST_TAG_ARTIST, artist, 
-		      GST_TAG_TITLE, title, 
-		      NULL);
+      GST_TAG_ARTIST, artist, GST_TAG_TITLE, title, NULL);
 
   /* add objects to the main pipeline */
   gst_bin_add_many (GST_BIN (bin), filesrc, decoder, encoder, filesink, NULL);
 
   /* link the elements */
   gst_element_link_many (filesrc, decoder, encoder, filesink, NULL);
-  
+
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);
 
@@ -104,4 +103,3 @@ main (int argc, char *argv[])
 
   return 0;
 }
-

@@ -30,32 +30,35 @@
 
 extern GstElement *_gst_parse_launch (const gchar *, GError **);
 
-GQuark 
+GQuark
 gst_parse_error_quark (void)
 {
   static GQuark quark = 0;
+
   if (!quark)
     quark = g_quark_from_static_string ("gst_parse_error");
   return quark;
 }
 
-static gchar *_gst_parse_escape (const gchar *str)
+static gchar *
+_gst_parse_escape (const gchar * str)
 {
   GString *gstr = NULL;
-  
+
   g_return_val_if_fail (str != NULL, NULL);
-  
+
   gstr = g_string_sized_new (strlen (str));
-  
+
   while (*str) {
     if (*str == ' ')
       g_string_append_c (gstr, '\\');
     g_string_append_c (gstr, *str);
     str++;
   }
-  
+
   return gstr->str;
 }
+
 /**
  * gst_parse_launchv:
  * @argv: null-terminated array of arguments
@@ -68,7 +71,7 @@ static gchar *_gst_parse_escape (const gchar *str)
  * Returns: a new element on success and NULL on failure.
  */
 GstElement *
-gst_parse_launchv (const gchar **argv, GError **error)
+gst_parse_launchv (const gchar ** argv, GError ** error)
 {
   GstElement *element;
   GString *str;
@@ -89,7 +92,7 @@ gst_parse_launchv (const gchar **argv, GError **error)
     g_string_append (str, " ");
     argvp++;
   }
-  
+
   element = gst_parse_launch (str->str, error);
 
   g_string_free (str, TRUE);
@@ -112,7 +115,7 @@ gst_parse_launchv (const gchar **argv, GError **error)
  * a #GstPipeline ant that is returned.
  */
 GstElement *
-gst_parse_launch (const gchar * pipeline_description, GError **error)
+gst_parse_launch (const gchar * pipeline_description, GError ** error)
 {
   GstElement *element;
   static GStaticMutex flex_lock = G_STATIC_MUTEX_INIT;
@@ -120,7 +123,7 @@ gst_parse_launch (const gchar * pipeline_description, GError **error)
   g_return_val_if_fail (pipeline_description != NULL, NULL);
 
   GST_CAT_INFO (GST_CAT_PIPELINE, "parsing pipeline description %s",
-            pipeline_description);
+      pipeline_description);
 
   /* the need for the mutex will go away with flex 2.5.6 */
   g_static_mutex_lock (&flex_lock);

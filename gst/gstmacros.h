@@ -21,24 +21,18 @@
 #define __GST_MACROS_H__
 
 G_BEGIN_DECLS
-
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
 # define GST_GNUC_CONSTRUCTOR \
-  __attribute__ ((constructor))  
-#else  /* !__GNUC__ */
+  __attribute__ ((constructor))
+#else /* !__GNUC__ */
 # define GST_GNUC_CONSTRUCTOR
 #endif /* !__GNUC__ */
-
 #if defined (__GNUC__) && !defined (GST_IMPLEMENT_INLINES)
 # define GST_INLINE_FUNC extern __inline__
 # define GST_CAN_INLINE 1
 #else
-# define GST_INLINE_FUNC extern 
+# define GST_INLINE_FUNC extern
 # undef GST_CAN_INLINE
 #endif
-
-G_END_DECLS
-
+    G_END_DECLS
 #endif /* __GST_MACROS_H__ */
-
-

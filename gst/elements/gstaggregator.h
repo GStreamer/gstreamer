@@ -26,11 +26,9 @@
 
 #include <gst/gst.h>
 
-G_BEGIN_DECLS
-
-
-typedef enum {
-  AGGREGATOR_LOOP 		= 1,
+G_BEGIN_DECLS typedef enum
+{
+  AGGREGATOR_LOOP = 1,
   AGGREGATOR_LOOP_SELECT,
   AGGREGATOR_CHAIN
 } GstAggregatorSchedType;
@@ -46,10 +44,11 @@ typedef enum {
 #define GST_IS_AGGREGATOR_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AGGREGATOR))
 
-typedef struct _GstAggregator 		GstAggregator;
-typedef struct _GstAggregatorClass 	GstAggregatorClass;
+typedef struct _GstAggregator GstAggregator;
+typedef struct _GstAggregatorClass GstAggregatorClass;
 
-struct _GstAggregator {
+struct _GstAggregator
+{
   GstElement element;
 
   GstPad *srcpad;
@@ -63,14 +62,14 @@ struct _GstAggregator {
   gchar *last_message;
 };
 
-struct _GstAggregatorClass {
+struct _GstAggregatorClass
+{
   GstElementClass parent_class;
 };
 
-GType 	gst_aggregator_get_type	(void);
+GType gst_aggregator_get_type (void);
 
-gboolean 	gst_aggregator_factory_init 	(GstElementFactory *factory);
+gboolean gst_aggregator_factory_init (GstElementFactory * factory);
 
 G_END_DECLS
-
 #endif /* __GST_AGGREGATOR_H__ */

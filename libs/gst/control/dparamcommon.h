@@ -22,11 +22,8 @@
 #ifndef __GST_DPCOMMON_H__
 #define __GST_DPCOMMON_H__
 
-G_BEGIN_DECLS
-
-typedef struct _GstDParam GstDParam;
+G_BEGIN_DECLS typedef struct _GstDParam GstDParam;
 typedef struct _GstDParamManager GstDParamManager;
 
 G_END_DECLS
-
 #endif /* __GST_DPCOMMON_H__ */

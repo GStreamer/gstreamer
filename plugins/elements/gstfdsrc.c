@@ -39,21 +39,21 @@
 GST_DEBUG_CATEGORY_STATIC (gst_fdsrc_debug);
 #define GST_CAT_DEFAULT gst_fdsrc_debug
 
-GstElementDetails gst_fdsrc_details = GST_ELEMENT_DETAILS (
-  "Disk Source",
-  "Source/File",
-  "Synchronous read from a file",
-  "Erik Walthinsen <omega@cse.ogi.edu>"
-);
+GstElementDetails gst_fdsrc_details = GST_ELEMENT_DETAILS ("Disk Source",
+    "Source/File",
+    "Synchronous read from a file",
+    "Erik Walthinsen <omega@cse.ogi.edu>");
 
 
 /* FdSrc signals and args */
-enum {
+enum
+{
   SIGNAL_TIMEOUT,
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_FD,
   ARG_BLOCKSIZE,
@@ -65,52 +65,56 @@ static guint gst_fdsrc_signals[LAST_SIGNAL] = { 0 };
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_fdsrc_debug, "fdsrc", 0, "fdsrc element");
 
-GST_BOILERPLATE_FULL (GstFdSrc, gst_fdsrc, GstElement, GST_TYPE_ELEMENT, _do_init);
+GST_BOILERPLATE_FULL (GstFdSrc, gst_fdsrc, GstElement, GST_TYPE_ELEMENT,
+    _do_init);
 
-static void		gst_fdsrc_set_property	(GObject *object, guint prop_id, 
-						 const GValue *value, GParamSpec *pspec);
-static void		gst_fdsrc_get_property	(GObject *object, guint prop_id, 
-						 GValue *value, GParamSpec *pspec);
+static void gst_fdsrc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_fdsrc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static GstData *	gst_fdsrc_get		(GstPad *pad);
+static GstData *gst_fdsrc_get (GstPad * pad);
 
 
 static void
 gst_fdsrc_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  
+
   gst_element_class_set_details (gstelement_class, &gst_fdsrc_details);
 }
 static void
-gst_fdsrc_class_init (GstFdSrcClass *klass) 
+gst_fdsrc_class_init (GstFdSrcClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
-    g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
-                      0, G_MAXINT, 0, G_PARAM_READWRITE));
+      g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
+	  0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLOCKSIZE,
-    g_param_spec_ulong ("blocksize", "Block size", "Size in bytes to read per buffer",
-                        1, G_MAXULONG, DEFAULT_BLOCKSIZE, G_PARAM_READWRITE));
+      g_param_spec_ulong ("blocksize", "Block size",
+	  "Size in bytes to read per buffer", 1, G_MAXULONG, DEFAULT_BLOCKSIZE,
+	  G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TIMEOUT,
-    g_param_spec_uint64 ("timeout", "Timeout", "Read timeout in nanoseconds",
-                        0, G_MAXUINT64, 0, G_PARAM_READWRITE));
+      g_param_spec_uint64 ("timeout", "Timeout", "Read timeout in nanoseconds",
+	  0, G_MAXUINT64, 0, G_PARAM_READWRITE));
 
   gst_fdsrc_signals[SIGNAL_TIMEOUT] =
-    g_signal_new ("timeout", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                    G_STRUCT_OFFSET (GstFdSrcClass, timeout), NULL, NULL,
-                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      g_signal_new ("timeout", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstFdSrcClass, timeout), NULL, NULL,
+      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gobject_class->set_property = gst_fdsrc_set_property;
   gobject_class->get_property = gst_fdsrc_get_property;
 }
 
-static void gst_fdsrc_init(GstFdSrc *fdsrc) {
+static void
+gst_fdsrc_init (GstFdSrc * fdsrc)
+{
   fdsrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  
+
   gst_pad_set_get_function (fdsrc->srcpad, gst_fdsrc_get);
   gst_element_add_pad (GST_ELEMENT (fdsrc), fdsrc->srcpad);
 
@@ -122,14 +126,15 @@ static void gst_fdsrc_init(GstFdSrc *fdsrc) {
 }
 
 
-static void 
-gst_fdsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) 
+static void
+gst_fdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
 {
   GstFdSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FDSRC (object));
-  
+
   src = GST_FDSRC (object);
 
   switch (prop_id) {
@@ -147,14 +152,15 @@ gst_fdsrc_set_property (GObject *object, guint prop_id, const GValue *value, GPa
   }
 }
 
-static void 
-gst_fdsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) 
+static void
+gst_fdsrc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstFdSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FDSRC (object));
-  
+
   src = GST_FDSRC (object);
 
   switch (prop_id) {
@@ -174,7 +180,7 @@ gst_fdsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
 }
 
 static GstData *
-gst_fdsrc_get(GstPad *pad)
+gst_fdsrc_get (GstPad * pad)
 {
   GstFdSrc *src;
   GstBuffer *buf;
@@ -191,38 +197,31 @@ gst_fdsrc_get(GstPad *pad)
   FD_ZERO (&readfds);
   FD_SET (src->fd, &readfds);
 
-  if (src->timeout != 0)
-  {
+  if (src->timeout != 0) {
     GST_TIME_TO_TIMEVAL (src->timeout, t);
-  }
-  else
+  } else
     tp = NULL;
 
-  do
-  {
+  do {
     retval = select (1, &readfds, NULL, NULL, tp);
-  } while (retval == -1 && errno == EINTR); /* retry if interrupted */
+  } while (retval == -1 && errno == EINTR);	/* retry if interrupted */
 
-  if (retval == -1)
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), ("select on file descriptor: %s.", g_strerror(errno)));
+  if (retval == -1) {
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+	("select on file descriptor: %s.", g_strerror (errno)));
+    gst_element_set_eos (GST_ELEMENT (src));
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+  } else if (retval == 0) {
+    g_signal_emit (G_OBJECT (src), gst_fdsrc_signals[SIGNAL_TIMEOUT], 0);
     gst_element_set_eos (GST_ELEMENT (src));
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
-  else if (retval == 0)
-  {
-    g_signal_emit (G_OBJECT (src), gst_fdsrc_signals[SIGNAL_TIMEOUT], 0);
-    gst_element_set_eos (GST_ELEMENT (src));
-    return GST_DATA(gst_event_new (GST_EVENT_EOS));
-  }
 
-  do
-  {
+  do {
     readbytes = read (src->fd, GST_BUFFER_DATA (buf), src->blocksize);
-  } while (readbytes == -1 && errno == EINTR); /* retry if interrupted */
+  } while (readbytes == -1 && errno == EINTR);	/* retry if interrupted */
 
-  if (readbytes > 0)
-  {
+  if (readbytes > 0) {
     GST_BUFFER_OFFSET (buf) = src->curoffset;
     GST_BUFFER_SIZE (buf) = readbytes;
     GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
@@ -230,15 +229,12 @@ gst_fdsrc_get(GstPad *pad)
 
     /* we're done, return the buffer */
     return GST_DATA (buf);
-  }
-  else if (readbytes == 0)
-  {
+  } else if (readbytes == 0) {
     gst_element_set_eos (GST_ELEMENT (src));
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
-  }
-  else
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), ("read on file descriptor: %s.", g_strerror(errno)));
+  } else {
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+	("read on file descriptor: %s.", g_strerror (errno)));
     gst_element_set_eos (GST_ELEMENT (src));
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }

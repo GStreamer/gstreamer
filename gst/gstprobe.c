@@ -34,10 +34,9 @@
  *
  * Returns: a new #GstProbe.
  */
-GstProbe*
-gst_probe_new (gboolean single_shot, 
-	       GstProbeCallback callback, 
-	       gpointer user_data)
+GstProbe *
+gst_probe_new (gboolean single_shot,
+    GstProbeCallback callback, gpointer user_data)
 {
   GstProbe *probe;
 
@@ -46,9 +45,9 @@ gst_probe_new (gboolean single_shot,
   probe = g_new0 (GstProbe, 1);
 
   probe->single_shot = single_shot;
-  probe->callback    = callback;
-  probe->user_data   = user_data;
-  
+  probe->callback = callback;
+  probe->user_data = user_data;
+
   return probe;
 }
 
@@ -59,12 +58,12 @@ gst_probe_new (gboolean single_shot,
  * Free the memeory associated with the probe.
  */
 void
-gst_probe_destroy (GstProbe *probe)
+gst_probe_destroy (GstProbe * probe)
 {
   g_return_if_fail (probe);
 
 #ifdef USE_POISONING
-  memset(probe, 0xff, sizeof(*probe));
+  memset (probe, 0xff, sizeof (*probe));
 #endif
 
   g_free (probe);
@@ -80,15 +79,15 @@ gst_probe_destroy (GstProbe *probe)
  * Returns: the result of the probe callback function.
  */
 gboolean
-gst_probe_perform (GstProbe *probe, GstData **data)
+gst_probe_perform (GstProbe * probe, GstData ** data)
 {
   gboolean res = TRUE;
 
   g_return_val_if_fail (probe, res);
-  
+
   if (probe->callback)
     res = probe->callback (probe, data, probe->user_data);
-  
+
   return res;
 }
 
@@ -99,15 +98,15 @@ gst_probe_perform (GstProbe *probe, GstData **data)
  *
  * Returns: a new probe dispatcher.
  */
-GstProbeDispatcher*
+GstProbeDispatcher *
 gst_probe_dispatcher_new (void)
 {
   GstProbeDispatcher *disp;
-  
+
   disp = g_new0 (GstProbeDispatcher, 1);
 
   gst_probe_dispatcher_init (disp);
-  
+
   return disp;
 }
 
@@ -118,13 +117,13 @@ gst_probe_dispatcher_new (void)
  * Free the memory allocated by the probe dispatcher. All pending
  * probes are removed first.
  */
-void		
-gst_probe_dispatcher_destroy (GstProbeDispatcher *disp)
+void
+gst_probe_dispatcher_destroy (GstProbeDispatcher * disp)
 {
   g_return_if_fail (disp);
-  
+
 #ifdef USE_POISONING
-  memset(disp, 0xff, sizeof(*disp));
+  memset (disp, 0xff, sizeof (*disp));
 #endif
 
   /* FIXME, free pending probes */
@@ -139,7 +138,7 @@ gst_probe_dispatcher_destroy (GstProbeDispatcher *disp)
  * dispatchers.
  */
 void
-gst_probe_dispatcher_init (GstProbeDispatcher *disp)
+gst_probe_dispatcher_init (GstProbeDispatcher * disp)
 {
   g_return_if_fail (disp);
 
@@ -155,8 +154,8 @@ gst_probe_dispatcher_init (GstProbeDispatcher *disp)
  * Activate or deactivate the given dispatcher
  * dispatchers.
  */
-void		
-gst_probe_dispatcher_set_active (GstProbeDispatcher *disp, gboolean active)
+void
+gst_probe_dispatcher_set_active (GstProbeDispatcher * disp, gboolean active)
 {
   g_return_if_fail (disp);
 
@@ -171,11 +170,11 @@ gst_probe_dispatcher_set_active (GstProbeDispatcher *disp, gboolean active)
  * Adds the given probe to the dispatcher.
  */
 void
-gst_probe_dispatcher_add_probe (GstProbeDispatcher *disp, GstProbe *probe)
+gst_probe_dispatcher_add_probe (GstProbeDispatcher * disp, GstProbe * probe)
 {
   g_return_if_fail (disp);
   g_return_if_fail (probe);
-  
+
   disp->probes = g_slist_prepend (disp->probes, probe);
 }
 
@@ -187,11 +186,11 @@ gst_probe_dispatcher_add_probe (GstProbeDispatcher *disp, GstProbe *probe)
  * Removes the given probe from the dispatcher.
  */
 void
-gst_probe_dispatcher_remove_probe (GstProbeDispatcher *disp, GstProbe *probe)
+gst_probe_dispatcher_remove_probe (GstProbeDispatcher * disp, GstProbe * probe)
 {
   g_return_if_fail (disp);
   g_return_if_fail (probe);
-  
+
   disp->probes = g_slist_remove (disp->probes, probe);
 }
 
@@ -204,8 +203,8 @@ gst_probe_dispatcher_remove_probe (GstProbeDispatcher *disp, GstProbe *probe)
  *
  * Returns: TRUE if all callbacks returned TRUE.
  */
-gboolean	
-gst_probe_dispatcher_dispatch (GstProbeDispatcher *disp, GstData **data)
+gboolean
+gst_probe_dispatcher_dispatch (GstProbeDispatcher * disp, GstData ** data)
 {
   GSList *walk;
   gboolean res = TRUE;
@@ -215,6 +214,7 @@ gst_probe_dispatcher_dispatch (GstProbeDispatcher *disp, GstData **data)
   walk = disp->probes;
   while (walk) {
     GstProbe *probe = (GstProbe *) walk->data;
+
     walk = g_slist_next (walk);
 
     res &= gst_probe_perform (probe, data);

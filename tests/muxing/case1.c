@@ -4,21 +4,22 @@
 gboolean playing = TRUE;
 
 static void
-handoff_signal (GstElement *element, GstBuffer *buf)
+handoff_signal (GstElement * element, GstBuffer * buf)
 {
-  g_print ("handoff \"%s\" %" G_GINT64_FORMAT "\n", gst_element_get_name (element), GST_BUFFER_TIMESTAMP (buf));
+  g_print ("handoff \"%s\" %" G_GINT64_FORMAT "\n",
+      gst_element_get_name (element), GST_BUFFER_TIMESTAMP (buf));
 }
 
 static void
-eos_signal (GstElement *element)
+eos_signal (GstElement * element)
 {
   g_print ("eos received from \"%s\"\n", gst_element_get_name (element));
 
   playing = FALSE;
 }
 
-int 
-main(int argc,char *argv[]) 
+int
+main (int argc, char *argv[])
 {
   GstBin *pipeline;
   GstElement *src, *tee, *identity1, *identity2, *aggregator, *sink;
@@ -45,23 +46,23 @@ main(int argc,char *argv[])
   sink = gst_element_factory_make ("fakesink", "sink");
   g_return_val_if_fail (sink != NULL, 4);
 
-  gst_bin_add_many (pipeline, src, tee, identity1, identity2, aggregator, sink, NULL);
+  gst_bin_add_many (pipeline, src, tee, identity1, identity2, aggregator, sink,
+      NULL);
 
   gst_element_link_pads (src, "src", tee, "sink");
   gst_pad_link (gst_element_get_request_pad (tee, "src%d"),
-		   gst_element_get_pad (identity1, "sink"));
+      gst_element_get_pad (identity1, "sink"));
   gst_pad_link (gst_element_get_request_pad (tee, "src%d"),
-		   gst_element_get_pad (identity2, "sink"));
+      gst_element_get_pad (identity2, "sink"));
   gst_pad_link (gst_element_get_pad (identity1, "src"),
-  		   gst_element_get_request_pad (aggregator, "sink%d"));
+      gst_element_get_request_pad (aggregator, "sink%d"));
   gst_pad_link (gst_element_get_pad (identity2, "src"),
-  		   gst_element_get_request_pad (aggregator, "sink%d"));
+      gst_element_get_request_pad (aggregator, "sink%d"));
   gst_element_link_pads (aggregator, "src", sink, "sink");
 
-  g_signal_connect (G_OBJECT (src), "eos",
-		    G_CALLBACK (eos_signal), NULL);
+  g_signal_connect (G_OBJECT (src), "eos", G_CALLBACK (eos_signal), NULL);
   g_signal_connect (G_OBJECT (sink), "handoff",
-		    G_CALLBACK (handoff_signal), NULL);
+      G_CALLBACK (handoff_signal), NULL);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 

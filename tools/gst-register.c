@@ -40,17 +40,18 @@ static gint num_features = 0;
 static gint num_plugins = 0;
 
 static void
-plugin_added_func (GstRegistry *registry, GstPlugin *plugin, gpointer user_data)
+plugin_added_func (GstRegistry * registry, GstPlugin * plugin,
+    gpointer user_data)
 {
   g_print ("added plugin %s with %d feature(s)\n", plugin->desc.name,
-           plugin->numfeatures);
+      plugin->numfeatures);
 
   num_features += plugin->numfeatures;
   num_plugins++;
 }
 
 static void
-spawn_all_in_dir(const char *dirname)
+spawn_all_in_dir (const char *dirname)
 {
   char *argv[2] = { NULL, NULL };
   GDir *dir;
@@ -59,25 +60,28 @@ spawn_all_in_dir(const char *dirname)
   /* g_print("spawning all in %s\n", dirname); */
 
   dir = g_dir_open (dirname, 0, NULL);
-  if (dir == NULL) return;
+  if (dir == NULL)
+    return;
 
-  while( (file = g_dir_read_name (dir)) ){
-    argv[0] = g_build_filename(dirname, file, NULL);
-    g_print("running %s\n",argv[0]);
-    g_spawn_sync (NULL, argv, NULL, G_SPAWN_FILE_AND_ARGV_ZERO, NULL, NULL, NULL, NULL, NULL, NULL);
-    g_free(argv[0]);
+  while ((file = g_dir_read_name (dir))) {
+    argv[0] = g_build_filename (dirname, file, NULL);
+    g_print ("running %s\n", argv[0]);
+    g_spawn_sync (NULL, argv, NULL, G_SPAWN_FILE_AND_ARGV_ZERO, NULL, NULL,
+	NULL, NULL, NULL, NULL);
+    g_free (argv[0]);
   }
-  g_dir_close(dir);
+  g_dir_close (dir);
 }
 
-int main (int argc,char *argv[])
+int
+main (int argc, char *argv[])
 {
   GList *registries;
-  GList *path_spill = NULL; /* used for path spill from failing registries */
+  GList *path_spill = NULL;	/* used for path spill from failing registries */
 
-  setlocale(LC_ALL, "");
+  setlocale (LC_ALL, "");
 
-    /* Init gst */
+  /* Init gst */
   _gst_registry_auto_load = FALSE;
   gst_init (&argc, &argv);
 
@@ -90,17 +94,15 @@ int main (int argc,char *argv[])
     GList *iter;
     char *dir;
 
-    if (path_spill)
-    {
+    if (path_spill) {
       GList *iter;
 
       /* add spilled paths to this registry;
        * since they're spilled they probably weren't loaded correctly
        * so we should give a lower priority registry the chance to do them */
-      for (iter = path_spill; iter; iter = iter->next)
-      {
+      for (iter = path_spill; iter; iter = iter->next) {
 	g_print ("added path   %s to %s \n",
-                 (const char *) iter->data, registry->name);
+	    (const char *) iter->data, registry->name);
 	gst_registry_add_path (registry, (const gchar *) iter->data);
       }
       g_list_free (path_spill);
@@ -108,41 +110,42 @@ int main (int argc,char *argv[])
     }
 
     g_signal_connect (G_OBJECT (registry), "plugin_added",
-		      G_CALLBACK (plugin_added_func), NULL);
+	G_CALLBACK (plugin_added_func), NULL);
 
     if (registry->flags & GST_REGISTRY_WRITABLE) {
       char *location;
+
       g_object_get (registry, "location", &location, NULL);
       g_print ("rebuilding %s (%s)\n", registry->name, location);
       g_free (location);
       gst_registry_rebuild (registry);
       gst_registry_save (registry);
-    }
-    else {
+    } else {
       g_print ("trying to load %s\n", registry->name);
-      if (!gst_registry_load (registry))
-      {
+      if (!gst_registry_load (registry)) {
 	g_print ("error loading %s\n", registry->name);
 	/* move over paths from this registry to the next one */
 	path_spill = g_list_concat (path_spill,
-	                            gst_registry_get_path_list (registry));
+	    gst_registry_get_path_list (registry));
 	g_assert (path_spill != NULL);
       }
       /* also move over paths if the registry wasn't writable
        * FIXME: we should check if the paths that were loaded from this
-         registry get removed from the path_list so we only try to
-         spill paths that could not be registered */
+       registry get removed from the path_list so we only try to
+       spill paths that could not be registered */
       path_spill = g_list_concat (path_spill,
-                                  gst_registry_get_path_list (registry));
+	  gst_registry_get_path_list (registry));
     }
 
-    dir_list = gst_registry_get_path_list(registry);
-    for(iter = dir_list; iter; iter = iter->next) {
-      dir = g_build_filename((const char *)iter->data, "register-scripts", NULL);
-      spawn_all_in_dir(dir);
-      g_free(dir);
+    dir_list = gst_registry_get_path_list (registry);
+    for (iter = dir_list; iter; iter = iter->next) {
+      dir =
+	  g_build_filename ((const char *) iter->data, "register-scripts",
+	  NULL);
+      spawn_all_in_dir (dir);
+      g_free (dir);
     }
-    g_list_free(dir_list);
+    g_list_free (dir_list);
 
     registries = g_list_next (registries);
   }
@@ -151,4 +154,3 @@ int main (int argc,char *argv[])
 
   return (0);
 }
-

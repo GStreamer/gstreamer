@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
- 
+
 #include <gst/gst.h>
 
 #include <string.h>
@@ -57,7 +57,7 @@ static gchar *s;
   gst_object_unref (GST_OBJECT (cur)); \
   cur = NULL; \
   g_print ("TEST %2d line %3d COMPLETE\n", test, __LINE__); \
-}G_STMT_END 
+}G_STMT_END
 #define TEST_RUN G_STMT_START{ \
   alarm(10); \
   g_print ("TEST %2d line %3d   RUN\n", test, __LINE__); \
@@ -73,7 +73,7 @@ static gchar *s;
   } \
   g_print ("TEST %2d line %3d STOPPED  : %u iterations\n", test, __LINE__, iterations); \
   alarm(0); \
-}G_STMT_END 
+}G_STMT_END
 #define PIPELINE1  "fakesrc"
 #define PIPELINE2  "fakesrc name=donald num-buffers= 27 silent =TruE sizetype = 3 eos  =    yesyo data=   Subbuffer\\ data"
 #define PIPELINE3  "fakesrc identity fakesink"
@@ -87,8 +87,8 @@ static gchar *s;
 #define PIPELINE11 "fakesink name = sink identity name=id ( fakesrc num-buffers=\"4\" ! id. ) id. ! sink."
 
 
-gint 
-main (gint argc, gchar *argv[]) 
+gint
+main (gint argc, gchar * argv[])
 {
   gst_init (&argc, &argv);
 
@@ -108,7 +108,8 @@ main (gint argc, gchar *argv[])
    * - first test of escaping strings
    */
   TEST_START (PIPELINE2);
-  g_object_get (G_OBJECT (cur), "name", &s, "num-buffers", &i, "silent", &b, NULL);
+  g_object_get (G_OBJECT (cur), "name", &s, "num-buffers", &i, "silent", &b,
+      NULL);
   TEST_CHECK_FAIL (strcmp (s, "donald") == 0);
   TEST_CHECK_FAIL (i == 27);
   TEST_CHECK_FAIL (b == TRUE);
@@ -125,7 +126,7 @@ main (gint argc, gchar *argv[])
    * - if multiple toplevel elements exist, a pipeline is returned
    */
   TEST_START (PIPELINE3);
-  TEST_CHECK_FAIL (GST_BIN (cur)->numchildren == 3); /* a bit hacky here */
+  TEST_CHECK_FAIL (GST_BIN (cur)->numchildren == 3);	/* a bit hacky here */
   TEST_CHECK_FAIL (GST_IS_PIPELINE (cur));
   TEST_OK;
 
@@ -161,7 +162,7 @@ main (gint argc, gchar *argv[])
   TEST_CHECK_FAIL (strcmp (s, "john") == 0);
   TEST_RUN;
   TEST_OK;
-  
+
   /**
    * checks:
    * - test request pads
@@ -169,7 +170,7 @@ main (gint argc, gchar *argv[])
   TEST_START (PIPELINE7);
   TEST_RUN;
   TEST_OK;
-  
+
   /**
    * checks:
    * - multiple pads on 1 link
@@ -177,7 +178,7 @@ main (gint argc, gchar *argv[])
   TEST_START (PIPELINE8);
   TEST_RUN;
   TEST_OK;
-  
+
   /**
    * checks:
    * - failed in grammar.y cvs version 1.17
@@ -185,7 +186,7 @@ main (gint argc, gchar *argv[])
   TEST_START (PIPELINE9);
   TEST_RUN;
   TEST_OK;
-  
+
   /**
    * checks:
    * - failed in grammar.y cvs version 1.17
@@ -193,7 +194,7 @@ main (gint argc, gchar *argv[])
   TEST_START (PIPELINE10);
   TEST_RUN;
   TEST_OK;
-  
+
   /**
    * checks:
    * - failed in grammar.y cvs version 1.18

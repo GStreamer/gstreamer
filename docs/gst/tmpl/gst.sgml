@@ -174,12 +174,6 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @use_threads: 
 
 
-<!-- ##### VARIABLE g_log_domain_gstreamer ##### -->
-<para>
-The variable that holds the GStreamer log domain
-</para>
-
-
 <!-- ##### MACRO GST_VERSION_MAJOR ##### -->
 <para>
 The major version of GStreamer at compile time

@@ -10,30 +10,31 @@
 #define swab32(x) GUINT32_FROM_BE(x)
 
 typedef struct _gst_getbits_t gst_getbits_t;
-typedef void (*GstGetbitsCallback) (gst_getbits_t *gb, void *data);
+typedef void (*GstGetbitsCallback) (gst_getbits_t * gb, void *data);
 
 /* breaks in structure show alignment on quadword boundaries */
 /* FIXME: need to find out how to force GCC to align this to octwords */
-struct _gst_getbits_t {
-  unsigned char *ptr;		
+struct _gst_getbits_t
+{
+  unsigned char *ptr;
   unsigned long *longptr;
   unsigned char *endptr;
   unsigned long length;
-  long bits;	
+  long bits;
   unsigned long dword;
   unsigned long temp;
 
   GstGetbitsCallback callback;
   void *data;
 
-  unsigned long (*get1bit)(gst_getbits_t *gb, unsigned long bits);
-  unsigned long (*getbits)(gst_getbits_t *gb, unsigned long bits);
-  unsigned long (*getbits_fast)(gst_getbits_t *gb, unsigned long bits);
-  unsigned long (*getbyte)(gst_getbits_t *gb, unsigned long bits);
-  unsigned long (*show1bit)(gst_getbits_t *gb, unsigned long bits);
-  unsigned long (*showbits)(gst_getbits_t *gb, unsigned long bits);
-  void (*flushbits)(gst_getbits_t *gb, unsigned long bits);	
-  void (*backbits)(gst_getbits_t *gb, unsigned long bits);
+  unsigned long (*get1bit) (gst_getbits_t * gb, unsigned long bits);
+  unsigned long (*getbits) (gst_getbits_t * gb, unsigned long bits);
+  unsigned long (*getbits_fast) (gst_getbits_t * gb, unsigned long bits);
+  unsigned long (*getbyte) (gst_getbits_t * gb, unsigned long bits);
+  unsigned long (*show1bit) (gst_getbits_t * gb, unsigned long bits);
+  unsigned long (*showbits) (gst_getbits_t * gb, unsigned long bits);
+  void (*flushbits) (gst_getbits_t * gb, unsigned long bits);
+  void (*backbits) (gst_getbits_t * gb, unsigned long bits);
 };
 
 
@@ -41,19 +42,21 @@ struct _gst_getbits_t {
 #include "gstgetbits_inl.h"
 #else
 
-void gst_getbits_init(gst_getbits_t *gb, GstGetbitsCallback callback, void *data);
-void gst_getbits_newbuf(gst_getbits_t *gb, unsigned char *buffer, unsigned long len);
+void gst_getbits_init (gst_getbits_t * gb, GstGetbitsCallback callback,
+    void *data);
+void gst_getbits_newbuf (gst_getbits_t * gb, unsigned char *buffer,
+    unsigned long len);
 
 #define gst_getbits_bitoffset(gb)                                       \
 (                                                                       \
   (-(gb)->bits)&0x7                                                     \
 )
 
-#define gst_getbits_align_byte(gb)                                 
+#define gst_getbits_align_byte(gb)
 
 #define gst_getbits_bufferpos(gb)  ((gb)->ptr)
 
-#define gst_getbits_bytesleft(gb) ((gb)->endptr - (gb)->ptr)        
+#define gst_getbits_bytesleft(gb) ((gb)->endptr - (gb)->ptr)
 
 #define gst_getbits_bitsleft(gb) (((gb)->endptr - (gb)->ptr)*8  - ((-(gb)->bits)&0x7))
 

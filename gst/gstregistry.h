@@ -43,25 +43,25 @@
                              S_IRGRP | S_IWGRP | \
 			     S_IROTH | S_IWOTH)
 
-G_BEGIN_DECLS
-
-typedef enum {
-  GST_REGISTRY_OK			= (0),
-  GST_REGISTRY_LOAD_ERROR		= (1 << 1),
-  GST_REGISTRY_SAVE_ERROR		= (1 << 2),
-  GST_REGISTRY_PLUGIN_LOAD_ERROR	= (1 << 3),
-  GST_REGISTRY_PLUGIN_SIGNATURE_ERROR	= (1 << 4)
+G_BEGIN_DECLS typedef enum
+{
+  GST_REGISTRY_OK = (0),
+  GST_REGISTRY_LOAD_ERROR = (1 << 1),
+  GST_REGISTRY_SAVE_ERROR = (1 << 2),
+  GST_REGISTRY_PLUGIN_LOAD_ERROR = (1 << 3),
+  GST_REGISTRY_PLUGIN_SIGNATURE_ERROR = (1 << 4)
 } GstRegistryReturn;
 
-typedef enum {
-  GST_REGISTRY_READABLE			= (1 << 1),
-  GST_REGISTRY_WRITABLE			= (1 << 2),
-  GST_REGISTRY_EXISTS			= (1 << 3),
-  GST_REGISTRY_REMOTE			= (1 << 4),
-  GST_REGISTRY_DELAYED_LOADING		= (1 << 5)
+typedef enum
+{
+  GST_REGISTRY_READABLE = (1 << 1),
+  GST_REGISTRY_WRITABLE = (1 << 2),
+  GST_REGISTRY_EXISTS = (1 << 3),
+  GST_REGISTRY_REMOTE = (1 << 4),
+  GST_REGISTRY_DELAYED_LOADING = (1 << 5)
 } GstRegistryFlags;
 
-  
+
 #define GST_TYPE_REGISTRY 		(gst_registry_get_type ())
 #define GST_REGISTRY(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REGISTRY, GstRegistry))
 #define GST_IS_REGISTRY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_REGISTRY))
@@ -72,75 +72,80 @@ typedef enum {
 typedef struct _GstRegistry GstRegistry;
 typedef struct _GstRegistryClass GstRegistryClass;
 
-struct _GstRegistry {
-  GObject 	 object;
+struct _GstRegistry
+{
+  GObject object;
 
-  gint 		 priority;
+  gint priority;
   GstRegistryFlags flags;
 
-  gchar 	*name;
-  gchar 	*details;
+  gchar *name;
+  gchar *details;
 
-  gboolean	 loaded;
-  GList		*plugins;
+  gboolean loaded;
+  GList *plugins;
 
-  GList 	*paths;
+  GList *paths;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
-struct _GstRegistryClass {
-  GObjectClass		parent_class;
+struct _GstRegistryClass
+{
+  GObjectClass parent_class;
 
   /* vtable */
-  gboolean		(*load)      		(GstRegistry *registry);
-  gboolean 		(*save)      		(GstRegistry *registry);
-  gboolean		(*rebuild)     		(GstRegistry *registry);
-  gboolean		(*unload)     		(GstRegistry *registry);
+    gboolean (*load) (GstRegistry * registry);
+    gboolean (*save) (GstRegistry * registry);
+    gboolean (*rebuild) (GstRegistry * registry);
+    gboolean (*unload) (GstRegistry * registry);
 
-  GstRegistryReturn 	(*load_plugin) 		(GstRegistry *registry, GstPlugin *plugin);
-  GstRegistryReturn 	(*unload_plugin) 	(GstRegistry *registry, GstPlugin *plugin);
-  GstRegistryReturn    	(*update_plugin) 	(GstRegistry *registry, GstPlugin *plugin);
+    GstRegistryReturn (*load_plugin) (GstRegistry * registry,
+      GstPlugin * plugin);
+    GstRegistryReturn (*unload_plugin) (GstRegistry * registry,
+      GstPlugin * plugin);
+    GstRegistryReturn (*update_plugin) (GstRegistry * registry,
+      GstPlugin * plugin);
 
   /* signals */
-  void 			(*plugin_added)		(GstRegistry *registry, GstPlugin *plugin);
+  void (*plugin_added) (GstRegistry * registry, GstPlugin * plugin);
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
 
 /* normal GObject stuff */
-GType			gst_registry_get_type		(void);
+GType gst_registry_get_type (void);
 
-gboolean		gst_registry_load		(GstRegistry *registry);
-gboolean		gst_registry_is_loaded		(GstRegistry *registry);
-gboolean		gst_registry_save		(GstRegistry *registry);
-gboolean		gst_registry_rebuild		(GstRegistry *registry);
-gboolean		gst_registry_unload		(GstRegistry *registry);
+gboolean gst_registry_load (GstRegistry * registry);
+gboolean gst_registry_is_loaded (GstRegistry * registry);
+gboolean gst_registry_save (GstRegistry * registry);
+gboolean gst_registry_rebuild (GstRegistry * registry);
+gboolean gst_registry_unload (GstRegistry * registry);
 
-void			gst_registry_add_path		(GstRegistry *registry, const gchar *path);
-GList*			gst_registry_get_path_list	(GstRegistry *registry);
-void 			gst_registry_clear_paths	(GstRegistry *registry);
+void gst_registry_add_path (GstRegistry * registry, const gchar * path);
+GList *gst_registry_get_path_list (GstRegistry * registry);
+void gst_registry_clear_paths (GstRegistry * registry);
 
-gboolean		gst_registry_add_plugin		(GstRegistry *registry, GstPlugin *plugin);
-void			gst_registry_remove_plugin	(GstRegistry *registry, GstPlugin *plugin);
+gboolean gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin);
+void gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin);
 
-GList*			gst_registry_plugin_filter	(GstRegistry *registry, 
-							 GstPluginFilter filter, 
-							 gboolean first, 
-							 gpointer user_data);
-GList*			gst_registry_feature_filter	(GstRegistry *registry, 
-							 GstPluginFeatureFilter filter, 
-							 gboolean first,
-							 gpointer user_data);
+GList *gst_registry_plugin_filter (GstRegistry * registry,
+    GstPluginFilter filter, gboolean first, gpointer user_data);
+GList *gst_registry_feature_filter (GstRegistry * registry,
+    GstPluginFeatureFilter filter, gboolean first, gpointer user_data);
 
-GstPlugin*		gst_registry_find_plugin	(GstRegistry *registry, const gchar *name);
-GstPluginFeature*	gst_registry_find_feature	(GstRegistry *registry, const gchar *name, GType type);
+GstPlugin *gst_registry_find_plugin (GstRegistry * registry,
+    const gchar * name);
+GstPluginFeature *gst_registry_find_feature (GstRegistry * registry,
+    const gchar * name, GType type);
 
-GstRegistryReturn	gst_registry_load_plugin	(GstRegistry *registry, GstPlugin *plugin);
-GstRegistryReturn	gst_registry_unload_plugin	(GstRegistry *registry, GstPlugin *plugin);
-GstRegistryReturn	gst_registry_update_plugin	(GstRegistry *registry, GstPlugin *plugin);
+GstRegistryReturn gst_registry_load_plugin (GstRegistry * registry,
+    GstPlugin * plugin);
+GstRegistryReturn gst_registry_unload_plugin (GstRegistry * registry,
+    GstPlugin * plugin);
+GstRegistryReturn gst_registry_update_plugin (GstRegistry * registry,
+    GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_REGISTRY_H__ */

@@ -27,8 +27,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
-
 #define GST_TYPE_FILESINK \
   (gst_filesink_get_type())
 #define GST_FILESINK(obj) \
@@ -39,17 +37,18 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FILESINK))
 #define GST_IS_FILESINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FILESINK))
-
 typedef struct _GstFileSink GstFileSink;
 typedef struct _GstFileSinkClass GstFileSinkClass;
 
-typedef enum {
-  GST_FILESINK_OPEN             = GST_ELEMENT_FLAG_LAST,
+typedef enum
+{
+  GST_FILESINK_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  GST_FILESINK_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 2
+  GST_FILESINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
 } GstFileSinkFlags;
 
-struct _GstFileSink {
+struct _GstFileSink
+{
   GstElement element;
 
   gchar *filename;
@@ -59,15 +58,15 @@ struct _GstFileSink {
   guint64 data_written;
 };
 
-struct _GstFileSinkClass {
+struct _GstFileSinkClass
+{
   GstElementClass parent_class;
 
   /* signals */
-  void (*handoff) (GstElement *element, GstPad *pad);
+  void (*handoff) (GstElement * element, GstPad * pad);
 };
 
-GType gst_filesink_get_type(void);
+GType gst_filesink_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_FILESINK_H__ */

@@ -27,48 +27,48 @@
 #include <gst/gst.h>
 #include <config.h>
 
-static BonoboObject* gstreamer_factory (BonoboGenericFactory *factory,
-				     gpointer user_data)
+static BonoboObject *
+gstreamer_factory (BonoboGenericFactory * factory, gpointer user_data)
 {
-	return BONOBO_OBJECT (bonobo_media_gstreamer_new ());
+  return BONOBO_OBJECT (bonobo_media_gstreamer_new ());
 }
 
-static void init_bonobo (int argc, char **argv)
+static void
+init_bonobo (int argc, char **argv)
 {
-	CORBA_ORB orb;
+  CORBA_ORB orb;
 
-	gnome_init_with_popt_table ("bonobo-media-gstreamer", VERSION,
-				    argc, argv,
-				    oaf_popt_options, 0, NULL);
+  gnome_init_with_popt_table ("bonobo-media-gstreamer", VERSION,
+      argc, argv, oaf_popt_options, 0, NULL);
 
-	orb = oaf_init (argc, argv);
+  orb = oaf_init (argc, argv);
 
-	if (bonobo_init (orb, NULL, NULL) == FALSE)
-		g_error ("Could not initialize Bonobo");
+  if (bonobo_init (orb, NULL, NULL) == FALSE)
+    g_error ("Could not initialize Bonobo");
 }
 
-static void last_unref_cb (BonoboObject *bonobo_object,
-			   BonoboGenericFactory *factory)
+static void
+last_unref_cb (BonoboObject * bonobo_object, BonoboGenericFactory * factory)
 {
-	bonobo_object_unref (BONOBO_OBJECT (factory));
-	gtk_main_quit ();
+  bonobo_object_unref (BONOBO_OBJECT (factory));
+  gtk_main_quit ();
 }
 
-int main (int argc, char **argv)
+int
+main (int argc, char **argv)
 {
-	BonoboGenericFactory *factory;
+  BonoboGenericFactory *factory;
 
-	gst_init (&argc, &argv);
-	init_bonobo (argc, argv);
+  gst_init (&argc, &argv);
+  init_bonobo (argc, argv);
 
-	factory = bonobo_generic_factory_new (
-			"OAFIID:Bonobo_Media_GStreamer_Factory",
-			gstreamer_factory, NULL);
+  factory = bonobo_generic_factory_new ("OAFIID:Bonobo_Media_GStreamer_Factory",
+      gstreamer_factory, NULL);
 
-	gtk_signal_connect (GTK_OBJECT (bonobo_context_running_get ()), "last_unref",
-			    GTK_SIGNAL_FUNC (last_unref_cb), factory);
+  gtk_signal_connect (GTK_OBJECT (bonobo_context_running_get ()), "last_unref",
+      GTK_SIGNAL_FUNC (last_unref_cb), factory);
 
-	bonobo_main ();
+  bonobo_main ();
 
-	return 0;
+  return 0;
 }

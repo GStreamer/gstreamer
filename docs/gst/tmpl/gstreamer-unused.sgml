@@ -4556,6 +4556,16 @@ can perform necessary cleanup.
 @pool: The pool that is being destroyed
 @user_data: user data as set on th bufferpool
 
+<!-- ##### ENUM GstCPUFlags ##### -->
+<para>
+Flags that represent cpu capabilities
+</para>
+
+@GST_CPU_FLAG_MMX: The cpu is mmx enabled
+@GST_CPU_FLAG_SSE: The cpu is sse enabled
+@GST_CPU_FLAG_MMXEXT: The cpu has extended mmx instructions
+@GST_CPU_FLAG_3DNOW: The cpu is 3DNOW enabled
+
 <!-- ##### STRUCT GstCacheAssociation ##### -->
 <para>
 
@@ -5158,6 +5168,18 @@ Indicates the mmapped area should be touched to bring it into memory.
 </para>
 
 
+<!-- ##### ENUM GstFormat ##### -->
+<para>
+Standard predefined formats
+</para>
+
+@GST_FORMAT_UNDEFINED: undefined format
+@GST_FORMAT_DEFAULT: the default format of the pad/element
+@GST_FORMAT_BYTES: bytes
+@GST_FORMAT_TIME: time in nanoseconds
+@GST_FORMAT_BUFFERS: buffers
+@GST_FORMAT_PERCENT: percentage of stream
+
 <!-- ##### STRUCT GstHttpSrc ##### -->
 <para>
 
@@ -5272,6 +5294,12 @@ Specify the location of the file. The location must be a fully qualified URL.
 <!-- ##### ARG GstMD5Sink:md5 ##### -->
 <para>
 
+</para>
+
+
+<!-- ##### STRUCT GstMemChunk ##### -->
+<para>
+The memchunk structure
 </para>
 
 
@@ -5505,6 +5533,20 @@ Sets the command to be executed.
 </para>
 
 
+<!-- ##### ENUM GstQueryType ##### -->
+<para>
+Standard predefined Query types
+</para>
+
+@GST_QUERY_NONE: invalid query type
+@GST_QUERY_TOTAL: total length of stream
+@GST_QUERY_POSITION: current position in stream
+@GST_QUERY_LATENCY: latency of stream
+@GST_QUERY_JITTER: current jitter of stream
+@GST_QUERY_START: start of configured segment
+@GST_QUERY_SEGMENT_END: end of configured segment
+@GST_QUERY_RATE: current rate of the stream
+
 <!-- ##### STRUCT GstQueue ##### -->
 <para>
 
@@ -5570,6 +5612,17 @@ the region types for #gst_pad_pullregion.
 
 @global_reg: 
 @local_reg: 
+
+<!-- ##### ENUM GstRegistryReturn ##### -->
+<para>
+The return value of registry operations
+</para>
+
+@GST_REGISTRY_OK: The registry reported no error.
+@GST_REGISTRY_LOAD_ERROR: There was a load error
+@GST_REGISTRY_SAVE_ERROR: There was an error saving the registry
+@GST_REGISTRY_PLUGIN_LOAD_ERROR: There was an error loading a plugin
+@GST_REGISTRY_PLUGIN_SIGNATURE_ERROR: There was an error saving a plugin
 
 <!-- ##### STRUCT GstRegistryWrite ##### -->
 <para>
@@ -5798,6 +5851,20 @@ Flags for the GstSrc element
 </para>
 
 
+<!-- ##### ENUM GstTagMergeMode ##### -->
+<para>
+
+</para>
+
+@GST_TAG_MERGE_UNDEFINED: 
+@GST_TAG_MERGE_REPLACE_ALL: 
+@GST_TAG_MERGE_REPLACE: 
+@GST_TAG_MERGE_APPEND: 
+@GST_TAG_MERGE_PREPEND: 
+@GST_TAG_MERGE_KEEP: 
+@GST_TAG_MERGE_KEEP_ALL: 
+@GST_TAG_MERGE_COUNT: 
+
 <!-- ##### STRUCT GstTee ##### -->
 <para>
 
@@ -5920,6 +5987,15 @@ Query the element for the current mime type
 
 </para>
 
+
+<!-- ##### SIGNAL GstXML::object-loaded ##### -->
+<para>
+
+</para>
+
+@gstxml: the object which received the signal.
+@arg1: 
+@arg2: 
 
 <!-- ##### USER_FUNCTION GstXMLRegistryAddPathList ##### -->
 <para>
@@ -6675,6 +6751,12 @@ must be defined to activate the tracing functionality.
 @list: 
 @llink: 
 @Returns: 
+
+<!-- ##### VARIABLE g_log_domain_gstreamer ##### -->
+<para>
+The variable that holds the GStreamer log domain
+</para>
+
 
 <!-- ##### MACRO g_object_class_find_property ##### -->
 <para>
@@ -9560,6 +9642,13 @@ Destroys the pipeline.
 </para>
 
 @Returns: 
+
+<!-- ##### FUNCTION gst_plugin_error_quark ##### -->
+<para>
+Get the error quark
+</para>
+
+@Returns: The error quark used in GError messages
 
 <!-- ##### FUNCTION gst_plugin_feature_get_type ##### -->
 <para>

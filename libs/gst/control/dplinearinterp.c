@@ -21,47 +21,50 @@
 
 #include "dplinearinterp.h"
 
-static void gst_dp_linint_class_init (GstDParamClass *klass);
-static void gst_dp_linint_base_class_init (GstDParamClass *klass);
-static void gst_dp_linint_init (GstDParam *dp_linint);
+static void gst_dp_linint_class_init (GstDParamClass * klass);
+static void gst_dp_linint_base_class_init (GstDParamClass * klass);
+static void gst_dp_linint_init (GstDParam * dp_linint);
 
-GType 
-gst_dp_linint_get_type(void) {
-	static GType dp_linint_type = 0;
+GType
+gst_dp_linint_get_type (void)
+{
+  static GType dp_linint_type = 0;
 
-	if (!dp_linint_type) {
-		static const GTypeInfo dp_linint_info = {
-			sizeof(GstDParamClass),
-			(GBaseInitFunc)gst_dp_linint_base_class_init,
-			NULL,
-			(GClassInitFunc)gst_dp_linint_class_init,
-			NULL,
-			NULL,
-			sizeof(GstDParam),
-			0,
-			(GInstanceInitFunc)gst_dp_linint_init,
-		};
-		dp_linint_type = g_type_register_static(GST_TYPE_DPARAM, "GstDParamLinInterp", &dp_linint_info, 0);
-	}
-	return dp_linint_type;
+  if (!dp_linint_type) {
+    static const GTypeInfo dp_linint_info = {
+      sizeof (GstDParamClass),
+      (GBaseInitFunc) gst_dp_linint_base_class_init,
+      NULL,
+      (GClassInitFunc) gst_dp_linint_class_init,
+      NULL,
+      NULL,
+      sizeof (GstDParam),
+      0,
+      (GInstanceInitFunc) gst_dp_linint_init,
+    };
+    dp_linint_type =
+	g_type_register_static (GST_TYPE_DPARAM, "GstDParamLinInterp",
+	&dp_linint_info, 0);
+  }
+  return dp_linint_type;
 }
 
 static void
-gst_dp_linint_base_class_init (GstDParamClass *klass)
+gst_dp_linint_base_class_init (GstDParamClass * klass)
 {
 
 }
 
 static void
-gst_dp_linint_class_init (GstDParamClass *klass)
+gst_dp_linint_class_init (GstDParamClass * klass)
 {
 
 }
 
 static void
-gst_dp_linint_init (GstDParam *dp_linint)
+gst_dp_linint_init (GstDParam * dp_linint)
 {
-	g_return_if_fail (dp_linint != NULL);
+  g_return_if_fail (dp_linint != NULL);
 }
 
 /**
@@ -70,14 +73,14 @@ gst_dp_linint_init (GstDParam *dp_linint)
  *
  * Returns: a new instance of GstDParam
  */
-GstDParam* 
+GstDParam *
 gst_dp_linint_new (GType type)
 {
-	GstDParam *dparam;
-	GstDParamLinInterp *dp_linint;
+  GstDParam *dparam;
+  GstDParamLinInterp *dp_linint;
 
-	dp_linint = g_object_new (gst_dp_linint_get_type (), NULL);
-	dparam = GST_DPARAM(dp_linint);
-	
-	return dparam;
+  dp_linint = g_object_new (gst_dp_linint_get_type (), NULL);
+  dparam = GST_DPARAM (dp_linint);
+
+  return dparam;
 }

@@ -22,11 +22,11 @@
 typedef struct
 {
   GMutex *mutex;
-  GCond  *cond;
-  gint    var;
+  GCond *cond;
+  gint var;
 } ThreadInfo;
 
-static void*
+static void *
 thread_loop (void *arg)
 {
   ThreadInfo *info = (ThreadInfo *) arg;
@@ -50,8 +50,8 @@ thread_loop (void *arg)
   return NULL;
 }
 
-gint 
-main (gint argc, gchar *argv[]) 
+gint
+main (gint argc, gchar * argv[])
 {
   ThreadInfo *info;
   GThread *thread;
@@ -65,14 +65,11 @@ main (gint argc, gchar *argv[])
   info->mutex = g_mutex_new ();
   info->cond = g_cond_new ();
   info->var = 0;
-  
+
   g_print ("main: lock\n");
   g_mutex_lock (info->mutex);
 
-  thread = g_thread_create (thread_loop,
-	                    info, 
-			    TRUE, 
-			    &error);
+  thread = g_thread_create (thread_loop, info, TRUE, &error);
 
   if (error != NULL) {
     g_print ("Unable to start thread: %s\n", error->message);
@@ -91,7 +88,7 @@ main (gint argc, gchar *argv[])
   g_cond_wait (info->cond, info->mutex);
 
   g_print ("main: var == %d\n", info->var);
-  if (info->var != 1) 
+  if (info->var != 1)
     g_print ("main: !!error!! expected var == 1, got %d\n", info->var);
   g_mutex_unlock (info->mutex);
 
@@ -105,4 +102,3 @@ done:
 
   return res;
 }
-

@@ -27,15 +27,14 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
-typedef enum {
-  GST_FORMAT_UNDEFINED 	=  0, /* must be first in list */
-  GST_FORMAT_DEFAULT   	=  1, /* samples for audio, frames/fields for video */
-  GST_FORMAT_BYTES   	=  2,
-  GST_FORMAT_TIME 	=  3,
-  GST_FORMAT_BUFFERS	=  4,
-  GST_FORMAT_PERCENT	=  5
+G_BEGIN_DECLS typedef enum
+{
+  GST_FORMAT_UNDEFINED = 0,	/* must be first in list */
+  GST_FORMAT_DEFAULT = 1,	/* samples for audio, frames/fields for video */
+  GST_FORMAT_BYTES = 2,
+  GST_FORMAT_TIME = 3,
+  GST_FORMAT_BUFFERS = 4,
+  GST_FORMAT_PERCENT = 5
 } GstFormat;
 
 /* a percentage is always relative to 1000000 */
@@ -44,11 +43,11 @@ typedef enum {
 
 typedef struct _GstFormatDefinition GstFormatDefinition;
 
-struct _GstFormatDefinition 
+struct _GstFormatDefinition
 {
-  GstFormat  value;
-  gchar     *nick;
-  gchar     *description;
+  GstFormat value;
+  gchar *nick;
+  gchar *description;
 };
 
 #ifdef G_HAVE_ISO_VARARGS
@@ -75,22 +74,18 @@ functionname (type object)                       	\
 }
 #endif
 
-void		_gst_format_initialize		(void);
+void _gst_format_initialize (void);
 
 /* register a new format */
-GstFormat	gst_format_register		(const gchar *nick, 
-						 const gchar *description);
-GstFormat	gst_format_get_by_nick		(const gchar *nick);
+GstFormat gst_format_register (const gchar * nick, const gchar * description);
+GstFormat gst_format_get_by_nick (const gchar * nick);
 
 /* check if a format is in an array of formats */
-gboolean	gst_formats_contains		(const GstFormat *formats, GstFormat format);
+gboolean gst_formats_contains (const GstFormat * formats, GstFormat format);
 
 /* query for format details */
-G_CONST_RETURN GstFormatDefinition*	
-		gst_format_get_details		(GstFormat format);
-G_CONST_RETURN GList*
-		gst_format_get_definitions 	(void);
+G_CONST_RETURN GstFormatDefinition *gst_format_get_details (GstFormat format);
+G_CONST_RETURN GList *gst_format_get_definitions (void);
 
 G_END_DECLS
-
 #endif /* __GST_FORMAT_H__ */

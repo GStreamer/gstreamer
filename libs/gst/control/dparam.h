@@ -26,13 +26,11 @@
 #include "dparamcommon.h"
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_DPARAM			(gst_dparam_get_type ())
 #define GST_DPARAM(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DPARAM,GstDParam))
 #define GST_DPARAM_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DPARAM,GstDParam))
 #define GST_IS_DPARAM(obj)			(G_TYPE_CHECK_INSTANCE_TYPE	((obj), GST_TYPE_DPARAM))
 #define GST_IS_DPARAM_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DPARAM))
-
 #define GST_DPARAM_NAME(dparam)				(GST_OBJECT_NAME(dparam))
 #define GST_DPARAM_PARENT(dparam)			(GST_OBJECT_PARENT(dparam))
 #define GST_DPARAM_CHANGE_VALUE(dparam)		((dparam)->change_value)
@@ -45,65 +43,67 @@ G_BEGIN_DECLS
 #define GST_DPARAM_META_PARAM_SPECS(dparam)	((dparam)->meta_param_specs)
 #define GST_DPARAM_LOCK(dparam)				(g_mutex_lock((dparam)->lock))
 #define GST_DPARAM_UNLOCK(dparam)			(g_mutex_unlock((dparam)->lock))
-
 #define GST_DPARAM_READY_FOR_UPDATE(dparam)	((dparam)->ready_for_update)
 #define GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam)	((dparam)->next_update_timestamp)
 #define GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam)	((dparam)->last_update_timestamp)
-
 #define GST_DPARAM_DO_UPDATE(dparam, timestamp, value, update_info) \
 	((dparam->do_update_func)(dparam, timestamp, value, update_info))
-
 typedef struct _GstDParamClass GstDParamClass;
 
 
-typedef enum {
+typedef enum
+{
   GST_DPARAM_UPDATE_FIRST,
   GST_DPARAM_UPDATE_NORMAL,
 } GstDParamUpdateInfo;
 
-typedef void (*GstDParamDoUpdateFunction) (GstDParam *dparam, gint64 timestamp, GValue *value, GstDParamUpdateInfo update_info);
+typedef void (*GstDParamDoUpdateFunction) (GstDParam * dparam, gint64 timestamp,
+    GValue * value, GstDParamUpdateInfo update_info);
 
-struct _GstDParam {
-	GstObject		object;
+struct _GstDParam
+{
+  GstObject object;
 
-	GstDParamDoUpdateFunction do_update_func;
-	
-	GMutex *lock;
+  GstDParamDoUpdateFunction do_update_func;
 
-	gfloat value_float;
-        gdouble value_double;
-	gint value_int;
-	gint64 value_int64;
-	
-	GstDParamManager *manager;
-	GParamSpec *param_spec;
-	GType type;
-	gboolean ready_for_update;
+  GMutex *lock;
 
-	gint64 next_update_timestamp;
-	gint64 last_update_timestamp;
-	gchar *unit_name;
-	gboolean is_log;
+  gfloat value_float;
+  gdouble value_double;
+  gint value_int;
+  gint64 value_int64;
 
-        gpointer _gst_reserved[GST_PADDING];
+  GstDParamManager *manager;
+  GParamSpec *param_spec;
+  GType type;
+  gboolean ready_for_update;
+
+  gint64 next_update_timestamp;
+  gint64 last_update_timestamp;
+  gchar *unit_name;
+  gboolean is_log;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
-struct _GstDParamClass {
-	GstObjectClass parent_class;
+struct _GstDParamClass
+{
+  GstObjectClass parent_class;
 
-	/* signal callbacks */
-	void (*value_changed) (GstDParam *dparam);
+  /* signal callbacks */
+  void (*value_changed) (GstDParam * dparam);
 
-        gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 
 GType gst_dparam_get_type (void);
-GstDParam* gst_dparam_new (GType type);
-void gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GParamSpec *param_spec, gchar *unit_name);
-void gst_dparam_detach (GstDParam *dparam);
-void gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value, GstDParamUpdateInfo update_info);
+GstDParam *gst_dparam_new (GType type);
+void gst_dparam_attach (GstDParam * dparam, GstDParamManager * manager,
+    GParamSpec * param_spec, gchar * unit_name);
+void gst_dparam_detach (GstDParam * dparam);
+void gst_dparam_do_update_default (GstDParam * dparam, gint64 timestamp,
+    GValue * value, GstDParamUpdateInfo update_info);
 
 G_END_DECLS
-
 #endif /* __GST_DPARAM_H__ */

@@ -34,7 +34,7 @@ create_all_elements (void)
 
   /* get list of elements */
   for (elements = gst_registry_pool_feature_list (GST_TYPE_ELEMENT_FACTORY);
-       elements != NULL; elements = elements->next) {
+      elements != NULL; elements = elements->next) {
     factory = (GstElementFactory *) elements->data;
     if ((element = gst_element_factory_create (factory, "test"))) {
       gst_object_unref (GST_OBJECT (element));
@@ -43,8 +43,7 @@ create_all_elements (void)
 }
 
 gint
-main (gint   argc,
-      gchar *argv[])
+main (gint argc, gchar * argv[])
 {
   gst_init (&argc, &argv);
   create_all_elements ();

@@ -26,56 +26,58 @@
 #include "gstinfo.h"
 #include "gstscheduler.h"
 
-static GstElementDetails gst_pipeline_details = GST_ELEMENT_DETAILS (
-  "Pipeline object",
-  "Generic/Bin",
-  "Complete pipeline object",
-  "Erik Walthinsen <omega@cse.ogi.edu>"
-);
+static GstElementDetails gst_pipeline_details =
+GST_ELEMENT_DETAILS ("Pipeline object",
+    "Generic/Bin",
+    "Complete pipeline object",
+    "Erik Walthinsen <omega@cse.ogi.edu>");
 
 /* Pipeline signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0
-  /* FILL ME */
+      /* FILL ME */
 };
 
 
-static void			gst_pipeline_base_init		(gpointer	g_class);
-static void			gst_pipeline_class_init		(gpointer	g_class, 
-								 gpointer	class_data);
-static void			gst_pipeline_init		(GTypeInstance *instance, 
-								 gpointer	g_class);
+static void gst_pipeline_base_init (gpointer g_class);
+static void gst_pipeline_class_init (gpointer g_class, gpointer class_data);
+static void gst_pipeline_init (GTypeInstance * instance, gpointer g_class);
 
-static void                     gst_pipeline_dispose         	(GObject *	object);
+static void gst_pipeline_dispose (GObject * object);
 
-static GstElementStateReturn	gst_pipeline_change_state	(GstElement *	element);
+static GstElementStateReturn gst_pipeline_change_state (GstElement * element);
 
 static GstBinClass *parent_class = NULL;
+
 /* static guint gst_pipeline_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-gst_pipeline_get_type (void) {
+gst_pipeline_get_type (void)
+{
   static GType pipeline_type = 0;
 
   if (!pipeline_type) {
     static const GTypeInfo pipeline_info = {
-      sizeof(GstPipelineClass),
+      sizeof (GstPipelineClass),
       gst_pipeline_base_init,
       NULL,
-      (GClassInitFunc)gst_pipeline_class_init,
+      (GClassInitFunc) gst_pipeline_class_init,
       NULL,
       NULL,
-      sizeof(GstPipeline),
+      sizeof (GstPipeline),
       0,
       gst_pipeline_init,
       NULL
     };
-    pipeline_type = g_type_register_static (GST_TYPE_BIN, "GstPipeline", &pipeline_info, 0);
+    pipeline_type =
+	g_type_register_static (GST_TYPE_BIN, "GstPipeline", &pipeline_info, 0);
   }
   return pipeline_type;
 }
@@ -84,7 +86,7 @@ static void
 gst_pipeline_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  
+
   gst_element_class_set_details (gstelement_class, &gst_pipeline_details);
 }
 
@@ -97,17 +99,18 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
 
-  gstelement_class->change_state 	= GST_DEBUG_FUNCPTR (gst_pipeline_change_state);
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_pipeline_change_state);
 }
 
 static void
-gst_pipeline_init (GTypeInstance *instance, gpointer g_class)
+gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
 {
   GstScheduler *scheduler;
   GstPipeline *pipeline = GST_PIPELINE (instance);
-  
+
   /* pipelines are managing bins */
   GST_FLAG_SET (pipeline, GST_BIN_FLAG_MANAGER);
 
@@ -119,19 +122,19 @@ gst_pipeline_init (GTypeInstance *instance, gpointer g_class)
     const gchar *name = gst_scheduler_factory_get_default_name ();
 
     g_error ("Critical error: could not get scheduler \"%s\"\n"
-	     "Are you sure you have a registry ?\n"
-	     "Run gst-register as root if you haven't done so yet.", name);
+	"Are you sure you have a registry ?\n"
+	"Run gst-register as root if you haven't done so yet.", name);
   }
 }
 
 static void
-gst_pipeline_dispose (GObject *object)
+gst_pipeline_dispose (GObject * object)
 {
   GstPipeline *pipeline = GST_PIPELINE (object);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
-  gst_object_replace ((GstObject **)&GST_ELEMENT_SCHED (pipeline), NULL);
+  gst_object_replace ((GstObject **) & GST_ELEMENT_SCHED (pipeline), NULL);
 }
 
 /**
@@ -142,14 +145,14 @@ gst_pipeline_dispose (GObject *object)
  *
  * Returns: newly created GstPipeline
  */
-GstElement*
-gst_pipeline_new (const gchar *name) 
+GstElement *
+gst_pipeline_new (const gchar * name)
 {
   return gst_element_factory_make ("pipeline", name);
 }
 
 static GstElementStateReturn
-gst_pipeline_change_state (GstElement *element)
+gst_pipeline_change_state (GstElement * element)
 {
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
@@ -165,7 +168,7 @@ gst_pipeline_change_state (GstElement *element)
        * might not be in cothread 0 */
 #if 0
       if (GST_ELEMENT_SCHED (element)) {
-        gst_scheduler_reset (GST_ELEMENT_SCHED (element));
+	gst_scheduler_reset (GST_ELEMENT_SCHED (element));
       }
 #endif
       break;
@@ -176,4 +179,3 @@ gst_pipeline_change_state (GstElement *element)
 
   return GST_STATE_SUCCESS;
 }
-

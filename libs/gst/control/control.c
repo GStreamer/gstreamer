@@ -18,16 +18,17 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
 #include <gst/gst.h>
 
 #include "control.h"
 
-GST_DEBUG_CATEGORY(_gst_control_debug);
+GST_DEBUG_CATEGORY (_gst_control_debug);
 
 void
-gst_control_init (int *argc, char **argv[]) {
-	GST_DEBUG_CATEGORY_INIT (_gst_control_debug, "control", 0, "libgstcontrol");
-	_gst_dpman_initialize ();
-	_gst_unitconv_initialize ();	
+gst_control_init (int *argc, char **argv[])
+{
+  GST_DEBUG_CATEGORY_INIT (_gst_control_debug, "control", 0, "libgstcontrol");
+  _gst_dpman_initialize ();
+  _gst_unitconv_initialize ();
 }

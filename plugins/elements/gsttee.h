@@ -27,8 +27,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
-
 #define GST_TYPE_TEE \
   (gst_tee_get_type())
 #define GST_TEE(obj) \
@@ -39,27 +37,27 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TEE))
 #define GST_IS_TEE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TEE))
+typedef struct _GstTee GstTee;
+typedef struct _GstTeeClass GstTeeClass;
 
-typedef struct _GstTee 		GstTee;
-typedef struct _GstTeeClass 	GstTeeClass;
-
-struct _GstTee {
+struct _GstTee
+{
   GstElement element;
 
   GstPad *sinkpad;
 
   gboolean silent;
-  gchar    *last_message;
+  gchar *last_message;
 };
 
-struct _GstTeeClass {
+struct _GstTeeClass
+{
   GstElementClass parent_class;
 };
 
-GType 	gst_tee_get_type	(void);
+GType gst_tee_get_type (void);
 
-gboolean 	gst_tee_factory_init 	(GstElementFactory *factory);
+gboolean gst_tee_factory_init (GstElementFactory * factory);
 
 G_END_DECLS
-
 #endif /* __GST_TEE_H__ */

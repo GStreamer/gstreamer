@@ -30,9 +30,7 @@
 
 #include <gst/gsttypes.h>
 
-G_BEGIN_DECLS
-
-extern GType _gst_object_type;
+G_BEGIN_DECLS extern GType _gst_object_type;
 
 #define GST_TYPE_OBJECT			(_gst_object_type)
 #define GST_IS_OBJECT(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_OBJECT))
@@ -49,45 +47,48 @@ extern GType _gst_object_type;
 
 typedef enum
 {
-  GST_DESTROYED   = 0,
+  GST_DESTROYED = 0,
   GST_FLOATING,
 
-  GST_OBJECT_FLAG_LAST   = 4
+  GST_OBJECT_FLAG_LAST = 4
 } GstObjectFlags;
 
-struct _GstObject {
-  GObject 	object;
+struct _GstObject
+{
+  GObject object;
 
-  gchar 	*name;
+  gchar *name;
 
   /* locking for all sorts of things */
-  GMutex 	*lock;
+  GMutex *lock;
   /* this object's parent */
-  GstObject 	*parent;
+  GstObject *parent;
 
-  guint32 	flags;
+  guint32 flags;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
 /* signal_object is used to signal to the whole class */
-struct _GstObjectClass {
-  GObjectClass	parent_class;
+struct _GstObjectClass
+{
+  GObjectClass parent_class;
 
-  gchar		*path_string_separator;
-  GObject	*signal_object;
+  gchar *path_string_separator;
+  GObject *signal_object;
 
   /* signals */
-  void		(*parent_set)		(GstObject *object, GstObject *parent);
-  void		(*parent_unset)		(GstObject *object, GstObject *parent);
-  void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
-  void 		(*deep_notify)   	(GstObject *object, GstObject *orig, GParamSpec *pspec);
+  void (*parent_set) (GstObject * object, GstObject * parent);
+  void (*parent_unset) (GstObject * object, GstObject * parent);
+  void (*object_saved) (GstObject * object, xmlNodePtr parent);
+  void (*deep_notify) (GstObject * object, GstObject * orig,
+      GParamSpec * pspec);
 
   /* functions go here */
-  void		(*destroy)		(GstObject *object);
+  void (*destroy) (GstObject * object);
 
-  xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
-  void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
+    xmlNodePtr (*save_thyself) (GstObject * object, xmlNodePtr parent);
+  void (*restore_thyself) (GstObject * object, xmlNodePtr self);
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -111,57 +112,51 @@ struct _GstObjectClass {
 
 
 /* normal GObject stuff */
-GType		gst_object_get_type		(void);
+GType gst_object_get_type (void);
 
 /* name routines */
-void		gst_object_set_name		(GstObject *object, const gchar *name);
-G_CONST_RETURN gchar*
-		gst_object_get_name		(GstObject *object);
+void gst_object_set_name (GstObject * object, const gchar * name);
+G_CONST_RETURN gchar *gst_object_get_name (GstObject * object);
 
 /* parentage routines */
-void		gst_object_set_parent		(GstObject *object, GstObject *parent);
-GstObject*	gst_object_get_parent		(GstObject *object);
-void		gst_object_unparent		(GstObject *object);
+void gst_object_set_parent (GstObject * object, GstObject * parent);
+GstObject *gst_object_get_parent (GstObject * object);
+void gst_object_unparent (GstObject * object);
 
-void            gst_object_default_deep_notify 	(GObject *object, GstObject *orig, 
-		                                 GParamSpec *pspec, gchar **excluded_props);
+void gst_object_default_deep_notify (GObject * object, GstObject * orig,
+    GParamSpec * pspec, gchar ** excluded_props);
 
-gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
+gboolean gst_object_check_uniqueness (GList * list, const gchar * name);
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
-xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
-void		gst_object_restore_thyself	(GstObject *object, xmlNodePtr self);
+xmlNodePtr gst_object_save_thyself (GstObject * object, xmlNodePtr parent);
+void gst_object_restore_thyself (GstObject * object, xmlNodePtr self);
 #else
 #pragma GCC poison gst_object_save_thyself
 #pragma GCC poison gst_object_restore_thyself
 #endif
 
 /* refcounting + life cycle */
-GstObject *	gst_object_ref			(GstObject *object);
-void 		gst_object_unref		(GstObject *object);
-void 		gst_object_sink			(GstObject *object);
+GstObject *gst_object_ref (GstObject * object);
+void gst_object_unref (GstObject * object);
+void gst_object_sink (GstObject * object);
 
 /* replace object pointer */
-void 		gst_object_replace		(GstObject **oldobj, GstObject *newobj);
+void gst_object_replace (GstObject ** oldobj, GstObject * newobj);
 
 /* printing out the 'path' of the object */
-gchar *		gst_object_get_path_string	(GstObject *object);
+gchar *gst_object_get_path_string (GstObject * object);
 
-guint		gst_class_signal_connect	(GstObjectClass	*klass,
-						 const gchar	*name,
-						 gpointer	 func,
-						 gpointer	 func_data);
+guint gst_class_signal_connect (GstObjectClass * klass,
+    const gchar * name, gpointer func, gpointer func_data);
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
-void		gst_class_signal_emit_by_name	(GstObject	*object,
-		                                 const gchar	*name,
-						 xmlNodePtr 	 self);
+void gst_class_signal_emit_by_name (GstObject * object,
+    const gchar * name, xmlNodePtr self);
 #else
 #pragma GCC poison gst_class_signal_emit_by_name
 #endif
 
 
 G_END_DECLS
-
 #endif /* __GST_OBJECT_H__ */
-

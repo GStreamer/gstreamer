@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
- 
+
 #include <gst/gst.h>
 
 #include <string.h>
@@ -88,7 +88,7 @@ static char *video_file = NULL;
   gst_object_unref (GST_OBJECT (cur)); \
   cur = NULL; \
   g_print ("TEST %2d line %3d COMPLETE\n", test, __LINE__); \
-}G_STMT_END 
+}G_STMT_END
 #define TEST_RUN(iters) G_STMT_START{ \
   gint it = iters; \
   g_print ("TEST %2d line %3d   RUN\n", test, __LINE__); \
@@ -106,7 +106,7 @@ static char *video_file = NULL;
     return -test; \
   } \
   g_print ("TEST %2d line %3d STOPPED  : %u iterations\n", test, __LINE__, iterations); \
-}G_STMT_END 
+}G_STMT_END
 #define TEST_FINISH G_STMT_START{ \
   g_print("\n"); \
   g_print("To run this test there are things required that you do not have. (see above)\n"); \
@@ -114,7 +114,7 @@ static char *video_file = NULL;
   g_print("Currently the following tests will be ignored.\n"); \
   g_print("\n"); \
   exit (0); \
-}G_STMT_END 
+}G_STMT_END
 #define TEST_REQUIRE(condition, error) G_STMT_START{ \
   if (condition) { \
     g_print ("REQUIRE line %3d    OK\n", __LINE__); \
@@ -122,7 +122,7 @@ static char *video_file = NULL;
     g_print ("REQUIRE line %3d   EXIT   : %s\n", __LINE__, (error)); \
     TEST_FINISH; \
   } \
-}G_STMT_END 
+}G_STMT_END
 #define TEST_REQUIRE_ELEMENT(element_name) G_STMT_START{ \
   GstElement *element = gst_element_factory_make ((element_name), NULL); \
   if (element) { \
@@ -132,7 +132,7 @@ static char *video_file = NULL;
     g_print ("REQUIRE line %3d   EXIT   : No element of type \"%s\" available. Exiting.\n", __LINE__, (element_name)); \
     TEST_FINISH; \
   } \
-}G_STMT_END 
+}G_STMT_END
 
 #define PIPELINE1 "filesrc blocksize =8192  location=%s ! mad ! osssink"
 #define PIPELINE2 "filesrc location=%s ! mpegdemux ! mpeg2dec ! xvideosink"
@@ -144,12 +144,12 @@ static char *video_file = NULL;
 #define PIPELINE3 "filesrc location=%s ! mpegdemux name = demux ! mpeg2dec ! { queue ! xvideosink } demux.audio_%%02d ! mad ! osssink"
 */
 
-gint 
-main (gint argc, gchar *argv[]) 
+gint
+main (gint argc, gchar * argv[])
 {
   gst_init (&argc, &argv);
 
-goto here;
+  goto here;
 here:
 
   /**
@@ -158,7 +158,8 @@ here:
    * - unsigned parameters
    */
   audio_file = g_build_filename (g_get_home_dir (), "music.mp3", NULL);
-  TEST_REQUIRE (g_file_test (audio_file, G_FILE_TEST_EXISTS), "The following tests requires a valid mp3 file music.mp3 in your home directory.");
+  TEST_REQUIRE (g_file_test (audio_file, G_FILE_TEST_EXISTS),
+      "The following tests requires a valid mp3 file music.mp3 in your home directory.");
   TEST_REQUIRE_ELEMENT ("mad");
   TEST_REQUIRE_ELEMENT ("osssink");
   TEST_START (PIPELINE1, audio_file);
@@ -171,7 +172,8 @@ here:
    * - SOMETIMES pads
    */
   video_file = g_build_filename (g_get_home_dir (), "video.mpeg", NULL);
-  TEST_REQUIRE (g_file_test (video_file, G_FILE_TEST_EXISTS), "The following tests requires a valid mpeg file video.mpeg in your home directory.");
+  TEST_REQUIRE (g_file_test (video_file, G_FILE_TEST_EXISTS),
+      "The following tests requires a valid mpeg file video.mpeg in your home directory.");
   TEST_REQUIRE_ELEMENT ("mpegdemux");
   TEST_REQUIRE_ELEMENT ("mpeg2dec");
   TEST_REQUIRE_ELEMENT ("xvideosink");

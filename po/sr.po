@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-03-09 16:16+0100\n"
+"POT-Creation-Date: 2004-03-11 11:33+0100\n"
 "PO-Revision-Date: 2004-03-13 01:47+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -27,16 +27,23 @@ msgid "Print available debug categories and exit"
 msgstr "Испиши доступне категорије за налажење грешака и заврши"
 
 #: gst/gst.c:125
-msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr "Подразумевани ниво опширности од 1 (само грешке) до 5 (све) или 0 (без излаза)"
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+"Подразумевани ниво опширности од 1 (само грешке) до 5 (све) или 0 (без "
+"излаза)"
 
 #: gst/gst.c:125
 msgid "LEVEL"
 msgstr "НИВО"
 
 #: gst/gst.c:126
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Запетом раздвојени списак парова име_категорије:ниво за постављање нарочитих нивоа за појединачне категорије. Пример: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Запетом раздвојени списак парова име_категорије:ниво за постављање нарочитих "
+"нивоа за појединачне категорије. Пример: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:126
 msgid "LIST"
@@ -71,8 +78,12 @@ msgid "PATHS"
 msgstr "ПУТАЊЕ"
 
 #: gst/gst.c:134
-msgid "Comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH"
-msgstr "Запетом раздвојен списак додатака који се предучитавају поред списка из променљиве окружења GST_PLUGIN_PATH"
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"env variable GST_PLUGIN_PATH"
+msgstr ""
+"Запетом раздвојен списак додатака који се предучитавају поред списка из "
+"променљиве окружења GST_PLUGIN_PATH"
 
 #: gst/gst.c:134
 msgid "PLUGINS"
@@ -121,8 +132,12 @@ msgid "GStreamer encountered a general core library error."
 msgstr "ГСтример је наишао на општу грешку у основној библиотеци."
 
 #: gst/gsterror.c:58 gst/gsterror.c:94 gst/gsterror.c:116 gst/gsterror.c:154
-msgid "GStreamer developers were too lazy to assign an error code to this error.  Please file a bug."
-msgstr "Програмери ГСтримера су били сувише лењи да доделе код за ову грешку. Пријавите грешку."
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error.  "
+"Please file a bug."
+msgstr ""
+"Програмери ГСтримера су били сувише лењи да доделе код за ову грешку. "
+"Пријавите грешку."
 
 #: gst/gsterror.c:61
 msgid "Internal GStreamer error: code not implemented.  File a bug."
@@ -130,7 +145,8 @@ msgstr "Унутрашња грешка у ГСтримеру: код није �
 
 #: gst/gsterror.c:63
 msgid "Internal GStreamer error: state change failed.  File a bug."
-msgstr "Унутрашња грешка у ГСтримеру: неуспешна промена стања.  Пријавите грешку."
+msgstr ""
+"Унутрашња грешка у ГСтримеру: неуспешна промена стања.  Пријавите грешку."
 
 #: gst/gsterror.c:65
 msgid "Internal GStreamer error: pad problem.  File a bug."
@@ -142,24 +158,29 @@ msgstr "Унутрашња грешка у ГСтримеру: неприлик�
 
 #: gst/gsterror.c:69
 msgid "Internal GStreamer error: scheduler problem.  File a bug."
-msgstr "Унутрашња грешка у ГСтримеру: неприлика са распоређивачем.  Пријавите грешку."
+msgstr ""
+"Унутрашња грешка у ГСтримеру: неприлика са распоређивачем.  Пријавите грешку."
 
 #: gst/gsterror.c:71
 msgid "Internal GStreamer error: negotiation problem.  File a bug."
-msgstr "Унутрашња грешка у ГСтримеру: неприлика у преговарању.  Пријавите грешку."
+msgstr ""
+"Унутрашња грешка у ГСтримеру: неприлика у преговарању.  Пријавите грешку."
 
 #: gst/gsterror.c:73
 msgid "Internal GStreamer error: event problem.  File a bug."
-msgstr "Унутрашња грешка у ГСтримеру: неприлика са догађајем.  Пријавите грешку."
+msgstr ""
+"Унутрашња грешка у ГСтримеру: неприлика са догађајем.  Пријавите грешку."
 
 #: gst/gsterror.c:75
 msgid "Internal GStreamer error: seek problem.  File a bug."
-msgstr "Унутрашња грешка у ГСтримеру: неприлика са тражењем.  Пријавите грешку."
+msgstr ""
+"Унутрашња грешка у ГСтримеру: неприлика са тражењем.  Пријавите грешку."
 
 # bug: is "caps" short for "capabilities"? if so, it should be spelled completely
 #: gst/gsterror.c:77
 msgid "Internal GStreamer error: caps problem.  File a bug."
-msgstr "Унутрашња грешка у ГСтримеру: неприлика са могућностима.  Пријавите грешку."
+msgstr ""
+"Унутрашња грешка у ГСтримеру: неприлика са могућностима.  Пријавите грешку."
 
 #: gst/gsterror.c:79
 msgid "Internal GStreamer error: tag problem.  File a bug."
@@ -381,7 +402,8 @@ msgstr "МСКС"
 
 #: gst/gsttag.c:147
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr "Међународни стандардни код за снимање — видети http://www.ifpi.org/isrc/"
+msgstr ""
+"Међународни стандардни код за снимање — видети http://www.ifpi.org/isrc/"
 
 #: gst/gsttag.c:151 gst/gsttag.c:152
 msgid "organization"
@@ -626,8 +648,10 @@ msgstr "не могу да поставим особину „%s“ у елем�
 
 #: gst/parse/grammar.y:337
 #, c-format
-msgid "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-msgstr "не могу да претворим „%s“ тако да одговара особини „%s“ у елементу „%s“"
+msgid ""
+"could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+msgstr ""
+"не могу да претворим „%s“ тако да одговара особини „%s“ у елементу „%s“"
 
 #: gst/parse/grammar.y:525
 #, c-format
@@ -711,7 +735,8 @@ msgstr " ns).\n"
 
 #: tools/gst-launch.c:99
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Употреба: gst-xmllaunch <датотека.xml> [ елемент.особина=вредност ... ]\n"
+msgstr ""
+"Употреба: gst-xmllaunch <датотека.xml> [ елемент.особина=вредност ... ]\n"
 
 #: tools/gst-launch.c:107
 #, c-format

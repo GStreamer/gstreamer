@@ -14,7 +14,7 @@ gboolean running = FALSE;
 gboolean done = FALSE;
 
 static void
-construct_pipeline (GstElement *pipeline, gint identities)
+construct_pipeline (GstElement * pipeline, gint identities)
 {
   GstElement *src, *sink;
   GstElement *identity = NULL;
@@ -22,15 +22,14 @@ construct_pipeline (GstElement *pipeline, gint identities)
   int i;
 
   identity = NULL;
-  src      = gst_element_factory_make ("fakesrc",  NULL);
-  sink     = gst_element_factory_make ("fakesink", NULL);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
   g_assert (src);
   g_assert (sink);
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
   from = src;
 
-  for (i = 0; i < identities; ++i)
-  {
+  for (i = 0; i < identities; ++i) {
     identity = gst_element_factory_make ("identity", NULL);
     g_assert (identity);
     gst_bin_add (GST_BIN (pipeline), identity);
@@ -50,8 +49,7 @@ thread (void)
   int i;
   GstElement *pipeline;
 
-  for (i = 30; i < runs; ++i)
-  {
+  for (i = 30; i < runs; ++i) {
     pipeline = gst_pipeline_new ("main_pipeline");
     g_assert (pipeline);
 
@@ -69,7 +67,7 @@ thread (void)
 }
 
 int
-main (gint argc, gchar *argv[])
+main (gint argc, gchar * argv[])
 {
   done = FALSE;
 
@@ -78,8 +76,8 @@ main (gint argc, gchar *argv[])
 
   g_thread_create ((GThreadFunc) thread, NULL, FALSE, NULL);
   g_print ("main: created GThread\n");
-  while (!done) g_usleep (G_USEC_PER_SEC);
+  while (!done)
+    g_usleep (G_USEC_PER_SEC);
   g_print ("main: done\n");
   return 0;
 }
-

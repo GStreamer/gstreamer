@@ -19,7 +19,7 @@
 
 #include <gst/gst.h>
 
-static GstElement*
+static GstElement *
 make_bin (gint count)
 {
   GstElement *bin;
@@ -42,7 +42,7 @@ make_bin (gint count)
 }
 
 gint
-main (gint argc, gchar *argv[]) 
+main (gint argc, gchar * argv[])
 {
   GstElement *pipeline;
   GstElement *aggregator, *sink;
@@ -53,9 +53,9 @@ main (gint argc, gchar *argv[])
   gst_init (&argc, &argv);
 
   pipeline = gst_pipeline_new ("main");
-  g_signal_connect (pipeline, "deep_notify", 
-		    G_CALLBACK (gst_element_default_deep_notify), NULL);
-  
+  g_signal_connect (pipeline, "deep_notify",
+      G_CALLBACK (gst_element_default_deep_notify), NULL);
+
   aggregator = gst_element_factory_make ("aggregator", "mixer");
   sink = gst_element_factory_make ("fakesink", "sink");
 
@@ -85,7 +85,7 @@ main (gint argc, gchar *argv[])
   i = 4;
   while (i--)
     gst_bin_iterate (GST_BIN (pipeline));
-		  
+
   g_print ("playing bin1\n");
   gst_element_set_state (bin1, GST_STATE_PLAYING);
 

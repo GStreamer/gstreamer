@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
- 
+
 #include <gst/gst.h>
 
 GST_DEBUG_CATEGORY_STATIC (cat_default);
@@ -28,17 +28,18 @@ static gint count = -1;
 static GstElement *pipeline;
 
 static void
-check_message (GstDebugCategory *category, GstDebugLevel level, const gchar *file,
-	       const gchar *function, gint line, GObject *object, GstDebugMessage *message,
-	       gpointer unused)
+check_message (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line, GObject * object,
+    GstDebugMessage * message, gpointer unused)
 {
   gint temp;
-  
+
   /* these checks require count to be set right. So the order in the main
      funtion is actually important. */
   /* <0 means no checks */
-  if (count < 0) return;
-  
+  if (count < 0)
+    return;
+
   g_print ("expecting \"%s\"...", (gchar *) message);
   /* level */
   temp = (count % 5) + 1;
@@ -52,17 +53,19 @@ check_message (GstDebugCategory *category, GstDebugLevel level, const gchar *fil
   g_print ("[OK]\n");
 }
 
-gint 
-main (gint argc, gchar *argv[]) 
+gint
+main (gint argc, gchar * argv[])
 {
 
   gst_init (&argc, &argv);
-  
-  GST_DEBUG_CATEGORY_INIT (cat_default, "GST_Check_default", 0, "default category for this test");
-  GST_DEBUG_CATEGORY_INIT (cat2, "GST_Check_2", 0, "second category for this test");
+
+  GST_DEBUG_CATEGORY_INIT (cat_default, "GST_Check_default", 0,
+      "default category for this test");
+  GST_DEBUG_CATEGORY_INIT (cat2, "GST_Check_2", 0,
+      "second category for this test");
   g_assert (gst_debug_remove_log_function (gst_debug_log_default) == 1);
-  gst_debug_add_log_function (check_message, NULL);	
-  
+  gst_debug_add_log_function (check_message, NULL);
+
   count = 0;
   GST_ERROR ("This is an error.");
   ++count;
@@ -96,18 +99,23 @@ main (gint argc, gchar *argv[])
   ++count;
   GST_LOG_OBJECT (pipeline, "This is a log message with object.");
   ++count;
-  GST_CAT_ERROR_OBJECT (cat2, pipeline, "This is an error with category and object.");
+  GST_CAT_ERROR_OBJECT (cat2, pipeline,
+      "This is an error with category and object.");
   ++count;
-  GST_CAT_WARNING_OBJECT (cat2, pipeline, "This is a warning with category and object.");
+  GST_CAT_WARNING_OBJECT (cat2, pipeline,
+      "This is a warning with category and object.");
   ++count;
-  GST_CAT_INFO_OBJECT (cat2, pipeline, "This is an info message with category and object.");
+  GST_CAT_INFO_OBJECT (cat2, pipeline,
+      "This is an info message with category and object.");
   ++count;
-  GST_CAT_DEBUG_OBJECT (cat2, pipeline, "This is a debug message with category and object.");
+  GST_CAT_DEBUG_OBJECT (cat2, pipeline,
+      "This is a debug message with category and object.");
   ++count;
-  GST_CAT_LOG_OBJECT (cat2, pipeline, "This is a log message with category and object.");
+  GST_CAT_LOG_OBJECT (cat2, pipeline,
+      "This is a log message with category and object.");
   count = -1;
 
-  g_assert (gst_debug_remove_log_function (check_message) == 1);	
-  
+  g_assert (gst_debug_remove_log_function (check_message) == 1);
+
   return 0;
 }

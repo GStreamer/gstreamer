@@ -26,7 +26,7 @@
 
 #include <gst/gst.h>
 
-GST_DEBUG_CATEGORY_STATIC(debug_scheduler);
+GST_DEBUG_CATEGORY_STATIC (debug_scheduler);
 #define GST_CAT_DEFAULT debug_scheduler
 
 #ifdef USE_COTHREADS
@@ -59,7 +59,8 @@ typedef struct _GstOptSchedulerClass GstOptSchedulerClass;
 #define GST_IS_OPT_SCHEDULER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OPT_SCHEDULER))
 
-typedef enum {
+typedef enum
+{
   GST_OPT_SCHEDULER_STATE_NONE,
   GST_OPT_SCHEDULER_STATE_STOPPED,
   GST_OPT_SCHEDULER_STATE_ERROR,
@@ -67,35 +68,38 @@ typedef enum {
   GST_OPT_SCHEDULER_STATE_INTERRUPTED
 } GstOptSchedulerState;
 
-struct _GstOptScheduler {
-  GstScheduler 		 parent;
+struct _GstOptScheduler
+{
+  GstScheduler parent;
 
-  GstOptSchedulerState	 state;
+  GstOptSchedulerState state;
 
 #ifdef USE_COTHREADS
-  cothread_context 	*context;
+  cothread_context *context;
 #endif
-  gint 			 iterations;
+  gint iterations;
 
-  GSList 		*elements;
-  GSList 		*chains;
+  GSList *elements;
+  GSList *chains;
 
-  GList			*runqueue;
-  gint			 recursion;
+  GList *runqueue;
+  gint recursion;
 
-  gint			 max_recursion;
+  gint max_recursion;
 };
 
-struct _GstOptSchedulerClass {
+struct _GstOptSchedulerClass
+{
   GstSchedulerClass parent_class;
 };
 
 static GType _gst_opt_scheduler_type = 0;
 
-typedef enum {
-  GST_OPT_SCHEDULER_CHAIN_DIRTY			= (1 << 1),	
-  GST_OPT_SCHEDULER_CHAIN_DISABLED		= (1 << 2),
-  GST_OPT_SCHEDULER_CHAIN_RUNNING		= (1 << 3),
+typedef enum
+{
+  GST_OPT_SCHEDULER_CHAIN_DIRTY = (1 << 1),
+  GST_OPT_SCHEDULER_CHAIN_DISABLED = (1 << 2),
+  GST_OPT_SCHEDULER_CHAIN_RUNNING = (1 << 3),
 } GstOptSchedulerChainFlags;
 
 #define GST_OPT_SCHEDULER_CHAIN_DISABLE(chain) 		((chain)->flags |= GST_OPT_SCHEDULER_CHAIN_DISABLED)
@@ -104,33 +108,36 @@ typedef enum {
 
 typedef struct _GstOptSchedulerChain GstOptSchedulerChain;
 
-struct _GstOptSchedulerChain {
-  gint				 refcount;
-  
-  GstOptScheduler 		*sched;
+struct _GstOptSchedulerChain
+{
+  gint refcount;
 
-  GstOptSchedulerChainFlags	 flags;
-  
-  GSList 			*groups;			/* the groups in this chain */
-  gint				 num_groups;
-  gint				 num_enabled;
+  GstOptScheduler *sched;
+
+  GstOptSchedulerChainFlags flags;
+
+  GSList *groups;		/* the groups in this chain */
+  gint num_groups;
+  gint num_enabled;
 };
 
 /* 
  * elements that are scheduled in one cothread 
  */
-typedef enum {
-  GST_OPT_SCHEDULER_GROUP_DIRTY			= (1 << 1),	/* this group has been modified */
-  GST_OPT_SCHEDULER_GROUP_COTHREAD_STOPPING	= (1 << 2),	/* the group's cothread stops after one iteration */
-  GST_OPT_SCHEDULER_GROUP_DISABLED		= (1 << 3),	/* this group is disabled */
-  GST_OPT_SCHEDULER_GROUP_RUNNING		= (1 << 4),	/* this group is running */
-  GST_OPT_SCHEDULER_GROUP_SCHEDULABLE		= (1 << 5),	/* this group is schedulable */
-  GST_OPT_SCHEDULER_GROUP_VISITED		= (1 << 6),	/* this group is visited when finding links */
+typedef enum
+{
+  GST_OPT_SCHEDULER_GROUP_DIRTY = (1 << 1),	/* this group has been modified */
+  GST_OPT_SCHEDULER_GROUP_COTHREAD_STOPPING = (1 << 2),	/* the group's cothread stops after one iteration */
+  GST_OPT_SCHEDULER_GROUP_DISABLED = (1 << 3),	/* this group is disabled */
+  GST_OPT_SCHEDULER_GROUP_RUNNING = (1 << 4),	/* this group is running */
+  GST_OPT_SCHEDULER_GROUP_SCHEDULABLE = (1 << 5),	/* this group is schedulable */
+  GST_OPT_SCHEDULER_GROUP_VISITED = (1 << 6),	/* this group is visited when finding links */
 } GstOptSchedulerGroupFlags;
 
-typedef enum {
-  GST_OPT_SCHEDULER_GROUP_GET			= 1,
-  GST_OPT_SCHEDULER_GROUP_LOOP			= 2,
+typedef enum
+{
+  GST_OPT_SCHEDULER_GROUP_GET = 1,
+  GST_OPT_SCHEDULER_GROUP_LOOP = 2,
 } GstOptSchedulerGroupType;
 
 #define GST_OPT_SCHEDULER_GROUP_SET_FLAG(group,flag) 	((group)->flags |= (flag))
@@ -147,39 +154,41 @@ typedef struct _GstOptSchedulerGroup GstOptSchedulerGroup;
 typedef struct _GstOptSchedulerGroupLink GstOptSchedulerGroupLink;
 
 /* used to keep track of links with other groups */
-struct _GstOptSchedulerGroupLink {
-  GstOptSchedulerGroup	*group1;  	/* the group we are linked with */
-  GstOptSchedulerGroup	*group2;  	/* the group we are linked with */
-  gint			 count;		/* the number of links with the group */
+struct _GstOptSchedulerGroupLink
+{
+  GstOptSchedulerGroup *group1;	/* the group we are linked with */
+  GstOptSchedulerGroup *group2;	/* the group we are linked with */
+  gint count;			/* the number of links with the group */
 };
 
 #define IS_GROUP_LINK(link, group1, group2)	((link->group1 == group1 && link->group2 == group2) || \
 		                                 (link->group2 == group1 && link->group1 == group2))
 #define OTHER_GROUP_LINK(link, group)		(link->group1 == group ? link->group2 : link->group1)
 
-typedef int (*GroupScheduleFunction)	(int argc, char *argv[]);
+typedef int (*GroupScheduleFunction) (int argc, char *argv[]);
 
-struct _GstOptSchedulerGroup {
-  GstOptSchedulerChain 		*chain;  		/* the chain this group belongs to */
-  GstOptSchedulerGroupFlags	 flags;			/* flags for this group */
-  GstOptSchedulerGroupType	 type;			/* flags for this group */
+struct _GstOptSchedulerGroup
+{
+  GstOptSchedulerChain *chain;	/* the chain this group belongs to */
+  GstOptSchedulerGroupFlags flags;	/* flags for this group */
+  GstOptSchedulerGroupType type;	/* flags for this group */
 
-  gint				 refcount;
+  gint refcount;
 
-  GSList 			*elements;		/* elements of this group */
-  gint				 num_elements;
-  gint				 num_enabled;
-  GstElement 			*entry;			/* the group's entry point */
+  GSList *elements;		/* elements of this group */
+  gint num_elements;
+  gint num_enabled;
+  GstElement *entry;		/* the group's entry point */
 
-  GSList			*group_links;		/* other groups that are linked with this group */
+  GSList *group_links;		/* other groups that are linked with this group */
 
 #ifdef USE_COTHREADS
-  cothread 			*cothread;		/* the cothread of this group */
+  cothread *cothread;		/* the cothread of this group */
 #else
-  GroupScheduleFunction 	 schedulefunc;
+  GroupScheduleFunction schedulefunc;
 #endif
-  int				 argc;
-  char			       **argv;
+  int argc;
+  char **argv;
 };
 
 
@@ -187,65 +196,62 @@ struct _GstOptSchedulerGroup {
  * A group is a set of elements through which data can flow without switching
  * cothreads or without invoking the scheduler's run queue.
  */
-static GstOptSchedulerGroup* 	ref_group 			(GstOptSchedulerGroup *group);
-static GstOptSchedulerGroup* 	unref_group 			(GstOptSchedulerGroup *group);
-static GstOptSchedulerGroup*	create_group			(GstOptSchedulerChain *chain,
-                                                                 GstElement *element,
-                                                                 GstOptSchedulerGroupType type);
-static void 			destroy_group 			(GstOptSchedulerGroup *group);
-static GstOptSchedulerGroup*	add_to_group			(GstOptSchedulerGroup *group,
-                                                                 GstElement *element);
-static GstOptSchedulerGroup*	remove_from_group		(GstOptSchedulerGroup *group,
-                                                                 GstElement *element);
-static GstOptSchedulerGroup*	merge_groups			(GstOptSchedulerGroup *group1,
-                                                                 GstOptSchedulerGroup *group2);
-static void 			setup_group_scheduler		(GstOptScheduler *osched,
-                                                                 GstOptSchedulerGroup *group);
-static void 			destroy_group_scheduler 	(GstOptSchedulerGroup *group);
-static void			group_error_handler		(GstOptSchedulerGroup *group);
-static void 			group_element_set_enabled 	(GstOptSchedulerGroup *group, 
-							  	 GstElement *element,
-                                                                 gboolean enabled);
-static gboolean			schedule_group			(GstOptSchedulerGroup *group);
+static GstOptSchedulerGroup *ref_group (GstOptSchedulerGroup * group);
+static GstOptSchedulerGroup *unref_group (GstOptSchedulerGroup * group);
+static GstOptSchedulerGroup *create_group (GstOptSchedulerChain * chain,
+    GstElement * element, GstOptSchedulerGroupType type);
+static void destroy_group (GstOptSchedulerGroup * group);
+static GstOptSchedulerGroup *add_to_group (GstOptSchedulerGroup * group,
+    GstElement * element);
+static GstOptSchedulerGroup *remove_from_group (GstOptSchedulerGroup * group,
+    GstElement * element);
+static GstOptSchedulerGroup *merge_groups (GstOptSchedulerGroup * group1,
+    GstOptSchedulerGroup * group2);
+static void setup_group_scheduler (GstOptScheduler * osched,
+    GstOptSchedulerGroup * group);
+static void destroy_group_scheduler (GstOptSchedulerGroup * group);
+static void group_error_handler (GstOptSchedulerGroup * group);
+static void group_element_set_enabled (GstOptSchedulerGroup * group,
+    GstElement * element, gboolean enabled);
+static gboolean schedule_group (GstOptSchedulerGroup * group);
 
 
 /* 
  * A chain is a set of groups that are linked to each other.
  */
-static void			destroy_chain			(GstOptSchedulerChain *chain);
-static GstOptSchedulerChain*	create_chain			(GstOptScheduler *osched);
-static GstOptSchedulerChain*	ref_chain			(GstOptSchedulerChain *chain);
-static GstOptSchedulerChain*	unref_chain			(GstOptSchedulerChain *chain);
-static GstOptSchedulerChain*	add_to_chain			(GstOptSchedulerChain *chain,
-                                                                 GstOptSchedulerGroup *group);
-static GstOptSchedulerChain*	remove_from_chain		(GstOptSchedulerChain *chain,
-                                                                 GstOptSchedulerGroup *group);
-static GstOptSchedulerChain*	merge_chains			(GstOptSchedulerChain *chain1,
-                                                                 GstOptSchedulerChain *chain2);
-static void			chain_recursively_migrate_group (GstOptSchedulerChain *chain,
-                                                                 GstOptSchedulerGroup *group);
-static void 			chain_group_set_enabled 	(GstOptSchedulerChain *chain, 
-								 GstOptSchedulerGroup *group,
-                                                                 gboolean enabled);
-static void			schedule_chain			(GstOptSchedulerChain *chain);
+static void destroy_chain (GstOptSchedulerChain * chain);
+static GstOptSchedulerChain *create_chain (GstOptScheduler * osched);
+static GstOptSchedulerChain *ref_chain (GstOptSchedulerChain * chain);
+static GstOptSchedulerChain *unref_chain (GstOptSchedulerChain * chain);
+static GstOptSchedulerChain *add_to_chain (GstOptSchedulerChain * chain,
+    GstOptSchedulerGroup * group);
+static GstOptSchedulerChain *remove_from_chain (GstOptSchedulerChain * chain,
+    GstOptSchedulerGroup * group);
+static GstOptSchedulerChain *merge_chains (GstOptSchedulerChain * chain1,
+    GstOptSchedulerChain * chain2);
+static void chain_recursively_migrate_group (GstOptSchedulerChain * chain,
+    GstOptSchedulerGroup * group);
+static void chain_group_set_enabled (GstOptSchedulerChain * chain,
+    GstOptSchedulerGroup * group, gboolean enabled);
+static void schedule_chain (GstOptSchedulerChain * chain);
 
 
 /*
  * The schedule functions are the entry points for cothreads, or called directly
  * by gst_opt_scheduler_schedule_run_queue
  */
-static int			get_group_schedule_function	(int argc, char *argv[]);
-static int			loop_group_schedule_function	(int argc, char *argv[]);
-static int			unknown_group_schedule_function (int argc, char *argv[]);
+static int get_group_schedule_function (int argc, char *argv[]);
+static int loop_group_schedule_function (int argc, char *argv[]);
+static int unknown_group_schedule_function (int argc, char *argv[]);
 
 
 /*
  * These wrappers are set on the pads as the chain handler (what happens when
  * gst_pad_push is called) or get handler (for gst_pad_pull).
  */
-static void			gst_opt_scheduler_loop_wrapper	(GstPad *sinkpad, GstData *data);
-static GstData*			gst_opt_scheduler_get_wrapper	(GstPad *srcpad);
-static void			gst_opt_scheduler_chain_wrapper (GstPad *sinkpad, GstData *data);
+static void gst_opt_scheduler_loop_wrapper (GstPad * sinkpad, GstData * data);
+static GstData *gst_opt_scheduler_get_wrapper (GstPad * srcpad);
+static void gst_opt_scheduler_chain_wrapper (GstPad * sinkpad, GstData * data);
 
 
 /*
@@ -254,7 +260,7 @@ static void			gst_opt_scheduler_chain_wrapper (GstPad *sinkpad, GstData *data);
  * instead of relying on cothreads to do the switch for us.
  */
 #ifndef USE_COTHREADS
-static void			gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched);
+static void gst_opt_scheduler_schedule_run_queue (GstOptScheduler * osched);
 #endif
 
 
@@ -263,17 +269,19 @@ static void			gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched);
  */
 typedef struct _GstOptSchedulerCtx GstOptSchedulerCtx;
 
-typedef enum {
-  GST_OPT_SCHEDULER_CTX_DISABLED		= (1 << 1),	/* the element is disabled */
+typedef enum
+{
+  GST_OPT_SCHEDULER_CTX_DISABLED = (1 << 1),	/* the element is disabled */
 } GstOptSchedulerCtxFlags;
 
-struct _GstOptSchedulerCtx {
-  GstOptSchedulerGroup *group;  			/* the group this element belongs to */
+struct _GstOptSchedulerCtx
+{
+  GstOptSchedulerGroup *group;	/* the group this element belongs to */
 
-  GstOptSchedulerCtxFlags flags;			/* flags for this element */
+  GstOptSchedulerCtxFlags flags;	/* flags for this element */
 };
 
- 
+
 /*
  * Implementation of GstScheduler
  */
@@ -284,35 +292,45 @@ enum
   ARG_MAX_RECURSION,
 };
 
-static void 		gst_opt_scheduler_class_init 		(GstOptSchedulerClass *klass);
-static void 		gst_opt_scheduler_init 			(GstOptScheduler *scheduler);
+static void gst_opt_scheduler_class_init (GstOptSchedulerClass * klass);
+static void gst_opt_scheduler_init (GstOptScheduler * scheduler);
 
-static void 		gst_opt_scheduler_set_property 		(GObject *object, guint prop_id,
-		               					 const GValue *value, GParamSpec *pspec);
-static void 		gst_opt_scheduler_get_property 		(GObject *object, guint prop_id,
-		               					 GValue *value, GParamSpec *pspec);
+static void gst_opt_scheduler_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_opt_scheduler_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static void 		gst_opt_scheduler_dispose 		(GObject *object);
+static void gst_opt_scheduler_dispose (GObject * object);
 
-static void 		gst_opt_scheduler_setup 		(GstScheduler *sched);
-static void 		gst_opt_scheduler_reset 		(GstScheduler *sched);
-static void		gst_opt_scheduler_add_element		(GstScheduler *sched, GstElement *element);
-static void     	gst_opt_scheduler_remove_element	(GstScheduler *sched, GstElement *element);
-static GstElementStateReturn  
-			gst_opt_scheduler_state_transition	(GstScheduler *sched, GstElement *element, gint transition);
-static void             gst_opt_scheduler_scheduling_change     (GstScheduler *sched, GstElement *element);
-static void 		gst_opt_scheduler_lock_element 		(GstScheduler *sched, GstElement *element);
-static void 		gst_opt_scheduler_unlock_element 	(GstScheduler *sched, GstElement *element);
-static gboolean		gst_opt_scheduler_yield 		(GstScheduler *sched, GstElement *element);
-static gboolean		gst_opt_scheduler_interrupt 		(GstScheduler *sched, GstElement *element);
-static void 		gst_opt_scheduler_error	 		(GstScheduler *sched, GstElement *element);
-static void     	gst_opt_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-static void     	gst_opt_scheduler_pad_unlink 		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-static void	  	gst_opt_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
-static GstSchedulerState
-			gst_opt_scheduler_iterate    		(GstScheduler *sched);
+static void gst_opt_scheduler_setup (GstScheduler * sched);
+static void gst_opt_scheduler_reset (GstScheduler * sched);
+static void gst_opt_scheduler_add_element (GstScheduler * sched,
+    GstElement * element);
+static void gst_opt_scheduler_remove_element (GstScheduler * sched,
+    GstElement * element);
+static GstElementStateReturn gst_opt_scheduler_state_transition (GstScheduler *
+    sched, GstElement * element, gint transition);
+static void gst_opt_scheduler_scheduling_change (GstScheduler * sched,
+    GstElement * element);
+static void gst_opt_scheduler_lock_element (GstScheduler * sched,
+    GstElement * element);
+static void gst_opt_scheduler_unlock_element (GstScheduler * sched,
+    GstElement * element);
+static gboolean gst_opt_scheduler_yield (GstScheduler * sched,
+    GstElement * element);
+static gboolean gst_opt_scheduler_interrupt (GstScheduler * sched,
+    GstElement * element);
+static void gst_opt_scheduler_error (GstScheduler * sched,
+    GstElement * element);
+static void gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
+    GstPad * sinkpad);
+static void gst_opt_scheduler_pad_unlink (GstScheduler * sched, GstPad * srcpad,
+    GstPad * sinkpad);
+static void gst_opt_scheduler_pad_select (GstScheduler * sched,
+    GList * padlist);
+static GstSchedulerState gst_opt_scheduler_iterate (GstScheduler * sched);
 
-static void     	gst_opt_scheduler_show  		(GstScheduler *sched);
+static void gst_opt_scheduler_show (GstScheduler * sched);
 
 static GstSchedulerClass *parent_class = NULL;
 
@@ -333,65 +351,75 @@ gst_opt_scheduler_get_type (void)
       NULL
     };
 
-    _gst_opt_scheduler_type = g_type_register_static (GST_TYPE_SCHEDULER, 
-		    "GstOpt"COTHREADS_NAME_CAPITAL"Scheduler", &scheduler_info, 0);
+    _gst_opt_scheduler_type = g_type_register_static (GST_TYPE_SCHEDULER,
+	"GstOpt" COTHREADS_NAME_CAPITAL "Scheduler", &scheduler_info, 0);
   }
   return _gst_opt_scheduler_type;
 }
 
 static void
-gst_opt_scheduler_class_init (GstOptSchedulerClass *klass)
+gst_opt_scheduler_class_init (GstOptSchedulerClass * klass)
 {
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
   GstSchedulerClass *gstscheduler_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstobject_class = (GstObjectClass*)klass;
-  gstscheduler_class = (GstSchedulerClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstobject_class = (GstObjectClass *) klass;
+  gstscheduler_class = (GstSchedulerClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_SCHEDULER);
 
-  gobject_class->set_property   = GST_DEBUG_FUNCPTR (gst_opt_scheduler_set_property);
-  gobject_class->get_property   = GST_DEBUG_FUNCPTR (gst_opt_scheduler_get_property);
-  gobject_class->dispose	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_dispose);
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_opt_scheduler_set_property);
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_opt_scheduler_get_property);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_opt_scheduler_dispose);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ITERATIONS,
-    g_param_spec_int ("iterations", "Iterations", 
-	    	      "Number of groups to schedule in one iteration (-1 == until EOS/error)",
-                      -1, G_MAXINT, 1, G_PARAM_READWRITE));
+      g_param_spec_int ("iterations", "Iterations",
+	  "Number of groups to schedule in one iteration (-1 == until EOS/error)",
+	  -1, G_MAXINT, 1, G_PARAM_READWRITE));
 #ifndef USE_COTHREADS
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_RECURSION,
-    g_param_spec_int ("max_recursion", "Max recursion", 
-	    	      "Maximum number of recursions",
-                      1, G_MAXINT, 100, G_PARAM_READWRITE));
+      g_param_spec_int ("max_recursion", "Max recursion",
+	  "Maximum number of recursions", 1, G_MAXINT, 100, G_PARAM_READWRITE));
 #endif
 
-  gstscheduler_class->setup             = GST_DEBUG_FUNCPTR (gst_opt_scheduler_setup);
-  gstscheduler_class->reset             = GST_DEBUG_FUNCPTR (gst_opt_scheduler_reset);
-  gstscheduler_class->add_element 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_add_element);
-  gstscheduler_class->remove_element 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_remove_element);
-  gstscheduler_class->state_transition 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_state_transition);
-  gstscheduler_class->scheduling_change = GST_DEBUG_FUNCPTR (gst_opt_scheduler_scheduling_change);
-  gstscheduler_class->lock_element 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_lock_element);
-  gstscheduler_class->unlock_element 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_unlock_element);
-  gstscheduler_class->yield	 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_yield);
-  gstscheduler_class->interrupt 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_interrupt);
-  gstscheduler_class->error	 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_error);
-  gstscheduler_class->pad_link 		= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_link);
-  gstscheduler_class->pad_unlink 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_unlink);
-  gstscheduler_class->pad_select	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_select);
-  gstscheduler_class->clock_wait	= NULL;
-  gstscheduler_class->iterate 		= GST_DEBUG_FUNCPTR (gst_opt_scheduler_iterate);
-  gstscheduler_class->show 		= GST_DEBUG_FUNCPTR (gst_opt_scheduler_show);
-  
+  gstscheduler_class->setup = GST_DEBUG_FUNCPTR (gst_opt_scheduler_setup);
+  gstscheduler_class->reset = GST_DEBUG_FUNCPTR (gst_opt_scheduler_reset);
+  gstscheduler_class->add_element =
+      GST_DEBUG_FUNCPTR (gst_opt_scheduler_add_element);
+  gstscheduler_class->remove_element =
+      GST_DEBUG_FUNCPTR (gst_opt_scheduler_remove_element);
+  gstscheduler_class->state_transition =
+      GST_DEBUG_FUNCPTR (gst_opt_scheduler_state_transition);
+  gstscheduler_class->scheduling_change =
+      GST_DEBUG_FUNCPTR (gst_opt_scheduler_scheduling_change);
+  gstscheduler_class->lock_element =
+      GST_DEBUG_FUNCPTR (gst_opt_scheduler_lock_element);
+  gstscheduler_class->unlock_element =
+      GST_DEBUG_FUNCPTR (gst_opt_scheduler_unlock_element);
+  gstscheduler_class->yield = GST_DEBUG_FUNCPTR (gst_opt_scheduler_yield);
+  gstscheduler_class->interrupt =
+      GST_DEBUG_FUNCPTR (gst_opt_scheduler_interrupt);
+  gstscheduler_class->error = GST_DEBUG_FUNCPTR (gst_opt_scheduler_error);
+  gstscheduler_class->pad_link = GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_link);
+  gstscheduler_class->pad_unlink =
+      GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_unlink);
+  gstscheduler_class->pad_select =
+      GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_select);
+  gstscheduler_class->clock_wait = NULL;
+  gstscheduler_class->iterate = GST_DEBUG_FUNCPTR (gst_opt_scheduler_iterate);
+  gstscheduler_class->show = GST_DEBUG_FUNCPTR (gst_opt_scheduler_show);
+
 #ifdef USE_COTHREADS
-  do_cothreads_init(NULL);
+  do_cothreads_init (NULL);
 #endif
 }
 
 static void
-gst_opt_scheduler_init (GstOptScheduler *scheduler)
+gst_opt_scheduler_init (GstOptScheduler * scheduler)
 {
   scheduler->elements = NULL;
   scheduler->iterations = 1;
@@ -399,65 +427,57 @@ gst_opt_scheduler_init (GstOptScheduler *scheduler)
 }
 
 static void
-gst_opt_scheduler_dispose (GObject *object)
+gst_opt_scheduler_dispose (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   GstSchedulerFactory *factory;
 
-  GST_DEBUG_CATEGORY_INIT (debug_scheduler, "scheduler", 0, "optimal scheduler");
+  GST_DEBUG_CATEGORY_INIT (debug_scheduler, "scheduler", 0,
+      "optimal scheduler");
 
 #ifdef USE_COTHREADS
-  factory = gst_scheduler_factory_new ("opt"COTHREADS_NAME,
-                                       "An optimal scheduler using "COTHREADS_NAME" cothreads",
-		                      gst_opt_scheduler_get_type());
+  factory = gst_scheduler_factory_new ("opt" COTHREADS_NAME,
+      "An optimal scheduler using " COTHREADS_NAME " cothreads",
+      gst_opt_scheduler_get_type ());
 #else
   factory = gst_scheduler_factory_new ("opt",
-                                       "An optimal scheduler using no cothreads",
-		                      gst_opt_scheduler_get_type());
+      "An optimal scheduler using no cothreads", gst_opt_scheduler_get_type ());
 #endif
 
   if (factory != NULL) {
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  }
-  else {
+  } else {
     g_warning ("could not register scheduler: optimal");
   }
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gstopt"COTHREADS_NAME"scheduler",
-  "An optimal scheduler using "COTHREADS_NAME" cothreads",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-);
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "gstopt" COTHREADS_NAME "scheduler",
+    "An optimal scheduler using " COTHREADS_NAME " cothreads",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN);
 
 
-static GstOptSchedulerChain*
-ref_chain (GstOptSchedulerChain *chain)
+static GstOptSchedulerChain *
+ref_chain (GstOptSchedulerChain * chain)
 {
-  GST_LOG ("ref chain %p %d->%d", chain, 
-	   chain->refcount, chain->refcount+1);
+  GST_LOG ("ref chain %p %d->%d", chain, chain->refcount, chain->refcount + 1);
   chain->refcount++;
 
   return chain;
 }
 
-static GstOptSchedulerChain*
-unref_chain (GstOptSchedulerChain *chain)
+static GstOptSchedulerChain *
+unref_chain (GstOptSchedulerChain * chain)
 {
-  GST_LOG ("unref chain %p %d->%d", chain, 
-	   chain->refcount, chain->refcount-1);
+  GST_LOG ("unref chain %p %d->%d", chain,
+      chain->refcount, chain->refcount - 1);
 
   if (--chain->refcount == 0) {
     destroy_chain (chain);
@@ -467,8 +487,8 @@ unref_chain (GstOptSchedulerChain *chain)
   return chain;
 }
 
-static GstOptSchedulerChain*
-create_chain (GstOptScheduler *osched)
+static GstOptSchedulerChain *
+create_chain (GstOptScheduler * osched)
 {
   GstOptSchedulerChain *chain;
 
@@ -480,17 +500,17 @@ create_chain (GstOptScheduler *osched)
   gst_object_ref (GST_OBJECT (osched));
   osched->chains = g_slist_prepend (osched->chains, chain);
 
-  GST_LOG ( "new chain %p", chain);
+  GST_LOG ("new chain %p", chain);
 
   return chain;
 }
 
 static void
-destroy_chain (GstOptSchedulerChain *chain)
+destroy_chain (GstOptSchedulerChain * chain)
 {
   GstOptScheduler *osched;
-  
-  GST_LOG ( "destroy chain %p", chain);
+
+  GST_LOG ("destroy chain %p", chain);
 
   g_assert (chain->num_groups == 0);
   g_assert (chain->groups == NULL);
@@ -503,8 +523,8 @@ destroy_chain (GstOptSchedulerChain *chain)
   g_free (chain);
 }
 
-static GstOptSchedulerChain*
-add_to_chain (GstOptSchedulerChain *chain, GstOptSchedulerGroup *group)
+static GstOptSchedulerChain *
+add_to_chain (GstOptSchedulerChain * chain, GstOptSchedulerGroup * group)
 {
   GST_LOG ("adding group %p to chain %p", group, chain);
 
@@ -523,7 +543,7 @@ add_to_chain (GstOptSchedulerChain *chain, GstOptSchedulerGroup *group)
     chain->groups = g_slist_prepend (chain->groups, group);
   else
     chain->groups = g_slist_append (chain->groups, group);
-    
+
   chain->num_groups++;
 
   if (GST_OPT_SCHEDULER_GROUP_IS_ENABLED (group)) {
@@ -533,8 +553,8 @@ add_to_chain (GstOptSchedulerChain *chain, GstOptSchedulerGroup *group)
   return chain;
 }
 
-static GstOptSchedulerChain*
-remove_from_chain (GstOptSchedulerChain *chain, GstOptSchedulerGroup *group)
+static GstOptSchedulerChain *
+remove_from_chain (GstOptSchedulerChain * chain, GstOptSchedulerGroup * group)
 {
   GST_LOG ("removing group %p from chain %p", group, chain);
 
@@ -549,22 +569,22 @@ remove_from_chain (GstOptSchedulerChain *chain, GstOptSchedulerGroup *group)
   chain->num_groups--;
   unref_group (group);
 
-  if (chain->num_groups == 0) 
+  if (chain->num_groups == 0)
     chain = unref_chain (chain);
 
   chain = unref_chain (chain);
   return chain;
 }
 
-static GstOptSchedulerChain*
-merge_chains (GstOptSchedulerChain *chain1, GstOptSchedulerChain *chain2)
+static GstOptSchedulerChain *
+merge_chains (GstOptSchedulerChain * chain1, GstOptSchedulerChain * chain2)
 {
   GSList *walk;
 
   g_assert (chain1 != NULL);
-  
+
   GST_LOG ("merging chain %p and %p", chain1, chain2);
-  
+
   /* FIXME: document how chain2 can be NULL */
   if (chain1 == chain2 || chain2 == NULL)
     return chain1;
@@ -572,6 +592,7 @@ merge_chains (GstOptSchedulerChain *chain1, GstOptSchedulerChain *chain2)
   /* switch if it's more efficient */
   if (chain1->num_groups < chain2->num_groups) {
     GstOptSchedulerChain *tmp = chain2;
+
     chain2 = chain1;
     chain1 = tmp;
   }
@@ -579,13 +600,13 @@ merge_chains (GstOptSchedulerChain *chain1, GstOptSchedulerChain *chain2)
   walk = chain2->groups;
   while (walk) {
     GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) walk->data;
+
     walk = g_slist_next (walk);
 
-    GST_LOG ("reparenting group %p from chain %p to %p", 
-             group, chain2, chain1);
+    GST_LOG ("reparenting group %p from chain %p to %p", group, chain2, chain1);
 
     ref_group (group);
-    
+
     remove_from_chain (chain2, group);
     add_to_chain (chain1, group);
 
@@ -598,25 +619,27 @@ merge_chains (GstOptSchedulerChain *chain1, GstOptSchedulerChain *chain2)
 }
 
 static void
-chain_group_set_enabled (GstOptSchedulerChain *chain, GstOptSchedulerGroup *group, gboolean enabled)
+chain_group_set_enabled (GstOptSchedulerChain * chain,
+    GstOptSchedulerGroup * group, gboolean enabled)
 {
   g_assert (group != NULL);
   g_assert (chain != NULL);
 
-  GST_LOG ("request to %d group %p in chain %p, have %d groups enabled out of %d", 
-           enabled, group, chain, chain->num_enabled, chain->num_groups);
+  GST_LOG
+      ("request to %d group %p in chain %p, have %d groups enabled out of %d",
+      enabled, group, chain, chain->num_enabled, chain->num_groups);
 
   if (enabled)
     GST_OPT_SCHEDULER_GROUP_ENABLE (group);
-  else 
+  else
     GST_OPT_SCHEDULER_GROUP_DISABLE (group);
 
   if (enabled) {
     if (chain->num_enabled < chain->num_groups)
       chain->num_enabled++;
 
-    GST_DEBUG ("enable group %p in chain %p, now %d groups enabled out of %d", group, chain,
-               chain->num_enabled, chain->num_groups);
+    GST_DEBUG ("enable group %p in chain %p, now %d groups enabled out of %d",
+	group, chain, chain->num_enabled, chain->num_groups);
 
     /* OK to call even if the scheduler (cothread context / schedulerfunc) was
        setup already -- will get destroyed when the group is destroyed */
@@ -626,13 +649,12 @@ chain_group_set_enabled (GstOptSchedulerChain *chain, GstOptSchedulerGroup *grou
       GST_DEBUG ("enable chain %p", chain);
       GST_OPT_SCHEDULER_CHAIN_ENABLE (chain);
     }
-  }
-  else {
+  } else {
     if (chain->num_enabled > 0)
       chain->num_enabled--;
 
-    GST_DEBUG ("disable group %p in chain %p, now %d groups enabled out of %d", group, chain,
-               chain->num_enabled, chain->num_groups);
+    GST_DEBUG ("disable group %p in chain %p, now %d groups enabled out of %d",
+	group, chain, chain->num_enabled, chain->num_groups);
 
     if (chain->num_enabled == 0) {
       GST_DEBUG ("disable chain %p", chain);
@@ -643,10 +665,11 @@ chain_group_set_enabled (GstOptSchedulerChain *chain, GstOptSchedulerGroup *grou
 
 /* recursively migrate the group and all connected groups into the new chain */
 static void
-chain_recursively_migrate_group (GstOptSchedulerChain *chain, GstOptSchedulerGroup *group)
+chain_recursively_migrate_group (GstOptSchedulerChain * chain,
+    GstOptSchedulerGroup * group)
 {
   GSList *links;
-  
+
   /* group already in chain */
   if (group->chain == chain)
     return;
@@ -660,28 +683,29 @@ chain_recursively_migrate_group (GstOptSchedulerChain *chain, GstOptSchedulerGro
   links = group->group_links;
   while (links) {
     GstOptSchedulerGroupLink *link = (GstOptSchedulerGroupLink *) links->data;
+
     links = g_slist_next (links);
 
-    chain_recursively_migrate_group (chain, (link->group1 == group ? link->group2 : link->group1));
+    chain_recursively_migrate_group (chain,
+	(link->group1 == group ? link->group2 : link->group1));
   }
 }
 
-static GstOptSchedulerGroup*
-ref_group (GstOptSchedulerGroup *group)
+static GstOptSchedulerGroup *
+ref_group (GstOptSchedulerGroup * group)
 {
-  GST_LOG ("ref group %p %d->%d", group, 
-	   group->refcount, group->refcount+1);
+  GST_LOG ("ref group %p %d->%d", group, group->refcount, group->refcount + 1);
 
   group->refcount++;
 
   return group;
 }
 
-static GstOptSchedulerGroup*
-unref_group (GstOptSchedulerGroup *group)
+static GstOptSchedulerGroup *
+unref_group (GstOptSchedulerGroup * group)
 {
-  GST_LOG ("unref group %p %d->%d", group, 
-	   group->refcount, group->refcount-1);
+  GST_LOG ("unref group %p %d->%d", group,
+      group->refcount, group->refcount - 1);
 
   if (--group->refcount == 0) {
     destroy_group (group);
@@ -691,29 +715,29 @@ unref_group (GstOptSchedulerGroup *group)
   return group;
 }
 
-static GstOptSchedulerGroup*
-create_group (GstOptSchedulerChain *chain, GstElement *element,
-              GstOptSchedulerGroupType type)
+static GstOptSchedulerGroup *
+create_group (GstOptSchedulerChain * chain, GstElement * element,
+    GstOptSchedulerGroupType type)
 {
   GstOptSchedulerGroup *group;
 
   group = g_new0 (GstOptSchedulerGroup, 1);
   GST_LOG ("new group %p", group);
-  group->refcount = 1; /* float... */
+  group->refcount = 1;		/* float... */
   group->flags = GST_OPT_SCHEDULER_GROUP_DISABLED;
   group->type = type;
 
   add_to_group (group, element);
   add_to_chain (chain, group);
-  group = unref_group (group); /* ...and sink. */
+  group = unref_group (group);	/* ...and sink. */
 
   /* group's refcount is now 2 (one for the element, one for the chain) */
-  
+
   return group;
 }
 
 static void
-destroy_group (GstOptSchedulerGroup *group)
+destroy_group (GstOptSchedulerGroup * group)
 {
   GST_LOG ("destroy group %p", group);
 
@@ -728,17 +752,18 @@ destroy_group (GstOptSchedulerGroup *group)
   g_free (group);
 }
 
-static GstOptSchedulerGroup*
-add_to_group (GstOptSchedulerGroup *group, GstElement *element)
+static GstOptSchedulerGroup *
+add_to_group (GstOptSchedulerGroup * group, GstElement * element)
 {
   g_assert (group != NULL);
   g_assert (element != NULL);
 
-  GST_DEBUG ("adding element \"%s\" to group %p", GST_ELEMENT_NAME (element), group);
+  GST_DEBUG ("adding element \"%s\" to group %p", GST_ELEMENT_NAME (element),
+      group);
 
   if (GST_ELEMENT_IS_DECOUPLED (element)) {
-    GST_DEBUG ("element \"%s\" is decoupled, not adding to group %p", 
-               GST_ELEMENT_NAME (element), group);
+    GST_DEBUG ("element \"%s\" is decoupled, not adding to group %p",
+	GST_ELEMENT_NAME (element), group);
     return group;
   }
 
@@ -760,10 +785,11 @@ add_to_group (GstOptSchedulerGroup *group, GstElement *element)
 
 /* if the element is linked to elements from other groups, you must decrement
    the link count prior to calling this function */
-static GstOptSchedulerGroup*
-remove_from_group (GstOptSchedulerGroup *group, GstElement *element)
+static GstOptSchedulerGroup *
+remove_from_group (GstOptSchedulerGroup * group, GstElement * element)
 {
-  GST_DEBUG ("removing element \"%s\" from group %p", GST_ELEMENT_NAME (element), group);
+  GST_DEBUG ("removing element \"%s\" from group %p",
+      GST_ELEMENT_NAME (element), group);
 
   g_assert (group != NULL);
   g_assert (element != NULL);
@@ -798,31 +824,31 @@ remove_from_group (GstOptSchedulerGroup *group, GstElement *element)
 
 /* FIXME need to check if the groups are of the same type -- otherwise need to
    setup the scheduler again, if it is setup */
-static GstOptSchedulerGroup*
-merge_groups (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
+static GstOptSchedulerGroup *
+merge_groups (GstOptSchedulerGroup * group1, GstOptSchedulerGroup * group2)
 {
   g_assert (group1 != NULL);
 
   GST_DEBUG ("merging groups %p and %p", group1, group2);
-  
+
   if (group1 == group2 || group2 == NULL)
     return group1;
 
   while (group2 && group2->elements) {
-    GstElement *element = (GstElement *)group2->elements->data;
+    GstElement *element = (GstElement *) group2->elements->data;
 
     group2 = remove_from_group (group2, element);
     add_to_group (group1, element);
   }
-  
+
   return group1;
 }
 
 /* setup the scheduler context for a group. The right schedule function
  * is selected based on the group type and cothreads are created if 
  * needed */
-static void 
-setup_group_scheduler (GstOptScheduler *osched, GstOptSchedulerGroup *group) 
+static void
+setup_group_scheduler (GstOptScheduler * osched, GstOptSchedulerGroup * group)
 {
   GroupScheduleFunction wrapper;
 
@@ -833,15 +859,14 @@ setup_group_scheduler (GstOptScheduler *osched, GstOptSchedulerGroup *group)
     wrapper = get_group_schedule_function;
   else if (group->type == GST_OPT_SCHEDULER_GROUP_LOOP)
     wrapper = loop_group_schedule_function;
-	
+
 #ifdef USE_COTHREADS
   if (!(group->flags & GST_OPT_SCHEDULER_GROUP_SCHEDULABLE)) {
     do_cothread_create (group->cothread, osched->context,
- 		      (cothread_func) wrapper, 0, (char **) group);
-  }
-  else {
+	(cothread_func) wrapper, 0, (char **) group);
+  } else {
     do_cothread_setfunc (group->cothread, osched->context,
- 		      (cothread_func) wrapper, 0, (char **) group);
+	(cothread_func) wrapper, 0, (char **) group);
   }
 #else
   group->schedulefunc = wrapper;
@@ -851,8 +876,8 @@ setup_group_scheduler (GstOptScheduler *osched, GstOptSchedulerGroup *group)
   group->flags |= GST_OPT_SCHEDULER_GROUP_SCHEDULABLE;
 }
 
-static void 
-destroy_group_scheduler (GstOptSchedulerGroup *group) 
+static void
+destroy_group_scheduler (GstOptSchedulerGroup * group)
 {
   g_assert (group);
 
@@ -874,7 +899,7 @@ destroy_group_scheduler (GstOptSchedulerGroup *group)
 }
 
 static void
-group_error_handler (GstOptSchedulerGroup *group) 
+group_error_handler (GstOptSchedulerGroup * group)
 {
   GST_DEBUG ("group %p has errored", group);
 
@@ -886,13 +911,16 @@ group_error_handler (GstOptSchedulerGroup *group)
  * and tells the chain that the group is enabled if all elements inside the group are
  * enabled */
 static void
-group_element_set_enabled (GstOptSchedulerGroup *group, GstElement *element, gboolean enabled)
+group_element_set_enabled (GstOptSchedulerGroup * group, GstElement * element,
+    gboolean enabled)
 {
   g_assert (group != NULL);
   g_assert (element != NULL);
 
-  GST_LOG ("request to %d element %s in group %p, have %d elements enabled out of %d", 
-           enabled, GST_ELEMENT_NAME (element), group, group->num_enabled, group->num_elements);
+  GST_LOG
+      ("request to %d element %s in group %p, have %d elements enabled out of %d",
+      enabled, GST_ELEMENT_NAME (element), group, group->num_enabled,
+      group->num_elements);
 
   /* Note that if an unlinked PLAYING element is added to a bin, we have to
      create a new group to hold the element, and this function will be called
@@ -903,33 +931,36 @@ group_element_set_enabled (GstOptSchedulerGroup *group, GstElement *element, gbo
     if (group->num_enabled < group->num_elements)
       group->num_enabled++;
 
-    GST_DEBUG ("enable element %s in group %p, now %d elements enabled out of %d", 
-               GST_ELEMENT_NAME (element), group, group->num_enabled, group->num_elements);
+    GST_DEBUG
+	("enable element %s in group %p, now %d elements enabled out of %d",
+	GST_ELEMENT_NAME (element), group, group->num_enabled,
+	group->num_elements);
 
     if (group->num_enabled == group->num_elements) {
       if (!group->chain) {
-        GST_DEBUG ("enable chainless group %p", group);
-        GST_OPT_SCHEDULER_GROUP_ENABLE (group);
+	GST_DEBUG ("enable chainless group %p", group);
+	GST_OPT_SCHEDULER_GROUP_ENABLE (group);
       } else {
-        GST_LOG ("enable group %p", group);
-        chain_group_set_enabled (group->chain, group, TRUE);
+	GST_LOG ("enable group %p", group);
+	chain_group_set_enabled (group->chain, group, TRUE);
       }
     }
-  }
-  else {
+  } else {
     if (group->num_enabled > 0)
       group->num_enabled--;
 
-    GST_DEBUG ("disable element %s in group %p, now %d elements enabled out of %d", 
-               GST_ELEMENT_NAME (element), group, group->num_enabled, group->num_elements);
+    GST_DEBUG
+	("disable element %s in group %p, now %d elements enabled out of %d",
+	GST_ELEMENT_NAME (element), group, group->num_enabled,
+	group->num_elements);
 
     if (group->num_enabled == 0) {
       if (!group->chain) {
-        GST_DEBUG ("disable chainless group %p", group);
-        GST_OPT_SCHEDULER_GROUP_DISABLE (group);
+	GST_DEBUG ("disable chainless group %p", group);
+	GST_OPT_SCHEDULER_GROUP_DISABLE (group);
       } else {
-        GST_LOG ("disable group %p", group);
-        chain_group_set_enabled (group->chain, group, FALSE);
+	GST_LOG ("disable group %p", group);
+	chain_group_set_enabled (group->chain, group, FALSE);
       }
     }
   }
@@ -939,14 +970,13 @@ group_element_set_enabled (GstOptSchedulerGroup *group, GstElement *element, gbo
  * by calling the schedule function. In the non-cothread case
  * we cannot run already running groups so we return FALSE here
  * to indicate this to the caller */
-static gboolean 
-schedule_group (GstOptSchedulerGroup *group) 
+static gboolean
+schedule_group (GstOptSchedulerGroup * group)
 {
   if (!group->entry) {
     GST_INFO ("not scheduling group %p without entry", group);
     return FALSE;
   }
-
 #ifdef USE_COTHREADS
   if (group->cothread)
     do_cothread_switch (group->cothread);
@@ -962,18 +992,20 @@ schedule_group (GstOptSchedulerGroup *group)
   } else {
     GSList *l;
 
-    for (l=group->elements; l; l=l->next) {
-      GstElement *e = (GstElement*)l->data;
+    for (l = group->elements; l; l = l->next) {
+      GstElement *e = (GstElement *) l->data;
+
       if (e->pre_run_func)
-        e->pre_run_func (e);
+	e->pre_run_func (e);
     }
 
     group->schedulefunc (group->argc, group->argv);
 
-    for (l=group->elements; l; l=l->next) {
-      GstElement *e = (GstElement*)l->data;
+    for (l = group->elements; l; l = l->next) {
+      GstElement *e = (GstElement *) l->data;
+
       if (e->post_run_func)
-        e->post_run_func (e);
+	e->post_run_func (e);
     }
 
   }
@@ -983,11 +1015,11 @@ schedule_group (GstOptSchedulerGroup *group)
 
 #ifndef USE_COTHREADS
 static void
-gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
+gst_opt_scheduler_schedule_run_queue (GstOptScheduler * osched)
 {
   GST_LOG_OBJECT (osched, "running queue: %d groups, recursed %d times",
-		  g_list_length (osched->runqueue),
-                  osched->recursion, g_list_length (osched->runqueue));
+      g_list_length (osched->runqueue),
+      osched->recursion, g_list_length (osched->runqueue));
 
   /* note that we have a ref on each group on the queue (unref after running) */
 
@@ -1002,7 +1034,7 @@ gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
   while (osched->runqueue) {
     GstOptSchedulerGroup *group;
     gboolean res;
-    
+
     group = (GstOptSchedulerGroup *) osched->runqueue->data;
 
     /* runqueue holds refcount to group */
@@ -1012,16 +1044,16 @@ gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
 
     res = schedule_group (group);
     if (!res) {
-      g_warning  ("error scheduling group %p", group);
+      g_warning ("error scheduling group %p", group);
       group_error_handler (group);
-    }
-    else {
+    } else {
       GST_LOG_OBJECT (osched, "done scheduling group %p", group);
     }
     unref_group (group);
   }
 
-  GST_LOG_OBJECT (osched, "run queue length after scheduling %d", g_list_length (osched->runqueue));
+  GST_LOG_OBJECT (osched, "run queue length after scheduling %d",
+      g_list_length (osched->runqueue));
 
   osched->recursion--;
 }
@@ -1029,7 +1061,7 @@ gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
 
 /* a chain is scheduled by picking the first active group and scheduling it */
 static void
-schedule_chain (GstOptSchedulerChain *chain) 
+schedule_chain (GstOptSchedulerChain * chain)
 {
   GSList *groups;
   GstOptScheduler *osched;
@@ -1042,23 +1074,20 @@ schedule_chain (GstOptSchedulerChain *chain)
 
     if (!GST_OPT_SCHEDULER_GROUP_IS_DISABLED (group)) {
       ref_group (group);
-      GST_LOG ("scheduling group %p in chain %p", 
- 	       group, chain);
+      GST_LOG ("scheduling group %p in chain %p", group, chain);
 
 #ifdef USE_COTHREADS
       schedule_group (group);
 #else
       osched->recursion = 0;
-      if (!g_list_find (osched->runqueue, group))
-      {
-        ref_group (group);
-        osched->runqueue = g_list_append (osched->runqueue, group);
+      if (!g_list_find (osched->runqueue, group)) {
+	ref_group (group);
+	osched->runqueue = g_list_append (osched->runqueue, group);
       }
       gst_opt_scheduler_schedule_run_queue (osched);
 #endif
 
-      GST_LOG ("done scheduling group %p in chain %p", 
- 	       group, chain);
+      GST_LOG ("done scheduling group %p in chain %p", group, chain);
       unref_group (group);
       break;
     }
@@ -1085,14 +1114,15 @@ get_group_schedule_function (int argc, char *argv[])
   while (pads) {
     GstData *data;
     GstPad *pad = GST_PAD (pads->data);
+
     pads = g_list_next (pads);
 
     /* skip sinks and ghostpads */
     if (!GST_PAD_IS_SRC (pad) || !GST_IS_REAL_PAD (pad))
       continue;
 
-    GST_DEBUG ("doing get and push on pad \"%s:%s\" in group %p", 
-               GST_DEBUG_PAD_NAME (pad), group);
+    GST_DEBUG ("doing get and push on pad \"%s:%s\" in group %p",
+	GST_DEBUG_PAD_NAME (pad), group);
 
     data = GST_RPAD_GETFUNC (pad) (pad);
     if (data) {
@@ -1123,13 +1153,13 @@ loop_group_schedule_function (int argc, char *argv[])
 
   group->flags |= GST_OPT_SCHEDULER_GROUP_RUNNING;
 
-  GST_DEBUG ("calling loopfunc of element %s in group %p", 
-             GST_ELEMENT_NAME (entry), group);
+  GST_DEBUG ("calling loopfunc of element %s in group %p",
+      GST_ELEMENT_NAME (entry), group);
 
   entry->loopfunc (entry);
 
-  GST_LOG ("loopfunc ended of element %s in group %p", 
-	   GST_ELEMENT_NAME (entry), group);
+  GST_LOG ("loopfunc ended of element %s in group %p",
+      GST_ELEMENT_NAME (entry), group);
 
   group->flags &= ~GST_OPT_SCHEDULER_GROUP_RUNNING;
 
@@ -1143,7 +1173,8 @@ unknown_group_schedule_function (int argc, char *argv[])
 {
   GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) argv;
 
-  g_warning ("(internal error) unknown group type %d, disabling\n", group->type);
+  g_warning ("(internal error) unknown group type %d, disabling\n",
+      group->type);
   group_error_handler (group);
 
   return 0;
@@ -1153,7 +1184,7 @@ unknown_group_schedule_function (int argc, char *argv[])
  * link performs a push to the loop element. We then schedule the
  * group with the loop-based element until the bufpen is empty */
 static void
-gst_opt_scheduler_loop_wrapper (GstPad *sinkpad, GstData *data)
+gst_opt_scheduler_loop_wrapper (GstPad * sinkpad, GstData * data)
 {
   GstOptSchedulerGroup *group;
   GstOptScheduler *osched;
@@ -1169,49 +1200,47 @@ gst_opt_scheduler_loop_wrapper (GstPad *sinkpad, GstData *data)
   if (GST_PAD_BUFLIST (peer)) {
     g_warning ("deadlock detected, disabling group %p", group);
     group_error_handler (group);
-  }
-  else {
+  } else {
     GST_LOG ("queueing data %p on %s:%s's bufpen", data,
-             GST_DEBUG_PAD_NAME (peer));
+	GST_DEBUG_PAD_NAME (peer));
     GST_PAD_BUFLIST (peer) = g_list_append (GST_PAD_BUFLIST (peer), data);
     schedule_group (group);
   }
 #else
   GST_LOG ("queueing data %p on %s:%s's bufpen", data,
-           GST_DEBUG_PAD_NAME (peer));
+      GST_DEBUG_PAD_NAME (peer));
   GST_PAD_BUFLIST (peer) = g_list_append (GST_PAD_BUFLIST (peer), data);
   if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
     GST_LOG ("adding group %p to runqueue", group);
-    if (!g_list_find (osched->runqueue, group))
-    {
+    if (!g_list_find (osched->runqueue, group)) {
       ref_group (group);
       osched->runqueue = g_list_append (osched->runqueue, group);
     }
   }
 #endif
-  
+
   GST_LOG ("%d buffers left on %s:%s's bufpen after chain handler",
-	    g_list_length (GST_PAD_BUFLIST (peer)));
+      g_list_length (GST_PAD_BUFLIST (peer)));
 }
 
 /* this function is called by a loop based element that performs a
  * pull on a sinkpad. We schedule the peer group until the bufpen
  * is filled with the buffer so that this function  can return */
-static GstData*
-gst_opt_scheduler_get_wrapper (GstPad *srcpad)
+static GstData *
+gst_opt_scheduler_get_wrapper (GstPad * srcpad)
 {
   GstData *data;
   GstOptSchedulerGroup *group;
   GstOptScheduler *osched;
   gboolean disabled;
-    
+
   GST_LOG ("get handler for %" GST_PTR_FORMAT, srcpad);
 
   /* first try to grab a queued buffer */
   if (GST_PAD_BUFLIST (srcpad)) {
     data = GST_PAD_BUFLIST (srcpad)->data;
     GST_PAD_BUFLIST (srcpad) = g_list_remove (GST_PAD_BUFLIST (srcpad), data);
-    
+
     GST_LOG ("returning popped queued data %p", data);
 
     return data;
@@ -1231,10 +1260,9 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
     if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
       ref_group (group);
 
-      if (!g_list_find (osched->runqueue, group))
-      {
-        ref_group (group);
-        osched->runqueue = g_list_append (osched->runqueue, group);
+      if (!g_list_find (osched->runqueue, group)) {
+	ref_group (group);
+	osched->runqueue = g_list_append (osched->runqueue, group);
       }
 
       GST_LOG ("recursing into scheduler group %p", group);
@@ -1249,8 +1277,7 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
 	/* if the group was gone we also might have to break out of the loop */
 	disabled = TRUE;
       }
-    }
-    else {
+    } else {
       /* in this case, the group was running and we wanted to swtich to it,
        * this is not allowed in the optimal scheduler (yet) */
       g_warning ("deadlock detected, disabling group %p", group);
@@ -1263,22 +1290,21 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
     if (osched->state == GST_OPT_SCHEDULER_STATE_INTERRUPTED) {
       GST_INFO ("scheduler interrupted, return interrupt event");
       data = GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
-    }
-    else {
+    } else {
       if (GST_PAD_BUFLIST (srcpad)) {
-        data = GST_PAD_BUFLIST (srcpad)->data;
-        GST_PAD_BUFLIST (srcpad) = g_list_remove (GST_PAD_BUFLIST (srcpad), data);
-      }
-      else if (disabled) {
-        /* no buffer in queue and peer group was disabled */
-        data = GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
+	data = GST_PAD_BUFLIST (srcpad)->data;
+	GST_PAD_BUFLIST (srcpad) =
+	    g_list_remove (GST_PAD_BUFLIST (srcpad), data);
+      } else if (disabled) {
+	/* no buffer in queue and peer group was disabled */
+	data = GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
       }
     }
   }
   while (data == NULL);
 
   GST_LOG ("get handler, returning data %p, queue length %d",
-	   data, g_list_length (GST_PAD_BUFLIST (srcpad)));
+      data, g_list_length (GST_PAD_BUFLIST (srcpad)));
 
   return data;
 }
@@ -1286,24 +1312,23 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
 /* this function is a chain wrapper for non-event-aware plugins,
  * it'll simply dispatch the events to the (default) event handler */
 static void
-gst_opt_scheduler_chain_wrapper (GstPad *sinkpad, GstData *data)
+gst_opt_scheduler_chain_wrapper (GstPad * sinkpad, GstData * data)
 {
   if (GST_IS_EVENT (data)) {
     gst_pad_send_event (sinkpad, GST_EVENT (data));
-  }
-  else {
+  } else {
     GST_RPAD_CHAINFUNC (sinkpad) (sinkpad, data);
   }
 }
 
 static void
-clear_queued (GstData *data, gpointer user_data)
+clear_queued (GstData * data, gpointer user_data)
 {
   gst_data_unref (data);
 }
 
 static void
-pad_clear_queued (GstPad *srcpad, gpointer user_data)
+pad_clear_queued (GstPad * srcpad, gpointer user_data)
 {
   GList *buflist = GST_PAD_BUFLIST (srcpad);
 
@@ -1316,13 +1341,13 @@ pad_clear_queued (GstPad *srcpad, gpointer user_data)
 }
 
 static gboolean
-gst_opt_scheduler_event_wrapper (GstPad *srcpad, GstEvent *event)
+gst_opt_scheduler_event_wrapper (GstPad * srcpad, GstEvent * event)
 {
   gboolean flush;
 
-  GST_DEBUG ("intercepting event %d on pad %s:%s", 
-             GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (srcpad));
-  
+  GST_DEBUG ("intercepting event %d on pad %s:%s",
+      GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (srcpad));
+
   /* figure out if this is a flush event */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
@@ -1346,12 +1371,14 @@ gst_opt_scheduler_event_wrapper (GstPad *srcpad, GstEvent *event)
 }
 
 static GstElementStateReturn
-gst_opt_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint transition)
+gst_opt_scheduler_state_transition (GstScheduler * sched, GstElement * element,
+    gint transition)
 {
   GstOptSchedulerGroup *group;
   GstElementStateReturn res = GST_STATE_SUCCESS;
-  
-  GST_DEBUG ("element \"%s\" state change %d", GST_ELEMENT_NAME (element), transition);
+
+  GST_DEBUG ("element \"%s\" state change %d", GST_ELEMENT_NAME (element),
+      transition);
 
   /* we check the state of the managing pipeline here */
   if (GST_IS_BIN (element)) {
@@ -1359,16 +1386,16 @@ gst_opt_scheduler_state_transition (GstScheduler *sched, GstElement *element, gi
       GST_LOG ("parent \"%s\" changed state", GST_ELEMENT_NAME (element));
 
       switch (transition) {
-        case GST_STATE_PLAYING_TO_PAUSED:
-          GST_INFO ("setting scheduler state to stopped");
-          GST_SCHEDULER_STATE (sched) = GST_SCHEDULER_STATE_STOPPED;
-  	  break;
-        case GST_STATE_PAUSED_TO_PLAYING:
-          GST_INFO ("setting scheduler state to running");
-          GST_SCHEDULER_STATE (sched) = GST_SCHEDULER_STATE_RUNNING;
+	case GST_STATE_PLAYING_TO_PAUSED:
+	  GST_INFO ("setting scheduler state to stopped");
+	  GST_SCHEDULER_STATE (sched) = GST_SCHEDULER_STATE_STOPPED;
 	  break;
-        default:
-          GST_LOG ("no interesting state change, doing nothing");
+	case GST_STATE_PAUSED_TO_PLAYING:
+	  GST_INFO ("setting scheduler state to running");
+	  GST_SCHEDULER_STATE (sched) = GST_SCHEDULER_STATE_RUNNING;
+	  break;
+	default:
+	  GST_LOG ("no interesting state change, doing nothing");
       }
     }
     return res;
@@ -1386,21 +1413,21 @@ gst_opt_scheduler_state_transition (GstScheduler *sched, GstElement *element, gi
       /* an element withut a group has to be an unlinked src, sink
        * filter element */
       if (!group) {
-        GST_INFO ("element \"%s\" has no group", GST_ELEMENT_NAME (element));
+	GST_INFO ("element \"%s\" has no group", GST_ELEMENT_NAME (element));
 	res = GST_STATE_FAILURE;
       }
       /* else construct the scheduling context of this group and enable it */
       else {
-        group_element_set_enabled (group, element, TRUE);
+	group_element_set_enabled (group, element, TRUE);
       }
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       /* if the element still has a group, we disable it */
-      if (group) 
-        group_element_set_enabled (group, element, FALSE);
+      if (group)
+	group_element_set_enabled (group, element, FALSE);
       break;
     case GST_STATE_PAUSED_TO_READY:
-    {  
+    {
       GList *pads = (GList *) gst_element_get_pad_list (element);
 
       g_list_foreach (pads, (GFunc) pad_clear_queued, NULL);
@@ -1414,19 +1441,20 @@ gst_opt_scheduler_state_transition (GstScheduler *sched, GstElement *element, gi
 }
 
 static void
-gst_opt_scheduler_scheduling_change (GstScheduler *sched, GstElement *element)
+gst_opt_scheduler_scheduling_change (GstScheduler * sched, GstElement * element)
 {
   g_warning ("scheduling change, implement me");
 }
 
 static void
-get_group (GstElement *element, GstOptSchedulerGroup **group)
+get_group (GstElement * element, GstOptSchedulerGroup ** group)
 {
   GstOptSchedulerCtx *ctx;
-  /*GList *pads;*/
+
+  /*GList *pads; */
 
   ctx = GST_ELEMENT_SCHED_CONTEXT (element);
-  if (ctx) 
+  if (ctx)
     *group = ctx->group;
   else
     *group = NULL;
@@ -1441,22 +1469,22 @@ get_group (GstElement *element, GstOptSchedulerGroup **group)
  * - if both of the elements have a group, we merge the groups, which
  *   will also merge the chains.
  */
-static GstOptSchedulerGroup*
-group_elements (GstOptScheduler *osched, GstElement *element1, GstElement *element2,
-                GstOptSchedulerGroupType type)
+static GstOptSchedulerGroup *
+group_elements (GstOptScheduler * osched, GstElement * element1,
+    GstElement * element2, GstOptSchedulerGroupType type)
 {
   GstOptSchedulerGroup *group1, *group2, *group = NULL;
-  
+
   get_group (element1, &group1);
   get_group (element2, &group2);
-  
+
   /* none of the elements is added to a group, create a new group
    * and chain to add the elements to */
   if (!group1 && !group2) {
     GstOptSchedulerChain *chain;
 
-    GST_DEBUG ("creating new group to hold \"%s\" and \"%s\"", 
-              GST_ELEMENT_NAME (element1), GST_ELEMENT_NAME (element2));
+    GST_DEBUG ("creating new group to hold \"%s\" and \"%s\"",
+	GST_ELEMENT_NAME (element1), GST_ELEMENT_NAME (element2));
 
     chain = create_chain (osched);
     group = create_group (chain, element1, type);
@@ -1464,8 +1492,8 @@ group_elements (GstOptScheduler *osched, GstElement *element1, GstElement *eleme
   }
   /* the first element has a group */
   else if (group1) {
-    GST_DEBUG ("adding \"%s\" to \"%s\"'s group", 
-               GST_ELEMENT_NAME (element2), GST_ELEMENT_NAME (element1));
+    GST_DEBUG ("adding \"%s\" to \"%s\"'s group",
+	GST_ELEMENT_NAME (element2), GST_ELEMENT_NAME (element1));
 
     /* the second element also has a group, merge */
     if (group2)
@@ -1480,8 +1508,8 @@ group_elements (GstOptScheduler *osched, GstElement *element1, GstElement *eleme
   /* element1 has no group, element2 does. Add element1 to the
    * group of element2 */
   else {
-    GST_DEBUG ("adding \"%s\" to \"%s\"'s group", 
-               GST_ELEMENT_NAME (element1), GST_ELEMENT_NAME (element2));
+    GST_DEBUG ("adding \"%s\" to \"%s\"'s group",
+	GST_ELEMENT_NAME (element1), GST_ELEMENT_NAME (element2));
     add_to_group (group2, element1);
     group = group2;
   }
@@ -1492,7 +1520,7 @@ group_elements (GstOptScheduler *osched, GstElement *element1, GstElement *eleme
  * increment link counts between groups
  */
 static void
-group_inc_link (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
+group_inc_link (GstOptSchedulerGroup * group1, GstOptSchedulerGroup * group2)
 {
   GSList *links = group1->group_links;
   gboolean done = FALSE;
@@ -1502,12 +1530,12 @@ group_inc_link (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
   while (links && !done) {
     link = (GstOptSchedulerGroupLink *) links->data;
     links = g_slist_next (links);
-    
+
     if (IS_GROUP_LINK (link, group1, group2)) {
       /* we found a link to this group, increment the link count */
       link->count++;
-      GST_LOG ("incremented group link count between %p and %p to %d", 
-               group1, group2, link->count);
+      GST_LOG ("incremented group link count between %p and %p to %d",
+	  group1, group2, link->count);
       done = TRUE;
     }
   }
@@ -1522,8 +1550,7 @@ group_inc_link (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
     group1->group_links = g_slist_prepend (group1->group_links, link);
     group2->group_links = g_slist_prepend (group2->group_links, link);
 
-    GST_DEBUG ("added group link between %p and %p", 
-               group1, group2);
+    GST_DEBUG ("added group link between %p and %p", group1, group2);
   }
 }
 
@@ -1531,7 +1558,7 @@ group_inc_link (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
  * decrement link counts between groups, returns TRUE if the link count reaches 0
  */
 static gboolean
-group_dec_link (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
+group_dec_link (GstOptSchedulerGroup * group1, GstOptSchedulerGroup * group2)
 {
   GSList *links = group1->group_links;
   gboolean res = FALSE;
@@ -1540,17 +1567,16 @@ group_dec_link (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
   while (links) {
     link = (GstOptSchedulerGroupLink *) links->data;
     links = g_slist_next (links);
-    
+
     if (IS_GROUP_LINK (link, group1, group2)) {
       link->count--;
-      GST_LOG ("link count between %p and %p is now %d", 
-               group1, group2, link->count);
+      GST_LOG ("link count between %p and %p is now %d",
+	  group1, group2, link->count);
       if (link->count == 0) {
 	group1->group_links = g_slist_remove (group1->group_links, link);
 	group2->group_links = g_slist_remove (group2->group_links, link);
 	g_free (link);
-        GST_DEBUG ("removed group link between %p and %p", 
-                   group1, group2);
+	GST_DEBUG ("removed group link between %p and %p", group1, group2);
 	res = TRUE;
       }
       break;
@@ -1560,7 +1586,8 @@ group_dec_link (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
 }
 
 
-typedef enum {
+typedef enum
+{
   GST_OPT_INVALID,
   GST_OPT_GET_TO_CHAIN,
   GST_OPT_LOOP_TO_CHAIN,
@@ -1574,22 +1601,22 @@ typedef enum {
  * Entry points for this scheduler.
  */
 static void
-gst_opt_scheduler_setup (GstScheduler *sched)
-{   
+gst_opt_scheduler_setup (GstScheduler * sched)
+{
 #ifdef USE_COTHREADS
   GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
-	      
+
   /* first create thread context */
   if (osched->context == NULL) {
     GST_DEBUG ("initializing cothread context");
     osched->context = do_cothread_context_init ();
   }
 #endif
-} 
-  
-static void 
-gst_opt_scheduler_reset (GstScheduler *sched)
-{ 
+}
+
+static void
+gst_opt_scheduler_reset (GstScheduler * sched)
+{
 #ifdef USE_COTHREADS
   GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   GSList *chains = osched->chains;
@@ -1606,19 +1633,19 @@ gst_opt_scheduler_reset (GstScheduler *sched)
     }
     chains = chains->next;
   }
-	      
+
   if (osched->context) {
     do_cothread_context_destroy (osched->context);
-    osched->context = NULL; 
+    osched->context = NULL;
   }
 #endif
-}     
+}
 static void
-gst_opt_scheduler_add_element (GstScheduler *sched, GstElement *element)
+gst_opt_scheduler_add_element (GstScheduler * sched, GstElement * element)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   GstOptSchedulerCtx *ctx;
-  const GList *pads; 
+  const GList *pads;
 
   GST_DEBUG_OBJECT (sched, "adding element \"%s\"", GST_OBJECT_NAME (element));
 
@@ -1637,9 +1664,11 @@ gst_opt_scheduler_add_element (GstScheduler *sched, GstElement *element)
   pads = gst_element_get_pad_list (element);
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
+
     pads = g_list_next (pads);
 
-    if (!GST_IS_REAL_PAD (pad)) continue;
+    if (!GST_IS_REAL_PAD (pad))
+      continue;
     GST_RPAD_EVENTHANDLER (pad) = GST_RPAD_EVENTFUNC (pad);
   }
 
@@ -1654,16 +1683,18 @@ gst_opt_scheduler_add_element (GstScheduler *sched, GstElement *element)
     group = create_group (chain, element, GST_OPT_SCHEDULER_GROUP_LOOP);
     group->entry = element;
 
-    GST_LOG ("added element \"%s\" as loop based entry", GST_ELEMENT_NAME (element));
+    GST_LOG ("added element \"%s\" as loop based entry",
+	GST_ELEMENT_NAME (element));
   }
 }
 
 static void
-gst_opt_scheduler_remove_element (GstScheduler *sched, GstElement *element)
+gst_opt_scheduler_remove_element (GstScheduler * sched, GstElement * element)
 {
   GstOptSchedulerGroup *group;
 
-  GST_DEBUG_OBJECT (sched, "removing element \"%s\"", GST_OBJECT_NAME (element));
+  GST_DEBUG_OBJECT (sched, "removing element \"%s\"",
+      GST_OBJECT_NAME (element));
 
   /* decoupled elements are not added to the scheduler lists and should therefore
    * no be removed */
@@ -1681,51 +1712,53 @@ gst_opt_scheduler_remove_element (GstScheduler *sched, GstElement *element)
 }
 
 static void
-gst_opt_scheduler_lock_element (GstScheduler *sched, GstElement *element)
+gst_opt_scheduler_lock_element (GstScheduler * sched, GstElement * element)
 {
   //GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   g_warning ("lock element, implement me");
 }
 
 static void
-gst_opt_scheduler_unlock_element (GstScheduler *sched, GstElement *element)
+gst_opt_scheduler_unlock_element (GstScheduler * sched, GstElement * element)
 {
   //GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   g_warning ("unlock element, implement me");
 }
 
 static gboolean
-gst_opt_scheduler_yield (GstScheduler *sched, GstElement *element)
+gst_opt_scheduler_yield (GstScheduler * sched, GstElement * element)
 {
 #ifdef USE_COTHREADS
   /* yield hands control to the main cothread context if the requesting 
    * element is the entry point of the group */
   GstOptSchedulerGroup *group;
+
   get_group (element, &group);
   if (group && group->entry == element)
-    do_cothread_switch (do_cothread_get_main (((GstOptScheduler*)sched)->context)); 
+    do_cothread_switch (do_cothread_get_main (((GstOptScheduler *) sched)->
+	    context));
 
   return FALSE;
 #else
-  g_warning ("element %s performs a yield, please fix the element", 
-		  GST_ELEMENT_NAME (element));
+  g_warning ("element %s performs a yield, please fix the element",
+      GST_ELEMENT_NAME (element));
   return TRUE;
 #endif
 }
 
 static gboolean
-gst_opt_scheduler_interrupt (GstScheduler *sched, GstElement *element)
+gst_opt_scheduler_interrupt (GstScheduler * sched, GstElement * element)
 {
-  GST_INFO ("interrupt from \"%s\"", 
-            GST_OBJECT_NAME (element));
+  GST_INFO ("interrupt from \"%s\"", GST_OBJECT_NAME (element));
 
 #ifdef USE_COTHREADS
-  do_cothread_switch (do_cothread_get_main (((GstOptScheduler*)sched)->context)); 
+  do_cothread_switch (do_cothread_get_main (((GstOptScheduler *) sched)->
+	  context));
   return FALSE;
 #else
   {
     GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
- 
+
     GST_INFO ("scheduler set interrupted state");
     osched->state = GST_OPT_SCHEDULER_STATE_INTERRUPTED;
   }
@@ -1734,10 +1767,11 @@ gst_opt_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 }
 
 static void
-gst_opt_scheduler_error (GstScheduler *sched, GstElement *element)
+gst_opt_scheduler_error (GstScheduler * sched, GstElement * element)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   GstOptSchedulerGroup *group;
+
   get_group (element, &group);
   if (group)
     group_error_handler (group);
@@ -1747,14 +1781,15 @@ gst_opt_scheduler_error (GstScheduler *sched, GstElement *element)
 
 /* link pads, merge groups and chains */
 static void
-gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
+gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
+    GstPad * sinkpad)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   LinkType type = GST_OPT_INVALID;
   GstElement *element1, *element2;
 
-  GST_INFO ("scheduling link between %s:%s and %s:%s", 
-            GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+  GST_INFO ("scheduling link between %s:%s and %s:%s",
+      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   element1 = GST_PAD_PARENT (srcpad);
   element2 = GST_PAD_PARENT (sinkpad);
@@ -1766,58 +1801,54 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
   else {
     if (element1->loopfunc) {
       if (GST_RPAD_CHAINFUNC (sinkpad))
-        type = GST_OPT_LOOP_TO_CHAIN;
-    }
-    else if (element2->loopfunc) {
+	type = GST_OPT_LOOP_TO_CHAIN;
+    } else if (element2->loopfunc) {
       if (GST_RPAD_GETFUNC (srcpad)) {
-        type = GST_OPT_GET_TO_LOOP;
+	type = GST_OPT_GET_TO_LOOP;
 	/* this could be tricky, the get based source could 
 	 * already be part of a loop based group in another pad,
 	 * we assert on that for now */
 	if (GST_ELEMENT_SCHED_CONTEXT (element1) != NULL &&
-	    GST_ELEMENT_SCHED_GROUP (element1) != NULL) 
-	{
-          GstOptSchedulerGroup *group = GST_ELEMENT_SCHED_GROUP (element1);
+	    GST_ELEMENT_SCHED_GROUP (element1) != NULL) {
+	  GstOptSchedulerGroup *group = GST_ELEMENT_SCHED_GROUP (element1);
 
 	  /* if the loop based element is the entry point we're ok, if it
 	   * isn't then we have multiple loop based elements in this group */
 	  if (group->entry != element2) {
-            g_error ("internal error: cannot schedule get to loop in multi-loop based group");
+	    g_error
+		("internal error: cannot schedule get to loop in multi-loop based group");
 	    return;
 	  }
 	}
-      }
-      else
-        type = GST_OPT_CHAIN_TO_LOOP;
-    }
-    else {
+      } else
+	type = GST_OPT_CHAIN_TO_LOOP;
+    } else {
       if (GST_RPAD_GETFUNC (srcpad) && GST_RPAD_CHAINFUNC (sinkpad)) {
-        type = GST_OPT_GET_TO_CHAIN;
+	type = GST_OPT_GET_TO_CHAIN;
 	/* the get based source could already be part of a loop 
 	 * based group in another pad, we assert on that for now */
 	if (GST_ELEMENT_SCHED_CONTEXT (element1) != NULL &&
-	    GST_ELEMENT_SCHED_GROUP (element1) != NULL) 
-	{
-          GstOptSchedulerGroup *group = GST_ELEMENT_SCHED_GROUP (element1);
+	    GST_ELEMENT_SCHED_GROUP (element1) != NULL) {
+	  GstOptSchedulerGroup *group = GST_ELEMENT_SCHED_GROUP (element1);
 
 	  /* if the get based element is the entry point we're ok, if it
 	   * isn't then we have a mixed loop/chain based group */
 	  if (group->entry != element1) {
-            g_error ("internal error: cannot schedule get to chain with mixed loop/chain based group");
+	    g_error
+		("internal error: cannot schedule get to chain with mixed loop/chain based group");
 	    return;
 	  }
 	}
-      }
-      else 
-        type = GST_OPT_CHAIN_TO_CHAIN;
+      } else
+	type = GST_OPT_CHAIN_TO_CHAIN;
     }
   }
- 
+
   /* since we can't set event handlers on pad creation after addition, it is
    * best we set all of them again to the default before linking */
   GST_RPAD_EVENTHANDLER (srcpad) = GST_RPAD_EVENTFUNC (srcpad);
   GST_RPAD_EVENTHANDLER (sinkpad) = GST_RPAD_EVENTFUNC (sinkpad);
-  
+
   /* for each link type, perform specific actions */
   switch (type) {
     case GST_OPT_GET_TO_CHAIN:
@@ -1829,22 +1860,22 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
       /* setup get/chain handlers */
       GST_RPAD_GETHANDLER (srcpad) = GST_RPAD_GETFUNC (srcpad);
       if (GST_ELEMENT_IS_EVENT_AWARE (element2))
-        GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
+	GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
       else
-        GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_chain_wrapper;
+	GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_chain_wrapper;
 
       /* the two elements should be put into the same group, 
        * this also means that they are in the same chain automatically */
       group = group_elements (osched, element1, element2,
-                              GST_OPT_SCHEDULER_GROUP_GET);
+	  GST_OPT_SCHEDULER_GROUP_GET);
 
       /* if there is not yet an entry in the group, select the source
        * element as the entry point */
       if (!group->entry) {
-        group->entry = element1;
+	group->entry = element1;
 
-        GST_DEBUG ("setting \"%s\" as entry point of _get-based group %p", 
-                   GST_ELEMENT_NAME (element1), group);
+	GST_DEBUG ("setting \"%s\" as entry point of _get-based group %p",
+	    GST_ELEMENT_NAME (element1), group);
       }
       break;
     }
@@ -1853,9 +1884,9 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
       GST_LOG ("loop/chain to chain based link");
 
       if (GST_ELEMENT_IS_EVENT_AWARE (element2))
-        GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
+	GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
       else
-        GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_chain_wrapper;
+	GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_chain_wrapper;
 
       /* the two elements should be put into the same group, 
        * this also means that they are in the same chain automatically, 
@@ -1897,14 +1928,15 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
       if (!group1) {
 	/* create a new group for element1 as it cannot be merged into another group
 	 * here. we create the group in the same chain as the loop-based element. */
-        GST_DEBUG ("creating new group for element %s", GST_ELEMENT_NAME (element1));
-        group1 = create_group (group2->chain, element1,
-                               GST_OPT_SCHEDULER_GROUP_LOOP);
-      }
-      else {
+	GST_DEBUG ("creating new group for element %s",
+	    GST_ELEMENT_NAME (element1));
+	group1 =
+	    create_group (group2->chain, element1,
+	    GST_OPT_SCHEDULER_GROUP_LOOP);
+      } else {
 	/* both elements are already in a group, make sure they are added to
 	 * the same chain */
-        merge_chains (group1->chain, group2->chain);
+	merge_chains (group1->chain, group2->chain);
       }
       group_inc_link (group1, group2);
       break;
@@ -1920,7 +1952,8 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
  * no checking is done on the brokenpad arg 
  */
 static gboolean
-element_has_link_with_group (GstElement *element, GstOptSchedulerGroup *group, GstPad *brokenpad)
+element_has_link_with_group (GstElement * element, GstOptSchedulerGroup * group,
+    GstPad * brokenpad)
 {
   gboolean linked = FALSE;
   const GList *pads;
@@ -1929,6 +1962,7 @@ element_has_link_with_group (GstElement *element, GstOptSchedulerGroup *group, G
   pads = gst_element_get_pad_list (element);
   while (pads && !linked) {
     GstPad *pad = GST_PAD (pads->data);
+
     pads = g_list_next (pads);
 
     /* we only operate on real pads and on the pad that is not broken */
@@ -1944,17 +1978,16 @@ element_has_link_with_group (GstElement *element, GstOptSchedulerGroup *group, G
 
       /* links with decoupled elements are valid */
       if (GST_ELEMENT_IS_DECOUPLED (parent)) {
-        linked = TRUE;
-      }
-      else {
+	linked = TRUE;
+      } else {
 	/* for non-decoupled elements we need to check the group */
-        get_group (parent, &parentgroup);
+	get_group (parent, &parentgroup);
 
-        /* if it's in the same group, we're still linked */
-        if (parentgroup == group)
-          linked = TRUE;
+	/* if it's in the same group, we're still linked */
+	if (parentgroup == group)
+	  linked = TRUE;
       }
-    } 
+    }
   }
   return linked;
 }
@@ -1964,13 +1997,13 @@ element_has_link_with_group (GstElement *element, GstOptSchedulerGroup *group, G
  * group link into account.
  */
 static gboolean
-group_can_reach_group (GstOptSchedulerGroup *group, GstOptSchedulerGroup *target)
+group_can_reach_group (GstOptSchedulerGroup * group,
+    GstOptSchedulerGroup * target)
 {
   gboolean reachable = FALSE;
   const GSList *links = group->group_links;
 
-  GST_LOG ("checking if group %p can reach %p", 
-           group, target);
+  GST_LOG ("checking if group %p can reach %p", group, target);
 
   /* seems like we found the target element */
   if (group == target) {
@@ -1979,7 +2012,8 @@ group_can_reach_group (GstOptSchedulerGroup *group, GstOptSchedulerGroup *target
   }
 
   /* if the group is marked as visited, we don't need to check here */
-  if (GST_OPT_SCHEDULER_GROUP_IS_FLAG_SET (group, GST_OPT_SCHEDULER_GROUP_VISITED)) {
+  if (GST_OPT_SCHEDULER_GROUP_IS_FLAG_SET (group,
+	  GST_OPT_SCHEDULER_GROUP_VISITED)) {
     GST_LOG ("already visited %p", group);
     return FALSE;
   }
@@ -1996,8 +2030,7 @@ group_can_reach_group (GstOptSchedulerGroup *group, GstOptSchedulerGroup *target
     /* find other group in this link */
     other = OTHER_GROUP_LINK (link, group);
 
-    GST_LOG ("found link from %p to %p, count %d", 
-             group, other, link->count);
+    GST_LOG ("found link from %p to %p, count %d", group, other, link->count);
 
     /* check if we can reach the target recursiveley */
     reachable = group_can_reach_group (other, target);
@@ -2008,20 +2041,20 @@ group_can_reach_group (GstOptSchedulerGroup *group, GstOptSchedulerGroup *target
    * all groups are checked. */
   GST_OPT_SCHEDULER_GROUP_UNSET_FLAG (group, GST_OPT_SCHEDULER_GROUP_VISITED);
 
-  GST_LOG ("leaving group %p with %s", group, (reachable ? "TRUE":"FALSE"));
+  GST_LOG ("leaving group %p with %s", group, (reachable ? "TRUE" : "FALSE"));
 
   return reachable;
 }
 
 static void
-group_dec_links_for_element (GstOptSchedulerGroup* group, GstElement *element)
+group_dec_links_for_element (GstOptSchedulerGroup * group, GstElement * element)
 {
   GList *l;
   GstPad *pad;
   GstOptSchedulerGroup *peer_group;
-  
-  for (l=GST_ELEMENT_PADS(element); l; l=l->next) {
-    pad = (GstPad*)l->data;
+
+  for (l = GST_ELEMENT_PADS (element); l; l = l->next) {
+    pad = (GstPad *) l->data;
     if (GST_IS_REAL_PAD (pad) && GST_PAD_PEER (pad)) {
       get_group (GST_PAD_PARENT (GST_PAD_PEER (pad)), &peer_group);
       if (peer_group && peer_group != group)
@@ -2031,18 +2064,19 @@ group_dec_links_for_element (GstOptSchedulerGroup* group, GstElement *element)
 }
 
 static void
-gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
+gst_opt_scheduler_pad_unlink (GstScheduler * sched, GstPad * srcpad,
+    GstPad * sinkpad)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   GstElement *element1, *element2;
   GstOptSchedulerGroup *group1, *group2;
 
-  GST_INFO ("unscheduling link between %s:%s and %s:%s", 
-            GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+  GST_INFO ("unscheduling link between %s:%s and %s:%s",
+      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   element1 = GST_PAD_PARENT (srcpad);
   element2 = GST_PAD_PARENT (sinkpad);
-  
+
   get_group (element1, &group1);
   get_group (element2, &group2);
 
@@ -2058,7 +2092,8 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
   /* if one the elements has no group (anymore) we don't really care 
    * about the link */
   if (!group1 || !group2) {
-    GST_LOG ("one (or both) of the elements is not in a group, not interesting");
+    GST_LOG
+	("one (or both) of the elements is not in a group, not interesting");
     return;
   }
 
@@ -2080,25 +2115,26 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
       /* see if group1 and group2 are still connected in any indirect way */
       still_link = group_can_reach_group (group1, group2);
 
-      GST_DEBUG ("group %p %s reach group %p", group1, (still_link ? "can":"can't"), group2);
+      GST_DEBUG ("group %p %s reach group %p", group1,
+	  (still_link ? "can" : "can't"), group2);
       if (!still_link) {
 	/* groups are really disconnected, migrate one group to a new chain */
-        chain = create_chain (osched);
-        chain_recursively_migrate_group (chain, group1);
+	chain = create_chain (osched);
+	chain_recursively_migrate_group (chain, group1);
 
-        GST_DEBUG ("migrated group %p to new chain %p", group1, chain);
+	GST_DEBUG ("migrated group %p to new chain %p", group1, chain);
       }
-    }
-    else {
-      GST_DEBUG ("group %p still has direct link with group %p", group1, group2);
+    } else {
+      GST_DEBUG ("group %p still has direct link with group %p", group1,
+	  group2);
     }
   }
   /* hard part, groups are equal */
   else {
     gboolean still_link1, still_link2;
     GstOptSchedulerGroup *group;
-    GstElement *element = NULL; /* shut up gcc */
-    
+    GstElement *element = NULL;	/* shut up gcc */
+
     /* since group1 == group2, it doesn't matter which group we take */
     group = group1;
 
@@ -2117,15 +2153,15 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
       GSList *l;
       GList *m;;
       int linkcount;
-      
-      GST_LOG ( "elements still have links with other elements in the group");
-      
+
+      GST_LOG ("elements still have links with other elements in the group");
+
       while (group->elements)
-	for (l = group->elements; l && l->data; l = l->next)  {
-	  element = (GstElement*)l->data;
+	for (l = group->elements; l && l->data; l = l->next) {
+	  element = (GstElement *) l->data;
 	  if (GST_ELEMENT_IS_DECOUPLED (element))
 	    continue;
-	    
+
 	  linkcount = 0;
 	  GST_LOG ("Examining %s\n", GST_ELEMENT_NAME (element));
 	  for (m = GST_ELEMENT_PADS (element); m; m = m->next) {
@@ -2133,78 +2169,76 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
 	    GstElement *parent;
 	    GstOptSchedulerGroup *peer_group;
 
-	    pad = (GstPad*)m->data;
+	    pad = (GstPad *) m->data;
 	    if (!pad || !GST_IS_REAL_PAD (pad))
 	      continue;
 
 	    peer = GST_PAD_PEER (pad);
 	    if (!peer || !GST_IS_REAL_PAD (peer))
 	      continue;
-		
+
 	    parent = GST_PAD_PARENT (GST_PAD_PEER (pad));
 	    get_group (parent, &peer_group);
 	    if (peer_group && peer_group != group) {
 	      GST_LOG ("pad %s is linked with %s\n",
-		       GST_PAD_NAME (pad),
-		       GST_ELEMENT_NAME (parent));
+		  GST_PAD_NAME (pad), GST_ELEMENT_NAME (parent));
 	      linkcount++;
 	    }
 	  }
 
 	  if (linkcount < 2) {
-	    group_dec_links_for_element  (group, element);
+	    group_dec_links_for_element (group, element);
 	    remove_from_group (group, element);
 	  }
 	  /* if linkcount == 2, it will be unlinked later on */
 	  else if (linkcount > 2) {
-	    g_warning ("opt: Can't handle element %s with 3 or more links, aborting",
-		       GST_ELEMENT_NAME (element));
+	    g_warning
+		("opt: Can't handle element %s with 3 or more links, aborting",
+		GST_ELEMENT_NAME (element));
 	    return;
 	  }
-	}	    
+	}
       /* Peer element will be catched during next iteration */
       return;
     }
 
     if (!still_link1 && !still_link2)
       return;
-    
+
     /* now check which one of the elements we can remove from the group */
     if (still_link1) {
       element = element2;
-    }
-    else if (still_link2) {
+    } else if (still_link2) {
       element = element1;
     }
 
     /* we only remove elements that are not the entry point of a loop based
      * group and are not decoupled */
     if (!(group->entry == element &&
-	  group->type == GST_OPT_SCHEDULER_GROUP_LOOP) &&
-	!GST_ELEMENT_IS_DECOUPLED (element)) {        
+	    group->type == GST_OPT_SCHEDULER_GROUP_LOOP) &&
+	!GST_ELEMENT_IS_DECOUPLED (element)) {
       GST_LOG ("element is separated from the group");
-      
+
       /* have to decrement links to other groups from other pads */
-      group_dec_links_for_element  (group, element);
+      group_dec_links_for_element (group, element);
       remove_from_group (group, element);
-    }
-    else {
+    } else {
       GST_LOG ("element is decoupled or entry in loop based group");
     }
   }
 }
 
 static void
-gst_opt_scheduler_pad_select (GstScheduler *sched, GList *padlist)
+gst_opt_scheduler_pad_select (GstScheduler * sched, GList * padlist)
 {
   //GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
-  
+
   g_warning ("pad select, implement me");
 }
 
 /* a scheduler iteration is done by looping and scheduling the active chains */
 static GstSchedulerState
-gst_opt_scheduler_iterate (GstScheduler *sched)
+gst_opt_scheduler_iterate (GstScheduler * sched)
 {
   GstSchedulerState state = GST_SCHEDULER_STATE_STOPPED;
   GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
@@ -2226,19 +2260,18 @@ gst_opt_scheduler_iterate (GstScheduler *sched)
       ref_chain (chain);
       /* if the chain is not disabled, schedule it */
       if (!GST_OPT_SCHEDULER_CHAIN_IS_DISABLED (chain)) {
-        GST_LOG ("scheduling chain %p", chain);
-        schedule_chain (chain);
-        scheduled = TRUE;
+	GST_LOG ("scheduling chain %p", chain);
+	schedule_chain (chain);
+	scheduled = TRUE;
       }
 
       /* don't schedule any more chains when in error */
       if (osched->state == GST_OPT_SCHEDULER_STATE_ERROR) {
-        GST_ERROR_OBJECT (sched, "in error state");
-        break;
-      }	
-      else if (osched->state == GST_OPT_SCHEDULER_STATE_INTERRUPTED) {
-        GST_DEBUG_OBJECT (osched, "got interrupted, continue with next chain");
-        osched->state = GST_OPT_SCHEDULER_STATE_RUNNING;
+	GST_ERROR_OBJECT (sched, "in error state");
+	break;
+      } else if (osched->state == GST_OPT_SCHEDULER_STATE_INTERRUPTED) {
+	GST_DEBUG_OBJECT (osched, "got interrupted, continue with next chain");
+	osched->state = GST_OPT_SCHEDULER_STATE_RUNNING;
       }
 
       chains = g_slist_next (chains);
@@ -2250,15 +2283,14 @@ gst_opt_scheduler_iterate (GstScheduler *sched)
     if (osched->state == GST_OPT_SCHEDULER_STATE_ERROR) {
       state = GST_SCHEDULER_STATE_ERROR;
       break;
-    }
-    else {
+    } else {
       /* if chains were scheduled, return our current state */
       if (scheduled)
-        state = GST_SCHEDULER_STATE (sched);
+	state = GST_SCHEDULER_STATE (sched);
       /* if no chains were scheduled, we say we are stopped */
       else {
-        state = GST_SCHEDULER_STATE_STOPPED;
-        break;
+	state = GST_SCHEDULER_STATE_STOPPED;
+	break;
       }
     }
     if (iterations > 0)
@@ -2270,7 +2302,7 @@ gst_opt_scheduler_iterate (GstScheduler *sched)
 
 
 static void
-gst_opt_scheduler_show (GstScheduler *sched)
+gst_opt_scheduler_show (GstScheduler * sched)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   GSList *chains;
@@ -2282,37 +2314,44 @@ gst_opt_scheduler_show (GstScheduler *sched)
   while (chains) {
     GstOptSchedulerChain *chain = (GstOptSchedulerChain *) chains->data;
     GSList *groups = chain->groups;
+
     chains = g_slist_next (chains);
 
-    g_print ("+- chain %p: refcount %d, %d groups, %d enabled, flags %d\n", 
-		    chain, chain->refcount, chain->num_groups, chain->num_enabled, chain->flags);
+    g_print ("+- chain %p: refcount %d, %d groups, %d enabled, flags %d\n",
+	chain, chain->refcount, chain->num_groups, chain->num_enabled,
+	chain->flags);
 
     while (groups) {
       GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) groups->data;
       GSList *elements = group->elements;
+
       groups = g_slist_next (groups);
 
-      g_print (" +- group %p: refcount %d, %d elements, %d enabled, flags %d, entry %s, %s\n", 
-		      group, group->refcount, group->num_elements, group->num_enabled, group->flags,
-		      (group->entry ? GST_ELEMENT_NAME (group->entry): "(none)"),
-		      (group->type == GST_OPT_SCHEDULER_GROUP_GET ? "get-based" : "loop-based") );
+      g_print
+	  (" +- group %p: refcount %d, %d elements, %d enabled, flags %d, entry %s, %s\n",
+	  group, group->refcount, group->num_elements, group->num_enabled,
+	  group->flags,
+	  (group->entry ? GST_ELEMENT_NAME (group->entry) : "(none)"),
+	  (group->type ==
+	      GST_OPT_SCHEDULER_GROUP_GET ? "get-based" : "loop-based"));
 
       while (elements) {
-        GstElement *element = (GstElement *) elements->data;
-        elements = g_slist_next (elements);
+	GstElement *element = (GstElement *) elements->data;
 
-        g_print ("  +- element %s\n", GST_ELEMENT_NAME (element));
+	elements = g_slist_next (elements);
+
+	g_print ("  +- element %s\n", GST_ELEMENT_NAME (element));
       }
     }
   }
 }
 
 static void
-gst_opt_scheduler_get_property (GObject *object, guint prop_id,
-                                GValue *value, GParamSpec *pspec)
+gst_opt_scheduler_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   GstOptScheduler *osched;
-  
+
   g_return_if_fail (GST_IS_OPT_SCHEDULER (object));
 
   osched = GST_OPT_SCHEDULER (object);
@@ -2331,11 +2370,11 @@ gst_opt_scheduler_get_property (GObject *object, guint prop_id,
 }
 
 static void
-gst_opt_scheduler_set_property (GObject *object, guint prop_id,
-		                const GValue *value, GParamSpec *pspec)
+gst_opt_scheduler_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstOptScheduler *osched;
-  
+
   g_return_if_fail (GST_IS_OPT_SCHEDULER (object));
 
   osched = GST_OPT_SCHEDULER (object);

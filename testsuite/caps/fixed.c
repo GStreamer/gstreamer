@@ -19,22 +19,19 @@
 
 #include <gst/gst.h>
 
-gint 
-main (gint argc, gchar *argv[])
+gint
+main (gint argc, gchar * argv[])
 {
 #if 0
   GstCaps *caps;
-  
+
   gst_init (&argc, &argv);
 
-  caps = GST_CAPS_NEW (
-		  "testcaps",
-		  "unknown/unknown",
-		  NULL);
+  caps = GST_CAPS_NEW ("testcaps", "unknown/unknown", NULL);
 
   /* newly crrated caps without props is fixed */
   g_assert (GST_CAPS_IS_FIXED (caps));
-  
+
   entry = gst_props_entry_new ("foo", GST_PROPS_INT (5));
   /* this entry is fixed */
   g_assert (gst_props_entry_is_fixed (entry));
@@ -42,7 +39,7 @@ main (gint argc, gchar *argv[])
   props = gst_props_empty_new ();
   /* props are fixed when created */
   g_assert (GST_PROPS_IS_FIXED (props));
-		  
+
   gst_props_add_entry (props, entry);
   /* props should still be fixed */
   g_assert (GST_PROPS_IS_FIXED (props));
@@ -67,7 +64,7 @@ main (gint argc, gchar *argv[])
   /* caps too */
   g_assert (GST_CAPS_IS_FIXED (caps));
 
-  gst_props_set (props, "foo", GST_PROPS_INT_RANGE (1,5));
+  gst_props_set (props, "foo", GST_PROPS_INT_RANGE (1, 5));
   /* props should be variable again now */
   g_assert (!GST_PROPS_IS_FIXED (props));
   /* caps too */

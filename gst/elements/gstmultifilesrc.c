@@ -40,20 +40,21 @@
 GST_DEBUG_CATEGORY_STATIC (gst_multifilesrc_debug);
 #define GST_CAT_DEFAULT gst_multifilesrc_debug
 
-GstElementDetails gst_multifilesrc_details = GST_ELEMENT_DETAILS (
-  "Multi File Source",
-  "Source/File",
-  "Read from multiple files in order",
-  "Dominic Ludlam <dom@openfx.org>"
-);
+GstElementDetails gst_multifilesrc_details =
+GST_ELEMENT_DETAILS ("Multi File Source",
+    "Source/File",
+    "Read from multiple files in order",
+    "Dominic Ludlam <dom@openfx.org>");
 
 /* FileSrc signals and args */
-enum {
+enum
+{
   NEW_FILE,
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_LOCATIONS
 };
@@ -61,18 +62,24 @@ enum {
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_multifilesrc_debug, "multifilesrc", 0, "multifilesrc element");
 
-GST_BOILERPLATE_FULL (GstMultiFileSrc, gst_multifilesrc, GstElement, GST_TYPE_ELEMENT, _do_init);
+GST_BOILERPLATE_FULL (GstMultiFileSrc, gst_multifilesrc, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
 
-static void		gst_multifilesrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		gst_multifilesrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void gst_multifilesrc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_multifilesrc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static GstData *	gst_multifilesrc_get		(GstPad *pad);
+static GstData *gst_multifilesrc_get (GstPad * pad);
+
 /*static GstBuffer *	gst_multifilesrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);*/
 
-static GstElementStateReturn	gst_multifilesrc_change_state	(GstElement *element);
+static GstElementStateReturn gst_multifilesrc_change_state (GstElement *
+    element);
 
-static gboolean		gst_multifilesrc_open_file	(GstMultiFileSrc *src, GstPad *srcpad);
-static void		gst_multifilesrc_close_file	(GstMultiFileSrc *src);
+static gboolean gst_multifilesrc_open_file (GstMultiFileSrc * src,
+    GstPad * srcpad);
+static void gst_multifilesrc_close_file (GstMultiFileSrc * src);
 
 static guint gst_multifilesrc_signals[LAST_SIGNAL] = { 0 };
 
@@ -80,28 +87,25 @@ static void
 gst_multifilesrc_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  
+
   gst_element_class_set_details (gstelement_class, &gst_multifilesrc_details);
 }
 static void
-gst_multifilesrc_class_init (GstMultiFileSrcClass *klass)
+gst_multifilesrc_class_init (GstMultiFileSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
 
   gst_multifilesrc_signals[NEW_FILE] =
-    g_signal_new ("new-file", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                    G_STRUCT_OFFSET (GstMultiFileSrcClass, new_file), NULL, NULL,
-                    g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1,
-                    G_TYPE_STRING);
+      g_signal_new ("new-file", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstMultiFileSrcClass, new_file), NULL, NULL,
+      g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATIONS,
-    g_param_spec_pointer("locations","locations","locations",
-                        G_PARAM_READWRITE)); /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATIONS, g_param_spec_pointer ("locations", "locations", "locations", G_PARAM_READWRITE));	/* CHECKME */
 
   gobject_class->set_property = gst_multifilesrc_set_property;
   gobject_class->get_property = gst_multifilesrc_get_property;
@@ -110,12 +114,12 @@ gst_multifilesrc_class_init (GstMultiFileSrcClass *klass)
 }
 
 static void
-gst_multifilesrc_init (GstMultiFileSrc *multifilesrc)
+gst_multifilesrc_init (GstMultiFileSrc * multifilesrc)
 {
 /*  GST_FLAG_SET (filesrc, GST_SRC_); */
 
   multifilesrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_pad_set_get_function (multifilesrc->srcpad,gst_multifilesrc_get);
+  gst_pad_set_get_function (multifilesrc->srcpad, gst_multifilesrc_get);
 /*  gst_pad_set_getregion_function (multifilesrc->srcpad,gst_multifilesrc_get_region); */
   gst_element_add_pad (GST_ELEMENT (multifilesrc), multifilesrc->srcpad);
 
@@ -128,7 +132,8 @@ gst_multifilesrc_init (GstMultiFileSrc *multifilesrc)
 }
 
 static void
-gst_multifilesrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_multifilesrc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstMultiFileSrc *src;
 
@@ -144,11 +149,11 @@ gst_multifilesrc_set_property (GObject *object, guint prop_id, const GValue *val
 
       /* clear the filename if we get a NULL */
       if (g_value_get_pointer (value) == NULL) {
-        gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
-        src->listptr = NULL;
-      /* otherwise set the new filenames */
+	gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
+	src->listptr = NULL;
+	/* otherwise set the new filenames */
       } else {
-        src->listptr = g_value_get_pointer (value);
+	src->listptr = g_value_get_pointer (value);
       }
       break;
     default:
@@ -157,7 +162,8 @@ gst_multifilesrc_set_property (GObject *object, guint prop_id, const GValue *val
 }
 
 static void
-gst_multifilesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_multifilesrc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstMultiFileSrc *src;
 
@@ -183,7 +189,7 @@ gst_multifilesrc_get_property (GObject *object, guint prop_id, GValue *value, GP
  * Push a new buffer from the filesrc at the current offset.
  */
 static GstData *
-gst_multifilesrc_get (GstPad *pad)
+gst_multifilesrc_get (GstPad * pad)
 {
   GstMultiFileSrc *src;
   GstBuffer *buf;
@@ -193,7 +199,7 @@ gst_multifilesrc_get (GstPad *pad)
   src = GST_MULTIFILESRC (gst_pad_get_parent (pad));
 
   if (GST_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN))
-    gst_multifilesrc_close_file(src);
+    gst_multifilesrc_close_file (src);
 
   if (!src->listptr) {
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
@@ -203,11 +209,11 @@ gst_multifilesrc_get (GstPad *pad)
   src->currentfilename = (gchar *) list->data;
   src->listptr = src->listptr->next;
 
-  if (!gst_multifilesrc_open_file(src, pad))
-      return NULL;
+  if (!gst_multifilesrc_open_file (src, pad))
+    return NULL;
 
-  /* emitted after the open, as the user may free the list and string from here*/
-  g_signal_emit(G_OBJECT(src), gst_multifilesrc_signals[NEW_FILE], 0, list);
+  /* emitted after the open, as the user may free the list and string from here */
+  g_signal_emit (G_OBJECT (src), gst_multifilesrc_signals[NEW_FILE], 0, list);
 
   /* create the buffer */
   /* FIXME: should eventually use a bufferpool for this */
@@ -231,24 +237,23 @@ gst_multifilesrc_get (GstPad *pad)
 }
 
 /* open the file and mmap it, necessary to go to READY state */
-static
-gboolean gst_multifilesrc_open_file (GstMultiFileSrc *src, GstPad *srcpad)
+static gboolean
+gst_multifilesrc_open_file (GstMultiFileSrc * src, GstPad * srcpad)
 {
   g_return_val_if_fail (!GST_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN), FALSE);
 
-  if (src->currentfilename == NULL || src->currentfilename[0] == '\0')
-  {
+  if (src->currentfilename == NULL || src->currentfilename[0] == '\0') {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-                       (_("No file name specified for reading.")), (NULL));
+	(_("No file name specified for reading.")), (NULL));
     return FALSE;
   }
 
   /* open the file */
   src->fd = open ((const char *) src->currentfilename, O_RDONLY);
   if (src->fd < 0) {
-      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-                         (_("Could not open file \"%s\" for reading."), src->currentfilename),
-                         GST_ERROR_SYSTEM);
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+	(_("Could not open file \"%s\" for reading."), src->currentfilename),
+	GST_ERROR_SYSTEM);
     return FALSE;
 
   } else {
@@ -257,12 +262,12 @@ gboolean gst_multifilesrc_open_file (GstMultiFileSrc *src, GstPad *srcpad)
     lseek (src->fd, 0, SEEK_SET);
     /* map the file into memory */
     src->map = mmap (NULL, src->size, PROT_READ, MAP_SHARED, src->fd, 0);
-    madvise (src->map,src->size, 2);
+    madvise (src->map, src->size, 2);
     /* collapse state if that failed */
     if (src->map == NULL) {
       close (src->fd);
       GST_ELEMENT_ERROR (src, RESOURCE, TOO_LAZY, (NULL),
-                         ("mmap call failed."));
+	  ("mmap call failed."));
       return FALSE;
     }
     GST_FLAG_SET (src, GST_MULTIFILESRC_OPEN);
@@ -273,7 +278,7 @@ gboolean gst_multifilesrc_open_file (GstMultiFileSrc *src, GstPad *srcpad)
 
 /* unmap and close the file */
 static void
-gst_multifilesrc_close_file (GstMultiFileSrc *src)
+gst_multifilesrc_close_file (GstMultiFileSrc * src)
 {
   g_return_if_fail (GST_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN));
 
@@ -291,7 +296,7 @@ gst_multifilesrc_close_file (GstMultiFileSrc *src)
 }
 
 static GstElementStateReturn
-gst_multifilesrc_change_state (GstElement *element)
+gst_multifilesrc_change_state (GstElement * element)
 {
   g_return_val_if_fail (GST_IS_MULTIFILESRC (element), GST_STATE_FAILURE);
 

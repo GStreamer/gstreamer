@@ -29,48 +29,44 @@
 #include "gstbufferstore.h"
 
 G_BEGIN_DECLS
-
-
-
 #define GST_TYPE_TYPE_FIND_ELEMENT		(gst_type_find_element_get_type ())
 #define GST_TYPE_FIND_ELEMENT(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TYPE_FIND_ELEMENT, GstTypeFindElement))
 #define GST_IS_TYPE_FIND_ELEMENT(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TYPE_FIND_ELEMENT))
 #define GST_TYPE_FIND_ELEMENT_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TYPE_FIND_ELEMENT, GstTypeFindElementClass))
 #define GST_IS_TYPE_FIND_ELEMENT_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TYPE_FIND_ELEMENT))
 #define GST_TYPE_FIND_ELEMENT_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_TYPE_FIND_ELEMENT, GstTypeFindElementClass))
+typedef struct _GstTypeFindElement GstTypeFindElement;
+typedef struct _GstTypeFindElementClass GstTypeFindElementClass;
 
-typedef struct _GstTypeFindElement 		GstTypeFindElement;
-typedef struct _GstTypeFindElementClass 	GstTypeFindElementClass;
+struct _GstTypeFindElement
+{
+  GstElement element;
 
-struct _GstTypeFindElement {
-  GstElement		element;
+  GstPad *sink;
+  GstPad *src;
 
-  GstPad *		sink;
-  GstPad *		src;
+  guint min_probability;
+  guint max_probability;
+  GstCaps *caps;
 
-  guint			min_probability;
-  guint			max_probability;
-  GstCaps *		caps;
+  guint mode;
+  GstBufferStore *store;
+  guint64 stream_length;
+  gboolean stream_length_available;
 
-  guint			mode;
-  GstBufferStore *	store;
-  guint64		stream_length;
-  gboolean		stream_length_available;
-  
-  GList *		possibilities;
+  GList *possibilities;
 };
 
-struct _GstTypeFindElementClass {
-  GstElementClass 	parent_class;
+struct _GstTypeFindElementClass
+{
+  GstElementClass parent_class;
 
   /* signals */
-  void 			(*have_type) 	(GstTypeFindElement *element,
-					 guint		probability,
-					 const GstCaps *	caps);
+  void (*have_type) (GstTypeFindElement * element,
+      guint probability, const GstCaps * caps);
 };
 
 GType gst_type_find_element_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_TYPE_FIND_ELEMENT_H__ */

@@ -26,10 +26,9 @@
 #include <gst/gstbin.h>
 
 G_BEGIN_DECLS
-
 #ifndef GST_DISABLE_PARSE
+    GQuark gst_parse_error_quark (void);
 
-GQuark gst_parse_error_quark (void);
 #define GST_PARSE_ERROR gst_parse_error_quark ()
 
 typedef enum
@@ -44,16 +43,13 @@ typedef enum
 } GstParseError;
 
 
-GstElement*	gst_parse_launch	(const gchar *pipeline_description, GError **error);
-GstElement*	gst_parse_launchv	(const gchar **argv, GError **error);
+GstElement *gst_parse_launch (const gchar * pipeline_description,
+    GError ** error);
+GstElement *gst_parse_launchv (const gchar ** argv, GError ** error);
 
 #else /* GST_DISABLE_PARSE */
-
 #pragma GCC poison gst_parse_launch
 #pragma GCC poison gst_parse_launchv
-
 #endif /* GST_DISABLE_PARSE */
-
-G_END_DECLS
-
+    G_END_DECLS
 #endif /* __GST_PARSE_H__ */

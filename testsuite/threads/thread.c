@@ -10,24 +10,24 @@ void
 usage (void)
 {
   g_print ("compile this test with TESTNUM defined.\n"
-           "   available TESTNUMs:   \n"
-           "          1: stress test state change      \n"
-           "          2: iterate once                  \n"
-           "          3: iterate twice                 \n"
-           "          4: state change while running    \n"
-           "          5: state change in thread context\n");
+      "   available TESTNUMs:   \n"
+      "          1: stress test state change      \n"
+      "          2: iterate once                  \n"
+      "          3: iterate twice                 \n"
+      "          4: state change while running    \n"
+      "          5: state change in thread context\n");
 }
 
 static void
-construct_pipeline (GstElement *pipeline) 
+construct_pipeline (GstElement * pipeline)
 {
   GstElement *src, *sink, *queue, *identity, *thread;
 
-  src      = gst_element_factory_make ("fakesrc",  NULL);
-  sink     = gst_element_factory_make ("fakesink", "sink");
+  src = gst_element_factory_make ("fakesrc", NULL);
+  sink = gst_element_factory_make ("fakesink", "sink");
   identity = gst_element_factory_make ("identity", NULL);
-  queue    = gst_element_factory_make ("queue",    NULL);
-  thread   = gst_element_factory_make ("thread",   NULL);
+  queue = gst_element_factory_make ("queue", NULL);
+  thread = gst_element_factory_make ("thread", NULL);
 
   gst_element_link_many (src, queue, identity, sink, NULL);
 
@@ -39,16 +39,16 @@ construct_pipeline (GstElement *pipeline)
 }
 
 void
-change_state (GstElement *element, GstBuffer *buf, GstElement *pipeline) 
+change_state (GstElement * element, GstBuffer * buf, GstElement * pipeline)
 {
   gst_element_set_state (pipeline, GST_STATE_NULL);
 }
 
 int
-main (gint argc, gchar *argv[])
+main (gint argc, gchar * argv[])
 {
   GstElement *pipeline;
-  
+
   gst_init (&argc, &argv);
 
 #ifndef TESTNUM
@@ -112,13 +112,13 @@ main (gint argc, gchar *argv[])
     sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
     g_assert (sink);
 
-    g_signal_connect (G_OBJECT (sink), "handoff", 
-		      G_CALLBACK (change_state), pipeline);
+    g_signal_connect (G_OBJECT (sink), "handoff",
+	G_CALLBACK (change_state), pipeline);
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     g_print ("running ...\n");
     while (gst_bin_iterate (GST_BIN (pipeline)));
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
-  
+
   return 0;
 }

@@ -10,47 +10,48 @@ static GstMemChunk *_chunks;
 static gint num_allocs;
 static gint num_threads;
 
-static gpointer 
+static gpointer
 alloc_chunk (void)
 {
   gpointer ret;
+
   ret = gst_mem_chunk_alloc (_chunks);
 
   return ret;
 }
 
-static void 
+static void
 free_chunk (gpointer chunk)
 {
   gst_mem_chunk_free (_chunks, chunk);
 }
 
 
-void*
+void *
 run_test (void *threadid)
 {
   gint i;
   gpointer chunk;
-  
-  g_usleep(G_USEC_PER_SEC);
 
-  for (i = 0; i<num_allocs; i++) {
+  g_usleep (G_USEC_PER_SEC);
+
+  for (i = 0; i < num_allocs; i++) {
     chunk = alloc_chunk ();
     free_chunk (chunk);
   }
 
-  g_thread_exit(NULL);
+  g_thread_exit (NULL);
   return NULL;
 }
 
 
-gint 
-main (gint argc, gchar *argv[]) 
+gint
+main (gint argc, gchar * argv[])
 {
-  GThread * threads[MAX_THREADS];
-  GError * error;
+  GThread *threads[MAX_THREADS];
+  GError *error;
   int t;
- 
+
   gst_init (&argc, &argv);
 
   if (argc != 3) {
@@ -63,9 +64,9 @@ main (gint argc, gchar *argv[])
 
   _chunks = gst_mem_chunk_new ("test", 32, 32 * 16, G_ALLOC_AND_FREE);
 
-  for(t=0; t < num_threads; t++) {
+  for (t = 0; t < num_threads; t++) {
     error = NULL;
-    threads[t] = g_thread_create (run_test, GINT_TO_POINTER(t), TRUE, &error);
+    threads[t] = g_thread_create (run_test, GINT_TO_POINTER (t), TRUE, &error);
     if (error) {
       printf ("ERROR: g_thread_create() %s\n", error->message);
       exit (-1);
@@ -73,10 +74,10 @@ main (gint argc, gchar *argv[])
   }
   printf ("main(): Created %d threads.\n", t);
 
-  for(t=0; t < num_threads; t++) {
+  for (t = 0; t < num_threads; t++) {
     g_thread_join (threads[t]);
   }
-  g_mem_chunk_info();
+  g_mem_chunk_info ();
 
   gst_mem_chunk_destroy (_chunks);
 

@@ -33,11 +33,11 @@
 #include "gstlog.h"
 #include "gsttrace.h"
 
-static 
+static
 #ifdef __inline__
-__inline__
+  __inline__
 #endif
-void
+    void
 read_tsc (gint64 * dst)
 {
 #ifdef HAVE_RDTSC
@@ -67,7 +67,8 @@ gst_trace_new (gchar * filename, gint size)
   g_return_val_if_fail (trace != NULL, NULL);
   trace->filename = g_strdup (filename);
   g_print ("opening '%s'\n", trace->filename);
-  trace->fd = open (trace->filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+  trace->fd =
+      open (trace->filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
   perror ("opening trace file");
   g_return_val_if_fail (trace->fd > 0, NULL);
   trace->buf = g_malloc (size * sizeof (GstTraceEntry));
@@ -108,6 +109,7 @@ void
 gst_trace_text_flush (GstTrace * trace)
 {
   int i;
+
 #define STRSIZE (20 + 1 + 10 + 1 + 10 + 1 + 112 + 1 + 1)
   char str[STRSIZE];
 
@@ -119,8 +121,8 @@ gst_trace_text_flush (GstTrace * trace)
 
   for (i = 0; i < trace->bufoffset; i++) {
     snprintf (str, STRSIZE, "%20" G_GINT64_FORMAT " %10d %10d %s\n",
-	      trace->buf[i].timestamp,
-	      trace->buf[i].sequence, trace->buf[i].data, trace->buf[i].message);
+	trace->buf[i].timestamp,
+	trace->buf[i].sequence, trace->buf[i].data, trace->buf[i].message);
     write (trace->fd, str, strlen (str));
   }
   trace->bufoffset = 0;
@@ -158,6 +160,7 @@ _gst_trace_add_entry (GstTrace * trace, guint32 seq, guint32 data, gchar * msg)
 
 /* global flags */
 static GstAllocTraceFlags _gst_trace_flags = 0;
+
 /* list of registered tracers */
 static GList *_gst_alloc_tracers = NULL;
 
@@ -188,8 +191,8 @@ gst_alloc_trace_available (void)
  *
  * Returns: A handle to a GstAllocTrace.
  */
-GstAllocTrace*
-_gst_alloc_trace_register (const gchar *name)
+GstAllocTrace *
+_gst_alloc_trace_register (const gchar * name)
 {
   GstAllocTrace *trace;
 
@@ -213,7 +216,7 @@ _gst_alloc_trace_register (const gchar *name)
  *
  * Returns: a GList of GstAllocTrace objects.
  */
-const GList*
+const GList *
 gst_alloc_trace_list (void)
 {
   return _gst_alloc_tracers;
@@ -229,7 +232,7 @@ gst_alloc_trace_live_all (void)
 {
   GList *walk = _gst_alloc_tracers;
   int num = 0;
-  
+
   while (walk) {
     GstAllocTrace *trace = (GstAllocTrace *) walk->data;
 
@@ -250,7 +253,7 @@ void
 gst_alloc_trace_print_all (void)
 {
   GList *walk = _gst_alloc_tracers;
-  
+
   while (walk) {
     GstAllocTrace *trace = (GstAllocTrace *) walk->data;
 
@@ -292,8 +295,8 @@ gst_alloc_trace_set_flags_all (GstAllocTraceFlags flags)
  * Returns: a GstAllocTrace with the given name or NULL when
  * no alloc tracer was registered with that name.
  */
-GstAllocTrace*
-gst_alloc_trace_get (const gchar *name)
+GstAllocTrace *
+gst_alloc_trace_get (const gchar * name)
 {
   GList *walk = _gst_alloc_tracers;
 
@@ -317,7 +320,7 @@ gst_alloc_trace_get (const gchar *name)
  * Print the status of the given GstAllocTrace.
  */
 void
-gst_alloc_trace_print (const GstAllocTrace *trace)
+gst_alloc_trace_print (const GstAllocTrace * trace)
 {
   GSList *mem_live;
 
@@ -333,13 +336,12 @@ gst_alloc_trace_print (const GstAllocTrace *trace)
 
     if (!mem_live) {
       g_print (", no live memory");
-    }
-    else {
+    } else {
       g_print (", dumping live memory: ");
 
       while (mem_live) {
-        g_print ("%p ", mem_live->data);
-        mem_live = g_slist_next (mem_live);
+	g_print ("%p ", mem_live->data);
+	mem_live = g_slist_next (mem_live);
       }
       g_print ("\ntotal %d", g_slist_length (trace->mem_live));
     }
@@ -355,7 +357,7 @@ gst_alloc_trace_print (const GstAllocTrace *trace)
  * Enable the given features on the given GstAllocTrace object.
  */
 void
-gst_alloc_trace_set_flags (GstAllocTrace *trace, GstAllocTraceFlags flags)
+gst_alloc_trace_set_flags (GstAllocTrace * trace, GstAllocTraceFlags flags)
 {
   g_return_if_fail (trace != NULL);
 

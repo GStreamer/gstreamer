@@ -32,21 +32,21 @@
 GST_DEBUG_CATEGORY_STATIC (gst_shaper_debug);
 #define GST_CAT_DEFAULT gst_shaper_debug
 
-GstElementDetails gst_shaper_details = GST_ELEMENT_DETAILS (
-  "Shaper",
-  "Generic",
-  "Synchronizes streams on different pads",
-  "Wim Taymans <wim.taymans@chello.be>"
-);
+GstElementDetails gst_shaper_details = GST_ELEMENT_DETAILS ("Shaper",
+    "Generic",
+    "Synchronizes streams on different pads",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 
 /* Shaper signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_POLICY,
   ARG_SILENT,
@@ -55,24 +55,20 @@ enum {
 
 typedef struct
 {
-  GstPad 	*sinkpad;
-  GstPad 	*srcpad;
-  GstBuffer	*buffer;
+  GstPad *sinkpad;
+  GstPad *srcpad;
+  GstBuffer *buffer;
 } GstShaperConnection;
 
-GstStaticPadTemplate shaper_src_template = GST_STATIC_PAD_TEMPLATE (
-  "src%d",
-  GST_PAD_SRC,
-  GST_PAD_SOMETIMES,
-  GST_STATIC_CAPS_ANY
-);
+GstStaticPadTemplate shaper_src_template = GST_STATIC_PAD_TEMPLATE ("src%d",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS_ANY);
 
-GstStaticPadTemplate shaper_sink_template = GST_STATIC_PAD_TEMPLATE (
-  "sink%d",
-  GST_PAD_SINK,
-  GST_PAD_REQUEST,
-  GST_STATIC_CAPS_ANY
-);
+GstStaticPadTemplate shaper_sink_template = GST_STATIC_PAD_TEMPLATE ("sink%d",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS_ANY);
 
 #define GST_TYPE_SHAPER_POLICY (gst_shaper_policy_get_type())
 static GType
@@ -80,12 +76,13 @@ gst_shaper_policy_get_type (void)
 {
   static GType shaper_policy_type = 0;
   static GEnumValue shaper_policy[] = {
-    { SHAPER_POLICY_TIMESTAMPS,         "1", "sync on timestamps"},
-    { SHAPER_POLICY_BUFFERSIZE,         "2", "sync on buffer size"},
+    {SHAPER_POLICY_TIMESTAMPS, "1", "sync on timestamps"},
+    {SHAPER_POLICY_BUFFERSIZE, "2", "sync on buffer size"},
     {0, NULL, NULL},
   };
   if (!shaper_policy_type) {
-    shaper_policy_type = g_enum_register_static ("GstShaperPolicy", shaper_policy);
+    shaper_policy_type =
+	g_enum_register_static ("GstShaperPolicy", shaper_policy);
   }
   return shaper_policy_type;
 }
@@ -93,24 +90,25 @@ gst_shaper_policy_get_type (void)
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_shaper_debug, "shaper", 0, "shaper element");
 
-GST_BOILERPLATE_FULL (GstShaper, gst_shaper, GstElement, GST_TYPE_ELEMENT, _do_init);
+GST_BOILERPLATE_FULL (GstShaper, gst_shaper, GstElement, GST_TYPE_ELEMENT,
+    _do_init);
 
-static void 	gst_shaper_set_property		(GObject *object, guint prop_id, 
-						 const GValue *value, GParamSpec *pspec);
-static void 	gst_shaper_get_property		(GObject *object, guint prop_id, 
-						 GValue *value, GParamSpec *pspec);
+static void gst_shaper_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_shaper_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static GstPad* 	gst_shaper_request_new_pad 	(GstElement *element, GstPadTemplate *templ, 
-						 const gchar *unused);
+static GstPad *gst_shaper_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * unused);
 
-static void 	gst_shaper_loop			(GstElement *element);
+static void gst_shaper_loop (GstElement * element);
 
 
 static void
 gst_shaper_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  
+
   gst_element_class_set_details (gstelement_class, &gst_shaper_details);
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&shaper_src_template));
@@ -118,41 +116,43 @@ gst_shaper_base_init (gpointer g_class)
       gst_static_pad_template_get (&shaper_sink_template));
 }
 
-static void 
-gst_shaper_class_init (GstShaperClass *klass) 
+static void
+gst_shaper_class_init (GstShaperClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*) klass;
-  gstelement_class = (GstElementClass*) klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_POLICY,
-    g_param_spec_enum ("policy", "Policy", "Shaper policy",
-                       GST_TYPE_SHAPER_POLICY, SHAPER_POLICY_TIMESTAMPS, G_PARAM_READWRITE));
+      g_param_spec_enum ("policy", "Policy", "Shaper policy",
+	  GST_TYPE_SHAPER_POLICY, SHAPER_POLICY_TIMESTAMPS, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
-    g_param_spec_boolean ("silent", "silent", "silent",
-                          FALSE, G_PARAM_READWRITE)); 
+      g_param_spec_boolean ("silent", "silent", "silent",
+	  FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
-    g_param_spec_string ("last-message", "last-message", "last-message",
-                         NULL, G_PARAM_READABLE)); 
+      g_param_spec_string ("last-message", "last-message", "last-message",
+	  NULL, G_PARAM_READABLE));
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_shaper_set_property);  
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_shaper_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_shaper_get_property);
 
-  gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR (gst_shaper_request_new_pad);
+  gstelement_class->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_shaper_request_new_pad);
 }
 
-static GstCaps*
-gst_shaper_getcaps (GstPad *pad)
+static GstCaps *
+gst_shaper_getcaps (GstPad * pad)
 {
   GstPad *otherpad;
   GstShaperConnection *connection;
 
   connection = gst_pad_get_element_private (pad);
 
-  otherpad = (pad == connection->srcpad ? connection->sinkpad : connection->srcpad);
+  otherpad =
+      (pad == connection->srcpad ? connection->sinkpad : connection->srcpad);
 
   if (GST_PAD_PEER (otherpad)) {
     return gst_pad_get_caps (GST_PAD_PEER (otherpad));
@@ -161,8 +161,8 @@ gst_shaper_getcaps (GstPad *pad)
   }
 }
 
-static GList*
-gst_shaper_get_internal_link (GstPad *pad)
+static GList *
+gst_shaper_get_internal_link (GstPad * pad)
 {
   GList *res = NULL;
   GstShaperConnection *connection;
@@ -170,7 +170,8 @@ gst_shaper_get_internal_link (GstPad *pad)
 
   connection = gst_pad_get_element_private (pad);
 
-  otherpad = (pad == connection->srcpad ? connection->sinkpad : connection->srcpad);
+  otherpad =
+      (pad == connection->srcpad ? connection->sinkpad : connection->srcpad);
 
   res = g_list_prepend (res, otherpad);
 
@@ -178,20 +179,21 @@ gst_shaper_get_internal_link (GstPad *pad)
 }
 
 static GstPadLinkReturn
-gst_shaper_link (GstPad *pad, const GstCaps *caps)
+gst_shaper_link (GstPad * pad, const GstCaps * caps)
 {
   GstPad *otherpad;
   GstShaperConnection *connection;
 
   connection = gst_pad_get_element_private (pad);
 
-  otherpad = (pad == connection->srcpad ? connection->sinkpad : connection->srcpad);
+  otherpad =
+      (pad == connection->srcpad ? connection->sinkpad : connection->srcpad);
 
   return gst_pad_try_set_caps (otherpad, caps);
 }
 
-static GstShaperConnection*
-gst_shaper_create_connection (GstShaper *shaper)
+static GstShaperConnection *
+gst_shaper_create_connection (GstShaper * shaper)
 {
   GstShaperConnection *connection;
   gchar *padname;
@@ -201,21 +203,25 @@ gst_shaper_create_connection (GstShaper *shaper)
   connection = g_new0 (GstShaperConnection, 1);
 
   padname = g_strdup_printf ("sink%d", shaper->nconnections);
-  connection->sinkpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&shaper_sink_template), padname);
+  connection->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&shaper_sink_template), padname);
   g_free (padname);
   gst_pad_set_getcaps_function (connection->sinkpad, gst_shaper_getcaps);
-  gst_pad_set_internal_link_function (connection->sinkpad, gst_shaper_get_internal_link);
+  gst_pad_set_internal_link_function (connection->sinkpad,
+      gst_shaper_get_internal_link);
   gst_pad_set_link_function (connection->sinkpad, gst_shaper_link);
   gst_pad_set_element_private (connection->sinkpad, connection);
   gst_element_add_pad (GST_ELEMENT (shaper), connection->sinkpad);
 
   padname = g_strdup_printf ("src%d", shaper->nconnections);
-  connection->srcpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&shaper_src_template), padname);
+  connection->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&shaper_src_template), padname);
   g_free (padname);
   gst_pad_set_getcaps_function (connection->srcpad, gst_shaper_getcaps);
-  gst_pad_set_internal_link_function (connection->srcpad, gst_shaper_get_internal_link);
+  gst_pad_set_internal_link_function (connection->srcpad,
+      gst_shaper_get_internal_link);
   gst_pad_set_link_function (connection->srcpad, gst_shaper_link);
   gst_pad_set_element_private (connection->srcpad, connection);
   gst_element_add_pad (GST_ELEMENT (shaper), connection->srcpad);
@@ -225,8 +231,9 @@ gst_shaper_create_connection (GstShaper *shaper)
   return connection;
 }
 
-static GstPad*
-gst_shaper_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar *unused)
+static GstPad *
+gst_shaper_request_new_pad (GstElement * element, GstPadTemplate * templ,
+    const gchar * unused)
 {
   GstShaper *shaper = GST_SHAPER (element);
   GstShaperConnection *connection;
@@ -236,8 +243,8 @@ gst_shaper_request_new_pad (GstElement *element, GstPadTemplate *templ, const gc
   return connection->sinkpad;
 }
 
-static void 
-gst_shaper_init (GstShaper *shaper) 
+static void
+gst_shaper_init (GstShaper * shaper)
 {
   gst_element_set_loop_function (GST_ELEMENT (shaper), gst_shaper_loop);
 
@@ -248,8 +255,8 @@ gst_shaper_init (GstShaper *shaper)
   shaper->last_message = NULL;
 }
 
-static void 
-gst_shaper_loop (GstElement *element) 
+static void
+gst_shaper_loop (GstElement * element)
 {
   GstShaper *shaper;
   GSList *connections;
@@ -278,16 +285,15 @@ gst_shaper_loop (GstElement *element)
 	gst_pad_push (connection->srcpad, GST_DATA (buffer));
 
 	switch (type) {
-          /* on EOS we disable the pad so that we don't pull on
-	   * it again and never get more data */
-          case GST_EVENT_EOS:
+	    /* on EOS we disable the pad so that we don't pull on
+	     * it again and never get more data */
+	  case GST_EVENT_EOS:
 	    gst_pad_set_active (connection->sinkpad, FALSE);
 	    break;
 	  default:
 	    break;
 	}
-      }
-      else {
+      } else {
 	/* we store the buffer */
 	connection->buffer = buffer;
       }
@@ -295,9 +301,8 @@ gst_shaper_loop (GstElement *element)
     /* FIXME policy stuff goes here */
     /* find connection with lowest timestamp */
     if (min == NULL || (connection->buffer != NULL &&
-	(GST_BUFFER_TIMESTAMP (connection->buffer) < 
-	 GST_BUFFER_TIMESTAMP (min->buffer)))) 
-    {
+	    (GST_BUFFER_TIMESTAMP (connection->buffer) <
+		GST_BUFFER_TIMESTAMP (min->buffer)))) {
       min = connection;
     }
     connections = g_slist_next (connections);
@@ -309,20 +314,21 @@ gst_shaper_loop (GstElement *element)
     /* since we pushed a buffer, it's not EOS */
     eos = FALSE;
   }
-  
+
   if (eos) {
     gst_element_set_eos (element);
   }
 }
 
-static void 
-gst_shaper_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) 
+static void
+gst_shaper_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
 {
   GstShaper *shaper;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SHAPER (object));
-  
+
   shaper = GST_SHAPER (object);
 
   switch (prop_id) {
@@ -338,12 +344,15 @@ gst_shaper_set_property (GObject *object, guint prop_id, const GValue *value, GP
   }
 }
 
-static void gst_shaper_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) {
+static void
+gst_shaper_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
   GstShaper *shaper;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SHAPER (object));
-  
+
   shaper = GST_SHAPER (object);
 
   switch (prop_id) {
@@ -361,4 +370,3 @@ static void gst_shaper_get_property(GObject *object, guint prop_id, GValue *valu
       break;
   }
 }
-

@@ -27,50 +27,49 @@
 #include <glib.h>
 #include <gst/gstdata.h>
 
-G_BEGIN_DECLS
-
-typedef struct _GstProbe GstProbe;
+G_BEGIN_DECLS typedef struct _GstProbe GstProbe;
 
 /* the callback should return FALSE if the data should be discarded */
-typedef gboolean 		(*GstProbeCallback) 		(GstProbe *probe, 
-								 GstData **data, 
-								 gpointer user_data);
+typedef gboolean (*GstProbeCallback) (GstProbe * probe,
+    GstData ** data, gpointer user_data);
 
-struct _GstProbe {
-  gboolean		single_shot;
-  
-  GstProbeCallback 	callback;
-  gpointer 		user_data;
+struct _GstProbe
+{
+  gboolean single_shot;
+
+  GstProbeCallback callback;
+  gpointer user_data;
 };
 
 
-GstProbe*		gst_probe_new 			(gboolean single_shot, 
-							 GstProbeCallback callback, 
-							 gpointer user_data);
-void			gst_probe_destroy		(GstProbe *probe);
+GstProbe *gst_probe_new (gboolean single_shot,
+    GstProbeCallback callback, gpointer user_data);
+void gst_probe_destroy (GstProbe * probe);
 
-gboolean		gst_probe_perform 		(GstProbe *probe, GstData **data);
+gboolean gst_probe_perform (GstProbe * probe, GstData ** data);
 
 typedef struct _GstProbeDispatcher GstProbeDispatcher;
 
-struct _GstProbeDispatcher {
-  gboolean		active;
-  
-  GSList		*probes;
+struct _GstProbeDispatcher
+{
+  gboolean active;
+
+  GSList *probes;
 };
 
-GstProbeDispatcher*	gst_probe_dispatcher_new 		(void);
-void			gst_probe_dispatcher_destroy 		(GstProbeDispatcher *disp);
-void			gst_probe_dispatcher_init 		(GstProbeDispatcher *disp);
+GstProbeDispatcher *gst_probe_dispatcher_new (void);
+void gst_probe_dispatcher_destroy (GstProbeDispatcher * disp);
+void gst_probe_dispatcher_init (GstProbeDispatcher * disp);
 
-void			gst_probe_dispatcher_set_active		(GstProbeDispatcher *disp, gboolean active);
-void			gst_probe_dispatcher_add_probe		(GstProbeDispatcher *disp, GstProbe *probe);
-void			gst_probe_dispatcher_remove_probe	(GstProbeDispatcher *disp, GstProbe *probe);
+void gst_probe_dispatcher_set_active (GstProbeDispatcher * disp,
+    gboolean active);
+void gst_probe_dispatcher_add_probe (GstProbeDispatcher * disp,
+    GstProbe * probe);
+void gst_probe_dispatcher_remove_probe (GstProbeDispatcher * disp,
+    GstProbe * probe);
 
-gboolean		gst_probe_dispatcher_dispatch		(GstProbeDispatcher *disp, GstData **data);
+gboolean gst_probe_dispatcher_dispatch (GstProbeDispatcher * disp,
+    GstData ** data);
 
 G_END_DECLS
-
-
 #endif /* __GST_PAD_H__ */
-

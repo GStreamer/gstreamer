@@ -31,7 +31,8 @@
 #endif
 
 /* Object signals and args */
-enum {
+enum
+{
   PARENT_SET,
   PARENT_UNSET,
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
@@ -41,52 +42,56 @@ enum {
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_NAME
-  /* FILL ME */
+      /* FILL ME */
 };
 
-enum {
+enum
+{
   SO_OBJECT_LOADED,
   SO_LAST_SIGNAL
 };
 
 GType _gst_object_type = 0;
 static GHashTable *object_name_counts = NULL;
+
 G_LOCK_DEFINE_STATIC (object_name_mutex);
 
 typedef struct _GstSignalObject GstSignalObject;
 typedef struct _GstSignalObjectClass GstSignalObjectClass;
 
-static GType		gst_signal_object_get_type	(void);
-static void		gst_signal_object_class_init	(GstSignalObjectClass *klass);
-static void		gst_signal_object_init		(GstSignalObject *object);
+static GType gst_signal_object_get_type (void);
+static void gst_signal_object_class_init (GstSignalObjectClass * klass);
+static void gst_signal_object_init (GstSignalObject * object);
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
 static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
 #endif
 
-static void		gst_object_class_init		(GstObjectClass *klass);
-static void		gst_object_init			(GstObject *object);
+static void gst_object_class_init (GstObjectClass * klass);
+static void gst_object_init (GstObject * object);
+
 #ifndef GST_DISABLE_TRACE
-static GObject *	gst_object_constructor 		(GType type, guint n_construct_properties, 
-							 GObjectConstructParam *construct_params);
+static GObject *gst_object_constructor (GType type,
+    guint n_construct_properties, GObjectConstructParam * construct_params);
 #endif
 
-static void 		gst_object_set_property 	(GObject * object, guint prop_id, const GValue * value,
-		                                    	 GParamSpec * pspec);
-static void 		gst_object_get_property 	(GObject * object, guint prop_id, GValue * value,
-		                                    	 GParamSpec * pspec);
-static void 		gst_object_dispatch_properties_changed (GObject     *object,
-                                       			 guint        n_pspecs,
-                                       			 GParamSpec **pspecs);
+static void gst_object_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_object_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_object_dispatch_properties_changed (GObject * object,
+    guint n_pspecs, GParamSpec ** pspecs);
 
-static void 		gst_object_dispose 		(GObject *object);
-static void 		gst_object_finalize 		(GObject *object);
+static void gst_object_dispose (GObject * object);
+static void gst_object_finalize (GObject * object);
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
-static void		gst_object_real_restore_thyself (GstObject *object, xmlNodePtr self);
+static void gst_object_real_restore_thyself (GstObject * object,
+    xmlNodePtr self);
 #endif
 
 static GObjectClass *parent_class = NULL;
@@ -108,17 +113,19 @@ gst_object_get_type (void)
       (GInstanceInitFunc) gst_object_init,
       NULL
     };
-    _gst_object_type = g_type_register_static (G_TYPE_OBJECT, "GstObject", &object_info, G_TYPE_FLAG_ABSTRACT);
+    _gst_object_type =
+	g_type_register_static (G_TYPE_OBJECT, "GstObject", &object_info,
+	G_TYPE_FLAG_ABSTRACT);
   }
   return _gst_object_type;
 }
 
 static void
-gst_object_class_init (GstObjectClass *klass)
+gst_object_class_init (GstObjectClass * klass)
 {
   GObjectClass *gobject_class;
 
-  gobject_class = (GObjectClass*) klass;
+  gobject_class = (GObjectClass *) klass;
 
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
@@ -126,35 +133,32 @@ gst_object_class_init (GstObjectClass *klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_object_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME,
-    g_param_spec_string ("name", "Name", "The name of the object",
-                         NULL, G_PARAM_READWRITE));
+      g_param_spec_string ("name", "Name", "The name of the object",
+	  NULL, G_PARAM_READWRITE));
 
   gst_object_signals[PARENT_SET] =
-    g_signal_new ("parent-set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
-                  g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-                  G_TYPE_OBJECT);
+      g_signal_new ("parent-set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
+      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
   gst_object_signals[PARENT_UNSET] =
-    g_signal_new ("parent-unset", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstObjectClass, parent_unset), NULL, NULL,
-                  g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-                  G_TYPE_OBJECT);
+      g_signal_new ("parent-unset", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstObjectClass, parent_unset), NULL,
+      NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   /* FIXME This should be the GType of xmlNodePtr instead of G_TYPE_POINTER */
   gst_object_signals[OBJECT_SAVED] =
-    g_signal_new ("object-saved", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL, NULL,
-                  g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                  G_TYPE_POINTER);
-  
+      g_signal_new ("object-saved", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL,
+      NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
+
   klass->restore_thyself = gst_object_real_restore_thyself;
 #endif
   gst_object_signals[DEEP_NOTIFY] =
-    g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
-                  G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED | G_SIGNAL_NO_HOOKS,
-                  G_STRUCT_OFFSET (GstObjectClass, deep_notify), NULL, NULL,
-                  gst_marshal_VOID__OBJECT_PARAM, G_TYPE_NONE,
-                  2, G_TYPE_OBJECT, G_TYPE_PARAM);
+      g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
+      G_SIGNAL_NO_HOOKS, G_STRUCT_OFFSET (GstObjectClass, deep_notify), NULL,
+      NULL, gst_marshal_VOID__OBJECT_PARAM, G_TYPE_NONE, 2, G_TYPE_OBJECT,
+      G_TYPE_PARAM);
 
   klass->path_string_separator = "/";
 
@@ -162,7 +166,7 @@ gst_object_class_init (GstObjectClass *klass)
 
   /* see the comments at gst_object_dispatch_properties_changed */
   gobject_class->dispatch_properties_changed
-	        = GST_DEBUG_FUNCPTR (gst_object_dispatch_properties_changed);
+      = GST_DEBUG_FUNCPTR (gst_object_dispatch_properties_changed);
 
   gobject_class->dispose = gst_object_dispose;
   gobject_class->finalize = gst_object_finalize;
@@ -172,9 +176,9 @@ gst_object_class_init (GstObjectClass *klass)
 }
 
 static void
-gst_object_init (GstObject *object)
+gst_object_init (GstObject * object)
 {
-  object->lock = g_mutex_new();
+  object->lock = g_mutex_new ();
   object->parent = NULL;
   object->name = NULL;
 
@@ -184,11 +188,14 @@ gst_object_init (GstObject *object)
 
 #ifndef GST_DISABLE_TRACE
 static GObject *
-gst_object_constructor (GType type, guint n_construct_properties, GObjectConstructParam *construct_params)
+gst_object_constructor (GType type, guint n_construct_properties,
+    GObjectConstructParam * construct_params)
 {
   const gchar *name;
   GstAllocTrace *trace;
-  GObject *obj = G_OBJECT_CLASS (parent_class)->constructor (type, n_construct_properties, construct_params);  
+  GObject *obj =
+      G_OBJECT_CLASS (parent_class)->constructor (type, n_construct_properties,
+      construct_params);
 
   name = g_type_name (type);
 
@@ -197,7 +204,7 @@ gst_object_constructor (GType type, guint n_construct_properties, GObjectConstru
     trace = gst_alloc_trace_register (name);
   }
   gst_alloc_trace_new (trace, obj);
-  
+
   return obj;
 }
 #endif
@@ -209,14 +216,13 @@ gst_object_constructor (GType type, guint n_construct_properties, GObjectConstru
  *
  * Returns: A pointer to the object
  */
-GstObject*
-gst_object_ref (GstObject *object)
+GstObject *
+gst_object_ref (GstObject * object)
 {
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "ref %d->%d",
-             G_OBJECT (object)->ref_count,
-	     G_OBJECT (object)->ref_count + 1);
+      G_OBJECT (object)->ref_count, G_OBJECT (object)->ref_count + 1);
 
   g_object_ref (G_OBJECT (object));
   return object;
@@ -230,14 +236,13 @@ gst_object_ref (GstObject *object)
  * zero, destroy the object.
  */
 void
-gst_object_unref (GstObject *object)
+gst_object_unref (GstObject * object)
 {
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (G_OBJECT (object)->ref_count > 0);
 
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unref %d->%d",
-             G_OBJECT (object)->ref_count,
-	     G_OBJECT (object)->ref_count - 1);
+      G_OBJECT (object)->ref_count, G_OBJECT (object)->ref_count - 1);
 
   g_object_unref (G_OBJECT (object));
 }
@@ -252,7 +257,7 @@ gst_object_unref (GstObject *object)
  * Use #gst_object_set_parent to have this done for you.
  */
 void
-gst_object_sink (GstObject *object)
+gst_object_sink (GstObject * object)
 {
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
@@ -274,29 +279,31 @@ gst_object_sink (GstObject *object)
  * puts the newobj in *oldobj.
  */
 void
-gst_object_replace (GstObject **oldobj, GstObject *newobj)
+gst_object_replace (GstObject ** oldobj, GstObject * newobj)
 {
   g_return_if_fail (oldobj != NULL);
   g_return_if_fail (*oldobj == NULL || GST_IS_OBJECT (*oldobj));
   g_return_if_fail (newobj == NULL || GST_IS_OBJECT (newobj));
-	
-  GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %s %s", 
-	       *oldobj ? GST_STR_NULL (GST_OBJECT_NAME (*oldobj)) : "(NONE)", 
-	       newobj ? GST_STR_NULL (GST_OBJECT_NAME (newobj)) : "(NONE)");
+
+  GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %s %s",
+      *oldobj ? GST_STR_NULL (GST_OBJECT_NAME (*oldobj)) : "(NONE)",
+      newobj ? GST_STR_NULL (GST_OBJECT_NAME (newobj)) : "(NONE)");
 
   if (*oldobj != newobj) {
-    if (newobj)  gst_object_ref (newobj);
-    if (*oldobj) gst_object_unref (*oldobj);
+    if (newobj)
+      gst_object_ref (newobj);
+    if (*oldobj)
+      gst_object_unref (*oldobj);
 
     *oldobj = newobj;
   }
 }
 
 static void
-gst_object_dispose (GObject *object)
+gst_object_dispose (GObject * object)
 {
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
-  
+
   GST_FLAG_SET (GST_OBJECT (object), GST_DESTROYED);
   GST_OBJECT_PARENT (object) = NULL;
 
@@ -305,7 +312,7 @@ gst_object_dispose (GObject *object)
 
 /* finalize is called when the object has to free its resources */
 static void
-gst_object_finalize (GObject *object)
+gst_object_finalize (GObject * object)
 {
   GstObject *gstobject = GST_OBJECT (object);
 
@@ -321,7 +328,7 @@ gst_object_finalize (GObject *object)
   {
     const gchar *name;
     GstAllocTrace *trace;
-  
+
     name = g_type_name (G_OBJECT_TYPE (object));
     trace = gst_alloc_trace_get (name);
     g_assert (trace);
@@ -338,25 +345,27 @@ gst_object_finalize (GObject *object)
  * top-level bin to catch property-change notifications for all contained
  * elements. */
 static void
-gst_object_dispatch_properties_changed (GObject     *object,
-                                        guint        n_pspecs,
-                                        GParamSpec **pspecs)
+gst_object_dispatch_properties_changed (GObject * object,
+    guint n_pspecs, GParamSpec ** pspecs)
 {
   GstObject *gst_object;
   guint i;
 
   /* do the standard dispatching */
-  G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs, pspecs);
+  G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs,
+      pspecs);
 
   /* now let the parent dispatch those, too */
   gst_object = GST_OBJECT_PARENT (object);
   while (gst_object) {
     /* need own category? */
     for (i = 0; i < n_pspecs; i++) {
-      GST_CAT_LOG (GST_CAT_EVENT, "deep notification from %s to %s (%s)", GST_OBJECT_NAME (object),
-                 GST_OBJECT_NAME (gst_object), pspecs[i]->name);
-      g_signal_emit (gst_object, gst_object_signals[DEEP_NOTIFY], g_quark_from_string (pspecs[i]->name),
-                     (GstObject *) object, pspecs[i]);
+      GST_CAT_LOG (GST_CAT_EVENT, "deep notification from %s to %s (%s)",
+	  GST_OBJECT_NAME (object), GST_OBJECT_NAME (gst_object),
+	  pspecs[i]->name);
+      g_signal_emit (gst_object, gst_object_signals[DEEP_NOTIFY],
+	  g_quark_from_string (pspecs[i]->name), (GstObject *) object,
+	  pspecs[i]);
     }
 
     gst_object = GST_OBJECT_PARENT (gst_object);
@@ -378,10 +387,10 @@ gst_object_dispatch_properties_changed (GObject     *object,
  * using g_print.
  */
 void
-gst_object_default_deep_notify (GObject *object, GstObject *orig,
-                                GParamSpec *pspec, gchar **excluded_props)
+gst_object_default_deep_notify (GObject * object, GstObject * orig,
+    GParamSpec * pspec, gchar ** excluded_props)
 {
-  GValue value = { 0, }; /* the important thing is that value.type = 0 */
+  GValue value = { 0, };	/* the important thing is that value.type = 0 */
   gchar *str = 0;
   gchar *name = NULL;
 
@@ -389,7 +398,7 @@ gst_object_default_deep_notify (GObject *object, GstObject *orig,
     /* let's not print these out for excluded properties... */
     while (excluded_props != NULL && *excluded_props != NULL) {
       if (strcmp (pspec->name, *excluded_props) == 0)
-        return;
+	return;
       excluded_props++;
     }
     g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
@@ -397,13 +406,14 @@ gst_object_default_deep_notify (GObject *object, GstObject *orig,
 
     if (G_IS_PARAM_SPEC_ENUM (pspec)) {
       GEnumValue *enum_value;
-      enum_value = g_enum_get_value (G_ENUM_CLASS (g_type_class_ref (pspec->value_type)),
-      g_value_get_enum (&value));
+
+      enum_value =
+	  g_enum_get_value (G_ENUM_CLASS (g_type_class_ref (pspec->value_type)),
+	  g_value_get_enum (&value));
 
       str = g_strdup_printf ("%s (%d)", enum_value->value_nick,
-                                        enum_value->value);
-    }
-    else {
+	  enum_value->value);
+    } else {
       str = g_strdup_value_contents (&value);
     }
     name = gst_object_get_path_string (orig);
@@ -413,19 +423,18 @@ gst_object_default_deep_notify (GObject *object, GstObject *orig,
     g_value_unset (&value);
   } else {
     name = gst_object_get_path_string (orig);
-    g_warning ("Parameter %s not readable in %s.",
-               pspec->name, name);
+    g_warning ("Parameter %s not readable in %s.", pspec->name, name);
     g_free (name);
   }
 }
 
 static void
-gst_object_set_name_default (GstObject *object)
+gst_object_set_name_default (GstObject * object)
 {
   gint count;
   gchar *name, *tmp;
   const gchar *type_name;
-  
+
   type_name = G_OBJECT_TYPE_NAME (object);
 
   /* to ensure guaranteed uniqueness across threads, only one thread
@@ -434,13 +443,13 @@ gst_object_set_name_default (GstObject *object)
 
   if (!object_name_counts) {
     object_name_counts = g_hash_table_new_full (g_str_hash, g_str_equal,
-        g_free, NULL);
+	g_free, NULL);
   }
 
   count = GPOINTER_TO_INT (g_hash_table_lookup (object_name_counts, type_name));
-  g_hash_table_insert (object_name_counts, g_strdup (type_name), 
-                       GINT_TO_POINTER (count + 1));
-  
+  g_hash_table_insert (object_name_counts, g_strdup (type_name),
+      GINT_TO_POINTER (count + 1));
+
   G_UNLOCK (object_name_mutex);
 
   /* GstFooSink -> foosinkN */
@@ -449,7 +458,7 @@ gst_object_set_name_default (GstObject *object)
   tmp = g_strdup_printf ("%s%d", type_name, count);
   name = g_ascii_strdown (tmp, strlen (tmp));
   g_free (tmp);
-  
+
   gst_object_set_name (object, name);
   g_free (name);
 }
@@ -463,7 +472,7 @@ gst_object_set_name_default (GstObject *object)
  * name (if @name is NULL).
  */
 void
-gst_object_set_name (GstObject *object, const gchar *name)
+gst_object_set_name (GstObject * object, const gchar * name)
 {
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
@@ -485,8 +494,8 @@ gst_object_set_name (GstObject *object, const gchar *name)
  *
  * Returns: name of the object
  */
-const gchar*
-gst_object_get_name (GstObject *object)
+const gchar *
+gst_object_get_name (GstObject * object)
 {
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
@@ -504,7 +513,7 @@ gst_object_get_name (GstObject *object)
  * Causes the parent-set signal to be emitted.
  */
 void
-gst_object_set_parent (GstObject *object, GstObject *parent)
+gst_object_set_parent (GstObject * object, GstObject * parent)
 {
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
@@ -528,8 +537,8 @@ gst_object_set_parent (GstObject *object, GstObject *parent)
  *
  * Returns: parent of the object
  */
-GstObject*
-gst_object_get_parent (GstObject *object)
+GstObject *
+gst_object_get_parent (GstObject * object)
 {
   g_return_val_if_fail (object != NULL, NULL);
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
@@ -544,16 +553,17 @@ gst_object_get_parent (GstObject *object)
  * Clear the parent of @object, removing the associated reference.
  */
 void
-gst_object_unparent (GstObject *object)
+gst_object_unparent (GstObject * object)
 {
   g_return_if_fail (object != NULL);
-  g_return_if_fail (GST_IS_OBJECT(object));
+  g_return_if_fail (GST_IS_OBJECT (object));
   if (object->parent == NULL)
     return;
 
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unparent");
-  
-  g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_UNSET], 0, object->parent);
+
+  g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_UNSET], 0,
+      object->parent);
 
   object->parent = NULL;
   gst_object_unref (object);
@@ -569,7 +579,7 @@ gst_object_unparent (GstObject *object)
  * Returns: TRUE if the name does not appear in the list, FALSE if it does.
  */
 gboolean
-gst_object_check_uniqueness (GList *list, const gchar *name)
+gst_object_check_uniqueness (GList * list, const gchar * name)
 {
   g_return_val_if_fail (name != NULL, FALSE);
 
@@ -577,8 +587,8 @@ gst_object_check_uniqueness (GList *list, const gchar *name)
     GstObject *child = GST_OBJECT (list->data);
 
     list = g_list_next (list);
-      
-    if (strcmp (GST_OBJECT_NAME (child), name) == 0) 
+
+    if (strcmp (GST_OBJECT_NAME (child), name) == 0)
       return FALSE;
   }
 
@@ -597,7 +607,7 @@ gst_object_check_uniqueness (GList *list, const gchar *name)
  * Returns: the new xmlNodePtr with the saved object
  */
 xmlNodePtr
-gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
+gst_object_save_thyself (GstObject * object, xmlNodePtr parent)
 {
   GstObjectClass *oclass;
 
@@ -610,7 +620,8 @@ gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
   if (oclass->save_thyself)
     oclass->save_thyself (object, parent);
 
-  g_signal_emit (G_OBJECT (object), gst_object_signals[OBJECT_SAVED], 0, parent);
+  g_signal_emit (G_OBJECT (object), gst_object_signals[OBJECT_SAVED], 0,
+      parent);
 
   return parent;
 }
@@ -623,7 +634,7 @@ gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
  * Restores the given object with the data from the parent XML node.
  */
 void
-gst_object_restore_thyself (GstObject *object, xmlNodePtr self)
+gst_object_restore_thyself (GstObject * object, xmlNodePtr self)
 {
   GstObjectClass *oclass;
 
@@ -638,25 +649,25 @@ gst_object_restore_thyself (GstObject *object, xmlNodePtr self)
 }
 
 static void
-gst_object_real_restore_thyself (GstObject *object, xmlNodePtr self)
+gst_object_real_restore_thyself (GstObject * object, xmlNodePtr self)
 {
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (self != NULL);
-  
-   gst_class_signal_emit_by_name (object, "object_loaded", self);
+
+  gst_class_signal_emit_by_name (object, "object_loaded", self);
 }
 #endif /* GST_DISABLE_LOADSAVE_REGISTRY */
 
 static void
-gst_object_set_property (GObject* object, guint prop_id, 
-			 const GValue* value, GParamSpec* pspec)
+gst_object_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstObject *gstobject;
-	    
+
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_OBJECT (object));
-	      
+
   gstobject = GST_OBJECT (object);
 
   switch (prop_id) {
@@ -670,19 +681,19 @@ gst_object_set_property (GObject* object, guint prop_id,
 }
 
 static void
-gst_object_get_property (GObject* object, guint prop_id, 
-			 GValue* value, GParamSpec* pspec)
+gst_object_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   GstObject *gstobject;
-	    
+
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_OBJECT (object));
-	      
+
   gstobject = GST_OBJECT (object);
 
   switch (prop_id) {
     case ARG_NAME:
-      g_value_set_string (value, (gchar*)GST_OBJECT_NAME (gstobject));
+      g_value_set_string (value, (gchar *) GST_OBJECT_NAME (gstobject));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -699,8 +710,8 @@ gst_object_get_property (GObject* object, guint prop_id,
  *
  * Returns: a string describing the path of the object
  */
-gchar*
-gst_object_get_path_string (GstObject *object)
+gchar *
+gst_object_get_path_string (GstObject * object)
 {
   GSList *parentage = NULL;
   GSList *parents;
@@ -740,18 +751,18 @@ gst_object_get_path_string (GstObject *object)
       separator = oclass->path_string_separator;
       free_component = FALSE;
     } else {
-      component = g_strdup_printf("%p",parents->data);
+      component = g_strdup_printf ("%p", parents->data);
       separator = "/";
       free_component = TRUE;
     }
 
     prevpath = path;
     path = g_strjoin (separator, prevpath, component, NULL);
-    g_free(prevpath);
+    g_free (prevpath);
     if (free_component)
-      g_free((gchar *)component);
+      g_free ((gchar *) component);
 
-    parents = g_slist_next(parents);
+    parents = g_slist_next (parents);
   }
 
   g_slist_free (parentage);
@@ -761,17 +772,20 @@ gst_object_get_path_string (GstObject *object)
 
 
 
-struct _GstSignalObject {
+struct _GstSignalObject
+{
   GObject object;
 };
 
-struct _GstSignalObjectClass {
-  GObjectClass        parent_class;
+struct _GstSignalObjectClass
+{
+  GObjectClass parent_class;
 
   /* signals */
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
-  void          (*object_loaded)           (GstSignalObject *object, GstObject *new, xmlNodePtr self);
-#endif /* GST_DISABLE_LOADSAVE_REGISTRY */
+  void (*object_loaded) (GstSignalObject * object, GstObject * new,
+      xmlNodePtr self);
+#endif				/* GST_DISABLE_LOADSAVE_REGISTRY */
 };
 
 static GType
@@ -781,42 +795,44 @@ gst_signal_object_get_type (void)
 
   if (!signal_object_type) {
     static const GTypeInfo signal_object_info = {
-      sizeof(GstSignalObjectClass),
+      sizeof (GstSignalObjectClass),
       NULL,
       NULL,
-      (GClassInitFunc)gst_signal_object_class_init,
+      (GClassInitFunc) gst_signal_object_class_init,
       NULL,
       NULL,
-      sizeof(GstSignalObject),
+      sizeof (GstSignalObject),
       16,
-      (GInstanceInitFunc)gst_signal_object_init,
+      (GInstanceInitFunc) gst_signal_object_init,
       NULL
     };
-    signal_object_type = g_type_register_static(G_TYPE_OBJECT, "GstSignalObject", &signal_object_info, 0);
+    signal_object_type =
+	g_type_register_static (G_TYPE_OBJECT, "GstSignalObject",
+	&signal_object_info, 0);
   }
   return signal_object_type;
 }
 
 static void
-gst_signal_object_class_init (GstSignalObjectClass *klass)
+gst_signal_object_class_init (GstSignalObjectClass * klass)
 {
   GObjectClass *gobject_class;
 
-  gobject_class = (GObjectClass*) klass;
+  gobject_class = (GObjectClass *) klass;
 
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   gst_signal_object_signals[SO_OBJECT_LOADED] =
-    g_signal_new ("object-loaded", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstSignalObjectClass, object_loaded), NULL, NULL,
-                  gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
-                  G_TYPE_OBJECT, G_TYPE_POINTER);
+      g_signal_new ("object-loaded", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSignalObjectClass, object_loaded),
+      NULL, NULL, gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
+      G_TYPE_OBJECT, G_TYPE_POINTER);
 #endif
 }
 
 static void
-gst_signal_object_init (GstSignalObject *object)
+gst_signal_object_init (GstSignalObject * object)
 {
 }
 
@@ -832,10 +848,8 @@ gst_signal_object_init (GstSignalObject *object)
  * Returns: the signal id.
  */
 guint
-gst_class_signal_connect (GstObjectClass *klass,
-			  const gchar    *name,
-			  gpointer  func,
-		          gpointer       func_data)
+gst_class_signal_connect (GstObjectClass * klass,
+    const gchar * name, gpointer func, gpointer func_data)
 {
   return g_signal_connect (klass->signal_object, name, func, func_data);
 }
@@ -850,9 +864,8 @@ gst_class_signal_connect (GstObjectClass *klass,
  * emits the named class signal.
  */
 void
-gst_class_signal_emit_by_name (GstObject *object,
-	                       const gchar *name,
-	                       xmlNodePtr self)
+gst_class_signal_emit_by_name (GstObject * object,
+    const gchar * name, xmlNodePtr self)
 {
   GstObjectClass *oclass;
 

@@ -5,12 +5,14 @@ GstElement *pipeline;
 GstPadChainFunction oss_chain;
 
 static GstElement *
-make_and_check_element (gchar *type, gchar *name)
+make_and_check_element (gchar * type, gchar * name)
 {
   GstElement *element = gst_element_factory_make (type, name);
 
   if (element == NULL) {
-    g_warning ("Could not run test, because element type \"%s\" is not installed. Please retry when it is. Assuming it works for now...", type);
+    g_warning
+	("Could not run test, because element type \"%s\" is not installed. Please retry when it is. Assuming it works for now...",
+	type);
     exit (1);
   }
 
@@ -20,10 +22,10 @@ make_and_check_element (gchar *type, gchar *name)
 static void
 create_pipeline (void)
 {
-  GstElement *src; 
+  GstElement *src;
   GstElement *sink;
   GstElement *id;
-  
+
   pipeline = gst_pipeline_new ("pipeline");
   src = make_and_check_element ("sinesrc", "src");
   /**
@@ -31,11 +33,11 @@ create_pipeline (void)
    * Osssink (chain-based) only breaks the basic scheduler.
    */
   sink = make_and_check_element ("alsasink", "sink");
-  
+
 
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
   gst_element_link (src, sink);
-  
+
   /** 
    * now make the bug appear
    * I believe it has something to do with 2 chains being created in the scheduler
@@ -47,17 +49,17 @@ create_pipeline (void)
   id = make_and_check_element ("identity", "id");
   gst_bin_add (GST_BIN (pipeline), id);
   gst_element_link_many (src, id, sink, NULL);
-  
+
   /* This pipeline will not be removed properly once we unref it */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-}  
+}
 
-gint 
-main (gint argc, gchar *argv[]) 
+gint
+main (gint argc, gchar * argv[])
 {
   gst_init (&argc, &argv);
-  create_pipeline();
-  
+  create_pipeline ();
+
   while (i < 300) {
     /**
      * only inc i when it works, so the program hangs when _iterate returns false,

@@ -36,7 +36,7 @@
  * Dumps the memory block into a hex representation. Useful for debugging.
  */
 void
-gst_util_dump_mem (guchar *mem, guint size)
+gst_util_dump_mem (guchar * mem, guint size)
 {
   guint i, j;
   GString *string = g_string_sized_new (50);
@@ -46,7 +46,7 @@ gst_util_dump_mem (guchar *mem, guint size)
   while (i < size) {
     if (g_ascii_isprint (mem[i]))
       g_string_append_printf (chars, "%c", mem[i]);
-    else 
+    else
       g_string_append_printf (chars, ".");
 
     g_string_append_printf (string, "%02x ", mem[i]);
@@ -55,7 +55,8 @@ gst_util_dump_mem (guchar *mem, guint size)
     i++;
 
     if (j == 16 || i == size) {
-      g_print ("%08x (%p): %-48.48s %-16.16s\n", i-j, mem+i-j, string->str, chars->str);
+      g_print ("%08x (%p): %-48.48s %-16.16s\n", i - j, mem + i - j,
+	  string->str, chars->str);
       g_string_set_size (string, 0);
       g_string_set_size (chars, 0);
       j = 0;
@@ -75,76 +76,87 @@ gst_util_dump_mem (guchar *mem, guint size)
  * sets the value with it.
  */
 void
-gst_util_set_value_from_string(GValue *value, const gchar *value_str)
+gst_util_set_value_from_string (GValue * value, const gchar * value_str)
 {
 
-	g_return_if_fail(value != NULL);
-	g_return_if_fail(value_str != NULL);
-	
-	GST_CAT_DEBUG (GST_CAT_PARAMS, "parsing '%s' to type %s", value_str, g_type_name(G_VALUE_TYPE(value)));
+  g_return_if_fail (value != NULL);
+  g_return_if_fail (value_str != NULL);
 
-	switch (G_VALUE_TYPE(value)) {
-		case G_TYPE_STRING:
-			g_value_set_string(value, g_strdup(value_str));
-			break;
-		case G_TYPE_ENUM: 
-		case G_TYPE_INT: {
-			gint i;
-			sscanf (value_str, "%d", &i);
-			g_value_set_int(value, i);
-			break;
-		}
-		case G_TYPE_UINT: {
-			guint i;
-			sscanf (value_str, "%u", &i);
-			g_value_set_uint(value, i);
-			break;
-		}
-		case G_TYPE_LONG: {
-			glong i;
-			sscanf (value_str, "%ld", &i);
-			g_value_set_long(value, i);
-			break;
-		}
-		case G_TYPE_ULONG: {
-			gulong i;
-			sscanf (value_str, "%lu", &i);
-			g_value_set_ulong(value, i);
-			break;
-		}
-		case G_TYPE_BOOLEAN: {
-			gboolean i = FALSE;
-			if (!strncmp ("true", value_str, 4)) i = TRUE;
-			g_value_set_boolean(value, i);
-			break;
-		}
-		case G_TYPE_CHAR: {
-			gchar i;
-			sscanf (value_str, "%c", &i);
-			g_value_set_char(value, i);
-			break;
-		}
-		case G_TYPE_UCHAR: {
-			guchar i;
-			sscanf (value_str, "%c", &i);
-			g_value_set_uchar(value, i);
-			break;
-		}
-		case G_TYPE_FLOAT: {
-			gfloat i;
-			sscanf (value_str, "%f", &i);
-			g_value_set_float(value, i);
-			break;
-		}
-		case G_TYPE_DOUBLE: {
-			gfloat i;
-			sscanf (value_str, "%g", &i);
-			g_value_set_double(value, (gdouble)i);
-			break;
-		}
-		default:
-	  		break;
-	}
+  GST_CAT_DEBUG (GST_CAT_PARAMS, "parsing '%s' to type %s", value_str,
+      g_type_name (G_VALUE_TYPE (value)));
+
+  switch (G_VALUE_TYPE (value)) {
+    case G_TYPE_STRING:
+      g_value_set_string (value, g_strdup (value_str));
+      break;
+    case G_TYPE_ENUM:
+    case G_TYPE_INT:{
+      gint i;
+
+      sscanf (value_str, "%d", &i);
+      g_value_set_int (value, i);
+      break;
+    }
+    case G_TYPE_UINT:{
+      guint i;
+
+      sscanf (value_str, "%u", &i);
+      g_value_set_uint (value, i);
+      break;
+    }
+    case G_TYPE_LONG:{
+      glong i;
+
+      sscanf (value_str, "%ld", &i);
+      g_value_set_long (value, i);
+      break;
+    }
+    case G_TYPE_ULONG:{
+      gulong i;
+
+      sscanf (value_str, "%lu", &i);
+      g_value_set_ulong (value, i);
+      break;
+    }
+    case G_TYPE_BOOLEAN:{
+      gboolean i = FALSE;
+
+      if (!strncmp ("true", value_str, 4))
+	i = TRUE;
+      g_value_set_boolean (value, i);
+      break;
+    }
+    case G_TYPE_CHAR:{
+      gchar i;
+
+      sscanf (value_str, "%c", &i);
+      g_value_set_char (value, i);
+      break;
+    }
+    case G_TYPE_UCHAR:{
+      guchar i;
+
+      sscanf (value_str, "%c", &i);
+      g_value_set_uchar (value, i);
+      break;
+    }
+    case G_TYPE_FLOAT:{
+      gfloat i;
+
+      sscanf (value_str, "%f", &i);
+      g_value_set_float (value, i);
+      break;
+    }
+    case G_TYPE_DOUBLE:{
+      gfloat i;
+
+      sscanf (value_str, "%g", &i);
+      g_value_set_double (value, (gdouble) i);
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 /**
@@ -157,19 +169,21 @@ gst_util_set_value_from_string(GValue *value, const gchar *value_str)
  * sets the argument with it.
  */
 void
-gst_util_set_object_arg (GObject * object, const gchar * name, const gchar * value)
+gst_util_set_object_arg (GObject * object, const gchar * name,
+    const gchar * value)
 {
   if (name && value) {
     GParamSpec *paramspec;
 
-    paramspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
+    paramspec =
+	g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
 
     if (!paramspec) {
       return;
     }
 
-    GST_DEBUG ( "paramspec->flags is %d, paramspec->value_type is %d",
-	       paramspec->flags, (gint) paramspec->value_type);
+    GST_DEBUG ("paramspec->flags is %d, paramspec->value_type is %d",
+	paramspec->flags, (gint) paramspec->value_type);
 
     if (paramspec->flags & G_PARAM_WRITABLE) {
       switch (paramspec->value_type) {
@@ -247,8 +261,7 @@ gst_util_set_object_arg (GObject * object, const gchar * name, const gchar * val
 
 	    sscanf (value, "%d", &i);
 	    g_object_set (G_OBJECT (object), name, i, NULL);
-	  }
-	  else if (paramspec->value_type == GST_TYPE_URI) {
+	  } else if (paramspec->value_type == GST_TYPE_URI) {
 	    g_object_set (G_OBJECT (object), name, value, NULL);
 	  }
 	  break;
@@ -294,14 +307,14 @@ gst_print_pad_caps (GString * buf, gint indent, GstPad * pad)
 
   if (!caps) {
     string_append_indent (buf, indent);
-    g_string_printf (buf, "%s:%s has no capabilities", GST_DEBUG_PAD_NAME (pad));
-  }
-  else {
+    g_string_printf (buf, "%s:%s has no capabilities",
+	GST_DEBUG_PAD_NAME (pad));
+  } else {
     char *s;
 
-    s = gst_caps_to_string(caps);
-    g_string_append(buf, s);
-    g_free(s);
+    s = gst_caps_to_string (caps);
+    g_string_append (buf, s);
+    g_free (s);
   }
 }
 
@@ -318,12 +331,12 @@ void
 gst_print_element_args (GString * buf, gint indent, GstElement * element)
 {
   guint width;
-  GValue value = { 0, }; /* the important thing is that value.type = 0 */
+  GValue value = { 0, };	/* the important thing is that value.type = 0 */
   gchar *str = 0;
   GParamSpec *spec, **specs, **walk;
 
   specs = g_object_class_list_properties (G_OBJECT_GET_CLASS (element), NULL);
-  
+
   width = 0;
   for (walk = specs; *walk; walk++) {
     spec = *walk;
@@ -333,12 +346,12 @@ gst_print_element_args (GString * buf, gint indent, GstElement * element)
 
   for (walk = specs; *walk; walk++) {
     spec = *walk;
-    
+
     if (spec->flags & G_PARAM_READABLE) {
-      g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (spec));
+      g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (spec));
       g_object_get_property (G_OBJECT (element), spec->name, &value);
       str = g_strdup_value_contents (&value);
-      g_value_unset(&value);
+      g_value_unset (&value);
     } else {
       str = g_strdup ("Parameter not readable.");
     }
@@ -348,7 +361,7 @@ gst_print_element_args (GString * buf, gint indent, GstElement * element)
     string_append_indent (buf, 2 + width - strlen (spec->name));
     g_string_append (buf, str);
     g_string_append_c (buf, '\n');
-    
+
     g_free (str);
   }
 

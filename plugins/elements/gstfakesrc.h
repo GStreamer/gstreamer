@@ -26,10 +26,8 @@
 
 #include <gst/gst.h>
 
-G_BEGIN_DECLS
-
-
-typedef enum {
+G_BEGIN_DECLS typedef enum
+{
   FAKESRC_FIRST_LAST_LOOP = 1,
   FAKESRC_LAST_FIRST_LOOP,
   FAKESRC_PING_PONG,
@@ -40,18 +38,21 @@ typedef enum {
   FAKESRC_GET_ALWAYS_SUCEEDS
 } GstFakeSrcOutputType;
 
-typedef enum {
+typedef enum
+{
   FAKESRC_DATA_ALLOCATE = 1,
   FAKESRC_DATA_SUBBUFFER,
 } GstFakeSrcDataType;
 
-typedef enum {
+typedef enum
+{
   FAKESRC_SIZETYPE_NULL = 1,
   FAKESRC_SIZETYPE_FIXED,
   FAKESRC_SIZETYPE_RANDOM
 } GstFakeSrcSizeType;
 
-typedef enum {
+typedef enum
+{
   FAKESRC_FILLTYPE_NOTHING = 1,
   FAKESRC_FILLTYPE_NULL,
   FAKESRC_FILLTYPE_RANDOM,
@@ -73,50 +74,51 @@ typedef enum {
 typedef struct _GstFakeSrc GstFakeSrc;
 typedef struct _GstFakeSrcClass GstFakeSrcClass;
 
-struct _GstFakeSrc {
-  GstElement     element;
+struct _GstFakeSrc
+{
+  GstElement element;
 
-  gboolean 	 loop_based;
-  gboolean 	 eos;
+  gboolean loop_based;
+  gboolean eos;
 
   GstFakeSrcOutputType output;
-  GstFakeSrcDataType   data;
-  GstFakeSrcSizeType   sizetype;
-  GstFakeSrcFillType   filltype;
+  GstFakeSrcDataType data;
+  GstFakeSrcSizeType sizetype;
+  GstFakeSrcFillType filltype;
 
-  guint 	 sizemin;
-  guint 	 sizemax;
-  GstBuffer 	*parent;
-  guint 	 parentsize;
-  guint 	 parentoffset;
-  guint8 	 pattern_byte;
-  gchar 	*pattern;
-  GList 	*patternlist;
-  gint64	 segment_start;
-  gint64	 segment_end;
-  gboolean	 segment_loop;
-  gint 		 num_buffers;
-  gint 		 rt_num_buffers; /* we are going to change this at runtime */
-  guint64 	 buffer_count;
-  gboolean 	 silent;
-  gboolean 	 signal_handoffs;
-  gboolean 	 dump;
-  gboolean 	 need_flush;
+  guint sizemin;
+  guint sizemax;
+  GstBuffer *parent;
+  guint parentsize;
+  guint parentoffset;
+  guint8 pattern_byte;
+  gchar *pattern;
+  GList *patternlist;
+  gint64 segment_start;
+  gint64 segment_end;
+  gboolean segment_loop;
+  gint num_buffers;
+  gint rt_num_buffers;		/* we are going to change this at runtime */
+  guint64 buffer_count;
+  gboolean silent;
+  gboolean signal_handoffs;
+  gboolean dump;
+  gboolean need_flush;
 
-  gchar		*last_message;
+  gchar *last_message;
 };
 
-struct _GstFakeSrcClass {
+struct _GstFakeSrcClass
+{
   GstElementClass parent_class;
 
   /* signals */
-  void (*handoff) (GstElement *element, GstBuffer *buf, GstPad *pad);
+  void (*handoff) (GstElement * element, GstBuffer * buf, GstPad * pad);
 };
 
-GType gst_fakesrc_get_type(void);
+GType gst_fakesrc_get_type (void);
 
-gboolean gst_fakesrc_factory_init (GstElementFactory *factory);
+gboolean gst_fakesrc_factory_init (GstElementFactory * factory);
 
 G_END_DECLS
-
 #endif /* __GST_FAKESRC_H__ */

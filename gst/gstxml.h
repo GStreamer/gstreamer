@@ -30,22 +30,20 @@
 #include <gst/gstelement.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_XML 		(gst_xml_get_type ())
 #define GST_XML(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_XML, GstXML))
 #define GST_IS_XML(obj) 	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_XML))
 #define GST_XML_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_XML, GstXMLClass))
 #define GST_IS_XML_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_XML))
-
 #define GST_XML_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_XML, GstXMLClass))
-
 typedef struct _GstXML GstXML;
 typedef struct _GstXMLClass GstXMLClass;
 
-struct _GstXML {
+struct _GstXML
+{
   GstObject object;
 
-  GList      *topelements;
+  GList *topelements;
 
   xmlNsPtr ns;
 
@@ -54,39 +52,41 @@ struct _GstXML {
 
 typedef struct _GstXMLNs GstXMLNs;
 
-struct _GstXMLClass {
+struct _GstXMLClass
+{
   GstObjectClass parent_class;
 
   /* signal callbacks */
-  void (*object_loaded)         (GstXML *xml, GstObject *object, xmlNodePtr self);
-  void (*object_saved)          (GstXML *xml, GstObject *object, xmlNodePtr self);
+  void (*object_loaded) (GstXML * xml, GstObject * object, xmlNodePtr self);
+  void (*object_saved) (GstXML * xml, GstObject * object, xmlNodePtr self);
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType		gst_xml_get_type	(void);
+GType gst_xml_get_type (void);
 
 
 /* create an XML document out of a pipeline */
-xmlDocPtr	gst_xml_write		(GstElement *element);
+xmlDocPtr gst_xml_write (GstElement * element);
 
 /* write a formatted representation of a pipeline to an open file */
-gint		gst_xml_write_file	(GstElement *element, FILE *out);
+gint gst_xml_write_file (GstElement * element, FILE * out);
 
-GstXML*		gst_xml_new		(void);
+GstXML *gst_xml_new (void);
 
-gboolean	gst_xml_parse_doc	(GstXML *xml, xmlDocPtr doc, const guchar *root);
-gboolean	gst_xml_parse_file	(GstXML *xml, const guchar *fname, const guchar *root);
-gboolean	gst_xml_parse_memory	(GstXML *xml, guchar *buffer, guint size, const gchar *root);
+gboolean gst_xml_parse_doc (GstXML * xml, xmlDocPtr doc, const guchar * root);
+gboolean gst_xml_parse_file (GstXML * xml, const guchar * fname,
+    const guchar * root);
+gboolean gst_xml_parse_memory (GstXML * xml, guchar * buffer, guint size,
+    const gchar * root);
 
 
-GstElement*	gst_xml_get_element	(GstXML *xml, const guchar *name);
-GList*		gst_xml_get_topelements (GstXML *xml);
+GstElement *gst_xml_get_element (GstXML * xml, const guchar * name);
+GList *gst_xml_get_topelements (GstXML * xml);
 
-GstElement*	gst_xml_make_element	(xmlNodePtr cur, GstObject *parent);
+GstElement *gst_xml_make_element (xmlNodePtr cur, GstObject * parent);
 
 G_END_DECLS
-
 #else /* GST_DISABLE_LOADSAVE */
 
 #pragma GCC poison gst_xml_write

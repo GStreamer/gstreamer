@@ -29,32 +29,34 @@
 #include "gstmarshal.h"
 
 /* Index signals and args */
-enum {
+enum
+{
   ENTRY_ADDED,
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_RESOLVER
-  /* FILL ME */
+      /* FILL ME */
 };
 
-static void		gst_index_class_init		(GstIndexClass *klass);
-static void		gst_index_init			(GstIndex *index);
+static void gst_index_class_init (GstIndexClass * klass);
+static void gst_index_init (GstIndex * index);
 
-static void             gst_index_set_property        	(GObject *object, guint prop_id,
-                                                         const GValue *value, GParamSpec *pspec);
-static void             gst_index_get_property        	(GObject *object, guint prop_id, 
-                                                         GValue *value, GParamSpec *pspec);
+static void gst_index_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_index_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static GstIndexGroup* 	gst_index_group_new		(guint groupnum);
+static GstIndexGroup *gst_index_group_new (guint groupnum);
 
-static gboolean 	gst_index_path_resolver 	(GstIndex *index, GstObject *writer,
-		                			 gchar **writer_string, gpointer data);
-static gboolean 	gst_index_gtype_resolver 	(GstIndex *index, GstObject *writer,
-		                			 gchar **writer_string, gpointer data);
-static void gst_index_add_entry (GstIndex *index, GstIndexEntry *entry);
+static gboolean gst_index_path_resolver (GstIndex * index, GstObject * writer,
+    gchar ** writer_string, gpointer data);
+static gboolean gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
+    gchar ** writer_string, gpointer data);
+static void gst_index_add_entry (GstIndex * index, GstIndexEntry * entry);
 
 static GstObject *parent_class = NULL;
 static guint gst_index_signals[LAST_SIGNAL] = { 0 };
@@ -62,15 +64,14 @@ static guint gst_index_signals[LAST_SIGNAL] = { 0 };
 typedef struct
 {
   GstIndexResolverMethod method;
-  GstIndexResolver 	 resolver;
-  gpointer		 user_data;
+  GstIndexResolver resolver;
+  gpointer user_data;
 } ResolverEntry;
 
-static const ResolverEntry resolvers[] =
-{
-  { GST_INDEX_RESOLVER_CUSTOM, NULL, NULL },
-  { GST_INDEX_RESOLVER_GTYPE,  gst_index_gtype_resolver, NULL },
-  { GST_INDEX_RESOLVER_PATH,   gst_index_path_resolver, NULL },
+static const ResolverEntry resolvers[] = {
+  {GST_INDEX_RESOLVER_CUSTOM, NULL, NULL},
+  {GST_INDEX_RESOLVER_GTYPE, gst_index_gtype_resolver, NULL},
+  {GST_INDEX_RESOLVER_PATH, gst_index_path_resolver, NULL},
 };
 
 #define GST_TYPE_INDEX_RESOLVER (gst_index_resolver_get_type())
@@ -79,13 +80,17 @@ gst_index_resolver_get_type (void)
 {
   static GType index_resolver_type = 0;
   static GEnumValue index_resolver[] = {
-    { GST_INDEX_RESOLVER_CUSTOM, "GST_INDEX_RESOLVER_CUSTOM",  "Use a custom resolver"},
-    { GST_INDEX_RESOLVER_GTYPE,  "GST_INDEX_RESOLVER_GTYPE",   "Resolve an object to its GType[.padname]"},
-    { GST_INDEX_RESOLVER_PATH,   "GST_INDEX_RESOLVER_PATH",    "Resolve an object to its path in the pipeline"},
+    {GST_INDEX_RESOLVER_CUSTOM, "GST_INDEX_RESOLVER_CUSTOM",
+	  "Use a custom resolver"},
+    {GST_INDEX_RESOLVER_GTYPE, "GST_INDEX_RESOLVER_GTYPE",
+	  "Resolve an object to its GType[.padname]"},
+    {GST_INDEX_RESOLVER_PATH, "GST_INDEX_RESOLVER_PATH",
+	  "Resolve an object to its path in the pipeline"},
     {0, NULL, NULL},
   };
   if (!index_resolver_type) {
-    index_resolver_type = g_enum_register_static ("GstIndexResolver", index_resolver);
+    index_resolver_type =
+	g_enum_register_static ("GstIndexResolver", index_resolver);
   }
   return index_resolver_type;
 }
@@ -97,66 +102,68 @@ gst_index_entry_get_type (void)
 
   if (!index_entry_type) {
     index_entry_type = g_boxed_type_register_static ("GstIndexEntry",
-        (GBoxedCopyFunc) gst_index_entry_copy,
-        (GBoxedFreeFunc) gst_index_entry_free);
+	(GBoxedCopyFunc) gst_index_entry_copy,
+	(GBoxedFreeFunc) gst_index_entry_free);
   }
   return index_entry_type;
 }
 
 
 GType
-gst_index_get_type (void) {
+gst_index_get_type (void)
+{
   static GType index_type = 0;
 
   if (!index_type) {
     static const GTypeInfo index_info = {
-      sizeof(GstIndexClass),
+      sizeof (GstIndexClass),
       NULL,
       NULL,
-      (GClassInitFunc)gst_index_class_init,
+      (GClassInitFunc) gst_index_class_init,
       NULL,
       NULL,
-      sizeof(GstIndex),
+      sizeof (GstIndex),
       1,
-      (GInstanceInitFunc)gst_index_init,
+      (GInstanceInitFunc) gst_index_init,
       NULL
     };
-    index_type = g_type_register_static(GST_TYPE_OBJECT, "GstIndex", &index_info, 0);
+    index_type =
+	g_type_register_static (GST_TYPE_OBJECT, "GstIndex", &index_info, 0);
   }
   return index_type;
 }
 
 static void
-gst_index_class_init (GstIndexClass *klass)
+gst_index_class_init (GstIndexClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_OBJECT);
+  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
   gst_index_signals[ENTRY_ADDED] =
-    g_signal_new ("entry-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstIndexClass, entry_added), NULL, NULL,
-                  gst_marshal_VOID__BOXED, G_TYPE_NONE, 1,
-                  GST_TYPE_INDEX_ENTRY);
+      g_signal_new ("entry-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstIndexClass, entry_added), NULL, NULL,
+      gst_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_INDEX_ENTRY);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_index_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_index_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RESOLVER,
-    g_param_spec_enum ("resolver", "Resolver", "Select a predefined object to string mapper",
-	               GST_TYPE_INDEX_RESOLVER, GST_INDEX_RESOLVER_PATH, G_PARAM_READWRITE));
+      g_param_spec_enum ("resolver", "Resolver",
+	  "Select a predefined object to string mapper",
+	  GST_TYPE_INDEX_RESOLVER, GST_INDEX_RESOLVER_PATH, G_PARAM_READWRITE));
 }
 
 static void
-gst_index_init (GstIndex *index)
+gst_index_init (GstIndex * index)
 {
-  index->curgroup = gst_index_group_new(0);
+  index->curgroup = gst_index_group_new (0);
   index->maxgroup = 0;
-  index->groups = g_list_prepend(NULL, index->curgroup);
+  index->groups = g_list_prepend (NULL, index->curgroup);
 
   index->writers = g_hash_table_new (NULL, NULL);
   index->last_id = 0;
@@ -167,13 +174,13 @@ gst_index_init (GstIndex *index)
 
   GST_FLAG_SET (index, GST_INDEX_WRITABLE);
   GST_FLAG_SET (index, GST_INDEX_READABLE);
-  
-  GST_DEBUG ( "created new index");
+
+  GST_DEBUG ("created new index");
 }
 
 static void
-gst_index_set_property (GObject *object, guint prop_id,
-                        const GValue *value, GParamSpec *pspec)
+gst_index_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstIndex *index;
 
@@ -192,8 +199,8 @@ gst_index_set_property (GObject *object, guint prop_id,
 }
 
 static void
-gst_index_get_property (GObject *object, guint prop_id, 
-                        GValue *value, GParamSpec *pspec)
+gst_index_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   GstIndex *index;
 
@@ -210,16 +217,16 @@ gst_index_get_property (GObject *object, guint prop_id,
 }
 
 static GstIndexGroup *
-gst_index_group_new(guint groupnum)
+gst_index_group_new (guint groupnum)
 {
-  GstIndexGroup *indexgroup = g_new(GstIndexGroup,1);
+  GstIndexGroup *indexgroup = g_new (GstIndexGroup, 1);
 
   indexgroup->groupnum = groupnum;
   indexgroup->entries = NULL;
   indexgroup->certainty = GST_INDEX_UNKNOWN;
   indexgroup->peergroup = -1;
 
-  GST_DEBUG ( "created new index group %d",groupnum);
+  GST_DEBUG ("created new index group %d", groupnum);
 
   return indexgroup;
 }
@@ -231,7 +238,7 @@ gst_index_group_new(guint groupnum)
  *
  * Returns: a new index object
  */
-GstIndex*
+GstIndex *
 gst_index_new (void)
 {
   GstIndex *index;
@@ -251,7 +258,7 @@ gst_index_new (void)
  * to it.
  */
 void
-gst_index_commit (GstIndex *index, gint id)
+gst_index_commit (GstIndex * index, gint id)
 {
   GstIndexClass *iclass;
 
@@ -271,7 +278,7 @@ gst_index_commit (GstIndex *index, gint id)
  * Returns: the id of the current group.
  */
 gint
-gst_index_get_group(GstIndex *index)
+gst_index_get_group (GstIndex * index)
 {
   return index->curgroup->groupnum;
 }
@@ -286,11 +293,11 @@ gst_index_get_group(GstIndex *index)
  * Returns: the id of the newly created group.
  */
 gint
-gst_index_new_group(GstIndex *index)
+gst_index_new_group (GstIndex * index)
 {
-  index->curgroup = gst_index_group_new(++index->maxgroup);
-  index->groups = g_list_append(index->groups,index->curgroup);
-  GST_DEBUG ( "created new group %d in index",index->maxgroup);
+  index->curgroup = gst_index_group_new (++index->maxgroup);
+  index->groups = g_list_append (index->groups, index->curgroup);
+  GST_DEBUG ("created new group %d in index", index->maxgroup);
   return index->maxgroup;
 }
 
@@ -305,7 +312,7 @@ gst_index_new_group(GstIndex *index)
  * did not exist.
  */
 gboolean
-gst_index_set_group(GstIndex *index, gint groupnum)
+gst_index_set_group (GstIndex * index, gint groupnum)
 {
   GList *list;
   GstIndexGroup *indexgroup;
@@ -317,17 +324,17 @@ gst_index_set_group(GstIndex *index, gint groupnum)
   /* else search for the proper group */
   list = index->groups;
   while (list) {
-    indexgroup = (GstIndexGroup *)(list->data);
-    list = g_list_next(list);
+    indexgroup = (GstIndexGroup *) (list->data);
+    list = g_list_next (list);
     if (indexgroup->groupnum == groupnum) {
       index->curgroup = indexgroup;
-      GST_DEBUG ( "switched to index group %d", indexgroup->groupnum);
+      GST_DEBUG ("switched to index group %d", indexgroup->groupnum);
       return TRUE;
     }
   }
 
   /* couldn't find the group in question */
-  GST_DEBUG ( "couldn't find index group %d",groupnum);
+  GST_DEBUG ("couldn't find index group %d", groupnum);
   return FALSE;
 }
 
@@ -339,7 +346,7 @@ gst_index_set_group(GstIndex *index, gint groupnum)
  * Set the certainty of the given index.
  */
 void
-gst_index_set_certainty(GstIndex *index, GstIndexCertainty certainty)
+gst_index_set_certainty (GstIndex * index, GstIndexCertainty certainty)
 {
   index->curgroup->certainty = certainty;
 }
@@ -353,7 +360,7 @@ gst_index_set_certainty(GstIndex *index, GstIndexCertainty certainty)
  * Returns: the certainty of the index.
  */
 GstIndexCertainty
-gst_index_get_certainty(GstIndex *index)
+gst_index_get_certainty (GstIndex * index)
 {
   return index->curgroup->certainty;
 }
@@ -368,8 +375,8 @@ gst_index_get_certainty(GstIndex *index)
  * it can select what entries should be stored in the index.
  */
 void
-gst_index_set_filter (GstIndex *index, 
-		      GstIndexFilter filter, gpointer user_data)
+gst_index_set_filter (GstIndex * index,
+    GstIndexFilter filter, gpointer user_data)
 {
   g_return_if_fail (GST_IS_INDEX (index));
 
@@ -387,8 +394,8 @@ gst_index_set_filter (GstIndex *index,
  * ids to writer descriptions.
  */
 void
-gst_index_set_resolver (GstIndex *index, 
-		        GstIndexResolver resolver, gpointer user_data)
+gst_index_set_resolver (GstIndex * index,
+    GstIndexResolver resolver, gpointer user_data)
 {
   g_return_if_fail (GST_IS_INDEX (index));
 
@@ -404,9 +411,9 @@ gst_index_set_resolver (GstIndex *index,
  * Copies an entry and returns the result.
  */
 GstIndexEntry *
-gst_index_entry_copy (GstIndexEntry *entry)
+gst_index_entry_copy (GstIndexEntry * entry)
 {
-  return g_memdup(entry, sizeof(*entry));
+  return g_memdup (entry, sizeof (*entry));
 }
 
 /**
@@ -416,7 +423,7 @@ gst_index_entry_copy (GstIndexEntry *entry)
  * Free the memory used by the given entry.
  */
 void
-gst_index_entry_free (GstIndexEntry *entry)
+gst_index_entry_free (GstIndexEntry * entry)
 {
   g_free (entry);
 }
@@ -433,18 +440,18 @@ gst_index_entry_free (GstIndexEntry *entry)
  *
  * Returns: a pointer to the newly added entry in the index.
  */
-GstIndexEntry*
-gst_index_add_format (GstIndex *index, gint id, GstFormat format)
+GstIndexEntry *
+gst_index_add_format (GstIndex * index, gint id, GstFormat format)
 {
   GstIndexEntry *entry;
-  const GstFormatDefinition* def;
+  const GstFormatDefinition *def;
 
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (format != 0, NULL);
 
   if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
-  
+
   entry = g_new0 (GstIndexEntry, 1);
   entry->type = GST_INDEX_ENTRY_FORMAT;
   entry->id = id;
@@ -468,17 +475,17 @@ gst_index_add_format (GstIndex *index, gint id, GstFormat format)
  *
  * Returns: a pointer to the newly added entry in the index.
  */
-GstIndexEntry*
-gst_index_add_id (GstIndex *index, gint id, gchar *description)
+GstIndexEntry *
+gst_index_add_id (GstIndex * index, gint id, gchar * description)
 {
   GstIndexEntry *entry;
 
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (description != NULL, NULL);
-  
+
   if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
-  
+
   entry = g_new0 (GstIndexEntry, 1);
   entry->type = GST_INDEX_ENTRY_ID;
   entry->id = id;
@@ -490,8 +497,8 @@ gst_index_add_id (GstIndex *index, gint id, gchar *description)
 }
 
 static gboolean
-gst_index_path_resolver (GstIndex *index, GstObject *writer,
-	                 gchar **writer_string, gpointer data) 
+gst_index_path_resolver (GstIndex * index, GstObject * writer,
+    gchar ** writer_string, gpointer data)
 {
   *writer_string = gst_object_get_path_string (writer);
 
@@ -499,18 +506,17 @@ gst_index_path_resolver (GstIndex *index, GstObject *writer,
 }
 
 static gboolean
-gst_index_gtype_resolver (GstIndex *index, GstObject *writer,
-	                  gchar **writer_string, gpointer data) 
+gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
+    gchar ** writer_string, gpointer data)
 {
   if (GST_IS_PAD (writer)) {
     GstElement *element = gst_pad_get_parent (GST_PAD (writer));
 
-    *writer_string = g_strdup_printf ("%s.%s", 
-		     g_type_name (G_OBJECT_TYPE (element)),
-		     gst_object_get_name (writer));
-  }
-  else {
-    *writer_string = g_strdup_printf ("%s", g_type_name (G_OBJECT_TYPE (writer)));
+    *writer_string = g_strdup_printf ("%s.%s",
+	g_type_name (G_OBJECT_TYPE (element)), gst_object_get_name (writer));
+  } else {
+    *writer_string =
+	g_strdup_printf ("%s", g_type_name (G_OBJECT_TYPE (writer)));
   }
 
   return TRUE;
@@ -532,8 +538,8 @@ gst_index_gtype_resolver (GstIndex *index, GstObject *writer,
  *
  * Returns: TRUE if the writer would be mapped to an id.
  */
-gboolean 
-gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
+gboolean
+gst_index_get_writer_id (GstIndex * index, GstObject * writer, gint * id)
 {
   gchar *writer_string = NULL;
   GstIndexEntry *entry;
@@ -548,7 +554,7 @@ gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
 
   /* first try to get a previously cached id */
   entry = g_hash_table_lookup (index->writers, writer);
-  if (entry == NULL) { 
+  if (entry == NULL) {
 
     iclass = GST_INDEX_GET_CLASS (index);
 
@@ -556,11 +562,12 @@ gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
     if (index->resolver) {
       gboolean res;
 
-      res = index->resolver (index, writer, &writer_string, index->resolver_user_data);
-      if (!res) 
-        return FALSE;
-    }
-    else {
+      res =
+	  index->resolver (index, writer, &writer_string,
+	  index->resolver_user_data);
+      if (!res)
+	return FALSE;
+    } else {
       g_warning ("no resolver found");
       return FALSE;
     }
@@ -584,8 +591,7 @@ gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
       entry->data.id.description = writer_string;
     }
     g_hash_table_insert (index->writers, writer, entry);
-  }
-  else {
+  } else {
     *id = entry->id;
   }
 
@@ -593,7 +599,7 @@ gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
 }
 
 static void
-gst_index_add_entry (GstIndex *index, GstIndexEntry *entry)
+gst_index_add_entry (GstIndex * index, GstIndexEntry * entry)
 {
   GstIndexClass *iclass;
 
@@ -619,25 +625,25 @@ gst_index_add_entry (GstIndex *index, GstIndexEntry *entry)
  *
  * Returns: a pointer to the newly added entry in the index.
  */
-GstIndexEntry*
-gst_index_add_associationv (GstIndex *index, gint id, GstAssocFlags flags, 
-    int n, const GstIndexAssociation *list)
+GstIndexEntry *
+gst_index_add_associationv (GstIndex * index, gint id, GstAssocFlags flags,
+    int n, const GstIndexAssociation * list)
 {
   GstIndexEntry *entry;
 
   g_return_val_if_fail (n > 0, NULL);
   g_return_val_if_fail (list != NULL, NULL);
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
-  
+
   if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
- 
+
   entry = g_malloc (sizeof (GstIndexEntry));
 
   entry->type = GST_INDEX_ENTRY_ASSOCIATION;
   entry->id = id;
   entry->data.assoc.flags = flags;
-  entry->data.assoc.assocs = g_memdup(list, sizeof (GstIndexAssociation) * n);
+  entry->data.assoc.assocs = g_memdup (list, sizeof (GstIndexAssociation) * n);
   entry->data.assoc.nassocs = n;
 
   gst_index_add_entry (index, entry);
@@ -660,9 +666,9 @@ gst_index_add_associationv (GstIndex *index, gint id, GstAssocFlags flags,
  *
  * Returns: a pointer to the newly added entry in the index.
  */
-GstIndexEntry*
-gst_index_add_association (GstIndex *index, gint id, GstAssocFlags flags, 
-		           GstFormat format, gint64 value, ...)
+GstIndexEntry *
+gst_index_add_association (GstIndex * index, gint id, GstAssocFlags flags,
+    GstFormat format, gint64 value, ...)
 {
   va_list args;
   GstIndexEntry *entry;
@@ -673,11 +679,11 @@ gst_index_add_association (GstIndex *index, gint id, GstAssocFlags flags,
 
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (format != 0, NULL);
-  
+
   if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
-  
-  array = g_array_new(FALSE, FALSE, sizeof(GstIndexAssociation));
+
+  array = g_array_new (FALSE, FALSE, sizeof (GstIndexAssociation));
 
   va_start (args, value);
 
@@ -717,22 +723,20 @@ gst_index_add_association (GstIndex *index, gint id, GstAssocFlags flags,
  * 
  * Returns: a pointer to the newly added entry in the index.
  */
-GstIndexEntry*
-gst_index_add_object (GstIndex *index, gint id, gchar *key,
-		      GType type, gpointer object)
+GstIndexEntry *
+gst_index_add_object (GstIndex * index, gint id, gchar * key,
+    GType type, gpointer object)
 {
   if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
-  
+
   return NULL;
 }
 
 static gint
-gst_index_compare_func (gconstpointer a,
-                        gconstpointer b,
-                        gpointer user_data)
+gst_index_compare_func (gconstpointer a, gconstpointer b, gpointer user_data)
 {
-  return (gint)a - (gint)b;  
+  return (gint) a - (gint) b;
 }
 
 /**
@@ -749,18 +753,18 @@ gst_index_compare_func (gconstpointer a,
  * Returns: the entry associated with the value or NULL if the
  *   value was not found.
  */
-GstIndexEntry*
-gst_index_get_assoc_entry (GstIndex *index, gint id,
-		           GstIndexLookupMethod method, GstAssocFlags flags,
-			   GstFormat format, gint64 value)
+GstIndexEntry *
+gst_index_get_assoc_entry (GstIndex * index, gint id,
+    GstIndexLookupMethod method, GstAssocFlags flags,
+    GstFormat format, gint64 value)
 {
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
 
   if (id == -1)
     return NULL;
 
-  return gst_index_get_assoc_entry_full (index, id, method, flags, format, value, 
-		                  gst_index_compare_func, NULL);
+  return gst_index_get_assoc_entry_full (index, id, method, flags, format,
+      value, gst_index_compare_func, NULL);
 }
 
 /**
@@ -780,12 +784,10 @@ gst_index_get_assoc_entry (GstIndex *index, gint id,
  * Returns: the entry associated with the value or NULL if the
  *   value was not found.
  */
-GstIndexEntry*
-gst_index_get_assoc_entry_full (GstIndex *index, gint id,
-		                GstIndexLookupMethod method, GstAssocFlags flags,
-			        GstFormat format, gint64 value,
-			        GCompareDataFunc func,
-			        gpointer user_data)
+GstIndexEntry *
+gst_index_get_assoc_entry_full (GstIndex * index, gint id,
+    GstIndexLookupMethod method, GstAssocFlags flags,
+    GstFormat format, gint64 value, GCompareDataFunc func, gpointer user_data)
 {
   GstIndexClass *iclass;
 
@@ -797,8 +799,9 @@ gst_index_get_assoc_entry_full (GstIndex *index, gint id,
   iclass = GST_INDEX_GET_CLASS (index);
 
   if (iclass->get_assoc_entry)
-    return iclass->get_assoc_entry (index, id, method, flags, format, value, func, user_data);
-  
+    return iclass->get_assoc_entry (index, id, method, flags, format, value,
+	func, user_data);
+
   return NULL;
 }
 
@@ -814,8 +817,8 @@ gst_index_get_assoc_entry_full (GstIndex *index, gint id,
  * format.
  */
 gboolean
-gst_index_entry_assoc_map (GstIndexEntry *entry,
-		           GstFormat format, gint64 *value)
+gst_index_entry_assoc_map (GstIndexEntry * entry,
+    GstFormat format, gint64 * value)
 {
   gint i;
 
@@ -823,23 +826,24 @@ gst_index_entry_assoc_map (GstIndexEntry *entry,
   g_return_val_if_fail (value != NULL, FALSE);
 
   for (i = 0; i < GST_INDEX_NASSOCS (entry); i++) {
-     if (GST_INDEX_ASSOC_FORMAT (entry, i) == format) {
-       *value = GST_INDEX_ASSOC_VALUE (entry, i);
-       return TRUE;
-     }
+    if (GST_INDEX_ASSOC_FORMAT (entry, i) == format) {
+      *value = GST_INDEX_ASSOC_VALUE (entry, i);
+      return TRUE;
+    }
   }
   return FALSE;
 }
 
 
-static void 		gst_index_factory_class_init 		(GstIndexFactoryClass *klass);
-static void 		gst_index_factory_init 		(GstIndexFactory *factory);
+static void gst_index_factory_class_init (GstIndexFactoryClass * klass);
+static void gst_index_factory_init (GstIndexFactory * factory);
 
 static GstPluginFeatureClass *factory_parent_class = NULL;
+
 /* static guint gst_index_factory_signals[LAST_SIGNAL] = { 0 }; */
 
-GType 
-gst_index_factory_get_type (void) 
+GType
+gst_index_factory_get_type (void)
 {
   static GType indexfactory_type = 0;
 
@@ -851,33 +855,33 @@ gst_index_factory_get_type (void)
       (GClassInitFunc) gst_index_factory_class_init,
       NULL,
       NULL,
-      sizeof(GstIndexFactory),
+      sizeof (GstIndexFactory),
       0,
       (GInstanceInitFunc) gst_index_factory_init,
       NULL
     };
-    indexfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE, 
-	    				  "GstIndexFactory", &indexfactory_info, 0);
+    indexfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
+	"GstIndexFactory", &indexfactory_info, 0);
   }
   return indexfactory_type;
 }
 
 static void
-gst_index_factory_class_init (GstIndexFactoryClass *klass)
+gst_index_factory_class_init (GstIndexFactoryClass * klass)
 {
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
   GstPluginFeatureClass *gstpluginfeature_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstobject_class = (GstObjectClass*)klass;
-  gstpluginfeature_class = (GstPluginFeatureClass*) klass;
+  gobject_class = (GObjectClass *) klass;
+  gstobject_class = (GstObjectClass *) klass;
+  gstpluginfeature_class = (GstPluginFeatureClass *) klass;
 
   factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 }
 
 static void
-gst_index_factory_init (GstIndexFactory *factory)
+gst_index_factory_init (GstIndexFactory * factory)
 {
 }
 
@@ -891,12 +895,12 @@ gst_index_factory_init (GstIndexFactory *factory)
  *
  * Returns: a new #GstIndexFactory.
  */
-GstIndexFactory*
-gst_index_factory_new (const gchar *name, const gchar *longdesc, GType type)
+GstIndexFactory *
+gst_index_factory_new (const gchar * name, const gchar * longdesc, GType type)
 {
   GstIndexFactory *factory;
 
-  g_return_val_if_fail(name != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
   factory = gst_index_factory_find (name);
   if (!factory) {
     factory = GST_INDEX_FACTORY (g_object_new (GST_TYPE_INDEX_FACTORY, NULL));
@@ -918,7 +922,7 @@ gst_index_factory_new (const gchar *name, const gchar *longdesc, GType type)
  * Removes the index from the global list.
  */
 void
-gst_index_factory_destroy (GstIndexFactory *factory)
+gst_index_factory_destroy (GstIndexFactory * factory)
 {
   g_return_if_fail (factory != NULL);
 
@@ -933,8 +937,8 @@ gst_index_factory_destroy (GstIndexFactory *factory)
  *
  * Returns: #GstIndexFactory if found, NULL otherwise
  */
-GstIndexFactory*
-gst_index_factory_find (const gchar *name)
+GstIndexFactory *
+gst_index_factory_find (const gchar * name)
 {
   GstPluginFeature *feature;
 
@@ -958,8 +962,8 @@ gst_index_factory_find (const gchar *name)
  *
  * Returns: A new #GstIndex instance.
  */
-GstIndex*
-gst_index_factory_create (GstIndexFactory *factory)
+GstIndex *
+gst_index_factory_create (GstIndexFactory * factory)
 {
   GstIndex *new = NULL;
 
@@ -968,7 +972,7 @@ gst_index_factory_create (GstIndexFactory *factory)
   if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
     g_return_val_if_fail (factory->type != 0, NULL);
 
-    new = GST_INDEX (g_object_new(factory->type,NULL));
+    new = GST_INDEX (g_object_new (factory->type, NULL));
   }
 
   return new;
@@ -983,8 +987,8 @@ gst_index_factory_create (GstIndexFactory *factory)
  *
  * Returns: A new #GstIndex instance.
  */
-GstIndex*
-gst_index_factory_make (const gchar *name)
+GstIndex *
+gst_index_factory_make (const gchar * name)
 {
   GstIndexFactory *factory;
 

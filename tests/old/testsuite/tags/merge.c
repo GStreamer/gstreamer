@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
- 
+
 #include <gst/gst.h>
 
 #include <string.h>
@@ -39,7 +39,7 @@
 
 /* checks that a tag contains the given values and not more values */
 static void
-check (const GstTagList *list, const gchar *tag, gchar *value, ...)
+check (const GstTagList * list, const gchar * tag, gchar * value, ...)
 {
   va_list args;
   gchar *str;
@@ -50,13 +50,14 @@ check (const GstTagList *list, const gchar *tag, gchar *value, ...)
     g_assert (gst_tag_list_get_string_index (list, tag, i, &str));
     g_assert (strcmp (value, str) == 0);
     g_free (str);
-    
+
     value = va_arg (args, gchar *);
     i++;
   }
   g_assert (i == gst_tag_list_get_tag_size (list, tag));
   va_end (args);
 }
+
 #define NEW_LIST_FIXED(mode) G_STMT_START{ \
   if (list) gst_tag_list_free (list);\
   list = gst_tag_list_new (); \
@@ -87,11 +88,11 @@ check (const GstTagList *list, const gchar *tag, gchar *value, ...)
   if (merge) gst_tag_list_free (merge);\
   merge = gst_tag_list_merge (list, list2, mode); \
 }G_STMT_END
-gint 
-main (gint argc, gchar *argv[]) 
+gint
+main (gint argc, gchar * argv[])
 {
   GstTagList *list = NULL, *list2 = NULL, *merge = NULL;
-  
+
   gst_init (&argc, &argv);
 
   /* make sure the assumptions work */
@@ -100,7 +101,7 @@ main (gint argc, gchar *argv[])
   /* we check string here only */
   g_assert (gst_tag_get_type (FTAG) == G_TYPE_STRING);
   g_assert (gst_tag_get_type (UTAG) == G_TYPE_STRING);
-  
+
   /* check additions */
   /* unfixed */
   NEW_LIST_UNFIXED (GST_TAG_MERGE_REPLACE_ALL);
@@ -128,9 +129,9 @@ main (gint argc, gchar *argv[])
   check (list, FTAG, FIXED1, NULL);
   NEW_LIST_FIXED (GST_TAG_MERGE_KEEP_ALL);
   check (list, FTAG, NULL);
-  
+
   /* check merging */
-  /* unfixed */ 
+  /* unfixed */
   NEW_LISTS_UNFIXED (GST_TAG_MERGE_REPLACE_ALL);
   check (merge, UTAG, UNFIXED3, UNFIXED4, NULL);
   NEW_LISTS_UNFIXED (GST_TAG_MERGE_REPLACE);
@@ -143,7 +144,7 @@ main (gint argc, gchar *argv[])
   check (merge, UTAG, UNFIXED1, UNFIXED2, NULL);
   NEW_LISTS_UNFIXED (GST_TAG_MERGE_KEEP_ALL);
   check (merge, UTAG, UNFIXED1, UNFIXED2, NULL);
-  /* fixed */ 
+  /* fixed */
   NEW_LISTS_FIXED (GST_TAG_MERGE_REPLACE_ALL);
   check (merge, FTAG, FIXED3, NULL);
   NEW_LISTS_FIXED (GST_TAG_MERGE_REPLACE);
@@ -156,6 +157,6 @@ main (gint argc, gchar *argv[])
   check (merge, FTAG, FIXED1, NULL);
   NEW_LISTS_FIXED (GST_TAG_MERGE_KEEP_ALL);
   check (merge, FTAG, FIXED1, NULL);
-  
+
   return 0;
 }

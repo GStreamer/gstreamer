@@ -48,19 +48,18 @@ _gst_event_initialize (void)
 {
   /* register the type */
   _gst_event_type = g_boxed_type_register_static ("GstEvent",
-                                               (GBoxedCopyFunc) gst_data_copy,
-                                               (GBoxedFreeFunc) gst_data_unref);
+      (GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
 
 #ifndef GST_DISABLE_TRACE
   _event_trace = gst_alloc_trace_register (GST_EVENT_TRACE_NAME);
 #endif
 
   chunk = gst_mem_chunk_new ("GstEventChunk", sizeof (GstEvent),
-                                 sizeof (GstEvent) * 50, 0);
+      sizeof (GstEvent) * 50, 0);
 }
 
-static GstEvent*
-_gst_event_copy (GstEvent *event)
+static GstEvent *
+_gst_event_copy (GstEvent * event)
 {
   GstEvent *copy;
 
@@ -70,14 +69,17 @@ _gst_event_copy (GstEvent *event)
 #endif
 
   memcpy (copy, event, sizeof (GstEvent));
-  
+
   /* FIXME copy/ref additional fields */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
-      copy->event_data.structure.structure = gst_tag_list_copy ((GstTagList *) event->event_data.structure.structure);
+      copy->event_data.structure.structure =
+	  gst_tag_list_copy ((GstTagList *) event->event_data.structure.
+	  structure);
       break;
     case GST_EVENT_NAVIGATION:
-      copy->event_data.structure.structure = gst_structure_copy (event->event_data.structure.structure);
+      copy->event_data.structure.structure =
+	  gst_structure_copy (event->event_data.structure.structure);
     default:
       break;
   }
@@ -86,7 +88,7 @@ _gst_event_copy (GstEvent *event)
 }
 
 static void
-_gst_event_free (GstEvent* event)
+_gst_event_free (GstEvent * event)
 {
   GST_CAT_INFO (GST_CAT_EVENT, "freeing event %p", event);
 
@@ -96,7 +98,7 @@ _gst_event_free (GstEvent* event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
       if (GST_IS_TAG_LIST (event->event_data.structure.structure)) {
-        gst_tag_list_free (event->event_data.structure.structure);
+	gst_tag_list_free (event->event_data.structure.structure);
       } else {
 	g_warning ("tag event %p didn't contain a valid tag list!", event);
 	GST_ERROR ("tag event %p didn't contain a valid tag list!", event);
@@ -125,16 +127,16 @@ _gst_event_free (GstEvent* event)
  * Returns: TRUE if the eventmask is found inside the array
  */
 gboolean
-gst_event_masks_contains (const GstEventMask *masks, GstEventMask *mask)
+gst_event_masks_contains (const GstEventMask * masks, GstEventMask * mask)
 {
   g_return_val_if_fail (mask != NULL, FALSE);
 
   if (!masks)
     return FALSE;
-  
+
   while (masks->type) {
     if (masks->type == mask->type &&
-        (masks->flags & mask->flags) == mask->flags)
+	(masks->flags & mask->flags) == mask->flags)
       return TRUE;
 
     masks++;
@@ -157,7 +159,7 @@ gst_event_get_type (void)
  *
  * Returns: A new event.
  */
-GstEvent*
+GstEvent *
 gst_event_new (GstEventType type)
 {
   GstEvent *event;
@@ -170,10 +172,10 @@ gst_event_new (GstEventType type)
   GST_CAT_INFO (GST_CAT_EVENT, "creating new event %p %d", event, type);
 
   _GST_DATA_INIT (GST_DATA (event),
-		  _gst_event_type,
-		  0,
-		  (GstDataFreeFunction) _gst_event_free,
-		  (GstDataCopyFunction) _gst_event_copy);
+      _gst_event_type,
+      0,
+      (GstDataFreeFunction) _gst_event_free,
+      (GstDataCopyFunction) _gst_event_copy);
 
   GST_EVENT_TYPE (event) = type;
   GST_EVENT_TIMESTAMP (event) = G_GINT64_CONSTANT (0);
@@ -191,7 +193,7 @@ gst_event_new (GstEventType type)
  *
  * Returns: A new seek event.
  */
-GstEvent*       
+GstEvent *
 gst_event_new_seek (GstSeekType type, gint64 offset)
 {
   GstEvent *event;
@@ -218,8 +220,9 @@ gst_event_new_seek (GstSeekType type, gint64 offset)
  *
  * Returns: A new discontinuous event.
  */
-GstEvent*
-gst_event_new_discontinuous_valist (gboolean new_media, GstFormat format1, va_list var_args)
+GstEvent *
+gst_event_new_discontinuous_valist (gboolean new_media, GstFormat format1,
+    va_list var_args)
 {
   GstEvent *event;
   gint count = 0;
@@ -229,7 +232,8 @@ gst_event_new_discontinuous_valist (gboolean new_media, GstFormat format1, va_li
 
   while (format1 != GST_FORMAT_UNDEFINED && count < 8) {
 
-    GST_EVENT_DISCONT_OFFSET (event, count).format = format1 & GST_SEEK_FORMAT_MASK;
+    GST_EVENT_DISCONT_OFFSET (event, count).format =
+	format1 & GST_SEEK_FORMAT_MASK;
     GST_EVENT_DISCONT_OFFSET (event, count).value = va_arg (var_args, gint64);
 
     format1 = va_arg (var_args, GstFormat);
@@ -238,7 +242,7 @@ gst_event_new_discontinuous_valist (gboolean new_media, GstFormat format1, va_li
   }
 
   GST_EVENT_DISCONT_OFFSET_LEN (event) = count;
-		    
+
   return event;
 }
 
@@ -255,7 +259,7 @@ gst_event_new_discontinuous_valist (gboolean new_media, GstFormat format1, va_li
  *
  * Returns: A new discontinuous event.
  */
-GstEvent*
+GstEvent *
 gst_event_new_discontinuous (gboolean new_media, GstFormat format1, ...)
 {
   va_list var_args;
@@ -281,7 +285,7 @@ gst_event_new_discontinuous (gboolean new_media, GstFormat format1, ...)
  * Returns: TRUE if the discont event caries the specified format/value pair.
  */
 gboolean
-gst_event_discont_get_value (GstEvent *event, GstFormat format, gint64 *value)
+gst_event_discont_get_value (GstEvent * event, GstFormat format, gint64 * value)
 {
   gint i, n;
 
@@ -291,12 +295,12 @@ gst_event_discont_get_value (GstEvent *event, GstFormat format, gint64 *value)
   n = GST_EVENT_DISCONT_OFFSET_LEN (event);
 
   for (i = 0; i < n; i++) {
-    if (GST_EVENT_DISCONT_OFFSET(event,i).format == format) {
-      *value = GST_EVENT_DISCONT_OFFSET(event,i).value;
+    if (GST_EVENT_DISCONT_OFFSET (event, i).format == format) {
+      *value = GST_EVENT_DISCONT_OFFSET (event, i).value;
       return TRUE;
     }
   }
-  
+
   return FALSE;
 }
 
@@ -310,7 +314,7 @@ gst_event_discont_get_value (GstEvent *event, GstFormat format, gint64 *value)
  *
  * Returns: The new size event.
  */
-GstEvent*
+GstEvent *
 gst_event_new_size (GstFormat format, gint64 value)
 {
   GstEvent *event;
@@ -319,7 +323,7 @@ gst_event_new_size (GstFormat format, gint64 value)
 
   GST_EVENT_SIZE_FORMAT (event) = format;
   GST_EVENT_SIZE_VALUE (event) = value;
-  
+
   return event;
 }
 
@@ -334,7 +338,7 @@ gst_event_new_size (GstFormat format, gint64 value)
  *
  * Returns: A new segment seek event.
  */
-GstEvent*       
+GstEvent *
 gst_event_new_segment_seek (GstSeekType type, gint64 start, gint64 stop)
 {
   GstEvent *event;

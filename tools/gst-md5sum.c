@@ -29,19 +29,18 @@ idle_func (gpointer data)
   iterations++;
   g_get_current_time (&tfnow);
 
-  diff = GST_TIMEVAL_TO_TIME (tfnow) -
-         GST_TIMEVAL_TO_TIME (tfthen);
+  diff = GST_TIMEVAL_TO_TIME (tfnow) - GST_TIMEVAL_TO_TIME (tfthen);
 
-  sum += diff; 
+  sum += diff;
   min = MIN (min, diff);
   max = MAX (max, diff);
 
   if (!busy) {
     gst_main_quit ();
     /*
-    g_print ("execution ended after %llu iterations (sum %llu ns, average %llu ns, min %llu ns, max %llu ns)\n", 
-		    iterations, sum, sum/iterations, min, max);
-		    */
+       g_print ("execution ended after %llu iterations (sum %llu ns, average %llu ns, min %llu ns, max %llu ns)\n", 
+       iterations, sum, sum/iterations, min, max);
+     */
   }
 
   return busy;
@@ -54,8 +53,8 @@ main (int argc, char *argv[])
   gboolean verbose = FALSE;
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
-    {"verbose",	'v',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &verbose,   0,
-     "do not output status information", NULL},
+    {"verbose", 'v', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &verbose, 0,
+	"do not output status information", NULL},
     POPT_TABLEEND
   };
 
@@ -65,7 +64,7 @@ main (int argc, char *argv[])
   GstElement *md5sink;
   gchar *md5string = g_malloc0 (33);
 
-  free (malloc (8)); /* -lefence */
+  free (malloc (8));		/* -lefence */
 
   setlocale (LC_ALL, "");
 
@@ -77,21 +76,18 @@ main (int argc, char *argv[])
 
   /* Check if we have an element already that is called md5sink0
      in the pipeline; if not, add one */
-  pipeline = (GstElement*) gst_parse_launchv ((const gchar**) argvn, &error);
+  pipeline = (GstElement *) gst_parse_launchv ((const gchar **) argvn, &error);
   if (!pipeline) {
-    if (error)
-    {
+    if (error) {
       g_warning ("pipeline could not be constructed: %s\n", error->message);
       g_error_free (error);
-    }
-    else
+    } else
       g_warning ("pipeline could not be constructed\n");
     return 1;
   }
 
   md5sink = gst_bin_get_by_name (GST_BIN (pipeline), "md5sink0");
-  if (md5sink == NULL)
-  {
+  if (md5sink == NULL) {
     g_print ("adding an md5sink element to the pipeline\n");
     /* make a null-terminated version of argv with ! md5sink appended
      * ! is stored in argvn[argc - 1], md5sink in argvn[argc],
@@ -101,41 +97,38 @@ main (int argc, char *argv[])
     memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
     argvn[argc - 1] = g_strdup_printf ("!");
     argvn[argc] = g_strdup_printf ("md5sink");
-    pipeline = (GstElement*) gst_parse_launchv ((const gchar**) argvn, &error);
+    pipeline =
+	(GstElement *) gst_parse_launchv ((const gchar **) argvn, &error);
   }
 
   if (!pipeline) {
-    if (error)
-    {
+    if (error) {
       g_warning ("pipeline could not be constructed: %s\n", error->message);
       g_error_free (error);
-    }
-    else
+    } else
       g_warning ("pipeline could not be constructed\n");
     return 1;
   }
-  
-  if (verbose)
-  {
-    gchar **exclude_list = exclude_args ? g_strsplit (exclude_args, ",", 0) 
-                                        : NULL;
-    g_signal_connect (pipeline, "deep_notify", 
-	              G_CALLBACK (gst_element_default_deep_notify), 
-		      exclude_list);
-  }
-  g_signal_connect (pipeline, "error", 
-                    G_CALLBACK (gst_element_default_error), NULL);
 
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
-  {
+  if (verbose) {
+    gchar **exclude_list = exclude_args ? g_strsplit (exclude_args, ",", 0)
+	: NULL;
+
+    g_signal_connect (pipeline, "deep_notify",
+	G_CALLBACK (gst_element_default_deep_notify), exclude_list);
+  }
+  g_signal_connect (pipeline, "error",
+      G_CALLBACK (gst_element_default_error), NULL);
+
+  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
     g_warning ("pipeline doesn't want to play\n");
     return 0;
   }
-  
+
   if (!GST_FLAG_IS_SET (GST_OBJECT (pipeline), GST_BIN_SELF_SCHEDULABLE)) {
     g_idle_add (idle_func, pipeline);
     gst_main ();
-  } else { 
+  } else {
     gst_element_wait_state_change (pipeline);
   }
 

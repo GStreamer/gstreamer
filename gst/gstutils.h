@@ -28,14 +28,15 @@
 #include <gst/gstelement.h>
 
 G_BEGIN_DECLS
+    void gst_util_set_value_from_string (GValue * value,
+    const gchar * value_str);
+void gst_util_set_object_arg (GObject * object, const gchar * name,
+    const gchar * value);
 
-void		gst_util_set_value_from_string	(GValue *value, const gchar *value_str);
-void 		gst_util_set_object_arg 	(GObject *object, const gchar *name, const gchar *value);
-	
-void 		gst_util_dump_mem		(guchar *mem, guint size);
+void gst_util_dump_mem (guchar * mem, guint size);
 
-void 		gst_print_pad_caps 		(GString *buf, gint indent, GstPad *pad);
-void 		gst_print_element_args 		(GString *buf, gint indent, GstElement *element);
+void gst_print_pad_caps (GString * buf, gint indent, GstPad * pad);
+void gst_print_element_args (GString * buf, gint indent, GstElement * element);
 
 
 /* Macros for defining classes.  Ideas taken from Bonobo, which took theirs 
@@ -105,5 +106,4 @@ type_as_function ## _get_type (void)						\
 
 
 G_END_DECLS
-
 #endif /* __GST_UTILS_H__ */

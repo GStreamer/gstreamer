@@ -20,18 +20,20 @@
 #include <gst/gst.h>
 
 static void
-my_resolver (GstIndex *index, GstObject *_ign, gchar **writer_string,
-	     gpointer user_data)
-{ *writer_string = user_data; }
+my_resolver (GstIndex * index, GstObject * _ign, gchar ** writer_string,
+    gpointer user_data)
+{
+  *writer_string = user_data;
+}
 
-gint 
-main (gint argc, gchar *argv[]) 
+gint
+main (gint argc, gchar * argv[])
 {
   GstIndex *index;
   GstObject *identity;
   gint id;
   gint64 cur;
-  
+
   gst_init (&argc, &argv);
 
   if (argc != 3) {
@@ -45,29 +47,30 @@ main (gint argc, gchar *argv[])
   g_object_set (index, "location", argv[1], NULL);
   gst_index_set_resolver (index, (GstIndexResolver) my_resolver, argv[2]);
 
-  identity = (GstObject*) gst_element_factory_make ("identity", "element");
+  identity = (GstObject *) gst_element_factory_make ("identity", "element");
   g_assert (identity);
   gst_index_get_writer_id (index, identity, &id);
-  
+
   cur = 0;
   while (1) {
     gint fx;
     GstIndexEntry *entry =
-      gst_index_get_assoc_entry (index, id, GST_INDEX_LOOKUP_AFTER, 0,
-				 GST_FORMAT_TIME, cur);
+	gst_index_get_assoc_entry (index, id, GST_INDEX_LOOKUP_AFTER, 0,
+	GST_FORMAT_TIME, cur);
+
     if (!entry)
       break;
 
     g_print ("%x", GST_INDEX_ASSOC_FLAGS (entry));
-    for (fx=0; fx < GST_INDEX_NASSOCS (entry); fx++) {
+    for (fx = 0; fx < GST_INDEX_NASSOCS (entry); fx++) {
       GstFormat fmt = GST_INDEX_ASSOC_FORMAT (entry, fx);
-      const GstFormatDefinition* def = gst_format_get_details (fmt);
+      const GstFormatDefinition *def = gst_format_get_details (fmt);
+
       if (fmt == GST_FORMAT_TIME) {
 	cur = GST_INDEX_ASSOC_VALUE (entry, fx) + 1;
 	g_print (" time %.4f",
-		 GST_INDEX_ASSOC_VALUE (entry, fx) / (double) GST_SECOND);
-      }
-      else
+	    GST_INDEX_ASSOC_VALUE (entry, fx) / (double) GST_SECOND);
+      } else
 	g_print (" %s %lld", def->nick, GST_INDEX_ASSOC_VALUE (entry, fx));
     }
     g_print ("\n");

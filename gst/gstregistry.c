@@ -37,16 +37,17 @@
 #include "gstfilter.h"
 
 /* Element signals and args */
-enum {
+enum
+{
   PLUGIN_ADDED,
   LAST_SIGNAL
 };
 
-static void             gst_registry_class_init           (GstRegistryClass *klass);
-static void             gst_registry_init                 (GstRegistry *registry);
+static void gst_registry_class_init (GstRegistryClass * klass);
+static void gst_registry_init (GstRegistry * registry);
 
 static GObjectClass *parent_class = NULL;
-static guint gst_registry_signals[LAST_SIGNAL] = { 0 }; 
+static guint gst_registry_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_registry_get_type (void)
@@ -67,31 +68,30 @@ gst_registry_get_type (void)
       NULL
     };
     registry_type = g_type_register_static (G_TYPE_OBJECT, "GstRegistry",
-                                            &registry_info, G_TYPE_FLAG_ABSTRACT);
+	&registry_info, G_TYPE_FLAG_ABSTRACT);
   }
   return registry_type;
 }
 
 static void
-gst_registry_class_init (GstRegistryClass *klass)
+gst_registry_class_init (GstRegistryClass * klass)
 {
   GObjectClass *gobject_class;
 
-  gobject_class = (GObjectClass*) klass;
+  gobject_class = (GObjectClass *) klass;
 
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
   gst_registry_signals[PLUGIN_ADDED] =
-    g_signal_new ("plugin-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstRegistryClass, plugin_added), NULL, NULL,
-                  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                  G_TYPE_POINTER);
+      g_signal_new ("plugin-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRegistryClass, plugin_added), NULL,
+      NULL, gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
 
   gobject_class->dispose = NULL;
 }
 
 static void
-gst_registry_init (GstRegistry *registry)
+gst_registry_init (GstRegistry * registry)
 {
   registry->priority = 0;
   registry->loaded = FALSE;
@@ -107,7 +107,7 @@ gst_registry_init (GstRegistry *registry)
  * Returns: TRUE on success.
  */
 gboolean
-gst_registry_load (GstRegistry *registry)
+gst_registry_load (GstRegistry * registry)
 {
   GstRegistryClass *rclass;
 
@@ -130,7 +130,7 @@ gst_registry_load (GstRegistry *registry)
  * Returns: TRUE if loaded.
  */
 gboolean
-gst_registry_is_loaded (GstRegistry *registry)
+gst_registry_is_loaded (GstRegistry * registry)
 {
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
 
@@ -146,7 +146,7 @@ gst_registry_is_loaded (GstRegistry *registry)
  * Returns: TRUE on success
  */
 gboolean
-gst_registry_save (GstRegistry *registry)
+gst_registry_save (GstRegistry * registry)
 {
   GstRegistryClass *rclass;
 
@@ -169,7 +169,7 @@ gst_registry_save (GstRegistry *registry)
  * Returns: TRUE on success
  */
 gboolean
-gst_registry_rebuild (GstRegistry *registry)
+gst_registry_rebuild (GstRegistry * registry)
 {
   GstRegistryClass *rclass;
 
@@ -192,7 +192,7 @@ gst_registry_rebuild (GstRegistry *registry)
  * Returns: TRUE on success
  */
 gboolean
-gst_registry_unload (GstRegistry *registry)
+gst_registry_unload (GstRegistry * registry)
 {
   GstRegistryClass *rclass;
 
@@ -216,13 +216,13 @@ gst_registry_unload (GstRegistry *registry)
  * added, do nothing.
  */
 void
-gst_registry_add_path (GstRegistry *registry, const gchar *path)
+gst_registry_add_path (GstRegistry * registry, const gchar * path)
 {
   g_return_if_fail (GST_IS_REGISTRY (registry));
   g_return_if_fail (path != NULL);
 
   if (g_list_find_custom (registry->paths, path, (GCompareFunc) strcmp)) {
-    g_warning ("path %s already added to registry", path);	  
+    g_warning ("path %s already added to registry", path);
     return;
   }
 
@@ -237,8 +237,8 @@ gst_registry_add_path (GstRegistry *registry, const gchar *path)
  *
  * Returns: A Glist of paths as strings. g_list_free after use.
  */
-GList*
-gst_registry_get_path_list (GstRegistry *registry)
+GList *
+gst_registry_get_path_list (GstRegistry * registry)
 {
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
@@ -253,7 +253,7 @@ gst_registry_get_path_list (GstRegistry *registry)
  * Clear the paths of the given registry
  */
 void
-gst_registry_clear_paths (GstRegistry *registry)
+gst_registry_clear_paths (GstRegistry * registry)
 {
   g_return_if_fail (GST_IS_REGISTRY (registry));
 
@@ -273,15 +273,16 @@ gst_registry_clear_paths (GstRegistry *registry)
  *
  * Returns: TRUE on success.
  */
-gboolean 
-gst_registry_add_plugin (GstRegistry *registry, GstPlugin *plugin)
+gboolean
+gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
 {
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
-  
+
   plugin->manager = registry;
   registry->plugins = g_list_prepend (registry->plugins, plugin);
 
-  g_signal_emit (G_OBJECT (registry), gst_registry_signals[PLUGIN_ADDED], 0, plugin);
+  g_signal_emit (G_OBJECT (registry), gst_registry_signals[PLUGIN_ADDED], 0,
+      plugin);
 
   return TRUE;
 }
@@ -294,7 +295,7 @@ gst_registry_add_plugin (GstRegistry *registry, GstPlugin *plugin)
  * Remove the plugin from the registry.
  */
 void
-gst_registry_remove_plugin (GstRegistry *registry, GstPlugin *plugin)
+gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
 {
   g_return_if_fail (GST_IS_REGISTRY (registry));
 
@@ -314,15 +315,14 @@ gst_registry_remove_plugin (GstRegistry *registry, GstPlugin *plugin)
  *
  * Returns: a GList of plugins, g_list_free after use.
  */
-GList*
-gst_registry_plugin_filter (GstRegistry *registry, 
-		            GstPluginFilter filter, 
-			    gboolean first,
-			    gpointer user_data)
+GList *
+gst_registry_plugin_filter (GstRegistry * registry,
+    GstPluginFilter filter, gboolean first, gpointer user_data)
 {
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
-  return gst_filter_run (registry->plugins, (GstFilterFunc) filter, first, user_data);
+  return gst_filter_run (registry->plugins, (GstFilterFunc) filter, first,
+      user_data);
 }
 
 /**
@@ -339,15 +339,14 @@ gst_registry_plugin_filter (GstRegistry *registry,
  *
  * Returns: a GList of plugin features, g_list_free after use.
  */
-GList*
-gst_registry_feature_filter (GstRegistry *registry,
-		             GstPluginFeatureFilter filter,
-			     gboolean first,
-			     gpointer user_data)
+GList *
+gst_registry_feature_filter (GstRegistry * registry,
+    GstPluginFeatureFilter filter, gboolean first, gpointer user_data)
 {
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
-  return gst_plugin_list_feature_filter (registry->plugins, filter, first, user_data);
+  return gst_plugin_list_feature_filter (registry->plugins, filter, first,
+      user_data);
 }
 
 /**
@@ -359,8 +358,8 @@ gst_registry_feature_filter (GstRegistry *registry,
  *
  * Returns: The plugin with the given name or NULL if the plugin was not found.
  */
-GstPlugin*
-gst_registry_find_plugin (GstRegistry *registry, const gchar *name)
+GstPlugin *
+gst_registry_find_plugin (GstRegistry * registry, const gchar * name)
 {
   GList *walk;
   GstPlugin *result = NULL;
@@ -368,11 +367,9 @@ gst_registry_find_plugin (GstRegistry *registry, const gchar *name)
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  walk = gst_registry_plugin_filter (registry, 
-		  		     (GstPluginFilter) gst_plugin_name_filter, 
-				     TRUE, 
-				     (gpointer) name);
-  if (walk) 
+  walk = gst_registry_plugin_filter (registry,
+      (GstPluginFilter) gst_plugin_name_filter, TRUE, (gpointer) name);
+  if (walk)
     result = GST_PLUGIN (walk->data);
 
   g_list_free (walk);
@@ -391,8 +388,9 @@ gst_registry_find_plugin (GstRegistry *registry, const gchar *name)
  * Returns: The pluginfeature with the given name and type or NULL 
  * if the plugin was not found.
  */
-GstPluginFeature*
-gst_registry_find_feature (GstRegistry *registry, const gchar *name, GType type)
+GstPluginFeature *
+gst_registry_find_feature (GstRegistry * registry, const gchar * name,
+    GType type)
 {
   GstPluginFeature *feature = NULL;
   GList *walk;
@@ -404,12 +402,11 @@ gst_registry_find_feature (GstRegistry *registry, const gchar *name, GType type)
   data.name = name;
   data.type = type;
 
-  walk = gst_registry_feature_filter (registry, 
-		  	              (GstPluginFeatureFilter) gst_plugin_feature_type_name_filter,
-			              TRUE,
-			              &data);
+  walk = gst_registry_feature_filter (registry,
+      (GstPluginFeatureFilter) gst_plugin_feature_type_name_filter,
+      TRUE, &data);
 
-  if (walk) 
+  if (walk)
     feature = GST_PLUGIN_FEATURE (walk->data);
 
   g_list_free (walk);
@@ -428,11 +425,12 @@ gst_registry_find_feature (GstRegistry *registry, const gchar *name, GType type)
  * Returns: a value indicating the result 
  */
 GstRegistryReturn
-gst_registry_load_plugin (GstRegistry *registry, GstPlugin *plugin)
+gst_registry_load_plugin (GstRegistry * registry, GstPlugin * plugin)
 {
   GstRegistryClass *rclass;
 
-  g_return_val_if_fail (GST_IS_REGISTRY (registry), GST_REGISTRY_PLUGIN_LOAD_ERROR);
+  g_return_val_if_fail (GST_IS_REGISTRY (registry),
+      GST_REGISTRY_PLUGIN_LOAD_ERROR);
 
   rclass = GST_REGISTRY_GET_CLASS (registry);
 
@@ -452,11 +450,12 @@ gst_registry_load_plugin (GstRegistry *registry, GstPlugin *plugin)
  * Returns: a value indicating the result 
  */
 GstRegistryReturn
-gst_registry_unload_plugin (GstRegistry *registry, GstPlugin *plugin)
+gst_registry_unload_plugin (GstRegistry * registry, GstPlugin * plugin)
 {
   GstRegistryClass *rclass;
 
-  g_return_val_if_fail (GST_IS_REGISTRY (registry), GST_REGISTRY_PLUGIN_LOAD_ERROR);
+  g_return_val_if_fail (GST_IS_REGISTRY (registry),
+      GST_REGISTRY_PLUGIN_LOAD_ERROR);
 
   rclass = GST_REGISTRY_GET_CLASS (registry);
 
@@ -476,11 +475,12 @@ gst_registry_unload_plugin (GstRegistry *registry, GstPlugin *plugin)
  * Returns: a value indicating the result 
  */
 GstRegistryReturn
-gst_registry_update_plugin (GstRegistry *registry, GstPlugin *plugin)
+gst_registry_update_plugin (GstRegistry * registry, GstPlugin * plugin)
 {
   GstRegistryClass *rclass;
 
-  g_return_val_if_fail (GST_IS_REGISTRY (registry), GST_REGISTRY_PLUGIN_LOAD_ERROR);
+  g_return_val_if_fail (GST_IS_REGISTRY (registry),
+      GST_REGISTRY_PLUGIN_LOAD_ERROR);
 
   rclass = GST_REGISTRY_GET_CLASS (registry);
 

@@ -46,14 +46,14 @@ struct _GstBsTest
   GstPad *srcpad;
 
   GstByteStream *bs;
-  
-  gchar 	*accesspattern;
-  guint 	num_patterns;
-  gchar		**patterns;
-  guint 	sizemin;
-  guint 	sizemax;
-  gint 		count;
-  gboolean 	silent;
+
+  gchar *accesspattern;
+  guint num_patterns;
+  gchar **patterns;
+  guint sizemin;
+  guint sizemax;
+  gint count;
+  gboolean silent;
 };
 
 struct _GstBsTestClass
@@ -64,13 +64,11 @@ struct _GstBsTestClass
 GType gst_bstest_get_type (void);
 
 
-GstElementDetails gst_bstest_details = GST_ELEMENT_DETAILS (
-  "ByteStreamTest",
-  "Filter",
-  "Test for the GstByteStream code",
-  "Erik Walthinsen <omega@temple-baptist.com>, "
-  "Wim Taymans <wim.taymans@chello.be>"
-);
+GstElementDetails gst_bstest_details = GST_ELEMENT_DETAILS ("ByteStreamTest",
+    "Filter",
+    "Test for the GstByteStream code",
+    "Erik Walthinsen <omega@temple-baptist.com>, "
+    "Wim Taymans <wim.taymans@chello.be>");
 
 
 /* BsTest signals and args */
@@ -91,17 +89,17 @@ enum
 };
 
 
-static void	gst_bstest_base_init		(gpointer g_class);
-static void 	gst_bstest_class_init 		(GstBsTestClass * klass);
-static void 	gst_bstest_init 		(GstBsTest * bstest);
+static void gst_bstest_base_init (gpointer g_class);
+static void gst_bstest_class_init (GstBsTestClass * klass);
+static void gst_bstest_init (GstBsTest * bstest);
 
-static void gst_bstest_set_property (GObject * object, guint prop_id, const GValue * value,
-				     GParamSpec * pspec);
-static void gst_bstest_get_property (GObject * object, guint prop_id, GValue * value,
-				     GParamSpec * pspec);
+static void gst_bstest_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_bstest_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn 	gst_bstest_change_state 	(GstElement *element);
-static void 			gst_bstest_loop 		(GstElement * element);
+static GstElementStateReturn gst_bstest_change_state (GstElement * element);
+static void gst_bstest_loop (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
@@ -125,7 +123,8 @@ gst_bstest_get_type (void)
       (GInstanceInitFunc) gst_bstest_init,
     };
 
-    bstest_type = g_type_register_static (GST_TYPE_ELEMENT, "BSTest", &bstest_info, 0);
+    bstest_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "BSTest", &bstest_info, 0);
   }
   return bstest_type;
 }
@@ -144,25 +143,25 @@ gst_bstest_class_init (GstBsTestClass * klass)
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass*)klass;
+  gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMIN,
-				   g_param_spec_int ("sizemin", "sizemin", "sizemin", 0, G_MAXINT,
-						     0, G_PARAM_READWRITE));
+      g_param_spec_int ("sizemin", "sizemin", "sizemin", 0, G_MAXINT,
+	  0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMAX,
-				   g_param_spec_int ("sizemax", "sizemax", "sizemax", 0, G_MAXINT,
-						     384, G_PARAM_READWRITE));
+      g_param_spec_int ("sizemax", "sizemax", "sizemax", 0, G_MAXINT,
+	  384, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACCESSPATTERN,
-				   g_param_spec_string ("accesspattern", "accesspattern", "accesspattern",
-						      "r", G_PARAM_READWRITE));
+      g_param_spec_string ("accesspattern", "accesspattern", "accesspattern",
+	  "r", G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_COUNT,
-				   g_param_spec_uint ("count", "count", "count",
-						      0, G_MAXUINT, 0, G_PARAM_READWRITE));
+      g_param_spec_uint ("count", "count", "count",
+	  0, G_MAXUINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
-		        	   g_param_spec_boolean ("silent", "silent", "silent",
-				                          FALSE, G_PARAM_READWRITE));
+      g_param_spec_boolean ("silent", "silent", "silent",
+	  FALSE, G_PARAM_READWRITE));
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_bstest_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_bstest_get_property);
@@ -172,7 +171,7 @@ gst_bstest_class_init (GstBsTestClass * klass)
 }
 
 static GstCaps *
-gst_bstest_getcaps (GstPad *pad)
+gst_bstest_getcaps (GstPad * pad)
 {
   GstBsTest *bstest = GST_BSTEST (gst_pad_get_parent (pad));
   GstPad *otherpad;
@@ -205,24 +204,25 @@ gst_bstest_init (GstBsTest * bstest)
 }
 
 static guint
-gst_bstest_get_size (GstBsTest *bstest, gchar *sizestring, guint prevsize)
+gst_bstest_get_size (GstBsTest * bstest, gchar * sizestring, guint prevsize)
 {
   guint size;
 
   if (sizestring[0] == 0) {
     size = bstest->sizemax;
-  }
-  else if (sizestring[0] == 'r') {
-    size = bstest->sizemin + (guint8)(((gfloat)bstest->sizemax)*rand()/(RAND_MAX + (gfloat)bstest->sizemin));
-  }
-  else if (sizestring[0] == '<') {
+  } else if (sizestring[0] == 'r') {
+    size =
+	bstest->sizemin +
+	(guint8) (((gfloat) bstest->sizemax) * rand () / (RAND_MAX +
+	    (gfloat) bstest->sizemin));
+  } else if (sizestring[0] == '<') {
     size = prevsize;
-  }
-  else {
+  } else {
     size = atoi (sizestring);
   }
 
-  if (size == 0) size++;
+  if (size == 0)
+    size++;
 
   return size;
 }
@@ -248,30 +248,31 @@ gst_bstest_loop (GstElement * element)
 
       if (bstest->patterns[i][0] == 'r') {
 	size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
-        if (!bstest->silent) g_print ("bstest: ***** read %d bytes\n", size);
-        gst_bytestream_read (bstest->bs, &buf, size);
-      }
-      else if (bstest->patterns[i][0] == 'f') {
+	if (!bstest->silent)
+	  g_print ("bstest: ***** read %d bytes\n", size);
+	gst_bytestream_read (bstest->bs, &buf, size);
+      } else if (bstest->patterns[i][0] == 'f') {
 	size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
-        if (!bstest->silent) g_print ("bstest: ***** flush %d bytes\n", size);
-        gst_bytestream_flush (bstest->bs, size);
-      }
-      else if (!strncmp (bstest->patterns[i], "pb", 2)) {
+	if (!bstest->silent)
+	  g_print ("bstest: ***** flush %d bytes\n", size);
+	gst_bytestream_flush (bstest->bs, size);
+      } else if (!strncmp (bstest->patterns[i], "pb", 2)) {
 	size = gst_bstest_get_size (bstest, &bstest->patterns[i][2], size);
-        if (!bstest->silent) g_print ("bstest: ***** peek bytes %d bytes\n", size);
-        gst_bytestream_peek_bytes (bstest->bs, &ptr, size);
-      }
-      else if (bstest->patterns[i][0] == 'p') {
+	if (!bstest->silent)
+	  g_print ("bstest: ***** peek bytes %d bytes\n", size);
+	gst_bytestream_peek_bytes (bstest->bs, &ptr, size);
+      } else if (bstest->patterns[i][0] == 'p') {
 	size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
-        if (!bstest->silent) g_print ("bstest: ***** peek %d bytes\n", size);
-        gst_bytestream_peek (bstest->bs, &buf, size);
+	if (!bstest->silent)
+	  g_print ("bstest: ***** peek %d bytes\n", size);
+	gst_bytestream_peek (bstest->bs, &buf, size);
 	gst_buffer_unref (buf);
 	buf = NULL;
       }
 
       if (buf)
-        gst_pad_push (bstest->srcpad, GST_DATA (buf));
-      
+	gst_pad_push (bstest->srcpad, GST_DATA (buf));
+
       i++;
     }
 /*  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element)); */
@@ -280,7 +281,8 @@ gst_bstest_loop (GstElement * element)
 }
 
 static void
-gst_bstest_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec)
+gst_bstest_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
 {
   GstBsTest *bstest;
 
@@ -302,16 +304,16 @@ gst_bstest_set_property (GObject * object, guint prop_id, const GValue * value, 
 	g_strfreev (bstest->patterns);
       }
       if (g_value_get_string (value) == NULL) {
-        gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
-        bstest->accesspattern = NULL;
-        bstest->num_patterns = 0;
+	gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
+	bstest->accesspattern = NULL;
+	bstest->num_patterns = 0;
       } else {
 	guint i = 0;
 
-        bstest->accesspattern = g_strdup (g_value_get_string (value));
-        bstest->patterns = g_strsplit (bstest->accesspattern, ":", 0);
-        while (bstest->patterns[i++]);
-        bstest->num_patterns = i-1;
+	bstest->accesspattern = g_strdup (g_value_get_string (value));
+	bstest->patterns = g_strsplit (bstest->accesspattern, ":", 0);
+	while (bstest->patterns[i++]);
+	bstest->num_patterns = i - 1;
       }
       break;
     case ARG_COUNT:
@@ -327,7 +329,8 @@ gst_bstest_set_property (GObject * object, guint prop_id, const GValue * value, 
 }
 
 static void
-gst_bstest_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec)
+gst_bstest_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstBsTest *bstest;
 
@@ -359,7 +362,7 @@ gst_bstest_get_property (GObject * object, guint prop_id, GValue * value, GParam
 }
 
 static GstElementStateReturn
-gst_bstest_change_state (GstElement *element)
+gst_bstest_change_state (GstElement * element)
 {
   GstBsTest *bstest;
 
@@ -372,8 +375,7 @@ gst_bstest_change_state (GstElement *element)
       gst_bytestream_destroy (bstest->bs);
       bstest->bs = NULL;
     }
-  }
-  else {
+  } else {
     if (!bstest->bs) {
       bstest->bs = gst_bytestream_new (bstest->sinkpad);
     }
@@ -392,17 +394,12 @@ plugin_init (GstPlugin * plugin)
    * This consists of the name of the element, the GType identifier,
    * and a pointer to the details structure at the top of the file.
    */
-  return gst_element_register (plugin, "bstest", GST_RANK_PRIMARY, GST_TYPE_BSTEST);
+  return gst_element_register (plugin, "bstest", GST_RANK_PRIMARY,
+      GST_TYPE_BSTEST);
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR, 
-  GST_VERSION_MINOR, 
-  "bstest", 
-  "test for the bytestream element",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "bstest",
+    "test for the bytestream element",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
