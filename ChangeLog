@@ -1,3 +1,12 @@
+2004-06-07  Benjamin Otte  <otte@gnome.org>
+
+	* gst/indexers/gstfileindex.c: (gst_file_index_get_writer_id),
+	(gst_file_index_load), (_file_index_id_save_entries),
+	(gst_file_index_commit), (gst_file_index_add_association),
+	(gst_file_index_add_entry), (gst_file_index_get_assoc_entry),
+	(gst_file_index_plugin_init):
+	  make debugging use a default category
+
 2004-06-06  David Moore  <dcm@acm.org>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>

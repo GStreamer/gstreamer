@@ -38,10 +38,6 @@
 #define GST_IS_FILE_INDEX_CLASS(obj)	\
   (GST_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_FILE_INDEX))
 
-#ifndef __FUNCTION__
-#define __FUNCTION__ "Unavailable"
-#endif
-
 /*
  * Object model:
  *
@@ -96,6 +92,7 @@ typedef struct _GstFileIndexClass GstFileIndexClass;
   (*(gint64*) (((gchar*)(_row)) + sizeof (gint32) + (_vx) * sizeof (gint64)))
 
 GST_DEBUG_CATEGORY_STATIC (DC);
+#define GST_CAT_DEFAULT DC
 
 struct _GstFileIndex
 {
@@ -300,7 +297,7 @@ gst_file_index_get_writer_id (GstIndex * _index,
     }
 
     if (match) {
-      GST_CAT_WARNING_OBJECT (DC, index, "Duplicate matches for writer '%s'",
+      GST_WARNING_OBJECT (index, "Duplicate matches for writer '%s'",
           writer_string);
       continue;
     }
@@ -321,11 +318,9 @@ gst_file_index_get_writer_id (GstIndex * _index,
 
     if (cx.ii) {
       match = TRUE;
-      GST_CAT_DEBUG_OBJECT (DC, index, "Resolved writer '%s' again",
-          writer_string);
+      GST_DEBUG_OBJECT (index, "Resolved writer '%s' again", writer_string);
     } else
-      GST_CAT_WARNING_OBJECT (DC, index, "Can't resolve writer '%s'",
-          writer_string);
+      GST_WARNING_OBJECT (index, "Can't resolve writer '%s'", writer_string);
   }
 
   return match;
@@ -358,7 +353,7 @@ gst_file_index_load (GstFileIndex * index)
     g_file_get_contents (path, &buf, &len, &err);
     g_free (path);
     if (err) {
-      GST_CAT_ERROR_OBJECT (DC, index, "%s", err->message);
+      GST_ERROR_OBJECT (index, "%s", err->message);
       return;
     }
 
@@ -370,13 +365,13 @@ gst_file_index_load (GstFileIndex * index)
 
   root = doc->xmlRootNode;
   if (strcmp (root->name, "gstfileindex") != 0) {
-    GST_CAT_ERROR_OBJECT (DC, index, "root node isn't a gstfileindex");
+    GST_ERROR_OBJECT (index, "root node isn't a gstfileindex");
     return;
   }
 
   val = xmlGetProp (root, "version");
   if (!val || atoi (val) != 1) {
-    GST_CAT_ERROR_OBJECT (DC, index, "version != 1");
+    GST_ERROR_OBJECT (index, "version != 1");
     return;
   }
   free (val);
@@ -399,7 +394,7 @@ gst_file_index_load (GstFileIndex * index)
         fd = open (path, O_RDONLY);
         g_free (path);
         if (fd < 0) {
-          GST_CAT_ERROR_OBJECT (DC, index,
+          GST_ERROR_OBJECT (index,
               "Can't open '%s': %s", path, strerror (errno));
           continue;
         }
@@ -423,13 +418,13 @@ gst_file_index_load (GstFileIndex * index)
               GstFormat fmt = gst_format_get_by_nick (nick);
 
               if (fmt == GST_FORMAT_UNDEFINED)
-                GST_CAT_ERROR_OBJECT (DC, index, "format '%s' undefined", nick);
+                GST_ERROR_OBJECT (index, "format '%s' undefined", nick);
               g_assert (fx < id_index->nformats);
               id_index->format[fx++] = fmt;
               free (nick);
             }
           } else
-            GST_CAT_INFO_OBJECT (DC, index, "unknown wpart '%s'", wpart->name);
+            GST_INFO_OBJECT (index, "unknown wpart '%s'", wpart->name);
         }
 
         g_assert (id_index->nformats > 0);
@@ -445,7 +440,7 @@ gst_file_index_load (GstFileIndex * index)
             0);
         close (fd);
         if (array_data == MAP_FAILED) {
-          GST_CAT_ERROR_OBJECT (DC, index,
+          GST_ERROR_OBJECT (index,
               "mmap %s failed: %s", path, strerror (errno));
           continue;
         }
@@ -455,14 +450,14 @@ gst_file_index_load (GstFileIndex * index)
         index->unresolved = g_slist_prepend (index->unresolved, id_index);
       }
     } else
-      GST_CAT_INFO_OBJECT (DC, index, "unknown part '%s'", part->name);
+      GST_INFO_OBJECT (index, "unknown part '%s'", part->name);
   }
 
   xmlFreeDoc (doc);
 
   GST_FLAG_UNSET (index, GST_INDEX_WRITABLE);
   index->is_loaded = TRUE;
-  GST_CAT_LOG_OBJECT (DC, index, "index %s loaded OK", index->location);
+  GST_LOG_OBJECT (index, "index %s loaded OK", index->location);
 }
 
 static void
@@ -570,7 +565,7 @@ _file_index_id_save_entries (gpointer * _key,
   return;
 
 fail:
-  GST_CAT_ERROR (DC, "%s", err->message);
+  GST_ERROR ("%s", err->message);
 }
 
 /*
@@ -605,8 +600,7 @@ gst_file_index_commit (GstIndex * _index, gint _writer_id)
       (GHFunc) _file_index_id_save_xml, writers);
 
   if (mkdir (index->location, 0777) && errno != EEXIST) {
-    GST_CAT_ERROR_OBJECT (DC, index,
-        "mkdir %s: %s", index->location, strerror (errno));
+    GST_ERROR_OBJECT (index, "mkdir %s: %s", index->location, strerror (errno));
     return;
   }
 
@@ -614,13 +608,13 @@ gst_file_index_commit (GstIndex * _index, gint _writer_id)
   tocfile = g_io_channel_new_file (path, "w", &err);
   g_free (path);
   if (err) {
-    GST_CAT_ERROR_OBJECT (DC, index, "%s", err->message);
+    GST_ERROR_OBJECT (index, "%s", err->message);
     return;
   }
 
   g_io_channel_set_encoding (tocfile, NULL, &err);
   if (err) {
-    GST_CAT_ERROR_OBJECT (DC, index, "%s", err->message);
+    GST_ERROR_OBJECT (index, "%s", err->message);
     return;
   }
 
@@ -631,7 +625,7 @@ gst_file_index_commit (GstIndex * _index, gint _writer_id)
     xmlDocDumpMemory (doc, &xmlmem, &xmlsize);
     g_io_channel_write_chars (tocfile, xmlmem, xmlsize, NULL, &err);
     if (err) {
-      GST_CAT_ERROR_OBJECT (DC, index, "%s", err->message);
+      GST_ERROR_OBJECT (index, "%s", err->message);
       return;
     }
     xmlFreeDoc (doc);
@@ -640,7 +634,7 @@ gst_file_index_commit (GstIndex * _index, gint _writer_id)
 
   g_io_channel_shutdown (tocfile, TRUE, &err);
   if (err) {
-    GST_CAT_ERROR_OBJECT (DC, index, "%s", err->message);
+    GST_ERROR_OBJECT (index, "%s", err->message);
     return;
   }
 
@@ -773,7 +767,7 @@ gst_file_index_add_association (GstIndex * index, GstIndexEntry * entry)
     gint fx;
 
     id_index->nformats = GST_INDEX_NASSOCS (entry);
-    GST_CAT_LOG_OBJECT (DC, fileindex, "creating %d formats for %d",
+    GST_LOG_OBJECT (fileindex, "creating %d formats for %d",
         id_index->nformats, entry->id);
     id_index->format = g_new (GstFormat, id_index->nformats);
     for (fx = 0; fx < id_index->nformats; fx++)
@@ -782,14 +776,14 @@ gst_file_index_add_association (GstIndex * index, GstIndexEntry * entry)
   } else {
     /* only sanity checking */
     if (id_index->nformats != GST_INDEX_NASSOCS (entry))
-      GST_CAT_WARNING_OBJECT (DC, fileindex, "arity change %d -> %d",
+      GST_WARNING_OBJECT (fileindex, "arity change %d -> %d",
           id_index->nformats, GST_INDEX_NASSOCS (entry));
     else {
       gint fx;
 
       for (fx = 0; fx < id_index->nformats; fx++)
         if (id_index->format[fx] != GST_INDEX_ASSOC_FORMAT (entry, fx))
-          GST_CAT_WARNING_OBJECT (DC, fileindex, "format[%d] changed %d -> %d",
+          GST_WARNING_OBJECT (fileindex, "format[%d] changed %d -> %d",
               fx, id_index->format[fx], GST_INDEX_ASSOC_FORMAT (entry, fx));
     }
   }
@@ -804,7 +798,7 @@ gst_file_index_add_association (GstIndex * index, GstIndexEntry * entry)
 
   if (exact) {
     /* maybe overwrite instead? */
-    GST_CAT_DEBUG_OBJECT (DC, index,
+    GST_DEBUG_OBJECT (index,
         "Ignoring duplicate index association at %lld",
         GST_INDEX_ASSOC_VALUE (entry, 0));
     return;
@@ -873,16 +867,14 @@ gst_file_index_add_entry (GstIndex * index, GstIndexEntry * entry)
       gst_file_index_add_association (index, entry);
       break;
     case GST_INDEX_ENTRY_OBJECT:
-      GST_CAT_ERROR_OBJECT (DC, index,
-          "gst_file_index_add_object not implemented");
+      GST_ERROR_OBJECT (index, "gst_file_index_add_object not implemented");
       break;
     case GST_INDEX_ENTRY_FORMAT:
       /*
          We infer the formats from the entry itself so this type of
          GST_INDEX_ENTRY_* can probably go away.
        */
-      GST_CAT_DEBUG_OBJECT (DC, index,
-          "gst_file_index_add_format not implemented");
+      GST_DEBUG_OBJECT (index, "gst_file_index_add_format not implemented");
       break;
     default:
       break;
@@ -912,7 +904,7 @@ gst_file_index_get_assoc_entry (GstIndex * index,
 
   id_index = g_hash_table_lookup (fileindex->id_index, &id);
   if (!id_index) {
-    GST_CAT_WARNING_OBJECT (DC, fileindex, "writer %d unavailable", id);
+    GST_WARNING_OBJECT (fileindex, "writer %d unavailable", id);
     return NULL;
   }
 
@@ -923,8 +915,7 @@ gst_file_index_get_assoc_entry (GstIndex * index,
     }
 
   if (formatx == -1) {
-    GST_CAT_WARNING_OBJECT (DC, fileindex,
-        "%s, format %d not available", __FUNCTION__, format);
+    GST_WARNING_OBJECT (fileindex, "format %d not available", format);
     return NULL;
   }
 
@@ -997,15 +988,15 @@ gst_file_index_plugin_init (GstPlugin * plugin)
 {
   GstIndexFactory *factory;
 
-  GST_DEBUG_CATEGORY_INIT (DC, "GST_FILEINDEX", 0, NULL);
-
   factory = gst_index_factory_new ("fileindex",
       "A index that stores entries in file", gst_file_index_get_type ());
 
   if (factory != NULL) {
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
   } else {
-    GST_CAT_ERROR (DC, "could not register fileindex");
+    return FALSE;
   }
+  GST_DEBUG_CATEGORY_INIT (DC, "GST_FILEINDEX", 0, NULL);
+
   return TRUE;
 }
