@@ -1,5 +1,11 @@
 2004-01-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst-libs/gst/play/gstplay.c: (gst_play_tick_callback):
+	  Query the audio element to get the time, not the clock. We're
+	  interested in the element's time here.
+
+2004-01-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* ext/aalib/gstaasink.c: (gst_aasink_chain):
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
 	* ext/esd/esdsink.c: (gst_esdsink_chain):
