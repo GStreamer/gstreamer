@@ -232,7 +232,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
       break;
     case G_TYPE_ENUM: {
       GEnumValue *en;
-      gchar **endptr;
+      gchar **endptr = NULL;
       GEnumClass *klass = (GEnumClass *) g_type_class_peek (G_PARAM_SPEC_VALUE_TYPE (pspec));
       if (klass == NULL) goto error;
       if (!(en = g_enum_get_value_by_name (klass, pos)))
