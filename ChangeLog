@@ -1,3 +1,10 @@
+2004-01-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_event),
+	(gst_ogg_demux_push):
+          add some seeking debug info
+          send a flush when seeking
+
 2004-01-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* configure.ac:
