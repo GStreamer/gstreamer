@@ -85,6 +85,8 @@ static void 			gst_sinesrc_get_property	(GObject *object, guint prop_id,
 //static void gst_sinesrc_close_audio(GstSineSrc *src);
 //static gboolean gst_sinesrc_open_audio(GstSineSrc *src);
 
+static void gst_sinesrc_update_volume(GValue *value, gpointer data);
+static void gst_sinesrc_update_freq(GValue *value, gpointer data);
 static void 			gst_sinesrc_populate_sinetable	(GstSineSrc *src);
 static inline void 		gst_sinesrc_update_table_inc	(GstSineSrc *src);
 static inline void 		gst_sinesrc_update_vol_scale	(GstSineSrc *src);
@@ -156,6 +158,9 @@ gst_sinesrc_class_init (GstSineSrcClass *klass)
 static void 
 gst_sinesrc_init (GstSineSrc *src) 
 {
+  GstElement *element = GST_ELEMENT(src);
+  GstDparamManager *dpman;
+  
   src->srcpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (sinesrc_src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(src), src->srcpad);
@@ -163,21 +168,30 @@ gst_sinesrc_init (GstSineSrc *src)
   
   gst_pad_set_get_function(src->srcpad, gst_sinesrc_get);
 
-  src->volume = 1.0;
-  gst_sinesrc_update_vol_scale(src);
-
   src->format = 16;
   src->samplerate = 44100;
-  src->freq = 440.0;
+  
   src->newcaps = TRUE;
   
   src->table_pos = 0.0;
   src->table_size = 1024;
-  gst_sinesrc_populate_sinetable(src);
-  gst_sinesrc_update_table_inc(src);
   src->buffer_size=1024;
   
   src->seq = 0;
+
+  dpman = gst_dpman_new ("sinesrc_dpman", GST_ELEMENT(src));
+  gst_dpman_add_required_dparam (dpman, "volume", G_TYPE_FLOAT, gst_sinesrc_update_volume, src);
+  gst_dpman_add_required_dparam (dpman, "freq", G_TYPE_FLOAT, gst_sinesrc_update_freq, src);
+
+  gst_dpman_set_rate_change_pad(dpman, src->srcpad);
+  
+  GST_ELEMENT_DPARAM_MANAGER(element) = dpman;
+  
+  gst_sinesrc_update_vol_scale(src);
+
+  gst_sinesrc_populate_sinetable(src);
+  gst_sinesrc_update_table_inc(src);
+
 }
 
 static GstPadNegotiateReturn 
@@ -201,8 +215,10 @@ gst_sinesrc_get(GstPad *pad)
 {
   GstSineSrc *src;
   GstBuffer *buf;
+  GstDparamManager *dpman;
+  
   gint16 *samples;
-  gint i;
+  gint i=0, frame_countdown;
   
   g_return_val_if_fail (pad != NULL, NULL);
   src = GST_SINESRC(gst_pad_get_parent (pad));
@@ -213,7 +229,10 @@ gst_sinesrc_get(GstPad *pad)
   GST_BUFFER_DATA(buf) = (gpointer) samples;
   GST_BUFFER_SIZE(buf) = 2 * src->buffer_size;
   
-  for (i=0 ; i < src->buffer_size; i++) {
+  dpman = GST_ELEMENT_DPARAM_MANAGER(GST_ELEMENT(src));
+  frame_countdown = GST_DPMAN_FIRST_COUNTDOWN(dpman, src->buffer_size, 0LL);
+
+  while(GST_DPMAN_COUNTDOWN(dpman, frame_countdown, i)) {
     src->table_lookup = (gint)(src->table_pos);
     src->table_lookup_next = src->table_lookup + 1;
     src->table_interp = src->table_pos - src->table_lookup;
@@ -234,7 +253,7 @@ gst_sinesrc_get(GstPad *pad)
     //               * src->vol_scale;
                   	
     //linear interpolation
-    samples[i] = ((src->table_interp
+    samples[i++] = ((src->table_interp
                    *(src->table_data[src->table_lookup_next]
                     -src->table_data[src->table_lookup]
                     )
@@ -260,7 +279,7 @@ gst_sinesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
 
   switch (prop_id) {
     case ARG_VOLUME:
-      src->volume = g_value_get_double (value);
+      src->volume = (gfloat)g_value_get_double (value);
       gst_sinesrc_update_vol_scale(src);
       break;
     case ARG_FORMAT:
@@ -275,7 +294,7 @@ gst_sinesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
     case ARG_FREQ: {
       if (g_value_get_double (value) <= 0.0 || g_value_get_double (value) > src->samplerate/2)
         break;
-      src->freq = g_value_get_double (value);
+      src->freq = (gfloat)g_value_get_double (value);
       gst_sinesrc_update_table_inc(src);
       break;
     case ARG_TABLESIZE:
@@ -303,7 +322,7 @@ gst_sinesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 
   switch (prop_id) {
     case ARG_VOLUME:
-      g_value_set_double (value, src->volume);
+      g_value_set_double (value, (gdouble)(src->volume));
       break;
     case ARG_FORMAT:
       g_value_set_int (value, src->format);
@@ -312,7 +331,7 @@ gst_sinesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       g_value_set_int (value, src->samplerate);
       break;
     case ARG_FREQ:
-      g_value_set_double (value, src->freq);
+      g_value_set_double (value, (gdouble)(src->freq));
       break;
     case ARG_TABLESIZE:
       g_value_set_int (value, src->table_size);
@@ -364,6 +383,26 @@ gst_sinesrc_populate_sinetable (GstSineSrc *src)
   src->table_data = table;
 }
 
+static void
+gst_sinesrc_update_volume(GValue *value, gpointer data)
+{
+  GstSineSrc *src = (GstSineSrc*)data;
+  g_return_if_fail(GST_IS_SINESRC(src));
+
+  src->volume = g_value_get_float(value);
+  src->vol_scale = 32767.0 * src->volume;
+}
+
+static void
+gst_sinesrc_update_freq(GValue *value, gpointer data)
+{
+  GstSineSrc *src = (GstSineSrc*)data;
+  g_return_if_fail(GST_IS_SINESRC(src));
+  
+  src->freq = g_value_get_float(value);
+  src->table_inc = src->table_size * src->freq / src->samplerate;
+}
+
 static inline void 
 gst_sinesrc_update_table_inc (GstSineSrc *src)
 {
@@ -373,7 +412,7 @@ gst_sinesrc_update_table_inc (GstSineSrc *src)
 static inline void 
 gst_sinesrc_update_vol_scale (GstSineSrc *src)
 {
-  src->vol_scale = 32767 * src->volume;
+  src->vol_scale = 32767.0 * src->volume;
 }
 
 static void 

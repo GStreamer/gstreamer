@@ -37,6 +37,7 @@
 #include <gst/gstpad.h>
 #include <gst/cothreads.h>
 #include <gst/gstpluginfeature.h>
+#include <gst/gstdparammanager.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -123,6 +124,7 @@ typedef enum {
 #define GST_ELEMENT_MANAGER(obj)		(((GstElement*)(obj))->manager)
 #define GST_ELEMENT_SCHED(obj)			(((GstElement*)(obj))->sched)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
+#define GST_ELEMENT_DPARAM_MANAGER(obj)			((obj)->dpman)
 
 //typedef struct _GstElement GstElement;
 //typedef struct _GstElementClass GstElementClass;
@@ -148,6 +150,7 @@ struct _GstElement {
 
   GstElement *manager;
   GstSchedule *sched;
+  GstDparamManager *dpman;
 };
 
 struct _GstElementClass {

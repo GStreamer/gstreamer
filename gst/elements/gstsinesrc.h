@@ -57,9 +57,9 @@ struct _GstSineSrc {
   GstPad *srcpad;
 
   /* parameters */
-  gdouble volume;
-  gdouble vol_scale;
-  gdouble freq;
+  gfloat volume;
+  gfloat freq;
+  gfloat vol_scale;
   
   /* lookup table data */
   gfloat *table_data;

@@ -1,0 +1,128 @@
+/* GStreamer
+ * Copyright (C) 2001 Steve Baker <stevebaker_org@yahoo.co.uk>
+ *
+ * gstdparam.h: Dynamic Parameter functionality
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifndef __GST_DPARAM_H__
+#define __GST_DPARAM_H__
+
+#include <gst/gstobject.h>
+#include <gst/gstprops.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+#define GST_TYPE_DPARAM			(gst_dparam_get_type ())
+#define GST_DPARAM(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DPARAM,GstDparam))
+#define GST_DPARAM_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DPARAM,GstDparam))
+#define GST_IS_DPARAM(obj)			(G_TYPE_CHECK_INSTANCE_TYPE	((obj), GST_TYPE_DPARAM))
+#define GST_IS_DPARAM_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DPARAM))
+
+#define GST_DPARAM_NAME(dparam)				 (GST_OBJECT_NAME(dparam))
+#define GST_DPARAM_PARENT(dparam)			 (GST_OBJECT_PARENT(dparam))
+#define GST_DPARAM_VALUE(dparam)				 ((dparam)->value)
+
+#define GST_DPARAM_LOCK(dparam)		(g_mutex_lock((dparam)->lock))
+#define GST_DPARAM_UNLOCK(dparam)		(g_mutex_unlock((dparam)->lock))
+
+#define GST_DPARAM_READY_FOR_UPDATE(dparam)		((dparam)->ready_for_update)
+#define GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam)	((dparam)->next_update_timestamp)
+
+#define GST_DPARAM_GET_POINT(dparam, timestamp) \
+	((dparam->get_point_func)(dparam, timestamp))
+
+#define GST_DPARAM_FIND_POINT(dparam, timestamp, search_flag) \
+	((dparam->find_point_func)(dparam, data, search_flag))
+
+#define GST_DPARAM_DO_UPDATE(dparam, timestamp) \
+	((dparam->do_update_func)(dparam, timestamp))
+		
+#define GST_DPARAM_INSERT_POINT(dparam, timestamp) \
+	((dparam->insert_point_func)(dparam, timestamp))
+
+#define GST_DPARAM_REMOVE_POINT(dparam, data) \
+	((dparam->remove_point_func)(dparam, data))
+	
+typedef enum {
+  GST_DPARAM_CLOSEST,
+  GST_DPARAM_CLOSEST_AFTER,
+  GST_DPARAM_CLOSEST_BEFORE,
+  GST_DPARAM_EXACT,
+} GstDparamSearchFlag;
+
+typedef enum {
+  GST_DPARAM_NOT_FOUND = 0,
+  GST_DPARAM_FOUND_EXACT,
+  GST_DPARAM_FOUND_CLOSEST,
+} GstDparamSearchResult;
+
+typedef struct _GstDparam GstDparam;
+typedef struct _GstDparamClass GstDparamClass;
+typedef struct _GstDparamModel GstDparamModel;
+typedef struct _GstDparamPoint GstDparamPoint;
+
+typedef GstDparamPoint* (*GstDparamInsertPointFunction) (GstDparam *dparam, guint64 timestamp);
+typedef void (*GstDparamRemovePointFunction) (GstDparam *dparam, GstDparamPoint* point);
+typedef GstDparamPoint* (*GstDparamGetPointFunction) (GstDparam *dparam, gint64 timestamp);
+typedef GstDparamSearchResult (*GstDparamFindPointFunction) (GstDparam *dparam, gint64 *timestamp, GstDparamSearchFlag search_flag);
+
+typedef void (*GstDparamDoUpdateFunction) (GstDparam *dparam, gint64 timestamp);
+
+struct _GstDparam {
+	GstObject		object;
+
+	GstDparamGetPointFunction get_point_func;
+	GstDparamFindPointFunction find_point_func;
+
+	GstDparamDoUpdateFunction do_update_func;
+	
+	GstDparamInsertPointFunction insert_point_func;
+	GstDparamRemovePointFunction remove_point_func;	
+	
+	GMutex *lock;
+	GValue *value;
+	GstDparamPoint *point;
+	gint64 next_update_timestamp;
+	gboolean ready_for_update;
+	
+};
+
+struct _GstDparamClass {
+	GstObjectClass parent_class;
+
+	/* signal callbacks */
+};
+
+struct _GstDparamPoint {
+	GValue **values;
+	gint64 timestamp;
+};
+
+
+GType gst_dparam_get_type (void);
+GstDparam* gst_dparam_new ();
+void gst_dparam_set_parent (GstDparam *dparam, GstObject *parent);
+GstDparamPoint* gst_dparam_new_point(gint64 timestamp, GType type, ...);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif /* __GST_DPARAM_H__ */
