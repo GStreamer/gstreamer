@@ -1,5 +1,6 @@
 
 #include <gst/gst.h>
+#include <stdlib.h>
 
 GstPad *srcpad, *sinkpad;
 GstPad *srcpadtempl, *sinkpadtempl;
