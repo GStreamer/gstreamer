@@ -1174,6 +1174,7 @@ static gboolean
 gst_alsa_open_audio (GstAlsa * this)
 {
   snd_pcm_info_t *info;
+  int ret;
 
   g_assert (this != NULL);
   g_assert (this->handle == NULL);
@@ -1191,11 +1192,34 @@ gst_alsa_open_audio (GstAlsa * this)
       "error opening log output: %s");
 #endif
 
-  if (snd_pcm_open (&this->handle, this->device,
-          GST_ALSA_GET_CLASS (this)->stream, SND_PCM_NONBLOCK) < 0) {
-    GST_ELEMENT_ERROR (GST_ELEMENT (this), RESOURCE, BUSY,
-        (_("Alsa device \"%s\" is already in use by another program."),
-            this->device), (NULL));
+  if ((ret = snd_pcm_open (&this->handle, this->device,
+              GST_ALSA_GET_CLASS (this)->stream, SND_PCM_NONBLOCK)) < 0) {
+    /* ALSA inverts standard errno.h error codes */
+    switch (-ret) {
+      case EBUSY:
+        GST_ELEMENT_ERROR (GST_ELEMENT (this), RESOURCE, BUSY,
+            (_("ALSA device \"%s\" is already in use by another program."),
+                this->device), (NULL));
+        break;
+      case EACCES:
+      case ETXTBSY:
+        GST_ELEMENT_ERROR (GST_ELEMENT (this), RESOURCE, OPEN_READ_WRITE,
+            (_("Could not access ALSA device \"%s\", check its permissions."),
+                this->device), GST_ERROR_SYSTEM);
+        break;
+
+      case ENXIO:
+      case ENODEV:
+      case ENOENT:
+        GST_ELEMENT_ERROR (GST_ELEMENT (this), RESOURCE, BUSY,
+            (_("ALSA device \"%s\" does not exist."), this->device), (NULL));
+        break;
+      default:
+        GST_ELEMENT_ERROR (GST_ELEMENT (this), RESOURCE, BUSY,
+            (_("ALSA device \"%s\" had an error."),
+                this->device), ("ALSA error %d: %s", ret, snd_strerror (ret)));
+        break;
+    }
     return FALSE;
   }
 
