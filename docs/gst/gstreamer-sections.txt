@@ -2,10 +2,9 @@
 
 <SECTION>
 <FILE>cothreads</FILE>
-CURRENT_STACK_FRAME
 cothread_state
-cothread_context
 cothread_func
+cothread_context
 COTHREAD_STARTED
 COTHREAD_DESTROYED
 cothread_context_init
@@ -127,7 +126,6 @@ GST_SCHEDULER_PARENT
 GST_SCHEDULER_STATE
 GstSchedulerState
 GstSchedulerFlags
-gst_scheduler_destroy
 gst_scheduler_setup
 gst_scheduler_reset
 gst_scheduler_add_element
@@ -214,7 +212,6 @@ GstBinFlags
 GstBin
 GstBinPrePostIterateFunction
 gst_bin_new
-gst_bin_destroy
 gst_bin_add
 gst_bin_add_many
 gst_bin_remove
@@ -280,7 +277,6 @@ GstData
 GstDataFreeFunction
 GstDataCopyFunction
 GstDataFlags
-GST_DATA_IS_READONLY
 GST_DATA_REFCOUNT
 GST_DATA_REFCOUNT_VALUE
 GST_DATA_COPY_FUNC
@@ -289,7 +285,6 @@ gst_data_init
 gst_data_dispose
 gst_data_copy_into
 gst_data_copy
-gst_data_needs_copy_on_write
 gst_data_copy_on_write
 gst_data_free
 gst_data_ref
@@ -337,7 +332,6 @@ gst_buffer_ref
 gst_buffer_ref_by_count
 gst_buffer_unref
 gst_buffer_copy
-gst_buffer_needs_copy_on_write
 gst_buffer_copy_on_write
 gst_buffer_free
 gst_buffer_create_sub
@@ -373,7 +367,6 @@ gst_buffer_pool_set_user_data
 gst_buffer_pool_get_user_data
 gst_buffer_pool_get_default
 gst_buffer_pool_default_free
-gst_buffer_pool_needs_copy_on_write
 <SUBSECTION Standard>
 GST_TYPE_BUFFER_POOL
 </SECTION>
@@ -442,7 +435,6 @@ gst_seek_type_get_type
 <FILE>gstelement</FILE>
 <TITLE>GstElement</TITLE>
 GstElement
-gst_element_destroy
 gst_element_get_name
 gst_element_set_name
 gst_element_get_factory
@@ -817,7 +809,6 @@ gst_object_ref
 gst_object_unref
 gst_object_replace
 gst_object_sink
-gst_object_destroy
 gst_object_save_thyself
 gst_object_restore_thyself
 gst_object_get_path_string
@@ -900,7 +891,6 @@ GstPadFlags
 gst_pad_new
 gst_pad_custom_new
 gst_pad_custom_new_from_template
-gst_pad_destroy
 gst_pad_new_from_template
 gst_pad_get_direction
 gst_pad_set_chain_function
@@ -1100,7 +1090,6 @@ gst_pad_template_flags_get_type
 <TITLE>GstPipeline</TITLE>
 GstPipeline
 gst_pipeline_new
-gst_pipeline_destroy
 <SUBSECTION Standard>
 GstPipelineClass
 gst_pipeline_get_type
@@ -1369,7 +1358,6 @@ gst_props_normalize
 gst_props_set
 gst_props_get
 gst_props_get_safe
-gst_props_has_property
 gst_props_has_fixed_property
 gst_props_has_property_typed
 gst_props_intersect
@@ -1386,6 +1374,7 @@ gst_props_entry_new
 gst_props_entry_copy
 gst_props_entry_destroy
 gst_props_entry_get
+gst_props_entry_get_type
 gst_props_entry_get_boolean
 gst_props_entry_get_float
 gst_props_entry_get_float_range

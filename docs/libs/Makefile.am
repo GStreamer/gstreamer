@@ -1,51 +1,198 @@
 ## Process this file with automake to produce Makefile.in
 
-# The name of the module.
+# The name of the module, e.g. 'glib'.
+#DOC_MODULE=gstreamer-libs-@GST_MAJORMINOR@
 DOC_MODULE=gstreamer-libs
 
-# The top-level SGML file.
+# generated basefiles
+#basefiles = \
+##		$(DOC_MODULE).types \
+#		$(DOC_MODULE)-sections.txt \
+#		$(DOC_MODULE)-docs.sgml
+
+# ugly hack to make -unused.sgml work
+#unused-build.stamp:
+#	BUILDDIR=`pwd` && \
+#	cd $(srcdir)/tmpl && \
+#	ln -sf gstreamer-libs-unused.sgml \
+#		$$BUILDDIR/tmpl/gstreamer-libs-@GST_MAJORMINOR@-unused.sgml
+#	touch unused-build.stamp
+
+# these rules are added to create parallel docs using GST_MAJORMINOR
+#$(basefiles): gstreamer-libs-@GST_MAJORMINOR@%: gstreamer-libs%
+#	cp $< $@
+
+#CLEANFILES = $(basefiles)
+
+# The top-level SGML file. Change it if you want.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 
-# The directory containing the source code (if it contains documentation).
-DOC_SOURCE_DIR=$(top_srcdir)/libs
+# The directory containing the source code. Relative to $(top_srcdir).
+# gtk-doc will search all .c & .h files beneath here for inline comments
+# documenting functions and macros.
+DOC_SOURCE_DIR=$(top_srcdir)/libs/gst
 
-EXTRA_DIST = $(DOC_MODULE)-docs.sgml $(DOC_MODULE)-sections.txt
+# Extra options to supply to gtkdoc-scan.
+SCAN_OPTIONS=
 
-HTML_DIR=@HTML_DIR@
-# add major minor here for parallel installs
+# FIXME :
+# there's something wrong with gstreamer-sections.txt not being in the dist
+# maybe it doesn't resolve; we're adding it below for now
+#EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
+
+# Extra options to supply to gtkdoc-mkdb.
+MKDB_OPTIONS=--sgml-mode --output-format=xml --ignore-files=trio
+
+# Extra options to supply to gtkdoc-fixref.
+FIXXREF_OPTIONS=--extra-dir=../gst/html
+
+# Used for dependencies.
+HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.h
+CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.c
+
+# this is a wingo addition
+# thomasvs: another nice wingo addition would be an explanation on why
+# this is useful ;)
+
+#SCANOBJ_DEPS = $(top_builddir)/gst/elements/libgstelements.la \
+#	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
+
+# Header files to ignore when scanning.
+IGNORE_HFILES=
+
+# Images to copy into HTML directory.
+HTML_IMAGES =
+
+# Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
+content_files =
+
+# Other files to distribute.
+extra_files =
+
+# CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
+# contains GtkObjects/GObjects and you want to document signals and properties.
+GTKDOC_CFLAGS = $(GST_CFLAGS)
+GTKDOC_LIBS = $(GST_LIBS) $(SCANOBJ_DEPS)
+
+GTKDOC_CC=$(LIBTOOL) --mode=compile $(CC)
+GTKDOC_LD=$(LIBTOOL) --mode=link $(CC)
+
+# If you need to override some of the declarations, place them in this file
+# and uncomment this line.
+#DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
+
+
+
+###########################################################################
+# Everything below here is generic and you shouldn't need to change it.
+###########################################################################
+# thomas: except of course that we did
+
+# thomas: copied from glib-2
+# We set GPATH here; this gives us semantics for GNU make
+# which are more like other make's VPATH, when it comes to
+# whether a source that is a target of one rule is then
+# searched for in VPATH/GPATH.
+#
+GPATH = $(srcdir)
+
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)-@GST_MAJORMINOR@
 
+EXTRA_DIST = 				\
+	$(content_files)		\
+	$(extra_files)			\
+	$(HTML_IMAGES)			\
+	$(DOC_MAIN_SGML_FILE)		\
+	$(DOC_MODULE).types		\
+	$(DOC_MODULE)-sections.txt
+
+DOC_STAMPS=scan-build.stamp tmpl-build.stamp sgml-build.stamp html-build.stamp \
+	   $(srcdir)/tmpl.stamp $(srcdir)/sgml.stamp $(srcdir)/html.stamp
+
+SCANOBJ_FILES = 		\
+	$(DOC_MODULE).args 	\
+	$(DOC_MODULE).hierarchy \
+	$(DOC_MODULE).signals
+
 if HAVE_GTK_DOC
-html: html/book1.html
-else
-html:
+all-local: html-build.stamp
+
+#### scan ####
+
+
+# wingo addition
+scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
+	@echo '*** Scanning header files ***'
+	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null ; then \
+	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" $(GTK_DOC_SCANOBJ) --module=$(DOC_MODULE) --output-dir=$(srcdir) ; \
+	else \
+	    cd $(srcdir) ; \
+	    for i in $(SCANOBJ_FILES) ; do \
+               test -f $$i || touch $$i ; \
+	    done \
+	fi
+	cd $(srcdir) && \
+	  gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers="$(IGNORE_HFILES)" $(SCAN_OPTIONS) $(EXTRA_HFILES)
+	touch scan-build.stamp
+
+$(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
+	@true
+
+#### templates ####
+
+tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_OVERRIDES)
+	@echo '*** Rebuilding template files ***'
+	cd $(srcdir) && gtkdoc-mktmpl --module=$(DOC_MODULE)
+	touch tmpl-build.stamp
+
+tmpl.stamp: tmpl-build.stamp
+	@true
+
+#### sgml ####
+
+sgml-build.stamp: tmpl.stamp $(CFILE_GLOB)
+	@echo '*** Building SGML ***'
+	cd $(srcdir) && \
+	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
+	touch sgml-build.stamp
+
+sgml.stamp: sgml-build.stamp
+	@true
+
+#### html ####
+
+# FIXME: setting LANG=C is a hack to work with gtk-doc < 1.1, because
+# that forces a non-utf8 locale.  gtk-doc >= 1.1 solves this by calling
+# use bytes; in gtkdoc-fixxref
+html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
+	@echo '*** Building HTML ***'
+	test -d $(srcdir)/html || mkdir $(srcdir)/html
+	cd $(srcdir)/html && gtkdoc-mkhtml $(DOC_MODULE) ../$(DOC_MAIN_SGML_FILE)
+	test "x$(HTML_IMAGES)" = "x" || ( cd $(srcdir) && cp $(HTML_IMAGES) html )
+	@echo '-- Fixing Crossreferences' 
+	cd $(srcdir) && gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
+	touch html-build.stamp
 endif
 
-# rule to make the html 
-html/book1.html: sgml/$(DOC_MODULE)-doc.bottom $(DOC_MAIN_SGML_FILE)
-	if ! test -d html ; then mkdir html ; fi
-	-cd html && gtkdoc-mkhtml $(DOC_MODULE) ../$(DOC_MAIN_SGML_FILE)
-
-# rule to cause scanning to be done
-$(DOC_MODULE)-decl.txt:
-	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers=""
-
-# rule to cause tmpls to be made
-tmpl/$(DOC_MODULE)-unused.sgml: $(DOC_MODULE)-decl.txt $(DOC_MODULE)-sections.txt
-	gtkdoc-mktmpl --module=$(DOC_MODULE)
-
-# rule to make sgml
-sgml/$(DOC_MODULE)-doc.bottom: tmpl/$(DOC_MODULE)-unused.sgml
-	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
-
-all-local: html
-
 clean-local:
-	$(RM) -rf *~ *.bak *.signals *-unused.txt *.args html sgml tmpl/*.bak $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt 
+	rm -f *~ *.bak $(SCANOBJ_FILES) *-unused.txt $(DOC_STAMPS)
+	rm -rf xml html
 
-install-data-local: html
-	@$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
-	@(installfiles=`echo $(srcdir)/html/*.html`; \
+maintainer-clean-local: clean
+	cd $(srcdir) && rm -rf sgml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
+
+# FIXME : thomas added all sgml files and some other things to make
+# make distcheck work
+distclean-local: clean
+	rm -rf $(DOC_MODULE)-decl-list.txt
+	rm -rf $(DOC_MODULE)-*.txt
+	rm -rf tmpl/*.sgml
+	rm -f $(DOC_MODULE).hierarchy
+	rm -f *.stamp || true
+
+install-data-local:
+	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
+	(installfiles=`echo $(srcdir)/html/*.html $(srcdir)/html/*.png`; \
 	if test "$$installfiles" = '$(srcdir)/html/*.html'; \
 	then echo '-- Nothing to install' ; \
 	else \
@@ -53,14 +200,36 @@ install-data-local: html
 	    echo '-- Installing '$$i ; \
 	    $(INSTALL_DATA) $$i $(DESTDIR)$(TARGET_DIR); \
 	  done; \
+          echo '-- Installing $(srcdir)/html/$(DOC_MODULE).devhelp' ; \
+          $(INSTALL_DATA) $(srcdir)/html/$(DOC_MODULE).devhelp \
+            $(DESTDIR)$(TARGET_DIR)/$(DOC_MODULE)-@GST_MAJORMINOR@.devhelp; \
 	  echo '-- Installing $(srcdir)/html/index.sgml' ; \
 	  $(INSTALL_DATA) $(srcdir)/html/index.sgml $(DESTDIR)$(TARGET_DIR); \
-	  echo '-- Fixing Crossreferences' ; \
-	  gtkdoc-fixxref --module=$(DOC_MODULE) --html-dir=$(HTML_DIR)|| true; \
 	fi)
 
-uninstall-local:
-	@echo '-- Uninstalling '$(DESTDIR)$(TARGET_DIR) ; \
-	$(RM) -rf $(DESTDIR)$(TARGET_DIR)
+#
+# Require gtk-doc when making dist
+#
+if HAVE_GTK_DOC
+dist-check-gtkdoc:
+else
+dist-check-gtkdoc:
+	@echo "*** gtk-doc must be installed and enabled in order to make dist"
+	@false
+endif
 
-.PHONY : html
+dist-hook: dist-check-gtkdoc dist-hook-local
+	mkdir $(distdir)/tmpl
+	mkdir $(distdir)/xml
+	mkdir $(distdir)/html
+	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
+	-cp $(srcdir)/sgml/*.xml $(distdir)/xml
+	-cp $(srcdir)/html/index.sgml $(distdir)/html
+	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
+
+	images=$(HTML_IMAGES) ;    	      \
+	for i in $$images ; do		      \
+	  cp $(srcdir)/$$i $(distdir)/html ;  \
+	done
+
+.PHONY : dist-hook-local

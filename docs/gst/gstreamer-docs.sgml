@@ -1,70 +1,73 @@
-<!doctype book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY Gst SYSTEM "xml/gst.xml">
+<!ENTITY GstAutoplug SYSTEM "xml/gstautoplug.xml">
+<!ENTITY GstAutoplugFactory SYSTEM "xml/gstautoplugfactory.xml">
+<!ENTITY GstAtomic SYSTEM "xml/gstatomic.xml">
+<!ENTITY GstBin SYSTEM "xml/gstbin.xml">
+<!ENTITY GstData SYSTEM "xml/gstdata.xml">
+<!ENTITY GstBuffer SYSTEM "xml/gstbuffer.xml">
+<!ENTITY GstEvent SYSTEM "xml/gstevent.xml">
+<!ENTITY GstBufferPool SYSTEM "xml/gstbufferpool.xml">
+<!ENTITY GstCpu SYSTEM "xml/gstcpu.xml">
+<!ENTITY GstElement SYSTEM "xml/gstelement.xml">
+<!ENTITY GstElementFactory SYSTEM "xml/gstelementfactory.xml">
+<!ENTITY GstFormat SYSTEM "xml/gstformat.xml">
+<!ENTITY GstInfo SYSTEM "xml/gstinfo.xml">
+<!ENTITY GstLog SYSTEM "xml/gstlog.xml">
+<!ENTITY GstMemChunk SYSTEM "xml/gstmemchunk.xml">
+<!ENTITY GstObject SYSTEM "xml/gstobject.xml">
+<!ENTITY GstPad SYSTEM "xml/gstpad.xml">
+<!ENTITY GstPadTemplate SYSTEM "xml/gstpadtemplate.xml">
+<!ENTITY GstParse SYSTEM "xml/gstparse.xml">
+<!ENTITY GstProbe SYSTEM "xml/gstprobe.xml">
+<!ENTITY GstPipeline SYSTEM "xml/gstpipeline.xml">
+<!ENTITY GstPlugin SYSTEM "xml/gstplugin.xml">
+<!ENTITY GstPluginFeature SYSTEM "xml/gstpluginfeature.xml">
+<!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
+<!ENTITY GstThread SYSTEM "xml/gstthread.xml">
+<!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
+<!ENTITY GstRegistryPool SYSTEM "xml/gstregistrypool.xml">
+<!ENTITY GstScheduler SYSTEM "xml/gstscheduler.xml">
+<!ENTITY GstSchedulerFactory SYSTEM "xml/gstschedulerfactory.xml">
+<!ENTITY GstTrace SYSTEM "xml/gsttrace.xml">
+<!ENTITY GstType SYSTEM "xml/gsttype.xml">
+<!ENTITY GstTypeFactory SYSTEM "xml/gsttypefactory.xml">
+<!ENTITY GstCaps SYSTEM "xml/gstcaps.xml">
+<!ENTITY GstProps SYSTEM "xml/gstprops.xml">
+<!ENTITY GstClock SYSTEM "xml/gstclock.xml">
+<!ENTITY GstSystemClock SYSTEM "xml/gstsystemclock.xml">
+<!ENTITY GstUtils SYSTEM "xml/gstutils.xml">
+<!ENTITY GstUri SYSTEM "xml/gsturi.xml">
+<!ENTITY GstXML SYSTEM "xml/gstxml.xml">
+<!-- these are elements without API docs
+<!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
+<!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
+-->
+<!ENTITY GstIndex SYSTEM "xml/gstindex.xml">
+<!ENTITY GstIndexFactory SYSTEM "xml/gstindexfactory.xml">
+<!ENTITY cothreads SYSTEM "xml/cothreads.xml">
 
-<!entity Gst SYSTEM "sgml/gst.sgml">
-<!entity GstAutoplug SYSTEM "sgml/gstautoplug.sgml">
-<!entity GstAutoplugFactory SYSTEM "sgml/gstautoplugfactory.sgml">
-<!entity GstAtomic SYSTEM "sgml/gstatomic.sgml">
-<!entity GstBin SYSTEM "sgml/gstbin.sgml">
-<!entity GstData SYSTEM "sgml/gstdata.sgml">
-<!entity GstBuffer SYSTEM "sgml/gstbuffer.sgml">
-<!entity GstEvent SYSTEM "sgml/gstevent.sgml">
-<!entity GstBufferPool SYSTEM "sgml/gstbufferpool.sgml">
-<!entity GstCpu SYSTEM "sgml/gstcpu.sgml">
-<!entity GstElement SYSTEM "sgml/gstelement.sgml">
-<!entity GstElementFactory SYSTEM "sgml/gstelementfactory.sgml">
-<!entity GstFormat SYSTEM "sgml/gstformat.sgml">
-<!entity GstInfo SYSTEM "sgml/gstinfo.sgml">
-<!entity GstLog SYSTEM "sgml/gstlog.sgml">
-<!entity GstMemChunk SYSTEM "sgml/gstmemchunk.sgml">
-<!entity GstObject SYSTEM "sgml/gstobject.sgml">
-<!entity GstPad SYSTEM "sgml/gstpad.sgml">
-<!entity GstPadTemplate SYSTEM "sgml/gstpadtemplate.sgml">
-<!entity GstParse SYSTEM "sgml/gstparse.sgml">
-<!entity GstProbe SYSTEM "sgml/gstprobe.sgml">
-<!entity GstPipeline SYSTEM "sgml/gstpipeline.sgml">
-<!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
-<!entity GstPluginFeature SYSTEM "sgml/gstpluginfeature.sgml">
-<!entity GstQuery SYSTEM "sgml/gstquery.sgml">
-<!entity GstThread SYSTEM "sgml/gstthread.sgml">
-<!entity GstRegistry SYSTEM "sgml/gstregistry.sgml">
-<!entity GstRegistryPool SYSTEM "sgml/gstregistrypool.sgml">
-<!entity GstScheduler SYSTEM "sgml/gstscheduler.sgml">
-<!entity GstSchedulerFactory SYSTEM "sgml/gstschedulerfactory.sgml">
-<!entity GstTrace SYSTEM "sgml/gsttrace.sgml">
-<!entity GstType SYSTEM "sgml/gsttype.sgml">
-<!entity GstTypeFactory SYSTEM "sgml/gsttypefactory.sgml">
-<!entity GstCaps SYSTEM "sgml/gstcaps.sgml">
-<!entity GstProps SYSTEM "sgml/gstprops.sgml">
-<!entity GstClock SYSTEM "sgml/gstclock.sgml">
-<!entity GstSystemClock SYSTEM "sgml/gstsystemclock.sgml">
-<!entity GstUtils SYSTEM "sgml/gstutils.sgml">
-<!entity GstUri SYSTEM "sgml/gsturi.sgml">
-<!entity GstXML SYSTEM "sgml/gstxml.sgml">
-<!entity GstQueue SYSTEM "sgml/gstqueue.sgml">
-<!entity GstTypeFind SYSTEM "sgml/gsttypefind.sgml">
-<!entity GstIndex SYSTEM "sgml/gstindex.sgml">
-<!entity GstIndexFactory SYSTEM "sgml/gstindexfactory.sgml">
-<!entity cothreads SYSTEM "sgml/cothreads.sgml">
+<!-- if none of the API is documented, these shouldn't go in
+<!ENTITY GstStaticAutoplug SYSTEM "xml/gststaticautoplug.xml">
+<!ENTITY GstStaticAutoplugRender SYSTEM "xml/gststaticautoplugrender.xml">
+-->
+<!ENTITY GstAggregator SYSTEM "xml/gstaggregator.xml">
+<!ENTITY GstFakeSrc SYSTEM "xml/gstfakesrc.xml">
+<!ENTITY GstFakeSink SYSTEM "xml/gstfakesink.xml">
+<!ENTITY GstFileSrc SYSTEM "xml/gstfilesrc.xml">
+<!ENTITY GstDiskSink SYSTEM "xml/gstdisksink.xml">
+<!ENTITY GstFdSrc SYSTEM "xml/gstfdsrc.xml">
+<!ENTITY GstFdSink SYSTEM "xml/gstfdsink.xml">
+<!ENTITY GstIdentity SYSTEM "xml/gstidentity.xml">
+<!ENTITY GstPipefilter SYSTEM "xml/gstpipefilter.xml">
+<!ENTITY GstStatistics SYSTEM "xml/gststatistics.xml">
+<!ENTITY GstMD5Sink SYSTEM "xml/gstmd5sink.xml">
+<!ENTITY GstTee SYSTEM "xml/gsttee.xml">
 
-<!entity GstStaticAutoplug SYSTEM "sgml/gststaticautoplug.sgml">
-<!entity GstStaticAutoplugRender SYSTEM "sgml/gststaticautoplugrender.sgml">
-<!entity GstAggregator SYSTEM "sgml/gstaggregator.sgml">
-<!entity GstFakeSrc SYSTEM "sgml/gstfakesrc.sgml">
-<!entity GstFakeSink SYSTEM "sgml/gstfakesink.sgml">
-<!entity GstFileSrc SYSTEM "sgml/gstfilesrc.sgml">
-<!entity GstDiskSink SYSTEM "sgml/gstdisksink.sgml">
-<!entity GstFdSrc SYSTEM "sgml/gstfdsrc.sgml">
-<!entity GstFdSink SYSTEM "sgml/gstfdsink.sgml">
-<!entity GstIdentity SYSTEM "sgml/gstidentity.sgml">
-<!entity GstPipefilter SYSTEM "sgml/gstpipefilter.sgml">
-<!entity GstStatistics SYSTEM "sgml/gststatistics.sgml">
-<!entity GstMD5Sink SYSTEM "sgml/gstmd5sink.sgml">
-<!entity GstTee SYSTEM "sgml/gsttee.sgml">
-
-<!entity gstreamer-tree-index SYSTEM "sgml/tree_index.sgml">
+<!ENTITY gstreamer-tree-index SYSTEM "xml/tree_index.xml">
 ]>
-
-
 <book>
   <bookinfo>
     <title>GStreamer Core Reference Manual</title>
@@ -114,7 +117,8 @@ with some more specialized elements.</para>
     &GstProbe;
     &GstProps;
     &GstQuery;
-    &GstQueue;
+<!-- no API docs
+    &GstQueue; -->
     &GstRegistry;
     &GstRegistryPool;
     &GstScheduler;
@@ -123,7 +127,8 @@ with some more specialized elements.</para>
     &GstThread;
     &GstType;
     &GstTypeFactory;
-    &GstTypeFind;
+<!-- no API docs
+    &GstTypeFind; -->
     &GstUri;
     &GstUtils;
     &GstXML;
@@ -161,6 +166,7 @@ with some more specialized elements.</para>
     -->
   </chapter>
 
+<!-- no API is documented of these elements
   <chapter id="autopluggers">
     <title>GStreamer Autopluggers</title>
 
@@ -170,7 +176,9 @@ with some more specialized elements.</para>
     &GstStaticAutoplug;
     &GstStaticAutoplugRender;
   </chapter>
+-->
 
+<!--
   <chapter id="gst-index">
     <title>Index</title>
 
@@ -179,4 +187,5 @@ with some more specialized elements.</para>
       &gstreamer-tree-index;
     </sect1>
   </chapter>
+-->
 </book>

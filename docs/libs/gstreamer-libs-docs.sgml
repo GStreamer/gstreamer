@@ -1,11 +1,10 @@
-<!doctype book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
-
-<!entity GstColorSpace SYSTEM "sgml/gstcolorspace.sgml">
-<!entity GstGetbits SYSTEM "sgml/gstgetbits.sgml">
-<!entity GstIDCT SYSTEM "sgml/gstidct.sgml">
-<!entity GstPutbits SYSTEM "sgml/gstputbits.sgml">
-<!entity GstVideoScale SYSTEM "sgml/gstvideoscale.sgml">
-<!entity GstRiff SYSTEM "sgml/gstriff.sgml">
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY GstGetbits SYSTEM "xml/gstgetbits.xml">
+<!ENTITY GstIDCT SYSTEM "xml/gstidct.xml">
+<!ENTITY GstPutbits SYSTEM "xml/gstputbits.xml">
+<!ENTITY GstControl SYSTEM "xml/gstcontrol.xml">
 
 ]>
 
@@ -24,12 +23,10 @@
     <para>
       GStreamer provides some standard libraries you can use to create plugins.
     </para>
-      &GstColorSpace;
       &GstGetbits;
       &GstIDCT;
       &GstPutbits;
-      &GstVideoScale;
-      &GstRiff;
+      &GstControl;
 
   </chapter>
 

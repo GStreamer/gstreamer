@@ -1,7 +1,28 @@
 ## Process this file with automake to produce Makefile.in
 
 # The name of the module, e.g. 'glib'.
+# DOC_MODULE=gstreamer-@GST_MAJORMINOR@
 DOC_MODULE=gstreamer
+
+# generated basefiles
+#basefiles = \
+#		gstreamer-@GST_MAJORMINOR@.types \
+#		gstreamer-@GST_MAJORMINOR@-sections.txt \
+#		gstreamer-@GST_MAJORMINOR@-docs.sgml
+
+# ugly hack to make -unused.sgml work
+#unused-build.stamp:
+#	BUILDDIR=`pwd` && \
+#	cd $(srcdir)/tmpl && \
+#	ln -sf gstreamer-unused.sgml \
+#		$$BUILDDIR/tmpl/gstreamer-@GST_MAJORMINOR@-unused.sgml
+#	touch unused-build.stamp
+
+# these rules are added to create parallel docs using GST_MAJORMINOR
+#$(basefiles): gstreamer-@GST_MAJORMINOR@%: gstreamer%
+#	cp $< $@
+
+#CLEANFILES = $(basefiles)
 
 # The top-level SGML file. Change it if you want.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
@@ -20,21 +41,21 @@ SCAN_OPTIONS=
 #EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=
+MKDB_OPTIONS=--sgml-mode --output-format=xml --ignore-files=trio
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS=
 
 # Used for dependencies.
-# FIXME deal with the subdirs too...
 HFILE_GLOB=$(DOC_SOURCE_DIR)/*.h
 CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
 
 # this is a wingo addition
 # thomasvs: another nice wingo addition would be an explanation on why
 # this is useful ;)
-SCANOBJ_DEPS = $(top_builddir)/gst/elements/libgstelements.la \
-	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
+
+#SCANOBJ_DEPS = $(top_builddir)/gst/elements/libgstelements.la \
+#	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
 
 # Header files to ignore when scanning.
 IGNORE_HFILES=
@@ -65,8 +86,17 @@ GTKDOC_LD=$(LIBTOOL) --mode=link $(CC)
 ###########################################################################
 # Everything below here is generic and you shouldn't need to change it.
 ###########################################################################
+# thomas: except of course that we did
 
-# added majorminor here because we want parallel installs
+# thomas: copied from glib-2
+# We set GPATH here; this gives us semantics for GNU make
+# which are more like other make's VPATH, when it comes to
+# whether a source that is a target of one rule is then
+# searched for in VPATH/GPATH.
+#
+GPATH = $(srcdir)
+
+# thomas: make docs parallel installable
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)-@GST_MAJORMINOR@
 
 EXTRA_DIST = 				\
@@ -90,8 +120,9 @@ all-local: html-build.stamp
 
 #### scan ####
 
+
 # wingo addition
-scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS)
+scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
 	@echo '*** Scanning header files ***'
 	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null ; then \
 	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" $(GTK_DOC_SCANOBJ) --module=$(DOC_MODULE) --output-dir=$(srcdir) ; \
@@ -131,18 +162,22 @@ sgml.stamp: sgml-build.stamp
 
 #### html ####
 
+# FIXME: setting LANG=C is a hack to work with gtk-doc < 1.1, because
+# that forces a non-utf8 locale.  gtk-doc >= 1.1 solves this by calling
+# use bytes; in gtkdoc-fixxref
 html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 	@echo '*** Building HTML ***'
 	test -d $(srcdir)/html || mkdir $(srcdir)/html
 	cd $(srcdir)/html && gtkdoc-mkhtml $(DOC_MODULE) ../$(DOC_MAIN_SGML_FILE)
 	test "x$(HTML_IMAGES)" = "x" || ( cd $(srcdir) && cp $(HTML_IMAGES) html )
 	@echo '-- Fixing Crossreferences' 
-	cd $(srcdir) && gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
+	cd $(srcdir) && LANG=C && gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
 	touch html-build.stamp
 endif
 
 clean-local:
 	rm -f *~ *.bak $(SCANOBJ_FILES) *-unused.txt $(DOC_STAMPS)
+	rm -rf xml html
 
 maintainer-clean-local: clean
 	cd $(srcdir) && rm -rf sgml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
@@ -151,14 +186,15 @@ maintainer-clean-local: clean
 # make distcheck work
 distclean-local: clean
 	rm -rf $(DOC_MODULE)-decl-list.txt
-	rm -rf gstreamer-*.txt
+	rm -rf $(DOC_MODULE)-*.txt
 	rm -rf tmpl/*.sgml
-	rm -f gstreamer.hierarchy
+	rm -f $(DOC_MODULE).hierarchy
 	rm -f *.stamp || true
 
+# thomas: make docs parallel installable; devhelp requires majorminor too
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
-	(installfiles=`echo $(srcdir)/html/*.html`; \
+	(installfiles=`echo $(srcdir)/html/*.html $(srcdir)/html/*.png`; \
 	if test "$$installfiles" = '$(srcdir)/html/*.html'; \
 	then echo '-- Nothing to install' ; \
 	else \
@@ -166,6 +202,9 @@ install-data-local:
 	    echo '-- Installing '$$i ; \
 	    $(INSTALL_DATA) $$i $(DESTDIR)$(TARGET_DIR); \
 	  done; \
+	  echo '-- Installing $(srcdir)/html/$(DOC_MODULE).devhelp' ; \
+	  $(INSTALL_DATA) $(srcdir)/html/$(DOC_MODULE).devhelp \
+	    $(DESTDIR)$(TARGET_DIR)/$(DOC_MODULE)-@GST_MAJORMINOR@.devhelp; \
 	  echo '-- Installing $(srcdir)/html/index.sgml' ; \
 	  $(INSTALL_DATA) $(srcdir)/html/index.sgml $(DESTDIR)$(TARGET_DIR); \
 	fi)
@@ -183,10 +222,10 @@ endif
 
 dist-hook: dist-check-gtkdoc dist-hook-local
 	mkdir $(distdir)/tmpl
-	mkdir $(distdir)/sgml
+	mkdir $(distdir)/xml
 	mkdir $(distdir)/html
 	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
-	-cp $(srcdir)/sgml/*.sgml $(distdir)/sgml
+	-cp $(srcdir)/sgml/*.xml $(distdir)/xml
 	-cp $(srcdir)/html/index.sgml $(distdir)/html
 	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
 
