@@ -51,6 +51,7 @@ sub read_config
   else
   {
     print "No configuration file $config_file found.  You might want to create one.\n";
+    print "This is not an error, just a friendly reminder... Check the man page.\n\n";
   }
   if (!defined $cfg{AUDIOSINK})  { $cfg{AUDIOSINK} = "osssink"; }
   if (!defined $cfg{VIDEOSINK})  { $cfg{VIDEOSINK} = "colorspace ! xvideosink"; }
@@ -60,9 +61,11 @@ sub read_config
 sub playfile($$)
 {
     my ($file, $ext) = @_;
+    my $command;
+    my $pipe;
+
     $ext = lc $ext;
 
-    my $pipe;
     if ($cfg{VISUALIZER} && ($pipe = $pipes{"vis." . $ext}))
     {
 	$command = "gst-launch filesrc location=\"$file\" ! $pipe";
@@ -123,7 +126,7 @@ while ($file = shift @ARGV) {
     my $ext = extension ($file);
     if (!$ext) { 
       print "file $file doesn't have an extension !\n";
-      return -1;
+      exit;
     }
     if ($ext eq 'm3u')
     {
