@@ -49,6 +49,8 @@ static void gst_queue_init(GstQueue *queue);
 static void gst_queue_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_queue_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
+void gst_queue_push(GstConnection *connection);
+void gst_queue_chain(GstPad *pad,GstBuffer *buf);
 
 static GstConnectionClass *parent_class = NULL;
 //static guint gst_queue_signals[LAST_SIGNAL] = { 0 };

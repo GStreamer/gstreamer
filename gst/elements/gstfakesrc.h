@@ -59,8 +59,6 @@ struct _GstFakeSrcClass {
 };
 
 GtkType gst_fakesrc_get_type(void);
-GstElement *gst_fakesrc_new(gchar *name);
-void gst_fakesrc_push(GstSrc *src);
 
 #ifdef __cplusplus
 }

@@ -62,8 +62,6 @@ struct _GstIdentityClass {
 };
 
 GtkType gst_identity_get_type(void);
-GstElement *gst_identity_new(gchar *name);
-void gst_identity_chain(GstPad *pad,GstBuffer *buf);
 
 
 #ifdef __cplusplus

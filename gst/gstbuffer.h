@@ -29,7 +29,8 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_BUFFER(buf) ((GstBuffer *)(buf))
+#define GST_BUFFER(buf) \
+	((GstBuffer *)(buf))
 
 
 #define GST_BUFFER_FLAGS(buf) \

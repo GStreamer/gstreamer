@@ -48,6 +48,7 @@ static void gst_fdsink_init(GstFdSink *fdsink);
 static void gst_fdsink_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_fdsink_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
+void gst_fdsink_chain(GstPad *pad,GstBuffer *buf);
 
 static GstSinkClass *parent_class = NULL;
 //static guint gst_fdsink_signals[LAST_SIGNAL] = { 0 };

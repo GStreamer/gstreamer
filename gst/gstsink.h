@@ -39,7 +39,7 @@ extern "C" {
 #define GST_IS_SINK(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_SINK))
 #define GST_IS_SINK_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SINK)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SINK))
 
 typedef struct _GstSink GstSink;
 typedef struct _GstSinkClass GstSinkClass;

@@ -7,7 +7,7 @@ Base container element
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 GstBin is the simplest of the container elements, allowing elements to
-beocme children of itself.  Pads from the child elements can be ghosted to
+become children of itself.  Pads from the child elements can be ghosted to
 the bin, making the bin itself look transparently like any other element,
 allowing for deep nesting of predefined sub-pipelines.
 </para>
@@ -17,12 +17,10 @@ allowing for deep nesting of predefined sub-pipelines.
 
 </para>
 
-<!-- ##### MACRO GST_BIN ##### -->
+<!-- ##### STRUCT GstBin ##### -->
 <para>
 
 </para>
-
-@obj: 
 
 
 <!-- ##### FUNCTION gst_bin_new ##### -->
@@ -100,9 +98,10 @@ allowing for deep nesting of predefined sub-pipelines.
 
 <!-- ##### SIGNAL GstBin::object-added ##### -->
 <para>
+is signaled whenever a new <classname>GstElement</classname> is added to the <classname>GstBin</classname>
 
 </para>
 
 @gstbin: the object which received the signal.
-@arg1: 
+@arg1: the element that was added
 

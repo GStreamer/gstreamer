@@ -2,10 +2,11 @@
 GstConnection
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Passes buffers between elements.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+Passes buffers between elements.
 
 </para>
 
@@ -14,12 +15,10 @@ GstConnection
 
 </para>
 
-<!-- ##### MACRO GST_CONNECTION ##### -->
+<!-- ##### STRUCT GstConnection ##### -->
 <para>
 
 </para>
-
-@obj: 
 
 
 <!-- ##### FUNCTION gst_connection_new ##### -->

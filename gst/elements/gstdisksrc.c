@@ -201,6 +201,7 @@ void gst_disksrc_push(GstSrc *src) {
   readbytes = read(disksrc->fd,GST_BUFFER_DATA(buf),disksrc->bytes_per_read);
   if (readbytes == 0) {
     gst_src_signal_eos(GST_SRC(disksrc));
+		gst_buffer_unref(buf);
     return;
   }
 

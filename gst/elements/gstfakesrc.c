@@ -46,6 +46,7 @@ enum {
 static void gst_fakesrc_class_init(GstFakeSrcClass *klass);
 static void gst_fakesrc_init(GstFakeSrc *fakesrc);
 
+void gst_fakesrc_push(GstSrc *src);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
@@ -90,12 +91,26 @@ static void gst_fakesrc_init(GstFakeSrc *fakesrc) {
   gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_COMPLETE);
 }
 
+/**
+ * gst_fakesrc_new:
+ * @name: then name of the fakse source
+ * 
+ * create a new fakesrc
+ *
+ * Returns: The new element.
+ */
 GstElement *gst_fakesrc_new(gchar *name) {
   GstElement *fakesrc = GST_ELEMENT(gtk_type_new(GST_TYPE_FAKESRC));
   gst_element_set_name(GST_ELEMENT(fakesrc),name);
   return fakesrc;
 }
 
+/**
+ * gst_fakesrc_push:
+ * @src: the faksesrc to push
+ * 
+ * generate an empty buffer and push it to the next element.
+ */
 void gst_fakesrc_push(GstSrc *src) {
   GstFakeSrc *fakesrc;
   GstBuffer *buf;

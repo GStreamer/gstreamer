@@ -2,10 +2,12 @@
 GstSink
 
 <!-- ##### SECTION Short_Description ##### -->
-
+The end point of a filter graph
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+The sink is the end of the filter graph. A typical sink would be an audio
+or a video card.
 
 </para>
 
@@ -14,12 +16,10 @@ GstSink
 
 </para>
 
-<!-- ##### MACRO GST_SINK ##### -->
+<!-- ##### STRUCT GstSink ##### -->
 <para>
 
 </para>
-
-@obj: 
 
 
 <!-- ##### FUNCTION gst_sink_new ##### -->

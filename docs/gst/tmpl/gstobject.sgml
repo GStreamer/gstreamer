@@ -44,7 +44,7 @@ This macro returns the entire set of flags for the object.
 This macro checks to see if the given flag is set.
 </para>
 
-@obj: Object to check for flag in.
+@obj: GstSrc to check for flag in.
 @flag: Flag to check for, must be a single bit in guint32.
 
 
@@ -131,9 +131,7 @@ This macro releases a lock on the object.
 
 </para>
 
-@obj: 
-<!-- # Unused Parameters # -->
-@object: 
+@object: the object
 
 
 <!-- ##### MACRO gst_object_unref ##### -->
@@ -141,9 +139,7 @@ This macro releases a lock on the object.
 
 </para>
 
-@obj: 
-<!-- # Unused Parameters # -->
-@object: 
+@object: the object
 
 
 <!-- ##### MACRO gst_object_sink ##### -->
@@ -151,7 +147,7 @@ This macro releases a lock on the object.
 
 </para>
 
-@obj: 
+@object: the object
 
 
 <!-- ##### MACRO gst_object_destroy ##### -->
@@ -159,7 +155,7 @@ This macro releases a lock on the object.
 
 </para>
 
-@obj: 
+@object: the object
 
 
 <!-- ##### SIGNAL GstObject::parent-set ##### -->
@@ -168,5 +164,5 @@ This macro releases a lock on the object.
 </para>
 
 @gstobject: the object which received the signal.
-@arg1: 
+@arg1: the new parent
 

@@ -1,12 +1,12 @@
 <!-- ##### SECTION Title ##### -->
-gsttrace
+GstTrace
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Tracing functionality
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+Tracing functionality
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -27,21 +27,12 @@ gsttrace
 
 </para>
 
-@filename: 
-@fd: 
-@buf: 
-@bufsize: 
-@bufoffset: 
 
 <!-- ##### STRUCT GstTraceEntry ##### -->
 <para>
 
 </para>
 
-@timestamp: 
-@sequence: 
-@data: 
-@message: 
 
 <!-- ##### FUNCTION gst_trace_new ##### -->
 <para>

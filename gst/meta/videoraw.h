@@ -42,33 +42,33 @@ enum {
 };
 
 struct _OverlayClip {
-	int x1, x2, y1, y2;
+  int x1, x2, y1, y2;
 };
 
 struct _MetaDGA {
-	// the base address of the screen
-	void *base;
-	// the dimensions of the screen
-	int swidth, sheight;
-	// the number of bytes in a line
-	int bytes_per_line;
+  // the base address of the screen
+  void *base;
+  // the dimensions of the screen
+  int swidth, sheight;
+  // the number of bytes in a line
+  int bytes_per_line;
 };
 
 struct _MetaOverlay {
-	// the position of the window
-	int wx, wy;
-	// a reference to the object sending overlay change events
-	GtkWidget *overlay_element;
-	// the number of overlay regions
-	int clip_count;
-	// the overlay regions of the display window
-	struct _OverlayClip overlay_clip[32];
+  // the position of the window
+  int wx, wy;
+  // a reference to the object sending overlay change events
+  GtkWidget *overlay_element;
+  // the number of overlay regions
+  int clip_count;
+  // the overlay regions of the display window
+  struct _OverlayClip overlay_clip[32];
 
   gint width;
   gint height;
 	
-	gboolean did_overlay;
-	gboolean fully_obscured;
+  gboolean did_overlay;
+  gboolean fully_obscured;
 };
 
 struct _MetaVideoRaw {
@@ -80,10 +80,10 @@ struct _MetaVideoRaw {
   // dimensions of the video buffer
   gint width;
   gint height;
-	// a pointer to the overlay info if the sink supports this
-	MetaOverlay *overlay_info;
-	// a pointer to the DGA info if the sink supports this
-	MetaDGA *dga_info;
+  // a pointer to the overlay info if the sink supports this
+  MetaOverlay *overlay_info;
+  // a pointer to the DGA info if the sink supports this
+  MetaDGA *dga_info;
 };
 
 #endif /* __GST_META_VIDEORAW_H__ */

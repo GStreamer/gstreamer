@@ -45,7 +45,6 @@ enum {
 
 enum {
   ARG_0,
-  ARG_LOCATION,
   ARG_BYTESPERREAD,
   ARG_CUROFFSET,
   ARG_FORMAT,
@@ -64,6 +63,7 @@ static void gst_audiosrc_close_audio(GstAudioSrc *src);
 static gboolean gst_audiosrc_open_audio(GstAudioSrc *src);
 void gst_audiosrc_sync_parms(GstAudioSrc *audiosrc);
 
+void gst_audiosrc_push(GstSrc *src);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_audiosrc_signals[LAST_SIGNAL] = { 0 };
@@ -100,8 +100,6 @@ gst_audiosrc_class_init(GstAudioSrcClass *klass) {
 
   parent_class = gtk_type_class(GST_TYPE_SRC);
 
-  gtk_object_add_arg_type("GstAudioSrc::location", GTK_TYPE_STRING,
-                          GTK_ARG_READWRITE, ARG_LOCATION);
   gtk_object_add_arg_type("GstAudioSrc::bytes_per_read", GTK_TYPE_ULONG,
                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);
   gtk_object_add_arg_type("GstAudioSrc::curoffset", GTK_TYPE_ULONG,
@@ -125,7 +123,6 @@ static void gst_audiosrc_init(GstAudioSrc *audiosrc) {
   audiosrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
   gst_element_add_pad(GST_ELEMENT(audiosrc),audiosrc->srcpad);
 
-  audiosrc->filename = g_strdup("/dev/dsp");
   audiosrc->fd = -1;
 
 //  audiosrc->meta = (MetaAudioRaw *)gst_meta_new();
@@ -142,12 +139,6 @@ static void gst_audiosrc_init(GstAudioSrc *audiosrc) {
 GstElement *gst_audiosrc_new(gchar *name) {
   GstElement *audiosrc = GST_ELEMENT(gtk_type_new(GST_TYPE_AUDIOSRC));
   gst_element_set_name(GST_ELEMENT(audiosrc),name);
-  return audiosrc;
-}
-
-GstElement *gst_audiosrc_new_with_fd(gchar *name,gchar *filename) {
-  GstElement *audiosrc = gst_audiosrc_new(name);
-  gtk_object_set(GTK_OBJECT(audiosrc),"location",filename,NULL);
   return audiosrc;
 }
 
@@ -190,16 +181,6 @@ static void gst_audiosrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   src = GST_AUDIOSRC(object);
 
   switch (id) {
-    case ARG_LOCATION:
-      if (src->filename) g_free(src->filename);
-      if (GTK_VALUE_STRING(*arg) == NULL) {
-        src->filename = NULL;
-        gst_element_set_state(GST_ELEMENT(object),~GST_STATE_COMPLETE);
-      } else {
-        src->filename = g_strdup(GTK_VALUE_STRING(*arg));
-        gst_element_set_state(GST_ELEMENT(object),GST_STATE_COMPLETE);
-      }
-      break;
     case ARG_BYTESPERREAD:
       src->bytes_per_read = GTK_VALUE_INT(*arg);
       break;
@@ -225,9 +206,6 @@ static void gst_audiosrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   src = GST_AUDIOSRC(object);
 
   switch (id) {
-    case ARG_LOCATION:
-      GTK_VALUE_STRING(*arg) = g_strdup(src->filename);
-      break;
     case ARG_BYTESPERREAD:
       GTK_VALUE_INT(*arg) = src->bytes_per_read;
       break;

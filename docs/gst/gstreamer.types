@@ -1,14 +1,29 @@
 #include <gtk/gtk.h>
 #include <gst/gst.h>
-
 gst_object_get_type
-gst_pad_get_type
 gst_element_get_type
-gst_filter_get_type
 gst_bin_get_type
 gst_pipeline_get_type
-gst_thread_get_type
-gst_connection_get_type
-gst_src_get_type
+gst_filter_get_type
 gst_sink_get_type
+gst_src_get_type
+gst_pad_get_type
+gst_connection_get_type
+gst_thread_get_type
 gst_tee_get_type
+
+gst_fakesrc_get_type
+gst_fakesink_get_type
+
+gst_disksrc_get_type
+gst_asyncdisksrc_get_type
+gst_httpsrc_get_type
+gst_fdsrc_get_type
+gst_audiosrc_get_type
+gst_sinesrc_get_type
+
+gst_audiosink_get_type
+gst_fdsink_get_type
+
+gst_identity_get_type
+gst_queue_get_type

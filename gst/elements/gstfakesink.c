@@ -46,6 +46,8 @@ enum {
 static void gst_fakesink_class_init(GstFakeSinkClass *klass);
 static void gst_fakesink_init(GstFakeSink *fakesink);
 
+GstElement *gst_fakesink_new(gchar *name);
+void gst_fakesink_chain(GstPad *pad,GstBuffer *buf);
 
 static GstSinkClass *parent_class = NULL;
 //static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
@@ -88,12 +90,28 @@ static void gst_fakesink_init(GstFakeSink *fakesink) {
   gst_element_set_state(GST_ELEMENT(fakesink),GST_STATE_COMPLETE);
 }
 
+/**
+ * gst_fakesink_new:
+ * @name: the name of the new fakesrc
+ *
+ * create a new fakesink
+ *
+ * Returns: the new fakesink
+ */
 GstElement *gst_fakesink_new(gchar *name) {
   GstElement *fakesink = GST_ELEMENT(gtk_type_new(GST_TYPE_FAKESINK));
   gst_element_set_name(GST_ELEMENT(fakesink),name);
   return fakesink;
 }
 
+/**
+ * gst_fakesink_chain:
+ * @pad: the pad this faksink is connected to
+ * @buf: the buffer that has to be absorbed
+ *
+ * take the buffer from the pad and unref it without doing
+ * anything with it.
+ */
 void gst_fakesink_chain(GstPad *pad,GstBuffer *buf) {
   GstFakeSink *fakesink;
 

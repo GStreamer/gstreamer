@@ -72,6 +72,15 @@ gst_sink_class_init(GstSinkClass *klass) {
 static void gst_sink_init(GstSink *sink) {
 }
 
+/**
+ * gst_sink_new:
+ * @name: name of new sink
+ *
+ * Create a new sink with given name.
+ *
+ * Returns: new sink
+ */
+
 GstObject *gst_sink_new(gchar *name) {
   GstObject *sink = GST_OBJECT(gtk_type_new(GST_TYPE_SINK));
   gst_element_set_name(GST_ELEMENT(sink),name);

@@ -1,0 +1,24 @@
+<!-- ##### SECTION Title ##### -->
+GstAudioSink
+
+<!-- ##### SECTION Short_Description ##### -->
+Output to a sound card via OSS. (audiosink)
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+Output to a sound card via OSS.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SIGNAL GstAudioSink::handoff ##### -->
+<para>
+The buffer is sent to the sound card.
+</para>
+
+@gstaudiosink: the object which received the signal.
+@arg1: the audiosink.
+

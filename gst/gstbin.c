@@ -97,7 +97,7 @@ gst_bin_class_init(GstBinClass *klass) {
     gtk_signal_new("object_added",GTK_RUN_FIRST,gtkobject_class->type,
                    GTK_SIGNAL_OFFSET(GstBinClass,object_added),
                    gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
-                   GTK_TYPE_POINTER);
+                   GST_TYPE_ELEMENT);
   gtk_object_class_add_signals(gtkobject_class,gst_bin_signals,LAST_SIGNAL);
 
   klass->change_state_type = gst_bin_change_state_type;
@@ -298,6 +298,15 @@ void gst_bin_real_destroy(GtkObject *object) {
   g_list_free(bin->children);
 }
 
+/**
+ * gst_bin_get_by_name:
+ * @bin: #Gstbin to search
+ * @name: the element name to search for
+ *
+ * get the element with the given name from this bin
+ *
+ * Returns: the element with the given name
+ */
 GstElement *gst_bin_get_by_name(GstBin *bin,gchar *name) {
   GList *children;
   GstElement *child;
@@ -317,6 +326,14 @@ GstElement *gst_bin_get_by_name(GstBin *bin,gchar *name) {
   return NULL;
 }
 
+/**
+ * gst_bin_get_list:
+ * @bin: #Gstbin to get the list from
+ *
+ * get the list of elements in this bin
+ *
+ * Returns: a GList of elements
+ */
 GList *gst_bin_get_list(GstBin *bin) {
   g_return_val_if_fail(bin != NULL, NULL);
   g_return_val_if_fail(GST_IS_BIN(bin), NULL);
@@ -344,6 +361,12 @@ static xmlNodePtr gst_bin_save_thyself(GstElement *element,xmlNodePtr parent) {
 	return childlist;
 }
 
+/**
+ * gst_bin_iterate:
+ * @bin: #Gstbin to iterate
+ *
+ * iterates over the elements in this bin
+ */
 void gst_bin_iterate(GstBin *bin) {
   GstBinClass *oclass;
 

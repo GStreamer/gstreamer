@@ -71,7 +71,7 @@ gst_src_class_init(GstSrcClass *klass) {
     gtk_signal_new("eos",GTK_RUN_LAST,gtkobject_class->type,
                    GTK_SIGNAL_OFFSET(GstSrcClass,eos),
                    gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
-                   GTK_TYPE_POINTER);
+                   GST_TYPE_SRC);
   gtk_object_class_add_signals(gtkobject_class,gst_src_signals,LAST_SIGNAL);
 }
 
@@ -79,6 +79,13 @@ static void gst_src_init(GstSrc *src) {
   src->flags = 0;
 }
 
+/**
+ * gst_src_signal_eos:
+ * @src: source to trigger the eos signal of
+ *
+ * singals the eos signal to indicate that the end of the stream
+ * is reached.
+ */
 void gst_src_signal_eos(GstSrc *src) {
   g_return_if_fail(src != NULL);
   g_return_if_fail(GST_IS_SRC(src));
@@ -86,6 +93,12 @@ void gst_src_signal_eos(GstSrc *src) {
   gtk_signal_emit(GTK_OBJECT(src),gst_src_signals[EOS],src);
 }
 
+/**
+ * gst_src_push:
+ * @src: source to trigger the push of
+ *
+ * Push a buffer from the source.
+ */
 void gst_src_push(GstSrc *src) {
   GstSrcClass *oclass;
 

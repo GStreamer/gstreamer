@@ -61,9 +61,6 @@ struct _GstFdSinkClass {
 };
 
 GtkType gst_fdsink_get_type(void);
-GstElement *gst_fdsink_new(gchar *name);
-GstElement *gst_fdsink_new_with_fd(gchar *name,gint fd);
-void gst_fdsink_chain(GstPad *pad,GstBuffer *buf);
 
 
 #ifdef __cplusplus

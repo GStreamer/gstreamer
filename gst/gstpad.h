@@ -32,20 +32,17 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_TYPE_PAD \
-  (gst_pad_get_type())
-#define GST_PAD(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_PAD,GstPad))
-#define GST_PAD_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_PAD,GstPadClass))
-#define GST_IS_PAD(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_PAD))
-#define GST_IS_PAD_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PAD)))
+#define GST_TYPE_PAD                 (gst_pad_get_type())
+#define GST_PAD(obj)                 (GTK_CHECK_CAST((obj),GST_TYPE_PAD,GstPad))
+#define GST_PAD_CLASS(klass)         (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_PAD,GstPadClass))
+#define GST_IS_PAD(obj)              (GTK_CHECK_TYPE((obj),GST_TYPE_PAD))
+#define GST_IS_PAD_CLASS(obj)        (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PAD))
 
 // quick test to see if the pad is connected
-#define GST_PAD_CONNECTED(pad) ((pad)->peer != NULL)
-#define GST_PAD_CAN_PULL(pad) ((pad)->pull != NULL)
+#define GST_PAD_CONNECTED(pad) \
+	((pad)->peer != NULL)
+#define GST_PAD_CAN_PULL(pad) \
+	((pad)->pull != NULL)
 
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;
@@ -103,8 +100,6 @@ void gst_pad_set_type_id(GstPad *pad,guint16 id);
 void gst_pad_set_name(GstPad *pad,gchar *name);
 gchar *gst_pad_get_name(GstPad *pad);
 #define gst_pad_destroy(pad) gst_object_destroy(GST_OBJECT(pad))
-
-GstPadDirection gst_pad_get_directory(GstPad *pad);
 
 void gst_pad_set_parent(GstPad *pad,GstObject *parent);
 void gst_pad_add_ghost_parent(GstPad *pad,GstObject *parent);

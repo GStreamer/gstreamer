@@ -75,9 +75,6 @@ struct _GstSineSrcClass {
 };
 
 GtkType gst_sinesrc_get_type(void);
-GstElement *gst_sinesrc_new(gchar *name);
-
-void gst_sinesrc_push(GstSrc *src);
 
 #ifdef __cplusplus
 }

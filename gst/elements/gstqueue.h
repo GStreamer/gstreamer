@@ -75,9 +75,6 @@ struct _GstQueueClass {
 };
 
 GtkType gst_queue_get_type(void);
-GstElement *gst_queue_new(gchar *name);
-void gst_queue_chain(GstPad *pad,GstBuffer *buf);
-void gst_queue_push(GstConnection *connection);
 
 #ifdef __cplusplus
 }

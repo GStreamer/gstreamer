@@ -56,7 +56,6 @@ struct _GstAudioSrc {
   GstPad *srcpad;
 
   /* sound card */
-  gchar *filename;
   gint fd;
 
   /* audio parameters */
@@ -78,9 +77,6 @@ struct _GstAudioSrcClass {
 };
 
 GtkType gst_audiosrc_get_type(void);
-GstElement *gst_audiosrc_new(gchar *name);
-
-void gst_audiosrc_push(GstSrc *src);
 
 #ifdef __cplusplus
 }

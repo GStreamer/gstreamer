@@ -313,6 +313,13 @@ void gst_plugin_add_factory(GstPlugin *plugin,GstElementFactory *factory) {
   plugin->elements = g_list_append(plugin->elements,factory);
 }
 
+/**
+ * gst_plugin_get_list:
+ *
+ * get the currently loaded plugins
+ *
+ * Returns; a GList of GstPlugin elements
+ */
 GList *gst_plugin_get_list() {
   return _gst_plugins;
 }

@@ -1,7 +1,8 @@
+SUBDIRS = 
 if HAVE_GTK_DOC
-  SUBDIRS += gst manual
+  SUBDIRS += gst 
 endif
 
-DIST_SUBDIRS = gst manual
+DIST_SUBDIRS = gst
 
-#EXTRA_DIST = random slides
+EXTRA_DIST = random slides

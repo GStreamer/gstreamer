@@ -1,11 +1,12 @@
 <!-- ##### SECTION Title ##### -->
-gstxml
+GstXml
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Convert Elements into an XML presentation
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+All GstElements can be serialized to an XML presentation
 
 </para>
 

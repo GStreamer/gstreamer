@@ -71,7 +71,7 @@ static void gst_object_class_init(GstObjectClass *klass) {
     gtk_signal_new("parent_set",GTK_RUN_LAST,gtkobject_class->type,
                    GTK_SIGNAL_OFFSET(GstObjectClass,parent_set),
                    gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
-                   GTK_TYPE_POINTER);
+                   GST_TYPE_OBJECT);
   gtk_object_class_add_signals(gtkobject_class,gst_object_signals,LAST_SIGNAL);
 }
 
@@ -103,6 +103,7 @@ GstObject *gst_object_new() {
  *
  * Set the parent of the object.  The object's reference count is
  * incremented.
+ * signals the parent-set signal
  */
 void gst_object_set_parent(GstObject *object,GstObject *parent) {
   g_return_if_fail(object != NULL);

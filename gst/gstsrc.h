@@ -39,14 +39,16 @@ extern "C" {
 #define GST_IS_SRC(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_SRC))
 #define GST_IS_SRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SRC))
 
 typedef enum {
   GST_SRC_ASYNC		= 1 << 0,
 } GstSrcFlags;
 
-#define GST_SRC_FLAGS(obj)	(GST_SRC(obj)->flags)
-#define GST_SRC_ASYNC(obj)	((GST_SRC_FLAGS(obj) & GST_SRC_ASYNC)
+#define GST_SRC_FLAGS(obj) \
+	(GST_SRC(obj)->flags)
+#define GST_SRC_ASYNC(obj) \
+  ((GST_SRC_FLAGS(obj) & GST_SRC_ASYNC))
 
 typedef struct _GstSrc GstSrc;
 typedef struct _GstSrcClass GstSrcClass;
@@ -67,8 +69,10 @@ struct _GstSrcClass {
   void (*eos) (GstSrc *src);
 };
 
-#define GST_SRC_SET_FLAGS(src,flag)   G_STMT_START{ (GST_SRC_FLAGS (src) |= (flag)); }G_STMT_END
-#define GST_SRC_UNSET_FLAGS(src,flag)  G_STMT_START{ (GST_SRC_FLAGS (src) &= ~(flag)); }G_STMT_END
+#define GST_SRC_SET_FLAGS(src,flag) \
+  G_STMT_START{ (GST_SRC_FLAGS (src) |= (flag)); }G_STMT_END
+#define GST_SRC_UNSET_FLAGS(src,flag) \
+	G_STMT_START{ (GST_SRC_FLAGS (src) &= ~(flag)); }G_STMT_END
 
 
 GtkType gst_src_get_type(void);

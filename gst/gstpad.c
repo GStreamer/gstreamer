@@ -105,6 +105,14 @@ GstPad *gst_pad_new(gchar *name,GstPadDirection direction) {
   return pad;
 }
 
+/**
+ * gst_pad_get_direction:
+ * @pad: the Pad to get the direction from
+ *
+ * get the direction of the pad
+ *
+ * Returns: the direction of the pad
+ */
 GstPadDirection gst_pad_get_direction(GstPad *pad) {
   g_return_val_if_fail(pad != NULL, GST_PAD_UNKNOWN);
   g_return_val_if_fail(GST_IS_PAD(pad), GST_PAD_UNKNOWN);
@@ -112,6 +120,13 @@ GstPadDirection gst_pad_get_direction(GstPad *pad) {
   return pad->direction;
 }
 
+/**
+ * gst_pad_set_name:
+ * @pad: the pad to set the name of
+ * @name: the name of the pad
+ *
+ * set the name of a pad
+ */
 void gst_pad_set_name(GstPad *pad,gchar *name) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -122,6 +137,14 @@ void gst_pad_set_name(GstPad *pad,gchar *name) {
   pad->name = g_strdup(name);
 }
 
+/**
+ * gst_pad_get_name:
+ * @pad: the pad to get the name of
+ *
+ * get the name of a pad
+ *
+ * Returns: the name of the pad
+ */
 gchar *gst_pad_get_name(GstPad *pad) {
   g_return_val_if_fail(pad != NULL, NULL);
   g_return_val_if_fail(GST_IS_PAD(pad), NULL);
@@ -132,8 +155,6 @@ gchar *gst_pad_get_name(GstPad *pad) {
 void gst_pad_set_pull_function(GstPad *pad,GstPadPullFunction pull) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
-
-	fprintf(stderr, "pad setting pull function\n");
   
   pad->pull = pull;
 }
@@ -310,13 +331,6 @@ GstPad *gst_pad_get_peer(GstPad *pad) {
   g_return_val_if_fail(GST_IS_PAD(pad), NULL);
 
   return pad->peer;
-}
-
-GstPadDirection gst_pad_get_directory(GstPad *pad) {
-  g_return_val_if_fail(pad != NULL, GST_PAD_UNKNOWN);
-  g_return_val_if_fail(GST_IS_PAD(pad), GST_PAD_UNKNOWN);
-
-  return pad->direction;
 }
 
 static void gst_pad_real_destroy(GtkObject *object) {

@@ -1,11 +1,12 @@
 <!-- ##### SECTION Title ##### -->
-gstplugin
+GstPlugin
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Dynamically loadable Elements
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+GStreamer is extensible so <classname>GstElements</classname> can be loaded at runtime.
 
 </para>
 
@@ -19,12 +20,6 @@ gstplugin
 
 </para>
 
-@name: 
-@longname: 
-@filename: 
-@types: 
-@elements: 
-@identifiers: 
 
 <!-- ##### STRUCT GstPluginElement ##### -->
 <para>
@@ -34,11 +29,12 @@ gstplugin
 
 <!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
 <para>
-
+A plugin should implement this function called plugin_init. It will be called
+by the loader at statup.
 </para>
 
-@module: 
-@Returns: 
+@module: The <classname>GModule</classname> it was loaded from
+@Returns: The plugin or NULL is an error was detected.
 
 
 <!-- ##### FUNCTION gst_plugin_new ##### -->
@@ -59,13 +55,6 @@ gstplugin
 @longname: 
 
 
-<!-- ##### FUNCTION gst_plugin_init ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### FUNCTION gst_plugin_load_all ##### -->
 <para>
 
@@ -74,6 +63,15 @@ gstplugin
 
 
 <!-- ##### FUNCTION gst_plugin_load ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_library_load ##### -->
 <para>
 
 </para>

@@ -1,0 +1,52 @@
+<!-- ##### SECTION Title ##### -->
+GstAsyncDiskSrc
+
+<!-- ##### SECTION Short_Description ##### -->
+Asynchronous disk reader. (asyncdisksrc)
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+Reads data from a file. You can seek to a specific location by setting
+the offset.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GstAsyncDiskSrcFlags ##### -->
+<para>
+<informaltable pgwide=1 frame="none" role="enum">
+<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
+<tbody>
+<row>
+<entry>GST_ASYNCDISKSRC_OPEN</entry>
+<entry>the asyncdisksrc is open for reading</entry>
+</row>
+
+</tbody></tgroup></informaltable>
+
+</para>
+
+
+<!-- ##### ARG GstAsyncDiskSrc:location ##### -->
+<para>
+Specify the location of the file to read.
+</para>
+
+<!-- ##### ARG GstAsyncDiskSrc:bytesperread ##### -->
+<para>
+Specify how many bytes to read at a time.
+</para>
+
+<!-- ##### ARG GstAsyncDiskSrc:length ##### -->
+<para>
+Get the size of the current file.
+</para>
+
+<!-- ##### ARG GstAsyncDiskSrc:offset ##### -->
+<para>
+Specify the current offset in the file.
+</para>
+

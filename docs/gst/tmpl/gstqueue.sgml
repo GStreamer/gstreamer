@@ -2,11 +2,18 @@
 GstQueue
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Simple data queue. (queue)
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+Simple data queue. Data is queued till max_level buffers any subsequent buffers
+sent to this filter will block until free space becomes available in the buffer.
+</para>
+<para>
+You can query how many buffers are queued with the level argument.
+</para>
+<para>
+The default queue length is set to 10.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -14,37 +21,14 @@ GstQueue
 
 </para>
 
-<!-- ##### MACRO GST_QUEUE ##### -->
+<!-- ##### ARG GstQueue:level ##### -->
 <para>
-
+Get the number of buffers in the queue.
 </para>
 
-@obj: 
-
-
-<!-- ##### FUNCTION gst_queue_new ##### -->
+<!-- ##### ARG GstQueue:max_level ##### -->
 <para>
-
+Specify the maximum number of buffers in the queue before the queue
+blocks.
 </para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_queue_chain ##### -->
-<para>
-
-</para>
-
-@pad: 
-@buf: 
-
-
-<!-- ##### FUNCTION gst_queue_push ##### -->
-<para>
-
-</para>
-
-@connection: 
-
 

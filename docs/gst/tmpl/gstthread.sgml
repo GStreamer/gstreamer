@@ -2,10 +2,14 @@
 GstThread
 
 <!-- ##### SECTION Short_Description ##### -->
-
+A bin that will become a thread
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+A bin that will become a thread if possible when the pipeline is started
+up.  Can contain any set of GstObjects except another GstThread.  All
+starting points and/or clocked events must be registered with this object,
+to be dealt with in the separate thread.
 
 </para>
 
@@ -17,18 +21,33 @@ GstThread
 <!-- ##### ENUM GstThreadState ##### -->
 <para>
 
+<informaltable pgwide=1 frame="none" role="enum">
+<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
+<tbody>
+<row>
+<entry>GST_THREAD_CREATE</entry>
+<entry>The thread is being created. </entry>
+</row>
+
+<row>
+<entry>GST_THREAD_STATE_SPINNING</entry>
+<entry>The thread is runnning</entry>
+</row>
+
+<row>
+<entry>GST_THREAD_STATE_REAPING</entry>
+<entry>The thread is ending.</entry>
+</row>
+
+</tbody></tgroup></informaltable>
+
 </para>
 
-@GST_THREAD_CREATE: 
-@GST_THREAD_STATE_SPINNING: 
-@GST_THREAD_STATE_REAPING: 
 
-<!-- ##### MACRO GST_THREAD ##### -->
+<!-- ##### STRUCT GstThread ##### -->
 <para>
 
 </para>
-
-@obj: 
 
 
 <!-- ##### FUNCTION gst_thread_new ##### -->
@@ -58,6 +77,7 @@ GstThread
 
 <!-- ##### ARG GstThread:create_thread ##### -->
 <para>
+TRUE if the thread should be created.
 
 </para>
 

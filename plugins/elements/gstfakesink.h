@@ -59,8 +59,6 @@ struct _GstFakeSinkClass {
 };
 
 GtkType gst_fakesink_get_type(void);
-GstElement *gst_fakesink_new(gchar *name);
-void gst_fakesink_chain(GstPad *pad,GstBuffer *buf);
 
 
 #ifdef __cplusplus

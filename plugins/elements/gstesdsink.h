@@ -64,14 +64,6 @@ struct _GstEsdSinkClass {
 };
 
 GtkType gst_esdsink_get_type(void);
-GstElement *gst_esdsink_new(gchar *name);
-void gst_esdsink_chain(GstPad *pad,GstBuffer *buf);
-
-void gst_esdsink_sync_parms(GstEsdSink *esdsink);
-
-void gst_esdsink_set_format(GstEsdSink *esdsink,gint format);
-void gst_esdsink_set_channels(GstEsdSink *esdsink,gint channels);
-void gst_esdsink_set_frequency(GstEsdSink *esdsink,gint frequency);
 
 #ifdef __cplusplus
 }

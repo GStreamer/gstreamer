@@ -19,6 +19,14 @@
 
 #include <gst/gstxml.h>
 
+/**
+ * gst_xml_write:
+ * @element: The element to write out
+ *
+ * converts the given elkement into an XML presentation
+ *
+ * Returns: a pointer to an XML document
+ */
 xmlDocPtr gst_xml_write(GstElement *element) {
   xmlDocPtr doc;
 

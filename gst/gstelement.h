@@ -69,7 +69,7 @@ gst_info("unset '%s' state %d\n",gst_element_get_name(obj),flag); \
 #define GST_IS_ELEMENT(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_ELEMENT))
 #define GST_IS_ELEMENT_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT))
 
 typedef struct _GstElement GstElement;
 typedef struct _GstElementClass GstElementClass;

@@ -43,7 +43,7 @@ GstElementDetails gst_asyncdisksrc_details;
 #define GST_IS_ASYNCDISKSRC(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_ASYNCDISKSRC))
 #define GST_IS_ASYNCDISKSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ASYNCDISKSRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ASYNCDISKSRC))
 
 // NOTE: per-element flags start with 16 for now
 typedef enum {

@@ -78,17 +78,17 @@ static void gst_element_class_init(GstElementClass *klass) {
     gtk_signal_new("new_pad",GTK_RUN_LAST,gtkobject_class->type,
                    GTK_SIGNAL_OFFSET(GstElementClass,new_pad),
                    gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
-                   GTK_TYPE_POINTER);
+                   GST_TYPE_PAD);
   gst_element_signals[NEW_GHOST_PAD] =
     gtk_signal_new("new_ghost_pad",GTK_RUN_LAST,gtkobject_class->type,
                    GTK_SIGNAL_OFFSET(GstElementClass,new_ghost_pad),
                    gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
-                   GTK_TYPE_POINTER);
+                   GST_TYPE_PAD);
   gst_element_signals[ERROR] =
     gtk_signal_new("error",GTK_RUN_LAST,gtkobject_class->type,
                    GTK_SIGNAL_OFFSET(GstElementClass,error),
-                   gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
-                   GTK_TYPE_POINTER);
+                   gtk_marshal_NONE__STRING,GTK_TYPE_NONE,1,
+                   GTK_TYPE_STRING);
 
 
   gtk_object_class_add_signals(gtkobject_class,gst_element_signals,LAST_SIGNAL);
@@ -204,7 +204,7 @@ GstPad *gst_element_get_pad(GstElement *element,gchar *name) {
  *
  * Retrieve a list of the pads associated with the element.
  *
- * Returns: <type>GList</type> of pads
+ * Returns: GList of pads
  */
 GList *gst_element_get_pad_list(GstElement *element) {
   g_return_val_if_fail(element != NULL, NULL);
@@ -310,7 +310,18 @@ gboolean gst_element_set_state(GstElement *element,GstElementState state) {
   return stateset;
 }
 
-/* class function to set the state of a simple element */
+/**
+ * gst_element_change_state:
+ * @element: element to change state of
+ * @state: new element state
+ *
+ * Changes the state of the element, but more importantly fires off a signal
+ * indicating the new state.  You can clear state by simply prefixing the
+ * GstElementState value with ~, it will be detected and used to turn off
+ * that bit.
+ *
+ * Returns: whether or not the state change was successfully set.
+ */
 gboolean gst_element_change_state(GstElement *element,
                                   GstElementState state) {
   g_return_val_if_fail(element != NULL, FALSE);
@@ -402,6 +413,15 @@ static gchar *_gst_element_type_names[] = {
 };
 */
 
+/**
+ * gst_element_save_thyself:
+ * @element: GstElement to save
+ * @parent: the xml parent node
+ *
+ * saves the element 
+ *
+ * Returns: the new xml node
+ */
 xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent) {
   xmlNodePtr self, arglist;
   GList *pads;

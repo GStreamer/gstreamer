@@ -46,7 +46,6 @@ enum {
 enum {
   ARG_0,
   ARG_VOLUME,
-  ARG_FREQ,
   ARG_FORMAT,
   ARG_CHANNELS,
   ARG_FREQUENCY,
@@ -63,6 +62,7 @@ static void gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 //static gboolean gst_sinesrc_open_audio(GstSineSrc *src);
 void gst_sinesrc_sync_parms(GstSineSrc *sinesrc);
 
+void gst_sinesrc_push(GstSrc *src);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 };
@@ -101,8 +101,6 @@ gst_sinesrc_class_init(GstSineSrcClass *klass) {
 
   gtk_object_add_arg_type("GstSineSrc::volume", GTK_TYPE_DOUBLE,
                           GTK_ARG_READWRITE, ARG_VOLUME);
-  gtk_object_add_arg_type("GstSineSrc::freq", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_FREQ);
   gtk_object_add_arg_type("GstSineSrc::format", GTK_TYPE_INT,
                           GTK_ARG_READWRITE, ARG_FORMAT);
   gtk_object_add_arg_type("GstSineSrc::channels", GTK_TYPE_INT,
@@ -123,7 +121,6 @@ static void gst_sinesrc_init(GstSineSrc *sinesrc) {
   gst_element_add_pad(GST_ELEMENT(sinesrc),sinesrc->srcpad);
 
   sinesrc->volume = 1.0;
-  sinesrc->freq = 512;
 
   sinesrc->format = AFMT_S16_LE;
   sinesrc->channels = 2;
@@ -193,9 +190,6 @@ static void gst_sinesrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
     case ARG_VOLUME:
       src->volume = GTK_VALUE_DOUBLE(*arg);
       break;
-    case ARG_FREQ:
-      src->freq = GTK_VALUE_INT(*arg);
-      break;
     case ARG_FORMAT:
       src->format = GTK_VALUE_INT(*arg);
       break;
@@ -220,9 +214,6 @@ static void gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   switch (id) {
     case ARG_VOLUME:
       GTK_VALUE_DOUBLE(*arg) = src->volume;
-      break;
-    case ARG_FREQ:
-      GTK_VALUE_INT(*arg) = src->freq;
       break;
     case ARG_FORMAT:
       GTK_VALUE_INT(*arg) = src->format;

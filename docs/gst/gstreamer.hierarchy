@@ -1,12 +1,27 @@
 GtkObject
+  GtkWidget
+    GtkRange
+    GtkContainer
   GstObject
-    GstPad
     GstElement
-      GstFilter
-        GstTee
       GstBin
         GstPipeline
         GstThread
-      GstConnection
-      GstSrc
+      GstFilter
+        GstTee
+        GstIdentity
       GstSink
+        GstFakeSink
+        GstAudioSink
+        GstFdSink
+      GstSrc
+        GstFakeSrc
+        GstDiskSrc
+        GstAsyncDiskSrc
+        GstHttpSrc
+        GstFdSrc
+        GstAudioSrc
+        GstSineSrc
+      GstConnection
+        GstQueue
+    GstPad

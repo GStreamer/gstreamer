@@ -98,7 +98,7 @@ gst_fdsrc_class_init(GstFdSrcClass *klass) {
   gtk_object_add_arg_type("GstFdSrc::bytesperread", GTK_TYPE_INT,
                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);
   gtk_object_add_arg_type("GstFdSrc::offset", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_OFFSET);
+                          GTK_ARG_READABLE, ARG_OFFSET);
 
   gtkobject_class->set_arg = gst_fdsrc_set_arg;
   gtkobject_class->get_arg = gst_fdsrc_get_arg;

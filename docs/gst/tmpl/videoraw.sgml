@@ -1,12 +1,12 @@
 <!-- ##### SECTION Title ##### -->
-plugin
+videoraw
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Information about video buffers.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+Information about video buffers.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -14,35 +14,27 @@ plugin
 
 </para>
 
-<!-- ##### FUNCTION plugin_initialize ##### -->
+<!-- ##### STRUCT MetaVideoRaw ##### -->
 <para>
 
 </para>
 
 
-
-<!-- ##### FUNCTION plugin_load_all ##### -->
+<!-- ##### STRUCT MetaDGA ##### -->
 <para>
 
 </para>
 
 
-
-<!-- ##### FUNCTION plugin_load ##### -->
+<!-- ##### STRUCT MetaOverlay ##### -->
 <para>
 
 </para>
 
-@name: 
-@Returns: 
 
-
-<!-- ##### FUNCTION plugin_load_absolute ##### -->
+<!-- ##### STRUCT OverlayClip ##### -->
 <para>
 
 </para>
-
-@name: 
-@Returns: 
 
 

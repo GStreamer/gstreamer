@@ -47,6 +47,7 @@ static gboolean gst_audiosink_stop(GstElement *element);
 static gboolean gst_audiosink_change_state(GstElement *element,
                                            GstElementState state);
 
+void gst_audiosink_chain(GstPad *pad,GstBuffer *buf);
 
 /* AudioSink signals and args */
 enum {
@@ -64,7 +65,7 @@ static void gst_audiosink_class_init(GstAudioSinkClass *klass);
 static void gst_audiosink_init(GstAudioSink *audiosink);
 
 
-static GstFilterClass *parent_class = NULL;
+static GstSinkClass *parent_class = NULL;
 static guint gst_audiosink_signals[LAST_SIGNAL] = { 0 };
 
 static guint16 gst_audiosink_type_audio = 0;
@@ -84,7 +85,7 @@ gst_audiosink_get_type(void) {
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    audiosink_type = gtk_type_unique(GST_TYPE_FILTER,&audiosink_info);
+    audiosink_type = gtk_type_unique(GST_TYPE_SINK,&audiosink_info);
   }
 
   if (!gst_audiosink_type_audio)
@@ -106,8 +107,8 @@ gst_audiosink_class_init(GstAudioSinkClass *klass) {
   gst_audiosink_signals[HANDOFF] =
     gtk_signal_new("handoff",GTK_RUN_LAST,gtkobject_class->type,
                    GTK_SIGNAL_OFFSET(GstAudioSinkClass,handoff),
-                   gtk_marshal_NONE__POINTER_POINTER,GTK_TYPE_NONE,2,
-                   GTK_TYPE_POINTER,GTK_TYPE_POINTER);
+                   gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
+                   GST_TYPE_AUDIOSINK);
   gtk_object_class_add_signals(gtkobject_class,gst_audiosink_signals,
                                LAST_SIGNAL);
 

@@ -23,7 +23,7 @@
 GstElementDetails gst_tee_details = {
   "Tee pipe fitting",
   "Tee",
-  "1ot-N pipe fitting",
+  "1-to-N pipe fitting",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
   "(C) 1999",
@@ -87,12 +87,28 @@ static void gst_tee_init(GstTee *tee) {
   tee->srcpads = NULL;
 }
 
+/**
+ * gst_tee_new:
+ * @name: the name of the new tee
+ *
+ * create a new tee element
+ *
+ * Returns: the new tee element
+ */
 GstElement *gst_tee_new(gchar *name) {
   GstElement *tee = GST_ELEMENT(gtk_type_new(GST_TYPE_TEE));
   gst_element_set_name(GST_ELEMENT(tee),name);
   return tee;
 }
 
+/**
+ * gst_tee_new_pad:
+ * @tee: the tee to create the new pad on
+ *
+ * create a new pad on a given tee
+ *
+ * Returns: the name of the new pad
+ */
 gchar *gst_tee_new_pad(GstTee *tee) {
   gchar *name;
   GstPad *srcpad;
@@ -108,6 +124,13 @@ gchar *gst_tee_new_pad(GstTee *tee) {
   return name;
 }
 
+/**
+ * gst_tee_chain:
+ * @pad: the pad to follow
+ * @buf: the buffer to pass
+ *
+ * chain a buffer on a pad
+ */
 void gst_tee_chain(GstPad *pad,GstBuffer *buf) {
   GstTee *tee;
   GSList *srcpads;

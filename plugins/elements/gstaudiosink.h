@@ -49,7 +49,7 @@ typedef struct _GstAudioSink GstAudioSink;
 typedef struct _GstAudioSinkClass GstAudioSinkClass;
 
 struct _GstAudioSink {
-  GstFilter filter;
+  GstSink sink;
 
   GstPad *sinkpad;
 
@@ -61,21 +61,13 @@ struct _GstAudioSink {
 };
 
 struct _GstAudioSinkClass {
-  GstFilterClass parent_class;
+  GstSinkClass parent_class;
 
   /* signals */
   void (*handoff) (GstElement *element,GstPad *pad);
 };
 
 GtkType gst_audiosink_get_type(void);
-GstElement *gst_audiosink_new(gchar *name);
-void gst_audiosink_chain(GstPad *pad,GstBuffer *buf);
-
-void gst_audiosink_sync_parms(GstAudioSink *audiosink);
-
-void gst_audiosink_set_format(GstAudioSink *audiosink,gint format);
-void gst_audiosink_set_channels(GstAudioSink *audiosink,gint channels);
-void gst_audiosink_set_frequency(GstAudioSink *audiosink,gint frequency);
 
 #ifdef __cplusplus
 }

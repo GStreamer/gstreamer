@@ -1,0 +1,27 @@
+<!-- ##### SECTION Title ##### -->
+GstHttpSrc
+
+<!-- ##### SECTION Short_Description ##### -->
+Reads data from a URL. (httpsrc)
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+Reads data from a URL.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstHttpSrc:location ##### -->
+<para>
+Specify the location of the file. The location must be a fully qualified URL.
+</para>
+
+<!-- ##### ARG GstHttpSrc:bytesperread ##### -->
+<para>
+Specify how many bytes to read at a time.
+
+</para>
+

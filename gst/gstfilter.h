@@ -39,7 +39,7 @@ extern "C" {
 #define GST_IS_FILTER(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_FILTER))
 #define GST_IS_FILTER_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FILTER)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FILTER))
 
 typedef struct _GstFilter GstFilter;
 typedef struct _GstFilterClass GstFilterClass;

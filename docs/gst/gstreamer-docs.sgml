@@ -1,39 +1,47 @@
 <!doctype book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
-<!entity Gst SYSTEM "sgml/gst.sgml">
 
-<!entity GstObject SYSTEM "sgml/gstobject.sgml">
-<!entity GstPad SYSTEM "sgml/gstpad.sgml">
+<!entity gstreamer-cothreads SYSTEM "sgml/cothreads.sgml">
+<!entity Gst SYSTEM "sgml/gst.sgml">
+<!entity GstBin SYSTEM "sgml/gstbin.sgml">
+<!entity GstBuffer SYSTEM "sgml/gstbuffer.sgml">
+<!entity GstConnection SYSTEM "sgml/gstconnection.sgml">
 <!entity GstElement SYSTEM "sgml/gstelement.sgml">
 <!entity GstFilter SYSTEM "sgml/gstfilter.sgml">
-<!entity GstBin SYSTEM "sgml/gstbin.sgml">
+<!entity GstLog SYSTEM "sgml/gstlog.sgml">
+<!entity GstMeta SYSTEM "sgml/gstmeta.sgml">
+<!entity GstObject SYSTEM "sgml/gstobject.sgml">
+<!entity GstPad SYSTEM "sgml/gstpad.sgml">
 <!entity GstPipeline SYSTEM "sgml/gstpipeline.sgml">
-<!entity GstBuffer SYSTEM "sgml/gstbuffer.sgml">
-<!entity GstSrc SYSTEM "sgml/gstsrc.sgml">
-<!entity GstSink SYSTEM "sgml/gstsink.sgml">
-
 <!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
+<!entity GstSink SYSTEM "sgml/gstsink.sgml">
+<!entity GstSrc SYSTEM "sgml/gstsrc.sgml">
+<!entity GstTee SYSTEM "sgml/gsttee.sgml">
+<!entity GstThread SYSTEM "sgml/gstthread.sgml">
+<!entity GstTrace SYSTEM "sgml/gsttrace.sgml">
+<!entity GstType SYSTEM "sgml/gsttype.sgml">
+<!entity GstUtils SYSTEM "sgml/gstutils.sgml">
+<!entity GstXml SYSTEM "sgml/gstxml.sgml">
 
-<!entity gstreamer-gsttype SYSTEM "sgml/gsttype.sgml">
-<!entity gstreamer-gstmeta SYSTEM "sgml/gstmeta.sgml">
-<!entity gstreamer-gstutils SYSTEM "sgml/gstutils.sgml">
-<!entity gstreamer-gsttrace SYSTEM "sgml/gsttrace.sgml">
+<!entity GstFakeSrc SYSTEM "sgml/gstfakesrc.sgml">
+<!entity GstFakeSink SYSTEM "sgml/gstfakesink.sgml">
 
-<!--
-<!entity gstreamer-gstasyncdisksrc SYSTEM "sgml/gstasyncdisksrc.sgml">
-<!entity gstreamer-gstaudiosink SYSTEM "sgml/gstaudiosink.sgml">
-<!entity gstreamer-gstdisksrc SYSTEM "sgml/gstdisksrc.sgml">
-<!entity gstreamer-gstesdsink SYSTEM "sgml/gstesdsink.sgml">
-<!entity gstreamer-gstfakefilter SYSTEM "sgml/gstfakefilter.sgml">
-<!entity gstreamer-gstfakesink SYSTEM "sgml/gstfakesink.sgml">
-<!entity gstreamer-gstfakesrc SYSTEM "sgml/gstfakesrc.sgml">
-<!entity gstreamer-gstfdsink SYSTEM "sgml/gstfdsink.sgml">
-<!entity gstreamer-gstfdsrc SYSTEM "sgml/gstfdsrc.sgml">
-<!entity gstreamer-gsthttpsrc SYSTEM "sgml/gsthttpsrc.sgml">
-<!entity gstreamer-gsttee SYSTEM "sgml/gsttee.sgml">
+<!entity GstDiskSrc SYSTEM "sgml/gstdisksrc.sgml">
+<!entity GstAsyncDiskSrc SYSTEM "sgml/gstasyncdisksrc.sgml">
+<!entity GstHttpSrc SYSTEM "sgml/gsthttpsrc.sgml">
+<!entity GstFdSrc SYSTEM "sgml/gstfdsrc.sgml">
+<!entity GstAudioSrc SYSTEM "sgml/gstaudiosrc.sgml">
+<!entity GstSineSrc SYSTEM "sgml/gstsinesrc.sgml">
 
-<!entity gstreamer-spectrum SYSTEM "sgml/spectrum.sgml">
-<!entity gstreamer-audioraw SYSTEM "sgml/audioraw.sgml">
--->
+<!entity GstAudioSink SYSTEM "sgml/gstaudiosink.sgml">
+<!entity GstEsdSink SYSTEM "sgml/gstesdsink.sgml">
+<!entity GstFdSink SYSTEM "sgml/gstfdsink.sgml">
+
+<!entity GstIdentity SYSTEM "sgml/gstidentity.sgml">
+<!entity GstQueue SYSTEM "sgml/gstqueue.sgml">
+
+<!entity audioraw SYSTEM "sgml/audioraw.sgml">
+<!entity spectrum SYSTEM "sgml/spectrum.sgml">
+<!entity videoraw SYSTEM "sgml/videoraw.sgml">
 
 <!entity gstreamer-tree-index SYSTEM "sgml/tree_index.sgml">
 ]>
@@ -61,38 +69,85 @@ with some more specialized elements.</para>
     &GstSrc;
     &GstBuffer;
     &GstPad;
+    &GstConnection;
     &GstPlugin;
+    &GstThread;
+    &GstTee;
 
-    &gstreamer-gsttype;
-    &gstreamer-gstmeta;
-    &gstreamer-gstutils;
-    &gstreamer-gsttrace;
+    &GstType;
+    &GstMeta;
+    &GstUtils;
+    &GstTrace;
+    &GstXml;
   </chapter>
 
-<!--
   <chapter id="element-types">
-    <title>GStreamer Element</title>
+    <title>GStreamer Standard Elements</title>
 
+    <para>
+      libgstelements.la provide some basic elements like a disk source
+      and sink. The use of these elements is strictly though the gtk_object_get() and
+      gtk_object_set() functions and the GStreamer Core Library functions.
+    </para>
+    <para>
+      Use the gst_elementfactory_find() and gst_elementfactory_create() functions
+      to create these elements. 
+    </para>
+    <para>
+      The following code example shows you how to create a GstDiskSrc element.
+    </para>
 
-    &gstreamer-gstfakesrc;
-    &gstreamer-gstdisksrc;
-    &gstreamer-gstasyncdisksrc;
-    &gstreamer-gsthttpsrc;
-    &gstreamer-gstfdsrc;
+    <para>
+    <programlisting role="C">
+      #include &lt;gst/gst.h&gt;
 
-    &gstreamer-gstaudiosink;
-    &gstreamer-gstesdsink;
-    &gstreamer-gstfdsink;
-    &gstreamer-gstfakesink;
+      GstElement *src;
+      GstElementFactory *srcfactory;
 
-    &gstreamer-gstfakefilter;
+      gst_init(&amp;argc,&amp;argv);
 
-    &gstreamer-spectrum;
-    &gstreamer-audioraw;
-    &gstreamer-gsttee;
-    &gstreamer-gsttypeaudio;
+      srcfactory = gst_elementfactory_find("disksrc");
+      g_return_if_fail(srcfactory != NULL);
+      src = gst_elementfactory_create(srcfactory,"src");
+      g_return_if_fail(src != NULL);
+      ...
+    </programlisting>
+    </para>
+
+    &GstFakeSrc;
+    &GstFakeSink;
+
+    &GstDiskSrc;
+    &GstAsyncDiskSrc;
+    &GstHttpSrc;
+    &GstFdSrc;
+    &GstAudioSrc;
+    &GstSineSrc;
+
+    &GstAudioSink;
+    &GstFdSink;
+
+    &GstIdentity;
+    &GstQueue;
   </chapter>
--->
+
+  <chapter id="metatdata-types">
+    <title>GStreamer MetaData Types</title>
+
+    <para>MetaData is used to specify the content of buffers. See <classname>GstMeta</classname>. </para>
+
+    &spectrum;
+    &audioraw;
+    &videoraw;
+  </chapter>
+
+  <chapter id="plugins">
+    <title>GStreamer Multimedia Plugins</title>
+
+    <para>GStreamer has some advanced multimedia plugins. </para>
+
+
+  </chapter>
 
   <chapter id="gst-index">
     <title>Index</title>

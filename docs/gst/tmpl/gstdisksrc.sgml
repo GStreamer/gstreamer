@@ -2,10 +2,12 @@
 GstDiskSrc
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Synchronous read from a file (disksrc)
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+Synchonously read buffers from a file. If you need asynchronous reading
+with seeking capabilities use a <classname>GstAsynDiskSrc</classname> instead.
 
 </para>
 
@@ -14,18 +16,33 @@ GstDiskSrc
 
 </para>
 
-<!-- ##### MACRO GST_DISKSRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
 <!-- ##### ENUM GstDiskSrcFlags ##### -->
 <para>
+<informaltable pgwide=1 frame="none" role="enum">
+<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
+<tbody>
+<row>
+<entry>GST_DISKSRC_OPEN</entry>
+<entry>the disksrc is open for reading</entry>
+</row>
+
+</tbody></tgroup></informaltable>
 
 </para>
 
-@GST_DISKSRC_OPEN: 
+
+<!-- ##### ARG GstDiskSrc:location ##### -->
+<para>
+Specify the location of the file to read.
+</para>
+
+<!-- ##### ARG GstDiskSrc:bytesperread ##### -->
+<para>
+Specify how many bytes to read at a time.
+</para>
+
+<!-- ##### ARG GstDiskSrc:offset ##### -->
+<para>
+Get the current offset in the file.
+</para>
 

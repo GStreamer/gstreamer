@@ -45,7 +45,7 @@ extern "C" {
 #define GST_IS_OBJECT(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_OBJECT))
 #define GST_IS_OBJECT_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_OBJECT)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_OBJECT))
 
 typedef struct _GstObject GstObject;
 typedef struct _GstObjectClass GstObjectClass;
@@ -98,14 +98,14 @@ void gst_object_unparent(GstObject *object);
 
 /* refcounting */
 //void gst_object_ref(GstObject *object);
-#define gst_object_ref(obj) gtk_object_ref(GTK_OBJECT(obj));
+#define gst_object_ref(object) gtk_object_ref(GTK_OBJECT(object));
 //void gst_object_unref(GstObject *object);
-#define gst_object_unref(obj) gtk_object_unref(GTK_OBJECT(obj));
+#define gst_object_unref(object) gtk_object_unref(GTK_OBJECT(object));
 //void gst_object_sink(GstObject *object);
-#define gst_object_sink(obj) gtk_object_sink(GTK_OBJECT(obj));
+#define gst_object_sink(object) gtk_object_sink(GTK_OBJECT(object));
 
 /* destroying an object */
-#define gst_object_destroy(obj) gtk_object_destroy(GTK_OBJECT(obj))
+#define gst_object_destroy(object) gtk_object_destroy(GTK_OBJECT(object))
 
 
 #ifdef __cplusplus

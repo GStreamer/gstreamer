@@ -2,11 +2,11 @@
 GstTee
 
 <!-- ##### SECTION Short_Description ##### -->
-
+1-to-N pipe fitting
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+A tee can be used to split out the filter graph.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -14,12 +14,10 @@ GstTee
 
 </para>
 
-<!-- ##### MACRO GST_TEE ##### -->
+<!-- ##### STRUCT GstTee ##### -->
 <para>
 
 </para>
-
-@obj: 
 
 
 <!-- ##### FUNCTION gst_tee_new ##### -->

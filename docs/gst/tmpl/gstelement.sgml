@@ -28,25 +28,57 @@ simpler to connect pads of two elements together.
 
 </para>
 
-<!-- ##### STRUCT GstElement ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### ENUM GstElementState ##### -->
 <para>
 This enum defines the standard states an element may be in.  GST_STATE_MAX
 is the highest bit that can be set, and is used internally.
+
+<informaltable pgwide=1 frame="none" role="enum">
+<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
+<tbody>
+<row>
+<entry>GST_STATE_COMPLETE</entry>
+<entry>means all the necesary information is available to run, i.e. the
+filename for the disksrc, etc. </entry>
+</row>
+
+<row>
+<entry>GST_STATE_RUNNING</entry>
+<entry>means that it's actually doing something, but that's fuzzy. </entry>
+</row>
+
+<row>
+<entry>GST_STATE_DISCOVERY</entry>
+<entry>is intended for the autoconnect case, in those instances where
+the only way to determine the input or output type of some pad is for an
+element to actually process some data.  The idea in that case is that the
+source element would be responsible for sending the data non-destructively
+(in the case of a network client, it would have to save it all up, unless
+it has seek capabilities over the network), and all downstream elements
+process it in such a way as to not hose their own state.  Or rather, when
+they cease to do discovery, they completely wipe their state as if nothing
+ever happened.</entry>
+</row>
+
+<row>
+<entry>GST_STATE_PREROLL</entry>
+<entry>is a local state, used for things like sending the first half of
+an MPEG GOP through the decoder in order to start playback at a frame
+somewhere in the middle of said GOP.  Not sure how that will work, 
+exactly.</entry>
+</row>
+
+<row>
+<entry>GST_STATE_PLAYING</entry>
+<entry>means there really is data flowing
+through the graph, where GST_STATE_PAUSED temporary stops the flow.  GST_STATE_PLAYING &&
+GST_STATE_PAUSED is the same idea as !GST_STATE_PLAYING, but there are probably going to be
+many cases where there really is a distinction.</entry>
+</row>
+
+</tbody></tgroup></informaltable>
 </para>
 
-@GST_STATE_COMPLETE: 
-@GST_STATE_RUNNING: 
-@GST_STATE_DISCOVERY: 
-@GST_STATE_PREROLL: 
-@GST_STATE_PLAYING: 
-@GST_STATE_PAUSED: 
-@GST_STATE_MAX: 
 
 <!-- ##### MACRO GST_STATE ##### -->
 <para>
@@ -83,18 +115,18 @@ This macro unsets the given state on the element.
 @flag: State to unset, can be any number of bits in guint32.
 
 
+<!-- ##### STRUCT GstElement ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### STRUCT GstElementDetails ##### -->
 <para>
 This struct is used to define public information about the element.  It
 describes the element, mostly for the benefit of editors.
 </para>
 
-@longname: 
-@class: 
-@description: 
-@version: 
-@author: 
-@copyright: 
 
 <!-- ##### STRUCT GstElementFactory ##### -->
 <para>
@@ -103,9 +135,6 @@ of the element, the GtkType value for it, as well as a pointer to the
 GstElementDetails struct for the element.
 </para>
 
-@name: 
-@type: 
-@details: 
 
 <!-- ##### USER_FUNCTION GstElementLoopFunction ##### -->
 <para>
@@ -195,7 +224,7 @@ circumstances.
 
 @element: 
 @name: 
-@Returns: 
+@Returns: GList of pads
 
 
 <!-- ##### FUNCTION gst_element_get_pad_list ##### -->
@@ -255,7 +284,7 @@ circumstances.
 
 </para>
 
-@element: 
+@element: the element to destroy
 
 
 <!-- ##### FUNCTION gst_element_save_thyself ##### -->
@@ -324,35 +353,46 @@ circumstances.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_loopfunc_wrapper ##### -->
+<para>
+</para>
+
+@argc: 
+@argv: 
+@Returns: 
+
+
 <!-- ##### SIGNAL GstElement::state-change ##### -->
 <para>
-
+Is trigered whenever the state of an element changes
 </para>
 
 @gstelement: the object which received the signal.
-@arg1: 
+@arg1: the new state of the object
 
 <!-- ##### SIGNAL GstElement::new-pad ##### -->
 <para>
-
+Is trigered whenever a new pad is added to an element
 </para>
 
 @gstelement: the object which received the signal.
-@arg1: 
+@arg1: the new pad that was added
 
 <!-- ##### SIGNAL GstElement::new-ghost-pad ##### -->
 <para>
 
+Is trigered whenever a new ghost pad is added to an element
 </para>
 
 @gstelement: the object which received the signal.
-@arg1: 
+@arg1: the new ghost pad that was added
 
 <!-- ##### SIGNAL GstElement::error ##### -->
 <para>
+Is trigered whenever an error occured
 
 </para>
 
 @gstelement: the object which received the signal.
-@arg1: 
+@arg1: the error message
 

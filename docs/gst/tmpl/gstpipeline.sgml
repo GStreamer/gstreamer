@@ -36,10 +36,10 @@ functions, like 'Play'.
 
 <!-- ##### MACRO gst_pipeline_destroy ##### -->
 <para>
-
+destroys the pipeline
 </para>
 
-@pipeline: 
+@pipeline: GstPipeline to destroy
 
 
 <!-- ##### FUNCTION gst_pipeline_iterate ##### -->

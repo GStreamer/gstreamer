@@ -1,0 +1,32 @@
+<!-- ##### SECTION Title ##### -->
+gstlog
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_SHOW_INFO ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO gst_info ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+

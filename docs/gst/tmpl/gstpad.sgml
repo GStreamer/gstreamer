@@ -2,10 +2,12 @@
 GstPad
 
 <!-- ##### SECTION Short_Description ##### -->
-
+The connection between Elements
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+Elements are connected to each other via "pads", which are extremely light-weight generic 
+connections. 
 
 </para>
 
@@ -14,20 +16,26 @@ GstPad
 
 </para>
 
-<!-- ##### MACRO GST_PAD ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
 <!-- ##### MACRO GST_PAD_CONNECTED ##### -->
 <para>
-
+is this pad connected
 </para>
 
-@pad: 
+@pad: the pad to check
+
+
+<!-- ##### MACRO GST_PAD_CAN_PULL ##### -->
+<para>
+can this pad be used to pull a buffer
+</para>
+
+@pad: the pad to check
+
+
+<!-- ##### STRUCT GstPad ##### -->
+<para>
+
+</para>
 
 
 <!-- ##### USER_FUNCTION GstPadChainFunction ##### -->
@@ -37,6 +45,15 @@ GstPad
 
 @pad: 
 @buf: 
+
+
+<!-- ##### USER_FUNCTION GstPadPullFunction ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
 
 
 <!-- ##### USER_FUNCTION GstPadPushFunction ##### -->
@@ -52,9 +69,6 @@ GstPad
 
 </para>
 
-@GST_PAD_UNKNOWN: 
-@GST_PAD_SRC: 
-@GST_PAD_SINK: 
 
 <!-- ##### FUNCTION gst_pad_new ##### -->
 <para>
@@ -92,6 +106,15 @@ GstPad
 @chain: 
 
 
+<!-- ##### FUNCTION gst_pad_set_pull_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@pull: 
+
+
 <!-- ##### FUNCTION gst_pad_get_type_id ##### -->
 <para>
 
@@ -120,15 +143,6 @@ GstPad
 
 
 <!-- ##### FUNCTION gst_pad_get_name ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_get_directory ##### -->
 <para>
 
 </para>

@@ -144,7 +144,14 @@ static void gst_thread_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   }
 }
 
-
+/**
+ * gst_thread_new:
+ * @name: the name of the thread
+ *
+ * Create a new thrad with the given name
+ *
+ * Returns; The new thread
+ */
 GstElement *gst_thread_new(guchar *name) {
   GstThread *thread;
 
@@ -271,7 +278,13 @@ static gboolean gst_thread_change_state(GstElement *element,
   return stateset;
 }
 
-
+/**
+ * gst_thread_main_loop:
+ * @arg: the thread to start
+ *
+ * The main loop of the thread. The thread will iterate
+ * while the state is GST_THREAD_STATE_SPINNING
+ */
 void *gst_thread_main_loop(void *arg) {
   GstThread *thread = GST_THREAD(arg);
 
@@ -293,6 +306,12 @@ void *gst_thread_main_loop(void *arg) {
   return NULL;
 }
 
+/**
+ * gst_thread_iterate:
+ * @thread: the thread to iterate
+ *
+ * do one iteration
+ */
 void gst_thread_iterate(GstThread *thread) {
   GList *entries;
   GstElement *entry;

@@ -118,6 +118,12 @@ GstBuffer *gst_buffer_create_sub(GstBuffer *parent,guint32 offset,guint32 size) 
   return buffer;
 }
 
+/**
+ * gst_buffer_destroy:
+ * @buffer: the GstBuffer to destroy
+ *
+ * destroy the buffer
+ */
 void gst_buffer_destroy(GstBuffer *buffer) {
   GSList *metas;
 
@@ -157,6 +163,12 @@ void gst_buffer_destroy(GstBuffer *buffer) {
   g_mem_chunk_free(_gst_buffer_chunk,buffer);
 }
 
+/**
+ * gst_buffer_ref:
+ * @buffer: the GstBuffer to reference
+ *
+ * increment the refcount of this buffer
+ */
 void gst_buffer_ref(GstBuffer *buffer) {
   g_return_if_fail(buffer != NULL);
 
@@ -173,6 +185,13 @@ void gst_buffer_ref(GstBuffer *buffer) {
 #endif
 }
 
+/**
+ * gst_buffer_ref_by_count:
+ * @buffer: the GstBuffer to reference
+ * @count: a number
+ *
+ * increment the refcount of this buffer with count
+ */
 void gst_buffer_ref_by_count(GstBuffer *buffer,int count) {
   g_return_if_fail(buffer != NULL);
   g_return_if_fail(count > 0);
@@ -188,6 +207,13 @@ void gst_buffer_ref_by_count(GstBuffer *buffer,int count) {
 #endif
 }
 
+/**
+ * gst_buffer_unref:
+ * @buffer: the GstBuffer to unref
+ *
+ * decrement the refcount of this buffer. If the refcount is
+ * zero, the buffer will be destroyed.
+ */
 void gst_buffer_unref(GstBuffer *buffer) {
   int zero;
 
@@ -211,6 +237,13 @@ void gst_buffer_unref(GstBuffer *buffer) {
     gst_buffer_destroy(buffer);
 }
 
+/**
+ * gst_buffer_add_meta:
+ * @buffer: the GstBuffer to add the metadata to
+ * @meta: the metadata to add to this buffer
+ *
+ * add the meta data to the buffer
+ */
 void gst_buffer_add_meta(GstBuffer *buffer,GstMeta *meta) {
   g_return_if_fail(buffer != NULL);
   g_return_if_fail(meta != NULL);
@@ -219,12 +252,28 @@ void gst_buffer_add_meta(GstBuffer *buffer,GstMeta *meta) {
   buffer->metas = g_slist_append(buffer->metas,meta);
 }
 
+/**
+ * gst_buffer_get_metas:
+ * @buffer: the GstBuffer to get the metadata from
+ *
+ * get the metadatas from the buffer
+ *
+ * Returns: a GSList of metadata
+ */
 GSList *gst_buffer_get_metas(GstBuffer *buffer) {
   g_return_val_if_fail(buffer != NULL, NULL);
 
   return buffer->metas;
 }
 
+/**
+ * gst_buffer_get_first_meta:
+ * @buffer: the GstBuffer to get the metadata from
+ *
+ * get the first metadata from the buffer
+ *
+ * Returns: the first metadata from the buffer
+ */
 GstMeta *gst_buffer_get_first_meta(GstBuffer *buffer) {
   g_return_val_if_fail(buffer != NULL, NULL);
 
@@ -233,6 +282,13 @@ GstMeta *gst_buffer_get_first_meta(GstBuffer *buffer) {
   return GST_META(buffer->metas->data);
 }
 
+/**
+ * gst_buffer_remove_meta:
+ * @buffer: the GstBuffer to remove the metadata from
+ * @meta: the metadata to remove
+ *
+ * remove the given metadata from the buffer
+ */
 void gst_buffer_remove_meta(GstBuffer *buffer,GstMeta *meta) {
   g_return_if_fail(buffer != NULL);
   g_return_if_fail(meta != NULL);
