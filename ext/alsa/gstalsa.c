@@ -547,19 +547,6 @@ gst_alsa_sink_check_event (GstAlsaSink *sink, gint pad_nr)
       case GST_EVENT_INTERRUPT:
 	cont = FALSE;
         break;
-      case GST_EVENT_NEW_MEDIA:
-	/* only the first pad my seek */
-	if (pad_nr != 0)
-	  break;	    
-	
-	if (GST_CLOCK_TIME_IS_VALID (this->clock->start_time)) { /* if the clock is running */
-	  g_assert (this->format);
-	  /* adjust the start time */
-	  this->clock->start_time += gst_alsa_samples_to_timestamp (this, this->transmitted);
-	}
-	this->transmitted = 0;
-	/* FIXME: Notify the clock that we're at offset 0 again */
-	break;
       case GST_EVENT_DISCONTINUOUS: 
 	{
 	  gint64 value;
