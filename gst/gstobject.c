@@ -78,6 +78,7 @@ gst_object_get_type (void)
       sizeof (GstObject),
       32,
       (GInstanceInitFunc) gst_object_init,
+      NULL
     };
     object_type = g_type_register_static (G_TYPE_OBJECT, "GstObject", &object_info, G_TYPE_FLAG_ABSTRACT);
   }
@@ -608,6 +609,7 @@ gst_signal_object_get_type (void)
       sizeof(GstSignalObject),
       16,
       (GInstanceInitFunc)gst_signal_object_init,
+      NULL
     };
     signal_object_type = g_type_register_static(G_TYPE_OBJECT, "GstSignalObject", &signal_object_info, 0);
   }

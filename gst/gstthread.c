@@ -95,6 +95,7 @@ gst_thread_get_type(void) {
       sizeof(GstThread),
       4,
       (GInstanceInitFunc)gst_thread_init,
+      NULL
     };
     thread_type = g_type_register_static(GST_TYPE_BIN, "GstThread", &thread_info, 0);
   }

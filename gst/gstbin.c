@@ -87,6 +87,7 @@ gst_bin_get_type (void)
       sizeof(GstBin),
       8,
       (GInstanceInitFunc)gst_bin_init,
+      NULL
     };
     bin_type = g_type_register_static (GST_TYPE_ELEMENT, "GstBin", &bin_info, 0);
   }
@@ -170,7 +171,7 @@ gst_bin_reset_element_sched (GstElement *element, GstSchedule *sched)
 //    GST_SCHEDULE_ADD_ELEMENT (sched, element);
 }
 
-void
+static void
 gst_bin_set_element_sched (GstElement *element,GstSchedule *sched)
 {
   GList *children;
@@ -211,7 +212,7 @@ gst_bin_set_element_sched (GstElement *element,GstSchedule *sched)
 }
 
 
-void
+static void
 gst_bin_unset_element_sched (GstElement *element)
 {
   GList *children;

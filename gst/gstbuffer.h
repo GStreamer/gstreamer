@@ -86,8 +86,8 @@ typedef enum {
 typedef struct _GstBuffer GstBuffer;
 
 
-typedef void	(*GstBufferFreeFunc)	(GstBuffer *buf);
-typedef void	(*GstBufferCopyFunc)	(GstBuffer *srcbuf,GstBuffer *dstbuf);
+typedef void       (*GstBufferFreeFunc)	(GstBuffer *buf);
+typedef GstBuffer *(*GstBufferCopyFunc)	(GstBuffer *srcbuf);
 
 
 #include <gst/gstbufferpool.h>

@@ -674,7 +674,7 @@ gst_plugin_find_feature_func (GstPlugin *plugin, const gchar *name, GType type)
   return NULL;
 }
 
-GstPluginFeature*
+static GstPluginFeature*
 gst_plugin_find_feature (const gchar *name, GType type)
 {
   GList *plugins;

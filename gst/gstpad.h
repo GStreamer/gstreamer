@@ -400,6 +400,9 @@ GstCaps*		gst_padtemplate_get_caps_by_name	(GstPadTemplate *templ, const gchar *
 xmlNodePtr		gst_padtemplate_save_thyself	(GstPadTemplate *templ, xmlNodePtr parent);
 GstPadTemplate*		gst_padtemplate_load_thyself	(xmlNodePtr parent);
 
+xmlNodePtr              gst_pad_ghost_save_thyself   (GstPad *pad,
+						      GstElement *bin,
+						      xmlNodePtr parent);
 
 #ifdef __cplusplus
 }

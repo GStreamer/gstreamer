@@ -58,6 +58,7 @@ GType gst_autoplug_get_type(void)
       sizeof(GstAutoplug),
       4,
       (GInstanceInitFunc)gst_autoplug_init,
+      NULL
     };
     autoplug_type = g_type_register_static (GST_TYPE_OBJECT, "GstAutoplug", &autoplug_info, G_TYPE_FLAG_ABSTRACT);
   }
@@ -189,6 +190,7 @@ gst_autoplugfactory_get_type (void)
       sizeof(GstAutoplugFactory),
       0,
       (GInstanceInitFunc) gst_autoplugfactory_init,
+      NULL
     };
     autoplugfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE, 
 		    				  "GstAutoplugFactory", &autoplugfactory_info, 0);

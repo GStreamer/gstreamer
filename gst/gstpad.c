@@ -55,6 +55,7 @@ gst_pad_get_type(void) {
       sizeof(GstPad),
       32,
       (GInstanceInitFunc)gst_pad_init,
+      NULL
     };
     pad_type = g_type_register_static(GST_TYPE_OBJECT, "GstPad", &pad_info, 0);
   }
@@ -124,6 +125,7 @@ gst_real_pad_get_type(void) {
       sizeof(GstRealPad),
       32,
       (GInstanceInitFunc)gst_real_pad_init,
+      NULL
     };
     pad_type = g_type_register_static(GST_TYPE_PAD, "GstRealPad", &pad_info, 0);
   }
@@ -1442,7 +1444,9 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
           GST_DEBUG_FUNCPTR_NAME (peer->chainhandler), GST_DEBUG_PAD_NAME (((GstPad*)peer)));
     (peer->chainhandler) (((GstPad*)peer), buf);
   } else
-    GST_DEBUG (GST_CAT_DATAFLOW, "no chainhandler\n");
+    {
+      GST_DEBUG (GST_CAT_DATAFLOW, "no chainhandler\n");
+    }
 }
 #endif
 
@@ -1633,6 +1637,7 @@ gst_padtemplate_get_type (void)
       sizeof(GstPadTemplate),
       32,
       (GInstanceInitFunc)gst_padtemplate_init,
+      NULL
     };
     padtemplate_type = g_type_register_static(GST_TYPE_OBJECT, "GstPadTemplate", &padtemplate_info, 0);
   }
@@ -1882,6 +1887,7 @@ gst_ghost_pad_get_type(void) {
       sizeof(GstGhostPad),
       8,
       (GInstanceInitFunc)gst_ghost_pad_init,
+      NULL
     };
     pad_type = g_type_register_static(GST_TYPE_PAD, "GstGhostPad", &pad_info, 0);
   }

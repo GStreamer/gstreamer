@@ -88,9 +88,11 @@ dynamic_connect (GstElement *element, GstPad *newpad, gpointer data)
 static gchar *
 gst_parse_unique_name(gchar *type,gst_parse_priv *priv)
 {
+  gpointer tmp;
   gint count;
 
-  count = GPOINTER_TO_INT(g_hash_table_lookup(priv->elementcounts,type));
+  tmp = g_hash_table_lookup (priv->elementcounts,type);
+  count = GPOINTER_TO_INT (tmp);
   count++;
   g_hash_table_insert(priv->elementcounts,type,GINT_TO_POINTER(count));
 
@@ -467,9 +469,10 @@ GST_DEBUG_PAD_NAME(temppad),GST_ELEMENT_NAME (parent),GST_PAD_NAME(temppad));
 
   if (retval) return retval;
 
-  if (closingchar != '\0')
-    DEBUG("returning IN THE WRONG PLACE\n");
-  else DEBUG("ending pipeline\n");
+  DEBUG (closingchar != '\0'?
+	 "returning IN THE WRONG PLACE\n" : 
+	 "ending pipeline\n");
+
   return i+1;
 }
 

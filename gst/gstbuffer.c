@@ -357,7 +357,7 @@ gst_buffer_copy (GstBuffer *buffer)
 
   // if a copy function exists, use it, else copy the bytes
   if (buffer->copy != NULL) {
-    (buffer->copy)(buffer,newbuf);
+    newbuf = (buffer->copy)(buffer);
   } else {
     // copy the absolute size
     newbuf->size = buffer->size;

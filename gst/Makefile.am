@@ -201,7 +201,13 @@ CFLAGS = \
 	$(LIBGST_CFLAGS) \
 	-D_GNU_SOURCE \
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
-	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\"
+	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
+	\
+	-W -Wpointer-arith -Wbad-function-cast \
+	-Wcast-align -Wsign-compare \
+	-Wmissing-prototypes -Wmissing-declarations \
+	-Wnested-externs \
+	-Winline -Wno-unused
 
 LIBS = $(LIBGST_LIBS)
 LDFLAGS = ""

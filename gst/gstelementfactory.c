@@ -57,6 +57,7 @@ gst_elementfactory_get_type (void)
       sizeof(GstElementFactory),
       0,
       (GInstanceInitFunc) gst_elementfactory_init,
+      NULL
     };
     elementfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE, 
 		    				  "GstElementFactory", &elementfactory_info, 0);
@@ -176,6 +177,7 @@ gst_elementfactory_new (const gchar *name, GType type,
   GstElementFactory *factory;
 
   g_return_val_if_fail(name != NULL, NULL);
+  g_return_val_if_fail (type, NULL);
   g_return_val_if_fail (details, NULL);
 
   factory = gst_elementfactory_find (name);

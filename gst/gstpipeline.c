@@ -75,6 +75,7 @@ gst_pipeline_get_type (void) {
       sizeof(GstPipeline),
       0,
       (GInstanceInitFunc)gst_pipeline_init,
+      NULL
     };
     pipeline_type = g_type_register_static (GST_TYPE_BIN, "GstPipeline", &pipeline_info, 0);
   }

@@ -54,6 +54,7 @@ gst_xml_get_type(void)
       sizeof(GstXML),
       0,
       (GInstanceInitFunc)gst_xml_init,
+      NULL
     };
     xml_type = g_type_register_static (GST_TYPE_OBJECT, "GstXml", &xml_info, 0);
   }

@@ -83,6 +83,7 @@ GType gst_element_get_type(void) {
       sizeof(GstElement),
       0,
       (GInstanceInitFunc)gst_element_init,
+      NULL
     };
     element_type = g_type_register_static(GST_TYPE_OBJECT, "GstElement", &element_info, G_TYPE_FLAG_ABSTRACT);
   }

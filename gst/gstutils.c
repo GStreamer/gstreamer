@@ -28,6 +28,8 @@
 
 #include "gstextratypes.h"
 
+#define ZERO(mem) memset(&mem, 0, sizeof(mem))
+
 /**
  * gst_util_get_int_arg:
  * @object: the object to query
@@ -40,8 +42,9 @@
 gint
 gst_util_get_int_arg (GObject *object, const gchar *argname) 
 {
-  GValue value = {0, };
+  GValue value;
 
+  ZERO (value);
   g_value_init (&value, G_TYPE_INT);
   g_object_get_property(G_OBJECT(object),argname,&value);
 
@@ -60,8 +63,9 @@ gst_util_get_int_arg (GObject *object, const gchar *argname)
 gint
 gst_util_get_bool_arg (GObject *object, const gchar *argname) 
 {
-  GValue value = {0, };
+  GValue value;
 
+  ZERO (value);
   g_value_init (&value, G_TYPE_BOOLEAN);
   g_object_get_property(G_OBJECT(object),argname,&value);
 
@@ -80,8 +84,9 @@ gst_util_get_bool_arg (GObject *object, const gchar *argname)
 glong
 gst_util_get_long_arg (GObject *object, const gchar *argname) 
 {
-  GValue value = {0, };
+  GValue value;
 
+  ZERO (value);
   g_value_init (&value, G_TYPE_LONG);
   g_object_get_property(G_OBJECT(object),argname,&value);
 
@@ -100,8 +105,9 @@ gst_util_get_long_arg (GObject *object, const gchar *argname)
 gfloat
 gst_util_get_float_arg (GObject *object, const gchar *argname) 
 {
-  GValue value = {0, };
+  GValue value;
 
+  ZERO (value);
   g_value_init (&value, G_TYPE_FLOAT);
   g_object_get_property(G_OBJECT(object),argname,&value);
 
@@ -120,8 +126,9 @@ gst_util_get_float_arg (GObject *object, const gchar *argname)
 gdouble 
 gst_util_get_double_arg (GObject *object, const gchar *argname) 
 {
-  GValue value = {0, };
+  GValue value;
 
+  ZERO (value);
   g_value_init (&value, G_TYPE_DOUBLE);
   g_object_get_property(G_OBJECT(object),argname,&value);
 
@@ -140,12 +147,13 @@ gst_util_get_double_arg (GObject *object, const gchar *argname)
  const gchar*
 gst_util_get_string_arg (GObject *object, const gchar *argname) 
 {
-  GValue value = {0, };
+  GValue value;
 
+  ZERO (value);
   g_value_init (&value, G_TYPE_STRING);
   g_object_get_property(G_OBJECT(object),argname,&value);
 
-  return g_value_get_string(&value);
+  return g_value_get_string(&value);  // memleak?
 }
 
 /**
@@ -160,8 +168,9 @@ gst_util_get_string_arg (GObject *object, const gchar *argname)
 gpointer
 gst_util_get_pointer_arg (GObject *object, const gchar *argname) 
 {
-  GValue value = {0, };
+  GValue value;
 
+  ZERO (value);
   g_value_init (&value, G_TYPE_POINTER);
   g_object_get_property(G_OBJECT(object),argname,&value);
 

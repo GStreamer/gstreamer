@@ -51,6 +51,7 @@ gst_plugin_feature_get_type (void)
       sizeof (GstObject),
       32,
       (GInstanceInitFunc) gst_plugin_feature_init,
+      NULL
     };
     plugin_feature_type = g_type_register_static (GST_TYPE_OBJECT, "GstPluginFeature", 
 		    				  &plugin_feature_info, G_TYPE_FLAG_ABSTRACT);
