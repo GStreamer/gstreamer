@@ -42,10 +42,12 @@ main (int argc, char *argv[])
   GstElement *pipeline = NULL;
   GstElement *tee, *src, *sink1, *sink2;
   GstPad *tee_src1, *tee_src2;
+#if 0
   GstCaps *src_caps = NULL;
   GstCaps *sink_caps = NULL;
   GstStructure *structure = NULL;
   GstPad *pad = NULL;
+#endif
 
   /* init */
   gst_init (&argc, &argv);
@@ -97,6 +99,8 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   gst_bin_iterate (GST_BIN (pipeline));
 
+  /* We don't allow apps to call gst_pad_try_set_caps(). */
+#if 0
   /* now we try setting caps on the src pad */
   /* FIXME: should we set to pause here ? */
   src_caps = gst_caps_from_string ("audio/raw, format=(s)\"int\", "
@@ -136,6 +140,7 @@ main (int argc, char *argv[])
     gst_structure_get_int (structure, "rate", &rate);
     g_print ("Rate of pad on sink2 : %d\n", rate);
   }
+#endif
    
   /* remove the first one, iterate */
   g_print ("Removing first sink\n");
