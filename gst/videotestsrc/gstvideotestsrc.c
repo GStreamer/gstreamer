@@ -187,7 +187,7 @@ static GstPadLinkReturn
 gst_videotestsrc_src_link (GstPad * pad, GstCaps * caps)
 {
   GstVideotestsrc *videotestsrc;
-  GstCaps *caps1;
+  GstCaps *caps1 = NULL;
 
   GST_DEBUG ("gst_videotestsrc_src_link");
   videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
