@@ -1,5 +1,13 @@
 2004-06-10  Wim Taymans  <wim@fluendo.com>
 
+	* ext/theora/theoraenc.c: (gst_theora_enc_class_init),
+	(gst_theora_enc_init), (theora_enc_sink_link),
+	(theora_buffer_from_packet), (theora_enc_set_property),
+	(theora_enc_get_property):
+	Set duration on encoded buffer, added some more properties
+
+2004-06-10  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_next_buffer),
 	(gst_ogg_mux_get_headers), (gst_ogg_mux_set_header_on_caps),
 	(gst_ogg_mux_send_headers), (gst_ogg_mux_loop):
