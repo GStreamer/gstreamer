@@ -361,6 +361,7 @@ int main
   if (_arg_list_mm)
   {
     g_hash_table_foreach (candidates, (GHFunc) hash_print_key, NULL);
+    return 0;
   }
 
   /* print out command line if asked for */
