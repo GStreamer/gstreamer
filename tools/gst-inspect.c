@@ -236,6 +236,26 @@ print_hierarchy (GType type, gint level, gint * maxlevel)
 }
 
 static void
+print_interfaces (GType type)
+{
+  guint n_ifaces;
+  GType *iface, *ifaces = g_type_interfaces (type, &n_ifaces);
+
+  if (ifaces) {
+    if (n_ifaces) {
+      g_print ("Implemented Interfaces:\n");
+      iface = ifaces;
+      while (*iface) {
+        g_print ("  %s\n", g_type_name (*iface));
+        iface++;
+      }
+      g_print ("\n");
+      g_free (ifaces);
+    }
+  }
+}
+
+static void
 print_element_properties_info (GstElement * element)
 {
   GParamSpec **property_specs;
@@ -1103,6 +1123,7 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   }
 
   print_hierarchy (G_OBJECT_TYPE (element), 0, &maxlevel);
+  print_interfaces (G_OBJECT_TYPE (element));
 
   print_pad_templates_info (element, factory);
   print_element_flag_info (element);

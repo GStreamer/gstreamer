@@ -1,3 +1,8 @@
+2005-03-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* tools/gst-inspect.c: (print_interfaces), (print_element_info):
+    added listing implemented interfaces to gst-inspect
+
 2005-03-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gststructure.c: (gst_structure_parse_field),
