@@ -1,3 +1,9 @@
+2004-03-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/oss/gstosssink.c: (gst_osssink_get_delay),
+	(gst_osssink_get_time):
+        add a warning, IMO this won't get triggered anymore, remove later
+
 2004-03-07  David Schleef  <ds@schleef.org>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):  Added Cinepak

@@ -296,12 +296,17 @@ gst_osssink_get_time (GstClock *clock, gpointer data)
 
   delay = gst_osssink_get_delay (osssink);
 
-  /* sometimes delay is bigger than the number of bytes sent to the device, 
-   * which screws up this calculation, we assume that everything is still 
-   * in the device then */
+  /* sometimes delay is bigger than the number of bytes sent to the device,
+   * which screws up this calculation, we assume that everything is still
+   * in the device then
+   * thomas: with proper handling of the return value, this doesn't seem to
+   * happen anymore, so remove the second code path after april 2004 */
   if (delay < 0) {
     delay = 0;
-  } else if (((guint64) delay) > osssink->handled) {
+  } else if ((guint64) delay > osssink->handled) {
+    g_warning ("Delay %d > osssink->handled %" G_GUINT64_FORMAT
+               ", setting to osssink->handled",
+               delay, osssink->handled);
     delay = osssink->handled;
   }
   res =  (osssink->handled - delay) * GST_SECOND / GST_OSSELEMENT (osssink)->bps;
