@@ -56,6 +56,7 @@ struct _GstEsdmon {
   gint frequency;
 
   guint64 basetime;
+  guint64 samples_since_basetime;
   guint64 curoffset;
   guint64 bytes_per_read;
 };
@@ -249,6 +250,7 @@ gst_esdmon_init(GstEsdmon *esdmon)
   esdmon->bytes_per_read = 4096;
   esdmon->curoffset = 0;
   esdmon->basetime = 0;
+  esdmon->samples_since_basetime = 0;
 }
 
 static gboolean
@@ -314,11 +316,12 @@ gst_esdmon_get (GstPad *pad)
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_OFFSET (buf) = esdmon->curoffset;
   GST_BUFFER_TIMESTAMP (buf) = esdmon->basetime +
-	  esdmon->curoffset * 1000000LL / esdmon->frequency;
+	  esdmon->samples_since_basetime * 1000000LL / esdmon->frequency;
 
+  esdmon->curoffset += readbytes;
   readsamples = readbytes / esdmon->channels;
   if (esdmon->depth == 16) readsamples /= 2;
-  esdmon->curoffset += readsamples;
+  esdmon->samples_since_basetime += readsamples;
 
   GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from esdmon of %ld bytes, timestamp %lld\n", readbytes, GST_BUFFER_TIMESTAMP (buf));
   return buf;
@@ -348,8 +351,8 @@ gst_esdmon_set_property (GObject *object, guint prop_id, const GValue *value, GP
       break;
     case ARG_RATE:
       /* Preserve the timestamps */
-      esdmon->basetime = esdmon->curoffset * 1000000LL / esdmon->frequency;
-      esdmon->curoffset = 0;
+      esdmon->basetime = esdmon->samples_since_basetime * 1000000LL / esdmon->frequency;
+      esdmon->samples_since_basetime = 0;
 
       /* Set the new frequency */
       esdmon->frequency = g_value_get_int (value);
