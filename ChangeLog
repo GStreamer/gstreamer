@@ -1,3 +1,9 @@
+2004-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/ximage/ximagesink.c:
+	* sys/xvimage/xvimagesink.c:
+	  assign all TOO_LAZY's to a real category.  Thanks to Warthy Warthog.
+
 2004-08-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
