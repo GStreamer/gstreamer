@@ -903,7 +903,7 @@ gst_caps_load_thyself (xmlNodePtr parent)
       xmlNodePtr subfield = field->xmlChildrenNode;
       GstCaps *caps;
       gchar *content;
-      gboolean fixed = TRUE;
+      GstCapsFlags fixed = GST_CAPS_FIXED;
 
       g_mutex_lock (_gst_caps_chunk_lock);
       caps = g_mem_chunk_alloc0 (_gst_caps_chunk);
@@ -929,7 +929,7 @@ gst_caps_load_thyself (xmlNodePtr parent)
 	
         subfield = subfield->next;
       }
-      if (fixed) GST_CAPS_FLAG_SET (caps, GST_CAPS_FIXED);
+      GST_CAPS_FLAG_SET (caps, fixed);
 
       result = gst_caps_append (result, caps);
     }
