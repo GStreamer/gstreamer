@@ -304,6 +304,11 @@ gst_ffmpegcolorspace_chain (GstPad * pad, GstData * data)
   g_return_if_fail (space != NULL);
   g_return_if_fail (GST_IS_FFMPEGCOLORSPACE (space));
 
+  if (!GST_PAD_IS_USABLE (space->srcpad)) {
+    gst_buffer_unref (inbuf);
+    return;
+  }
+
   if (space->from_pixfmt == PIX_FMT_NB || space->to_pixfmt == PIX_FMT_NB) {
     GST_ELEMENT_ERROR (space, CORE, NOT_IMPLEMENTED, (NULL),
         ("attempting to convert colorspaces between unknown formats"));
