@@ -1,3 +1,12 @@
+2004-07-21  Benjamin Otte  <otte@gnome.org>
+
+	* gst/schedulers/entryscheduler.c:
+	(gst_entry_scheduler_loop_wrapper),
+	(gst_entry_scheduler_chain_wrapper),
+	(gst_entry_scheduler_get_wrapper):
+	  reset the state when the cothread starts, so we don't get assertion
+	  failures on restarting of cothreads
+
 2004-07-20  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstelement.c: (gst_element_link_pads_filtered):

@@ -277,6 +277,7 @@ gst_entry_scheduler_loop_wrapper (int argc, char **argv)
   CothreadPrivate *priv = (CothreadPrivate *) argv;
   GstElement *element = priv->element;
 
+  priv->wait = WAIT_FOR_NOTHING;
   do {
     g_assert (priv->wait == WAIT_FOR_NOTHING);
     GST_LOG_OBJECT (SCHED (element), "calling loopfunc for element %s",
@@ -332,6 +333,7 @@ gst_entry_scheduler_chain_wrapper (int argc, char **argv)
   CothreadPrivate *priv = (CothreadPrivate *) argv;
   GstElement *element = priv->element;
 
+  priv->wait = WAIT_FOR_PADS;
   do {
     GstRealPad *pad = priv->schedule_pad;
 
@@ -397,6 +399,7 @@ gst_entry_scheduler_get_wrapper (int argc, char **argv)
   CothreadPrivate *priv = (CothreadPrivate *) argv;
   GstElement *element = priv->element;
 
+  priv->wait = WAIT_FOR_PADS;
   do {
     GstRealPad *pad = priv->schedule_pad;
 
