@@ -1,3 +1,9 @@
+2003-11-14  Thomas Vander Stichele <thomas at apestaart dot org>
+
+        * Slap walters back into place.
+	* remove GST_CONFIG_DIR, it isn't used anymore, and it looks like
+          GST_CACHE_DIR replaces it (which is up for fixing next)
+
 2003-06-02  Colin Walters  <walters@verbum.org>
 
 	* Take over the world.
