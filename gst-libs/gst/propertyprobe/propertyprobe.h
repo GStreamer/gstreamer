@@ -41,32 +41,56 @@ typedef struct _GstPropertyProbeInterface {
   GTypeInterface klass;
 
   /* signals */
-  void (*need_probe) (GstPropertyProbe *property_probe, const gchar *property);
+  void          (*probe_needed)   (GstPropertyProbe *probe,
+				   const GParamSpec *pspec);
 
   /* virtual functions */
-  gchar ** (*get_list) (GstElement *property_probe);
-  void (*probe_property) (GstElement *property_probe, const GParamSpec *property);
-  gchar ** (*get_property_info) (GstElement *property_probe,
-      const GParamSpec *property);
-  gboolean (*is_probed) (GstElement *element, const GParamSpec *property);
-  
+  const GList * (*get_properties) (GstPropertyProbe *probe);
+  gboolean      (*needs_probe)    (GstPropertyProbe *probe,
+				   guint             prop_id,
+				   const GParamSpec *pspec);
+  void          (*probe_property) (GstPropertyProbe *probe,
+				   guint             prop_id,
+				   const GParamSpec *pspec);
+  GValueArray * (*get_values)     (GstPropertyProbe *probe,
+				   guint             prop_id,
+				   const GParamSpec *pspec);
+
   GST_CLASS_PADDING
 } GstPropertyProbeInterface;
 
-GType		gst_property_probe_get_type	(void);
+GType	     gst_property_probe_get_type       (void);
 
 /* virtual class function wrappers */
-gchar ** gst_property_probe_get_list (GstElement *element);
-void gst_property_probe_probe_property (GstElement *element,
-    const gchar *property);
-gchar ** gst_property_probe_get_property_info (GstElement *element,
-    const gchar *property);
-gboolean gst_property_probe_is_probed (GstElement *element,
-    const gchar *property);
 
-/* utility functions */
-gchar ** gst_property_probe_get_possibilities (GstElement *element,
-    const gchar *property);
+/* returns list of GParamSpecs */
+const GList *     gst_property_probe_get_properties      (GstPropertyProbe *probe);
+const GParamSpec *gst_property_probe_get_property        (GstPropertyProbe *probe,
+							  const gchar      *name);
+
+/* probe one property */
+void		  gst_property_probe_probe_property      (GstPropertyProbe *probe,
+							  const GParamSpec *pspec);
+void		  gst_property_probe_probe_property_name (GstPropertyProbe *probe,
+						          const gchar      *name);
+
+/* do we need a probe? */
+gboolean	  gst_property_probe_needs_probe         (GstPropertyProbe *probe,
+							  const GParamSpec *pspec);
+gboolean	  gst_property_probe_needs_probe_name    (GstPropertyProbe *probe,
+							  const gchar      *name);
+
+/* returns list of GValues */
+GValueArray *     gst_property_probe_get_values          (GstPropertyProbe *probe,
+							  const GParamSpec *pspec);
+GValueArray *     gst_property_probe_get_values_name     (GstPropertyProbe *probe,
+							  const gchar      *name);
+
+/* sugar */
+GValueArray *     gst_property_probe_probe_and_get_values (GstPropertyProbe *probe,
+							  const GParamSpec *pspec);
+GValueArray *     gst_property_probe_probe_and_get_values_name (GstPropertyProbe *probe,
+							  const gchar      *name);
 
 G_END_DECLS
 
