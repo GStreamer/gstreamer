@@ -1,3 +1,8 @@
+2004-11-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/volume/gstvolume.c:
+	  Allow buffer-frames=0.
+
 2004-11-12 Iain <iaingnome@gmail.com>
 
 	* configure.ac: Check for polypaudio
