@@ -185,15 +185,19 @@ gst_fdsrc_get (GstPad * pad)
   GstFdSrc *src;
   GstBuffer *buf;
   glong readbytes;
+
+#ifndef HAVE_WIN32
   fd_set readfds;
   struct timeval t, *tp = &t;
   gint retval;
+#endif
 
   src = GST_FDSRC (gst_pad_get_parent (pad));
 
   /* create the buffer */
   buf = gst_buffer_new_and_alloc (src->blocksize);
 
+#ifndef HAVE_WIN32
   FD_ZERO (&readfds);
   FD_SET (src->fd, &readfds);
 
@@ -216,6 +220,7 @@ gst_fdsrc_get (GstPad * pad)
     gst_element_set_eos (GST_ELEMENT (src));
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
+#endif
 
   do {
     readbytes = read (src->fd, GST_BUFFER_DATA (buf), src->blocksize);

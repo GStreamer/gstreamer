@@ -1,5 +1,14 @@
 2004-04-13  David Schleef  <ds@schleef.org>
 
+	* configure.ac:  Disable various code when compiling for MinGW.
+	* gst/elements/Makefile.am:
+	* gst/elements/gstelements.c:
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_get):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_init), (gst_filesrc_get):
+	* gst/registries/gstxmlregistry.c: (make_dir):
+
+2004-04-13  David Schleef  <ds@schleef.org>
+
 	* gst/Makefile.am:
 	* gst/gstcpu.c: (gst_cpuid_i386): Convert asm source into inline
 	assembly.

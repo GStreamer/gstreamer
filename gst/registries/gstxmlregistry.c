@@ -301,7 +301,7 @@ get_time (const char *path, gboolean * is_dir)
 }
 
 /* same as 0755 */
-#define dirmode \
+#define DIRMODE \
   (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
 
 static gboolean
@@ -316,15 +316,19 @@ make_dir (gchar * filename)
   dirname = g_strndup (filename, strrchr (filename, '/') - filename);
 
   if (stat (dirname, &dirstat) == -1 && errno == ENOENT) {
-    if (mkdir (dirname, dirmode) != 0) {
+#ifndef HAVE_WIN32
+    if (mkdir (dirname, DIRMODE) != 0) {
       if (make_dir (dirname) != TRUE) {
         g_free (dirname);
         return FALSE;
       } else {
-        if (mkdir (dirname, dirmode) != 0)
+        if (mkdir (dirname, DIRMODE) != 0)
           return FALSE;
       }
     }
+#else
+    return FALSE;
+#endif
   }
 
   g_free (dirname);

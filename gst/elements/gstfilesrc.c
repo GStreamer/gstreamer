@@ -230,7 +230,9 @@ gst_filesrc_init (GstFileSrc * src)
   gst_pad_set_formats_function (src->srcpad, gst_filesrc_get_formats);
   gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
 
+#ifdef HAVE_MMAP
   src->pagesize = getpagesize ();
+#endif
 
   src->filename = NULL;
   src->fd = 0;

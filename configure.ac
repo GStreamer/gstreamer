@@ -233,6 +233,15 @@ if test "x$GST_CVS" = "xyes"; then
   AS_COMPILER_FLAG(-fno-common,GST_INT_CFLAGS="$GST_INT_CFLAGS -fno-common",)
 fi
 
+dnl HAVE_WIN32 currently means "disable POSIXisms".
+case "$host" in
+  *-*-mingw*)
+    AC_DEFINE_UNQUOTED(HAVE_WIN32, 1, [Defined if compiling for Windows])
+    ;;
+  *)
+    ;;
+esac
+
 dnl Check for essential libraries first:
 dnl ====================================
 

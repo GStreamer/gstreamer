@@ -8,6 +8,16 @@ plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = libgstelements.la
 
+# FIXME:
+# Disable multifilesrc on Windows, cause it uses mmap excessively
+# and I don't feel like fixing it yet.  See also the disablement
+# in gstelements.c.
+if AS_LIBTOOL_WIN32
+multifilesrc = 
+else
+multifilesrc = gstmultifilesrc.c
+endif
+
 libgstelements_la_DEPENDENCIES = ../libgstreamer-@GST_MAJORMINOR@.la
 libgstelements_la_SOURCES =	\
 	gstaggregator.c		\
@@ -21,7 +31,7 @@ libgstelements_la_SOURCES =	\
 	gstfdsrc.c		\
 	gstidentity.c		\
 	gstmd5sink.c		\
-	gstmultifilesrc.c	\
+	$(multifilesrc)		\
 	gstpipefilter.c		\
 	gstshaper.c		\
 	gststatistics.c		\
