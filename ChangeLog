@@ -1,3 +1,8 @@
+2004-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	  really fix dist
+
 2004-12-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
