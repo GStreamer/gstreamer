@@ -1123,12 +1123,13 @@ gst/elements/Makefile
 gst/autoplug/Makefile
 gst/schedulers/Makefile
 libs/Makefile
+libs/gst/Makefile
+libs/gst/bytestream/makefile
 libs/riff/Makefile
 libs/getbits/Makefile
 libs/putbits/Makefile
 libs/idct/Makefile
 libs/audio/Makefile
-libs/bytestream/Makefile
 libs/control/Makefile
 libs/resample/Makefile
 plugins/Makefile
