@@ -261,7 +261,7 @@ enum {
   GST_CAT_STATES,		// State changes and such
   GST_CAT_PLANNING,		// Plan generation
   GST_CAT_SCHEDULING,		// Schedule construction
-  GST_CAT_OPERATION,		// Events during actual data movement
+  GST_CAT_DATAFLOW,		// Events during actual data movement
   GST_CAT_BUFFER,		// Buffer creation/destruction
   GST_CAT_CAPS,			// Capabilities matching
   GST_CAT_CLOCK,		// Clocking

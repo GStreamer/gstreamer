@@ -937,13 +937,13 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
 #endif
 
 #ifndef gst_pad_pullregion
-GstBuffer *gst_pad_pullregion(GstPad *pad,gulong offset,gulong size) {
+GstBuffer *gst_pad_pullregion(GstPad *pad,GstRegionType type,guint64 offset,guint64 len) {
   GstRealPad *peer = GST_RPAD_PEER(pad);
-  GST_DEBUG_ENTER("(%s:%s,%ld,%ld)",GST_DEBUG_PAD_NAME(pad),offset,size);
+  GST_DEBUG_ENTER("(%s:%s,%d,%lld,%lld)",GST_DEBUG_PAD_NAME(pad),type,offset,len);
   if (peer->pullregionfunc) {
     GST_DEBUG (0,"calling pullregionfunc &%s of peer pad %s:%s\n",
           GST_DEBUG_FUNCPTR_NAME(peer->pullregionfunc),GST_DEBUG_PAD_NAME(((GstPad*)peer)));
-    return (peer->pullregionfunc)(((GstPad*)peer),offset,size);
+    return (peer->pullregionfunc)(((GstPad*)peer),type,offset,len);
   } else {
     GST_DEBUG (0,"no pullregionfunc\n");
     return NULL;

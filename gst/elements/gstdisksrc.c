@@ -56,14 +56,14 @@ enum {
 };
 
 
-static void 			gst_disksrc_class_init	(GstDiskSrcClass *klass);
-static void 			gst_disksrc_init		(GstDiskSrc *disksrc);
+static void 		gst_disksrc_class_init	(GstDiskSrcClass *klass);
+static void 		gst_disksrc_init		(GstDiskSrc *disksrc);
 
-static void 			gst_disksrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void 			gst_disksrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void 		gst_disksrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void 		gst_disksrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
-static GstBuffer *		gst_disksrc_get		(GstPad *pad);
-static GstBuffer *		gst_disksrc_get_region	(GstPad *pad, gulong offset, gulong size);
+static GstBuffer *	gst_disksrc_get		(GstPad *pad);
+static GstBuffer *	gst_disksrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);
 
 static GstElementStateReturn 	gst_disksrc_change_state	(GstElement *element);
 
@@ -269,12 +269,13 @@ gst_disksrc_get (GstPad *pad)
  * Push a new buffer from the disksrc of given size at given offset.
  */
 static GstBuffer *
-gst_disksrc_get_region (GstPad *pad, gulong offset, gulong size) 
+gst_disksrc_get_region (GstPad *pad, GstRegionType type,guint64 offset,guint64 len) 
 {
   GstDiskSrc *src;
   GstBuffer *buf;
 
   g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (type == GST_REGION_OFFSET_LEN, NULL);
 
   src = GST_DISKSRC (gst_pad_get_parent (pad));
 
@@ -297,13 +298,13 @@ gst_disksrc_get_region (GstPad *pad, gulong offset, gulong size)
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
-  if ((offset + size) > src->size) {
+  if ((offset + len) > src->size) {
     GST_BUFFER_SIZE (buf) = src->size - offset;
     // FIXME: set the buffer's EOF bit here
   } else
-    GST_BUFFER_SIZE (buf) = size;
+    GST_BUFFER_SIZE (buf) = len;
 
-  GST_DEBUG (0,"map %p, offset %ld, size %d\n", src->map, offset, GST_BUFFER_SIZE (buf));
+  GST_DEBUG (0,"map %p, offset %lld, size %d\n", src->map, offset, GST_BUFFER_SIZE (buf));
 
   /* we're done, return the buffer off now */
   return buf;

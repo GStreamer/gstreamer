@@ -66,18 +66,24 @@ typedef struct _GstPadTemplate GstPadTemplate;
 typedef struct _GstPadTemplateClass GstPadTemplateClass;
 
 
+typedef enum {
+  GST_REGION_NONE,
+  GST_REGION_OFFSET_LEN,
+  GST_REGION_TIME_LEN,
+} GstRegionType;
+
+
 /* this defines the functions used to chain buffers
  * pad is the sink pad (so the same chain function can be used for N pads)
  * buf is the buffer being passed */
 typedef void (*GstPadChainFunction) (GstPad *pad,GstBuffer *buf);
 typedef GstBuffer *(*GstPadGetFunction) (GstPad *pad);
-typedef GstBuffer *(*GstPadGetRegionFunction) (GstPad *pad, gulong offset, gulong size);
+typedef GstBuffer *(*GstPadGetRegionFunction) (GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
 typedef void (*GstPadQoSFunction) (GstPad *pad, glong qos_message);
 
 typedef void (*GstPadPushFunction) (GstPad *pad, GstBuffer *buf);
 typedef GstBuffer *(*GstPadPullFunction) (GstPad *pad);
-typedef GstBuffer *(*GstPadPullRegionFunction) (GstPad *pad, gulong offset, gulong size);
-
+typedef GstBuffer *(*GstPadPullRegionFunction) (GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
 typedef gboolean (*GstPadEOSFunction) (GstPad *pad);
 
 typedef enum {
@@ -116,6 +122,9 @@ struct _GstRealPad {
   GstRealPad *peer;
 
   GstBuffer *bufpen;
+  GstRegionType regiontype;
+  guint64 offset;
+  guint64 len;
 
   GstPadChainFunction chainfunc;
   GstPadGetFunction getfunc;
@@ -170,6 +179,10 @@ struct _GstGhostPadClass {
 #define GST_RPAD_PULLREGIONFUNC(pad)	(((GstRealPad *)(pad))->pullregionfunc)
 #define GST_RPAD_QOSFUNC(pad)		(((GstRealPad *)(pad))->qosfunc)
 #define GST_RPAD_EOSFUNC(pad)		(((GstRealPad *)(pad))->eosfunc)
+
+#define GST_RPAD_REGIONTYPE(pad)	(((GstRealPad *)(pad))->regiontype)
+#define GST_RPAD_OFFSET(pad)		(((GstRealPad *)(pad))->offset)
+#define GST_RPAD_LEN(pad)		(((GstRealPad *)(pad))->len)
 
 /* GstGhostPad */
 #define GST_GPAD_REALPAD(pad)		(((GstGhostPad *)(pad))->realpad)
@@ -277,12 +290,12 @@ void			gst_pad_push			(GstPad *pad, GstBuffer *buffer);
 #endif
 #if 1
 GstBuffer*		gst_pad_pull			(GstPad *pad);
-GstBuffer*		gst_pad_pull_region		(GstPad *pad, gulong offset, gulong size);
+GstBuffer*		gst_pad_pullregion		(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
 #else
 #define gst_pad_pull(pad) \
   (((pad)->peer->pullfunc) ? ((pad)->peer->pullfunc)((pad)->peer) : NULL)
-#define gst_pad_pullregion(pad,offset,size) \
-  (((pad)->peer->pullregionfunc) ? ((pad)->peer->pullregionfunc)((pad)->peer,(offset),(size)) : NULL)
+#define gst_pad_pullregion(pad,type,offset,len) \
+  (((pad)->peer->pullregionfunc) ? ((pad)->peer->pullregionfunc)((pad)->peer,(type),(offset),(len)) : NULL)
 #endif
 
 GstPad *		gst_pad_select			(GstPad *nextpad, ...);

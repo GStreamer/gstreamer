@@ -86,7 +86,7 @@ gst_bin_src_wrapper (int argc,char *argv[])
   GstElement *element = GST_ELEMENT (argv);
   GList *pads;
   GstRealPad *realpad;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
 
   GST_DEBUG_ENTER("(%d,\"%s\")",argc,name);
@@ -98,18 +98,20 @@ gst_bin_src_wrapper (int argc,char *argv[])
       realpad = (GstRealPad*)(pads->data);
       pads = g_list_next(pads);
       if (GST_RPAD_DIRECTION(realpad) == GST_PAD_SRC) {
-//        region_struct *region = cothread_get_data (element->threadstate, "region");
         GST_DEBUG (0,"calling _getfunc for %s:%s\n",GST_DEBUG_PAD_NAME(realpad));
-//        if (region) {
-//          gst_src_push_region (GST_SRC (element), region->offset, region->size);
+        if (realpad->regiontype != GST_REGION_NONE) {
+          g_return_val_if_fail (GST_RPAD_GETREGIONFUNC(realpad) != NULL, 0);
 //          if (GST_RPAD_GETREGIONFUNC(realpad) == NULL)
 //            fprintf(stderr,"error, no getregionfunc in \"%s\"\n", name);
-//          buf = (GST_RPAD_GETREGIONFUNC(realpad))((GstPad*)realpad, region->offset, region->size);
-//        } else {
-          if (GST_RPAD_GETFUNC(realpad) == NULL)
-            fprintf(stderr,"error, no getfunc in \"%s\"\n", name);
+//          else
+          buf = (GST_RPAD_GETREGIONFUNC(realpad))((GstPad*)realpad,realpad->regiontype,realpad->offset,realpad->len);
+        } else {
+          g_return_val_if_fail (GST_RPAD_GETFUNC(realpad) != NULL, 0);
+//          if (GST_RPAD_GETFUNC(realpad) == NULL)
+//            fprintf(stderr,"error, no getfunc in \"%s\"\n", name);
+//          else
           buf = GST_RPAD_GETFUNC(realpad) ((GstPad*)realpad);
-//        }
+        }
 
         GST_DEBUG (0,"calling gst_pad_push on pad %s:%s\n",GST_DEBUG_PAD_NAME(realpad));
         if (buf) gst_pad_push ((GstPad*)realpad, buf);
@@ -127,11 +129,21 @@ gst_bin_pushfunc_proxy (GstPad *pad, GstBuffer *buf)
 {
   cothread_state *threadstate = GST_ELEMENT (GST_PAD_PARENT (pad))->threadstate;
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
-  GST_DEBUG (0,"putting buffer %p in peer's pen\n",buf);
+  GST_DEBUG (GST_CAT_DATAFLOW,"putting buffer %p in peer's pen\n",buf);
+
+  // FIXME this should be bounded
+  // loop until the bufferpen is empty so we can fill it up again
+  while (GST_RPAD_BUFPEN(pad) != NULL) {
+    GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p to empty bufpen\n",threadstate);
+    cothread_switch (threadstate);
+  }
+
+  // now fill the bufferpen and switch so it can be consumed
   GST_RPAD_BUFPEN(GST_RPAD_PEER(pad)) = buf;
-  GST_DEBUG (0,"switching to %p (@%p)\n",threadstate,&(GST_ELEMENT(GST_PAD_PARENT(pad))->threadstate));
+  GST_DEBUG (GST_CAT_DATAFLOW,"switching to %p (@%p)\n",threadstate,&(GST_ELEMENT(GST_PAD_PARENT(pad))->threadstate));
   cothread_switch (threadstate);
-  GST_DEBUG (0,"done switching\n");
+
+  GST_DEBUG (GST_CAT_DATAFLOW,"done switching\n");
 }
 
 static GstBuffer*
@@ -141,43 +153,46 @@ gst_bin_pullfunc_proxy (GstPad *pad)
 
   cothread_state *threadstate = GST_ELEMENT(GST_PAD_PARENT(pad))->threadstate;
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
-  // FIXME this should be a while
-  if (GST_RPAD_BUFPEN(pad) == NULL) {
-    GST_DEBUG (0,"switching to %p (@%p)\n",threadstate,&(GST_ELEMENT(GST_PAD_PARENT(pad))->threadstate));
+
+  // FIXME this should be bounded
+  // we will loop switching to the peer until it's filled up the bufferpen
+  while (GST_RPAD_BUFPEN(pad) == NULL) {
+    GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p to fill bufpen\n",threadstate);
     cothread_switch (threadstate);
   }
-  GST_DEBUG (0,"done switching\n");
+  GST_DEBUG (GST_CAT_DATAFLOW,"done switching\n");
+
+  // now grab the buffer from the pen, clear the pen, and return the buffer
   buf = GST_RPAD_BUFPEN(pad);
   GST_RPAD_BUFPEN(pad) = NULL;
   return buf;
 }
 
-static GstBuffer *
-gst_bin_chainfunc_proxy (GstPad *pad)
+static GstBuffer*
+gst_bin_pullregionfunc_proxy (GstPad *pad,GstRegionType type,guint64 offset,guint64 len)
 {
-// FIXME!!
-//  GstBuffer *buf;
-  return NULL;
-}
+  GstBuffer *buf;
 
-// FIXME!!!
-static void
-gst_bin_pullregionfunc_proxy (GstPad *pad,
-                                gulong offset,
-                                gulong size)
-{
-//  region_struct region;
-  cothread_state *threadstate;
+  cothread_state *threadstate = GST_ELEMENT(GST_PAD_PARENT(pad))->threadstate;
+  GST_DEBUG_ENTER("%s:%s,%d,%lld,%lld",GST_DEBUG_PAD_NAME(pad),type,offset,len);
 
-  GST_DEBUG_ENTER("%s:%s,%ld,%ld",GST_DEBUG_PAD_NAME(pad),offset,size);
+  // put the region info into the pad
+  GST_RPAD_REGIONTYPE(pad) = type;
+  GST_RPAD_OFFSET(pad) = offset;
+  GST_RPAD_LEN(pad) = len;
 
-//  region.offset = offset;
-//  region.size = size;
+  // FIXME this should be bounded
+  // we will loop switching to the peer until it's filled up the bufferpen
+  while (GST_RPAD_BUFPEN(pad) == NULL) {
+    GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p to fill bufpen\n",threadstate);
+    cothread_switch (threadstate);
+  }
+  GST_DEBUG (GST_CAT_DATAFLOW,"done switching\n");
 
-//  threadstate = GST_ELEMENT(pad->parent)->threadstate;
-//  cothread_set_data (threadstate, "region", &region);
-  cothread_switch (threadstate);
-//  cothread_set_data (threadstate, "region", NULL);
+  // now grab the buffer from the pen, clear the pen, and return the buffer
+  buf = GST_RPAD_BUFPEN(pad);
+  GST_RPAD_BUFPEN(pad) = NULL;
+  return buf;
 }
 
 
@@ -253,6 +268,7 @@ gst_schedule_cothreaded_chain (GstBin *bin, _GstBinChain *chain) {
         } else {
           GST_DEBUG (0,"setting cothreaded pull proxy for srcpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
           GST_RPAD_PULLFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+          GST_RPAD_PULLREGIONFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullregionfunc_proxy);
         }
       }
     }
@@ -496,7 +512,8 @@ void gst_bin_schedule_func(GstBin *bin) {
 //            pad->pullfunc = pad->peer->pullfunc;
 //            GST_DEBUG (0,"PUNT: setting pushfunc proxy to fake proxy on %s:%s\n",GST_DEBUG_PAD_NAME(pad->peer));
 //            pad->peer->pushfunc = GST_DEBUG_FUNCPTR(gst_bin_pushfunc_fake_proxy);
-            pad->pullfunc = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+            GST_RPAD_PULLFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+            GST_RPAD_PULLREGIONFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullregionfunc_proxy);
           }
         } else {
 */
@@ -525,7 +542,8 @@ void gst_bin_schedule_func(GstBin *bin) {
         } else if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
           GST_DEBUG (0,"setting pull proxies for srcpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
           // set the proxy functions
-          pad->pullfunc = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+          GST_RPAD_PULLFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+          GST_RPAD_PULLREGIONFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullregionfunc_proxy);
           GST_DEBUG (0,"pad->pullfunc(@%p) = gst_bin_pullfunc_proxy(@%p)\n",
                 &pad->pullfunc,gst_bin_pullfunc_proxy);
           pad->pullregionfunc = GST_DEBUG_FUNCPTR(gst_bin_pullregionfunc_proxy);
@@ -662,7 +680,8 @@ void gst_bin_schedule_func(GstBin *bin) {
             pad->pushfunc = GST_DEBUG_FUNCPTR(gst_bin_pushfunc_proxy);
           } else if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
             GST_DEBUG (0,"setting pull proxy for srcpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-            pad->pullfunc = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+            GST_RPAD_PULLFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+            GST_RPAD_PULLREGIONFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullregionfunc_proxy);
           }
         } else {
           // otherwise we need to set up for 'traditional' chaining
