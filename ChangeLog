@@ -1,3 +1,9 @@
+2004-10-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/audioconvert/gstaudioconvert.c:
+	(gst_audio_convert_buffer_to_default_format):
+	  Really don't touch read-only buffers (#156563).
+
 2004-10-29  Sebastien Cote  <sc5@hermes.usherb.ca>
 
 	Reviewd by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
