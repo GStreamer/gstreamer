@@ -229,7 +229,7 @@ gst_deinterlace_init (GstDeInterlace * filter)
 static void
 gst_deinterlace_chain (GstPad * pad, GstData * _data)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
+  GstBuffer *buf = gst_buffer_copy_on_write (GST_BUFFER (_data));
   GstDeInterlace *filter;
   gint y0, y1, y2, y3;
   guchar *psrc1, *psrc2, *psrc3, *pdst1, *yuvptr, *src;

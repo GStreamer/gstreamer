@@ -523,7 +523,8 @@ gst_video_crop_chain (GstPad * pad, GstData * _data)
 
   outbuf = gst_pad_alloc_buffer (video_crop->srcpad, GST_BUFFER_OFFSET (buffer),
       GST_VIDEO_I420_SIZE (new_width, new_height));
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
+
+  gst_buffer_stamp (outbuf, buffer);
 
   gst_video_crop_i420 (video_crop, buffer, outbuf);
   gst_buffer_unref (buffer);
