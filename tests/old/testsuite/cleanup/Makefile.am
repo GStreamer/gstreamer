@@ -1,3 +1,6 @@
+TOP_BUILDDIR=$(shell cd $(top_builddir) && pwd)
+TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(TOP_BUILDDIR) GST_REGISTRY=$(TOP_BUILDDIR)/testsuite/test-registry.xml
+
 if BUILD_FAILING_TESTS
 FAILING = cleanup3 cleanup4
 else
@@ -5,9 +8,6 @@ FAILING =
 endif
 
 testprogs = cleanup1 cleanup2 $(FAILING) cleanup5
-
-GST_PLUGIN_PATH = $(shell cd $(top_builddir) && pwd)
-TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(GST_PLUGIN_PATH) GST_REGISTRY=`pwd`/test-registry.xml
 
 TESTS = $(testprogs)
 

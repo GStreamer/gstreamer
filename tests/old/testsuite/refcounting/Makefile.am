@@ -1,3 +1,6 @@
+TOP_BUILDDIR=$(shell cd $(top_builddir) && pwd)
+TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(TOP_BUILDDIR) GST_REGISTRY=$(TOP_BUILDDIR)/testsuite/test-registry.xml
+
 if BUILD_FAILING_TESTS
 tests_failing = element bin element_pad pad
 else
@@ -10,9 +13,6 @@ pad_SOURCES = pad.c mem.c
 
 element_pad_SOURCES = element_pad.c mem.c
 bin_SOURCES = bin.c mem.c
-
-GST_PLUGIN_PATH = $(shell cd $(top_builddir) && pwd)
-TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(GST_PLUGIN_PATH) GST_REGISTRY=`pwd`/test-registry.xml
 
 TESTS = $(tests_working)
 

@@ -373,8 +373,15 @@ init_pre (void)
     gst_registry_add_path (_global_registry, PLUGINS_DIR);
 #endif /* PLUGINS_USE_BUILDDIR */
 
-    homedir = g_get_home_dir ();
-    user_reg = g_strjoin ("/", homedir, LOCAL_REGISTRY_FILE, NULL);
+    if (g_getenv ("GST_REGISTRY"))
+    {
+      user_reg = g_strdup (g_getenv ("GST_REGISTRY"));
+    }
+    else
+    {
+      homedir = g_get_home_dir ();
+      user_reg = g_strjoin ("/", homedir, LOCAL_REGISTRY_FILE, NULL);
+    }
     _user_registry = gst_xml_registry_new ("user_registry", user_reg);
 
     g_free (user_reg);

@@ -1,3 +1,6 @@
+TOP_BUILDDIR=$(shell cd $(top_builddir) && pwd)
+TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(TOP_BUILDDIR) GST_REGISTRY=$(TOP_BUILDDIR)/testsuite/test-registry.xml
+
 testprogs = thread1 thread2 thread3 thread5 threadb
 testsfailing = threadc threadd threade threadf thread4
 
@@ -6,10 +9,6 @@ TESTS = $(testprogs)
 check_PROGRAMS = $(testprogs)
 
 noinst_PROGRAMS = $(testsfailing)
-
-GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
-
-TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(GST_PLUGIN_PATH) GST_REGISTRY=`pwd`test-registry.xml
 
 LDADD = $(GST_LIBS) 
 AM_CFLAGS = $(GST_CFLAGS)

@@ -1,13 +1,12 @@
+TOP_BUILDDIR=$(shell cd $(top_builddir) && pwd)
+TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(TOP_BUILDDIR) GST_REGISTRY=$(TOP_BUILDDIR)/testsuite/test-registry.xml
+
 if BUILD_FAILING_TESTS
 tests_failing = fake
 else
 tests_failing =
 endif
 tests_working = name tee property
-
-GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
-
-TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(GST_PLUGIN_PATH) GST_REGISTRY=`pwd`test-registry.xml
 
 TESTS = $(tests_working)
 
