@@ -56,9 +56,6 @@ struct _GstAviMux {
   GstPad *videosinkpad;
   gboolean video_pad_connected, video_pad_eos;
 
-  /* timestamps of first and current frame + num_frames for fps calculation */
-  gdouble framerate;
-
   /* the AVI header */
   gst_riff_avih avi_hdr;
   guint32 total_frames; /* total number of frames */

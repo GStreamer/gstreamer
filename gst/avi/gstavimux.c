@@ -248,19 +248,12 @@ gst_avimux_class_init (GstAviMuxClass *klass)
 static const GstEventMask *
 gst_avimux_get_event_masks (GstPad *pad)
 {
-  static const GstEventMask gst_avimux_src_event_masks[] = {
-    { GST_EVENT_NEW_MEDIA, 0 },
-    { 0, }
-  };
   static const GstEventMask gst_avimux_sink_event_masks[] = {
     { GST_EVENT_EOS, 0 },
     { 0, }
   };
 
-  if (GST_PAD_IS_SRC(pad))
-    return gst_avimux_src_event_masks;
-  else
-    return gst_avimux_sink_event_masks;
+  return gst_avimux_sink_event_masks;
 }
 
 static void 
@@ -271,8 +264,6 @@ gst_avimux_init (GstAviMux *avimux)
   gst_element_add_pad (GST_ELEMENT (avimux), avimux->srcpad);
 
   GST_FLAG_SET (GST_ELEMENT(avimux), GST_ELEMENT_EVENT_AWARE);
-  gst_pad_set_event_function(avimux->srcpad, gst_avimux_handle_event);
-  gst_pad_set_event_mask_function(avimux->srcpad, gst_avimux_get_event_masks);
 
   avimux->audiosinkpad = NULL;
   avimux->audio_pad_connected = FALSE;
@@ -293,14 +284,14 @@ gst_avimux_init (GstAviMux *avimux)
   avimux->vids_hdr.type = GST_MAKE_FOURCC('v','i','d','s');
   avimux->vids_hdr.rate = 1000000;
   avimux->auds_hdr.type = GST_MAKE_FOURCC('a','u','d','s');
+  avimux->vids_hdr.quality = 0xFFFFFFFF;
+  avimux->auds_hdr.quality = 0xFFFFFFFF;
 
   avimux->idx = NULL;
 
   avimux->write_header = TRUE;
 
   avimux->enable_large_avi = TRUE;
-
-  avimux->framerate = 0;
 
   gst_element_set_loop_function(GST_ELEMENT(avimux), gst_avimux_loop);
 }
@@ -453,15 +444,27 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
       avimux->auds.format      = (layer == 3?
                                    GST_RIFF_WAVE_FORMAT_MPEGL3 : 
 				   GST_RIFF_WAVE_FORMAT_MPEGL12);
-      avimux->auds_hdr.scale = avimux->auds_hdr.samplesize = 1;
+      avimux->auds_hdr.scale = avimux->auds_hdr.samplesize =
+	      avimux->auds.blockalign = 1;
       avimux->auds_hdr.rate = avimux->auds.av_bps = 0;
+      avimux->auds.size = 16;
+      /* nobody cares about this valus, but is has to be set (regardless of
+       * whether the value is correct) */
+      avimux->auds.channels = 1;
+      /* we'll request this later on from the earlier pads */
+      avimux->auds.rate = 0;
       goto done;
     }
     else if (!strcmp (mimetype, "application/x-ogg"))
     {
       avimux->auds.format = GST_RIFF_WAVE_FORMAT_VORBIS1;
-      avimux->auds_hdr.scale = avimux->auds_hdr.samplesize = 1;
+      avimux->auds_hdr.scale = avimux->auds_hdr.samplesize =
+	      avimux->auds.blockalign = 1;
       avimux->auds_hdr.rate = avimux->auds.av_bps = 0;
+      avimux->auds.size = 16;
+      /* see above */
+      avimux->auds.channels = 1;
+      avimux->auds.rate = 0;
       goto done;
     }
   }
@@ -970,6 +973,7 @@ gst_avimux_stop_file (GstAviMux *avimux)
 {
   GstEvent *event;
   GstBuffer *header;
+  gdouble framerate = 0.;
 
   /* if bigfile, rewrite header, else write indexes */
   if (avimux->video_pad_connected)
@@ -987,39 +991,50 @@ gst_avimux_stop_file (GstAviMux *avimux)
 
   /* statistics/total_frames/... */
   avimux->avi_hdr.tot_frames = avimux->num_frames;
-  if (avimux->video_pad_connected)
+  if (avimux->video_pad_connected) {
     avimux->vids_hdr.length = avimux->num_frames;
+
+    /* get fps */
+    framerate = gst_video_frame_rate(GST_PAD_PEER(avimux->videosinkpad));
+    avimux->vids_hdr.scale = 1000000 / framerate;
+  }
   if (avimux->audio_pad_connected)
   {
     if (avimux->auds_hdr.scale)
-      avimux->auds_hdr.length = avimux->audio_size/avimux->auds_hdr.scale;
+      avimux->auds_hdr.length = avimux->audio_size/(avimux->auds.size/8);
     else
       avimux->auds_hdr.length = 0; /* urm...? FIXME! ;-) */
+
+    /* sampling rate, if known - yes this is a hack */
+    if (!avimux->auds.rate)
+      avimux->auds.rate = gst_video_frame_rate(GST_PAD_PEER(avimux->audiosinkpad));
   }
 
   /* set rate and everything having to do with that */
-  avimux->avi_hdr.us_frame = avimux->vids_hdr.scale = 1000000/avimux->framerate;
+  avimux->avi_hdr.us_frame = avimux->vids_hdr.scale;
   avimux->avi_hdr.max_bps = 0;
   if (avimux->audio_pad_connected) {
     /* calculate bps if needed */
     if (!avimux->auds.av_bps) {
-      avimux->auds.av_bps = GST_SECOND * ((1. * avimux->audio_size) / avimux->audio_time);
-      avimux->auds_hdr.rate = avimux->auds.av_bps * avimux->auds_hdr.scale;
+      avimux->auds_hdr.rate = (GST_SECOND * avimux->audio_size) / avimux->audio_time;
+      avimux->auds.av_bps = avimux->auds_hdr.rate * avimux->auds_hdr.scale;
     }
     avimux->avi_hdr.max_bps += avimux->auds.av_bps;
   }
-  if (avimux->video_pad_connected)
+  if (avimux->video_pad_connected) {
     avimux->avi_hdr.max_bps += ((avimux->vids.bit_cnt+7)/8) *
-				avimux->framerate *
+				framerate *
 				avimux->vids.image_size;
+  }
 
   /* seek and rewrite the header */
   header = gst_avimux_riff_get_avi_header(avimux);
   event = gst_event_new_seek (GST_FORMAT_BYTES | 
-		  	      GST_SEEK_METHOD_SET |
-			      GST_SEEK_FLAG_FLUSH, 0);
+		  	      GST_SEEK_METHOD_SET, 0);
   gst_pad_send_event(GST_PAD_PEER(avimux->srcpad), event);
   gst_pad_push(avimux->srcpad, header);
+  event = gst_event_new_seek (GST_FORMAT_BYTES |
+		  	      GST_SEEK_METHOD_SET, avimux->total_data);
 
   avimux->write_header = TRUE;
 }
@@ -1031,7 +1046,7 @@ gst_avimux_restart_file (GstAviMux *avimux)
 
   gst_avimux_stop_file(avimux);
 
-  event = gst_event_new(GST_EVENT_NEW_MEDIA);
+  event = gst_event_new(GST_EVENT_EOS);
   gst_pad_send_event(avimux->srcpad, event);
 
   gst_avimux_start_file(avimux);
@@ -1049,17 +1064,15 @@ gst_avimux_handle_event (GstPad *pad, GstEvent *event)
   type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
   switch (type) {
-    case GST_EVENT_NEW_MEDIA:
-      avimux->restart = TRUE;
-      break;
     case GST_EVENT_EOS:
       /* is this allright? */
-      if (pad == avimux->videosinkpad)
+      if (pad == avimux->videosinkpad) {
         avimux->video_pad_eos = TRUE;
-      else if (pad == avimux->audiosinkpad)
+      } else if (pad == avimux->audiosinkpad) {
         avimux->audio_pad_eos = TRUE;
-      else
+      } else {
         g_warning("Unknown pad for EOS!");
+      }
       break;
     default:
       break;
@@ -1075,47 +1088,33 @@ gst_avimux_fill_queue (GstAviMux *avimux)
 {
   GstBuffer *buffer;
 
-  if (!avimux->audio_buffer_queue &&
-       avimux->audiosinkpad &&
-       avimux->audio_pad_connected &&
-       GST_PAD_IS_USABLE(avimux->audiosinkpad) &&
-      !avimux->audio_pad_eos)
+  while (!avimux->audio_buffer_queue &&
+          avimux->audiosinkpad &&
+          avimux->audio_pad_connected &&
+          GST_PAD_IS_USABLE(avimux->audiosinkpad) &&
+         !avimux->audio_pad_eos)
   {
-    while (1)
-    {
-      buffer = gst_pad_pull(avimux->audiosinkpad);
-      if (GST_IS_EVENT(buffer))
-      {
-        gst_avimux_handle_event(avimux->audiosinkpad, GST_EVENT(buffer));
-      }
-      else
-      {
-        avimux->audio_buffer_queue = buffer;
-        break;
-      }
+    buffer = gst_pad_pull(avimux->audiosinkpad);
+    if (GST_IS_EVENT(buffer)) {
+      gst_avimux_handle_event(avimux->audiosinkpad, GST_EVENT(buffer));
+    } else {
+      avimux->audio_buffer_queue = buffer;
+      break;
     }
   }
 
-  if (!avimux->video_buffer_queue &&
-       avimux->videosinkpad &&
-       avimux->video_pad_connected &&
-       GST_PAD_IS_USABLE(avimux->videosinkpad) &&
-      !avimux->video_pad_eos)
+  while (!avimux->video_buffer_queue &&
+          avimux->videosinkpad &&
+          avimux->video_pad_connected &&
+          GST_PAD_IS_USABLE(avimux->videosinkpad) &&
+         !avimux->video_pad_eos)
   {
-    while (1)
-    {
-      buffer = gst_pad_pull(avimux->videosinkpad);
-      if (GST_IS_EVENT(buffer))
-      {
-        gst_avimux_handle_event(avimux->videosinkpad, GST_EVENT(buffer));
-      }
-      else
-      {
-        avimux->video_buffer_queue = buffer;
-	if (avimux->framerate < 0)
-          avimux->framerate = gst_video_frame_rate(GST_PAD_PEER(avimux->videosinkpad));
-        break;
-      }
+    buffer = gst_pad_pull(avimux->videosinkpad);
+    if (GST_IS_EVENT(buffer)) {
+      gst_avimux_handle_event(avimux->videosinkpad, GST_EVENT(buffer));
+    } else {
+      avimux->video_buffer_queue = buffer;
+      break;
     }
   }
 }
@@ -1334,17 +1333,8 @@ gst_avimux_change_state (GstElement *element)
   avimux = GST_AVIMUX(element);
 
   switch (transition) {
-    case GST_STATE_READY_TO_PAUSED:
-      break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      avimux->framerate = -1; /* means that we fill it in later */
       avimux->video_pad_eos = avimux->audio_pad_eos = FALSE;
-      break;
-    case GST_STATE_PLAYING_TO_PAUSED:
-      /* this function returns TRUE while it handles buffers */
-      while (gst_avimux_do_one_buffer(avimux));
-      break;
-    case GST_STATE_PAUSED_TO_READY:
       break;
   }
 
