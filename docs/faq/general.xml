@@ -61,8 +61,8 @@ GStreamer is still very early in its development, but already we see some
 really nice applications being developed in parallel with GStreamer. 
 Both gst-player and gst-editor are very closely linked to GStreamer itself
 for obvious reasons.
-For a list of some of the more advanced projects, look at the list
-in our <ulink url="http://gstreamer.net/status/">Status table</ulink>.
+<!-- For a list of some of the more advanced projects, look at the list
+in our <ulink url="http://gstreamer.net/status/">Status table</ulink>. -->
         </para>
       </answer>
     </qandaentry>
@@ -105,7 +105,7 @@ application.
         </para>
         <para>
 As part of the GStreamer source download you find a file called 
-license_README. That file contains information in the exact licensing 
+LICENSE_readme in gst-plugins package. That file contains information in the exact licensing 
 terms of the libraries we use. As a general rule, GStreamer aims at using 
 only LGPL or BSD licensed libraries if available and only use GPL or 
 proprietary libraries where no good LGPL or BSD alternatives are available.
@@ -142,9 +142,9 @@ Will GStreamer be available for platforms other than Unix ?
 Depends. Our main target is the Unix platform. That said, interest has been 
 expressed in porting GStreamer to other platforms and the GStreamer core 
 team will gladly accept patches to accomplish this.
-Please refer to the
+<!-- Please refer to the
 <ulink url="http://gstreamer.net/status/?category=7">
-platform support status table</ulink>
+platform support status table</ulink> -->
         </para>
       </answer>
     </qandaentry>
