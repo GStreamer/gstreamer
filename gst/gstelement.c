@@ -712,28 +712,40 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
   gboolean templ_found = FALSE;
   GList *list;
   gint n;
+  gchar *str;
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  if (strstr (name, "%d")) {
-      templ = gst_element_get_padtemplate_by_name (element, name);
-      templ_found = (templ != NULL);
-      req_name = NULL;
+  if (strstr (name, "%")) {
+    templ = gst_element_get_padtemplate_by_name (element, name);
+    req_name = NULL;
+    if (templ)
+      templ_found = TRUE;
   } else {
-      list = gst_element_get_padtemplate_list(element);
-      while (!templ_found && list) {
-          templ = (GstPadTemplate*) list->data;
-          if (strstr (templ->name_template, "%d")) {
-              if (sscanf(name, templ->name_template, &n)) {
-                  templ_found = TRUE;
-                  req_name = name;
-                  break;
-              }
+    list = gst_element_get_padtemplate_list(element);
+    while (!templ_found && list) {
+      templ = (GstPadTemplate*) list->data;
+      if (templ->presence == GST_PAD_REQUEST) {
+        /* we know that %s and %d are the ony possibilities because of sanity
+           checks in gst_padtemplate_new */
+        if (strstr (templ->name_template, "%d")) {
+          if (sscanf(name, templ->name_template, &n)) {
+            templ_found = TRUE;
+            req_name = name;
+            break;
           }
-          list = list->next;
+        } else if (strstr (templ->name_template, "%s")) {
+          if (sscanf(name, templ->name_template, &str)) {
+            templ_found = TRUE;
+            req_name = name;
+            break;
+          }
+        }
       }
+      list = list->next;
+    }
   }
   
   if (!templ_found)
@@ -1875,7 +1887,7 @@ gst_element_populate_std_props (GObjectClass * klass,
 }
 
 /**
- * gst_element_install_std_props:
+ * gst_element_class_install_std_props:
  * @klass: the class to add the properties to
  * @first_name: the first in a NULL terminated
  * 'name', 'id', 'flags' triplet list.
@@ -1886,7 +1898,7 @@ gst_element_populate_std_props (GObjectClass * klass,
  * the flags determine readability / writeability.
  **/
 void
-gst_element_install_std_props (GstElementClass * klass, const char *first_name, ...)
+gst_element_class_install_std_props (GstElementClass * klass, const char *first_name, ...)
 {
   const char *name;
 
@@ -1910,6 +1922,14 @@ gst_element_install_std_props (GstElementClass * klass, const char *first_name, 
   va_end (args);
 }
 
+/**
+ * gst_element_get_managing_bin:
+ * @element: the element in question
+ * 
+ * Get the managing bin (a pipeline or a thread, for example) of an element.
+ *
+ * Returns: the bin, or NULL on failure
+ **/
 GstBin*
 gst_element_get_managing_bin (GstElement *element)
 {

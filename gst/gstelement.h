@@ -243,7 +243,7 @@ void			gst_element_error		(GstElement *element, const gchar *error, ...);
 
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 
-void                    gst_element_install_std_props   (GstElementClass *klass,
+void                    gst_element_class_install_std_props	(GstElementClass *klass,
 							 const char      *first_name, ...);
 
 GstBin*			gst_element_get_managing_bin	(GstElement *element);

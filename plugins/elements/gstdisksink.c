@@ -101,7 +101,7 @@ gst_disksink_class_init (GstDiskSinkClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gst_element_install_std_props (
+  gst_element_class_install_std_props (
 	  GST_ELEMENT_CLASS (klass),
 	  "location", ARG_LOCATION, G_PARAM_READWRITE,
 	  NULL);

@@ -113,7 +113,7 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
                          NULL, G_PARAM_READABLE));
 
 
-  gst_element_install_std_props (
+  gst_element_class_install_std_props (
 	  GST_ELEMENT_CLASS (klass),
 	  "silent", ARG_SILENT, G_PARAM_READWRITE,
 	  "dump",   ARG_DUMP,   G_PARAM_READWRITE,

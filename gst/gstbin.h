@@ -63,8 +63,11 @@ typedef enum {
 
   GST_BIN_FLAG_FIXED_CLOCK,
 
+  /* bin iterates itself, like a bin with a jack element in it */
+  GST_BIN_SELF_ITERATING,
+
   /* padding */
-  GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 4,
+  GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 5,
 } GstBinFlags;
 
 /*typedef struct _GstBin GstBin; */

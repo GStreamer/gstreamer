@@ -2009,6 +2009,41 @@ gst_padtemplate_init (GstPadTemplate *templ)
 {
 }
 
+/* ALWAYS padtemplates cannot have conversion specifications, it doesn't make
+ * sense.
+ * SOMETIMES padtemplates can do whatever they want, they are provided by the
+ * element.
+ * REQUEST padtemplates can be reverse-parsed (the user asks for 'sink1', the
+ * 'sink%d' template is automatically selected), so we need to restrict their
+ * naming.
+ */
+static gboolean
+name_is_valid (const gchar *name, GstPadPresence presence)
+{
+  const gchar *str;
+  
+  if (presence == GST_PAD_ALWAYS) {
+    if (strchr (name, '%')) {
+      g_warning ("invalid name template %s: conversion specifications are not"
+                 " allowed for GST_PAD_ALWAYS padtemplates", name);
+      return FALSE;
+    }
+  } else if (presence == GST_PAD_REQUEST) {
+    if ((str = strchr (name, '%')) && strchr (str + 1, '%')) {
+      g_warning ("invalid name template %s: only one conversion specification"
+                 " allowed in GST_PAD_REQUEST padtemplate", name);
+      return FALSE;
+    }
+    if (str && (*(str+1) != 's' && *(str+1) != 'd')) {
+      g_warning ("invalid name template %s: conversion specification must be of"
+                 " type '%%d' or '%%s' for GST_PAD_REQUEST padtemplate", name);
+      return FALSE;
+    }
+  }
+  
+  return TRUE;
+}
+
 /**
  * gst_padtemplate_new:
  * @name_template: the name template
@@ -2031,6 +2066,9 @@ gst_padtemplate_new (gchar *name_template,
   GstCaps *thecaps = NULL;
 
   g_return_val_if_fail (name_template != NULL, NULL);
+
+  if (!name_is_valid (name_template, presence))
+    return NULL;
 
   new = g_object_new(gst_padtemplate_get_type () ,NULL);
 

@@ -890,6 +890,9 @@ gst_bin_iterate (GstBin * bin)
 
   GST_DEBUG_ENTER ("(\"%s\")", GST_ELEMENT_NAME (bin));
 
+  g_return_val_if_fail (bin != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
+
   oclass = GST_BIN_CLASS (G_OBJECT_GET_CLASS (bin));
 
   if (oclass->iterate)

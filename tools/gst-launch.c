@@ -198,8 +198,13 @@ main(int argc, char *argv[])
       exit (-1);
     }
 
-    g_idle_add (idle_func, pipeline);
-    gst_main ();
+    if (!GST_FLAG_IS_SET (GST_OBJECT (pipeline), GST_BIN_SELF_ITERATING)) {
+        g_idle_add (idle_func, pipeline);
+        gst_main ();
+    } else {
+        g_print ("sleeping 100...\n");
+        sleep (100);
+    }
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
     gst_buffer_print_stats();

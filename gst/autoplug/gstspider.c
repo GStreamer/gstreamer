@@ -59,14 +59,14 @@ enum {
 
 /* generic templates */
 GST_PADTEMPLATE_FACTORY (spider_src_factory,
-  "src_%02d",
+  "src_%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
   NULL      /* no caps */
 );
 
 GST_PADTEMPLATE_FACTORY (spider_sink_factory,
-  "sink_%02d",
+  "sink_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
   NULL      /* no caps */
