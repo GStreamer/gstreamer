@@ -69,7 +69,6 @@ typedef struct
   GstPad       *pad;
   gint 		num;
   gst_riff_strh strh;
-  guint64 	next_ts;
   guint32 	current_frame;
   guint32 	current_byte;
   guint64 	delay;
