@@ -188,10 +188,6 @@ static GstCaps *gst_swfdec_videosrc_getcaps(GstPad *pad, GstCaps *caps)
   if(swfdec->height){
     gst_caps_set(c,"height",GST_PROPS_INT(swfdec->height));
     gst_caps_set(c,"width",GST_PROPS_INT(swfdec->width));
-    
-    /* FIXME: this feels like a hack or bug workaround */
-    GST_PROPS_FLAG_SET(c->properties,GST_PROPS_FIXED);
-    GST_CAPS_FLAG_SET(c,GST_CAPS_FIXED);
   }
 
   return c;
