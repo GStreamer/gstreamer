@@ -22,6 +22,12 @@ else
 V4L_DIR=
 endif
 
+if USE_V4L2
+V4L2_DIR=v4l2
+else
+V4L2_DIR=
+endif
+
 if USE_VCD
 VCD_DIR=vcd
 else
@@ -46,8 +52,7 @@ else
 CDROM_DIR=
 endif
 
-SUBDIRS=$(DXR3_DIR) $(OSS_DIR) $(QCAM_DIR) $(V4L_DIR) $(VCD_DIR) \
-	$(VGA_DIR) $(XVIDEO_DIR) $(CDROM_DIR)
+SUBDIRS=$(DXR3_DIR) $(OSS_DIR) $(QCAM_DIR) $(V4L_DIR) $(V4L2_DIR) \
+	$(VCD_DIR) $(VGA_DIR) $(XVIDEO_DIR) $(CDROM_DIR)
 
-DIST_SUBDIRS=dxr3 oss qcam v4l vcd vga xvideo videosink cdrom
-
+DIST_SUBDIRS=dxr3 oss qcam v4l v4l2 vcd vga xvideo videosink cdrom
