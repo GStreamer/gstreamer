@@ -1,3 +1,10 @@
+2004-11-06  Tim-Philipp Müller  <t.i.m@zen.co.uk>
+
+	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/rtp/gstrtpgsmparse.c: (gst_rtpgsm_caps_nego):
+	  Add missing NULL terminator (#157543).
+
 2004-11-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/tcp/gsttcp.h:
