@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 indent \
   --braces-on-if-line \
   --blank-lines-after-declarations \

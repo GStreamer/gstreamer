@@ -141,6 +141,7 @@ gst_xml_registry_get_type (void)
       (GInstanceInitFunc) gst_xml_registry_init,
       NULL
     };
+
     xml_registry_type = g_type_register_static (GST_TYPE_REGISTRY,
 	"GstXMLRegistry", &xml_registry_info, 0);
   }
@@ -638,6 +639,7 @@ gst_xml_registry_load_plugin (GstRegistry * registry, GstPlugin * plugin)
     if (error) {
       g_warning ("could not load plugin %s: %s", plugin->desc.name,
 	  error->message);
+      g_error_free (error);
     }
     return GST_REGISTRY_PLUGIN_LOAD_ERROR;
   } else if (loaded_plugin != plugin) {

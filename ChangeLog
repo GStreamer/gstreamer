@@ -1,5 +1,14 @@
 2004-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/registries/gstxmlregistry.c: (gst_xml_registry_load_plugin):
+          g_error_free the g_error
+	* tools/gst-feedback-m.m:
+          check for other versions of gstreamer
+	* tools/gst-indent:
+          use sh, not bash
+
+2004-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* tools/gst-register.c: do not spill paths when registries are not
           writable, until we fix the "user running gst-register" case.
 

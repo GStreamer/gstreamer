@@ -36,14 +36,18 @@ command_output "id"
 echo
 
 echo "+   PKG-CONFIG INFORMATION"
-command_output "pkg-config --version"
-command_output "pkg-config gstreamer --modversion"
-command_output "pkg-config gstreamer --cflags"
-command_output "pkg-config gstreamer --libs"
-command_output "pkg-config gstreamer-libs --modversion"
-command_output "pkg-config gstreamer-libs --cflags"
-command_output "pkg-config gstreamer-libs --libs"
-echo
+for mm in 0.6 0.7 0.8
+do
+  echo "+   $mm"
+  command_output "pkg-config --version"
+  command_output "pkg-config gstreamer-$mm --modversion"
+  command_output "pkg-config gstreamer-$mm --cflags"
+  command_output "pkg-config gstreamer-$mm --libs"
+  command_output "pkg-config gstreamer-libs-$mm --modversion"
+  command_output "pkg-config gstreamer-libs-$mm --cflags"
+  command_output "pkg-config gstreamer-libs-$mm --libs"
+  echo
+done
 
 echo "+   GSTREAMER INFORMATION"
 command_output "which gst-register"
@@ -53,13 +57,13 @@ command_output "gst-inspect fakesink"
 command_output "gst-launch fakesrc num_buffers=5 ! fakesink"
 
 echo "++  looking for gstreamer libraries in common locations"
-for dirs in /usr/lib /usr/local/lib /home; do
+for dirs in /usr/lib /usr/local/lib; do
   if test -d $dirs; then
     find $dirs -name libgstreamer* | grep so
   fi
 done
 echo "++  looking for gstreamer headers in common locations"
-for dirs in /usr/include /usr/local/include /home; do
+for dirs in /usr/include /usr/local/include; do
   if test -d $dirs; then
     find $dirs -name gst.h
   fi
@@ -69,13 +73,13 @@ echo "+   GSTREAMER PLUG-INS INFORMATION"
 command_output "gst-inspect volume"
 
 echo "++  looking for gstreamer volume plugin in common locations"
-for dirs in /usr/lib /usr/local/lib /home; do
+for dirs in /usr/lib /usr/local/lib; do
   if test -d $dirs; then
     find $dirs -name libgstvolume* | grep so
   fi
 done
 echo "++  looking for gstreamer headers in common locations"
-for dirs in /usr/include /usr/local/include /home; do
+for dirs in /usr/include /usr/local/include; do
   if test -d $dirs; then
     find $dirs -name audio.h
   fi
