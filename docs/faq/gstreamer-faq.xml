@@ -5,10 +5,13 @@
 <!ENTITY START SYSTEM "start.xml">
 <!ENTITY GENERAL SYSTEM "general.xml">
 <!ENTITY DEPENDENCIES SYSTEM "dependencies.xml">
+
 <!ENTITY GETTING SYSTEM "getting.xml">
 <!ENTITY USING SYSTEM "using.xml">
-<!ENTITY DEVELOPING SYSTEM "developing.xml">
 <!ENTITY TROUBLESHOOTING SYSTEM "troubleshooting.xml">
+
+<!ENTITY CVS SYSTEM "cvs.xml">
+<!ENTITY DEVELOPING SYSTEM "developing.xml">
 
 ]>
 
@@ -36,9 +39,12 @@
   &START;
   &GENERAL;
   &DEPENDENCIES;
+
   &GETTING;
   &USING;
-  &DEVELOPING;
   &TROUBLESHOOTING;
+
+  &CVS;
+  &DEVELOPING;
 
 </article>
