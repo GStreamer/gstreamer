@@ -1,7 +1,7 @@
 # This directory depends on an x86 computer, so if nasm is present, we're good
 # complain to hadess@hadess.net
 if HAVE_NASM
-NASMDEP_DIR=bufspeed memchunk
+NASMDEP_DIR=memchunk
 else
 NASMDEP_DIR=
 endif
