@@ -355,21 +355,28 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
 {
   GstBuffer *buf;
   gint retval;
+  void *mmapregion;
 
   g_return_val_if_fail (offset >= 0, NULL);
 
   fs_print  ("mapping region %08llx+%08x from file into memory\n",offset,size);
+  mmapregion = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
+
+  if (mmapregion == NULL) {
+    gst_element_error (GST_ELEMENT (src), "couldn't map file");
+    return NULL;
+  }
+  else if (mmapregion == MAP_FAILED) {
+    gst_element_error (GST_ELEMENT (src), "mmap (0x%x, %d, 0x%llx) : %s",
+ 	     size, src->fd, offset, strerror (errno));
+    return NULL;
+  }
 
   /* time to allocate a new mapbuf */
   buf = gst_buffer_new();
   /* mmap() the data into this new buffer */
-  GST_BUFFER_DATA(buf) = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
-  if (GST_BUFFER_DATA(buf) == NULL) {
-    gst_element_error (GST_ELEMENT (src), "couldn't map file");
-  } else if (GST_BUFFER_DATA(buf) == MAP_FAILED) {
-    gst_element_error (GST_ELEMENT (src), "mmap (0x%x, %d, 0x%llx) : %s",
- 	     size, src->fd, offset, strerror (errno));
-  }
+  GST_BUFFER_DATA(buf) = mmapregion;
+
 #ifdef MADV_SEQUENTIAL
   /* madvise to tell the kernel what to do with it */
   retval = madvise(GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf),MADV_SEQUENTIAL);
@@ -408,6 +415,9 @@ gst_filesrc_map_small_region (GstFileSrc *src, off_t offset, size_t size)
     mapsize = ((size + mod + src->pagesize - 1) / src->pagesize) * src->pagesize;
 /*    printf("not on page boundaries, resizing map to %d+%d\n",mapbase,mapsize);*/
     map = gst_filesrc_map_region(src, mapbase, mapsize);
+    if (map == NULL)
+      return NULL;
+
     ret = gst_buffer_create_sub (map, offset - mapbase, size);
 
     gst_buffer_unref (map);
@@ -565,6 +575,9 @@ gst_filesrc_get (GstPad *pad)
 	}
         /* create a new one */
         src->mapbuf = gst_filesrc_map_region (src, nextmap, mapsize);
+	if (src->mapbuf == NULL)
+          return NULL;
+
         /* subbuffer it */
         buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - nextmap, readsize);
       }
@@ -616,6 +629,8 @@ gst_filesrc_open_file (GstFileSrc *src)
 
     /* allocate the first mmap'd region */
     src->mapbuf = gst_filesrc_map_region (src, 0, src->mapsize);
+    if (src->mapbuf == NULL)
+      return FALSE;
 
     src->curoffset = 0;
 
