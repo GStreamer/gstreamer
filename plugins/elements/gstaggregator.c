@@ -79,6 +79,7 @@ static void 	gst_aggregator_init		(GstAggregator *aggregator);
 
 static GstPad* 	gst_aggregator_request_new_pad	(GstElement *element, GstPadTemplate *temp, const
                                                  gchar *unused);
+static void 	gst_aggregator_update_functions	(GstAggregator *aggregator);
 
 static void 	gst_aggregator_set_property 	(GObject *object, guint prop_id, 
 						 const GValue *value, GParamSpec *pspec);
@@ -153,6 +154,8 @@ gst_aggregator_init (GstAggregator *aggregator)
   aggregator->sinkpads = NULL;
   aggregator->silent = FALSE;
   aggregator->sched = AGGREGATOR_LOOP;
+
+  gst_aggregator_update_functions (aggregator);
 }
 
 static GstPad*
@@ -176,7 +179,9 @@ gst_aggregator_request_new_pad (GstElement *element, GstPadTemplate *templ, cons
   sinkpad = gst_pad_new_from_template (templ, name);
   g_free (name);
   
-  gst_pad_set_chain_function (sinkpad, gst_aggregator_chain);
+  if (!AGGREGATOR_IS_LOOP_BASED (aggregator)) {
+    gst_pad_set_chain_function (sinkpad, gst_aggregator_chain);
+  }
   gst_element_add_pad (GST_ELEMENT (aggregator), sinkpad);
   
   aggregator->sinkpads = g_list_prepend (aggregator->sinkpads, sinkpad);
@@ -294,10 +299,13 @@ gst_aggregator_loop (GstElement *element)
       GstPad *pad = GST_PAD (pads->data);
       pads = g_list_next (pads);
 
-      buf = gst_pad_pull (pad);
-      debug = "loop";
+      g_print ("inspecting pad %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+      if (GST_PAD_IS_ACTIVE (pad)) {
+        buf = gst_pad_pull (pad);
+        debug = "loop";
 
-      gst_aggregator_push (aggregator, pad, buf, debug);
+        gst_aggregator_push (aggregator, pad, buf, debug);
+      }
     }
   }
   else {
