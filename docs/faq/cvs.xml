@@ -52,6 +52,9 @@ will be in <filename>.ssh/id_dsa.pub</filename></para></listitem>
 add and remove ssh keys to your account.
 </para></listitem>
 </orderedlist>
+
+MAKE SURE you ATTACH these files to your mail, not paste them, because
+then the output is useless.
         </para>
       </answer>
     </qandaentry>
