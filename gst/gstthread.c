@@ -394,13 +394,22 @@ static void
 gst_thread_wait_thread (GstThread *thread, guint syncflag, gboolean set)
 {
 //  if (!thread->signaling) {
-    g_mutex_lock (thread->lock);
-    GST_DEBUG (0,"sync: waiting for thread for %u to be set %d\n",
-	       syncflag,set);
-    if (GST_FLAG_IS_SET(thread,syncflag)!=set) {
-      g_cond_wait (thread->cond, thread->lock);
+  GTimeVal finaltime;  
+  g_mutex_lock (thread->lock);
+  GST_DEBUG (0,"sync: waiting for thread for %u to be set %d\n",
+	     syncflag,set);
+  while (GST_FLAG_IS_SET(thread,syncflag)!=set) {
+    g_get_current_time(&finaltime);
+    if (finaltime.tv_usec>995000) {
+      finaltime.tv_sec++;
+      finaltime.tv_usec=5000-(1000000-finaltime.tv_usec);
     }
-    g_mutex_unlock (thread->lock);
+    else {
+      finaltime.tv_usec+=5000;
+    }
+    g_cond_timed_wait (thread->cond, thread->lock,&finaltime);
+  }
+  g_mutex_unlock (thread->lock);
     GST_DEBUG (0, "sync: done waiting for thread\n");
 //  }
 }
