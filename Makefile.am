@@ -15,7 +15,7 @@ SUBDIRS_DOCS =
 endif
 
 if BUILD_TESTS
-SUBDIRS_TESTS =
+SUBDIRS_TESTS = test tests testsuite
 else
 SUBDIRS_TESTS =
 endif
