@@ -1,0 +1,23 @@
+<chapter id="cha-buffers-anatomy">
+  <title>
+    Anatomy of a Buffer
+  </title>
+  <para>
+  </para>
+</chapter>
+
+<chapter id="cha-buffers-refcounts">
+  <title>
+    Refcounts and mutability
+  </title>
+  <para>
+  </para>
+</chapter>
+
+<chapter id="cha-buffers-metadata">
+  <title>
+    Metadata
+  </title>
+  <para>
+  </para>
+</chapter>

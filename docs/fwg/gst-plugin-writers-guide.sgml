@@ -7,13 +7,13 @@
 
 <!ENTITY LOOPBASED SYSTEM "loopbased.sgml">
 
-<!ENTITY BUFFERS SYSTEM ".sgml">
+<!ENTITY BUFFERS SYSTEM "buffers.sgml">
 
-<!ENTITY SRCNSINK SYSTEM ".sgml">
+<!ENTITY SRCNSINK SYSTEM "srcnsink.sgml">
 
-<!ENTITY STATEMANAGE SYSTEM ".sgml">
+<!ENTITY STATEMANAGE SYSTEM "statemanage.sgml">
 
-<!ENTITY CHECKLIST SYSTEM ".sgml">
+<!ENTITY CHECKLIST SYSTEM "checklist.sgml">
 
 <!ENTITY GStreamer "<application>GStreamer</application>">
 ]>
@@ -781,12 +781,6 @@
     </partintro>
 
       &BUFFERS;
-	Anatomy of a Buffer
-	Refcounts and mutability
-	Metadata
-		How Properties work efficiently
-		Metadata mutability
-		  (FIXME: this is an unsolved problem)
   </part>
 
 <!-- ############ part ############# -->
@@ -798,12 +792,6 @@
     </partintro>
 
       &SRCNSINK;
-	Writing a source
-		Pull vs loop based
-		Region pulling
-		  (NOTE: somewhere explain how filters use this)
-	Writing a sink
-		Gee, that was easy
   </part>
 
 <!-- ############ part ############# -->
@@ -815,8 +803,6 @@
     </partintro>
 
       &STATEMANAGE;
-	What are states?
-	Mangaging filter state
   </part>
 
 <!-- ############ part ############# -->
@@ -828,24 +814,6 @@
     </partintro>
 
       &CHECKLIST;
-	Things to check when writing a filter
-	Things to check when writing a source or sink
   </part>
 
 </book>
-
-
-
-
-
-=====
-
-Omega: a chain-based element has chain functions on each sink pad, the
-	connected source pad may directly call (i.e. on the stack) the chain
-	function
-Omega: each chain function is responsible for doing something useful,
-	generally processing the buffer and pushing out the other end
-Omega: a loop-based element has a single function attatched to the element
-	(not tha pads) that spins in a loop calling gst_pad_pull(sinkpad),
-	do stuff, gst_pad_push(srcpad)
-

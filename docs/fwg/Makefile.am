@@ -5,7 +5,11 @@ sgml_files = gst-plugin-writers-guide.sgml \
 	     titlepage.sgml \
 	     intro.sgml \
 	     testapp.sgml \
-	     loopbased.sgml
+	     loopbased.sgml \
+	     buffers.sgml \
+	     srcnsink.sgml \
+	     statemanage.sgml \
+	     checklist.sgml
 
 fig_files = 
 eps_files = 
