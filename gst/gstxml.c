@@ -19,11 +19,43 @@
 
 #include <gst/gstxml.h>
 
+static void gst_xml_class_init(GstXMLClass *klass);
+static void gst_xml_init(GstXML *xml);
+
+static GstObjectClass *parent_class = NULL;
+
+GtkType gst_xml_get_type(void) {
+  static GtkType xml_type = 0;
+
+  if (!xml_type) {
+    static const GtkTypeInfo xml_info = {
+      "GstXML",
+      sizeof(GstElement),
+      sizeof(GstElementClass),
+      (GtkClassInitFunc)gst_xml_class_init,
+      (GtkObjectInitFunc)gst_xml_init,
+      (GtkArgSetFunc)NULL,
+      (GtkArgGetFunc)NULL,
+      (GtkClassInitFunc)NULL,
+    };
+    xml_type = gtk_type_unique(GST_TYPE_XML,&xml_info);
+  }
+  return xml_type;
+}
+
+static void
+gst_xml_class_init(GstXMLClass *klass) {
+  parent_class = gtk_type_class(GST_TYPE_OBJECT);
+}
+
+static void gst_xml_init(GstXML *xml) {
+}
+
 /**
  * gst_xml_write:
  * @element: The element to write out
  *
- * converts the given elkement into an XML presentation
+ * converts the given element into an XML presentation
  *
  * Returns: a pointer to an XML document
  */
@@ -36,4 +68,62 @@ xmlDocPtr gst_xml_write(GstElement *element) {
   gst_element_save_thyself(element,doc->root);
 
   return doc;
+}
+
+/**
+ * gst_xml_new:
+ * @fname: The filename with the xml description
+ * @root: The name of the root object to build
+ *
+ * Creates a new GstXML object (and the corresponding elements) from 
+ * the XML file fname. Optionally it will only build the element from 
+ * the element node root (if it is not NULL). This feature is useful 
+ * if you only want to build a specific element from an XML file
+ * but not the pipeline it is embedded in. Note also that the XML parse 
+ * tree is cached to speed up creating another GstXML object for 
+ * the same file
+ *
+ * Returns: a pointer to a new GstElement
+ */
+GstXML *gst_xml_new(const guchar *fname, const guchar *root) {
+  xmlDocPtr doc;
+  GstXML *xml;
+
+  g_return_val_if_fail(fname != NULL, NULL);
+	
+  doc = xmlParseFile(fname);
+
+  if (!doc) {
+    g_print("gstxml: XML file \"%s\" could not be read\n", fname);
+    return NULL;
+  }
+  if (strcmp(doc->root->name, "GST-Pipeline")) {
+    g_print("gstxml: XML file \"%s\" is in wrong format\n", fname);
+    return NULL;
+  }
+
+  xml = GST_XML(gtk_type_new(GST_TYPE_XML));
+
+  return xml;
+}
+
+/**
+ * gst_xml_get_element:
+ * @xml: The GstXML to get the element from
+ * @name: The name of element to retreive
+ *
+ * This function is used to get a pointer to the GStElement corresponding 
+ * to name in the pipeline description. You would use this if you have 
+ * to do anything to the element after loading.
+ *
+ * Returns: a pointer to a new GstElement
+ */
+GstElement *gst_xml_get_element(GstXML *xml, const guchar *name) {
+
+  g_return_val_if_fail(xml != NULL, NULL);
+  g_return_val_if_fail(name != NULL, NULL);
+
+  g_print("gstxml: getting element \"%s\" (implement me)\n", name);
+
+  return NULL;
 }

@@ -39,7 +39,7 @@ extern "C" {
 #define GST_IS_CONNECTION(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_CONNECTION))
 #define GST_IS_CONNECTION_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_CONNECTION)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_CONNECTION))
 
 typedef struct _GstConnection GstConnection;
 typedef struct _GstConnectionClass GstConnectionClass;

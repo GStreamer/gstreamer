@@ -24,7 +24,43 @@
 #include <gst/gst.h>
 #include <gnome-xml/parser.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+#define GST_TYPE_XML \
+  (gst_object_get_type())
+#define GST_XML(obj) \
+  (GTK_CHECK_CAST((obj),GST_TYPE_XML,GstXML))
+#define GST_XML_CLASS(klass) \
+  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_XML,GstXMLClass))
+#define GST_IS_XML(obj) \
+  (GTK_CHECK_TYPE((obj),GST_TYPE_XML))
+#define GST_IS_XML_CLASS(obj) \
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_XML))
+
+typedef struct _GstXML GstXML;
+typedef struct _GstXMLClass GstXMLClass;
+
+struct _GstXML {
+  GtkObject object;
+};
+
+struct _GstXMLClass {
+  GtkObjectClass parent_class;
+};
+
+GtkType gst_xml_get_type(void);
+
+
 /* create an XML document out of a pipeline */
 xmlDocPtr gst_xml_write(GstElement *element);
+
+GstXML *gst_xml_new(const guchar *fname, const guchar *root);
+
+GstElement *gst_xml_get_element(GstXML *xml, const guchar *name);
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __GST_XML_H__ */

@@ -88,6 +88,7 @@ gst_pipeline_class_init(GstPipelineClass *klass) {
   parent_class = gtk_type_class(gst_bin_get_type());
 
   gstelement_class->change_state = gst_pipeline_change_state;
+  gstelement_class->elementfactory = gst_elementfactory_find("pipeline");
 }
 
 static void gst_pipeline_init(GstPipeline *pipeline) {
@@ -300,7 +301,7 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
   GstElement *element, *srcelement = NULL, *sinkelement= NULL;
   GList *factories;
   GstElementFactory *factory;
-  GList *src_types, *sink_types;
+  GList *src_types;
   guint16 src_type = 0, sink_type = 0;
   gboolean complete = FALSE;
 
@@ -367,27 +368,6 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
 
       pads = g_list_next(pads);
     }
-    /*
-    if (GST_IS_SINK(element)) {
-      g_print("GstPipeline: found sink \"%s\"\n", gst_element_get_name(element));
-
-      sinkelement = element;
-      factory = gst_element_get_factory(element);
-      
-      sink_types = factory->sink_types;
-      if (sink_types == NULL) {
-        g_print("GstPipeline: sink \"%s\" has no MIME type, can't autoplug \n", 
-			gst_element_get_name(element));
-	return FALSE;
-      }
-      else {
-	sink_type = GPOINTER_TO_UINT(sink_types->data);
-        g_print("GstPipeline: sink \"%s\" has MIME type %d \n", 
-			gst_element_get_name(element), sink_type);
-      }
-    }
-    */
-
     elements = g_list_next(elements);
   }
 

@@ -108,6 +108,7 @@ gst_bin_class_init(GstBinClass *klass) {
 
   gstelement_class->change_state = gst_bin_change_state;
   gstelement_class->save_thyself = gst_bin_save_thyself;
+  gstelement_class->elementfactory = gst_elementfactory_find("bin");
 
   gtkobject_class->destroy = gst_bin_real_destroy;
 }

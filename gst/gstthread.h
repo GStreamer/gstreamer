@@ -49,7 +49,7 @@ typedef enum {
 #define GST_IS_THREAD(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_THREAD))
 #define GST_IS_THREAD_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_THREAD)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_THREAD))
 
 typedef struct _GstThread GstThread;
 typedef struct _GstThreadClass GstThreadClass;

@@ -120,6 +120,9 @@ GstElement *gst_elementfactory_create(GstElementFactory *factory,
 
   factory = gst_plugin_load_elementfactory(factory->name);
 
+  if (factory->type == 0) {
+    factory = gst_elementfactory_find(name);
+  }
   g_return_val_if_fail(factory->type != 0, NULL);
 
   // create an instance of the element

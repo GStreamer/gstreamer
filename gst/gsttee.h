@@ -38,7 +38,7 @@ extern "C" {
 #define GST_IS_TEE(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_TEE))
 #define GST_IS_TEE_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_TEE)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_TEE))
 
 typedef struct _GstTee GstTee;
 typedef struct _GstTeeClass GstTeeClass;
