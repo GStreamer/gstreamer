@@ -1,3 +1,34 @@
+2005-04-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/Makefile.am:
+	* gst/base/README:
+	* gst/base/gstbasesink.c: (gst_basesink_base_init),
+	(gst_basesink_pad_getcaps), (gst_basesink_pad_setcaps),
+	(gst_basesink_pad_buffer_alloc), (gst_basesink_init),
+	(gst_basesink_do_sync), (gst_basesink_chain_unlocked):
+	* gst/base/gstbasesrc.c: (gst_basesrc_get_type),
+	(gst_basesrc_base_init), (gst_basesrc_class_init),
+	(gst_basesrc_init), (gst_basesrc_get_formats),
+	(gst_basesrc_get_query_types), (gst_basesrc_query),
+	(gst_basesrc_get_event_mask), (gst_basesrc_event_handler),
+	(gst_basesrc_set_property), (gst_basesrc_get_property),
+	(gst_basesrc_get_range_unlocked), (gst_basesrc_get_range),
+	(gst_basesrc_loop), (gst_basesrc_activate),
+	(gst_basesrc_change_state):
+	* gst/base/gstbasesrc.h:
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_base_init),
+	(gst_fakesrc_class_init), (gst_fakesrc_init),
+	(gst_fakesrc_event_handler), (gst_fakesrc_set_property),
+	(gst_fakesrc_get_property), (gst_fakesrc_create):
+	* gst/elements/gstfakesrc.h:
+	* gst/elements/gstfilesrc.c: (gst_filesrc_getrange),
+	(gst_filesrc_open_file), (gst_filesrc_loop),
+	(gst_filesrc_activate), (filesrc_find_peek),
+	(gst_filesrc_type_find):
+	Made base source class, make fakesrc extend it.
+	Add comments to basesink class.
+	Some filesrc cleanup.
+
 2005-03-31  David Schleef  <ds@schleef.org>
 
 	* gst/gstplugin.c: (gst_plugin_check_file), (gst_plugin_load_file):

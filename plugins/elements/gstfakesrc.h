@@ -25,9 +25,9 @@
 #define __GST_FAKESRC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesrc.h>
 
 G_BEGIN_DECLS
-
 
 typedef enum {
   FAKESRC_FIRST_LAST_LOOP = 1,
@@ -74,7 +74,7 @@ typedef struct _GstFakeSrc GstFakeSrc;
 typedef struct _GstFakeSrcClass GstFakeSrcClass;
 
 struct _GstFakeSrc {
-  GstElement     element;
+  GstBaseSrc     element;
 
   gboolean 	 has_loop;
   gboolean 	 has_getrange;
@@ -114,7 +114,7 @@ struct _GstFakeSrc {
 };
 
 struct _GstFakeSrcClass {
-  GstElementClass parent_class;
+  GstBaseSrcClass parent_class;
 
   /* signals */
   void (*handoff) (GstElement *element, GstBuffer *buf, GstPad *pad);

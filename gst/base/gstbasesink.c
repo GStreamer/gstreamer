@@ -190,6 +190,7 @@ gst_basesink_pad_setcaps (GstPad * pad, GstCaps * caps)
 
   bsink = GST_BASESINK (GST_PAD_PARENT (pad));
   bclass = GST_BASESINK_GET_CLASS (bsink);
+
   if (bclass->set_caps)
     res = bclass->set_caps (bsink, caps);
 
@@ -206,6 +207,7 @@ gst_basesink_pad_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
   bsink = GST_BASESINK (GST_PAD_PARENT (pad));
   bclass = GST_BASESINK_GET_CLASS (bsink);
+
   if (bclass->buffer_alloc)
     buffer = bclass->buffer_alloc (bsink, offset, size, caps);
 
@@ -571,6 +573,9 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
   return result;
 }
 
+/* default implementation to calculate the start and end
+ * timestamps on a buffer, subclasses cna override
+ */
 static void
 gst_basesink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
@@ -587,6 +592,15 @@ gst_basesink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
   }
 }
 
+/* perform synchronisation on a buffer
+ * 
+ * 1) check if we have a clock, if not, do nothing
+ * 2) calculate the start and end time of the buffer
+ * 3) create a single shot notification to wait on
+ *    the clock, save the entry so we can unlock it
+ * 4) wait on the clock, this blocks
+ * 5) unref the clockid again
+ */
 static void
 gst_basesink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 {
@@ -615,6 +629,7 @@ gst_basesink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
         gst_clock_id_unref (basesink->clock_id);
         basesink->clock_id = NULL;
       }
+      /* FIXME, don't mess with end_time here */
       basesink->end_time = GST_CLOCK_TIME_NONE;
       GST_UNLOCK (basesink);
 
@@ -623,6 +638,12 @@ gst_basesink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
   }
 }
 
+/* handle a buffer
+ *
+ * 1) first sync on the buffer
+ * 2) render the buffer
+ * 3) unref the buffer
+ */
 static inline void
 gst_basesink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf)
 {
@@ -662,7 +683,7 @@ gst_basesink_chain_unlocked (GstPad * pad, GstBuffer * buf)
       return GST_FLOW_UNEXPECTED;
     default:
       g_assert_not_reached ();
-      return GST_FLOW_UNEXPECTED;
+      return GST_FLOW_ERROR;
   }
 }
 
@@ -683,6 +704,8 @@ gst_basesink_chain (GstPad * pad, GstBuffer * buf)
   return result;
 }
 
+/* FIXME, not all sinks can operate in pull mode 
+ */
 static void
 gst_basesink_loop (GstPad * pad)
 {

@@ -8,6 +8,7 @@ libgstbase_@GST_MAJORMINOR@_la_DEPENDENCIES = \
 	../libgstreamer-@GST_MAJORMINOR@.la
 libgstbase_@GST_MAJORMINOR@_la_SOURCES =	\
 	gstbasesink.c	\
+	gstbasesrc.c	\
 	gstbasetransform.c	
 
 libgstbase_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)
@@ -20,6 +21,7 @@ libgstbase_@GST_MAJORMINOR@includedir =		\
 
 libgstbase_@GST_MAJORMINOR@include_HEADERS =	\
 	gstbasesink.h	\
+	gstbasesrc.h	\
 	gstbasetransform.h	
 
 install-data-local: as-libtool-install-data-local

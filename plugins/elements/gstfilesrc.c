@@ -910,16 +910,22 @@ gst_filesrc_loop (GstPad * pad)
   GST_STREAM_LOCK (pad);
 
   result = gst_filesrc_get (pad, &buffer);
-  if (result != GST_FLOW_OK) {
-    gst_task_pause (GST_RPAD_TASK (pad));
-    goto done;
-  }
+  if (result != GST_FLOW_OK)
+    goto need_pause;
+
   result = gst_pad_push (pad, buffer);
-  if (result != GST_FLOW_OK) {
-    gst_task_pause (GST_RPAD_TASK (pad));
-  }
-done:
+  if (result != GST_FLOW_OK)
+    goto need_pause;
+
   GST_STREAM_UNLOCK (pad);
+  return;
+
+need_pause:
+  {
+    gst_task_pause (GST_RPAD_TASK (pad));
+    GST_STREAM_UNLOCK (pad);
+    return;
+  }
 }
 
 

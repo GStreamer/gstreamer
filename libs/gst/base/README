@@ -25,3 +25,11 @@ GstBaseTransform
   - does flushing
   - push mode
   - pull mode if transform can operate on arbitrary data
+
+GstBaseSrc
+
+  Base class for getrange based source elements
+
+  - one sinkpad
+  - handles state changes
+  - pull/push mode

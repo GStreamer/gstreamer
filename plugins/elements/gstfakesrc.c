@@ -64,8 +64,6 @@ enum
 {
   ARG_0,
   ARG_NUM_SOURCES,
-  ARG_HAS_LOOP,
-  ARG_HAS_GETRANGE,
   ARG_OUTPUT,
   ARG_DATA,
   ARG_SIZETYPE,
@@ -83,11 +81,6 @@ enum
   ARG_PARENTSIZE,
   ARG_LAST_MESSAGE
 };
-
-GstStaticPadTemplate fakesrc_src_template = GST_STATIC_PAD_TEMPLATE ("src%d",
-    GST_PAD_SRC,
-    GST_PAD_REQUEST,
-    GST_STATIC_CAPS_ANY);
 
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())
 static GType
@@ -175,22 +168,18 @@ gst_fakesrc_filltype_get_type (void)
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_fakesrc_debug, "fakesrc", 0, "fakesrc element");
 
-GST_BOILERPLATE_FULL (GstFakeSrc, gst_fakesrc, GstElement, GST_TYPE_ELEMENT,
+GST_BOILERPLATE_FULL (GstFakeSrc, gst_fakesrc, GstBaseSrc, GST_TYPE_BASESRC,
     _do_init);
 
-static GstPad *gst_fakesrc_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * unused);
-static gboolean gst_fakesrc_activate (GstPad * pad, GstActivateMode mode);
 static void gst_fakesrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_fakesrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_fakesrc_set_clock (GstElement * element, GstClock * clock);
 
 static GstElementStateReturn gst_fakesrc_change_state (GstElement * element);
 
-static void gst_fakesrc_loop (GstPad * pad);
-static GstFlowReturn gst_fakesrc_get_range (GstPad * pad, guint64 offset,
+static gboolean gst_fakesrc_event_handler (GstBaseSrc * src, GstEvent * event);
+static GstFlowReturn gst_fakesrc_create (GstBaseSrc * src, guint64 offset,
     guint length, GstBuffer ** buf);
 
 static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
@@ -202,9 +191,8 @@ gst_fakesrc_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
+
   gst_element_class_set_details (gstelement_class, &gst_fakesrc_details);
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&fakesrc_src_template));
 }
 
 static void
@@ -212,9 +200,11 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseSrcClass *gstbasesrc_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbasesrc_class = (GstBaseSrcClass *) klass;
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesrc_get_property);
@@ -222,14 +212,6 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SOURCES,
       g_param_spec_int ("num-sources", "num-sources", "Number of sources",
           1, G_MAXINT, 1, G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HAS_LOOP,
-      g_param_spec_boolean ("has-loop", "has-loop",
-          "Enable loop-based operation", TRUE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HAS_GETRANGE,
-      g_param_spec_boolean ("has-getrange", "has-getrange",
-          "Enable getrange-based operation", TRUE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OUTPUT,
       g_param_spec_enum ("output", "output", "Output method (currently unused)",
           GST_TYPE_FAKESRC_OUTPUT, FAKESRC_FIRST_LAST_LOOP, G_PARAM_READWRITE));
@@ -287,26 +269,18 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
-      gst_marshal_VOID__BOXED_OBJECT, G_TYPE_NONE, 2,
-      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_PAD);
+      gst_marshal_VOID__BOXED_OBJECT, G_TYPE_NONE, 1,
+      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
 
-  gstelement_class->request_new_pad =
-      GST_DEBUG_FUNCPTR (gst_fakesrc_request_new_pad);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_fakesrc_change_state);
-  gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_fakesrc_set_clock);
+
+  gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_fakesrc_event_handler);
+  gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_fakesrc_create);
 }
 
 static void
 gst_fakesrc_init (GstFakeSrc * fakesrc)
 {
-  GstPad *pad;
-
-  /* create our first output pad */
-  pad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
-      "src");
-  gst_element_add_pad (GST_ELEMENT (fakesrc), pad);
-
   fakesrc->output = FAKESRC_FIRST_LAST_LOOP;
   fakesrc->segment_start = -1;
   fakesrc->segment_end = -1;
@@ -331,84 +305,12 @@ gst_fakesrc_init (GstFakeSrc * fakesrc)
   fakesrc->pad_mode = GST_ACTIVATE_NONE;
 }
 
-static void
-gst_fakesrc_set_clock (GstElement * element, GstClock * clock)
+static gboolean
+gst_fakesrc_event_handler (GstBaseSrc * basesrc, GstEvent * event)
 {
   GstFakeSrc *src;
 
-  src = GST_FAKESRC (element);
-
-  src->clock = clock;
-}
-
-static const GstFormat *
-gst_fakesrc_get_formats (GstPad * pad)
-{
-  static const GstFormat formats[] = {
-    GST_FORMAT_DEFAULT,
-    0,
-  };
-
-  return formats;
-}
-
-static const GstQueryType *
-gst_fakesrc_get_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_TOTAL,
-    GST_QUERY_POSITION,
-    GST_QUERY_START,
-    GST_QUERY_SEGMENT_END,
-    0,
-  };
-
-  return types;
-}
-
-static gboolean
-gst_fakesrc_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
-{
-  GstFakeSrc *src = GST_FAKESRC (GST_PAD_PARENT (pad));
-
-  switch (type) {
-    case GST_QUERY_TOTAL:
-      *value = src->num_buffers;
-      break;
-    case GST_QUERY_POSITION:
-      *value = src->buffer_count;
-      break;
-    case GST_QUERY_START:
-      *value = src->segment_start;
-      break;
-    case GST_QUERY_SEGMENT_END:
-      *value = src->segment_end;
-      break;
-    default:
-      return FALSE;
-  }
-  return TRUE;
-}
-
-static const GstEventMask *
-gst_fakesrc_get_event_mask (GstPad * pad)
-{
-  static const GstEventMask masks[] = {
-    {GST_EVENT_SEEK, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT_LOOP},
-    {GST_EVENT_FLUSH, 0},
-    {0, 0},
-  };
-
-  return masks;
-}
-
-static gboolean
-gst_fakesrc_event_handler (GstPad * pad, GstEvent * event)
-{
-  GstFakeSrc *src;
-
-  src = GST_FAKESRC (GST_PAD_PARENT (pad));
+  src = GST_FAKESRC (basesrc);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -428,64 +330,6 @@ gst_fakesrc_event_handler (GstPad * pad, GstEvent * event)
   gst_event_unref (event);
 
   return TRUE;
-}
-
-static void
-gst_fakesrc_set_pad_functions (GstFakeSrc * src, GstPad * pad)
-{
-  gst_pad_set_activate_function (pad, gst_fakesrc_activate);
-  gst_pad_set_event_function (pad, gst_fakesrc_event_handler);
-  gst_pad_set_event_mask_function (pad, gst_fakesrc_get_event_mask);
-  gst_pad_set_query_function (pad, gst_fakesrc_query);
-  gst_pad_set_query_type_function (pad, gst_fakesrc_get_query_types);
-  gst_pad_set_formats_function (pad, gst_fakesrc_get_formats);
-
-  if (src->has_loop)
-    gst_pad_set_loop_function (pad, gst_fakesrc_loop);
-  else
-    gst_pad_set_loop_function (pad, NULL);
-
-  if (src->has_getrange)
-    gst_pad_set_getrange_function (pad, gst_fakesrc_get_range);
-  else
-    gst_pad_set_getrange_function (pad, NULL);
-}
-
-static void
-gst_fakesrc_set_all_pad_functions (GstFakeSrc * src)
-{
-  GList *l;
-
-  for (l = GST_ELEMENT_PADS (src); l; l = l->next)
-    gst_fakesrc_set_pad_functions (src, (GstPad *) l->data);
-}
-
-static GstPad *
-gst_fakesrc_request_new_pad (GstElement * element, GstPadTemplate * templ,
-    const gchar * unused)
-{
-  gchar *name;
-  GstPad *srcpad;
-  GstFakeSrc *fakesrc;
-
-  g_return_val_if_fail (GST_IS_FAKESRC (element), NULL);
-
-  if (templ->direction != GST_PAD_SRC) {
-    g_warning ("gstfakesrc: request new pad that is not a SRC pad\n");
-    return NULL;
-  }
-
-  fakesrc = GST_FAKESRC (element);
-
-  name = g_strdup_printf ("src%d", GST_ELEMENT (fakesrc)->numsrcpads);
-
-  srcpad = gst_pad_new_from_template (templ, name);
-  gst_element_add_pad (GST_ELEMENT (fakesrc), srcpad);
-  gst_fakesrc_set_pad_functions (fakesrc, srcpad);
-
-  g_free (name);
-
-  return srcpad;
 }
 
 static void
@@ -510,14 +354,6 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
   src = GST_FAKESRC (object);
 
   switch (prop_id) {
-    case ARG_HAS_LOOP:
-      src->has_loop = g_value_get_boolean (value);
-      gst_fakesrc_set_all_pad_functions (src);
-      break;
-    case ARG_HAS_GETRANGE:
-      src->has_getrange = g_value_get_boolean (value);
-      gst_fakesrc_set_all_pad_functions (src);
-      break;
     case ARG_OUTPUT:
       g_warning ("not yet implemented");
       break;
@@ -593,12 +429,6 @@ gst_fakesrc_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case ARG_NUM_SOURCES:
       g_value_set_int (value, GST_ELEMENT (src)->numsrcpads);
-      break;
-    case ARG_HAS_LOOP:
-      g_value_set_boolean (value, src->has_loop);
-      break;
-    case ARG_HAS_GETRANGE:
-      g_value_set_boolean (value, src->has_getrange);
       break;
     case ARG_OUTPUT:
       g_value_set_enum (value, src->output);
@@ -792,26 +622,20 @@ gst_fakesrc_create_buffer (GstFakeSrc * src)
 }
 
 static GstFlowReturn
-gst_fakesrc_get_range_unlocked (GstPad * pad, guint64 offset, guint length,
+gst_fakesrc_create (GstBaseSrc * basesrc, guint64 offset, guint length,
     GstBuffer ** ret)
 {
   GstFakeSrc *src;
   GstBuffer *buf;
   GstClockTime time;
 
-  src = GST_FAKESRC (GST_OBJECT_PARENT (pad));
+  src = GST_FAKESRC (basesrc);
 
   if (src->buffer_count == src->segment_end) {
-    if (src->segment_loop) {
-      //gst_pad_push_event (pad, gst_event_new (GST_EVENT_SEGMENT_DONE));
-    } else {
-      gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
-      return GST_FLOW_UNEXPECTED;
-    }
+    return GST_FLOW_UNEXPECTED;
   }
 
   if (src->rt_num_buffers == 0) {
-    gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
     return GST_FLOW_UNEXPECTED;
   } else {
     if (src->rt_num_buffers > 0)
@@ -820,7 +644,6 @@ gst_fakesrc_get_range_unlocked (GstPad * pad, guint64 offset, guint length,
 
   if (src->eos) {
     GST_INFO ("fakesrc is setting eos on pad");
-    gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
     return GST_FLOW_UNEXPECTED;
   }
 
@@ -844,8 +667,8 @@ gst_fakesrc_get_range_unlocked (GstPad * pad, guint64 offset, guint length,
     g_free (src->last_message);
 
     src->last_message =
-        g_strdup_printf ("get      ******* (%s:%s)> (%d bytes, %"
-        G_GUINT64_FORMAT " ) %p", GST_DEBUG_PAD_NAME (pad),
+        g_strdup_printf ("get      ******* > (%d bytes, %"
+        G_GUINT64_FORMAT " ) %p",
         GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
 
     g_object_notify (G_OBJECT (src), "last_message");
@@ -853,8 +676,7 @@ gst_fakesrc_get_range_unlocked (GstPad * pad, guint64 offset, guint length,
 
   if (src->signal_handoffs) {
     GST_LOG_OBJECT (src, "pre handoff emit");
-    g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
-        buf, pad);
+    g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0, buf);
     GST_LOG_OBJECT (src, "post handoff emit");
   }
 
@@ -862,110 +684,6 @@ gst_fakesrc_get_range_unlocked (GstPad * pad, guint64 offset, guint length,
 
   *ret = buf;
   return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_fakesrc_get_range (GstPad * pad, guint64 offset, guint length,
-    GstBuffer ** ret)
-{
-  GstFlowReturn fret;
-
-  g_assert (GST_FAKESRC (GST_OBJECT_PARENT (pad))->pad_mode ==
-      GST_ACTIVATE_PULL);
-
-  GST_STREAM_LOCK (pad);
-
-  fret = gst_fakesrc_get_range_unlocked (pad, offset, length, ret);
-
-  GST_STREAM_UNLOCK (pad);
-
-  return fret;
-}
-
-static void
-gst_fakesrc_loop (GstPad * pad)
-{
-  GstFakeSrc *src;
-  GstBuffer *buf = NULL;
-  GstFlowReturn ret;
-
-  src = GST_FAKESRC (GST_OBJECT_PARENT (pad));
-
-  g_assert (src->pad_mode == GST_ACTIVATE_PUSH);
-
-  GST_STREAM_LOCK (pad);
-  if (src->need_flush) {
-    src->need_flush = FALSE;
-    gst_pad_push_event (pad, gst_event_new (GST_EVENT_FLUSH));
-  }
-
-  ret = gst_fakesrc_get_range_unlocked (pad, src->buffer_count,
-      DEFAULT_SIZEMAX, &buf);
-  if (ret != GST_FLOW_OK) {
-    goto pause;
-  }
-
-  ret = gst_pad_push (pad, buf);
-  if (ret != GST_FLOW_OK) {
-    goto pause;
-  }
-
-  GST_STREAM_UNLOCK (pad);
-  return;
-
-pause:
-  gst_task_pause (GST_RPAD_TASK (pad));
-  GST_STREAM_UNLOCK (pad);
-  return;
-}
-
-static gboolean
-gst_fakesrc_activate (GstPad * pad, GstActivateMode mode)
-{
-  gboolean result = FALSE;
-  GstFakeSrc *fakesrc;
-
-  fakesrc = GST_FAKESRC (GST_OBJECT_PARENT (pad));
-
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-      /* if we have a scheduler we can start the task */
-      g_return_val_if_fail (fakesrc->has_loop, FALSE);
-      if (GST_ELEMENT_SCHEDULER (fakesrc)) {
-        GST_STREAM_LOCK (pad);
-        GST_RPAD_TASK (pad) =
-            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (fakesrc),
-            (GstTaskFunction) gst_fakesrc_loop, pad);
-
-        gst_task_start (GST_RPAD_TASK (pad));
-        GST_STREAM_UNLOCK (pad);
-        result = TRUE;
-      }
-      break;
-    case GST_ACTIVATE_PULL:
-      g_return_val_if_fail (fakesrc->has_getrange, FALSE);
-      result = TRUE;
-      break;
-    case GST_ACTIVATE_NONE:
-      /* step 1, unblock clock sync (if any) */
-
-      /* step 2, make sure streaming finishes */
-      GST_STREAM_LOCK (pad);
-      /* step 3, stop the task */
-      if (GST_RPAD_TASK (pad)) {
-        gst_task_stop (GST_RPAD_TASK (pad));
-        gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
-        GST_RPAD_TASK (pad) = NULL;
-      }
-      GST_STREAM_UNLOCK (pad);
-
-      result = TRUE;
-      break;
-  }
-
-  fakesrc->pad_mode = mode;
-
-  return result;
 }
 
 static GstElementStateReturn
