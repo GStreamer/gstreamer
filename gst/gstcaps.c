@@ -538,6 +538,11 @@ gst_caps_set_props (GstCaps *caps, GstProps *props)
 
   gst_props_replace_sink (&caps->properties, props);
 
+  if (props && !GST_PROPS_IS_FIXED (props))
+    GST_CAPS_FLAG_UNSET (caps, GST_CAPS_FIXED);
+  else
+    GST_CAPS_FLAG_SET (caps, GST_CAPS_FIXED);
+
   return caps;
 }
 
