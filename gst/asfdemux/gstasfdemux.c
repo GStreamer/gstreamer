@@ -522,7 +522,7 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
   gchar *utf8_comments[5] = { NULL, NULL, NULL, NULL, NULL };
   guchar *data;
   const gchar *tags[5] = { GST_TAG_TITLE, GST_TAG_ARTIST, GST_TAG_COPYRIGHT,
-    GST_TAG_COMMENT, NULL /* ? */
+    GST_TAG_COMMENT, NULL       /* ? */
   };
   guint16 *lengths = (guint16 *) & object;
   gint i;
@@ -1230,9 +1230,11 @@ gst_asf_demux_handle_sink_event (GstASFDemux * asf_demux,
         asf_stream_context *stream = &asf_demux->stream[i];
 
         if (GST_PAD_IS_USABLE (stream->pad)) {
-          GST_DEBUG ("sending discont on %d %" G_GINT64_FORMAT " + %"
-              G_GINT64_FORMAT " = %" G_GINT64_FORMAT, i, asf_demux->last_seek,
-              stream->delay, asf_demux->last_seek + stream->delay);
+          GST_DEBUG ("sending discont on stream %d with %" GST_TIME_FORMAT
+              " + %" GST_TIME_FORMAT " = %" GST_TIME_FORMAT,
+              i, GST_TIME_ARGS (asf_demux->last_seek),
+              GST_TIME_ARGS (stream->delay),
+              GST_TIME_ARGS (asf_demux->last_seek + stream->delay));
           discont =
               gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
               asf_demux->last_seek + stream->delay, NULL);
