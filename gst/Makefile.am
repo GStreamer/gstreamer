@@ -97,10 +97,10 @@ libgst_la_SOURCES =		\
 
 # FIXME this only lists the x86 arch file, we really should merge them all
 cothreads.lo: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h \
-  $(top_builddir)/config.h $(srcdir)/gstinfo.c $(srcdir)/gstarch.h $(srcdir)/gsti386.h
+  $(top_builddir)/config.h $(srcdir)/gstinfo.c $(srcdir)/gstarch.h
 	$(LIBTOOL) --mode=compile $(COMPILE) -O2 -c $<
 cothreads.o: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h \
-  $(top_builddir)/config.h $(srcdir)/gstinfo.c $(srcdir)/gstarch.h $(srcdir)/gsti386.h
+  $(top_builddir)/config.h $(srcdir)/gstinfo.c $(srcdir)/gstarch.h
 	$(COMPILE) -O2 -c $<
 
 # NOTDEPEND.cothreads.lo: cothreads.c
@@ -190,11 +190,6 @@ libgstinclude_HEADERS =		\
 noinst_HEADERS = 	\
 	gst_private.h	\
 	gstarch.h	\
-	gsti386.h	\
-	gstppc.h	\
-	gstalpha.h	\
-	gstarm.h	\
-	gstsparc.h	\
 	gstpropsprivate.h
 
 CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\"
