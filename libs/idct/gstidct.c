@@ -20,6 +20,7 @@
 
 #include <config.h>
 
+#include <gst/gstcpu.h>
 #include "gstidct.h"
 #include "dct.h"
 
@@ -33,10 +34,14 @@ GstIDCT *gst_idct_new(GstIDCTMethod method)
 
   if (method == GST_IDCT_DEFAULT) {
 #ifdef HAVE_LIBMMX
-	 method = GST_IDCT_MMX32;
-#else
-	 method = GST_IDCT_FAST_INT;
+    if (gst_cpu_get_flags() & GST_CPU_FLAG_MMX) {
+      method = GST_IDCT_MMX;
+    }
+    else
 #endif
+    {
+      method = GST_IDCT_FAST_INT;
+    }
   }
 
   new->convert_sparse = gst_idct_int_sparse_idct;

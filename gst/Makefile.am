@@ -15,6 +15,8 @@ libgst_la_SOURCES =	\
 	gstbuffer.c	\
 	gstbufferpool.c	\
 	gstclock.c	\
+	gstcpu.c	\
+	gstcpuid_i386.s	\
 	gstelement.c	\
 	gstelementfactory.c	\
 	gstbin.c	\
@@ -42,6 +44,7 @@ libgstinclude_HEADERS =	\
 	gstbuffer.h	\
 	gstbufferpool.h	\
 	gstclock.h	\
+	gstcpu.h	\
 	gstelement.h	\
 	gstbin.h	\
 	gstpipeline.h	\

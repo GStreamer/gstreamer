@@ -36,6 +36,7 @@ void gst_init(int *argc,char **argv[]) {
 
   gtk_init(argc,argv);
 
+  _gst_cpu_initialize();
   _gst_type_initialize();
   _gst_plugin_initialize();
   _gst_buffer_initialize();
