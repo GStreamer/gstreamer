@@ -1,3 +1,12 @@
+2004-07-09  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* configure.ac:
+	* testsuite/Makefile.am:
+	* testsuite/states/Makefile.am:
+	* testsuite/states/parent.c: (main):
+	  re-enable states testsuite dir.  Add test for state changes and
+	  parent behaviour
+
 2004-07-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/schedulers/gstoptimalscheduler.c:

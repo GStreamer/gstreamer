@@ -678,6 +678,7 @@ testsuite/parse/Makefile
 testsuite/plugin/Makefile
 testsuite/refcounting/Makefile
 testsuite/schedulers/Makefile
+testsuite/states/Makefile
 testsuite/tags/Makefile
 testsuite/threads/Makefile
 examples/Makefile
