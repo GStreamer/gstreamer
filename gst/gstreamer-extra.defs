@@ -39,6 +39,26 @@
 )
 
 ;;
+;; Override normal *_get_type handling via rename
+;;
+
+(define-method get_props_type
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_get_props_type")
+  (return-type "GstPropsType")
+)
+
+;;
+;; Access GstProps properties list
+;;
+
+(define-method get_list
+  (of-object "GstProps")
+  (c-name "gst_props_get_list")
+  (return-type "const-GList*")
+)
+
+;;
 ;; Accelerate common GstBin iterate loop
 ;;
 

@@ -1,3 +1,19 @@
+2003-02-06  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* gstreamer/gstreamer-extra.defs, gstreamer/gstreamer.override: add
+	wrapper for gst_props_entry_gst_list() and method gst_list() to
+	GstProps to access properties list
+
+	* gstreamer/gstreamer-extra.defs, gstreamer/gstreamer-fixes.[ch]: add
+	alias for gst_props_entry_get_type as _get_props_type() since
+	_get_type() is recognized as a GObject type function
+
+	* examples/gstreamer/oggplay.py: rename to vorbisplay.py
+
+	* examples/gstreamer/vorbisplay.py: print out meta/stream info
+
+	* gstreamer/Makefile.am: add gstreamer.defs to CLEANFILES
+
 2003-02-05  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* configure.ac: require GStreamer core 0.6.0

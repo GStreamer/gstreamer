@@ -62,3 +62,8 @@ guint add_iterate_bin(GstBin *bin) {
 void remove_iterate_bin(guint id) {
 	g_source_remove(id);
 }
+
+GstPropsType gst_props_entry_get_props_type(GstPropsEntry *entry)
+{
+	return gst_props_entry_get_type(entry);
+}

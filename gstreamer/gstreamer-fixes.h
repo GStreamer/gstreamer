@@ -28,3 +28,4 @@
 void iterate_bin_all(GstBin *bin);
 guint add_iterate_bin(GstBin *bin);
 void remove_iterate_bin(guint id);
+GstPropsType gst_props_entry_get_props_type(GstPropsEntry *entry);

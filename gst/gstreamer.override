@@ -434,3 +434,60 @@ _wrap_gst_props_entry_get_float_range(PyObject *self)
 	ret = gst_props_entry_get_float_range(pyg_boxed_get(self, GstPropsEntry), &min, &max);
 	return Py_BuildValue("(bff)", ret, min, max);
 }
+%%
+override gst_props_entry_get_list
+
+static PyObject *
+_wrap_gst_props_entry_get_list(PyObject *self)
+{
+	gboolean ret;
+	const GList *list;
+	PyObject *tuple, *obj;
+	int i;
+
+	list = NULL;
+	ret = gst_props_entry_get_list(pyg_boxed_get(self, GstPropsEntry), &list);
+	if (ret == TRUE) {
+		tuple = PyTuple_New(g_list_length(list));
+		for (i = 0; list != NULL; i++, list = g_list_next(list)) {
+			obj = pyg_boxed_new(GST_TYPE_PROPS_ENTRY, list->data, TRUE, TRUE);
+			PyTuple_SET_ITEM(tuple, i, obj);
+		}
+	} else {
+		tuple = Py_None;
+		Py_INCREF(tuple);
+	}
+	return Py_BuildValue("(bO)", ret, tuple);
+}
+%%
+override gst_props_get_list
+
+static gboolean
+gst_props_get_list(GstProps *props, GList **list)
+{
+	*list = GST_PROPS_PROPERTIES(props);
+	return TRUE;
+}
+
+static PyObject *
+_wrap_gst_props_get_list(PyObject *self)
+{
+	gboolean ret;
+	GList *list;
+	PyObject *tuple, *obj;
+	int i;
+
+	list = NULL;
+	ret = gst_props_get_list(pyg_boxed_get(self, GstProps), &list);
+	if (ret == TRUE) {
+		tuple = PyTuple_New(g_list_length(list));
+		for (i = 0; list != NULL; i++, list = g_list_next(list)) {
+			obj = pyg_boxed_new(GST_TYPE_PROPS_ENTRY, list->data, TRUE, TRUE);
+			PyTuple_SET_ITEM(tuple, i, obj);
+		}
+	} else {
+		tuple = Py_None;
+		Py_INCREF(tuple);
+	}
+	return Py_BuildValue("(bO)", ret, tuple);
+}
