@@ -28,6 +28,7 @@ version_check ()
   MINOR=$4
   MICRO=$5
 
+  WRONG=
 
   debug "major $MAJOR minor $MINOR micro $MICRO"
   VERSION=$MAJOR
