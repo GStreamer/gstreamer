@@ -2017,14 +2017,15 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
           pads = g_list_next (pads);
 	}
       }
+      gst_event_free (event);
       /* we have to try to schedule another element because this one is deisabled */
       gst_element_yield (element);
       break;
     default:
       g_warning ("no default handler for event\n");
+      gst_event_free (event);
       break;
   }
-  gst_event_free (event);
 }
 
 /**

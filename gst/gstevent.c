@@ -92,6 +92,8 @@ gst_event_new (GstEventType type)
 void
 gst_event_free (GstEvent* event)
 {
+  GST_INFO (GST_CAT_EVENT, "freeing event %p", event);
+
   g_mutex_lock (_gst_event_chunk_lock);
   if (GST_EVENT_SRC (event)) {
     gst_object_unref (GST_EVENT_SRC (event));

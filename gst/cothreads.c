@@ -233,8 +233,10 @@ cothread_destroy (cothread_state *thread)
 
   GST_INFO (GST_CAT_COTHREADS, "destroy cothread %d %p %d", threadnum, thread, ctx->current);
 
+  /* we have to unlock here because we might be switched out with the lock held */
+  cothread_unlock (thread);
+
 #ifndef COTHREAD_ATOMIC
-  g_mutex_unlock (thread->lock);
   g_mutex_free (thread->lock);
 #endif
 
@@ -429,7 +431,7 @@ cothread_switch (cothread_state * thread)
 #ifdef GST_ARCH_PRESETJMP
   GST_ARCH_PRESETJMP ();
 #endif
-  enter = sigsetjmp (current->jmp, 1);
+  enter = setjmp (current->jmp);
   if (enter != 0) {
     GST_DEBUG (0, "enter thread #%d %d %p<->%p (%d)\n", current->threadnum, enter,
 	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp);
@@ -447,7 +449,7 @@ cothread_switch (cothread_state * thread)
   if (thread->flags & COTHREAD_STARTED) {
     GST_DEBUG (0, "in thread \n");
     /* switch to it */
-    siglongjmp (thread->jmp, 1);
+    longjmp (thread->jmp, 1);
   }
   else {
     GST_ARCH_SETUP_STACK ((char*)thread->sp);
