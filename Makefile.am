@@ -8,7 +8,7 @@ gstplay_subdir=
 endif
 
 # These are the subdirs which might get used.
-SUBDIRS = gst libs plugins . $(gstplay_subdir) test editor tools docs tests
+SUBDIRS = gst libs plugins . $(gstplay_subdir) test editor tools docs # tests
 
 # These are all the possible subdirs
 DIST_SUBDIRS = gst libs plugins . gstplay test editor tools docs tests

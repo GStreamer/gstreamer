@@ -15,8 +15,15 @@ ac3play_SOURCES = ac3play.c mem.c
 
 noinst_HEADERS = mem.h
 
-LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la \
-          $(top_builddir)/plugins/videosink/gdkxvimage.lo -lXv -lXxf86vm
+if HAVE_LIBXV
+xvlibs=-lXv
+else
+xvlibs=
+endif
+
+LDADD = $(top_builddir)/gst/libgst.la \
+          $(GLIB_LIBS) $(GTK_LIBS) \
+          $(top_builddir)/plugins/videosink/gdkxvimage.lo ${xvlibs} -lXxf86vm
 
 #LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la \
 #          $(top_builddir)/plugins/videosink/libvideosink.la -L/usr/X11/lib -lXxf86dga

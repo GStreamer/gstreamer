@@ -129,7 +129,6 @@ else
       [Couldn't find gnome libraries for libglade - Can't build gstplay])
 	     )
   CFLAGS=${libglade_save_CFLAGS}
-  AC_MSG_WARN()
 fi
 
 dnl Check for atomic.h
@@ -183,8 +182,9 @@ AC_SUBST(X_PRE_LIBS)
 AC_SUBST(X_EXTRA_LIBS)
 AC_SUBST(X_LIBS)
 
-AC_CHECK_LIB(Xv, XvQueryExtension,,,
-    $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
+xvsave_LIBS=${LIBS}
+AC_CHECK_LIB(Xv, XvQueryExtension, HAVE_LIBXV=yes, HAVE_LIBXV=no, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
+LIBS=${xvsave_LIBS}
 
 dnl Check for xaudio
 AC_CHECK_HEADER(xaudio/decoder.h,[
@@ -339,6 +339,7 @@ AM_CONDITIONAL(HAVE_XAUDIO,         test "x$HAVE_XAUDIO" = "xyes")
 AM_CONDITIONAL(HAVE_CSSAUTH,        test "x$HAVE_CSSAUTH" = "xyes")
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
+AM_CONDITIONAL(HAVE_LIBXV,          test "x$HAVE_LIBXV" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 
 
@@ -426,6 +427,7 @@ test/Makefile
 test/xml/Makefile
 test/bindings/Makefile
 test/cothreads/Makefile
+tests/Makefile
 editor/Makefile
 tools/Makefile
 docs/Makefile

@@ -24,9 +24,6 @@
 
 #undef DEBUG_ENABLED
 
-/* Define if you have the Xv library (-lXv).  */
-#undef HAVE_LIBXV
-
 /* Name of package */
 #undef PACKAGE
 

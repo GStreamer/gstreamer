@@ -22,7 +22,13 @@ CFLAGS += -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
 gstplay_CFLAGS = $(shell gnome-config --cflags gnomeui) $(shell libglade-config --cflags gnome) 
 gstplay_LDFLAGS = $(shell gnome-config --libs gnomeui) $(shell libglade-config --libs gnome)
 
+if HAVE_LIBXV
+xvlibs=-lXv
+else
+xvlibs=
+endif
+
 gstplay_LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la \
-          $(top_builddir)/plugins/videosink/gdkxvimage.lo -lXv -lXxf86vm
+          $(top_builddir)/plugins/videosink/gdkxvimage.lo ${xvlibs} -lXxf86vm
 
 
