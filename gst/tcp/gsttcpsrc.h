@@ -35,6 +35,7 @@ extern "C" {
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include "gsttcp.h"
 
 #include <fcntl.h>
 
@@ -70,6 +71,7 @@ struct _GstTCPSrc {
   int sock;
   int client_sock;
   int control_sock;
+  Gst_TCP_Control control;
 
   struct sockaddr_in myaddr;
   GstClock *clock;

@@ -42,6 +42,7 @@ extern "C" {
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include "gsttcp.h"
 
 #define GST_TYPE_TCPSINK \
   (gst_tcpsink_get_type())
@@ -71,6 +72,7 @@ struct _GstTCPSink {
 
   int sock;
   struct sockaddr_in theiraddr;
+  Gst_TCP_Control control;
 
   gint port;
   gchar *host;

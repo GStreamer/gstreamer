@@ -28,7 +28,6 @@ extern "C" {
 typedef enum {
   CONTROL_ZERO,
   CONTROL_NONE,
-  CONTROL_TCP,
   CONTROL_TCP
 } Gst_TCP_Control;
 

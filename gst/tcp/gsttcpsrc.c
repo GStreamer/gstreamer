@@ -42,8 +42,24 @@ enum {
 enum {
   ARG_0,
   ARG_PORT,
+  ARG_CONTROL
   /* FILL ME */
 };
+
+#define GST_TYPE_TCPSRC_CONTROL	(gst_tcpsrc_control_get_type())
+static GType
+gst_tcpsrc_control_get_type(void) {
+  static GType tcpsrc_control_type = 0;
+  static GEnumValue tcpsrc_control[] = {
+    {CONTROL_NONE, "1", "none"},
+    {CONTROL_TCP, "2", "tcp"},
+    {CONTROL_ZERO, NULL, NULL}
+  };
+  if (!tcpsrc_control_type) {
+    tcpsrc_control_type = g_enum_register_static("GstTCPSrcControl", tcpsrc_control);
+  }
+  return tcpsrc_control_type;
+}
 
 static void		gst_tcpsrc_class_init		(GstTCPSrc *klass);
 static void		gst_tcpsrc_init			(GstTCPSrc *tcpsrc);
@@ -99,6 +115,9 @@ gst_tcpsrc_class_init (GstTCPSrc *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
     g_param_spec_int ("port", "port", "The port to receive the packets from",
                        0, 32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE)); 
+  g_object_class_install_property (gobject_class, ARG_CONTROL,
+    g_param_spec_enum ("control", "control", "The type of control",
+                       GST_TYPE_TCPSRC_CONTROL, CONTROL_TCP, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_tcpsrc_set_property;
   gobject_class->get_property = gst_tcpsrc_get_property;
@@ -126,6 +145,7 @@ gst_tcpsrc_init (GstTCPSrc *tcpsrc)
   gst_pad_set_get_function (tcpsrc->srcpad, gst_tcpsrc_get);
 
   tcpsrc->port = TCP_DEFAULT_PORT;
+  tcpsrc->control = CONTROL_TCP;
   tcpsrc->clock = NULL;
   tcpsrc->sock = -1;
   tcpsrc->control_sock = -1;
@@ -154,42 +174,56 @@ gst_tcpsrc_get (GstPad *pad)
 
   FD_ZERO (&read_fds);
   FD_SET (tcpsrc->sock, &read_fds);
-  FD_SET (tcpsrc->control_sock, &read_fds);
+
+  if (tcpsrc->control_sock >= 0) {
+    FD_SET (tcpsrc->control_sock, &read_fds);
+  }
   
   max_sock = MAX(tcpsrc->sock, tcpsrc->control_sock);
 
   if (select (max_sock+1, &read_fds, NULL, NULL, NULL) > 0) {
-    if ((tcpsrc->control_sock != -1) &&
-        FD_ISSET (tcpsrc->control_sock, &read_fds)) {
-#ifndef GST_DISABLE_LOADSAVE
+    if ((tcpsrc->control_sock != -1) && FD_ISSET (tcpsrc->control_sock, &read_fds)) 
+    {
       guchar *buf;
       xmlDocPtr doc;
       GstCaps *caps;
+      
+      switch (tcpsrc->control) {
+    	case CONTROL_TCP:
 
-      buf = g_malloc (1024*10);
+#ifndef GST_DISABLE_LOADSAVE
+      	   buf = g_malloc (1024*10);
 
-      len = sizeof (struct sockaddr);
-      client_sock = accept (tcpsrc->control_sock, &client_addr, &len);
+      	   len = sizeof (struct sockaddr);
+           client_sock = accept (tcpsrc->control_sock, &client_addr, &len);
       	    
-      if (client_sock <= 0) {
-        perror ("control_sock accept");
-      }
+           if (client_sock <= 0) {
+             perror ("control_sock accept");
+      	   }
       
-      else if ((ret = read (client_sock, buf, 1024*10)) <= 0) {
-        perror ("control_sock read");
-      }
+      	   else if ((ret = read (client_sock, buf, 1024*10)) <= 0) {
+             perror ("control_sock read");
+      	   }
 
-      else {
-        buf[ret] = '\0';
-        doc = xmlParseMemory(buf, ret);
-        caps = gst_caps_load_thyself(doc->xmlRootNode);
+      	   else {
+             buf[ret] = '\0';
+             doc = xmlParseMemory(buf, ret);
+             caps = gst_caps_load_thyself(doc->xmlRootNode);
       
-        /* foward the connect, we don't signal back the result here... */
-        gst_pad_proxy_link (tcpsrc->srcpad, caps);
+             /* foward the connect, we don't signal back the result here... */
+             gst_pad_proxy_link (tcpsrc->srcpad, caps);
+      	   }
+      
+      	   g_free (buf);
+#endif
+	break;
+    	case CONTROL_NONE:
+	default:
+	    g_free (buf);
+      	    return NULL;
+	    break;
       }
       
-      g_free (buf);
-#endif
       outbuf = NULL;
     }
     else {
@@ -220,9 +254,7 @@ gst_tcpsrc_get (GstPad *pad)
       }
 	
       if (!GST_FLAG_IS_SET (tcpsrc, GST_TCPSRC_CONNECTED)) {
-        g_print ("accepting stream..\n");
         tcpsrc->client_sock = accept (tcpsrc->sock, &client_addr, &len);
-        g_print ("accepted stream.\n");
       	    
         if (tcpsrc->client_sock <= 0) {
           perror ("accept");
@@ -272,6 +304,9 @@ gst_tcpsrc_set_property (GObject *object, guint prop_id, const GValue *value, GP
     case ARG_PORT:
         tcpsrc->port = g_value_get_int (value);
       break;
+    case ARG_CONTROL:
+        tcpsrc->control = g_value_get_enum (value);
+      break;
     default:
       break;
   }
@@ -289,6 +324,9 @@ gst_tcpsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
   switch (prop_id) {
     case ARG_PORT:
       g_value_set_int (value, tcpsrc->port);
+      break;
+    case ARG_CONTROL:
+      g_value_set_enum (value, tcpsrc->control);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -310,35 +348,46 @@ gst_tcpsrc_init_receive (GstTCPSrc *src)
     return FALSE;
   }
   
-  if ((src->control_sock = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
-    perror("control_socket");
-    return FALSE;
-  }
-  
   if (bind (src->sock, (struct sockaddr *) &src->myaddr, sizeof (src->myaddr)) == -1) {
     perror("stream_sock bind");
     return FALSE;
   }
-  
-  src->myaddr.sin_port = htons (src->port+1);   /* short, network byte order */
 
-  if (bind (src->control_sock, (struct sockaddr *) &src->myaddr, sizeof (src->myaddr)) == -1) {
-    perror("control bind");
-    return FALSE;
-  }
-  
   if (listen (src->sock, 5) == -1) {
     perror("stream_sock listen");
     return FALSE;
   }
   
-  if (listen (src->control_sock, 5) == -1) {
-    perror("control listen");
-    return FALSE;
-  }
-  	
   fcntl (src->sock, F_SETFL, O_NONBLOCK);
-  fcntl (src->control_sock, F_SETFL, O_NONBLOCK);
+  
+  switch (src->control) {
+    case CONTROL_TCP:
+  	if ((src->control_sock = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
+    	  perror("control_socket");
+    	  return FALSE;
+  	}
+  	
+  	src->myaddr.sin_port = htons (src->port+1);
+        if (bind (src->control_sock, (struct sockaddr *) &src->myaddr, sizeof (src->myaddr)) == -1) 
+	{
+    	  perror("control bind");
+    	  return FALSE;
+  	}
+  	
+	if (listen (src->control_sock, 5) == -1) {
+    	  perror("control listen");
+    	  return FALSE;
+	}
+  
+	fcntl (src->control_sock, F_SETFL, O_NONBLOCK);
+    case CONTROL_NONE:
+        GST_FLAG_SET (src, GST_TCPSRC_OPEN);
+  	return TRUE;
+	break;
+    default:
+    	return FALSE;
+	break;
+  }
   
   GST_FLAG_SET (src, GST_TCPSRC_OPEN);
   
