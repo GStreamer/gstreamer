@@ -10,19 +10,23 @@ else
 GST_LOADSAVE_SRC = gst-compprep gst-xmllaunch
 endif
 
-bin_PROGRAMS = 	gst-launch 	\
+bin_PROGRAMS = 	gst-launch 		\
 		$(GST_REGISTRY_SRC) 	\
-		gst-inspect 	\
+		gst-inspect 		\
 		$(GST_LOADSAVE_SRC) 	\
+		gst-md5 		\
 		gst-complete
 bin_SCRIPTS = gst-feedback
 
-man_MANS = gst-launch.1 gst-register.1 gst-inspect.1 \
+man_MANS = gst-launch.1 gst-md5.1 gst-register.1 gst-inspect.1 \
 	gst-complete.1 gst-compprep.1 gst-xmllaunch.1 \
 	gst-feedback.1
 
 gst_launch_LDADD = $(GST_LIBS) #-lefence
 gst_launch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+
+gst_md5_LDADD = $(GST_LIBS) #-lefence
+gst_md5_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 
 if !GST_DISABLE_REGISTRY
 gst_register_LDADD = $(GST_LIBS)
