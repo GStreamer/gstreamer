@@ -56,12 +56,16 @@ struct _GstSDLVideoSink {
   GstPad *sinkpad;
 
   gulong format;
-  gint width, height;
+  gint window_width, window_height; /* the size of the SDL window */
+  gint image_width, image_height;   /* the size of the incoming YUV stream */
+  gint window_id;
 
   gint frames_displayed;
   guint64 frame_time;
 
   GstClock *clock;
+
+  GstCaps *capslist;
 
   unsigned char *yuv[3];
   SDL_Surface *screen;
