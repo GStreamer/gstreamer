@@ -14,9 +14,11 @@ int main (int argc, char *argv[])
 
   /* create a new bin to hold the elements */
   bin = gst_pipeline_new ("pipeline");
+  g_assert (bin);
 
   /* create a disk reader */
   filesrc = gst_elementfactory_make ("filesrc", "disk_source");
+  g_assert (filesrc);
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   /* now it's time to get the decoder */
@@ -27,6 +29,7 @@ int main (int argc, char *argv[])
   }
   /* and an audio sink */
   osssink = gst_elementfactory_make ("osssink", "play_audio");
+  g_assert (osssink);
 
   /* add objects to the main pipeline */
   gst_bin_add_many (GST_BIN (bin), filesrc, decoder, osssink, NULL);
