@@ -341,7 +341,8 @@ gst_ffmpegcsp_chain (GstPad  *pad,
 
   if (space->from_pixfmt == PIX_FMT_NB ||
       space->to_pixfmt == PIX_FMT_NB) {
-    g_critical ("attempting to convert unknown formats");
+    GST_ELEMENT_ERROR (space, CORE, NOT_IMPLEMENTED, NULL,
+         ("attempting to convert colorspaces between unknown formats"));
     gst_buffer_unref (inbuf);
     return;
   }
