@@ -229,7 +229,8 @@ gst_bin_set_element_sched (GstElement *element, GstScheduler *sched)
   if (GST_IS_BIN (element)) {
     if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_MANAGER)) {
       GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "child is already a manager, not resetting");
-      gst_scheduler_add_scheduler (sched, GST_ELEMENT_SCHED (element));
+      if (GST_ELEMENT_SCHED (element))
+        gst_scheduler_add_scheduler (sched, GST_ELEMENT_SCHED (element));
       return;
     }
 
@@ -565,9 +566,13 @@ gst_bin_change_state (GstElement * element)
 
   if (have_async)
     ret = GST_STATE_ASYNC;
-  else
-    ret = GST_STATE_SUCCESS;
-
+  else {
+    if (parent_class->change_state) {
+      ret = parent_class->change_state(element);
+    }
+    else
+      ret = GST_STATE_SUCCESS;
+  }
   return ret;
 }
 
@@ -577,9 +582,9 @@ gst_bin_change_state_norecurse (GstBin * bin)
 {
   GstElementStateReturn ret;
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state) {
+  if (parent_class->change_state) {
     GST_DEBUG_ELEMENT (GST_CAT_STATES, bin, "setting bin's own state");
-    ret = GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT (bin));
+    ret = parent_class->change_state (GST_ELEMENT (bin));
 
     return ret;
   }

@@ -2087,13 +2087,16 @@ gst_element_change_state (GstElement *element)
 
   parent = GST_ELEMENT_PARENT (element);
 
+  GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "signaling state change from %s to %s",
+                     gst_element_state_get_name (old_state),
+                     gst_element_state_get_name (GST_STATE (element)));
+  g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
+		  0, old_state, GST_STATE (element));
+
   /* tell our parent about the state change */
   if (parent && GST_IS_BIN (parent)) {
     gst_bin_child_state_change (GST_BIN (parent), old_state, GST_STATE (element), element);
   }
-
-  g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
-		  0, old_state, GST_STATE (element));
 
   /* signal the state change in case somebody is waiting for us */
   g_mutex_lock (element->state_mutex);
