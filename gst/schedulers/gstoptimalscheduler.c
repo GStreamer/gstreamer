@@ -891,8 +891,9 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
     }
 #endif
     /* if the scheduler interrupted, make sure we send an INTERRUPTED event to the
-     * >        * loop based element */
+     * loop based element */
     if (osched->state == GST_OPT_SCHEDULER_STATE_INTERRUPTED) {
+      GST_INFO (GST_CAT_SCHEDULING, "scheduler interrupted, return interrupt event");
       return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
     }
     
@@ -1250,6 +1251,7 @@ gst_opt_scheduler_interrupt (GstScheduler *sched, GstElement *element)
   {
     GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
  
+    GST_INFO (GST_CAT_SCHEDULING, "scheduler set interrupted state");
     osched->state = GST_OPT_SCHEDULER_STATE_INTERRUPTED;
   }
   return TRUE;
