@@ -35,10 +35,25 @@ DIST_SUBDIRS=ext gst-libs \
 	pkgconfig
 
 EXTRA_DIST=gst-plugins.spec depcomp \
-	   AUTHORS COPYING COPYING.LIB README RELEASE REQUIREMENTS \
+	   AUTHORS COPYING COPYING.LIB README REQUIREMENTS \
 	   ChangeLog autogen.sh common m4
 
 DISTCLEANFILES=_stdint.h
+
+# to do a release, run "make release"
+# this will generate all archives and md5sums
+                                                                                
+# make bz2 as well
+AUTOMAKE_OPTIONS = dist-bzip2
+                                                                                
+release: dist
+	make @PACKAGE@-@VERSION@.tar.gz.md5
+	make @PACKAGE@-@VERSION@.tar.bz2.md5
+                                                                                
+# generate md5 sum files
+%.md5: %
+	md5sum $< > $@
+                                                                                
 
 dist-hook:
 	rm -rf `find $(distdir)/common -name CVS`
