@@ -25,9 +25,11 @@ SUBDIRS = include gst libs tools \
 # These are all the possible subdirs
 DIST_SUBDIRS = include libs gst tools tests testsuite examples docs
 
+all-local: gstreamer-@GST_MAJORMINOR@.pc gstreamer-@GST_MAJORMINOR@-uninstalled.pc
+
 gstreamer-@GST_MAJORMINOR@.pc: gstreamer.pc
 	cp gstreamer.pc gstreamer-@GST_MAJORMINOR@.pc
-gstreamer-uninstalled-@GST_MAJORMINOR@.pc: gstreamer.pc
+gstreamer-@GST_MAJORMINOR@-uninstalled.pc: gstreamer.pc
 	cp gstreamer-uninstalled.pc gstreamer-@GST_MAJORMINOR@-uninstalled.pc
 
 pkgconfigdir = $(libdir)/pkgconfig
