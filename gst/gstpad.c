@@ -619,7 +619,7 @@ gst_pad_can_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filterca
       num_decoupled++;
 
     if (realsrc->sched != realsink->sched && num_decoupled != 1) {
-      g_warning ("connecting pads with different scheds requires exactly one decoupled element (queue)\n");
+      g_warning ("connecting pads with different scheds requires exactly one decoupled element (queue)");
       return FALSE;
     }
   }
@@ -1153,14 +1153,13 @@ gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, Gs
   intersection = gst_caps_intersect (srccaps, sinkcaps);
 
   /* if we have no intersection but one of the caps was not NULL.. */
-  if (!intersection && (srccaps || sinkcaps )) {
+  if (!intersection && (srccaps || sinkcaps)) {
     /* the intersection is NULL but the pad caps were not both NULL,
      * this means they have no common format */
     GST_INFO (GST_CAT_PADS, "pads %s:%s and %s:%s have no common type",
          GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
     return FALSE;
-  }
-  else {
+  } else if (intersection) {
     GST_INFO (GST_CAT_PADS, "pads %s:%s and %s:%s intersected to %s caps",
          GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink), 
 	 ((intersection && GST_CAPS_IS_FIXED (intersection)) ? "fixed" : "variable"));
@@ -1187,6 +1186,8 @@ gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, Gs
   GST_DEBUG (GST_CAT_CAPS, "setting filter for connection to:\n");
   gst_caps_debug (intersection, "filter for connection");
 
+  /* both the app filter and the filter, while stored on both peer pads, are the
+     equal to the same thing on both */
   GST_RPAD_FILTER (realsrc) = intersection; 
   GST_RPAD_FILTER (realsink) = intersection; 
 
@@ -1205,9 +1206,9 @@ gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, Gs
 gboolean
 gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad) 
 {
-  GstCaps *intersection;
+  GstCaps *intersection, *filtered_intersection;
   GstRealPad *realsrc, *realsink;
-  GstCaps *srccaps, *sinkcaps;
+  GstCaps *srccaps, *sinkcaps, *filter;
 
   g_return_val_if_fail (srcpad != NULL, FALSE);
   g_return_val_if_fail (sinkpad != NULL, FALSE);
@@ -1218,14 +1219,26 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
   g_return_val_if_fail (GST_RPAD_PEER (realsrc) != NULL, FALSE);
   g_return_val_if_fail (GST_RPAD_PEER (realsink) == realsrc, FALSE);
 
+  filter = GST_RPAD_APPFILTER (realsrc);
+  if (filter) {
+    GST_INFO (GST_CAT_PADS, "dumping filter for connection %s:%s-%s:%s",
+              GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
+    gst_caps_debug (filter, "connection filter caps");
+  }
+
   /* calculate the new caps here */
   srccaps = gst_pad_get_caps (GST_PAD (realsrc));
   GST_INFO (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsrc));
-  gst_caps_debug (srccaps, "src caps, awaiting negotiation");
+  gst_caps_debug (srccaps, "src caps, awaiting negotiation, after applying filter");
   sinkcaps = gst_pad_get_caps (GST_PAD (realsink));
   GST_INFO (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsink));
-  gst_caps_debug (sinkcaps, "sink caps, awaiting negotiation");
+  gst_caps_debug (sinkcaps, "sink caps, awaiting negotiation, after applying filter");
   intersection = gst_caps_intersect (srccaps, sinkcaps);
+  filtered_intersection = gst_caps_intersect (intersection, filter);
+  if (filtered_intersection) {
+    gst_caps_unref (intersection);
+    intersection = filtered_intersection;
+  }
 
   /* no negotiation is performed if the pads have filtercaps */
   if (intersection) {
@@ -1469,10 +1482,10 @@ gst_pad_get_peer (GstPad *pad)
  * gst_pad_get_allowed_caps:
  * @pad: the pad to get the allowed caps from
  *
- * Gst the caps of the allowed media types that can
+ * Get the caps of the allowed media types that can
  * go through this pad.
  *
- * Returns: the allowed caps
+ * Returns: the allowed caps, newly allocated
  */
 GstCaps*
 gst_pad_get_allowed_caps (GstPad *pad)
@@ -1486,13 +1499,13 @@ gst_pad_get_allowed_caps (GstPad *pad)
 }
 
 /**
- * gst_pad_get_allowed_caps:
- * @pad: the pad to get the allowed caps from
+ * gst_pad_recac_allowed_caps:
+ * @pad: the pad to recaculate the caps of
  *
- * Gst the caps of the allowed media types that can
- * go through this pad.
+ * Attempt to reconnect the pad to its peer through its filter, set with gst_pad_[re]connect_filtered.
+ * FIXME: no one calls this function. why is it here?
  *
- * Returns: the allowed caps
+ * Returns: TRUE on success, FALSE otherwise.
  */
 gboolean
 gst_pad_recalc_allowed_caps (GstPad *pad)
@@ -1516,7 +1529,7 @@ gst_pad_recalc_allowed_caps (GstPad *pad)
  * @pad: the pad to get the bufferpool from
  *
  * Get the bufferpool of the peer pad of the given
- * pad
+ * pad.
  *
  * Returns: The GstBufferPool or NULL.
  */
