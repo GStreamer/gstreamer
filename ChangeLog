@@ -1,3 +1,14 @@
+2004-07-08  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_drain_audio):
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_flush_one_pad),
+	(gst_alsa_sink_check_event), (gst_alsa_sink_mmap),
+	(gst_alsa_sink_write), (gst_alsa_sink_loop):
+	* ext/alsa/gstalsasink.h:
+	- add debugging info
+	- clean up schizophrenia of data/buffer/event
+	- fix double event unref error
+
 2004-07-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/Makefile.am:
