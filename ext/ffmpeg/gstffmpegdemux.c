@@ -711,6 +711,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
 
     /* if it's already registered, drop it */
     if (g_type_from_name (type_name)) {
+      gst_caps_free (videosrccaps);
+      gst_caps_free (audiosrccaps);
       g_free (type_name);
       goto next;
     }
@@ -745,6 +747,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
       return FALSE;
     }
 
+    g_free (type_name);
+    g_free (typefind_name);
     if (extensions)
       g_strfreev (extensions);
 

@@ -1,3 +1,10 @@
+2004-04-03  Tim-Philipp Müller <t.i.m@zen.co.uk>
+
+	reviewed by: David Schleef  <ds@schleef.org>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):  Fix
+	memleaks (bug #138985)
+
 2004-03-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/*.c: indent
