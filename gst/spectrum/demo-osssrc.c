@@ -37,13 +37,13 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(spectrum));
 
-  gst_pad_connect(gst_element_get_pad(src,"src"),
+  gst_pad_link(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(spectrum,"sink"));
 
   spectrumpad = gst_pad_new("sink",GST_PAD_SINK);
   gst_pad_set_chain_function(spectrumpad,spectrum_chain);
 
-  gst_pad_connect(gst_element_get_pad(spectrum,"src"),spectrumpad);
+  gst_pad_link(gst_element_get_pad(spectrum,"src"),spectrumpad);
 
   appwindow = gnome_app_new("spectrum","Spectrum");
   drawingarea = gtk_drawing_area_new();
