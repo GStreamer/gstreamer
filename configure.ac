@@ -415,44 +415,6 @@ GST_CHECK_FEATURE(QCAM, [QuickCam], qcamsrc, [
   fi
 ])
 
-dnl *** Video 4 Linux ***
-dnl for information about the header/define, see sys/v4l/gstv4lelement.h
-translit(dnm, m, l) AM_CONDITIONAL(USE_V4L, true)
-GST_CHECK_FEATURE(V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
-  # first check X
-  HAVE_V4L="no"
-  if test "$HAVE_X" == "yes"
-  then
-    AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_V4L="yes", HAVE_V4L="no", [
-#include <sys/types.h>
-#define _LINUX_TIME_H
-#include <linux/videodev.h>
-    ])
-  fi
-])
-
-dnl *** Video 4 Linux 2***
-dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
-translit(dnm, m, l) AM_CONDITIONAL(USE_V4L2, true)
-GST_CHECK_FEATURE(V4L2, [Video 4 Linux 2], v4l2src, [
-  AC_MSG_CHECKING([Checking for uptodate v4l2 installation])
-  AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <linux/types.h>
-#define _LINUX_TIME_H
-#include <linux/videodev2.h>
-#if defined(V4L2_MAJOR_VERSION) || defined(V4L2_MINOR_VERSION)
-#error too early v4l2 version or no v4l2 at all
-#endif
-  ], [
-return 0;
-  ], [ HAVE_V4L2="yes" && AC_MSG_RESULT(yes)],
-     [ HAVE_V4L2="no"  && AC_MSG_RESULT(no) &&
-       AC_CHECK_HEADER(linux/videodev2.h,
-                       [ AC_MSG_WARN([video4linux2 headers were found, but they're old. Please update v4l2 to compile the v4l2 plugins])],
-                       [ AC_MSG_WARN([video4linux2 was not found])])])
-])
-
 dnl *** Video CD ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VCD, true)
 GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
@@ -581,6 +543,50 @@ GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], xshm, [
   AC_SUBST(HAVE_XSHM) 
   AC_SUBST(XSHM_LIBS) 
 ] )
+
+dnl v4l/v4l2 checks have been moved down because they require X
+
+dnl *** Video 4 Linux ***
+dnl for information about the header/define, see sys/v4l/gstv4lelement.h
+translit(dnm, m, l) AM_CONDITIONAL(USE_V4L, true)
+GST_CHECK_FEATURE(V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
+  # first check X
+  HAVE_V4L="no"
+  if test "$HAVE_X" == "yes"
+  then
+    AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_V4L="yes", HAVE_V4L="no", [
+#include <sys/types.h>
+#define _LINUX_TIME_H
+#include <linux/videodev.h>
+    ])
+  fi
+])
+
+dnl *** Video 4 Linux 2***
+dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
+translit(dnm, m, l) AM_CONDITIONAL(USE_V4L2, true)
+GST_CHECK_FEATURE(V4L2, [Video 4 Linux 2], v4l2src, [
+  HAVE_V4L2="no"
+  if test "$HAVE_X" == "yes"
+  then
+    AC_MSG_CHECKING([Checking for uptodate v4l2 installation])
+    AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <linux/types.h>
+#define _LINUX_TIME_H
+#include <linux/videodev2.h>
+#if defined(V4L2_MAJOR_VERSION) || defined(V4L2_MINOR_VERSION)
+#error too early v4l2 version or no v4l2 at all
+#endif
+    ], [
+return 0;
+    ], [ HAVE_V4L2="yes" && AC_MSG_RESULT(yes)],
+       [ HAVE_V4L2="no"  && AC_MSG_RESULT(no) &&
+         AC_CHECK_HEADER(linux/videodev2.h,
+                         [ AC_MSG_WARN([video4linux2 headers were found, but they're old. Please update v4l2 to compile the v4l2 plugins])],
+                         [ AC_MSG_WARN([video4linux2 was not found])])])
+  fi
+])
 
 dnl Next, check for the optional libraries:
 dnl These are all libraries used in building plug-ins
