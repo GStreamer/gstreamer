@@ -64,14 +64,14 @@ GST_PAD_TEMPLATE_FACTORY (shaper_src_factory,
   "src%d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  GST_CAPS_ANY
+  GST_CAPS2_ANY
 );
 
 GST_PAD_TEMPLATE_FACTORY (shaper_sink_factory,
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_ANY
+  GST_CAPS2_ANY
 );
 
 #define GST_TYPE_SHAPER_POLICY (gst_shaper_policy_get_type())
@@ -177,8 +177,8 @@ gst_shaper_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool (connection->srcpad);
 }
 
-static GstCaps*
-gst_shaper_getcaps (GstPad *pad, GstCaps *caps)
+static GstCaps2*
+gst_shaper_getcaps (GstPad *pad, const GstCaps2 *caps)
 {
   GstPad *otherpad;
   GstShaperConnection *connection;
@@ -187,7 +187,7 @@ gst_shaper_getcaps (GstPad *pad, GstCaps *caps)
 
   otherpad = (pad == connection->srcpad ? connection->sinkpad : connection->srcpad);
 
-  return gst_pad_get_allowed_caps (otherpad);
+  return gst_caps2_copy (gst_pad_get_allowed_caps (otherpad));
 }
 
 static GList*
@@ -207,7 +207,7 @@ gst_shaper_get_internal_link (GstPad *pad)
 }
 
 static GstPadLinkReturn
-gst_shaper_link (GstPad *pad, GstCaps *caps)
+gst_shaper_link (GstPad *pad, const GstCaps2 *caps)
 {
   GstPad *otherpad;
   GstShaperConnection *connection;

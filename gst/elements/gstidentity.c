@@ -162,8 +162,8 @@ gst_identity_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool (identity->srcpad);
 }
 
-static GstCaps*
-gst_identity_getcaps (GstPad *pad, GstCaps *caps)
+static GstCaps2*
+gst_identity_getcaps (GstPad *pad, const GstCaps2 *caps)
 {
   GstIdentity *identity;
   GstPad *otherpad;
@@ -176,19 +176,19 @@ gst_identity_getcaps (GstPad *pad, GstCaps *caps)
 
   otherpad = (pad == identity->srcpad ? identity->sinkpad : identity->srcpad);
 
-  return gst_pad_get_allowed_caps (otherpad);
+  return gst_caps2_copy (gst_pad_get_allowed_caps (otherpad));
 }
 
 static GstPadLinkReturn
-gst_identity_link (GstPad *pad, GstCaps *caps)
+gst_identity_link (GstPad *pad, const GstCaps2 *caps)
 {
   GstIdentity *identity;
   
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
 
-  if (GST_CAPS_IS_FIXED (caps)) {
+  if (gst_caps2_is_fixed (caps)) {
     if (identity->delay_capsnego && GST_PAD_IS_SINK (pad)) {
-      identity->srccaps = gst_caps_ref (caps);
+      identity->srccaps = gst_caps2_copy (caps);
 
       return GST_PAD_LINK_OK;
     }

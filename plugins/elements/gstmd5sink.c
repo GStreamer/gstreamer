@@ -58,7 +58,7 @@ GST_PAD_TEMPLATE_FACTORY (md5_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_ANY
+  GST_CAPS2_ANY
 );
 
 /* GObject stuff */

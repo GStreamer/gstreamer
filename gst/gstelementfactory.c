@@ -373,30 +373,30 @@ gst_element_factory_get_author (GstElementFactory *factory)
   return factory->details.author;
 }
 /**
- * gst_element_factory_get_num_pad_templates:
+ * gst_element_factory_get_num_padtemplates:
  * @factory: a #GstElementFactory
  * 
- * Gets the number of pad_templates in this factory.
+ * Gets the number of padtemplates in this factory.
  *
- * Returns: the number of pad_templates
+ * Returns: the number of padtemplates
  */
 guint
-gst_element_factory_get_num_pad_templates (GstElementFactory *factory)
+gst_element_factory_get_num_padtemplates (GstElementFactory *factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), 0);
 
   return factory->numpadtemplates;
 }
 /**
- * gst_element_factory_get_pad_templates:
+ * gst_element_factory_get_padtemplates:
  * @factory: a #GstElementFactory
  * 
- * Gets the #Glist of pad templates for this factory.
+ * Gets the #Glist of padtemplates for this factory.
  *
  * Returns: the padtemplates
  */
 G_CONST_RETURN GList *
-gst_element_factory_get_pad_templates (GstElementFactory *factory)
+gst_element_factory_get_padtemplates (GstElementFactory *factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
 
@@ -413,7 +413,7 @@ gst_element_factory_get_pad_templates (GstElementFactory *factory)
  */
 gboolean
 gst_element_factory_can_src_caps (GstElementFactory *factory,
-		                 GstCaps *caps)
+		                 const GstCaps2 *caps)
 {
   GList *templates;
 
@@ -426,7 +426,7 @@ gst_element_factory_can_src_caps (GstElementFactory *factory,
     GstPadTemplate *template = (GstPadTemplate *)templates->data;
 
     if (template->direction == GST_PAD_SRC) {
-      if (gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (template), caps))
+      if (gst_caps2_is_always_compatible (GST_PAD_TEMPLATE_CAPS (template), caps))
 	return TRUE;
     }
     templates = g_list_next (templates);
@@ -445,7 +445,7 @@ gst_element_factory_can_src_caps (GstElementFactory *factory,
  */
 gboolean
 gst_element_factory_can_sink_caps (GstElementFactory *factory,
-		                  GstCaps *caps)
+		                  const GstCaps2 *caps)
 {
   GList *templates;
 
@@ -458,7 +458,7 @@ gst_element_factory_can_sink_caps (GstElementFactory *factory,
     GstPadTemplate *template = (GstPadTemplate *)templates->data;
 
     if (template->direction == GST_PAD_SINK) {
-      if (gst_caps_is_always_compatible (caps, GST_PAD_TEMPLATE_CAPS (template)))
+      if (gst_caps2_is_always_compatible (caps, GST_PAD_TEMPLATE_CAPS (template)))
 	return TRUE;
     }
     templates = g_list_next (templates);

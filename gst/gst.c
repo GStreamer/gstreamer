@@ -530,6 +530,7 @@ init_post (void)
   _gst_value_initialize ();
   _gst_props_initialize ();
   _gst_caps_initialize ();
+  _gst_caps2_initialize ();
   _gst_plugin_initialize ();
   _gst_event_initialize ();
   _gst_buffer_initialize ();

@@ -1178,16 +1178,12 @@ void
 gst_element_class_add_pad_template (GstElementClass *klass, 
                                     GstPadTemplate *templ)
 {
-  GstPadTemplate *templ_copy;
-
   g_return_if_fail (klass != NULL);
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
   g_return_if_fail (templ != NULL);
   g_return_if_fail (GST_IS_PAD_TEMPLATE (templ));
   
-  templ_copy = g_memdup(templ, sizeof(GstPadTemplate));
-
-  klass->padtemplates = g_list_append (klass->padtemplates, templ_copy);
+  klass->padtemplates = g_list_append (klass->padtemplates, templ);
   klass->numpadtemplates++;
 }
 
@@ -1209,62 +1205,10 @@ gst_element_class_set_details (GstElementClass *klass, GstElementDetails *detail
 }
 
 /**
- * gst_element_class_get_pad_template_list:
- * @element: a #GstElementClass to get pad templates of.
- *
- * Retrieves a list of the pad templates associated with the element.
- *
- * Returns: the #GList of padtemplates.
- */
-GList*
-gst_element_class_get_pad_template_list (GstElementClass *element_class)
-{
-  g_return_val_if_fail (element_class != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT_CLASS (element_class), NULL);
-
-  return element_class->padtemplates;
-}
-
-/**
- * gst_element_class_get_pad_template:
- * @element: a #GstElementClass to get the pad template of.
- * @name: the name of the #GstPadTemplate to get.
- *
- * Retrieves a padtemplate from this element with the
- * given name.
- *
- * Returns: the #GstPadTemplate with the given name, or NULL if none was found. 
- * No unreferencing is necessary.
- */
-GstPadTemplate*
-gst_element_class_get_pad_template (GstElementClass *element_class, const gchar *name)
-{
-  GList *padlist;
-
-  g_return_val_if_fail (element_class != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT_CLASS (element_class), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
-
-  padlist = gst_element_class_get_pad_template_list (element_class);
-
-  while (padlist) {
-    GstPadTemplate *padtempl = (GstPadTemplate*) padlist->data;
-
-    if (strcmp (padtempl->name_template, name) == 0)
-      return padtempl;
-
-    padlist = g_list_next (padlist);
-  }
-
-  return NULL;
-}
-
-/**
  * gst_element_get_pad_template_list:
  * @element: a #GstElement to get pad templates of.
  *
  * Retrieves a list of the pad templates associated with the element.
- * (FIXME: Should be deprecated in favor of gst_element_class_get_pad_template_list).
  *
  * Returns: the #GList of padtemplates.
  */
@@ -1284,7 +1228,6 @@ gst_element_get_pad_template_list (GstElement *element)
  *
  * Retrieves a padtemplate from this element with the
  * given name.
- * (FIXME: Should be deprecated in favor of gst_element_class_get_pad_template).
  *
  * Returns: the #GstPadTemplate with the given name, or NULL if none was found. 
  * No unreferencing is necessary.
@@ -1352,13 +1295,13 @@ gst_element_get_compatible_pad_template (GstElement *element,
     if (padtempl->direction == GST_PAD_SRC &&
       compattempl->direction == GST_PAD_SINK) {
       GST_CAT_DEBUG (GST_CAT_CAPS, "compatible direction: found src pad template");
-      comp = gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (compattempl),
+      comp = gst_caps2_is_always_compatible (GST_PAD_TEMPLATE_CAPS (compattempl),
 				           GST_PAD_TEMPLATE_CAPS (padtempl));
       GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible", (comp ? "" : "not "));
     } else if (padtempl->direction == GST_PAD_SINK &&
 	       compattempl->direction == GST_PAD_SRC) {
       GST_CAT_DEBUG (GST_CAT_CAPS, "compatible direction: found sink pad template");
-      comp = gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (compattempl),
+      comp = gst_caps2_is_always_compatible (GST_PAD_TEMPLATE_CAPS (compattempl),
 					   GST_PAD_TEMPLATE_CAPS (padtempl));
       GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible", (comp ? "" : "not "));
     }
@@ -1408,7 +1351,7 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
  * gst_element_get_compatible_pad_filtered:
  * @element: a #GstElement in which the pad should be found.
  * @pad: the #GstPad to find a compatible one for.
- * @filtercaps: the #GstCaps to use as a filter.
+ * @filtercaps: the #GstCaps2 to use as a filter.
  *
  * Looks for an unlinked pad to which the given pad can link to.
  * It is not guaranteed that linking the pads will work, though
@@ -1418,11 +1361,11 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
  */
 GstPad*
 gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
-                                         GstCaps *filtercaps)
+                                         const GstCaps2 *filtercaps)
 {
   const GList *pads;
   GstPadTemplate *templ;
-  GstCaps *templcaps;
+  GstCaps2 *templcaps;
   GstPad *foundpad = NULL;
 
   /* checks */
@@ -1450,11 +1393,12 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
   /* try to create a new one */
   /* requesting is a little crazy, we need a template. Let's create one */
   if (filtercaps != NULL) {
-    templcaps = gst_caps_intersect (filtercaps, (GstCaps *) GST_RPAD_CAPS (pad));
+    templcaps = gst_caps2_intersect (filtercaps, (GstCaps2 *) GST_RPAD_CAPS (pad));
+    /* FIXME */
     if (templcaps == NULL)
       return NULL;
   } else {
-    templcaps = gst_pad_get_caps (pad);
+    templcaps = gst_caps2_copy (gst_pad_get_caps (pad));
   }
 
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
@@ -1498,7 +1442,7 @@ gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
  * @srcpadname: the name of the #GstPad in source element or NULL for any pad.
  * @dest: the #GstElement containing the destination pad.
  * @destpadname: the name of the #GstPad in destination element or NULL for any pad.
- * @filtercaps: the #GstCaps to use as a filter.
+ * @filtercaps: the #GstCaps2 to use as a filter.
  *
  * Links the two named pads of the source and destination elements.
  * Side effect is that if one of the pads has no parent, it becomes a
@@ -1510,7 +1454,7 @@ gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
 gboolean
 gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
                                 GstElement *dest, const gchar *destpadname,
-                                GstCaps *filtercaps)
+                                const GstCaps2 *filtercaps)
 {
   const GList *srcpads, *destpads, *srctempls, *desttempls, *l;
   GstPad *srcpad, *destpad;
@@ -1638,10 +1582,10 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
       srctempl = (GstPadTemplate*) srctempls->data;
       if (srctempl->presence == GST_PAD_REQUEST) {
         for (l=desttempls; l; l=l->next) {
-          desttempl = (GstPadTemplate*) l->data;
+          desttempl = (GstPadTemplate*) desttempls->data;
           if (desttempl->presence == GST_PAD_REQUEST && 
 	      desttempl->direction != srctempl->direction) {
-            if (gst_caps_is_always_compatible (gst_pad_template_get_caps (srctempl),
+            if (gst_caps2_is_always_compatible (gst_pad_template_get_caps (srctempl),
                                               gst_pad_template_get_caps (desttempl))) {
               srcpad = gst_element_get_request_pad (src, 
 		                                    srctempl->name_template);
@@ -1654,9 +1598,7 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
 			   GST_DEBUG_PAD_NAME (destpad));
                 return TRUE;
               }
-              /* it failed, so we release the request pads */
-              gst_element_release_request_pad (src, srcpad);
-              gst_element_release_request_pad (dest, destpad);
+              /* FIXME: we have extraneous request pads lying around */
             }
           }
         }
@@ -1673,7 +1615,7 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
  * gst_element_link_filtered:
  * @src: a #GstElement containing the source pad.
  * @dest: the #GstElement containing the destination pad.
- * @filtercaps: the #GstCaps to use as a filter.
+ * @filtercaps: the #GstCaps2 to use as a filter.
  *
  * Links the source to the destination element using the filtercaps.
  * The link must be from source to destination, the other
@@ -1686,7 +1628,7 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
  */
 gboolean
 gst_element_link_filtered (GstElement *src, GstElement *dest,
-			      GstCaps *filtercaps)
+			      const GstCaps2 *filtercaps)
 {
   return gst_element_link_pads_filtered (src, NULL, dest, NULL, filtercaps);
 }
@@ -2495,7 +2437,7 @@ gst_element_clear_pad_caps (GstElement *element)
   while (pads) {
     GstRealPad *pad = GST_PAD_REALIZE (pads->data);
 
-    gst_caps_replace (&GST_PAD_CAPS (pad), NULL);
+    gst_caps2_replace (&GST_PAD_CAPS (pad), NULL);
 
     pads = g_list_next (pads);
   }

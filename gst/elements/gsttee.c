@@ -57,7 +57,7 @@ GST_PAD_TEMPLATE_FACTORY (tee_src_factory,
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  GST_CAPS_ANY
+  GST_CAPS2_ANY
 );
 
 static void	gst_tee_base_init	(gpointer g_class);
@@ -137,24 +137,18 @@ gst_tee_class_init (GstTeeClass *klass)
 }
 
 static GstPadLinkReturn 
-gst_tee_sinklink (GstPad *pad, GstCaps *caps) 
+gst_tee_sinklink (GstPad *pad, const GstCaps2 *caps) 
 {
   GstTee *tee;
   const GList *pads;
   GstPadLinkReturn set_retval;
-  GstCaps *caps1;
   
-  GST_DEBUG ( "gst_tee_sinklink caps=%s", gst_caps_to_string(caps));
+  GST_DEBUG ( "gst_tee_sinklink caps=%s", gst_caps2_to_string(caps));
 
   tee = GST_TEE (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps)) {
+  if (!gst_caps2_is_fixed (caps)) {
     return GST_PAD_LINK_DELAYED;
-  }
-
-  if (GST_CAPS_IS_CHAINED (caps)) {
-    caps1 = gst_caps_copy_1(caps);
-    caps = caps1;
   }
 
   /* go through all the src pads */
@@ -175,21 +169,21 @@ gst_tee_sinklink (GstPad *pad, GstCaps *caps)
 }
 
 static GstPadLinkReturn 
-gst_tee_srclink (GstPad *pad, GstCaps *caps) 
+gst_tee_srclink (GstPad *pad, const GstCaps2 *caps) 
 {
   GstTee *tee;
 
-  GST_DEBUG ( "gst_tee_srclink caps=%s", gst_caps_to_string(caps));
+  GST_DEBUG ( "gst_tee_srclink caps=%s", gst_caps2_to_string(caps));
 
   tee = GST_TEE (gst_pad_get_parent (pad));
 
   return gst_pad_proxy_link (tee->sinkpad, caps);
 }
 
-static GstCaps* 
-gst_tee_getcaps (GstPad *pad, GstCaps *filter) 
+static GstCaps2* 
+gst_tee_getcaps (GstPad *pad, const GstCaps2 *filter) 
 {
-  GstCaps *caps = NULL;
+  GstCaps2 *caps = GST_CAPS2_ANY;
   GstTee *tee;
   const GList *pads;
 
@@ -202,8 +196,8 @@ gst_tee_getcaps (GstPad *pad, GstCaps *filter)
   while (pads) {
     GstPad *srcpad = GST_PAD_CAST (pads->data);
     GstPad *peer;
-    GstCaps *peercaps;
-    GstCaps *newcaps;
+    const GstCaps2 *peercaps;
+    GstCaps2 *newcaps;
 
     pads = g_list_next (pads);
 
@@ -213,9 +207,8 @@ gst_tee_getcaps (GstPad *pad, GstCaps *filter)
     }
 
     peercaps = gst_pad_get_caps (peer);
-    newcaps = gst_caps_intersect (caps, peercaps);
-    gst_caps_unref (caps);
-    gst_caps_sink (peercaps);
+    newcaps = gst_caps2_intersect (caps, peercaps);
+    gst_caps2_free (caps);
     caps = newcaps;
   }
 

@@ -28,7 +28,7 @@
 
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
-#include <gst/gstcaps.h>
+#include <gst/gstcaps2.h>
 #include <gst/gstevent.h>
 #include <gst/gstprobe.h>
 #include <gst/gstquery.h>
@@ -146,9 +146,9 @@ typedef const GstFormat*	(*GstPadFormatsFunction)	(GstPad *pad);
 typedef const GstEventMask*	(*GstPadEventMaskFunction)	(GstPad *pad);
 typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
 
-typedef GstPadLinkReturn	(*GstPadLinkFunction) 		(GstPad *pad, GstCaps *caps);
+typedef GstPadLinkReturn	(*GstPadLinkFunction) 		(GstPad *pad, const GstCaps2 *caps);
 typedef void			(*GstPadUnlinkFunction) 	(GstPad *pad);
-typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad, GstCaps *caps);
+typedef GstCaps2*		(*GstPadGetCapsFunction) 	(GstPad *pad, const GstCaps2 *caps);
 typedef GstBufferPool*		(*GstPadBufferPoolFunction) 	(GstPad *pad);
 
 typedef gboolean 		(*GstPadDispatcherFunction) 	(GstPad *pad, gpointer data);
@@ -186,9 +186,9 @@ struct _GstRealPad {
   GstPad 			 pad;
 
   /* the pad capabilities */
-  GstCaps 			*caps;
-  GstCaps 			*filter;
-  GstCaps 			*appfilter;
+  GstCaps2 			*caps;
+  GstCaps2 			*filter;
+  GstCaps2 			*appfilter;
   GstPadGetCapsFunction 	 getcapsfunc;
   
   GstPadDirection 		 direction;
@@ -228,7 +228,7 @@ struct _GstRealPadClass {
   GstPadClass 	parent_class;
 
   /* signal callbacks */
-  void		(*caps_nego_failed)	(GstPad *pad, GstCaps *caps);
+  void		(*caps_nego_failed)	(GstPad *pad, GstCaps2 *caps);
 
   void 		(*linked)		(GstPad *pad, GstPad *peer);
   void 		(*unlinked)		(GstPad *pad, GstPad *peer);
@@ -332,7 +332,7 @@ struct _GstPadTemplate {
   gchar           *name_template;
   GstPadDirection  direction;
   GstPadPresence   presence;
-  GstCaps	  *caps;
+  GstCaps2	  *caps;
 
   GST_OBJECT_PADDING
 };
@@ -444,30 +444,30 @@ const GstEventMask*	gst_pad_get_event_masks_default		(GstPad *pad);
 /* pad links */
 void			gst_pad_set_link_function		(GstPad *pad, GstPadLinkFunction link);
 gboolean                gst_pad_can_link            		(GstPad *srcpad, GstPad *sinkpad);
-gboolean                gst_pad_can_link_filtered   		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
+gboolean                gst_pad_can_link_filtered   		(GstPad *srcpad, GstPad *sinkpad, const GstCaps2 *filtercaps);
 void			gst_pad_set_unlink_function		(GstPad *pad, GstPadUnlinkFunction unlink);
 
 gboolean                gst_pad_link             		(GstPad *srcpad, GstPad *sinkpad);
-gboolean                gst_pad_link_filtered       		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
+gboolean                gst_pad_link_filtered       		(GstPad *srcpad, GstPad *sinkpad, const GstCaps2 *filtercaps);
 void			gst_pad_unlink				(GstPad *srcpad, GstPad *sinkpad);
 
 GstPad*			gst_pad_get_peer			(GstPad *pad);
 
 /* capsnego functions */
-GstCaps*		gst_pad_get_caps			(GstPad *pad);
-GstCaps*		gst_pad_get_pad_template_caps		(GstPad *pad);
-GstPadLinkReturn	gst_pad_try_set_caps			(GstPad *pad, GstCaps *caps);
+const GstCaps2*		gst_pad_get_caps			(GstPad *pad);
+const GstCaps2*		gst_pad_get_pad_template_caps		(GstPad *pad);
+GstPadLinkReturn	gst_pad_try_set_caps			(GstPad *pad, const GstCaps2 *caps);
 gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);
 
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
-GstPadLinkReturn	gst_pad_proxy_link          		(GstPad *pad, GstCaps *caps);
-gboolean		gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
+GstPadLinkReturn	gst_pad_proxy_link          		(GstPad *pad, const GstCaps2 *caps);
+gboolean		gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, const GstCaps2 *filtercaps);
 gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);
-gboolean		gst_pad_try_relink_filtered		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
-GstCaps*	     	gst_pad_get_allowed_caps       		(GstPad *pad);
+gboolean		gst_pad_try_relink_filtered		(GstPad *srcpad, GstPad *sinkpad, const GstCaps2 *filtercaps);
+GstCaps2*	     	gst_pad_get_allowed_caps       		(GstPad *pad);
 gboolean	     	gst_pad_recalc_allowed_caps    		(GstPad *pad);
 
-gboolean	     	gst_pad_recover_caps_error    		(GstPad *pad, GstCaps *allowed);
+gboolean	     	gst_pad_recover_caps_error    		(GstPad *pad, const GstCaps2 *allowed);
 
 /* data passing functions */
 void			gst_pad_push				(GstPad *pad, GstData *data);
@@ -528,14 +528,14 @@ GType			gst_pad_template_get_type		(void);
 
 GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 		                                        	 GstPadDirection direction, GstPadPresence presence,
-								 GstCaps *caps, ...);
+								 GstCaps2 *caps, ...);
 
 GstPadTemplate*		gst_pad_template_newv			(const gchar *name_template,
 		                                        	 GstPadDirection direction, GstPadPresence presence,
-								 GstCaps *caps, va_list var_args);
+								 GstCaps2 *caps, va_list var_args);
 
-GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
-GstCaps*		gst_pad_template_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
+const GstCaps2*		gst_pad_template_get_caps		(GstPadTemplate *templ);
+const GstCaps2*		gst_pad_template_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
 
 #ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr              gst_ghost_pad_save_thyself   		(GstPad *pad,

@@ -55,7 +55,7 @@ GST_PAD_TEMPLATE_FACTORY (aggregator_src_factory,
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_ANY
+  GST_CAPS2_ANY
 );
 
 #define GST_TYPE_AGGREGATOR_SCHED (gst_aggregator_sched_get_type())

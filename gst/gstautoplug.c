@@ -120,7 +120,8 @@ gst_autoplug_signal_new_object (GstAutoplug *autoplug, GstObject *object)
  * Returns: A new #GstElement that connects the src caps to the sink caps.
  */
 GstElement*
-gst_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps, ...)
+gst_autoplug_to_caps (GstAutoplug *autoplug, const GstCaps2 *srccaps,
+    const GstCaps2 *sinkcaps, ...)
 {
   GstAutoplugClass *oclass;
   GstElement *element = NULL;
@@ -150,7 +151,8 @@ gst_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps
  * Returns: A new #GstElement that connects the src caps to the sink caps.
  */
 GstElement*
-gst_autoplug_to_caps_valist (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps, va_list args)
+gst_autoplug_to_caps_valist (GstAutoplug *autoplug, const GstCaps2 *srccaps,
+    const GstCaps2 *sinkcaps, va_list args)
 {
   GstAutoplugClass *oclass;
   GstElement *element = NULL;
@@ -175,7 +177,8 @@ gst_autoplug_to_caps_valist (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
  * Returns: A new #GstElement that connects the src caps to the target elements.
  */
 GstElement*
-gst_autoplug_to_renderers (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *target, ...)
+gst_autoplug_to_renderers (GstAutoplug *autoplug, const GstCaps2 *srccaps,
+    GstElement *target, ...)
 {
   GstAutoplugClass *oclass;
   GstElement *element = NULL;
@@ -205,7 +208,8 @@ gst_autoplug_to_renderers (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *
  * Returns: A new #GstElement that connects the src caps to the target elements.
  */
 GstElement*
-gst_autoplug_to_renderers_valist (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *target, va_list args)
+gst_autoplug_to_renderers_valist (GstAutoplug *autoplug,
+    const GstCaps2 *srccaps, GstElement *target, va_list args)
 {
   GstAutoplugClass *oclass;
   GstElement *element = NULL;

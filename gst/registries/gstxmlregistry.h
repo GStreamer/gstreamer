@@ -100,11 +100,11 @@ struct _GstXMLRegistry {
   gchar			*name_template;
   GstPadDirection	 direction;
   GstPadPresence	 presence;
-  GstCaps		*caps;
+  GstCaps2		*caps;
 
   gchar			*caps_name;
   gchar			*caps_mime;
-  GstProps		*props;
+  //GstProps		*props;
 
   gboolean		 in_list;
   GList			*entry_list;

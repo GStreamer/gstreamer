@@ -178,7 +178,7 @@ gst_queue_class_init (gpointer g_class, gpointer class_data)
 }
 
 static GstPadLinkReturn
-gst_queue_link (GstPad *pad, GstCaps *caps)
+gst_queue_link (GstPad *pad, const GstCaps2 *caps)
 {
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
   GstPad *otherpad;
@@ -191,8 +191,8 @@ gst_queue_link (GstPad *pad, GstCaps *caps)
   return gst_pad_proxy_link (otherpad, caps);
 }
 
-static GstCaps*
-gst_queue_getcaps (GstPad *pad, GstCaps *caps)
+static GstCaps2 *
+gst_queue_getcaps (GstPad *pad, const GstCaps2 *caps)
 {
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
   GstPad *otherpad;
@@ -203,7 +203,7 @@ gst_queue_getcaps (GstPad *pad, GstCaps *caps)
     otherpad = GST_PAD_PEER (queue->srcpad);
   
   if (otherpad)
-    return gst_pad_get_caps (otherpad);
+    return gst_pad_get_allowed_caps (otherpad);
 
   return NULL;
 }

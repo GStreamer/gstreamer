@@ -15,7 +15,7 @@ typedef struct {
   gchar *sink_name;
   GSList *src_pads;
   GSList *sink_pads;
-  GstCaps *caps;
+  GstCaps2 *caps;
 } link_t;
 
 typedef struct {

@@ -65,8 +65,8 @@ struct _GstAutoplugClass {
   void (*new_object)  (GstAutoplug *autoplug, GstObject *object);
 
   /* perform the autoplugging */
-  GstElement* (*autoplug_to_caps) (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps, va_list args);
-  GstElement* (*autoplug_to_renderers) (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *target, va_list args);
+  GstElement* (*autoplug_to_caps) (GstAutoplug *autoplug, const GstCaps2 *srccaps, const GstCaps2 *sinkcaps, va_list args);
+  GstElement* (*autoplug_to_renderers) (GstAutoplug *autoplug, const GstCaps2 *srccaps, GstElement *target, va_list args);
 
   GST_CLASS_PADDING
 };
@@ -76,11 +76,11 @@ GType			gst_autoplug_get_type			(void);
 
 void			gst_autoplug_signal_new_object		(GstAutoplug *autoplug, GstObject *object);
 
-GstElement*		gst_autoplug_to_caps		        (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps, ...);
-GstElement*		gst_autoplug_to_caps_valist		(GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps, va_list args);
-GstElement*		gst_autoplug_to_renderers	        (GstAutoplug *autoplug, GstCaps *srccaps, 
+GstElement*		gst_autoplug_to_caps		        (GstAutoplug *autoplug, const GstCaps2 *srccaps, const GstCaps2 *sinkcaps, ...);
+GstElement*		gst_autoplug_to_caps_valist		(GstAutoplug *autoplug, const GstCaps2 *srccaps, const GstCaps2 *sinkcaps, va_list args);
+GstElement*		gst_autoplug_to_renderers	        (GstAutoplug *autoplug, const GstCaps2 *srccaps, 
  							 	 GstElement *target, ...);
-GstElement*		gst_autoplug_to_renderers_valist	(GstAutoplug *autoplug, GstCaps *srccaps, 
+GstElement*		gst_autoplug_to_renderers_valist	(GstAutoplug *autoplug, const GstCaps2 *srccaps, 
 								 GstElement *target, va_list args);
 
 

@@ -24,7 +24,7 @@
 #define __GST_TYPE_FIND_H__
 
 #include <gst/gstbuffer.h>
-#include <gst/gstcaps.h>
+#include <gst/gstcaps2.h>
 #include <gst/gstplugin.h>
 #include <gst/gstpluginfeature.h>
 #include <gst/gsttypes.h>
@@ -59,7 +59,7 @@ struct _GstTypeFind {
 							 guint			size);
   void			(* suggest)			(gpointer		data,
 							 guint			probability,
-							 GstCaps *		caps);
+							 const GstCaps2 *		caps);
   
   gpointer			data;
   
@@ -76,7 +76,7 @@ struct _GstTypeFindFactory {
 
   GstTypeFindFunction		function;
   gchar **			extensions;
-  GstCaps *			caps; /* FIXME: not yet saved in registry */
+  GstCaps2 *			caps; /* FIXME: not yet saved in registry */
   
   gpointer			user_data;
     
@@ -96,7 +96,7 @@ guint8 *	gst_type_find_peek			(GstTypeFind *		find,
 							 guint			size);
 void		gst_type_find_suggest			(GstTypeFind *		find,
 							 guint			probability,
-							 GstCaps *		caps);
+							 const GstCaps2 *		caps);
 guint64		gst_type_find_get_length		(GstTypeFind *		find);
 
 /* registration interface */
@@ -105,7 +105,7 @@ gboolean	gst_type_find_register			(GstPlugin *		plugin,
 							 guint			rank,
 							 GstTypeFindFunction	func,
 							 gchar **		extensions,
-							 GstCaps *		possible_caps,
+							 const GstCaps2 *		possible_caps,
 							 gpointer		data); 
 
 /* typefinding interface */
@@ -115,7 +115,7 @@ GType           gst_type_find_factory_get_type		(void);
 GList *		gst_type_find_factory_get_list		(void);
 
 gchar **	gst_type_find_factory_get_extensions	(const GstTypeFindFactory *factory);
-GstCaps *	gst_type_find_factory_get_caps	  	(const GstTypeFindFactory *factory);
+const GstCaps2 *	gst_type_find_factory_get_caps	  	(const GstTypeFindFactory *factory);
 void		gst_type_find_factory_call_function	(const GstTypeFindFactory *factory,
 							 GstTypeFind *find);
 

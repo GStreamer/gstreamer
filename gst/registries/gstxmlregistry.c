@@ -871,6 +871,7 @@ gst_xml_registry_parse_capscomp (GMarkupParseContext *context, const gchar *tag,
   return TRUE;
 }
 
+#if 0
 static gint
 find_index_for (const gchar *name, const gchar **attribute_names)
 {
@@ -883,6 +884,7 @@ find_index_for (const gchar *name, const gchar **attribute_names)
   }
   return -1;
 }
+#endif
 
 static void
 gst_xml_registry_start_element (GMarkupParseContext *context, 
@@ -977,11 +979,12 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	xmlregistry->parser = gst_xml_registry_parse_capscomp;
       }
       break;
+#if 0
     case GST_XML_REGISTRY_CAPSCOMP:
       if (!strncmp (element_name, "properties", 10)) {
 	xmlregistry->state = GST_XML_REGISTRY_PROPERTIES;
 	xmlregistry->parser = NULL;
-	xmlregistry->props = gst_props_empty_new ();
+	//xmlregistry->props = gst_props_empty_new ();
       }
       break;
     case GST_XML_REGISTRY_PROPERTIES:
@@ -1084,6 +1087,7 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
       }
       break;
     }
+#endif
     default:
       break;
   }
@@ -1148,19 +1152,20 @@ gst_xml_registry_end_element (GMarkupParseContext *context,
       break;
     case GST_XML_REGISTRY_CAPSCOMP:
       if (!strcmp (element_name, "capscomp")) {
-	GstCaps *caps;
+	GstCaps2 *caps;
 	
 	xmlregistry->state = GST_XML_REGISTRY_CAPS;
 	xmlregistry->parser = gst_xml_registry_parse_padtemplate;
 
-	caps = gst_caps_new (xmlregistry->caps_name, xmlregistry->caps_mime, xmlregistry->props);
+	/* FIXME */
+	caps = gst_caps2_new_simple (xmlregistry->caps_mime, NULL);
 	g_free (xmlregistry->caps_mime);
 	g_free (xmlregistry->caps_name);
 
-	xmlregistry->caps = gst_caps_append (xmlregistry->caps, caps);
-	xmlregistry->props = NULL;
+	xmlregistry->caps = caps;
       }
       break;
+#if 0
     case GST_XML_REGISTRY_PROPERTIES:
       if (!strncmp (element_name, "list", 4)) {
 	GstPropsEntry *entry;
@@ -1183,6 +1188,7 @@ gst_xml_registry_end_element (GMarkupParseContext *context,
 	xmlregistry->parser = NULL;
       }
       break;
+#endif
     default:
       break;
   }
@@ -1303,6 +1309,7 @@ G_STMT_START{ 							\
 }G_STMT_END
 
 
+#if 0
 static gboolean
 gst_xml_registry_save_props_func (GstPropsEntry *entry, 
                                   GstXMLRegistry *xmlregistry)
@@ -1369,7 +1376,9 @@ gst_xml_registry_save_props_func (GstPropsEntry *entry,
   }
   return TRUE;
 }
+#endif
 
+#if 0
 static gboolean
 gst_xml_registry_save_props (GstXMLRegistry *xmlregistry, GstProps *props)
 {
@@ -1400,23 +1409,42 @@ gst_xml_registry_save_props (GstXMLRegistry *xmlregistry, GstProps *props)
   }
   return TRUE;
 }
+#endif
 
 static gboolean
-gst_xml_registry_save_caps (GstXMLRegistry *xmlregistry, GstCaps *caps)
+gst_xml_registry_save_structure (GstXMLRegistry *xmlregistry, const GstStructure *structure)
 {
-  while (caps) {
-    CLASS (xmlregistry)->save_func (xmlregistry, "<capscomp>\n");
-    PUT_ESCAPED ("name", caps->name);
-    PUT_ESCAPED ("type", gst_caps_get_mime (caps));
+  int i;
 
-    if (caps->properties) {
-      CLASS (xmlregistry)->save_func (xmlregistry, "<properties>\n");
-      gst_xml_registry_save_props (xmlregistry, caps->properties);
-      CLASS (xmlregistry)->save_func (xmlregistry, "</properties>\n");
-    }
-    CLASS (xmlregistry)->save_func (xmlregistry, "</capscomp>\n");
-    caps = caps->next;
+  CLASS (xmlregistry)->save_func (xmlregistry, "<structure>\n");
+  PUT_ESCAPED ("name", g_quark_to_string(structure->name));
+  for (i=0;i<structure->fields->len;i++) {
+    GstStructureField *field = GST_STRUCTURE_FIELD(structure, i);
+    CLASS (xmlregistry)->save_func (xmlregistry, "<field>\n");
+    PUT_ESCAPED ("name", g_quark_to_string(field->name));
+    PUT_ESCAPED ("type", G_VALUE_TYPE_NAME(&field->value));
+    PUT_ESCAPED ("value", g_strdup_value_contents(&field->value));
+    CLASS (xmlregistry)->save_func (xmlregistry, "</field>\n");
   }
+  CLASS (xmlregistry)->save_func (xmlregistry, "</structure>\n");
+  return TRUE;
+}
+
+static gboolean
+gst_xml_registry_save_caps (GstXMLRegistry *xmlregistry, const GstCaps2 *caps)
+{
+  CLASS (xmlregistry)->save_func (xmlregistry, "<capscomp>\n");
+  if(gst_caps2_is_any(caps)){
+    PUT_ESCAPED ("flags", "any");
+  } else {
+    int i;
+    for (i=0;i<caps->structs->len;i++) {
+      GstStructure *structure = gst_caps2_get_nth_cap (caps, i);
+
+      gst_xml_registry_save_structure (xmlregistry, structure);
+    }
+  }
+  CLASS (xmlregistry)->save_func (xmlregistry, "</capscomp>\n");
   return TRUE;
 }
 

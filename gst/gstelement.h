@@ -313,10 +313,8 @@ void			gst_element_release_request_pad	(GstElement *element, GstPad *pad);
 const GList*		gst_element_get_pad_list	(GstElement *element);
 GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
-							 GstCaps *filtercaps);
+							 const GstCaps2 *filtercaps);
 
-GstPadTemplate*		gst_element_class_get_pad_template	(GstElementClass *element_class, const gchar *name);
-GList*                  gst_element_class_get_pad_template_list (GstElementClass *element_class);
 GstPadTemplate*		gst_element_get_pad_template		(GstElement *element, const gchar *name);
 GList*			gst_element_get_pad_template_list	(GstElement *element);
 GstPadTemplate*		gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl);
@@ -325,7 +323,7 @@ gboolean		gst_element_link		(GstElement *src, GstElement *dest);
 gboolean		gst_element_link_many 		(GstElement *element_1, 
 							 GstElement *element_2, ...);
 gboolean		gst_element_link_filtered 	(GstElement *src, GstElement *dest,
-							 GstCaps *filtercaps);
+							 const GstCaps2 *filtercaps);
 void			gst_element_unlink 		(GstElement *src, GstElement *dest);
 void			gst_element_unlink_many 	(GstElement *element_1, 
 							 GstElement *element_2, ...);
@@ -334,7 +332,7 @@ gboolean		gst_element_link_pads		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 gboolean		gst_element_link_pads_filtered 	(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname,
-							 GstCaps *filtercaps);
+							 const GstCaps2 *filtercaps);
 void			gst_element_unlink_pads		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 
@@ -417,17 +415,17 @@ G_CONST_RETURN gchar *	gst_element_factory_get_klass		(GstElementFactory *factor
 G_CONST_RETURN gchar *	gst_element_factory_get_description  	(GstElementFactory *factory);
 G_CONST_RETURN gchar *	gst_element_factory_get_version      	(GstElementFactory *factory);
 G_CONST_RETURN gchar *	gst_element_factory_get_author		(GstElementFactory *factory);
-guint			gst_element_factory_get_num_pad_templates (GstElementFactory *factory);
-G_CONST_RETURN GList *	gst_element_factory_get_pad_templates	(GstElementFactory *factory);
+guint			gst_element_factory_get_num_padtemplates (GstElementFactory *factory);
+G_CONST_RETURN GList *	gst_element_factory_get_padtemplates	(GstElementFactory *factory);
 
 GstElement*		gst_element_factory_create		(GstElementFactory *factory,
 								 const gchar *name);
 GstElement*		gst_element_factory_make		(const gchar *factoryname, const gchar *name);
 
 gboolean		gst_element_factory_can_src_caps	(GstElementFactory *factory,
-								 GstCaps *caps);
+								 const GstCaps2 *caps);
 gboolean		gst_element_factory_can_sink_caps	(GstElementFactory *factory,
-								 GstCaps *caps);
+								 const GstCaps2 *caps);
 
 void			__gst_element_factory_add_pad_template	(GstElementFactory *elementfactory,
 								 GstPadTemplate *templ);

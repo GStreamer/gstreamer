@@ -190,26 +190,39 @@ gst_value_transform_int_range_string (const GValue *src_value,
 static int
 gst_value_compare_int (const GValue *value1, const GValue *value2)
 {
-  return value2->data[0].v_int - value1->data[0].v_int;
+  if (value1->data[0].v_int > value2->data[0].v_int)
+    return GST_VALUE_GREATER_THAN;
+  if (value1->data[0].v_int < value2->data[0].v_int)
+    return GST_VALUE_LESS_THAN;
+  return GST_VALUE_EQUAL;
 }
 
 static int
 gst_value_compare_double (const GValue *value1, const GValue *value2)
 {
-  return (value2->data[0].v_double > value1->data[0].v_double) -
-    (value2->data[0].v_double < value1->data[0].v_double);
+  if (value1->data[0].v_double > value2->data[0].v_double)
+    return GST_VALUE_GREATER_THAN;
+  if (value1->data[0].v_double < value2->data[0].v_double)
+    return GST_VALUE_LESS_THAN;
+  if (value1->data[0].v_double == value2->data[0].v_double)
+    return GST_VALUE_EQUAL;
+  return GST_VALUE_UNORDERED;
 }
 
 static int
 gst_value_compare_string (const GValue *value1, const GValue *value2)
 {
-  return strcmp(value1->data[0].v_pointer, value2->data[0].v_pointer);
+  int x = strcmp(value1->data[0].v_pointer, value2->data[0].v_pointer);
+  if(x<0) return GST_VALUE_LESS_THAN;
+  if(x>0) return GST_VALUE_GREATER_THAN;
+  return GST_VALUE_EQUAL;
 }
 
 static int
 gst_value_compare_fourcc (const GValue *value1, const GValue *value2)
 {
-  return value2->data[0].v_int - value1->data[0].v_int;
+  if (value2->data[0].v_int == value1->data[0].v_int) return GST_VALUE_EQUAL;
+  return GST_VALUE_UNORDERED;
 }
 
 gboolean
@@ -275,7 +288,7 @@ gst_value_can_union (const GValue *value1, const GValue *value2)
   return FALSE;
 }
 
-void
+gboolean
 gst_value_union (GValue *dest, const GValue *value1, const GValue *value2)
 {
   GstValueUnionInfo *union_info;
@@ -285,10 +298,10 @@ gst_value_union (GValue *dest, const GValue *value1, const GValue *value2)
     union_info = &g_array_index(gst_value_union_funcs, GstValueUnionInfo, i);
     if(union_info->type1 == G_VALUE_TYPE(value1) &&
 	union_info->type2 == G_VALUE_TYPE(value2)) {
-      union_info->func(dest, value1, value2);
-      return;
+      return union_info->func(dest, value1, value2);
     }
   }
+  return FALSE;
 }
 
 void
@@ -364,7 +377,7 @@ gst_value_can_intersect (const GValue *value1, const GValue *value2)
   return FALSE;
 }
 
-void
+gboolean
 gst_value_intersect (GValue *dest, const GValue *value1, const GValue *value2)
 {
   GstValueIntersectInfo *intersect_info;
@@ -375,10 +388,17 @@ gst_value_intersect (GValue *dest, const GValue *value1, const GValue *value2)
 	GstValueIntersectInfo, i);
     if(intersect_info->type1 == G_VALUE_TYPE(value1) &&
 	intersect_info->type2 == G_VALUE_TYPE(value2)) {
-      intersect_info->func(dest, value1, value2);
-      return;
+      return intersect_info->func(dest, value1, value2);
     }
   }
+
+  if(gst_value_compare(value1, value2) == GST_VALUE_EQUAL){
+    g_value_init(dest, G_VALUE_TYPE(value1));
+    g_value_copy(value1, dest);
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 void

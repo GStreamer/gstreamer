@@ -37,6 +37,11 @@ typedef int (* GstValueIntersectFunc) (GValue *dest, const GValue *value1,
 #define GST_TYPE_INT_RANGE gst_type_int_range
 #define GST_TYPE_DOUBLE_RANGE gst_type_double_range
 
+#define GST_VALUE_LESS_THAN (-1)
+#define GST_VALUE_EQUAL 0
+#define GST_VALUE_GREATER_THAN 1
+#define GST_VALUE_UNORDERED 2
+
 extern GType gst_type_fourcc;
 extern GType gst_type_int_range;
 extern GType gst_type_double_range;
@@ -53,6 +58,10 @@ double gst_value_get_double_range_start (const GValue *value);
 double gst_value_get_double_range_end (const GValue *value);
 
 void _gst_value_initialize (void);
+
+int gst_value_compare (const GValue *src1, const GValue *src2);
+gboolean gst_value_intersect (GValue *dest, const GValue *src1, const GValue *src2);
+gboolean gst_value_union (GValue *dest, const GValue *src1, const GValue *src2);
 
 G_END_DECLS
 
