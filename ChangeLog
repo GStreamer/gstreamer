@@ -1,3 +1,12 @@
+2005-01-29  David Moore  <dcm@acm.org>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
+	(gst_qtdemux_loop_header):
+	  Re-apply patch from #142272 that allows non-seekable sources,
+	  re-proposed by Daniel Drake <dsd@gentoo.org>.
+
 2005-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/rtp/gstrtpgsmenc.c: (gst_rtpgsmenc_init):
