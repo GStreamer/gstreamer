@@ -1763,9 +1763,10 @@ static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc, const gu
           "systemstream = (boolean) false");
     case GST_MAKE_FOURCC('3','I','V','1'):
       return gst_caps_from_string ("video/x-3ivx");
-    case GST_MAKE_FOURCC('r','p','z','a'):
     case GST_MAKE_FOURCC('c','v','i','d'):
       /* Cinepak */
+      return gst_caps_from_string ("video/x-cinepak");
+    case GST_MAKE_FOURCC('r','p','z','a'):
     case GST_MAKE_FOURCC('r','l','e',' '):
       /* Run-length encoding */
     case GST_MAKE_FOURCC('s','m','c',' '):
