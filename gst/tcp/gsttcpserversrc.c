@@ -483,6 +483,7 @@ gst_tcpserversrc_init_receive (GstTCPServerSrc * this)
       this->server_sock_fd);
 
   /* make address reusable */
+  ret = 1;
   if (setsockopt (this->server_sock_fd, SOL_SOCKET, SO_REUSEADDR, &ret,
           sizeof (int)) < 0) {
     GST_ELEMENT_ERROR (this, RESOURCE, SETTINGS, (NULL),
