@@ -6,5 +6,7 @@
 sed "
 s/^SUBSTFOR $1://g;
 /^SUBSTFOR .*:.*/d;
-s/GST_CHECK_FEATURE *(\\([A-Za-z0-9_]*\\) *,/translit(dnm, m, l) AM_CONDITIONAL(USE_\\1, true)\\
-GST_CHECK_FEATURE(\\1,/"
+s/^ *GST_CHECK_FEATURE *(\\([A-Za-z0-9_]*\\) *,/translit(dnm, m, l) AM_CONDITIONAL(USE_\\1, true)\\
+GST_CHECK_FEATURE(\\1,/
+s/^ *GST_SUBSYSTEM_DISABLE *(\\([A-Za-z0-9_]*\\) *,/translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_\\1, true)\\
+GST_SUBSYSTEM_DISABLE(\\1,/"
