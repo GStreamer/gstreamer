@@ -1,3 +1,11 @@
+2002-03-01  Michael Meeks  <michael@ximian.com>                                
+       * docs/manual/Makefile.am: use $(wildcard) instead of                   
+       strange shell stuff.                                                    
+                                                                               
+       * tools/Makefile.am: handle conditionals in a compatible way            
+                                                                               
+       * docs/manuals.mak: don't do silly things with if/else                  
+
 2002-01-15  Bastien Nocera  <hadess@hadess.net>
 
 	* tests/Makefile.am: add all the dirs to the DIST_SUBDIRS

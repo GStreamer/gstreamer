@@ -9,9 +9,9 @@ if     HAVE_XSLTPROC
 
 if     HAVE_FIG2DEV_PNG
 html: $(DOC)
-else  !HAVE_FIG2DEV_PNG
+else  #!HAVE_FIG2DEV_PNG
 html:
-endif !HAVE_FIG2DEV_PNG
+endif #!HAVE_FIG2DEV_PNG
 
 if     HAVE_FIG2DEV_PDF
 if     HAVE_PDFXMLTEX
@@ -19,25 +19,25 @@ pdf: $(DOC).pdf
 
 if     HAVE_PDFTOPS
 ps: $(DOC).ps
-else  !HAVE_PDFTOPS
+else  #!HAVE_PDFTOPS
 ps:
-endif !HAVE_PDFTOPS
+endif #!HAVE_PDFTOPS
 
-else  !HAVE_PDFXMLTEX
+else  #!HAVE_PDFXMLTEX
 pdf:
 ps:
-endif !HAVE_PDFXMLTEX
+endif #!HAVE_PDFXMLTEX
 
-else  !HAVE_FIG2DEV_PDF
+else  #!HAVE_FIG2DEV_PDF
 pdf:
 ps:
-endif !HAVE_FIG2DEV_PDF
+endif #!HAVE_FIG2DEV_PDF
 
-else  !HAVE_XSLTPROC
+else  #!HAVE_XSLTPROC
 html:
 ps:
 pdf:
-endif !HAVE_XSLTPROC
+endif #!HAVE_XSLTPROC
 
 $(DOC).fo: $(XML) $(PDFS) $(XSLFO) $(XSLFOMODS)
 	cp magic-pdf magic

@@ -1,3 +1,3 @@
-XSL=$(shell cd $(srcdir) && echo *.xsl)
+XSL=$(wildcard *.xsl)
 
 EXTRA_DIST = $(XSL)

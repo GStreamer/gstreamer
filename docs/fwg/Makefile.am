@@ -1,13 +1,13 @@
 DOC=gst-plugin-writers-guide
 MAIN=$(DOC).xml
-XML=$(shell cd $(srcdir) && echo *.xml)
+XML=$(wildcard *.xml)
 XSLFO=$(srcdir)/../xsl/fo.xsl
 XSLFOMODS=$(srcdir)/../xsl/ulink.xsl $(srcdir)/../xsl/keycombo.xsl
 XSLHTML=$(srcdir)/../xsl/html.xsl
 XSLHTMLMODS=$(srcdir)/../xsl/fileext.xsl $(srcdir)/../xsl/admon.xsl \
 	$(srcdir)/../xsl/keycombo.xsl $(srcdir)/../xsl/css.xsl
 XSLS=$(XSLFO) $(XSLFOMODS) $(XSLHTML) $(XSLHTMLMODS)
-FIGS= # $(shell cd $(srcdir) && echo *.fig) (uncomment when pngs are added)
+FIGS= # $(wildcard *.fig) (uncomment when pngs are added)
 PNGS=$(FIGS:.fig=.png)
 PDFS=$(FIGS:.fig=.pdf)
 SRC=$(XML)
