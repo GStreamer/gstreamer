@@ -1,3 +1,11 @@
+2004-08-04  Benjamin Otte  <otte@gnome.org>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_get_capslist), (generate_capslist),
+	(plugin_init):
+	  generate the list of supported caps at startup and reuse it instead
+	  of always generating it
+
 2004-07-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/multipart/multipartmux.c: (gst_multipart_mux_pad_link):
