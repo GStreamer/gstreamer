@@ -68,7 +68,7 @@ static void			gst_thread_get_property		(GObject *object, guint prop_id, GValue *
 
 static GstElementStateReturn	gst_thread_change_state		(GstElement *element);
 
-#ifndef GST_DISABLE_XML
+#ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr		gst_thread_save_thyself		(GstObject *object, xmlNodePtr parent);
 static void			gst_thread_restore_thyself	(GstObject *object, xmlNodePtr self);
 #endif
@@ -123,7 +123,7 @@ gst_thread_class_init (GstThreadClass *klass)
 // FIXME!
 //  gobject_class->destroy =		gst_thread_real_destroy;
 
-#ifndef GST_DISABLE_XML
+#ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself =	gst_thread_save_thyself;
   gstobject_class->restore_thyself =	gst_thread_restore_thyself;
 #endif
@@ -674,7 +674,7 @@ gst_thread_signal_thread (GstThread *thread, gboolean spinning)
 }
 
 
-#ifndef GST_DISABLE_XML
+#ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr
 gst_thread_save_thyself (GstObject *object,
 		         xmlNodePtr self)
@@ -693,4 +693,4 @@ gst_thread_restore_thyself (GstObject *object,
   if (GST_OBJECT_CLASS (parent_class)->restore_thyself)
     GST_OBJECT_CLASS (parent_class)->restore_thyself (object, self);
 }
-#endif // GST_DISABLE_XML
+#endif // GST_DISABLE_LOADSAVE

@@ -287,7 +287,6 @@ gst_elementfactory_can_sink_caps (GstElementFactory *factory,
   return FALSE;
 }
 
-#ifndef GST_DISABLE_XML
 /**
  * gst_elementfactory_save_thyself:
  * @factory: factory to save
@@ -381,4 +380,3 @@ gst_elementfactory_load_thyself (xmlNodePtr parent)
 
   return factory;
 }
-#endif // GST_DISABLE_XML

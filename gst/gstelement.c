@@ -59,7 +59,7 @@ static void			gst_element_real_destroy	(GObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
 
-#ifndef GST_DISABLE_XML
+#ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr		gst_element_save_thyself	(GstObject *object, xmlNodePtr parent);
 GstElement* 			gst_element_restore_thyself 	(xmlNodePtr self, GstObject *parent);
 #endif
@@ -141,7 +141,7 @@ gst_element_class_init (GstElementClass *klass)
 // FIXME!
 //  gobject_class->destroy =		GST_DEBUG_FUNCPTR(gst_element_real_destroy);
 
-#ifndef GST_DISABLE_XML
+#ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself =	GST_DEBUG_FUNCPTR(gst_element_save_thyself);
   gstobject_class->restore_thyself =	GST_DEBUG_FUNCPTR(gst_element_restore_thyself);
 #endif
@@ -953,7 +953,7 @@ static gchar *_gst_element_type_names[] = {
 };
 */
 
-#ifndef GST_DISABLE_XML
+#ifndef GST_DISABLE_LOADSAVE
 /**
  * gst_element_save_thyself:
  * @element: GstElement to save
@@ -1155,7 +1155,7 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 
   return element;
 }
-#endif // GST_DISABLE_XML
+#endif // GST_DISABLE_LOADSAVE
 
 /**
  * gst_element_set_sched:

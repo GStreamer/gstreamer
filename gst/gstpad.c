@@ -34,7 +34,7 @@
 static void		gst_pad_class_init		(GstPadClass *klass);
 static void		gst_pad_init			(GstPad *pad);
 
-#ifndef GST_DISABLE_XML
+#ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr	gst_pad_save_thyself		(GstObject *object, xmlNodePtr parent);
 #endif
 
@@ -178,7 +178,7 @@ gst_real_pad_class_init (GstRealPadClass *klass)
     g_param_spec_boolean("active","Active","Whether the pad is active.",
                          TRUE,G_PARAM_READWRITE));
 
-#ifndef GST_DISABLE_XML
+#ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR(gst_pad_save_thyself);
 #endif
   gstobject_class->path_string_separator = ".";
@@ -1091,7 +1091,7 @@ gst_real_pad_destroy (GObject *object)
 }
 
 
-#ifndef GST_DISABLE_XML
+#ifndef GST_DISABLE_LOADSAVE
 /**
  * gst_pad_load_and_connect:
  * @self: the XML node to read the description from
@@ -1148,7 +1148,7 @@ gst_pad_load_and_connect (xmlNodePtr self,
 cleanup:
   g_strfreev (split);
 }
-#endif // GST_DISABLE_XML
+#endif // GST_DISABLE_LOADSAVE
 
 static gboolean
 gst_pad_renegotiate_func (GstPad *pad, gpointer *data1, GstPad *peerpad, gpointer *data2, GstCaps **newcaps)
@@ -1396,7 +1396,7 @@ gst_pad_negotiate_proxy (GstPad *srcpad, GstPad *destpad, GstCaps **caps)
   return GST_PAD_NEGOTIATE_AGREE;
 }
 
-#ifndef GST_DISABLE_XML
+#ifndef GST_DISABLE_LOADSAVE
 /**
  * gst_pad_save_thyself:
  * @pad: the pad to save
@@ -1457,7 +1457,7 @@ gst_pad_ghost_save_thyself (GstPad *pad,
 
   return self;
 }
-#endif // GST_DISABLE_XML
+#endif // GST_DISABLE_LOADSAVE
 
 #ifndef gst_pad_push
 /**

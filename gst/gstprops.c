@@ -986,7 +986,6 @@ end:
   return compatible;
 }
 
-#ifndef GST_DISABLE_XML
 static xmlNodePtr
 gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
 {
@@ -1241,4 +1240,3 @@ gst_props_load_thyself (xmlNodePtr parent)
 
   return props;
 }
-#endif // GST_DISABLE_XML

@@ -238,11 +238,7 @@ gst_debug_disable_category (gint category) {
 
 /***** INFO system *****/
 GstInfoHandler _gst_info_handler = gst_default_info_handler;
-#ifdef GST_INFO_ENABLED_VERBOSE
-guint32 _gst_info_categories = 0xffffffff;
-#else
 guint32 _gst_info_categories = 0x00000001;
-#endif
 
 
 /**

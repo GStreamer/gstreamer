@@ -20,6 +20,12 @@ GST_OBJECT_MODEL_SRC = gobject2gtk.c
 GST_OBJECT_MODEL_HDR = gobject2gtk.h
 endif
 
+if GST_DISABLE_LOADSAVE
+GST_LOADSAVE_SRC = 
+else
+GST_LOADSAVE_SRC = gstxml.c
+endif
+
 libgst_la_SOURCES =		\
 	cothreads.c		\
 	gst.c			\
@@ -50,7 +56,7 @@ libgst_la_SOURCES =		\
 	gstutils.c		\
 	gstparse.c		\
 	$(GSTARCH_SRCS)		\
-	gstxml.c
+	$(GST_LOADSAVE_SRC)
 
 
 ##### Oh this sucks so badly.  This isn't funny. #####

@@ -23,6 +23,8 @@
 #ifndef __GST_XML_H__
 #define __GST_XML_H__
 
+#ifndef GST_DISABLE_LOADSAVE
+
 #include <parser.h>
 
 // Include compatability defines: if libxml hasn't already defined these,
@@ -87,5 +89,17 @@ GList*		gst_xml_get_topelements (GstXML *xml);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+
+#else // GST_DISABLE_LOADSAVE
+
+#pragma GCC poison gst_xml_write
+#pragma GCC poison gst_xml_new
+#pragma GCC poison gst_xml_parse_doc
+#pragma GCC poison gst_xml_parse_file
+#pragma GCC poison gst_xml_parse_memory
+#pragma GCC poison gst_xml_get_element
+#pragma GCC poison gst_xml_get_topelements
+
+#endif // GST_DISABLE_LOADSAVE
 
 #endif /* __GST_XML_H__ */
