@@ -9,15 +9,15 @@ AM_CONFIG_HEADER(config.h)
 
 GST_VERSION_MAJOR=0
 GST_VERSION_MINOR=3
-GST_VERSION_MICRO=1
+GST_VERSION_MICRO=2
 
 dnl we use a datestamped release tag and a fourth version ".1" number
 dnl during CVS development
-GST_VERSION_RELEASE=`date +%Y%m%d`
-GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO.3
+dnl GST_VERSION_RELEASE=`date +%Y%m%d`
+dnl GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO.3
 dnl we use a normal release tag increased manually when releasing
-dnl GST_VERSION_RELEASE=1
-dnl GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
+GST_VERSION_RELEASE=1
+GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
 PACKAGE=gst-plugins
 VERSION=$GST_VERSION
@@ -423,9 +423,9 @@ dnl *** Gnome VFS ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro with gnome-config vfs
 translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)
 GST_CHECK_FEATURE(GNOME_VFS, [Gnome VFS], gnomevfssrc, [
-translit(dnm, m, l) AC_SUBST(GNOME_VFS_LIBS)
-translit(dnm, m, l) AC_SUBST(GNOME_VFS_CFLAGS)
-GST_CHECK_CONFIGPROG(GNOME_VFS, gnome-config vfs)
+  PKG_CHECK_MODULES(GNOME_VFS, gnome-vfs-2.0, HAVE_GNOME_VFS="yes", HAVE_GNOME_VFS="no")
+  AC_SUBST(GNOME_VFS_CFLAGS)
+  AC_SUBST(GNOME_VFS_LIBS)
 ])
 
 dnl *** gsm ***
