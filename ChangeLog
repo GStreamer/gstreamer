@@ -1,3 +1,19 @@
+2004-05-13  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* ext/mad/gstid3tag.c : move from "Codec/(Dem/M)uxer" to "Codec/(Dem/M)uxer/Audio"
+	* gst/wavenc/gstwavenc.c : move from "Codec/Encoder/Audio" to "Codec/Muxer/Audio"
+
+	* gst/auparse/gstauparse.c :
+	  - add code (commented for now) to support audio/x-adpcm on src pad
+	    (we have no decoder for those layout yet)
+
+	* gst/cdxaparse/gstcdxaparse.c :
+	* gst/cdxaparse/gstcdxaparse.h :
+	  - partial rewrite using RiffRead (ripped iain's wavparse code)
+
+	* gst/rtp/gstrtpL16enc.c : typo
+	* gst/rtp/gstrtpgsmenc.c : typo
+
 2004-05-13  Benjamin Otte  <otte@gnome.org>
 
 	* configure.ac:
