@@ -85,11 +85,13 @@ gst_v4l2_iface_supported (GstImplementsInterface * iface, GType iface_type)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (iface);
 
-  g_assert (iface_type == GST_TYPE_TUNER ||
 #ifdef HAVE_XVIDEO
-      iface_type == GST_TYPE_X_OVERLAY ||
-#endif
+  g_assert (iface_type == GST_TYPE_TUNER ||
+      iface_type == GST_TYPE_X_OVERLAY || iface_type == GST_TYPE_COLOR_BALANCE);
+#else
+  g_assert (iface_type == GST_TYPE_TUNER ||
       iface_type == GST_TYPE_COLOR_BALANCE);
+#endif
 
   if (v4l2element->video_fd == -1)
     return FALSE;
