@@ -1,3 +1,5 @@
+# FIXME FIXME
+
 Gamesdir = $(datadir)/gnome/apps/Games
 
 INCLUDES = -I$(top_srcdir)/gst				\
@@ -29,4 +31,3 @@ oaf_DATA = $(OAF_FILES)
 
 EXTRA_DIST = gstmediaplay.desktop $(OAF_FILES) \
 	bonobo-gstmediaplay-ui.xml
-

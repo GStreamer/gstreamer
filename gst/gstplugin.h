@@ -25,8 +25,7 @@
 #define __GST_PLUGIN_H__
 
 #include <gmodule.h>
-//#include <gnome-xml/parser.h>
-#include <parser.h>
+#include <parser.h> // NOTE: this is xml-config's fault
 
 #include <gst/gsttype.h>
 #include <gst/gstelement.h>

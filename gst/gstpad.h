@@ -24,8 +24,7 @@
 #ifndef __GST_PAD_H__
 #define __GST_PAD_H__
 
-//#include <gnome-xml/parser.h>
-#include <parser.h>
+#include <parser.h> // NOTE: This is xml-config's fault
 
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>

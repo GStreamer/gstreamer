@@ -1,4 +1,5 @@
 noinst_PROGRAMS = helloworld2
 
-LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la
-INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir)
+LIBS += $(GST_LIBS)
+CFLAGS += $(GST_CFLAGS)
+

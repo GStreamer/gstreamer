@@ -78,7 +78,6 @@ libgstinclude_HEADERS =		\
 	gstparse.h		\
 	gstxml.h
 
-
 noinst_HEADERS = 	\
 	gst_private.h	\
 	gstarch.h	\
@@ -86,7 +85,8 @@ noinst_HEADERS = 	\
 	gstppc.h	\
 	gstpropsprivate.h
 
-libgst_la_LIBADD = $(GLIB_LIBS) $(GTK_LIBS) $(XML_LIBS)
-libgst_la_LDFLAGS = -version-info $(STREAMER_CURRENT):$(STREAMER_REVISION):$(STREAMER_AGE)
+CFLAGS = $(LIBGST_CFLAGS)
+LIBS = $(LIBGST_LIBS)
+libgst_la_LDFLAGS = -version-info $(GSTREAMER_LIBVERSION)
 
 EXTRA_DIST = ROADMAP

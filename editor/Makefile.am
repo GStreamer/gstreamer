@@ -1,8 +1,5 @@
-LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la 
-LDFLAGS = $(shell gnome-config --libs gnomeui)  $(shell libglade-config --libs gnome)
-INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir)/gst $(shell libglade-config --cflags gnome) \
-           $(shell gnome-config --cflags gnomeui)
-
+CFLAGS += -DDATADIR="\"$(gladedir)/\"" $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS)
+LDFLAGS += $(GNOME_LIBS) $(LIBGLADE_GNOME_LIBS)
 
 lib_LTLIBRARIES = libgsteditor.la
 
@@ -28,7 +25,7 @@ libgsteditorinclude_HEADERS =	\
 
 bin_PROGRAMS = gsteditor
 gsteditor_SOURCES = editor.c
-gsteditor_LDFLAGS = libgsteditor.la
+gsteditor_LDFLAGS = libgsteditor.la $(GST_LIBS)
 
 gladedir = $(datadir)/gsteditor
 glade_DATA = editor.glade editorelement.glade
@@ -40,8 +37,6 @@ noinst_HEADERS =		\
 	gsteditorproperty.h	\
 	gsteditorimage.h	\
 	gsteditorcreate.h
-
-CFLAGS = -O2 -Wall -DDATADIR="\"$(gladedir)/\""
 
 SUBDIRS = pixmaps
 

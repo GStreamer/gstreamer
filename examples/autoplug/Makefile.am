@@ -1,4 +1,5 @@
 noinst_PROGRAMS = autoplug
 
-LDADD = $(GNOME_LIBS) $(top_builddir)/gst/libgst.la
-INCLUDES = $(GNOME_CFLAGS)
+# just an app here, we're safe
+LIBS += $(GNOME_LIBS) $(GST_LIBS)
+CFLAGS += $(GNOME_CFLAGS) $(GST_CFLAGS)

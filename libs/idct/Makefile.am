@@ -1,4 +1,3 @@
-
 if HAVE_LIBMMX
 GSTIDCTARCH_SRCS = mmxidct.S mmx32idct.c sseidct.S
 else
@@ -22,13 +21,10 @@ libgstidctinclude_HEADERS = gstidct.h
 check_PROGRAMS = ieeetest
 
 ieeetest_SOURCES = ieeetest.c
-ieeetest_LDADD = libgstidct.la $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/libgst.la
-ieeetest_CFLAGS = $(shell gnome-config --cflags gnomeui) -g -Wall
-ieeetest_LDFLAGS = $(shell gnome-config --libs gnomeui) 
+ieeetest_LDADD = libgstidct.la
+ieeetest_CFLAGS = $(GNOME_CFLAGS)
+ieeetest_LDFLAGS = $(GNOME_LIBS)
 
 noinst_HEADERS = dct.h
 
-CFLAGS += -Wall -O2 -funroll-all-loops -finline-functions -ffast-math
-
-INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir) -I$(top_srcdir)/include
-LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/libgst.la
+CFLAGS += -O2 $(FOMIT_FRAME_POINTER) -finline-functions -ffast-math

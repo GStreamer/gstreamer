@@ -9,7 +9,4 @@ libgstvideoscaleinclude_HEADERS = gstvideoscale.h
 
 noinst_HEADERS = yuv2rgb.h
 
-CFLAGS += -Wall -O1 -fomit-frame-pointer -funroll-all-loops -finline-functions -ffast-math
-
-INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir) -I$(top_srcdir)/include
-LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/libgst.la
+CFLAGS += -O1 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math

@@ -24,6 +24,8 @@
 #ifndef __GST_H__
 #define __GST_H__
 
+#include <glib.h>
+
 #include <gst/gstinfo.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>

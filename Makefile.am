@@ -1,3 +1,6 @@
+PACKAGE = @PACKAGE@
+VERSION = @VERSION@
+
 # if libglade is present, build the player and editor
 if HAVE_LIBGLADE_GNOME
 SUBDIRS_LGG = gstplay editor
@@ -8,7 +11,7 @@ endif
 SUBDIRS = include gst libs plugins tools test tests examples $(SUBDIRS_LGG) docs
 
 # These are all the possible subdirs
-DIST_SUBDIRS = include gst libs plugins tools test tests examples gstplay editor docs
+DIST_SUBDIRS = intl po include gst libs plugins tools test tests examples gstplay editor docs
 
 
 bin_SCRIPTS = gstreamer-config
@@ -16,7 +19,7 @@ bin_SCRIPTS = gstreamer-config
 m4datadir = $(datadir)/aclocal
 m4data_DATA = gstreamer.m4
 
-EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 LICENSE REQUIREMENTS
+EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 LICENSE REQUIREMENTS ABOUT-NLS
 
 dist-hook:
 	cp gstreamer.spec $(distdir)

@@ -1,0 +1,7 @@
+Convert all the STREAMER_ version stuff to GSTREAMER_
+
+Convert all the --version-info lines to use GSTREAMER_LIBVERSION
+
+Fix all the masses of Makefile.am's that override CFLAGS
+
+Makefile.am's should use the library_la_CFLAGS and _LIBADD always

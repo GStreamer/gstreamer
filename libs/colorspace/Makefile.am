@@ -15,7 +15,5 @@ libgstcolorspaceinclude_HEADERS = gstcolorspace.h
 
 noinst_HEADERS = yuv2rgb.h
 
-CFLAGS += -Wall -O2  -fomit-frame-pointer -finline-functions -ffast-math
-
-INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir) -I$(top_srcdir)/include
-LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/libgst.la
+# FIXME is this needed?
+CFLAGS += -O2 $(FOMIT_FRAME_POINTER) -finline-functions -ffast-math

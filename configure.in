@@ -4,17 +4,26 @@ AC_CANONICAL_SYSTEM
 
 AM_CONFIG_HEADER(config.h)
 
+dnl FIXME this should be GSTREAMER_ now
 STREAMER_MAJOR_VERSION=0
 STREAMER_MINOR_VERSION=1
 STREAMER_MICRO_VERSION=0
 STREAMER_VERSION=$STREAMER_MAJOR_VERSION.$STREAMER_MINOR_VERSION.$STREAMER_MICRO_VERSION
 
+PACKAGE=gstreamer
+VERSION=$STREAMER_VERSION
+AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
+AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
+AC_SUBST(PACKAGE)
+AC_SUBST(VERSION)
+
 dnl libtool
 STREAMER_CURRENT=0
 STREAMER_REVISION=0
 STREAMER_AGE=0
+GSTREAMER_LIBVERSION=$STREAMER_CURRENT:$STREAMER_REVISION:$STREAMER_AGE
 
-AM_INIT_AUTOMAKE(gstreamer, $STREAMER_VERSION)
+AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
@@ -27,6 +36,7 @@ AC_SUBST(STREAMER_VERSION)
 AC_SUBST(STREAMER_CURRENT)
 AC_SUBST(STREAMER_REVISION)
 AC_SUBST(STREAMER_AGE)
+AC_SUBST(GSTREAMER_LIBVERSION)
 
 
 AM_MAINTAINER_MODE
@@ -39,6 +49,9 @@ AC_ARG_PROGRAM
 AM_DISABLE_STATIC
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
+
+dnl ALL_LINGUAS=""
+dnl AM_GNU_GETTEXT
 
 CFLAGS=""
 
@@ -172,7 +185,11 @@ dnl Check for libesd
 AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
 
 dnl Check for libasound
+alsa_save_LIBS=$LIBS
+alsa_save_CFLAGS=$CFLAGS
 AM_PATH_ALSA(0.5.0, HAVE_LIBASOUND=yes, HAVE_LIBASOUND=no)
+LIBS=$alsa_save_LIBS
+CFLAGS=$alsa_save_CFLAGS
 
 dnl Check for libgdk-pixbuf
 AC_PATH_PROG(GDK_PIXBUF_CONFIG, gdk-pixbuf-config, no)
@@ -228,16 +245,27 @@ HAVE_LIBGLADE_GNOME="no"
 AC_PATH_PROG(LIBGLADE_CONFIG_PATH, libglade-config, no)
 if test x$LIBGLADE_CONFIG_PATH = xno; then
   AC_MSG_WARN(Couldn't find libglade-config - Can't build gstplay)
+  LIBGLADE_GNOME_LIBS=
+  LIBGLADE_GNOME_CFLAGS=
+  HAVE_LIBGLADE_GNOME=NO
 else
-  libglade_save_CFLAGS=${CFLAGS}
-  CFLAGS="$CFLAGS `$LIBGLADE_CONFIG_PATH --libs gnome` `$LIBGLADE_CONFIG_PATH --cflags gnome`"
+  LIBGLADE_GNOME_LIBS=`libglade-config --libs gnome`
+  LIBGLADE_GNOME_CFLAGS=`libglade-config --cflags gnome`
+  libglade_save_CFLAGS="$CFLAGS"
+  libglade_save_LIBS="$LIBS"
+  CFLAGS="$CFLAGS $LIBGLADE_GNOME_CFLAGS"
+  LIBS="$LIBS $LIBGLADE_GNOME_LIBS"
+  HAVE_LIBGLADE_GNOME="no"
   AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
 	      HAVE_LIBGLADE_GNOME="yes",
 	      AC_MSG_WARN(
       [Couldn't find gnome libraries for libglade - Can't build gstplay])
 	     )
-  CFLAGS=${libglade_save_CFLAGS}
+  CFLAGS="$libglade_save_CFLAGS"
+  LIBS="$libglade_save_LIBS"
 fi
+AC_SUBST(LIBGLADE_GNOME_LIBS)
+AC_SUBST(LIBGLADE_GNOME_CFLAGS)
 
 
 dnl Check for atomic.h
@@ -312,7 +340,6 @@ AC_CHECK_LIB(cdda_interface, cdda_open, : , HAVE_CDPARANOIA=no, )
 AC_CHECK_HEADER(cdda_interface.h, :, HAVE_CDPARANOIA=no)
 AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
-
 
 dnl Check for liblame
 AC_MSG_CHECKING(LAME library)
@@ -500,6 +527,9 @@ fi
 
 if test "x$USE_PROFILING" = xyes; then
   CFLAGS="$CFLAGS -pg"
+  FOMIT_FRAME_POINTER=""
+else
+  FOMIT_FRAME_POINTER="-fomit-frame-pointer"
 fi
 
 dnl #############################
@@ -571,9 +601,26 @@ CFLAGS="$CFLAGS -O6 -Wall"
 
 dnl FIXME: having to AC_SUBST these is messy.  Not sure if CPPFLAGS and LDFLAGS
 dnl need it, either.
+
+dnl Private vars for libgst only
+LIBGST_LIBS="$LIBS"
+LIBGST_CFLAGS="$CFLAGS"
+AC_SUBST(LIBGST_LIBS)
+AC_SUBST(LIBGST_CFLAGS)
+
+dnl Vars for everyone else
+GST_LIBS="\$(top_builddir)/gst/libgst.la"
+GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include"
+AC_SUBST(GST_LIBS)
+AC_SUBST(GST_CFLAGS)
+
+dnl CFLAGS for everyone else
+CFLAGS="$CFLAGS $GST_CFLAGS"
+AC_SUBST(LIBS)
 AC_SUBST(CFLAGS)
-AC_SUBST(CPPFLAGS)
-AC_SUBST(LDFLAGS)
+
+dnl AC_SUBST(CPPFLAGS)
+dnl AC_SUBST(LDFLAGS)
 
 
 dnl #############################
@@ -589,6 +636,8 @@ dnl # Make the output files #
 dnl #########################
 
 AC_OUTPUT([Makefile
+intl/Makefile
+po/Makefile.in
 include/Makefile
 include/wine/Makefile
 gst/Makefile

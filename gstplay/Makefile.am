@@ -1,8 +1,9 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir) \
-	           $(shell gnome-config --cflags gnomeui) -I..
+# FIXME FIXME
 
+LIBADD += $(GNOME_LIBS) $(GST_LIBS)
+CFLAGS += $(GNOME_CFLAGS) $(GST_CFLAGS) -DDATADIR=\""$(gladedir)/"\"
 
 bin_PROGRAMS = gstmediaplay 
 
@@ -31,21 +32,6 @@ noinst_HEADERS = \
 
 
 CFLAGS += -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
-#CFLAGS += -pg -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
 
-gstmediaplay_CFLAGS = $(shell gnome-config --cflags gnomeui) $(shell libglade-config --cflags gnome) \
-		 -I..
-
-gstmediaplay_LDFLAGS = $(shell gnome-config --libs gnomeui) $(shell libglade-config --libs gnome) \
-		 ../gst/libgst.la ./libgstmediaplay.la
-
-
-if HAVE_LIBXV
-xvlibs=-lXv
-else
-xvlibs=
-endif
-
-gstmediaplay_LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la
-       
-
+gstmediaplay_CFLAGS = $(LIBGLADE_GNOME_CFLAGS)
+gstmediaplay_LDADD = $(LIBGLADE_GNOME_LIBS) libgstmediaplay.la

@@ -24,8 +24,7 @@
 #ifndef __GST_ELEMENT_H__
 #define __GST_ELEMENT_H__
 
-//#include <gnome-xml/parser.h>
-#include <parser.h>
+#include <parser.h> // NOTE: this is xml-config's fault
 
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
@@ -38,11 +37,11 @@ extern "C" {
 
 
 typedef enum {
-  GST_STATE_NONE_PENDING	= -1,
-  GST_STATE_NULL		= 0,
-  GST_STATE_READY		= 1,
-  GST_STATE_PLAYING		= 2,
-  GST_STATE_PAUSED		= 3,
+  GST_STATE_NONE_PENDING	= 0,
+  GST_STATE_NULL		= (1 << 0),
+  GST_STATE_READY		= (1 << 1),
+  GST_STATE_PLAYING		= (1 << 2),
+  GST_STATE_PAUSED		= (1 << 3),
 } GstElementState;
 
 typedef enum {
@@ -53,11 +52,11 @@ typedef enum {
 
 static inline char *_gst_print_statename(int state) {
   switch (state) {
-    case -1: return "none pending";break;
-    case 0: return "null";break;
-    case 1: return "ready";break;
-    case 2: return "playing";break;
-    case 3: return "paused";break;
+    case GST_STATE_NONE_PENDING: return "none pending";break;
+    case GST_STATE_NULL: return "null";break;
+    case GST_STATE_READY: return "ready";break;
+    case GST_STATE_PLAYING: return "playing";break;
+    case GST_STATE_PAUSED: return "paused";break;
     default: return "";
   }
   return "";
@@ -66,13 +65,14 @@ static inline char *_gst_print_statename(int state) {
 #define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
 #define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
 
-#define GST_STATE_TRANSITION(obj)	((GST_STATE(obj)<<4) | GST_STATE_PENDING(obj))
-#define GST_STATE_NULL_TO_READY 	((GST_STATE_NULL<<4) | GST_STATE_READY)
-#define GST_STATE_READY_TO_PLAYING 	((GST_STATE_READY<<4) | GST_STATE_PLAYING)
-#define GST_STATE_PLAYING_TO_PAUSED	((GST_STATE_PLAYING<<4) | GST_STATE_PAUSED)
-#define GST_STATE_PAUSED_TO_PLAYING	((GST_STATE_PAUSED<<4) | GST_STATE_PLAYING)
-#define GST_STATE_PLAYING_TO_READY 	((GST_STATE_PLAYING<<4) | GST_STATE_READY)
-#define GST_STATE_READY_TO_NULL		((GST_STATE_READY<<4) | GST_STATE_NULL)
+// Note: using 8 bit shift mostly "just because", it leaves us enough room to grow <g>
+#define GST_STATE_TRANSITION(obj)	((GST_STATE(obj)<<8) | GST_STATE_PENDING(obj))
+#define GST_STATE_NULL_TO_READY 	((GST_STATE_NULL<<8) | GST_STATE_READY)
+#define GST_STATE_READY_TO_PLAYING 	((GST_STATE_READY<<8) | GST_STATE_PLAYING)
+#define GST_STATE_PLAYING_TO_PAUSED	((GST_STATE_PLAYING<<8) | GST_STATE_PAUSED)
+#define GST_STATE_PAUSED_TO_PLAYING	((GST_STATE_PAUSED<<8) | GST_STATE_PLAYING)
+#define GST_STATE_PLAYING_TO_READY 	((GST_STATE_PLAYING<<8) | GST_STATE_READY)
+#define GST_STATE_READY_TO_NULL		((GST_STATE_READY<<8) | GST_STATE_NULL)
 
 #define GST_TYPE_ELEMENT \
   (gst_element_get_type())

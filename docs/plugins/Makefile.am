@@ -9,11 +9,8 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 # The directory containing the source code (if it contains documentation).
 DOC_SOURCE_DIR=$(top_srcdir)/plugins
 
-INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir)
-LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/libgst.la
-
-CFLAGS = `gstreamer-config --cflags` -Wall -g
-LDFLAGS = `gstreamer-config --libs` 
+#CFLAGS = `gstreamer-config --cflags` -Wall -g
+#LDFLAGS = `gstreamer-config --libs` 
 
 EXTRA_DIST=$(DOC_MODULE).types.in $(DOC_MODULE)-sections.txt $(DOC_MAIN_SGML_FILE) gstdoc-mkdb gstdoc-mktmpl gstdoc-scanobj
 
