@@ -2861,13 +2861,13 @@ gst_element_state_get_name (GstElementState state)
   switch (state) {
 #ifdef GST_DEBUG_COLOR
     case GST_STATE_VOID_PENDING: return "NONE_PENDING";break;
-    case GST_STATE_NULL: return "\033[01;37mNULL\033[00m";break;
+    case GST_STATE_NULL: return "\033[01;34mNULL\033[00m";break;
     case GST_STATE_READY: return "\033[01;31mREADY\033[00m";break;
     case GST_STATE_PLAYING: return "\033[01;32mPLAYING\033[00m";break;
     case GST_STATE_PAUSED: return "\033[01;33mPAUSED\033[00m";break;
     default:
       /* This is a memory leak */
-      return g_strdup_printf ("\033[01;37;41mUNKNOWN!\033[00m(%d)", state);
+      return g_strdup_printf ("\033[01;35;41mUNKNOWN!\033[00m(%d)", state);
 #else
     case GST_STATE_VOID_PENDING: return "NONE_PENDING";break;
     case GST_STATE_NULL: return "NULL";break;
