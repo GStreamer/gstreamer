@@ -34,11 +34,12 @@
 
 #include "gstlame.h"
 
-
+/* elementfactory information */
 static GstElementDetails gst_lame_details = 
 {
   "L.A.M.E. mp3 encoder",
   "Codec/Audio/Encoder",
+  "GPL",
   "High-quality free MP3 encoder",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
