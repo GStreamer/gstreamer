@@ -64,13 +64,13 @@ Record sound from your sound input and encode it into an ogg file:
 gstreamer-launch not only handles audio but video as well:
 For mpeg1 files (video and audio streams respectively):
 
- gstreamer-launch disksrc location=video.mpg ! mpeg1parse video_00! queue ! { mp1videoparse ! mpeg_play ! sdlvideosink }
- gstreamer-launch disksrc location=video.mpg ! mpeg1parse audio_00! queue ! { mad ! osssink }
+ gstreamer-launch disksrc location=video.mpg ! mpegdemux video_00! { queue ! mpeg2dec ! sdlvideosink }
+ gstreamer-launch disksrc location=video.mpg ! mpegdemux audio_00! { queue ! mad ! osssink }
 
 For mpeg2 files (video and audio streams respectively):
  
- gstreamer-launch disksrc location=video.mpeg ! mpeg2parse video_0! queue ! { mpeg2dec ! sdlvideosink }
- gstreamer-launch disksrc location=video.mpeg ! mpeg2parse private_stream_1.0! queue ! { ac3dec ! osssink }
+ gstreamer-launch disksrc location=video.mpeg ! mpegdemux video_00! { queue ! mpeg2dec ! sdlvideosink }
+ gstreamer-launch disksrc location=video.mpeg ! mpegdemux private_stream_1.0! { queue ! ac3dec ! osssink }
 
 Note: The types of audio streams in the mpeg files can vary!
  

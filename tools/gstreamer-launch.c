@@ -167,7 +167,10 @@ main(int argc, char *argv[])
     arg_search(GST_BIN(pipeline),"xid",xid_handler,NULL);
 
     fprintf(stderr,"RUNNING pipeline\n");
-    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
+      fprintf(stderr,"pipeline doesn't want to play\n");
+      exit (-1);
+    }
 
     g_idle_add(idle_func,pipeline);
 #ifdef USE_GLIB2
