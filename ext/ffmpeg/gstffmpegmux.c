@@ -157,7 +157,7 @@ gst_ffmpegmux_class_init (GstFFMpegMuxClass *klass)
   gobject_class->get_property = gst_ffmpegmux_get_property;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_ffmpegmux_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstFFMpegMux *ffmpegmux = (GstFFMpegMux *)(gst_pad_get_parent (pad));

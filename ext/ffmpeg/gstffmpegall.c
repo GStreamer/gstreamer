@@ -186,7 +186,7 @@ static void	gst_ffmpegdecall_class_init	(GstFFMpegDecAllClass *klass);
 static void	gst_ffmpegdecall_init		(GstFFMpegDecAll *ffmpegdec);
 static void	gst_ffmpegdecall_destroy	(GObject         *obj);
 static void	gst_ffmpegdecall_chain		(GstPad *pad, GstBuffer *buffer);
-static GstPadConnectReturn gst_ffmpegdecall_connect (GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn gst_ffmpegdecall_connect (GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -265,7 +265,7 @@ gst_ffmpegdecall_destroy (GObject *obj)
   av_free(ffmpegdec->context);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_ffmpegdecall_connect (GstPad *pad, GstCaps *caps)
 {
   GstFFMpegDecAll *ffmpegdec = GST_FFMPEGDECALL(gst_pad_get_parent(pad));

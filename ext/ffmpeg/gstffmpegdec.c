@@ -154,7 +154,7 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass *klass)
   gobject_class->get_property = gst_ffmpegdec_get_property;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_ffmpegdec_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad));
