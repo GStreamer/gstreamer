@@ -316,10 +316,14 @@ gboolean gst_caps2_is_chained (const GstCaps2 *caps)
 }
 
 static gboolean
-one_value_fixed (GQuark field_id, GValue *value, gpointer unused)
+_gst_caps2_is_fixed_foreach (GQuark field_id, GValue *value, gpointer unused)
 {
-  return G_TYPE_IS_FUNDAMENTAL (G_VALUE_TYPE (value));
+  GType type = G_VALUE_TYPE (value);
+  if (G_TYPE_IS_FUNDAMENTAL (type)) return TRUE;
+  if (type == GST_TYPE_FOURCC) return TRUE;
+  return FALSE;
 }
+
 gboolean gst_caps2_is_fixed (const GstCaps2 *caps)
 {
   GstStructure *structure;
@@ -330,7 +334,7 @@ gboolean gst_caps2_is_fixed (const GstCaps2 *caps)
 
   structure = gst_caps2_get_nth_cap (caps, 0);
 
-  return gst_structure_foreach (structure, one_value_fixed, NULL);
+  return gst_structure_foreach (structure, _gst_caps2_is_fixed_foreach, NULL);
 }
 
 static gboolean
@@ -342,19 +346,16 @@ _gst_structure_field_has_compatible (GQuark field_id,
   const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
 
   if (val1 == NULL) return FALSE;
-
-  if (gst_value_compare (val1, val2) ==
-      GST_VALUE_EQUAL) {
-    return TRUE;
-  }
-  if (gst_value_intersect (&dest, val1, val2)){
+  if (gst_value_intersect (&dest, val1, val2)) {
     g_value_unset (&dest);
     return TRUE;
   }
 
   return FALSE;
 }
-static gboolean _gst_cap_is_always_compatible (const GstStructure *struct1,
+
+static gboolean
+_gst_cap_is_always_compatible (const GstStructure *struct1,
     const GstStructure *struct2)
 {
   if(struct1->name != struct2->name){
@@ -366,8 +367,9 @@ static gboolean _gst_cap_is_always_compatible (const GstStructure *struct1,
       _gst_structure_field_has_compatible, (gpointer) struct1);
 }
 
-static gboolean _gst_caps2_cap_is_always_compatible (const GstStructure
-    *struct1, const GstCaps2 *caps2)
+static gboolean
+_gst_caps2_cap_is_always_compatible (const GstStructure *struct1,
+    const GstCaps2 *caps2)
 {
   int i;
 
@@ -382,8 +384,8 @@ static gboolean _gst_caps2_cap_is_always_compatible (const GstStructure
   return FALSE;
 }
 
-gboolean gst_caps2_is_always_compatible (const GstCaps2 *caps1,
-    const GstCaps2 *caps2)
+gboolean
+gst_caps2_is_always_compatible (const GstCaps2 *caps1, const GstCaps2 *caps2)
 {
   int i;
 
@@ -515,10 +517,12 @@ GstCaps2 *gst_caps2_intersect (const GstCaps2 *caps1, const GstCaps2 *caps2)
   for(i=0;i<caps1->structs->len;i++){
     struct1 = gst_caps2_get_nth_cap (caps1, i);
     for(j=0;j<caps2->structs->len;j++){
-      struct2 = gst_caps2_get_nth_cap (caps2, j);
+      GstStructure *istruct;
 
-      gst_caps2_append_cap(dest, gst_caps2_structure_intersect (
-	    struct1, struct2));
+      struct2 = gst_caps2_get_nth_cap (caps2, j);
+      istruct = gst_caps2_structure_intersect (struct1, struct2);
+
+      gst_caps2_append_cap(dest, istruct);
     }
   }
 
