@@ -1,4 +1,4 @@
-testprogs = cache1
+testprogs = cache1 indexdump
 
 TESTS = $(testprogs)
 
