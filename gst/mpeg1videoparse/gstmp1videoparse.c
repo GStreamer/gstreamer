@@ -32,12 +32,12 @@
 #define SEQ_END_CODE 0x000001b7
 
 /* elementfactory information */
-static GstElementDetails mpeg1videoparse_details = {
+static GstElementDetails mpeg1videoparse_details = GST_ELEMENT_DETAILS (
   "MPEG 1 Video Parser",
   "Codec/Parser",
-  "Parses and frames MPEG 1 video streams, provides seek"
+  "Parses and frames MPEG 1 video streams, provides seek",
   "Wim Taymans <wim.taymans@chello.be>"
-};
+);
 
 GST_PAD_TEMPLATE_FACTORY (src_factory,
   "src",
