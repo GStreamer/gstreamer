@@ -259,11 +259,16 @@ main(int argc, char *argv[])
   g_free (argvn);
 
   if (!pipeline) {
-    if (error)
+    if (error) {
       fprintf(stderr, "ERROR: pipeline could not be constructed: %s\n", error->message);
-    else
+      g_error_free (error);
+    } else {
       fprintf(stderr, "ERROR: pipeline could not be constructed\n");
+    }
     exit(1);
+  } else if (error) {
+    fprintf(stderr, "WARNING: erroneous pipeline: %s\n         Trying to run anyway\n", error->message);
+    g_error_free (error);
   }
   
   if (verbose) {
