@@ -65,7 +65,6 @@ gst_dv1394src_factory (void)
       GST_STATIC_CAPS (
         "dv1394src",
         "video/dv",
-/*
 	gst_props_new (
           "format", GST_PROPS_LIST (
 	  		G_TYPE_STRING ("NTSC"),
@@ -73,7 +72,6 @@ gst_dv1394src_factory (void)
 			), 
 	  NULL)
 	),
-*/  
       NULL);
   }
   return template;
