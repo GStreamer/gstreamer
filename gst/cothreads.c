@@ -36,8 +36,8 @@
 #include "gstarch.h"
 
 
-#define COTHREAD_STACKSIZE 16384
-#define COTHREAD_MAXTHREADS 128
+#define COTHREAD_STACKSIZE 32768
+#define COTHREAD_MAXTHREADS 64
 #define STACK_SIZE 0x200000
 
 
@@ -385,7 +385,8 @@ cothread_lock (cothread_state *thread)
 #ifdef COTHREAD_ATOMIC
   // do something to lock the cothread
 #else
-  g_mutex_lock(thread->lock);
+  if (thread->lock)
+    g_mutex_lock(thread->lock);
 #endif
 }
 
@@ -395,7 +396,10 @@ cothread_trylock (cothread_state *thread)
 #ifdef COTHREAD_ATOMIC
   // do something to try to lock the cothread
 #else
-  return g_mutex_trylock(thread->lock);
+  if (thread->lock)
+    return g_mutex_trylock(thread->lock);
+  else
+    return FALSE;
 #endif
 }
 
@@ -405,7 +409,8 @@ cothread_unlock (cothread_state *thread)
 #ifdef COTHREAD_ATOMIC
   // do something to unlock the cothread
 #else
-  g_mutex_unlock(thread->lock);
+  if (thread->lock)
+    g_mutex_unlock(thread->lock);
 #endif
 }
 

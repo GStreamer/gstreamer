@@ -778,13 +778,15 @@ void gst_bin_schedule_func(GstBin *bin) {
 static void 
 gst_schedule_lock_element (GstSchedule *sched,GstElement *element)
 {
-  cothread_lock(element->threadstate);
+  if (element->threadstate)
+    cothread_lock(element->threadstate);
 }
 
 static void
 gst_schedule_unlock_element (GstSchedule *sched,GstElement *element)
 {
-  cothread_unlock(element->threadstate);
+  if (element->threadstate)
+    cothread_unlock(element->threadstate);
 }
 
 

@@ -49,6 +49,7 @@ enum {
 
 static void			gst_element_class_init		(GstElementClass *klass);
 static void			gst_element_init		(GstElement *element);
+static void			gst_element_base_class_init	(GstElementClass *klass);
 
 static void			gst_element_set_arg		(GtkObject *object, GtkArg *arg, guint id);
 static void			gst_element_get_arg		(GtkObject *object, GtkArg *arg, guint id);
@@ -75,7 +76,7 @@ GtkType gst_element_get_type(void) {
       (GtkObjectInitFunc)gst_element_init,
       (GtkArgSetFunc)gst_element_set_arg,
       (GtkArgGetFunc)gst_element_get_arg,
-      (GtkClassInitFunc)NULL,
+      (GtkClassInitFunc)gst_element_base_class_init,
     };
     element_type = gtk_type_unique(GST_TYPE_OBJECT,&element_info);
   }
@@ -141,6 +142,17 @@ gst_element_class_init (GstElementClass *klass)
 
   klass->change_state =			GST_DEBUG_FUNCPTR(gst_element_change_state);
   klass->elementfactory = NULL;
+}
+
+static void
+gst_element_base_class_init (GstElementClass *klass)
+{
+  GtkObjectClass *gtkobject_class;
+
+  gtkobject_class = (GtkObjectClass*) klass;
+
+  gtkobject_class->set_arg =		GST_DEBUG_FUNCPTR(gst_element_set_arg);
+  gtkobject_class->get_arg =		GST_DEBUG_FUNCPTR(gst_element_get_arg);
 }
 
 static void
