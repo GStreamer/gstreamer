@@ -1,3 +1,11 @@
+2005-01-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Ronald Bultje <rbultje@ronald.bitfreak.net>
+
+	* gst/audioscale/gstaudioscale.c:
+	  Fix for #162819 - make audioscale reusable
+	  Fixes playback of more than one file with playbin/totem
+
 2004-12-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/ffmpegcolorspace/avcodec.h:
