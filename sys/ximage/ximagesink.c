@@ -1242,7 +1242,7 @@ gst_ximagesink_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_ximagesink_dispose (GObject * object)
+gst_ximagesink_finalize (GObject * object)
 {
   GstXImageSink *ximagesink;
 
@@ -1256,7 +1256,7 @@ gst_ximagesink_dispose (GObject * object)
   g_mutex_free (ximagesink->x_lock);
   g_mutex_free (ximagesink->pool_lock);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -1332,7 +1332,7 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
           "the X display in synchronous mode. (used only for debugging)", FALSE,
           G_PARAM_READWRITE));
 
-  gobject_class->dispose = gst_ximagesink_dispose;
+  gobject_class->finalize = gst_ximagesink_finalize;
   gobject_class->set_property = gst_ximagesink_set_property;
   gobject_class->get_property = gst_ximagesink_get_property;
 

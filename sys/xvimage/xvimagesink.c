@@ -1627,8 +1627,11 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
   }
 }
 
+/* Finalize is called only once, dispose can be called multiple times.
+ * We use mutexes and don't reset stuff to NULL here so let's register
+ * as a finalize. */
 static void
-gst_xvimagesink_dispose (GObject * object)
+gst_xvimagesink_finalize (GObject * object)
 {
   GstXvImageSink *xvimagesink;
 
@@ -1642,7 +1645,7 @@ gst_xvimagesink_dispose (GObject * object)
   g_mutex_free (xvimagesink->x_lock);
   g_mutex_free (xvimagesink->pool_lock);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -1734,7 +1737,7 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
           "the X display in synchronous mode. (used only for debugging)", FALSE,
           G_PARAM_READWRITE));
 
-  gobject_class->dispose = gst_xvimagesink_dispose;
+  gobject_class->finalize = gst_xvimagesink_finalize;
   gobject_class->set_property = gst_xvimagesink_set_property;
   gobject_class->get_property = gst_xvimagesink_get_property;
 
