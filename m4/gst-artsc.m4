@@ -1,8 +1,7 @@
 dnl Perform a check for existence of ARTSC
 dnl Richard Boulton <richard-alsa@tartarus.org>
 dnl Last modification: 26/06/2001
-dnl GST_CHECK_FEATURE(FEATURE-NAME, FEATURE-DESCRIPTION,
-dnl                   DEPENDENT-PLUGINS, TEST-FOR-FEATURE)
+dnl GST_CHECK_ARTSC()
 dnl
 dnl This check was written for GStreamer: it should be renamed and checked
 dnl for portability if you decide to use it elsewhere.
