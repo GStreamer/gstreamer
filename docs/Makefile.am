@@ -32,7 +32,6 @@ tmpbuildcatalog: gst-python.ent
 
 check: tmpbuildcatalog
 	for d in $(XMLFILES); do \
-		SGML_CATALOG_FILES=$$SGML_CATALOG_FILES\ $(CURDIR)/tmpbuildcatalog \
 		$(XMLLINT) $(XMLLINTFLAGS) $(srcdir)/$$d; \
 	done
 
@@ -50,15 +49,12 @@ xmltoxslflags = $(foreach xsl,$(filter %xsl,$(filter-out $(1),$(2))),-m $(srcdir
 FULLDEPS = common.xsl full.xsl tmpbuildcatalog
 
 README.txt: $(READMEFILES) $(FULLDEPS)
-	XML_CATALOG_FILES=$$XML_CATALOG_FILES\ $(CURDIR)/tmpbuildcatalog \
 	$(XMLTO) $(XMLTOFLAGS) $(call xmltoxslflags,$<,$+) txt $<
 
 README.html: $(READMEFILES) $(FULLDEPS) html.xsl
-	XML_CATALOG_FILES=$$XML_CATALOG_FILES\ $(CURDIR)/tmpbuildcatalog \
 	$(XMLTO) $(XMLTOFLAGS) $(call xmltoxslflags,$<,$+) xhtml-nochunks $<
 
 README.pdf: $(READMEFILES) $(FULLDEPS) pdf.xsl
-	XML_CATALOG_FILES=$$XML_CATALOG_FILES\ $(CURDIR)/tmpbuildcatalog \
 	$(XMLTO) $(XMLTOFLAGS) $(call xmltoxslflags,$<,$+) pdf $<
 
 # partial docs
@@ -66,11 +62,9 @@ README.pdf: $(READMEFILES) $(FULLDEPS) pdf.xsl
 PARTIALDEPS = gst-python.ent common.xsl part.xsl tmpbuildcatalog
 
 RELNOTES.txt: $(RELNOTESFILES) $(PARTIALDEPS)
-	XML_CATALOG_FILES=$$XML_CATALOG_FILES\ $(CURDIR)/tmpbuildcatalog \
 	$(XMLTO) $(XMLTOFLAGS) $(call xmltoxslflags,$<,$+) txt $<
 
 %.txt: %.xml $(PARTIALDEPS)
-	XML_CATALOG_FILES=$$XML_CATALOG_FILES\ $(CURDIR)/tmpbuildcatalog \
 	$(XMLTO) $(XMLTOFLAGS) $(call xmltoxslflags,$<,$+) txt $<
 
 else
