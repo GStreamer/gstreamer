@@ -612,6 +612,10 @@ main() { atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0
   ])
 fi
 
+dnl Check for fast float to int casting as defined in C99
+AC_C99_FUNC_LRINT()
+AC_C99_FUNC_LRINTF()
+
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
