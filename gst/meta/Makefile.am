@@ -1,3 +1,4 @@
 metaincludedir = $(includedir)/gst/meta
 metainclude_HEADERS =	\
-	audioraw.h
+	audioraw.h \
+	videoraw.h

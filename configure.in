@@ -308,6 +308,7 @@ plugins/visualization/spectrum/Makefile
 plugins/visualization/vumeter/Makefile
 plugins/visualization/synaesthesia/Makefile
 plugins/visualization/smoothwave/Makefile
+plugins/videosink/Makefile
 plugins/dvdsrc/Makefile
 plugins/vcdsrc/Makefile
 plugins/cobin/Makefile
