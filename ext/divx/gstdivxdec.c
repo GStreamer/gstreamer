@@ -471,7 +471,7 @@ plugin_init (GstPlugin *plugin)
 
   /* create an elementfactory for the v4lmjpegsrcparse element */
   return gst_element_register(plugin, "divxdec",
-			      GST_RANK_PRIMARY, GST_TYPE_DIVXDEC);
+			      GST_RANK_SECONDARY, GST_TYPE_DIVXDEC);
 }
 
 

@@ -290,7 +290,7 @@ plugin_init (GstPlugin *plugin)
   return (gst_element_register (plugin, "xvidenc",
 				GST_RANK_NONE, GST_TYPE_XVIDENC) &&
 	  gst_element_register (plugin, "xviddec",
-				GST_RANK_NONE, GST_TYPE_XVIDDEC));
+				GST_RANK_SECONDARY, GST_TYPE_XVIDDEC));
 }
 
 GST_PLUGIN_DEFINE (
