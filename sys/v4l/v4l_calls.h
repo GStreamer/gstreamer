@@ -29,59 +29,59 @@ extern "C" {
 
 
 /* simple check whether the device is open */
-#define GST_V4L_IS_OPEN(v4lelement) \
-  (v4lelement->video_fd > 0)
+#define GST_V4L_IS_OPEN(element) \
+  (element->video_fd > 0)
 
 /* check whether the device is 'active' */
-#define GST_V4L_IS_ACTIVE(v4lelement) \
-  (v4lelement->buffer != NULL)
+#define GST_V4L_IS_ACTIVE(element) \
+  (element->buffer != NULL)
 
-#define GST_V4L_IS_OVERLAY(v4lelement) \
-  (v4lelement->vcap.type & VID_TYPE_OVERLAY)
+#define GST_V4L_IS_OVERLAY(element) \
+  (element->vcap.type & VID_TYPE_OVERLAY)
 
 /* checks whether the current v4lelement has already been open()'ed or not */
-#define GST_V4L_CHECK_OPEN(v4lelement)				\
-  if (v4lelement->video_fd <= 0)				\
+#define GST_V4L_CHECK_OPEN(element)				\
+  if (element->video_fd <= 0)					\
   {								\
-    gst_element_error (v4lelement, RESOURCE, TOO_LAZY,	\
+    gst_element_error (element, RESOURCE, TOO_LAZY,		\
       (_("Device is not open")), NULL);				\
     return FALSE;						\
   }
 
 /* checks whether the current v4lelement is close()'ed or whether it is still open */
-#define GST_V4L_CHECK_NOT_OPEN(v4lelement) \
-  if (v4lelement->video_fd != -1)              \
-  {                                            \
-    gst_element_error (v4lelement, RESOURCE, TOO_LAZY,	\
+#define GST_V4L_CHECK_NOT_OPEN(element)				\
+  if (element->video_fd != -1)					\
+  {								\
+    gst_element_error (element, RESOURCE, TOO_LAZY,		\
       (_("Device is open")), NULL);				\
     return FALSE;						\
   }
 
 /* checks whether the current v4lelement does video overlay */
-#define GST_V4L_CHECK_OVERLAY(v4lelement) \
-  if (!(v4lelement->vcap.type & VID_TYPE_OVERLAY)) \
-  {                                                \
-    gst_element_error (v4lelement, RESOURCE, TOO_LAZY,	\
+#define GST_V4L_CHECK_OVERLAY(element)				\
+  if (!(element->vcap.type & VID_TYPE_OVERLAY))			\
+  {								\
+    gst_element_error (element, RESOURCE, TOO_LAZY,		\
       NULL, ("Device cannot handle overlay"));			\
     return FALSE;						\
   }
 
 /* checks whether we're in capture mode or not */
-#define GST_V4L_CHECK_ACTIVE(v4lelement) \
-  if (v4lelement->buffer == NULL)              \
-  {                                            \
-    gst_element_error (v4lelement, RESOURCE, SETTINGS,	\
+#define GST_V4L_CHECK_ACTIVE(element)				\
+  if (element->buffer == NULL)					\
+  {								\
+    gst_element_error (element, RESOURCE, SETTINGS,		\
       NULL, ("Device is not in streaming mode"));		\
-    return FALSE;                              \
+    return FALSE;						\
   }
 
 /* checks whether we're out of capture mode or not */
-#define GST_V4L_CHECK_NOT_ACTIVE(v4lelement) \
-  if (v4lelement->buffer != NULL)              \
-  {                                            \
-    gst_element_error (v4lelement, RESOURCE, SETTINGS,	\
-      NULL, ("Device is in streaming mode"));		\
-    return FALSE;                              \
+#define GST_V4L_CHECK_NOT_ACTIVE(element)			\
+  if (element->buffer != NULL)					\
+  {								\
+    gst_element_error (element, RESOURCE, SETTINGS,		\
+      NULL, ("Device is in streaming mode"));			\
+    return FALSE;						\
   }
 
 
