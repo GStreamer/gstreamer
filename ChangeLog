@@ -1,3 +1,19 @@
+2004-10-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/.cvsignore:
+	* gst/tcp/gstmultifdsink.c: (gst_sync_method_get_type),
+	(gst_multifdsink_class_init), (gst_multifdsink_init),
+	(gst_multifdsink_add), (gst_multifdsink_remove),
+	(gst_multifdsink_remove_client_link), (is_sync_frame),
+	(gst_multifdsink_new_client),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_recover_client), (gst_multifdsink_queue_buffer),
+	(gst_multifdsink_handle_clients), (gst_multifdsink_set_property),
+	(gst_multifdsink_get_property):
+	* gst/tcp/gstmultifdsink.h:
+	Added burst on connect sync_method, deprecated sync_clients,
+	streamlined the sync code some more.
+
 2004-10-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybasebin.c: (thread_error), (setup_source),
