@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-04-14 20:54+0200\n"
+"POT-Creation-Date: 2004-03-16 00:32+0100\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -35,22 +35,17 @@ msgstr "\"%s\" faylı oxuma üçün açıla bilmədi."
 msgid "Could not open CD device for reading."
 msgstr "CD avadanlığı oxuma üçün açıla bilmədi."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1066 ext/gnomevfs/gstgnomevfssrc.c:1089
+#: ext/gnomevfs/gstgnomevfssrc.c:1054 ext/gnomevfs/gstgnomevfssrc.c:1077
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "\"%s\" vfs faylı oxuma üçün açıla bilmədi."
 
-#: ext/gnomevfs/gstgnomevfssink.c:343
+#: ext/gnomevfs/gstgnomevfssink.c:293
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing."
 msgstr "\"%s\" vfs faylı yazma üçün açıla bilmədi."
 
-#: ext/gnomevfs/gstgnomevfssink.c:350
-#, fuzzy
-msgid "No filename given"
-msgstr "Fayl adı verilməyib."
-
-#: ext/gnomevfs/gstgnomevfssink.c:375
+#: ext/gnomevfs/gstgnomevfssink.c:318
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "\"%s\" vfs faylı bağlana bilmədi."
@@ -64,7 +59,7 @@ msgstr "Fayl adı verilməyib."
 msgid "Could not write to file \"%s\"."
 msgstr "\"%s\" faylına yazıla bilmədi."
 
-#: gst/avi/gstavimux.c:1052
+#: gst/avi/gstavimux.c:1051
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Səhv ya da olmayan audio girişi, AVI yayımı pozulacaqdır."
 
@@ -137,10 +132,6 @@ msgstr "\"%s\" avadanlığı yazma üçün açıla bilmədi."
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "\"%s\" avadanlığı oxuma üçün açıla bilmədi."
-
-#: sys/oss/gstosselement.c:1092
-msgid "Your oss device could not be probed correctly"
-msgstr ""
 
 #: sys/oss/gstossmixer.c:83
 msgid "Volume"

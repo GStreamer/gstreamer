@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins 0.8.0\n"
+"Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-03-16 00:32+0100\n"
-"PO-Revision-Date: 2004-04-19 22:23-0400\n"
+"POT-Creation-Date: 2004-04-14 20:54+0200\n"
+"PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -33,17 +33,21 @@ msgstr "Could not open file \"%s\" for reading."
 msgid "Could not open CD device for reading."
 msgstr "Could not open CD device for reading."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1054 ext/gnomevfs/gstgnomevfssrc.c:1077
+#: ext/gnomevfs/gstgnomevfssrc.c:1066 ext/gnomevfs/gstgnomevfssrc.c:1089
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Could not open vfs file \"%s\" for reading."
 
-#: ext/gnomevfs/gstgnomevfssink.c:293
+#: ext/gnomevfs/gstgnomevfssink.c:343
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing."
 msgstr "Could not open vfs file \"%s\" for writing."
 
-#: ext/gnomevfs/gstgnomevfssink.c:318
+#: ext/gnomevfs/gstgnomevfssink.c:350
+msgid "No filename given"
+msgstr "No filename given"
+
+#: ext/gnomevfs/gstgnomevfssink.c:375
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Could not close vfs file \"%s\"."
@@ -57,7 +61,7 @@ msgstr "No filename specified."
 msgid "Could not write to file \"%s\"."
 msgstr "Could not write to file \"%s\"."
 
-#: gst/avi/gstavimux.c:1051
+#: gst/avi/gstavimux.c:1052
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "No or invalid input audio, AVI stream will be corrupt."
 
@@ -130,6 +134,10 @@ msgstr "Could not open device \"%s\" for writing."
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "Could not open device \"%s\" for reading."
+
+#: sys/oss/gstosselement.c:1092
+msgid "Your oss device could not be probed correctly"
+msgstr "Your oss device could not be probed correctly"
 
 #: sys/oss/gstossmixer.c:83
 msgid "Volume"
