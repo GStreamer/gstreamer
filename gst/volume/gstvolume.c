@@ -318,7 +318,8 @@ volume_chain_int16 (GstPad *pad, GstBuffer *buf)
   i = 0;
     
   while(GST_DPMAN_PROCESS_COUNTDOWN(filter->dpman, sample_countdown, i)) {
-    data[i] = (gint16)(filter->real_vol_i * (gint)data[i++] / 8192);
+    data[i] = (gint16)(filter->real_vol_i * (gint)data[i] / 8192);
+    i++;
   }
   
   gst_pad_push(filter->srcpad,out_buf);   
