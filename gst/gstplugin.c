@@ -776,11 +776,11 @@ gst_plugin_add_type (GstPlugin *plugin, GstTypeFactory *factory)
 }
 
 /**
- * gst_plugin_add_type:
- * @plugin: plugin to add type to
- * @factory: the typefactory to add
+ * gst_plugin_add_autoplugger:
+ * @plugin: plugin to add the autoplugger to
+ * @factory: the autoplugfactory to add
  *
- * Add a typefactory to the list of those provided by the plugin.
+ * Add an autoplugfactory to the list of those provided by the plugin.
  */
 void
 gst_plugin_add_autoplugger (GstPlugin *plugin, GstAutoplugFactory *factory)

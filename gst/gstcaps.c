@@ -214,10 +214,12 @@ gst_caps_ref (GstCaps *caps)
 }
 
 /**
- * gst_caps_copy_on_write:
+ * gst_caps_copy:
  * @caps: the caps to copy
  *
- * Copies the caps if the refcount is greater than 1
+ * Copies the caps.
+ *
+ * Returns: a copy of the GstCaps structure.
  */
 GstCaps*
 gst_caps_copy (GstCaps *caps)
@@ -239,6 +241,9 @@ gst_caps_copy (GstCaps *caps)
  * @caps: the caps to copy
  *
  * Copies the caps if the refcount is greater than 1
+ *
+ * Returns: a pointer to a GstCaps strcuture that can
+ * be safely written to
  */
 GstCaps*
 gst_caps_copy_on_write (GstCaps *caps)
@@ -347,7 +352,7 @@ gst_caps_get_type_id (GstCaps *caps)
 /**
  * gst_caps_set_type_id:
  * @caps: the caps to set the type id to
- * @typeid: the type id to set
+ * @type_id: the type id to set
  *
  * Set the type id of the caps.
  */
@@ -446,6 +451,17 @@ gst_caps_prepend (GstCaps *caps, GstCaps *capstoadd)
   return orig;
 }
 
+/**
+ * gst_caps_get_by_name:
+ * @caps: a capabilty
+ * @name: the name of the capability to get
+ *
+ * Get the capability with the given name from this
+ * chain of capabilities.
+ *
+ * Returns: the first capability in the chain with the 
+ * given name
+ */
 GstCaps*
 gst_caps_get_by_name (GstCaps *caps, const gchar *name)
 {
@@ -487,11 +503,11 @@ gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
 }
 
 /**
- * gst_caps_list_check_compatibility:
+ * gst_caps_check_compatibility:
  * @fromcaps: a capabilty
  * @tocaps: a capabilty
  *
- * Checks whether two capability lists are compatible.
+ * Checks whether two capabilities are compatible.
  *
  * Returns: TRUE if compatible, FALSE otherwise
  */

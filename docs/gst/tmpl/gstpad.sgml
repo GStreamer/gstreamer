@@ -155,6 +155,26 @@ The function that will be called in an EOS case.
 @Returns: TRUE if EOS was successful, FALSE otherwise
 
 
+<!-- ##### ENUM GstPadNegotiateReturn ##### -->
+<para>
+The possible results from padnegotiation.
+</para>
+
+@GST_PAD_NEGOTIATE_FAIL: The pads could not agree about the media type.
+@GST_PAD_NEGOTIATE_AGREE: The pads agreed about the media type.
+@GST_PAD_NEGOTIATE_TRY: The pad did not agree and suggests another media type.
+
+<!-- ##### USER_FUNCTION GstPadNegotiateFunction ##### -->
+<para>
+The function that will be called when negotiating.
+</para>
+
+@pad: The pad that is being negotiated
+@caps: The current caps that are being negotiated
+@count: A counter to keep track of the negotiation process
+@Returns: The result of the negotiation process
+
+
 <!-- ##### USER_FUNCTION GstPadPushFunction ##### -->
 <para>
 
@@ -282,6 +302,15 @@ Destroy the pad.
 @getregion: 
 
 
+<!-- ##### FUNCTION gst_pad_set_negotiate_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@nego: 
+
+
 <!-- ##### FUNCTION gst_pad_set_qos_function ##### -->
 <para>
 
@@ -300,31 +329,22 @@ Destroy the pad.
 @eos: 
 
 
-<!-- ##### FUNCTION gst_pad_set_caps_list ##### -->
+<!-- ##### FUNCTION gst_pad_set_caps ##### -->
 <para>
 
 </para>
 
 @pad: 
 @caps: 
-
-
-<!-- ##### FUNCTION gst_pad_get_caps_list ##### -->
-<para>
-
-</para>
-
-@pad: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_get_caps_by_name ##### -->
+<!-- ##### FUNCTION gst_pad_get_caps ##### -->
 <para>
 
 </para>
 
 @pad: 
-@name: 
 @Returns: 
 
 
@@ -392,6 +412,15 @@ Destroy the pad.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_pad_get_real_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_pad_add_ghost_pad ##### -->
 <para>
 
@@ -435,6 +464,7 @@ Destroy the pad.
 
 @srcpad: 
 @sinkpad: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_disconnect ##### -->
@@ -518,6 +548,47 @@ Call the EOS function of the pad
 @elements: 
 
 
+<!-- ##### FUNCTION gst_pad_negotiate_proxy ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@destpad: 
+@caps: 
+@counter: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@count: 
+
+
+<!-- ##### FUNCTION gst_pad_renegotiate ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_padtemplate ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_padtemplate_caps ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
 <!-- ##### MACRO GST_RPAD_LEN ##### -->
 <para>
 
@@ -564,6 +635,7 @@ Call the EOS function of the pad
 @pushfunc: 
 @pullfunc: 
 @pullregionfunc: 
+@negotiatefunc: 
 @ghostpads: 
 
 <!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
@@ -660,6 +732,14 @@ Get the EOS function of the real pad.
 </para>
 
 @pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_NEGOTIATEFUNC ##### -->
+<para>
+
+</para>
+
+@pad: 
 
 
 <!-- ##### MACRO GST_GPAD_REALPAD ##### -->
@@ -766,6 +846,38 @@ Indicates when this pad will become available.
 @presence: 
 @caps: 
 
+<!-- ##### MACRO GST_PADTEMPLATE_CAPS ##### -->
+<para>
+
+</para>
+
+@templ: 
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_DIRECTION ##### -->
+<para>
+
+</para>
+
+@templ: 
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_NAME_TEMPLATE ##### -->
+<para>
+
+</para>
+
+@templ: 
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_PRESENCE ##### -->
+<para>
+
+</para>
+
+@templ: 
+
+
 <!-- ##### FUNCTION gst_padtemplate_new ##### -->
 <para>
 
@@ -806,5 +918,24 @@ Indicates when this pad will become available.
 @Returns: 
 <!-- # Unused Parameters # -->
 @pad: 
+
+
+<!-- ##### FUNCTION gst_padtemplate_get_caps ##### -->
+<para>
+
+</para>
+
+@templ: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_padtemplate_get_caps_by_name ##### -->
+<para>
+
+</para>
+
+@templ: 
+@name: 
+@Returns: 
 
 

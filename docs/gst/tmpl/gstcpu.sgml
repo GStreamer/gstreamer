@@ -25,6 +25,8 @@ features of the CPU.
 
 @GST_CPU_FLAG_MMX: 
 @GST_CPU_FLAG_SSE: 
+@GST_CPU_FLAG_MMXEXT: 
+@GST_CPU_FLAG_3DNOW: 
 
 <!-- ##### FUNCTION gst_cpu_get_flags ##### -->
 <para>

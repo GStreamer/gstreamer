@@ -170,6 +170,15 @@ by the loader at statup.
 @factory: 
 
 
+<!-- ##### FUNCTION gst_plugin_add_autoplugger ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@factory: 
+
+
 <!-- ##### FUNCTION gst_plugin_find ##### -->
 <para>
 
@@ -205,6 +214,15 @@ by the loader at statup.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_plugin_get_autoplug_list ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_plugin_load_elementfactory ##### -->
 <para>
 
@@ -220,6 +238,15 @@ by the loader at statup.
 </para>
 
 @mime: 
+
+
+<!-- ##### FUNCTION gst_plugin_load_autoplugfactory ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_plugin_load_thyself ##### -->

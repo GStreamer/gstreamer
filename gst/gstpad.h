@@ -309,7 +309,7 @@ gboolean		gst_pad_connect			(GstPad *srcpad, GstPad *sinkpad);
 void			gst_pad_disconnect		(GstPad *srcpad, GstPad *sinkpad);
 
 gboolean		gst_pad_renegotiate		(GstPad *pad);
-GstPadNegotiateReturn	gst_pad_negotiate_proxy		(GstPad *srcpad, GstPad *destpad, GstCaps **caps, gint count);
+GstPadNegotiateReturn	gst_pad_negotiate_proxy		(GstPad *srcpad, GstPad *destpad, GstCaps **caps, gint counter);
 
 #if 1
 void			gst_pad_push			(GstPad *pad, GstBuffer *buf);

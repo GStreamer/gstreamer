@@ -94,6 +94,16 @@ _gst_autoplug_initialize (void)
   _gst_autoplugfactories = NULL;
 }
 
+/**
+ * gst_autoplug_signal_new_object:
+ * @autoplug: The autoplugger to emit the signal 
+ * @object: The object that is passed to the signal
+ *
+ * Emit a new_object signal. autopluggers are supposed to
+ * emit this signal whenever a new object has been added to 
+ * the autoplugged pipeline.
+ * 
+ */
 void
 gst_autoplug_signal_new_object (GstAutoplug *autoplug, GstObject *object)
 {
@@ -101,6 +111,18 @@ gst_autoplug_signal_new_object (GstAutoplug *autoplug, GstObject *object)
 }
 
 
+/**
+ * gst_autoplug_to_caps:
+ * @autoplug: The autoplugger perform the autoplugging
+ * @srccaps: The source cpabilities
+ * @sinkcaps: The target capabilities
+ * @...: more target capabilities
+ *
+ * Perform the autoplugging procedure on the given autoplugger. 
+ * The src caps will be connected to the sink caps.
+ * 
+ * Returns: A new Element that connects the src caps to the sink caps.
+ */
 GstElement*
 gst_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps, ...)
 {
@@ -119,6 +141,18 @@ gst_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps
   return element;
 }
 
+/**
+ * gst_autoplug_to_renderers:
+ * @autoplug: The autoplugger perform the autoplugging
+ * @srccaps: The source cpabilities
+ * @target: The target element 
+ * @...: more target elements
+ *
+ * Perform the autoplugging procedure on the given autoplugger. 
+ * The src caps will be connected to the target elements.
+ * 
+ * Returns: A new Element that connects the src caps to the target elements.
+ */
 GstElement*
 gst_autoplug_to_renderers (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *target, ...)
 {
@@ -168,27 +202,27 @@ gst_autoplugfactory_new (const gchar *name, const gchar *longdesc, GtkType type)
 
 /**
  * gst_autoplugfactory_destroy:
- * @autoplug: factory to destroy
+ * @factory: factory to destroy
  *
  * Removes the autoplug from the global list.
  */
 void
-gst_autoplugfactory_destroy (GstAutoplugFactory *autoplug)
+gst_autoplugfactory_destroy (GstAutoplugFactory *factory)
 {
-  g_return_if_fail (autoplug != NULL);
+  g_return_if_fail (factory != NULL);
 
-  _gst_autoplugfactories = g_list_remove (_gst_autoplugfactories, autoplug);
+  _gst_autoplugfactories = g_list_remove (_gst_autoplugfactories, factory);
 
   // we don't free the struct bacause someone might  have a handle to it..
 }
 
 /**
- * gst_autoplug_find:
- * @name: name of autoplugger to find
+ * gst_autoplugfactory_find:
+ * @name: name of autoplugfactory to find
  *
- * Search for an autoplugger of the given name.
+ * Search for an autoplugfactory of the given name.
  *
- * Returns: #GstAutoplug if found, NULL otherwise
+ * Returns: #GstAutoplugFactory if found, NULL otherwise
  */
 GstAutoplugFactory*
 gst_autoplugfactory_find (const gchar *name)
@@ -214,9 +248,9 @@ gst_autoplugfactory_find (const gchar *name)
 /**
  * gst_autoplugfactory_get_list:
  *
- * Get the global list of elementfactories.
+ * Get the global list of autoplugfactories.
  *
- * Returns: GList of type #GstElementFactory
+ * Returns: GList of type #GstAutoplugFactory
  */
 GList*
 gst_autoplugfactory_get_list (void)
@@ -224,6 +258,15 @@ gst_autoplugfactory_get_list (void)
   return _gst_autoplugfactories;
 }
 
+/**
+ * gst_autoplugfactory_create:
+ * @factory: the factory used to create the instance
+ *
+ * Create a new #GstAutoplug instance from the 
+ * given autoplugfactory.
+ *
+ * Returns: A new #GstAutoplug instance.
+ */
 GstAutoplug*
 gst_autoplugfactory_create (GstAutoplugFactory *factory)
 {
@@ -242,6 +285,15 @@ gst_autoplugfactory_create (GstAutoplugFactory *factory)
   return new;
 }
 
+/**
+ * gst_autoplugfactory_make:
+ * @name: the name of the factory used to create the instance
+ *
+ * Create a new #GstAutoplug instance from the 
+ * autoplugfactory with the given name.
+ *
+ * Returns: A new #GstAutoplug instance.
+ */
 GstAutoplug*
 gst_autoplugfactory_make (const gchar *name)
 {
@@ -257,6 +309,15 @@ gst_autoplugfactory_make (const gchar *name)
   return gst_autoplugfactory_create (factory);;
 }
 
+/**
+ * gst_autoplugfactory_save_thyself:
+ * @factory: The facory to save
+ * @parent: the parent XML node pointer
+ *
+ * Save the autoplugfactory into an XML representation
+ *
+ * Returns: The new XML parent.
+ */
 xmlNodePtr
 gst_autoplugfactory_save_thyself (GstAutoplugFactory *factory, xmlNodePtr parent)
 {
@@ -268,6 +329,14 @@ gst_autoplugfactory_save_thyself (GstAutoplugFactory *factory, xmlNodePtr parent
   return parent;
 }
 
+/**
+ * gst_autoplugfactory_load_thyself:
+ * @parent: the parent XML node pointer
+ *
+ * Load an autoplugfactory from the given XML parent node.
+ *
+ * Returns: A new factory based on the XML node.
+ */
 GstAutoplugFactory*
 gst_autoplugfactory_load_thyself (xmlNodePtr parent)
 {

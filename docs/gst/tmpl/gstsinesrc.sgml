@@ -24,13 +24,23 @@ The volume as a double 0.0 is silent, 1.0 is loudest.
 The format ad defined in soundcard.h
 </para>
 
-<!-- ##### ARG GstSineSrc:channels ##### -->
+<!-- ##### ARG GstSineSrc:samplerate ##### -->
 <para>
-The number of channels.
+
 </para>
 
-<!-- ##### ARG GstSineSrc:frequency ##### -->
+<!-- ##### ARG GstSineSrc:tablesize ##### -->
 <para>
-The fequency.
+
+</para>
+
+<!-- ##### ARG GstSineSrc:freq ##### -->
+<para>
+The frequency.
+</para>
+
+<!-- ##### ARG GstSineSrc:buffersize ##### -->
+<para>
+
 </para>
 

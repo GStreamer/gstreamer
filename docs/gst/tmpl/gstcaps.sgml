@@ -22,7 +22,15 @@ a mime-type and a set of properties.
 
 @name: the name of the capability, for the application
 @id: the typeid of the capability
+@refcount: 
 @properties: the properties of the capability
+@next: 
+
+<!-- ##### TYPEDEF GstCapsFactory ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### TYPEDEF GstCapsFactoryEntry ##### -->
 <para>
@@ -57,6 +65,30 @@ a mime-type and a set of properties.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_caps_destroy ##### -->
+<para>
+
+</para>
+
+@caps: 
+
+
+<!-- ##### FUNCTION gst_caps_ref ##### -->
+<para>
+
+</para>
+
+@caps: 
+
+
+<!-- ##### FUNCTION gst_caps_unref ##### -->
+<para>
+
+</para>
+
+@caps: 
+
+
 <!-- ##### FUNCTION gst_caps_register ##### -->
 <para>
 
@@ -78,7 +110,75 @@ a mime-type and a set of properties.
 @count: 
 
 
+<!-- ##### FUNCTION gst_caps_copy ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_copy_on_write ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_append ##### -->
+<para>
+
+</para>
+
+@caps: 
+@capstoadd: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_prepend ##### -->
+<para>
+
+</para>
+
+@caps: 
+@capstoadd: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_set_name ##### -->
+<para>
+
+</para>
+
+@caps: 
+@name: 
+
+
 <!-- ##### FUNCTION gst_caps_get_name ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_set_type_id ##### -->
+<para>
+
+</para>
+
+@caps: 
+@type_id: 
+<!-- # Unused Parameters # -->
+@Param2: 
+@typeid: 
+
+
+<!-- ##### FUNCTION gst_caps_get_type_id ##### -->
 <para>
 
 </para>
@@ -96,26 +196,6 @@ a mime-type and a set of properties.
 @mime: 
 
 
-<!-- ##### FUNCTION gst_caps_set_type_id ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Param2: 
-<!-- # Unused Parameters # -->
-@typeid: 
-
-
-<!-- ##### FUNCTION gst_caps_get_type_id ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_caps_get_mime ##### -->
 <para>
 
@@ -123,15 +203,6 @@ a mime-type and a set of properties.
 
 @caps: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_set_name ##### -->
-<para>
-
-</para>
-
-@caps: 
-@name: 
 
 
 <!-- ##### FUNCTION gst_caps_set_props ##### -->
@@ -166,14 +237,51 @@ a mime-type and a set of properties.
 @caps2: 
 
 
-<!-- ##### FUNCTION gst_caps_list_check_compatibility ##### -->
+<!-- ##### MACRO gst_caps_set ##### -->
 <para>
 
 </para>
 
-@fromcaps: 
-@tocaps: 
+@caps: 
+@name: 
+@args...: 
+
+
+<!-- ##### MACRO gst_caps_get_boolean ##### -->
+<para>
+
+</para>
+
+@caps: 
+@name: 
+
+
+<!-- ##### FUNCTION gst_caps_get_by_name ##### -->
+<para>
+
+</para>
+
+@caps: 
+@name: 
 @Returns: 
+
+
+<!-- ##### MACRO gst_caps_get_fourcc_int ##### -->
+<para>
+
+</para>
+
+@caps: 
+@name: 
+
+
+<!-- ##### MACRO gst_caps_get_int ##### -->
+<para>
+
+</para>
+
+@caps: 
+@name: 
 
 
 <!-- ##### FUNCTION gst_caps_save_thyself ##### -->

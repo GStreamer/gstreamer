@@ -35,7 +35,9 @@
  *
  * Returns: the property of the object
  */
-gint gst_util_get_int_arg(GtkObject *object,guchar *argname) {
+gint
+gst_util_get_int_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
@@ -52,7 +54,9 @@ gint gst_util_get_int_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-gint gst_util_get_bool_arg(GtkObject *object,guchar *argname) {
+gint
+gst_util_get_bool_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
@@ -69,7 +73,9 @@ gint gst_util_get_bool_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-glong gst_util_get_long_arg(GtkObject *object,guchar *argname) {
+glong
+gst_util_get_long_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
@@ -86,7 +92,9 @@ glong gst_util_get_long_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-gfloat gst_util_get_float_arg(GtkObject *object,guchar *argname) {
+gfloat
+gst_util_get_float_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
@@ -103,7 +111,9 @@ gfloat gst_util_get_float_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-gdouble gst_util_get_double_arg(GtkObject *object,guchar *argname) {
+gdouble 
+gst_util_get_double_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
@@ -120,7 +130,9 @@ gdouble gst_util_get_double_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-guchar *gst_util_get_string_arg(GtkObject *object,guchar *argname) {
+guchar*
+gst_util_get_string_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
@@ -137,11 +149,14 @@ guchar *gst_util_get_string_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-gpointer gst_util_get_pointer_arg(GtkObject *object,guchar *argname) {
+gpointer
+gst_util_get_pointer_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
   gtk_object_getv(GTK_OBJECT(object),1,&arg);
+  
   return GTK_VALUE_POINTER(arg);
 }
 
@@ -154,11 +169,14 @@ gpointer gst_util_get_pointer_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-GtkWidget *gst_util_get_widget_arg(GtkObject *object,guchar *argname) {
+GtkWidget*
+gst_util_get_widget_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
   gtk_object_getv(GTK_OBJECT(object),1,&arg);
+  
   return GTK_WIDGET(GTK_VALUE_OBJECT(arg));
 }
 
@@ -169,7 +187,9 @@ GtkWidget *gst_util_get_widget_arg(GtkObject *object,guchar *argname) {
  *
  * Dumps the memory block into a hex representation. Useful for debugging.
  */
-void gst_util_dump_mem(guchar *mem, guint size) {
+void 
+gst_util_dump_mem (guchar *mem, guint size) 
+{
   guint i, j;
 
   i = j =0;
@@ -187,7 +207,17 @@ void gst_util_dump_mem(guchar *mem, guint size) {
   g_print("\n");
 }
 
-void gst_util_set_object_arg (GtkObject *object, guchar *name, gchar *value) 
+/**
+ * gst_util_set_object_arg:
+ * @object: the object to set the argument of
+ * @name: the name of the argument to set
+ * @value: the string value to set
+ *
+ * Convertes the string value to the type of the objects argument and
+ * sets the argument with it.
+ */
+void
+gst_util_set_object_arg (GtkObject *object, guchar *name, gchar *value) 
 {
   if (name && value) {
     GtkType type = GTK_OBJECT_TYPE (object);

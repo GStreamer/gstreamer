@@ -411,11 +411,11 @@ gst_pad_set_eos_function (GstPad *pad,
 }
 
 /**
- * gst_pad_set_eos_function:
- * @pad: the pad to set the eos function for
- * @eos: the eos function
+ * gst_pad_set_negotiate_function:
+ * @pad: the pad to set the negotiate function for
+ * @nego: the negotiate function
  *
- * Set the given EOS function for the pad.
+ * Set the given negotiate function for the pad.
  */
 void
 gst_pad_set_negotiate_function (GstPad *pad,
@@ -607,12 +607,12 @@ gst_pad_set_parent (GstPad *pad,
 }
 
 /**
- * gst_pad_get_parent:
- * @pad: the pad to get the parent from
+ * gst_pad_get_padtemplate:
+ * @pad: the pad to get the padtemplate from
  *
- * Get the parent object of this pad.
+ * Get the padtemplate object of this pad.
  *
- * Returns: the parent object
+ * Returns: the padtemplate object
  */
 GstPadTemplate*
 gst_pad_get_padtemplate (GstPad *pad)
@@ -726,9 +726,11 @@ gst_pad_get_ghost_pad_list (GstPad *pad)
 /**
  * gst_pad_set_caps:
  * @pad: the pad to set the caps to
- * @caps: a GList of the capabilities to attach to this pad
+ * @caps: the capabilities to attach to this pad
  *
  * Set the capabilities of this pad.
+ *
+ * Returns: a boolean indicating the caps could be set on the pad
  */
 gboolean
 gst_pad_set_caps (GstPad *pad,
@@ -753,12 +755,12 @@ gst_pad_set_caps (GstPad *pad,
 }
 
 /**
- * gst_pad_get_caps_list:
+ * gst_pad_get_caps:
  * @pad: the pad to get the capabilities from
  *
  * Get the capabilities of this pad.
  *
- * Returns: a list of the capabilities of this pad
+ * Returns: the capabilities of this pad
  */
 GstCaps*
 gst_pad_get_caps (GstPad *pad)
@@ -774,6 +776,14 @@ gst_pad_get_caps (GstPad *pad)
   return NULL;
 }
 
+/**
+ * gst_pad_get_padtemplate_caps:
+ * @pad: the pad to get the capabilities from
+ *
+ * Get the capabilities of this pad.
+ *
+ * Returns: a list of the capabilities of this pad
+ */
 GstCaps*
 gst_pad_get_padtemplate_caps (GstPad *pad)
 {
@@ -788,11 +798,11 @@ gst_pad_get_padtemplate_caps (GstPad *pad)
 
 
 /**
- * gst_pad_get_caps_by_name:
- * @pad: the pad to get the capabilities from
+ * gst_padtemplate_get_caps_by_name:
+ * @templ: the padtemplate to get the capabilities from
  * @name: the name of the capability to get
  *
- * Get the capabilities  with the given name from this pad.
+ * Get the capability with the given name from this padtemplate.
  *
  * Returns: a capability or NULL if not found
  */
@@ -1058,7 +1068,18 @@ gst_pad_renegotiate (GstPad *pad)
   return result;
 }
 
-   
+/**
+ * gst_pad_negotiate_proxy:
+ * @srcpad: the pad that proxies
+ * @destpad: the pad to proxy the negotiation to
+ * @caps: the current caps
+ * @counter: a counter to keep track of the negotiation process 
+ *
+ * Proxies the negotiation pad from srcpad to destpad. Further
+ * negotiation is done on the peers of both pad instead.
+ *
+ * Returns: the result of the negotiation preocess.
+ */
 GstPadNegotiateReturn
 gst_pad_negotiate_proxy (GstPad *srcpad, GstPad *destpad, GstCaps **caps, gint counter)
 {

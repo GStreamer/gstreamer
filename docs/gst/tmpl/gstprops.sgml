@@ -20,6 +20,7 @@ GstCaps
 
 </para>
 
+@refcount: 
 @properties: the properties
 
 <!-- ##### TYPEDEF GstPropsFactoryEntry ##### -->
@@ -125,6 +126,48 @@ Create a boolean property.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_props_copy ##### -->
+<para>
+
+</para>
+
+@props: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_copy_on_write ##### -->
+<para>
+
+</para>
+
+@props: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_destroy ##### -->
+<para>
+
+</para>
+
+@props: 
+
+
+<!-- ##### FUNCTION gst_props_ref ##### -->
+<para>
+
+</para>
+
+@props: 
+
+
+<!-- ##### FUNCTION gst_props_unref ##### -->
+<para>
+
+</para>
+
+@props: 
+
+
 <!-- ##### FUNCTION gst_props_check_compatibility ##### -->
 <para>
 
@@ -136,6 +179,50 @@ Create a boolean property.
 <!-- # Unused Parameters # -->
 @props1: 
 @props2: 
+
+
+<!-- ##### FUNCTION gst_props_set ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@entry: 
+@Varargs: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@value: 
+
+
+<!-- ##### FUNCTION gst_props_get_boolean ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_get_fourcc_int ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_get_int ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_props_save_thyself ##### -->

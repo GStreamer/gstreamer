@@ -91,7 +91,7 @@ GstProps*	gst_props_merge			(GstProps *props, GstProps *tomerge);
 
 gboolean 	gst_props_check_compatibility 	(GstProps *fromprops, GstProps *toprops);
 
-GstProps*	gst_props_set			(GstProps *props, const gchar *name, GstPropsFactoryEntry value, ...);
+GstProps*	gst_props_set			(GstProps *props, const gchar *name, GstPropsFactoryEntry entry, ...);
 
 gint 		gst_props_get_int		(GstProps *props, const gchar *name);
 gulong		gst_props_get_fourcc_int	(GstProps *props, const gchar *name);

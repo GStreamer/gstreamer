@@ -239,7 +239,7 @@ end:
  *
  * Returns: the new property created from the list of entries
  */
-GstProps *
+GstProps*
 gst_props_new (GstPropsFactoryEntry entry, ...)
 {
   va_list var_args;
@@ -307,6 +307,17 @@ gst_props_new (GstPropsFactoryEntry entry, ...)
   return props;
 }
 
+/**
+ * gst_props_set:
+ * @props: the props to modify
+ * @name: the name of the entry to modify
+ * @entry: The new value of the property entry
+ * @...: More property entries.
+ *
+ * Modifies the value of the given entry in the props struct.
+ *
+ * Returns: the new modified property structure.
+ */
 GstProps*
 gst_props_set (GstProps *props, const gchar *name, GstPropsFactoryEntry entry, ...)
 {
@@ -356,6 +367,13 @@ gst_props_set (GstProps *props, const gchar *name, GstPropsFactoryEntry entry, .
   return props;
 }
 
+/**
+ * gst_props_unref:
+ * @props: the props to unref
+ *
+ * Decrease the refcount of the property structure, destroying
+ * the property if the refcount is 0.
+ */
 void
 gst_props_unref (GstProps *props)
 {
@@ -367,6 +385,12 @@ gst_props_unref (GstProps *props)
     gst_props_destroy (props);
 }
 
+/**
+ * gst_props_ref:
+ * @props: the props to ref
+ *
+ * Increase the refcount of the property structure.
+ */
 void
 gst_props_ref (GstProps *props)
 {
@@ -375,6 +399,13 @@ gst_props_ref (GstProps *props)
   props->refcount++;
 }
 
+/**
+ * gst_props_destroy:
+ * @props: the props to destroy
+ *
+ * Destroy the property, freeing all the memory that
+ * was allocated.
+ */
 void
 gst_props_destroy (GstProps *props)
 {
@@ -398,6 +429,15 @@ gst_props_destroy (GstProps *props)
   g_list_free (props->properties);
 }
 
+/**
+ * gst_props_copy:
+ * @props: the props to copy
+ *
+ * Copy the property structure.
+ *
+ * Returns: the new property that is a copy of the original
+ * one.
+ */
 GstProps*
 gst_props_copy (GstProps *props)
 {
@@ -434,6 +474,14 @@ gst_props_copy (GstProps *props)
   return new;
 }
 
+/**
+ * gst_props_copy_on_write:
+ * @props: the props to copy on write
+ *
+ * Copy the property structure if the refcount is >1.
+ *
+ * Returns: A new props that can be safely written to.
+ */
 GstProps*
 gst_props_copy_on_write (GstProps *props)
 {
@@ -449,6 +497,15 @@ gst_props_copy_on_write (GstProps *props)
   return props;
 }
 
+/**
+ * gst_props_get_int:
+ * @props: the props to get the int value from
+ * @name: the name of the props entry to get.
+ *
+ * Get the named entry as an integer.
+ *
+ * Returns: the integer value of the named entry, 0 if not found.
+ */
 gint
 gst_props_get_int (GstProps *props, const gchar *name)
 {
@@ -470,6 +527,15 @@ gst_props_get_int (GstProps *props, const gchar *name)
   return 0;
 }
 
+/**
+ * gst_props_get_fourcc_int:
+ * @props: the props to get the fourcc value from
+ * @name: the name of the props entry to get.
+ *
+ * Get the named entry as a gulong fourcc.
+ *
+ * Returns: the fourcc value of the named entry, 0 if not found.
+ */
 gulong
 gst_props_get_fourcc_int (GstProps *props, const gchar *name)
 {
@@ -491,6 +557,15 @@ gst_props_get_fourcc_int (GstProps *props, const gchar *name)
   return 0;
 }
 
+/**
+ * gst_props_get_boolean:
+ * @props: the props to get the fourcc value from
+ * @name: the name of the props entry to get.
+ *
+ * Get the named entry as a boolean value.
+ *
+ * Returns: the boolean value of the named entry, 0 if not found.
+ */
 gboolean
 gst_props_get_boolean (GstProps *props, const gchar *name)
 {

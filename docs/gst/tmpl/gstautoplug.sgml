@@ -2,12 +2,12 @@
 GstAutoplug
 
 <!-- ##### SECTION Short_Description ##### -->
-Provide automatic element selection.
+Automatically create and connect elements
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-The autoplugger can select a list of elements that are needed
-to convert a certain GstCaps to another one.
+GstAutoplug is an abstract class that is used for constructing and 
+connecting elements. 
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -15,18 +15,134 @@ to convert a certain GstCaps to another one.
 
 </para>
 
-<!-- ##### FUNCTION gst_autoplug_caps_list ##### -->
+<!-- ##### STRUCT GstAutoplug ##### -->
+<para>
+
+</para>
+
+@object: 
+
+<!-- ##### ENUM GstAutoplugFlags ##### -->
+<para>
+
+</para>
+
+@GST_AUTOPLUG_TO_CAPS: 
+@GST_AUTOPLUG_TO_RENDERER: 
+@GST_AUTOPLUG_FLAG_LAST: 
+
+<!-- ##### STRUCT GstAutoplugFactory ##### -->
+<para>
+
+</para>
+
+@name: 
+@longdesc: 
+@type: 
+
+<!-- ##### FUNCTION gst_autoplug_signal_new_object ##### -->
 <para>
 
 </para>
 
 @autoplug: 
-@srcpad: 
-@sinkpad: 
-@Varargs: 
-@Returns: 
-<!-- # Unused Parameters # -->
+@object: 
+
+
+<!-- ##### FUNCTION gst_autoplug_to_caps ##### -->
+<para>
+
+</para>
+
+@autoplug: 
 @srccaps: 
 @sinkcaps: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_autoplug_to_renderers ##### -->
+<para>
+
+</para>
+
+@autoplug: 
+@srccaps: 
+@target: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_autoplugfactory_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@longdesc: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_autoplugfactory_destroy ##### -->
+<para>
+
+</para>
+
+@factory: 
+
+
+<!-- ##### FUNCTION gst_autoplugfactory_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_autoplugfactory_get_list ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_autoplugfactory_create ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_autoplugfactory_make ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_autoplugfactory_save_thyself ##### -->
+<para>
+
+</para>
+
+@factory: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_autoplugfactory_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
 
 
