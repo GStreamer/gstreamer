@@ -52,7 +52,8 @@ win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
 debug:
 	echo $(win32)
 EXTRA_DIST = \
-	gstreamer.spec gstreamer.spec.in gst-element-check.m4 \
+	gstreamer.spec gstreamer.spec.in \
+	gst-element-check.m4 gst-element-check.m4.in \
 	configure.ac autogen.sh depcomp \
 	REQUIREMENTS ABOUT-NLS DOCBUILDING DEVEL RELEASE \
 	$(win32) \

@@ -728,6 +728,7 @@ pkgconfig/gstreamer.pc
 pkgconfig/gstreamer-uninstalled.pc
 pkgconfig/gstreamer-control.pc
 pkgconfig/gstreamer-control-uninstalled.pc
+gst-element-check.m4
 gstreamer.spec,
 echo "$infomessages", infomessages="$infomessages"
 )

@@ -1,3 +1,11 @@
+2005-03-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* Makefile.am:
+	* configure.ac:
+	* gst-element-check.m4:
+	* gst-element-check.m4.in:
+	  Call gst-inspect-$VERSION instead of gst-inspect. Fixes #168659.
+
 2005-03-10  Jean de Largentaye  <jlargentaye@gmail.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
