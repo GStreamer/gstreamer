@@ -24,6 +24,8 @@
 #include "config.h"
 #endif
 
+#include <locale.h>
+
 /* include this first, before NO_IMPORT_PYGOBJECT is defined */
 #include <pygobject.h>
 #include <gst/gst.h>
@@ -89,7 +91,11 @@ init_gst (void)
 	       g_free (argv);
 	  }
 	  PyErr_SetString (PyExc_RuntimeError, "can't initialize module gst");
+	  setlocale(LC_NUMERIC, "C");
+	  return;
      }
+     
+     setlocale(LC_NUMERIC, "C");
      if (argv != NULL) {
 	  PySys_SetArgv (argc, argv);
 	  for (i = 0; i < argc; i++)
