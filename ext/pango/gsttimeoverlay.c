@@ -153,6 +153,8 @@ gst_timeoverlay_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_timeoverlay_sink_template_factory));
   gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_timeoverlay_src_template_factory));
   gst_element_class_set_details (element_class, &timeoverlay_details);
+
+  gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
 }
 
 static void
