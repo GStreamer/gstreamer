@@ -1,3 +1,8 @@
+2004-04-17  Iain <iain@prettypeople.org>
+
+	* gst/wavparse/gstwavparse.c (gst_wavparse_loop): Allow all events,
+	not just EOS.
+
 2004-04-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_get_type),
