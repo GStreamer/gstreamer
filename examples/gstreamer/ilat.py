@@ -90,7 +90,8 @@ def check(f, n, b):
 
    start = time.time()
    ret = filter(pipe)
-   print '%s b:%d i:%d t:%f' % (f, b, n, time.time() - start)
+   end = time.time()
+   print '%s b:%d i:%d t:%f' % (f, b, n, end - start)
    return ret
 
 def main():
