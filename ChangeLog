@@ -1,3 +1,8 @@
+2004-05-17  Benjamin Otte  <otte@gnome.org>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_comment):
+	  signal the new tags before giving up the reference
+
 2004-05-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/shout2/gstshout2.c:
