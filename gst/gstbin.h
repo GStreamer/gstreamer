@@ -97,7 +97,7 @@ struct _GstBinClass {
   void		(*create_plan)		(GstBin *bin);
   void		(*schedule)		(GstBin *bin);
   /* run a full iteration of operation */
-  void		(*iterate)		(GstBin *bin);
+  gboolean	(*iterate)		(GstBin *bin);
 };
 
 struct __GstBinChain {
@@ -132,7 +132,7 @@ gboolean	gst_bin_set_state_type		(GstBin *bin,
 						 GstElementState state,
 						 GtkType type);
 
-void		gst_bin_iterate			(GstBin *bin);
+gboolean	gst_bin_iterate			(GstBin *bin);
 
 /* hack FIXME */
 void		gst_bin_use_cothreads		(GstBin *bin,

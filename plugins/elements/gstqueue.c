@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstqueue.c: 
+ * gstqueue.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,7 +25,7 @@
 #ifdef STATUS_ENABLED
 #define STATUS(A) GST_DEBUG(0,A, gst_element_get_name(GST_ELEMENT(queue)))
 #else
-#define STATUS(A) 
+#define STATUS(A)
 #endif
 
 #include <pthread.h>
@@ -60,18 +60,19 @@ enum {
 };
 
 
-static void 			gst_queue_class_init	(GstQueueClass *klass);
-static void 			gst_queue_init		(GstQueue *queue);
+static void			gst_queue_class_init	(GstQueueClass *klass);
+static void			gst_queue_init		(GstQueue *queue);
 
-static void 			gst_queue_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void 			gst_queue_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void			gst_queue_set_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void			gst_queue_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
-static void 			gst_queue_chain		(GstPad *pad, GstBuffer *buf);
+static gboolean			gst_queue_handle_eos	(GstPad *pad);
+static void			gst_queue_chain		(GstPad *pad, GstBuffer *buf);
 static GstBuffer *		gst_queue_get		(GstPad *pad);
 
-static void 			gst_queue_flush		(GstQueue *queue);
+static void			gst_queue_flush		(GstQueue *queue);
 
-static GstElementStateReturn 	gst_queue_change_state	(GstElement *element);
+static GstElementStateReturn	gst_queue_change_state	(GstElement *element);
 
 
 static GstElementClass *parent_class = NULL;
@@ -97,8 +98,8 @@ gst_queue_get_type(void) {
   return queue_type;
 }
 
-static void 
-gst_queue_class_init (GstQueueClass *klass) 
+static void
+gst_queue_class_init (GstQueueClass *klass)
 {
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
@@ -117,14 +118,14 @@ gst_queue_class_init (GstQueueClass *klass)
   gtk_object_add_arg_type ("GstQueue::timeout", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_TIMEOUT);
 
-  gtkobject_class->set_arg = gst_queue_set_arg;  
+  gtkobject_class->set_arg = gst_queue_set_arg;
   gtkobject_class->get_arg = gst_queue_get_arg;
 
   gstelement_class->change_state = gst_queue_change_state;
 }
 
-static void 
-gst_queue_init (GstQueue *queue) 
+static void
+gst_queue_init (GstQueue *queue)
 {
   // scheduling on this kind of element is, well, interesting
   GST_FLAG_SET (queue, GST_ELEMENT_DECOUPLED);
@@ -132,6 +133,7 @@ gst_queue_init (GstQueue *queue)
   queue->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_pad_set_chain_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_chain));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
+  gst_pad_set_eos_function (queue->sinkpad, gst_queue_handle_eos);
 
   queue->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_get_function (queue->srcpad, GST_DEBUG_FUNCPTR(gst_queue_get));
@@ -149,28 +151,50 @@ gst_queue_init (GstQueue *queue)
   queue->fullcond = g_cond_new ();
 }
 
-static void 
-gst_queue_cleanup_buffers (gpointer data, const gpointer user_data) 
+static gboolean
+gst_queue_handle_eos (GstPad *pad)
+{
+  GstQueue *queue;
+
+  queue = GST_QUEUE(pad->parent);
+
+  GST_DEBUG (0,"queue: %s received eos\n", gst_element_get_name (GST_ELEMENT (queue)));
+
+  GST_LOCK (queue);
+  GST_DEBUG (0,"queue: %s has %d buffers left\n", gst_element_get_name (GST_ELEMENT (queue)),
+		  queue->level_buffers);
+
+  GST_FLAG_SET (pad, GST_PAD_EOS);
+
+  g_cond_signal (queue->emptycond);
+
+  GST_UNLOCK (queue);
+
+  return TRUE;
+}
+
+static void
+gst_queue_cleanup_buffers (gpointer data, const gpointer user_data)
 {
   GST_DEBUG (0,"queue: %s cleaning buffer %p\n", (gchar *)user_data, data);
-  
+
   gst_buffer_unref (GST_BUFFER (data));
 }
 
-static void 
-gst_queue_flush (GstQueue *queue) 
+static void
+gst_queue_flush (GstQueue *queue)
 {
-  g_slist_foreach (queue->queue, gst_queue_cleanup_buffers, 
-		  (char *)gst_element_get_name (GST_ELEMENT (queue))); 
+  g_slist_foreach (queue->queue, gst_queue_cleanup_buffers,
+		  (char *)gst_element_get_name (GST_ELEMENT (queue)));
   g_slist_free (queue->queue);
-  
+
   queue->queue = NULL;
   queue->level_buffers = 0;
   queue->timeval = NULL;
 }
 
-static void 
-gst_queue_chain (GstPad *pad, GstBuffer *buf) 
+static void
+gst_queue_chain (GstPad *pad, GstBuffer *buf)
 {
   GstQueue *queue;
   gboolean tosignal = FALSE;
@@ -228,7 +252,7 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
 }
 
 static GstBuffer *
-gst_queue_get (GstPad *pad) 
+gst_queue_get (GstPad *pad)
 {
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent(pad));
   GstBuffer *buf = NULL;
@@ -252,6 +276,10 @@ gst_queue_get (GstPad *pad)
   while (!queue->level_buffers) {
     STATUS("queue: %s U released lock\n");
     //g_cond_timed_wait (queue->emptycond, queue->emptylock, queue->timeval);
+    if (GST_FLAG_IS_SET (queue->sinkpad, GST_PAD_EOS)) {
+      gst_pad_set_eos (queue->srcpad);
+      return NULL;
+    }
     //FIXME need to signal other thread in case signals got lost?
     g_cond_signal (queue->fullcond);
     g_cond_wait (queue->emptycond, GST_OBJECT(queue)->lock);
@@ -283,8 +311,8 @@ gst_queue_get (GstPad *pad)
   /* unlock now */
 }
 
-static GstElementStateReturn 
-gst_queue_change_state (GstElement *element) 
+static GstElementStateReturn
+gst_queue_change_state (GstElement *element)
 {
   GstQueue *queue;
   g_return_val_if_fail (GST_IS_QUEUE (element), GST_STATE_FAILURE);
@@ -306,14 +334,14 @@ gst_queue_change_state (GstElement *element)
 }
 
 
-static void 
-gst_queue_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+static void
+gst_queue_set_arg (GtkObject *object, GtkArg *arg, guint id)
 {
   GstQueue *queue;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_QUEUE (object));
-  
+
   queue = GST_QUEUE (object);
 
   switch(id) {
@@ -330,14 +358,14 @@ gst_queue_set_arg (GtkObject *object, GtkArg *arg, guint id)
   }
 }
 
-static void 
-gst_queue_get_arg (GtkObject *object, GtkArg *arg, guint id) 
+static void
+gst_queue_get_arg (GtkObject *object, GtkArg *arg, guint id)
 {
   GstQueue *queue;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_QUEUE (object));
-  
+
   queue = GST_QUEUE (object);
 
   switch (id) {

@@ -447,11 +447,13 @@ gst_element_connect (GstElement *src, const gchar *srcpadname,
   destparent = gst_object_get_parent (GST_OBJECT (dest));
 
   /* have to make sure that they have the same parents... */
+  /*
   if (srcparent != destparent) {
     GST_ERROR_OBJECT(srcparent,destparent,"%s and %s have different parents",
                  gst_element_get_name(src),gst_element_get_name(dest));
     return;
   }
+  */
 
   /* we're satisified they can be connected, let's do it */
   gst_pad_connect(srcpad,destpad);

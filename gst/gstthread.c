@@ -311,9 +311,13 @@ gst_thread_main_loop (void *arg)
   gst_thread_signal_thread (thread);
 
   while (!GST_FLAG_IS_SET (thread, GST_THREAD_STATE_REAPING)) {
-    if (GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING))
-      gst_bin_iterate (GST_BIN (thread));
+    if (GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING)) {
+      if (!gst_bin_iterate (GST_BIN (thread))) {
+	GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
+      }
+    }
     else {
+      GST_DEBUG (0, "thread \"%s\" waiting\n", gst_element_get_name (GST_ELEMENT (thread)));
       gst_thread_wait_thread (thread);
     }
   }
@@ -326,8 +330,8 @@ gst_thread_main_loop (void *arg)
   return NULL;
 }
 
-static void 
-gst_thread_signal_thread (GstThread *thread) 
+static void
+gst_thread_signal_thread (GstThread *thread)
 {
   GST_DEBUG (0,"signaling thread\n");
   g_mutex_lock (thread->lock);
@@ -345,10 +349,10 @@ gst_thread_wait_thread (GstThread *thread)
 }
 
 
-static void 
+static void
 gst_thread_restore_thyself (GstElement *element,
-		            xmlNodePtr parent, 
-			    GHashTable *elements) 
+		            xmlNodePtr parent,
+			    GHashTable *elements)
 {
   GST_DEBUG (0,"gstthread: restore\n");
 
@@ -356,9 +360,9 @@ gst_thread_restore_thyself (GstElement *element,
     GST_ELEMENT_CLASS (parent_class)->restore_thyself (element,parent, elements);
 }
 
-static xmlNodePtr 
+static xmlNodePtr
 gst_thread_save_thyself (GstElement *element,
-		         xmlNodePtr parent) 
+		         xmlNodePtr parent)
 {
   if (GST_ELEMENT_CLASS (parent_class)->save_thyself)
     GST_ELEMENT_CLASS (parent_class)->save_thyself (element,parent);

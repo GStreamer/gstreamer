@@ -49,7 +49,7 @@ static gboolean			gst_bin_change_state_type	(GstBin *bin,
 								 GtkType type);
 
 static void			gst_bin_create_plan_func	(GstBin *bin);
-static void			gst_bin_iterate_func		(GstBin *bin);
+static gboolean			gst_bin_iterate_func		(GstBin *bin);
 
 static xmlNodePtr		gst_bin_save_thyself		(GstElement *element, xmlNodePtr parent);
 static void			gst_bin_restore_thyself		(GstElement *element, xmlNodePtr parent,
@@ -134,6 +134,7 @@ gst_bin_init (GstBin *bin)
   bin->numchildren = 0;
   bin->children = NULL;
   bin->eos_providers = NULL;
+  bin->num_eos_providers = 0;
   bin->chains = NULL;
 // FIXME temporary testing measure
 //  bin->use_cothreads = TRUE;
@@ -508,19 +509,22 @@ gst_bin_use_cothreads (GstBin *bin,
  *
  * Iterates over the elements in this bin.
  */
-void
+gboolean
 gst_bin_iterate (GstBin *bin)
 {
   GstBinClass *oclass;
+  gboolean eos = TRUE;
 
   GST_DEBUG_ENTER("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
 
   oclass = GST_BIN_CLASS (GTK_OBJECT (bin)->klass);
 
   if (oclass->iterate)
-    (oclass->iterate) (bin);
+    eos = (oclass->iterate) (bin);
 
   GST_DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
+
+  return eos;
 }
 
 /**
@@ -538,6 +542,18 @@ gst_bin_create_plan (GstBin *bin)
 
   if (oclass->create_plan)
     (oclass->create_plan) (bin);
+}
+
+/* out internal element fired EOS, we decrement the number of pending EOS childs */
+static void
+gst_bin_received_eos (GstElement *element, GstBin *bin)
+{
+  GST_INFO_ELEMENT (GST_CAT_PLANNING, bin, "child %s fired eos, pending %d\n", gst_element_get_name (element),
+		  bin->num_eos_providers);
+
+  if (bin->num_eos_providers) {
+    bin->num_eos_providers--;
+  }
 }
 
 /**
@@ -684,6 +700,11 @@ gst_bin_create_plan_func (GstBin *bin)
         if (GST_IS_BIN (element)) {
           GST_DEBUG (0,"flattened recurse into \"%s\"\n",elementname);
           pending = g_slist_prepend (pending, element);
+
+	  gtk_signal_connect (GTK_OBJECT (element), "eos", gst_bin_received_eos, bin);
+	  bin->eos_providers = g_list_prepend (bin->eos_providers, element);
+	  bin->num_eos_providers++;
+
         // otherwise add it to the list of elements
         } else {
           GST_DEBUG (0,"found element \"%s\" that I manage\n",elementname);
@@ -701,7 +722,7 @@ gst_bin_create_plan_func (GstBin *bin)
   GST_DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
 }
 
-static void
+static gboolean
 gst_bin_iterate_func (GstBin *bin)
 {
   GList *chains;
@@ -712,12 +733,13 @@ gst_bin_iterate_func (GstBin *bin)
   GstPad *pad;
   GstBuffer *buf = NULL;
   gint num_scheduled = 0;
+  gboolean eos = FALSE;
 
   GST_DEBUG_ENTER("(\"%s\")", gst_element_get_name (GST_ELEMENT (bin)));
 
-  g_return_if_fail (bin != NULL);
-  g_return_if_fail (GST_IS_BIN (bin));
-  g_return_if_fail (GST_STATE (bin) == GST_STATE_PLAYING);
+  g_return_val_if_fail (bin != NULL, TRUE);
+  g_return_val_if_fail (GST_IS_BIN (bin), TRUE);
+  g_return_val_if_fail (GST_STATE (bin) == GST_STATE_PLAYING, TRUE);
 
   // step through all the chains
   chains = bin->chains;
@@ -773,10 +795,18 @@ gst_bin_iterate_func (GstBin *bin)
     num_scheduled++;
   }
 
-  if (!num_scheduled) {
+  /*
+  g_print ("bin \"%s\", eos providers:%d, scheduled: %d\n",
+		  gst_element_get_name (GST_ELEMENT (bin)),
+		  bin->num_eos_providers, num_scheduled);
+		  */
+
+  if (!num_scheduled && !bin->num_eos_providers) {
     gst_element_signal_eos (GST_ELEMENT (bin));
+    eos = TRUE;
   }
 
   GST_DEBUG_LEAVE("(%s)", gst_element_get_name (GST_ELEMENT (bin)));
+  return !eos;
 }
 

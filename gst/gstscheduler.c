@@ -431,6 +431,7 @@ void gst_bin_schedule_func(GstBin *bin) {
             if ((GST_RPAD_DIRECTION(pad) == GST_PAD_SINK) &&
                 (GST_FLAG_IS_SET (peerparent, GST_ELEMENT_DECOUPLED))) {
               chain->entries = g_list_prepend (chain->entries, peerparent);
+              gtk_signal_connect (GTK_OBJECT (peerparent), "eos", gst_scheduler_handle_eos, chain);
               GST_DEBUG (0,"added '%s' as DECOUPLED entry into the chain\n",gst_element_get_name(peerparent));
             }
           } else
