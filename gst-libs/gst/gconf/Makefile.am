@@ -16,6 +16,4 @@ libgstgconf_@GST_MAJORMINOR@_la_LIBADD = $(GCONF_LIBS) $(GST_LIBS)
 libgstgconf_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) $(GCONF_CFLAGS)
 libgstgconf_@GST_MAJORMINOR@_la_LDFLAGS = @GST_PLUGINS_LT_LDFLAGS@ -version-info @GST_PLUGINS_LIBVERSION@
 
-CLEANFILES = gstreamer-gconf.pc gstreamer-gconf-uninstalled.pc
-
 EXTRA_DIST = gstreamer-gconf.pc.in gstreamer-gconf-uninstalled.pc.in
