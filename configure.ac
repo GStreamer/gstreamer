@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS, 0, 4, 0, 1, GST_ERROR="-Wall", GST_ERROR="-Wall -Werror")
+AS_VERSION(gst-plugins, GST_PLUGINS, 0, 4, 1, 1, GST_ERROR="-Wall", GST_ERROR="-Wall -Werror")
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(GST_PLUGINS, 0, 0, 0, yes)
 
@@ -639,7 +639,7 @@ GST_CHECK_FEATURE(MJPEGTOOLS, [mjpegtools], jpegmmxenc jpegmmxdec, [
     AC_CHECK_HEADERS(stdint.h, HAVE_STDINT_H="yes", HAVE_STDINT_H="no")
     if [ test x$HAVE_STDINT_H = x"no" ]; then
       AC_CHECK_HEADERS(inttypes.h sys/types.h, HAVE_INTTYPES_H="yes", [
-        AC_WARNING(No valid header files found, mjpegtools plugins disabled)
+        AC_MSG_WARN(No valid header files found, mjpegtools plugins disabled)
         HAVE_INTTYPES_H="no" HAVE_MJPEGTOOLS="no"
       ])
     fi
