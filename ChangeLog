@@ -1,3 +1,40 @@
+2004-04-21  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstcaps.c: (gst_caps_append), (gst_caps_union):
+	  check for ANY caps before appending/unioning
+	* gst/gstcaps.c: (gst_caps_is_subset),
+	(gst_caps_is_equal), (gst_caps_structure_subtract_field),
+	(gst_caps_structure_subtract), (gst_caps_subtract):
+	* gst/gstcaps.h:
+	  add gst_caps_is_equal, gst_caps_is_subset and gst_caps_subtract to
+	  the API. deprecate gst_caps_is_equal_fixed
+	* gst/gstpad.c: (gst_pad_try_set_caps):
+	* gst/gstqueue.c: (gst_queue_link):
+	  s/gst_caps_is_equal_fixed/gst_caps_is_equal/
+	* gst/gststructure.c: (gst_structure_get_name_id):
+	* gst/gststructure.h:
+	  add function gst_structure_get_name_id
+	* gst/gstvalue.c: (gst_value_subtract_int_int_range),
+	(gst_value_create_new_range), (gst_value_subtract_int_range_int),
+	(gst_value_subtract_int_range_int_range),
+	(gst_value_subtract_double_double_range),
+	(gst_value_subtract_double_range_double),
+	(gst_value_subtract_double_range_double_range),
+	(gst_value_subtract_from_list), (gst_value_subtract_list),
+	(gst_value_can_intersect), (gst_value_subtract),
+	(gst_value_can_subtract), (gst_value_register_subtract_func),
+	(_gst_value_initialize):
+	* gst/gstvalue.h:
+	  add support for subtracting values from each other. Note that
+	  subtracting means subtracting as in set theory. Required for caps
+	  stuff above.
+	* testsuite/caps/.cvsignore:
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/erathostenes.c: (erathostenes), (main):
+	* testsuite/caps/sets.c: (check_caps), (main):
+	* testsuite/caps/subtract.c: (check_caps), (main):
+	  add tests for subtraction and equality code.
+
 2004-04-20  David Schleef  <ds@schleef.org>
 
 	* gst/autoplug/Makefile.am:  Fix some little buglets in last checkin.

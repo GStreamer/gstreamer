@@ -44,6 +44,15 @@ struct _GstValueIntersectInfo
   GstValueIntersectFunc func;
 };
 
+typedef struct _GstValueSubtractInfo GstValueSubtractInfo;
+struct _GstValueSubtractInfo
+{
+  GType minuend;
+  GType subtrahend;
+  GstValueSubtractFunc func;
+};
+
+GType gst_type_fourcc;
 GType gst_type_fourcc;
 GType gst_type_int_range;
 GType gst_type_double_range;
@@ -52,6 +61,7 @@ GType gst_type_list;
 static GArray *gst_value_table;
 static GArray *gst_value_union_funcs;
 static GArray *gst_value_intersect_funcs;
+static GArray *gst_value_subtract_funcs;
 
 /*************************************/
 /* list */
@@ -1235,6 +1245,252 @@ gst_value_intersect_list (GValue * dest, const GValue * value1,
   return ret;
 }
 
+/*************************************/
+/* subtraction */
+
+static gboolean
+gst_value_subtract_int_int_range (GValue * dest, const GValue * minuend,
+    const GValue * subtrahend)
+{
+  int min = gst_value_get_int_range_min (subtrahend);
+  int max = gst_value_get_int_range_max (subtrahend);
+  int val = g_value_get_int (minuend);
+
+  if (val < min || val > max) {
+    gst_value_init_and_copy (dest, minuend);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static gboolean
+gst_value_create_new_range (GValue * dest, int min1, int max1, int min2,
+    int max2)
+{
+  GValue v1 = { 0, };
+  GValue v2 = { 0, };
+  GValue *pv1, *pv2;            /* yeah, hungarian! */
+
+  if (min1 <= max1 && min2 <= max2) {
+    pv1 = &v1;
+    pv2 = &v2;
+  } else if (min1 <= max1) {
+    pv1 = dest;
+  } else if (min2 <= max2) {
+    pv2 = dest;
+  } else {
+    return FALSE;
+  }
+
+  if (min1 < max1) {
+    g_value_init (pv1, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (pv1, min1, max1);
+  } else if (min1 == max1) {
+    g_value_init (pv1, G_TYPE_INT);
+    g_value_set_int (pv1, min1);
+  }
+  if (min2 < max2) {
+    g_value_init (pv2, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (pv2, min2, max2);
+  } else if (min2 == max2) {
+    g_value_init (pv2, G_TYPE_INT);
+    g_value_set_int (pv2, min2);
+  }
+
+  if (min1 <= max1 && min2 <= max2) {
+    gst_value_list_concat (dest, pv1, pv2);
+    g_value_unset (pv1);
+    g_value_unset (pv2);
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_value_subtract_int_range_int (GValue * dest, const GValue * minuend,
+    const GValue * subtrahend)
+{
+  int min = gst_value_get_int_range_min (minuend);
+  int max = gst_value_get_int_range_max (minuend);
+  int val = g_value_get_int (subtrahend);
+
+  g_return_val_if_fail (min < max, FALSE);
+
+  if (val < min || val > max) {
+    gst_value_init_and_copy (dest, minuend);
+    return TRUE;
+  } else {
+    if (val == G_MAXINT) {
+      max--;
+      val--;
+    }
+    if (val == G_MININT) {
+      min++;
+      val++;
+    }
+    gst_value_create_new_range (dest, min, val - 1, val + 1, max);
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_value_subtract_int_range_int_range (GValue * dest, const GValue * minuend,
+    const GValue * subtrahend)
+{
+  int min1 = gst_value_get_int_range_min (minuend);
+  int max1 = gst_value_get_int_range_max (minuend);
+  int min2 = gst_value_get_int_range_min (subtrahend);
+  int max2 = gst_value_get_int_range_max (subtrahend);
+
+  if (max2 == G_MAXINT) {
+    max2--;
+    max1--;
+  }
+  if (min2 == G_MININT) {
+    min2++;
+    min1++;
+  }
+  return gst_value_create_new_range (dest, min1, MIN (min2 - 1, max1),
+      MAX (max2 + 1, min1), max1);
+}
+
+static gboolean
+gst_value_subtract_double_double_range (GValue * dest, const GValue * minuend,
+    const GValue * subtrahend)
+{
+  double min = gst_value_get_double_range_min (subtrahend);
+  double max = gst_value_get_double_range_max (subtrahend);
+  double val = g_value_get_double (minuend);
+
+  if (val < min || val > max) {
+    gst_value_init_and_copy (dest, minuend);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static gboolean
+gst_value_subtract_double_range_double (GValue * dest, const GValue * minuend,
+    const GValue * subtrahend)
+{
+  /* FIXME! */
+  gst_value_init_and_copy (dest, minuend);
+  return TRUE;
+}
+
+static gboolean
+gst_value_subtract_double_range_double_range (GValue * dest,
+    const GValue * minuend, const GValue * subtrahend)
+{
+  /* FIXME! */
+  /* done like with ints */
+  double min1 = gst_value_get_double_range_min (minuend);
+  double max2 = gst_value_get_double_range_max (minuend);
+  double max1 = MIN (gst_value_get_double_range_min (subtrahend), max2);
+  double min2 = MAX (gst_value_get_double_range_max (subtrahend), min1);
+  GValue v1 = { 0, };
+  GValue v2 = { 0, };
+  GValue *pv1, *pv2;            /* yeah, hungarian! */
+
+  if (min1 < max1 && min2 < max2) {
+    pv1 = &v1;
+    pv2 = &v2;
+  } else if (min1 < max1) {
+    pv1 = dest;
+  } else if (min2 < max2) {
+    pv2 = dest;
+  } else {
+    return FALSE;
+  }
+
+  if (min1 < max1) {
+    g_value_init (pv1, GST_TYPE_DOUBLE_RANGE);
+    gst_value_set_double_range (pv1, min1, max1);
+  }
+  if (min2 < max2) {
+    g_value_init (pv2, GST_TYPE_DOUBLE_RANGE);
+    gst_value_set_double_range (pv2, min2, max2);
+  }
+
+  if (min1 < max1 && min2 < max2) {
+    gst_value_list_concat (dest, pv1, pv2);
+    g_value_unset (pv1);
+    g_value_unset (pv2);
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
+    const GValue * subtrahend)
+{
+  guint i, size;
+  GValue subtraction = { 0, };
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (minuend), FALSE);
+
+  size = gst_value_list_get_size (minuend);
+  for (i = 0; i < size; i++) {
+    const GValue *cur = gst_value_list_get_value (minuend, i);
+
+    if (gst_value_subtract (&subtraction, cur, subtrahend)) {
+      if (!ret) {
+        gst_value_init_and_copy (dest, &subtraction);
+        ret = TRUE;
+      } else if (GST_VALUE_HOLDS_LIST (dest)
+          && GST_VALUE_HOLDS_LIST (&subtraction)) {
+        /* unroll */
+        GValue unroll = { 0, };
+
+        gst_value_init_and_copy (&unroll, dest);
+        g_value_unset (dest);
+        gst_value_list_concat (dest, &unroll, &subtraction);
+      } else if (GST_VALUE_HOLDS_LIST (dest)) {
+        gst_value_list_append_value (dest, &subtraction);
+      } else {
+        GValue temp = { 0, };
+
+        gst_value_init_and_copy (&temp, dest);
+        g_value_unset (dest);
+        gst_value_list_concat (dest, &temp, &subtraction);
+      }
+      g_value_unset (&subtraction);
+    }
+  }
+  return ret;
+}
+
+static gboolean
+gst_value_subtract_list (GValue * dest, const GValue * minuend,
+    const GValue * subtrahend)
+{
+  guint i, size;
+  GValue data[2] = { {0,}, {0,} };
+  GValue *subtraction = &data[0], *result = &data[1];
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (subtrahend), FALSE);
+
+  gst_value_init_and_copy (result, minuend);
+  size = gst_value_list_get_size (subtrahend);
+  for (i = 0; i < size; i++) {
+    const GValue *cur = gst_value_list_get_value (subtrahend, i);
+
+    if (gst_value_subtract (subtraction, result, cur)) {
+      GValue *temp = result;
+
+      result = subtraction;
+      subtraction = temp;
+      g_value_unset (subtraction);
+    } else {
+      g_value_unset (result);
+      return FALSE;
+    }
+  }
+  gst_value_init_and_copy (dest, result);
+  g_value_unset (result);
+  return TRUE;
+}
+
 
 /*************************************/
 
@@ -1418,7 +1674,9 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
         GstValueIntersectInfo, i);
     if (intersect_info->type1 == G_VALUE_TYPE (value1) &&
         intersect_info->type2 == G_VALUE_TYPE (value2))
-      return TRUE;
+      if (intersect_info->type2 == G_VALUE_TYPE (value1) &&
+          intersect_info->type1 == G_VALUE_TYPE (value2))
+        return TRUE;
   }
 
   return gst_value_can_compare (value1, value2);
@@ -1489,6 +1747,118 @@ gst_value_register_intersect_func (GType type1, GType type2,
   intersect_info.func = func;
 
   g_array_append_val (gst_value_intersect_funcs, intersect_info);
+}
+
+
+/* subtraction */
+
+/**
+ * gst_value_subtract:
+ * @dest: the destination value for the result if the subtraction is not empty
+ * @minuend: the value to subtract from
+ * @subtrahend: the value to subtract
+ *
+ * Subtracts @subtrahend from @minuend and stores the result in @dest.
+ * Note that this means subtraction as in sets, not as in mathematics.
+ *
+ * Returns: TRUE if the subtraction is not empty
+ */
+gboolean
+gst_value_subtract (GValue * dest, const GValue * minuend,
+    const GValue * subtrahend)
+{
+  GstValueSubtractInfo *info;
+  int i;
+
+  /* special cases first */
+  if (GST_VALUE_HOLDS_LIST (minuend))
+    return gst_value_subtract_from_list (dest, minuend, subtrahend);
+  if (GST_VALUE_HOLDS_LIST (subtrahend))
+    return gst_value_subtract_list (dest, minuend, subtrahend);
+
+  for (i = 0; i < gst_value_subtract_funcs->len; i++) {
+    info = &g_array_index (gst_value_subtract_funcs, GstValueSubtractInfo, i);
+    if (info->minuend == G_VALUE_TYPE (minuend) &&
+        info->subtrahend == G_VALUE_TYPE (subtrahend)) {
+      return info->func (dest, minuend, subtrahend);
+    }
+  }
+
+  if (gst_value_compare (minuend, subtrahend) != GST_VALUE_EQUAL) {
+    gst_value_init_and_copy (dest, minuend);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+#if 0
+gboolean
+gst_value_subtract (GValue * dest, const GValue * minuend,
+    const GValue * subtrahend)
+{
+  gboolean ret = gst_value_subtract2 (dest, minuend, subtrahend);
+
+  g_printerr ("\"%s\"  -  \"%s\"  =  \"%s\"\n", gst_value_serialize (minuend),
+      gst_value_serialize (subtrahend),
+      ret ? gst_value_serialize (dest) : "---");
+  return ret;
+}
+#endif
+
+/**
+ * gst_value_can_subtract:
+ * @minuend: the value to subtract from
+ * @subtrahend: the value to subtract
+ *
+ * Checks if it's possible to subtract @subtrahend from @minuend.
+ *
+ * Returns: TRUE if a subtraction is possible
+ */
+gboolean
+gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
+{
+  GstValueSubtractInfo *info;
+  int i;
+
+  /* special cases */
+  if (GST_VALUE_HOLDS_LIST (minuend) || GST_VALUE_HOLDS_LIST (subtrahend))
+    return TRUE;
+
+  for (i = 0; i < gst_value_subtract_funcs->len; i++) {
+    info = &g_array_index (gst_value_subtract_funcs, GstValueSubtractInfo, i);
+    if (info->minuend == G_VALUE_TYPE (minuend) &&
+        info->subtrahend == G_VALUE_TYPE (subtrahend))
+      return TRUE;
+  }
+
+  return gst_value_can_compare (minuend, subtrahend);
+}
+
+/**
+ * gst_value_register_subtract_func:
+ * @minuend_type: type of the minuend
+ * @subtrahend_type: type of the subtrahend
+ * @func: function to use
+ *
+ * Registers @func as a function capable of subtracting the values of 
+ * @subtrahend_type from values of @minuend_type.
+ */
+void
+gst_value_register_subtract_func (GType minuend_type, GType subtrahend_type,
+    GstValueSubtractFunc func)
+{
+  GstValueSubtractInfo info;
+
+  /* one type must be unfixed, other subtractions can be done as comparisons */
+  g_return_if_fail (!gst_type_is_fixed (minuend_type)
+      || !gst_type_is_fixed (subtrahend_type));
+
+  info.minuend = minuend_type;
+  info.subtrahend = subtrahend_type;
+  info.func = func;
+
+  g_array_append_val (gst_value_subtract_funcs, info);
 }
 
 /*
@@ -1618,6 +1988,8 @@ _gst_value_initialize (void)
       sizeof (GstValueUnionInfo));
   gst_value_intersect_funcs = g_array_new (FALSE, FALSE,
       sizeof (GstValueIntersectInfo));
+  gst_value_subtract_funcs = g_array_new (FALSE, FALSE,
+      sizeof (GstValueSubtractInfo));
 
   {
     static const GTypeValueTable value_table = {
@@ -1811,6 +2183,19 @@ _gst_value_initialize (void)
       gst_value_intersect_double_double_range);
   gst_value_register_intersect_func (GST_TYPE_DOUBLE_RANGE,
       GST_TYPE_DOUBLE_RANGE, gst_value_intersect_double_range_double_range);
+
+  gst_value_register_subtract_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
+      gst_value_subtract_int_int_range);
+  gst_value_register_subtract_func (GST_TYPE_INT_RANGE, G_TYPE_INT,
+      gst_value_subtract_int_range_int);
+  gst_value_register_subtract_func (GST_TYPE_INT_RANGE, GST_TYPE_INT_RANGE,
+      gst_value_subtract_int_range_int_range);
+  gst_value_register_subtract_func (G_TYPE_DOUBLE, GST_TYPE_DOUBLE_RANGE,
+      gst_value_subtract_double_double_range);
+  gst_value_register_subtract_func (GST_TYPE_DOUBLE_RANGE, G_TYPE_DOUBLE,
+      gst_value_subtract_double_range_double);
+  gst_value_register_subtract_func (GST_TYPE_DOUBLE_RANGE,
+      GST_TYPE_DOUBLE_RANGE, gst_value_subtract_double_range_double_range);
 
   gst_value_register_union_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_union_int_int_range);

@@ -106,16 +106,22 @@ gboolean                 gst_caps_is_any                                (const G
 gboolean                 gst_caps_is_empty                              (const GstCaps *caps);
 #ifndef GST_DISABLE_DEPRECATED
 gboolean                 gst_caps_is_chained                            (const GstCaps *caps);
-#endif
-gboolean                 gst_caps_is_fixed                              (const GstCaps *caps);
 gboolean                 gst_caps_is_equal_fixed                        (const GstCaps *caps1,
 									 const GstCaps *caps2);
+#endif
+gboolean                 gst_caps_is_fixed                              (const GstCaps *caps);
 gboolean                 gst_caps_is_always_compatible                  (const GstCaps *caps1,
+						                 	 const GstCaps *caps2);
+gboolean		 gst_caps_is_subset				(const GstCaps *subset,
+									 const GstCaps *superset);
+gboolean		 gst_caps_is_equal				(const GstCaps *caps1,
 						                 	 const GstCaps *caps2);
 
 /* operations */
 GstCaps *                gst_caps_intersect                             (const GstCaps *caps1,
 									 const GstCaps *caps2);
+GstCaps *                gst_caps_subtract				(const GstCaps *minuend,
+									 const GstCaps *subtrahend);
 GstCaps *                gst_caps_union                                 (const GstCaps *caps1,
 									 const GstCaps *caps2);
 GstCaps *                gst_caps_normalize                             (const GstCaps *caps);

@@ -15,7 +15,10 @@ tests_pass = \
 	value_intersect \
 	value_serialize \
 	audioscale \
-	filtercaps
+	filtercaps \
+	erathostenes \
+	subtract \
+	sets
 
 tests_fail =
 tests_ignore =
@@ -38,6 +41,10 @@ intersect2_LDADD = $(GST_LIBS)
 intersect2_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 filtercaps_LDADD = $(GST_LIBS) 
 filtercaps_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
-
-
+erathostenes_LDADD = $(GST_LIBS) 
+ersthostenes_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
+subtract_LDADD = $(GST_LIBS) 
+subtract_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
+sets_LDADD = $(GST_LIBS) 
+sets_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 

@@ -62,6 +62,9 @@ typedef int      (* GstValueUnionFunc)       (GValue       *dest,
 typedef int      (* GstValueIntersectFunc)   (GValue       *dest,
 					      const GValue *value1,
 					      const GValue *value2);
+typedef int      (* GstValueSubtractFunc)    (GValue       *dest,
+					      const GValue *minuend,
+					      const GValue *subtrahend);
 
 typedef struct _GstValueTable GstValueTable;
 struct _GstValueTable {
@@ -148,6 +151,17 @@ void                     gst_value_register_intersect_func (GType               
 							    GType                 type2,
 							    GstValueIntersectFunc func);
 
+/* subtraction */
+gboolean		 gst_value_subtract		   (GValue		  *dest,
+							    const GValue      	  *minuend,
+							    const GValue      	  *subtrahend);
+gboolean		 gst_value_can_subtract		   (const GValue      	  *minuend,
+							    const GValue      	  *subtrahend);
+void                     gst_value_register_subtract_func  (GType                 minuend_type,
+							    GType                 dubtrahend_type,
+							    GstValueSubtractFunc  func);
+
+/* fixation */
 gboolean                 gst_type_is_fixed                 (GType type);
 
 /* private */

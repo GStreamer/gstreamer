@@ -60,6 +60,7 @@ GstStructure *          gst_structure_copy                 (const GstStructure  
 void                    gst_structure_free                 (GstStructure            *structure);
 
 G_CONST_RETURN gchar *  gst_structure_get_name             (const GstStructure      *structure);
+GQuark			gst_structure_get_name_id          (const GstStructure      *structure);
 void                    gst_structure_set_name             (GstStructure            *structure,
 							    const gchar             *name);
 

@@ -12,11 +12,14 @@ Makefile.in
 app_fixate
 caps
 compatibility
+erathostenes
+fixed
+intersect2
 intersection
 normalisation
 union
-fixed
+sets
 string-conversions
-intersect2
+subtract
 value_compare
 value_intersect

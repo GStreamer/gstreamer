@@ -248,6 +248,22 @@ gst_structure_get_name (const GstStructure * structure)
 }
 
 /**
+ * gst_structure_get_name:
+ * @structure: a #GstStructure
+ *
+ * Accessor fuction.
+ *
+ * Returns: the quark representing the name of the structure.
+ */
+GQuark
+gst_structure_get_name_id (const GstStructure * structure)
+{
+  g_return_val_if_fail (structure != NULL, 0);
+
+  return structure->name;
+}
+
+/**
  * gst_structure_set_name:
  * @structure: a #GstStructure
  * @name: the new name of the structure

@@ -1449,7 +1449,7 @@ gst_pad_try_set_caps (GstPad * pad, const GstCaps * caps)
   g_return_val_if_fail (GST_PAD_LINK_SINK (pad), GST_PAD_LINK_REFUSED);
 
   /* if the desired caps are already there, it's trivially ok */
-  if (GST_PAD_CAPS (pad) && gst_caps_is_equal_fixed (caps, GST_PAD_CAPS (pad))) {
+  if (GST_PAD_CAPS (pad) && gst_caps_is_equal (caps, GST_PAD_CAPS (pad))) {
     return GST_PAD_LINK_OK;
   }
 
