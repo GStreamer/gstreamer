@@ -624,9 +624,6 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
       g_warning ("connecting pads with different scheds requires exactly one decoupled element (queue)\n");
       return FALSE;
     }
-  } else if (realsrc->sched || realsink->sched) {
-    g_warning ("you can't connect to a non-managed element");
-    return FALSE;
   }
 
   /* check for reversed directions and swap if necessary */
