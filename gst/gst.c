@@ -40,8 +40,9 @@ extern gint _gst_trace_on;
 extern gboolean _gst_plugin_spew;
 
 
-static gboolean 	gst_init_check 		(int *argc, gchar ***argv);
 static void 		load_plugin_func 	(gpointer data, gpointer user_data);
+static void		init_popt_callback	(poptContext context, enum poptCallbackReason reason,
+                                                 const struct poptOption *option, const char *arg, void *data);
 
 static GSList *preload_plugins = NULL;
 
@@ -57,6 +58,50 @@ debug_log_handler (const gchar *log_domain,
   g_on_error_query(NULL);
 }
 
+enum {
+  ARG_INFO_MASK=1,
+  ARG_DEBUG_MASK,
+  ARG_MASK,
+  ARG_PLUGIN_SPEW,
+  ARG_PLUGIN_PATH,
+  ARG_PLUGIN_LOAD,
+  ARG_SCHEDULER
+};
+
+#ifndef NUL
+#define NUL '\0'
+#endif
+
+/* FIXME: put in the extended mask help */
+static const struct poptOption options[] = {
+  {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, &init_popt_callback, 0, NULL, NULL},
+  {NULL,              NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 0, "Help options:", NULL},
+  {"gst-info-mask",   NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_INFO_MASK,   "info bitmask", "MASK"},
+  {"gst-debug-mask",  NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_MASK,  "debugging bitmask", "MASK"},
+  {"gst-mask",        NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_MASK,        "bitmask for both info and debugging", "MASK"},
+  {"gst-plugin-spew", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_PLUGIN_SPEW, "enable verbose plugin loading diagnostics", NULL},
+  {"gst-plugin-path", NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH, "'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins", "PATHS"},
+  {"gst-plugin-load", NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD, "comma-separated list of plugins to preload", "PLUGINS"},
+  {"gst-scheduler",   NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,   "scheduler to use ('basic' is the default)", "SCHEDULER"},
+  POPT_TABLEEND
+};
+
+/**
+ * gst_init_get_popt_table:
+ *
+ * Returns a popt option table with GStreamer's argument specifications. The
+ * table is set up to use popt's callback method, so whenever the parsing is
+ * actually performed (via a poptGetContext()), the GStreamer libraries will
+ * be initialized.
+ *
+ * Returns: a pointer to the static GStreamer option table. No free is necessary.
+ */
+const struct poptOption *
+gst_init_get_popt_table (void)
+{
+  return options;
+}
+
 /**
  * gst_init:
  * @argc: pointer to application's argc
@@ -68,25 +113,100 @@ debug_log_handler (const gchar *log_domain,
 void 
 gst_init (int *argc, char **argv[]) 
 {
+  poptContext context;
+  gint nextopt;
+  const struct poptOption *options = gst_init_get_popt_table ();
+
+  context = poptGetContext ("GStreamer", *argc, (const char**)*argv, options, 0);
+  
+  while ((nextopt = poptGetNextOpt (context)) > 0 || nextopt == POPT_ERROR_BADOPT)
+    /* do nothing */ ;
+  
+  if (nextopt != -1) {
+    g_print ("Error on option %s: %s.\nRun '%s --help' to see a full list of available command line options.\n",
+             poptBadOption (context, 0),
+             poptStrerror (nextopt),
+             (*argv)[0]);
+    exit (1);
+  }
+  *argc = poptStrippedArgv (context, *argc, *argv);
+}
+
+static void 
+add_path_func (gpointer data, gpointer user_data)
+{
+  GST_INFO (GST_CAT_GST_INIT, "Adding plugin path: \"%s\"", (gchar *)data);
+  gst_plugin_add_path ((gchar *)data);
+}
+
+static void 
+prepare_for_load_plugin_func (gpointer data, gpointer user_data)
+{
+  preload_plugins = g_slist_prepend (preload_plugins, data);
+}
+
+static void 
+load_plugin_func (gpointer data, gpointer user_data)
+{
+  gboolean ret;
+  ret = gst_plugin_load ((gchar *)data);
+  if (ret)
+    GST_INFO (GST_CAT_GST_INIT, "Loaded plugin: \"%s\"", (gchar *)data);
+  else
+    GST_INFO (GST_CAT_GST_INIT, "Failed to load plugin: \"%s\"", (gchar *)data);
+
+  g_free (data);
+}
+
+static void 
+parse_number (const gchar *number, guint32 *val)
+{
+  /* handle either 0xHEX or dec */
+  if (*(number+1) == 'x') {
+    sscanf (number+2, "%08x", val);
+  } else {
+    sscanf (number, "%d", val);
+  }
+}
+
+static void
+split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator) 
+{
+  gchar **strings;
+  gint j = 0;
+  gchar *lastlist = g_strdup (stringlist);
+
+  while (lastlist) {
+    strings = g_strsplit (lastlist, separator, MAX_PATH_SPLIT);
+    g_free (lastlist);
+    lastlist = NULL;
+
+    while (strings[j]) {
+      iterator (strings[j], NULL);
+      if (++j == MAX_PATH_SPLIT) {
+        lastlist = g_strdup (strings[j]);
+        g_strfreev (strings); 
+        j=0;
+        break;
+      }
+    }
+  }
+}
+
+static void
+init_post (void)
+{
   GLogLevelFlags llf;
+  gboolean showhelp = FALSE;
 #ifndef GST_DISABLE_TRACE
   GstTrace *gst_trace;
 #endif
-
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-
-  g_type_init();
-
-  if (!gst_init_check (argc,argv)) {
-    exit (0);				/* FIXME! */
-  }
-
+  
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
   g_log_set_handler(g_log_domain_gstreamer, llf, debug_log_handler, NULL);
-
+  
   GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library");
-
+  
   gst_object_get_type ();
   gst_pad_get_type ();
   gst_real_pad_get_type ();
@@ -99,7 +219,7 @@ gst_init (int *argc, char **argv[])
 #ifndef GST_DISABLE_AUTOPLUG
   gst_autoplugfactory_get_type ();
 #endif
-
+  
   _gst_cpu_initialize ();
   _gst_props_initialize ();
   _gst_caps_initialize ();
@@ -131,150 +251,9 @@ gst_init (int *argc, char **argv[])
     gst_trace_set_default (gst_trace);
   }
 #endif /* GST_DISABLE_TRACE */
-}
-
-static void
-split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator) 
-{
-  gchar **strings;
-  gint j = 0;
-  gchar *lastlist = g_strdup (stringlist);
-
-  while (lastlist) {
-    strings = g_strsplit (lastlist, separator, MAX_PATH_SPLIT);
-    g_free (lastlist);
-    lastlist = NULL;
-
-    while (strings[j]) {
-      iterator (strings[j], NULL);
-      if (++j == MAX_PATH_SPLIT) {
-        lastlist = g_strdup (strings[j]);
-        g_strfreev (strings); 
-        j=0;
-        break;
-      }
-    }
-  }
-}
-
-static void 
-add_path_func (gpointer data, gpointer user_data)
-{
-  GST_INFO (GST_CAT_GST_INIT, "Adding plugin path: \"%s\"", (gchar *)data);
-  gst_plugin_add_path ((gchar *)data);
-}
-
-static void 
-prepare_for_load_plugin_func (gpointer data, gpointer user_data)
-{
-  preload_plugins = g_slist_prepend (preload_plugins, data);
-}
-
-static void 
-load_plugin_func (gpointer data, gpointer user_data)
-{
-  gboolean ret;
-  ret = gst_plugin_load ((gchar *)data);
-  if (ret)
-    GST_INFO (GST_CAT_GST_INIT, "Loaded plugin: \"%s\"", (gchar *)data);
-  else
-    GST_INFO (GST_CAT_GST_INIT, "Failed to load plugin: \"%s\"", (gchar *)data);
-
-  g_free (data);
-}
-
-static void 
-parse_number (gchar *number, guint32 *val)
-{
-  /* handle either 0xHEX or dec */
-  if (*(number+1) == 'x') {
-    sscanf (number+2, "%08x", val);
-  } else {
-    sscanf (number, "%d", val);
-  }
-}
-
-/* returns FALSE if the program can be aborted */
-static gboolean
-gst_init_check (int     *argc,
-		gchar ***argv)
-{
-  gboolean ret = TRUE;
-  gboolean showhelp = FALSE;
-
-  _gst_progname = NULL;
-
-  if (argc && argv) {
-    gint i, j, k;
-
-    _gst_progname = g_strdup(*argv[0]);
-
-    for (i=1; i< *argc; i++) {
-      if (!strncmp ("--gst-info-mask=", (*argv)[i], 16)) {
-	guint32 val;
-
-	parse_number ((*argv)[i]+16, &val);
-	gst_info_set_categories (val);
-
-	(*argv)[i] = NULL;
-      }
-      else if (!strncmp ("--gst-debug-mask=", (*argv)[i], 17)) {
-	guint32 val;
-
-	parse_number ((*argv)[i]+17, &val);
-	gst_debug_set_categories (val);
-
-	(*argv)[i] = NULL;
-      }
-      else if (!strncmp ("--gst-mask=", (*argv)[i], 11)) {
-	guint32 val;
-
-	parse_number ((*argv)[i]+11, &val);
-	gst_debug_set_categories (val);
-	gst_info_set_categories (val);
-
-	(*argv)[i] = NULL;
-      }
-      else if (!strncmp ("--gst-plugin-spew", (*argv)[i], 17)) {
-        _gst_plugin_spew = TRUE;
-
-        (*argv)[i] = NULL;
-      }
-      else if (!strncmp ("--gst-plugin-path=", (*argv)[i], 17)) {
-        split_and_iterate ((*argv)[i]+18, G_SEARCHPATH_SEPARATOR_S, add_path_func);
-
-        (*argv)[i] = NULL;
-      }
-      else if (!strncmp ("--gst-plugin-load=", (*argv)[i], 17)) {
-        split_and_iterate ((*argv)[i]+18, ",", prepare_for_load_plugin_func);
-
-        (*argv)[i] = NULL;
-      }
-      else if (!strncmp ("--help", (*argv)[i], 6)) {
-	showhelp = TRUE;
-
-        (*argv)[i] = NULL;
-      }
-    }
-
-    for (i = 1; i < *argc; i++) {
-      for (k = i; k < *argc; k++)
-        if ((*argv)[k] != NULL)
-          break;
-
-      if (k > i) {
-        k -= i;
-        for (j = i + k; j < *argc; j++)
-          (*argv)[j-k] = (*argv)[j];
-        *argc -= k;
-      }
-    }
-  }
-
   if (_gst_progname == NULL) {
     _gst_progname = g_strdup("gstprog");
   }
-
 
   /* check for ENV variables */
   {
@@ -282,6 +261,7 @@ gst_init_check (int     *argc,
     split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func);
   }
 
+  /* FIXME: this is never true... */
   if (showhelp) {
     guint i;
 
@@ -293,9 +273,10 @@ gst_init_check (int     *argc,
     g_print ("  --gst-mask=FLAGS                    GST info *and* debug flags to set\n");
     g_print ("  --gst-plugin-spew                   Enable printout of errors while loading GST plugins\n");
     g_print ("  --gst-plugin-path=PATH              Add directories separated with '%s' to the plugin search path\n",
-		    G_SEARCHPATH_SEPARATOR_S);
+             G_SEARCHPATH_SEPARATOR_S);
     g_print ("  --gst-plugin-load=PLUGINS           Load plugins separated with '%s'\n",
-		    GST_PLUGIN_SEPARATOR);
+             GST_PLUGIN_SEPARATOR);
+    g_print ("  --gst-scheduler=NAME                Use a nonstandard scheduler\n");
 
     g_print ("\n  Mask (to be OR'ed)   info/debug         FLAGS   \n");
     g_print ("--------------------------------------------------------\n");
@@ -316,8 +297,57 @@ gst_init_check (int     *argc,
       }
     }
   }
+}
 
-  return ret;
+static void
+init_popt_callback (poptContext context, enum poptCallbackReason reason,
+                    const struct poptOption *option, const char *arg, void *data) 
+{
+  gint val = 0;
+
+  switch (reason) {
+  case POPT_CALLBACK_REASON_PRE:
+    if (!g_thread_supported ())
+      g_thread_init (NULL);
+    
+    g_type_init();
+    break;
+  case POPT_CALLBACK_REASON_OPTION:
+    switch (option->val) {
+    case ARG_INFO_MASK:
+      parse_number (arg, &val);
+      gst_info_set_categories (val);
+      break;
+    case ARG_DEBUG_MASK:
+      parse_number (arg, &val);
+      gst_debug_set_categories (val);
+      break;
+    case ARG_MASK:
+      parse_number (arg, &val);
+      gst_debug_set_categories (val);
+      gst_info_set_categories (val);
+      break;
+    case ARG_PLUGIN_SPEW:
+      _gst_plugin_spew = TRUE;
+      break;
+    case ARG_PLUGIN_PATH:
+      split_and_iterate (arg, G_SEARCHPATH_SEPARATOR_S, add_path_func);
+      break;
+    case ARG_PLUGIN_LOAD:
+      split_and_iterate (arg, ",", prepare_for_load_plugin_func);
+      break;
+    case ARG_SCHEDULER:
+      gst_schedulerfactory_set_default_name (arg);
+      break;
+    default:
+      g_warning ("option %d not recognized", option->val);
+      break;
+    }
+    break;
+  case POPT_CALLBACK_REASON_POST:
+    init_post();
+    break;
+  }
 }
 
 static GSList *mainloops = NULL;

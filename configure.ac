@@ -1,4 +1,3 @@
-dnl Note: this file is now the main autoconf file
 AC_INIT
 AC_CANONICAL_TARGET([])
 
@@ -117,6 +116,11 @@ fi
 AC_SUBST(LIBXML_PKG)
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
+
+GST_CHECK_LIBHEADER(POPT, popt, poptAddItem,, popt.h, POPT_LIBS="-lpopt",
+  AC_MSG_ERROR(
+[popt 1.6.3 or newer is required to build gstreamer. You can download the latest
+version from ftp://people.redhat.com/sopwith/popt/]))
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
@@ -358,10 +362,8 @@ PLUGINS_BUILDDIR=`pwd`
 AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR,"$PLUGINS_BUILDDIR")
 AC_SUBST(PLUGINS_BUILDDIR)
 
-dnl finalize _CFLAGS and _LIBS
-dnl add GLIB and XML if necessary to EXT_*
-GST_EXT_CFLAGS="$GST_EXT_CFLAGS $XML_CFLAGS $GLIB_CFLAGS"
-GST_EXT_LIBS="$GST_EXT_LIBS $XML_LIBS $GLIB_LIBS"
+dnl since glib and xml are package deps, there's no need to include their cflags
+dnl in the pkg-config file
 
 dnl for pkg-config
 GST_PKG_CFLAGS=$GST_EXT_CFLAGS
@@ -369,18 +371,23 @@ GST_PKG_LIBS=$GST_EXT_LIBS
 AC_SUBST(GST_PKG_CFLAGS)
 AC_SUBST(GST_PKG_LIBS)
 
+dnl finalize _CFLAGS and _LIBS
+dnl add GLIB and XML if necessary to EXT_*
+GST_CFLAGS="$GST_EXT_CFLAGS $XML_CFLAGS $GLIB_CFLAGS"
+GST_LIBS="$GST_EXT_LIBS $XML_LIBS $GLIB_LIBS -lpopt"
+
 dnl Private vars for libgst only
-LIBGST_LIBS="$GST_EXT_LIBS"
-LIBGST_CFLAGS="$GST_EXT_CFLAGS -I\$(top_srcdir)"
+LIBGST_LIBS="$GST_LIBS"
+LIBGST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir) -Wall"
 AC_SUBST(LIBGST_LIBS)
 AC_SUBST(LIBGST_CFLAGS)
 
 dnl Vars for everyone else
 GST_INT_LIBS="\$(top_builddir)/gst/libgstreamer.la"
-GST_INT_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir)/include -I\$(top_srcdir) -Wall"
+GST_INT_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir)/include"
 
-AC_SUBST(GST_CFLAGS, "$GST_EXT_CFLAGS $GST_INT_CFLAGS")
-AC_SUBST(GST_LIBS, "$GST_EXT_LIBS $GST_INT_LIBS")
+AC_SUBST(GST_CFLAGS, "$LIBGST_CFLAGS $GST_INT_CFLAGS")
+AC_SUBST(GST_LIBS, "$LIBGST_LIBS $GST_INT_LIBS")
 
 AC_CONFIG_SUBDIRS(libs/ext/cothreads)
 
