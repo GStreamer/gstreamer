@@ -256,21 +256,19 @@ gst_parsewav_chain (GstPad *pad, GstBuffer *buf)
       format = (GstParseWavFormat *)((guchar *) GST_BUFFER_DATA (buf) + fmt->offset);
 
       /* set the caps on the src pad */
-      gst_pad_set_caps (parsewav->srcpad, gst_caps_new (
-	"parsewav_src",
-	"audio/raw",
-	gst_props_new (
-	"format",	GST_PROPS_STRING ("int"),
-	  "law",	GST_PROPS_INT (0),		//FIXME
-	  "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-          "signed",     GST_PROPS_BOOLEAN (TRUE), //FIXME
-	  "width",	GST_PROPS_INT (format->wBitsPerSample),
-	  "depth",	GST_PROPS_INT (format->wBitsPerSample),
-	  "rate",	GST_PROPS_INT (format->dwSamplesPerSec),
-	  "channels",	GST_PROPS_INT (format->wChannels),
-	  NULL
-	)
-      ));
+      gst_pad_try_set_caps (parsewav->srcpad, 
+		      GST_CAPS_NEW (
+			"parsewav_src",
+			"audio/raw",
+			"format",	GST_PROPS_STRING ("int"),
+			  "law",	GST_PROPS_INT (0),		//FIXME
+			  "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
+        		  "signed",     GST_PROPS_BOOLEAN (TRUE), //FIXME
+			  "width",	GST_PROPS_INT (format->wBitsPerSample),
+			  "depth",	GST_PROPS_INT (format->wBitsPerSample),
+			  "rate",	GST_PROPS_INT (format->dwSamplesPerSec),
+			  "channels",	GST_PROPS_INT (format->wChannels)
+		      ));
 
       parsewav->bps = format->wBlockAlign;
       GST_DEBUG (0, "frequency %d, channels %d\n",

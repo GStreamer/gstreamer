@@ -47,9 +47,9 @@ static void 			gst_osssink_finalize		(GObject *object);
 
 static gboolean 		gst_osssink_open_audio		(GstOssSink *sink);
 static void 			gst_osssink_close_audio		(GstOssSink *sink);
-static void 			gst_osssink_sync_parms 		(GstOssSink *osssink);
+static gboolean 		gst_osssink_sync_parms 		(GstOssSink *osssink);
 static GstElementStateReturn 	gst_osssink_change_state	(GstElement *element);
-static GstPadNegotiateReturn	gst_osssink_negotiate 		(GstPad *pad, GstCaps **caps, gpointer *user_data);
+static GstPadConnectReturn	gst_osssink_sinkconnect		(GstPad *pad, GstCaps *caps);
 
 static void 			gst_osssink_set_property	(GObject *object, guint prop_id, const GValue *value, 
 		  						 GParamSpec *pspec);
@@ -87,9 +87,9 @@ GST_PADTEMPLATE_FACTORY (osssink_sink_factory,
       "law",        GST_PROPS_INT (0),
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),
       "signed",     GST_PROPS_LIST (
- 	      	      GST_PROPS_BOOLEAN (FALSE),
-       		      GST_PROPS_BOOLEAN (TRUE)
-	      	    ),
+         	      GST_PROPS_BOOLEAN (FALSE),
+     		      GST_PROPS_BOOLEAN (TRUE)
+      		    ),
       "width",      GST_PROPS_LIST (
          	      GST_PROPS_INT (8),
      		      GST_PROPS_INT (16)
@@ -220,7 +220,7 @@ gst_osssink_init (GstOssSink *osssink)
   osssink->sinkpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (osssink_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (osssink), osssink->sinkpad);
-  gst_pad_set_negotiate_function (osssink->sinkpad, gst_osssink_negotiate);
+  gst_pad_set_connect_function (osssink->sinkpad, gst_osssink_sinkconnect);
   gst_pad_set_bufferpool_function (osssink->sinkpad, gst_osssink_get_bufferpool);
 
   gst_pad_set_chain_function (osssink->sinkpad, gst_osssink_chain);
@@ -245,20 +245,22 @@ gst_osssink_init (GstOssSink *osssink)
   GST_FLAG_SET (osssink, GST_ELEMENT_THREAD_SUGGESTED);
 }
 
-static gboolean
-gst_osssink_parse_caps (GstOssSink *osssink, GstCaps *caps)
+static GstPadConnectReturn 
+gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps) 
 {
   gint law, endianness, width, depth;
   gboolean sign;
   gint format = -1;
+  GstOssSink *osssink = GST_OSSSINK (gst_pad_get_parent (pad));
 
-  // deal with the case where there are no props...
-  if (gst_caps_get_props(caps) == NULL) return FALSE;
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
   
   width = gst_caps_get_int (caps, "width");
   depth = gst_caps_get_int (caps, "depth");
 
-  if (width != depth) return FALSE;
+  if (width != depth) 
+    return GST_PAD_CONNECT_REFUSED;
 
   law = gst_caps_get_int (caps, "law");
   endianness = gst_caps_get_int (caps, "endianness");
@@ -290,68 +292,50 @@ gst_osssink_parse_caps (GstOssSink *osssink, GstCaps *caps)
   }
 
   if (format == -1) 
-   return FALSE;
+    return GST_PAD_CONNECT_REFUSED;
 
   osssink->format = format;
   osssink->channels = gst_caps_get_int (caps, "channels");
   osssink->frequency = gst_caps_get_int (caps, "rate");
 
-  return TRUE;
+  if (!gst_osssink_sync_parms (osssink)) {
+    return GST_PAD_CONNECT_REFUSED;
+  }
+
+  return GST_PAD_CONNECT_OK;
 }
 
-static GstPadNegotiateReturn 
-gst_osssink_negotiate (GstPad *pad, GstCaps **caps, gpointer *user_data) 
-{
-  GstOssSink *osssink;
-
-  g_return_val_if_fail (pad != NULL, GST_PAD_NEGOTIATE_FAIL);
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_NEGOTIATE_FAIL);
-
-  osssink = GST_OSSSINK (gst_pad_get_parent (pad));
-
-  GST_INFO (GST_CAT_NEGOTIATION, "osssink: negotiate");
-  // we decide
-  if (user_data == NULL) {
-    *caps = NULL;
-    return GST_PAD_NEGOTIATE_TRY;
-  }
-  // have we got caps?
-  else if (*caps) {
-
-    if (gst_osssink_parse_caps (osssink, *caps)) {
-      gst_osssink_sync_parms (osssink);
-
-      return GST_PAD_NEGOTIATE_AGREE;
-    }
-
-    // FIXME check if the sound card was really set to these caps,
-    // else send out another caps..
-
-    return GST_PAD_NEGOTIATE_FAIL;
-  }
-  
-  return GST_PAD_NEGOTIATE_FAIL;
-}
-
-static void 
+static gboolean 
 gst_osssink_sync_parms (GstOssSink *osssink) 
 {
   audio_buf_info ospace;
   int frag;
+  gint target_format;
+  gint target_channels;
+  gint target_frequency;
 
   g_return_if_fail (osssink != NULL);
   g_return_if_fail (GST_IS_OSSSINK (osssink));
 
-  if (osssink->fd == -1) return;
+  if (osssink->fd == -1)
+    return FALSE;
   
   if (osssink->fragment >> 16)
       frag = osssink->fragment;
   else
       frag = 0x7FFF0000 | osssink->fragment;
   
+  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: trying to set sound card to %dHz %d bit %s (%08x fragment)",
+           osssink->frequency, osssink->format,
+           (osssink->channels == 2) ? "stereo" : "mono",frag);
+
   ioctl (osssink->fd, SNDCTL_DSP_SETFRAGMENT, &frag);
 
   ioctl (osssink->fd, SNDCTL_DSP_RESET, 0);
+
+  target_format = osssink->format;
+  target_channels = osssink->channels;
+  target_frequency = osssink->frequency;
 
   ioctl (osssink->fd, SNDCTL_DSP_SETFMT, &osssink->format);
   ioctl (osssink->fd, SNDCTL_DSP_CHANNELS, &osssink->channels);
@@ -360,15 +344,26 @@ gst_osssink_sync_parms (GstOssSink *osssink)
   ioctl (osssink->fd, SNDCTL_DSP_GETBLKSIZE, &frag);
   ioctl (osssink->fd, SNDCTL_DSP_GETOSPACE, &ospace);
 
-  /*
-  g_warning ("osssink: setting sound card to %dHz %d bit %s (%d bytes buffer, %d fragment)\n",
-           osssink->frequency, osssink->format,
-           (osssink->channels == 2) ? "stereo" : "mono", ospace.bytes, frag);
-	   */
-  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: setting sound card to %dHz %d bit %s (%d bytes buffer, %d fragment)",
+  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: set sound card to %dHz %d bit %s (%d bytes buffer, %08x fragment)",
            osssink->frequency, osssink->format,
            (osssink->channels == 2) ? "stereo" : "mono", ospace.bytes, frag);
 
+  gst_element_send_event (GST_ELEMENT (osssink), 
+		  gst_event_new_info ("samplerate", GST_PROPS_INT (osssink->frequency), NULL));
+  gst_element_send_event (GST_ELEMENT (osssink), 
+		  gst_event_new_info ("channels", GST_PROPS_INT (osssink->channels), NULL));
+  gst_element_send_event (GST_ELEMENT (osssink), 
+		  gst_event_new_info ("bits", GST_PROPS_INT (osssink->format), NULL));
+
+  if (target_format != osssink->format ||
+      target_channels != osssink->channels ||
+      target_frequency != osssink->frequency) 
+  {
+    g_warning ("could not configure oss with required parameters, enjoy the noise :)");
+    /* we could eventually return FALSE here, or just do some additional tests
+     * to see that the frequencies don't differ too much etc.. */
+  }
+  return TRUE;
 }
 
 static void 
@@ -554,7 +549,6 @@ gst_osssink_open_audio (GstOssSink *sink)
     GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: opened audio (%s) with fd=%d", sink->device, sink->fd);
     GST_FLAG_SET (sink, GST_OSSSINK_OPEN);
 
-    gst_osssink_sync_parms (sink);
     return TRUE;
   }
 

@@ -385,7 +385,7 @@ gst_osssrc_sync_parms (GstOssSrc *osssrc)
           (osssrc->channels == 2) ? "stereo" : "mono", ispace.bytes, frag);
 
   /* set caps on src pad */
-  gst_pad_set_caps (osssrc->srcpad, gst_caps_new (
+  gst_pad_try_set_caps (osssrc->srcpad, gst_caps_new (
     "oss_src",
     "audio/raw",
     gst_props_new (

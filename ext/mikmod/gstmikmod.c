@@ -170,9 +170,6 @@ static GstElementStateReturn  gst_mikmod_change_state 	(GstElement *element);
 
 
 
-static GstPadNegotiateReturn mikmod_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data);
-static GstPadNegotiateReturn mikmod_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data);
-
 static GstElementClass *parent_class = NULL;
 
 #define GST_TYPE_MIKMOD_MIXFREQ (gst_mikmod_mixfreq_get_type())
@@ -193,29 +190,6 @@ gst_mikmod_mixfreq_get_type (void)
   }
   return mikmod_mixfreq_type;
 }
-
-static GstPadNegotiateReturn 
-mikmod_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstMikMod* filter = GST_MIKMOD (gst_pad_get_parent (pad));
-  
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad,filter->sinkpad,caps);
-}
-
-static GstPadNegotiateReturn
-mikmod_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstMikMod* filter = GST_MIKMOD (gst_pad_get_parent (pad));
-  
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad,filter->srcpad,caps);
-}		
-
 
 GType
 gst_mikmod_get_type(void) {
@@ -302,6 +276,7 @@ gst_mikmod_class_init (GstMikModClass *klass)
   
   gobject_class->set_property = gst_mikmod_set_property;
   gobject_class->get_property = gst_mikmod_get_property;
+
   gstelement_class->change_state = gst_mikmod_change_state;
 }
 
@@ -312,15 +287,12 @@ gst_mikmod_init (GstMikMod *filter)
   filter->sinkpad = gst_pad_new_from_template(mikmod_sink_factory (),"sink");
   filter->srcpad = gst_pad_new_from_template(mikmod_src_factory (),"src");
 
-  /*gst_pad_set_negotiate_function(filter->sinkpad,mikmod_negotiate_sink);
-  gst_pad_set_negotiate_function(filter->srcpad,mikmod_negotiate_src);*/
-
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
   
   gst_element_set_loop_function (GST_ELEMENT (filter), gst_mikmod_loop);
   
-  filter->Buffer = gst_buffer_new();
+  filter->Buffer = NULL;
 
   filter->stereo      = TRUE;
   filter->surround    = TRUE;
@@ -351,26 +323,20 @@ gst_mikmod_loop (GstElement *element)
   srcpad = mikmod->srcpad;
   mikmod->Buffer = NULL;
   	
-  while ((buffer_in = gst_pad_pull( mikmod->sinkpad ))) /*&& GST_BUFFER_SIZE(buffer_tmp) != 0 && GST_BUFFER_SIZE(buffer_tmp) != -1 )  */
-  {
-	if ( GST_IS_EVENT (buffer_in) ) 
-	{
+  while ((buffer_in = gst_pad_pull( mikmod->sinkpad ))) {
+    if ( GST_IS_EVENT (buffer_in) ) {
       GstEvent *event = GST_EVENT (buffer_in);
 		
-	  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) 
-		  break;
+      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) 
+         break;
     }
 		
-	/*if ( GST_BUFFER_SIZE(buffer_in) != 0 && GST_BUFFER_SIZE(buffer_in) != -1 )
-	{*/
-	  if ( mikmod->Buffer )	
-	  {	 
-        mikmod->Buffer = gst_buffer_append( mikmod->Buffer, buffer_in );
-	    gst_buffer_unref( buffer_in );	 	  
-	  }
-	  else
-	    mikmod->Buffer = buffer_in;
-  /*  }*/
+    if ( mikmod->Buffer ) {	 
+      mikmod->Buffer = gst_buffer_append( mikmod->Buffer, buffer_in );
+      gst_buffer_unref( buffer_in );	 	  
+    }
+    else
+      mikmod->Buffer = buffer_in;
   }  
   
   if ( mikmod->_16bit )
@@ -385,24 +351,23 @@ gst_mikmod_loop (GstElement *element)
   reader = GST_READER_new( mikmod );
   module = Player_LoadGeneric ( reader, 64, 0 );
   
+  gst_buffer_unref (mikmod->Buffer);
+  
   if ( ! Player_Active() )
     Player_Start(module);
 
-  gst_pad_set_caps (mikmod->srcpad, gst_caps_new (
-				    "mikmod_src",
-				    "audio/raw",
-				    gst_props_new (
-				       "format",      GST_PROPS_STRING ("int"),
-				       "law",         GST_PROPS_INT (0),
-				       "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
-				       "signed",      GST_PROPS_BOOLEAN (TRUE),
-				       "width",       GST_PROPS_INT (mode16bits),
-				       "depth",       GST_PROPS_INT (mode16bits),
-				       "rate",        GST_PROPS_INT (mikmod->mixfreq),
-				       "channels",    GST_PROPS_INT (2),
-				       NULL
-				       )
-				    ));
+  gst_pad_try_set_caps (mikmod->srcpad, 
+		          GST_CAPS_NEW (
+			    "mikmod_src",
+			    "audio/raw",
+			      "format",      GST_PROPS_STRING ("int"),
+			      "law",         GST_PROPS_INT (0),
+			      "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
+			      "signed",      GST_PROPS_BOOLEAN (TRUE),
+			      "width",       GST_PROPS_INT (mode16bits),
+			      "depth",       GST_PROPS_INT (mode16bits),
+			      "rate",        GST_PROPS_INT (mikmod->mixfreq),
+			      "channels",    GST_PROPS_INT (2)));
 				    
   do {
     if ( Player_Active() ) {

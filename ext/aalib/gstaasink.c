@@ -70,10 +70,12 @@ GST_PADTEMPLATE_FACTORY (sink_template,
 static void	gst_aasink_class_init	(GstAASinkClass *klass);
 static void	gst_aasink_init		(GstAASink *aasink);
 
-static void	gst_aasink_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_aasink_chain	(GstPad *pad, GstBuffer *buf);
 
-static void	gst_aasink_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_aasink_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void	gst_aasink_set_property	(GObject *object, guint prop_id, 
+					 const GValue *value, GParamSpec *pspec);
+static void	gst_aasink_get_property	(GObject *object, guint prop_id, 
+					 GValue *value, GParamSpec *pspec);
 
 static GstElementStateReturn gst_aasink_change_state (GstElement *element);
 
@@ -87,7 +89,12 @@ gst_aasink_get_type (void)
 
   if (!aasink_type) {
     static const GTypeInfo aasink_info = {
-      sizeof(GstAASinkClass),      NULL,      NULL,      (GClassInitFunc)gst_aasink_class_init,      NULL,      NULL,
+      sizeof(GstAASinkClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_aasink_class_init,
+      NULL,
+      NULL,
       sizeof(GstAASink),
       0,
       (GInstanceInitFunc)gst_aasink_init,
@@ -224,14 +231,17 @@ gst_aasink_class_init (GstAASinkClass *klass)
   gstelement_class->change_state = gst_aasink_change_state;
 }
 
-static void
-gst_aasink_newcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_aasink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstAASink *aasink;
   gulong print_format;
 
   aasink = GST_AASINK (gst_pad_get_parent (pad));
 
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
+  
   aasink->width =  gst_caps_get_int (caps, "width");
   aasink->height =  gst_caps_get_int (caps, "height");
 
@@ -241,6 +251,8 @@ gst_aasink_newcaps (GstPad *pad, GstCaps *caps)
   
   g_signal_emit( G_OBJECT (aasink), gst_aasink_signals[SIGNAL_HAVE_SIZE], 0,
 		 aasink->width, aasink->height);
+
+  return GST_PAD_CONNECT_OK;
 }
 
 static void
@@ -250,7 +262,7 @@ gst_aasink_init (GstAASink *aasink)
 		  GST_PADTEMPLATE_GET (sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (aasink), aasink->sinkpad);
   gst_pad_set_chain_function (aasink->sinkpad, gst_aasink_chain);
-  gst_pad_set_newcaps_function (aasink->sinkpad, gst_aasink_newcaps);
+  gst_pad_set_connect_function (aasink->sinkpad, gst_aasink_sinkconnect);
 
   aasink->clock = gst_clock_get_system();
   gst_clock_register(aasink->clock, GST_OBJECT(aasink));

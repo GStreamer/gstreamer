@@ -173,7 +173,7 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
 
   jpegdec = GST_JPEGDEC (GST_OBJECT_PARENT (pad));
 
-  if (!GST_PAD_CONNECTED (jpegdec->srcpad)) {
+  if (!GST_PAD_IS_CONNECTED (jpegdec->srcpad)) {
     gst_buffer_unref (buf);
     return;
   }
@@ -220,14 +220,14 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
     jpegdec->line[2] = g_realloc(jpegdec->line[2], height*sizeof(char*));
     jpegdec->height = height;
 
-    gst_pad_set_caps (jpegdec->srcpad, gst_caps_new (
+    gst_pad_try_set_caps (jpegdec->srcpad, 
+		          GST_CAPS_NEW (
 			    "jpegdec_caps",
 			    "video/raw",
-			    gst_props_new (
-				    "format",  GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-				    "width",   GST_PROPS_INT (width),
-				    "height",  GST_PROPS_INT (height),
-				    NULL)));
+			      "format",  GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+			      "width",   GST_PROPS_INT (width),
+			      "height",  GST_PROPS_INT (height)
+			  ));
   }
 
   /* mind the swap, jpeglib outputs blue chroma first */

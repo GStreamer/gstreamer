@@ -85,9 +85,9 @@ static GstPadTemplate *srctempl, *sinktempl;
 static void			gst_ladspa_class_init		(GstLADSPAClass *klass);
 static void			gst_ladspa_init			(GstLADSPA *ladspa);
 
-static GstPadNegotiateReturn gst_ladspa_negotiate_sink_mono (GstPad *pad, GstCaps **caps, gpointer *data);
-static GstPadNegotiateReturn gst_ladspa_negotiate_src_mono (GstPad *pad, GstCaps **caps, gpointer *data);
-static GstPadNegotiateReturn gst_ladspa_negotiate_src_get_mono (GstPad *pad, GstCaps **caps, gpointer *data);
+//static GstPadNegotiateReturn gst_ladspa_negotiate_sink_mono (GstPad *pad, GstCaps **caps, gpointer *data);
+//static GstPadNegotiateReturn gst_ladspa_negotiate_src_mono (GstPad *pad, GstCaps **caps, gpointer *data);
+//static GstPadNegotiateReturn gst_ladspa_negotiate_src_get_mono (GstPad *pad, GstCaps **caps, gpointer *data);
 static void gst_ladspa_force_caps(GstLADSPA *ladspa, GstPad *pad);
 
 static void			gst_ladspa_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -347,9 +347,9 @@ gst_ladspa_init (GstLADSPA *ladspa)
   // mono chain
   if (sinkcount==1 && srccount==1){
     //g_print("inplace mono chain mode\n");
-    gst_pad_set_negotiate_function (ladspa->sinkpads[0], gst_ladspa_negotiate_sink_mono);
+    //gst_pad_set_negotiate_function (ladspa->sinkpads[0], gst_ladspa_negotiate_sink_mono);
     gst_pad_set_chain_function(ladspa->sinkpads[0],gst_ladspa_chain_inplace_mono);
-    gst_pad_set_negotiate_function (ladspa->srcpads[0], gst_ladspa_negotiate_src_mono);
+    //gst_pad_set_negotiate_function (ladspa->srcpads[0], gst_ladspa_negotiate_src_mono);
   }
   
   // mono get (no sink pads)
@@ -359,7 +359,7 @@ gst_ladspa_init (GstLADSPA *ladspa)
     ladspa->samplerate = 44100;
     ladspa->buffersize = 64;
     gst_pad_set_get_function(ladspa->srcpads[0],gst_ladspa_get_mono);
-    gst_pad_set_negotiate_function (ladspa->srcpads[0], gst_ladspa_negotiate_src_get_mono);
+    //gst_pad_set_negotiate_function (ladspa->srcpads[0], gst_ladspa_negotiate_src_get_mono);
     gst_ladspa_instantiate(ladspa);
   }
   
@@ -370,12 +370,13 @@ gst_ladspa_init (GstLADSPA *ladspa)
     ladspa->samplerate = 44100;
     ladspa->buffersize = 64;
     gst_pad_set_get_function(ladspa->srcpads[0],gst_ladspa_get);
-    gst_pad_set_negotiate_function (ladspa->srcpads[0], gst_ladspa_negotiate_src_get_mono);
+    //gst_pad_set_negotiate_function (ladspa->srcpads[0], gst_ladspa_negotiate_src_get_mono);
     gst_ladspa_instantiate(ladspa);
     ladspa->buffers = g_new0(GstBuffer*,oclass->numsrcpads);
   }
 }
 
+#if 0
 static GstPadNegotiateReturn
 gst_ladspa_negotiate_src_mono (GstPad *pad, GstCaps **caps, gpointer *data)
 {
@@ -416,12 +417,13 @@ gst_ladspa_negotiate_src_get_mono (GstPad *pad, GstCaps **caps, gpointer *data)
   }
   return GST_PAD_NEGOTIATE_FAIL;
 }
+#endif
 
 static void
 gst_ladspa_force_caps(GstLADSPA *ladspa, GstPad *pad) {
   
   // g_print("forcing caps\n");
-  gst_pad_set_caps (pad, gst_caps_new (
+  gst_pad_try_set_caps (pad, gst_caps_new (
     "ladspa_src_caps",
     "audio/raw",
     gst_props_new (

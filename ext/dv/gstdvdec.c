@@ -236,11 +236,9 @@ gst_dvdec_init(GstDVDec *dvdec)
   gst_element_add_pad(GST_ELEMENT(dvdec),dvdec->sinkpad);
 
   dvdec->videosrcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET(video_src_temp), "video");
-  //gst_pad_set_caps (dvdec->videosrcpad, gst_pad_get_padtemplate_caps (dvdec->videosrcpad));
   gst_element_add_pad(GST_ELEMENT(dvdec),dvdec->videosrcpad);
 
 //  dvdec->audiosrcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET(audio_src_temp), "audio");
-//  gst_pad_set_caps (dvdec->audiosrcpad, gst_pad_get_padtemplate_caps (dvdec->audiosrcpad));
 //  gst_element_add_pad(GST_ELEMENT(dvdec),dvdec->audiosrcpad);
 
   gst_element_set_loop_function (GST_ELEMENT(dvdec), gst_dvdec_loop);
@@ -291,7 +289,7 @@ gst_dvdec_loop (GstElement *element)
   }
 
   if (!GST_PAD_CAPS (dvdec->videosrcpad)) {
-    gst_pad_set_caps (dvdec->videosrcpad, gst_pad_get_padtemplate_caps (dvdec->videosrcpad));
+    gst_pad_try_set_caps (dvdec->videosrcpad, gst_pad_get_padtemplate_caps (dvdec->videosrcpad));
   }
 
   if (!dvdec->pool) {

@@ -245,10 +245,6 @@ gst_avi_decoder_new_pad (GstElement *element, GstPad *pad, GstAviDecoder *avi_de
   }
 
   if (!new_element && (media_type == AVI_TYPE_VIDEO)) {
-    gst_pad_disconnect (pad, gst_element_get_pad (type, "sink"));
-
-    new_element = gst_elementfactory_make ("windec", "decoder");
-
     padname = "src";
   }
   else if (!new_element && (media_type == AVI_TYPE_AUDIO)) {

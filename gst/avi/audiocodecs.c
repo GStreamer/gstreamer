@@ -50,19 +50,19 @@ GstPad *gst_avi_decoder_get_audio_srcpad(GstAviDecoder *avi_decoder, guint pad_n
   switch (strf->format) {
     case GST_RIFF_WAVE_FORMAT_PCM:
       newpad = gst_pad_new("audio_00", GST_PAD_SRC);
-      gst_pad_set_caps (newpad, gst_caps_new (
+      gst_pad_try_set_caps (newpad, 
+		            GST_CAPS_NEW (
 			      "avidecoder_caps",
 			      "audio/raw",
-			      gst_props_new (
-				      "format", 	GST_PROPS_STRING ("int"),
-				        "law",  	GST_PROPS_INT (0),
-					"endianness",   GST_PROPS_INT (G_BYTE_ORDER),
-					"signed",	GST_PROPS_BOOLEAN (TRUE),
-					"width",	GST_PROPS_INT ((gint)strf->size),
-					"depth",	GST_PROPS_INT ((gint)strf->size),
-					"rate",		GST_PROPS_INT ((gint)strf->rate),
-					"channels",	GST_PROPS_INT ((gint)strf->channels),
-					NULL)));
+				 "format", 	GST_PROPS_STRING ("int"),
+				 "law",  	GST_PROPS_INT (0),
+				  "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+				  "signed",	GST_PROPS_BOOLEAN (TRUE),
+				  "width",	GST_PROPS_INT ((gint)strf->size),
+				  "depth",	GST_PROPS_INT ((gint)strf->size),
+				  "rate",	GST_PROPS_INT ((gint)strf->rate),
+				  "channels",	GST_PROPS_INT ((gint)strf->channels)
+			    ));
 
       avi_decoder->audio_pad[pad_nr] = newpad;
       return newpad;

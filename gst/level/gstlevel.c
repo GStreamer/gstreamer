@@ -99,28 +99,6 @@ static void inline 	gst_level_fast_8bit_chain		(gint8* data, gint8** out_data,
 static GstElementClass *parent_class = NULL;
 //static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
 
-static GstPadNegotiateReturn
-level_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstLevel* filter = GST_LEVEL (gst_pad_get_parent (pad));
-  
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad,filter->sinkpad,caps);
-}
-
-static GstPadNegotiateReturn
-level_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstLevel* filter = GST_LEVEL (gst_pad_get_parent (pad));
-  
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad,filter->srcpad,caps);
-}		
-
 GType
 gst_level_get_type(void) {
   static GType level_type = 0;
@@ -161,9 +139,6 @@ gst_level_init (GstLevel *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(level_sink_factory (),"sink");
   filter->srcpad = gst_pad_new_from_template(level_src_factory (),"src");
-
-  gst_pad_set_negotiate_function(filter->sinkpad,level_negotiate_sink);
-  gst_pad_set_negotiate_function(filter->srcpad,level_negotiate_src);
 
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_pad_set_chain_function(filter->sinkpad,gst_level_chain);

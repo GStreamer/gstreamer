@@ -170,8 +170,8 @@ gst_avi_types_class_init (GstAviTypesClass *klass)
   gobject_class->get_property = gst_avi_types_get_property;
 }
 
-static void 
-gst_avi_types_newcaps (GstPad *pad, GstCaps *caps) 
+static GstPadConnectReturn 
+gst_avi_types_sinkconnect (GstPad *pad, GstCaps *caps) 
 {
   GstAviTypes *avi_types;
   const gchar *format;
@@ -196,6 +196,9 @@ gst_avi_types_newcaps (GstPad *pad, GstCaps *caps)
 			      "format",		GST_PROPS_STRING ("NTSC"),
 			      NULL));
       default:
+	/* else we simply don't convert, and hope there is a native decoder
+	 * available */
+	newcaps = caps;
         break;
     }
   }
@@ -243,9 +246,11 @@ gst_avi_types_newcaps (GstPad *pad, GstCaps *caps)
   }
   
   if (newcaps) {
-    gst_pad_set_caps (avi_types->srcpad, newcaps);
+    gst_pad_try_set_caps (avi_types->srcpad, newcaps);
     avi_types->type_found = TRUE;
+    return GST_PAD_CONNECT_OK;
   }
+  return GST_PAD_CONNECT_REFUSED;
 }
 
 static void 
@@ -254,7 +259,7 @@ gst_avi_types_init (GstAviTypes *avi_types)
   avi_types->sinkpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (sink_templ), "sink");
   gst_element_add_pad (GST_ELEMENT (avi_types), avi_types->sinkpad);
-  gst_pad_set_newcaps_function (avi_types->sinkpad, gst_avi_types_newcaps);
+  gst_pad_set_connect_function (avi_types->sinkpad, gst_avi_types_sinkconnect);
   gst_pad_set_chain_function (avi_types->sinkpad, gst_avi_types_chain);
 
   avi_types->srcpad = gst_pad_new_from_template (
@@ -271,7 +276,7 @@ gst_avi_types_chain (GstPad *pad, GstBuffer *buffer)
 
   avi_types = GST_AVI_TYPES (gst_pad_get_parent (pad));
 
-  if (GST_PAD_CONNECTED (avi_types->srcpad))
+  if (GST_PAD_IS_CONNECTED (avi_types->srcpad))
     gst_pad_push (avi_types->srcpad, buffer);
   else
     gst_buffer_unref (buffer);

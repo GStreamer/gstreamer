@@ -86,12 +86,14 @@ static gboolean			gst_esdsink_open_audio		(GstEsdsink *sink);
 static void			gst_esdsink_close_audio		(GstEsdsink *sink);
 static GstElementStateReturn	gst_esdsink_change_state	(GstElement *element);
 static gboolean			gst_esdsink_sync_parms		(GstEsdsink *esdsink);
-static void 			gst_esdsink_newcaps 		(GstPad *pad, GstCaps *caps);
+static GstPadConnectReturn	gst_esdsink_sinkconnect		(GstPad *pad, GstCaps *caps);
 
 static void			gst_esdsink_chain		(GstPad *pad, GstBuffer *buf);
 
-static void			gst_esdsink_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void			gst_esdsink_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void			gst_esdsink_set_property	(GObject *object, guint prop_id, 
+								 const GValue *value, GParamSpec *pspec);
+static void			gst_esdsink_get_property	(GObject *object, guint prop_id, 
+								 GValue *value, GParamSpec *pspec);
 
 #define GST_TYPE_ESDSINK_DEPTHS (gst_esdsink_depths_get_type())
 static GType
@@ -190,7 +192,7 @@ gst_esdsink_init(GstEsdsink *esdsink)
 		  GST_PADTEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(esdsink), esdsink->sinkpad);
   gst_pad_set_chain_function(esdsink->sinkpad, GST_DEBUG_FUNCPTR(gst_esdsink_chain));
-  gst_pad_set_newcaps_function(esdsink->sinkpad, gst_esdsink_newcaps);
+  gst_pad_set_connect_function(esdsink->sinkpad, gst_esdsink_sinkconnect);
 
   esdsink->mute = FALSE;
   esdsink->fd = -1;
@@ -215,18 +217,24 @@ gst_esdsink_sync_parms (GstEsdsink *esdsink)
   return gst_esdsink_open_audio (esdsink);
 }
 
-static void
-gst_esdsink_newcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_esdsink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstEsdsink *esdsink;
 
   esdsink = GST_ESDSINK (gst_pad_get_parent (pad));
 
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
+
   esdsink->depth = gst_caps_get_int (caps, "depth");
   esdsink->channels = gst_caps_get_int (caps, "channels");
   esdsink->frequency = gst_caps_get_int (caps, "rate");
 
-  gst_esdsink_sync_parms (esdsink);
+  if (gst_esdsink_sync_parms (esdsink))
+    return GST_PAD_CONNECT_OK;
+
+  return GST_PAD_CONNECT_REFUSED;
 }
 
 static void

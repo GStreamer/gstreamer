@@ -77,8 +77,7 @@ GST_PADTEMPLATE_FACTORY (src_factory_templ,
     "auparse_src",
     "audio/raw",
       "format",     GST_PROPS_STRING ("int"),
-      //"law",        GST_PROPS_INT_RANGE (0, 2),
-      "law",        GST_PROPS_INT (0),
+      "law",        GST_PROPS_INT_RANGE (0, 1),
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),
       "signed",     GST_PROPS_LIST(
 		      GST_PROPS_BOOLEAN (FALSE),
@@ -152,7 +151,6 @@ gst_parseau_init (GstParseAu *parseau)
 {
   parseau->sinkpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (sink_factory_templ), "sink");
-  gst_pad_set_caps (parseau->sinkpad, gst_pad_get_padtemplate_caps (parseau->sinkpad));
   gst_element_add_pad (GST_ELEMENT (parseau), parseau->sinkpad);
   gst_pad_set_chain_function (parseau->sinkpad, gst_parseau_chain);
 
@@ -174,6 +172,8 @@ gst_parseau_chain (GstPad *pad, GstBuffer *buf)
   gchar *data;
   glong size;
   GstCaps* tempcaps;
+  gint law, depth;
+  gboolean sign;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -222,38 +222,44 @@ gst_parseau_chain (GstPad *pad, GstBuffer *buf)
     GST_DEBUG (0, "offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld\n",
              parseau->offset,parseau->size,parseau->encoding,
              parseau->frequency,parseau->channels);
-
-    tempcaps = gst_caps_copy (gst_pad_get_padtemplate_caps (parseau->srcpad));
     
-    gst_caps_set (tempcaps, "format", GST_PROPS_STRING ("int"));
-    gst_caps_set (tempcaps, "rate", GST_PROPS_INT (parseau->frequency));
-    gst_caps_set (tempcaps, "channels", GST_PROPS_INT (parseau->channels));
-
     switch (parseau->encoding) {
       case 1:
-	gst_caps_set (tempcaps, "law", GST_PROPS_INT (1));
-	gst_caps_set (tempcaps, "depth", GST_PROPS_INT (8));
-        gst_caps_set (tempcaps, "width", GST_PROPS_INT (8));
-        gst_caps_set (tempcaps, "signed", GST_PROPS_BOOLEAN (FALSE));
+	law = 1;
+	depth = 8;
+	sign = FALSE;
 	break;
       case 2:
-	gst_caps_set (tempcaps, "law", GST_PROPS_INT (0));
-	gst_caps_set (tempcaps, "depth", GST_PROPS_INT (8));
-	gst_caps_set (tempcaps, "width", GST_PROPS_INT (8));
-	gst_caps_set (tempcaps, "signed", GST_PROPS_BOOLEAN (TRUE));
+	law = 0;
+	depth = 8;
+	sign = TRUE;
 	break;
       case 3:
-	gst_caps_set (tempcaps, "law", GST_PROPS_INT (0));
-	gst_caps_set (tempcaps, "depth", GST_PROPS_INT (16));
-	gst_caps_set (tempcaps, "width", GST_PROPS_INT (16));
-	gst_caps_set (tempcaps, "signed", GST_PROPS_BOOLEAN (TRUE));
+	law = 0;
+	depth = 16;
+	sign = TRUE;
 	break;
       default:
 	g_warning ("help!, dont know how to deal with this format yet\n");
 	return;
     }
 
-    gst_pad_set_caps (parseau->srcpad, tempcaps);
+    tempcaps = GST_CAPS_NEW ("auparse_src",
+		             "audio/raw",
+			       "format",  	GST_PROPS_STRING ("int"),
+      			       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
+			       "rate",  	GST_PROPS_INT (parseau->frequency),
+			       "channels",  	GST_PROPS_INT (parseau->channels),
+			       "law",  		GST_PROPS_INT (law),
+			       "depth", 	GST_PROPS_INT (depth),
+			       "width", 	GST_PROPS_INT (depth),
+			       "signed", 	GST_PROPS_BOOLEAN (sign));
+
+    if (!gst_pad_try_set_caps (parseau->srcpad, tempcaps)) {
+      gst_buffer_unref (buf);
+      gst_element_error (GST_ELEMENT (parseau), "could not set audio caps");
+      return;
+    }
 
     newbuf = gst_buffer_new ();
     GST_BUFFER_DATA (newbuf) = (gpointer) malloc (size-(parseau->offset));
@@ -265,7 +271,6 @@ gst_parseau_chain (GstPad *pad, GstBuffer *buf)
     gst_pad_push (parseau->srcpad, newbuf);
     return;
   }
-
 
   gst_pad_push (parseau->srcpad, buf);
 }

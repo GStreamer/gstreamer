@@ -100,12 +100,15 @@ gst_flacenc_class_init (FlacEncClass *klass)
   gobject_class->get_property = gst_flacenc_get_property;
 }
 
-static void
-gst_flacenc_newcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   FlacEnc *flacenc;
 
   flacenc = GST_FLACENC (gst_pad_get_parent (pad));
+
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
 
   flacenc->channels = gst_caps_get_int (caps, "channels");
   flacenc->depth = gst_caps_get_int (caps, "depth");
@@ -114,6 +117,8 @@ gst_flacenc_newcaps (GstPad *pad, GstCaps *caps)
   FLAC__stream_encoder_set_bits_per_sample (flacenc->encoder, flacenc->depth);
   FLAC__stream_encoder_set_sample_rate (flacenc->encoder, flacenc->sample_rate);
   FLAC__stream_encoder_set_channels (flacenc->encoder, flacenc->channels);
+
+  return GST_PAD_CONNECT_OK;
 }
 
 static void
@@ -122,10 +127,9 @@ gst_flacenc_init (FlacEnc *flacenc)
   flacenc->sinkpad = gst_pad_new_from_template (enc_sink_template, "sink");
   gst_element_add_pad(GST_ELEMENT(flacenc),flacenc->sinkpad);
   gst_pad_set_chain_function(flacenc->sinkpad,gst_flacenc_chain);
-  gst_pad_set_newcaps_function (flacenc->sinkpad, gst_flacenc_newcaps);
+  gst_pad_set_connect_function (flacenc->sinkpad, gst_flacenc_sinkconnect);
 
   flacenc->srcpad = gst_pad_new_from_template (enc_src_template, "src");
-  gst_pad_set_caps (flacenc->srcpad, gst_pad_get_padtemplate_caps (flacenc->srcpad));
   gst_element_add_pad(GST_ELEMENT(flacenc),flacenc->srcpad);
 
   flacenc->encoder = FLAC__stream_encoder_new();

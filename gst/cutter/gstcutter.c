@@ -88,27 +88,6 @@ void			gst_cutter_get_caps 		(GstPad *pad, GstCutter* filter);
 static GstElementClass *parent_class = NULL;
 static guint gst_cutter_signals[LAST_SIGNAL] = { 0 };
 
-static GstPadNegotiateReturn
-cutter_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstCutter* filter = GST_CUTTER (gst_pad_get_parent (pad));
-  
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad,filter->sinkpad,caps);
-}
-
-static GstPadNegotiateReturn
-cutter_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstCutter* filter = GST_CUTTER (gst_pad_get_parent (pad));
-  
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad,filter->srcpad,caps);
-}		
 
 GType
 gst_cutter_get_type(void) {
@@ -180,9 +159,6 @@ gst_cutter_init (GstCutter *filter)
   filter->pre_length = 0.2;
   filter->pre_run_length = 0.0;
   filter->pre_buffer = NULL;
-  
-  gst_pad_set_negotiate_function (filter->sinkpad,cutter_negotiate_sink);
-  gst_pad_set_negotiate_function (filter->srcpad,cutter_negotiate_src);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_cutter_chain);

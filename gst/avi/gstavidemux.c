@@ -300,10 +300,10 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
 		  GST_PADTEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d", 
 			  avi_demux->num_video_pads));
 
-  gst_pad_set_caps (srcpad, gst_caps_new (
+  gst_pad_try_set_caps (srcpad, 
+		        GST_CAPS_NEW (
 			  "avidec_video_src",
 			  "video/avi",
-			  gst_props_new (
 			    "format",    	GST_PROPS_STRING ("strf_vids"),
 			      "size", 		GST_PROPS_INT (GUINT32_FROM_LE (strf->size)),
 			      "width", 		GST_PROPS_INT (GUINT32_FROM_LE (strf->width)),
@@ -315,8 +315,8 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
 			      "xpels_meter", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->xpels_meter)),
 			      "ypels_meter", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->ypels_meter)),
 			      "num_colors", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->num_colors)),
-			      "imp_colors", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->imp_colors)),
-			      NULL)));
+			      "imp_colors", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->imp_colors))
+			      ));
 
   avi_demux->video_pad[avi_demux->num_video_pads++] = srcpad;
   gst_element_add_pad (GST_ELEMENT (avi_demux), srcpad);
@@ -343,18 +343,18 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
 		  GST_PADTEMPLATE_GET (src_audio_templ), g_strdup_printf ("audio_%02d", 
 			  avi_demux->num_audio_pads));
 
-  gst_pad_set_caps (srcpad, gst_caps_new (
+  gst_pad_try_set_caps (srcpad, 
+		        GST_CAPS_NEW (
 			  "avidec_audio_src",
 			  "video/avi",
-			  gst_props_new (
 			    "format",    	GST_PROPS_STRING ("strf_auds"),
 			      "fmt", 		GST_PROPS_INT (GUINT16_FROM_LE (strf->format)),
 			      "channels", 	GST_PROPS_INT (GUINT16_FROM_LE (strf->channels)),
 			      "rate", 		GST_PROPS_INT (GUINT32_FROM_LE (strf->rate)),
 			      "av_bps",		GST_PROPS_INT (GUINT32_FROM_LE (strf->av_bps)),
 			      "blockalign",	GST_PROPS_INT (GUINT16_FROM_LE (strf->blockalign)),
-			      "size",		GST_PROPS_INT (GUINT16_FROM_LE (strf->size)),
-			      NULL)));
+			      "size",		GST_PROPS_INT (GUINT16_FROM_LE (strf->size))
+			  ));
 
   avi_demux->audio_pad[avi_demux->num_audio_pads++] = srcpad;
   gst_element_add_pad (GST_ELEMENT (avi_demux), srcpad);
@@ -383,10 +383,10 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
 		  GST_PADTEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d", 
 			  avi_demux->num_video_pads));
 
-  gst_pad_set_caps (srcpad, gst_caps_new (
+  gst_pad_try_set_caps (srcpad, 
+		        GST_CAPS_NEW (
 			  "avidec_iav_src",
 			  "video/avi",
-			  gst_props_new (
 			    "format",    	GST_PROPS_STRING ("strf_iavs"),
                               "DVAAuxSrc", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVAAuxSrc)),
                               "DVAAuxCtl", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVAAuxCtl)),
@@ -395,8 +395,8 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
                               "DVVAuxSrc", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVVAuxSrc)),
                               "DVVAuxCtl", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVVAuxCtl)),
                               "DVReserved1", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVReserved1)),
-                              "DVReserved2", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVReserved2)),
-			      NULL)));
+                              "DVReserved2", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVReserved2))
+			 ));
 
   avi_demux->video_pad[avi_demux->num_video_pads++] = srcpad;
   gst_element_add_pad (GST_ELEMENT (avi_demux), srcpad);
@@ -460,14 +460,14 @@ gst_avidemux_forall_pads (GstAviDemux *avi_demux, GFunc func, gpointer user_data
   
   for(i=0; i<GST_AVI_DEMUX_MAX_AUDIO_PADS; i++) {
     pad = avi_demux->audio_pad[i];
-    if (pad && GST_PAD_CONNECTED (pad)) {
+    if (pad && GST_PAD_IS_CONNECTED (pad)) {
       (*func) (pad, user_data);
     }
   }
 
   for(i=0; i<GST_AVI_DEMUX_MAX_VIDEO_PADS; i++) {
     pad = avi_demux->video_pad[i];
-    if (pad && GST_PAD_CONNECTED (pad)) {
+    if (pad && GST_PAD_IS_CONNECTED (pad)) {
       (*func) (pad, user_data);
     }
   }
@@ -595,7 +595,7 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 filepos,
       GST_DEBUG (0,"gst_avi_demux_chain: tag found %08x size %08x\n",
 		    chunkid, *chunksize);
 
-      if (GST_PAD_CONNECTED (avi_demux->video_pad[0])) {
+      if (GST_PAD_IS_CONNECTED (avi_demux->video_pad[0])) {
 	GstBuffer *buf;
 
 	if (*chunksize) {
@@ -626,7 +626,7 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 filepos,
       GST_DEBUG (0,"gst_avi_demux_chain: tag found %08x size %08x\n",
 		    chunkid, *chunksize);
 
-      if (GST_PAD_CONNECTED (avi_demux->audio_pad[0])) {
+      if (GST_PAD_IS_CONNECTED (avi_demux->audio_pad[0])) {
 	GstBuffer *buf;
 
 	if (*chunksize) {

@@ -111,8 +111,8 @@ gst_udpsink_class_init (GstUDPSink *klass)
 }
 
 
-static void
-gst_udpsink_newcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstUDPSink *udpsink;
   struct sockaddr_in serv_addr;
@@ -127,15 +127,15 @@ gst_udpsink_newcaps (GstPad *pad, GstCaps *caps)
 
   fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (fd < 0) {
-     perror("socket");
-     return;
+    perror("socket");
+    return GST_PAD_CONNECT_REFUSED;
   }
   memset(&serv_addr, 0, sizeof(serv_addr));
   /* its a name rather than an ipnum */
   serverhost = gethostbyname(udpsink->host);
   if (serverhost == (struct hostent *)0) {
     perror("gethostbyname");
-    return;
+    return GST_PAD_CONNECT_REFUSED;
   }
   memmove(&serv_addr.sin_addr,serverhost->h_addr, serverhost->h_length);
 
@@ -145,7 +145,7 @@ gst_udpsink_newcaps (GstPad *pad, GstCaps *caps)
   if (connect(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) != 0) {
     g_printerr ("udpsink: connect to %s port %d failed: %s\n",
 		udpsink->host, udpsink->port, sys_errlist[errno]);
-    return;
+    return GST_PAD_CONNECT_REFUSED;
   }
   f = fdopen (dup (fd), "wb");
 
@@ -159,6 +159,8 @@ gst_udpsink_newcaps (GstPad *pad, GstCaps *caps)
 
   fclose (f);
   close (fd);
+
+  return GST_PAD_CONNECT_OK;
 }
 
 static void
@@ -168,7 +170,7 @@ gst_udpsink_init (GstUDPSink *udpsink)
   udpsink->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (udpsink), udpsink->sinkpad);
   gst_pad_set_chain_function (udpsink->sinkpad, gst_udpsink_chain);
-  gst_pad_set_newcaps_function (udpsink->sinkpad, gst_udpsink_newcaps);
+  gst_pad_set_connect_function (udpsink->sinkpad, gst_udpsink_sinkconnect);
 
   udpsink->host = g_strdup (UDP_DEFAULT_HOST);
   udpsink->port = UDP_DEFAULT_PORT;

@@ -276,7 +276,7 @@ gst_ossgst_get (GstPad *pad)
 					    cmd.cmd.format.stereo, 
 					    cmd.cmd.format.rate); 
 
-	  gst_pad_set_caps (ossgst->srcpad, caps);
+	  gst_pad_try_set_caps (ossgst->srcpad, caps);
 	}
         break;
       default:

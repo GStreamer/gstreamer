@@ -46,7 +46,8 @@ static void		gst_alawdec_chain			(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_stereo_signals[LAST_SIGNAL] = { 0 };
-
+//
+/*
 static GstPadNegotiateReturn
 alawdec_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
 {
@@ -65,7 +66,7 @@ alawdec_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
   gst_caps_set(tempcaps,"width",GST_PROPS_INT(16));
   gst_caps_set(tempcaps,"signed",GST_PROPS_BOOLEAN(TRUE));
 
-  if (gst_pad_set_caps (alawdec->srcpad, tempcaps))
+  if (gst_pad_try_set_caps (alawdec->srcpad, tempcaps))
   {
     return GST_PAD_NEGOTIATE_AGREE;
   }
@@ -74,6 +75,7 @@ alawdec_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
     return GST_PAD_NEGOTIATE_FAIL;
   }
 }		
+*/
 
 GType
 gst_alawdec_get_type(void) {
@@ -115,7 +117,7 @@ gst_alawdec_init (GstALawDec *alawdec)
 {
   alawdec->sinkpad = gst_pad_new_from_template(alawdec_sink_template,"sink");
   alawdec->srcpad = gst_pad_new_from_template(alawdec_src_template,"src");
-  gst_pad_set_negotiate_function(alawdec->sinkpad, alawdec_negotiate_sink);
+  //gst_pad_set_negotiate_function(alawdec->sinkpad, alawdec_negotiate_sink);
 
   gst_element_add_pad(GST_ELEMENT(alawdec),alawdec->sinkpad);
   gst_pad_set_chain_function(alawdec->sinkpad,gst_alawdec_chain);

@@ -184,7 +184,7 @@ gst_flacdec_write (const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame,
   flacdec = GST_FLACDEC (client_data);
 
   if (!GST_PAD_CAPS (flacdec->srcpad)) {
-    gst_pad_set_caps (flacdec->srcpad,
+    gst_pad_try_set_caps (flacdec->srcpad,
 		    GST_CAPS_NEW (
 		      "flac_caps",
 		      "audio/raw",

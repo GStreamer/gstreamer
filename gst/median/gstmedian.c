@@ -80,28 +80,6 @@ static void	gst_median_get_property	(GObject *object, guint prop_id, GValue *val
 static GstElementClass *parent_class = NULL;
 //static guint gst_median_signals[LAST_SIGNAL] = { 0 };
 
-static GstPadNegotiateReturn
-median_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstMedian* filter = GST_MEDIAN (gst_pad_get_parent (pad));
-
-  if (*caps==NULL)
-    return GST_PAD_NEGOTIATE_FAIL;
-
-  return gst_pad_negotiate_proxy (pad, filter->sinkpad, caps);
-}
-
-static GstPadNegotiateReturn
-median_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstMedian* filter = GST_MEDIAN (gst_pad_get_parent (pad));
-
-  if (*caps==NULL)
-    return GST_PAD_NEGOTIATE_FAIL;
-
-  return gst_pad_negotiate_proxy (pad, filter->srcpad, caps);
-}
-
 GType
 gst_median_get_type (void)
 {
@@ -146,29 +124,32 @@ gst_median_class_init (GstMedianClass *klass)
   gobject_class->get_property = gst_median_get_property;
 }
 
-static void
-gst_median_newcaps (GstPad *pad, GstCaps *caps)
+static gboolean
+gst_median_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstMedian *filter;
 
   filter = GST_MEDIAN (gst_pad_get_parent (pad));
 
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
+
   filter->width = gst_caps_get_int (caps, "width");
   filter->height = gst_caps_get_int (caps, "height");
+
+  return GST_PAD_CONNECT_OK;
 }
 
 void gst_median_init (GstMedian *median)
 {
   median->sinkpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (median_sink_factory), "sink");
-  gst_pad_set_negotiate_function (median->sinkpad, median_negotiate_sink);
-  gst_pad_set_newcaps_function (median->sinkpad, gst_median_newcaps);
+  gst_pad_set_connect_function (median->sinkpad, gst_median_sinkconnect);
   gst_pad_set_chain_function (median->sinkpad, gst_median_chain);
   gst_element_add_pad (GST_ELEMENT (median), median->sinkpad);
 
   median->srcpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (median_src_factory), "src");
-  gst_pad_set_negotiate_function (median->srcpad, median_negotiate_src);
   gst_element_add_pad (GST_ELEMENT (median), median->srcpad);
 
   median->filtersize = 5;

@@ -152,8 +152,8 @@ gst_avimux_init (GstAviMux *avimux)
   avimux->aviheader = g_malloc0 (sizeof (gst_riff_avih));
 }
 
-static void
-gst_avimux_newcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_avimux_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstAviMux *avimux;
   const gchar* format = gst_caps_get_string (caps, "format");
@@ -161,7 +161,7 @@ gst_avimux_newcaps (GstPad *pad, GstCaps *caps)
 
   avimux = GST_AVIMUX (gst_pad_get_parent (pad));
 
-  GST_DEBUG (0, "avimux: newcaps triggered on %s (%d), %s\n", gst_pad_get_name (pad), 
+  GST_DEBUG (0, "avimux: sinkconnect triggered on %s (%d), %s\n", gst_pad_get_name (pad), 
 		  padnum, format);
 
   if (!strncmp (format, "strf_vids", 9)) {
@@ -184,6 +184,7 @@ gst_avimux_newcaps (GstPad *pad, GstCaps *caps)
   else if (!strncmp (format, "strf_auds", 9)) {
 
   }
+  return GST_PAD_CONNECT_OK;
 }
 
 static GstPad*
@@ -228,7 +229,7 @@ gst_avimux_request_new_pad (GstElement     *element,
   }
 
   gst_pad_set_chain_function (newpad, gst_avimux_chain);
-  gst_pad_set_newcaps_function (newpad, gst_avimux_newcaps);
+  gst_pad_set_connect_function (newpad, gst_avimux_sinkconnect);
   gst_element_add_pad (element, newpad);
   
   return newpad;

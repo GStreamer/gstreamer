@@ -46,6 +46,7 @@ static void		gst_mulawenc_chain			(GstPad *pad, GstBuffer *buf);
 static GstElementClass *parent_class = NULL;
 //static guint gst_stereo_signals[LAST_SIGNAL] = { 0 };
 
+/*
 static GstPadNegotiateReturn
 mulawenc_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
 {
@@ -64,7 +65,7 @@ mulawenc_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
   gst_caps_set(tempcaps,"width",GST_PROPS_INT(8));
   gst_caps_set(tempcaps,"signed",GST_PROPS_BOOLEAN(FALSE));
 
-  if (gst_pad_set_caps (mulawenc->srcpad, tempcaps))
+  if (gst_pad_try_set_caps (mulawenc->srcpad, tempcaps))
   {
     return GST_PAD_NEGOTIATE_AGREE;
   }
@@ -73,6 +74,7 @@ mulawenc_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
     return GST_PAD_NEGOTIATE_FAIL;
   }
 }		
+*/
 
 GType
 gst_mulawenc_get_type(void) {
@@ -114,7 +116,7 @@ gst_mulawenc_init (GstMuLawEnc *mulawenc)
 {
   mulawenc->sinkpad = gst_pad_new_from_template(mulawenc_sink_template,"sink");
   mulawenc->srcpad = gst_pad_new_from_template(mulawenc_src_template,"src");
-  gst_pad_set_negotiate_function(mulawenc->sinkpad, mulawenc_negotiate_sink);
+  //gst_pad_set_negotiate_function(mulawenc->sinkpad, mulawenc_negotiate_sink);
 
   gst_element_add_pad(GST_ELEMENT(mulawenc),mulawenc->sinkpad);
   gst_pad_set_chain_function(mulawenc->sinkpad,gst_mulawenc_chain);

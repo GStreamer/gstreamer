@@ -161,7 +161,7 @@ gst_udpsrc_get (GstPad *pad)
       doc = xmlParseMemory(buf, ret);
       caps = gst_caps_load_thyself(doc->xmlRootNode);
       
-      gst_pad_set_caps (udpsrc->srcpad, caps);
+      gst_pad_try_set_caps (udpsrc->srcpad, caps);
 
 #endif
       outbuf = NULL;
