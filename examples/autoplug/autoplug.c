@@ -59,6 +59,7 @@ int main(int argc,char *argv[])
   GstCaps *srccaps;
   GstElement *new_element;
   GstAutoplug *autoplug;
+  GtkWidget *socket;
 
   g_thread_init(NULL);
   gst_init(&argc,&argv);
@@ -92,9 +93,8 @@ int main(int argc,char *argv[])
   g_assert(osssink != NULL);
 
   /* and an video sink */
-  videosink = gst_elementfactory_make("videosink", "play_video");
+  videosink = gst_elementfactory_make("xvideosink", "play_video");
   g_assert(videosink != NULL);
-  gtk_object_set(GTK_OBJECT(videosink),"xv_enabled", FALSE,NULL);
 
   autoplug = gst_autoplugfactory_make ("staticrender");
   g_assert (autoplug != NULL);
@@ -115,8 +115,17 @@ int main(int argc,char *argv[])
   gst_element_connect (disksrc, "src", new_element, "sink");
 
   appwindow = gnome_app_new("autoplug demo","autoplug demo");
+
+  socket = gtk_socket_new ();
+  gtk_widget_show (socket);
+
   gnome_app_set_contents(GNOME_APP(appwindow),
-    gst_util_get_widget_arg(GTK_OBJECT(videosink),"widget"));
+    		GTK_WIDGET (socket));
+
+  gtk_widget_realize (socket);
+  gtk_socket_steal (GTK_SOCKET (socket), 
+		    gst_util_get_int_arg (GTK_OBJECT (videosink), "xid"));
+
   gtk_widget_show_all(appwindow);
 
   xmlSaveFile("xmlTest.gst", gst_xml_write(GST_ELEMENT(bin)));
