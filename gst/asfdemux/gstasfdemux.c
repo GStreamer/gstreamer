@@ -1280,7 +1280,27 @@ gst_asf_demux_identify_guid (GstASFDemux *asf_demux,
  * Stream and pad setup code
  */
 
-#define GST_ASF_AUD_CAPS_NEW(name, mimetype, props...)			\
+#ifdef G_HAVE_ISO_VARARGS
+
+#define GST_ASF_AUD_CAPS_NEW(name, mimetype, ...)			\
+	(audio != NULL) ?						\
+	GST_CAPS_NEW (name,						\
+		      mimetype,						\
+		      "rate",     GST_PROPS_INT (			\
+				    GUINT32_FROM_LE (audio->byte_rate)), \
+		      "channels", GST_PROPS_INT (			\
+				    GUINT16_FROM_LE (audio->channels)),	\
+		      __VA_ARGS__)					\
+	:								\
+	GST_CAPS_NEW (name,						\
+		      mimetype,						\
+		      "rate",     GST_PROPS_INT_RANGE (8000, 96000),	\
+		      "channels", GST_PROPS_INT_RANGE (1, 2),		\
+		      __VA_ARGS__)
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
+#define GST_ASF_AUD_CAPS_NEW(name, mimetype, ...)			\
 	(audio != NULL) ?						\
 	GST_CAPS_NEW (name,						\
 		      mimetype,						\
@@ -1295,6 +1315,7 @@ gst_asf_demux_identify_guid (GstASFDemux *asf_demux,
 		      "rate",     GST_PROPS_INT_RANGE (8000, 96000),	\
 		      "channels", GST_PROPS_INT_RANGE (1, 2),		\
 		      ##props)
+#endif
 
 static GstCaps *
 gst_asf_demux_audio_caps (guint16 codec_id,
@@ -1434,6 +1455,26 @@ gst_asf_demux_add_audio_stream (GstASFDemux *asf_demux,
   return gst_asf_demux_setup_pad (asf_demux, src_pad, caps, id);
 }
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#define GST_ASF_VID_CAPS_NEW(name, mimetype, ...)		\
+	(video != NULL) ?					\
+	GST_CAPS_NEW (name,					\
+		      mimetype,					\
+		      "width",  GST_PROPS_INT (width),		\
+		      "height", GST_PROPS_INT (height),		\
+		      "framerate", GST_PROPS_FLOAT (0),/* FIXME */ \
+		      __VA_ARGS__)				\
+	:							\
+	GST_CAPS_NEW (name,					\
+		      mimetype,					\
+		      "width",  GST_PROPS_INT_RANGE (16, 4096),	\
+		      "height", GST_PROPS_INT_RANGE (16, 4096),	\
+		      "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT), \
+		      __VA_ARGS__)
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #define GST_ASF_VID_CAPS_NEW(name, mimetype, props...)		\
 	(video != NULL) ?					\
 	GST_CAPS_NEW (name,					\
@@ -1449,6 +1490,7 @@ gst_asf_demux_add_audio_stream (GstASFDemux *asf_demux,
 		      "height", GST_PROPS_INT_RANGE (16, 4096),	\
 		      "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT), \
 		      ##props)
+#endif
 
 static GstCaps *
 gst_asf_demux_video_caps (guint32 codec_fcc,
