@@ -1,0 +1,160 @@
+purpose
+-------
+
+A proposal for proper syncing and clocking of a pipeline.
+
+Requirements
+------------
+
+ - elements should be able to get the time and wait for a specific
+   time
+ - some elements should be able to control and adjust the clock.
+   (clock master)
+ - the application should be able to provide another clock.
+
+Clocks
+------
+
+A clock extends the abstract GstClock class.
+
+gst_clock_get_time should always report an equal or increasing
+value with each succesive call.
+
+
+
+Clock providers
+---------------
+
+Clock providers call gst_element_provides_clock (element, clock)
+in their _init function. This will set some element flags.
+This also means that a clock provider cannot stop being a clock
+provider.
+
+Clock providers will update the clock at specific intervals. 
+get_resolution/set_resolution can be used to control the resolution.
+
+When a clock provider is not going to update the clock anymore
+it should make sure elements still blocked on the clock get
+unblocked at the right time. This can be done by converting all
+blocking waits to a select call. All further waits on the clock
+should be estimated (using gettimeofday for example)
+
+
+Clock receivers
+---------------
+
+An element needing a clock must implement the element receive_clock method.
+It has to use the clock received in this function or if the 
+clock == NULL it should not do any waiting at all.
+
+
+Clocks and the scheduler
+------------------------
+
+The scheduler knows about the clocks, else a clock provider and receiver
+in the same scheduler could cause a deadlock.
+
+Only one clock provider is allowed per scheduler. multiple clock
+receivers are allowed per scheduler.
+
+
+
+Specifying clocks
+-----------------
+
+on every bin with a scheduler, gst_bin_use_clock (bin, clock) can be used 
+to force the use of this specific clock for all the elements in this bin. 
+
+gst_bin_use_clock (bin, NULL) to disable all clocking for this bin.
+
+gst_bin_auto_clock (bin) to use the default algorithm to find a clock.
+
+bins that get a use clock set a flag and store the clock, they also call
+set_clock on all of their children. When other children are added, they
+all get the stored clock.
+
+
+Clock distribution
+------------------
+
+clock providers and receivers are collected in the bins on element 
+add/remove, recursing bins if needed. 
+
+the toplevel bin with a scheduler selects the global clock and calls
+set_clock on itself.
+
+bins dispatch the set_clock to to all of the reveivers. Bins with
+a scheduler and another use_clock do nothing.
+
+Bins with a scheduler also notify the scheduler of the clock.
+
+
+Clock usage
+-----------
+
+when an element wants to wait for a specific time, if calls
+gst_element_clock_wait (elements, clock, time). The call is dispatched
+to the scheduler of the element which can use the owner field 
+of the clock to check if the elements are in the same scheduler.
+
+For elements waiting for a clock provided by an element in another
+scheduler there is no problem.
+
+When provider and receiver are in the same scheduler, a deadlock can
+occur since the scheduler will block on the wait without being able to
+schedule the provider again to update the clock. 
+
+A solution would be to call the async notify of the clock and schedule
+some other element (the provider?). We probably need an event based
+scheduler for this. When the async event arrives we can reschedule
+the receiver and continue.
+
+The current scheduler will assert on this condition for now.
+
+
+Changing clocks
+---------------
+
+The clock can only be changed when the bin is in the PAUSED state.
+
+
+State Changes
+-------------
+
+When the pipeline is PAUSED, the clock is stopped with 
+gst_clock_enable (clock, FALSE). The clock should unblock all
+waiting elements ASAP and return GST_CLOCK_STOP in the wait.
+
+Elements waiting for a clock and receiving the STOP should 
+process the last buffer ASAP and break out of their loop.
+
+When the pipeline is brought to the READY state, the clock is 
+set to 0.
+
+When the clock is enabled again, it should start counting from where
+it was last disabled.
+
+
+automatic Clock selection
+-------------------------
+
+Select a random clock from the Src elements.
+if no Src elements exist with a clock, select a random clock from the
+Sink elements.
+else use a default System Clock.
+
+Src elements with a clock are prefered because they usualy provide
+live audio/video.
+
+Issues
+------
+
+ossrc ! osssink can cause clock drift if osssink doesn't process the bytes
+at the same rate osssrc provides them (different hardware). Things will
+stutter and cracle if this is the case.	QoS and a resampler could solve
+this.
+
+
+
+
+
