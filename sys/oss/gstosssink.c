@@ -257,7 +257,7 @@ gst_osssink_sinkconnect (GstPad *pad, const GstCaps *caps)
   return GST_PAD_LINK_OK;
 }
 
-static inline gint64 
+static inline gint
 gst_osssink_get_delay (GstOssSink *osssink) 
 {
   gint delay = 0;
@@ -280,6 +280,7 @@ gst_osssink_get_delay (GstOssSink *osssink)
       delay = (info.fragstotal * info.fragsize) - info.bytes;	  
     }
   }
+
   return delay;
 }
 
@@ -298,7 +299,9 @@ gst_osssink_get_time (GstClock *clock, gpointer data)
   /* sometimes delay is bigger than the number of bytes sent to the device, 
    * which screws up this calculation, we assume that everything is still 
    * in the device then */
-  if (((guint64)delay) > osssink->handled) {
+  if (delay < 0) {
+    delay = 0;
+  } else if (((guint64) delay) > osssink->handled) {
     delay = osssink->handled;
   }
   res =  (osssink->handled - delay) * GST_SECOND / GST_OSSELEMENT (osssink)->bps;
