@@ -10,3 +10,4 @@ libgstsynaesthesia_la_CFLAGS = -O2 -ffast-math $(GST_CFLAGS)
 libgstsynaesthesia_la_LIBADD =
 libgstsynaesthesia_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
+EXTRA_DIST = README-syna
