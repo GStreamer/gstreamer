@@ -169,6 +169,19 @@ gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data)
   else {
     guint64 size = GST_BUFFER_SIZE (data);
 
+    if (!GST_PAD_CAPS (mpeg_parse->srcpad)) {
+      gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
+
+      gst_pad_set_caps (mpeg_parse->srcpad,
+		      GST_CAPS_NEW (
+    			"mpeg_parse_src",
+    			"video/mpeg",
+    			  "mpegversion",  GST_PROPS_INT (mpeg2 ? 2 : 1),
+    			  "systemstream", GST_PROPS_BOOLEAN (TRUE),
+    			  "parsed",       GST_PROPS_BOOLEAN (TRUE)
+			      ));
+    }
+
     GST_BUFFER_TIMESTAMP (data) = mpeg_parse->next_ts;
     gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (data));
     mpeg_parse->next_ts += ((size * 1000000.0) / (mpeg_parse->bit_rate));
