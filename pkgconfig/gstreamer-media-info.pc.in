@@ -6,6 +6,7 @@ includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
 Name: GStreamer Media Info Library
 Description: Streaming-media framework, media info libraries
 Requires: gstreamer-@GST_MAJORMINOR@
+Version: @VERSION@
 
 Libs: -L${libdir} -lgstmedia-info-@GST_MAJORMINOR@
 Cflags: -I${includedir}
