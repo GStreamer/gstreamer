@@ -9,7 +9,7 @@
 AUStream::AUStream ():
 cur_rd (0), cur_wr (0), totalctr (0), size (0), buf (0)
 {
-  buf = new (Aunit **)[AUStream::BUF_SIZE];
+  buf = new (Aunit *)[AUStream::BUF_SIZE];
 }
 
 
