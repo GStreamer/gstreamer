@@ -1,0 +1,24 @@
+EXPORTS
+    gst_plugin_desc
+    gst_riff_read_get_type
+    gst_riff_create_video_template_caps
+    gst_riff_create_video_caps
+    gst_riff_create_video_caps_with_data
+    gst_riff_create_audio_template_caps
+    gst_riff_create_audio_caps
+    gst_riff_create_audio_caps_with_data
+    gst_riff_create_iavs_template_caps
+    gst_riff_create_iavs_caps
+    gst_riff_read_header
+    gst_riff_read_data
+    gst_riff_read_seek
+    gst_riff_read_skip
+    gst_riff_read_info
+    gst_riff_read_list
+    gst_riff_read_ascii
+    gst_riff_read_strh
+    gst_riff_read_strf_iavs
+    gst_riff_read_strf_auds_with_data
+    gst_riff_read_strf_vids_with_data
+    gst_riff_peek_tag
+    gst_riff_peek_list
