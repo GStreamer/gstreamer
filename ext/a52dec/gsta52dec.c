@@ -532,7 +532,7 @@ gst_a52dec_change_state (GstElement * element)
       a52dec->level = 1;
       a52dec->bias = 384;
       a52dec->last_ts = -1;
-      a52dec->current_ts = -1;
+      a52dec->current_ts = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
