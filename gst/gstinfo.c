@@ -31,6 +31,7 @@
 #include <dlfcn.h>
 #endif
 #include <unistd.h>
+#include <string.h> /* G_VA_COPY */
 #include "gstinfo.h"
 #include "gstlog.h"
 #include "gst_private.h"
@@ -295,7 +296,7 @@ void gst_debug_log_valist (GstDebugCategory *category, GstDebugLevel level,
 
   message.message = NULL;
   message.format = format;
-  message.arguments = args;
+  G_VA_COPY (message.arguments, args);
   
   handler = __log_functions;
   while (handler) {
