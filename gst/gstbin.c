@@ -299,7 +299,7 @@ gboolean gst_bin_set_state_type(GstBin *bin,
 
   if (oclass->change_state_type)
     (oclass->change_state_type)(bin,state,type);
-	return TRUE;
+  return TRUE;
 }
 
 void gst_bin_real_destroy(GtkObject *object) {
@@ -424,7 +424,7 @@ static int gst_bin_loopfunc_wrapper(int argc,char *argv[]) {
   GList *pads;
   GstPad *pad;
   GstBuffer *buf;
-  gchar *name = gst_element_get_name(element);
+  G_GNUC_UNUSED gchar *name = gst_element_get_name(element);
 
   DEBUG("** gst_bin_loopfunc_wrapper(%d,\"%s\")\n",
           argc,gst_element_get_name(element));
@@ -502,11 +502,13 @@ static void gst_bin_create_plan_func(GstBin *bin) {
     if (element->loopfunc != NULL) {
       g_print("gstbin: loop based element \"%s\" in bin \"%s\"\n", gst_element_get_name(element), gst_element_get_name(GST_ELEMENT(bin)));
       bin->need_cothreads = TRUE;
+      break;
     }
     // if it's a complex element, use cothreads
     else if (GST_ELEMENT_IS_MULTI_IN(element)) {
       g_print("gstbin: complex element \"%s\" in bin \"%s\"\n", gst_element_get_name(element), gst_element_get_name(GST_ELEMENT(bin)));
       bin->need_cothreads = TRUE;
+      break;
     }
     // if it has more than one input pad, use cothreads
     sink_pads = 0;
@@ -553,6 +555,11 @@ static void gst_bin_create_plan_func(GstBin *bin) {
         cothread_setfunc(element->threadstate,gst_bin_loopfunc_wrapper,
                          0,(char **)element);
       }
+      if (GST_IS_SRC(element)) {
+        g_print("gstbin: adding '%s' as entry point\n",gst_element_get_name(element));
+        bin->entries = g_list_prepend(bin->entries,element);
+        bin->numentries++;
+      } 
 
       pads = gst_element_get_pad_list(element);
       while (pads) {
@@ -581,10 +588,12 @@ static void gst_bin_create_plan_func(GstBin *bin) {
             while (connection_pads) {
               opad = GST_PAD(connection_pads->data);
               if (gst_pad_get_direction(opad) == GST_PAD_SRC) {
-                g_print("gstbin: setting push&pull handlers for %s:%s SRC connection\n",
-         	 	gst_element_get_name(outside),gst_pad_get_name(opad));
+                g_print("gstbin: setting push&pull handlers for %s:%s SRC connection %p %p\n",
+         	 	gst_element_get_name(outside),gst_pad_get_name(opad), opad, opad->pullfunc);
+
                 opad->pushfunc = gst_bin_pushfunc_wrapper;
                 opad->pullfunc = gst_bin_pullfunc_wrapper;
+
                 if (outside->threadstate == NULL) {
                   outside->threadstate = cothread_create(bin->threadcontext);
                   cothread_setfunc(outside->threadstate,gst_bin_loopfunc_wrapper,
@@ -623,9 +632,13 @@ static void gst_bin_create_plan_func(GstBin *bin) {
           pad = GST_PAD(pads->data);
           /* we only worry about sink pads */
           if (gst_pad_get_direction(pad) == GST_PAD_SINK) {
+	    g_print("gstbin: found SINK pad %s\n", gst_pad_get_name(pad));
             /* get the pad's peer */
             peer = gst_pad_get_peer(pad);
-            if (!peer) break;
+            if (!peer) {
+	      g_print("gstbin: found SINK pad %s has no peer\n", gst_pad_get_name(pad));
+	      break;
+	    }
             /* get the parent of the peer of the pad */
             outside = GST_ELEMENT(gst_pad_get_parent(peer));
             if (!outside) break;
@@ -639,6 +652,9 @@ static void gst_bin_create_plan_func(GstBin *bin) {
 	      bin->entries = g_list_prepend(bin->entries,outside);
 	      bin->numentries++;
 	    }
+	  }
+	  else {
+	    g_print("gstbin: found pad %s\n", gst_pad_get_name(pad));
 	  }
 	  pads = g_list_next(pads);
 	}
@@ -668,7 +684,8 @@ void gst_bin_iterate_func(GstBin *bin) {
     cothread_switch(GST_ELEMENT(bin->children->data)->threadstate);
   } else {
     if (bin->numentries <= 0) {
-      printf("gstbin: no elements in bin \"%s\"\n", gst_element_get_name(GST_ELEMENT(bin)));
+      printf("gstbin: no entries in bin \"%s\" trying children...\n", gst_element_get_name(GST_ELEMENT(bin)));
+      // we will try loop over the elements then...
       entries = bin->children;
     }
     else {

@@ -55,8 +55,7 @@ struct _GstQueue {
   GstPad *srcpad;
 
   /* the queue of buffers we're keeping our grubby hands on */
-  GList *queue;
-  GList *tail;		/* have to keep track of this myself */
+  GSList *queue;
 
   gint level_buffers;	/* number of buffers queued here */
   gint max_buffers;	/* maximum number of buffers queued here */

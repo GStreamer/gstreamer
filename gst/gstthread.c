@@ -55,6 +55,7 @@ static xmlNodePtr gst_thread_save_thyself(GstElement *element,xmlNodePtr parent)
 
 static void gst_thread_prepare(GstThread *thread);
 static void gst_thread_signal_thread(GstThread *thread);
+static void gst_thread_create_plan_dummy(GstBin *bin);
 
 
 static GstBin *parent_class = NULL;
@@ -85,10 +86,12 @@ gst_thread_class_init(GstThreadClass *klass) {
   GtkObjectClass *gtkobject_class;
   GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
+  GstBinClass *gstbin_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
   gstobject_class = (GstObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
+  gstbin_class = (GstBinClass*)klass;
 
   parent_class = gtk_type_class(gst_bin_get_type());
 
@@ -97,6 +100,8 @@ gst_thread_class_init(GstThreadClass *klass) {
 
   gstelement_class->change_state = gst_thread_change_state;
   gstelement_class->save_thyself = gst_thread_save_thyself;
+
+  gstbin_class->create_plan = gst_thread_create_plan_dummy;
 
   gtkobject_class->set_arg = gst_thread_set_arg;
   gtkobject_class->get_arg = gst_thread_get_arg;
@@ -107,6 +112,10 @@ static void gst_thread_init(GstThread *thread) {
 
   thread->lock = g_mutex_new();
   thread->cond = g_cond_new();
+}
+
+static void gst_thread_create_plan_dummy(GstBin *bin) {
+  gst_info("gstthread: create plan delayed until thread starts\n");
 }
 
 static void gst_thread_set_arg(GtkObject *object,GtkArg *arg,guint id) {
@@ -246,6 +255,9 @@ void *gst_thread_main_loop(void *arg) {
 
   gst_info("gstthread: thread \"%s\" is running with PID %d\n",
 		  gst_element_get_name(GST_ELEMENT(thread)), getpid());
+
+  if (GST_BIN_CLASS(parent_class)->create_plan)
+    GST_BIN_CLASS(parent_class)->create_plan(GST_BIN(thread));
 
   while(!GST_FLAG_IS_SET(thread,GST_THREAD_STATE_REAPING)) {
     if (GST_FLAG_IS_SET(thread,GST_THREAD_STATE_SPINNING))

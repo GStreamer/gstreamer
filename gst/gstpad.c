@@ -201,7 +201,7 @@ void gst_pad_push(GstPad *pad,GstBuffer *buffer) {
     (pad->chainfunc)(pad->peer,buffer);
   // else we squawk
   } else {
-    //g_print("-- gst_pad_push(): houston, we have a problem, no way of talking to peer\n");
+    g_print("-- gst_pad_push(): houston, we have a problem, no way of talking to peer\n");
   }
 
 }
@@ -340,7 +340,7 @@ void gst_pad_connect(GstPad *srcpad,GstPad *sinkpad) {
   /* now copy the chain pointer from sink to src */
   srcpad->chainfunc = sinkpad->chainfunc;
   /* and the pull function */
-  srcpad->pullfunc = sinkpad->pullfunc;
+  //srcpad->pullfunc = sinkpad->pullfunc;
 
   /* set the connected flag */
   /* FIXME: set connected flag */
