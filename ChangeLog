@@ -1,3 +1,8 @@
+2004-09-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybin.c: (gst_play_bin_get_property):
+	  Volume is a double not a float.
+
 2004-09-15  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_remove_client_link),
