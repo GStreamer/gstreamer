@@ -1,0 +1,108 @@
+Set of 0.4.0 proposals
+
+* module versioning
+  - we need an agreement on how we are going to version the separate modules.
+    This needs to meet some requirements :
+    a) we shouldn't be forced to release all of the modules together 
+       every time (if the plugins have been updated, and still work against
+       a previous core, then only release plugins, for example)
+       We should start treating the different modules as separate projects
+       (albeit still closely tied of course)
+    b) it should be clear for other people what packages they need to download
+    c) major API breakage needs to be clear; we don't expect really old players
+       to keep working with really new cores.
+
+   - my idea (which others seemed to agree with) would be to let the micro
+     numbers run independently.  Only when the core API has changed to the
+     point that other modules are not compatible with them anymore
+     should we upgrade the minor version.
+     We can assume/assert that modules with the same minor number will be able
+     to work with each other.
+     
+    - Example schedule : 
+      * we release 0.4.0 versions of all of the modules
+      * plugins get updated a few times : 0.4.1 and 0.4.2
+      * core gets a new scheduler, doesn't affect other modules : 0.4.1
+      * gst-player gets rapid releases due to arik's recovery: 0.4.1-0.4.5
+      * core gets a major new update re: events : 0.5.0
+      * some days later, other modules have been updated to the new core
+        and the new core starts being useful to other people as well
+	
+* release practice
+  - we should have a simple way to cut releases; something that makes
+    the necessary adaptions to the source tree
+    This could also be a simple check list of things that need to pass
+  - cvs tarballs/packages should be easily distinguishable from pre-release
+    tarballs/packages and actual released ones.
+
+    my idea here would be :
+    a) releases are named as normal
+       e.g. gstreamer-0.4.0.tar.gz
+            gstreamer-0.4.0-1.i386.rpm
+
+    b) as soon as the release is made, we are back in "cvs" mode
+       i'd use a ".1" for a fourth version number for all cvs versions
+         so as soon as we release 0.4.0, I'd add a fourth ".1" version number.
+	 this one would be used during the whole of the cvs period, no
+	 reason to up this manually in between
+	The packages (rpms in any case, don't know about debs) would still
+	keep the date as the revision number like they have now, in order
+	to make it easy to work with snapshots.
+
+    c) when we are ready to release this module, I would go back to maintainer
+       mode, but keep the fourth version number and increase that for each cut.
+       So we'd stop developing the module, switch to maintainer mode, up the
+       version number to
+       gstreamer-0.4.0.2.tar.gz
+       and test that.
+
+     d) when we are happy with the precuts, we drop the fourth number and make
+        a release
+
+     Summary :
+     * all "official" released versions have sane versioning with three numbers
+     * all "cvs" versions are clearly recognizable by the fourth .1
+     * all "precuts" are also recognizable
+     * no tarballs will accidentally spill pretending to be real releases ;)
+     * upgrading rpm's all through this process is easy
+	 
+* build code stuff duplicated between various modules
+  - how do we integrate these ? this pertains to stuff in autogen.sh,
+    duplicate stuff in configure.ac (which should probably be moved out to
+    custom .m4 files and yanked in), and maybe testing stuff
+  
+* what possible ways are there to build gstreamer ?
+  I would like to take stock of the combinations of deps possible to build
+  gstreamer.  While most people want only glib2, I think there is merit
+  in still making glib1 work and willing to put in the effort.  I just need
+  the possibilities mapped out once and for all ;) IMO the effort going into
+  making gstreamer build without libxml is the same as making it work with
+  older glib too.  I mean, as soon as you allow variation, it isn't that hard
+  to allow for more than one variation.  The bigger step is from zero to one.
+  
+  so, what are they ?
+  - glib1 & gtk1
+  - glib1 & gtk1 & libxml
+  - glib2 & libxml2
+  
+* media suite
+  - media files on the site should be renamed to simple uniform names
+  - and split up based on size
+  - described by features/content
+
+* when to branch in CVS ?
+
+* automatic build testing
+  - tinderbox ? useful ?
+  - small build scripts
+  
+* automatic functionality testing
+  - an md5sink would be useful to do this
+  - something automated is needed; it should check if you have the plugins
+    that are needed to test other plugins
+
+* media player
+
+* packaging
+  - dependency libs should be easily available
+
