@@ -118,19 +118,19 @@ static const struct poptOption gstreamer_options[] = {
   {"gst-version",        NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_VERSION,        N_("Print the GStreamer version"), NULL},
   {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_FATAL_WARNINGS, N_("Make all warnings fatal"), NULL},
 #ifndef GST_DISABLE_GST_DEBUG
-  {"gst-debug-level",    NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_LEVEL,  N_("default debug level from 1 (only error) to 5 (anything) or 0 for no output"), "LEVEL"},
-  {"gst-debug",          NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,          N_("colon-seperated list of category_name=level pairs to set specific levels for the individual categories.\nExample:GST_AUTOPLUG=5:GST_ELEMENT_*=3"), "CATEGORIES"},
-  {"gst-debug-no-color", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_NO_COLOR, N_("disable color debugging output"), NULL},
-  {"gst-disable-debug",  NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_DISABLE,  N_("disable debugging")},
-  {"gst-debug-help",     NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_HELP,     N_("print available debug categories and exit"), NULL},
+  {"gst-debug-level",    NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_LEVEL,  N_("Default debug level from 1 (only error) to 5 (anything) or 0 for no output"), "LEVEL"},
+  {"gst-debug",          NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,          N_("Colon-seperated list of category_name=level pairs to set specific levels for the individual categories.\nExample:GST_AUTOPLUG=5:GST_ELEMENT_*=3"), "CATEGORIES"},
+  {"gst-debug-no-color", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_NO_COLOR, N_("Disable color debugging output"), NULL},
+  {"gst-disable-debug",  NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_DISABLE,  N_("Disable debugging")},
+  {"gst-debug-help",     NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_HELP,     N_("Print available debug categories and exit"), NULL},
 #endif
   {"gst-disable-cpu-opt",NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,	  NULL, ARG_DISABLE_CPU_OPT,N_("Disable accelerated CPU instructions"), NULL},
-  {"gst-plugin-spew",    NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_PLUGIN_SPEW,    N_("enable verbose plugin loading diagnostics"), NULL},
+  {"gst-plugin-spew",    NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_PLUGIN_SPEW,    N_("Enable verbose plugin loading diagnostics"), NULL},
   {"gst-plugin-path",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH,    N_("'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins"), "PATHS"},
-  {"gst-plugin-load",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD,    N_("comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH"), "PLUGINS"},
-  {"gst-disable-segtrap",NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_SEGTRAP_DISABLE,N_("disable trapping of segmentation faults during plugin loading"), NULL},
-  {"gst-scheduler",      NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,      N_("scheduler to use ('"GST_SCHEDULER_DEFAULT_NAME"' is the default)"), "SCHEDULER"},
-  {"gst-registry",       NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,       N_("registry to use") , "REGISTRY"},
+  {"gst-plugin-load",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD,    N_("Comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH"), "PLUGINS"},
+  {"gst-disable-segtrap",NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_SEGTRAP_DISABLE,N_("Disable trapping of segmentation faults during plugin loading"), NULL},
+  {"gst-scheduler",      NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,      N_("Scheduler to use ('"GST_SCHEDULER_DEFAULT_NAME"' is the default)"), "SCHEDULER"},
+  {"gst-registry",       NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,       N_("Registry to use") , "REGISTRY"},
   POPT_TABLEEND
 };
 
