@@ -1,3 +1,12 @@
+2004-07-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/videoscale/videoscale.c: (gst_videoscale_setup),
+	(gst_videoscale_planar411), (gst_videoscale_scale_nearest_32bit),
+	(gst_videoscale_scale_nearest_24bit),
+	(gst_videoscale_scale_nearest_16bit):
+	  fix 16bit and 24bit for stride (24bit might need testing)
+	  don't pretend we do more than one algorithm
+
 2004-07-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* configure.ac:
