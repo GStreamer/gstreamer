@@ -98,7 +98,7 @@ GST_PADTEMPLATE_FACTORY (osssink_sink_factory,
     		      GST_PROPS_INT (8),
      		      GST_PROPS_INT (16)
      		    ),
-      "rate",       GST_PROPS_INT_RANGE (8000, 48000),
+      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
       "channels",   GST_PROPS_INT_RANGE (1, 2)
   )
 );
