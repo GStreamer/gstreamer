@@ -252,7 +252,8 @@ gst_resample_nearest_s16 (gst_resample_t * r)
       SCALE_LOOP (o_ptr[0] = i_ptr[0], 1);
       break;
     case 2:
-      SCALE_LOOP (o_ptr[0] = i_ptr[0]; o_ptr[1] = i_ptr[1], 2);
+      SCALE_LOOP (o_ptr[0] = i_ptr[0];
+          o_ptr[1] = i_ptr[1], 2);
       break;
     default:
     {
@@ -472,8 +473,6 @@ gst_resample_sinc_s16 (gst_resample_t * r)
 
 static functable_t *ft;
 
-double out_tmp[10000];
-
 void
 gst_resample_sinc_ft_s16 (gst_resample_t * r)
 {
@@ -493,6 +492,14 @@ gst_resample_sinc_ft_s16 (gst_resample_t * r)
   double x, d;
   double scale;
   int n = 4;
+  double *out_tmp;
+
+  if (r->hack_union.s.out_tmp_len < r->o_samples) {
+    r->hack_union.s.out_tmp = realloc (r->hack_union.s.out_tmp,
+        r->o_samples * 2 * sizeof (double));
+    r->hack_union.s.out_tmp_len = r->o_samples;
+  }
+  out_tmp = r->hack_union.s.out_tmp;
 
   scale = r->i_inc;             /* cutoff at 22050 */
   /*scale = 1.0;          // cutoff at 24000 */
@@ -605,7 +612,8 @@ gst_resample_nearest_float (gst_resample_t * r)
       SCALE_LOOP (o_ptr[0] = i_ptr[0], 1);
       break;
     case 2:
-      SCALE_LOOP (o_ptr[0] = i_ptr[0]; o_ptr[1] = i_ptr[1], 2);
+      SCALE_LOOP (o_ptr[0] = i_ptr[0];
+          o_ptr[1] = i_ptr[1], 2);
       break;
     default:
     {
@@ -805,6 +813,14 @@ gst_resample_sinc_ft_float (gst_resample_t * r)
   double x, d;
   double scale;
   int n = 4;
+  double *out_tmp;
+
+  if (r->hack_union.s.out_tmp_len < r->o_samples) {
+    r->hack_union.s.out_tmp = realloc (r->hack_union.s.out_tmp,
+        r->o_samples * 2 * sizeof (double));
+    r->hack_union.s.out_tmp_len = r->o_samples;
+  }
+  out_tmp = r->hack_union.s.out_tmp;
 
   scale = r->i_inc;             /* cutoff at 22050 */
   /*scale = 1.0;          // cutoff at 24000 */

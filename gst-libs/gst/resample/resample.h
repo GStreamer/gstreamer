@@ -78,12 +78,20 @@ struct gst_resample_s {
 
 	void *i_buf, *o_buf;
 
-	double acc[10];
+	double acc[2];
+        union {
+          struct {
+            double *out_tmp;
+            int out_tmp_len;
+          } s;
+          double padding[8];
+        } hack_union;
 
 	/* methods */
 	void (*scale)(gst_resample_t *r);
 
 	double ack;
+
 };
 
 void gst_resample_init(gst_resample_t *r);
