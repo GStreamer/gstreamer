@@ -48,7 +48,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate gst_auparse_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
-    GST_PAD_ALWAYS,
+    GST_PAD_SOMETIMES,          /* FIXME: spider */
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "       /* does not support 24bit without patch */
         GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS "; "
         "audio/x-alaw, "
@@ -76,6 +76,8 @@ static void gst_auparse_class_init (GstAuParseClass * klass);
 static void gst_auparse_init (GstAuParse * auparse);
 
 static void gst_auparse_chain (GstPad * pad, GstData * _data);
+
+static GstElementStateReturn gst_auparse_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
@@ -127,6 +129,8 @@ gst_auparse_class_init (GstAuParseClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  gstelement_class->change_state = gst_auparse_change_state;
 }
 
 static void
@@ -138,11 +142,13 @@ gst_auparse_init (GstAuParse * auparse)
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->sinkpad);
   gst_pad_set_chain_function (auparse->sinkpad, gst_auparse_chain);
 
-  auparse->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
+  auparse->srcpad = NULL;
+#if 0                           /* FIXME: spider */
+  gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_auparse_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
   gst_pad_use_explicit_caps (auparse->srcpad);
+#endif
 
   auparse->offset = 0;
   auparse->size = 0;
@@ -268,9 +274,15 @@ Samples :
       case 26:                 /* 5 bit CCITT G723 ADPCM */
 
       default:
-        g_warning ("help!, dont know how to deal with this format yet\n");
+        GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL), (NULL));
+        gst_buffer_unref (buf);
         return;
     }
+
+    auparse->srcpad =
+        gst_pad_new_from_template (gst_static_pad_template_get
+        (&gst_auparse_src_template), "src");
+    gst_pad_use_explicit_caps (auparse->srcpad);
 
     if (law) {
       tempcaps =
@@ -293,8 +305,12 @@ Samples :
 
     if (!gst_pad_set_explicit_caps (auparse->srcpad, tempcaps)) {
       gst_buffer_unref (buf);
+      gst_object_unref (GST_OBJECT (auparse->srcpad));
+      auparse->srcpad = NULL;
       return;
     }
+
+    gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
 
     newbuf = gst_buffer_new ();
     GST_BUFFER_DATA (newbuf) = (gpointer) malloc (size - (auparse->offset));
@@ -310,6 +326,27 @@ Samples :
   gst_pad_push (auparse->srcpad, GST_DATA (buf));
 }
 
+static GstElementStateReturn
+gst_auparse_change_state (GstElement * element)
+{
+  GstAuParse *auparse = GST_AUPARSE (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_PAUSED_TO_READY:
+      if (auparse->srcpad) {
+        gst_element_remove_pad (element, auparse->srcpad);
+        auparse->srcpad = NULL;
+      }
+      break;
+    default:
+      break;
+  }
+
+  if (parent_class->change_state)
+    return parent_class->change_state (element);
+
+  return GST_STATE_SUCCESS;
+}
 
 static gboolean
 plugin_init (GstPlugin * plugin)
