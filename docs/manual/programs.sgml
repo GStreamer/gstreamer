@@ -90,17 +90,20 @@ clean:
       A simple commandline looks like:
 
     <screen>
-gstreamer-launch disksrc hello.mp3 ! mp3parse ! mpg123 ! audiosink-oss
+gstreamer-launch disksrc location=hello.mp3 ! mp3parse ! mpg123 ! audiosink
     </screen>
 
       A more complex pipeline looks like:
 
     <screen>
-gstreamer-launch disksrc redpill.vob ! css-descramble ! private_stream_1.0 ! \
-         (ac3parse ! ac3dec ! audiosink) video_0 ! (mpeg2dec ! videosink)
+gstreamer-launch disksrc redpill.vob audio_00! (ac3parse ! ac3dec ! audiosink) \
+video_00! (mpeg2dec ! videosink)
     </screen>
 
     </para>
+
+    <para>Note that the parser isn't capable of more complex pipelines yet, including
+    the VOB player above.  The minor tweaks will be made post 0.1.0.</para>
   </sect1>
 
   <sect1>
