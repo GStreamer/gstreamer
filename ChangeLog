@@ -1,3 +1,9 @@
+2004-10-26  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnomevfssink_init),
+	(gst_gnomevfssink_handle_event), (gst_gnomevfssink_chain):
+	  Implement seeking.
+
 2004-10-25  James Henstridge  <james@jamesh.id.au>
 
 	Reviewed by:  David Schleef  <ds@schleef.org>
