@@ -1236,6 +1236,7 @@ examples/queue3/Makefile
 examples/queue4/Makefile
 examples/thread/Makefile
 examples/mixer/Makefile
+examples/cutter/Makefile
 examples/launch/Makefile
 examples/xml/Makefile
 examples/plugins/Makefile
