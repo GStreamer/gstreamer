@@ -1,5 +1,12 @@
 2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/audioscale/gstaudioscale.c: (gst_audioscale_init),
+	(gst_audioscale_chain):
+	  %#^@^#@^@#^#@^#@^@#^@#^@#^@#^#@^#@^#@^@#^#@ fix seeking
+	  when resampling - how the ^@$^!@^! is this possible?!?
+
+2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_change_state):
 	  Reset variables on READY.
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_request_new_pad),
