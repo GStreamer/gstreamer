@@ -92,14 +92,6 @@ gst_ladspa_base_init (GstLADSPAClass *klass)
     desc = g_hash_table_lookup(ladspa_descriptors, GINT_TO_POINTER(0));
   g_assert (desc);
 
-  /* construct the element details struct */
-  details = g_new0(GstElementDetails,1);
-  details->longname = g_strdup(desc->Name);
-  details->klass = "Filter/Effect/Audio/LADSPA";
-  details->description = details->longname;
-  details->author = g_strdup(desc->Maker);
-  gst_element_class_set_details (element_class, details);
-
   /* pad templates */
   klass->numports = desc->PortCount;
   klass->numsinkpads = 0;
@@ -123,6 +115,17 @@ gst_ladspa_base_init (GstLADSPAClass *klass)
       gst_element_class_add_pad_template (element_class, templ);
     }
   }
+
+  /* construct the element details struct */
+  details = g_new0(GstElementDetails,1);
+  details->longname = g_strdup(desc->Name);
+  details->description = details->longname;
+  details->author = g_strdup(desc->Maker);
+  if     ((klass->numsinkpads >0) && (klass->numsrcpads >0)) details->klass = "Filter/Effect/Audio/LADSPA";
+  else if((klass->numsinkpads==0) && (klass->numsrcpads >0)) details->klass = "Source/Audio/LADSPA";
+  else if((klass->numsinkpads >0) && (klass->numsrcpads==0)) details->klass = "Sink/Audio/LADSPA";
+  else details->klass = "Filter/Effect/Audio/LADSPA"; /* whatever this is */
+  gst_element_class_set_details (element_class, details);
 
   klass->srcpad_portnums = g_new0(gint,klass->numsrcpads);
   klass->sinkpad_portnums = g_new0(gint,klass->numsinkpads);

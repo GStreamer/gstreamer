@@ -1,3 +1,15 @@
+2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ladspa/gstladspa.c: (gst_ladspa_base_init):
+          classify LADSPA plugins based on number of src/sink pads
+	  (#133663, Stefan Kost)
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_init):
+          fix dparams registration
+	  (#133528, Stefan Kost)
+	* gst/vbidec/vbiscreen.c: (vbiscreen_set_current_cell):
+          fix use of isprint and use g_ascii_isprint instead
+	  (#133316, Stefan Kost)
+
 2004-02-11  David Schleef  <ds@schleef.org>
 
 	Convert a few inner loops to use liboil.  This is currently

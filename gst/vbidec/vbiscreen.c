@@ -506,7 +506,7 @@ void vbiscreen_set_current_cell( vbiscreen_t *vs, char text )
     int base;
     if( !vs ) return;
     base = ( ( vs->top_of_screen + vs->cury ) % ( 2 * ROWS ) ) * COLS;
-    if( isprint( text ) ) 
+    if( g_ascii_isprint( text ) ) 
         vs->text[ base + vs->curx + vs->indent ] = text;
     else
         vs->text[ base + vs->curx + vs->indent ] = ' ';
