@@ -451,13 +451,10 @@ gst_v4l2element_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
   GstV4l2Element *v4l2element;
-  GstTuner *tuner;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_V4L2ELEMENT (object));
   v4l2element = GST_V4L2ELEMENT (object);
-  /* stupid GstInterface */
-  tuner = (GstTuner *) object;
 
   switch (prop_id) {
     case ARG_DEVICE:
@@ -469,7 +466,9 @@ gst_v4l2element_set_property (GObject * object,
       break;
     case ARG_NORM:
       if (GST_V4L2_IS_OPEN (v4l2element)) {
-        GstTunerNorm *norm = gst_tuner_get_norm (tuner);
+        GstTuner *tuner = GST_TUNER (v4l2element);
+        GstTunerNorm *norm = gst_tuner_find_norm_by_name (tuner,
+            (gchar *) g_value_get_string (value));
 
         if (norm) {
           gst_tuner_set_norm (tuner, norm);
@@ -482,7 +481,9 @@ gst_v4l2element_set_property (GObject * object,
       break;
     case ARG_CHANNEL:
       if (GST_V4L2_IS_OPEN (v4l2element)) {
-        GstTunerChannel *channel = gst_tuner_get_channel (tuner);
+        GstTuner *tuner = GST_TUNER (v4l2element);
+        GstTunerChannel *channel = gst_tuner_find_channel_by_name (tuner,
+            (gchar *) g_value_get_string (value));
 
         if (channel) {
           gst_tuner_set_channel (tuner, channel);
@@ -495,13 +496,13 @@ gst_v4l2element_set_property (GObject * object,
       break;
     case ARG_FREQUENCY:
       if (GST_V4L2_IS_OPEN (v4l2element)) {
-        GstTunerChannel *channel;
+        GstTuner *tuner = GST_TUNER (v4l2element);
+        GstTunerChannel *channel = gst_tuner_get_channel (tuner);
 
-        if (!v4l2element->channel)
-          return;
-        channel = gst_tuner_get_channel (tuner);
-        g_assert (channel);
-        gst_tuner_set_frequency (tuner, channel, g_value_get_ulong (value));
+        if (channel &&
+            GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
+          gst_tuner_set_frequency (tuner, channel, g_value_get_ulong (value));
+        }
       } else {
         v4l2element->frequency = g_value_get_ulong (value);
         g_object_notify (object, "frequency");
