@@ -56,7 +56,7 @@ struct _GstQuarkTVClass
 
 GstElementDetails gst_quarktv_details = {
   "QuarkTV",
-  "Filter/Effect",
+  "Filter/Video/Effect",
   "Motion disolver",
   VERSION,
   "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>",

@@ -50,7 +50,7 @@ struct _GstEdgeTVClass
 
 GstElementDetails gst_edgetv_details = {
   "EdgeTV",
-  "Filter/Effect",
+  "Filter/Video/Effect",
   "Aply edge detect on video",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

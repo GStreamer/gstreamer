@@ -68,7 +68,7 @@ struct _GstAgingTVClass
 
 GstElementDetails gst_agingtv_details = {
   "AgingTV",
-  "Filter/Effect",
+  "Filter/Video/Effect",
   "Aply aging effect on video",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -59,7 +59,7 @@ struct _GstShagadelicTVClass
 
 GstElementDetails gst_shagadelictv_details = {
   "ShagadelicTV",
-  "Filter/Effect",
+  "Filter/Video/Effect",
   "Oh behave, ShagedelicTV makes images shagadelic!",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

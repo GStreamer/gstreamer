@@ -58,7 +58,7 @@ struct _GstVertigoTVClass
 
 GstElementDetails gst_vertigotv_details = {
   "VertigoTV",
-  "Filter/Effect",
+  "Filter/Video/Effect",
   "A loopback alpha blending effector with rotating and scaling",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -64,7 +64,7 @@ struct _GstDiceTVClass
 
 GstElementDetails gst_dicetv_details = {
   "DiceTV",
-  "Filter/Effect",
+  "Filter/Video/Effect",
   "'Dices' the screen up into many small squares",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -65,7 +65,7 @@ struct _GstWarpTVClass
 
 GstElementDetails gst_warptv_details = {
   "WarpTV",
-  "Filter/Effect",
+  "Filter/Video/Effect",
   "WarpTV does realtime goo'ing of the video input",
   VERSION,
   "Sam Lantinga <slouken@devolution.com>",

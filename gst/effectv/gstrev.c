@@ -74,7 +74,7 @@ struct _GstRevTVClass
 
 GstElementDetails gst_revtv_details = {
   "RevTV",
-  "Filter/Effect",
+  "Filter/Video/Effect",
   "A video waveform monitor for each line of video processed",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
