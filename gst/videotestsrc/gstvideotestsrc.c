@@ -162,7 +162,7 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
   gstelement_class->change_state = gst_videotestsrc_change_state;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
 {
   GstVideotestsrc *videotestsrc;

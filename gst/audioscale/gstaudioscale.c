@@ -162,7 +162,7 @@ gst_audioscale_class_init (AudioscaleClass *klass)
 
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_audioscale_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   Audioscale *audioscale;

@@ -204,7 +204,7 @@ gst_adder_parse_caps (GstAdder *adder, GstCaps *caps)
   return TRUE;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_adder_connect (GstPad *pad, GstCaps *caps)
 {
   GstAdder *adder;

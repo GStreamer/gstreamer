@@ -54,7 +54,7 @@ static void                  gst_v4lmjpegsink_class_init   (GstV4lMjpegSinkClass
 static void                  gst_v4lmjpegsink_init         (GstV4lMjpegSink      *v4lmjpegsink);
 
 /* the chain of buffers */
-static GstPadConnectReturn   gst_v4lmjpegsink_sinkconnect  (GstPad               *pad,
+static GstPadLinkReturn   gst_v4lmjpegsink_sinkconnect  (GstPad               *pad,
                                                             GstCaps              *vscapslist);
 static void                  gst_v4lmjpegsink_chain        (GstPad               *pad,
                                                             GstBuffer            *buf);
@@ -191,7 +191,7 @@ gst_v4lmjpegsink_init (GstV4lMjpegSink *v4lmjpegsink)
 }
 
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
                               GstCaps *vscapslist)
 {

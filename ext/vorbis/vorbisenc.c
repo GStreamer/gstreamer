@@ -167,7 +167,7 @@ gst_vorbisenc_class_init (VorbisEncClass * klass)
   gstelement_class->change_state = gst_vorbisenc_change_state;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_vorbisenc_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   VorbisEnc *vorbisenc;

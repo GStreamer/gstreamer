@@ -64,7 +64,7 @@ static gboolean              gst_v4lmjpegsrc_srcconvert   (GstPad         *pad,
                                                            gint64         src_value,
                                                            GstFormat      *dest_format,
                                                            gint64         *dest_value);
-static GstPadConnectReturn   gst_v4lmjpegsrc_srcconnect   (GstPad         *pad,
+static GstPadLinkReturn   gst_v4lmjpegsrc_srcconnect   (GstPad         *pad,
                                                            GstCaps        *caps);
 static GstBuffer*            gst_v4lmjpegsrc_get          (GstPad         *pad);
 
@@ -273,11 +273,11 @@ gst_v4lmjpegsrc_srcconvert (GstPad    *pad,
 }
 
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
                             GstCaps *caps)
 {
-  GstPadConnectReturn ret_val;
+  GstPadLinkReturn ret_val;
   GstV4lMjpegSrc *v4lmjpegsrc;
 
   v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));

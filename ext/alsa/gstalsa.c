@@ -63,7 +63,7 @@ static GstPad* gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *te
 static void gst_alsa_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_alsa_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static GstElementStateReturn gst_alsa_change_state(GstElement *element);
-static GstPadConnectReturn gst_alsa_connect(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn gst_alsa_connect(GstPad *pad, GstCaps *caps);
 
 static GstCaps* gst_alsa_caps (GstAlsa *this);
 
@@ -752,7 +752,7 @@ gst_alsa_caps (GstAlsa *this)
 /*
  * Negotiates the caps, "borrowed" from gstosssink.c
  */
-GstPadConnectReturn
+GstPadLinkReturn
 gst_alsa_connect(GstPad *pad, GstCaps *caps)
 {
     GstAlsa *this;

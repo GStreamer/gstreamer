@@ -180,7 +180,7 @@ videoscale_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
 }
 */
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_videoscale_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstVideoscale *videoscale;

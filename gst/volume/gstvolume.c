@@ -132,7 +132,7 @@ volume_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool (filter->srcpad);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 volume_connect (GstPad *pad, GstCaps *caps)
 {
   GstVolume *filter;
@@ -145,7 +145,7 @@ volume_connect (GstPad *pad, GstCaps *caps)
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
   
   if (GST_CAPS_IS_FIXED (caps)) {
-    GstPadConnectReturn set_retval;
+    GstPadLinkReturn set_retval;
     if (!volume_parse_caps (filter, caps))
       return GST_PAD_LINK_REFUSED;
 

@@ -60,7 +60,7 @@ static gboolean              gst_v4lsrc_srcconvert   (GstPad         *pad,
                                                       gint64         src_value,
                                                       GstFormat      *dest_format,
                                                       gint64         *dest_value);
-static GstPadConnectReturn   gst_v4lsrc_srcconnect   (GstPad         *pad,
+static GstPadLinkReturn   gst_v4lsrc_srcconnect   (GstPad         *pad,
                                                       GstCaps        *caps);
 static GstBuffer*            gst_v4lsrc_get          (GstPad         *pad);
 
@@ -239,11 +239,11 @@ gst_v4lsrc_srcconvert (GstPad    *pad,
 }
 
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_v4lsrc_srcconnect (GstPad  *pad,
                        GstCaps *vscapslist)
 {
-  GstPadConnectReturn ret_val;
+  GstPadLinkReturn ret_val;
   GstV4lSrc *v4lsrc;
   GstCaps *caps, *newcaps;
   gint palette;
