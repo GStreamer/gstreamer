@@ -1,0 +1,3 @@
+swig -perl5 Gst.i && \
+perl Makefile.PL && \
+make
