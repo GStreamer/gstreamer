@@ -102,7 +102,7 @@ are supposed to handle them.
   a DISCONTINUOUS event has a flush flag. If that flag is set, the
   element should also remove any buffered data it might have.
 
-  In addition to the flush flag, a DISCONTINOUS event also caries up
+  In addition to the flush flag, a DISCONTINUOUS event also caries up
   to GST_DISCONTINUOUS_MAX_FORMATS format/value pairs. These values
   might be used by the receiver of the event to resynchronize itself.
 

@@ -65,7 +65,7 @@ typedef enum {
   GST_BUFFER_SUBBUFFER  = GST_DATA_FLAG_LAST,
   GST_BUFFER_ORIGINAL,
   GST_BUFFER_DONTFREE,
-  GST_BUFFER_DISCONTINOUS,
+  GST_BUFFER_DISCONTINUOUS,
   GST_BUFFER_KEY_UNIT,
   GST_BUFFER_PREROLL,
   GST_BUFFER_FLAG_LAST 	= GST_DATA_FLAG_LAST + 8
@@ -128,9 +128,9 @@ GstBuffer*	gst_buffer_new_from_pool 	(GstBufferPool *pool, guint64 offset, guint
 #define		gst_buffer_ref_by_count(buf,c)	GST_BUFFER (gst_data_ref_by_count (GST_DATA (buf), c))
 #define		gst_buffer_unref(buf)		gst_data_unref (GST_DATA (buf))
 /* copy buffer */
-#define		gst_buffer_copy(buffer)		GST_BUFFER (gst_data_copy (GST_DATA (buffer)))
-#define		gst_buffer_copy_on_write(buffer) GST_BUFFER (gst_data_copy_on_write (GST_DATA (buffer)))
-#define		gst_buffer_free(buffer)		gst_data_free (GST_DATA (buffer))
+#define		gst_buffer_copy(buf)		GST_BUFFER (gst_data_copy (GST_DATA (buf)))
+#define		gst_buffer_copy_on_write(buf)   GST_BUFFER (gst_data_copy_on_write (GST_DATA (buf)))
+#define		gst_buffer_free(buf)		gst_data_free (GST_DATA (buf))
 
 /* creating a subbuffer */
 GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint offset, guint size);
