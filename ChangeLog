@@ -1,5 +1,20 @@
 2004-06-12  Zaheer Abbas Merali  <zaheerabbas@merali.org>
 
+	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_init_send):
+	* gst/tcp/gsttcpclientsink.h:
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_init_receive):
+	* gst/tcp/gsttcpclientsrc.h:
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_init),
+	(gst_tcpserversink_handle_server_read),
+	(gst_tcpserversink_init_send):
+	* gst/tcp/gsttcpserversink.h:
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_init_receive):
+	* gst/tcp/gsttcpserversrc.h:
+	Modified the tcp plugins so they are portable (IPv4,IPv6, any future 
+        version of IP)
+
+2004-06-12  Zaheer Abbas Merali  <zaheerabbas@merali.org>
+
 	* configure.ac:
 	Added ogg library so that OSX detects libtheora properly
 	
