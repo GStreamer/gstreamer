@@ -1,3 +1,24 @@
+2004-01-15  David Schleef  <ds@schleef.org>
+
+	* ext/esd/esdsink.c: (gst_esdsink_class_init): Remove property
+	that handles osssink fallback.
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_init),
+	(gst_audio_convert_getcaps):
+	* gst/qtdemux/qtdemux.c: (qtdemux_audio_caps):
+	Add audio/x-qdm2 for QDM2 audio.
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_get):
+	* gst/sine/gstsinesrc.h: Add example of how to implement tags.
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_getcaps):
+	Decrease minimum size to 16x16.
+	* gst/wavparse/gstwavparse.c:
+	Convert disabled pad template caps to new caps.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_get),
+	(gst_xvimagesink_chain): Throw element error when display cannot
+	be opened.  Increase minimum framerate to 1.0.  Check the data
+	free function on a buffer to make sure it is the type we expect
+	before manipulating it.
+
 2004-01-15  Julien MOUTTE <julien@moutte.net>
 
 	* gst/videofilter/gstvideobalance.c: (gst_videobalance_init),

@@ -119,6 +119,7 @@ static void  gst_audio_convert_get_property (GObject *object, guint prop_id, GVa
 /* gstreamer functions */
 static void                  gst_audio_convert_chain        (GstPad *pad, GstData *_data);
 static GstPadLinkReturn      gst_audio_convert_link         (GstPad *pad, const GstCaps *caps);
+static GstCaps *             gst_audio_convert_getcaps      (GstPad *pad);
 static GstElementStateReturn gst_audio_convert_change_state (GstElement *element);
 
 /* actual work */
@@ -268,6 +269,7 @@ gst_audio_convert_init (GstAudioConvert *this)
   /* sinkpad */
   this->sink = gst_pad_new_from_template (
       gst_static_pad_template_get (&gst_audio_convert_sink_template), "sink");
+  gst_pad_set_getcaps_function (this->sink, gst_audio_convert_getcaps);
   gst_pad_set_link_function (this->sink, gst_audio_convert_link);
   gst_pad_set_getcaps_function (this->sink, gst_audioconvert_getcaps);
   gst_element_add_pad (GST_ELEMENT(this), this->sink);
@@ -275,6 +277,7 @@ gst_audio_convert_init (GstAudioConvert *this)
   /* srcpad */
   this->src = gst_pad_new_from_template (
       gst_static_pad_template_get (&gst_audio_convert_src_template), "src");
+  gst_pad_set_getcaps_function (this->src, gst_audio_convert_getcaps);
   gst_pad_set_link_function (this->src, gst_audio_convert_link);
   gst_pad_set_getcaps_function (this->src, gst_audioconvert_getcaps);
   gst_element_add_pad (GST_ELEMENT(this), this->src);
@@ -360,6 +363,39 @@ gst_audio_convert_chain (GstPad *pad, GstData *_data)
   buf = gst_audio_convert_buffer_from_default_format (this, buf);
 
   gst_pad_push (this->src, GST_DATA (buf));
+}
+
+static GstCaps *
+gst_audio_convert_getcaps (GstPad *pad)
+{
+  GstAudioConvert *this;
+  GstPad *otherpad;
+  GstCaps *othercaps;
+  GstCaps *caps;
+  int i;
+
+  g_return_val_if_fail(GST_IS_PAD(pad), NULL);
+  g_return_val_if_fail(GST_IS_AUDIO_CONVERT(GST_OBJECT_PARENT (pad)), NULL);
+  this = GST_AUDIO_CONVERT(GST_OBJECT_PARENT (pad));
+
+  otherpad = (pad == this->src) ? this->sink : this->src;
+
+  othercaps = gst_pad_get_allowed_caps (otherpad);
+
+  for (i=0;i<gst_caps_get_size (othercaps); i++) {
+    GstStructure *structure;
+
+    structure = gst_caps_get_structure (othercaps, i);
+    gst_structure_remove_field (structure, "channels");
+    gst_structure_remove_field (structure, "endianness");
+    gst_structure_remove_field (structure, "width");
+    gst_structure_remove_field (structure, "depth");
+    gst_structure_remove_field (structure, "signed");
+  }
+  caps = gst_caps_intersect (othercaps, gst_pad_get_pad_template_caps (pad));
+  gst_caps_free(othercaps);
+
+  return caps;
 }
 
 static GstPadLinkReturn

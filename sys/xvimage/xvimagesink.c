@@ -29,6 +29,8 @@
 /* Object header */
 #include "xvimagesink.h"
 
+static void gst_xvimagesink_buffer_free (GstBuffer *buffer);
+
 /* ElementFactory information */
 static GstElementDetails gst_xvimagesink_details = GST_ELEMENT_DETAILS (
   "Video sink",
@@ -46,11 +48,11 @@ GST_STATIC_PAD_TEMPLATE (
   GST_PAD_ALWAYS,
   GST_STATIC_CAPS (
     "video/x-raw-rgb, "
-      "framerate = (double) [ 0, MAX ], "
+      "framerate = (double) [ 1.0, 100.0 ], "
       "width = (int) [ 0, MAX ], "
       "height = (int) [ 0, MAX ]; "
     "video/x-raw-yuv, "
-      "framerate = (double) [ 0, MAX ], "
+      "framerate = (double) [ 1.0, 100.0 ], "
       "width = (int) [ 0, MAX ], "
       "height = (int) [ 0, MAX ]"
   )
@@ -557,6 +559,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
     {
       g_mutex_unlock (xvimagesink->x_lock);
       g_free (xcontext);
+      gst_element_error (GST_ELEMENT (xvimagesink), "Could not open display");
       return NULL;
     }
   
@@ -938,7 +941,8 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
   
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
-  if (GST_BUFFER_PRIVATE (buf))
+  /* FIXME: need to check for correct xvimagesink here? */
+  if (GST_BUFFER_FREE_DATA_FUNC (buf) == gst_xvimagesink_buffer_free)
     {
       gst_xvimagesink_xvimage_put (xvimagesink, GST_BUFFER_PRIVATE (buf));
     }

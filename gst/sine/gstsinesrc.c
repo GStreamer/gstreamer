@@ -314,6 +314,18 @@ gst_sinesrc_get (GstPad *pad)
   g_return_val_if_fail (pad != NULL, NULL);
   src = GST_SINESRC (gst_pad_get_parent (pad));
 
+  if (!src->tags_pushed) {
+    GstTagList *taglist;
+
+    taglist = gst_tag_list_new ();
+
+    gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
+        GST_TAG_DESCRIPTION, "sine wave", NULL);
+
+    gst_element_found_tags_for_pad (GST_ELEMENT (src), pad, 0, taglist);
+    src->tags_pushed = TRUE;
+  }
+
   tdiff = src->samples_per_buffer * GST_SECOND / src->samplerate;
 
   /* note: the 2 is because of the format we use */

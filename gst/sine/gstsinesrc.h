@@ -77,6 +77,8 @@ struct _GstSineSrc {
   guint64 offset;
 
   gdouble accumulator;
+
+  gboolean tags_pushed;
 };
 
 struct _GstSineSrcClass {

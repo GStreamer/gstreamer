@@ -44,7 +44,7 @@ GST_STATIC_PAD_TEMPLATE (
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
   GST_STATIC_CAPS ("video/x-raw-rgb, "
-    "framerate = (double) [ 0, MAX ], "
+    "framerate = (double) [ 1.0, 100.0 ], "
     "width = (int) [ 0, MAX ], "
     "height = (int) [ 0, MAX ]")
 );
@@ -446,6 +446,7 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
     {
       g_mutex_unlock (ximagesink->x_lock);
       g_free (xcontext);
+      gst_element_error (GST_ELEMENT (ximagesink), "Could not open display");
       return NULL;
     }
   

@@ -183,8 +183,8 @@ gst_videoscale_getcaps (GstPad *pad)
     GstStructure *structure = gst_caps_get_structure (caps, i);
 
     gst_structure_set (structure,
-	"width", GST_TYPE_INT_RANGE, 100, G_MAXINT,
-	"height", GST_TYPE_INT_RANGE, 100, G_MAXINT,
+	"width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
+	"height", GST_TYPE_INT_RANGE, 16, G_MAXINT,
 	NULL);
   }
 
