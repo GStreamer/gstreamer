@@ -1364,6 +1364,7 @@ gst_alsa_probe_hw_params (GstAlsa * this, GstAlsaFormat * format)
   snd_pcm_hw_params_t *hw_params;
   snd_pcm_uframes_t period_size;
   unsigned int period_count;
+  unsigned int rate;
 
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (format != NULL, FALSE);
@@ -1392,8 +1393,19 @@ gst_alsa_probe_hw_params (GstAlsa * this, GstAlsaFormat * format)
           format->format));
   SIMPLE_ERROR_CHECK (snd_pcm_hw_params_set_channels (this->handle, hw_params,
           format->channels));
-  SIMPLE_ERROR_CHECK (snd_pcm_hw_params_set_rate (this->handle, hw_params,
-          format->rate, 0));
+  /* FIXME: We should use snd_pcm_hw_params_set_rate instead of 
+   * snd_pcm_hw_params_set_rate_near here. Unfortunately alsa fails in that case
+   * far more often and seems to handle this quite well. (Example: ENS1371 
+   * driver on alsalib 1.0.5, kernel 2.6.6-mm5). If it sets far too wrong sample
+   * rates, we need to revert back to snd_pcm_hw_params_set_rate or check the
+   * rate that was set.
+   */
+  rate = format->rate;
+  SIMPLE_ERROR_CHECK (snd_pcm_hw_params_set_rate_near (this->handle, hw_params,
+          &rate, 0));
+  if (rate != format->rate)
+    GST_WARNING_OBJECT (this, "set rate (%u) differs from desired rate (%u)",
+        rate, format->rate);
 
   period_count = this->period_count;
   SIMPLE_ERROR_CHECK (snd_pcm_hw_params_set_periods_near (this->handle,
@@ -1414,6 +1426,7 @@ static gboolean
 gst_alsa_set_hw_params (GstAlsa * this)
 {
   snd_pcm_hw_params_t *hw_params;
+  unsigned int rate;
 
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
@@ -1445,9 +1458,19 @@ gst_alsa_set_hw_params (GstAlsa * this)
     ERROR_CHECK (snd_pcm_hw_params_set_channels (this->handle, hw_params,
             this->format->channels), "Channels count (%d) not available: %s",
         this->format->channels);
-    ERROR_CHECK (snd_pcm_hw_params_set_rate (this->handle, hw_params,
-            this->format->rate, 0), "error setting rate (%d): %s",
-        this->format->rate);
+    /* FIXME: We should use snd_pcm_hw_params_set_rate instead of 
+     * snd_pcm_hw_params_set_rate_near here. Unfortunately alsa fails in that case
+     * far more often and seems to handle this quite well. (Example: ENS1371 
+     * driver on alsalib 1.0.5, kernel 2.6.6-mm5). If it sets far too wrong sample
+     * rates, we need to revert back to snd_pcm_hw_params_set_rate or check the
+     * rate that was set.
+     */
+    rate = this->format->rate;
+    ERROR_CHECK (snd_pcm_hw_params_set_rate_near (this->handle, hw_params,
+            &rate, 0), "error setting rate (%d): %s", this->format->rate);
+    if (rate != this->format->rate)
+      GST_WARNING_OBJECT (this, "set rate (%u) differs from desired rate (%u)",
+          rate, this->format->rate);
     ERROR_CHECK (snd_pcm_hw_params_set_periods_near (this->handle, hw_params,
             &this->period_count, 0), "error setting period count to %u: %s",
         (guint) this->period_count);
