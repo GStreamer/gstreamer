@@ -1442,6 +1442,9 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
+  GST_DEBUG ("finding pad in %s compatible with %s:%s",
+        GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad));    
+
   /* let's use the real pad */
   pad = (GstPad *) GST_PAD_REALIZE (pad);
   g_return_val_if_fail (pad != NULL, NULL);
@@ -1460,30 +1463,37 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
 
   /* try to create a new one */
   /* requesting is a little crazy, we need a template. Let's create one */
+  templcaps = gst_pad_get_caps (pad);
   if (filtercaps != NULL) {
-    templcaps = gst_caps_intersect (filtercaps, (GstCaps *) GST_RPAD_CAPS (pad));
-    /* FIXME */
-    if (templcaps == NULL)
-      return NULL;
-  } else {
-    templcaps = gst_caps_copy (gst_pad_get_caps (pad));
+    GstCaps *temp;
+    temp = gst_caps_intersect (filtercaps, templcaps);
+    gst_caps_free (templcaps);
+    templcaps = temp;
   }
 
-  templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
-                               GST_PAD_ALWAYS, templcaps);
+  templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
+      GST_RPAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
   foundpad = gst_element_request_compatible_pad (element, templ);
-  gst_object_unref (GST_OBJECT (templ)); /* this will take care of the caps too */
+  gst_object_unref (GST_OBJECT (templ));
 
-  /* FIXME: this is broken, but it's in here so autoplugging elements that don't
-     have caps on their source padtemplates (spider) can link... */
-  if (!foundpad && !filtercaps) {
-    templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
-                                 GST_PAD_ALWAYS, gst_caps_new_any());
+  if (foundpad) return foundpad;
+
+  /* FIXME: this is broken, but it's in here so autoplugging elements
+   * that don't have caps on their source padtemplates (spider) can
+   * link... */
+  //g_warning("got here");
+  //if (filtercaps == NULL) {
+    templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
+        GST_RPAD_DIRECTION (pad), GST_PAD_ALWAYS, gst_caps_new_any());
     foundpad = gst_element_request_compatible_pad (element, templ);
     gst_object_unref (GST_OBJECT (templ));
-  }
+
+    if (foundpad) return foundpad;
+  //}
   
-  return foundpad;
+  g_critical("could not find a compatible pad");
+
+  return NULL;
 }
 
 /**

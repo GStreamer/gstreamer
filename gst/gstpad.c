@@ -1052,11 +1052,14 @@ gst_pad_link_fixate (GstPadLink *link)
   g_return_if_fail (caps != NULL);
   g_return_if_fail (!gst_caps_is_empty(caps));
 
+  GST_DEBUG_CAPS ("trying to fixate caps", caps);
+
   while (!gst_caps_is_fixed (caps)) {
     if (link->app_fixate) {
       newcaps = (link->app_fixate) (GST_PAD (link->srcpad), caps, NULL);
       if (newcaps) {
         caps = newcaps;
+        GST_DEBUG_CAPS ("app fixated to", caps);
         continue;
       }
     }
@@ -1065,6 +1068,7 @@ gst_pad_link_fixate (GstPadLink *link)
           caps, NULL);
       if (newcaps) {
         caps = newcaps;
+        GST_DEBUG_CAPS ("src pad fixated to", caps);
         continue;
       }
     }
@@ -1073,10 +1077,12 @@ gst_pad_link_fixate (GstPadLink *link)
           caps, NULL);
       if (newcaps) {
         caps = newcaps;
+        GST_DEBUG_CAPS ("sink pad fixated to", caps);
         continue;
       }
     }
     caps = _gst_pad_default_fixate_func (GST_PAD(link->srcpad), caps, NULL);
+    GST_DEBUG_CAPS ("core fixated to", caps);
   }
 
   GST_DEBUG_CAPS ("fixate decided on", caps);
@@ -1296,7 +1302,7 @@ gst_pad_can_link_filtered (GstPad *srcpad, GstPad *sinkpad,
   GstRealPad *realsrc, *realsink;
   GstPadLink *link;
 
-  /* FIXME This function is gosss.  It's almost a direct copy of
+  /* FIXME This function is gross.  It's almost a direct copy of
    * gst_pad_link_filtered().  Any decent programmer would attempt
    * to merge the two functions, which I will do some day. --ds
    */
@@ -1375,10 +1381,6 @@ gst_pad_can_link_filtered (GstPad *srcpad, GstPad *sinkpad,
   link->srccaps = gst_pad_get_caps (link->srcpad);
   link->sinkcaps = gst_pad_get_caps (link->sinkpad);
   if (filtercaps) link->filtercaps = gst_caps_copy (filtercaps);
-
-  if (!gst_pad_link_ready_for_negotiation (link)) {
-    return FALSE;
-  }
 
   gst_pad_link_intersect (link);
   if (gst_caps_is_empty (link->caps))
