@@ -33,7 +33,7 @@ idle_func (gpointer data)
 
   if (!busy) {
     gst_main_quit ();
-    g_print ("execution ended after %llu iterations (sum %llu us, average %llu us, min %llu us, max %llu us)\n", 
+    g_print ("execution ended after %llu iterations (sum %llu ns, average %llu ns, min %llu ns, max %llu ns)\n", 
 		    iterations, sum, sum/iterations, min, max);
   }
 
