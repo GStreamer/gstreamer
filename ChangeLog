@@ -1,3 +1,16 @@
+2004-11-12 Iain <iaingnome@gmail.com>
+
+	* configure.ac: Check for polypaudio
+
+	* ext/Makefile.am: Build the polyp dir
+
+	* ext/polyp: The polypsink sources.
+
+2004-10-30 Iain <iaingnome@gmail.com>
+
+	* gst/interleave/interleave.c (interleave_unlink): Change the src pads
+	caps to reflect the new number of channels.
+
 2004-11-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_loop):
