@@ -67,7 +67,7 @@ struct _VorbisFileClass {
 
 GType vorbisfile_get_type(void);
 
-extern GstPadTemplate *dec_src_template, *dec_sink_template;
+extern GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template;
 
 /* elementfactory information */
 GstElementDetails vorbisfile_details = 
@@ -198,12 +198,12 @@ gst_vorbisfile_class_init (VorbisFileClass * klass)
 static void
 gst_vorbisfile_init (VorbisFile * vorbisfile)
 {
-  vorbisfile->sinkpad = gst_pad_new_from_template (dec_sink_template, "sink");
+  vorbisfile->sinkpad = gst_pad_new_from_template (gst_vorbisdec_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (vorbisfile), vorbisfile->sinkpad);
   gst_pad_set_convert_function (vorbisfile->sinkpad, NULL);
 
   gst_element_set_loop_function (GST_ELEMENT (vorbisfile), gst_vorbisfile_loop);
-  vorbisfile->srcpad = gst_pad_new_from_template (dec_src_template, "src");
+  vorbisfile->srcpad = gst_pad_new_from_template (gst_vorbisdec_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (vorbisfile), vorbisfile->srcpad);
   gst_pad_set_formats_function (vorbisfile->srcpad, gst_vorbisfile_get_formats);
   gst_pad_set_query_type_function (vorbisfile->srcpad, gst_vorbisfile_get_query_types);

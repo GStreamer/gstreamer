@@ -29,8 +29,8 @@ extern GstElementDetails vorbisdec_details;
 
 static GstCaps* 	vorbis_type_find 	(GstBuffer *buf, gpointer private);
 
-GstPadTemplate *dec_src_template, *dec_sink_template; 
-GstPadTemplate *enc_src_template, *enc_sink_template;
+GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template; 
+GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
 
 static GstCaps*
 vorbis_caps_factory (void)
@@ -114,16 +114,16 @@ plugin_init (GModule *module, GstPlugin *plugin)
   vorbis_caps = vorbis_caps_factory ();
 
   /* register sink pads */
-  enc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+  gst_vorbisenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                              GST_PAD_ALWAYS, 
 					      raw_caps, NULL);
-  gst_element_factory_add_pad_template (enc, enc_sink_template);
+  gst_element_factory_add_pad_template (enc, gst_vorbisenc_sink_template);
 
   /* register src pads */
-  enc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+  gst_vorbisenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                             GST_PAD_ALWAYS, 
 					     vorbis_caps, NULL);
-  gst_element_factory_add_pad_template (enc, enc_src_template);
+  gst_element_factory_add_pad_template (enc, gst_vorbisenc_src_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
 
@@ -133,17 +133,17 @@ plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail(dec != NULL, FALSE);
  
   /* register sink pads */
-  dec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+  gst_vorbisdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                              GST_PAD_ALWAYS, 
 					      vorbis_caps, NULL);
-  gst_element_factory_add_pad_template (dec, dec_sink_template);
+  gst_element_factory_add_pad_template (dec, gst_vorbisdec_sink_template);
 
   raw_caps = gst_caps_prepend (raw_caps, raw_caps2);
   /* register src pads */
-  dec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+  gst_vorbisdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                             GST_PAD_ALWAYS, 
 					     raw_caps, NULL);
-  gst_element_factory_add_pad_template (dec, dec_src_template);
+  gst_element_factory_add_pad_template (dec, gst_vorbisdec_src_template);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
 
@@ -154,9 +154,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_set_rank (file, GST_ELEMENT_RANK_PRIMARY);
  
   /* register sink pads */
-  gst_element_factory_add_pad_template (file, dec_sink_template);
+  gst_element_factory_add_pad_template (file, gst_vorbisdec_sink_template);
   /* register src pads */
-  gst_element_factory_add_pad_template (file, dec_src_template);
+  gst_element_factory_add_pad_template (file, gst_vorbisdec_src_template);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (file));
 

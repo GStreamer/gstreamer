@@ -23,7 +23,7 @@
 #include <vorbisdec.h>
 
 
-extern GstPadTemplate *dec_src_template, *dec_sink_template;
+extern GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template;
 
 /* elementfactory information */
 GstElementDetails vorbisdec_details = 
@@ -137,11 +137,11 @@ gst_vorbisdec_class_init (VorbisDecClass * klass)
 static void
 gst_vorbisdec_init (VorbisDec * vorbisdec)
 {
-  vorbisdec->sinkpad = gst_pad_new_from_template (dec_sink_template, "sink");
+  vorbisdec->sinkpad = gst_pad_new_from_template (gst_vorbisdec_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (vorbisdec), vorbisdec->sinkpad);
 
   gst_element_set_loop_function (GST_ELEMENT (vorbisdec), gst_vorbisdec_loop);
-  vorbisdec->srcpad = gst_pad_new_from_template (dec_src_template, "src");
+  vorbisdec->srcpad = gst_pad_new_from_template (gst_vorbisdec_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (vorbisdec), vorbisdec->srcpad);
 
   ogg_sync_init (&vorbisdec->oy);	/* Now we can read pages */

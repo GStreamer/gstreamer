@@ -27,7 +27,7 @@
 
 
 
-extern GstPadTemplate *enc_src_template, *enc_sink_template;
+extern GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
 
 /* elementfactory information */
 GstElementDetails vorbisenc_details = {
@@ -133,12 +133,12 @@ gst_vorbisenc_sinkconnect (GstPad * pad, GstCaps * caps)
 static void
 gst_vorbisenc_init (VorbisEnc * vorbisenc)
 {
-  vorbisenc->sinkpad = gst_pad_new_from_template (enc_sink_template, "sink");
+  vorbisenc->sinkpad = gst_pad_new_from_template (gst_vorbisenc_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->sinkpad);
   gst_pad_set_chain_function (vorbisenc->sinkpad, gst_vorbisenc_chain);
   gst_pad_set_connect_function (vorbisenc->sinkpad, gst_vorbisenc_sinkconnect);
 
-  vorbisenc->srcpad = gst_pad_new_from_template (enc_src_template, "src");
+  vorbisenc->srcpad = gst_pad_new_from_template (gst_vorbisenc_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->srcpad);
 
   vorbisenc->channels = 2;
