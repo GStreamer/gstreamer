@@ -625,8 +625,13 @@ gst_xml_registry_load (GstRegistry *registry)
 static GstRegistryReturn 
 gst_xml_registry_load_plugin (GstRegistry *registry, GstPlugin *plugin)
 {
+  GError *error = NULL;
+
   /* FIXME: add gerror support */
-  if (!gst_plugin_load_plugin (plugin, NULL)) {
+  if (!gst_plugin_load_plugin (plugin, &error)) {
+    if (error) {
+      g_warning ("could not load plugin %s: %s", plugin->name, error->message);
+    }
     return GST_REGISTRY_PLUGIN_LOAD_ERROR;
   }
 
@@ -955,10 +960,16 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
     case GST_XML_REGISTRY_PROPERTIES:
     {
       gint name_index;
-      
+      GstPropsEntry *entry = NULL;
+
       name_index = find_index_for ("name", attribute_names);
       if (name_index < 0)
 	break;
+
+      if (!strncmp (element_name, "list", 4)) {
+	xmlregistry->in_list = TRUE;
+	xmlregistry->list_name = g_strdup (attribute_values[name_index]);
+      }
 
       if (!strncmp (element_name, "int", 3)) {
 	gint value;
@@ -967,9 +978,9 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	if ((index = find_index_for ("value", attribute_names)) < 0) 
           break;
 	sscanf (attribute_values[index], "%d", &value);
-	gst_props_add_entry (xmlregistry->props, 
-			     gst_props_entry_new (attribute_values[name_index], 
-			                          GST_PROPS_INT (value)));
+
+	entry = gst_props_entry_new (attribute_values[name_index], 
+		                     GST_PROPS_INT (value));
       }
       else if (!strncmp (element_name, "range", 5)) {
 	gint min, max;
@@ -981,8 +992,8 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
           break;
 	sscanf (attribute_values[min_idx], "%d", &min);
 	sscanf (attribute_values[max_idx], "%d", &max);
-	gst_props_add_entry (xmlregistry->props, 
-			gst_props_entry_new (attribute_values[name_index], GST_PROPS_INT_RANGE (min, max)));
+
+	entry = gst_props_entry_new (attribute_values[name_index], GST_PROPS_INT_RANGE (min, max));
       }
       else if (!strncmp (element_name, "float", 5)) {
 	gfloat value;
@@ -991,8 +1002,8 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	if ((index = find_index_for ("value", attribute_names)) < 0) 
           break;
 	sscanf (attribute_values[index], "%f", &value);
-	gst_props_add_entry (xmlregistry->props, 
-			gst_props_entry_new (attribute_values[name_index], GST_PROPS_FLOAT (value)));
+	
+	entry = gst_props_entry_new (attribute_values[name_index], GST_PROPS_FLOAT (value));
       }
       else if (!strncmp (element_name, "floatrange", 10)) {
 	gfloat min, max;
@@ -1004,8 +1015,8 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
           break;
 	sscanf (attribute_values[min_idx], "%f", &min);
 	sscanf (attribute_values[max_idx], "%f", &max);
-	gst_props_add_entry (xmlregistry->props, 
-			gst_props_entry_new (attribute_values[name_index], GST_PROPS_FLOAT_RANGE (min, max)));
+
+	entry = gst_props_entry_new (attribute_values[name_index], GST_PROPS_FLOAT_RANGE (min, max));
       }
       else if (!strncmp (element_name, "boolean", 7)) {
 	gboolean value = TRUE;
@@ -1015,8 +1026,8 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
           break;
 	if (!strcmp (attribute_values[index], "false")) 
           value = FALSE;
-	gst_props_add_entry (xmlregistry->props, 
-			gst_props_entry_new (attribute_values[name_index], GST_PROPS_BOOLEAN (value)));
+
+	entry = gst_props_entry_new (attribute_values[name_index], GST_PROPS_BOOLEAN (value));
       }
       else if (!strncmp (element_name, "fourcc", 6)) {
 	guint32 value;
@@ -1025,17 +1036,24 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	if ((index = find_index_for ("hexvalue", attribute_names)) < 0) 
           break;
 	sscanf (attribute_values[index], "%08x", &value);
-	gst_props_add_entry (xmlregistry->props, 
-			gst_props_entry_new (attribute_values[name_index], GST_PROPS_FOURCC (value)));
+
+	entry = gst_props_entry_new (attribute_values[name_index], GST_PROPS_FOURCC (value));
       }
       else if (!strncmp (element_name, "string", 6)) {
         gint index;
 
 	if ((index = find_index_for ("value", attribute_names)) < 0) 
           break;
-	gst_props_add_entry (xmlregistry->props, 
-			gst_props_entry_new (attribute_values[name_index], 
-					      GST_PROPS_STRING (attribute_values[index])));
+
+        entry = gst_props_entry_new (attribute_values[name_index], 
+				     GST_PROPS_STRING (attribute_values[index]));
+      }
+      /* add property to list or parent */
+      if (entry) {
+        if (xmlregistry->in_list)
+          xmlregistry->entry_list = g_list_prepend (xmlregistry->entry_list, entry);
+        else
+          gst_props_add_entry (xmlregistry->props, entry);
       }
       break;
     }
@@ -1126,7 +1144,23 @@ gst_xml_registry_end_element (GMarkupParseContext *context,
       }
       break;
     case GST_XML_REGISTRY_PROPERTIES:
-      if (!strcmp (element_name, "properties")) {
+      if (!strncmp (element_name, "list", 4)) {
+	GstPropsEntry *entry;
+	
+	xmlregistry->entry_list = g_list_reverse (xmlregistry->entry_list);
+	
+        entry = gst_props_entry_new (xmlregistry->list_name, 
+			             GST_PROPS_GLIST (xmlregistry->entry_list));
+
+        gst_props_add_entry (xmlregistry->props, entry);
+	g_list_free (xmlregistry->entry_list);
+	g_free (xmlregistry->list_name);
+
+	xmlregistry->entry_list = NULL;
+	xmlregistry->list_name = NULL;
+	xmlregistry->in_list = FALSE;
+      }
+      else if (!strcmp (element_name, "properties")) {
 	xmlregistry->state = GST_XML_REGISTRY_CAPSCOMP;
 	xmlregistry->parser = NULL;
       }

@@ -105,6 +105,10 @@ struct _GstXMLRegistry {
   gchar			*caps_name;
   gchar			*caps_mime;
   GstProps		*props;
+
+  gboolean		 in_list;
+  GList			*entry_list;
+  gchar			*list_name;
 };
 
 struct _GstXMLRegistryClass {
