@@ -1,3 +1,8 @@
+2004-03-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/faq/gst-uninstalled:
+          adding gst-monkeysaudio to the list of possible plugin dirs
+
 2004-03-16  David Schleef  <ds@schleef.org>
 
 	* gst/gst.c: (gst_get_popt_options), (gst_init_get_popt_table),
