@@ -7,6 +7,7 @@ test1 (void)
 {
   GValue value1 = { 0 };
   GValue value2 = { 0 };
+
   //GValue value3 = { 0 };
   //gboolean ret;
 
@@ -49,6 +50,48 @@ test1 (void)
   g_value_unset (&value1);
   g_value_unset (&value2);
 
+  /* comparing 2/3 with 3/4 */
+  g_value_init (&value1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value1, 2, 3);
+  g_value_init (&value2, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value2, 3, 4);
+  g_assert (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
+  g_assert (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
+  g_assert (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
+  /* comparing -4/5 with 2/-3 */
+  g_value_init (&value1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value1, -4, 5);
+  g_value_init (&value2, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value2, 2, -3);
+  g_assert (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
+  g_assert (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
+  g_assert (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
+  /* comparing 10/100 with 20/2000 */
+  g_value_init (&value1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value1, 10, 100);
+  g_value_init (&value2, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value2, 200, 2000);
+  g_assert (gst_value_compare (&value1, &value2) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
+  /* comparing -4/5 with 2/-3 */
+  g_value_init (&value1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value1, -4, 5);
+  g_value_init (&value2, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value2, 2, -3);
+  g_assert (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
+  g_assert (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
+  g_assert (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
 }
 
 int
@@ -60,5 +103,4 @@ main (int argc, char *argv[])
   test1 ();
 
   return 0;
-
 }

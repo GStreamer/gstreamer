@@ -1686,11 +1686,13 @@ GST_VALUE_HOLDS_DOUBLE_RANGE
 GST_VALUE_HOLDS_LIST
 GST_VALUE_HOLDS_FIXED_LIST
 GST_VALUE_HOLDS_CAPS
+GST_VALUE_HOLDS_FRACTION
 GST_TYPE_FOURCC
 GST_TYPE_INT_RANGE
 GST_TYPE_DOUBLE_RANGE
 GST_TYPE_LIST
 GST_TYPE_FIXED_LIST
+GST_TYPE_FRACTION
 GST_VALUE_LESS_THAN
 GST_VALUE_EQUAL
 GST_VALUE_GREATER_THAN
@@ -1707,6 +1709,7 @@ gst_type_int_range
 gst_type_double_range
 gst_type_list
 gst_type_fixed_list
+gst_type_fraction
 gst_type_is_fixed
 gst_value_register
 gst_value_init_and_copy
@@ -1727,6 +1730,10 @@ gst_value_get_double_range_min
 gst_value_get_double_range_max
 gst_value_get_caps
 gst_value_set_caps
+gst_value_get_fraction_numerator
+gst_value_get_fraction_denominator
+gst_value_set_fraction
+gst_value_fraction_multiply
 gst_value_compare
 gst_value_can_compare
 gst_value_union

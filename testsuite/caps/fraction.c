@@ -1,54 +1,36 @@
+/* GStreamer
+ *
+ * fraction.c: test for all GstFraction operations
+ *
+ * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
 
 #include <gst/gst.h>
 #include <glib.h>
 
 void
-test1 (void)
+test (void)
 {
   GValue value1 = { 0 };
   GValue value2 = { 0 };
+  GValue value3 = { 0 };
 
-  //GValue value3 = { 0 };
   //gboolean ret;
-
-  g_value_init (&value1, G_TYPE_INT);
-  g_value_set_int (&value1, 10);
-  g_value_init (&value2, G_TYPE_INT);
-  g_value_set_int (&value2, 20);
-  g_assert (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
-  g_assert (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
-  g_assert (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
-  g_value_unset (&value1);
-  g_value_unset (&value2);
-
-  g_value_init (&value1, G_TYPE_DOUBLE);
-  g_value_set_double (&value1, 10);
-  g_value_init (&value2, G_TYPE_DOUBLE);
-  g_value_set_double (&value2, 20);
-  g_assert (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
-  g_assert (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
-  g_assert (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
-  g_value_unset (&value1);
-  g_value_unset (&value2);
-
-  g_value_init (&value1, G_TYPE_STRING);
-  g_value_set_string (&value1, "a");
-  g_value_init (&value2, G_TYPE_STRING);
-  g_value_set_string (&value2, "b");
-  g_assert (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
-  g_assert (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
-  g_assert (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
-  g_value_unset (&value1);
-  g_value_unset (&value2);
-
-  g_value_init (&value1, GST_TYPE_FOURCC);
-  gst_value_set_fourcc (&value1, GST_MAKE_FOURCC ('a', 'b', 'c', 'd'));
-  g_value_init (&value2, GST_TYPE_FOURCC);
-  gst_value_set_fourcc (&value2, GST_MAKE_FOURCC ('1', '2', '3', '4'));
-  g_assert (gst_value_compare (&value1, &value2) == GST_VALUE_UNORDERED);
-  g_assert (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
-  g_value_unset (&value1);
-  g_value_unset (&value2);
 
   /* comparing 2/3 with 3/4 */
   g_value_init (&value1, GST_TYPE_FRACTION);
@@ -92,6 +74,18 @@ test1 (void)
   g_value_unset (&value1);
   g_value_unset (&value2);
 
+  /* multiplying 4/5 with 3/-2 */
+  g_value_init (&value1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value1, 4, 5);
+  g_value_init (&value2, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value2, 3, -2);
+  g_value_init (&value3, GST_TYPE_FRACTION);
+  g_assert (gst_value_fraction_multiply (&value3, &value1, &value2));
+  g_assert (gst_value_get_fraction_nominator (&value3) == -6);
+  g_assert (gst_value_get_fraction_denominator (&value3) == 5);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+  g_value_unset (&value3);
 }
 
 int
@@ -100,7 +94,7 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 
-  test1 ();
+  test ();
 
   return 0;
 }

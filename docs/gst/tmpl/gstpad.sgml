@@ -467,6 +467,7 @@ Flags for the pad.
 
 @GST_PAD_DISABLED: the pad is disabled.
 @GST_PAD_NEGOTIATING: 
+@GST_PAD_DISPATCHING: 
 @GST_PAD_FLAG_LAST: subclasses can use this number to enumerate their flags.
 
 <!-- ##### MACRO GST_PAD_NAME ##### -->
@@ -752,6 +753,14 @@ Checks if the pad is active.
 
 
 <!-- ##### MACRO GST_PAD_IS_NEGOTIATING ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_PAD_IS_DISPATCHING ##### -->
 <para>
 
 </para>

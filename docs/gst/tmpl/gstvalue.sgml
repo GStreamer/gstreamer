@@ -96,6 +96,14 @@ GValue implementations specific to GStreamer
 @x: 
 
 
+<!-- ##### MACRO GST_VALUE_HOLDS_FRACTION ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
 <!-- ##### MACRO GST_TYPE_FOURCC ##### -->
 <para>
 
@@ -125,6 +133,13 @@ GValue implementations specific to GStreamer
 
 
 <!-- ##### MACRO GST_TYPE_FIXED_LIST ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TYPE_FRACTION ##### -->
 <para>
 
 </para>
@@ -257,6 +272,12 @@ GValue implementations specific to GStreamer
 
 
 <!-- ##### VARIABLE gst_type_fixed_list ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE gst_type_fraction ##### -->
 <para>
 
 </para>
@@ -446,6 +467,45 @@ GValue implementations specific to GStreamer
 @caps: 
 <!-- # Unused Parameters # -->
 @calue: 
+
+
+<!-- ##### FUNCTION gst_value_get_fraction_numerator ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_value_get_fraction_denominator ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_value_set_fraction ##### -->
+<para>
+
+</para>
+
+@value: 
+@numerator: 
+@denominator: 
+
+
+<!-- ##### FUNCTION gst_value_fraction_multiply ##### -->
+<para>
+
+</para>
+
+@product: 
+@factor1: 
+@factor2: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_value_compare ##### -->

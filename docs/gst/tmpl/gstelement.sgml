@@ -76,19 +76,12 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 </para>
 
-@:
-
 @gstelement: the object which received the signal.
 
 <!-- ##### SIGNAL GstElement::error ##### -->
 <para>
 
 </para>
-
-@: 
-@: 
-@: 
-@:
 
 @gstelement: the object which received the signal.
 @arg1: 
@@ -100,10 +93,6 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 </para>
 
-@: 
-@: 
-@:
-
 @gstelement: the object which received the signal.
 @arg1: 
 @arg2: 
@@ -113,9 +102,6 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 </para>
 
-@: 
-@:
-
 @gstelement: the object which received the signal.
 @arg1: 
 
@@ -124,17 +110,12 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 </para>
 
-@:
-
 @gstelement: the object which received the signal.
 
 <!-- ##### SIGNAL GstElement::pad-removed ##### -->
 <para>
 
 </para>
-
-@: 
-@:
 
 @gstelement: the object which received the signal.
 @arg1: 
@@ -143,10 +124,6 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 <para>
 
 </para>
-
-@: 
-@: 
-@:
 
 @gstelement: the object which received the signal.
 @arg1: 

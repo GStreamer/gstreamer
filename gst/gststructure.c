@@ -428,6 +428,13 @@ gst_structure_set_valist (GstStructure * structure,
 
           g_value_init (&field.value, GST_TYPE_BUFFER);
           g_value_set_boxed (&field.value, buffer);
+        } else if (type == GST_TYPE_FRACTION) {
+          gint n, d;
+          n = va_arg (varargs, int);
+          d = va_arg (varargs, int);
+
+          g_value_init (&field.value, GST_TYPE_FRACTION);
+          gst_value_set_fraction (&field.value, n, d);
         } else {
           g_critical ("unimplemented vararg field type %d\n", (int) type);
           return;
@@ -988,6 +995,7 @@ static GstStructureAbbreviation gst_structure_abbrs[] = {
 //{ "buffer",   GST_TYPE_BUFFER },
 //{ "fourcc",   GST_TYPE_FOURCC },
 //{ "4",   GST_TYPE_FOURCC },
+//{ "fraction",   GST_TYPE_FRACTION },
   {"boolean", G_TYPE_BOOLEAN},
   {"bool", G_TYPE_BOOLEAN},
   {"b", G_TYPE_BOOLEAN},
@@ -1016,6 +1024,9 @@ gst_structure_from_abbr (const char *type_name)
   if (strcmp (type_name, "buffer") == 0) {
     return GST_TYPE_BUFFER;
   }
+  if (strcmp (type_name, "fraction") == 0) {
+    return GST_TYPE_FRACTION;
+  }
 
   return g_type_from_name (type_name);
 }
@@ -1039,6 +1050,9 @@ gst_structure_to_abbr (GType type)
   }
   if (type == GST_TYPE_BUFFER) {
     return "buffer";
+  }
+  if (type == GST_TYPE_FRACTION) {
+    return "fraction";
   }
 
   return g_type_name (type);

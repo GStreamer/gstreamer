@@ -57,6 +57,7 @@ GType gst_type_int_range;
 GType gst_type_double_range;
 GType gst_type_list;
 GType gst_type_fixed_list;
+GType gst_type_fraction;
 
 static GArray *gst_value_table;
 static GArray *gst_value_union_funcs;
@@ -2281,11 +2282,275 @@ gst_type_is_fixed (GType type)
     return TRUE;
   }
   if (type == GST_TYPE_BUFFER || type == GST_TYPE_FOURCC
-      || type == GST_TYPE_FIXED_LIST) {
+      || type == GST_TYPE_FIXED_LIST || type == GST_TYPE_FRACTION) {
     return TRUE;
   }
 
   return FALSE;
+}
+
+/************
+ * fraction *
+ ************/
+
+/* helper functions */
+
+/* Finds the greatest common divisor.
+ * Returns 1 if none other found.
+ * This is Euclid's algorithm. */
+static guint
+gst_greatest_common_divisor (gint64 a, gint64 b)
+{
+  while (b != 0) {
+    int temp = a;
+
+    a = b;
+    b = temp % b;
+  }
+
+  g_return_val_if_fail (a < G_MAXINT, 1);
+  g_return_val_if_fail (a > G_MININT, 1);
+  return ABS ((gint) a);
+}
+
+static void
+gst_value_init_fraction (GValue * value)
+{
+  value->data[0].v_int = 0;
+  value->data[1].v_int = 1;
+}
+
+static void
+gst_value_copy_fraction (const GValue * src_value, GValue * dest_value)
+{
+  dest_value->data[0].v_int = src_value->data[0].v_int;
+  dest_value->data[1].v_int = src_value->data[1].v_int;
+}
+
+static gchar *
+gst_value_collect_fraction (GValue * value, guint n_collect_values,
+    GTypeCValue * collect_values, guint collect_flags)
+{
+  value->data[0].v_int = collect_values[0].v_int;
+  value->data[1].v_int = collect_values[1].v_int;
+
+  return NULL;
+}
+
+static gchar *
+gst_value_lcopy_fraction (const GValue * value, guint n_collect_values,
+    GTypeCValue * collect_values, guint collect_flags)
+{
+  guint32 *numerator = collect_values[0].v_pointer;
+  guint32 *denominator = collect_values[1].v_pointer;
+
+  if (!numerator)
+    return g_strdup_printf ("numerator for `%s' passed as NULL",
+        G_VALUE_TYPE_NAME (value));
+  if (!denominator)
+    return g_strdup_printf ("denominator for `%s' passed as NULL",
+        G_VALUE_TYPE_NAME (value));
+
+  *numerator = value->data[0].v_int;
+  *denominator = value->data[1].v_int;
+
+  return NULL;
+}
+
+/**
+ * gst_value_set_fraction:
+ * @value: a GValue initialized to GST_TYPE_FRACTION
+ * @numerator: the numerator of the fraction
+ * @denominator: the denominator of the fraction
+ *
+ * Sets @value to the fraction specified by @numerator over @denominator.
+ * The fraction gets reduced to the smallest numerator and denominator,
+ * and if necessary the sign is moved to the numerator.
+ */
+void
+gst_value_set_fraction (GValue * value, gint numerator, gint denominator)
+{
+  g_return_if_fail (GST_VALUE_HOLDS_FRACTION (value));
+  g_return_if_fail (denominator != 0);
+  gint gcd = 0;
+
+  /* normalize sign */
+  if (denominator < 0) {
+    numerator = -numerator;
+    denominator = -denominator;
+  }
+
+  /* check for reduction */
+  gcd = gst_greatest_common_divisor (numerator, denominator);
+  if (gcd) {
+    numerator /= gcd;
+    denominator /= gcd;
+  }
+  value->data[0].v_int = numerator;
+  value->data[1].v_int = denominator;
+}
+
+/**
+ * gst_value_get_fraction_numerator:
+ * @value: a GValue initialized to GST_TYPE_FRACTION
+ *
+ * Gets the numerator of the fraction specified by @value.
+ *
+ * Returns: the numerator of the fraction.
+ */
+int
+gst_value_get_fraction_numerator (const GValue * value)
+{
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (value), 0);
+
+  return value->data[0].v_int;
+}
+
+/**
+ * gst_value_get_fraction_denominator:
+ * @value: a GValue initialized to GST_TYPE_FRACTION
+ *
+ * Gets the denominator of the fraction specified by @value.
+ *
+ * Returns: the denominator of the fraction.
+ */
+int
+gst_value_get_fraction_denominator (const GValue * value)
+{
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (value), 0);
+
+  return value->data[1].v_int;
+}
+
+/**
+ * gst_value_fraction_multiply:
+ * @product: a GValue initialized to GST_TYPE_FRACTION
+ * @factor1: a GValue initialized to GST_TYPE_FRACTION
+ * @factor2: a GValue initialized to GST_TYPE_FRACTION
+ *
+ * Multiplies the two GValues containing a GstFraction and sets @product
+ * to the product of the two fractions.
+ *
+ * Returns: FALSE in case of an error (like integer overflow), TRUE otherwise.
+ */
+gboolean
+gst_value_fraction_multiply (GValue * product, const GValue * factor1,
+    const GValue * factor2)
+{
+  gint64 n, d;
+  guint gcd;
+
+  gint n1, n2, d1, d2;
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (factor1), FALSE);
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (factor2), FALSE);
+
+  n1 = factor1->data[0].v_int;
+  n2 = factor2->data[0].v_int;
+  d1 = factor1->data[1].v_int;
+  d2 = factor2->data[1].v_int;
+
+  n = n1 * n2;
+  d = d1 * d2;
+
+  gcd = gst_greatest_common_divisor (n, d);
+  n /= gcd;
+  d /= gcd;
+
+  g_return_val_if_fail (n < G_MAXINT, FALSE);
+  g_return_val_if_fail (n > G_MININT, FALSE);
+  g_return_val_if_fail (d < G_MAXINT, FALSE);
+  g_return_val_if_fail (d > G_MININT, FALSE);
+
+  gst_value_set_fraction (product, n, d);
+
+  return TRUE;
+}
+
+static char *
+gst_value_serialize_fraction (const GValue * value)
+{
+  gint32 numerator = value->data[0].v_int;
+  gint32 denominator = value->data[1].v_int;
+  gboolean positive = TRUE;
+
+  /* get the sign and make components absolute */
+  if (numerator < 0) {
+    numerator = -numerator;
+    positive = !positive;
+  }
+  if (denominator < 0) {
+    denominator = -denominator;
+    positive = !positive;
+  }
+
+  return g_strdup_printf ("%s%d/%d",
+      positive ? "" : "-", numerator, denominator);
+}
+
+static gboolean
+gst_value_deserialize_fraction (GValue * dest, const char *s)
+{
+  gint num, den;
+  char *div;
+  char *tmp;
+
+  div = strstr (s, "/");
+  if (!div)
+    return FALSE;
+  tmp = strndup (s, (size_t) (div - s));
+  num = atoi (tmp);
+  free (tmp);
+  den = atoi (div + 1);
+
+  gst_value_set_fraction (dest, num, den);
+
+  return TRUE;
+}
+
+static void
+gst_value_transform_fraction_string (const GValue * src_value,
+    GValue * dest_value)
+{
+  dest_value->data[0].v_pointer = gst_value_serialize_fraction (src_value);
+}
+
+static void
+gst_value_transform_string_fraction (const GValue * src_value,
+    GValue * dest_value)
+{
+  gst_value_deserialize_fraction (dest_value, src_value->data[0].v_pointer);
+}
+
+static int
+gst_value_compare_fraction (const GValue * value1, const GValue * value2)
+{
+  /* FIXME: maybe we should make this more mathematically correct instead
+   * of approximating with gdoubles */
+
+  gint n1, n2;
+  gint d1, d2;
+
+  gdouble new_num_1;
+  gdouble new_num_2;
+
+  n1 = value1->data[0].v_int;
+  n2 = value2->data[0].v_int;
+  d1 = value1->data[1].v_int;
+  d2 = value2->data[1].v_int;
+
+  /* fractions are reduced when set, so we can quickly see if they're equal */
+  if (n1 == n2 && d1 == d2)
+    return GST_VALUE_EQUAL;
+
+  new_num_1 = n1 * d2;
+  new_num_2 = n2 * d1;
+  if (new_num_1 < new_num_2)
+    return GST_VALUE_LESS_THAN;
+  if (new_num_1 > new_num_2)
+    return GST_VALUE_GREATER_THAN;
+  g_assert_not_reached ();
+  return GST_VALUE_UNORDERED;
 }
 
 void
@@ -2473,6 +2738,32 @@ _gst_value_initialize (void)
     gst_value.type = GST_TYPE_BUFFER;
     gst_value_register (&gst_value);
   }
+  {
+    static const GTypeValueTable value_table = {
+      gst_value_init_fraction,
+      NULL,
+      gst_value_copy_fraction,
+      NULL,
+      "ii",
+      gst_value_collect_fraction,
+      "pp",
+      gst_value_lcopy_fraction
+    };
+    static GstValueTable gst_value = {
+      0,
+      gst_value_compare_fraction,
+      gst_value_serialize_fraction,
+      gst_value_deserialize_fraction,
+    };
+
+    info.value_table = &value_table;
+    gst_type_fraction =
+        g_type_register_fundamental (g_type_fundamental_next (), "GstFraction",
+        &info, &finfo, 0);
+    gst_value.type = gst_type_fraction;
+    gst_value_register (&gst_value);
+  }
+
 
   REGISTER_SERIALIZATION (G_TYPE_DOUBLE, double);
   REGISTER_SERIALIZATION (G_TYPE_FLOAT, float);
@@ -2500,6 +2791,10 @@ _gst_value_initialize (void)
       gst_value_transform_list_string);
   g_value_register_transform_func (GST_TYPE_FIXED_LIST, G_TYPE_STRING,
       gst_value_transform_fixed_list_string);
+  g_value_register_transform_func (GST_TYPE_FRACTION, G_TYPE_STRING,
+      gst_value_transform_fraction_string);
+  g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_FRACTION,
+      gst_value_transform_string_fraction);
 
   gst_value_register_intersect_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_intersect_int_int_range);

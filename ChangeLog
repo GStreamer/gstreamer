@@ -1,10 +1,40 @@
+2004-07-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-sections.txt:
+	  add new symbols
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstpad.sgml:
+	* docs/gst/tmpl/gsttypes.sgml:
+	* docs/gst/tmpl/gstvalue.sgml:
+	  update docs
+	* gst/gststructure.c: (gst_structure_set_valist),
+	(gst_structure_from_abbr), (gst_structure_to_abbr):
+	* gst/gstvalue.c: (gst_value_compare_double), (gst_type_is_fixed),
+	(gst_greatest_common_divisor), (gst_value_init_fraction),
+	(gst_value_copy_fraction), (gst_value_collect_fraction),
+	(gst_value_lcopy_fraction), (gst_value_set_fraction),
+	(gst_value_get_fraction_numerator),
+	(gst_value_get_fraction_denominator),
+	(gst_value_fraction_multiply), (gst_value_serialize_fraction),
+	(gst_value_deserialize_fraction),
+	(gst_value_transform_fraction_string),
+	(gst_value_transform_string_fraction),
+	(gst_value_compare_fraction), (_gst_value_initialize):
+	* gst/gstvalue.h:
+	  adding GstFraction GValue type, get/set, and multiply
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/fraction.c: (test), (main):
+	* testsuite/caps/string-conversions.c: (main):
+	* testsuite/caps/value_compare.c: (test1), (main):
+	  add regression tests for GstFraction
+
 2004-07-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 	
 	* docs/manual/init-api.xml: Grammar fix
 
 2004-07-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
-                                                                                
-        * docs/manual/states.xml: Fix inconsistent information
+
+	* docs/manual/states.xml: Fix inconsistent information
 
 2004-07-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -211,7 +241,6 @@
 	* testsuite/clock/signedness.c: (main):
 	  make sure it never will again
 
->>>>>>> 1.669
 2004-07-11  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbin.c (gst_bin_add_func): If we're adding an element

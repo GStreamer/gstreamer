@@ -19,7 +19,8 @@ GstStaticCaps caps6 = GST_STATIC_CAPS ("video/raw, "
     "fourcc=(fourcc){\"YV12\",\"YUYV\"}, " "height=(int)[16,4096]");
 
 GstStaticCaps caps7 = GST_STATIC_CAPS ("video/raw, "
-    "fourcc=(fourcc){\"YVYV\",\"YUY2\"}, " "height=(int)[16,4096]");
+    "fourcc=(fourcc){\"YVYV\",\"YUY2\"}, " "height=(int)[16,4096],"
+    "pixel-aspect-ratio=(fraction)16/15");
 
 GstStaticCaps caps8 = GST_STATIC_CAPS ("video/raw, "
     "format=(fourcc)\"I420\"; " "video/raw, " "format=(fourcc)\"YUYV\"");
@@ -136,6 +137,7 @@ bla:
   test_string ("audio/raw  ,test=(b ) yes");
   test_string ("audio/raw  ,test =( boolean)no");
   test_string ("audio/raw  ,test = < 1, 2, 3 >");
+  test_string ("video/raw  ,test =( fraction)9/8");
 
   /* buffers */
   test_string ("audio/raw  ,test=(buffer)0123456789abcdef");

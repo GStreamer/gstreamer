@@ -41,12 +41,14 @@ G_BEGIN_DECLS
 #define GST_VALUE_HOLDS_LIST(x)         (G_VALUE_HOLDS(x, gst_type_list))
 #define GST_VALUE_HOLDS_FIXED_LIST(x)   (G_VALUE_HOLDS(x, gst_type_fixed_list))
 #define GST_VALUE_HOLDS_CAPS(x)		(G_VALUE_HOLDS(x, GST_TYPE_CAPS))
+#define GST_VALUE_HOLDS_FRACTION(x)	(G_VALUE_HOLDS(x, gst_type_fraction))
 
 #define GST_TYPE_FOURCC                  gst_type_fourcc
 #define GST_TYPE_INT_RANGE               gst_type_int_range
 #define GST_TYPE_DOUBLE_RANGE            gst_type_double_range
 #define GST_TYPE_LIST                    gst_type_list
 #define GST_TYPE_FIXED_LIST              gst_type_fixed_list
+#define GST_TYPE_FRACTION                gst_type_fraction
 
 #define GST_VALUE_LESS_THAN              (-1)
 #define GST_VALUE_EQUAL                   0
@@ -83,6 +85,7 @@ extern GType gst_type_int_range;
 extern GType gst_type_double_range;
 extern GType gst_type_list;
 extern GType gst_type_fixed_list;
+extern GType gst_type_fraction;
 
 void		gst_value_register		(const GstValueTable   *table);
 void		gst_value_init_and_copy		(GValue                *dest,
@@ -129,6 +132,16 @@ G_CONST_RETURN GstCaps *
 		gst_value_get_caps		(const GValue	*value);
 void		gst_value_set_caps		(GValue		*value,
 						 const GstCaps  *caps);
+
+/* fraction */
+void		gst_value_set_fraction		(GValue		*value,
+						 int		numerator,
+						 int		denominator);
+int		gst_value_get_fraction_numerator (const GValue	*value);
+int		gst_value_get_fraction_denominator(const GValue	*value);
+gboolean	gst_value_fraction_multiply	(GValue		*product,
+						 const GValue	*factor1,
+						 const GValue	*factor2);
 
 /* compare */
 int		gst_value_compare		(const GValue	*value1,
