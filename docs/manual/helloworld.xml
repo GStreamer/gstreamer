@@ -271,7 +271,7 @@ main (int argc, char *argv[])
     </para>
     <para>
       We can also choose to use another type of sink instead of the audiosink.
-      We could use a disksink to write the raw samples to a file, for example.
+      We could use a filesink to write the raw samples to a file, for example.
       It should also be clear that inserting filters, like a stereo effect,
       into the pipeline is not that hard to do. The most important thing is
       that you can reuse already existing elements.

@@ -224,7 +224,7 @@ Play the mp3 music file "music.mp3" using a libmad-based plug-in and
 output to an OSS device
 
 .B
-        gst\-launch filesrc location=music.ogg ! vorbisfile ! osssink
+        gst\-launch filesrc location=music.ogg ! oggdemux ! vorbisdec ! osssink
 .br
 Play an Ogg Vorbis format file
 

@@ -29,7 +29,7 @@ limit the valid directions an event can travel in? ie. Can EOS only
 travel downstream (left to right)? 
 
 eg. Seek travels upstream, but it makes sense to also make it travel 
-    downstream (the case of a disksink, where we overwrite the header)
+    downstream (the case of a filesink, where we overwrite the header)
 
 
 Setting an event function

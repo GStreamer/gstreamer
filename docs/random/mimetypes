@@ -373,7 +373,7 @@ channels = 1 - MAXINT (INT, number of audio channels)
 4 - Ogg/Vorbis
     MIME type: audio/x-vorbis
     Encoder: vorbisenc
-    Decoder: vorbisfile
+    Decoder: vorbisdec
 
 5 - Windows Media Audio 1 and 2 (WMA)
     MIME type: audio/x-wma

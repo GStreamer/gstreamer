@@ -31,35 +31,35 @@ And too play the same song with gnome-vfs via smb:
 
 Here we convert a Mp3 file into an Ogg Vorbis file:
 
- gst-launch filesrc location=music.mp3 ! mad ! vorbisenc ! disksink location=music.ogg
+ gst-launch filesrc location=music.mp3 ! mad ! vorbisenc ! filesink location=music.ogg
 
 And then we can play that file with:
 
- gst-launch filesrc location=music.ogg ! vorbisdec ! osssink
+ gst-launch filesrc location=music.ogg ! oggdemux ! vorbisdec ! osssink
 
 Some other useful pipelines are..
 Plays wav files (currently there are no wav encoders):
 
- gst-launch filesrc location=music.wav ! parsewav ! osssink
+ gst-launch filesrc location=music.wav ! wavparse ! osssink
 
 Converts wav files into mp3 and ogg files:
 
- gst-launch filesrc location=music.wav ! parsewav ! vorbisenc ! disksink location=music.ogg
- gst-launch filesrc location=music.wav ! parsewav ! mpegaudio ! disksink location=music.mp3
+ gst-launch filesrc location=music.wav ! wavparse ! vorbisenc ! filesink location=music.ogg
+ gst-launch filesrc location=music.wav ! wavparse ! mpegaudio ! filesink location=music.mp3
 
 You can also use lame for mp3 encoding if you have it installed, it does a 
 much better job than mpegaudio.
 
 Rips all songs from cd and saves them into a mp3 file:
 
- gst-launch cdparanoia ! mpegaudio ! disksink location=cd.mp3
+ gst-launch cdparanoia ! mpegaudio ! filesink location=cd.mp3
 
 You can toy around with gst-inspect to discover the settings for 
 cdparanoia to rip individual tracks
 
 Record sound from your sound input and encode it into an ogg file:
 
- gst-launch osssrc ! vorbisenc ! disksink location=input.ogg
+ gst-launch osssrc ! vorbisenc ! filesink location=input.ogg
 
 gst-launch not only handles audio but video as well:
 For mpeg1 files (video and audio streams respectively):
