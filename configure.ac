@@ -553,7 +553,6 @@ examples/typefind/Makefile
 examples/xml/Makefile
 tools/Makefile
 docs/Makefile
-docs/devhelp/Makefile
 docs/faq/Makefile
 docs/gst/Makefile
 docs/gst/gstreamer.types
