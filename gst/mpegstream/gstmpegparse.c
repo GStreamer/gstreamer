@@ -133,10 +133,6 @@ gst_mpeg_parse_base_init (GstMPEGParseClass *klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-		gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-		gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &mpeg_parse_details);
 }
 
@@ -174,6 +170,14 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
   klass->parse_pes 	= NULL;
   klass->send_data 	= gst_mpeg_parse_send_data;
   klass->handle_discont	= gst_mpeg_parse_handle_discont;
+
+  /* FIXME: this is a hack.  We add the pad templates here instead
+   * in the base_init function, since the derived class (mpegdemux)
+   * uses different pads.  IMO, this is wrong. */
+  gst_element_class_add_pad_template (gstelement_class,
+		gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+		gst_static_pad_template_get (&sink_factory));
 }
 
 static void
