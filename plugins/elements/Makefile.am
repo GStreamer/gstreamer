@@ -1,40 +1,51 @@
+# FIXME:
+# need to get gstbufferstore.[ch] into its own lib, preferrably 
+# libs/gst/buifferstore
+# This requires building libs/gst before this dir, which we currently don't
+# do.
+
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = libgstelements.la
 
 libgstelements_la_DEPENDENCIES = ../libgstreamer-@GST_MAJORMINOR@.la
 libgstelements_la_SOURCES =	\
+	gstaggregator.c		\
+	gstbufferstore.c	\
 	gstelements.c		\
-	gstfakesrc.c		\
-	gstidentity.c		\
 	gstfakesink.c		\
-	gstfilesrc.c		\
+	gstfakesrc.c		\
 	gstfilesink.c		\
-	gstfdsrc.c		\
+	gstfilesrc.c		\
 	gstfdsink.c		\
+	gstfdsrc.c		\
+	gstidentity.c		\
+	gstmd5sink.c		\
 	gstmultidisksrc.c	\
 	gstpipefilter.c		\
-	gsttee.c		\
-	gstaggregator.c		\
 	gstshaper.c		\
 	gststatistics.c		\
-	gstmd5sink.c
+	gsttee.c		\
+	gsttypefindelement.c
+
 libgstelements_la_CFLAGS = $(GST_CFLAGS)
 libgstelements_la_LIBADD =
 libgstelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS =		\
-	gstfakesrc.h		\
-	gstidentity.h		\
-	gstfakesink.h		\
-	gstfilesink.h		\
-	gstfdsrc.h		\
-	gstmultidisksrc.h	\
-	gstfdsink.h		\
-	gstpipefilter.h		\
-	gsttee.h		\
 	gstaggregator.h		\
-	gstshaper.h		\
-	gststatistics.h	        \
+	gstbufferstore.h	\
+	gstfakesink.h		\
+	gstfakesrc.h		\
+	gstfdsink.h		\
+	gstfdsrc.h		\
+	gstfilesink.h		\
 	gstfilesrc.h		\
-	gstmd5sink.h
+	gstidentity.h		\
+	gstmd5sink.h		\
+	gstmultidisksrc.h	\
+	gstpipefilter.h		\
+	gstshaper.h		\
+	gststatistics.h		\
+	gsttee.h		\
+	gsttypefindelement.h

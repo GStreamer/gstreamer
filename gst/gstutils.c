@@ -265,7 +265,6 @@ gst_util_set_object_arg (GObject * object, const gchar * name, const gchar * val
  */
 
 #include "gstpad.h"
-#include "gsttype.h"
 #include "gstprops.h"
 
 static void
@@ -399,14 +398,11 @@ gst_print_pad_caps (GString * buf, gint indent, GstPad * pad)
     gint capx = 0;
 
     while (caps) {
-      GstType *type;
-
       string_append_indent (buf, indent);
       g_string_append_printf (buf, "Cap[%d]: %s\n", capx++, caps->name);
 
-      type = gst_type_find_by_id (caps->id);
       string_append_indent (buf, indent + 2);
-      g_string_append_printf (buf, "MIME type: %s\n", type->mime ? type->mime : "unknown/unknown");
+      g_string_append_printf (buf, "MIME type: %s\n", gst_caps_get_mime (caps));
 
       if (caps->properties)
 	gst_print_props (buf, indent + 4, caps->properties->properties, TRUE);

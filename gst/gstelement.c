@@ -2545,7 +2545,7 @@ gst_element_dispose (GObject *object)
   GList *pads;
   GstPad *pad;
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, element, "dispose");
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose");
 
   gst_element_set_state (element, GST_STATE_NULL);
 

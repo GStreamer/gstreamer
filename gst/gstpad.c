@@ -25,7 +25,6 @@
 #include "gstpad.h"
 #include "gstutils.h"
 #include "gstelement.h"
-#include "gsttype.h"
 #include "gstbin.h"
 #include "gstscheduler.h"
 #include "gstevent.h"
@@ -2311,14 +2310,19 @@ gst_pad_push (GstPad *pad, GstData *data)
 {
   GstRealPad *peer;
 
-  g_assert (GST_IS_PAD (pad));
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad, "pushing");
-
+  g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
 
   if (!gst_probe_dispatcher_dispatch (&(GST_REAL_PAD (pad)->probedisp), &data))
     return;
+  
+  if (!GST_PAD_IS_LINKED (pad)) {
+    GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad, "not pushing data %p as pad is unconnected", data);
+    gst_data_unref (data);
+    return;
+  }      
 
+  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad, "pushing");
   peer = GST_RPAD_PEER (pad);
 
   if (!peer) {

@@ -301,8 +301,6 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
   }
   /* ref the real parent */
   gst_data_ref (GST_DATA (parent));
-  /* make sure nobody overwrites data in the parent */
-  GST_DATA_FLAG_SET (parent, GST_DATA_READONLY);
 
   /* create the new buffer */
   buffer = gst_mem_chunk_alloc (chunk);
@@ -337,8 +335,11 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
     GST_BUFFER_TIMESTAMP (buffer)    = GST_CLOCK_TIME_NONE;
     GST_BUFFER_OFFSET (buffer)       = GST_BUFFER_OFFSET_NONE;
   }
-
   GST_BUFFER_DURATION (buffer)     = GST_CLOCK_TIME_NONE;
+
+  /* make sure nobody overwrites data as it would overwrite in the parent.
+   * data in parent cannot be overwritten because we hold a ref */
+  GST_DATA_FLAG_SET (parent, GST_DATA_READONLY);
 
   return buffer;
 }

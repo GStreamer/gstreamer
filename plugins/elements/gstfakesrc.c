@@ -487,7 +487,7 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
           src->pool = gst_buffer_pool_get_default (src->sizemax, 10);
       } else {
         if (src->pool) {
-          gst_buffer_pool_free (src->pool);
+          gst_buffer_pool_unref (src->pool);
           src->pool = NULL;
         }
       }

@@ -88,18 +88,6 @@ GstElementDetails gst_filesrc_details = {
 #define DEFAULT_BLOCKSIZE 	4*1024
 #define DEFAULT_MMAPSIZE 	4*1024*1024
 
-#ifdef G_HAVE_ISO_VARARGS
-
-/* #define fs_print(...) g_print(__VA_ARGS__)  */
-#define fs_print(...)
-
-#elif defined(G_HAVE_GNUC_VARARGS)
-
-/* #define fs_print(format,args...) g_print(format, ## args)  */
-#define fs_print(format,args...)
-
-#endif
-
 /* FileSrc signals and args */
 enum {
   /* FILL ME */
@@ -305,7 +293,7 @@ gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
         src->mapsize = g_value_get_ulong (value);
         g_object_notify (G_OBJECT (src), "mmapsize");
       } else {
-        GST_INFO ( "invalid mapsize, must a multiple of pagesize, which is %d", 
+        GST_INFO_OBJECT (src, "invalid mapsize, must a multiple of pagesize, which is %d", 
 	          src->pagesize);
       }
       break;
@@ -355,8 +343,8 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
 {
   GstFileSrc *src = GST_FILESRC (GST_BUFFER_POOL_PRIVATE (buf));
 
-  fs_print ("freeing mmap()d buffer at %d+%d\n", 
-	    GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
+  GST_LOG_OBJECT (src, "freeing mmap()d buffer at %"G_GUINT64_FORMAT"+%u", 
+		  GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
 
   /* remove the buffer from the list of available mmap'd regions */
   g_mutex_lock (src->map_regions_lock);
@@ -375,13 +363,14 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
   munmap (GST_BUFFER_DATA (buf), GST_BUFFER_MAXSIZE (buf));
   /* cast to unsigned long, since there's no gportable way to print
    * guint64 as hex */
-  GST_DEBUG ( "unmapped region %08lx+%08lx at %p", 
+  GST_LOG_OBJECT (src, "unmapped region %08lx+%08lx at %p", 
 		  (unsigned long) GST_BUFFER_OFFSET (buf),
 		  (unsigned long) GST_BUFFER_MAXSIZE (buf), 
 		  GST_BUFFER_DATA (buf));
 
   GST_BUFFER_DATA (buf) = NULL;
 
+  g_object_unref (src);
   gst_buffer_default_free (buf);
 }
 
@@ -394,7 +383,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
 
   g_return_val_if_fail (offset >= 0, NULL);
 
-  fs_print  ("mapping region %08llx+%08lx from file into memory\n",offset,(unsigned long)size);
+  GST_LOG_OBJECT (src, "mapping region %08llx+%08lx from file into memory",offset,(unsigned long)size);
   mmapregion = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
 
   if (mmapregion == NULL) {
@@ -402,11 +391,11 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
     return NULL;
   }
   else if (mmapregion == MAP_FAILED) {
-    GST_DEBUG ("mmap (0x%08lx, %d, 0x%llx) : %s",
+    GST_WARNING_OBJECT (src, "mmap (0x%08lx, %d, 0x%llx) failed: %s",
  	     (unsigned long)size, src->fd, offset, strerror (errno));
     return NULL;
   }
-  GST_DEBUG ( "mapped region %08lx+%08lx from file into memory at %p", 
+  GST_LOG_OBJECT (src, "mapped region %08lx+%08lx from file into memory at %p", 
 		  (unsigned long)offset, (unsigned long)size, mmapregion);
 
   /* time to allocate a new mapbuf */
@@ -426,6 +415,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_POOL_PRIVATE (buf) = src;
+  g_object_ref (src);
   GST_BUFFER_FREE_FUNC (buf) = (GstDataFreeFunction) gst_filesrc_free_parent_mmap;
 
   g_mutex_lock (src->map_regions_lock);
@@ -522,7 +512,7 @@ gst_filesrc_get_mmap (GstFileSrc *src)
     /* if the end is before the mapend, the buffer is in current mmap region... */
     /* ('cause by definition if readend is in the buffer, so's readstart) */
     if (readend <= mapend) {
-      fs_print ("read buf %llu+%d lives in current mapbuf %lld+%d, creating subbuffer of mapbuf\n",
+      GST_LOG_OBJECT (src, "read buf %llu+%d lives in current mapbuf %lld+%d, creating subbuffer of mapbuf",
              src->curoffset, readsize, mapstart, mapsize);
       buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - mapstart,
                                    readsize);
@@ -530,8 +520,8 @@ gst_filesrc_get_mmap (GstFileSrc *src)
 
     /* if the start actually is within the current mmap region, map an overlap buffer */
     } else if (src->curoffset < mapend) {
-      fs_print ("read buf %llu+%d starts in mapbuf %d+%d but ends outside, creating new mmap\n",
-             src->curoffset, readsize, mapstart, mapsize);
+      GST_LOG_OBJECT (src, "read buf %llu+%d starts in mapbuf %d+%d but ends outside, creating new mmap",
+             (unsigned long long) src->curoffset, (gint) readsize, (gint) mapstart, (gint) mapsize);
       buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
       if (buf == NULL)
         return NULL;
@@ -545,8 +535,8 @@ gst_filesrc_get_mmap (GstFileSrc *src)
     /* either the read buffer overlaps the start of the mmap region */
     /* or the read buffer fully contains the current mmap region    */
     /* either way, it's really not relevant, we just create a new region anyway*/
-    fs_print ("read buf %llu+%d starts before mapbuf %d+%d, but overlaps it\n",
-             src->curoffset,readsize, mapstart, mapsize);
+    GST_LOG_OBJECT (src, "read buf %llu+%d starts before mapbuf %d+%d, but overlaps it",
+             (unsigned long long) src->curoffset, (gint) readsize, (gint) mapstart, (gint) mapsize);
     buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
     if (buf == NULL)
       return NULL;
@@ -555,7 +545,7 @@ gst_filesrc_get_mmap (GstFileSrc *src)
   /* then deal with the case where the read buffer is totally outside */
   if (buf == NULL) {
     /* first check to see if there's a map that covers the right region already */
-    fs_print ("searching for mapbuf to cover %llu+%d\n",src->curoffset,readsize);
+    GST_LOG_OBJECT (src, "searching for mapbuf to cover %llu+%d",src->curoffset,readsize);
     region.offset = src->curoffset;
     region.size = readsize;
     map = g_tree_search (src->map_regions,
@@ -564,7 +554,8 @@ gst_filesrc_get_mmap (GstFileSrc *src)
 
     /* if we found an exact match, subbuffer it */
     if (map != NULL) {
-      fs_print ("found mapbuf at %d+%d, creating subbuffer\n",GST_BUFFER_OFFSET(map),GST_BUFFER_SIZE(map));
+      GST_LOG_OBJECT (src, "found mapbuf at %"G_GUINT64_FORMAT"+%u, creating subbuffer",
+		      GST_BUFFER_OFFSET (map), GST_BUFFER_SIZE (map));
       buf = gst_buffer_create_sub (map, src->curoffset - GST_BUFFER_OFFSET(map), readsize);
       GST_BUFFER_OFFSET (buf) = src->curoffset;
 
@@ -572,7 +563,7 @@ gst_filesrc_get_mmap (GstFileSrc *src)
     } else {
       /* if the read buffer crosses a mmap region boundary, create a one-off region */
       if ((src->curoffset / src->mapsize) != (readend / src->mapsize)) {
-        fs_print ("read buf %llu+%d crosses a %d-byte boundary, creating a one-off\n",
+        GST_LOG_OBJECT (src, "read buf %llu+%d crosses a %d-byte boundary, creating a one-off",
                src->curoffset,readsize,src->mapsize);
         buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
 	if (buf == NULL)
@@ -583,7 +574,7 @@ gst_filesrc_get_mmap (GstFileSrc *src)
 	size_t mapsize;
 
         off_t nextmap = src->curoffset - (src->curoffset % src->mapsize);
-        fs_print ("read buf %llu+%d in new mapbuf at %llu+%d, mapping and subbuffering\n",
+        GST_LOG_OBJECT (src, "read buf %llu+%d in new mapbuf at %llu+%d, mapping and subbuffering",
                src->curoffset, readsize, nextmap, src->mapsize);
         /* first, we're done with the old mapbuf */
         gst_buffer_unref(src->mapbuf);
@@ -591,7 +582,7 @@ gst_filesrc_get_mmap (GstFileSrc *src)
 
 	/* double the mapsize as long as the readsize is smaller */
 	while (readsize - (src->curoffset - nextmap) > mapsize) {
-          fs_print ("readsize smaller then mapsize %08x %d\n", readsize, mapsize);
+          GST_LOG_OBJECT (src, "readsize smaller then mapsize %08x %d", readsize, mapsize);
           mapsize <<=1;
 	}
         /* create a new one */
@@ -664,7 +655,7 @@ gst_filesrc_get (GstPad *pad)
     GstEvent *event;
 
     src->seek_happened = FALSE;
-    GST_DEBUG ("filesrc sending discont");
+    GST_DEBUG_OBJECT (src, "sending discont");
     event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
     src->need_flush = FALSE;
     return GST_DATA (event);
@@ -672,13 +663,13 @@ gst_filesrc_get (GstPad *pad)
   /* check for flush */
   if (src->need_flush) {
     src->need_flush = FALSE;
-    GST_DEBUG ("filesrc sending flush");
+    GST_DEBUG_OBJECT (src, "sending flush");
     return GST_DATA (gst_event_new_flush ());
   }
 
   /* check for EOF */
   if (src->curoffset == src->filelen) {
-    GST_DEBUG ("filesrc eos %" G_GINT64_FORMAT" %" G_GINT64_FORMAT,
+    GST_DEBUG_OBJECT (src, "eos %" G_GINT64_FORMAT" %" G_GINT64_FORMAT,
                src->curoffset, src->filelen);
     gst_element_set_eos (GST_ELEMENT (src));
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
@@ -697,7 +688,7 @@ gst_filesrc_open_file (GstFileSrc *src)
 {
   g_return_val_if_fail (!GST_FLAG_IS_SET (src ,GST_FILESRC_OPEN), FALSE);
 
-  GST_DEBUG ( "opening file %s",src->filename);
+  GST_INFO_OBJECT (src, "opening file %s",src->filename);
 
   /* open the file */
   src->fd = open (src->filename, O_RDONLY);
@@ -829,7 +820,7 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
 {
   GstFileSrc *src = GST_FILESRC (GST_PAD_PARENT (pad));
 
-  GST_DEBUG ( "event %d", GST_EVENT_TYPE (event));
+  GST_DEBUG_OBJECT (src, "event %d", GST_EVENT_TYPE (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -847,19 +838,19 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
           if (offset > src->filelen) 
 	    goto error;
           src->curoffset = offset;
-          GST_DEBUG ( "seek set pending to %" G_GINT64_FORMAT, src->curoffset);
+          GST_DEBUG_OBJECT (src, "seek set pending to %" G_GINT64_FORMAT, src->curoffset);
 	  break;
         case GST_SEEK_METHOD_CUR:
           if (offset + src->curoffset > src->filelen) 
 	    goto error;
           src->curoffset += offset;
-          GST_DEBUG ( "seek cur pending to %" G_GINT64_FORMAT, src->curoffset);
+          GST_DEBUG_OBJECT (src, "seek cur pending to %" G_GINT64_FORMAT, src->curoffset);
 	  break;
         case GST_SEEK_METHOD_END:
           if (ABS (offset) > src->filelen) 
 	    goto error;
           src->curoffset = src->filelen - ABS (offset);
-          GST_DEBUG ( "seek end pending to %" G_GINT64_FORMAT, src->curoffset);
+          GST_DEBUG_OBJECT (src, "seek end pending to %" G_GINT64_FORMAT, src->curoffset);
 	  break;
 	default:
           goto error;

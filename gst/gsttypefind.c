@@ -1,8 +1,7 @@
 /* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
  *
- * gsttypefind.c: 
+ * gsttypefind.h: typefinding subsystem
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,234 +19,291 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
-#include "gst_private.h"
-#include "gsttype.h"
 #include "gstinfo.h"
 #include "gsttypefind.h"
+#include "gstregistrypool.h"
 
-GstElementDetails gst_type_find_details = {
-  "TypeFind",
-  "Generic",
-  "LGPL",
-  "Finds the media type of a stream",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>,"
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 1999",
-};
+GST_DEBUG_CATEGORY_STATIC (gst_type_find_debug);
+#define GST_CAT_DEFAULT gst_type_find_debug
 
-/* generic templates */
-GST_PAD_TEMPLATE_FACTORY (type_find_sink_factory,
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  NULL
-);
+static void		gst_type_find_factory_class_init	(gpointer		g_class,
+								 gpointer		class_data);
+static void		gst_type_find_factory_init		(GTypeInstance *	instance,
+								 gpointer		g_class);
+static void		gst_type_find_factory_dispose		(GObject *		object);
 
-/* TypeFind signals and args */
-enum {
-  HAVE_TYPE,
-  LAST_SIGNAL
-};
+static void		gst_type_find_factory_unload_thyself	(GstPluginFeature *	feature);
 
-enum {
-  ARG_0,
-  ARG_CAPS,
-};
+static void		gst_type_find_load_plugin		(GstTypeFind *		find,
+								 gpointer		data);
 
-
-static void	gst_type_find_class_init	(GstTypeFindClass *klass);
-static void	gst_type_find_init		(GstTypeFind *typefind);
-
-static void	gst_type_find_set_property	(GObject *object, guint prop_id,
-						 const GValue *value, 
-						 GParamSpec *pspec);
-static void	gst_type_find_get_property	(GObject *object, guint prop_id,
-						 GValue *value, 
-						 GParamSpec *pspec);
-
-static void	gst_type_find_loopfunc		(GstElement *element);
-static GstElementStateReturn
-		gst_type_find_change_state 	(GstElement *element);
-
-static GstElementClass *parent_class = NULL;
-static guint gst_type_find_signals[LAST_SIGNAL] = { 0 };
+static GstPluginFeatureClass *parent_class = NULL;
 
 GType
-gst_type_find_get_type (void)
+gst_type_find_factory_get_type (void)
 {
   static GType typefind_type = 0;
-
+    
   if (!typefind_type) {
     static const GTypeInfo typefind_info = {
-      sizeof(GstTypeFindClass),
+      sizeof (GstTypeFindFactoryClass),
       NULL,
       NULL,
-      (GClassInitFunc)gst_type_find_class_init,
+      gst_type_find_factory_class_init,
       NULL,
       NULL,
-      sizeof(GstTypeFind),
+      sizeof (GstTypeFindFactory),
       0,
-      (GInstanceInitFunc)gst_type_find_init,
+      gst_type_find_factory_init,
       NULL
     };
-    typefind_type = g_type_register_static (GST_TYPE_ELEMENT,
-					    "GstTypeFind",
+    typefind_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
+		                            "GstTypeFindFactory",
 					    &typefind_info, 0);
+    GST_DEBUG_CATEGORY_INIT (gst_type_find_debug, "GST_TYPEFIND", 
+			     GST_DEBUG_FG_GREEN, "typefinding subsystem");
   }
+
   return typefind_type;
 }
-
 static void
-gst_type_find_class_init (GstTypeFindClass *klass)
+gst_type_find_factory_class_init (gpointer g_class, gpointer class_data)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CAPS,
-    g_param_spec_pointer ("caps", "Caps", "Found capabilities", G_PARAM_READABLE));
-
-  gst_type_find_signals[HAVE_TYPE] =
-      g_signal_new ("have_type", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                     G_STRUCT_OFFSET (GstTypeFindClass, have_type), NULL, NULL,
-                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                     G_TYPE_POINTER);
-
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_type_find_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_type_find_get_property);
-
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_type_find_change_state);
+  GstPluginFeatureClass *gstpluginfeature_class = GST_PLUGIN_FEATURE_CLASS (g_class);
+  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+    
+  parent_class = g_type_class_peek_parent (g_class);
+  
+  object_class->dispose = gst_type_find_factory_dispose;
+  
+  gstpluginfeature_class->unload_thyself = GST_DEBUG_FUNCPTR (gst_type_find_factory_unload_thyself);
 }
-
 static void
-gst_type_find_init (GstTypeFind *typefind)
+gst_type_find_factory_init (GTypeInstance *instance, gpointer g_class)
 {
-  typefind->sinkpad = gst_pad_new_from_template (
-		GST_PAD_TEMPLATE_GET (type_find_sink_factory), "sink");
-  gst_element_add_pad (GST_ELEMENT (typefind), typefind->sinkpad);
+  GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (instance);
 
-  gst_element_set_loop_function (GST_ELEMENT (typefind),
-				 gst_type_find_loopfunc);
-
-  typefind->caps = NULL;
+  factory->user_data = factory;
+  factory->function = gst_type_find_load_plugin;
 }
-
 static void
-gst_type_find_set_property (GObject *object, guint prop_id, 
-		            const GValue *value, GParamSpec *pspec)
+gst_type_find_factory_dispose (GObject *object)
 {
-  GstTypeFind *typefind;
+  GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (object);
 
-  g_return_if_fail (GST_IS_TYPE_FIND (object));
-
-  typefind = GST_TYPE_FIND (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+  if (factory->caps) {
+    gst_caps_unref (factory->caps);
+    factory->caps = NULL;
+  }
+  if (factory->extensions) {
+    g_strfreev (factory->extensions);
+    factory->extensions = NULL;
   }
 }
-
 static void
-gst_type_find_get_property (GObject *object, guint prop_id, 
-		            GValue *value, GParamSpec *pspec)
+gst_type_find_factory_unload_thyself (GstPluginFeature *feature)
 {
-  GstTypeFind *typefind;
+  GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
 
-  g_return_if_fail (GST_IS_TYPE_FIND (object));
-
-  typefind = GST_TYPE_FIND (object);
-
-  switch (prop_id) {
-    case ARG_CAPS:
-      g_value_set_pointer (value, typefind->caps);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+  factory->function = gst_type_find_load_plugin;
+  factory->user_data = factory;
 }
-
 static void
-gst_type_find_loopfunc (GstElement *element)
+gst_type_find_load_plugin (GstTypeFind *find, gpointer data)
 {
-  GstTypeFind *typefind;
-  const GList *type_list;
-  GstType *type;
+  GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (data);
 
-  typefind = GST_TYPE_FIND (element);
-
-  GST_DEBUG ("Started typefinding loop in '%s'",
-	     GST_OBJECT_NAME (typefind));
-
-  type_list = gst_type_get_list ();
-
-  while (type_list) {
-    GSList *factories;
-    type = (GstType *) type_list->data;
-
-    factories = type->factories;
-
-    while (factories) {
-      GstTypeFactory *factory = GST_TYPE_FACTORY (factories->data);
-      GstTypeFindFunc typefindfunc = (GstTypeFindFunc) factory->typefindfunc;
-      GstCaps *caps;
-
-      GST_CAT_DEBUG (GST_CAT_TYPES, "try type (%p) :%d \"%s\" %p", 
-		 factory, type->id, type->mime, typefindfunc);
-      if (typefindfunc && (caps = typefindfunc (typefind->bs, factory))) {
-        GST_CAT_DEBUG (GST_CAT_TYPES, "found type: %d \"%s\" \"%s\"", 
-		   caps->id, type->mime, gst_caps_get_name (caps));
-	gst_caps_replace (&typefind->caps, caps);
-
-	if (gst_pad_try_set_caps (typefind->sinkpad, caps) <= 0) {
-          g_warning ("typefind: found type but peer didn't accept it");
-	}
-
-	gst_object_ref (GST_OBJECT (typefind));
-	g_signal_emit (G_OBJECT (typefind), gst_type_find_signals[HAVE_TYPE],
-		       0, typefind->caps);
-	gst_object_unref (GST_OBJECT (typefind));
-        return;
-      }
-      factories = g_slist_next (factories);
+  GST_DEBUG_OBJECT (factory, "need to load typefind function %s",  GST_PLUGIN_FEATURE_NAME (factory));
+  
+  if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
+    if (factory->function == gst_type_find_load_plugin) {
+      /* looks like we didn't get a real typefind function */
+      g_warning ("could not load valid typefind function for feature '%s'\n", GST_PLUGIN_FEATURE_NAME (factory));
+    } else {
+      g_assert (factory->function);
+      gst_type_find_factory_call_function (factory, find);
     }
-    type_list = g_list_next (type_list);
   }
-
-  /* if we get here, nothing worked... :'(. */
-  gst_element_error (GST_ELEMENT (typefind), 
-		     "media type could not be detected");
 }
-
-static GstElementStateReturn
-gst_type_find_change_state (GstElement *element)
+/**
+ * gst_type_find_factory_get_list:
+ *
+ * Gets the list of all registered typefind factories. You must free the
+ * list using g_list_free.
+ * 
+ * Returns: the list of all registered typefind factories
+ */
+GList *
+gst_type_find_factory_get_list (void)
 {
-  GstTypeFind *typefind;
-  GstElementStateReturn ret;
-
-  typefind = GST_TYPE_FIND (element);
-
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
-      typefind->bs = gst_bytestream_new (typefind->sinkpad);
-      break;
-    case GST_STATE_PAUSED_TO_READY:
-      gst_bytestream_destroy (typefind->bs);
-      gst_caps_replace (&typefind->caps, NULL);
-      break;
-    default:
-      break;
-  }
-  
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  
-  return ret;
+  return gst_registry_pool_feature_list (GST_TYPE_TYPE_FIND_FACTORY);
 }
+/**
+ * gst_type_find_factory_get_caps:
+ * @factory: a factory
+ * 
+ * Gets the caps associated with a typefind factory.
+ *
+ * Returns: the #GstCaps associated with this factory
+ */
+GstCaps *
+gst_type_find_factory_get_caps (const GstTypeFindFactory *factory)
+{
+  g_return_val_if_fail (GST_IS_TYPE_FIND_FACTORY (factory), NULL);
+
+  return factory->caps;
+}
+/**
+ * gst_type_find_factory_get_extensions:
+ * @factory: a factory
+ * 
+ * Gets the extensions associated with a typefind factory. The returned
+ * array should not be changed. If you need to change stuff in it, you should
+ * copy it using g_stdupv().
+ *
+ * Returns: a NULL-terminated array of extensions associated with this factory
+ */
+gchar **
+gst_type_find_factory_get_extensions (const GstTypeFindFactory *factory)
+{
+  g_return_val_if_fail (GST_IS_TYPE_FIND_FACTORY (factory), NULL);
+
+  return factory->extensions;
+}
+/**
+ * gst_type_find_factory_call_function:
+ * @factory: a factory
+ * @find: a properly setup #GstTypeFind entry. The get_data and suggest_type
+ *        members must be set.
+ * 
+ * Calls the typefinding function associated with this factory.
+ */
+void
+gst_type_find_factory_call_function (const GstTypeFindFactory *factory, GstTypeFind *find)
+{
+  g_return_if_fail (GST_IS_TYPE_FIND_FACTORY (factory));
+  g_return_if_fail (find != NULL);
+  g_return_if_fail (find->peek != NULL);
+  g_return_if_fail (find->suggest != NULL);
+
+  /* should never happen */
+  g_assert (factory->function != NULL);
+
+  factory->function (find, factory->user_data);
+}
+/**
+ * gst_type_find_factory_register:
+ * @plugin: the GstPlugin to register with
+ * @name: the name for registering
+ * @rank: rank (or importance) of this typefind function
+ * @func: the function to use for typefinding
+ * @extensions: optional extensions that could belong to this type
+ * @possible_caps: optionally the caps that could be returned when typefinding succeeds
+ * @data: optional user data. This user data must be available until the plugin 
+ *	  is unloaded.
+ *
+ * Registers a new typefind function to be used for typefinding. After 
+ * registering this function will be available for typefinding.
+ * This function is typically called during an element's plugin initialization.
+ *
+ * Returns: TRUE on success, FALSE otherwise
+ */
+void
+gst_type_find_factory_register (GstPlugin *plugin, const gchar *name, guint rank,
+				GstTypeFindFunction func, gchar **extensions, GstCaps *possible_caps,
+				gpointer data)
+{
+  GstTypeFindFactory *factory;
+  
+  g_return_if_fail (plugin != NULL);
+  g_return_if_fail (name != NULL);
+  g_return_if_fail (func != NULL);
+
+  GST_INFO ("registering typefind function for %s", name);
+  factory = GST_TYPE_FIND_FACTORY (gst_registry_pool_find_feature (name, GST_TYPE_TYPE_FIND_FACTORY));
+  if (!factory) {
+    factory = g_object_new (GST_TYPE_TYPE_FIND_FACTORY, NULL);
+    GST_DEBUG_OBJECT (factory, "using new typefind factory for %s", name);
+    g_assert (GST_IS_TYPE_FIND_FACTORY (factory));
+    gst_plugin_feature_set_name (GST_PLUGIN_FEATURE (factory), name);
+  } else {
+    GST_DEBUG_OBJECT (factory, "using old typefind factory for %s", name);
+  }
+
+  gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
+  if (factory->extensions)
+    g_strfreev (factory->extensions);
+
+  factory->extensions = g_strdupv (extensions);
+  gst_caps_replace (&factory->caps, possible_caps);
+  factory->function = func;
+  factory->user_data = data;
+
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+}
+
+/*** typefind function interface **********************************************/
+
+/**
+ * gst_type_find_peek:
+ * @find: the find object the function was called with
+ * @offset: the offset
+ * @size: the number of bytes to return
+ *
+ * Returns size bytes of the stream to identify beginning at offset. If offset 
+ * is a positive number, the offset is relative to the beginning of the stream,
+ * if offset is a negative number the offset is relative to the end of the 
+ * stream. The returned memory is valid until the typefinding function returns
+ * and must not be freed.
+ * If NULL is returned, that data is not available.
+ *
+ * Returns: the requested data or NULL if that data is not available.
+ */
+guint8 *
+gst_type_find_peek (GstTypeFind *find, gint64 offset, guint size)
+{
+  g_return_val_if_fail (find->peek != NULL, NULL);
+
+  return find->peek (find->data, offset, size);
+}
+/**
+ * gst_type_find_suggest:
+ * @find: the find object the function was called with
+ * @probability: the probability in percent that the suggestion is right
+ * @caps: the fixed caps to suggest
+ *
+ * If a typefind function calls this function it suggests the caps with the
+ * given probability. A typefind function may supply different suggestions
+ * in one call.
+ * It is up to the caller of the typefind function to interpret these values.
+ */
+void
+gst_type_find_suggest (GstTypeFind *find, guint probability, GstCaps *caps)
+{
+  g_return_if_fail (find->suggest != NULL);
+  g_return_if_fail (probability <= 100);
+  g_return_if_fail (caps != NULL);
+  g_return_if_fail (GST_CAPS_IS_FIXED (caps));
+
+  gst_caps_ref (caps);
+  gst_caps_sink (caps);
+  find->suggest (find->data, probability, caps);
+  gst_caps_unref (caps);
+}
+/**
+ * gst_type_find_get_length:
+ * @find: the find object the function was called with
+ *
+ * Get the length of the data stream.
+ * 
+ * Returns: the length of the data stream or 0 if it is not available.
+ */
+guint64
+gst_type_find_get_length (GstTypeFind *find)
+{
+  if (find->get_length == NULL)
+    return 0;
+
+  return find->get_length(find->data);
+}
+

@@ -1,8 +1,7 @@
 /* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
  *
- * gsttypefind.h: 
+ * gsttypefind.h: typefinding subsystem
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,51 +23,103 @@
 #ifndef __GST_TYPE_FIND_H__
 #define __GST_TYPE_FIND_H__
 
-#ifndef GST_DISABLE_TYPE_FIND
-
-#include <gst/gstelement.h>
-#include <gst/gstbytestream.h>
+#include <gst/gstbuffer.h>
+#include <gst/gstcaps.h>
+#include <gst/gstplugin.h>
+#include <gst/gstpluginfeature.h>
+#include <gst/gsttypes.h>
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_type_find_details;
+#define GST_TYPE_TYPE_FIND_FACTORY                 (gst_type_find_factory_get_type())
+#define GST_TYPE_FIND_FACTORY(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TYPE_FIND_FACTORY, GstTypeFindFactory))
+#define GST_IS_TYPE_FIND_FACTORY(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TYPE_FIND_FACTORY))
+#define GST_TYPE_FIND_FACTORY_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TYPE_FIND_FACTORY, GstTypeFindFactoryClass))
+#define GST_IS_TYPE_FIND_FACTORY_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TYPE_FIND_FACTORY))
+#define GST_TYPE_FIND_FACTORY_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_TYPE_FIND_FACTORY, GstTypeFindFactoryClass))
 
-#define GST_TYPE_TYPE_FIND 		(gst_type_find_get_type ())
-#define GST_TYPE_FIND(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TYPE_FIND, GstTypeFind))
-#define GST_IS_TYPE_FIND(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TYPE_FIND))
-#define GST_TYPE_FIND_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TYPE_FIND, GstTypeFindClass))
-#define GST_IS_TYPE_FIND_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TYPE_FIND))
-#define GST_TYPE_FIND_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_TYPE_FIND, GstTypeFindClass))
+typedef struct _GstTypeFind GstTypeFind;
+typedef struct _GstTypeFindFactory GstTypeFindFactory;
+typedef struct _GstTypeFindFactoryClass GstTypeFindFactoryClass;
 
-typedef struct _GstTypeFind 		GstTypeFind;
-typedef struct _GstTypeFindClass 	GstTypeFindClass;
+typedef void (* GstTypeFindFunction) (GstTypeFind *find, gpointer data);
+
+enum {
+  GST_TYPE_FIND_MINIMUM = 1,
+  GST_TYPE_FIND_POSSIBLE = 50,
+  GST_TYPE_FIND_LIKELY = 80,
+  GST_TYPE_FIND_NEARLY_CERTAIN = 99,
+  GST_TYPE_FIND_MAXIMUM = 100,
+} GstTypeFindProbability;
 
 struct _GstTypeFind {
-  GstElement 	 element;
+  /* private to the caller of the typefind function */
+  guint8 *		(* peek)			(gpointer		data,
+							 gint64	         	offset,
+							 guint			size);
+  void			(* suggest)			(gpointer		data,
+							 guint			probability,
+							 GstCaps *		caps);
+  
+  gpointer			data;
+  
+  /* optional */
+  guint64		(* get_length)			(gpointer		data);
 
-  GstPad 	*sinkpad;
-  GstByteStream *bs;
-
-  GstCaps 	*caps;
-
-  GST_OBJECT_PADDING
+  /* <private> */
+  GST_STRUCT_PADDING
 };
 
-struct _GstTypeFindClass {
-  GstElementClass 	parent_class;
+struct _GstTypeFindFactory {
+  GstPluginFeature		feature;
+  /* <private> */
 
-  /* signals */
-  void 			(*have_type) 	(GstElement *element,
-					 GstCaps    *caps);
-
+  GstTypeFindFunction		function;
+  gchar **			extensions;
+  GstCaps *			caps; /* FIXME: not yet saved in registry */
+  
+  gpointer			user_data;
+    
+  GST_OBJECT_PADDING
+};
+                                                                                                                                                                         
+struct _GstTypeFindFactoryClass {
+  GstPluginFeatureClass		parent;
+  /* <private> */
+    
   GST_CLASS_PADDING
 };
 
-GType gst_type_find_get_type (void);
+/* typefind function interface */
+guint8 *	gst_type_find_peek			(GstTypeFind *		find,
+							 gint64			offset,
+							 guint			size);
+void		gst_type_find_suggest			(GstTypeFind *		find,
+							 guint			probability,
+							 GstCaps *		caps);
+guint64		gst_type_find_get_length		(GstTypeFind *		find);
+
+/* registration interface */
+void      	gst_type_find_factory_register		(GstPlugin *		plugin,
+							 const gchar *		name, 
+							 guint			rank,
+							 GstTypeFindFunction	func,
+							 gchar **		extensions,
+							 GstCaps *		possible_caps,
+							 gpointer		data); 
+
+/* typefinding interface */
+
+GType           gst_type_find_factory_get_type		(void);
+    
+GList *		gst_type_find_factory_get_list		(void);
+
+gchar **	gst_type_find_factory_get_extensions	(const GstTypeFindFactory *factory);
+GstCaps *	gst_type_find_factory_get_caps	  	(const GstTypeFindFactory *factory);
+void		gst_type_find_factory_call_function	(const GstTypeFindFactory *factory,
+							 GstTypeFind *find);
 
 
 G_END_DECLS
-
-#endif /* GST_DISABLE_TYPE_FIND */
 
 #endif /* __GST_TYPE_FIND_H__ */

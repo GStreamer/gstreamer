@@ -28,7 +28,9 @@
 #include <stdlib.h>
 
 #include <gst/gstinfo.h>
-#include <gst/gstbytestream.h>
+#include <gst/gstplugin.h>
+#include <gst/gstversion.h>
+#include "bytestream.h"
 
 GST_DEBUG_CATEGORY_STATIC(debug_bs);
 #define GST_CAT_DEFAULT debug_bs
@@ -75,8 +77,6 @@ GstByteStream *
 gst_bytestream_new (GstPad * pad)
 {
   GstByteStream *bs = g_new (GstByteStream, 1);
-
-  GST_DEBUG_CATEGORY_INIT (debug_bs, "bytestream", 0, "bytestream library");
 
   bs->pad = pad;
   gst_bytestream_init (bs);
@@ -744,3 +744,19 @@ gst_bytestream_print_status (GstByteStream * bs)
 	      GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
   }
 }
+
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
+{
+  GST_DEBUG_CATEGORY_INIT (debug_bs, "bytestream", 0, "bytestream library");
+
+  gst_plugin_set_longname (plugin, "GstByteStream: a byte-oriented layer on top of buffer-passing");
+  return TRUE;
+}
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gstbytestream",
+  plugin_init
+};

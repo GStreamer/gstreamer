@@ -41,7 +41,7 @@
 #include <gst/gstindex.h>
 #include <gst/gstpipeline.h>
 #include <gst/gstthread.h>
-#include <gst/gsttype.h>
+#include <gst/gsttypefind.h>
 #include <gst/gstautoplug.h>
 #include <gst/gstcaps.h>
 #include <gst/gstprops.h>
