@@ -102,9 +102,11 @@ gst_swfdec_request_new_pad (GstElement *element, GstPadTemplate *templ,
 
 #if 0
 static gboolean gst_swfdec_src_event       	(GstPad *pad, GstEvent *event);
+#endif
 static gboolean gst_swfdec_src_query 		(GstPad *pad, GstQueryType type,
 		       				 GstFormat *format, gint64 *value);
 
+#if 0
 static gboolean gst_swfdec_convert_sink 	(GstPad *pad, GstFormat src_format, gint64 src_value,
 		         			 GstFormat *dest_format, gint64 *dest_value);
 static gboolean gst_swfdec_convert_src 	(GstPad *pad, GstFormat src_format, gint64 src_value,
@@ -473,18 +475,19 @@ gst_swfdec_loop(GstElement *element)
 	swfdec = GST_SWFDEC(element);
 
 	if(!swfdec->videopad){
-printf("creating videopad\n");
 		swfdec->videopad =
 			gst_pad_new_from_template(
 				GST_PAD_TEMPLATE_GET(video_template_factory),
 				"video_00");
-printf("videopad=%p\n",swfdec->videopad);
+  		gst_pad_set_query_function (swfdec->videopad,
+			GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
 		swfdec->audiopad =
 			gst_pad_new_from_template(
 				GST_PAD_TEMPLATE_GET(audio_template_factory),
 				"audio_00");
+  		gst_pad_set_query_function (swfdec->audiopad,
+			GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
 
-printf("setting caps\n");
 #if 0
 		gst_pad_try_set_caps(swfdec->videopad,
 			gst_pad_get_pad_template_caps(swfdec->videopad));
@@ -850,16 +853,12 @@ gst_swfdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
 }
 #endif
 
-#if 0
 static gboolean 
 gst_swfdec_src_query (GstPad *pad, GstQueryType type,
 		        GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
   GstSwfdec *swfdec;
-  static const GstFormat formats[] = { GST_FORMAT_TIME, GST_FORMAT_BYTES };
-#define MAX_SEEK_FORMATS 1 /* we can only do time seeking for now */
-  gint i;
 
   swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
 
@@ -871,33 +870,15 @@ gst_swfdec_src_query (GstPad *pad, GstQueryType type,
           *format = GST_FORMAT_TIME;
           /* fallthrough */
         case GST_FORMAT_TIME:
-        case GST_FORMAT_BYTES:
-        case GST_FORMAT_UNITS:
 	{
+	  int n_frames;
+	  int ret;
+
           res = FALSE;
-
-          for (i = 0; i < MAX_SEEK_FORMATS && !res; i++) {
-	    GstFormat peer_format;
-	    gint64 peer_value;
-		  
-	    peer_format = formats[i];
-	  
-            /* do the probe */
-            if (gst_pad_query (GST_PAD_PEER (swfdec->sinkpad), GST_QUERY_TOTAL,
-			       &peer_format, &peer_value)) 
-	    {
-              GstFormat conv_format;
-
-              /* convert to TIME */
-              conv_format = GST_FORMAT_TIME;
-              res = gst_pad_convert (swfdec->sinkpad,
-                              peer_format, peer_value,
-                              &conv_format, value);
-              /* and to final format */
-              res &= gst_pad_convert (pad,
-                         GST_FORMAT_TIME, *value,
-                         format, value);
-            }
+	  ret = swfdec_decoder_get_n_frames(swfdec->state, &n_frames);
+	  if(ret == SWF_OK){
+	    *value = n_frames * swfdec->interval;
+            res = TRUE;
 	  }
           break;
 	}
@@ -914,9 +895,7 @@ gst_swfdec_src_query (GstPad *pad, GstQueryType type,
           *format = GST_FORMAT_TIME;
           /* fallthrough */
         default:
-          res = gst_pad_convert (pad,
-                          GST_FORMAT_TIME, swfdec->next_time,
-                          format, value);
+          res = FALSE;
           break;
       }
       break;
@@ -928,7 +907,6 @@ gst_swfdec_src_query (GstPad *pad, GstQueryType type,
 
   return res;
 }
-#endif
 
 #if 0
 static gboolean 
