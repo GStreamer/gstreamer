@@ -1,3 +1,15 @@
+2004-11-16  Jan Schmidt  <thaytan@mad.scientist.com>
+	* gst/synaesthesia/gstsynaesthesia.c:
+	(gst_synaesthesia_class_init), (gst_synaesthesia_init),
+	(gst_synaesthesia_dispose), (gst_synaesthesia_finalize),
+	(gst_synaesthesia_sink_link), (gst_synaesthesia_src_getcaps),
+	(gst_synaesthesia_src_link), (gst_synaesthesia_chain),
+	(gst_synaesthesia_change_state), (plugin_init):
+	Fix up synaesthesia to work under different samplerates/ buffer sizes.
+	Force 320x200 output, as that's the only thing the underlying
+	synaesthesia implementation supports. Still needs to be made
+	re-entrant.
+
 2004-11-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
