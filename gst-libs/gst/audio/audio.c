@@ -104,11 +104,13 @@ gst_audio_length (GstPad* pad, GstBuffer* buf)
 
   GstCaps *caps = NULL;
 
+  g_assert (GST_IS_BUFFER (buf));
   /* get caps of pad */
   caps = GST_PAD_CAPS (pad);
   if (caps == NULL)
   {
     /* ERROR: could not get caps of pad */
+    g_error ("gstaudio: warning: could not get caps of pad %p\n", pad);
     length = 0.0;
   }
   else
@@ -118,8 +120,13 @@ gst_audio_length (GstPad* pad, GstBuffer* buf)
     gst_caps_get_int (caps, "channels", &channels);
     gst_caps_get_int (caps, "rate",     &rate);
 
+    g_assert (bytes != 0);
+    g_assert (width != 0);
+    g_assert (channels != 0);
+    g_assert (rate != 0);
     length = (bytes * 8.0) / (double) (rate * channels * width);
   }
+  /* g_print ("DEBUG: audio: returning length of %f\n", length); */
   return length;
 }
 
