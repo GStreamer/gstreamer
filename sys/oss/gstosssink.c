@@ -55,7 +55,9 @@ static GstClockTime 		gst_osssink_get_time 		(GstClock *clock, gpointer data);
 
 static gboolean 		gst_osssink_convert 		(GstPad *pad, GstFormat src_format, gint64 src_value,
 	            						 GstFormat *dest_format, gint64 *dest_value);
-static gboolean 		gst_osssink_query 		(GstPad *pad, GstPadQueryType type, 
+static gboolean 		gst_osssink_query 		(GstElement *element, GstPadQueryType type, 
+								 GstFormat *format, gint64 *value);
+static gboolean 		gst_osssink_sink_query 		(GstPad *pad, GstPadQueryType type,
 								 GstFormat *format, gint64 *value);
 
 static GstPadConnectReturn	gst_osssink_sinkconnect		(GstPad *pad, GstCaps *caps);
@@ -225,6 +227,7 @@ gst_osssink_class_init (GstOssSinkClass *klass)
   gobject_class->finalize     = gst_osssink_finalize;
   
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_osssink_change_state);
+  gstelement_class->query 	 = GST_DEBUG_FUNCPTR (gst_osssink_query);
 }
 
 static void 
@@ -236,7 +239,7 @@ gst_osssink_init (GstOssSink *osssink)
   gst_pad_set_connect_function (osssink->sinkpad, gst_osssink_sinkconnect);
   gst_pad_set_bufferpool_function (osssink->sinkpad, gst_osssink_get_bufferpool);
   gst_pad_set_convert_function (osssink->sinkpad, gst_osssink_convert);
-  gst_pad_set_query_function (osssink->sinkpad, gst_osssink_query);
+  gst_pad_set_query_function (osssink->sinkpad, gst_osssink_sink_query);
 
   gst_pad_set_chain_function (osssink->sinkpad, gst_osssink_chain);
 
@@ -610,7 +613,7 @@ gst_osssink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
 	  *dest_value = src_value * osssink->bps / GST_SECOND;
           break;
         case GST_FORMAT_UNITS:
-	  *dest_value = osssink->frequency;
+	  *dest_value = src_value * osssink->frequency / GST_SECOND;
           break;
         default:
           res = FALSE;
@@ -638,7 +641,7 @@ gst_osssink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
 }
 
 static gboolean
-gst_osssink_query (GstPad *pad, GstPadQueryType type, GstFormat *format, gint64 *value) 
+gst_osssink_sink_query (GstPad *pad, GstPadQueryType type, GstFormat *format, gint64 *value) 
 {
   gboolean res = TRUE;
   GstOssSink *osssink;
@@ -654,12 +657,28 @@ gst_osssink_query (GstPad *pad, GstPadQueryType type, GstFormat *format, gint64 
         res = FALSE;
       }
       break;
+    case GST_PAD_QUERY_POSITION:
+      if (!gst_osssink_convert (pad, 
+			        GST_FORMAT_TIME, gst_clock_get_time (osssink->provided_clock),
+		                format, value)) 
+      {
+        res = FALSE;
+      }
+      break;
     default:
-      res = FALSE;
+      res = gst_pad_query (gst_pad_get_peer (osssink->sinkpad), type, format, value);
       break;
   }
 
   return res;
+}
+
+static gboolean
+gst_osssink_query (GstElement *element, GstPadQueryType type, GstFormat *format, gint64 *value) 
+{
+  GstOssSink *osssink = GST_OSSSINK (element);
+
+  return gst_osssink_sink_query (osssink->sinkpad, type, format, value);
 }
 
 static void 
