@@ -398,7 +398,7 @@ gst_icecastsend_change_state (GstElement *element)
 
   icecastsend = GST_ICECASTSEND(element);
 
-  GST_DEBUG (0,"state pending %d\n", GST_STATE_PENDING (element));
+  GST_DEBUG (0,"state pending %d", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, close the file if it's open */
   switch (GST_STATE_TRANSITION (element)) {

@@ -232,7 +232,7 @@ gst_artsdsink_chain (GstPad *pad, GstBuffer *buf)
       int bytes;
       void * bufptr = GST_BUFFER_DATA (buf);
       int bufsize = GST_BUFFER_SIZE (buf);
-      GST_DEBUG (0, "artsdsink: stream=%p data=%p size=%d\n",
+      GST_DEBUG (0, "artsdsink: stream=%p data=%p size=%d",
 		 artsdsink->stream, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
       do {
@@ -359,11 +359,11 @@ gst_artsdsink_open_audio (GstArtsdsink *sink)
       return FALSE;
   }
 
-  GST_DEBUG (0, "artsdsink: attempting to open connection to aRtsd server\n");
+  GST_DEBUG (0, "artsdsink: attempting to open connection to aRtsd server");
   sink->stream = arts_play_stream(sink->frequency, sink->depth,
 				  sink->channels, connname);
   /* FIXME: check connection */
-  /*   GST_DEBUG (0, "artsdsink: can't open connection to aRtsd server\n"); */
+  /*   GST_DEBUG (0, "artsdsink: can't open connection to aRtsd server"); */
 
   GST_FLAG_SET (sink, GST_ARTSDSINK_OPEN);
   sink->connected = TRUE;

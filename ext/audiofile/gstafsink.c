@@ -317,10 +317,10 @@ gst_afsink_open_file (GstAFSink *sink)
     sink->is_signed       = gst_caps_get_int (caps, "signed");
     sink->endianness_data = gst_caps_get_int (caps, "endianness");
   }
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "channels %d, width %d, rate %d, signed %s\n",
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "channels %d, width %d, rate %d, signed %s",
   	   		sink->channels, sink->width, sink->rate,
   	   		sink->is_signed ? "yes" : "no");
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "endianness: data %d, output %d\n", 
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "endianness: data %d, output %d", 
 	   sink->endianness_data, sink->endianness_output);
   /* setup the output file */
   if (sink->is_signed)
@@ -486,7 +486,7 @@ gst_afsink_handle_event (GstPad *pad, GstEvent *event)
   GstAFSink *afsink;
 
   afsink = GST_AFSINK (gst_pad_get_parent (pad));
-  GST_DEBUG (0, "DEBUG: afsink: got event\n");
+  GST_DEBUG (0, "DEBUG: afsink: got event");
   gst_afsink_close_file (afsink);
   GST_FLAG_SET (pad, GST_PAD_EOS);
 

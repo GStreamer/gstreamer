@@ -87,7 +87,7 @@ gst_gsmdec_class_init (GstGSMDec *klass)
 static void
 gst_gsmdec_init (GstGSMDec *gsmdec)
 {
-  GST_DEBUG (0,"gst_gsmdec_init: initializing\n");
+  GST_DEBUG (0,"gst_gsmdec_init: initializing");
 
   /* create the sink and src pads */
   gsmdec->sinkpad = gst_pad_new_from_template (gsmdec_sink_template, "sink");

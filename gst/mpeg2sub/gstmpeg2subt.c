@@ -197,7 +197,7 @@ gst_mpeg2subt_parse_header (GstMpeg2Subt *mpeg2subt)
         mpeg2subt->color[2] = yuv_color[buffer [i+2] >> 4];
         mpeg2subt->color[3] = yuv_color[buffer [i+2] & 0xf];
         mpeg2subt->color[4] = yuv_color[0xf];
-	GST_DEBUG (0,"mpeg2subt: colors %d %d %d %d\n", mpeg2subt->color[0],mpeg2subt->color[1],mpeg2subt->color[2],mpeg2subt->color[3]);
+	GST_DEBUG (0,"mpeg2subt: colors %d %d %d %d", mpeg2subt->color[0],mpeg2subt->color[1],mpeg2subt->color[2],mpeg2subt->color[3]);
         i += 3;
         break;
       case 0x04: /* transparency palette */
@@ -205,7 +205,7 @@ gst_mpeg2subt_parse_header (GstMpeg2Subt *mpeg2subt)
 	mpeg2subt->trans[2] = buffer [i+1] & 0xf;
 	mpeg2subt->trans[1] = buffer [i+2] >> 4;
 	mpeg2subt->trans[0] = buffer [i+2] & 0xf;
-	GST_DEBUG (0,"mpeg2subt: transparency %d %d %d %d\n", mpeg2subt->trans[0],mpeg2subt->trans[1],mpeg2subt->trans[2],mpeg2subt->trans[3]);
+	GST_DEBUG (0,"mpeg2subt: transparency %d %d %d %d", mpeg2subt->trans[0],mpeg2subt->trans[1],mpeg2subt->trans[2],mpeg2subt->trans[3]);
 	i += 3;
 	break;
       case 0x05: /* image coordinates */
@@ -225,7 +225,7 @@ gst_mpeg2subt_parse_header (GstMpeg2Subt *mpeg2subt)
 	          */
 	mpeg2subt->duration = (((buffer[i+1] << 8) + buffer[i+2]) * 25)/90;
 
-	GST_DEBUG (0,"duration %d\n", mpeg2subt->duration);
+	GST_DEBUG (0,"duration %d", mpeg2subt->duration);
 
 	if ( (buffer[i+3] != buffer[mpeg2subt->data_size+2])
 	     || (buffer[i+4] != buffer[mpeg2subt->data_size+3]) )
@@ -279,7 +279,7 @@ gst_mpeg2subt_merge_title (GstMpeg2Subt *mpeg2subt, GstBuffer *buf)
   offset[1] = mpeg2subt->offset[1];
 #define get_nibble() get_nibble (buffer, offset, id, &aligned)
 
-  GST_DEBUG (0,"mpeg2subt: merging subtitle\n");
+  GST_DEBUG (0,"mpeg2subt: merging subtitle");
 
   while ((offset[1] < mpeg2subt->data_size + 2) && (y < height))
   {
@@ -361,7 +361,7 @@ gst_mpeg2subt_chain_subtitle (GstPad *pad, GstBuffer *buf)
     mpeg2subt->have_title = FALSE;
   }
 
-  GST_DEBUG (0,"presentation time %llu\n", GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG (0,"presentation time %llu", GST_BUFFER_TIMESTAMP(buf));
 
   /* deal with partial frame from previous buffer */
   if (mpeg2subt->partialbuf) {
@@ -381,7 +381,7 @@ gst_mpeg2subt_chain_subtitle (GstPad *pad, GstBuffer *buf)
 
   if (mpeg2subt->packet_size == size) {
 
-    GST_DEBUG (0,"mpeg2subt: subtitle packet size %d, current size %ld\n", mpeg2subt->packet_size, size);
+    GST_DEBUG (0,"mpeg2subt: subtitle packet size %d, current size %ld", mpeg2subt->packet_size, size);
 
     mpeg2subt->data_size = GUINT16_FROM_BE(*(guint16 *)(data+2));
 

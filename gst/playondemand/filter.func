@@ -9,7 +9,7 @@ num_filter = filter->buffer_size / sizeof(_TYPE_);
 /* see if we've got any events coming through ... */
 
 do {
-  GST_DEBUG(0, "--- going to events\n");
+  GST_DEBUG(0, "--- going to events");
 
   while (! filter->eos && GST_IS_EVENT(in)) {
     if (GST_EVENT_TYPE(in) == GST_EVENT_EOS) {
@@ -24,7 +24,7 @@ do {
   /******************************************************************************/
   /* first handle data from the input buffer. */
 
-  GST_DEBUG(0, "--- done with events, going to input\n");
+  GST_DEBUG(0, "--- done with events, going to input");
 
   /* only update the input if there hasn't been an eos yet. */
   if (! filter->eos) {
@@ -70,7 +70,7 @@ do {
   /******************************************************************************/
   /* now handle output data. */
 
-  GST_DEBUG(0, "--- done with input, going to output\n");
+  GST_DEBUG(0, "--- done with input, going to output");
 
   data_out = (_TYPE_ *) GST_BUFFER_DATA(out);
   num_out = GST_BUFFER_SIZE(out) / sizeof(_TYPE_);
@@ -102,7 +102,7 @@ do {
     }
   }
 
-  GST_DEBUG(0, "--- done with output, pushing buffer %p\n", out);
+  GST_DEBUG(0, "--- done with output, pushing buffer %p", out);
 
   gst_pad_push(filter->srcpad, out);
 

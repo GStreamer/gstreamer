@@ -341,7 +341,7 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
   else
     SDL_DisplayYUVOverlay(sdlvideosink->yuv_overlay, &(sdlvideosink->rect));
 
-  GST_DEBUG (0, "sdlvideosink: setting %08lx (%4.4s)\n", sdlvideosink->format, (gchar*)&print_format);
+  GST_DEBUG (0, "sdlvideosink: setting %08lx (%4.4s)", sdlvideosink->format, (gchar*)&print_format);
   
   /* TODO: is this the width of the input image stream or of the widget? */
   g_signal_emit (G_OBJECT (sdlvideosink), gst_sdlvideosink_signals[SIGNAL_HAVE_SIZE], 0,
@@ -404,7 +404,7 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
 
   sdlvideosink = GST_SDLVIDEOSINK (gst_pad_get_parent (pad));
 
-  GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG (0,"videosink: clock wait: %llu", GST_BUFFER_TIMESTAMP(buf));
 
   while (SDL_PollEvent(&event))
   {
