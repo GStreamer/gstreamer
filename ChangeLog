@@ -1,3 +1,8 @@
+2003-12-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+        * docs/gst/tmpl/gstreamer-unused.sgml:
+          removed all traces of cvs conflicts
+
 2003-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

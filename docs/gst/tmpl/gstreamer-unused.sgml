@@ -2119,7 +2119,7 @@ candidate.
 
 </para>
 
-@klass: <<<<<<< gstreamer-unused.sgml
+@klass:
 
 <!-- ##### MACRO GST_EVENT_DISCONT_FLUSH ##### -->
 <para>
@@ -2253,7 +2253,6 @@ subclass use this to start their flag enumeration
 
 
 <!-- ##### MACRO GST_HTTPSRC ##### -->
->>>>>>> 1.23.2.3
 <para>
 
 </para>
@@ -3446,7 +3445,6 @@ This macro unsets the given state on the element.
 
 
 <!-- ##### MACRO GST_TYPE_ASYNCDISKSRC ##### -->
->>>>>>> 1.23.2.3
 <para>
 
 </para>
@@ -3824,11 +3822,7 @@ A type that can be used to indicate a filename.
 </para>
 
 
-<<<<<<< gstreamer-unused.sgml
-
-
 <!-- ##### MACRO GST_TYPE_SINESRC ##### -->
->>>>>>> 1.66
 <para>
 
 </para>
@@ -3858,11 +3852,7 @@ A type that can be used to indicate a filename.
 </para>
 
 
-<<<<<<< gstreamer-unused.sgml
-
-
 <!-- ##### MACRO GST_TYPE_THREAD_STATE ##### -->
->>>>>>> 1.66
 <para>
 
 </para>
@@ -4296,10 +4286,6 @@ A type that can be used to indicate a filename.
 
 </para>
 
-
-<<<<<<< gstreamer-unused.sgml
-
-
 <!-- ##### ARG GstAggregator:sched ##### -->
 <para>
 
@@ -4307,7 +4293,6 @@ A type that can be used to indicate a filename.
 
 
 <!-- ##### ARG GstAggregator:silent ##### -->
->>>>>>> 1.66
 <para>
 
 </para>
@@ -4529,9 +4514,6 @@ is signaled whenever a new <classname>GstElement</classname> is added to the <cl
 </para>
 
 
-<<<<<<< gstreamer-unused.sgml
-
-
 <!-- ##### USER_FUNCTION GstBufferCopyFunc ##### -->
 <para>
 This supplied function is used to copy the buffer contents.
@@ -4546,8 +4528,6 @@ This supplied function is called when the buffer data has to be freed.
 </para>
 
 @buf: a #GstBuffer to clear the buffer data of
-
->>>>>>> 1.63
 
 <!-- ##### USER_FUNCTION GstBufferPoolCreateFunction ##### -->
 <para>
@@ -4804,10 +4784,7 @@ Is trigered whenever a new ghost pad is added to an element
 @gstelement: the object which received the signal.
 @arg1: the new ghost pad that was added
 
-<<<<<<< gstreamer-unused.sgml
-
 <!-- ##### STRUCT GstElementClass ##### -->
->>>>>>> 1.66
 <para>
 
 </para>
@@ -5348,9 +5325,6 @@ Indicates this pad is active
 <para>
 
 </para>
-
-
-<<<<<<< gstreamer-unused.sgml
 
 
 <!-- ##### TYPEDEF GstPadConnectFunction ##### -->
@@ -8122,10 +8096,6 @@ safely be modified.
 @clock: 
 @id: 
 
-<!-- ##### FUNCTION gst_clock_current_diff ##### -->
-=======
-
-
 <!-- ##### FUNCTION gst_clock_entry_status_get_type ##### -->
 <para>
 
@@ -8173,10 +8143,6 @@ safely be modified.
 @user_data: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_clock_register ##### -->
-=======
-
-
 <!-- ##### FUNCTION gst_clock_remove_notify_async ##### -->
 <para>
 
@@ -8191,10 +8157,6 @@ safely be modified.
 </para>
 
 @Returns: 
-
-<!-- ##### FUNCTION gst_clock_set ##### -->
-=======
-
 
 <!-- ##### FUNCTION gst_clock_unlock_id ##### -->
 <para>
@@ -8703,17 +8665,6 @@ of an element he doesn't need anymore.
 
 @Returns: 
 
-<<<<<<< gstreamer-unused.sgml
-
-<!-- ##### FUNCTION gst_esdsink_new ##### -->
->>>>>>> 1.66
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_esdsink_set_channels ##### -->
 <para>
 
@@ -8730,10 +8681,7 @@ of an element he doesn't need anymore.
 @esdsink: 
 @format: 
 
-<<<<<<< gstreamer-unused.sgml
-
 <!-- ##### FUNCTION gst_esdsink_set_frequency ##### -->
->>>>>>> 1.66
 <para>
 
 </para>
@@ -8741,20 +8689,14 @@ of an element he doesn't need anymore.
 @esdsink: 
 @frequency: 
 
-<<<<<<< gstreamer-unused.sgml
-
 <!-- ##### FUNCTION gst_esdsink_sync_parms ##### -->
->>>>>>> 1.66
 <para>
 
 </para>
 
 @esdsink: 
 
-<<<<<<< gstreamer-unused.sgml
-
 <!-- ##### FUNCTION gst_event_flag_get_type ##### -->
->>>>>>> 1.66
 <para>
 
 </para>
@@ -8973,8 +8915,11 @@ of an element he doesn't need anymore.
 @Returns: 
 
 <!-- ##### FUNCTION gst_link_get_type ##### -->
-=======
+<para>
 
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_link_new ##### -->
 <para>
@@ -10263,8 +10208,6 @@ Destroy the scheduler
 
 @arg: 
 
-<<<<<<< gstreamer-unused.sgml
-
 <!-- ##### FUNCTION gst_thread_state_get_type ##### -->
 <para>
 
@@ -10348,8 +10291,6 @@ Destroy the scheduler
 @tc: 
 @groupnum: 
 @Returns: 
-
->>>>>>> 1.66
 
 <!-- ##### MACRO gst_trace_add_entry ##### -->
 <para>
