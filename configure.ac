@@ -1057,6 +1057,7 @@ ext/flac/Makefile
 ext/gnomevfs/Makefile
 ext/gsm/Makefile
 ext/hermes/Makefile
+ext/http/Makefile
 ext/jpeg/Makefile
 ext/ladspa/Makefile
 ext/lame/Makefile

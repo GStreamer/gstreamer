@@ -95,7 +95,7 @@ HERMES_DIR=
 endif
 
 if USE_HTTP
-HTTP_DIR=gnomevfs
+HTTP_DIR=http
 else
 HTTP_DIR=
 endif
