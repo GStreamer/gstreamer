@@ -3,6 +3,14 @@
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps):
+	  Fix BGRA32 caps (#164209).
+
+2005-01-17  Gergely Nagy  <algernon@bonehunter.rulez.org>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
 	(gst_ffmpeg_caps_to_pixfmt):
 	  alpha_mask can be RGBA/ABGR. Fixes #164265.
 
