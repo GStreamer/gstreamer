@@ -213,7 +213,7 @@ gst_play_frame_displayed (GstElement *element, GstPlay *play)
 	if (!stolen) {
 		gtk_widget_realize (priv->video_widget);
 		gtk_socket_steal (GTK_SOCKET (priv->video_widget),
-				  gst_util_get_int_arg (GTK_OBJECT (priv->video_show), "xid"));
+				  gst_util_get_int_arg (G_OBJECT (priv->video_show), "xid"));
 		gtk_widget_show (priv->video_widget);
 		stolen = TRUE;
 	}
@@ -338,7 +338,7 @@ gst_play_have_type (GstElement *sink, GstCaps *caps, GstPlay *play)
 
 	gst_bin_add (GST_BIN (priv->pipeline), new_element);
 
-	gtk_object_set (GTK_OBJECT (priv->cache), "reset", TRUE, NULL);
+	gtk_object_set (G_OBJECT (priv->cache), "reset", TRUE, NULL);
 
 	gst_element_connect (priv->cache, "src", new_element, "sink");
 
@@ -409,7 +409,7 @@ gst_play_set_uri (GstPlay *play, const guchar *uri)
 	priv->offset_element = priv->src;
 	g_return_val_if_fail (priv->src != NULL, GST_PLAY_CANNOT_PLAY);
 
-	gtk_object_set (GTK_OBJECT (priv->src), "location", priv->uri, NULL);
+	gtk_object_set (G_OBJECT (priv->src), "location", priv->uri, NULL);
 
 
 	priv->cache = gst_elementfactory_make ("autoplugcache", "cache");
@@ -521,7 +521,7 @@ gst_play_stop (GstPlay *play)
 
 	// FIXME until state changes are handled properly
 	gst_element_set_state (GST_ELEMENT (priv->pipeline),GST_STATE_READY);
-	gtk_object_set (GTK_OBJECT (priv->src),"offset",0,NULL);
+	gtk_object_set (G_OBJECT (priv->src),"offset",0,NULL);
 	//gst_element_set_state (GST_ELEMENT (priv->pipeline),GST_STATE_NULL);
 
 	play->state = GST_PLAY_STOPPED;
@@ -574,7 +574,7 @@ gst_play_get_media_size (GstPlay *play)
 
 	priv = (GstPlayPrivate *)play->priv;
 
-	return gst_util_get_long_arg (GTK_OBJECT (priv->src), "size");
+	return gst_util_get_long_arg (G_OBJECT (priv->src), "size");
 }
 
 gulong
@@ -588,7 +588,7 @@ gst_play_get_media_offset (GstPlay *play)
 	priv = (GstPlayPrivate *)play->priv;
 
 	if (priv->offset_element)
-		return gst_util_get_long_arg (GTK_OBJECT (priv->offset_element), "offset");
+		return gst_util_get_long_arg (G_OBJECT (priv->offset_element), "offset");
 	else
 		return 0;
 }
@@ -605,12 +605,12 @@ gst_play_get_media_total_time (GstPlay *play)
 	priv = (GstPlayPrivate *)play->priv;
 
 	if (priv->media_time_element) {
-		return gst_util_get_long_arg (GTK_OBJECT (priv->media_time_element), "media_time");
+		return gst_util_get_long_arg (G_OBJECT (priv->media_time_element), "media_time");
 	}
 
 	if (priv->bit_rate_element == NULL) return 0;
 
-	bit_rate = gst_util_get_long_arg (GTK_OBJECT (priv->bit_rate_element), "bit_rate");
+	bit_rate = gst_util_get_long_arg (G_OBJECT (priv->bit_rate_element), "bit_rate");
 
 	if (bit_rate)
 		total_time = (gst_play_get_media_size (play) * 8) / bit_rate;
@@ -632,12 +632,12 @@ gst_play_get_media_current_time (GstPlay *play)
 	priv = (GstPlayPrivate *)play->priv;
 
 	if (priv->current_time_element) {
-		return gst_util_get_long_arg (GTK_OBJECT (priv->current_time_element), "current_time");
+		return gst_util_get_long_arg (G_OBJECT (priv->current_time_element), "current_time");
 	}
 
 	if (priv->bit_rate_element == NULL) return 0;
 
-	bit_rate = gst_util_get_long_arg (GTK_OBJECT (priv->bit_rate_element), "bit_rate");
+	bit_rate = gst_util_get_long_arg (G_OBJECT (priv->bit_rate_element), "bit_rate");
 
 	if (bit_rate)
 		current_time = (gst_play_get_media_offset (play) * 8) / bit_rate;
