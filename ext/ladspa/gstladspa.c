@@ -242,6 +242,47 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
       if (argtype==G_TYPE_FLOAT) klass->control_info[i].upperbound = G_MAXFLOAT;
     }
 
+    klass->control_info[i].def = klass->control_info[i].lowerbound;
+
+#ifdef LADSPA_IS_HINT_HAS_DEFAULT
+    /* figure out the defaults */
+    if (LADSPA_IS_HINT_HAS_DEFAULT (hintdesc)) {
+      if (LADSPA_IS_HINT_DEFAULT_MINIMUM (hintdesc))
+        klass->control_info[i].def = klass->control_info[i].lowerbound;
+      else if (LADSPA_IS_HINT_DEFAULT_LOW (hintdesc))
+        if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
+          klass->control_info[i].def = exp (0.75*log(klass->control_info[i].lowerbound) +
+                                                0.25*log(klass->control_info[i].upperbound));
+        else
+          klass->control_info[i].def = (0.75*klass->control_info[i].lowerbound +
+                                            0.25*klass->control_info[i].upperbound);
+      else if (LADSPA_IS_HINT_DEFAULT_MIDDLE (hintdesc))
+        if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
+          klass->control_info[i].def = exp (0.5*log(klass->control_info[i].lowerbound) +
+                                                0.5*log(klass->control_info[i].upperbound));
+        else
+          klass->control_info[i].def = (0.5*klass->control_info[i].lowerbound +
+                                            0.5*klass->control_info[i].upperbound);
+      else if (LADSPA_IS_HINT_DEFAULT_HIGH (hintdesc))
+        if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
+          klass->control_info[i].def = exp (0.25*log(klass->control_info[i].lowerbound) +
+                                                0.75*log(klass->control_info[i].upperbound));
+        else
+          klass->control_info[i].def = (0.25*klass->control_info[i].lowerbound +
+                                            0.75*klass->control_info[i].upperbound);
+      else if (LADSPA_IS_HINT_DEFAULT_MAXIMUM (hintdesc))
+        klass->control_info[i].def = klass->control_info[i].upperbound;
+      else if (LADSPA_IS_HINT_DEFAULT_0 (hintdesc))
+        klass->control_info[i].def = 0.0;
+      else if (LADSPA_IS_HINT_DEFAULT_1 (hintdesc))
+        klass->control_info[i].def = 1.0;
+      else if (LADSPA_IS_HINT_DEFAULT_100 (hintdesc))
+        klass->control_info[i].def = 100.0;
+      else if (LADSPA_IS_HINT_DEFAULT_440 (hintdesc))
+        klass->control_info[i].def = 440.0;
+    }
+#endif /* LADSPA_IS_HINT_HAS_DEFAULT */
+    
     if (LADSPA_IS_PORT_INPUT(desc->PortDescriptors[current_portnum])) {
       argperms = G_PARAM_READWRITE;
       klass->control_info[i].writable = TRUE;
@@ -288,7 +329,7 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
       paramspec = g_param_spec_int(argname,argname,argname, 
         (gint)klass->control_info[i].lowerbound, 
         (gint)klass->control_info[i].upperbound, 
-        (gint)klass->control_info[i].lowerbound, argperms);
+        (gint)klass->control_info[i].def, argperms);
     } else if (klass->control_info[i].samplerate){
       paramspec = g_param_spec_float(argname,argname,argname, 
         0.0, G_MAXFLOAT, 
@@ -296,7 +337,7 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
     } else {
       paramspec = g_param_spec_float(argname,argname,argname, 
         klass->control_info[i].lowerbound, klass->control_info[i].upperbound, 
-        klass->control_info[i].lowerbound, argperms);
+        klass->control_info[i].def, argperms);
     }
     
     g_object_class_install_property(G_OBJECT_CLASS(klass), i+ARG_LAST, paramspec);
@@ -345,11 +386,7 @@ gst_ladspa_init (GstLADSPA *ladspa)
         LADSPA_IS_PORT_INPUT(desc->PortDescriptors[i])) {
       cinfo = oclass->control_info[controlcount];
       /* use the lowerbound as the default value if it exists */
-      if (cinfo.lower){
-        ladspa->controls[controlcount]=cinfo.lowerbound;
-      } else {
-        ladspa->controls[controlcount] = 0.0;
-      }
+      ladspa->controls[controlcount]=cinfo.def;
       
       /* set up dparams for this instance */
       if (cinfo.toggled){
@@ -925,8 +962,7 @@ gst_ladspa_chain (GstPad *pad, GstBuffer *buf)
     }
 
     if (num_created_buffers > 0){
-      GstBufferPool *bufpool;
-      bufpool = gst_buffer_pool_get_default (sizeof (LADSPA_Data) * GST_BUFFER_SIZE(buf), ladspa->numbuffers);
+      ladspa->bufpool = gst_buffer_pool_get_default (sizeof (LADSPA_Data) * GST_BUFFER_SIZE(buf), ladspa->numbuffers);
 
       for (i = numsrcpads - num_created_buffers ; i<numsrcpads ; i++){
         buffers_out[i] = gst_buffer_new_from_pool (ladspa->bufpool, 0, 0);
