@@ -237,7 +237,7 @@ get_candidates (const gchar * dir, const gchar * base)
 
   /* get all dirs from the path and prepend with given dir */
   path = g_strdup_printf ("%s%c%s",
-                          dir, G_SEARCHPATH_SEPARATOR, getenv ("PATH"));
+                          dir, G_SEARCHPATH_SEPARATOR, g_getenv ("PATH"));
   dirs = g_strsplit (path, G_SEARCHPATH_SEPARATOR_S, 0);
   g_free (path);
 
@@ -311,7 +311,7 @@ int main
   ctx = poptGetContext ("gst-run", argc, (const char **) argv, options, 0);
   poptReadDefaultConfig (ctx, TRUE);
   while ((nextopt = poptGetNextOpt (ctx)) > 0)
-    ;
+    /* keep looping to parse */;
 
   argc = poptStrippedArgv (ctx, argc, argv);
   argv[argc] = NULL;
@@ -353,6 +353,8 @@ int main
     binary = g_strdup_printf ("%s-%s", base, highest);
   }
 
+  g_free (base);
+
   path = g_build_filename (dir, binary, NULL);
   g_free (binary);
 
@@ -361,6 +363,7 @@ int main
   if (_arg_list_mm)
   {
     g_hash_table_foreach (candidates, (GHFunc) hash_print_key, NULL);
+    g_hash_table_destroy (candidates);
     return 0;
   }
 
