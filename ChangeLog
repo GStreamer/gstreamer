@@ -1,3 +1,9 @@
+2004-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/speex/gstspeexdec.c: (gst_speex_dec_init),
+	(speex_dec_convert):
+	  sinkconvert function so oggdemux can get the file length (totem).
+
 2004-10-25  James Morrison  <ja2morri@csclub.uwaterloo.ca>
 
 	Reviewd by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
