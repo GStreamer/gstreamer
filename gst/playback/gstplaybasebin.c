@@ -263,7 +263,7 @@ no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
 }
 
 static void
-new_stream (GstElement * element, GstPad * pad, gboolean last,
+new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
     GstPlayBaseBin * play_base_bin)
 {
   GstStructure *structure;
@@ -274,7 +274,7 @@ new_stream (GstElement * element, GstPad * pad, gboolean last,
   GstStreamType type;
   GstPad *srcpad;
 
-  GST_DEBUG ("play base: new stream");
+  GST_DEBUG ("play base: new decoded pad");
 
   caps = gst_pad_get_caps (pad);
 
@@ -372,7 +372,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
       return FALSE;
     }
     sig1 = g_signal_connect (G_OBJECT (play_base_bin->decoder),
-        "new-decoded-pad", G_CALLBACK (new_stream), play_base_bin);
+        "new-decoded-pad", G_CALLBACK (new_decoded_pad), play_base_bin);
     sig2 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "no-more-pads",
         G_CALLBACK (no_more_pads), play_base_bin);
     sig3 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "unknown-type",

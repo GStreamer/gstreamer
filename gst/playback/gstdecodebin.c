@@ -70,7 +70,7 @@ struct _GstDecodeBinClass
 {
   GstBinClass parent_class;
 
-  void (*new_stream) (GstElement * element, GstPad * pad, gboolean last);
+  void (*new_decoded_pad) (GstElement * element, GstPad * pad, gboolean last);
   void (*unknown_type) (GstElement * element, GstCaps * caps);
 };
 
@@ -84,7 +84,7 @@ enum
 /* signals */
 enum
 {
-  SIGNAL_NEW_STREAM,
+  SIGNAL_NEW_DECODED_PAD,
   SIGNAL_UNKNOWN_TYPE,
   LAST_SIGNAL
 };
@@ -174,9 +174,10 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       g_param_spec_boolean ("threaded", "Threaded", "Use threads",
           FALSE, G_PARAM_READWRITE));
 
-  gst_decode_bin_signals[SIGNAL_NEW_STREAM] =
-      g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstDecodeBinClass, new_stream), NULL, NULL,
+  gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD] =
+      g_signal_new ("new-decoded-pad", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstDecodeBinClass, new_decoded_pad), NULL, NULL,
       gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, G_TYPE_OBJECT,
       G_TYPE_BOOLEAN);
   gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE] =
@@ -356,7 +357,7 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
 
     /* our own signal with an extra flag that this is the only pad */
     g_signal_emit (G_OBJECT (decode_bin),
-        gst_decode_bin_signals[SIGNAL_NEW_STREAM], 0, ghost, !dynamic);
+        gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD], 0, ghost, !dynamic);
 
     g_free (padname);
     return;
