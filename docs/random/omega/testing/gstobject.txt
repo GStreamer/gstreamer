@@ -1,0 +1,95 @@
+Subject: GstObject
+
+Areas to test
+=============
+
+Creation
+Refcounting
+Destruction
+Flags
+Locking
+Parentage
+Path string
+
+
+Tests
+=====
+
+Creation
+--------
+Create an object
+	Does it return !NULL
+	GST_IS_OBJECT() ?
+
+Refcounting
+-----------
+Create new object
+	object->refcount == 1, GTK_OBJECT_FLOATING(object) == TRUE
+Increment refcount
+	object->refcount == 2
+Sink object
+	object->refcount == 1, GTK_OBJECT_FLOATING(object) == FALSE
+Increment refcount
+	object->refcount == 2
+Decrement refcount
+	object->refcount == 1
+
+Destruction
+-----------
+???
+
+Flags (start with new object)
+-----
+Create new object
+	Verify that all flags are unset
+Set a flag
+	Verify it's set
+Unset a flag
+	Verify it's not set
+
+Locking (start with new object)
+-------
+Lock an object
+	Try to lock, get false
+
+Parentage (start with new object, check refcount == 1)
+---------
+gst_object_set_parent: (start with new parent object)
+	Pass NULL...
+	Pass !NULL, but not Object...
+	Pass NULL parent...
+	Pass !NULL parent, but not Object...
+	Pass valid Object, and parent == object
+		object->refcount == 1
+		GTK_OBJECT_FLOATING(object) == TRUE
+		object->parent == NULL
+	Pass valid Object
+		object->refcount == 1
+		GTK_OBJECT_FLOATING(object) == FALSE
+		object->parent == parent
+		The "parent_set" signal should fire with the object and parent as args
+	Pass Object with parent already set
+		object->parent should not equal new parent
+		object->refcount == 1
+gst_object_get_parent:
+	Pass NULL...
+	Pass !NULL, not Object...
+	Pass valid object with no parent
+		Get NULL
+	Pass valid object with parent
+		Get parent pointer
+gst_object_unparent:
+	Pass NULL, with no parent
+		no effect
+	Pass !NULL, not Object, NULL parent
+		pointer not mangled
+	Pass valid object, with no parent
+		object->parent == NULL
+		object->refcount = 1
+	Pass NULL, with valid parent
+		no effect
+	Pass !NULL, not Object, with valid object as parent
+		pointer not mangled
+	Pass valid object, with valid parent
+		object->parent == NULL
+		object->refcount == 0
