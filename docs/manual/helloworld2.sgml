@@ -207,7 +207,7 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
      Finally we set the pipeline back to the playing state. At this point the
      cache will replay the buffers. We will be notified when the cache is empty 
      with the gst_play_cache_empty callback function:
-    <para>
+    </para>
 
     <programlisting>
 static void

@@ -43,6 +43,7 @@
           <option>--gst-plugin-path=<replaceable>PATH</replaceable></option> 
 	  Add a directory to the plugin search path.
          </para>
+       </listitem>
        <listitem>
          <para>
            <option>--help</option> Print the a short desciption of the
@@ -52,7 +53,6 @@
        </listitem>
      </itemizedlist>
     </para>
-    <para>
     <para>
       The follwing table gives an overview of the mask values and 
       their meaning. (enabled) means that the corresponding flag
