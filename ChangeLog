@@ -1,3 +1,13 @@
+2004-01-20  David Schleef  <ds@schleef.org>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents),
+	(gst_ximagesink_xcontext_get), (gst_ximagesink_getcaps),
+	(gst_ximagesink_set_xwindow_id): Change to using a framerate
+	of [1,100] instead of [0,MAX], since 0 isn't handled correctly,
+	and neither is 100+, most likely.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support),
+	(gst_xvimagesink_getcaps): same
+
 2004-01-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* configure.ac:
