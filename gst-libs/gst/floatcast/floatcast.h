@@ -21,8 +21,6 @@
 #ifndef __FLOATCAST_H__
 #define __FLOATCAST_H__
 
-#include <config.h>
-
 #if (HAVE_LRINT && HAVE_LRINTF)
 
 	/*	These defines enable functionality introduced with the 1999 ISO C

@@ -1,7 +1,5 @@
 /* define DCT types */
 
-#include "config.h"
-
 /*
  * DCTSIZE      underlying (1d) transform size
  * DCTSIZE2     DCTSIZE squared

@@ -22,7 +22,6 @@
 #define __MPEG_DEMUX_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include "gstmpegparse.h"
 

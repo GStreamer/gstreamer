@@ -20,6 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "gstmpegclock.h"
 
 static void 		gst_mpeg_clock_class_init 	(GstMPEGClockClass *klass);

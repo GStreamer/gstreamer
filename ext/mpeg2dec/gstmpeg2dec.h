@@ -22,7 +22,6 @@
 #define __GST_MPEG2DEC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <mpeg2.h>
 

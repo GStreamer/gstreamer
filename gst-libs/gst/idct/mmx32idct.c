@@ -115,6 +115,10 @@
 mword typedef qword
 qword ptr equ mword ptr */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <mmx.h>
 
 #define BITS_INV_ACC	4	/*; 4 or 5 for IEEE */

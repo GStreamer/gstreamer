@@ -22,7 +22,6 @@
 #define __RFC2250_ENC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 #include "gstmpegpacketize.h"

@@ -20,6 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "audioclock.h"
 
 static void 		gst_audio_clock_class_init 	(GstAudioClockClass *klass);

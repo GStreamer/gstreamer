@@ -38,6 +38,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,8 +55,6 @@
 #include <assert.h>
 
 #include <dvdreadsrc.h>
-
-#include "config.h"
 
 #include <dvdread/dvd_reader.h>
 #include <dvdread/ifo_types.h>

@@ -22,7 +22,6 @@
 #define __AC3PARSE_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 

@@ -21,7 +21,6 @@
 #ifndef __ASF_DEMUX_H__
 #define __ASF_DEMUX_H__
 
-#include <config.h>
 #include <gst/gst.h>
 #include <gst/riff/riff.h>
 #include <gst/bytestream/bytestream.h>

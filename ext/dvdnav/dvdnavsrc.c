@@ -20,6 +20,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,8 +29,6 @@
 #include <errno.h>
 #include <assert.h>
 #include <gst/gst.h>
-
-#include "config.h"
 
 #include <dvdnav/dvdnav.h>
 #include <dvdread/nav_print.h>

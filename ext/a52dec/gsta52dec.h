@@ -21,7 +21,6 @@
 #ifndef __GST_A52DEC_H__
 #define __GST_A52DEC_H__
 
-#include <config.h>
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 

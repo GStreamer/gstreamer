@@ -35,6 +35,10 @@
 /* Here we use math.h to generate constants.  Compiler results may
    vary a little */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <math.h>
 
 #ifndef PI
