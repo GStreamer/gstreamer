@@ -652,8 +652,9 @@ WM/MCDI
 
 */
 
-  const guchar *tags[] = { GST_TAG_GENRE, GST_TAG_ALBUM, GST_TAG_ARTIST, NULL };
-  const guchar *tags_label[] =
+  const guchar *tags[4] =
+      { GST_TAG_GENRE, GST_TAG_ALBUM, GST_TAG_ARTIST, NULL };
+  const guchar *tags_label[4] =
       { "WM/Genre", "WM/AlbumTitle", "WM/AlbumArtist", NULL };
 
   GstTagList *taglist;

@@ -1015,12 +1015,25 @@ GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
   GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h, FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
   if test $HAVE_FAAD = "yes"; then
     AC_MSG_CHECKING([Checking for FAAD >= 2])
-    AC_TRY_COMPILE([
+    AC_TRY_RUN([
+
 #include <faad.h>
 #if !defined(FAAD2_VERSION) || !defined(FAAD_FMT_DOUBLE)
 #error Not faad2
+#else
+#include <string.h>
+
+int main()
+{
+char version[9] = FAAD2_VERSION;
+// a release candidate of 2.0 is not enought for us
+if ( strstr( version, "2.0 RC" ) ) { return 1; }
+
+return 0;
+}
+
 #endif
-    ], [ return 0; ],
+    ],
        [ HAVE_FAAD="yes" && AC_MSG_RESULT(yes)],
        [ HAVE_FAAD="no"  && AC_MSG_RESULT(no)])
   fi;
