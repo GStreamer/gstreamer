@@ -57,6 +57,11 @@ struct _GstMad {
   gboolean need_sync;
   guint64 last_time;
   guint64 framestamp;	/* timestamp-like, but counted in frames */
+
+  /* info */
+  struct mad_header header;
+  gboolean new_header;
+  gint channels;
 };
 
 struct _GstMadClass {

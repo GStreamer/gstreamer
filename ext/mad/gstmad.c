@@ -19,9 +19,6 @@
 
 #include <string.h>
 #include "gstmad.h"
-#include <libs/audio/gstaudio.h>
-
-//#define DEBUG_TIMESTAMP
 
 /* elementfactory information */
 static GstElementDetails gst_mad_details = {
@@ -136,7 +133,7 @@ gst_mad_init (GstMad *mad)
 
   gst_element_set_loop_function (GST_ELEMENT (mad), GST_DEBUG_FUNCPTR(gst_mad_loop));
   // the MAD API is broken, so we have to set this
-//  GST_FLAG_SET(GST_ELEMENT(mad), GST_ELEMENT_NO_ENTRY);
+  //GST_FLAG_SET(GST_ELEMENT(mad), GST_ELEMENT_NO_ENTRY);
 
   mad_decoder_init (&mad->decoder, mad, 
                      gst_mad_input, 0 /* header */, 0 /* filter */, gst_mad_output,
@@ -147,6 +144,7 @@ gst_mad_init (GstMad *mad)
   mad->need_sync = TRUE;
   mad->last_time = 0;
   mad->framestamp = 0;
+  mad->new_header = TRUE;
 }
 
 static enum mad_flow 
@@ -239,8 +237,8 @@ gst_mad_input (void *user_data,
   mad_stream_buffer (stream, mad->tempbuffer, mad->tempsize);
 
   /* this doesn't seem to work very well.. */
-  //if (mad->need_sync)
-  //   mad_stream_sync (stream);
+  /*if (mad->need_sync)
+      mad_stream_sync (stream); */
      
   GST_DEBUG (0, "decoder_in done %p\n", stream->next_frame);
 
@@ -261,6 +259,37 @@ scale (mad_fixed_t sample)
 
   /* quantize */
   return sample >> (MAD_F_FRACBITS + 1 - 16);
+}
+
+static gchar *layers[]   = { "unknown", "I", "II", "III" };
+static gchar *modes[]    = { "single channel", "dual channel", "joint stereo", "stereo" };
+static gchar *emphases[] = { "none", "50/15 microseconds", "CCITT J.17" };
+
+static void
+gst_mad_update_info (GstMad *mad, struct mad_header const *header)
+{
+#define CHECK_HEADER(h1,str,prop) 				\
+G_STMT_START{							\
+  if (mad->header.h1 != header->h1 || mad->new_header) {	\
+    mad->header.h1 = header->h1;				\
+    gst_element_send_event (GST_ELEMENT (mad),			\
+	gst_event_new_info (str, prop, NULL));			\
+  };								\
+}G_STMT_END
+
+  CHECK_HEADER (layer, 	    "layer",      GST_PROPS_STRING (layers[header->layer]));
+  CHECK_HEADER (mode, 	    "mode",       GST_PROPS_STRING (modes[header->mode]));
+  CHECK_HEADER (emphasis,   "emphasis",   GST_PROPS_STRING (emphases[header->emphasis]));
+  CHECK_HEADER (bitrate,    "bitrate",    GST_PROPS_INT (header->bitrate));
+  CHECK_HEADER (samplerate, "samplerate", GST_PROPS_INT (header->samplerate));
+  if (mad->channels != MAD_NCHANNELS (header) || mad->new_header) {
+    mad->channels = MAD_NCHANNELS (header);
+    gst_element_send_event (GST_ELEMENT (mad),
+	gst_event_new_info ("channels", GST_PROPS_INT (mad->channels), NULL));
+
+  }
+
+  mad->new_header = FALSE;
 }
 
 static enum mad_flow 
@@ -284,22 +313,13 @@ gst_mad_output (void *data,
   left_ch   = pcm->samples[0];
   right_ch  = pcm->samples[1];
 
+  gst_mad_update_info (mad, header);
+
   buffer = gst_buffer_new ();
   outdata = (gint16 *) GST_BUFFER_DATA (buffer) = g_malloc (nsamples*nchannels*2);
   GST_BUFFER_SIZE (buffer) = nsamples*nchannels*2;
   GST_BUFFER_TIMESTAMP (buffer) = mad->last_time;
   
-  /* this bit added by thomas to try timestamps */
-#ifdef DEBUG_TIMESTAMP
-  mad->framestamp += gst_audio_frame_length (mad->srcpad, buffer);
-  if (GST_BUFFER_TIMESTAMP (buffer) == 0)
-  {
-    GST_BUFFER_TIMESTAMP (buffer) = mad->framestamp * 1E9
-				  / gst_audio_frame_rate (mad->srcpad);
-    printf ("DEBUG: mad: timestamp set on output buffer: %f sec\n",
-	GST_BUFFER_TIMESTAMP (buffer) / 1E9);
-  }
-#endif
   /* end of new bit */
   while (nsamples--) {
     /* output sample(s) in 16-bit signed native-endian PCM */
@@ -331,8 +351,7 @@ gst_mad_output (void *data,
   }
 
   if (mad->need_sync) {
-    // use an event FIXME
-    // GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLUSH);
+    /* use an event FIXME */
     mad->need_sync = FALSE;
   }
   if (GST_PAD_CONNECTED (mad->srcpad))
@@ -383,15 +402,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 		  GST_PADTEMPLATE_GET (mad_src_template_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  /* load audio support library */
-  /*
-  if (!gst_library_load ("gstaudio"))
-  {
-    gst_info ("mad: could not load support library: 'gstaudio'\n");
-    return FALSE;
-  }
-  */
 
   return TRUE;
 }
