@@ -627,17 +627,27 @@ probe_handler_marshal(GstProbe *probe, GstData **data, gpointer user_data)
     PyGILState_STATE state;
     PyObject *callback, *args;
     PyObject *ret;
+    PyObject *py_user_data;
     gboolean res;
+    gint len, i;
 
     g_return_val_if_fail(user_data != NULL, FALSE);
 
     state = pyg_gil_state_ensure();
 
-    callback = PyTuple_GetItem((PyObject *)user_data, 0);
-    args = Py_BuildValue("(NNO)",
+    py_user_data = (PyObject *) user_data;
+
+    callback = PyTuple_GetItem(py_user_data, 0);
+    args = Py_BuildValue("(NN)",
         pyg_boxed_new(GST_TYPE_PROBE, probe, TRUE, TRUE),
-        pyg_boxed_new(GST_TYPE_DATA, *data, TRUE, TRUE),
-        PyTuple_GetItem((PyObject *)user_data, 1));
+        pyg_boxed_new(GST_TYPE_DATA, *data, TRUE, TRUE));
+
+    len = PyTuple_Size(py_user_data);
+    for (i = 1; i < len; ++i) {
+        PyObject *tuple = args;
+        args = PySequence_Concat(tuple, PyTuple_GetItem(py_user_data, i));
+        Py_DECREF(tuple);
+    }
     ret = PyObject_CallObject(callback, args);
 
     if (!ret) {

@@ -19,7 +19,16 @@ class ProbeTest(unittest.TestCase):
         self.assertRaises(TypeError, probe.perform, None)
         self.assertRaises(TypeError, probe.perform, "nodata")
 
-    def testPerform(self):
+    def testPerformNoArg(self):
+        probe = gst.Probe(True, self._probe_callback_no_arg)
+        buffer = gst.Buffer()
+        probe.perform(buffer)
+        self.assertEqual(self._no_arg, None)
+
+    def _probe_callback_no_arg(self, probe, data):
+        self._no_arg = None
+
+    def testPerformOneArg(self):
         probe = gst.Probe(True, self._probe_callback, "yeeha")
         buffer = gst.Buffer()
         probe.perform(buffer)
@@ -28,6 +37,18 @@ class ProbeTest(unittest.TestCase):
     def _probe_callback(self, probe, data, result):
         self._probe_result = result
         return True
-   
+
+    def testPerformTwoArgs(self):
+        probe = gst.Probe(True, self._probe_callback_two, "yeeha", "works")
+        buffer = gst.Buffer()
+        probe.perform(buffer)
+        self.assertEqual(self._probe_result1, "yeeha")
+        self.assertEqual(self._probe_result2, "works")
+
+    def _probe_callback_two(self, probe, data, result1, result2):
+        self._probe_result1 = result1
+        self._probe_result2 = result2
+        return True
+    
 if __name__ == "__main__":
     unittest.main()
