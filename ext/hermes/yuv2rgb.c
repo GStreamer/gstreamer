@@ -107,7 +107,7 @@ static GstColorSpaceYUVTables * gst_colorspace_init_yuv(long depth,
 GstColorSpaceConverter* 
 gst_colorspace_yuv2rgb_get_converter (GstCaps *from, GstCaps *to) 
 {
-  guint32 from_space, to_space;
+  guint32 from_space;
   GstColorSpaceConverter *new;
   gint to_bpp;
   
@@ -120,11 +120,9 @@ gst_colorspace_yuv2rgb_get_converter (GstCaps *from, GstCaps *to)
   new->color_tables = NULL;
 
   gst_caps_get_fourcc_int (from, "format", &from_space);
-  gst_caps_get_fourcc_int (to, "format", &to_space);
   gst_caps_get_int (to, "bpp", &to_bpp);
 
   /* FIXME we leak new here. */
-  g_return_val_if_fail (to_space == GST_STR_FOURCC ("RGB "), NULL);
 
   switch(from_space) {
     case GST_MAKE_FOURCC ('Y','V','1','2'):
