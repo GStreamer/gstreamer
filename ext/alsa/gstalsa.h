@@ -1,23 +1,22 @@
-/* -*- c-basic-offset: 4 -*- */
 /*
-    Copyright (C) 2001 CodeFactory AB
-    Copyright (C) 2001 Thomas Nyberg <thomas@codefactory.se>
-    Copyright (C) 2001-2002 Andy Wingo <apwingo@eos.ncsu.edu>
-                            
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Library General Public
-    License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
-
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Library General Public License for more details.
-
-    You should have received a copy of the GNU Library General Public
-    License along with this library; if not, write to the Free
-    Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*/
+ * Copyright (C) 2001 CodeFactory AB
+ * Copyright (C) 2001 Thomas Nyberg <thomas@codefactory.se>
+ * Copyright (C) 2001-2002 Andy Wingo <apwingo@eos.ncsu.edu>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the Free
+ * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 
 #ifndef __GST_ALSA_H__
 #define __GST_ALSA_H__
@@ -58,68 +57,68 @@ typedef GstAlsa GstAlsaSrc;
 typedef GstAlsaClass GstAlsaSrcClass;
 
 enum {
-    GST_ALSA_OPEN = GST_ELEMENT_FLAG_LAST,
-    GST_ALSA_RUNNING,
-    GST_ALSA_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 3,
+  GST_ALSA_OPEN = GST_ELEMENT_FLAG_LAST,
+  GST_ALSA_RUNNING,
+  GST_ALSA_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 3,
 };
 
 typedef gboolean (*GstAlsaProcessFunc) (GstAlsa *, snd_pcm_uframes_t frames);
 
 typedef struct {
-    gint channel;
-    GstPad *pad;
-    GstByteStream *bs;
-    /* pointer to where we can access mmap_areas */
-    char *access_addr;
-    char *buf;
-    /* how much of the buffer we have used */
-    snd_pcm_uframes_t offset;
+  gint channel;
+  GstPad *pad;
+  GstByteStream *bs;
+
+  /* buf and offset are only used for src elements to hold data from the sound
+     card, while we're waiting for an entire period_frames data. */
+  char *buf;
+  snd_pcm_uframes_t offset;
 } GstAlsaPad;
 
 struct _GstAlsa {
-    GstElement parent;
+  GstElement parent;
 
-    /* list of GstAlsaPads */
-    GList *pads;
-    
-    gchar *device;
-    snd_pcm_stream_t stream;
-    
-    snd_pcm_t *handle;
-    snd_output_t *out;
-    
-    /* our mmap'd data areas */
-    gboolean mmap_open;
-    const snd_pcm_channel_area_t *mmap_areas;
-    char **access_addr;
-    snd_pcm_uframes_t offset;
-    snd_pcm_sframes_t avail;
-    
-    GstAlsaProcessFunc process;
-    
-    snd_pcm_format_t format;
-    guint rate;
-    gint channels;
-    guint32 mute; /* bitmask. */
-    
-    /* the gstreamer data */
-    gboolean data_interleaved;
-    
-    /* access to the hardware */
-    gboolean access_interleaved;
-    guint sample_bytes;
-    guint interleave_unit;
-    guint interleave_skip;
-    
-    guint buffer_frames;
-    guint period_count; /* 'number of fragments' in oss-speak */
-    guint period_frames;
+  /* list of GstAlsaPads */
+  GList *pads;
 
-    gboolean debug;
+  gchar *device;
+  snd_pcm_stream_t stream;
+  snd_pcm_t *handle;
+  snd_output_t *out;
+
+  /* our mmap'd data areas */
+  gboolean mmap_open;
+  const snd_pcm_channel_area_t *mmap_areas;
+  char **access_addr;
+  snd_pcm_uframes_t offset;
+  snd_pcm_sframes_t avail;
+
+  GstAlsaProcessFunc process;
+
+  snd_pcm_format_t format;
+  guint rate;
+  gint channels;
+  guint32 mute; /* bitmask. */
+
+  /* the gstreamer data */
+  gboolean data_interleaved;
+  gboolean autorecover;
+
+  /* access to the hardware */
+  gboolean access_interleaved;
+  guint sample_bytes;
+  guint interleave_unit;
+  guint interleave_skip;
+
+  guint buffer_frames;
+  guint period_count; /* 'number of fragments' in oss-speak */
+  guint period_frames;
+
+  gboolean debug;
 };
 
 struct _GstAlsaClass {
-    GstElementClass parent_class;
+  GstElementClass parent_class;
 };
 
 GType gst_alsa_get_type (void);
