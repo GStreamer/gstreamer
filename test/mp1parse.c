@@ -81,7 +81,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 
     appwindow = gnome_app_new("MPEG1 player","MPEG1 player");
     gnome_app_set_contents(GNOME_APP(appwindow),
-      	        gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
+      	        gst_util_get_pointer_arg(GTK_OBJECT(show),"widget"));
 		gtk_widget_show_all(appwindow);
 
     // create the thread and pack stuff into it
