@@ -69,13 +69,13 @@ sub playfile($$)
     if ($cfg{VISUALIZER} && ($pipe = $pipes{"vis." . $ext}))
     {
 	$command = "gst-launch filesrc location=\"$file\" ! $pipe";
-	print "Running $command\n";
+	print "Running command-line\n$command\n\n";
 	system ("PATH=\$PATH:".$cfg{CVS_PATH}."/gstreamer/tools $command");
     }
     elsif ($pipe = $pipes{$ext})
     {
 	$command = "gst-launch filesrc location=\"$file\" ! $pipe";
-	print "Running $command\n";
+	print "Running command-line\n$command\n\n";
 	system ("PATH=\$PATH:".$cfg{CVS_PATH}."/gstreamer/tools $command");
     }
     else
