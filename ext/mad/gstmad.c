@@ -52,8 +52,6 @@ struct _GstMad {
   gboolean	need_sync;
   guint64       base_byte_offset;
   guint64       bytes_consumed;   /* since the base_byte_offset */
-  guint64	base_time;
-  guint64	framestamp;	/* timestamp-like, but counted in frames */
   guint64	total_samples;  /* the number of samples since the sync point */
 
   gboolean	restart;
@@ -315,10 +313,8 @@ gst_mad_init (GstMad *mad)
   mad->tempbuffer = g_malloc (MAD_BUFFER_MDLEN * 3);
   mad->tempsize = 0;
   mad->need_sync = TRUE;
-  mad->base_time = 0;
   mad->base_byte_offset = 0;
   mad->bytes_consumed = 0;
-  mad->framestamp = 0;
   mad->total_samples = 0;
   mad->new_header = TRUE;
   mad->framecount = 0;
@@ -570,16 +566,9 @@ gst_mad_src_query (GstPad *pad, GstQueryType type,
       switch (*format) {
 	default:
 	{
-          GstFormat time_format;
-	  gint64 samples;
-
-          time_format = GST_FORMAT_DEFAULT;
-	  res = gst_pad_convert (pad,
-			GST_FORMAT_TIME, mad->base_time,
-			&time_format, &samples);
 	  /* we only know about our samples, convert to requested format */
 	  res &= gst_pad_convert (pad,
-			  GST_FORMAT_DEFAULT, mad->total_samples + samples,
+			  GST_FORMAT_DEFAULT, mad->total_samples,
 			  format, value);
 	  break;
 	}
@@ -656,10 +645,10 @@ normal_seek (GstMad *mad, GstPad *pad, GstEvent *event)
   if (!gst_pad_convert (pad,
 			GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
 			&format, &src_offset))
-    {
-      /* didn't work, probably unsupported seek format then */
-      return FALSE;
-    }
+  {
+    /* didn't work, probably unsupported seek format then */
+    return FALSE;
+  }
   
   /* shave off the flush flag, we'll need it later */
   flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
@@ -1030,6 +1019,8 @@ gst_mad_handle_event (GstPad *pad, GstBuffer *buffer)
       gint n = GST_EVENT_DISCONT_OFFSET_LEN (event);
       gint i;
 
+      mad->total_samples = 0;
+
       for (i = 0; i < n; i++)
       {
 	const GstFormat *formats;
@@ -1051,9 +1042,14 @@ gst_mad_handle_event (GstPad *pad, GstBuffer *buffer)
             time = 0;
           }
 
-          /* for now, this is the best we can do. Let's hope a real timestamp
-           * arrives with the next buffer */
-          mad->base_time = time;
+          /* for now, this is the best we can do to get the total number
+	   * of samples */
+          format = GST_FORMAT_DEFAULT;
+          if (!gst_pad_convert (mad->srcpad,
+		                GST_FORMAT_TIME, time, &format, &mad->total_samples))
+          {
+            mad->total_samples = 0;
+          }
 
           gst_event_unref (event);
 
@@ -1066,7 +1062,6 @@ gst_mad_handle_event (GstPad *pad, GstBuffer *buffer)
           break;
         }
       }
-      mad->total_samples = 0;
       mad->tempsize = 0;
       /* we don't need to restart when we get here */
       mad->restart = FALSE;
@@ -1118,8 +1113,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
     /* if there is nothing queued (partial buffer), we prepare to set the
      * timestamp on the next buffer */
     if (mad->tempsize == 0) {
-      mad->base_time = timestamp;
-      mad->total_samples = 0;
+      GstFormat format = GST_FORMAT_DEFAULT;
+      gst_pad_convert (pad, GST_FORMAT_TIME, timestamp, &format, &mad->total_samples);
       mad->base_byte_offset = GST_BUFFER_OFFSET (buffer);
       mad->bytes_consumed = 0;
     }
@@ -1248,10 +1243,10 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
                 "channels",    GST_PROPS_INT (nchannels),
                 NULL))) <= 0)
 	{
-	  gst_buffer_unref (buffer);
-          gst_element_error (GST_ELEMENT (mad),
-			     "could not set caps on source pad, aborting...");
-	  return;
+	  if (!gst_pad_recover_caps_error (mad->srcpad, NULL)) {
+	    gst_buffer_unref (buffer);
+	    return;
+	  }
         }
 	mad->channels = nchannels;
 	mad->rate = rate;
@@ -1263,10 +1258,10 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	time_duration = GST_CLOCK_TIME_NONE;
       }
       else {
-	time_offset = mad->base_time + (mad->total_samples * GST_SECOND
-					/ mad->frame.header.samplerate);
-	time_duration = (mad->base_time + ((mad->total_samples + nsamples) * GST_SECOND
-					/ mad->frame.header.samplerate)) - time_offset;
+	time_offset = mad->total_samples * GST_SECOND
+					/ mad->frame.header.samplerate;
+	time_duration = ((mad->total_samples + nsamples) * GST_SECOND
+					/ mad->frame.header.samplerate) - time_offset;
       }
 
       if (mad->index) {
@@ -1279,7 +1274,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       }
 
       if (GST_PAD_IS_USABLE (mad->srcpad) &&
-	  mad->segment_start <= (time_offset == GST_CLOCK_TIME_NONE ? mad->base_time : time_offset)) {
+	  mad->segment_start <= (time_offset == GST_CLOCK_TIME_NONE ? 0 : time_offset)) {
 
 	/* for sample accurate seeking, calculate how many samples
 	   to skip and send the remaining pcm samples */
@@ -1297,7 +1292,6 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 
 	GST_BUFFER_TIMESTAMP (outbuffer) = time_offset;
 	GST_BUFFER_DURATION (outbuffer) = time_duration;
-	/* FIXME this is wrong */
 	GST_BUFFER_OFFSET (outbuffer) = mad->total_samples;
 
         /* output sample(s) in 16-bit signed native-endian PCM */
@@ -1323,9 +1317,10 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       /* we have a queued timestamp on the incoming buffer that we should
        * use for the next frame */
       if (new_pts) {
+        GstFormat format = GST_FORMAT_DEFAULT;
+
 	new_pts = FALSE;
-        mad->base_time = timestamp;
-        mad->total_samples = 0;
+        gst_pad_convert (pad, GST_FORMAT_TIME, timestamp, &format, &mad->total_samples);
 	mad->base_byte_offset = GST_BUFFER_OFFSET (buffer);
 	mad->bytes_consumed = 0;
       }
@@ -1373,9 +1368,7 @@ gst_mad_change_state (GstElement *element)
       mad->rate = 0;
       mad->channels = 0;
       mad->vbr_average = 0;
-      mad->base_time = 0;
       mad->segment_start = 0;
-      mad->framestamp = 0;
       mad->new_header = TRUE;
       mad->framecount = 0;
       mad->vbr_rate = 0;
