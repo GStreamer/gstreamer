@@ -1,0 +1,24 @@
+<chapter id="cha-connections">
+  <title>Connecting elements</title>
+  <para> 
+    You can connect the different pads of elements together so that the elements
+    form a chain.
+  </para>
+
+  <figure float="1" id="sec-connection">
+    <title>Visualisation of three connected elements</title>
+      <graphic fileref="images/connected-elements" format="png"></graphic>
+  </figure>
+  <para> 
+    By connecting these three elements, we have created a very simple pipeline. The effect
+    of this will be that the output of the source element (element1) will be used as input 
+    for the filter element (element2). The filter element will do something with the data and 
+    send the result to the final sink element (element3).
+  </para>
+  <para> 
+    Imagine the above graph as a simple mpeg audio decoder. The source element is a 
+    disk source, the filter element is the mpeg decoder and the sink element is your
+    audiocard. We will use this simple graph to construct an mpeg player later
+    in this manual.
+  </para>
+</chapter>

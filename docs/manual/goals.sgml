@@ -1,0 +1,109 @@
+<chapter id="cha-goals">
+  <title>Goals</title>
+  <para> 
+    GStreamer was designed to provide a solution to the current Linux media
+    problems.
+  </para>
+
+  <sect1 id="sec-goals-design">
+    <title>The design goals</title>
+    <para> 
+      We descibe what we try to achieve with GStreamer.
+    </para>
+    <sect2 id="sec-goals-clean">
+      <title>Clean and powerfull</title>
+      <para>
+        GStreamer wants to provide a clean interface to:
+      </para>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    The application programmer who wants to build a media pipeline.
+	  </para>
+        </listitem>
+        <listitem>
+	  <para>
+	    The plugin programmer.
+	  </para>
+        </listitem>
+      </itemizedlist>
+
+    </sect2>
+    <sect2 id="sec-goals-object">
+      <title>Object oriented</title>
+      <para>
+        Adhere as much as possible to the GTK+ object model. A programmer familiar
+	with GTK+ will be confortable with GStreamer.
+      </para> 
+      <para>
+        GStreamer uses the mechanisems of signals and object arguments. 
+      </para> 
+    </sect2>
+  
+    <sect2 id="sec-goals-extensible">
+      <title>Extensible</title>
+      <para> 
+	All GStreamer Objects can be extended using the GTK+ inheritance methods.
+      </para> 
+      <para> 
+        All plugins are loaded dynamically and can be extended and upgraded
+	independently.
+      </para> 
+    </sect2>
+
+    <sect2 id="sec-goals-binary">
+      <title>Allow binary only plugins</title>
+      <para> 
+        plugins are shared libraries that are loaded at runtime. since all the
+	properties of the plugin can be set using the GtkObject arguments, there
+	is no need to have any header files installed for the plugins.
+      </para> 
+    </sect2>
+
+    <sect2 id="sec-goals-performance">
+      <title>High performance</title>
+      <para> 
+        High performance is obtained by:
+      </para> 
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    Using glib g_mem_chunk where possible to minimize dynamic memory
+	    allocation.
+	  </para>
+        </listitem>
+        <listitem>
+	  <para>
+	    Connections between plugins are extremely light-weight. Data can travel
+	    the pipeline with minimal overhead.
+	  </para>
+        </listitem>
+        <listitem>
+	  <para>
+	    Provide a mechanism to directly work on the target memory. A
+	    plugin can for example directly write to the X servers shared mem.
+	    Buffers can also point to arbitrary memory like kernel memory.
+	  </para>
+        </listitem>
+        <listitem>
+	  <para>
+	    Refcounting and copy on write to minimize the amount of memcpy.
+	    Subbufers to efficiently split the data in a buffer.
+	  </para>
+        </listitem>
+        <listitem>
+	  <para>
+	    Pipelines can be constructed using cothreads to minimize the
+	    threading overhead. Cothreads are a simple user-space method for 
+	    switching between subtasks.
+	  </para>
+        </listitem>
+        <listitem>
+	  <para>
+	    HW acceleration is possible by writing a specialized plugin.
+	  </para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+  </sect1>
+</chapter>

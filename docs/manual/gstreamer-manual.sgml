@@ -1,0 +1,173 @@
+<!doctype book PUBLIC "-//GNOME//DTD DocBook PNG Variant V1.0//EN" [ 
+<!ENTITY INTRO SYSTEM "intro.sgml">
+<!ENTITY MOTIVATION SYSTEM "motivation.sgml">
+<!ENTITY GOALS SYSTEM "goals.sgml">
+
+<!ENTITY ELEMENTS SYSTEM "elements.sgml">
+<!ENTITY CONNECTIONS SYSTEM "connections.sgml">
+<!ENTITY BINS SYSTEM "bins.sgml">
+<!ENTITY BUFFERS SYSTEM "buffers.sgml">
+<!ENTITY STATES SYSTEM "states.sgml">
+]>
+
+
+<book id="GStreamer">
+  <bookinfo>
+    
+    <authorgroup>
+      <author>
+	<firstname>Wim</firstname>
+	<surname>Taymans</surname>
+	<authorblurb>
+	  <para>
+	    <email>wim.taymans@chello.be</email>
+	  </para>
+	</authorblurb>
+      </author>
+    </authorgroup>
+
+    <edition>First Release</edition>
+    <pubdate>2000</pubdate>
+    <copyright>
+      <year>2000</year>
+      <holder>New Riders Publishing</holder>
+    </copyright>
+
+    <legalnotice>
+      <para>
+	This material may be distributed only subject to the terms and
+        conditions set forth in the Open Publication License, v1.0 or later (the
+        latest version is presently available at <ulink url="
+        http://www.opencontent.org/openpub/"
+        type="http">http://www.opencontent.org/openpub/</ulink> )
+      </para>
+    </legalnotice>
+
+    <title>GStreamer Application Development Manual</title>
+
+  </bookinfo>
+      
+<!-- ############# Overview - part ############### -->
+
+  <part id="overview"><title>Overview</title>
+    <partintro>
+      <para> 
+        The first chapter of the book gives you an overview of GStreamer
+        design goals. Chapter 2 rapidly covers the basics of GStreamer
+        programming. In chapter 3 we will move on to the examples. 
+        Since GStreamer adheres to the GTK+ programming model, the reader is 
+        assumed to understand the basics of GTK+.
+        For a gentle introduction to GTK+, you may wish to read the <emphasis>GTK+
+        Tutorial</emphasis> or Eric Harlow's book <emphasis>Developing Linux
+        Applications with GTK+ and GDK</emphasis>.  
+      </para>
+    </partintro>
+
+<!-- ############ Introduction - chapter ############# -->
+      &INTRO;
+
+      &MOTIVATION;
+
+      &GOALS;
+  </part>
+
+<!-- ############ Basic concepts - part ############# -->
+
+  <part id="basic-concepts"><title>Basic concepts</title>
+    <partintro>
+      <para> 
+        We will first describe the basics of the GStreamer programming by
+        introducing the different objects needed to create a media pipeline.
+      </para>
+      <para> 
+        We will use a visual representation of these objects so that we can
+	visualize the more complex pipelines you will learn to build later on.
+      </para>
+    </partintro>
+
+<!-- ############ Basic concepts - chapter ############# -->
+      &ELEMENTS;
+
+      &CONNECTIONS;
+
+      &BINS;
+
+      &BUFFERS;
+
+      &STATES;
+  </part>
+<!-- ############ Building Apps - part ############# -->
+
+  <part id="build-app"><title>Building an application</title>
+
+    <partintro>
+      <para>
+        With the basic concepts out of the way, you're ready to start building a
+        full-scale GStreamer application. This part of the book walks you through the
+        creation of a generic application skeleton: a source tree using
+        <application>automake</application> and
+        <application>autoconf</application>, argument parsing, session
+        management, internationalization, the main window, dialogs, toolbars, and
+        menubars. Many examples in Part 2 come from a simple application called
+        "GnomeHello"; the source code for this application is included in the
+        back of the book.  </para> <para> Of course the "meat" of the application
+        is up to you; but in Part 3 of the book we'll cover a range of library
+        features you can use to develop it.  
+      </para>
+    </partintro>
+
+  </part>
+
+<!-- ############ Advanced GStreamer - part ############# -->
+
+  <part id="advanced"><title>Advanced GStreamer concepts</title>
+
+    <partintro>
+      <para>
+        Wanna know more?
+      </para>      
+    </partintro>
+
+  </part>
+
+<!-- ############ XML in GStreamer - part ############# -->
+
+  <part id="xml-gstreamer"><title>XML in GStreamer</title>
+
+    <partintro>
+      <para>
+        Just say how we use it...
+      </para>      
+    </partintro>
+
+  </part>
+
+<!-- ############ XML in GStreamer - part ############# -->
+
+  <part id="plugins"><title>plugin development in GStreamer</title>
+
+    <partintro>
+      <para>
+        A lot of text will follow...
+      </para>      
+    </partintro>
+
+  </part>
+
+<!-- ############ Appendices - part ############# -->
+
+  <part id="appendices">
+    <title>Appendices</title>
+
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+  </part>
+</book>
+
+
+
+
+
+

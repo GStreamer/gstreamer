@@ -1,0 +1,66 @@
+<chapter id="cha-bins">
+  <title>Bins</title>
+  <para> 
+    A Bin is a container element. You can add elements to a bin. Since a bin is 
+    an element itself, it can also be added to another bin.
+  </para>
+  <para> 
+    Bins allow you to combine connected elements into one logical element. You do
+    not deal with the individual elements anymore but with just one element, the bin.
+    We will see that this is extremely powerfull when you are going to construct
+    complex pipelines since it allows you to break up the pipeline in smaller chunks.
+  </para>
+  <para> 
+    The bin will also manage the elements contained in it. It will figure out how
+    the data will flow in the bin and generate an optimal plan for that data flow.
+  </para>
+
+  <figure float="1" id="sec-bin-img">
+    <title>Visualisation of a <classname>GstBin</classname> element with some elements in it</title>
+    <graphic fileref="images/bin-element" format="png"></graphic>
+  </figure>
+
+  <para> 
+    There are two standard bins available to the GStreamer programmer:
+
+    <itemizedlist>
+      <listitem>
+        <para>
+          A pipeline (<classname>GstPipeline</classname>). Which is a generic container you will
+	  use most of the time.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          A thread (<classname>GstThread</classname>). All the elements in the thread bin will 
+	  run in a separate thread. You will haver to use this bin if you carfully have to 
+	  synchronize audio and video for example. You will learn more about threads in.. <!-- FIXME -->
+        </para>
+      </listitem>
+    </itemizedlist>
+  </para>
+
+  <para> 
+    The application programmer can create custom bins packed with elements to perform a 
+    specific task. This allow you to write an MPEG audio decoder with just the follwing lines
+    of code:
+
+    <programlisting>
+
+      // create the mp3player element
+      GstElement *mp3player = gst_elementfactory_make("mp3player","mp3player");
+      // set the source mp3 audio file
+      gtk_object_set(GTK_OBJECT(mp3player), "location", "helloworld.mp3", NULL);
+      // tell the mp3player to prepare itself
+      gst_element_set_state(GST_ELEMENT(mp3player),GST_STATE_READY);
+      // start playback
+      gst_element_set_state(GST_ELEMENT(mp3player),GST_STATE_PLAYING);
+      ...
+      // pause playback
+      gst_element_set_state(GST_ELEMENT(mp3player),GST_STATE_PAUSED);
+      ...
+      // stop
+      gst_element_set_state(GST_ELEMENT(mp3player),GST_STATE_NULL);
+    </programlisting>
+  </para>
+</chapter>

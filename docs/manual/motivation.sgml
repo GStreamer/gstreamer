@@ -1,0 +1,86 @@
+<chapter id="cha-motivation">
+  <title>Motivation</title>
+  <para> 
+    Linux has historically lagged behind other operating systems in the multimedia 
+    arena. Microsoft's Windows[tm] and Apple's MacOS[tm] both have strong support 
+    for multimedia devices, multimedia content creation,
+    playback, and realtime processing. Linux, on the other hand, has a poorly integrated 
+    collection of multimedia utilities and applications available, which can hardly compete 
+    with the professional level of software available for MS Windows and MacOS.
+  </para>
+
+  <sect1 id="sec-motivation-problems">
+    <title>Current problems</title>
+    <para> 
+      We descibe the typical problems in todays media handling on Linux.
+    </para>
+    <sect2 id="sec-motivation-duplicate">
+      <title>Multitude of duplicate code</title>
+      <para> 
+        The Linux user who wishes to hear a sound file must hunt through their collection of 
+        sound file players in order to play the tens of sound file formats in wide use today. 
+        Most of these players basically reimplement the same code over and over again.
+      </para>
+      <para>
+        The Linux developer who wishes to embed a video clip in their application must use 
+        crude hacks to run an external video player. There is no library available that a
+        developer can use to create a custom media player.
+      </para>
+
+    </sect2>
+    <sect2 id="sec-motivation-goal">
+      <title>'One goal' media players</title>
+      <para>
+        Your typical MPEG player was designed to play MPEG video and audio. Most of
+        these players have implemented a complete infrastructure focused on 
+        achieving their only goal: playback. No provisions were made to add
+        filters or special effects to the video or audio data.
+      </para> 
+      <para>
+        If I wanted to convert an MPEG2 video stream into an AVI file, my best
+        option would be to take all of the MPEG2 decoding algorithms out
+        of the player and duplicate them into my own AVI encoder. These 
+        algorithms cannot easily be shared accross applications.
+      </para> 
+    </sect2>
+  
+    <sect2 id="sec-motivation-plugin">
+      <title>Non unified plugin mechanisms</title>
+      <para> 
+        Your typical media player might have a plugin for different media
+        types. Two media players will typically implement their own plugin
+        mechanism so that the codecs cannot be easily exchanged. 
+      </para> 
+      <para> 
+        The lack of a unified plugin mechanism also seriously hinders the 
+	creation of binary only codecs. No company is willing to port their
+	code to all the different plugin mechanisms.
+      </para> 
+    </sect2>
+
+    <sect2 id="sec-motivation-network">
+      <title>Provision for network transparency</title>
+      <para> 
+        No infrastructure is present to allow network transparent media
+        handling. A distributed MPEG encoder will typically duplicate the
+        same encoder algorithms found in a non-distributed encoder.
+      </para> 
+      <para> 
+        No provisions have been made for emerging technologies such as
+	the GNOME object embedding using BONOBO.
+      </para> 
+    </sect2>
+
+    <sect2 id="sec-motivation-catchup">
+      <title>Catch up with the Windows(tm) world</title>
+      <para> 
+        We need solid media handling if we want to see Linux succeed on
+	the desktop.
+      </para> 
+      <para> 
+        We must clear the road for commercially backed codecs and multimedia 
+	applications so that Linux can become an option for doing multimedia.
+      </para> 
+    </sect2>
+  </sect1>
+</chapter>
