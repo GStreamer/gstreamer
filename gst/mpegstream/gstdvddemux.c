@@ -127,6 +127,9 @@ static void gst_dvd_demux_send_discont
 static gboolean gst_dvd_demux_handle_dvd_event
     (GstDVDDemux * dvd_demux, GstEvent * event);
 
+static GstMPEGStream *gst_dvd_demux_get_video_stream
+    (GstMPEGDemux * mpeg_demux,
+    guint8 stream_nr, gint type, const gpointer info);
 static GstMPEGStream *gst_dvd_demux_get_audio_stream
     (GstMPEGDemux * dvd_demux,
     guint8 stream_nr, gint type, const gpointer info);
@@ -232,6 +235,7 @@ gst_dvd_demux_class_init (GstDVDDemuxClass * klass)
   mpeg_parse_class->send_discont = gst_dvd_demux_send_discont;
 
   mpeg_demux_class->get_audio_stream = gst_dvd_demux_get_audio_stream;
+  mpeg_demux_class->get_video_stream = gst_dvd_demux_get_video_stream;
   mpeg_demux_class->send_subbuffer = gst_dvd_demux_send_subbuffer;
   mpeg_demux_class->process_private = gst_dvd_demux_process_private;
 
@@ -259,6 +263,7 @@ gst_dvd_demux_init (GstDVDDemux * dvd_demux)
       DEMUX_CLASS (dvd_demux)->new_output_pad (mpeg_demux, "current_subpicture",
       CLASS (dvd_demux)->cur_subpicture_template);
 
+  dvd_demux->mpeg_version = 0;
   dvd_demux->cur_video_nr = 0;
   dvd_demux->cur_audio_nr = 0;
   dvd_demux->cur_subpicture_nr = 0;
@@ -443,6 +448,33 @@ gst_dvd_demux_send_discont (GstMPEGParse * mpeg_parse, GstClockTime time)
   }
 }
 
+static GstMPEGStream *
+gst_dvd_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
+    guint8 stream_nr, gint type, const gpointer info)
+{
+  GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_demux);
+  GstMPEGStream *str =
+      parent_class->get_video_stream (mpeg_demux, stream_nr, type, info);
+  gint mpeg_version = *((gint *) info);
+
+  if (dvd_demux->mpeg_version != mpeg_version) {
+    GstCaps *caps;
+
+    caps = gst_caps_new_simple ("video/mpeg",
+        "mpegversion", G_TYPE_INT, mpeg_version,
+        "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+
+    if (!gst_pad_set_explicit_caps (dvd_demux->cur_video, caps)) {
+      GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_demux),
+          CORE, NEGOTIATION, (NULL), ("failed to set caps"));
+    } else {
+      dvd_demux->mpeg_version = mpeg_version;
+    }
+    gst_caps_free (caps);
+  }
+
+  return str;
+}
 
 static GstMPEGStream *
 gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
@@ -601,10 +633,10 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
 
     if (str->number == dvd_demux->cur_subpicture_nr) {
       /* This is the current subpicture stream.  Use the same caps. */
-      gst_pad_set_explicit_caps (dvd_demux->cur_subpicture,
-          gst_caps_copy (caps));
+      gst_pad_set_explicit_caps (dvd_demux->cur_subpicture, caps);
     }
 
+    gst_caps_free (caps);
     str->type = GST_DVD_DEMUX_SUBP_DVD;
   }
 
@@ -780,7 +812,7 @@ gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
       break;
   }
 
-  if (outpad != NULL && cur_nr == outstream->number && (size > 0)) {
+  if ((outpad != NULL) && (cur_nr == outstream->number) && (size > 0)) {
     GstBuffer *outbuf;
 
     /* We have a packet of the current stream. Send it to the
@@ -830,7 +862,7 @@ static void
 gst_dvd_demux_set_cur_subpicture (GstDVDDemux * dvd_demux, gint stream_nr)
 {
   GstMPEGStream *str;
-  const GstCaps *caps;
+  const GstCaps *caps = NULL;
 
   g_return_if_fail (stream_nr >= -1 &&
       stream_nr < GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS);

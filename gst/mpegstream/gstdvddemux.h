@@ -52,7 +52,7 @@ enum {
 
 /* Supported number of streams. */
 #define GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS 	32
-
+#define GST_DVD_DEMUX_MAX_SUBPICTURE_DELAY 0
 
 typedef struct _GstDVDLPCMStream GstDVDLPCMStream ;
 typedef struct _GstDVDDemux GstDVDDemux;
@@ -109,8 +109,12 @@ struct _GstDVDDemux {
                                    given time, before sending the next dara
                                    block.. */
 
+  gint mpeg_version;		/* Version of the MPEG video stream */
+
   GstMPEGStream *subpicture_stream[GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS];
 				/* Subpicture output streams. */
+  GstClockTime   subpicture_time[GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS];
+  				/* Last timestamp for buffer on each stream */
 };
 
 

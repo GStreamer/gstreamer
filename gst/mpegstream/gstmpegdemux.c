@@ -405,8 +405,10 @@ gst_mpeg_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
     if (!gst_pad_set_explicit_caps (str->pad, caps)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_demux),
           CORE, NEGOTIATION, (NULL), ("failed to set caps"));
+      gst_caps_free (caps);
       return str;
     }
+    gst_caps_free (caps);
 
     /* Store the current values. */
     video_str->mpeg_version = mpeg_version;
@@ -455,8 +457,10 @@ gst_mpeg_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
     if (!gst_pad_set_explicit_caps (str->pad, caps)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_demux),
           CORE, NEGOTIATION, (NULL), ("failed to set caps"));
+      gst_caps_free (caps);
       return str;
     }
+    gst_caps_free (caps);
   }
 
   return str;
