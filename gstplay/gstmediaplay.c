@@ -118,18 +118,17 @@ gst_media_play_connect_func (const gchar *handler_name,
 static void 
 gst_media_play_init(GstMediaPlay *mplay) 
 {
-  GtkWidget *gstplay;
   GModule *symbols;
   connect_struct data;
 
-  glade_init();
-  glade_gnome_init();
-
   g_print("using %s\n", DATADIR"gstmediaplay.glade");
   /* load the interface */
-  mplay->xml = glade_xml_new (DATADIR "gstmediaplay.glade", "gstplay");
+  mplay->xml = glade_xml_new (DATADIR"gstmediaplay.glade", "gstplay");
+  //mplay->xml = glade_xml_new ("/usr/local/share/gstplay/gstplay.glade", "gstplay");
+  g_assert (mplay->xml != NULL);
 
   mplay->slider = glade_xml_get_widget(mplay->xml, "slider");
+  g_assert (mplay->slider != NULL);
   {
     GtkArg arg;
     GtkRange *range;
@@ -144,15 +143,20 @@ gst_media_play_init(GstMediaPlay *mplay)
   }
 
   mplay->play_button = glade_xml_get_widget (mplay->xml, "toggle_play");
+  g_assert (mplay->play_button != NULL);
   mplay->pause_button = glade_xml_get_widget (mplay->xml, "toggle_pause");
+  g_assert (mplay->pause_button != NULL);
   mplay->stop_button = glade_xml_get_widget (mplay->xml, "toggle_stop");
+  g_assert (mplay->stop_button != NULL);
 
-  gstplay = glade_xml_get_widget (mplay->xml, "gstplay");
-  gtk_drag_dest_set (gstplay,
+  mplay->window = glade_xml_get_widget (mplay->xml, "gstplay");
+  g_assert (mplay->window != NULL);
+
+  gtk_drag_dest_set (mplay->window,
                      GTK_DEST_DEFAULT_ALL,
 	             target_table, 1,
 	             GDK_ACTION_COPY);
-  gtk_signal_connect (GTK_OBJECT (gstplay), "drag_data_received",
+  gtk_signal_connect (GTK_OBJECT (mplay->window), "drag_data_received",
 	              GTK_SIGNAL_FUNC (target_drag_data_received),
 	              NULL);
 
@@ -175,7 +179,7 @@ gst_media_play_init(GstMediaPlay *mplay)
 
   gtk_widget_show (GTK_WIDGET (mplay->play));
 
-  mplay->status = gst_status_area_new();
+  mplay->status = glade_xml_get_widget (mplay->xml, "status_area");
   gst_status_area_set_state (mplay->status, GST_STATUS_AREA_STATE_INIT);
   gst_status_area_set_playtime (mplay->status, "00:00 / 00:00");
 
@@ -185,10 +189,6 @@ gst_media_play_init(GstMediaPlay *mplay)
   data.symbols = symbols;
 
   glade_xml_signal_autoconnect_full (mplay->xml, gst_media_play_connect_func, &data);
-
-  gtk_container_add (GTK_CONTAINER (glade_xml_get_widget (mplay->xml, "dockitem4")),
-		  GTK_WIDGET (mplay->status));
-  gtk_widget_show (GTK_WIDGET (mplay->status));
 
   mplay->last_time = 0;
 }
@@ -225,6 +225,9 @@ gst_media_play_start_uri (GstMediaPlay *play,
     if (!gst_play_media_can_seek (play->play)) {
       gtk_widget_set_sensitive (play->slider, FALSE);
     }
+
+    gtk_window_set_title (GTK_WINDOW (play->window), 
+		          g_strconcat ( "Gstplay - ", uri, NULL));
 
     gst_play_play (play->play);
   }
@@ -308,6 +311,15 @@ on_gst_media_play_delete_event (GtkWidget *widget,
   gst_play_stop (mplay->play);
   gdk_threads_enter ();
   return FALSE;
+}
+
+void 
+on_extended1_activate (GtkCheckMenuItem *item, 
+		       GstMediaPlay *mplay)
+{
+  gdk_threads_leave ();
+  gst_status_area_show_extended (mplay->status, item->active);
+  gdk_threads_enter ();
 }
 
 static void

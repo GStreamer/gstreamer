@@ -139,6 +139,19 @@
 	    <name>view1_menu</name>
 
 	    <widget>
+	      <class>GtkCheckMenuItem</class>
+	      <name>extended1</name>
+	      <signal>
+		<name>activate</name>
+		<handler>on_extended1_activate</handler>
+		<last_modification_time>Mon, 06 Nov 2000 21:52:57 GMT</last_modification_time>
+	      </signal>
+	      <label>_Extended</label>
+	      <active>False</active>
+	      <always_show_toggle>False</always_show_toggle>
+	    </widget>
+
+	    <widget>
 	      <class>GtkMenuItem</class>
 	      <name>media1</name>
 	      <signal>
@@ -252,7 +265,7 @@
     <widget>
       <class>GnomeDockItem</class>
       <name>dockitem3</name>
-      <border_width>2</border_width>
+      <border_width>1</border_width>
       <placement>GNOME_DOCK_BOTTOM</placement>
       <band>0</band>
       <position>0</position>
@@ -284,7 +297,6 @@
     <widget>
       <class>GnomeDockItem</class>
       <name>dockitem2</name>
-      <border_width>1</border_width>
       <placement>GNOME_DOCK_BOTTOM</placement>
       <band>1</band>
       <position>0</position>
@@ -369,7 +381,12 @@
       <shadow_type>GTK_SHADOW_OUT</shadow_type>
 
       <widget>
-	<class>Placeholder</class>
+	<class>Custom</class>
+	<name>status_area</name>
+	<creation_function>gst_status_area_new</creation_function>
+	<int1>0</int1>
+	<int2>0</int2>
+	<last_modification_time>Wed, 08 Nov 2000 19:56:51 GMT</last_modification_time>
       </widget>
     </widget>
 

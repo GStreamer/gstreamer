@@ -35,6 +35,7 @@ struct _GstMediaPlay {
   GtkWidget *play_button;
   GtkWidget *pause_button;
   GtkWidget *stop_button;
+  GtkWidget *window;
 
   GstStatusArea *status;
 

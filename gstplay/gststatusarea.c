@@ -17,6 +17,7 @@ static void gst_status_area_realize(GtkWidget *status_area);
 static gint gst_status_area_expose(GtkWidget *widget, GdkEventExpose *event);
 
 #define DEFAULT_HEIGHT 20
+#define DEFAULT_EXPANDED_HEIGHT 100
 
 /* signals and args */
 enum {
@@ -75,6 +76,7 @@ gst_status_area_init (GstStatusArea *status_area)
   GTK_WIDGET(status_area)->requisition.height = DEFAULT_HEIGHT;
 
   status_area->state = GST_STATUS_AREA_STATE_INIT;
+  status_area->expanded = FALSE;
 }
 
 GstStatusArea *
@@ -135,6 +137,56 @@ gst_status_area_expose(GtkWidget *widget,
 		        widget->allocation.width,
 		        widget->allocation.height);
 
+    if (status_area->expanded) {
+      gint width;
+      
+      gdk_draw_line (widget->window,
+                     widget->style->dark_gc[0],
+		     0, widget->allocation.height - 20,
+		     widget->allocation.width, widget->allocation.height - 20);
+
+      width = gdk_string_width (widget->style->font, "Show:");
+
+      gdk_draw_string (widget->window,
+		       widget->style->font,
+		       widget->style->white_gc, 
+		       80-width, 15,
+		       "Show:");
+
+      width = gdk_string_width (widget->style->font, "Clip:");
+
+      gdk_draw_string (widget->window,
+		       widget->style->font,
+		       widget->style->white_gc, 
+		       80-width, 40,
+		       "Clip:");
+
+      width = gdk_string_width (widget->style->font, "Author:");
+
+      gdk_draw_string (widget->window,
+		       widget->style->font,
+		       widget->style->white_gc, 
+		       80-width, 55,
+		       "Author:");
+
+      width = gdk_string_width (widget->style->font, "Copyright:");
+
+      gdk_draw_string (widget->window,
+		       widget->style->font,
+		       widget->style->white_gc, 
+		       80-width, 70,
+		       "Copyright:");
+
+      gdk_draw_line (widget->window,
+                     widget->style->dark_gc[0],
+		     0, widget->allocation.height - 80,
+		     widget->allocation.width, widget->allocation.height - 80);
+
+
+
+
+    }
+
     switch (status_area->state) {
       case GST_STATUS_AREA_STATE_INIT:
 	statustext = "Initializing";
@@ -156,7 +208,8 @@ gst_status_area_expose(GtkWidget *widget,
     gdk_draw_string (widget->window,
 		     widget->style->font,
 		     widget->style->white_gc, 
-		     8, 15, statustext);
+		     8, widget->allocation.height-5,
+		     statustext);
 
     if (status_area->playtime) {
       gint width = gdk_string_width (widget->style->font, status_area->playtime);
@@ -164,7 +217,9 @@ gst_status_area_expose(GtkWidget *widget,
       gdk_draw_string (widget->window,
 		       widget->style->font,
 		       widget->style->white_gc, 
-		       widget->allocation.width-width-20, 15, status_area->playtime);
+		       widget->allocation.width-width-20, 
+		       widget->allocation.height-5, 
+		       status_area->playtime);
     }
   }
 
@@ -210,6 +265,15 @@ void
 gst_status_area_show_extended (GstStatusArea *area, 
 		               gboolean show)
 {
+  area->expanded = show;
+
+  if (show) {
+    GTK_WIDGET(area)->requisition.height = DEFAULT_EXPANDED_HEIGHT;
+  }
+  else {
+    GTK_WIDGET(area)->requisition.height = DEFAULT_HEIGHT;
+  }
+  gtk_widget_queue_resize (GTK_WIDGET (area));
 }
 
 static void 

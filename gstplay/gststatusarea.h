@@ -30,6 +30,7 @@ struct _GstStatusArea {
 
   GstStatusAreaState state;
   guchar *playtime;
+  gboolean expanded;
 };
 
 struct _GstStatusAreaClass {
