@@ -259,7 +259,11 @@ theora_enc_chain (GstPad * pad, GstData * data)
     GstCaps *caps;
 
     caps = gst_caps_new_simple ("video/x-theora", NULL);
-    gst_pad_set_explicit_caps (enc->srcpad, caps);
+    if (!gst_pad_set_explicit_caps (enc->srcpad, caps)) {
+      gst_caps_free (caps);
+      gst_data_unref (data);
+      return;
+    }
     gst_caps_free (caps);
 
     /* first packet will get its own page automatically */
@@ -364,7 +368,7 @@ theora_enc_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_BITRATE:
-      g_value_set_int (value, enc->video_bitrate);
+      g_value_set_int (value, enc->video_bitrate / 1000);
       break;
     case ARG_QUALITY:
       g_value_set_int (value, enc->video_quality);
