@@ -1,0 +1,131 @@
+problem 
+-------
+
+Since gstreamer uses a hierarchical pipeline layout individual elements
+can be inside N levels of containers (bins). Elements can also produce
+interesting information for the user app or for its parent.
+
+Consider the mp3parse element that could detect id3 tags in the stream.
+One way to let the app know about those tags is by emitting a signal. The
+problem with this signal is that the app has to perform a g_signal_connect
+on this element. This might not always be possible/feasable because
+the APP might not know about the mp3parse element (eg. an autoplugged
+pipeline or a compound object). The app could instrospect each element
+in the pipeline and look for known properties/signals to connect to,
+but that looks a bit ugly IMO.
+
+Signal proxying is also not very feasable because signals are tied to
+class instances.
+
+let's take the following use case:
+
+ - the user autoplugs an mpeg1 pipeline
+
+ - the autoplugged pipeline most likely contains an mpegdemuxer, an mp3
+   decoder, mpegdecoder etc.
+
+ - the mpegdemuxer knows the (average) bitrate of the stream.
+
+ - the mpegdecoder knows the framerate of the stream
+
+ - the mp3 decoder has some neat stuff too (bitrate, layer etc..)
+
+how are we going to get all those properties to the app? each element
+could fire a signal with the data. It the app were able to connect to
+every signal in each element this would work somewhat.
+
+
+Requirements 
+------------
+
+The application can listen to an abritrary bin in the pipeline to collect
+information about that bins children. The app can listen on the top
+level bin to collect all of the elements messages.
+
+The data sent out by the elements must not be limited to a fixed set of
+messages; it must be extensible.
+
+
+proposed solution 
+-----------------
+
+We propose another way of propagating these element messages to the
+application.
+
+An element can send a message to its parent using a
+gst_element_send_message (element, message). The message would be of type
+GstMessage and would be similar to a GstEvent type (maybe even the same).
+
+The message would contain GstProps, which can be anything (a string, an
+int, a range etc..). It would also contain the originator of the message.
+
+The parent would just simply accept the message (and do something with it)
+or the default handler would just forward the message to its parent etc..
+
+The message would bubble up the pipeline. When an element doesn't have
+a parent, the message is converted to a GSignal. The signal ("message")
+would just forward the message to any listening apps.
+
+The app can then use the originator field of the message to find out
+where it came from, possibly using the elementfactories klass field to
+find out what type of plugin created this message.
+
+For an autoplugged mpeg1 pipeline the following messages could be
+signalled to the app:
+
+element klass        element      property      value
+                     name
+
+stream/mpeg/demuxer: (mpegdemux) "bitrate",   GST_PROPS_INT (1000000)
+stream/mpeg/demuxer: (mpegdemux) "type",      GST_PROPS_STRING ("mpeg1") 
+video/mpeg/decoder:  (mpeg2dec)  "type",      GST_PROPS_STRING ("mpeg1") 
+video/mpeg/decoder:  (mpeg2dec)  "frame_rate",GST_PROPS_INT (25) 
+video/mpeg/decoder:  (mpeg2dec)  "size",      GST_PROPS_LIST (
+                                                 GST_PROPS_INT (320), 
+					         GST_PROPS_INT (200)
+					       ) 
+audio/mp3/decoder:   (mad)	 "layer",     GST_PROPS_INT (2) 
+audio/mp3/decoder:   (mad)	 "bitrate",   GST_PROPS_INT (128000) 
+audio/mp3/decoder:   (mad)	 "channels",  GST_PROPS_INT (2)
+
+other possibilities:
+
+video/render/X:     (xvideosink) "frames_dropped", GST_PROPS_INT (4)
+video/render/X:     (xvideosink) "frames_shown",   GST_PROPS_INT (254) 
+video/mpeg/decoder: (mpeg2dec)	 "frames_dropped", GST_PROPS_INT (2) 
+video/avi/demuxer:  (avidemux)   "codec",          GST_PROPS_FOURCC ("DIVX")
+
+or
+
+video/mpeg/decoder: (mpeg2dec)  "state_changed", GST_PROPS_INT (GST_STATE_PAUSED)
+
+or even
+
+audio/render/oss:    (osssink)	"master_clock", GST_PROPS_OBJECT (osssink_clock)
+....
+
+or even even:
+
+input/file/filesrc:  (filesrc)	"here_i_am", GST_PROPS_STRING ("alive and kicking")
+
+
+With standard naming conventions for the element klass type and the
+messages ids, the player can easily create an info dialog to show various
+properties of the stream.
+
+The benefits are that we don't need to define N-thousand methods on
+elements, the messages can be anything and we don't have to use the
+heavyweight GObject signals in the core library.
+
+
+what about?  
+-----------
+
+- Threads? do we queue events and let the top half collect the messages
+  or do we send them to the app in the thread context?
+
+- do we need a similar system for core functionalities (clocks, states,
+  ...) or do we define methods for those?
+
+
+
