@@ -107,7 +107,6 @@ distclean-local:
 
 libgstreamerincludedir = $(includedir)/gstreamer
 libgstreamerinclude_HEADERS =		\
-	cothreads.h		\
 	gst.h			\
 	gstconfig.h		\
 	gstmarshal.h		\
@@ -158,7 +157,7 @@ libgstreamer_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" 
 # the compiler shoots cothreads.c in the head at -O6
 libcothreads_la_CFLAGS = $(libgstreamer_la_CFLAGS) -O2
 
-libgstreamer_la_LIBADD = $(LIBGST_LIBS) libcothreads.la
+libgstreamer_la_LIBADD = $(LIBGST_LIBS)
 libgstreamer_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@
 
 EXTRA_DIST = ROADMAP

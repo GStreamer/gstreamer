@@ -31,8 +31,6 @@
 #include <config.h>
 #endif
 
-#include "cothreads.h"
-
 
 /***** are we in the core or not? *****/
 #ifdef __GST_PRIVATE_H__

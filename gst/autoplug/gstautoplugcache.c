@@ -20,6 +20,7 @@
  */
 
 #include <gst/gst.h>
+#include "../cothreads.h"
 
 GstElementDetails gst_autoplugcache_details = {
   "AutoplugCache",
@@ -235,7 +236,7 @@ gst_autoplugcache_loop (GstElement *element)
       if (GST_STATE(cache) != oldstate) {
         gst_object_ref (GST_OBJECT (cache));
         GST_DEBUG(GST_CAT_AUTOPLUG, "state changed during signal, aborting\n");
-        cothread_switch(cothread_current_main());
+        gst_element_yield (cache);
       }
       gst_object_unref (GST_OBJECT (cache));
     }

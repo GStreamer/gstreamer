@@ -24,6 +24,7 @@
 #include "gst_private.h"
 #include "gstelement.h"
 #include "gstpad.h"
+#include "gstscheduler.h"
 
 #if defined __sgi__
 #include <rld_interface.h>
@@ -188,7 +189,7 @@ gst_default_debug_handler (gint category, gboolean incore,
   gchar *empty = "";
   gchar *elementname = empty,*location = empty;
   int pthread_id = getpid();
-  int cothread_id = cothread_getcurrent();
+  int cothread_id = 0; /*FIXME*/
 #ifdef GST_DEBUG_COLOR
   int pthread_color = pthread_id%6 + 31;
   int cothread_color = (cothread_id < 0) ? 37 : (cothread_id%6 + 31);
@@ -306,7 +307,7 @@ gst_default_info_handler (gint category, gboolean incore,
   gchar *empty = "";
   gchar *elementname = empty,*location = empty;
   int pthread_id = getpid();
-  int cothread_id = cothread_getcurrent();
+  int cothread_id = 0; /*FIXME*/
 #ifdef GST_DEBUG_COLOR
   int pthread_color = pthread_id%6 + 31;
   int cothread_color = (cothread_id < 0) ? 37 : (cothread_id%6 + 31);
