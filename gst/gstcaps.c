@@ -1090,7 +1090,7 @@ gst_caps_compare_structures (gconstpointer one, gconstpointer two)
   if (ret)
     return ret;
 
-  return gst_structure_n_fields (struct2) - gst_structure_n_fields (struct1);
+  return gst_structure_n_fields (struct1) - gst_structure_n_fields (struct2);
 }
 
 /**
