@@ -1,3 +1,13 @@
+2004-05-05  Wim Taymans  <wim@fluendo.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (src_templ),
+	(gst_mpeg2dec_base_init), (gst_mpeg2dec_init),
+	(gst_mpeg2dec_negotiate_format):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  removed the static pad template so that we can add the
+	  more accurate framerate value to the caps.
+	  
+
 2004-05-04  Benjamin Otte  <otte@gnome.org>
 
 	* configure.ac:
