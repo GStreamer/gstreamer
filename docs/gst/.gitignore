@@ -3,6 +3,7 @@ Makefile.in
 html
 sgml
 gstreamer.signals
+gstreamer.types
 gstreamer.html
 gstreamer-unused.txt
 gstreamer-decl-list.txt
