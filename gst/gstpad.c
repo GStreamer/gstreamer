@@ -3026,26 +3026,35 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
 static GstData *
 _invent_event (GstPad * pad, GstBuffer * buffer)
 {
-  GstData *data;
+  GstEvent *event;
+  GstEventType event_type;
+  guint64 offset;
+
+  if (GST_BUFFER_OFFSET_IS_VALID (buffer))
+    event_type = GST_FORMAT_DEFAULT;
+  else
+    event_type = GST_FORMAT_UNDEFINED;
+
+  offset = GST_BUFFER_OFFSET (buffer);
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
-    data = GST_DATA (gst_event_new_discontinuous (TRUE, GST_FORMAT_TIME,
-            GST_BUFFER_TIMESTAMP (buffer), GST_BUFFER_OFFSET_IS_VALID (buffer) ?
-            GST_FORMAT_DEFAULT : 0, GST_BUFFER_OFFSET (buffer), 0));
+    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+    event = gst_event_new_discontinuous (TRUE,
+        GST_FORMAT_TIME, timestamp, event_type, offset, GST_FORMAT_UNDEFINED);
     GST_CAT_WARNING (GST_CAT_DATAFLOW,
         "needed to invent a DISCONT (time %" G_GUINT64_FORMAT
-        ") for %s:%s => %s:%s", GST_BUFFER_TIMESTAMP (buffer),
+        ") for %s:%s => %s:%s", timestamp,
         GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
   } else {
-    data = GST_DATA (gst_event_new_discontinuous (TRUE,
-            GST_BUFFER_OFFSET_IS_VALID (buffer) ? GST_FORMAT_DEFAULT : 0,
-            GST_BUFFER_OFFSET (buffer), 0));
+    event = gst_event_new_discontinuous (TRUE,
+        event_type, offset, GST_FORMAT_UNDEFINED);
     GST_CAT_WARNING (GST_CAT_DATAFLOW,
         "needed to invent a DISCONT (no time) for %s:%s => %s:%s",
         GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
   }
 
-  return data;
+  return GST_DATA (event);
 }
 
 /**

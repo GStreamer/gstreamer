@@ -1,3 +1,7 @@
+2004-04-20  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gstpad.c (_invent_event): Clean up
+
 2004-04-20  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* testsuite/caps/filtercaps.c: (main):
