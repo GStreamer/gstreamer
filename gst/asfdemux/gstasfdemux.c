@@ -976,6 +976,8 @@ gst_asf_demux_process_object    (GstASFDemux *asf_demux,
     return gst_asf_demux_skip_object (asf_demux, filepos, &obj_size);
   case ASF_OBJ_BITRATE_PROPS:
     return gst_asf_demux_process_bitrate_props_object (asf_demux, filepos, &obj_size);
+  case ASF_OBJ_BITRATE_MUTEX:
+    return gst_asf_demux_skip_object (asf_demux, filepos, &obj_size);
   default:
     gst_element_error (GST_ELEMENT (asf_demux), "Unknown ASF object");
     return FALSE;
