@@ -1,3 +1,8 @@
+2002-05-06  Thomas Vander Stichele <thomas@apestaart.org>
+
+  	* GConf stuff : from http://www.gnome.org/projects/gconf/ and eog
+	  - added gstreamer-gconf package
+
 2002-02-06  Thomas Vander Stichele <thomas@apestaart.org>
 
   	* more build cleanup : merging over changes from gst-player
