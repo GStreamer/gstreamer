@@ -112,7 +112,7 @@ struct _GstPlay
   GstElement *video_sink_element;
   GstElement *audio_sink;
   GstElement *audio_sink_element;
-  GstElement *visualisation_sink_element;
+  GstElement *visualization_sink_element;
 
   GstDParamManager *vol_dpman;
   GstDParam *vol_dparam;
@@ -199,14 +199,14 @@ gboolean gst_play_get_mute (GstPlay * play);
 gboolean gst_play_set_data_src (GstPlay * play, GstElement * data_src);
 gboolean gst_play_set_video_sink (GstPlay * play, GstElement * video_sink);
 gboolean
-gst_play_set_visualisation_video_sink (GstPlay * play,
+gst_play_set_visualization_video_sink (GstPlay * play,
 				       GstElement * video_sink);
 gboolean gst_play_set_audio_sink (GstPlay * play, GstElement * audio_sink);
 
 gboolean
-gst_play_set_visualisation_element (GstPlay * play, GstElement * element);
+gst_play_set_visualization_element (GstPlay * play, GstElement * element);
 
-gboolean gst_play_connect_visualisation (GstPlay * play, gboolean connect);
+gboolean gst_play_connect_visualization (GstPlay * play, gboolean connect);
 
 GType gst_play_get_type (void);
 
