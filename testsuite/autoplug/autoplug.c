@@ -1,5 +1,6 @@
 #include <gst/gst.h>
 
+/* FIXME: add a description of what this test does */
 static void
 new_object_added (GstAutoplug *autoplug, GstObject *object)
 {
