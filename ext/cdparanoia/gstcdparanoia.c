@@ -729,8 +729,8 @@ cdparanoia_open (CDParanoia * src)
     cdda_speed_set (src->d, src->read_speed);
   }
 
-  /* save thse ones */
-  src->first_sector = cdda_disc_firstsector (src->d);
+  /* save thse ones - skip lead-in */
+  src->first_sector = cdda_track_firstsector (src->d, 1);
   src->last_sector = cdda_disc_lastsector (src->d);
 
   /* this is the default segment we will play */
@@ -911,6 +911,7 @@ cdparanoia_event (GstPad * pad, GstEvent * event)
       }
       /* do we need to update the start sector? */
       if (seg_start_sector != -1) {
+        seg_start_sector += src->first_sector;
         seg_start_sector = CLAMP (seg_start_sector,
             src->first_sector, src->last_sector);
 
@@ -924,6 +925,7 @@ cdparanoia_event (GstPad * pad, GstEvent * event)
         }
       }
       if (seg_end_sector != -1) {
+        seg_end_sector += src->first_sector;
         seg_end_sector = CLAMP (seg_end_sector,
             src->first_sector, src->last_sector);
         src->segment_end_sector = seg_end_sector;
@@ -1101,20 +1103,23 @@ cdparanoia_query (GstPad * pad, GstQueryType type,
       /* we take the last sector + 1 so that we also have the full
        * size of that last sector */
       res = gst_pad_convert (src->srcpad,
-          sector_format, src->last_sector + 1, format, value);
+          sector_format, src->last_sector + 1 - src->first_sector,
+          format, value);
       break;
     case GST_QUERY_POSITION:
       /* bring our current sector to the requested format */
       res = gst_pad_convert (src->srcpad,
-          sector_format, src->cur_sector, format, value);
+          sector_format, src->cur_sector - src->first_sector, format, value);
       break;
     case GST_QUERY_START:
       res = gst_pad_convert (src->srcpad,
-          sector_format, src->segment_start_sector, format, value);
+          sector_format, src->segment_start_sector - src->first_sector,
+          format, value);
       break;
     case GST_QUERY_SEGMENT_END:
       res = gst_pad_convert (src->srcpad,
-          sector_format, src->segment_end_sector, format, value);
+          sector_format, src->segment_end_sector - src->first_sector,
+          format, value);
       break;
     default:
       res = FALSE;
