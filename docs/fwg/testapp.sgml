@@ -1,0 +1,25 @@
+<chapter id="cha-testapp-init">
+  <title>Initialization</title>
+  <para>
+  </para>
+</chapter>
+
+<chapter id="cha-testapp-inst">
+  <title>Instantiating the plugins</title>
+  <para>
+    (NOTE: we really should have a debugging Sink)
+  </para>
+</chapter>
+
+<chapter id="cha-testapp-connect">
+  <title>Connecting the plugins</title>
+  <para>
+  </para>
+</chapter>
+
+<chapter id="cha-testapp-connect">
+  <title>Running the pipeline</title>
+  <para>
+  </para>
+</chapter>
+

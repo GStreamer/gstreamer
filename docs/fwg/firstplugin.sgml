@@ -74,6 +74,34 @@
       available by writing the boilerplate yourself, so some plugins will
       always need to be manually registered.
     </para>
+    <para>
+      As a rough outline of what is planned: the FilterFactory will take a
+      list of appropriate function pointers, and data structures to define
+      a filter.  With a reasonable measure of preprocessor magic, the
+      plugin writer will then simply need to provide definitions of the
+      functions and data structures desired, and a name for the filter, and
+      then call a macro from within plugin_init() which will register the
+      new filter.  All the fluff that goes into the definition of a filter
+      will thus be hidden from view.
+    </para>
+    <para>
+      Ideally, we will come up with a way for various FilterFactory-provided
+      functions to be overridden, to the point where you can construct
+      almost the most complex stuff with it, it just saves typing.
+    </para>
+    <para>
+      Of course, the filter factory can be used to create sources and sinks
+      too: simply create a filter with only source or sink pads.
+    </para>
+    <para>
+      You may be thinking that this should really be called an
+      ElementFactory.  Well, we agree, but there is already something else
+      justifiably ealled an ElementFactory (this is the thing which actually
+      makes instances of elements).  There is also already something called
+      a PluginFactory.  We just have too many factories and not enough words.
+      And since this isn't yet written, it doesn't get priority for claiming
+      a name.
+    </para>
   </sect1>
 </chapter>
 

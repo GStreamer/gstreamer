@@ -5,7 +5,10 @@ sgml_files = gst-plugin-writers-guide.sgml \
 	     titlepage.sgml \
 	     intro.sgml \
 	     concepts.sgml \
-	     firstplugin.sgml
+	     firstplugin.sgml \
+	     testapp.sgml \
+	     loopbased.sgml \
+	     typesnprops.sgml
 
 fig_files = 
 eps_files = 

@@ -1,0 +1,24 @@
+<chapter id="cha-types-test">
+  <title>Building a simple format for testing</title>
+  <para>
+  </para>
+</chapter>
+
+<chapter id="cha-types-simplemime">
+  <title>A simple MIME type</title>
+  <para>
+  </para>
+</chapter>
+
+<chapter id="cha-types-props">
+  <title>Type properties</title>
+  <para>
+  </para>
+</chapter>
+
+<chapter id="cha-types-typefind">
+  <title>Typefind functions and autoplugging</title>
+  <para>
+  </para>
+</chapter>
+

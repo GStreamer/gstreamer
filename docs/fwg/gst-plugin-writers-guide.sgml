@@ -7,11 +7,11 @@
 
 <!ENTITY FIRSTPLUGIN SYSTEM "firstplugin.sgml">
 
-<!ENTITY TESTAPP SYSTEM ".sgml">
+<!ENTITY TESTAPP SYSTEM "testapp.sgml">
 
-<!ENTITY LOOPBASED SYSTEM ".sgml">
+<!ENTITY LOOPBASED SYSTEM "loopbased.sgml">
 
-<!ENTITY TYPESNPROPS SYSTEM ".sgml">
+<!ENTITY TYPESNPROPS SYSTEM "typesnprops.sgml">
 
 <!ENTITY BUFFERS SYSTEM ".sgml">
 
@@ -99,11 +99,6 @@
     </partintro>
 
       &TESTAPP;
-	Initialization
-	Instantiating the plugins
-	  (NOTE: we really should have a debugging Sink)
-	Connecting them
-	Running the pipeline
   </part>
 
 <!-- ############ part ############# -->
@@ -115,11 +110,6 @@
     </partintro>
 
       &LOOPBASED;
-	How scheduling works, aka pushing and pulling
-	How a loopfunc works, aka pulling and pushing
-	Adding a second output
-		Identity is now a tee
-		Modifying the test application
   </part>
 
 <!-- ############ part ############# -->
@@ -131,10 +121,6 @@
     </partintro>
 
       &TYPESNPROPS;
-	Building a simple format for testing
-	A simple MIME type
-	Type properties
-	Typefind functions and autoplugging
   </part>
 
 <!-- ############ part ############# -->
