@@ -208,11 +208,26 @@ AC_MSG_RESULT(no)
 dnl Check for essential libraries first:
 dnl ====================================
 
-dnl if test -n "`cat $GST_CFLAGS | grep USE_GLIB2`"; then
-dnl   HAVE_GLIB2=yes
-dnl else
-dnl   HAVE_GLIB2=no
-dnl fi
+if test -n "`echo $GST_CFLAGS | grep USE_GLIB2`"; then
+  USE_GLIB2=yes
+else
+  USE_GLIB2=no
+fi
+
+dnl needed for some plugins and demos, now's a nice time to check for gtk
+if test x$USE_GLIB2 = xno; then
+  AM_PATH_GTK(1.2.0,,
+              AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
+  HAVE_GTK=yes
+  # we have to have it
+else
+  PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
+
+  GTK_CFLAGS=$GTK2_CFLAGS
+  GTK_LIBS=$GTK2_LIBS
+fi
+AC_SUBST(GTK_LIBS)
+AC_SUBST(GTK_CFLAGS)
 
 dnl Check for X11 extensions
 AC_PATH_XTRA
@@ -253,21 +268,6 @@ AC_ARG_WITH(plugins,
     [GST_PLUGINS_SELECTED=$GST_PLUGINS_ALL])
 
 AC_SUBST(GST_PLUGINS_SELECTED)
-
-dnl needed for smoothwave, FIXME!
-if test x$USE_GLIB2 = xno; then
-  AM_PATH_GTK(1.2.0,,
-              AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
-  HAVE_GTK=yes
-  # we have to have it
-else
-  PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
-
-  GTK_CFLAGS=$GTK2_CFLAGS
-  GTK_LIBS=$GTK2_LIBS
-fi
-AC_SUBST(GTK_LIBS)
-AC_SUBST(GTK_CFLAGS)
 
 dnl ==========================================================================
 dnl ============================= sys plugins ================================
