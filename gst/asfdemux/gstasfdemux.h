@@ -65,7 +65,7 @@ struct _GstASFStreamContext {
 typedef struct
 {
   GstPad  *pad;
-  guint32 num;
+  guint16 id;
   guint32 frag_offset;
   guint32 sequence;
   guint64 delay;
@@ -82,7 +82,7 @@ struct _GstASFDemux {
 
 #define GST_ASF_DEMUX_NUM_VIDEO_PADS 16
 #define GST_ASF_DEMUX_NUM_AUDIO_PADS 32
-#define GST_ASF_DEMUX_NUM_STREAMS 48
+#define GST_ASF_DEMUX_NUM_STREAMS 16
 
   /* stream output pads */
   GstPad *video_pad[GST_ASF_DEMUX_NUM_VIDEO_PADS];
@@ -106,6 +106,13 @@ struct _GstASFDemux {
 
   guint64 preroll;
   guint64 pts;
+
+  /* Descrambler settings */
+  guint8  span;
+  guint16 ds_packet_size;
+  guint16 ds_chunk_size;
+  guint16 ds_data_size;
+
 };
 
 struct _GstASFDemuxClass {
