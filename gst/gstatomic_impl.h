@@ -15,7 +15,12 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
- */
+ *
+ *
+ * Much of the code in this file is taken from the Linux kernel. 
+ * The code is relicensed under the LGPL with the kind permission of
+ * Linus Torvalds,Ralf Baechle and Alan Cox
+ * /
 
 #ifndef __GST_ATOMIC_IMPL_H__
 #define __GST_ATOMIC_IMPL_H__
