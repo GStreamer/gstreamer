@@ -81,7 +81,7 @@ g_object_class_install_property(GtkObjectClass *oclass,guint property_id,GParamS
   gchar *arg_fullname;
  
   arg_fullname = g_strdup_printf("%s::%s",gtk_type_name(oclass->type),pspec->name);
-fprintf(stderr,"installing arg \"%s\" into class \"%s\"\n",arg_fullname,"");
+  //fprintf(stderr,"installing arg \"%s\" into class \"%s\"\n",arg_fullname,"");
   gtk_object_add_arg_type(arg_fullname,pspec->value_type,pspec->flags,property_id);
   g_free(pspec);
 }
@@ -92,7 +92,7 @@ g_object_class_find_property(GtkObjectClass *class,gchar *name)
   GtkArgInfo *info;
   GParamSpec *spec;
 
-fprintf(stderr,"class name is %s\n",gtk_type_name(class->type));
+  //fprintf(stderr,"class name is %s\n",gtk_type_name(class->type));
 
   gtk_object_arg_get_info(class->type,name,&info);
   spec = g_new0(GParamSpec,1);
