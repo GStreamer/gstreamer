@@ -27,6 +27,7 @@
 #include <vorbis/vorbisenc.h>
 
 #include <gst/gsttaginterface.h>
+#include <gst/tag/tag.h>
 #include "vorbisenc.h"
 
 static GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
@@ -462,87 +463,64 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
   GST_FLAG_SET (vorbisenc, GST_ELEMENT_EVENT_AWARE);
 }
 
+
+static gchar *
+gst_vorbisenc_get_tag_value (const GstTagList *list, const gchar *tag, int index)
+{
+  gchar *vorbisvalue = NULL;
+
+  if (tag == NULL) {
+    return NULL;
+  }
+
+  /* get tag name right */
+  if ((strcmp (tag, GST_TAG_TRACK_NUMBER) == 0) 
+      || (strcmp (tag, GST_TAG_ALBUM_VOLUME_NUMBER) == 0) 
+      || (strcmp (tag, GST_TAG_TRACK_COUNT) == 0) 
+      || (strcmp (tag, GST_TAG_ALBUM_VOLUME_COUNT) == 0)) {
+    guint track_no;
+    g_assert (gst_tag_list_get_uint_index (list, tag, index, &track_no));
+    vorbisvalue = g_strdup_printf ("%u", track_no);
+  } else if (strcmp (tag, GST_TAG_DATE) == 0) {
+    /* FIXME: how are dates represented in vorbis files? */
+    GDate *date;
+    guint u;
+    
+    g_assert (gst_tag_list_get_uint_index (list, tag, index, &u));
+    date = g_date_new_julian (u);
+    vorbisvalue = g_strdup_printf ("%04d-%02d-%02d", (gint) g_date_get_year (date),
+				   (gint) g_date_get_month (date), (gint) g_date_get_day (date));
+    g_date_free (date);
+  } else if (gst_tag_get_type (tag) == G_TYPE_STRING) {
+      g_assert (gst_tag_list_get_string_index (list, tag, index, &vorbisvalue));
+  }
+
+  return vorbisvalue;
+}
+
 static void
 gst_vorbisenc_metadata_set1 (const GstTagList *list, const gchar *tag, gpointer vorbisenc)
 {
-  gchar *vorbistag = NULL;
+  const gchar *vorbistag = NULL;
   gchar *vorbisvalue = NULL;
   guint i, count;
   VorbisEnc *enc = GST_VORBISENC (vorbisenc);
 
-  count = gst_tag_list_get_tag_size (list, tag);
-  for (i = 0; i < count; i++) {
-    /* get tag name right */
-    if (strcmp (tag, GST_TAG_TITLE) == 0) {
-      vorbistag = g_strdup ("TITLE");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    } else if (strcmp (tag, GST_TAG_VERSION) == 0) {
-      vorbistag = g_strdup ("VERSION");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    } else if (strcmp (tag, GST_TAG_ALBUM) == 0) {
-      vorbistag = g_strdup ("ALBUM");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    } else if (strcmp (tag, GST_TAG_TRACK_NUMBER) == 0) {
-      guint track_no;
-      vorbistag = g_strdup ("TRACKNUMBER");
-      g_assert (gst_tag_list_get_uint_index (list, tag, i, &track_no));
-      vorbisvalue = g_strdup_printf ("%u", track_no);
-    } else if (strcmp (tag, GST_TAG_ARTIST) == 0) {
-      vorbistag = g_strdup ("ARTIST");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    } else if (strcmp (tag, GST_TAG_PERFORMER) == 0) {
-      vorbistag = g_strdup ("PERFORMER");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    } else if (strcmp (tag, GST_TAG_COPYRIGHT) == 0) {
-      vorbistag = g_strdup ("COPYRIGHT");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    } else if (strcmp (tag, GST_TAG_LICENSE) == 0) {
-      vorbistag = g_strdup ("LICENSE");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    } else if (strcmp (tag, GST_TAG_ORGANIZATION) == 0) {
-      vorbistag = g_strdup ("ORGANIZATION");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    } else if (strcmp (tag, GST_TAG_DESCRIPTION) == 0) {
-      vorbistag = g_strdup ("DESCRIPTION");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    } else if (strcmp (tag, GST_TAG_GENRE) == 0) {
-      vorbistag = g_strdup ("GENRE");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    } else if (strcmp (tag, GST_TAG_DATE) == 0) {
-      /* FIXME: how are dates represented in vorbis files? */
-      GDate *date;
-      guint u;
-      
-      vorbistag = g_strdup ("DATE");
-      g_assert (gst_tag_list_get_uint_index (list, tag, i, &u));
-      date = g_date_new_julian (u);
-      vorbisvalue = g_strdup_printf ("%04d-%02d-%02d", (gint) g_date_get_year (date),
-				   (gint) g_date_get_month (date), (gint) g_date_get_day (date));
-      g_date_free (date);
-    /* NOTE: GST_TAG_LOCATION != vorbis' location
-    } else if (strcmp (tag, PLACE) == 0) {
-      vorbistag = g_strdup ("LOCATION");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    */
-    } else if (strcmp (tag, GST_TAG_CONTACT) == 0) {
-      vorbistag = g_strdup ("CONTACT");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    } else if (strcmp (tag, GST_TAG_ISRC) == 0) {
-      vorbistag = g_strdup ("ISRC");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-    } else {
-      vorbistag = g_ascii_strup (tag, -1);
-      if (gst_tag_get_type (tag) == G_TYPE_STRING) {
-	g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
-      } else {
-	const GValue *value = gst_tag_list_get_value_index (list, tag, i);
-        vorbisvalue = g_strdup_value_contents (value);
-      }
-    }
+  vorbistag = gst_tag_to_vorbis_tag (tag);
+  if (vorbistag == NULL) {
+    return;
   }
 
-  vorbis_comment_add_tag (&enc->vc, vorbistag, vorbisvalue);
+  count = gst_tag_list_get_tag_size (list, tag);
+  for (i = 0; i < count; i++) {
+    vorbisvalue = gst_vorbisenc_get_tag_value (list, tag, i);
+    
+    if (vorbisvalue != NULL) {
+      vorbis_comment_add_tag (&enc->vc, g_strdup (vorbistag), vorbisvalue);
+    }
+  }
 }
+
 static void 
 gst_vorbisenc_set_metadata (VorbisEnc *vorbisenc)
 {

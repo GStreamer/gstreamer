@@ -177,6 +177,9 @@ static GstTagEntryMatch tag_matches[] = {
   { GST_TAG_VERSION,		"VERSION"		},
   { GST_TAG_ALBUM,		"ALBUM"			},
   { GST_TAG_TRACK_NUMBER,	"TRACKNUMBER"		},
+  { GST_TAG_ALBUM_VOLUME_NUMBER,  "DISCNUMBER"            },
+  { GST_TAG_TRACK_COUNT,	"TRACKTOTAL"		},
+  { GST_TAG_ALBUM_VOLUME_COUNT,   "DISCTOTAL"             },
   { GST_TAG_ARTIST,		"ARTIST"		},
   { GST_TAG_PERFORMER,		"PERFORMER"		},
   { GST_TAG_COPYRIGHT,		"COPYRIGHT"   		},
@@ -277,13 +280,22 @@ gst_vorbis_tag_add (GstTagList *list, const gchar *tag, const gchar *value)
       } else {
         guint tmp;
         gchar *check;
+	gboolean is_track_number_tag;
+	gboolean is_disc_number_tag;
+
+	is_track_number_tag = (strcmp (gst_tag, GST_TAG_TRACK_NUMBER) == 0);
+	is_disc_number_tag = (strcmp (gst_tag, GST_TAG_ALBUM_VOLUME_NUMBER) == 0);
         tmp = strtoul (value, &check, 10);
-        if (*check == '/' && strcmp (gst_tag, GST_TAG_TRACK_NUMBER) == 0) {
+        if (*check == '/' && (is_track_number_tag || is_disc_number_tag)) {
           guint count;
           check++;
           count = strtoul (check, &check, 10);
           if (*check != '\0' || count == 0) break;
-          gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_TRACK_COUNT, count, NULL);
+	  if (is_track_number_tag) {
+	    gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_TRACK_COUNT, count, NULL);
+	  } else {
+	    gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_ALBUM_VOLUME_COUNT, count, NULL);
+	  }
         }
         if (*check != '\0') break;
         gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, tmp, NULL);

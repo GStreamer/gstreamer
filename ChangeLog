@@ -1,4 +1,23 @@
+2004-02-22  Benjamin Otte  <otte@gnome.org>
+
+	* configure.ac:
+	  export [_]*{gst,Gst,GST}.* symbols from plugins
+
+2004-02-22  Christophe Fergeau <teuf@gnome.org>
+
+	reviewed by: Benjamin Otte  <otte@gnome.org>
+
+	* ext/lame/gstlame.c: (add_one_tag):
+	* ext/mad/gstid3tag.c: (gst_mad_id3_to_tag_list):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_get_tag_value),
+	(gst_vorbisenc_metadata_set1):
+	* gst/tags/gstid3tag.c:
+	* gst/tags/gstvorbistag.c: (gst_vorbis_tag_add):
+	  apply fixes from bugs #135042 (lame can't write tags) and #133817
+	  (add GST_ALBUM_VOLUME_{COUNT,NUMBER} tags)
+
 2004-02-22 Ramon Garcia <ramon_garcia_f@yahoo.com>
+
         * configure.ac: Export only gst_plugin_desc from plugins.
          Note that this change only makes any effect with Linux using libtool 
 	 1.5.2 or higher. Otherwise it is silently ignored, but it would build

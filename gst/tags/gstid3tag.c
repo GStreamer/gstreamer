@@ -186,6 +186,7 @@ static GstTagEntryMatch tag_matches[] = {
   { GST_TAG_GENRE,		"TCON"  },
   { GST_TAG_DATE,		"TDRC"  },
   { GST_TAG_COMMENT,		"COMM"	},
+  { GST_TAG_ALBUM_VOLUME_NUMBER,  "TPOS"  },
   { NULL,			NULL	}
 };
 /**
