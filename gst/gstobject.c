@@ -588,7 +588,6 @@ gst_object_dispatch_properties_changed (GObject     *object,
 				      guint        n_pspecs,
 				      GParamSpec **pspecs)
 {
-#ifdef USE_GLIB2
   GstObject *gst_object;
   guint i;
 
@@ -606,7 +605,6 @@ gst_object_dispatch_properties_changed (GObject     *object,
 
     gst_object = GST_OBJECT_PARENT (gst_object);
   }
-#endif /* USE_GLIB2 */
 }
 
 /**
