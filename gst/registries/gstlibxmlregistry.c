@@ -844,7 +844,8 @@ load_plugin (xmlTextReaderPtr reader)
       }
     }
   }
-  gst_object_unref (GST_OBJECT (plugin));
+  g_free (plugin);
+
   return NULL;
 }
 
@@ -873,6 +874,8 @@ load_paths (xmlTextReaderPtr reader, GstXMLRegistry * registry)
       }
     }
   }
+
+  g_free (plugin);
   return NULL;
 }
 
