@@ -3,21 +3,19 @@
 # Shamelessly stolen from Owen Taylor and Manish Singh
 
 dnl AM_PATH_SHOUT2([ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
-dnl Test for libshout, and define SHOUT2_CFLAGS and SHOUT2_LIBS
+dnl Test for libshout 2, and define SHOUT2_CFLAGS and SHOUT2_LIBS
 dnl
 AC_DEFUN([AM_PATH_SHOUT2],
 [dnl 
 dnl Get the cflags and libraries
 dnl
-AC_ARG_WITH(shout-prefix,[  --with-shout2-prefix=PFX   Prefix where libshout2 is installed (optional)], shout2_prefix="$withval", shout2_prefix="")
-AC_ARG_ENABLE(shout2test, [  --disable-shout2test       Do not try to compile and run a test Shout2 program],, enable_shout2test=yes)
+AC_ARG_WITH(shout2-prefix,[  --with-shout2-prefix=PFX   Prefix where libshout2 is installed (optional)], shout2_prefix="$withval", shout2_prefix="")
+AC_ARG_ENABLE(shout2test, [  --disable-shout2test       Do not try to compile and run a test shout2 program],, enable_shout2test=yes)
 
   if test "x$shout2_prefix" != "xNONE" ; then
-    shout2_args="$shout2_args --prefix=$shout2_prefix"
     SHOUT2_CFLAGS="-I$shout2_prefix/include"
     SHOUT2_LIBS="-L$shout2_prefix/lib"
-  elif test "$prefix" != ""; then
-    shout2_args="$shout2_args --prefix=$prefix"
+  elif test "x$prefix" != "x"; then
     SHOUT2_CFLAGS="-I$prefix/include"
     SHOUT2_LIBS="-L$prefix/lib"
   fi
@@ -29,7 +27,7 @@ AC_ARG_ENABLE(shout2test, [  --disable-shout2test       Do not try to compile an
   	SHOUT2_LIBS="$SHOUT2_LIBS -lnsl -lsocket -lresolv"
   esac
 
-  AC_MSG_CHECKING(for Shout2)
+  AC_MSG_CHECKING(for shout2)
   no_shout2=""
 
   if test "x$enable_shout2test" = "xyes" ; then
@@ -38,7 +36,7 @@ AC_ARG_ENABLE(shout2test, [  --disable-shout2test       Do not try to compile an
     CFLAGS="$CFLAGS $SHOUT2_CFLAGS $OGG_CFLAGS $VORBIS_CFLAGS"
     LIBS="$LIBS $SHOUT2_LIBS $OGG_LIBS $VORBIS_LIBS"
 dnl
-dnl Now check if the installed Shout2 is sufficiently new.
+dnl Now check if the installed shout2 is sufficiently new.
 dnl
       rm -f conf.shout2test
       AC_TRY_RUN([
@@ -49,7 +47,12 @@ dnl
 
 int main ()
 {
+  int major, minor, patch;
+
   system("touch conf.shout2test");
+  shout_version(&major, &minor, &patch);
+  if (major < 2)
+    return 1;
   return 0;
 }
 
