@@ -94,12 +94,6 @@ endif
 ## FESTIVAL_DIR=
 ## endif
 
-if USE_FFMPEG
-FFMPEG_DIR=ffmpeg
-else
-FFMPEG_DIR=
-endif
-
 if USE_FLAC
 FLAC_DIR=flac
 else
@@ -337,7 +331,6 @@ SUBDIRS=\
 	$(NAS_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
-	$(FFMPEG_DIR) \
 	$(FLAC_DIR) \
 	$(GDK_PIXBUF_DIR) \
 	$(GNOMEVFS_DIR) \
@@ -392,7 +385,6 @@ DIST_SUBDIRS=\
 	esd \
 	faac \
 	faad \
-	ffmpeg \
 	flac \
 	gdk_pixbuf \
 	gnomevfs \

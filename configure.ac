@@ -876,24 +876,6 @@ GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
   AC_SUBST(FLAC_LIBS)
 ])
 
-dnl *** FFMPEG ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_FFMPEG, true)
-GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
-  # only slurp in the case where we are in CVS mode;
-  # prerelease and release should get it disted
-  if test "x$GST_PLUGINS_VERSION_NANO" = x1; then
-    AC_MSG_NOTICE(slurping FFmpeg CVS source)
-    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2003-10-26 10:00 GMT,
-                    HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
-  else
-    AC_MSG_NOTICE(FFmpeg CVS code should be included already)
-    HAVE_FFMPEG=yes
-  fi
-  # we only bother with uninstalled (included) ffmpeg for now
-  AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1,
-                     [defined if we use uninstalled ffmpeg])
-])
-
 dnl *** GDK pixbuf ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
 GST_CHECK_FEATURE(GDK_PIXBUF, [GDK pixbuf], gdkpixbufsrc, [
@@ -1513,9 +1495,6 @@ AC_SUBST(GST_CFLAGS)
 dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
-if test "x$HAVE_FFMPEG" = xyes; then
-  AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg/ffmpeg)
-fi 
 
 dnl ############################
 dnl # Set up some more defines #
@@ -1656,7 +1635,6 @@ ext/dvdnav/Makefile
 ext/esd/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
-ext/ffmpeg/Makefile
 ext/flac/Makefile
 ext/gdk_pixbuf/Makefile
 ext/gnomevfs/Makefile
@@ -1717,7 +1695,6 @@ gst-libs/gst/video/Makefile
 gst-libs/gst/xoverlay/Makefile
 gst-libs/gst/xwindowlistener/Makefile
 gst-libs/ext/Makefile
-gst-libs/ext/ffmpeg/Makefile
 examples/dynparams/Makefile
 examples/capsfilter/Makefile
 examples/seeking/Makefile
