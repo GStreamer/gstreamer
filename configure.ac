@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 8, 0, 2, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 8, 1, 0, GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
@@ -188,7 +188,8 @@ GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
 ])
 
 dnl check for gstreamer; uninstalled is selected preferentially -- see pkg-config(1)
-PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_PLUGINS_VERSION_MAJOR.$GST_PLUGINS_VERSION_MINOR.$GST_PLUGINS_VERSION_MICRO,
+GST_REQ=0.8.0
+PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST="yes", HAVE_GST="no")
 
 if test "x$HAVE_GST" = "xno"; then
@@ -202,7 +203,7 @@ fi
 AC_SUBST(GST_TOOLS_DIR)
 
 dnl check for gstreamer-control; uninstalled is selected preferentially
-PKG_CHECK_MODULES(GST_CONTROL, gstreamer-control-$GST_MAJORMINOR >= $GST_PLUGINS_VERSION_MAJOR.$GST_PLUGINS_VERSION_MINOR.$GST_PLUGINS_VERSION_MICRO,
+PKG_CHECK_MODULES(GST_CONTROL, gstreamer-control-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST_CONTROL="yes", HAVE_GST_CONTROL="no")
 
 if test "x$HAVE_GST_CONTROL" = "xno"; then
