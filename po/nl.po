@@ -463,7 +463,7 @@ msgstr "TYPE1,TYPE2,..."
 
 #: tools/gst-launch.c:338
 msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Bewaar xml-representatie van pijplijn af naar FILE en stop"
+msgstr "Bewaar xml-representatie van pijplijn in BESTAND en stop"
 
 #: tools/gst-launch.c:338
 msgid "FILE"
