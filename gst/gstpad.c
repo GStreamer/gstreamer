@@ -94,7 +94,7 @@ gst_pad_init (GstPad *pad)
 enum {
   REAL_CAPS_NEGO_FAILED,
   REAL_LINKED,
-  REAL_DISLINKED,
+  REAL_UNLINKED,
   /* FILL ME */
   REAL_LAST_SIGNAL
 };
@@ -164,7 +164,7 @@ gst_real_pad_class_init (GstRealPadClass *klass)
                   G_STRUCT_OFFSET (GstRealPadClass, linked), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);
-  gst_real_pad_signals[REAL_DISLINKED] =
+  gst_real_pad_signals[REAL_UNLINKED] =
     g_signal_new ("unlinked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, unlinked), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
@@ -859,9 +859,9 @@ gst_pad_unlink (GstPad *srcpad,
 
   /* fire off a signal to each of the pads telling them 
    * that they've been unlinked */
-  g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_DISLINKED], 
+  g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_UNLINKED], 
                  0, realsink);
-  g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_DISLINKED], 
+  g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_UNLINKED], 
                  0, realsrc);
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "unlinked %s:%s and %s:%s",
