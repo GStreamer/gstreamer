@@ -1514,7 +1514,6 @@ gst-libs/gst/play/Makefile
 gst-libs/gst/propertyprobe/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
-gst-libs/gst/tag/Makefile
 gst-libs/gst/tuner/Makefile
 gst-libs/gst/video/Makefile
 gst-libs/gst/xoverlay/Makefile
