@@ -42,8 +42,9 @@ G_BEGIN_DECLS
 
 typedef enum {
   GST_MULTIFILESRC_OPEN		= GST_ELEMENT_FLAG_LAST,
+  GST_MULTIFILESRC_NEWFILE      = GST_ELEMENT_FLAG_LAST + 2,
 
-  GST_MULTIFILESRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST + 2
+  GST_MULTIFILESRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST + 4
 } GstMultiFileSrcFlags;
 
 typedef struct _GstMultiFileSrc GstMultiFileSrc;
@@ -62,6 +63,11 @@ struct _GstMultiFileSrc {
   gint fd;
   gulong size;    /* how long is the file? */
   guchar *map;    /* where the file is mapped to */
+
+  gint curfileindex; /* how many files have we done so far */
+
+  gboolean have_newmedia_events; /* tunable parameter to say whether new media
+				    disconts should be generated */
 
   gboolean new_seek;
 };

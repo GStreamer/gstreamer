@@ -56,7 +56,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_LOCATIONS
+  ARG_LOCATIONS,
+  ARG_HAVENEWMEDIA
 };
 
 #define _do_init(bla) \
@@ -105,7 +106,13 @@ gst_multifilesrc_class_init (GstMultiFileSrcClass * klass)
       G_STRUCT_OFFSET (GstMultiFileSrcClass, new_file), NULL, NULL,
       g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
 
+
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATIONS, g_param_spec_pointer ("locations", "locations", "locations", G_PARAM_READWRITE));     /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HAVENEWMEDIA,
+      g_param_spec_boolean ("newmedia", "newmedia",
+          "generate new media events?", FALSE, G_PARAM_READWRITE));
+
 
   gobject_class->set_property = gst_multifilesrc_set_property;
   gobject_class->get_property = gst_multifilesrc_get_property;
@@ -129,6 +136,7 @@ gst_multifilesrc_init (GstMultiFileSrc * multifilesrc)
   multifilesrc->size = 0;
   multifilesrc->map = NULL;
   multifilesrc->new_seek = FALSE;
+  multifilesrc->have_newmedia_events = FALSE;
 }
 
 static void
@@ -156,6 +164,9 @@ gst_multifilesrc_set_property (GObject * object, guint prop_id,
         src->listptr = g_value_get_pointer (value);
       }
       break;
+    case ARG_HAVENEWMEDIA:
+      src->have_newmedia_events = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -177,6 +188,9 @@ gst_multifilesrc_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_LOCATIONS:
       g_value_set_pointer (value, src->listptr);
       break;
+    case ARG_HAVENEWMEDIA:
+      g_value_set_boolean (value, src->have_newmedia_events);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -194,47 +208,74 @@ gst_multifilesrc_get (GstPad * pad)
 {
   GstMultiFileSrc *src;
   GstBuffer *buf;
+  GstEvent *newmedia;
   GSList *list;
+
 
   g_return_val_if_fail (pad != NULL, NULL);
   src = GST_MULTIFILESRC (gst_pad_get_parent (pad));
 
-  if (GST_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN))
-    gst_multifilesrc_close_file (src);
+  GST_DEBUG ("curfileindex = %d newmedia flag = %s", src->curfileindex,
+      GST_FLAG_IS_SET (src, GST_MULTIFILESRC_NEWFILE) ? "true" : "false");
 
-  if (!src->listptr) {
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+  switch (GST_FLAG_IS_SET (src, GST_MULTIFILESRC_NEWFILE)) {
+    case FALSE:
+      if (GST_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN))
+        gst_multifilesrc_close_file (src);
+
+      if (!src->listptr) {
+        GST_DEBUG ("sending EOS event");
+        gst_element_set_eos (GST_ELEMENT (src));
+        return GST_DATA (gst_event_new (GST_EVENT_EOS));
+      }
+
+      list = src->listptr;
+      src->currentfilename = (gchar *) list->data;
+      src->listptr = src->listptr->next;
+
+      if (!gst_multifilesrc_open_file (src, pad))
+        return NULL;
+      src->curfileindex++;
+      /* emitted after the open, as the user may free the list and string from here */
+      g_signal_emit (G_OBJECT (src), gst_multifilesrc_signals[NEW_FILE], 0,
+          list);
+      if (src->have_newmedia_events) {
+        newmedia =
+            gst_event_new_discontinuous (TRUE, GST_FORMAT_TIME, (gint64) 0,
+            GST_FORMAT_UNDEFINED);
+        GST_FLAG_SET (src, GST_MULTIFILESRC_NEWFILE);
+
+        GST_DEBUG ("sending new media event");
+        return GST_DATA (newmedia);
+      }
+    default:
+      if (GST_FLAG_IS_SET (src, GST_MULTIFILESRC_NEWFILE))
+        GST_FLAG_UNSET (src, GST_MULTIFILESRC_NEWFILE);
+      /* create the buffer */
+      /* FIXME: should eventually use a bufferpool for this */
+      buf = gst_buffer_new ();
+
+      g_return_val_if_fail (buf != NULL, NULL);
+
+      /* simply set the buffer to point to the correct region of the file */
+      GST_BUFFER_DATA (buf) = src->map;
+      GST_BUFFER_SIZE (buf) = src->size;
+      GST_BUFFER_OFFSET (buf) = 0;
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
+
+      if (src->new_seek) {
+        /* fixme, do something here */
+        src->new_seek = FALSE;
+      }
+
+      /* we're done, return the buffer */
+      GST_DEBUG ("sending buffer");
+      return GST_DATA (buf);
   }
 
-  list = src->listptr;
-  src->currentfilename = (gchar *) list->data;
-  src->listptr = src->listptr->next;
-
-  if (!gst_multifilesrc_open_file (src, pad))
-    return NULL;
-
-  /* emitted after the open, as the user may free the list and string from here */
-  g_signal_emit (G_OBJECT (src), gst_multifilesrc_signals[NEW_FILE], 0, list);
-
-  /* create the buffer */
-  /* FIXME: should eventually use a bufferpool for this */
-  buf = gst_buffer_new ();
-
-  g_return_val_if_fail (buf != NULL, NULL);
-
-  /* simply set the buffer to point to the correct region of the file */
-  GST_BUFFER_DATA (buf) = src->map;
-  GST_BUFFER_SIZE (buf) = src->size;
-  GST_BUFFER_OFFSET (buf) = 0;
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
-
-  if (src->new_seek) {
-    /* fixme, do something here */
-    src->new_seek = FALSE;
-  }
-
-  /* we're done, return the buffer */
-  return GST_DATA (buf);
+  /* should not reach here */
+  g_assert_not_reached ();
+  return NULL;
 }
 
 /* open the file and mmap it, necessary to go to READY state */
