@@ -660,26 +660,35 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
          * For B-frame containing movies, we get all pictures delayed
          * except for the I frames, so we synchronize only on I frames
          * and keep an internal counter based on FPS for the others. */
-        if (ffmpegdec->picture->pict_type == FF_I_TYPE &&
-            GST_CLOCK_TIME_IS_VALID (*in_ts) &&
-            ffmpegdec->context->frame_rate > 0) {
+        if ((ffmpegdec->picture->pict_type == FF_I_TYPE ||
+             !GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts)) &&
+            GST_CLOCK_TIME_IS_VALID (*in_ts)) {
           ffmpegdec->next_ts = *in_ts;
         }
         GST_BUFFER_TIMESTAMP (outbuf) = ffmpegdec->next_ts;
-        GST_BUFFER_DURATION (outbuf) = GST_SECOND *
-            ffmpegdec->context->frame_rate_base /
-            ffmpegdec->context->frame_rate;
-        ffmpegdec->next_ts += GST_BUFFER_DURATION (outbuf);
+        if (ffmpegdec->context->frame_rate_base != 0 &&
+            ffmpegdec->context->frame_rate != 0) {
+          GST_BUFFER_DURATION (outbuf) = GST_SECOND *
+              ffmpegdec->context->frame_rate_base /
+              ffmpegdec->context->frame_rate;
+          ffmpegdec->next_ts += GST_BUFFER_DURATION (outbuf);
+        } else {
+          ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
+        }
       } else if (ffmpegdec->picture->pict_type != -1) {
         /* update time for skip-frame */
-        if (ffmpegdec->picture->pict_type == FF_I_TYPE &&
-            GST_CLOCK_TIME_IS_VALID (*in_ts) &&
-            ffmpegdec->context->frame_rate > 0) {
+        if ((ffmpegdec->picture->pict_type == FF_I_TYPE ||
+             !GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts)) &&
+            GST_CLOCK_TIME_IS_VALID (*in_ts)) {
           ffmpegdec->next_ts = *in_ts;
-        } else {
+        }
+        if (ffmpegdec->context->frame_rate_base != 0 &&
+            ffmpegdec->context->frame_rate != 0) {
           ffmpegdec->next_ts += GST_SECOND *
             ffmpegdec->context->frame_rate_base /
             ffmpegdec->context->frame_rate;
+        } else {
+          ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
         }
       }
       break;
