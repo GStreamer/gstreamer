@@ -195,7 +195,7 @@ gst_sinesrc_init (GstSineSrc *src)
 
   gst_dpman_add_required_dparam_callback (
     src->dpman, 
-    g_param_spec_double("freq","Frequency (Hz)","Frequency of the tone",
+    g_param_spec_float("freq","Frequency (Hz)","Frequency of the tone",
                        10.0, 10000.0, 350.0, G_PARAM_READWRITE),
     "hertz",
     gst_sinesrc_update_freq, 
@@ -204,7 +204,7 @@ gst_sinesrc_init (GstSineSrc *src)
   
   gst_dpman_add_required_dparam_direct (
     src->dpman, 
-    g_param_spec_double("volume","Volume","Volume of the tone",
+    g_param_spec_float("volume","Volume","Volume of the tone",
                        0.0, 1.0, 0.8, G_PARAM_READWRITE),
     "scalar",
     &(src->volume)
