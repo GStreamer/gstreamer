@@ -1,3 +1,18 @@
+2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* gst-libs/gst/colorbalance/colorbalance.vcproj:
+	* gst-libs/gst/idct/idct.vcproj:
+	* gst-libs/gst/media-info/media-info.vcproj:
+	* gst-libs/gst/mixer/mixer.vcproj:
+	* gst-libs/gst/navigation/navigation.vcproj:
+	* gst-libs/gst/play/play.vcproj:
+	* gst-libs/gst/propertyprobe/propertyprobe.vcproj:
+	* gst-libs/gst/resample/resample.vcproj:
+	* gst-libs/gst/tuner/tuner.vcproj:
+	* gst-libs/gst/video/video.vcproj:
+	* gst-libs/gst/xoverlay/xoverlay.vcproj:
+	  more plugins supported under windows
+
 2004-07-25 Iain <iain@prettypeople.org>
 
 	* gst/wavparse/gstwavparse.c (gst_wavparse_fmt): Set the caps on the
@@ -12,6 +27,7 @@
 	  fix mad plugin crashing on Sun (fixes #148289)
 
 2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* gst/avi/avi.def:
 	* gst/avi/avi.vcproj:
 	* gst/matroska/matroska.def:
@@ -19,6 +35,7 @@
 	  remove unused .def files
 
 2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* gst-libs/gst/audio/gstaudiofilter.c:
 	  Clean the local include
 
