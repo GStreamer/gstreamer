@@ -197,7 +197,8 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
     GST_BUFFER_TIMESTAMP (buf) = wavparse->offset * GST_SECOND / wavparse->rate;
     wavparse->offset += GST_BUFFER_SIZE (buf) * 8 / wavparse->width / wavparse->channels;
 
-    gst_pad_push (wavparse->srcpad, buf);
+    if (GST_PAD_IS_USABLE (wavparse->srcpad))
+      gst_pad_push (wavparse->srcpad, buf);
     return;
   }
 
@@ -335,7 +336,8 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 
       gst_buffer_unref (buf);
 
-      gst_pad_push (wavparse->srcpad, newbuf);
+      if (GST_PAD_IS_USABLE (wavparse->srcpad))
+        gst_pad_push (wavparse->srcpad, newbuf);
 
       /* now we're ready to go, the next buffer should start data */
       wavparse->state = GST_WAVPARSE_DATA;
