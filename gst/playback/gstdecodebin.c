@@ -56,6 +56,7 @@ struct _GstDecodeBin
   GstElement *typefind;
 
   gboolean threaded;
+  gboolean dynamic;
 
   GList *factories;
   gint numpads;
@@ -64,6 +65,8 @@ struct _GstDecodeBin
 struct _GstDecodeBinClass
 {
   GstBinClass parent_class;
+
+  void (*new_stream) (GstElement * element, GstPad * pad, gboolean last);
 };
 
 /* props */
@@ -76,6 +79,7 @@ enum
 /* signals */
 enum
 {
+  SIGNAL_NEW_STREAM,
   LAST_SIGNAL
 };
 
@@ -89,19 +93,6 @@ static void gst_decode_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
 static GstElementStateReturn gst_decode_bin_change_state (GstElement * element);
 
-static const GstEventMask *gst_decode_bin_get_event_masks (GstElement *
-    element);
-static gboolean gst_decode_bin_send_event (GstElement * element,
-    GstEvent * event);
-static const GstFormat *gst_decode_bin_get_formats (GstElement * element);
-static gboolean gst_decode_bin_convert (GstElement * element,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value);
-static const GstQueryType *gst_decode_bin_get_query_types (GstElement *
-    element);
-static gboolean gst_decode_bin_query (GstElement * element, GstQueryType type,
-    GstFormat * format, gint64 * value);
-
 static void type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin);
 static GstElement *try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad,
@@ -111,8 +102,7 @@ static void close_pad_link (GstElement * element, GstPad * pad,
     GstCaps * caps, GstDecodeBin * decode_bin);
 
 static GstElementClass *parent_class;
-
-//static guint gst_decode_bin_signals[LAST_SIGNAL] = { 0 };
+static guint gst_decode_bin_signals[LAST_SIGNAL] = { 0 };
 
 static GstElementDetails gst_decode_bin_details = {
   "Decoder Bin",
@@ -169,6 +159,12 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       g_param_spec_boolean ("threaded", "Threaded", "Use threads",
           FALSE, G_PARAM_READWRITE));
 
+  gst_decode_bin_signals[SIGNAL_NEW_STREAM] =
+      g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstDecodeBinClass, new_stream), NULL, NULL,
+      gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, G_TYPE_OBJECT,
+      G_TYPE_BOOLEAN);
+
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_decode_bin_dispose);
 
   gst_element_class_add_pad_template (gstelement_klass,
@@ -178,15 +174,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_decode_bin_change_state);
-  gstelement_klass->get_event_masks =
-      GST_DEBUG_FUNCPTR (gst_decode_bin_get_event_masks);
-  gstelement_klass->send_event = GST_DEBUG_FUNCPTR (gst_decode_bin_send_event);
-  gstelement_klass->get_formats =
-      GST_DEBUG_FUNCPTR (gst_decode_bin_get_formats);
-  gstelement_klass->convert = GST_DEBUG_FUNCPTR (gst_decode_bin_convert);
-  gstelement_klass->get_query_types =
-      GST_DEBUG_FUNCPTR (gst_decode_bin_get_query_types);
-  gstelement_klass->query = GST_DEBUG_FUNCPTR (gst_decode_bin_query);
 }
 
 
@@ -195,12 +182,18 @@ gst_decode_bin_factory_filter (GstPluginFeature * feature,
     GstDecodeBin * decode_bin)
 {
   guint rank;
+  const gchar *klass;
 
   if (!GST_IS_ELEMENT_FACTORY (feature))
     return FALSE;
 
+  klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY (feature));
+  if (strstr (klass, "Demux") == NULL && strstr (klass, "Decoder") == NULL) {
+    return FALSE;
+  }
+
   rank = gst_plugin_feature_get_rank (feature);
-  if (rank < GST_RANK_SECONDARY)
+  if (rank < GST_RANK_MARGINAL)
     return FALSE;
 
   return TRUE;
@@ -213,6 +206,12 @@ compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 }
 
 static void
+print_feature (GstPluginFeature * feature)
+{
+  g_print ("%s\n", gst_plugin_feature_get_name (feature));
+}
+
+static void
 gst_decode_bin_init (GstDecodeBin * decode_bin)
 {
   GList *factories;
@@ -222,6 +221,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
       FALSE, decode_bin);
 
   decode_bin->factories = g_list_sort (factories, (GCompareFunc) compare_ranks);
+  g_list_foreach (decode_bin->factories, (GFunc) print_feature, NULL);
 
   decode_bin->typefind = gst_element_factory_make ("typefind", "typefind");
   if (!decode_bin->typefind) {
@@ -274,6 +274,7 @@ find_compatibles (GstDecodeBin * decode_bin, const GstCaps * caps)
         if (!gst_caps_is_empty (intersect)) {
           to_try = g_list_append (to_try, factory);
         }
+        gst_caps_free (intersect);
       }
     }
   }
@@ -295,11 +296,19 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
   if (g_str_has_prefix (mimetype, "video/x-raw") ||
       g_str_has_prefix (mimetype, "audio/x-raw")) {
     gchar *padname;
+    GstPad *ghost;
 
     padname = g_strdup_printf ("src%d", decode_bin->numpads);
     decode_bin->numpads++;
 
     gst_element_add_ghost_pad (GST_ELEMENT (decode_bin), pad, padname);
+
+    ghost = gst_element_get_pad (GST_ELEMENT (decode_bin), padname);
+
+    g_signal_emit (G_OBJECT (decode_bin),
+        gst_decode_bin_signals[SIGNAL_NEW_STREAM], 0,
+        ghost, !decode_bin->dynamic);
+
     g_free (padname);
     return;
   }
@@ -327,7 +336,8 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
     GstElement *element;
     gboolean ret;
 
-    //g_print ("trying to link %s\n", gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
+    g_print ("trying to link %s\n",
+        gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
 
     element = gst_element_factory_create (factory, NULL);
     if (element == NULL)
@@ -344,7 +354,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
       klass = gst_element_factory_get_klass (factory);
       if (decode_bin->threaded) {
         if (strstr (klass, "Demux") != NULL) {
-          //g_print ("thread after %s\n", gst_element_get_name (element));
+          /* FIXME, do something with threads here */
         }
       }
 
@@ -369,6 +379,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
 {
   GList *pads;
   gboolean dynamic = FALSE;
+  GList *to_connect = NULL;
 
   for (pads = gst_element_get_pad_template_list (element); pads;
       pads = g_list_next (pads)) {
@@ -384,7 +395,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
             gst_element_get_pad (element,
             GST_PAD_TEMPLATE_NAME_TEMPLATE (templ));
         if (pad) {
-          close_pad_link (element, pad, gst_pad_get_caps (pad), decode_bin);
+          to_connect = g_list_prepend (to_connect, pad);
         }
         break;
       }
@@ -394,7 +405,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
             gst_element_get_pad (element,
             GST_PAD_TEMPLATE_NAME_TEMPLATE (templ));
         if (pad) {
-          close_pad_link (element, pad, gst_pad_get_caps (pad), decode_bin);
+          to_connect = g_list_prepend (to_connect, pad);
         } else {
           dynamic = TRUE;
         }
@@ -407,21 +418,29 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
   if (dynamic) {
     g_signal_connect (G_OBJECT (element), "new_pad",
         G_CALLBACK (new_pad), decode_bin);
+    decode_bin->dynamic = TRUE;
   }
+
+  for (pads = to_connect; pads; pads = g_list_next (pads)) {
+    GstPad *pad = GST_PAD (pads->data);
+
+    close_pad_link (element, pad, gst_pad_get_caps (pad), decode_bin);
+  }
+  g_list_free (to_connect);
 }
 
 static void
 type_found (GstElement * typefind, guint probability, GstCaps * caps,
     GstDecodeBin * decode_bin)
 {
-  gchar *capsstr;
-
-  capsstr = gst_caps_to_string (caps);
-  //g_print ("found type %s\n", capsstr);
-  g_free (capsstr);
+  decode_bin->dynamic = FALSE;
 
   close_pad_link (typefind, gst_element_get_pad (typefind, "src"), caps,
       decode_bin);
+
+  if (decode_bin->dynamic == FALSE) {
+    gst_element_no_more_pads (GST_ELEMENT (decode_bin));
+  }
 }
 
 static void
@@ -495,64 +514,6 @@ gst_decode_bin_change_state (GstElement * element)
   }
 
   return ret;
-}
-
-static const GstEventMask *
-gst_decode_bin_get_event_masks (GstElement * element)
-{
-  return NULL;
-}
-
-static gboolean
-gst_decode_bin_send_event (GstElement * element, GstEvent * event)
-{
-  gboolean res = FALSE;
-
-  return res;
-}
-
-static const GstFormat *
-gst_decode_bin_get_formats (GstElement * element)
-{
-  static GstFormat formats[] = {
-    GST_FORMAT_TIME,
-    GST_FORMAT_BYTES,
-    GST_FORMAT_DEFAULT,
-    0,
-  };
-
-  return formats;
-}
-
-static gboolean
-gst_decode_bin_convert (GstElement * element,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
-{
-  return FALSE;
-}
-
-static const GstQueryType *
-gst_decode_bin_get_query_types (GstElement * element)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_TOTAL,
-    GST_QUERY_POSITION,
-    GST_QUERY_START,
-    GST_QUERY_SEGMENT_END,
-    0
-  };
-
-  return query_types;
-}
-
-static gboolean
-gst_decode_bin_query (GstElement * element, GstQueryType type,
-    GstFormat * format, gint64 * value)
-{
-  gboolean res = FALSE;
-
-  return res;
 }
 
 static gboolean

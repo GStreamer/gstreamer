@@ -1,0 +1,48 @@
+decoderbin:
+
+  A bin with a sinkpad that decodes the data into raw formats. It works by sending
+  the input data through a typefind element and then recursively autoplugs elements 
+  from the registry until a raw format is obtained. It will then create a new ghostpad
+  on itself to signal the app of the new pad. 
+
+  TODO
+   - reuse of decoderbin, cleanup in READY state
+   - debugging 
+   - threading after demuxing?
+   - better factory selection, based on Demuxer/Decoder types and ranks.
+   - error handling
+
+baseplaybin:
+
+  A bin with an uri property. It will find the right source element from the registry
+  and connect a decoderbin to it. When going to the PAUSED state, it will iterate the
+  decoderbin and listen for new pad signals from it. It will connect a queue to each
+  new pad and will iterate the decoderbin until one of the queues is filled. It is
+  assumed that by that time all the streams will be found so that when leaving the
+  PAUSED state, one can query the number of streams in the media file with the given
+  uri.
+  Before going to the PLAYING state, it is possible to connect a custom element to
+  each of the streams. To do that, you have to add the element to the bin and then
+  connect the pad(s) from the stream(s). You do not have to add the elements in
+  a thread, the bin will take care of then when it's needed. You are allowed to use
+  threads inside the elements, of course.
+  The bin tries to be smart and doesn't add a queue when there is only one possible 
+  stream.
+  
+  TODO
+  - reuse, cleanup in ready state
+  - debugging
+  - when the first pad is closed, it's possible that another dynamic element is
+    added somewhere so that we need a queue for the first pad as well.
+  - error handling
+
+playbin:
+  
+   Extends baseplaybin, sets up default audiosink and videosink for first audio/video
+   stream detected. implements seeking and querying on the configured sinks.
+
+   TODO
+   - reuse, refcounting, cleanup in READY state
+   - debugging
+   - error handling
+
