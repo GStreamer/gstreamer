@@ -24,10 +24,10 @@
 
 
 #define POD_MAX_PLAYS     192     /* maximum number of simultaneous plays */
-#define POD_GSTBUFSIZE    4096    /* gstreamer buffer size to make if no
+#define POD_BUFPOOL_SIZE  4096    /* gstreamer buffer size to make if no
                                      bufferpool is available, must be divisible
                                      by sizeof(gfloat) */
-#define POD_BUFSPERCHUNK  6       /* number of buffers to allocate per chunk in
+#define POD_BUFPOOL_NUM   6       /* number of buffers to allocate per chunk in
                                      sink buffer pool */
 #define POD_BUFFER_SIZE   882000  /* enough space for 10 seconds of 16-bit audio
                                      at 44100 samples per second ... */
@@ -49,6 +49,8 @@ enum {
   RESET_SIGNAL,
   LAST_SIGNAL
 };
+
+static guint gst_pod_filter_signals[LAST_SIGNAL] = { 0 };
 
 enum {
   ARG_0,
@@ -91,21 +93,20 @@ play_on_demand_src_factory (void)
   return template;
 }
 
-static void		play_on_demand_class_init	 (GstPlayOnDemandClass *klass);
-static void		play_on_demand_init		 (GstPlayOnDemand *filter);
+static void	play_on_demand_class_init	(GstPlayOnDemandClass *klass);
+static void	play_on_demand_init		(GstPlayOnDemand *filter);
 
-static void		play_on_demand_set_property	 (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		play_on_demand_get_property      (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void	play_on_demand_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void	play_on_demand_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static gint             play_on_demand_parse_caps        (GstPlayOnDemand *filter, GstCaps *caps);
+static GstPadConnectReturn	play_on_demand_pad_connect	(GstPad *pad, GstCaps *caps);
 
-static void		play_on_demand_loop              (GstElement *elem);
+static void	play_on_demand_loop		(GstElement *elem);
 
-static void             play_on_demand_play_handler      (GstElement *elem);
-static void             play_on_demand_reset_handler     (GstElement *elem);
+static void	play_on_demand_play_handler	(GstElement *elem);
+static void	play_on_demand_reset_handler	(GstElement *elem);
 
 static GstElementClass *parent_class = NULL;
-static guint gst_pod_filter_signals[LAST_SIGNAL] = { 0 };
 
 static GstBufferPool*
 play_on_demand_get_bufferpool (GstPad *pad)
@@ -117,44 +118,17 @@ play_on_demand_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool(filter->srcpad);
 }
 
-/*
-static GstPadNegotiateReturn
-play_on_demand_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstPlayOnDemand* filter = GST_PLAYONDEMAND(gst_pad_get_parent(pad));
-  
-  if (*caps == NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  if (play_on_demand_parse_caps(filter, *caps))
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad, filter->sinkpad, caps);
-}
-
-static GstPadNegotiateReturn
-play_on_demand_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstPlayOnDemand* filter = GST_PLAYONDEMAND(gst_pad_get_parent(pad));
-  
-  if (*caps == NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  if (play_on_demand_parse_caps(filter, *caps))
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad, filter->srcpad, caps);
-}	
-*/
-
-static gint
-play_on_demand_parse_caps (GstPlayOnDemand *filter, GstCaps *caps)
+static GstPadConnectReturn
+play_on_demand_pad_connect (GstPad *pad, GstCaps *caps)
 {
   const gchar *format;
+  GstPlayOnDemand *filter;
   
-  g_return_val_if_fail(filter != NULL, -1);
-  g_return_val_if_fail(caps   != NULL, -1);
-  
+  g_return_val_if_fail(caps != NULL, GST_PAD_CONNECT_DELAYED);
+  g_return_val_if_fail(pad  != NULL, GST_PAD_CONNECT_DELAYED);
+
+  filter = GST_PLAYONDEMAND(GST_PAD_PARENT(pad));
+
   format = gst_caps_get_string(caps, "format");
   
   filter->rate       = gst_caps_get_int(caps, "rate");
@@ -173,7 +147,7 @@ play_on_demand_parse_caps (GstPlayOnDemand *filter, GstCaps *caps)
       g_print ("PlayOnDemand : format int, bit width %d, endianness %d, signed %s\n",
                filter->width, filter->endianness, filter->is_signed ? "yes" : "no");
     }
-  } else if (strcmp(format, "float")==0) {
+  } else if (strcmp(format, "float") == 0) {
     filter->format     = GST_PLAYONDEMAND_FORMAT_FLOAT;
     filter->layout     = gst_caps_get_string(caps, "layout");
     filter->intercept  = gst_caps_get_float(caps, "intercept");
@@ -184,15 +158,17 @@ play_on_demand_parse_caps (GstPlayOnDemand *filter, GstCaps *caps)
       g_print ("PlayOnDemand : format float, layout %s, intercept %f, slope %f\n",
                filter->layout, filter->intercept, filter->slope);
     }
-  } else  {
-    return -1;
   }
-  return 0;
+
+  if (GST_CAPS_IS_FIXED (caps) && ! gst_pad_try_set_caps (filter->srcpad, caps))
+    return GST_PAD_CONNECT_REFUSED;
+  
+  return GST_PAD_CONNECT_DELAYED;
 }
 
-
 GType
-gst_play_on_demand_get_type(void) {
+gst_play_on_demand_get_type (void)
+{
   static GType play_on_demand_type = 0;
 
   if (! play_on_demand_type) {
@@ -246,7 +222,7 @@ play_on_demand_class_init (GstPlayOnDemandClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
     g_param_spec_boolean("silent","silent","silent",
-                         TRUE, G_PARAM_READWRITE)); // CHECKME
+                         TRUE, G_PARAM_READWRITE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FOLLOWTAIL,
     g_param_spec_boolean("follow-stream-tail","follow-stream-tail","follow-stream-tail",
@@ -265,19 +241,16 @@ play_on_demand_init (GstPlayOnDemand *filter)
 {
   guint i;
   
-  filter->sinkpad = gst_pad_new_from_template(play_on_demand_sink_factory(), "sink");
-  //gst_pad_set_negotiate_function(filter->sinkpad, play_on_demand_negotiate_sink);
-  gst_pad_set_bufferpool_function(filter->sinkpad, play_on_demand_get_bufferpool);
-
   filter->srcpad = gst_pad_new_from_template(play_on_demand_src_factory(), "src");
-  //gst_pad_set_negotiate_function(filter->srcpad, play_on_demand_negotiate_src);
+  filter->sinkpad = gst_pad_new_from_template(play_on_demand_sink_factory(), "sink");
+
+  gst_pad_set_bufferpool_function(filter->sinkpad, play_on_demand_get_bufferpool);
+  gst_pad_set_connect_function(filter->sinkpad, play_on_demand_pad_connect);
   
   gst_element_add_pad(GST_ELEMENT(filter), filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter), filter->srcpad);
 
   gst_element_set_loop_function(GST_ELEMENT(filter), play_on_demand_loop);
-
-  filter->sinkpool = gst_buffer_pool_get_default(POD_GSTBUFSIZE, POD_BUFSPERCHUNK);
 
   filter->follow_stream_tail = FALSE;  
   filter->silent      = TRUE;
@@ -309,7 +282,11 @@ play_on_demand_loop (GstElement *elem)
   g_return_if_fail(filter != NULL);
   g_return_if_fail(GST_IS_PLAYONDEMAND(filter));
 
-  filter->srcpool = gst_pad_get_bufferpool(filter->srcpad);
+  filter->bufpool = gst_pad_get_bufferpool(filter->srcpad);
+
+  if (filter->bufpool == NULL) {
+    filter->bufpool = gst_buffer_pool_get_default(POD_BUFPOOL_SIZE, POD_BUFPOOL_NUM);
+  }
 
   in = gst_pad_pull(filter->sinkpad);
 

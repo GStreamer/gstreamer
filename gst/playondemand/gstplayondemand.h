@@ -57,7 +57,7 @@ struct _GstPlayOnDemand {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
-  GstBufferPool *sinkpool, *srcpool;
+  GstBufferPool *bufpool;
 
   /* these next data elements are for the filter's internal buffers and list of
      play pointers (offsets in the internal buffers). there are also flags for

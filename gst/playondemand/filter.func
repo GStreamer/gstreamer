@@ -64,14 +64,7 @@ do {
   } else {
     j = 0;
 
-    if (filter->srcpool) {
-      out = gst_buffer_new_from_pool(filter->srcpool, 0, 0);
-    } else {
-      out = gst_buffer_new();
-  
-      GST_BUFFER_DATA(out) = (gchar *) g_new(_TYPE_, POD_GSTBUFSIZE / sizeof(_TYPE_));
-      GST_BUFFER_SIZE(out) = POD_GSTBUFSIZE;
-    }
+    out = gst_buffer_new_from_pool(filter->bufpool, 0, 0);
   }
 
   /******************************************************************************/

@@ -3,19 +3,19 @@
 
 void play (GtkButton *button, gpointer data)
 {
-  gtk_signal_emit_by_name(GTK_OBJECT(data), "play");
+  g_signal_emit_by_name(G_OBJECT(data), "play");
 }
   
 void reset (GtkButton *button, gpointer data)
 {
-  gtk_signal_emit_by_name(GTK_OBJECT(data), "reset");
+  g_signal_emit_by_name(G_OBJECT(data), "reset");
 }
   
 int main(int argc, char **argv) 
 {
   guint channels;
   GtkWidget *window, *vbox, *play_button, *reset_button, *quit_button;
-  GstElement *filesrc, *mad, *stereo2mono, *pod, *osssink, *pipeline;
+  GstElement *src, *mad, *pod, *osssink, *pipeline;
     
   gst_init (&argc, &argv);
   gtk_init (&argc, &argv);
@@ -25,33 +25,25 @@ int main(int argc, char **argv)
     exit(-1);
   }
     
-  filesrc = gst_elementfactory_make("filesrc", "filesrc");
+  src = gst_elementfactory_make("filesrc", "filesrc");
   mad = gst_elementfactory_make("mad", "mad");
   pod = gst_elementfactory_make("playondemand", "playondemand");
   osssink = gst_elementfactory_make("osssink", "osssink");
 
-  gtk_object_set(GTK_OBJECT(filesrc), "location", argv[1], NULL);
-  gtk_object_set(GTK_OBJECT(osssink), "fragment", 0x00180008, NULL);
-  gtk_object_get(GTK_OBJECT(osssink), "channels", &channels, NULL);
+  g_object_set(G_OBJECT(src), "location", argv[1], NULL);
+  g_object_set(G_OBJECT(osssink), "fragment", 0x00180008, NULL);
+  g_object_get(G_OBJECT(osssink), "channels", &channels, NULL);
 
   pipeline = gst_pipeline_new("app");
 
-  gst_bin_add(GST_BIN(pipeline), filesrc);
+  gst_bin_add(GST_BIN(pipeline), src);
   gst_bin_add(GST_BIN(pipeline), mad);
   gst_bin_add(GST_BIN(pipeline), pod);
   gst_bin_add(GST_BIN(pipeline), osssink);
 
-  gst_element_connect(filesrc, "src", mad, "sink");
+  gst_element_connect(src, "src", mad, "sink");
   gst_element_connect(pod, "src", osssink, "sink");
-
-  if (channels != 2) {
-    gst_element_connect(mad, "src", pod, "sink");
-  } else {
-    stereo2mono = gst_elementfactory_make("stereo2mono", "stereo2mono");
-    gst_bin_add(GST_BIN(pipeline), stereo2mono);
-    gst_element_connect(mad, "src", stereo2mono, "sink");
-    gst_element_connect(stereo2mono, "src", pod, "sink");
-  }
+  gst_element_connect(mad, "src", pod, "sink");
 
   gst_element_set_state(pipeline, GST_STATE_PLAYING);
 
@@ -70,9 +62,9 @@ int main(int argc, char **argv)
   gtk_box_pack_start(GTK_BOX(vbox), quit_button, FALSE, FALSE, 2);
 
   /* connect things ... */
-  gtk_signal_connect(GTK_OBJECT(play_button), "clicked", play, pod);
-  gtk_signal_connect(GTK_OBJECT(reset_button), "clicked", reset, pod);
-  gtk_signal_connect(GTK_OBJECT(quit_button), "clicked", gtk_main_quit, NULL);
+  g_signal_connect(G_OBJECT(play_button), "clicked", G_CALLBACK(play), pod);
+  g_signal_connect(G_OBJECT(reset_button), "clicked", G_CALLBACK(reset), pod);
+  g_signal_connect(G_OBJECT(quit_button), "clicked", gtk_main_quit, NULL);
 
   /* show the gui. */
   gtk_widget_show(play_button);
