@@ -30,14 +30,8 @@
  *   -- truth hurts.
  */
 
-/* stream doesn't work (local storage does - differences):
- * - 0x046, 4 byte # file size (byte)
- * - 0x056, 2 byte # num_packets (count)
- * - 0x05E, 5 byte # duration (ms)
- * - 0x066, 5 byte # duration (ms)
- * - 0x076, 1 byte # streamable vs. seekable flag
- * - 0x21F, 4 byte # data size (byte)
- * - 0x237, 3 byte # num_packets (count)
+/* stream does NOT work on Windows Media Player (does work on
+ * other (Linux-based) players, because we do not specify bitrate
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1334,7 +1328,10 @@ gst_asfmux_loop (GstElement *element)
   gst_asfmux_fill_queue (asfmux);
   
   if (asfmux->write_header == TRUE) {
-    gst_asfmux_file_start (asfmux, 0, 0);
+    /* indeed, these are fake values. We need this so that
+     * players will read the file. Without these fake values,
+     * the players will mark the file as invalid and stop */
+    gst_asfmux_file_start (asfmux, 0xFFFFFFFF, 0xFFFFFFFF);
   }
 
   gst_asfmux_do_one_buffer (asfmux);
