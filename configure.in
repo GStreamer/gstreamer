@@ -66,14 +66,10 @@ AM_CONDITIONAL(HAVE_LIBXML, test "x$HAVE_LIBXML" = "xyes")
 
 
 AC_CHECK_HEADER(mmx.h,[
-  AC_DEFINE(HAVE_LIBMMX), []])
-AM_CONDITIONAL(HAVE_LIBMMX, test "x$HAVE_LIBMMX" = "xyes")
-
-AC_CHECK_HEADER(xaudio/decoder.h,[
-  AC_DEFINE(HAVE_XAUDIO) 
-  HAVE_XAUDIO="yes", []
+  AC_DEFINE(HAVE_LIBMMX)
+  HAVE_LIBMMX="yes", []
 ])
-AM_CONDITIONAL(HAVE_XAUDIO, test "x$HAVE_XAUDIO" = "xyes")
+AM_CONDITIONAL(HAVE_LIBMMX, test "x$HAVE_LIBMMX" = "xyes")
 
 AC_CHECK_HEADER(xaudio/decoder.h,[
   AC_DEFINE(HAVE_XAUDIO) 
@@ -109,12 +105,12 @@ dnl check if css.c exists (FIXME)
 if test -f plugins/dvdsrc/css.c
 then
   AC_MSG_RESULT(yes)
-  HAVE_DECSS="yes"
+  HAVE_CSSAUTH="yes"
 else
   AC_MSG_RESULT(no)
-  HAVE_DECSS="no"
+  HAVE_CSSAUTH="no"
 fi
-AM_CONDITIONAL(HAVE_DECSS, test "x$HAVE_DECSS" = "xyes")
+AM_CONDITIONAL(HAVE_CSSAUTH, test "x$HAVE_CSSAUTH" = "xyes")
 
 
 AC_SUBST(CFLAGS)

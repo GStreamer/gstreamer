@@ -8,6 +8,7 @@ config.log
 config.status
 config.sub
 configure
+gstreamer-[0-9]*
 gstreamer-config
 gstreamer.spec
 libtool

@@ -6,6 +6,7 @@
 #undef HAVE_LIBXML
 #undef HAVE_LIBMMX
 #undef HAVE_XAUDIO
+#undef HAVE_CSSAUTH
 
 #undef HAVE_ATOMIC_H
 
