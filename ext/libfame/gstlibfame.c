@@ -612,7 +612,6 @@ GST_PLUGIN_DEFINE (
   plugin_init,
   LIBFAME_VERSION,
   "LGPL",
-  "(c) 2000-2001, Vivien Chappelier",
   "libfame",
   "http://fame.sourceforge.net/"
 )
