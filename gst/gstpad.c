@@ -1378,13 +1378,66 @@ gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
   return ret;
 }
 
+GstPadLinkReturn
+gst_pad_try_set_caps_nonfixed (GstPad *pad, const GstCaps *caps)
+{
+  GstPadLink *link;
+  GstPadLink *oldlink;
+  GstPadLinkReturn ret;
 
+  g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (!GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING),
+      GST_PAD_LINK_REFUSED);
 
+  /* we allow setting caps on non-linked pads.  It's ignored */
+  if (!GST_PAD_PEER (pad)) {
+    return GST_PAD_LINK_OK;
+  }
 
+  /* if the link is already negotiated and the caps are compatible
+   * with what we're setting, it's trivially OK. */
+  if (GST_PAD_CAPS (pad)) {
+    GstCaps *intersection;
+    intersection = gst_caps_intersect (caps, GST_PAD_CAPS (pad));
+    if (!gst_caps_is_empty (intersection)) {
+      gst_caps_free (intersection);
+      return GST_PAD_LINK_OK;
+    }
+    gst_caps_free (intersection);
+  }
 
+  g_return_val_if_fail (GST_PAD_LINK_SRC (pad), GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_PAD_LINK_SINK (pad), GST_PAD_LINK_REFUSED);
 
+  link = gst_pad_link_new ();
 
+  link->srcpad = GST_PAD_LINK_SRC (pad);
+  link->sinkpad = GST_PAD_LINK_SINK (pad);
 
+  if (!gst_pad_link_ready_for_negotiation (link)) {
+    gst_pad_link_free (link);
+    return GST_PAD_LINK_DELAYED;
+  }
+
+  oldlink = GST_REAL_PAD(pad)->link;
+  if (oldlink && oldlink->filtercaps) {
+    link->filtercaps = gst_caps_copy (oldlink->filtercaps);
+  }
+  if (link->srcpad == pad) {
+    link->srccaps = gst_caps_copy(caps);
+    link->sinkcaps = gst_pad_get_caps (link->sinkpad);
+    link->srcnotify = FALSE;
+  } else {
+    link->srccaps = gst_pad_get_caps (link->srcpad);
+    link->sinkcaps = gst_caps_copy(caps);
+    link->sinknotify = FALSE;
+  }
+
+  ret = gst_pad_link_try (link);
+
+  return ret;
+}
 
 /**
  * gst_pad_can_link_filtered:

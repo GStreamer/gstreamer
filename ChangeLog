@@ -1,5 +1,13 @@
 2004-01-26  David Schleef  <ds@schleef.org>
 
+	* gst/gstpad.c: (gst_pad_try_set_caps_nonfixed):
+	* gst/gstpad.h: Add new function to allow element to (somewhat)
+	specify non-fixed caps on a pad.
+	* gst/gstqueue.c: (gst_queue_chain): Remove noisy g_object_notify()
+	that I added a few weeks ago.
+
+2004-01-26  David Schleef  <ds@schleef.org>
+
 	* gst/gstpad.c: (gst_pad_try_set_caps): Revert last change
 	  making try_set_caps() work with non-fixed caps.
 

@@ -510,7 +510,6 @@ restart:
          * to make things read-only. Also keep our list uptodate. */
         queue->cur_level.bytes -= GST_BUFFER_SIZE (data);
         queue->cur_level.buffers --;
-        g_object_notify (G_OBJECT (queue), "current-level-buffers");
         if (GST_BUFFER_DURATION (data) != GST_CLOCK_TIME_NONE)
           queue->cur_level.time -= GST_BUFFER_DURATION (data);
 
@@ -606,7 +605,6 @@ restart:
   /* Note that we only add buffers (not events) to the statistics */
   if (GST_IS_BUFFER (data)) {
     queue->cur_level.buffers++;
-    g_object_notify (G_OBJECT (queue), "current-level-buffers");
     queue->cur_level.bytes += GST_BUFFER_SIZE (data);
     if (GST_BUFFER_DURATION (data) != GST_CLOCK_TIME_NONE)
       queue->cur_level.time += GST_BUFFER_DURATION (data);

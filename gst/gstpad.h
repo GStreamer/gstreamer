@@ -410,6 +410,7 @@ gboolean	        gst_pad_is_negotiated		        (GstPad *pad);
 GstCaps*		gst_pad_get_caps			(GstPad *pad);
 G_CONST_RETURN GstCaps*	gst_pad_get_pad_template_caps		(GstPad *pad);
 GstPadLinkReturn	gst_pad_try_set_caps			(GstPad *pad, const GstCaps *caps);
+GstPadLinkReturn	gst_pad_try_set_caps_nonfixed		(GstPad *pad, const GstCaps *caps);
 gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);
 
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
