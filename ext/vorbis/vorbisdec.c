@@ -113,6 +113,9 @@ gst_vorbisdec_pull (VorbisDec * vorbisdec, ogg_sync_state * oy)
 
     buf = gst_pad_pull (vorbisdec->sinkpad);
 
+    /* this is fatal */
+    g_assert (buf != NULL);
+
     if (GST_IS_EVENT (buf)) {
       switch (GST_EVENT_TYPE (buf)) {
 	case GST_EVENT_FLUSH:
@@ -182,15 +185,16 @@ gst_vorbisdec_loop (GstElement * element)
     bytes = GST_BUFFER_SIZE (buf);
     buffer = ogg_sync_buffer (&oy, bytes);
     memcpy (buffer, GST_BUFFER_DATA (buf), bytes);
+    gst_buffer_unref (buf);
 
     ogg_sync_wrote (&oy, bytes);
 
     /* Get the first page. */
     if (ogg_sync_pageout (&oy, &og) != 1) {
       /* error case.  Must not be Vorbis data */
-      g_warning ("Input does not appear to be an Ogg bitstream.\n");
+      gst_element_error (element, "input does not appear to be an Ogg bitstream.");
+      return;
     }
-    gst_buffer_unref (buf);
 
     /* Get the serial number and set up the rest of decode. */
     /* serialno first; use it to set up a logical stream */
@@ -209,16 +213,19 @@ gst_vorbisdec_loop (GstElement * element)
     if (ogg_stream_pagein (&os, &og) < 0) {
       /* error; stream version mismatch perhaps */
       g_warning ("Error reading first page of Ogg bitstream data.\n");
+      return;
     }
 
     if (ogg_stream_packetout (&os, &op) != 1) {
       /* no page? must not be vorbis */
       g_warning ("Error reading initial header packet.\n");
+      return;
     }
 
     if (vorbis_synthesis_headerin (&vi, &vc, &op) < 0) {
       /* error case; not a vorbis header */
-      g_warning ("This Ogg bitstream does not contain Vorbis " "audio data.\n");
+      g_warning ("This Ogg bitstream does not contain Vorbis audio data.\n");
+      return;
     }
 
     /* At this point, we're sure we're Vorbis.  We've set up the logical
