@@ -31,7 +31,7 @@ sub check_carriage_returns();
 sub check_printf_lld();
 sub check_glibisms();
 sub check_indentation();
-sub check_gst_props_set();
+sub check_no_ignore();
 sub check_deprecated();
 sub check_config_h();
 sub check_varargs_functions();
@@ -63,7 +63,7 @@ foreach $filename (<FIND>) {
 	# important stuff
 	check_bad_includes();
 	check_printf_lld();
-	check_gst_props_set();
+	check_no_ignore();
 	check_deprecated();
 	check_config_h();
 	check_old_typefind();
@@ -263,13 +263,18 @@ sub check_indentation()
 
 
 #
-# gst_props_set() returns a value that should never be ignored
-# may have false positives
+# Check (roughly) for functions whose value should not be ignored
 #
-sub check_gst_props_set()
+sub check_no_ignore()
 {
-	if (grep { /^\s+gst_props_set\s*\(/; } @lines) {
-		print "E: return value of gst_props_set() possibly ignored\n";
+	if (grep { /^\s+gst_buffer_merge\s*\(/; } @lines) {
+		print "E: return value of gst_buffer_merge () possibly ignored\n";
+	}
+	if (grep { /^\s+malloc\s*\(/; } @lines) {
+		print "E: return value of malloc() possibly ignored\n";
+	}
+	if (grep { /^\s+gst_buffer_new\s*\(/; } @lines) {
+		print "E: return value of gst_buffer_new() possibly ignored\n";
 	}
 }
 
