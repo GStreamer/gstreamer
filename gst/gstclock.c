@@ -34,7 +34,7 @@
 static GstAllocTrace *_gst_clock_entry_trace;
 #endif
 
-#define DEFAULT_EVENT_DIFF	(GST_SECOND / 10)
+#define DEFAULT_EVENT_DIFF	(GST_SECOND)
 #define DEFAULT_MAX_DIFF	(2 * GST_SECOND)
 
 enum {
@@ -386,10 +386,10 @@ gst_clock_class_init (GstClockClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_DIFF,
     g_param_spec_int64 ("max-diff", "Max diff", "The maximum amount of time to wait in nanoseconds",
                         0, G_MAXINT64, DEFAULT_MAX_DIFF, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_DIFF,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EVENT_DIFF,
     g_param_spec_uint64 ("event-diff", "event diff", 
 	"The amount of time that may elapse until 2 events are treated as happening at different times",
-                        0, G_MAXUINT64, DEFAULT_EVENT_DIFF, G_PARAM_READWRITE));
+                        0, G_MAXUINT64, DEFAULT_EVENT_DIFF, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -702,7 +702,7 @@ gst_clock_set_property (GObject *object, guint prop_id,
       break;
     case ARG_EVENT_DIFF:
       clock->max_event_diff = g_value_get_uint64 (value);
-      g_object_notify (object, "max-event-diff");
+      g_object_notify (object, "event-diff");
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

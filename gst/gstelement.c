@@ -878,6 +878,8 @@ gst_element_wait (GstElement *element, GstClockTime timestamp)
 void
 gst_element_set_time (GstElement *element, GstClockTime time)
 {
+  GstClockTime event_time;
+  
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (GST_IS_CLOCK (element->clock));
   g_return_if_fail (element->current_state >= GST_STATE_PAUSED);
@@ -887,7 +889,9 @@ gst_element_set_time (GstElement *element, GstClockTime time)
       element->base_time = time;
       break;
     case GST_STATE_PLAYING:
-      element->base_time = gst_clock_get_time (element->clock) - time;
+      event_time = gst_clock_get_event_time (element->clock);
+      GST_LOG_OBJECT (element, "clock time %llu: setting element time to %llu", event_time, time);
+      element->base_time = event_time - time;
       break;
     default:
       g_assert_not_reached ();

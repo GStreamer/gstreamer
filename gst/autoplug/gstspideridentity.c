@@ -467,9 +467,9 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   g_return_if_fail (GST_IS_SPIDER_IDENTITY (ident));
 
   data = gst_pad_pull (ident->sink);
-  while (!GST_IS_BUFFER (data)) {
+  if (!GST_IS_BUFFER (data)) {
     gst_spider_identity_chain (ident->sink, GST_BUFFER (data));
-    data = gst_pad_pull (ident->sink);
+    return;
   }
   
   find.buffer = GST_BUFFER (data);

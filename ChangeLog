@@ -1,3 +1,14 @@
+2004-01-15  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/autoplug/gstspideridentity.c:
+	(gst_spider_identity_sink_loop_type_finding):
+	  break infinite loop by just returning instead of looping
+	* gst/gstclock.c: (gst_clock_class_init), (gst_clock_set_property):
+	  set event time difference correctly. Set it to 1 second instead
+	  of 100ms to be more tolerant
+	* gst/gstelement.c: (gst_element_set_time):
+	  add debugging output
+
 2004-01-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstqueue.c: (gst_queue_getcaps), (gst_queue_link):
