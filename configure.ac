@@ -72,44 +72,32 @@ dnl # Super Duper options for plugin building #
 dnl ###########################################
 
 dnl experimental plugins; stuff that hasn't had the dust settle yet
-AC_ARG_ENABLE(experimental,
-[  --enable-experimental          enable building of experimental plugins],
-[case "${enableval}" in
-  yes) EXPERIMENTAL="yes" ;;
-  no) EXPERIMENTAL="no" ;;
-esac], 
-[EXPERIMENTAL=no]) dnl Default value
 
-if test "x$EXPERIMENTAL" = "$xyes"; then
+GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
+[HAVE_EXPERIMENTAL=yes],disabled,
+[
   AC_MSG_WARN(building experimental plugins)
   USE_LIBMIKMOD="yes"
-else
-  AC_MSG_NOTICE(not building experimental plugins)
-  USE_LIBMIKMOD="no"
-fi
-
-dnl broken plugins; stuff that doesn't seem to build at the moment
-AC_ARG_ENABLE(broken,
-[  --enable-broken          enable building of broken plugins],
-[case "${enableval}" in
-  yes) BROKEN="yes" ;;
-  no) BROKEN="no" ;;
-esac], 
-[BROKEN=no]) dnl Default value
-
-if test "x$broken-plugins" = "$xyes"; then
-  AC_MSG_WARN(building broken plugins)
   USE_ARTS="yes"
   USE_ARTSC="yes"
-  USE_VGA="yes"
-else
-  AC_MSG_NOTICE(not building broken plugins)
+],[
+  AC_MSG_NOTICE(not building experimental plugins)
+  USE_LIBMIKMOD="no"
   USE_ARTS="no"
   USE_ARTSC="no"
+])
+
+dnl broken plugins; stuff that doesn't seem to build at the moment
+GST_CHECK_FEATURE(BROKEN, [enable building of broken plugins],,
+HAVE_BROKEN=yes,disabled,
+[  
+  AC_MSG_WARN(building broken plugins)
+  USE_VGA="yes"
+  dnl AC_MSG_NOTICE(actually there are no broken plugins at the moment)
+],[
   USE_VGA="no"
-fi
-
-
+  AC_MSG_NOTICE(not building broken plugins)
+])
 
 dnl ##############################
 dnl # Do automated configuration #
@@ -350,62 +338,6 @@ AC_SUBST(LIBXML_PKG)
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
 
-dnl ==========================================================================
-dnl ========================= Macro definitions ==============================
-dnl ==========================================================================
-
-dnl These macros should be moved out to separate files (acinclude.m4?), but
-dnl can't currently be because of the SUBSTFOR magic.
-
-dnl Perform a check for existence of ARTS
-dnl Richard Boulton <richard-alsa@tartarus.org>
-dnl Last modification: 26/06/2001
-dnl GST_CHECK_FEATURE(FEATURE-NAME, FEATURE-DESCRIPTION,
-dnl                   DEPENDENT-PLUGINS, TEST-FOR-FEATURE)
-dnl
-dnl This check was written for GStreamer: it should be renamed and checked
-dnl for portability if you decide to use it elsewhere.
-dnl
-AC_DEFUN(GST_CHECK_ARTS,
-[
-dnl Set the flags
-ARTS_LIBS="-L/usr/local/lib -L/usr/lib -lmcop -lartsflow -lartsflow_idl"
-ARTS_CFLAGS="-I/usr/local/include/arts -I/usr/include/kde/arts -I/usr/include/arts"
-ARTS_MCOPFLAGS=$ARTS_CFLAGS
-dnl There's no arts-config script, so we make a guess based on the artsc-config
-AC_PATH_PROG(ARTSC_CONFIG, artsc-config, no)
-if test x$ARTSC_CONFIG = xyes; then
-  ARTS_ARTSC_CFLAGS=`artsc-config --cflags | sed 's/artsc/arts/g'`
-  ARTS_CFLAGS="$ARTS_CFLAGS $ARTS_ARTSC_CFLAGS"
-  ARTS_MCOPFLAGS="$ARTS_MCOPFLAGS $ARTS_ARTSC_CFLAGS"
-fi
-AC_SUBST(ARTS_LIBS)
-AC_SUBST(ARTS_CFLAGS)
-AC_SUBST(ARTS_MCOPFLAGS)
-
-dnl Now check if it exists
-AC_LANG_PUSH(C++)
-HAVE_ARTS=yes
-dnl FIXME: Can't get this test to pass, so commented it out.  Rely on header check.
-dnl AC_CHECK_LIB(artsflow, convert_stereo_2float_i16le, :, HAVE_ARTS=no, $LIBS)
-
-dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
-dnl FIXME: ensure only suitable flags result from artsc-config --cflags
-AC_CHECK_HEADER(artsflow.h, :, HAVE_ARTS=no)
-
-AC_LANG_POP(C++)
-dnl Check for the idl generator
-AC_CHECK_PROG(HAVE_MCOPIDL, mcopidl, yes, no)
-if test x$HAVE_MCOPIDL = xno; then
-  HAVE_ARTS=no
-fi
-])
-
-dnl ==========================================================================
-dnl ========================= End macro definitions ==========================
-dnl ==========================================================================
-
-
 dnl Check for X11 extensions
 AC_PATH_XTRA
 if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
@@ -467,7 +399,7 @@ AC_MSG_NOTICE(Checking for plugin libraries)
 dnl *** a52dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_A52DEC, true)
 GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
-GST_CHECK_LIBHEADER(A52DEC, a52, a52_init, -lm, a52dec/a52.h, A52DEC_LIBS="-la52")
+  GST_CHECK_LIBHEADER(A52DEC, a52, a52_init, -lm, a52dec/a52.h, A52DEC_LIBS="-la52")
 ])
 
 dnl *** aalib ***
@@ -479,33 +411,37 @@ GST_CHECK_FEATURE(AALIB, [aasink plugin], aasink, [
 dnl *** alsa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
 GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
-AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
+  AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
 ])
 
 dnl *** arts ***
-dnl translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
-dnl GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
+translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
+GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [
+  AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
+])
 
 dnl *** artsc ***
-dnl translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
-dnl GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [GST_CHECK_ARTSC()])
+translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
+GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [
+  GST_CHECK_ARTSC()
+])
 
 dnl *** audiofile ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBAUDIOFILE, true)
 GST_CHECK_FEATURE(LIBAUDIOFILE, [audiofile], afsink afsrc, [
-translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_LIBS)
-translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_CFLAGS)
-GST_CHECK_CONFIGPROG(LIBAUDIOFILE, audiofile-config)
+  translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_LIBS)
+  translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_CFLAGS)
+  GST_CHECK_CONFIGPROG(LIBAUDIOFILE, audiofile-config)
 ])
 
 dnl *** avifile ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro
 translit(dnm, m, l) AM_CONDITIONAL(USE_AVIFILE, true)
-GST_CHECK_FEATURE(AVIFILE, [avifile], windec winenc, [
-translit(dnm, m, l) AC_SUBST(AVIFILE_LIBS)
-translit(dnm, m, l) AC_SUBST(AVIFILE_CFLAGS)
-GST_CHECK_CONFIGPROG(AVIFILE, avifile-config)
+  GST_CHECK_FEATURE(AVIFILE, [avifile], windec winenc, [
+  translit(dnm, m, l) AC_SUBST(AVIFILE_LIBS)
+  translit(dnm, m, l) AC_SUBST(AVIFILE_CFLAGS)
+  GST_CHECK_CONFIGPROG(AVIFILE, avifile-config)
 ])
 
 dnl *** CDParanoia ***
@@ -537,7 +473,6 @@ GST_CHECK_FEATURE(FLACLIB, [FLAC lossless audio], flacenc flacdec, [
   GST_CHECK_LIBHEADER(FLACLIB, FLAC, main, -lm, FLAC/all.h, LIBFLAC_LIBS="-lFLAC")
 ])
 
-dnl 
 dnl *** Gnome VFS ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro with gnome-config vfs
 translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)
