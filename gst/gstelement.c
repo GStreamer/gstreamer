@@ -2350,6 +2350,29 @@ gst_element_convert (GstElement *element,
 }
 
 /**
+ * gst_element_error_printf:
+ * @format: the printf-like format to use, or NULL
+ *
+ * This function is only used internally by the #gst_element_error macro.
+ *
+ * Returns: a newly allocated string, or NULL if the format was NULL or ""
+ */
+gchar *
+gst_element_error_printf (const gchar *format, ...)
+{
+  va_list args;
+  gchar *buffer;
+
+  if (format == NULL) return NULL;
+  if (format[0] == 0) return NULL;
+
+  va_start (args, format);
+  buffer = g_strdup_vprintf (format, args);
+  va_end (args);
+  return buffer;
+}
+
+/**
  * gst_element_error_extended:
  * @element: a #GstElement with the error.
  * @domain: the GStreamer error domain this error belongs to.
@@ -2361,7 +2384,7 @@ gst_element_convert (GstElement *element,
  *
  * signals an error condition on an element.
  * This function is used internally by elements.
- * It results in the "error_2" signal.
+ * It results in the "error" signal.
  */
 void
 gst_element_error_extended
@@ -2378,13 +2401,20 @@ gst_element_error_extended
   /* check if we send the given message or the default error message */
   if ((message == NULL) || (message[0] == 0))
   {
-    /* we got this message from g_strdup_printf (NULL); */
+    /* we got this message from g_strdup_printf (""); */
     g_free (message);
     sent_message = gst_error_get_message (domain, code);
   }
   else
     sent_message = message;
 
+  if ((debug == NULL) || (debug[0] == 0))
+  {
+    /* we got this debug from g_strdup_printf (""); */
+    g_free (debug);
+    debug = NULL;
+  }
+ 
   /* create error message */
   GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "signaling error in %s: %s",
                 GST_ELEMENT_NAME (element),

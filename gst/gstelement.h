@@ -142,8 +142,8 @@ typedef enum {
 #define gst_element_error(el, domain, code, message, debug) G_STMT_START { \
   gst_element_error_extended (GST_ELEMENT(el), \
   GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code, \
-  g_strdup_printf message, \
-  g_strdup_printf debug, \
+  gst_element_error_printf message, \
+  gst_element_error_printf debug, \
   __FILE__, GST_FUNCTION, __LINE__); } G_STMT_END
 
 typedef struct _GstElementFactory GstElementFactory;
@@ -365,6 +365,7 @@ void			gst_element_found_tags_for_pad	(GstElement *element, GstPad *pad, GstCloc
 
 void			gst_element_set_eos		(GstElement *element);
 
+gchar *			gst_element_error_printf 	(const gchar *format, ...);
 void			gst_element_error_extended	(GstElement *element, GQuark domain, gint code, gchar *message, gchar *debug, const gchar *file, const gchar *function, gint line);
 
 gboolean		gst_element_is_locked_state	(GstElement *element);
