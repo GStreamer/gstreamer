@@ -1159,6 +1159,8 @@ pkgconfig/gstreamer-libs.pc
 pkgconfig/gstreamer-libs-uninstalled.pc
 pkgconfig/gstreamer-play.pc
 pkgconfig/gstreamer-play-uninstalled.pc
+pkgconfig/gstreamer-interfaces.pc
+pkgconfig/gstreamer-interfaces-uninstalled.pc
 gst-libs/gst/gconf/gstreamer-gconf.pc
 gst-libs/gst/gconf/gstreamer-gconf-uninstalled.pc
 gst-plugins.spec
@@ -1296,6 +1298,7 @@ gst-libs/gst/media-info/Makefile
 gst-libs/gst/mixer/Makefile
 gst-libs/gst/navigation/Makefile
 gst-libs/gst/play/Makefile
+gst-libs/gst/propertyprobe/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/tuner/Makefile

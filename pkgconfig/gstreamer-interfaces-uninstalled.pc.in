@@ -1,0 +1,13 @@
+# the standard variables don't make sense for an uninstalled copy
+prefix=
+exec_prefix=
+libdir=${pcfiledir}
+includedir=${pcfiledir}
+
+Name: GStreamer Interfaces library, uninstalled
+Description: Streaming-media framework, interfaces library, not installed
+Requires: gstreamer >= @VERSION@
+Version: @VERSION@
+
+Libs: ${pcfiledir}/../gst-libs/gst/libgst-interfaces-@GST_MAJORMINOR@.la
+Cflags: -I${pcfiledir}/../gst-libs
