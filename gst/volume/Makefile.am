@@ -8,3 +8,10 @@ libgstvolume_la_LIBADD = $(GST_LIBS) $(GST_CONTROL_LIBS) \
 libgstvolume_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstvolume.h filter.func
+
+if HAVE_GTK
+noinst_PROGRAMS = demo
+demo_SOURCES = demo.c
+demo_CFLAGS = $(GTK_CFLAGS) $(GST_CFLAGS) -D_GNU_SOURCE
+demo_LDFLAGS = $(GTK_LIBS) $(GST_LIBS) -lm
+endif
