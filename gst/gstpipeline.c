@@ -109,7 +109,8 @@ gst_pipeline_init (GstPipeline *pipeline)
   if (scheduler == NULL)
   {
     g_error ("Critical error: could not get a scheduler - \
-	      are you sure you have a registry ?");
+	      are you sure you have a registry ? Run gst-register as root \
+	      if you haven't done so yet.");
   }
 	  
   gst_scheduler_setup (scheduler);
