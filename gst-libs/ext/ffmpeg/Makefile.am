@@ -7,16 +7,18 @@ else
 FFMPEG_DIR=
 endif
 
-# patch it up
-all-am: Makefile patches
+# patch it up before descending into dirs
+all-recursive: patches
 
 # ignore failures on patching
 # ignore failures on rm
 PATCHES = patch/function.patch
 
 patches:
+	@echo -n Patching ffmpeg if necessary ...
 	@patch -p0 -N -r rejects < patch/function.patch > /dev/null || true
 	@rm -f rejects || true
+	@echo done.
 
 
 SUBDIRS = $(FFMPEG_DIR)
