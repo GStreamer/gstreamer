@@ -50,9 +50,6 @@ AM_DISABLE_STATIC
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 
-dnl ALL_LINGUAS=""
-dnl AM_GNU_GETTEXT
-
 CFLAGS=""
 
 dnl ##############################
@@ -659,8 +656,6 @@ dnl # Make the output files #
 dnl #########################
 
 AC_OUTPUT([Makefile
-intl/Makefile
-po/Makefile.in
 include/Makefile
 include/wine/Makefile
 gst/Makefile
