@@ -350,6 +350,9 @@ GST_INT_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir)/include"
 AC_SUBST(GST_CFLAGS, "$LIBGST_CFLAGS $GST_INT_CFLAGS")
 AC_SUBST(GST_LIBS, "$LIBGST_LIBS $GST_INT_LIBS")
 
+GST_PLUGIN_LDFLAGS='-module -avoid-version'
+AC_SUBST(GST_PLUGIN_LDFLAGS)
+
 AC_CONFIG_SUBDIRS(libs/ext/cothreads)
 
 dnl ##################################################
