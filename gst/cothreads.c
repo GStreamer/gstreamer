@@ -159,7 +159,7 @@ cothread_setfunc (cothread_state *thread,
  *
  * Returns: the #cothread_state of the main (0th) thread
  */
-static cothread_state*
+cothread_state*
 cothread_main(cothread_context *ctx) 
 {
   GST_DEBUG (0,"returning %p, the 0th cothread\n",ctx->threads[0]);

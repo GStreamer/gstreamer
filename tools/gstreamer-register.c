@@ -38,6 +38,7 @@
 #define GLOBAL_REGISTRY_FILE_TMP GLOBAL_REGISTRY_DIR"/.reg.xml.tmp"
 
 extern gboolean _gst_plugin_spew;
+extern gboolean _gst_warn_old_registry;
 
 static void error_perm() {
     g_print("\n(%s)\n"
@@ -103,6 +104,7 @@ int main(int argc,char *argv[])
 
     // Init gst
     _gst_plugin_spew = TRUE;
+    _gst_warn_old_registry = FALSE;
     gst_init(&argc,&argv);
 
     // Check args

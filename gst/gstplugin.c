@@ -47,6 +47,10 @@ gint _gst_libraries_seqno;
 /* whether or not to spew library load issues */
 gboolean _gst_plugin_spew = FALSE;
 
+/* whether or not to warn if registry needs rebuild (gstreamer-register sets
+ * this to false.) */
+gboolean _gst_warn_old_registry = TRUE;
+
 static gboolean plugin_times_older_than(time_t regtime);
 static time_t get_time(const char * path);
 
@@ -85,7 +89,8 @@ _gst_plugin_initialize (void)
 
   if (!doc || strcmp (doc->root->name, "GST-PluginRegistry") ||
       !plugin_times_older_than(get_time(GST_CONFIG_DIR"/reg.xml"))) {
-    g_warning ("gstplugin: registry needs rebuild\n");
+    if (_gst_warn_old_registry)
+	g_warning ("gstplugin: registry needs rebuild\n");
     gst_plugin_load_all ();
     return;
   }
