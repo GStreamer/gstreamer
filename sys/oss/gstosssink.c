@@ -813,11 +813,12 @@ gst_osssink_open_audio (GstOssSink *sink)
   sink->fd = open (sink->device, O_WRONLY | O_NONBLOCK);
   if (errno == EBUSY) {
     g_warning ("osssink: unable to open the sound device (in use ?)\n");
-    return FALSE;
   }
 
+  if (sink->fd >= 0)
+    close (sink->fd);
+  
   /* re-open the sound device in blocking mode */
-  close (sink->fd);
   sink->fd = open (sink->device, O_WRONLY);
 
   if (sink->fd < 0) {
