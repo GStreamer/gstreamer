@@ -23,7 +23,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtp_gsmparse_details = {
   "RTP packet parser",
-  "RtpGSMParse",
+  "Codec/Network",
   "GPL",
   "Extracts GSM audio from RTP packets",
   VERSION,

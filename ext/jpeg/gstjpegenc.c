@@ -28,7 +28,7 @@
 /* elementfactory information */
 GstElementDetails gst_jpegenc_details = {
   "jpeg image encoder",
-  "Codec/Image/Encoder",
+  "Codec/Image",
   "LGPL",
   ".jpeg",
   VERSION,

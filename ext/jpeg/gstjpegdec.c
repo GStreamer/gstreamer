@@ -31,7 +31,7 @@ extern GstPadTemplate *jpegdec_src_template, *jpegdec_sink_template;
 /* elementfactory information */
 GstElementDetails gst_jpegdec_details = {
   "jpeg image decoder",
-  "Codec/Image/Decoder",
+  "Codec/Image",
   "LGPL",
   ".jpeg",
   VERSION,

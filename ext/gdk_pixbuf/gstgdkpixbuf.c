@@ -31,7 +31,7 @@
 
 static GstElementDetails plugin_details = {
   "GdkPixbuf image decoder",
-  "Codec/Image/Decoder",
+  "Codec/Image",
   "LGPL",
   "Decodes images in a video stream using GdkPixbuf",
   VERSION,

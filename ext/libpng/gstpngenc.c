@@ -28,7 +28,7 @@
 
 GstElementDetails gst_pngenc_details = {
   "PNG encoder",
-  "Codec/Image/Encoder",
+  "Codec/Image",
   "LGPL",
   "Encode a video frame to a .png image",
   VERSION,
