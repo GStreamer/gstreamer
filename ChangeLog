@@ -1,5 +1,14 @@
 2004-11-26  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),
+	(probe_triggered), (check_queue), (buffer_underrun),
+	(buffer_running), (buffer_overrun), (gen_source_element),
+	(setup_source):
+	* gst/playback/gstplaybasebin.h:
+	  Implement buffering. Needs some more work.
+
+2004-11-26  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/theora/theoradec.c: (theora_dec_chain):
 	  Fix ilog mask range overflow.
 
