@@ -16,7 +16,7 @@ libgsteditor_la_SOURCES =	\
 	gstelementselect.c	\
 	gsteditorcreate.c
 
-libgsteditor_la_CFLAGS = -DDATADIR="\"$(gladedir)/\"" $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS)
+libgsteditor_la_CFLAGS = -DDATADIR="\"$(gladedir)/\"" $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS) $(GST_CFLAGS)
 libgsteditor_la_LDFLAGS = $(GNOME_LIBS) $(LIBGLADE_GNOME_LIBS)
 
 libgsteditorincludedir = $(includedir)/gst
