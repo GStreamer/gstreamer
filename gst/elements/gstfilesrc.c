@@ -439,13 +439,18 @@ gst_filesrc_get (GstPad *pad)
   /* check for seek */
   if (src->seek_happened) {
     src->seek_happened = FALSE;
-    return GST_BUFFER (gst_event_new(GST_EVENT_DISCONTINUOUS));
+    return GST_BUFFER (gst_event_new (GST_EVENT_DISCONTINUOUS));
+  }
+  /* check for flush */
+  if (src->need_flush) {
+    src->need_flush = FALSE;
+    return GST_BUFFER (gst_event_new_flush ());
   }
 
   /* check for EOF */
   if (src->curoffset == src->filelen) {
     gst_element_set_eos (GST_ELEMENT (src));
-    return GST_BUFFER (gst_event_new(GST_EVENT_EOS));
+    return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
   }
 
   /* calculate end pointers so we don't have to do so repeatedly later */
@@ -650,8 +655,13 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
 	  break;
       }
       src->seek_happened = TRUE;
+      src->need_flush = GST_EVENT_SEEK_FLUSH(event);
       gst_event_free (event);
       /* push a discontinuous event? */
+      break;
+    case GST_EVENT_FLUSH:
+      src->need_flush = TRUE;
+      break;
     default:
       return FALSE;
       break;

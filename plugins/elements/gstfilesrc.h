@@ -74,6 +74,7 @@ struct _GstFileSrc {
   GMutex *map_regions_lock;
 
   gboolean seek_happened;
+  gboolean need_flush;
 };
 
 struct _GstFileSrcClass {
