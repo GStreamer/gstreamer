@@ -271,6 +271,54 @@ gst_switch_loop (GstElement *element)
   }
 }
 
+static GstElementStateReturn
+gst_switch_change_state (GstElement *element)
+{
+  GstSwitch *gstswitch;
+
+  gstswitch = GST_SWITCH (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      {
+        GList *sinkpads = NULL;
+        
+        sinkpads = gstswitch->sinkpads;
+        
+        while (sinkpads) {
+          GstSwitchPad *switchpad = sinkpads->data;
+          
+          /* If a data is still stored in our structure we unref it */
+          if (switchpad->data) {
+            gst_data_unref (switchpad->data);
+            switchpad->data = NULL;
+          }
+          
+          switchpad->forwarded = FALSE;
+          switchpad->eos = FALSE;
+          
+          sinkpads = g_list_next (sinkpads);
+        }
+      }
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  else 
+    return GST_STATE_SUCCESS;
+}
+
 /* =========================================== */
 /*                                             */
 /*                 Properties                  */
@@ -416,8 +464,8 @@ gst_switch_class_init (GstSwitchClass *klass)
   gobject_class->dispose = gst_switch_dispose;
   gobject_class->set_property = gst_switch_set_property;
   gobject_class->get_property = gst_switch_get_property;
-  /* FIXME: implement change state to unref all data from our sinkpad list on 
-     READY */
+  
+  gstelement_class->change_state = gst_switch_change_state;
   gstelement_class->request_new_pad = gst_switch_request_new_pad;
   gstelement_class->release_pad = gst_switch_release_pad;
 }
