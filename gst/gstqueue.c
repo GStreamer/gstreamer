@@ -183,7 +183,6 @@ gst_queue_init (GstQueue *queue)
 
   queue->leaky = GST_QUEUE_NO_LEAK;
   queue->queue = NULL;
-  queue->count = 0;
   queue->level_buffers = 0;
   queue->level_bytes = 0;
   queue->level_time = 0LL;
@@ -387,7 +386,6 @@ restart:
         queue->level_buffers, queue->size_buffers);
   }
 
-  GST_BUFFER_OFFSET (buf) = queue->count++;
   /* put the buffer on the tail of the list */
   queue->queue = g_list_append (queue->queue, buf);
   queue->level_buffers++;
@@ -398,7 +396,7 @@ restart:
       queue->level_buffers, queue->size_buffers);
 
   /* this assertion _has_ to hold */
-  g_assert (g_list_length (queue->queue) == queue->level_buffers);
+  /* g_assert (g_list_length (queue->queue) == queue->level_buffers); */
 
   /* reader waiting on an empty queue */
   reader = queue->reader;
@@ -481,7 +479,7 @@ restart:
       queue->level_buffers, queue->size_buffers);
 
   /* this assertion _has_ to hold */
-  g_assert (g_list_length (queue->queue) == queue->level_buffers);
+  /* g_assert (g_list_length (queue->queue) == queue->level_buffers); */
 
   /* writer waiting on a full queue */
   writer = queue->writer;

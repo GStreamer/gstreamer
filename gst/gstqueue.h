@@ -64,7 +64,6 @@ struct _GstQueue {
 
   /* the queue of buffers we're keeping our grubby hands on */
   GList *queue;
-  gint count;
 
   guint level_buffers;	/* number of buffers queued here */
   guint level_bytes;	/* number of bytes queued here */
