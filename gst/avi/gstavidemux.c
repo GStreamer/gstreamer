@@ -1929,6 +1929,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
+  if (!gst_library_load ("gstriff"))
+    return FALSE;
 
   /* create an elementfactory for the avi_demux element */
   factory = gst_element_factory_new ("avidemux", GST_TYPE_AVI_DEMUX,
