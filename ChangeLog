@@ -1,3 +1,10 @@
+2005-02-23  Andy Wingo  <wingo@pobox.com>
+
+	* check/Makefile.am (TESTS): Add pipelines/simple_launch_lines.
+
+	* check/pipelines/simple_launch_lines.c: New test suite for simple
+	gst-launch lines. Just a beginning right now.
+
 2005-02-23  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:

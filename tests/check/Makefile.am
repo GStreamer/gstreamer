@@ -27,7 +27,8 @@ TESTS = \
 	gst/gstdata	\
 	gst/gstobject	\
 	gst/gstpad	\
-	gst-libs/gdp
+	gst-libs/gdp	\
+	pipelines/simple_launch_lines
 
 check_PROGRAMS = $(TESTS)
 
