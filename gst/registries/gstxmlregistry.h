@@ -100,7 +100,7 @@ struct _GstXMLRegistry {
   gchar			*name_template;
   GstPadDirection	 direction;
   GstPadPresence	 presence;
-  GstCaps2		*caps;
+  GstCaps		*caps;
 
   gchar			*caps_name;
   gchar			*structure_name;

@@ -1,55 +1,55 @@
 #include <gst/gst.h>
 #include <string.h>
 
-GstStaticCaps2 caps1 = GST_STATIC_CAPS (
+GstStaticCaps caps1 = GST_STATIC_CAPS (
   "video/mpeg, "
     "mpegtype=(int){1,2}"
 );
 
-GstStaticCaps2 caps2 = GST_STATIC_CAPS (
+GstStaticCaps caps2 = GST_STATIC_CAPS (
   "video/mpeg, "
     "mpegtype=(int){1}"
 );
 
-GstStaticCaps2 caps3 = GST_STATIC_CAPS (
+GstStaticCaps caps3 = GST_STATIC_CAPS (
   "video/raw, "
     "fourcc=(fourcc){\"YV12\",\"YUY2\"}, "
     "width=(int)[16,4096], "
     "height=(int)[16,4096]"
 );
 
-GstStaticCaps2 caps4 = GST_STATIC_CAPS (
+GstStaticCaps caps4 = GST_STATIC_CAPS (
   "video/raw, "
     "fourcc=(fourcc)\"YV12\", "
     "height=(int)[16,256]"
 );
 
-GstStaticCaps2 caps5 = GST_STATIC_CAPS (
+GstStaticCaps caps5 = GST_STATIC_CAPS (
   "video/raw, "
     "fourcc=(fourcc){\"YV12\",\"YUY2\"}, "
     "height=(int)[16,4096]"
 );
 
-GstStaticCaps2 caps6 = GST_STATIC_CAPS (
+GstStaticCaps caps6 = GST_STATIC_CAPS (
   "video/raw, "
     "fourcc=(fourcc){\"YV12\",\"YUYV\"}, "
     "height=(int)[16,4096]"
 );
 
-GstStaticCaps2 caps7 = GST_STATIC_CAPS (
+GstStaticCaps caps7 = GST_STATIC_CAPS (
   "video/raw, "
     "fourcc=(fourcc){\"YVYV\",\"YUY2\"}, "
     "height=(int)[16,4096]"
 );
 
-GstStaticCaps2 caps8 = GST_STATIC_CAPS (
+GstStaticCaps caps8 = GST_STATIC_CAPS (
   "video/raw, "
     "format=(fourcc)\"I420\"; "
   "video/raw, "
     "format=(fourcc)\"YUYV\""
 );
 
-GstStaticCaps2 caps9 = GST_STATIC_CAPS (
+GstStaticCaps caps9 = GST_STATIC_CAPS (
   "video/raw, "
     "format=(fourcc)\"I420\"; "
   "video/raw, "
@@ -70,19 +70,19 @@ static gint failures = 0;
   } \
 }G_STMT_END
 static void
-test_caps_func (const GstCaps2 *caps)
+test_caps_func (const GstCaps *caps)
 {
   gchar *str1, *str2;  
   gboolean ret = FALSE;
 
-  str1 = gst_caps2_to_string (caps);
-  caps = gst_caps2_from_string (str1);
+  str1 = gst_caps_to_string (caps);
+  caps = gst_caps_from_string (str1);
   if (!caps) {
     g_print ("%3d, INFO     : no caps from  %s\n", test, str1);
     TEST_END (ret);
     return;
   }
-  str2 = gst_caps2_to_string (caps);
+  str2 = gst_caps_to_string (caps);
   g_print ("%3d, INFO     : %s <==> %s\n", test, str1, str2);
   ret = strcmp (str1, str2) == 0;
   g_free (str1);
@@ -90,7 +90,7 @@ test_caps_func (const GstCaps2 *caps)
   TEST_END (ret);
 }
 static void
-test_caps (const GstCaps2 *caps)
+test_caps (const GstCaps *caps)
 {
   TEST_START;
   test_caps_func (caps);
@@ -98,11 +98,11 @@ test_caps (const GstCaps2 *caps)
 static void
 test_string (gchar *str)
 {
-  GstCaps2 *caps;
+  GstCaps *caps;
 
   TEST_START;
   g_print ("%3d, INFO     : checking  %s\n", test, str);
-  caps = gst_caps2_from_string (str);
+  caps = gst_caps_from_string (str);
   if (!caps) {
     g_print ("%3d, INFO     : no caps from  %s\n", test, str);
     TEST_FAIL;
@@ -113,11 +113,11 @@ test_string (gchar *str)
 static void
 test_string_fail (gchar *str)
 {
-  GstCaps2 *caps;
+  GstCaps *caps;
 
   TEST_START;
   g_print ("%3d, INFO     : checking  %s  for failure\n", test, str);
-  caps = gst_caps2_from_string (str);
+  caps = gst_caps_from_string (str);
 g_print("got %p\n", caps);
   TEST_END (caps == NULL);
 }
@@ -128,18 +128,18 @@ main (int argc, char *argv[])
 goto bla;
 bla:
   /* stupidity tests */
-  test_caps (gst_caps2_new_simple ("audio/raw", NULL));
+  test_caps (gst_caps_new_simple ("audio/raw", NULL));
 
   /* all sorts of caps */
-  test_caps (gst_static_caps2_get (&caps1));
-  test_caps (gst_static_caps2_get (&caps2));
-  test_caps (gst_static_caps2_get (&caps3));
-  test_caps (gst_static_caps2_get (&caps4));
-  test_caps (gst_static_caps2_get (&caps5));
-  test_caps (gst_static_caps2_get (&caps6));
-  test_caps (gst_static_caps2_get (&caps7));
-  test_caps (gst_static_caps2_get (&caps8));
-  test_caps (gst_static_caps2_get (&caps9));
+  test_caps (gst_static_caps_get (&caps1));
+  test_caps (gst_static_caps_get (&caps2));
+  test_caps (gst_static_caps_get (&caps3));
+  test_caps (gst_static_caps_get (&caps4));
+  test_caps (gst_static_caps_get (&caps5));
+  test_caps (gst_static_caps_get (&caps6));
+  test_caps (gst_static_caps_get (&caps7));
+  test_caps (gst_static_caps_get (&caps8));
+  test_caps (gst_static_caps_get (&caps9));
 
   /* mime types */
   test_string ("audio/raw");

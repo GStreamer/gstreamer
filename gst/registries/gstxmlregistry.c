@@ -837,7 +837,7 @@ gst_xml_registry_parse_padtemplate (GMarkupParseContext *context, const gchar *t
     char *s;
 
     s = g_strndup (text, text_len);
-    registry->caps = gst_caps2_from_string (s);
+    registry->caps = gst_caps_from_string (s);
     if (registry->caps == NULL) {
       g_critical ("Could not parse caps: %d %*s\n", text_len, text_len, text);
     }
@@ -1099,9 +1099,9 @@ G_STMT_START{ 							\
 
 
 static gboolean
-gst_xml_registry_save_caps (GstXMLRegistry *xmlregistry, const GstCaps2 *caps)
+gst_xml_registry_save_caps (GstXMLRegistry *xmlregistry, const GstCaps *caps)
 {
-  char *s = gst_caps2_to_string (caps);
+  char *s = gst_caps_to_string (caps);
   PUT_ESCAPED ("caps", s);
   return TRUE;
 }

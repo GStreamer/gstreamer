@@ -1,6 +1,6 @@
 #include <gst/gst.h>
 
-GstStaticCaps2 rawcaps1 = GST_STATIC_CAPS(
+GstStaticCaps rawcaps1 = GST_STATIC_CAPS(
   "video/x-raw-yuv, "
     "fourcc:fourcc=\"YUYV\", "
     "height:int=640, "
@@ -13,31 +13,31 @@ GstStaticCaps2 rawcaps1 = GST_STATIC_CAPS(
     "framerate:float=30.0"
 );
 
-GstStaticCaps2 rawcaps2 = GST_STATIC_CAPS(
+GstStaticCaps rawcaps2 = GST_STATIC_CAPS(
     "video/x-raw-yuv"
 );
 
-GstStaticCaps2 rawcaps3 = GST_STATIC_CAPS(
+GstStaticCaps rawcaps3 = GST_STATIC_CAPS(
     "video/x-raw-yuv, height=(int) [ 0, MAX ]"
 );
 
-GstStaticCaps2 rawcaps4 = GST_STATIC_CAPS(
+GstStaticCaps rawcaps4 = GST_STATIC_CAPS(
     "video/x-raw-yuv, format=(fourcc)YUY2; video/x-raw-yuv, format=(fourcc)UYVY"
 );
 
-GstStaticCaps2 rawcaps5 = GST_STATIC_CAPS(
+GstStaticCaps rawcaps5 = GST_STATIC_CAPS(
     "video/x-raw-yuv, format=(fourcc)YUY2, framerate=(double)[0,1.79769e+308], width=(int)[0,2147483647], height=(int)[0,2147483647]; video/x-raw-yuv, format=(fourcc)UYVY, framerate=(double)[0,1.79769e+308], width=(int)[0,2147483647], height=(int)[0,2147483647]"
 );
 
-GstStaticCaps2 rawcaps6 = GST_STATIC_CAPS(
+GstStaticCaps rawcaps6 = GST_STATIC_CAPS(
     "video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)240"
 );
 
-GstStaticCaps2 rawcaps7 = GST_STATIC_CAPS(
+GstStaticCaps rawcaps7 = GST_STATIC_CAPS(
     "video/x-raw-yuv, format=(fourcc)YUY2, width=(int)[0,2147483647], height=(int)[0,2147483647], framerate=(double)[0,1.79769e+308]"
 );
 
-GstStaticCaps2 rawcaps8 = GST_STATIC_CAPS(
+GstStaticCaps rawcaps8 = GST_STATIC_CAPS(
     "video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)240"
 );
 
@@ -45,56 +45,56 @@ GstStaticCaps2 rawcaps8 = GST_STATIC_CAPS(
 int 
 main (int argc, char *argv[]) 
 {
-  GstCaps2 *caps1;
-  GstCaps2 *caps2;
-  GstCaps2 *caps3;
-  GstCaps2 *caps4;
-  GstCaps2 *caps;
+  GstCaps *caps1;
+  GstCaps *caps2;
+  GstCaps *caps3;
+  GstCaps *caps4;
+  GstCaps *caps;
 
   gst_init (&argc, &argv);
 
-  caps1 = gst_caps2_copy( gst_static_caps2_get (&rawcaps1));
-  caps2 = gst_caps2_copy_1 (gst_static_caps2_get (&rawcaps1));
+  caps1 = gst_caps_copy( gst_static_caps_get (&rawcaps1));
+  caps2 = gst_caps_copy_1 (gst_static_caps_get (&rawcaps1));
 
 #if 0
-  gst_caps2_set(caps1, "height", GST_PROPS_INT(640));
-  gst_caps2_set(caps1, "width", GST_PROPS_INT(480));
-  gst_caps2_set(caps1, "framerate", GST_PROPS_FLOAT(30.0));
+  gst_caps_set(caps1, "height", GST_PROPS_INT(640));
+  gst_caps_set(caps1, "width", GST_PROPS_INT(480));
+  gst_caps_set(caps1, "framerate", GST_PROPS_FLOAT(30.0));
 #endif
 
-  caps = gst_caps2_intersect(caps1, caps2);
-  g_print("caps %s\n", gst_caps2_to_string(caps));
-  if (gst_caps2_is_empty (caps)) return 1;
-  gst_caps2_free(caps1);
-  gst_caps2_free(caps2);
+  caps = gst_caps_intersect(caps1, caps2);
+  g_print("caps %s\n", gst_caps_to_string(caps));
+  if (gst_caps_is_empty (caps)) return 1;
+  gst_caps_free(caps1);
+  gst_caps_free(caps2);
 
-  caps1 = gst_caps2_copy( gst_static_caps2_get (&rawcaps2));
-  caps2 = gst_caps2_copy( gst_static_caps2_get (&rawcaps3));
-  caps = gst_caps2_intersect(caps1, caps2);
-  g_print("caps %s\n", gst_caps2_to_string(caps));
-  if (gst_caps2_is_empty (caps)) return 1;
-  gst_caps2_free(caps1);
-  gst_caps2_free(caps2);
+  caps1 = gst_caps_copy( gst_static_caps_get (&rawcaps2));
+  caps2 = gst_caps_copy( gst_static_caps_get (&rawcaps3));
+  caps = gst_caps_intersect(caps1, caps2);
+  g_print("caps %s\n", gst_caps_to_string(caps));
+  if (gst_caps_is_empty (caps)) return 1;
+  gst_caps_free(caps1);
+  gst_caps_free(caps2);
 
-  caps1 = gst_caps2_copy( gst_static_caps2_get (&rawcaps4));
-  caps2 = gst_caps2_copy( gst_static_caps2_get (&rawcaps5));
-  caps3 = gst_caps2_copy( gst_static_caps2_get (&rawcaps6));
-  caps4 = gst_caps2_intersect(caps1, caps2);
-  caps = gst_caps2_intersect(caps3, caps4);
-  g_print("caps4 %s\n", gst_caps2_to_string(caps4));
-  g_print("caps %s\n", gst_caps2_to_string(caps));
-  gst_caps2_free(caps1);
-  gst_caps2_free(caps2);
-  gst_caps2_free(caps3);
-  gst_caps2_free(caps4);
+  caps1 = gst_caps_copy( gst_static_caps_get (&rawcaps4));
+  caps2 = gst_caps_copy( gst_static_caps_get (&rawcaps5));
+  caps3 = gst_caps_copy( gst_static_caps_get (&rawcaps6));
+  caps4 = gst_caps_intersect(caps1, caps2);
+  caps = gst_caps_intersect(caps3, caps4);
+  g_print("caps4 %s\n", gst_caps_to_string(caps4));
+  g_print("caps %s\n", gst_caps_to_string(caps));
+  gst_caps_free(caps1);
+  gst_caps_free(caps2);
+  gst_caps_free(caps3);
+  gst_caps_free(caps4);
 
-  caps1 = gst_caps2_copy( gst_static_caps2_get (&rawcaps7));
-  caps2 = gst_caps2_copy( gst_static_caps2_get (&rawcaps8));
-  caps = gst_caps2_intersect(caps1, caps2);
-  g_print("caps %s\n", gst_caps2_to_string(caps));
-  if (gst_caps2_is_empty (caps)) return 1;
-  gst_caps2_free(caps1);
-  gst_caps2_free(caps2);
+  caps1 = gst_caps_copy( gst_static_caps_get (&rawcaps7));
+  caps2 = gst_caps_copy( gst_static_caps_get (&rawcaps8));
+  caps = gst_caps_intersect(caps1, caps2);
+  g_print("caps %s\n", gst_caps_to_string(caps));
+  if (gst_caps_is_empty (caps)) return 1;
+  gst_caps_free(caps1);
+  gst_caps_free(caps2);
 
   return 0;
 }

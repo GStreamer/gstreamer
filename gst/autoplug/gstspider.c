@@ -70,7 +70,7 @@ GST_STATIC_PAD_TEMPLATE (
   "src_%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  GST_STATIC_CAPS2_ANY
+  GST_STATIC_CAPS_ANY
 );
 
 /* standard GObject stuff */

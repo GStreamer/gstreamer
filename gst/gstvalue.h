@@ -74,8 +74,8 @@ void gst_value_set_double_range (GValue *value, double start, double end);
 double gst_value_get_double_range_min (const GValue *value);
 double gst_value_get_double_range_max (const GValue *value);
 
-G_CONST_RETURN GstCaps2 *gst_value_get_caps (const GValue *value);
-void gst_value_set_caps (GValue *calue, const GstCaps2 *caps);
+G_CONST_RETURN GstCaps *gst_value_get_caps (const GValue *value);
+void gst_value_set_caps (GValue *calue, const GstCaps *caps);
 
 void gst_value_list_prepend_value (GValue *value, const GValue *prepend_value);
 void gst_value_list_append_value (GValue *value, const GValue *append_value);

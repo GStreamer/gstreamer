@@ -416,14 +416,14 @@ gst_value_get_double_range_max (const GValue *value)
 /* GstCaps */
 
 void
-gst_value_set_caps (GValue *value, const GstCaps2 *caps)
+gst_value_set_caps (GValue *value, const GstCaps *caps)
 {
   g_return_if_fail (GST_VALUE_HOLDS_CAPS (value));
 
-  value->data[0].v_pointer = gst_caps2_copy (caps);
+  value->data[0].v_pointer = gst_caps_copy (caps);
 }
 
-const GstCaps2 *
+const GstCaps *
 gst_value_get_caps (const GValue *value)
 {
   g_return_val_if_fail (GST_VALUE_HOLDS_CAPS (value), 0);

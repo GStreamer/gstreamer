@@ -59,7 +59,7 @@ struct _GstIdentity {
   gboolean 	 dump;
   gchar 	*last_message;
   gboolean 	 delay_capsnego;
-  GstCaps2	*srccaps;
+  GstCaps	*srccaps;
 };
 
 struct _GstIdentityClass {

@@ -77,7 +77,7 @@ GstStaticPadTemplate fakesrc_src_template = GST_STATIC_PAD_TEMPLATE (
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  GST_STATIC_CAPS2_ANY
+  GST_STATIC_CAPS_ANY
 );
 
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())

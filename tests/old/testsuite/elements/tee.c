@@ -42,8 +42,8 @@ main (int argc, char *argv[])
   GstElement *pipeline = NULL;
   GstElement *tee, *src, *sink1, *sink2;
   GstPad *tee_src1, *tee_src2;
-  GstCaps2 *src_caps = NULL;
-  GstCaps2 *sink_caps = NULL;
+  GstCaps *src_caps = NULL;
+  GstCaps *sink_caps = NULL;
   GstStructure *structure = NULL;
   GstPad *pad = NULL;
 
@@ -99,7 +99,7 @@ main (int argc, char *argv[])
 
   /* now we try setting caps on the src pad */
   /* FIXME: should we set to pause here ? */
-  src_caps = gst_caps2_from_string ("audio/raw, format=(s)\"int\", "
+  src_caps = gst_caps_from_string ("audio/raw, format=(s)\"int\", "
       "rate=(i)44100");
 
   g_assert (src_caps != NULL);
@@ -112,8 +112,8 @@ main (int argc, char *argv[])
   /* now iterate and see if it proxies caps ok */
   gst_bin_iterate (GST_BIN (pipeline));
   sink_caps = gst_pad_get_caps (gst_element_get_pad (sink1, "sink"));
-  if (sink_caps && gst_caps2_is_fixed (sink_caps)) {
-    structure = gst_caps2_get_nth_cap (sink_caps, 0);
+  if (sink_caps && gst_caps_is_fixed (sink_caps)) {
+    structure = gst_caps_get_structure (sink_caps, 0);
   }else {
     structure = NULL;
     g_print ("sink_caps is not fixed\n");
@@ -127,7 +127,7 @@ main (int argc, char *argv[])
     g_print ("Rate of pad on sink1 : %d\n", rate);
   }
   sink_caps = gst_pad_get_caps (gst_element_get_pad (sink2, "sink"));
-  structure = gst_caps2_get_nth_cap (sink_caps, 0);
+  structure = gst_caps_get_structure (sink_caps, 0);
   if (structure != NULL && ! (gst_structure_has_field (structure, "rate"))) {
     g_print ("Hm, rate has not been propagated to sink2.\n"); 
     return 1;

@@ -60,7 +60,7 @@ GstStaticPadTemplate fakesink_sink_template = GST_STATIC_PAD_TEMPLATE (
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_STATIC_CAPS2_ANY
+  GST_STATIC_CAPS_ANY
 );
 
 #define GST_TYPE_FAKESINK_STATE_ERROR (gst_fakesink_state_error_get_type())

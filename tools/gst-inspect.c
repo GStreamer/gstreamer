@@ -7,11 +7,11 @@
 #include <string.h>
 
 static void
-print_caps (const GstCaps2 *caps, const gchar *pfx)
+print_caps (const GstCaps *caps, const gchar *pfx)
 {
   char *s;
 
-  s = gst_caps2_to_string (caps);
+  s = gst_caps_to_string (caps);
   g_print ("%s%s\n", pfx, s);
   g_free(s);
 }
@@ -238,8 +238,8 @@ print_element_properties (GstElement *element)
         if (param->value_type == GST_TYPE_URI) {
           g_print("%-23.23s URI", "");
         }
-        if (param->value_type == GST_TYPE_CAPS2) {
-          const GstCaps2 *caps = gst_value_get_caps (&value);
+        if (param->value_type == GST_TYPE_CAPS) {
+          const GstCaps *caps = gst_value_get_caps (&value);
 
           if (!caps)
             g_print("%-23.23s Caps (NULL)", "");

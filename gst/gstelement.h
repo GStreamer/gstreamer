@@ -305,7 +305,7 @@ G_CONST_RETURN GList*
 			gst_element_get_pad_list	(GstElement *element);
 GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
-							 const GstCaps2 *filtercaps);
+							 const GstCaps *filtercaps);
 
 GstPadTemplate*		gst_element_class_get_pad_template	(GstElementClass *element_class, const gchar *name);
 GList*                  gst_element_class_get_pad_template_list (GstElementClass *element_class);
@@ -317,7 +317,7 @@ gboolean		gst_element_link		(GstElement *src, GstElement *dest);
 gboolean		gst_element_link_many 		(GstElement *element_1, 
 							 GstElement *element_2, ...);
 gboolean		gst_element_link_filtered 	(GstElement *src, GstElement *dest,
-							 const GstCaps2 *filtercaps);
+							 const GstCaps *filtercaps);
 void			gst_element_unlink 		(GstElement *src, GstElement *dest);
 void			gst_element_unlink_many 	(GstElement *element_1, 
 							 GstElement *element_2, ...);
@@ -326,7 +326,7 @@ gboolean		gst_element_link_pads		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 gboolean		gst_element_link_pads_filtered 	(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname,
-							 const GstCaps2 *filtercaps);
+							 const GstCaps *filtercaps);
 void			gst_element_unlink_pads		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 
@@ -432,9 +432,9 @@ GstElement*		gst_element_factory_create		(GstElementFactory *factory,
 GstElement*		gst_element_factory_make		(const gchar *factoryname, const gchar *name);
 
 gboolean		gst_element_factory_can_src_caps	(GstElementFactory *factory,
-								 const GstCaps2 *caps);
+								 const GstCaps *caps);
 gboolean		gst_element_factory_can_sink_caps	(GstElementFactory *factory,
-								 const GstCaps2 *caps);
+								 const GstCaps *caps);
 
 void			__gst_element_factory_add_pad_template	(GstElementFactory *elementfactory,
 								 GstPadTemplate *templ);

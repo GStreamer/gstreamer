@@ -1,7 +1,7 @@
 #include <gst/gst.h>
 
 void
-type_found (GstElement *typefind, const GstCaps2 * caps) 
+type_found (GstElement *typefind, const GstCaps * caps) 
 {
   xmlDocPtr doc;
   xmlNodePtr parent;
@@ -11,7 +11,7 @@ type_found (GstElement *typefind, const GstCaps2 * caps)
 
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Caps1", NULL);
   /* FIXME */
-  //gst_caps2_save_thyself (caps, parent);
+  //gst_caps_save_thyself (caps, parent);
 
   xmlDocDump (stdout, doc);
 }

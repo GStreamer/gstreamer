@@ -46,7 +46,7 @@ G_STMT_START{                                                   \
 #endif
 
 static void
-print_caps (const GstCaps2 *caps, gint pfx)
+print_caps (const GstCaps *caps, gint pfx)
 {
   if (!caps)
     return;
@@ -286,7 +286,7 @@ print_element_properties (GstElement *element, gint pfx)
 #if 0
       /* FIXME */
         if (param->value_type == GST_TYPE_CAPS) {
-          GstCaps2 *caps = g_value_peek_pointer (&value);
+          GstCaps *caps = g_value_peek_pointer (&value);
 
           if (!caps)
             PUT_ESCAPED (pfx + 2, "default", "NULL");

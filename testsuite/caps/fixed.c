@@ -23,7 +23,7 @@ gint
 main (gint argc, gchar *argv[])
 {
 #if 0
-  GstCaps2 *caps;
+  GstCaps *caps;
   
   gst_init (&argc, &argv);
 

@@ -386,7 +386,7 @@ void
 gst_print_pad_caps (GString * buf, gint indent, GstPad * pad)
 {
   GstRealPad *realpad;
-  GstCaps2 *caps;
+  GstCaps *caps;
 
   realpad = GST_PAD_REALIZE (pad);
   caps = realpad->caps;
@@ -398,7 +398,7 @@ gst_print_pad_caps (GString * buf, gint indent, GstPad * pad)
   else {
     char *s;
 
-    s = gst_caps2_to_string(caps);
+    s = gst_caps_to_string(caps);
     g_string_append(buf, s);
     g_free(s);
   }

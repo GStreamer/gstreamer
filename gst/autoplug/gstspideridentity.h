@@ -53,7 +53,7 @@ struct _GstSpiderIdentity {
   gboolean plugged;
 	
   /* Caps from typefinding */
-  GstCaps2 *caps;
+  GstCaps *caps;
 
 };
 

@@ -1,7 +1,7 @@
 #include <gst/gst.h>
 
 /* these caps all have a non empty intersection */
-GstStaticCaps2 sinkcaps = GST_STATIC_CAPS (
+GstStaticCaps sinkcaps = GST_STATIC_CAPS (
   "video/mpeg, "
     "mpegtype=(int)1, "
     "foo1=(int)[20,40], "
@@ -9,7 +9,7 @@ GstStaticCaps2 sinkcaps = GST_STATIC_CAPS (
     "foo3=(int)[10,20]"
 );
 
-GstStaticCaps2 mp1parsecaps = GST_STATIC_CAPS (
+GstStaticCaps mp1parsecaps = GST_STATIC_CAPS (
   "video/mpeg, "
     "mpegtype=(int)1, "
     "foo1=(int)30, "
@@ -19,37 +19,37 @@ GstStaticCaps2 mp1parsecaps = GST_STATIC_CAPS (
 
 
 
-GstStaticCaps2 rawcaps = GST_STATIC_CAPS (
+GstStaticCaps rawcaps = GST_STATIC_CAPS (
   "video/raw, "
     "width=(int)[16,4096], "
     "height=(int)[16,4096]"
 );
 
-GstStaticCaps2 rawcaps2 = GST_STATIC_CAPS (
+GstStaticCaps rawcaps2 = GST_STATIC_CAPS (
   "video/raw, "
     "height=(int)[16,256], "
     "depth=(int)16"
 );
 
-GstStaticCaps2 rawcaps3 = GST_STATIC_CAPS (
+GstStaticCaps rawcaps3 = GST_STATIC_CAPS (
   "video/raw, "
     "fourcc=(fourcc){\"YUY2\", \"YV12\" }, "
     "height=(int)[16,4096]"
 );
 
-GstStaticCaps2 rawcaps4 = GST_STATIC_CAPS (
+GstStaticCaps rawcaps4 = GST_STATIC_CAPS (
   "video/raw, "
     "fourcc=(fourcc){\"YUY2\",\"YV12\",\"YUYV\" }, "
     "height=(int)[16,4096]"
 );
 
-GstStaticCaps2 rawcaps5 = GST_STATIC_CAPS (
+GstStaticCaps rawcaps5 = GST_STATIC_CAPS (
   "video/raw, "
     "fourcc=(fourcc){\"YUYV\",\"YUY2\"}, "
     "height=(int)[16,4096]"
 );
 
-GstStaticCaps2 rawcaps6 = GST_STATIC_CAPS (
+GstStaticCaps rawcaps6 = GST_STATIC_CAPS (
   "video/raw, "
     "fourcc=(fourcc)\"YUYV\", "
     "height=(int)640, "
@@ -67,7 +67,7 @@ main (int argc, char *argv[])
 {
   xmlDocPtr doc;
   xmlNodePtr parent;
-  GstCaps2 *caps;
+  GstCaps *caps;
 
   gst_init (&argc, &argv);
 
@@ -77,36 +77,36 @@ main (int argc, char *argv[])
   /*
   g_mem_chunk_info ();
   for (i = 0; i<100000; i++) {
-    caps = gst_caps2_intersect (gst_static_caps2_get (rawcaps3), GST_CAPS_GET (rawcaps4));
-    gst_caps2_unref (caps);
+    caps = gst_caps_intersect (gst_static_caps_get (rawcaps3), GST_CAPS_GET (rawcaps4));
+    gst_caps_unref (caps);
   }
   g_mem_chunk_info ();
   */
 
-  caps = gst_caps2_intersect (gst_static_caps2_get (&sinkcaps),
-      gst_static_caps2_get (&mp1parsecaps));
+  caps = gst_caps_intersect (gst_static_caps_get (&sinkcaps),
+      gst_static_caps_get (&mp1parsecaps));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
-  gst_caps2_save_thyself (caps, parent);
+  gst_caps_save_thyself (caps, parent);
 
-  caps = gst_caps2_intersect (gst_static_caps2_get (&rawcaps),
-      gst_static_caps2_get (&rawcaps2));
+  caps = gst_caps_intersect (gst_static_caps_get (&rawcaps),
+      gst_static_caps_get (&rawcaps2));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities2", NULL);
-  gst_caps2_save_thyself (caps, parent);
+  gst_caps_save_thyself (caps, parent);
 
-  caps = gst_caps2_intersect (gst_static_caps2_get (&rawcaps3),
-      gst_static_caps2_get (&rawcaps4));
+  caps = gst_caps_intersect (gst_static_caps_get (&rawcaps3),
+      gst_static_caps_get (&rawcaps4));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities3", NULL);
-  gst_caps2_save_thyself (caps, parent);
+  gst_caps_save_thyself (caps, parent);
 
-  caps = gst_caps2_intersect (gst_static_caps2_get (&rawcaps3),
-      gst_static_caps2_get (&rawcaps5));
+  caps = gst_caps_intersect (gst_static_caps_get (&rawcaps3),
+      gst_static_caps_get (&rawcaps5));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities4", NULL);
-  gst_caps2_save_thyself (caps, parent);
+  gst_caps_save_thyself (caps, parent);
 
-  caps = gst_caps2_intersect (gst_static_caps2_get (&rawcaps6),
-      gst_caps2_copy_1(gst_static_caps2_get (&rawcaps6)));
+  caps = gst_caps_intersect (gst_static_caps_get (&rawcaps6),
+      gst_caps_copy_1(gst_static_caps_get (&rawcaps6)));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities5", NULL);
-  gst_caps2_save_thyself (caps, parent);
+  gst_caps_save_thyself (caps, parent);
 
   xmlDocDump(stdout, doc);
 

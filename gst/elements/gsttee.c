@@ -57,7 +57,7 @@ GstStaticPadTemplate tee_src_template = GST_STATIC_PAD_TEMPLATE (
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  GST_STATIC_CAPS2_ANY
+  GST_STATIC_CAPS_ANY
 );
 
 static void	gst_tee_base_init	(gpointer g_class);
@@ -138,17 +138,17 @@ gst_tee_class_init (GstTeeClass *klass)
 }
 
 static GstPadLinkReturn 
-gst_tee_sinklink (GstPad *pad, const GstCaps2 *caps) 
+gst_tee_sinklink (GstPad *pad, const GstCaps *caps) 
 {
   GstTee *tee;
   const GList *pads;
   GstPadLinkReturn set_retval;
   
-  GST_DEBUG ( "gst_tee_sinklink caps=%s", gst_caps2_to_string(caps));
+  GST_DEBUG ( "gst_tee_sinklink caps=%s", gst_caps_to_string(caps));
 
   tee = GST_TEE (gst_pad_get_parent (pad));
 
-  if (!gst_caps2_is_fixed (caps)) {
+  if (!gst_caps_is_fixed (caps)) {
     return GST_PAD_LINK_DELAYED;
   }
 
@@ -170,21 +170,21 @@ gst_tee_sinklink (GstPad *pad, const GstCaps2 *caps)
 }
 
 static GstPadLinkReturn 
-gst_tee_srclink (GstPad *pad, const GstCaps2 *caps) 
+gst_tee_srclink (GstPad *pad, const GstCaps *caps) 
 {
   GstTee *tee;
 
-  GST_DEBUG ( "gst_tee_srclink caps=%s", gst_caps2_to_string(caps));
+  GST_DEBUG ( "gst_tee_srclink caps=%s", gst_caps_to_string(caps));
 
   tee = GST_TEE (gst_pad_get_parent (pad));
 
   return gst_pad_proxy_link (tee->sinkpad, caps);
 }
 
-static GstCaps2* 
+static GstCaps* 
 gst_tee_getcaps (GstPad *pad)
 {
-  GstCaps2 *caps = GST_CAPS2_ANY;
+  GstCaps *caps = GST_CAPS_ANY;
   GstTee *tee;
   const GList *pads;
 
@@ -197,8 +197,8 @@ gst_tee_getcaps (GstPad *pad)
   while (pads) {
     GstPad *srcpad = GST_PAD (pads->data);
     GstPad *peer;
-    const GstCaps2 *peercaps;
-    GstCaps2 *newcaps;
+    const GstCaps *peercaps;
+    GstCaps *newcaps;
 
     pads = g_list_next (pads);
 
@@ -208,8 +208,8 @@ gst_tee_getcaps (GstPad *pad)
     }
 
     peercaps = gst_pad_get_caps (peer);
-    newcaps = gst_caps2_intersect (caps, peercaps);
-    gst_caps2_free (caps);
+    newcaps = gst_caps_intersect (caps, peercaps);
+    gst_caps_free (caps);
     caps = newcaps;
   }
 

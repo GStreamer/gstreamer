@@ -83,7 +83,7 @@ typedef struct {
   gchar *src_pad;
   gchar *sink_pad;
   GstElement *sink;
-  GstCaps2 *caps;
+  GstCaps *caps;
   gulong signal_id;
   /* FIXME: need to connect to "disposed" signal to clean up, but there is no such signal */
 } DelayedLink;
@@ -336,7 +336,7 @@ gst_parse_free_link (link_t *link)
   g_slist_foreach (link->sink_pads, (GFunc) gst_parse_strfree, NULL);
   g_slist_free (link->src_pads);
   g_slist_free (link->sink_pads);
-  if (link->caps) gst_caps2_free (link->caps);
+  if (link->caps) gst_caps_free (link->caps);
   gst_parse_link_free (link);  
 }
 static void
@@ -396,7 +396,7 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
     g_signal_handler_disconnect (src, link->signal_id);
     g_free (link->src_pad);
     g_free (link->sink_pad);
-    if (link->caps) gst_caps2_free (link->caps);
+    if (link->caps) gst_caps_free (link->caps);
     if (!gst_element_is_locked_state (src))
       gst_parse_element_lock (link->sink, FALSE);
     g_free (link);
@@ -405,7 +405,7 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 /* both padnames and the caps may be NULL */
 static gboolean
 gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad, 
-                                GstElement *sink, const gchar *sink_pad, GstCaps2 *caps)
+                                GstElement *sink, const gchar *sink_pad, GstCaps *caps)
 {
   GList *templs = gst_element_get_pad_template_list (src);
 	 
@@ -423,7 +423,7 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       data->src_pad = g_strdup (src_pad);
       data->sink = sink;
       data->sink_pad = g_strdup (sink_pad);
-      data->caps = gst_caps2_copy (caps);
+      data->caps = gst_caps_copy (caps);
       data->signal_id = g_signal_connect (G_OBJECT (src), "new_pad", 
 					  G_CALLBACK (gst_parse_found_pad), data);
       return TRUE;
@@ -451,7 +451,7 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
   GST_CAT_INFO (GST_CAT_PIPELINE, "linking %s(%s):%u to %s(%s):%u with caps \"%s\"", 
                 GST_ELEMENT_NAME (src), link->src_name ? link->src_name : "---", g_slist_length (srcs),
                 GST_ELEMENT_NAME (sink), link->sink_name ? link->sink_name : "---", g_slist_length (sinks),
-	        link->caps ? gst_caps2_to_string (link->caps) : "-");
+	        link->caps ? gst_caps_to_string (link->caps) : "-");
 
   if (!srcs || !sinks) {
     if (gst_element_link_pads_filtered (src, srcs ? (const gchar *) srcs->data : NULL,
@@ -592,7 +592,7 @@ linkpart:	reference		      { $$ = $1; }
 	
 link:		linkpart LINK linkpart	      { $$ = $1;
 						if ($2) {
-						  $$->caps = gst_caps2_from_string ($2);
+						  $$->caps = gst_caps_from_string ($2);
 						  if (!$$->caps)
 						    ERROR (GST_PARSE_ERROR_LINK, "could not parse caps \"%s\"", $2);
 						  gst_parse_strfree ($2);

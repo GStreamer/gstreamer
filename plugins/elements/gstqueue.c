@@ -83,10 +83,10 @@ static void	gst_queue_get_property		(GObject       *object,
 						 GValue        *value,
 						 GParamSpec    *pspec);
 
-static GstCaps2 *gst_queue_getcaps		(GstPad        *pad);
+static GstCaps *gst_queue_getcaps		(GstPad        *pad);
 static GstPadLinkReturn
 		gst_queue_link			(GstPad        *pad,
-						 const GstCaps2 *caps);
+						 const GstCaps *caps);
 static void	gst_queue_chain			(GstPad        *pad,
 						 GstData       *data);
 static GstData *gst_queue_get			(GstPad        *pad);
@@ -330,12 +330,12 @@ gst_queue_otherpad (GstPad *pad)
 }
 
 static GstPadLinkReturn
-gst_queue_link (GstPad  *pad, const GstCaps2 *caps)
+gst_queue_link (GstPad  *pad, const GstCaps *caps)
 {
   return gst_pad_proxy_link (gst_queue_otherpad (pad), caps);
 }
 
-static GstCaps2 *
+static GstCaps *
 gst_queue_getcaps (GstPad  *pad)
 {
   GstPad *otherpad = GST_PAD_PEER (gst_queue_otherpad (pad));
@@ -343,7 +343,7 @@ gst_queue_getcaps (GstPad  *pad)
   if (otherpad)
     return gst_pad_get_caps (otherpad);
 
-  return gst_caps2_new_any ();
+  return gst_caps_new_any ();
 }
 
 static void

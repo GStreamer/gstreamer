@@ -55,7 +55,7 @@ GstStaticPadTemplate aggregator_src_template = GST_STATIC_PAD_TEMPLATE (
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_STATIC_CAPS2_ANY
+  GST_STATIC_CAPS_ANY
 );
 
 #define GST_TYPE_AGGREGATOR_SCHED (gst_aggregator_sched_get_type())

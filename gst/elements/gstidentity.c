@@ -152,7 +152,7 @@ gst_identity_class_init (GstIdentityClass *klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
 }
 
-static GstCaps2*
+static GstCaps*
 gst_identity_getcaps (GstPad *pad)
 {
   GstIdentity *identity;
@@ -171,20 +171,20 @@ gst_identity_getcaps (GstPad *pad)
   if (peer) {
     return gst_pad_get_caps (peer);
   } else {
-    return gst_caps2_new_any ();
+    return gst_caps_new_any ();
   }
 }
 
 static GstPadLinkReturn
-gst_identity_link (GstPad *pad, const GstCaps2 *caps)
+gst_identity_link (GstPad *pad, const GstCaps *caps)
 {
   GstIdentity *identity;
   
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
 
-  if (gst_caps2_is_fixed (caps)) {
+  if (gst_caps_is_fixed (caps)) {
     if (identity->delay_capsnego && GST_PAD_IS_SINK (pad)) {
-      identity->srccaps = gst_caps2_copy (caps);
+      identity->srccaps = gst_caps_copy (caps);
 
       return GST_PAD_LINK_OK;
     }

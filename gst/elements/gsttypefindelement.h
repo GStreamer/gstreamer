@@ -50,7 +50,7 @@ struct _GstTypeFindElement {
 
   guint			min_probability;
   guint			max_probability;
-  GstCaps2 *		caps;
+  GstCaps *		caps;
 
   guint			mode;
   GstBufferStore *	store;
@@ -66,7 +66,7 @@ struct _GstTypeFindElementClass {
   /* signals */
   void 			(*have_type) 	(GstTypeFindElement *element,
 					 guint		probability,
-					 GstCaps2 *	caps);
+					 GstCaps *	caps);
 };
 
 GType gst_type_find_element_get_type (void);

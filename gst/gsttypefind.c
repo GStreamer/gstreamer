@@ -92,7 +92,7 @@ gst_type_find_factory_dispose (GObject *object)
   GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (object);
 
   if (factory->caps) {
-    gst_caps2_free (factory->caps);
+    gst_caps_free (factory->caps);
     factory->caps = NULL;
   }
   if (factory->extensions) {
@@ -144,9 +144,9 @@ gst_type_find_factory_get_list (void)
  * 
  * Gets the caps associated with a typefind factory.
  *
- * Returns: the #GstCaps2 associated with this factory
+ * Returns: the #GstCaps associated with this factory
  */
-const GstCaps2 *
+const GstCaps *
 gst_type_find_factory_get_caps (const GstTypeFindFactory *factory)
 {
   g_return_val_if_fail (GST_IS_TYPE_FIND_FACTORY (factory), NULL);
@@ -212,7 +212,7 @@ gst_type_find_factory_call_function (const GstTypeFindFactory *factory, GstTypeF
 gboolean
 gst_type_find_register (GstPlugin *plugin, const gchar *name, guint rank,
 			GstTypeFindFunction func, gchar **extensions,
-			const GstCaps2 *possible_caps, gpointer data)
+			const GstCaps *possible_caps, gpointer data)
 {
   GstTypeFindFactory *factory;
   
@@ -236,7 +236,7 @@ gst_type_find_register (GstPlugin *plugin, const gchar *name, guint rank,
     g_strfreev (factory->extensions);
 
   factory->extensions = g_strdupv (extensions);
-  gst_caps2_replace (&factory->caps, gst_caps2_copy(possible_caps));
+  gst_caps_replace (&factory->caps, gst_caps_copy(possible_caps));
   factory->function = func;
   factory->user_data = data;
 
@@ -281,12 +281,12 @@ gst_type_find_peek (GstTypeFind *find, gint64 offset, guint size)
  * It is up to the caller of the typefind function to interpret these values.
  */
 void
-gst_type_find_suggest (GstTypeFind *find, guint probability, const GstCaps2 *caps)
+gst_type_find_suggest (GstTypeFind *find, guint probability, const GstCaps *caps)
 {
   g_return_if_fail (find->suggest != NULL);
   g_return_if_fail (probability <= 100);
   g_return_if_fail (caps != NULL);
-  g_return_if_fail (gst_caps2_is_fixed (caps));
+  g_return_if_fail (gst_caps_is_fixed (caps));
 
   find->suggest (find->data, probability, caps);
 }

@@ -1,7 +1,7 @@
 #include <gst/gst.h>
 
 /* these caps all have a non empty intersection */
-GstStaticCaps2 sinkcaps = GST_STATIC_CAPS (
+GstStaticCaps sinkcaps = GST_STATIC_CAPS (
   "video/mpeg, "
     "fourcc=(fourcc){\"YV12\",\"YUY2\"}, "
     "foo1=(int)[20,40], "
@@ -9,20 +9,20 @@ GstStaticCaps2 sinkcaps = GST_STATIC_CAPS (
     "foo3=(int)[10,20]"
 );
 
-GstStaticCaps2 mp1parsecaps = GST_STATIC_CAPS (
+GstStaticCaps mp1parsecaps = GST_STATIC_CAPS (
   "video/mpeg, "
     "fourcc=(fourcc){\"YV12\",\"YUY2\"}, "
     "foo4=(fourcc){\"YV12\",\"YUY2\"}"
 );
 
-GstStaticCaps2 rawcaps = GST_STATIC_CAPS (
+GstStaticCaps rawcaps = GST_STATIC_CAPS (
   "video/raw, "
     "width=(int)[16,4096], "
     "height=(int)[16,4096], "
     "fourcc=(fourcc){\"YV12\",\"YUY2\"}"
 );
 
-GstStaticCaps2 rawcaps2 = GST_STATIC_CAPS (
+GstStaticCaps rawcaps2 = GST_STATIC_CAPS (
   "video/raw, "
     "width=(int)[16,256], "
     "height=(int)16; "
@@ -31,7 +31,7 @@ GstStaticCaps2 rawcaps2 = GST_STATIC_CAPS (
     "height=(int)16"
 );
 
-GstStaticCaps2 rawcaps3 = GST_STATIC_CAPS (
+GstStaticCaps rawcaps3 = GST_STATIC_CAPS (
   "video/raw, "
     "width=(int)[16,256], "
     "height=(int)16; "
@@ -75,32 +75,32 @@ main (int argc, char *argv[])
 {
   xmlDocPtr doc;
   xmlNodePtr parent;
-  GstCaps2 *caps;
+  GstCaps *caps;
 
   gst_init (&argc, &argv);
 
   doc = xmlNewDoc ("1.0");
   doc->xmlRootNode = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
 
-  caps = gst_caps2_normalize (gst_static_caps2_get (&sinkcaps));
+  caps = gst_caps_normalize (gst_static_caps_get (&sinkcaps));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
-  gst_caps2_save_thyself (caps, parent);
+  gst_caps_save_thyself (caps, parent);
 
-  caps = gst_caps2_normalize (gst_static_caps2_get (&mp1parsecaps));
+  caps = gst_caps_normalize (gst_static_caps_get (&mp1parsecaps));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
-  gst_caps2_save_thyself (caps, parent);
+  gst_caps_save_thyself (caps, parent);
 
-  caps = gst_caps2_normalize (gst_static_caps2_get (&rawcaps));
+  caps = gst_caps_normalize (gst_static_caps_get (&rawcaps));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
-  gst_caps2_save_thyself (caps, parent);
+  gst_caps_save_thyself (caps, parent);
 
-  caps = gst_caps2_normalize (gst_static_caps2_get (&rawcaps2));
+  caps = gst_caps_normalize (gst_static_caps_get (&rawcaps2));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
-  gst_caps2_save_thyself (caps, parent);
+  gst_caps_save_thyself (caps, parent);
 
-  caps = gst_caps2_normalize (gst_static_caps2_get (&rawcaps3));
+  caps = gst_caps_normalize (gst_static_caps_get (&rawcaps3));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
-  gst_caps2_save_thyself (caps, parent);
+  gst_caps_save_thyself (caps, parent);
 
   xmlDocDump(stdout, doc);
 
