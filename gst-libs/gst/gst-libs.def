@@ -1,7 +1,0 @@
-EXPORTS
-    gst_riff_read_get_type
-    gst_riff_create_video_template_caps
-    gst_riff_create_video_caps
-    gst_riff_create_audio_template_caps
-    gst_riff_create_audio_caps
-    gst_plugin_desc
