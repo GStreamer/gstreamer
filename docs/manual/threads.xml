@@ -106,7 +106,7 @@ main (int argc, char *argv[])
   GstElement *filesrc, *decoder, *audiosink;
   GstElement *thread;
 
-  if (argc < 2) {
+  if (argc &lt; 2) {
     g_print ("usage: %s &lt;Ogg/Vorbis filename&gt;\n", argv[0]);
     exit (-1);
   }
