@@ -226,6 +226,12 @@ else
 LIBVISUAL_DIR=
 endif
 
+if USE_LIBMMS
+LIBMMS_DIR=libmms
+else 
+LIBMMS_DIR=
+endif
+
 if USE_MAD
 MAD_DIR=mad
 else
@@ -415,6 +421,7 @@ SUBDIRS=\
 	$(GNOMEVFS_DIR) \
 	$(GSM_DIR) \
 	$(HERMES_DIR) \
+	$(LIBMMS_DIR) \
 	$(JACK_DIR) \
 	$(JPEG_DIR) \
 	$(LADSPA_DIR) \
@@ -472,6 +479,7 @@ DIST_SUBDIRS=\
 	dvdread \
 	dvdnav \
 	esd \
+	libmms \
 	faac \
 	faad \
 	flac \
