@@ -80,6 +80,7 @@ static void         gst_play_set_property	    (GObject *object, guint prop_id,
 						     const GValue *value, GParamSpec *pspec);
 static void         gst_play_get_property	    (GObject *object, guint prop_id, 
 						     GValue *value, GParamSpec *pspec);
+static void         callback_pipeline_error         (GObject *object, GstObject *orig, gchar *error, GstPlay* play);
 static void         callback_pipeline_state_change  (GstElement *element, GstElementState old, 
 						     GstElementState state, GstPlay *play);
 static void         callback_pipeline_deep_notify   (GstElement *element, GstElement *orig, 
@@ -361,6 +362,7 @@ gst_play_new (GstPlayPipeType pipe_type, GError **error)
 		/* connect to pipeline events */
 		g_signal_connect (G_OBJECT (play->pipeline), "deep_notify", G_CALLBACK (callback_pipeline_deep_notify), play);
 		g_signal_connect (G_OBJECT (play->pipeline), "state_change", G_CALLBACK (callback_pipeline_state_change), play);
+		g_signal_connect (G_OBJECT (play->pipeline), "error", G_CALLBACK (callback_pipeline_error), play);
 	}
 
 	if (play->volume){
@@ -392,6 +394,15 @@ gst_play_dispose (GObject *object)
 	g_mutex_free(play->audio_bin_mutex);
 	g_mutex_free(play->video_bin_mutex);
 }
+
+static void
+callback_pipeline_error (GObject *object, GstObject *orig, gchar *error, GstPlay* play)
+{ 
+	g_print ("Pipeline error: %s\n", error);
+	if (gst_element_get_state(play->pipeline) == GST_STATE_PLAYING){
+		gst_element_set_state(play->pipeline, GST_STATE_READY);
+	}
+} 
 
 static void
 callback_pipeline_deep_notify (GstElement *element, GstElement *orig, GParamSpec *param, GstPlay* play)
