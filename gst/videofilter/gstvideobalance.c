@@ -487,7 +487,7 @@ gst_videobalance_update_tables_planar411 (GstVideobalance * vb)
 
 #ifndef HAVE_LIBOIL
 void
-tablelookup_u8 (guint8 * dest, int dstr, guint8 * src, int sstr,
+oil_tablelookup_u8 (guint8 * dest, int dstr, guint8 * src, int sstr,
     guint8 * table, int tstr, int n)
 {
   int i;
@@ -524,7 +524,7 @@ gst_videobalance_planar411 (GstVideofilter * videofilter, void *dest, void *src)
     guint8 *csrc = src;
 
     for (y = 0; y < height; y++) {
-      tablelookup_u8 (cdest + y * width, 1, csrc + y * width, 1,
+      oil_tablelookup_u8 (cdest + y * width, 1, csrc + y * width, 1,
           videobalance->tabley, 1, width);
     }
   }
