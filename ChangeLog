@@ -1,3 +1,11 @@
+2004-04-01  Benjamin Otte  <otte@gnome.org>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_change_state),
+	(gst_alsa_close_audio):
+	  handle case better where a soundcard can't pause
+	* ext/ogg/gstoggdemux.c:
+	  don't crash when we get events but don't have pads yet
+
 2004-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/oss/gstosselement.c: (gst_osselement_probe_caps):
@@ -130,7 +138,6 @@
 	* ext/kio/kiosrc.cpp: (process_events):
 	  update handling event processing if inside KDE - untested
 
->>>>>>> 1.489
 2004-03-29  David Schleef  <ds@schleef.org>
 
 	* ext/hermes/gsthermescolorspace.c: (plugin_init): decrease rank
