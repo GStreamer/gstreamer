@@ -703,6 +703,8 @@ dnl #########################
 dnl # Make the output files #
 dnl #########################
 
+dnl testsuite/autoplug/Makefile
+dnl testsuite/Makefile
 AC_CONFIG_FILES(
 Makefile
 gstreamer-libs.pc
@@ -805,8 +807,6 @@ gst-libs/gst/riff/Makefile
 examples/capsfilter/Makefile
 examples/Makefile
 tools/Makefile
-testsuite/autoplug/Makefile
-testsuite/Makefile
 )
 
 AC_OUTPUT
