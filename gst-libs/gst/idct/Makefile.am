@@ -15,9 +15,9 @@ libgstidct_la_SOURCES = \
 	intidct.c \
 	$(GSTIDCTARCH_SRCS)
 
-## libgstidctincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/idct
-## libgstidctinclude_HEADERS = idct.h
-noinst_HEADERS = idct.h dct.h
+libgstidctincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/idct
+libgstidctinclude_HEADERS = idct.h
+noinst_HEADERS = dct.h
 
 ## check_PROGRAMS = ieeetest
 
