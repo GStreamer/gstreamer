@@ -54,14 +54,18 @@ struct _GstTextOverlay {
     gchar		 *default_text;
 
     cairo_t *cr;
-    guchar *pixbuf;
-    int text_width;
+    guchar *text_fill_image;
+    guchar *text_outline_image;
     int text_height;
 
     GstBuffer		 *current_buffer;
     GstBuffer		 *next_buffer;
     gboolean		  need_render;
 
+    gchar *font;
+    int slant;
+    int weight;
+    double scale;
 };
 
 struct _GstTextOverlayClass {
