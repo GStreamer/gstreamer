@@ -1,0 +1,229 @@
+GStreamer Internals
+
+Benjamin Otte
+Universität Hamburg, Germany
+otte@gnome.org
+
+
+Abstract
+
+GStreamer is a multimedia streaming framework. It aims to provide developers
+with an abstracted view on media files, while still allowing him to do all
+modifications necessary for the different types ofmedia handling applications.
+
+The framework is utilizes as a graph-based streaming architecture, which is
+implemented in the GStreamer core. Being media agnostic, the Gstreamer core
+uses a plugin-based architecture to provide the building blocks for streams
+processing. The GStreamer plugins collection provides these building blocks
+for multimedia processing.
+
+
+Introduction
+
+While there is a good number of high-quality applications available today for
+audio and video playback such as MPlayer[1] and Xine[2], none of these provide
+a generic media processing backend and a lot of code duplication has been
+going on when trying to provide a generic playback backend. On top of this,
+most application backends are limited in their abilities and only provide
+solutions for the problem space of the application. GStreamer tries to
+overcome these issues by providing a generic infrastructure that allows
+creating all sorts of applications. The applications show the flexibility of
+this approach. Examples are Rhythmbox[3], an audio player, Totem[4], a video
+player, Marlin[5], an audio editor, /*FIXME*/[6], an audio synthesis
+application and fluendo[7], a video streaming server.
+
+Although the GStreamer framework's focus is multimedia processing, the core
+has been used outside the real of multimedia, for example in the gst-sci
+package[8] that provides statistical data analysis.
+
+This paper focusses on the GStreamer core and explains the goals of the
+framework and how the core tries to achieve these by following a simple
+mp3 playback example. 
+
+
+Plugins
+
+To allow easy extensibility, the complete media processing functionality
+inside GStreamer is provided via plugins. Upon initialization a plugin
+registeres its different capabilities with the GStreamer library. These
+capabilities are schedulers, typefind functions or - most common - elements.
+The capabilities of plugins are recorded inside the registry.
+
+
+The registry
+
+The registry is a cache file that is used to inspect certain plugin capabilities
+without the need to load the plugin. As an example those stored capabilites
+enabled automatically determining which plugins must be loaded in order to
+decode a certain media file.
+The gst-register(1) command updates the registry file. The gst-inspect(1)
+command allows querying plugins and their capabilities.
+[Add: output of gst-inspect gstelements]
+
+
+Elements
+
+Elements are at the main building block inside GStreamer. An element takes
+data from 0 to n input sink pads, processes it and produces data for 0 to n
+output source pads. Pads are used to enable data flow between elements in
+GStreamer. A pad can be viewed as a "place" or "port" on an element where
+links may be made with other elements, and through which data can flow to or
+from those elements.  For the most part, all data in GStreamer flows one way
+through a link between elements. Data flows out of one element through one or
+more source pads, and elements accept incoming data through one or more sink
+pads. Elements are ordered in a tree structure by putting them inside
+container elements, called bins. This allows to operate only on the toplevel
+element (called the pipeline element) which propagates these operations to the
+contained elements.
+[Add: gst-editor with a simple mp3 decoder]
+There exists a simple command line tool to quickly construct media pipelines,
+called gst-launch. It helps to get comfortable with using it when developing
+code for or with GStreamer. /* FIXME: write more? */
+As an example the pipeline above would be presented by the command gst-launch
+filesrc ! mad ! alsasink
+
+
+The sample program
+
+/* note that the sample program does not do error checking for simplicities
+ * sake */
+int
+main (int argc, char **argv)
+{
+  GstElement *pipeline;
+
+  gst_init (&argc, &argv);
+  pipeline = gst_parse_launch ("filesrc location=./music.mp3 ! mad ! osssink",
+      NULL);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  while (gst_bin_iterate (GST_BIN (pipeline)));
+  gst_object_unref (GST_OBJECT (pipeline));
+}
+
+
+Step 1: gst_init
+
+gst_init initializes the GStreamer library. The most important part here is
+loading information from the registry. The other important part is preparing
+the subsystems that need it. It also processes the command line options and
+environment variables specific to GStreamer, like the debugging options.
+
+
+The debugging subsystem
+
+GStreamer includes a powerful debugging subsystem. The need for such a system
+becomes apparent when looking at the way GStreamer works. It is built out of
+little independet elements that process unknown data for long times with or
+without user intervention, realtime requirements or other factors that can
+affect processing. Debugging messages are divided into named categories and 5
+levels for importance, ranging from "log" to "error". Desired debugging output
+can be specified either on the command line or as environment variable
+GST_DEBUG.
+
+
+Step 2: creating the pipeline
+
+A pipeline is set up by creating an element tree, setting options on these
+elements and finally linking their pads.
+Elements are created from their element factories. Element factories contain
+information about elements loaded from the registry. Getting the right element
+factory is done by either knowing its name (in the example "filesrc" is such a
+name) or querying the features of element factories and then deciding which
+one to use. Upon requesting an element, the element factory automatically
+loads the required plugin and returns a newly created element.
+Setting options on elements can be achieved in 2 ways. Either by knowing the
+GObject properties of the element and setting the property directly (the
+location property of filesrc is set in the example pipeline) or by using
+interfaces. Interfaces are used when there is a set of elements that allows the
+same features in a different context. For example there is an interface for
+setting tags that is implemented by different encoding plugins that support
+tag writing as well as tag changing plugins. Another example would be the
+mixer interface that allows changing the volume of an audio element. It is
+implemented by different audio sinks (oss, alsa) as well as the generic volume
+changing element. There is a set of interfaces included in the GStreamer
+Plugins plugin set, but people are of course free to add interfaces and
+elements implementing them.
+The last step in creating a pipeline is linking pads. When attempting to link
+two pads, GStreamer checks that a link is possible and if so, links them. After
+they are linked data may pass through this link. Most of the time (just like
+in this example) convenience funtions are used that automatically select the
+right elements to connect inside a GStreamer pipeline.
+
+
+Step 3: setting the state
+
+GStreamer elements know of four different states: NULL, READY, PAUSED and
+PLAYING. Each state and more important each state transition allows and
+requires different things from elements. State transitions are done step by
+step internally. (Note that in the following description state transitions in
+opposite directions can be assumed to do exactly the reverse thing.) Every
+transition may fail to succeed. In that case the gst_element_set_state
+function will return an error.
+
+
+GST_STATE_NULL to GST_STATE_READY 
+
+GST_STATE_NULL is the 'uninitialized' state. Since it is always possible to
+create an element, nothing that might require interaction or can fail is done
+while creating the element. During the state transition elements are supposed
+to initialize external ressources. A file source opens its file, X elements
+open connections to the X server etc. This ensures that all elements can
+provide the best possible information about their capabilities during future
+interactions. The GStreamer core essentially does nothing. After this
+transition all external dependencies are initialized and supposed to work and
+the element is ready to start.
+
+
+GST_STATE_READY to GST_STATE_PAUSED
+
+During this state change all internal dependencies are resolved. The GStreamer 
+core tries to resolve links between pads by negotiating capabilites of pads.
+(See below for an explanation.) The schedulers will prepare the elements for
+playback and the elements will prepare their internal data structures. After
+this state change is successful, nearly all elements are done with their setup.
+
+
+GST_STATE_PAUSED to GST_STATE_PLAYING
+
+The major difference between these two states is that in the playing state
+data is processed. Therefore the two major things happening here are the
+schedulers finishing their setup and readying their elements to run and the
+clocking subsystem starting the clocks. After this state change succeeded
+elements' processing function may finally be called.
+
+
+capabilities (or short: caps) and negotiation
+
+"Caps" are the format descriptions of the data passed. A caps is a list of
+structures. Each structure describes one "mime type" by n properties and its
+name. Note that "mime type" is used escaped because there is no 1:1 mapping
+between GStreamer caps names and real world mime types though GStreamer tries
+to orient itself at those. Properties are either fixed values, ranges or lists
+of values. There's also two special caps: any and empty.
+The mathematicians reading this should think of caps as a mathematical set of
+formats that is a union of the formats described in every structure. The
+GStreamer core provides functions to union, intersect and subtract caps or
+test them for various conditions (subsets, equality, etc). 
+The negotiation phase works as follows: Both pads figure out all possible caps
+for themselves - most of the time depending on caps on other pads in the
+element. The core then takes those, intersects them and if the intersection
+isn't empty fixates them. Fixation is a process that selects the best possible
+fixed caps from a caps. A fixed caps is a caps that describes only one format
+and cannot be reduced further. After both pads acdepted the fixed caps, its
+format is then used to describe the contents of the buffers that are passed on
+this link. Caps can be serialized and deserialized to a string representation.
+[Add: a medium complex caps description (audioconvert?)]
+
+
+
+
+
+
+1. Mplayer media player - http://www.mplayerhq.hu
+2. Xine media player - http://xine.sourceforge.net
+3. Rhythmbox audio player - http://web.rhythmbox.org
+4. Totem video player - http://hadess.net/totem /* FIXME? */
+5. Marlin sample editor - http://marlin.sourceforge.net
+6. /* FIXME */
+7. Fluendo - http://www.fluendo.com
+8. gst-sci - /*FIXME */
