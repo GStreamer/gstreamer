@@ -582,10 +582,11 @@ GST_INT_CFLAGS="$GST_INT_CFLAGS -I\$(top_srcdir)/libs -I\$(top_srcdir)/include"
 AC_SUBST(GST_CFLAGS, "$LIBGST_CFLAGS $GST_INT_CFLAGS")
 AC_SUBST(GST_LIBS, "$LIBGST_LIBS $GST_INT_LIBS")
 
-GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*"
-#GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).* \$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la"
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).* \$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la"
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
+plugindir="\$(libdir)/gstreamer-$GST_MAJORMINOR"
+AC_SUBST(plugindir)
 
 dnl ##################################################
 dnl # deps for examples from manual                  #
@@ -656,6 +657,7 @@ testsuite/caps/Makefile
 testsuite/cleanup/Makefile
 testsuite/clock/Makefile
 testsuite/debug/Makefile
+testsuite/dlopen/Makefile
 testsuite/dynparams/Makefile
 testsuite/elements/Makefile
 testsuite/ghostpads/Makefile

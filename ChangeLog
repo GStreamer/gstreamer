@@ -1,5 +1,26 @@
 2004-04-20  David Schleef  <ds@schleef.org>
 
+	* common/as-libtool.mak: Fine-tune DLL building.
+	* configure.ac: Link plugins against libgstreamer.  Define plugindir
+	(like gst-plugins)
+	* examples/plugins/Makefile.am: remove plugindir
+	* gst/autoplug/Makefile.am: DLL building fixes
+	* gst/elements/Makefile.am: DLL building fixes.  Disable pipefilter on
+	Windows.
+	* gst/elements/gstelements.c: Conditionally disable pipefilter.
+	* gst/indexers/Makefile.am: DLL building fixes
+	* gst/schedulers/Makefile.am: DLL building fixes.
+	* libs/gst/bytestream/Makefile.am: DLL building fixes.
+	* libs/gst/control/Makefile.am: same
+	* libs/gst/getbits/Makefile.am: same
+	* testsuite/Makefile.am: New dlopen directory
+	* testsuite/dlopen/Makefile.am: Tests to check if libgstreamer works
+	when dlopened.
+	* testsuite/dlopen/dlopen_gst.c: (main): same
+	* testsuite/dlopen/loadgst.c: (do_test): same
+
+2004-04-20  David Schleef  <ds@schleef.org>
+
 	* gst/parse/grammar.y:  Apply patch from Sebastien Cote
 	<sc5@hermes.usherb.ca> to fix a memleak. (bug #140594)
 

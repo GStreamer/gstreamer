@@ -1,6 +1,9 @@
-librarydir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
-library_LTLIBRARIES = libgstgetbits.la
+plugin_LTLIBRARIES = libgstgetbits.la
+AS_LIBTOOL_LIB = libgstgstgetbits
+
+EXTRA_DIST = $(as_libtool_EXTRA_DIST)
+noinst_DATA = $(as_libtool_noinst_DATA_files)
 
 if HAVE_CPU_I386
 GSTARCH_SRCS = gstgetbits_i386.s
@@ -19,3 +22,10 @@ libgstgetbits_la_CFLAGS = $(GST_CFLAGS) -funroll-all-loops -finline-functions -f
 libgstgetbits_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 # check_PROGRAMS = gbtest
+
+install-data-local: as-libtool-install-data-local
+
+uninstall-local: as-libtool-uninstall-local
+
+include $(top_srcdir)/common/as-libtool.mak
+
