@@ -1,5 +1,12 @@
 2004-02-18  David Schleef  <ds@schleef.org>
 
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (plugin_init): Disable gdk_pixbuf
+	typefinding, since it seems to be worse than nothing.
+	* gst/typefind/gsttypefindfunctions.c: (qt_type_find):  Add ftyp
+	atom to recognize .mp4 and .m4a files as video/quicktime.
+
+2004-02-18  David Schleef  <ds@schleef.org>
+
 	* gst/sine/demo-dparams.c: (quit_live),
 	(dynparm_log_value_changed), (dynparm_value_changed), (main):
 	Use double dparams, not float.

@@ -98,7 +98,9 @@ static void	gst_gdk_pixbuf_get_property(GObject *object, guint prop_id,
 						 GParamSpec *pspec);
 
 static void	gst_gdk_pixbuf_chain	(GstPad *pad, GstData *_data);
+#ifdef enable_typefind
 static void     gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore);
+#endif
 
 static GstElementClass *parent_class = NULL;
 
@@ -396,6 +398,7 @@ gst_gdk_pixbuf_get_property (GObject *object, guint prop_id,
 
 #define GST_GDK_PIXBUF_TYPE_FIND_SIZE 1024
 
+#ifdef enable_typefind
 static void
 gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore)
 {
@@ -438,6 +441,7 @@ gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore)
   GST_DEBUG ("closed pixbuf loader");
   g_object_unref (G_OBJECT (pixbuf_loader));
 }
+#endif
 
 /* entry point to initialize the plug-in
  * initialize the plug-in itself
@@ -447,18 +451,16 @@ gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore)
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-  GstCaps *caps;
-
   GST_DEBUG_CATEGORY_INIT (gst_gdk_pixbuf_debug, "gdkpixbuf", 0, "gdk pixbuf loader");
 
   if (!gst_element_register (plugin, "gdkpixbufdec", GST_RANK_NONE, GST_TYPE_GDK_PIXBUF))
     return FALSE;
 
-  caps = GST_CAPS_ANY;
+#ifdef enable_typefind
   gst_type_find_register (plugin, "image/*", GST_RANK_MARGINAL,
 			  gst_gdk_pixbuf_type_find, NULL,
-                          caps, NULL);
-  gst_caps_free (caps);
+                          GST_CAPS_ANY, NULL);
+#endif
 
   /* plugin initialisation succeeded */
   return TRUE;
