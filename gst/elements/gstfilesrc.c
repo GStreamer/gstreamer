@@ -320,6 +320,7 @@ gst_filesrc_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
   GstFileSrc *src;
+  gulong ul;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FILESRC (object));
@@ -332,21 +333,19 @@ gst_filesrc_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case ARG_BLOCKSIZE:
       src->block_size = g_value_get_ulong (value);
-      g_object_notify (G_OBJECT (src), "blocksize");
       break;
     case ARG_MMAPSIZE:
-      if ((src->mapsize % src->pagesize) == 0) {
-        src->mapsize = g_value_get_ulong (value);
-        g_object_notify (G_OBJECT (src), "mmapsize");
+      ul = g_value_get_ulong (value);
+      if ((ul % src->pagesize) == 0) {
+        src->mapsize = ul;
       } else {
         GST_INFO_OBJECT (src,
-            "invalid mapsize, must be a multiple of pagesize, which is %d",
-            src->pagesize);
+            "invalid mapsize %d, must be a multiple of pagesize, which is %d",
+            ul, src->pagesize);
       }
       break;
     case ARG_TOUCH:
       src->touch = g_value_get_boolean (value);
-      g_object_notify (G_OBJECT (src), "touch");
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
