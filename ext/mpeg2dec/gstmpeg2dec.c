@@ -21,7 +21,6 @@
 
 #include <inttypes.h>
 
-#include <mpeg2dec/mm_accel.h>
 #include "gstmpeg2dec.h"
 
 /* elementfactory information */
@@ -188,7 +187,7 @@ gst_mpeg2dec_init (GstMpeg2dec *mpeg2dec)
   gst_pad_set_convert_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_convert_src));
 
   /* initialize the mpeg2dec decoder state */
-  mpeg2dec->decoder = mpeg2_init (mm_accel());
+  mpeg2dec->decoder = mpeg2_init ();
 
   GST_FLAG_SET (GST_ELEMENT (mpeg2dec), GST_ELEMENT_EVENT_AWARE);
 }
