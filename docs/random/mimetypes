@@ -18,6 +18,12 @@ GstCaps *caps = gst_caps_new("video_mpeg_type",
                              gst_props_new("width",  GST_PROPS_INT(384),
                                            "height", GST_PROPS_INT(288),
                                            NULL));
+or using a macro:
+GstCaps *caps = GST_CAPS_NEW("video_mpeg_type",
+                             "video/mpeg",
+                               "width",  GST_PROPS_INT(384),
+                               "height", GST_PROPS_INT(288)
+                            );
 
 Obviously, mimetypes and their corresponding properties are of major
 importance in GStreamer for uniquely identifying media streams.
@@ -32,6 +38,9 @@ The samplerate _is_ important for _raw_ audio, so a decoder would need
 to retrieve the samplerate from the Ogg/Vorbis stream headers (that are
 part of the bytestream) in order to pass it on in the GstCaps that
 belongs to the decoded audio ('audio/raw').
+However, other plugins *might* want to know such properties, even for
+compressed streams. One such example is an AVI muxer, which does want
+to know the samplerate of an audio stream, even when it is compressed.
 
 Another problem is that many media types can be defined in multiple ways.
 For example, MJPEG video can be defined as video/jpeg, video/mjpeg,
@@ -52,43 +61,62 @@ AVI or MPEG (bytestream). They mostly contain of a set of headers that
 define the media stream(s) that is packed inside the container and the
 media data itself.
 Video codecs and audio codecs describe encoded audio or video data.
-Examples are MPEG-1 video, DivX ;-) video, MPEG-1 layer 3 (MP3) audio
-or Ogg/Vorbis audio. Actually, Ogg is a container format too (for Vorbis
+Examples are MPEG-1 video, DivX video, MPEG-1 layer 3 (MP3) audio or
+Ogg/Vorbis audio. Actually, Ogg is a container format too (for Vorbis
 audio), but these are usually used in conjunction with each other.
 
 3a) Container formats
 1 - AVI (Microsoft RIFF/AVI)
-  mimetype: video/x-msvideo
+  mimetype: video/x-avi
+
 2 - Quicktime (Apple)
   mimetype: video/x-quicktime
+
 3 - MPEG (MPEG LA)
   mimetype: video/mpeg
   properties: 'systemstream' = TRUE (BOOLEAN)
+
 4 - ASF (Microsoft)
   mimetype: video/x-asf
+
 5 - WAV (PCM)
   mimetype: audio/x-wav
+
 6 - RealMedia (Real)
   mimetype: video/realmedia
+
 7 - DV (Digital Video)
   mimetype: video/dv
   properties: 'systemstream' = TRUE (BOOLEAN)
-8 - Ogg
-  mimetypes: media/ogg
+
+8 - Ogg (Xiph)
+  mimetype: application/x-ogg
+
+9 - Matroska
+  mimetype: video/x-mkv
+
+Please note that we try to keep these mimetypes as similar as possible
+to what's used as standard mimetypes in Gnome (Gnome-VFS/Nautilus) and
+KDE (Konqueror).
 
 3b) Video codecs
 For convenience, the fourcc codes used in the AVI container format will be
-listed along with the mimetype and optional properties. All video codecs
-share the properties 'width' and 'height', both INT, which define the size
-of the frame (in pixels).
+listed along with the mimetype and optional properties.
+
+Preface - (optional) properties for all video formats:
+  'width' = X (INT)
+  'height' = X (INT)
+  'pixel_width' and 'pixel_height' = X (2xINT, together aspect ratio)
 
 1a - Raw Video (YUV/YCbCr)
   mimetype: video/raw
   properties: 'format' = 'XXXX' (fourcc)
-  known fourccs: YUY2, IYUV/I420, Y41P, etc.
+  known fourccs: YUY2, I420, Y41P, YVYU, UYVY, etc.
 
   Note: some raw video formats have implicit alignment rules.  We should
-  discuss this more.
+        discuss this more.
+  Note: some formats have multiple fourccs (e.g. IYUV/I420 or YUY2/YUYV).
+        For each of these, we only use one (e.g. I420 and YUY2).
 
 1b - Raw Video (RGB)
   mimetype: video/raw
@@ -144,72 +172,105 @@ of the frame (in pixels).
   properties: 'systemstream' = FALSE (BOOLEAN)
               'mpegversion' = 1/2/4 (INT)
   known fourccs: MPEG, MPGI
-3 - DivX ;-) 3.x, 4.x and 5.x video
+
+3 - DivX 3.x, 4.x and 5.x video
   mimetype: video/divx
-  properties: 'divxversion' = 3/4/5 (INT)
+  optional properties: 'divxversion' = 3/4/5 (INT)
   known fourccs: DIV3, DIV4, DIV5, DIVX, DX50, DIVX, divx
+
 4 - Microsoft MPEG 4.1, 4.2 and 4.3
   mimetype: video/x-msmpeg
-  properties: 'mpegversion' = 41/42/43 (INT)
+  optional properties: 'mpegversion' = 41/42/43 (INT)
   known fourccs: MPG4, MP42, MP43
+
 5 - Motion-JPEG (official and extended)
   mimetype: video/jpeg
   known fourccs: MJPG (YUY2 MJPEG), JPEG (any), PIXL (Pinnacle/Miro), VIXL
+
 6 - Sorensen (Quicktime - SVQ1/SVQ3)
   mimetypes: video/x-svq
   properties: 'svqversion' = 1/3 (INT)
+
 7 - H263 and related codecs
   mimetype: video/h263
   known fourccs: H263, i263, M263, x263, VDOW, VIVO
+
 8 - RealVideo (Real)
   mimetype: video/realvideo
+
 9 - Digital Video (DV)
   mimetype: video/dv
   properties: 'systemstream' = FALSE (BOOLEAN)
   known fourccs: DVSD, dvsd
+
 10 - Windows Media Video 1 and 2 (WMV)
   mimetype: video/wmv
   properties: 'wmvversion' = 1/2 (INT)
+
 11 - XviD
   mimetype: video/xvid
   known fourccs: xvid, XVID
+
 12 - 3IVX
   mimetype: video/3ivx
   known fourccs: 3IV1, 3IV2
-13 - Ogg/Tarkin
-  mimetype: video/x-ogg-tarkin
-14 - Ogg/Theora
-  mimetype: video/x-ogg-theora
-15 - Huffyuv
+
+13 - Ogg/Tarkin (Xiph)
+  mimetype: video/x-tarkin
+
+15 - VP3
+  mimetype: video/vp3
+
+15 - Ogg/Theora (Xiph, VP3-like)
+  mimetype: video/x-theora
+
+16 - Huffyuv
   mimetype: video/x-huffyuv
   known fourccs: HFYU
+
+TODO: colorspace identifications for MJPEG? How? Move MPEG4-compatible codecs
+      over to video/mpeg with a subtype (xvid, divx3, divx4, divx5, iso, ...)?
+      interlacing?
 
 3c) Audio Codecs
 for convenience, the two-byte hexcodes (as are being used for identification
 in AVI files) are also given
+
+Preface - (optional) properties for all audio formats:
+  currently none
+
 1 - Raw Audio
   mimetype: audio/raw
   properties: 'rate' = X (INT) <- samplerate
-              'width' = X (INT) <- audio bitsize
-              'depth' = X (INT) <- same?
+              'width' = X (INT) <- memory bits per sample
+              'depth' = X (INT) <- used bits per sample
               'law' = 0/1/2 (INT) <- no law (0), alaw (1) or mulaw (2)
               'signedness' = X (BOOLEAN)
               'channels' = X (INT) <- number of audio channels
               'endianness' = 1234/4321 <- endianness of audio stream
+
 2 - MPEG-1 layer 1/2/3 audio
-  mimetype: audio/mpeg
-  properties: 'mpegversion' = 1/2/3 (INT)
+  mimetype: audio/x-mp3
+  properties: 'layer' = 1/2/3 (INT)
+
 3 - Ogg/Vorbis
-  mimetype: application/x-ogg
+  mimetype: audio/vorbis
+
 4 - Windows Media Audio 1 and 2 (WMA)
   mimetype: audio/wma
+  properties: 'wmaversion' = 1/2 (INT)
+
 5 - AC3
   mimetype: audio/ac3
 
+6 - FLAC (Free Lossless Audio Codec)
+  mimetype: audio/x-flac
+
 4 - Status of this document
 ---------------------------
-This document is currently under construction and the types listed in here
-are purely imaginary. Don't take this as your starting point (yet).
+Not all plugins strictly follow these guidelines yet, but these are the
+official types. Plugins not following these specs either use extensions
+that should be documented, or are buggy (and should be fixed).
 
 Blame Ronald Bultje <rbultje@ronald.bitfreak.net> aka BBB for any mistakes
 in this document.
