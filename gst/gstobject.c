@@ -640,8 +640,7 @@ gst_object_real_restore_thyself (GstObject *object, xmlNodePtr self)
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (self != NULL);
   
-/* FIXME: the signalobject stuff doesn't work
- *  gst_class_signal_emit_by_name (object, "object_loaded", self); */
+   gst_class_signal_emit_by_name (object, "object_loaded", self);
 }
 #endif /* GST_DISABLE_LOADSAVE_REGISTRY */
 
@@ -806,7 +805,7 @@ gst_signal_object_class_init (GstSignalObjectClass *klass)
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   gst_signal_object_signals[SO_OBJECT_LOADED] =
     g_signal_new ("object_loaded", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
+                  G_STRUCT_OFFSET (GstSignalObjectClass, object_loaded), NULL, NULL,
                   gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
                   G_TYPE_OBJECT, G_TYPE_POINTER);
 #endif
