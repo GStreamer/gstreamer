@@ -1924,6 +1924,7 @@ gst_ghost_pad_new (gchar *name,
   ghostpad = gtk_type_new (gst_ghost_pad_get_type ());
   gst_pad_set_name (GST_PAD (ghostpad), name);
   GST_GPAD_REALPAD(ghostpad) = GST_PAD_REALIZE(pad);
+  GST_PAD_PADTEMPLATE(ghostpad) = GST_PAD_PADTEMPLATE(pad);
 
   // add ourselves to the real pad's list of ghostpads
   gst_pad_add_ghost_pad (pad, GST_PAD(ghostpad));
