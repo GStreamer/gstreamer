@@ -360,7 +360,7 @@ gst_plugin_load_absolute (const gchar *name)
   }
 
   if (stat(name,&file_status)) {
-    g_print("problem opening file %s\n",name);
+    //g_print("problem opening file %s\n",name);
     return FALSE;
   }
 
