@@ -1,3 +1,9 @@
+2003-12-31  David Schleef  <ds@schleef.org>
+
+	* gst/tcp/gsttcpsrc.c: (gst_tcpsrc_get):
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_get):
+	  Change gst_pad_proxy_link() to gst_pad_try_set_caps()
+
 2003-12-30  David Schleef  <ds@schleef.org>
 
 	* ext/ffmpeg/gstffmpegcolorspace.c:

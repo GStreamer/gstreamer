@@ -238,7 +238,7 @@ gst_tcpsrc_get (GstPad *pad)
              caps = gst_caps_load_thyself(doc->xmlRootNode);
       
              /* foward the connect, we don't signal back the result here... */
-             gst_pad_proxy_link (tcpsrc->srcpad, caps);
+             gst_pad_try_set_caps (tcpsrc->srcpad, caps);
       	   }
       
       	   g_free (buf);
