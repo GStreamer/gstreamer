@@ -1332,7 +1332,7 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
  * order. The end result should be a smoother playing AVI.
  */
 
-static gint
+static gint G_GNUC_UNUSED
 sort (gst_avi_index_entry * a, gst_avi_index_entry * b)
 {
   if (a->ts > b->ts)
@@ -1415,24 +1415,25 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
       for (i = 0; i < num_added + 1; i++) {
         gst_avi_index_entry *entry2;
 
-        if (i == 0)
+        if (i == 0) {
           entry2 = entry;
-        else {
+        } else {
           entry2 = &entries[i - 1];
           list = g_list_insert_before (list, one->next, entry2);
           entry = one->data;
           one = one->next;
+          memcpy (entry2, entry, sizeof (gst_avi_index_entry));
         }
 
         if (old_size >= ideal_size) {
           entry2->size = ideal_size;
           old_size -= ideal_size;
-        } else
+        } else {
           entry2->size = old_size;
+        }
 
         entry2->dur = GST_SECOND * entry2->size / stream->bitrate;
         if (i != 0) {
-          memcpy (entry2, entry, sizeof (gst_avi_index_entry));
           entry2->index_nr++;
           entry2->ts += entry->dur;
           entry2->offset += entry->size;
