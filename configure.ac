@@ -1152,7 +1152,6 @@ sys/v4l2/Makefile
 sys/vcd/Makefile
 sys/vga/Makefile
 sys/xvideo/Makefile
-sys/x11/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/aalib/Makefile
