@@ -1,13 +1,13 @@
 DOC=gstreamer-manual
 MAIN=$(DOC).xml
-XML=$(shell echo $(srcdir)/*.xml)
+XML=$(shell cd $(srcdir) && echo *.xml)
 XSLFO=$(srcdir)/../xsl/fo.xsl
 XSLFOMODS=$(srcdir)/../xsl/ulink.xsl $(srcdir)/../xsl/keycombo.xsl
 XSLHTML=$(srcdir)/../xsl/html.xsl
 XSLHTMLMODS=$(srcdir)/../xsl/fileext.xsl $(srcdir)/../xsl/admon.xsl \
 	$(srcdir)/../xsl/keycombo.xsl $(srcdir)/../xsl/css.xsl
 XSLS=$(XSLFO) $(XSLFOMODS) $(XSLHTML) $(XSLHTMLMODS)
-FIGS=$(shell echo $(srcdir)/*.fig)
+FIGS=$(shell cd $(srcdir) && echo *.fig)
 PNGS=$(FIGS:.fig=.png)
 PDFS=$(FIGS:.fig=.pdf)
 SRC=$(XML)
