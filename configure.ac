@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS, 0, 4, 1, 1, GST_ERROR="-Wall", GST_ERROR="-Wall -Werror")
+AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 4, 1, 1, GST_ERROR="-Wall", GST_ERROR="-Wall -Werror")
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(GST_PLUGINS, 0, 0, 0, yes)
 
@@ -134,7 +134,7 @@ GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
 ])
 
 dnl check for gstreamer; uninstalled is selected preferentially -- see pkg-config(1)
-PKG_CHECK_MODULES(GST, gstreamer >= $GST_PLUGINS_MAJOR.$GST_PLUGINS_MINOR.$GST_PLUGINS_MICRO,
+PKG_CHECK_MODULES(GST, gstreamer >= $GST_PLUGINS_VERSION_MAJOR.$GST_PLUGINS_VERSION_MINOR.$GST_PLUGINS_VERSION_MICRO,
   HAVE_GST="yes", HAVE_GST="no")
 
 if test "x$HAVE_GST" = "xno"; then
@@ -461,9 +461,7 @@ dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 dnl *** libdv ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
 GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
-  dnl use this when gtk deps are removed from its pkg-config .pc
-  dnl PKG_CHECK_MODULES(LIBDV, libdv, HAVE_LIBDV="yes", HAVE_LIBDV="no")
-  AM_PATH_LIBDV(HAVE_LIBDV="yes", HAVE_LIBDV="no")
+  PKG_CHECK_MODULES(LIBDV, libdv >= 0.98, HAVE_LIBDV="yes", HAVE_LIBDV="no")
   AC_SUBST(LIBDV_CFLAGS)
   AC_SUBST(LIBDV_LIBS)
 ])
