@@ -44,17 +44,8 @@ AC_PROG_CC
 AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
-dnl objective-c for OSX (should check if os is darwin)
-AM_CONDITIONAL([am__fastdepOBJC], false)
-case "$host" in
-  *-*darwin*)
-  OBJC="${CC}"
-  AC_SUBST(OBJC)
-  OBJCFLAGS="${CFLAGS}"
-  AC_SUBST(OBJCFLAGS)
-  _AM_DEPENDENCIES(OBJC)
-  ;;
-esac
+AS_PROG_OBJC
+
 dnl the gettext stuff needed
 AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT([external])
@@ -533,6 +524,7 @@ GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
 
 dnl *** CDROM Audio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDROM, true)
+
 GST_CHECK_FEATURE(CDROM, [CDROM Audio], cdrom, [
   AC_CHECK_HEADERS(linux/cdrom.h) dnl linux
   AC_CHECK_HEADERS(sys/cdio.h) dnl almost everything else
