@@ -61,6 +61,9 @@ struct _GstA52Dec {
 
   GstByteStream *bs;
 
+  GstClockTime	last_ts;
+  GstClockTime	current_ts;
+
   GstCaps	*streaminfo;
 };
 

@@ -458,6 +458,12 @@ gst_a52dec_loop (GstElement *element)
   }
   data = GST_BUFFER_DATA (buf);
   timestamp = gst_bytestream_get_timestamp (a52dec->bs);
+  if (timestamp == a52dec->last_ts) {
+    timestamp = a52dec->current_ts;
+  }
+  else {
+    a52dec->last_ts = timestamp;
+  }
 
   /* process */
   flags = a52dec->request_channels | A52_ADJUST_LEVEL;
@@ -495,7 +501,11 @@ gst_a52dec_loop (GstElement *element)
     if (gst_a52dec_push (a52dec->srcpad, a52dec->using_channels, a52dec->samples, timestamp)) {
       g_warning ("a52dec push error\n");
     }
+    else {
+      timestamp += sizeof (int16_t) * 256 * GST_SECOND / a52dec->sample_rate;
+    }
   }
+  a52dec->current_ts = timestamp;
 
 end:
   gst_buffer_unref (buf);
@@ -521,6 +531,8 @@ gst_a52dec_change_state (GstElement * element)
       a52dec->using_channels = A52_CHANNEL;
       a52dec->level = 1;
       a52dec->bias = 384;
+      a52dec->last_ts = -1;
+      a52dec->current_ts = -1;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
