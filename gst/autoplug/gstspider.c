@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
  
-/**
+/*
  * TODO:
  * - handle automatic removal of unneeded elements
  * - make the spider handle and send events (esp. new media)
@@ -449,8 +449,12 @@ gst_spider_identity_plug (GstSpiderIdentity *ident)
   padlist = gst_element_get_pad_list (GST_ELEMENT (spider));
   while (padlist)
   {
-    GstPad *otherpad = (GstPad *) GST_GPAD_REALPAD (padlist->data);
-    GstSpiderIdentity *peer = (GstSpiderIdentity *) GST_PAD_PARENT (otherpad);
+    GstPad *otherpad;
+    GstSpiderIdentity *peer;
+
+    g_assert (GST_IS_PAD (padlist->data));
+    otherpad = (GstPad *) GST_GPAD_REALPAD (padlist->data);
+    peer = (GstSpiderIdentity *) GST_PAD_PARENT (otherpad);
     /* we only want to connect to the other side */
     if (dir != GST_PAD_DIRECTION (otherpad))
     {
@@ -624,6 +628,7 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
   /* FIXME: make that if go away and work anyway */
   if (srcpad == conn->sink->src)
   {
+    g_assert (GST_RPAD_PEER (conn->sink->sink) != NULL);
     plugpath = gst_autoplug_sp (gst_pad_get_caps ((GstPad *) GST_RPAD_PEER (conn->sink->sink)), gst_pad_get_caps (conn->src->sink), spider->factories);
   } else {
     plugpath = gst_autoplug_sp (gst_pad_get_caps (srcpad), gst_pad_get_caps (conn->src->sink), spider->factories);

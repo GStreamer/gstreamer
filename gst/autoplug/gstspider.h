@@ -32,7 +32,7 @@ extern "C" {
 	
 extern GstElementDetails gst_spider_details;
 
-/**
+/*
  * Theory of operation:
  * When connecting a sink to a source, GstSpiderConnections are used to keep track
  * of the current status of the connection. sink -> src is the path we intend to

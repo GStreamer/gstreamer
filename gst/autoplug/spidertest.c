@@ -63,7 +63,7 @@ error_callback (GObject *object, GstObject *orig, gchar *error)
   g_print ("ERROR: %s: %s\n", GST_OBJECT_NAME (orig), error);
 }
 
-/**
+/*
  * Test program for the autoplugger.
  * Uses new API extensions (2002-01-28), too.
  *
