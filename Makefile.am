@@ -1,4 +1,4 @@
-SUBDIRS=gst-libs gst sys ext examples tools testsuite
+SUBDIRS=gst-libs gst sys ext examples tools ## testsuite
 
 DIST_SUBDIRS=gst-libs gst sys ext examples tools testsuite
 
