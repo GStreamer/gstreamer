@@ -1,3 +1,24 @@
+2004-01-29  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/ogg/gstoggdemux.c: 
+	  lots of changes - mainly support for chained bitstreams, seeking,
+	  querying and bugfixes of course
+	* ext/vorbis/Makefile.am:
+	* ext/vorbis/vorbisdec.c: 
+	* ext/vorbis/vorbisdec.h:
+	  add vorbisdec raw vorbis decoder
+	* ext/vorbis/vorbis.c: (plugin_init):
+	  register vorbisdec as PRIMARY, vorbisfile as SECONDARY
+	* gst/intfloat/Makefile.am:
+	* gst/intfloat/float22int.c:
+	* gst/intfloat/float22int.h:
+	* gst/intfloat/gstintfloatconvert.c: (plugin_init):
+	  add float2intnew plugin. It converts multichannel interleaved float to
+	  multichannel interleaved int. The name should probably be changed.
+	* gst/typefind/gsttypefindfunctions.c: (theora_type_find),
+	(plugin_init):
+	  add typefinding for raw theora video so oggdemux can detect it.
+
 2004-01-28  Julien MOUTTE  <julien@moutte.net>
 
 	* gst-libs/gst/play/gstplay.c: (gst_play_seek_to_time): seek on video
