@@ -1,3 +1,17 @@
+2004-12-19  Tim-Philipp Müller  <t.i.m@zen.co.uk>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/deinterlace/gstdeinterlace.c: (gst_deinterlace_link),
+	(gst_deinterlace_chain):
+	  Rowstride fixes. Fixes #161039.
+	* gst/videocrop/gstvideocrop.c: (gst_video_crop_init),
+	(gst_video_crop_get_property), (gst_video_crop_add_to_struct_val),
+	(gst_video_crop_getcaps), (gst_video_crop_link),
+	(gst_video_crop_i420), (gst_video_crop_chain),
+	(gst_video_crop_change_state):
+	  Rework of negotiation. Actually works now. Fixes #158650.
+
 2004-12-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_ebmlnum_sint):

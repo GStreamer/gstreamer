@@ -27,6 +27,21 @@
 #include <gst/video/video.h>
 #include "gstdeinterlace.h"
 
+/* these macros are adapted from videotestsrc, paint_setup_I420() */
+#define ROUND_UP_2(x)  (((x)+1)&~1)
+#define ROUND_UP_4(x)  (((x)+3)&~3)
+#define ROUND_UP_8(x)  (((x)+7)&~7)
+
+#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (ROUND_UP_4(width))
+#define GST_VIDEO_I420_U_ROWSTRIDE(width) (ROUND_UP_8(width)/2)
+#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
+
+#define GST_VIDEO_I420_Y_OFFSET(w,h) (0)
+#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*ROUND_UP_2(h)))
+#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+
+#define GST_VIDEO_I420_SIZE(w,h) (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+
 /* elementfactory information */
 static GstElementDetails deinterlace_details =
 GST_ELEMENT_DETAILS ("Deinterlace",
@@ -173,10 +188,10 @@ gst_deinterlace_link (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (structure, "width", &filter->width);
   gst_structure_get_int (structure, "height", &filter->height);
 
-  if (filter->picsize != (filter->width * filter->height)) {
+  if (filter->picsize != GST_VIDEO_I420_SIZE (filter->width, filter->height)) {
     if (filter->src)
       g_free (filter->src);
-    filter->picsize = filter->width * filter->height;
+    filter->picsize = GST_VIDEO_I420_SIZE (filter->width, filter->height);
     filter->src = g_malloc (filter->picsize);
   }
 
@@ -250,7 +265,7 @@ gst_deinterlace_chain (GstPad * pad, GstData * _data)
   /* 2 pixels per 2 lines = 4 pixel and we don't want to change */
   /* the color of */
 
-  y_line = width;
+  y_line = GST_VIDEO_I420_Y_ROWSTRIDE (width);
   y_src = src;
 
   iThreshold = iThreshold * iThreshold * 4;
