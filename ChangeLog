@@ -1,5 +1,13 @@
 2005-02-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/schedulers/gstoptimalscheduler.c: (remove_decoupled),
+	(schedule_chain), (get_invalid_call), (chain_invalid_call),
+	(loop_group_schedule_function), (gst_opt_scheduler_iterate):
+	Remove some FIXMEs after analysing and commenting why they
+	are not issues.
+
+2005-02-02  Wim Taymans  <wim@fluendo.com>
+
 	* gst/schedulers/gstoptimalscheduler.c:
 	(gst_opt_scheduler_class_init), (gst_opt_scheduler_init),
 	(gst_opt_scheduler_finalize), (remove_decoupled), (schedule_chain),

@@ -1309,7 +1309,9 @@ schedule_chain (GstOptSchedulerChain * chain)
     sort_chain (chain);
   GST_OPT_SCHEDULER_CHAIN_SET_CLEAN (chain);
 
-  /* FIXME handle the case where the groups change during scheduling */
+  /* since the lock on the group list is only released when we schedule
+   * a group and since we only schedule one group, we don't need to 
+   * worry about the list getting corrupted. */
   groups = chain->groups;
   while (groups) {
     GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) groups->data;
@@ -1333,6 +1335,7 @@ schedule_chain (GstOptSchedulerChain * chain)
 
       GST_LOG ("done scheduling group %p in chain %p", group, chain);
       unref_group (group);
+      /* stop scheduling more groups */
       break;
     }
 
@@ -2774,8 +2777,7 @@ gst_opt_scheduler_iterate (GstScheduler * sched)
     gboolean scheduled = FALSE;
     GSList *chains;
 
-    /* we have to schedule each of the scheduler chains now. 
-     * FIXME handle the case where the chains change during iterations. */
+    /* we have to schedule each of the scheduler chains now. */
     chains = osched->chains;
     while (chains) {
       GstOptSchedulerChain *chain = (GstOptSchedulerChain *) chains->data;
@@ -2801,6 +2803,8 @@ gst_opt_scheduler_iterate (GstScheduler * sched)
         osched->state = GST_OPT_SCHEDULER_STATE_RUNNING;
       }
 
+      /* grab the next chain before we unref, the list we are iterating
+       * can only be updated in the unref method */
       chains = g_slist_next (chains);
       unref_chain (chain);
     }
