@@ -486,6 +486,10 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 
 	GST_DEBUG (0, "sequence flags: %d, frame period: %d", 
 		      info->sequence->flags, info->sequence->frame_period);
+	GST_DEBUG (0, "profile: %02x, colour_primaries: %d", 
+		      info->sequence->profile_level_id, info->sequence->colour_primaries);
+	GST_DEBUG (0, "transfer chars: %d, matrix coef: %d", 
+		      info->sequence->transfer_characteristics, info->sequence->matrix_coefficients);
 
 	if (!gst_mpeg2dec_negotiate_format (mpeg2dec)) {
           gst_element_error (GST_ELEMENT (mpeg2dec), "could not negotiate format");
@@ -612,6 +616,8 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	    gst_buffer_unref (outbuf);
 	  }
 	  else {
+	    /* TODO set correct offset here based on frame number */
+	    GST_BUFFER_DURATION (outbuf) = mpeg2dec->frame_period;
 	    gst_pad_push (mpeg2dec->srcpad, outbuf);
 	  }
 	}
@@ -684,8 +690,6 @@ gst_mpeg2dec_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
 	  if (info->sequence && info->sequence->byte_rate) {
             *dest_value = GST_SECOND * src_value / info->sequence->byte_rate;
@@ -697,8 +701,6 @@ gst_mpeg2dec_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
         case GST_FORMAT_BYTES:
 	  if (info->sequence && info->sequence->byte_rate) {
             *dest_value = src_value * info->sequence->byte_rate / GST_SECOND;
@@ -720,7 +722,7 @@ gst_mpeg2dec_get_src_formats (GstPad *pad)
   static const GstFormat formats[] = {
     GST_FORMAT_BYTES,
     GST_FORMAT_TIME,
-    GST_FORMAT_UNITS,
+    GST_FORMAT_DEFAULT,
     0
   };
   return formats;
@@ -745,8 +747,6 @@ gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
         default:
           res = FALSE;
@@ -754,11 +754,9 @@ gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
         case GST_FORMAT_BYTES:
 	  scale = 6 * (mpeg2dec->width * mpeg2dec->height >> 2);
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	  if (info->sequence && mpeg2dec->frame_period) {
             *dest_value = src_value * scale / mpeg2dec->frame_period;
             break;
@@ -767,10 +765,8 @@ gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
           res = FALSE;
       }
       break;
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
           *dest_value = src_value * mpeg2dec->frame_period;
 	  break;
@@ -812,12 +808,9 @@ gst_mpeg2dec_src_query (GstPad *pad, GstQueryType type,
     case GST_QUERY_TOTAL:
     {
       switch (*format) {
-        case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-          /* fallthrough */
         case GST_FORMAT_TIME:
         case GST_FORMAT_BYTES:
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	{
           res = FALSE;
 
@@ -860,9 +853,6 @@ gst_mpeg2dec_src_query (GstPad *pad, GstQueryType type,
     case GST_QUERY_POSITION:
     {
       switch (*format) {
-        case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-          /* fallthrough */
         default:
           res = gst_pad_convert (pad,
                           GST_FORMAT_TIME, mpeg2dec->next_time,
