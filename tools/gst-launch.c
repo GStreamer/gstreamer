@@ -4,7 +4,7 @@
 
 static guint64 iterations = 0;
 static guint64 sum = 0;
-static guint64 min = G_MAXINT;
+static guint64 min = G_MAXINT64;
 static guint64 max = 0;
 static GstClock *s_clock;
 
