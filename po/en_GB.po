@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-04-29 12:09+0200\n"
+"POT-Creation-Date: 2004-05-04 13:46+0200\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -551,22 +551,22 @@ msgstr ", "
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr "There is no element present to handle the stream's mime type %s."
 
-#: gst/elements/gstfilesink.c:254
+#: gst/elements/gstfilesink.c:257
 msgid "No file name specified for writing."
 msgstr "No file name specified for writing."
 
-#: gst/elements/gstfilesink.c:261
+#: gst/elements/gstfilesink.c:264
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Could not open file \"%s\" for writing."
 
-#: gst/elements/gstfilesink.c:280
+#: gst/elements/gstfilesink.c:283
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Error closing file \"%s\"."
 
-#: gst/elements/gstfilesink.c:345 gst/elements/gstfilesink.c:376
-#: gst/elements/gstfilesink.c:428
+#: gst/elements/gstfilesink.c:355 gst/elements/gstfilesink.c:390
+#: gst/elements/gstfilesink.c:443
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Error while writing to file \"%s\"."
@@ -732,6 +732,7 @@ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ERROR: no toplevel pipeline element in file '%s'.\n"
 
 #: tools/gst-launch.c:123
+#, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "WARNING: only one toplevel element is supported at this time."
 
@@ -792,6 +793,7 @@ msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERROR: pipeline could not be constructed: %s.\n"
 
 #: tools/gst-launch.c:442
+#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ERROR: pipeline could not be constructed.\n"
 
@@ -801,18 +803,22 @@ msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WARNING: erroneous pipeline: %s\n"
 
 #: tools/gst-launch.c:447
+#, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Trying to run anyway.\n"
 
 #: tools/gst-launch.c:475
+#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERROR: the 'pipeline' element wasn't found.\n"
 
 #: tools/gst-launch.c:482
+#, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "RUNNING pipeline ...\n"
 
 #: tools/gst-launch.c:485
+#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERROR: pipeline doesn't want to play.\n"
 

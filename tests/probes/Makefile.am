@@ -1,5 +1,5 @@
 
 noinst_PROGRAMS = probetest
 
-LDADD = $(GST_LIBS)
-AM_CFLAGS = $(GST_CFLAGS) 
+LDADD = $(GST_OBJ_LIBS)
+AM_CFLAGS = $(GST_OBJ_CFLAGS) 

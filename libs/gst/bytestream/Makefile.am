@@ -8,8 +8,9 @@ noinst_DATA = $(as_libtool_noinst_DATA_files)
 libgstbytestreamincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/bytestream
 libgstbytestreaminclude_HEADERS = bytestream.h adapter.h
 
-libgstbytestream_la_SOURCES = bytestream.c adapter.c
-libgstbytestream_la_CFLAGS = $(GST_CFLAGS)
+libgstbytestream_la_SOURCES = bytestream.c 
+libgstbytestream_la_CFLAGS = $(GST_OBJ_CFLAGS)
+libgstbytestream_la_LIBS = $(GST_OBJ_LIBS)
 libgstbytestream_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
 
 install-data-local: as-libtool-install-data-local

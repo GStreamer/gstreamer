@@ -220,6 +220,7 @@ GST_PAD_CONNECT_OK
 GST_PAD_CONNECT_DONE
 GstPadConnectReturn
 GstPadConnectFunction
+gst_info
 <SUBSECTION Standard>
 GST_PAD_IS_CONNECTED
 </SECTION>

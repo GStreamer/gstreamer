@@ -6,8 +6,8 @@ tests_fail =
 tests_ignore =
 
 libloadgst_la_SOURCES = loadgst.c
-libloadgst_la_CFLAGS = $(GST_CFLAGS)
-libloadgst_la_LDFLAGS = -module -avoid-version $(GST_LIBS)
+libloadgst_la_CFLAGS = $(GST_OBJ_CFLAGS)
+libloadgst_la_LDFLAGS = -module -avoid-version $(GST_OBJ_LIBS)
 
 dlopen_gst_SOURCES = dlopen_gst.c
 dlopen_gst_CFLAGS = $(GLIB_CFLAGS)

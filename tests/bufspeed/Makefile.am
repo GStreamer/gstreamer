@@ -10,5 +10,5 @@ gstbuffer.c:
 
 EXTRA_DIST = gstmempool.h
 
-LDADD = $(GST_LIBS)
-AM_CFLAGS = $(GST_CFLAGS) -I$(top_srcdir)/gst
+LDADD = $(GST_OBJ_LIBS)
+AM_CFLAGS = $(GST_OBJ_CFLAGS) -I$(top_srcdir)/gst

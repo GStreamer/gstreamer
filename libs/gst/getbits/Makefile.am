@@ -18,8 +18,8 @@ noinst_HEADERS = gstgetbits_inl.h
 libgstgetbits_la_SOURCES = getbits.c gstgetbits_inl.h gstgetbits_generic.c $(GSTARCH_SRCS)
 EXTRA_libgstgetbits_la_SOURCES = gstgetbits_i386.s
 
-libgstgetbits_la_CFLAGS = $(GST_CFLAGS) -funroll-all-loops -finline-functions -ffast-math
-libgstgetbits_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
+libgstgetbits_la_CFLAGS = $(GST_OBJ_CFLAGS) -funroll-all-loops -finline-functions -ffast-math
+libgstgetbits_la_LDFLAGS = $(GST_OBJ_LIBS) $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
 
 # check_PROGRAMS = gbtest
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-04-29 12:09+0200\n"
+"POT-Creation-Date: 2004-05-04 13:46+0200\n"
 "PO-Revision-Date: 2004-04-20 18:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -566,22 +566,22 @@ msgstr ", "
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr "Немає елементу для обробки потоку з MIME типом %s."
 
-#: gst/elements/gstfilesink.c:254
+#: gst/elements/gstfilesink.c:257
 msgid "No file name specified for writing."
 msgstr "Не вказана назва файлу для запису."
 
-#: gst/elements/gstfilesink.c:261
+#: gst/elements/gstfilesink.c:264
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Не вдається відкрити файл \"%s\" для запису."
 
-#: gst/elements/gstfilesink.c:280
+#: gst/elements/gstfilesink.c:283
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Помилка закривання файлу \"%s\"."
 
-#: gst/elements/gstfilesink.c:345 gst/elements/gstfilesink.c:376
-#: gst/elements/gstfilesink.c:428
+#: gst/elements/gstfilesink.c:355 gst/elements/gstfilesink.c:390
+#: gst/elements/gstfilesink.c:443
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Помилка при записуванні у файл \"%s\"."
@@ -750,6 +750,7 @@ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ПОМИЛКА: немає верхнього елементу каналу у файлі \"%s\".\n"
 
 #: tools/gst-launch.c:123
+#, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "ПОПЕРЕДЖЕННЯ: наразі підтримується лише один верхній елемент."
 
@@ -811,6 +812,7 @@ msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ПОМИЛКА: канал не може бути сконструйований: %s.\n"
 
 #: tools/gst-launch.c:442
+#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ПОМИЛКА: канал не може бути сконструйований.\n"
 
@@ -820,18 +822,22 @@ msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ПОПЕРЕДЖЕННЯ: помилковий канал: %s\n"
 
 #: tools/gst-launch.c:447
+#, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Спроба запуститись у будь-якому разі.\n"
 
 #: tools/gst-launch.c:475
+#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ПОМИЛКА: не знайдений елемент \"pipeline\".\n"
 
 #: tools/gst-launch.c:482
+#, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
 #: tools/gst-launch.c:485
+#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ПОМИЛКА: канал не може почати відтворення.\n"
 

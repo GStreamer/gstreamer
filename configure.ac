@@ -53,10 +53,14 @@ AC_DEFINE_UNQUOTED([LOCALEDIR], "$LOCALEDIR",
 
 
 dnl decide on error flags
-AS_COMPILER_FLAG(-Wall,GST_ERROR="$GST_ERROR -Wall",GST_ERROR="$GST_ERROR")
-if test "x$GST_CVS" = "xyes"; then
-  AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
-  GST_ERROR="$GST_ERROR"
+dnl if we support -Wall, set it unconditionally
+AS_COMPILER_FLAG(-Wall,
+                 GST_ERROR_CFLAGS="-Wall",
+                 GST_ERROR_CFLAGS="")
+dnl if we're in nano >= 1, add -Werror if supported
+if test "x$GST_CVS" = "xyes"
+then
+  AS_COMPILER_FLAG(-Werror, GST_ERROR_CFLAGS="$GST_ERROR_CFLAGS -Werror")
 fi
 
 dnl We disable static building for development, for time savings
@@ -155,16 +159,6 @@ dnl code be compiled with the same sizeof(off_t), so we use
 dnl the following crude hack.
 dnl
 
-dnl
-dnl GST_CFLAGS are split up as GST_EXT_CFLAGS and GST_INT_CFLAGS
-dnl same for libs
-dnl this is so we can make GST_CFLAGS for external modules available
-dnl without mixing in internal (uninstalled) CFLAGS
-dnl
-
-dnl disable deprecated functions internally
-GST_INT_CFLAGS="-DGST_DISABLE_DEPRECATED"
-
 AC_MSG_CHECKING(for large file support)
 AC_TRY_RUN([
 #define _LARGEFILE_SOURCE
@@ -173,14 +167,11 @@ AC_TRY_RUN([
 int main () { return !(sizeof(off_t) == 8); }
 ],
 [
-AC_MSG_RESULT(yes)
-GST_EXT_CFLAGS="-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+  AC_MSG_RESULT(yes)
+  GST_PKG_CFLAGS="-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
 ],
 [
-AC_MSG_RESULT(no)
-],
-[
-AC_MSG_RESULT(no)
+  AC_MSG_RESULT(no)
 ])
 
 dnl check for mmap
@@ -269,9 +260,6 @@ AC_SUBST(GLIB_CFLAGS)
 if test "x$HAVE_GLIB2" = "xno"; then
   AC_MSG_ERROR([GStreamer requires GLib $GLIB2_REQ to compile.])
 fi
-
-GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
-AC_SUBST(GST_PKG_DEPS)
 
 dnl Check for glib2 without extra fat, useful for the unversioned tool frontends
 PKG_CHECK_MODULES(GLIB_ONLY, glib-2.0 >= $GLIB2_REQ)
@@ -555,34 +543,50 @@ PLUGINS_BUILDDIR=`pwd`
 AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR, "$PLUGINS_BUILDDIR", [Define the uninstalled plugin directory])
 AC_SUBST(PLUGINS_BUILDDIR)
 
+dnl LDFLAGS modifier defining exported symbols from built objects
+EXPORT_LDFLAGS="-export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*"
+
+dnl GST_PKG_*:    the flags we use that are also used
+dnl               for external applications/.pc file
+dnl GST_LIB_*:    used for the main library
+dnl GST_OBJ_*:    the flags we use for all the objects internal to the core
+dnl GST_PLUGIN_*: additional flags we use for all plugins
+
+dnl finalize _CFLAGS and _LIBS
+dnl flags exported for external applications and use in our pkg-config .pc files
 dnl since glib and xml are package deps, there's no need to include their cflags
 dnl in the pkg-config file
 
-dnl for pkg-config
-GST_PKG_CFLAGS=$GST_EXT_CFLAGS
-GST_PKG_LIBS=$GST_EXT_LIBS
+GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_CFLAGS)
 AC_SUBST(GST_PKG_LIBS)
+AC_SUBST(GST_PKG_DEPS)
 
-dnl finalize _CFLAGS and _LIBS
-dnl add GLIB and XML if necessary to EXT_*
-GST_CFLAGS="$GST_EXT_CFLAGS $XML_CFLAGS $GLIB_CFLAGS"
-GST_LIBS="$GST_EXT_LIBS $XML_LIBS $GLIB_LIBS -lpopt"
+dnl flags shared for all internal objects (core libs, elements, applications)
+dnl we disable deprecated internally
+dnl XML, GLib, popt, GST_INT, VALGRIND, and the right include for CFLAGS
+dnl no need to add XML, GLib, popt explicitly since libgstreamer pulls them in
+GST_INT_CFLAGS="$GLIB_CFLAGS $XML_CFLAGS \
+ $GST_ERROR_CFLAGS -DGST_DISABLE_DEPRECATED"
 
 dnl Private vars for libgst only
-LIBGST_LIBS="$GST_LIBS"
-LIBGST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir) $GST_ERROR"
-AC_SUBST(LIBGST_LIBS)
-AC_SUBST(LIBGST_CFLAGS)
+GST_LIB_CFLAGS="$GST_PKG_CFLAGS $GST_INT_CFLAGS \
+  $VALGRIND_CFLAGS -I\$(top_srcdir)"
+GST_LIB_LIBS="$XML_LIBS $GLIB_LIBS -lpopt $GST_PKG_LIBS $VALGRIND_LIBS"
+GST_LIB_LDFLAGS="$GST_LT_LDFLAGS -version-info $GST_LIBVERSION $EXPORT_LDFLAGS"
+AC_SUBST(GST_LIB_CFLAGS)
+AC_SUBST(GST_LIB_LIBS)
+AC_SUBST(GST_LIB_LDFLAGS)
 
-dnl Vars for everyone else
-GST_INT_LIBS="\$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la"
-GST_INT_CFLAGS="$GST_INT_CFLAGS -I\$(top_srcdir)/libs -I\$(top_srcdir)/include"
+dnl Vars for all internal objects built on libgstreamer
+GST_OBJ_CFLAGS="$GST_INT_CFLAGS -I\$(top_srcdir)/libs -I\$(top_srcdir)"
+GST_OBJ_LIBS="\$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la"
 
-AC_SUBST(GST_CFLAGS, "$LIBGST_CFLAGS $GST_INT_CFLAGS")
-AC_SUBST(GST_LIBS, "$LIBGST_LIBS $GST_INT_LIBS")
+AC_SUBST(GST_OBJ_CFLAGS, "$GST_OBJ_CFLAGS")
+AC_SUBST(GST_OBJ_LIBS, "$GST_OBJ_LIBS")
 
-GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).* $GST_LIBS"
+dnl specific additional LDFLAGS for plugins
+GST_PLUGIN_LDFLAGS="-module -avoid-version $EXPORT_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
 plugindir="\$(libdir)/gstreamer-$GST_MAJORMINOR"

@@ -105,8 +105,8 @@ extra_files =
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
-GTKDOC_CFLAGS = $(GST_CFLAGS) -I$(top_builddir)
-GTKDOC_LIBS = $(GST_LIBS) $(SCANOBJ_DEPS)
+GTKDOC_CFLAGS = $(GST_OBJ_CFLAGS) -I$(top_builddir)
+GTKDOC_LIBS = $(GST_OBJ_LIBS) $(SCANOBJ_DEPS)
 
 GTKDOC_CC=$(LIBTOOL) --mode=compile $(CC)
 GTKDOC_LD=$(LIBTOOL) --mode=link $(CC)

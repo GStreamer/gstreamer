@@ -42,8 +42,8 @@ libgstelements_la_SOURCES =	\
 	gsttee.c		\
 	gsttypefindelement.c
 
-libgstelements_la_CFLAGS = $(GST_CFLAGS)
-libgstelements_la_LIBADD =
+libgstelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
+libgstelements_la_LIBADD = $(GST_OBJ_LIBS)
 libgstelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
 
 noinst_HEADERS =		\

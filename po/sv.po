@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-04-29 12:09+0200\n"
+"POT-Creation-Date: 2004-05-04 13:46+0200\n"
 "PO-Revision-Date: 2004-03-20 18:41+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -567,22 +567,22 @@ msgid "There is no element present to handle the stream's mime type %s."
 msgstr ""
 "Det finns inget element tillgängligt för att hantera flödets mime-typ %s."
 
-#: gst/elements/gstfilesink.c:254
+#: gst/elements/gstfilesink.c:257
 msgid "No file name specified for writing."
 msgstr "Inget filnamn angivet för skrivning."
 
-#: gst/elements/gstfilesink.c:261
+#: gst/elements/gstfilesink.c:264
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kunde inte öppna filen \"%s\" för skrivning."
 
-#: gst/elements/gstfilesink.c:280
+#: gst/elements/gstfilesink.c:283
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: gst/elements/gstfilesink.c:345 gst/elements/gstfilesink.c:376
-#: gst/elements/gstfilesink.c:428
+#: gst/elements/gstfilesink.c:355 gst/elements/gstfilesink.c:390
+#: gst/elements/gstfilesink.c:443
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid skrivning till filen \"%s\"."
@@ -758,6 +758,7 @@ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FEL: inget rörledningselement på översta nivån i filen \"%s\".\n"
 
 #: tools/gst-launch.c:123
+#, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "VARNING: endast ett element på översta nivån stöds just nu."
 
@@ -818,6 +819,7 @@ msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras: %s.\n"
 
 #: tools/gst-launch.c:442
+#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras.\n"
 
@@ -829,18 +831,22 @@ msgstr "VARNING: felaktig rörledning: %s\n"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #: tools/gst-launch.c:447
+#, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Försöker köra ändå.\n"
 
 #: tools/gst-launch.c:475
+#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEL: \"pipeline\"-elementet hittades inte.\n"
 
 #: tools/gst-launch.c:482
+#, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "KÖR rörledning...\n"
 
 #: tools/gst-launch.c:485
+#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
 

@@ -166,3 +166,14 @@ gstcompat
 </para>
 
 
+<!-- ##### MACRO gst_info ##### -->
+<para>
+
+</para>
+
+@...: 
+<!-- # Unused Parameters # -->
+@format: 
+@args...: 
+
+

@@ -42,35 +42,35 @@ bin_SCRIPTS = gst-feedback-@GST_MAJORMINOR@
 # make sure each versioned tool has the right source file and flags
 if !GST_DISABLE_REGISTRY
 gst_register_@GST_MAJORMINOR@_SOURCES = gst-register.c
-gst_register_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
-gst_register_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
+gst_register_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
+gst_register_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 endif
 if !GST_DISABLE_LOADSAVE
 gst_complete_@GST_MAJORMINOR@_SOURCES = gst-complete.c
-gst_complete_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
-gst_complete_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
+gst_complete_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
+gst_complete_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 gst_compprep_@GST_MAJORMINOR@_SOURCES = gst-compprep.c
-gst_compprep_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
-gst_compprep_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
+gst_compprep_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
+gst_compprep_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 gst_xmllaunch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
-gst_xmllaunch_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
-gst_xmllaunch_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
+gst_xmllaunch_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
+gst_xmllaunch_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 endif
 gst_inspect_@GST_MAJORMINOR@_SOURCES = gst-inspect.c
-gst_inspect_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
-gst_inspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
+gst_inspect_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
+gst_inspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 gst_launch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
-gst_launch_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
-gst_launch_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
+gst_launch_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
+gst_launch_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 gst_md5sum_@GST_MAJORMINOR@_SOURCES = gst-md5sum.c
-gst_md5sum_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
-gst_md5sum_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
+gst_md5sum_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
+gst_md5sum_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 gst_typefind_@GST_MAJORMINOR@_SOURCES = gst-typefind.c
-gst_typefind_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
-gst_typefind_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
+gst_typefind_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
+gst_typefind_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 gst_xmlinspect_@GST_MAJORMINOR@_SOURCES = gst-xmlinspect.c
-gst_xmlinspect_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
-gst_xmlinspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
+gst_xmlinspect_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
+gst_xmlinspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 
 gst-feedback-@GST_MAJORMINOR@: gst-feedback-m.m
 	cp $(srcdir)/gst-feedback-m.m $@

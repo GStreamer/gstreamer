@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gst.h: Main header for GStreamer, apps should include this
+ * gstcompat.h: backwards compatibility stuff
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -28,7 +28,7 @@
 G_BEGIN_DECLS
 
 #ifndef GST_DISABLE_DEPRECATED
-/* 0.5.2 changes */
+/* 0.5.2 changes; remove these ASAP */
 
 /* element functions */
 #define	gst_element_connect(a,b)	gst_element_link(a,b)
@@ -71,6 +71,15 @@ typedef GstPadLinkFunction		GstPadConnectFunction;
 /*
  * GST_RPAD_LINKFUNC
  */
+
+/* 0.8.1.1 removal; remove completely in 0.9 */
+/* information messages */
+#  ifdef G_HAVE_ISO_VARARGS
+#define gst_info(...) GST_INFO(__VA_ARGS__)
+#  elif defined(G_HAVE_GNUC_VARARGS)
+#define gst_info(format,args...) GST_INFO(format,##args)
+#  endif
+
 #endif /* not GST_DISABLE_DEPRECATED */
 
 G_END_DECLS

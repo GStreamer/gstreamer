@@ -1,3 +1,67 @@
+2004-05-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstcompat.sgml:
+	* examples/appreader/Makefile.am:
+	* examples/cutter/Makefile.am:
+	* examples/events/Makefile.am:
+	* examples/helloworld/Makefile.am:
+	* examples/helloworld2/Makefile.am:
+	* examples/launch/Makefile.am:
+	* examples/manual/Makefile.am:
+	* examples/mixer/Makefile.am:
+	* examples/pingpong/Makefile.am:
+	* examples/plugins/Makefile.am:
+	* examples/queue/Makefile.am:
+	* examples/queue2/Makefile.am:
+	* examples/queue3/Makefile.am:
+	* examples/queue4/Makefile.am:
+	* examples/retag/Makefile.am:
+	* examples/thread/Makefile.am:
+	* examples/typefind/Makefile.am:
+	* examples/xml/Makefile.am:
+	* gst/Makefile.am:
+	* gst/autoplug/Makefile.am:
+	* gst/elements/Makefile.am:
+	* gst/gstcompat.h:
+	* gst/indexers/Makefile.am:
+	* gst/parse/Makefile.am:
+	* gst/registries/Makefile.am:
+	* gst/schedulers/Makefile.am:
+	* libs/gst/bytestream/Makefile.am:
+	* libs/gst/control/Makefile.am:
+	* libs/gst/getbits/Makefile.am:
+	* po/af.po:
+	* po/az.po:
+	* po/en_GB.po:
+	* po/fr.po:
+	* po/nl.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* tests/Makefile.am:
+	* tests/bufspeed/Makefile.am:
+	* tests/instantiate/Makefile.am:
+	* tests/memchunk/Makefile.am:
+	* tests/muxing/Makefile.am:
+	* tests/negotiation/Makefile.am:
+	* tests/probes/Makefile.am:
+	* tests/sched/Makefile.am:
+	* tests/seeking/Makefile.am:
+	* tests/threadstate/Makefile.am:
+	* testsuite/caps/Makefile.am:
+	* testsuite/cleanup/Makefile.am:
+	* testsuite/dlopen/Makefile.am:
+	* testsuite/dynparams/Makefile.am:
+	* testsuite/plugin/Makefile.am:
+	* testsuite/states/Makefile.am:
+	* tools/Makefile.am:
+          reorganize compile/link flags to be consistent
+          put gst_info in gstcompat.h and actually use GST_DISABLE_DEPRECATED
+
 2004-05-04  David Schleef  <ds@schleef.org>
 
 	The "once more, with feeling" check-in.
