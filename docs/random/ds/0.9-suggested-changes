@@ -4,6 +4,9 @@ API:
 
   - MAKE A DOCUMENT THAT LISTS ALL API CHANGES AND HOW TO DEAL WITH THEM
 
+ - GstElementState should be a real enum, not something that looks like flags
+   changing state can be done with ++ and -- instead of >> and <<
+
  - replace object/structure set/get macros with actual functions.
 
  - events should all use GstStructure
