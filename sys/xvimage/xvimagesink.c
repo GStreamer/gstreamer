@@ -47,6 +47,9 @@ MotifWmHints, MwmHints;
 #define MWM_HINTS_DECORATIONS   (1L << 1)
 
 static void gst_xvimagesink_buffer_free (GstBuffer * buffer);
+static void gst_xvimagesink_xvimage_destroy (GstXvImageSink * xvimagesink,
+    GstXvImage * xvimage);
+
 
 /* ElementFactory information */
 static GstElementDetails gst_xvimagesink_details =
@@ -126,35 +129,47 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
   handler = XSetErrorHandler (gst_xvimagesink_handle_xerror);
 
   /* Trying to create a 1x1 picture */
+  GST_DEBUG ("XvShmCreateImage of 1x1");
   xvimage->xvimage = XvShmCreateImage (xcontext->disp, xcontext->xv_port_id,
       xcontext->im_format, NULL, 1, 1, &xvimage->SHMInfo);
-  if (!xvimage->xvimage)
-    goto out;
+  if (!xvimage->xvimage) {
+    GST_WARNING ("could not XvShmCreateImage a 1x1 image");
+    goto beach;
+  }
+  xvimage->size = xvimage->xvimage->data_size;
 
-  xvimage->size = xvimage->xvimage->bytes_per_line;
   xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
       IPC_CREAT | 0777);
+  if (xvimage->SHMInfo.shmid == -1) {
+    GST_WARNING ("could not get shared memory of %d bytes", xvimage->size);
+    goto beach;
+  }
+
   xvimage->SHMInfo.shmaddr = shmat (xvimage->SHMInfo.shmid, 0, 0);
+  if ((int) xvimage->SHMInfo.shmaddr == -1) {
+    GST_WARNING ("Failed to shmat: %s", g_strerror (errno));
+    goto beach;
+  }
+
   xvimage->xvimage->data = xvimage->SHMInfo.shmaddr;
   xvimage->SHMInfo.readOnly = FALSE;
 
-  XShmAttach (xcontext->disp, &xvimage->SHMInfo);
+  if (XShmAttach (xcontext->disp, &xvimage->SHMInfo) == 0) {
+    GST_WARNING ("Failed to XShmAttach");
+    goto beach;
+  }
 
   XSync (xcontext->disp, 0);
 
-  if (error_caught) {
-    /* Failed, detaching shared memory, destroying image and telling we can't
-       use XShm */
-    error_caught = FALSE;
-    shmdt (xvimage->SHMInfo.shmaddr);
-    shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
-  } else {
-    XShmDetach (xcontext->disp, &xvimage->SHMInfo);
-    shmdt (xvimage->SHMInfo.shmaddr);
-    shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
-    result = TRUE;
-  }
-out:
+  XShmDetach (xcontext->disp, &xvimage->SHMInfo);
+  shmdt (xvimage->SHMInfo.shmaddr);
+  shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
+
+  /* store whether we succeeded in result and reset error_caught */
+  result = !error_caught;
+  error_caught = FALSE;
+
+beach:
   XSetErrorHandler (handler);
   if (xvimage->xvimage)
     XFree (xvimage->xvimage);
@@ -170,6 +185,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
     gint width, gint height)
 {
   GstXvImage *xvimage = NULL;
+  gboolean succeeded = FALSE;
 
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
   GST_DEBUG_OBJECT (xvimagesink, "creating %dx%d", width, height);
@@ -189,48 +205,67 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
         xvimagesink->xcontext->xv_port_id,
         xvimage->im_format, NULL,
         xvimage->width, xvimage->height, &xvimage->SHMInfo);
-    /* we have to use the returned data_size, not our own calculation */
+    if (!xvimage->xvimage) {
+      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
+          ("could not XvShmCreateImage a %dx%d image"));
+      goto beach;
+    }
+
+    /* we have to use the returned data_size for our shm size */
     xvimage->size = xvimage->xvimage->data_size;
     GST_DEBUG_OBJECT (xvimagesink, "XShm image size is %d", xvimage->size);
 
     xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
         IPC_CREAT | 0777);
+    if (xvimage->SHMInfo.shmid == -1) {
+      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
+          ("could not get shared memory of %d bytes", xvimage->size));
+      goto beach;
+    }
 
     xvimage->SHMInfo.shmaddr = shmat (xvimage->SHMInfo.shmid, 0, 0);
-    xvimage->xvimage->data = xvimage->SHMInfo.shmaddr;
+    if ((int) xvimage->SHMInfo.shmaddr == -1) {
+      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
+          ("Failed to shmat: %s", g_strerror (errno)));
+      goto beach;
+    }
 
+    xvimage->xvimage->data = xvimage->SHMInfo.shmaddr;
     xvimage->SHMInfo.readOnly = FALSE;
 
-    XShmAttach (xvimagesink->xcontext->disp, &xvimage->SHMInfo);
+    if (XShmAttach (xvimagesink->xcontext->disp, &xvimage->SHMInfo) == 0) {
+      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
+          ("Failed to XShmAttach"));
+      goto beach;
+    }
 
     XSync (xvimagesink->xcontext->disp, FALSE);
-
-    shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
-    xvimage->SHMInfo.shmid = -1;
   } else
 #endif /* HAVE_XSHM */
   {
-    /* We use image's internal data pointer */
     xvimage->xvimage = XvCreateImage (xvimagesink->xcontext->disp,
         xvimagesink->xcontext->xv_port_id,
         xvimage->im_format, NULL, xvimage->width, xvimage->height);
+    if (!xvimage->xvimage) {
+      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
+          ("could not XvCreateImage a %dx%d image"));
+      goto beach;
+    }
 
-    /* Allocating memory for image's data */
+    /* we have to use the returned data_size for our image size */
     xvimage->size = xvimage->xvimage->data_size;
     xvimage->xvimage->data = g_malloc (xvimage->size);
 
     XSync (xvimagesink->xcontext->disp, FALSE);
   }
+  succeeded = TRUE;
+  g_mutex_unlock (xvimagesink->x_lock);
 
-  if (!xvimage->xvimage) {
-    if (xvimage->xvimage->data) {
-      g_free (xvimage->xvimage->data);
-    }
-    g_free (xvimage);
+beach:
+  if (!succeeded) {
+    gst_xvimagesink_xvimage_destroy (xvimagesink, xvimage);
     xvimage = NULL;
   }
-
-  g_mutex_unlock (xvimagesink->x_lock);
 
   return xvimage;
 }
@@ -251,26 +286,21 @@ gst_xvimagesink_xvimage_destroy (GstXvImageSink * xvimagesink,
 
 #ifdef HAVE_XSHM
   if (xvimagesink->xcontext->use_xshm) {
-    if (xvimage->SHMInfo.shmaddr)
+    if ((int) xvimage->SHMInfo.shmaddr != -1) {
       XShmDetach (xvimagesink->xcontext->disp, &xvimage->SHMInfo);
-
-    if (xvimage->xvimage)
-      XFree (xvimage->xvimage);
-
-    if (xvimage->SHMInfo.shmaddr)
       shmdt (xvimage->SHMInfo.shmaddr);
-
+    }
     if (xvimage->SHMInfo.shmid > 0)
       shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
+    if (xvimage->xvimage)
+      XFree (xvimage->xvimage);
   } else
 #endif /* HAVE_XSHM */
   {
     if (xvimage->xvimage) {
-      /* Freeing image data */
       if (xvimage->xvimage->data) {
         g_free (xvimage->xvimage->data);
       }
-      /* Freeing image itself */
       XFree (xvimage->xvimage);
     }
   }
@@ -298,6 +328,10 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstXvImage * xvimage)
   /* We scale to the window's geometry */
 #ifdef HAVE_XSHM
   if (xvimagesink->xcontext->use_xshm) {
+    GST_LOG_OBJECT (xvimagesink,
+        "XvShmPutImage with image %dx%d and window %dx%d",
+        xvimage->width, xvimage->height,
+        xvimagesink->xwindow->width, xvimagesink->xwindow->height);
     XvShmPutImage (xvimagesink->xcontext->disp,
         xvimagesink->xcontext->xv_port_id,
         xvimagesink->xwindow->win,
