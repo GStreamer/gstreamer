@@ -22,10 +22,23 @@ G_STMT_START{                                                   \
   }                                                             \
 }G_STMT_END
 
-#define PUT_STRING(pfx,str, a...)	                       	\
+#ifdef G_HAVE_ISO_VARARGS
+
+#define PUT_STRING(pfx, ...)	                                \
+G_STMT_START{                                                   \
+  gchar *ps_val = g_strdup_printf(__VA_ARGS__);                 \
+  g_print ("%*.*s%s\n", pfx, pfx, "", ps_val);                  \
+  g_free(ps_val);                                               \
+}G_STMT_END
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
+#define PUT_STRING(pfx, str, a...)	                       	\
 G_STMT_START{                                                   \
   g_print ("%*.*s"str"\n", pfx, pfx, "", ##a);	   		\
 }G_STMT_END
+
+#endif
 
 static void 
 print_prop (GstPropsEntry *prop, gint pfx) 
