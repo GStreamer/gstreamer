@@ -31,10 +31,9 @@
  * Class init stuff.
  */
 
-GstMpeg2EncPictureReader::GstMpeg2EncPictureReader (GstPad        *in_pad,
-						    const GstCaps *in_caps,
-						    EncoderParams *params) :
-  PictureReader (*params)
+GstMpeg2EncPictureReader::GstMpeg2EncPictureReader (GstPad * in_pad,
+    const GstCaps * in_caps, EncoderParams * params):
+PictureReader (*params)
 {
   pad = in_pad;
   caps = gst_caps_copy (in_caps);
@@ -50,7 +49,7 @@ GstMpeg2EncPictureReader::~GstMpeg2EncPictureReader ()
  */
 
 void
-GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams &strm)
+GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams & strm)
 {
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   gint width, height;
@@ -65,8 +64,7 @@ GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams &strm)
   strm.frame_rate_code = mpeg_framerate_code (mpeg_conform_framerate (fps));
   strm.interlacing_code = Y4M_ILACE_NONE;
   strm.aspect_ratio_code = mpeg_guess_mpeg_aspect_code (2, y4m_sar_SQUARE,
-							strm.horizontal_size,
-							strm.vertical_size);
+      strm.horizontal_size, strm.vertical_size);
 
   /* FIXME:
    * strm.interlacing_code = y4m_si_get_interlace(&si);
@@ -82,15 +80,24 @@ GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams &strm)
  * Read a frame. Return true means EOS or error.
  */
 
-bool
-GstMpeg2EncPictureReader::LoadFrame ()
+bool GstMpeg2EncPictureReader::LoadFrame ()
 {
-  GstData *data;
-  GstBuffer *buf = NULL;
-  gint i, x, y, n;
-  guint8 *frame;
-  GstFormat fmt = GST_FORMAT_DEFAULT;
-  gint64 pos = 0, tot = 0;
+  GstData *
+      data;
+  GstBuffer *
+      buf = NULL;
+  gint
+      i,
+      x,
+      y,
+      n;
+  guint8 *
+      frame;
+  GstFormat
+      fmt = GST_FORMAT_DEFAULT;
+  gint64
+      pos = 0, tot = 0;
+
   gst_pad_query (GST_PAD_PEER (pad), GST_QUERY_POSITION, &fmt, &pos);
   gst_pad_query (GST_PAD_PEER (pad), GST_QUERY_TOTAL, &fmt, &tot);
 
@@ -99,16 +106,16 @@ GstMpeg2EncPictureReader::LoadFrame ()
       gst_pad_set_element_private (pad, NULL);
     } else if (!(data = gst_pad_pull (pad))) {
       GST_ELEMENT_ERROR (gst_pad_get_parent (pad), RESOURCE, READ,
-			 (NULL), (NULL));
+	  (NULL), (NULL));
       return true;
     }
 
     if (GST_IS_EVENT (data)) {
       if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
-        gst_event_unref (GST_EVENT (data));
-        return true;
+	gst_event_unref (GST_EVENT (data));
+	return true;
       } else {
-        gst_pad_event_default (pad, GST_EVENT (data));
+	gst_pad_event_default (pad, GST_EVENT (data));
       }
     } else {
       buf = GST_BUFFER (data);
@@ -121,18 +128,18 @@ GstMpeg2EncPictureReader::LoadFrame ()
   y = encparams.vertical_size;
 
   for (i = 0; i < y; i++) {
-    memcpy (input_imgs_buf[n][0]+i*encparams.phy_width, frame, x);
+    memcpy (input_imgs_buf[n][0] + i * encparams.phy_width, frame, x);
     frame += x;
   }
   lum_mean[n] = LumMean (input_imgs_buf[n][0]);
   x >>= 1;
   y >>= 1;
   for (i = 0; i < y; i++) {
-    memcpy (input_imgs_buf[n][1]+i*encparams.phy_chrom_width, frame, x);
+    memcpy (input_imgs_buf[n][1] + i * encparams.phy_chrom_width, frame, x);
     frame += x;
   }
   for (i = 0; i < y; i++) {
-    memcpy (input_imgs_buf[n][2]+i*encparams.phy_chrom_width, frame, x);
+    memcpy (input_imgs_buf[n][2] + i * encparams.phy_chrom_width, frame, x);
     frame += x;
   }
   gst_buffer_unref (buf);

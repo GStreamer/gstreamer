@@ -26,7 +26,8 @@
 #include "gstmplexjob.hh"
 
 
-enum {
+enum
+{
   ARG_0,
   ARG_FORMAT,
   ARG_MUX_BITRATE,
@@ -36,7 +37,7 @@ enum {
   ARG_SEGMENT_SIZE,
   ARG_PACKETS_PER_PACK,
   ARG_SECTOR_SIZE
-  /* FILL ME */
+      /* FILL ME */
 };
 
 /*
@@ -53,22 +54,21 @@ gst_mplex_format_get_type (void)
 
   if (!mplex_format_type) {
     static const GEnumValue mplex_formats[] = {
-      { 0, "0", "Generic MPEG-1" },
-      { 1, "1", "Standard VCD" },
-      { 2, "2", "User VCD" },
-      { 3, "3", "Generic MPEG-2" },
-      { 4, "4", "Standard SVCD" },
-      { 5, "5", "User SVCD" },
-      { 6, "6", "VCD Stills sequences" },
-      { 7, "7", "SVCD Stills sequences" },
-      { 8, "8", "DVD MPEG-2 for dvdauthor" },
-      { 9, "9", "DVD MPEG-2" },
-      { 0, NULL, NULL },
+      {0, "0", "Generic MPEG-1"},
+      {1, "1", "Standard VCD"},
+      {2, "2", "User VCD"},
+      {3, "3", "Generic MPEG-2"},
+      {4, "4", "Standard SVCD"},
+      {5, "5", "User SVCD"},
+      {6, "6", "VCD Stills sequences"},
+      {7, "7", "SVCD Stills sequences"},
+      {8, "8", "DVD MPEG-2 for dvdauthor"},
+      {9, "9", "DVD MPEG-2"},
+      {0, NULL, NULL},
     };
 
     mplex_format_type =
-	g_enum_register_static ("GstMplexFormat",
-				mplex_formats);
+	g_enum_register_static ("GstMplexFormat", mplex_formats);
   }
 
   return mplex_format_type;
@@ -78,8 +78,8 @@ gst_mplex_format_get_type (void)
  * Class init functions.
  */
 
-GstMplexJob::GstMplexJob (void) :
-  MultiplexJob ()
+GstMplexJob::GstMplexJob (void):
+MultiplexJob ()
 {
   /* blabla */
 }
@@ -89,58 +89,57 @@ GstMplexJob::GstMplexJob (void) :
  */
 
 void
-GstMplexJob::initProperties (GObjectClass *klass)
+GstMplexJob::initProperties (GObjectClass * klass)
 {
   /* encoding profile */
   g_object_class_install_property (klass, ARG_FORMAT,
-    g_param_spec_enum ("format", "Format", "Encoding profile format",
-                       GST_TYPE_MPLEX_FORMAT, 0,
-		       (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_enum ("format", "Format", "Encoding profile format",
+	  GST_TYPE_MPLEX_FORMAT, 0, (GParamFlags) G_PARAM_READWRITE));
 
   /* total stream datarate. Normally, this shouldn't be needed, but
    * some DVD/VCD/SVCD players really need strict values to handle
    * the created files correctly. */
   g_object_class_install_property (klass, ARG_MUX_BITRATE,
-    g_param_spec_int ("mux-bitrate", "Mux. bitrate",
-		      "Bitrate of output stream in kbps (0 = autodetect)",
-                       0, 15 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("mux-bitrate", "Mux. bitrate",
+	  "Bitrate of output stream in kbps (0 = autodetect)",
+	  0, 15 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
 
 #if 0
-	{ "video-buffer",      1, 0, 'b' },
+  {
+  "video-buffer", 1, 0, 'b'},
 #endif
-
-  /* some boolean stuff for headers */
-  g_object_class_install_property (klass, ARG_VBR,
-    g_param_spec_boolean ("vbr", "VBR",
-			  "Whether the input video stream is variable bitrate",
-                	  FALSE, (GParamFlags) G_PARAM_READWRITE));
+      /* some boolean stuff for headers */
+      g_object_class_install_property (klass, ARG_VBR,
+      g_param_spec_boolean ("vbr", "VBR",
+	  "Whether the input video stream is variable bitrate",
+	  FALSE, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_SYSTEM_HEADERS,
-    g_param_spec_boolean ("system-headers", "System headers",
-			  "Create system header in every pack for generic formats",
-                	  FALSE, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_boolean ("system-headers", "System headers",
+	  "Create system header in every pack for generic formats",
+	  FALSE, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_SPLIT_SEQUENCE,
-    g_param_spec_boolean ("split-sequence", "Split sequence",
-			  "Simply split a sequence across files "
-			  "(rather than building run-out/run-in)",
-                	  FALSE, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_boolean ("split-sequence", "Split sequence",
+	  "Simply split a sequence across files "
+	  "(rather than building run-out/run-in)",
+	  FALSE, (GParamFlags) G_PARAM_READWRITE));
 
   /* size of a segment (followed by EOS) */
   g_object_class_install_property (klass, ARG_SEGMENT_SIZE,
-    g_param_spec_int ("max-segment-size", "Max. segment size",
-		      "Max. size per segment/file in MB (0 = unlimited)",
-                       0, 10 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("max-segment-size", "Max. segment size",
+	  "Max. size per segment/file in MB (0 = unlimited)",
+	  0, 10 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
 
   /* packets per pack (generic formats) */
   g_object_class_install_property (klass, ARG_PACKETS_PER_PACK,
-    g_param_spec_int ("packets-per-pack", "Packets per pack",
-		      "Number of packets per pack for generic formats",
-                       1, 100, 1, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("packets-per-pack", "Packets per pack",
+	  "Number of packets per pack for generic formats",
+	  1, 100, 1, (GParamFlags) G_PARAM_READWRITE));
 
   /* size of one sector */
   g_object_class_install_property (klass, ARG_SECTOR_SIZE,
-    g_param_spec_int ("sector-size", "Sector size",
-		      "Specify sector size in bytes for generic formats",
-                       256, 16384, 2048, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("sector-size", "Sector size",
+	  "Specify sector size in bytes for generic formats",
+	  256, 16384, 2048, (GParamFlags) G_PARAM_READWRITE));
 }
 
 /*
@@ -148,8 +147,7 @@ GstMplexJob::initProperties (GObjectClass *klass)
  */
 
 void
-GstMplexJob::getProperty (guint   prop_id,
-			  GValue *value)
+GstMplexJob::getProperty (guint prop_id, GValue * value)
 {
   switch (prop_id) {
     case ARG_FORMAT:
@@ -182,8 +180,7 @@ GstMplexJob::getProperty (guint   prop_id,
 }
 
 void
-GstMplexJob::setProperty (guint         prop_id,
-			  const GValue *value)
+GstMplexJob::setProperty (guint prop_id, const GValue * value)
 {
   switch (prop_id) {
     case ARG_FORMAT:
@@ -193,7 +190,7 @@ GstMplexJob::setProperty (guint         prop_id,
       /* data_rate expects bytes (don't ask me why the property itself is
        * in bits, I'm just staying compatible to mjpegtools options), and
        * rounded up to 50-bytes. */
-      data_rate = ((g_value_get_int (value) * 1000 / 8 + 49) / 50 ) * 50;
+      data_rate = ((g_value_get_int (value) * 1000 / 8 + 49) / 50) * 50;
       break;
     case ARG_VBR:
       VBR = g_value_get_boolean (value);

@@ -31,9 +31,8 @@
  * Class init stuff.
  */
 
-GstMpeg2EncStreamWriter::GstMpeg2EncStreamWriter (GstPad        *in_pad,
-						  EncoderParams *params) :
-  ElemStrmWriter (*params)
+GstMpeg2EncStreamWriter::GstMpeg2EncStreamWriter (GstPad * in_pad, EncoderParams * params):
+ElemStrmWriter (*params)
 {
   pad = in_pad;
   buf = NULL;
@@ -44,8 +43,7 @@ GstMpeg2EncStreamWriter::GstMpeg2EncStreamWriter (GstPad        *in_pad,
  */
 
 void
-GstMpeg2EncStreamWriter::PutBits (guint32 val,
-				  gint    n)
+GstMpeg2EncStreamWriter::PutBits (guint32 val, gint n)
 {
   /* only relevant bits. Note that (according to Andrew),
    * some CPUs do bitshifts modulo wordsize (32), which
@@ -62,7 +60,7 @@ GstMpeg2EncStreamWriter::PutBits (guint32 val,
       GST_BUFFER_SIZE (buf) = 0;
     }
 
-    outbfr = (outbfr << outcnt ) | (val >> (n - outcnt));
+    outbfr = (outbfr << outcnt) | (val >> (n - outcnt));
     GST_BUFFER_DATA (buf)[GST_BUFFER_SIZE (buf)++] = outbfr;
     n -= outcnt;
     outcnt = 8;

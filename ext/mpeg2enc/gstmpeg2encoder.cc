@@ -35,11 +35,9 @@
  * Class init stuff.
  */
 
-GstMpeg2Encoder::GstMpeg2Encoder (GstMpeg2EncOptions *options,
-				  GstPad             *sinkpad,
-				  const GstCaps      *caps,
-				  GstPad             *srcpad) :
-  MPEG2Encoder (*options)
+GstMpeg2Encoder::GstMpeg2Encoder (GstMpeg2EncOptions * options,
+    GstPad * sinkpad, const GstCaps * caps, GstPad * srcpad):
+MPEG2Encoder (*options)
 {
   MPEG2EncInVidParams strm;
 
@@ -58,7 +56,7 @@ GstMpeg2Encoder::GstMpeg2Encoder (GstMpeg2EncOptions *options,
 
   /* sequencer */
   seqencoder = new SeqEncoder (parms, *reader, *quantizer,
-			       *writer, *coder, *bitrate_controller);
+      *writer, *coder, *bitrate_controller);
 
   parms.Init (*options);
   reader->Init ();
@@ -86,10 +84,9 @@ GstMpeg2Encoder::getFormat ()
   gdouble fps = Y4M_RATIO_DBL (mpeg_framerate (options.frame_rate));
 
   return gst_caps_new_simple ("video/mpeg",
-			      "systemstream", G_TYPE_BOOLEAN, FALSE,
-			      "mpegversion",  G_TYPE_INT, options.mpeg,
-			      "width",        G_TYPE_INT, options.in_img_width,
-			      "height",       G_TYPE_INT, options.in_img_height,
-			      "framerate",    G_TYPE_DOUBLE, fps,
-			      NULL);
+      "systemstream", G_TYPE_BOOLEAN, FALSE,
+      "mpegversion", G_TYPE_INT, options.mpeg,
+      "width", G_TYPE_INT, options.in_img_width,
+      "height", G_TYPE_INT, options.in_img_height,
+      "framerate", G_TYPE_DOUBLE, fps, NULL);
 }

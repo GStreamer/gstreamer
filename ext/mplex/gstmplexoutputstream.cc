@@ -31,9 +31,8 @@
  * Class init functions.
  */
 
-GstMplexOutputStream::GstMplexOutputStream (GstElement *_element,
-					    GstPad     *_pad) :
-  OutputStream ()
+GstMplexOutputStream::GstMplexOutputStream (GstElement * _element, GstPad * _pad):
+OutputStream ()
 {
   element = _element;
   pad = _pad;
@@ -63,8 +62,7 @@ GstMplexOutputStream::Close (void)
  * Get size of current segment.
  */
 
-off_t
-GstMplexOutputStream::SegmentSize (void)
+off_t GstMplexOutputStream::SegmentSize (void)
 {
   return size;
 }
@@ -88,8 +86,7 @@ GstMplexOutputStream::NextSegment (void)
  */
 
 void
-GstMplexOutputStream::Write (guint8 *data,
-			     guint   len)
+GstMplexOutputStream::Write (guint8 * data, guint len)
 {
   GstBuffer *buf;
 

@@ -31,9 +31,8 @@
  * Class init/exit functions.
  */
 
-GstMplexIBitStream::GstMplexIBitStream (GstPad *_pad,
-					guint   buf_size) :
-  IBitStream ()
+GstMplexIBitStream::GstMplexIBitStream (GstPad * _pad, guint buf_size):
+IBitStream ()
 {
   guint8 *data;
 
@@ -54,8 +53,7 @@ GstMplexIBitStream::GstMplexIBitStream (GstPad *_pad,
 
   if (!ReadIntoBuffer () && buffered == 0) {
     GST_ELEMENT_ERROR (gst_pad_get_parent (_pad), RESOURCE, READ, (NULL),
-		       ("Failed to read from input pad %s",
-		       gst_pad_get_name (pad)));
+	("Failed to read from input pad %s", gst_pad_get_name (pad)));
   }
 }
 
@@ -68,28 +66,30 @@ GstMplexIBitStream::~GstMplexIBitStream (void)
  * Read data.
  */
 
-size_t
-GstMplexIBitStream::ReadStreamBytes (uint8_t *buf,
-				     size_t   size)
+size_t GstMplexIBitStream::ReadStreamBytes (uint8_t * buf, size_t size)
 {
-  guint8 *data;
-  guint read;
+  guint8 *
+      data;
+  guint
+      read;
 
   if (eos)
     return 0;
 
   if ((read = gst_bytestream_peek_bytes (bs, &data, size)) != size) {
-    GstEvent *event;
-    guint pending;
+    GstEvent *
+	event;
+    guint
+	pending;
 
     gst_bytestream_get_status (bs, &pending, &event);
     if (event) {
       switch (GST_EVENT_TYPE (event)) {
-        case GST_EVENT_EOS:
-          eos = TRUE;
-          break;
-        default:
-          break;
+	case GST_EVENT_EOS:
+	  eos = TRUE;
+	  break;
+	default:
+	  break;
       }
       gst_event_unref (event);
     }
@@ -105,8 +105,7 @@ GstMplexIBitStream::ReadStreamBytes (uint8_t *buf,
  * Are we at EOS?
  */
 
-bool
-GstMplexIBitStream::EndOfStream (void)
+bool GstMplexIBitStream::EndOfStream (void)
 {
   return eos;
 }
