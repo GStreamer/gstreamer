@@ -1,5 +1,10 @@
 2004-12-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ogg/gstoggdemux.c: (get_relative):
+	  Check for non-NULL before accessing member (end-of-chain).
+
+2004-12-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_class_init),
 	(cdparanoia_set_property), (cdparanoia_get_property):
 	* ext/dvdnav/dvdnavsrc.c: (dvdnavsrc_class_init),
