@@ -747,7 +747,8 @@ gst_filesrc_open_file (GstFileSrc * src)
   src->fd = open (src->filename, O_RDONLY);
   if (src->fd < 0) {
     if (errno == ENOENT)
-      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), (NULL));
+      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
+          ("No such file \"%s\"", src->filename));
     else
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
           (_("Could not open file \"%s\" for reading."), src->filename),

@@ -1,5 +1,10 @@
 2004-04-25  Benjamin Otte  <otte@gnome.org>
 
+	* gst/elements/gstfilesrc.c: (gst_filesrc_open_file):
+	  better debugging output on error
+
+2004-04-25  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstcaps.c: (gst_caps_subtract):
 	  fix memleak
 
