@@ -1253,7 +1253,8 @@ gst_ximagesink_expose (GstXOverlay *overlay)
   if (attr.width == 1 && attr.height == 1)
     return;
   
-  if (gst_pad_is_negotiated (GST_VIDEOSINK_PAD (ximagesink)))
+  if (gst_pad_is_negotiated (GST_VIDEOSINK_PAD (ximagesink)) &&
+      !GST_PAD_IS_NEGOTIATING (GST_VIDEOSINK_PAD (ximagesink)))
     gst_ximagesink_renegotiate_size (ximagesink, attr.width, attr.height);
   
   gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
