@@ -40,13 +40,13 @@ enum {
   ARG_DROP_INCOMPLETE,
 };
 
-static GstElementDetails gst_dv1394src_details = {
+static GstElementDetails gst_dv1394src_details = GST_ELEMENT_DETAILS (
   "Firewire (1394) DV Source",
   "Source/Video",
   "Source for DV video data from firewire port",
   "Erik Walthinsen <omega@temple-baptist.com>\n"
-  "Daniel Fischer <dan@f3c.com>",
-};
+  "Daniel Fischer <dan@f3c.com>"
+);
 
 #if 0
 static GstPadTemplate*

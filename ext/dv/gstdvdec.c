@@ -35,13 +35,13 @@
 /* The ElementDetails structure gives a human-readable description
  * of the plugin, as well as author and version data.
  */
-static GstElementDetails dvdec_details = {
+static GstElementDetails dvdec_details = GST_ELEMENT_DETAILS (
   "DV (smpte314) decoder plugin",
   "Codec/Video/Decoder",
   "Uses libdv to decode DV video (libdv.sourceforge.net)",
   "Erik Walthinsen <omega@cse.ogi.edu>\n"
-  "Wim Taymans <wim.taymans@tvd.be>",
-};
+  "Wim Taymans <wim.taymans@tvd.be>"
+);
 
 
 /* These are the signals that this element can fire.  They are zero-
