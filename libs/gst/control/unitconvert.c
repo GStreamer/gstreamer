@@ -358,7 +358,7 @@ gst_unitconv_register_convert_func (gchar * from_unit_named,
   g_return_val_if_fail (g_hash_table_lookup (convert_funcs, to_unit) == NULL,
       FALSE);
 
-  GST_DEBUG ("adding unit converter from %s to %s\n",
+  GST_DEBUG ("adding unit converter from %s to %s",
       g_param_spec_get_name (from_unit->unit_spec),
       g_param_spec_get_name (to_unit->unit_spec));
 
