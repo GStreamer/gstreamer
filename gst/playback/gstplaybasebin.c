@@ -327,8 +327,6 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   if (last || !need_preroll) {
     srcpad = pad;
-    if (last)
-      no_more_pads (NULL, play_base_bin);
   } else {
     new_element = gen_preroll_element (play_base_bin, pad);
     srcpad = gst_element_get_pad (new_element, "src");
@@ -342,9 +340,13 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
     gst_element_set_state (new_element, GST_STATE_PAUSED);
   }
 
+  /* add the stream to the list */
   info = gst_stream_info_new (srcpad, type, NULL);
-
   play_base_bin->streaminfo = g_list_append (play_base_bin->streaminfo, info);
+
+  /* signal the no more pads after adding the stream */
+  if (last)
+    no_more_pads (NULL, play_base_bin);
 }
 
 static void
