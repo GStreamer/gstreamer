@@ -8,7 +8,7 @@ License: 	LGPL
 URL:		http://gstreamer.net/
 Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
 Source: 	http://gstreamer.net/src/gstreamer/gstreamer-%{version}.tar.gz
-BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %define		majorminor	@GST_MAJORMINOR@
 %define 	_glib2		@GLIB2_REQ@
@@ -24,6 +24,7 @@ BuildRequires: 	glib2-devel >= %_glib2
 BuildRequires: 	libxml2-devel >= %_libxml2
 BuildRequires: 	bison
 BuildRequires: 	flex
+BuildRequires: 	m4
 BuildRequires: 	gtk-doc >= 1.1
 BuildRequires: 	gcc
 BuildRequires: 	zlib-devel
@@ -90,7 +91,6 @@ with different major/minor versions of GStreamer.
 %setup -n gstreamer-%{version}
 
 %build
-%{?__libtoolize:[ -f configure.in ] && %{__libtoolize} --copy --force}
 %configure \
   --enable-debug \
   --with-cachedir=%{_localstatedir}/cache/gstreamer-%{majorminor} \
