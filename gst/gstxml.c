@@ -107,7 +107,7 @@ gst_xml_new (void)
  * Returns: a pointer to an XML document
  */
 xmlDocPtr
-gst_xml_write_ns (GstElement *element, gint num_ns, GstXMLNs ns[])
+gst_xml_write (GstElement *element)
 {
   xmlDocPtr doc;
   xmlNodePtr elementnode;
@@ -127,20 +127,6 @@ gst_xml_write_ns (GstElement *element, gint num_ns, GstXMLNs ns[])
 }
 
 /**
- * gst_xml_write:
- * @element: The element to write out
- *
- * Converts the given element into an XML presentation.
- *
- * Returns: a pointer to an XML document
- */
-xmlDocPtr
-gst_xml_write (GstElement *element)
-{
-  return gst_xml_write_ns (element, 0, NULL);
-}
-
-/**
  * gst_xml_write_file:
  * @element: The element to write out
  * @out: an open file, like stdout
@@ -151,7 +137,7 @@ gst_xml_write (GstElement *element)
  * Returns: number of bytes written on success, -1 otherwise.
  */
 gint
-gst_xml_write_file_ns (GstElement *element, FILE *out, gint num_ns, GstXMLNs ns[])
+gst_xml_write_file (GstElement *element, FILE *out)
 {
   xmlDocPtr cur;
 #ifdef HAVE_LIBXML2
@@ -200,22 +186,6 @@ gst_xml_write_file_ns (GstElement *element, FILE *out, gint num_ns, GstXMLNs ns[
 #endif
   
   return ret;
-}
-
-/**
- * gst_xml_write_file:
- * @element: The element to write out
- * @out: an open file, like stdout
- *
- * Converts the given element into XML and writes the formatted XML to an open
- * file.
- *
- * Returns: number of bytes written on success, -1 otherwise.
- */
-gint
-gst_xml_write_file (GstElement *element, FILE *out)
-{
-  return gst_xml_write_file_ns (element, out, 0, NULL);
 }
 
 /**
