@@ -152,7 +152,7 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
         NULL, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RATE,
       g_param_spec_int ("rate", "Rate", "Frame rate",
-        0, 100, 30, G_PARAM_READWRITE));
+        1, 100, 30, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
