@@ -1040,6 +1040,7 @@ gst_gnomevfssrc_get (GstPad * pad)
   /* deal with EOF state */
   if ((src->curoffset >= src->size) && (src->size != 0)) {
     gst_element_set_eos (GST_ELEMENT (src));
+    GST_DEBUG ("Returning EOS");
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
 
@@ -1063,6 +1064,7 @@ gst_gnomevfssrc_get (GstPad * pad)
     /* EOS? */
     if (readbytes == 0) {
       gst_buffer_unref (buf);
+      GST_DEBUG ("Returning EOS");
       gst_element_set_eos (GST_ELEMENT (src));
       return GST_DATA (gst_event_new (GST_EVENT_EOS));
     }
@@ -1107,14 +1109,13 @@ gst_gnomevfssrc_get (GstPad * pad)
     result = gnome_vfs_read (src->handle, GST_BUFFER_DATA (buf),
         src->bytes_per_read, &readbytes);
 
-    GST_DEBUG ("read: %s, readbytes: %" G_GINT64_FORMAT,
-        gnome_vfs_result_to_string (result), readbytes);
+    GST_DEBUG ("read: %s, readbytes: %" G_GINT64_FORMAT " @ %" G_GINT64_FORMAT,
+        gnome_vfs_result_to_string (result), readbytes, src->curoffset);
     /* deal with EOS */
     if (readbytes == 0) {
       gst_buffer_unref (buf);
-
+      GST_DEBUG ("Returning EOS");
       gst_element_set_eos (GST_ELEMENT (src));
-
       return GST_DATA (gst_event_new (GST_EVENT_EOS));
     }
 
@@ -1249,7 +1250,7 @@ gst_gnomevfssrc_srcpad_query (GstPad * pad, GstQueryType type,
 
   switch (type) {
     case GST_QUERY_TOTAL:
-      if (*format != GST_FORMAT_BYTES) {
+      if (*format != GST_FORMAT_BYTES || src->size == 0) {
         return FALSE;
       }
       *value = src->size;
@@ -1298,6 +1299,8 @@ gst_gnomevfssrc_srcpad_event (GstPad * pad, GstEvent * event)
           desired_offset = src->curoffset + GST_EVENT_SEEK_OFFSET (event);
           break;
         case GST_SEEK_METHOD_END:
+          if (src->size == 0)
+            return FALSE;
           desired_offset = src->size - ABS (GST_EVENT_SEEK_OFFSET (event));
           break;
         default:
@@ -1308,7 +1311,8 @@ gst_gnomevfssrc_srcpad_event (GstPad * pad, GstEvent * event)
 
       result = gnome_vfs_seek (src->handle,
           GNOME_VFS_SEEK_START, desired_offset);
-      GST_DEBUG ("new_seek: %s", gnome_vfs_result_to_string (result));
+      GST_DEBUG ("new_seek to %" G_GINT64_FORMAT ": %s",
+          desired_offset, gnome_vfs_result_to_string (result));
 
       if (result != GNOME_VFS_OK) {
         gst_event_unref (event);
