@@ -1,99 +1,104 @@
 
-                GStreamer "30 Second Frenchman" 0.3.4 released
-
-                                 RELEASE NOTES
+            GStreamer "Desperately Seeking Sexiness" 0.4.0 released
 
    The  GStreamer  team  is  happy  to  announce  another  release of the
-   GStreamer streaming-media framework.
+   GStreamer  streaming-media framework. We are quickly moving forward at
+   this  time  and more and more applications using GStreamer are popping
+   up.  Please  see  the  [1]release  page for availability of source and
+   binary packages.
 
-Focus of this release
+Updates and Enhancements
 
-   This release fixes a few developer usability issues.
+  General
 
-   A  few  of  the  API  functions  have  been  changed  to  offer better
-   functionality  and  to  be  more consistent with other toolkits (GLib,
-   GTK).
-   Sample changes:
-     * gst_elementfactory_make to gst_element_factory_make
-     * GST_PADTEMPLATE_* to GST_PAD_TEMPLATE_*
+     * Graphical pipeline editor (gst-editor) ported to GNOME 2.0
+     * Autobuild system using [2]bitches to generate good RPMs
+     * Apt  for  rpm repository for GStreamer and plug-in dependencies on
+       RedHat  7.2  and  7.3,  for  both  Ximian  Red-Carpet  Gnome 2 and
+       Gnomehide. See [3]http://gstreamer.net/releases/redhat/
+     * Red-Carpet GStreamer channel under construction.
+     * GConf schemas distributed for centralised sink settings
+     * Moved  to  [4]http://bugzilla.gnome.org/ for bug reports. Bugzilla
+       is  more  convenient  than SourceForge's system, and Gnome already
+       has a system running. Thanks to Gnome for the support.
+     * Created  a  gst-feedback script to gather system information to be
+       added to a bug report for better debugging.
 
-   This  release  of  GStreamer  has  been  primarily  made in support of
-   RhythmBox. It should really work with their upcoming 0.2.0 release.
+  Core
 
-   The gst-launch parsing has been bisonified. This allows for better and
-   more consistent command-line parsing. Accordingly, some changes in the
-   dynamic pad treatment have been made as well.
-   The registry handling has been changed. gst-register will now write to
-   a  local  registry  (in  ~/.gstreamer/reg.xml)  if  it  does  not have
-   permissions  to  write to the global registry. Normal applications not
-   running as root will prefer this local registry if it exists, and fall
-   back to the global otherwise.
-   Also,  a --gst-registry option has been added to all gst applications.
-   If  this  is  specified,  then  the  application  will  ONLY  use this
-   registry.  This  is  useful  for testsuites inside the core as well as
-   general testing of plugins.
+     * New much improved registry system implemented.
+     * New  event-driven  seek  support.  Event system is now working and
+       implemented
+     * Header files are now in a versioned directory to ease build pains.
+     * Improvements and bugfixes todparams.
+     * Docs updated, registry and system clock documentation added
+     * More tests added for improved troubleshooting
+     * Cothreads code made more POSIX-compatible
+     * PowerPC portability fixes
 
-   GStreamer  is  now  in  Gnome's  Bugzilla. Please file bugs against us
-   there whenever you find them !
+  Plug-ins
 
-Changes in the 0.3.x tree
+     * Quicktime plug-in rewritten
+     * [5]Effectv video effects plug-ins included
+     * Audio effect plug-ins fixes (int2float, floatcast etc.)
+     * A new filter plug-in for audio filters
+     * OSS plug-in fixes
+     * Audiofile  plug-in  works again (depends on upstream patch getting
+       included)
+     * lavencode plug-in renamed yuv4mpeg
+     * Synaesthesia plug-in added to gst-visualisation packages
+     * [6]Jack plug-in working and packaged -- CVS Jack required
+     * Floatcast plug-in added
+     * Include file setup fixes
+     * Avi plug-in ported to avifile 0.7.7
+     * Lots of fixes and cleanups on the DV plug-in
+     * libfame plug-in added (mpeg4)
+     * libdvdnav plug-in added
+     * Better URI handling in gnome-vfs plug-in
+     * RTP plug-in updated and ported to the [7]oRTP library
 
-   The  0.3.x  tree  is  our first tree using GLib 2.0 and libxml2 as the
-   sole  compile  platform.  We  have  also  started  including  all  our
-   documentation  in our RPMS starting this tree. People wanting to build
-   GStreamer themselves with documentation should look at the DOCBUILDING
-   file  for  some  information on what packages are needed to build that
-   successfully.
+Known Issues
 
-   Another  new  feature  of  this  release  tree  is  the gst-launch-ext
-   command-line  application.  It  uses predefined pipelines to play back
-   media  files  based on their file extension. This means that you don't
-   need  to construct your own pipelines using gst-launch if all you want
-   to  do  is  play  a  file. Just type gst-launch-ext [filename] and the
-   audiofile  or movie plays for you. This of course also being a work in
-   progress  means  that sometimes it might decide on the wrong pipeline,
-   or cause jitter, as well as random headaches.
+   GStreamer  currently  ships  with  two  schedulers,  named 'basic' and
+   'standard'. Basic is the one we have been shipping for a long time now
+   and  is  still  the default in GStreamer 0.4.0. There are however some
+   limitations and threadrelated bugs in basic. These limitations are not
+   present  in  standard,  but  unfortunately standard does not work with
+   i686  glibc  atm  due  to  differences  in the way threads are handled
+   compared  to  other  architectures  including i386. We hope to get the
+   remaining  issues  in  standard  fixed  before  0.4.1  and use that as
+   default.
 
-   For help building GStreamer, take a look at our [1]build help document
-   .
+   As  for the bugs in basic we did not feel they warranted not releasing
+   0.4.0  as  they  are  rather  obscure.  For  instance if you are using
+   Rhythmbox  you  will  need  to  be  playing  over 500 songs nonstop to
+   trigger it.
 
-Updates and Enhancements in this release
+   If  you  want  to  test  the  standard  scheduler,  run your GStreamer
+   application with --gst-scheduler=standard
 
-     * Improved API naming
-     * New  registry  handling,  allowing  for global, local or specified
-       registry
-     * bison parser
-     * gst-launch-ext dynamic pad fixes
-     * various fixes in mad and vorbisdec for RhythmBox
-
-Previously, in the 0.3.x tree
-
-     * devhelp documentation
-     * New and improved Props API
-     * New master clock system
-     * dxr3 plugin
-     * libcolorspace plugin
-     * Full dparams documentation
-     * All functions documented (551 functions documented)
-     * Python bindings
-     * Portability fixes (no more C++ // style comments)
-     * a52dec plugin updated to a52dec 0.7.3 API
-     * gnome-vfs plugin updated to new seek api
-     * Misc bug and caps fixes
-     * SPEC files improvements
+GStreamer Homepage
 
    More  details on these features can be found on the project's website,
-   [2]http://gstreamer.net/.   Source   tarballs  are  also  mirrored  at
-   [3]http://gstreamer.net/releases/current/src/.  If you use Red Hat (or
-   possibly  other  RPM-based  systems),  RPMs for both GStreamer itself,
-   external  libraries and development tools not included in the standard
-   reference    distribution    (RedHat    7.2)    can    be   found   in
-   [4]http://gstreamer.net/releases/current/redhat.
+   [8]http://gstreamer.net/.
 
-   GStreamer  is  hosted on SourceForge, so support requests and bugs may
-   be filed as usual. Interested developers of the core library, plugins,
-   and  applications  should  subscribe  to  the gstreamer-devel list. If
-   there is sufficient interest we will create more lists as necessary.
+Support
+
+   We  use  [9]Gnome's Bugzilla for bug reports and feature requests. The
+   "product  name"  is  GStreamer  (capital  G).  Please do the following
+   before writing a bug report :
+gst-feedback > feedback 2>&1
+
+   and  attach  the  file  "feedback" to your bug report, so that we have
+   some information useful in the debugging process.
+
+Developers
+
+   GStreamer  is [10]hosted on SourceForge. All code is in CVS and can be
+   checked  out  from  there.  Interested developers of the core library,
+   plug-ins,  and  applications  should  subscribe to the gstreamer-devel
+   list.  If  there  is  sufficient interest we will create more lists as
+   necessary.
 
    We  are  still  looking for people with access to Solaris, HP-UX, Irix
    and  True64  that  would  be  willing  to  try  building  and  testing
@@ -103,33 +108,44 @@ Contributors to this release
 
   Core
 
-     * Erik Walthinsen <omega@temple-baptist.com>
-     * Wim Taymans <wim.taymans@chello.be>
-     * Thomas Vander Stichele <thomas@apestaart.org>
-     * Andy Wingo <wingo@pobox.com>
-     * Benjamin Otte <in7y118@public.uni-hamburg.de>
+     * Erik Walthinsen <omega(AT)temple-baptist.com>
+     * Wim Taymans <wim.taymans(AT)chello.be>
+     * Thomas Vander Stichele <thomas(AT)apestaart.org>
+     * Andy Wingo <wingo(AT)pobox.com>
+     * Benjamin Otte <in7y118(AT)public.uni-hamburg.de>
+     * Steve Baker <stevebaker_org(AT)yahoo.co.uk>
 
   Plugins and Sample Applications
 
-     * Richard Boulton <richard@tartarus.org>
-     * David Lehn <dlehn@vt.edu>
-     * Ronald Bultje <rbultje@ronald.bitfreak.net>
-     * Bastien Nocera <hadess@hadess.net>
-     * Martin Enlund <martin@enlund.net>
-     * Arik Devens <arik@gnome.org>
-     * Jérémy Simon <jsimon13@yahoo.fr>
-     * Zeeshan Ali Khattak <zak147@yahoo.com>
-     * Steve Baker <stevebaker_org@yahoo.co.uk>
-     * Rehan Khwaja <rehankhwaja@yahoo.com>
+     * Richard Boulton <richard(AT)tartarus.org>
+     * David Lehn <dlehn(AT)vt.edu>
+     * Ronald Bultje <rbultje(AT)ronald.bitfreak.net>
+     * Bastien Nocera <hadess(AT)hadess.net>
+     * Martin Enlund <martin(AT)enlund.net>
+     * Arik Devens <arik(AT)gnome.org>
+     * Jérémy Simon <jsimon13(AT)yahoo.fr>
+     * Zeeshan Ali Khattak <zak147(AT)yahoo.com>
+     * Rehan Khwaja <rehankhwaja(AT)yahoo.com>
+     * Kentarou Fukuchi <fukuchi(AT)is.titech.ac.jp>
+     * Artyom Baginski <artm(AT)nerve.v2.nl>
+     * David Schleef <ds(AT)schleef.org>
+     * Xavier Bestel <xavier.bestel(AT)free.fr>
 
   Misc
 
-     * Christian Schaller <christian.schaller@linuxrising.org>
-     * Calum Selkirk <cselkirk@panix.com>
+     * Christian Fredrik Kalager Schaller
+       <uraeus(AT)linuxrising.org>
+     * Calum Selkirk <cselkirk(AT)panix.com>
 
 References
 
-   1. http://gstreamer.net/releases/current/buildhelp.php
-   2. http://gstreamer.net/
-   3. http://gstreamer.net/releases/current/src/
-   4. http://gstreamer.net/releases/current/redhat/
+   1. http://gstreamer.net/releases/current/
+   2. http://urgent.rug.ac.be/thomas/
+   3. http://gstreamer.net/releases/redhat/
+   4. http://bugzilla.gnome.org/
+   5. http://effectv.sourceforge.net/
+   6. http://jackit.sf.net/
+   7. http://www.linphone.org/ortp/
+   8. http://gstreamer.net/
+   9. http://bugzilla.gnome.org/
+  10. http://gstreamer.sf.net/

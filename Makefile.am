@@ -25,14 +25,13 @@ SUBDIRS = include gst libs tools \
 # These are all the possible subdirs
 DIST_SUBDIRS = include libs gst tools tests testsuite examples docs
 
-
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer.pc
 
 EXTRA_DIST = gstreamer.spec.in \
 	     gstreamer.pc.in gstreamer-uninstalled.pc.in \
 	     configure.ac autogen.sh depcomp \
-	     LICENSE REQUIREMENTS ABOUT-NLS RELEASE DOCBUILDING DEVEL \
+	     REQUIREMENTS ABOUT-NLS RELEASE DOCBUILDING DEVEL \
 	     idiottest.mak common
 
 dist-hook:

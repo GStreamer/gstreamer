@@ -15,6 +15,7 @@ bin_PROGRAMS = 	gst-launch 	\
 		gst-inspect 	\
 		$(GST_LOADSAVE_SRC) 	\
 		gst-complete
+bin_SCRIPTS = gst-feedback
 
 man_MANS = gst-launch.1 gst-register.1 gst-inspect.1 \
 	gst-complete.1 gst-compprep.1 gst-xmllaunch.1
@@ -42,4 +43,4 @@ gst_xmllaunch_LDADD = $(GST_LIBS)
 gst_xmllaunch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 endif
 
-EXTRA_DIST = $(man_MANS)
+EXTRA_DIST = $(man_MANS) gst-feedback
