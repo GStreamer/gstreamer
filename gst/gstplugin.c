@@ -27,6 +27,7 @@
 
 #include "gst_private.h"
 #include "gstplugin.h"
+#include "gstversion.h"
 #include "config.h"
 
 
@@ -392,15 +393,22 @@ gst_plugin_load_absolute (const gchar *name)
 /**
  * gst_plugin_new:
  * @name: name of new plugin
+ * @major: major version number of core that plugin is compatible with
+ * @minor: minor version number of core that plugin is compatible with
  *
  * Create a new plugin with given name.
  *
- * Returns: new plugin
+ * Returns: new plugin, or NULL if plugin couldn't be created, due to
+ * incompatible version number, or name already being allocated)
  */
 GstPlugin*
-gst_plugin_new (const gchar *name)
+gst_plugin_new (const gchar *name, gint major, gint minor)
 {
   GstPlugin *plugin;
+
+  // return NULL if the major and minor version numbers are not compatible
+  // with ours.
+  if (major != GST_VERSION_MAJOR || minor != GST_VERSION_MINOR) return NULL;
 
   // return NULL if the plugin is allready loaded
   plugin = gst_plugin_find (name);

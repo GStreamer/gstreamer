@@ -342,7 +342,7 @@ plugin_init (GModule *module)
   GstElementFactory *factory;
 
   /* First we try to create a new Plugin structure. */
-  plugin = gst_plugin_new("example");
+  plugin = gst_plugin_new("example", GST_VERSION_MAJOR, GST_VERSION_MINOR);
   /* If we get a NULL back, chances are we're already loaded. */
   g_return_val_if_fail(plugin != NULL, NULL);
 

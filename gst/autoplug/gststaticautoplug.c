@@ -86,7 +86,7 @@ plugin_init (GModule *module)
   GstPlugin *plugin;
   GstAutoplugFactory *factory;
 
-  plugin = gst_plugin_new("gststaticautoplug");
+  plugin = gst_plugin_new("gststaticautoplug", GST_VERSION_MAJOR, GST_VERSION_MINOR);
   g_return_val_if_fail(plugin != NULL,NULL);
 
   gst_plugin_set_longname (plugin, "A static autoplugger");

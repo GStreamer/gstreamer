@@ -73,7 +73,7 @@ GstPlugin *plugin_init (GModule *module)
   GstElementFactory *factory;
   gint i = 0;
 
-  plugin = gst_plugin_new("gstelements");
+  plugin = gst_plugin_new("gstelements", GST_VERSION_MAJOR, GST_VERSION_MINOR);
   g_return_val_if_fail(plugin != NULL,NULL);
 
   gst_plugin_set_longname (plugin, "Standard GST Elements");

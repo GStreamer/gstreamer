@@ -34,7 +34,7 @@ plugin_init (GModule *module)
   GstPlugin *plugin;
   gint i = 0;
 
-  plugin = gst_plugin_new ("gsttypes");
+  plugin = gst_plugin_new ("gsttypes", GST_VERSION_MAJOR, GST_VERSION_MINOR);
   g_return_val_if_fail (plugin != NULL,NULL);
 
   while (_factories[i].mime) {

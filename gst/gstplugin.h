@@ -62,7 +62,7 @@ typedef GstPlugin* (*GstPluginInitFunc) (GModule *module);
 
 void			_gst_plugin_initialize		(void);
 
-GstPlugin*		gst_plugin_new			(const gchar *name);
+GstPlugin*		gst_plugin_new			(const gchar *name, gint major, gint minor);
 
 void			gst_plugin_add_path		(const gchar *path);
 
