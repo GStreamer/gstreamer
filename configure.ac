@@ -96,7 +96,7 @@ if test "x$GST_CVS" = "xyes"; then
 fi
 
 dnl Check for FIONREAD ioctl declaration :
-HAVE_FIONREAD()
+GST_CHECK_FIONREAD()
 
 dnl ############################################
 dnl # Super Duper options for plug-in building #
