@@ -168,7 +168,8 @@ SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(OPENQUICKTIME_DIR) $(RTP_DIR) $(SDL_DIR) $(SHOUT_DIR) $(VORBIS_DIR) \
 	$(XMMS_DIR)
 
-DIST_SUBDIRS=a52 aalib alsa arts artsd avifile audiofile cdparanoia \
+# fixme : add arts and artsd
+DIST_SUBDIRS=a52 aalib alsa avifile audiofile cdparanoia \
              dv dvdread esd \
 	     festival flac gnomevfs gsm hermes jpeg lame mad mikmod mpeg2dec \
 	     openquicktime rtp sdl shout vorbis xmms
