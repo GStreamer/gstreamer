@@ -311,7 +311,8 @@ gst_alsa_src_loop (GstElement *element)
   /* set the caps on all pads */
   if (!this->format) {
     if (!gst_alsa_src_set_caps (src, FALSE)) {
-      gst_element_error (element, "Could not set caps");
+          gst_element_error (element, CORE, NEGOTIATION, NULL,
+                             ("ALSA format not negotiated"));
       return;
     }
   }

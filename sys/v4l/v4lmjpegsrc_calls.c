@@ -67,9 +67,9 @@ gst_v4lmjpegsrc_queue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
 
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_QBUF_CAPT, &num) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Error queueing a buffer (%d): %s",
-      num, g_strerror(errno));
+    gst_element_error (v4lmjpegsrc, RESOURCE, READ, NULL,
+      ("Error queueing a buffer (%d): %s",
+      num, g_strerror(errno)));
     return FALSE;
   }
 
@@ -99,9 +99,7 @@ gst_v4lmjpegsrc_sync_next_frame (GstV4lMjpegSrc *v4lmjpegsrc,
   while (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd,
                MJPIOC_SYNC, &(v4lmjpegsrc->bsync)) < 0) {
     if (errno != EINTR) {
-      gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-        "Error syncing on a buffer: %s",
-        g_strerror(errno));
+      gst_element_error (v4lmjpegsrc, RESOURCE, SYNC, NULL, GST_ERROR_SYSTEM);
       return FALSE;
     }
     DEBUG("Sync got interrupted");
@@ -163,9 +161,7 @@ gst_v4lmjpegsrc_set_capture (GstV4lMjpegSrc *v4lmjpegsrc,
   /* Query params for capture */
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_G_PARAMS, &bparm) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Error getting video parameters: %s",
-      g_strerror(errno));
+    gst_element_error (v4lmjpegsrc, RESOURCE, SETTINGS, NULL, GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -191,9 +187,7 @@ gst_v4lmjpegsrc_set_capture (GstV4lMjpegSrc *v4lmjpegsrc,
   /* Set params for capture */
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_S_PARAMS, &bparm) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Error setting video parameters: %s",
-      g_strerror(errno));
+    gst_element_error (v4lmjpegsrc, RESOURCE, SETTINGS, NULL, GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -237,9 +231,7 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
   /* Query params for capture */
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_G_PARAMS, &bparm) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Error getting video parameters: %s",
-      g_strerror(errno));
+    gst_element_error (v4lmjpegsrc, RESOURCE, SETTINGS, NULL, GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -274,23 +266,23 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
 
   if (width + x_offset > maxwidth)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Image width+offset (%d) bigger than maximum (%d)",
-      width + x_offset, maxwidth);
+    gst_element_error (v4lmjpegsrc, RESOURCE, TOO_LAZY, NULL,
+      ("Image width+offset (%d) bigger than maximum (%d)",
+      width + x_offset, maxwidth));
     return FALSE;
   }
   if ((width%(bparm.HorDcm*16))!=0) 
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Image width (%d) not multiple of %d (required for JPEG)",
-      width, bparm.HorDcm*16);
+    gst_element_error (v4lmjpegsrc, STREAM, FORMAT, NULL,
+      ("Image width (%d) not multiple of %d (required for JPEG)",
+      width, bparm.HorDcm*16));
     return FALSE;
   }
   if (height + y_offset > (norm==VIDEO_MODE_NTSC ? 480 : 576)) 
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Image height+offset (%d) bigger than maximum (%d)",
-      height + y_offset, (norm==VIDEO_MODE_NTSC ? 480 : 576));
+    gst_element_error (v4lmjpegsrc, RESOURCE, TOO_LAZY, NULL,
+      ("Image height+offset (%d) bigger than maximum (%d)",
+      height + y_offset, (norm==VIDEO_MODE_NTSC ? 480 : 576)));
     return FALSE;
   }
   /* RJ: Image height must only be a multiple of 8, but geom_height
@@ -298,9 +290,9 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
    */
   if ((height%(bparm.VerDcm*16))!=0) 
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Image height (%d) not multiple of %d (required for JPEG)",
-      height, bparm.VerDcm*16);
+    gst_element_error (v4lmjpegsrc, STREAM, FORMAT, NULL,
+      ("Image height (%d) not multiple of %d (required for JPEG)",
+      height, bparm.VerDcm*16));
     return FALSE;
   }
 
@@ -321,9 +313,7 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
   /* Set params for capture */
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_S_PARAMS, &bparm) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Error setting video parameters: %s",
-      g_strerror(errno));
+    gst_element_error (v4lmjpegsrc, RESOURCE, SETTINGS, NULL, GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -348,17 +338,15 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd,
             MJPIOC_REQBUFS, &(v4lmjpegsrc->breq)) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Error requesting video buffers: %s",
-      g_strerror(errno));
+    gst_element_error (v4lmjpegsrc, RESOURCE, READ, NULL, GST_ERROR_SYSTEM);
     return FALSE;
   }
 
   if (v4lmjpegsrc->breq.count < MIN_BUFFERS_QUEUED)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Too little buffers. We got %d, we want at least %d",
-      v4lmjpegsrc->breq.count, MIN_BUFFERS_QUEUED);
+    gst_element_error (v4lmjpegsrc, RESOURCE, READ, NULL,
+      ("Too little buffers. We got %ld, we want at least %d",
+      v4lmjpegsrc->breq.count, MIN_BUFFERS_QUEUED));
     return FALSE;
   }
 
@@ -383,9 +371,8 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
     PROT_READ|PROT_WRITE, MAP_SHARED, GST_V4LELEMENT(v4lmjpegsrc)->video_fd, 0);
   if (GST_V4LELEMENT(v4lmjpegsrc)->buffer == MAP_FAILED)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Error mapping video buffers: %s",
-      g_strerror(errno));
+    gst_element_error (v4lmjpegsrc, RESOURCE, TOO_LAZY, NULL,
+      ("Error mapping video buffers: %s", g_strerror (errno)));
     GST_V4LELEMENT(v4lmjpegsrc)->buffer = NULL;
     return FALSE;
   }
@@ -526,10 +513,10 @@ gst_v4lmjpegsrc_requeue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
   g_mutex_lock(v4lmjpegsrc->mutex_queue_state);
 
   if (v4lmjpegsrc->frame_queue_state[num] != QUEUE_STATE_SYNCED) {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-                      "Invalid state %d (expected %d), can't requeue",
+    gst_element_error (v4lmjpegsrc, RESOURCE, TOO_LAZY, NULL,
+                      ("Invalid state %d (expected %d), can't requeue",
                       v4lmjpegsrc->frame_queue_state[num],
-                      QUEUE_STATE_SYNCED);
+                      QUEUE_STATE_SYNCED));
     return FALSE;
   }
 

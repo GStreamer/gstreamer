@@ -95,9 +95,8 @@ gst_v4lsrc_queue_frame (GstV4lSrc *v4lsrc,
   if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd,
             VIDIOCMCAPTURE, &(v4lsrc->mmap)) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Error queueing a buffer (%d): %s",
-      num, g_strerror(errno));
+    gst_element_error (v4lsrc, RESOURCE, WRITE, NULL,
+      ("Error queueing a buffer (%d): %s", num, g_strerror (errno)));
     return FALSE;
   }
 
@@ -126,9 +125,7 @@ gst_v4lsrc_sync_frame (GstV4lSrc *v4lsrc, gint num)
     /* if the sync() got interrupted, we can retry */
     if (errno != EINTR) {
       v4lsrc->frame_queue_state[num] = QUEUE_STATE_ERROR;
-      gst_element_error(GST_ELEMENT(v4lsrc),
-         "Error syncing on a buffer (%d): %s",
-          num, g_strerror(errno));
+      gst_element_error (v4lsrc, RESOURCE, SYNC, NULL, GST_ERROR_SYSTEM);
       return FALSE;
     }
     DEBUG("Sync got interrupted");
@@ -190,17 +187,16 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
   /* request buffer info */
   if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCGMBUF, &(v4lsrc->mbuf)) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Error getting buffer information: %s",
-      g_strerror(errno));
+    gst_element_error (v4lsrc, RESOURCE, READ, NULL,
+      ("Error getting buffer information: %s", g_strerror (errno)));
     return FALSE;
   }
 
   if (v4lsrc->mbuf.frames < MIN_BUFFERS_QUEUED)
   {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Too little buffers. We got %d, we want at least %d",
-      v4lsrc->mbuf.frames, MIN_BUFFERS_QUEUED);
+    gst_element_error (v4lsrc, RESOURCE, READ, NULL,
+      ("Not enough buffers. We got %d, we want at least %d",
+      v4lsrc->mbuf.frames, MIN_BUFFERS_QUEUED));
     return FALSE;
   }
 
@@ -225,9 +221,8 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
     PROT_READ|PROT_WRITE, MAP_SHARED, GST_V4LELEMENT(v4lsrc)->video_fd, 0);
   if (GST_V4LELEMENT(v4lsrc)->buffer == MAP_FAILED)
   {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Error mapping video buffers: %s",
-      g_strerror(errno));
+    gst_element_error (v4lsrc, RESOURCE, TOO_LAZY, NULL,
+      ("Error mapping video buffers: %s", g_strerror (errno)));
     GST_V4LELEMENT(v4lsrc)->buffer = NULL;
     return FALSE;
   }
@@ -364,10 +359,10 @@ gst_v4lsrc_requeue_frame (GstV4lSrc *v4lsrc, gint  num)
   g_mutex_lock(v4lsrc->mutex_queue_state);
 
   if (v4lsrc->frame_queue_state[num] != QUEUE_STATE_SYNCED) {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-                      "Invalid state %d (expected %d), can't requeue",
+    gst_element_error (v4lsrc, RESOURCE, TOO_LAZY, NULL,
+                      ("Invalid state %d (expected %d), can't requeue",
                       v4lsrc->frame_queue_state[num],
-                      QUEUE_STATE_SYNCED);
+                      QUEUE_STATE_SYNCED));
     return FALSE;
   }
 
@@ -478,9 +473,8 @@ gst_v4lsrc_try_palette (GstV4lSrc *v4lsrc,
   /* let's start by requesting a buffer and mmap()'ing it */
   if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCGMBUF, &vmbuf) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Error getting buffer information: %s",
-      g_strerror(errno));
+    gst_element_error (v4lsrc, RESOURCE, READ, NULL,
+      ("Error getting buffer information: %s", g_strerror(errno)));
     return FALSE;
   }
   /* Map the buffers */
@@ -488,9 +482,8 @@ gst_v4lsrc_try_palette (GstV4lSrc *v4lsrc,
                 MAP_SHARED, GST_V4LELEMENT(v4lsrc)->video_fd, 0);
   if (buffer == MAP_FAILED)
   {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Error mapping our try-out buffer: %s",
-      g_strerror(errno));
+    gst_element_error (v4lsrc, RESOURCE, TOO_LAZY, NULL,
+      ("Error mapping our try-out buffer: %s", g_strerror(errno)));
     return FALSE;
   }
 
@@ -502,18 +495,15 @@ gst_v4lsrc_try_palette (GstV4lSrc *v4lsrc,
   if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCMCAPTURE, &vmmap) < 0)
   {
     if (errno != EINVAL) /* our format failed! */
-      gst_element_error(GST_ELEMENT(v4lsrc),
-        "Error queueing our try-out buffer: %s",
-        g_strerror(errno));
+    gst_element_error (v4lsrc, RESOURCE, TOO_LAZY, NULL,
+      ("Error queueing our try-out buffer: %s", g_strerror(errno)));
     munmap(buffer, vmbuf.size);
     return FALSE;
   }
 
   if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCSYNC, &frame) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Error syncing on a buffer (%d): %s",
-      frame, g_strerror(errno));
+    gst_element_error (v4lsrc, RESOURCE, SYNC, NULL, GST_ERROR_SYSTEM);
     munmap(buffer, vmbuf.size);
     return FALSE;
   }

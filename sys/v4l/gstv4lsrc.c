@@ -829,8 +829,8 @@ gst_v4lsrc_buffer_free (GstBuffer *buf)
     }
 
   if (n == v4lsrc->mbuf.frames)
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Couldn\'t find the buffer");
+    gst_element_error (v4lsrc, RESOURCE, TOO_LAZY, NULL,
+      ("Couldn\'t find the buffer"));
 }
 
 

@@ -342,8 +342,8 @@ sink_restart:
 	}
         /* caps nego failed somewhere */
         if (this->format == NULL) {
-          gst_element_error (GST_ELEMENT (this), "alsasink: No caps available");
-          return;
+          gst_element_error (this, CORE, NEGOTIATION, NULL,
+                             ("ALSA format not negotiated"));
         }
         samplestamp = gst_alsa_timestamp_to_samples (this, GST_BUFFER_TIMESTAMP (sink->buf[i]));
         max_discont = gst_alsa_timestamp_to_samples (this, this->max_discont);

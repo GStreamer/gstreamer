@@ -21,6 +21,7 @@
 #define __V4L_CALLS_H__
 
 #include "gstv4lelement.h"
+#include "gst-libs/gst/gst-i18n-plugin.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,38 +40,38 @@ extern "C" {
   (v4lelement->vcap.type & VID_TYPE_OVERLAY)
 
 /* checks whether the current v4lelement has already been open()'ed or not */
-#define GST_V4L_CHECK_OPEN(v4lelement) \
-  if (v4lelement->video_fd <= 0)               \
-  {                                            \
-    gst_element_error(GST_ELEMENT(v4lelement), \
-      "Device is not open");                   \
-    return FALSE;                              \
+#define GST_V4L_CHECK_OPEN(v4lelement)				\
+  if (v4lelement->video_fd <= 0)				\
+  {								\
+    gst_element_error (v4lelement, RESOURCE, TOO_LAZY,	\
+      (_("Device is not open")), NULL);				\
+    return FALSE;						\
   }
 
 /* checks whether the current v4lelement is close()'ed or whether it is still open */
 #define GST_V4L_CHECK_NOT_OPEN(v4lelement) \
   if (v4lelement->video_fd != -1)              \
   {                                            \
-    gst_element_error(GST_ELEMENT(v4lelement), \
-      "Device is open");                       \
-    return FALSE;                              \
+    gst_element_error (v4lelement, RESOURCE, TOO_LAZY,	\
+      (_("Device is open")), NULL);				\
+    return FALSE;						\
   }
 
 /* checks whether the current v4lelement does video overlay */
 #define GST_V4L_CHECK_OVERLAY(v4lelement) \
   if (!(v4lelement->vcap.type & VID_TYPE_OVERLAY)) \
   {                                                \
-    gst_element_error(GST_ELEMENT(v4lelement),     \
-      "Device doesn't do overlay");               \
-    return FALSE;                                  \
+    gst_element_error (v4lelement, RESOURCE, TOO_LAZY,	\
+      NULL, ("Device cannot handle overlay"));			\
+    return FALSE;						\
   }
 
 /* checks whether we're in capture mode or not */
 #define GST_V4L_CHECK_ACTIVE(v4lelement) \
   if (v4lelement->buffer == NULL)              \
   {                                            \
-    gst_element_error(GST_ELEMENT(v4lelement), \
-      "Device is not in streaming mode");      \
+    gst_element_error (v4lelement, RESOURCE, SETTINGS,	\
+      NULL, ("Device is not in streaming mode"));		\
     return FALSE;                              \
   }
 
@@ -78,8 +79,8 @@ extern "C" {
 #define GST_V4L_CHECK_NOT_ACTIVE(v4lelement) \
   if (v4lelement->buffer != NULL)              \
   {                                            \
-    gst_element_error(GST_ELEMENT(v4lelement), \
-      "Device is in streaming mode");          \
+    gst_element_error (v4lelement, RESOURCE, SETTINGS,	\
+      NULL, ("Device is in streaming mode"));		\
     return FALSE;                              \
   }
 

@@ -658,7 +658,8 @@ gst_alsa_link (GstPad *pad, const GstCaps *caps)
 	  GstCaps *old = gst_alsa_caps (this->format->format, this->format->rate, this->format->channels);
 	  for (--i; i >= 0; i--) {
 	    if (gst_pad_try_set_caps (this->pad[i], old) == GST_PAD_LINK_REFUSED) {
-	      gst_element_error (GST_ELEMENT (this), "error resetting caps to sane value");
+              gst_element_error (this, CORE, NEGOTIATION, NULL,
+                                   ("could not reset caps to a sane value"));
 	      gst_caps_free (old);
 	      break;
 	    } else {
@@ -679,7 +680,7 @@ gst_alsa_link (GstPad *pad, const GstCaps *caps)
     g_free (this->format);
     this->format = format;
     if (! gst_alsa_start_audio (this)) {
-      gst_element_error (GST_ELEMENT (this), "Probed format doesn't work");
+      gst_element_error (this, RESOURCE, SETTINGS, NULL, NULL);
       return GST_PAD_LINK_REFUSED;
     }
 
@@ -872,7 +873,8 @@ gst_alsa_xrun_recovery (GstAlsa *this)
   }
 
   if (!(gst_alsa_stop_audio (this) && gst_alsa_start_audio (this))) {
-    gst_element_error (GST_ELEMENT (this), "alsasink: Error restarting audio after xrun");
+    gst_element_error (this, RESOURCE, FAILED, NULL,
+                       ("Error restarting audio after xrun"));
   }
 }
 

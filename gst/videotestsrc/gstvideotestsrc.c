@@ -406,8 +406,8 @@ gst_videotestsrc_get (GstPad * pad)
   videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
 
   if (videotestsrc->fourcc == NULL) {
-    gst_element_error (GST_ELEMENT (videotestsrc),
-		       "No color format set - aborting");
+    gst_element_error (videotestsrc, CORE, NEGOTIATION, NULL,
+                       ("format wasn't negotiated before get function"));
     return NULL;
   }
 

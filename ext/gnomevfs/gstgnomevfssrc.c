@@ -30,6 +30,8 @@
 #include "config.h"
 #endif
 
+#include "gst-libs/gst/gst-i18n-plugin.h"
+
 #include "gstgnomevfs.h"
 
 #include <sys/types.h>
@@ -525,7 +527,8 @@ static int audiocast_init(GstGnomeVFSSrc *src)
 		return TRUE;
 	GST_DEBUG ("audiocast: registering listener");
 	if (audiocast_register_listener(&src->audiocast_port, &src->audiocast_fd) < 0) {
-		gst_element_error(GST_ELEMENT(src), "unable to register UDP port");
+		gst_element_error (src, RESOURCE, OPEN_READ, NULL,
+                                     ("Unable to listen on UDP port %d", src->audiocast_port));
 		close(src->audiocast_fd);
 		return FALSE;
 	}
@@ -541,8 +544,8 @@ static int audiocast_init(GstGnomeVFSSrc *src)
 	GST_DEBUG ("audiocast: creating audiocast thread");
 	src->audiocast_thread = g_thread_create((GThreadFunc) audiocast_thread_run, src, TRUE, &error);
 	if (error != NULL) {
-		gst_element_error(GST_ELEMENT(src),
-				  "unable to create thread: %s", error->message);
+		gst_element_error (src, RESOURCE, TOO_LAZY, NULL,
+				  ("Unable to create thread: %s", error->message));
 		close(src->audiocast_fd);
 		return FALSE;
 	}
@@ -1048,8 +1051,8 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 		/* create the uri */
 		src->uri = gnome_vfs_uri_new(src->filename);
 		if (!src->uri) {
-			gst_element_error(GST_ELEMENT(src), "creating uri \"%s\" (%s)",
-					  src->filename, strerror (errno));
+			gst_element_error (src, RESOURCE, OPEN_READ,
+                                           (_("Error opening URI \"%s\" for reading"), src->filename), GST_ERROR_SYSTEM);
 			return FALSE;
 		}
 	}
@@ -1066,19 +1069,18 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 		result = GNOME_VFS_OK;
 	if (result != GNOME_VFS_OK) {
 		char *escaped;
-		
+
 		gst_gnomevfssrc_pop_callbacks (src);
 		audiocast_thread_kill(src);
 
 		escaped = gnome_vfs_unescape_string_for_display (src->filename);
-		gst_element_error(GST_ELEMENT(src),
-				  "opening vfs file \"%s\" (%s)",
-				  escaped,
-				  gnome_vfs_result_to_string(result));
+		gst_element_error (src, RESOURCE, OPEN_READ,
+				   (_("Error opening vfs file \"%s\""), escaped),
+				   (gnome_vfs_result_to_string (result)));
 		g_free (escaped);
 		return FALSE;
 	}
-	
+
 	info = gnome_vfs_file_info_new ();
 	if (gnome_vfs_get_file_info_from_handle (src->handle, info,
 						 GNOME_VFS_FILE_INFO_DEFAULT)

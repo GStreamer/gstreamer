@@ -27,6 +27,8 @@
 #include "config.h"
 #endif
 
+#include "gst-libs/gst/gst-i18n-plugin.h"
+
 #include "gstgnomevfs.h"
 
 #include <gst/gst.h>
@@ -280,7 +282,9 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink *sink)
 		       gst_gnomevfssink_signals[SIGNAL_ERASE_ASK], 0,
 		       sink->erase);
       }
-      gst_element_error (GST_ELEMENT (sink), "opening file \"%s\" (%s)", sink->filename, strerror (errno));
+      gst_element_error (sink, RESOURCE, OPEN_WRITE,
+                         (_("Error opening vfs file \"%s\""), sink->filename),
+                         GST_ERROR_SYSTEM);
       return FALSE;
     } 
   } else
@@ -303,7 +307,9 @@ gst_gnomevfssink_close_file (GstGnomeVFSSink *sink)
     result = gnome_vfs_close(sink->handle);
 
     if (result != GNOME_VFS_OK)
-	gst_element_error (GST_ELEMENT (sink), "closing file \"%s\" (%s)", sink->filename, strerror (errno));
+	gst_element_error (sink, RESOURCE, CLOSE,
+                           (_("Error closing file \"%s\""), sink->filename),
+                           GST_ERROR_SYSTEM);
   }
   
   GST_FLAG_UNSET (sink, GST_GNOMEVFSSINK_OPEN);

@@ -269,9 +269,9 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
     /* check size */
     if (GST_BUFFER_SIZE(buf) > v4lmjpegsink->breq.size)
     {
-      gst_element_error(GST_ELEMENT(v4lmjpegsink),
-        "Buffer too big (%d KB), max. buffersize is %d KB",
-        GST_BUFFER_SIZE(buf)/1024, v4lmjpegsink->breq.size/1024);
+      gst_element_error (v4lmjpegsink, RESOURCE, WRITE, NULL,
+        ("Buffer too big (%d KB), max. buffersize is %ld KB",
+        GST_BUFFER_SIZE(buf)/1024, v4lmjpegsink->breq.size/1024));
       return;
     }
 

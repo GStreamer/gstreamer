@@ -634,7 +634,8 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
     {
       g_mutex_unlock (xvimagesink->x_lock);
       g_free (xcontext);
-      gst_element_error (GST_ELEMENT (xvimagesink), "Could not open display");
+      gst_element_error (xvimagesink, RESOURCE, TOO_LAZY, NULL,
+                         ("Could not open display"));
       return NULL;
     }
   
@@ -1036,7 +1037,7 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
       else /* No image available. Something went wrong during capsnego ! */
         {
           gst_buffer_unref (buf);
-          gst_element_error (GST_ELEMENT (xvimagesink), "no image to draw");
+         gst_element_error (xvimagesink, CORE, NEGOTIATION, NULL, ("no format defined before chain function"));
           return;
         }
     }

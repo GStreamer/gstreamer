@@ -124,9 +124,8 @@ gst_v4l_set_window (GstElement        *element,
 
   if (ioctl(v4lelement->video_fd, VIDIOCSWIN, &vwin) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Failed to set the video window: %s",
-      g_strerror(errno));
+    gst_element_error (v4lelement, RESOURCE, TOO_LAZY, NULL,
+      ("Failed to set the video window: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -152,9 +151,9 @@ gst_v4l_enable_overlay (GstV4lElement *v4lelement,
 
   if (ioctl(v4lelement->video_fd, VIDIOCCAPTURE, &doit) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Failed to %s overlay display: %s",
-      enable?"enable":"disable", g_strerror(errno));
+    gst_element_error (v4lelement, RESOURCE, TOO_LAZY, NULL,
+      ("Failed to %s overlay display: %s",
+      enable?"enable":"disable", g_strerror (errno)));
     return FALSE;
   }
 

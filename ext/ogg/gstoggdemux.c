@@ -313,7 +313,7 @@ gst_ogg_demux_chain (GstPad *pad, GstData *buffer)
   memcpy (data, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
   if (ogg_sync_wrote (&ogg->sync, GST_BUFFER_SIZE (buffer)) != 0) {
     gst_data_unref (buffer);
-    gst_element_error (GST_ELEMENT (ogg), "ogg_sync_wrote failed");
+    gst_element_error (ogg, LIBRARY, TOO_LAZY, NULL, ("ogg_sync_wrote failed"));
     return;
   }
   gst_data_unref (buffer);
@@ -394,13 +394,13 @@ br:
       /* FIXME: monitor if we are still in creation stage? */
       cur = gst_ogg_pad_new (ogg, ogg_page_serialno (page));
       if (!cur) {
-	gst_element_error (GST_ELEMENT (ogg), "Creating ogg_stream struct failed.");
+	gst_element_error (ogg, LIBRARY, TOO_LAZY, NULL, ("Creating ogg_stream struct failed."));
       }
       ogg->srcpads = g_slist_prepend (ogg->srcpads, cur);
     }
   }
   if (cur == NULL) {
-    gst_element_error (GST_ELEMENT (ogg), "invalid ogg stream serial no");
+    gst_element_error (ogg, LIBRARY, TOO_LAZY, NULL, ("invalid ogg stream serial no"));
     return;
   }
   if (ogg_stream_pagein (&cur->stream, page) != 0) {
@@ -438,8 +438,7 @@ gst_ogg_pad_push (GstOggDemux *ogg, GstOggPad *pad)
 	  gchar *name = g_strdup_printf ("serial %d", pad->serial);
 	  
 	  if (caps == NULL) {
-	    gst_element_error (GST_ELEMENT (ogg),
-		"couldn't determine stream type from media");
+	    gst_element_error (ogg, STREAM, TYPE_NOT_FOUND, NULL, NULL);
 	    return;
 	  }
 	  pad->pad = gst_pad_new_from_template (

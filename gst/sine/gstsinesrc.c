@@ -383,7 +383,7 @@ gst_sinesrc_get (GstPad *pad)
   if (!GST_PAD_CAPS (src->srcpad)) {
     if (gst_sinesrc_link (src->srcpad,
 			  gst_pad_get_allowed_caps (src->srcpad)) <= 0) {
-      gst_element_error (GST_ELEMENT (src), "Could not set caps");
+      gst_element_error (src, CORE, NEGOTIATION, NULL, NULL);
       return NULL;
     }
   }
