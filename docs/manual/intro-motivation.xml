@@ -77,7 +77,7 @@
       </para> 
       <para> 
         While &GStreamer; also uses it own plugin system it offers a very rich
-	framework for the plugin developper and ensures the plugin can be used
+	framework for the plugin developer and ensures the plugin can be used
 	in a wide range of applications, transparently interacting with other
 	plugins. The framework that &GStreamer; provides for the plugins is
 	flexible enough to host even the most demanding plugins.
@@ -154,7 +154,7 @@
         <listitem>
 	  <para>
 	    The plugin programmer. Plugin programmers are provided a clean and
-	    simple API to create self contained plugins. An extensive debugging
+	    simple API to create self-contained plugins. An extensive debugging
 	    and tracing mechanism has been integrated. GStreamer also comes with
 	    an extensive set of real-life plugins that serve as examples too.
 	  </para>
@@ -204,7 +204,7 @@
         installed for the plugins.
       </para>
       <para> 
-        Special care has been taken to make plugins completely selfcontained. 
+        Special care has been taken to make plugins completely self-contained. 
         All relevant aspects of plugins can be queried at run-time.
       </para> 
     </sect2>
