@@ -573,8 +573,8 @@ gst_play_set_location (GstPlay *play, const char *location)
   
   gst_bin_add (GST_BIN (work_thread), autoplugger);
   gst_element_link (source, autoplugger);
-  gst_element_link (autoplugger, identity);
   gst_element_link (autoplugger, audioconvert);
+  gst_element_link (autoplugger, identity);
   
   g_hash_table_replace (play->priv->elements, "autoplugger", autoplugger);
   
