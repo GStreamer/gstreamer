@@ -28,5 +28,5 @@ noinst_HEADERS = dct.h
 
 
 libgstidct_la_LIBADD =
-libgstidct_la_CFLAGS = $(GST_CFLAGS) $(GST_OPT_CFLAGS)
+libgstidct_la_CFLAGS = $(GST_CFLAGS)
 libgstidct_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
