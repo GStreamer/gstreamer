@@ -196,6 +196,7 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->context = avcodec_alloc_context ();
   ffmpegdec->picture = avcodec_alloc_frame ();
 
+  ffmpegdec->par = NULL;
   ffmpegdec->opened = FALSE;
 }
 
@@ -218,6 +219,11 @@ gst_ffmpegdec_close (GstFFMpegDec *ffmpegdec)
 {
   if (!ffmpegdec->opened)
     return;
+
+  if (ffmpegdec->par) {
+    g_free (ffmpegdec->par);
+    ffmpegdec->par = NULL;
+  }
 
   if (ffmpegdec->context->priv_data)
     avcodec_close (ffmpegdec->context);
@@ -301,8 +307,15 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
    * during playback... */
-  return gst_ffmpegdec_open (ffmpegdec) ?
-      GST_PAD_LINK_OK : GST_PAD_LINK_REFUSED;
+  if (!gst_ffmpegdec_open (ffmpegdec)) {
+    if (ffmpegdec->par) {
+      g_free (ffmpegdec->par);
+      ffmpegdec->par = NULL;
+    }
+    return GST_PAD_LINK_REFUSED;
+  }
+
+  return GST_PAD_LINK_OK;
 }
 
 #if 0
@@ -358,8 +371,55 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
 }
 #endif
 
-#define ROUND_UP_2(x) (((x) + 1) & ~1)
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
+static gboolean
+gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
+{
+  GstFFMpegDecClass *oclass =
+      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  GstCaps *caps;
+
+  caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
+      ffmpegdec->context);
+
+  /* add in pixel-aspect-ratio if we have it,
+   * prefer ffmpeg par over sink par (since it's provided
+   * by the codec, which is more often correct).
+   */
+ if (caps) {
+   if (ffmpegdec->context->sample_aspect_ratio.num &&
+       ffmpegdec->context->sample_aspect_ratio.den) {
+     GST_DEBUG ("setting ffmpeg provided pixel-aspect-ratio");
+     gst_structure_set (gst_caps_get_structure (caps, 0),
+         "pixel-aspect-ratio", GST_TYPE_FRACTION,
+         ffmpegdec->context->sample_aspect_ratio.num,
+         ffmpegdec->context->sample_aspect_ratio.den,
+         NULL);
+    } else if (ffmpegdec->par) {
+      GST_DEBUG ("passing on pixel-aspect-ratio from sink");
+      gst_structure_set (gst_caps_get_structure (caps, 0),
+          "pixel-aspect-ratio", GST_TYPE_FRACTION,
+           gst_value_get_fraction_numerator (ffmpegdec->par),
+           gst_value_get_fraction_denominator (ffmpegdec->par),
+           NULL);
+    }
+  }
+
+  if (caps == NULL ||
+      !gst_pad_set_explicit_caps (ffmpegdec->srcpad, caps)) {
+    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
+        ("Failed to link ffmpeg decoder (%s) to next element",
+        oclass->in_plugin->name));
+
+    if (caps != NULL)
+      gst_caps_free (caps);
+
+    return FALSE;
+  }
+
+  gst_caps_free (caps);
+
+  return TRUE;
+}
 
 static void
 gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
@@ -484,31 +544,10 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 
     if (have_data) {
       if (!GST_PAD_CAPS (ffmpegdec->srcpad)) {
-        GstCaps *caps;
-
-        caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
-            ffmpegdec->context);
-
-        /* add in pixel-aspect-ratio if we have it */
-        if (caps && ffmpegdec->par) {
-          GST_DEBUG_OBJECT (ffmpegdec, "setting pixel-aspect-ratio");
-	  gst_structure_set (gst_caps_get_structure (caps, 0),
-              "pixel-aspect-ratio", GST_TYPE_FRACTION,
-              gst_value_get_fraction_numerator (ffmpegdec->par),
-              gst_value_get_fraction_denominator (ffmpegdec->par),
-              NULL);
-        }
-        if (caps == NULL ||
-            !gst_pad_set_explicit_caps (ffmpegdec->srcpad, caps)) {
-          GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-              ("Failed to link ffmpeg decoder (%s) to next element",
-                  oclass->in_plugin->name));
-	  if (caps != NULL)
-	    gst_caps_free (caps);
+        if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
           gst_buffer_unref (outbuf);
           return;
         }
-	gst_caps_free (caps);
       }
 
       if (GST_PAD_IS_USABLE (ffmpegdec->srcpad))
