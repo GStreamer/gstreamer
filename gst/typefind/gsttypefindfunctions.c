@@ -469,6 +469,25 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** audio/x-ac3 **************************************************************/
+static GstStaticCaps ac3_caps = GST_STATIC_CAPS ("audio/x-ac3");
+
+#define AC3_CAPS (gst_static_caps_get(&ac3_caps))
+
+static void
+ac3_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 2);
+
+  if (data) {
+    /* pretty lame method... */
+    if (data[0] == 0x0b && data[1] == 0x77) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, AC3_CAPS);
+      return;
+    }
+  }
+}
+
 /*** video/mpeg systemstream **************************************************/
 
 static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
@@ -1367,6 +1386,7 @@ plugin_init (GstPlugin * plugin)
     "s3m", "stm", "stx", "ult", "xm", NULL
   };
   static gchar *mp3_exts[] = { "mp3", "mp2", "mp1", "mpga", NULL };
+  static gchar *ac3_exts[] = { "ac3", NULL };
   static gchar *mpeg_sys_exts[] = { "mpe", "mpeg", "mpg", NULL };
   static gchar *mpeg_video_exts[] = { "mpv", "mpeg", "mpg", NULL };
   static gchar *ogg_exts[] = { "ogg", "ogm", NULL };
@@ -1425,6 +1445,8 @@ plugin_init (GstPlugin * plugin)
       mod_exts, MOD_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/mpeg", GST_RANK_PRIMARY, mp3_type_find,
       mp3_exts, MP3_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-ac3", GST_RANK_PRIMARY, ac3_type_find,
+      ac3_exts, AC3_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg1", GST_RANK_PRIMARY,
       mpeg1_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg2", GST_RANK_SECONDARY,
