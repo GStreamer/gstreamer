@@ -22,16 +22,19 @@
 #include <gstmpegpacketize.h>
 
 GstMPEGPacketize*
-gst_mpeg_packetize_new (GstByteStream *bs)
+gst_mpeg_packetize_new (GstPad *pad)
 {
   GstMPEGPacketize *new;
 
-  g_return_val_if_fail (bs != NULL, NULL);
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
   
   new = g_malloc (sizeof (GstMPEGPacketize));
   
+  gst_object_ref (GST_OBJECT (pad));
   new->id = 0;
-  new->bs = bs;
+  new->pad = pad;
+  new->bs = gst_bytestream_new (pad);
   new->MPEG2 = FALSE;
 
   return new;
@@ -41,6 +44,9 @@ void
 gst_mpeg_packetize_destroy (GstMPEGPacketize *packetize)
 {
   g_return_if_fail (packetize != NULL);
+
+  gst_bytestream_destroy (packetize->bs);
+  gst_object_unref (GST_OBJECT (packetize->pad));
 
   g_free (packetize);
 }

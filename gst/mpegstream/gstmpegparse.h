@@ -54,7 +54,6 @@ struct _GstMPEGParse {
 
   GstPad *sinkpad, *srcpad;
 
-  GstByteStream *bs;
   GstMPEGPacketize *packetize;
 
   /* pack header values */

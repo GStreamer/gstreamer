@@ -24,7 +24,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include <gst/bytestream/gstbytestream.h>
 
 
 #ifdef __cplusplus
@@ -42,12 +42,13 @@ struct _GstMPEGPacketize {
   /* current parse state */
   guchar id;
 
+  GstPad *pad;
   GstByteStream *bs;
 
   gboolean MPEG2;
 };
 
-GstMPEGPacketize* 	gst_mpeg_packetize_new 		(GstByteStream *bs);
+GstMPEGPacketize* 	gst_mpeg_packetize_new 		(GstPad *pad);
 void		 	gst_mpeg_packetize_destroy 	(GstMPEGPacketize *packetize);
 
 GstData* 		gst_mpeg_packetize_read 	(GstMPEGPacketize *packetize);

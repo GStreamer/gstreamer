@@ -47,12 +47,6 @@ enum {
   /* FILL ME */
 };
 
-typedef enum {
-  PARSE_STATE_ERROR 	= 0,
-  PARSE_STATE_OK  	= 1,
-  PARSE_STATE_EVENT	= 2,
-} GstMPEGParseState;
-
 GST_PADTEMPLATE_FACTORY (sink_factory,
   "sink",
   GST_PAD_SINK,
@@ -80,6 +74,8 @@ GST_PADTEMPLATE_FACTORY (src_factory,
 
 static void 	gst_mpeg_parse_class_init	(GstMPEGParseClass *klass);
 static void 	gst_mpeg_parse_init		(GstMPEGParse *mpeg_parse);
+static GstElementStateReturn
+		gst_mpeg_parse_change_state	(GstElement *element);
 
 static gboolean	gst_mpeg_parse_parse_packhead 	(GstMPEGParse *mpeg_parse, GstBuffer *buffer);
 static void 	gst_mpeg_parse_send_data	(GstMPEGParse *mpeg_parse, GstData *data);
@@ -122,6 +118,8 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
+  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BIT_RATE,
     g_param_spec_uint("bit_rate","bit_rate","bit_rate",
                       0, G_MAXUINT, 0, G_PARAM_READABLE));
@@ -131,13 +129,14 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
 
   gobject_class->get_property = gst_mpeg_parse_get_property;
 
+  gstelement_class->change_state = gst_mpeg_parse_change_state;
+
   klass->parse_packhead = gst_mpeg_parse_parse_packhead;
   klass->parse_syshead 	= NULL;
   klass->parse_packet 	= NULL;
   klass->parse_pes 	= NULL;
   klass->send_data 	= gst_mpeg_parse_send_data;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 }
 
 static void
@@ -152,7 +151,6 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
   gst_element_add_pad(GST_ELEMENT(mpeg_parse),mpeg_parse->srcpad);
 
   /* initialize parser state */
-  mpeg_parse->bs = NULL;
   mpeg_parse->packetize = NULL;
   mpeg_parse->next_ts = 0;
 
@@ -185,6 +183,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   guint8 *buf;
   guint64 scr;
   guint32 scr1, scr2;
+  guint32 new_rate;
 
   GST_DEBUG (0, "mpeg_parse: in parse_packhead\n");
 
@@ -203,7 +202,8 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     scr |= (scr2 & 0xf8000000) >> 27;
     
     buf += 6;
-    mpeg_parse->bit_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0xfffffc00) >> 10;
+    new_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0xfffffc00) >> 10;
+    new_rate *= 133; /* FIXME trial and error */
   }
   else {
     scr  = (scr1 & 0x0e000000) << 5;
@@ -211,15 +211,21 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     scr |= (scr1 & 0x000000ff) << 7;
     scr |= (scr2 & 0xfe000000) >> 25;
     
-    buf += 4;
-    mpeg_parse->bit_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0x7ffffe00) >> 9;
+    buf += 5;
+    new_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0x7ffffe00) >> 9;
+    new_rate *= 400;
   }
 
   GST_DEBUG (0, "mpeg_parse: SCR is %llu\n", scr);
   mpeg_parse->next_ts = (scr*100)/9;
-  mpeg_parse->bit_rate *= 50;
 
-  GST_DEBUG (0, "mpeg_parse: stream is %1.3fMB/sec\n",
+  if (mpeg_parse->bit_rate != new_rate) {
+    mpeg_parse->bit_rate = new_rate;
+    gst_element_send_event (GST_ELEMENT (mpeg_parse), 
+      gst_event_new_info ("bitrate", GST_PROPS_INT (new_rate), NULL));
+  }
+
+  GST_DEBUG (0, "mpeg_parse: stream is %1.3fMbs\n",
 	     (mpeg_parse->bit_rate) / 1000000.0);
 
   return TRUE;
@@ -229,57 +235,79 @@ static void
 gst_mpeg_parse_loop (GstElement *element)
 {
   GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (element);
+  GstData *data;
+  guint id;
+  gboolean mpeg2;
+  gboolean to_send = TRUE;
 
-  if (!mpeg_parse->bs) {
-    mpeg_parse->bs = gst_bytestream_new (mpeg_parse->sinkpad);
-    mpeg_parse->packetize = gst_mpeg_packetize_new (mpeg_parse->bs);
-  }
+  data = gst_mpeg_packetize_read (mpeg_parse->packetize);
 
-  do {
-    GstData *data;
-    guint id;
-    gboolean mpeg2;
-
-    data = gst_mpeg_packetize_read (mpeg_parse->packetize);
-
-    id = GST_MPEG_PACKETIZE_ID (mpeg_parse->packetize);
-    mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
+  id = GST_MPEG_PACKETIZE_ID (mpeg_parse->packetize);
+  mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
     
-    if (GST_IS_BUFFER (data)) {
-      GstBuffer *buffer = GST_BUFFER (data);
+  if (GST_IS_BUFFER (data)) {
+    GstBuffer *buffer = GST_BUFFER (data);
 
-      GST_DEBUG (0, "mpeg2demux: have chunk 0x%02X\n", id);
+    GST_DEBUG (0, "mpeg2demux: have chunk 0x%02X\n", id);
 
-      switch (id) {
-        case 0xba:
-	  if (CLASS (mpeg_parse)->parse_packhead)
-	    CLASS (mpeg_parse)->parse_packhead (mpeg_parse, buffer);
-	  break;
-        case 0xbb:
-	  if (CLASS (mpeg_parse)->parse_syshead)
-	    CLASS (mpeg_parse)->parse_syshead (mpeg_parse, buffer);
-	  break;
-	default:
-          if (mpeg2 && ((id < 0xBD) || (id > 0xFE))) {
-               g_warning ("mpeg2demux: ******** unknown id 0x%02X", id); 
-          }
-	  else {
-	    if (mpeg2) {
-	      if (CLASS (mpeg_parse)->parse_pes)
-	        CLASS (mpeg_parse)->parse_pes (mpeg_parse, buffer);
-	    }
-	    else {
-	      if (CLASS (mpeg_parse)->parse_packet)
-	        CLASS (mpeg_parse)->parse_packet (mpeg_parse, buffer);
+    switch (id) {
+      case 0xba:
+        if (CLASS (mpeg_parse)->parse_packhead) {
+	  CLASS (mpeg_parse)->parse_packhead (mpeg_parse, buffer);
+	}
+	break;
+      case 0xbb:
+	if (CLASS (mpeg_parse)->parse_syshead) {
+	  CLASS (mpeg_parse)->parse_syshead (mpeg_parse, buffer);
+	}
+	break;
+      default:
+        if (mpeg2 && ((id < 0xBD) || (id > 0xFE))) {
+          g_warning ("mpeg2demux: ******** unknown id 0x%02X", id); 
+        }
+	else {
+	  if (mpeg2) {
+	    if (CLASS (mpeg_parse)->parse_pes) {
+	      CLASS (mpeg_parse)->parse_pes (mpeg_parse, buffer);
 	    }
 	  }
-      }
+	  else {
+	    if (CLASS (mpeg_parse)->parse_packet) {
+	      CLASS (mpeg_parse)->parse_packet (mpeg_parse, buffer);
+	    }
+	  }
+        }
     }
+  }
 
-    if (CLASS (mpeg_parse)->send_data)
-      CLASS (mpeg_parse)->send_data (mpeg_parse, data);
+  if (CLASS (mpeg_parse)->send_data && to_send)
+    CLASS (mpeg_parse)->send_data (mpeg_parse, data);
+}
 
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
+static GstElementStateReturn
+gst_mpeg_parse_change_state (GstElement *element) 
+{
+  GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      if (!mpeg_parse->packetize) {
+        mpeg_parse->packetize = gst_mpeg_packetize_new (mpeg_parse->sinkpad);
+      }
+      break;
+    case GST_STATE_READY_TO_NULL:
+      if (mpeg_parse->packetize) {
+        gst_mpeg_packetize_destroy (mpeg_parse->packetize);
+        mpeg_parse->packetize = NULL;
+      }
+      break;
+    default:
+      break;
+  }
+
+  GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
 }
 
 static void
