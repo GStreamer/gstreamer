@@ -115,23 +115,20 @@ gst_aasink_drivers_get_type (void)
   if (!driver_type) {
     GEnumValue *drivers;
     const struct aa_driver *driver;
-    gint i = 0;
+    gint n_drivers;
+    gint i;
 
-    driver = aa_drivers[i++];
-    while (driver) {
-      driver = aa_drivers[i++];
+    for (n_drivers = 0; aa_drivers[n_drivers]; n_drivers++){
+      /* count number of drivers */
     }
     
-    drivers = g_new0(GEnumValue, i);
+    drivers = g_new0(GEnumValue, n_drivers + 1);
 
-    i = 0;
-    driver = aa_drivers[i];
-    while (driver) {
+    for (i = 0; i < n_drivers; i++){
+      driver = aa_drivers[i];
       drivers[i].value = i;
       drivers[i].value_name = g_strdup (driver->shortname);
       drivers[i].value_nick = g_strdup (driver->name);
-      i++;
-      driver = aa_drivers[i];
     }
     drivers[i].value = 0;
     drivers[i].value_name = NULL;
@@ -149,20 +146,19 @@ gst_aasink_dither_get_type (void)
   static GType dither_type = 0;
   if (!dither_type) {
     GEnumValue *ditherers;
-    gint i = 0;
+    gint n_ditherers;
+    gint i;
 
-    while (aa_dithernames[i]) {
-      i++;
+    for (n_ditherers = 0; aa_dithernames[n_ditherers]; n_ditherers++){
+      /* count number of ditherers */
     }
     
-    ditherers = g_new0(GEnumValue, i + 1);
+    ditherers = g_new0(GEnumValue, n_ditherers + 1);
 
-    i = 0;
-    while (aa_dithernames[i]) {
+    for (i = 0; i < n_ditherers; i++){
       ditherers[i].value = i;
       ditherers[i].value_name = g_strdup (aa_dithernames[i]);
       ditherers[i].value_nick = g_strdup (aa_dithernames[i]);
-      i++;
     }
     ditherers[i].value = 0;
     ditherers[i].value_name = NULL;
