@@ -602,7 +602,7 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
 static void
 gst_avi_debug_entry (const gchar *prefix, gst_avi_index_entry *entry)
 {
-  GST_DEBUG (0, "%s: %05d %d %08llx %05d %08lld %08x %08x (%d) %08x", prefix, entry->index_nr, entry->stream_nr, 
+  GST_DEBUG (0, "%s: %05d %d %08llx %05d %14lld %08x %08x (%d) %08x", prefix, entry->index_nr, entry->stream_nr, 
 		  entry->bytes_before, entry->frames_before, entry->ts, entry->flags, entry->offset, 
 		  entry->offset, entry->size);
 }
@@ -664,6 +664,11 @@ gst_avi_demux_parse_index (GstAviDemux *avi_demux,
     GstFormat format;
 
     stream_nr = CHUNKID_TO_STREAMNR (entry[i].id);
+    if (stream_nr > avi_demux->num_streams || stream_nr < 0) {
+      avi_demux->index_entries[i].stream_nr = -1;
+      continue;
+    }
+
     target->stream_nr = stream_nr;
     stream = &avi_demux->stream[stream_nr];
 
@@ -671,12 +676,15 @@ gst_avi_demux_parse_index (GstAviDemux *avi_demux,
     target->flags    = entry[i].flags;
     target->size     = entry[i].size;
     target->offset   = entry[i].offset;
-    
+
     target->bytes_before = stream->total_bytes;
     target->frames_before = stream->total_frames;
 
     format = GST_FORMAT_TIME;
     if (stream->strh.type == GST_RIFF_FCC_auds) {
+      /* all audio frames are keyframes */
+      target->flags |= GST_RIFF_IF_KEYFRAME;
+      
       gst_pad_convert (stream->pad, GST_FORMAT_BYTES, stream->total_bytes,
 		                 &format, &target->ts);
     }
@@ -1019,7 +1027,7 @@ gst_avi_demux_handle_sink_event (GstAviDemux *avi_demux)
 	GST_DEBUG (GST_CAT_EVENT, "sending discont on %d %lld + %lld = %lld", i, 
 			avi_demux->last_seek, stream->delay, avi_demux->last_seek + stream->delay);
         event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
-			avi_demux->last_seek + stream->delay, NULL);
+			avi_demux->last_seek + stream->delay , NULL);
 	gst_pad_push (stream->pad, GST_BUFFER (event));
       }
       break;
