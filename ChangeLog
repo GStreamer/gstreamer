@@ -1,3 +1,11 @@
+2004-05-10  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* ext/ffmpeg/gstffmpegdec.c
+	* ext/ffmpeg/gstffmpegenc.c
+		change plugins category to meet our new standard :
+			Codec/Encoder|Decoder/Audio|Video
+		suggested by bilboed, approved by Company
+
 2004-05-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/ext/ffmpeg/autogen.sh:
