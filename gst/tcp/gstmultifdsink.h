@@ -84,6 +84,8 @@ typedef struct {
   GList *sending;               /* the buffers we need to send */
   gint bufoffset;               /* offset in the first buffer */
 
+  gboolean discont;
+
   GstTCPProtocolType protocol;
 
   gboolean caps_sent;
@@ -125,6 +127,12 @@ struct _GstMultiFdSink {
 struct _GstMultiFdSinkClass {
   GstElementClass parent_class;
 
+  /* element methods */
+  void (*add)    (GstMultiFdSink *sink, int fd);
+  void (*remove) (GstMultiFdSink *sink, int fd);
+  void (*clear)  (GstMultiFdSink *sink);
+
+  /* vtable */
   gboolean (*init)   (GstMultiFdSink *sink);
   gboolean (*select) (GstMultiFdSink *sink, fd_set *readfds, fd_set *writefds);
   gboolean (*close)  (GstMultiFdSink *sink);
@@ -135,6 +143,10 @@ struct _GstMultiFdSinkClass {
 };
 
 GType gst_multifdsink_get_type (void);
+
+void gst_multifdsink_add (GstMultiFdSink *sink, int fd);
+void gst_multifdsink_remove (GstMultiFdSink *sink, int fd);
+void gst_multifdsink_clear (GstMultiFdSink *sink);
 
 
 #ifdef __cplusplus

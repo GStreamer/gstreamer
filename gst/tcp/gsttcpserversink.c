@@ -70,8 +70,6 @@ static void gst_tcpserversink_get_property (GObject * object, guint prop_id,
 
 static GstMultiFdSinkClass *parent_class = NULL;
 
-//static guint gst_tcpserversink_signals[LAST_SIGNAL] = { 0 };
-
 GType
 gst_tcpserversink_get_type (void)
 {
@@ -156,8 +154,6 @@ gst_tcpserversink_handle_server_read (GstTCPServerSink * sink)
   int client_sock_fd;
   struct sockaddr_in client_address;
   int client_address_len;
-  GstTCPClient *client;
-  GstMultiFdSink *parent = GST_MULTIFDSINK (sink);
 
   client_sock_fd =
       accept (sink->server_sock_fd, (struct sockaddr *) &client_address,
@@ -168,22 +164,7 @@ gst_tcpserversink_handle_server_read (GstTCPServerSink * sink)
     return FALSE;
   }
 
-  /* create client datastructure */
-  client = g_new0 (GstTCPClient, 1);
-  client->fd = client_sock_fd;
-  client->bufpos = -1;
-  client->bufoffset = 0;
-  client->sending = NULL;
-
-  g_mutex_lock (parent->clientslock);
-  parent->clients = g_list_prepend (parent->clients, client);
-  g_mutex_unlock (parent->clientslock);
-
-  /* we always read from a client */
-  FD_SET (client_sock_fd, &parent->readfds);
-
-  /* set the socket to non blocking */
-  fcntl (client_sock_fd, F_SETFL, O_NONBLOCK);
+  gst_multifdsink_add (GST_MULTIFDSINK (sink), client_sock_fd);
 
   GST_DEBUG_OBJECT (sink, "added new client ip %s with fd %d",
       inet_ntoa (client_address.sin_addr), client_sock_fd);
