@@ -158,6 +158,7 @@ cothread_setfunc (cothread_state *thread,
  * @ctx: cothread context to find main thread of
  *
  * Returns: the #cothread_state of the main (0th) thread
+ */
 static cothread_state*
 cothread_main(cothread_context *ctx) 
 {
