@@ -25,10 +25,15 @@
 
 #include "gstcaps.h"
 #include "gsttype.h"
+#include "gstmemchunk.h"
 #include "gstlog.h"
 
-static GMemChunk *_gst_caps_chunk;
-static GMutex *_gst_caps_chunk_lock;
+/* #define GST_WITH_ALLOC_TRACE */
+#include "gsttrace.h"
+
+static GstMemChunk *_gst_caps_chunk;
+
+static GstAllocTrace *_gst_caps_trace;
 
 GType _gst_caps_type;
 
@@ -52,22 +57,23 @@ transform_func (const GValue *src_value,
     g_value_set_boxed  (&value, caps->properties);
     props = g_strdup_value_contents (&value);
 
+    g_value_unset (&value);
     g_string_append (result, props);
     g_free (props);
 
     caps = caps->next;
-    g_string_append_printf (result, " }%s", caps?", ":"");
+    g_string_append_printf (result, " }%s", (caps ? ", " : ""));
   }
   dest_value->data[0].v_pointer = result->str;
+  g_string_free (result, FALSE);
 }
 
 void
 _gst_caps_initialize (void)
 {
-  _gst_caps_chunk = g_mem_chunk_new ("GstCaps",
+  _gst_caps_chunk = gst_mem_chunk_new ("GstCaps",
                   sizeof (GstCaps), sizeof (GstCaps) * 256,
                   G_ALLOC_AND_FREE);
-  _gst_caps_chunk_lock = g_mutex_new ();
 
   _gst_caps_type = g_boxed_type_register_static ("GstCaps",
                                        (GBoxedCopyFunc) gst_caps_ref,
@@ -76,6 +82,8 @@ _gst_caps_initialize (void)
   g_value_register_transform_func (_gst_caps_type,
 		                   G_TYPE_STRING,
 				   transform_func);
+
+  _gst_caps_trace = gst_alloc_trace_register (GST_CAPS_TRACE_NAME);
 }
 
 static guint16
@@ -133,21 +141,60 @@ gst_caps_new_id (const gchar *name, const guint16 id, GstProps *props)
 {
   GstCaps *caps;
 
-  g_mutex_lock (_gst_caps_chunk_lock);
-  caps = g_mem_chunk_alloc (_gst_caps_chunk);
-  g_mutex_unlock (_gst_caps_chunk_lock);
+  caps = gst_mem_chunk_alloc (_gst_caps_chunk);
+  gst_alloc_trace_new (_gst_caps_trace, caps);
+
+  GST_DEBUG (GST_CAT_CAPS, "new %p", caps);
+
+  gst_props_ref (props);
+  gst_props_sink (props);
 
   caps->name = g_strdup (name);
   caps->id = id;
   caps->properties = props;
   caps->next = NULL;
   caps->refcount = 1;
-  if (props)
-    caps->fixed = props->fixed;
+  GST_CAPS_FLAG_SET (caps, GST_CAPS_FLOATING);
+
+  if (props && !GST_PROPS_IS_FIXED (props))
+    GST_CAPS_FLAG_UNSET (caps, GST_CAPS_FIXED);
   else
-    caps->fixed = TRUE;
+    GST_CAPS_FLAG_SET (caps, GST_CAPS_FIXED);
 
   return caps;
+}
+
+/**
+ * gst_caps_replace:
+ * @oldcaps: the caps to take replace
+ * @newcaps: the caps to take replace 
+ *
+ * Replace the pointer to the caps, doing proper
+ * refcounting.
+ */
+void
+gst_caps_replace (GstCaps **oldcaps, GstCaps *newcaps)
+{
+  if (*oldcaps != newcaps) {
+    if (newcaps)  gst_caps_ref   (newcaps);
+    if (*oldcaps) gst_caps_unref (*oldcaps);
+
+    *oldcaps = newcaps;
+  }
+}
+
+/**
+ * gst_caps_replace_sink:
+ * @oldcaps: the caps to take replace
+ * @newcaps: the caps to take replace 
+ *
+ * Replace the pointer to the caps and take ownership.
+ */
+void
+gst_caps_replace_sink (GstCaps **oldcaps, GstCaps *newcaps)
+{
+  gst_caps_replace (oldcaps, newcaps);
+  gst_caps_sink (newcaps);
 }
 
 /**
@@ -167,11 +214,13 @@ gst_caps_destroy (GstCaps *caps)
 
   next = caps->next;
 
+  GST_DEBUG (GST_CAT_CAPS, "destroy %p", caps);
+
   gst_props_unref (caps->properties);
   g_free (caps->name);
-  g_mutex_lock (_gst_caps_chunk_lock);
-  g_mem_chunk_free (_gst_caps_chunk, caps);
-  g_mutex_unlock (_gst_caps_chunk_lock);
+
+  gst_alloc_trace_free (_gst_caps_trace, caps);
+  gst_mem_chunk_free (_gst_caps_chunk, caps);
 
   if (next) 
     gst_caps_unref (next);
@@ -189,8 +238,10 @@ gst_caps_debug (GstCaps *caps, const gchar *label)
 {
   GST_DEBUG_ENTER ("caps debug: %s", label);
   while (caps) {
-    GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s (%sfixed)", caps, caps->name, gst_caps_get_mime (caps), 
-               caps->fixed ? "" : "NOT ");
+    GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s (%sfixed) (refcount %d) %s", 
+	       caps, caps->name, gst_caps_get_mime (caps), 
+               GST_CAPS_IS_FIXED (caps) ? "" : "NOT ", caps->refcount,
+               GST_CAPS_IS_FLOATING (caps) ? "FLOATING" : "");
 
     if (caps->properties) {
       gst_props_debug (caps->properties);
@@ -223,6 +274,9 @@ gst_caps_unref (GstCaps *caps)
 
   g_return_val_if_fail (caps->refcount > 0, NULL);
 
+  GST_DEBUG (GST_CAT_CAPS, "unref %p (%d->%d) %d", 
+	     caps, caps->refcount, caps->refcount-1, GST_CAPS_FLAGS (caps));
+
   caps->refcount--;
   zero = (caps->refcount == 0);
 
@@ -244,11 +298,37 @@ gst_caps_unref (GstCaps *caps)
 GstCaps*
 gst_caps_ref (GstCaps *caps)
 {
-  g_return_val_if_fail (caps != NULL, NULL);
+  if (caps == NULL)
+    return NULL;
+
+  g_return_val_if_fail (caps->refcount > 0, NULL);
+
+  GST_DEBUG (GST_CAT_CAPS, "ref %p (%d->%d) %d", 
+	     caps, caps->refcount, caps->refcount+1, GST_CAPS_FLAGS (caps));
 
   caps->refcount++;
 
   return caps;
+}
+
+/**
+ * gst_caps_sink:
+ * @caps: the caps to take ownership of
+ *
+ * Take ownership of a GstCaps
+ */
+void
+gst_caps_sink (GstCaps *caps)
+{
+  if (caps == NULL)
+    return;
+
+  if (GST_CAPS_IS_FLOATING (caps)) {
+    GST_DEBUG (GST_CAT_CAPS, "sink %p", caps);
+
+    GST_CAPS_FLAG_UNSET (caps, GST_CAPS_FLOATING);
+    gst_caps_unref (caps);
+  }
 }
 
 /**
@@ -257,7 +337,7 @@ gst_caps_ref (GstCaps *caps)
  *
  * Copies the caps, not copying any chained caps.
  *
- * Returns: a copy of the GstCaps structure.
+ * Returns: a floating copy of the GstCaps structure.
  */
 GstCaps*
 gst_caps_copy_1 (GstCaps *caps)
@@ -281,7 +361,7 @@ gst_caps_copy_1 (GstCaps *caps)
  *
  * Copies the caps.
  *
- * Returns: a copy of the GstCaps structure.
+ * Returns: a floating copy of the GstCaps structure.
  */
 GstCaps*
 gst_caps_copy (GstCaps *caps)
@@ -312,7 +392,7 @@ gst_caps_copy (GstCaps *caps)
  * Copies the caps if the refcount is greater than 1
  *
  * Returns: a pointer to a GstCaps strcuture that can
- * be safely written to
+ * be safely written to.
  */
 GstCaps*
 gst_caps_copy_on_write (GstCaps *caps)
@@ -360,9 +440,7 @@ gst_caps_set_name (GstCaps *caps, const gchar *name)
 {
   g_return_if_fail (caps != NULL);
 
-  if (caps->name)
-    g_free (caps->name);
-
+  g_free (caps->name);
   caps->name = g_strdup (name);
 }
 
@@ -449,10 +527,8 @@ GstCaps*
 gst_caps_set_props (GstCaps *caps, GstProps *props)
 {
   g_return_val_if_fail (caps != NULL, caps);
-  g_return_val_if_fail (props != NULL, caps);
-  g_return_val_if_fail (caps->properties == NULL, caps);
 
-  caps->properties = props;
+  gst_props_replace_sink (&caps->properties, props);
 
   return caps;
 }
@@ -471,6 +547,23 @@ gst_caps_get_props (GstCaps *caps)
   g_return_val_if_fail (caps != NULL, NULL);
 
   return caps->properties;
+}
+
+/**
+ * gst_caps_next:
+ * @caps: the caps to query
+ *
+ * Get the next caps of this chained caps.
+ *
+ * Returns: the next caps or NULL if the chain ended.
+ */
+GstCaps*
+gst_caps_next (GstCaps *caps)
+{
+  if (caps == NULL)
+    return NULL;
+
+  return caps->next;
 }
 
 /**
@@ -523,7 +616,7 @@ gst_caps_append (GstCaps *caps, GstCaps *capstoadd)
   while (caps->next) {
     caps = caps->next;
   }
-  caps->next = capstoadd;
+  gst_caps_replace_sink (&caps->next, capstoadd);
 
   return orig;
 }
@@ -550,7 +643,7 @@ gst_caps_prepend (GstCaps *caps, GstCaps *capstoadd)
   while (capstoadd->next) {
     capstoadd = capstoadd->next;
   }
-  capstoadd->next = caps;
+  gst_caps_replace_sink (&capstoadd->next, caps);
 
   return orig;
 }
@@ -679,6 +772,8 @@ gst_caps_intersect_func (GstCaps *caps1, GstCaps *caps2)
   props = gst_props_intersect (caps1->properties, caps2->properties);
   if (props) {
     result = gst_caps_new_id ("intersect", caps1->id, props);
+    gst_caps_ref (result);
+    gst_caps_sink (result);
   }
 
   return result;
@@ -692,7 +787,7 @@ gst_caps_intersect_func (GstCaps *caps1, GstCaps *caps2)
  * Make the intersection between two caps.
  *
  * Returns: The intersection of the two caps or NULL if the intersection
- * is empty.
+ * is empty. unref the caps after use.
  */
 GstCaps*
 gst_caps_intersect (GstCaps *caps1, GstCaps *caps2)
@@ -704,11 +799,16 @@ gst_caps_intersect (GstCaps *caps1, GstCaps *caps2)
 		  
   if (caps1 == NULL) {
     GST_DEBUG (GST_CAT_CAPS, "first caps is NULL, return other caps");
-    return gst_caps_copy (caps2);
+    return gst_caps_ref (caps2);
   }
   if (caps2 == NULL) {
     GST_DEBUG (GST_CAT_CAPS, "second caps is NULL, return other caps");
-    return gst_caps_copy (caps1);
+    return gst_caps_ref (caps1);
+  }
+
+  /* same caps */
+  if (caps1 == caps2) {
+    return gst_caps_ref (caps1);
   }
 
   while (caps1) {
@@ -729,7 +829,27 @@ gst_caps_intersect (GstCaps *caps1, GstCaps *caps2)
       }
       othercaps = othercaps->next;
     }
-    caps1 =  caps1->next;
+    caps1 = caps1->next;
+  }
+
+  return result;
+}
+
+GstCaps*
+gst_caps_union (GstCaps *caps1, GstCaps *caps2)
+{
+  GstCaps *result = NULL;
+
+  /* printing the name is not useful here since caps can be chained */
+  GST_DEBUG (GST_CAT_CAPS, "making union of caps %p and %p", caps1, caps2);
+		  
+  if (caps1 == NULL) {
+    GST_DEBUG (GST_CAT_CAPS, "first caps is NULL, return other caps");
+    return gst_caps_ref (caps2);
+  }
+  if (caps2 == NULL) {
+    GST_DEBUG (GST_CAT_CAPS, "second caps is NULL, return other caps");
+    return gst_caps_ref (caps1);
   }
 
   return result;
@@ -742,43 +862,40 @@ gst_caps_intersect (GstCaps *caps1, GstCaps *caps2)
  * Make the normalisation of the caps. This will return a new caps
  * that is equivalent to the input caps with the exception that all
  * lists are unrolled. This function is useful when you want to iterate
- * the caps.
+ * the caps. unref the caps after use.
  *
- * Returns: The normalisation of the caps.
+ * Returns: The normalisation of the caps. Unref after usage.
  */
 GstCaps*
 gst_caps_normalize (GstCaps *caps)
 {
-  GstCaps *result = NULL, *walk = caps;
+  GstCaps *result = NULL, *walk;
 
   if (caps == NULL)
     return caps;
+
+  GST_DEBUG (GST_CAT_CAPS, "normalizing caps %p ", caps);
+
+  walk = caps;
 
   while (caps) {
     GList *proplist;
 
     proplist = gst_props_normalize (caps->properties);
-    if (proplist && g_list_next (proplist) == NULL) {
-      if (result == NULL)
-	walk = result = caps;
-      else {
-	walk = walk->next = caps;
-      }
-      goto next;
-    }
-
     while (proplist) {
       GstProps *props = (GstProps *) proplist->data;
       GstCaps *newcaps = gst_caps_new_id (caps->name, caps->id, props);
 
+      gst_caps_ref (newcaps);
+      gst_caps_sink (newcaps);
+
       if (result == NULL)
 	walk = result = newcaps;
       else {
-	walk = walk->next = newcaps;
+ 	walk = walk->next = newcaps;
       }
       proplist = g_list_next (proplist);  
     }
-next:
     caps = caps->next;
   }
   return result;
@@ -836,13 +953,13 @@ gst_caps_load_thyself (xmlNodePtr parent)
       xmlNodePtr subfield = field->xmlChildrenNode;
       GstCaps *caps;
       gchar *content;
-      gboolean fixed = TRUE;
+      GstCapsFlags fixed = GST_CAPS_FIXED;
 
-      g_mutex_lock (_gst_caps_chunk_lock);
-      caps = g_mem_chunk_alloc0 (_gst_caps_chunk);
-      g_mutex_unlock (_gst_caps_chunk_lock);
+      caps = gst_mem_chunk_alloc0 (_gst_caps_chunk);
+      gst_alloc_trace_new (_gst_caps_trace, caps);
 
       caps->refcount = 1;
+      GST_CAPS_FLAG_SET (caps, GST_CAPS_FLOATING);
       caps->next = NULL;
 	
       while (subfield) {
@@ -855,13 +972,18 @@ gst_caps_load_thyself (xmlNodePtr parent)
           g_free (content);
         }
         else if (!strcmp (subfield->name, "properties")) {
-          caps->properties = gst_props_load_thyself (subfield);
-          fixed &= caps->properties->fixed;
+          GstProps *props = gst_props_load_thyself (subfield);
+
+	  gst_props_ref (props);
+	  gst_props_sink (props);
+          caps->properties = props;
+
+          fixed &= (GST_PROPS_IS_FIXED (caps->properties) ? GST_CAPS_FIXED : 0 );
         }
 	
         subfield = subfield->next;
       }
-      caps->fixed = fixed;
+      GST_CAPS_FLAG_SET (caps, fixed);
 
       result = gst_caps_append (result, caps);
     }

@@ -262,6 +262,9 @@ make_links (graph_t *g, GError **error)
     a = c->src_pads;
     b = c->sink_pads;
     caps = c->caps;
+    gst_caps_ref (caps);
+    gst_caps_sink (caps);
+
     gst_caps_debug (caps, "foo");
     /* g_print ("a: %p, b: %p\n", a, b); */
     if (a && b) {
@@ -363,6 +366,7 @@ make_links (graph_t *g, GError **error)
       }
     }
 next:
+    gst_caps_unref (caps);
     l = g_list_next (l);
   }
   

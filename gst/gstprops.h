@@ -33,6 +33,8 @@ G_BEGIN_DECLS
 typedef struct _GstProps GstProps;
 extern GType _gst_props_type;
 
+#define	GST_PROPS_TRACE_NAME "GstProps"
+
 #define GST_TYPE_PROPS	(_gst_props_type)
 
 typedef enum {
@@ -78,56 +80,91 @@ typedef enum {
 #define GST_PROPS_INT_NEGATIVE		GST_PROPS_INT_RANGE(G_MININT,0)
 #define GST_PROPS_INT_ANY		GST_PROPS_INT_RANGE(G_MININT,G_MAXINT)
 
+/* propsentries are private */
 typedef struct _GstPropsEntry GstPropsEntry;
 extern GType _gst_props_entry_type;
 
+#define	GST_PROPS_ENTRY_TRACE_NAME "GstPropsEntry"
+
 #define GST_TYPE_PROPS_ENTRY	(_gst_props_entry_type)
 
-struct _GstProps {
-  gint refcount;
-  gboolean fixed;
+typedef enum {
+  GST_PROPS_FIXED        = (1 << 0),	/* props has no variable entries */
+  GST_PROPS_FLOATING     = (1 << 1)	/* props is floating */
+} GstPropsFlags;
 
-  GList *properties;		/* real properties for this property */
+#define GST_PROPS_FLAGS(props)            ((props)->flags)
+#define GST_PROPS_FLAG_IS_SET(props,flag) (GST_PROPS_FLAGS (props) & flag)
+#define GST_PROPS_FLAG_SET(props,flag)    (GST_PROPS_FLAGS (props) |= (flag))
+#define GST_PROPS_FLAG_UNSET(props,flag)  (GST_PROPS_FLAGS (props) &= ~(flag))
+
+#define GST_PROPS_REFCOUNT(props)         ((props)->refcount)
+#define GST_PROPS_PROPERTIES(props)       ((props)->properties)
+
+#define GST_PROPS_IS_FIXED(props)         (GST_PROPS_FLAGS (props) & GST_PROPS_FIXED)
+#define GST_PROPS_IS_FLOATING(props)      (GST_PROPS_FLAGS (props) & GST_PROPS_FLOATING)
+
+struct _GstProps {
+  gint   refcount;
+  gint   flags;
+
+  GList *properties;		/* real property entries for this property */
 };
 
 /* initialize the subsystem */
 void 			_gst_props_initialize		(void);
 
+/* creating new properties */
 GstProps*		gst_props_new			(const gchar *firstname, ...);
 GstProps*		gst_props_newv			(const gchar *firstname, va_list var_args);
 GstProps*		gst_props_empty_new		(void);
 
-void            	gst_props_unref			(GstProps *props);
-void            	gst_props_ref			(GstProps *props);
+/* replace pointer to props, doing proper refcounting */
+void                    gst_props_replace               (GstProps **oldprops, GstProps *newprops);
+void                    gst_props_replace_sink          (GstProps **oldprops, GstProps *newprops);
+
+/* lifecycle management */
+GstProps*            	gst_props_unref			(GstProps *props);
+GstProps*            	gst_props_ref			(GstProps *props);
+void            	gst_props_sink			(GstProps *props);
 void            	gst_props_destroy		(GstProps *props);
 
+/* dump property debug info to the log */
 void            	gst_props_debug 		(GstProps *props);
 
+/* copy */
 GstProps*       	gst_props_copy                  (GstProps *props);
 GstProps*       	gst_props_copy_on_write         (GstProps *props);
 
-GstProps*		gst_props_merge			(GstProps *props, GstProps *tomerge);
-
+/* check if fromprops is subset of toprops */
 gboolean 		gst_props_check_compatibility 	(GstProps *fromprops, GstProps *toprops);
+
+/* operation on props */
+GstProps*		gst_props_merge			(GstProps *props, GstProps *tomerge);
 GstProps* 		gst_props_intersect	 	(GstProps *props1, GstProps *props2);
 GList* 			gst_props_normalize	 	(GstProps *props);
 
+/* modify entries */
 GstProps*		gst_props_set			(GstProps *props, const gchar *name, ...);
 gboolean		gst_props_get			(GstProps *props, gchar *first_name, ...);
 gboolean		gst_props_get_safe		(GstProps *props, gchar *first_name, ...);
 
+/* query entries */
 gboolean 		gst_props_has_property		(GstProps *props, const gchar *name);
 gboolean 		gst_props_has_property_typed 	(GstProps *props, const gchar *name, GstPropsType type);
 gboolean 		gst_props_has_fixed_property	(GstProps *props, const gchar *name);
 
+/* add/get entries */
 const GstPropsEntry* 	gst_props_get_entry		(GstProps *props, const gchar *name);
 void			gst_props_add_entry		(GstProps *props, GstPropsEntry *entry);
+void		 	gst_props_remove_entry		(GstProps *props, GstPropsEntry *entry);
+void		 	gst_props_remove_entry_by_name	(GstProps *props, const gchar *name);
 
 /* working with props entries */
 GstPropsEntry*		gst_props_entry_new		(const gchar *name, ...);
 
 void            	gst_props_entry_destroy		(GstPropsEntry *entry);
-GstPropsEntry*       	gst_props_entry_copy		(GstPropsEntry *entry);
+GstPropsEntry*       	gst_props_entry_copy		(const GstPropsEntry *entry);
 GstPropsType		gst_props_entry_get_type	(const GstPropsEntry *entry);
 const gchar*		gst_props_entry_get_name	(const GstPropsEntry *entry);
 gboolean		gst_props_entry_is_fixed	(const GstPropsEntry *entry);

@@ -122,10 +122,26 @@ gst_element_details_free (GstElementDetails *dp)
 static void
 gst_element_factory_cleanup (GstElementFactory *factory)
 {
+  GList *padtemplates;
+
   if (factory->details_dynamic) {
     gst_element_details_free (factory->details);
     factory->details_dynamic = FALSE;
   }
+
+  padtemplates = factory->padtemplates;
+
+  while (padtemplates) {
+    GstPadTemplate *oldtempl = GST_PAD_TEMPLATE (padtemplates->data);
+     
+    gst_object_unref (GST_OBJECT (oldtempl));
+
+    padtemplates = g_list_next (padtemplates);
+  }
+  g_list_free (factory->padtemplates);
+
+  factory->padtemplates = NULL;
+  factory->numpadtemplates = 0;
 
   g_free (GST_PLUGIN_FEATURE (factory)->name);
 }
@@ -301,28 +317,14 @@ gst_element_factory_make_or_warn (const gchar *factoryname, const gchar *name)
  */
 void
 gst_element_factory_add_pad_template (GstElementFactory *factory,
-			            GstPadTemplate *templ)
+			              GstPadTemplate *templ)
 {
-  GList *padtemplates;
-  
   g_return_if_fail (factory != NULL);
   g_return_if_fail (templ != NULL);
 
-  padtemplates = factory->padtemplates;
-
   gst_object_ref (GST_OBJECT (templ));
+  gst_object_sink (GST_OBJECT (templ));
 
-  while (padtemplates) {
-    GstPadTemplate *oldtempl = GST_PAD_TEMPLATE (padtemplates->data);
-    
-    if (!strcmp (oldtempl->name_template, templ->name_template)) {
-      gst_object_unref (GST_OBJECT (oldtempl));
-      padtemplates->data = templ;
-      return;
-    }
-    
-    padtemplates = g_list_next (padtemplates);
-  }
   factory->padtemplates = g_list_append (factory->padtemplates, templ);
   factory->numpadtemplates++;
 }

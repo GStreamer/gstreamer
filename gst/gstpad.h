@@ -146,7 +146,7 @@ typedef const GstFormat*	(*GstPadFormatsFunction)	(GstPad *pad);
 typedef const GstEventMask*	(*GstPadEventMaskFunction)	(GstPad *pad);
 typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
 
-typedef GstPadLinkReturn	(*GstPadLinkFunction) 	(GstPad *pad, GstCaps *caps);
+typedef GstPadLinkReturn	(*GstPadLinkFunction) 		(GstPad *pad, GstCaps *caps);
 typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad, GstCaps *caps);
 typedef GstBufferPool*		(*GstPadBufferPoolFunction) 	(GstPad *pad);
 
@@ -276,7 +276,7 @@ struct _GstGhostPadClass {
 #define GST_PAD_PEER(pad)		GST_PAD_CAST(GST_RPAD_PEER(GST_PAD_REALIZE(pad)))
 
 /* Some check functions (unused?) */
-#define GST_PAD_IS_LINKED(pad)	(GST_PAD_PEER(pad) != NULL)
+#define GST_PAD_IS_LINKED(pad)		(GST_PAD_PEER(pad) != NULL)
 #define GST_PAD_IS_ACTIVE(pad)		(!GST_FLAG_IS_SET(GST_PAD_REALIZE(pad), GST_PAD_DISABLED))
 #define GST_PAD_IS_USABLE(pad)		(GST_PAD_IS_LINKED (pad) && \
 		                         GST_PAD_IS_ACTIVE(pad) && GST_PAD_IS_ACTIVE(GST_PAD_PEER (pad)))
@@ -301,22 +301,26 @@ typedef enum {
 #define GST_PAD_TEMPLATE_DIRECTION(templ)	(((GstPadTemplate *)(templ))->direction)
 #define GST_PAD_TEMPLATE_PRESENCE(templ)	(((GstPadTemplate *)(templ))->presence)
 #define GST_PAD_TEMPLATE_CAPS(templ)		(((GstPadTemplate *)(templ))->caps)
-#define GST_PAD_TEMPLATE_FIXED(templ)		(((GstPadTemplate *)(templ))->fixed)
 
-#define GST_PAD_TEMPLATE_IS_FIXED(templ)	(GST_PAD_TEMPLATE_FIXED(templ) == TRUE)
+typedef enum {
+  GST_PAD_TEMPLATE_FIXED	= GST_OBJECT_FLAG_LAST,
+
+  GST_PAD_TEMPLATE_FLAG_LAST	= GST_OBJECT_FLAG_LAST + 4
+} GstPadTemplateFlags;
+
+#define GST_PAD_TEMPLATE_IS_FIXED(templ)	(GST_FLAG_IS_SET(templ), GST_PAD_TEMPLATE_FIXED)
 
 struct _GstPadTemplate {
-  GstObject	  object;
+  GstObject	   object;
 
   gchar           *name_template;
-  GstPadDirection direction;
-  GstPadPresence  presence;
+  GstPadDirection  direction;
+  GstPadPresence   presence;
   GstCaps	  *caps;
-  gboolean	  fixed;
 };
 
 struct _GstPadTemplateClass {
-  GstObjectClass parent_class;
+  GstObjectClass   parent_class;
 
   /* signal callbacks */
   void (*pad_created)	(GstPadTemplate *templ, GstPad *pad);
@@ -425,7 +429,7 @@ gboolean                gst_pad_can_link_filtered   		(GstPad *srcpad, GstPad *s
 
 gboolean                gst_pad_link             		(GstPad *srcpad, GstPad *sinkpad);
 gboolean                gst_pad_link_filtered       		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
-void			gst_pad_unlink			(GstPad *srcpad, GstPad *sinkpad);
+void			gst_pad_unlink				(GstPad *srcpad, GstPad *sinkpad);
 
 GstPad*			gst_pad_get_peer			(GstPad *pad);
 
@@ -437,7 +441,7 @@ gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);
 
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
 GstPadLinkReturn	gst_pad_proxy_link          		(GstPad *pad, GstCaps *caps);
-gboolean		gst_pad_relink_filtered		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
+gboolean		gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
 gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);
 gboolean		gst_pad_try_relink_filtered		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
 GstCaps*	     	gst_pad_get_allowed_caps       		(GstPad *pad);
@@ -475,9 +479,9 @@ gboolean		gst_pad_query				(GstPad *pad, GstQueryType type,
 gboolean 		gst_pad_query_default 			(GstPad *pad, GstQueryType type,
 		                      				 GstFormat *format, gint64 *value);
 
-void			gst_pad_set_internal_link_function(GstPad *pad, GstPadIntLinkFunction intlink);
-GList*			gst_pad_get_internal_links	(GstPad *pad);
-GList*	 		gst_pad_get_internal_links_default (GstPad *pad);
+void			gst_pad_set_internal_link_function	(GstPad *pad, GstPadIntLinkFunction intlink);
+GList*			gst_pad_get_internal_links		(GstPad *pad);
+GList*	 		gst_pad_get_internal_links_default 	(GstPad *pad);
 	
 /* misc helper functions */
 gboolean 		gst_pad_dispatcher 			(GstPad *pad, GstPadDispatcherFunction dispatch, 
@@ -489,7 +493,7 @@ gboolean 		gst_pad_dispatcher 			(GstPad *pad, GstPadDispatcherFunction dispatch
 			(gst_probe_dispatcher_remove_probe (&(GST_REAL_PAD (pad)-probedisp), probe))
 
 #ifndef GST_DISABLE_LOADSAVE
-void			gst_pad_load_and_link		(xmlNodePtr self, GstObject *parent);
+void			gst_pad_load_and_link			(xmlNodePtr self, GstObject *parent);
 #endif
 
 
