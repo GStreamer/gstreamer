@@ -1,3 +1,8 @@
+2005-01-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/v4l/gstv4lelement.c: (gst_v4l_iface_supported):
+	  Revert Johan´s 1.35->1.36 since it breaks compat.
+
 2005-01-14  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* ext/dv/gstdvdec.c:
