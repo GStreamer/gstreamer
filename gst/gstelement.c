@@ -1195,6 +1195,8 @@ gst_element_class_add_pad_template (GstElementClass *klass,
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
   g_return_if_fail (templ != NULL);
   g_return_if_fail (GST_IS_PAD_TEMPLATE (templ));
+  /* avoid registering pad templates with the same name */
+  g_return_if_fail (gst_element_class_get_pad_template (klass, templ->name_template) == NULL);
   
   templ_copy = g_memdup(templ, sizeof(GstPadTemplate));
 

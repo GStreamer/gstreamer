@@ -1,3 +1,9 @@
+2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstelement.c: (gst_element_class_add_pad_template):
+	  Refuse registering a pad template if another pad template
+	  with the same name already exists (#114715).
+
 2004-01-02  David Schleef  <ds@schleef.org>
 
 	* gst/gstcaps.c: (_gst_structure_is_equal_foreach),
