@@ -1,6 +1,6 @@
 %define name    gstreamer
 %define ver     @VERSION@
-%define rel     2
+%define rel     1
 %define prefix  /usr
 %define sysconfdir /etc
 
@@ -58,7 +58,6 @@ plugins.
 %{prefix}/lib/gst/libgstparsewav*
 %{prefix}/lib/gst/libgststaticautoplug*
 %{prefix}/lib/gst/libgsttypes*
-%{prefix}/lib/gst/liblavencode*
 %{prefix}/lib/gst/libgstbasicscheduler*
 %{prefix}/lib/gst/libgstbytestream*
 %{prefix}/lib/gst/libgstcontrol*
@@ -621,7 +620,25 @@ Library for resampling of sound
 %defattr(-, root, root)
 %{prefix}/lib/gst/libresample*
 
+%package -n gstreamer-rtp
+Summary: GStreamer RTP plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+Requires: librtp >= 0.1
+
+%description -n gstreamer-rtp
+Library for transfering data with the RTP protocol
+
+%files -n gstreamer-rtp
+%defattr(-, root, root)
+%{prefix}/lib/gst/librtp*
+
 %changelog
+* Fri Dec 07 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Removed the  CFLAGS="$RPM_OPT_FLAGS" from before .configure
+- Added logging to the make statement
+- Added hackery to get it to build the rtp plugin
+
 * Wed Dec 05 2001 Christian Schaller <Uraeus@linuxrising.org>
 - Updated in preparation for 0.3.0 release
 
@@ -639,6 +656,7 @@ Library for resampling of sound
 
 * Fri Jun 01 2001 Christian Schaller <Uraeus@linuxrising.org>
 - Updated with change suggestions from Dennis Bjorklund
+
 * Tue Jan 09 2001 Erik Walthinsen <omega@cse.ogi.edu>
 - updated to build -devel package as well
 
@@ -649,33 +667,23 @@ Library for resampling of sound
 %setup
 
 %build
-CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir}
+./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir}
 
 if [ "$SMP" != "" ]; then
   (make "MAKE=make -k -j $SMP"; exit 0)
-  make
+  make 2>&1 | tee make.log
 else
-  make
+  make 2>&1 | tee make.log
 fi
+
+# hackery to make the RTP plugin build
+cd $RPM_BUILD_DIR/%{name}-%{ver}/plugins/rtp
+make install $RPM_BUILD_ROOT%{prefix}/lib/gst/
 
 %install  
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
 make prefix=$RPM_BUILD_ROOT%{prefix} install
-
-# Some hackish magic to build the udp and flac plugin since the 
-# build scripts didn't include these in 0.2.1
-
-# cd $RPM_BUILD_DIR/%{name}-%{ver}/plugins/udp
-# make install $RPM_BUILD_ROOT%{prefix}/lib/gst/
-
-# cd  $RPM_BUILD_DIR/%{name}-%{ver}/plugins/flac
-# make install $RPM_BUILD_ROOT%{prefix}/lib/gst/
-
-# cd $RPM_BUILD_DIR/%{name}-%{ver}/plugins/avi
-# make install $RPM_BUILD_ROOT%{prefix}/lib/gst/
-# mv %{prefix}/lib/gst/*avi* $RPM_BUILD_ROOT%{prefix}/lib/gst/
-# mv %{prefix}/lib/gst/*udp* $RPM_BUILD_ROOT%{prefix}/lib/gst/
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -750,11 +758,11 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %post -n gstreamer-vcd
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
-# %post -n gstreamer-alsa
-# %{prefix}/bin/gstreamer-register --gst-mask=0
+%post -n gstreamer-alsa
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
-# %post -n gstreamer-flac
-# %{prefix}/bin/gstreamer-register --gst-mask=0
+%post -n gstreamer-flac
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-festival
 %{prefix}/bin/gstreamer-register --gst-mask=0
@@ -796,6 +804,12 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-lavencode
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-resample
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-rtp
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
 %postun
