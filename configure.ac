@@ -395,6 +395,14 @@ AC_CHECK_FUNC(sigaction,
    AC_DEFINE(HAVE_SIGACTION, 1,
              [Defined if we have sigaction ()]))
 
+dnl test if we have dladdr(); we use it for debugging
+save_cflags="$CFLAGS"
+CFLAGS="$CFLAGS -D_GNU_SOURCE"
+AC_CHECK_LIB(dl, dladdr,
+   AC_DEFINE(HAVE_DLADDR, 1,
+             [Defined if we have dladdr ()]))
+CFLAGS="$save_cflags"
+
 if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
   AC_DEFINE(PLUGINS_USE_BUILDDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
 fi
