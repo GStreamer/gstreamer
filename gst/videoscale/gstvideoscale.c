@@ -330,6 +330,7 @@ gst_videoscale_sink_link (GstPad *pad, GstCaps *caps)
   ret = gst_pad_try_set_caps (videoscale->srcpad, gst_caps_copy(caps));
   if (ret == GST_PAD_LINK_OK || ret == GST_PAD_LINK_DONE) {
     videoscale->passthru = TRUE;
+    videoscale->inited = TRUE;
     return ret;
   }
 
@@ -342,6 +343,12 @@ gst_videoscale_sink_link (GstPad *pad, GstCaps *caps)
   peercaps = gst_pad_get_allowed_caps(videoscale->srcpad);
 
   caps1 = gst_caps_intersect(peercaps, srccaps);
+  if (!caps1) {
+    /* apparently, the sink element doesn't like the input of the
+     * source element. The user should add a colorspace converter
+     * or so. */
+    return GST_PAD_LINK_REFUSED;
+  }
 
   if (!GST_CAPS_IS_FIXED (caps1)) {
     /* FIXME */
