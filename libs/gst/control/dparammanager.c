@@ -24,6 +24,8 @@
 #include <gst/gstinfo.h>
 
 static GHashTable *_element_registry;
+static gboolean _gst_dpman_init_done = FALSE;
+
 enum {
   NEW_REQUIRED_DPARAM,
   LAST_SIGNAL
@@ -32,7 +34,7 @@ enum {
 static void gst_dpman_class_init (GstDParamManagerClass *klass);
 static void gst_dpman_init (GstDParamManager *dpman);
 static void gst_dpman_dispose (GObject *object);
- static GstDParamWrapper* gst_dpman_new_wrapper(GstDParamManager *dpman, GParamSpec *param_spec, gboolean is_log, gboolean is_rate, GstDPMUpdateMethod update_method);
+ static GstDParamWrapper* gst_dpman_new_wrapper(GstDParamManager *dpman, GParamSpec *param_spec, gchar *unit_name, GstDPMUpdateMethod update_method);
  static GstDParamWrapper* gst_dpman_get_wrapper(GstDParamManager *dpman, gchar *dparam_name);
 static void gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, GstDParamManager *dpman);
 static void gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDParamManager *dpman);
@@ -46,6 +48,10 @@ static guint gst_dpman_signals[LAST_SIGNAL] = { 0 };
 void 
 _gst_dpman_initialize()
 {
+	if (_gst_dpman_init_done) return;
+	
+	_gst_dpman_init_done = TRUE;
+	_element_registry = g_hash_table_new(NULL,NULL);
 }
 
 GType
@@ -91,7 +97,6 @@ gst_dpman_class_init (GstDParamManagerClass *klass)
 	gst_dpman_register_mode (klass, "disabled", 
 	                       gst_dpman_preprocess_noop, gst_dpman_process_noop, NULL, NULL);
 
-	_element_registry = g_hash_table_new(NULL,NULL);
 
 	gst_dpman_signals[NEW_REQUIRED_DPARAM] =
 		g_signal_new ("new_required_dparam", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
@@ -157,8 +162,7 @@ gst_dpman_dispose (GObject *object)
 gboolean 
 gst_dpman_add_required_dparam_callback (GstDParamManager *dpman, 
                                         GParamSpec *param_spec,
-                                        gboolean is_log,
-                                        gboolean is_rate,
+                                        gchar *unit_name,
                                         GstDPMUpdateFunction update_func, 
                                         gpointer update_data)
 {
@@ -168,7 +172,7 @@ gst_dpman_add_required_dparam_callback (GstDParamManager *dpman,
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), FALSE);
 	g_return_val_if_fail (update_func != NULL, FALSE);
 
-	dpwrap = gst_dpman_new_wrapper(dpman, param_spec, is_log, is_rate, GST_DPMAN_CALLBACK);
+	dpwrap = gst_dpman_new_wrapper(dpman, param_spec, unit_name, GST_DPMAN_CALLBACK);
 
 	g_return_val_if_fail (dpwrap != NULL, FALSE);
 
@@ -192,8 +196,7 @@ gst_dpman_add_required_dparam_callback (GstDParamManager *dpman,
 gboolean 
 gst_dpman_add_required_dparam_direct (GstDParamManager *dpman, 
                                       GParamSpec *param_spec,
-                                      gboolean is_log,
-                                      gboolean is_rate,
+                                      gchar *unit_name,
                                       gpointer update_data)
 {
 	GstDParamWrapper* dpwrap;
@@ -202,7 +205,7 @@ gst_dpman_add_required_dparam_direct (GstDParamManager *dpman,
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), FALSE);
 	g_return_val_if_fail (update_data != NULL, FALSE);
 
-	dpwrap = gst_dpman_new_wrapper(dpman, param_spec, is_log, is_rate, GST_DPMAN_DIRECT);
+	dpwrap = gst_dpman_new_wrapper(dpman, param_spec, unit_name, GST_DPMAN_DIRECT);
 
 	g_return_val_if_fail (dpwrap != NULL, FALSE);
 
@@ -226,8 +229,7 @@ gst_dpman_add_required_dparam_direct (GstDParamManager *dpman,
 gboolean 
 gst_dpman_add_required_dparam_array (GstDParamManager *dpman, 
                                      GParamSpec *param_spec,
-                                     gboolean is_log,
-                                     gboolean is_rate,
+                                     gchar *unit_name,
                                      gpointer update_data)
 {
 	GstDParamWrapper* dpwrap;
@@ -236,7 +238,7 @@ gst_dpman_add_required_dparam_array (GstDParamManager *dpman,
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), FALSE);
 	g_return_val_if_fail (update_data != NULL, FALSE);
 
-	dpwrap = gst_dpman_new_wrapper(dpman, param_spec, is_log, is_rate, GST_DPMAN_ARRAY);
+	dpwrap = gst_dpman_new_wrapper(dpman, param_spec, unit_name, GST_DPMAN_ARRAY);
 
 	g_return_val_if_fail (dpwrap != NULL, FALSE);
 
@@ -304,7 +306,7 @@ gst_dpman_attach_dparam (GstDParamManager *dpman, gchar *dparam_name, GstDParam 
 	g_return_val_if_fail(dpwrap->value != NULL, FALSE);
 
 	dpwrap->dparam = dparam;
-	gst_dparam_attach(dparam, dpman, dpwrap->param_spec, dpwrap->is_log, dpwrap->is_rate);
+	gst_dparam_attach(dparam, dpman, dpwrap->param_spec, dpwrap->unit_name);
 
 	return TRUE;
 }
@@ -586,8 +588,7 @@ gst_dpman_get_wrapper(GstDParamManager *dpman, gchar *dparam_name)
 static GstDParamWrapper* 
 gst_dpman_new_wrapper(GstDParamManager *dpman, 
                       GParamSpec *param_spec, 
-                      gboolean is_log, 
-                      gboolean is_rate, 
+                      gchar *unit_name, 
                       GstDPMUpdateMethod update_method)
 {
 	GstDParamWrapper* dpwrap;
@@ -596,6 +597,7 @@ gst_dpman_new_wrapper(GstDParamManager *dpman,
 	g_return_val_if_fail (dpman != NULL, NULL);
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), NULL);
 	g_return_val_if_fail (param_spec != NULL, NULL);
+	g_return_val_if_fail (gst_unitconv_unit_exists(unit_name), NULL);
 
 	dparam_name = g_strdup(g_param_spec_get_name(param_spec));
 	g_return_val_if_fail(gst_dpman_get_wrapper(dpman, dparam_name) == NULL, NULL);
@@ -605,8 +607,7 @@ gst_dpman_new_wrapper(GstDParamManager *dpman,
 	dpwrap->value = g_new0(GValue,1);
 	g_value_init(dpwrap->value, G_PARAM_SPEC_VALUE_TYPE(param_spec));
 	dpwrap->param_spec = param_spec;
-	dpwrap->is_log = is_log;
-	dpwrap->is_rate = is_rate;
+	dpwrap->unit_name = unit_name;
 	
 	g_hash_table_insert(GST_DPMAN_DPARAMS(dpman), dparam_name, dpwrap);
 	GST_DPMAN_DPARAMS_LIST(dpman) = g_slist_append(GST_DPMAN_DPARAMS_LIST(dpman), dpwrap);

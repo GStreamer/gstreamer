@@ -8,6 +8,7 @@ libgstcontrolinclude_HEADERS = \
     dparammanager.h \
     dparam.h \
     dparam_smooth.h \
+    unitconvert.h \
     dparamcommon.h \
     dplinearinterp.h
 
@@ -16,6 +17,7 @@ libgstcontrol_la_SOURCES = \
     dparammanager.c \
     dparam.c \
     dparam_smooth.c \
+    unitconvert.c \
     dplinearinterp.c
 
 libgstcontrol_la_CFLAGS = $(GST_CFLAGS) -finline-functions -ffast-math

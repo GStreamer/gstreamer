@@ -37,8 +37,6 @@ enum {
 	ARG_VALUE_FLOAT,
 	ARG_VALUE_INT,
 	ARG_VALUE_INT64,
-	ARG_IS_LOG,
-	ARG_IS_RATE,
 };
 
 GType 
@@ -89,15 +87,6 @@ gst_dparam_class_init (GstDParamClass *klass)
 		             "The value that should be changed if gint64 is the type",
                      G_MININT64, G_MAXINT64, 0, G_PARAM_READWRITE));
                      
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_IS_LOG,
-		g_param_spec_boolean("is_log","Is a Log Value",
-		             "This dparam should be interpreted on a log scale",
-                     FALSE, G_PARAM_READABLE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_IS_RATE,
-		g_param_spec_boolean("is_rate","Is a sample rate proportion",
-		             "This dparam value represents a proportion of the sample rate (eg half of the sample rate will be 0.5)",
-                     FALSE, G_PARAM_READABLE));
-                     
 	gobject_class->dispose = gst_dparam_dispose;
 	
 	/*gstobject_class->save_thyself = gst_dparam_save_thyself; */
@@ -141,13 +130,7 @@ gst_dparam_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 	g_return_if_fail(GST_IS_DPARAM(object));
 	dparam = GST_DPARAM(object);
   
-	switch (prop_id) {
-		case ARG_IS_LOG:
-			g_value_set_boolean (value, dparam->is_log);
-			break;
-		case ARG_IS_RATE:
-			g_value_set_boolean (value, dparam->is_rate);
-			break;    
+	switch (prop_id) {   
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
@@ -237,7 +220,7 @@ gst_dparam_dispose (GObject *object)
  *
  */
 void
-gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GParamSpec *param_spec, gboolean is_log, gboolean is_rate)
+gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GParamSpec *param_spec, gchar *unit_name)
 {
 	
 	g_return_if_fail (dparam != NULL);
@@ -245,13 +228,14 @@ gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GParamSpec *par
 	g_return_if_fail (manager != NULL);
 	g_return_if_fail (GST_IS_DPMAN (manager));
 	g_return_if_fail (param_spec != NULL);
+	g_return_if_fail (unit_name != NULL);
 	g_return_if_fail (G_IS_PARAM_SPEC (param_spec));
 
 	GST_DPARAM_NAME(dparam) = g_param_spec_get_name(param_spec);
 	GST_DPARAM_PARAM_SPEC(dparam) = param_spec;
 	GST_DPARAM_MANAGER(dparam) = manager;
-	dparam->is_log = is_log;
-	dparam->is_rate = is_rate;
+	GST_DPARAM_UNIT_NAME(dparam) = unit_name;
+	GST_DPARAM_IS_LOG(dparam) = gst_unitconv_unit_is_logarithmic(unit_name);
 	GST_DEBUG(GST_CAT_PARAMS, "attaching %s to dparam %p",GST_DPARAM_NAME (dparam),dparam);
 
 }

@@ -42,8 +42,8 @@ extern "C" {
 #define GST_DPARAM_PARAM_SPEC(dparam)		((dparam)->param_spec)
 #define GST_DPARAM_MANAGER(dparam)			((dparam)->manager)
 #define GST_DPARAM_TYPE(dparam)				((dparam)->type)
+#define GST_DPARAM_UNIT_NAME(dparam)		((dparam)->unit_name)
 #define GST_DPARAM_IS_LOG(dparam)			((dparam)->is_log)
-#define GST_DPARAM_IS_RATE(dparam)			((dparam)->is_rate)
 #define GST_DPARAM_META_VALUES(dparam)		((dparam)->meta_values)
 #define GST_DPARAM_META_PARAM_SPECS(dparam)	((dparam)->meta_param_specs)
 #define GST_DPARAM_LOCK(dparam)				(g_mutex_lock((dparam)->lock))
@@ -76,8 +76,8 @@ struct _GstDParam {
 	gboolean ready_for_update;
 
 	gint64 next_update_timestamp;
+	gchar *unit_name;
 	gboolean is_log;
-	gboolean is_rate;
 };
 
 struct _GstDParamClass {
@@ -89,7 +89,7 @@ struct _GstDParamClass {
 
 GType gst_dparam_get_type (void);
 GstDParam* gst_dparam_new (GType type);
-void gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GParamSpec *param_spec, gboolean is_log, gboolean is_rate);
+void gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GParamSpec *param_spec, gchar *unit_name);
 void gst_dparam_detach (GstDParam *dparam);
 void gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value);
 

@@ -30,6 +30,7 @@ extern "C" {
 #include <gst/control/dparam.h>
 #include <gst/control/dparam_smooth.h>
 #include <gst/control/dplinearinterp.h>
+#include <gst/control/unitconvert.h>
 
 void gst_control_init (int *argc, char **argv[]);
 

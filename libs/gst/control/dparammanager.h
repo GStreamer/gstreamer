@@ -26,6 +26,7 @@
 #include <gst/gstprops.h>
 #include <gst/control/dparamcommon.h>
 #include <gst/control/dparam.h>
+#include <gst/control/unitconvert.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,7 +63,7 @@ typedef guint (*GstDPMModeProcessFunction) (GstDParamManager *dpman, guint frame
 typedef void (*GstDPMModeSetupFunction) (GstDParamManager *dpman);
 typedef void (*GstDPMModeTeardownFunction) (GstDParamManager *dpman);
 
-typedef void (*GstDPMUpdateFunction) (GValue *value, gpointer data);
+typedef void (*GstDPMUpdateFunction) (const GValue *value, gpointer data);
 
 struct _GstDParamManager {
 	GstObject		object;
@@ -99,8 +100,7 @@ struct _GstDParamWrapper {
 	GstDPMUpdateMethod update_method;
 	gpointer update_data;
 	GstDPMUpdateFunction update_func;
-	gboolean is_log;
-	gboolean is_rate;
+	gchar *unit_name;
 };
 
 #define GST_DPMAN_PREPROCESSFUNC(dpman)		(((dpman)->mode)->preprocessfunc)
@@ -117,6 +117,10 @@ struct _GstDParamWrapper {
 #define GST_DPMAN_PROCESS_COUNTDOWN(dpman, frame_countdown, frame_count) \
 				(frame_countdown-- || \
 				(frame_countdown = GST_DPMAN_PROCESS(dpman, frame_count)))
+
+#define GST_DPMAN_PROCESS_CHUNK(dpman, frames_to_process, frame_count) \
+				(frames_to_process || \
+				(frames_to_process = GST_DPMAN_PROCESS(dpman, frame_count)))
 				
 #define GST_DPMAN_DO_UPDATE(dpwrap) ((dpwrap->update_func)(dpwrap->value, dpwrap->update_data))
 
@@ -128,20 +132,17 @@ GstDParamManager* gst_dpman_get_manager (GstElement *parent);
 
 gboolean gst_dpman_add_required_dparam_callback (GstDParamManager *dpman, 
                                                  GParamSpec *param_spec,
-                                                 gboolean is_log,
-                                                 gboolean is_rate,
+                                                 gchar *unit_name,
                                                  GstDPMUpdateFunction update_func, 
                                                  gpointer update_data);
 gboolean gst_dpman_add_required_dparam_direct (GstDParamManager *dpman, 
                                                GParamSpec *param_spec,
-                                               gboolean is_log,
-                                               gboolean is_rate,
+                                               gchar *unit_name,
                                                gpointer update_data);
                                                                               
 gboolean gst_dpman_add_required_dparam_array (GstDParamManager *dpman, 
                                               GParamSpec *param_spec,
-                                              gboolean is_log,
-                                              gboolean is_rate,
+                                              gchar *unit_name,
                                               gpointer update_data);
                                      
 void gst_dpman_remove_required_dparam (GstDParamManager *dpman, gchar *dparam_name);
@@ -150,7 +151,7 @@ void gst_dpman_detach_dparam (GstDParamManager *dpman, gchar *dparam_name);
 GstDParam* gst_dpman_get_dparam(GstDParamManager *dpman, gchar *name);
 GType gst_dpman_get_dparam_type (GstDParamManager *dpman, gchar *name);
 
-GParamSpec** gst_dpman_list_param_specs(GstDParamManager *dpman);
+GParamSpec** gst_dpman_list_dparam_specs(GstDParamManager *dpman);
 GParamSpec* gst_dpman_get_param_spec (GstDParamManager *dpman, gchar *dparam_name);
 void gst_dpman_dparam_spec_has_changed (GstDParamManager *dpman, gchar *dparam_name);
 

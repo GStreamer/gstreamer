@@ -22,21 +22,29 @@
 #include <gst/gst.h>
 #include <gst/control/control.h>
 
+static void 
+gst_control_init_common()
+{
+	_gst_dpman_initialize ();
+	_gst_unitconv_initialize ();	
+}
+
 void
 gst_control_init (int *argc, char **argv[]) {
-	_gst_dpman_initialize ();
+	gst_control_init_common();
 }
 
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
-  gst_plugin_set_longname (plugin, "Dynamic Parameters");
-  return TRUE;
+	gst_control_init_common();
+	gst_plugin_set_longname (plugin, "Dynamic Parameters");
+	return TRUE;
 }
 
 GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gstcontrol",
-  plugin_init
+	GST_VERSION_MAJOR,
+	GST_VERSION_MINOR,
+	"gstcontrol",
+	plugin_init
 };
