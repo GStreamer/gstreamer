@@ -40,7 +40,7 @@ typedef cothread_state cothread;
  */
 #define do_cothreads_init(x) 			/* NOP */
 
-#define do_cothreads_stackquery(stack,size)	FALSE
+#define do_cothreads_stackquery(stack,size)	cothread_stackquery(stack,size)
 
 #define do_cothread_switch(to)			cothread_switch(to)
 

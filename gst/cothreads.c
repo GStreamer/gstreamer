@@ -179,11 +179,18 @@ cothread_create (cothread_context *ctx)
   stack_end = (guchar *) ((gulong) sp & ~(STACK_SIZE - 1));
 
   thread = (cothread_state *) (stack_end + ((slot - 1) * COTHREAD_STACKSIZE));
-  GST_DEBUG (GST_CAT_COTHREADS, "new stack at %p", thread);
+  GST_DEBUG (GST_CAT_COTHREADS, 
+             "new cothread slot stack from %p to %p (size %ld)", 
+	     thread, thread + COTHREAD_STACKSIZE - 1, 
+	     (long) COTHREAD_STACKSIZE);
 
   GST_DEBUG (GST_CAT_COTHREADS, "going into mmap");
+  /* the mmap is used to reserve part of the stack
+   * ie. we state explicitly that we are going to use it */
+  munmap ((void *) thread, COTHREAD_STACKSIZE);
   mmaped = mmap ((void *) thread, COTHREAD_STACKSIZE,
-	    PROT_READ | PROT_WRITE | PROT_EXEC, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	          PROT_READ | PROT_WRITE | PROT_EXEC, 
+		  MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   GST_DEBUG (GST_CAT_COTHREADS, "coming out of mmap");
   if (mmaped == MAP_FAILED) {
     perror ("mmap'ing cothread stack space");
@@ -444,6 +451,34 @@ cothread_context_get_data (cothread_state * thread, gchar * key)
   cothread_context *ctx = pthread_getspecific (_cothread_key);
 
   return g_hash_table_lookup (ctx->data, key);
+}
+
+/**
+ * cothreads_stackquery:
+ * @stack: Will be set to point to the allocated stack location
+ * @stacksize: Will be set to the size of the allocated stack
+ *
+ *  Returns: #TRUE on success, #FALSE otherwise.
+ */
+gboolean
+cothread_stackquery (void **stack, glong* stacksize)
+{
+  /* wingo:  use posix_memalign to allocate a 2M-aligned, 2M stack */
+
+  int retval = 0;
+
+  retval = posix_memalign (stack, STACK_SIZE, STACK_SIZE);
+  if (retval != 0)
+  {
+    g_warning ("Could not posix_memalign stack !\n");
+    *stacksize = 0;
+    return FALSE;
+  }
+  GST_DEBUG (GST_CAT_COTHREADS, 
+             "Got new cothread stack from %p to %p (size %ld)\n",
+             *stack, *stack + STACK_SIZE - 1, (long) STACK_SIZE);
+  *stacksize = STACK_SIZE;
+  return TRUE;
 }
 
 /**

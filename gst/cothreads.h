@@ -81,6 +81,7 @@ void				cothread_setfunc		(cothread_state *thread, cothread_func func,
 void				cothread_stop			(cothread_state *thread);
 
 void				cothread_switch			(cothread_state *thread);
+gboolean			cothread_stackquery		(void **stack, glong* stacksize);
 void				cothread_set_private		(cothread_state *thread, 
 								 gpointer data);
 gpointer			cothread_get_private		(cothread_state *thread);
