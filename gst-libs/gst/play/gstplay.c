@@ -311,8 +311,9 @@ gst_play_have_video_size (GstElement *element, gint width,
 static gboolean
 gst_play_tick_callback (GstPlay *play)
 {
-  GstElement* audio_sink_element;
-  GstClockTime time;
+  GstFormat format = GST_FORMAT_TIME;
+  gboolean q = FALSE;
+  GstElement *audio_sink_element = NULL;
   
   g_return_val_if_fail (play != NULL, FALSE);
   
@@ -323,11 +324,18 @@ gst_play_tick_callback (GstPlay *play)
   
   audio_sink_element = g_hash_table_lookup (play->priv->elements,
                                             "audio_sink_element");
-  time = gst_element_get_time (audio_sink_element);
-  play->priv->time_nanos = GST_CLOCK_TIME_IS_VALID (time) ? time : 0;
   
-  g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
-                 0,play->priv->time_nanos);
+  if (!GST_IS_ELEMENT (audio_sink_element)) {
+    play->priv->tick_id = 0;
+    return FALSE;
+  }
+  
+  q = gst_element_query (audio_sink_element, GST_QUERY_POSITION, &format,
+                         &(play->priv->time_nanos));
+  
+  if (q)
+    g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
+                   0,play->priv->time_nanos);
   
   if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING)
     return TRUE;
@@ -643,11 +651,15 @@ gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
     }
     
     if (s) {
-      GstClockTime time;
-      time = gst_element_get_time (audio_sink_element);
-      play->priv->time_nanos = GST_CLOCK_TIME_IS_VALID (time) ? time : 0;
-      g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
-                     0,play->priv->time_nanos);
+      GstFormat format = GST_FORMAT_TIME;
+      gboolean q = FALSE;
+      
+      q = gst_element_query (audio_sink_element, GST_QUERY_POSITION, &format,
+                             &(play->priv->time_nanos));
+
+      if (q)
+        g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
+                       0,play->priv->time_nanos);
     }
   }
   
