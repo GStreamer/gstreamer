@@ -103,7 +103,7 @@ application/x-pn-realmedia, systemstream=(boolean)true
 audio/x-gsm, rate=(int)[ 1000, 48000 ], channels=(int)1
 audio/x-speex, rate=(int)[ 1000, 48000 ], channels=(int)1
 video/mpeg, mpegversion=(int)1, systemstream=(boolean)false
-audio/ac3, channels=(int)[ 1, 6 ], rate=(int)[ 32000, 48000 ]
+audio/x-ac3, channels=(int)[ 1, 6 ], rate=(int)[ 32000, 48000 ]
 audio/x-alaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]
 audio/x-mulaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]
 video/mpeg, mpegversion=(int)[ 1, 2 ], systemstream=(boolean)true

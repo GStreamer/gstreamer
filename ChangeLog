@@ -1,3 +1,9 @@
+2004-05-10  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* testsuite/caps/caps_strings : audio/ac3 => audio/x-ac3
+	* docs/manual/pads-api.xml : audio/wav => audio/x-wav
+	* docs/random/uraeus/gstreamer_and_midi.txt : audio/wav => audio/x-wav
+
 2004-05-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tests/Makefile.am: fix am16 issue

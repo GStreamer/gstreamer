@@ -201,7 +201,7 @@ GstCaps*    gst_caps_new (const gchar *name, const gchar *mime, GstProps *props)
     <programlisting>
   GstCaps *newcaps;
   
-  newcaps = gst_caps_new ("my_caps", "audio/wav", NULL);
+  newcaps = gst_caps_new ("my_caps", "audio/x-wav", NULL);
     </programlisting>
       </para>
       <para>
@@ -268,7 +268,7 @@ GstProps*     gst_props_new   (const gchar *firstname, ...);
   GstCaps *newcaps;
   
   newcaps = gst_caps_new ("my_caps", 
-                          "audio/wav", 
+                          "audio/x-wav", 
   			  gst_props_new (
 			    "bitrate", GST_PROPS_INT_RANGE (11025,22050),
 			    "depth",   GST_PROPS_INT (16),
@@ -285,7 +285,7 @@ GstProps*     gst_props_new   (const gchar *firstname, ...);
   GstCaps *newcaps;
   
   newcaps = GST_CAPS_NEW ("my_caps", 
-                          "audio/wav", 
+                          "audio/x-wav", 
 			    "bitrate", GST_PROPS_INT_RANGE (11025,22050),
 			    "depth",   GST_PROPS_INT (16),
 			    "signed",  GST_PROPS_LIST (

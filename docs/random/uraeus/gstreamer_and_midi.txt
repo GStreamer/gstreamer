@@ -112,7 +112,7 @@ Types :
 
 - MIDI being passed to/from a text file : audio/midi (This is in my midi.types
   file, associated with a .midi or .mid extension. It seems analogous to a .wav
-  file, which contains audio/wav-type information.)
+  file, which contains "audio/x-wav" type information.)
 
 - MIDI in a pipeline : audio/x-gst-midi ?
 
