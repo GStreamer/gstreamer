@@ -26,6 +26,7 @@
 #include <signal.h>
 #include <setjmp.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/mman.h>
 
 #include "gst_private.h"
@@ -180,14 +181,13 @@ cothread_create (cothread_context *ctx)
 
   thread = (cothread_state *) (stack_end + ((slot - 1) * COTHREAD_STACKSIZE));
   GST_DEBUG (GST_CAT_COTHREADS, 
-             "new cothread slot stack from %p to %p (size %ld)", 
+             "mmap   cothread slot stack from %p to %p (size %ld)", 
 	     thread, thread + COTHREAD_STACKSIZE - 1, 
 	     (long) COTHREAD_STACKSIZE);
 
   GST_DEBUG (GST_CAT_COTHREADS, "going into mmap");
   /* the mmap is used to reserve part of the stack
    * ie. we state explicitly that we are going to use it */
-  munmap ((void *) thread, COTHREAD_STACKSIZE);
   mmaped = mmap ((void *) thread, COTHREAD_STACKSIZE,
 	          PROT_READ | PROT_WRITE | PROT_EXEC, 
 		  MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -267,6 +267,28 @@ cothread_destroy (cothread_state *thread)
   else {
     /* this doesn't seem to work very well */
     /* munmap ((void *) thread, COTHREAD_STACKSIZE); */
+    int res;
+
+    GST_DEBUG (GST_CAT_COTHREADS, 
+               "unmap cothread slot stack from %p to %p (size %ld)", 
+  	       thread, thread + COTHREAD_STACKSIZE - 1, 
+	       (long) COTHREAD_STACKSIZE);
+    GST_DEBUG (GST_CAT_COTHREADS, "doing an munmap at %p of size %d\n",
+	       thread, COTHREAD_STACKSIZE);
+    res = munmap ((void *) thread, COTHREAD_STACKSIZE);
+    if (res != 0)
+    {
+      switch (res)
+      {
+	case EINVAL:
+	  g_warning ("munmap doesn't like start %p or length %d\n",
+	             thread, COTHREAD_STACKSIZE);
+	  break;
+	default:
+	  g_warning ("Thomas was too lazy to check for all errors, so I can't tell you what is wrong.\n");
+	  break;
+      }
+    }
   }
 
   ctx->threads[threadnum] = NULL;
@@ -463,7 +485,7 @@ cothread_context_get_data (cothread_state * thread, gchar * key)
 gboolean
 cothread_stackquery (void **stack, glong* stacksize)
 {
-  /* wingo:  use posix_memalign to allocate a 2M-aligned, 2M stack */
+  /* wingo says: use posix_memalign to allocate a 2M-aligned, 2M stack */
 
   int retval = 0;
 
@@ -471,6 +493,12 @@ cothread_stackquery (void **stack, glong* stacksize)
   if (retval != 0)
   {
     g_warning ("Could not posix_memalign stack !\n");
+    if (retval == EINVAL)
+      g_warning ("The alignment parameter %d was not a power of two !\n",
+	         STACK_SIZE);
+    if (retval == ENOMEM)
+      g_warning ("Insufficient memory to allocate the request of %d !\n",
+	         STACK_SIZE);
     *stacksize = 0;
     return FALSE;
   }
