@@ -12,8 +12,7 @@ paranoia rip mp3encode case4 markup load autoplug3 \
 incsched reaping threadlock mp1vid reconnect \
 faketest events timecache
 
-# we have nothing but apps here, we can do this safely
-LIBS = $(GST_LIBS)
-CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
+LDADD = $(GST_LIBS)
+AM_CFLAGS = $(GST_CFLAGS)
 
 EXTRA_DIST = README

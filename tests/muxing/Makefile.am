@@ -1,5 +1,4 @@
 noinst_PROGRAMS = case1 
 
-# jsut apps here, this is safe
-LIBS = $(GST_LIBS)
-CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
+LDADD = $(GST_LIBS)
+AM_CFLAGS = $(GST_CFLAGS)
