@@ -1360,7 +1360,7 @@ gst_opt_scheduler_add_element (GstScheduler *sched, GstElement *element)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
   GstOptSchedulerCtx *ctx;
-  GList *pads;
+  const GList *pads;
 
   GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to scheduler", GST_ELEMENT_NAME (element));
 
