@@ -102,44 +102,33 @@ static void		speed_init		(GstSpeed *filter);
 static void		speed_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		speed_get_property        (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static gint             speed_parse_caps          (GstSpeed *filter, GstCaps *caps);
+static gboolean		speed_parse_caps          (GstSpeed *filter, GstCaps *caps);
 
 static void		speed_loop              (GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
 
-/*
-static GstPadNegotiateReturn
-speed_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
+static GstPadConnectReturn
+speed_connect_sink (GstPad *pad, GstCaps *caps)
 {
-  GstSpeed* filter = GST_SPEED (gst_pad_get_parent (pad));
+  GstSpeed *filter;
   
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
+  filter = GST_SPEED (gst_pad_get_parent (pad));
+  g_return_val_if_fail (filter != NULL, GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (GST_IS_SPEED (filter), GST_PAD_CONNECT_REFUSED);
+
+  if (GST_CAPS_IS_FIXED (caps)) {
+    if (!speed_parse_caps (filter, caps) || !gst_pad_try_set_caps (filter->srcpad, caps))
+      return GST_PAD_CONNECT_REFUSED;
+    
+    return GST_PAD_CONNECT_OK;
+  }
   
-  if (speed_parse_caps(filter, *caps))
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad,filter->sinkpad,caps);
+  return GST_PAD_CONNECT_DELAYED;
 }
 
-static GstPadNegotiateReturn
-speed_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstSpeed* filter = GST_SPEED (gst_pad_get_parent (pad));
-  
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  if (speed_parse_caps(filter, *caps))
-    return GST_PAD_NEGOTIATE_FAIL;
-  
-  return gst_pad_negotiate_proxy(pad,filter->srcpad,caps);
-}	
-*/
-
-static gint
+static gboolean
 speed_parse_caps (GstSpeed *filter, GstCaps *caps)
 {
   const gchar *format;
@@ -177,9 +166,9 @@ speed_parse_caps (GstSpeed *filter, GstCaps *caps)
                filter->layout, filter->intercept, filter->slope);
     }
   } else  {
-    return -1;
+    return FALSE;
   }
-  return 0;
+  return TRUE;
 }
 
 
@@ -230,10 +219,9 @@ static void
 speed_init (GstSpeed *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(speed_sink_factory (),"sink");
-  //gst_pad_set_negotiate_function(filter->sinkpad,speed_negotiate_sink);
+  gst_pad_set_connect_function(filter->sinkpad,speed_connect_sink);
   gst_pad_set_bufferpool_function (filter->sinkpad, speed_sink_get_bufferpool);
   filter->srcpad = gst_pad_new_from_template(speed_src_factory (),"src");
-  //gst_pad_set_negotiate_function(filter->srcpad,speed_negotiate_src);
   
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
@@ -277,6 +265,10 @@ speed_loop (GstElement *element)
 #define _FORMAT gint8
 #include "filter.func"
 #undef _FORMAT
+  } else {
+    gst_element_error (element, "capsnego was never performed, bailing...");
+    gst_element_yield (element); /* this is necessary for some reason with loop
+                                    elements */
   }
 }
 
