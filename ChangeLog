@@ -1,3 +1,8 @@
+2004-04-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gsterror.h:
+          include the headers needed for declarations used in this header
+
 2004-04-30  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* docs/random/uraeus/gstreamer_and_midi.txt :
