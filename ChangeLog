@@ -1,3 +1,10 @@
+2004-12-27  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
+	* gst/gstplugin.c:
+	  document gst_library_load a bit more (riff special case + return value if already loaded)
+	* testsuite/bytestream/filepadsink.c:
+	  plugin name is 'gstbytestream', not 'bytestream'
+
 2004-12-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/random/bbb/subtitles:

@@ -247,7 +247,7 @@ main (gint argc, gchar ** argv)
   long size;
 
   gst_init (&argc, &argv);
-  gst_library_load ("bytestream");
+  gst_library_load ("gstbytestream");
 
   pipeline = gst_element_factory_make ("pipeline", NULL);
   g_assert (pipeline);

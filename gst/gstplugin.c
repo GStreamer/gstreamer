@@ -890,9 +890,9 @@ gst_plugin_load (const gchar * name)
  * @name: name of library to load
  *
  * Load the named library.  Name should be given as
- * &quot;liblibrary.so&quot;.
+ * &quot;liblibrary.so&quot;. (exception to this rule is 'riff', which .so name is 'gstriff')
  *
- * Returns: whether the library was loaded or not
+ * Returns: whether the library was loaded or not (and return FALSE if it was already loaded)
  */
 gboolean
 gst_library_load (const gchar * name)
