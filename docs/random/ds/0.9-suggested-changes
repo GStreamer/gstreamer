@@ -54,6 +54,8 @@ API:
  - make GstBuffer/GstData a real class heirarchy, although maybe not
    as a subclass of GObject.
 
+ - remove unnecessary headers from gst.h (gstqueue.h in particular)
+
 caps:
 
   (Company:)
