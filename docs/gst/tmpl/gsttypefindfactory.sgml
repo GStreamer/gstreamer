@@ -1,0 +1,117 @@
+<!-- ##### SECTION Title ##### -->
+GstTypeFindFactory
+
+<!-- ##### SECTION Short_Description ##### -->
+information about registered typefind functions
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+These functions allow querying informations about registered typefind 
+functions. How to create and register these functions is described in
+the section <link linkend="gstreamer-Writing-typefind-functions">
+"Writing typefind functions"</link>.
+</para>
+<example>
+  <title>how to write a simple typefinder</title>
+  <programlisting>
+  /* FIXME: compile this? ;) */
+  typedef struct {
+    guint8 *data;
+    guint size;
+    guint probability;
+    GstCaps *data;
+  } MyTypeFind;
+  static void
+  my_peek (gpointer data, gint64 offset, guint size)
+  {
+    MyTypeFind *find = (MyTypeFind *) data;
+    if (offset &gt;= 0 &amp;&amp; offset + size &lt;= find->size) {
+      return find->data + offset;
+    }
+    return NULL;
+  }
+  static void
+  my_suggest (gpointer data, guint probability, GstCaps *caps)
+  {
+    MyTypeFind *find = (MyTypeFind *) data;
+    if (probability &gt; find->probability) {
+      find->probability = probability;
+      gst_caps_replace (&amp;find->caps, caps);
+    }
+  }
+  static GstCaps *
+  find_type (guint8 *data, guint size)
+  {
+    GList *walk, *type_list;
+    MyTypeFind find = {data, size, 0, NULL};
+    GstTypeFind gst_find = {my_peek, my_suggest, &amp;find, };
+    
+    walk = type_list = gst_type_find_factory_get_list ();
+    while (walk) {
+      GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
+      walk = g_list_next (walk)
+      gst_type_find_factory_call_function (factory, &amp;gst_find);
+    }
+    g_list_free (type_list);
+    return find.caps;
+  };
+  </programlisting>
+</example>
+<para>
+The above example shows how to write a very simple typefinder that identifies
+the given data. You can get quite a bit more complicated than that though.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+<link linkend="gstreamer-Writing-typefind-functions">Writing typefind functions</link>
+</para>
+
+<!-- ##### STRUCT GstTypeFindFactory ##### -->
+<para>
+Object that stores information about a typefind function
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_TYPE_FIND_FACTORY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_type_find_factory_get_list ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_find_factory_get_extensions ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_find_factory_get_caps ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_find_factory_call_function ##### -->
+<para>
+
+</para>
+
+@factory: 
+@find: 
+
+

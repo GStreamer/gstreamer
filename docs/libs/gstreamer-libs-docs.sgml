@@ -16,7 +16,8 @@
 ]>
 <book>
   <bookinfo>
-    <title>GStreamer Library &GST_MAJORMINOR; API Reference (&GST_VERSION;)</title>
+    <title>GStreamer &GST_MAJORMINOR; Library API Reference</title>
+    <releaseinfo>for GStreamer Library &GST_MAJORMINOR; (&GST_VERSION;)</releaseinfo>
   </bookinfo>
   <chapter id="gstreamer-libs">
     <title>GStreamer Libraries</title>

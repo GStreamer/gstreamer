@@ -1,0 +1,222 @@
+<!-- ##### SECTION Title ##### -->
+GstPadTemplate
+
+<!-- ##### SECTION Short_Description ##### -->
+Describe the media type of a pad.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+Padtemplates describe the possible media types a pad or an elementfactory can
+handle. 
+</para>
+<para>
+Pad and PadTemplates have #GstCaps attached to it to describe the media type they
+are capable of dealing with.  gst_pad_template_get_caps() is used to get the
+caps of a padtemplate. It's not possible to modify the caps of a padtemplate after
+creation. 
+</para>
+<para>
+Padtemplates can be created with gst_pad_template_new() or with the convenient
+GST_PAD_TEMPLATE_FACTORY() macro. A padtemplate can be used to create a pad or 
+to add to an elementfactory.
+</para>
+<para>
+The following code example shows the code to create a pad from a padtemplate.
+<example>
+<title>Create a pad from a padtemplate</title>
+  <programlisting>
+  GstStaticPadTemplate my_template =
+  GST_STATIC_PAD_TEMPLATE (
+    "sink",		/* the name of the pad */
+    GST_PAD_SINK,	/* the direction of the pad */
+    GST_PAD_ALWAYS, 	/* when this pad will be present */
+    GST_STATIC_CAPS (	/* the capabilities of the padtemplate */
+      "audio/x-raw-int, "
+        "channels = (int) [ 1, 6 ]"
+    )
+  )
+
+  void
+  my_method (void) 
+  {
+    GstPad *pad;
+  
+    pad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (my_template_factory), "sink");
+    ...
+  }
+  </programlisting>
+</example>
+</para>
+<para>
+The following example shows you how to add the padtemplate to an elementfactory:
+<programlisting>
+  gboolean
+  my_factory_init (GstPlugin *plugin)
+  {
+    GstElementFactory *factory;
+
+    factory = gst_element_factory_new ("my_factory", GST_TYPE_MYFACTORY, &amp;gst_myfactory_details);
+    g_return_val_if_fail (factory != NULL, FALSE);
+
+    gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (my_template_factory));
+
+    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+
+    return TRUE;
+  }
+
+</programlisting>
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+#GstPad, #GstElementFactory
+</para>
+
+<!-- ##### STRUCT GstPadTemplate ##### -->
+<para>
+The padtemplate object.
+</para>
+
+
+<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
+<para>
+This signal is fired when an element creates a pad from this 
+template.
+</para>
+
+@gstpadtemplate: the object which received the signal.
+@arg1: The pad that was created.
+
+<!-- ##### STRUCT GstStaticPadTemplate ##### -->
+<para>
+
+</para>
+
+@name_template: 
+@direction: 
+@presence: 
+@static_caps: 
+
+<!-- ##### MACRO GST_TYPE_PAD ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TYPE_GHOST_PAD ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_IS_GHOST_PAD_FAST ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_IS_PAD_FAST ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_PAD_TEMPLATE_NAME_TEMPLATE ##### -->
+<para>
+Get the nametemplate of the padtemplate.
+</para>
+
+@templ: the template to query
+
+
+<!-- ##### MACRO GST_PAD_TEMPLATE_DIRECTION ##### -->
+<para>
+Get the direction of the padtemplate.
+</para>
+
+@templ: the template to query
+
+
+<!-- ##### MACRO GST_PAD_TEMPLATE_PRESENCE ##### -->
+<para>
+Get the presence of the padtemplate.
+</para>
+
+@templ: the template to query
+
+
+<!-- ##### MACRO GST_PAD_TEMPLATE_CAPS ##### -->
+<para>
+Get a handle to the padtemplate #GstCaps
+</para>
+
+@templ: the template to query
+
+
+<!-- ##### MACRO GST_PAD_TEMPLATE_IS_FIXED ##### -->
+<para>
+Check if the properties of the padtemplate are fixed
+</para>
+
+@templ: the template to query
+
+
+<!-- ##### ENUM GstPadTemplateFlags ##### -->
+<para>
+Flags for the padtemplate
+</para>
+
+@GST_PAD_TEMPLATE_FIXED: The padtemplate has no variable properties
+@GST_PAD_TEMPLATE_FLAG_LAST: first flag that can be used by subclasses.
+
+<!-- ##### FUNCTION gst_pad_template_new ##### -->
+<para>
+
+</para>
+
+@name_template: 
+@direction: 
+@presence: 
+@caps: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_static_pad_template_get ##### -->
+<para>
+
+</para>
+
+@pad_template: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@templ: 
+
+
+<!-- ##### FUNCTION gst_pad_template_get_caps ##### -->
+<para>
+
+</para>
+
+@templ: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_template_get_caps_by_name ##### -->
+<para>
+
+</para>
+
+@templ: 
+@name: 
+@Returns: 
+
+

@@ -1,0 +1,55 @@
+<!-- ##### SECTION Title ##### -->
+GstGhostPad
+
+<!-- ##### SECTION Short_Description ##### -->
+Pseudo link pads
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstGhostPad ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstGhostPad:real-pad ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_GPAD_REALPAD ##### -->
+<para>
+Get the real pad of this ghost pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### FUNCTION gst_ghost_pad_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ghost_pad_save_thyself ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+@Returns: 
+
+

@@ -128,9 +128,11 @@ Under Windows it permits to export variables from a DLL, otherwise it just means
 </para>
 
 
+
 <!-- ##### MACRO GST_PLUGIN_EXPORT ##### -->
 <para>
 Under Windows it permits to automatically export the plugin definition, otherwise it just defines as nothing.
 </para>
+
 
 

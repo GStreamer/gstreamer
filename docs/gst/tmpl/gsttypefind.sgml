@@ -44,12 +44,6 @@ typefinding subsystem
 @GST_TYPE_FIND_NEARLY_CERTAIN: 
 @GST_TYPE_FIND_MAXIMUM: 
 
-<!-- ##### STRUCT GstTypeFindFactory ##### -->
-<para>
-Object that stores information about a typefind function
-</para>
-
-
 <!-- ##### FUNCTION gst_type_find_peek ##### -->
 <para>
 
@@ -93,40 +87,5 @@ Object that stores information about a typefind function
 @possible_caps: 
 @data: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_type_find_factory_get_list ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_type_find_factory_get_extensions ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_type_find_factory_get_caps ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_type_find_factory_call_function ##### -->
-<para>
-
-</para>
-
-@factory: 
-@find: 
 
 

@@ -1,8 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-GstURIType
+GstRealPad
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Real link pads
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -13,20 +13,4 @@ GstURIType
 <para>
 
 </para>
-
-<!-- ##### ENUM GstURIType ##### -->
-<para>
-
-</para>
-
-@GST_URI_UNKNOWN: 
-@GST_URI_SINK: 
-@GST_URI_SRC: 
-
-<!-- ##### MACRO GST_TYPE_URI ##### -->
-<para>
-
-</para>
-
-
 

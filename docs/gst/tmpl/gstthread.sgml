@@ -36,6 +36,13 @@ A Thread can act as a toplevel bin as it has its own scheduler.
 The thread priority
 </para>
 
+<!-- ##### MACRO GST_TYPE_THREAD ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### VARIABLE gst_thread_current ##### -->
 <para>
 

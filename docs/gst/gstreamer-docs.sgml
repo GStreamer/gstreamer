@@ -18,31 +18,37 @@
 <!ENTITY GstError SYSTEM "xml/gsterror.xml">
 <!ENTITY GstEvent SYSTEM "xml/gstevent.xml">
 <!ENTITY GstFormat SYSTEM "xml/gstformat.xml">
+<!ENTITY GstGhostPad SYSTEM "xml/gstghostpad.xml">
 <!ENTITY GstIndex SYSTEM "xml/gstindex.xml">
+<!ENTITY GstIndexFactory SYSTEM "xml/gstindexfactory.xml">
 <!ENTITY GstImplementsInterface SYSTEM "xml/gstimplementsinterface.xml">
 <!ENTITY GstInfo SYSTEM "xml/gstinfo.xml">
 <!ENTITY GstLog SYSTEM "xml/gstlog.xml">
 <!ENTITY GstMemChunk SYSTEM "xml/gstmemchunk.xml">
 <!ENTITY GstObject SYSTEM "xml/gstobject.xml">
 <!ENTITY GstPad SYSTEM "xml/gstpad.xml">
+<!ENTITY GstPadTemplate SYSTEM "xml/gstpadtemplate.xml">
 <!ENTITY GstParse SYSTEM "xml/gstparse.xml">
 <!ENTITY GstPipeline SYSTEM "xml/gstpipeline.xml">
 <!ENTITY GstPlugin SYSTEM "xml/gstplugin.xml">
 <!ENTITY GstPluginFeature SYSTEM "xml/gstpluginfeature.xml">
 <!ENTITY GstProbe SYSTEM "xml/gstprobe.xml">
 <!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
+<!ENTITY GstRealPad SYSTEM "xml/gstrealpad.xml">
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
 <!ENTITY GstRegistryPool SYSTEM "xml/gstregistrypool.xml">
 <!ENTITY GstScheduler SYSTEM "xml/gstscheduler.xml">
+<!ENTITY GstSchedulerFactory SYSTEM "xml/gstschedulerfactory.xml">
 <!ENTITY GstStructure SYSTEM "xml/gststructure.xml">
 <!ENTITY GstSystemClock SYSTEM "xml/gstsystemclock.xml">
-<!ENTITY GstTag SYSTEM "xml/gsttag.xml">
+<!ENTITY GstTagList SYSTEM "xml/gsttaglist.xml">
 <!ENTITY GstTagSetter SYSTEM "xml/gsttagsetter.xml">
 <!ENTITY GstThread SYSTEM "xml/gstthread.xml">
 <!ENTITY GstTrace SYSTEM "xml/gsttrace.xml">
 <!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
+<!ENTITY GstTypeFindFactory SYSTEM "xml/gsttypefindfactory.xml">
 <!ENTITY GstUtils SYSTEM "xml/gstutils.xml">
-<!ENTITY GstUri SYSTEM "xml/gsturi.xml">
+<!ENTITY GstUriHandler SYSTEM "xml/gsturihandler.xml">
 <!ENTITY GstValue SYSTEM "xml/gstvalue.xml">
 <!ENTITY GstXML SYSTEM "xml/gstxml.xml">
 <!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
@@ -66,7 +72,8 @@
 ]>
 <book>
   <bookinfo>
-    <title>GStreamer &GST_MAJORMINOR; Core API Reference (&GST_VERSION;)</title>
+    <title>GStreamer &GST_MAJORMINOR; Core API Reference</title>
+    <releaseinfo>for GStreamer Core &GST_MAJORMINOR; (&GST_VERSION;)</releaseinfo>
   </bookinfo>
 
   <chapter id="gstreamer">
@@ -93,11 +100,14 @@
     &GstError;
     &GstEvent;
     &GstFormat;
+    &GstGhostPad;
     &GstIndex;
+    &GstIndexFactory;
     &GstInfo;
     &GstImplementsInterface;
     &GstObject;
     &GstPad;
+    &GstPadTemplate;
     &GstParse;
     &GstPipeline;
     &GstPlugin;
@@ -105,16 +115,19 @@
     &GstProbe;
     &GstQuery;
     &GstQueue;
+    &GstRealPad;
     &GstRegistry;
     &GstRegistryPool;
     &GstScheduler;
+    &GstSchedulerFactory;
     &GstStructure;
     &GstSystemClock;
-    &GstTag;
+    &GstTagList;
     &GstTagSetter;
     &GstThread;
     &GstTypeFind;
-    &GstUri;
+    &GstTypeFindFactory;
+    &GstUriHandler;
     &GstUtils;
     &GstValue;
     &GstXML;

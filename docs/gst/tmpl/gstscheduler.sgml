@@ -272,87 +272,10 @@ The state of the scheduler
 @sched: 
 
 
-<!-- ##### MACRO GST_TYPE_SCHEDULER_FACTORY ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GST_SCHEDULER_DEFAULT_NAME ##### -->
 <para>
 
 </para>
 
-
-
-<!-- ##### STRUCT GstSchedulerFactory ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_scheduler_factory_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@longdesc: 
-@type: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_scheduler_factory_destroy ##### -->
-<para>
-
-</para>
-
-@factory: 
-
-
-<!-- ##### FUNCTION gst_scheduler_factory_find ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_scheduler_factory_create ##### -->
-<para>
-
-</para>
-
-@factory: 
-@parent: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_scheduler_factory_make ##### -->
-<para>
-
-</para>
-
-@name: 
-@parent: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_scheduler_factory_set_default_name ##### -->
-<para>
-
-</para>
-
-@name: 
-
-
-<!-- ##### FUNCTION gst_scheduler_factory_get_default_name ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 

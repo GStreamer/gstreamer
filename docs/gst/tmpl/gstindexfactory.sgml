@@ -1,0 +1,75 @@
+<!-- ##### SECTION Title ##### -->
+GstIndexFactory
+
+<!-- ##### SECTION Short_Description ##### -->
+Create GstIndexes from a factory
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstIndexFactory is used to dynamically create GstIndex implementations.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+#GstIndex
+</para>
+
+<!-- ##### MACRO GST_TYPE_INDEX_FACTORY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### STRUCT GstIndexFactory ##### -->
+<para>
+The GstIndexFactory object
+</para>
+
+
+<!-- ##### FUNCTION gst_index_factory_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@longdesc: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_factory_destroy ##### -->
+<para>
+
+</para>
+
+@factory: 
+
+
+<!-- ##### FUNCTION gst_index_factory_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_factory_create ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_factory_make ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+

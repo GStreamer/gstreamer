@@ -114,17 +114,20 @@ GTK-DOC NOTES
 
 * what to do when adding a new piece of API:
   - add both an entity and use the entity in gstreamer-docs.sgml
-  - add a new section to gstreamer-sections.txt
+  - add a new <SECTION> to gstreamer-sections.txt in the correct alphabetical
+    position related to the other sections (so that it is easier to locate)
   - add all documented symbols to gstreamer-sections.txt in the proper section
     (default),<SUBSECTION Standard>,<SUBSECTION Private>
   - document at least the Short_Description in tmpl/.sgml
   - signals: document them properly in tmpl/.sgml (or better in the c-source)
 
 * checklist:
-  - make sure -sections.txt has a <TITLE> set for each <FILE>
-  - the title should be named like the type, when it gets registered
-    (otherwise gtkdoc introspection fails)
-  - for clarity name the file like the title, but all lowercase
+  - make sure *-sections.txt has a <TITLE> set for each <FILE>
+  - add only *one* <TITLE> to each file, when you have multiple classes in one
+    source-file, create one <FILE> section for each class
+  - the <TITLE> *must* be named like the type of the GType, when it gets
+    registered (otherwise gtkdoc introspection fails)
+  - for clarity name the <FILE> like the <TITLE>, but all lowercase
 
 * what to do when trying to improve the docs
   - compare the output of

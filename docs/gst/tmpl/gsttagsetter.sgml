@@ -27,6 +27,13 @@ Element interface that allows setting and retrieval of media metadata
 
 @g_iface: 
 
+<!-- ##### MACRO GST_TYPE_TAG_SETTER ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### FUNCTION gst_tag_setter_merge ##### -->
 <para>
 

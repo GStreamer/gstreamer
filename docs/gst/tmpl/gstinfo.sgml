@@ -483,18 +483,6 @@ output with the function name of the message.
 @Returns: 
 
 
-<!-- ##### VARIABLE GST_CAT_DEFAULT ##### -->
-<para>
-The default category that is used when no other category is defined as the
-default. If you want to define a default category, do it like this:
-<informalexample>
-<programlisting>
-&hash;define GST_CAT_DEFAULT category_to_be_default
-</programlisting>
-</informalexample>
-</para>
-
-
 <!-- ##### MACRO GST_CAT_LEVEL_LOG ##### -->
 <para>
 GST_CAT_LEVEL_LOG:

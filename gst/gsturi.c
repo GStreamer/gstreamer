@@ -198,12 +198,14 @@ gst_uri_construct (const gchar * protocol, const gchar * location)
 
   return g_strdup_printf ("%s://%s", protocol, location);
 }
+
 typedef struct
 {
   GstURIType type;
   gchar *protocol;
 }
 SearchEntry;
+
 static gboolean
 search_by_entry (GstPluginFeature * feature, gpointer search_entry)
 {
