@@ -1,3 +1,9 @@
+2004-05-09  Benjamin Otte  <otte@gnome.org>
+
+	* libs/gst/bytestream/Makefile.am:
+	  we should indeed add .c files to makefiles or they won't be built
+	  (d'oh)
+
 2004-05-08  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstpad.c: (gst_pad_proxy_fixate):
