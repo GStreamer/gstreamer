@@ -188,16 +188,19 @@ static GstCaps *
 gst_tcpclientsrc_getcaps (GstPad * pad)
 {
   GstTCPClientSrc *src;
+  GstCaps *caps = NULL;
 
   src = GST_TCPCLIENTSRC (GST_OBJECT_PARENT (pad));
 
   if (!GST_FLAG_IS_SET (src, GST_TCPCLIENTSRC_OPEN))
-    return gst_caps_new_any ();
-
-  if (src->caps)
-    return src->caps;
-
-  return gst_caps_new_any ();
+    caps = gst_caps_new_any ();
+  else if (src->caps)
+    caps = gst_caps_copy (src->caps);
+  else
+    caps = gst_caps_new_any ();
+  GST_DEBUG_OBJECT (src, "returning caps %" GST_PTR_FORMAT, caps);
+  g_assert (GST_IS_CAPS (caps));
+  return caps;
 }
 
 static GstData *
@@ -445,7 +448,6 @@ gst_tcpclientsrc_init_receive (GstTCPClientSrc * this)
   if (this->protocol == GST_TCP_PROTOCOL_TYPE_GDP) {
     /* if we haven't received caps yet, we should get them first */
     if (!this->caps_received) {
-      gchar *string;
       GstCaps *caps;
 
       GST_DEBUG_OBJECT (this, "getting caps through GDP");
@@ -454,11 +456,15 @@ gst_tcpclientsrc_init_receive (GstTCPClientSrc * this)
             ("Could not read caps through GDP"));
         return FALSE;
       }
+      if (!GST_IS_CAPS (caps)) {
+        GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+            ("Could not read caps through GDP"));
+        return FALSE;
+      }
+      GST_DEBUG_OBJECT (this, "Received caps through GDP: %" GST_PTR_FORMAT,
+          caps);
       this->caps_received = TRUE;
       this->caps = caps;
-      string = gst_caps_to_string (caps);
-      GST_DEBUG_OBJECT (this, "Received caps through GDP: %s", string);
-      g_free (string);
     }
   }
   return TRUE;
@@ -470,6 +476,11 @@ gst_tcpclientsrc_close (GstTCPClientSrc * this)
   if (this->sock_fd != -1) {
     close (this->sock_fd);
     this->sock_fd = -1;
+  }
+  this->caps_received = FALSE;
+  if (this->caps) {
+    gst_caps_free (this->caps);
+    this->caps = NULL;
   }
   GST_FLAG_UNSET (this, GST_TCPCLIENTSRC_OPEN);
 }
