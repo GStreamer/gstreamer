@@ -1,3 +1,14 @@
+2004-06-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  add videorate
+	* sys/ximage/ximagesink.c: (gst_ximagesink_finalize),
+	(gst_ximagesink_class_init):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_finalize),
+	(gst_xvimagesink_class_init):
+          run them as finalize, not dispose, since dispose can be invoked
+          multiple times
+
 2004-06-17  Wim Taymans  <wim@fluendo.com>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_init), (gst_alsa_dispose),
