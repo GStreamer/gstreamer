@@ -1,3 +1,8 @@
+2004-10-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_src_link), (gst_v4lsrc_getcaps):
+	Fix for webcams that support only specific width or height
+
 2004-10-09  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
