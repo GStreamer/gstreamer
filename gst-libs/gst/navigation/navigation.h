@@ -44,7 +44,7 @@ typedef struct _GstNavigationInterface {
   /* virtual functions */
   void (*send_event) (GstNavigation *navigation, GstStructure *structure);
   
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 } GstNavigationInterface;
 
 GType		gst_navigation_get_type	(void);

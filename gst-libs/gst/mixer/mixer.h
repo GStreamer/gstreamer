@@ -73,7 +73,7 @@ typedef struct _GstMixerClass {
 			   GstMixerTrack *channel,
 			   gint          *volumes);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 } GstMixerClass;
 
 GType		gst_mixer_get_type	(void);

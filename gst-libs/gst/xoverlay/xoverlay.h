@@ -55,7 +55,7 @@ typedef struct _GstXOverlayClass {
   void (*have_xwindow_id) (GstXOverlay *overlay,
                            XID          xwindow_id);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 } GstXOverlayClass;
 
 GType	gst_x_overlay_get_type		(void);
