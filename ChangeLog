@@ -1,5 +1,11 @@
 2004-06-11  Wim Taymans  <wim@fluendo.com>
 
+	* ext/theora/theoradec.c: (theora_dec_chain),
+	(theora_dec_change_state):
+	Don't try to decode frames before we received a keyframe.
+
+2004-06-11  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_class_init),
 	(gst_ogg_mux_init), (gst_ogg_mux_next_buffer),
 	(gst_ogg_mux_get_headers), (gst_ogg_mux_set_header_on_caps),

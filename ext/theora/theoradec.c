@@ -54,6 +54,8 @@ struct _GstTheoraDec
 
   guint packetno;
   guint64 granulepos;
+
+  gboolean need_keyframe;
 };
 
 struct _GstTheoraDecClass
@@ -334,6 +336,7 @@ theora_dec_chain (GstPad * pad, GstData * data)
   packet.packetno = dec->packetno++;
   packet.b_o_s = (packet.packetno == 0) ? 1 : 0;
   packet.e_o_s = 0;
+
   /* switch depending on packet type */
   if (packet.packet[0] & 0x80) {
     /* header packet */
@@ -376,12 +379,23 @@ theora_dec_chain (GstPad * pad, GstData * data)
       gst_caps_free (caps);
     }
   } else {
+    /* normal data packet */
     yuv_buffer yuv;
     GstBuffer *out;
     guint8 *y, *v, *u;
     guint i;
+    gboolean keyframe;
 
-    /* normal data packet */
+    /* the second most significant bit of the first data byte is cleared 
+     * for keyframes */
+    keyframe = (packet.packet[0] & 0x40) == 0;
+    if (keyframe) {
+      dec->need_keyframe = FALSE;
+    } else if (dec->need_keyframe) {
+      /* drop frames if we're looking for a keyframe */
+      gst_data_unref (data);
+      return;
+    }
 #if 0
     {
       GTimeVal tv;
@@ -446,6 +460,7 @@ theora_dec_change_state (GstElement * element)
     case GST_STATE_READY_TO_PAUSED:
       theora_info_init (&dec->info);
       theora_comment_init (&dec->comment);
+      dec->need_keyframe = TRUE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
