@@ -92,28 +92,29 @@
           filter for illustration.
         </para>
         <para>
-          This part covers all the basic steps you generally need to perform to
-          build a plugin. The discussion begins by giving examples of generating
-          the basic structures with <xref linkend="chapter-building-boiler"/>. Then
-          you will learn how to write the code to get a basic filter plugin
-          working: These steps include chapters on <xref
-          linkend="chapter-building-types"/>, <xref linkend="chapter-building-pads"/>,
-          <xref linkend="chapter-building-chainfn"/>, and <!-- <xref
-          linkend="chapter-building-state"/>--> (WRITEME: building state).
+          This part covers all the basic steps you generally need to perform
+          to build a plugin, such as registering the element with &GStreamer;
+          and setting up the basics so it can receive data from and send data
+          to neighbour elements. The discussion begins by giving examples of
+          generating the basic structures and registering an element in
+          <xref linkend="chapter-building-boiler"/>. Then, you will learn how
+          to write the code to get a basic filter plugin working in <xref
+          linkend="chapter-building-pads"/>, <xref
+          linkend="chapter-building-chainfn"/> and <xref
+          linkend="chapter-statemanage-states"/>.
         </para>
         <para>
-          After you have finished the first steps, you will be able to create a
-          working plugin, but your new plugin might not have all the
-          functionality you need. To provide some standard functionality, you
-          will learn how to add more features to a new plugin. These features
-          are described in the chapters on 
-          <!--FIXME: WRITEME <xref linkend="chapter-building-props"/> -->
-          (WRITEME)
-          and <xref linkend="chapter-building-signals"/>.
-          Finally, you will see in
-          <!--<xref linkend="chapter-building-testapp"/>-->(WRITEME) 
-          how to write a short test
-          application to try out your new plugin.
+          After that, we will show some of the GObject concepts on how to
+          make an element configurable for applications and how to do
+          application-element interaction in
+          <xref linkend="chapter-building-args"/> and <xref
+          linkend="chapter-building-signals"/>. Next, you will learn to build
+          a quick test application to test all that you've just learned in
+          <xref linkend="chapter-building-testapp"/>. We will just touch upon
+          basics here. For full-blown application development, you should
+          look at <ulink type="http"
+          url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/manual/html/index.html">the
+          Application Development Manual</ulink>.
         </para>
       </listitem>
       <listitem>
@@ -125,14 +126,64 @@
           After learning about the basic steps, you should be able to create a
           functional audio or video filter plugin with some nice features.
           However, &GStreamer; offers more for plugin writers. This part of the
-          guide includes chapters on more advanced topics, such as <xref
-          linkend="chapter-advanced-request"/>, <!-- <xref
-          linkend="chapter-advanced-clock"/>, <xref
-          linkend="chapter-advanced-scheduling"/>, <xref
-          linkend="chapter-advanced-dparams"/>, and <xref
-          linkend="chapter-advanced-midi"/>-->. Since these features are more advanced,
-          the chapters can basically be read in any order, as you find that your
-          plugins require these features.
+          guide includes chapters on more advanced topics, such as scheduling,
+          media type definitions in &GStreamer;, clocks, interfaces and
+          tagging. Since these features are purpose-specific, you can read them
+          in any order, most of them don't require knowledge from other
+          sections.
+        </para>
+        <para>
+          The first chapter, named <xref linkend="chapter-loopbased-sched"/>,
+          will explain some of the basics of element scheduling. It is not
+          very in-depth, but is mostly some sort of an introduction on why
+          other things work as they do. Read this chapter if you're interested
+          in &GStreamer; internals. Next, we will apply this knowledge and
+          discuss another type of data transmission than what you learned in
+          <xref linkend="chapter-building-chainfn"/>: <xref
+          linkend="chapter-loopbased-loopfn"/>. Loop-based elements will give
+          you more control over input rate. This is useful when writing, for
+          example, muxers or demuxers.
+        </para>
+        <para>
+          Next, we will discuss media identification in &GStreamer; in <xref
+          linkend="chapter-building-types"/>. You will learn how to define
+          new media types and get to know a list of standard media types
+          defined in &GStreamer;.
+        </para>
+        <para>
+          In the next chapter, you will learn the concept of request- and
+          sometimes-pads, which are pads that are created dynamically, either
+          because the application asked for it (request) or because the media
+          stream requires it (sometimes). This will be in <xref
+          linkend="chapter-advanced-request"/>.
+        </para>
+        <para>
+          The next chapter, <xref linkend="chapter-advanced-clock"/>, will
+          explain the concept of clocks in &GStreamer;. You need this
+          information when you want to know how elements should achieve
+          audio/video synchronization.
+        </para>
+        <para>
+          The next few chapters will discuss advanced ways of doing
+          application-element interaction. Previously, we learned on the
+          GObject-ways of doing this in <xref linkend="chapter-building-args"/>
+          and <xref linkend="chapter-building-signals"/>. We will discuss
+          dynamic parameters, which are a way of defining element behaviour
+          over time in advance, in <xref linkend="chapter-dparams"/>. Next,
+          you will learn about interfaces in <xref
+          linkend="chapter-advanced-interfaces"/>. Interfaces are very target-
+          specific ways of application-element interaction, based on GObject's
+          GInterface. Lastly, you will learn about how metadata is handled in
+          &GStreamer; in <xref linkend="chapter-advanced-tagging"/>.
+        </para>
+        <para>
+          The last chapter, <xref linkend="chapter-advanced-events"/>, will
+          discuss the concept of events in &GStreamer;. Events are, on the
+          one hand, another way of doing application-element interaction. It
+          atkes care of seeking, for example. On the other hand, it is also
+          a way in which elements interact with each other, such as letting
+          each other know about media stream discontinuities, forwarding tags
+          inside a pipeline and so on.
         </para>
       </listitem>
       <listitem>
@@ -146,10 +197,11 @@
           the concepts apply equally to other plugin types, including sources,
           sinks, and autopluggers. This part of the guide presents the issues
           that arise when working on these more specialized plugin types. The
-          part includes chapters on <xref linkend="chapter-other-source"/>, <xref
-          linkend="chapter-other-sink"/>, <!-- FIXME: WRITEME 
-          <xref linkend="chapter-other-scheduler"/>,--> and
-          <xref linkend="chapter-other-autoplugger"/>.
+          part includes chapters on <xref linkend="chapter-other-source"/>,
+          <xref linkend="chapter-other-sink"/>, <xref
+          linkend="chapter-other-oneton"/> (including demuxers), <xref
+          linkend="chapter-other-ntoone"/> (including muxers) and <xref
+          linkend="chapter-other-manager"/>.
         </para>
       </listitem>
       <listitem>
@@ -158,12 +210,9 @@
           information for plugin developers.
         </para>
         <para>
-          The appendices contain some information that stubbornly refuses to fit
-          cleanly in other sections of the guide. This information includes
-          <!-- FIXME: WRITEME
-          <xref linkend="chapter-appendix-checklist"/>--> (WRITEME) and 
-          <!-- <xref
-          linkend="chapter-appendix-python"/>.--> FIXME: organize better.
+          The appendices contain some information that stubbornly refuses
+          to fit cleanly in other sections of the guide. Most of this section
+          is not yet finished.
         </para>
       </listitem>
     </itemizedlist>

@@ -1,5 +1,10 @@
 2004-11-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/pwg/intro-preface.xml:
+	  Rewrite preface.
+
+2004-11-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/pwg/advanced-scheduling.xml:
 	* docs/pwg/advanced-tagging.xml:
 	* docs/pwg/advanced-types.xml:
