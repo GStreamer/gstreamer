@@ -29,6 +29,6 @@ upload: $(FORMATS)
 	if echo $(FORMATS) | grep ps > /dev/null; then export SRC="$$SRC $(DOC).ps"; fi; \
 	if echo $(FORMATS) | grep pdf > /dev/null; then export SRC="$$SRC $(DOC).pdf"; fi; \
 	echo Uploading $$SRC to $(DOC_SERVER):$$DIR; \
-	rsync -rv -e ssh $$SRC $(DOC_SERVER):$$DIR; \
+	rsync -rv -e ssh --delete $$SRC $(DOC_SERVER):$$DIR; \
 	ssh $(DOC_SERVER) chmod -R g+w $$DIR; \
 	echo Done
