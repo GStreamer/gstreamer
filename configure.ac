@@ -20,10 +20,9 @@ dnl FIXME take something else ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])
 AM_CONFIG_HEADER(config.h)
 
-##AUTOMAKE="$AUTOMAKE"
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
-ACLOCAL="$ACLOCAL -I m4 -I common/m4 $ACLOCAL_FLAGS"
+ACLOCAL_AMFLAGS="-I m4 -I common/m4"
 
 AC_PROG_CC
 AM_PROG_CC_STDC
@@ -47,7 +46,7 @@ dnl ext plug-ins; plug-ins that have external dependencies
 GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
 [HAVE_EXTERNAL=yes],enabled,
 [
-  AC_MSG_WARN(building experimental plug-ins)
+  AC_MSG_WARN(building external plug-ins)
   BUILD_EXTERNAL="yes"
 ],[
   AC_MSG_WARN(all plug-ins with external dependencies will not be built)
@@ -410,6 +409,8 @@ GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
   translit(dnm, m, l) AC_SUBST(AUDIOFILE_LIBS)
   translit(dnm, m, l) AC_SUBST(AUDIOFILE_CFLAGS)
   GST_CHECK_CONFIGPROG(AUDIOFILE, audiofile-config)
+  dnl we need this function
+  AC_CHECK_LIB(audiofile, afOpenVirtualFile, , HAVE_AUDIOFILE="no")
 ])
 
 dnl *** avifile ***
