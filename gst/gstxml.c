@@ -139,7 +139,9 @@ gint
 gst_xml_write_file (GstElement *element, FILE *out)
 {
   xmlDocPtr cur;
+#ifdef HAVE_LIBXML2
   xmlOutputBufferPtr buf;
+#endif
   const char * encoding;
   xmlCharEncodingHandlerPtr handler = NULL;
   int indent;
