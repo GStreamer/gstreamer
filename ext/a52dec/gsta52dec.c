@@ -136,8 +136,8 @@ gst_a52dec_class_init (GstA52DecClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DRC,
     g_param_spec_boolean ("drc", "Dynamic Range Compression",
-			  "Use Dynamic Range Compression", FALSE,
-			  G_PARAM_READWRITE));
+                          "Use Dynamic Range Compression", FALSE,
+                          G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_a52dec_set_property;
   gobject_class->get_property = gst_a52dec_get_property;
@@ -181,87 +181,87 @@ float_to_int (float *_f, int16_t * s16, int flags)
   switch (flags) {
     case A52_MONO:
       for (i = 0; i < 256; i++) {
-	s16[5 * i] = s16[5 * i + 1] = s16[5 * i + 2] = s16[5 * i + 3] = 0;
-	s16[5 * i + 4] = convert (f[i]);
+        s16[5 * i] = s16[5 * i + 1] = s16[5 * i + 2] = s16[5 * i + 3] = 0;
+        s16[5 * i + 4] = convert (f[i]);
       }
       break;
     case A52_CHANNEL:
     case A52_STEREO:
     case A52_DOLBY:
       for (i = 0; i < 256; i++) {
-	s16[2 * i] = convert (f[i]);
-	s16[2 * i + 1] = convert (f[i + 256]);
+        s16[2 * i] = convert (f[i]);
+        s16[2 * i + 1] = convert (f[i + 256]);
       }
       break;
     case A52_3F:
       for (i = 0; i < 256; i++) {
-	s16[5 * i] = convert (f[i]);
-	s16[5 * i + 1] = convert (f[i + 512]);
-	s16[5 * i + 2] = s16[5 * i + 3] = 0;
-	s16[5 * i + 4] = convert (f[i + 256]);
+        s16[5 * i] = convert (f[i]);
+        s16[5 * i + 1] = convert (f[i + 512]);
+        s16[5 * i + 2] = s16[5 * i + 3] = 0;
+        s16[5 * i + 4] = convert (f[i + 256]);
       }
       break;
     case A52_2F2R:
       for (i = 0; i < 256; i++) {
-	s16[4 * i] = convert (f[i]);
-	s16[4 * i + 1] = convert (f[i + 256]);
-	s16[4 * i + 2] = convert (f[i + 512]);
-	s16[4 * i + 3] = convert (f[i + 768]);
+        s16[4 * i] = convert (f[i]);
+        s16[4 * i + 1] = convert (f[i + 256]);
+        s16[4 * i + 2] = convert (f[i + 512]);
+        s16[4 * i + 3] = convert (f[i + 768]);
       }
       break;
     case A52_3F2R:
       for (i = 0; i < 256; i++) {
-	s16[5 * i] = convert (f[i]);
-	s16[5 * i + 1] = convert (f[i + 512]);
-	s16[5 * i + 2] = convert (f[i + 768]);
-	s16[5 * i + 3] = convert (f[i + 1024]);
-	s16[5 * i + 4] = convert (f[i + 256]);
+        s16[5 * i] = convert (f[i]);
+        s16[5 * i + 1] = convert (f[i + 512]);
+        s16[5 * i + 2] = convert (f[i + 768]);
+        s16[5 * i + 3] = convert (f[i + 1024]);
+        s16[5 * i + 4] = convert (f[i + 256]);
       }
       break;
     case A52_MONO | A52_LFE:
       for (i = 0; i < 256; i++) {
-	s16[6 * i] = s16[6 * i + 1] = s16[6 * i + 2] = s16[6 * i + 3] = 0;
-	s16[6 * i + 4] = convert (f[i + 256]);
-	s16[6 * i + 5] = convert (f[i]);
+        s16[6 * i] = s16[6 * i + 1] = s16[6 * i + 2] = s16[6 * i + 3] = 0;
+        s16[6 * i + 4] = convert (f[i + 256]);
+        s16[6 * i + 5] = convert (f[i]);
       }
       break;
     case A52_CHANNEL | A52_LFE:
     case A52_STEREO | A52_LFE:
     case A52_DOLBY | A52_LFE:
       for (i = 0; i < 256; i++) {
-	s16[6 * i] = convert (f[i + 256]);
-	s16[6 * i + 1] = convert (f[i + 512]);
-	s16[6 * i + 2] = s16[6 * i + 3] = s16[6 * i + 4] = 0;
-	s16[6 * i + 5] = convert (f[i]);
+        s16[6 * i] = convert (f[i + 256]);
+        s16[6 * i + 1] = convert (f[i + 512]);
+        s16[6 * i + 2] = s16[6 * i + 3] = s16[6 * i + 4] = 0;
+        s16[6 * i + 5] = convert (f[i]);
       }
       break;
     case A52_3F | A52_LFE:
       for (i = 0; i < 256; i++) {
-	s16[6 * i] = convert (f[i + 256]);
-	s16[6 * i + 1] = convert (f[i + 768]);
-	s16[6 * i + 2] = s16[6 * i + 3] = 0;
-	s16[6 * i + 4] = convert (f[i + 512]);
-	s16[6 * i + 5] = convert (f[i]);
+        s16[6 * i] = convert (f[i + 256]);
+        s16[6 * i + 1] = convert (f[i + 768]);
+        s16[6 * i + 2] = s16[6 * i + 3] = 0;
+        s16[6 * i + 4] = convert (f[i + 512]);
+        s16[6 * i + 5] = convert (f[i]);
       }
       break;
     case A52_2F2R | A52_LFE:
       for (i = 0; i < 256; i++) {
-	s16[6 * i] = convert (f[i + 256]);
-	s16[6 * i + 1] = convert (f[i + 512]);
-	s16[6 * i + 2] = convert (f[i + 768]);
-	s16[6 * i + 3] = convert (f[i + 1024]);
-	s16[6 * i + 4] = 0;
-	s16[6 * i + 5] = convert (f[i]);
+        s16[6 * i] = convert (f[i + 256]);
+        s16[6 * i + 1] = convert (f[i + 512]);
+        s16[6 * i + 2] = convert (f[i + 768]);
+        s16[6 * i + 3] = convert (f[i + 1024]);
+        s16[6 * i + 4] = 0;
+        s16[6 * i + 5] = convert (f[i]);
       }
       break;
     case A52_3F2R | A52_LFE:
       for (i = 0; i < 256; i++) {
-	s16[6 * i] = convert (f[i + 256]);
-	s16[6 * i + 1] = convert (f[i + 768]);
-	s16[6 * i + 2] = convert (f[i + 1024]);
-	s16[6 * i + 3] = convert (f[i + 1280]);
-	s16[6 * i + 4] = convert (f[i + 512]);
-	s16[6 * i + 5] = convert (f[i]);
+        s16[6 * i] = convert (f[i + 256]);
+        s16[6 * i + 1] = convert (f[i + 768]);
+        s16[6 * i + 2] = convert (f[i + 1024]);
+        s16[6 * i + 3] = convert (f[i + 1280]);
+        s16[6 * i + 4] = convert (f[i + 512]);
+        s16[6 * i + 5] = convert (f[i]);
       }
       break;
   }
@@ -341,7 +341,7 @@ gst_a52dec_reneg (GstPad * pad, int channels, int rate)
 {
   GST_INFO (GST_CAT_PLUGIN_INFO, "a52dec: reneg channels:%d rate:%d\n", channels, rate);
 
-  gst_pad_try_set_caps (pad, 
+  if (gst_pad_try_set_caps (pad, 
 		  GST_CAPS_NEW ("a52dec_src_caps",
 			        "audio/raw",
 				  "format", 	GST_PROPS_STRING ("int"),
@@ -352,7 +352,9 @@ gst_a52dec_reneg (GstPad * pad, int channels, int rate)
 				  "depth", 	GST_PROPS_INT (16),
 				  "channels", 	GST_PROPS_INT (channels),
 				  "rate", 	GST_PROPS_INT (rate))
-		    );
+		    ) <= 0) {
+    gst_element_error (GST_PAD_PARENT (pad), "could not set caps on source pad, aborting...");
+  }
 }
 
 static void
@@ -383,9 +385,10 @@ gst_a52dec_loop (GstElement *element)
   GstA52Dec *a52dec;
   guint8 *data;
   int i, length, flags, sample_rate, bit_rate;
-  int stream_channels;
+  int channels;
   GstBuffer *buf;
   guint32 got_bytes;
+  gboolean need_reneg;
 
   a52dec = GST_A52DEC (element);
 
@@ -404,25 +407,21 @@ gst_a52dec_loop (GstElement *element)
     else
       break;
 
-    /* FIXME this can potentially be an infinite loop, we have to
-     * insert a yield operations here */
+    /* FIXME this can potentially be an infinite loop, we might
+     * have to insert a yield operation here */
   }
 
-  /* check if params have changed since last call */
-  stream_channels = flags & A52_CHANNEL_MASK;
+  need_reneg = FALSE;
 
-  if ((sample_rate     != a52dec->sample_rate) ||
-      (bit_rate        != a52dec->bit_rate) || 
-      (stream_channels != a52dec->stream_channels)) 
-  {
+  if (a52dec->sample_rate != sample_rate) {
+    need_reneg = TRUE;
     a52dec->sample_rate = sample_rate;
-    a52dec->bit_rate = bit_rate;
-    a52dec->stream_channels = stream_channels;
-    /* FIXME force stereo for now */
-    a52dec->req_channels = A52_STEREO;
-    gst_a52dec_reneg (a52dec->srcpad,
-		      gst_a52dec_channels (a52dec->req_channels), a52dec->sample_rate);
   }
+
+  a52dec->stream_channels = flags & A52_CHANNEL_MASK;
+
+  /* FIXME: perhaps this change should be announced? */
+  a52dec->bit_rate = bit_rate;
 
   /* read the header + rest of frame */
   got_bytes = gst_bytestream_read (a52dec->bs, &buf, length);
@@ -433,7 +432,7 @@ gst_a52dec_loop (GstElement *element)
   data = GST_BUFFER_DATA (buf);
 
   /* process */
-  flags = a52dec->req_channels | A52_ADJUST_LEVEL;
+  flags = a52dec->request_channels | A52_ADJUST_LEVEL;
   a52dec->level = 1;
 
   if (a52_frame (a52dec->state, data, &flags, &a52dec->level, a52dec->bias)) {
@@ -441,8 +440,18 @@ gst_a52dec_loop (GstElement *element)
     goto end;
   }
 
-  if ((flags & A52_CHANNEL_MASK) != a52dec->req_channels) {
-    gst_a52dec_reneg (a52dec->srcpad, gst_a52dec_channels (flags), a52dec->sample_rate);
+  channels = flags & A52_CHANNEL_MASK;
+
+  if (a52dec->using_channels != channels) {
+    need_reneg = TRUE;
+    a52dec->using_channels = channels;
+  }
+
+  if (need_reneg == TRUE) {
+    fprintf (stderr, "a52dec reneg: sample_rate:%d stream_chans:%d using_chans:%d\n",
+        a52dec->sample_rate, a52dec->stream_channels, a52dec->using_channels);
+    gst_a52dec_reneg (a52dec->srcpad,
+        gst_a52dec_channels (a52dec->using_channels), a52dec->sample_rate);
   }
 
   if (a52dec->dynamic_range_compression == FALSE) {
@@ -455,7 +464,9 @@ gst_a52dec_loop (GstElement *element)
       continue;
     }
     /* push on */
-    gst_a52dec_push (a52dec->srcpad, a52dec->req_channels, a52dec->samples, GST_BUFFER_TIMESTAMP (buf));
+    if (gst_a52dec_push (a52dec->srcpad, a52dec->using_channels, a52dec->samples, GST_BUFFER_TIMESTAMP (buf))) {
+      g_warning ("a52dec push error\n");
+    }
   }
 
 end:
@@ -477,8 +488,10 @@ gst_a52dec_change_state (GstElement * element)
       a52dec->samples = a52_samples (a52dec->state);
       a52dec->bit_rate = -1;
       a52dec->sample_rate = -1;
-      a52dec->stream_channels = -1;
-      a52dec->req_channels = -1;
+      a52dec->stream_channels = A52_CHANNEL;
+      /* FIXME force stereo for now */
+      a52dec->request_channels = A52_STEREO;
+      a52dec->using_channels = A52_CHANNEL;
       a52dec->level = 1;
       a52dec->bias = 384;
       break;

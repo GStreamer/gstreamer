@@ -21,7 +21,6 @@
 #ifndef __GST_A52DEC_H__
 #define __GST_A52DEC_H__
 
-
 #include <config.h>
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
@@ -29,7 +28,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
 
 #define GST_TYPE_A52DEC \
   (gst_a52dec_get_type())
@@ -53,7 +51,8 @@ struct _GstA52Dec {
   int bit_rate;
   int sample_rate;
   int stream_channels;
-  int req_channels;
+  int request_channels;
+  int using_channels;
   sample_t level;
   sample_t bias;
   gboolean dynamic_range_compression;
@@ -69,6 +68,5 @@ struct _GstA52DecClass {
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
 
 #endif /* __GST_A52DEC_H__ */
