@@ -1,3 +1,11 @@
+2004-12-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* ext/speex/gstspeexdec.h:
+	* ext/speex/gstspeexenc.h:
+	  Fixes #158382.  Make speex plugin compatible with both 1.0 and 1.1.
+	  Fix detection code in configure.ac
+
 2004-12-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/matroska/matroska-demux.c:
