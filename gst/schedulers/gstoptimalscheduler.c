@@ -1286,7 +1286,12 @@ get_group_schedule_function (int argc, char *argv[])
 {
   GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) argv;
   GstElement *entry = group->entry;
-  const GList *pads = gst_element_get_pad_list (entry);
+  const GList *pads;
+
+  /* what if the entry point disappeared? */
+  if (!entry)
+    return 0;
+  pads = gst_element_get_pad_list (entry);
 
   GST_LOG ("executing get-based group %p", group);
 
