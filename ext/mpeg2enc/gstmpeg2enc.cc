@@ -229,6 +229,7 @@ gst_mpeg2enc_loop (GstElement *element)
 
   if (!enc->encoder) {
     const GstCaps *caps;
+    GstCaps *othercaps;
     GstData *data;
 
     /* make sure we've had data */
@@ -246,8 +247,8 @@ gst_mpeg2enc_loop (GstElement *element)
 					caps, enc->srcpad);
 
     /* and set caps on other side */
-    caps = enc->encoder->getFormat ();
-    if (gst_pad_set_explicit_caps (enc->srcpad, caps) <= 0) {
+    othercaps = enc->encoder->getFormat ();
+    if (gst_pad_set_explicit_caps (enc->srcpad, othercaps) <= 0) {
       gst_element_error (element,
 			 "Failed to set up encoder properly");
       delete enc->encoder;
