@@ -235,10 +235,7 @@ else
   dnl Assume only suitable flags result from artsc-config --cflags
   artsc_save_CPPFLAGS=$CPPFLAGS
   CPPFLAGS="$CPPFLAGS $ARTSC_CFLAGS"
-  AC_CHECK_HEADER(artsc.h,
-		  HAVE_ARTSC=yes,
-		  HAVE_ARTSC=no
-  )
+  AC_CHECK_HEADER(artsc.h, HAVE_ARTSC=yes, HAVE_ARTSC=no)
   CPPFLAGS=$artsc_save_CPPFLAGS
 fi
 AC_SUBST(ARTSC_LIBS)
@@ -251,6 +248,47 @@ AC_ARG_ENABLE(artsd,
 	*) AC_MSG_ERROR(bad value ${enableval} for --enable-artsd) ;;
 	esac],
 [:])
+
+
+dnl Check for arts
+AC_MSG_CHECKING(arts library)
+
+dnl Set the flags
+ARTS_LIBS="-L/usr/local/lib -L/usr/lib -lmcop -lartsflow -lartsflow_idl"
+ARTS_CFLAGS="-I/usr/local/include/arts -I/usr/include/kde/arts -I/usr/include/arts"
+ARTS_MCOPFLAGS=$ARTS_CFLAGS
+dnl There's no arts-config script, so we make a guess based on the artsc-config
+if test x$ARTSC_CONFIG = xyes; then
+  ARTS_ARTSC_CFLAGS=`artsc-config --cflags | sed 's/artsc/arts/g'`
+  ARTS_CFLAGS="$ARTS_CFLAGS $ARTS_ARTSC_CFLAGS"
+  ARTS_MCOPFLAGS="$ARTS_MCOPFLAGS $ARTS_ARTSC_CFLAGS"
+fi
+AC_SUBST(ARTS_LIBS)
+AC_SUBST(ARTS_CFLAGS)
+AC_SUBST(ARTS_MCOPFLAGS)
+dnl Now check if it exists
+SUBSTFOR configure.ac:AC_LANG_PUSH(C++)
+SUBSTFOR configure.in:AC_LANG_SAVE
+SUBSTFOR configure.in:AC_LANG_CPLUSPLUS
+HAVE_ARTS=yes
+dnl FIXME: Can't get this test to pass, so commented it out.  Rely on header check.
+dnl AC_CHECK_LIB(artsflow, convert_stereo_2float_i16le, :, HAVE_ARTS=no, $LIBS)
+
+dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
+dnl Assume only suitable flags result from artsc-config --cflags
+arts_save_CPPFLAGS=$CPPFLAGS
+CPPFLAGS="$CPPFLAGS $ARTS_CFLAGS"
+AC_CHECK_HEADER(artsflow.h, :, HAVE_ARTS=no)
+CPPFLAGS=$arts_save_CPPFLAGS
+
+SUBSTFOR configure.ac:AC_LANG_POP(C++)
+SUBSTFOR configure.in:AC_LANG_RESTORE
+dnl Check for the idl generator
+AC_CHECK_PROG(HAVE_MCOPIDL, mcopidl, yes, no)
+if test x$HAVE_MCOPIDL = xno; then
+  HAVE_ARTS=no
+fi
+
 
 dnl AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 
@@ -540,19 +578,6 @@ AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GL
 AC_CHECK_HEADER(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
 AC_CHECK_HEADER(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
 AC_CHECK_HEADER(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
-
-dnl Check for arts
-SUBSTFOR configure.ac:AC_DIAGNOSE([obsolete],[instead of using `AC_LANG', `AC_LANG_SAVE',
-SUBSTFOR configure.ac:and `AC_LANG_RESTORE', you should use `AC_LANG_PUSH' and `AC_LANG_POP'.])
-SUBSTFOR configure.ac:
-SUBSTFOR configure.ac:AC_LANG_PUSH(C++)
-SUBSTFOR configure.in:AC_LANG_SAVE
-SUBSTFOR configure.in:AC_LANG_CPLUSPLUS
-AC_MSG_CHECKING(arts library)
-dnl AC_CHECK_LIB(artsflow, convert_stereo_ifloat_2float, HAVE_ARTS=yes, HAVE_ARTS=no, -lmcop -lartsflow_idl)
-dnl AC_CHECK_HEADER(arts/artsflow.h, HAVE_ARTS=yes, HAVE_ARTS=no)
-SUBSTFOR configure.ac:AC_LANG_POP(C++)
-SUBSTFOR configure.in:AC_LANG_RESTORE
 
 dnl Check for libraw1394
 AC_MSG_CHECKING(raw1394 library)
