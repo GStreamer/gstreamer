@@ -1,5 +1,5 @@
 # FIXME : threads bytestream
-SUBDIRS = caps cleanup plugin elements clock refcounting ## dynparams
+SUBDIRS = caps plugin elements clock refcounting ## cleanup dynparams
 
 GST_PLUGIN_PATH = $(shell cd $(top_builddir) && pwd)
 TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(GST_PLUGIN_PATH) GST_REGISTRY=`pwd`/test-registry.xml

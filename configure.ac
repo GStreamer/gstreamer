@@ -252,6 +252,9 @@ AC_HELP_STRING([--disable-failing-tests],[disable building tests known to fail])
 esac], 
 [BUILD_FAILING_TESTS=yes]) dnl Default value
 AM_CONDITIONAL(BUILD_FAILING_TESTS, test "x$BUILD_FAILING_TESTS" = "xyes")
+if test x$BUILD_FAILING_TESTS = xyes; then
+  AC_MSG_WARN([building tests known to fail, use --disable-failing-tests to disable])
+fi
 
 AC_ARG_ENABLE(examples,
 AC_HELP_STRING([--disable-examples],[disable building examples]),
