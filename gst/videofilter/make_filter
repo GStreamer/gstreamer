@@ -19,7 +19,8 @@ open OUT, ">gst$template.c";
 map { s/Videotemplate/$Template/g;
 	s/videotemplate/$template/g;
 	s/VIDEOTEMPLATE/$TEMPLATE/g;
-	s/\$Id$/$1/g;
+	# remember to break up the Id: in the line below
+	s/\$I[d]: (.*)\$/$1/g;
 } @lines;
 
 print OUT @lines;
