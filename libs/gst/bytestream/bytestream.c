@@ -69,7 +69,7 @@ gst_bytestream_destroy (GstByteStream * bs)
   GSList *walk;
 
   if (bs->event)
-    gst_event_free (bs->event);
+    gst_event_unref (bs->event);
 
   walk = bs->buflist;
   while (walk) {
