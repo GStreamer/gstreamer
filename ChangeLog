@@ -1,3 +1,14 @@
+2004-05-15  Jan Schmidt  <thaytan@mad.scientisti.com>
+	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_method_get_type),
+	(gst_pixbufscale_get_type), (gst_pixbufscale_base_init),
+	(gst_pixbufscale_class_init), (gst_pixbufscale_getcaps),
+	(gst_pixbufscale_link), (gst_pixbufscale_init),
+	(gst_pixbufscale_handle_src_event), (pixbufscale_scale),
+	(gst_pixbufscale_chain), (gst_pixbufscale_set_property),
+	(gst_pixbufscale_get_property), (pixbufscale_init):
+	* ext/gdk_pixbuf/pixbufscale.h:
+	Add these files I forgot earlier
+
 2004-05-15  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/gdk_pixbuf/Makefile.am:
 	* ext/gdk_pixbuf/gstgdkpixbuf.c: (plugin_init):
