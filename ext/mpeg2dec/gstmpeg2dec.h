@@ -84,8 +84,8 @@ struct _GstMpeg2dec {
   gint64	 total_frames;
   gint64	 frame_period;
 
-  GstCache	*cache;
-  gint		 cache_id;
+  GstIndex	*index;
+  gint		 index_id;
 };
 
 struct _GstMpeg2decClass {

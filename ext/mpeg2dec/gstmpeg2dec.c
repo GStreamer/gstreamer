@@ -92,8 +92,8 @@ static void		gst_mpeg2dec_set_property	(GObject *object, guint prop_id,
 							 const GValue *value, GParamSpec *pspec);
 static void		gst_mpeg2dec_get_property	(GObject *object, guint prop_id, 
 							 GValue *value, GParamSpec *pspec);
-static void 		gst_mpeg2dec_set_cache 		(GstElement *element, GstCache *cache);
-static GstCache*	gst_mpeg2dec_get_cache 		(GstElement *element);
+static void 		gst_mpeg2dec_set_index 		(GstElement *element, GstIndex *index);
+static GstIndex*	gst_mpeg2dec_get_index 		(GstElement *element);
 
 static const GstFormat*
 			gst_mpeg2dec_get_src_formats 	(GstPad *pad);
@@ -162,8 +162,8 @@ gst_mpeg2dec_class_init(GstMpeg2decClass *klass)
   gobject_class->dispose 	= gst_mpeg2dec_dispose;
 
   gstelement_class->change_state = gst_mpeg2dec_change_state;
-  gstelement_class->set_cache 	 = gst_mpeg2dec_set_cache;
-  gstelement_class->get_cache 	 = gst_mpeg2dec_get_cache;
+  gstelement_class->set_index 	 = gst_mpeg2dec_set_index;
+  gstelement_class->get_index 	 = gst_mpeg2dec_get_index;
 }
 
 static void
@@ -205,21 +205,21 @@ gst_mpeg2dec_dispose (GObject *object)
 }
 
 static void
-gst_mpeg2dec_set_cache (GstElement *element, GstCache *cache)
+gst_mpeg2dec_set_index (GstElement *element, GstIndex *index)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (element);
   
-  mpeg2dec->cache = cache;
+  mpeg2dec->index = index;
 
-  gst_cache_get_writer_id (cache, GST_OBJECT (element), &mpeg2dec->cache_id);
+  gst_index_get_writer_id (index, GST_OBJECT (element), &mpeg2dec->index_id);
 }
 
-static GstCache*
-gst_mpeg2dec_get_cache (GstElement *element)
+static GstIndex*
+gst_mpeg2dec_get_index (GstElement *element)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (element);
 
-  return mpeg2dec->cache;
+  return mpeg2dec->index;
 }
 
 static gboolean
@@ -428,8 +428,8 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
           }
 	}
 
-	if (mpeg2dec->cache && pts != GST_CLOCK_TIME_NONE) {
-          gst_cache_add_association (mpeg2dec->cache, mpeg2dec->cache_id,
+	if (mpeg2dec->index && pts != GST_CLOCK_TIME_NONE) {
+          gst_index_add_association (mpeg2dec->index, mpeg2dec->index_id,
 	                             (key_frame ? GST_ACCOCIATION_FLAG_KEY_UNIT : 0),
 	                             GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buf),
 	                             GST_FORMAT_TIME, pts, 0);
