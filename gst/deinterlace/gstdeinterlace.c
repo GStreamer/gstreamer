@@ -48,7 +48,7 @@ enum
   ARG_DI_ONLY,
   ARG_BLEND,
   ARG_THRESHOLD,
-  ARG_EDGE_DETECT,
+  ARG_EDGE_DETECT
 };
 
 static GstStaticPadTemplate deinterlace_src_factory =

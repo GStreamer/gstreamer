@@ -53,7 +53,7 @@ enum
 {
   ARG_0,
   ARG_LENGTH,
-  ARG_FREQUENCY,
+  ARG_FREQUENCY
 };
 
 #define GST_TYPE_LPWSINC \

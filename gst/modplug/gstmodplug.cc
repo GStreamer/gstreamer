@@ -91,7 +91,7 @@ enum
 {
   MODPLUG_STATE_NEED_TUNE = 1,
   MODPLUG_STATE_LOAD_TUNE = 2,
-  MODPLUG_STATE_PLAY_TUNE = 3,
+  MODPLUG_STATE_PLAY_TUNE = 3
 };
 
 static void gst_modplug_base_init (GstModPlugClass * klass);

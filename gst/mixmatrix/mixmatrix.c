@@ -79,7 +79,7 @@ enum
 {
   /* FILL ME */
   RESIZE_SIGNAL,
-  LAST_SIGNAL,
+  LAST_SIGNAL
 };
 
 enum
@@ -89,7 +89,7 @@ enum
   ARG_OUTSIZE,
   ARG_SINKPADS,
   ARG_SRCPADS,
-  ARG_MATRIXPTR,
+  ARG_MATRIXPTR
 };
 
 static GstStaticPadTemplate mixmatrix_sink_template =

@@ -29,7 +29,7 @@ enum
   BOX_VERTICAL = 1,
   BOX_HORIZONTAL = 2,
   BOX_CLOCK = 3,
-  TRIGANLE_LINEAR = 4,
+  TRIGANLE_LINEAR = 4
 };
 
 static gint boxes_1b[][7] = {

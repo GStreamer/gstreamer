@@ -122,8 +122,8 @@ enum
 
 enum
 {
-  ARG_0,
-  /* FILL ME */
+  ARG_0
+      /* FILL ME */
 };
 
 static GstElementClass *parent_class = NULL;

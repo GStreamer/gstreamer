@@ -74,7 +74,7 @@ enum
 
 enum
 {
-  ARG_0,
+  ARG_0
 };
 
 static void gst_xsharpen_class_init (GstXsharpenClass * klass);

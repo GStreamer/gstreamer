@@ -41,7 +41,7 @@ enum
 enum
 {
   ARG_0,
-  ARG_WIDTH,
+  ARG_WIDTH
 };
 
 

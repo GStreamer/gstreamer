@@ -79,8 +79,8 @@ enum
   ARG_LEFT,
   ARG_RIGHT,
   ARG_TOP,
-  ARG_BOTTOM,
-  /* FILL ME */
+  ARG_BOTTOM
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate gst_video_crop_src_template =

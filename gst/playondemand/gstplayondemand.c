@@ -137,7 +137,7 @@ enum
   PROP_MAX_PLAYS,
   PROP_TICK_RATE,
   PROP_TOTAL_TICKS,
-  PROP_TICKS,
+  PROP_TICKS
 };
 
 static guint gst_pod_filter_signals[LAST_SIGNAL] = { 0 };

@@ -105,7 +105,7 @@ enum QtDemuxState
   QTDEMUX_STATE_SEEKING,
   QTDEMUX_STATE_MOVIE,
   QTDEMUX_STATE_SEEKING_EOS,
-  QTDEMUX_STATE_EOS,
+  QTDEMUX_STATE_EOS
 };
 
 static GNode *qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc);

@@ -71,7 +71,7 @@ enum
   ARG_TYPE,
   ARG_BORDER,
   ARG_DEPTH,
-  ARG_FPS,
+  ARG_FPS
 };
 
 #define GST_TYPE_SMPTE_TRANSITION_TYPE (gst_smpte_transition_type_get_type())

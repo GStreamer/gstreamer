@@ -41,7 +41,7 @@ enum
 enum
 {
   ARG_0,
-  ARG_QUALITY,
+  ARG_QUALITY
 };
 
 

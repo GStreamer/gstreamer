@@ -88,8 +88,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_SKIP,
-  /* FILL ME */
+  ARG_SKIP
+      /* FILL ME */
 };
 
 enum

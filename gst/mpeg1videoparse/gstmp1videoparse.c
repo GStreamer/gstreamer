@@ -70,8 +70,8 @@ enum
 
 enum
 {
-  ARG_0,
-  /* FILL ME */
+  ARG_0
+      /* FILL ME */
 };
 
 static void gst_mp1videoparse_class_init (Mp1VideoParseClass * klass);

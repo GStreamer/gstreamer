@@ -42,7 +42,7 @@ enum
   ARG_A,
   ARG_B,
   ARG_GAIN,
-  ARG_STAGES,
+  ARG_STAGES
 };
 
 #define GST_TYPE_IIR \
