@@ -98,6 +98,7 @@ gst_gl_rgbimage_get_caps (GstImageInfo *info)
   XImage *ximage;
   GstGLImageInfo *xinfo = gst_gl_rgbimage_info (info);
   
+  g_warning("rgbimage get caps called, context %p, endianness %d !\n", glXGetCurrentContext(), G_BIG_ENDIAN);
   /* we don't handle this image information */
   if (xinfo == NULL) return NULL;
 
@@ -122,9 +123,9 @@ gst_gl_rgbimage_get_caps (GstImageInfo *info)
 		    "format",          GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
 		    "depth",        GST_PROPS_INT(24),
 		    "bpp",          GST_PROPS_INT(24),
-		    "red_mask",        GST_PROPS_INT(0xff0000),
+		    "red_mask",        GST_PROPS_INT(0xff),
 		    "green_mask",        GST_PROPS_INT(0xff00),
-		    "blue_mask",        GST_PROPS_INT(0xff),
+		    "blue_mask",        GST_PROPS_INT(0xff0000),
 		    "endianness",  GST_PROPS_INT(G_BIG_ENDIAN), /*= 1234/4321 (INT) <- endianness */
 		    
 		    "width",      GST_PROPS_INT_RANGE (0, TEX_XSIZE), /* can't have videos larger than TEX_SIZE */
@@ -133,7 +134,7 @@ gst_gl_rgbimage_get_caps (GstImageInfo *info)
     XDestroyImage (ximage);
   }
   
-  GST_DEBUG ("GL_RGBImage: returning caps at %p", caps);
+  printf ("GL_RGBImage: returning caps at %p", caps);
   return caps;
 }
 
@@ -245,13 +246,13 @@ gst_gl_rgbimage_put_image (GstImageInfo *info, GstImageData *image)
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glTranslatef(0.0, 0.0, -25.0);
+  glTranslatef(0.0, 0.0, -5.0);
 
   glEnable(GL_TEXTURE_2D);
 
   if (xinfo->info.demo)
     {
-
+      glTranslatef(0.0, 0.0, -5.0); // make it avoid the clipping plane, zoom 2.0 instead
       glRotatef(180.0*sin(xinfo->rotX),1,0,0);
       glRotatef(180.0*cos(xinfo->rotY),0,1,0);
 
@@ -259,12 +260,11 @@ gst_gl_rgbimage_put_image (GstImageInfo *info, GstImageData *image)
       xinfo->rotY -= 0.015;
       float zoom = xinfo->zoom;
       glScalef(zoom,zoom,zoom); 
-      //glScalef(0.1,0.1,0.1); 
 
-      if (xinfo->zoom > 1.0)
+      if (xinfo->zoom > 2.0)
 	xinfo->zoomdir = -0.01;
 
-      if (xinfo->zoom < 0.5)
+      if (xinfo->zoom < 1.0)
 	xinfo->zoomdir = 0.01;
 
       xinfo->zoom += xinfo->zoomdir;
@@ -278,7 +278,7 @@ gst_gl_rgbimage_put_image (GstImageInfo *info, GstImageData *image)
   ymax = (float)im->conn->h/TEX_YSIZE;
 
   float aspect = img_width/(float)img_height;
-  float hor = 4 * aspect;
+  float hor = aspect;
 
   glColor4f(1,1,1,1);
   glBegin(GL_QUADS);
@@ -286,16 +286,16 @@ gst_gl_rgbimage_put_image (GstImageInfo *info, GstImageData *image)
   glNormal3f(0, -1, 0);
   
   glTexCoord2f(xmax, 0);
-  glVertex3f(hor,4,0);
+  glVertex3f(hor,1,0);
 
   glTexCoord2f(0, 0);
-  glVertex3f(-hor,4,0);
+  glVertex3f(-hor,1,0);
 
   glTexCoord2f(0, ymax);
-  glVertex3f(-hor,-4,0);
+  glVertex3f(-hor,-1,0);
 
   glTexCoord2f(xmax, ymax);
-  glVertex3f(hor,-4,0);
+  glVertex3f(hor,-1,0);
   glEnd();
 
   if (xinfo->info.dumpvideo)

@@ -44,6 +44,38 @@ GLfloat LightDiffuse[] = { 0.6, 0.6, 0.6, 1.0 };  /* bluish  diffuse light. */
 GLfloat LightPosition[] = { 1.5, 1.5, 1.5, 0.0 };    /* position */
 
 
+void
+gst_glxwindow_unhook_context(GstImageInfo *info)
+{
+  GstGLImageInfo *window = (GstGLImageInfo *) info;
+
+  if (window->ctx)
+    {
+      if (!glXMakeCurrent(window->dpy, None, NULL))
+        {
+	  printf("Could not release drawing context.\n");
+        }
+      else
+	  printf("Released drawing context.\n");
+    }
+}
+
+void
+gst_glxwindow_hook_context(GstImageInfo *info)
+{
+  GstGLImageInfo *window = (GstGLImageInfo *) info;
+
+  if (window->ctx && window->win && window->ctx)
+    {
+      if (!glXMakeCurrent(window->dpy, window->win, window->ctx))
+        {
+	  printf("Could not acquire GLX drawing context.\n");
+        }
+      else
+	  printf("Acquired drawing context.\n");
+    }
+}
+
 static void
 gst_glxwindow_free (GstImageInfo *info)
 {
@@ -92,7 +124,7 @@ gst_glxwindow_callback(GObject *object, GParamSpec *pspec, GstGLImageInfo *data)
       XMapRaised (data->dpy, data->win);
 
       // resize OpenGL
-      //g_warning("resizing in OpenGL");
+      g_warning("resizing in OpenGL");
       glViewport(0, 0, (GLint) w, (GLint) h);
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
@@ -205,7 +237,7 @@ gst_glxwindow_new (GstElement *sink)
   else
     GST_DEBUG ("Sorry, no Direct Rendering possible!\n");
 
-  GST_DEBUG("Initializing OpenGL parameters\n");
+  g_warning("Initializing OpenGL parameters\n");
   /* initialize OpenGL drawing */
   glEnable(GL_DEPTH_TEST);
   //glShadeModel(GL_SMOOTH);
