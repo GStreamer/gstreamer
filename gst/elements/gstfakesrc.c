@@ -49,6 +49,7 @@ enum {
   ARG_OUTPUT,
   ARG_PATTERN,
   ARG_NUM_BUFFERS,
+  ARG_SILENT
 };
 
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())
@@ -124,6 +125,8 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
                            GTK_ARG_READWRITE, ARG_PATTERN);
   gtk_object_add_arg_type ("GstFakeSrc::num_buffers", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_NUM_BUFFERS);
+  gtk_object_add_arg_type ("GstFakeSrc::silent", GTK_TYPE_BOOL,
+                           GTK_ARG_READWRITE, ARG_SILENT);
 
   gtkobject_class->set_arg = gst_fakesrc_set_arg;
   gtkobject_class->get_arg = gst_fakesrc_get_arg;
@@ -158,6 +161,7 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
     gst_pad_set_get_function(pad,gst_fakesrc_get);
 
   fakesrc->num_buffers = -1;
+  fakesrc->silent = FALSE;
   // we're ready right away, since we don't have any args...
 //  gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_READY);
 }
@@ -217,6 +221,9 @@ gst_fakesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_NUM_BUFFERS:
       src->num_buffers = GTK_VALUE_INT (*arg);
       break;
+    case ARG_SILENT:
+      src->silent = GTK_VALUE_BOOL (*arg);
+      break;
     default:
       break;
   }
@@ -247,6 +254,9 @@ gst_fakesrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
       break;
     case ARG_NUM_BUFFERS:
       GTK_VALUE_INT (*arg) = src->num_buffers;
+      break;
+    case ARG_SILENT:
+      GTK_VALUE_BOOL (*arg) = src->silent;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
@@ -284,7 +294,8 @@ gst_fakesrc_get(GstPad *pad)
       src->num_buffers--;
   }
 
-  g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
+  if (!src->silent)
+    g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
   buf = gst_buffer_new();
 
   gtk_signal_emit (GTK_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF],
@@ -324,11 +335,12 @@ gst_fakesrc_loop(GstElement *element)
       }
       else {
       if (src->num_buffers > 0)
-         src->num_buffers--;
+        src->num_buffers--;
       }
 
       buf = gst_buffer_new();
-      g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
+      if (!src->silent)
+        g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
 
       gtk_signal_emit (GTK_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF],
                                   src);
