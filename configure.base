@@ -540,7 +540,7 @@ AC_CHECK_HEADER(gsm.h, :,
 AC_SUBST(GSM_CFLAGS)
 AC_SUBST(GSM_LIBS)
 
-if test "x$HAVE_LIBGSM" == "xyes"; then
+if test "x$HAVE_LIBGSM" = "xyes"; then
   AC_DEFINE(HAVE_LIBGSM, 1, [Define if GSM library is available])
 else
   AC_MSG_WARN(
@@ -646,7 +646,7 @@ fi
 AC_SUBST(SDL_LIBS)
 AC_SUBST(SDL_CFLAGS)
 
-if test "x$HAVE_LIBSDL" == "xno"; then
+if test "x$HAVE_LIBSDL" = "xno"; then
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: sdlvideosink
 )
