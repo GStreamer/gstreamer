@@ -1,3 +1,10 @@
+2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/flac/gstflacdec.c:
+	* ext/libpng/gstpngenc.h:
+	* ext/mikmod/gstmikmod.h:
+	  OS X fixes (see #126628).
+
 2004-01-02  David Schleef  <ds@schleef.org>
 
 	* ext/alsa/gstalsasrc.c: (gst_alsa_src_pad_factory),
