@@ -81,8 +81,11 @@ gst_switch_request_new_pad (GstElement *element,
   if (name)
     g_free (name);
   
-  /* That pad will proxy caps */
-  gst_pad_set_getcaps_function (sinkpad, gst_pad_proxy_getcaps);
+  /* That pad will proxy caps and link */
+  gst_pad_set_link_function (sinkpad,
+                             GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
+  gst_pad_set_getcaps_function (sinkpad,
+                                GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   
   gst_element_add_pad (GST_ELEMENT (gstswitch), sinkpad);
   
@@ -97,6 +100,10 @@ gst_switch_request_new_pad (GstElement *element,
   gstswitch->sinkpads = g_list_insert (gstswitch->sinkpads, switchpad,
                                        gstswitch->nb_sinkpads);
   gstswitch->nb_sinkpads++;
+  
+  if (GST_PAD_CAPS (gstswitch->srcpad)) {
+    gst_pad_try_set_caps (sinkpad, GST_PAD_CAPS (gstswitch->srcpad));
+  }
   
   return sinkpad;
 }
@@ -238,7 +245,10 @@ gst_switch_init (GstSwitch *gstswitch)
 {
   gstswitch->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (gstswitch), gstswitch->srcpad);
-  gst_pad_set_getcaps_function (gstswitch->srcpad, gst_pad_proxy_getcaps);
+  gst_pad_set_link_function (gstswitch->srcpad,
+                             GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
+  gst_pad_set_getcaps_function (gstswitch->srcpad,
+                                GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_element_set_loop_function (GST_ELEMENT (gstswitch), gst_switch_loop);
   
   gstswitch->sinkpads = NULL;
