@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 7, 0, 1, GST_CVS="no", CVS="yes")
+AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 7, 0, 1, GST_CVS="no", GST_CVS="yes")
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
 dnl our libraries and install dirs use major.minor as a version
@@ -315,9 +315,12 @@ GST_CHECK_FEATURE(QCAM, [QuickCam], qcamsrc, [
   if test "x$HAVE_CPU_I386" != "xyes";
   then
     HAVE_QCAM="no"
-    AC_MSG_WARN([QuickCam only works on i386])
   else
-    HAVE_QCAM="yes"
+    AC_CHECK_HEADER(sys/io.h, HAVE_QCAM="yes", HAVE_QCAM="no")
+  fi
+  if test "x$HAVE_QCAM" != "xyes";
+  then
+    AC_MSG_WARN([QuickCam only works on i386-linux])
   fi
 ])
 
