@@ -345,8 +345,9 @@ gst_gdk_animation_iter_may_advance (GstGdkAnimationIter * iter)
 
   data_amount = lseek (iter->ani->temp_fd, 0, SEEK_CUR);
   g_assert (data_amount >= 0);
-  g_assert (gst_element_query (gst_bin_get_by_name (GST_BIN (iter->pipeline),
-              "source"), GST_QUERY_POSITION, &bytes, &offset));
+  if (!gst_element_query (gst_bin_get_by_name (GST_BIN (iter->pipeline),
+              "source"), GST_QUERY_POSITION, &bytes, &offset))
+    g_assert_not_reached ();
   if (data_amount - offset > GST_GDK_BUFFER_SIZE)
     return TRUE;
 
