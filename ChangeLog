@@ -1,3 +1,8 @@
+2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/divx/gstdivxenc.c: (gst_divxenc_setup), (gst_divxenc_chain):
+          fix for new error reporting
+
 2004-01-20  David Schleef  <ds@schleef.org>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents),
