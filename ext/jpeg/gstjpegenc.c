@@ -230,8 +230,10 @@ gst_jpegenc_getcaps (GstPad * pad)
   GstCaps *caps;
   const char *name;
   int i;
-  GstStructure *structure;
+  GstStructure *structure = NULL;
 
+  /* we want to proxy properties like width, height and framerate from the
+     other end of the element */
   otherpad = (pad == jpegenc->srcpad) ? jpegenc->sinkpad : jpegenc->srcpad;
   caps = gst_pad_get_allowed_caps (otherpad);
   if (pad == jpegenc->srcpad) {
@@ -246,6 +248,11 @@ gst_jpegenc_getcaps (GstPad * pad)
     gst_structure_remove_field (structure, "format");
   }
 
+  /* ... but for the sink pad, we only do I420 anyway, so add that */
+  if (pad == jpegenc->sinkpad) {
+    gst_structure_set (structure, "format", GST_TYPE_FOURCC,
+        GST_STR_FOURCC ("I420"), NULL);
+  }
   return caps;
 }
 
