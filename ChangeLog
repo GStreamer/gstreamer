@@ -1,5 +1,13 @@
 2004-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/Makefile.am:
+	* testsuite/caps/filtercaps.c: (main):
+	* testsuite/clock/clock1.c: (main):
+	* testsuite/dynparams/dparamstest.c: (gst_dptest_chain), (main):
+	  fix some more tests
+
+2004-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/cleanup/cleanup1.c: (create_pipeline):
 	* testsuite/cleanup/cleanup2.c: (create_pipeline):
 	* testsuite/cleanup/cleanup4.c: (main):

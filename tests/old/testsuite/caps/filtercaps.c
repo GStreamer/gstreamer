@@ -23,13 +23,17 @@ main (gint argc, gchar ** argv)
 {
   GstCaps *caps;
   GstElement *sink, *identity;
+  GstElement *pipeline;
 
   gst_init (&argc, &argv);
 
+  pipeline = gst_pipeline_new ("pipeline");
+  g_assert (pipeline);
   identity = gst_element_factory_make ("identity", NULL);
   g_assert (identity);
   sink = gst_element_factory_make ("fakesink", NULL);
   g_assert (sink);
+  gst_bin_add_many (GST_BIN (pipeline), identity, sink, NULL);
   gst_element_link_filtered (identity, sink,
       gst_caps_new_simple ("audio/x-raw-int", NULL));
   caps = gst_pad_get_caps (gst_element_get_pad (identity, "sink"));

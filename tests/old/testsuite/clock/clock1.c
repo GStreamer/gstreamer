@@ -40,8 +40,8 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  gst_element_link_many (src, id, sink, NULL);
   gst_bin_add_many (GST_BIN (pipeline), src, id, sink, NULL);
+  gst_element_link_many (src, id, sink, NULL);
 
   clock = gst_bin_get_clock (GST_BIN (pipeline));
   g_assert (clock != NULL);

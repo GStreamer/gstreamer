@@ -253,13 +253,8 @@ main (int argc, char *argv[])
   testelement = gst_element_factory_make ("dptest", "testelement");
   g_assert (testelement);
 
-  gst_element_link (src, testelement);
-  gst_element_link (testelement, sink);
-
-  gst_bin_add (GST_BIN (pipeline), src);
-  gst_bin_add (GST_BIN (pipeline), testelement);
-  gst_bin_add (GST_BIN (pipeline), sink);
-
+  gst_bin_add_many (GST_BIN (pipeline), src, testelement, sink, NULL);
+  gst_element_link_many (src, testelement, sink, NULL);
 
   g_object_set (G_OBJECT (src), "num_buffers", 1, NULL);
 

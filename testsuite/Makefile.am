@@ -13,14 +13,21 @@ else
 GST_DEBUG_DIRS = debug
 endif
 
-SUBDIRS = bins bytestream cleanup dynparams ghostpads \
-	caps plugin elements clock refcounting tags threads \
-	indexers debug $(GST_PARSE_DIRS) $(GST_DEBUG_DIRS) \
-	dlopen negotiation schedulers
+SUBDIRS = \
+	bins bytestream caps cleanup clock \
+	$(GST_DEBUG_DIRS) \
+	dlopen dynparams \
+	elements ghostpads indexers negotiation \
+	$(GST_PARSE_DIRS) \
+	plugin refcounting schedulers tags threads
 
-DIST_SUBDIRS = bins bytestream caps cleanup clock dynparams elements indexers \
-		plugin refcounting tags threads parse debug ghostpads \
-		dlopen negotiation schedulers
+DIST_SUBDIRS = \
+	bins bytestream caps cleanup clock \
+	debug \
+	dlopen dynparams \
+	elements ghostpads indexers negotiation \
+	parse \
+	plugin refcounting schedulers tags threads
 
 tests_pass = test_gst_init
 tests_fail = 
