@@ -294,7 +294,6 @@ gst_mad_class_init (GstMadClass *klass)
   g_object_class_install_property (gobject_class, ARG_CHANNELS,
     g_param_spec_enum ("channels", "Channels", "number of channels",
                        GST_TYPE_MAD_CHANNELS, 0, G_PARAM_READABLE));
-  
 }
 
 static void
@@ -359,7 +358,7 @@ gst_mad_get_formats (GstPad *pad)
     GST_FORMAT_TIME,
     0
   };
-
+  
   return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
 
@@ -793,6 +792,9 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       {
 	gint n = GST_EVENT_DISCONT_OFFSET_LEN (event);
 	gint i;
+
+	if (!GST_PAD_IS_USABLE (mad->srcpad))
+          return;
 
 	for (i=0; i<n; i++) {
 	  if (gst_pad_handles_format (pad, GST_EVENT_DISCONT_OFFSET(event,i).format))
