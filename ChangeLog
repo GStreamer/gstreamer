@@ -1,3 +1,14 @@
+2004-10-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_add),
+	(gst_multifdsink_remove), (gst_multifdsink_remove_client_link),
+	(is_sync_frame), (gst_multifdsink_new_client),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_recover_client), (gst_multifdsink_queue_buffer),
+	(gst_multifdsink_handle_clients), (gst_multifdsink_change_state):
+	Turn warnings into info.
+	Don't allow a state change in the streaming thread.
+
 2004-10-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/vorbis/oggvorbisenc.c:
