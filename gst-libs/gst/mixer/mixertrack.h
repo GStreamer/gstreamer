@@ -46,6 +46,13 @@ G_BEGIN_DECLS
  * microphone, etc.). Channels are then single streams
  * within a track. A mono stream has one channel, a stereo
  * stream has two, etc.
+ *
+ * Input tracks can have 'recording' enabled, which means
+ * that any input will be hearable into the speakers that
+ * are attached to the output. Mute is obvious. A track
+ * flagged as master is the master volume track on this
+ * mixer, which means that setting this track will change
+ * the hearable volume on any output.
  */
 
 typedef enum {
@@ -53,6 +60,7 @@ typedef enum {
   GST_MIXER_TRACK_OUTPUT = (1<<1),
   GST_MIXER_TRACK_MUTE   = (1<<2),
   GST_MIXER_TRACK_RECORD = (1<<3),
+  GST_MIXER_TRACK_MASTER = (1<<4)
 } GstMixerTrackFlags;
 
 #define GST_MIXER_TRACK_HAS_FLAG(channel, flag) \
