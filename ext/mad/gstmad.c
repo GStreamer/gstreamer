@@ -55,6 +55,7 @@ struct _GstMad {
   guint64 total_samples; /* the number of samples since the sync point */
 
   gint64 seek_point;
+  gboolean restart;
 
   /* info */
   struct mad_header header;
@@ -246,6 +247,7 @@ gst_mad_init (GstMad *mad)
   mad->framecount = 0;
   mad->vbr_average = 0;
   mad->vbr_rate = 0;
+  mad->restart = FALSE;
 }
 
 static void
@@ -545,6 +547,10 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       }
 
       gst_pad_push (mad->srcpad, outbuffer);
+      if (mad->restart) {
+	mad->restart = FALSE;
+	goto end;
+      }
 next:
 
       /* figure out how many bytes mad consumed */
@@ -564,6 +570,7 @@ next:
     memmove (mad->tempbuffer, mad_input_buffer, mad->tempsize);
   }
 
+end:
   gst_buffer_unref (buffer);
 }
 
@@ -583,6 +590,7 @@ gst_mad_change_state (GstElement *element)
       mad_synth_init (&mad->synth);
       mad->tempsize = 0;
       mad->can_seek = FALSE;
+      mad->total_samples = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* do something to get out of the chain function faster */
@@ -595,6 +603,7 @@ gst_mad_change_state (GstElement *element)
       mad_stream_finish (&mad->stream);
       mad->sync_point = 0;
       mad->can_seek = FALSE;
+      mad->restart = TRUE;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
