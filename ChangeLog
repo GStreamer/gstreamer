@@ -13,7 +13,9 @@
 	* testsuite/caps/value_serialize.c: (test_string_deserialization):
 	  disable a test that tested the above and comment it
 
-2004-12-16  David Schleef  <ds@schleef.org>
+2004-12-16  Steve Lhomme <steve.lhomme@free.fr>
+
+	Patch reviewed by David Schleef  <ds@schleef.org>
 
 	* win32/gstenumtypes.c: Update from gst/gstenumtypes.c (See
 	bug #153882)
