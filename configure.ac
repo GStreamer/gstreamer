@@ -878,6 +878,7 @@ gst/vumeter/Makefile
 gst/wavparse/Makefile
 gst/y4m/Makefile
 sys/Makefile
+sys/cdrom/Makefile
 sys/dxr3/Makefile
 sys/oss/Makefile
 sys/qcam/Makefile
