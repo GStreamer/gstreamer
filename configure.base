@@ -1106,6 +1106,7 @@ gst/gstversion.h
 gst/types/Makefile
 gst/elements/Makefile
 gst/autoplug/Makefile
+swig/Makefile.PL
 libs/Makefile
 libs/riff/Makefile
 libs/getbits/Makefile
