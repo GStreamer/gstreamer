@@ -1,3 +1,10 @@
+2005-01-17  Luca Ognibene  <luogni@tin.it>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/registries/gstxmlregistry.c: (gst_xml_registry_load):
+	  Fix memleak (#163801).
+
 2005-01-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/elements/gsttee.c: (gst_tee_getcaps), (gst_tee_link):

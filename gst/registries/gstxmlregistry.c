@@ -698,6 +698,7 @@ gst_xml_registry_load (GstRegistry * registry)
 
   CLASS (xmlregistry)->close_func (xmlregistry);
 
+  g_markup_parse_context_free (xmlregistry->context);
 
   return TRUE;
 }
