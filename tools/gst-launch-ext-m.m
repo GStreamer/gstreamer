@@ -126,6 +126,7 @@ read_config ($0);
   "wmv", "asfdemux name=demux ! { queue ! spider ! $cfg{VIDEOSINK} } { demux. ! queue ! spider ! $cfg{AUDIOSINK} }",
   "mkv", "matroskademux name=demux ! { queue ! spider ! $cfg{VIDEOSINK} } { demux. ! queue ! spider ! $cfg{AUDIOSINK} }",
   "mka", "matroskademux ! spider ! $cfg{AUDIOSINK}",
+  "mov", "qtdemux name=demux { .video_00 ! queue ! spider ! $cfg{VIDEOSINK} } { demux. !  queue ! spider ! $cfg{AUDIOSINK} }",
 );
 
 if ($cfg{VISUALIZER}) {
