@@ -1530,8 +1530,8 @@ gst_alsa_open_audio (GstAlsa *this)
 
   ERROR_CHECK (snd_output_stdio_attach (&this->out, stderr, 0),
                "error opening log output: %s");
-  /* blocking i/o */
-  ERROR_CHECK (snd_pcm_open (&this->handle, this->device, this->stream, 0),
+  /* we use non-blocking i/o */
+  ERROR_CHECK (snd_pcm_open (&this->handle, this->device, this->stream, SND_PCM_NONBLOCK),
                "error opening pcm device %s: %s\n", this->device);
 
   GST_FLAG_SET (this, GST_ALSA_OPEN);
@@ -1690,6 +1690,8 @@ gst_alsa_start_audio (GstAlsa *this)
 static gboolean
 gst_alsa_drain_audio (GstAlsa *this)
 {
+  int err;
+
   g_assert (this != NULL);
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
@@ -1700,9 +1702,14 @@ gst_alsa_drain_audio (GstAlsa *this)
       (snd_pcm_state (this->handle) == SND_PCM_STATE_PAUSED ||
        snd_pcm_state (this->handle) == SND_PCM_STATE_XRUN ||
        snd_pcm_state (this->handle) == SND_PCM_STATE_RUNNING)) {
-    ERROR_CHECK (snd_pcm_drain (this->handle),
-                 "couldn't stop and drain buffer: %s");
     gst_alsa_clock_stop (this->clock);
+    /* snd_pcm_drain returns -EAGAIN in non-blocking mode while it outputs sound */
+    err = snd_pcm_drain (this->handle);
+    while (err == -EAGAIN) {
+      g_usleep (1000);
+      err = snd_pcm_drain (this->handle);
+    }
+    ERROR_CHECK (err, "couldn't stop and drain buffer: %s");
   }
 
   GST_FLAG_UNSET (this, GST_ALSA_RUNNING);  
@@ -1721,9 +1728,9 @@ gst_alsa_stop_audio (GstAlsa *this)
       (snd_pcm_state (this->handle) == SND_PCM_STATE_PAUSED ||
        snd_pcm_state (this->handle) == SND_PCM_STATE_XRUN ||
        snd_pcm_state (this->handle) == SND_PCM_STATE_RUNNING)) {
+    gst_alsa_clock_stop (this->clock);
     ERROR_CHECK (snd_pcm_drop (this->handle),
                  "couldn't stop (dropping frames): %s");
-    gst_alsa_clock_stop (this->clock);
   }
 
   GST_FLAG_UNSET (this, GST_ALSA_RUNNING);  
