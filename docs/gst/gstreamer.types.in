@@ -13,9 +13,9 @@ gst_thread_get_type
 gst_plugin_feature_get_type
 gst_autoplug_get_type
 gst_autoplug_factory_get_type
-gst_typefactory_get_type
+gst_type_factory_get_type
 gst_element_factory_get_type
 gst_scheduler_factory_get_type
 gst_scheduler_get_type
-gst_timecache_get_type
+gst_time_cache_get_type
 gst_xml_get_type
