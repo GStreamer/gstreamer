@@ -50,6 +50,8 @@ static void gst_xvimagesink_buffer_free (GstBuffer * buffer);
 static void gst_xvimagesink_xvimage_destroy (GstXvImageSink * xvimagesink,
     GstXvImage * xvimage);
 
+static void gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay,
+    XID xwindow_id);
 
 /* ElementFactory information */
 static GstElementDetails gst_xvimagesink_details =
@@ -1278,8 +1280,8 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
   g_assert (GST_VIDEOSINK_WIDTH (xvimagesink) > 0);
   g_assert (GST_VIDEOSINK_HEIGHT (xvimagesink) > 0);
   if (!xvimagesink->xwindow)
-    xvimagesink->xwindow = gst_xvimagesink_xwindow_new (xvimagesink,
-        GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
+    gst_xvimagesink_set_xwindow_id (GST_X_OVERLAY (xvimagesink),
+        xvimagesink->parent);
   else {
     if (xvimagesink->xwindow->internal)
       gst_xvimagesink_xwindow_resize (xvimagesink, xvimagesink->xwindow,
@@ -1642,6 +1644,7 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 
   if (xwindow)
     xvimagesink->xwindow = xwindow;
+  xvimagesink->parent = xwindow_id;
 }
 
 static void
@@ -1915,6 +1918,7 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
       gst_xvimagesink_buffer_alloc);
 
   xvimagesink->display_name = NULL;
+  xvimagesink->parent = 0;
   xvimagesink->xcontext = NULL;
   xvimagesink->xwindow = NULL;
   xvimagesink->xvimage = NULL;
