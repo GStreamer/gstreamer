@@ -133,6 +133,7 @@ struct _GstAlsa {
   GstPad *			pad[GST_ALSA_MAX_TRACKS];
 
   gchar *			device;
+  gchar *                       cardname;
   snd_pcm_t *			handle;
   snd_pcm_info_t *		info;
   guint				pcm_caps;	/* capabilities of the pcm device, see GstAlsaPcmCaps */
