@@ -84,6 +84,8 @@ gstreamer-decl.txt:
 
 scanobj: $(srcdir)/$(DOC_MODULE).types
 	rm gstreamer-scan.o; ln -s gstreamer-scan.lo gstreamer-scan.o
+	cd ../../gst/;$(MAKE) libgst.la
+	cd ../../gst/elements/;$(MAKE) libgstelements.la
 	env CC="$(LIBTOOL) $(CC)" CFLAGS="$(LIBGST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS) -I../../" LDFLAGS="$(GST_LIBS)"\
 	gtkdoc-scanobj --module=$(DOC_MODULE) 
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
@@ -121,9 +123,9 @@ install-data-local: gstreamer.html
 	fi)
 
 dist-hook: gstreamer.html
-	mkdir $(distdir)/html
-	mkdir $(distdir)/sgml
-	mkdir $(distdir)/tmpl
+	if ! test -d $(distdir)/html ; then mkdir $(distdir)/html ; fi
+	if ! test -d $(distdir)/sgml ; then mkdir $(distdir)/sgml ; fi
+	if ! test -d $(distdir)/tmpl ; then mkdir $(distdir)/tmpl ; fi
 	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
 	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
 	-cp $(srcdir)/sgml/*.sgml $(distdir)/sgml
