@@ -108,6 +108,43 @@ gst_element_factory_find (const gchar *name)
   GST_DEBUG ("no such elementfactory \"%s\"", name);
   return NULL;
 }
+typedef struct {
+  GType type;
+} MyGTypeData;
+static gboolean
+find_type_filter (GstPluginFeature *feature, gpointer data)
+{
+  GstElementFactory *factory;
+  
+  if (!GST_IS_ELEMENT_FACTORY (feature))
+    return FALSE;
+
+  factory = GST_ELEMENT_FACTORY (feature);
+
+  return factory->type == ((MyGTypeData *) data)->type;
+}
+GstElementFactory *
+gst_element_factory_find_from_element (GstElement *element)
+{
+  GstElementFactory *factory;
+  GList *list;
+  MyGTypeData data;
+  
+  g_return_val_if_fail(GST_IS_ELEMENT (element), NULL);
+  
+  data.type = G_OBJECT_TYPE (element);
+  
+  list = gst_registry_pool_feature_filter (find_type_filter, TRUE, &data);
+
+  if (!list)
+    return NULL;
+  
+  g_assert (g_list_next (list) == NULL);
+  factory = GST_ELEMENT_FACTORY (list->data);
+  g_list_free (list);
+
+  return factory;
+}
 void
 __gst_element_details_clear (GstElementDetails *dp)
 {
