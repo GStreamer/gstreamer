@@ -350,13 +350,15 @@ if test "x$PLUGINS_USE_SRCDIR" = xyes; then
 fi
 
 if test "x$USE_DEBUG" = xyes; then
-  AC_DEFINE(DEBUG_ENABLED)
+  CFLAGS="$CFLAGS -g"
+  AC_DEFINE(GST_DEBUG_ENABLED)
 fi
 
 if test "x$USE_PROFILING" = xyes; then
   CFLAGS="$CFLAGS -pg"
 fi
 
+CFLAGS="$CFLAGS -O6"
 
 dnl #############################
 dnl # Set automake conditionals #

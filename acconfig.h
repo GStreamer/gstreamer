@@ -16,4 +16,4 @@
 
 #undef HAVE_ATOMIC_H
 
-#undef DEBUG_ENABLED
+#undef GST_DEBUG_ENABLED

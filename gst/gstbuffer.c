@@ -18,7 +18,8 @@
  */
 
 
-//#define DEBUG_ENABLED
+/* this file makes too much noise for most debugging sessions */
+#define GST_DEBUG_FORCE_DISABLE
 #include <gst/gst.h>
 #include <gst/gstbuffer.h>
 
@@ -45,7 +46,7 @@ gst_buffer_new(void)
   GstBuffer *buffer;
 
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
-  DEBUG("BUF: allocating new buffer %p\n",buffer);
+  DEBUG("allocating new buffer %p\n",buffer);
 
 //  g_print("allocating new mutex\n");
   buffer->lock = g_mutex_new ();
@@ -104,7 +105,7 @@ gst_buffer_create_sub (GstBuffer *parent,
   g_return_val_if_fail ((offset+size) <= parent->size, NULL);
 
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
-  DEBUG("BUF: allocating new subbuffer %p, parent %p\n", buffer, parent);
+  DEBUG("allocating new subbuffer %p, parent %p\n", buffer, parent);
 
   buffer->lock = g_mutex_new ();
 #ifdef HAVE_ATOMIC_H
@@ -196,10 +197,10 @@ void gst_buffer_destroy (GstBuffer *buffer)
   g_return_if_fail (buffer != NULL);
 
   if (buffer->parent != NULL) {
-    DEBUG("BUF: freeing subbuffer %p\n", buffer);
+    DEBUG("freeing subbuffer %p\n", buffer);
   }
   else {
-    DEBUG("BUF: freeing buffer %p\n", buffer);
+    DEBUG("freeing buffer %p\n", buffer);
   }
 
   // free the data only if there is some, DONTFREE isn't set, and not sub
@@ -240,7 +241,7 @@ gst_buffer_ref (GstBuffer *buffer)
 {
   g_return_if_fail (buffer != NULL);
 
-  DEBUG("BUF: referencing buffer %p\n", buffer);
+  DEBUG("referencing buffer %p\n", buffer);
 
 #ifdef HAVE_ATOMIC_H
   //g_return_if_fail(atomic_read(&(buffer->refcount)) > 0);
@@ -291,7 +292,7 @@ gst_buffer_unref (GstBuffer *buffer)
 
   g_return_if_fail (buffer != NULL);
 
-  DEBUG("BUF: unreferencing buffer %p\n", buffer);
+  DEBUG("unreferencing buffer %p\n", buffer);
 
 #ifdef HAVE_ATOMIC_H
   g_return_if_fail (atomic_read (&(buffer->refcount)) > 0);

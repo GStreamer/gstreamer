@@ -21,9 +21,16 @@
 #ifndef __GST_H__
 #define __GST_H__
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <unistd.h>
 
 #include <gtk/gtk.h>
+#include <gmodule.h>
+
+#include <gst/gstdebug.h>
 
 #include <gst/gstlog.h>
 
@@ -46,7 +53,6 @@
 #include <gst/gstutils.h>
 #include <gst/gsttrace.h>
 #include <gst/gstxml.h>
-
 #include <gst/gsttee.h>
 
 #include <gst/cothreads.h>
@@ -56,14 +62,5 @@ void gst_init(int *argc,char **argv[]);
 
 void gst_main		(void);
 void gst_main_quit	(void);
-
-/* debugging */
-#ifndef DEBUG
-#ifdef DEBUG_ENABLED
-#define DEBUG(format, args...) g_print("DEBUG:(%d:%d) " format, getpid() , cothread_getcurrent() , ##args)
-#else
-#define DEBUG(format, args...)
-#endif
-#endif
 
 #endif /* __GST_H__ */
