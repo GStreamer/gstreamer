@@ -114,6 +114,8 @@ struct _GstJackBin {
     /* the scheduler needs to be setup from within the jack client thread; this
        variable is to keep track of whether or not we have been set up yet */
     gboolean sched_setup;
+    GCond *cond;
+    GMutex *lock;
 };
 
 struct _GstJackBinClass {

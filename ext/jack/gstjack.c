@@ -418,7 +418,7 @@ gst_jack_loop (GstElement *element)
             pad = GST_JACK_PAD (pads);
             
             if (this->direction == GST_PAD_SINK) {
-                if (pad->bs)
+                if (!pad->bs)
                     pad->bs = gst_bytestream_new (pad->pad);
                 
                 if (!(peeked = gst_bytestream_peek_bytes (pad->bs, len))) {
