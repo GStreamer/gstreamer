@@ -1,0 +1,362 @@
+<chapter id="cha-hello">
+  <title>Your first application</title>
+  <para> 
+    This chapter describes the most rudimentary aspects of a GStreamer application, 
+    including initializing the libraries, creating elements, packing them into
+    a pipeline and playing, pause and stop the pipeline.
+  </para>
+
+  <sect1>
+    <title>Hello world</title>
+    <para> 
+      We will create a simple first application. In fact it will be a complete
+      MP3 player, using standard GStreamer components. The player will read from
+      a file that is given as the first argument of the program.
+    </para>
+
+
+    <programlisting>
+      
+#include &lt;gst/gst.h&gt;
+
+gboolean playing;
+
+/* eos will be called when the src element has an end of stream */
+void eos(GstSrc *src) 
+{
+  g_print("have eos, quitting\n");
+
+  playing = FALSE;
+}
+
+int main(int argc,char *argv[]) 
+{
+  GstElement *bin, *disksrc, *parse, *decoder, *audiosink;
+
+  if (argc != 2) {
+    g_print("usage: %s &lt;filename&gt;n", argv[0]);
+    exit(-1);
+  }
+
+  gst_init(&amp;argc,&amp;argv);
+  gst_plugin_load_all();
+  g_print("\n");
+
+  /* create a new bin to hold the elements */
+  bin = gst_bin_new("bin");
+
+  /* create a disk reader */
+  disksrc = gst_elementfactory_make("disksrc", "disk_source");
+  gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
+  gtk_signal_connect(GTK_OBJECT(disksrc),"eos",
+                     GTK_SIGNAL_FUNC(eos),NULL);
+
+  /* now it's time to get the parser */
+  parse = gst_elementfactory_make("mp3parse","parse");
+  decoder = gst_elementfactory_make("mpg123","decoder");
+  /* and an audio sink */
+  audiosink = gst_elementfactory_make("audiosink", "play_audio");
+
+  /* add objects to the main pipeline */
+  gst_bin_add(GST_BIN(bin), disksrc);
+  gst_bin_add(GST_BIN(bin), parse);
+  gst_bin_add(GST_BIN(bin), decoder);
+  gst_bin_add(GST_BIN(bin), audiosink);
+
+  /* connect src to sink */
+  gst_pad_connect(gst_element_get_pad(disksrc,"src"),
+                  gst_element_get_pad(parse,"sink"));
+  gst_pad_connect(gst_element_get_pad(parse,"src"),
+                  gst_element_get_pad(decoder,"sink"));
+  gst_pad_connect(gst_element_get_pad(decoder,"src"),
+                  gst_element_get_pad(audiosink,"sink"));
+
+  /* find out how to handle this bin */
+  gst_bin_create_plan(GST_BIN(bin));
+
+  /* make it ready */
+  gst_element_set_state(bin, GST_STATE_READY);
+  /* start playing */
+  gst_element_set_state(bin, GST_STATE_PLAYING);
+
+  playing = TRUE;
+
+  while (playing) {
+    gst_bin_iterate(GST_BIN(bin));
+  }
+
+  /* stop the bin */
+  gst_element_set_state(bin, GST_STATE_NULL);
+
+  gst_object_destroy(GST_OBJECT(audiosink));
+  gst_object_destroy(GST_OBJECT(decoder));
+  gst_object_destroy(GST_OBJECT(disksrc));
+  gst_object_destroy(GST_OBJECT(bin));
+
+  exit(0);
+}
+
+    </programlisting>
+
+    <para>
+      Let's go through this example step by step.
+    </para>
+
+    <para>
+      The first thing you have to do is to include the standard GStreamer headers and 
+      initialize the framework.
+    </para>
+    <programlisting>
+
+#include &lt;gst/gst.h&gt;
+
+  ...
+
+int main(int argc,char *argv[]) 
+{
+  ...
+  gst_init(&amp;argc,&amp;argv);
+  ...
+
+    </programlisting>
+
+    <para>
+      For simplicity, we are going to load all known plugins. This has the effect
+      that all the codecs known to GStreamer are registered to the system.
+    </para>
+    <programlisting>
+  ...
+  gst_plugin_load_all();
+  ...
+    </programlisting>
+
+    <para>
+      We are going to create 4 elements and one bin. Since all objects are
+      in fact elements, we can define them as:
+    </para>
+    <programlisting>
+  ...
+  GstElement *bin, *disksrc, *parse, *decoder, *audiosink;
+  ...
+    </programlisting>
+
+    <para>
+      Next, we are going to create an empty bin. As you have seen in the basic
+      introduction, this bin will hold and manage all the elements we are 
+      going to stuff into it.
+    </para>
+    <programlisting>
+  /* create a new bin to hold the elements */
+  bin = gst_bin_new("bin");
+    </programlisting>
+
+    <para>
+      We then create a disk source element. The disk source element is able to
+      read from a file.  We use the standard GTK+ argument mechanism to set
+      a property of the element: the file to read from.
+    </para>
+    <programlisting>
+  /* create a disk reader */
+  disksrc = gst_elementfactory_make("disksrc", "disk_source");
+  gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
+  gtk_signal_connect(GTK_OBJECT(disksrc),"eos",
+                     GTK_SIGNAL_FUNC(eos),NULL);
+    </programlisting>
+    <para>
+      We also connected the eos signal to our function. When the
+      disk source has reached an end-of-stream, this function will be called.
+      We will use it to set a gboolean value to FALSE;
+    </para>
+    <note>
+      <para>
+        You can check if the disksrc != NULL to verify the creation of the
+	disk source element.
+      </para>
+    </note>
+
+    <programlisting>
+gboolean playing;
+...
+
+/* eos will be called when the src element has an end of stream */
+void eos(GstSrc *src) 
+{
+  g_print("have eos, quitting\n");
+
+  playing = FALSE;
+}
+    </programlisting>
+
+    <para>
+      We now create the MP3 decoder element. GStreamer requires you
+      to put a parser in front of the decoder. This parser will
+      cut the raw data from the disk source into MP3 frames
+      suitable for the decoder. In the advanced concepts chapter we will
+      see how this can be avoided.
+    </para>
+    <programlisting>
+  /* now it's time to get the parser */
+  parse = gst_elementfactory_make("mp3parse","parse");
+  decoder = gst_elementfactory_make("mpg123","decoder");
+    </programlisting>
+    <para>
+      gst_elementfactory_make() takes two arguments: a string that will
+      identify the element you need and a second argument: how you want
+      to name the element. The name of the element is something you can
+      choose yourself and might be used to retrieve the element from a
+      bin.
+    </para>
+
+    <para>
+      Finally we create our audio sink element. This element will be able
+      to playback the audio using OSS.
+    </para>
+    <programlisting>
+  /* and an audio sink */
+  audiosink = gst_elementfactory_make("audiosink", "play_audio");
+    </programlisting>
+
+    <para>
+      We then add the elements to the bin.
+    </para>
+    <programlisting>
+  /* add objects to the main pipeline */
+  gst_bin_add(GST_BIN(bin), disksrc);
+  gst_bin_add(GST_BIN(bin), parse);
+  gst_bin_add(GST_BIN(bin), decoder);
+  gst_bin_add(GST_BIN(bin), audiosink);
+    </programlisting>
+
+    <para>
+      We connect the different pads of the elements together like this:
+    </para>
+    <programlisting>
+  /* connect src to sink */
+  gst_pad_connect(gst_element_get_pad(disksrc,"src"),
+                  gst_element_get_pad(parse,"sink"));
+  gst_pad_connect(gst_element_get_pad(parse,"src"),
+                  gst_element_get_pad(decoder,"sink"));
+  gst_pad_connect(gst_element_get_pad(decoder,"src"),
+                  gst_element_get_pad(audiosink,"sink"));
+    </programlisting>
+    
+    <para>
+      We now have a created a complete pipeline.  We can visualise the
+      pipeline as follows:
+    </para>
+    <figure float="1" id="sec-hello-img">
+      <title>The Hello world pipeline</title>
+      <graphic fileref="images/hello-world" format="png"></graphic>
+    </figure>
+
+    <para>
+      Before we can run it, we have to instruct the bin to analyse its contents 
+      and come up with a plan to handle the media streams.
+    </para>
+    <programlisting>
+  /* find out how to handle this bin */
+  gst_bin_create_plan(GST_BIN(bin));
+    </programlisting>
+
+    <para>
+     Everything is now set up to start the streaming. We use the following
+     statements to change the state of the bin:
+    </para>
+    <programlisting>
+  /* make it ready */
+  gst_element_set_state(bin, GST_STATE_READY);
+  /* start playing */
+  gst_element_set_state(bin, GST_STATE_PLAYING);
+
+  playing = TRUE;
+    </programlisting>
+    <note>
+      <para>
+        Before you set the bin to the PLAYING state, you must go through the
+	READY state. The READY state will, in this example, open the file, open
+	the audio device and initialise the MP3 decoder.
+      </para>
+    </note>
+
+    <para>
+      Since we do not use threads, nothing will happen yet. We manually have to
+      call gst_bin_iterate() to execute one iteration of the bin. 
+    </para>
+    <programlisting>
+  while (playing) {
+    gst_bin_iterate(GST_BIN(bin));
+  }
+    </programlisting>
+    <para>
+      Remember that the variable playing will become false if the disk source
+      has reached an end-of-file. When that happens, the follwing code takes
+      care of the cleanup:
+    </para>
+    <programlisting>
+  /* stop the bin */
+  gst_element_set_state(bin, GST_STATE_NULL);
+
+  gst_object_destroy(GST_OBJECT(audiosink));
+  gst_object_destroy(GST_OBJECT(decoder));
+  gst_object_destroy(GST_OBJECT(disksrc));
+  gst_object_destroy(GST_OBJECT(bin));
+
+  exit(0);
+    </programlisting>
+    <note>
+      <para>
+        don't forget to set the state of the bin to NULL. This will free
+        all of the resources held by the elements.
+      </para>
+    </note>
+    
+  </sect1>
+
+  <sect1>
+    <title>compiling helloworld.c</title>
+    <para>
+      To compile the helloworld example, use: 
+    </para>
+    <programlisting>
+       gcc -Wall `gstreamer-config --cflags` `gtk-config --cflags` helloworld.c \
+             -o helloworld `gstreamer-config --libs` `gtk-config --libs`
+    </programlisting>
+    <para>
+      This uses the program gstreamer-config, which comes with GStreamer. This program "knows" 
+      what compiler switches are needed to compile programs that use GStreamer. 
+      gstreamer-config --cflags will output a list of include
+      directories for the compiler to look in, and gstreamer-config --libs will output the 
+      list of libraries for the compiler to link with and the directories to find them 
+      in. 
+    </para>
+    <para>
+      You can run the example with (substitute helloworld.mp3 with you favorite MP3 file):
+    </para>
+    <programlisting>
+      ./helloworld helloworld.mp3
+    </programlisting>
+  </sect1>
+
+  <sect1>
+    <title>conclusion</title>
+    <para>
+      This concludes our first example. As you see, setting up a pipeline
+      is very lowlevel but powerfull. You will later in this manual how
+      you can create a custom MP3 element with a more high level API.
+    </para>
+    <para>
+      It should be clear from the example that we can vary easily replace the 
+      disksrc element with a httpsrc, giving you instant network streaming.
+      An element could be build to handle icecast connections, for example.
+    </para>
+    <para>
+      We can also choose to use another type of sink instead of the audiosink.
+      We could use a disksink to write the raw samples to a file, for example.
+      It should also be clear that inserting filters, like a stereo effect,
+      into the pipeline is not that hard to do. The most important thing is
+      that you can reuse allready existing codecs.
+    </para>
+    
+
+  </sect1>
+</chapter>
