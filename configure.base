@@ -588,10 +588,12 @@ if sdl-config --libs > /dev/null 2>&1; then
   SDL_CFLAGS="`sdl-config --cflags`"
   AC_CHECK_LIB(SDL, SDL_Init, :, HAVE_LIBSDL=no, $SDL_LIBS)
   dnl FIXME: CPPFLAGS should be set from SDL_CFLAGS for the next check
-  CFLAGS="$sdlcheck_save_CFLAGS"
-  CFLAGS="$CFLAGS $SDL_CFLAGS"
+  dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
+  dnl Assume only suitable flags result from artsc-config --cflags
+  CPPFLAGS="$sdlcheck_save_CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $SDL_CFLAGS"
   AC_CHECK_HEADER(SDL.h, :, HAVE_LIBSDL=no)
-  sdlcheck_save_CFLAGS="$CFLAGS"
+  sdlcheck_save_CPPFLAGS="$CPPFLAGS"
   AC_CHECK_LIB(SDL, SDL_CreateYUVOverlay, :, HAVE_LIBSDL=no, $SDL_LIBS)
 else
   AC_MSG_RESULT(not found)
