@@ -26,14 +26,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_type_find_debug);
 #define GST_CAT_DEFAULT gst_type_find_debug
 
-/* GstTypeFind flags */
-enum {
-  FLAG_OFFSET		= (1 << 0),
-  FLAG_SIZE		= (1 << 1),
-  FLAG_CAPS		= (1 << 2),
-  FLAG_EXTENSIONS	= (1 << 3)
-};
-
 static void		gst_type_find_factory_class_init	(gpointer		g_class,
 								 gpointer		class_data);
 static void		gst_type_find_factory_init		(GTypeInstance *	instance,
@@ -284,11 +276,6 @@ gst_type_find_peek (GstTypeFind *find, gint64 offset, guint size)
  * given probability. A typefind function may supply different suggestions
  * in one call.
  * It is up to the caller of the typefind function to interpret these values.
- * <note>A typefind function not suggesting Caps during one call is thought
- * to have no chance to identify the data. If there is even the slightest
- * possibility that this data may still be identified by your function once
- * more data is available you must call this function - preferrably with a
- * probability of 0.</note>
  */
 void
 gst_type_find_suggest (GstTypeFind *find, guint probability, GstCaps *caps)
