@@ -1,3 +1,9 @@
+2004-06-24  Johan Dahlin  <johan@gnome.org>
+
+	* ext/theora/theoraenc.c (theora_enc_chain): Call
+	gst_pad_try_set_caps instead of gst_pad_set_explicit_caps so the
+	streamheader caps are set correctly.
+
 2004-06-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/vorbis/vorbisenc.c: (raw_caps_factory),
@@ -254,7 +260,7 @@
 
 2004-06-17  Johan Dahlin  <johan@gnome.org>
 
-	* ext/tcp/*: Revert Zaheer changes.
+	* ext/tcp/*: Revert Zaheer changes, to make things actually work again.
 
 2004-06-16  Wim Taymans  <wim@fluendo.com>
 
