@@ -1,3 +1,5 @@
+AUTOMAKE_OPTIONS = dist-bzip2
+
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
 
@@ -45,11 +47,18 @@ DIST_SUBDIRS = include libs gst \
 
 EXTRA_DIST = gstreamer.spec.in gst-element-check.m4 \
 	     configure.ac autogen.sh depcomp \
-	     REQUIREMENTS ABOUT-NLS RELEASE DOCBUILDING DEVEL \
+	     REQUIREMENTS ABOUT-NLS DOCBUILDING DEVEL \
 	     idiottest.mak common
 
 CLEANFILES = gst-element-check-@GST_MAJORMINOR@.m4
 
+
+release: dist
+	make @PACKAGE@-@VERSION@.tar.gz.md5
+	make @PACKAGE@-@VERSION@.tar.bz2.md5
+
+%.md5: %
+	md5sum $< > $@
 
 dist-hook:
 	cp gstreamer.spec $(distdir)

@@ -1,2 +1,93 @@
-2001-12-12
-	* GStreamer 0.3.0 released, "Most Eventful Ever"
+Release notes for GStreamer 0.7.4 "Wooden Eels"
+
+   The  GStreamer  team  is  happy to announce a new release in the 0.7.x
+   development  series  of  the  GStreamer streaming-media framework. The
+   goal  of  this  release  series  is to stabilize towards a 0.8 release
+   series  which  will  be  part  of the GNOME 2.6 releases and hopefully
+   eventually KDE 4.x.
+
+   The  0.7 series is a development series and is aimed at developers. It
+   is  NOT  API  or  ABI  compatible with the stable 0.6.x series or with
+   other  releases in the series. This means you can not use this release
+   to  upgrade  your  current  GStreamer  installation  and  expect  your
+   GStreamer  applications  to  keep  working without a recompile. It is,
+   however, parallel installable with the 0.6.x series.
+
+Features of this release
+
+     * Merged the new caps system
+     * Reworked pad negotiation
+     * Internationalized core and elements
+     * Reworked  error  notification  with  translated error messages and
+       additional debug information for developer feedback
+     * Updated Dutch and French translations
+     * Reworked clocking
+     * Serialization of GstValue
+     * Documentation of GstCaps
+     * Poisoning of GstCaps
+     * Queues now flushed properly to fix seeking in playback
+     * Memleak fixes in core elements
+     * Largely rewritten Plugin Writer's Guide
+     * Unversioned tools that wrap all present and future versioned tools
+       to help packagers
+     * Portability fixes for Solaris and OSX
+     * Lots of bugfixes
+
+Download
+
+   You  find  source  releases of gstreamer in the [14]gstreamer download
+   directory.
+
+GStreamer Homepage
+
+   More    details    can    be   found   on   the   project's   website,
+   [15]http://www.freedesktop.org/~gstreamer.
+
+Support and Bugs
+
+   We use Gnome's bugzilla for [16]bug reports and feature requests.
+
+Developers
+
+   CVS is hosted on cvs.freedesktop.org. You can [17]browse the gstreamer
+   repository.  All  code  is  in  CVS and can be checked out from there.
+   Interested  developers of the core library, plug-ins, and applications
+   should  subscribe  to the gstreamer-devel list. If there is sufficient
+   interest we will create more lists as necessary.
+
+Applications
+
+   As  mentioned  there are some changes in API/ABI between the 0.6.x and
+   0.7.x  releases.  Many applications will probably be source compatible
+   between  0.6.x.  and 0.7.x however. [18]Rhythmbox and [19]Sound Juicer
+   for  instance  work very well when compiled on 0.7.x. GStreamer Player
+   does  not  work  across  releases  however, so we will make a separate
+   release of gst-player with the needed fixes for it to work with 0.7.x.
+   This  release  contains the core fixes we were waiting for to port the
+   player over so expect a gst-player release in the near future.
+
+Contributors to this release
+
+     * David Schleef
+     * Benjamin Otte
+     * Thomas Vander Stichele
+     * Iain Holmes
+     * Ronald Bultje
+     * Colin Walters
+     * Jan Schmidt
+     * Jérémy Simon
+     * Leif Morgan Johnson
+     * Julien Moutte
+     * Jon Trowbridge
+     * Christian Fredrik Kalager Schaller
+     * Laurent Vivier
+
+References
+
+   Visible links
+  14. http://www.freedesktop.org/~gstreamer/src/gstreamer/
+  15. http://www.freedesktop.org/~gstreamer
+  16. http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+  17. http://freedesktop.org/cgi-bin/viewcvs.cgi/gstreamer//gstreamer/
+  18. http://www.rhythmbox.org/
+  19. http://www.burtonini.com/blog/computers/sound-juicer
