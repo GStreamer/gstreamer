@@ -255,6 +255,9 @@ volume_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail(filter != NULL);
   g_return_if_fail(GST_IS_VOLUME(filter));
   
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_READONLY))
+    buf = gst_buffer_copy (buf);
+  
   switch (filter->format) {
   case GST_VOLUME_FORMAT_INT:
     int_data = (gint16 *)GST_BUFFER_DATA(buf);
@@ -314,6 +317,7 @@ volume_set_property (GObject *object, guint prop_id, const GValue *value, GParam
     filter->volume_i       = filter->volume_f*8192;
     break;
   default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     break;
   }
 }
