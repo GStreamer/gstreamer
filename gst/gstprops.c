@@ -183,14 +183,7 @@ gst_props_debug_entry (GstPropsEntry *entry)
       break;
     case GST_PROPS_LIST_TYPE:
       GST_DEBUG (GST_CAT_PROPERTIES, "%p: [list]", entry);
-      {
-	GList *entries = entry->data.list_data.entries;
-
-	while (entries) {
-          gst_props_debug_entry ((GstPropsEntry *)entries->data);
-	  entries = g_list_next (entries);
-	}
-      }
+      g_list_foreach (entry->data.list_data.entries, (GFunc) gst_props_debug_entry, NULL);
       break;
     default:
       g_warning ("unknown property type %d at %p", entry->propstype, entry);
@@ -328,16 +321,9 @@ gst_props_entry_clean (GstPropsEntry *entry)
       g_free (entry->data.string_data.string);
       break;
     case GST_PROPS_LIST_TYPE:
-    {
-      GList *entries = entry->data.list_data.entries;
-
-      while (entries) {
-	gst_props_entry_destroy ((GstPropsEntry *)entries->data);
-	entries = g_list_next (entries);
-      }
+      g_list_foreach (entry->data.list_data.entries, (GFunc) gst_props_entry_destroy, NULL);
       g_list_free (entry->data.list_data.entries);
       break;
-    }
     default:
       break;
   }
@@ -520,17 +506,9 @@ gst_props_new (const gchar *firstname, ...)
 void
 gst_props_debug (GstProps *props)
 {
-  GList *propslist = props->properties;
-
   GST_DEBUG (GST_CAT_PROPERTIES, "props %p, refcount %d, flags %d", props, props->refcount, props->flags);
 
-  while (propslist) {
-    GstPropsEntry *entry = (GstPropsEntry *)propslist->data;
-
-    gst_props_debug_entry (entry);
-
-    propslist = g_list_next (propslist);
-  }
+  g_list_foreach (props->properties, (GFunc) gst_props_debug_entry, NULL);
 }
 
 /**
@@ -926,17 +904,10 @@ gst_props_sink (GstProps *props)
 void
 gst_props_destroy (GstProps *props)
 {
-  GList *entries;
-
   if (props == NULL)
     return;
 
-  entries = props->properties;
-
-  while (entries) {
-    gst_props_entry_destroy ((GstPropsEntry *)entries->data);
-    entries = g_list_next (entries);
-  }
+  g_list_foreach (props->properties, (GFunc) gst_props_entry_destroy, NULL);
   g_list_free (props->properties);
 
   gst_mem_chunk_free (_gst_props_chunk, props);

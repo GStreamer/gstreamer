@@ -246,18 +246,11 @@ gst_bin_auto_clock (GstBin *bin)
 static void
 gst_bin_set_index (GstElement *element, GstIndex *index)
 {
-  GList *children;
   GstBin *bin = GST_BIN (element);
   
   g_return_if_fail (GST_IS_BIN (bin));
 
-  children = bin->children;
-  while (children) {
-    GstElement *child = GST_ELEMENT (children->data);
-    children = g_list_next (children);
-
-    gst_element_set_index (child, index);
-  }
+  g_list_foreach (bin->children, (GFunc) gst_element_set_index, index);
 }
 #endif
 
@@ -269,8 +262,6 @@ gst_bin_set_element_sched (GstElement *element, GstScheduler *sched)
 
   /* if it's actually a Bin */
   if (GST_IS_BIN (element)) {
-    GList *children;
-
     if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_MANAGER)) {
       GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "child is already a manager, not resetting");
       if (GST_ELEMENT_SCHED (element))
@@ -282,13 +273,7 @@ gst_bin_set_element_sched (GstElement *element, GstScheduler *sched)
     gst_scheduler_add_element (sched, element);
 
     /* set the children's schedule */
-    children = GST_BIN (element)->children;
-    while (children) {
-      GstElement *child = GST_ELEMENT (children->data);
-      children = g_list_next (children);
-
-      gst_bin_set_element_sched (child, sched);
-    }
+    g_list_foreach (GST_BIN (element)->children, (GFunc) gst_bin_set_element_sched, sched);
   }
   /* otherwise, if it's just a regular old element */
   else {
@@ -328,9 +313,6 @@ gst_bin_set_element_sched (GstElement *element, GstScheduler *sched)
 static void
 gst_bin_unset_element_sched (GstElement *element, GstScheduler *sched)
 {
-  GList *children;
-  GstElement *child;
-
   if (GST_ELEMENT_SCHED (element) == NULL) {
     GST_INFO (GST_CAT_SCHEDULING, "element \"%s\" has no scheduler",
 	      GST_ELEMENT_NAME (element));
@@ -352,13 +334,7 @@ gst_bin_unset_element_sched (GstElement *element, GstScheduler *sched)
       return;
     }
     /* for each child, remove them from their schedule */
-    children = GST_BIN (element)->children;
-    while (children) {
-      child = GST_ELEMENT (children->data);
-      children = g_list_next (children);
-
-      gst_bin_unset_element_sched (child, sched);
-    }
+    g_list_foreach (GST_BIN (element)->children, (GFunc) gst_bin_unset_element_sched, sched);
 
     gst_scheduler_remove_element (GST_ELEMENT_SCHED (element), element);
   }
