@@ -42,7 +42,7 @@ fi
 PATH=$GST/gstreamer/tools:$GST/gst-plugins/tools:$GST/gst-player/src:$GST/gst-editor/src:$GST/prefix/bin:$PATH
 # /some/path: makes the dynamic linker look in . too, so avoid this
 export LD_LIBRARY_PATH=$GST/prefix/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
-export PKG_CONFIG_PATH=$GST/gstreamer/pkgconfig:$GST/gst-plugins/pkgconfig:$PKG_CONFIG_PATH
+export PKG_CONFIG_PATH=$GST/gstreamer/pkgconfig:$GST/gst-plugins/pkgconfig:$GST/gst-python/pkgconfig:$PKG_CONFIG_PATH
 export GST_PLUGIN_PATH=$GST/gstreamer:$GST/gst-plugins:$GST/gst-ffmpeg:$GST/gst-monkeysaudio:$GST_PLUGIN_PATH
 export MANPATH=$GST/gstreamer/tools:$GST/prefix/share/man:$MANPATH
 export PYTHONPATH=$GST/gst-python:$PYTHONPATH
