@@ -674,7 +674,7 @@ gst_queue_change_state (GstElement *element)
           GST_DEBUG_ELEMENT (GST_CAT_STATES, queue, "queue %s does not connect different schedulers", 
 			GST_ELEMENT_NAME (queue));
 
-	  g_warning ("queue %s does connect different schedulers",
+	  g_warning ("queue %s does not connect different schedulers",
 			GST_ELEMENT_NAME (queue));
 
 	  ret = GST_STATE_FAILURE;
