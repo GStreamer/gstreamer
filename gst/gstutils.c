@@ -26,6 +26,7 @@
 
 #include "gst_private.h"
 #include "gstutils.h"
+#include "gstlog.h"
 
 #include "gstextratypes.h"
 
@@ -218,14 +219,14 @@ gst_util_dump_mem (guchar * mem, guint size)
 	guint k;
 
 	for (k = i - 16; k < i; k++) {
-          if (isprint (mem[k]))
+          if (mem[k]>'a' && mem[k] < 'Z')
             g_print ("%c", mem[k]);
 	  else 
             g_print (".");
 	}
         g_print ("\n");
       }
-      g_print ("%08x : ", i);
+      g_print ("%08x (%p): ", i, mem+i);
       j = 15;
     }
     else {

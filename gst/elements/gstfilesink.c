@@ -304,7 +304,7 @@ gst_filesink_handle_event (GstPad *pad, GstEvent *event)
       if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &offset))
         fseek(filesink->file, offset, SEEK_SET);
 
-      gst_event_free (event);
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_NEW_MEDIA:

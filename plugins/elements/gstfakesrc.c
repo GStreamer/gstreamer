@@ -323,7 +323,6 @@ gst_fakesrc_event_handler (GstPad *pad, GstEvent *event)
       src->buffer_count = GST_EVENT_SEEK_OFFSET (event);
 
       if (!GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
-        gst_event_free (event);
         break;
       }
       /* else we do a flush too */
@@ -333,6 +332,7 @@ gst_fakesrc_event_handler (GstPad *pad, GstEvent *event)
     default:
       break;
   }
+  gst_event_unref (event);
 
   return TRUE;
 }
@@ -680,8 +680,8 @@ gst_fakesrc_get(GstPad *pad)
     if (src->last_message)
       g_free (src->last_message);
 
-    src->last_message = g_strdup_printf ("get      ******* (%s:%s)> (%d bytes, %llu)",
-                      GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+    src->last_message = g_strdup_printf ("get      ******* (%s:%s)> (%d bytes, %llu) %p",
+                      GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
 
     g_object_notify (G_OBJECT (src), "last_message");
   }

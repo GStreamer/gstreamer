@@ -55,15 +55,16 @@ libgstreamer_la_SOURCES =		\
 	$(GST_AUTOPLUG_SRC)	\
 	gstbin.c		\
 	gstbuffer.c		\
-	gstbufferpool.c		\
 	gstcaps.c		\
 	gstclock.c		\
 	gstcpu.c		\
+	gstdata.c		\
 	gstelement.c		\
 	gstelementfactory.c	\
 	gstevent.c		\
 	gstextratypes.c		\
 	gstinfo.c		\
+	gstmemchunk.c		\
 	gstpad.c		\
 	gstpipeline.c		\
 	gstplugin.c		\
@@ -125,6 +126,7 @@ distclean-local:
 libgstreamerincludedir = $(includedir)/gstreamer-@VERSION@/gst
 libgstreamerinclude_HEADERS =		\
 	gst.h			\
+	gstatomic.h		\
 	gstconfig.h		\
 	gstmarshal.h		\
 	gstenumtypes.h		\
@@ -133,7 +135,6 @@ libgstreamerinclude_HEADERS =		\
 	gstautoplug.h		\
 	gstbin.h		\
 	gstbuffer.h		\
-	gstbufferpool.h		\
 	gstcaps.h		\
 	gstclock.h		\
 	gstcpu.h		\
@@ -144,6 +145,7 @@ libgstreamerinclude_HEADERS =		\
 	gstformat.h		\
 	gstinfo.h		\
 	gstlog.h		\
+	gstmemchunk.h		\
 	gstpad.h		\
 	gstpipeline.h		\
 	gstplugin.h		\

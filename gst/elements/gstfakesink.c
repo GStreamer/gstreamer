@@ -266,8 +266,6 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
 	gst_pad_event_default (pad, event);
         break;
     }
-
-    gst_event_free (event);
     return;
   }
 

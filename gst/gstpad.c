@@ -30,6 +30,7 @@
 #include "gstbin.h"
 #include "gstscheduler.h"
 #include "gstevent.h"
+#include "gstlog.h"
 
 enum {
   TEMPL_PAD_CREATED,
@@ -1045,7 +1046,6 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
   GstPadTemplate *template;
   GstElement *parent = GST_PAD_PARENT (pad);
 
-  /* thomas: FIXME: is this the right result to return ? */
   g_return_val_if_fail (pad != NULL, GST_PAD_CONNECT_REFUSED);
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_CONNECT_REFUSED);
   
@@ -1856,10 +1856,7 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
   }
   /* clean up the mess here */
   if (buf != NULL) {
-    if (GST_IS_BUFFER (buf))
-      gst_buffer_unref (buf);
-    else
-      gst_event_free (GST_EVENT (buf));
+    gst_data_unref (GST_DATA (buf));
   }
 }
 #endif
@@ -2341,7 +2338,9 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element, GstEvent *even
     /* for all pads in the opposite direction that are connected */
     if (GST_PAD_DIRECTION (eventpad) != GST_PAD_DIRECTION (pad) && GST_PAD_IS_CONNECTED (eventpad)) {
       if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
-        gst_pad_push (eventpad, GST_BUFFER (gst_event_copy (event)));
+	/* increase the refcount */
+        gst_event_ref (event);
+        gst_pad_push (eventpad, GST_BUFFER (event));
       }
       else {
 	GstPad *peerpad = GST_PAD_CAST (GST_RPAD_PEER (eventpad));
@@ -2352,6 +2351,7 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element, GstEvent *even
       }
     }
   }
+  gst_event_unref (event);
   return TRUE;
 }
 
@@ -2398,17 +2398,17 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
 /**
  * gst_pad_dispatcher:
  * @pad: the pad to dispatch
- * @dispatch: the GstDispatcherFunc to call
+ * @dispatch: the GstDispatcherFunction to call
  * @data: data passed to the dispatcher function.
  *
  * Invoke the given dispatcher function on all internally connected
- * pads of the given pad. The GstPadDispatcherFunc should return
+ * pads of the given pad. The GstPadDispatcherFunction should return
  * TRUE when no further pads need to be preocessed.
  *
  * Returns: TRUE if one of the dispatcher functions returned TRUE.
  */
 gboolean
-gst_pad_dispatcher (GstPad *pad, GstPadDispatcherFunc dispatch, gpointer data)
+gst_pad_dispatcher (GstPad *pad, GstPadDispatcherFunction dispatch, gpointer data)
 {
   gboolean res = FALSE;
   GList *int_pads, *orig;
@@ -2464,6 +2464,7 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
     success = GST_RPAD_EVENTFUNC (pad) (pad, event);
   else {
     GST_DEBUG(GST_CAT_EVENT, "there's no event function for pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+    gst_event_unref (event);
   }
 
   return success;
@@ -2514,7 +2515,7 @@ gst_pad_convert_default (GstPad *pad,
   data.dest_format = dest_format;
   data.dest_value = dest_value;
 
-  return gst_pad_dispatcher (pad, (GstPadDispatcherFunc) gst_pad_convert_dispatcher, &data);
+  return gst_pad_dispatcher (pad, (GstPadDispatcherFunction) gst_pad_convert_dispatcher, &data);
 }
 
 /**
@@ -2594,7 +2595,7 @@ gst_pad_query_default (GstPad *pad, GstPadQueryType type,
   data.format = format;
   data.value = value;
 
-  return gst_pad_dispatcher (pad, (GstPadDispatcherFunc) gst_pad_query_dispatcher, &data);
+  return gst_pad_dispatcher (pad, (GstPadDispatcherFunction) gst_pad_query_dispatcher, &data);
 }
 
 /**

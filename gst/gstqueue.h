@@ -28,10 +28,7 @@
 #include <gst/gstelement.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 extern GstElementDetails gst_queue_details;
 
@@ -63,7 +60,7 @@ struct _GstQueue {
   GstPad *srcpad;
 
   /* the queue of buffers we're keeping our grubby hands on */
-  GList *queue;
+  GQueue *queue;
 
   guint level_buffers;	/* number of buffers queued here */
   guint level_bytes;	/* number of bytes queued here */
@@ -101,9 +98,7 @@ struct _GstQueueClass {
 
 GType gst_queue_get_type (void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GST_QUEUE_H__ */

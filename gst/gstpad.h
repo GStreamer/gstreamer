@@ -32,9 +32,7 @@
 #include <gst/gstevent.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 extern GType _gst_pad_type;
 extern GType _gst_real_pad_type;
@@ -142,7 +140,7 @@ typedef GstPadConnectReturn	(*GstPadConnectFunction) 	(GstPad *pad, GstCaps *cap
 typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad, GstCaps *caps);
 typedef GstBufferPool*		(*GstPadBufferPoolFunction) 	(GstPad *pad);
 
-typedef gboolean 		(*GstPadDispatcherFunc) 	(GstPad *pad, gpointer data);
+typedef gboolean 		(*GstPadDispatcherFunction) 	(GstPad *pad, gpointer data);
 
 typedef enum {
   GST_PAD_UNKNOWN,
@@ -436,7 +434,7 @@ gboolean 		gst_pad_query_default 			(GstPad *pad, GstPadQueryType type,
 GList*			gst_pad_get_internal_connections	(GstPad *pad);
 GList*	 		gst_pad_get_internal_connections_default (GstPad *pad);
 	
-gboolean 		gst_pad_dispatcher 			(GstPad *pad, GstPadDispatcherFunc dispatch, 
+gboolean 		gst_pad_dispatcher 			(GstPad *pad, GstPadDispatcherFunction dispatch, 
 								 gpointer data);
 
 
@@ -467,9 +465,7 @@ xmlNodePtr              gst_pad_ghost_save_thyself   		(GstPad *pad,
 						     		 GstElement *bin,
 						     		 xmlNodePtr parent);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GST_PAD_H__ */

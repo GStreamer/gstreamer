@@ -26,12 +26,12 @@
 #include "gst_private.h"
 
 #include "gstclock.h"
+#include "gstlog.h"
+#include "gstmemchunk.h"
 
 #define CLASS(clock)  GST_CLOCK_CLASS (G_OBJECT_GET_CLASS (clock))
 
-static GMemChunk *_gst_clock_entries_chunk;
-static GMutex *_gst_clock_entries_chunk_lock;
-static GList *_gst_clock_entries_pool;
+static GstMemChunk *_gst_clock_entries_chunk;
 
 static void		gst_clock_class_init		(GstClockClass *klass);
 static void		gst_clock_init			(GstClock *clock);
@@ -54,17 +54,10 @@ struct _GstClockEntry {
   GstEntryStatus 	 status;
   GstClockCallback 	 func;
   gpointer		 user_data;
-  GMutex 		*lock;
-  GCond 		*cond;
 };
 
 #define GST_CLOCK_ENTRY(entry)          ((GstClockEntry *)(entry))
 #define GST_CLOCK_ENTRY_TIME(entry)     (((GstClockEntry *)(entry))->time)
-#define GST_CLOCK_ENTRY_LOCK(entry)     (g_mutex_lock ((entry)->lock))
-#define GST_CLOCK_ENTRY_UNLOCK(entry)   (g_mutex_unlock ((entry)->lock))
-#define GST_CLOCK_ENTRY_SIGNAL(entry)   (g_cond_signal ((entry)->cond))
-#define GST_CLOCK_ENTRY_WAIT(entry)     (g_cond_wait (entry->cond, entry->lock))
-#define GST_CLOCK_ENTRY_TIMED_WAIT(entry, time)         (g_cond_timed_wait (entry->cond, entry->lock, (time)))
 
 static GstClockEntry*
 gst_clock_entry_new (GstClockTime time,
@@ -72,20 +65,8 @@ gst_clock_entry_new (GstClockTime time,
 {
   GstClockEntry *entry;
 
-  g_mutex_lock (_gst_clock_entries_chunk_lock);
-  if (_gst_clock_entries_pool) {
-    entry = GST_CLOCK_ENTRY (_gst_clock_entries_pool->data);
+  entry = gst_mem_chunk_alloc (_gst_clock_entries_chunk);
 
-    _gst_clock_entries_pool = g_list_remove (_gst_clock_entries_pool, entry);
-    g_mutex_unlock (_gst_clock_entries_chunk_lock);
-  }
-  else {
-    entry = g_mem_chunk_alloc (_gst_clock_entries_chunk);
-    g_mutex_unlock (_gst_clock_entries_chunk_lock);
-
-    entry->lock = g_mutex_new ();
-    entry->cond = g_cond_new ();
-  }
   entry->time = time;
   entry->func = func;
   entry->user_data = user_data;
@@ -93,6 +74,7 @@ gst_clock_entry_new (GstClockTime time,
   return entry;
 }
 
+/*
 static gint
 clock_compare_func (gconstpointer a,
                     gconstpointer b)
@@ -102,6 +84,7 @@ clock_compare_func (gconstpointer a,
 
   return (entry1->time - entry2->time);
 }
+*/
 
 GType
 gst_clock_get_type (void)
@@ -141,11 +124,9 @@ gst_clock_class_init (GstClockClass *klass)
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
-  _gst_clock_entries_chunk = g_mem_chunk_new ("GstClockEntries",
+  _gst_clock_entries_chunk = gst_mem_chunk_new ("GstClockEntries",
                      sizeof (GstClockEntry), sizeof (GstClockEntry) * 32,
                      G_ALLOC_AND_FREE);
-  _gst_clock_entries_chunk_lock = g_mutex_new ();
-  _gst_clock_entries_pool = NULL;
 }
 
 static void
@@ -384,10 +365,6 @@ gst_clock_wait_async_func (GstClock *clock, GstClockTime time,
 
   entry = gst_clock_entry_new (time, func, user_data);
 
-  GST_LOCK (clock);
-  clock->entries = g_list_insert_sorted (clock->entries, entry, clock_compare_func);
-  GST_UNLOCK (clock);
-
   return entry;
 }
 
@@ -493,11 +470,6 @@ gst_clock_remove_notify_async (GstClock *clock, GstClockID id)
 static void
 gst_clock_unlock_func (GstClock *clock, GstClockTime time, GstClockID id, gpointer user_data)
 {
-  GstClockEntry *entry = (GstClockEntry *) id;
-
-  GST_CLOCK_ENTRY_LOCK (entry);
-  GST_CLOCK_ENTRY_SIGNAL (entry);
-  GST_CLOCK_ENTRY_UNLOCK (entry);
 }
 
 /**
@@ -516,8 +488,7 @@ gst_clock_wait_id (GstClock *clock, GstClockID id, GstClockTimeDiff *jitter)
 {
   GstClockReturn res = GST_CLOCK_TIMEOUT;
   GstClockEntry *entry = (GstClockEntry *) id;
-  GstClockTime current_real, current, target;
-  GTimeVal timeval;
+  GstClockTime current, target;
   GstClockTimeDiff this_jitter;
   
   g_return_val_if_fail (GST_IS_CLOCK (clock), GST_CLOCK_ERROR);
@@ -525,27 +496,25 @@ gst_clock_wait_id (GstClock *clock, GstClockID id, GstClockTimeDiff *jitter)
 
   current = gst_clock_get_time (clock);
 
-  g_get_current_time (&timeval);
-  current_real = GST_TIMEVAL_TO_TIME (timeval);
-
-  GST_CLOCK_ENTRY_LOCK (entry);
   entry->func = gst_clock_unlock_func;
-  target = GST_CLOCK_ENTRY_TIME (entry) - current + current_real;
+  target = GST_CLOCK_ENTRY_TIME (entry) - current;
 
-  GST_DEBUG (GST_CAT_CLOCK, "real_target %llu, current_real %llu, target %llu, now %llu", 
-		  target, current_real, GST_CLOCK_ENTRY_TIME (entry), current); 
+  GST_DEBUG (GST_CAT_CLOCK, "real_target %llu,  target %llu, now %llu", 
+		  target, GST_CLOCK_ENTRY_TIME (entry), current); 
   
-  if (target > current_real) {
-    GST_TIME_TO_TIMEVAL (target, timeval);
-    GST_CLOCK_ENTRY_TIMED_WAIT (entry, &timeval);
+  if (((gint64)target) > 0) {
+    struct timeval tv;
+
+    GST_TIME_TO_TIMEVAL (target, tv);
+    select (0, NULL, NULL, NULL, &tv);
+
     current = gst_clock_get_time (clock);
     this_jitter = current - GST_CLOCK_ENTRY_TIME (entry);
   }
   else {
     res = GST_CLOCK_EARLY;
-    this_jitter = target - current_real;
+    this_jitter = target;
   }
-  GST_CLOCK_ENTRY_UNLOCK (entry);
 
   if (jitter)
     *jitter = this_jitter;
@@ -593,13 +562,7 @@ gst_clock_id_get_time (GstClockID id)
 static void
 gst_clock_free_entry (GstClock *clock, GstClockEntry *entry)
 {
-  GST_LOCK (clock);
-  clock->entries = g_list_remove (clock->entries, entry);
-  GST_UNLOCK (clock);
-
-  g_mutex_lock (_gst_clock_entries_chunk_lock);
-  _gst_clock_entries_pool = g_list_prepend (_gst_clock_entries_pool, entry);
-  g_mutex_unlock (_gst_clock_entries_chunk_lock);
+  gst_mem_chunk_free (_gst_clock_entries_chunk, entry);
 }
 
 /**

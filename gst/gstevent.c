@@ -20,44 +20,72 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
-#include "gst/gstinfo.h"
-#include "gst/gstevent.h"
 #include <string.h>		/* memcpy */
+
+#include "gstinfo.h"
+#include "gstdata_private.h"
+#include "gstevent.h"
+#include "gstlog.h"
 
 /* #define MEMPROF */
 
 GType _gst_event_type;
 
-static GMemChunk *_gst_event_chunk;
-static GMutex *_gst_event_chunk_lock;
+static gint _gst_event_live;
 
 void
 _gst_event_initialize (void)
 {
-  gint eventsize = sizeof(GstEvent);
-  static const GTypeInfo event_info = {
-    0,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    0, 
-    0,
-    NULL,
-    NULL,
-  };
-
-  /* round up to the nearest 32 bytes for cache-line and other efficiencies */
-  eventsize = (((eventsize-1) / 32) + 1) * 32;
-
-  _gst_event_chunk = g_mem_chunk_new ("GstEvent", eventsize,
-  				      eventsize * 32, G_ALLOC_AND_FREE);
-  _gst_event_chunk_lock = g_mutex_new ();
-
   /* register the type */
-  _gst_event_type = g_type_register_static (G_TYPE_INT, "GstEvent", &event_info, 0);
+  _gst_event_type = g_boxed_type_register_static ("GstEvent",
+                                               (GBoxedCopyFunc) gst_data_ref,
+                                               (GBoxedFreeFunc) gst_data_unref);
+  _gst_event_live = 0;
+}
+
+/**
+ * gst_buffer_print_stats:
+ *
+ * Logs statistics about live buffers (using g_log).
+ */
+void
+gst_event_print_stats (void)
+{
+  g_log (g_log_domain_gstreamer, G_LOG_LEVEL_INFO,
+                    "%d live event(s)", _gst_event_live);
+}
+
+
+static GstEvent*
+_gst_event_copy (GstEvent *event)
+{
+  GstEvent *copy;
+
+  copy = g_new0(GstEvent, 1);
+  _gst_event_live++;
+
+  memcpy (copy, event, sizeof (GstEvent));
+  
+  /* FIXME copy/ref additional fields */
+
+  return copy;
+}
+
+static void
+_gst_event_free (GstEvent* event)
+{
+  GST_INFO (GST_CAT_EVENT, "freeing event %p", event);
+
+  if (GST_EVENT_SRC (event)) {
+    gst_object_unref (GST_EVENT_SRC (event));
+  }
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      break;
+  }
+  _GST_DATA_DISPOSE (GST_DATA (event));
+  _gst_event_live--;
+  g_free (event);
 }
 
 /**
@@ -73,76 +101,21 @@ gst_event_new (GstEventType type)
 {
   GstEvent *event;
 
-#ifndef MEMPROF
-  g_mutex_lock (_gst_event_chunk_lock);
-  event = g_mem_chunk_alloc (_gst_event_chunk);
-  g_mutex_unlock (_gst_event_chunk_lock);
-#else
   event = g_new0(GstEvent, 1);
-#endif
+  _gst_event_live++;
   GST_INFO (GST_CAT_EVENT, "creating new event %p", event);
 
-  GST_DATA_TYPE (event) = _gst_event_type;
+  _GST_DATA_INIT (GST_DATA (event),
+		  _gst_event_type,
+		  0,
+		  (GstDataFreeFunction) _gst_event_free,
+		  (GstDataCopyFunction) _gst_event_copy);
+
   GST_EVENT_TYPE (event) = type;
   GST_EVENT_TIMESTAMP (event) = 0LL;
   GST_EVENT_SRC (event) = NULL;
 
   return event;
-}
-
-/**
- * gst_event_copy:
- * @event: The event to copy
- *
- * Copy the event
- *
- * Returns: A copy of the event.
- */
-GstEvent*
-gst_event_copy (GstEvent *event)
-{
-  GstEvent *copy;
-
-#ifndef MEMPROF
-  g_mutex_lock (_gst_event_chunk_lock);
-  copy = g_mem_chunk_alloc (_gst_event_chunk);
-  g_mutex_unlock (_gst_event_chunk_lock);
-#else
-  copy = g_new0(GstEvent, 1);
-#endif
-
-  memcpy (copy, event, sizeof (GstEvent));
-  
-  /* FIXME copy/ref additional fields */
-
-  return copy;
-}
-
-/**
- * gst_event_free:
- * @event: The event to free
- *
- * Free the given element.
- */
-void
-gst_event_free (GstEvent* event)
-{
-  GST_INFO (GST_CAT_EVENT, "freeing event %p", event);
-
-  g_mutex_lock (_gst_event_chunk_lock);
-  if (GST_EVENT_SRC (event)) {
-    gst_object_unref (GST_EVENT_SRC (event));
-  }
-  switch (GST_EVENT_TYPE (event)) {
-    default:
-      break;
-  }
-#ifndef MEMPROF
-  g_mem_chunk_free (_gst_event_chunk, event);
-#else
-  g_free (event);
-#endif
-  g_mutex_unlock (_gst_event_chunk_lock);
 }
 
 /**
@@ -160,6 +133,7 @@ gst_event_new_seek (GstSeekType type, gint64 offset)
   GstEvent *event;
 
   event = gst_event_new (GST_EVENT_SEEK);
+
   GST_EVENT_SEEK_TYPE (event) = type;
   GST_EVENT_SEEK_OFFSET (event) = offset;
 
@@ -235,12 +209,22 @@ gst_event_discont_get_value (GstEvent *event, GstFormat format, gint64 *value)
 }
 
 
+/**
+ * gst_event_new_size:
+ * @format: The format of the size value
+ * @value: The value of the size event
+ *
+ * Create a new size event with the given values.
+ *
+ * Returns: The new size event.
+ */
 GstEvent*
 gst_event_new_size (GstFormat format, gint64 value)
 {
   GstEvent *event;
 
   event = gst_event_new (GST_EVENT_SIZE);
+
   GST_EVENT_SIZE_FORMAT (event) = format;
   GST_EVENT_SIZE_VALUE (event) = value;
   

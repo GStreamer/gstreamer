@@ -24,23 +24,77 @@
 #ifndef __GST_DATA_H__
 #define __GST_DATA_H__
 
-#include <gst/gstobject.h>
+#include <glib-object.h>
+#include <gst/gstatomic.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
-#define GST_DATA(data)		(GstData*)(data)
-#define GST_DATA_TYPE(data)	(((GstData*)(data))->type)
+/* type */
+#define GST_DATA(data)		((GstData*)(data))
+#define GST_DATA_TYPE(data)	(GST_DATA(data)->type)
+
+/* flags */
+#define GST_DATA_FLAGS(data)		(GST_DATA(data)->flags)
+#define GST_DATA_FLAG_SHIFT(flag)	(1<<(flag))
+#define GST_DATA_FLAG_IS_SET(data,flag)	(GST_DATA_FLAGS(data) & (1<<(flag)))
+#define GST_DATA_FLAG_SET(data,flag)	G_STMT_START{ (GST_DATA_FLAGS(data) |= (1<<(flag))); }G_STMT_END
+#define GST_DATA_FLAG_UNSET(data,flag) 	G_STMT_START{ (GST_DATA_FLAGS(data) &= ~(1<<(flag))); }G_STMT_END
 
 typedef struct _GstData GstData;
 
+typedef void       	(*GstDataFreeFunction)		(GstData *data);
+typedef GstData*	(*GstDataCopyFunction)		(const GstData *data);
+
+typedef enum
+{
+  GST_DATA_READONLY 	= 1,
+
+  /* insert more */
+  GST_DATA_FLAG_LAST 	= 8,
+} GstDataFlags;
+
+#define GST_DATA_IS_READONLY(data)		(GST_DATA_FLAG_IS_SET((data), GST_DATA_READONLY))
+
+/* refcount */
+#define GST_DATA_REFCOUNT(data)			((GST_DATA(data))->refcount)
+#define GST_DATA_REFCOUNT_VALUE(data)		(GST_ATOMIC_INT_VALUE((&GST_DATA_REFCOUNT (data))))
+#define GST_DATA_REFCOUNT_READ(data,value)	(GST_ATOMIC_INT_READ(&(GST_DATA_REFCOUNT (data)),value)
+
+/* copy/free functions */
+#define GST_DATA_COPY_FUNC(data) 		(GST_DATA(data)->copy)
+#define GST_DATA_FREE_FUNC(data) 		(GST_DATA(data)->free)
+
+
 struct _GstData {
-  GType type;
+  GType 		 type;
+
+  /* refcounting */
+  GstAtomicInt		 refcount;
+
+  guint16		 flags;
+ 
+  /* utility function pointers, can override default */
+  GstDataFreeFunction 	 free;		/* free the data */
+  GstDataCopyFunction 	 copy;		/* free the data */
 };
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+/* function used by subclasses only */
+void			_gst_data_init			(GstData *data, GType type, guint16 flags,
+							 GstDataFreeFunction free,
+							 GstDataCopyFunction copy);
+void			_gst_data_free			(GstData *data);
+GstData*		_gst_data_copy			(const GstData *data);
+
+/* basic operations on data */
+GstData*		gst_data_copy	 		(const GstData *data);
+GstData* 		gst_data_copy_on_write 		(const GstData *data);
+void 			gst_data_free	 		(GstData *data);
+
+/* reference counting */
+GstData*		gst_data_ref			(GstData* data);
+GstData*		gst_data_ref_by_count		(GstData* data, gint count);
+void			gst_data_unref			(GstData* data);
+
+G_END_DECLS
 
 #endif /* __GST_DATA_H__ */

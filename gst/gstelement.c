@@ -32,6 +32,7 @@
 #include "gstscheduler.h"
 #include "gstevent.h"
 #include "gstutils.h"
+#include "gstlog.h"
 
 /* Element signals and args */
 enum {

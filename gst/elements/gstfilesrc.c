@@ -337,6 +337,10 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
 #endif
   /* now unmap the memory */
   munmap(GST_BUFFER_DATA(buf),GST_BUFFER_MAXSIZE(buf));
+
+  GST_BUFFER_DATA (buf) = NULL;
+
+  _gst_buffer_free (buf);
 }
 
 static GstBuffer *
@@ -371,7 +375,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   GST_BUFFER_OFFSET(buf) = offset;
   GST_BUFFER_TIMESTAMP(buf) = -1LL;
   GST_BUFFER_POOL_PRIVATE(buf) = src;
-  GST_BUFFER_FREE_FUNC(buf) = gst_filesrc_free_parent_mmap;
+  GST_BUFFER_FREE_FUNC(buf) = (GstDataFreeFunction) gst_filesrc_free_parent_mmap;
 
   g_mutex_lock(src->map_regions_lock);
   g_tree_insert(src->map_regions,buf,buf);
@@ -716,7 +720,7 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
       guint64 offset;
 
       if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
-	return FALSE;
+	goto error;
       }
 
       offset = GST_EVENT_SEEK_OFFSET (event);
@@ -724,24 +728,24 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
       switch (GST_EVENT_SEEK_METHOD (event)) {
         case GST_SEEK_METHOD_SET:
           if (offset > src->filelen) 
-	    return FALSE;
+	    goto error;
           src->curoffset = offset;
           GST_DEBUG(0, "seek set pending to %lld", src->curoffset);
 	  break;
         case GST_SEEK_METHOD_CUR:
           if (offset + src->curoffset > src->filelen) 
-	    return FALSE;
+	    goto error;
           src->curoffset += offset;
           GST_DEBUG(0, "seek cur pending to %lld", src->curoffset);
 	  break;
         case GST_SEEK_METHOD_END:
           if (ABS (offset) > src->filelen) 
-	    return FALSE;
+	    goto error;
           src->curoffset = src->filelen - ABS (offset);
           GST_DEBUG(0, "seek end pending to %lld", src->curoffset);
 	  break;
 	default:
-          return FALSE;
+          goto error;
 	  break;
       }
       g_object_notify (G_OBJECT (src), "offset");  
@@ -751,7 +755,7 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
     }
     case GST_EVENT_SIZE:
       if (GST_EVENT_SIZE_FORMAT (event) != GST_FORMAT_BYTES) {
-	return FALSE;
+	goto error;
       }
       src->block_size = GST_EVENT_SIZE_VALUE (event);
       g_object_notify (G_OBJECT (src), "blocksize");  
@@ -760,9 +764,13 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
       src->need_flush = TRUE;
       break;
     default:
-      return FALSE;
+      goto error;
       break;
   }
-
+  gst_event_unref (event);
   return TRUE;
+
+error:
+  gst_event_unref (event);
+  return FALSE;
 }
