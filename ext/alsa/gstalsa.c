@@ -894,7 +894,7 @@ out:
 static GstElementStateReturn
 gst_alsa_change_state (GstElement * element)
 {
-  int err;
+  int err = 0;
   GstAlsa *this;
 
   g_return_val_if_fail (element != NULL, FALSE);
@@ -931,10 +931,12 @@ gst_alsa_change_state (GstElement * element)
           if ((err = snd_pcm_pause (this->handle, 1)) < 0) {
             GST_ERROR_OBJECT (this, "Error pausing sound: %s",
                 snd_strerror (err));
-            return GST_STATE_FAILURE;
+            GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_PAUSE, 0);
+            goto cant_pause;
           }
         }
       } else {
+      cant_pause:
         /* if device doesn't know how to pause, we just stop */
         if (GST_FLAG_IS_SET (element, GST_ALSA_RUNNING))
           gst_alsa_stop_audio (this);
@@ -1402,6 +1404,9 @@ gst_alsa_close_audio (GstAlsa * this)
     g_free (this->cardname);
     this->cardname = NULL;
   }
+  GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_PAUSE, 0);
+  GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_RESUME, 0);
+  GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_SYNC_START, 0);
   GST_FLAG_UNSET (this, GST_ALSA_OPEN);
 
   return TRUE;

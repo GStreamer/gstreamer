@@ -90,9 +90,11 @@ GstOggChain;
 #define CURRENT_CHAIN(ogg) (&g_array_index ((ogg)->chains, GstOggChain, (ogg)->current_chain))
 #define FOR_PAD_IN_CURRENT_CHAIN(ogg, _pad, ...) G_STMT_START{			\
   GSList *_walk;							      	\
-  for (_walk = CURRENT_CHAIN (ogg)->pads; _walk; _walk = g_slist_next (_walk)) { \
-    GstOggPad *_pad = (GstOggPad *) _walk->data;				\
-    __VA_ARGS__									\
+  if ((ogg)->current_chain != -1) {						\
+    for (_walk = CURRENT_CHAIN (ogg)->pads; _walk; _walk = g_slist_next (_walk)) { \
+      GstOggPad *_pad = (GstOggPad *) _walk->data;				\
+      __VA_ARGS__								\
+    }										\
   }										\
 }G_STMT_END
 
@@ -374,8 +376,7 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
 
       GST_OGG_SET_STATE (ogg, GST_OGG_STATE_SEEK);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       GST_DEBUG_OBJECT (ogg, "initiating seeking to offset %" G_GUINT64_FORMAT,
           offset);
       ogg->seek_pad = cur;
@@ -422,8 +423,7 @@ gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       GST_FLAG_UNSET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       break;
     case GST_EVENT_EOS:
       if (ogg->state == GST_OGG_STATE_SETUP) {
