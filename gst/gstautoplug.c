@@ -127,11 +127,11 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
   }
   else if (IS_CAPS (src)) {
     res = gst_elementfactory_can_sink_caps ((GstElementFactory *)dest, src);
-    INFO (0,"factory %s to sink caps %d %d", ((GstElementFactory *)dest)->name, ((GstCaps *)src)->id, res);
+    INFO (0,"factory %s to src caps %d %d", ((GstElementFactory *)dest)->name, ((GstCaps *)src)->id, res);
   }
   else if (IS_CAPS (dest)) {
     res = gst_elementfactory_can_src_caps ((GstElementFactory *)src, dest);
-    INFO (0,"factory %s to src caps %d %d", ((GstElementFactory *)src)->name, ((GstCaps *)dest)->id, res);
+    INFO (0,"factory %s to sink caps %d %d", ((GstElementFactory *)src)->name, ((GstCaps *)dest)->id, res);
   }
   else {
     res = gst_autoplug_can_match ((GstElementFactory *)src, (GstElementFactory *)dest);

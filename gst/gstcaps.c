@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+#define GST_DEBUG_ENABLED
 #include "gst_private.h"
 
 #include "gstcaps.h"

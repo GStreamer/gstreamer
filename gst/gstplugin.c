@@ -465,7 +465,7 @@ gst_plugin_load_typefactory (gchar *mime)
 	  g_free (filename);
 	  g_free (pluginname);
 	}
-	return;
+	//return;
       }
       factories = g_list_next(factories);
     }
