@@ -6,7 +6,7 @@ More information can be found at http://gstreamer.net/
 
 GStreamer is split into a number of base packages:
 
-   libgst0              shared core libs
+   libgst1              shared core libs
    libgst-dev           development libs and headers
    gstreamer-runtime    tools required by the libs (gstreamer-register)
    gstreamer-doc        documentation
@@ -28,6 +28,7 @@ optional plugins:
    gstreamer-avifile
    gstreamer-cdparanoia
    gstreamer-colorspace
+   gstreamer-dvd
    gstreamer-esd
    gstreamer-festival
    gstreamer-flac
