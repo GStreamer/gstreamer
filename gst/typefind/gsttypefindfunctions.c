@@ -638,6 +638,18 @@ shn_type_find (GstTypeFind *tf, gpointer unused)
   }
 }
 
+/*** audio/x-m4a *********************************************/
+
+#define AAC_CAPS GST_CAPS_NEW ("m4a_type_find", "audio/x-m4a", NULL)
+static void
+m4a_type_find (GstTypeFind *tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 4, 8);
+  if (data && memcmp (data, "ftypM4A ", 8) == 0) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, AAC_CAPS);
+  }
+}
+
 /*** audio/x-mod *********************************************/
 
 #define MOD_CAPS gst_caps_new ("mod_type_find", "audio/x-mod", NULL)
@@ -1003,6 +1015,7 @@ plugin_init (GstPlugin *plugin)
   static gchar * gz_exts[] = {"gz", NULL};
   static gchar * zip_exts[] = {"zip", NULL};
   static gchar * compress_exts[] = {"Z", NULL};
+  static gchar * m4a_exts[] = {"m4a", NULL};
   
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions", GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
 
@@ -1083,6 +1096,8 @@ plugin_init (GstPlugin *plugin)
 	  compress_exts, "\037\235", 2, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER (plugin, "audio/x-vorbis", GST_RANK_PRIMARY,
 	  vorbis_type_find, NULL, VORBIS_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY,
+	  m4a_type_find, m4a_exts, AAC_CAPS, NULL);
   
   return TRUE;
 }
