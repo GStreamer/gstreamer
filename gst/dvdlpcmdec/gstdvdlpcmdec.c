@@ -229,7 +229,6 @@ gst_dvdlpcmdec_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstDvdLpcmDec *dvdlpcmdec;
-  guchar *data;
   gint64 size;
 
   g_return_if_fail (pad != NULL);
@@ -238,7 +237,6 @@ gst_dvdlpcmdec_chain (GstPad * pad, GstData * _data)
 
   dvdlpcmdec = GST_DVDLPCMDEC (gst_pad_get_parent (pad));
 
-  data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
   GST_LOG_OBJECT (dvdlpcmdec, "got buffer %p of size %" G_GINT64_FORMAT, buf,
@@ -290,7 +288,7 @@ gst_dvdlpcmdec_chain (GstPad * pad, GstData * _data)
       }
       gst_buffer_stamp (outbuf, buf);
 
-      src = data;
+      src = GST_BUFFER_DATA (buf);;
       dest = GST_BUFFER_DATA (outbuf);
 
       /* Copy 20-bit LPCM format to 24-bit buffers, with 0x00 in the lowest 
@@ -324,7 +322,11 @@ gst_dvdlpcmdec_chain (GstPad * pad, GstData * _data)
        * and last byte are already correct */
       gint64 count = size / 12;
       gint64 i;
-      guchar *src = data;
+      guchar *src;
+
+      /* Ensure our output buffer is writable */
+      buf = gst_buffer_copy_on_write (buf);
+      src = GST_BUFFER_DATA (buf);
 
       for (i = 0; i < count; i++) {
         guchar temp[9];
