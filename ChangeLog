@@ -1,5 +1,18 @@
 2004-08-09  David Schleef  <ds@schleef.org>
 
+	* sys/glsink/ARB_multitexture.h:  Remove old files.
+	* sys/glsink/EXT_paletted_texture.h:
+	* sys/glsink/NV_register_combiners.h:
+	* sys/glsink/gstgl_nvimage.c:
+	* sys/glsink/gstgl_pdrimage.c:
+	* sys/glsink/gstgl_rgbimage.c:
+	* sys/glsink/gstglsink.c:
+	* sys/glsink/gstglsink.h:
+	* sys/glsink/gstglxwindow.c:
+	* sys/glsink/regcomb_yuvrgb.c:
+
+2004-08-09  David Schleef  <ds@schleef.org>
+
 	Patch from Gernot Ziegler <gz@lysator.liu.se> rewriting the
 	GL sink plugin.  (Bug #147302)
 
