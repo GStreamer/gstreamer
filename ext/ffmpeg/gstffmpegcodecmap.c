@@ -371,6 +371,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_HUFFYUV:
       caps = GST_FF_VID_CAPS_NEW ("video/x-huffyuv", NULL);
+      if (context) {
+        gst_caps_set_simple (caps,
+            "bpp", G_TYPE_INT, context->bits_per_sample, NULL);
+      }
       break;
 
     case CODEC_ID_CYUV:
@@ -764,7 +768,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
   GstCaps *caps = NULL;
 
   int bpp = 0, depth = 0, endianness = 0;
-  gulong g_mask = 0, r_mask = 0, b_mask = 0;
+  gulong g_mask = 0, r_mask = 0, b_mask = 0, a_mask = 0;
   guint32 fmt = 0;
 
   switch (pix_fmt) {
@@ -796,16 +800,18 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       break;
     case PIX_FMT_RGBA32:
       bpp = 32;
-      depth = 24;
+      depth = 32;
       endianness = G_BIG_ENDIAN;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-      r_mask = 0x00ff0000;
+      r_mask = 0x000000ff;
       g_mask = 0x0000ff00;
-      b_mask = 0x000000ff;
+      b_mask = 0x00ff0000;
+      a_mask = 0xff000000;
 #else
-      r_mask = 0x0000ff00;
+      r_mask = 0xff000000;
       g_mask = 0x00ff0000;
-      b_mask = 0xff000000;
+      b_mask = 0x0000ff00;
+      a_mask = 0x000000ff;
 #endif
       break;
     case PIX_FMT_YUV410P:
@@ -847,6 +853,9 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
           "green_mask", G_TYPE_INT, g_mask,
           "blue_mask", G_TYPE_INT, b_mask,
           "endianness", G_TYPE_INT, endianness, NULL);
+      if (a_mask) {
+        gst_caps_set_simple (caps, "alpha_mask", G_TYPE_INT, a_mask, NULL);
+      }
     } else {
       caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
           "bpp", G_TYPE_INT, bpp,
@@ -1032,6 +1041,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
 
   gst_structure_get_int (structure, "width", &context->width);
   gst_structure_get_int (structure, "height", &context->height);
+  gst_structure_get_int (structure, "bpp", &context->bits_per_sample);
 
   if (gst_structure_get_double (structure, "framerate", &fps)) {
     context->frame_rate = fps * DEFAULT_FRAME_RATE_BASE;

@@ -252,10 +252,12 @@ gst_ffmpegdec_query (GstPad * pad, GstQueryType type,
 
   if (!peer)
     return FALSE;
-  else if (gst_pad_query (peer, type, fmt, value))
+
+  if (gst_pad_query (peer, type, fmt, value))
     return TRUE;
+
   /* ok, do bitrate calc... */
-  else if ((type != GST_QUERY_POSITION && type != GST_QUERY_TOTAL) ||
+  if ((type != GST_QUERY_POSITION && type != GST_QUERY_TOTAL) ||
            *fmt != GST_FORMAT_TIME || ffmpegdec->context->bit_rate == 0 ||
            !gst_pad_query (peer, type, &bfmt, value))
     return FALSE;
@@ -275,10 +277,16 @@ gst_ffmpegdec_event (GstPad * pad, GstEvent * event)
 
   if (!peer)
     return FALSE;
-  else if (gst_pad_send_event (peer, event))
+
+  gst_event_ref (event);
+  if (gst_pad_send_event (peer, event)) {
+    gst_event_unref (event);
     return TRUE;
-  else 
-    return FALSE; /* .. */
+  }
+
+  gst_event_unref (event);
+
+  return FALSE; /* .. */
 }
 
 static void
