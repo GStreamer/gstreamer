@@ -972,6 +972,7 @@ gst/rtjpeg/Makefile
 gst/silence/Makefile
 gst/sine/Makefile
 gst/smooth/Makefile
+gst/smpte/Makefile
 gst/spectrum/Makefile
 gst/speed/Makefile
 gst/stereo/Makefile
