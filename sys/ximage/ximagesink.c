@@ -80,13 +80,7 @@ gst_ximagesink_navigation_send_event (GstNavigation *navigation, GstCaps *caps)
   GstEvent *event;
 
   event = gst_event_new (GST_EVENT_NAVIGATION);
-  /*GST_EVENT_TIMESTAMP (event) = 0;*/
   event->event_data.caps.caps = caps;
-
-  /* FIXME 
-   * Obviously, the pointer x,y coordinates need to be adjusted by the
-   * window size and relation to the bounding window. */
-
   gst_pad_send_event (gst_pad_get_peer (ximagesink->sinkpad), event);
 }
 
@@ -98,6 +92,7 @@ gst_ximagesink_navigation_init (GstNavigationInterface *iface)
 
 /* X11 stuff */
 
+/* This function handles GstXImage creation depending on XShm availability */
 static GstXImage *
 gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
 {
@@ -134,8 +129,6 @@ gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
       ximage->SHMInfo.readOnly = FALSE;
   
       XShmAttach (ximagesink->xcontext->disp, &ximage->SHMInfo);
-      
-      GST_DEBUG ("ximagesink creating an image with XShm");
     }
   else
     {
@@ -148,8 +141,6 @@ gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
                                      ximage->width, ximage->height,
                                      ximagesink->xcontext->bpp,
                                      ximage->width * (ximagesink->xcontext->bpp / 8));
-      
-      GST_DEBUG ("ximagesink creating an image without XShm but with SHM defined");
     }
 #else
   ximage->data = g_malloc (ximage->size);
@@ -161,8 +152,6 @@ gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
                                  ximage->width, ximage->height,
                                  ximagesink->xcontext->bpp,
                                  ximage->width * (ximagesink->xcontext->bpp / 8));
-    
-  GST_DEBUG ("ximagesink creating an image without XShm");
 #endif /* HAVE_XSHM */
   
   if (ximage->ximage)
@@ -184,6 +173,7 @@ gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
   return ximage;
 }
 
+/* This function destroys a GstXImage handling XShm availability */ 
 static void
 gst_ximagesink_ximage_destroy (GstXImageSink *ximagesink, GstXImage *ximage)
 {
@@ -223,6 +213,7 @@ gst_ximagesink_ximage_destroy (GstXImageSink *ximagesink, GstXImage *ximage)
   g_free (ximage);
 }
 
+/* This function puts a GstXImage on a GstXImageSink's window */
 static void
 gst_ximagesink_ximage_put (GstXImageSink *ximagesink, GstXImage *ximage)
 {
@@ -267,6 +258,7 @@ gst_ximagesink_ximage_put (GstXImageSink *ximagesink, GstXImage *ximage)
   g_mutex_unlock (ximagesink->x_lock);
 }
 
+/* This function handles a GstXWindow creation */
 static GstXWindow *
 gst_ximagesink_xwindow_new (GstXImageSink *ximagesink, gint width, gint height)
 {
@@ -302,6 +294,7 @@ gst_ximagesink_xwindow_new (GstXImageSink *ximagesink, gint width, gint height)
   return xwindow;
 }
 
+/* This function destroys a GstXWindow */
 static void
 gst_ximagesink_xwindow_destroy (GstXImageSink *ximagesink, GstXWindow *xwindow)
 {
@@ -320,6 +313,7 @@ gst_ximagesink_xwindow_destroy (GstXImageSink *ximagesink, GstXWindow *xwindow)
   g_free (xwindow);
 }
 
+/* This function resizes a GstXWindow */
 /*static void
 gst_ximagesink_xwindow_resize (GstXImageSink *ximagesink, GstXWindow  *xwindow,
                                gint width, gint height)
@@ -335,6 +329,10 @@ gst_ximagesink_xwindow_resize (GstXImageSink *ximagesink, GstXWindow  *xwindow,
   g_mutex_unlock (ximagesink->x_lock);
 } */
 
+/* This function handles XEvents that might be in the queue. It generates
+   GstEvent that will be sent upstream in the pipeline to handle interactivity
+   and navigation. It will also listen for configure events on the window to
+   trigger caps renegotiation so on the fly software scaling can work. */
 static void
 gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
 {
@@ -344,7 +342,7 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
   /* We get all events on our window to throw them upstream */
-  //g_mutex_lock (ximagesink->x_lock);
+  g_mutex_lock (ximagesink->x_lock);
   while (XCheckWindowEvent (ximagesink->xcontext->disp,
                             ximagesink->xwindow->win,
                             ExposureMask | StructureNotifyMask |
@@ -355,7 +353,7 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
       GstEvent *event = NULL;
       
       /* We lock only for the X function call */
-      //g_mutex_unlock (ximagesink->x_lock);
+      g_mutex_unlock (ximagesink->x_lock);
       
       switch (e.type)
         {
@@ -374,8 +372,6 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                                                   "framerate", GST_PROPS_FLOAT (30),
                                                   "width", GST_PROPS_INT (e.xconfigure.width),
                                                   "height", GST_PROPS_INT (e.xconfigure.height)));
-            else
-              GST_DEBUG ("ximagesink window size has not changed. no renegotiation");
             break;
           case MotionNotify:
             /* Mouse pointer moved over our window. We send upstream
@@ -383,7 +379,6 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
             GST_DEBUG ("ximagesink pointer moved over window at %d,%d",
                        e.xmotion.x, e.xmotion.y);
             event = gst_event_new (GST_EVENT_NAVIGATION);
-            event->src = GST_OBJECT (ximagesink);
             event->event_data.caps.caps = GST_CAPS_NEW (
                                              "ximagesink_navigation",
                                              "video/x-raw-rgb",
@@ -398,7 +393,6 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
             GST_DEBUG ("ximagesink button %d pressed over window at %d,%d",
                        e.xbutton.button, e.xbutton.x, e.xbutton.x);
             event = gst_event_new (GST_EVENT_NAVIGATION);
-            event->src = GST_OBJECT (ximagesink);
             event->event_data.caps.caps = GST_CAPS_NEW (
                                              "ximagesink_navigation",
                                              "video/x-raw-rgb",
@@ -414,7 +408,6 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
             GST_DEBUG ("ximagesink key %d pressed over window at %d,%d",
                        e.xbutton.button, e.xbutton.x, e.xbutton.x);
             event = gst_event_new (GST_EVENT_NAVIGATION);
-            event->src = GST_OBJECT (ximagesink);
             event->event_data.caps.caps = GST_CAPS_NEW (
                                              "ximagesink_navigation",
                                              "video/x-raw-rgb",
@@ -427,13 +420,14 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
             GST_DEBUG ("ximagesink unhandled X event (%d)", e.type);
         }
         
-      /*if (event)
-        gst_pad_send_event (gst_pad_get_peer (pad), event);*/
+      if (event)
+        gst_pad_send_event (gst_pad_get_peer (pad), event);
       
-      //g_mutex_lock (ximagesink->x_lock);
+      g_mutex_lock (ximagesink->x_lock);
     }
-  //g_mutex_unlock (ximagesink->x_lock);
+  g_mutex_unlock (ximagesink->x_lock);
 }
+
 /* This function get the X Display and global infos about it. Everything is
    stored in our object and will be cleaned when the object is disposed. Note
    here that caps for supported format are generated without any window or 
@@ -577,7 +571,8 @@ gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
   if (GST_CAPS_IS_CHAINED (caps))
     return GST_PAD_LINK_DELAYED;
   
-  GST_DEBUG ("sinkconnect %s with %s", gst_caps_to_string(caps), gst_caps_to_string(ximagesink->xcontext->caps));
+  GST_DEBUG ("sinkconnect %s with %s", gst_caps_to_string(caps),
+             gst_caps_to_string(ximagesink->xcontext->caps));
   
   if (!gst_caps_get_int (caps, "width", &ximagesink->width))
     return GST_PAD_LINK_REFUSED;
@@ -772,7 +767,7 @@ gst_ximagesink_buffer_new (GstBufferPool *pool,
    
   g_mutex_unlock (ximagesink->pool_lock);
   
-  if (!ximage) /* We found not suitable image in the pool. Creating... */
+  if (!ximage) /* We found no suitable image in the pool. Creating... */
     ximage = gst_ximagesink_ximage_new (ximagesink,
                                         ximagesink->width,
                                         ximagesink->height);
