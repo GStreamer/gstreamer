@@ -20,6 +20,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include "string.h"
 #include "gstlame.h"
 
 /* elementfactory information */
@@ -173,6 +174,7 @@ enum {
   ARG_ALLOW_DIFF_SHORT,
   ARG_NO_SHORT_BLOCKS,
   ARG_EMPHASIS,
+  ARG_METADATA,
 };
 
 
@@ -323,6 +325,11 @@ gst_lame_class_init (GstLameClass *klass)
     g_param_spec_boolean ("emphasis", "Emphasis", "Emphasis",
                           TRUE, G_PARAM_READWRITE));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METADATA,
+    g_param_spec_boxed ("metadata", "Metadata", "Metadata to add to the stream,",
+            GST_TYPE_CAPS, G_PARAM_READWRITE));
+
+
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
 
@@ -408,9 +415,64 @@ gst_lame_init (GstLame *lame)
   lame->no_short_blocks = lame_get_no_short_blocks (lame->lgf);
   lame->emphasis = lame_get_emphasis (lame->lgf);
 
+  lame->metadata = GST_CAPS_NEW (
+      "lame_metadata",
+      "application/x-gst-metadata",
+      "comment",     GST_PROPS_STRING ("Track encoded with GStreamer"),
+      "year",        GST_PROPS_STRING (""),
+      "tracknumber", GST_PROPS_STRING (""),
+      "title",       GST_PROPS_STRING (""),
+      "artist",      GST_PROPS_STRING (""),
+      "album",       GST_PROPS_STRING (""),
+      "genre",       GST_PROPS_STRING ("")
+  );
+
+  id3tag_init (lame->lgf);
+  
   GST_DEBUG_OBJECT (lame, "done initializing");
 }
 
+static void
+gst_lame_add_metadata (GstLame *lame, GstCaps *caps)
+{
+  GList *props;
+  GstPropsEntry *prop;
+
+  if (caps == NULL)
+    return;
+
+  props = gst_caps_get_props (caps)->properties;
+  while (props) {
+    prop = (GstPropsEntry*)(props->data);
+    props = g_list_next(props);
+
+    if (gst_props_entry_get_type (prop) == GST_PROPS_STRING_TYPE) {
+      const gchar *name = gst_props_entry_get_name (prop);
+      const gchar *value;
+
+      gst_props_entry_get_string (prop, &value);
+
+      if (!value || strlen (value) == 0)
+        continue;
+
+      if (strcmp (name, "comment") == 0) {
+        id3tag_set_comment (lame->lgf, value);
+      } else if (strcmp (name, "date") == 0) {
+        id3tag_set_year (lame->lgf, value);
+      } else if (strcmp (name, "tracknumber") == 0) {
+        id3tag_set_track (lame->lgf, value);
+      } else if (strcmp (name, "title") == 0) {
+        id3tag_set_title (lame->lgf, value);
+      } else if (strcmp (name, "artist") == 0) {
+        id3tag_set_artist (lame->lgf, value);
+      } else if (strcmp (name, "album") == 0) {
+        id3tag_set_album (lame->lgf, value);
+      } else if (strcmp (name, "genre") == 0) {
+        id3tag_set_genre (lame->lgf, value);
+      }
+    }
+  }
+}
 
 static void
 gst_lame_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -512,6 +574,9 @@ gst_lame_set_property (GObject *object, guint prop_id, const GValue *value, GPar
       break;
     case ARG_EMPHASIS:
       lame->emphasis = g_value_get_boolean (value);
+      break;
+    case ARG_METADATA:
+      lame->metadata = g_value_get_boxed (value);
       break;
     default:
       break;
@@ -620,6 +685,9 @@ gst_lame_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec
     case ARG_EMPHASIS:
       g_value_set_boolean (value, lame->emphasis);
       break;
+    case ARG_METADATA:
+      g_value_set_static_boxed (value, lame->metadata);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -646,8 +714,8 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
       case GST_EVENT_FLUSH:
         mp3_buffer_size = 7200;
         mp3_data = g_malloc (mp3_buffer_size);
-	
-        mp3_size = lame_encode_flush_nogap (lame->lgf, mp3_data, mp3_buffer_size);
+
+        mp3_size = lame_encode_flush (lame->lgf, mp3_data, mp3_buffer_size);
 	gst_event_unref (GST_EVENT (buf));
         break;	
       default:
@@ -778,6 +846,8 @@ gst_lame_setup (GstLame *lame)
   lame_set_allow_diff_short (lame->lgf, lame->allow_diff_short);
   lame_set_no_short_blocks (lame->lgf, lame->no_short_blocks);
   lame_set_emphasis (lame->lgf, lame->emphasis);
+
+  gst_lame_add_metadata (lame, lame->metadata);
 
   /* initialize the lame encoder */
   if (lame_init_params (lame->lgf) < 0) {
