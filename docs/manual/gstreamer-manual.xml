@@ -36,6 +36,7 @@
 <!ENTITY DEBUGGING SYSTEM "debugging.xml">
 <!ENTITY PROGRAMS SYSTEM "programs.xml">
 <!ENTITY COMPONENTS SYSTEM "components.xml">
+<!ENTITY GNOME SYSTEM "gnome.xml">
 <!ENTITY QUOTES SYSTEM "quotes.xml">
 ]>
 
@@ -241,6 +242,8 @@
       &PROGRAMS;
 
       &COMPONENTS;
+
+      &GNOME;
 
       &QUOTES;
 
