@@ -800,4 +800,4 @@ Plugin for playback of wav audio files
 %{prefix}/lib/gst/libgstwavparse*
 
 %post -n gstreamer-wav
-@%{prefix}/bin/gstreamer-register --gst-mask=0
+%{prefix}/bin/gstreamer-register --gst-mask=0
