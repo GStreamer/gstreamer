@@ -77,28 +77,16 @@ static void
 gst_ximagesink_navigation_send_event (GstNavigation *navigation, GstStructure *structure)
 {
   GstXImageSink *ximagesink = GST_XIMAGESINK (navigation);
-  XWindowAttributes attr;
   GstEvent *event;
-  double x, y;
-
-  g_mutex_lock (ximagesink->x_lock);
-  XGetWindowAttributes (ximagesink->xcontext->disp,
-      ximagesink->xwindow->win, &attr);
-  g_mutex_unlock (ximagesink->x_lock);
 
   event = gst_event_new (GST_EVENT_NAVIGATION);
   event->event_data.structure.structure = structure;
-  if(gst_structure_get_double(structure, "pointer_x", &x)){
-    x *= ximagesink->width;
-    x /= attr.width;
-    gst_structure_set(structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
-  }
-  if(gst_structure_get_double(structure, "pointer_y", &y)){
-    y *= ximagesink->height;
-    y /= attr.height;
-    gst_structure_set(structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
-  }
 
+  /* We are not converting the pointer coordinates as there's no hardware 
+     scaling done here. The only possible scaling is done by videoscale and
+     videoscale will have to catch those events and tranform the coordinates
+     to match the applied scaling */
+  
   gst_pad_send_event (gst_pad_get_peer (ximagesink->sinkpad), event);
 }
 
@@ -385,27 +373,36 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                        e.xconfigure.width, e.xconfigure.height);
             if ( (ximagesink->xwindow->width != e.xconfigure.width) ||
                  (ximagesink->xwindow->height != e.xconfigure.height) )
-              gst_pad_try_set_caps (ximagesink->sinkpad,
-                                    GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
-                                                  "bpp",        GST_PROPS_INT (ximagesink->xcontext->bpp),
-                                                  "depth",      GST_PROPS_INT (ximagesink->xcontext->depth),
-                                                  "endianness", GST_PROPS_INT (ximagesink->xcontext->endianness),
-                                                  "red_mask",   GST_PROPS_INT (ximagesink->xcontext->visual->red_mask),
-                                                  "green_mask", GST_PROPS_INT (ximagesink->xcontext->visual->green_mask),
-                                                  "blue_mask",  GST_PROPS_INT (ximagesink->xcontext->visual->blue_mask),
-                                                  "width",      GST_PROPS_INT (e.xconfigure.width),
-                                                  "height",     GST_PROPS_INT (e.xconfigure.height),
-                                                  "framerate",  GST_PROPS_FLOAT (30)));
-              ximagesink->width = e.xconfigure.width;
-              ximagesink->height = e.xconfigure.height;
-              if ( (ximagesink->ximage) &&
-                  ( (ximagesink->width != ximagesink->ximage->width) ||
-                    (ximagesink->height != ximagesink->ximage->height) ) ) {
-                /* We renew our ximage only if size changed */
-                gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
+              {
+                gst_pad_try_set_caps (ximagesink->sinkpad,
+                                      GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
+                                                    "bpp",        GST_PROPS_INT (ximagesink->xcontext->bpp),
+                                                    "depth",      GST_PROPS_INT (ximagesink->xcontext->depth),
+                                                    "endianness", GST_PROPS_INT (ximagesink->xcontext->endianness),
+                                                    "red_mask",   GST_PROPS_INT (ximagesink->xcontext->visual->red_mask),
+                                                    "green_mask", GST_PROPS_INT (ximagesink->xcontext->visual->green_mask),
+                                                    "blue_mask",  GST_PROPS_INT (ximagesink->xcontext->visual->blue_mask),
+                                                    "width",      GST_PROPS_INT (e.xconfigure.width),
+                                                    "height",     GST_PROPS_INT (e.xconfigure.height),
+                                                    "framerate",  GST_PROPS_FLOAT (ximagesink->framerate)));
                 
-                ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
-                    ximagesink->width, ximagesink->height);
+                /* We should check for _try_set_caps result */
+                ximagesink->width = e.xconfigure.width;
+                ximagesink->height = e.xconfigure.height;
+                
+                if ( (ximagesink->ximage) &&
+                     ( (ximagesink->width != ximagesink->ximage->width) ||
+                       (ximagesink->height != ximagesink->ximage->height) ) )
+                  {
+                    /* We renew our ximage only if size changed */
+                    gst_ximagesink_ximage_destroy (ximagesink,
+                                                   ximagesink->ximage);
+                
+                    ximagesink->ximage = gst_ximagesink_ximage_new (
+                                                            ximagesink,
+                                                            ximagesink->width,
+                                                            ximagesink->height);
+                  }
               }
             break;
           case MotionNotify:
@@ -413,8 +410,8 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                events for interactivity/navigation */
             GST_DEBUG ("ximagesink pointer moved over window at %d,%d",
                        e.xmotion.x, e.xmotion.y);
-            gst_navigation_send_mouse_event(GST_NAVIGATION(ximagesink),
-                e.xmotion.x, e.xmotion.y);
+            gst_navigation_send_mouse_event (GST_NAVIGATION (ximagesink),
+                                             e.xmotion.x, e.xmotion.y);
             break;
           case ButtonPress:
           case ButtonRelease:
@@ -422,8 +419,8 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                events for interactivity/navigation */
             GST_DEBUG ("ximagesink button %d pressed over window at %d,%d",
                        e.xbutton.button, e.xbutton.x, e.xbutton.x);
-            gst_navigation_send_mouse_event(GST_NAVIGATION(ximagesink),
-                e.xmotion.x, e.xmotion.y);
+            gst_navigation_send_mouse_event (GST_NAVIGATION (ximagesink),
+                                             e.xmotion.x, e.xmotion.y);
             break;
           case KeyPress:
           case KeyRelease:
@@ -431,12 +428,13 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                events for interactivity/navigation */
             GST_DEBUG ("ximagesink key %d pressed over window at %d,%d",
                        e.xkey.keycode, e.xkey.x, e.xkey.x);
-            keysym = XKeycodeToKeysym(ximagesink->xcontext->disp,
-                e.xkey.keycode, 0);
+            keysym = XKeycodeToKeysym (ximagesink->xcontext->disp,
+                                       e.xkey.keycode, 0);
             gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
-                XKeysymToString (keysym));
-            gst_navigation_send_key_event(GST_NAVIGATION(ximagesink),
-                "unknown");
+                                           XKeysymToString (keysym));
+            /* What's that ? */
+            gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
+                                           "unknown");
             break;
           default:
             GST_DEBUG ("ximagesink unhandled X event (%d)", e.type);
@@ -521,7 +519,6 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
     }
 #endif /* HAVE_XSHM */
   
-  /* What the hell is that ? */
   if (xcontext->endianness == G_LITTLE_ENDIAN && xcontext->depth == 24)
     {
       xcontext->endianness = G_BIG_ENDIAN;
@@ -606,6 +603,8 @@ gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!gst_caps_get_int (caps, "width", &ximagesink->width))
     return GST_PAD_LINK_REFUSED;
   if (!gst_caps_get_int (caps, "height", &ximagesink->height))
+    return GST_PAD_LINK_REFUSED;
+  if (!gst_caps_get_float (caps, "framerate", &ximagesink->framerate))
     return GST_PAD_LINK_REFUSED;
   
   if (gst_caps_has_fixed_property (caps, "pixel_width"))
@@ -940,6 +939,8 @@ gst_ximagesink_init (GstXImageSink *ximagesink)
   ximagesink->clock = NULL;
   
   ximagesink->width = ximagesink->height = 0;
+  
+  ximagesink->framerate = 0;
   
   ximagesink->x_lock = g_mutex_new ();
   

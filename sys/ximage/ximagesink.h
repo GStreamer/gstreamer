@@ -114,6 +114,7 @@ struct _GstXImageSink {
   GstXImage *ximage;
   
   gint width, height;
+  gfloat framerate;
   GMutex *x_lock;
   
   /* Unused */
