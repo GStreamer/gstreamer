@@ -357,6 +357,7 @@ gst_modplug_src_query (GstPad * pad, GstQueryType type,
           res = FALSE;
           break;
       }
+      break;
     default:
       res = FALSE;
       break;
