@@ -1,3 +1,7 @@
+2004-04-05  Johan Dahlin  <johan@gnome.org>
+
+	* po/sv.po: Updated translation
+
 2004-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstplugin.c: (gst_plugin_load_file):
