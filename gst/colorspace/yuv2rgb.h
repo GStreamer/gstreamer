@@ -23,7 +23,7 @@
 #define __YUV2RGB_H__
 
 #include <gst/gst.h>
-#include <gstcolorspace.h>
+#include "gstcolorspace.h"
 
 G_BEGIN_DECLS
 

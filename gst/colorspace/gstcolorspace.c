@@ -20,7 +20,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gstcolorspace.h>
+#include "gstcolorspace.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
