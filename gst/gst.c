@@ -318,7 +318,7 @@ load_plugin_func (gpointer data, gpointer user_data)
 }
 
 static void 
-parse_number (const gchar *number, guint32 *val)
+parse_number (const gchar *number, gint32 *val)
 {
   /* handle either 0xHEX or dec */
   if (*(number+1) == 'x') {
@@ -574,7 +574,7 @@ static void
 init_popt_callback (poptContext context, enum poptCallbackReason reason,
                     const struct poptOption *option, const char *arg, void *data) 
 {
-  gint val = 0;
+  gint32 val = 0;
   GLogLevelFlags fatal_mask;
 
   if (gst_initialized)
@@ -595,16 +595,16 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
       break;
     case ARG_INFO_MASK:
       parse_number (arg, &val);
-      gst_info_set_categories (val);
+      gst_info_set_categories ((guint32) val);
       break;
     case ARG_DEBUG_MASK:
       parse_number (arg, &val);
-      gst_debug_set_categories (val);
+      gst_debug_set_categories ((guint32) val);
       break;
     case ARG_MASK:
       parse_number (arg, &val);
-      gst_debug_set_categories (val);
-      gst_info_set_categories (val);
+      gst_debug_set_categories ((guint32) val);
+      gst_info_set_categories ((guint32) val);
       break;
     case ARG_MASK_HELP:
       gst_mask_help ();
@@ -727,4 +727,3 @@ gst_version (guint *major, guint *minor, guint *micro)
   *minor = GST_VERSION_MINOR;
   *micro = GST_VERSION_MICRO;
 }
-
