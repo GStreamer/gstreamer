@@ -37,7 +37,7 @@ typedef struct
   GObjectClass parent_class;
 
   /* signals */
-  void (*media_info_signal)     		(GstMediaInfo *gst_media_info);
+  void (*media_info_signal) 		(GstMediaInfo *gst_media_info);
 
 } GstMediaInfoClass;
 
@@ -57,7 +57,7 @@ typedef struct
   GList *tracks;
 } GstMediaInfoStream;
 
-/* structure for "logical" stream or track, 
+/* structure for "logical" stream or track,
  * or one of a set of sequentially muxed streams */
 typedef struct
 {
@@ -76,7 +76,7 @@ typedef struct
   GstCaps *caps;		/* properties of the muxed concurrent stream */
 } GstMediaInfoConcurrent;
 
-#define GST_MEDIA_INFO_ERROR      	gst_media_info_error_quark ()
+#define GST_MEDIA_INFO_ERROR		gst_media_info_error_quark ()
 
 #define GST_MEDIA_INFO_TYPE		(gst_media_info_get_type ())
 #define GST_MEDIA_INFO(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_MEDIA_INFO_TYPE, GstMediaInfo))
@@ -92,24 +92,30 @@ typedef struct
 #define GST_MEDIA_INFO_FORMAT		1 << 5
 #define GST_MEDIA_INFO_ALL		((1 << 6) - 1)
 
-GType           gst_media_info_get_type (void);
+GType           gst_media_info_get_type		(void);
 
-GstMediaInfo *	gst_media_info_new 	(const char *source_element);
-GstMediaInfoStream *	
-		gst_media_info_read	(GstMediaInfo *media_info,
-		                         const char *location,
-					 guint16 GST_MEDIA_INFO_FLAGS);
-gboolean	gst_media_info_read_many (GstMediaInfo *media_info,
-					  GList *locations,
-					  guint16 GST_MEDIA_INFO_FLAGS,
-					  GError **error);
-GstCaps *	gst_media_info_get_next (GstMediaInfo *media_info,
-		                         GError **error);
+GstMediaInfo *	gst_media_info_new		(const char *source_element);
+
+void		gst_media_info_read_with_idler	(GstMediaInfo *media_info,
+						 const char *location,
+						 guint16 GST_MEDIA_INFO_FLAGS);
+gboolean	gst_media_info_read_idler	(GstMediaInfo *media_info,
+						 GstMediaInfoStream **streamp);
+GstMediaInfoStream *
+		gst_media_info_read		(GstMediaInfo *media_info,
+						 const char *location,
+						 guint16 GST_MEDIA_INFO_FLAGS);
+gboolean	gst_media_info_read_many	(GstMediaInfo *media_info,
+						 GList *locations,
+						 guint16 GST_MEDIA_INFO_FLAGS,
+						 GError **error);
+GstCaps *	gst_media_info_get_next		(GstMediaInfo *media_info,
+						 GError **error);
 /*
  * FIXME: reset ?
 gboolean	gst_media_info_write	(GstMediaInfo *media_info,
                                          const char *location,
 					 GstCaps *media_info);
 					 */
-					 
+
 #endif /* __GST_MEDIA_INFO_H__ */
