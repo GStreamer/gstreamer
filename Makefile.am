@@ -55,6 +55,12 @@ dist-hook:
 rpm: dist
 	rpm -ta $(distdir).tar.gz
 
+deb:
+	dpkg-buildpacakge -rfakeroot -us -uc
+
+deb-maint:
+	debuild
+
 include $(top_srcdir)/idiottest.mak
 
 # Rules to generate autoconf scripts if configure.base is updated
