@@ -81,6 +81,7 @@ AC_PROG_CXXCPP
 AC_ISC_POSIX
 
 AC_HEADER_STDC([])
+AC_C_INLINE
 
 dnl Check for a way to display the function name in debug output
 GST_CHECK_FUNCTION()
@@ -1333,6 +1334,14 @@ GST_CHECK_FEATURE(OGG, [ogg de/encoder], oggdemux oggmux, [
   AS_SCRUB_INCLUDE(OGG_CFLAGS)
 ])
 
+dnl *** theora ***
+dnl FIXME: theora doesn't have proper pc/m4 files yet, change this when this happens
+translit(dnm, m, l) AM_CONDITIONAL(USE_THEORA, true)
+GST_CHECK_FEATURE(THEORA, [ogg theora codec], theoradec, [
+  GST_CHECK_LIBHEADER(THEORA, theora, theora_version_string, , theora/theora.h, THEORA_LIBS="-ltheora")
+  AC_SUBST(THEORA_LIBS)
+])
+
 dnl *** vorbis ***
 dnl AM_PATH_VORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
@@ -1687,8 +1696,9 @@ ext/snapshot/Makefile
 ext/speex/Makefile
 ext/sndfile/Makefile
 ext/swfdec/Makefile
-ext/vorbis/Makefile
 ext/tarkin/Makefile
+ext/theora/Makefile
+ext/vorbis/Makefile
 ext/xvid/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
