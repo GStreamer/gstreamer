@@ -169,6 +169,21 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 	  sinkpadname = NULL;
       }
 
+      if (srcpadname && (ptr = strchr (srcpadname, '.'))) {
+	gchar *element_name = g_strndup (arg, (ptr - srcpadname));
+	GstElement *new;
+
+	GST_DEBUG (0, "have pad for element %s\n", element_name);
+	new = gst_bin_get_by_name (parent, element_name);
+	if (!new) {
+          GST_DEBUG (0, "element %s does not exist! trying to continue\n", element_name);
+	}
+	else {
+          previous = new;
+	  srcpadname = ptr + 1;
+	}
+      }
+      
       GST_DEBUG (0, "have srcpad %s, sinkpad %s\n", srcpadname, sinkpadname);
 
       g_slist_free (srcpads);
@@ -422,7 +437,7 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 
       g_slist_free (srcpads);
       srcpads = NULL;
-
+      
       g_slist_free (sinkpads);
       sinkpads = NULL;
 
