@@ -37,7 +37,8 @@
 #define MASK_BIT_IS_SET(mask, bit) \
   (mask & (1 << bit))
 
-static gboolean		gst_ossmixer_supported	   (GstInterface     *iface);
+static gboolean		gst_ossmixer_supported	   (GstInterface     *iface,
+						    GType             iface_type);
 
 static const GList *	gst_ossmixer_list_channels (GstMixer         *ossmixer);
 
@@ -111,8 +112,11 @@ gst_ossmixer_interface_init (GstMixerClass *klass)
 }
 
 static gboolean
-gst_ossmixer_supported (GstInterface *iface)
+gst_ossmixer_supported (GstInterface *iface,
+			GType         iface_type)
 {
+  g_assert (iface_type == GST_TYPE_MIXER);
+
   return (GST_OSSELEMENT (iface)->mixer_fd != -1);
 }
 
