@@ -57,21 +57,29 @@ struct _GstVideoscale {
 
   GstPad *sinkpad,*srcpad;
 
+  gboolean force_size;
+  gint forced_width;
+  gint forced_height;
+
   /* video state */
-  guint32 format;
-  gint width;
-  gint height;
-  gint targetwidth;
-  gint targetheight;
+  gboolean inited;
+  struct videoscale_format_struct *format;
+  gint to_width;
+  gint to_height;
+  gint from_width;
+  gint from_height;
+  gboolean passthru;
+
   GstVideoScaleMethod method;
-  guint scale_bytes;
   
   /* private */
+  gint from_buf_size;
+  gint to_buf_size;
+#if 0
   guchar *temp;
-  void (*scale_cc) (GstVideoscale *scale, guchar *src, guchar *dest);
-  void (*scaler) (GstVideoscale *scale, guchar *src, guchar *dest,int,int,int,int);
   guchar (*filter) (guchar *src, gdouble x, gdouble y, gint sw, gint sh);
   guchar copy_row[8192];
+#endif
 };
 
 struct _GstVideoscaleClass {
