@@ -1,0 +1,143 @@
+Source: gstreamer
+Section: x11
+Priority: optional
+Maintainer: David I. Lehn <dlehn@vt.edu>
+Build-Depends: debhelper (>= 3.0.0), libxml-dev (>= 1.8.10), zlib1g-dev (>= 1:1.1.3), libghttp-dev (>= 1.0.6), libglib-dev (>= 1.2.8), libgtk1.2-dev (>= 1.2.8), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0beta3), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b)
+Build-Depends-Indep: debhelper (>= 3.0.0), gtk-doc-tools (>= 0.4.0), jade (>= 1.2.1), transfig (>= 3.2.3.c)
+Standards-Version: 3.5.2.0
+
+Package: libgst0
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}
+Suggests: gstreamer-elements, gstreamer-common
+Description: Core GStreamer shared library
+ Core GStreamer shared library
+
+Package: libgst-dev
+Architecture: any
+Section: devel
+Depends: libgst0 (= ${Source-Version}), libc6-dev
+Recommends: gstreamer-doc (= ${Source-Version})
+Description: GStreamer development libraries and headers
+ GStreamer development libraries and headers
+
+Package: gstreamer-runtime
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}
+Description: gstreamer-register binary needed to manage plugin registry
+ gstreamer-register binary needed to manage plugin registry
+
+Package: gstreamer-doc
+Architecture: all
+Section: doc
+Recommends: libgst-dev (= ${Source-Version})
+Description: Core GStreamer documentation
+ Core GStreamer documentation
+
+Package: gstreamer-tools
+Architecture: any
+Section: x11
+Depends: ${shlibs:Depends}
+Suggests: gstreamer-common
+Description: Tools for use with GStreamer
+ Tools for use with GStreamer
+ .
+ gstreamer-inspect: query details of installed plugins
+ gstreamer-launch: command line pipeline generator
+
+Package: libgstmediaplay0
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}
+Description: GStreamer media player library
+ GStreamer media player library
+
+Package: libgstmediaplay-dev
+Architecture: any
+Section: devel
+Depends: libgstmediaplay0 (= ${Source-Version}), libc6-dev
+Description: GStreamer media player development library and header
+ GStreamer media player development library and header
+
+Package: gstmediaplay
+Architecture: any
+Section: x11
+Depends: ${shlibs:Depends}
+Suggests: gstreamer-common
+Description: GStreamer media player
+ GStreamer media player
+
+Package: libgsteditor0
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}
+Description: GStreamer editor library
+ GStreamer editor library
+
+Package: libgsteditor-dev
+Architecture: any
+Section: devel
+Depends: libgsteditor0 (= ${Source-Version}), libc6-dev
+Description: GStreamer editor development library and header
+ GStreamer editor development library and header
+
+Package: gsteditor
+Architecture: any
+Section: x11
+Depends: ${shlibs:Depends}
+Suggests: gstreamer-common
+Description: GStreamer editor
+ GStreamer editor
+
+Package: gstreamer-cdparanoia
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime
+Description: cdparanoia plugin for GStreamer
+ cdparanoia plugin for GStreamer
+
+Package: gstreamer-common
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime
+Description: Collection of GStreamer plugins
+ Collection of GStreamer plugins
+ .
+ These plugins have no special dependencies.
+
+Package: gstreamer-elements
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime
+Description: Core elements plugin for GStreamer
+ Core elements plugin for GStreamer
+
+Package: gstreamer-esd
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime
+Description: Enlightened Sound Daemon plugin for GStreamer
+ Enlightened Sound Daemon plugin for GStreamer
+
+Package: gstreamer-lame
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime
+Description: LAME plugin for GStreamer
+ LAME plugin for GStreamer
+
+Package: gstreamer-mpg123
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime
+Description: mpg123 plugin for GStreamer
+ mpg123 plugin for GStreamer
+
+Package: gstreamer-vorbis
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime
+Description: Vorbis plugin for GStreamer
+ Vorbis plugin for GStreamer

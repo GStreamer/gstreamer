@@ -1,0 +1,5 @@
+?package(gsteditor): \
+  needs=X11 \
+  section=Apps/Viewers \
+  title="GStreamer Editor" \
+  command="/usr/bin/gsteditor"
