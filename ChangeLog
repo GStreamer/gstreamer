@@ -1,3 +1,9 @@
+2005-02-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ogg/gstogmparse.c:
+	* gst/debug/gstnavigationtest.c:
+	  Die, thou faulty symbol pollutors (non-static parent_class).
+
 2005-02-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/mplex/gstmplexibitstream.cc:
