@@ -101,6 +101,7 @@ enum {
 
 static void		gst_filesrc_class_init		(GstFileSrcClass *klass);
 static void		gst_filesrc_init		(GstFileSrc *filesrc);
+static void 		gst_filesrc_dispose 		(GObject *object);
 
 static void		gst_filesrc_set_property	(GObject *object, guint prop_id, 
 							 const GValue *value, GParamSpec *pspec);
@@ -159,8 +160,9 @@ gst_filesrc_class_init (GstFileSrcClass *klass)
 	  "touch",        ARG_TOUCH,        G_PARAM_READWRITE,
 	  NULL);
 
-  gobject_class->set_property = gst_filesrc_set_property;
-  gobject_class->get_property = gst_filesrc_get_property;
+  gobject_class->dispose 	= gst_filesrc_dispose;
+  gobject_class->set_property 	= gst_filesrc_set_property;
+  gobject_class->get_property 	= gst_filesrc_get_property;
 
   gstelement_class->change_state = gst_filesrc_change_state;
 }
@@ -203,6 +205,21 @@ gst_filesrc_init (GstFileSrc *src)
   src->map_regions_lock = g_mutex_new();
 
   src->seek_happened = FALSE;
+}
+
+static void
+gst_filesrc_dispose (GObject *object)
+{
+  GstFileSrc *src;
+
+  src = GST_FILESRC (object);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+
+  g_tree_destroy (src->map_regions);
+  g_mutex_free (src->map_regions_lock);
+  if (src->filename)
+    g_free (src->filename);
 }
 
 
