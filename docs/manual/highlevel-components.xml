@@ -132,6 +132,20 @@ main (gint   argc,
           Supports visualizations for audio-only media.
         </para>
       </listitem>
+      <listitem>
+        <para>
+          Supports subtitles, both in the media as well as from separate
+          files.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Supports stream selection and disabling. If your media has
+          multiple audio or subtitle tracks, you can dynamically choose
+          which one to play back, or decide to turn it off alltogther
+          (which is especially useful to turn off subtitles).
+        </para>
+      </listitem>
     </itemizedlist>
   </sect1>
 

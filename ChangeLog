@@ -1,5 +1,10 @@
 2005-01-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/manual/highlevel-components.xml:
+	  Add subtitle/streamselection as new features to playbin.
+
+2005-01-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/manual/manual.xml:
 	  Re-enable dataaccess docs (oops).
 
