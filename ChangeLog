@@ -1,3 +1,11 @@
+2004-06-05  Andrew Turner <zxombie@hotpop.com>
+
+	* gst/tcp/gsttcp.c: portability (Solaris 10/FreeBSD)
+	* gst/tcp/gsttcpclientsrc.h: idem
+	  - define MSG_NOSIGNAL if not done
+	  - include unistd.h for off_t
+          (fixes #143749)
+
 2004-06-05  Benjamin Otte  <otte@gnome.org>
 
 	* configure.ac:
