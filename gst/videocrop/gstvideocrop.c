@@ -277,53 +277,70 @@ gst_video_crop_sink_connect (GstPad *pad, GstCaps *caps)
   return GST_PAD_LINK_OK;
 }
 
+#define GST_VIDEO_I420_SIZE(width,height) ((width)*(height) + ((width)/2)*((height)/2)*2)
+
+#define GST_VIDEO_I420_Y_OFFSET(width,height) (0)
+#define GST_VIDEO_I420_U_OFFSET(width,height) ((width)*(height))
+#define GST_VIDEO_I420_V_OFFSET(width,height) ((width)*(height) + ((width/2)*(height/2)))
+
+#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (width)
+#define GST_VIDEO_I420_U_ROWSTRIDE(width) ((width)/2)
+#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((width)/2)
+
 static void
 gst_video_crop_i420 (GstVideoCrop *video_crop, GstBuffer *src_buffer, GstBuffer *dest_buffer)
 {
+  guint8 *src;
+  guint8 *dest;
   guint8 *srcY, *srcU, *srcV;
   guint8 *destY, *destU, *destV;
   gint out_width = video_crop->width -
 	(video_crop->crop_left + video_crop->crop_right);
   gint out_height = video_crop->height -
 	(video_crop->crop_top + video_crop->crop_bottom);
-  gint src_stride = video_crop->width;
-  gint src_size = video_crop->width * video_crop->height;
+  gint src_stride;
   gint j;
 
-  srcY = GST_BUFFER_DATA (src_buffer) +
-	(src_stride * video_crop->crop_top + video_crop->crop_left);
-  destY = GST_BUFFER_DATA (dest_buffer);
+  src = GST_BUFFER_DATA (src_buffer);
+  dest = GST_BUFFER_DATA (dest_buffer);
+
+  g_return_if_fail(GST_BUFFER_SIZE (dest_buffer) == GST_VIDEO_I420_SIZE(out_width,out_height));
+
+  srcY = src + GST_VIDEO_I420_Y_OFFSET(video_crop->width, video_crop->height);
+  destY = dest + GST_VIDEO_I420_Y_OFFSET(out_width, out_height);
+
+  src_stride = GST_VIDEO_I420_Y_ROWSTRIDE(video_crop->width);
 
   /* copy Y plane first */
 
+  srcY += src_stride * video_crop->crop_top + video_crop->crop_left;
   for (j = 0; j < out_height; j++) {
     memcpy (destY, srcY, out_width);
     srcY += src_stride;
     destY += out_width;
   }
 
-  out_width >>= 1;
-  src_stride >>= 1;
-  out_height >>= 1;
+  src_stride = GST_VIDEO_I420_U_ROWSTRIDE(video_crop->width);
 
-  destU = destY;
-  destV = destU + ((out_width * out_height) >> 1);
+  destU = dest + GST_VIDEO_I420_U_OFFSET(out_width, out_height);
+  destV = dest + GST_VIDEO_I420_V_OFFSET(out_width, out_height);
 
-  srcU = GST_BUFFER_DATA (src_buffer) +	src_size +
-	((src_stride * video_crop->crop_top + video_crop->crop_left) >> 1);
-  srcV = srcU + (src_size >> 2);
+  srcU = src + GST_VIDEO_I420_U_OFFSET(video_crop->width, video_crop->height);
+  srcV = src + GST_VIDEO_I420_V_OFFSET(video_crop->width, video_crop->height);
 
-  /* copy U plane */
-  for (j = 0; j < out_height; j++) {
-    memcpy (destU, srcU, out_width);
+  srcU += src_stride * (video_crop->crop_top/2) + (video_crop->crop_left/2);
+  srcV += src_stride * (video_crop->crop_top/2) + (video_crop->crop_left/2);
+
+  for (j = 0; j < out_height/2; j++) {
+    /* copy U plane */
+    memcpy (destU, srcU, out_width/2);
     srcU += src_stride;
-    destU += out_width;
-  }
-  /* copy U plane */
-  for (j = 0; j < out_height; j++) {
-    memcpy (destV, srcV, out_width);
+    destU += out_width/2;
+
+    /* copy V plane */
+    memcpy (destV, srcV, out_width/2);
     srcV += src_stride;
-    destV += out_width;
+    destV += out_width/2;
   }
 }
 
