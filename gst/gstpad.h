@@ -279,6 +279,7 @@ struct _GstGhostPadClass {
 /* Some check functions (unused?) */
 #define GST_PAD_IS_LINKED(pad)		(GST_PAD_PEER(pad) != NULL)
 #define GST_PAD_IS_ACTIVE(pad)		(!GST_FLAG_IS_SET(GST_PAD_REALIZE(pad), GST_PAD_DISABLED))
+#define GST_PAD_IS_NEGOTIATING(pad)	(GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING))
 #define GST_PAD_IS_USABLE(pad)		(GST_PAD_IS_LINKED (pad) && \
 		                         GST_PAD_IS_ACTIVE(pad) && GST_PAD_IS_ACTIVE(GST_PAD_PEER (pad)))
 #define GST_PAD_CAN_PULL(pad)		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->gethandler != NULL)
@@ -516,4 +517,3 @@ G_END_DECLS
 
 
 #endif /* __GST_PAD_H__ */
-
