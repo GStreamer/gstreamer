@@ -1,4 +1,4 @@
-%define name    gst-plugins  
+%define name    gstreamer-plugins  
 %define ver     @VERSION@
 %define rel     @GST_PLUGINS_RELEASE@
 %define prefix  /usr
@@ -10,7 +10,7 @@ Version: %ver
 Release: %rel
 Copyright: LGPL
 Group: Libraries/Multimedia
-Source: %{name}-%{ver}.tar.gz
+Source: gst-plugins-%{ver}.tar.gz
 BuildRoot: /var/tmp/%{name}-%{ver}-root
 Docdir: %{prefix}/doc
 Prefix: %prefix
@@ -32,7 +32,7 @@ plugins.
 %doc AUTHORS COPYING README  
 %{_bindir}/gst-launch-ext
 %prep
-%setup
+%setup -n gst-plugins
 %build
 CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir} --mandir=$RPM_BUILD_ROOT%{prefix}/share/man --enable-DEBUG 
 
@@ -745,7 +745,8 @@ Summary: GStreamer audio format plugin
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
 Requires: gstreamer-plugin-libs = %{ver}
-%description -n gstreamer-audioformats
+
+%description -n gstreamer-audio-formats
 Plugin for playback of wav, au and mp3 audio files
 
 %files -n gstreamer-audio-formats
