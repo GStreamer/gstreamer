@@ -788,6 +788,25 @@ gst_value_get_caps (const GValue * value)
 /*************************************/
 /* GstBuffer */
 
+static int
+gst_value_compare_buffer (const GValue * value1, const GValue * value2)
+{
+  GstBuffer *buf1 = g_value_get_boxed (value1);
+  GstBuffer *buf2 = g_value_get_boxed (value2);
+
+  if (GST_BUFFER_SIZE (buf1) != GST_BUFFER_SIZE (buf2))
+    return GST_VALUE_UNORDERED;
+  if (GST_BUFFER_SIZE (buf1) == 0)
+    return GST_VALUE_EQUAL;
+  g_assert (GST_BUFFER_DATA (buf1));
+  g_assert (GST_BUFFER_DATA (buf2));
+  if (memcmp (GST_BUFFER_DATA (buf1), GST_BUFFER_DATA (buf2),
+          GST_BUFFER_SIZE (buf1)) == 0)
+    return GST_VALUE_EQUAL;
+
+  return GST_VALUE_UNORDERED;
+}
+
 static char *
 gst_value_serialize_buffer (const GValue * value)
 {
@@ -2119,7 +2138,7 @@ _gst_value_initialize (void)
 #endif
     static GstValueTable gst_value = {
       0,
-      NULL,                     /*gst_value_compare_buffer, */
+      gst_value_compare_buffer,
       gst_value_serialize_buffer,
       gst_value_deserialize_buffer,
     };

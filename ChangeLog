@@ -1,3 +1,9 @@
+2004-04-23  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstvalue.c: (gst_value_compare_buffer),
+	(_gst_value_initialize):
+	  add comparison function for buffers
+
 2004-04-22  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/pwg.xml:
