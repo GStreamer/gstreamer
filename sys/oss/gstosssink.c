@@ -462,7 +462,6 @@ gst_osssink_get_clock (GstElement *element)
 	    
   osssink = GST_OSSSINK (element);
 
-  return NULL;
   return GST_CLOCK (osssink->provided_clock);
 }
 
