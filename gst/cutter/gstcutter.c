@@ -268,7 +268,7 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
 /*      g_print ("DEBUG: cutter: start from here, turning on out\n"); */
       /* first of all, flush current buffer */
       g_signal_emit (G_OBJECT (filter), gst_cutter_signals[CUT_START], 0);
-      g_print ("DEBUG: cutter: flushing buffer ");
+      GST_DEBUG (GST_CAT_PLUGIN_INFO, "DEBUG: cutter: flushing buffer");
       while (filter->pre_buffer)
       {
         g_print (".");
@@ -324,8 +324,9 @@ gst_cutter_set_property (GObject *object, guint prop_id, const GValue *value, GP
     case ARG_THRESHOLD:
 	/* set the level */
       filter->threshold_level = g_value_get_double (value);
-      g_print ("DEBUG: cutter: set threshold level to %f\n",
-		filter->threshold_level);
+      GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+		 "DEBUG: cutter: set threshold level to %f\n", 
+		 filter->threshold_level);
       break;
     case ARG_THRESHOLD_DB:
       /* set the level given in dB 
@@ -333,8 +334,9 @@ gst_cutter_set_property (GObject *object, guint prop_id, const GValue *value, GP
        * values in dB < 0 result in values between 0 and 1
        */
       filter->threshold_level = pow (10, g_value_get_double (value) / 20);
-      g_print ("DEBUG: cutter: set threshold level to %f\n",
-		filter->threshold_level);
+      GST_DEBUG (GST_CAT_PLUGIN_INFO,
+                 "DEBUG: cutter: set threshold level to %f\n",
+		 filter->threshold_level);
       break;
     case ARG_RUN_LENGTH:
       /* set the minimum length of the silent run required */
