@@ -625,7 +625,9 @@ gst_modplug_loop (GstElement *element)
     
     if (!GST_PAD_CAPS (modplug->srcpad) &&
         modplug_negotiate (modplug) <= 0) {
-      gst_element_error (GST_ELEMENT (modplug), "could not negotiate format");
+      gst_element_gerror (GST_ELEMENT (modplug), GST_ERROR_CAPS_NEGOTIATION,
+			  g_strdup ("could not negotiate format"),
+			  g_strdup ("could not negotiate format"));
       return;
     }
         

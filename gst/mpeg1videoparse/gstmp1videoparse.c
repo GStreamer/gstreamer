@@ -198,8 +198,9 @@ mp1videoparse_parse_seq (Mp1VideoParse *mp1videoparse, GstBuffer *buf)
     gst_caps_debug (caps, "New mpeg1videoparse caps");
 
     if (gst_pad_try_set_caps (mp1videoparse->srcpad, caps) <= 0) {
-      gst_element_error (GST_ELEMENT (mp1videoparse),
-                         "mp1videoparse: failed to negotiate a new format");
+      gst_element_gerror(GST_ELEMENT (mp1videoparse), GST_ERROR_UNKNOWN,
+        g_strdup ("unconverted error, file a bug"),
+        g_strdup_printf ("mp1videoparse: failed to negotiate a new format"));
       return; 
     }
   }

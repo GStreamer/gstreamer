@@ -499,7 +499,9 @@ gst_flxdec_loop (GstElement *element)
     if (flxh->type != FLX_MAGICHDR_FLI &&
       flxh->type != FLX_MAGICHDR_FLC &&
       flxh->type != FLX_MAGICHDR_FLX) {
-      gst_element_error (element, "not a flx file (type %d)\n", flxh->type);
+      gst_element_gerror(element, GST_ERROR_UNKNOWN,
+        g_strdup ("unconverted error, file a bug"),
+        g_strdup_printf("not a flx file (type %d)\n", flxh->type));
       return;
     }
   

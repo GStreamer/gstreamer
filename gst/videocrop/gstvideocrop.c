@@ -380,7 +380,9 @@ gst_video_crop_chain (GstPad *pad, GstBuffer *buffer)
                                          "framerate", GST_PROPS_FLOAT (video_crop->fps)
 				       )) <= 0)
     {
-      gst_element_error (GST_ELEMENT (video_crop), "could not negotiate pads");
+      gst_element_gerror(GST_ELEMENT (video_crop), GST_ERROR_UNKNOWN,
+        g_strdup ("unconverted error, file a bug"),
+        g_strdup_printf("could not negotiate pads"));
       return;
     }
   }

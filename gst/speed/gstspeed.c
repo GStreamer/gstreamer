@@ -280,7 +280,9 @@ speed_loop (GstElement *element)
 #include "filter.func"
 #undef _FORMAT
   } else {
-    gst_element_error (element, "capsnego was never performed, bailing...");
+    gst_element_gerror(element, GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf("capsnego was never performed, bailing..."));
     gst_element_yield (element);
   }
 }
