@@ -136,9 +136,9 @@ gst_asf_demux_base_init (gpointer g_class)
     GST_RIFF_WAVE_FORMAT_PCM,
     GST_RIFF_WAVE_FORMAT_VORBIS1,
     GST_RIFF_WAVE_FORMAT_A52,
-    GST_RIFF_WAVE_FORMAT_DIVX_WMAV1,
-    GST_RIFF_WAVE_FORMAT_DIVX_WMAV2,
-    GST_RIFF_WAVE_FORMAT_WMAV9,
+    GST_RIFF_WAVE_FORMAT_WMAV1,
+    GST_RIFF_WAVE_FORMAT_WMAV2,
+    GST_RIFF_WAVE_FORMAT_WMAV3,
     -1                          /* end */
   };
 
@@ -1479,7 +1479,7 @@ gst_asf_demux_audio_caps (guint16 codec_id,
         *codec_name = g_strdup ("AC3");
       break;
 
-    case GST_RIFF_WAVE_FORMAT_DIVX_WMAV1:
+    case GST_RIFF_WAVE_FORMAT_WMAV1:
       caps = gst_caps_from_string ("audio/x-wma, "
           "wmaversion = (int) 1, "
           "block_align = (int) [ 0, MAX ], " "bitrate = (int) [ 0, MAX ]");
@@ -1496,10 +1496,10 @@ gst_asf_demux_audio_caps (guint16 codec_id,
             "bitrate", G_TYPE_INT, audio->byte_rate * 8, NULL);
       }
       if (codec_name)
-        *codec_name = g_strdup ("Microsoft WMA V1");
+        *codec_name = g_strdup ("Microsoft Windows Media 7 (WMA1)");
       break;
 
-    case GST_RIFF_WAVE_FORMAT_DIVX_WMAV2:
+    case GST_RIFF_WAVE_FORMAT_WMAV2:
       caps = gst_caps_from_string ("audio/x-wma, "
           "wmaversion = (int) 2, "
           "block_align = (int) [ 0, MAX ], " "bitrate = (int) [ 0, MAX ]");
@@ -1517,13 +1517,13 @@ gst_asf_demux_audio_caps (guint16 codec_id,
         gst_data_unref (GST_DATA (buffer));
       }
       if (codec_name)
-        *codec_name = g_strdup ("Microsoft WMA V2");
+        *codec_name = g_strdup ("Microsoft Windows Media 8 (WMA2)");
       break;
 
-    case GST_RIFF_WAVE_FORMAT_WMAV9:
+    case GST_RIFF_WAVE_FORMAT_WMAV3:
       caps = gst_caps_from_string ("audio/x-wma, " "wmaversion = (int) 3");
       if (codec_name)
-        *codec_name = g_strdup ("Microsoft WMA V3");
+        *codec_name = g_strdup ("Microsoft Windows Media 9 (WMA3)");
       break;
 
     default:
@@ -1653,21 +1653,21 @@ gst_asf_demux_video_caps (guint32 codec_fcc,
       caps = gst_caps_new_simple ("video/x-wmv",
           "wmvversion", G_TYPE_INT, 1, NULL);
       if (codec_name)
-        *codec_name = g_strdup ("Windows Media Video 7");
+        *codec_name = g_strdup ("Microsoft Windows Media 7 (WMV1)");
       break;
 
     case GST_MAKE_FOURCC ('W', 'M', 'V', '2'):
       caps = gst_caps_new_simple ("video/x-wmv",
           "wmvversion", G_TYPE_INT, 2, NULL);
       if (codec_name)
-        *codec_name = g_strdup ("Windows Media Video 8");
+        *codec_name = g_strdup ("Microsoft Windows Media 8 (WMV2)");
       break;
 
     case GST_MAKE_FOURCC ('W', 'M', 'V', '3'):
       caps = gst_caps_new_simple ("video/x-wmv",
           "wmvversion", G_TYPE_INT, 3, NULL);
       if (codec_name)
-        *codec_name = g_strdup ("Windows Media Video 9");
+        *codec_name = g_strdup ("Microsoft Windows Media 9 (WMV3)");
       break;
 
     case GST_MAKE_FOURCC ('M', 'P', 'G', '4'):
