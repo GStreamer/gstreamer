@@ -265,7 +265,7 @@ gst_bin_add (GstBin *bin,
   GST_DEBUG_ENTER ("");
 
   // must be not be in PLAYING state in order to modify bin
-  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
+//  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
 
   // the element must not already have a parent
   g_return_if_fail (GST_ELEMENT_PARENT(element) == NULL);
