@@ -1,8 +1,9 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgstwavparse.la
+plugin_LTLIBRARIES = libgstwavparse.la
 
 libgstwavparse_la_SOURCES = gstwavparse.c gstriff.c
 libgstwavparse_la_CFLAGS = $(GST_CFLAGS)
+libgstwavparse_la_LIBADD = $(GST_LIBS)
 
 noinst_HEADERS = gstwavparse.h gstriff.h

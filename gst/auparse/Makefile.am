@@ -1,8 +1,9 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgstparseau.la
+plugin_LTLIBRARIES = libgstparseau.la
 
 libgstparseau_la_SOURCES = gstparseau.c
-libgstparseau_la_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
+libgstparseau_la_CFLAGS = $(GST_CFLAGS)
+libgstparseau_la_LIBADD = $(GST_LIBS)
 
 noinst_HEADERS = gstparseau.h

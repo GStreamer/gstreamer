@@ -1,11 +1,10 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libesdsink.la
+plugin_LTLIBRARIES = libesdsink.la
 
 libesdsink_la_SOURCES = esdsink.c
+libesdsink_la_CFLAGS = $(GST_CFLAGS) $(ESD_CFLAGS)
+libesdsink_la_LIBADD = $(GST_LIBS) $(ESD_LIBS)
+
 noinst_HEADERS = esdsink.h
-
-libesdsink_la_CFLAGS = $(ESD_CFLAGS) $(GST_CFLAGS)
-libesdsink_la_LIBADD = $(ESD_LIBS)
-
 EXTRA_DIST = README
