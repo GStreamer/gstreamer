@@ -61,15 +61,32 @@ typedef struct {
   ogg_stream_state	stream;
   guint64		offset; /* end offset of last buffer */
   guint64		known_offset; /* last known offset */
+  gint64		packetno; /* number of next expected packet */
+  
   guint64		length;	/* length of stream or 0 */
-  glong			pages;
+  glong			pages; /* number of pages in stream or 0 */
+
+  guint			flags;
 } GstOggPad;
+
+typedef enum {
+  GST_OGG_PAD_NEEDS_DISCONT	= (1 << 0),
+  GST_OGG_PAD_NEEDS_FLUSH	= (1 << 1)
+}
+GstOggPadFlags;
 
 /* all information needed for one ogg chain (relevant for chained bitstreams) */
 typedef struct {
   GSList *		pads; /* list of GstOggPad */
 } GstOggChain;
 #define CURRENT_CHAIN(ogg) (&g_array_index ((ogg)->chains, GstOggChain, (ogg)->current_chain))
+#define FOR_PAD_IN_CURRENT_CHAIN(ogg, _pad, ...) G_STMT_START{			\
+  GSList *_walk;							      	\
+  for (_walk = CURRENT_CHAIN (ogg)->pads; _walk; _walk = g_slist_next (_walk)) { \
+    GstOggPad *_pad = (GstOggPad *) _walk->data;				\
+    __VA_ARGS__									\
+  }										\
+}G_STMT_END
 
 typedef enum {
   GST_OGG_FLAG_BOS = GST_ELEMENT_FLAG_LAST,
@@ -307,19 +324,19 @@ gst_ogg_demux_src_event (GstPad *pad, GstEvent *event)
   cur = gst_ogg_get_pad_by_pad (ogg, pad);
   /* FIXME: optimize this so events from inactive chains work? 
    * in theory there shouldn't be an exisiting pad for inactive chains */
-  if (cur == NULL) return FALSE;
+  if (cur == NULL) goto error;
   
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
       gint64 offset;
       if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_DEFAULT)
-	break;
+	goto error;
       offset = GST_EVENT_SEEK_OFFSET (event);
       switch (GST_EVENT_SEEK_METHOD (event)) {
 	case GST_SEEK_METHOD_END:
 	  if (cur->length == 0 || offset > 0)
-	    goto out;
+	    goto error;
 	  offset = cur->length + offset;
 	  break;
 	case GST_SEEK_METHOD_CUR:
@@ -329,21 +346,23 @@ gst_ogg_demux_src_event (GstPad *pad, GstEvent *event)
 	  break;
 	default:
 	  g_warning ("invalid seek method in seek event");
-	  break;
+	  goto error;
       }
-      g_print ("DEBUG: oggdemux: offset %lld, known %lld\n", offset, cur->known_offset);
       if (offset < cur->known_offset) {
-	GstEvent *restart = gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, 0);
+	GstEvent *restart = gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET | GST_EVENT_SEEK_FLAGS (event), 0);
 	if (!gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad), restart))
-	  break;
-      }
-      else {
-        GstEvent *flush = gst_event_new_flush ();
-	if (!gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad), flush))
-	  break;
+	  goto error;
+      } else {
+	FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
+	  if (GST_PAD_IS_USABLE (pad->pad))
+	    gst_pad_push (pad->pad, GST_DATA (gst_event_new (GST_EVENT_FLUSH)));
+	);
       }
 
       GST_OGG_SET_STATE (ogg, GST_OGG_STATE_SEEK);
+      FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
+	pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
+      );
       GST_DEBUG_OBJECT (ogg, "initiating seeking to offset %"G_GUINT64_FORMAT, offset);
       ogg->seek_pad = cur; 
       ogg->seek_to = offset;
@@ -351,10 +370,12 @@ gst_ogg_demux_src_event (GstPad *pad, GstEvent *event)
       return TRUE;
     }
     default:
-      break;
+      return gst_pad_event_default (pad, event);
   }
 
-out:
+  g_assert_not_reached ();
+  
+error:
   gst_event_unref (event);
   return FALSE;
 }
@@ -386,6 +407,9 @@ gst_ogg_demux_handle_event (GstPad *pad, GstEvent *event)
       ogg_sync_reset (&ogg->sync);
       gst_event_unref (event);
       GST_FLAG_UNSET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
+      FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
+	pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
+      );
       break;
     case GST_EVENT_EOS:
       if (ogg->state == GST_OGG_STATE_SETUP) {
@@ -648,14 +672,6 @@ br:
           GST_DEBUG_OBJECT (ogg, "ended seek at offset %"G_GUINT64_FORMAT" (requested  %"G_GUINT64_FORMAT, cur->known_offset, ogg->seek_to);
 	  ogg->seek_pad = NULL;
 	  ogg->seek_to = 0;
-	  /* send discont everywhere */
-	  for (walk = CURRENT_CHAIN (ogg)->pads; walk; walk = g_slist_next (walk)) {
-	    GstOggPad *send = (GstOggPad *) walk->data;
-	    GstEvent *event = gst_event_new_discontinuous (FALSE, 
-		GST_FORMAT_DEFAULT, send->known_offset);
-	    if (GST_PAD_IS_USABLE (send->pad))
-	      gst_pad_push (send->pad, GST_DATA (event));
-	  }
 	}
       }
       /* fallthrough */
@@ -696,7 +712,7 @@ gst_ogg_pad_push (GstOggDemux *ogg, GstOggPad *pad)
 	gst_ogg_pad_reset (ogg, pad);
 	break;
       case 1: {
-	/* only push data when plazing, not during seek or similar */
+	/* only push data when playing, not during seek or similar */
 	if (ogg->state != GST_OGG_STATE_PLAY)
 	  continue;
 	if (!pad->pad) {
@@ -720,6 +736,18 @@ gst_ogg_pad_push (GstOggDemux *ogg, GstOggPad *pad)
 	  gst_pad_set_active (pad->pad, TRUE);
 	  gst_element_add_pad (GST_ELEMENT (ogg), pad->pad);
 	}
+	/* check for discont */
+	if (packet.packetno != pad->packetno++) {
+	  pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
+	  pad->packetno = packet.packetno + 1;
+	}
+	/* send discont if needed */
+	if ((pad->flags & GST_OGG_PAD_NEEDS_DISCONT) && GST_PAD_IS_USABLE (pad->pad)) {
+	  GstEvent *event = gst_event_new_discontinuous (FALSE, 
+	    GST_FORMAT_DEFAULT, pad->known_offset); /* FIXME: this might be wrong because we can only use the last known offset */
+	  gst_pad_push (pad->pad, GST_DATA (event));
+	  pad->flags &= (~GST_OGG_PAD_NEEDS_DISCONT);
+	};
 	/* optimization: use a bufferpool containing the ogg packet? */
 	buf = gst_pad_alloc_buffer (pad->pad, GST_BUFFER_OFFSET_NONE, packet.bytes);
 	memcpy (buf->data, packet.packet, packet.bytes);

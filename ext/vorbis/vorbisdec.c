@@ -247,7 +247,7 @@ vorbis_dec_src_event (GstPad *pad, GstEvent *event)
 static void
 vorbis_dec_event (GstVorbisDec *dec, GstEvent *event)
 {
-  guint64 value;
+  guint64 value, time, bytes;
   
   GST_LOG_OBJECT (dec, "handling event");
   switch (GST_EVENT_TYPE (event)) {
@@ -259,12 +259,29 @@ vorbis_dec_event (GstVorbisDec *dec, GstEvent *event)
 	GST_WARNING_OBJECT (dec, 
 	    "discont event didn't include offset, we might set it wrong now");
       }
-      dec->packetno = 3;
+      if (dec->packetno < 3) {
+	if (dec->granulepos != 0)
+	  GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), ("can't handle discont before parsing first 3 packets"));
+	dec->packetno = 0;
+	gst_pad_push (dec->srcpad, GST_DATA (gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, (guint64) 0, 
+	      GST_FORMAT_DEFAULT, (guint64) 0, GST_FORMAT_BYTES, (guint64) 0, 0)));
+      } else {
+	dec->packetno = 3;
+	/* if one of them works, all of them work */
+	if (vorbis_dec_from_granulepos (dec, GST_FORMAT_TIME, dec->granulepos, &time) &&
+	    vorbis_dec_from_granulepos (dec, GST_FORMAT_DEFAULT, dec->granulepos, &value) &&
+	    vorbis_dec_from_granulepos (dec, GST_FORMAT_BYTES, dec->granulepos, &bytes)) {
+	  gst_pad_push (dec->srcpad, GST_DATA (gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, 
+		GST_FORMAT_DEFAULT, value, GST_FORMAT_BYTES, bytes, 0)));
+	} else {
+	  GST_ERROR_OBJECT (dec, "failed to parse data for DISCONT event, not sending any");
+	}
+      }
       break;
     default:
+      gst_pad_event_default (dec->sinkpad, event);
       break;
   }
-  gst_pad_event_default (dec->sinkpad, event);
 }
 
 static void
@@ -292,7 +309,7 @@ vorbis_dec_chain (GstPad *pad, GstData *data)
     if (packet.packet[0] / 2 != packet.packetno) {
       /* FIXME: just skip? */
       GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
-	  (NULL), ("unexpected packet type %d", (gint) packet.packet[0]));
+	  (NULL), ("unexpected packet type %d, expected %d", (gint) packet.packet[0], (gint) packet.packetno));
       gst_data_unref (data);
       return;
     }

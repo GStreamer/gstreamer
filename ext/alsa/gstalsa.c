@@ -720,8 +720,8 @@ gst_alsa_change_state (GstElement *element)
         GST_ERROR_OBJECT (this, "Error unpausing sound: %s", snd_strerror (err));
         return GST_STATE_FAILURE;
       }
-      gst_alsa_clock_start (this->clock);
     }
+    gst_alsa_clock_start (this->clock);
     break;
   case GST_STATE_PLAYING_TO_PAUSED:
     if (GST_ALSA_CAPS_IS_SET (this, GST_ALSA_CAPS_PAUSE)) {
@@ -836,7 +836,7 @@ gst_alsa_start (GstAlsa *this)
       g_assert_not_reached ();
       break;
   }
-  gst_alsa_clock_start (this->clock);
+  /* gst_alsa_clock_start (this->clock); */
   return TRUE;
 }
 void
