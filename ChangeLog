@@ -1,3 +1,28 @@
+2004-09-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_update),
+	(gst_alsa_mixer_get_volume), (gst_alsa_mixer_set_volume),
+	(gst_alsa_mixer_set_mute), (gst_alsa_mixer_set_record),
+	(gst_alsa_mixer_set_option), (gst_alsa_mixer_get_option):
+	  Update mixer (to sync with other sessions) if we try to obtain
+	  a new value. This makes alsamixer work accross applications.
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_get_time):
+	  Only call sync functions if we're running, else alsalib asserts.
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_query):
+	  Sometimes fails to compile. Possibly a gcc bug.
+	* gst/playback/gstplaybin.c: (gen_video_element),
+	(gen_audio_element):
+	  Add a reference to an application-provided object, because we lose
+	  this same reference if we add it to the bin. If we don't do this,
+	  we can only use this object once and thus crash if we go from
+	  ready to playing, back to ready and back to playing again.
+	  Also add an audioscale element because several cheap soundcards -
+	  like mine - don't support all samplerates.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get),
+	(gst_ximagesink_xcontext_clear), (gst_ximagesink_change_state):
+	  Fix wrong order or PAR calls. Makes automatically obtained PAR
+	  from the X server atually being used.
+
 2004-09-12  David Schleef  <ds@schleef.org>
 
 	Fixes: #151879, #151881, #151882, #151883, #151884, #151886,
