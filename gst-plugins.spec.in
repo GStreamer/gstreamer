@@ -515,7 +515,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_RTP_TRUE@Summary: GStreamer RTP plugin
 @USE_RTP_TRUE@Group: Libraries/Multimedia
 @USE_RTP_TRUE@Requires: gstreamer-plugins >= %{ver}
-@USE_RTP_TRUE@Requires: librtp >= 0.1
+@USE_RTP_TRUE@Requires: librtp >= 0.99
 @USE_RTP_TRUE@
 @USE_RTP_TRUE@%description -n gstreamer-rtp
 @USE_RTP_TRUE@Library for transfering data with the RTP protocol
