@@ -97,7 +97,7 @@ static GstBufferPool    *gst_alsa_src_get_buffer_pool (GstPad *pad);
 static GstElementStateReturn gst_alsa_change_state (GstElement *element);
 
 /* audio processing functions */
-static int      gst_alsa_do_mmap (GstAlsa *this, guint numpads, snd_pcm_sframes_t *avail);
+static int      gst_alsa_do_mmap (GstAlsa *this, snd_pcm_sframes_t *avail);
 
 static void     gst_alsa_sink_loop (GstElement *element);
 static void     gst_alsa_src_loop (GstElement *element);
@@ -280,6 +280,7 @@ gst_alsa_init (GstAlsa *this)
   /* init values */
   this->handle = NULL;
   this->channels = 1;
+  this->caps_set = FALSE;
 
   GST_FLAG_SET (this, GST_ELEMENT_THREAD_SUGGESTED);
 
@@ -816,20 +817,16 @@ gst_alsa_change_state (GstElement *element)
 /*** AUDIO PROCESSING *********************************************************/
 
 static int
-gst_alsa_do_mmap (GstAlsa *this, guint numpads, snd_pcm_sframes_t *avail)
+gst_alsa_do_mmap (GstAlsa *this, snd_pcm_sframes_t *avail)
 {
   snd_pcm_uframes_t offset;
   snd_pcm_channel_area_t *dst, *src, *areas;
   int i, err, width = snd_pcm_format_physical_width (this->format);
 
   /* areas points to the memory areas that belong to gstreamer. */
-  if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SRC) {
-    areas = dst = calloc(this->channels, sizeof(snd_pcm_channel_area_t));
-  } else {
-    areas = src = calloc(this->channels, sizeof(snd_pcm_channel_area_t));
-  }
+  areas = src = dst = calloc(this->channels, sizeof(snd_pcm_channel_area_t));
 
-  if (numpads == 1) {
+  if (((GstElement *) this)->numpads == 1) {
     /* interleaved */
     for (i = 0; i < this->channels; i++) {
       areas[i].addr = this->pads[0].data;
@@ -845,18 +842,11 @@ gst_alsa_do_mmap (GstAlsa *this, guint numpads, snd_pcm_sframes_t *avail)
     }
   }
 
-  /* might want to try to do some pointer sneakery in the first if block to get
-     rid of this second if block ... but right now i'm too sleepy */
-  if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SRC) {
-    if ((err = snd_pcm_mmap_begin (this->handle, (const snd_pcm_channel_area_t **) &src, &offset, avail)) < 0) {
-      g_warning ("gstalsa: mmap failed: %s", snd_strerror (err));
-      return -1;
-    }
-  } else {
-    if ((err = snd_pcm_mmap_begin (this->handle, (const snd_pcm_channel_area_t **) &dst, &offset, avail)) < 0) {
-      g_warning ("gstalsa: mmap failed: %s", snd_strerror (err));
-      return -1;
-    }
+  if ((err = snd_pcm_mmap_begin (this->handle, (
+             const snd_pcm_channel_area_t **) (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SRC ? &src : &dst),
+             &offset, avail)) < 0) {
+    g_warning ("gstalsa: mmap failed: %s", snd_strerror (err));
+    return -1;
   }
 
   if ((err = snd_pcm_areas_copy (dst, offset, src, 0, this->channels, *avail, this->format)) < 0) {
@@ -879,16 +869,15 @@ gst_alsa_update_avail (GstAlsa *this)
   if (avail < 0) {
     if (avail == -EPIPE) {
       gst_alsa_xrun_recovery (this);
-      return -EPIPE;
     } else {
       g_warning ("unknown ALSA avail_update return value (%d)", (int) avail);
-      return -1;
     }
   }
   return avail;
 }
 
-inline static gint
+/* returns TRUE, if the loop should go on */
+inline static gboolean
 gst_alsa_pcm_wait (GstAlsa *this)
 {
   if (snd_pcm_state (this->handle) == SND_PCM_STATE_RUNNING) {
@@ -896,20 +885,23 @@ gst_alsa_pcm_wait (GstAlsa *this)
       if (errno == EINTR) {
         /* happens mostly when run under gdb, or when exiting due to a signal */
         GST_DEBUG (GST_CAT_PLUGIN_INFO, "got interrupted while waiting");
-        if (gst_element_interrupt (GST_ELEMENT (this)))
-          return -1;
+        if (gst_element_interrupt (GST_ELEMENT (this))) {
+          return TRUE;
+        } else {
+          return FALSE;
+        }
       }
       g_warning ("error waiting for alsa pcm: (%d: %s)", errno, strerror (errno));
-      return -1;
+      return FALSE;
     }
   }
-  return 0;
+  return TRUE;
 }
 
 static void
 gst_alsa_sink_loop (GstElement *element)
 {
-  snd_pcm_sframes_t avail, copied;
+  snd_pcm_sframes_t avail, avail2, copied;
   gint i;
   gint bytes, num_bytes; /* per channel */
   GstAlsa *this = GST_ALSA (element);
@@ -932,50 +924,57 @@ gst_alsa_sink_loop (GstElement *element)
     }
   }
 
- sink_restart:
+sink_restart:
 
-  while (1) {
-    avail = gst_alsa_update_avail (this);
-    if (avail == -EPIPE) goto sink_restart;
-    if (avail == -1) break;
-    if (avail > 0) {
-      int width = snd_pcm_format_physical_width (this->format);
-
-      /* check how many bytes we still have in all our bytestreams */
-      bytes = avail * ( width / 8 ) * (element->numpads == 1 ? this->channels : 1);
-      for (i = 0; i < element->numpads; i++) {
-        g_assert (this->pads[i].pad != NULL);
-        do {
-          num_bytes = gst_bytestream_peek_bytes (this->pads[i].bs, &this->pads[i].data, bytes);
-        } while (num_bytes == 0 && gst_alsa_sink_check_event (this, i));
-        if (num_bytes == 0)
-          break;
-        bytes = MIN (bytes, num_bytes);
-      }
-
-      /* FIXME: lotsa stuff can have happened while fetching data. Do we need to check something? */
-
-      /* put this data into alsa */
-      avail = bytes / (width / 8 ) / (element->numpads == 1 ? this->channels : 1);
-      if ((copied = gst_alsa_do_mmap (this, element->numpads, &avail)) < 0)
-        break;
-
-      /* flush the data */
-      bytes = copied * ( width / 8 ) * (element->numpads == 1 ? this->channels : 1);
-      for (i = 0; i < element->numpads; i++)
-        gst_bytestream_flush (this->pads[i].bs, bytes);
-
-      /* BUG: we start the stream explicitly, autostart doesn't work correctly (alsa 0.9.0rc7) */
-      if (snd_pcm_state(this->handle) == SND_PCM_STATE_PREPARED && snd_pcm_avail_update (this->handle) == 0) {
-        GST_DEBUG (GST_CAT_PLUGIN_INFO, "Explicitly starting playback");
-        snd_pcm_start(this->handle);
-      }
+  avail = gst_alsa_update_avail (this);
+  if (avail == -EPIPE) goto sink_restart;
+  if (avail < 0) return;
+  if (avail > 0) {
+    int width = snd_pcm_format_physical_width (this->format);
+    
+    /* Not enough space. We grab data nonetheless and sleep afterwards */
+    if (avail < this->period_size) {
+      avail = this->period_size;
     }
+    
+    /* check how many bytes we still have in all our bytestreams */
+    bytes = avail * ( width / 8 ) * (element->numpads == 1 ? this->channels : 1);
+    for (i = 0; i < element->numpads; i++) {
+      g_assert (this->pads[i].pad != NULL);
+      do {
+        num_bytes = gst_bytestream_peek_bytes (this->pads[i].bs, &this->pads[i].data, bytes);
+      } while (num_bytes == 0 && gst_alsa_sink_check_event (this, i));
+      if (num_bytes == 0)
+        return;
+      bytes = MIN (bytes, num_bytes);
+    }
+    avail = bytes / (width / 8 ) / (element->numpads == 1 ? this->channels : 1);
 
-    /* wait */
-    if (gst_alsa_pcm_wait (this) < 0)
-      break;
+    /* FIXME: lotsa stuff can have happened while fetching data. Do we need to check something? */
+
+    /* wait until the hw buffer has enough space */
+    while ((avail2 = gst_alsa_update_avail (this)) < avail) {
+      if (avail2 == -EPIPE) goto sink_restart;
+      if (avail < 0) return;
+      if (gst_alsa_pcm_wait (this) == FALSE)
+        return;
+    }
+    /* put this data into alsa */
+    if ((copied = gst_alsa_do_mmap (this, &avail)) < 0)
+      return;
+
+    /* flush the data */
+    bytes = copied * ( width / 8 ) * (element->numpads == 1 ? this->channels : 1);
+    for (i = 0; i < element->numpads; i++)
+      gst_bytestream_flush (this->pads[i].bs, bytes);
+
+    /* BUG: we start the stream explicitly, autostart doesn't work correctly (alsa 0.9.0rc7) */
+    if (snd_pcm_state(this->handle) == SND_PCM_STATE_PREPARED && snd_pcm_avail_update (this->handle) == 0) {
+      GST_DEBUG (GST_CAT_PLUGIN_INFO, "Explicitly starting playback");
+      snd_pcm_start(this->handle);
+    }
   }
+
 }
 
 static void
@@ -991,11 +990,9 @@ gst_alsa_src_loop (GstElement *element)
 
   g_return_if_fail (this != NULL);
 
-  static gboolean caps_set = FALSE;
-
   /* set the caps on all pads */
-  if (!caps_set) {
-    GST_DEBUG (GST_CAT_NEGOTIATION, "starting caps negotiation");
+  if (!this->caps_set) {
+    GST_DEBUG (GST_CAT_NEGOTIATION, "starting caps negotiationgst_alsa_pcm_wait");
     caps = gst_alsa_caps (this->format, this->rate, this->channels);
     for (i = 0; i < element->numpads; i++) {
       if (gst_pad_try_set_caps (this->pads[i].pad, caps) <= 0) {
@@ -1003,58 +1000,55 @@ gst_alsa_src_loop (GstElement *element)
         return;
       }
     }
-    caps_set = TRUE;
+    this->caps_set = TRUE;
   }
 
- src_restart:
+src_restart:
 
-  while (1) {
-    avail = gst_alsa_update_avail (this);
+  while ((avail = gst_alsa_update_avail (this)) < this->period_size) {
     if (avail == -EPIPE) goto src_restart;
-    if (avail == -1) break;
-    if (avail > 0) {
-      int width = snd_pcm_format_physical_width (this->format);
-      int bytes_per_frame = ( width / 8 ) * (element->numpads == 1 ? this->channels : 1);
+    if (avail < 0) return;
+    /* wait */
+    if (gst_alsa_pcm_wait (this) == FALSE)
+      return;
+  }
+  if (avail > 0) {
+    int width = snd_pcm_format_physical_width (this->format);
+    int bytes_per_frame = ( width / 8 ) * (element->numpads == 1 ? this->channels : 1);
+    if ((copied = gst_alsa_do_mmap (this, &avail)) < 0)
+      return;
+      
+    /* we get the buffer pool once per go round */
+    if (! pool) pool = gst_alsa_src_get_buffer_pool (this->pads[0].pad);
 
-      if ((copied = gst_alsa_do_mmap (this, element->numpads, &avail)) < 0)
-        break;
+    /* push the data to gstreamer if it's big enough to fill up a buffer. */
+    for (i = 0; i < element->numpads; i++) {
+      pad = &this->pads[i];
+      pad->offset += MIN (copied, this->period_size - pad->offset);
 
-      /* we get the buffer pool once per go round */
-      if (! pool) pool = gst_alsa_src_get_buffer_pool (this->pads[0].pad);
+      if (pad->offset >= this->period_size) {
+        g_assert (pad->offset <= this->period_size);
 
-      /* push the data to gstreamer if it's big enough to fill up a buffer. */
-      for (i = 0; i < element->numpads; i++) {
-        pad = &this->pads[i];
-        pad->offset += MIN (copied, this->period_size - pad->offset);
+        buf = gst_buffer_new_from_pool (pool, 0, 0);
 
-        if (pad->offset >= this->period_size) {
-          g_assert (pad->offset <= this->period_size);
+        GST_BUFFER_DATA (buf) = pad->data;
+        GST_BUFFER_SIZE (buf) = this->period_size * bytes_per_frame;
+        GST_BUFFER_MAXSIZE (buf) = this->period_size * bytes_per_frame;
 
-          buf = gst_buffer_new_from_pool (pool, 0, 0);
+        gst_pad_push (pad->pad, buf);
 
-          GST_BUFFER_DATA (buf) = pad->data;
-          GST_BUFFER_SIZE (buf) = this->period_size * bytes_per_frame;
-          GST_BUFFER_MAXSIZE (buf) = this->period_size * bytes_per_frame;
-
-          gst_pad_push (pad->pad, buf);
-
-          pad->data = NULL;
-          pad->offset = 0;
-        }
-      }
-
-      pool = NULL;
-
-      /* BUG: we start the stream explicitly, autostart doesn't work correctly (alsa 0.9.0rc7) */
-      if (snd_pcm_state(this->handle) == SND_PCM_STATE_PREPARED && snd_pcm_avail_update (this->handle) == 0) {
-        GST_DEBUG (GST_CAT_PLUGIN_INFO, "Explicitly starting capture");
-        snd_pcm_start(this->handle);
+        pad->data = NULL;
+        pad->offset = 0;
       }
     }
 
-    /* wait */
-    if (gst_alsa_pcm_wait (this) < 0)
-      break;
+    pool = NULL;
+
+    /* BUG: we start the stream explicitly, autostart doesn't work correctly (alsa 0.9.0rc7) */
+    if (snd_pcm_state(this->handle) == SND_PCM_STATE_PREPARED && snd_pcm_avail_update (this->handle) == 0) {
+      GST_DEBUG (GST_CAT_PLUGIN_INFO, "Explicitly starting capture");
+      snd_pcm_start(this->handle);
+    }
   }
 }
 

@@ -87,6 +87,7 @@ struct _GstAlsa {
   snd_pcm_format_t format;
   guint rate;
   gint channels;
+  gboolean caps_set;
 
   /* latency / performance parameters */
   snd_pcm_uframes_t period_size;
