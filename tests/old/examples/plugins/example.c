@@ -120,7 +120,8 @@ gst_example_get_type(void)
 
   if (!example_type) {
     static const GTypeInfo example_info = {
-      sizeof(GstExampleClass),      NULL,
+      sizeof(GstExampleClass),      
+      NULL,
       NULL,
       (GClassInitFunc)gst_example_class_init,
       NULL,

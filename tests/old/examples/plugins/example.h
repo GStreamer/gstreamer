@@ -72,7 +72,7 @@ struct _GstExampleClass {
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_EXAMPLE,GstExample))
 /* The third is a checking cast of the class instead of the object. */
 #define GST_EXAMPLE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_EXAMPLE,GstExample))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_EXAMPLE,GstExampleClass))
 /* The last two simply check to see if the passed pointer is an object or
  * class of the correct type. */
 #define GST_IS_EXAMPLE(obj) \
