@@ -1,3 +1,14 @@
+2005-01-24  Jeffrey C. Ollie
+
+	reviewed by: Maciej Katafiasz  <mathrick@freedesktop.org>
+
+	* ext/gsm/gstgsmdec.c: (gst_gsmdec_init), (gst_gsmdec_chain):
+	* ext/gsm/gstgsmdec.h:
+	* ext/gsm/gstgsmenc.c: (gst_gsmenc_init), (gst_gsmenc_chain):
+	* ext/gsm/gstgsmenc.h:
+	Fix rate to 8kHz as per spec, removes obscure errors when no rate
+	was given by property. Add proper buffer timestamps and offsets.
+
 2005-01-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/riff/riff-media.c:
