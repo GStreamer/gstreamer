@@ -19,6 +19,7 @@ libgstplaybin_la_LIBADD =
 libgstplaybin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 libgstdecodebin_la_SOURCES = gstdecodebin.c
+nodist_libgstdecodebin_la_SOURCES = $(built_sources)
 libgstdecodebin_la_CFLAGS = $(GST_CFLAGS)
 libgstdecodebin_la_LIBADD =
 libgstdecodebin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
