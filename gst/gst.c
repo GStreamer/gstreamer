@@ -98,7 +98,6 @@ enum {
   ARG_PLUGIN_PATH,
   ARG_PLUGIN_LOAD,
   ARG_SCHEDULER,
-  ARG_NOTHREADS,
   ARG_REGISTRY
 };
 
@@ -125,7 +124,6 @@ static const struct poptOption gstreamer_options[] = {
   {"gst-plugin-path",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH,    "'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins", "PATHS"},
   {"gst-plugin-load",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD,    "comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH", "PLUGINS"},
   {"gst-scheduler",      NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,      "scheduler to use ('"GST_SCHEDULER_DEFAULT_NAME"' is the default)", "SCHEDULER"},
-  {"gst-nothreads",      NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_NOTHREADS,      "use NOPs for all threading and locking operations", NULL},
   {"gst-registry",       NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,       "registry to use" , "REGISTRY"},
   POPT_TABLEEND
 };
@@ -386,7 +384,18 @@ init_pre (void)
 
   g_type_init ();
 
+  if (g_thread_supported ()) {
+    /* somebody already initialized threading */
+    _gst_use_threads = TRUE;
+  } else {
+    if (_gst_use_threads)
+      g_thread_init (NULL);
+    else
+      g_thread_init (&gst_thread_dummy_functions);
+  }
+  /* we need threading to be enabled right here */
   _gst_debug_init();
+  
 #ifndef GST_DISABLE_REGISTRY
   {
     const gchar *debug_list;
@@ -484,13 +493,6 @@ init_post (void)
   GstTrace *gst_trace;
 #endif /* GST_DISABLE_TRACE */
 
-  if (!g_thread_supported ()) {
-    if (_gst_use_threads)
-      g_thread_init (NULL);
-    else
-      g_thread_init (&gst_thread_dummy_functions);
-  }
-  
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
   g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
   
@@ -670,9 +672,6 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
     case ARG_SCHEDULER:
       gst_scheduler_factory_set_default_name (arg);
       break;
-    case ARG_NOTHREADS:
-      gst_use_threads (FALSE);
-      break;
     case ARG_REGISTRY:
 #ifndef GST_DISABLE_REGISTRY
       g_object_set (G_OBJECT (_user_registry), "location", arg, NULL);
@@ -699,10 +698,17 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
  * is turned off, all thread operations such as mutexes and conditionals
  * are turned into NOPs. use this if you want absolute minimal overhead
  * and you don't use any threads in the pipeline.
+ * <note><para>
+ * This function may only be called before threads are initialized. This
+ * usually happens when calling gst_init.
+ * </para></note>
  */
 void
 gst_use_threads (gboolean use_threads)
 {
+  g_return_if_fail (!gst_initialized);
+  g_return_if_fail (g_thread_supported ());
+
   _gst_use_threads = use_threads;
 }
 
