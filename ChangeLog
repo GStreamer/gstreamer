@@ -1,3 +1,9 @@
+2004-10-07  Wim Taymans  <wim@fluendo.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (ac3_type_find),
+	(plugin_init):
+	Added lame audio/x-ac3 typefind function.
+
 2004-10-06  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* configure.ac:
