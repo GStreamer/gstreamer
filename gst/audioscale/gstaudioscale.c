@@ -88,6 +88,7 @@ gst_audioscale_method_get_type (void)
 static void gst_audioscale_base_init (gpointer g_class);
 static void gst_audioscale_class_init (AudioscaleClass * klass);
 static void gst_audioscale_init (Audioscale * audioscale);
+static void gst_audioscale_dispose (GObject * object);
 
 static void gst_audioscale_chain (GstPad * pad, GstData * _data);
 
@@ -149,6 +150,7 @@ gst_audioscale_class_init (AudioscaleClass * klass)
 
   gobject_class->set_property = gst_audioscale_set_property;
   gobject_class->get_property = gst_audioscale_get_property;
+  gobject_class->dispose = gst_audioscale_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERLEN,
       g_param_spec_int ("filter_length", "filter_length", "filter_length",
@@ -381,6 +383,18 @@ gst_audioscale_init (Audioscale * audioscale)
   gst_resample_init (r);
 
   /* we will be reinitialized when the G_PARAM_CONSTRUCTs hit */
+}
+
+static void
+gst_audioscale_dispose (GObject * object)
+{
+  Audioscale *audioscale = GST_AUDIOSCALE (object);
+
+  if (audioscale->gst_resample)
+    g_free (audioscale->gst_resample);
+  audioscale->gst_resample = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void

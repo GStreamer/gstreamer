@@ -219,6 +219,10 @@ gst_volume_dispose (GObject * object)
 
   volume = GST_VOLUME (object);
 
+  if (volume->dpman)
+    g_object_unref (G_OBJECT (volume->dpman));
+  volume->dpman = NULL;
+
   if (volume->tracklist) {
     if (volume->tracklist->data)
       g_object_unref (volume->tracklist->data);
