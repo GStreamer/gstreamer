@@ -537,37 +537,6 @@ delete_group (GstOptSchedulerGroup *group)
 }
 
 static GstOptSchedulerGroup*
-merge_groups (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
-{
-  GSList *walk;
-  GstOptSchedulerChain *chain1;
-  GstOptSchedulerChain *chain2;
-  
-  g_assert (group1 != NULL);
-
-  GST_INFO (GST_CAT_SCHEDULING, "merging groups %p and %p", group1, group2);
-  
-  if (group1 == group2 || group2 == NULL)
-    return group1;
-
-  walk = group2->elements;
-  while (walk) {
-    add_to_group (group1, (GstElement *)walk->data);
-    walk = g_slist_next (walk);
-  }
-
-  chain1 = group1->chain;
-  chain2 = group2->chain;
-
-  remove_from_chain (chain2, group2);
-  delete_group (group2);
-
-  merge_chains (chain1, chain2);
-
-  return group1;
-}
-
-static void
 remove_from_group (GstOptSchedulerGroup *group, GstElement *element)
 {
   GST_INFO (GST_CAT_SCHEDULING, "removing element \"%s\" from group %p", GST_ELEMENT_NAME (element), group);
@@ -584,7 +553,29 @@ remove_from_group (GstOptSchedulerGroup *group, GstElement *element)
     GST_INFO (GST_CAT_SCHEDULING, "group %p is empty, deleting", group);
     remove_from_chain (group->chain, group);
     delete_group (group);
+    return NULL;
   }
+  return group;
+}
+
+static GstOptSchedulerGroup*
+merge_groups (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
+{
+  g_assert (group1 != NULL);
+
+  GST_INFO (GST_CAT_SCHEDULING, "merging groups %p and %p", group1, group2);
+  
+  if (group1 == group2 || group2 == NULL)
+    return group1;
+
+  while (group2) {
+    GstElement *element = (GstElement *)group2->elements->data;
+   
+    group2 = remove_from_group (group2, element);
+    add_to_group (group1, element);
+  }
+  
+  return group1;
 }
 
 static void
@@ -1347,7 +1338,7 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
       group1 = GST_ELEMENT_SCHED_GROUP (element1);
       group2 = GST_ELEMENT_SCHED_GROUP (element2);
 
-       g_assert (group2 != NULL);
+      g_assert (group2 != NULL);
 
       /* group2 is guaranteed to exist as it contains a loop-based element.
        * group1 only exists if element1 is connected to some other element */
