@@ -88,7 +88,10 @@ _gst_plugin_initialize (void)
 
   doc = xmlParseFile (GST_CONFIG_DIR"/reg.xml");
 
-  if (!doc || strcmp (doc->xmlRootNode->name, "GST-PluginRegistry") ||
+  if (!doc || 
+      !doc->xmlRootNode ||
+      doc->xmlRootNode->name == 0 ||
+      strcmp (doc->xmlRootNode->name, "GST-PluginRegistry") ||
       !plugin_times_older_than(get_time(GST_CONFIG_DIR"/reg.xml"))) {
     if (_gst_warn_old_registry)
 	g_warning ("gstplugin: registry needs rebuild: run gstreamer-register\n");
