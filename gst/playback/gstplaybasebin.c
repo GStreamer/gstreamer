@@ -988,7 +988,8 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GList ** subbins)
     return NULL;
 
   /* lame - FIXME, maybe we can use seek_types/mask here? */
-  is_stream = !strncmp (play_base_bin->uri, "http://", 7);
+  is_stream = !strncmp (play_base_bin->uri, "http://", 7) ||
+      !strncmp (play_base_bin->uri, "mms://", 6);
   if (!is_stream)
     return source;
 
