@@ -262,6 +262,7 @@ group_destroy (GstPlayBaseGroup * group)
     GstElement *element = GST_ELEMENT (prerolls->data);
     GstPad *pad;
     guint sig_id;
+    GstElement *fakesrc;
 
     /* have to unlink the unlink handler first because else we
      * are going to link an element in the finalize handler */
@@ -275,10 +276,20 @@ group_destroy (GstPlayBaseGroup * group)
       g_object_set_data (G_OBJECT (pad), "unlinked_id", GINT_TO_POINTER (0));
     }
 
+    /* remove any fakesrc elements for this preroll element */
+    fakesrc = (GstElement *) g_object_get_data (G_OBJECT (element), "fakesrc");
+    if (fakesrc != NULL) {
+      GST_LOG ("removing fakesrc");
+      gst_bin_remove (GST_BIN (play_base_bin->thread), fakesrc);
+    }
+
+    /* if the group is currently being played, we have to remove the element 
+     * from the thread */
     if (get_active_group (play_base_bin) == group) {
       GST_LOG ("removing preroll element %s", gst_element_get_name (element));
       gst_bin_remove (GST_BIN (play_base_bin->thread), element);
     } else {
+      /* else we can just unref it */
       gst_object_unref (GST_OBJECT (element));
     }
   }
@@ -334,6 +345,22 @@ group_commit (GstPlayBaseBin * play_base_bin)
   g_cond_signal (play_base_bin->group_cond);
   GST_DEBUG ("signaled group done");
   g_mutex_unlock (play_base_bin->group_lock);
+}
+
+/* check if there are streams in the group that are not muted */
+static gboolean
+group_is_muted (GstPlayBaseGroup * group)
+{
+  GList *infos;
+
+  for (infos = group->streaminfo; infos; infos = g_list_next (infos)) {
+    GstStreamInfo *info = GST_STREAM_INFO (infos->data);
+
+    /* if we find a non muded group we can return FALSE */
+    if (!info->mute)
+      return FALSE;
+  }
+  return TRUE;
 }
 
 /* this signal will be fired when one of the queues with raw
@@ -400,11 +427,13 @@ remove_groups (GstPlayBaseBin * play_base_bin)
 /* Add/remove a single stream to current  building group.
  */
 static void
-add_stream (GstPlayBaseBin * play_base_bin, GstStreamInfo * info)
+add_stream (GstPlayBaseGroup * group, GstStreamInfo * info)
 {
-  GstPlayBaseGroup *group = get_building_group (play_base_bin);
+  GST_DEBUG ("add stream to group %p", group);
 
-  GST_DEBUG ("add stream to building group %p", group);
+  /* keep ref to the group */
+  g_object_set_data (G_OBJECT (info), "group", group);
+
   group->streaminfo = g_list_append (group->streaminfo, info);
   switch (info->type) {
     case GST_STREAM_TYPE_AUDIO:
@@ -428,6 +457,7 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
 {
   gchar *capsstr;
   GstStreamInfo *info;
+  GstPlayBaseGroup *group = get_building_group (play_base_bin);
 
   capsstr = gst_caps_to_string (caps);
   g_warning ("don't know how to handle %s", capsstr);
@@ -436,7 +466,7 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
   info = gst_stream_info_new (GST_OBJECT (pad), GST_STREAM_TYPE_UNKNOWN,
       NULL, caps);
   info->origin = GST_OBJECT (pad);
-  add_stream (play_base_bin, info);
+  add_stream (group, info);
 
   g_free (capsstr);
 }
@@ -450,13 +480,14 @@ static void
 add_element_stream (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
   GstStreamInfo *info;
+  GstPlayBaseGroup *group = get_building_group (play_base_bin);
 
   /* add the stream to the list */
   info =
       gst_stream_info_new (GST_OBJECT (element), GST_STREAM_TYPE_ELEMENT,
       NULL, NULL);
   info->origin = GST_OBJECT (element);
-  add_stream (play_base_bin, info);
+  add_stream (group, info);
 }
 
 /* when the decoder element signals that no more pads will be generated, we
@@ -467,31 +498,45 @@ no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
   /* setup phase */
   GST_DEBUG ("no more pads");
+  /* we can commit this group for playback now */
   group_commit (play_base_bin);
 }
 
 static gboolean
 probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
 {
-  GstPlayBaseGroup *group = (GstPlayBaseGroup *) user_data;
-  GstPlayBaseBin *play_base_bin = group->bin;
+  GstPlayBaseGroup *group;
+  GstPlayBaseBin *play_base_bin;
+  GstStreamInfo *info = GST_STREAM_INFO (user_data);
+
+  group = (GstPlayBaseGroup *) g_object_get_data (G_OBJECT (info), "group");
+  play_base_bin = group->bin;
 
   if (GST_IS_EVENT (*data)) {
     GstEvent *event = GST_EVENT (*data);
 
     if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-      gint queued;
+      gboolean have_left;
 
       GST_DEBUG ("probe got EOS in group %p", group);
 
-      /* FIXME there might be more streams in this group that need
-       * to go to EOS before we can switch to the next group. So
-       * here we should mark the stream as EOSed and decide if all
-       * streams have EOSed before continuing. */
+      /* mute this stream */
+      g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
 
       /* see if we have some more groups left to play */
-      queued = g_list_length (play_base_bin->queued_groups);
-      if (queued > 1) {
+      have_left = (g_list_length (play_base_bin->queued_groups) > 1);
+
+      /* see if the complete group is muted */
+      if (!group_is_muted (group)) {
+        /* group is not completely muted, we remove the EOS event
+         * and continue, eventually the other streams will be EOSed and
+         * we can switch out this group. */
+        GST_DEBUG ("group %p not completely muted", group);
+        /* remove the EOS if we have something left */
+        return !have_left;
+      }
+
+      if (have_left) {
         gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
         /* ok, get rid of the current group then */
         group_destroy (group);
@@ -512,6 +557,27 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
         /* get rid of the EOS event */
         return FALSE;
       }
+    } else if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
+      GstTagList *taglist;
+      GstObject *source;
+
+      /* ref some to be sure.. */
+      gst_event_ref (event);
+      gst_object_ref (GST_OBJECT (play_base_bin));
+      taglist = gst_event_tag_get_list (event);
+      /* now try to find the source of this tag */
+      source = event->src;
+      if (source == NULL || !GST_IS_ELEMENT (source)) {
+        /* no source, just use playbasebin then. This happens almost
+         * all the time, it seems the source is never filled in... */
+        source = GST_OBJECT (play_base_bin);
+      }
+      /* emit the signal now */
+      g_signal_emit_by_name (G_OBJECT (play_base_bin),
+          "found-tag", source, taglist);
+      /* and unref */
+      gst_object_unref (GST_OBJECT (play_base_bin));
+      gst_event_unref (event);
     }
   }
   return TRUE;
@@ -525,9 +591,10 @@ static void
 preroll_unlinked (GstPad * pad, GstPad * peerpad,
     GstPlayBaseBin * play_base_bin)
 {
-  GstElement *fakesrc;
+  GstElement *fakesrc, *queue;
   guint sig_id;
 
+  /* make a fakesrc that will just emit one EOS */
   fakesrc = gst_element_factory_make ("fakesrc", NULL);
   g_object_set (G_OBJECT (fakesrc), "num_buffers", 0, NULL);
 
@@ -536,8 +603,13 @@ preroll_unlinked (GstPad * pad, GstPad * peerpad,
   gst_pad_link (gst_element_get_pad (fakesrc, "src"), pad);
   gst_bin_add (GST_BIN (play_base_bin->thread), fakesrc);
 
-  sig_id = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (pad), "unlinked_id"));
+  /* keep track of these patch elements */
+  queue = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (pad)));
+  g_object_set_data (G_OBJECT (queue), "fakesrc", fakesrc);
 
+  /* now unlink the unlinked signal so that it is not called again when
+   * we destroy the queue */
+  sig_id = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (pad), "unlinked_id"));
   if (sig_id != 0) {
     g_signal_handler_disconnect (G_OBJECT (pad), sig_id);
     g_object_set_data (G_OBJECT (pad), "unlinked_id", GINT_TO_POINTER (0));
@@ -627,15 +699,15 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
     gst_element_set_state (new_element, GST_STATE_PAUSED);
   }
-  /* install a probe so that we know when this group has ended */
-  probe = gst_probe_new (FALSE, probe_triggered, group);
-
-  gst_pad_add_probe (GST_PAD_REALIZE (srcpad), probe);
-
   /* add the stream to the list */
   info = gst_stream_info_new (GST_OBJECT (srcpad), type, NULL, caps);
   info->origin = GST_OBJECT (pad);
-  add_stream (play_base_bin, info);
+  add_stream (group, info);
+
+  /* install a probe so that we know when this group has ended */
+  probe = gst_probe_new (FALSE, probe_triggered, info);
+  /* have to REALIZE the pad as we cannot attach a padprobe to a ghostpad */
+  gst_pad_add_probe (GST_PAD_REALIZE (srcpad), probe);
 
   /* signal the no more pads after adding the stream */
   if (last)
@@ -1181,27 +1253,38 @@ gst_play_base_bin_error (GstElement * element,
   gst_object_unref (parent);
 }
 
+/* this code does not do anything usefull as it catches the tags
+ * in the preroll and playback stage so that it is very difficult
+ * to link them to the actual playback point. 
+ *
+ * An alternative codepath can be found in the probe_triggered function
+ * where the tag is signaled when it is found inside the stream. The
+ * drawback is that we don't know the source anymore at that point because
+ * the event->src field appears to be left empty most of the time...
+ */
 static void
 gst_play_base_bin_found_tag (GstElement * element,
     GstElement * _source, const GstTagList * taglist, gpointer data)
 {
-  GstObject *source, *parent;
+  GstObject *source;
+  GstPlayBaseBin *play_base_bin;
 
   source = GST_OBJECT (_source);
-  parent = GST_OBJECT (data);
+  play_base_bin = GST_PLAY_BASE_BIN (data);
 
   /* tell ourselves */
   gst_object_ref (source);
-  gst_object_ref (parent);
+  gst_object_ref (GST_OBJECT (play_base_bin));
   GST_DEBUG ("forwarding taglist %p from %s to %s", taglist,
-      GST_ELEMENT_NAME (source), GST_OBJECT_NAME (parent));
+      GST_ELEMENT_NAME (source), GST_OBJECT_NAME (play_base_bin));
 
-  g_signal_emit_by_name (G_OBJECT (parent), "found-tag", source, taglist);
+  /* this would signal completely out-of-band */
+  //g_signal_emit_by_name (G_OBJECT (play_base_bin), "found-tag", source, taglist);
 
   GST_DEBUG ("forwarded taglist %p from %s to %s", taglist,
-      GST_ELEMENT_NAME (source), GST_OBJECT_NAME (parent));
+      GST_ELEMENT_NAME (source), GST_OBJECT_NAME (play_base_bin));
   gst_object_unref (source);
-  gst_object_unref (parent);
+  gst_object_unref (GST_OBJECT (play_base_bin));
 }
 
 gboolean

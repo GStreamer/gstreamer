@@ -231,12 +231,36 @@ stream_info_mute_pad (GstStreamInfo * stream_info, GstPad * pad, gboolean mute)
   }
 }
 
+gboolean
+gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
+{
+  g_return_val_if_fail (GST_IS_STREAM_INFO (stream_info), FALSE);
+
+  if (stream_info->type == GST_STREAM_TYPE_ELEMENT) {
+    g_warning ("cannot mute element stream");
+    return FALSE;
+  }
+
+  if (mute != stream_info->mute) {
+    stream_info->mute = mute;
+    stream_info_mute_pad (stream_info, GST_PAD (stream_info->object), mute);
+  }
+  return TRUE;
+}
+
+gboolean
+gst_stream_info_is_mute (GstStreamInfo * stream_info)
+{
+  g_return_val_if_fail (GST_IS_STREAM_INFO (stream_info), TRUE);
+
+  return stream_info->mute;
+}
+
 static void
 gst_stream_info_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstStreamInfo *stream_info;
-  gboolean new_mute;
 
   g_return_if_fail (GST_IS_STREAM_INFO (object));
 
@@ -244,20 +268,8 @@ gst_stream_info_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_MUTE:
-    {
-      if (stream_info->type == GST_STREAM_TYPE_ELEMENT) {
-        g_warning ("cannot mute element stream");
-        break;
-      }
-      new_mute = g_value_get_boolean (value);
-
-      if (new_mute != stream_info->mute) {
-        stream_info->mute = new_mute;
-        stream_info_mute_pad (stream_info, GST_PAD (stream_info->object),
-            new_mute);
-      }
+      gst_stream_info_set_mute (stream_info, g_value_get_boolean (value));
       break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

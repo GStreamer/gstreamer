@@ -491,8 +491,6 @@ gen_vis_element (GstPlayBin * play_bin)
   gst_element_add_ghost_pad (element,
       gst_element_get_pad (tee, "sink"), "sink");
 
-  //gst_element_set_state (element, GST_STATE_READY);
-
   return element;
 }
 
