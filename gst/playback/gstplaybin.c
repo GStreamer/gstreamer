@@ -790,7 +790,8 @@ gst_play_bin_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       /* Set audio sink state to NULL to release the sound device,
        * but only if we own it (else we might be in chain-transition). */
-      if (GST_STATE (play_bin->audio_sink) == GST_STATE_PAUSED) {
+      if (play_bin->audio_sink != NULL &&
+          GST_STATE (play_bin->audio_sink) == GST_STATE_PAUSED) {
         gst_element_set_state (play_bin->audio_sink, GST_STATE_NULL);
       }
       break;

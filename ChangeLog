@@ -1,3 +1,14 @@
+2004-12-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	  Fix indentation, fix v4l2 plugin detection.
+	* ext/Makefile.am:
+	  Fix libmms location (Maciej, use diff -u!).
+	* ext/alsa/gstalsa.c: (gst_alsa_init):
+	  Initialize caps cache to NULL.
+	* gst/playback/gstplaybin.c: (gst_play_bin_change_state):
+	  Only change state on audiosink if it exists.
+
 2004-12-28  Maciej Katafiasz  <mathrick@mathrick.org>
 
 	* gst/matroska/matroska-demux.c:

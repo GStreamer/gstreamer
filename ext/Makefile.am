@@ -479,7 +479,6 @@ DIST_SUBDIRS=\
 	dvdread \
 	dvdnav \
 	esd \
-	libmms \
 	faac \
 	faad \
 	flac \
@@ -496,6 +495,7 @@ DIST_SUBDIRS=\
 	libcaca \
 	libfame \
 	libmng \
+	libmms \
 	libpng \
 	librfb \
 	libvisual \

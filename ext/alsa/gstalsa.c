@@ -211,6 +211,7 @@ static void
 gst_alsa_init (GstAlsa * this)
 {
   this->device = g_strdup ("default");
+  this->cached_caps = NULL;
 
   GST_FLAG_SET (this, GST_ELEMENT_EVENT_AWARE);
   GST_FLAG_SET (this, GST_ELEMENT_THREAD_SUGGESTED);
