@@ -400,10 +400,14 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
     return ret;
 
   /* woohoo, got it */
-  if (!gst_audio_convert_parse_caps (gst_pad_get_negotiated_caps (otherpad),
-          &other_ac_caps)) {
-    g_critical ("internal negotiation error");
-    return GST_PAD_LINK_REFUSED;
+  othercaps = (GstCaps *) gst_pad_get_negotiated_caps (otherpad);
+  if (othercaps) {
+    if (!gst_audio_convert_parse_caps (othercaps, &other_ac_caps)) {
+      g_critical ("internal negotiation error");
+      return GST_PAD_LINK_REFUSED;
+    }
+  } else {
+    other_ac_caps = ac_caps;
   }
 
   if (this->sink == pad) {

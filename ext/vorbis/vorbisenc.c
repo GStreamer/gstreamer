@@ -228,6 +228,7 @@ gst_vorbisenc_sinkconnect (GstPad * pad, const GstCaps * caps)
   GstStructure *structure;
 
   vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
+  vorbisenc->setup = FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "channels", &vorbisenc->channels);
@@ -622,6 +623,8 @@ update_start_message (VorbisEnc * vorbisenc)
 static gboolean
 gst_vorbisenc_setup (VorbisEnc * vorbisenc)
 {
+  vorbisenc->setup = FALSE;
+
   if (vorbisenc->bitrate < 0 && vorbisenc->min_bitrate < 0
       && vorbisenc->max_bitrate < 0) {
     vorbisenc->quality_set = TRUE;
@@ -635,9 +638,10 @@ gst_vorbisenc_setup (VorbisEnc * vorbisenc)
 
   if (vorbisenc->quality_set) {
     if (vorbis_encode_setup_vbr (&vorbisenc->vi,
-            vorbisenc->channels, vorbisenc->frequency, vorbisenc->quality)) {
-      g_warning
-          ("vorbisenc: initialisation failed: invalid parameters for quality");
+            vorbisenc->channels, vorbisenc->frequency,
+            vorbisenc->quality) != 0) {
+      GST_ERROR_OBJECT (vorbisenc,
+          "vorbisenc: initialisation failed: invalid parameters for quality");
       vorbis_info_clear (&vorbisenc->vi);
       return FALSE;
     }
@@ -662,8 +666,8 @@ gst_vorbisenc_setup (VorbisEnc * vorbisenc)
             vorbisenc->max_bitrate > 0 ? vorbisenc->max_bitrate : -1,
             vorbisenc->bitrate,
             vorbisenc->min_bitrate > 0 ? vorbisenc->min_bitrate : -1)) {
-      g_warning
-          ("vorbisenc: initialisation failed: invalid parameters for bitrate\n");
+      GST_ERROR_OBJECT (vorbisenc,
+          "vorbisenc: initialisation failed: invalid parameters for bitrate");
       vorbis_info_clear (&vorbisenc->vi);
       return FALSE;
     }

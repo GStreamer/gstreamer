@@ -224,6 +224,7 @@ gst_oggvorbisenc_sinkconnect (GstPad * pad, const GstCaps * caps)
   GstStructure *structure;
 
   vorbisenc = GST_OGGVORBISENC (gst_pad_get_parent (pad));
+  vorbisenc->setup = FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "channels", &vorbisenc->channels);
@@ -655,14 +656,24 @@ gst_oggvorbisenc_setup (OggVorbisEnc * vorbisenc)
       vorbis_encode_ctl (&vorbisenc->vi, OV_ECTL_RATEMANAGE_SET, &ai);
     }
   } else {
-    if (vorbis_encode_setup_managed (&vorbisenc->vi,
-            vorbisenc->channels,
-            vorbisenc->frequency,
-            vorbisenc->max_bitrate > 0 ? vorbisenc->max_bitrate : -1,
-            vorbisenc->bitrate,
-            vorbisenc->min_bitrate > 0 ? vorbisenc->min_bitrate : -1)) {
-      g_warning
-          ("vorbisenc: initialisation failed: invalid parameters for bitrate\n");
+    int ret;
+
+    GST_LOG_OBJECT (vorbisenc,
+        "calling setup_managed with channels=%d, frequency=%d, bitrate=[%d,%d,%d]",
+        vorbisenc->channels, vorbisenc->frequency,
+        vorbisenc->min_bitrate > 0 ? vorbisenc->min_bitrate : -1,
+        vorbisenc->bitrate,
+        vorbisenc->max_bitrate > 0 ? vorbisenc->max_bitrate : -1);
+    ret =
+        vorbis_encode_setup_managed (&vorbisenc->vi, vorbisenc->channels,
+        vorbisenc->frequency,
+        vorbisenc->max_bitrate > 0 ? vorbisenc->max_bitrate : -1,
+        vorbisenc->bitrate,
+        vorbisenc->min_bitrate > 0 ? vorbisenc->min_bitrate : -1);
+    if (ret != 0) {
+      GST_ERROR_OBJECT (vorbisenc,
+          "vorbisenc: initialisation failed: invalid parameters for bitrate (returned: %d)",
+          ret);
       vorbis_info_clear (&vorbisenc->vi);
       return FALSE;
     }
