@@ -186,7 +186,7 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
   gint row_indice;
   png_byte *row_pointers[ MAX_HEIGHT ];
 
-  if (frame != 300)
+  if (frame != 30)
   {
     frame++;
     gst_buffer_unref (buf);

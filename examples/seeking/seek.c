@@ -47,7 +47,7 @@ dynamic_link (GstPadTemplate *templ, GstPad *newpad, gpointer data)
 }
 
 static void
-setup_dynamic_linkion (GstElement *element, const gchar *padname, GstPad *target, GstElement *bin)
+setup_dynamic_link (GstElement *element, const gchar *padname, GstPad *target, GstElement *bin)
 {
   dyn_link *connect;
 
@@ -356,7 +356,7 @@ make_avi_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (audio_thread), audiosink);
   gst_element_set_state (audio_bin, GST_STATE_PAUSED);
 
-  setup_dynamic_linkion (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
+  setup_dynamic_link (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
 
   seekable = gst_element_get_pad (a_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -382,7 +382,7 @@ make_avi_pipeline (const gchar *location)
 
   gst_element_set_state (video_bin, GST_STATE_PAUSED);
 
-  setup_dynamic_linkion (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
+  setup_dynamic_link (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
 
   seekable = gst_element_get_pad (v_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -428,7 +428,7 @@ make_mpeg_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (audio_thread), a_queue);
   gst_bin_add (GST_BIN (audio_thread), audiosink);
 
-  setup_dynamic_linkion (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
+  setup_dynamic_link (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
 
   seekable = gst_element_get_pad (a_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -448,7 +448,7 @@ make_mpeg_pipeline (const gchar *location)
   gst_bin_add_many (GST_BIN (video_bin), v_decoder, video_thread, NULL);
   gst_bin_add_many (GST_BIN (video_thread), v_queue, v_filter, videosink, NULL);
 
-  setup_dynamic_linkion (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
+  setup_dynamic_link (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
 
   seekable = gst_element_get_pad (v_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -495,7 +495,7 @@ make_mpegnt_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (audio_thread), a_queue);
   gst_bin_add (GST_BIN (audio_thread), audiosink);
 
-  setup_dynamic_linkion (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
+  setup_dynamic_link (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
 
   seekable = gst_element_get_pad (a_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -510,7 +510,7 @@ make_mpegnt_pipeline (const gchar *location)
   
   gst_bin_add_many (GST_BIN (video_bin), v_decoder, v_filter, videosink, NULL);
 
-  setup_dynamic_linkion (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
+  setup_dynamic_link (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
 
   seekable = gst_element_get_pad (v_decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
