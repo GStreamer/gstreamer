@@ -37,6 +37,7 @@ paramunits
 faketest
 events
 lat
+mass_elements
 *.bb
 *.bbg
 *.da

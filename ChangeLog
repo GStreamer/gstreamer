@@ -1,5 +1,15 @@
 2004-07-02  Benjamin Otte  <otte@gnome.org>
 
+	* tests/.cvsignore:
+	* tests/Makefile.am:
+	* tests/mass_elements.c: (gst_get_current_time), (main):
+	  add simple benchmark to test various speeds of fakesrc ! identity !
+	  identity ! ... ! fakesink.
+	  Usage: mass_elements [num_identities] [num_buffers]
+	  If not specified they default to 1000.
+
+2004-07-02  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstpad.c: (gst_pad_check_schedulers),
 	(gst_pad_can_link_filtered), (gst_pad_link_filtered),
 	(gst_pad_link_prepare):
