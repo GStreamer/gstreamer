@@ -1,5 +1,17 @@
 2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_element_data),
+	(gst_riff_read_element_data):
+	* gst-libs/gst/riff/riff-read.h:
+	  Add _peek version (req'ed in CDXA).
+	* gst/cdxaparse/gstcdxaparse.c: (gst_cdxaparse_init),
+	(gst_cdxaparse_loop):
+	  Fix parsing in playbin.
+	* gst/playback/gstdecodebin.c: (close_pad_link):
+	  Ignore current_ pads, they cause major annoyance.
+
+2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_loop):
 	  Safety guard.
 
