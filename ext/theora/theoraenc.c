@@ -69,6 +69,7 @@ struct _GstTheoraEnc
 
   guint packetno;
   guint64 bytes_out;
+  guint64 next_ts;
 };
 
 struct _GstTheoraEncClass
@@ -278,7 +279,8 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
 
 /* prepare a buffer for transmission by passing data through libtheora */
 static GstBuffer *
-theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet)
+theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
+    GstClockTime timestamp, GstClockTime duration)
 {
   GstBuffer *buf;
 
@@ -287,9 +289,8 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet)
   memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
   GST_BUFFER_OFFSET (buf) = enc->bytes_out;
   GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
-  GST_BUFFER_TIMESTAMP (buf) =
-      theora_granule_time (&enc->state, packet->granulepos) * GST_SECOND;
-  GST_BUFFER_DURATION (buf) = GST_SECOND / enc->fps;
+  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_DURATION (buf) = duration;
 
   enc->packetno++;
 
@@ -310,11 +311,12 @@ theora_push_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
 }
 
 static void
-theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet)
+theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet,
+    GstClockTime timestamp, GstClockTime duration)
 {
   GstBuffer *buf;
 
-  buf = theora_buffer_from_packet (enc, packet);
+  buf = theora_buffer_from_packet (enc, packet, timestamp, duration);
   theora_push_buffer (enc, buf);
 }
 
@@ -354,19 +356,27 @@ theora_enc_chain (GstPad * pad, GstData * data)
 {
   GstTheoraEnc *enc;
   ogg_packet op;
+  GstBuffer *buf;
+  GstClockTime in_time;
 
   enc = GST_THEORA_ENC (gst_pad_get_parent (pad));
   if (GST_IS_EVENT (data)) {
     switch (GST_EVENT_TYPE (data)) {
       case GST_EVENT_EOS:
         /* push last packet with eos flag */
-        if (theora_encode_packetout (&enc->state, 1, &op))
-          theora_push_packet (enc, &op);
+        while (theora_encode_packetout (&enc->state, 1, &op)) {
+          GstClockTime out_time =
+              theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
+          theora_push_packet (enc, &op, out_time, GST_SECOND / enc->fps);
+        }
       default:
         gst_pad_event_default (pad, GST_EVENT (data));
         return;
     }
   }
+
+  buf = GST_BUFFER (data);
+  in_time = GST_BUFFER_TIMESTAMP (buf);
 
   /* no packets written yet, setup headers */
   /* Theora streams begin with three headers; the initial header (with
@@ -380,17 +390,16 @@ theora_enc_chain (GstPad * pad, GstData * data)
     GstCaps *caps;
     GstBuffer *buf1, *buf2, *buf3;
 
-
     /* first packet will get its own page automatically */
     theora_encode_header (&enc->state, &op);
-    buf1 = theora_buffer_from_packet (enc, &op);
+    buf1 = theora_buffer_from_packet (enc, &op, 0, 0);
 
     /* create the remaining theora headers */
     theora_comment_init (&enc->comment);
     theora_encode_comment (&enc->comment, &op);
-    buf2 = theora_buffer_from_packet (enc, &op);
+    buf2 = theora_buffer_from_packet (enc, &op, 0, 0);
     theora_encode_tables (&enc->state, &op);
-    buf3 = theora_buffer_from_packet (enc, &op);
+    buf3 = theora_buffer_from_packet (enc, &op, 0, 0);
 
     /* mark buffers and put on caps */
     caps = gst_pad_get_caps (enc->srcpad);
@@ -415,7 +424,7 @@ theora_enc_chain (GstPad * pad, GstData * data)
     gint y_size;
     guchar *pixels;
 
-    pixels = GST_BUFFER_DATA (GST_BUFFER (data));
+    pixels = GST_BUFFER_DATA (buf);
 
     yuv.y_width = enc->width;
     yuv.y_height = enc->height;
@@ -432,8 +441,11 @@ theora_enc_chain (GstPad * pad, GstData * data)
     yuv.v = pixels + y_size * 5 / 4;
 
     theora_encode_YUVin (&enc->state, &yuv);
-    if (theora_encode_packetout (&enc->state, 0, &op))
-      theora_push_packet (enc, &op);
+    while (theora_encode_packetout (&enc->state, 0, &op)) {
+      GstClockTime out_time =
+          theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
+      theora_push_packet (enc, &op, out_time, GST_SECOND / enc->fps);
+    }
 
     gst_data_unref (data);
   }
