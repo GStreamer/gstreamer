@@ -1896,6 +1896,31 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
             break;
         }
 
+        if ((cluster_time + time == 0) &&
+            (!strcmp (demux->src[stream]->codec_id,
+                    GST_MATROSKA_CODEC_ID_AUDIO_VORBIS))) {
+          /* start of the stream and vorbis audio, need to send the codec_priv
+           * data as first three packets */
+          guchar *p;
+          guint32 offset, length;
+          gint i;
+          GstBuffer *priv;
+
+          p = (unsigned char *) demux->src[stream]->codec_priv;
+          offset = 3;
+          for (i = 0; i < 2; i++) {
+            length = p[i + 1];
+            priv = gst_buffer_new_and_alloc (length);
+            memcpy (GST_BUFFER_DATA (priv), &p[offset], length);
+            gst_pad_push (demux->src[stream]->pad, GST_DATA (priv));
+            offset += length;
+          }
+          length = demux->src[stream]->codec_priv_size - offset;
+          priv = gst_buffer_new_and_alloc (length);
+          memcpy (GST_BUFFER_DATA (priv), &p[offset], length);
+          gst_pad_push (demux->src[stream]->pad, GST_DATA (priv));
+        }
+
         if (res) {
           for (n = 0; n < laces; n++) {
             GstBuffer *sub = gst_buffer_create_sub (buf,
