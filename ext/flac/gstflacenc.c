@@ -372,7 +372,7 @@ gst_flacenc_write_callback (const FLAC__StreamEncoder *encoder,
   flacenc = GST_FLACENC (client_data);
 
   if (flacenc->stopped) 
-    return FLAC__STREAM_ENCODER_WRITE_OK;
+    return FLAC__STREAM_ENCODER_OK;
 
   outbuf = gst_buffer_new_and_alloc (bytes);
 
@@ -386,7 +386,7 @@ gst_flacenc_write_callback (const FLAC__StreamEncoder *encoder,
 
   gst_pad_push (flacenc->srcpad, outbuf);
 
-  return FLAC__STREAM_ENCODER_WRITE_OK;
+  return FLAC__STREAM_ENCODER_OK;
 }
 
 static void 

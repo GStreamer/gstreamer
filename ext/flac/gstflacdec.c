@@ -435,7 +435,7 @@ gst_flacdec_loop (GstElement *element)
 
   if (flacdec->init) {
     FLAC__seekable_stream_decoder_init (flacdec->decoder);
-    FLAC__seekable_stream_decoder_process_metadata (flacdec->decoder);
+    //FLAC__seekable_stream_decoder_process_metadata (flacdec->decoder);
     flacdec->init = FALSE;
   }
 
@@ -455,7 +455,7 @@ gst_flacdec_loop (GstElement *element)
     flacdec->seek_pending = FALSE;
   }
 
-  res = FLAC__seekable_stream_decoder_process_one_frame (flacdec->decoder);
+  res = FLAC__seekable_stream_decoder_process_single (flacdec->decoder);
   if (FLAC__seekable_stream_decoder_get_state (flacdec->decoder) == 
 		  FLAC__SEEKABLE_STREAM_DECODER_END_OF_STREAM) 
   {
