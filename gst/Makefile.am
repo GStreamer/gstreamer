@@ -146,7 +146,8 @@ libgstreamerinclude_HEADERS =		\
 noinst_HEADERS = 	\
 	gst_private.h	\
 	gstarch.h	\
-	gstpropsprivate.h
+	gstpropsprivate.h \
+	cothreads.h
 
 libgstreamer_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
 	$(LIBGST_CFLAGS) \
