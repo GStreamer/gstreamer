@@ -65,7 +65,7 @@ struct mjpeg_params
    unsigned long jpeg_markers;    /* Which markers should go into the JPEG output.
                                      Unless you exactly know what you do, leave them untouched.
                                      Inluding less markers will make the resulting code
-                                     smaller, but there will be fewer aplications
+                                     smaller, but there will be fewer applications
                                      which can read it.
                                      The presence of the APP and COM marker is
                                      influenced by APP0_len and COM_len ONLY! */

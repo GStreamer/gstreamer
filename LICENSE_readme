@@ -11,7 +11,7 @@ sidplay		libsidplay	(http://www.geocities.com/SiliconValley/Lakes/5147/sidplay/)
 Plugins derived from GPL code are as follows:
 synaesthesia	synaesthesia	(http://yoyo.cc.monash.edu.au/~pfh/synaesthesia.html)
 
-Plugins which use library a LGPL are as follows:
+Plugins which use a LGPL library are as follows:
 Colorspace 	Hermes 		(http://www.clanlib.org/hermes/)
 httpsrc		libghttp	(ftp.gnome.org/pub/GNOME/stable/sources/libghttp/)
 alsasink	alsa		(http://alsa-project.org)
