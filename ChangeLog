@@ -1,5 +1,12 @@
 2004-06-20  Benjamin Otte  <otte@gnome.org>
 
+	* testsuite/schedulers/.cvsignore:
+	* testsuite/schedulers/Makefile.am:
+	* testsuite/schedulers/143777-2.c: (main):
+	  add test for opt breakage in bug #143777
+
+2004-06-20  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstpad.c: (gst_pad_call_chain_function):
 	  check for if we were unlinked while inside the chainfunction (fixes
 	  entrygthread having issues with #143777)
