@@ -1,3 +1,8 @@
+2004-01-26  David Schleef  <ds@schleef.org>
+
+	* gst/gstpad.c: (gst_pad_try_set_caps): Revert last change
+	  making try_set_caps() work with non-fixed caps.
+
 2004-01-26  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced_types.xml:
