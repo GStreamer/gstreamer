@@ -1055,10 +1055,11 @@ cdparanoia_convert (GstPad * pad,
             *dest_value = sector;
           } else if (*dest_format == track_format) {
             /* if we go past the last sector, make sure to report the last track */
-            if (sector > src->last_sector)
+            if (sector > src->last_sector - src->first_sector)
               *dest_value = cdda_sector_gettrack (src->d, src->last_sector);
             else
-              *dest_value = cdda_sector_gettrack (src->d, sector) - 1;
+              *dest_value = cdda_sector_gettrack (src->d,
+                  sector + src->first_sector) - 1;
           } else {
             return FALSE;
           }
