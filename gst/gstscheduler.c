@@ -71,11 +71,17 @@ gst_schedule_chain_wrapper (int argc,char *argv[])
       if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SINK) {
         GstBuffer *buf;
 
-        GST_DEBUG (GST_CAT_DATAFLOW,"pulling a buffer from %s:%s\n", name, GST_PAD_NAME (pad));
+        GST_DEBUG (GST_CAT_DATAFLOW,"pulling data from %s:%s\n", name, GST_PAD_NAME (pad));
         buf = gst_pad_pull (pad);
-        GST_DEBUG (GST_CAT_DATAFLOW,"calling chain function of %s:%s\n", name, GST_PAD_NAME (pad));
-        if (buf) 
-          GST_RPAD_CHAINFUNC(realpad) (pad,buf);
+        if (buf) { 
+          if (GST_IS_EVENT (buf) && !GST_ELEMENT_IS_EVENT_AWARE (element)) {
+            gst_pad_event_default (pad, GST_EVENT (buf)); 
+	  }
+	  else {
+            GST_DEBUG (GST_CAT_DATAFLOW,"calling chain function of %s:%s\n", name, GST_PAD_NAME (pad));
+            GST_RPAD_CHAINFUNC(realpad) (pad, buf);
+	  }
+        }
         GST_DEBUG (GST_CAT_DATAFLOW,"calling chain function of %s:%s done\n", name, GST_PAD_NAME (pad));
       }
     }
@@ -214,6 +220,7 @@ gst_schedule_gethandler_proxy (GstPad *pad)
   // now grab the buffer from the pen, clear the pen, and return the buffer
   buf = GST_RPAD_BUFPEN(pad);
   GST_RPAD_BUFPEN(pad) = NULL;
+		  
   return buf;
 }
 
@@ -1492,6 +1499,7 @@ GST_DEBUG(GST_CAT_SCHEDULING,"there are %d elements in this chain\n",chain->num_
           GST_INFO (GST_CAT_DATAFLOW,"NO ENTRY INTO CHAIN!");
 gst_schedule_show(sched);
 	  //eos = TRUE;
+	  //gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
         }
       } else {
         GST_INFO (GST_CAT_DATAFLOW,"NO ENABLED ELEMENTS IN CHAIN!!");
@@ -1518,7 +1526,6 @@ gst_schedule_show(sched);
           pads = entry->pads;
           while (pads) {
             pad = GST_PAD (pads->data);
-            if (GST_RPAD_DIRECTION(pad) == GST_PAD_SRC) {
               GST_DEBUG (GST_CAT_DATAFLOW,"calling getfunc of %s:%s\n",GST_DEBUG_PAD_NAME(pad));
               if (GST_REAL_PAD(pad)->getfunc == NULL) 
                 fprintf(stderr, "error, no getfunc in \"%s\"\n", GST_ELEMENT_NAME  (entry));
