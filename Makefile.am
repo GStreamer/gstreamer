@@ -32,6 +32,7 @@ aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
 SUBDIRS = include gst libs tools \
 	$(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) \
 	pkgconfig po \
+	common \
 	$(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
@@ -41,23 +42,18 @@ DIST_SUBDIRS = include libs gst \
 	examples \
 	pkgconfig \
 	po \
+	common \
 	docs
 
-EXTRA_DIST = gstreamer.spec.in gst-element-check.m4 \
+EXTRA_DIST = gstreamer.spec gstreamer.spec.in gst-element-check.m4 \
 	     configure.ac autogen.sh depcomp \
 	     REQUIREMENTS ABOUT-NLS DOCBUILDING DEVEL RELEASE \
-	     idiottest.mak common
+	     idiottest.mak
 
 CLEANFILES = gst-element-check-@GST_MAJORMINOR@.m4
 
-dist-hook:
-	cp gstreamer.spec $(distdir)
-	rm -rf `find $(distdir)/common -name CVS`
-
-rpm: dist
-	rpm -ta $(distdir).tar.gz
-
 include $(top_srcdir)/idiottest.mak
+include $(top_srcdir)/common/release.mak
 
 
 if GST_GCOV_ENABLED
@@ -101,4 +97,3 @@ check-coverage:
 
 endif
 
-include $(top_srcdir)/common/release.mak

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-03-16 00:10+0100\n"
+"POT-Creation-Date: 2004-03-18 11:15+0100\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -15,30 +15,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:121
+#: gst/gst.c:135
 msgid "Print the GStreamer version"
 msgstr "Druk de GStreamer versie af"
 
-#: gst/gst.c:123
+#: gst/gst.c:137
 msgid "Make all warnings fatal"
 msgstr "Maak alle waarschuwingen fataal"
 
-#: gst/gst.c:127
+#: gst/gst.c:141
 msgid "Print available debug categories and exit"
 msgstr "Druk beschikbare debug-categorieën af en stop"
 
-#: gst/gst.c:131
+#: gst/gst.c:144
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Standaard debug-niveau van 1 (enkel fouten) tot 5 (alles) of 0 voor geen "
 "uitvoer"
 
-#: gst/gst.c:132
+#: gst/gst.c:146
 msgid "LEVEL"
 msgstr "NIVEAU"
 
-#: gst/gst.c:135
+#: gst/gst.c:148
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -47,39 +47,31 @@ msgstr ""
 "specifieke niveau's in te stellen voor de individuele categorieën.Voorbeeld:"
 "GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:136
+#: gst/gst.c:151
 msgid "LIST"
 msgstr ""
 
-#: gst/gst.c:138
+#: gst/gst.c:153
 msgid "Disable colored debugging output"
 msgstr "Zet kleuren af in debug-uitvoer"
 
-#: gst/gst.c:140
+#: gst/gst.c:155
 msgid "Disable debugging"
 msgstr "Zet debugging af"
 
-#: gst/gst.c:144
+#: gst/gst.c:159
 msgid "Disable accelerated CPU instructions"
 msgstr "Schakel versnelde CPU-instructies uit"
 
-#: gst/gst.c:146
+#: gst/gst.c:161
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Schakel uitgebreide diagnostiek aan voor het laden van plugins"
 
-#: gst/gst.c:149
-msgid "path list for loading plugins (separated by '"
-msgstr "padlijst om plugins te laden (gescheiden door '"
-
-#: gst/gst.c:150
-msgid "')"
-msgstr ")"
-
-#: gst/gst.c:150
+#: gst/gst.c:163
 msgid "PATHS"
 msgstr "PADEN"
 
-#: gst/gst.c:154
+#: gst/gst.c:166
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "env variable GST_PLUGIN_PATH"
@@ -87,34 +79,36 @@ msgstr ""
 "Lijst van plugins, gescheiden door komma's, om eerste te laden bovenop de "
 "lijst volgens omgevingsvariable GST_PLUGIN_PATH"
 
-#: gst/gst.c:155
+#: gst/gst.c:168
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:158
+#: gst/gst.c:171
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Schakel het opvangen van segmentatiefouten uit tijdens laden van plugins"
 
-#: gst/gst.c:162
-msgid "Scheduler to use ('"
-msgstr "Planner om te gebruiken ('"
-
-#: gst/gst.c:163
-msgid "' is the default)"
-msgstr "' is de voorkeursplanner)"
-
-#: gst/gst.c:163
+#: gst/gst.c:174
 msgid "SCHEDULER"
 msgstr "PLANNER"
 
-#: gst/gst.c:165
+#: gst/gst.c:176
 msgid "Registry to use"
 msgstr "Register om te gebruiken"
 
-#: gst/gst.c:165
+#: gst/gst.c:176
 msgid "REGISTRY"
 msgstr "REGISTER"
+
+#: gst/gst.c:189
+#, fuzzy, c-format
+msgid "path list for loading plugins (separated by '%s')"
+msgstr "padlijst om plugins te laden (gescheiden door '"
+
+#: gst/gst.c:193
+#, fuzzy, c-format
+msgid "Scheduler to use (default is '%s')"
+msgstr "Planner om te gebruiken ('"
 
 #: gst/gstelement.c:252
 #, c-format
@@ -829,6 +823,12 @@ msgstr "BEZIG met pijplijn ...\n"
 #: tools/gst-launch.c:485
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pijplijn wil niet spelen.\n"
+
+#~ msgid "')"
+#~ msgstr ")"
+
+#~ msgid "' is the default)"
+#~ msgstr "' is de voorkeursplanner)"
 
 #~ msgid "CATEGORIES"
 #~ msgstr "CATEGORIEEN"

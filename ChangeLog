@@ -1,3 +1,15 @@
+2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* configure.ac:
+          dist common properly
+	* po/af.po:
+	* po/fr.po:
+	* po/nl.po:
+	* po/sr.po:
+	* po/sv.po:
+          refreshing translations
+
 2004-03-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/LINGUAS:

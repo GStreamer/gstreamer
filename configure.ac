@@ -657,6 +657,8 @@ examples/thread/Makefile
 examples/typefind/Makefile
 examples/xml/Makefile
 tools/Makefile
+common/Makefile
+common/m4/Makefile
 docs/Makefile
 docs/faq/Makefile
 docs/gst/Makefile
