@@ -222,15 +222,17 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
    * note that this is a pretty lame typefind method (14 bits, 0.006%), so
    * we'll only use LIKELY
    */
-  if (data[0] == 0xFF && (data[1] & 0xF6) == 0xF0) {
-    gboolean mpegversion = (data[1] & 0x08) ? 2 : 4;
-    GstCaps *caps = gst_caps_new_simple ("audio/mpeg",
-        "framed", G_TYPE_BOOLEAN, FALSE,
-        "mpegversion", G_TYPE_INT, mpegversion,
-        NULL);
+  if (data) {
+    if (data[0] == 0xFF && (data[1] & 0xF6) == 0xF0) {
+      gboolean mpegversion = (data[1] & 0x08) ? 2 : 4;
+      GstCaps *caps = gst_caps_new_simple ("audio/mpeg",
+          "framed", G_TYPE_BOOLEAN, FALSE,
+          "mpegversion", G_TYPE_INT, mpegversion,
+          NULL);
 
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
-    gst_caps_free (caps);
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
+      gst_caps_free (caps);
+    }
   }
 }
 
