@@ -31,4 +31,7 @@ extern GstElementDetails gst_iir_details;
 extern GstPadTemplate *gst_filter_sink_factory ();
 extern GstPadTemplate *gst_filter_src_factory ();
 
+GType gst_wsinc_get_type (void);
+extern GstElementDetails gst_wsinc_details;
+
 #endif /* __GST_FILTER_H__ */

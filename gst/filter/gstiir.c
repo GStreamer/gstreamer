@@ -136,7 +136,7 @@ gst_iir_class_init (GstIIRClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STAGES,
       g_param_spec_int ("stages", "Stages", "Number of filter stages", 
 	                   1, G_MAXINT, 
-	                   0, G_PARAM_READWRITE));
+	                   1, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_iir_set_property;
   gobject_class->get_property = gst_iir_get_property;
