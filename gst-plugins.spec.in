@@ -621,24 +621,24 @@ GStreamer support libraries header files.
 @USE_NAS_TRUE@%{register}
 
 ### VIDEO 4 LINUX 2 ###
-@USE_V4L2_TRUE@%package -n gstreamer-v4l2
-@USE_V4L2_TRUE@Summary:       GStreamer Video for Linux 2 plug-in.
-@USE_V4L2_TRUE@Group:         Applications/Multimedia
-@USE_V4L2_TRUE@Requires:      gstreamer-plugins = %{version}
-@USE_V4L2_TRUE@BuildRequires: glibc-devel
-@USE_V4L2_TRUE@
-@USE_V4L2_TRUE@%description -n gstreamer-v4l2
-@USE_V4L2_TRUE@Plug-in for accessing Video for Linux devices.
-@USE_V4L2_TRUE@
-@USE_V4L2_TRUE@%files -n gstreamer-v4l2
-@USE_V4L2_TRUE@%defattr(-, root, root)
-@USE_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
-@USE_V4L2_TRUE@
-@USE_V4L2_TRUE@%post -n gstreamer-v4l2
-@USE_V4L2_TRUE@%{register}
-@USE_V4L2_TRUE@
-@USE_V4L2_TRUE@%postun -n gstreamer-v4l2
-@USE_V4L2_TRUE@%{register}
+@USE_GST_V4L2_TRUE@%package -n gstreamer-v4l2
+@USE_GST_V4L2_TRUE@Summary:       GStreamer Video for Linux 2 plug-in.
+@USE_GST_V4L2_TRUE@Group:         Applications/Multimedia
+@USE_GST_V4L2_TRUE@Requires:      gstreamer-plugins = %{version}
+@USE_GST_V4L2_TRUE@BuildRequires: glibc-devel
+@USE_GST_V4L2_TRUE@
+@USE_GST_V4L2_TRUE@%description -n gstreamer-v4l2
+@USE_GST_V4L2_TRUE@Plug-in for accessing Video for Linux devices.
+@USE_GST_V4L2_TRUE@
+@USE_GST_V4L2_TRUE@%files -n gstreamer-v4l2
+@USE_GST_V4L2_TRUE@%defattr(-, root, root)
+@USE_GST_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
+@USE_GST_V4L2_TRUE@
+@USE_GST_V4L2_TRUE@%post -n gstreamer-v4l2
+@USE_GST_V4L2_TRUE@%{register}
+@USE_GST_V4L2_TRUE@
+@USE_GST_V4L2_TRUE@%postun -n gstreamer-v4l2
+@USE_GST_V4L2_TRUE@%{register}
 
 ### XVID ###
 @USE_XVID_TRUE@%package -n gstreamer-xvid
@@ -662,7 +662,10 @@ GStreamer support libraries header files.
 
 
 %changelog
-* Thu Sep 28 2004 Christian Schalle <uraeus at gnome dot org>
+* Wed Sep 29 2004 Christian Schaller <uraeus at gnome dot org>
+- Fix USE statement for V4L2
+
+* Thu Sep 28 2004 Christian Schaller <uraeus at gnome dot org>
 - Remove kio plugin (as it was broken)
 
 * Wed Sep 21 2004 Christian Schaller <uraeus at gnome dot org>
