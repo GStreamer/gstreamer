@@ -1,6 +1,6 @@
-libdir = $(prefix)/lib/gst
+librarydir = $(prefix)/lib/gst
 
-lib_LTLIBRARIES = libgstriff.la
+library_LTLIBRARIES = libgstriff.la
 
 libgstriff_la_SOURCES = riffparse.c riffencode.c riffutil.c
 
