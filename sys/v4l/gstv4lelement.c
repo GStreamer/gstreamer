@@ -140,7 +140,7 @@ gst_v4l_get_attribute (GstElement  *element,
       return gst_v4l_get_audio(v4lelement, n, value);
   }
 
-  gst_element_error(element, "Unknown attribute %s", name);
+  g_warning("Unknown attribute %s", name);
   return FALSE;
 }
 
@@ -170,7 +170,7 @@ gst_v4l_set_attribute (GstElement  *element,
       return gst_v4l_set_audio(v4lelement, n, value);
   }
 
-  gst_element_error(element, "Unknown attribute %s", name);
+  g_warning("Unknown attribute %s", name);
   return FALSE;
 }
 

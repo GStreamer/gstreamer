@@ -26,6 +26,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#define _(string) (string)
 
 /* simple check whether the device is open */
 #define GST_V4L_IS_OPEN(v4lelement) \
@@ -43,7 +44,9 @@ extern "C" {
   if (v4lelement->video_fd <= 0)               \
   {                                            \
     gst_element_error(GST_ELEMENT(v4lelement), \
-      "Device is not open");                   \
+      GST_ERROR_DEVICE,			       \
+      g_strdup("Video device is not open"), \
+      g_strdup("Device is not open"));         \
     return FALSE;                              \
   }
 
@@ -52,35 +55,43 @@ extern "C" {
   if (v4lelement->video_fd != -1)              \
   {                                            \
     gst_element_error(GST_ELEMENT(v4lelement), \
-      "Device is open");                       \
+      GST_ERROR_DEVICE,                        \
+      g_strdup(_("Video device is open")),     \
+      g_strdup("Device is open"));             \
     return FALSE;                              \
   }
 
 /* checks whether the current v4lelement does video overlay */
 #define GST_V4L_CHECK_OVERLAY(v4lelement) \
-  if (!(v4lelement->vcap.type & VID_TYPE_OVERLAY)) \
-  {                                                \
-    gst_element_error(GST_ELEMENT(v4lelement),     \
-      "Device doesn't do overlay");               \
-    return FALSE;                                  \
+  if (!(v4lelement->vcap.type & VID_TYPE_OVERLAY))   \
+  {                                                  \
+    gst_element_error(GST_ELEMENT(v4lelement),       \
+      GST_ERROR_DEVICE,                              \
+      g_strdup(_("Video device doesn't do overlay")),\
+      g_strdup("Device doesn't do overlay"));        \
+    return FALSE;                                    \
   }
 
 /* checks whether we're in capture mode or not */
-#define GST_V4L_CHECK_ACTIVE(v4lelement) \
-  if (v4lelement->buffer == NULL)              \
-  {                                            \
-    gst_element_error(GST_ELEMENT(v4lelement), \
-      "Device is not in streaming mode");      \
-    return FALSE;                              \
+#define GST_V4L_CHECK_ACTIVE(v4lelement)                    \
+  if (v4lelement->buffer == NULL)                           \
+  {                                                         \
+    gst_element_error(GST_ELEMENT(v4lelement),              \
+      GST_ERROR_DEVICE,                                     \
+      g_strdup(_("Video device is not in streaming mode")), \
+      g_strdup("Device is not in streaming mode"));         \
+    return FALSE;                                           \
   }
 
 /* checks whether we're out of capture mode or not */
-#define GST_V4L_CHECK_NOT_ACTIVE(v4lelement) \
-  if (v4lelement->buffer != NULL)              \
-  {                                            \
-    gst_element_error(GST_ELEMENT(v4lelement), \
-      "Device is in streaming mode");          \
-    return FALSE;                              \
+#define GST_V4L_CHECK_NOT_ACTIVE(v4lelement)            \
+  if (v4lelement->buffer != NULL)                       \
+  {                                                     \
+    gst_element_error(GST_ELEMENT(v4lelement),          \
+      GST_ERROR_DEVICE,                                 \
+      g_strdup(_("Video device is in streaming mode")), \
+      g_strdup("Device is in streaming mode"));         \
+    return FALSE;                                       \
   }
 
 

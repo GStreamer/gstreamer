@@ -80,9 +80,10 @@ gst_v4lmjpegsink_sync_thread (void *arg)
     if (ioctl(GST_V4LELEMENT(v4lmjpegsink)->video_fd, MJPIOC_SYNC,
         &(v4lmjpegsink->bsync)) < 0)
     {
-      gst_element_error(GST_ELEMENT(v4lmjpegsink),
-        "Failed to sync on frame %d: %s",
-         frame, g_strerror(errno));
+      gst_element_error(GST_ELEMENT(v4lmjpegsink), GST_ERROR_DEVICE,
+        g_strdup(_("Unable to set parameters on video device")),
+        g_strdup_printf("Failed to sync on frame %d: %s",
+                        frame, g_strerror(errno)));
       g_mutex_lock(v4lmjpegsink->mutex_queued_frames);
       v4lmjpegsink->isqueued_queued_frames[frame] = -1;
       g_cond_broadcast(v4lmjpegsink->cond_queued_frames[frame]);
@@ -94,8 +95,9 @@ gst_v4lmjpegsink_sync_thread (void *arg)
       /* be sure that we're not confusing */
       if (frame != v4lmjpegsink->bsync.frame)
       {
-        gst_element_error(GST_ELEMENT(v4lmjpegsink),
-          "Internal error: frame number confusion");
+        gst_element_error(GST_ELEMENT(v4lmjpegsink), GST_ERROR_INTERNAL,
+          g_strdup(_("An internal error occured")),
+          g_strdup("Internal error: frame number confusion"));
         goto end;
       }
       g_mutex_lock(v4lmjpegsink->mutex_queued_frames);
@@ -129,9 +131,10 @@ gst_v4lmjpegsink_queue_frame (GstV4lMjpegSink *v4lmjpegsink,
   /* queue on this frame */
   if (ioctl(GST_V4LELEMENT(v4lmjpegsink)->video_fd, MJPIOC_QBUF_PLAY, &num) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsink),
-      "Failed to queue frame %d: %s",
-      num, g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lmjpegsink), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to set parameters on video device")),
+      g_strdup_printf("Failed to queue frame %d: %s",
+                      num, g_strerror(errno)));
     return FALSE;
   }
 
@@ -226,9 +229,10 @@ gst_v4lmjpegsink_set_playback (GstV4lMjpegSink *v4lmjpegsink,
 
   if (ioctl(GST_V4LELEMENT(v4lmjpegsink)->video_fd, MJPIOC_G_PARAMS, &bparm) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsink),
-      "Error getting playback parameters: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lmjpegsink), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to get informations from video device")),
+      g_strdup_printf("Error getting playback parameters: %s",
+                      g_strerror(errno)));
     return FALSE;
   }
 
@@ -244,9 +248,10 @@ gst_v4lmjpegsink_set_playback (GstV4lMjpegSink *v4lmjpegsink,
 
   if (width > mw || height > mh)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsink),
-      "Video dimensions (%dx%d) are larger than device max (%dx%d)",
-      width, height, mw, mh);
+    gst_element_error(GST_ELEMENT(v4lmjpegsink), GST_ERROR_UNKNOWN,
+      g_strdup(_("An unknown error occured")),
+      g_strdup_printf("Video dimensions (%dx%d) are larger than device max (%dx%d)",
+                      width, height, mw, mh));
     return FALSE;
   }
 
@@ -274,9 +279,10 @@ gst_v4lmjpegsink_set_playback (GstV4lMjpegSink *v4lmjpegsink,
   {
     if (height > mh/2)
     {
-      gst_element_error(GST_ELEMENT(v4lmjpegsink),
-        "Video dimensions (%dx%d) too large for non-interlaced playback (%dx%d)",
-        width, height, mw, mh/2);
+      gst_element_error(GST_ELEMENT(v4lmjpegsink), GST_ERROR_UNKNOWN,
+        g_strdup(_("An unknown error occured")),
+        g_strdup_printf("Video dimensions (%dx%d) too large for non-interlaced playback (%dx%d)",
+                        width, height, mw, mh/2));
       return FALSE;
     }
 
@@ -321,9 +327,10 @@ gst_v4lmjpegsink_set_playback (GstV4lMjpegSink *v4lmjpegsink,
 
   if (ioctl(GST_V4LELEMENT(v4lmjpegsink)->video_fd, MJPIOC_S_PARAMS, &bparm) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsink),
-      "Error setting playback parameters: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lmjpegsink), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to set parameters on video device")),
+      g_strdup_printf("Error setting playback parameters: %s",
+                      g_strerror(errno)));
     return FALSE;
   }
 
@@ -349,9 +356,10 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
   /* Request buffers */
   if (ioctl(GST_V4LELEMENT(v4lmjpegsink)->video_fd, MJPIOC_REQBUFS, &(v4lmjpegsink->breq)) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsink),
-      "Error requesting video buffers: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lmjpegsink), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to get informations from video device")),
+      g_strdup_printf("Error requesting video buffers: %s",
+                      g_strerror(errno)));
     return FALSE;
   }
 
@@ -364,9 +372,10 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
     PROT_READ|PROT_WRITE, MAP_SHARED, GST_V4LELEMENT(v4lmjpegsink)->video_fd, 0);
   if (GST_V4LELEMENT(v4lmjpegsink)->buffer == MAP_FAILED)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsink),
-      "Error mapping video buffers: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lmjpegsink), GST_ERROR_UNKNOWN,
+      g_strdup(_("An unknown error occured")),
+      g_strdup_printf("Error mapping video buffers: %s",
+                      g_strerror(errno)));
     GST_V4LELEMENT(v4lmjpegsink)->buffer = NULL;
     return FALSE;
   }
@@ -377,18 +386,20 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
     malloc(sizeof(gint8) * v4lmjpegsink->breq.count);
   if (!v4lmjpegsink->isqueued_queued_frames)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsink),
-      "Failed to create queue tracker: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lmjpegsink), GST_ERROR_UNKNOWN,
+      g_strdup(_("An unknown error occured")),
+      g_strdup_printf("Failed to create queue tracker: %s",
+                      g_strerror(errno)));
     return FALSE;
   }
   v4lmjpegsink->cond_queued_frames = (GCond **)
     malloc(sizeof(GCond *) * v4lmjpegsink->breq.count);
   if (!v4lmjpegsink->cond_queued_frames)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsink),
-      "Failed to create queue condition holders: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lmjpegsink), GST_ERROR_UNKNOWN,
+      g_strdup(_("An unknown error occured")),
+      g_strdup_printf("Failed to create queue condition holders: %s",
+                      g_strerror(errno)));
     return FALSE;
   }
   for (n=0;n<v4lmjpegsink->breq.count;n++)
@@ -425,8 +436,9 @@ gst_v4lmjpegsink_playback_start (GstV4lMjpegSink *v4lmjpegsink)
       gst_v4lmjpegsink_sync_thread, (void *) v4lmjpegsink, TRUE, &error);
   if(!v4lmjpegsink->thread_queued_frames)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsink),
-      "Failed to create sync thread: %s", error->message);
+    gst_element_error(GST_ELEMENT(v4lmjpegsink), GST_ERROR_UNKNOWN,
+      g_strdup(_("An unknown error occured")),
+      g_strdup_printf("Failed to create sync thread: %s", error->message));
     return FALSE;
   }
 

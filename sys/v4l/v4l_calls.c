@@ -74,9 +74,10 @@ gst_v4l_get_capabilities (GstV4lElement *v4lelement)
 
   if (ioctl(v4lelement->video_fd, VIDIOCGCAP, &(v4lelement->vcap)) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error getting \'%s\' capabilities: %s",
-      v4lelement->videodev, g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to get informations from video device")),
+      g_strdup_printf("Error getting \'%s\' capabilities: %s",
+                      v4lelement->videodev, g_strerror(errno)));
     return FALSE;
   }
 
@@ -108,9 +109,10 @@ gst_v4l_open (GstV4lElement *v4lelement)
   v4lelement->video_fd = open(v4lelement->videodev, O_RDWR);
   if (!GST_V4L_IS_OPEN(v4lelement))
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Failed to open device (\'%s\'): %s",
-      v4lelement->videodev, g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
+		      g_strdup(_("Unable to open video device")),
+                      g_strdup_printf("Failed to open device (\'%s\'): %s",
+                                      v4lelement->videodev, g_strerror(errno)));
     return FALSE;
   }
 
@@ -271,17 +273,19 @@ gst_v4l_set_chan_norm (GstV4lElement *v4lelement,
 
   if (ioctl(v4lelement->video_fd, VIDIOCSCHAN, &(v4lelement->vchan)) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error setting the channel/norm settings: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to set parameters on video device")),
+      g_strdup_printf("Error setting the channel/norm settings: %s",
+                      g_strerror(errno)));
     return FALSE;
   }
 
   if (ioctl(v4lelement->video_fd, VIDIOCGCHAN, &(v4lelement->vchan)) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error getting the channel/norm settings: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lelement),  GST_ERROR_DEVICE,
+      g_strdup(_("Unable to set parameters on video device")),
+      g_strdup_printf("Error getting the channel/norm settings: %s",
+                      g_strerror(errno)));
     return FALSE;
   }
 
@@ -325,9 +329,9 @@ gst_v4l_get_signal (GstV4lElement *v4lelement,
   tuner.tuner = 0;
   if (ioctl(v4lelement->video_fd, VIDIOCGTUNER, &tuner) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error getting tuner signal: %s",
-      sys_errlist[errno]);
+    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to get informations from video device")),
+      g_strdup_printf("Error getting tuner signal: %s", sys_errlist[errno]));
     return FALSE;
   }
 
@@ -355,9 +359,9 @@ gst_v4l_get_frequency (GstV4lElement *v4lelement,
 
   if (ioctl(v4lelement->video_fd, VIDIOCGFREQ, frequency) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error getting tuner frequency: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to get informations from video device")),
+      g_strdup_printf("Error getting tuner frequency: %s", g_strerror(errno)));
     return FALSE;
   }
 
@@ -383,9 +387,9 @@ gst_v4l_set_frequency (GstV4lElement *v4lelement,
 
   if (ioctl(v4lelement->video_fd, VIDIOCSFREQ, &frequency) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error setting tuner frequency: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to set parameters on video device")),
+      g_strdup_printf("Error setting tuner frequency: %s", g_strerror(errno)));
     return FALSE;
   }
 
@@ -412,9 +416,10 @@ gst_v4l_get_picture (GstV4lElement     *v4lelement,
 
   if (ioctl(v4lelement->video_fd, VIDIOCGPICT, &vpic) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error getting picture parameters: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to get informations from video device")),
+      g_strdup_printf("Error getting picture parameters: %s",
+                      g_strerror(errno)));
     return FALSE;
   }
 
@@ -433,9 +438,7 @@ gst_v4l_get_picture (GstV4lElement     *v4lelement,
       *value = vpic.colour;
       break;
     default:
-      gst_element_error(GST_ELEMENT(v4lelement),
-        "Error getting picture parameters: unknown type %d",
-        type);
+      g_warning("Error getting picture parameters: unknown type %d", type);
       return FALSE;
   }
 
@@ -462,9 +465,10 @@ gst_v4l_set_picture (GstV4lElement     *v4lelement,
 
   if (ioctl(v4lelement->video_fd, VIDIOCGPICT, &vpic) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error getting picture parameters: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to get informations from video device")),
+      g_strdup_printf("Error getting picture parameters: %s",
+                      g_strerror(errno)));
     return FALSE;
   }
 
@@ -483,17 +487,16 @@ gst_v4l_set_picture (GstV4lElement     *v4lelement,
       vpic.colour = value;
       break;
     default:
-      gst_element_error(GST_ELEMENT(v4lelement),
-        "Error setting picture parameters: unknown type %d",
-        type);
+      g_warning("Error setting picture parameters: unknown type %d", type);
       return FALSE;
   }
 
   if (ioctl(v4lelement->video_fd, VIDIOCSPICT, &vpic) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error setting picture parameters: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to set parameters on video device")),
+      g_strdup_printf("Error setting picture parameters: %s",
+                      g_strerror(errno)));
     return FALSE;
   }
 
@@ -538,9 +541,10 @@ gst_v4l_get_audio (GstV4lElement   *v4lelement,
 
   if (ioctl(v4lelement->video_fd, VIDIOCGAUDIO, &vau) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error getting audio parameters: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to get informations from video device")),
+      g_strdup_printf("Error getting audio parameters: %s",
+                      g_strerror(errno)));
     return FALSE;
   }
 
@@ -556,9 +560,7 @@ gst_v4l_get_audio (GstV4lElement   *v4lelement,
       *value = vau.mode;
       break;
     default:
-      gst_element_error(GST_ELEMENT(v4lelement),
-        "Error getting audio parameters: unknown type %d",
-        type);
+      g_warning("Error getting audio parameters: unknown type %d", type);
       return FALSE;
   }
 
@@ -588,9 +590,10 @@ gst_v4l_set_audio (GstV4lElement   *v4lelement,
 
   if (ioctl(v4lelement->video_fd, VIDIOCGAUDIO, &vau) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error getting audio parameters: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to get informations from video device")),
+      g_strdup_printf("Error getting audio parameters: %s",
+                      g_strerror(errno)));
     return FALSE;
   }
 
@@ -599,8 +602,8 @@ gst_v4l_set_audio (GstV4lElement   *v4lelement,
     case V4L_AUDIO_MUTE:
       if (!(vau.flags & VIDEO_AUDIO_MUTABLE))
       {
-        gst_element_error(GST_ELEMENT(v4lelement),
-          "Error setting audio mute: (un)setting mute is not supported");
+        g_warning("Error setting audio mute: " \
+		  "(un)setting mute is not supported");
         return FALSE;
       }
       if (value)
@@ -611,8 +614,8 @@ gst_v4l_set_audio (GstV4lElement   *v4lelement,
     case V4L_AUDIO_VOLUME:
       if (!(vau.flags & VIDEO_AUDIO_VOLUME))
       {
-        gst_element_error(GST_ELEMENT(v4lelement),
-          "Error setting audio volume: setting volume is not supported");
+        g_warning("Error setting audio volume: " \
+	          "setting volume is not supported");
         return FALSE;
       }
       vau.volume = value;
@@ -621,17 +624,16 @@ gst_v4l_set_audio (GstV4lElement   *v4lelement,
       vau.mode = value;
       break;
     default:
-      gst_element_error(GST_ELEMENT(v4lelement),
-        "Error setting audio parameters: unknown type %d",
-        type);
+      g_warning("Error setting audio parameters: unknown type %d", type);
       return FALSE;
   }
 
   if (ioctl(v4lelement->video_fd, VIDIOCSAUDIO, &vau) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error setting audio parameters: %s",
-      g_strerror(errno));
+    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
+      g_strdup(_("Unable to set parameters on video device")),
+      g_strdup_printf("Error setting audio parameters: %s",
+      		      g_strerror(errno)));
     return FALSE;
   }
 
