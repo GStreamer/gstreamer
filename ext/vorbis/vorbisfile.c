@@ -476,7 +476,7 @@ gst_vorbisfile_loop (GstElement *element)
   VorbisFile *vorbisfile = GST_VORBISFILE (element);
   GstBuffer *outbuf;
   long ret;
-  GstClockTime time;
+  GstClockTime time = 0;
   gint64 samples;
   gint link;
 
