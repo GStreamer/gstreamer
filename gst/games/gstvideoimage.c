@@ -493,7 +493,7 @@ copy_hline_YUY2 (GstVideoImage * dest, int xdest, int ydest,
     GstVideoImage * src, int xsrc, int ysrc, int w)
 {
   int destoffset = ydest * dest->ystride;
-  int srcoffset = ydest * src->ystride;
+  int srcoffset = ysrc * src->ystride;
 
   memcpy (dest->yp + destoffset + xdest * 2, src->yp + srcoffset + xsrc * 2,
       w * 2);
