@@ -13,9 +13,14 @@ autogen.sh to generate the build system files.
 Unfortunately, there is a bug in automake which causes it to use a large
 amount of memory when generating plugins/Makefile.in.  The following patch,
 which you may wish to apply to automake (version 1.4), fixes this problem.
-Alternatively, ensure that you have at least 128Mb of memory on your system,
+It is also fixed in versions of automake 1.4f and later.
+Alternatively, ensure that you have at least 512Mb of memory on your system,
 and be prepared to wait a little while when running automake (or autogen.sh).
 
+The autogen.sh script will automatically detect an unpatched automake and give
+a warning.  It will also generate a patched version of automake in the top
+build directory, which you can use by putting it in a directory in your $PATH
+ahead of the unpatched version of automake.
 
 @@ -2383,8 +2383,8 @@
  	# to all possible directories, and use it.  If DIST_SUBDIRS is
@@ -28,7 +33,3 @@ and be prepared to wait a little while when running automake (or autogen.sh).
  	{
  	    $dist_subdir_name = 'DIST_SUBDIRS';
  	    if (! &variable_defined ('DIST_SUBDIRS'))
-
-
-The automake developers have been notified of this problem, and supplied with
-an equivalent patch against CVS head.

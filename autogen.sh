@@ -63,7 +63,23 @@ EOF
       echo "Detected automake version 1.4 (or near) without patch."
       echo "Your version of automake needs a patch applied in order to operate correctly."
       echo
+      patchedfile="`pwd`/automake"
+      if test -e $patchedfile; then 
+	PATCHED=0
+      else
+        echo "patching..."
+        patch -R -s -f `which automake` <autogen.patch.tmp -o $patchedfile;
+	chmod +x $patchedfile;
+	PATCHED=1
+      fi
+      echo
       echo "***************************************************************************"
+      if test -e $patchedfile; then 
+	if test "x$PATCHED" == "x1"; then
+	  echo "A patched version of automake is available at:"
+	  echo "$patchedfile"
+	fi
+      fi
       echo "You should abort the build now and read the README file for an explanation."
       echo "***************************************************************************"
       echo
