@@ -25,9 +25,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CAPS              gst_caps_get_type()
-#define GST_CAPS(object)          (G_TYPE_CHECK_INSTANCE_CAST ((object), GST_TYPE_CAPS, GstCaps))
-#define GST_IS_CAPS(object)       (G_TYPE_CHECK_INSTANCE_TYPE ((object), GST_TYPE_CAPS))
+#define GST_TYPE_CAPS             (gst_caps_get_type())
+#define GST_CAPS(object)          ((GstCaps*)object)
+#define GST_IS_CAPS(object)       ((object) && (GST_CAPS(object)->type == GST_TYPE_CAPS))
 
 #define GST_CAPS_FLAGS_ANY	  (1 << 0)
 

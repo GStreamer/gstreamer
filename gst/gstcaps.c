@@ -199,7 +199,7 @@ gst_caps_copy (const GstCaps * caps)
   GstStructure *structure;
   int i;
 
-  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
   newcaps = gst_caps_new_empty ();
   newcaps->flags = caps->flags;
@@ -225,7 +225,7 @@ gst_caps_free (GstCaps * caps)
   GstStructure *structure;
   int i;
 
-  g_return_if_fail (caps != NULL);
+  g_return_if_fail (GST_IS_CAPS (caps));
 
   for (i = 0; i < caps->structs->len; i++) {
     structure = gst_caps_get_structure (caps, i);
@@ -282,8 +282,8 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
   GstStructure *structure;
   int i;
 
-  g_return_if_fail (caps1 != NULL);
-  g_return_if_fail (caps2 != NULL);
+  g_return_if_fail (GST_IS_CAPS (caps1));
+  g_return_if_fail (GST_IS_CAPS (caps2));
 
 #ifdef USE_POISONING
   CAPS_POISON (caps2);
@@ -318,7 +318,7 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
 void
 gst_caps_append_structure (GstCaps * caps, GstStructure * structure)
 {
-  g_return_if_fail (caps != NULL);
+  g_return_if_fail (GST_IS_CAPS (caps));
 
   if (structure) {
 #if 0
@@ -385,7 +385,7 @@ gst_caps_split_one (GstCaps * caps)
 int
 gst_caps_get_size (const GstCaps * caps)
 {
-  g_return_val_if_fail (caps != NULL, 0);
+  g_return_val_if_fail (GST_IS_CAPS (caps), 0);
 
   return caps->structs->len;
 }
@@ -408,7 +408,7 @@ gst_caps_get_size (const GstCaps * caps)
 GstStructure *
 gst_caps_get_structure (const GstCaps * caps, int index)
 {
-  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
   g_return_val_if_fail (index >= 0, NULL);
   g_return_val_if_fail (index < caps->structs->len, NULL);
 
@@ -430,7 +430,7 @@ gst_caps_copy_1 (const GstCaps * caps)
   GstCaps *newcaps;
   GstStructure *structure;
 
-  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
   newcaps = gst_caps_new_empty ();
   newcaps->flags = caps->flags;
@@ -459,7 +459,7 @@ gst_caps_set_simple (GstCaps * caps, char *field, ...)
   GstStructure *structure;
   va_list var_args;
 
-  g_return_if_fail (caps != NULL);
+  g_return_if_fail (GST_IS_CAPS (caps));
   g_return_if_fail (caps->structs->len == 1);
 
   structure = gst_caps_get_structure (caps, 0);
@@ -484,7 +484,7 @@ gst_caps_set_simple_valist (GstCaps * caps, char *field, va_list varargs)
 {
   GstStructure *structure;
 
-  g_return_if_fail (caps != NULL);
+  g_return_if_fail (GST_IS_CAPS (caps));
   g_return_if_fail (caps->structs->len != 1);
 
   structure = gst_caps_get_structure (caps, 0);
@@ -505,7 +505,7 @@ gst_caps_set_simple_valist (GstCaps * caps, char *field, va_list varargs)
 gboolean
 gst_caps_is_any (const GstCaps * caps)
 {
-  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
   return (caps->flags & GST_CAPS_FLAGS_ANY);
 }
@@ -521,7 +521,7 @@ gst_caps_is_any (const GstCaps * caps)
 gboolean
 gst_caps_is_empty (const GstCaps * caps)
 {
-  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
   if (caps->flags & GST_CAPS_FLAGS_ANY)
     return FALSE;
@@ -543,7 +543,7 @@ gst_caps_is_empty (const GstCaps * caps)
 gboolean
 gst_caps_is_chained (const GstCaps * caps)
 {
-  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
   return (caps->structs->len > 1);
 }
@@ -571,7 +571,7 @@ gst_caps_is_fixed (const GstCaps * caps)
 {
   GstStructure *structure;
 
-  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
   if (caps->structs->len != 1)
     return FALSE;
@@ -642,8 +642,8 @@ gst_caps_is_equal_fixed (const GstCaps * caps1, const GstCaps * caps2)
 gboolean
 gst_caps_is_always_compatible (const GstCaps * caps1, const GstCaps * caps2)
 {
-  g_return_val_if_fail (caps1 != NULL, FALSE);
-  g_return_val_if_fail (caps2 != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps1), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps2), FALSE);
 
   return gst_caps_is_subset (caps1, caps2);
 }
@@ -823,8 +823,8 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
   GstStructure *struct2;
   GstCaps *dest;
 
-  g_return_val_if_fail (caps1 != NULL, NULL);
-  g_return_val_if_fail (caps2 != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps1), NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps2), NULL);
 
   if (gst_caps_is_empty (caps1) || gst_caps_is_empty (caps2)) {
     return gst_caps_new_empty ();
@@ -1059,7 +1059,7 @@ gst_caps_normalize (const GstCaps * caps)
   GstCaps *newcaps;
   int i;
 
-  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
   newcaps = gst_caps_copy (caps);
   nf.caps = newcaps;
@@ -1447,8 +1447,11 @@ gst_caps_from_string (const gchar * string)
 static void
 gst_caps_transform_to_string (const GValue * src_value, GValue * dest_value)
 {
-  g_return_if_fail (src_value != NULL);
-  g_return_if_fail (dest_value != NULL);
+  g_return_if_fail (G_IS_VALUE (src_value));
+  g_return_if_fail (G_IS_VALUE (dest_value));
+  g_return_if_fail (G_VALUE_HOLDS (src_value, GST_TYPE_CAPS));
+  g_return_if_fail (G_VALUE_HOLDS (dest_value, G_TYPE_STRING)
+      || G_VALUE_HOLDS (dest_value, G_TYPE_POINTER));
 
   dest_value->data[0].v_pointer =
       gst_caps_to_string (src_value->data[0].v_pointer);
