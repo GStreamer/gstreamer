@@ -56,8 +56,16 @@ struct _GstTheoraEnc
 
   gint video_bitrate;           /* bitrate target for Theora video */
   gint video_quality;           /* Theora quality selector 0 = low, 63 = high */
+  gboolean quick;
+  gboolean keyframe_auto;
+  gint keyframe_freq;
+  gint keyframe_force;
+  gint keyframe_threshold;
+  gint keyframe_mindistance;
+  gint noise_sensitivity;
 
   gint width, height;
+  gdouble fps;
 
   guint packetno;
   guint64 bytes_out;
@@ -68,14 +76,29 @@ struct _GstTheoraEncClass
   GstElementClass parent_class;
 };
 
-#define THEORA_DEF_BITRATE 0
-#define THEORA_DEF_QUALITY 16
+#define THEORA_DEF_BITRATE 		0
+#define THEORA_DEF_QUALITY 		16
+#define THEORA_DEF_QUICK		TRUE
+#define THEORA_DEF_KEYFRAME_AUTO	TRUE
+#define THEORA_DEF_KEYFRAME_FREQ	64
+#define THEORA_DEF_KEYFRAME_FREQ_FORCE	64
+#define THEORA_DEF_KEYFRAME_THRESHOLD	80
+#define THEORA_DEF_KEYFRAME_MINDISTANCE	8
+#define THEORA_DEF_NOISE_SENSITIVITY	1
+
 enum
 {
   ARG_0,
   ARG_BITRATE,
-  ARG_QUALITY
-      /* FILL ME */
+  ARG_QUALITY,
+  ARG_QUICK,
+  ARG_KEYFRAME_AUTO,
+  ARG_KEYFRAME_FREQ,
+  ARG_KEYFRAME_FREQ_FORCE,
+  ARG_KEYFRAME_THRESHOLD,
+  ARG_KEYFRAME_MINDISTANCE,
+  ARG_NOISE_SENSITIVITY,
+  /* FILL ME */
 };
 
 static GstElementDetails theora_enc_details = {
@@ -142,6 +165,34 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
       g_param_spec_int ("quality", "Quality", "Video quality",
           0, 63, THEORA_DEF_QUALITY, (GParamFlags) G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, ARG_QUICK,
+      g_param_spec_boolean ("quick", "Quick", "Quick encoding",
+          THEORA_DEF_QUICK, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_KEYFRAME_AUTO,
+      g_param_spec_boolean ("keyframe-auto", "Keyframe Auto",
+          "Automatic keyframe detection", THEORA_DEF_KEYFRAME_AUTO,
+          (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_KEYFRAME_FREQ,
+      g_param_spec_int ("keyframe-freq", "Keyframe frequency",
+          "Keyframe frequency", 1, 32768, THEORA_DEF_KEYFRAME_FREQ,
+          (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_KEYFRAME_FREQ_FORCE,
+      g_param_spec_int ("keyframe-force", "Keyframe force",
+          "Force keyframe every N frames", 1, 32768,
+          THEORA_DEF_KEYFRAME_FREQ_FORCE, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_KEYFRAME_THRESHOLD,
+      g_param_spec_int ("keyframe-threshold", "Keyframe threshold",
+          "Keyframe threshold", 0, 32768, THEORA_DEF_KEYFRAME_THRESHOLD,
+          (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_KEYFRAME_MINDISTANCE,
+      g_param_spec_int ("keyframe-mindistance", "Keyframe mindistance",
+          "Keyframe mindistance", 1, 32768, THEORA_DEF_KEYFRAME_MINDISTANCE,
+          (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_NOISE_SENSITIVITY,
+      g_param_spec_int ("noise-sensitivity", "Noise sensitivity",
+          "Noise sensitivity", 0, 32768, THEORA_DEF_NOISE_SENSITIVITY,
+          (GParamFlags) G_PARAM_READWRITE));
+
   gstelement_class->change_state = theora_enc_change_state;
 }
 
@@ -163,6 +214,13 @@ gst_theora_enc_init (GstTheoraEnc * enc)
 
   enc->video_bitrate = THEORA_DEF_BITRATE;
   enc->video_quality = THEORA_DEF_QUALITY;
+  enc->quick = THEORA_DEF_QUICK;
+  enc->keyframe_auto = THEORA_DEF_KEYFRAME_AUTO;
+  enc->keyframe_freq = THEORA_DEF_KEYFRAME_FREQ;
+  enc->keyframe_force = THEORA_DEF_KEYFRAME_FREQ_FORCE;
+  enc->keyframe_threshold = THEORA_DEF_KEYFRAME_THRESHOLD;
+  enc->keyframe_mindistance = THEORA_DEF_KEYFRAME_MINDISTANCE;
+  enc->noise_sensitivity = THEORA_DEF_NOISE_SENSITIVITY;
 
   GST_FLAG_SET (enc, GST_ELEMENT_EVENT_AWARE);
 }
@@ -172,14 +230,13 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
 {
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstTheoraEnc *enc = GST_THEORA_ENC (gst_pad_get_parent (pad));
-  gdouble fps;
 
   if (!gst_caps_is_fixed (caps))
     return GST_PAD_LINK_DELAYED;
 
   gst_structure_get_int (structure, "width", &enc->width);
   gst_structure_get_int (structure, "height", &enc->height);
-  gst_structure_get_double (structure, "framerate", &fps);
+  gst_structure_get_double (structure, "framerate", &enc->fps);
 
   /* Theora has a divisible-by-sixteen restriction for the encoded video size */
   if ((enc->width & 0x0f) != 0 || (enc->height & 0x0f) != 0)
@@ -194,7 +251,7 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
   enc->info.offset_y = 0;
 
   /* do some scaling, we really need fractions in structures... */
-  enc->info.fps_numerator = fps * 10000000;
+  enc->info.fps_numerator = enc->fps * 10000000;
   enc->info.fps_denominator = 10000000;
   enc->info.aspect_numerator = 1;
   enc->info.aspect_denominator = 1;
@@ -205,14 +262,14 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
   enc->info.quality = enc->video_quality;
 
   enc->info.dropframes_p = 0;
-  enc->info.quick_p = 1;
-  enc->info.keyframe_auto_p = 1;
-  enc->info.keyframe_frequency = 64;
-  enc->info.keyframe_frequency_force = 64;
+  enc->info.quick_p = (enc->quick ? 1 : 0);
+  enc->info.keyframe_auto_p = (enc->keyframe_auto ? 1 : 0);
+  enc->info.keyframe_frequency = enc->keyframe_freq;
+  enc->info.keyframe_frequency_force = enc->keyframe_force;
   enc->info.keyframe_data_target_bitrate = enc->video_bitrate * 1.5;
-  enc->info.keyframe_auto_threshold = 80;
-  enc->info.keyframe_mindistance = 8;
-  enc->info.noise_sensitivity = 1;
+  enc->info.keyframe_auto_threshold = enc->keyframe_threshold;
+  enc->info.keyframe_mindistance = enc->keyframe_mindistance;
+  enc->info.noise_sensitivity = enc->noise_sensitivity;
 
   theora_encode_init (&enc->state, &enc->info);
 
@@ -232,6 +289,7 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet)
   GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
   GST_BUFFER_TIMESTAMP (buf) =
       theora_granule_time (&enc->state, packet->granulepos) * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = GST_SECOND / enc->fps;
 
   enc->packetno++;
 
@@ -428,6 +486,27 @@ theora_enc_set_property (GObject * object, guint prop_id,
       enc->video_quality = g_value_get_int (value);
       enc->video_bitrate = 0;
       break;
+    case ARG_QUICK:
+      enc->quick = g_value_get_boolean (value);
+      break;
+    case ARG_KEYFRAME_AUTO:
+      enc->keyframe_auto = g_value_get_boolean (value);
+      break;
+    case ARG_KEYFRAME_FREQ:
+      enc->keyframe_freq = g_value_get_int (value);
+      break;
+    case ARG_KEYFRAME_FREQ_FORCE:
+      enc->keyframe_force = g_value_get_int (value);
+      break;
+    case ARG_KEYFRAME_THRESHOLD:
+      enc->keyframe_threshold = g_value_get_int (value);
+      break;
+    case ARG_KEYFRAME_MINDISTANCE:
+      enc->keyframe_mindistance = g_value_get_int (value);
+      break;
+    case ARG_NOISE_SENSITIVITY:
+      enc->noise_sensitivity = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -446,6 +525,27 @@ theora_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_QUALITY:
       g_value_set_int (value, enc->video_quality);
+      break;
+    case ARG_QUICK:
+      g_value_set_boolean (value, enc->quick);
+      break;
+    case ARG_KEYFRAME_AUTO:
+      g_value_set_boolean (value, enc->keyframe_auto);
+      break;
+    case ARG_KEYFRAME_FREQ:
+      g_value_set_int (value, enc->keyframe_freq);
+      break;
+    case ARG_KEYFRAME_FREQ_FORCE:
+      g_value_set_int (value, enc->keyframe_force);
+      break;
+    case ARG_KEYFRAME_THRESHOLD:
+      g_value_set_int (value, enc->keyframe_threshold);
+      break;
+    case ARG_KEYFRAME_MINDISTANCE:
+      g_value_set_int (value, enc->keyframe_mindistance);
+      break;
+    case ARG_NOISE_SENSITIVITY:
+      g_value_set_int (value, enc->noise_sensitivity);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
