@@ -481,16 +481,30 @@ gst_mad_id3_to_tag_list(const struct id3_tag *tag)
 	{
 	  guint tmp;
 	  gchar *check;
+
 	  tmp = strtoul (utf8, &check, 10);
-	  if (*check != '\0') break;
+
 	  if (strcmp (tag_name, GST_TAG_DATE) == 0) {
 	    GDate *d;
 
+	    if (*check != '\0') break;
 	    if (tmp == 0) break;
 	    d = g_date_new_dmy (1, 1, tmp);
 	    tmp = g_date_get_julian (d);
 	    g_date_free (d);
+	  } else if (strcmp(tag_name,GST_TAG_TRACK_NUMBER) == 0) {
+	    if (*check == '/') {
+	      guint total;
+
+	      check++;
+	      total = strtoul (check, &check, 10);
+	      if (*check != '\0') break;
+
+	      gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, GST_TAG_TRACK_COUNT, total, NULL);
+	    }
 	  }
+
+	  if (*check != '\0') break;		
 	  gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, tag_name, tmp, NULL);
 	  break;
 	}
