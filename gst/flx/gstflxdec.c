@@ -609,7 +609,7 @@ gst_flxdec_loop (GstElement *element)
 	GST_BUFFER_TIMESTAMP (out) = flxdec->next_time;
 	flxdec->next_time += flxdec->frame_time;
 
-        gst_pad_push(flxdec->srcpad, out);
+        gst_pad_push(flxdec->srcpad, GST_DATA (out));
         
         break;
     }

@@ -101,7 +101,7 @@ static void 	gst_quarktv_set_property 	(GObject * object, guint prop_id,
 static void 	gst_quarktv_get_property 	(GObject * object, guint prop_id,
 					  	 GValue * value, GParamSpec * pspec);
 
-static void 	gst_quarktv_chain 		(GstPad * pad, GstBuffer * buf);
+static void 	gst_quarktv_chain 		(GstPad * pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /* static guint gst_quarktv_signals[LAST_SIGNAL] = { 0 }; */
@@ -200,8 +200,9 @@ gst_quarktv_init (GstQuarkTV * filter)
 }
 
 static void
-gst_quarktv_chain (GstPad * pad, GstBuffer * buf)
+gst_quarktv_chain (GstPad * pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstQuarkTV *filter;
   guint32 *src, *dest;
   GstBuffer *outbuf;
@@ -232,7 +233,7 @@ gst_quarktv_chain (GstPad * pad, GstBuffer * buf)
     dest[area] = (rand ? ((guint32 *)GST_BUFFER_DATA (rand))[area] : 0);
   }
 
-  gst_pad_push (filter->srcpad, outbuf);
+  gst_pad_push (filter->srcpad, GST_DATA (outbuf));
 
   filter->current_plane--;
   

@@ -290,7 +290,7 @@ gst_mikmod_loop (GstElement *element)
   srcpad = mikmod->srcpad;
   mikmod->Buffer = NULL;
   	
-  while ((buffer_in = gst_pad_pull( mikmod->sinkpad ))) {
+  while ((buffer_in = GST_BUFFER (gst_pad_pull( mikmod->sinkpad )))) {
     if ( GST_IS_EVENT (buffer_in) ) {
       GstEvent *event = GST_EVENT (buffer_in);
 		
@@ -338,7 +338,7 @@ gst_mikmod_loop (GstElement *element)
     }
     else {
       gst_element_set_eos (GST_ELEMENT (mikmod));
-      gst_pad_push (mikmod->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+      gst_pad_push (mikmod->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS))));
     }
 
   } 

@@ -93,7 +93,7 @@ static GstPadLinkReturn		gst_esdsink_sinkconnect		(GstPad *pad, GstCaps *caps);
 static GstClockTime		gst_esdsink_get_time		(GstClock *clock, gpointer data);
 static GstClock *		gst_esdsink_get_clock		(GstElement *element);
 static void                     gst_esdsink_set_clock           (GstElement *element, GstClock *clock);
-static void			gst_esdsink_chain		(GstPad *pad, GstBuffer *buf);
+static void			gst_esdsink_chain		(GstPad *pad, GstData *_data);
 
 static void			gst_esdsink_set_property	(GObject *object, guint prop_id, 
 								 const GValue *value, GParamSpec *pspec);
@@ -259,8 +259,9 @@ gst_esdsink_set_clock (GstElement *element, GstClock *clock)
 }
 
 static void
-gst_esdsink_chain (GstPad *pad, GstBuffer *buf)
+gst_esdsink_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstEsdsink *esdsink;
 
   esdsink = GST_ESDSINK (gst_pad_get_parent (pad));

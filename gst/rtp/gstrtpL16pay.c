@@ -75,7 +75,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
 
 static void gst_rtpL16enc_class_init (GstRtpL16EncClass * klass);
 static void gst_rtpL16enc_init (GstRtpL16Enc * rtpL16enc);
-static void gst_rtpL16enc_chain (GstPad * pad, GstBuffer * buf);
+static void gst_rtpL16enc_chain (GstPad * pad, GstData *_data);
 static void gst_rtpL16enc_set_property (GObject * object, guint prop_id,
 				   const GValue * value, GParamSpec * pspec);
 static void gst_rtpL16enc_get_property (GObject * object, guint prop_id,
@@ -176,8 +176,9 @@ gst_rtpL16enc_htons (GstBuffer *buf)
 }
 
 static void
-gst_rtpL16enc_chain (GstPad * pad, GstBuffer * buf)
+gst_rtpL16enc_chain (GstPad * pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstRtpL16Enc *rtpL16enc;
   GstBuffer *outbuf;
   Rtp_Packet packet;
@@ -240,7 +241,7 @@ gst_rtpL16enc_chain (GstPad * pad, GstBuffer * buf)
   memcpy (GST_BUFFER_DATA (outbuf) + rtp_packet_get_packet_len(packet), GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
   GST_DEBUG ("gst_rtpL16enc_chain: pushing buffer of size %d", GST_BUFFER_SIZE(outbuf));
-  gst_pad_push (rtpL16enc->srcpad, outbuf);
+  gst_pad_push (rtpL16enc->srcpad, GST_DATA (outbuf));
 
   ++rtpL16enc->seq;
   rtpL16enc->next_time += rtpL16enc->time_interval * GST_BUFFER_SIZE (buf);

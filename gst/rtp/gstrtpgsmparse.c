@@ -67,7 +67,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
 static void gst_rtpgsmparse_class_init (GstRtpGSMParseClass * klass);
 static void gst_rtpgsmparse_init (GstRtpGSMParse * rtpgsmparse);
 
-static void gst_rtpgsmparse_chain (GstPad * pad, GstBuffer * buf);
+static void gst_rtpgsmparse_chain (GstPad * pad, GstData *_data);
 
 static void gst_rtpgsmparse_set_property (GObject * object, guint prop_id,
 				   const GValue * value, GParamSpec * pspec);
@@ -160,8 +160,9 @@ gst_rtpgsm_caps_nego (GstRtpGSMParse *rtpgsmparse)
 }
 
 static void
-gst_rtpgsmparse_chain (GstPad * pad, GstBuffer * buf)
+gst_rtpgsmparse_chain (GstPad * pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstRtpGSMParse *rtpgsmparse;
   GstBuffer *outbuf;
   Rtp_Packet packet;
@@ -212,7 +213,7 @@ gst_rtpgsmparse_chain (GstPad * pad, GstBuffer * buf)
      gst_rtpgsmparse_ntohs (outbuf);
 #endif
 
-  gst_pad_push (rtpgsmparse->srcpad, outbuf);
+  gst_pad_push (rtpgsmparse->srcpad, GST_DATA (outbuf));
 
   rtp_packet_free (packet);
   gst_buffer_unref (buf);

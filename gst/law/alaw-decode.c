@@ -41,7 +41,7 @@ static void		gst_alawdec_init			(GstALawDec *alawdec);
 static void		gst_alawdec_set_property			(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		gst_alawdec_get_property			(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void		gst_alawdec_chain			(GstPad *pad, GstBuffer *buf);
+static void		gst_alawdec_chain			(GstPad *pad, GstData *_data);
 
 
 static GstElementClass *parent_class = NULL;
@@ -146,8 +146,9 @@ gst_alawdec_init (GstALawDec *alawdec)
 }
 
 static void
-gst_alawdec_chain (GstPad *pad,GstBuffer *buf)
+gst_alawdec_chain (GstPad *pad,GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstALawDec *alawdec;
   gint16 *linear_data;
   guint8 *alaw_data;
@@ -175,7 +176,7 @@ gst_alawdec_chain (GstPad *pad,GstBuffer *buf)
   }
   
   gst_buffer_unref(buf);
-  gst_pad_push(alawdec->srcpad,outbuf);
+  gst_pad_push(alawdec->srcpad,GST_DATA (outbuf));
 }
 
 static void

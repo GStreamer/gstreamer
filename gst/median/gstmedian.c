@@ -81,7 +81,7 @@ static void	gst_median_init		(GstMedian *median);
 
 static void	median_5		(unsigned char *src, unsigned char *dest, int height, int width);
 static void	median_9		(unsigned char *src, unsigned char *dest, int height, int width);
-static void	gst_median_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_median_chain	(GstPad *pad, GstData *_data);
 
 static void	gst_median_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_median_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -267,8 +267,9 @@ median_9 (unsigned char *src, unsigned char *dest, int width, int height)
 }
 
 static void
-gst_median_chain (GstPad *pad, GstBuffer *buf)
+gst_median_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstMedian *median;
   guchar *data;
   gulong size;
@@ -283,7 +284,7 @@ gst_median_chain (GstPad *pad, GstBuffer *buf)
   median = GST_MEDIAN (GST_OBJECT_PARENT (pad));
 
   if (!median->active) {
-    gst_pad_push(median->srcpad,buf);
+    gst_pad_push(median->srcpad,GST_DATA (buf));
     return;
   }
 
@@ -323,7 +324,7 @@ gst_median_chain (GstPad *pad, GstBuffer *buf)
 
   gst_buffer_unref(buf);
 
-  gst_pad_push(median->srcpad,outbuf);
+  gst_pad_push(median->srcpad,GST_DATA (outbuf));
 }
 
 static void

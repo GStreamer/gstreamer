@@ -72,7 +72,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
 static void gst_rtpL16parse_class_init (GstRtpL16ParseClass * klass);
 static void gst_rtpL16parse_init (GstRtpL16Parse * rtpL16parse);
 
-static void gst_rtpL16parse_chain (GstPad * pad, GstBuffer * buf);
+static void gst_rtpL16parse_chain (GstPad * pad, GstData *_data);
 
 static void gst_rtpL16parse_set_property (GObject * object, guint prop_id,
 				   const GValue * value, GParamSpec * pspec);
@@ -195,8 +195,9 @@ gst_rtpL16parse_payloadtype_change (GstRtpL16Parse *rtpL16parse, rtp_payload_t p
 }
 
 static void
-gst_rtpL16parse_chain (GstPad * pad, GstBuffer * buf)
+gst_rtpL16parse_chain (GstPad * pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstRtpL16Parse *rtpL16parse;
   GstBuffer *outbuf;
   Rtp_Packet packet;
@@ -244,7 +245,7 @@ gst_rtpL16parse_chain (GstPad * pad, GstBuffer * buf)
      gst_rtpL16parse_ntohs (outbuf);
 #endif
 
-  gst_pad_push (rtpL16parse->srcpad, outbuf);
+  gst_pad_push (rtpL16parse->srcpad, GST_DATA (outbuf));
 
   rtp_packet_free (packet);
   gst_buffer_unref (buf);

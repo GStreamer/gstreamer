@@ -106,7 +106,7 @@ static void	gst_gdk_pixbuf_get_property(GObject *object, guint prop_id,
                                                  GValue *value,
 						 GParamSpec *pspec);
 
-static void	gst_gdk_pixbuf_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_gdk_pixbuf_chain	(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 
@@ -267,8 +267,9 @@ gst_gdk_pixbuf_init (GstGdkPixbuf *filter)
 }
 
 static void
-gst_gdk_pixbuf_chain (GstPad *pad, GstBuffer *buf)
+gst_gdk_pixbuf_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstGdkPixbuf *filter;
   GdkPixbufLoader *pixbuf_loader;
   GdkPixbuf *pixbuf;
@@ -322,7 +323,7 @@ gst_gdk_pixbuf_chain (GstPad *pad, GstBuffer *buf)
 
   g_object_unref(G_OBJECT(pixbuf_loader));
 
-  gst_pad_push (filter->srcpad, outbuf);
+  gst_pad_push (filter->srcpad, GST_DATA (outbuf));
 }
 
 static void

@@ -78,7 +78,7 @@ static void	gst_aasink_class_init	(GstAASinkClass *klass);
 static void	gst_aasink_init		(GstAASink *aasink);
 
 static void 	gst_aasink_set_clock 	(GstElement *element, GstClock *clock);
-static void	gst_aasink_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_aasink_chain	(GstPad *pad, GstData *_data);
 
 static void	gst_aasink_set_property	(GObject *object, guint prop_id, 
 					 const GValue *value, GParamSpec *pspec);
@@ -333,8 +333,9 @@ gst_aasink_scale (GstAASink *aasink, gchar *src, gchar *dest,
 }
 
 static void
-gst_aasink_chain (GstPad *pad, GstBuffer *buf)
+gst_aasink_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstAASink *aasink;
 
   g_return_if_fail (pad != NULL);

@@ -51,7 +51,7 @@ static void mikmod_Update( void )
     /* FIXME, send a flush event or something */
     need_sync = 0 ;
   }
-  gst_pad_push( srcpad, outdata );
+  gst_pad_push( srcpad, GST_DATA (outdata ));
       
 }
 

@@ -56,7 +56,7 @@ static void	gst_videoflip_init		(GstVideoflip *videoflip);
 static void	gst_videoflip_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_videoflip_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void	gst_videoflip_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_videoflip_chain		(GstPad *pad, GstData *_data);
 static GstCaps * gst_videoflip_get_capslist(void);
 
 static GstElementClass *parent_class = NULL;
@@ -341,8 +341,9 @@ gst_videoflip_init (GstVideoflip *videoflip)
 
 
 static void
-gst_videoflip_chain (GstPad *pad, GstBuffer *buf)
+gst_videoflip_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstVideoflip *videoflip;
   guchar *data;
   gulong size;
@@ -361,7 +362,7 @@ gst_videoflip_chain (GstPad *pad, GstBuffer *buf)
   size = GST_BUFFER_SIZE(buf);
 
   if(videoflip->passthru){
-    gst_pad_push(videoflip->srcpad, buf);
+    gst_pad_push(videoflip->srcpad, GST_DATA (buf));
     return;
   }
 
@@ -392,7 +393,7 @@ gst_videoflip_chain (GstPad *pad, GstBuffer *buf)
   GST_DEBUG ("gst_videoflip_chain: pushing buffer of %d bytes in '%s'",GST_BUFFER_SIZE(outbuf),
 	              GST_OBJECT_NAME (videoflip));
 
-  gst_pad_push(videoflip->srcpad, outbuf);
+  gst_pad_push(videoflip->srcpad, GST_DATA (outbuf));
 
   gst_buffer_unref(buf);
 }

@@ -70,7 +70,7 @@ static void 		gst_flacenc_dispose 		(GObject *object);
 
 static GstPadLinkReturn
 			gst_flacenc_sinkconnect 	(GstPad *pad, GstCaps *caps);
-static void		gst_flacenc_chain		(GstPad *pad, GstBuffer *buf);
+static void		gst_flacenc_chain		(GstPad *pad, GstData *_data);
 
 static gboolean 	gst_flacenc_update_quality 	(FlacEnc *flacenc, gint quality);
 static void     	gst_flacenc_set_property        (GObject *object, guint prop_id, 
@@ -410,7 +410,7 @@ GstEvent *event;
   event = gst_event_new_seek ((GstSeekType)(int)(GST_FORMAT_BYTES | GST_SEEK_METHOD_SET), absolute_byte_offset); 
 
   if (event)
-    gst_pad_push (flacenc->srcpad, GST_BUFFER (event));
+    gst_pad_push (flacenc->srcpad, GST_DATA (event));
  
   return  FLAC__STREAM_ENCODER_OK;
 }
@@ -439,7 +439,7 @@ gst_flacenc_write_callback (const FLAC__SeekableStreamEncoder *encoder,
     flacenc->first = FALSE;
   }
 
-  gst_pad_push (flacenc->srcpad, outbuf);
+  gst_pad_push (flacenc->srcpad, GST_DATA (outbuf));
 
   return FLAC__STREAM_ENCODER_OK;
 }
@@ -485,8 +485,9 @@ gst_flacenc_set_metadata (FlacEnc *flacenc, GstCaps *caps)
 
 
 static void
-gst_flacenc_chain (GstPad *pad, GstBuffer *buf)
+gst_flacenc_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   FlacEnc *flacenc;
   FLAC__int32 *data;
   gulong insize;

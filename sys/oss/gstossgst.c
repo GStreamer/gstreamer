@@ -55,7 +55,7 @@ static GstElementStateReturn 	gst_ossgst_change_state	(GstElement *element);
 static void 			gst_ossgst_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void 			gst_ossgst_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static GstBuffer* 		gst_ossgst_get 			(GstPad *pad);
+static GstData* 		gst_ossgst_get 			(GstPad *pad);
 
 /* OssGst signals and args */
 enum {
@@ -277,7 +277,7 @@ gst_ossgst_format_to_caps (gint format, gint stereo, gint rate)
   return caps;
 }
 
-static GstBuffer* 
+static GstData* 
 gst_ossgst_get (GstPad *pad) 
 {
   GstOssGst *ossgst;
@@ -320,7 +320,7 @@ gst_ossgst_get (GstPad *pad)
     }
   }
 
-  return buf;
+  return GST_DATA (buf);
 }
 
 static void 

@@ -91,7 +91,7 @@ static void 	gst_edgetv_set_property 	(GObject * object, guint prop_id,
 static void 	gst_edgetv_get_property 	(GObject * object, guint prop_id,
 					  	 GValue * value, GParamSpec * pspec);
 
-static void 	gst_edgetv_chain 		(GstPad * pad, GstBuffer * buf);
+static void 	gst_edgetv_chain 		(GstPad * pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_edgetv_signals[LAST_SIGNAL] = { 0 }; */
@@ -171,8 +171,9 @@ gst_edgetv_init (GstEdgeTV * filter)
 }
 
 static void
-gst_edgetv_chain (GstPad * pad, GstBuffer * buf)
+gst_edgetv_chain (GstPad * pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstEdgeTV *filter;
   int x, y;
   int r, g, b;
@@ -269,7 +270,7 @@ gst_edgetv_chain (GstPad * pad, GstBuffer * buf)
   }
   gst_buffer_unref (buf);
 
-  gst_pad_push (filter->srcpad, outbuf);
+  gst_pad_push (filter->srcpad, GST_DATA (outbuf));
 }
 
 static void

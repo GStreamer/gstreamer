@@ -71,7 +71,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
 
 static void gst_rtpgsmenc_class_init (GstRtpGSMEncClass * klass);
 static void gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc);
-static void gst_rtpgsmenc_chain (GstPad * pad, GstBuffer * buf);
+static void gst_rtpgsmenc_chain (GstPad * pad, GstData *_data);
 static void gst_rtpgsmenc_set_property (GObject * object, guint prop_id,
 				   const GValue * value, GParamSpec * pspec);
 static void gst_rtpgsmenc_get_property (GObject * object, guint prop_id,
@@ -170,8 +170,9 @@ gst_rtpgsmenc_htons (GstBuffer *buf)
 }
 
 static void
-gst_rtpgsmenc_chain (GstPad * pad, GstBuffer * buf)
+gst_rtpgsmenc_chain (GstPad * pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstRtpGSMEnc *rtpgsmenc;
   GstBuffer *outbuf;
   Rtp_Packet packet;
@@ -227,7 +228,7 @@ gst_rtpgsmenc_chain (GstPad * pad, GstBuffer * buf)
   memcpy (GST_BUFFER_DATA (outbuf) + rtp_packet_get_packet_len(packet), GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
   GST_DEBUG ("gst_rtpgsmenc_chain: pushing buffer of size %d", GST_BUFFER_SIZE(outbuf));
-  gst_pad_push (rtpgsmenc->srcpad, outbuf);
+  gst_pad_push (rtpgsmenc->srcpad, GST_DATA (outbuf));
 
   ++rtpgsmenc->seq;
   rtpgsmenc->next_time += rtpgsmenc->time_interval * GST_BUFFER_SIZE (buf);

@@ -89,7 +89,7 @@ sink_template_factory (void)
 static void			gst_shout2send_class_init	(GstShout2sendClass *klass);
 static void			gst_shout2send_init		(GstShout2send *shout2send);
 
-static void			gst_shout2send_chain		(GstPad *pad, GstBuffer *buf);
+static void			gst_shout2send_chain		(GstPad *pad, GstData *_data);
 static GstPadLinkReturn      gst_shout2send_connect         (GstPad *pad, GstCaps *caps);
 
 static void			gst_shout2send_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -217,8 +217,9 @@ gst_shout2send_init (GstShout2send *shout2send)
 }
 
 static void
-gst_shout2send_chain (GstPad *pad, GstBuffer *buf)
+gst_shout2send_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstShout2send *shout2send;
   glong ret;
 

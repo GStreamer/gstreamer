@@ -92,7 +92,7 @@ static void			gst_esdmon_close_audio	(GstEsdmon *src);
 static GstElementStateReturn	gst_esdmon_change_state	(GstElement *element);
 static gboolean			gst_esdmon_sync_parms	(GstEsdmon *esdmon);
 
-static GstBuffer *		gst_esdmon_get		(GstPad *pad);
+static GstData *		gst_esdmon_get		(GstPad *pad);
 
 static void			gst_esdmon_set_property	(GObject *object, guint prop_id, 
 							 const GValue *value, GParamSpec *pspec);
@@ -225,7 +225,7 @@ gst_esdmon_sync_parms (GstEsdmon *esdmon)
   return gst_esdmon_open_audio (esdmon);
 }
 
-static GstBuffer *
+static GstData *
 gst_esdmon_get (GstPad *pad)
 {
   GstEsdmon *esdmon;
@@ -282,7 +282,7 @@ gst_esdmon_get (GstPad *pad)
   esdmon->samples_since_basetime += readsamples;
 
   GST_DEBUG ("pushed buffer from esdmon of %ld bytes, timestamp %" G_GINT64_FORMAT, readbytes, GST_BUFFER_TIMESTAMP (buf));
-  return buf;
+  return GST_DATA (buf);
 }
 
 static void

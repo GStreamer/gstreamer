@@ -95,7 +95,7 @@ static void	gst_cutter_set_property	(GObject *object, guint prop_id,
 static void	gst_cutter_get_property	(GObject *object, guint prop_id,
 					 GValue *value, GParamSpec *pspec);
 
-static void	gst_cutter_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_cutter_chain	(GstPad *pad, GstData *_data);
 static double
 inline		gst_cutter_16bit_ms	(gint16* data, guint numsamples);
 static double
@@ -212,8 +212,9 @@ gst_cutter_init (GstCutter *filter)
 }
 
 static void
-gst_cutter_chain (GstPad *pad, GstBuffer *buf)
+gst_cutter_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstCutter *filter;
   gint16 *in_data;
   double RMS = 0.0;			/* RMS of signal in buffer */
@@ -299,7 +300,7 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
       {
         prebuf = (g_list_first (filter->pre_buffer))->data;
         filter->pre_buffer = g_list_remove (filter->pre_buffer, prebuf);
-        gst_pad_push (filter->srcpad, prebuf);
+        gst_pad_push (filter->srcpad, GST_DATA (prebuf));
 	++count;
       }
       GST_DEBUG ("flushed %d buffers", count);
@@ -327,13 +328,13 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
         filter->pre_run_length -= gst_audio_length (filter->srcpad, prebuf);
 	/* only pass buffers if we don't leak */
 	if (!filter->leaky)
-          gst_pad_push (filter->srcpad, prebuf);
+          gst_pad_push (filter->srcpad, GST_DATA (prebuf));
         /* we unref it after getting it out of the pre_buffer */
 	gst_buffer_unref (prebuf);
       }
   }
   else
-    gst_pad_push (filter->srcpad, buf);
+    gst_pad_push (filter->srcpad, GST_DATA (buf));
 }
 
 static double inline

@@ -112,7 +112,7 @@ static const GstQueryType* 	gst_osssrc_get_query_types (GstPad *pad);
 static gboolean 		gst_osssrc_src_query 	(GstPad *pad, GstQueryType type, 
 							 GstFormat *format, gint64 *value);
 
-static GstBuffer *		gst_osssrc_get		(GstPad *pad);
+static GstData *		gst_osssrc_get		(GstPad *pad);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_osssrc_signals[LAST_SIGNAL] = { 0 }; */
@@ -293,7 +293,7 @@ gst_osssrc_set_clock (GstElement *element, GstClock *clock)
   osssrc->clock = clock;
 }
 	
-static GstBuffer *
+static GstData *
 gst_osssrc_get (GstPad *pad)
 {
   GstOssSrc *src;
@@ -306,7 +306,7 @@ gst_osssrc_get (GstPad *pad)
 
   if (src->need_eos) {
     src->need_eos = FALSE;
-    return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
   
   buf = gst_buffer_new_and_alloc (src->buffersize);
@@ -316,13 +316,13 @@ gst_osssrc_get (GstPad *pad)
     if (!gst_osssrc_negotiate (pad)) {
       gst_buffer_unref (buf);
       gst_element_error (GST_ELEMENT (src), "could not negotiate format");
-      return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+      return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
     }
   }
   if (GST_OSSELEMENT (src)->bps == 0) {
     gst_buffer_unref (buf);
     gst_element_error (GST_ELEMENT (src), "no format negotiated");
-    return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+    return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
   }
 
   readbytes = read (GST_OSSELEMENT (src)->fd,GST_BUFFER_DATA (buf),
@@ -331,13 +331,13 @@ gst_osssrc_get (GstPad *pad)
     gst_buffer_unref (buf);
     gst_element_error (GST_ELEMENT (src), "error reading data (%s)",
 		    strerror (errno));
-    return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+    return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
   }
 
   if (readbytes == 0) {
     gst_buffer_unref (buf);
     gst_element_set_eos (GST_ELEMENT (src));
-    return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+    return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
   }
 
   GST_BUFFER_SIZE (buf) = readbytes;
@@ -353,7 +353,7 @@ gst_osssrc_get (GstPad *pad)
   GST_DEBUG ("pushed buffer from soundcard of %ld bytes, timestamp %" G_GINT64_FORMAT, 
 		  readbytes, GST_BUFFER_TIMESTAMP (buf));
 
-  return buf;
+  return GST_DATA (buf);
 }
 
 static void 

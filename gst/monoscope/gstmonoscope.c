@@ -124,7 +124,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_template,
 static void	gst_monoscope_class_init	(GstMonoscopeClass *klass);
 static void	gst_monoscope_init		(GstMonoscope *monoscope);
 
-static void	gst_monoscope_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_monoscope_chain		(GstPad *pad, GstData *_data);
 
 static GstPadLinkReturn 
 		gst_monoscope_sinkconnect 	(GstPad *pad, GstCaps *caps);
@@ -250,8 +250,9 @@ gst_monoscope_srcconnect (GstPad *pad, GstCaps *caps)
 }
 
 static void
-gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
+gst_monoscope_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *bufin = GST_BUFFER (_data);
   GstMonoscope *monoscope;
   GstBuffer *bufout;
   guint32 samples_in;
@@ -300,7 +301,7 @@ gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
 
   monoscope->next_time += GST_SECOND / monoscope->fps;
 
-  gst_pad_push (monoscope->srcpad, bufout);
+  gst_pad_push (monoscope->srcpad, GST_DATA (bufout));
 
   gst_buffer_unref (bufin);
 

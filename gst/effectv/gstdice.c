@@ -102,7 +102,7 @@ static void 	gst_dicetv_set_property 	(GObject * object, guint prop_id,
 static void 	gst_dicetv_get_property 	(GObject * object, guint prop_id,
 					  	 GValue * value, GParamSpec * pspec);
 
-static void 	gst_dicetv_chain 		(GstPad * pad, GstBuffer * buf);
+static void 	gst_dicetv_chain 		(GstPad * pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_dicetv_signals[LAST_SIGNAL] = { 0 };
@@ -301,8 +301,9 @@ gst_dicetv_create_map (GstDiceTV *filter)
 }
 
 static void
-gst_dicetv_chain (GstPad * pad, GstBuffer * buf)
+gst_dicetv_chain (GstPad * pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstDiceTV *filter;
   guint32 *src, *dest;
   GstBuffer *outbuf;
@@ -320,7 +321,7 @@ gst_dicetv_chain (GstPad * pad, GstBuffer * buf)
   
   gst_buffer_unref (buf);
 
-  gst_pad_push (filter->srcpad, outbuf);
+  gst_pad_push (filter->srcpad, GST_DATA (outbuf));
 }
 
 static void

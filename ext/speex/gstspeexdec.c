@@ -52,7 +52,7 @@ enum {
 static void			gst_speexdec_class_init	(GstSpeexDec *klass);
 static void			gst_speexdec_init		(GstSpeexDec *speexdec);
 
-static void			gst_speexdec_chain	(GstPad *pad, GstBuffer *buf);
+static void			gst_speexdec_chain	(GstPad *pad, GstData *_data);
 static GstPadLinkReturn	gst_speexdec_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
@@ -135,8 +135,9 @@ gst_speexdec_sinkconnect (GstPad *pad, GstCaps *caps)
 }
 
 static void
-gst_speexdec_chain (GstPad *pad, GstBuffer *buf)
+gst_speexdec_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstSpeexDec *speexdec;
   gchar *data;
   guint size;

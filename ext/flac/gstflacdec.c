@@ -451,7 +451,7 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder *decoder,
 		                             GST_FORMAT_DEFAULT, flacdec->total_samples, 
 					 NULL);
 	  
-        gst_pad_push (flacdec->srcpad, GST_BUFFER (discont));
+        gst_pad_push (flacdec->srcpad, GST_DATA (discont));
       }
     }
   }
@@ -502,7 +502,7 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder *decoder,
       g_warning ("flacdec: invalid depth %d found\n", depth);
       return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
     }
-    gst_pad_push (flacdec->srcpad, outbuf);
+    gst_pad_push (flacdec->srcpad, GST_DATA (outbuf));
   }
   flacdec->total_samples += samples;
 
@@ -555,7 +555,7 @@ gst_flacdec_loop (GstElement *element)
 
     if (GST_PAD_IS_USABLE (flacdec->srcpad)) {
       event = gst_event_new (GST_EVENT_EOS);
-      gst_pad_push (flacdec->srcpad, GST_BUFFER (event));
+      gst_pad_push (flacdec->srcpad, GST_DATA (event));
     }
     gst_element_set_eos (element);
   }

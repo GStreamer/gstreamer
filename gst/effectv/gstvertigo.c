@@ -105,7 +105,7 @@ static void 	gst_vertigotv_set_property 	(GObject * object, guint prop_id,
 static void 	gst_vertigotv_get_property 	(GObject * object, guint prop_id,
 					  	 GValue * value, GParamSpec * pspec);
 
-static void 	gst_vertigotv_chain 		(GstPad * pad, GstBuffer * buf);
+static void 	gst_vertigotv_chain 		(GstPad * pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_vertigotv_signals[LAST_SIGNAL] = { 0 };
@@ -263,8 +263,9 @@ gst_vertigotv_set_parms (GstVertigoTV *filter)
 }
 	
 static void
-gst_vertigotv_chain (GstPad * pad, GstBuffer * buf)
+gst_vertigotv_chain (GstPad * pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstVertigoTV *filter;
   guint32 *src, *dest;
   GstBuffer *outbuf;
@@ -315,7 +316,7 @@ gst_vertigotv_chain (GstPad * pad, GstBuffer * buf)
 
   gst_buffer_unref (buf);
 
-  gst_pad_push (filter->srcpad, outbuf);
+  gst_pad_push (filter->srcpad, GST_DATA (outbuf));
 
   p = filter->current_buffer;
   filter->current_buffer = filter->alt_buffer;

@@ -117,7 +117,7 @@ static void		gst_goom_dispose	(GObject *object);
 static GstElementStateReturn
 			gst_goom_change_state 	(GstElement *element);
 
-static void		gst_goom_chain		(GstPad *pad, GstBuffer *buf);
+static void		gst_goom_chain		(GstPad *pad, GstData *_data);
 
 static GstPadLinkReturn gst_goom_sinkconnect 	(GstPad *pad, GstCaps *caps);
 static GstPadLinkReturn gst_goom_srcconnect 	(GstPad *pad, GstCaps *caps);
@@ -268,8 +268,9 @@ gst_goom_negotiate_default (GstGOOM *goom)
 }
 
 static void
-gst_goom_chain (GstPad *pad, GstBuffer *bufin)
+gst_goom_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *bufin = GST_BUFFER (_data);
   GstGOOM *goom;
   GstBuffer *bufout;
   guint32 samples_in;
@@ -344,7 +345,7 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 
   goom->next_time += GST_SECOND / goom->fps;
 
-  gst_pad_push (goom->srcpad, bufout);
+  gst_pad_push (goom->srcpad, GST_DATA (bufout));
 
 done:
   gst_buffer_unref (bufin);

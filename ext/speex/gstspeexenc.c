@@ -53,7 +53,7 @@ enum {
 static void			gst_speexenc_class_init	(GstSpeexEnc *klass);
 static void			gst_speexenc_init		(GstSpeexEnc *speexenc);
 
-static void			gst_speexenc_chain	(GstPad *pad,GstBuffer *buf);
+static void			gst_speexenc_chain	(GstPad *pad,GstData *_data);
 static GstPadLinkReturn	gst_speexenc_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
@@ -149,8 +149,9 @@ gst_speexenc_sinkconnect (GstPad *pad, GstCaps *caps)
 }
 
 static void
-gst_speexenc_chain (GstPad *pad, GstBuffer *buf)
+gst_speexenc_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstSpeexEnc *speexenc;
   GstBuffer *outbuf;
   gint16 *data;
@@ -188,7 +189,7 @@ gst_speexenc_chain (GstPad *pad, GstBuffer *buf)
     GST_BUFFER_DATA (outbuf) = header_data;
     GST_BUFFER_SIZE (outbuf) = size;
 
-    gst_pad_push (speexenc->srcpad, outbuf);
+    gst_pad_push (speexenc->srcpad, GST_DATA (outbuf));
   }
 
   data = (gint16 *) GST_BUFFER_DATA (buf);
@@ -214,7 +215,7 @@ gst_speexenc_chain (GstPad *pad, GstBuffer *buf)
       GST_BUFFER_TIMESTAMP (outbuf) = speexenc->next_ts;
       speex_bits_reset(&speexenc->bits);
 
-      gst_pad_push (speexenc->srcpad, outbuf);
+      gst_pad_push (speexenc->srcpad, GST_DATA (outbuf));
       speexenc->next_ts += frame_size * GST_SECOND / speexenc->rate;
     }
 
@@ -240,7 +241,7 @@ gst_speexenc_chain (GstPad *pad, GstBuffer *buf)
       GST_BUFFER_TIMESTAMP (outbuf) = speexenc->next_ts;
       speex_bits_reset(&speexenc->bits);
 
-      gst_pad_push (speexenc->srcpad, outbuf);
+      gst_pad_push (speexenc->srcpad, GST_DATA (outbuf));
       speexenc->next_ts += frame_size * GST_SECOND / speexenc->rate;
     }
 

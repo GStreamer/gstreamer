@@ -46,7 +46,7 @@ static gboolean		gst_wavparse_pad_convert 	(GstPad *pad,
 							 gint64 src_value,
 							 GstFormat *dest_format,
 							 gint64 *dest_value);
-static void		gst_wavparse_chain		(GstPad *pad, GstBuffer *buf);
+static void		gst_wavparse_chain		(GstPad *pad, GstData *_data);
 
 static const GstEventMask*
 			gst_wavparse_get_event_masks 	(GstPad *pad);
@@ -324,8 +324,9 @@ static void wav_new_chunk_callback(GstRiffChunk *chunk, gpointer data)
 }
 
 static void
-gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
+gst_wavparse_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstWavParse *wavparse;
   gboolean buffer_riffed = FALSE;	/* so we don't parse twice */
   gulong size;
@@ -380,19 +381,19 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       if (wavparse->need_discont) {
         if (buf && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
           gst_pad_push (wavparse->srcpad, 
-	                GST_BUFFER (gst_event_new_discontinuous (FALSE,
+	                GST_DATA (gst_event_new_discontinuous (FALSE,
       			      GST_FORMAT_BYTES, wavparse->offset,
 			      GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf), 
 			      NULL)));
 	} else {
           gst_pad_push (wavparse->srcpad, 
-	                GST_BUFFER (gst_event_new_discontinuous (FALSE,
+	                GST_DATA (gst_event_new_discontinuous (FALSE,
       			      GST_FORMAT_BYTES, wavparse->offset,
 			      NULL)));
 	}
         wavparse->need_discont = FALSE;
       }
-      gst_pad_push (wavparse->srcpad, buf);
+      gst_pad_push (wavparse->srcpad, GST_DATA (buf));
     } else {
       gst_buffer_unref (buf);
     }
@@ -494,7 +495,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       GST_BUFFER_TIMESTAMP (newbuf) = 0;
 
       if (GST_PAD_IS_USABLE (wavparse->srcpad))
-        gst_pad_push (wavparse->srcpad, newbuf);
+        gst_pad_push (wavparse->srcpad, GST_DATA (newbuf));
       else
 	gst_buffer_unref (newbuf);
 

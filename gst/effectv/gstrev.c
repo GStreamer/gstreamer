@@ -120,7 +120,7 @@ static void 	gst_revtv_set_property 		(GObject * object, guint prop_id,
 static void 	gst_revtv_get_property 		(GObject * object, guint prop_id,
 					  	 GValue * value, GParamSpec * pspec);
 
-static void 	gst_revtv_chain 		(GstPad * pad, GstBuffer * buf);
+static void 	gst_revtv_chain 		(GstPad * pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /* static guint gst_revtv_signals[LAST_SIGNAL] = { 0 }; */
@@ -206,8 +206,9 @@ gst_revtv_init (GstRevTV * filter)
 
 
 static void
-gst_revtv_chain (GstPad * pad, GstBuffer * buf)
+gst_revtv_chain (GstPad * pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstRevTV *filter;
   guint32 *src, *dest;
   GstBuffer *outbuf;
@@ -248,7 +249,7 @@ gst_revtv_chain (GstPad * pad, GstBuffer * buf)
   
   gst_buffer_unref (buf);
 
-  gst_pad_push (filter->srcpad, outbuf);
+  gst_pad_push (filter->srcpad, GST_DATA (outbuf));
 }
 
 static void

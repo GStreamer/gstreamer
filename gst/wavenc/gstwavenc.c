@@ -27,7 +27,7 @@
 
 static void 	gst_wavenc_class_init 	(GstWavEncClass *klass);
 static void 	gst_wavenc_init 	(GstWavEnc *wavenc);
-static void 	gst_wavenc_chain 	(GstPad *pad, GstBuffer *buf);
+static void 	gst_wavenc_chain 	(GstPad *pad, GstData *_data);
 
 #define WAVE_FORMAT_PCM 0x0001
 
@@ -253,7 +253,7 @@ gst_wavenc_stop_file (GstWavEnc *wavenc)
   WRITE_U32 (wavenc->header + 4, wavenc->length);
   memcpy (GST_BUFFER_DATA (outbuf), wavenc->header, WAV_HEADER_LEN);
   
-  gst_pad_push (wavenc->srcpad, outbuf);
+  gst_pad_push (wavenc->srcpad, GST_DATA (outbuf));
 }
 
 static void
@@ -275,8 +275,9 @@ gst_wavenc_init (GstWavEnc *wavenc)
 
 static void
 gst_wavenc_chain (GstPad *pad,
-		  GstBuffer *buf)
+		  GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstWavEnc *wavenc;
 
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
@@ -292,7 +293,7 @@ gst_wavenc_chain (GstPad *pad,
 			wavenc->pad_eos = TRUE;
 			gst_wavenc_stop_file (wavenc);
 			gst_pad_push (wavenc->srcpad,
-										GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+										GST_DATA (gst_event_new (GST_EVENT_EOS)));
 			gst_element_set_eos (GST_ELEMENT (wavenc));
 		} else {
 			gst_pad_event_default (wavenc->srcpad, GST_EVENT (buf));
@@ -308,12 +309,12 @@ gst_wavenc_chain (GstPad *pad,
       memcpy (GST_BUFFER_DATA (outbuf), wavenc->header, WAV_HEADER_LEN);
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
       
-      gst_pad_push (wavenc->srcpad, outbuf);
+      gst_pad_push (wavenc->srcpad, GST_DATA (outbuf));
       wavenc->flush_header = FALSE;
     }
 
     wavenc->length += GST_BUFFER_SIZE (buf);
-    gst_pad_push (wavenc->srcpad, buf);
+    gst_pad_push (wavenc->srcpad, GST_DATA (buf));
   }
 }
 

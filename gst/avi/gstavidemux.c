@@ -1599,7 +1599,7 @@ gst_avi_demux_handle_sink_event (GstAviDemux *avi_demux)
           discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 			avi_demux->last_seek + stream->delay , NULL);
 
-	  gst_pad_push (stream->pad, GST_BUFFER (discont));
+	  gst_pad_push (stream->pad, GST_DATA (discont));
 	}
       }
       break;
@@ -1807,7 +1807,7 @@ gst_avi_demux_loop (GstElement *element)
           else {
             if (GST_PAD_IS_USABLE (stream->pad)) {
               if (next_ts >= stream->end_pos) {
-                gst_pad_push (stream->pad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+                gst_pad_push (stream->pad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
 	        GST_DEBUG ("end stream %d: %" G_GINT64_FORMAT " %d %" G_GINT64_FORMAT, 
 		           stream_id, next_ts, stream->current_frame - 1,
 			   stream->end_pos);
@@ -1833,7 +1833,7 @@ gst_avi_demux_loop (GstElement *element)
 			     stream_id, next_ts, stream->current_frame - 1,
 			     stream->delay, chunk.size);
 
-                  gst_pad_push(stream->pad, buf);
+                  gst_pad_push(stream->pad, GST_DATA (buf));
 	        }
               }
             }

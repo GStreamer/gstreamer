@@ -40,7 +40,7 @@ static void		gst_mulawenc_init			(GstMuLawEnc *mulawenc);
 static void		gst_mulawenc_set_property			(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		gst_mulawenc_get_property			(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void		gst_mulawenc_chain			(GstPad *pad, GstBuffer *buf);
+static void		gst_mulawenc_chain			(GstPad *pad, GstData *_data);
 
 
 static GstElementClass *parent_class = NULL;
@@ -123,8 +123,9 @@ gst_mulawenc_init (GstMuLawEnc *mulawenc)
 }
 
 static void
-gst_mulawenc_chain (GstPad *pad,GstBuffer *buf)
+gst_mulawenc_chain (GstPad *pad,GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstMuLawEnc *mulawenc;
   gint16 *linear_data;
   guint8 *mulaw_data;
@@ -147,7 +148,7 @@ gst_mulawenc_chain (GstPad *pad,GstBuffer *buf)
   mulaw_encode(linear_data,mulaw_data,GST_BUFFER_SIZE(outbuf));
 
   gst_buffer_unref(buf);
-  gst_pad_push(mulawenc->srcpad,outbuf);
+  gst_pad_push(mulawenc->srcpad,GST_DATA (outbuf));
 }
 
 static void

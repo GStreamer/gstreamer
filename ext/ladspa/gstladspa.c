@@ -76,8 +76,8 @@ static void			gst_ladspa_deactivate		(GstLADSPA *ladspa);
 
 static GstElementStateReturn	gst_ladspa_change_state		(GstElement *element);
 static void			gst_ladspa_loop			(GstElement *element);
-static void			gst_ladspa_chain		(GstPad *pad,GstBuffer *buf);
-static GstBuffer *		gst_ladspa_get			(GstPad *pad);
+static void			gst_ladspa_chain		(GstPad *pad,GstData *_data);
+static GstData *		gst_ladspa_get			(GstPad *pad);
 
 static GstElementClass *parent_class = NULL;
 
@@ -676,13 +676,13 @@ gst_ladspa_loop (GstElement *element)
   /* first get all the necessary data from the input ports */
   for (i=0 ; i<numsinkpads ; i++){  
   get_buffer:
-    buffers_in[i] = gst_pad_pull (ladspa->sinkpads[i]);
+    buffers_in[i] = GST_BUFFER (gst_pad_pull (ladspa->sinkpads[i]));
     
     if (GST_IS_EVENT (buffers_in[i])) {
       /* push it out on all pads */
       gst_data_ref_by_count ((GstData*)buffers_in[i], numsrcpads);
       for (j=0; j<numsrcpads; j++)
-        gst_pad_push (ladspa->srcpads[j], buffers_in[i]);
+        gst_pad_push (ladspa->srcpads[j], GST_DATA (buffers_in[i]));
       if (GST_EVENT_TYPE (buffers_in[i]) == GST_EVENT_EOS) {
         /* shut down */
         gst_element_set_eos (element);
@@ -753,7 +753,7 @@ gst_ladspa_loop (GstElement *element)
   }      
   for (i=0 ; i<numsrcpads ; i++) {
     DEBUG_OBJ (ladspa, "pushing buffer (%p) on src pad %d", buffers_out[i], i);
-    gst_pad_push (ladspa->srcpads[i], buffers_out[i]);
+    gst_pad_push (ladspa->srcpads[i], GST_DATA (buffers_out[i]));
     
     data_out[i] = NULL;
     buffers_out[i] = NULL;
@@ -770,8 +770,9 @@ gst_ladspa_loop (GstElement *element)
 }
 
 static void
-gst_ladspa_chain (GstPad *pad, GstBuffer *buffer_in)
+gst_ladspa_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buffer_in = GST_BUFFER (_data);
   LADSPA_Descriptor *desc;
   LADSPA_Data *data_in, **data_out = NULL;
   GstBuffer **buffers_out = NULL;
@@ -850,7 +851,7 @@ gst_ladspa_chain (GstPad *pad, GstBuffer *buffer_in)
     for (i=0; i<numsrcpads; i++) {
       DEBUG_OBJ (ladspa, "pushing buffer (%p, length %u bytes) on src pad %d",
                  buffers_out[i], GST_BUFFER_SIZE (buffers_out[i]), i);
-      gst_pad_push (ladspa->srcpads[i], buffers_out[i]);
+      gst_pad_push (ladspa->srcpads[i], GST_DATA (buffers_out[i]));
     }
 
     g_free(buffers_out);
@@ -858,7 +859,7 @@ gst_ladspa_chain (GstPad *pad, GstBuffer *buffer_in)
   }
 }
 
-static GstBuffer *
+static GstData *
 gst_ladspa_get(GstPad *pad)
 {  
   GstLADSPA *ladspa;
@@ -902,7 +903,7 @@ gst_ladspa_get(GstPad *pad)
     num_processed = num_to_process;
   }
   
-  return buf;
+  return GST_DATA (buf);
 }
 
 static void

@@ -77,7 +77,7 @@ static void		gst_dv1394src_get_property		(GObject *object, guint prop_id, GValue
 
 static GstElementStateReturn	gst_dv1394src_change_state	(GstElement *element);
 
-static GstBuffer *	gst_dv1394src_get			(GstPad *pad);
+static GstData *	gst_dv1394src_get			(GstPad *pad);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
@@ -314,7 +314,7 @@ int gst_dv1394src_bus_reset(raw1394handle_t handle,
   return 0;
 }
 
-static GstBuffer *
+static GstData *
 gst_dv1394src_get (GstPad *pad)
 {
   GstDV1394Src *dv1394src = GST_DV1394SRC (GST_PAD_PARENT(pad));

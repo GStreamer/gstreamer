@@ -919,14 +919,14 @@ gst_avimux_write_index (GstAviMux *avimux)
   memcpy(GST_BUFFER_DATA(buffer), "idx1", 4);
   temp32 = LE_FROM_GUINT32(avimux->idx_index * sizeof(gst_riff_index_entry)); 
   memcpy(GST_BUFFER_DATA(buffer)+4, &temp32, 4);
-  gst_pad_push(avimux->srcpad, buffer);
+  gst_pad_push(avimux->srcpad, GST_DATA (buffer));
 
   buffer = gst_buffer_new();
   GST_BUFFER_SIZE(buffer) = avimux->idx_index * sizeof(gst_riff_index_entry);
   GST_BUFFER_DATA(buffer) = (unsigned char*) avimux->idx;
   avimux->idx = NULL; /* will be free()'ed by gst_buffer_unref() */
   avimux->total_data += GST_BUFFER_SIZE(buffer);
-  gst_pad_push(avimux->srcpad, buffer);
+  gst_pad_push(avimux->srcpad, GST_DATA (buffer));
 
   avimux->idx_size += avimux->idx_index * sizeof(gst_riff_index_entry) + 8;
 
@@ -962,18 +962,18 @@ gst_avimux_bigfile(GstAviMux *avimux, gboolean last)
 				GST_SEEK_FLAG_FLUSH, 
 				avimux->avix_start);
     /* if the event succeeds */
-    gst_pad_push(avimux->srcpad, GST_BUFFER(event));
+    gst_pad_push(avimux->srcpad, GST_DATA(event));
 
     /* rewrite AVIX header */
     header = gst_avimux_riff_get_avix_header(avimux->datax_size);
-    gst_pad_push(avimux->srcpad, header);
+    gst_pad_push(avimux->srcpad, GST_DATA (header));
 
     /* go back to current location */
     event = gst_event_new_seek (GST_FORMAT_BYTES | 
 				GST_SEEK_METHOD_SET |
 				GST_SEEK_FLAG_FLUSH, 
 				avimux->total_data);
-    gst_pad_push(avimux->srcpad, GST_BUFFER(event));
+    gst_pad_push(avimux->srcpad, GST_DATA(event));
   }
   avimux->avix_start = avimux->total_data;
 
@@ -986,7 +986,7 @@ gst_avimux_bigfile(GstAviMux *avimux, gboolean last)
 
   header = gst_avimux_riff_get_avix_header(0);
   avimux->total_data += GST_BUFFER_SIZE(header);
-  gst_pad_push(avimux->srcpad, header);
+  gst_pad_push(avimux->srcpad, GST_DATA (header));
 }
 
 /* enough header blabla now, let's go on to actually writing the headers */
@@ -1019,7 +1019,7 @@ gst_avimux_start_file (GstAviMux *avimux)
   header = gst_avimux_riff_get_avi_header(avimux);
   avimux->total_data += GST_BUFFER_SIZE(header);
   avimux->idx_offset = avimux->total_data;
-  gst_pad_push(avimux->srcpad, header);
+  gst_pad_push(avimux->srcpad, GST_DATA (header));
 
   avimux->write_header = FALSE;
   avimux->restart = FALSE;
@@ -1080,11 +1080,11 @@ gst_avimux_stop_file (GstAviMux *avimux)
     header = gst_avimux_riff_get_avi_header(avimux);
     event = gst_event_new_seek (GST_FORMAT_BYTES | 
 				GST_SEEK_METHOD_SET, 0);
-    gst_pad_push(avimux->srcpad, GST_BUFFER(event));
-    gst_pad_push(avimux->srcpad, header);
+    gst_pad_push(avimux->srcpad, GST_DATA(event));
+    gst_pad_push(avimux->srcpad, GST_DATA (header));
     event = gst_event_new_seek (GST_FORMAT_BYTES |
 				GST_SEEK_METHOD_SET, avimux->total_data);
-    gst_pad_push(avimux->srcpad, GST_BUFFER(event));
+    gst_pad_push(avimux->srcpad, GST_DATA(event));
   }
 
   avimux->write_header = TRUE;
@@ -1098,7 +1098,7 @@ gst_avimux_restart_file (GstAviMux *avimux)
   gst_avimux_stop_file(avimux);
 
   event = gst_event_new(GST_EVENT_EOS);
-  gst_pad_push(avimux->srcpad, GST_BUFFER(event));
+  gst_pad_push(avimux->srcpad, GST_DATA(event));
 
   gst_avimux_start_file(avimux);
 }
@@ -1145,7 +1145,7 @@ gst_avimux_fill_queue (GstAviMux *avimux)
           GST_PAD_IS_USABLE(avimux->audiosinkpad) &&
          !avimux->audio_pad_eos)
   {
-    buffer = gst_pad_pull(avimux->audiosinkpad);
+    buffer = GST_BUFFER (gst_pad_pull(avimux->audiosinkpad));
     if (GST_IS_EVENT(buffer)) {
       gst_avimux_handle_event(avimux->audiosinkpad, GST_EVENT(buffer));
     } else {
@@ -1160,7 +1160,7 @@ gst_avimux_fill_queue (GstAviMux *avimux)
           GST_PAD_IS_USABLE(avimux->videosinkpad) &&
          !avimux->video_pad_eos)
   {
-    buffer = gst_pad_pull(avimux->videosinkpad);
+    buffer = GST_BUFFER (gst_pad_pull(avimux->videosinkpad));
     if (GST_IS_EVENT(buffer)) {
       gst_avimux_handle_event(avimux->videosinkpad, GST_EVENT(buffer));
     } else {
@@ -1183,7 +1183,7 @@ gst_avimux_send_pad_data (GstAviMux *avimux,
   GST_BUFFER_DATA(buffer) = g_malloc(num_bytes);
   memset(GST_BUFFER_DATA(buffer), 0, num_bytes);
 
-  gst_pad_push(avimux->srcpad, buffer);
+  gst_pad_push(avimux->srcpad, GST_DATA (buffer));
 }
 
 /* do audio buffer */
@@ -1212,8 +1212,8 @@ gst_avimux_do_audio_buffer (GstAviMux *avimux)
     gst_avimux_add_index(avimux, "01wb", 0x0, GST_BUFFER_SIZE(data));
   }
 
-  gst_pad_push(avimux->srcpad, header);
-  gst_pad_push(avimux->srcpad, data);
+  gst_pad_push(avimux->srcpad, GST_DATA (header));
+  gst_pad_push(avimux->srcpad, GST_DATA (data));
   if (pad_bytes) {
     gst_avimux_send_pad_data(avimux, pad_bytes);
   }
@@ -1265,8 +1265,8 @@ gst_avimux_do_video_buffer (GstAviMux *avimux)
     gst_avimux_add_index(avimux, "00db", flags, GST_BUFFER_SIZE(data));
   }
 
-  gst_pad_push(avimux->srcpad, header);
-  gst_pad_push(avimux->srcpad, data);
+  gst_pad_push(avimux->srcpad, GST_DATA (header));
+  gst_pad_push(avimux->srcpad, GST_DATA (data));
   if (pad_bytes) {
     gst_avimux_send_pad_data(avimux, pad_bytes);
   }
@@ -1302,7 +1302,7 @@ gst_avimux_do_one_buffer (GstAviMux *avimux)
     /* simply finish off the file and send EOS */
     gst_avimux_stop_file(avimux);
     gst_pad_push(avimux->srcpad,
-                 GST_BUFFER(gst_event_new(GST_EVENT_EOS)));
+                 GST_DATA(gst_event_new(GST_EVENT_EOS)));
     gst_element_set_eos(GST_ELEMENT(avimux));
     return FALSE;
   }

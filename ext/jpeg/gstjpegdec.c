@@ -53,7 +53,7 @@ enum {
 static void	gst_jpegdec_class_init	(GstJpegDec *klass);
 static void	gst_jpegdec_init	(GstJpegDec *jpegdec);
 
-static void	gst_jpegdec_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_jpegdec_chain	(GstPad *pad, GstData *_data);
 static GstPadLinkReturn
 		gst_jpegdec_link	(GstPad *pad, GstCaps *caps);
 
@@ -303,8 +303,9 @@ static void guarantee_huff_tables(j_decompress_ptr dinfo)
 }
 
 static void
-gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
+gst_jpegdec_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstJpegDec *jpegdec;
   guchar *data, *outdata;
   gulong size, outsize;
@@ -410,7 +411,7 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
   jpeg_finish_decompress(&jpegdec->cinfo);
 
   GST_DEBUG ("gst_jpegdec_chain: sending buffer");
-  gst_pad_push(jpegdec->srcpad, outbuf);
+  gst_pad_push(jpegdec->srcpad, GST_DATA (outbuf));
 
   gst_buffer_unref(buf);
 }

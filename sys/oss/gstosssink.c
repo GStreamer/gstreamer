@@ -67,7 +67,7 @@ static void 			gst_osssink_set_property	(GObject *object, guint prop_id, const G
 static void 			gst_osssink_get_property	(GObject *object, guint prop_id, GValue *value, 
 								 GParamSpec *pspec);
 
-static void 			gst_osssink_chain		(GstPad *pad,GstBuffer *buf);
+static void 			gst_osssink_chain		(GstPad *pad,GstData *_data);
 
 /* OssSink signals and args */
 enum {
@@ -316,8 +316,9 @@ gst_osssink_set_clock (GstElement *element, GstClock *clock)
 }
 
 static void 
-gst_osssink_chain (GstPad *pad, GstBuffer *buf) 
+gst_osssink_chain (GstPad *pad, GstData *_data) 
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstOssSink *osssink;
   GstClockTime buftime;
 

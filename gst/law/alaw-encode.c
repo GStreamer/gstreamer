@@ -41,7 +41,7 @@ static void		gst_alawenc_init			(GstALawEnc *alawenc);
 static void		gst_alawenc_set_property			(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		gst_alawenc_get_property			(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void		gst_alawenc_chain			(GstPad *pad, GstBuffer *buf);
+static void		gst_alawenc_chain			(GstPad *pad, GstData *_data);
 
 /*
  * s16_to_alaw() - Convert a 16-bit linear PCM value to 8-bit A-law
@@ -185,8 +185,9 @@ gst_alawenc_init (GstALawEnc *alawenc)
 }
 
 static void
-gst_alawenc_chain (GstPad *pad,GstBuffer *buf)
+gst_alawenc_chain (GstPad *pad,GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstALawEnc *alawenc;
   gint16 *linear_data;
   guint8 *alaw_data;
@@ -214,7 +215,7 @@ gst_alawenc_chain (GstPad *pad,GstBuffer *buf)
     linear_data++;
   }
   gst_buffer_unref(buf);
-  gst_pad_push(alawenc->srcpad,outbuf);
+  gst_pad_push(alawenc->srcpad,GST_DATA (outbuf));
 }
 
 static void

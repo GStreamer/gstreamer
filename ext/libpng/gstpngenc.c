@@ -52,7 +52,7 @@ enum
 static void	gst_pngenc_class_init	(GstPngEncClass *klass);
 static void	gst_pngenc_init		(GstPngEnc *pngenc);
 
-static void	gst_pngenc_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_pngenc_chain	(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 
@@ -151,7 +151,7 @@ GstPngEnc *pngenc;
 
   pngenc = (GstPngEnc *) png_get_io_ptr (png_ptr);
 
-  gst_pad_push (pngenc->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_FLUSH)));
+  gst_pad_push (pngenc->srcpad, GST_DATA (gst_event_new (GST_EVENT_FLUSH)));
 }
 
 
@@ -176,8 +176,9 @@ void user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
 }
 
 static void
-gst_pngenc_chain (GstPad *pad, GstBuffer *buf)
+gst_pngenc_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstPngEnc *pngenc;
   gint row_index;
   png_byte *row_pointers[MAX_HEIGHT];
@@ -246,11 +247,11 @@ gst_pngenc_chain (GstPad *pad, GstBuffer *buf)
   png_destroy_info_struct (pngenc->png_struct_ptr, &pngenc->png_info_ptr);
   png_destroy_write_struct (&pngenc->png_struct_ptr, (png_infopp) NULL);
 
-  gst_pad_push (pngenc->srcpad, pngenc->buffer_out);
+  gst_pad_push (pngenc->srcpad, GST_DATA (pngenc->buffer_out));
 
   /* send EOS event, since a frame has been pushed out */
   event = gst_event_new (GST_EVENT_EOS);
-  gst_pad_push (pngenc->srcpad, GST_BUFFER (event));
+  gst_pad_push (pngenc->srcpad, GST_DATA (event));
 
   gst_buffer_unref (buf);
 }

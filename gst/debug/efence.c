@@ -83,7 +83,7 @@ static void	gst_efence_get_property(GObject *object, guint prop_id,
                                                  GValue *value,
 						 GParamSpec *pspec);
 
-static void	gst_efence_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_efence_chain	(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 
@@ -201,8 +201,9 @@ gst_efence_init (GstEFence *filter)
  */
 
 static void
-gst_efence_chain (GstPad *pad, GstBuffer *buffer)
+gst_efence_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buffer = GST_BUFFER (_data);
   GstEFence *efence;
   GstBuffer *copy;
   void *ptr;
@@ -231,7 +232,7 @@ gst_efence_chain (GstPad *pad, GstBuffer *buffer)
   GST_BUFFER_POOL_PRIVATE (copy) = NULL;
 
   gst_buffer_unref(buffer);
-  gst_pad_push (efence->srcpad, copy);
+  gst_pad_push (efence->srcpad, GST_DATA (copy));
 }
 
 static void

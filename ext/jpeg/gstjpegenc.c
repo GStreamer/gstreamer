@@ -51,10 +51,10 @@ enum {
 static void		gst_jpegenc_class_init	(GstJpegEnc *klass);
 static void		gst_jpegenc_init	(GstJpegEnc *jpegenc);
 
-static void		gst_jpegenc_chain	(GstPad *pad,GstBuffer *buf);
+static void		gst_jpegenc_chain	(GstPad *pad,GstData *_data);
 static GstPadLinkReturn	gst_jpegenc_link	(GstPad *pad, GstCaps *caps);
 
-static GstBuffer	*gst_jpegenc_get	(GstPad *pad);
+static GstData	*gst_jpegenc_get	(GstPad *pad);
 
 static void		gst_jpegenc_resync	(GstJpegEnc *jpegenc);
 
@@ -241,7 +241,7 @@ gst_jpegenc_resync (GstJpegEnc *jpegenc)
   GST_DEBUG ("gst_jpegenc_resync: resync done");
 }
 
-static GstBuffer*
+static GstData*
 gst_jpegenc_get (GstPad *pad)
 {
   GstJpegEnc *jpegenc;
@@ -263,12 +263,13 @@ gst_jpegenc_get (GstPad *pad)
   }
   gst_buffer_ref(jpegenc->buffer);
 
-  return jpegenc->buffer;
+  return GST_DATA (jpegenc->buffer);
 }
 
 static void
-gst_jpegenc_chain (GstPad *pad, GstBuffer *buf)
+gst_jpegenc_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstJpegEnc *jpegenc;
   guchar *data, *outdata;
   gulong size, outsize;
@@ -326,7 +327,7 @@ gst_jpegenc_chain (GstPad *pad, GstBuffer *buf)
 
   GST_BUFFER_SIZE(outbuf) = (((outsize - jpegenc->jdest.free_in_buffer)+3)&~3);
 
-  gst_pad_push(jpegenc->srcpad, outbuf);
+  gst_pad_push(jpegenc->srcpad, GST_DATA (outbuf));
 
   g_signal_emit(G_OBJECT(jpegenc),gst_jpegenc_signals[FRAME_ENCODED], 0);
 

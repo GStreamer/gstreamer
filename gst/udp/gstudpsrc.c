@@ -72,7 +72,7 @@ gst_udpsrc_control_get_type(void) {
 static void		gst_udpsrc_class_init		(GstUDPSrc *klass);
 static void		gst_udpsrc_init			(GstUDPSrc *udpsrc);
 
-static GstBuffer*	gst_udpsrc_get			(GstPad *pad);
+static GstData*	gst_udpsrc_get			(GstPad *pad);
 static GstElementStateReturn
 			gst_udpsrc_change_state 	(GstElement *element);
 
@@ -166,7 +166,7 @@ gst_udpsrc_init (GstUDPSrc *udpsrc)
   udpsrc->first_buf = TRUE;
 }
 
-static GstBuffer*
+static GstData*
 gst_udpsrc_get (GstPad *pad)
 {
   GstUDPSrc *udpsrc;
@@ -254,7 +254,7 @@ gst_udpsrc_get (GstPad *pad)
       	   discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 				current_time, NULL);
 
-      	   gst_pad_push (udpsrc->srcpad, GST_BUFFER (discont));
+      	   gst_pad_push (udpsrc->srcpad, GST_DATA (discont));
 	}
 
 	udpsrc->first_buf = FALSE;
@@ -283,7 +283,7 @@ gst_udpsrc_get (GstPad *pad)
     perror ("select");
     outbuf = NULL;
   }
-  return outbuf;
+  return GST_DATA (outbuf);
 }
 
 

@@ -101,7 +101,7 @@ static void		gst_level_init			(GstLevel *filter);
 static void		gst_level_set_property			(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		gst_level_get_property			(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void		gst_level_chain			(GstPad *pad, GstBuffer *buf);
+static void		gst_level_chain			(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
@@ -193,8 +193,9 @@ gst_level_fast_8bit_chain (gint8* in, guint num, gint channels,
 #include "filter.func"
 
 static void
-gst_level_chain (GstPad *pad, GstBuffer *buf)
+gst_level_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstLevel *filter;
   gint16 *in_data;
 
@@ -239,7 +240,7 @@ gst_level_chain (GstPad *pad, GstBuffer *buf)
     filter->CS[i] += CS;
 
   }
-  gst_pad_push (filter->srcpad, buf);
+  gst_pad_push (filter->srcpad, GST_DATA (buf));
 
   filter->num_samples += num_samples;
 
