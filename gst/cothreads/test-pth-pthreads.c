@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include "linuxthreads-internals.h"
 
 #ifndef CURRENT_STACK_FRAME
 #define CURRENT_STACK_FRAME  ({ char __csf; &__csf; })
@@ -10,20 +11,8 @@
 
 pth_mctx_t main_context;
 int threadnum = 0;
-/*
-int *__errno_location() 
-{
-  static pth_mctx_t ctx;
-  
-  errno_shield {
-    pth_mctx_save (&ctx);
-  }
-  
-  return &ctx.error;
-  return &main_context.error;
-}
-*/
-void thread (char *str)
+
+void cothread (void *unused)
 {
   printf ("1.1: current stack frame: %p\n", CURRENT_STACK_FRAME);
   printf ("1.1: sleeping 2s in thread %d...\n", threadnum);
@@ -36,18 +25,24 @@ void thread (char *str)
 void pthread (void* unused) 
 {
   pth_mctx_t ctx;
-  char *skaddr;
+  char *skaddr, *stackspace;
   
   printf ("1: saving the main context\n");
   printf ("1: current stack frame: %p\n", CURRENT_STACK_FRAME);
   pth_mctx_save (&main_context);
   
+  printf ("1: %d\n", pthread_self());
+  
+  stackspace = malloc(2 * 1024 * 1024);
+  (pthread_descr) stackspace[2 * 1024 * 1024 - sizeof (pthread_descr) -1] = 
+    (thread_handle (pthread_self()))->h_descr;
+  
   while (1) {
-    skaddr = malloc (1024 * 1024);
+    skaddr = stackspace;
     
     printf ("1: current stack frame: %p\n", CURRENT_STACK_FRAME);
     printf ("1: spawning a new cothread\n");
-    pth_mctx_set (&ctx, thread, skaddr, skaddr + 1024 * 1024);
+    pth_mctx_set (&ctx, cothread, skaddr, skaddr + 64 * 1024);
     printf ("1: new thread's stack frame will be in the heap at %p\n", skaddr);
     
     printf ("1: current stack frame: %p\n", CURRENT_STACK_FRAME);
@@ -69,9 +64,10 @@ int main (int argc, char *argv[])
   printf ("0: current stack frame: %p\n", CURRENT_STACK_FRAME);
   printf ("0: creating the pthread\n");
   pthread_create (&tid, NULL, pthread, NULL);
-
+  printf ("0: %d\n", pthread_self());
+//  pthread(NULL);
 //  printf ("joining the pthread\n");
-//  pthread_join (tid, NULL);
+  pthread_join (tid, NULL);
 
   printf ("0: current stack frame: %p\n", CURRENT_STACK_FRAME);
   printf ("0: take five...\n");
