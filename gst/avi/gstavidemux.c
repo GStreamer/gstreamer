@@ -412,7 +412,7 @@ gst_avi_demux_metadata (GstAviDemux *avi_demux, gint len)
 {
   guint32 got_bytes;
   GstByteStream  *bs = avi_demux->bs;
-  gst_riff_chunk *chunk;
+  gst_riff_chunk *temp_chunk, chunk;
   gchar *name, *type;
   GstProps *props;
   GstPropsEntry *entry;
@@ -420,24 +420,29 @@ gst_avi_demux_metadata (GstAviDemux *avi_demux, gint len)
   props = gst_props_empty_new ();
 
   while (len > 0) {
-    got_bytes = gst_bytestream_peek_bytes(bs, (guint8**)&chunk, sizeof(gst_riff_chunk));
-    gst_bytestream_flush(bs, sizeof(gst_riff_chunk));
-    if (got_bytes != sizeof(gst_riff_chunk))
+    got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&temp_chunk, sizeof (gst_riff_chunk));
+
+    /* fixup for our big endian friends */
+    chunk.id = GUINT32_FROM_LE (temp_chunk->id);
+    chunk.size = GUINT32_FROM_LE (temp_chunk->size);
+
+    gst_bytestream_flush (bs, sizeof (gst_riff_chunk));
+    if (got_bytes != sizeof (gst_riff_chunk))
       return;
-    len -= sizeof(gst_riff_chunk);
+    len -= sizeof (gst_riff_chunk);
 
     /* don't care about empty entries - move on */
-    if (chunk->size == 0)
+    if (chunk.size == 0)
       continue;
 
-    got_bytes = gst_bytestream_peek_bytes(bs, (guint8**)&name, chunk->size);
-    gst_bytestream_flush(bs, (chunk->size + 1) &~ 1);
-    if (got_bytes != chunk->size)
+    got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&name, chunk.size);
+    gst_bytestream_flush (bs, (chunk.size + 1) & ~1);
+    if (got_bytes != chunk.size)
       return;
-    len -= ((chunk->size + 1) &~ 1);
+    len -= ((chunk.size + 1) & ~1);
 
     /* we now have an info string in 'name' of type 'chunk.id' - find 'type' */
-    switch (chunk->id) {
+    switch (chunk.id) {
       case GST_RIFF_INFO_IARL:
         type = "Location";
         break;
@@ -514,16 +519,17 @@ gst_avi_demux_metadata (GstAviDemux *avi_demux, gint len)
 
     if (type) {
       /* create props entry */
-      entry = gst_props_entry_new(type, GST_PROPS_STRING(name));
+      entry = gst_props_entry_new (type, GST_PROPS_STRING (name));
       gst_props_add_entry (props, entry);
     }
   }
 
   gst_props_debug(props);
 
-  avi_demux->metadata = gst_caps_new("avi_metadata",
-                                     "application/x-gst-metadata",
-                                     props);
+  gst_caps_replace_sink (&avi_demux->metadata,
+		         gst_caps_new("avi_metadata",
+                                      "application/x-gst-metadata",
+                                        props));
 
   g_object_notify(G_OBJECT(avi_demux), "metadata");
 }
@@ -537,9 +543,10 @@ gst_avi_demux_streaminfo (GstAviDemux *avi_demux)
 
   /* compression formats are added later - a bit hacky */
 
-  avi_demux->streaminfo = gst_caps_new("avi_streaminfo",
-                                       "application/x-gst-streaminfo",
-                                       props);
+  gst_caps_replace_sink (&avi_demux->streaminfo,
+		  	 gst_caps_new("avi_streaminfo",
+                                      "application/x-gst-streaminfo",
+                                      props));
 
   /*g_object_notify(G_OBJECT(avi_demux), "streaminfo");*/
 }
@@ -1700,14 +1707,8 @@ gst_avi_demux_change_state (GstElement *element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_bytestream_destroy (avi_demux->bs);
-      if (avi_demux->metadata) {
-        gst_caps_unref(avi_demux->metadata);
-        avi_demux->metadata = NULL;
-      }
-      if (avi_demux->streaminfo) {
-        gst_caps_unref(avi_demux->streaminfo);
-        avi_demux->streaminfo = NULL;
-      }
+      gst_caps_replace (&avi_demux->metadata, NULL);
+      gst_caps_replace (&avi_demux->streaminfo, NULL);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
