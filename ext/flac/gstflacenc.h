@@ -44,8 +44,6 @@ struct _FlacEnc {
 
   GstPad *sinkpad,*srcpad;
 
-  GstCaps *metadata;
-
   gboolean 	 first;
   GstBuffer	*first_buf;
   gboolean 	 eos;
@@ -59,6 +57,8 @@ struct _FlacEnc {
 
   FLAC__SeekableStreamEncoder *encoder;
   FLAC__StreamMetadata **meta;
+
+  GstTagList *	   tags;
 };
 
 struct _FlacEncClass {

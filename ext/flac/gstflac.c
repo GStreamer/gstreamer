@@ -32,6 +32,10 @@ plugin_init (GstPlugin *plugin)
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
+  /* we need the gsttags plugin for metadata querying */
+  if (!gst_plugin_load ("gsttags"))
+    return FALSE;
+
   if (!gst_element_register (plugin, "flacenc", GST_RANK_NONE, GST_TYPE_FLACENC))
     return FALSE;
 

@@ -25,6 +25,9 @@
 
 /*#define DEBUG_ENABLED */
 #include "gstflacdec.h"
+#include <gst/gsttaginterface.h>
+
+#include <gst/tags/gsttagediting.h>
 
 #include "flac_compat.h"
 
@@ -66,14 +69,6 @@ static gboolean		gst_flacdec_src_query 		(GstPad *pad, GstQueryType type,
 static const GstEventMask* 
 			gst_flacdec_get_src_event_masks (GstPad *pad);
 static gboolean 	gst_flacdec_src_event 		(GstPad *pad, GstEvent *event);
-static void 	gst_flacdec_get_property 	(GObject *object, 
-		            			 guint prop_id, 
-						 GValue *value, 
-						 GParamSpec *pspec);
-static void 	gst_flacdec_set_property 	(GObject *object, 
-		            			 guint prop_id, 
-						 const GValue *value, 
-						 GParamSpec *pspec);
 
 static FLAC__SeekableStreamDecoderReadStatus 	
 			gst_flacdec_read 		(const FLAC__SeekableStreamDecoder *decoder, 
@@ -186,14 +181,7 @@ gst_flacdec_class_init (FlacDecClass *klass)
 	gobject_class = (GObjectClass*) klass;
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
-	
-	g_object_class_install_property (gobject_class, ARG_METADATA,
-    g_param_spec_boxed ("metadata", "Metadata", "(logical) Stream metadata",
-                         GST_TYPE_CAPS, G_PARAM_READABLE));
 
-	gobject_class->get_property = gst_flacdec_get_property;
-  gobject_class->set_property = gst_flacdec_set_property;
-	
   gstelement_class->change_state = gst_flacdec_change_state;
 }
 
@@ -219,7 +207,6 @@ gst_flacdec_init (FlacDec *flacdec)
   flacdec->init = TRUE;
   flacdec->eos = FALSE;
   flacdec->seek_pending = FALSE;
-  flacdec->metadata = NULL;
 
   FLAC__seekable_stream_decoder_set_read_callback (flacdec->decoder, gst_flacdec_read);
   FLAC__seekable_stream_decoder_set_seek_callback (flacdec->decoder, gst_flacdec_seek);
@@ -246,20 +233,15 @@ gst_flacdec_init (FlacDec *flacdec)
 static gboolean
 gst_flacdec_update_metadata (FlacDec *flacdec, const FLAC__StreamMetadata *metadata)
 {
+  GstTagList *list;
   guint32 number_of_comments, cursor, str_len;
   gchar *p_value, *value, *name, *str_ptr;
-  GstProps *props = NULL;
-  GstPropsEntry *entry;
-	
-  /* clear old one */
-  if (flacdec->metadata) {
-    gst_caps_unref (flacdec->metadata);
-    flacdec->metadata = NULL;
+
+  list = gst_tag_list_new ();
+  if (list == NULL) {
+    return FALSE;
   }
 
-  /* create props to hold the key/value pairs */
-  props = gst_props_empty_new ();
-  
   number_of_comments = metadata->data.vorbis_comment.num_comments;
   value = NULL;
   GST_DEBUG ("%d tag(s) found",  number_of_comments);
@@ -271,23 +253,20 @@ gst_flacdec_update_metadata (FlacDec *flacdec, const FLAC__StreamMetadata *metad
     if (p_value)
     {			
       name = g_strndup (str_ptr, p_value - str_ptr);
-      value = g_strndup (p_value + 1, str_ptr + str_len - p_value);
+      value = g_strndup (p_value + 1, str_ptr + str_len - p_value - 1);
 			
-      entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, value);
-      gst_props_add_entry (props, (GstPropsEntry *) entry);
-
       GST_DEBUG ("%s : %s", name, value);
-
+      gst_vorbis_tag_add (list, name, value);
       g_free (name);
       g_free (value);
     }
   }
-	
-  flacdec->metadata = gst_caps_new ("vorbisfile_metadata",
-                                    "application/x-gst-metadata",
-                                    props);
-  g_object_notify (G_OBJECT (flacdec), "metadata");
-	
+
+
+  gst_element_found_tags (GST_ELEMENT (flacdec), list);
+  if (GST_PAD_IS_USABLE (flacdec->srcpad)) {
+    gst_pad_push (flacdec->srcpad, GST_DATA (gst_event_new_tag (list)));
+  }
   return TRUE;
 }
 
@@ -789,39 +768,4 @@ gst_flacdec_change_state (GstElement *element)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
-}
-
-static void
-gst_flacdec_set_property (GObject *object, guint prop_id, 
-		             const GValue *value, GParamSpec *pspec)
-{
-  FlacDec *flacdec;
-	      
-  g_return_if_fail (GST_IS_FLACDEC (object));
-
-  flacdec = GST_FLACDEC (object);
-
-  switch (prop_id) {
-    default:
-      g_warning ("Unknown property id\n");
-  }
-}
-
-static void 
-gst_flacdec_get_property (GObject *object, guint prop_id, 
-		             GValue *value, GParamSpec *pspec)
-{
-  FlacDec *flacdec;
-	      
-  g_return_if_fail (GST_IS_FLACDEC(object));
-
-  flacdec = GST_FLACDEC (object);
-
-  switch (prop_id) {
-    case ARG_METADATA:
-      g_value_set_boxed (value, flacdec->metadata);
-      break;
-    default:
-      g_warning ("Unknown property id\n");
-  }
 }

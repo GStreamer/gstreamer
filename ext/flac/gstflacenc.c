@@ -25,7 +25,8 @@
 #include <string.h>
 
 #include <gstflacenc.h>
-
+#include <gst/tags/gsttagediting.h>
+#include <gst/gsttaginterface.h>
 #include "flac_compat.h"
 
 static GstPadTemplate *src_template, *sink_template;
@@ -108,7 +109,15 @@ flacenc_get_type (void)
       0,
       (GInstanceInitFunc)gst_flacenc_init,
     };
+
+    static const GInterfaceInfo tag_setter_info = {
+      NULL,
+      NULL,
+      NULL
+    };
+
     flacenc_type = g_type_register_static (GST_TYPE_ELEMENT, "FlacEnc", &flacenc_info, 0);
+    g_type_add_interface_static (flacenc_type, GST_TYPE_TAG_SETTER, &tag_setter_info);
   }
   return flacenc_type;
 }
@@ -333,31 +342,13 @@ gst_flacenc_init (FlacEnc *flacenc)
   					
   FLAC__seekable_stream_encoder_set_client_data (flacenc->encoder, 
 		                        flacenc);
-
-  flacenc->metadata = GST_CAPS_NEW (
-                  "flacenc_metadata",
-                  "application/x-gst-metadata",
-                    "DESCRIPTION",      GST_PROPS_STRING ("Track encoded with GStreamer"),
-                    "DATE",             GST_PROPS_STRING (""),
-                    "TRACKNUMBER",      GST_PROPS_STRING (""),
-                    "TITLE",            GST_PROPS_STRING (""),
-                    "ARTIST",           GST_PROPS_STRING (""),
-                    "ALBUM",            GST_PROPS_STRING (""),
-                    "GENRE",            GST_PROPS_STRING (""),
-                    "VERSION",          GST_PROPS_STRING (""),
-                    "COPYRIGHT",        GST_PROPS_STRING (""),
-                    "LICENSE",          GST_PROPS_STRING (""),
-                    "ORGANISATION",     GST_PROPS_STRING (""),
-                    "LOCATION",         GST_PROPS_STRING (""),
-                    "CONTACT",          GST_PROPS_STRING (""),
-                    "ISRC",             GST_PROPS_STRING ("")
-                  );
 		  
   flacenc->negotiated = FALSE;
   flacenc->first = TRUE;
   flacenc->first_buf = NULL;
   flacenc->data = NULL;
   gst_flacenc_update_quality (flacenc, DEFAULT_QUALITY);
+  flacenc->tags = gst_tag_list_new ();
 }
 
 static void
@@ -492,44 +483,49 @@ gst_flacenc_write_callback (const FLAC__SeekableStreamEncoder *encoder,
   return FLAC__STREAM_ENCODER_OK;
 }
 
-static void
-gst_flacenc_set_metadata (FlacEnc *flacenc, GstCaps *caps)
+void  add_one_tag (const GstTagList *list, 
+		   const gchar *tag, 
+		   gpointer user_data)
 {
-  guint indice;
-  guint comments;
-  const gchar *meta_types[] = { "TITLE", "VERSION", "ALBUM", "TRACKNUMBER",
-                                "ARTIST", "PERFORMER", "COPYRIGHT", "LICENSE",
-                                "ORGANISATION", "DESCRIPTION", "GENRE", "DATE",
-                                "LOCATION", "CONTACT", "ISRC", NULL };
+      GList *comments;
+      GList *it;
+      FlacEnc *flacenc = GST_FLACENC (user_data);
+
+      comments = gst_tag_to_vorbis_comments (list, tag);
+      for (it = comments; it != NULL; it = it->next) {
+	      FLAC__StreamMetadata_VorbisComment_Entry commment_entry;
+	      commment_entry.length = GUINT32_TO_LE (strlen(it->data) + 1);
+	      commment_entry.entry  =  it->data;
+	      FLAC__metadata_object_vorbiscomment_insert_comment (flacenc->meta[0], 
+								  flacenc->meta[0]->data.vorbis_comment.num_comments, 
+								  commment_entry, 
+								  TRUE);
+	      g_free (it->data);
+      }
+      g_list_free (comments);
+}
+
+static void
+gst_flacenc_set_metadata (FlacEnc *flacenc)
+{
+  const GstTagList *user_tags;
+  GstTagList *copy;
 
   g_return_if_fail (flacenc != NULL);
-
+  user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (flacenc));
+  if ((flacenc->tags == NULL) && (user_tags == NULL)) {
+    return;
+  }
+  copy = gst_tag_list_merge (user_tags, flacenc->tags, 
+			     gst_tag_setter_get_merge_mode (GST_TAG_SETTER (flacenc)));
   flacenc->meta = g_malloc (sizeof (FLAC__StreamMetadata **));
 
   flacenc->meta[0] = FLAC__metadata_object_new (FLAC__METADATA_TYPE_VORBIS_COMMENT);
-  
-  for ( indice = 0, comments=0; meta_types[indice] != NULL; indice++) {
-    if (gst_caps_has_property(caps, meta_types[indice])) {
-      const gchar *entry;
-      gchar *data;
-      FLAC__StreamMetadata_VorbisComment_Entry commment_entry;
-      
-      gst_caps_get_string(caps, (gchar *)meta_types[indice], &entry);
-
-      if (!strcmp (entry, ""))
-	continue;
-   
-      data = g_strdup_printf("%s=%s", meta_types[indice], entry);
-      commment_entry.length = GUINT32_TO_LE (strlen(entry) + strlen(meta_types[indice]) + 1);
-      commment_entry.entry  =  g_convert (data, commment_entry.length, "UTF8", "ISO-8859-1", NULL, NULL, NULL);
-
-      FLAC__metadata_object_vorbiscomment_insert_comment (flacenc->meta[0], comments++, commment_entry, TRUE);
-    }
-  }
+  gst_tag_list_foreach ((GstTagList*)copy, add_one_tag, flacenc);
 
   FLAC__seekable_stream_encoder_set_metadata(flacenc->encoder, flacenc->meta, 1);
+  gst_tag_list_free (copy);
 }
-
 
 
 static void
@@ -553,10 +549,19 @@ gst_flacenc_chain (GstPad *pad, GstData *_data)
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
 	FLAC__seekable_stream_encoder_finish(flacenc->encoder);
+	break;
+      case GST_EVENT_TAG:
+	if (flacenc->tags) {
+	  gst_tag_list_merge (flacenc->tags, gst_event_tag_get_list (event), 
+		  gst_tag_setter_get_merge_mode (GST_TAG_SETTER (flacenc)));
+	} else {
+	  g_assert_not_reached ();
+	}
+	break;
       default:
-	gst_pad_event_default (pad, event);
         break;
     }
+    gst_pad_event_default (pad, event);
     return;
   }
 
@@ -575,8 +580,7 @@ gst_flacenc_chain (GstPad *pad, GstData *_data)
 		  FLAC__SEEKABLE_STREAM_ENCODER_UNINITIALIZED) 
   {
     FLAC__SeekableStreamEncoderState state;
-
-    gst_flacenc_set_metadata (flacenc, flacenc->metadata);
+    gst_flacenc_set_metadata (flacenc);
     state = FLAC__seekable_stream_encoder_init (flacenc->encoder);
     if (state != FLAC__STREAM_ENCODER_OK) {
       gst_element_error (GST_ELEMENT (flacenc),
