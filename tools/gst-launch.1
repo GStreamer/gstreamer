@@ -52,7 +52,9 @@ Converts wav files into mp3 and ogg files:
  gst\-launch filesrc location=music.wav ! parsewav ! mpegaudio ! disksink location=music.mp3
 
 Play mpeg movie with the aasink:
- gst\-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! mpegdemux video_00! { queue ! mpeg2dec ! aasink }
+ gst\-launch filesrc location=movie.mpg ! mpegdemux video_00! { queue ! mpeg2dec ! aasink }
+Play a mpeg movie with sound using the sdlvideosink:
+ gst\-launch filesrc location=movie.mpg ! mpegdemux video_00! { queue ! mpeg2dec ! sdlvideosink } mpegdemux0.audio_00! { queue ! mad ! osssink }
 
 You can also use lame for mp3 encoding if you have it installed, it does a 
 much better job than mpegaudio.
