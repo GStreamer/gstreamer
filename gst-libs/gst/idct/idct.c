@@ -55,23 +55,6 @@ gst_idct_new (GstIDCTMethod method)
       gst_idct_init_float_idct ();
       new->convert = gst_idct_float_idct;
       break;
-#ifdef HAVE_LIBMMX
-    case GST_IDCT_MMX:
-      GST_INFO ("using MMX_idct");
-      new->convert = gst_idct_mmx_idct;
-      new->need_transpose = TRUE;
-      break;
-    case GST_IDCT_MMX32:
-      GST_INFO ("using MMX32_idct");
-      new->convert = gst_idct_mmx32_idct;
-      new->need_transpose = TRUE;
-      break;
-    case GST_IDCT_SSE:
-      GST_INFO ("using SSE_idct");
-      new->convert = gst_idct_sse_idct;
-      new->need_transpose = TRUE;
-      break;
-#endif /* HAVE_LIBMMX */
     default:
       GST_INFO ("method not supported");
       g_free (new);

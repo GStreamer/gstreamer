@@ -28,9 +28,6 @@ typedef enum {
   GST_IDCT_INT,	
   GST_IDCT_FAST_INT, 
   GST_IDCT_FLOAT,   
-  GST_IDCT_MMX,	
-  GST_IDCT_MMX32,
-  GST_IDCT_SSE,
 } GstIDCTMethod;
 
 typedef struct _GstIDCT GstIDCT;
