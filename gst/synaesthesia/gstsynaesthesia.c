@@ -398,7 +398,7 @@ gst_synaesthesia_change_state (GstElement *element)
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-  return gst_element_register (plugin, "synaesthesia", GST_RANK_MARGINAL, GST_TYPE_SYNAESTHESIA);
+  return gst_element_register (plugin, "synaesthesia", GST_RANK_NONE, GST_TYPE_SYNAESTHESIA);
 }
 
 GST_PLUGIN_DEFINE (
