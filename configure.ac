@@ -216,8 +216,8 @@ GST_PLUGINS_ALL="\
         median mixmatrix mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
         mpegaudio mpegaudioparse mpegstream mpegtypes\
         monoscope passthrough playondemand qtdemux rtjpeg silence sine\
-        smooth spectrum speed stereo stereomono\
-        synaesthesia udp videocrop videoscale videotestsrc volenv volume\ 
+        smooth spectrum speed stereo stereomono synaesthesia\
+        udp videocrop videoscale videotestsrc volenv volume\ 
         vumeter wavparse y4m"
 
 dnl see if we can build C++ plug-ins
@@ -376,6 +376,7 @@ dnl *** aalib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
 GST_CHECK_FEATURE(AALIB, [aasink plug-in], aasink, [
   AM_PATH_AALIB(, HAVE_AALIB=yes, HAVE_AALIB=no)
+  AS_SCRUB_INCLUDE(AALIB_CFLAGS)
 ])
 
 dnl *** alsa ***
@@ -479,6 +480,7 @@ GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnavsrc, [
   translit(dnm, m, l) AC_SUBST(DVDNAV_LIBS)
   translit(dnm, m, l) AC_SUBST(DVDNAV_CFLAGS)
   GST_CHECK_CONFIGPROG(DVDNAV, dvdnav-config)
+  AS_SCRUB_INCLUDE(DVDNAV_CFLAGS)
 ])
 
 dnl **** ESound ****
@@ -505,7 +507,6 @@ dnl  HAVE_FESTIVAL=yes
 dnl])
 
 dnl *** FLAC ***
-dnl FLAC 1.0.3 is needed
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLAC, true)
 GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
   GST_CHECK_LIBHEADER(FLAC, FLAC, FLAC__stream_decoder_new, -lm, FLAC/all.h, FLAC_LIBS="-lFLAC")
