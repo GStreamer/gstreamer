@@ -119,6 +119,7 @@ int main (int argc, char *argv[])
   g_object_set (G_OBJECT (cutter), 
 	"threshold_dB", -40.0, 
 	"runlength", 0.5,
+        "prelength", 1.0,
 	NULL);
 
   /* create an audio src */
