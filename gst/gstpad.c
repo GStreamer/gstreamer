@@ -3366,7 +3366,7 @@ gst_pad_collectv (GstPad ** selected, const GList * padlist)
   }
   pads[i] = NULL;
 
-  return gst_pad_collect_array (GST_SCHEDULER (element), selected, pads);
+  return gst_pad_collect_array (GST_ELEMENT_SCHED (element), selected, pads);
 }
 
 /**
@@ -3425,7 +3425,8 @@ gst_pad_collect_valist (GstPad ** selected, GstPad * pad, va_list var_args)
     padlist[i++] = pad;
     pad = va_arg (var_args, GstPad *);
   }
-  return gst_pad_collect_array (GST_SCHEDULER (element), selected, padlist);
+  padlist[i] = NULL;
+  return gst_pad_collect_array (GST_ELEMENT_SCHED (element), selected, padlist);
 }
 
 /**
