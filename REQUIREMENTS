@@ -55,7 +55,8 @@ raw1394/linux1394	(for the dv plugin)
 			http://linux1394.sourceforge.net/
 decss		(for the dvdsrc)
 			huh, I don't know, sorry (FIXME)
-libesound	(for the esd sink)
+libesound	(for the esd sink 
+			ftp.gnome.org/pub/GNOME/stable/sources/esound)
 gnome-vfs	(for the gnome-vfs src)
 libgsm		(for the gsm plugin)
 			http://kbs.cs.tu-berlin.de/~jutta/toast.html
