@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include "gstplaybasebin.h"
+#include "gstplay-marshal.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_base_bin_debug);
 #define GST_CAT_DEFAULT gst_play_base_bin_debug
@@ -139,12 +140,12 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   gst_play_base_bin_signals[LINK_STREAM_SIGNAL] =
       g_signal_new ("link-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBaseBinClass, link_stream),
-      NULL, NULL, gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
+      NULL, NULL, gst_play_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2,
       G_TYPE_OBJECT, GST_TYPE_PAD);
   gst_play_base_bin_signals[UNLINK_STREAM_SIGNAL] =
       g_signal_new ("unlink-stream", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstPlayBaseBinClass, unlink_stream),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+      NULL, NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_base_bin_dispose);
 

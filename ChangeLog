@@ -1,3 +1,13 @@
+2004-10-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_iterate):
+	  Wrong return.
+	* gst/playback/Makefile.am:
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init):
+	* gst/playback/gstplay-marshal.list:
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init):
+	  Fix marshallers.
+
 2004-10-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_event):

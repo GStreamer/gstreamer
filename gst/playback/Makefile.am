@@ -1,8 +1,19 @@
+glib_enum_define=GST_PLAY
+glib_enum_prefix=gst_play
+
+built_sources = gstplay-marshal.c
+
+built_headers = gstplay-marshal.h
+
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = libgstplaybin.la libgstdecodebin.la
 
-libgstplaybin_la_SOURCES = gstplaybin.c gstplaybasebin.c gststreaminfo.c
+libgstplaybin_la_SOURCES = \
+	gstplaybin.c \
+	gstplaybasebin.c \
+	gststreaminfo.c
+nodist_libgstplaybin_la_SOURCES = $(built_sources)
 libgstplaybin_la_CFLAGS = $(GST_CFLAGS)
 libgstplaybin_la_LIBADD =
 libgstplaybin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
@@ -30,3 +41,11 @@ test4_CFLAGS = $(GST_CFLAGS)
 
 decodetest_LDADD = $(GST_LIBS) 
 decodetest_CFLAGS = $(GST_CFLAGS)
+
+BUILT_SOURCES = $(built_headers) $(built_sources)
+
+EXTRA_DIST = gstplay-marshal.list
+
+CLEANFILES = $(BUILT_SOURCES)
+
+include $(top_srcdir)/common/glib-gen.mak
