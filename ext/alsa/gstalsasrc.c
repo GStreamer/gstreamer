@@ -134,17 +134,51 @@ gst_alsa_src_init (GstAlsaSrc * src)
   gst_object_ref (GST_OBJECT (this->clock));
   gst_object_sink (GST_OBJECT (this->clock));
 
+  src->status = NULL;
   gst_element_set_loop_function (GST_ELEMENT (this), gst_alsa_src_loop);
 }
 
+/* alsasrc provides a clock starting from the trigger tstamp
+ * (last play/pause/stop), and added to that the time for the currently
+ * processed samples, and the current fill state of the buffer */
 static GstClockTime
 gst_alsa_src_get_time (GstAlsa * this)
 {
+  struct timeval trigger;
+  snd_pcm_sframes_t delay;
+  GstClockTime gct_trigger, gct_captured, gct_delay, retval =
+      GST_CLOCK_TIME_NONE;
+  int err;
+  GstAlsaSrc *src = GST_ALSA_SRC (this);
+
   GTimeVal now;
 
   g_get_current_time (&now);
-
   return GST_TIMEVAL_TO_TIME (now);
+
+  if (src->status == NULL)
+    return GST_CLOCK_TIME_NONE;
+
+  if ((err = snd_pcm_status (this->handle, src->status)) < 0) {
+    GST_ERROR_OBJECT (this, "status error: %s", snd_strerror (err));
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  /* trigger tstamp is the last time the device got started/stopped/paused */
+  snd_pcm_status_get_trigger_tstamp (src->status, &trigger);
+  gct_trigger = GST_TIMEVAL_TO_TIME (trigger);
+
+  /* captured is the number of samples already sent out as buffers */
+  gct_captured = gst_alsa_samples_to_timestamp (this, this->captured);
+
+  /* delay is the number of samples in the buffer not yet processed */
+  delay = snd_pcm_status_get_delay (src->status);
+  gct_delay = gst_alsa_samples_to_timestamp (this, delay);
+
+  retval = gct_trigger + gct_captured + gct_delay;
+  GST_LOG_OBJECT (src, "returning clock time of %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (retval));
+  return retval;
 }
 
 static int
@@ -388,13 +422,11 @@ gst_alsa_src_loop (GstElement * element)
     gint outsize;
     GstClockTime outtime, outdur, outreal, outideal, startalsa, outalsa;
     gint64 diff, offset;
-    snd_pcm_status_t *status;
     struct timeval tstamp;
     int err;
 
-    snd_pcm_status_alloca (&status);
 
-    if ((err = snd_pcm_status (this->handle, status)) < 0)
+    if ((err = snd_pcm_status (this->handle, src->status)) < 0)
       GST_ERROR_OBJECT (this, "status error: %s", snd_strerror (err));
 
     offset = this->captured;
@@ -408,7 +440,7 @@ gst_alsa_src_loop (GstElement * element)
     /* ideal time is counting samples */
     outideal = gst_alsa_samples_to_timestamp (this, offset);
 
-    snd_pcm_status_get_trigger_tstamp (status, &tstamp);
+    snd_pcm_status_get_trigger_tstamp (src->status, &tstamp);
     startalsa = GST_TIMEVAL_TO_TIME (tstamp) - element->base_time;
     outalsa = startalsa + outideal;
 
@@ -473,13 +505,17 @@ gst_alsa_src_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
+      break;
     case GST_STATE_READY_TO_PAUSED:
+      snd_pcm_status_malloc (&src->status);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      snd_pcm_status_free (src->status);
+      src->status = NULL;
       gst_alsa_src_flush (src);
       break;
     case GST_STATE_READY_TO_NULL:
