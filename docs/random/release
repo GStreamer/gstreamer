@@ -56,7 +56,6 @@ TODO :
     and add that to cvs
   - Start updating the release notes on the www cvs tree
     - create the base xml file in www/htdocs/releases/$/module)/$(version).xml
-    - add the generated targets (text and html) for this to the Makefile.am
     - grepping ChangeLog for contributors:
  grep "<.*>" ChangeLog | perl -i -p -e 's@\d*-\d*-\d*\s*(.*)\s*<.*$@$1@' | sort | uniq
     - use www/bin/bugzilla (module) (version) to get an xml list of the
@@ -113,6 +112,7 @@ TODO :
     for example for 0.6.3 :
            cvs tag RELEASE-0_6_3
   - run "make release", build rpms
+  - install on gnome's ftp
   - for core: run "make upload" from gstreamer/docs to get the new docs online
   - change www/src/htdocs/entities.gst with the new version numbers
   - change www/src/htdocs/bugs/bugs.xml and add a new milestone
