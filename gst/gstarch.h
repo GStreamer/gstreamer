@@ -180,6 +180,19 @@ struct minimal_s390_stackframe {
     ((struct minimal_s390_stackframe *)sp)->back_chain = 0;
 
 
+/***** M68K *****/
+#elif defined(HAVE_CPU_M68K) && defined(__GNUC__)
+
+/* From Matthias Urlichs <smurf@smurf.noris.de> */
+
+#define GST_ARCH_SET_SP(stackpointer) \
+    __asm__( "move.l %0, %%sp\n" : : "r" (stackpointer))
+
+#define GST_ARCH_CALL(target) \
+    __asm__( "jbsr (%0)" : : "r" (target))
+
+#define GST_ARCH_SETUP_STACK(sp) sp -= 4
+
 #elif defined(HAVE_MAKECONTEXT)
 
 /* If we have makecontext(), we'll be using that. */
