@@ -50,6 +50,7 @@ enum {
   ARG_ERROR_AFTER,
   ARG_DROP_PROBABILITY,
   ARG_SILENT,
+  ARG_LAST_MESSAGE,
 };
 
 
@@ -112,6 +113,9 @@ gst_identity_class_init (GstIdentityClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
     g_param_spec_boolean ("silent", "silent", "silent",
                           TRUE,G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
+    g_param_spec_string ("last-message", "last-message", "last-message",
+                         NULL, G_PARAM_READABLE)); 
 
   gst_identity_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
@@ -175,8 +179,9 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
 
   if (identity->drop_probability > 0.0) {
     if ((gfloat)(1.0*rand()/(RAND_MAX)) < identity->drop_probability) {
-      gst_element_info (GST_ELEMENT (identity), "dropping   ******* (%s:%s)i (%d bytes, %llu)",
+      identity->last_message = g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, %llu)",
 	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+      g_object_notify (G_OBJECT (identity), "last-message");
       gst_buffer_unref (buf);
       return;
     }
@@ -184,9 +189,9 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
 
   for (i = identity->duplicate; i; i--) {
     if (!identity->silent)
-      gst_element_info (GST_ELEMENT (identity), "chain   ******* (%s:%s)i (%d bytes, %llu)",
+      identity->last_message = g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, %llu)",
 	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
-  
+    g_object_notify (G_OBJECT (identity), "last-message");
     g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
 	                       buf);
 
@@ -288,6 +293,9 @@ static void gst_identity_get_property(GObject *object, guint prop_id, GValue *va
       break;
     case ARG_SILENT:
       g_value_set_boolean (value, identity->silent);
+      break;
+    case ARG_LAST_MESSAGE:
+      g_value_set_string (value, identity->last_message);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
