@@ -189,6 +189,9 @@ gboolean		gst_props_entry_get_int_range	(const GstPropsEntry *entry, gint *min, 
 gboolean		gst_props_entry_get_float_range	(const GstPropsEntry *entry, gfloat *min, gfloat *max);
 gboolean		gst_props_entry_get_list	(const GstPropsEntry *entry, const GList **val);
 
+/* for debugging purposes */
+gchar *			gst_props_to_string		(GstProps *props);
+GstProps *		gst_props_from_string		(gchar *str);
 
 #ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr 		gst_props_save_thyself 		(GstProps *props, xmlNodePtr parent);

@@ -20,7 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 
 #include "gstlog.h"
@@ -71,63 +70,490 @@ struct _GstPropsEntry {
 static GstMemChunk *_gst_props_entries_chunk;
 static GstMemChunk *_gst_props_chunk;
 
+/* transform functions */
+static void		gst_props_transform_to_string		(const GValue *src_value, GValue *dest_value);
+static gchar *		gst_props_entry_to_string		(GstPropsEntry *entry);
+gboolean		__gst_props_parse_string		(gchar *r, gchar **end, gchar **next);
+
 static gboolean 	gst_props_entry_check_compatibility 	(GstPropsEntry *entry1, GstPropsEntry *entry2);
 static GList* 		gst_props_list_copy 			(GList *propslist);
 
-static void
-transform_func (const GValue *src_value,
-		GValue *dest_value)
+static GstPropsEntry*	gst_props_alloc_entry			(void);
+
+static gchar *
+gst_props_entry_to_string (GstPropsEntry *entry)
 {
-  GstProps *props = g_value_peek_pointer (src_value);
-  GString *result = g_string_new ("");
-
-  if (props) {
-    GList *propslist = props->properties;
-
-    while (propslist) {
-      GstPropsEntry *entry = (GstPropsEntry *)propslist->data;
-      const gchar *name = g_quark_to_string (entry->propid);
-
-      switch (entry->propstype) {
-        case GST_PROPS_INT_TYPE:
-  	  g_string_append_printf (result, "%s=(int) %d", name, entry->data.int_data);
-	  break;
-        case GST_PROPS_FLOAT_TYPE:
-  	  g_string_append_printf (result, "%s=(float) %f", name, entry->data.float_data);
-	  break;
-        case GST_PROPS_FOURCC_TYPE:
-  	  g_string_append_printf (result, "%s=(fourcc) '%4.4s'", name, (gchar *)&entry->data.fourcc_data);
-	  break;
-        case GST_PROPS_BOOLEAN_TYPE:
-  	  g_string_append_printf (result, "%s=(boolean) %s", name, 
-			  	  (entry->data.bool_data ? "TRUE" : "FALSE"));
-	  break;
-        case GST_PROPS_STRING_TYPE:
-	  g_string_append_printf (result, "%s=(string) '%s'", name, entry->data.string_data.string);
-	  break;
-        case GST_PROPS_INT_RANGE_TYPE:
-  	  g_string_append_printf (result, "%s=(int range) %d-%d", name, 
-			  entry->data.int_range_data.min, entry->data.int_range_data.max);
-	  break;
-        case GST_PROPS_FLOAT_RANGE_TYPE:
-  	  g_string_append_printf (result, "%s=(float range) %f-%f", name, 
-			  entry->data.float_range_data.min, entry->data.float_range_data.max);
-	  break;
-        case GST_PROPS_LIST_TYPE:
-  	  g_string_append_printf (result, "%s=(list) %p", name, entry->data.list_data.entries);
-	  break;
-        default:
-	  break;
-      }
-
-      propslist = g_list_next (propslist);
-      if (propslist) {
-        g_string_append (result, "; ");
+  switch (entry->propstype) {
+    case GST_PROPS_INT_TYPE:
+      return g_strdup_printf ("int = %d", entry->data.int_data);
+    case GST_PROPS_FLOAT_TYPE:
+      return g_strdup_printf ("float = %f", entry->data.float_data);
+      break;
+    case GST_PROPS_FOURCC_TYPE: {
+      gchar fourcc[5] = { GST_FOURCC_ARGS (entry->data.fourcc_data), '\0' }; /* Do all compilers understand that? */
+      if (g_ascii_isalnum(fourcc[1]) && g_ascii_isalnum(fourcc[2]) &&
+	  g_ascii_isalnum(fourcc[3]) && g_ascii_isalnum(fourcc[4])) {
+        return g_strdup_printf ("fourcc = %s", fourcc);
+      } else {
+        return g_strdup_printf ("fourcc = %d", entry->data.fourcc_data);
       }
     }
+    case GST_PROPS_BOOLEAN_TYPE:
+      return g_strdup_printf ("bool = %s", (entry->data.bool_data ? "TRUE" : "FALSE"));
+    case GST_PROPS_STRING_TYPE:
+      /* FIXME: Need to escape stuff here */
+      return g_strdup_printf ("string = '%s'", entry->data.string_data.string);
+    case GST_PROPS_INT_RANGE_TYPE:
+      return g_strdup_printf ("int = [%d, %d]", entry->data.int_range_data.min, entry->data.int_range_data.max);
+    case GST_PROPS_FLOAT_RANGE_TYPE:
+      return g_strdup_printf ("float = [%f, %f]", entry->data.float_range_data.min, entry->data.float_range_data.max);
+    case GST_PROPS_LIST_TYPE: {
+      GList *walk;
+      GString *s;
+      gchar *temp;
+      
+      s = g_string_new ("list = (");
+      walk = entry->data.list_data.entries;
+      while (walk) {
+	temp = gst_props_entry_to_string ((GstPropsEntry *) walk->data);
+	g_string_append (s, temp);
+	walk = walk->next;
+	if (walk) {
+	  g_string_append (s, ", ");
+	} else {
+	  g_string_append (s, ")");
+	}
+	g_free (temp);
+      }
+      temp = s->str;
+      g_string_free (s, FALSE);
+      return temp;
+    }
+    default:
+      /* transforms always succeed */
+      g_assert_not_reached();
+      return NULL;
   }
-  dest_value->data[0].v_pointer = result->str;
-  g_string_free (result, FALSE);
+}
+/**
+ * gst_props_to_string:
+ * props: the props to convert to a string
+ *
+ * Converts a #GstProps into a readable format. This is mainly intended for
+ * debugging purposes. You have to free the string using g_free.
+ * A string converted with #gst_props_to_string can always be converted back to
+ * its props representation using #gst_props_from_string.
+ *
+ * Returns: A newly allocated string
+ */
+gchar *
+gst_props_to_string (GstProps *props)
+{
+  GString *s;
+  gchar *temp;
+  GList *propslist; 
+
+  s = g_string_new ("");
+  propslist = props->properties;
+  while (propslist) {
+    GstPropsEntry *entry = (GstPropsEntry *)propslist->data;
+    const gchar *name = g_quark_to_string (entry->propid);    
+  
+    temp = gst_props_entry_to_string (entry);
+    propslist = g_list_next (propslist);
+    if (temp) {
+      if (propslist) {
+        g_string_append_printf (s, "%s:%s, ", name, temp);
+      } else {
+        g_string_append_printf (s, "%s:%s", name, temp);
+      }
+      g_free (temp);
+    }
+  }
+  temp = s->str;
+  g_string_free (s, FALSE);
+
+  return temp;
+}
+static void
+gst_props_transform_to_string (const GValue *src_value, GValue *dest_value)
+{
+  GstProps *props = g_value_peek_pointer (src_value);
+
+  if (props)
+    dest_value->data[0].v_pointer = gst_props_to_string (props);
+}
+/**
+ * r will still point to the string. if end == next, the string will not be 
+ * null-terminated. In all other cases it will be.
+ * end = pointer to char behind end of string, next = pointer to start of
+ * unread data.
+ * THIS FUNCTION MODIFIES THE STRING AND DETECTS INSIDE A NONTERMINATED STRING 
+ */
+gboolean
+__gst_props_parse_string (gchar *r, gchar **end, gchar **next)
+{
+  gchar *w;
+  gchar c = '\0';
+
+  w = r;
+  if (*r == '\'' || *r == '\"') {
+    c = *r;
+    r++;
+  }
+  
+  for (;;r++) {
+    if (*r == '\0') {
+      if (c) {
+        goto error;
+      } else {
+        goto found;
+      }
+    }
+    
+    if (*r == '\\') {
+      r++;
+      if (*r == '\0')
+	goto error;
+      *w++ = *r;
+      continue;
+    }
+    
+    if (*r == c) {
+      r++;
+      if (*r == '\0')
+	goto found;
+      break;
+    }
+
+    if (!c) {
+      if (g_ascii_isspace (*r))
+	break;
+      /* this needs to be escaped */
+      if (*r == ',' || *r == ')' || *r == ']' || *r == ':' ||
+	  *r == ';' || *r == '(' || *r == '[')
+        break;
+    }
+    *w++ = *r;
+  }
+
+found:
+  while (g_ascii_isspace (*r)) r++;
+  if (w != r)
+    *w++ = '\0';
+  *end = w;
+  *next = r;
+  return TRUE;
+
+error:
+  return FALSE;
+}
+static GstPropsEntry *
+gst_props_entry_from_string_no_name (gchar *s, gchar **after, gboolean has_type)
+{
+  GstPropsEntry *entry;
+  gchar org = '\0';
+  gchar *end, *next, *check = s;
+  GstPropsType type = GST_PROPS_INVALID_TYPE;
+  /* [TYPE=]VALUE */
+  /**
+   * valid type identifiers case insensitive:
+   * INT: "i", "int"
+   * FLOAT: "f", "float"
+   * FOURCC: "4", "fourcc"
+   * BOOLEAN: "b", "bool", "boolean"
+   * STRING: "s", "str", "string"
+   * lists/ranges are identified by the value
+   */
+  if (g_ascii_tolower (s[0]) == 'i') {
+    type = GST_PROPS_INT_TYPE;
+    if (g_ascii_tolower (s[1]) == 'n' && g_ascii_tolower (s[2]) == 't') {
+      check = s + 3;
+    } else {
+      check = s + 1;
+    }
+  } else if (g_ascii_tolower (s[0]) == 'f') {
+    type = GST_PROPS_FLOAT_TYPE;
+    if (g_ascii_tolower (s[1]) == 'l' && g_ascii_tolower (s[2]) == 'o' &&
+        g_ascii_tolower (s[3]) == 'a' && g_ascii_tolower (s[4]) == 't') {
+      check = s + 5;
+    } else if (g_ascii_tolower (s[1]) == 'o' && g_ascii_tolower (s[2]) == 'u' &&
+               g_ascii_tolower (s[3]) == 'r' && g_ascii_tolower (s[4]) == 'c' && 
+               g_ascii_tolower (s[5]) == 'c') {
+      check = s + 6;
+      type = GST_PROPS_FOURCC_TYPE;
+    } else {
+      check = s + 1;
+    }
+  } else if (g_ascii_tolower (s[0]) == '4') {
+    type = GST_PROPS_FOURCC_TYPE;
+    check = s + 1;
+  } else if (g_ascii_tolower (s[0]) == 'b') {
+    type = GST_PROPS_BOOLEAN_TYPE;
+    if (g_ascii_tolower (s[1]) == 'o' && g_ascii_tolower (s[2]) == 'o' &&
+        g_ascii_tolower (s[3]) == 'l') {
+      if (g_ascii_tolower (s[4]) == 'e' && g_ascii_tolower (s[5]) == 'a' &&
+          g_ascii_tolower (s[6]) == 'n') {
+	check = s + 7;
+      } else {
+	check = s + 4;
+      }
+    } else {
+      check = s + 1;
+    }
+  } else if (g_ascii_tolower (s[0]) == 's') {
+    type = GST_PROPS_STRING_TYPE;
+    if (g_ascii_tolower (s[1]) == 't' && g_ascii_tolower (s[2]) == 'r') {
+      if (g_ascii_tolower (s[3]) == 'i' && g_ascii_tolower (s[4]) == 'n' &&
+          g_ascii_tolower (s[5]) == 'g') {
+	check = s + 6;
+      } else {
+	check = s + 3;
+      }
+    } else {
+      check = s + 1;
+    }
+  } else if (g_ascii_tolower (s[0]) == 'l') {
+    type = GST_PROPS_LIST_TYPE;
+    if (g_ascii_tolower (s[1]) == 'i' && g_ascii_tolower (s[2]) == 's' &&
+        g_ascii_tolower (s[3]) == 't') {
+      check = s + 4;
+    } else {
+      check = s + 1;
+    }
+  }
+  while (g_ascii_isspace(*check)) check++;
+  if (*check != '=') {
+    if (has_type) goto error;
+    type = GST_PROPS_INVALID_TYPE;
+    check = s;
+  } else {
+    check++;
+    while (g_ascii_isspace(*check)) check++;
+  }
+  /* ok. Now type is GST_PROPS_INVALID_TYPE for guessing or the selected type.
+     check points to the string containing the contents. s still is the beginning
+     of the string */
+  if (type == GST_PROPS_INVALID_TYPE || type == GST_PROPS_INT_TYPE || type == GST_PROPS_FOURCC_TYPE) {
+    glong l;
+    l = strtol (check, &end, 0);
+    while (g_ascii_isspace (*end)) end++;
+    if (*end == '\0' || *end == ',' || *end == ';' || *end == ')' || *end == ']') {
+      *after = end;
+      entry = gst_props_alloc_entry ();
+      if (type == GST_PROPS_FOURCC_TYPE) {
+        entry->propstype = GST_PROPS_FOURCC_TYPE;
+        entry->data.fourcc_data = l;
+      } else {
+        entry->propstype = GST_PROPS_INT_TYPE;
+        entry->data.int_data = l;
+      }
+      return entry;
+    }
+  }
+  if (type == GST_PROPS_INVALID_TYPE || type == GST_PROPS_FLOAT_TYPE) {
+    gdouble d;
+    d = strtod (check, &end);
+    while (g_ascii_isspace (*end)) end++;
+    if (*end == '\0' || *end == ',' || *end == ';' || *end == ')' || *end == ']') {
+      *after = end;
+      entry = gst_props_alloc_entry ();
+      entry->propstype = GST_PROPS_FLOAT_TYPE;
+      entry->data.float_data = d;
+      return entry;
+    }
+  }
+  if ((type == GST_PROPS_INVALID_TYPE || type == GST_PROPS_FLOAT_TYPE ||
+       type == GST_PROPS_INT_TYPE) && *check == '[') {
+    GstPropsEntry *min, *max;
+    check++;
+    if (g_ascii_isspace (*check)) check++;
+    min = gst_props_entry_from_string_no_name (check, &check, FALSE);
+    if (!min) goto error;
+    if (*check++ != ',') goto error;
+    if (g_ascii_isspace (*check)) check++;
+    max = gst_props_entry_from_string_no_name (check, &check, FALSE);
+    if (!max || *check++ != ']') {
+      gst_props_entry_destroy (min);
+      goto error;
+    }
+    if (g_ascii_isspace (*check)) check++;
+    entry = gst_props_alloc_entry ();
+    entry->propstype = GST_PROPS_FLOAT_RANGE_TYPE;
+    if (min->propstype == GST_PROPS_INT_TYPE && max->propstype == GST_PROPS_INT_TYPE && type != GST_PROPS_FLOAT_TYPE) {
+      entry->propstype = GST_PROPS_INT_RANGE_TYPE;
+      entry->data.int_range_data.min = min->data.int_data;
+      entry->data.int_range_data.max = max->data.int_data;
+    } else if (min->propstype == GST_PROPS_INT_TYPE && max->propstype == GST_PROPS_INT_TYPE && type == GST_PROPS_FLOAT_TYPE) {
+      entry->data.float_range_data.min = min->data.int_data;
+      entry->data.float_range_data.max = max->data.int_data;
+    } else if (min->propstype == GST_PROPS_INT_TYPE && max->propstype == GST_PROPS_FLOAT_TYPE && type != GST_PROPS_INT_TYPE) {
+      entry->data.float_range_data.min = min->data.int_data;
+      entry->data.float_range_data.max = max->data.float_data;
+    } else if (min->propstype == GST_PROPS_FLOAT_TYPE && max->propstype == GST_PROPS_INT_TYPE && type != GST_PROPS_INT_TYPE) {
+      entry->data.float_range_data.min = min->data.float_data;
+      entry->data.float_range_data.max = max->data.int_data;
+    } else if (min->propstype == GST_PROPS_FLOAT_TYPE && max->propstype == GST_PROPS_FLOAT_TYPE && type != GST_PROPS_INT_TYPE) {
+      entry->data.float_range_data.min = min->data.float_data;
+      entry->data.float_range_data.max = max->data.float_data;
+    } else {
+      gst_props_entry_destroy (min);
+      gst_props_entry_destroy (max);
+      gst_props_entry_destroy (entry);
+      goto error;
+    }
+    gst_props_entry_destroy (min);
+    gst_props_entry_destroy (max);
+    *after = check;
+    return entry;    
+  }
+  if ((type == GST_PROPS_INVALID_TYPE || type == GST_PROPS_LIST_TYPE) && *check == '(') {
+    GstPropsEntry *next;
+    check++;
+    entry = gst_props_alloc_entry ();
+    entry->propstype = GST_PROPS_LIST_TYPE;
+    entry->data.list_data.entries = NULL;
+    do {
+      while (g_ascii_isspace (*check)) check++;
+      next = gst_props_entry_from_string_no_name (check, &check, FALSE);
+      /* use g_list_append to keep original order */
+      entry->data.list_data.entries = g_list_append (entry->data.list_data.entries, next);
+      if (*check == ')') break;
+      if (*check++ != ',') goto error;
+    } while (TRUE);
+    *check++;
+    while (g_ascii_isspace (*check)) check++;    
+    *after = check;
+    return entry;    
+  }
+  if (!__gst_props_parse_string (check, &next, &end))
+    goto error;
+  if (next == end) {
+    org = *end;
+    *end = '\0';
+  }
+  if (type == GST_PROPS_INVALID_TYPE || type == GST_PROPS_BOOLEAN_TYPE) {
+    if (!(g_ascii_strcasecmp (check, "true") &&
+          g_ascii_strcasecmp (check, "yes"))) {
+      entry = gst_props_alloc_entry ();
+      entry->propstype = GST_PROPS_BOOLEAN_TYPE;
+      entry->data.bool_data = TRUE;
+      goto string_out;
+    }
+    if (!(g_ascii_strcasecmp (check, "false") &&
+          g_ascii_strcasecmp (check, "no"))) {
+      entry = gst_props_alloc_entry ();
+      entry->propstype = GST_PROPS_BOOLEAN_TYPE;
+      entry->data.bool_data = FALSE;
+      goto string_out;
+    }
+  }
+  if (type == GST_PROPS_FOURCC_TYPE) {
+    gint l = strlen (check);
+    entry = gst_props_alloc_entry ();
+    entry->propstype = GST_PROPS_FOURCC_TYPE;
+    entry->data.fourcc_data = GST_MAKE_FOURCC(l > 0 ? check[0] : ' ',
+					      l > 1 ? check[1] : ' ',
+					      l > 2 ? check[2] : ' ',
+					      l > 3 ? check[3] : ' ');
+    goto string_out;
+  }
+  if (type == GST_PROPS_INVALID_TYPE || type == GST_PROPS_STRING_TYPE) {
+    entry = gst_props_alloc_entry ();
+    entry->propstype = GST_PROPS_STRING_TYPE;
+    entry->data.string_data.string = g_strdup (check);
+    goto string_out;
+  }
+error:
+  return NULL;
+
+string_out:
+  *next = org;
+  *after = end;
+  return entry;
+}
+static GstPropsEntry *
+gst_props_entry_from_string (gchar *str, gchar **after)
+{
+  /* NAME[:TYPE]=VALUE */
+  gchar *name;
+  gchar *s, *del;
+  gboolean has_type = FALSE;
+  GstPropsEntry *entry;
+
+  name = s = str;
+  while (g_ascii_isalnum (*s)) s++;
+  del = s;
+  while (g_ascii_isspace (*s)) s++;
+  if (!(*s == '=' || *s == ':')) return NULL;  
+  if (*s == ':') has_type = TRUE;
+  s++;
+  while (g_ascii_isspace (*s)) s++;
+  *del = '\0';
+  
+  entry = gst_props_entry_from_string_no_name (s, &s, has_type);
+  if (entry) {
+    entry->propid = g_quark_from_string (name);
+    *after = s;
+  }
+  
+  return entry;
+}
+GstProps *
+__gst_props_from_string_func (gchar *s, gchar **end, gboolean caps)
+{
+  GstProps *props;
+  GstPropsEntry *entry;
+
+  props = gst_props_empty_new ();
+  for (;;) {
+    entry = gst_props_entry_from_string (s, &s);
+    if (!entry) goto error;
+    gst_props_add_entry (props, entry);
+    while (g_ascii_isspace (*s)) s++;
+    if ((*s == '\0') || /* end */
+        (caps && (*s == ';'))) /* another caps */
+      break;
+    if (!(*s == ',')) goto error;
+    s++;
+    while (g_ascii_isspace (*s)) s++;    
+  }
+
+  *end = s;
+  return props;  
+error:
+  gst_props_unref (props);
+  return NULL;
+}
+/**
+ * gst_props_from_string:
+ * str: the str to convert into props
+ *
+ * Tries to convert a string into a #GstProps. This is mainly intended for
+ * debugging purposes. The returned props are floating.
+ *
+ * Returns: A floating props or NULL if the string couldn't be converted
+ */
+GstProps *
+gst_props_from_string (gchar *str)
+{
+  /**
+   * format to parse is ENTRY[,ENTRY ...]
+   * ENTRY is NAME[:TYPE]=VALUE
+   * NAME is alphanumeric
+   * TYPE is a list of values
+   * VALUE is evil, see gst_props_entry_to_string
+   */
+  GstProps *props;
+  gchar *temp, *org;
+
+  g_return_val_if_fail (str != NULL, NULL);
+
+  org = g_strdup (str);
+  props = __gst_props_from_string_func (org, &temp, FALSE);
+  g_free (org);
+
+  return props;
 }
 
 void
@@ -145,9 +571,8 @@ _gst_props_initialize (void)
 		                       (GBoxedCopyFunc) gst_props_ref,
 		                       (GBoxedFreeFunc) gst_props_unref);
 
-  g_value_register_transform_func (_gst_props_type,
-                                   G_TYPE_STRING,
-                                   transform_func);
+  g_value_register_transform_func (_gst_props_type, G_TYPE_STRING,
+                                   gst_props_transform_to_string);
 
   _gst_props_entry_type = g_boxed_type_register_static ("GstPropsEntry",
 		  (GBoxedCopyFunc) gst_props_entry_copy,
@@ -2289,4 +2714,3 @@ gst_props_load_thyself (xmlNodePtr parent)
   return props;
 }
 #endif /* GST_DISABLE_LOADSAVE_REGISTRY */
-

@@ -20,7 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 
 #include "gstcaps.h"
@@ -39,37 +38,131 @@ static GstMemChunk *_gst_caps_chunk;
 
 GType _gst_caps_type;
 
+extern GstProps *	__gst_props_from_string_func		(gchar *s, gchar **end, gboolean caps);
+extern gboolean		__gst_props_parse_string		(gchar *r, gchar **end, gchar **next);
+
+/* transform functions */
+static void		gst_caps_transform_to_string		(const GValue *src_value, GValue *dest_value);
+
 static void
-transform_func (const GValue *src_value,
-		GValue *dest_value)
+gst_caps_transform_to_string (const GValue *src_value, GValue *dest_value)
 {
   GstCaps *caps = g_value_peek_pointer (src_value);
-  GString *result = g_string_new (""); 
+  dest_value->data[0].v_pointer = gst_caps_to_string (caps);
+}
+/**
+ * gst_caps_to_string:
+ * caps: the caps to convert to a string
+ *
+ * Converts a #GstCaps into a readable format. This is mainly intended for
+ * debugging purposes. You have to free the string using g_free.
+ * A string converted with #gst_caps_to_string can always be converted back to
+ * its caps representation using #gst_caps_from_string.
+ *
+ * Returns: A newly allocated string
+ */
+gchar *
+gst_caps_to_string (GstCaps *caps)
+{
+  gchar *ret;
+  GString *result;
 
-  g_string_append_printf (result, "(GstCaps *) ");
-		  
+  g_return_val_if_fail (caps != NULL, NULL);
+
+  result = g_string_new ("");
+
   while (caps) {
     gchar *props;
     GValue value = { 0, }; /* the important thing is that value.type = 0 */
     
-    g_string_append_printf (result,
-	          "{ %s; ", gst_caps_get_mime (caps));
+    g_string_append_printf (result, "\"%s\"", gst_caps_get_mime (caps));
 
-    g_value_init (&value, GST_TYPE_PROPS);
-    g_value_set_boxed  (&value, caps->properties);
-    props = g_strdup_value_contents (&value);
+    if (caps->properties) {
+      g_value_init (&value, GST_TYPE_PROPS);
+      g_value_set_boxed  (&value, caps->properties);
+      props = g_strdup_value_contents (&value);
 
-    g_value_unset (&value);
-    g_string_append (result, props);
-    g_free (props);
+      g_value_unset (&value);
+      g_string_append (result, ", ");
+      g_string_append (result, props);
+      g_free (props);
+    }
 
     caps = caps->next;
-    g_string_append_printf (result, " }%s", (caps ? ", " : ""));
+    if (caps)
+      g_string_append (result, "; ");
   }
-  dest_value->data[0].v_pointer = result->str;
+  ret = result->str;
   g_string_free (result, FALSE);
+  return ret;
 }
 
+static GstCaps *
+gst_caps_from_string_func (gchar *r)
+{
+  gchar *mime, *w;
+  GstCaps *caps, *append;
+  GstProps *props = NULL;
+
+  mime = r;
+  if (!__gst_props_parse_string (r, &w, &r)) goto error;
+    
+  if (*r == '\0') goto found;
+  if (*r++ != ',') goto error;
+  while (g_ascii_isspace (*r)) r++;
+    
+  props = __gst_props_from_string_func (r, &r, TRUE);
+  if (!props) goto error;
+
+found:
+  *w = '\0';
+  if (*mime == '\0') {
+    gst_props_unref (props);
+    goto error;
+  }  
+  caps = gst_caps_new ("parsed caps", mime, props);
+  if (*r == '\0')
+    return caps;
+  
+  while (g_ascii_isspace (*r)) r++;
+  if (*r == ';') {
+    r++;
+    while (g_ascii_isspace (*r)) r++;
+    append = gst_caps_from_string_func (r);
+    if (!append) {
+      gst_caps_unref (caps);
+      goto error;
+    }
+    gst_caps_append (caps, append);
+  }
+
+  return caps;
+
+error:
+  return NULL;
+}
+/**
+ * gst_caps_from_string:
+ * str: the str to convert into caps
+ *
+ * Tries to convert a string into a #GstCaps. This is mainly intended for
+ * debugging purposes. The returned caps are floating.
+ *
+ * Returns: A floating caps or NULL if the string couldn't be converted
+ */
+GstCaps *
+gst_caps_from_string (gchar *str)
+{
+  gchar *s;
+  GstCaps *caps;
+  g_return_val_if_fail (str != NULL, NULL);  
+ 
+  s = g_strdup (str);
+  caps = gst_caps_from_string_func (s);
+  g_free (s);
+
+  return caps;
+}
 void
 _gst_caps_initialize (void)
 {
@@ -81,9 +174,8 @@ _gst_caps_initialize (void)
                                        (GBoxedCopyFunc) gst_caps_ref,
                                        (GBoxedFreeFunc) gst_caps_unref);
 
-  g_value_register_transform_func (_gst_caps_type,
-		                   G_TYPE_STRING,
-				   transform_func);
+  g_value_register_transform_func (_gst_caps_type, G_TYPE_STRING,
+				   gst_caps_transform_to_string);
 
 #ifndef GST_DISABLE_TRACE
   _gst_caps_trace = gst_alloc_trace_register (GST_CAPS_TRACE_NAME);

@@ -192,6 +192,10 @@ xmlNodePtr      gst_caps_save_thyself			(GstCaps *caps, xmlNodePtr parent);
 GstCaps*	gst_caps_load_thyself			(xmlNodePtr parent);
 #endif
 
+/* for debugging purposes */
+gchar *		gst_caps_to_string			(GstCaps *caps);
+GstCaps *	gst_caps_from_string			(gchar *str);
+
 G_END_DECLS
 
 #endif /* __GST_CAPS_H__ */
