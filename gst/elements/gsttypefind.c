@@ -221,12 +221,12 @@ gst_type_find_element_dispose (GObject *object)
 {
   GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (object);
 
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+
   if (typefind->store) {
     g_object_unref (typefind->store);
     typefind->store = NULL;
   }
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 static void
 gst_type_find_element_set_property (GObject *object, guint prop_id, 
