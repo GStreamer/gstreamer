@@ -6,4 +6,4 @@ libgstjpeg_la_CFLAGS = $(GST_CFLAGS)
 libgstjpeg_la_LIBADD = $(JPEG_LIBS) 
 libgstjpeg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstjpegdec.h gstjpegenc.h gstsmokeenc.h gstsmokedec.h somecodec.h
+noinst_HEADERS = gstjpegdec.h gstjpegenc.h gstsmokeenc.h gstsmokedec.h smokecodec.h
