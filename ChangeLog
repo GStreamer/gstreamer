@@ -1,5 +1,11 @@
 2004-11-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_push):
+	  Fix position for discont if we're close as well. Nitpicking, but
+	  saves a few milliseconds of extra waiting or skipping.
+
+2004-11-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_factory_filter):
 	  We sometimes need parsers for playback, so add those too.
 
