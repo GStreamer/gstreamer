@@ -55,8 +55,12 @@ struct _GstDV1394Src {
   gint skip;
   gboolean drop_incomplete;
 
-  int numcards,numports;
-  int card,port,channel;
+  gint num_ports;
+  gint port;
+  gint channel;
+  octlet_t guid;
+  gint avc_node;
+  gboolean use_avc;
 
   struct raw1394_portinfo pinfo[16];
   raw1394handle_t handle;

@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *               <2000> Daniel Fischer <dan@f3c.com>
+ *               <2004> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,6 +24,10 @@
 #endif
 #include <gst/gst.h>
 #include <string.h>
+#include <libavc1394/avc1394.h>
+#include <libavc1394/avc1394_vcr.h>
+#include <libavc1394/rom1394.h>
+
 #include "gstdv1394src.h"
 
 #define N_BUFFERS_IN_POOL 3
@@ -37,12 +42,24 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_PORT		-1
+#define DEFAULT_CHANNEL		63
+#define DEFAULT_CONSECUTIVE	1
+#define DEFAULT_SKIP		0
+#define DEFAULT_DROP_INCOMPLETE	TRUE
+#define DEFAULT_USE_AVC		TRUE
+#define DEFAULT_GUID		0
+
 enum
 {
   ARG_0,
+  ARG_PORT,
+  ARG_CHANNEL,
   ARG_CONSECUTIVE,
   ARG_SKIP,
-  ARG_DROP_INCOMPLETE
+  ARG_DROP_INCOMPLETE,
+  ARG_USE_AVC,
+  ARG_GUID
 };
 
 static GstElementDetails gst_dv1394src_details =
@@ -50,7 +67,7 @@ GST_ELEMENT_DETAILS ("Firewire (1394) DV Source",
     "Source/Video",
     "Source for DV video data from firewire port",
     "Erik Walthinsen <omega@temple-baptist.com>\n"
-    "Daniel Fischer <dan@f3c.com>");
+    "Daniel Fischer <dan@f3c.com>\n" "Wim Taymans <wim@fluendo.com>");
 
 #if 0
 static GstPadTemplate *
@@ -132,16 +149,31 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
+      g_param_spec_int ("port", "Port", "Port number (-1 automatic)",
+          -1, 16, DEFAULT_PORT, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CHANNEL,
+      g_param_spec_int ("channel", "Channel", "Channel number for listening",
+          0, 64, DEFAULT_CHANNEL, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CONSECUTIVE,
       g_param_spec_int ("consecutive", "consecutive frames",
-          "send n consecutive frames after skipping", 1, G_MAXINT, 1,
-          G_PARAM_READWRITE));
+          "send n consecutive frames after skipping", 1, G_MAXINT,
+          DEFAULT_CONSECUTIVE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP,
-      g_param_spec_int ("skip", "skip frames", "skip n frames", 0, G_MAXINT, 1,
-          G_PARAM_READWRITE));
+      g_param_spec_int ("skip", "skip frames", "skip n frames",
+          0, G_MAXINT, DEFAULT_SKIP, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DROP_INCOMPLETE,
       g_param_spec_boolean ("drop_incomplete", "drop_incomplete",
-          "drop incomplete frames", TRUE, G_PARAM_READWRITE));
+          "drop incomplete frames", DEFAULT_DROP_INCOMPLETE,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_USE_AVC,
+      g_param_spec_boolean ("use-avc", "Use AV/C", "Use AV/C VTR control",
+          DEFAULT_USE_AVC, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GUID,
+      g_param_spec_uint64 ("guid", "GUID",
+          "select one of multiple DV devices by its GUID. use a hexadecimal "
+          "like 0xhhhhhhhhhhhhhhhh. (0 = no guid)", 0, G_MAXUINT64,
+          DEFAULT_GUID, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -159,13 +191,14 @@ gst_dv1394src_init (GstDV1394Src * dv1394src)
   gst_pad_use_explicit_caps (dv1394src->srcpad);
   gst_element_add_pad (GST_ELEMENT (dv1394src), dv1394src->srcpad);
 
-  dv1394src->card = 0;
-  dv1394src->port = 0;
-  dv1394src->channel = 63;
+  dv1394src->port = DEFAULT_PORT;
+  dv1394src->channel = DEFAULT_CHANNEL;
 
-  dv1394src->consecutive = 1;
-  dv1394src->skip = 0;
-  dv1394src->drop_incomplete = TRUE;
+  dv1394src->consecutive = DEFAULT_CONSECUTIVE;
+  dv1394src->skip = DEFAULT_SKIP;
+  dv1394src->drop_incomplete = DEFAULT_DROP_INCOMPLETE;
+  dv1394src->use_avc = DEFAULT_USE_AVC;
+  dv1394src->guid = DEFAULT_GUID;
 
   /* initialized when first header received */
   dv1394src->frameSize = 0;
@@ -186,6 +219,12 @@ gst_dv1394src_set_property (GObject * object, guint prop_id,
   filter = GST_DV1394SRC (object);
 
   switch (prop_id) {
+    case ARG_PORT:
+      filter->port = g_value_get_int (value);
+      break;
+    case ARG_CHANNEL:
+      filter->channel = g_value_get_int (value);
+      break;
     case ARG_SKIP:
       filter->skip = g_value_get_int (value);
       break;
@@ -194,6 +233,12 @@ gst_dv1394src_set_property (GObject * object, guint prop_id,
       break;
     case ARG_DROP_INCOMPLETE:
       filter->drop_incomplete = g_value_get_boolean (value);
+      break;
+    case ARG_USE_AVC:
+      filter->use_avc = g_value_get_boolean (value);
+      break;
+    case ARG_GUID:
+      filter->guid = g_value_get_uint64 (value);
       break;
     default:
       break;
@@ -211,6 +256,12 @@ gst_dv1394src_get_property (GObject * object, guint prop_id, GValue * value,
   filter = GST_DV1394SRC (object);
 
   switch (prop_id) {
+    case ARG_PORT:
+      g_value_set_int (value, filter->port);
+      break;
+    case ARG_CHANNEL:
+      g_value_set_int (value, filter->channel);
+      break;
     case ARG_SKIP:
       g_value_set_int (value, filter->skip);
       break;
@@ -219,6 +270,12 @@ gst_dv1394src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_DROP_INCOMPLETE:
       g_value_set_boolean (value, filter->drop_incomplete);
+      break;
+    case ARG_USE_AVC:
+      g_value_set_boolean (value, filter->use_avc);
+      break;
+    case ARG_GUID:
+      g_value_set_uint64 (value, filter->guid);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -323,7 +380,7 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
                   dif_block) * 80, p, 480);
           break;
 
-        default:               /* we can´t handle any other data */
+        default:               /* we can't handle any other data */
           break;
       }
       dv1394src->bytesInFrame += 480;
@@ -353,6 +410,73 @@ gst_dv1394src_get (GstPad * pad)
   return GST_DATA (dv1394src->buf);
 }
 
+static int
+gst_dv1394src_discover_avc_node (GstDV1394Src * src)
+{
+  int node = -1;
+  int i, j = 0;
+  int m = src->num_ports;
+
+  if (src->port >= 0) {
+    /* search on explicit port */
+    j = src->port;
+    m = j + 1;
+  }
+
+  /* loop over all our ports */
+  for (; j < m && node == -1; j++) {
+    raw1394handle_t handle;
+    gint n_ports;
+    struct raw1394_portinfo pinf[16];
+
+    /* open the port */
+    handle = raw1394_new_handle ();
+    if (!handle) {
+      g_warning ("raw1394 - failed to get handle: %s.\n", strerror (errno));
+      continue;
+    }
+    if ((n_ports = raw1394_get_port_info (handle, pinf, 16)) < 0) {
+      g_warning ("raw1394 - failed to get port info: %s.\n", strerror (errno));
+      goto next;
+    }
+
+    /* tell raw1394 which host adapter to use */
+    if (raw1394_set_port (handle, j) < 0) {
+      g_warning ("raw1394 - failed to set set port: %s.\n", strerror (errno));
+      goto next;
+    }
+
+    /* now loop over all the nodes */
+    for (i = 0; i < raw1394_get_nodecount (handle); i++) {
+      /* are we looking for an explicit GUID */
+      if (src->guid != 0) {
+        if (src->guid == rom1394_get_guid (handle, i)) {
+          node = i;
+          src->port = j;
+          break;
+        }
+      } else {
+        rom1394_directory rom_dir;
+
+        /* select first AV/C Tape Reccorder Player node */
+        if (rom1394_get_directory (handle, i, &rom_dir) < 0) {
+          g_warning ("error reading config rom directory for node %d\n", i);
+          continue;
+        }
+        if ((rom1394_get_node_type (&rom_dir) == ROM1394_NODE_TYPE_AVC) &&
+            avc1394_check_subunit_type (handle, i, AVC1394_SUBUNIT_TYPE_VCR)) {
+          node = i;
+          src->port = j;
+          break;
+        }
+      }
+    }
+  next:
+    raw1394_destroy_handle (handle);
+  }
+  return node;
+}
+
 static GstElementStateReturn
 gst_dv1394src_change_state (GstElement * element)
 {
@@ -363,34 +487,41 @@ gst_dv1394src_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
+      /* create a handle */
       if ((dv1394src->handle = raw1394_new_handle ()) == NULL) {
         GST_ELEMENT_ERROR (dv1394src, RESOURCE, NOT_FOUND, (NULL),
             ("can't get raw1394 handle"));
         return GST_STATE_FAILURE;
       }
+      /* set this plugin as the user data */
       raw1394_set_userdata (dv1394src->handle, dv1394src);
-      dv1394src->numcards =
+      /* get number of ports */
+      dv1394src->num_ports =
           raw1394_get_port_info (dv1394src->handle, dv1394src->pinfo, 16);
-      if (dv1394src->numcards == 0) {
+      if (dv1394src->num_ports == 0) {
         GST_ELEMENT_ERROR (dv1394src, RESOURCE, NOT_FOUND, (NULL),
-            ("no cards available for raw1394"));
+            ("no ports available for raw1394"));
         return GST_STATE_FAILURE;
       }
-      if (dv1394src->pinfo[dv1394src->card].nodes <= 1) {
-        GST_ELEMENT_ERROR (dv1394src, RESOURCE, NOT_FOUND, (NULL),
-            ("there are no nodes on the 1394 bus"));
-        return GST_STATE_FAILURE;
+
+      if (dv1394src->use_avc || dv1394src->port == -1) {
+        /* discover AVC and optionally the port */
+        dv1394src->avc_node = gst_dv1394src_discover_avc_node (dv1394src);
       }
+
+      /* configure our port now */
       if (raw1394_set_port (dv1394src->handle, dv1394src->port) < 0) {
         GST_ELEMENT_ERROR (dv1394src, RESOURCE, SETTINGS, (NULL),
             ("can't set 1394 port %d", dv1394src->port));
         return GST_STATE_FAILURE;
       }
+      /* set the callbacks */
       raw1394_set_iso_handler (dv1394src->handle, dv1394src->channel,
           gst_dv1394src_iso_receive);
       raw1394_set_bus_reset_handler (dv1394src->handle,
           gst_dv1394src_bus_reset);
       dv1394src->started = FALSE;
+
       GST_DEBUG_OBJECT (dv1394src, "successfully opened up 1394 connection");
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -399,11 +530,31 @@ gst_dv1394src_change_state (GstElement * element)
             ("can't start 1394 iso receive"));
         return GST_STATE_FAILURE;
       }
+      if (dv1394src->use_avc) {
+        /* start the VCR */
+        if (!avc1394_vcr_is_recording (dv1394src->handle, dv1394src->avc_node)
+            && avc1394_vcr_is_playing (dv1394src->handle, dv1394src->avc_node)
+            != AVC1394_VCR_OPERAND_PLAY_FORWARD) {
+          avc1394_vcr_play (dv1394src->handle, dv1394src->avc_node);
+        }
+      }
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       raw1394_stop_iso_rcv (dv1394src->handle, dv1394src->channel);
+      if (dv1394src->use_avc) {
+        /* pause the VCR */
+        if (!avc1394_vcr_is_recording (dv1394src->handle, dv1394src->avc_node)
+            && (avc1394_vcr_is_playing (dv1394src->handle, dv1394src->avc_node)
+                != AVC1394_VCR_OPERAND_PLAY_FORWARD_PAUSE)) {
+          avc1394_vcr_pause (dv1394src->handle, dv1394src->avc_node);
+        }
+      }
       break;
     case GST_STATE_READY_TO_NULL:
+      if (dv1394src->use_avc) {
+        /* stop the VCR */
+        avc1394_vcr_stop (dv1394src->handle, dv1394src->avc_node);
+      }
       raw1394_destroy_handle (dv1394src->handle);
       break;
     default:
