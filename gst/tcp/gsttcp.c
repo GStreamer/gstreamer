@@ -147,7 +147,7 @@ gst_tcp_gdp_read_header (GstElement * this, int socket)
 
   GST_DEBUG_OBJECT (this, "Reading %d bytes for buffer packet header",
       readsize);
-  ret = read (socket, header, readsize);
+  ret = gst_tcp_socket_read (socket, header, readsize);
   /* if we read 0 bytes, and we're blocking, we hit eos */
   if (ret == 0) {
     GST_DEBUG ("blocking read returns 0, EOS");
@@ -197,7 +197,7 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket)
   readsize = header_length;
 
   GST_LOG_OBJECT (this, "Reading %d bytes for caps packet header", readsize);
-  ret = read (socket, header, readsize);
+  ret = gst_tcp_socket_read (socket, header, readsize);
   if (ret < 0) {
     g_free (header);
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
@@ -215,7 +215,7 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket)
   readsize = gst_dp_header_payload_length (header);
   payload = g_malloc (readsize);
   GST_LOG_OBJECT (this, "Reading %d bytes for caps packet payload", readsize);
-  ret = read (socket, payload, readsize);
+  ret = gst_tcp_socket_read (socket, payload, readsize);
 
   if (ret < 0) {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
