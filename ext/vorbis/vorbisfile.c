@@ -44,13 +44,10 @@ struct _VorbisFile {
   GstByteStream *bs;
 
   OggVorbis_File vf;
-  gint current_section;
+  gint current_link;
 
   gboolean restart;
   gboolean need_discont;
-  gboolean get_metadata;		/* TRUE if we request metadata */
-  gboolean have_metadata;	/* TRUE if we already have this */
-  gboolean have_metadata_technical;	/* TRUE if we already have this */
   gboolean eos;
   gboolean seek_pending;
   gint64 seek_value;
@@ -58,22 +55,8 @@ struct _VorbisFile {
   gboolean seek_accurate;
 
   gboolean may_eos;
-  int16_t convsize;
-  guint64 total_out;
   guint64 total_bytes;
   guint64 offset;
-
-  int link;			/* stream id of logical bitstream */
-  int streams;			/* number of streams in physical bitstream */
-  int version;
-  int channels;
-  long samplerate;
-  long bitrate;
-
-  long bitrate_upper;
-  long bitrate_nominal;
-  long bitrate_lower;
-  /* long bitrate_window; 	not set in 1.0 */
 
   GstCaps *metadata;
 };
@@ -81,8 +64,6 @@ struct _VorbisFile {
 struct _VorbisFileClass {
   GstElementClass parent_class;
 
-    /* signals */
-    void (*have_metadata) (GstElement *element);
 };
 
 GType vorbisfile_get_type (void);
@@ -105,13 +86,6 @@ GstElementDetails vorbisfile_details =
 /* VorbisFile signals and args */
 enum
 {
-  /* FILL ME */
-  SIGNAL_HAVE_METADATA,		/* FIXME: maybe separate out in
-				    - descriptive
-				    - technical
-				      - easy
-				      - hard (expensive)
-				*/
   LAST_SIGNAL
 };
 
@@ -119,17 +93,6 @@ enum
 {
   ARG_0,
   ARG_METADATA,
-  ARG_VENDOR,
-  ARG_VERSION,
-  ARG_CHANNELS,
-  ARG_RATE,
-  ARG_STREAMS,
-  ARG_LINK,
-  ARG_BITRATE,
-  ARG_BITRATE_UPPER,
-  ARG_BITRATE_NOMINAL,
-  ARG_BITRATE_LOWER,
-  ARG_BITRATE_WINDOW,
 };
 
 static void
@@ -145,6 +108,11 @@ static gboolean gst_vorbisfile_src_convert 	(GstPad *pad,
 		                                 GstFormat src_format, 
 						 gint64 src_value,
 		           			 GstFormat *dest_format, 
+						 gint64 *dest_value);
+static gboolean gst_vorbisfile_sink_convert 	(GstPad *pad, 
+		            			 GstFormat src_format, 
+						 gint64 src_value,
+		            			 GstFormat *dest_format, 
 						 gint64 *dest_value);
 static const GstPadQueryType*
 		gst_vorbisfile_get_query_types 	(GstPad *pad);
@@ -169,7 +137,9 @@ static void 	gst_vorbisfile_set_property 	(GObject *object,
 static void 	gst_vorbisfile_loop 		(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
-static guint gst_vorbisfile_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_vorbisfile_signals[LAST_SIGNAL] = { 0 };
+
+static GstFormat logical_stream_format;
 
 GType
 vorbisfile_get_type (void)
@@ -186,6 +156,8 @@ vorbisfile_get_type (void)
 
     vorbisfile_type = g_type_register_static (GST_TYPE_ELEMENT, "VorbisFile", 
 		                              &vorbisfile_info, 0);
+
+    logical_stream_format = gst_format_register ("logical_stream", "The logical stream");
   }
   return vorbisfile_type;
 }
@@ -202,54 +174,11 @@ gst_vorbisfile_class_init (VorbisFileClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (gobject_class, ARG_METADATA,
-    g_param_spec_boxed ("metadata", "Metadata", "Metadata",
+    g_param_spec_boxed ("metadata", "Metadata", "(logical) Stream metadata",
                          GST_TYPE_CAPS, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_VENDOR,
-    g_param_spec_string ("vendor", "Vendor", 
-	                 "The vendor for this vorbis stream",
-                         "", G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_VERSION,
-    g_param_spec_int ("version", "Version", "The version",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_CHANNELS,
-    g_param_spec_int ("channels", "Channels", "The number of channels",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_STREAMS,
-    g_param_spec_int ("streams", "Streams", 
-	              "Number of logical bitstreams in the physical bitstream",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_LINK,
-    g_param_spec_int ("link", "Link", 
-	              "The link id of the current logical bitstream",
-                       -1, G_MAXINT, 0, G_PARAM_READWRITE));
-   g_object_class_install_property (gobject_class, ARG_RATE,
-    g_param_spec_int ("rate", "Rate", "The samplerate",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_BITRATE,
-    g_param_spec_int ("bitrate", "Bitrate", 
-	              "(average) bitrate in bits per second",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
-   g_object_class_install_property (gobject_class, ARG_BITRATE_UPPER,
-    g_param_spec_int ("bitrate_upper", "bitrate_upper", "bitrate_upper",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_BITRATE_NOMINAL,
-    g_param_spec_int ("bitrate_nominal", "bitrate_nominal", "bitrate_nominal",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_BITRATE_LOWER,
-    g_param_spec_int ("bitrate_lower", "bitrate_lower", "bitrate_lower",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_BITRATE_WINDOW,
-    g_param_spec_int ("bitrate_window", "bitrate_window", "bitrate_window",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
 
   gobject_class->get_property = gst_vorbisfile_get_property;
   gobject_class->set_property = gst_vorbisfile_set_property;
-
-  gst_vorbisfile_signals[SIGNAL_HAVE_METADATA] =
-    g_signal_new ("have_metadata", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-		  G_STRUCT_OFFSET (VorbisFileClass, have_metadata), 
-		  NULL, NULL, 
-		  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gstelement_class->change_state = gst_vorbisfile_change_state;
 }
@@ -260,7 +189,8 @@ gst_vorbisfile_init (VorbisFile * vorbisfile)
   vorbisfile->sinkpad = gst_pad_new_from_template (gst_vorbisdec_sink_template,
 		                                   "sink");
   gst_element_add_pad (GST_ELEMENT (vorbisfile), vorbisfile->sinkpad);
-  gst_pad_set_convert_function (vorbisfile->sinkpad, NULL);
+  gst_pad_set_formats_function (vorbisfile->sinkpad, gst_vorbisfile_get_formats);
+  gst_pad_set_convert_function (vorbisfile->sinkpad, gst_vorbisfile_sink_convert);
 
   gst_element_set_loop_function (GST_ELEMENT (vorbisfile), gst_vorbisfile_loop);
   vorbisfile->srcpad = gst_pad_new_from_template (gst_vorbisdec_src_template, 
@@ -275,15 +205,12 @@ gst_vorbisfile_init (VorbisFile * vorbisfile)
   gst_pad_set_event_function (vorbisfile->srcpad, gst_vorbisfile_src_event);
   gst_pad_set_convert_function (vorbisfile->srcpad, gst_vorbisfile_src_convert);
 
-  vorbisfile->convsize = 4096;
-  vorbisfile->total_out = 0;
   vorbisfile->total_bytes = 0;
   vorbisfile->offset = 0;
   vorbisfile->seek_pending = 0;
   vorbisfile->need_discont = FALSE;
-  vorbisfile->get_metadata = TRUE;
-  vorbisfile->link = -1;	/* by default, ask for entire bitstream */
   vorbisfile->metadata = NULL;
+  vorbisfile->current_link = -1;
 }
 
 /* the next four functions are the ov callbacks we provide to vorbisfile
@@ -422,18 +349,15 @@ ov_callbacks vorbisfile_ov_callbacks =
  * returns TRUE if caps were still valid or could be set,
  * FALSE if they couldn't be read somehow */
 static gboolean
-gst_vorbisfile_get_metadata (VorbisFile *vorbisfile)
+gst_vorbisfile_update_metadata (VorbisFile *vorbisfile, gint link)
 {
   OggVorbis_File *vf = &vorbisfile->vf;
-  char **ptr;
-  int link = vorbisfile->link;
+  gchar **ptr;
+  vorbis_info *vi;
+  vorbis_comment *vc;
   GstProps *props = NULL;
   GstPropsEntry *entry;
   gchar *name, *value;
-
-  /* check if we need to update or not */
-  if (vorbisfile->have_metadata)
-    return TRUE;
 
   /* clear old one */
   if (vorbisfile->metadata) {
@@ -441,63 +365,94 @@ gst_vorbisfile_get_metadata (VorbisFile *vorbisfile)
     vorbisfile->metadata = NULL;
   }
 
-  ptr = ov_comment (vf, link)->user_comments;
-  if (! (*ptr)) return FALSE;
+  /* create props to hold the key/value pairs */
   props = gst_props_empty_new ();
 
+  /* first, grab the comments */
+  vc = ov_comment (vf, link);
+  ptr = vc->user_comments;
   while (*ptr) {
     value = strstr (*ptr, "=");
     if (value) {
-      *value = 0;
-      ++value;
-      name = *ptr;
-      entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, value);
+      name = g_strndup (*ptr, value-*ptr);
+      entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, value+1);
       gst_props_add_entry (props, (GstPropsEntry *) entry);
     }
-    ++ptr;
+    ptr++;
   }
+  entry = gst_props_entry_new ("vendor", GST_PROPS_STRING_TYPE, vc->vendor);
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
 
-  vorbisfile->have_metadata = TRUE;
+  /* grab some more random properties */
+  vi = ov_info (vf, link);
+  entry = gst_props_entry_new ("version", GST_PROPS_INT_TYPE, vi->version);
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+  entry = gst_props_entry_new ("bitrate_upper", GST_PROPS_INT_TYPE, vi->bitrate_upper);
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+  entry = gst_props_entry_new ("bitrate_nominal", GST_PROPS_INT_TYPE, vi->bitrate_nominal);
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+  entry = gst_props_entry_new ("bitrate_lower", GST_PROPS_INT_TYPE, vi->bitrate_lower);
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+
+  /* some more properties */
+  entry = gst_props_entry_new ("serial", GST_PROPS_INT_TYPE, ov_serialnumber (vf, link));
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+  entry = gst_props_entry_new ("bitrate", GST_PROPS_INT_TYPE, ov_bitrate (vf, link));
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+
   vorbisfile->metadata = gst_caps_new ("vorbisfile_metadata",
 		                       "application/x-gst-metadata",
 		                       props);
+
+  g_object_notify (G_OBJECT (vorbisfile), "metadata");
+
   return TRUE;
 }
 
-/* retrieve techical metadata and update vorbisfile with it */
-/* FIXME: write me */
-/* FIXME: make this less more expensive; only update it if the
- * link id has changed */
-static void
-gst_vorbisfile_metadata_get_technical (VorbisFile *vorbisfile)
+static gboolean
+gst_vorbisfile_new_link (VorbisFile *vorbisfile, gint link)
 {
-  OggVorbis_File *vf = &vorbisfile->vf;
-  //vorbis_info *vi;
-  //int link = vorbisfile->link;
+  vorbis_info *vi = ov_info (&vorbisfile->vf, link);
 
-  /* check if we need to update or not */
-  if (vorbisfile->have_metadata_technical)
-    return;
+  /* new logical bitstream */
+  vorbisfile->current_link = link;
 
-  /* FIXME: clear old one */
+  gst_vorbisfile_update_metadata (vorbisfile, link);
+      
+  if (gst_pad_try_set_caps (vorbisfile->srcpad,
+                   GST_CAPS_NEW ("vorbisdec_src",
+                                   "audio/raw",    
+                                     "format",     GST_PROPS_STRING ("int"),
+                                     "law",        GST_PROPS_INT (0),
+                                     "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+                                     "signed",     GST_PROPS_BOOLEAN (TRUE),
+                                     "width",      GST_PROPS_INT (16),
+                                     "depth",      GST_PROPS_INT (16),
+                                     "rate",       GST_PROPS_INT (vi->rate),
+                                     "channels",   GST_PROPS_INT (vi->channels)
+                                )) <= 0) 
+  {
+     return FALSE;
+  }
 
-  /* get number of streams */
-  vorbisfile->streams = ov_streams (vf);
+  return TRUE;
 }
+
 static void
 gst_vorbisfile_loop (GstElement *element)
 {
   VorbisFile *vorbisfile = GST_VORBISFILE (element);
-  OggVorbis_File *vf = &vorbisfile->vf;
   GstBuffer *outbuf;
   long ret;
   GstClockTime time;
   gint64 samples;
+  gint link;
 
   /* this function needs to go first since you don't want to be messing
    * with an unset vf ;) */
   if (vorbisfile->restart) {
-    vorbisfile->current_section = 0;
+    gint i;
+
     vorbisfile->offset = 0;
     vorbisfile->total_bytes = 0;
     vorbisfile->may_eos = FALSE;
@@ -512,57 +467,22 @@ gst_vorbisfile_loop (GstElement *element)
     }
     vorbisfile->need_discont = TRUE;
     vorbisfile->restart = FALSE;
+    vorbisfile->current_link = -1;
+
+    for (i = 0; i < vorbisfile->vf.links; i++) {
+      g_print ("%lld %lld\n", vorbisfile->vf.offsets[i],
+		      vorbisfile->vf.dataoffsets[i]);
+    }
   }
 
-  /* get relevant data if asked for */
-  if (vorbisfile->get_metadata) {
-    vorbis_info *vi;
-    double time_total;
-    ogg_int64_t raw_total;
-    int link = vorbisfile->link;
-
-    if (gst_vorbisfile_get_metadata (vorbisfile))
-      g_object_notify (G_OBJECT (vorbisfile), "metadata");
-
-
-    /* get stream metadata */
-    /* FIXME: due to a compiler bug, the actual vorbis bitrate function 
-     * doesn't return a good number ... */
-    vorbisfile->bitrate = ov_bitrate (vf, link);
-    if (vorbisfile->bitrate == OV_EINVAL)
-      g_warning ("OV_EINVAL: vf not open\n");
-    if (vorbisfile->bitrate == OV_FALSE)
-      g_warning ("OV_FALSE: non-seekable and no bitrate values set\n");
-
-    /* ... so we calculate it by hand, which should be done better
-     * by avoiding headers and stuff */
-     time_total = ov_time_total (vf, link);
-    raw_total = ov_raw_total (vf, link);
-    g_print ("total time: %f\n", time_total);
-    g_print ("abr: %d\n", 
-	     (gint) ((guint64) raw_total / (guint64) time_total) * 8);
-    vi = ov_info (vf, link);
-    vorbisfile->version = vi->version;
-    vorbisfile->samplerate = vi->rate;
-    vorbisfile->channels = vi->channels;
-    vorbisfile->bitrate_upper = vi->bitrate_upper;
-    vorbisfile->bitrate_nominal = vi->bitrate_nominal;
-    vorbisfile->bitrate_lower = vi->bitrate_lower;
-    g_print ("Bitstream is %d channel, %ld Hz, %d version, %ld bitrate\n", 
-	     vi->channels, vi->rate, vi->version, vorbisfile->bitrate);
-    g_print ("bitrate: %f\n", (double) vorbisfile->bitrate);
-    /* fire the signal saying we have metadata */
-    g_signal_emit (G_OBJECT(vorbisfile), 
-		   gst_vorbisfile_signals[SIGNAL_HAVE_METADATA], 0);
-    vorbisfile->get_metadata = FALSE;
-  }
- 
   if (vorbisfile->seek_pending) {
     /* get time to seek to in seconds */
-    gdouble seek_to = (gdouble) vorbisfile->seek_value / GST_SECOND;
 
     switch (vorbisfile->seek_format) {
       case GST_FORMAT_TIME:
+      {
+        gdouble seek_to = (gdouble) vorbisfile->seek_value / GST_SECOND;
+
 	if (vorbisfile->seek_accurate) {
           if (ov_time_seek (&vorbisfile->vf, seek_to) == 0) {
             vorbisfile->need_discont = TRUE;
@@ -574,23 +494,46 @@ gst_vorbisfile_loop (GstElement *element)
           }
 	}
 	break;
+      }
       case GST_FORMAT_UNITS:
 	if (vorbisfile->seek_accurate) {
-          if (ov_pcm_seek (&vorbisfile->vf, seek_to) == 0) {
+          if (ov_pcm_seek (&vorbisfile->vf, vorbisfile->seek_value) == 0) {
             vorbisfile->need_discont = TRUE;
           }
         }
 	else {
-          if (ov_pcm_seek_page (&vorbisfile->vf, seek_to) == 0) {
+          if (ov_pcm_seek_page (&vorbisfile->vf, vorbisfile->seek_value) == 0) {
             vorbisfile->need_discont = TRUE;
           }
 	}
 	break;
       default:
-	g_warning ("unknown seek method, implement me !");
+	if (vorbisfile->seek_format == logical_stream_format) {
+          gint64 seek_to;
+	  
+	  seek_to = vorbisfile->vf.offsets[vorbisfile->seek_value];
+
+          if (ov_raw_seek (&vorbisfile->vf, seek_to) == 0) {
+            vorbisfile->need_discont = TRUE;
+            vorbisfile->current_link = -1;
+          }
+	  else {
+	    g_warning ("raw seek failed");
+	  }
+	}
+	else
+	  g_warning ("unknown seek method, implement me !");
 	break;
     }
     vorbisfile->seek_pending = FALSE;
+  }
+
+  /* we update the caps for each logical stream */
+  if (vorbisfile->vf.current_link != vorbisfile->current_link) {
+    if (!gst_vorbisfile_new_link (vorbisfile, vorbisfile->vf.current_link)) {
+      gst_element_error (GST_ELEMENT (vorbisfile), "could not negotiate format");
+    }
+    return;
   }
 
   outbuf = gst_buffer_new ();
@@ -603,72 +546,49 @@ gst_vorbisfile_loop (GstElement *element)
   ret = ov_read (&vorbisfile->vf, 
 		 GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), 
 		 (G_BYTE_ORDER == G_LITTLE_ENDIAN ? 0 : 1), 
-		 sizeof (gint16), 1, &vorbisfile->current_section);
-
-  if (vorbisfile->need_discont) {
-    GstEvent *discont;
-
-    vorbisfile->need_discont = FALSE;
-
-    /* if the pad is not usable, don't push it out */
-    if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) {
-      /* get stream stats */
-      samples = (gint64) (ov_pcm_tell (&vorbisfile->vf));
-
-      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, 
-		    			     GST_FORMAT_UNITS, samples, NULL); 
-
-      gst_pad_push (vorbisfile->srcpad, GST_BUFFER (discont));
-    }
-  }
+		 sizeof (gint16), 1, &link);
 
   if (ret == 0) {
     GST_DEBUG (0, "eos");
     /* send EOS event */
-    /*FIXME: should we do this or not ?
-    ov_clear (&vorbisfile->vf);*/
+    /*ov_clear (&vorbisfile->vf);*/
     vorbisfile->restart = TRUE;
     gst_buffer_unref (outbuf);
     /* if the pad is not usable, don't push it out */
-    if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) 
+    if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) {
       gst_pad_push (vorbisfile->srcpad, 
 		    GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+    }
     gst_element_set_eos (element);
     return;
   }
   else if (ret < 0) {
     g_warning ("vorbisfile: decoding error");
     gst_buffer_unref (outbuf);
+    return;
   }
   else {
-    GST_BUFFER_SIZE (outbuf) = ret;
+    if (vorbisfile->need_discont) {
+      GstEvent *discont;
 
-    if (!GST_PAD_CAPS (vorbisfile->srcpad)) {
-      vorbis_info *vi = ov_info (&vorbisfile->vf, -1);
-      
-      if (gst_pad_try_set_caps (vorbisfile->srcpad,
-                   GST_CAPS_NEW ("vorbisdec_src",
-                                   "audio/raw",    
-                                     "format",     GST_PROPS_STRING ("int"),
-                                     "law",        GST_PROPS_INT (0),
-                                     "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-                                     "signed",     GST_PROPS_BOOLEAN (TRUE),
-                                     "width",      GST_PROPS_INT (16),
-                                     "depth",      GST_PROPS_INT (16),
-                                     "rate",       GST_PROPS_INT (vi->rate),
-                                     "channels",   GST_PROPS_INT (vi->channels)
-                                )) <= 0) 
-      {
-        gst_buffer_unref (outbuf);
-	gst_element_error (GST_ELEMENT (vorbisfile), 
-			   "could not negotiate format");
-	return;
+      vorbisfile->need_discont = FALSE;
+
+      /* if the pad is not usable, don't push it out */
+      if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) {
+        /* get stream stats */
+        samples = (gint64) (ov_pcm_tell (&vorbisfile->vf));
+
+        discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, 
+		    			     GST_FORMAT_UNITS, samples, NULL); 
+
+        gst_pad_push (vorbisfile->srcpad, GST_BUFFER (discont));
       }
     }
 
-    vorbisfile->may_eos = TRUE;
-
+    GST_BUFFER_SIZE (outbuf) = ret;
     GST_BUFFER_TIMESTAMP (outbuf) = time;
+
+    vorbisfile->may_eos = TRUE;
 
     if (!vorbisfile->vf.seekable) {
       vorbisfile->total_bytes += GST_BUFFER_SIZE (outbuf);
@@ -684,17 +604,26 @@ gst_vorbisfile_loop (GstElement *element)
 static const GstFormat*
 gst_vorbisfile_get_formats (GstPad *pad)
 {
-  static const GstFormat formats[] = {
+  static GstFormat src_formats[] = {
     GST_FORMAT_TIME,
     GST_FORMAT_BYTES,
     GST_FORMAT_UNITS,
+    0,
     0
   };
-  return formats;
+  static GstFormat sink_formats[] = {
+    GST_FORMAT_TIME,
+    GST_FORMAT_BYTES,
+    0,
+    0
+  };
+
+  src_formats[3] = logical_stream_format;
+  sink_formats[2] = logical_stream_format;
+  
+  return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
 
-/* handles conversion of location offsets between two formats based on
- * src caps */
 static gboolean
 gst_vorbisfile_src_convert (GstPad *pad, 
 		            GstFormat src_format, gint64 src_value,
@@ -708,6 +637,9 @@ gst_vorbisfile_src_convert (GstPad *pad,
   
   vorbisfile = GST_VORBISFILE (gst_pad_get_parent (pad));
 
+  if (*dest_format == GST_FORMAT_DEFAULT)
+    *dest_format = GST_FORMAT_TIME;
+
   vi = ov_info (&vorbisfile->vf, -1);
   bytes_per_sample = vi->channels * 2;
 
@@ -717,8 +649,6 @@ gst_vorbisfile_src_convert (GstPad *pad,
         case GST_FORMAT_UNITS:
           *dest_value = src_value / (vi->channels * 2);
           break;
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
         {
           gint byterate = bytes_per_sample * vi->rate;
@@ -736,8 +666,6 @@ gst_vorbisfile_src_convert (GstPad *pad,
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * bytes_per_sample;
           break;
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
 	  if (vi->rate == 0)
 	    return FALSE;
@@ -749,8 +677,6 @@ gst_vorbisfile_src_convert (GstPad *pad,
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
         case GST_FORMAT_BYTES:
 	  scale = bytes_per_sample;
         case GST_FORMAT_UNITS:
@@ -761,7 +687,90 @@ gst_vorbisfile_src_convert (GstPad *pad,
       }
       break;
     default:
-      res = FALSE;
+      if (src_format == logical_stream_format) {
+	/* because we need to convert relative from 0, we have to add
+	 * all pcm totals */
+	gint i;
+	gint64 count = 0;
+
+	if (src_value >= vorbisfile->vf.links) {
+	  count = ov_pcm_total (&vorbisfile->vf, -1);
+	}
+	else {
+	  for (i = 0; i < src_value; i++) {
+	    count += ov_pcm_total (&vorbisfile->vf, i);
+	  }
+	}
+        switch (*dest_format) {
+          case GST_FORMAT_BYTES:
+	    scale = bytes_per_sample;
+          case GST_FORMAT_UNITS:
+	    *dest_value = count *scale;
+            break;
+          case GST_FORMAT_TIME:
+	    if (vi->rate == 0)
+	      return FALSE;
+	    /* we use the pcm totals to get the total time, it's more accurate */
+	    *dest_value = count * GST_SECOND / vi->rate;
+            break;
+          default:
+            res = FALSE;
+	}
+      }
+      else
+        res = FALSE;
+      break;
+  }
+  return res;
+}
+
+static gboolean
+gst_vorbisfile_sink_convert (GstPad *pad, 
+		             GstFormat src_format, gint64 src_value,
+		             GstFormat *dest_format, gint64 *dest_value)
+{
+  gboolean res = TRUE;
+  VorbisFile *vorbisfile; 
+  
+  vorbisfile = GST_VORBISFILE (gst_pad_get_parent (pad));
+
+  if (*dest_format == GST_FORMAT_DEFAULT)
+    *dest_format = GST_FORMAT_TIME;
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_TIME:
+          break;
+        default:
+          if (*dest_format == logical_stream_format) {
+          }
+	  else
+            res = FALSE;
+      }
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          break;
+        default:
+          if (*dest_format == logical_stream_format) {
+          }
+	  else
+            res = FALSE;
+      }
+    default:
+      if (src_format == logical_stream_format) {
+        switch (*dest_format) {
+          case GST_FORMAT_TIME:
+            break;
+          case GST_FORMAT_BYTES:
+            break;
+          default:
+            res = FALSE;
+        }
+      }
+      else
+        res = FALSE;
       break;
   }
 
@@ -818,7 +827,14 @@ gst_vorbisfile_src_query (GstPad *pad, GstPadQueryType type,
 	    return FALSE;
 	  break;
 	default:
-          res = FALSE;
+	  if (*format == logical_stream_format) {
+            if (vorbisfile->vf.seekable)
+	      *value = vorbisfile->vf.links;
+	    else
+	     return FALSE;
+	  }
+	  else
+            res = FALSE;
           break;
       }
       break;
@@ -848,7 +864,14 @@ gst_vorbisfile_src_query (GstPad *pad, GstPadQueryType type,
             *value = vorbisfile->total_bytes / (vi->channels * 2);
 	  break;
         default:
-          res = FALSE;
+	  if (*format == logical_stream_format) {
+            if (vorbisfile->vf.seekable)
+	      *value = vorbisfile->current_link;
+	    else
+	     return FALSE;
+	  }
+	  else
+            res = FALSE;
           break;
       }
       break;
@@ -884,6 +907,7 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
     {
       gint64 offset;
       vorbis_info *vi;
+      GstFormat format;
   
       if (!vorbisfile->vf.seekable) {
 	gst_event_unref (event);
@@ -891,12 +915,13 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
       }
 
       offset = GST_EVENT_SEEK_OFFSET (event);
+      format = GST_EVENT_SEEK_FORMAT (event);
 
-      switch (GST_EVENT_SEEK_FORMAT (event)) {
+      switch (format) {
 	case GST_FORMAT_TIME:
 	  vorbisfile->seek_pending = TRUE;
 	  vorbisfile->seek_value = offset;
-	  vorbisfile->seek_format = GST_FORMAT_TIME;
+	  vorbisfile->seek_format = format;
 	  vorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event) 
 		                    & GST_SEEK_FLAG_ACCURATE;
 	  break;
@@ -911,12 +936,20 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
 	case GST_FORMAT_UNITS:
 	  vorbisfile->seek_pending = TRUE;
 	  vorbisfile->seek_value = offset;
-	  vorbisfile->seek_format = GST_FORMAT_UNITS;
+	  vorbisfile->seek_format = format;
 	  vorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event) 
 		                    & GST_SEEK_FLAG_ACCURATE;
 	  break;
 	default:
-	  res = FALSE;
+	  if (format == logical_stream_format) {
+	    vorbisfile->seek_pending = TRUE;
+	    vorbisfile->seek_value = offset;
+	    vorbisfile->seek_format = format;
+	    vorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event) 
+		                      & GST_SEEK_FLAG_ACCURATE;
+	  }
+	  else
+	    res = FALSE;
 	  break;
       }
       break;
@@ -972,11 +1005,6 @@ gst_vorbisfile_set_property (GObject *object, guint prop_id,
   vorbisfile = GST_VORBISFILE (object);
 
   switch (prop_id) {
-    case ARG_METADATA:
-      break;
-    case ARG_LINK:
-      vorbisfile->link = g_value_get_int (value);
-      break;
     default:
       g_warning ("Unknown property id\n");
   }
@@ -995,32 +1023,7 @@ gst_vorbisfile_get_property (GObject *object, guint prop_id,
   /* FIXME: the reupdate could be expensive */
   switch (prop_id) {
     case ARG_METADATA:
-      gst_vorbisfile_get_metadata (vorbisfile);
       g_value_set_boxed (value, vorbisfile->metadata);
-      break;
-    case ARG_VENDOR:
-      break;
-    case ARG_VERSION:
-      break;
-    case ARG_CHANNELS:
-      break;
-    case ARG_RATE:
-      break;
-    case ARG_STREAMS:
-      gst_vorbisfile_metadata_get_technical (vorbisfile);
-      g_value_set_int (value, vorbisfile->streams);
-      break;
-    case ARG_LINK:
-      break;
-    case ARG_BITRATE:
-      break;
-    case ARG_BITRATE_UPPER:
-      break;
-    case ARG_BITRATE_NOMINAL:
-      break;
-    case ARG_BITRATE_LOWER:
-      break;
-    case ARG_BITRATE_WINDOW:
       break;
     default:
       g_warning ("Unknown property id\n");
