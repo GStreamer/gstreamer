@@ -275,7 +275,7 @@ gst_smpte_blend_i420 (guint8 *in1, guint8 *in2, guint8 *out, GstMask *mask,
 {
   guint32 *maskp;
   gint value;
-  gint i;
+  gint i, j;
   gint min, max;
   guint8 *in1u, *in1v, *in2u, *in2v, *outu, *outv; 
   gint lumsize = width * height;
@@ -286,20 +286,22 @@ gst_smpte_blend_i420 (guint8 *in1, guint8 *in2, guint8 *out, GstMask *mask,
   min = pos - border; 
   max = pos;
 
-  in1u = in1 + lumsize; in1v = in1 + chromsize;
-  in2u = in2 + lumsize; in2v = in2 + chromsize;
-  outu = out + lumsize; outv = out + chromsize;
+  in1u = in1 + lumsize; in1v = in1u + chromsize;
+  in2u = in2 + lumsize; in2v = in2u + chromsize;
+  outu = out + lumsize; outv = outu + chromsize;
   
   maskp = mask->data;
 
-  for (i = lumsize; i; i--) {
-    value = *maskp++;
-    value = ((CLAMP (value, min, max) - min) << 8) / border;
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < width; j++) {
+      value = *maskp++;
+      value = ((CLAMP (value, min, max) - min) << 8) / border;
     
-    *out++ = ((*in1++ * value) + (*in2++ * (255 - value))) >> 8;
-    if (i % 4) {
-      *outu++ = ((*in1u++ * value) + (*in2u++ * (255 - value))) >> 8;
-      *outv++ = ((*in1v++ * value) + (*in2v++ * (255 - value))) >> 8;
+      *out++ = ((*in1++ * value) + (*in2++ * (256 - value))) >> 8;
+      if (!(i & 1) && !(j & 1)) {
+        *outu++ = ((*in1u++ * value) + (*in2u++ * (256 - value))) >> 8;
+        *outv++ = ((*in1v++ * value) + (*in2v++ * (256 - value))) >> 8;
+      }
     }
   }
 }
