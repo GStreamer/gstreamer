@@ -703,6 +703,9 @@ gst_ffmpeg_caps_to_extradata (const GstCaps *caps,
       flags |= thirdpel_flag;
       flags = flags << 3;
 
+      if (G_BYTE_ORDER == G_BIG_ENDIAN)
+	flags = (flags << 8) | (8 >> flags);
+	
       memcpy (context->extradata + 0x62, &flags, 2);
       context->extradata_size = 0x64;
     }
