@@ -1,1 +1,4 @@
-gst-launch-ext
+gst-launch-ext-?.?
+gst-visualise-?.?
+gst-launch-ext-?.?.1
+gst-visualise-?.?.1

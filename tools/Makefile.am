@@ -6,7 +6,7 @@ man_MANS = \
         gst-launch-ext-@GST_MAJORMINOR@.1 \
         gst-visualise-@GST_MAJORMINOR@.1
 
-CLEANFILES = $(man_MANS)
+CLEANFILES = $(man_MANS) $(bin_SCRIPTS)
 
 EXTRA_DIST = \
 	gst-launch-ext-m.m gst-visualise-m.m \
