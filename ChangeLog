@@ -1,5 +1,10 @@
 2004-08-13  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* ext/lame/gstlame.c: (gst_lame_get_property):
+	whoops forgot break, thanks teuf
+
+2004-08-13  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* ext/lame/gstlame.c: (gst_lame_vbrmode_get_type),
 	(gst_lame_class_init), (gst_lame_src_getcaps),
 	(gst_lame_sink_link), (gst_lame_init), (gst_lame_set_property),
