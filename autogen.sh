@@ -149,8 +149,8 @@ aclocal $ACLOCAL_FLAGS || {
 }
 
 # FIXME : why does libtoolize keep complaining about aclocal ?
-echo "+ running libtoolize ..."
-libtoolize --copy --force
+## echo "+ running libtoolize ..."
+## libtoolize --copy --force
 
 echo "+ running autoheader ... "
 autoheader || {
