@@ -166,7 +166,7 @@ GST_PLUGIN_LDFLAGS='-module -avoid-version'
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 GST_PLUGINS_ALL="\
-        ac3parse adder audioscale auparse avi chart\
+        ac3parse adder audioscale auparse avi cdxaparse chart\
         cutter deinterlace flx goom intfloat law level\
         median mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
         mpegaudio mpegaudioparse mpegstream mpegtypes modplug\
@@ -744,6 +744,7 @@ gst/adder/Makefile
 gst/audioscale/Makefile
 gst/auparse/Makefile
 gst/avi/Makefile
+gst/cdxaparse/Makefile
 gst/chart/Makefile
 gst/cutter/Makefile
 gst/deinterlace/Makefile

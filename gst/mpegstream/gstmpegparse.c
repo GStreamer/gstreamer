@@ -24,8 +24,8 @@
 /* elementfactory information */
 static GstElementDetails mpeg_parse_details = {
   "MPEG System Parser",
-  "Filter/Parser/System",
-  "Demultiplexes MPEG1 and MPEG2 System Streams",
+  "Codec/Parser",
+  "Parses MPEG1 and MPEG2 System Streams",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"
   "Wim Taymans <wim.taymans@chello.be>",

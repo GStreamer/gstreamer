@@ -59,7 +59,7 @@ GType gst_synaesthesia_get_type(void);
 /* elementfactory information */
 static GstElementDetails gst_synaesthesia_details = {
   "Synaesthesia",
-  "Filter/Visualization",
+  "Visualization",
   "Creates video visualizations of audio input, using stereo and pitch information",
   VERSION,
   "Richard Boulton <richard@tartarus.org>",

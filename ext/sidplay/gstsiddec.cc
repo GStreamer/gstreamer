@@ -25,7 +25,7 @@
 /* elementfactory information */
 static GstElementDetails gst_siddec_details = {
   "Sid decoder",
-  "Filter/Decoder/Audio",
+  "Codec/Audio/Decoder",
   "Use sidplay to decode SID audio tunes",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be> ",

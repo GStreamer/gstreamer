@@ -23,8 +23,8 @@
 
 /* elementfactory information */
 static GstElementDetails mpeg_demux_details = {
-  "MPEG System Parser",
-  "Filter/Parser/System",
+  "MPEG Demuxer",
+  "Codec/Demuxer",
   "Demultiplexes MPEG1 and MPEG2 System Streams",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"
