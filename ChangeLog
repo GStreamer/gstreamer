@@ -1,3 +1,18 @@
+2004-02-18  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c:
+	(gst_ximagesink_xwindow_update_geometry),
+	(gst_ximagesink_renegotiate_size), (gst_ximagesink_handle_xevents),
+	(gst_ximagesink_change_state), (gst_ximagesink_expose),
+	(gst_ximagesink_init): Rework the way software video scaling works. So
+	now we check on each chain call if the video frames are feeling the 
+	window. If not we try to renegotiate caps. On failure we memorize that
+	and we won't try again for that PLAYING sessions.
+	* sys/ximage/ximagesink.h: Adding a boolean to store the caps renego
+	failure.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_init): initialize the 
+	synchronous flag.
+
 2004-02-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/play/play.c: (gst_play_pipeline_setup):
