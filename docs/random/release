@@ -51,6 +51,9 @@ TODO :
   - while (IS_PRERELEASE)
     {
       - increase the nano number (starting with 2)
+      - check out a fresh anonymous copy
+        cvs -d:pserver:anonymous@cvs.gstreamer.sf.net:/cvsroot/gstreamer \
+            co -rBRANCH-RELEASE-0_3_3 gstreamer
       - make distcheck, rpm build should pass, from a FRESH cvs tree
       - media tests should be done
       - source tarball should be installed and tested
