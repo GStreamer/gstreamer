@@ -589,6 +589,7 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 		     GST_DEBUG_PAD_NAME (peerpad));
 	      GST_RPAD_GETHANDLER (peerpad) = GST_RPAD_GETFUNC (peerpad);
 	    }
+	    gst_pad_set_scheduler (peerpad, GST_SCHEDULER (chain->sched));
 	  }
 	}
       }
@@ -1114,10 +1115,6 @@ gst_basic_scheduler_yield (GstScheduler *sched, GstElement *element)
 static gboolean
 gst_basic_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 {
-
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
-    g_warning ("interrupt decoupled element");
-  }
 
   GST_FLAG_SET (element, GST_ELEMENT_COTHREAD_STOPPING);
   do_switch_to_main (sched);
