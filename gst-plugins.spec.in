@@ -713,12 +713,12 @@ GStreamer support libraries
 %{prefix}/lib/gst/libgstriff*
 %{prefix}/lib/gst/libgstresample*
 
-%package -n gstreamer-miscvideo
+%package -n gstreamer-misc
 Summary: GStreamer plugins for various effects
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
 
-%description -n gstreamer-miscvideo
+%description -n gstreamer-misc
 Plugins for various codecs, effects 
 and so on.
 
