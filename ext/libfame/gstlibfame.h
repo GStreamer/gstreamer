@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __GST_LIBFAME_H__
-#define __GST_LIBFAME_H__
+#ifndef __GST_FAMEENC_H__
+#define __GST_FAMEENC_H__
 
 #include <gst/gst.h>
 #include <fame.h>
@@ -29,21 +29,21 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_TYPE_LIBFAME \
-  (gst_libfame_get_type())
-#define GST_LIBFAME(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_LIBFAME,GstLibfame))
-#define GST_LIBFAME_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_LIBFAME,GstLibfame))
-#define GST_IS_LIBFAME(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_LIBFAME))
-#define GST_IS_LIBFAME_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LIBFAME))
+#define GST_TYPE_FAMEENC \
+  (gst_fameenc_get_type())
+#define GST_FAMEENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FAMEENC,GstFameEnc))
+#define GST_FAMEENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FAMEENC,GstFameEnc))
+#define GST_IS_FAMEENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FAMEENC))
+#define GST_IS_FAMEENC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FAMEENC))
 
-typedef struct _GstLibfame GstLibfame;
-typedef struct _GstLibfameClass GstLibfameClass;
+typedef struct _GstFameEnc GstFameEnc;
+typedef struct _GstFameEncClass GstFameEncClass;
 
-struct _GstLibfame {
+struct _GstFameEnc {
   GstElement element;
 
   /* pads */
@@ -62,7 +62,8 @@ struct _GstLibfame {
   /* encoding pattern string */
   gchar *pattern;
 
-  /* libfame stuff */
+  /* fameenc stuff */
+  gboolean verbose;
   fame_context_t *fc;
   fame_parameters_t fp;
   fame_yuv_t fy;
@@ -71,11 +72,11 @@ struct _GstLibfame {
   gboolean initialized;
 };
 
-struct _GstLibfameClass {
+struct _GstFameEncClass {
   GstElementClass parent_class;
 };
 
-GType gst_libfame_get_type (void);
+GType gst_fameenc_get_type (void);
 
 
 #ifdef __cplusplus
@@ -83,4 +84,4 @@ GType gst_libfame_get_type (void);
 #endif /* __cplusplus */
 
 
-#endif /* __GST_LIBFAME_H__ */
+#endif /* __GST_FAMEENC_H__ */
