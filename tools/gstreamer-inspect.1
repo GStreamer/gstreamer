@@ -1,0 +1,43 @@
+.TH GStreamer 1 "March 2001"
+.SH NAME
+gstreamer\-inspect - print info about a GStreamer plugin or element
+.SH SYNOPSIS
+.B  gstreamer\-register [OPTION...] [PLUGIN|ELEMENT]
+.SH DESCRIPTION
+.PP
+\fIgstreamer\-inspect\fP is a tool to print out information on the
+available \fIGStreamer\fP plugins, information on a plugin, or
+information on an element.  With no PLUGIN or ELEMENT option it
+will list all plugins and elements.
+.
+.SH OPTIONS
+.l
+\fIgstreamer\-inspect\fP accepts the following options:
+.TP 8
+.B  PLUGIN
+Name of a plugin
+.TP 8
+.B  ELEMENT
+Name of an element
+.TP 8
+.B  \-\-help
+Print help synopsis and available FLAGS
+.TP 8
+.B  \-\-gst\-info\-mask=FLAGS
+\fIGStreamer\fP info flags to set (list with \-\-help)
+.TP 8
+.B  \-\-gst\-debug\-mask=FLAGS
+\fIGStreamer\fP debugging flags to set (list with \-\-help)
+.TP 8
+.B  \-\-gst\-plugin\-spew
+\fIGStreamer\fP info flags to set
+Enable printout of errors while loading \fIGStreamer\fP plugins
+.TP 8
+.B  \-\-gst\-plugin\-path=PATH
+Add directories separated with ':' to the plugin search path
+.SH SEE ALSO
+.BR gstreamer\-config (1),
+.BR gstreamer\-register (1),
+.BR gstreamer\-launch (1)
+.SH AUTHOR
+The GStreamer team at http://gstreamer.net/

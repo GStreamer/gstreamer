@@ -9,10 +9,12 @@ bin_PROGRAMS = gstmediaplay
 
 lib_LTLIBRARIES = libgstmediaplay.la
 
+man_MANS = gstmediaplay.1
+
 gladedir = $(datadir)/gstmediaplay
 glade_DATA = gstmediaplay.glade play.xpm stop.xpm pause.xpm
 
-EXTRA_DIST = $(glade_DATA)
+EXTRA_DIST = $(glade_DATA) $(man_MANS)
 
 libgstmediaplay_la_SOURCES = \
 	gstplay.c \

@@ -27,6 +27,8 @@ bin_PROGRAMS = gsteditor
 gsteditor_SOURCES = editor.c
 gsteditor_LDFLAGS = libgsteditor.la $(GST_LIBS)
 
+man_MANS = gsteditor.1
+
 gladedir = $(datadir)/gsteditor
 glade_DATA = editor.glade editorelement.glade
 
@@ -40,4 +42,4 @@ noinst_HEADERS =		\
 
 SUBDIRS = pixmaps
 
-EXTRA_DIST = $(glade_DATA) 
+EXTRA_DIST = $(glade_DATA) $(man_MANS)
