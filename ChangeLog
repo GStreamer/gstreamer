@@ -1,3 +1,9 @@
+2004-01-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/divx/gstdivxdec.c: (gst_divxdec_init),
+	(gst_divxdec_negotiate):
+	  Fix for new capsnego - also fixes gst-player with divxdec.
+
 2004-01-25  Julien MOUTTE  <julien@moutte.net>
 
 	* gst-libs/gst/play/gstplay.c: (gst_play_pipeline_setup),
