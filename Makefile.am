@@ -6,11 +6,7 @@ VERSION = @VERSION@
 # otherwise none
 
 if HAVE_LIBGLADE_GNOME
-if HAVE_GNOME
-SUBDIRS_LGG = gstplay editor
-else
 SUBDIRS_LGG = gstplay
-endif
 else
 SUBDIRS_LGG =
 endif

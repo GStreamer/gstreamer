@@ -764,8 +764,6 @@ examples/xml/Makefile
 examples/plugins/Makefile
 examples/typefind/Makefile
 examples/mixer/Makefile
-editor/Makefile
-editor/pixmaps/Makefile
 tools/Makefile
 docs/Makefile
 docs/gst/Makefile
