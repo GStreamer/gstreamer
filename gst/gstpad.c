@@ -2254,8 +2254,9 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
 	       GST_DEBUG_PAD_NAME (pad));
   }
   else {
-    if (!GST_IS_EVENT (buf) && !GST_PAD_IS_ACTIVE (pad)) {
-      g_warning ("push on pad %s:%s but it is not active", 
+    if (!GST_IS_EVENT (buf) && !GST_PAD_IS_ACTIVE (peer)) {
+      g_warning ("push on peer %s:%s of pad %s:%s but peer is not active", 
+	         GST_DEBUG_PAD_NAME (peer),
 	         GST_DEBUG_PAD_NAME (pad));
       return;
     }
