@@ -80,7 +80,7 @@ Casts an object to a GstBuffer.
 Gets the flags from this buffer.
 </para>
 
-@buf: #GstBuffer to retrieve the flags from
+@buf: a #GstBuffer to retrieve the flags from
 
 
 <!-- ##### MACRO GST_BUFFER_FLAG_IS_SET ##### -->
@@ -88,7 +88,7 @@ Gets the flags from this buffer.
 Gives the status of a given #GstBufferFlag.
 </para>
 
-@buf: #GstBuffer to query
+@buf: a #GstBuffer to query
 @flag: the #GstBufferFlag to check
 
 
@@ -97,8 +97,8 @@ Gives the status of a given #GstBufferFlag.
 Sets a buffer flag.
 </para>
 
-@buf: #GstBuffer to modify
-@flag: #GstBufferFlag to set
+@buf: a #GstBuffer to modify
+@flag: the #GstBufferFlag to set
 
 
 <!-- ##### MACRO GST_BUFFER_FLAG_UNSET ##### -->
@@ -106,8 +106,8 @@ Sets a buffer flag.
 Clears a buffer flag.
 </para>
 
-@buf: #GstBuffer to modify
-@flag: #GstBufferFlag to clear
+@buf: a #GstBuffer to modify
+@flag: the #GstBufferFlag to clear
 
 
 <!-- ##### MACRO GST_BUFFER_DATA ##### -->
@@ -115,7 +115,7 @@ Clears a buffer flag.
 Retrieves a pointer to the data element of this buffer.
 </para>
 
-@buf: #GstBuffer to get data pointer of
+@buf: a #GstBuffer to get data pointer of
 
 
 <!-- ##### MACRO GST_BUFFER_SIZE ##### -->
@@ -123,7 +123,7 @@ Retrieves a pointer to the data element of this buffer.
 Gets the size of the data in this buffer.
 </para>
 
-@buf: #GstBuffer to get data size of
+@buf: a #GstBuffer to get data size of
 
 
 <!-- ##### MACRO GST_BUFFER_OFFSET ##### -->
@@ -131,7 +131,7 @@ Gets the size of the data in this buffer.
 Gets the offset in the source file of this buffer.
 </para>
 
-@buf: #GstBuffer to get offset of
+@buf: a #GstBuffer to get offset of
 
 
 <!-- ##### MACRO GST_BUFFER_MAXSIZE ##### -->
@@ -139,7 +139,7 @@ Gets the offset in the source file of this buffer.
 Gets the maximum size of this buffer.
 </para>
 
-@buf: #GstBuffer to get maximum size of
+@buf: a #GstBuffer to get maximum size of
 
 
 <!-- ##### MACRO GST_BUFFER_TIMESTAMP ##### -->
@@ -147,7 +147,7 @@ Gets the maximum size of this buffer.
 Gets the timestamp for this buffer.
 </para>
 
-@buf: #GstBuffer to get timestamp of
+@buf: a #GstBuffer to get timestamp of
 
 
 <!-- ##### MACRO GST_BUFFER_BUFFERPOOL ##### -->
@@ -155,7 +155,7 @@ Gets the timestamp for this buffer.
 Gets the bufferpool for this buffer.
 </para>
 
-@buf: #GstBuffer to get bufferpool of
+@buf: a #GstBuffer to get bufferpool of
 
 
 <!-- ##### MACRO GST_BUFFER_POOL_PRIVATE ##### -->
@@ -163,7 +163,7 @@ Gets the bufferpool for this buffer.
 Gets the bufferpool private data.
 </para>
 
-@buf: #GstBuffer to get bufferpool's private data of
+@buf: a #GstBuffer to get bufferpool's private data of
 
 
 <!-- ##### MACRO GST_BUFFER_LOCK ##### -->
@@ -171,7 +171,7 @@ Gets the bufferpool private data.
 Obtains a lock on the object, making serialization possible.
 </para>
 
-@buf: #GstBuffer to lock
+@buf: a #GstBuffer to lock
 
 
 <!-- ##### MACRO GST_BUFFER_TRYLOCK ##### -->
@@ -180,7 +180,7 @@ Tries to obtain a lock on the buffer.
 If it can't get immediately, will return FALSE.
 </para>
 
-@buf: #GstBuffer to try to lock
+@buf: a #GstBuffer to try to lock
 
 
 <!-- ##### MACRO GST_BUFFER_UNLOCK ##### -->
@@ -189,7 +189,7 @@ Releases a lock on the buffer.
 
 </para>
 
-@buf: #GstBuffer to unlock
+@buf: a #GstBuffer to unlock
 
 
 <!-- ##### MACRO GST_BUFFER_PARENT ##### -->
@@ -197,7 +197,7 @@ Releases a lock on the buffer.
 Gets the parent of this buffer. The parent is set on sub-buffers.
 </para>
 
-@buf: #GstBuffer to get parent of
+@buf: a #GstBuffer to get parent of
 
 
 <!-- ##### MACRO GST_BUFFER_MAXAGE ##### -->
@@ -205,7 +205,7 @@ Gets the parent of this buffer. The parent is set on sub-buffers.
 Gets the maximum age of a buffer.
 </para>
 
-@buf: #GstBuffer to get maximum age of
+@buf: a #GstBuffer to get maximum age of
 
 
 <!-- ##### MACRO GST_BUFFER_COPY_FUNC ##### -->
@@ -213,7 +213,7 @@ Gets the maximum age of a buffer.
 Calls the buffer-specific copy function on the given buffer.
 </para>
 
-@buf: #GstBuffer to copy
+@buf: a #GstBuffer to copy
 
 
 <!-- ##### MACRO GST_BUFFER_FREE_FUNC ##### -->
@@ -221,7 +221,7 @@ Calls the buffer-specific copy function on the given buffer.
 Calls the buffer-specific free function on the given buffer.
 </para>
 
-@buf: #GstBuffer to free
+@buf: a #GstBuffer to free
 
 
 <!-- ##### USER_FUNCTION GstBufferCopyFunc ##### -->
@@ -229,8 +229,8 @@ Calls the buffer-specific free function on the given buffer.
 This supplied function is used to copy the buffer contents.
 </para>
 
-@srcbuf: #GstBuffer to copy from
-@Returns: newly allocated #GstBuffer copy of srcbuf
+@srcbuf: a #GstBuffer to copy from
+@Returns: a newly allocated #GstBuffer copy of srcbuf
 
 
 <!-- ##### USER_FUNCTION GstBufferFreeFunc ##### -->
@@ -238,7 +238,7 @@ This supplied function is used to copy the buffer contents.
 This supplied function is called when the buffer data has to be freed.
 </para>
 
-@buf: #GstBuffer to clear the buffer data of
+@buf: a #GstBuffer to clear the buffer data of
 
 
 <!-- ##### ENUM GstBufferFlag ##### -->
