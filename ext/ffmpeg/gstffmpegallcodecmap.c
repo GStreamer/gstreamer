@@ -524,6 +524,7 @@ gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
         case GST_MAKE_FOURCC('D','I','V','X'):
         case GST_MAKE_FOURCC('D','X','5','0'):
         case GST_MAKE_FOURCC('X','V','I','D'):
+        case GST_MAKE_FOURCC('x','v','i','d'):
           id = CODEC_ID_MPEG4;
           break;
         case GST_MAKE_FOURCC('M','P','G','4'):
