@@ -28,7 +28,7 @@
 #include <gst/gstdata.h>
 #include <gst/gstformat.h>
 #include <gst/gstobject.h>
-#include <gst/gstcaps.h>
+#include <gst/gststructure.h>
 
 G_BEGIN_DECLS
 
@@ -181,8 +181,8 @@ struct _GstEvent {
       gdouble      	value;
     } rate;
     struct {
-      GstCaps		*caps;
-    } caps;
+      GstStructure	*structure;
+    } structure;
   } event_data;
 
   GST_STRUCT_PADDING
