@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdlib.h>
 #include <gst/gst.h>
 #include <string.h>
@@ -44,7 +47,7 @@ main (int argc, char **argv)
   GstElement *oggdemux;
   GstElement *vorbisdec;
   GstElement *audioconvert;
-  GstElement *osssink;
+  GstElement *audiosink;
 
   gst_init (&argc, &argv);
 
@@ -75,14 +78,14 @@ main (int argc, char **argv)
   g_assert (vorbisdec);
   audioconvert = gst_element_factory_make ("audioconvert", "audioconvert");
   g_assert (audioconvert);
-  osssink = gst_element_factory_make ("osssink", "osssink");
-  g_assert (osssink);
+  audiosink = gst_element_factory_make (DEFAULT_AUDIOSINK, DEFAULT_AUDIOSINK);
+  g_assert (audiosink);
   gst_bin_add (GST_BIN (bin), vorbisdec);
   gst_bin_add (GST_BIN (bin), audioconvert);
-  gst_bin_add (GST_BIN (bin), osssink);
+  gst_bin_add (GST_BIN (bin), audiosink);
 
   gst_element_link_pads (vorbisdec, "src", audioconvert, "sink");
-  gst_element_link_pads (audioconvert, "src", osssink, "sink");
+  gst_element_link_pads (audioconvert, "src", audiosink, "sink");
 
   gst_element_add_ghost_pad (bin, gst_element_get_pad (vorbisdec, "sink"),
       "sink");
