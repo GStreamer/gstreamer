@@ -376,148 +376,154 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
 
   GST_DEBUG ("mp1videoparse: received buffer of %ld bytes %" G_GINT64_FORMAT,size, GST_BUFFER_TIMESTAMP(buf));
 
-  head = GUINT32_FROM_BE(*((guint32 *)data));
+  do {
+    data = GST_BUFFER_DATA(mp1videoparse->partialbuf);
+    size = GST_BUFFER_SIZE(mp1videoparse->partialbuf);
 
-  GST_DEBUG ("mp1videoparse: head is %08x", (unsigned int)head);
+    head = GUINT32_FROM_BE(*((guint32 *)data));
 
-  if (!mp1videoparse_valid_sync(mp1videoparse, head,
-				mp1videoparse->partialbuf) ||
-      mp1videoparse->need_resync) {
-    sync_pos = mp1videoparse_find_next_gop(mp1videoparse, mp1videoparse->partialbuf);
-    if (sync_pos >= 0) {
-      mp1videoparse->need_resync = FALSE;
-      GST_DEBUG ("mp1videoparse: found new gop at %d", sync_pos);
+    GST_DEBUG ("mp1videoparse: head is %08x", (unsigned int)head);
 
-      if (sync_pos != 0) {
-        temp = gst_buffer_create_sub(mp1videoparse->partialbuf, sync_pos, size-sync_pos);
-	g_assert(temp != NULL);
-	gst_buffer_unref(mp1videoparse->partialbuf);
-	mp1videoparse->partialbuf = temp;
-        data = GST_BUFFER_DATA(mp1videoparse->partialbuf);
-        size = GST_BUFFER_SIZE(mp1videoparse->partialbuf);
-	offset = 0;
+    if (!mp1videoparse_valid_sync(mp1videoparse, head,
+				  mp1videoparse->partialbuf) ||
+        mp1videoparse->need_resync) {
+      sync_pos = mp1videoparse_find_next_gop(mp1videoparse, mp1videoparse->partialbuf);
+      if (sync_pos >= 0) {
+        mp1videoparse->need_resync = FALSE;
+        GST_DEBUG ("mp1videoparse: found new gop at %d", sync_pos);
+
+        if (sync_pos != 0) {
+          temp = gst_buffer_create_sub(mp1videoparse->partialbuf, sync_pos, size-sync_pos);
+	  g_assert(temp != NULL);
+	  gst_buffer_unref(mp1videoparse->partialbuf);
+	  mp1videoparse->partialbuf = temp;
+          data = GST_BUFFER_DATA(mp1videoparse->partialbuf);
+          size = GST_BUFFER_SIZE(mp1videoparse->partialbuf);
+	  offset = 0;
+        }
+
+        head = GUINT32_FROM_BE(*((guint32 *)data));
+        /* re-call this function so that if we hadn't already, we can
+         * now read the sequence header and parse video properties,
+         * set caps, stream data, be happy, bla, bla, bla... */
+        if (!mp1videoparse_valid_sync (mp1videoparse, head,
+				       mp1videoparse->partialbuf))
+          g_error ("Found sync but no valid sync point at pos 0x0");
       }
-
-      head = GUINT32_FROM_BE(*((guint32 *)data));
-      /* re-call this function so that if we hadn't already, we can
-       * now read the sequence header and parse video properties,
-       * set caps, stream data, be happy, bla, bla, bla... */
-      if (!mp1videoparse_valid_sync (mp1videoparse, head,
-				     mp1videoparse->partialbuf))
-        g_error ("Found sync but no valid sync point at pos 0x0");
-    }
-    else {
-      GST_DEBUG ("mp1videoparse: could not sync");
-      gst_buffer_unref(mp1videoparse->partialbuf);
-      mp1videoparse->partialbuf = NULL;
-      return;
-    }
-  }
-
-  if (mp1videoparse->picture_in_buffer == 1 &&
-      time_stamp != GST_CLOCK_TIME_NONE) {
-    mp1videoparse->last_pts = time_stamp;
-  }
-
-  sync_state = 0;
-  have_sync = FALSE;
-
-  GST_DEBUG ("mp1videoparse: searching sync");
-
-  while (offset < size-1) {
-    sync_byte = *(data + offset);
-    if (sync_byte == 0) {
-      sync_state++;
-    }
-    else if ((sync_byte == 1) && (sync_state >=2)) {
-      GST_DEBUG ("mp1videoparse: code 0x000001%02x",data[offset+1]);
-      if (data[offset+1] == (PICTURE_START_CODE & 0xff)) {
-	mp1videoparse->picture_in_buffer++;
-	if (mp1videoparse->picture_in_buffer == 1) {
-	  if (time_stamp != GST_CLOCK_TIME_NONE) {
-            mp1videoparse->last_pts = time_stamp;
-	  }
-	  sync_state = 0;
-	}
-	else if (mp1videoparse->picture_in_buffer == 2) {
-          have_sync = TRUE;
-          break;
-	}
-	else {
-          GST_DEBUG ("mp1videoparse: %d in buffer", mp1videoparse->picture_in_buffer);
-          g_assert_not_reached();
-	}
+      else {
+        GST_DEBUG ("mp1videoparse: could not sync");
+        gst_buffer_unref(mp1videoparse->partialbuf);
+        mp1videoparse->partialbuf = NULL;
+        return;
       }
-      /* A new sequence (or GOP) is a valid sync too. Note that the
-       * sequence header should be put in the next buffer, not here. */
-      else if (data[offset+1] == (SEQ_START_CODE & 0xFF) ||
-	       data[offset+1] == (GOP_START_CODE & 0xFF)) {
-        if (mp1videoparse->picture_in_buffer == 0 &&
-	    data[offset+1] == (GOP_START_CODE & 0xFF)) {
-	  mp1videoparse->last_pts = gst_mp1videoparse_time_code (&data[2],
-			  			mp1videoparse->fps);
-	}
-        else if (mp1videoparse->picture_in_buffer == 1) {
-	  have_sync = TRUE;
-	  break;
-	} else {
-	  g_assert (mp1videoparse->picture_in_buffer == 0);
-	}
-      }
-      /* end-of-sequence is a valid sync point and should be included
-       * in the current picture, not the next. */
-      else if (data[offset+1] == (SEQ_END_CODE & 0xFF)) {
-        if (mp1videoparse->picture_in_buffer == 1) {
-          offset += 4;
-	  have_sync = TRUE;
-	  break;
-	} else {
-	  g_assert (mp1videoparse->picture_in_buffer == 0);
-	}
-      }
-      else sync_state = 0;
-    }
-    /* something else... */
-    else sync_state = 0;
-    /* go down the buffer */
-    offset++;
-  }
-
-  if (have_sync) {
-    offset -= 2;
-    outbuf = gst_buffer_create_sub(mp1videoparse->partialbuf, 0, offset);
-    g_assert(outbuf != NULL);
-    GST_BUFFER_TIMESTAMP(outbuf) = mp1videoparse->last_pts;
-    GST_BUFFER_DURATION(outbuf) = GST_SECOND / mp1videoparse->fps;
-    mp1videoparse->last_pts += GST_BUFFER_DURATION (outbuf);
-
-    if (mp1videoparse->in_flush) {
-      /* FIXME, send a flush event here */
-      mp1videoparse->in_flush = FALSE;
     }
 
-    if (GST_PAD_CAPS (outpad) != NULL) {
-      GST_DEBUG ("mp1videoparse: pushing  %d bytes %" G_GUINT64_FORMAT, GST_BUFFER_SIZE(outbuf), GST_BUFFER_TIMESTAMP(outbuf));
-      gst_pad_push(outpad, GST_DATA (outbuf));
-      GST_DEBUG ("mp1videoparse: pushing  done");
-    } else {
-      GST_DEBUG ("No capsnego yet, delaying buffer push");
-      gst_buffer_unref (outbuf);
-    }
-    mp1videoparse->picture_in_buffer = 0;
-
-    if (size > offset)
-      temp = gst_buffer_create_sub(mp1videoparse->partialbuf, offset, size-offset);
-    else
-      temp = NULL;
-    gst_buffer_unref(mp1videoparse->partialbuf);
-    mp1videoparse->partialbuf = temp;
-  }
-  else {
-    if (time_stamp != GST_CLOCK_TIME_NONE) {
+    if (mp1videoparse->picture_in_buffer == 1 &&
+        time_stamp != GST_CLOCK_TIME_NONE) {
       mp1videoparse->last_pts = time_stamp;
     }
-  }
+
+    sync_state = 0;
+    have_sync = FALSE;
+
+    GST_DEBUG ("mp1videoparse: searching sync");
+
+    while (offset < size-1) {
+      sync_byte = *(data + offset);
+      if (sync_byte == 0) {
+        sync_state++;
+      }
+      else if ((sync_byte == 1) && (sync_state >=2)) {
+        GST_DEBUG ("mp1videoparse: code 0x000001%02x",data[offset+1]);
+        if (data[offset+1] == (PICTURE_START_CODE & 0xff)) {
+	  mp1videoparse->picture_in_buffer++;
+	  if (mp1videoparse->picture_in_buffer == 1) {
+	    if (time_stamp != GST_CLOCK_TIME_NONE) {
+              mp1videoparse->last_pts = time_stamp;
+	    }
+	    sync_state = 0;
+	  }
+	  else if (mp1videoparse->picture_in_buffer == 2) {
+            have_sync = TRUE;
+            break;
+	  }
+	  else {
+            GST_DEBUG ("mp1videoparse: %d in buffer", mp1videoparse->picture_in_buffer);
+            g_assert_not_reached();
+	  }
+        }
+        /* A new sequence (or GOP) is a valid sync too. Note that the
+         * sequence header should be put in the next buffer, not here. */
+        else if (data[offset+1] == (SEQ_START_CODE & 0xFF) ||
+	         data[offset+1] == (GOP_START_CODE & 0xFF)) {
+          if (mp1videoparse->picture_in_buffer == 0 &&
+	      data[offset+1] == (GOP_START_CODE & 0xFF)) {
+	    mp1videoparse->last_pts = gst_mp1videoparse_time_code (&data[2],
+			  			mp1videoparse->fps);
+	  }
+          else if (mp1videoparse->picture_in_buffer == 1) {
+	    have_sync = TRUE;
+	    break;
+	  } else {
+	    g_assert (mp1videoparse->picture_in_buffer == 0);
+	  }
+        }
+        /* end-of-sequence is a valid sync point and should be included
+         * in the current picture, not the next. */
+        else if (data[offset+1] == (SEQ_END_CODE & 0xFF)) {
+          if (mp1videoparse->picture_in_buffer == 1) {
+            offset += 4;
+	    have_sync = TRUE;
+	    break;
+	  } else {
+	    g_assert (mp1videoparse->picture_in_buffer == 0);
+	  }
+        }
+        else sync_state = 0;
+      }
+      /* something else... */
+      else sync_state = 0;
+      /* go down the buffer */
+      offset++;
+    }
+
+    if (have_sync) {
+      offset -= 2;
+      GST_DEBUG ("mp1videoparse: synced at %ld code 0x000001%02x",offset,data[offset+3]);
+
+      outbuf = gst_buffer_create_sub(mp1videoparse->partialbuf, 0, offset+4);
+      g_assert(outbuf != NULL);
+      GST_BUFFER_TIMESTAMP(outbuf) = mp1videoparse->last_pts;
+      GST_BUFFER_DURATION(outbuf) = GST_SECOND / mp1videoparse->fps;
+      mp1videoparse->last_pts += GST_BUFFER_DURATION (outbuf);
+
+      if (mp1videoparse->in_flush) {
+        /* FIXME, send a flush event here */
+        mp1videoparse->in_flush = FALSE;
+      }
+
+      if (GST_PAD_CAPS (outpad) != NULL) {
+        GST_DEBUG ("mp1videoparse: pushing  %d bytes %" G_GUINT64_FORMAT, GST_BUFFER_SIZE(outbuf), GST_BUFFER_TIMESTAMP(outbuf));
+	gst_pad_push(outpad, GST_DATA (outbuf));
+        GST_DEBUG ("mp1videoparse: pushing  done");
+      } else {
+        GST_DEBUG ("No capsnego yet, delaying buffer push");
+        gst_buffer_unref (outbuf);
+      }
+      mp1videoparse->picture_in_buffer = 0;
+
+      temp = gst_buffer_create_sub(mp1videoparse->partialbuf, offset, size-offset);
+      gst_buffer_unref(mp1videoparse->partialbuf);
+      mp1videoparse->partialbuf = temp;
+      offset = 0;
+    }
+    else {
+      if (time_stamp != GST_CLOCK_TIME_NONE) {
+        mp1videoparse->last_pts = time_stamp;
+	break;
+      }
+    }
+  } while (1);
 }
 
 static GstElementStateReturn 
