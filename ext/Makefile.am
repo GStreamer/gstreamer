@@ -136,12 +136,6 @@ else
 JPEG_DIR=
 endif
 
-if USE_KIO
-KIO_DIR=kio
-else
-KIO_DIR=
-endif
-
 if USE_LADSPA
 LADSPA_DIR=ladspa
 else
