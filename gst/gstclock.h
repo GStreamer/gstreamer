@@ -45,7 +45,9 @@ typedef guint64 	GstClockTime;
 typedef gint64 		GstClockTimeDiff;
 typedef gpointer 	GstClockID;
 
-#define GST_SECOND  ((guint64)G_USEC_PER_SEC)
+#define GST_CLOCK_TIME_NONE  ((guint64)-1)
+
+#define GST_SECOND  ((guint64)G_USEC_PER_SEC * 1000LL)
 #define GST_MSECOND ((guint64)GST_SECOND/1000LL)
 #define GST_USECOND ((guint64)GST_SECOND/1000000LL)
 #define GST_NSECOND ((guint64)GST_SECOND/1000000000LL)
@@ -55,7 +57,7 @@ typedef gpointer 	GstClockID;
 #define GST_TIME_TO_TIMEVAL(t,tv)			\
 G_STMT_START { 						\
   (tv).tv_sec  = (t) / GST_SECOND;			\
-  (tv).tv_usec = ((t) / GST_USECOND) % GST_SECOND;	\
+  (tv).tv_usec = ((t) / GST_USECOND) % GST_MSECOND;	\
 } G_STMT_END
 
 typedef struct _GstClock 	GstClock;
