@@ -7,12 +7,14 @@
 
 #define ZERO(mem) memset(&mem, 0, sizeof(mem))
 
-static gint quit_live(GtkWidget *window, GdkEventAny *e, gpointer data) {
+static gint quit_live(GtkWidget *window, GdkEventAny *e, gpointer data)
+{
   gtk_main_quit();
   return FALSE;
 }
 
-static void dynparm_log_value_changed(GtkAdjustment *adj,GstDParam *dparam) {
+static void dynparm_log_value_changed(GtkAdjustment *adj,GstDParam *dparam)
+{
   gdouble value;
   g_return_if_fail(dparam != NULL);
   g_return_if_fail(GST_IS_DPARAM (dparam));
@@ -23,7 +25,8 @@ static void dynparm_log_value_changed(GtkAdjustment *adj,GstDParam *dparam) {
   g_object_set(G_OBJECT(dparam), "value_double", value, NULL);
 }
 
-static void dynparm_value_changed(GtkAdjustment *adj,GstDParam *dparam) {
+static void dynparm_value_changed(GtkAdjustment *adj,GstDParam *dparam)
+{
   g_return_if_fail(dparam != NULL);
   g_return_if_fail(GST_IS_DPARAM (dparam));
 
@@ -45,7 +48,7 @@ int main(int argc,char *argv[]) {
   GstDParamManager *dpman;
   GstDParam *volume;
   GstDParam *freq;
-  GParamSpecFloat *spec;
+  GParamSpecDouble *spec;
 
   gtk_init(&argc,&argv);
   gst_init(&argc,&argv);
@@ -90,7 +93,7 @@ int main(int argc,char *argv[]) {
   g_assert(gst_dpman_attach_dparam (dpman, "freq", freq));
   gst_dpman_set_mode(dpman, "asynchronous");
   
-  spec = (GParamSpecFloat*)gst_dpman_get_param_spec (dpman, "freq");
+  spec = (GParamSpecDouble*)gst_dpman_get_param_spec (dpman, "freq");
   freq_adj = (GtkAdjustment*)gtk_adjustment_new(log(spec->default_value), 
       log(spec->minimum), log(spec->maximum), 0.1, 0.01, 0.01);
 
@@ -115,7 +118,7 @@ int main(int argc,char *argv[]) {
   
   g_object_set(G_OBJECT(volfilter), "mute", FALSE, NULL);
 
-  spec = (GParamSpecFloat*)gst_dpman_get_param_spec (dpman, "volume");
+  spec = (GParamSpecDouble*)gst_dpman_get_param_spec (dpman, "volume");
   volume_adj = (GtkAdjustment*)gtk_adjustment_new(spec->default_value, 0.0, 1.2, 0.1, 0.01, 0.01);
   volume_slider = gtk_vscale_new(volume_adj);
   gtk_scale_set_digits(GTK_SCALE(volume_slider), 2);

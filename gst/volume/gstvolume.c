@@ -35,7 +35,7 @@
 #define VOLUME_UNITY_INT	8192		/* internal int for unity */
 #define VOLUME_UNITY_BIT_SHIFT	13		/* number of bits to shift
                                                    for unity */
-#define VOLUME_MAX_FLOAT	4.0
+#define VOLUME_MAX_DOUBLE	4.0
 #define VOLUME_MAX_INT16	32767
 #define VOLUME_MIN_INT16	-32768
 
@@ -357,8 +357,8 @@ volume_class_init (GstVolumeClass *klass)
                          FALSE,G_PARAM_READWRITE));
   
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VOLUME,
-    g_param_spec_float("volume","volume","volume",
-                       0.0,VOLUME_MAX_FLOAT,1.0,G_PARAM_READWRITE));
+    g_param_spec_double("volume","volume","volume",
+                       0.0,VOLUME_MAX_DOUBLE,1.0,G_PARAM_READWRITE));
   
   gobject_class->set_property = volume_set_property;
   gobject_class->get_property = volume_get_property;
@@ -403,8 +403,8 @@ volume_init (GstVolume *filter)
   );
   gst_dpman_add_required_dparam_callback (
     filter->dpman, 
-    g_param_spec_float("volume","Volume","Volume of the audio",
-                       0.0, VOLUME_MAX_FLOAT, 1.0, G_PARAM_READWRITE),
+    g_param_spec_double("volume","Volume","Volume of the audio",
+                       0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE),
     "scalar",
     volume_update_volume, 
     filter
@@ -527,7 +527,7 @@ volume_update_volume(const GValue *value, gpointer data)
   GstVolume *filter = (GstVolume*)data;
   g_return_if_fail(GST_IS_VOLUME(filter));
 
-  filter->volume_f       = g_value_get_float (value);
+  filter->volume_f       = g_value_get_double (value);
   filter->volume_i       = filter->volume_f*VOLUME_UNITY_INT;
   if (filter->mute){
     filter->real_vol_f = 0.0;
@@ -578,7 +578,7 @@ volume_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *
     g_value_set_boolean (value, filter->mute);
     break;
   case ARG_VOLUME:
-    g_value_set_float (value, filter->volume_f);
+    g_value_set_double (value, filter->volume_f);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

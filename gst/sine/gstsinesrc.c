@@ -163,7 +163,7 @@ gst_sinesrc_class_init (GstSineSrcClass *klass)
                         0.0, 1.0, 0.8, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Synchronize to clock",
-        TRUE, G_PARAM_READWRITE));
+        FALSE, G_PARAM_READWRITE));
                                      
   gobject_class->set_property = gst_sinesrc_set_property;
   gobject_class->get_property = gst_sinesrc_get_property;
@@ -188,7 +188,7 @@ gst_sinesrc_init (GstSineSrc *src)
   src->samplerate = 44100;
   src->volume = 1.0;
   src->freq = 440.0;
-  src->sync = TRUE;
+  src->sync = FALSE;
   
   src->table_pos = 0.0;
   src->table_size = 1024;
