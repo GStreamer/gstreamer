@@ -214,7 +214,7 @@ gst_real_pad_init (GstRealPad *pad)
   pad->formatsfunc 	= gst_pad_get_formats_default;
   pad->querytypefunc 	= gst_pad_get_query_types_default;
 
-  GST_FLAG_SET (pad, GST_PAD_DISABLED);
+  /* GST_FLAG_SET (pad, GST_PAD_DISABLED); */
   
   gst_probe_dispatcher_init (&pad->probedisp);
 }
