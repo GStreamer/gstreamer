@@ -1,5 +1,6 @@
 #undef PACKAGE
 #undef VERSION
+#undef GST_VERSION
 #undef GST_VERSION_RELEASE
 
 /* Gettext stuff */

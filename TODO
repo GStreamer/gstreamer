@@ -1,4 +1,3 @@
-
 - property proxy in compount elements.
 - implement events in all plugins.
 - app must be able to catch events?

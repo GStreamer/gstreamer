@@ -1,53 +1,17 @@
 dnl Note: this file is now the main autoconf file
 AC_INIT
-AC_CONFIG_SRCDIR([gst/gstobject.h])
-
 AC_CANONICAL_TARGET([])
 
+dnl when going to/from release please set the nano (fourth number) right !
+AS_VERSION(gstreamer, GST_VERSION, 0, 3, 2, 1)
+AS_LIBTOOL(GST, 0, 0, 0, yes)
+
+AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
 
-GST_VERSION_MAJOR=0
-GST_VERSION_MINOR=3
-GST_VERSION_MICRO=2
-
-dnl we use a datestamped release tag and a fourth version ".1" number
-dnl during CVS development
-GST_VERSION_RELEASE=`date +%Y%m%d`
-GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO.1
-dnl we use a normal release tag increased manually when releasing
-dnl GST_VERSION_RELEASE=1
-dnl GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
-
-PACKAGE=gstreamer
-VERSION=$GST_VERSION
-
-AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
-AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
-AC_SUBST(PACKAGE)
-AC_SUBST(VERSION)
-AC_DEFINE_UNQUOTED(GST_VERSION_RELEASE, "$GST_VERSION_RELEASE")
-AC_SUBST(GST_VERSION_RELEASE)
-
-dnl libtool
-GST_CURRENT=0
-GST_REVISION=0
-GST_AGE=0
-GST_LIBVERSION=$GST_CURRENT:$GST_REVISION:$GST_AGE
-
-AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 ACLOCAL="cat m4/*.m4 >acinclude.m4;$ACLOCAL $ACLOCAL_FLAGS"
-
-AC_SUBST(GST_VERSION_MAJOR)
-AC_SUBST(GST_VERSION_MINOR)
-AC_SUBST(GST_VERSION_MICRO)
-AC_SUBST(GST_VERSION)
-
-AC_SUBST(GST_CURRENT)
-AC_SUBST(GST_REVISION)
-AC_SUBST(GST_AGE)
-AC_SUBST(GST_LIBVERSION)
 
 AM_MAINTAINER_MODE
 
@@ -62,8 +26,6 @@ AC_ISC_POSIX
 dnl We disable static building for development, for time savings
 dnl *NOTE*: dnl this line before release, so release does static too
 dnl AM_DISABLE_STATIC
-AC_LIBTOOL_DLOPEN
-AM_PROG_LIBTOOL
 
 AC_HEADER_STDC([])
 

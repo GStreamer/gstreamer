@@ -20,7 +20,13 @@ system stabilizes.
 
 * add release notes to cvs -- why?
 
+* take a FRESH cvs checkout
+
+* make distcheck should pass
+
 * test suite should pass
+
+* rpms should build and install
 
 * autotools have latest config.{guess,sub}
   This is needed in order to support newer platforms.
@@ -38,6 +44,9 @@ registers fine, runs the media tests fine, and uninstalls as well
 * tag tree
   http://gstreamer.net/dev/cvs.php
   add tag to above page
+
+* relink current and cvs in the redhat dir and copy the symlinks from the
+  current to the new release treee
 
 * update web site release notes: added to cvs
   - change the releases/current symbolic link

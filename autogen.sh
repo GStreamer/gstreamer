@@ -2,189 +2,62 @@
 # Run this to generate all the initial makefiles, etc.
 
 DIE=0
-package=GStreamer
-srcfile=gst/gstobject.h
-#DEBUG=defined
+package=gstreamer
+srcfile=gst/gst.c
 
+# a quick cvs co to ease the transition
 if test ! -d common; then
   echo "+ getting common from cvs"; cvs co common
 fi
 if test ! -d libs/ext/cothreads; then
-  echo "+ getting cothreads from cvs"; cvs co -d libs/ext cothreads
+  echo "+ getting cothreads from cvs"; cvs co gst-cothreads
 fi
 
-CONFIGURE_OPT='--enable-maintainer-mode --enable-plugin-builddir'
-
-for i in $@; do
-    if test "$i" = "--autogen-noconfigure"; then
-        NOCONFIGURE=defined
-        echo "+ configure run disabled"
-    elif test "$i" = "--autogen-nocheck"; then
-        NOCHECK=defined
-        echo "+ autotools version check disabled"
-    elif test "$i" = "--autogen-debug"; then
-        DEBUG=defined
-        echo "+ debug output enabled"
-    elif test "$i" = "--help"; then
-        echo "autogen.sh help options: "
-        echo " --autogen-noconfigure    don't run the configure script"
-        echo " --autogen-nocheck        don't do version checks"
-        echo " --autogen-debug          debug the autogen process"
-        echo "continuing with the autogen in order to get configure help messages..."
-    fi
-done
-
-debug ()
-# print out a debug message if DEBUG is a defined variable
-{
-  if test ! -z "$DEBUG"
-  then
-    echo "DEBUG: $1"
-  fi
-}
-
-version_check ()
-# check the version of a package
-# first argument : package name (executable)
-# second argument : source download url
-# rest of arguments : major, minor, micro version
-{
-  PACKAGE=$1
-  URL=$2
-  MAJOR=$3
-  MINOR=$4
-  MICRO=$5
-
-  WRONG=
-
-  debug "major $MAJOR minor $MINOR micro $MICRO"
-  VERSION=$MAJOR
-  if test ! -z "$MINOR"; then VERSION=$VERSION.$MINOR; else MINOR=0; fi
-  if test ! -z "$MICRO"; then VERSION=$VERSION.$MICRO; else MICRO=0; fi
-
-  debug "major $MAJOR minor $MINOR micro $MICRO"
-  
-  test -z "$NOCHECK" && {
-      echo -n "+ checking for $1 >= $VERSION ... "
-  } || {
-      return 0
-  }
-  
-  ($PACKAGE --version) < /dev/null > /dev/null 2>&1 || 
-  {
-	echo
-	echo "You must have $PACKAGE installed to compile $package."
-	echo "Download the appropriate package for your distribution,"
-	echo "or get the source tarball at $URL"
-	return 1
-  }
-  # the following line is carefully crafted sed magic
-  pkg_version=`$PACKAGE --version|head -n 1|sed 's/^[a-zA-z\.\ ()]*//;s/ .*$//'`
-  debug "pkg_version $pkg_version"
-  pkg_major=`echo $pkg_version | cut -d. -f1`
-  pkg_minor=`echo $pkg_version | cut -d. -f2`
-  pkg_micro=`echo $pkg_version | cut -d. -f3`
-  test -z "$pkg_minor" && pkg_minor=0
-  test -z "$pkg_micro" && pkg_micro=0
-
-  debug "found major $pkg_major minor $pkg_minor micro $pkg_micro"
-
-  #start checking the version
-  debug "version check"
-
-  if [ ! "$pkg_major" -gt "$MAJOR" ]; then
-    debug "$pkg_major -le $MAJOR"
-    if [ "$pkg_major" -lt "$MAJOR" ]; then
-      WRONG=1
-    elif [ ! "$pkg_minor" -gt "$MINOR" ]; then
-      if [ "$pkg_minor" -lt "$MINOR" ]; then
-        WRONG=1
-      elif [ "$pkg_micro" -lt "$MICRO" ]; then
-	WRONG=1
-      fi
-    fi
-  fi
-
-  if test ! -z "$WRONG"; then
-    echo "found $pkg_version, not ok !"
-    echo
-    echo "You must have $PACKAGE $VERSION or greater to compile $package."
-    echo "Get the latest version from $URL"
-    return 1
-  else
-    echo "found $pkg_version, ok."
-  fi
-}
-
-# autoconf 2.52d has a weird issue involving a yes:no error
-# so don't allow it's use
-ac_version=`autoconf --version|head -n 1|sed 's/^[a-zA-z\.\ ()]*//;s/ .*$//'`
-if test "$ac_version" = "2.52d"; then
-  echo "autoconf 2.52d has an issue with our current build."
-  echo "We don't know who's to blame however.  So until we do, get a"
-  echo "regular version.  RPM's of a working version are on the gstreamer site."
+# source helper functions
+if test ! -f common/gst-autogen.sh;
+then
+  echo There is something wrong with your source tree.
+  echo You are missing common/gst-autogen.sh
   exit 1
 fi
+. common/gst-autogen.sh
 
+autogen_options $@
 
-if test -z "$*"; then
-	echo "This autogen script will automatically run ./configure as:"
-        echo "./configure $CONFIGURE_OPT"
-        echo "To pass any other options, please specify them on the $0"
-        echo "command line."
-        echo
-fi
-
+echo -n "+ check for build tools"
+if test ! -z $NOCHECK; then echo " skipped"; else  echo; fi
 version_check "autoconf" "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
 version_check "automake" "ftp://ftp.gnu.org/pub/gnu/automake/" 1 5 || DIE=1
 version_check "libtool" "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
 version_check "pkg-config" "http://www.freedesktop.org/software/pkgconfig" 0 8 0 || DIE=1
 
-if test "$DIE" -eq 1; then
-	exit 1
+autoconf_2.52d_check || DIE=1
+
+CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-plugin-builddir'
+# if no arguments specified then this will be printed
+if test -z "$*"; then
+  echo "+ checking for autogen.sh options"
+  echo "  This autogen script will automatically run ./configure as:"
+  echo "  ./configure $CONFIGURE_DEF_OPT"
+  echo "  To pass any additional options, please specify them on the $0"
+  echo "  command line."
 fi
 
-test -f $srcfile || {
-	echo "You must run this script in the top-level $package directory"
-	exit 1
-}
+toplevel_check $srcfile
 
-echo "+ running aclocal ..."
-cat m4/*.m4 >acinclude.m4;aclocal $ACLOCAL_FLAGS || {
-	echo
-	echo "aclocal failed - check that all needed development files are present on system"
-	exit 1
-}
+tool_run "aclocal" "-I m4 -I common/m4 $ACLOCAL_FLAGS"
 
 # FIXME : why does libtoolize keep complaining about aclocal ?
-echo "+ not running libtoolize until libtool fix has flown downstream"
-#echo "+ running libtoolize ..."
-#libtoolize --copy --force || {
-#	echo
-#	echo "libtoolize failed"
-#	exit 1
-#}
 
-echo "+ running autoheader ... "
-autoheader || {
-	echo
-	echo "autoheader failed"
-	exit 1
-}
+echo "+ not running libtoolize until libtool fix has flown downstream"
+# tool_run "libtoolize" "--copy --force"
+tool_run "autoheader"
+
 # touch the stamp-h.in build stamp so we don't re-run autoheader in maintainer mode -- wingo
 echo timestamp > stamp-h.in 2> /dev/null
-echo "+ running autoconf ... "
-autoconf || {
-	echo
-	echo "autoconf failed"
-	exit 1
-}
-echo "+ running automake ... "
-automake -a -c || {
-	echo
-	echo "automake failed"
-	exit 1
-}
+
+tool_run "autoconf"
+tool_run "automake" "-a -c"
 
 echo
 echo "+ running autogen.sh in libs/ext/cothreads..."
@@ -198,21 +71,20 @@ popd > /dev/null
 echo
 
 test -n "$NOCONFIGURE" && {
-    echo "skipping configure stage for package $package, as requested."
-    echo "autogen.sh done."
-    exit 0
+  echo "skipping configure stage for package $package, as requested."
+  echo "autogen.sh done."
+  exit 0
 }
 
 echo "+ running configure ... "
-echo "./configure default flags: $CONFIGURE_OPT"
-echo "using: $CONFIGURE_OPT $@"
+test ! -z "$CONFIGURE_DEF_OPT" && echo "  ./configure default flags: $CONFIGURE_DEF_OPT"
+test ! -z "$CONFIGURE_EXT_OPT" && echo "  ./configure external flags: $CONFIGURE_EXT_OPT"
 echo
 
-./configure $CONFIGURE_OPT "$@" || {
-	echo
-	echo "configure failed"
-	exit 1
+./configure $CONFIGURE_OPT $CONFIGURE_EXT_OPT || {
+        echo "  configure failed"
+        exit 1
 }
 
-echo 
 echo "Now type 'make' to compile $package."
+

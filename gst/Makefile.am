@@ -159,6 +159,6 @@ libgst_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
 libcothreads_la_CFLAGS = $(libgst_la_CFLAGS) -O2
 
 libgst_la_LIBADD = $(LIBGST_LIBS) libcothreads.la
-libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION) -release $(GST_VERSION)
+libgst_la_LDFLAGS = @GST_LT_LDFLAGS@ -version @GST_LIBVERSION@
 
 EXTRA_DIST = ROADMAP
