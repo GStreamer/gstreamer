@@ -656,8 +656,15 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
             gst_play_base_bin_signals[GROUP_SWITCH_SIGNAL], 0);
         /* removing the current group brings the next group
          * active */
+        g_mutex_lock (play_base_bin->group_lock);
         play_base_bin->queued_groups =
             g_list_remove (play_base_bin->queued_groups, group);
+        while (!play_base_bin->queued_groups) {
+          GST_DEBUG ("Waiting for new groups");
+          g_cond_wait (play_base_bin->group_cond, play_base_bin->group_lock);
+          GST_DEBUG ("done");
+        }
+        g_mutex_unlock (play_base_bin->group_lock);
         setup_substreams (play_base_bin);
         GST_DEBUG ("switching to next group %p",
             play_base_bin->queued_groups->data);

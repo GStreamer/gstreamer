@@ -1,3 +1,8 @@
+2005-01-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybasebin.c: (probe_triggered):
+	  Thread safety.
+
 2005-01-16  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/swfdec/gstswfdec.c: (gst_swfdec_change_state):
