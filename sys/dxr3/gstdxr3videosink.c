@@ -155,6 +155,8 @@ gst_dxr3_video_sink_class_init (GstDxr3VideoSinkClass *klass)
 
   gobject_class->set_property = gst_dxr3_video_sink_set_property;
   gobject_class->get_property = gst_dxr3_video_sink_get_property;
+
+  gstelement_class->set_clock = gst_dxr3_video_sink_set_clock;
 }
 
 static void
@@ -192,7 +194,6 @@ gst_dxr3_video_sink_init(GstDxr3VideoSink *dxr3_video_sink)
   gst_pad_set_event_function(dxr3_video_sink->sinkpad, gst_dxr3_video_sink_handle_event);
 
   dxr3_video_sink->clock = NULL;
-  GST_ELEMENT(dxr3_video_sink)->setclockfunc = gst_dxr3_video_sink_set_clock;
 }
 
 static gboolean
