@@ -91,10 +91,13 @@ g2g_object_class_find_property(GtkObjectClass *class,gchar *name)
 {
   GtkArgInfo *info;
   GParamSpec *spec;
-
   //fprintf(stderr,"class name is %s\n",gtk_type_name(class->type));
 
-  gtk_object_arg_get_info(class->type,name,&info);
+  // return NULL if no info found
+  if (gtk_object_arg_get_info(class->type,name,&info)){
+    return NULL;
+  }
+  
   spec = g_new0(GParamSpec,1);
 
   if (info) {
