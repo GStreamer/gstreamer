@@ -58,16 +58,18 @@ static GstElementStateReturn gst_bin_change_state (GstElement * element);
 static GstElementStateReturn gst_bin_get_state (GstElement * element,
     GstElementState * state, GstElementState * pending, GTimeVal * timeout);
 
+static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
+static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
+
 #ifndef GST_DISABLE_INDEX
-static void gst_bin_set_index (GstElement * element, GstIndex * index);
+static void gst_bin_set_index_func (GstElement * element, GstIndex * index);
 #endif
-static void gst_bin_set_clock (GstElement * element, GstClock * clock);
-static GstClock *gst_bin_get_clock (GstElement * element);
+static GstClock *gst_bin_get_clock_func (GstElement * element);
+static void gst_bin_set_clock_func (GstElement * element, GstClock * clock);
+
 static void gst_bin_set_bus (GstElement * element, GstBus * bus);
 static void gst_bin_set_scheduler (GstElement * element, GstScheduler * sched);
 
-static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
-static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_bin_save_thyself (GstObject * object, xmlNodePtr parent);
@@ -167,10 +169,10 @@ gst_bin_class_init (GstBinClass * klass)
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_bin_change_state);
   gstelement_class->get_state = GST_DEBUG_FUNCPTR (gst_bin_get_state);
 #ifndef GST_DISABLE_INDEX
-  gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_bin_set_index);
+  gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_bin_set_index_func);
 #endif
-  gstelement_class->get_clock = GST_DEBUG_FUNCPTR (gst_bin_get_clock);
-  gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_bin_set_clock);
+  gstelement_class->get_clock = GST_DEBUG_FUNCPTR (gst_bin_get_clock_func);
+  gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_bin_set_clock_func);
   gstelement_class->set_bus = GST_DEBUG_FUNCPTR (gst_bin_set_bus);
   gstelement_class->set_scheduler = GST_DEBUG_FUNCPTR (gst_bin_set_scheduler);
 
@@ -206,7 +208,7 @@ gst_bin_new (const gchar * name)
  */
 #ifndef GST_DISABLE_INDEX
 static void
-gst_bin_set_index (GstElement * element, GstIndex * index)
+gst_bin_set_index_func (GstElement * element, GstIndex * index)
 {
   GstBin *bin;
   GList *children;
@@ -228,7 +230,7 @@ gst_bin_set_index (GstElement * element, GstIndex * index)
  * MT safe 
  */
 static void
-gst_bin_set_clock (GstElement * element, GstClock * clock)
+gst_bin_set_clock_func (GstElement * element, GstClock * clock)
 {
   GList *children;
   GstBin *bin;
@@ -249,7 +251,7 @@ gst_bin_set_clock (GstElement * element, GstClock * clock)
  * MT safe 
  */
 static GstClock *
-gst_bin_get_clock (GstElement * element)
+gst_bin_get_clock_func (GstElement * element)
 {
   GstClock *result = NULL;
   GstBin *bin;
@@ -354,7 +356,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
 
   gst_element_set_manager (element, GST_ELEMENT (bin)->manager);
   gst_element_set_bus (element, GST_ELEMENT (bin)->bus);
-  gst_element_set_scheduler (element, GST_ELEMENT (bin)->scheduler);
+  gst_element_set_scheduler (element, GST_ELEMENT_SCHEDULER (bin));
 
   GST_UNLOCK (bin);
 
@@ -368,23 +370,27 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
 
   /* ERROR handling here */
 adding_itself:
-  GST_LOCK (bin);
-  g_warning ("Cannot add bin %s to itself", GST_ELEMENT_NAME (bin));
-  GST_UNLOCK (bin);
-  return FALSE;
-
+  {
+    GST_LOCK (bin);
+    g_warning ("Cannot add bin %s to itself", GST_ELEMENT_NAME (bin));
+    GST_UNLOCK (bin);
+    return FALSE;
+  }
 duplicate_name:
-  g_warning ("Name %s is not unique in bin %s, not adding",
-      elem_name, GST_ELEMENT_NAME (bin));
-  GST_UNLOCK (bin);
-  g_free (elem_name);
-  return FALSE;
-
+  {
+    g_warning ("Name %s is not unique in bin %s, not adding",
+        elem_name, GST_ELEMENT_NAME (bin));
+    GST_UNLOCK (bin);
+    g_free (elem_name);
+    return FALSE;
+  }
 had_parent:
-  g_warning ("Element %s already has parent", elem_name);
-  GST_UNLOCK (bin);
-  g_free (elem_name);
-  return FALSE;
+  {
+    g_warning ("Element %s already has parent", elem_name);
+    GST_UNLOCK (bin);
+    g_free (elem_name);
+    return FALSE;
+  }
 }
 
 /**
@@ -421,10 +427,13 @@ gst_bin_add (GstBin * bin, GstElement * element)
 
   return result;
 
+  /* ERROR handling */
 no_function:
-  g_warning ("adding elements to bin %s is not supported",
-      GST_ELEMENT_NAME (bin));
-  return FALSE;
+  {
+    g_warning ("adding elements to bin %s is not supported",
+        GST_ELEMENT_NAME (bin));
+    return FALSE;
+  }
 }
 
 /* remove an element from the bin
@@ -471,11 +480,15 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 
   return TRUE;
 
+  /* ERROR handling */
 not_in_bin:
-  g_warning ("Element %s is not in bin %s", elem_name, GST_ELEMENT_NAME (bin));
-  GST_UNLOCK (bin);
-  g_free (elem_name);
-  return FALSE;
+  {
+    g_warning ("Element %s is not in bin %s", elem_name,
+        GST_ELEMENT_NAME (bin));
+    GST_UNLOCK (bin);
+    g_free (elem_name);
+    return FALSE;
+  }
 }
 
 /**
@@ -516,10 +529,13 @@ gst_bin_remove (GstBin * bin, GstElement * element)
 
   return result;
 
+  /* ERROR handling */
 no_function:
-  g_warning ("removing elements from bin %s is not supported",
-      GST_ELEMENT_NAME (bin));
-  return FALSE;
+  {
+    g_warning ("removing elements from bin %s is not supported",
+        GST_ELEMENT_NAME (bin));
+    return FALSE;
+  }
 }
 
 static GstIteratorItem
@@ -611,7 +627,6 @@ gst_bin_iterate_recurse (GstBin * bin)
   GST_UNLOCK (bin);
 
   return result;
-  return NULL;
 }
 
 GstIterator *
@@ -718,7 +733,6 @@ gst_bin_iterate_sinks (GstBin * bin)
   children = gst_bin_iterate_elements (bin);
   result = gst_iterator_filter (children,
       (GCompareFunc) bin_element_is_sink, bin);
-  gst_iterator_free (children);
 
   return result;
 }
@@ -1168,7 +1182,6 @@ gst_bin_iterate_all_by_interface (GstBin * bin, GType interface)
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_filter (children, (GCompareFunc) compare_interface,
       GINT_TO_POINTER (interface));
-  gst_iterator_free (children);
 
   return result;
 }

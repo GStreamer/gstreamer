@@ -26,15 +26,14 @@
 #include <gobject/gvaluecollector.h>
 
 #include "gstelement.h"
+#include "gstbus.h"
 #include "gstmarshal.h"
 #include "gsterror.h"
+#include "gstscheduler.h"
 #include "gstevent.h"
 #include "gstutils.h"
 #include "gstinfo.h"
 #include "gst-i18n-lib.h"
-
-#include "gstscheduler.h"
-#include "gstbus.h"
 
 /* Element signals and args */
 enum
@@ -872,7 +871,7 @@ iterate_pad (GstIterator * it, GstPad * pad)
  *
  * Retrieves an iterattor of @element's pads. 
  *
- * Returns: the #GstIterator of pads.
+ * Returns: the #GstIterator of #GstPad. unref each pad after usage.
  *
  * MT safe.
  */

@@ -136,9 +136,9 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
 static void
 gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
 {
+  GstScheduler *scheduler;
   GstPipeline *pipeline = GST_PIPELINE (instance);
   GstBus *bus;
-  GstScheduler *scheduler;
 
   /* get an instance of the default scheduler */
   scheduler = gst_scheduler_factory_make (NULL, GST_ELEMENT (pipeline));
@@ -562,9 +562,9 @@ gst_pipeline_auto_clock (GstPipeline * pipeline)
   g_return_if_fail (pipeline != NULL);
   g_return_if_fail (GST_IS_PIPELINE (pipeline));
 
+  GST_LOCK (pipeline);
   GST_FLAG_UNSET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK);
 
-  GST_LOCK (pipeline);
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
   GST_UNLOCK (pipeline);
 

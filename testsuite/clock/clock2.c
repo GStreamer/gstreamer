@@ -27,8 +27,8 @@ element_wait (GstElement * element, GstClockTime time)
   GstClockID id;
 
   id = gst_clock_new_single_shot_id (clock, time + element->base_time);
-
   gst_clock_id_wait (id, NULL);
+  gst_clock_id_unref (id);
 }
 
 int

@@ -97,8 +97,8 @@ main (int argc, char *argv[])
   g_usleep (G_USEC_PER_SEC / 2);
   g_print ("cancel id %p after 0.5 seconds\n", id2);
   gst_clock_id_unschedule (id2);
-  gst_clock_id_unref (id2);
   g_print ("canceled id %p\n", id2);
+  gst_clock_id_unref (id2);
 
   g_usleep (2 * G_USEC_PER_SEC);
 
