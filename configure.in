@@ -335,14 +335,23 @@ AC_ARG_ENABLE(debug-verbose,
 esac], 
 [USE_DEBUG_VERBOSE=no]) dnl Default value
 
-AC_ARG_ENABLE(debug-info,
-[  --enable-debug-info         spews lots of info at runtime for plugin writers],
+AC_ARG_ENABLE(info,
+[  --enable-info                spews lots of info at runtime for plugin writers],
 [case "${enableval}" in
-  yes) USE_DEBUG_INFO=yes ;;
-  no)  USE_DEBUG_INFO=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug-info) ;;
+  yes) USE_DEBUG_INFO_VERBOSE=yes ;;
+  no)  USE_DEBUG_INFO_VERBOSE=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-info) ;;
 esac], 
-[USE_DEBUG_INFO=no]) dnl Default value
+[USE_DEBUG_INFO_VERBOSE=no]) dnl Default value
+
+AC_ARG_ENABLE(info-system,
+[  --disable-info-system        disables the info debugging system],
+[case "${enableval}" in
+  yes) DISABLE_DEBUG_INFO=no ;;
+  no)  DISABLE_DEBUG_INFO=yes ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --disable-info) ;;
+esac], 
+[DISABLE_DEBUG_INFO=no]) dnl Default value
 
 AC_ARG_ENABLE(profiling,
 [  --enable-profiling           adds -pg to compiler commandline, for profiling],
@@ -388,8 +397,15 @@ if test "x$USE_DEBUG_VERBOSE" = xyes; then
   AC_DEFINE(GST_DEBUG_ENABLED)
 fi
 
-if test "x$USE_DEBUG_INFO" = xyes; then
+if test "x$USE_DEBUG_INFO_VERBOSE" = xyes; then
+  AC_DEFINE(GST_INFO_ENABLED_VERBOSE)
   AC_DEFINE(GST_INFO_ENABLED)
+else
+  AC_DEFINE(GST_INFO_ENABLED)
+fi
+
+if test "x$DISABLE_DEBUG_INFO" = xyes; then
+  AC_DEFINE(GST_INFO_FORCE_DISABLE)
 fi
 
 if test "x$USE_PROFILING" = xyes; then
