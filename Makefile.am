@@ -31,7 +31,8 @@ pkgconfig_DATA = gstreamer.pc
 
 man_MANS = gstreamer-config.1
 
-EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 gstreamer.pc.in \
+EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 \
+	     gstreamer.pc.in gstreamer-uninstall.pc.in \
 	     LICENSE REQUIREMENTS ABOUT-NLS $(man_MANS)
 
 dist-hook:
