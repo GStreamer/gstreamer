@@ -32,8 +32,6 @@ GST_DEBUG_CATEGORY (alsa_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (alsa_debug, "alsa", 0, "alsa plugins");
-
   if (!gst_element_register (plugin, "alsamixer", GST_RANK_NONE,
           GST_TYPE_ALSA_MIXER))
     return FALSE;
@@ -43,6 +41,8 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "alsasink", GST_RANK_NONE,
           GST_TYPE_ALSA_SINK))
     return FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (alsa_debug, "alsa", 0, "alsa plugins");
 
   return TRUE;
 }
