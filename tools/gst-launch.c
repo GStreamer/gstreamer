@@ -337,7 +337,8 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
       break;
     case GST_MESSAGE_ERROR:
       gst_object_default_error (GST_MESSAGE_SRC (message),
-          GST_MESSAGE_ERROR_ERROR (message), GST_MESSAGE_ERROR_DEBUG (message));
+          GST_MESSAGE_ERROR_GERROR (message),
+          GST_MESSAGE_ERROR_DEBUG (message));
       caught_error = TRUE;
       gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
       if (g_main_loop_is_running (loop))

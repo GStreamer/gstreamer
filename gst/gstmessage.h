@@ -28,20 +28,19 @@
 #include <gst/gsttag.h>
 #include <gst/gststructure.h>
 
-G_BEGIN_DECLS
+G_BEGIN_DECLS GST_EXPORT GType _gst_message_type;
 
-GST_EXPORT GType _gst_message_type;
-
-typedef enum {
-  GST_MESSAGE_UNKNOWN		= 0,
-  GST_MESSAGE_EOS		= 1,
-  GST_MESSAGE_ERROR		= 2,
-  GST_MESSAGE_WARNING		= 3,
-  GST_MESSAGE_INFO		= 4,
-  GST_MESSAGE_TAG 		= 5,
-  GST_MESSAGE_BUFFERING		= 6,
-  GST_MESSAGE_STATE_CHANGED	= 7,
-  GST_MESSAGE_STEP_DONE		= 8,
+typedef enum
+{
+  GST_MESSAGE_UNKNOWN = 0,
+  GST_MESSAGE_EOS = 1,
+  GST_MESSAGE_ERROR = 2,
+  GST_MESSAGE_WARNING = 3,
+  GST_MESSAGE_INFO = 4,
+  GST_MESSAGE_TAG = 5,
+  GST_MESSAGE_BUFFERING = 6,
+  GST_MESSAGE_STATE_CHANGED = 7,
+  GST_MESSAGE_STEP_DONE = 8,
 } GstMessageType;
 
 #define GST_MESSAGE_TRACE_NAME	"GstMessage"
@@ -56,42 +55,49 @@ typedef enum {
 
 #define GST_MESSAGE_TAG_LIST(message)	(GST_MESSAGE(message)->message_data.tag.list)
 
-#define GST_MESSAGE_ERROR_ERROR(message)	(GST_MESSAGE(message)->message_data.error.error)
+#define GST_MESSAGE_ERROR_GERROR(message)	(GST_MESSAGE(message)->message_data.error.gerror)
 #define GST_MESSAGE_ERROR_DEBUG(message)	(GST_MESSAGE(message)->message_data.error.debug)
+#define GST_MESSAGE_WARNING_GERROR(message)	(GST_MESSAGE(message)->message_data.error.gerror)
+#define GST_MESSAGE_WARNING_DEBUG(message)	(GST_MESSAGE(message)->message_data.error.debug)
 
-struct _GstMessage {
+struct _GstMessage
+{
   GstData data;
 
-  /*< public >*/ /* with MESSAGE_LOCK */
-  GMutex	  *lock;	/* lock and cond for async delivery */
-  GCond		  *cond;
+  /*< public > *//* with MESSAGE_LOCK */
+  GMutex *lock;                 /* lock and cond for async delivery */
+  GCond *cond;
 
-  /*< public >*/ /* with COW */
-  GstMessageType  type;
-  guint64	  timestamp;
-  GstObject	  *src;
+  /*< public > *//* with COW */
+  GstMessageType type;
+  guint64 timestamp;
+  GstObject *src;
 
-  union {
-    struct {
-      GError *error;
+  union
+  {
+    struct
+    {
+      GError *gerror;
       gchar *debug;
     } error;
-    struct {
-      GstStructure	*structure;
+    struct
+    {
+      GstStructure *structure;
     } structure;
-    struct {
-      GstTagList	*list;
+    struct
+    {
+      GstTagList *list;
     } tag;
   } message_data;
 
-  /*< private >*/
+  /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };
 
-void		_gst_message_initialize		(void);
-	
-GType		gst_message_get_type		(void);
-GstMessage*	gst_message_new			(GstMessageType type, GstObject *src);
+void _gst_message_initialize (void);
+
+GType gst_message_get_type (void);
+GstMessage *gst_message_new (GstMessageType type, GstObject * src);
 
 /* refcounting */
 #define         gst_message_ref(ev)		GST_MESSAGE (gst_data_ref (GST_DATA (ev)))
@@ -100,10 +106,12 @@ GstMessage*	gst_message_new			(GstMessageType type, GstObject *src);
 /* copy message */
 #define         gst_message_copy(ev)		GST_MESSAGE (gst_data_copy (GST_DATA (ev)))
 
-GstMessage*	gst_message_new_eos		(GstObject *src);
-GstMessage*	gst_message_new_error		(GstObject *src, GError *error, gchar *debug);
-GstMessage*	gst_message_new_tag		(GstObject *src, GstTagList *tag_list);
+GstMessage *gst_message_new_eos (GstObject * src);
+GstMessage *gst_message_new_error (GstObject * src, GError * error,
+    gchar * debug);
+GstMessage *gst_message_new_warning (GstObject * src, GError * error,
+    gchar * debug);
+GstMessage *gst_message_new_tag (GstObject * src, GstTagList * tag_list);
 
 G_END_DECLS
-
 #endif /* __GST_MESSAGE_H__ */

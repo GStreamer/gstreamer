@@ -313,6 +313,10 @@ AC_SUBST(POPT_LIBS)
 dnl Check for ucontext.h
 AC_CHECK_HEADER(ucontext.h, AC_DEFINE(HAVE_UCONTEXT_H, 1, [defined if we have ucontext.h]))
 
+dnl check for "check", unit testing library/header
+AM_PATH_CHECK(0.8.2, HAVE_CHECK=yes, HAVE_CHECK=no)
+AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
+
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
@@ -669,6 +673,7 @@ libs/gst/control/Makefile
 libs/gst/dataprotocol/Makefile
 libs/gst/getbits/Makefile
 po/Makefile.in
+check/Makefile
 tests/Makefile
 tests/bufspeed/Makefile
 tests/instantiate/Makefile

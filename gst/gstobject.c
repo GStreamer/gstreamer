@@ -604,12 +604,13 @@ gst_object_set_name_default (GstObject * object)
 
 /**
  * gst_object_set_name:
- * @object: GstObject to set the name of
- * @name: new name of object
+ * @object: a #GstObject to set the name of
+ * @name:   new name of object
  *
- * Sets the name of the object, or gives the element a guaranteed unique
- * name (if @name is NULL). This function makes a copy of the provided
- * name so the called must g_free() the name it sent as a parameter.
+ * Sets the name of the object, or gives the object a guaranteed unique
+ * name (if @name is NULL).
+ * This function makes a copy of the provided name, so the caller
+ * retains ownership of the name it sent.
  *
  * MT safe.
  */
@@ -632,12 +633,14 @@ gst_object_set_name (GstObject * object, const gchar * name)
 
 /**
  * gst_object_get_name:
- * @object: GstObject to get the name of
+ * @object: a #GstObject to get the name of
  *
- * Get the name of the object. This function returns a copy
- * of the name, you should call g_free() on it after usage.
+ * Returns a copy of the name of the object.
+ * Caller should g_free() the return value after usage.
+ * For a nameless object, this returns NULL, which you can safely g_free()
+ * as well.
  *
- * Returns: name of the object. g_free() after usage.
+ * Returns: the name of the object. g_free() after usage.
  *
  * MT safe.
  */

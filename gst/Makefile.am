@@ -214,13 +214,13 @@ noinst_HEADERS = 		\
 	gstarch.h		\
 	cothreads.h		
 
-if GST_DISABLE_OMEGA_COTHREADS
+#if GST_DISABLE_OMEGA_COTHREADS
 #libcothreads_la_SOURCES =
 #libcothreads_la_CFLAGS =
-else
-libcothreads_la_SOURCES = cothreads.c
-libcothreads_la_CFLAGS = $(libgstreamer_@GST_MAJORMINOR@_la_CFLAGS) 
-endif
+#else
+#libcothreads_la_SOURCES = cothreads.c
+#libcothreads_la_CFLAGS = $(libgstreamer_@GST_MAJORMINOR@_la_CFLAGS) 
+#endif
 
 
 gstmarshal.h: gstmarshal.list

@@ -38,7 +38,7 @@ G_BEGIN_DECLS
  * the core GStreamer library */
 /* FIXME: should we divide in numerical blocks so we can easily add
           for example PAD errors later ? */
-typedef enum
+    typedef enum
 {
   GST_CORE_ERROR_FAILED = 1,
   GST_CORE_ERROR_TOO_LAZY,
@@ -123,7 +123,7 @@ GstStreamError;
 #define GST_ERROR_SYSTEM    ("system error: %s", g_strerror (errno))
 
 GType gst_g_error_get_type (void);
-gchar *gst_error_get_message (GQuark domain, gint code);
+gchar *gst_error_get_text (GQuark domain, gint code);
 GQuark gst_stream_error_quark (void);
 GQuark gst_core_error_quark (void);
 GQuark gst_resource_error_quark (void);

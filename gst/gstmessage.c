@@ -102,7 +102,8 @@ _gst_message_free (GstMessage * message)
   }
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
-      g_error_free (GST_MESSAGE_ERROR_ERROR (message));
+    case GST_MESSAGE_WARNING:
+      g_error_free (GST_MESSAGE_ERROR_GERROR (message));
       g_free (GST_MESSAGE_ERROR_DEBUG (message));
       break;
     case GST_MESSAGE_TAG:
@@ -194,8 +195,27 @@ gst_message_new_error (GstObject * src, GError * error, gchar * debug)
   GstMessage *message;
 
   message = gst_message_new (GST_MESSAGE_ERROR, src);
-  GST_MESSAGE_ERROR_ERROR (message) = error;
+  GST_MESSAGE_ERROR_GERROR (message) = error;
   GST_MESSAGE_ERROR_DEBUG (message) = debug;
+
+  return message;
+}
+
+/**
+ * gst_message_new_warning:
+ *
+ * Create a new warning message.
+ *
+ * Returns: The new warning message.
+ */
+GstMessage *
+gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
+{
+  GstMessage *message;
+
+  message = gst_message_new (GST_MESSAGE_WARNING, src);
+  GST_MESSAGE_WARNING_GERROR (message) = error;
+  GST_MESSAGE_WARNING_DEBUG (message) = debug;
 
   return message;
 }

@@ -22,9 +22,7 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
-typedef struct _GstObject GstObject;
+G_BEGIN_DECLS typedef struct _GstObject GstObject;
 typedef struct _GstObjectClass GstObjectClass;
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;
@@ -36,36 +34,42 @@ typedef struct _GstBin GstBin;
 typedef struct _GstBinClass GstBinClass;
 typedef struct _GstPipeline GstPipeline;
 typedef struct _GstPipelineClass GstPipelineClass;
+typedef struct _GstBus GstBus;
+typedef struct _GstBusClass GstBusClass;
 typedef struct _GstScheduler GstScheduler;
 typedef struct _GstSchedulerClass GstSchedulerClass;
 typedef struct _GstEvent GstEvent;
 typedef struct _GstMessage GstMessage;
 
-typedef enum {
-  GST_STATE_VOID_PENDING        = 0,
-  GST_STATE_NULL                = (1 << 0),
-  GST_STATE_READY               = (1 << 1),
-  GST_STATE_PAUSED              = (1 << 2),
-  GST_STATE_PLAYING             = (1 << 3)
+typedef enum
+{
+  GST_STATE_VOID_PENDING = 0,
+  GST_STATE_NULL = (1 << 0),
+  GST_STATE_READY = (1 << 1),
+  GST_STATE_PAUSED = (1 << 2),
+  GST_STATE_PLAYING = (1 << 3)
 } GstElementState;
 
-typedef enum {
-  GST_STATE_FAILURE             = 0,
-  GST_STATE_SUCCESS             = 1,
-  GST_STATE_ASYNC               = 2
+typedef enum
+{
+  GST_STATE_FAILURE = 0,
+  GST_STATE_SUCCESS = 1,
+  GST_STATE_ASYNC = 2
 } GstElementStateReturn;
 
-typedef enum {
+typedef enum
+{
   GST_RESULT_OK,
   GST_RESULT_NOK,
   GST_RESULT_NOT_IMPL
 } GstResult;
 
-typedef enum {
-  GST_RANK_NONE                 = 0,
-  GST_RANK_MARGINAL             = 64,
-  GST_RANK_SECONDARY            = 128,
-  GST_RANK_PRIMARY              = 256
+typedef enum
+{
+  GST_RANK_NONE = 0,
+  GST_RANK_MARGINAL = 64,
+  GST_RANK_SECONDARY = 128,
+  GST_RANK_PRIMARY = 256
 } GstRank;
 
 #define GST_PADDING 4
@@ -73,5 +77,4 @@ typedef enum {
 
 
 G_END_DECLS
-
 #endif /* __GST_TYPES_H__ */

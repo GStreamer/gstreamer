@@ -1,0 +1,4 @@
+TESTS = gst / gstobject check_PROGRAMS = $ (TESTS)
+
+    AM_CFLAGS = $ (GST_OBJ_CFLAGS) $ (CHECK_CFLAGS)
+    LDADD = $ (GST_OBJ_LIBS) $ (CHECK_LIBS)

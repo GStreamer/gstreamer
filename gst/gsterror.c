@@ -28,10 +28,11 @@
 #define TABLE(t, d, a, b) t[GST_ ## d ## _ERROR_ ## a] = g_strdup (b)
 #define QUARK_FUNC(string)						\
 GQuark gst_ ## string ## _error_quark (void) {				\
-  static GQuark quark;							\
-  if (!quark)								\
-    quark = g_quark_from_static_string ("gst-" # string "-error-quark"); \
-  return quark; }
+  static GQuark q;							\
+  if (!q)								\
+    q = g_quark_from_static_string ("gst-" # string "-error-quark");	\
+  return q;								\
+}
 
 GType
 gst_g_error_get_type (void)
@@ -161,29 +162,30 @@ _gst_stream_errors_init (void)
   return t;
 }
 
-QUARK_FUNC (core)
-    QUARK_FUNC (library)
-    QUARK_FUNC (resource)
-    QUARK_FUNC (stream)
+QUARK_FUNC (core);
+QUARK_FUNC (library);
+QUARK_FUNC (resource);
+QUARK_FUNC (stream);
 
 /**
- * gst_error_get_message:
+ * gst_error_get_text:
  * @domain: the GStreamer error domain this error belongs to.
  * @code: the error code belonging to the domain.
  *
- * Returns: a newly allocated string describing the error message in the
+ * Returns: a newly allocated string describing the error text in the
  * current locale.
  */
-     gchar *gst_error_get_message (GQuark domain, gint code)
+gchar *
+gst_error_get_text (GQuark domain, gint code)
 {
   static gchar **gst_core_errors = NULL;
   static gchar **gst_library_errors = NULL;
   static gchar **gst_resource_errors = NULL;
   static gchar **gst_stream_errors = NULL;
 
-  gchar *message = NULL;
+  gchar *text = NULL;
 
-  /* initialize error message tables if necessary */
+  /* initialize error text tables if necessary */
   if (gst_core_errors == NULL)
     gst_core_errors = _gst_core_errors_init ();
   if (gst_library_errors == NULL)
@@ -195,23 +197,23 @@ QUARK_FUNC (core)
 
 
   if (domain == GST_CORE_ERROR)
-    message = gst_core_errors[code];
+    text = gst_core_errors[code];
   else if (domain == GST_LIBRARY_ERROR)
-    message = gst_library_errors[code];
+    text = gst_library_errors[code];
   else if (domain == GST_RESOURCE_ERROR)
-    message = gst_resource_errors[code];
+    text = gst_resource_errors[code];
   else if (domain == GST_STREAM_ERROR)
-    message = gst_stream_errors[code];
+    text = gst_stream_errors[code];
   else {
-    g_warning ("No error messages for domain %s", g_quark_to_string (domain));
-    return g_strdup_printf (_("No error message for domain %s."),
+    g_warning ("No error texts for domain %s", g_quark_to_string (domain));
+    return g_strdup_printf (_("No error text for domain %s."),
         g_quark_to_string (domain));
   }
-  if (message)
-    return g_strdup (_(message));
+  if (text)
+    return g_strdup (_(text));
   else
     return
         g_strdup_printf (_
-        ("No standard error message for domain %s and code %d."),
+        ("No standard error text for domain %s and code %d."),
         g_quark_to_string (domain), code);
 }

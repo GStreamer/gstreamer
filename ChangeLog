@@ -1,3 +1,32 @@
+2004-12-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* check/Makefile.am:
+	* check/gst/.cvsignore:
+	* check/gst/gstobject.c:
+	* configure.ac:
+	  adding unit testing
+	* docs/upload.mak:
+	  fixing double vars
+	* gst/Makefile.am:
+	  disable some unused stuff
+	* gst/gstbus.h:
+	* gst/gsttypes.h:
+	  move typedefs for gstbus
+	* gst/gstelement.c:
+	* gst/gstelement.h:
+	  add getter/setter for bus and scheduler
+	  add functionality to have (non-fatal) warnings as messages
+	* gst/gsterror.c:
+	* gst/gsterror.h:
+	* gst/gstmessage.c:
+	* gst/gstmessage.h:
+	  rework API to be more general for warnings as well
+	* gst/gstobject.c:
+	  fix docs
+	* tools/gst-launch.c:
+	  fix macros for errors
+
 2004-12-13  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-MT-refcounting.txt:

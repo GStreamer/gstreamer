@@ -69,6 +69,9 @@ static gboolean gst_element_get_state_func (GstElement * element,
     GstElementState * state, GstElementState * pending, GTimeVal * timeout);
 static void gst_element_set_manager_func (GstElement * element,
     GstPipeline * manager);
+static void gst_element_set_bus_func (GstElement * element, GstBus * bus);
+static void gst_element_set_scheduler_func (GstElement * element,
+    GstScheduler * scheduler);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_element_save_thyself (GstObject * object,
@@ -143,6 +146,8 @@ gst_element_class_init (GstElementClass * klass)
   klass->change_state = GST_DEBUG_FUNCPTR (gst_element_change_state);
   klass->get_state = GST_DEBUG_FUNCPTR (gst_element_get_state_func);
   klass->set_manager = GST_DEBUG_FUNCPTR (gst_element_set_manager_func);
+  klass->set_bus = GST_DEBUG_FUNCPTR (gst_element_set_bus_func);
+  klass->set_scheduler = GST_DEBUG_FUNCPTR (gst_element_set_scheduler_func);
   klass->numpadtemplates = 0;
 
   klass->elementfactory = NULL;
@@ -444,6 +449,7 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   /* locking pad to look at the name */
   GST_LOCK (pad);
   /* then check to see if there's already a pad by that name here */
+
   if (G_UNLIKELY (!gst_object_check_uniqueness (element->pads,
               GST_PAD_NAME (pad))))
     goto name_exists;
@@ -1311,24 +1317,29 @@ gst_element_convert (GstElement * element,
 gboolean
 gst_element_post_message (GstElement * element, GstMessage * message)
 {
-  GstPipeline *manager;
+  GstBus *bus;
   gboolean result = FALSE;
+
+  GST_DEBUG ("posting message %p ...", message);
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (message != NULL, FALSE);
 
   GST_LOCK (element);
-  manager = element->manager;
-  if (manager == NULL) {
+  bus = element->bus;
+
+  if (bus == NULL) {
+    GST_DEBUG ("... but I won't because I have no bus");
     GST_UNLOCK (element);
     gst_data_unref (GST_DATA (message));
     return FALSE;
   }
-  gst_object_ref (GST_OBJECT (manager));
+  gst_object_ref (GST_OBJECT (bus));
+  GST_DEBUG ("... on bus %p", bus);
   GST_UNLOCK (element);
 
-  result = gst_pipeline_post_message (manager, message);
-  gst_object_unref (GST_OBJECT (manager));
+  result = gst_bus_post (bus, message);
+  gst_object_unref (GST_OBJECT (bus));
 
   return result;
 }
@@ -1361,77 +1372,79 @@ _gst_element_error_printf (const gchar * format, ...)
 }
 
 /**
- * gst_element_error_full:
- * @element: a #GstElement with the error.
- * @domain: the GStreamer error domain this error belongs to.
- * @code: the error code belonging to the domain
- * @message: an allocated message to be used as a replacement for the default
- *           message connected to code, or NULL
- * @debug: an allocated debug message to be used as a replacement for the
- *         default debugging information, or NULL
- * @file: the source code file where the error was generated
+ * gst_element_message_full:
+ * @element:  a #GstElement to send message from
+ * @type:     the #GstMessageType
+ * @domain:   the GStreamer GError domain this message belongs to
+ * @code:     the GError code belonging to the domain
+ * @text:     an allocated text string to be used as a replacement for the
+ *            default message connected to code, or NULL
+ * @debug:    an allocated debug message to be used as a replacement for the
+ *            default debugging information, or NULL
+ * @file:     the source code file where the error was generated
  * @function: the source code function where the error was generated
- * @line: the source code line where the error was generated
+ * @line:     the source code line where the error was generated
  *
- * Signals an error condition on an element.
- * This function is used internally by elements.
- * It results in the "error" signal.
+ * Post an error or warning message on the bus from inside an element.
  *
  * MT safe.
  */
-void gst_element_error_full
-    (GstElement * element, GQuark domain, gint code, gchar * message,
+void gst_element_message_full
+    (GstElement * element, GstMessageType type,
+    GQuark domain, gint code, gchar * text,
     gchar * debug, const gchar * file, const gchar * function, gint line)
 {
-  GError *error = NULL;
+  GError *gerror = NULL;
   gchar *name;
-  gchar *sent_message;
+  gchar *sent_text;
   gchar *sent_debug;
-  gchar *elem_name;
+  GstMessage *message = NULL;
 
   /* checks */
+  GST_DEBUG ("start");
   g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail ((type == GST_MESSAGE_ERROR) ||
+      (type == GST_MESSAGE_WARNING));
 
-  elem_name = gst_element_get_name (element);
-
-  /* check if we send the given message or the default error message */
-  if ((message == NULL) || (message[0] == 0)) {
-    /* we got this message from g_strdup_printf (""); */
-    g_free (message);
-    sent_message = gst_error_get_message (domain, code);
+  /* check if we send the given text or the default error text */
+  if ((text == NULL) || (text[0] == 0)) {
+    /* text could have come from g_strdup_printf (""); */
+    g_free (text);
+    sent_text = gst_error_get_text (domain, code);
   } else
-    sent_message = message;
+    sent_text = text;
 
+  /* construct a sent_debug with extra information from source */
   if ((debug == NULL) || (debug[0] == 0)) {
-    /* we got this debug from g_strdup_printf (""); */
-    g_free (debug);
-    debug = NULL;
-  }
-
-  /* create error message */
-  GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "signaling error in %s: %s",
-      elem_name, sent_message);
-  error = g_error_new_literal (domain, code, sent_message);
-
-  /* emit the signal, make sure the element stays available */
-  name = gst_object_get_path_string (GST_OBJECT (element));
-  if (debug)
+    /* debug could have come from g_strdup_printf (""); */
+    sent_debug = NULL;
+  } else {
+    name = gst_object_get_path_string (GST_OBJECT (element));
     sent_debug = g_strdup_printf ("%s(%d): %s: %s:\n%s",
         file, line, function, name, debug ? debug : "");
-  else
-    sent_debug = NULL;
+    g_free (name);
+  }
   g_free (debug);
-  g_free (name);
 
-  gst_element_post_message (element,
-      gst_message_new_error (GST_OBJECT (element), error, sent_debug));
+  /* create gerror and post message */
+  GST_CAT_INFO_OBJECT (GST_CAT_ERROR_SYSTEM, element, "posting message: %s",
+      sent_text);
+  gerror = g_error_new_literal (domain, code, sent_text);
 
-  GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "signalled error in %s: %s",
-      elem_name, sent_message);
+  if (type == GST_MESSAGE_ERROR) {
+    message = gst_message_new_error (GST_OBJECT (element), gerror, sent_debug);
+  } else {
+    message = gst_message_new_warning (GST_OBJECT (element), gerror,
+        sent_debug);
+  }
+  gst_element_post_message (element, message);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_ERROR_SYSTEM, element, "posted message: %s",
+      sent_text);
 
   /* cleanup */
-  g_free (sent_message);
-  g_free (elem_name);
+  g_free (sent_text);
+  /* sent_debug is not part of the gerror, so don't free it here */
 }
 
 /**
@@ -2073,6 +2086,33 @@ gst_element_set_manager_func (GstElement * element, GstPipeline * manager)
   GST_UNLOCK (element);
 }
 
+static void
+gst_element_set_bus_func (GstElement * element, GstBus * bus)
+{
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, element, "setting bus to %p", bus);
+
+  GST_LOCK (element);
+  gst_object_replace ((GstObject **) & GST_ELEMENT_BUS (element),
+      GST_OBJECT (bus));
+  GST_UNLOCK (element);
+}
+
+static void
+gst_element_set_scheduler_func (GstElement * element, GstScheduler * scheduler)
+{
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, element, "setting scheduler to %p",
+      scheduler);
+
+  GST_LOCK (element);
+  gst_object_replace ((GstObject **) & GST_ELEMENT_SCHEDULER (element),
+      GST_OBJECT (scheduler));
+  GST_UNLOCK (element);
+}
+
 /**
  * gst_element_set_manager:
  * @element: a #GstElement to set the manager of.
@@ -2096,6 +2136,7 @@ gst_element_set_manager (GstElement * element, GstPipeline * manager)
     oclass->set_manager (element, manager);
 }
 
+
 /**
  * gst_element_get_manager:
  * @element: a #GstElement to get the manager of.
@@ -2116,6 +2157,92 @@ gst_element_get_manager (GstElement * element)
   GST_LOCK (element);
   result = GST_ELEMENT_MANAGER (element);
   gst_object_ref (GST_OBJECT (result));
+  GST_UNLOCK (element);
+
+  return result;
+}
+
+/**
+ * gst_element_set_bus:
+ * @element: a #GstElement to set the bus of.
+ * @bus: the #GstBus to set.
+ *
+ * Sets the bus of the element.  For internal use only, unless you're
+ * testing elements.
+ */
+void
+gst_element_set_bus (GstElement * element, GstBus * bus)
+{
+  GstElementClass *oclass;
+
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  if (oclass->set_bus)
+    oclass->set_bus (element, bus);
+}
+
+/**
+ * gst_element_get_bus:
+ * @element: a #GstElement to get the bus of.
+ *
+ * Returns the bus of the element.
+ *
+ * Returns: the element's #GstBus.
+ */
+GstBus *
+gst_element_get_bus (GstElement * element)
+{
+  GstBus *result = NULL;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+
+  GST_LOCK (element);
+  result = GST_ELEMENT_BUS (element);
+  GST_UNLOCK (element);
+
+  return result;
+}
+
+/**
+ * gst_element_set_scheduler:
+ * @element: a #GstElement to set the scheduler of.
+ * @scheduler: the #GstScheduler to set.
+ *
+ * Sets the scheduler of the element.  For internal use only, unless you're
+ * testing elements.
+ */
+void
+gst_element_set_scheduler (GstElement * element, GstScheduler * scheduler)
+{
+  GstElementClass *oclass;
+
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  if (oclass->set_scheduler)
+    oclass->set_scheduler (element, scheduler);
+}
+
+/**
+ * gst_element_get_scheduler:
+ * @element: a #GstElement to get the scheduler of.
+ *
+ * Returns the scheduler of the element.
+ *
+ * Returns: the element's #GstScheduler.
+ */
+GstScheduler *
+gst_element_get_scheduler (GstElement * element)
+{
+  GstScheduler *result = NULL;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+
+  GST_LOCK (element);
+  result = GST_ELEMENT_SCHEDULER (element);
   GST_UNLOCK (element);
 
   return result;
