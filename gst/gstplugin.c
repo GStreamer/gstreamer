@@ -42,7 +42,7 @@ static GList *_gst_plugin_static = NULL;
 
 /* static variables for segfault handling of plugin loading */
 static char *_gst_plugin_fault_handler_filename = NULL;
-extern gboolean *_gst_enable_segfault; /* see gst.c */
+extern gboolean *_gst_disable_segtrap; /* see gst.c */
 static gboolean *_gst_plugin_fault_handler_is_setup = FALSE;
 
 /* list of valid licenses.
@@ -228,12 +228,12 @@ _gst_plugin_fault_handler_sighandler (int signum)
   switch (signum)
   {
     case SIGSEGV:
-      g_print ("\nERROR:");
+      g_print ("\nERROR: ");
       g_print ("Caught a segmentation fault while loading plugin file:\n");
       g_print ("%s\n\n", _gst_plugin_fault_handler_filename);
       g_print ("Please either:\n");
       g_print ("- remove it and restart.\n");
-      g_print ("- run with --gst-enable-segfault and debug.\n");
+      g_print ("- run with --gst-disable-segtrap and debug.\n");
       exit (-1);
       break;
     default:
@@ -252,7 +252,7 @@ _gst_plugin_fault_handler_setup (void)
   struct sigaction action;
 
   /* if asked to leave segfaults alone, just return */
-  if (_gst_enable_segfault) return;
+  if (_gst_disable_segtrap) return;
 
   if (_gst_plugin_fault_handler_is_setup) return;
 
