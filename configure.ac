@@ -33,14 +33,14 @@ AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
-AC_SUBST(ACLOCAL_AMFLAGS, "-I m4")
+AC_SUBST(ACLOCAL_AMFLAGS, "-I common/m4")
 
 AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
 
 dnl the gettext stuff needed
-AM_GNU_GETTEXT_VERSION(0.11.4)
+AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT([external])
 
 GETTEXT_PACKAGE=gstreamer-$GST_VERSION_MAJOR.$GST_VERSION_MINOR

@@ -1,3 +1,31 @@
+2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/m4/as-ac-expand.m4:
+	* common/m4/as-auto-alt.m4:
+	* common/m4/as-compiler-flag.m4:
+	* common/m4/as-compiler.m4:
+	* common/m4/as-docbook.m4:
+	* common/m4/as-libtool.m4:
+	* common/m4/as-scrub-include.m4:
+	* common/m4/as-version.m4:
+	* common/m4/glib-gettext.m4:
+	* common/m4/gst-arch.m4:
+	* common/m4/gst-debuginfo.m4:
+	* common/m4/gst-doc.m4:
+	* common/m4/gst-feature.m4:
+	* common/m4/gst-function.m4:
+	* common/m4/gst-glib2.m4:
+	* common/m4/gst-gstreamer.m4:
+	* common/m4/gst-libxml2.m4:
+	* common/m4/gst-makecontext.m4:
+	* common/m4/gst-mcsc.m4:
+	* common/m4/pkg.m4:
+	* gst-element-check.m4:
+          fix underquoted macros as reported by automake 1.8.x (#133800)
+	* configure.ac:
+          require gettext 0.11.5 so ulonglong.m4 gets checked out and copied
+          by autopoint (fixes #132996)
+
 2004-02-10  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpad.c (gst_pad_custom_new): Add a FIXME, this is a hacky
