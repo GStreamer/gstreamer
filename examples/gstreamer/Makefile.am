@@ -1,9 +1,10 @@
 EXTRA_DIST = \
-	f2f.py \
-	oggplay.py \
+	bps.py \
 	cp.py \
 	dvdplay.py \
+	f2f.py \
 	identity.py \
 	ilat.py \
 	lat.py \
-	rot13.py
+	rot13.py \
+	vorbisplay.py
