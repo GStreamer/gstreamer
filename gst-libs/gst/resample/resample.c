@@ -165,7 +165,7 @@ void resample_scale(resample_t * r, void *i_buf, unsigned int i_size)
 			r->i_start, r->i_end, r->o_start);
 	}
 
-	if ((r->filter_length + r->i_samples)*2*2 > r->buffer_len) {
+	if ((r->filter_length + r->i_samples)*sizeof(double)*2 > r->buffer_len) {
 		int size = (r->filter_length + r->i_samples) * sizeof(double) * 2;
 
 		if(r->verbose){
@@ -882,3 +882,4 @@ GstPluginDesc plugin_desc = {
   "gstresample",
   plugin_init
 };
+
