@@ -13,3 +13,4 @@ tee
 gst-inspect-check
 gst-compprep-check
 static
+struct_size
