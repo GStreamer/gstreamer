@@ -1,3 +1,16 @@
+2004-05-18  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Add sunaudio
+	* examples/Makefile.am: make gstplay depend on gconf
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c: Remove c99-isms
+	* gst/ffmpegcolorspace/imgconvert.c: (build_rgb_palette),
+	(convert_table_lookup), (img_convert): remove c99-isms
+	* gst/ffmpegcolorspace/imgconvert_template.h: make a constant
+          unsigned, to fix a warning on Solaris
+	* gst/mpeg1sys/systems.c: bcopy->memcpy
+	* gst/rtjpeg/RTjpeg.c: (RTjpeg_yuvrgb8): bcopy->memcpy
+	* sys/Makefile.am: Add sunaudio
+
 2004-05-18  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_get_type), (gst_ogg_mux_init),
