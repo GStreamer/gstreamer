@@ -1,4 +1,4 @@
-librarydir = $(prefix)/lib/gstreamer-@GST_MAJORMINOR@
+librarydir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 library_LTLIBRARIES = libgstriff.la
 
