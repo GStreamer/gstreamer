@@ -1,3 +1,8 @@
+2004-01-26  Julien MOUTTE <julien@moutte.net>
+
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_chain): Dunno how
+	that one managed to stay there... Fixed.
+
 2004-01-26  Jeremy Simon  <jesimon@libertysurf.fr>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
