@@ -619,14 +619,14 @@ gst_element_load_thyself (xmlNodePtr parent,
     }
     children = children->next;
   }
-  g_assert (name != NULL);
-  g_assert (type != NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (type != NULL, NULL);
 
   g_print ("gstelement: loading \"%s\" of type \"%s\"\n", name, type);
 
   element = gst_elementfactory_make (type, name);
 
-  g_assert (element != NULL);
+  g_return_val_if_fail (element != NULL, NULL);
 
   g_hash_table_insert (elements, g_strdup (gst_element_get_name (element)), element);
 

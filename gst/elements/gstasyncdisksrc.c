@@ -296,8 +296,8 @@ gst_asyncdisksrc_get_region (GstPad *pad, gulong offset, gulong size)
   } else
     GST_BUFFER_SIZE (buf) = size;
 
-  /* we're done, push the buffer off now */
-  gst_pad_push (pad,buf);
+  /* we're done, return the buffer off now */
+  return buf;
 }
 
 

@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+#define GST_DEBUG_ENABLED
 
 #include "gstbin.h"
 #include "gstdebug.h"
@@ -247,13 +247,20 @@ gst_bin_change_state (GstElement *element)
   }
 //  g_print("<-- \"%s\"\n",gst_object_get_name(GST_OBJECT(bin)));
 
-  if (GST_STATE_PENDING (element) == GST_STATE_READY) {
-    GstObject *parent;
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:	  
+    {
+      GstObject *parent;
 
-    parent = gst_object_get_parent (GST_OBJECT (element));
+      parent = gst_object_get_parent (GST_OBJECT (element));
 
-    if (!parent || !GST_IS_BIN (parent))
-      gst_bin_create_plan (bin);
+      if (!parent || !GST_IS_BIN (parent))
+        gst_bin_create_plan (bin);
+
+      break;
+    }
+    default:
+      break;
   }
 
   return gst_bin_change_state_norecurse (bin);

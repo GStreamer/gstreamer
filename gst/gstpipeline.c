@@ -486,8 +486,8 @@ gst_pipeline_change_state (GstElement *element)
   
   pipeline = GST_PIPELINE (element);
 
-  switch (GST_STATE_PENDING (pipeline)) {
-    case GST_STATE_READY:
+  switch (GST_STATE_TRANSITION (pipeline)) {
+    case GST_STATE_NULL_TO_READY:
       // we need to set up internal state
       gst_pipeline_prepare (pipeline);
       break;

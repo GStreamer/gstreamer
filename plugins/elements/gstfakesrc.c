@@ -138,7 +138,7 @@ gst_fakesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
           gst_pad_set_get_function(pad,gst_fakesrc_get);
           gst_element_add_pad(GST_ELEMENT(src),pad);
           src->srcpads = g_slist_append(src->srcpads,pad);
-          src->numsrcpads;
+          src->numsrcpads++;
         }
       }
       break;

@@ -63,6 +63,14 @@ static inline char *_gst_print_statename(int state) {
 #define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
 #define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
 
+#define GST_STATE_TRANSITION(obj)	((GST_STATE(obj)<<4) | GST_STATE_PENDING(obj))
+#define GST_STATE_NULL_TO_READY 	((GST_STATE_NULL<<4) | GST_STATE_READY)
+#define GST_STATE_READY_TO_PLAYING 	((GST_STATE_READY<<4) | GST_STATE_PLAYING)
+#define GST_STATE_PLAYING_TO_PAUSED	((GST_STATE_PLAYING<<4) | GST_STATE_PAUSED)
+#define GST_STATE_PAUSED_TO_PLAYING	((GST_STATE_PAUSED<<4) | GST_STATE_PLAYING)
+#define GST_STATE_PLAYING_TO_READY 	((GST_STATE_PLAYING<<4) | GST_STATE_READY)
+#define GST_STATE_READY_TO_NULL		((GST_STATE_READY<<4) | GST_STATE_NULL)
+
 #define GST_TYPE_ELEMENT \
   (gst_element_get_type())
 #define GST_ELEMENT(obj) \

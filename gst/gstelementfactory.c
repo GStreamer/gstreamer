@@ -63,6 +63,8 @@ gst_elementfactory_find (gchar *name)
   GList *walk;
   GstElementFactory *factory;
 
+  g_return_val_if_fail(name != NULL, NULL);
+
   DEBUG("gstelementfactory: find \"%s\"\n", name);
 
   walk = _gst_elementfactories;
@@ -107,6 +109,8 @@ gst_elementfactory_new (gchar *name, GtkType type,
 {
   GstElementFactory *factory = g_new0(GstElementFactory, 1);
 
+  g_return_val_if_fail(name != NULL, NULL);
+
   factory->name = g_strdup(name);
   factory->type = type;
   factory->details = details;
@@ -136,6 +140,7 @@ gst_elementfactory_create (GstElementFactory *factory,
   GstElementClass *oclass;
 
   g_return_val_if_fail(factory != NULL, NULL);
+  g_return_val_if_fail(name != NULL, NULL);
 
   DEBUG("gstelementfactory: create \"%s\" \"%s\"\n", factory->name, name);
 
@@ -179,6 +184,9 @@ gst_elementfactory_make (gchar *factoryname, gchar *name)
 {
   GstElementFactory *factory;
   GstElement *element;
+
+  g_return_val_if_fail(factoryname != NULL, NULL);
+  g_return_val_if_fail(name != NULL, NULL);
 
   DEBUG("gstelementfactory: make \"%s\" \"%s\"\n", factoryname, name);
 
@@ -268,6 +276,8 @@ gst_elementfactory_save_thyself (GstElementFactory *factory,
 		                 xmlNodePtr parent) 
 {
   GList *pads;
+
+  g_return_val_if_fail(factory != NULL, NULL);
 
   xmlNewChild(parent,NULL,"name",factory->name);
   xmlNewChild(parent,NULL,"longname", factory->details->longname);

@@ -206,30 +206,30 @@ gst_disksrc_get (GstPad *pad)
   GstBuffer *buf;
   glong readbytes;
 
-  g_return_if_fail (pad != NULL);
+  g_return_val_if_fail (pad != NULL, NULL);
   src = GST_DISKSRC(gst_pad_get_parent(pad));
-  g_return_if_fail (GST_FLAG_IS_SET (src, GST_DISKSRC_OPEN));
-  g_return_if_fail (GST_STATE (src) >= GST_STATE_READY);
+  g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_DISKSRC_OPEN), NULL);
+  g_return_val_if_fail (GST_STATE (src) >= GST_STATE_READY, NULL);
 
   /* create the buffer */
   // FIXME: should eventually use a bufferpool for this
   buf = gst_buffer_new ();
-  g_return_if_fail (buf);
+  g_return_val_if_fail (buf, NULL);
 
   /* allocate the space for the buffer data */
   GST_BUFFER_DATA (buf) = g_malloc (src->bytes_per_read);
-  g_return_if_fail (GST_BUFFER_DATA (buf) != NULL);
+  g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
 
   /* read it in from the file */
   readbytes = read (src->fd, GST_BUFFER_DATA (buf), src->bytes_per_read);
   if (readbytes == -1) {
     perror ("read()");
     gst_buffer_unref (buf);
-    return;
+    return NULL;
   } else if (readbytes == 0) {
     gst_src_signal_eos (GST_SRC (src));
     gst_buffer_unref (buf);
-    return;
+    return NULL;
   }
 
   /* if we didn't get as many bytes as we asked for, we're at EOF */

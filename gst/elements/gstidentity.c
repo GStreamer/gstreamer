@@ -132,9 +132,12 @@ gst_identity_loop (GstElement *element)
 
   identity = GST_IDENTITY (element);
   
-  buf = gst_pad_pull (identity->sinkpad);
+  do {
+    buf = gst_pad_pull (identity->sinkpad);
 
-  gst_pad_push (identity->srcpad, buf);
+    gst_pad_push (identity->srcpad, buf);
+
+  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
 }
 
 static void 
