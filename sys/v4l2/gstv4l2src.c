@@ -425,6 +425,7 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32 fourcc)
           r_mask = 0xf800;
           g_mask = 0x07e0;
           b_mask = 0x001f;
+          break;
         case V4L2_PIX_FMT_RGB24:
           bpp = depth = 24;
           endianness = G_BIG_ENDIAN;
