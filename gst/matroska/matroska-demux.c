@@ -944,9 +944,6 @@ gst_matroska_demux_handle_src_query (GstPad * pad,
   switch (type) {
     case GST_QUERY_TOTAL:
       switch (*format) {
-        case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-          /* fall through */
         case GST_FORMAT_TIME:
           *value = demux->duration;
           break;
@@ -958,9 +955,6 @@ gst_matroska_demux_handle_src_query (GstPad * pad,
 
     case GST_QUERY_POSITION:
       switch (*format) {
-        case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-          /* fall through */
         case GST_FORMAT_TIME:
           *value = demux->pos;
           break;
