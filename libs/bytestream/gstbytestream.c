@@ -58,10 +58,12 @@ gst_bytestream_destroy (GstByteStream *bs)
   g_free (bs);
 }
 
-GstBuffer*
-gst_bytestream_peek (GstByteStream *bs, guint64 len)
+static inline guint64
+gst_bytestream_fill (GstByteStream *bs, guint64 len)
 {
   GstBuffer *buf;
+
+  g_print ("fill  %08llx %08llx\n", len, bs->pos);
 
   while ((bs->index + len) > bs->size) {
     buf = gst_pad_pull (bs->pad);
@@ -74,6 +76,40 @@ gst_bytestream_peek (GstByteStream *bs, guint64 len)
     }
     bs->size = GST_BUFFER_SIZE (bs->buffer);
   }
+   
+  return len;
+}
+
+static inline void
+gst_bytestream_shrink (GstByteStream *bs, guint64 len)
+{
+  GstBuffer *newbuf;
+
+  bs->index += len;
+  bs->pos += len;
+
+  if ((GST_BUFFER_SIZE (bs->buffer) - bs->index) > 1024 * 1024) {
+    g_print ("shrink%08llx %08llx, %08llx\n", len, bs->pos,
+		  GST_BUFFER_SIZE (bs->buffer) - bs->index);
+
+    newbuf = gst_buffer_create_sub (bs->buffer, bs->index, 
+		  GST_BUFFER_SIZE (bs->buffer) - bs->index);
+    bs->size = GST_BUFFER_SIZE (newbuf);
+    gst_buffer_unref (bs->buffer);
+    bs->index = 0;
+
+    bs->buffer = newbuf;
+  }
+}
+
+GstBuffer*
+gst_bytestream_peek (GstByteStream *bs, guint64 len)
+{
+  GstBuffer *buf;
+
+  g_print ("peek  %08llx %08llx\n", len, bs->pos);
+
+  len = gst_bytestream_fill (bs, len);
 
   buf = gst_buffer_create_sub (bs->buffer, bs->index, len);
 
@@ -85,9 +121,11 @@ gst_bytestream_read (GstByteStream *bs, guint64 len)
 {
   GstBuffer *buf;
 
+  g_print ("read  %08llx %08llx\n", len, bs->pos);
+
   buf = gst_bytestream_peek (bs, len);
-  bs->index += len;
-  bs->pos += len;
+
+  gst_bytestream_shrink (bs, GST_BUFFER_SIZE (buf));
 
   return buf;
 }
@@ -98,11 +136,19 @@ gst_bytestream_seek (GstByteStream *bs, guint64 offset)
   return FALSE;
 }
 
-gint
+gint64
 gst_bytestream_flush (GstByteStream *bs, guint64 len)
 {
+  guint64 outlen;
+
+  g_print ("flush %08llx %08llx\n", len, bs->pos);
+
   if (len == 0)
     return len;
-  
-  return GST_BUFFER_SIZE (gst_bytestream_read (bs, len));
+
+  outlen = gst_bytestream_fill (bs, len);
+
+  gst_bytestream_shrink (bs, outlen);
+
+  return outlen;
 }

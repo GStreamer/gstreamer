@@ -47,7 +47,7 @@ void			gst_bytestream_destroy		(GstByteStream *bs);
 GstBuffer*		gst_bytestream_peek		(GstByteStream *bs, guint64 len);
 GstBuffer*		gst_bytestream_read		(GstByteStream *bs, guint64 len);
 gboolean		gst_bytestream_seek		(GstByteStream *bs, guint64 offset);
-gint			gst_bytestream_flush		(GstByteStream *bs, guint64 len);
+gint64			gst_bytestream_flush		(GstByteStream *bs, guint64 len);
 
 
 #ifdef __cplusplus
