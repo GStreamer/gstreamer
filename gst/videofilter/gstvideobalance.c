@@ -285,11 +285,10 @@ gst_videobalance_colorbalance_set_value (GstColorBalance * balance,
     GstColorBalanceChannel * channel, gint value)
 {
   GstVideobalance *vb = GST_VIDEOBALANCE (balance);
-  GstVideofilter *vf = GST_VIDEOFILTER (vb);
 
   g_return_if_fail (vb != NULL);
   g_return_if_fail (GST_IS_VIDEOBALANCE (vb));
-  g_return_if_fail (GST_IS_VIDEOFILTER (vf));
+  g_return_if_fail (GST_IS_VIDEOFILTER (vb));
   g_return_if_fail (channel->label != NULL);
 
   if (!g_ascii_strcasecmp (channel->label, "HUE")) {

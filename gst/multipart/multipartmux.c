@@ -247,18 +247,16 @@ static void
 gst_multipart_mux_pad_link (GstPad * pad, GstPad * peer, gpointer data)
 {
   //GstMultipartMux *multipart_mux = GST_MULTIPART_MUX (data);
-  const gchar *padname = gst_pad_get_name (pad);
 
-  GST_DEBUG ("pad '%s' connected", padname);
+  GST_DEBUG ("pad '%s' connected", gst_pad_get_name (padname));
 }
 
 static void
 gst_multipart_mux_pad_unlink (GstPad * pad, GstPad * peer, gpointer data)
 {
   //GstMultipartMux *multipart_mux = GST_MULTIPART_MUX (data);
-  const gchar *padname = gst_pad_get_name (pad);
 
-  GST_DEBUG ("pad '%s' unlinked", padname);
+  GST_DEBUG ("pad '%s' unlinked", gst_pad_get_name (pad));
 }
 
 static GstPad *

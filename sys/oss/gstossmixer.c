@@ -264,7 +264,8 @@ gst_ossmixer_supported (GstImplementsInterface * iface, GType iface_type)
   return (GST_OSSELEMENT (iface)->mixer_fd != -1);
 }
 
-static gboolean
+/* unused with G_DISABLE_* */
+static G_GNUC_UNUSED gboolean
 gst_ossmixer_contains_track (GstOssElement * oss, GstOssMixerTrack * osstrack)
 {
   const GList *item;

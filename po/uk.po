@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-06-22 16:47+0200\n"
+"POT-Creation-Date: 2004-08-03 17:41+0200\n"
 "PO-Revision-Date: 2004-08-03 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -37,12 +37,14 @@ msgstr "Не вдається відкрити пристрій компакт-�
 #: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
-msgstr "Не вдається відкрити файл віртуальної файлової системи \"%s\" для читання."
+msgstr ""
+"Не вдається відкрити файл віртуальної файлової системи \"%s\" для читання."
 
 #: ext/gnomevfs/gstgnomevfssink.c:344
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Не вдається відкрити файл віртуальної файлової системи \"%s\" для запису: %s."
+msgstr ""
+"Не вдається відкрити файл віртуальної файлової системи \"%s\" для запису: %s."
 
 #: ext/gnomevfs/gstgnomevfssink.c:351
 msgid "No filename given"
@@ -65,6 +67,20 @@ msgstr "Не вдається записати у файл \"%s\"."
 #: gst/avi/gstavimux.c:1052
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Відсутній або неправильний вхід звуку, AVI потік буде пошкоджений."
+
+#: gst-libs/gst/play/play.c:110
+#, c-format
+msgid ""
+"The %s element could not be found. This element is essential for playback. "
+"Please install the right plug-in and verify that it works by running 'gst-"
+"inspect %s'"
+msgstr ""
+
+#: gst-libs/gst/play/play.c:139
+msgid ""
+"No usable colorspace element could be found.\n"
+"Please install one and restart."
+msgstr ""
 
 #: sys/dxr3/dxr3audiosink.c:298
 #, c-format
@@ -111,33 +127,36 @@ msgstr "Не вдається закрити відео пристрій \"%s\".
 msgid "Could not write to device \"%s\"."
 msgstr "Не вдається записати у пристрій \"%s\"."
 
-#: sys/oss/gstosselement.c:723
+#: sys/oss/gstosselement.c:725
 #, c-format
 msgid "OSS device \"%s\" is already in use by another program."
 msgstr "OSS пристрій \"%s\" вже використовується іншою програмою."
 
-#: sys/oss/gstosselement.c:730 sys/oss/gstosselement.c:734
+#: sys/oss/gstosselement.c:732 sys/oss/gstosselement.c:736
 #, c-format
 msgid "Could not access device \"%s\", check its permissions."
-msgstr "Не вдається отримати доступ до пристрою \"%s\", перевірте права доступу до нього."
+msgstr ""
+"Не вдається отримати доступ до пристрою \"%s\", перевірте права доступу до "
+"нього."
 
-#: sys/oss/gstosselement.c:741 sys/v4l/v4l_calls.c:167
+#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Пристрій \"%s\" не існує."
 
-#: sys/oss/gstosselement.c:748
+#: sys/oss/gstosselement.c:750
 #, c-format
 msgid "Could not open device \"%s\" for writing."
 msgstr "Не вдається відкрити пристрій \"%s\" для запису."
 
-#: sys/oss/gstosselement.c:752
+#: sys/oss/gstosselement.c:754
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "Не вдається відкрити пристрій \"%s\" для читання."
 
-#: sys/oss/gstosselement.c:1129
-msgid "Your oss device could not be probed correctly"
+#: sys/oss/gstosselement.c:1131
+#, fuzzy
+msgid "Your OSS device could not be probed correctly"
 msgstr "Ваш OSS пристрій неможливо коректно перевірити"
 
 #: sys/oss/gstossmixer.c:98

@@ -301,18 +301,16 @@ static void
 gst_videomixer_pad_link (GstPad * pad, GstPad * peer, gpointer data)
 {
   //GstVideoMixer *videomixer = GST_VIDEO_MIXER (data);
-  const gchar *padname = gst_pad_get_name (pad);
 
-  GST_DEBUG ("pad '%s' connected", padname);
+  GST_DEBUG ("pad '%s' connected", gst_pad_get_name (pad));
 }
 
 static void
 gst_videomixer_pad_unlink (GstPad * pad, GstPad * peer, gpointer data)
 {
   //GstVideoMixer *videomixer = GST_VIDEO_MIXER (data);
-  const gchar *padname = gst_pad_get_name (pad);
 
-  GST_DEBUG ("pad '%s' unlinked", padname);
+  GST_DEBUG ("pad '%s' unlinked", gst_pad_get_name (pad));
 }
 
 static void
