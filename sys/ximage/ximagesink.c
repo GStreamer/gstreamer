@@ -28,6 +28,11 @@
 /* Object header */
 #include "ximagesink.h"
 
+/* Debugging category */
+#include <gst/gstinfo.h>
+GST_DEBUG_CATEGORY_STATIC (gst_debug_ximagesink);
+#define GST_CAT_DEFAULT gst_debug_ximagesink
+
 static void gst_ximagesink_buffer_free (GstBuffer * buffer);
 
 /* ElementFactory information */
@@ -1408,6 +1413,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "ximagesink",
           GST_RANK_SECONDARY, GST_TYPE_XIMAGESINK))
     return FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (gst_debug_ximagesink, "ximagesink", 0,
+      "ximagesink element");
 
   return TRUE;
 }

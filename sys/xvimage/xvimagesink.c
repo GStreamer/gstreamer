@@ -29,6 +29,11 @@
 /* Object header */
 #include "xvimagesink.h"
 
+/* Debugging category */
+#include <gst/gstinfo.h>
+GST_DEBUG_CATEGORY_STATIC (gst_debug_xvimagesink);
+#define GST_CAT_DEFAULT gst_debug_xvimagesink
+
 static void gst_xvimagesink_buffer_free (GstBuffer * buffer);
 
 /* ElementFactory information */
@@ -1784,6 +1789,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "xvimagesink",
           GST_RANK_PRIMARY, GST_TYPE_XVIMAGESINK))
     return FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (gst_debug_xvimagesink, "xvimagesink", 0,
+      "xvimagesink element");
 
   return TRUE;
 }
