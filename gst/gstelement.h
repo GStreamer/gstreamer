@@ -139,14 +139,12 @@ typedef enum {
 #define GST_ELEMENT_CLOCK(obj)			(((GstElement*)(obj))->clock)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
-#define gst_element_error(el, domain, code, message, debug, ...) \
-G_STMT_START { \
+#define gst_element_error(el, domain, code, message, debug) G_STMT_START { \
   gst_element_error_full (GST_ELEMENT(el), \
   GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code, \
   _gst_element_error_printf message, \
   _gst_element_error_printf debug, \
-  __FILE__, GST_FUNCTION, __LINE__); \
-} G_STMT_END
+  __FILE__, GST_FUNCTION, __LINE__); } G_STMT_END
 
 typedef struct _GstElementFactory GstElementFactory;
 typedef struct _GstElementFactoryClass GstElementFactoryClass;

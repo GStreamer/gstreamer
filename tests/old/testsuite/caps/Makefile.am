@@ -12,8 +12,7 @@ tests_pass = \
 	intersect2 \
 	caps \
 	value_compare \
-	value_intersect \
-	it
+	value_intersect
 
 tests_fail =
 
@@ -35,7 +34,5 @@ fixed_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 intersect2_LDADD = $(GST_LIBS) 
 intersect2_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 
-it_LDADD = $(GST_LIBS) 
-it_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS)
 
 

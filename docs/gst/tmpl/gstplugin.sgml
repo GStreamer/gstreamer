@@ -101,7 +101,25 @@ loaded will use this variable to initialize the plugin.
 @origin: 
 @_gst_reserved: 
 
+<!-- ##### FUNCTION gst_plugin_set_name ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@name: 
+
+
 <!-- ##### FUNCTION gst_plugin_get_name ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_get_longname ##### -->
 <para>
 
 </para>
