@@ -483,7 +483,7 @@ find_suggest (gpointer data, guint probability, const GstCaps2 *caps)
   g_free (str);
   if (((gint) probability) > entry->probability) {
     entry->probability = probability;
-    gst_caps2_replace (&entry->caps, caps);
+    gst_caps2_replace (&entry->caps, gst_caps2_copy (caps));
   }
 }
 static gint

@@ -236,7 +236,7 @@ gst_type_find_register (GstPlugin *plugin, const gchar *name, guint rank,
     g_strfreev (factory->extensions);
 
   factory->extensions = g_strdupv (extensions);
-  gst_caps2_replace (&factory->caps, possible_caps);
+  gst_caps2_replace (&factory->caps, gst_caps2_copy(possible_caps));
   factory->function = func;
   factory->user_data = data;
 
