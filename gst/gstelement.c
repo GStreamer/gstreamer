@@ -76,6 +76,8 @@ static void gst_element_error_func (GstElement * element, GstElement * source,
     GError * error, gchar * debug);
 static void gst_element_found_tag_func (GstElement * element,
     GstElement * source, const GstTagList * tag_list);
+GstElementStateReturn gst_element_set_state_func (GstElement * element,
+    GstElementState state);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_element_save_thyself (GstObject * object,
@@ -170,6 +172,7 @@ gst_element_class_init (GstElementClass * klass)
   klass->error = GST_DEBUG_FUNCPTR (gst_element_error_func);
   klass->found_tag = GST_DEBUG_FUNCPTR (gst_element_found_tag_func);
   klass->numpadtemplates = 0;
+  klass->set_state = GST_DEBUG_FUNCPTR (gst_element_set_state_func);
 
   klass->elementfactory = NULL;
 }
@@ -2720,42 +2723,32 @@ gst_element_wait_state_change (GstElement * element)
 GstElementStateReturn
 gst_element_set_state (GstElement * element, GstElementState state)
 {
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
+  klass = GST_ELEMENT_GET_CLASS (element);
+  /* a set_state function is mandatory */
+  g_return_val_if_fail (klass->set_state, GST_STATE_FAILURE);
+  return klass->set_state (element, state);
+}
+
+GstElementStateReturn
+gst_element_set_state_func (GstElement * element, GstElementState state)
+{
   GstElementClass *oclass;
   GstElementState curpending;
   GstElementStateReturn return_val = GST_STATE_SUCCESS;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
   oclass = GST_ELEMENT_GET_CLASS (element);
-
-  /* for bins, we allow calls to change_state where old == new
-   * for elements, too many of them break with g_assert_not_reached(),
-   * so weed those out first.  This is done in gst-plugins CVS and can
-   * be fixed here after a new plugins release.
-   * FIXME: of course this file should not have ties to gstbin.h *at all*,
-   * but someone else added a function at the bottom using it.
-   * Fix this properly for 0.9 */
 
   /* start with the current state */
   curpending = GST_STATE (element);
 
   if (state == curpending) {
-    if (GST_IS_BIN (element)) {
-      /* set current state on it again */
-      GST_STATE_PENDING (element) = curpending;
-      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-          "%s is a bin, calling class state change on it for %s -> %s",
-          GST_OBJECT_NAME (element),
-          gst_element_state_get_name (curpending),
-          gst_element_state_get_name (state));
-      if (oclass->change_state)
-        return_val = (oclass->change_state) (element);
-      return return_val;
-    } else {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-          "non-bin element is already in requested state %s, returning",
-          gst_element_state_get_name (state));
-      return GST_STATE_SUCCESS;
-    }
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+        "element is already in requested state %s, returning",
+        gst_element_state_get_name (state));
+    return GST_STATE_SUCCESS;
   }
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "setting state from %s to %s",

@@ -1,5 +1,20 @@
 2004-07-12  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstelement.c: (gst_element_class_init),
+	(gst_element_set_state), (gst_element_set_state_func):
+	  virutalize gst_element_set_state, use set_state member in class
+	  struct that was already added in 0.7 for this.
+	* gst/gstbin.c: (gst_bin_foreach), (set_kid_state_func), 
+	(gst_bin_change_state):
+	  make gst_bin_foreach works similar to other foreach functions, plug
+	  memleaks in it. Make functions using it work with the new approach.
+	  Document gst_bin_foreach, so it can be exported if we want to
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_set_state):
+	  use virtualized set_state to make set_state on bins set the state of
+	  all its children.
+
+2004-07-12  Benjamin Otte  <otte@gnome.org>
+
 	* configure.ac:
 	  require valgrind >= 2.1 (fixes Gentoo bug 53967, see
 	  http://bugs.gentoo.org/show_bug.cgi?id=53967)
