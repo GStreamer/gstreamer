@@ -24,9 +24,6 @@ gst_loader_la_SOURCES = 	\
 gst_loader_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) --avoid-version --module
 gst_loader_la_LIBADD = $(GTK_LIBS) $(GST_LIBS)
 else
-gst_loader_headers =
-loader_LTLIBRARIES =
-loaderdir =
 install-data-hook:
 	true
 endif
