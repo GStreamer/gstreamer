@@ -418,6 +418,12 @@ gst_adder_loop (GstElement *element)
 
       GST_DEBUG (0, "looking into channel %p", input);
       
+      if (GST_PAD_IS_USABLE (input->sinkpad)) {
+        GST_DEBUG (0, "adder ignoring pad %s:%s", GST_DEBUG_PAD_NAME (input->sinkpad));
+        inputs = inputs->next;
+        continue;
+      }
+
       /* get data from the bytestream of each input channel. we need to check for
          events before passing on the data to the output buffer. */
       got_bytes = gst_bytestream_peek_bytes (input->bytestream, &raw_in, GST_BUFFER_SIZE (buf_out));
