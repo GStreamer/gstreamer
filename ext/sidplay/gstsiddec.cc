@@ -476,13 +476,11 @@ gst_siddec_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
           if (bytes_per_sample == 0)
             return FALSE;
           *dest_value = src_value / bytes_per_sample;
           break;
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
         {
            gint byterate = bytes_per_sample * siddec->config->frequency;
@@ -496,13 +494,11 @@ gst_siddec_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
            res = FALSE;
       }
       break;
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
           *dest_value = src_value * bytes_per_sample;
           break;
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
           if (siddec->config->frequency == 0)
             return FALSE;
@@ -514,12 +510,10 @@ gst_siddec_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
         case GST_FORMAT_BYTES:
           scale = bytes_per_sample;
           /* fallthrough */
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
           *dest_value = src_value * scale * siddec->config->frequency / GST_SECOND;
           break;
         default:

@@ -27,7 +27,7 @@
 gdouble
 gst_video_frame_rate (GstPad *pad)
 {
-  GstFormat dest_format = GST_FORMAT_UNITS;
+  GstFormat dest_format = GST_FORMAT_DEFAULT;
   gint64 dest_value = 0;
   gdouble fps;
 

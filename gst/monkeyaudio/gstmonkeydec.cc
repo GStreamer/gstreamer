@@ -138,7 +138,7 @@ gst_monkeydec_get_formats (GstPad *pad)
 {
   static const GstFormat src_formats[] = {
 /*    GST_FORMAT_BYTES,
-    GST_FORMAT_UNITS,*/
+    GST_FORMAT_DEFAULT,*/
     GST_FORMAT_TIME,
     (GstFormat)0
   };
@@ -177,8 +177,6 @@ gst_monkeydec_src_query (GstPad *pad, GstQueryType type,
   switch (type) {
     case GST_QUERY_TOTAL:
       switch (*format) {
-        case GST_FORMAT_DEFAULT:
-            *format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
             *value = monkeydec->decomp->GetInfo (APE_DECOMPRESS_LENGTH_MS) * 1000000LL;
             break;
@@ -189,8 +187,6 @@ gst_monkeydec_src_query (GstPad *pad, GstQueryType type,
       break;
     case GST_QUERY_POSITION:
       switch (*format) {
-         case GST_FORMAT_DEFAULT:
-           *format = GST_FORMAT_TIME;
          default:
            *value = monkeydec->decomp->GetInfo (APE_DECOMPRESS_CURRENT_MS) * 1000000LL;  
            break;
