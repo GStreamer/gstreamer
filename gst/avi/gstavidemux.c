@@ -153,6 +153,8 @@ static void 	gst_avi_demux_init		(GstAviDemux *avi_demux);
 
 static void 	gst_avi_demux_loop 		(GstElement *element);
 
+static gboolean gst_avi_demux_send_event 	(GstElement *element, GstEvent *event);
+
 static gboolean gst_avi_demux_handle_src_event 	(GstPad *pad, GstEvent *event);
 static gboolean gst_avi_demux_handle_src_query 	(GstPad *pad, GstPadQueryType type, 
 						 GstFormat *format, gint64 *value);
@@ -207,6 +209,7 @@ gst_avi_demux_class_init (GstAviDemuxClass *klass)
   gobject_class->get_property = gst_avi_demux_get_property;
   
   gstelement_class->change_state = gst_avi_demux_change_state;
+  gstelement_class->send_event = gst_avi_demux_send_event;
 }
 
 static void 
@@ -852,6 +855,26 @@ gst_avi_demux_sync_streams (GstAviDemux *avi_demux, guint64 time)
   }
 
   return min_index;
+}
+
+static gboolean
+gst_avi_demux_send_event (GstElement *element, GstEvent *event)
+{
+  GList *pads;
+
+  pads = gst_element_get_pad_list (element);
+
+  while (pads) { 
+    GstPad *pad = GST_PAD (pads->data);
+
+    if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
+      return gst_avi_demux_handle_src_event (pad, event);
+    }
+    
+    pads = g_list_next (pads);
+  }
+  
+  return FALSE;
 }
 
 static gboolean
