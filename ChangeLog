@@ -1,3 +1,13 @@
+2004-02-26  David Schleef  <ds@schleef.org>
+
+	* gst-libs/gst/colorbalance/Makefile.am:
+	* gst-libs/gst/mixer/Makefile.am:
+	* gst-libs/gst/tuner/Makefile.am:
+	* gst/level/Makefile.am: -marshal.[ch] and -enum.[ch] files
+	should not be disted, -marshal.h files should not be installed,
+	and -enum.h files _should_ be installed.  Fix to make this the
+	case.
+
 === release 0.7.5 ===
 
 2004-02-26  Thomas Vander Stichele  <thomas at apestaart dot org>

@@ -19,13 +19,17 @@ built_headers =	\
 	mixer-marshal.h \
 	mixer-enumtypes.h
 
-libgstmixerinclude_HEADERS = $(mixer_headers) $(built_headers)
+libgstmixerinclude_HEADERS = \
+	$(mixer_headers) \
+	mixer-enumtypes.h
 
 noinst_LTLIBRARIES = libgstmixer.la
 
 libgstmixer_la_SOURCES = \
 	mixer.c \
-	mixertrack.c \
+	mixertrack.c
+nodist_libgstmixer_la_SOURCES = \
+	mixer-marshal.h \
 	$(built_sources)
 
 libgstmixer_la_CFLAGS = $(GST_CFLAGS)
