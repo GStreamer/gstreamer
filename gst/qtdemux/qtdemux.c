@@ -2608,7 +2608,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
       return gst_caps_from_string ("image/jpeg");
     case GST_MAKE_FOURCC ('m', 'j', 'p', 'b'):
       /* Motion-JPEG (format B) */
-      return gst_caps_from_string ("image/jpeg");
+      return gst_caps_from_string ("image/jpeg-b");
     case GST_MAKE_FOURCC ('S', 'V', 'Q', '3'):
       if (stsd_data != NULL) {
         gst_getbits_t gb;
