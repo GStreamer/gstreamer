@@ -66,7 +66,7 @@ got_time_tick (GstPlay * play, gint64 time_nanos)
 static void
 got_stream_length (GstPlay * play, gint64 length_nanos)
 {
-  g_print ("got length %llu\n", length_nanos);
+  g_print ("got length %" G_GUINT64_FORMAT "\n", length_nanos);
   length = length_nanos;
 }
 
