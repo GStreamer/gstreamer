@@ -13,6 +13,7 @@
  */
 
 #include <gst/gst.h>
+#include <gst/gstprops.h>
 #include <property.h>
 
 GstElement *
@@ -75,7 +76,7 @@ main (int argc, char *argv[])
    
   /* request one pad from tee */
   g_print ("Requesting first pad\n");
-  tee_src1 = gst_element_request_pad_by_name (tee, "src%d");
+  tee_src1 = gst_element_get_request_pad (tee, "src%d");
   gst_bin_add (GST_BIN (pipeline), sink1);
   gst_pad_connect (tee_src1, gst_element_get_pad (sink1, "sink"));
 
@@ -87,7 +88,7 @@ main (int argc, char *argv[])
   /* pause and request another pad */
   g_print ("Requesting second pad\n");
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  tee_src2 = gst_element_request_pad_by_name (tee, "src%d");
+  tee_src2 = gst_element_get_request_pad (tee, "src%d");
   gst_bin_add (GST_BIN (pipeline), sink2);
   gst_pad_connect (tee_src2, gst_element_get_pad (sink2, "sink"));
   
@@ -121,7 +122,11 @@ main (int argc, char *argv[])
     return 1;
   }
   else
-    g_print ("Rate of pad on sink1 : %d\n", gst_props_get_int (props, "rate"));
+  {
+    int rate;
+    gst_props_get (props, "rate", &rate);
+    g_print ("Rate of pad on sink1 : %d\n", rate);
+  }
   sink_caps = gst_pad_get_caps (gst_element_get_pad (sink2, "sink"));
   props = gst_caps_get_props (sink_caps);
   if (! (gst_props_has_property (props, "rate")))
@@ -130,7 +135,11 @@ main (int argc, char *argv[])
     return 1;
   }
   else
-    g_print ("Rate of pad on sink2 : %d\n", gst_props_get_int (props, "rate"));
+  {
+    int rate;
+    gst_props_get (props, "rate", &rate);
+    g_print ("Rate of pad on sink2 : %d\n", rate);
+  }
    
   /* remove the first one, iterate */
   g_print ("Removing first sink\n");
@@ -148,7 +157,7 @@ main (int argc, char *argv[])
   g_print ("Requesting third pad\n");
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
   /* in 0.3.2 the next statement gives an assert error */
-  tee_src1 = gst_element_request_pad_by_name (tee, "src%d");
+  tee_src1 = gst_element_get_request_pad (tee, "src%d");
   
   g_print ("Done !\n");
   return 0;
