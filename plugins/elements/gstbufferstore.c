@@ -47,7 +47,10 @@ static void	gst_buffer_store_cleared_func	(GstBufferStore *	store);
   
 static guint gst_buffer_store_signals[LAST_SIGNAL] = { 0 };
 
-GST_BOILERPLATE (GstBufferStore, gst_buffer_store, GObject, G_TYPE_OBJECT);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_buffer_store_debug, "GstBufferStore", 0, "buffer store helper");
+
+GST_BOILERPLATE_FULL (GstBufferStore, gst_buffer_store, GObject, G_TYPE_OBJECT, _do_init);
 
 
 G_GNUC_UNUSED static void

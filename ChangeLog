@@ -1,5 +1,15 @@
 2004-01-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/elements/gstbufferstore.c:
+	  initialize debugging structure correctly
+	* gst/elements/gsttee.c: (gst_tee_set_property):
+	  g_object_notify when property was changed
+	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_element_change_state):
+	  clear caps correctly
+
+2004-01-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/gstqueue.c: (gst_queue_init):
 	  Use better defaults for when a queue should block. This
 	  gets rid of jerky playback for quite a few files.

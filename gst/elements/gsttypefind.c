@@ -633,8 +633,7 @@ gst_type_find_element_change_state (GstElement *element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       stop_typefinding (typefind);
-      if (typefind->caps)
-	gst_caps_free (typefind->caps);
+      gst_caps_replace (&typefind->caps, NULL);
       break;
     default:
       break;

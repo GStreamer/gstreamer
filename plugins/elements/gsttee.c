@@ -201,6 +201,7 @@ gst_tee_set_property (GObject *object, guint prop_id, const GValue *value, GPara
   switch (prop_id) {
     case ARG_SILENT:
       tee->silent = g_value_get_boolean (value);
+      g_object_notify (G_OBJECT (tee), "silent");
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
