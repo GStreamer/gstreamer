@@ -538,9 +538,11 @@ callback_pipeline_state_change (	GstElement *element,
 static void
 gst_play_dispose (GObject *object)
 {
+	GstPlay *play;
+
 	g_return_if_fail (object != NULL);
 	g_return_if_fail (GST_IS_PLAY(object));
-	GstPlay *play = GST_PLAY (object);
+	play = GST_PLAY (object);
 
 	/* Removing all sources */
 	while (g_source_remove_by_user_data (play));
