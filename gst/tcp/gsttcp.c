@@ -21,32 +21,27 @@
 #include "gsttcpsrc.h"
 #include "gsttcpsink.h"
 
-/* elementfactory information */
-extern GstElementDetails gst_tcpsrc_details;
-extern GstElementDetails gst_tcpsink_details;
-
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *src, *sink;
+  if (!gst_element_register (plugin, "tcpsink", GST_RANK_NONE, GST_TYPE_TCPSINK))
+    return FALSE;
 
-  /* create an elementfactory for the tcpsrc element */
-  sink = gst_element_factory_new ("tcpsink",GST_TYPE_TCPSINK,
-                                   &gst_tcpsink_details);
-  g_return_val_if_fail (sink != NULL, FALSE);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (sink));
-
-  src = gst_element_factory_new ("tcpsrc",GST_TYPE_TCPSRC,
-                                   &gst_tcpsrc_details);
-  g_return_val_if_fail (src != NULL, FALSE);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (src));
+  if (!gst_element_register (plugin, "tcpsrc", GST_RANK_NONE, GST_TYPE_TCPSRC))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "tcp",
-  plugin_init
-};
+  "transfer data over the network via TCP",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

@@ -28,15 +28,12 @@
 #define TCP_DEFAULT_PORT		4953
 
 /* elementfactory information */
-GstElementDetails gst_tcpsrc_details = {
+GstElementDetails gst_tcpsrc_details = GST_ELEMENT_DETAILS (
   "TCP packet receiver",
   "Source/Network",
-  "LGPL",
   "Receive data over the network via TCP",
-  VERSION,
-  "Zeeshan Ali <zak147@yahoo.com>",
-  "(C) 2003",
-};
+  "Zeeshan Ali <zak147@yahoo.com>"
+);
 
 /* TCPSrc signals and args */
 enum {
@@ -67,6 +64,7 @@ gst_tcpsrc_control_get_type(void) {
   return tcpsrc_control_type;
 }
 
+static void		gst_tcpsrc_base_init		(gpointer g_class);
 static void		gst_tcpsrc_class_init		(GstTCPSrc *klass);
 static void		gst_tcpsrc_init			(GstTCPSrc *tcpsrc);
 
@@ -92,7 +90,7 @@ gst_tcpsrc_get_type (void)
   if (!tcpsrc_type) {
     static const GTypeInfo tcpsrc_info = {
       sizeof(GstTCPSrcClass),
-      NULL,
+      gst_tcpsrc_base_init,
       NULL,
       (GClassInitFunc)gst_tcpsrc_class_init,
       NULL,
@@ -105,6 +103,14 @@ gst_tcpsrc_get_type (void)
     tcpsrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstTCPSrc", &tcpsrc_info, 0);
   }
   return tcpsrc_type;
+}
+
+static void
+gst_tcpsrc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_tcpsrc_details);
 }
 
 static void

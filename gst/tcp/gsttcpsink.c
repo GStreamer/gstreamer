@@ -26,15 +26,12 @@
 #define TCP_DEFAULT_PORT	4953
 
 /* elementfactory information */
-GstElementDetails gst_tcpsink_details = {
+static GstElementDetails gst_tcpsink_details = GST_ELEMENT_DETAILS (
   "TCP packet sender",
-  "Sink/Network",
   "LGPL",
   "Send data over the network via TCP",
-  VERSION,
-  "Zeeshan Ali <zak147@yahoo.com>",
-  "(C) 2003",
-};
+  "Zeeshan Ali <zak147@yahoo.com>"
+);
 
 /* TCPSink signals and args */
 enum {
@@ -67,6 +64,7 @@ gst_tcpsink_control_get_type(void) {
   return tcpsink_control_type;
 }
 
+static void		gst_tcpsink_base_init		(gpointer g_class);
 static void		gst_tcpsink_class_init		(GstTCPSink *klass);
 static void		gst_tcpsink_init		(GstTCPSink *tcpsink);
 
@@ -93,7 +91,7 @@ gst_tcpsink_get_type (void)
   if (!tcpsink_type) {
     static const GTypeInfo tcpsink_info = {
       sizeof(GstTCPSinkClass),
-      NULL,
+      gst_tcpsink_base_init,
       NULL,
       (GClassInitFunc)gst_tcpsink_class_init,
       NULL,
@@ -106,6 +104,14 @@ gst_tcpsink_get_type (void)
     tcpsink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstTCPSink", &tcpsink_info, 0);
   }
   return tcpsink_type;
+}
+
+static void
+gst_tcpsink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_tcpsink_details);
 }
 
 static void
