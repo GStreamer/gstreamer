@@ -1,3 +1,11 @@
+2004-03-24  David Schleef  <ds@schleef.org>
+
+	* ext/speex/gstspeexdec.c: (gst_speexdec_base_init),
+	(gst_speexdec_init):
+	* ext/speex/gstspeexenc.c: (gst_speexenc_base_init),
+	(gst_speexenc_init):  Create the pad template correctly (from
+	the static pad template, not a NULL pointer.)
+
 2004-03-25  Benjamin Otte  <otte@gnome.org>
 
 	* gst/debug/Makefile.am:
