@@ -284,7 +284,7 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
       break;
 
     default:
-      GST_WARNING ("Unkown video fourcc " GST_FOURCC_FORMAT,
+      GST_WARNING ("Unknown video fourcc " GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
       return NULL;
   }
@@ -415,7 +415,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
       break;
 
     default:
-      GST_WARNING ("Unkown audio tag 0x%04x", codec_id);
+      GST_WARNING ("Unknown audio tag 0x%04x", codec_id);
       return NULL;
   }
 
@@ -452,9 +452,10 @@ gst_riff_create_iavs_caps (guint32 codec_fcc,
           "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
       if (codec_name)
         *codec_name = g_strdup ("Generic DV");
+      break;
 
     default:
-      GST_WARNING ("Unkown IAVS fourcc " GST_FOURCC_FORMAT,
+      GST_WARNING ("Unknown IAVS fourcc " GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
       return NULL;
   }
