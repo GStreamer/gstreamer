@@ -256,7 +256,6 @@ gst_thread_change_state (GstElement *element)
   gboolean stateset = GST_STATE_SUCCESS;
   gint transition;
   pthread_t self = pthread_self();
-  GstElement *peerelement;
 
   g_return_val_if_fail (GST_IS_THREAD(element), FALSE);
 //  GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME(element));
@@ -394,10 +393,15 @@ gst_thread_change_state (GstElement *element)
             GList *pads = GST_ELEMENT_PADS(e);
             while (pads)
             {
+	      GstRealPad *peer;
+	      GstElement *peerelement;
               GstPad *p = GST_PAD(pads->data);
               pads = g_list_next(pads);
 
-              peerelement = GST_PAD_PARENT(GST_PAD_PEER(p));
+	      peer = GST_PAD_PEER(p);
+	      if (!peer) continue;
+
+              peerelement = GST_PAD_PARENT(peer);
               if (!peerelement) continue;		// deal with case where there's no peer
 
               if (!GST_FLAG_IS_SET(peerelement,GST_ELEMENT_DECOUPLED)) {
