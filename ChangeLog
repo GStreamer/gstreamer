@@ -2,6 +2,7 @@
 
 	* configure.ac:
           bump nano to 2, first prerelease
+          put back AM_PROG_LIBTOOL
 
 2004-02-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
