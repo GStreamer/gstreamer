@@ -1,3 +1,13 @@
+2004-12-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_type_get), (qtdemux_audio_caps):
+	* gst/typefind/gsttypefindfunctions.c: (q3gp_type_find),
+	(plugin_init):
+	  Add 3GP (variables name Q3GP because they can't start with a
+	  number). Add samr audio fourcc (used in .3gp files), decoder
+	  is work in progress. Also do a GST_WARNING instead of ERROR
+	  in case of unknown nodes, to decrease output.
+
 2004-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

@@ -131,7 +131,7 @@ static GstStaticPadTemplate gst_qtdemux_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/quicktime; audio/x-m4a")
+    GST_STATIC_CAPS ("video/quicktime; audio/x-m4a; application/x-3gp")
     );
 
 static GstStaticPadTemplate gst_qtdemux_videosrc_template =
@@ -1392,7 +1392,7 @@ qtdemux_type_get (guint32 fourcc)
       return qt_node_types + i;
   }
 
-  GST_ERROR ("unknown QuickTime node type " GST_FOURCC_FORMAT,
+  GST_WARNING ("unknown QuickTime node type " GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (fourcc));
   return qt_node_types + n_qt_node_types - 1;
 }
@@ -2640,6 +2640,9 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data,
     case GST_MAKE_FOURCC ('a', 'g', 's', 'm'):
       /* GSM */
       return gst_caps_new_simple ("audio/x-gsm", NULL);
+    case GST_MAKE_FOURCC ('s', 'a', 'm', 'r'):
+      /* AMR-NB */
+      return gst_caps_new_simple ("audio/x-amr-nb", NULL);
     case GST_MAKE_FOURCC ('i', 'm', 'a', '4'):
       /* IMA 4:1 */
       return gst_caps_new_simple ("audio/x-adpcm",
