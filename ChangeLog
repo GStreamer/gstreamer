@@ -1,3 +1,20 @@
+2004-03-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/Makefile.am:
+	* gst-libs/gst/media-info/Makefile.am:
+	* gst-libs/gst/media-info/media-info-priv.c: (found_tag_callback),
+	(error_callback), (gst_media_info_error_create),
+	(gst_media_info_error_element), (gmip_init), (gmip_reset),
+	(gmi_clear_decoder), (gmip_find_type_pre), (gmip_find_type):
+	* gst-libs/gst/media-info/media-info-priv.h:
+	* gst-libs/gst/media-info/media-info-test.c: (main):
+	* gst-libs/gst/media-info/media-info.c: (gst_media_info_init),
+	(gst_media_info_class_init), (gst_media_info_instance_init),
+	(gst_media_info_set_source), (gst_media_info_read_with_idler),
+	(gst_media_info_read_idler), (gst_media_info_read):
+	* gst-libs/gst/media-info/media-info.h:
+	fixed, should work now
+
 2004-03-07  Christian Schaller <Uraeus@gnome.org>
 
 	* ext/nas/nassink.c:
