@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-12-30 20:49+0100\n"
+"POT-Creation-Date: 2005-02-23 13:35+0100\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -19,31 +19,31 @@ msgstr ""
 msgid "Master"
 msgstr ""
 
-#: ext/alsa/gstalsamixertrack.c:84 sys/oss/gstossmixer.c:100
+#: ext/alsa/gstalsamixertrack.c:84
 msgid "Bass"
 msgstr "Bas"
 
-#: ext/alsa/gstalsamixertrack.c:85 sys/oss/gstossmixer.c:102
+#: ext/alsa/gstalsamixertrack.c:85
 msgid "Treble"
 msgstr "Treble"
 
-#: ext/alsa/gstalsamixertrack.c:86 sys/oss/gstossmixer.c:106
+#: ext/alsa/gstalsamixertrack.c:86
 msgid "PCM"
 msgstr "PCM"
 
-#: ext/alsa/gstalsamixertrack.c:87 sys/oss/gstossmixer.c:104
+#: ext/alsa/gstalsamixertrack.c:87
 msgid "Synth"
 msgstr "Sintetiseerder"
 
-#: ext/alsa/gstalsamixertrack.c:88 sys/oss/gstossmixer.c:110
+#: ext/alsa/gstalsamixertrack.c:88
 msgid "Line-in"
 msgstr "Lyn-in"
 
-#: ext/alsa/gstalsamixertrack.c:89 sys/oss/gstossmixer.c:114
+#: ext/alsa/gstalsamixertrack.c:89
 msgid "CD"
 msgstr "CD"
 
-#: ext/alsa/gstalsamixertrack.c:90 sys/oss/gstossmixer.c:112
+#: ext/alsa/gstalsamixertrack.c:90
 msgid "Microphone"
 msgstr "Mikrofoon"
 
@@ -59,21 +59,6 @@ msgstr ""
 #: ext/alsa/gstalsamixertrack.c:93
 msgid "Capture"
 msgstr ""
-
-#: ext/audiofile/gstafsink.c:344 ext/sndfile/gstsf.c:624
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
-
-#: ext/audiofile/gstafsink.c:366 ext/audiofile/gstafsrc.c:371
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Fout tydens toemaak van lêer \"%s\"."
-
-#: ext/audiofile/gstafsrc.c:318
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."
 
 #: ext/cdparanoia/gstcdparanoia.c:278
 msgid "discid"
@@ -112,188 +97,20 @@ msgstr "Geen lêernaam gespesifiseer."
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
 
-#: ext/sndfile/gstsf.c:585
-msgid "No filename specified."
-msgstr "Geen lêernaam gespesifiseer."
-
-#: ext/sndfile/gstsf.c:838
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Kon nie skryf na lêer \"%s\" nie."
-
-#: gst/avi/gstavimux.c:1056
-msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Geen of ongeldige klanktoevoer, AVI-stroom sal korrup wees."
-
-#: gst-libs/gst/play/play.c:110
-#, c-format
-msgid ""
-"The %s element could not be found. This element is essential for playback. "
-"Please install the right plug-in and verify that it works by running 'gst-"
-"inspect %s'"
+#: gst-libs/gst/play/play.c:719
+msgid "Failed to create playbin object"
 msgstr ""
-
-#: gst-libs/gst/play/play.c:139
-msgid ""
-"No usable colorspace element could be found.\n"
-"Please install one and restart."
-msgstr ""
-
-#: sys/dxr3/dxr3audiosink.c:298
-#, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "Kon nie oudio-toestel \"%s\" oopmaak vir skryf nie."
-
-#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "Kon nie beheertoestel \"%s\" oopmaak vir skryf nie."
-
-#: sys/dxr3/dxr3audiosink.c:343
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "Kon nie oudio-toestel \"%s\" konfigureer nie."
-
-#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Kon nie klanktoestel \"%s\" verstel na %d Hz nie."
-
-#: sys/dxr3/dxr3audiosink.c:422
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "Kon nie oudio-toestel \"%s\" toemaak nie."
-
-#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
-
-#: sys/dxr3/dxr3videosink.c:271
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "Kon nie video-toestel \"%s\" oopmaak vir skryf nie."
-
-#: sys/dxr3/dxr3videosink.c:301
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "Kon nie video-toestel \"%s\" toemaak nie."
-
-#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:124
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "Kon nie skryf na toestel \"%s\" nie."
-
-#: sys/oss/gstosselement.c:726
-#, c-format
-msgid "OSS device \"%s\" is already in use by another program."
-msgstr "OSS-toestel \"%s\" is reeds in gebruik deur 'n ander program."
-
-#: sys/oss/gstosselement.c:733 sys/oss/gstosselement.c:737
-#, c-format
-msgid "Could not access device \"%s\", check its permissions."
-msgstr "Kon nie toegang kry tot toestel \"%s\" nie, kyk na toegangsregte."
-
-#: sys/oss/gstosselement.c:744 sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Toestel \"%s\" bestaan nie."
-
-#: sys/oss/gstosselement.c:751
-#, c-format
-msgid "Could not open device \"%s\" for writing."
-msgstr "Kon nie toestel \"%s\" oopmaak vir skryf nie."
-
-#: sys/oss/gstosselement.c:755
-#, c-format
-msgid "Could not open device \"%s\" for reading."
-msgstr "Kon nie toestel \"%s\" oopmaak vir lees nie."
-
-#: sys/oss/gstosselement.c:1153
-msgid "Your OSS device doesn't support mono or stereo."
-msgstr ""
-
-#: sys/oss/gstosselement.c:1167
-msgid "Your OSS device could not be probed correctly"
-msgstr ""
-
-#: sys/oss/gstossmixer.c:98
-msgid "Volume"
-msgstr "Volume"
-
-#: sys/oss/gstossmixer.c:108
-msgid "Speaker"
-msgstr "Luidspreker"
-
-#: sys/oss/gstossmixer.c:116
-msgid "Mixer"
-msgstr "Menger"
-
-#: sys/oss/gstossmixer.c:118
-msgid "PCM-2"
-msgstr "PCM-2"
-
-#: sys/oss/gstossmixer.c:120
-msgid "Record"
-msgstr "Neem op"
-
-#: sys/oss/gstossmixer.c:122
-msgid "In-gain"
-msgstr "In-versterking"
-
-#: sys/oss/gstossmixer.c:124
-msgid "Out-gain"
-msgstr "Uit-versterking"
-
-#: sys/oss/gstossmixer.c:126
-msgid "Line-1"
-msgstr "Lyn-1"
-
-#: sys/oss/gstossmixer.c:128
-msgid "Line-2"
-msgstr "Lyn-2"
-
-#: sys/oss/gstossmixer.c:130
-msgid "Line-3"
-msgstr "Lyn-3"
-
-#: sys/oss/gstossmixer.c:132
-msgid "Digital-1"
-msgstr "Digitaal-1"
-
-#: sys/oss/gstossmixer.c:134
-msgid "Digital-2"
-msgstr "Digitaal-2"
-
-#: sys/oss/gstossmixer.c:136
-msgid "Digital-3"
-msgstr "Digitaal-3"
-
-#: sys/oss/gstossmixer.c:138
-msgid "Phone-in"
-msgstr "Telefoon-in"
-
-#: sys/oss/gstossmixer.c:140
-msgid "Phone-out"
-msgstr "Telefoon-uit"
-
-#: sys/oss/gstossmixer.c:142
-msgid "Video"
-msgstr "Video"
-
-#: sys/oss/gstossmixer.c:144
-msgid "Radio"
-msgstr "Radio"
-
-#: sys/oss/gstossmixer.c:146
-msgid "Monitor"
-msgstr "Monitor"
 
 #: sys/v4l/v4l_calls.c:159
 msgid "No device specified."
 msgstr "Geen toestel gespesifiseer"
 
-#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:400
+#: sys/v4l/v4l_calls.c:168
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Toestel \"%s\" bestaan nie."
+
+#: sys/v4l/v4l_calls.c:172
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kon nie toestel \"%s\" oopmaak vir lees en skryf nie."
@@ -306,17 +123,122 @@ msgstr "Toestel is nie oop nie."
 msgid "Device is open."
 msgstr "Toestel is oop."
 
-#: sys/v4l2/v4l2_calls.c:414
-#, c-format
-msgid "Device \"%s\" is not a capture device."
-msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
 
-#: sys/v4l2/v4l2src_calls.c:256
-#, c-format
-msgid "Could not get buffers from device \"%s\"."
-msgstr "Kon nie buffers vanaf toestel \"%s\" verkry nie."
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Fout tydens toemaak van lêer \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:265
-#, c-format
-msgid "Could not get enough buffers from device \"%s\"."
-msgstr "Kon nie genoeg buffers vanaf toestel \"%s\" kry nie."
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."
+
+#~ msgid "No filename specified."
+#~ msgstr "Geen lêernaam gespesifiseer."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Kon nie skryf na lêer \"%s\" nie."
+
+#~ msgid "No or invalid input audio, AVI stream will be corrupt."
+#~ msgstr "Geen of ongeldige klanktoevoer, AVI-stroom sal korrup wees."
+
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Kon nie oudio-toestel \"%s\" oopmaak vir skryf nie."
+
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "Kon nie beheertoestel \"%s\" oopmaak vir skryf nie."
+
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "Kon nie oudio-toestel \"%s\" konfigureer nie."
+
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "Kon nie klanktoestel \"%s\" verstel na %d Hz nie."
+
+#~ msgid "Could not close audio device \"%s\"."
+#~ msgstr "Kon nie oudio-toestel \"%s\" toemaak nie."
+
+#~ msgid "Could not close control device \"%s\"."
+#~ msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "Kon nie video-toestel \"%s\" oopmaak vir skryf nie."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "Kon nie video-toestel \"%s\" toemaak nie."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "Kon nie skryf na toestel \"%s\" nie."
+
+#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgstr "OSS-toestel \"%s\" is reeds in gebruik deur 'n ander program."
+
+#~ msgid "Could not access device \"%s\", check its permissions."
+#~ msgstr "Kon nie toegang kry tot toestel \"%s\" nie, kyk na toegangsregte."
+
+#~ msgid "Could not open device \"%s\" for writing."
+#~ msgstr "Kon nie toestel \"%s\" oopmaak vir skryf nie."
+
+#~ msgid "Could not open device \"%s\" for reading."
+#~ msgstr "Kon nie toestel \"%s\" oopmaak vir lees nie."
+
+#~ msgid "Volume"
+#~ msgstr "Volume"
+
+#~ msgid "Speaker"
+#~ msgstr "Luidspreker"
+
+#~ msgid "Mixer"
+#~ msgstr "Menger"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Neem op"
+
+#~ msgid "In-gain"
+#~ msgstr "In-versterking"
+
+#~ msgid "Out-gain"
+#~ msgstr "Uit-versterking"
+
+#~ msgid "Line-1"
+#~ msgstr "Lyn-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Lyn-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Lyn-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Digitaal-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Digitaal-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Digitaal-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Telefoon-in"
+
+#~ msgid "Phone-out"
+#~ msgstr "Telefoon-uit"
+
+#~ msgid "Video"
+#~ msgstr "Video"
+
+#~ msgid "Radio"
+#~ msgstr "Radio"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
+#~ msgid "Device \"%s\" is not a capture device."
+#~ msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
+
+#~ msgid "Could not get buffers from device \"%s\"."
+#~ msgstr "Kon nie buffers vanaf toestel \"%s\" verkry nie."
+
+#~ msgid "Could not get enough buffers from device \"%s\"."
+#~ msgstr "Kon nie genoeg buffers vanaf toestel \"%s\" kry nie."

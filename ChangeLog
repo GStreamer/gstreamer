@@ -1,3 +1,29 @@
+2005-02-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* autogen.sh:
+	* configure.ac:
+	* ext/Makefile.am:
+	* gst/Makefile.am:
+	* po/POTFILES.in:
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	* sys/Makefile.am:
+	* testsuite/Makefile.am:
+	  remove a whole bunch of plugins.  This module now contains a set
+	  of free reference plugins/elements as agreed.
+
 2005-02-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

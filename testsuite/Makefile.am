@@ -12,14 +12,10 @@ endif
 
 SUBDIRS = \
 	$(EMBED_DIR) \
-	spider \
-	multifilesink \
 	$(ALSA_DIR) #seeking
 DIST_SUBDIRS = \
 	embed \
-	spider \
-	alsa \
-	multifilesink
+	alsa
 
 GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
 
