@@ -34,6 +34,7 @@ version_check "pkg-config" "" "http://www.freedesktop.org/software/pkgconfig" 0 
 die_check $DIE
 
 autoconf_2.52d_check || DIE=1
+aclocal_check || DIE=1
 
 die_check $DIE
 
@@ -50,7 +51,7 @@ fi
 toplevel_check $srcfile
 
 if test -e acinclude.m4; then rm acinclude.m4; fi
-tool_run "aclocal" "-I common/m4 $ACLOCAL_FLAGS"
+tool_run "$aclocal" "-I common/m4 $ACLOCAL_FLAGS"
 
 # FIXME : why does libtoolize keep complaining about aclocal ?
 
