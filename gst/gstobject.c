@@ -582,7 +582,7 @@ struct _GstSignalObjectClass {
   /* signals */
 #ifndef GST_DISABLE_LOADSAVE
   void          (*object_loaded)           (GstSignalObject *object, GstObject *new, xmlNodePtr self);
-#endif GST_DISABLE_LOADSAVE
+#endif /* GST_DISABLE_LOADSAVE */
 };
 
 static GType
