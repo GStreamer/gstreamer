@@ -1,7 +1,7 @@
 /* GStreamer
- * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
+ * Copyright (C) 2003-2004 Benjamin Otte <otte@gnome.org>
  *
- * gstid3tagsetter.c: plugin for reading / modifying id3 tags
+ * gstid3tag.c: plugin for reading / modifying id3 tags
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -30,11 +30,12 @@
 GST_DEBUG_CATEGORY_STATIC (gst_id3_tag_debug);
 #define GST_CAT_DEFAULT gst_id3_tag_debug
 
-#define GST_TYPE_ID3_TAG (gst_id3_tag_get_type())
+#define GST_TYPE_ID3_TAG (gst_id3_tag_get_type(GST_ID3_TAG_PARSE_BASE ))
 #define GST_ID3_TAG(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ID3_TAG, GstID3Tag))
-#define GST_ID3_TAG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ID3_TAG, GstID3Tag))
+#define GST_ID3_TAG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ID3_TAG, GstID3TagClass))
 #define GST_IS_ID3_TAG(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ID3_TAG))
 #define GST_IS_ID3_TAG_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ID3_TAG))
+#define GST_ID3_TAG_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_ID3_TAG, GstID3TagClass))
 
 typedef struct _GstID3Tag GstID3Tag;
 typedef struct _GstID3TagClass GstID3TagClass;
@@ -52,12 +53,17 @@ GstID3TagState;
 
 typedef enum
 {
-  GST_ID3_TAG_PARSE_UNKNOWN,
-  GST_ID3_TAG_PARSE_TAG,
-  GST_ID3_TAG_PARSE_WRITE,
-  GST_ID3_TAG_PARSE_PARSE
+  GST_ID3_TAG_PARSE_BASE = 0,
+  GST_ID3_TAG_PARSE_DEMUX = 1,
+  GST_ID3_TAG_PARSE_MUX = 2,
+  GST_ID3_TAG_PARSE_ANY = 3
 }
 GstID3ParseMode;
+
+#define IS_DEMUXER(tag) ((tag)->parse_mode & GST_ID3_TAG_PARSE_DEMUX)
+#define IS_MUXER(tag) ((tag)->parse_mode & GST_ID3_TAG_PARSE_MUX)
+#define CAN_BE_DEMUXER(tag) (GST_ID3_TAG_GET_CLASS(tag)->type & GST_ID3_TAG_PARSE_DEMUX)
+#define CAN_BE_MUXER(tag) (GST_ID3_TAG_GET_CLASS(tag)->type & GST_ID3_TAG_PARSE_MUX)
 
 struct _GstID3Tag
 {
@@ -92,15 +98,9 @@ struct _GstID3Tag
 struct _GstID3TagClass
 {
   GstElementClass parent_class;
+
+  GstID3ParseMode type;
 };
-
-/* elementfactory information */
-static GstElementDetails gst_id3_tag_details =
-GST_ELEMENT_DETAILS ("id3 tag extractor",
-    "Tag",
-    "Extract tagging information from mp3s",
-    "Benjamin Otte <in7y118@public.uni-hamburg.de>");
-
 
 /* signals and args */
 enum
@@ -120,15 +120,31 @@ enum
 
 GST_DEBUG_CATEGORY_EXTERN (mad_debug);
 
-static GstStaticPadTemplate id3_tag_src_template_factory =
+static GstStaticPadTemplate id3_tag_src_any_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
-  /* FIXME: for spider - GST_PAD_ALWAYS, */
+  /* FIXME: for spider - should be GST_PAD_ALWAYS, */
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("ANY")
     );
 
-static GstStaticPadTemplate id3_tag_sink_template_factory =
+static GstStaticPadTemplate id3_tag_src_id3_template_factory =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+  /* FIXME: for spider - should be GST_PAD_ALWAYS, */
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS ("application/x-id3")
+    );
+
+static GstStaticPadTemplate id3_tag_sink_any_template_factory =
+    GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    /* FIXME: find a way to extend this generically */
+    GST_STATIC_CAPS ("audio/mpeg; audio/x-flac")
+    );
+
+static GstStaticPadTemplate id3_tag_sink_id3_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -136,9 +152,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 
-static void gst_id3_tag_base_init (gpointer g_class);
-static void gst_id3_tag_class_init (GstID3TagClass * klass);
-static void gst_id3_tag_init (GstID3Tag * tag);
+static void gst_id3_tag_class_init (gpointer g_class, gpointer class_data);
+static void gst_id3_tag_init (GTypeInstance * instance, gpointer g_class);
 static void gst_id3_tag_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_id3_tag_get_property (GObject * object,
@@ -162,21 +177,26 @@ static GstElementClass *parent_class = NULL;
 /* static guint gst_id3_tag_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-gst_id3_tag_get_type (void)
+gst_id3_tag_get_type (guint type)
 {
-  static GType id3_tag_type = 0;
+  static GType id3_tag_type[4] = { 0, 0, 0, 0 };
+  static gchar *name[4] = { "GstID3TagBase", "GstID3Demux", "GstID3Mux",
+    "GstID3Tag"
+  };
 
-  if (!id3_tag_type) {
-    static const GTypeInfo id3_tag_info = {
+  g_assert (type < 4);
+
+  if (!id3_tag_type[type]) {
+    GTypeInfo id3_tag_info = {
       sizeof (GstID3TagClass),
-      gst_id3_tag_base_init,
-      NULL,
-      (GClassInitFunc) gst_id3_tag_class_init,
       NULL,
       NULL,
+      gst_id3_tag_class_init,
+      NULL,
+      GUINT_TO_POINTER (type),
       sizeof (GstID3Tag),
       0,
-      (GInstanceInitFunc) gst_id3_tag_init,
+      gst_id3_tag_init,
     };
     static const GInterfaceInfo tag_setter_info = {
       NULL,
@@ -184,55 +204,80 @@ gst_id3_tag_get_type (void)
       NULL
     };
 
-    id3_tag_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstID3Tag", &id3_tag_info,
-        0);
+    id3_tag_type[type] = g_type_register_static (
+        (type == GST_ID3_TAG_PARSE_BASE) ? GST_TYPE_ELEMENT :
+        GST_TYPE_ID3_TAG, name[type], &id3_tag_info, 0);
 
-    g_type_add_interface_static (id3_tag_type, GST_TYPE_TAG_SETTER,
-        &tag_setter_info);
-
-    GST_DEBUG_CATEGORY_INIT (gst_id3_tag_debug, "id3tag", 0,
-        "id3 tag reader / setter");
+    if (type & GST_ID3_TAG_PARSE_DEMUX) {
+      g_type_add_interface_static (id3_tag_type[type], GST_TYPE_TAG_SETTER,
+          &tag_setter_info);
+    }
   }
-  return id3_tag_type;
+  return id3_tag_type[type];
 }
+
+/* elementfactory information */
+GstElementDetails gst_id3_tag_details[3] = {
+  GST_ELEMENT_DETAILS ("id3 tag extractor",
+      "Codec/Demuxer",
+      "Extract ID3 tagging information",
+      "Benjamin Otte <otte@gnome.org>"),
+  GST_ELEMENT_DETAILS ("id3 muxer",
+      "Codec/Muxer",
+      "Add ID3 tagging information",
+      "Benjamin Otte <otte@gnome.org>"),
+  GST_ELEMENT_DETAILS ("id3 tag extractor",
+      "Tag",
+      "Extract tagging information from mp3s",
+      "Benjamin Otte <otte@gnome.org>")
+};
+
 static void
-gst_id3_tag_base_init (gpointer g_class)
+gst_id3_tag_class_init (gpointer g_class, gpointer class_data)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+  GstID3TagClass *tag_class = GST_ID3_TAG_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_id3_tag_details);
+  tag_class->type = GPOINTER_TO_UINT (class_data);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&id3_tag_sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&id3_tag_src_template_factory));
-}
-static void
-gst_id3_tag_class_init (GstID3TagClass * klass)
-{
-  GstElementClass *gstelement_class;
-  GObjectClass *gobject_class;
+  if (tag_class->type == GST_ID3_TAG_PARSE_BASE) {
+    parent_class = g_type_class_peek_parent (g_class);
+    gstelement_class->change_state = gst_id3_tag_change_state;
+  } else {
+    gst_element_class_set_details (gstelement_class,
+        &gst_id3_tag_details[tag_class->type - 1]);
+  }
 
-  gstelement_class = (GstElementClass *) klass;
-  gobject_class = (GObjectClass *) klass;
+  if (tag_class->type & GST_ID3_TAG_PARSE_DEMUX) {
+    g_object_class_install_property (gobject_class, ARG_V2_TAG,
+        g_param_spec_boolean ("v2-tag", "add version 2 tag",
+            "Add version 2 tag at start of file", TRUE,
+            G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (gobject_class, ARG_V1_TAG,
+        g_param_spec_boolean ("v1-tag", "add version 1 tag",
+            "Add version 1 tag at end of file", FALSE,
+            G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    gst_element_class_add_pad_template (gstelement_class,
+        gst_static_pad_template_get (&id3_tag_src_any_template_factory));
+  } else {
+    gst_element_class_add_pad_template (gstelement_class,
+        gst_static_pad_template_get (&id3_tag_src_id3_template_factory));
+  }
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  gstelement_class->change_state = gst_id3_tag_change_state;
-
-  g_object_class_install_property (gobject_class, ARG_V1_TAG,
-      g_param_spec_boolean ("v1-tag", "add version 1 tag",
-          "Add version 1 tag at end of file", FALSE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (gobject_class, ARG_V2_TAG,
-      g_param_spec_boolean ("v2-tag", "add version 2 tag",
-          "Add version 2 tag at start of file", TRUE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (gobject_class, ARG_PREFER_V1,
-      g_param_spec_boolean ("prefer-v1", "prefer version 1 tag",
-          "Prefer tags from tag at end of file", FALSE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  if (tag_class->type & GST_ID3_TAG_PARSE_MUX) {
+    g_object_class_install_property (gobject_class, ARG_PREFER_V1,
+        g_param_spec_boolean ("prefer-v1", "prefer version 1 tag",
+            "Prefer tags from tag at end of file", FALSE,
+            G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  }
+  if (tag_class->type == GST_ID3_TAG_PARSE_MUX) {
+    gst_element_class_add_pad_template (gstelement_class,
+        gst_static_pad_template_get (&id3_tag_sink_any_template_factory));
+  } else {
+    gst_element_class_add_pad_template (gstelement_class,
+        gst_static_pad_template_get (&id3_tag_sink_id3_template_factory));
+  }
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_id3_tag_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_id3_tag_get_property);
@@ -244,13 +289,15 @@ gst_id3_tag_get_caps (GstPad * pad)
   GstID3Tag *tag = GST_ID3_TAG (gst_pad_get_parent (pad));
 
   if (tag->found_caps) {
-    GstCaps *caps;
+    GstCaps *caps = gst_caps_copy (tag->found_caps);
 
-    caps = gst_caps_from_string ("application/x-gst-tags; application/x-id3");
-    gst_caps_append (caps, gst_caps_copy (tag->found_caps));
+    if (CAN_BE_MUXER (tag)) {
+      gst_caps_append (caps,
+          gst_caps_from_string ("application/x-gst-tags; application/x-id3"));
+    }
     return caps;
   } else {
-    return gst_caps_new_any ();
+    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
 }
 
@@ -259,8 +306,8 @@ gst_id3_tag_add_src_pad (GstID3Tag * tag)
 {
   g_assert (tag->srcpad == NULL);
   tag->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&id3_tag_src_template_factory), "src");
+      gst_pad_new_from_template (gst_element_class_get_pad_template
+      (GST_ELEMENT_GET_CLASS (tag), "src"), "src");
   gst_pad_set_event_function (tag->srcpad,
       GST_DEBUG_FUNCPTR (gst_id3_tag_src_event));
   gst_pad_set_event_mask_function (tag->srcpad,
@@ -275,21 +322,25 @@ gst_id3_tag_add_src_pad (GstID3Tag * tag)
       GST_DEBUG_FUNCPTR (gst_id3_tag_src_link));
   gst_element_add_pad (GST_ELEMENT (tag), tag->srcpad);
 }
+
 static void
-gst_id3_tag_init (GstID3Tag * tag)
+gst_id3_tag_init (GTypeInstance * instance, gpointer g_class)
 {
-  /* create the sink and src pads */
-  tag->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&id3_tag_sink_template_factory), "sink");
-  gst_element_add_pad (GST_ELEMENT (tag), tag->sinkpad);
-  gst_pad_set_chain_function (tag->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_id3_tag_chain));
+  GstID3Tag *tag = GST_ID3_TAG (instance);
+
+  if (GST_ID3_TAG_GET_CLASS (tag)->type != GST_ID3_TAG_PARSE_BASE) {
+    /* create the sink and src pads */
+    g_print ("creating sinkpad\n");
+    tag->sinkpad =
+        gst_pad_new_from_template (gst_element_class_get_pad_template
+        (GST_ELEMENT_CLASS (g_class), "sink"), "sink");
+    gst_element_add_pad (GST_ELEMENT (tag), tag->sinkpad);
+    gst_pad_set_chain_function (tag->sinkpad,
+        GST_DEBUG_FUNCPTR (gst_id3_tag_chain));
+  }
 
   /* FIXME: for the alli^H^H^H^Hspider - gst_id3_tag_add_src_pad (tag); */
-
-  tag->state = GST_ID3_TAG_STATE_READING_V2_TAG;
-  tag->parse_mode = GST_ID3_TAG_PARSE_UNKNOWN;
+  tag->parse_mode = GST_ID3_TAG_PARSE_BASE;
   tag->buffer = NULL;
 
   GST_FLAG_SET (tag, GST_ELEMENT_EVENT_AWARE);
@@ -318,6 +369,13 @@ gst_id3_tag_set_property (GObject * object, guint prop_id, const GValue * value,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
+  }
+
+  /* make sure we render at least one tag */
+  if (GST_ID3_TAG_GET_CLASS (tag)->type == GST_ID3_TAG_PARSE_MUX &&
+      !tag->v1tag_render && !tag->v2tag_render) {
+    g_object_set (object, prop_id == ARG_V1_TAG ? "v2-tag" : "v1-tag", TRUE,
+        NULL);
   }
 }
 static void
@@ -850,7 +908,7 @@ gst_id3_tag_do_typefind (GstID3Tag * tag, GstBuffer * buffer)
 static gboolean
 gst_id3_tag_do_caps_nego (GstID3Tag * tag, GstBuffer * buffer)
 {
-  if (buffer != NULL) {
+  if (buffer != NULL && CAN_BE_DEMUXER (tag)) {
     tag->found_caps = gst_id3_tag_do_typefind (tag, buffer);
     if (!tag->found_caps) {
       return FALSE;
@@ -859,7 +917,7 @@ gst_id3_tag_do_caps_nego (GstID3Tag * tag, GstBuffer * buffer)
   if (!tag->srcpad)
     gst_id3_tag_add_src_pad (tag);
   if (!gst_pad_is_linked (tag->srcpad)) {
-    tag->parse_mode = GST_ID3_TAG_PARSE_TAG;
+    tag->parse_mode = GST_ID3_TAG_GET_CLASS (tag)->type;
     return TRUE;
   } else {
     return gst_pad_renegotiate (tag->srcpad) != GST_PAD_LINK_REFUSED;
@@ -874,19 +932,23 @@ gst_id3_tag_src_link (GstPad * pad, const GstCaps * caps)
 
   tag = GST_ID3_TAG (gst_pad_get_parent (pad));
 
-  if (!tag->found_caps)
+  if (!tag->found_caps && CAN_BE_DEMUXER (tag))
     return GST_PAD_LINK_DELAYED;
+  if (!CAN_BE_MUXER (tag) || !CAN_BE_DEMUXER (tag)) {
+    tag->parse_mode = GST_ID3_TAG_GET_CLASS (tag)->type;
+    return GST_PAD_LINK_OK;
+  }
 
   mimetype = gst_structure_get_name (gst_caps_get_structure (caps, 0));
 
   if (strcmp (mimetype, "application/x-id3") == 0) {
-    tag->parse_mode = GST_ID3_TAG_PARSE_WRITE;
+    tag->parse_mode = GST_ID3_TAG_PARSE_MUX;
     GST_LOG_OBJECT (tag, "normal operation, using application/x-id3 output");
   } else if (strcmp (mimetype, "application/x-gst-tags") == 0) {
-    tag->parse_mode = GST_ID3_TAG_PARSE_TAG;
+    tag->parse_mode = GST_ID3_TAG_PARSE_ANY;
     GST_LOG_OBJECT (tag, "fast operation, just outputting tags");
   } else {
-    tag->parse_mode = GST_ID3_TAG_PARSE_PARSE;
+    tag->parse_mode = GST_ID3_TAG_PARSE_DEMUX;
     GST_LOG_OBJECT (tag, "parsing operation, extracting tags");
   }
 
@@ -966,7 +1028,7 @@ gst_id3_tag_chain (GstPad * pad, GstData * data)
       }
       gst_data_unref (GST_DATA (tag->buffer));
       tag->buffer = NULL;
-      if (tag->parse_mode != GST_ID3_TAG_PARSE_TAG) {
+      if (tag->parse_mode != GST_ID3_TAG_PARSE_ANY) {
         /* seek to beginning */
         GST_LOG_OBJECT (tag, "seeking back to beginning");
         if (gst_pad_send_event (GST_PAD_PEER (tag->sinkpad),
@@ -1052,7 +1114,7 @@ gst_id3_tag_chain (GstPad * pad, GstData * data)
       g_assert (tag->buffer == NULL);
       gst_id3_tag_send_tag_event (tag);
 
-      if (tag->parse_mode == GST_ID3_TAG_PARSE_WRITE && tag->v2tag_render) {
+      if (IS_MUXER (tag) && tag->v2tag_render) {
         struct id3_tag *id3;
         GstTagList *merged;
         GstBuffer *tag_buffer;
@@ -1079,13 +1141,14 @@ gst_id3_tag_chain (GstPad * pad, GstData * data)
       }
       gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_NORMAL);
       tag->v1tag_size_new = (tag->v1tag_render &&
-          tag->parse_mode == GST_ID3_TAG_PARSE_WRITE &&
+          IS_MUXER (tag) &&
           (tag->parsed_tags != NULL ||
               gst_tag_setter_get_list (GST_TAG_SETTER (tag)) !=
               NULL)) ? 128 : 0;
       /* fall through */
     case GST_ID3_TAG_STATE_NORMAL:
-      if (tag->parse_mode == GST_ID3_TAG_PARSE_TAG) {
+      if (tag->parse_mode == GST_ID3_TAG_PARSE_ANY) {
+        gst_data_unref (GST_DATA (buffer));
         gst_element_set_eos (GST_ELEMENT (tag));
         gst_pad_push (tag->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
       } else {
@@ -1122,9 +1185,13 @@ gst_id3_tag_change_state (GstElement * element)
       tag->v1tag_size = 0;
       tag->v1tag_offset = G_MAXUINT64;
       tag->v2tag_size = 0;
+      if (CAN_BE_DEMUXER (tag)) {
+        gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_READING_V2_TAG);
+      } else {
+        gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_NORMAL_START);
+      }
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      /* do something to get out of the chain function faster */
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
@@ -1145,7 +1212,7 @@ gst_id3_tag_change_state (GstElement * element)
         gst_caps_free (tag->found_caps);
         tag->found_caps = NULL;
       }
-      tag->parse_mode = GST_ID3_TAG_PARSE_UNKNOWN;
+      tag->parse_mode = GST_ID3_TAG_PARSE_BASE;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -1162,14 +1229,20 @@ plugin_init (GstPlugin * plugin)
   if (!gst_library_load ("gsttags"))
     return FALSE;
 
-  /* We register id3tag with a rank one less than mad so that mad always
-     gets picked before id3tag if possible.  This avoids multiple plugging
-     of id3tag in the autoplugger for now. */
   if (!gst_element_register (plugin, "mad", GST_RANK_PRIMARY,
           gst_mad_get_type ())
-      || !gst_element_register (plugin, "id3tag", GST_RANK_PRIMARY - 1,
-          gst_id3_tag_get_type ()))
+      || !gst_element_register (plugin, "id3demux", GST_RANK_PRIMARY,
+          gst_id3_tag_get_type (GST_ID3_TAG_PARSE_DEMUX))
+      || !gst_element_register (plugin, "id3mux", GST_RANK_PRIMARY,
+          gst_id3_tag_get_type (GST_ID3_TAG_PARSE_MUX))
+      /* FIXME 0.9: remove this element */
+      || !gst_element_register (plugin, "id3tag", GST_RANK_NONE,
+          gst_id3_tag_get_type (GST_ID3_TAG_PARSE_ANY))) {
     return FALSE;
+  }
+
+  GST_DEBUG_CATEGORY_INIT (gst_id3_tag_debug, "id3tag", 0,
+      "id3 tag reader / setter");
 
   return TRUE;
 }
