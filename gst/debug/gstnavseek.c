@@ -145,7 +145,14 @@ gst_navseek_init (GTypeInstance * instance, gpointer g_class)
   gst_pad_set_getcaps_function (navseek->srcpad, gst_pad_proxy_getcaps);
   gst_pad_set_event_function (navseek->srcpad, gst_navseek_handle_src_event);
 
+  GST_FLAG_SET (GST_ELEMENT (navseek), GST_ELEMENT_EVENT_AWARE);
+
   navseek->seek_offset = 5.0;
+  navseek->loop = FALSE;
+  navseek->grab_seg_start = FALSE;
+  navseek->grab_seg_end = FALSE;
+  navseek->segment_start = GST_CLOCK_TIME_NONE;
+  navseek->segment_end = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -168,6 +175,32 @@ gst_navseek_seek (GstNavSeek * navseek, gint64 offset)
         GST_SEEK_METHOD_SET | GST_FORMAT_TIME | GST_SEEK_FLAG_ACCURATE |
         GST_SEEK_FLAG_FLUSH, peer_value);
   }
+}
+
+static void
+gst_navseek_segseek (GstNavSeek * navseek)
+{
+  GstEvent *event;
+
+  if ((navseek->segment_start == GST_CLOCK_TIME_NONE) ||
+      (navseek->segment_end == GST_CLOCK_TIME_NONE) ||
+      (!GST_PAD_IS_LINKED (navseek->sinkpad))) {
+    return;
+  }
+
+  if (navseek->loop) {
+    event =
+        gst_event_new_segment_seek (GST_SEEK_METHOD_SET | GST_FORMAT_TIME |
+        GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_SEGMENT_LOOP,
+        navseek->segment_start, navseek->segment_end);
+  } else {
+    event =
+        gst_event_new_segment_seek (GST_SEEK_METHOD_SET | GST_FORMAT_TIME |
+        GST_SEEK_FLAG_ACCURATE, navseek->segment_start, navseek->segment_end);
+  }
+
+  g_return_if_fail (event != NULL);
+  gst_pad_send_event (gst_pad_get_peer (navseek->sinkpad), event);
 }
 
 static gboolean
@@ -199,6 +232,16 @@ gst_navseek_handle_src_event (GstPad * pad, GstEvent * event)
         } else if (strcmp (key, "Right") == 0) {
           /* Seek forward */
           gst_navseek_seek (navseek, navseek->seek_offset * GST_SECOND);
+        } else if (strcmp (key, "s") == 0) {
+          /* Grab the next frame as the start frame of a segment */
+          navseek->grab_seg_start = TRUE;
+        } else if (strcmp (key, "e") == 0) {
+          /* Grab the next frame as the end frame of a segment */
+          navseek->grab_seg_end = TRUE;
+        } else if (strcmp (key, "l") == 0) {
+          /* Toggle the loop flag. If we have both start and end segment times send a seek */
+          navseek->loop = !navseek->loop;
+          gst_navseek_segseek (navseek);
         }
       } else {
         break;
@@ -210,7 +253,7 @@ gst_navseek_handle_src_event (GstPad * pad, GstEvent * event)
     default:
       break;
   }
-  if (event) {
+  if ((event) && GST_PAD_IS_LINKED (navseek->sinkpad)) {
     return gst_pad_send_event (gst_pad_get_peer (navseek->sinkpad), event);
   }
   return TRUE;
@@ -259,6 +302,28 @@ gst_navseek_chain (GstPad * pad, GstData * _data)
   GstNavSeek *navseek;
 
   navseek = GST_NAVSEEK (gst_pad_get_parent (pad));
+
+  if (GST_IS_BUFFER (_data) &&
+      GST_BUFFER_TIMESTAMP_IS_VALID (GST_BUFFER (_data))) {
+    if (navseek->grab_seg_start) {
+      navseek->segment_start = GST_BUFFER_TIMESTAMP (GST_BUFFER (_data));
+      navseek->segment_end = GST_CLOCK_TIME_NONE;
+      navseek->grab_seg_start = FALSE;
+    }
+
+    if (navseek->grab_seg_end) {
+      navseek->segment_end = GST_BUFFER_TIMESTAMP (GST_BUFFER (_data));
+      navseek->grab_seg_end = FALSE;
+      gst_navseek_segseek (navseek);
+    }
+  }
+
+  if (GST_IS_EVENT (_data) &&
+      (GST_EVENT_TYPE (GST_EVENT (_data)) == GST_EVENT_SEGMENT_DONE) &&
+      navseek->loop) {
+    gst_navseek_segseek (navseek);
+  }
+
   gst_pad_push (navseek->srcpad, _data);
 }
 

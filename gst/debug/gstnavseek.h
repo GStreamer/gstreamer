@@ -46,6 +46,11 @@ struct _GstNavSeek {
   GstPad *srcpad;
 
   gdouble seek_offset;
+  gboolean loop;
+  gboolean grab_seg_start;
+  gboolean grab_seg_end;
+  GstClockTime segment_start;
+  GstClockTime segment_end;
 };
 
 struct _GstNavSeekClass {
