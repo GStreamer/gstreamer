@@ -1,3 +1,9 @@
+2003-12-03  set REAL_NAME environment variable  <thomas at apestaart dot org>
+
+	* common/m4/gst-feature.m4: *** instead of newline when not built
+	* configure.ac: fix X detection when no X stuff present
+	* gst-libs/gst/Makefile.am: put X dependencies inside conditional
+
 2003-07-12  Thomas Vander Stichele <thomas at apestaart dot org>
 
         * gst-plugins.spec.in: fix up spec file
