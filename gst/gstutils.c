@@ -1339,6 +1339,68 @@ gst_pad_can_link (GstPad * srcpad, GstPad * sinkpad)
 }
 
 /**
+ * gst_pad_use_fixed_caps:
+ * @pad: the pad to use
+ *
+ * A helper function you can use that sets the 
+ * @gst_pad_get_fixed_caps_func as the gstcaps function for the
+ * pad. This way the function will always return the negotiated caps
+ * or in case the pad is not negotiated, the padtemplate caps.
+ */
+void
+gst_pad_use_fixed_caps (GstPad * pad)
+{
+  gst_pad_set_getcaps_function (pad, gst_pad_get_fixed_caps_func);
+}
+
+/**
+ * gst_pad_get_fixed_caps_func:
+ * @pad: the pad to use
+ *
+ * A helper function you can use as a GetCaps function that
+ * will return the currently negotiated caps or the padtemplate
+ * when NULL.
+ *
+ * Returns: The currently negotiated caps or the padtemplate.
+ */
+GstCaps *
+gst_pad_get_fixed_caps_func (GstPad * pad)
+{
+  GstCaps *result;
+  GstRealPad *realpad;
+
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), NULL);
+
+  realpad = GST_REAL_PAD_CAST (pad);
+
+  if (GST_RPAD_CAPS (realpad)) {
+    result = GST_RPAD_CAPS (realpad);
+
+    GST_CAT_DEBUG (GST_CAT_CAPS,
+        "using pad caps %p %" GST_PTR_FORMAT, result, result);
+
+    result = gst_caps_ref (result);
+    goto done;
+  }
+  if (GST_PAD_PAD_TEMPLATE (realpad)) {
+    GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (realpad);
+
+    result = GST_PAD_TEMPLATE_CAPS (templ);
+    GST_CAT_DEBUG (GST_CAT_CAPS,
+        "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, result,
+        result);
+
+    result = gst_caps_ref (result);
+    goto done;
+  }
+  GST_CAT_DEBUG (GST_CAT_CAPS, "pad has no caps");
+  result = gst_caps_new_empty ();
+
+done:
+  return result;
+}
+
+/**
  * gst_object_default_error:
  * @object: a #GObject that signalled the error.
  * @orig: the #GstObject that initiated the error.

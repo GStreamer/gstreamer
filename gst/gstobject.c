@@ -26,6 +26,7 @@
 #include "gstobject.h"
 #include "gstmarshal.h"
 #include "gstinfo.h"
+#include "gstatomic_impl.h"
 
 #ifndef GST_DISABLE_TRACE
 #include "gsttrace.h"

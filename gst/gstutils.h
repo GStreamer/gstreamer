@@ -265,6 +265,8 @@ void gst_element_class_install_std_props (GstElementClass * klass,
 gboolean                gst_pad_can_link                (GstPad *srcpad, GstPad *sinkpad);
 gboolean                gst_pad_can_link_filtered       (GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
 
+void			gst_pad_use_fixed_caps		(GstPad *pad);
+GstCaps*		gst_pad_get_fixed_caps_func	(GstPad *pad);
 
 /* bin functions */
 void            	gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...);

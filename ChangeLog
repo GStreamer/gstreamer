@@ -1,3 +1,25 @@
+2005-02-03  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstcaps.c: (gst_caps_intersect):
+	* gst/gstclock.c: (gst_clock_id_ref), (gst_clock_id_unref),
+	(gst_clock_id_compare_func), (gst_clock_id_wait),
+	(gst_clock_id_wait_async), (gst_clock_init),
+	(gst_clock_adjust_unlocked), (gst_clock_get_time):
+	* gst/gstinfo.c:
+	* gst/gstobject.c: (gst_object_class_init), (gst_object_ref),
+	(gst_object_unref), (gst_object_sink), (gst_object_dispose),
+	(gst_object_dispatch_properties_changed), (gst_object_set_name),
+	(gst_object_set_parent), (gst_object_unparent),
+	(gst_object_check_uniqueness), (gst_object_get_path_string):
+	* gst/gstutils.c: (gst_element_finish_preroll),
+	(gst_element_get_compatible_pad_filtered),
+	(gst_element_link_pads_filtered), (gst_element_unlink),
+	(gst_pad_use_fixed_caps), (gst_pad_get_fixed_caps_func):
+	* gst/gstutils.h:
+	Inline refcounting.. not sure why it wasn't before.
+	Added use_fixed_caps method to change default getcaps 
+	behaviour.
+
 2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstelement.h:

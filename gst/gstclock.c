@@ -28,6 +28,7 @@
 #include "gstclock.h"
 #include "gstinfo.h"
 #include "gstmemchunk.h"
+#include "gstatomic_impl.h"
 
 #ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE */

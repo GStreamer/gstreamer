@@ -24,6 +24,7 @@
 #include <signal.h>
 
 #include "gst_private.h"
+#include "gstatomic_impl.h"
 #include <gst/gst.h>
 
 //#define DEBUG_REFCOUNT
