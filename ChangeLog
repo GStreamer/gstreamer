@@ -1,5 +1,11 @@
 2004-06-12  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* win32/msvc71.sln:
+	* win32/testsuite/:
+          prepare to compile the testsuite with MSVC
+
+2004-06-12  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* docs/manual/win32.xml:
           attempt to transform the Win32 README into an XML doc
 
