@@ -23,7 +23,7 @@ dnl FIXME take something else ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])
 AM_CONFIG_HEADER(config.h)
 
-AUTOMAKE="$AUTOMAKE"
+##AUTOMAKE="$AUTOMAKE"
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 ACLOCAL="$ACLOCAL -I m4 -I common/m4 $ACLOCAL_FLAGS"
@@ -45,7 +45,7 @@ dnl # Super Duper options for plugin building #
 dnl ###########################################
 
 dnl experimental plugins; stuff that hasn't had the dust settle yet
-dnl read 'builds, but might not work'
+dnl read 'builds, but might not work'UTO
 GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
 [HAVE_EXPERIMENTAL=yes],disabled,
 [
@@ -364,7 +364,7 @@ dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 dnl *** dv ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DV, true)
 GST_CHECK_FEATURE(DV, [dv library], dv, [
-  GST_CHECK_LIBHEADER(DV, dv, dv_init, -lm, libdv/dv.h, DV_LIBS="-ldv")
+  AM_PATH_LIBDV(HAVE_DV=yes, HAVE_DV=no)
   AC_SUBST(DV_LIBS)
 ])
 
