@@ -98,7 +98,7 @@ static void             gst_divxdec_class_init   (GstDivxDecClass *klass);
 static void             gst_divxdec_init         (GstDivxDec      *divxdec);
 static void             gst_divxdec_dispose      (GObject         *object);
 static void             gst_divxdec_chain        (GstPad          *pad,
-                                                  GstBuffer       *buf);
+                                                  GstData         *data);
 static GstPadLinkReturn gst_divxdec_connect      (GstPad          *pad,
                                                   GstCaps         *vscapslist);
 static GstPadLinkReturn	gst_divxdec_negotiate	(GstDivxDec *divxdec);

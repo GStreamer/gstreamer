@@ -103,7 +103,7 @@ static void             gst_divxenc_class_init   (GstDivxEncClass *klass);
 static void             gst_divxenc_init         (GstDivxEnc      *divxenc);
 static void             gst_divxenc_dispose      (GObject         *object);
 static void             gst_divxenc_chain        (GstPad          *pad,
-                                                  GstBuffer       *buf);
+                                                  GstData         *data);
 static GstPadLinkReturn gst_divxenc_connect      (GstPad          *pad,
                                                   GstCaps         *vscapslist);
 
