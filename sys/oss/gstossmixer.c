@@ -59,9 +59,71 @@ static void	gst_ossmixer_set_mute	   (GstMixer       *ossmixer,
 					    GstMixerTrack  *track,
 					    gboolean        mute);
 
-static const gchar *labels[SOUND_MIXER_NRDEVICES] = SOUND_DEVICE_LABELS;
+static const gchar **labels = NULL;
 static GstMixerTrackClass *parent_class = NULL;
 
+/* three functions: firstly, OSS has the nasty habit of inserting
+ * spaces in the labels, we want to get rid of them. Secondly,
+ * i18n is impossible with OSS' way of providing us with mixer
+ * labels, so we make a 'given' list of i18n'ed labels. Since
+ * i18n doesn't actually work, we fake it (FIXME). Thirdly, I
+ * personally don't like the "1337" names that OSS gives to their
+ * labels ("Vol", "Mic", "Rec"), I'd rather see full names. */
+#define _(s) s
+
+static void
+fill_labels (void)
+{
+  gint i, pos;
+  gchar *origs[SOUND_MIXER_NRDEVICES] = SOUND_DEVICE_LABELS;
+  struct {
+    gchar *given, *wanted;
+  } cases[] = {
+    /* Note: this list is simply ripped from soundcard.h. For
+     * some people, some values might be missing (3D surround,
+     * etc.) - feel free to add them. That's the reason why
+     * I'm doing this in such a horribly complicated way. */
+    { "Vol  ",    _("Volume")     },
+    { "Bass ",    _("Bass")       },
+    { "Trebl",    _("Treble")     },
+    { "Synth",    _("Synth")      },
+    { "Pcm  ",    _("PCM")        },
+    { "Spkr ",    _("Speaker")    },
+    { "Line ",    _("Line-in")    },
+    { "Mic  ",    _("Microphone") },
+    { "CD   ",    _("CD")         },
+    { "Mix  ",    _("Mixer")      },
+    { "Pcm2 ",    _("PCM-2")      },
+    { "Rec  ",    _("Record")     },
+    { "IGain",    _("In-gain")    },
+    { "OGain",    _("Out-gain")   },
+    { "Line1",    _("Line-1")     },
+    { "Line2",    _("Line-2")     },
+    { "Line3",    _("Line-3")     },
+    { "Digital1", _("Digital-1")  },
+    { "Digital2", _("Digital-2")  },
+    { "Digital3", _("Digital-3")  },
+    { "PhoneIn",  _("Phone-in")   },
+    { "PhoneOut", _("Phone-out")  },
+    { "Video",    _("Video")      },
+    { "Radio",    _("Radio")      },
+    { "Monitor",  _("Monitor")    },
+    { NULL, NULL }
+  };
+
+  labels = g_malloc (sizeof (gchar *) * SOUND_MIXER_NRDEVICES);
+
+  for (i = 0; i < SOUND_MIXER_NRDEVICES; i++) {
+    for (pos = 0; cases[pos].given != NULL; pos++) {
+      if (!strcmp (cases[pos].given, origs[i])) {
+        labels[i] = g_strdup (cases[pos].wanted);
+        break;
+      }
+    }
+    if (cases[pos].given == NULL)
+      labels[i] = g_strdup (origs[i]);
+  }
+}
 
 GType
 gst_ossmixer_track_get_type (void)
@@ -112,7 +174,10 @@ gst_ossmixer_track_new (GstOssElement *oss,
 {
   GstOssMixerTrack *osstrack;
   GstMixerTrack *track;
-  gint volumes[2];
+  gint volume;
+
+  if (!labels)
+    fill_labels ();
 
   osstrack = g_object_new (GST_TYPE_OSSMIXER_TRACK, NULL);
   track = GST_MIXER_TRACK (osstrack);
@@ -124,10 +189,15 @@ gst_ossmixer_track_new (GstOssElement *oss,
   osstrack->track_num = track_num;
 
   /* volume */
-  gst_ossmixer_get_volume (GST_MIXER (oss), track, volumes);
-  osstrack->lvol = volumes[0];
-  if (max_chans == 2)
-    osstrack->rvol = volumes[1];
+  if (ioctl(oss->mixer_fd, MIXER_READ (osstrack->track_num), &volume) < 0) {
+    g_warning("Error getting device (%d) volume: %s",
+	      osstrack->track_num, strerror(errno));
+    volume = 0;
+  }
+  osstrack->lvol = (volume & 0xff);
+  if (track->num_channels == 2) {
+    osstrack->rvol = ((volume >> 8) & 0xff);
+  }
 
   return track;
 }
@@ -199,8 +269,8 @@ gst_ossmixer_get_volume (GstMixer      *mixer,
   } else {
     /* get */
     if (ioctl(oss->mixer_fd, MIXER_READ (osstrack->track_num), &volume) < 0) {
-      g_warning("Error getting recording device (%d) volume (0x%x): %s\n",
-	        osstrack->track_num, volume, strerror(errno));
+      g_warning("Error getting recording device (%d) volume: %s",
+	        osstrack->track_num, strerror(errno));
       volume = 0;
     }
 
@@ -233,7 +303,7 @@ gst_ossmixer_set_volume (GstMixer      *mixer,
 
     /* set */
     if (ioctl(oss->mixer_fd, MIXER_WRITE (osstrack->track_num), &volume) < 0) {
-      g_warning("Error setting recording device (%d) volume (0x%x): %s\n",
+      g_warning("Error setting recording device (%d) volume (0x%x): %s",
 	        osstrack->track_num, volume, strerror(errno));
       return;
     }
