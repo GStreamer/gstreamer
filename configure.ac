@@ -451,7 +451,7 @@ GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
 dnl *** avifile ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro
 translit(dnm, m, l) AM_CONDITIONAL(USE_AVIFILE, true)
-  GST_CHECK_FEATURE(AVIFILE, [avifile], windec winenc, [
+GST_CHECK_FEATURE(AVIFILE, [avifile], windec winenc, [
   translit(dnm, m, l) AC_SUBST(AVIFILE_LIBS)
   translit(dnm, m, l) AC_SUBST(AVIFILE_CFLAGS)
   GST_CHECK_CONFIGPROG(AVIFILE, avifile-config)
@@ -1044,7 +1044,6 @@ AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_AALIB,          test "x$HAVE_AALIB" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
-AM_CONDITIONAL(HAVE_AVIFILE,        test "x$HAVE_AVIFILE" = "xyes")
 AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
