@@ -144,6 +144,9 @@ struct _GstElementFactory {
   GtkType type;			/* unique GtkType of element */
 
   GstElementDetails *details;	/* pointer to details struct */
+
+  GList *src_types;
+  GList *sink_types;
 };
 
 
@@ -172,6 +175,8 @@ gint gst_element_set_state(GstElement *element,GstElementState state);
 
 void gst_element_error(GstElement *element,gchar *error);
 
+GstElementFactory *gst_element_get_factory(GstElement *element);
+
 #define gst_element_destroy(element) gst_object_destroy(GST_OBJECT(element))
 
 /* XML write and read */
@@ -181,6 +186,9 @@ xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent);
 GstElementFactory *gst_elementfactory_new(gchar *name,GtkType type,
                                           GstElementDetails *details);
 void gst_elementfactory_register(GstElementFactory *elementfactory);
+
+void gst_elementfactory_add_src(GstElementFactory *elementfactory, guint16 id);
+void gst_elementfactory_add_sink(GstElementFactory *elementfactory, guint16 id);
 
 GstElementFactory *gst_elementfactory_find(gchar *name);
 GList *gst_elementfactory_get_list();

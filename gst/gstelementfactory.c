@@ -91,6 +91,8 @@ GstElementFactory *gst_elementfactory_new(gchar *name,GtkType type,
   factory->name = g_strdup(name);
   factory->type = type;
   factory->details = details;
+  factory->src_types = NULL;
+  factory->sink_types = NULL;
   return factory;
 }
 
@@ -136,3 +138,16 @@ GstElement *gst_elementfactory_make(gchar *factoryname,gchar *name) {
   element = gst_elementfactory_create(factory,name);
   return element;
 }
+
+void gst_elementfactory_add_src(GstElementFactory *elementfactory, guint16 id) {
+  guint type = id;
+
+  elementfactory->src_types = g_list_prepend(elementfactory->src_types, GUINT_TO_POINTER(type));
+}
+
+void gst_elementfactory_add_sink(GstElementFactory *elementfactory, guint16 id) {
+  guint type = id;
+
+  elementfactory->sink_types = g_list_prepend(elementfactory->sink_types, GUINT_TO_POINTER(type));
+}
+

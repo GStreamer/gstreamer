@@ -27,7 +27,7 @@
 
 
 /* type of function used to check a stream for equality with type */
-typedef gboolean (*GstTypeFindFunc) (GstBuffer *buf,gpointer *private);
+typedef gboolean (*GstTypeFindFunc) (GstBuffer *buf,gpointer *priv);
 
 typedef struct _GstType GstType;
 typedef struct _GstTypeFactory GstTypeFactory;
@@ -42,6 +42,10 @@ struct _GstType {
 
   GList *srcs;			/* list of src objects for this type */
   GList *sinks;			/* list of sink objects for type */
+
+  GHashTable *converters;       /* a hashtable of factories that can convert
+				   from this type to destination type. The
+				   factories are indexed by destination type */
 };
 
 struct _GstTypeFactory {
@@ -70,7 +74,11 @@ GList *gst_type_get_sinks(guint16 id);
 
 /* get GstType by id */
 GstType *gst_type_find_by_id(guint16 id);
+
+GList *gst_type_get_sink_to_src(guint16 sinkid, guint16 srcid);
+
 /* get the list of registered types (returns list of GstType!) */
 GList *gst_type_get_list();
 
+void gst_type_dump();
 #endif /* __GST_TYPE_H__ */

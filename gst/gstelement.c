@@ -306,6 +306,17 @@ gint gst_element_set_state(GstElement *element,GstElementState state) {
   return return_val;
 }
 
+GstElementFactory *gst_element_get_factory(GstElement *element) {
+  GstElementClass *oclass;
+
+  g_return_val_if_fail(element != NULL, NULL);
+  g_return_val_if_fail(GST_IS_ELEMENT(element), NULL);
+  
+  oclass = GST_ELEMENT_CLASS(GTK_OBJECT(element)->klass);
+
+  return oclass->elementfactory;
+}
+
 /**
  * gst_element_change_state:
  * @element: element to change state of

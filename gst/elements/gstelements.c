@@ -42,25 +42,26 @@ struct _elements_entry {
   gchar *name;
   GtkType (*type) (void);
   GstElementDetails *details;
+  gboolean (*factoryinit) (GstElementFactory *factory);
 };
 
 struct _elements_entry _elements[] = {
-  { "fakesrc", gst_fakesrc_get_type, &gst_fakesrc_details },
-  { "fakesink", gst_fakesink_get_type, &gst_fakesink_details },
-  { "asyncdisksrc", gst_asyncdisksrc_get_type, &gst_asyncdisksrc_details },
-  { "audiosink", gst_audiosink_get_type, &gst_audiosink_details },
-  { "audiosrc", gst_audiosrc_get_type, &gst_audiosrc_details },
-  { "disksrc", gst_disksrc_get_type, &gst_disksrc_details },
-  { "identity", gst_identity_get_type, &gst_identity_details },
-  { "fdsink", gst_fdsink_get_type, &gst_fdsink_details },
-  { "fdsrc", gst_fdsrc_get_type, &gst_fdsrc_details },
+  { "fakesrc", gst_fakesrc_get_type, &gst_fakesrc_details, NULL },
+  { "fakesink", gst_fakesink_get_type, &gst_fakesink_details, NULL },
+  { "asyncdisksrc", gst_asyncdisksrc_get_type, &gst_asyncdisksrc_details, NULL },
+  { "audiosink", gst_audiosink_get_type, &gst_audiosink_details, gst_audiosink_factory_init },
+  { "audiosrc", gst_audiosrc_get_type, &gst_audiosrc_details, NULL },
+  { "disksrc", gst_disksrc_get_type, &gst_disksrc_details, NULL },
+  { "identity", gst_identity_get_type, &gst_identity_details, NULL },
+  { "fdsink", gst_fdsink_get_type, &gst_fdsink_details, NULL },
+  { "fdsrc", gst_fdsrc_get_type, &gst_fdsrc_details, NULL },
 #if HAVE_LIBGHTTP
-  { "httpsrc", gst_httpsrc_get_type, &gst_httpsrc_details },
+  { "httpsrc", gst_httpsrc_get_type, &gst_httpsrc_details, NULL },
 #endif /* HAVE_LIBGHTTP */
-  { "pipefilter", gst_pipefilter_get_type, &gst_pipefilter_details },
-  { "queue", gst_queue_get_type, &gst_queue_details },
-  { "sinesrc", gst_sinesrc_get_type, &gst_sinesrc_details },
-  { "typefind", gst_typefind_get_type, &gst_typefind_details },
+  { "pipefilter", gst_pipefilter_get_type, &gst_pipefilter_details, NULL },
+  { "queue", gst_queue_get_type, &gst_queue_details, NULL },
+  { "sinesrc", gst_sinesrc_get_type, &gst_sinesrc_details, NULL },
+  { "typefind", gst_typefind_get_type, &gst_typefind_details, NULL },
   { NULL, 0 },
 };
 
@@ -82,7 +83,10 @@ GstPlugin *plugin_init(GModule *module) {
                                      _elements[i].details);
     if (factory != NULL) {
       gst_plugin_add_factory(plugin,factory);
-//      DEBUG("added factory '%s'\n",_elements[i].name);
+      if (_elements[i].factoryinit) {
+        _elements[i].factoryinit(factory);
+      }
+//      g_print("added factory '%s'\n",_elements[i].name);
     }
     i++;
   }

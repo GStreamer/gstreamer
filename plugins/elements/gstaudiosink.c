@@ -133,9 +133,9 @@ gst_audiosink_class_init(GstAudioSinkClass *klass) {
 static void gst_audiosink_init(GstAudioSink *audiosink) {
   audiosink->sinkpad = gst_pad_new("sink",GST_PAD_SINK);
   gst_element_add_pad(GST_ELEMENT(audiosink),audiosink->sinkpad);
-  if (!gst_audiosink_type_audio)
-    gst_audiosink_type_audio = gst_type_find_by_mime("audio/raw");
+
   gst_pad_set_type_id(audiosink->sinkpad,gst_audiosink_type_audio);
+
   gst_pad_set_chain_function(audiosink->sinkpad,gst_audiosink_chain);
 
   audiosink->fd = -1;
@@ -342,3 +342,14 @@ static GstElementStateReturn gst_audiosink_change_state(GstElement *element) {
     return GST_ELEMENT_CLASS(parent_class)->change_state(element);
   return GST_STATE_SUCCESS;
 }
+
+gboolean gst_audiosink_factory_init(GstElementFactory *factory) {
+ 
+  if (!gst_audiosink_type_audio)
+    gst_audiosink_type_audio = gst_type_find_by_mime("audio/raw");
+
+  gst_type_add_sink(gst_audiosink_type_audio, factory);
+
+  return TRUE;
+}
+

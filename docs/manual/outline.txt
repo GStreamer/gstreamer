@@ -49,6 +49,11 @@ Building apps
    (fdsrc->mp3decoder->audiosink)
    (step by step explanation)
  More on factories
+   problems with helloworld
+   MIME types
+   GStreamer types
+   Basic types
+   
   
 advanced concepts
   threads

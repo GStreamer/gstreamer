@@ -79,6 +79,8 @@ struct _GstAudioSinkClass {
 
 GtkType gst_audiosink_get_type(void);
 
+gboolean gst_audiosink_factory_init(GstElementFactory *factory);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

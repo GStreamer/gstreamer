@@ -41,7 +41,7 @@ GstElementDetails gst_pipeline_details;
 #define GST_IS_PIPELINE(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_PIPELINE))
 #define GST_IS_PIPELINE_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPELINE)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPELINE))
 
 typedef struct _GstPipeline GstPipeline;
 typedef struct _GstPipelineClass GstPipelineClass;
@@ -57,6 +57,8 @@ struct _GstPipelineClass {
 GtkType gst_pipeline_get_type(void);
 GstPipeline *gst_pipeline_new(guchar *name);
 #define gst_pipeline_destroy(pipeline) gst_object_destroy(GST_OBJECT(pipeline))
+
+gboolean gst_pipeline_autoplug(GstPipeline *pipeline);
 
 void gst_pipeline_iterate(GstPipeline *pipeline);
 

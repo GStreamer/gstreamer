@@ -17,9 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+//#define DEBUG_ENABLED
 #include <gst/gst.h>
 
 #include "config.h"
+
 
 GstElementDetails gst_bin_details = { 
   "Generic bin",
@@ -542,6 +544,7 @@ gst_element_get_name(element),gst_pad_get_name(pad));
     g_print("gstbin: don't need cothreads, looking for entry points\n");
     // clear previous plan state
     g_list_free(bin->entries);
+    bin->entries = NULL;
     bin->numentries = 0;
     // we have to find which elements will drive an iteration
     elements = bin->children;
@@ -617,5 +620,4 @@ void gst_bin_iterate_func(GstBin *bin) {
       entries = g_list_next(entries);
     }
   }
-//  g_print(",");
 }
