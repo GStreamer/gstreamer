@@ -252,11 +252,11 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
         ac3parse adder audioscale auparse avi asfdemux audioconvert cdxaparse chart\
-        cutter deinterlace effectv festival filter flx goom\
+        cutter debug deinterlace effectv festival filter flx goom\
         intfloat law level\
         median mixmatrix mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
         mpegaudio mpegaudioparse mpegstream mpegtypes\
-        monoscope oneton passthrough playondemand qtdemux rtp rtjpeg silence sine\
+        monoscope oneton passthrough playondemand qtdemux realmedia rtp rtjpeg silence sine\
         smooth smpte spectrum speed stereo stereomono synaesthesia\
         udp vbidec videocrop videoflip videoscale videotestsrc volenv volume\ 
         vumeter wavenc wavparse y4m"
@@ -672,6 +672,12 @@ GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
   # we only bother with uninstalled (included) ffmpeg for now
   AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1,
                      [defined if we use uninstalled ffmpeg])
+])
+
+dnl *** GDK pixbuf ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
+GST_CHECK_FEATURE(GDK_PIXBUF, [GDK pixbuf], gdkpixbufsrc, [
+  if test $HAVE_GTK = "yes"; then HAVE_GDK_PIXBUF=yes; fi;
 ])
 
 dnl *** Gnome VFS ***
@@ -1175,6 +1181,7 @@ gst/asfdemux/Makefile
 gst/cdxaparse/Makefile
 gst/chart/Makefile
 gst/cutter/Makefile
+gst/debug/Makefile
 gst/deinterlace/Makefile
 gst/effectv/Makefile
 gst/festival/Makefile
@@ -1204,6 +1211,7 @@ gst/oneton/Makefile
 gst/passthrough/Makefile
 gst/playondemand/Makefile
 gst/qtdemux/Makefile
+gst/realmedia/Makefile
 gst/rtjpeg/Makefile
 gst/rtp/Makefile
 gst/silence/Makefile
@@ -1252,6 +1260,7 @@ ext/dvdnav/Makefile
 ext/esd/Makefile
 ext/ffmpeg/Makefile
 ext/flac/Makefile
+ext/gdk_pixbuf/Makefile
 ext/gnomevfs/Makefile
 ext/gsm/Makefile
 ext/hermes/Makefile
