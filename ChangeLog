@@ -1,3 +1,12 @@
+2004-10-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(qtdemux_parse), (gst_qtdemux_handle_esds):
+	An esds box is not a container.
+	Fix parsing of mp4v boxes.
+	Do not try to renegotiate fps for each frame. Need to
+	find a better method. This should fix mp4 playback.
+
 2004-10-14  David Schleef  <ds@schleef.org>
 
 	* configure.ac: update for swfdec-0.3 and liboil-0.2

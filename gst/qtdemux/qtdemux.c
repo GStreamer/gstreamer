@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_EXTERN (qtdemux_debug);
 
 /* temporary hack */
 #define g_print(...)            /* */
-//#define gst_util_dump_mem(a,b)  /* */
+#define gst_util_dump_mem(a,b)  /* */
 
 #define QTDEMUX_GUINT32_GET(a)	(GST_READ_UINT32_BE(a))
 #define QTDEMUX_GUINT24_GET(a)	(GST_READ_UINT32_BE(a) >> 8)
@@ -735,16 +735,19 @@ gst_qtdemux_loop_header (GstElement * element)
       } while (TRUE);
 
       if (buf) {
-        /* hum... */
+        /* hum... FIXME changing framerate breaks horribly, better set
+         * an average framerate, or get rid of the framerate property. */
         if (stream->subtype == GST_MAKE_FOURCC ('v', 'i', 'd', 'e')) {
-          float fps =
-              1. * GST_SECOND / stream->samples[stream->sample_index].duration;
-          if (fps != stream->fps) {
-            gst_caps_set_simple (stream->caps, "framerate", G_TYPE_DOUBLE, fps,
-                NULL);
-            stream->fps = fps;
-            gst_pad_set_explicit_caps (stream->pad, stream->caps);
-          }
+          //float fps =
+          //   1. * GST_SECOND / stream->samples[stream->sample_index].duration;
+          /*
+             if (fps != stream->fps) {
+             gst_caps_set_simple (stream->caps, "framerate", G_TYPE_DOUBLE, fps,
+             NULL);
+             stream->fps = fps;
+             gst_pad_set_explicit_caps (stream->pad, stream->caps);
+             }
+           */
         }
 
         GST_BUFFER_TIMESTAMP (buf) =
@@ -987,7 +990,7 @@ QtNodeType qt_node_types[] = {
   {FOURCC_mp4v, "mp4v", 0,},
   {FOURCC_wave, "wave", QT_CONTAINER},
   {FOURCC_appl, "appl", QT_CONTAINER},
-  {FOURCC_esds, "esds", QT_CONTAINER},
+  {FOURCC_esds, "esds", 0},
   {FOURCC_hnti, "hnti", QT_CONTAINER},
   {FOURCC_rtp_, "rtp ", 0, qtdemux_dump_unknown},
   {FOURCC_sdp_, "sdp ", 0, qtdemux_dump_unknown},
@@ -1208,12 +1211,17 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         buf = buffer + 0x32;
         end = buffer + length;
 
+        /* FIXME Quicktime uses PASCAL string while
+         * the iso format uses C strings. Check the file
+         * type before attempting to parse the string here. */
         tlen = QTDEMUX_GUINT8_GET (buf);
         g_print ("tlen = %d\n", tlen);
         buf++;
         g_print ("string = %.*s\n", tlen, (char *) buf);
-        buf += tlen;
-        buf += 23;
+        /* the string has a reserved space of 32 bytes so skip
+         * the remaining 31 */
+        buf += 31;
+        buf += 4;               /* and 4 bytes reserved */
 
         gst_util_dump_mem (buf, end - buf);
         while (buf < end) {
@@ -2323,7 +2331,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
   guint8 *data_ptr = NULL;
   int data_len = 0;
 
-  //gst_util_dump_mem (ptr, len);
+  gst_util_dump_mem (ptr, len);
   ptr += 8;
   g_print ("version/flags = %08x\n", QTDEMUX_GUINT32_GET (ptr));
   ptr += 4;
