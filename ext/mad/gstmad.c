@@ -456,6 +456,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
           return;
         }
 	/* recoverable errors pass */
+	goto next;
       }
 
       /* calculate beginning of next frame */
@@ -544,6 +545,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       }
 
       gst_pad_push (mad->srcpad, outbuffer);
+next:
 
       /* figure out how many bytes mad consumed */
       consumed = mad->stream.next_frame - mad_input_buffer;
