@@ -125,6 +125,16 @@ cothreads.o: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h
 
 ##### end immense suckage #####
 
+##### Other built sources #####
+
+gstmarshal.h: gstmarshal.list
+	glib-genmarshal --header --prefix=gst gstmarshal.list > gstmarshal.h
+
+gstmarshal.c: gstmarshal.list
+	glib-genmarshal --body --prefix=gst gstmarshal.list > gstmarshal.c
+
+##### end built sources #####
+
 
 libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
