@@ -26,7 +26,6 @@
 #define CHAR(x) PRINT ("char: %c\n", *yytext); return *yytext;
 
 #define YY_DECL int _gst_parse_yylex (YYSTYPE *lvalp)
-#define YY_NO_UNPUT
 %}
 
 _integer [-+]?[[:digit:]]+
@@ -53,6 +52,7 @@ _flink ({_identifier}\.)?{_identifier}!{_caps}!({_identifier}\.)?{_identifier}
 
 %x value
 %option noyywrap
+%option nounput
 %%
 
 <value>{
