@@ -3,7 +3,6 @@ EXTRA_DIST = \
 	cp.py \
 	dvdplay.py \
 	f2f.py \
-	identity.py \
 	ilat.py \
 	lat.py \
 	rot13.py \

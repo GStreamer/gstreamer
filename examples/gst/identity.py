@@ -77,6 +77,8 @@ def filter(element):
 
 def main(args):
    "A GStreamer Python subclassing example of an identity filter"
+   print "This example is not finished."
+   sys.exit(1)
 
    identity = Identity()
    identity.set_name('identity')

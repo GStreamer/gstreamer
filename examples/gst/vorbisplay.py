@@ -111,20 +111,24 @@ def main():
     filesrc = Element ('filesrc', 'disk_source')
     filesrc.set_property('location', sys.argv[1])
 
+    # now get the demuxer
+    demuxer = Element ('oggdemux', 'demuxer')
+    demuxer.connect('notify', decoder_notified)
+
     # now get the decoder
-    decoder = Element ('vorbisfile', 'parse')
+    decoder = Element ('vorbisdec', 'decoder')
     decoder.connect('notify', decoder_notified)
 
     # and an audio sink
     osssink = Element ('osssink', 'play_audio')
 
     #  add objects to the main pipeline
-    for e in (filesrc, decoder, osssink):
+    for e in (filesrc, demuxer, decoder, osssink):
         bin.add(e)
 
     # link the elements
     previous = None
-    for e in (filesrc, decoder, osssink):
+    for e in (filesrc, demuxer, decoder, osssink):
         if previous:
             previous.link(e)
         previous = e
