@@ -1,5 +1,12 @@
 2004-01-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/xvid/gstxviddec.c: (gst_xviddec_init),
+	(gst_xviddec_src_getcaps), (gst_xviddec_src_link),
+	(gst_xviddec_sink_link):
+	  Implement src_getcaps() so proper size caps is negotiated.
+
+2004-01-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/flac/gstflacdec.c: (gst_flacdec_loop):
 	  Finish flac decoder on EOS. See #116178.
 

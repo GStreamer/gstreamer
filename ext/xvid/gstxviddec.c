@@ -87,6 +87,8 @@ static GstPadLinkReturn
 static GstPadLinkReturn
 	    gst_xviddec_src_link     (GstPad          *pad,
                                       const GstCaps   *vscapslist);
+static GstCaps *
+            gst_xviddec_src_getcaps  (GstPad          *pad);
 static GstElementStateReturn
 	    gst_xviddec_change_state (GstElement      *element);
 
@@ -164,6 +166,7 @@ gst_xviddec_init (GstXvidDec *xviddec)
                       "src");
   gst_element_add_pad(GST_ELEMENT(xviddec), xviddec->srcpad);
 
+  gst_pad_set_getcaps_function (xviddec->srcpad, gst_xviddec_src_getcaps);
   gst_pad_set_link_function(xviddec->srcpad, gst_xviddec_src_link);
 
   /* size, etc. */
@@ -271,10 +274,41 @@ gst_xviddec_chain (GstPad    *pad,
   gst_buffer_unref(buf);
 }
 
-/*
- * This function allows multiple structures because it
- * can be called from sink_link().
- */
+static GstCaps *
+gst_xviddec_src_getcaps (GstPad *pad)
+{
+  GstXvidDec *xviddec = GST_XVIDDEC (gst_pad_get_parent (pad));
+  GstCaps *caps;
+  gint csp[] = {
+    XVID_CSP_I420,
+    XVID_CSP_YV12,
+    XVID_CSP_YUY2,
+    XVID_CSP_UYVY,
+    XVID_CSP_YVYU,
+    XVID_CSP_BGRA,
+    XVID_CSP_ABGR,
+    XVID_CSP_RGBA,
+    XVID_CSP_ARGB,
+    XVID_CSP_BGR,
+    XVID_CSP_RGB555,
+    XVID_CSP_RGB565,
+    0
+  }, i;
+
+  if (!GST_PAD_CAPS (xviddec->sinkpad)) {
+    GstPadTemplate *templ = gst_static_pad_template_get (&src_template);
+    return gst_caps_copy (gst_pad_template_get_caps (templ));
+  }
+
+  caps = gst_caps_new_empty ();
+  for (i = 0; csp[i] != 0; i++) {
+    GstCaps *one = gst_xvid_csp_to_caps (csp[i], xviddec->width,
+					 xviddec->height, xviddec->fps);
+    gst_caps_append (caps, one);
+  }
+
+  return caps;
+}
 
 static GstPadLinkReturn
 gst_xviddec_src_link (GstPad        *pad,
@@ -290,7 +324,7 @@ gst_xviddec_src_link (GstPad        *pad,
   if (xviddec->handle) {
     gst_xviddec_unset(xviddec);
   }
-
+g_print ("out: %s\n", gst_caps_to_string (vscaps));
   xviddec->csp = gst_xvid_structure_to_csp (structure, xviddec->width,
 					    &xviddec->stride,
 					    &xviddec->bpp);
@@ -323,7 +357,7 @@ gst_xviddec_sink_link (GstPad        *pad,
   gst_structure_get_int(structure, "width", &xviddec->width);
   gst_structure_get_int(structure, "height", &xviddec->height);
   gst_structure_get_double(structure, "framerate", &xviddec->fps);
-
+g_print ("in: %dx%d\n", xviddec->width, xviddec->height);
   /* re-nego? or just await src nego? */
   if (GST_PAD_CAPS(xviddec->srcpad)) {
     GstPadLinkReturn ret;
