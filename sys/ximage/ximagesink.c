@@ -284,6 +284,7 @@ gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink, GstXImage * ximage)
   if (ximagesink->xcontext->use_xshm) {
     if (ximage->SHMInfo.shmaddr != ((void *) -1)) {
       XShmDetach (ximagesink->xcontext->disp, &ximage->SHMInfo);
+      XSync (xcontext->disp, 0);
       shmdt (ximage->SHMInfo.shmaddr);
     }
     if (ximage->SHMInfo.shmid > 0)

@@ -1,5 +1,10 @@
 2004-09-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_destroy):
+	  For completeness, XSync in the destroy function as xvimage does.
+
+2004-09-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_getcaps):
 	   Correct caps negotiation
 	* gst/volume/gstvolume.c: (volume_chain_float),
