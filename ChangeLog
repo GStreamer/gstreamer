@@ -1,3 +1,25 @@
+2004-09-21  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* testsuite/multifilesink/Makefile.am:
+	* testsuite/multifilesink/lame_test.c: (gst_newmedia_base_init),
+	(gst_newmedia_class_init), (gst_newmedia_init),
+	(gst_newmedia_chain), (gst_newmedia_trigger), (test_format),
+	(newfile_signal), (test_signal), (main):
+	* testsuite/multifilesink/multifilesrc_test.c: (main):
+	* testsuite/multifilesink/oggtheora_test.c:
+	(gst_newmedia_base_init), (gst_newmedia_class_init),
+	(gst_newmedia_init), (gst_newmedia_chain), (gst_newmedia_trigger),
+	(test_format), (newfile_signal), (test_signal), (main):
+	* testsuite/multifilesink/oggvorbis_test.c:
+	(gst_newmedia_base_init), (gst_newmedia_class_init),
+	(gst_newmedia_init), (gst_newmedia_chain), (gst_newmedia_trigger),
+	(test_format), (newfile_signal), (test_signal), (main):
+	* testsuite/multifilesink/wavenc_test.c: (gst_newmedia_base_init),
+	(gst_newmedia_class_init), (gst_newmedia_init),
+	(gst_newmedia_chain), (gst_newmedia_trigger), (test_format),
+	(newfile_signal), (test_signal), (main):
+	New media tests
+
 2004-09-20  Christian Schaller <christian@fluendo.com>
 
 	* Fix mixmod license to LGPL as they have relicensed
