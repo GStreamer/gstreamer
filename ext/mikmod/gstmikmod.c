@@ -407,9 +407,8 @@ gst_mikmod_loop (GstElement *element)
   do {
     if ( Player_Active() )
       drv_gst.Update();
-       
-       if (GST_ELEMENT_IS_COTHREAD_STOPPING (element))         
-        cothread_switch(cothread_current_main()); 
+  
+    gst_element_yield (element);
   } 
   while ( 1 );
 }

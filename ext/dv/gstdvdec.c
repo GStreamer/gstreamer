@@ -266,81 +266,78 @@ gst_dvdec_loop (GstElement *element)
 
   dvdec = GST_DVDEC (element);
 
-  do {
-    // grab an input frame
-    needed = BUFFER;
-    if (dvdec->remaining > 0) {
-      memcpy(&dvdec->inframe[BUFFER-needed],
-             GST_BUFFER_DATA(dvdec->carryover)+(GST_BUFFER_SIZE(dvdec->carryover)-dvdec->remaining),
-             dvdec->remaining);
-      dvdec->remaining = 0;
-      gst_buffer_unref(dvdec->carryover);
-    }
-    while (needed) {
-      buf = gst_pad_pull(dvdec->sinkpad);
-      if (needed < GST_BUFFER_SIZE(buf)) {
-        memcpy(&dvdec->inframe[BUFFER-needed],GST_BUFFER_DATA(buf),needed);
-/***** NOTE: this is done because 1394src doesn't allow buffers to outlive the handler *****/
-        dvdec->carryover = gst_buffer_copy(buf);
-        dvdec->remaining = GST_BUFFER_SIZE(buf) - needed;
-        needed = 0;
-      } else {
-        memcpy(&dvdec->inframe[BUFFER-needed],GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
-        needed -= GST_BUFFER_SIZE(buf);
-      }
-      gst_buffer_unref(buf);
-    }
-
-    if (!GST_PAD_CAPS (dvdec->videosrcpad)) {
-      gst_pad_set_caps (dvdec->videosrcpad, gst_pad_get_padtemplate_caps (dvdec->videosrcpad));
-    }
-
-    if (!dvdec->pool) {
-      dvdec->pool = gst_pad_get_bufferpool (dvdec->videosrcpad);
-    }
-
-    buf = NULL;
-    if (dvdec->pool) {
-      buf = gst_buffer_new_from_pool (dvdec->pool, 0, 0);
-    }
-
-    if (!buf) {
-      // allocate an output frame
-      buf = gst_buffer_new();
-#ifdef RGB
-      GST_BUFFER_SIZE(buf) = (720*HEIGHT)*3;
-#else
-      GST_BUFFER_SIZE(buf) = (720*HEIGHT)*2;
-#endif
-      GST_BUFFER_DATA(buf) = g_malloc(GST_BUFFER_SIZE(buf));
-      outframe = GST_BUFFER_DATA(buf);
+  // grab an input frame
+  needed = BUFFER;
+  if (dvdec->remaining > 0) {
+    memcpy(&dvdec->inframe[BUFFER-needed],
+           GST_BUFFER_DATA(dvdec->carryover)+(GST_BUFFER_SIZE(dvdec->carryover)-dvdec->remaining),
+           dvdec->remaining);
+    dvdec->remaining = 0;
+    gst_buffer_unref(dvdec->carryover);
+  }
+  while (needed) {
+    buf = gst_pad_pull(dvdec->sinkpad);
+    if (needed < GST_BUFFER_SIZE(buf)) {
+      memcpy(&dvdec->inframe[BUFFER-needed],GST_BUFFER_DATA(buf),needed);
+/**** NOTE: this is done because 1394src doesn't allow buffers to outlive the handler *****/
+      dvdec->carryover = gst_buffer_copy(buf);
+      dvdec->remaining = GST_BUFFER_SIZE(buf) - needed;
+      needed = 0;
     } else {
-      outframe = GST_BUFFER_DATA (buf);
+      memcpy(&dvdec->inframe[BUFFER-needed],GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
+      needed -= GST_BUFFER_SIZE(buf);
     }
+    gst_buffer_unref(buf);
+  }
 
-    outframe_ptrs[0] = outframe;
-    outframe_ptrs[1] = outframe_ptrs[0] + 720*HEIGHT;
-    outframe_ptrs[2] = outframe_ptrs[1] + 360*HEIGHT;
+  if (!GST_PAD_CAPS (dvdec->videosrcpad)) {
+    gst_pad_set_caps (dvdec->videosrcpad, gst_pad_get_padtemplate_caps (dvdec->videosrcpad));
+  }
+
+  if (!dvdec->pool) {
+    dvdec->pool = gst_pad_get_bufferpool (dvdec->videosrcpad);
+  }
+
+  buf = NULL;
+  if (dvdec->pool) {
+    buf = gst_buffer_new_from_pool (dvdec->pool, 0, 0);
+  }
+
+  if (!buf) {
+    // allocate an output frame
+    buf = gst_buffer_new();
 #ifdef RGB
-    outframe_pitches[0] = 720*3;
+    GST_BUFFER_SIZE(buf) = (720*HEIGHT)*3;
 #else
-    outframe_pitches[0] = 720*2;	// huh?
+    GST_BUFFER_SIZE(buf) = (720*HEIGHT)*2;
 #endif
-    outframe_pitches[1] = HEIGHT/2;
-    outframe_pitches[2] = HEIGHT/2;
+    GST_BUFFER_DATA(buf) = g_malloc(GST_BUFFER_SIZE(buf));
+    outframe = GST_BUFFER_DATA(buf);
+  } else {
+    outframe = GST_BUFFER_DATA (buf);
+  }
 
-    // now we start decoding the frame
-    dv_parse_header(dvdec->decoder,dvdec->inframe);
+  outframe_ptrs[0] = outframe;
+  outframe_ptrs[1] = outframe_ptrs[0] + 720*HEIGHT;
+  outframe_ptrs[2] = outframe_ptrs[1] + 360*HEIGHT;
+#ifdef RGB
+  outframe_pitches[0] = 720*3;
+#else
+  outframe_pitches[0] = 720*2;	// huh?
+#endif
+  outframe_pitches[1] = HEIGHT/2;
+  outframe_pitches[2] = HEIGHT/2;
+
+  // now we start decoding the frame
+  dv_parse_header(dvdec->decoder,dvdec->inframe);
 
 #ifdef RGB
-    dv_decode_full_frame(dvdec->decoder,dvdec->inframe,e_dv_color_rgb,outframe_ptrs,outframe_pitches);
+  dv_decode_full_frame(dvdec->decoder,dvdec->inframe,e_dv_color_rgb,outframe_ptrs,outframe_pitches);
 #else
-    dv_decode_full_frame(dvdec->decoder,dvdec->inframe,e_dv_color_yuv,outframe_ptrs,outframe_pitches);
+  dv_decode_full_frame(dvdec->decoder,dvdec->inframe,e_dv_color_yuv,outframe_ptrs,outframe_pitches);
 #endif
 
-    gst_pad_push(dvdec->videosrcpad,buf);
-
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+  gst_pad_push(dvdec->videosrcpad,buf);
 }
 
 

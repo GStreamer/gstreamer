@@ -242,9 +242,6 @@ gst_flacdec_loop (GstElement *element)
     FLAC__stream_decoder_process_metadata (flacdec->decoder);
   }
 
-  do {
-    FLAC__stream_decoder_process_one_frame (flacdec->decoder);
-  }
-  while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+  FLAC__stream_decoder_process_one_frame (flacdec->decoder);
 }
 
