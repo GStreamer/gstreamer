@@ -1,6 +1,10 @@
 Object relation types
 ---------------------
 
+This document describes the relations between objects that exist in GStreamer.
+It will also describe the way of handling the relation wrt locking and 
+refcounting.
+
 1) parent-child relation
 
         +---------+    +-------+

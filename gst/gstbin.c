@@ -484,23 +484,27 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
 
   /* ERROR handling here */
 adding_itself:
-  GST_LOCK (bin);
-  g_warning ("Cannot add bin %s to itself", GST_ELEMENT_NAME (bin));
-  GST_UNLOCK (bin);
-  return FALSE;
-
+  {
+    GST_LOCK (bin);
+    g_warning ("Cannot add bin %s to itself", GST_ELEMENT_NAME (bin));
+    GST_UNLOCK (bin);
+    return FALSE;
+  }
 duplicate_name:
-  g_warning ("Name %s is not unique in bin %s, not adding",
-      elem_name, GST_ELEMENT_NAME (bin));
-  GST_UNLOCK (bin);
-  g_free (elem_name);
-  return FALSE;
-
+  {
+    g_warning ("Name %s is not unique in bin %s, not adding",
+        elem_name, GST_ELEMENT_NAME (bin));
+    GST_UNLOCK (bin);
+    g_free (elem_name);
+    return FALSE;
+  }
 had_parent:
-  g_warning ("Element %s already has parent", elem_name);
-  GST_UNLOCK (bin);
-  g_free (elem_name);
-  return FALSE;
+  {
+    g_warning ("Element %s already has parent", elem_name);
+    GST_UNLOCK (bin);
+    g_free (elem_name);
+    return FALSE;
+  }
 }
 
 /**
@@ -537,10 +541,13 @@ gst_bin_add (GstBin * bin, GstElement * element)
 
   return result;
 
+  /* ERROR handling */
 no_function:
-  g_warning ("adding elements to bin %s is not supported",
-      GST_ELEMENT_NAME (bin));
-  return FALSE;
+  {
+    g_warning ("adding elements to bin %s is not supported",
+        GST_ELEMENT_NAME (bin));
+    return FALSE;
+  }
 }
 
 /* remove an element from the bin
@@ -585,11 +592,15 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 
   return TRUE;
 
+  /* ERROR handling */
 not_in_bin:
-  g_warning ("Element %s is not in bin %s", elem_name, GST_ELEMENT_NAME (bin));
-  GST_UNLOCK (bin);
-  g_free (elem_name);
-  return FALSE;
+  {
+    g_warning ("Element %s is not in bin %s", elem_name,
+        GST_ELEMENT_NAME (bin));
+    GST_UNLOCK (bin);
+    g_free (elem_name);
+    return FALSE;
+  }
 }
 
 /**
@@ -630,10 +641,13 @@ gst_bin_remove (GstBin * bin, GstElement * element)
 
   return result;
 
+  /* ERROR handling */
 no_function:
-  g_warning ("removing elements from bin %s is not supported",
-      GST_ELEMENT_NAME (bin));
-  return FALSE;
+  {
+    g_warning ("removing elements from bin %s is not supported",
+        GST_ELEMENT_NAME (bin));
+    return FALSE;
+  }
 }
 
 static GstIteratorItem
@@ -725,9 +739,7 @@ gst_bin_iterate_recurse (GstBin * bin)
   GST_UNLOCK (bin);
 
   return result;
-  return NULL;
 }
-
 
 /**
  * gst_bin_child_state_change:
@@ -1070,6 +1082,7 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_find_custom (children,
       (GCompareFunc) compare_name, (gpointer) name);
+  gst_iterator_free (children);
 
   return GST_ELEMENT_CAST (result);
 }
@@ -1154,6 +1167,7 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_find_custom (children, (GCompareFunc) compare_interface,
       GINT_TO_POINTER (interface));
+  gst_iterator_free (children);
 
   return GST_ELEMENT_CAST (result);
 }
@@ -1182,6 +1196,7 @@ gst_bin_iterate_all_by_interface (GstBin * bin, GType interface)
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_filter (children, (GCompareFunc) compare_interface,
       GINT_TO_POINTER (interface));
+  gst_iterator_free (children);
 
   return result;
 }

@@ -21,7 +21,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_OBJECT_H__
 #define __GST_OBJECT_H__
 
@@ -79,6 +78,7 @@ typedef enum
 #define GST_FLAG_SET(obj,flag)          G_STMT_START{ (GST_FLAGS (obj) |= (1<<(flag))); }G_STMT_END
 #define GST_FLAG_UNSET(obj,flag)        G_STMT_START{ (GST_FLAGS (obj) &= ~(1<<(flag))); }G_STMT_END
 
+#define GST_OBJECT_IS_DISPOSING(obj)    (GST_FLAG_IS_SET (obj, GST_OBJECT_DISPOSING))
 #define GST_OBJECT_IS_DESTROYED(obj)    (GST_FLAG_IS_SET (obj, GST_OBJECT_DESTROYED))
 #define GST_OBJECT_IS_FLOATING(obj)     (GST_FLAG_IS_SET (obj, GST_OBJECT_FLOATING))
 
@@ -91,9 +91,9 @@ struct _GstObject {
   /*< public >*/ /* with LOCK */
   GMutex        *lock;        /* object LOCK */
   gchar         *name;        /* object name */
+  gchar         *name_prefix; /* used for debugging */
   GstObject     *parent;      /* this object's parent, weak ref */
   guint32        flags;
-  gchar         *name_prefix; /* used for debugging */
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

@@ -1,3 +1,28 @@
+2005-03-08  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-MT-refcounting.txt:
+	* docs/design/part-conventions.txt:
+	* docs/design/part-gstobject.txt:
+	* docs/design/part-relations.txt:
+	* docs/design/part-standards.txt:
+	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_add),
+	(gst_bin_remove_func), (gst_bin_remove), (gst_bin_iterate_recurse),
+	(gst_bin_get_by_name), (gst_bin_get_by_interface),
+	(gst_bin_iterate_all_by_interface):
+	* gst/gstbuffer.h:
+	* gst/gstclock.h:
+	* gst/gstelement.c: (gst_element_class_init),
+	(gst_element_change_state), (gst_element_set_loop_function):
+	* gst/gstelement.h:
+	* gst/gstiterator.c:
+	* gst/gstobject.c: (gst_object_class_init), (gst_object_ref),
+	(gst_object_unref), (gst_object_sink), (gst_object_dispose),
+	(gst_object_dispatch_properties_changed), (gst_object_set_name),
+	(gst_object_set_parent), (gst_object_unparent),
+	(gst_object_check_uniqueness):
+	* gst/gstobject.h:
+	Docs updates, clean up some headers.
+
 2005-03-07  Wim Taymans  <wim@fluendo.com>
 
 	* check/.cvsignore:

@@ -260,6 +260,16 @@ Objects
     anymore of the pad. If you need to be sure it is, you need to extend the
     critical section to include the operations on the peer.
 
+    The following code is equivalent to the above but with using the functions
+    to access object properties.
+
+      peer = gst_pad_get_parent (pad);
+      if (peer) {
+        ... use peer ...
+
+        gst_object_unref (GST_OBJECT (peer));
+      }
+
   Example:
 
     Accessing the name of an object makes a copy of the name. The caller of the
@@ -268,6 +278,14 @@ Objects
       GST_LOCK (object)
       name = g_strdup (object->name);
       GST_UNLOCK (object)
+      ... use name ...
+
+      g_free (name);
+
+    or:
+
+      name = gst_object_get_name (object);
+
       ... use name ...
 
       g_free (name);

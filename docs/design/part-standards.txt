@@ -6,11 +6,7 @@ far as the pointers go.  Therefore, some standards must be adhered to as far as 
 
 Strings:
 Arguments passed into a function are owned by the caller, and the function will make a copy of the string for its own 
-internal use.  The string should be const gchar *.  Strings returned from a function remain the property of the 
-function called, and the caller must make a copy if it is to use the string for an extended duration.
+internal use.  The string should be const gchar *.  Strings returned from a function are always a copy of the
+original and should be freed after usage by the caller.
 
 Objects:
-The ownership of an object during a function call depends on the type of function.  If the function is simply returning 
-something from the object, such as _get_name(), the caller retains ownership.  If the object passed is to be 
-manipulated in some way, it is generally the case that the function will take over the ownership.  This should be 
-expressed as a reference increment on that object, but isn't in the general case (yet).

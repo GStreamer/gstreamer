@@ -18,12 +18,14 @@ allows for new additions later.
   GstElement (inside a bin)
   GstPad (inside an element)
 
+
 Refcounting
 -----------
-- GObject refcount is not threadsafe.
-  GStreamer sets it to a constant value on each _ref/_unref()
+- GObject refcount is not threadsafe. This will be changed in the future.
+  GStreamer for now sets it to a constant value on each _ref/_unref()
   and uses an atomic int "refcount" instead for threadsafe refcounting
   This implies you should always use gst_object_ref() and gst_object_unref() !
+
 
 Naming
 ------
@@ -40,6 +42,7 @@ Naming
   a more identifiable name.  Typically a parent will call _set_name_prefix
   on children, taking a lock on them to do so.
 
+
 Locking
 -------
 
@@ -50,23 +53,38 @@ needed.  However, this lock is generic, i.e. it covers the whole object.
 All members of the GstObject structure marked as
 /*< public >*/ /* with LOCK */
 are protected by this lock.  These members can only be accessed for reading
-or writing while the lock is held.
+or writing while the lock is held. All members should be copied or reffed
+if they are used after releasing the LOCK.
 
 Note that this does *not* mean that no other thread can modify the object at
 the same time that the lock is held.  It only means that any two sections of
 code that obey the lock are guaranteed to not be running simultaneously.  "The
 lock is voluntary and cooperative".
 
-This lock will ideally be used for parentage and refcounting, which is
+This lock will ideally be used for parentage, flags and naming, which is
 reasonable, since they are the only possible things to protect in the
 GstObject.
 
+
 Path Generation
 ---------------
-FIXME: rethink this ?
 
 Due to the base nature of the GstObject, it becomes the only reasonable place
 to put this particular function (_get_path_string).  It will generate a string
-describing the parent hierarchy of a given GstObject.  Currently it is forced
-to use several child-class-specific functions, because we do not properly use
-the base capabilities (parentage, etc.) of GstObject properly.
+describing the parent hierarchy of a given GstObject.  
+
+
+Flags
+-----
+
+Each object in the GStreamer object hierarchy can have flags associated with it,
+which are used to describe a state or a feature of the object.
+GstObject has flags to mark its lifecycle: FLOATING, DISPOSING and DESTROYED.
+
+
+Class signals
+-------------
+
+It is possible to know when a new object is loaded by connecting to the
+GstObjectClass signal. This feature is not very much used and might be removed
+at some point.

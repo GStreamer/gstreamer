@@ -52,6 +52,9 @@ gst_iterator_init (GstIterator * it,
  *
  * Create a new iterator. This function is mainly used for objects
  * implementing the next/resync/free function to iterate a data structure.
+ *
+ * For each item retrieved, the @item function is called with the lock
+ * held. The @free function is called when the iterator is freed.
  * 
  * Returns: the new #GstIterator.
  *
@@ -124,9 +127,8 @@ gst_list_iterator_free (GstListIterator * it)
  * @master_cookie: pointer to a guint32 to protect the list.
  * @list: pointer to the list
  * @owner: object owning the list
- * @ref: function to ref each item
- * @unref: function to unref each item
- * @free: function to free the owner of the list
+ * @item: function to call for each item
+ * @free: function to call when the iterator is freed
  *
  * Create a new iterator designed for iterating @list. 
  * 

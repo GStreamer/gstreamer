@@ -281,9 +281,14 @@ struct _GstElementClass
   gpointer _gst_reserved[GST_PADDING - 1];
 };
 
+GType			gst_element_get_type		(void);
+
+/* element class pad templates */
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);
-void                    gst_element_class_install_std_props	(GstElementClass *klass,
-								 const gchar      *first_name, ...);
+GstPadTemplate*		gst_element_class_get_pad_template	(GstElementClass *element_class, const gchar *name);
+GList*                  gst_element_class_get_pad_template_list (GstElementClass *element_class);
+
+/* element class details */
 void			gst_element_class_set_details		(GstElementClass *klass,
 								 const GstElementDetails *details);
 
@@ -291,7 +296,6 @@ void			gst_element_class_set_details		(GstElementClass *klass,
 
 void 			gst_element_default_error		(GObject *object, GstObject *orig, GError *error, gchar *debug);
 
-GType			gst_element_get_type		(void);
 void			gst_element_set_loop_function	(GstElement *element,
 							 GstElementLoopFunction loop);
 
@@ -353,34 +357,7 @@ GstPad*			gst_element_get_static_pad	(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_request_pad	(GstElement *element, const gchar *name);
 void			gst_element_release_request_pad	(GstElement *element, GstPad *pad);
 
-GstIterator *gst_element_iterate_pads (GstElement * element);
-
-GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
-GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
-							 const GstCaps *filtercaps);
-
-GstPadTemplate*		gst_element_class_get_pad_template	(GstElementClass *element_class, const gchar *name);
-GList*                  gst_element_class_get_pad_template_list (GstElementClass *element_class);
-GstPadTemplate*		gst_element_get_pad_template		(GstElement *element, const gchar *name);
-GList*			gst_element_get_pad_template_list	(GstElement *element);
-GstPadTemplate*		gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl);
-
-gboolean		gst_element_link		(GstElement *src, GstElement *dest);
-gboolean		gst_element_link_many 		(GstElement *element_1, 
-							 GstElement *element_2, ...);
-gboolean		gst_element_link_filtered 	(GstElement *src, GstElement *dest,
-							 const GstCaps *filtercaps);
-void			gst_element_unlink 		(GstElement *src, GstElement *dest);
-void			gst_element_unlink_many 	(GstElement *element_1, 
-							 GstElement *element_2, ...);
-
-gboolean		gst_element_link_pads		(GstElement *src, const gchar *srcpadname,
-							 GstElement *dest, const gchar *destpadname);
-gboolean		gst_element_link_pads_filtered 	(GstElement *src, const gchar *srcpadname,
-							 GstElement *dest, const gchar *destpadname,
-							 const GstCaps *filtercaps);
-void			gst_element_unlink_pads		(GstElement *src, const gchar *srcpadname,
-							 GstElement *dest, const gchar *destpadname);
+GstIterator *		gst_element_iterate_pads 	(GstElement * element);
 
 G_CONST_RETURN GstEventMask*
 			gst_element_get_event_masks	(GstElement *element);
@@ -417,8 +394,6 @@ GstElementStateReturn	gst_element_set_state		(GstElement *element, GstElementSta
 
 void 			gst_element_wait_state_change 	(GstElement *element);
 	
-G_CONST_RETURN gchar*	gst_element_state_get_name	(GstElementState state);
-
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 
 GstBin*			gst_element_get_managing_bin	(GstElement *element);
