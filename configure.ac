@@ -48,7 +48,7 @@ AM_PROG_AS
 AS="${CC}"
 
 dnl the gettext stuff needed
-AM_GNU_GETTEXT_VERSION(0.11.4)
+AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT([external])
                                                                                 
 GETTEXT_PACKAGE=gst-plugins-$GST_MAJORMINOR
