@@ -1276,7 +1276,9 @@ gst_value_create_new_range (GValue * dest, int min1, int max1, int min2,
     pv2 = &v2;
   } else if (min1 <= max1) {
     pv1 = dest;
+    pv2 = NULL;
   } else if (min2 <= max2) {
+    pv1 = NULL;
     pv2 = dest;
   } else {
     return FALSE;
