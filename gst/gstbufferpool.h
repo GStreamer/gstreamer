@@ -31,65 +31,46 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_BUFFER_POOL(pool) \
-  ((GstBufferPool *)(pool))
-#define GST_BUFFER_POOL_LOCK(pool)	(g_mutex_lock(GST_BUFFER_POOL(pool)->lock))
-#define GST_BUFFER_POOL_UNLOCK(pool)	(g_mutex_unlock(GST_BUFFER_POOL(pool)->lock))
+#define GST_BUFFER_POOL(pool) ((GstBufferPool *)(pool))
 
 typedef struct _GstBufferPool GstBufferPool;
 
-typedef GstBuffer*	(*GstBufferPoolBufferNewFunction) (GstBufferPool *pool, gint64 location, gint size, gpointer user_data);
-typedef void 		(*GstBufferPoolDestroyHook)       (GstBufferPool *pool, gpointer user_data);
+typedef GstBuffer *	(*GstBufferPoolBufferNewFunction)	(GstBufferPool *pool, guint size);
+typedef GstBuffer * 	(*GstBufferPoolBufferCopyFunction)	(const GstBuffer *buffer);
 
 struct _GstBufferPool {
-  /* locking */
-  GMutex *lock;
+  /* easiest way to get refcounting */
+  GstData 				data;
 
-  /* refcounting */
-#ifdef HAVE_ATOMIC_H
-  atomic_t refcount;
-#define GST_BUFFER_POOL_REFCOUNT(pool)	(atomic_read(&(GST_BUFFER_POOL((pool))->refcount)))
-#else
-  int refcount;
-#define GST_BUFFER_POOL_REFCOUNT(pool)	(GST_BUFFER_POOL(pool)->refcount)
-#endif
+  GstBufferPoolBufferNewFunction 	buffer_new;
+  GstBufferPoolBufferCopyFunction	buffer_copy;
+  GstDataFreeFunction			buffer_dispose;
+  GstDataFreeFunction			buffer_free;
 
-  GstBufferPoolBufferNewFunction buffer_new;
-  GstBufferFreeFunc buffer_free;
-  GstBufferCopyFunc buffer_copy;
-  GstBufferPoolDestroyHook destroy_hook;
-    
-  gpointer user_data;
+  gpointer				user_data;
 };
 
-void _gst_buffer_pool_initialize (void);
+void 			_gst_buffer_pool_initialize 		(void);
 
 /* creating a new buffer pool from scratch */
-GstBufferPool*		gst_buffer_pool_new			(void);
+GstBufferPool *		gst_buffer_pool_new			(void);
 
-/* refcounting */
-void 		gst_buffer_pool_ref			(GstBufferPool *pool);
-void 		gst_buffer_pool_ref_by_count		(GstBufferPool *pool, int count);
-void 		gst_buffer_pool_unref			(GstBufferPool *pool);
+/* getting the default bufferpool */
+GstBufferPool *		gst_buffer_pool_default			(void);
+
 
 /* setting create and destroy functions */
 void 		gst_buffer_pool_set_buffer_new_function	        (GstBufferPool *pool, 
                                                                  GstBufferPoolBufferNewFunction create);
-void 		gst_buffer_pool_set_buffer_free_function	(GstBufferPool *pool, 
-                                                                 GstBufferFreeFunc destroy); 
 void 		gst_buffer_pool_set_buffer_copy_function	(GstBufferPool *pool, 
-                                                                 GstBufferCopyFunc copy); 
-void 		gst_buffer_pool_set_destroy_hook		(GstBufferPool *pool, 
-                                                                 GstBufferPoolDestroyHook destroy);
+                                                                 GstBufferPoolBufferCopyFunction copy); 
+void 		gst_buffer_pool_set_buffer_dispose_function	(GstBufferPool *pool, 
+                                                                 GstDataFreeFunction dispose); 
+void 		gst_buffer_pool_set_buffer_free_function	(GstBufferPool *pool, 
+                                                                 GstDataFreeFunction free); 
 void 		gst_buffer_pool_set_user_data			(GstBufferPool *pool, 
                                                                  gpointer user_data);
 gpointer	gst_buffer_pool_get_user_data			(GstBufferPool *pool);
-
-/* destroying the buffer pool */
-void 		gst_buffer_pool_destroy			(GstBufferPool *pool);
-
-/* a default buffer pool implementation */
-GstBufferPool* gst_buffer_pool_get_default (guint buffer_size, guint pool_size);
 
 #ifdef __cplusplus
 }

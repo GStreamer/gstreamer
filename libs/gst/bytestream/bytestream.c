@@ -233,7 +233,7 @@ gst_bytestream_peek (GstByteStream * bs, guint32 len)
   else {
     bs_print ("peek: current buffer is not big enough for len %d\n", len);
 
-    retbuf = gst_buffer_new ();
+    retbuf = gst_buffer_new (NULL, 0);
     GST_BUFFER_SIZE (retbuf) = len;
     GST_BUFFER_DATA (retbuf) = gst_bytestream_assemble (bs, len);
     if (GST_BUFFER_OFFSET (headbuf) != -1)

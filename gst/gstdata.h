@@ -43,7 +43,8 @@ typedef enum {
   GST_DATA_UNKNOWN,
   GST_DATA_NONE,		/* uninitialized */
   /* buffer */
-  GST_BUFFER,
+  GST_DATA_BUFFER,
+  GST_DATA_BUFFERPOOL,
   /* events */
   GST_EVENT_FIRST,
   /* instream events */
@@ -76,12 +77,24 @@ typedef enum {
 #define GST_DATA(data)			((GstData*)(data))
 
 #define GST_DATA_TYPE(data)		(((GstData*)(data))->type)
-/* FIXME: delete this macro? */
-#define GST_DATA_TIMESTAMP(data)	(((GstData*)(data))->offset[GST_TIMEOFFSET])
+#define GST_DATA_OFFSET_TIME(data)	(((GstData*)(data))->offset[GST_OFFSET_TIME])
+#define GST_DATA_OFFSET_BYTES(data)	(((GstData*)(data))->offset[GST_OFFSET_BYTES])
+#define GST_DATA_OFFSET_FRAMES(data)	(((GstData*)(data))->offset[GST_OFFSET_FRAMES])
+
+/* flags */
+#define GST_DATA_FLAGS(data)		(GST_DATA(data)->flags)
+#define GST_DATA_FLAG_IS_SET(data,flag)	(GST_DATA_FLAGS(data) & (1<<(flag)))
+#define GST_DATA_FLAG_SET(data,flag)	G_STMT_START{ (GST_DATA_FLAGS(data) |= (1<<(flag))); }G_STMT_END
+#define GST_DATA_FLAG_UNSET(data,flag) 	G_STMT_START{ (GST_DATA_FLAGS(data) &= ~(1<<(flag))); }G_STMT_END
+enum {
+  GST_DATA_READONLY,
+  /* insert more */
+  GST_DATA_FLAG_LAST
+};
+#define GST_DATA_IS_WRITABLE(data)	(!GST_DATA_FLAG_IS_SET((data), GST_DATA_READONLY))
 
 typedef struct _GstData GstData;
 
-typedef void (*GstDataCopyFunction) (GstData *from, GstData *to);
 typedef void (*GstDataFreeFunction) (GstData *data);
 
 struct _GstData
@@ -99,8 +112,11 @@ struct _GstData
   GMutex *		reflock;
 #endif
   
+  /* flags */
+  guint			flags;
+  
   /* offset in stream */
-  /* FIXME: upstream events don't need that */
+  /* FIXME: only instream data needs that */
   guint64		offset[GST_OFFSET_TYPES];
 };
 

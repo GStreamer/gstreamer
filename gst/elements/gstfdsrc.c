@@ -190,12 +190,9 @@ gst_fdsrc_get(GstPad *pad)
 
   /* create the buffer */
   /* FIXME: should eventually use a bufferpool for this*/
-  buf = gst_buffer_new ();
+  buf = gst_pad_new_buffer (pad, src->bytes_per_read);
   g_return_val_if_fail (buf, NULL);
-
-  /* allocate the space for the buffer data */
-  GST_BUFFER_DATA(buf) = g_malloc(src->bytes_per_read);
-  g_return_val_if_fail(GST_BUFFER_DATA(buf) != NULL, NULL);
+  g_return_val_if_fail (GST_BUFFER_DATA(buf) != NULL, NULL);
 
   /* read it in from the file */
   readbytes = read(src->fd,GST_BUFFER_DATA(buf),src->bytes_per_read);

@@ -383,7 +383,8 @@ GstPadTemplate*		gst_pad_get_padtemplate			(GstPad *pad);
 
 GstPad*			gst_pad_get_peer			(GstPad *pad);
 
-GstBufferPool*		gst_pad_get_bufferpool			(GstPad *pad);
+GstBufferPool *		gst_pad_get_bufferpool			(GstPad *pad);
+GstBuffer *		gst_pad_new_buffer			(GstPad *pad, guint size);
 
 gboolean                gst_pad_can_connect            		(GstPad *srcpad, GstPad *sinkpad);
 gboolean                gst_pad_can_connect_filtered   		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);

@@ -254,7 +254,7 @@ gst_queue_cleanup_buffers (gpointer data, const gpointer user_data)
 {
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, user_data, "cleaning buffer %p\n", data);
 
-  gst_buffer_unref (GST_DATA (data));
+  gst_data_unref (GST_DATA (data));
 }
 
 static void

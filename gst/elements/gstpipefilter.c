@@ -64,7 +64,7 @@ static void 			gst_pipefilter_get_property	(GObject *object, guint prop_id, GVal
 
 static GstData *		gst_pipefilter_get		(GstPad *pad);
 static void 			gst_pipefilter_chain		(GstPad *pad, GstData *buf);
-static gboolean 		gst_pipefilter_handle_event 	(GstPad *pad, GstData *event);
+static gpointer 		gst_pipefilter_handle_event 	(GstPad *pad, GstData *event);
 
 static GstElementStateReturn 	gst_pipefilter_change_state	(GstElement *element);
 
@@ -133,7 +133,7 @@ gst_pipefilter_init (GstPipefilter *pipefilter)
   pipefilter->seq = 0;
 }
 
-static gboolean
+static gpointer
 gst_pipefilter_handle_event (GstPad *pad, GstData *event)
 {
   GstPipefilter *pipefilter;
@@ -148,7 +148,7 @@ gst_pipefilter_handle_event (GstPad *pad, GstData *event)
 
   GST_FLAG_SET (pad, GST_PAD_EOS);
 
-  return TRUE;
+  return (gpointer) TRUE;
 }
 
 static GstData * 
@@ -162,11 +162,8 @@ gst_pipefilter_get (GstPad *pad)
 
   /* create the buffer */
   /* FIXME: should eventually use a bufferpool for this */
-  newbuf = gst_buffer_new();
+  newbuf = gst_pad_new_buffer (pad, pipefilter->bytes_per_read);
   g_return_val_if_fail(newbuf, NULL);
-
-  /* allocate the space for the buffer data */
-  GST_BUFFER_DATA(newbuf) = g_malloc(pipefilter->bytes_per_read);
   g_return_val_if_fail(GST_BUFFER_DATA(newbuf) != NULL, NULL);
 
   /* read it in from the file */

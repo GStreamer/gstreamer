@@ -74,6 +74,7 @@ struct _GstFileSrc {
   off_t block_size;			/* bytes per read */
   gboolean touch;			/* whether to touch every page */
 
+  GstBufferPool *pool;			/* the pool creating the buffers */
   GstBuffer *mapbuf;
   size_t mapsize;
 

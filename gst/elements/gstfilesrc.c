@@ -98,20 +98,23 @@ enum {
   ARG_TOUCH,
 };
 
-
-static void		gst_filesrc_class_init		(GstFileSrcClass *klass);
-static void		gst_filesrc_init		(GstFileSrc *filesrc);
-static void 		gst_filesrc_dispose 		(GObject *object);
-
-static void		gst_filesrc_set_property	(GObject *object, guint prop_id, 
-							 const GValue *value, GParamSpec *pspec);
-static void		gst_filesrc_get_property	(GObject *object, guint prop_id, 
-							 GValue *value, GParamSpec *pspec);
-
-static GstData *	gst_filesrc_get			(GstPad *pad);
-static gpointer 	gst_filesrc_srcpad_event 	(GstPad *pad, GstData *event);
-
+/* standard GObject stuff */
+static void		gst_filesrc_class_init			(GstFileSrcClass *klass);
+static void		gst_filesrc_init			(GstFileSrc *filesrc);
+static void 		gst_filesrc_dispose 			(GObject *object);
+/* properties */
+static void		gst_filesrc_set_property		(GObject *object, guint prop_id, 
+								 const GValue *value, GParamSpec *pspec);
+static void		gst_filesrc_get_property		(GObject *object, guint prop_id, 
+								 GValue *value, GParamSpec *pspec);
+/* buffer handling */
+static GstData *	gst_filesrc_get				(GstPad *pad);
+static gpointer 	gst_filesrc_srcpad_event 		(GstPad *pad, GstData *event);
+/* state change */
 static GstElementStateReturn	gst_filesrc_change_state	(GstElement *element);
+/* bufferpool */
+static GstBuffer *	gst_filesrc_buffer_new			(GstBufferPool *pool, guint size);
+static void		gst_filesrc_buffer_dispose		(GstData *buffer);
 
 
 static GstElementClass *parent_class = NULL;
@@ -201,6 +204,11 @@ gst_filesrc_init (GstFileSrc *src)
   src->mapbuf = NULL;
   src->mapsize = 4 * 1024 * 1024;		/* default is 4MB */
 
+  src->pool = gst_buffer_pool_new ();
+  gst_buffer_pool_set_buffer_new_function (src->pool, gst_filesrc_buffer_new);
+  gst_buffer_pool_set_buffer_dispose_function (src->pool, gst_filesrc_buffer_dispose);
+  gst_buffer_pool_set_user_data (src->pool, src);
+  
   src->map_regions = g_tree_new(gst_filesrc_bufcmp);
   src->map_regions_lock = g_mutex_new();
 
@@ -316,9 +324,9 @@ gst_filesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 static void
 gst_filesrc_free_parent_mmap (GstBuffer *buf)
 {
-  GstFileSrc *src = GST_FILESRC(GST_BUFFER_POOL_PRIVATE(buf));
+  GstFileSrc *src = GST_FILESRC(gst_buffer_pool_get_user_data (buf->pool));
 
-  fs_print ("freeing mmap()d buffer at %d+%d\n",GST_BUFFER_OFFSET(buf),GST_BUFFER_SIZE(buf));
+  fs_print ("freeing mmap()d buffer at %d+%d\n", GST_BUFFER_OFFSET_BYTES(buf), GST_BUFFER_SIZE(buf));
 
   /* remove the buffer from the list of available mmap'd regions */
   g_mutex_lock(src->map_regions_lock);
@@ -334,7 +342,7 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
   madvise(GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf),MADV_DONTNEED);
 #endif
   /* now unmap the memory */
-  munmap(GST_BUFFER_DATA(buf),GST_BUFFER_MAXSIZE(buf));
+  munmap(GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf));
 }
 
 static GstBuffer *
@@ -348,7 +356,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   fs_print  ("mapping region %08lx+%08lx from file into memory\n",offset,size);
 
   /* time to allocate a new mapbuf */
-  buf = gst_buffer_new();
+  buf = gst_buffer_new(src->pool, 0);
   /* mmap() the data into this new buffer */
   GST_BUFFER_DATA(buf) = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
   if (GST_BUFFER_DATA(buf) == NULL) {
@@ -362,16 +370,12 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   retval = madvise(GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf),MADV_SEQUENTIAL);
 #endif
   /* fill in the rest of the fields */
-  GST_BUFFER_FLAGS(buf) = GST_BUFFER_READONLY | GST_BUFFER_ORIGINAL;
+  GST_DATA_FLAGS(buf) |= GST_DATA_READONLY;
   GST_BUFFER_SIZE(buf) = size;
-  GST_BUFFER_MAXSIZE(buf) = size;
-  GST_BUFFER_OFFSET(buf) = offset;
-  GST_BUFFER_TIMESTAMP(buf) = -1LL;
-  GST_BUFFER_POOL_PRIVATE(buf) = src;
-  GST_BUFFER_FREE_FUNC(buf) = gst_filesrc_free_parent_mmap;
+  GST_DATA_OFFSET_BYTES(buf) = offset;
 
   g_mutex_lock(src->map_regions_lock);
-  g_tree_insert(src->map_regions,buf,buf);
+  g_tree_insert(src->map_regions, buf, buf);
   g_mutex_unlock(src->map_regions_lock);
 
   return buf;
@@ -714,4 +718,28 @@ gst_filesrc_srcpad_event (GstPad *pad, GstData *event)
 
   gst_data_unref (event);
   return ret;
+}
+static GstBuffer *	
+gst_filesrc_buffer_new (GstBufferPool *pool, guint size)
+{
+  GstBuffer *buffer;
+  
+  if (size > 0)
+    g_warning("filesrc: ignoring size request when creating buffer");
+  
+  g_return_val_if_fail((buffer = gst_buffer_alloc()), NULL);
+  gst_buffer_init (buffer, pool);
+  
+  return buffer;
+}
+static void
+gst_filesrc_buffer_dispose (GstData *buffer)
+{
+  GstBuffer *buf = GST_BUFFER (buffer);
+  
+  gst_buffer_dispose (buffer);
+  if (buf->data)
+    gst_filesrc_free_parent_mmap (GST_BUFFER (buffer));
+  buf->data = NULL;
+  buf->size = 0;
 }

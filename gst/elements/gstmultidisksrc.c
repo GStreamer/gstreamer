@@ -218,14 +218,13 @@ gst_multidisksrc_get (GstPad *pad)
 
   /* create the buffer */
   /* FIXME: should eventually use a bufferpool for this */
-  buf = gst_buffer_new ();
+  buf = gst_pad_new_buffer (pad, 0);
 
   g_return_val_if_fail (buf != NULL, NULL);
 
   /* simply set the buffer to point to the correct region of the file */
   GST_BUFFER_DATA (buf) = src->map;
   GST_BUFFER_OFFSET (buf) = 0;
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
   if (src->new_seek) {
     /* fixme, do something here */

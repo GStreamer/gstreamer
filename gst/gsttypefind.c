@@ -211,5 +211,5 @@ gst_typefind_chain (GstPad *pad, GstData *buf)
     type_list = g_list_next (type_list);
   }
 end:
-  gst_buffer_unref (buf);
+  gst_data_unref (buf);
 }

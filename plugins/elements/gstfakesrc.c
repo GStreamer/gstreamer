@@ -370,9 +370,7 @@ gst_fakesrc_alloc_parent (GstFakeSrc *src)
 {
   GstBuffer *buf;
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = g_malloc (src->parentsize);
-  GST_BUFFER_SIZE (buf) = src->parentsize;
+  buf = gst_buffer_new (NULL, src->parentsize);
 
   src->parent = buf;
   src->parentoffset = 0;
@@ -546,26 +544,23 @@ gst_fakesrc_prepare_buffer (GstFakeSrc *src, GstBuffer *buf)
 }
 
 static GstBuffer*
-gst_fakesrc_alloc_buffer (GstFakeSrc *src, guint size)
+gst_fakesrc_alloc_buffer (GstPad *pad, guint size)
 {
-  GstBuffer *buf;
-
-  buf = gst_buffer_new ();
-  GST_BUFFER_SIZE(buf) = size;
+  GstFakeSrc *src = GST_FAKESRC (GST_PAD_PARENT (pad));
+  GstBuffer *buf = gst_pad_new_buffer (pad, size);
 
   if (size != 0) { 
     switch (src->filltype) {
       case FAKESRC_FILLTYPE_NOTHING:
-        GST_BUFFER_DATA(buf) = g_malloc (size);
         break;
       case FAKESRC_FILLTYPE_NULL:
+	memset (buf->data, 0, buf->size);
         GST_BUFFER_DATA(buf) = g_malloc0 (size);
         break;
       case FAKESRC_FILLTYPE_RANDOM:
       case FAKESRC_FILLTYPE_PATTERN:
       case FAKESRC_FILLTYPE_PATTERN_CONT:
       default:
-        GST_BUFFER_DATA(buf) = g_malloc (size);
         gst_fakesrc_prepare_buffer (src, buf);
         break;
     }
@@ -596,19 +591,20 @@ gst_fakesrc_get_size (GstFakeSrc *src)
 }
 
 static GstBuffer *
-gst_fakesrc_create_buffer (GstFakeSrc *src)
+gst_fakesrc_create_buffer (GstPad *pad)
 {
   GstBuffer *buf;
   guint size;
+  GstFakeSrc *src = GST_FAKESRC (GST_PAD_PARENT (pad));
   gboolean dump = src->dump;
 
   size = gst_fakesrc_get_size (src);
   if (size == 0)
-    return gst_buffer_new();
+    return gst_pad_new_buffer (pad, 0);
 
   switch (src->data) {
     case FAKESRC_DATA_ALLOCATE:
-      buf = gst_fakesrc_alloc_buffer (src, size);
+      buf = gst_fakesrc_alloc_buffer (pad, size);
       break;
     case FAKESRC_DATA_SUBBUFFER:
       /* see if we have a parent to subbuffer */
@@ -626,13 +622,13 @@ gst_fakesrc_create_buffer (GstFakeSrc *src)
 	gst_data_unref (GST_DATA (src->parent));
 	src->parent = NULL;
 	/* try again (this will allocate a new parent) */
-        return gst_fakesrc_create_buffer (src);
+        return gst_fakesrc_create_buffer (pad);
       }
       gst_fakesrc_prepare_buffer (src, buf);
       break;
     default:
       g_warning ("fakesrc: dunno how to allocate buffers !");
-      buf = gst_buffer_new();
+      buf = gst_pad_new_buffer (pad, 0);
       break;
   }
   if (dump) {
@@ -673,7 +669,7 @@ gst_fakesrc_get(GstPad *pad)
     return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
   }
 
-  buf = gst_fakesrc_create_buffer (src);
+  buf = gst_fakesrc_create_buffer (pad);
   GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
 
   if (!src->silent) {
@@ -730,7 +726,7 @@ gst_fakesrc_loop(GstElement *element)
       return;
     }
 
-    buf = gst_fakesrc_create_buffer (src);
+    buf = gst_fakesrc_create_buffer (pad);
     GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
 
     if (!src->silent) {

@@ -1071,6 +1071,7 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
   GstRealPad *peer, *realpad;
 
   realpad = GST_PAD_REALIZE (pad);
+  g_return_val_if_fail (realpad != NULL, FALSE);
   peer = GST_RPAD_PEER (realpad);
 
   GST_INFO (GST_CAT_CAPS, "trying to set caps %p on pad %s:%s",
@@ -1561,6 +1562,22 @@ gst_pad_get_bufferpool (GstPad *pad)
 		    GST_DEBUG_PAD_NAME (((GstPad*) peer)), &peer->bufferpoolfunc);
     return NULL;
   }
+}
+/**
+ * gst_pad_new_buffer:
+ * @pad: the pad to get the buffer from
+ * @size: the requested size of the buffer
+ *
+ * Creates a new buffer using the bufferpool of the given
+ * pad.
+ * See #gst_buffer_new.
+ *
+ * Returns: The new buffer or NULL on error.
+ */
+GstBuffer *
+gst_pad_new_buffer (GstPad *pad, guint size)
+{
+  return gst_buffer_new (gst_pad_get_bufferpool (pad), size);
 }
 
 static void

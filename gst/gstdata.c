@@ -19,6 +19,7 @@ gst_data_init (GstData *data)
   data->refcount = 1;
   data->reflock = g_mutex_new();
 #endif
+  data->flags = 0;
   for (i = 0; i < GST_OFFSET_TYPES; i++)
   {
     data->offset[i] = 0;
@@ -29,8 +30,9 @@ gst_data_copy (GstData *to, const GstData *from)
 {
   guint i;
   
-  to->type = from->type;
-  to->dispose = from->dispose;
+  g_assert (to->type == from->type);
+
+  to->flags = from->flags & (~GST_DATA_READONLY);
   for (i = 0; i < GST_OFFSET_TYPES; i++)
   {
     to->offset[i] = from->offset[i];
