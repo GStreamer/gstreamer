@@ -418,37 +418,42 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
   return GST_PAD_LINK_OK;
 }
 
+/* tries to fixate the given field of the given caps to the given int value */
 gboolean
 _fixate_caps_to_int (GstCaps ** caps, const gchar * field, gint value)
 {
-  GstCaps *try, *intersection;
+  GstCaps *try, *isect_lower, *isect_higher;
   gboolean ret = FALSE;
   guint i;
 
+  /* First try to see if we can fixate by intersecting given caps with
+   * simple audio caps with ranges starting/ending with value */
   try = gst_caps_new_simple ("audio/x-raw-int", field, GST_TYPE_INT_RANGE,
       G_MININT, value - 1, NULL);
   gst_caps_append (try, gst_caps_new_simple ("audio/x-raw-float", field,
           GST_TYPE_INT_RANGE, G_MININT, value - 1, NULL));
-  intersection = gst_caps_intersect (*caps, try);
-  if (!gst_caps_is_empty (intersection)) {
-    gst_caps_free (try);
+  isect_lower = gst_caps_intersect (*caps, try);
+  gst_caps_free (try);
+
+  if (!gst_caps_is_empty (isect_lower)) {
     try = gst_caps_new_simple ("audio/x-raw-int", field, GST_TYPE_INT_RANGE,
         value, G_MAXINT, NULL);
     gst_caps_append (try, gst_caps_new_simple ("audio/x-raw-float", field,
             GST_TYPE_INT_RANGE, value, G_MAXINT, NULL));
-    gst_caps_free (intersection);
-    intersection = gst_caps_intersect (*caps, try);
-    if (!gst_caps_is_empty (intersection)) {
+    isect_higher = gst_caps_intersect (*caps, try);
+    /* FIXME: why choose to end up with the higher range, and not the fixed
+     * value ? */
+    if (!gst_caps_is_empty (isect_higher)) {
       gst_caps_free (*caps);
-      *caps = intersection;
+      *caps = isect_higher;
       ret = TRUE;
     } else {
-      gst_caps_free (intersection);
+      gst_caps_free (isect_higher);
     }
-  } else {
-    gst_caps_free (intersection);
   }
-  gst_caps_free (try);
+  gst_caps_free (isect_lower);
+
+  /* FIXME: why don't we already return here when ret == TRUE ? */
   for (i = 0; i < gst_caps_get_size (*caps); i++) {
     GstStructure *structure = gst_caps_get_structure (*caps, i);
 
