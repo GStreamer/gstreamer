@@ -40,6 +40,11 @@ GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_sink_factory,
     "ffmpegdec_sink",
     "video/avi",
       "format",		GST_PROPS_STRING ("strf_vids")
+  ),
+  GST_CAPS_NEW (
+    "ffmpegdec_sink",
+    "video/mpeg",
+    NULL
   )
 )
 
@@ -123,8 +128,11 @@ gst_ffmpegdec_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
 
-  ffmpegdec->context->width = gst_caps_get_int (caps, "width");
-  ffmpegdec->context->height = gst_caps_get_int (caps, "height");
+  if (gst_caps_has_property_typed (caps, "width", GST_PROPS_INT_TYPE))
+    gst_caps_get_int (caps, "width", &ffmpegdec->context->width);
+  if (gst_caps_has_property_typed (caps, "height", GST_PROPS_INT_TYPE))
+    gst_caps_get_int (caps, "height", &ffmpegdec->context->height);
+
   ffmpegdec->context->pix_fmt = PIX_FMT_YUV420P;
   ffmpegdec->context->frame_rate = 23 * FRAME_RATE_BASE;
   ffmpegdec->context->bit_rate = 0;

@@ -21,6 +21,8 @@
 
 #include <string.h>
 
+#define VIDEO_BUFFER_SIZE (1024*1024)
+
 enum {
   /* FILL ME */
   LAST_SIGNAL
@@ -97,6 +99,8 @@ gst_ffmpegenc_me_method_get_type (void)
     { ME_FULL,  "1", "full" },
     { ME_LOG,   "2", "logarithmic" },
     { ME_PHODS, "3", "phods" },
+    { ME_EPZS,  "4", "epzs" },
+    { ME_X1   , "5", "x1" },
     { 0, NULL, NULL },
   };
   if (!ffmpegenc_me_method_type) {
@@ -138,10 +142,10 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass *klass)
   if (klass->in_plugin->type == CODEC_TYPE_VIDEO) {
     g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_WIDTH,
       g_param_spec_int ("width","width","width",
-                      0, G_MAXINT, -1, G_PARAM_READWRITE)); 
+                      0, G_MAXINT, 0, G_PARAM_READWRITE)); 
     g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_HEIGHT,
       g_param_spec_int ("height","height","height",
-                      0, G_MAXINT, -1, G_PARAM_READWRITE)); 
+                      0, G_MAXINT, 0, G_PARAM_READWRITE)); 
     g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_BIT_RATE,
       g_param_spec_int ("bit_rate","bit_rate","bit_rate",
                       0, G_MAXINT, 300000, G_PARAM_READWRITE)); 
@@ -184,12 +188,15 @@ gst_ffmpegenc_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_CONNECT_DELAYED;
 
   if (strstr (gst_caps_get_mime (caps), "audio/raw")) {
-    ffmpegenc->context->sample_rate = gst_caps_get_int (caps, "rate");
-    ffmpegenc->context->channels = gst_caps_get_int (caps, "channels");
+    gst_caps_get_int (caps, "rate", &ffmpegenc->context->sample_rate);
+    gst_caps_get_int (caps, "channels", &ffmpegenc->context->channels);
   }
   else if (strstr (gst_caps_get_mime (caps), "video/raw")) {
-    ffmpegenc->in_width = gst_caps_get_int (caps, "width");
-    ffmpegenc->in_height = gst_caps_get_int (caps, "height");
+    guint32 fourcc;
+
+    gst_caps_get_int (caps, "width", &ffmpegenc->in_width);
+    gst_caps_get_int (caps, "height", &ffmpegenc->in_height);
+    
     if (ffmpegenc->need_resample) {
       ffmpegenc->context->width = ffmpegenc->out_width;
       ffmpegenc->context->height = ffmpegenc->out_height;
@@ -198,7 +205,8 @@ gst_ffmpegenc_sinkconnect (GstPad *pad, GstCaps *caps)
       ffmpegenc->context->width = ffmpegenc->in_width;
       ffmpegenc->context->height = ffmpegenc->in_height;
     }
-    if (gst_caps_get_fourcc_int (caps, "format") == GST_STR_FOURCC ("I420")) {
+    gst_caps_get_fourcc_int (caps, "format", &fourcc);
+    if (fourcc == GST_STR_FOURCC ("I420")) {
       ffmpegenc->context->pix_fmt = PIX_FMT_YUV420P;
     }
     else {
@@ -237,9 +245,13 @@ gst_ffmpegenc_init(GstFFMpegEnc *ffmpegenc)
     ffmpegenc->sinkpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (gst_ffmpegenc_video_sink_factory), "sink");
     gst_pad_set_chain_function (ffmpegenc->sinkpad, gst_ffmpegenc_chain_video);
-    ffmpegenc->context->bit_rate = 300000;
+    ffmpegenc->context->bit_rate = 400000;
+    ffmpegenc->context->bit_rate_tolerance = 400000;
+    ffmpegenc->context->qmin = 3;
+    ffmpegenc->context->qmax = 15;
+    ffmpegenc->context->max_qdiff = 3;
     ffmpegenc->context->gop_size = 15;
-    ffmpegenc->context->frame_rate = 25;
+    ffmpegenc->context->frame_rate = 25 * FRAME_RATE_BASE;
     ffmpegenc->out_width = -1;
     ffmpegenc->out_height = -1;
   }
@@ -333,6 +345,7 @@ gst_ffmpegenc_chain_video (GstPad *pad, GstBuffer *inbuf)
 
   frame_size = ffmpegenc->in_width * ffmpegenc->in_height;
 
+  /*
   switch (ffmpegenc->context->pix_fmt) {
     case PIX_FMT_YUV422: 
     {
@@ -341,7 +354,7 @@ gst_ffmpegenc_chain_video (GstPad *pad, GstBuffer *inbuf)
       temp = g_malloc ((frame_size * 3) /2 );
       size = (frame_size * 3)/2;
 
-      img_convert_to_yuv420 (temp, data, PIX_FMT_YUV422, 
+      img_convert (temp, PIX_FMT_YUV422, data, PIX_FMT_YUV420P,
 		      ffmpegenc->in_width, ffmpegenc->in_height);
       data = temp;
       free_data = TRUE;
@@ -350,33 +363,27 @@ gst_ffmpegenc_chain_video (GstPad *pad, GstBuffer *inbuf)
     default:
       break;
   }
+  */
 
-  picture.data[0] = data;
-  picture.data[1] = picture.data[0] + frame_size;
-  picture.data[2] = picture.data[1] + (frame_size >> 2);
-  picture.linesize[0] = ffmpegenc->in_width;
-  picture.linesize[1] = ffmpegenc->in_width >> 1;
-  picture.linesize[2] = ffmpegenc->in_width >> 1;
+  avpicture_fill (&picture, data, PIX_FMT_YUV420P, ffmpegenc->in_width, ffmpegenc->in_height);
   toencode = &picture;
 
   if (ffmpegenc->need_resample) {
     gint rframe_size = ffmpegenc->context->width * ffmpegenc->context->height;
+    guint8 *rdata;
 
-    rpicture.data[0] = g_malloc ((rframe_size * 3)/2);
-    rpicture.data[1] = rpicture.data[0] + rframe_size;
-    rpicture.data[2] = rpicture.data[1] + (rframe_size >> 2);
-    rpicture.linesize[0] = ffmpegenc->context->width;
-    rpicture.linesize[1] = ffmpegenc->context->width >> 1;
-    rpicture.linesize[2] = ffmpegenc->context->width >> 1;
+    rdata = g_malloc ((rframe_size * 3)/2);
+    avpicture_fill (&rpicture, rdata, PIX_FMT_YUV420P, ffmpegenc->context->width, ffmpegenc->context->height);
+
     free_res = TRUE;
     toencode = &rpicture;
     
     img_resample (ffmpegenc->resample, &rpicture, &picture);
   }
-  
+
   outbuf = gst_buffer_new ();
-  GST_BUFFER_SIZE (outbuf) = size;
-  GST_BUFFER_DATA (outbuf) = g_malloc (size);
+  GST_BUFFER_SIZE (outbuf) = VIDEO_BUFFER_SIZE;
+  GST_BUFFER_DATA (outbuf) = g_malloc (VIDEO_BUFFER_SIZE);
 
   GST_BUFFER_SIZE (outbuf) = avcodec_encode_video (ffmpegenc->context, GST_BUFFER_DATA (outbuf),
   				GST_BUFFER_SIZE (outbuf), toencode);

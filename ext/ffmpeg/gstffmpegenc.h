@@ -29,6 +29,10 @@ extern "C" {
 
 #ifndef __GST_FFMPEG_AV_H__
 #define __GST_FFMPEG_AV_H__
+#undef ABS
+#undef MAX
+#undef MIN
+#include <assert.h>
 #include <libavcodec/avcodec.h>
 #endif /*  __GST_FFMPEG_AV_H__ */
 

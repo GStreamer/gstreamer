@@ -3,9 +3,8 @@ plugindir = $(libdir)/gst
 plugin_LTLIBRARIES = libgstffmpeg.la
 
 libgstffmpeg_la_SOURCES = gstffmpeg.c gstffmpegenc.c gstffmpegdec.c
-
-## FIXME: these really need a kick in the pants !
-## CFLAGS += -I/opt/src/ffmpeg/
-## LDFLAGS += -L/opt/src/ffmpeg/libavcodec -lavcodec -L/opt/src/ffmpeg/libav -lav
+libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) -I/opt/src/sourceforge/ffmpeg/
+libgstffmpeg_la_LIBADD = 
+libgstffmpeg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -L/opt/src/sourceforge/ffmpeg/libavcodec -lavcodec -L/opt/src/sourceforge/ffmpeg/libav -lavformat
 
 noinst_HEADERS = gstffmpegenc.h gstffmpegdec.h
