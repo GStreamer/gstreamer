@@ -71,6 +71,7 @@ struct _GstTCPSrc {
   int sock;
   int client_sock;
   int control_sock;
+  gboolean socket_options;
   Gst_TCP_Control control;
 
   struct sockaddr_in myaddr;
