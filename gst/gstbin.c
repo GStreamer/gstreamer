@@ -504,6 +504,11 @@ gst_bin_create_plan (GstBin *bin)
     (oclass->create_plan) (bin);
 }
 
+typedef struct {
+  gulong offset;
+  gulong size;
+} region_struct; 
+
 static int 
 gst_bin_loopfunc_wrapper (int argc,char *argv[]) 
 {
@@ -525,9 +530,15 @@ gst_bin_loopfunc_wrapper (int argc,char *argv[])
   } else {
     DEBUG("** gst_bin_loopfunc_wrapper(): element %s is chain-based, calling in infinite loop\n", name);
     if (GST_IS_SRC (element)) {
-      DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of source %s\n", name);
-      gst_src_push (GST_SRC (element));
-      DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of source %s done\n", name);
+      region_struct *region = cothread_get_data (element->threadstate, "region");
+      if (region) {
+        gst_src_push_region (GST_SRC (element), region->offset, region->size);
+      }
+      else {
+        DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of source %s\n", name);
+        gst_src_push (GST_SRC (element));
+        DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of source %s done\n", name);
+      }
     } else if (GST_IS_CONNECTION (element) && argc == 1) {
       while (1) {
         DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of connection %s\n", name);
@@ -561,6 +572,25 @@ gst_bin_pullfunc_wrapper (GstPad *pad)
           gst_element_get_name (GST_ELEMENT (pad->parent)));
   cothread_switch (GST_ELEMENT (pad->parent)->threadstate);
   DEBUG("** out gst_bin_pullfunc_wrapper()============================= %s\n",
+          gst_element_get_name (GST_ELEMENT (pad->parent)));
+}
+
+static void 
+gst_bin_pullregionfunc_wrapper (GstPad *pad, 
+				gulong offset, 
+				gulong size) 
+{
+  region_struct region;
+
+  region.offset = offset;
+  region.size = size;
+
+  DEBUG("** in gst_bin_pullregionfunc_wrapper()============================= %s\n",
+          gst_element_get_name (GST_ELEMENT (pad->parent)));
+  cothread_set_data (GST_ELEMENT (pad->parent)->threadstate, "region", &region);
+  cothread_switch (GST_ELEMENT (pad->parent)->threadstate);
+  cothread_set_data (GST_ELEMENT (pad->parent)->threadstate, "region", NULL);
+  DEBUG("** out gst_bin_pullregionfunc_wrapper()============================= %s\n",
           gst_element_get_name (GST_ELEMENT (pad->parent)));
 }
 
@@ -683,6 +713,7 @@ gst_bin_create_plan_func (GstBin *bin)
           pad->pushfunc = gst_bin_pushfunc_wrapper;
 	}
         pad->pullfunc = gst_bin_pullfunc_wrapper;
+        pad->pullregionfunc = gst_bin_pullregionfunc_wrapper;
 
         /* we only worry about sink pads */
         if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
@@ -704,6 +735,7 @@ gst_bin_create_plan_func (GstBin *bin)
 
                 opad->pushfunc = gst_bin_pushfunc_wrapper;
                 opad->pullfunc = gst_bin_pullfunc_wrapper;
+        	opad->pullregionfunc = gst_bin_pullregionfunc_wrapper;
 
                 if (outside->threadstate == NULL) {
                   outside->threadstate = cothread_create (bin->threadcontext);

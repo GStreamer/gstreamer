@@ -85,6 +85,7 @@ gst_pad_init (GstPad *pad)
   pad->peer = NULL;
   pad->chainfunc = NULL;
   pad->pullfunc = NULL;
+  pad->pullregionfunc = NULL;
   pad->pushfunc = NULL;
   pad->qosfunc = NULL;
   pad->parent = NULL;
@@ -241,7 +242,6 @@ gst_pad_push (GstPad *pad,
 
   // first check to see if there's a push handler
   if (pad->pushfunc != NULL) {
-    //g_print("-- gst_pad_push(): putting buffer in pen and calling push handler\n");
     // put the buffer in peer's holding pen
     pad->peer->bufpen = buffer;
     // now inform the handler that the peer pad has something
@@ -269,20 +269,13 @@ GstBuffer*
 gst_pad_pull (GstPad *pad) 
 {
   GstBuffer *buf;
-//  GstElement *peerparent;
-//  cothread_state *state;
 
   g_return_val_if_fail(pad != NULL, NULL);
   g_return_val_if_fail(GST_IS_PAD(pad), NULL);
 
-//  g_print("-- gst_pad_pull(): attempting to pull buffer\n");
-
-//  g_return_val_if_fail(pad->pullfunc != NULL, NULL);
-
   // if no buffer in pen and there's a pull handler, fire it
   if (pad->bufpen == NULL) {
     if (pad->pullfunc != NULL) {
-//      g_print("-- gst_pad_pull(): calling pull handler\n");
       (pad->pullfunc)(pad->peer);
     } else {
       g_print("-- gst_pad_pull(%s:%s): no buffer in pen, and no handler to get one there!!!\n", 
@@ -292,7 +285,6 @@ gst_pad_pull (GstPad *pad)
 
   // if there's a buffer in the holding pen, use it
   if (pad->bufpen != NULL) {
-//    g_print("-- gst_pad_pull(): buffer available, pulling\n");
     buf = pad->bufpen;
     pad->bufpen = NULL;
     return buf;
@@ -321,8 +313,38 @@ gst_pad_pull_region (GstPad *pad,
 		     gulong offset, 
 		     gulong size) 
 {
-  // FIXME
-  return gst_pad_pull (pad);
+  GstBuffer *buf;
+
+  g_return_val_if_fail(pad != NULL, NULL);
+  g_return_val_if_fail(GST_IS_PAD(pad), NULL);
+
+  DEBUG("-- gst_pad_pull_region(%s:%s): region (%lu,%lu)\n", 
+		      GST_ELEMENT(pad->parent)->name, pad->peer->name,
+		      offset, size);
+
+  // if no buffer in pen and there's a pull handler, fire it
+  if (pad->bufpen == NULL) {
+    if (pad->pullregionfunc != NULL) {
+      (pad->pullregionfunc)(pad->peer, offset, size);
+    } else {
+      g_print("-- gst_pad_pull_region(%s:%s): no buffer in pen, and no handler to get one there!!!\n", 
+		      GST_ELEMENT(pad->parent)->name, pad->name);
+    }
+  }
+
+  // if there's a buffer in the holding pen, use it
+  if (pad->bufpen != NULL) {
+    buf = pad->bufpen;
+    pad->bufpen = NULL;
+    return buf;
+  // else we have a big problem...
+  } else {
+    g_print("-- gst_pad_pull_region(%s:%s): no buffer in pen, and no handler\n", 
+		      GST_ELEMENT(pad->parent)->name, pad->peer->name);
+    return NULL;
+  }
+
+  return NULL;
 }
 
 /**

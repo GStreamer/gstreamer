@@ -153,6 +153,7 @@ gst_play_init (GstPlay *play)
   priv->uri = NULL;
   priv->offset_element = NULL;
   priv->bit_rate_element = NULL;
+  priv->media_time_element = NULL;
 }
 
 GstPlay *
@@ -165,6 +166,7 @@ static void
 gst_play_eos (GstElement *element, 
 	      GstPlay *play) 
 {
+  g_print("gstplay: eos reached\n");
   gst_play_stop(play);
 }
 
@@ -227,8 +229,14 @@ gst_play_object_added (GstElement *pipeline,
   }
   else {
     // first come first serve here...
-    if (!priv->offset_element) gst_play_object_introspect(element, "offset", &priv->offset_element);
-    if (!priv->bit_rate_element) gst_play_object_introspect(element, "bit_rate", &priv->bit_rate_element);
+    if (!priv->offset_element) 
+      gst_play_object_introspect (element, "offset", &priv->offset_element);
+    if (!priv->bit_rate_element) 
+      gst_play_object_introspect (element, "bit_rate", &priv->bit_rate_element);
+    if (!priv->media_time_element)
+      gst_play_object_introspect (element, "media_time", &priv->media_time_element);
+    if (!priv->current_time_element)
+      gst_play_object_introspect (element, "current_time", &priv->current_time_element);
   }
 }
 
@@ -251,7 +259,7 @@ gst_play_set_uri (GstPlay *play,
 
   priv->uri = g_strdup (uri);
 
-  priv->src = gst_elementfactory_make ("disksrc", "disk_src");
+  priv->src = gst_elementfactory_make ("asyncdisksrc", "disk_src");
   g_return_val_if_fail (priv->src != NULL, -1);
   gtk_object_set (GTK_OBJECT (priv->src),"location",uri,NULL);
   gtk_signal_connect (GTK_OBJECT (priv->src), "eos", GTK_SIGNAL_FUNC (gst_play_eos), play);
@@ -398,6 +406,10 @@ gst_play_get_media_total_time (GstPlay *play)
 
   priv = (GstPlayPrivate *)play->priv;
 
+  if (priv->media_time_element) {
+    return gst_util_get_long_arg (GTK_OBJECT (priv->media_time_element), "media_time");
+  }
+
   if (priv->bit_rate_element == NULL) return 0;
 
   bit_rate = gst_util_get_long_arg (GTK_OBJECT (priv->bit_rate_element), "bit_rate");
@@ -420,6 +432,10 @@ gst_play_get_media_current_time (GstPlay *play)
   g_return_val_if_fail (GST_IS_PLAY (play), 0);
 
   priv = (GstPlayPrivate *)play->priv;
+
+  if (priv->current_time_element) {
+    return gst_util_get_long_arg (GTK_OBJECT (priv->current_time_element), "current_time");
+  }
 
   if (priv->bit_rate_element == NULL) return 0;
 

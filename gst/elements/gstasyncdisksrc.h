@@ -70,6 +70,7 @@ struct _GstAsyncDiskSrc {
   /* details for fallback synchronous read */
   gulong curoffset;			/* current offset in file */
   gulong bytes_per_read;		/* bytes per read */
+  gboolean new_seek;
 
   gulong seq;				/* buffer sequence number */
 };

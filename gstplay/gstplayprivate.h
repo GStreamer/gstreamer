@@ -23,6 +23,8 @@ struct _GstPlayPrivate {
 
   GstElement *offset_element;
   GstElement *bit_rate_element;
+  GstElement *media_time_element;
+  GstElement *current_time_element;
 };
 
 #endif /* __GSTPLAY_PRIVATE_H__ */

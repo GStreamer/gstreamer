@@ -52,16 +52,17 @@ enum {
 };
 
 
-static void gst_disksrc_class_init(GstDiskSrcClass *klass);
-static void gst_disksrc_init(GstDiskSrc *disksrc);
-static void gst_disksrc_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_disksrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
+static void 			gst_disksrc_class_init		(GstDiskSrcClass *klass);
+static void 			gst_disksrc_init		(GstDiskSrc *disksrc);
 
-static void gst_disksrc_close_file(GstDiskSrc *src);
+static void 			gst_disksrc_set_arg		(GtkObject *object, GtkArg *arg, guint id);
+static void 			gst_disksrc_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
-static void gst_disksrc_push(GstSrc *src);
-//static void gst_disksrc_push_region(GstSrc *src,gulong offset,gulong size);
-static GstElementStateReturn gst_disksrc_change_state(GstElement *element);
+static void 			gst_disksrc_close_file		(GstDiskSrc *src);
+
+static void 			gst_disksrc_push		(GstSrc *src);
+
+static GstElementStateReturn 	gst_disksrc_change_state	(GstElement *element);
 
 
 static GstSrcClass *parent_class = NULL;
@@ -104,7 +105,7 @@ gst_disksrc_class_init(GstDiskSrcClass *klass) {
   gtk_object_add_arg_type("GstDiskSrc::bytesperread", GTK_TYPE_INT,
                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);
   gtk_object_add_arg_type("GstDiskSrc::offset", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_OFFSET);
+                          GTK_ARG_READABLE, ARG_OFFSET);
   gtk_object_add_arg_type("GstDiskSrc::size", GTK_TYPE_INT,
                           GTK_ARG_READABLE, ARG_SIZE);
 
@@ -157,11 +158,13 @@ static void gst_disksrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
     case ARG_BYTESPERREAD:
       src->bytes_per_read = GTK_VALUE_INT(*arg);
       break;
+      /*
     case ARG_OFFSET:
       src->curoffset = GTK_VALUE_INT(*arg);
       lseek(src->fd,src->curoffset, SEEK_SET);
       src->new_seek = TRUE;
       break;
+      */
     default:
       break;
   }

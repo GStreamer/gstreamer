@@ -38,6 +38,7 @@ struct _cothread_context {
   cothread_state *threads[COTHREAD_MAXTHREADS];
   int nthreads;
   int current;
+  GHashTable *data;
 };
 
 cothread_context*		cothread_init();
@@ -45,6 +46,9 @@ cothread_state*			cothread_create		(cothread_context *ctx);
 void 				cothread_setfunc	(cothread_state *thread, cothread_func func, 
 						         int argc, char **argv);
 void 				cothread_switch		(cothread_state *thread);
+void 				cothread_set_data	(cothread_state *thread, gchar *key, gpointer data);
+gpointer 			cothread_get_data 	(cothread_state *thread, gchar *key);
+
 cothread_state*			cothread_main		(cothread_context *ctx);
 
 #endif /* __COTHREAD_H__ */

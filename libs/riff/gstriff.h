@@ -22,9 +22,7 @@
 #define __GST_RIFF_H__
 
 
-#include <gst/gstbuffer.h>
-#include <gst/gstplugin.h>
-
+#include <gst/gst.h>
 
 typedef enum {
   GST_RIFF_OK 	    =  0,		
@@ -311,18 +309,30 @@ struct _gst_riff_chunk {
   guint32 size;
 };
 
-typedef struct _gst_riff_riff gst_riff_riff;
-typedef struct _gst_riff_list gst_riff_list;
-typedef struct _gst_riff_chunk gst_riff_chunk;
+struct _gst_riff_index_entry {  
+  guint32 id;
+  guint32 flags;
+#define GST_RIFF_IF_LIST		(0x00000001L)
+#define GST_RIFF_IF_KEYFRAME		(0x00000010L)
+#define GST_RIFF_IF_NO_TIME		(0x00000100L)
+#define GST_RIFF_IF_COMPUSE		(0x0FFF0000L)
+  guint32 offset;
+  guint32 size;
+};
 
-typedef struct _gst_riff_avih gst_riff_avih;
-typedef struct _gst_riff_strh gst_riff_strh;
-typedef struct _gst_riff_strf_vids gst_riff_strf_vids;
-typedef struct _gst_riff_strf_auds gst_riff_strf_auds;
-typedef struct _GstRiff GstRiff;
-typedef struct _GstRiffChunk GstRiffChunk;
+typedef struct _gst_riff_riff 		gst_riff_riff;
+typedef struct _gst_riff_list 		gst_riff_list;
+typedef struct _gst_riff_chunk 		gst_riff_chunk;
+typedef struct _gst_riff_index_entry 	gst_riff_index_entry;
 
-typedef void (*GstRiffCallback) (GstRiffChunk *chunk, gpointer data);
+typedef struct _gst_riff_avih 		gst_riff_avih;
+typedef struct _gst_riff_strh 		gst_riff_strh;
+typedef struct _gst_riff_strf_vids 	gst_riff_strf_vids;
+typedef struct _gst_riff_strf_auds 	gst_riff_strf_auds;
+typedef struct _GstRiff 		GstRiff;
+typedef struct _GstRiffChunk 		GstRiffChunk;
+
+typedef void (*GstRiffCallback) 	(GstRiffChunk *chunk, gpointer data);
 
 struct _GstRiff {
   guint32 form;
@@ -358,22 +368,25 @@ struct _GstRiffChunk {
 
 
 /* from gstriffparse.c */
-GstRiff *gst_riff_parser_new(GstRiffCallback function, gpointer data);
-GstRiffReturn gst_riff_parser_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off);
+GstRiff*		gst_riff_parser_new			(GstRiffCallback function, gpointer data);
+GstRiffReturn 		gst_riff_parser_next_buffer		(GstRiff *riff, GstBuffer *buf, gulong off);
+void 			gst_riff_parser_resync 			(GstRiff *riff, gulong offset);  
 
 /* from gstriffencode.c */
-GstRiff *gst_riff_encoder_new(guint32 type);
-GstRiffReturn gst_riff_encoder_avih(GstRiff *riff, gst_riff_avih *head, gulong size);
-GstRiffReturn gst_riff_encoder_strh(GstRiff *riff, guint32 fcc_type, gst_riff_strh *head, gulong size);
-GstRiffReturn gst_riff_encoder_strf(GstRiff *riff, void *format, gulong size);
-GstRiffReturn gst_riff_encoder_chunk(GstRiff *riff, guint32 chunk_type, void *chunk, gulong size);
+GstRiff*		gst_riff_encoder_new			(guint32 type);
+GstRiffReturn 		gst_riff_encoder_avih			(GstRiff *riff, gst_riff_avih *head, gulong size);
+GstRiffReturn 		gst_riff_encoder_strh			(GstRiff *riff, guint32 fcc_type, 
+								 gst_riff_strh *head, gulong size);
+GstRiffReturn 		gst_riff_encoder_strf			(GstRiff *riff, void *format, gulong size);
+GstRiffReturn 		gst_riff_encoder_chunk			(GstRiff *riff, guint32 chunk_type, 
+								 void *chunk, gulong size);
 
-GstBuffer *gst_riff_encoder_get_buffer(GstRiff *riff);
-GstBuffer *gst_riff_encoder_get_and_reset_buffer(GstRiff *riff);
+GstBuffer*		gst_riff_encoder_get_buffer		(GstRiff *riff);
+GstBuffer*		gst_riff_encoder_get_and_reset_buffer	(GstRiff *riff);
 
 /* from gstriffutil.c */
-gulong gst_riff_fourcc_to_id(gchar *fourcc);
-gchar *gst_riff_id_to_fourcc(gulong id);
+gulong 			gst_riff_fourcc_to_id			(gchar *fourcc);
+gchar*			gst_riff_id_to_fourcc			(gulong id);
 
 
 #endif /* __GST_RIFF_H__ */

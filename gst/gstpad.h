@@ -50,6 +50,7 @@ typedef struct _GstPadClass GstPadClass;
  * buf is the buffer being passed */
 typedef void (*GstPadChainFunction) (GstPad *pad,GstBuffer *buf);
 typedef void (*GstPadPullFunction) (GstPad *pad);
+typedef void (*GstPadPullRegionFunction) (GstPad *pad, gulong offset, gulong size);
 typedef void (*GstPadPushFunction) (GstPad *pad);
 typedef void (*GstPadQoSFunction) (GstPad *pad, glong qos_message);
 
@@ -73,6 +74,7 @@ struct _GstPad {
 
   GstPadChainFunction chainfunc;
   GstPadPullFunction pullfunc;
+  GstPadPullRegionFunction pullregionfunc;
   GstPadPushFunction pushfunc;
   GstPadQoSFunction qosfunc;
 

@@ -21,7 +21,9 @@
 #include <gst/gst.h>
 #include <gstriff.h>
 
-GstRiff *gst_riff_parser_new(GstRiffCallback function, gpointer data) {
+GstRiff*
+gst_riff_parser_new (GstRiffCallback function, gpointer data) 
+{
   GstRiff *riff;
 
   riff = (GstRiff *)g_malloc(sizeof(GstRiff));
@@ -40,7 +42,9 @@ GstRiff *gst_riff_parser_new(GstRiffCallback function, gpointer data) {
   return riff;
 }
 
-gint gst_riff_parser_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
+gint 
+gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off) 
+{
   gulong last, size;
   GstRiffChunk *chunk;
 
@@ -131,12 +135,12 @@ gint gst_riff_parser_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
 
       DEBUG("gst_riff_parser: next 0x%08x  offset 0x%08lx size 0x%08x\n",riff->nextlikely, 
 		      chunk->offset, chunk->size);
-	   if (riff->nextlikely >= chunk->offset+chunk->size) {
+      if (riff->nextlikely >= chunk->offset+chunk->size) {
         DEBUG("gst_riff_parser: found END LIST\n");
-	     // we have the end of the chunk on the stack, remove it
-  	     riff->chunks = g_list_remove(riff->chunks, chunk);
+        // we have the end of the chunk on the stack, remove it
+        riff->chunks = g_list_remove(riff->chunks, chunk);
       }
-	   else break;
+      else break;
     }
 
     DEBUG("gst_riff_parser: next likely chunk is at offset 0x%08x\n",riff->nextlikely);
@@ -172,10 +176,10 @@ gint gst_riff_parser_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
       riff->nextlikely += 8 + chunk->size;	/* doesn't include hdr */
       // if this buffer is incomplete
       if (riff->nextlikely > last) {
-	     guint left = size - (riff->nextlikely - chunk->size - off);
+        guint left = size - (riff->nextlikely - chunk->size - off);
 
         DEBUG("make incomplete buffer %08x\n", left);
-	     chunk->data = g_malloc(chunk->size);
+        chunk->data = g_malloc(chunk->size);
         memcpy(chunk->data, (gchar *)(words+2), left);
 	     riff->incomplete_chunk = chunk;
 	     riff->incomplete_chunk_size = left;
@@ -207,3 +211,10 @@ gint gst_riff_parser_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
   return 0;
 }
 
+void 
+gst_riff_parser_resync (GstRiff *riff, gulong offset) 
+{
+  riff->incomplete_chunk = NULL;
+  riff->dataleft = NULL;
+  riff->nextlikely = offset;
+}

@@ -94,6 +94,7 @@ cothread_init (void)
   // we consider the initiating process to be cothread 0
   ctx->nthreads = 1;
   ctx->current = 0;
+  ctx->data = g_hash_table_new(g_str_hash, g_str_equal);
 
   return ctx;
 }
@@ -120,6 +121,25 @@ cothread_stub (void)
   thread->sp = thread->top_sp;
   DEBUG("cothread: cothread_stub() exit\n");
   //printf("uh, yeah, we shouldn't be here, but we should deal anyway\n");
+}
+
+void
+cothread_set_data (cothread_state *thread, 
+		   gchar *key,
+		   gpointer data)
+{
+  cothread_context *ctx = pthread_getspecific(_cothread_key);
+
+  g_hash_table_insert(ctx->data, key, data);
+}
+
+gpointer
+cothread_get_data (cothread_state *thread, 
+		   gchar *key)
+{
+  cothread_context *ctx = pthread_getspecific(_cothread_key);
+
+  return g_hash_table_lookup(ctx->data, key);
 }
 
 void 

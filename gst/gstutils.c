@@ -152,14 +152,14 @@ void gst_util_dump_mem(guchar *mem, guint size) {
 
   i = j =0;
   while (i<size) {
-    g_print("%02x ", mem[i]);
-    if (j == 16) {
-      g_print("\n");
-      j = 0;
+    if (j == 0) {
+      g_print("\n%08x : ", i);
+      j = 15;
     }
     else {
-      j++;
+      j--;
     }
+    g_print("%02x ", mem[i]);
     i++;
   }
   g_print("\n");

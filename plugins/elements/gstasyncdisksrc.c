@@ -51,22 +51,24 @@ enum {
 };
 
 
-static void gst_asyncdisksrc_class_init(GstAsyncDiskSrcClass *klass);
-static void gst_asyncdisksrc_init(GstAsyncDiskSrc *asyncdisksrc);
-static void gst_asyncdisksrc_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_asyncdisksrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
+static void 			gst_asyncdisksrc_class_init	(GstAsyncDiskSrcClass *klass);
+static void 			gst_asyncdisksrc_init		(GstAsyncDiskSrc *asyncdisksrc);
 
-static void gst_asyncdisksrc_push(GstSrc *src);
-static void gst_asyncdisksrc_push_region(GstSrc *src,gulong offset,
-                                         gulong size);
-static GstElementStateReturn gst_asyncdisksrc_change_state(GstElement *element);
+static void 			gst_asyncdisksrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void 			gst_asyncdisksrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+
+static void 			gst_asyncdisksrc_push		(GstSrc *src);
+static void 			gst_asyncdisksrc_push_region	(GstSrc *src, gulong offset, gulong size);
+
+static GstElementStateReturn 	gst_asyncdisksrc_change_state	(GstElement *element);
 
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_asyncdisksrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
-gst_asyncdisksrc_get_type(void) {
+gst_asyncdisksrc_get_type(void) 
+{
   static GtkType asyncdisksrc_type = 0;
 
   if (!asyncdisksrc_type) {
@@ -80,13 +82,14 @@ gst_asyncdisksrc_get_type(void) {
       (GtkArgGetFunc)gst_asyncdisksrc_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    asyncdisksrc_type = gtk_type_unique(GST_TYPE_SRC,&asyncdisksrc_info);
+    asyncdisksrc_type = gtk_type_unique (GST_TYPE_SRC, &asyncdisksrc_info);
   }
   return asyncdisksrc_type;
 }
 
 static void
-gst_asyncdisksrc_class_init(GstAsyncDiskSrcClass *klass) {
+gst_asyncdisksrc_class_init (GstAsyncDiskSrcClass *klass) 
+{
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
   GstSrcClass *gstsrc_class;
@@ -95,31 +98,33 @@ gst_asyncdisksrc_class_init(GstAsyncDiskSrcClass *klass) {
   gstelement_class = (GstElementClass*)klass;
   gstsrc_class = (GstSrcClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_SRC);
+  parent_class = gtk_type_class (GST_TYPE_SRC);
 
-  gtk_object_add_arg_type("GstAsyncDiskSrc::location", GST_TYPE_FILENAME,
-                          GTK_ARG_READWRITE, ARG_LOCATION);
-  gtk_object_add_arg_type("GstAsyncDiskSrc::bytesperread", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_BYTESPERREAD);
-  gtk_object_add_arg_type("GstAsyncDiskSrc::offset", GTK_TYPE_LONG,
-                          GTK_ARG_READWRITE, ARG_OFFSET);
-  gtk_object_add_arg_type("GstAsyncDiskSrc::size", GTK_TYPE_LONG,
-                          GTK_ARG_READABLE, ARG_SIZE);
+  gtk_object_add_arg_type ("GstAsyncDiskSrc::location", GST_TYPE_FILENAME,
+                           GTK_ARG_READWRITE, ARG_LOCATION);
+  gtk_object_add_arg_type ("GstAsyncDiskSrc::bytesperread", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);
+  gtk_object_add_arg_type ("GstAsyncDiskSrc::offset", GTK_TYPE_LONG,
+                           GTK_ARG_READWRITE, ARG_OFFSET);
+  gtk_object_add_arg_type ("GstAsyncDiskSrc::size", GTK_TYPE_LONG,
+                           GTK_ARG_READABLE, ARG_SIZE);
 
   gtkobject_class->set_arg = gst_asyncdisksrc_set_arg;
   gtkobject_class->get_arg = gst_asyncdisksrc_get_arg;
 
   gstelement_class->change_state = gst_asyncdisksrc_change_state;
 
-  gstsrc_class->push = gst_asyncdisksrc_push;
-  gstsrc_class->push_region = gst_asyncdisksrc_push_region;
+  gstsrc_class->push = 		gst_asyncdisksrc_push;
+  gstsrc_class->push_region = 	gst_asyncdisksrc_push_region;
 }
 
-static void gst_asyncdisksrc_init(GstAsyncDiskSrc *asyncdisksrc) {
-  GST_SRC_SET_FLAGS(asyncdisksrc,GST_SRC_ASYNC);
+static void 
+gst_asyncdisksrc_init (GstAsyncDiskSrc *asyncdisksrc) 
+{
+  GST_SRC_SET_FLAGS (asyncdisksrc, GST_SRC_ASYNC);
 
-  asyncdisksrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_element_add_pad(GST_ELEMENT(asyncdisksrc),asyncdisksrc->srcpad);
+  asyncdisksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (asyncdisksrc), asyncdisksrc->srcpad);
 
   asyncdisksrc->filename = NULL;
   asyncdisksrc->fd = 0;
@@ -128,61 +133,69 @@ static void gst_asyncdisksrc_init(GstAsyncDiskSrc *asyncdisksrc) {
   asyncdisksrc->curoffset = 0;
   asyncdisksrc->bytes_per_read = 4096;
   asyncdisksrc->seq = 0;
+  asyncdisksrc->new_seek = FALSE;
 }
 
 
-static void gst_asyncdisksrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_asyncdisksrc_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstAsyncDiskSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_ASYNCDISKSRC(object));
-  src = GST_ASYNCDISKSRC(object);
+  g_return_if_fail (GST_IS_ASYNCDISKSRC (object));
+  
+  src = GST_ASYNCDISKSRC (object);
 
   switch(id) {
     case ARG_LOCATION:
       /* the element must be stopped in order to do this */
-      g_return_if_fail(GST_STATE(src) < GST_STATE_PLAYING);
+      g_return_if_fail (GST_STATE (src) < GST_STATE_PLAYING);
 
-      if (src->filename) g_free(src->filename);
+      if (src->filename) g_free (src->filename);
       /* clear the filename if we get a NULL (is that possible?) */
-      if (GTK_VALUE_STRING(*arg) == NULL) {
-        gst_element_set_state(GST_ELEMENT(object),GST_STATE_NULL);
+      if (GTK_VALUE_STRING (*arg) == NULL) {
+        gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
         src->filename = NULL;
       /* otherwise set the new filename */
       } else {
-        src->filename = g_strdup(GTK_VALUE_STRING(*arg));
+        src->filename = g_strdup (GTK_VALUE_STRING (*arg));
       }
       break;
     case ARG_BYTESPERREAD:
-      src->bytes_per_read = GTK_VALUE_INT(*arg);
+      src->bytes_per_read = GTK_VALUE_INT (*arg);
       break;
     case ARG_OFFSET:
-      src->curoffset = GTK_VALUE_LONG(*arg);
+      src->curoffset = GTK_VALUE_LONG (*arg);
+      src->new_seek = TRUE;
       break;
     default:
       break;
   }
 }
 
-static void gst_asyncdisksrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_asyncdisksrc_get_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstAsyncDiskSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_ASYNCDISKSRC(object));
-  src = GST_ASYNCDISKSRC(object);
+  g_return_if_fail (GST_IS_ASYNCDISKSRC (object));
+  
+  src = GST_ASYNCDISKSRC (object);
 
   switch (id) {
     case ARG_LOCATION:
-      GTK_VALUE_STRING(*arg) = src->filename;
+      GTK_VALUE_STRING (*arg) = src->filename;
       break;
     case ARG_BYTESPERREAD:
-      GTK_VALUE_INT(*arg) = src->bytes_per_read;
+      GTK_VALUE_INT (*arg) = src->bytes_per_read;
       break;
     case ARG_OFFSET:
-      GTK_VALUE_LONG(*arg) = src->curoffset;
+      GTK_VALUE_LONG (*arg) = src->curoffset;
       break;
     case ARG_SIZE:
-      GTK_VALUE_LONG(*arg) = src->size;
+      GTK_VALUE_LONG (*arg) = src->size;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
@@ -196,43 +209,51 @@ static void gst_asyncdisksrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
  *
  * Push a new buffer from the asyncdisksrc at the current offset.
  */
-void gst_asyncdisksrc_push(GstSrc *src) {
+static void 
+gst_asyncdisksrc_push (GstSrc *src) 
+{
   GstAsyncDiskSrc *asyncdisksrc;
   GstBuffer *buf;
 
-  g_return_if_fail(src != NULL);
-  g_return_if_fail(GST_IS_ASYNCDISKSRC(src));
-  g_return_if_fail(GST_FLAG_IS_SET(src,GST_ASYNCDISKSRC_OPEN));
-  asyncdisksrc = GST_ASYNCDISKSRC(src);
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (GST_IS_ASYNCDISKSRC (src));
+  g_return_if_fail (GST_FLAG_IS_SET (src, GST_ASYNCDISKSRC_OPEN));
+  
+  asyncdisksrc = GST_ASYNCDISKSRC (src);
 
   /* deal with EOF state */
   if (asyncdisksrc->curoffset >= asyncdisksrc->size) {
-    gst_src_signal_eos(GST_SRC(asyncdisksrc));
+    gst_src_signal_eos (GST_SRC (asyncdisksrc));
     return;
   }
 
   /* create the buffer */
   // FIXME: should eventually use a bufferpool for this
-  buf = gst_buffer_new();
-  g_return_if_fail(buf != NULL);
+  buf = gst_buffer_new ();
+  
+  g_return_if_fail (buf != NULL);
 
   /* simply set the buffer to point to the correct region of the file */
-  GST_BUFFER_DATA(buf) = asyncdisksrc->map + asyncdisksrc->curoffset;
-  GST_BUFFER_OFFSET(buf) = asyncdisksrc->curoffset;
-  GST_BUFFER_FLAG_SET(buf, GST_BUFFER_DONTFREE);
+  GST_BUFFER_DATA (buf) = asyncdisksrc->map + asyncdisksrc->curoffset;
+  GST_BUFFER_OFFSET (buf) = asyncdisksrc->curoffset;
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
   if ((asyncdisksrc->curoffset + asyncdisksrc->bytes_per_read) >
       asyncdisksrc->size) {
-    GST_BUFFER_SIZE(buf) = asyncdisksrc->size - asyncdisksrc->curoffset;
+    GST_BUFFER_SIZE (buf) = asyncdisksrc->size - asyncdisksrc->curoffset;
     // FIXME: set the buffer's EOF bit here
   } else
-    GST_BUFFER_SIZE(buf) = asyncdisksrc->bytes_per_read;
-  asyncdisksrc->curoffset += GST_BUFFER_SIZE(buf);
+    GST_BUFFER_SIZE (buf) = asyncdisksrc->bytes_per_read;
 
-  //gst_buffer_ref(buf);
+  asyncdisksrc->curoffset += GST_BUFFER_SIZE (buf);
+
+  if (asyncdisksrc->new_seek) {
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
+    asyncdisksrc->new_seek = FALSE;
+  }
 
   /* we're done, push the buffer off now */
-  gst_pad_push(asyncdisksrc->srcpad,buf);
+  gst_pad_push (asyncdisksrc->srcpad, buf);
 }
 
 /**
@@ -243,78 +264,84 @@ void gst_asyncdisksrc_push(GstSrc *src) {
  *
  * Push a new buffer from the asyncdisksrc of given size at given offset.
  */
-void gst_asyncdisksrc_push_region(GstSrc *src,gulong offset,gulong size) {
+static void 
+gst_asyncdisksrc_push_region (GstSrc *src, gulong offset, gulong size) 
+{
   GstAsyncDiskSrc *asyncdisksrc;
   GstBuffer *buf;
 
-  g_return_if_fail(src != NULL);
-  g_return_if_fail(GST_IS_ASYNCDISKSRC(src));
-  g_return_if_fail(GST_FLAG_IS_SET(src,GST_STATE_READY));
-  asyncdisksrc = GST_ASYNCDISKSRC(src);
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (GST_IS_ASYNCDISKSRC (src));
+  g_return_if_fail (GST_FLAG_IS_SET (src, GST_ASYNCDISKSRC_OPEN));
+  
+  asyncdisksrc = GST_ASYNCDISKSRC (src);
 
   /* deal with EOF state */
   if (offset >= asyncdisksrc->size) {
-    gst_src_signal_eos(GST_SRC(asyncdisksrc));
+    gst_src_signal_eos (GST_SRC (asyncdisksrc));
     return;
   }
 
   /* create the buffer */
   // FIXME: should eventually use a bufferpool for this
-  buf = gst_buffer_new();
-  g_return_if_fail(buf);
+  buf = gst_buffer_new ();
+  g_return_if_fail (buf);
 
   /* simply set the buffer to point to the correct region of the file */
-  GST_BUFFER_DATA(buf) = asyncdisksrc->map + offset;
-  GST_BUFFER_OFFSET(buf) = asyncdisksrc->curoffset;
-  GST_BUFFER_FLAG_SET(buf, GST_BUFFER_DONTFREE);
+  GST_BUFFER_DATA (buf) = asyncdisksrc->map + offset;
+  GST_BUFFER_OFFSET (buf) = offset;
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
   if ((offset + size) > asyncdisksrc->size) {
-    GST_BUFFER_SIZE(buf) = asyncdisksrc->size - offset;
+    GST_BUFFER_SIZE (buf) = asyncdisksrc->size - offset;
     // FIXME: set the buffer's EOF bit here
   } else
-    GST_BUFFER_SIZE(buf) = size;
-  asyncdisksrc->curoffset += GST_BUFFER_SIZE(buf);
+    GST_BUFFER_SIZE (buf) = size;
 
   /* we're done, push the buffer off now */
-  gst_pad_push(asyncdisksrc->srcpad,buf);
+  gst_pad_push (asyncdisksrc->srcpad,buf);
 }
 
 
 /* open the file and mmap it, necessary to go to READY state */
-static gboolean gst_asyncdisksrc_open_file(GstAsyncDiskSrc *src) {
-  g_return_val_if_fail(!GST_FLAG_IS_SET(src,GST_ASYNCDISKSRC_OPEN), FALSE);
+static 
+gboolean gst_asyncdisksrc_open_file (GstAsyncDiskSrc *src) 
+{
+  g_return_val_if_fail (!GST_FLAG_IS_SET (src ,GST_ASYNCDISKSRC_OPEN), FALSE);
 
   /* open the file */
-  src->fd = open(src->filename,O_RDONLY);
+  src->fd = open (src->filename, O_RDONLY);
   if (src->fd < 0) {
-    gst_element_error(GST_ELEMENT(src),"opening file");
+    gst_element_error (GST_ELEMENT (src), "opening file");
     return FALSE;
   } else {
     /* find the file length */
-    src->size = lseek(src->fd,0,SEEK_END);
-    lseek(src->fd,0,SEEK_SET);
+    src->size = lseek (src->fd, 0, SEEK_END);
+    lseek (src->fd, 0, SEEK_SET);
     /* map the file into memory */
-    src->map = mmap(NULL,src->size,PROT_READ,MAP_SHARED,src->fd,0);
-    madvise(src->map,src->size,2);
+    src->map = mmap (NULL, src->size, PROT_READ, MAP_SHARED, src->fd, 0);
+    madvise (src->map,src->size, 2);
     /* collapse state if that failed */
     if (src->map == NULL) {
-      close(src->fd);
-      gst_element_error(GST_ELEMENT(src),"mmapping file");
+      close (src->fd);
+      gst_element_error (GST_ELEMENT (src),"mmapping file");
       return FALSE;
     }
-    GST_FLAG_SET(src,GST_ASYNCDISKSRC_OPEN);
+    GST_FLAG_SET (src, GST_ASYNCDISKSRC_OPEN);
   }
   return TRUE;
 }
 
 /* unmap and close the file */
-static void gst_asyncdisksrc_close_file(GstAsyncDiskSrc *src) {
-  g_return_if_fail(GST_FLAG_IS_SET(src,GST_ASYNCDISKSRC_OPEN));
+static void 
+gst_asyncdisksrc_close_file (GstAsyncDiskSrc *src) 
+{
+  g_return_if_fail (GST_FLAG_IS_SET (src, GST_ASYNCDISKSRC_OPEN));
 
   /* unmap the file from memory */
-  munmap(src->map,src->size);
+  munmap (src->map, src->size);
   /* close the file */
-  close(src->fd);
+  close (src->fd);
 
   /* zero out a lot of our state */
   src->fd = 0;
@@ -323,25 +350,27 @@ static void gst_asyncdisksrc_close_file(GstAsyncDiskSrc *src) {
   src->curoffset = 0;
   src->seq = 0;
 
-  GST_FLAG_UNSET(src,GST_ASYNCDISKSRC_OPEN);
+  GST_FLAG_UNSET (src, GST_ASYNCDISKSRC_OPEN);
 }
 
 
-static GstElementStateReturn gst_asyncdisksrc_change_state(GstElement *element) {
-  g_return_val_if_fail(GST_IS_ASYNCDISKSRC(element),GST_STATE_FAILURE);
+static 
+GstElementStateReturn gst_asyncdisksrc_change_state (GstElement *element) 
+{
+  g_return_val_if_fail (GST_IS_ASYNCDISKSRC (element), GST_STATE_FAILURE);
 
-  if (GST_STATE_PENDING(element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET(element,GST_ASYNCDISKSRC_OPEN))
-      gst_asyncdisksrc_close_file(GST_ASYNCDISKSRC(element));
+  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
+    if (GST_FLAG_IS_SET (element, GST_ASYNCDISKSRC_OPEN))
+      gst_asyncdisksrc_close_file (GST_ASYNCDISKSRC (element));
   } else {
-    if (!GST_FLAG_IS_SET(element,GST_ASYNCDISKSRC_OPEN)) {
-      if (!gst_asyncdisksrc_open_file(GST_ASYNCDISKSRC(element))) 
+    if (!GST_FLAG_IS_SET (element, GST_ASYNCDISKSRC_OPEN)) {
+      if (!gst_asyncdisksrc_open_file (GST_ASYNCDISKSRC (element))) 
         return GST_STATE_FAILURE;
     }
   }
 
-  if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
 }
