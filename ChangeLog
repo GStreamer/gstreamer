@@ -1,3 +1,13 @@
+2004-08-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
+	(gst_multifdsink_init), (gst_multifdsink_add),
+	(gst_multifdsink_client_queue_buffer),
+	(gst_multifdsink_set_property), (gst_multifdsink_get_property):
+	* gst/tcp/gstmultifdsink.h:
+	Added option to send a keyframe to clients as the first buffer.
+	Make timeout property writable.
+
 2004-08-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Wim Taymans
