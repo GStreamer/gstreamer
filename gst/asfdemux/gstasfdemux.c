@@ -24,6 +24,7 @@
 
 #include <gst/gstutils.h>
 #include <gst/riff/riff-ids.h>
+#include <string.h>
 
 #include "gstasfdemux.h"
 #include "asfheaders.h"
@@ -1474,20 +1475,18 @@ gst_asf_demux_audio_caps (guint16 codec_id,
       break;
 
     case GST_RIFF_WAVE_FORMAT_DIVX_WMAV1:
-      /* get flags1 and flags2 ripped from ffmpeg (wmadec.c) */
-      if (audio && audio->size >= 4) {
-        flags1 = extradata[0] | (extradata[1] << 8);
-        flags2 = extradata[2] | (extradata[3] << 8);
-      }
       caps = gst_caps_from_string ("audio/x-wma, "
           "wmaversion = (int) 1, "
-          "flags1 = (int) [ MIN, MAX ], "
-          "flags2 = (int) [ MIN, MAX ], "
           "block_align = (int) [ 0, MAX ], " "bitrate = (int) [ 0, MAX ]");
       if (audio != NULL) {
+        GstBuffer *buffer;
+
+        buffer = gst_buffer_new_and_alloc (audio->size);
+        memcpy (GST_BUFFER_DATA (buffer), extradata, audio->size);
+        gst_util_dump_mem (GST_BUFFER_DATA (buffer), audio->size);
+
         gst_caps_set_simple (caps,
-            "flags1", G_TYPE_INT, flags1,
-            "flags2", G_TYPE_INT, flags2,
+            "codec_data", GST_TYPE_BUFFER, buffer,
             "block_align", G_TYPE_INT, audio->block_align,
             "bitrate", G_TYPE_INT, audio->byte_rate * 8, NULL);
       }
@@ -1496,21 +1495,18 @@ gst_asf_demux_audio_caps (guint16 codec_id,
       break;
 
     case GST_RIFF_WAVE_FORMAT_DIVX_WMAV2:
-      /* get flags1 and flags2 ripped from ffmpeg (wmadec.c) */
-      if (audio && audio->size >= 6) {
-        flags1 = extradata[0] | (extradata[1] << 8) |
-            (extradata[2] << 16) | (extradata[3] << 24);
-        flags2 = extradata[4] | (extradata[5] << 8);
-      }
       caps = gst_caps_from_string ("audio/x-wma, "
           "wmaversion = (int) 2, "
-          "flags1 = (int) [ MIN, MAX ], "
-          "flags2 = (int) [ MIN, MAX ], "
           "block_align = (int) [ 0, MAX ], " "bitrate = (int) [ 0, MAX ]");
       if (audio != NULL) {
+        GstBuffer *buffer;
+
+        buffer = gst_buffer_new_and_alloc (audio->size);
+        memcpy (GST_BUFFER_DATA (buffer), extradata, audio->size);
+        gst_util_dump_mem (GST_BUFFER_DATA (buffer), audio->size);
+
         gst_caps_set_simple (caps,
-            "flags1", G_TYPE_INT, flags1,
-            "flags2", G_TYPE_INT, flags2,
+            "codec_data", GST_TYPE_BUFFER, buffer,
             "block_align", G_TYPE_INT, audio->block_align,
             "bitrate", G_TYPE_INT, audio->byte_rate * 8, NULL);
       }
