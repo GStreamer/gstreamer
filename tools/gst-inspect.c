@@ -988,6 +988,36 @@ main (int argc, char *argv[])
       /* if there's a factory, print out the info */
       if (factory)
         return print_element_info (factory);
+      else {
+	 GstPluginFeature* feature;
+
+	 /* FIXME implement other pretty print function for these */
+	 feature = gst_registry_pool_find_feature (argv[1], GST_TYPE_SCHEDULER_FACTORY);
+	 if (feature) {
+           g_print ("%s: a scheduler\n", argv[1]);
+	   return 0;
+	 }
+	 feature = gst_registry_pool_find_feature (argv[1], GST_TYPE_INDEX_FACTORY);
+	 if (feature) {
+           g_print ("%s: an index\n", argv[1]);
+	   return 0;
+	 }
+	 feature = gst_registry_pool_find_feature (argv[1], GST_TYPE_AUTOPLUG_FACTORY);
+	 if (feature) {
+           g_print ("%s: an autoplugger\n", argv[1]);
+	   return 0;
+	 }
+	 feature = gst_registry_pool_find_feature (argv[1], GST_TYPE_TYPE_FACTORY);
+	 if (feature) {
+           g_print ("%s: an type\n", argv[1]);
+	   return 0;
+	 }
+	 feature = gst_registry_pool_find_feature (argv[1], GST_TYPE_URI_HANDLER);
+	 if (feature) {
+           g_print ("%s: an uri handler\n", argv[1]);
+	   return 0;
+	 }
+      }
     } else {
       /* strip the .so */
       so = strstr(argv[1],".so");
