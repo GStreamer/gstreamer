@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-27 02:22+0500\n"
+"POT-Creation-Date: 2004-09-09 21:16+0200\n"
 "PO-Revision-Date: 2004-08-03 20:48+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -604,7 +604,7 @@ msgstr "\"%s\" är en katalog."
 msgid "File \"%s\" is a socket."
 msgstr "Filen \"%s\" är ett uttag."
 
-#: gst/elements/gstidentity.c:285
+#: gst/elements/gstidentity.c:303
 msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
