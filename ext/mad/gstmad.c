@@ -919,7 +919,7 @@ gst_mad_check_restart (GstMad *mad)
  * This code has been kindly relicensed to LGPL by Thibaut Mattern and 
  * Bastien Nocera
  */
-#define BE_32 GINT_FROM_BE
+#define BE_32(x) GINT32_FROM_BE(*(gint*)(x))
 
 #define FOURCC_TAG( ch0, ch1, ch2, ch3 )		\
 	( (long)(unsigned char)(ch3) |			\
@@ -959,7 +959,7 @@ static int mpg123_parse_xing_header(struct mad_header *header,
   double frame_duration;
   int xflags, xframes, xbytes, xvbr_scale;
   int abr;
-  guint8 xtoc[100];
+  guint8 xtoc[XING_TOC_LENGTH];
   /* This should be the MPEG Audio version ID 
    * (version 2.5, 2 or 1) least significant byte, but mad doesn't 
    * provide that, so assume it's always MPEG 1
