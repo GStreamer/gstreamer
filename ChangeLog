@@ -1,6 +1,11 @@
 2004-04-07  Benjamin Otte  <otte@gnome.org>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_dispose):
+	  free the mutexes, too
+
+2004-04-07  Benjamin Otte  <otte@gnome.org>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_dispose):
 	  actually free the URI string
 	* ext/mad/gstid3tag.c: (gst_id3_tag_src_event):
 	  compute offset correctly when passing discont events
