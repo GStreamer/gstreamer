@@ -1713,10 +1713,7 @@ gst_matroska_ebmlnum_uint (guint8 * data, guint size, guint64 * num)
     n++;
   }
 
-  if (!total)
-    return -1;
-
-  if (read == num_ffs)
+  if (read == num_ffs && total != 0)
     *num = G_MAXUINT64;
   else
     *num = total;
@@ -1735,10 +1732,12 @@ gst_matroska_ebmlnum_sint (guint8 * data, guint size, gint64 * num)
     return -1;
 
   /* make signed */
-  if (unum == G_MAXUINT64)
+  if (unum == G_MAXUINT64 && res > 1)
     *num = G_MAXINT64;
-  else
+  else if (unum != 0)
     *num = unum - ((1 << ((7 * res) - 1)) - 1);
+  else
+    *num = 0;
 
   return res;
 }
@@ -1968,9 +1967,13 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
       duration = demux->src[stream]->default_duration;
     }
     for (n = 0; n < laces; n++) {
-      GstBuffer *sub = gst_buffer_create_sub (buf,
-          GST_BUFFER_SIZE (buf) - size,
-          lace_size[n]);
+      GstBuffer *sub;
+
+      if (lace_size[n] == 0)
+        continue;
+
+      sub = gst_buffer_create_sub (buf,
+          GST_BUFFER_SIZE (buf) - size, lace_size[n]);
 
       if (cluster_time != GST_CLOCK_TIME_NONE) {
         if (time < 0 && (-time) > cluster_time)
