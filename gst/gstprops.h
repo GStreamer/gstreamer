@@ -83,11 +83,27 @@ extern GType _gst_props_entry_type;
 
 #define GST_TYPE_PROPS_ENTRY	(_gst_props_entry_type)
 
-struct _GstProps {
-  gint refcount;
-  gboolean fixed;
+typedef enum {
+  GST_PROPS_FIXED        = (1 << 0),    /* props has no variable entries */
+  GST_PROPS_FLOATING     = (1 << 1)     /* props is floating */
+} GstPropsFlags;
 
-  GList *properties;		/* real properties for this property */
+#define GST_PROPS_FLAGS(props)            ((props)->flags)
+#define GST_PROPS_FLAG_IS_SET(props,flag) (GST_PROPS_FLAGS (props) & flag)
+#define GST_PROPS_FLAG_SET(props,flag)    (GST_PROPS_FLAGS (props) |= (flag))
+#define GST_PROPS_FLAG_UNSET(props,flag)  (GST_PROPS_FLAGS (props) &= ~(flag))
+
+#define GST_PROPS_REFCOUNT(props)         ((props)->refcount)
+#define GST_PROPS_PROPERTIES(props)       ((props)->properties)
+
+#define GST_PROPS_IS_FIXED(props)         (GST_PROPS_FLAGS (props) & GST_PROPS_FIXED)
+#define GST_PROPS_IS_FLOATING(props)      (GST_PROPS_FLAGS (props) & GST_PROPS_FLOATING)
+
+struct _GstProps {
+  gint   refcount;
+  gint   flags;
+
+  GList *properties;            /* real property entries for this property */
 };
 
 /* initialize the subsystem */
@@ -97,8 +113,14 @@ GstProps*		gst_props_new			(const gchar *firstname, ...);
 GstProps*		gst_props_newv			(const gchar *firstname, va_list var_args);
 GstProps*		gst_props_empty_new		(void);
 
-void            	gst_props_unref			(GstProps *props);
-void            	gst_props_ref			(GstProps *props);
+/* replace pointer to props, doing proper refcounting */
+void            	gst_props_replace               (GstProps **oldprops, GstProps *newprops);
+void            	gst_props_replace_sink          (GstProps **oldprops, GstProps *newprops);
+
+/* lifecycle management */
+GstProps*            	gst_props_unref			(GstProps *props);
+GstProps*            	gst_props_ref			(GstProps *props);
+void                    gst_props_sink                  (GstProps *props);
 void            	gst_props_destroy		(GstProps *props);
 
 void            	gst_props_debug 		(GstProps *props);

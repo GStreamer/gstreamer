@@ -56,9 +56,10 @@ transform_func (const GValue *src_value,
     g_free (props);
 
     caps = caps->next;
-    g_string_append_printf (result, " }%s", caps?", ":"");
+    g_string_append_printf (result, " }%s", (caps ? ", " : ""));
   }
   dest_value->data[0].v_pointer = result->str;
+  g_string_free (result, FALSE);
 }
 
 void
@@ -142,12 +143,39 @@ gst_caps_new_id (const gchar *name, const guint16 id, GstProps *props)
   caps->properties = props;
   caps->next = NULL;
   caps->refcount = 1;
-  if (props)
-    caps->fixed = props->fixed;
+  GST_CAPS_FLAG_SET (caps, GST_CAPS_FLOATING);
+
+  if (props && !GST_PROPS_IS_FIXED (props))
+    GST_CAPS_FLAG_UNSET (caps, GST_CAPS_FIXED);
   else
-    caps->fixed = TRUE;
+    GST_CAPS_FLAG_SET (caps, GST_CAPS_FIXED);
 
   return caps;
+}
+
+void
+gst_caps_replace (GstCaps **oldcaps, GstCaps *newcaps)
+{
+  if (*oldcaps != newcaps) {
+    if (newcaps)  gst_caps_ref   (newcaps);
+    if (*oldcaps) gst_caps_unref (*oldcaps);
+
+    *oldcaps = newcaps;
+  }
+}
+
+/**
+ * gst_caps_replace_sink:
+ * @oldcaps: the caps to take replace
+ * @newcaps: the caps to take replace 
+ *
+ * Replace the pointer to the caps and take ownership.
+ */
+void
+gst_caps_replace_sink (GstCaps **oldcaps, GstCaps *newcaps)
+{
+  gst_caps_replace (oldcaps, newcaps);
+  gst_caps_sink (newcaps);
 }
 
 /**
@@ -189,8 +217,10 @@ gst_caps_debug (GstCaps *caps, const gchar *label)
 {
   GST_DEBUG_ENTER ("caps debug: %s", label);
   while (caps) {
-    GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s (%sfixed)", caps, caps->name, gst_caps_get_mime (caps), 
-               caps->fixed ? "" : "NOT ");
+    GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s (%sfixed) (refcount %d) %s",
+               caps, caps->name, gst_caps_get_mime (caps),
+               GST_CAPS_IS_FIXED (caps) ? "" : "NOT ", caps->refcount,
+               GST_CAPS_IS_FLOATING (caps) ? "FLOATING" : "");
 
     if (caps->properties) {
       gst_props_debug (caps->properties);
@@ -249,6 +279,26 @@ gst_caps_ref (GstCaps *caps)
   caps->refcount++;
 
   return caps;
+}
+
+/**
+ * gst_caps_sink:
+ * @caps: the caps to take ownership of
+ *
+ * Take ownership of a GstCaps
+ */
+void
+gst_caps_sink (GstCaps *caps)
+{
+  if (caps == NULL)
+    return;
+
+  if (GST_CAPS_IS_FLOATING (caps)) {
+    GST_DEBUG (GST_CAT_CAPS, "sink %p", caps);
+
+    GST_CAPS_FLAG_UNSET (caps, GST_CAPS_FLOATING);
+    gst_caps_unref (caps);
+  }
 }
 
 /**
@@ -471,6 +521,23 @@ gst_caps_get_props (GstCaps *caps)
   g_return_val_if_fail (caps != NULL, NULL);
 
   return caps->properties;
+}
+
+/**
+ * gst_caps_next:
+ * @caps: the caps to query
+ *
+ * Get the next caps of this chained caps.
+ *
+ * Returns: the next caps or NULL if the chain ended.
+ */
+GstCaps*
+gst_caps_next (GstCaps *caps)
+{
+  if (caps == NULL)
+    return NULL;
+
+  return caps->next;
 }
 
 /**
@@ -836,13 +903,14 @@ gst_caps_load_thyself (xmlNodePtr parent)
       xmlNodePtr subfield = field->xmlChildrenNode;
       GstCaps *caps;
       gchar *content;
-      gboolean fixed = TRUE;
+      GstCapsFlags fixed = GST_CAPS_FIXED;
 
       g_mutex_lock (_gst_caps_chunk_lock);
       caps = g_mem_chunk_alloc0 (_gst_caps_chunk);
       g_mutex_unlock (_gst_caps_chunk_lock);
 
       caps->refcount = 1;
+      GST_CAPS_FLAG_SET (caps, GST_CAPS_FLOATING);
       caps->next = NULL;
 	
       while (subfield) {
@@ -856,12 +924,12 @@ gst_caps_load_thyself (xmlNodePtr parent)
         }
         else if (!strcmp (subfield->name, "properties")) {
           caps->properties = gst_props_load_thyself (subfield);
-          fixed &= caps->properties->fixed;
+	  fixed &= GST_PROPS_IS_FIXED (caps->properties);
         }
 	
         subfield = subfield->next;
       }
-      caps->fixed = fixed;
+      GST_CAPS_FLAG_SET (caps, fixed);
 
       result = gst_caps_append (result, caps);
     }

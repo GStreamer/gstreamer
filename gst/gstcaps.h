@@ -34,26 +34,40 @@ extern GType _gst_caps_type;
 
 #define GST_TYPE_CAPS  (_gst_caps_type)
 
+typedef enum {
+  GST_CAPS_FIXED        = (1 << 0),     /* caps has no variable properties */
+  GST_CAPS_FLOATING     = (1 << 1)      /* caps is floating */
+} GstCapsFlags;
 
-#define GST_CAPS(caps)  	((GstCaps *)(caps))
+#define GST_CAPS(caps)          ((GstCaps *)(caps))
 
-#define GST_CAPS_IS_FIXED(caps)		((caps)->fixed)
-#define GST_CAPS_IS_CHAINED(caps)  	((caps)->next)
+#define GST_CAPS_FLAGS(caps)            ((caps)->flags)
+#define GST_CAPS_FLAG_IS_SET(caps,flag) (GST_CAPS_FLAGS (caps) & flag)
+#define GST_CAPS_FLAG_SET(caps,flag)    (GST_CAPS_FLAGS (caps) |= (flag))
+#define GST_CAPS_FLAG_UNSET(caps,flag)  (GST_CAPS_FLAGS (caps) &= ~(flag))
 
-/* CR1: id is an int corresponding to the quark for the mime type because
- * it's really fast when doing a first-pass check for caps compatibility */
+#define GST_CAPS_REFCOUNT(caps)         ((caps)->refcount)
+#define GST_CAPS_PROPERTIES(caps)       ((caps)->properties)
+#define GST_CAPS_NEXT(caps)             ((caps)->next)
+
+#define GST_CAPS_IS_FIXED(caps)         (GST_CAPS_FLAGS (caps) & GST_CAPS_FIXED)
+#define GST_CAPS_IS_FLOATING(caps)      (GST_CAPS_FLAGS (caps) & GST_CAPS_FLOATING)
+#define GST_CAPS_IS_CHAINED(caps)       (GST_CAPS_NEXT (caps) != NULL)
+
 struct _GstCaps {
-  gchar 	*name;			/* the name of this caps */
-  guint16 	id;			/* type id (major type) representing 
-					   the mime type */
+  /* --- public ReadOnly --- */
+  gchar         *name;                  /* the name of this caps */
+  guint16        id;                    /* type id (major type) representing 
+                                           the mime type, it's stored as a GQuark 
+                                           for speed/space reasons */
 
-  guint 	refcount;		
-  gboolean 	fixed;			/* this caps doesn't contain variable properties */
+  guint16        flags;                 /* flags */
+  guint          refcount;
 
-  GstProps 	*properties;		/* properties for this capability */
-
-  GstCaps 	*next;			/* not with a GList for efficiency */
+  GstProps      *properties;            /* properties for this capability */
+  GstCaps       *next;                  /* not with a GList for efficiency */
 };
+
 
 /* factory macros which make it easier for plugins to instantiate */
 
@@ -106,8 +120,14 @@ void		_gst_caps_initialize			(void);
 GstCaps*	gst_caps_new				(const gchar *name, const gchar *mime, GstProps *props);
 GstCaps*	gst_caps_new_id				(const gchar *name, const guint16 id, GstProps *props);
 
+/* replace pointer to caps, doing proper refcounting */
+void            gst_caps_replace                        (GstCaps **oldcaps, GstCaps *newcaps);
+void            gst_caps_replace_sink                   (GstCaps **oldcaps, GstCaps *newcaps);
+
+/* caps lifecycle control */
 GstCaps*	gst_caps_unref				(GstCaps *caps);
 GstCaps*	gst_caps_ref				(GstCaps *caps);
+void            gst_caps_sink                           (GstCaps *caps);
 void		gst_caps_destroy			(GstCaps *caps);
 
 void		gst_caps_debug				(GstCaps *caps, const gchar *label);
@@ -148,6 +168,7 @@ GstProps*	gst_caps_get_props			(GstCaps *caps);
 
 GstCaps*	gst_caps_get_by_name			(GstCaps *caps, const gchar *name);
 
+GstCaps* 	gst_caps_next 				(GstCaps *caps);
 GstCaps*	gst_caps_chain				(GstCaps *caps, ...); 
 GstCaps*	gst_caps_append				(GstCaps *caps, GstCaps *capstoadd); 
 GstCaps*	gst_caps_prepend			(GstCaps *caps, GstCaps *capstoadd); 

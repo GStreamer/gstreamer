@@ -113,7 +113,7 @@ print_caps (const GstCaps *caps, const gchar *pfx)
   while (caps) {
     GstType *type;
 
-    g_print ("%s'%s': (%sfixed)\n", pfx, caps->name, (caps->fixed ? "" : "NOT "));
+    g_print ("%s'%s': (%sfixed)\n", pfx, caps->name, (GST_CAPS_IS_FIXED (caps) ? "" : "NOT "));
 
     type = gst_type_find_by_id (caps->id);
     if (type) 

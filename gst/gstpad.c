@@ -2434,7 +2434,6 @@ gst_pad_template_new (const gchar *name_template,
   va_start (var_args, caps);
 
   while (caps) {
-    new->fixed &= caps->fixed;
     thecaps = gst_caps_append (thecaps, gst_caps_ref (caps));
     caps = va_arg (var_args, GstCaps*);
   }

@@ -84,9 +84,6 @@ transform_func (const GValue *src_value,
       const gchar *name = g_quark_to_string (entry->propid);
 
       switch (entry->propstype) {
-        case GST_PROPS_STRING_TYPE:
-	  g_string_append_printf (result, "%s=(string) '%s'", name, entry->data.string_data.string);
-	  break;
         case GST_PROPS_INT_TYPE:
   	  g_string_append_printf (result, "%s=(int) %d", name, entry->data.int_data);
 	  break;
@@ -100,6 +97,9 @@ transform_func (const GValue *src_value,
   	  g_string_append_printf (result, "%s=(boolean) %s", name, 
 			  (entry->data.bool_data ? "TRUE" : "FALSE"));
 	  break;
+        case GST_PROPS_STRING_TYPE:
+	  g_string_append_printf (result, "%s=(string) '%s'", name, entry->data.string_data.string);
+	  break;
         default:
 	  break;
       }
@@ -111,6 +111,7 @@ transform_func (const GValue *src_value,
     }
   }
   dest_value->data[0].v_pointer = result->str;
+  g_string_free (result, FALSE);
 }
 
 	
@@ -353,9 +354,43 @@ gst_props_empty_new (void)
 
   props->properties = NULL;
   props->refcount = 1;
-  props->fixed = TRUE;
+  GST_PROPS_FLAG_SET (props, GST_PROPS_FLOATING);
+  GST_PROPS_FLAG_SET (props, GST_PROPS_FIXED);
 
   return props;
+}
+
+/**
+ * gst_props_replace:
+ * @oldprops: the props to take replace
+ * @newprops: the props to take replace 
+ *
+ * Replace the pointer to the props, doing proper
+ * refcounting.
+ */
+void
+gst_props_replace (GstProps **oldprops, GstProps *newprops)
+{
+  if (*oldprops != newprops) {
+    if (newprops)  gst_props_ref   (newprops);
+    if (*oldprops) gst_props_unref (*oldprops);
+
+    *oldprops = newprops;
+  }
+}
+
+/**
+ * gst_props_replace_sink:
+ * @oldprops: the props to take replace
+ * @newprops: the props to take replace 
+ *
+ * Replace the pointer to the proppropsd take ownership.
+ */
+void
+gst_props_replace_sink (GstProps **oldprops, GstProps *newprops)
+{
+  gst_props_replace (oldprops, newprops);
+  gst_props_sink (newprops);
 }
 
 /**
@@ -371,8 +406,8 @@ gst_props_add_entry (GstProps *props, GstPropsEntry *entry)
   g_return_if_fail (props);
   g_return_if_fail (entry);
 
-  if (props->fixed && GST_PROPS_ENTRY_IS_VARIABLE (entry)) {
-    props->fixed = FALSE;
+  if (GST_PROPS_IS_FIXED (props) && GST_PROPS_ENTRY_IS_VARIABLE (entry)) {
+    GST_PROPS_FLAG_UNSET (props, GST_PROPS_FIXED);
   }
   props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
 }
@@ -740,17 +775,23 @@ gst_props_set (GstProps *props, const gchar *name, ...)
  *
  * Decrease the refcount of the property structure, destroying
  * the property if the refcount is 0.
+ *
+ * Returns: refcounted GstProps or NULL if props was destroyed.
  */
-void
+GstProps*
 gst_props_unref (GstProps *props)
 {
   if (props == NULL)
-    return;
+    return NULL;
   
   props->refcount--;
 
-  if (props->refcount == 0)
+  if (props->refcount == 0) {
     gst_props_destroy (props);
+    return NULL;
+  }
+
+  return props;
 }
 
 /**
@@ -758,15 +799,38 @@ gst_props_unref (GstProps *props)
  * @props: the props to ref
  *
  * Increase the refcount of the property structure.
+ *
+ * Returns: refcounted GstProps.
  */
-void
+GstProps*
 gst_props_ref (GstProps *props)
 {
-  g_return_if_fail (props != NULL);
+  if (props == NULL)
+    return NULL;
   
   props->refcount++;
+
+  return props;
 }
 
+/**
+ * gst_props_sink:
+ * @props: the props to sink
+ *
+ * If the props if floating, decrease its refcount. Usually used 
+ * with gst_props_ref() to take ownership of the props.
+ */
+void
+gst_props_sink (GstProps *props)
+{
+  if (props == NULL)
+    return;
+
+  if (GST_PROPS_IS_FLOATING (props)) {
+    GST_PROPS_FLAG_UNSET (props, GST_PROPS_FLOATING);
+    gst_props_unref (props);
+  }
+}
 
 /**
  * gst_props_destroy:
@@ -806,11 +870,17 @@ gst_props_entry_copy (GstPropsEntry *entry)
 
   newentry = gst_props_alloc_entry ();
   memcpy (newentry, entry, sizeof (GstPropsEntry));
-  if (entry->propstype == GST_PROPS_LIST_TYPE) {
-    newentry->data.list_data.entries = gst_props_list_copy (entry->data.list_data.entries);
-  }
-  else if (entry->propstype == GST_PROPS_STRING_TYPE) {
-    newentry->data.string_data.string = g_strdup (entry->data.string_data.string);
+
+  switch (entry->propstype) {
+    case GST_PROPS_LIST_TYPE:
+      newentry->data.list_data.entries = gst_props_list_copy (entry->data.list_data.entries);
+      break;
+    case GST_PROPS_STRING_TYPE:
+      newentry->data.string_data.string = g_strdup (entry->data.string_data.string);
+      break;
+    default:
+      /* FIXME more? */
+      break;
   }
 
   return newentry;
@@ -852,7 +922,7 @@ gst_props_copy (GstProps *props)
 
   new = gst_props_empty_new ();
   new->properties = gst_props_list_copy (props->properties);
-  new->fixed = props->fixed;
+  GST_PROPS_FLAGS (new) |= (GST_PROPS_FLAGS (props) & GST_PROPS_FIXED);
 
   return new;
 }
@@ -1726,7 +1796,7 @@ gst_props_intersect (GstProps *props1, GstProps *props2)
   GstPropsEntry *iprops = NULL;
 
   intersection = gst_props_empty_new ();
-  intersection->fixed = TRUE;
+  GST_PROPS_FLAG_SET (intersection, GST_PROPS_FIXED);
 
   g_return_val_if_fail (props1 != NULL, NULL);
   g_return_val_if_fail (props2 != NULL, NULL);
@@ -1751,7 +1821,7 @@ gst_props_intersect (GstProps *props1, GstProps *props2)
 
       toadd = gst_props_entry_copy (entry1);
       if (GST_PROPS_ENTRY_IS_VARIABLE (toadd))
-	intersection->fixed = FALSE;
+        GST_PROPS_FLAG_UNSET (intersection, GST_PROPS_FIXED);
 
       intersection->properties = g_list_prepend (intersection->properties, toadd);
 
@@ -1766,7 +1836,7 @@ gst_props_intersect (GstProps *props1, GstProps *props2)
 
       toadd = gst_props_entry_copy (entry2);
       if (GST_PROPS_ENTRY_IS_VARIABLE (toadd))
-	intersection->fixed = FALSE;
+        GST_PROPS_FLAG_UNSET (intersection, GST_PROPS_FIXED);
 
       intersection->properties = g_list_prepend (intersection->properties, toadd);
 
@@ -1781,7 +1851,8 @@ gst_props_intersect (GstProps *props1, GstProps *props2)
 
     if (iprops) {
       if (GST_PROPS_ENTRY_IS_VARIABLE (iprops))
-	intersection->fixed = FALSE;
+        GST_PROPS_FLAG_UNSET (intersection, GST_PROPS_FIXED);
+
       intersection->properties = g_list_prepend (intersection->properties, iprops);
     }
     else {
@@ -1807,7 +1878,8 @@ end:
 
     entry = (GstPropsEntry *) leftovers->data;
     if (GST_PROPS_ENTRY_IS_VARIABLE (entry))
-      intersection->fixed = FALSE;
+      GST_PROPS_FLAG_UNSET (intersection, GST_PROPS_FIXED);
+
     intersection->properties = g_list_prepend (intersection->properties, gst_props_entry_copy (entry));
 
     leftovers = g_list_next (leftovers);
