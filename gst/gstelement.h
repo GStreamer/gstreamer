@@ -68,6 +68,8 @@ static inline char *_gst_print_statename(int state) {
   return "";
 }
 
+// NOTE: this probably should be done with an #ifdef to decide whether to safe-cast
+// or to just do the non-checking cast.
 #define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
 #define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
 
