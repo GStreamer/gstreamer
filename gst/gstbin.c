@@ -23,6 +23,7 @@
 /* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 
+#include "gstevent.h"
 #include "gstbin.h"
 
 #include "gstscheduler.h"
@@ -40,11 +41,14 @@ GType _gst_bin_type = 0;
 
 static void 			gst_bin_dispose 		(GObject * object);
 
-static GstElementStateReturn 	gst_bin_change_state		(GstElement * element);
-static GstElementStateReturn 	gst_bin_change_state_norecurse 	(GstBin * bin);
-static gboolean 		gst_bin_change_state_type 	(GstBin * bin, GstElementState state, GType type);
-static void 			gst_bin_child_state_change 	(GstBin * bin, GstElementState old,
-								 GstElementState new, GstElement * element);
+static GstElementStateReturn	gst_bin_change_state		(GstElement *element);
+static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
+static gboolean			gst_bin_change_state_type	(GstBin *bin,
+								 GstElementState state,
+								 GType type);
+static void 			gst_bin_child_state_change 	(GstBin *bin, GstElementState old, 
+								 GstElementState new, GstElement *child);
+static void 			gst_bin_send_event 		(GstElement *element, GstEvent *event);
 
 static gboolean 		gst_bin_iterate_func 		(GstBin * bin);
 
@@ -110,7 +114,10 @@ gst_bin_class_init (GstBinClass * klass)
   gst_bin_signals[OBJECT_ADDED] =
     g_signal_new ("object_added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
 		  G_STRUCT_OFFSET (GstBinClass, object_added), NULL, NULL,
-		  gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+		  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
+
+  klass->change_state_type =		GST_DEBUG_FUNCPTR (gst_bin_change_state_type);
+  klass->iterate =			GST_DEBUG_FUNCPTR (gst_bin_iterate_func);
 
   gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_bin_dispose);
 #ifndef GST_DISABLE_LOADSAVE
@@ -119,6 +126,7 @@ gst_bin_class_init (GstBinClass * klass)
 #endif
 
   gstelement_class->change_state 	= GST_DEBUG_FUNCPTR (gst_bin_change_state);
+  gstelement_class->send_event 		= GST_DEBUG_FUNCPTR (gst_bin_send_event);
 
   klass->change_state_type 		= GST_DEBUG_FUNCPTR (gst_bin_change_state_type);
   klass->iterate 			= GST_DEBUG_FUNCPTR (gst_bin_iterate_func);
@@ -272,8 +280,6 @@ gst_bin_add (GstBin * bin, GstElement * element)
 
   /* set the element's parent and add the element to the bin's list of children */
   gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
-  g_signal_connect_swapped (G_OBJECT (element), "state_change",
-			    G_CALLBACK (gst_bin_child_state_change), G_OBJECT (bin));
 
   bin->children = g_list_append (bin->children, element);
   bin->numchildren++;
@@ -384,8 +390,31 @@ gst_bin_child_state_change (GstBin * bin, GstElementState old, GstElementState n
       break;
     }
   }
-
   GST_UNLOCK (bin);
+}
+
+static void
+gst_bin_send_event (GstElement *element, GstEvent *event)
+{
+  GST_DEBUG (GST_CAT_EVENT, "event from %s in %s\n", 
+	   gst_element_get_name (GST_ELEMENT (GST_EVENT_SRC (event))),
+  	   gst_element_get_name (element));
+
+  if (GST_ELEMENT (GST_EVENT_SRC (event)) == element) {
+    GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+    return;
+  }
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STATE_CHANGE:
+      gst_bin_child_state_change (GST_BIN (element), GST_EVENT_STATE_OLD (event),
+		      		  GST_EVENT_STATE_NEW (event), GST_ELEMENT (GST_EVENT_SRC (event)));
+      gst_event_free (event);
+      break;
+    default:
+      GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+      break;
+  }
 }
 
 static GstElementStateReturn
@@ -432,8 +461,10 @@ gst_bin_change_state (GstElement * element)
     }
   }
 
-  GST_INFO_ELEMENT (GST_CAT_STATES, element, "done changing bin's state from %s to %s",
-		    gst_element_statename (old_state), gst_element_statename (pending));
+  GST_INFO_ELEMENT (GST_CAT_STATES, element, "done changing bin's state from %s to %s, now in %s",
+                gst_element_statename (old_state),
+                gst_element_statename (pending),
+                gst_element_statename (GST_STATE (element)));
 
   if (have_async)
     ret = GST_STATE_ASYNC;

@@ -77,6 +77,8 @@ gst_event_new (GstEventType type)
 
   GST_DATA_TYPE (event) = _gst_event_type;
   GST_EVENT_TYPE (event) = type;
+  GST_EVENT_TIMESTAMP (event) = 0LL;
+  GST_EVENT_SRC (event) = NULL;
 
   return event;
 }
@@ -91,6 +93,16 @@ void
 gst_event_free (GstEvent* event)
 {
   g_mutex_lock (_gst_event_chunk_lock);
+  if (GST_EVENT_SRC (event)) {
+    gst_object_unref (GST_EVENT_SRC (event));
+  }
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_INFO:
+      gst_props_unref (GST_EVENT_INFO_PROPS (event));
+      break;
+    default:
+      break;
+  }
   g_mem_chunk_free (_gst_event_chunk, event);
   g_mutex_unlock (_gst_event_chunk_lock);
 }
@@ -117,3 +129,49 @@ gst_event_new_seek (GstSeekType type, guint64 offset, gboolean flush)
 
   return event;
 }
+
+/**
+ * gst_event_new_info:
+ * @props: The GstProps for this info event
+ *
+ * Allocate a new info event with the given props.
+ *
+ * Returns: A new info event.
+ */
+GstEvent*       
+gst_event_new_info (const gchar *firstname, ...)
+{
+  GstEvent *event;
+  va_list var_args;
+      
+  event = gst_event_new (GST_EVENT_INFO);
+  va_start (var_args, firstname); 
+
+  GST_EVENT_INFO_PROPS (event) = gst_props_newv (firstname, var_args);
+	  
+  va_end (var_args);
+
+  return event;
+}
+/**
+ * gst_event_new_state_change:
+ * @old: The old state
+ * @state: The new state
+ *
+ * Allocate a new state change event with the given props.
+ *
+ * Returns: A new state change event.
+ */
+GstEvent*       
+gst_event_new_state_change (GstElementState old, GstElementState state)
+{
+  GstEvent *event;
+
+  event = gst_event_new (GST_EVENT_STATE_CHANGE);
+  GST_EVENT_STATE_OLD (event) = old;
+  GST_EVENT_STATE_NEW (event) = state;
+
+  return event;
+}
+
+

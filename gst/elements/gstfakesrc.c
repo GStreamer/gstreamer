@@ -300,6 +300,8 @@ gst_fakesrc_request_new_pad (GstElement *element, GstPadTemplate *templ)
   srcpad = gst_pad_new_from_template (templ, name);
   gst_element_add_pad (GST_ELEMENT (fakesrc), srcpad);
 
+  g_free (name);
+
   return srcpad;
 }
 
@@ -312,7 +314,6 @@ gst_fakesrc_event_handler (GstPad *pad, GstEvent *event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      g_print("fakesrc: have seek event\n");
       src->buffer_count = GST_EVENT_SEEK_OFFSET (event);
       if (!GST_EVENT_SEEK_FLUSH (event)) {
         gst_event_free (event);
@@ -320,11 +321,9 @@ gst_fakesrc_event_handler (GstPad *pad, GstEvent *event)
       }
       /* else we do a flush too */
     case GST_EVENT_FLUSH:
-      g_print("fakesrc: have flush event\n");
       src->need_flush = TRUE;
       break;
     default:
-      g_print("fakesrc: have unhandled event\n");
       break;
   }
 
@@ -646,12 +645,10 @@ gst_fakesrc_get(GstPad *pad)
 
   if (src->need_flush) {
     src->need_flush = FALSE;
-    g_print("fakesrc: sending FLUSH\n");
     return GST_BUFFER(gst_event_new (GST_EVENT_FLUSH));
   }
 
   if (src->rt_num_buffers == 0) {
-    g_print("fakesrc: sending EOS\n");
     gst_element_set_state (GST_ELEMENT (src), GST_STATE_PAUSED);
     return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
   }
@@ -662,16 +659,17 @@ gst_fakesrc_get(GstPad *pad)
 
   if (src->eos) {
     GST_INFO (0, "fakesrc is setting eos on pad");
-    g_print("fakesrc: sending EOS\n");
     return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
   }
 
   buf = gst_fakesrc_create_buffer (src);
   GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
 
-  if (!src->silent)
-    g_print("fakesrc: get      ******* (%s:%s)> (%d bytes, %llu) \n",
-               GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+  if (!src->silent) {
+    gst_element_info (GST_ELEMENT (src), 
+		      "get      ******* (%s:%s)> (%d bytes, %llu)",
+                      GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+  }
 
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, src, "pre handoff emit\n");
   g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
@@ -715,7 +713,6 @@ gst_fakesrc_loop(GstElement *element)
       }
 
       if (src->eos) {
-        GST_INFO (0, "fakesrc is setting eos on pad");
         gst_pad_push(pad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));
 	return;
       }
@@ -723,9 +720,10 @@ gst_fakesrc_loop(GstElement *element)
       buf = gst_fakesrc_create_buffer (src);
       GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
 
-      if (!src->silent)
-        g_print("fakesrc:  loop    ******* (%s:%s)  > (%d bytes, %llu) \n",
-               GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+      if (!src->silent) {
+        gst_element_info (element, "fakesrc:  loop    ******* (%s:%s)  > (%d bytes, %llu)",
+                            GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+      }
 
       g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
                        buf, pad);
@@ -766,9 +764,6 @@ gst_fakesrc_change_state (GstElement *element)
     default:
       g_assert_not_reached ();
       break;
-  }
-
-  if (GST_STATE_PENDING (element) == GST_STATE_READY) {
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)

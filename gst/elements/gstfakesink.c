@@ -226,9 +226,10 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
   }
   */
 
-  if (!fakesink->silent)
-    g_print("fakesink: chain   ******* (%s:%s)< (%d bytes, %lld) %p\n",
+  if (!fakesink->silent) { 
+    gst_element_info (GST_ELEMENT (fakesink), "chain   ******* (%s:%s)< (%d bytes, %lld) %p",
 		GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
+  }
 
   g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0, buf, pad);
 

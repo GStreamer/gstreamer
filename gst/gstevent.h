@@ -24,8 +24,11 @@
 #ifndef __GST_EVENT_H__
 #define __GST_EVENT_H__
 
+#include <gst/gsttypes.h>
+#include <gst/gstelement.h>
 #include <gst/gstobject.h>
 #include <gst/gstdata.h>
+#include <gst/gstcaps.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,11 +36,16 @@ extern "C" {
 
 typedef enum {
   GST_EVENT_UNKNOWN,
+  /* horizontal events */
   GST_EVENT_EOS,
   GST_EVENT_FLUSH,
   GST_EVENT_EMPTY,
   GST_EVENT_SEEK,
-  GST_EVENT_DISCONTINUOUS
+  GST_EVENT_DISCONTINUOUS,
+  /* vertical events */
+  GST_EVENT_INFO,
+  GST_EVENT_ERROR,
+  GST_EVENT_STATE_CHANGE,
 } GstEventType;
 
 extern GType _gst_event_type;
@@ -47,7 +55,8 @@ extern GType _gst_event_type;
 #define GST_IS_EVENT(event)	(GST_DATA_TYPE(event) == GST_TYPE_EVENT)
 
 #define GST_EVENT_TYPE(event)		(GST_EVENT(event)->type)
-#define GST_EVENT_TIMESTAMP(event)	(GST_EVENT(event)->timstamp)
+#define GST_EVENT_TIMESTAMP(event)	(GST_EVENT(event)->timestamp)
+#define GST_EVENT_SRC(event)		(GST_EVENT(event)->src)
 
 /* seek events */
 typedef enum {
@@ -60,13 +69,18 @@ typedef enum {
 #define GST_EVENT_SEEK_OFFSET(event)	(GST_EVENT(event)->event_data.seek.offset)
 #define GST_EVENT_SEEK_FLUSH(event)	(GST_EVENT(event)->event_data.seek.flush)
 
-typedef struct _GstEvent GstEvent;
+#define GST_EVENT_INFO_PROPS(event)	(GST_EVENT(event)->event_data.info.props)
+
+#define GST_EVENT_STATE_OLD(event)	(GST_EVENT(event)->event_data.state.old_state)
+#define GST_EVENT_STATE_NEW(event)	(GST_EVENT(event)->event_data.state.new_state)
+
 
 struct _GstEvent {
   GstData data;
 
   GstEventType  type;
   guint64	timestamp;
+  GstObject	*src;
 
   union {
     struct {
@@ -74,6 +88,13 @@ struct _GstEvent {
       guint64     offset;
       gboolean	  flush;
     } seek;
+    struct {
+      GstProps *props;
+    } info;
+    struct {
+      GstElementState old_state;
+      GstElementState new_state;
+    } state;
   } event_data;
 };
 
@@ -87,6 +108,12 @@ GstEvent*	gst_event_new_seek	(GstSeekType type, guint64 offset, gboolean flush);
 
 /* flush events */
 #define		gst_event_new_flush()	gst_event_new(GST_EVENT_FLUSH)
+
+/* info events */
+GstEvent*	gst_event_new_info	(const gchar *firstname, ...);
+
+/* state change events */
+GstEvent*	gst_event_new_state_change (GstElementState old, GstElementState state);
 
 #ifdef __cplusplus
 }

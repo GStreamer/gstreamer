@@ -29,6 +29,7 @@
 #include "gstextratypes.h"
 #include "gstbin.h"
 #include "gstscheduler.h"
+#include "gstevent.h"
 #include "gstutils.h"
 
 /* Element signals and args */
@@ -37,6 +38,7 @@ enum {
   NEW_PAD,
   PAD_REMOVED,
   ERROR,
+  EVENT,
   EOS,
   LAST_SIGNAL
 };
@@ -59,6 +61,7 @@ static void			gst_element_get_property	(GObject *object, guint prop_id, GValue *
 static void 			gst_element_dispose 		(GObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
+static void 			gst_element_send_event_func 	(GstElement *element, GstEvent *event);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr		gst_element_save_thyself	(GstObject *object, xmlNodePtr parent);
@@ -102,27 +105,32 @@ gst_element_class_init (GstElementClass *klass)
   parent_class = g_type_class_ref(GST_TYPE_OBJECT);
 
   gst_element_signals[STATE_CHANGE] =
-    g_signal_new ("state_change", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("state_change", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, state_change), NULL, NULL,
 		  gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2,
                   G_TYPE_INT, G_TYPE_INT);
   gst_element_signals[NEW_PAD] =
-    g_signal_new ("new_pad", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("new_pad", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, new_pad), NULL, NULL,
-                  gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-                  GST_TYPE_PAD);
+                  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                  G_TYPE_POINTER);
   gst_element_signals[PAD_REMOVED] =
-    g_signal_new ("pad_removed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("pad_removed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, pad_removed), NULL, NULL,
-                  gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-                   GST_TYPE_PAD);
+                  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                  G_TYPE_POINTER);
   gst_element_signals[ERROR] =
-    g_signal_new ("error", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, error), NULL, NULL,
                   gst_marshal_VOID__STRING, G_TYPE_NONE,1,
-                   G_TYPE_STRING);
+                  G_TYPE_STRING);
+  gst_element_signals[EVENT] =
+    g_signal_new ("event", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (GstElementClass, event), NULL, NULL,
+                  gst_marshal_VOID__POINTER, G_TYPE_NONE,1,
+                  G_TYPE_POINTER);
   gst_element_signals[EOS] =
-    g_signal_new ("eos", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("eos", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass,eos), NULL, NULL,
                   gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
@@ -138,9 +146,10 @@ gst_element_class_init (GstElementClass *klass)
 #endif
 
   klass->change_state 			= GST_DEBUG_FUNCPTR (gst_element_change_state);
-  klass->elementfactory 	= NULL;
-  klass->padtemplates 		= NULL;
-  klass->numpadtemplates 	= 0;
+  klass->send_event 			= GST_DEBUG_FUNCPTR (gst_element_send_event_func);
+  klass->elementfactory 		= NULL;
+  klass->padtemplates 			= NULL;
+  klass->numpadtemplates 		= 0;
 }
 
 static void
@@ -158,7 +167,7 @@ static void
 gst_element_init (GstElement *element)
 {
   element->current_state = GST_STATE_NULL;
-  element->pending_state = -1;
+  element->pending_state = GST_STATE_VOID_PENDING;
   element->numpads = 0;
   element->numsrcpads = 0;
   element->numsinkpads = 0;
@@ -166,6 +175,8 @@ gst_element_init (GstElement *element)
   element->loopfunc = NULL;
   element->threadstate = NULL;
   element->sched = NULL;
+  element->state_mutex = g_mutex_new ();
+  element->state_cond = g_cond_new ();
 }
 
 
@@ -760,6 +771,21 @@ gst_element_disconnect (GstElement *src, const gchar *srcpadname,
   gst_pad_disconnect(srcpad,destpad);
 }
 
+static void
+gst_element_message (GstElement *element, const gchar *type, const gchar *info, va_list var_args)
+{
+  GstEvent *event;
+  GstProps *props;
+  gchar *string;
+  
+  string = g_strdup_vprintf (info, var_args);
+
+  event = gst_event_new_info (type, GST_PROPS_STRING (string), NULL);
+  gst_element_send_event (element, event);
+
+  g_free (string);
+}
+
 /**
  * gst_element_error:
  * @element: Element with the error
@@ -769,15 +795,75 @@ gst_element_disconnect (GstElement *src, const gchar *srcpadname,
  * condition.  It results in the "error" signal.
  */
 void
-gst_element_error (GstElement *element, const gchar *error)
+gst_element_error (GstElement *element, const gchar *error, ...)
 {
-  g_error("GstElement: error in element '%s': %s\n", GST_ELEMENT_NAME(element), error);
-
-  /* FIXME: this is not finished!!! */
-
-  g_signal_emit (G_OBJECT (element), gst_element_signals[ERROR], 0, error);
+  va_list var_args;
+  
+  va_start (var_args, error);
+  gst_element_message (element, "error", error, var_args);
+  va_end (var_args);
 }
 
+/**
+ * gst_element_info:
+ * @element: Element with the info
+ * @info: String describing the info
+ *
+ * This function is used internally by elements to signal an info
+ * condition.  It results in the "info" signal.
+ */
+void
+gst_element_info (GstElement *element, const gchar *info, ...)
+{
+  va_list var_args;
+  
+  va_start (var_args, info);
+  gst_element_message (element, "info", info, var_args);
+  va_end (var_args);
+}
+
+
+static void
+gst_element_send_event_func (GstElement *element, GstEvent *event)
+{
+  if (GST_OBJECT_PARENT (element)) {
+    gst_element_send_event (GST_ELEMENT (GST_OBJECT_PARENT (element)), event);
+  }
+  else {
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_STATE_CHANGE:
+        g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE], 0, 
+			GST_EVENT_STATE_OLD (event), GST_EVENT_STATE_NEW (event));
+      default:
+        g_signal_emit (G_OBJECT (element), gst_element_signals[EVENT], 0, event);
+    }
+    gst_event_free (event);
+  }
+}
+
+/**
+ * gst_element_send_event:
+ * @element: Element generating the event
+ * @event: the event to send
+ *
+ * This function is used intenally by elements to send an event to 
+ * the app. It will result in an "event" signal.
+ */
+void
+gst_element_send_event (GstElement *element, GstEvent *event)
+{
+  GstElementClass *oclass = (GstElementClass *) G_OBJECT_GET_CLASS (element);
+
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (event);
+
+  if (GST_EVENT_SRC (event) == NULL)
+    GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (element));
+
+  if (oclass->send_event)
+    (oclass->send_event) (element, event);
+
+}
 
 /**
  * gst_element_get_state:
@@ -795,13 +881,6 @@ gst_element_get_state (GstElement *element)
   return GST_STATE (element);
 }
 
-static void
-gst_element_wait_done (GstElement *element, GstElementState old, GstElementState new, GCond *cond)
-{
-  g_signal_handlers_disconnect_by_func (G_OBJECT (element), gst_element_wait_done, cond);
-  g_cond_signal (cond);
-}
-
 /**
  * gst_element_wait_state_change:
  * @element: element wait for
@@ -811,17 +890,9 @@ gst_element_wait_done (GstElement *element, GstElementState old, GstElementState
 void
 gst_element_wait_state_change (GstElement *element)
 {
-  GCond *cond = g_cond_new ();
-  GMutex *mutex = g_mutex_new ();
-
-  g_mutex_lock (mutex);
-  g_signal_connect (G_OBJECT (element), "state_change",
-		    G_CALLBACK (gst_element_wait_done), cond);
-  g_cond_wait (cond, mutex);
-  g_mutex_unlock (mutex);
-
-  g_mutex_free (mutex);
-  g_cond_free (cond);
+  g_mutex_lock (element->state_mutex);
+  g_cond_wait (element->state_cond, element->state_mutex);
+  g_mutex_unlock (element->state_mutex);
 }
 /**
  * gst_element_set_state:
@@ -935,14 +1006,15 @@ gst_element_change_state (GstElement *element)
   GST_STATE (element) = GST_STATE_PENDING (element);
   GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
 
-  /* note: queues' state_change is a special case because it needs to lock
-   * for synchronization (from another thread).  since this signal may block
-   * or (worse) make another state change, the queue needs to unlock before
-   * calling.  thus, gstqueue.c::gst_queue_state_change() blocks, unblocks,
-   * unlocks, then emits this. 
-   */
-  g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE], 0,
-                   old_state, GST_STATE (element));
+  g_mutex_lock (element->state_mutex);
+  g_cond_signal (element->state_cond);
+  g_mutex_unlock (element->state_mutex);
+
+  {
+    GstEvent *event = gst_event_new_state_change (old_state, GST_STATE (element));
+
+    gst_element_send_event (element, event);
+  }
 
   return GST_STATE_SUCCESS;
 }
@@ -995,6 +1067,8 @@ gst_element_dispose (GObject *object)
   element->numsrcpads = 0;
   element->numsinkpads = 0;
   element->numpads = 0;
+  g_mutex_free (element->state_mutex);
+  g_cond_free (element->state_cond);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

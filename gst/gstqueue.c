@@ -35,6 +35,7 @@
 
 #include "gstqueue.h"
 #include "gstscheduler.h"
+#include "gstevent.h"
 
 GstElementDetails gst_queue_details = {
   "Queue",

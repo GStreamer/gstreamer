@@ -26,6 +26,7 @@
 
 #include <gst/gstconfig.h>
 
+#include <gst/gsttypes.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
 #include <gst/cothreads.h>
@@ -37,20 +38,23 @@ extern "C" {
 
 #define GST_NUM_STATES 4
 
-typedef enum {
-  GST_STATE_VOID_PENDING	= 0,
-  GST_STATE_NULL		= (1 << 0),
-  GST_STATE_READY		= (1 << 1),
-  GST_STATE_PAUSED		= (1 << 2),
-  GST_STATE_PLAYING		= (1 << 3),
-} GstElementState;
+//typedef enum _GstElementState GstElementState;
+//typedef enum _GstElementStateReturn GstElementStateReturn;
 
-typedef enum {
-  GST_STATE_FAILURE		= 0,
-  GST_STATE_SUCCESS		= 1,
-  GST_STATE_ASYNC		= 2,
-} GstElementStateReturn;
 
+enum _GstElementState {
+  GST_STATE_VOID_PENDING        = 0,
+  GST_STATE_NULL                = (1 << 0),
+  GST_STATE_READY               = (1 << 1),
+  GST_STATE_PAUSED              = (1 << 2),
+  GST_STATE_PLAYING             = (1 << 3),
+};
+
+enum _GstElementStateReturn {
+  GST_STATE_FAILURE             = 0,
+  GST_STATE_SUCCESS             = 1,
+  GST_STATE_ASYNC               = 2,
+};
 
 /* NOTE: this probably should be done with an #ifdef to decide 
  * whether to safe-cast or to just do the non-checking cast.
@@ -150,6 +154,9 @@ struct _GstElement {
   guint16 		numsinkpads;
   GList 		*pads;
   GstPad 		*select_pad;
+
+  GMutex 		*state_mutex;
+  GCond 		*state_cond;
 };
 
 struct _GstElementClass {
@@ -166,16 +173,19 @@ struct _GstElementClass {
   void (*new_pad)		(GstElement *element, GstPad *pad);
   void (*pad_removed)		(GstElement *element, GstPad *pad);
   void (*error)			(GstElement *element, gchar *error);
+  void (*event)			(GstElement *element, GstEvent *event);
   void (*eos)			(GstElement *element);
 
   /* local pointers for get/set */
   void (*set_property) 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
   void (*get_property)	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
+  /* vtable*/
   /* change the element state */
   GstElementStateReturn (*change_state)		(GstElement *element);
   /* request a new pad */
   GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ, const gchar* name);
+  void			(*send_event)		(GstElement *element, GstEvent *event);
 };
 
 void			gst_element_class_add_padtemplate	(GstElementClass *klass, GstPadTemplate *templ);
@@ -214,6 +224,8 @@ void			gst_element_disconnect		(GstElement *src, const gchar *srcpadname,
 
 void			gst_element_signal_eos		(GstElement *element);
 
+void			gst_element_send_event		(GstElement *element, GstEvent *event);
+
 
 GstElementState         gst_element_get_state           (GstElement *element);
 gint			gst_element_set_state		(GstElement *element, GstElementState state);
@@ -222,7 +234,8 @@ void 			gst_element_wait_state_change 	(GstElement *element);
 	
 const gchar*		gst_element_statename		(GstElementState state);
 
-void			gst_element_error		(GstElement *element, const gchar *error);
+void			gst_element_info		(GstElement *element, const gchar *info, ...);
+void			gst_element_error		(GstElement *element, const gchar *error, ...);
 
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 

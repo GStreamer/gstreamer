@@ -29,6 +29,7 @@
 #include "gsttype.h"
 #include "gstbin.h"
 #include "gstscheduler.h"
+#include "gstevent.h"
 
 GType _gst_pad_type = 0;
 
@@ -1671,8 +1672,8 @@ gst_padtemplate_class_init (GstPadTemplateClass *klass)
   gst_padtemplate_signals[TEMPL_PAD_CREATED] =
     g_signal_new ("pad_created", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstPadTemplateClass, pad_created), NULL, NULL,
-                    gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-                    GST_TYPE_PAD);
+                    gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    G_TYPE_POINTER);
 
 
   gstobject_class->path_string_separator = "*";
@@ -1969,6 +1970,7 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
   GstElement *element = GST_PAD_PARENT (pad);
  
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH:
     case GST_EVENT_EOS:
 /*      gst_element_signal_eos (element); */
       gst_element_set_state (element, GST_STATE_PAUSED);
@@ -2005,6 +2007,9 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
   gboolean handled = FALSE;
 
   g_return_val_if_fail (event, FALSE);
+
+  if (GST_EVENT_SRC (event) == NULL)
+    GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (pad));
 
   GST_DEBUG (GST_CAT_EVENT, "have event %d on pad %s:%s\n",
 		  GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
