@@ -187,6 +187,7 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_AUDIOFILE_TRUE@Group: Libraries/Multimedia
 @USE_AUDIOFILE_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_AUDIOFILE_TRUE@Requires: audiofile >= 0.2.1
+@USE_AUDIOFILE_TRUE@BuildRequires: audiofile-devel >= 0.2.1
 @USE_AUDIOFILE_TRUE@
 @USE_AUDIOFILE_TRUE@%description -n gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@Plugin for supporting reading and writing all files audiofile support
@@ -259,6 +260,7 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_ESD_TRUE@Summary: GStreamer plugin for ESD sound output
 @USE_ESD_TRUE@Group: Libraries/Multimedia
 @USE_ESD_TRUE@Requires: esound >= 0.2.8
+@USE_ESD_TRUE@BuildRequires: esound-devel >= 0.2.8
 @USE_ESD_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@%description -n gstreamer-esd
@@ -313,8 +315,8 @@ Element for text-to-speech using the festival server.
 @USE_GNOME_VFS_TRUE@%package -n gstreamer-gnomevfs
 @USE_GNOME_VFS_TRUE@Summary: GStreamer plugins for GNOME VFS input and output
 @USE_GNOME_VFS_TRUE@Group: Libraries/Multimedia
-@USE_GNOME_VFS_TRUE@Requires: gnome-vfs2 > 1.9.4.00
 @USE_GNOME_VFS_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_GNOME_VFS_TRUE@Requires: gnome-vfs2 > 1.9.4.00
 @USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs2-devel > 1.9.4.00
 @USE_GNOME_VFS_TRUE@
 @USE_GNOME_VFS_TRUE@%description -n gstreamer-gnomevfs
@@ -366,8 +368,8 @@ Element for text-to-speech using the festival server.
 @USE_JPEG_TRUE@%package -n gstreamer-jpeg
 @USE_JPEG_TRUE@Summary: GStreamer plugin for jpeg images
 @USE_JPEG_TRUE@Group: Libraries/Multimedia
-@USE_JPEG_TRUE@Requires: libjpeg
 @USE_JPEG_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_JPEG_TRUE@Requires: libjpeg
 @USE_JPEG_TRUE@BuildRequires: libjpeg-devel
 @USE_JPEG_TRUE@
 @USE_JPEG_TRUE@%description -n gstreamer-jpeg
