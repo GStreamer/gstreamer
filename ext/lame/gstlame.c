@@ -683,17 +683,6 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 
   GST_DEBUG (GST_CAT_PLUGIN_INFO, "entered chain");
 
-  if (!lame->initialized) {
-    gst_element_error (GST_ELEMENT (lame), "encoder not initialized (input is not audio?)");
-    if (GST_IS_EVENT (buf)) {
-      gst_pad_event_default (pad, GST_EVENT (buf));
-    }
-    else {
-      gst_buffer_unref (buf);
-    }
-    return;
-  }
-
   if (GST_IS_EVENT (buf)) {
     switch (GST_EVENT_TYPE (buf)) {
       case GST_EVENT_EOS:
@@ -711,6 +700,12 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
     }
   }
   else {
+    if (!lame->initialized) {
+      gst_buffer_unref (buf);
+      gst_element_error (GST_ELEMENT (lame), "encoder not initialized (input is not audio?)");
+      return;
+    }
+
     /* allocate space for output */
     mp3_buffer_size = ((GST_BUFFER_SIZE(buf) / (2+lame->num_channels)) * 1.25) + 7200;
     mp3_data = g_malloc (mp3_buffer_size);
