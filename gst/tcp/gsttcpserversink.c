@@ -157,12 +157,18 @@ gst_tcpserversink_handle_server_read (GstTCPServerSink * sink)
   struct sockaddr_in client_address;
   int client_address_len;
 
+  /* For some stupid reason, client_address and client_address_len has to be
+   * zeroed */
+  memset (&client_address, 0, sizeof (client_address));
+  client_address_len = 0;
+
   client_sock_fd =
       accept (sink->server_sock.fd, (struct sockaddr *) &client_address,
       &client_address_len);
   if (client_sock_fd == -1) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
-        ("Could not accept client on server socket: %s", g_strerror (errno)));
+        ("Could not accept client on server socket %d: %s (%d)",
+            sink->server_sock.fd, g_strerror (errno), errno));
     return FALSE;
   }
 
