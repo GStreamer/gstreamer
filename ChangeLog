@@ -1,5 +1,25 @@
 2003-12-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/divx/gstdivxdec.c: (gst_divxdec_base_init),
+	(gst_divxdec_init), (gst_divxdec_negotiate):
+	* ext/divx/gstdivxdec.h:
+	* ext/divx/gstdivxenc.c: (gst_divxenc_base_init),
+	(gst_divxenc_init):
+	* ext/faac/gstfaac.c: (gst_faac_base_init), (gst_faac_init),
+	(gst_faac_sinkconnect), (gst_faac_srcconnect):
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	* ext/mpeg2enc/gstmpeg2encoder.cc:
+	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
+	* sys/dxr3/dxr3audiosink.c: (dxr3audiosink_base_init),
+	(dxr3audiosink_init), (dxr3audiosink_pcm_sinklink):
+	* sys/dxr3/dxr3spusink.c: (dxr3spusink_base_init),
+	(dxr3spusink_init):
+	* sys/dxr3/dxr3videosink.c: (dxr3videosink_base_init),
+	(dxr3videosink_init):
+	  Fix caps breakage after Dave's caps branch merge.
+
+2003-12-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get):
 	  Fix for 24bpp display.
 
