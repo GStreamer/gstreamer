@@ -347,13 +347,12 @@ gst_alsa_class_probe_devices (GstAlsaClass *klass,
 
     for (num = 0; num < MAX_DEVICES; num++) {
       dev = g_strdup_printf ("hw:%d", num);
-printf ("Trying to open %s\n", dev);
+
       if (!(res = snd_pcm_open (&pcm, dev, 0, 0))) {
         klass->devices = g_list_append (klass->devices, dev);
-printf ("success\n");
+
         snd_pcm_close (pcm);
       } else {
-printf ("failure=%d (%s)\n", res, snd_strerror (res));
         g_free (dev);
       }
     }
