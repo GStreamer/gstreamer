@@ -698,7 +698,8 @@ gst_bin_change_state (GstElement * element)
   pending = GST_STATE_PENDING (element);
   transition = GST_STATE_TRANSITION (element);
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "changing childrens' state from %s to %s",
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+                        "changing state of children from %s to %s",
                         gst_element_state_get_name (old_state),
                         gst_element_state_get_name (pending));
 
@@ -725,6 +726,11 @@ gst_bin_change_state (GstElement * element)
       continue;
 
     old_child_state = GST_STATE (child);
+
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+      "changing state of child %s from current %s to pending %s",
+        GST_ELEMENT_NAME (child), gst_element_state_get_name (old_child_state),
+        gst_element_state_get_name (pending));
 
     switch (gst_element_set_state (child, pending)) {
       case GST_STATE_FAILURE:

@@ -1151,7 +1151,8 @@ gst_pad_link_fixate (GstPadLink *link)
           if (GST_RPAD_FIXATEFUNC(link->srcpad)) {
 	    newcaps = GST_RPAD_FIXATEFUNC(link->srcpad) (
 		GST_PAD (link->srcpad), caps);
-	    GST_DEBUG ("srcpad fixated to %" GST_PTR_FORMAT, newcaps);
+	    GST_DEBUG ("srcpad %s:%s fixated to %" GST_PTR_FORMAT,
+                       GST_DEBUG_PAD_NAME (link->srcpad), newcaps);
 	  }
           else
 	    GST_DEBUG ("srcpad %s:%s doesn't have a fixate function",
@@ -1162,7 +1163,8 @@ gst_pad_link_fixate (GstPadLink *link)
           if (GST_RPAD_FIXATEFUNC(link->sinkpad)) {
 	    newcaps = GST_RPAD_FIXATEFUNC(link->sinkpad) (
 		GST_PAD (link->sinkpad), caps);
-	    GST_DEBUG ("sinkpad fixated to %" GST_PTR_FORMAT, newcaps);
+	    GST_DEBUG ("sinkpad %s:%s fixated to %" GST_PTR_FORMAT,
+                       GST_DEBUG_PAD_NAME (link->sinkpad), newcaps);
 	  }
           else
 	    GST_DEBUG ("sinkpad %s:%s doesn't have a fixate function",
