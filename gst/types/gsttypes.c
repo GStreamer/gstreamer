@@ -28,14 +28,10 @@ GstTypeFactory _factories[] = {
 };
 
 
-GstPlugin*
-plugin_init (GModule *module) 
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
 {
-  GstPlugin *plugin;
   gint i = 0;
-
-  plugin = gst_plugin_new ("gsttypes", GST_VERSION_MAJOR, GST_VERSION_MINOR);
-  g_return_val_if_fail (plugin != NULL,NULL);
 
   while (_factories[i].mime) {
     gst_type_register (&_factories[i]);
@@ -46,5 +42,12 @@ plugin_init (GModule *module)
 
   //gst_info ("gsttypes: loaded %d standard types\n",i);
 
-  return plugin;
+  return TRUE;
 }
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gsttypes",
+  plugin_init
+};

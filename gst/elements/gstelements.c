@@ -67,14 +67,11 @@ static struct _elements_entry _elements[] = {
   { NULL, 0 },
 };
 
-GstPlugin *plugin_init (GModule *module)
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
 {
-  GstPlugin *plugin;
   GstElementFactory *factory;
   gint i = 0;
-
-  plugin = gst_plugin_new("gstelements", GST_VERSION_MAJOR, GST_VERSION_MINOR);
-  g_return_val_if_fail(plugin != NULL,NULL);
 
   gst_plugin_set_longname (plugin, "Standard GST Elements");
 
@@ -94,5 +91,13 @@ GstPlugin *plugin_init (GModule *module)
 
 //  INFO (GST_INFO_PLUGIN_LOAD,"gstelements: loaded %d standard elements", i);
 
-  return plugin;
+  return TRUE;
 }
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gstelements",
+  plugin_init
+};
+

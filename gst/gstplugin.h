@@ -40,7 +40,7 @@
 
 
 typedef struct _GstPlugin		GstPlugin;
-typedef struct _GstPluginElement	GstPluginElement;
+typedef struct _GstPluginDesc		GstPluginDesc;
 
 struct _GstPlugin {
   gchar *name;			/* name of the plugin */
@@ -57,8 +57,15 @@ struct _GstPlugin {
   gboolean loaded;              /* if the plugin is in memory */
 };
 
+/* Initialiser function: returns TRUE if plugin initialised successfully */
+typedef gboolean (*GstPluginInitFunc) (GModule *module, GstPlugin *plugin);
 
-typedef GstPlugin* (*GstPluginInitFunc) (GModule *module);
+struct _GstPluginDesc {
+  gint major_version; /* major version of core that plugin was compiled for */
+  gint minor_version; /* minor version of core that plugin was compiled for */
+  gchar *name;        /* name of plugin */
+  GstPluginInitFunc plugin_init; /* pointer to plugin_init function */
+};
 
 void			_gst_plugin_initialize		(void);
 
