@@ -1,3 +1,15 @@
+2005-01-25  Benjamin Otte  <otte@gnome.org>
+
+	* ext/mad/gstmad.c: (gst_mad_check_caps_reset), (gst_mad_chain):
+	  - on half framerate, compute the rate in advance so the comparisons
+	    don't compare wrong values
+	  - don't use mad_synth/frame_mute anymore, this mirrors mad_decoder
+	    behaviour
+	  - don't use mad_header_decode anymore, mad_frame_decode does that
+	    automatically
+	  - when getting rid of consumed bytes, reset the stream's skiplen
+	  (fixes #163867)
+
 2005-01-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_class_init)
