@@ -266,15 +266,15 @@ AC_ARG_WITH(gdk-pixbuf-loader-dir,
 ])
 AC_SUBST(GDK_PIXBUF_LOADER_DIR)
 
-GDK_PIXBUF_CONFFILE="$GDK_PIXBUF_PREFIXDIR/gtk-2.0/gdk-pixbuf.loaders"
+GDK_PIXBUF_CONFDIR="$GDK_PIXBUF_PREFIXDIR/etc/gtk-2.0/"
 AC_ARG_WITH(gdk-pixbuf-conffile, 
-   AC_HELP_STRING([--with-gdk-pixbuf-conffile],
-   	[path to the gdk_pixbuf config file]),
+   AC_HELP_STRING([--with-gdk-pixbuf-confdir],
+   	[path to the gdk_pixbuf config directroy]),
    [if test "x${withval}" != x ; then
-   	GDK_PIXBUF_CONFFILE="${withval}"
+   	GDK_PIXBUF_CONFDIR="${withval}"
     fi
 ])
-AC_SUBST(GDK_PIXBUF_CONFFILE)
+AC_SUBST(GDK_PIXBUF_CONFDIR)
 
 dnl ===========================================================================
 dnl ============================= gst plug-ins ================================
