@@ -128,6 +128,13 @@ Group: Libraries/Multimedia
 Plugin for the free AC-3 stream decoder from Linuxvideo.
 (http://linuxvideo.org/ac3dec/)
 
+# %package -n gstreamer-alsa
+# Summary: Gstreamer plugins for the ALSA sound architecture
+# Group: Libraries/Multimedia
+
+# %description -n gstreamer-alsa
+Input and output plugin for the ALSA soundcard driver architecture.
+
 %changelog
 * Sat Jun 02 2001 Christian Schaller <Uraeus@linuxrising.org>
 - Split the plugins into separate RPMS
@@ -234,3 +241,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %files -n gstreamer-ac3dec
 %defattr(-, root, root)
 %{prefix}/lib/gst/libac3dec*
+
+# %files -n gstreamer-alsa
+# %defattr(-, root, root)
+# %{prefix}/lib/gst/libalsa*
