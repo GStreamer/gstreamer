@@ -104,7 +104,7 @@ GstMediaInfoTrack *
 		gmi_track_new			(void);
 
 void		gmip_reset			(GstMediaInfoPriv *priv);
-void		gmip_init			(GstMediaInfoPriv *priv, GError **error);
+gboolean	gmip_init			(GstMediaInfoPriv *priv, GError **error);
 
 void		gmi_clear_decoder		(GstMediaInfo *info);
 

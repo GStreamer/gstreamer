@@ -229,7 +229,7 @@ gst_media_info_error_element (const gchar *element, GError **error)
 }
 
 /* initialise priv; done the first time */
-void
+gboolean
 gmip_init (GstMediaInfoPriv *priv, GError **error)
 {
 #define GST_MEDIA_INFO_MAKE_OR_ERROR(el, factory, name, error)  \
@@ -238,7 +238,7 @@ G_STMT_START {                                                  \
   if (!GST_IS_ELEMENT (el))                                     \
   {                                                             \
     gst_media_info_error_element (factory, error);              \
-    return;                                                     \
+    return FALSE;                                               \
   }                                                             \
 } G_STMT_END
   /* create the typefind element and make sure it stays around by reffing */
@@ -251,6 +251,7 @@ G_STMT_START {                                                  \
   /* source element for media info reading */
   priv->source = NULL;
   priv->source_name = NULL;
+  return TRUE;
 }
 
 /* called at the beginning of each use cycle */
