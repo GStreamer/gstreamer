@@ -262,16 +262,22 @@ else
 SDL_DIR=
 endif
 
-if USE_SIDPLAY
-SIDPLAY_DIR=sidplay
-else
-SIDDPLAY_DIR=
-endif
-
 if USE_SHOUT
 SHOUT_DIR=shout
 else
 SHOUT_DIR=
+endif
+
+if USE_SHOUT2
+SHOUT2_DIR=shout2
+else
+SHOUT2_DIR=
+endif
+
+if USE_SIDPLAY
+SIDPLAY_DIR=sidplay
+else
+SIDDPLAY_DIR=
 endif
 
 if USE_SMOOTHWAVE
@@ -385,6 +391,7 @@ SUBDIRS=\
 	$(RAW1394_DIR) \
 	$(SDL_DIR) \
 	$(SHOUT_DIR) \
+	$(SHOUT2_DIR) \
 	$(SIDPLAY_DIR) \
 	$(SMOOTHWAVE_DIR) \
 	$(SNAPSHOT_DIR) \
