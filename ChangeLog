@@ -1,5 +1,11 @@
 2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/LINGUAS:
+	* po/af.po:
+          adding Afrikaans (Petri Jooste)
+
+2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
 	(gst_ffmpegcolorspace_chain):
         throw error instead of g_critical (#137588)
