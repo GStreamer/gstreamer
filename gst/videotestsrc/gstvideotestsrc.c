@@ -59,6 +59,7 @@ enum
 static void gst_videotestsrc_class_init (GstVideotestsrcClass * klass);
 static void gst_videotestsrc_init (GstVideotestsrc * videotestsrc);
 static GstElementStateReturn gst_videotestsrc_change_state (GstElement * element);
+static void gst_videotestsrc_set_clock (GstElement *element, GstClock *clock);
 
 static void gst_videotestsrc_set_pattern (GstVideotestsrc *src, int pattern_type);
 static void gst_videotestsrc_set_property (GObject * object, guint prop_id,
@@ -163,6 +164,17 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
   gobject_class->get_property = gst_videotestsrc_get_property;
 
   gstelement_class->change_state = gst_videotestsrc_change_state;
+  gstelement_class->set_clock    = gst_videotestsrc_set_clock;
+}
+
+static void
+gst_videotestsrc_set_clock (GstElement *element, GstClock *clock)
+{
+  GstVideotestsrc *v;
+
+  v = GST_VIDEOTESTSRC (element);
+
+  gst_object_replace ((GstObject **)&v->clock, (GstObject *)clock);
 }
 
 static GstPadLinkReturn
@@ -290,6 +302,7 @@ gst_videotestsrc_get (GstPad * pad)
   GstVideotestsrc *videotestsrc;
   gulong newsize;
   GstBuffer *buf;
+  GstClockTimeDiff jitter = 0;
 
   GST_DEBUG (0, "gst_videotestsrc_get");
 
@@ -313,11 +326,22 @@ gst_videotestsrc_get (GstPad * pad)
   }
   g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
 
-  videotestsrc->timestamp += videotestsrc->interval;
-  GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp;
-
   videotestsrc->make_image (videotestsrc, (void *) GST_BUFFER_DATA (buf),
 			    videotestsrc->width, videotestsrc->height);
+  
+  do {
+    GstClockID id;
+
+    videotestsrc->timestamp += videotestsrc->interval;
+    GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp;
+
+    if (videotestsrc->clock) {
+      id = gst_clock_new_single_shot_id (videotestsrc->clock, GST_BUFFER_TIMESTAMP (buf));
+      gst_element_clock_wait (GST_ELEMENT (videotestsrc), id, &jitter);
+      gst_clock_id_free (id);
+    }
+  }
+  while (jitter > 100 * GST_MSECOND);
 
   return buf;
 }
