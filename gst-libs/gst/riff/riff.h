@@ -288,6 +288,7 @@ struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_IBM_FORMAT_ADPCM           (0x0103)
 #define GST_RIFF_WAVE_FORMAT_DIVX           (0x0160)
 #define GST_RIFF_WAVE_FORMAT_divx           (0x0161)
+#define GST_RIFF_WAVE_FORMAT_A52	    (0x2000)
 #define GST_RIFF_WAVE_FORMAT_VORBIS1        (0x674f)
 #define GST_RIFF_WAVE_FORMAT_VORBIS2        (0x6750)
 #define GST_RIFF_WAVE_FORMAT_VORBIS3        (0x6751)
