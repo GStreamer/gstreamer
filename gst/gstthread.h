@@ -51,8 +51,8 @@ typedef enum {
 #define GST_IS_THREAD_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_THREAD))
 
-typedef struct _GstThread GstThread;
-typedef struct _GstThreadClass GstThreadClass;
+typedef struct _GstThread 	GstThread;
+typedef struct _GstThreadClass 	GstThreadClass;
 
 struct _GstThread {
   GstBin bin;
@@ -66,8 +66,9 @@ struct _GstThreadClass {
   GstBinClass parent_class;
 };
 
-GtkType gst_thread_get_type(void);
-GstElement *gst_thread_new(guchar *name);
+GtkType 	gst_thread_get_type	(void);
+
+GstElement*	gst_thread_new		(guchar *name);
 
 #ifdef __cplusplus
 }

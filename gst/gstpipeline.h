@@ -57,16 +57,16 @@ struct _GstPipelineClass {
   GstBinClass parent_class;
 };
 
-GtkType gst_pipeline_get_type(void);
-GstElement *gst_pipeline_new(guchar *name);
-#define gst_pipeline_destroy(pipeline) gst_object_destroy(GST_OBJECT(pipeline))
+GtkType 	gst_pipeline_get_type		(void);
+GstElement*	gst_pipeline_new		(guchar *name);
+#define 	gst_pipeline_destroy(pipeline) 	gst_object_destroy(GST_OBJECT(pipeline))
 
-gboolean gst_pipeline_autoplug(GstPipeline *pipeline);
+void 		gst_pipeline_add_src		(GstPipeline *pipeline, GstElement *src);
+void 		gst_pipeline_add_sink		(GstPipeline *pipeline, GstElement *sink);
 
-void gst_pipeline_add_src(GstPipeline *pipeline, GstElement *src);
-void gst_pipeline_add_sink(GstPipeline *pipeline, GstElement *sink);
+gboolean 	gst_pipeline_autoplug		(GstPipeline *pipeline);
 
-void gst_pipeline_iterate(GstPipeline *pipeline);
+void 		gst_pipeline_iterate		(GstPipeline *pipeline);
 
 #ifdef __cplusplus
 }

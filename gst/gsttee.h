@@ -40,8 +40,8 @@ extern "C" {
 #define GST_IS_TEE_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_TEE))
 
-typedef struct _GstTee GstTee;
-typedef struct _GstTeeClass GstTeeClass;
+typedef struct _GstTee 		GstTee;
+typedef struct _GstTeeClass 	GstTeeClass;
 
 struct _GstTee {
   GstFilter filter;
@@ -56,11 +56,12 @@ struct _GstTeeClass {
   GstFilterClass parent_class;
 };
 
-GtkType gst_tee_get_type(void);
-GstElement *gst_tee_new(gchar *name);
-void gst_tee_chain(GstPad *pad,GstBuffer *buf);
-gchar *gst_tee_new_pad(GstTee *tee);
+GtkType 	gst_tee_get_type	(void);
 
+GstElement*	gst_tee_new		(gchar *name);
+
+gchar*		gst_tee_new_pad		(GstTee *tee);
+void 		gst_tee_chain		(GstPad *pad, GstBuffer *buf);
 
 #ifdef __cplusplus
 }

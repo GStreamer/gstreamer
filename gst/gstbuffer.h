@@ -108,31 +108,30 @@ struct _GstBuffer {
 };
 
 /* initialisation */
-void _gst_buffer_initialize();
+void 		_gst_buffer_initialize		(void);
 /* creating a new buffer from scratch */
-GstBuffer *gst_buffer_new();
-GstBuffer *gst_buffer_new_from_pool(GstBufferPool *pool);
+GstBuffer*	gst_buffer_new			(void);
+GstBuffer*	gst_buffer_new_from_pool	(GstBufferPool *pool);
 
 /* creating a subbuffer */
-GstBuffer *gst_buffer_create_sub(GstBuffer *parent,guint32 offset,guint32 size);
+GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint32 offset, guint32 size);
 
 /* adding data to a buffer */
-GstBuffer *gst_buffer_append(GstBuffer *buffer, GstBuffer *append);
+GstBuffer*	gst_buffer_append		(GstBuffer *buffer, GstBuffer *append);
 
 /* refcounting */
-void gst_buffer_ref(GstBuffer *buffer);
-void gst_buffer_ref_by_count(GstBuffer *buffer,int count);
-void gst_buffer_unref(GstBuffer *buffer);
+void 		gst_buffer_ref			(GstBuffer *buffer);
+void 		gst_buffer_ref_by_count		(GstBuffer *buffer, int count);
+void 		gst_buffer_unref		(GstBuffer *buffer);
 
 /* destroying the buffer */
-void gst_buffer_destroy(GstBuffer *buffer);
+void 		gst_buffer_destroy		(GstBuffer *buffer);
 
 /* add, retrieve, and remove metadata from the buffer */
-void gst_buffer_add_meta(GstBuffer *buffer,GstMeta *meta);
-GstMeta *gst_buffer_get_first_meta(GstBuffer *buffer);
-GSList *gst_buffer_get_metas(GstBuffer *buffer);
-void gst_buffer_remove_meta(GstBuffer *buffer,GstMeta *meta);
-
+void 		gst_buffer_add_meta		(GstBuffer *buffer, GstMeta *meta);
+void 		gst_buffer_remove_meta		(GstBuffer *buffer, GstMeta *meta);
+GstMeta*	gst_buffer_get_first_meta	(GstBuffer *buffer);
+GSList*		gst_buffer_get_metas		(GstBuffer *buffer);
 
 #ifdef __cplusplus
 }

@@ -21,10 +21,9 @@
 #ifndef __GST_TRACE_H__
 #define __GST_TRACE_H__
 
-void gst_trace_read_tsc(guint64 *dst);
 
-typedef struct _GstTrace GstTrace;
-typedef struct _GstTraceEntry GstTraceEntry;
+typedef struct _GstTrace 	GstTrace;
+typedef struct _GstTraceEntry 	GstTraceEntry;
 
 struct _GstTrace {
   /* where this trace is going */
@@ -44,15 +43,19 @@ struct _GstTraceEntry {
   gchar message[112];
 };
 
-GstTrace *gst_trace_new(guchar *filename,gint size);
-void gst_trace_destroy(GstTrace *trace);
-void gst_trace_flush(GstTrace *trace);
-#define gst_trace_get_size(trace) ((trace)->bufsize)
-#define gst_trace_get_offset(trace) ((trace)->bufoffset)
-#define gst_trace_get_remaining(trace) ((trace)->bufsize - (trace)->bufoffset)
-void gst_trace_set_default(GstTrace *trace);
+GstTrace*	gst_trace_new			(guchar *filename, gint size);
 
-void _gst_trace_add_entry(GstTrace *trace,guint32 seq,guint32 data,gchar *msg);
+void 		gst_trace_destroy		(GstTrace *trace);
+void 		gst_trace_flush			(GstTrace *trace);
+#define 	gst_trace_get_size(trace) 	((trace)->bufsize)
+#define 	gst_trace_get_offset(trace) 	((trace)->bufoffset)
+#define 	gst_trace_get_remaining(trace) 	((trace)->bufsize - (trace)->bufoffset)
+void 		gst_trace_set_default		(GstTrace *trace);
+
+void 		_gst_trace_add_entry		(GstTrace *trace, guint32 seq, 
+						 guint32 data, gchar *msg);
+
+void 		gst_trace_read_tsc		(guint64 *dst);
 
 #define TRACE_ENABLE
 

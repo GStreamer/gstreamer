@@ -34,7 +34,6 @@ extern "C" {
 
 extern GstElementDetails gst_bin_details;
 
-
 #define GST_TYPE_BIN \
   (gst_bin_get_type())
 #define GST_BIN(obj) \
@@ -68,42 +67,41 @@ struct _GstBin {
 struct _GstBinClass {
   GstElementClass parent_class;
 
-  void (*object_added) (GstObject *object,GstObject *child);
+  void 		(*object_added) 	(GstObject *object, GstObject *child);
 
   /* change the state of elements of the given type */
-  gboolean (*change_state_type) (GstBin *bin,
-                                 GstElementState state,
-                                 GtkType type);
+  gboolean 	(*change_state_type) 	(GstBin *bin,
+                                 	 GstElementState state,
+                                 	 GtkType type);
 
   /* create a plan for the execution of the bin */
-  void (*create_plan) (GstBin *bin);
+  void 		(*create_plan) 		(GstBin *bin);
 
   /* run a full iteration of operation */
-  void (*iterate) (GstBin *bin);
+  void		(*iterate) 		(GstBin *bin);
 };
 
-GtkType gst_bin_get_type(void);
-GstElement *gst_bin_new(gchar *name);
-#define gst_bin_destroy(bin) gst_object_destroy(GST_OBJECT(bin))
+GtkType 	gst_bin_get_type		(void);
+GstElement*	gst_bin_new			(gchar *name);
+#define 	gst_bin_destroy(bin) 		gst_object_destroy(GST_OBJECT(bin))
 
 /* add and remove elements from the bin */
-void gst_bin_add(GstBin *bin,GstElement *element);
-void gst_bin_remove(GstBin *bin,GstElement *element);
+void 		gst_bin_add			(GstBin *bin, GstElement *element);
+void 		gst_bin_remove			(GstBin *bin, GstElement *element);
 
-/* retrieve a single element or the while list of children */
-GstElement *gst_bin_get_by_name(GstBin *bin,gchar *name);
-GList *gst_bin_get_list(GstBin *bin);
+/* retrieve a single element or the list of children */
+GstElement*	gst_bin_get_by_name		(GstBin *bin, gchar *name);
+GList*		gst_bin_get_list		(GstBin *bin);
 
-/* set the state for only elements of the given type */
-gboolean gst_bin_set_state_type(GstBin *bin,
-                                GstElementState state,
-                                GtkType type);
+void 		gst_bin_create_plan		(GstBin *bin);
+gboolean 	gst_bin_set_state_type		(GstBin *bin,
+                                		 GstElementState state,
+                                		 GtkType type);
 
-void gst_bin_iterate(GstBin *bin);
-void gst_bin_create_plan(GstBin *bin);
+void 		gst_bin_iterate			(GstBin *bin);
 
 // hack FIXME
-void gst_bin_use_cothreads(GstBin *bin, gboolean enabled);
+void 		gst_bin_use_cothreads		(GstBin *bin, gboolean enabled);
 
 #ifdef __cplusplus
 }

@@ -52,8 +52,8 @@ struct _GstFilterClass {
   GstElementClass parent_class;
 };
 
-GtkType gst_filter_get_type(void);
-GstElement *gst_filter_new(gchar *name);
+GtkType 	gst_filter_get_type	(void);
+GstElement*	gst_filter_new		(gchar *name);
 
 #ifdef __cplusplus
 }

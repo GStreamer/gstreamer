@@ -90,24 +90,21 @@ struct _GstObjectClass {
 
 
 /* normal GtkObject stuff */
-GtkType gst_object_get_type(void);
-GstObject* gst_object_new(void);
+GtkType 	gst_object_get_type		(void);
+GstObject* 	gst_object_new			(void);
 
 /* parentage routines */
-void gst_object_set_parent(GstObject *object,GstObject *parent);
-GstObject *gst_object_get_parent(GstObject *object);
-void gst_object_unparent(GstObject *object);
+void 		gst_object_set_parent		(GstObject *object,GstObject *parent);
+GstObject*	gst_object_get_parent		(GstObject *object);
+void 		gst_object_unparent		(GstObject *object);
 
 /* refcounting */
-//void gst_object_ref(GstObject *object);
-#define gst_object_ref(object) gtk_object_ref(GTK_OBJECT(object));
-//void gst_object_unref(GstObject *object);
-#define gst_object_unref(object) gtk_object_unref(GTK_OBJECT(object));
-//void gst_object_sink(GstObject *object);
-#define gst_object_sink(object) gtk_object_sink(GTK_OBJECT(object));
+#define 	gst_object_ref(object) 		gtk_object_ref(GTK_OBJECT(object));
+#define 	gst_object_unref(object) 	gtk_object_unref(GTK_OBJECT(object));
+#define 	gst_object_sink(object) 	gtk_object_sink(GTK_OBJECT(object));
 
 /* destroying an object */
-#define gst_object_destroy(object) gtk_object_destroy(GTK_OBJECT(object))
+#define 	gst_object_destroy(object) 	gtk_object_destroy(GTK_OBJECT(object))
 
 
 #ifdef __cplusplus

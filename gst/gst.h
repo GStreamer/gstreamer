@@ -51,8 +51,8 @@
 /* initialize GST */
 void gst_init(int *argc,char **argv[]);
 
-void gst_main();
-void gst_main_quit();
+void gst_main		(void);
+void gst_main_quit	(void);
 
 /* debugging */
 #ifndef DEBUG

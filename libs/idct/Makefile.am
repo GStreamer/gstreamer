@@ -1,6 +1,6 @@
 
 if HAVE_LIBMMX
-GSTIDCTARCH_SRCS = mmxidct.S mmx32idct.c
+GSTIDCTARCH_SRCS = mmxidct.S mmx32idct.c sseidct.S
 else
 GSTIDCTARCH_SRCS =
 endif

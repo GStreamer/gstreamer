@@ -55,11 +55,10 @@ struct _GstConnectionClass {
   void (*push) (GstConnection *connection);
 };
 
-GtkType gst_connection_get_type(void);
-GstElement *gst_connection_new(gchar *name);
+GtkType 	gst_connection_get_type		(void);
+GstElement*	gst_connection_new		(gchar *name);
 
-void gst_connection_push(GstConnection *connection);
-
+void 		gst_connection_push		(GstConnection *connection);
 
 #ifdef __cplusplus
 }

@@ -15,7 +15,9 @@
 
 pthread_key_t _cothread_key = -1;
 
-cothread_state *cothread_create(cothread_context *ctx) {
+cothread_state*
+cothread_create (cothread_context *ctx) 
+{
   cothread_state *s;
 
   DEBUG("cothread: pthread_self() %ld\n",pthread_self());
@@ -50,25 +52,32 @@ cothread_state *cothread_create(cothread_context *ctx) {
   return s;
 }
 
-void cothread_setfunc(cothread_state *thread,cothread_func func,int argc,char **argv) {
+void 
+cothread_setfunc (cothread_state *thread,
+		  cothread_func func,
+		  int argc,
+		  char **argv) 
+{
   thread->func = func;
   thread->argc = argc;
   thread->argv = argv;
   thread->pc = (int *)func;
 }
 
-cothread_context *cothread_init() {
+cothread_context*
+cothread_init (void) 
+{
   cothread_context *ctx = (cothread_context *)malloc(sizeof(cothread_context));
 
   if (_cothread_key == -1) {
-    if (pthread_key_create(&_cothread_key,NULL) != 0) {
-      perror("pthread_key_create");
+    if (pthread_key_create (&_cothread_key,NULL) != 0) {
+      perror ("pthread_key_create");
       return NULL;
     }
   }
-  pthread_setspecific(_cothread_key,ctx);
+  pthread_setspecific (_cothread_key,ctx);
 
-  memset(ctx->threads,0,sizeof(ctx->threads));
+  memset (ctx->threads,0,sizeof(ctx->threads));
 
   ctx->threads[0] = (cothread_state *)malloc(sizeof(cothread_state));
   ctx->threads[0]->ctx = ctx;
@@ -89,12 +98,16 @@ cothread_context *cothread_init() {
   return ctx;
 }
 
-cothread_state *cothread_main(cothread_context *ctx) {
-//  fprintf(stderr,"returning %p, the 0th cothread\n",ctx->threads[0]);
+cothread_state*
+cothread_main(cothread_context *ctx) 
+{
+  DEBUG(stderr,"returning %p, the 0th cothread\n",ctx->threads[0]);
   return ctx->threads[0];
 }
 
-void cothread_stub() {
+void 
+cothread_stub (void) 
+{
   cothread_context *ctx = pthread_getspecific(_cothread_key);
   register cothread_state *thread = ctx->threads[ctx->current];
 
@@ -109,7 +122,9 @@ void cothread_stub() {
   //printf("uh, yeah, we shouldn't be here, but we should deal anyway\n");
 }
 
-void cothread_switch(cothread_state *thread) {
+void 
+cothread_switch (cothread_state *thread) 
+{
   cothread_context *ctx;
   cothread_state *current;
   int enter;

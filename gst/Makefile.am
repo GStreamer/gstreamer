@@ -1,5 +1,5 @@
 # cheap trick to build . first...
-SUBDIRS = . types meta elements xml
+SUBDIRS = . types meta elements
 
 lib_LTLIBRARIES = libgst.la
 

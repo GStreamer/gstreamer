@@ -52,15 +52,15 @@ struct _GstXMLClass {
   GtkObjectClass parent_class;
 };
 
-GtkType gst_xml_get_type(void);
+GtkType 	gst_xml_get_type	(void);
 
 
 /* create an XML document out of a pipeline */
-xmlDocPtr gst_xml_write(GstElement *element);
+xmlDocPtr 	gst_xml_write		(GstElement *element);
 
-GstXML *gst_xml_new(const guchar *fname, const guchar *root);
+GstXML*		gst_xml_new		(const guchar *fname, const guchar *root);
 
-GstElement *gst_xml_get_element(GstXML *xml, const guchar *name);
+GstElement*	gst_xml_get_element	(GstXML *xml, const guchar *name);
 
 #ifdef __cplusplus
 }

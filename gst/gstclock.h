@@ -48,14 +48,14 @@ struct _GstClock {
   GMutex *lock;
 };
 
-GstClock *gst_clock_new(gchar *name);
-GstClock *gst_clock_get_system(void);
+GstClock*		gst_clock_new			(gchar *name);
+GstClock*		gst_clock_get_system		(void);
 
-void gst_clock_register(GstClock *clock, GstObject *obj);
-void gst_clock_set(GstClock *clock, GstClockTime time);
-void gst_clock_reset(GstClock *clock);
-void gst_clock_wait(GstClock *clock, GstClockTime time, GstObject *obj);
-GstClockTimeDiff gst_clock_current_diff(GstClock *clock, GstClockTime time);
+void 			gst_clock_register		(GstClock *clock, GstObject *obj);
+void 			gst_clock_set			(GstClock *clock, GstClockTime time);
+void 			gst_clock_reset			(GstClock *clock);
+void 			gst_clock_wait			(GstClock *clock, GstClockTime time, GstObject *obj);
+GstClockTimeDiff 	gst_clock_current_diff		(GstClock *clock, GstClockTime time);
 
 #ifdef __cplusplus
 }

@@ -29,33 +29,35 @@ extern gint _gst_trace_on;
  * Initializes the GStreamer library, setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
  */
-void gst_init(int *argc,char **argv[]) {
+void 
+gst_init (int *argc, char **argv[]) 
+{
   GstTrace *gst_trace;
 
-  if (!g_thread_supported()) g_thread_init (NULL);
+  if (!g_thread_supported ()) g_thread_init (NULL);
 
-  gtk_init(argc,argv);
+  gtk_init (argc,argv);
 
-  _gst_cpu_initialize();
-  _gst_type_initialize();
-  _gst_plugin_initialize();
-  _gst_buffer_initialize();
+  _gst_cpu_initialize ();
+  _gst_type_initialize ();
+  _gst_plugin_initialize ();
+  _gst_buffer_initialize ();
 
   /* register some standard builtin types */
-  gst_elementfactory_register(gst_elementfactory_new(
-    "bin",gst_bin_get_type(),&gst_bin_details));
-  gst_elementfactory_register(gst_elementfactory_new(
-    "pipeline",gst_pipeline_get_type(),&gst_pipeline_details));
-  gst_elementfactory_register(gst_elementfactory_new(
-    "thread",gst_thread_get_type(),&gst_thread_details));
+  gst_elementfactory_register (gst_elementfactory_new ("bin",
+			  gst_bin_get_type (), &gst_bin_details));
+  gst_elementfactory_register (gst_elementfactory_new ("pipeline",
+			  gst_pipeline_get_type (), &gst_pipeline_details));
+  gst_elementfactory_register (gst_elementfactory_new("thread",
+			  gst_thread_get_type (), &gst_thread_details));
 
   //gst_plugin_load_elementfactory("gsttypes");
   //gst_plugin_load("libgstelements.so");
 
   _gst_trace_on = 0;
   if (_gst_trace_on) {
-    gst_trace = gst_trace_new("gst.trace",1024);
-    gst_trace_set_default(gst_trace);
+    gst_trace = gst_trace_new ("gst.trace",1024);
+    gst_trace_set_default (gst_trace);
   }
 }
 
@@ -64,8 +66,10 @@ void gst_init(int *argc,char **argv[]) {
  *
  * Enter the main GStreamer processing loop 
  */
-void gst_main() {
-  gtk_main();
+void 
+gst_main (void) 
+{
+  gtk_main ();
 }
 
 /**
@@ -73,6 +77,8 @@ void gst_main() {
  *
  * Exits the main GStreamer processing loop 
  */
-void gst_main_quit() {
-  gtk_main_quit();
+void 
+gst_main_quit (void) 
+{
+  gtk_main_quit ();
 }

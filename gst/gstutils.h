@@ -23,14 +23,14 @@
 
 #include <gtk/gtk.h>
 
-gint gst_util_get_int_arg(GtkObject *object,guchar *argname);
-glong gst_util_get_long_arg(GtkObject *object,guchar *argname);
-gfloat gst_util_get_float_arg(GtkObject *object,guchar *argname);
-gdouble gst_util_get_double_arg(GtkObject *object,guchar *argname);
-guchar *gst_util_get_string_arg(GtkObject *object,guchar *argname);
-gpointer gst_util_get_pointer_arg(GtkObject *object,guchar *argname);
-GtkWidget *gst_util_get_widget_arg(GtkObject *object,guchar *argname);
+gint 		gst_util_get_int_arg		(GtkObject *object, guchar *argname);
+glong 		gst_util_get_long_arg		(GtkObject *object, guchar *argname);
+gfloat 		gst_util_get_float_arg		(GtkObject *object, guchar *argname);
+gdouble 	gst_util_get_double_arg		(GtkObject *object, guchar *argname);
+guchar*		gst_util_get_string_arg		(GtkObject *object, guchar *argname);
+gpointer 	gst_util_get_pointer_arg	(GtkObject *object, guchar *argname);
+GtkWidget*	gst_util_get_widget_arg		(GtkObject *object, guchar *argname);
 
-void gst_util_dump_mem(guchar *mem, guint size);
+void 		gst_util_dump_mem		(guchar *mem, guint size);
 
 #endif /* __GST_UTILS_H__ */

@@ -12,10 +12,10 @@
 #define CURRENT_STACK_FRAME  ({ char __csf; &__csf; })
 #endif /* CURRENT_STACK_FRAME */
 
-typedef struct _cothread_state cothread_state;
-typedef struct _cothread_context cothread_context;
+typedef struct _cothread_state 		cothread_state;
+typedef struct _cothread_context 	cothread_context;
 
-typedef int (*cothread_func)(int argc,char **argv);
+typedef int (*cothread_func) (int argc,char **argv);
 
 #define COTHREAD_STARTED	0x01
 
@@ -40,10 +40,11 @@ struct _cothread_context {
   int current;
 };
 
-cothread_context *cothread_init();
-cothread_state *cothread_create(cothread_context *ctx);
-void cothread_setfunc(cothread_state *thread,cothread_func func,int argc,char **argv);
-void cothread_switch(cothread_state *thread);
-cothread_state *cothread_main(cothread_context *ctx);
+cothread_context*		cothread_init();
+cothread_state*			cothread_create		(cothread_context *ctx);
+void 				cothread_setfunc	(cothread_state *thread, cothread_func func, 
+						         int argc, char **argv);
+void 				cothread_switch		(cothread_state *thread);
+cothread_state*			cothread_main		(cothread_context *ctx);
 
 #endif /* __COTHREAD_H__ */

@@ -33,8 +33,8 @@ extern "C" {
 
 typedef struct _GstBufferPool GstBufferPool;
 
-typedef GstBuffer *(*GstBufferPoolCreateFunction) (GstBufferPool *pool, gpointer user_data);
-typedef void (*GstBufferPoolDestroyFunction) (GstBufferPool *pool, GstBuffer *buffer, gpointer user_data);
+typedef GstBuffer*	(*GstBufferPoolCreateFunction) 	(GstBufferPool *pool, gpointer user_data);
+typedef void 		(*GstBufferPoolDestroyFunction) (GstBufferPool *pool, GstBuffer *buffer, gpointer user_data);
 
 struct _GstBufferPool {
   /* will be called when a new buffer is to be created */
@@ -47,18 +47,22 @@ struct _GstBufferPool {
 };
 
 /* creating a new buffer pool from scratch */
-GstBufferPool *gst_buffer_pool_new();
+GstBufferPool*		gst_buffer_pool_new			(void);
 
 /* creating a buffer from the pool */
-GstBuffer *gst_buffer_pool_new_buffer(GstBufferPool *pool);
-void gst_buffer_pool_destroy_buffer(GstBufferPool *pool, GstBuffer *buffer);
+GstBuffer*		gst_buffer_pool_new_buffer		(GstBufferPool *pool);
+void 			gst_buffer_pool_destroy_buffer		(GstBufferPool *pool, GstBuffer *buffer);
 
 /* setting create and destroy functions */
-void gst_buffer_pool_set_create_function(GstBufferPool *pool, GstBufferPoolCreateFunction create, gpointer user_data);
-void gst_buffer_pool_set_destroy_function(GstBufferPool *pool, GstBufferPoolDestroyFunction destroy, gpointer user_data);
+void 			gst_buffer_pool_set_create_function	(GstBufferPool *pool, 
+								 GstBufferPoolCreateFunction create, 
+								 gpointer user_data);
+void 			gst_buffer_pool_set_destroy_function	(GstBufferPool *pool, 
+								 GstBufferPoolDestroyFunction destroy, 
+								 gpointer user_data);
 
 /* destroying the buffer pool */
-void gst_buffer_pool_destroy(GstBufferPool *pool);
+void 			gst_buffer_pool_destroy			(GstBufferPool *pool);
 
 #ifdef __cplusplus
 }

@@ -69,12 +69,12 @@ struct _GstMeta {
 };
 
 
-GstMeta *gst_meta_new_size(gint size);
-#define gst_meta_new(type) (type *)gst_meta_new_size(sizeof(type))
+GstMeta*	gst_meta_new_size	(gint size);
+#define 	gst_meta_new(type) 	(type *)gst_meta_new_size(sizeof(type))
 
 /* refcounting */
-void gst_meta_ref(GstMeta *meta);
-void gst_meta_unref(GstMeta *meta);
+void 		gst_meta_ref		(GstMeta *meta);
+void 		gst_meta_unref		(GstMeta *meta);
 
 #ifdef __cplusplus
 }

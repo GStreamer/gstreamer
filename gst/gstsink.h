@@ -41,8 +41,8 @@ extern "C" {
 #define GST_IS_SINK_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SINK))
 
-typedef struct _GstSink GstSink;
-typedef struct _GstSinkClass GstSinkClass;
+typedef struct _GstSink 	GstSink;
+typedef struct _GstSinkClass 	GstSinkClass;
 
 struct _GstSink {
   GstElement element;
@@ -52,8 +52,8 @@ struct _GstSinkClass {
   GstElementClass parent_class;
 };
 
-GtkType gst_sink_get_type(void);
-GstObject *gst_sink_new(gchar *name);
+GtkType 	gst_sink_get_type	(void);
+GstObject*	gst_sink_new		(gchar *name);
 
 
 #ifdef __cplusplus

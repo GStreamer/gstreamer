@@ -29,21 +29,23 @@ GstTypeFactory _factories[] = {
 };
 
 
-GstPlugin *plugin_init(GModule *module) {
+GstPlugin*
+plugin_init (GModule *module) 
+{
   GstPlugin *plugin;
   gint i = 0;
 
-  plugin = gst_plugin_new("gsttypes");
-  g_return_val_if_fail(plugin != NULL,NULL);
+  plugin = gst_plugin_new ("gsttypes");
+  g_return_val_if_fail (plugin != NULL,NULL);
 
   while (_factories[i].mime) {
-    gst_type_register(&_factories[i]);
-    gst_plugin_add_type(plugin, &_factories[i]);
+    gst_type_register (&_factories[i]);
+    gst_plugin_add_type (plugin, &_factories[i]);
 //    DEBUG("added factory #%d '%s'\n",i,_factories[i].mime);
     i++;
   }
 
-  gst_info("gsttypes: loaded %d standard types\n",i);
+  gst_info ("gsttypes: loaded %d standard types\n",i);
 
   return plugin;
 }

@@ -129,8 +129,8 @@ struct _GstElementClass {
   GstElementStateReturn (*change_state) (GstElement *element);
 
   /* create or read XML representation of self */
-  xmlNodePtr (*save_thyself)(GstElement *element,xmlNodePtr parent);
-  void (*restore_thyself)(GstElement *element, xmlNodePtr self, GHashTable *elements);
+  xmlNodePtr 		(*save_thyself) (GstElement *element, xmlNodePtr parent);
+  void 			(*restore_thyself) (GstElement *element, xmlNodePtr self, GHashTable *elements);
 };
 
 struct _GstElementDetails {

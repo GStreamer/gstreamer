@@ -42,7 +42,7 @@ extern "C" {
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SRC))
 
 typedef enum {
-  GST_SRC_ASYNC		= 1 << 0,
+  GST_SRC_ASYNC		= (1 << 0),
 } GstSrcFlags;
 
 #define GST_SRC_FLAGS(obj) \
@@ -50,8 +50,8 @@ typedef enum {
 #define GST_SRC_ASYNC(obj) \
   ((GST_SRC_FLAGS(obj) & GST_SRC_ASYNC))
 
-typedef struct _GstSrc GstSrc;
-typedef struct _GstSrcClass GstSrcClass;
+typedef struct _GstSrc 		GstSrc;
+typedef struct _GstSrcClass 	GstSrcClass;
 
 struct _GstSrc {
   GstElement element;
@@ -62,11 +62,11 @@ struct _GstSrcClass {
   GstElementClass parent_class;
 
   /* subclass functions */
-  void (*push) (GstSrc *src);
-  void (*push_region) (GstSrc *src,gulong offset,gulong size);
+  void (*push) 		(GstSrc *src);
+  void (*push_region) 	(GstSrc *src, gulong offset, gulong size);
 
   /* signals */
-  void (*eos) (GstSrc *src);
+  void (*eos) 		(GstSrc *src);
 };
 
 #define GST_SRC_SET_FLAGS(src,flag) \
@@ -74,13 +74,12 @@ struct _GstSrcClass {
 #define GST_SRC_UNSET_FLAGS(src,flag) \
 	G_STMT_START{ (GST_SRC_FLAGS (src) &= ~(flag)); }G_STMT_END
 
+GtkType 	gst_src_get_type	(void);
 
-GtkType gst_src_get_type(void);
+void 		gst_src_push		(GstSrc *src);
+void 		gst_src_push_region	(GstSrc *src, gulong offset, gulong size);
 
-void gst_src_signal_eos(GstSrc *src);
-
-void gst_src_push(GstSrc *src);
-void gst_src_push_region(GstSrc *src,gulong offset,gulong size);
+void 		gst_src_signal_eos	(GstSrc *src);
 
 #ifdef __cplusplus
 }

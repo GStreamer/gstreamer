@@ -56,36 +56,36 @@ struct _GstTypeFactory {
 
 
 /* initialize the subsystem */
-void _gst_type_initialize();
+void 		_gst_type_initialize		(void);
 
 /* create a new type, or find/merge an existing one */
-guint16 gst_type_register(GstTypeFactory *factory);
+guint16 	gst_type_register		(GstTypeFactory *factory);
 
 /* look up a type by mime or extension */
-guint16 gst_type_find_by_mime(gchar *mime);
-guint16 gst_type_find_by_ext(gchar *ext);
+guint16 	gst_type_find_by_mime		(gchar *mime);
+guint16 	gst_type_find_by_ext		(gchar *ext);
 
 /* add src or sink object */
-void gst_type_add_src(guint16 id,GstElementFactory *src);
-void gst_type_add_sink(guint16 id,GstElementFactory *sink);
+void	 	gst_type_add_src		(guint16 id, GstElementFactory *src);
+void 		gst_type_add_sink		(guint16 id, GstElementFactory *sink);
 /* get list of src or sink objects */
-GList *gst_type_get_srcs(guint16 id);
-GList *gst_type_get_sinks(guint16 id);
+GList*		gst_type_get_srcs		(guint16 id);
+GList*		gst_type_get_sinks		(guint16 id);
 
 /* get GstType by id */
-GstType *gst_type_find_by_id(guint16 id);
+GstType*	gst_type_find_by_id		(guint16 id);
 
-GList *gst_type_get_sink_to_src(guint16 sinkid, guint16 srcid);
+GList*		gst_type_get_sink_to_src	(guint16 sinkid, guint16 srcid);
 
 /* get the list of registered types (returns list of GstType!) */
-GList *gst_type_get_list();
+GList*		gst_type_get_list		(void);
 
-void gst_type_dump();
+void 		gst_type_dump			(void);
 
-xmlNodePtr gst_type_save_thyself(GstType *type, xmlNodePtr parent);
-guint16 gst_type_load_thyself(xmlNodePtr parent);
+xmlNodePtr 	gst_type_save_thyself		(GstType *type, xmlNodePtr parent);
+guint16 	gst_type_load_thyself		(xmlNodePtr parent);
 
-xmlNodePtr gst_typefactory_save_thyself(GstTypeFactory *factory, xmlNodePtr parent);
-GstTypeFactory *gst_typefactory_load_thyself(xmlNodePtr parent);
+xmlNodePtr 	gst_typefactory_save_thyself	(GstTypeFactory *factory, xmlNodePtr parent);
+GstTypeFactory*	gst_typefactory_load_thyself	(xmlNodePtr parent);
 
 #endif /* __GST_TYPE_H__ */

@@ -28,8 +28,8 @@ typedef enum {
   GST_CPU_FLAG_SSE      = (1<<1),
 } GstCPUFlags;
 
-void _gst_cpu_initialize();
+void 		_gst_cpu_initialize	(void);
 
-GstCPUFlags gst_cpu_get_flags();
+GstCPUFlags 	gst_cpu_get_flags	(void);
 
 #endif /* __GST_CPU_H__ */
