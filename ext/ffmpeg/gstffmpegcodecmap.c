@@ -32,7 +32,7 @@ gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context, int codec_id)
   switch (codec_id) {
     case CODEC_ID_NONE:
       return GST_CAPS_NEW ("ffmpeg_none",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_MPEG1VIDEO:
@@ -186,52 +186,52 @@ gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context, int codec_id)
       break;
     case CODEC_ID_WMV2:
       return GST_CAPS_NEW ("ffmpeg_wmv2",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_H263P:
       return GST_CAPS_NEW ("ffmpeg_h263p",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_H263I:
       return GST_CAPS_NEW ("ffmpeg_h263i",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_SVQ1:
       return GST_CAPS_NEW ("ffmpeg_svq1",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_DVVIDEO:
       return GST_CAPS_NEW ("ffmpeg_dvvideo",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_DVAUDIO: 
       return GST_CAPS_NEW ("ffmpeg_dvaudio",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_WMAV1:
       return GST_CAPS_NEW ("ffmpeg_wmav1",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_WMAV2:
       return GST_CAPS_NEW ("ffmpeg_wmav2",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_MACE3:
       return GST_CAPS_NEW ("ffmpeg_mace3",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_MACE6:
       return GST_CAPS_NEW ("ffmpeg_mace6",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_HUFFYUV:
@@ -242,58 +242,58 @@ gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context, int codec_id)
     /* various pcm "codecs" */
     case CODEC_ID_PCM_S16LE:
       return GST_CAPS_NEW ("ffmpeg_s16le",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_PCM_S16BE:
       return GST_CAPS_NEW ("ffmpeg_s16be",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_PCM_U16LE:
       return GST_CAPS_NEW ("ffmpeg_u16le",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_PCM_U16BE:
       return GST_CAPS_NEW ("ffmpeg_u16be",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_PCM_S8:
       return GST_CAPS_NEW ("ffmpeg_s8",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_PCM_U8:
       return GST_CAPS_NEW ("ffmpeg_u8",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_PCM_MULAW:
       return GST_CAPS_NEW ("ffmpeg_mulaw",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_PCM_ALAW:
       return GST_CAPS_NEW ("ffmpeg_alaw",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     /* various adpcm codecs */
     case CODEC_ID_ADPCM_IMA_QT:
       return GST_CAPS_NEW ("ffmpeg_adpcm_ima_qt",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_ADPCM_IMA_WAV:
       return GST_CAPS_NEW ("ffmpeg_adpcm_ima_wav",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     case CODEC_ID_ADPCM_MS:
       return GST_CAPS_NEW ("ffmpeg_adpcm_ms",
-		           "unkown/unkown",
+		           "unknown/unknown",
 			   NULL);
       break;
     default:

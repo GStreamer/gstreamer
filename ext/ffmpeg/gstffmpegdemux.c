@@ -230,7 +230,7 @@ gst_ffmpegdemux_loop (GstElement *element)
           gst_element_add_pad (GST_ELEMENT (ffmpegdemux), pad);
 	}
 	else {
-          g_warning ("unkown pad type %d", st->codec.codec_type);
+          g_warning ("unknown pad type %d", st->codec.codec_type);
 	  return;
 	}
       }
