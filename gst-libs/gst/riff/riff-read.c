@@ -458,7 +458,8 @@ gst_riff_read_strh (GstRiffRead * riff, gst_riff_strh ** header)
 }
 
 gboolean
-gst_riff_read_strf_vids (GstRiffRead * riff, gst_riff_strf_vids ** header)
+gst_riff_read_strf_vids_with_data (GstRiffRead * riff,
+    gst_riff_strf_vids ** header, GstBuffer ** extradata)
 {
   guint32 tag;
   GstBuffer *buf;
@@ -496,10 +497,14 @@ gst_riff_read_strf_vids (GstRiffRead * riff, gst_riff_strf_vids ** header)
 #endif
 
   /* size checking */
+  *extradata = NULL;
   if (strf->size > GST_BUFFER_SIZE (buf)) {
     g_warning ("strf_vids header gave %d bytes data, only %d available",
         strf->size, GST_BUFFER_SIZE (buf));
     strf->size = GST_BUFFER_SIZE (buf);
+  } else if (strf->size < GST_BUFFER_SIZE (buf)) {
+    *extradata = gst_buffer_create_sub (buf, strf->size,
+        GST_BUFFER_SIZE (buf) - strf->size);
   }
 
   /* debug */
@@ -516,12 +521,31 @@ gst_riff_read_strf_vids (GstRiffRead * riff, gst_riff_strf_vids ** header)
   GST_INFO (" ypels_meter %d", strf->ypels_meter);
   GST_INFO (" num_colors  %d", strf->num_colors);
   GST_INFO (" imp_colors  %d", strf->imp_colors);
+  if (*extradata)
+    GST_INFO (" %d bytes extra_data", GST_BUFFER_SIZE (*extradata));
 
   gst_buffer_unref (buf);
 
   *header = strf;
 
   return TRUE;
+}
+
+/*
+ * Obsolete, use gst_riff_read_strf_vids_with_data ().
+ */
+
+gboolean
+gst_riff_read_strf_vids (GstRiffRead * riff, gst_riff_strf_vids ** header)
+{
+  GstBuffer *data = NULL;
+  gboolean ret;
+
+  ret = gst_riff_read_strf_vids_with_data (riff, header, &data);
+  if (data)
+    gst_buffer_unref (data);
+
+  return ret;
 }
 
 gboolean
