@@ -305,9 +305,9 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
   g_async_queue_lock(queue->events);
   while (g_async_queue_length_unlocked(queue->events) > 0){
     GstEvent *event = (GstEvent*)g_async_queue_pop_unlocked(queue->events);
-    g_print("sending event upstream\n");
+    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "sending event upstream\n");
     gst_pad_event_default (pad, event);
-    g_print("event sent\n");
+    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "event sent\n");
   }
   g_async_queue_unlock(queue->events);
 
