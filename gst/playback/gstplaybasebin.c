@@ -955,10 +955,14 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
       caps = gst_pad_get_caps (pad);
 
       if (caps == NULL || gst_caps_is_empty (caps) ||
-          gst_caps_get_size (caps) == 0)
+          gst_caps_get_size (caps) == 0) {
+        if (caps != NULL)
+          gst_caps_free (caps);
         continue;
+      }
 
       structure = gst_caps_get_structure (caps, 0);
+      gst_caps_free (caps);
       mimetype = gst_structure_get_name (structure);
 
       if (g_str_has_prefix (mimetype, "audio/x-raw") ||
@@ -1266,6 +1270,8 @@ gst_play_base_bin_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_NULL:
       gst_object_unref (GST_OBJECT (play_base_bin->thread));
+      play_base_bin->source = NULL;
+      play_base_bin->decoder = NULL;
       break;
     default:
       break;

@@ -216,7 +216,7 @@ gst_play_bin_init (GstPlayBin * play_bin)
   play_bin->sinks = NULL;
   play_bin->frame = NULL;
   play_bin->cache = g_hash_table_new_full (g_str_hash, g_str_equal,
-      NULL, g_object_unref);
+      NULL, (GDestroyNotify) gst_object_unref);
 
   /* no iterate is needed */
   GST_FLAG_SET (play_bin, GST_BIN_SELF_SCHEDULABLE);
@@ -386,7 +386,6 @@ gen_video_element (GstPlayBin * play_bin)
   /* first see if we have it in the cache */
   element = g_hash_table_lookup (play_bin->cache, "vbin");
   if (element != NULL) {
-    g_object_ref (G_OBJECT (element));
     /* need to get the video sink element as we need to add it to the
      * list of seekable elements */
     sink = g_hash_table_lookup (play_bin->cache, "video_sink");
@@ -399,11 +398,11 @@ gen_video_element (GstPlayBin * play_bin)
   conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
   scale = gst_element_factory_make ("videoscale", "vscale");
   if (play_bin->video_sink) {
-    gst_object_ref (GST_OBJECT (play_bin->video_sink));
     sink = play_bin->video_sink;
   } else {
     sink = gst_element_factory_make ("xvimagesink", "sink");
   }
+  gst_object_ref (GST_OBJECT (sink));
   g_hash_table_insert (play_bin->cache, "video_sink", sink);
 
   gst_bin_add (GST_BIN (element), identity);
@@ -419,14 +418,13 @@ gen_video_element (GstPlayBin * play_bin)
 
   gst_element_set_state (element, GST_STATE_READY);
 
+  /* since we're gonna add it to a bin but don't want to lose it,
+   * we keep a reference. */
+  gst_object_ref (GST_OBJECT (element));
   g_hash_table_insert (play_bin->cache, "vbin", element);
 
 done:
   play_bin->seekables = g_list_append (play_bin->seekables, sink);
-
-  /* since we're gonna add it to a bin but don't want to lose it,
-   * we keep a reference. */
-  gst_object_ref (GST_OBJECT (element));
 
   return element;
 }
@@ -455,7 +453,6 @@ gen_audio_element (GstPlayBin * play_bin)
 
   element = g_hash_table_lookup (play_bin->cache, "abin");
   if (element != NULL) {
-    g_object_ref (G_OBJECT (element));
     sink = g_hash_table_lookup (play_bin->cache, "audio_sink");
     goto done;
   }
@@ -468,11 +465,13 @@ gen_audio_element (GstPlayBin * play_bin)
   play_bin->volume_element = volume;
 
   if (play_bin->audio_sink) {
-    gst_object_ref (GST_OBJECT (play_bin->audio_sink));
     sink = play_bin->audio_sink;
   } else {
     sink = gst_element_factory_make ("osssink", "sink");
+    play_bin->audio_sink = GST_ELEMENT (gst_object_ref (GST_OBJECT (sink)));
   }
+
+  gst_object_ref (GST_OBJECT (sink));
   g_hash_table_insert (play_bin->cache, "audio_sink", sink);
 
   gst_bin_add (GST_BIN (element), conv);
@@ -489,14 +488,13 @@ gen_audio_element (GstPlayBin * play_bin)
 
   gst_element_set_state (element, GST_STATE_READY);
 
+  /* since we're gonna add it to a bin but don't want to lose it,
+   * we keep a reference. */
+  gst_object_ref (GST_OBJECT (element));
   g_hash_table_insert (play_bin->cache, "abin", element);
 
 done:
   play_bin->seekables = g_list_prepend (play_bin->seekables, sink);
-
-  /* since we're gonna add it to a bin but don't want to lose it,
-   * we keep a reference. */
-  gst_object_ref (GST_OBJECT (element));
 
   return element;
 }
@@ -793,7 +791,15 @@ gst_play_bin_change_state (GstElement * element)
       }
       break;
     case GST_STATE_PAUSED_TO_READY:
-      remove_sinks (play_bin);
+      /* Check for NULL because the state transition may be done by
+       * gst_bin_dispose which is called by gst_play_bin_dispose, and in that
+       * case, we don't want to run remove_sinks.
+       * FIXME: should the NULL test be done in remove_sinks? Should we just
+       * set the state to NULL in gst_play_bin_dispose?
+       */
+      if (play_bin->cache != NULL) {
+        remove_sinks (play_bin);
+      }
       break;
     default:
       break;
