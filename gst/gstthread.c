@@ -378,7 +378,7 @@ gst_thread_main_loop (void *arg)
 static void
 gst_thread_signal_thread (GstThread *thread, guint syncflag, gboolean set)
 {
-  GST_DEBUG (0,"sync: signaling thread\n");
+  GST_DEBUG (0,"sync: signaling thread setting %u to %d\n",synflag,set);
   g_mutex_lock (thread->lock);
   if (set)
     GST_FLAG_SET(thread,syncflag);
@@ -394,7 +394,8 @@ static void
 gst_thread_wait_thread (GstThread *thread, guint syncflag, gboolean set)
 {
 //  if (!thread->signaling) {
-    GST_DEBUG (0,"sync: waiting for thread\n");
+    GST_DEBUG (0,"sync: waiting for thread for %u to be set %d\n",
+	       syncflag,set);
     g_mutex_lock (thread->lock);
     if (GST_FLAG_IS_SET(thread,syncflag)!=set) {
       g_cond_wait (thread->cond, thread->lock);
