@@ -46,7 +46,7 @@ AM_PROG_CC_STDC
 dnl you need automake 1.5 for AM_PROG_AS to work !
 AM_PROG_AS
 dnl there's something wrong with AS being set to CC, so we set it explicitly
-AS=gcc
+AS="${CC}"
 AC_SUBST(AS)
 
 AC_PROG_CXX
