@@ -42,13 +42,13 @@ dump_factory (gchar *name)
     xmlDocPtr doc;
 
     doc = xmlNewDoc ("1.0");
-    doc->root = xmlNewDocNode (doc, NULL, "templates", NULL);
+    doc->xmlRootNode = xmlNewDocNode (doc, NULL, "templates", NULL);
 
     while (padtemplates) {
       xmlNodePtr parent;
       GstPadTemplate *template = (GstPadTemplate *) padtemplates->data;
 
-      parent = xmlNewChild (doc->root, NULL, "template", NULL);
+      parent = xmlNewChild (doc->xmlRootNode, NULL, "template", NULL);
 
       gst_padtemplate_save_thyself (template, parent);
 

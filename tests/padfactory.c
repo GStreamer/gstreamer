@@ -63,20 +63,20 @@ int main(int argc,char *argv[])
   xmlNodePtr parent;
 
   doc = xmlNewDoc ("1.0");
-  doc->root = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
+  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
 
   _gst_type_initialize ();
 
   sinkcaps = gst_caps_register (&mpeg2dec_sink_caps);
-  parent = xmlNewChild (doc->root, NULL, "Capabilities1", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
   gst_caps_save_thyself (sinkcaps, parent);
 
   rawcaps  = gst_caps_register (&mpeg2dec_src_caps);
-  parent = xmlNewChild (doc->root, NULL, "Capabilities2", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities2", NULL);
   gst_caps_save_thyself (rawcaps, parent);
 
   temp = gst_padtemplate_new (&pad_caps);
-  parent = xmlNewChild (doc->root, NULL, "Padtemplate", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Padtemplate", NULL);
   gst_padtemplate_save_thyself (temp, parent);
 
   xmlDocDump(stdout, doc);

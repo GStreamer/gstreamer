@@ -66,28 +66,28 @@ int main(int argc,char *argv[])
   xmlNodePtr parent;
 
   doc = xmlNewDoc ("1.0");
-  doc->root = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
+  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
 
   _gst_type_initialize ();
 
   sinkcaps = gst_caps_register (&mpeg2dec_sink_caps);
-  parent = xmlNewChild (doc->root, NULL, "Capabilities1", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
   gst_caps_save_thyself (sinkcaps, parent);
 
   rawcaps  = gst_caps_register (&mpeg2dec_src_caps);
-  parent = xmlNewChild (doc->root, NULL, "Capabilities2", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities2", NULL);
   gst_caps_save_thyself (rawcaps, parent);
 
   rawcaps2  = gst_caps_register (&raw_sink_caps);
-  parent = xmlNewChild (doc->root, NULL, "Capabilities3", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities3", NULL);
   gst_caps_save_thyself (rawcaps2, parent);
 
   mp1parsecaps  = gst_caps_register (&mp1parse_src_caps);
-  parent = xmlNewChild (doc->root, NULL, "Capabilities4", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities4", NULL);
   gst_caps_save_thyself (mp1parsecaps, parent);
 
   rawcaps3  = gst_caps_register (&raw2_sink_caps);
-  parent = xmlNewChild (doc->root, NULL, "Capabilities5", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities5", NULL);
   gst_caps_save_thyself (rawcaps3, parent);
 
   xmlDocDump(stdout, doc);

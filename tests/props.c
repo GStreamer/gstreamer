@@ -29,16 +29,16 @@ int main(int argc,char *argv[])
   gint i;
 
   doc = xmlNewDoc ("1.0");
-  doc->root = xmlNewDocNode (doc, NULL, "Properties", NULL);
+  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "Properties", NULL);
 
   _gst_type_initialize ();
 
   sinkprops = gst_props_register (mpeg2dec_sink_props);
-  parent = xmlNewChild (doc->root, NULL, "Props1", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Props1", NULL);
   gst_props_save_thyself (sinkprops, parent);
 
   rawprops  = gst_props_register (mpeg2dec_src_props);
-  parent = xmlNewChild (doc->root, NULL, "Props2", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Props2", NULL);
   gst_props_save_thyself (rawprops, parent);
 
   i=argc;
@@ -57,7 +57,7 @@ int main(int argc,char *argv[])
 			             NULL));
   }
 
-  parent = xmlNewChild (doc->root, NULL, "Props3", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Props3", NULL);
   gst_props_save_thyself (testprops, parent);
 
   xmlDocDump(stdout, doc);
