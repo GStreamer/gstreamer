@@ -52,6 +52,10 @@ AM_PROG_LIBTOOL
 
 CFLAGS=""
 
+dnl This is used for the -config script...
+builddir=`pwd`
+AC_SUBST(builddir)
+
 dnl ##############################
 dnl # Do automated configuration #
 dnl ##############################
@@ -153,16 +157,16 @@ AM_PATH_GLIB(1.2.0,,
             AC_MSG_ERROR(Cannot find glib: Is glib-config in path?),
             glib gmodule gthread)
 dnl Put the glib flags into $LIBS and $CFLAGS since we always use them
-LIBS="$LIBS $GLIB_LIBS"
-CFLAGS="$CFLAGS $GLIB_CFLAGS"
+CORE_LIBS="$GLIB_LIBS"
+CORE_CFLAGS="$GLIB_CFLAGS"
 
 
 dnl Check for gtk
 AM_PATH_GTK(1.2.0,,
             AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
 dnl Put the gtk flags into $LIBS and $CFLAGS since we always use them
-LIBS="$LIBS $GTK_LIBS"
-CFLAGS="$CFLAGS $GTK_CFLAGS"
+CORE_LIBS="$CORE_LIBS $GTK_LIBS"
+CORE_CFLAGS="$CORE_CFLAGS $GTK_CFLAGS"
 
 
 dnl Check for libxml
@@ -174,8 +178,8 @@ XML_LIBS=`xml-config --libs`
 XML_CFLAGS=`xml-config --cflags`
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
-LIBS="$LIBS $XML_LIBS"
-CFLAGS="$CFLAGS $XML_CFLAGS"
+CORE_LIBS="$CORE_LIBS $XML_LIBS"
+CORE_CFLAGS="$CORE_CFLAGS $XML_CFLAGS"
 
 
 dnl Next, check for the optional libraries:
@@ -617,7 +621,10 @@ dnl ##############################
 dnl # Set up the defaults cflags #
 dnl ##############################
 dnl CC="kgcc"
-CFLAGS="$CFLAGS -O6 -Wall"
+CFLAGS="$CORE_CFLAGS $CFLAGS -O6 -Wall"
+LIBS="$CORE_LIBS $LIBS"
+AC_SUBST(CORE_LIBS)
+AC_SUBST(CORE_CFLAGS)
 
 dnl FIXME: having to AC_SUBST these is messy.  Not sure if CPPFLAGS and LDFLAGS
 dnl need it, either.
