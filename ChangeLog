@@ -1,3 +1,10 @@
+2004-06-01  Christophe Fergeau  <teuf@gnome.org>
+
+	* ext/flac/gstflactag.c: strip ending framing bit from vorbiscomment
+	  buffer since libflac doesn't expect it (reports a sync error when 
+	  it encounters that)
+
+	
 2004-06-01  Owen Fraser-Green  <owen@discobabe.net>
 
 	* gst-libs/gst/mixer/mixertrack.h: Changed struct syntax
@@ -9,6 +16,7 @@
 	(gst_mixer_options_get_values): Added	
 	* gst-libs/gst/mixer/mixer.h: Changed GstMixerClass syntax
 	* gst-libs/gst/mixer/mixer.c: Fixed comment
+
 
 2004-06-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
