@@ -1,0 +1,20 @@
+2001-05-20  Arik Devens  <arik@gnome.org>
+
+	General code cleanup and moving bits around as well.
+	
+	* gstplay.c (gst_play_have_size): Added saving of the source_width
+	and source_height so that changing the size is possible.
+	(gst_play_set_display_size): New function to change the displayed
+	size.
+
+	* callbacks.c (on_original_size_activate): Added a new function to
+	restore the size of the media to it's default.
+	(on_double_size_activate): Added a new function to double the size
+	of the media.
+	(on_full_screen_activate): Added a new function to (theoretically)
+	do full-screen action baby!
+
+	* full-screen.h: New file for full-screen action baby!
+
+	* full-screen.c: New file for full-screen action baby!
+

@@ -470,7 +470,8 @@
 Wim Taymans &lt;wim.taymans@tvd.be&gt;,
 Richard Boulton &lt;richard@tartarus.org&gt;,
 Chris Emerson (PPC port),
-Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
+Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;,
+Arik Devens &lt;arik@gnome.org&gt;
 </authors>
   <comments>A generic media player for the gstreamer streaming media framework.</comments>
 </widget>
