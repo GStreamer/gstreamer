@@ -64,7 +64,8 @@ mp3_sink_factory (void)
   	  "mp3parse_sink",
     	  "audio/mpeg",
 	    "mpegversion", GST_PROPS_INT (1)
-        )
+        ),
+	NULL
     );
 };
 
