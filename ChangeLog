@@ -1,5 +1,10 @@
 2004-06-12  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* gst/gstinfo.h:
+          fix a problem to enable/disable DEBUG under MSVC
+
+2004-06-12  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* win32/:
           enable more debug code in DEBUG build
 
