@@ -1430,8 +1430,8 @@ gst_pad_renegotiate (GstPad * pad)
   GstPadLink *link;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (GST_PAD_LINK_SRC (pad), GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (GST_PAD_LINK_SINK (pad), GST_PAD_LINK_REFUSED);
+  if (!GST_PAD_PEER (pad))
+    return GST_PAD_LINK_OK;
 
   link = gst_pad_link_new ();
 
@@ -1503,8 +1503,9 @@ gst_pad_try_set_caps (GstPad * pad, const GstCaps * caps)
     return GST_PAD_LINK_OK;
   }
 
-  g_return_val_if_fail (GST_PAD_LINK_SRC (pad), GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (GST_PAD_LINK_SINK (pad), GST_PAD_LINK_REFUSED);
+  /* we just checked that a peer exists */
+  g_assert (GST_PAD_LINK_SRC (pad));
+  g_assert (GST_PAD_LINK_SINK (pad));
 
   /* if the desired caps are already there, it's trivially ok */
   if (GST_PAD_CAPS (pad) && gst_caps_is_equal (caps, GST_PAD_CAPS (pad))) {
@@ -1567,8 +1568,9 @@ gst_pad_try_set_caps_nonfixed (GstPad * pad, const GstCaps * caps)
     return GST_PAD_LINK_OK;
   }
 
-  g_return_val_if_fail (GST_PAD_LINK_SRC (pad), GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (GST_PAD_LINK_SINK (pad), GST_PAD_LINK_REFUSED);
+  /* we just checked that a peer exists */
+  g_assert (GST_PAD_LINK_SRC (pad));
+  g_assert (GST_PAD_LINK_SINK (pad));
 
   /* if the link is already negotiated and the caps are compatible
    * with what we're setting, it's trivially OK. */

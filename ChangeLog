@@ -1,3 +1,10 @@
+2004-10-11  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstpad.c: (gst_pad_renegotiate), (gst_pad_try_set_caps),
+	(gst_pad_try_set_caps_nonfixed):
+	  allow renegotiation of unconnected pads (as inside spider). Simply
+	  return OK if unconnected - mimic try_set_caps there.
+
 2004-10-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstbin.c: (gst_bin_sync_children_state):
@@ -197,6 +204,7 @@
 	* gst/elements/gstidentity.h:
 	Added datarate properties to limit the datarate.
 
+>>>>>>> 1.808
 2004-08-25  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/autoplug/gstspider.c: (plugin_init):
