@@ -1,5 +1,10 @@
 2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_type_find):
+	  Yay, another one.
+
+2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/esd/esdsink.c: (gst_esdsink_chain):
 	  Make error actually say something useful (fixes #156798).
 	* gst-libs/gst/riff/riff-media.c:
