@@ -57,14 +57,14 @@ gst_v4l2_set_display (GstV4l2Element *v4l2element,
 	switch (system(buff)) {
 		case -1:
 			gst_element_error(GST_ELEMENT(v4l2element),
-				"Could not start v4l-conf: %s", sys_errlist[errno]);
+				"Could not start v4l-conf: %s", strerror(errno));
 			g_free(buff);
 			return FALSE;
 		case 0:
 			break;
 		default:
 			gst_element_error(GST_ELEMENT(v4l2element),
-				"v4l-conf failed to run correctly: %s", sys_errlist[errno]);
+				"v4l-conf failed to run correctly: %s", strerror(errno));
 			g_free(buff);
 			return FALSE;
 	}
@@ -106,7 +106,7 @@ gst_v4l2_set_window (GstV4l2Element   *v4l2element,
 	if (ioctl(v4l2element->video_fd, VIDIOC_S_WIN, &vwin) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2element),
 			"Failed to set the video window on device %s: %s",
-			v4l2element->device, sys_errlist[errno]);
+			v4l2element->device, strerror(errno));
 		return FALSE;
 	}
 
@@ -133,7 +133,7 @@ gst_v4l2_enable_overlay (GstV4l2Element *v4l2element,
 	if (ioctl(v4l2element->video_fd, VIDIOC_PREVIEW, &doit) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2element),
 			"Failed to %s overlay display for device %s: %s",
-			enable?"enable":"disable", v4l2element->device, sys_errlist[errno]);
+			enable?"enable":"disable", v4l2element->device, strerror(errno));
 		return FALSE;
 	}
 
