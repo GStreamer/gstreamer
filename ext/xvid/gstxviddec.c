@@ -96,7 +96,7 @@ static void             gst_xviddec_class_init   (GstXvidDecClass *klass);
 static void             gst_xviddec_init         (GstXvidDec      *xviddec);
 static void             gst_xviddec_dispose      (GObject         *object);
 static void             gst_xviddec_chain        (GstPad          *pad,
-                                                  GstBuffer       *buf);
+                                                  GstData         *data);
 static GstPadLinkReturn gst_xviddec_connect      (GstPad          *pad,
                                                   GstCaps         *vscapslist);
 static GstPadLinkReturn	gst_xviddec_negotiate	(GstXvidDec *xviddec);

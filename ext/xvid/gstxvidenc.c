@@ -98,7 +98,7 @@ enum {
 static void             gst_xvidenc_class_init   (GstXvidEncClass *klass);
 static void             gst_xvidenc_init         (GstXvidEnc      *xvidenc);
 static void             gst_xvidenc_chain        (GstPad          *pad,
-                                                  GstBuffer       *buf);
+                                                  GstData         *data);
 static GstPadLinkReturn gst_xvidenc_connect      (GstPad          *pad,
                                                   GstCaps         *vscapslist);
 
