@@ -139,7 +139,7 @@ gst_sdlvideosink_base_init (gpointer g_class)
             "format", GST_TYPE_FOURCC, format[i],
             "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
             "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL));
+            "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0, NULL));
   }
 
   sink_template = gst_pad_template_new ("sink",
