@@ -257,6 +257,10 @@ GstPadLinkReturn        gst_element_link_pads_filtered  (GstElement *src, const 
 void                    gst_element_unlink_pads         (GstElement *src, const gchar *srcpadname,
 		                                         GstElement *dest, const gchar *destpadname);
 
+/* element class functions */
+void gst_element_class_install_std_props (GstElementClass * klass,
+    const gchar * first_name, ...);
+
 /* pad functions */
 gboolean                gst_pad_can_link                (GstPad *srcpad, GstPad *sinkpad);
 gboolean                gst_pad_can_link_filtered       (GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);

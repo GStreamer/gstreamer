@@ -273,8 +273,6 @@ struct _GstElementClass
 /* class stuff */
 void gst_element_class_add_pad_template (GstElementClass * klass,
     GstPadTemplate * templ);
-void gst_element_class_install_std_props (GstElementClass * klass,
-    const gchar * first_name, ...);
 void gst_element_class_set_details (GstElementClass * klass,
     const GstElementDetails * details);
 GstPadTemplate *gst_element_class_get_pad_template (GstElementClass *
