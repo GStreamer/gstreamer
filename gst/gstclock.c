@@ -602,23 +602,22 @@ GstClockTime
 gst_clock_get_time (GstClock *clock)
 {
   GstClockTime ret = G_GINT64_CONSTANT (0);
+  GstClockClass *cclass;
 
   g_return_val_if_fail (GST_IS_CLOCK (clock), G_GINT64_CONSTANT (0));
 
-    GstClockClass *cclass;
+  cclass = GST_CLOCK_GET_CLASS (clock);
 
-    cclass = GST_CLOCK_GET_CLASS (clock);
-
-    if (cclass->get_internal_time) {
-      ret = cclass->get_internal_time (clock) - clock->start_time;
-    }
-    /* make sure the time is increasing, else return last_time */
-    if ((gint64) ret < (gint64) clock->last_time) {
-      ret = clock->last_time;
-    }
-    else {
-      clock->last_time = ret;
-    }
+  if (cclass->get_internal_time) {
+    ret = cclass->get_internal_time (clock) - clock->start_time;
+  }
+  /* make sure the time is increasing, else return last_time */
+  if ((gint64) ret < (gint64) clock->last_time) {
+    ret = clock->last_time;
+  }
+  else {
+    clock->last_time = ret;
+  }
 
   return ret;
 }
