@@ -1,3 +1,13 @@
+2004-03-09  Benjamin Otte  <otte@gnome.org>
+
+	* ext/mikmod/gstmikmod.c: (gst_mikmod_init), (gst_mikmod_loop),
+	(gst_mikmod_change_state):
+	* ext/mikmod/gstmikmod.h:
+	  make mikmod's loop function not loop infinitely and call
+	  gst_element_yield anymore
+	* gst/modplug/gstmodplug.cc:
+	  fix pad negotiation
+
 2004-03-09  David Schleef  <ds@schleef.org>
 
 	* ext/lcs/Makefile.am:  Fix so that the lcs colorspace plugin
