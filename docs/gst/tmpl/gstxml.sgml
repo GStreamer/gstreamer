@@ -110,10 +110,6 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 
 </para>
 
-@: 
-@: 
-@:
-
 @gstxml: the object which received the signal.
 @arg1: 
 @arg2: 
@@ -123,7 +119,7 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 
 </para>
 
-@gstxml: the object which received the signal.
-@arg1: 
-@arg2: 
+@: 
+@: 
+@: 
 

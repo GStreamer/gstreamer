@@ -212,6 +212,15 @@ Check if the object has been destroyed.
 @object: the object
 
 
+<!-- ##### FUNCTION gst_object_replace ##### -->
+<para>
+
+</para>
+
+@oldobj: 
+@newobj: 
+
+
 <!-- ##### FUNCTION gst_object_sink ##### -->
 <para>
 

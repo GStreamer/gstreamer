@@ -344,6 +344,12 @@ gst_props_entry_clean (GstPropsEntry *entry)
   }
 }
 
+/**
+ * gst_props_entry_destroy:
+ * @entry: the entry to destroy
+ *
+ * Free the given propsentry
+ */
 void
 gst_props_entry_destroy (GstPropsEntry *entry)
 {
@@ -929,8 +935,14 @@ gst_props_destroy (GstProps *props)
 #endif
 }
 
-/* 
- * copy entries 
+/** 
+ * gst_props_entry_copy:
+ * @entry: the entry to copy
+ *
+ * Copy the propsentry.
+ *
+ * Returns: a new #GstPropsEntry that is a copy of the original
+ * given entry.
  */
 GstPropsEntry*
 gst_props_entry_copy (const GstPropsEntry *entry)

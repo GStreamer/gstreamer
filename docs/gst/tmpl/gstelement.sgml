@@ -700,6 +700,46 @@ is scheduled.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_get_event_masks ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_get_formats ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_get_query_types ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_convert ##### -->
+<para>
+
+</para>
+
+@element: 
+@src_format: 
+@src_value: 
+@dest_format: 
+@dest_value: 
+@Returns: 
+
+
 <!-- ##### MACRO gst_element_default_deep_notify ##### -->
 <para>
 The default deep notify handler that prints out the property change
@@ -912,9 +952,37 @@ Get the clock of this element
 @obj: a #GstElement to query
 
 
+<!-- ##### MACRO GST_ELEMENT_EVENT_MASK_FUNCTION ##### -->
+<para>
+A helper macro to create a mask function
+</para>
+
+@functionname: the name of the mask function
+@...: Masks
+
+
+<!-- ##### MACRO GST_ELEMENT_FORMATS_FUNCTION ##### -->
+<para>
+Halper macro to create element format functions
+</para>
+
+@functionname: The function name
+@...: formats
+
+
+<!-- ##### MACRO GST_ELEMENT_QUERY_TYPE_FUNCTION ##### -->
+<para>
+Helper macro to create query type functions
+</para>
+
+@functionname: The function name
+@...: list of query types.
+
+
 <!-- ##### SIGNAL GstElement::eos ##### -->
 <para>
-
+Signal emited when the element goes to PAUSED due to an end-of-stream
+condition.
 </para>
 
 @gstelement: the object which received the signal.

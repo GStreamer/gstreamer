@@ -27,6 +27,7 @@
 <!entity GstQuery SYSTEM "sgml/gstquery.sgml">
 <!entity GstThread SYSTEM "sgml/gstthread.sgml">
 <!entity GstRegistry SYSTEM "sgml/gstregistry.sgml">
+<!entity GstRegistryPool SYSTEM "sgml/gstregistrypool.sgml">
 <!entity GstScheduler SYSTEM "sgml/gstscheduler.sgml">
 <!entity GstSchedulerFactory SYSTEM "sgml/gstschedulerfactory.sgml">
 <!entity GstTrace SYSTEM "sgml/gsttrace.sgml">
@@ -37,6 +38,7 @@
 <!entity GstClock SYSTEM "sgml/gstclock.sgml">
 <!entity GstSystemClock SYSTEM "sgml/gstsystemclock.sgml">
 <!entity GstUtils SYSTEM "sgml/gstutils.sgml">
+<!entity GstUri SYSTEM "sgml/gsturi.sgml">
 <!entity GstXML SYSTEM "sgml/gstxml.sgml">
 <!entity GstQueue SYSTEM "sgml/gstqueue.sgml">
 <!entity GstTypeFind SYSTEM "sgml/gsttypefind.sgml">
@@ -114,6 +116,7 @@ with some more specialized elements.</para>
     &GstQuery;
     &GstQueue;
     &GstRegistry;
+    &GstRegistryPool;
     &GstScheduler;
     &GstSchedulerFactory;
     &GstSystemClock;
@@ -121,6 +124,7 @@ with some more specialized elements.</para>
     &GstType;
     &GstTypeFactory;
     &GstTypeFind;
+    &GstUri;
     &GstUtils;
     &GstXML;
 

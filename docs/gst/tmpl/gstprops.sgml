@@ -21,7 +21,7 @@ The props structure
 </para>
 
 @refcount: a refcount for this struct
-@fixed: indicates that this props has no lists or ranges
+@flags: 
 @properties: the properties
 
 <!-- ##### ENUM GstPropsType ##### -->
@@ -42,6 +42,88 @@ The property type
 @GST_PROPS_FLOAT_RANGE_TYPE: 
 @GST_PROPS_INT_RANGE_TYPE: 
 @GST_PROPS_LAST_TYPE: 
+
+<!-- ##### ENUM GstPropsFlags ##### -->
+<para>
+Flags for this property
+</para>
+
+@GST_PROPS_FIXED: The property has no variable entries
+@GST_PROPS_FLOATING: The property is not owned by anyone
+
+<!-- ##### MACRO GST_PROPS_TRACE_NAME ##### -->
+<para>
+The name used for tracing memory allocations for the properties
+</para>
+
+
+
+<!-- ##### MACRO GST_PROPS_FLAGS ##### -->
+<para>
+The flags of this property
+</para>
+
+@props: The props to query
+
+
+<!-- ##### MACRO GST_PROPS_FLAG_IS_SET ##### -->
+<para>
+Check if a flag is set on the property
+</para>
+
+@props: The property to check
+@flag: The flag to check for
+
+
+<!-- ##### MACRO GST_PROPS_FLAG_SET ##### -->
+<para>
+Set a flag on the property
+</para>
+
+@props: The property to modify
+@flag: The flag to set
+
+
+<!-- ##### MACRO GST_PROPS_FLAG_UNSET ##### -->
+<para>
+Unset a flag in the property
+</para>
+
+@props: The property to modify
+@flag: The flag to unset
+
+
+<!-- ##### MACRO GST_PROPS_IS_FIXED ##### -->
+<para>
+Check if the property is fixed, ie. it has no variable property entries.
+</para>
+
+@props: The property to check
+
+
+<!-- ##### MACRO GST_PROPS_IS_FLOATING ##### -->
+<para>
+Check if the property is floating
+</para>
+
+@props: The property to check
+
+
+<!-- ##### MACRO GST_PROPS_PROPERTIES ##### -->
+<para>
+Get the property entries of this property
+</para>
+
+@props: The property to query
+
+
+<!-- ##### MACRO GST_PROPS_REFCOUNT ##### -->
+<para>
+Get the refcount of the property
+</para>
+
+@props: The property to query
+
 
 <!-- ##### MACRO GST_TYPE_PROPS ##### -->
 <para>
@@ -181,6 +263,13 @@ An entry hols one key/value pair.
 </para>
 
 
+<!-- ##### MACRO GST_PROPS_ENTRY_TRACE_NAME ##### -->
+<para>
+The name used for tracing memory allocations.
+</para>
+
+
+
 <!-- ##### FUNCTION gst_props_new ##### -->
 <para>
 
@@ -251,9 +340,37 @@ An entry hols one key/value pair.
 </para>
 
 @props: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_props_unref ##### -->
+<para>
+
+</para>
+
+@props: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_replace ##### -->
+<para>
+
+</para>
+
+@oldprops: 
+@newprops: 
+
+
+<!-- ##### FUNCTION gst_props_replace_sink ##### -->
+<para>
+
+</para>
+
+@oldprops: 
+@newprops: 
+
+
+<!-- ##### FUNCTION gst_props_sink ##### -->
 <para>
 
 </para>
@@ -410,6 +527,24 @@ An entry hols one key/value pair.
 @entry: 
 
 
+<!-- ##### FUNCTION gst_props_remove_entry ##### -->
+<para>
+
+</para>
+
+@props: 
+@entry: 
+
+
+<!-- ##### FUNCTION gst_props_remove_entry_by_name ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+
+
 <!-- ##### FUNCTION gst_props_entry_new ##### -->
 <para>
 
@@ -418,6 +553,23 @@ An entry hols one key/value pair.
 @name: 
 @Varargs: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_copy ##### -->
+<para>
+
+</para>
+
+@entry: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_destroy ##### -->
+<para>
+
+</para>
+
+@entry: 
 
 
 <!-- ##### FUNCTION gst_props_entry_get ##### -->

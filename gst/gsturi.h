@@ -60,7 +60,6 @@ GType			gst_uri_handler_get_type	(void);
 GstURIHandler*		gst_uri_handler_new		(const gchar *name, 
 		          				 const gchar *uri, const gchar *longdesc, 
 							 const gchar *element, gchar *property);
-void                    gst_uri_handler_destroy		(GstURIHandler *handler);
 
 GstURIHandler*		gst_uri_handler_find		(const gchar *name);
 GstURIHandler*		gst_uri_handler_find_by_uri	(const gchar *uri);

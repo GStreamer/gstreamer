@@ -2668,6 +2668,30 @@ subclasses can use this value to start the enumeration of their flags
 
 @klass: 
 
+<!-- ##### MACRO GST_PAD_CONNECT_DELAYED ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PAD_CONNECT_DONE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PAD_CONNECT_OK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PAD_CONNECT_REFUSED ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_PAD_FACTORY_ALWAYS ##### -->
 <para>
 Indicate that this pad will always be available.
@@ -2708,6 +2732,13 @@ Indicates a srcpad for the padfactory.
 </para>
 
 
+<!-- ##### MACRO GST_PAD_IS_CONNECTED ##### -->
+<para>
+
+</para>
+
+@a: 
+
 <!-- ##### MACRO GST_PAD_LINKED ##### -->
 <para>
 Is this pad linked.
@@ -2728,6 +2759,13 @@ Is this pad linked.
 </para>
 
 @klass: 
+
+<!-- ##### MACRO GST_PAD_TEMPLATE_FIXED ##### -->
+<para>
+Get the flag indicating the properties are fixed from the template.
+</para>
+
+@templ: the template to query
 
 <!-- ##### MACRO GST_PIPELINE ##### -->
 <para>
@@ -5073,6 +5111,18 @@ Indicates this pad is active
 <<<<<<< gstreamer-unused.sgml
 
 
+<!-- ##### TYPEDEF GstPadConnectFunction ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstPadConnectReturn ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### USER_FUNCTION GstPadDispatcherFunc ##### -->
 <para>
 The signature of the dispatcher callback.
@@ -7396,6 +7446,12 @@ must be defined to activate the tracing functionality.
 @pool: 
 @destroy: 
 
+<!-- ##### FUNCTION gst_buffer_print_stats ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gst_buffer_remove_meta ##### -->
 <para>
 
@@ -7871,6 +7927,49 @@ must be defined to activate the tracing functionality.
 @first_name: 
 @Varargs: 
 
+<!-- ##### MACRO gst_element_connect ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
+<!-- ##### MACRO gst_element_connect_filtered ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@c: 
+
+<!-- ##### MACRO gst_element_connect_many ##### -->
+<para>
+
+</para>
+
+@a: 
+@...: 
+
+<!-- ##### MACRO gst_element_connect_pads ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@c: 
+@d: 
+
+<!-- ##### MACRO gst_element_disconnect ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
 <!-- ##### FUNCTION gst_element_factory_add_sink ##### -->
 <para>
 
@@ -8244,6 +8343,12 @@ must be defined to activate the tracing functionality.
 @Varargs: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_event_print_stats ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gst_event_type_get_type ##### -->
 <para>
 
@@ -8607,12 +8712,37 @@ Create new meta data.
 @pad: 
 @parent: 
 
+<!-- ##### MACRO gst_pad_connect ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
+<!-- ##### MACRO gst_pad_connect_filtered ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@c: 
+
 <!-- ##### FUNCTION gst_pad_direction_get_type ##### -->
 <para>
 
 </para>
 
 @Returns: 
+
+<!-- ##### MACRO gst_pad_disconnect ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
 
 <!-- ##### MACRO gst_pad_eos ##### -->
 <para>
@@ -8773,6 +8903,14 @@ Call the EOS function of the pad
 @data: 
 @Returns: 
 
+<!-- ##### MACRO gst_pad_proxy_connect ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
 <!-- ##### FUNCTION gst_pad_pull_region ##### -->
 <para>
 
@@ -8843,6 +8981,14 @@ Call the EOS function of the pad
 
 @pad: 
 @caps: 
+
+<!-- ##### MACRO gst_pad_set_connect_function ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
 
 <!-- ##### FUNCTION gst_pad_set_eos ##### -->
 <para>
@@ -9879,6 +10025,85 @@ Call the EOS function of the pad
 @parent: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_uri_handler_destroy ##### -->
+<para>
+
+</para>
+
+@handler: 
+
+<!-- ##### FUNCTION gst_util_get_bool_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_util_get_double_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_util_get_float_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_util_get_int64_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_util_get_int_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_util_get_long_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_util_get_pointer_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_util_get_string_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_util_get_widget_arg ##### -->
 <para>
 
@@ -9886,6 +10111,16 @@ Call the EOS function of the pad
 
 @object: 
 @argname: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_util_has_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@arg_type: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_xml_new_from_memory ##### -->

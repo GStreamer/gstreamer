@@ -143,6 +143,13 @@ The type of the clock entry
 @GST_CLOCK_ENTRY_SINGLE: a single shot timeout
 @GST_CLOCK_ENTRY_PERIODIC: a periodic timeout request
 
+<!-- ##### MACRO GST_CLOCK_ENTRY_TRACE_NAME ##### -->
+<para>
+The name used for tracing clock entry allocations.
+</para>
+
+
+
 <!-- ##### MACRO GST_CLOCK_ENTRY ##### -->
 <para>
 Cast to a clock entry

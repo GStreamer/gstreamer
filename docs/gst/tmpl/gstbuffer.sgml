@@ -82,6 +82,13 @@ Last reviewed on August 30th, 2002 (0.4.0.1)
 #GstBufferPool, #GstPad, #GstData
 </para>
 
+<!-- ##### MACRO GST_BUFFER_TRACE_NAME ##### -->
+<para>
+The name used for tracing memory allocations
+</para>
+
+
+
 <!-- ##### MACRO GST_BUFFER ##### -->
 <para>
 Casts an object to a GstBuffer.
@@ -418,12 +425,5 @@ It is dangerous to use this function, you should use gst_buffer_unref() instead.
 @buf2: 
 @len: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_buffer_print_stats ##### -->
-<para>
-
-</para>
-
 
 

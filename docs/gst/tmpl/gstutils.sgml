@@ -33,86 +33,6 @@ Some convenience functions
 @value_str: 
 
 
-<!-- ##### FUNCTION gst_util_get_int_arg ##### -->
-<para>
-
-</para>
-
-@object: 
-@argname: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_util_get_bool_arg ##### -->
-<para>
-
-</para>
-
-@object: 
-@argname: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_util_get_long_arg ##### -->
-<para>
-
-</para>
-
-@object: 
-@argname: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_util_get_float_arg ##### -->
-<para>
-
-</para>
-
-@object: 
-@argname: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_util_get_double_arg ##### -->
-<para>
-
-</para>
-
-@object: 
-@argname: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_util_get_string_arg ##### -->
-<para>
-
-</para>
-
-@object: 
-@argname: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_util_get_pointer_arg ##### -->
-<para>
-
-</para>
-
-@object: 
-@argname: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_util_get_int64_arg ##### -->
-<para>
-
-</para>
-
-@object: 
-@argname: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_util_dump_mem ##### -->
 <para>
 
@@ -120,17 +40,6 @@ Some convenience functions
 
 @mem: 
 @size: 
-
-
-<!-- ##### FUNCTION gst_util_has_arg ##### -->
-<para>
-
-</para>
-
-@object: 
-@argname: 
-@arg_type: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_print_element_args ##### -->

@@ -251,6 +251,21 @@ The value of the size event
 @event: The event to query
 
 
+<!-- ##### MACRO GST_EVENT_IS_INTERRUPT ##### -->
+<para>
+Check if the event is an interrupt event
+</para>
+
+@event: The event to check
+
+
+<!-- ##### MACRO GST_EVENT_TRACE_NAME ##### -->
+<para>
+The name used for memory allocation tracing
+</para>
+
+
+
 <!-- ##### STRUCT GstEvent ##### -->
 <para>
 The event structure
@@ -371,11 +386,14 @@ Create a new flush event.
 
 
 
-<!-- ##### FUNCTION gst_event_print_stats ##### -->
+<!-- ##### FUNCTION gst_event_masks_contains ##### -->
 <para>
 
 </para>
 
+@masks: 
+@mask: 
+@Returns: 
 
 
 <!-- ##### MACRO GST_EVENT_MASK_FUNCTION ##### -->

@@ -87,6 +87,14 @@ The padtemplate object.
 </para>
 
 
+<!-- ##### ENUM GstPadTemplateFlags ##### -->
+<para>
+Flags for the padtemplate
+</para>
+
+@GST_PAD_TEMPLATE_FIXED: The padtemplate has no variable properties
+@GST_PAD_TEMPLATE_FLAG_LAST: first flag that can be used by subclasses.
+
 <!-- ##### MACRO GST_PAD_TEMPLATE_CAPS ##### -->
 <para>
 Get a handle to the padtemplate #GstCaps
@@ -149,14 +157,6 @@ Get the padtemplate of the factory created with GST_PAD_TEMPLATE_FACTORY()
 </para>
 
 @fact: the factory name to get the padtemplate from.
-
-
-<!-- ##### MACRO GST_PAD_TEMPLATE_FIXED ##### -->
-<para>
-Get the flag indicating the properties are fixed from the template.
-</para>
-
-@templ: the template to query
 
 
 <!-- ##### MACRO GST_PAD_TEMPLATE_IS_FIXED ##### -->

@@ -61,6 +61,38 @@ Specify the method to find an index entry in the index.
 @GST_INDEX_LOOKUP_BEFORE: The exact entry or the one before it
 @GST_INDEX_LOOKUP_AFTER: The exact entry or the one after it
 
+<!-- ##### ENUM GstIndexFlags ##### -->
+<para>
+Flags for this index
+</para>
+
+@GST_INDEX_WRITABLE: The index is writable
+@GST_INDEX_READABLE: The index is readable
+@GST_INDEX_FLAG_LAST: First flag that can be used by subclasses
+
+<!-- ##### MACRO GST_INDEX_ID_INVALID ##### -->
+<para>
+An invalid index id
+</para>
+
+
+
+<!-- ##### MACRO GST_INDEX_IS_READABLE ##### -->
+<para>
+Check if the index can be read from
+</para>
+
+@obj: The index to check
+
+
+<!-- ##### MACRO GST_INDEX_IS_WRITABLE ##### -->
+<para>
+Check if the index can be written to
+</para>
+
+@obj: The index to check
+
+
 <!-- ##### MACRO GST_INDEX_NASSOCS ##### -->
 <para>
 Get the number of associations in the entry.
@@ -161,6 +193,15 @@ Function to resolve ids to writer descriptions.
 <!-- # Unused Parameters # -->
 @writer_id: A pointer to the id that has to be assigned to this writer
 
+
+<!-- ##### ENUM GstIndexResolverMethod ##### -->
+<para>
+The method used to resolve index writers
+</para>
+
+@GST_INDEX_RESOLVER_CUSTOM: Use a custom resolver
+@GST_INDEX_RESOLVER_GTYPE: Resolve based on the GType of the object
+@GST_INDEX_RESOLVER_PATH: Resolve on the path in graph
 
 <!-- ##### STRUCT GstIndex ##### -->
 <para>
@@ -349,6 +390,15 @@ The GstIndex object
 @format: 
 @value: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_index_commit ##### -->
+<para>
+
+</para>
+
+@index: 
+@id: 
 
 
 <!-- ##### SIGNAL GstIndex::entry-added ##### -->

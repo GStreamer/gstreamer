@@ -66,6 +66,13 @@ Cast a pointer to a GstBufferPool
 @pool: The pointer to cast
 
 
+<!-- ##### MACRO GST_BUFFER_POOL_TRACE_NAME ##### -->
+<para>
+The name used for memory tracing.
+</para>
+
+
+
 <!-- ##### MACRO GST_IS_BUFFER_POOL ##### -->
 <para>
 Check if the given pointer is a bufferpool

@@ -137,7 +137,7 @@ gst_uri_handler_find (const gchar *name)
   return NULL;
 }
 
-/**
+/*
  * this is a straight copy from glib 2.2
  * remove this function when glib 2.2 is sufficiently widespread and
  * then change to using the regular g_str_has_prefix

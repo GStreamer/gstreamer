@@ -14,3 +14,104 @@ Tracing functionality
 
 </para>
 
+<!-- ##### ENUM GstAllocTraceFlags ##### -->
+<para>
+Flags indicating which tracing feature to enable.
+</para>
+
+@GST_ALLOC_TRACE_LIVE: Trace number of non-freed memory
+@GST_ALLOC_TRACE_MEM_LIVE: trace pointers of unfreed memory
+
+<!-- ##### STRUCT GstAllocTrace ##### -->
+<para>
+The main tracing object
+</para>
+
+@name: The name of the tracing object
+@flags: Flags for this object
+@live: counter for live memory
+@mem_live: list with pointers to unfreed memory
+
+<!-- ##### FUNCTION gst_alloc_trace_available ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_alloc_trace_list ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_alloc_trace_print_all ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_alloc_trace_set_flags_all ##### -->
+<para>
+
+</para>
+
+@flags: 
+
+
+<!-- ##### FUNCTION gst_alloc_trace_get ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_alloc_trace_print ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+
+<!-- ##### FUNCTION gst_alloc_trace_set_flags ##### -->
+<para>
+
+</para>
+
+@trace: 
+@flags: 
+
+
+<!-- ##### MACRO gst_alloc_trace_register ##### -->
+<para>
+Register a new alloc tracer with the given name
+</para>
+
+@name: The name of the tracer object
+
+
+<!-- ##### MACRO gst_alloc_trace_new ##### -->
+<para>
+Use the tracer to trace a new memory allocation
+</para>
+
+@trace: The tracer to use
+@mem: The memory allocated
+
+
+<!-- ##### MACRO gst_alloc_trace_free ##### -->
+<para>
+Trace a memory free operation
+</para>
+
+@trace: The traver to use
+@mem: The memory that is freed
+
+

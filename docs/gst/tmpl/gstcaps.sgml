@@ -146,6 +146,69 @@ A convenience macro to get a GstCaps from the given capsfactory.
 @fact: the factory to use.
 
 
+<!-- ##### STRUCT GstCaps ##### -->
+<para>
+The gstcaps structure
+</para>
+
+@name: the name of the capability, for the application
+@id: the typeid of the capability
+@flags: 
+@refcount: a refcounter for this caps structure
+@properties: the properties of the capability
+@next: a pointer to the next caps.
+
+<!-- ##### ENUM GstCapsFlags ##### -->
+<para>
+Flags for this caps.
+</para>
+
+@GST_CAPS_FIXED: flag indicating the caps has no variable properties
+@GST_CAPS_FLOATING: the caps is not owned by anyone
+
+<!-- ##### MACRO GST_CAPS_FLAGS ##### -->
+<para>
+Get the flags of the caps
+</para>
+
+@caps: The caps to get the flags of
+
+
+<!-- ##### MACRO GST_CAPS_FLAG_IS_SET ##### -->
+<para>
+Test is a flag is set
+</para>
+
+@caps: The caps to test
+@flag: The flag to check
+
+
+<!-- ##### MACRO GST_CAPS_FLAG_SET ##### -->
+<para>
+Set a flag on the caps
+</para>
+
+@caps: The caps to modify
+@flag: The flag to set
+
+
+<!-- ##### MACRO GST_CAPS_FLAG_UNSET ##### -->
+<para>
+Unset a flag on the caps
+</para>
+
+@caps: The caps to modify
+@flag: The flag to unset
+
+
+<!-- ##### MACRO GST_CAPS_IS_FLOATING ##### -->
+<para>
+Test if a caps is floating
+</para>
+
+@caps: The caps to test
+
+
 <!-- ##### MACRO GST_CAPS_IS_CHAINED ##### -->
 <para>
 Check if the GstCaps is chained.
@@ -162,17 +225,36 @@ Check if the GstCaps has fixed properties, ie. it has no ranges or lists.
 @caps: the caps to query
 
 
-<!-- ##### STRUCT GstCaps ##### -->
+<!-- ##### MACRO GST_CAPS_NEXT ##### -->
 <para>
-The gstcaps structure
+Get a pointer to the next chained caps
 </para>
 
-@name: the name of the capability, for the application
-@id: the typeid of the capability
-@refcount: a refcounter for this caps structure
-@fixed: a boolean indicating that this caps structure is fixed
-@properties: the properties of the capability
-@next: a pointer to the next caps.
+@caps: The caps to query
+
+
+<!-- ##### MACRO GST_CAPS_PROPERTIES ##### -->
+<para>
+Get the properties of the caps
+</para>
+
+@caps: The caps to query
+
+
+<!-- ##### MACRO GST_CAPS_REFCOUNT ##### -->
+<para>
+Get the refcount of the caps.
+</para>
+
+@caps: The caps to query
+
+
+<!-- ##### MACRO GST_CAPS_TRACE_NAME ##### -->
+<para>
+The name used for tracing
+</para>
+
+
 
 <!-- ##### FUNCTION gst_caps_new ##### -->
 <para>
@@ -277,6 +359,41 @@ The gstcaps structure
 @caps: 
 @capstoadd: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_next ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_replace ##### -->
+<para>
+
+</para>
+
+@oldcaps: 
+@newcaps: 
+
+
+<!-- ##### FUNCTION gst_caps_replace_sink ##### -->
+<para>
+
+</para>
+
+@oldcaps: 
+@newcaps: 
+
+
+<!-- ##### FUNCTION gst_caps_sink ##### -->
+<para>
+
+</para>
+
+@caps: 
 
 
 <!-- ##### FUNCTION gst_caps_set_name ##### -->
