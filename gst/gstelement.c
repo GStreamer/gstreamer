@@ -307,6 +307,7 @@ gint
 gst_element_set_state (GstElement *element, GstElementState state) 
 {
   GstElementClass *oclass;
+  GstElementState curpending;
   GstElementStateReturn return_val = GST_STATE_SUCCESS;
 
 //  g_print("gst_element_set_state(\"%s\",%08lx)\n",
@@ -315,14 +316,22 @@ gst_element_set_state (GstElement *element, GstElementState state)
   g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
-  // first we set the pending state variable
-  // FIXME should probably check to see that we don't already have one
-  GST_STATE_PENDING (element) = state;
+  curpending = GST_STATE(element);
+  while (GST_STATE(element) != state) {
+    if (curpending < state) curpending++;
+    else curpending--;
 
-  // now we call the state change function so it can set the state
-  oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
-  if (oclass->change_state)
-    return_val = (oclass->change_state)(element);
+    // first we set the pending state variable
+    // FIXME should probably check to see that we don't already have one
+    GST_STATE_PENDING (element) = curpending;
+
+    // now we call the state change function so it can set the state
+    oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
+    if (oclass->change_state)
+      return_val = (oclass->change_state)(element);
+
+    if (return_val == GST_STATE_FAILURE) return return_val;
+  }
 
   return return_val;
 }

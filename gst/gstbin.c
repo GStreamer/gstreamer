@@ -221,14 +221,6 @@ gst_bin_change_state (GstElement *element)
           _gst_print_statename (GST_STATE (element)), GST_STATE_PENDING (element),
           _gst_print_statename (GST_STATE_PENDING (element)));
 
-  if (GST_STATE_PENDING (element) == GST_STATE_READY) {
-    GstObject *parent;
-
-    parent = gst_object_get_parent (GST_OBJECT (element));
-
-    if (!parent || !GST_IS_BIN (parent))
-      gst_bin_create_plan (bin);
-  }
 //  g_return_val_if_fail(bin->numchildren != 0, GST_STATE_FAILURE);
 
 //  g_print("-->\n");
@@ -253,6 +245,14 @@ gst_bin_change_state (GstElement *element)
   }
 //  g_print("<-- \"%s\"\n",gst_object_get_name(GST_OBJECT(bin)));
 
+  if (GST_STATE_PENDING (element) == GST_STATE_READY) {
+    GstObject *parent;
+
+    parent = gst_object_get_parent (GST_OBJECT (element));
+
+    if (!parent || !GST_IS_BIN (parent))
+      gst_bin_create_plan (bin);
+  }
 
   return gst_bin_change_state_norecurse (bin);
 }
