@@ -214,16 +214,8 @@ qcip_autoexposure(struct qcam *q, scanbuf *scan)
   case AE_STD_AVG:
     luminance_avg = qcip_pixel_average(q, scan);
     lum_std = qcip_luminance_std(q, scan, luminance_avg);
-    break;
-  case AE_ALL_AVG:
-  default:
-    luminance_avg = qcip_pixel_average(q, scan);
-    break;
-  }
 
-  /* ==>> Contrast adjustment <<== */
-
-  if (ae_mode == AE_STD_AVG) {
+    /* ==>> Contrast adjustment <<== */
 
     /* set target if it has not been explicitly set */
     if (luminance_std_target == -1) {
@@ -244,6 +236,12 @@ qcip_autoexposure(struct qcam *q, scanbuf *scan)
     fprintf(stderr, "Luminance std/target/tolerance: %d/%d/%d\n",
 	    lum_std, luminance_std_target, luminance_std_tolerance );
 #endif
+    
+    break;
+  case AE_ALL_AVG:
+  default:
+    luminance_avg = qcip_pixel_average(q, scan);
+    break;
   }
 
   /* ==>> Brightness adjustment <<== */
