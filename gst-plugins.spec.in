@@ -1,7 +1,7 @@
 %define name    gstreamer-plugins  
 %define module  gst-plugins  
-%define ver     0.3.02
-%define rel     20011221
+%define ver     @VERSION@
+%define rel     @GST_VERSION_RELEASE@
 %define prefix  /usr
 %define sysconfdir /etc
 
