@@ -38,6 +38,7 @@ G_BEGIN_DECLS
 #define GST_STATIC_CAPS_NONE      GST_STATIC_CAPS("NONE")
 
 #define GST_CAPS_IS_SIMPLE(caps) (gst_caps_get_size(caps) == 1)
+#define gst_caps_is_simple(caps) GST_CAPS_IS_SIMPLE(caps)
 
 #ifndef GST_DISABLE_DEPRECATED
 #define GST_DEBUG_CAPS(string, caps) \

@@ -180,7 +180,7 @@ gst_element_base_class_init (gpointer g_class)
 static void
 gst_element_base_class_finalize (gpointer g_class)
 {
-  GstElementClass *klass = GST_ELEMENT_CLASS (klass);
+  GstElementClass *klass = GST_ELEMENT_CLASS (g_class);
 
   g_list_foreach (klass->padtemplates, (GFunc) g_object_unref, NULL);
   g_list_free (klass->padtemplates);

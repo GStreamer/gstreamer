@@ -1,3 +1,11 @@
+2004-03-12  David Schleef  <ds@schleef.org>
+
+	* gst/gstcaps.h: jdahlin, what are you smoking?  We can't just
+	change API right now!  Readd gst_caps_is_simple() macro.
+	* gst/gstelement.c: (gst_element_base_class_finalize): Fix
+	uninitialized variable.  I'd bet this caused crashes.
+	* gst/gstinfo.c: (gst_debug_print_object):  Fix 64-bit cleanliness.
+
 2004-03-12  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gstcaps.h (GST_CAPS_IS_SIMPLE): Capitalize macro
