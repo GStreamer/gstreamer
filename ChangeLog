@@ -1,3 +1,9 @@
+2004-10-06  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
+	* docs/random/mimetypes:
+	Add an entry for Sony ATRAC3 audio format with mime-type
+	used by rmdemux et riff-read
+
 2004-10-06  Wim Taymans  <wim at fluendo dot com>
 
 	* gst/elements/gsttypefindelement.c: (stop_typefinding):

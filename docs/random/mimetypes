@@ -447,6 +447,12 @@ channels = 1 - MAXINT (INT, number of audio channels)
      MIME type: audio/x-qdm2
      Properties:
 
+16 - Sony ATRAC4 (detected inside realmedia and wave/avi streams, nothing to decode it yet)
+     MIME type: audio/x-vnd.sony.atrac3
+     Properties:
+     Encoder:
+     Decoder:
+
 TODO: adpcm/dv needs confirmation from someone with knowledge...
 
 Raw formats
