@@ -26,6 +26,7 @@
 GstElementDetails gst_tee_details = {
   "Tee pipe fitting",
   "Generic",
+  "LGPL",
   "1-to-N pipe fitting",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"

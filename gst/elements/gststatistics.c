@@ -27,6 +27,7 @@
 GstElementDetails gst_statistics_details = {
   "Statistics",
   "Generic",
+  "LGPL",
   "Statistics on buffers/bytes/events",
   VERSION,
   "David I. Lehn <dlehn@users.sourceforge.net>",

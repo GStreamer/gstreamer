@@ -30,6 +30,7 @@
 GstElementDetails gst_fakesrc_details = {
   "Fake Source",
   "Source",
+  "LGPL",
   "Push empty (no data) buffers around",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"

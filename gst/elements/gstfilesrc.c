@@ -72,6 +72,7 @@
 GstElementDetails gst_filesrc_details = {
   "File Source",
   "Source/File",
+  "LGPL",
   "Read from arbitrary point in a file",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

@@ -27,6 +27,7 @@
 GstElementDetails gst_fakesink_details = {
   "Fake Sink",
   "Sink",
+  "LGPL",
   "Black hole for data",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

@@ -26,6 +26,7 @@
 GstElementDetails gst_aggregator_details = {
   "Aggregator pipe fitting",
   "Generic",
+  "LGPL",
   "N-to-1 pipe fitting",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

@@ -36,6 +36,7 @@
 GstElementDetails gst_pipefilter_details = {
   "Pipefilter",
   "Filter",
+  "LGPL",
   "Interoperate with an external program using stdin and stdout",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"

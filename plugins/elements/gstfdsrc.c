@@ -33,6 +33,7 @@
 GstElementDetails gst_fdsrc_details = {
   "Disk Source",
   "Source/File",
+  "LGPL",
   "Synchronous read from a file",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

@@ -29,6 +29,7 @@
 GstElementDetails gst_filesink_details = {
   "File Sink",
   "Sink/File",
+  "LGPL",
   "Write stream to a file",
   VERSION,
   "Thomas <thomas@apestaart.org>",

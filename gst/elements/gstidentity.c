@@ -28,6 +28,7 @@
 GstElementDetails gst_identity_details = {
   "Identity",
   "Generic",
+  "LGPL",
   "Pass data without modification",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

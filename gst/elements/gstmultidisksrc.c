@@ -34,6 +34,7 @@
 GstElementDetails gst_multidisksrc_details = {
   "Multi Disk Source",
   "Source/File",
+  "LGPL",
   "Read from multiple files in order",
   VERSION,
   "Dominic Ludlam <dom@openfx.org>",

@@ -499,6 +499,7 @@ gst_md5sink_chain (GstPad *pad, GstBuffer *buf)
 GstElementDetails gst_md5sink_details = {
   "MD5 Sink",
   "Sink",
+  "LGPL",
   "compute MD5 for incoming data",
   VERSION,
   "Benjamin Otte <in7y118@public.uni-hamburg.de>",
