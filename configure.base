@@ -580,26 +580,29 @@ fi
 
 dnl Check for SDL library
 AC_MSG_CHECKING(SDL library)
-HAVE_LIBSDL=no
+HAVE_LIBSDL=yes
 if sdl-config --libs > /dev/null 2>&1; then
-  HAVE_LIBSDL=yes
   SDL_VERSION=`sdl-config --version`
   AC_MSG_RESULT([found (version $SDL_VERSION)])
+  SDL_LIBS="`sdl-config --libs`"
+  SDL_CFLAGS="`sdl-config --cflags`"
+  AC_CHECK_LIB(SDL, SDL_Init, :, HAVE_LIBSDL=no, $SDL_LIBS)
+  dnl FIXME: CPPFLAGS should be set from SDL_CFLAGS for the next two checks
+  AC_CHECK_HEADER(SDL/SDL.h, :, HAVE_LIBSDL=no)
+  AC_CHECK_FUNC(SDL_CreateYUVOverlay, :, HAVE_LIBSDL=no)
 else
   AC_MSG_RESULT(not found)
+  HAVE_LIBSDL=no
+  SDL_LIBS=
+  SDL_CFLAGS=
 fi
-SDL_LIBS="`sdl-config --libs`"
-SDL_CFLAGS="`sdl-config --cflags`"
 AC_SUBST(SDL_LIBS)
 AC_SUBST(SDL_CFLAGS)
 
-if test "x$HAVE_LIBSDL" == "xyes"; then
-  AC_CHECK_LIB(SDL, SDL_Init, :, HAVE_LIBSDL=no, $SDL_LIBS)
-  AC_CHECK_HEADER(SDL/SDL.h, :, HAVE_LIBSDL=no)
-  AC_CHECK_FUNC(SDL_CreateYUVOverlay, :, [HAVE_LIBSDL=no
+if test "x$HAVE_LIBSDL" == "xno"; then
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: sdlvideosink
-  )])
+)
 fi
 
 
