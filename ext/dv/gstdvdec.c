@@ -121,7 +121,7 @@ static GstStaticPadTemplate video_src_temp = GST_STATIC_PAD_TEMPLATE ("video",
         //" }; "
         "video/x-raw-rgb, "
         "bpp = (int) 32, "
-        "depth = (int) 32, "
+        "depth = (int) 24, "
         "endianness = (int) " G_STRINGIFY (G_BIG_ENDIAN) ", "
         "red_mask =   (int) 0x00ff0000, "
         "green_mask = (int) 0x0000ff00, "
@@ -169,9 +169,9 @@ static GstStaticPadTemplate audio_src_temp = GST_STATIC_PAD_TEMPLATE ("audio",
         "depth = (int) 16, "
         "width = (int) 16, "
         "signed = (boolean) TRUE, "
-        "channels = (int) 2, "
+        "channels = (int) {2, 4}"
         "endianness = (int) " G_STRINGIFY (G_LITTLE_ENDIAN) ", "
-        "rate = (int) [ 4000, 48000 ]")
+        "rate = (int) { 32000, 44100, 48000}")
     );
 
 #define GST_TYPE_DVDEC_QUALITY (gst_dvdec_quality_get_type())

@@ -45,7 +45,7 @@ main (int argc, char *argv[])
     fprintf (stderr, "no dvdec\n"), exit (1);
 /*  cspace = gst_element_factory_make ("colorspace", "cspace"); */
   deint = gst_element_factory_make ("deinterlace", "deinterlace");
-  videosink = gst_element_factory_make ("xvideosink", "videosink");
+  videosink = gst_element_factory_make ("xvimagesink", "videosink");
   if (!videosink)
     fprintf (stderr, "no dvdec\n"), exit (1);
   g_object_set (G_OBJECT (videosink), "width", 720, "height", 576, NULL);
