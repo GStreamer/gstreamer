@@ -41,8 +41,6 @@
 GST_DEBUG_CATEGORY (tcpclientsrc_debug);
 #define GST_CAT_DEFAULT tcpclientsrc_debug
 
-#define TCP_DEFAULT_PORT		4953
-#define TCP_DEFAULT_HOST		"localhost"
 #define MAX_READ_SIZE			4 * 1024
 
 /* elementfactory information */
@@ -138,7 +136,7 @@ gst_tcpclientsrc_class_init (GstTCPClientSrc * klass)
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "Port", "The port to receive packets from", 0,
-          32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
+          TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
           GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_NONE,

@@ -26,9 +26,6 @@
 #include "gsttcp.h"
 #include "gsttcpclientsink.h"
 
-#define TCP_DEFAULT_HOST	"localhost"
-#define TCP_DEFAULT_PORT	4953
-
 /* elementfactory information */
 static GstElementDetails gst_tcpclientsink_details =
 GST_ELEMENT_DETAILS ("TCP Client sink",
@@ -128,7 +125,7 @@ gst_tcpclientsink_class_init (GstTCPClientSink * klass)
           TCP_DEFAULT_HOST, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "Port", "The port to send the packets to",
-          0, 32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
+          0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
           GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_NONE,

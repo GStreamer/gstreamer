@@ -29,11 +29,10 @@
 #include <sys/filio.h>
 #endif
 
+#include "gsttcp.h"
 #include "gsttcpserversink.h"
 #include "gsttcp-marshal.h"
 
-#define TCP_DEFAULT_HOST	"127.0.0.1"
-#define TCP_DEFAULT_PORT	4953
 #define TCP_BACKLOG		5
 
 /* elementfactory information */
@@ -124,7 +123,7 @@ gst_tcpserversink_class_init (GstTCPServerSink * klass)
           TCP_DEFAULT_HOST, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "port", "The port to send the packets to",
-          0, 32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
+          0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_tcpserversink_set_property;
   gobject_class->get_property = gst_tcpserversink_get_property;

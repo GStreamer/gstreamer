@@ -27,6 +27,10 @@
 #include <gst/gst.h>
 #include <gst/dataprotocol/dataprotocol.h>
 
+#define TCP_HIGHEST_PORT	65535
+#define TCP_DEFAULT_HOST        "localhost"
+#define TCP_DEFAULT_PORT        4953
+
 G_BEGIN_DECLS
 
 typedef enum

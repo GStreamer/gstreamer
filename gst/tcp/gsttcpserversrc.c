@@ -36,8 +36,7 @@
 GST_DEBUG_CATEGORY (tcpserversrc_debug);
 #define GST_CAT_DEFAULT tcpserversrc_debug
 
-#define TCP_DEFAULT_PORT		4953
-#define TCP_DEFAULT_HOST		NULL    /* listen on all interfaces */
+#define TCP_DEFAULT_LISTEN_HOST		NULL    /* listen on all interfaces */
 #define TCP_BACKLOG			1       /* client connection queue */
 
 /* elementfactory information */
@@ -126,11 +125,11 @@ gst_tcpserversrc_class_init (GstTCPServerSrc * klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
-      g_param_spec_string ("host", "Host", "The hostname to listen",
-          TCP_DEFAULT_HOST, G_PARAM_READWRITE));
+      g_param_spec_string ("host", "Host", "The hostname to listen as",
+          TCP_DEFAULT_LISTEN_HOST, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "Port", "The port to listen to",
-          0, 32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
+          0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
           GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_NONE,
