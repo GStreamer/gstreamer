@@ -335,7 +335,7 @@ gst_cacasink_chain (GstPad *pad, GstData *_data)
 
   cacasink = GST_CACASINK (gst_pad_get_parent (pad));
 
-  if (cacasink->clock && GST_CLOCK_TIME_IS_VALID (time)) {
+  if (cacasink->id && GST_CLOCK_TIME_IS_VALID (time)) {
     GST_DEBUG ("videosink: clock %s wait: %" G_GUINT64_FORMAT " %u", 
                GST_OBJECT_NAME (GST_VIDEOSINK_CLOCK (cacasink)),
                time, GST_BUFFER_SIZE (buf));
