@@ -123,9 +123,9 @@ static GstStaticPadTemplate video_src_temp = GST_STATIC_PAD_TEMPLATE ("video",
         "bpp = (int) 32, "
         "depth = (int) 24, "
         "endianness = (int) " G_STRINGIFY (G_BIG_ENDIAN) ", "
-        "red_mask =   (int) 0x00ff0000, "
-        "green_mask = (int) 0x0000ff00, "
-        "blue_mask =  (int) 0x000000ff, "
+        "red_mask =   (int) 0x0000ff00, "
+        "green_mask = (int) 0x00ff0000, "
+        "blue_mask =  (int) 0xff000000, "
         "width = (int) 720, "
         "height = (int) { "
         G_STRINGIFY (NTSC_HEIGHT) ", " G_STRINGIFY (PAL_HEIGHT)
