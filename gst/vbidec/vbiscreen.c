@@ -32,6 +32,7 @@
 #include <unistd.h>
 /*#include "osdtools.h"*/
 /*#include "speedy.h"*/
+#include <glib.h>
 #include "vbiscreen.h"
 #include "gstvbidec.h"
 
