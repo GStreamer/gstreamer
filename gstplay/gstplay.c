@@ -581,7 +581,7 @@ gst_play_get_media_size (GstPlay *play)
 
 	priv = (GstPlayPrivate *)play->priv;
 
-	return gst_util_get_long_arg (G_OBJECT (priv->src), "size");
+	return gst_util_get_long_arg (G_OBJECT (priv->src), "filesize");
 }
 
 gulong
