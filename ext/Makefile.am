@@ -148,6 +148,12 @@ else
 LIBFAME_DIR=
 endif
 
+if USE_LIBPNG
+LIBPNG_DIR=libpng
+else
+LIBPNG_DIR=
+endif
+
 if USE_MAD
 MAD_DIR=mad
 else
@@ -244,7 +250,8 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(DVDREAD_DIR) $(DVDNAV_DIR) $(ESD_DIR) \
 	$(FFMPEG_DIR) $(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) \
 	$(HERMES_DIR) $(HTTP_DIR) $(JACK_DIR) $(JPEG_DIR) \
-	$(LADSPA_DIR) $(LAME_DIR) $(LCS_DIR) $(LIBDV_DIR) $(LIBFAME_DIR) \
+	$(LADSPA_DIR) $(LAME_DIR) $(LCS_DIR) \
+	$(LIBDV_DIR) $(LIBFAME_DIR) $(LIBPNG_DIR) \
 	$(MAD_DIR) $(MIKMOD_DIR) $(MJPEGTOOLS_DIR) $(MPEG2DEC_DIR) \
 	$(OPENQUICKTIME_DIR) $(RAW1394_DIR) $(RTP_DIR) \
 	$(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
@@ -258,7 +265,7 @@ DIST_SUBDIRS=\
 	dvdread dvdnav esd ffmpeg \
 	flac gnomevfs gsm \
 	hermes http jack jpeg \
-	ladspa lame lcs libfame \
+	ladspa lame lcs libfame libpng \
 	mad mikmod mjpegtools mpeg2dec \
 	openquicktime raw1394 rtp \
 	sdl shout sidplay \
