@@ -322,9 +322,11 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
     return FALSE;
   }
 
+  // FIXME check the factory???
   factory = gst_element_get_factory(pipeline->src);
 
-  src_types = factory->src_caps;
+  //src_types = factory->pads;
+  src_types = NULL; // FIXME
   if (src_types == NULL) {
     g_print("GstPipeline: source \"%s\" has no MIME type, running typefind...\n", 
 		gst_element_get_name(pipeline->src));

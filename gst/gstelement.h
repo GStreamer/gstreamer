@@ -153,8 +153,7 @@ struct _GstElementFactory {
 
   GstElementDetails *details;	/* pointer to details struct */
 
-  GList *src_caps;
-  GList *sink_caps;
+  GList *padfactories;
 };
 
 GtkType 		gst_element_get_type		(void);
@@ -197,12 +196,8 @@ GstElementFactory*	gst_elementfactory_new		(gchar *name,GtkType type,
 void 			gst_elementfactory_register	(GstElementFactory *elementfactory);
 void 			gst_elementfactory_unregister	(GstElementFactory *elementfactory);
 
-void 			gst_elementfactory_add_src_caps	(GstElementFactory *elementfactory, 
-							 GstCapsDefinition def,
-							 GstCaps *caps);
-void 			gst_elementfactory_add_sink_caps(GstElementFactory *elementfactory, 
-							 GstCapsDefinition def,
-							 GstCaps *caps);
+void 			gst_elementfactory_add_pad	(GstElementFactory *elementfactory, 
+							 GstPadFactory *pad);
 
 GstElementFactory*	gst_elementfactory_find		(gchar *name);
 GList*			gst_elementfactory_get_list	(void);

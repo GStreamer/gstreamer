@@ -98,8 +98,25 @@ struct _GstPadClass {
   void (*caps_changed)	(GstPad *pad, GstCaps *newcaps);
 };
 
+typedef enum {
+  GST_PAD_ALWAYS,
+  GST_PAD_SOMETIMES,
+} GstPadPresence;
+
+typedef struct _GstPadFactory GstPadFactory;
+
+/* factory */
+struct _GstPadFactory {
+  gchar           *nametemplate;
+  GstCapsFactory  *caps;
+  GstPadDirection direction;
+  GstPadPresence  presence;
+  gpointer	  priv;
+};
+
 
 GtkType 		gst_pad_get_type		(void);
+
 GstPad*			gst_pad_new			(gchar *name, GstPadDirection direction);
 #define 		gst_pad_destroy(pad) 		gst_object_destroy (GST_OBJECT (pad))
 
@@ -135,6 +152,14 @@ void 			gst_pad_handle_qos		(GstPad *pad, glong qos_message);
 xmlNodePtr 		gst_pad_save_thyself		(GstPad *pad, xmlNodePtr parent);
 void 			gst_pad_load_and_connect	(xmlNodePtr parent, GstObject *element, GHashTable *elements);
 
+
+/* factory */
+GstPad*			gst_padfactory_create		(GstPadFactory *factory, gchar *name);
+
+GstCaps*		gst_padfactory_get_caps		(GstPadFactory *factory);
+
+xmlNodePtr 		gst_padfactory_save_thyself	(GstPadFactory *pad, xmlNodePtr parent);
+GstPadFactory*		gst_padfactory_load_thyself	(xmlNodePtr parent);
 
 #ifdef __cplusplus
 }

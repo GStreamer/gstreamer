@@ -54,7 +54,7 @@ get_type_for_mime (gchar *mime)
  * Returns: The registered capability
  */
 GstCaps *
-gst_caps_register (GstCapsFactory factory)
+gst_caps_register (GstCapsFactory *factory)
 {
   GstCapsFactoryEntry tag;
   gint i = 0;
@@ -63,7 +63,7 @@ gst_caps_register (GstCapsFactory factory)
   
   g_return_val_if_fail (factory != NULL, NULL);
 
-  tag = factory[i++];
+  tag = (*factory)[i++];
 
   g_return_val_if_fail (tag != NULL, NULL);
   
@@ -73,7 +73,7 @@ gst_caps_register (GstCapsFactory factory)
   g_return_val_if_fail (caps != NULL, NULL);
 
   caps->id = typeid;
-  caps->properties = gst_props_register (&factory[i]);
+  caps->properties = gst_props_register (&(*factory)[i]);
 
   return caps;
 }

@@ -387,7 +387,7 @@ gst_pad_pull (GstPad *pad)
       (pad->pullfunc)(pad->peer);
     } else {
       DEBUG("no buffer in pen, and no handler (# %p) to get one there!!!\n",&pad->pullfunc);
-      g_return_if_fail(pad->pullfunc != NULL);
+      g_return_val_if_fail(pad->pullfunc != NULL, NULL);
     }
   }
 
@@ -399,7 +399,7 @@ gst_pad_pull (GstPad *pad)
   // else we have a big problem...
   } else {
     DEBUG("no buffer in pen, and no handler\n");
-    g_return_if_fail(pad->pullfunc != NULL);
+    g_return_val_if_fail(pad->pullfunc != NULL, NULL);
     return NULL;
   }
 
@@ -693,7 +693,6 @@ gst_pad_set_caps (GstPad *pad,
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (caps != NULL);
 
   pad->caps = caps;
 }
@@ -848,3 +847,104 @@ gst_pad_ghost_save_thyself (GstPad *pad,
 
   return self;
 }
+
+/**
+ * gst_padfactory_create:
+ * @factory: the pad factory
+ * @name: the name of the new pad
+ *
+ * crrates a new pad form the given factory
+ *
+ * Returns: the new pad;
+ */
+GstPad*
+gst_padfactory_create (GstPadFactory *factory, 
+		       gchar *name)
+{
+  GstPad *newpad;
+  GstCaps *caps;
+
+  newpad = gst_pad_new (name, factory->direction);
+
+  caps = gst_padfactory_get_caps (factory);
+
+  gst_pad_set_caps (newpad, caps);
+
+  return newpad;
+}
+
+GstCaps*
+gst_padfactory_get_caps (GstPadFactory *factory)
+{
+  if (factory->priv) {
+    return (GstCaps *) factory->priv;
+  }
+  else if (factory->caps) {
+    GstCaps *caps;
+    
+    caps = gst_caps_register (factory->caps);
+   
+    factory->priv = caps;
+
+    return caps;
+  }
+  else return NULL;
+}
+
+xmlNodePtr
+gst_padfactory_save_thyself (GstPadFactory *pad, xmlNodePtr parent)
+{
+  xmlNodePtr subtree;
+
+  xmlNewChild(parent,NULL,"nametemplate", pad->nametemplate);
+  xmlNewChild(parent,NULL,"direction", (pad->direction == GST_PAD_SINK? "sink":"src"));
+  xmlNewChild(parent,NULL,"presence", (pad->presence == GST_PAD_ALWAYS? "always":"sometimes"));
+  subtree = xmlNewChild(parent,NULL,"caps", NULL);
+
+  gst_caps_save_thyself (gst_padfactory_get_caps (pad), subtree);
+
+  return parent;
+}
+
+GstPadFactory*   
+gst_padfactory_load_thyself (xmlNodePtr parent)
+{
+  xmlNodePtr field = parent->childs;
+  GstPadFactory *factory = g_new0 (GstPadFactory, 1);
+
+  while (field) {
+    if (!strcmp(field->name, "nametemplate")) {
+      factory->nametemplate = g_strdup(xmlNodeGetContent(field));
+    }
+    if (!strcmp(field->name, "direction")) {
+      gchar *value = xmlNodeGetContent(field);
+
+      factory->direction = GST_PAD_UNKNOWN;
+      if (!strcmp(value, "sink")) {
+        factory->direction = GST_PAD_SINK;
+      }
+      else if (!strcmp(value, "src")) {
+        factory->direction = GST_PAD_SRC;
+      }
+    }
+    if (!strcmp(field->name, "presence")) {
+      gchar *value = xmlNodeGetContent(field);
+
+      if (!strcmp(value, "always")) {
+        factory->presence = GST_PAD_ALWAYS;
+      }
+      else if (!strcmp(value, "sometimes")) {
+        factory->presence = GST_PAD_SOMETIMES;
+      }
+    }
+    else if (!strcmp(field->name, "caps")) {
+      factory->priv = gst_caps_load_thyself (field);
+    }
+    field = field->next;
+  }
+  return factory;
+}
+
+
+
+

@@ -101,12 +101,14 @@ int main(int argc,char *argv[])
   dump_plugins ();
   dump_factories ();
   dump_types ();
+  gst_type_dump ();
 
   print_some_providers ("audio/mp3");
 
   load_something ("mpg123");
 
   print_some_providers ("audio/mp3");
+  gst_type_dump ();
 
   load_something ("mpg123");
 
@@ -114,4 +116,5 @@ int main(int argc,char *argv[])
   dump_factories ();
   dump_types ();
 
+  gst_type_dump ();
 }

@@ -130,6 +130,8 @@ guint16 gst_type_find_by_mime_func (gchar *mime)
   gint typelen,mimelen;
   gchar *search, *found;
 
+  g_return_val_if_fail (mime != NULL, 0);
+
   walk = _gst_types;
 //  DEBUG("searching for '%s'\n",mime);
   mimelen = strlen (mime);
@@ -219,15 +221,16 @@ gst_type_dump_converter (gpointer key,
 {
   GList *walk = (GList *)value;
   GstElementFactory *factory;
+  guint16 id = GPOINTER_TO_UINT (key);
+  GstType *type = gst_type_find_by_id (id);
   
-  g_print ("gsttype: %u, (", GPOINTER_TO_UINT (key));
+  g_print ("\ngsttype:    %u (%s), ", type->id, type->mime);
 
   while (walk) {
     factory = (GstElementFactory *) walk->data;
-    g_print("%s, ", factory->name);
+    g_print("\"%s\" ", factory->name);
     walk = g_list_next (walk);
   }
-  g_print ("NULL)), ");
 }
 
 /**
@@ -246,9 +249,9 @@ gst_type_dump(void)
   while (walk) {
     type = (GstType *)walk->data;
 
-    g_print ("gst_type: %d (%s) -> (", type->id, type->mime);
+    g_print ("gsttype: %d (%s)", type->id, type->mime);
     g_hash_table_foreach (type->converters, gst_type_dump_converter, NULL); 
-    g_print ("NULL)\n");
+    g_print ("\n");
 
     walk = g_list_next (walk);
   }
@@ -263,39 +266,52 @@ gst_type_handle_src (guint16 id, GstElementFactory *src, gboolean remove)
   g_return_if_fail (type != NULL);
   g_return_if_fail (src != NULL);
 
-  g_print ("gsttype: add src %d, \"%s\"\n", id, src->name);
+  g_print ("gsttype: handle src \"%s\" %d\n", src->name, remove);
+
   if (remove) 
     type->srcs = g_list_remove (type->srcs, src);
   else 
     type->srcs = g_list_prepend (type->srcs, src);
 
   // find out if the element has to be indexed in the matrix
-  walk = src->sink_caps;
+  walk = src->padfactories;
 
   while (walk) {
-    GstType *type2;
-    GList *converters;
-    GList *orig;
+    GstPadFactory *factory;
 
-    type2 = gst_type_find_by_id (((GstCaps *)walk->data)->id);
-    converters = (GList *)g_hash_table_lookup (type2->converters, GUINT_TO_POINTER ((guint)id));
-    orig = converters;
+    factory = (GstPadFactory *) walk->data;
 
-    while (converters) {
-      if (converters->data == src) {
-	break;
+    if (factory->direction == GST_PAD_SINK) {
+      GstType *type2;
+      GList *converters;
+      GList *orig;
+      GstCaps *caps;
+
+      caps = gst_padfactory_get_caps (factory);
+
+      if (caps)
+        type2 = gst_type_find_by_id (caps->id);
+      else
+	goto next;
+
+      converters = (GList *)g_hash_table_lookup (type2->converters, GUINT_TO_POINTER ((guint)id));
+      orig = converters;
+
+      while (converters) {
+        if (converters->data == src) {
+	  break;
+        }
+        converters = g_list_next (converters);
       }
-      converters = g_list_next (converters);
-    }
 
-    if (!converters) {
       if (remove) 
         orig = g_list_remove (orig, src);
-      else
+      else if (!converters)
         orig = g_list_prepend (orig, src);
+
       g_hash_table_insert (type2->converters, GUINT_TO_POINTER ((guint)id), orig);
     }
-    
+next: 
     walk = g_list_next (walk);
   }
 }
@@ -337,33 +353,52 @@ gst_type_handle_sink (guint16 id, GstElementFactory *sink, gboolean remove)
   g_return_if_fail (type != NULL);
   g_return_if_fail (sink != NULL);
 
+  g_print ("gsttype: handle sink \"%s\" %d\n", sink->name, remove);
+
   if (remove) 
     type->sinks = g_list_remove (type->sinks, sink);
   else 
     type->sinks = g_list_prepend (type->sinks, sink);
 
   // find out if the element has to be indexed in the matrix
-  walk = sink->src_caps;
+  walk = sink->padfactories;
 
   while (walk) {
-    GList *converters = (GList *)g_hash_table_lookup (type->converters, walk->data);
-    GList *orig = converters;
+    GstPadFactory *factory;
 
-    while (converters) {
-      if (converters->data == sink) {
-	break;
+    factory = (GstPadFactory *) walk->data;
+
+    if (factory->direction == GST_PAD_SRC) {
+      guint16 id2;
+      GList *converters;
+      GList *orig;
+      GstCaps *caps;
+
+      caps = gst_padfactory_get_caps (factory);
+
+      if (caps)
+        id2 = caps->id;
+      else
+	goto next;
+
+      converters = (GList *)g_hash_table_lookup (type->converters, GUINT_TO_POINTER ((guint)id2));
+      orig = converters;
+
+      while (converters) {
+        if (converters->data == sink) {
+	  break;
+        }
+        converters = g_list_next (converters);
       }
-      converters = g_list_next (converters);
-    }
 
-    if (!converters) {
       if (remove) 
         orig = g_list_remove (orig, sink);
-      else
+      else if (!converters) 
         orig = g_list_prepend (orig, sink);
-      g_hash_table_insert (type->converters, walk->data, orig);
+
+      g_hash_table_insert (type->converters, GUINT_TO_POINTER ((guint)id2), orig);
     }
-    
+next: 
     walk = g_list_next (walk);
   }
 }
