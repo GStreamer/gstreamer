@@ -32,13 +32,17 @@ enum
   ARG_PAD,
   ARG_TYPE,
   ARG_DECODER,
+  ARG_MUTE,
 };
 
 /* signals */
 enum
 {
+  SIGNAL_MUTED,
   LAST_SIGNAL
 };
+
+static guint gst_stream_info_signals[LAST_SIGNAL] = { 0 };
 
 #define GST_TYPE_STREAM_TYPE (gst_stream_type_get_type())
 static GType
@@ -89,7 +93,6 @@ gst_stream_info_get_type (void)
       (GInstanceInitFunc) gst_stream_info_init,
       NULL
     };
-
     gst_stream_info_type = g_type_register_static (G_TYPE_OBJECT,
         "GstStreamInfo", &gst_stream_info_info, 0);
   }
@@ -118,6 +121,14 @@ gst_stream_info_class_init (GstStreamInfoClass * klass)
   g_object_class_install_property (gobject_klass, ARG_DECODER,
       g_param_spec_string ("decoder", "Decoder",
           "The decoder used to decode the stream", NULL, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_klass, ARG_MUTE,
+      g_param_spec_boolean ("mute", "Mute", "Mute or unmute this stream", FALSE,
+          G_PARAM_READWRITE));
+
+  gst_stream_info_signals[SIGNAL_MUTED] =
+      g_signal_new ("muted", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstStreamInfoClass, muted), NULL, NULL,
+      gst_marshal_VOID__BOOLEAN, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_stream_info_dispose);
 }
@@ -129,6 +140,7 @@ gst_stream_info_init (GstStreamInfo * stream_info)
   stream_info->pad = NULL;
   stream_info->type = GST_STREAM_TYPE_UNKNOWN;
   stream_info->decoder = NULL;
+  stream_info->mute = FALSE;
 }
 
 GstStreamInfo *
@@ -163,6 +175,39 @@ gst_stream_info_dispose (GObject * object)
   }
 }
 
+static void
+stream_info_mute_pad (GstStreamInfo * stream_info, GstPad * pad, gboolean mute)
+{
+  GList *int_links;
+  gboolean activate = !mute;
+  gchar *debug_str = (activate ? "activate" : "inactivate");
+
+  GST_DEBUG_OBJECT (stream_info, "%s %s:%s", debug_str,
+      GST_DEBUG_PAD_NAME (pad));
+  gst_pad_set_active (pad, activate);
+
+  for (int_links = gst_pad_get_internal_links (pad);
+      int_links; int_links = g_list_next (int_links)) {
+    GstPad *pad = GST_PAD (int_links->data);
+    GstPad *peer = gst_pad_get_peer (pad);
+    GstElement *peer_elem = gst_pad_get_parent (peer);
+
+    GST_DEBUG_OBJECT (stream_info, "%s internal pad %s:%s",
+        debug_str, GST_DEBUG_PAD_NAME (pad));
+
+    gst_pad_set_active (pad, activate);
+
+    if (peer_elem->numsrcpads == 1) {
+      GST_DEBUG_OBJECT (stream_info, "recursing element %s on pad %s:%s",
+          gst_element_get_name (peer_elem), GST_DEBUG_PAD_NAME (peer));
+      stream_info_mute_pad (stream_info, peer, mute);
+    } else {
+      GST_DEBUG_OBJECT (stream_info, "%s final pad %s:%s",
+          debug_str, GST_DEBUG_PAD_NAME (peer));
+      gst_pad_set_active (peer, activate);
+    }
+  }
+}
 
 static void
 gst_stream_info_set_property (GObject * object, guint prop_id,
@@ -175,6 +220,16 @@ gst_stream_info_set_property (GObject * object, guint prop_id,
   stream_info = GST_STREAM_INFO (object);
 
   switch (prop_id) {
+    case ARG_MUTE:
+    {
+      gboolean new_mute = g_value_get_boolean (value);
+
+      if (new_mute != stream_info->mute) {
+        stream_info->mute = new_mute;
+        stream_info_mute_pad (stream_info, stream_info->pad, new_mute);
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -200,6 +255,9 @@ gst_stream_info_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_DECODER:
       g_value_set_string (value, stream_info->decoder);
+      break;
+    case ARG_MUTE:
+      g_value_set_boolean (value, stream_info->mute);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

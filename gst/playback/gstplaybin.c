@@ -48,11 +48,13 @@ struct _GstPlayBin
   GstElement *video_sink;
   GstElement *visualisation;
   GstElement *volume_element;
-  float volume;
+  gfloat volume;
 
   GList *sinks;
 
   GList *seekables;
+
+  GHashTable *cache;
 };
 
 struct _GstPlayBinClass
@@ -194,6 +196,7 @@ gst_play_bin_init (GstPlayBin * play_bin)
   play_bin->volume = 1.0;
   play_bin->seekables = NULL;
   play_bin->sinks = NULL;
+  play_bin->cache = g_hash_table_new (g_str_hash, g_str_equal);
 
   GST_FLAG_SET (play_bin, GST_BIN_SELF_SCHEDULABLE);
 }
@@ -222,11 +225,31 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_VIDEO_SINK:
+    {
+      GstElement *element;
+
       play_bin->video_sink = g_value_get_object (value);
+
+      element = g_hash_table_lookup (play_bin->cache, "vbin");
+      if (element != NULL) {
+        g_hash_table_remove (play_bin->cache, "vbin");
+        g_object_unref (G_OBJECT (element));
+      }
       break;
+    }
     case ARG_AUDIO_SINK:
+    {
+      GstElement *element;
+
       play_bin->audio_sink = g_value_get_object (value);
+
+      element = g_hash_table_lookup (play_bin->cache, "abin");
+      if (element != NULL) {
+        g_hash_table_remove (play_bin->cache, "abin");
+        g_object_unref (G_OBJECT (element));
+      }
       break;
+    }
     case ARG_VIS_PLUGIN:
       play_bin->visualisation = g_value_get_object (value);
       break;
@@ -281,6 +304,13 @@ gen_video_element (GstPlayBin * play_bin)
   GstElement *scale;
   GstElement *sink;
 
+  element = g_hash_table_lookup (play_bin->cache, "vbin");
+  if (element != NULL) {
+    g_object_ref (G_OBJECT (element));
+    sink = gst_bin_get_by_name (GST_BIN (element), "sink");
+    goto done;
+  }
+
   element = gst_bin_new ("vbin");
   conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
   scale = gst_element_factory_make ("videoscale", "vscale");
@@ -290,8 +320,6 @@ gen_video_element (GstPlayBin * play_bin)
   } else {
     sink = gst_element_factory_make ("ximagesink", "sink");
   }
-
-  play_bin->seekables = g_list_append (play_bin->seekables, sink);
 
   gst_bin_add (GST_BIN (element), conv);
   gst_bin_add (GST_BIN (element), scale);
@@ -303,6 +331,13 @@ gen_video_element (GstPlayBin * play_bin)
       "sink");
 
   gst_element_set_state (element, GST_STATE_READY);
+
+  /* ref before adding to the cache */
+  g_object_ref (G_OBJECT (element));
+  g_hash_table_insert (play_bin->cache, "vbin", element);
+
+done:
+  play_bin->seekables = g_list_append (play_bin->seekables, sink);
 
   return element;
 }
@@ -316,6 +351,12 @@ gen_audio_element (GstPlayBin * play_bin)
   GstElement *volume;
   GstElement *scale;
 
+  element = g_hash_table_lookup (play_bin->cache, "abin");
+  if (element != NULL) {
+    g_object_ref (G_OBJECT (element));
+    sink = gst_bin_get_by_name (GST_BIN (element), "sink");
+    goto done;
+  }
   element = gst_bin_new ("abin");
   conv = gst_element_factory_make ("audioconvert", "aconv");
   scale = gst_element_factory_make ("audioscale", "ascale");
@@ -331,8 +372,6 @@ gen_audio_element (GstPlayBin * play_bin)
     sink = gst_element_factory_make ("osssink", "sink");
   }
 
-  play_bin->seekables = g_list_prepend (play_bin->seekables, sink);
-
   gst_bin_add (GST_BIN (element), conv);
   gst_bin_add (GST_BIN (element), scale);
   gst_bin_add (GST_BIN (element), volume);
@@ -346,6 +385,13 @@ gen_audio_element (GstPlayBin * play_bin)
       gst_element_get_pad (conv, "sink"), "sink");
 
   gst_element_set_state (element, GST_STATE_READY);
+
+  /* ref before adding to the cache */
+  g_object_ref (G_OBJECT (element));
+  g_hash_table_insert (play_bin->cache, "abin", element);
+
+done:
+  play_bin->seekables = g_list_prepend (play_bin->seekables, sink);
 
   return element;
 }
@@ -380,7 +426,7 @@ setup_sinks (GstPlayBin * play_bin)
 
   for (s = streaminfo; s; s = g_list_next (s)) {
     GObject *obj = G_OBJECT (s->data);
-    int type;
+    gint type;
     GstPad *srcpad, *sinkpad;
     GstElement *sink = NULL;
     gboolean res;
@@ -431,8 +477,7 @@ setup_sinks (GstPlayBin * play_bin)
       }
     }
     if (mute) {
-      gst_play_base_bin_mute_stream (GST_PLAY_BASE_BIN (play_bin),
-          GST_STREAM_INFO (obj), TRUE);
+      g_object_set (G_OBJECT (obj), "mute", TRUE, NULL);
     }
   }
 }

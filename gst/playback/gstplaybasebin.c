@@ -136,11 +136,6 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_play_base_bin_debug, "playbasebin", 0,
       "playbasebin");
 
-  gst_play_base_bin_signals[MUTE_STREAM_SIGNAL] =
-      g_signal_new ("mute-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBaseBinClass, mute_stream),
-      NULL, NULL, gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
-      G_TYPE_OBJECT, G_TYPE_BOOLEAN);
   gst_play_base_bin_signals[LINK_STREAM_SIGNAL] =
       g_signal_new ("link-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBaseBinClass, link_stream),
@@ -162,7 +157,6 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   gstbin_klass->remove_element =
       GST_DEBUG_FUNCPTR (gst_play_base_bin_remove_element);
 
-  klass->mute_stream = gst_play_base_bin_mute_stream;
   klass->link_stream = gst_play_base_bin_link_stream;
   klass->unlink_stream = gst_play_base_bin_unlink_stream;
 }
@@ -256,12 +250,18 @@ remove_prerolls (GstPlayBaseBin * play_base_bin)
 }
 
 static void
-unknown_type (GstElement * element, GstCaps * caps,
+unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
     GstPlayBaseBin * play_base_bin)
 {
-  gchar *capsstr = gst_caps_to_string (caps);
+  gchar *capsstr;
+  GstStreamInfo *info;
 
+  capsstr = gst_caps_to_string (caps);
   g_warning ("don't know how to handle %s", capsstr);
+
+  /* add the stream to the list */
+  info = gst_stream_info_new (pad, GST_STREAM_TYPE_UNKNOWN, NULL);
+  play_base_bin->streaminfo = g_list_append (play_base_bin->streaminfo, info);
 
   g_free (capsstr);
 }
@@ -683,6 +683,9 @@ gst_play_base_bin_remove_element (GstBin * bin, GstElement * element)
       if (!thread) {
         g_warning ("cannot find element to remove");
       } else {
+        /* we remove the element from the thread first so that the
+         * state is not affected when someone holds a reference to it */
+        gst_bin_remove (GST_BIN (thread), element);
         element = thread;
       }
     }
@@ -739,63 +742,6 @@ gst_play_base_bin_found_tag (GstElement * element,
   gst_object_unref (parent);
 }
 
-static void
-play_base_bin_mute_pad (GstPlayBaseBin * play_base_bin,
-    GstPad * pad, gboolean mute)
-{
-  GList *int_links;
-  gboolean activate = !mute;
-  gchar *debug_str = (activate ? "activate" : "inactivate");
-
-  GST_DEBUG_OBJECT (play_base_bin, "%s %s:%s", debug_str,
-      GST_DEBUG_PAD_NAME (pad));
-  gst_pad_set_active (pad, activate);
-
-  for (int_links = gst_pad_get_internal_links (pad);
-      int_links; int_links = g_list_next (int_links)) {
-    GstPad *pad = GST_PAD (int_links->data);
-    GstPad *peer = gst_pad_get_peer (pad);
-    GstElement *peer_elem = gst_pad_get_parent (peer);
-
-    GST_DEBUG_OBJECT (play_base_bin, "%s internal pad %s:%s",
-        debug_str, GST_DEBUG_PAD_NAME (pad));
-
-    gst_pad_set_active (pad, activate);
-
-    if (peer_elem->numsrcpads == 1) {
-      GST_DEBUG_OBJECT (play_base_bin, "recursing element %s on pad %s:%s",
-          gst_element_get_name (peer_elem), GST_DEBUG_PAD_NAME (peer));
-      play_base_bin_mute_pad (play_base_bin, peer, mute);
-    } else {
-      GST_DEBUG_OBJECT (play_base_bin, "%s final pad %s:%s",
-          debug_str, GST_DEBUG_PAD_NAME (peer));
-      gst_pad_set_active (peer, activate);
-    }
-  }
-}
-
-/* muting a stream follows the flow downstream and dis/enables all
- * pads it encounters until an element with more than one source pad 
- * (a demuxer or equivalent) is met.
- */
-void
-gst_play_base_bin_mute_stream (GstPlayBaseBin * play_base_bin,
-    GstStreamInfo * info, gboolean mute)
-{
-  GST_DEBUG ("mute stream");
-
-  g_return_if_fail (play_base_bin != NULL);
-  g_return_if_fail (GST_IS_PLAY_BASE_BIN (play_base_bin));
-  g_return_if_fail (info != NULL);
-  g_return_if_fail (GST_IS_STREAM_INFO (info));
-
-  /* check if info contains a pad */
-  if (info->pad == NULL)
-    return;
-
-  play_base_bin_mute_pad (play_base_bin, info->pad, mute);
-}
-
 void
 gst_play_base_bin_link_stream (GstPlayBaseBin * play_base_bin,
     GstStreamInfo * info, GstPad * pad)
@@ -821,7 +767,7 @@ gst_play_base_bin_link_stream (GstPlayBaseBin * play_base_bin,
   if (info) {
     if (!gst_pad_link (info->pad, pad)) {
       GST_DEBUG ("could not link");
-      gst_play_base_bin_mute_stream (play_base_bin, info, TRUE);
+      g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
     }
   } else {
     GST_DEBUG ("could not find pad to link");

@@ -47,16 +47,19 @@ struct _GstStreamInfo {
   GstPad 	*pad;
   GstStreamType	 type;
   gchar 	*decoder;
+  gboolean	 mute;
 };
 
 struct _GstStreamInfoClass {
   GObjectClass 	 parent_class;
+
+  /* signals */
+  void (*muted) (GstStreamInfo *info, gboolean mute);
 };
 
 GType gst_stream_info_get_type (void);
 
 GstStreamInfo* gst_stream_info_new (GstPad *pad, GstStreamType type, gchar *decoder);
-
 
 G_END_DECLS
 

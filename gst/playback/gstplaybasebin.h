@@ -66,9 +66,6 @@ struct _GstPlayBaseBin {
 struct _GstPlayBaseBinClass {
   GstBinClass 	 parent_class;
 
-  void	(*mute_stream)		(GstPlayBaseBin *play_base_bin, 
-				 GstStreamInfo *info,
-				 gboolean mute);
   void	(*link_stream)		(GstPlayBaseBin *play_base_bin, 
 				 GstStreamInfo *info,
 				 GstPad *pad);
@@ -83,9 +80,6 @@ const GList*	gst_play_base_bin_get_streaminfo	(GstPlayBaseBin *play_base_bin);
 gint		gst_play_base_bin_get_nstreams_of_type	(GstPlayBaseBin *play_base_bin,
 							 GstStreamType type);
 
-void		gst_play_base_bin_mute_stream		(GstPlayBaseBin *play_base_bin, 
-							 GstStreamInfo *info,
-							 gboolean mute);
 void		gst_play_base_bin_link_stream		(GstPlayBaseBin *play_base_bin, 
 							 GstStreamInfo *info,
 							 GstPad *pad);

@@ -73,7 +73,7 @@ struct _GstDecodeBinClass
   /* signal we fire when a new pad has been decoded into raw audio/video */
   void (*new_decoded_pad) (GstElement * element, GstPad * pad, gboolean last);
   /* signal fired when we found a pad that we cannot decode */
-  void (*unknown_type) (GstElement * element, GstCaps * caps);
+  void (*unknown_type) (GstElement * element, GstPad * pad, GstCaps * caps);
 };
 
 /* props */
@@ -187,7 +187,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE] =
       g_signal_new ("unknown-type", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, unknown_type),
-      NULL, NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_CAPS);
+      NULL, NULL, gst_marshal_VOID__POINTER_OBJECT, G_TYPE_NONE, 2,
+      GST_TYPE_PAD, GST_TYPE_CAPS);
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_decode_bin_dispose);
 
@@ -374,9 +375,9 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
 
   /* the caps is empty, this means the pad has no type, we can only
    * decide to fire the unknown_type signal. */
-  if (gst_caps_is_empty (caps)) {
+  if (caps == NULL || gst_caps_is_empty (caps)) {
     g_signal_emit (G_OBJECT (decode_bin),
-        gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, caps);
+        gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, pad, caps);
     return;
   }
 
@@ -423,15 +424,13 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
       /* no compatible elements, fire the unknown_type signal, we cannot go
        * on */
       g_signal_emit (G_OBJECT (decode_bin),
-          gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, caps);
+          gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, pad, caps);
       return;
     }
     try_to_link_1 (decode_bin, pad, to_try);
   } else {
     GST_LOG_OBJECT (element, "multiple possibilities, delaying");
-    g_warning ("multiple possibilities, delaying");
   }
-
 }
 
 /* given a list of element factories, try to link one of the factories
