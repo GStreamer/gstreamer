@@ -353,7 +353,7 @@ gst_lame_src_link (GstPad * pad, const GstCaps * caps)
   GstLame *lame;
   gint out_samplerate;
   GstStructure *structure;
-  GstCaps *othercaps, *channelcaps, *ratecaps;
+  GstCaps *othercaps, *channelcaps;
   GstPadLinkReturn result;
 
   lame = GST_LAME (gst_pad_get_parent (pad));
@@ -362,16 +362,6 @@ gst_lame_src_link (GstPad * pad, const GstCaps * caps)
   if (!gst_structure_get_int (structure, "rate", &out_samplerate) ||
       !gst_structure_get_int (structure, "channels", &lame->num_channels))
     g_return_val_if_reached (GST_PAD_LINK_REFUSED);
-
-  /* try sample rate */
-  ratecaps =
-      gst_caps_new_simple ("audio/x-raw-int",
-      "channels", G_TYPE_INT, lame->num_channels,
-      "rate", G_TYPE_INT, out_samplerate, NULL);
-  result = gst_pad_try_set_caps (lame->srcpad, ratecaps);
-  gst_caps_free (ratecaps);
-  if (GST_PAD_LINK_FAILED (result))
-    return result;
 
   if (lame_set_out_samplerate (lame->lgf, out_samplerate) != 0)
     return GST_PAD_LINK_REFUSED;
