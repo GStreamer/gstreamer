@@ -278,32 +278,22 @@ Output plugin for GStreamer to convert to GSM lossy audio format.
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstgsm*
 
-%package -n gstreamer-mpeg1
-Summary: GStreamer plugins for Mpeg level 1 video playback
+%package -n gstreamer-mpeg
+Summary: GStreamer plugins for MPEG video playback and encoding
 Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
 
-%description -n gstreamer-mpeg1
-Plugins for playing mpeg level 1 encoded movies
+%description -n gstreamer-mpeg
+Plugins for playing and encoding MPEG video
 
-%files -n gstreamer-mpeg1
+%files -n gstreamer-mpeg
 %defattr(-, root, root)
 %{prefix}/lib/gst/libmpeg1types*
 %{prefix}/lib/gst/libmpeg1encoder*
 %{prefix}/lib/gst/libmpegaudio*
 %{prefix}/lib/gst/libmp1*
+%{prefix}/lib/gst/libmpegstream*
 # this is gone %{prefix}/lib/gst/libmpeg_play*
-
-%package -n gstreamer-mpeg2
-Summary: GStreamer plugins for Mpeg level 2 playback
-Group: Libraries/Multimedia
-Requires: %{name} = %{ver}
-
-%description -n gstreamer-mpeg2
-Plugins for playing mpeg level 2 encoded movies
-
-%files -n gstreamer-mpeg2
-%defattr(-, root, root)
 %{prefix}/lib/gst/libmpeg2play*
 %{prefix}/lib/gst/libmpeg2enc*
 %{prefix}/lib/gst/libmpeg2subt*
