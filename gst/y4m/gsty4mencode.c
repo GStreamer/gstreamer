@@ -136,11 +136,11 @@ gst_y4mencode_sinkconnect (GstPad * pad, const GstCaps * caps)
   gdouble fps;
   gdouble framerates[] = {
     00.000,
-    23.976, 24.000,             /* 24fps movie */
+    24000 / 1001, 24.000,       /* 24fps movie */
     25.000,                     /* PAL */
-    29.970, 30.000,             /* NTSC */
+    30000 / 1001, 30.000,       /* NTSC */
     50.000,
-    59.940, 60.000
+    60000 / 1001, 60.000
   };
   GstStructure *structure;
 
