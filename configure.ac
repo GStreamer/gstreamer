@@ -28,8 +28,6 @@ dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 ACLOCAL="$ACLOCAL -I m4 -I common/m4 $ACLOCAL_FLAGS"
 
-AM_MAINTAINER_MODE
-
 AC_PROG_CC
 AM_PROG_CC_STDC
 AM_PROG_AS
@@ -453,6 +451,7 @@ dnl  HAVE_FESTIVAL=yes
 dnl])
 
 dnl *** FLAC ***
+dnl FLAC 1.0.3 is needed
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLAC, true)
 GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
   GST_CHECK_LIBHEADER(FLAC, FLAC, FLAC__stream_decoder_new, -lm, FLAC/all.h, FLAC_LIBS="-lFLAC")
