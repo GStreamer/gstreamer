@@ -24,6 +24,7 @@
 #include <gst/video/video.h>
 
 #include <string.h>
+#include <math.h>
 
 #define GST_TYPE_ALPHA \
   (gst_alpha_get_type())
@@ -44,14 +45,12 @@ typedef enum
   ALPHA_METHOD_ADD,
   ALPHA_METHOD_GREEN,
   ALPHA_METHOD_BLUE,
-  ALPHA_METHOD_BLACK,
+  ALPHA_METHOD_CUSTOM,
 }
 GstAlphaMethod;
 
-#define DEFAULT_METHOD ALPHA_METHOD_ADD
-#define DEFAULT_ALPHA 1.0
-#define DEFAULT_TARGET_CR 116
-#define DEFAULT_TARGET_CB 116
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+#define ROUND_UP_2(x) (((x) + 1) & ~1)
 
 struct _GstAlpha
 {
@@ -67,9 +66,24 @@ struct _GstAlpha
 
   gdouble alpha;
 
-  guint target_cr, target_cb;
+  guint target_r;
+  guint target_g;
+  guint target_b;
 
   GstAlphaMethod method;
+
+  gfloat angle;
+  gfloat noise_level;
+
+  gfloat y;                     /* chroma color */
+  gint8 cb, cr;
+  gint8 kg;
+  gfloat accept_angle_cos;
+  gfloat accept_angle_sin;
+  guint8 accept_angle_tg;
+  guint8 accept_angle_ctg;
+  guint8 one_over_kc;
+  guint8 kfgy_scale;
 };
 
 struct _GstAlphaClass
@@ -92,13 +106,24 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_METHOD ALPHA_METHOD_ADD
+#define DEFAULT_ALPHA 1.0
+#define DEFAULT_TARGET_R 0
+#define DEFAULT_TARGET_G 255
+#define DEFAULT_TARGET_B 0
+#define DEFAULT_ANGLE 20.0
+#define DEFAULT_NOISE_LEVEL 2.0
+
 enum
 {
   ARG_0,
   ARG_METHOD,
   ARG_ALPHA,
-  ARG_TARGET_CR,
-  ARG_TARGET_CB,
+  ARG_TARGET_R,
+  ARG_TARGET_G,
+  ARG_TARGET_B,
+  ARG_ANGLE,
+  ARG_NOISE_LEVEL,
   /* FILL ME */
 };
 
@@ -120,6 +145,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 static void gst_alpha_base_init (gpointer g_class);
 static void gst_alpha_class_init (GstAlphaClass * klass);
 static void gst_alpha_init (GstAlpha * alpha);
+static void gst_alpha_init_params (GstAlpha * alpha);
 
 static void gst_alpha_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -144,7 +170,7 @@ gst_alpha_method_get_type (void)
     {ALPHA_METHOD_ADD, "0", "Add alpha channel"},
     {ALPHA_METHOD_GREEN, "1", "Chroma Key green"},
     {ALPHA_METHOD_BLUE, "2", "Chroma Key blue"},
-    {ALPHA_METHOD_BLACK, "3", "Chroma Key black"},
+    {ALPHA_METHOD_CUSTOM, "3", "Chroma Key on target_r/g/b"},
     {0, NULL, NULL},
   };
 
@@ -210,12 +236,21 @@ gst_alpha_class_init (GstAlphaClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "The value for the alpha channel",
           0.0, 1.0, DEFAULT_ALPHA, (GParamFlags) G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TARGET_CR,
-      g_param_spec_uint ("target_cr", "Target Red", "The Red Chroma target", 0,
-          255, 116, (GParamFlags) G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TARGET_CB,
-      g_param_spec_uint ("target_cb", "Target Blue", "The Blue Chroma target",
-          0, 255, 116, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TARGET_R,
+      g_param_spec_uint ("target_r", "Target Red", "The Red target", 0,
+          255, DEFAULT_TARGET_R, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TARGET_G,
+      g_param_spec_uint ("target_g", "Target Green", "The Green target", 0,
+          255, DEFAULT_TARGET_G, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TARGET_B,
+      g_param_spec_uint ("target_b", "Target Blue", "The Blue target",
+          0, 255, DEFAULT_TARGET_B, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ANGLE,
+      g_param_spec_float ("angle", "Angle", "Size of the colorcube to change",
+          0.0, 90.0, DEFAULT_ANGLE, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NOISE_LEVEL,
+      g_param_spec_float ("noise_level", "Noise Level", "Size of noise radius",
+          0.0, 64.0, DEFAULT_NOISE_LEVEL, (GParamFlags) G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_alpha_set_property;
   gobject_class->get_property = gst_alpha_get_property;
@@ -241,8 +276,11 @@ gst_alpha_init (GstAlpha * alpha)
 
   alpha->alpha = DEFAULT_ALPHA;
   alpha->method = DEFAULT_METHOD;
-  alpha->target_cr = DEFAULT_TARGET_CR;
-  alpha->target_cb = DEFAULT_TARGET_CB;
+  alpha->target_r = DEFAULT_TARGET_R;
+  alpha->target_g = DEFAULT_TARGET_G;
+  alpha->target_b = DEFAULT_TARGET_B;
+  alpha->angle = DEFAULT_ANGLE;
+  alpha->noise_level = DEFAULT_NOISE_LEVEL;
 
   GST_FLAG_SET (alpha, GST_ELEMENT_EVENT_AWARE);
 }
@@ -262,15 +300,44 @@ gst_alpha_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_METHOD:
       alpha->method = g_value_get_enum (value);
+      switch (alpha->method) {
+        case ALPHA_METHOD_GREEN:
+          alpha->target_r = 0;
+          alpha->target_g = 255;
+          alpha->target_b = 0;
+          break;
+        case ALPHA_METHOD_BLUE:
+          alpha->target_r = 0;
+          alpha->target_g = 0;
+          alpha->target_b = 255;
+          break;
+        default:
+          break;
+      }
+      gst_alpha_init_params (alpha);
       break;
     case ARG_ALPHA:
       alpha->alpha = g_value_get_double (value);
       break;
-    case ARG_TARGET_CB:
-      alpha->target_cb = g_value_get_uint (value);
+    case ARG_TARGET_R:
+      alpha->target_r = g_value_get_uint (value);
+      gst_alpha_init_params (alpha);
       break;
-    case ARG_TARGET_CR:
-      alpha->target_cr = g_value_get_uint (value);
+    case ARG_TARGET_G:
+      alpha->target_g = g_value_get_uint (value);
+      gst_alpha_init_params (alpha);
+      break;
+    case ARG_TARGET_B:
+      alpha->target_b = g_value_get_uint (value);
+      gst_alpha_init_params (alpha);
+      break;
+    case ARG_ANGLE:
+      alpha->angle = g_value_get_float (value);
+      gst_alpha_init_params (alpha);
+      break;
+    case ARG_NOISE_LEVEL:
+      alpha->noise_level = g_value_get_float (value);
+      gst_alpha_init_params (alpha);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -295,11 +362,20 @@ gst_alpha_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_ALPHA:
       g_value_set_double (value, alpha->alpha);
       break;
-    case ARG_TARGET_CR:
-      g_value_set_uint (value, alpha->target_cr);
+    case ARG_TARGET_R:
+      g_value_set_uint (value, alpha->target_r);
       break;
-    case ARG_TARGET_CB:
-      g_value_set_uint (value, alpha->target_cb);
+    case ARG_TARGET_G:
+      g_value_set_uint (value, alpha->target_g);
+      break;
+    case ARG_TARGET_B:
+      g_value_set_uint (value, alpha->target_b);
+      break;
+    case ARG_ANGLE:
+      g_value_set_float (value, alpha->angle);
+      break;
+    case ARG_NOISE_LEVEL:
+      g_value_set_float (value, alpha->noise_level);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -322,12 +398,6 @@ gst_alpha_sink_link (GstPad * pad, const GstCaps * caps)
 
   return GST_PAD_LINK_OK;
 }
-
-/*
-static int yuv_colors_Y[] = {  16, 150,  29 };
-static int yuv_colors_U[] = { 128,  46, 255 };
-static int yuv_colors_V[] = { 128,  21, 107 };
-*/
 
 #define ROUND_UP_4(x) (((x) + 3) & ~3)
 
@@ -381,24 +451,24 @@ gst_alpha_add (guint8 * src, guint8 * dest, gint width, gint height,
   }
 }
 
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
-#define ROUND_UP_2(x) (((x) + 1) & ~1)
 
+/* based on http://www.cs.utah.edu/~michael/chroma/
+ */
 static void
 gst_alpha_chroma_key (gchar * src, gchar * dest, gint width, gint height,
-    gboolean soft, gint target_u, gint target_v, gfloat edge_factor,
-    gdouble alpha)
+    GstAlpha * alpha)
 {
   gint b_alpha;
-  gint f_alpha = (gint) (alpha * 255);
   guint8 *srcY1, *srcY2, *srcU, *srcV;
   guint8 *dest1, *dest2;
   gint i, j;
-  gint x, z, u, v;
+  gint x, z, u, v, y11, y12, y21, y22;
   gint w2, h2;
   gint size, size2;
   gint stride, stride2;
   gint wrap, wrap2, wrap3;
+  gint tmp, tmp1;
+  gint x1, y1;
 
   stride = ROUND_UP_4 (width);
   size = stride * height;
@@ -421,55 +491,99 @@ gst_alpha_chroma_key (gchar * src, gchar * dest, gint width, gint height,
 
   for (i = 0; i < height / 2; i++) {
     for (j = 0; j < width / 2; j++) {
-      u = *srcU++;
-      v = *srcV++;
+      y11 = *srcY1++;
+      y12 = *srcY1++;
+      y21 = *srcY2++;
+      y22 = *srcY2++;
+      u = *srcU++ - 128;
+      v = *srcV++ - 128;
 
-      x = target_u - u;
-      z = target_v - v;
+      /* Convert foreground to XZ coords where X direction is defined by
+         the key color */
+      tmp = ((short) u * alpha->cb + (short) v * alpha->cr) >> 7;
+      x = CLAMP (tmp, -128, 127);
+      tmp = ((short) v * alpha->cb - (short) u * alpha->cr) >> 7;
+      z = CLAMP (tmp, -128, 127);
 
-      // only filter if in top left square
-      if ((x > 0) && (z > 0)) {
-        // only calculate lot of stuff if we'll use soft edges
-        if (soft) {
-          gint ds = (x > z) ? z : x;
+      /* WARNING: accept angle should never be set greater than "somewhat less
+         than 90 degrees" to avoid dealing with negative/infinite tg. In reality,
+         80 degrees should be enough if foreground is reasonable. If this seems
+         to be a problem, go to alternative ways of checking point position
+         (scalar product or line equations). This angle should not be too small
+         either to avoid infinite ctg (used to suppress foreground without use of
+         division) */
 
-          gfloat df = (gfloat) (ds) / edge_factor;
+      tmp = ((short) (x) * alpha->accept_angle_tg) >> 4;
+      tmp = MIN (tmp, 127);
 
-          if (df > 1.0)
-            df = 1.0;
+      if (abs (z) > tmp) {
+        /* keep foreground Kfg = 0 */
+        b_alpha = 255;
+      } else {
+        /* Compute Kfg (implicitly) and Kbg, suppress foreground in XZ coord
+           according to Kfg */
+        tmp = ((short) (z) * alpha->accept_angle_ctg) >> 4;
+        tmp = CLAMP (tmp, -128, 127);
+        x1 = abs (tmp);
+        y1 = z;
 
-          // suppress foreground
-          if (x > z) {
-            u += z;
-            v += z;
-          } else {
-            u += x;
-            v += x;
-          }
-          b_alpha = (int) (f_alpha * (1.0 - df));
-        } else {
-          // kill color and alpha
+        tmp1 = x - x1;
+        tmp1 = MAX (tmp1, 0);
+        b_alpha = (((unsigned char) (tmp1) *
+                (unsigned short) (alpha->one_over_kc)) / 2);
+        b_alpha = 255 - CLAMP (b_alpha, 0, 255);
+
+        tmp = ((unsigned short) (tmp1) * alpha->kfgy_scale) >> 4;
+        tmp1 = MIN (tmp, 255);
+
+        tmp = y11 - tmp1;
+        y11 = MAX (tmp, 0);
+        tmp = y12 - tmp1;
+        y12 = MAX (tmp, 0);
+        tmp = y21 - tmp1;
+        y21 = MAX (tmp, 0);
+        tmp = y22 - tmp1;
+        y22 = MAX (tmp, 0);
+
+        /* Convert suppressed foreground back to CbCr */
+        tmp = ((char) (x1) * (short) (alpha->cb) -
+            (char) (y1) * (short) (alpha->cr)) >> 7;
+        u = CLAMP (tmp, -128, 127);
+
+        tmp = ((char) (x1) * (short) (alpha->cr) +
+            (char) (y1) * (short) (alpha->cb)) >> 7;
+        v = CLAMP (tmp, -128, 127);
+
+        /* Deal with noise. For now, a circle around the key color with
+           radius of noise_level treated as exact key color. Introduces
+           sharp transitions.
+         */
+        tmp = z * (short) (z) + (x - alpha->kg) * (short) (x - alpha->kg);
+        tmp = MIN (tmp, 0xffff);
+
+        if (tmp < alpha->noise_level * alpha->noise_level) {
+          /* Uncomment this if you want total suppression within the noise circle */
           b_alpha = 0;
         }
-      } else {
-        // do nothing;
-        b_alpha = f_alpha;
       }
 
+      u += 128;
+      v += 128;
+
       *dest1++ = b_alpha;
-      *dest1++ = *srcY1++;
+      *dest1++ = y11;
       *dest1++ = u;
       *dest1++ = v;
       *dest1++ = b_alpha;
-      *dest1++ = *srcY1++;
+      *dest1++ = y12;
       *dest1++ = u;
       *dest1++ = v;
       *dest2++ = b_alpha;
-      *dest2++ = *srcY2++;
+      *dest2++ = y21;
       *dest2++ = u;
       *dest2++ = v;
       *dest2++ = b_alpha;
-      *dest2++ = *srcY2++;
+      *dest2++ = y22;
       *dest2++ = u;
       *dest2++ = v;
     }
@@ -480,6 +594,42 @@ gst_alpha_chroma_key (gchar * src, gchar * dest, gint width, gint height,
     srcU += wrap2;
     srcV += wrap2;
   }
+}
+
+static void
+gst_alpha_init_params (GstAlpha * alpha)
+{
+  float kgl;
+  float tmp;
+  float tmp1, tmp2;
+
+  alpha->y =
+      0.257 * alpha->target_r + 0.504 * alpha->target_g +
+      0.098 * alpha->target_b;
+  tmp1 =
+      -0.148 * alpha->target_r - 0.291 * alpha->target_g +
+      0.439 * alpha->target_b;
+  tmp2 =
+      0.439 * alpha->target_r - 0.368 * alpha->target_g -
+      0.071 * alpha->target_b;
+  kgl = sqrt (tmp1 * tmp1 + tmp2 * tmp2);
+  alpha->cb = 127 * (tmp1 / kgl);
+  alpha->cr = 127 * (tmp2 / kgl);
+
+  alpha->accept_angle_cos = cos (M_PI * alpha->angle / 180);
+  alpha->accept_angle_sin = sin (M_PI * alpha->angle / 180);
+  tmp = 15 * tan (M_PI * alpha->angle / 180);
+  tmp = MIN (tmp, 255);
+  alpha->accept_angle_tg = tmp;
+  tmp = 15 / tan (M_PI * alpha->angle / 180);
+  tmp = MIN (tmp, 255);
+  alpha->accept_angle_ctg = tmp;
+  tmp = 1 / (kgl);
+  alpha->one_over_kc = 255 * 2 * tmp - 255;
+  tmp = 15 * (float) (alpha->y) / kgl;
+  tmp = MIN (tmp, 255);
+  alpha->kfgy_scale = tmp;
+  alpha->kg = MIN (kgl, 127);
 }
 
 static void
@@ -537,19 +687,15 @@ gst_alpha_chain (GstPad * pad, GstData * _data)
       break;
     case ALPHA_METHOD_GREEN:
       gst_alpha_chroma_key (GST_BUFFER_DATA (buffer),
-          GST_BUFFER_DATA (outbuf),
-          new_width, new_height,
-          FALSE, alpha->target_cr, alpha->target_cb, 1.0, alpha->alpha);
+          GST_BUFFER_DATA (outbuf), new_width, new_height, alpha);
       break;
     case ALPHA_METHOD_BLUE:
       gst_alpha_chroma_key (GST_BUFFER_DATA (buffer),
-          GST_BUFFER_DATA (outbuf),
-          new_width, new_height, TRUE, 100, 100, 1.0, alpha->alpha);
+          GST_BUFFER_DATA (outbuf), new_width, new_height, alpha);
       break;
-    case ALPHA_METHOD_BLACK:
+    case ALPHA_METHOD_CUSTOM:
       gst_alpha_chroma_key (GST_BUFFER_DATA (buffer),
-          GST_BUFFER_DATA (outbuf),
-          new_width, new_height, TRUE, 129, 129, 1.0, alpha->alpha);
+          GST_BUFFER_DATA (outbuf), new_width, new_height, alpha);
       break;
     default:
       break;
@@ -571,6 +717,7 @@ gst_alpha_change_state (GstElement * element)
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
+      gst_alpha_init_params (alpha);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
