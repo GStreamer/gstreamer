@@ -1,3 +1,10 @@
+2004-11-14  Koop Mast  <kwm@rainbow-runner.nl>
+
+	reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	  Fix for gcc-2.95 (fixes #158221).
+
 2004-11-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_add_element):
