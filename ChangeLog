@@ -1,5 +1,13 @@
 2004-11-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* configure.ac:
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_add_element):
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find):
+	  Remove hacks for older core. Require newer core version
+	  accordingly.
+
+2004-11-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/cdxaparse/Makefile.am:
 	* gst/cdxaparse/gstcdxaparse.c: (gst_cdxaparse_get_type),
 	(gst_cdxaparse_class_init), (gst_cdxaparse_init),
