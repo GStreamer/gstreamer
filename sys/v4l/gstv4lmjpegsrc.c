@@ -365,10 +365,10 @@ gst_v4lmjpegsrc_get (GstPad *pad)
     return NULL;
   GST_BUFFER_DATA(buf) = gst_v4lmjpegsrc_get_buffer(v4lmjpegsrc, num);
   if (!v4lmjpegsrc->first_timestamp)
-    v4lmjpegsrc->first_timestamp = v4lmjpegsrc->bsync.timestamp.tv_sec * 1000000 +
-      v4lmjpegsrc->bsync.timestamp.tv_usec;
-  GST_BUFFER_TIMESTAMP(buf) = v4lmjpegsrc->bsync.timestamp.tv_sec * 1000000 +
-    v4lmjpegsrc->bsync.timestamp.tv_usec - v4lmjpegsrc->first_timestamp;
+    v4lmjpegsrc->first_timestamp = v4lmjpegsrc->bsync.timestamp.tv_sec * GST_SECOND +
+      v4lmjpegsrc->bsync.timestamp.tv_usec * GST_SECOND/1000000;
+  GST_BUFFER_TIMESTAMP(buf) = v4lmjpegsrc->bsync.timestamp.tv_sec * GST_SECOND +
+    v4lmjpegsrc->bsync.timestamp.tv_usec - v4lmjpegsrc->first_timestamp * GST_SECOND/1000000;
 
   return buf;
 }
