@@ -406,14 +406,16 @@ gst_audio_convert_link (GstPad *pad, const GstCaps *caps)
     GstPadLinkReturn ret;
     
     otherpad = (nr) ? this->src : this->sink;
-    othercaps = gst_caps_copy (gst_pad_get_negotiated_caps (otherpad));
+    if (gst_pad_is_negotiated (otherpad)) {
+      othercaps = gst_caps_copy (gst_pad_get_negotiated_caps (otherpad));
 
-    gst_caps_set_simple (othercaps, "rate", G_TYPE_INT, rate, NULL);
+      gst_caps_set_simple (othercaps, "rate", G_TYPE_INT, rate, NULL);
 
-    ret = gst_pad_try_set_caps (otherpad, othercaps);
-    if (GST_PAD_LINK_FAILED (ret)) return ret;
+      ret = gst_pad_try_set_caps (otherpad, othercaps);
+      if (GST_PAD_LINK_FAILED (ret)) return ret;
 
-    this->rate[1 - nr] = rate;
+      this->rate[1 - nr] = rate;
+    }
   }
 
   this->caps_set[nr] = TRUE;
