@@ -779,7 +779,7 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      guint64 offset;
+      gint64 offset;
 
       if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
 	goto error;
