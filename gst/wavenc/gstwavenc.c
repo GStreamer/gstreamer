@@ -294,7 +294,7 @@ gst_wavenc_init (GstWavEnc * wavenc)
 
   wavenc->setup = FALSE;
   wavenc->flush_header = TRUE;
-
+  wavenc->newmediacount = 0;
   GST_FLAG_SET (wavenc, GST_ELEMENT_EVENT_AWARE);
 }
 
@@ -619,6 +619,17 @@ gst_wavenc_chain (GstPad * pad, GstData * _data)
       gst_wavenc_stop_file (wavenc);
       gst_pad_push (wavenc->srcpad, _data);
       gst_element_set_eos (GST_ELEMENT (wavenc));
+    } else if (GST_EVENT_TYPE (buf) == GST_EVENT_DISCONTINUOUS) {
+      if (GST_EVENT_DISCONT_NEW_MEDIA (buf)) {
+        /* new media */
+        if (wavenc->newmediacount++ > 0) {
+          gst_wavenc_stop_file (wavenc);
+          wavenc->setup = FALSE;
+          wavenc->flush_header = TRUE;
+          gst_wavenc_setup (wavenc);
+        }
+        gst_pad_event_default (wavenc->srcpad, GST_EVENT (buf));
+      }
     } else {
       gst_pad_event_default (wavenc->srcpad, GST_EVENT (buf));
     }
