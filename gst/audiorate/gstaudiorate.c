@@ -49,6 +49,7 @@ struct _GstAudiorate
   guint64 next_offset;
 
   guint64 in, out, add, drop;
+  gboolean silent;
 };
 
 struct _GstAudiorateClass
@@ -70,6 +71,8 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_SILENT	TRUE
+
 enum
 {
   ARG_0,
@@ -77,6 +80,7 @@ enum
   ARG_OUT,
   ARG_ADD,
   ARG_DROP,
+  ARG_SILENT,
   /* FILL ME */
 };
 
@@ -162,11 +166,16 @@ gst_audiorate_class_init (GstAudiorateClass * klass)
       g_param_spec_uint64 ("out", "Out",
           "Number of output samples", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
   g_object_class_install_property (object_class, ARG_ADD,
-      g_param_spec_uint64 ("duplicate", "Duplicate",
+      g_param_spec_uint64 ("add", "Add",
           "Number of added samples", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
   g_object_class_install_property (object_class, ARG_DROP,
       g_param_spec_uint64 ("drop", "Drop",
           "Number of dropped samples", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, ARG_SILENT,
+      g_param_spec_boolean ("silent", "silent",
+          "Don't emit notify for dropped and duplicated frames",
+          DEFAULT_SILENT, G_PARAM_READWRITE));
+
 
   object_class->set_property = gst_audiorate_set_property;
   object_class->get_property = gst_audiorate_get_property;
@@ -221,6 +230,7 @@ gst_audiorate_init (GstAudiorate * audiorate)
   audiorate->out = 0;
   audiorate->drop = 0;
   audiorate->add = 0;
+  audiorate->silent = DEFAULT_SILENT;
 }
 
 static void
@@ -231,6 +241,7 @@ gst_audiorate_chain (GstPad * pad, GstData * data)
   GstClockTime in_time, in_duration;
   guint64 in_offset, in_offset_end;
   gint in_size;
+  gint bytes_per_sample;
 
   audiorate = GST_AUDIORATE (gst_pad_get_parent (pad));
 
@@ -250,14 +261,14 @@ gst_audiorate_chain (GstPad * pad, GstData * data)
   in_offset = GST_BUFFER_OFFSET (buf);
   in_offset_end = GST_BUFFER_OFFSET_END (buf);
 
+  /* FIXME: use caps to get this */
+  bytes_per_sample = in_size / (in_offset_end - in_offset);
+
   /* do we need to insert samples */
   if (in_offset > audiorate->next_offset) {
     GstBuffer *fill;
-    gint bytes_per_sample, fillsize;
+    gint fillsize;
     guint64 fillsamples;
-
-    /* FIXME: use caps to get this */
-    bytes_per_sample = in_size / (in_offset_end - in_offset);
 
     fillsamples = in_offset - audiorate->next_offset;
     fillsize = fillsamples * bytes_per_sample;
@@ -272,10 +283,43 @@ gst_audiorate_chain (GstPad * pad, GstData * data)
 
     gst_pad_push (audiorate->srcpad, GST_DATA (fill));
     audiorate->out++;
-    audiorate->add++;
+    audiorate->add += fillsamples;
+
+    if (!audiorate->silent)
+      g_object_notify (G_OBJECT (audiorate), "add");
   } else if (in_offset < audiorate->next_offset) {
-    g_warning ("overlapping samples, implement me");
-    audiorate->drop++;
+    /* need to remove samples */
+    if (in_offset_end <= audiorate->next_offset) {
+      audiorate->drop += in_size / bytes_per_sample;
+
+      /* we can drop the buffer completely */
+      gst_buffer_unref (buf);
+
+      if (!audiorate->silent)
+        g_object_notify (G_OBJECT (audiorate), "drop");
+
+      return;
+    } else {
+      gint truncsamples, truncsize, leftsize;
+      GstBuffer *trunc;
+
+      /* truncate buffer */
+      truncsamples = audiorate->next_offset - in_offset;
+      truncsize = truncsamples * bytes_per_sample;
+      leftsize = in_size - truncsize;
+
+      trunc = gst_buffer_create_sub (buf, truncsize, in_size);
+      GST_BUFFER_DURATION (trunc) = in_duration * leftsize / in_size;
+      GST_BUFFER_TIMESTAMP (trunc) =
+          in_time + in_duration - GST_BUFFER_DURATION (trunc);
+      GST_BUFFER_OFFSET (trunc) = audiorate->next_offset;
+      GST_BUFFER_OFFSET_END (trunc) = in_offset_end;
+
+      gst_buffer_unref (buf);
+      buf = trunc;
+
+      audiorate->drop += truncsamples;
+    }
   }
   gst_pad_push (audiorate->srcpad, GST_DATA (buf));
   audiorate->out++;
@@ -287,9 +331,12 @@ static void
 gst_audiorate_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  //GstAudiorate *audiorate = GST_AUDIORATE (object);
+  GstAudiorate *audiorate = GST_AUDIORATE (object);
 
   switch (prop_id) {
+    case ARG_SILENT:
+      audiorate->silent = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -314,6 +361,9 @@ gst_audiorate_get_property (GObject * object,
       break;
     case ARG_DROP:
       g_value_set_uint64 (value, audiorate->drop);
+      break;
+    case ARG_SILENT:
+      g_value_set_boolean (value, audiorate->silent);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
