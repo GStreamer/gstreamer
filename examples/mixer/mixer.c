@@ -6,8 +6,11 @@
  * 
  * Latest change : 	28/04/2001
  * 					trying to adapt to incsched
- * 					
- * Version :		0.4.1
+ * 					delayed start for channels > 1
+ *					now works by quickhacking the
+ *					adder plugin to set
+ * 					GST_ELEMENT_COTHREAD_STOPPING		
+ * Version :		0.5
  */
 
 #include <stdlib.h>
@@ -132,7 +135,7 @@ int main(int argc,char *argv[])
     channel_in = create_input_channel (i, argv[i]);
     input_channels = g_list_append (input_channels, channel_in);
 
-    //gst_element_set_state (main_bin, GST_STATE_PAUSED);
+    if (i > 1) gst_element_set_state (main_bin, GST_STATE_PAUSED);
     gst_bin_add (GST_BIN(main_bin), channel_in->pipe);
 
     /* request pads and connect to adder */
@@ -188,11 +191,12 @@ int main(int argc,char *argv[])
     playing = TRUE;
 
     j = 0;
-    printf ("main: iterating %d\n", j);
+    //printf ("main: start iterating from 0");
     while (playing && j < 100) 
     {
+//      printf ("main: iterating %d\n", j);
       gst_bin_iterate(GST_BIN(main_bin));
-     fprintf(stderr,"after iterate()\n");
+     //fprintf(stderr,"after iterate()\n");
       ++j;
     }
   }
@@ -200,7 +204,7 @@ int main(int argc,char *argv[])
   while (playing) 
   {
     gst_bin_iterate(GST_BIN(main_bin));
-    fprintf(stderr,"after iterate()\n");
+    //fprintf(stderr,"after iterate()\n");
   }
   /* stop the bin */
   gst_element_set_state(main_bin, GST_STATE_NULL);
@@ -323,7 +327,7 @@ create_input_channel (int id, char* location)
   new_element = gst_bin_new ("autoplug_bin");
 
   /* static plug, use mad plugin and assume mp3 input */
-  decoder =  gst_elementfactory_make ("mad", "mad");
+  decoder =  gst_elementfactory_make ("mad", "mpg123");
 
   gst_bin_add (GST_BIN (new_element), decoder);
 
