@@ -427,8 +427,8 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
       "format", GST_TYPE_FOURCC, myFourcc,
       "width", G_TYPE_INT, mpeg2dec->width,
       "height", G_TYPE_INT, mpeg2dec->height,
-      "pixel_width", G_TYPE_INT, mpeg2dec->pixel_width,
-      "pixel_height", G_TYPE_INT, mpeg2dec->pixel_height,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, mpeg2dec->pixel_width,
+      mpeg2dec->pixel_height,
       "framerate", G_TYPE_DOUBLE, mpeg2dec->frame_rate, NULL);
 
   ret = gst_pad_set_explicit_caps (mpeg2dec->srcpad, caps);
