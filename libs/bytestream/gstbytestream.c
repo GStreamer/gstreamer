@@ -56,6 +56,7 @@ gst_bytestream_new (GstPad * pad)
   bs->buflist = NULL;
   bs->headbufavail = 0;
   bs->listavail = 0;
+  bs->assembled = NULL;
 
   return bs;
 }
@@ -71,6 +72,8 @@ gst_bytestream_destroy (GstByteStream * bs)
     walk = g_slist_next (walk);
   }
   g_slist_free (bs->buflist);
+  if (bs->assembled)
+    g_free (bs->assembled);
   g_free (bs);
 }
 
@@ -195,7 +198,7 @@ gst_bytestream_peek (GstByteStream * bs, guint32 len)
     gst_bytestream_fill_bytes (bs, len);
     bs_print ("peek: there are now %d bytes in the list\n", bs->listavail);
   }
-  bs_status (bs)
+  bs_status (bs);
 
   // extract the head buffer
   headbuf = GST_BUFFER (bs->buflist->data);
@@ -239,7 +242,7 @@ gst_bytestream_peek_bytes (GstByteStream * bs, guint32 len)
     gst_bytestream_fill_bytes (bs, len);
     bs_print ("peek_bytes: there are now %d bytes in the list\n", bs->listavail);
   }
-  bs_status (bs)
+  bs_status (bs);
 
   // extract the head buffer
   headbuf = GST_BUFFER (bs->buflist->data);
@@ -257,6 +260,8 @@ gst_bytestream_peek_bytes (GstByteStream * bs, guint32 len)
     bs_print ("peek_bytes: current buffer is not big enough for len %d\n", len);
 
     data = gst_bytestream_assemble (bs, len);
+    bs->assembled = data;
+    bs->assembled_len = len;
   }
 
   return data;
@@ -303,6 +308,10 @@ gst_bytestream_flush (GstByteStream * bs, guint32 len)
   GstBuffer *headbuf;
 
   bs_print ("flush: flushing %d bytes\n", len);
+  if (bs->assembled) {
+    g_free (bs->assembled);
+    bs->assembled = NULL;
+  }
 
   // make sure we have enough
   bs_print ("flush: there are %d bytes in the list\n", bs->listavail);

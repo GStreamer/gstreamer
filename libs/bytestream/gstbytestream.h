@@ -31,15 +31,20 @@ typedef struct _GstByteStream GstByteStream;
 struct _GstByteStream {
   GstPad *pad;
 
-  GSList *buflist;
-  guint32 headbufavail;
-  guint32 listavail;
+  GSList 	*buflist;
+  guint32 	headbufavail;
+  guint32 	listavail;
+
+  // we keep state of assembled pieces
+  guint8	*assembled;
+  guint32	assembled_len;
 };
 
 GstByteStream*		gst_bytestream_new		(GstPad *pad);
 void			gst_bytestream_destroy		(GstByteStream *bs);
 
 GstBuffer*		gst_bytestream_read		(GstByteStream *bs, guint32 len);
+GstBuffer*		gst_bytestream_peek		(GstByteStream *bs, guint32 len);
 guint8*			gst_bytestream_peek_bytes	(GstByteStream *bs, guint32 len);
 gboolean		gst_bytestream_flush		(GstByteStream *bs, guint32 len);
 
