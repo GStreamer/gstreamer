@@ -179,6 +179,7 @@ gst_ffmpegdec_init (GstFFMpegDec *ffmpegdec)
   gst_pad_set_link_function (ffmpegdec->sinkpad, gst_ffmpegdec_connect);
   gst_pad_set_chain_function (ffmpegdec->sinkpad, gst_ffmpegdec_chain);
   ffmpegdec->srcpad = gst_pad_new_from_template (oclass->srctempl, "src");
+  gst_pad_use_explicit_caps (ffmpegdec->srcpad);
 
   gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->sinkpad);
   gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->srcpad);
@@ -410,7 +411,7 @@ gst_ffmpegdec_chain (GstPad    *pad,
         caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
 					     ffmpegdec->context);
         if (caps == NULL ||
-            gst_pad_try_set_caps (ffmpegdec->srcpad, caps) <= 0) {
+            !gst_pad_set_explicit_caps (ffmpegdec->srcpad, caps)) {
           gst_element_error (GST_ELEMENT (ffmpegdec),
 			     "Failed to link ffmpeg decoder (%s) to next element",
 			     oclass->in_plugin->name);

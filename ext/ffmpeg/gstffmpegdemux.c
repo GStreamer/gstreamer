@@ -316,6 +316,7 @@ gst_ffmpegdemux_loop (GstElement *element)
     pad = gst_pad_new_from_template (templ, padname);
     g_free (padname);
 
+    gst_pad_use_explicit_caps (pad);
     /* FIXME: convert() and query() functions for pad */
 
     /* store pad internally */
@@ -325,12 +326,9 @@ gst_ffmpegdemux_loop (GstElement *element)
     /* get caps that belongs to this stream */
     caps = gst_ffmpeg_codecid_to_caps (st->codec.codec_id,
 				       &st->codec);
-    if (gst_pad_try_set_caps (pad, caps) <= 0) {
-      GST_DEBUG (
-		 "Failed to set caps from ffdemuxer on next element");
-      /* we continue here, in the next pad-is-usable check,
-       * we'll return nonetheless */
-    }
+    gst_pad_set_explicit_caps (pad, caps);
+    /* we continue here, in the next pad-is-usable check,
+     * we'll return nonetheless */
   }
 
   /* shortcut to pad belonging to this stream */
