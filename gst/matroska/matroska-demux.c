@@ -2328,23 +2328,26 @@ gst_matroska_demux_loop_stream (GstMatroskaDemux * demux)
         break;
       }
 
-      case GST_MATROSKA_ID_CLUSTER:{
-        if (!gst_ebml_read_master (ebml, &id)) {
+      case GST_MATROSKA_ID_CLUSTER:
+        if (demux->state != GST_MATROSKA_DEMUX_STATE_DATA) {
+          demux->state = GST_MATROSKA_DEMUX_STATE_DATA;
+          gst_element_no_more_pads (GST_ELEMENT (demux));
+        } else {
+          if (!gst_ebml_read_master (ebml, &id)) {
+            res = FALSE;
+            break;
+          }
+          /* The idea is that we parse one cluster per loop and
+           * then break out of the loop here. In the next call
+           * of the loopfunc, we will get back here with the
+           * next cluster. If an error occurs, we didn't
+           * actually push a buffer, but we still want to break
+           * out of the loop to handle a possible error. We'll
+           * get back here if it's recoverable. */
+          gst_matroska_demux_parse_cluster (demux);
           res = FALSE;
-          break;
         }
-        /* The idea is that we parse one cluster per loop and
-         * then break out of the loop here. In the next call
-         * of the loopfunc, we will get back here with the
-         * next cluster. If an error occurs, we didn't
-         * actually push a buffer, but we still want to break
-         * out of the loop to handle a possible error. We'll
-         * get back here if it's recoverable. */
-        gst_matroska_demux_parse_cluster (demux);
-        demux->state = GST_MATROSKA_DEMUX_STATE_DATA;
-        res = FALSE;
         break;
-      }
 
       default:
         GST_WARNING ("Unknown matroska file header ID 0x%x", id);
