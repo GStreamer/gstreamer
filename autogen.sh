@@ -22,6 +22,8 @@ then
 fi
 . common/gst-autogen.sh
 
+CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-plugin-builddir'
+
 autogen_options $@
 
 echo -n "+ check for build tools"
@@ -35,10 +37,10 @@ die_check $DIE
 
 autoconf_2.52d_check || DIE=1
 aclocal_check || DIE=1
+autoheader_check || DIE=1
 
 die_check $DIE
 
-CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-plugin-builddir'
 # if no arguments specified then this will be printed
 if test -z "$*"; then
   echo "+ checking for autogen.sh options"
@@ -57,7 +59,7 @@ tool_run "$aclocal" "-I common/m4 $ACLOCAL_FLAGS"
 
 echo "+ not running libtoolize until libtool fix has flown downstream"
 # tool_run "libtoolize" "--copy --force"
-tool_run "autoheader"
+tool_run "$autoheader"
 
 # touch the stamp-h.in build stamp so we don't re-run autoheader in maintainer mode -- wingo
 echo timestamp > stamp-h.in 2> /dev/null

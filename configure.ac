@@ -39,9 +39,13 @@ dnl ##############################
 dnl Check for tools:
 dnl ================
 
+dnl allow for different autotools
+AS_AUTOTOOLS_ALTERNATE()
+
 dnl modify pkg-config path
 AC_ARG_WITH(pkg-config-path, 
-   AC_HELP_STRING([--with-pkg-config-path],[colon-separated list of pkg-config(1) dirs]),
+   AC_HELP_STRING([--with-pkg-config-path],
+                  [colon-separated list of pkg-config(1) dirs]),
    [export PKG_CONFIG_PATH=${withval}])
 
 dnl Check for nasm
