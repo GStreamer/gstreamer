@@ -146,7 +146,7 @@ gst_httpsrc_get(GstPad *pad)
     return NULL;
   }
 
-  g_print ("%ld\n", readbytes);
+  //g_print ("%ld\n", readbytes);
   if (readbytes < src->bytes_per_read) {
     // FIXME: set the buffer's EOF bit here
   }
