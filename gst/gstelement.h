@@ -183,8 +183,8 @@ const gchar*            gst_element_get_name            (GstElement *element);
 void                    gst_element_set_parent          (GstElement *element, GstObject *parent);
 GstObject*              gst_element_get_parent          (GstElement *element);
 
-#define			gst_element_yield(element)	gst_scheduler_yield(GST_ELEMENT_SCHED(element),element)
-#define			gst_element_interrupt(element)	gst_scheduler_interrupt(GST_ELEMENT_SCHED(element),element)
+void			gst_element_yield		(GstElement *element);
+void			gst_element_interrupt		(GstElement *element);
 void			gst_element_set_sched		(GstElement *element, GstScheduler *sched);
 GstScheduler*		gst_element_get_sched		(GstElement *element);
 

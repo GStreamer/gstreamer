@@ -162,7 +162,8 @@ cothread_create (cothread_context *ctx)
   for (slot = 1; slot < ctx->nthreads; slot++) {
     if (ctx->threads[slot] == NULL)
       break;
-    else if (ctx->threads[slot]->flags & COTHREAD_DESTROYED) {
+    else if (ctx->threads[slot]->flags & COTHREAD_DESTROYED &&
+		    slot != ctx->current) {
       cothread_destroy (ctx->threads[slot]);
       break;
     }
@@ -217,7 +218,7 @@ cothread_free (cothread_state *thread)
 {
   g_return_if_fail (thread != NULL);
 
-  GST_INFO (GST_CAT_COTHREADS, "flag cothread for destruction");
+  GST_INFO (GST_CAT_COTHREADS, "flag cothread %d for destruction", thread->threadnum);
 
   /* we simply flag the cothread for destruction here */
   thread->flags |= COTHREAD_DESTROYED;
@@ -230,10 +231,11 @@ cothread_destroy (cothread_state *thread)
 
   g_return_if_fail (thread != NULL);
 
-  GST_INFO (GST_CAT_COTHREADS, "destroy cothread");
+  GST_INFO (GST_CAT_COTHREADS, "destroy cothread %d %p %p", thread->threadnum, thread, ctx->current);
 
   ctx = thread->ctx;
 #ifndef COTHREAD_ATOMIC
+  g_mutex_unlock (thread->lock);
   g_mutex_free (thread->lock);
 #endif
   //munmap ((void *) thread, COTHREAD_STACKSIZE);

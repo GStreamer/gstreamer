@@ -1282,6 +1282,22 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 }
 #endif /* GST_DISABLE_LOADSAVE */
 
+void
+gst_element_yield (GstElement *element)
+{
+  if (GST_ELEMENT_SCHED (element)) {
+    gst_scheduler_yield (GST_ELEMENT_SCHED (element), element);
+  }
+}
+
+void
+gst_element_interrupt (GstElement *element)
+{
+  if (GST_ELEMENT_SCHED (element)) {
+    gst_scheduler_interrupt (GST_ELEMENT_SCHED (element), element);
+  }
+}
+
 /**
  * gst_element_set_sched:
  * @element: Element to set manager of.
