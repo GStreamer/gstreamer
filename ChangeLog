@@ -1,3 +1,9 @@
+2004-09-09  Arwed v. Merkatz  <v.merkatz@gmx.net>
+	* gst/matroska/matroska-mux.h:
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_reset),
+	(gst_matroska_mux_finish), (gst_matroska_mux_write_data):
+	  Write multiple blocks/frames per cluster.
+
 2004-09-09  Scott Wheeler <wheeler@kde.org>
 
 	* gst/gstplaybin.c: (gst_play_bin_class_init), (gst_play_bin_init),
