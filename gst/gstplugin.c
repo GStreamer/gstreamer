@@ -191,6 +191,15 @@ gst_plugin_load_plugin (GstPlugin *plugin, GError **error)
         plugin->module = module;
         return TRUE;
       }
+      else {
+	/* plugin == NULL */
+        g_set_error (error,
+                     GST_PLUGIN_ERROR,
+                     GST_PLUGIN_ERROR_MODULE,
+                     "gst_plugin_register_func failed for plugin \"%s\"",
+                     filename);
+        return FALSE;
+      }
     }
     else {
       g_set_error (error,
@@ -207,8 +216,16 @@ gst_plugin_load_plugin (GstPlugin *plugin, GError **error)
                  GST_PLUGIN_ERROR_MODULE,
                  "Error loading plugin %s, reason: %s\n",
                  filename, g_module_error());
+    return FALSE;
   }
 
+  /* FIXME: this should not happen */
+  g_set_error (error,
+               GST_PLUGIN_ERROR,
+               GST_PLUGIN_ERROR_MODULE,
+               "Error loading plugin %s, reason: %s\n",
+               filename, 
+	       "fell of the end of the gst_plugin_load_plugin function");
   return FALSE;
 }
 

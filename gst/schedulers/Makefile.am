@@ -25,6 +25,6 @@ libgstfaststandardscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 ## this is a REALLY evil hack 
 ## but we need to keep it as long as we have libs/gst and libs/ext
 $(top_builddir)/libs/ext/cothreads/cothreads/libcothreads-gthreads.la:
-	cd $(top_builddir)/libs/ext/cothreads/cothreads && make
+	cd $(top_builddir)/libs/ext/cothreads/cothreads && ${MAKE}
 
 noinst_HEADERS = cothreads_compat.h
