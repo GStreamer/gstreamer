@@ -22,6 +22,7 @@
 
 /* #define DEBUG_ENABLED */
 #include <stdio.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -177,13 +178,28 @@ gst_xml_registry_new (const gchar *name, const gchar *location)
   return GST_REGISTRY (xmlregistry);
 }
 
+/* same as 0755 */
+#define dirmode \
+  (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
+
 static gboolean
 gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
 {
   if (mode == GST_XML_REGISTRY_READ)
     registry->regfile = fopen (registry->location, "r");
   else if (mode == GST_XML_REGISTRY_WRITE)
+  {
+    /* check the dir */
+    struct stat filestat;
+    char *dirname = g_strndup(registry->location,
+			strrchr(registry->location, '/') - registry->location);
+    if (stat(dirname, &filestat) == -1 && errno == ENOENT)
+      if (mkdir(dirname, dirmode) != 0)
+        return FALSE;
+    g_free(dirname);
+
     registry->regfile = fopen (registry->location, "w");
+  }
 
   if (!registry->regfile)
     return FALSE;
