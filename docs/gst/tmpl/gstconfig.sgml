@@ -44,13 +44,6 @@ If a subsystem is disabled in GStreamer, a value is defined in
 
 
 
-<!-- ##### MACRO GST_DISABLE_AUTOPLUG ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GST_DISABLE_ENUMTYPES ##### -->
 <para>
 

@@ -426,11 +426,6 @@ GST_PLUGIN_DEFINE (
   "0.1",		/* The version number of the plugin */
   "LGPL",		/* ieffective license the plugin can be shipped with. Must be 
 			 * valid for all libraries it links to, too. */
-  "(c) 2003 E. Xamplewriter",
-			/* Copyright holder for this plugin. This does not include
-			 * the libraries it links to, contrary to the license. This
-			 * field should be considered informational and not legally
-			 * binding */
   "my nifty plugin package",
 			/* package this plugin belongs to. */
   "http://www.mydomain.com"

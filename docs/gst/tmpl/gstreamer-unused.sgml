@@ -196,6 +196,142 @@ GstAudioSink
 GstAudioSrc
 
 
+<!-- ##### SECTION ./tmpl/gstautoplug.sgml:Long_Description ##### -->
+<para>
+GstAutoplug is an abstract class that is used for constructing and 
+linking elements. Two types of autopluggers exist: renderer ones and non
+renderer ones. The renderer autopluggers will not have any src pads while the
+non renderer ones do.
+</para>
+
+<para>
+You first need to create a suitable autoplugger with gst_autoplug_factory_make() 
+(see #GstAutoplugFactory).
+The name of the autoplugger must be one of the registered autopluggers 
+(see #GstStaticAutoplug and #GstStaticAutoplugRender).
+</para>
+<para>
+If the autoplugger supports the RENDERER API, use gst_autoplug_to_renderers() to
+create a bin that links the src caps to the specified renderer elements. You can 
+then add the bin to a pipeline and run it.
+
+  <programlisting>
+  GstAutoplug *autoplug;
+  GstElement  *element;
+  GstElement  *sink;
+
+  /* create a static autoplugger */
+  autoplug = gst_autoplug_factory_make ("staticrender");
+
+  /* create an osssink */
+  sink = gst_element_factory_make ("osssink", "our_sink");
+
+  /* create an element that can play audio/mp3 through osssink */
+  element = gst_autoplug_to_renderers (autoplug, 
+   				       gst_caps_new (
+				         "sink_audio_caps",
+				         "audio/mp3",
+					 NULL
+				       ),
+				       sink,
+				       NULL);
+
+  /* add the element to a bin and link the sink pad */
+  ...
+  </programlisting>
+</para>
+<para>
+If the autoplugger supports the CAPS API, use gst_autoplug_to_caps() to
+link the src caps to the destination caps. The created bin will have src caps 
+compatible with the provided sink caps.
+
+  <programlisting>
+  GstAutoplug *autoplug;
+  GstElement  *element;
+
+  /* create a static autoplugger */
+  autoplug = gst_autoplug_factory_make ("static");
+
+  /* create an element that converts audio/mp3 to audio/raw */
+  element = gst_autoplug_to_caps (autoplug, 
+   				  gst_caps_new (
+				    "sink_audio_caps",
+				    "audio/mp3",
+				    NULL
+				  ),
+   				  gst_caps_new (
+				    "src_audio_caps",
+				    "audio/raw",
+				    NULL
+				  ),
+				  NULL);
+
+  /* add the element to a bin and link the src/sink pads */
+  ...
+  </programlisting>
+</para>
+
+<para>
+Optionally you can get a notification when a new object is added to the created
+pipeline with a g_signal_connect to the "new_object" signal.
+</para>
+
+<para>
+Use the regular gst_object_destroy() call to destroy the autoplugger.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstautoplug.sgml:See_Also ##### -->
+<para>
+#GstStaticAutoplug, #GstStaticAutoplugRender
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstautoplug.sgml:Short_Description ##### -->
+Automatically create and link elements
+
+
+<!-- ##### SECTION ./tmpl/gstautoplug.sgml:Title ##### -->
+GstAutoplug
+
+
+<!-- ##### SECTION ./tmpl/gstautoplugfactory.sgml:Long_Description ##### -->
+<para>
+An autoplugfactory is used to create instances of an autoplugger. It
+can be added to a #GstPlugin as it extends #GstPluginFeature.
+</para>
+<para>
+Use gst_autoplug_factory_new() to create a new autoplugger which can be registered 
+to a plugin with gst_plugin_add_feature().
+</para>
+<para>
+Use gst_autoplug_factory_find() to find the named autoplugfactory.
+or use gst_autoplug_factory_get_list() to get a  list of all available autopluggers.
+</para>
+<para>
+Once an autoplugfactory has been obtained use gst_autoplug_factory_create() to
+instantiate a real autoplugger. Optionally gst_autoplug_factory_make() to create
+a autoplugger from the named factory.
+</para>
+<para>
+Use gst_autoplug_factory_destroy() to remove the factory from the global list.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstautoplugfactory.sgml:See_Also ##### -->
+<para>
+#GstAutoplug, #GstPlugin, #GstPluginFeature.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstautoplugfactory.sgml:Short_Description ##### -->
+Create autopluggers from a factory.
+
+
+<!-- ##### SECTION ./tmpl/gstautoplugfactory.sgml:Title ##### -->
+GstAutoplugFactory
+
+
 <!-- ##### SECTION ./tmpl/gstbufferpool-default.sgml:Long_Description ##### -->
 <para>
 
@@ -992,6 +1128,48 @@ The start point of a filter graph
 
 <!-- ##### SECTION ./tmpl/gstsrc.sgml:Title ##### -->
 GstSrc
+
+
+<!-- ##### SECTION ./tmpl/gststaticautoplug.sgml:Long_Description ##### -->
+<para>
+This autoplugger will create a non threaded element before running the
+pipeline.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gststaticautoplug.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gststaticautoplug.sgml:Short_Description ##### -->
+A static autoplugger.
+
+
+<!-- ##### SECTION ./tmpl/gststaticautoplug.sgml:Title ##### -->
+GstStaticAutoplug
+
+
+<!-- ##### SECTION ./tmpl/gststaticautoplugrender.sgml:Long_Description ##### -->
+<para>
+this autoplugger will create a threaded element that can be used
+in media players.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gststaticautoplugrender.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gststaticautoplugrender.sgml:Short_Description ##### -->
+An autoplugger made for media playback
+
+
+<!-- ##### SECTION ./tmpl/gststaticautoplugrender.sgml:Title ##### -->
+GstStaticAutoplugRender
 
 
 <!-- ##### SECTION ./tmpl/gststatistics.sgml:Long_Description ##### -->
@@ -1813,6 +1991,12 @@ to the current function, i.e. "('element')"
 
 @format: printf-style format string
 @args...: printf arguments
+
+<!-- ##### MACRO GST_DISABLE_AUTOPLUG ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### MACRO GST_DISABLE_TYPEFIND ##### -->
 <para>
@@ -4290,6 +4474,35 @@ The frequency.
 </para>
 
 
+<!-- ##### STRUCT GstAutoplug ##### -->
+<para>
+The autoplug object
+</para>
+
+
+<!-- ##### SIGNAL GstAutoplug::new-object ##### -->
+<para>
+
+</para>
+
+@gstautoplug: the object which received the signal.
+@arg1: 
+
+<!-- ##### STRUCT GstAutoplugFactory ##### -->
+<para>
+The autoplugfactory object
+</para>
+
+
+<!-- ##### ENUM GstAutoplugFlags ##### -->
+<para>
+The type of the autoplugger.
+</para>
+
+@GST_AUTOPLUG_TO_CAPS: 
+@GST_AUTOPLUG_TO_RENDERER: 
+@GST_AUTOPLUG_FLAG_LAST: 
+
 <!-- ##### STRUCT GstAutoplugNode ##### -->
 <para>
 
@@ -5765,15 +5978,6 @@ Query the element for the current mime type
 </para>
 
 
-<!-- ##### SIGNAL GstXML::object-loaded ##### -->
-<para>
-
-</para>
-
-@gstxml: the object which received the signal.
-@arg1: 
-@arg2: 
-
 <!-- ##### USER_FUNCTION GstXMLRegistryAddPathList ##### -->
 <para>
 
@@ -7201,6 +7405,29 @@ must be defined to activate the tracing functionality.
 @factories: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_autoplug_factory_create ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_factory_destroy ##### -->
+<para>
+
+</para>
+
+@factory: 
+
+<!-- ##### FUNCTION gst_autoplug_factory_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_autoplug_factory_get_list ##### -->
 <para>
 
@@ -7246,6 +7473,24 @@ must be defined to activate the tracing functionality.
 @parent: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_autoplug_factory_make ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_factory_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@longdesc: 
+@type: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_autoplug_factory_save_thyself ##### -->
 <para>
 
@@ -7269,6 +7514,14 @@ must be defined to activate the tracing functionality.
 
 @fac: 
 
+<!-- ##### FUNCTION gst_autoplug_signal_new_object ##### -->
+<para>
+
+</para>
+
+@autoplug: 
+@object: 
+
 <!-- ##### FUNCTION gst_autoplug_sp ##### -->
 <para>
 
@@ -7277,6 +7530,28 @@ must be defined to activate the tracing functionality.
 @src_caps: 
 @sink_caps: 
 @factories: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_to_caps ##### -->
+<para>
+
+</para>
+
+@autoplug: 
+@srccaps: 
+@sinkcaps: 
+@Varargs: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_to_renderers ##### -->
+<para>
+
+</para>
+
+@autoplug: 
+@srccaps: 
+@target: 
+@Varargs: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_bin_add_managed_element ##### -->
@@ -8680,6 +8955,13 @@ of an element he doesn't need anymore.
 @...: 
 @format: 
 @args...: 
+
+<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_link_get_type ##### -->
 =======

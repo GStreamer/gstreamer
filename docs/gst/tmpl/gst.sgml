@@ -112,14 +112,6 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_version ##### -->
 <para>
 

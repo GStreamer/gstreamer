@@ -96,7 +96,6 @@ loaded will use this variable to initialize the plugin.
 @plugin_exit: 
 @version: 
 @license: 
-@copyright: 
 @package: 
 @origin: 
 

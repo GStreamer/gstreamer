@@ -470,7 +470,6 @@ dnl ############################
 
 dnl set license and copyright notice
 AC_DEFINE(GST_LICENSE, "LGPL", [GStreamer license])
-AC_DEFINE(GST_COPYRIGHT, "(c) 1999-2003 The GStreamer Team", [copyright message in plugins])
 dnl package name in plugins
 AC_ARG_WITH(package-name,
 AC_HELP_STRING([--with-package-name],[specify package name to use in plugins]),

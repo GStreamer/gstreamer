@@ -893,7 +893,6 @@ print_plugin_info (GstPlugin *plugin)
   g_print ("  Filename:\t%s\n",	    plugin->filename);
   g_print ("  Version:\t%s\n",	    plugin->desc.version);
   g_print ("  License:\t%s\n",	    plugin->desc.license);
-  g_print ("  Copyright:\t%s\n",    plugin->desc.copyright);
   g_print ("  Package:\t%s\n",	    plugin->desc.package);
   g_print ("  Origin URL:\t%s\n",   plugin->desc.origin);
   g_print ("\n");

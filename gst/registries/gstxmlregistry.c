@@ -663,9 +663,6 @@ gst_xml_registry_parse_plugin (GMarkupParseContext *context, const gchar *tag, c
   else if (!strcmp (tag, "version")) {
     plugin->desc.version = g_strndup (text, text_len);
   }
-  else if (!strcmp (tag, "copyright")) {
-    plugin->desc.copyright = g_strndup (text, text_len);
-  }
   else if (!strcmp (tag, "license")) {
     plugin->desc.license = g_strndup (text, text_len);
   }
@@ -1511,7 +1508,6 @@ gst_xml_registry_save_plugin (GstXMLRegistry *xmlregistry, GstPlugin *plugin)
   PUT_ESCAPED ("filename", plugin->filename);
   PUT_ESCAPED ("version", plugin->desc.version);
   PUT_ESCAPED ("license", plugin->desc.license);
-  PUT_ESCAPED ("copyright", plugin->desc.copyright);
   PUT_ESCAPED ("package", plugin->desc.package);
   PUT_ESCAPED ("origin", plugin->desc.origin);
 

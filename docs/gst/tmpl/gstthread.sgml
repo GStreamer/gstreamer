@@ -34,6 +34,15 @@ The GstThread object
 </para>
 
 
+<!-- ##### FUNCTION gst_thread_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
 <!-- ##### SIGNAL GstThread::shutdown ##### -->
 <para>
 
@@ -45,13 +54,4 @@ The GstThread object
 <para>
 The thread priority
 </para>
-
-<!-- ##### FUNCTION gst_thread_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
 

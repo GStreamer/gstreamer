@@ -61,7 +61,6 @@ struct _GstPluginDesc {
   GstPluginExitFunc plugin_exit;	/* pointer to exiting function */
   gchar *version;			/* version of the plugin */
   gchar *license;			/* effective license of plugin */
-  gchar *copyright;			/* informal copyright notice */
   gchar *package;			/* package plugin belongs to */
   gchar *origin;			/* URL to provider of plugin */
   
@@ -82,7 +81,7 @@ struct _GstPlugin {
 };
 
 #ifndef GST_PLUGIN_STATIC				
-#define GST_PLUGIN_DEFINE_DYNAMIC(major,minor,name,description,init,version,license,copyright,package,origin)	\
+#define GST_PLUGIN_DEFINE_DYNAMIC(major,minor,name,description,init,version,license,package,origin)	\
 GstPluginDesc gst_plugin_desc = {		      	\
   major,						\
   minor,						\
@@ -92,15 +91,14 @@ GstPluginDesc gst_plugin_desc = {		      	\
   NULL,							\
   version,						\
   license,					      	\
-  copyright,						\
   package,						\
   origin,						\
   GST_STRUCT_PADDING_INIT				\
 };							
-#define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,copyright,package,origin)
+#define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,package,origin)
 #else
-#define GST_PLUGIN_DEFINE_DYNAMIC(major,minor,name,description,init,version,license,copyright,package,origin)
-#define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,copyright,package,origin)  \
+#define GST_PLUGIN_DEFINE_DYNAMIC(major,minor,name,description,init,version,license,package,origin)
+#define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,package,origin)  \
 static void GST_GNUC_CONSTRUCTOR			\
 _gst_plugin_static_init__ ##init (void)			\
 {							\
@@ -113,7 +111,6 @@ _gst_plugin_static_init__ ##init (void)			\
     NULL,					      	\
     version,						\
     license,					      	\
-    copyright,						\
     package,						\
     origin,						\
     GST_STRUCT_PADDING_INIT				\
@@ -122,9 +119,9 @@ _gst_plugin_static_init__ ##init (void)			\
 }			
 #endif
 
-#define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,copyright,package,origin)\
-  GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,copyright,package,origin)\
-  GST_PLUGIN_DEFINE_DYNAMIC(major,minor,name,description,init,version,license,copyright,package,origin)
+#define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin)\
+  GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,package,origin)\
+  GST_PLUGIN_DEFINE_DYNAMIC(major,minor,name,description,init,version,license,package,origin)
   
 #define GST_LICENSE_UNKNOWN "unknown"
 
@@ -143,7 +140,6 @@ void			gst_plugin_set_name		(GstPlugin *plugin, const gchar *name);
 G_CONST_RETURN gchar*	gst_plugin_get_longname		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_filename		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_license		(GstPlugin *plugin);
-G_CONST_RETURN gchar*	gst_plugin_get_copyright      	(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_package		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_origin      	(GstPlugin *plugin);
 GModule *		gst_plugin_get_module		(GstPlugin *plugin);

@@ -168,7 +168,7 @@ gst_plugin_register_func (GstPlugin *plugin, GModule *module, GstPluginDesc *des
   }
 
   if (!desc->license || !desc->description || !desc->package ||
-      !desc->copyright || !desc->origin) {
+      !desc->origin) {
     if (GST_CAT_DEFAULT) GST_INFO ("plugin \"%s\" has incorrect GstPluginDesc, not loading",
        plugin->filename);
     return FALSE;
@@ -327,8 +327,6 @@ gst_plugin_desc_copy (GstPluginDesc *dest, const GstPluginDesc *src)
   dest->version = g_strdup (src->version);
   g_free (dest->license);
   dest->license = g_strdup (src->license);
-  g_free (dest->copyright);
-  dest->copyright = g_strdup (src->copyright);
   g_free (dest->package);
   dest->package = g_strdup (src->package);
   g_free (dest->origin);
@@ -343,7 +341,6 @@ gst_plugin_desc_free (GstPluginDesc *desc)
   g_free (desc->description);
   g_free (desc->version);
   g_free (desc->license);
-  g_free (desc->copyright);
   g_free (desc->package);
   g_free (desc->origin);
 
@@ -438,21 +435,6 @@ gst_plugin_get_license (GstPlugin *plugin)
   g_return_val_if_fail (plugin != NULL, NULL);
 
   return plugin->desc.license;
-}
-/**
- * gst_plugin_get_copyright:
- * @plugin: plugin to get the copyright of
- *
- * get the informal copyright notice of the plugin
- *
- * Returns: the copyright of the plugin
- */
-G_CONST_RETURN gchar*
-gst_plugin_get_copyright (GstPlugin *plugin)
-{
-  g_return_val_if_fail (plugin != NULL, NULL);
-
-  return plugin->desc.copyright;
 }
 /**
  * gst_plugin_get_package:
