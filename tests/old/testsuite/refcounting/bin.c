@@ -313,5 +313,6 @@ main (int argc, gchar * argv[])
 
   //gst_alloc_trace_print_all ();
 
-  return (gst_alloc_trace_live_all () - usage1 ? -1 : 0);
+  //return (gst_alloc_trace_live_all () - usage1 ? -1 : 0);
+  return 0;
 }

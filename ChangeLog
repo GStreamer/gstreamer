@@ -1,3 +1,12 @@
+=== release 0.8.1 ===
+
+2004-04-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+          releasing 0.8.1, "Snow Brigade"
+
 2004-04-14  David Schleef  <ds@schleef.org>
 
 	* testsuite/Makefile.am: define tests_ignore
@@ -829,7 +838,7 @@
 	(pad_clear_queued), (gst_opt_scheduler_add_element),
 	(gst_opt_scheduler_remove_element):
 	  fix GStreamer to not have issues with lvalue casts anymore (fixes
-	  some bug, but bugzilla is down)
+	  #136841)
 
 2004-03-24  Benjamin Otte  <otte@gnome.org>
 
@@ -877,7 +886,8 @@
 
 2004-03-20  Colin Walters  <walters@redhat.com>
 
-	* gst/registries/gstxmlregistry.c (gst_xml_registry_get_perms_func): Just use
+	* gst/registries/gstxmlregistry.c (gst_xml_registry_get_perms_func):
+        Just use
 	access() instead of actually creating and deleting files.
 
 2004-03-18  David Schleef  <ds@schleef.org>

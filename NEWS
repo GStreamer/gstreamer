@@ -1,4 +1,14 @@
-This is GStreamer 0.8.0
+This is GStreamer 0.8.1
+
+Changes since 0.8.0:
+      * new translations: Azarbaijani, Afrikaans, Swedish
+      * MinGW compilation fixes
+      * buffer internal fixes
+      * new entry scheduler
+      * move from memchunks to malloc
+      * lots of memleak fixes
+      * better valgrind support
+      * registry fixes
 
 Changes since 0.7.6:
       * coding style consistency for .c files

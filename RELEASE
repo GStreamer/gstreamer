@@ -1,10 +1,9 @@
 
-GStreamer: Release notes for GStreamer 0.8.0 "Executive Slacks"
+GStreamer: Release notes for GStreamer 0.8.1 "Snow Brigade"
         
 
-The GStreamer team is happy to announce the first release
-in the 0.8.x stable series
-of the GStreamer streaming-media framework.
+The GStreamer team is happy to announce a new release
+in the 0.8.x stable series of the GStreamer streaming-media framework.
 
 
 The 0.8.x series is a stable series aimed at end users.
@@ -23,7 +22,9 @@ Features of this release
     
       * Parallel installability with 0.6.x series
       * Internationalization
-      * Dutch, French and Serbian translations
+      * New translations in this release: Swedish, Afrikaans, Azerbeaijani
+      * Translations: af, az, fr, nl, sr, sv
+      * New scheduler: entry
       * Reworked capabilities and negotiation subsystem
       * Reworked tagging subsystem
       * Reworked interactivity subsystem (for DVD playback)
@@ -36,8 +37,14 @@ Features of this release
 
 Bugs fixed in this release
     
-      * 133653 : need to settle on coding style using indent and use it befor
-      * 136683 : Add padding to GstCaps [ABI change]
+      * 136841 : Some code will need to be rewritten to compile against gc...
+      * 136904 : [opt] support loop in multi-loop based group
+      * 137279 : [patch] dispose/finalize functions for gst core elements
+      * 137625 : HAVE_ATOMIC_H is not used
+      * 138705 : Problem testing gstreamer 0.8.0
+      * 139002 : Compilation error
+      * 139109 : Compilation of gst-plugins fails because of errors in header
+      * 139617 : v4l2src ! spider ! ximagesink : crashes
 
 Download
 
@@ -74,23 +81,15 @@ Contributors to this release
     
       * Andy Wingo
       * Benjamin Otte
-      * Brian Cameron
-      * Christian Schaller
-      * Christophe Fergeau
+      * Christian Rose
       * Colin Walters
-      * Danilo Segan
-      * David I. Lehn
       * David Schleef
-      * Iain Holmes
       * Jan Schmidt
-      * Jérémy Simon
       * Johan Dahlin
-      * Jon Trowbridge
-      * Julien Moutte
-      * Laurent Vivier
-      * Leif Morgan Johnson
-      * Mattias Wadman
+      * Martin Soto
+      * Mətin Əmirov
+      * Petri Jooste
       * Ronald Bultje
-      * Stefan Kost
+      * Tim-Philipp Müller
       * Thomas Vander Stichele
  
