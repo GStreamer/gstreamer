@@ -23,6 +23,10 @@ GST_GUI_LAUNCH =
 endif
 else
 GST_GUI_LAUNCH = gstreamer-guilaunch
+gstreamer_guilaunch_CFLAGS = \
+	$(LIBGLADE_GNOME_CFLAGS) $(CFLAGS)
+gstreamer_guilaunch_LDADD = \
+	$(LIBGLADE_GNOME_LIBS) $(LDADD)
 endif
 
 bin_PROGRAMS = 	gstreamer-launch 	\
