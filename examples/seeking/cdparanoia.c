@@ -215,8 +215,5 @@ main (int argc, char **argv)
   /* shutdown everything again */
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  gst_buffer_print_stats();
-  gst_event_print_stats();
-
   return 0;
 }

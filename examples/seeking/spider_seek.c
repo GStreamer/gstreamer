@@ -371,8 +371,5 @@ main (int argc, char **argv)
 
   gtk_main ();
 
-  gst_buffer_print_stats();
-  gst_event_print_stats();
-
   return 0;
 }

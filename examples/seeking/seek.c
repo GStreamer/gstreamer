@@ -264,7 +264,7 @@ make_vorbis_pipeline (const gchar *location)
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("vorbisfile", "decoder");
   audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
-  g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
+  g_object_set (G_OBJECT (audiosink), "sync", TRUE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
@@ -366,7 +366,7 @@ make_avi_pipeline (const gchar *location)
   video_bin = gst_bin_new ("v_decoder_bin");
   //v_decoder = gst_element_factory_make_or_warn ("identity", "v_dec");
   //v_decoder = gst_element_factory_make_or_warn ("windec", "v_dec");
-  v_decoder = gst_element_factory_make_or_warn ("ffdec_msmpeg4", "v_dec");
+  v_decoder = gst_element_factory_make_or_warn ("ffmpegdecall", "v_dec");
   video_thread = gst_thread_new ("v_decoder_thread");
   videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
   //videosink = gst_element_factory_make_or_warn ("fakesink", "v_sink");
@@ -407,7 +407,7 @@ make_mpeg_pipeline (const gchar *location)
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
   demux = gst_element_factory_make_or_warn ("mpegdemux", "demux");
-  g_object_set (G_OBJECT (demux), "sync", TRUE, NULL);
+  g_object_set (G_OBJECT (demux), "sync", FALSE, NULL);
 
   seekable_elements = g_list_prepend (seekable_elements, demux);
 
@@ -518,6 +518,12 @@ make_mpegnt_pipeline (const gchar *location)
   rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (v_decoder, "sink"));
 
   return pipeline;
+}
+
+static GstElement*
+make_playerbin_pipeline (const gchar *location) 
+{
+  return NULL;
 }
 
 static gchar*
@@ -774,6 +780,43 @@ stop_cb (GtkButton * button, gpointer data)
   }
 }
 
+typedef struct
+{
+  gchar *name;
+  GstElement* (*func) (const gchar *location);
+} Pipeline;
+
+static Pipeline pipelines[] = {
+  { "mp3", 		make_mp3_pipeline 	},
+  { "avi", 		make_avi_pipeline 	},
+  { "mpeg1",  		make_mpeg_pipeline 	},
+  { "mpegparse",  	make_parse_pipeline 	},
+  { "vorbis",  		make_vorbis_pipeline 	}, 
+  { "sid",  		make_sid_pipeline 	},
+  { "flac",  		make_flac_pipeline 	},
+  { "wav",  		make_wav_pipeline 	},
+  { "mod",  		make_mod_pipeline 	},
+  { "dv",  		make_dv_pipeline 	},
+  { "mpeg1nothreads",  	make_mpegnt_pipeline 	},
+  { "playerbin",  	make_playerbin_pipeline },
+  { NULL, NULL},
+};
+
+#define NUM_TYPES	((sizeof (pipelines) / sizeof (Pipeline)) - 1)
+
+static void
+print_usage (int argc, char **argv)
+{
+  gint i;
+
+  g_print ("usage: %s <type> <filename>\n", argv[0]);
+  g_print ("   possible types:\n");
+
+  for (i = 0; i < NUM_TYPES; i++) {
+    g_print ("     %d = %s\n", i, pipelines[i].name);
+  }
+}
+
 int
 main (int argc, char **argv)
 {
@@ -781,41 +824,29 @@ main (int argc, char **argv)
             *play_button, *pause_button, *stop_button, 
 	    *hscale;
   struct poptOption options[] = {
-    {"stats",  's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &stats,   0,
-           "Show pad stats", NULL},
+    { "stats",  's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &stats,   0,
+           "Show pad stats", NULL },
     POPT_TABLEEND
   };
+  gint type;
 	        
   gst_init_with_popt_table (&argc, &argv, options);
   gtk_init (&argc, &argv);
 
   if (argc != 3) {
-    g_print ("usage: %s <type 0=mp3 1=avi 2=mpeg1 3=mpegparse 4=vorbis 5=sid 6=flac 7=wav 8=mod 9=dv 10=mpeg1nothreads> <filename>\n", argv[0]);
+    print_usage (argc, argv);
     exit (-1);
   }
 
-  if (atoi (argv[1]) == 0) 
-    pipeline = make_mp3_pipeline (argv[2]);
-  else if (atoi (argv[1]) == 1) 
-    pipeline = make_avi_pipeline (argv[2]);
-  else if (atoi (argv[1]) == 2) 
-    pipeline = make_mpeg_pipeline (argv[2]);
-  else if (atoi (argv[1]) == 3)
-    pipeline = make_parse_pipeline (argv[2]);
-  else if (atoi (argv[1]) == 4) 
-    pipeline = make_vorbis_pipeline (argv[2]);
-  else if (atoi (argv[1]) == 5) 
-    pipeline = make_sid_pipeline (argv[2]);
-  else if (atoi (argv[1]) == 6) 
-    pipeline = make_flac_pipeline (argv[2]);
-  else if (atoi (argv[1]) == 7) 
-    pipeline = make_wav_pipeline (argv[2]);
-  else if (atoi (argv[1]) == 8) 
-    pipeline = make_mod_pipeline (argv[2]);
-  else if (atoi (argv[1]) == 9) 
-    pipeline = make_dv_pipeline (argv[2]);
-  else if (atoi (argv[1]) == 10) 
-    pipeline = make_mpegnt_pipeline (argv[2]);
+  type = atoi (argv[1]);
+
+  if (type < 0 || type >= NUM_TYPES) {
+    print_usage (argc, argv);
+    exit (-1);
+  }
+
+  pipeline = pipelines[type].func (argv[2]);
+  g_assert (pipeline);
 
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -863,8 +894,6 @@ main (int argc, char **argv)
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   //gst_object_unref (GST_OBJECT (pipeline));
-  gst_buffer_print_stats();
-  gst_event_print_stats();
 
   //g_mem_chunk_info();
 
