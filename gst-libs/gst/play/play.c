@@ -22,7 +22,7 @@
 #endif
 #include <string.h>
 
-#include "gstplay.h"
+#include "play.h"
 
 enum
 {
