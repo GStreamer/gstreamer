@@ -559,12 +559,10 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
 
       GST_OGG_SET_STATE (ogg, GST_OGG_STATE_PLAY);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
         FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-            pad->flags |= GST_OGG_PAD_NEEDS_FLUSH;
-            );
+            pad->flags |= GST_OGG_PAD_NEEDS_FLUSH;);
       }
       GST_DEBUG_OBJECT (ogg,
           "initiating seeking to format %d, offset %" G_GUINT64_FORMAT, format,
@@ -638,8 +636,7 @@ gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       GST_FLAG_UNSET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       break;
     default:
       gst_pad_event_default (pad, event);
@@ -925,8 +922,7 @@ _find_chain_get_unknown_part (GstOggDemux * ogg, gint64 * start, gint64 * end)
   *end = G_MAXINT64;
 
   g_assert (ogg->current_chain >= 0);
-  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset);
-      );
+  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset););
 
   if (ogg->setup_state == SETUP_FIND_LAST_CHAIN) {
     *end = gst_file_pad_get_length (ogg->sinkpad);
@@ -1055,8 +1051,7 @@ _find_streams_check (GstOggDemux * ogg)
   } else {
     endpos = G_MAXINT64;
     FOR_PAD_IN_CHAIN (ogg, pad, ogg->chains->len - 1,
-        endpos = MIN (endpos, pad->start_offset);
-        );
+        endpos = MIN (endpos, pad->start_offset););
   }
   if (!ogg->seek_skipped || gst_ogg_demux_position (ogg) >= endpos) {
     /* have we found the endposition for all streams yet? */
@@ -1260,10 +1255,12 @@ gst_ogg_pad_remove (GstOggDemux * ogg, GstOggPad * pad)
     /* FIXME:
      * we do it in the EOS signal already - EOS handling needs to be better thought out.
      * Correct way would be pushing EOS on eos page, but scheduler doesn't like that
-     if (GST_PAD_IS_USEABLE (pad->pad))
-     gst_pad_push (pad->pad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
      */
+    if (GST_PAD_IS_USABLE (pad->pad))
+      gst_pad_push (pad->pad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
+
     gst_element_remove_pad (GST_ELEMENT (ogg), pad->pad);
+    pad->pad = NULL;
   }
   if (ogg_stream_clear (&pad->stream) != 0)
     GST_ERROR_OBJECT (ogg,
@@ -1361,10 +1358,11 @@ gst_ogg_demux_push (GstOggDemux * ogg, ogg_page * page)
   if (ogg_page_eos (page)) {
     GST_DEBUG_OBJECT (ogg, "got EOS for stream with serial %d, sending EOS now",
         cur->serial);
-#if 0
     /* Removing pads while PLAYING doesn't work with current schedulers */
     /* remove from list, as this will never be called again */
-    gst_ogg_pad_remove (ogg, cur);
+    gst_element_remove_pad (GST_ELEMENT (ogg), cur->pad);
+    cur->pad = NULL;
+#if 0
     /* this is also not possible because sending EOS this way confuses the scheduler */
     gst_pad_push (cur->pad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
 #endif
@@ -1513,6 +1511,7 @@ gst_ogg_chains_clear (GstOggDemux * ogg)
       gst_ogg_pad_remove (ogg, (GstOggPad *) walk->data);
     }
     g_slist_free (cur->pads);
+    cur->pads = NULL;
     g_array_remove_index (ogg->chains, i);
   }
   ogg->current_chain = -1;
