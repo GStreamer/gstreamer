@@ -1,2 +1,9 @@
-gstreamer-faq
-www-faq
+Makefile
+Makefile.in
+*.png
+*.fig
+.deps
+build
+html
+*.pdf
+*.ps
