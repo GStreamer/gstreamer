@@ -62,11 +62,75 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_ESD_TRUE@%files -n gstreamer-esd
 @USE_ESD_TRUE@%defattr(-, root, root)
 @USE_ESD_TRUE@%{prefix}/lib/gst/libesd*
+@USE_ESD_TRUE@
+@USE_ESD_TRUE@%post -n gstreamer-esd
+@USE_ESD_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+@USE_ESD_TRUE@
+@USE_ESD_TRUE@%postun -n gstreamer-esd
+@USE_ESD_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+@USE_ESD_TRUE@/sbin/ldconfig
 
-%post -n gstreamer-esd
-%{prefix}/bin/gstreamer-register --gst-mask=0
+### MAD ###
+@USE_MAD_TRUE@%package -n gstreamer-mad  
+@USE_MAD_TRUE@Summary: Plugin using MAD for mp3 decoding
+@USE_MAD_TRUE@Group: Libraries/Multimedia
+@USE_MAD_TRUE@Requires: %{name} = %{ver}
+@USE_MAD_TRUE@Requires: mad >= 0.13.0
+@USE_MAD_TRUE@
+@USE_MAD_TRUE@%description -n gstreamer-mad
+@USE_MAD_TRUE@Plugin for playback of mp3 songs using the very good MAD library
+@USE_MAD_TRUE@
+@USE_MAD_TRUE@%files -n gstreamer-mad
+@USE_MAD_TRUE@%defattr(-, root, root)  
+@USE_MAD_TRUE@%{prefix}/lib/gst/libgstmad*
+@USE_MAD_TRUE@
+@USE_MAD_TRUE@%post -n gstreamer-mad
+@USE_MAD_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+@USE_MAD_TRUE@
+@USE_MAD_TRUE@%postun -n gstreamer-mad
+@USE_MAD_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+@USE_MAD_TRUE@/sbin/ldconfig
 
-%postun -n gstreamer-esd
-%{prefix}/bin/gstreamer-register --gst-mask=0
-/sbin/ldconfig
+### OSS ###
+@USE_OSS_TRUE@%package -n gstreamer-oss
+@USE_OSS_TRUE@Summary: Gstreamer plugins for input and output using OSS
+@USE_OSS_TRUE@Group: Libraries/Multimedia
+@USE_OSS_TRUE@Requires: %{name} = %{ver}
+@USE_OSS_TRUE@
+@USE_OSS_TRUE@%description -n gstreamer-oss 
+@USE_OSS_TRUE@Plugins for output and input to the OpenSoundSytem audio
+@USE_OSS_TRUE@drivers found in the Linux kernels or commercially available
+@USE_OSS_TRUE@from OpenSound.
+@USE_OSS_TRUE@
+@USE_OSS_TRUE@%files -n gstreamer-oss
+@USE_OSS_TRUE@%defattr(-, root, root)
+@USE_OSS_TRUE@%{prefix}/lib/gst/libgstoss*
+@USE_OSS_TRUE@
+@USE_OSS_TRUE@%post -n gstreamer-oss
+@USE_OSS_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+@USE_OSS_TRUE@
+@USE_OSS_TRUE@%postun -n gstreamer-oss
+@USE_OSS_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+@USE_OSS_TRUE@/sbin/ldconfig
 
+### Vorbis ###
+@USE_VORBIS_TRUE@%package -n gstreamer-vorbis
+@USE_VORBIS_TRUE@Summary: Gstreamer plugin for encoding and decoding Ogg Vorbis audio files
+@USE_VORBIS_TRUE@Group: Libraries/Multimedia
+@USE_VORBIS_TRUE@Requires: libogg >= 1.0beta4
+@USE_VORBIS_TRUE@Requires: libvorbis >= 1.0beta4
+@USE_VORBIS_TRUE@Requires: %{name} = %{ver}
+@USE_VORBIS_TRUE@
+@USE_VORBIS_TRUE@%description -n gstreamer-vorbis
+@USE_VORBIS_TRUE@Plugins for creating and playing Ogg Vorbis audio files.
+@USE_VORBIS_TRUE@
+@USE_VORBIS_TRUE@%files -n gstreamer-vorbis  
+@USE_VORBIS_TRUE@%defattr(-, root, root)
+@USE_VORBIS_TRUE@%{prefix}/lib/gst/libgstvorbis*
+@USE_VORBIS_TRUE@
+@USE_VORBIS_TRUE@%post -n gstreamer-vorbis
+@USE_VORBIS_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+@USE_VORBIS_TRUE@
+@USE_VORBIS_TRUE@%postun -n gstreamer-vorbis
+@USE_VORBIS_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+@USE_VORBIS_TRUE@/sbin/ldconfig
