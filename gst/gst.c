@@ -34,6 +34,7 @@
 #include "gstqueue.h"
 #include "gsttypefind.h"
 
+//#define NO_X
 
 #define MAX_PATH_SPLIT	16
 
@@ -63,7 +64,11 @@ gst_init (int *argc, char **argv[])
 
   if (!g_thread_supported ()) g_thread_init (NULL);
 
+#ifdef NO_X
+  gtk_type_init ();
+#else
   gtk_init (argc,argv);
+#endif
 
   if (!gst_init_check (argc,argv)) {
     exit (0);
