@@ -95,11 +95,11 @@
     <title>Using the <classname>GstAutoplugCache</classname> element</title>
     <para>
       The <classname>GstAutoplugCache</classname> element is used to cache the 
-      media stream when performing typedetection. As we have have seen in the
-      previous chapter (typedetection), the type typefind function consumes a 
-      buffer to determine the media type of it. After we have set up the pipeline
+      media stream when performing typedetection. As we have seen in
+      <xref linkend="cha-typedetection"/>, the typefind function consumes a 
+      buffer to determine its media type. After we have set up the pipeline
       to play the media stream we should be able to 'replay' the previous buffer(s).
-      This is where the autoplugcache is used for.
+      This is what the autoplugcache is used for.
     </para>
     <para>
       The basic usage pattern for the autoplugcache in combination with the typefind 
@@ -151,9 +151,9 @@
     <title>Another approach to autoplugging</title>
     <para>
       The autoplug API is interesting, but often impractical. It is static;
-      it cannot deal with dynamic pipelines (insert ref here). What you
-      often want is just an element to stick into a pipeline that will DWIM
-      (Do What I Mean)(ref). Enter the spider.
+      it cannot deal with dynamic pipelines. An element that will
+      automatically figure out and decode the type is more useful.
+      Enter the spider.
     </para>
     <sect2>
       <title>The spider element</title>

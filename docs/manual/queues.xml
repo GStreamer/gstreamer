@@ -1,7 +1,7 @@
 <chapter id="cha-queues">
   <title>Queues</title>
   <para> 
-    A <classname>GstQueue</classname> is a filter element.
+    A queue is a filter element.
     Queues can be used to link two elements in such way that the data can 
     be buffered.
   </para>
@@ -11,10 +11,10 @@
     element as soon as a gst_pad_pull () is called on the queue's source pad.
   </para>
   <para> 
-    Queues are mostly used in conjunction with a <classname>GstThread</classname> to
-    provide an external link for the thread elements. You could have one
-    thread feeding buffers into a <classname>GstQueue</classname> and another
-    thread repeadedly calling gst_pad_pull () on the queue to feed its 
+    Queues are mostly used in conjunction with a thread bin to
+    provide an external link for the thread's elements. You could have one
+    thread feeding buffers into a queue and another
+    thread repeatedly pulling on the queue to feed its 
     internal elements.
   </para>
 

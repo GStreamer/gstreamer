@@ -6,7 +6,7 @@
     access to the library functions.
   </para> 
   <para> 
-    Before the <application>GStreamer</application> libraries can be used
+    Before the <application>GStreamer</application> libraries can be used,
     <function>gst_init</function> has to be called from the main application. 
     This call will perform the necessary initialization of the library as
     well as parse the GStreamer-specific command line options.
@@ -40,11 +40,6 @@ main (int argc, char *argv[])
     It is also possible to call the <function>gst_init</function> function
     with two <symbol>NULL</symbol> arguments, in which case no command line
     options will parsed by <application>GStreamer</application>.
-  </para>
-  <para> 
-    Use the GST_VERSION_MAJOR, GST_VERSION_MINOR and GST_VERSION_MICRO macros to
-    get the <application>GStreamer</application> version you are building against or
-    use gst_version() to get the version you are linked against.
   </para>
   <sect1>
     <title>The popt interface</title>

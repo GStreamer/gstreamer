@@ -97,7 +97,9 @@
    <title>Making filtered links</title>
     <para>
       You can also force a specific media type on the link by using gst_pad_link_filtered ()
-      and gst_element_link_filtered (). FIXME link to caps documentation.
+      and gst_element_link_filtered () with capabilities.
+      See <xref linkend="sec-caps"/> for
+      an explanation of capabilities.
     </para>
   </sect1>
 

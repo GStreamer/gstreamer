@@ -38,8 +38,8 @@
     <sect2 id="sec-goals-object">
       <title>Object oriented</title>
       <para>
-        Adhere to the GLib 2.0 object model. A programmer familiar with GLib 2.0 or older versions
-	of Gtk+ will be comfortable with GStreamer.
+        GStreamer adheres to the GLib 2.0 object model. A programmer familiar with GLib 2.0 or older versions
+	of GTK+ will be comfortable with GStreamer.
       </para>
       <para>
         GStreamer uses the mechanism of signals and object properties. 
@@ -47,6 +47,11 @@
       <para>
         All objects can be queried at runtime for their various properties and
 	capabilities.
+      </para> 
+      <para>
+        GStreamer intends to be similar in programming methodology to GTK+.
+	This applies to the object model, ownership of objects, reference
+        counting, ...
       </para> 
     </sect2>
   
@@ -69,7 +74,7 @@
 	have any header files installed for the plugins.
       </para>
       <para> 
-        Special care has been taken to make plugins completely self contained. 
+        Special care has been taken to make plugins completely selfcontained. 
         All relevant aspects of plugins can be queried at run-time.
       </para> 
     </sect2>
@@ -82,59 +87,80 @@
       <itemizedlist>
         <listitem>
 	  <para>
-	    Using GLib g_mem_chunk and fast non-blocking allocation algorithms 
+	    using GLib's <function>g_mem_chunk</function> and fast non-blocking allocation algorithms 
 	    where possible to minimize dynamic memory allocation.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    Extremely light-weight links between plugins. Data can travel
+	    extremely light-weight links between plugins. Data can travel
 	    the pipeline with minimal overhead. Data passing between plugins only involves
 	    a pointer dereference in a typical pipeline.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    Providing a mechanism to directly work on the target memory. A plugin can for example
+	    providing a mechanism to directly work on the target memory. A plugin can for example
 	    directly write to the X server's shared memory space. Buffers can also point to
 	    arbitrary memory, such as a sound card's internal hardware buffer.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    Refcounting and copy on write minimize usage of memcpy(3).
+	    refcounting and copy on write minimize usage of memcpy.
 	    Sub-buffers efficiently split buffers into manageable pieces.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    The use of cothreads to minimize the threading overhead. Cothreads are a simple and fast
+	    the use of cothreads to minimize the threading overhead. Cothreads are a simple and fast
 	    user-space method for switching between subtasks. Cothreads were measured  to
 	    consume as little as 600 cpu cycles.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    Allowing hardware acceleration by the use of specialized plugins.
+	    allowing hardware acceleration by using specialized plugins.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    Using a plugin registry with the specifications of the plugins so 
+	    using a plugin registry with the specifications of the plugins so 
 	    that the plugin loading can be delayed until the plugin is actually
 	    used.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    All critical data passing is free of locks and mutexes.
+	    all critical data passing is free of locks and mutexes.
 	  </para>
         </listitem>
       </itemizedlist>
     </sect2>
 
+    <sect2 id="sec-goals-separation">
+      <title>Clean core/plugins separation</title>
+      <para>
+        The core of GStreamer is essentially media-agnostic.  It only knows
+        about bytes and blocks, and only contains basic elements.
+        The core of GStreamer is functional enough to even implement low-level
+        system tools, like cp.
+      </para>
+      <para>
+        All of the media handling functionality is provided by plugins external
+        to the core.  These tell the core how to handle specific types of media.
+      </para>
+    </sect2>
+
     <sect2 id="sec-goals-testbed">
       <title>Provide a framework for codec experimentation</title>
+      <para>
+	GStreamer also wants to be an easy framework where codec
+	developers can experiment with different algorithms, speeding up
+	the development of open and free multimedia codecs like <ulink
+	url="http://www.xiph.org/ogg/index.html" type="http">tarkin and
+	vorbis</ulink>.
+      </para>
       <para>
 	GStreamer also wants to be an easy framework where codec
 	developers can experiment with different algorithms, speeding up

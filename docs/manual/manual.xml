@@ -143,9 +143,9 @@
 
       &ELEMENTS;
 
-      &PLUGINS;
-
       &PADS;
+
+      &PLUGINS;
 
       &LINKS;
 

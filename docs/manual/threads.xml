@@ -63,7 +63,7 @@
       an audio pipeline.
     </para>
     <para> 
-    A thread can be visualised as below
+    <xref linkend="sec-threads-img"/> shows how a thread can be visualised.
     </para>
     <figure float="1" id="sec-threads-img">
       <title>A thread</title>

@@ -178,7 +178,7 @@ main (int argc, char *argv[])
       pipeline as follows:
     </para>
     <figure float="1" id="sec-hello-img">
-      <title>The Hello world pipeline</title>
+      <title>The "hello world" pipeline</title>
       <mediaobject>
         <imageobject>
           <imagedata fileref="images/hello-world.&image;" format="&IMAGE;" />
@@ -188,7 +188,7 @@ main (int argc, char *argv[])
     </figure>
 
     <para>
-     Everything is now set up to start the streaming. We use the following
+     Everything is now set up to start streaming. We use the following
      statements to change the state of the pipeline:
     </para>
     <programlisting>

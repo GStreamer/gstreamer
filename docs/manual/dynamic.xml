@@ -188,8 +188,4 @@ main (int argc, char *argv[])
     There are other possibilities to check the type of the pad, for
     example by using the MIME type and the properties of the pad.
   </para>
-  <para>
-    Note that the pipeline has to be in the PAUSED state before changes
-    can be made to its structure.
-  </para>
 </chapter>

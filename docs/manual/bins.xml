@@ -1,11 +1,11 @@
 <chapter id="cha-bins">
   <title>Bins</title>
   <para> 
-    A Bin is a container element. You can add elements to a bin. Since a bin is 
-    an <classname>GstElement</classname> itself, it can also be added to another bin.
+    A bin is a container element. You can add elements to a bin. Since a bin is 
+    an element itself, it can also be added to another bin.
   </para>
   <para> 
-    Bins allow you to combine linked elements into one logical element. You do
+    Bins allow you to combine a group of linked elements into one logical element. You do
     not deal with the individual elements anymore but with just one element, the bin.
     We will see that this is extremely powerful when you are going to construct
     complex pipelines since it allows you to break up the pipeline in smaller chunks.
@@ -17,7 +17,7 @@
   </para>
 
   <figure float="1" id="sec-bin-img">
-    <title>Visualisation of a <classname>GstBin</classname> element with some elements in it</title>
+    <title>Visualisation of a bin with some elements in it</title>
       <mediaobject>  
         <imageobject>
           <imagedata fileref="images/bin-element.&image;" format="&IMAGE;" />
@@ -26,20 +26,21 @@
   </figure>
 
   <para> 
-    There are two standard bins available to the GStreamer programmer:
+    There are two specialized bins available to the GStreamer programmer:
 
     <itemizedlist>
       <listitem>
         <para>
-          A pipeline (<classname>GstPipeline</classname>). Which is a generic container you will
-	  use most of the time. The toplevel bin has to be a pipeline.
+          a pipeline: a generic container that allows scheduling of the
+          containing elements.  The toplevel bin has to be a pipeline.
+          Every application thus needs at least one of these.
         </para>
       </listitem>
       <listitem>
         <para>
-          A thread (<classname>GstThread</classname>). The plan for the
-	  <classname>GstThread</classname> will be run in a separate thread. You will have to use
-	  this bin if you have to carefully synchronize audio and video, for example. You will learn
+          a thread: a bin that will be run in a separate execution thread.
+	  You will have to use this bin if you have to carefully
+          synchronize audio and video, or for buffering. You will learn
 	  more about threads in <xref linkend="cha-threads"/>.
         </para>
       </listitem>
@@ -84,9 +85,8 @@
    ...
     </programlisting>
     <para>
-      Bins and threads can be added to other bins too. This allows you to create nested bins. Note
-      that it doesn't make very much sense to add a <classname>GstPipeline</classname> to anything,
-      as it's a toplevel bin that needs to be explicitly iterated.
+      Bins and threads can be added to other bins too. This allows you to create nested bins. Pipelines shouldn't be added to any other element, though.
+      They are toplevel bins and they are directly linked to the scheduler.
     </para>
     <para>
       To get an element from the bin you can use: 
@@ -180,7 +180,7 @@
   <sect1 id="sec-bin-ghostpads">
     <title>Ghost pads</title>
     <para>
-      You can see from figure <xref linkend="sec-bin-noghost-img"/> how a bin has no pads of its own.
+      You can see from <xref linkend="sec-bin-noghost-img"/> how a bin has no pads of its own.
       This is where "ghost pads" come into play.
     </para>
     <figure float="1" id="sec-bin-noghost-img">
@@ -207,7 +207,8 @@
       </mediaobject>  
     </figure>
     <para>
-      Above is a representation of a ghost pad. The sink pad of element one is now also a pad
+      <xref linkend="sec-bin-ghost-img"/>
+      is a representation of a ghost pad. The sink pad of element one is now also a pad
       of the bin.
     </para>
     <para>

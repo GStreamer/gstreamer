@@ -247,11 +247,5 @@ Element Signals:
 gst-inspect gstelements
     </screen>
   </sect1>
-  <sect1>
-    <title><command>gst-play</command></title>
-    <para> 
-      A sample media player.
-    </para>
-  </sect1>
 
 </chapter>

@@ -97,7 +97,7 @@ chain_function (GstPad *pad, GstBuffer *buffer)
     </para>
 
     <para>
-      When the request for a buffer cannot immediatly satisfied, the control
+      When the request for a buffer cannot be immediately satisfied, the control
       will be given to the source element of the loop-based element until it
       performs a push on its source pad. At that time the control is handed
       back to the loop-based element, etc... The execution trace can get

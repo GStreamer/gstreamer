@@ -2,7 +2,7 @@
   <title>Motivation</title>
   <para> 
     Linux has historically lagged behind other operating systems in the multimedia 
-    arena. Microsoft's Windows[tm] and Apple's MacOS[tm] both have strong support 
+    arena. Microsoft's <trademark>Windows</trademark> and Apple's <trademark>MacOS</trademark> both have strong support 
     for multimedia devices, multimedia content creation,
     playback, and realtime processing. Linux, on the other hand, has a poorly integrated 
     collection of multimedia utilities and applications available, which can hardly compete 
@@ -12,7 +12,7 @@
   <sect1 id="sec-motivation-problems">
     <title>Current problems</title>
     <para> 
-      We descibe the typical problems in todays media handling on Linux.
+      We describe the typical problems in today's media handling on Linux.
     </para>
     <sect2 id="sec-motivation-duplicate">
       <title>Multitude of duplicate code</title>
@@ -37,9 +37,9 @@
         filters or special effects to the video or audio data.
       </para> 
       <para>
-        If I wanted to convert an MPEG2 video stream into an AVI file, my best
+        If you want to convert an MPEG2 video stream into an AVI file, your best
         option would be to take all of the MPEG2 decoding algorithms out
-        of the player and duplicate them into my own AVI encoder. These 
+        of the player and duplicate them into your own AVI encoder. These 
         algorithms cannot easily be shared accross applications.
       </para> 
       <para>
@@ -69,7 +69,7 @@
         While GStreamer also uses it own plugin system it offers a very rich
 	framework for the plugin developper and ensures the plugin can be used
 	in a wide range of applications, transparently interacting with other
-	plugins. The Framework that GStreamer provides for the plugins is
+	plugins. The framework that GStreamer provides for the plugins is
 	flexible enough to host even the most demanding plugins.
       </para> 
     </sect2>
@@ -87,7 +87,7 @@
           type="http">GNOME object embedding using Bonobo</ulink>.
       </para> 
       <para> 
-        The GStreamer cores does not use network transparent technologies at the
+        The GStreamer core does not use network transparent technologies at the
 	lowest level as it only adds overhead for the local case. 
 	That said, it shouldn't be hard to create a wrapper around the
 	core components. 
@@ -95,7 +95,7 @@
     </sect2>
 
     <sect2 id="sec-motivation-catchup">
-      <title>Catch up with the Windows(tm) world</title>
+      <title>Catch up with the <trademark>Windows</trademark> world</title>
       <para> 
         We need solid media handling if we want to see Linux succeed on
 	the desktop.

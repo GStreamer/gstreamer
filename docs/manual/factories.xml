@@ -82,8 +82,8 @@
     </para> 
 
     <para>
-      In our helloworld example the elements we constructed would have the
-      following MIME types associated with their source and sink pads:
+      <xref linkend="sec-mime-img"/> shows the MIME types associated with
+      each pad from the "hello world" example.
     </para>
     <figure float="1" id="sec-mime-img">
       <title>The Hello world pipeline with MIME types</title>
@@ -103,7 +103,7 @@
     <para>
       The typing of the source and sink pads also makes it possible to
       'autoplug' a pipeline. We will have the ability to say: "construct
-      me a pipeline that does an audio/mpeg to audio/raw conversion".
+      a pipeline that does an audio/mpeg to audio/raw conversion".
     </para>
     <note>
       <para>

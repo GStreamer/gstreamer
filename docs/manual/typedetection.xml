@@ -1,5 +1,5 @@
 <chapter id="cha-typedetection">
-  <title>Typedetection</title>
+  <title>Type Detection</title>
   <para> 
     Sometimes the capabilities of a pad are not specificied. The filesrc
     element, for example, does not know what type of file it is reading. Before
@@ -8,7 +8,7 @@
   </para>
   <para> 
     To solve this problem, a plugin can provide the <application>GStreamer</application> 
-    core library with a typedefinition library with a typedefinition. The typedefinition
+    core library with a type definition. The type definition
     will contain the following information:
     <itemizedlist>
       <listitem>
@@ -43,7 +43,8 @@ typedef GstCaps *(*GstTypeFindFunc) (GstBuffer *buf, gpointer priv);
     understand the buffer contents, it will return NULL.
   </para>
   <para>
-    <application>GStreamer</application> has a typefind element in its core elements
+    <application>GStreamer</application> has a typefind element in the set
+    of core elements
     that can be used to determine the type of a given pad.
   </para>
   <para>
@@ -82,14 +83,12 @@ main(int argc, char *argv[])
   g_assert (typefind != NULL);
 
   /* add objects to the main pipeline */
-  gst_bin_add (GST_BIN (bin), filesrc);
-  gst_bin_add (GST_BIN (bin), typefind);
+  gst_bin_add_many (GST_BIN (bin), filesrc, typefind, NULL);
 
   g_signal_connect (G_OBJECT (typefind), "have_type", 
 		     G_CALLBACK (type_found), NULL);
 
-  gst_pad_link (gst_element_get_pad (filesrc, "src"),
-                gst_element_get_pad (typefind, "sink"));
+  gst_element_link (filesrc, typefind);
 
   /* start playing */
   gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);

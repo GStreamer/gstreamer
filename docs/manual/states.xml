@@ -8,7 +8,7 @@
   <sect1 id="sec-states">
     <title>The different element states</title>
     <para> 
-      All elements can be in one of the following four states:
+      An element can be in one of the following four states:
       <itemizedlist>
         <listitem>
           <para>
@@ -37,7 +37,7 @@
     <para> 
       All elements start with the NULL state. The elements will go throught
       the following state changes: NULL -&gt; READY -&gt; PAUSED -&gt;
-      PLAYING. Remember when going from PLAYING to READY, GStreamer will
+      PLAYING.  When going from NULL to PLAYING, GStreamer will
       internally go throught the intermediate states.
     </para>
     <para> 
@@ -53,7 +53,7 @@
     </programlisting>
 
     <para> 
-      You can set the following states to an element:
+      You can set the following states on an element:
     </para>
     <informaltable pgwide="1" frame="none" role="enum">
     <tgroup cols="2">
@@ -88,7 +88,7 @@
     <title>The NULL state</title>
     <para> 
       When you created the pipeline all of the elements will be in the NULL state. There is
-      nothing spectacular about the NULL state.
+      nothing special about the NULL state.
     </para> 
     <note>
       <para> 
@@ -119,14 +119,6 @@
     </note>
   </sect1>
 
-  <sect1 id="sec-states-playing">
-    <title>The PLAYING state</title>
-    <para> 
-      A Pipeline that is in the READY state can be started by setting it to the PLAYING state. At
-      that time data will start to flow all the way through the pipeline.
-    </para>
-  </sect1>
-
   <sect1 id="sec-states-paused">
     <title>The PAUSED state</title>
     <para> 
@@ -148,5 +140,13 @@
       in the pipeline. We will cover dynamic pipeline behaviour in <xref linkend="cha-dynamic"/>.
     </para>
   </sect1>
+  <sect1 id="sec-states-playing">
+    <title>The PLAYING state</title>
+    <para> 
+      A Pipeline that is in the READY state can be started by setting it to the PLAYING state. At
+      that time data will start to flow all the way through the pipeline.
+    </para>
+  </sect1>
+
 
 </chapter>
