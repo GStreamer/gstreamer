@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
  *
+ * formats.c: Tests the different formats on alsasink
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
@@ -25,7 +27,7 @@ gint endianness = G_LITTLE_ENDIAN;
 gint depth = 8;
 gint width = 8;
 
-#define NUMBER_OF_INT_TESTS 16
+#define NUMBER_OF_INT_TESTS 28
 #define NUMBER_OF_FLOAT_TESTS 2
 #define NUMBER_OF_LAW_TESTS 2
 
@@ -164,7 +166,7 @@ main (gint argc, gchar *argv[])
   g_print ("\n"
            "This test will test the various formats ALSA and GStreamer support.\n"
            "You will hear a short sine tone on your default ALSA soundcard for every\n"
-           "format tested. They should all sound the same.\n"
+           "format tested. They should all sound the same (incl. volume).\n"
            "\n");
   create_pipeline ();
   

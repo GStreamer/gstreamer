@@ -18,8 +18,9 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <math.h>
 #include "sinesrc.h"
+#include <math.h>
+#include <string.h> /* memcpy */
 
 #define SAMPLES_PER_WAVE 200
 
@@ -56,6 +57,7 @@ static void             sinesrc_init (SineSrc *src);
 static void             sinesrc_class_init (SineSrcClass *klass);
 
 static GstBuffer *      sinesrc_get (GstPad *pad);
+static GstElementStateReturn sinesrc_change_state (GstElement *element);
 
 
 GType
@@ -78,6 +80,10 @@ sinesrc_get_type (void)
 static void
 sinesrc_class_init (SineSrcClass *klass) 
 {
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  element_class->change_state = sinesrc_change_state;
+
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 }
 
@@ -222,8 +228,47 @@ sinesrc_get (GstPad *pad)
               POPULATE (guint16, GUINT16_TO_BE, GUINT16_TO_LE)
             break;
           case 24:
-            /* mom, can I have gint24 plz? */
-            g_assert_not_reached ();
+            if (src->sign) {
+	      gpointer p;
+              gint32 val = (gint32) int_value;
+              switch (src->endianness) {
+                case G_LITTLE_ENDIAN:
+                  val = GINT32_TO_LE (val);
+                  break;
+                case G_BIG_ENDIAN:
+                  val = GINT32_TO_BE (val);
+                  break;
+                default:
+                  g_assert_not_reached ();
+              };
+	      p = &val;
+	      if (src->endianness == G_BIG_ENDIAN)
+	        p++;
+              for (j = 0; j < src->channels; j++) {
+	        memcpy (data, p, 3);
+	        data += 3;
+	      }	      
+	    } else {
+	      gpointer p;
+              guint32 val = (guint32) int_value;
+              switch (src->endianness) {
+                case G_LITTLE_ENDIAN:
+                  val = GUINT32_TO_LE (val);
+                  break;
+                case G_BIG_ENDIAN:
+                  val = GUINT32_TO_BE (val);
+                  break;
+                default:
+                  g_assert_not_reached ();
+              };
+	      p = &val;
+	      if (src->endianness == G_BIG_ENDIAN)
+	        p++;
+              for (j = 0; j < src->channels; j++) {
+	        memcpy (data, p, 3);
+	        data += 3;
+	      }
+            }	    
             break;
           case 32:
             if (src->sign)
@@ -277,4 +322,32 @@ void
 sinesrc_set_pre_get_func (SineSrc *src, PreGetFunc func)
 {
   src->pre_get_func = func;
+}
+static GstElementStateReturn
+sinesrc_change_state (GstElement *element)
+{
+  SineSrc *sinesrc;
+
+  g_return_val_if_fail (element != NULL, FALSE);
+  sinesrc = SINESRC (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+  case GST_STATE_NULL_TO_READY:
+  case GST_STATE_READY_TO_PAUSED:
+  case GST_STATE_PAUSED_TO_PLAYING:
+  case GST_STATE_PLAYING_TO_PAUSED:
+    break;
+  case GST_STATE_PAUSED_TO_READY:
+    sinesrc->newcaps = TRUE;
+    break;
+  case GST_STATE_READY_TO_NULL:
+    break;
+  default:
+    g_assert_not_reached();
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
 }
