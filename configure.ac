@@ -494,6 +494,7 @@ examples/xml/Makefile
 examples/plugins/Makefile
 examples/typefind/Makefile
 examples/mixer/Makefile
+examples/pingpong/Makefile
 tools/Makefile
 docs/Makefile
 docs/gst/Makefile
