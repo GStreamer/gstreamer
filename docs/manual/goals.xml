@@ -161,13 +161,6 @@
 	url="http://www.xiph.org/ogg/index.html" type="http">tarkin and
 	vorbis</ulink>.
       </para>
-      <para>
-	GStreamer also wants to be an easy framework where codec
-	developers can experiment with different algorithms, speeding up
-	the development of open and free multimedia codecs like <ulink
-	url="http://www.xiph.org/ogg/index.html" type="http">tarkin and
-	vorbis</ulink>.
-      </para>
     </sect2>
 
   </sect1>

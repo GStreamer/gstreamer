@@ -1,3 +1,8 @@
+2004-04-29  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* docs/manual/goals.xml : remove duplicated paragraph at end 
+	of doc page (fixes #141448)
+
 2004-04-29  David Schleef  <ds@schleef.org>
 
 	* gst/elements/gstfilesink.c: (gst_filesink_handle_event):
