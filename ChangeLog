@@ -1,5 +1,10 @@
 2004-07-09  Wim Taymans  <wim@fluendo.com>
 
+	* examples/seeking/seek.c: (iterate):
+	Don't consume all CPU in the idle loop.
+
+2004-07-09  Wim Taymans  <wim@fluendo.com>
+
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_new_output_pad),
 	(gst_mpeg_demux_parse_packet), (gst_mpeg_demux_process_private):
 	Add pad to element *after* setting the pad functions so that
