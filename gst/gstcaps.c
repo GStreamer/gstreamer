@@ -553,9 +553,7 @@ gst_caps_is_chained (const GstCaps * caps)
 static gboolean
 gst_caps_is_fixed_foreach (GQuark field_id, GValue * value, gpointer unused)
 {
-  GType type = G_VALUE_TYPE (value);
-
-  return gst_type_is_fixed (type);
+  return gst_value_is_fixed (value);
 }
 
 /**

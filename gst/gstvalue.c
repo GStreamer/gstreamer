@@ -2360,8 +2360,8 @@ gst_type_is_fixed (GType type)
       type == GST_TYPE_LIST) {
     return FALSE;
   }
-  if (G_TYPE_IS_FUNDAMENTAL (type) &&
-      type < G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_GLIB_LAST)) {
+  if (G_TYPE_FUNDAMENTAL (type) <=
+      G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_GLIB_LAST)) {
     return TRUE;
   }
   if (type == GST_TYPE_BUFFER || type == GST_TYPE_FOURCC
@@ -2370,6 +2370,41 @@ gst_type_is_fixed (GType type)
   }
 
   return FALSE;
+}
+
+/**
+ * gst_value_is_fixed:
+ * @value: the #GValue to check
+ *
+ * Tests if the given GValue, if available in a GstStructure (or any other
+ * container) contains a "fixed" (which means: one value) or an "unfixed"
+ * (which means: multiple possible values, such as data lists or data
+ * ranges) value.
+ *
+ * Returns: true if the value is "fixed".
+ */
+
+gboolean
+gst_value_is_fixed (const GValue * value)
+{
+  GType type = G_VALUE_TYPE (value);
+
+  if (type == GST_TYPE_FIXED_LIST) {
+    gboolean fixed = TRUE;
+    gint size, n;
+    const GValue *kid;
+
+    /* check recursively */
+    size = gst_value_list_get_size (value);
+    for (n = 0; n < size; n++) {
+      kid = gst_value_list_get_value (value, n);
+      fixed &= gst_value_is_fixed (kid);
+    }
+
+    return fixed;
+  }
+
+  return gst_type_is_fixed (type);
 }
 
 /************

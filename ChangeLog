@@ -1,3 +1,15 @@
+2004-11-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstcaps.c: (gst_caps_is_fixed_foreach):
+	* gst/gstpad.c: (_gst_pad_default_fixate_value),
+	(_gst_pad_default_fixate_foreach):
+	* gst/gstvalue.c: (gst_type_is_fixed), (gst_value_is_fixed):
+	* gst/gstvalue.h:
+	  Deprecate _type_is_fixed, use _value_is_fixed instead, since
+	  in some cases (arrays), the fixedness depends on the content.
+	* gst/gstqueue.c: (gst_queue_handle_src_query):
+	  Check for availability before doing something.
+
 2004-11-29  Wim Taymans  <wim@fluendo.com>
 
 	* testsuite/threads/Makefile.am:

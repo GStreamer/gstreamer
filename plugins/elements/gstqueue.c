@@ -953,10 +953,10 @@ gst_queue_handle_src_query (GstPad * pad,
     GstQueryType type, GstFormat * fmt, gint64 * value)
 {
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
-  gboolean res;
 
-  res = gst_pad_query (GST_PAD_PEER (queue->sinkpad), type, fmt, value);
-  if (!res)
+  if (!GST_PAD_PEER (queue->sinkpad))
+    return FALSE;
+  if (!gst_pad_query (GST_PAD_PEER (queue->sinkpad), type, fmt, value))
     return FALSE;
 
   if (type == GST_QUERY_POSITION) {

@@ -2073,32 +2073,57 @@ gst_pad_get_ghost_pad_list (GstPad * pad)
 }
 
 static gboolean
-_gst_pad_default_fixate_foreach (GQuark field_id, GValue * value, gpointer s)
+_gst_pad_default_fixate_value (const GValue * value, GValue * dest)
 {
-  GstStructure *structure = (GstStructure *) s;
   GType type = G_VALUE_TYPE (value);
 
-  if (gst_type_is_fixed (type))
+  if (gst_value_is_fixed (value))
     return TRUE;
 
   if (type == GST_TYPE_INT_RANGE) {
-    gst_structure_set (structure, g_quark_to_string (field_id),
-        G_TYPE_INT, gst_value_get_int_range_min (value), NULL);
-    return FALSE;
-  }
-  if (type == GST_TYPE_DOUBLE_RANGE) {
-    gst_structure_set (structure, g_quark_to_string (field_id),
-        G_TYPE_DOUBLE, gst_value_get_double_range_min (value), NULL);
-    return FALSE;
-  }
-  if (type == GST_TYPE_LIST) {
-    gst_structure_set_value (structure, g_quark_to_string (field_id),
-        gst_value_list_get_value (value, 0));
-    return FALSE;
+    g_value_init (dest, G_TYPE_INT);
+    g_value_set_int (dest, gst_value_get_int_range_min (value));
+  } else if (type == GST_TYPE_DOUBLE_RANGE) {
+    g_value_init (dest, G_TYPE_DOUBLE);
+    g_value_set_double (dest, gst_value_get_double_range_min (value));
+  } else if (type == GST_TYPE_LIST) {
+    gst_value_init_and_copy (dest, gst_value_list_get_value (value, 0));
+  } else if (type == GST_TYPE_FIXED_LIST) {
+    gint size, n;
+    GValue dest_kid = { 0 };
+    const GValue *kid;
+
+    /* check recursively */
+    g_value_init (dest, GST_TYPE_FIXED_LIST);
+    size = gst_value_list_get_size (value);
+    for (n = 0; n < size; n++) {
+      kid = gst_value_list_get_value (value, n);
+      if (_gst_pad_default_fixate_value (kid, &dest_kid)) {
+        gst_value_list_append_value (dest, kid);
+      } else {
+        gst_value_list_append_value (dest, &dest_kid);
+        g_value_unset (&dest_kid);
+      }
+    }
+  } else {
+    g_critical ("Don't know how to fixate value type %s", g_type_name (type));
   }
 
-  g_critical ("don't know how to fixate type %s", g_type_name (type));
-  return TRUE;
+  return FALSE;
+}
+
+static gboolean
+_gst_pad_default_fixate_foreach (GQuark field_id, GValue * value, gpointer s)
+{
+  GstStructure *structure = (GstStructure *) s;
+  GValue dest = { 0 };
+
+  if (_gst_pad_default_fixate_value (value, &dest))
+    return TRUE;
+  gst_structure_id_set_value (structure, field_id, &dest);
+  g_value_unset (&dest);
+
+  return FALSE;
 }
 
 static GstCaps *
