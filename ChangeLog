@@ -1,3 +1,15 @@
+2005-01-05  Martin Eikermann  <meiker@upb.de>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_class_init),
+	(gst_dvd_demux_handle_discont):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_class_init),
+	(gst_mpeg_demux_handle_discont):
+	  Recreate pads on new-media (#160730).
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_new_pad):
+	  Send discont even if manager changes timestamps (#161929).
+
 2005-01-05  Sebastien Cote  <sc5@hermes.usherb.ca>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
