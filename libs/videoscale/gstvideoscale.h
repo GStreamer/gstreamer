@@ -41,6 +41,7 @@ struct _GstVideoScale {
   guint dest_height;
   GstColorSpaceType format;
   GstVideoScaleMethod method;
+  guint scale_bytes;
   /* private */
   guchar copy_row[8192];
   guchar *temp;

@@ -2,11 +2,18 @@ filterdir = $(libdir)/gst
 
 filter_LTLIBRARIES = libgstvideoscale.la
 
-libgstvideoscale_la_SOURCES = gstvideoscale.c 
+if HAVE_CPU_I386
+SCALER = gstscale_x86.c
+else
+SCALER =
+endif
+
+libgstvideoscale_la_SOURCES = gstvideoscale.c $(SCALER)
 
 libgstvideoscaleincludedir = $(includedir)/gst/libs/gstvideoscale
-libgstvideoscaleinclude_HEADERS = gstvideoscale.h
+libgstvideoscaleinclude_HEADERS = gstvideoscale.h 
 
-noinst_HEADERS = yuv2rgb.h
+noinst_HEADERS = gstscale_x86.h
 
-CFLAGS += -O1 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math
+#CFLAGS += -S -O1 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math
+CFLAGS = -g $(GLIB_CFLAGS) $(GST_CFLAGS) $(XML_CFLAGS) -O5 -fomit-frame-pointer -ffast-math
