@@ -173,22 +173,26 @@ gst_vorbis_tag_init (GTypeInstance *instance, gpointer g_class)
   gst_element_add_pad (GST_ELEMENT (tag), tag->srcpad);
 }
 static GstTagEntryMatch tag_matches[] = {
-  { GST_TAG_TITLE,	"TITLE"		},
-  { GST_TAG_VERSION,	"VERSION"	},
-  { GST_TAG_ALBUM,	"ALBUM"		},
-  { GST_TAG_TRACK_NUMBER,"TRACKNUMBER"	},
-  { GST_TAG_ARTIST,	"ARTIST"	},
-  { GST_TAG_PERFORMER,	"PERFORMER"	},
-  { GST_TAG_COPYRIGHT,	"COPYRIGHT"   	},
-  { GST_TAG_LICENSE, 	"LICENSE"    	},
-  { GST_TAG_ORGANIZATION,"ORGANIZATION" },
-  { GST_TAG_DESCRIPTION,"DESCRIPTION"   },
-  { GST_TAG_GENRE, 	"GENRE"    	},
-  { GST_TAG_DATE, 	"DATE"    	},
-  { GST_TAG_CONTACT, 	"CONTACT"    	},
-  { GST_TAG_ISRC, 	"ISRC"    	},
-  { GST_TAG_COMMENT,	"COMMENT"	},
-  { NULL,		NULL		}
+  { GST_TAG_TITLE,		"TITLE"			},
+  { GST_TAG_VERSION,		"VERSION"		},
+  { GST_TAG_ALBUM,		"ALBUM"			},
+  { GST_TAG_TRACK_NUMBER,	"TRACKNUMBER"		},
+  { GST_TAG_ARTIST,		"ARTIST"		},
+  { GST_TAG_PERFORMER,		"PERFORMER"		},
+  { GST_TAG_COPYRIGHT,		"COPYRIGHT"   		},
+  { GST_TAG_LICENSE, 		"LICENSE"    		},
+  { GST_TAG_ORGANIZATION,	"ORGANIZATION"		},
+  { GST_TAG_DESCRIPTION,	"DESCRIPTION"   	},
+  { GST_TAG_GENRE, 		"GENRE"    		},
+  { GST_TAG_DATE, 		"DATE"    		},
+  { GST_TAG_CONTACT, 		"CONTACT"    		},
+  { GST_TAG_ISRC, 		"ISRC"    		},
+  { GST_TAG_COMMENT,		"COMMENT"		},
+  { GST_TAG_TRACK_GAIN,		"REPLAYGAIN_TRACK_GAIN"	},
+  { GST_TAG_TRACK_PEAK,		"REPLAYGAIN_TRACK_PEAK"	},
+  { GST_TAG_ALBUM_GAIN,		"REPLAYGAIN_ALBUM_GAIN"	},
+  { GST_TAG_ALBUM_PEAK,		"REPLAYGAIN_ALBUM_PEAK"	},
+  { NULL,			NULL			}
 };
 /**
  * gst_tag_from_vorbis_tag:
@@ -287,6 +291,9 @@ gst_vorbis_tag_add (GstTagList *list, const gchar *tag, const gchar *value)
       break;
     case G_TYPE_STRING:
       gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, value, NULL);
+      break;
+    case G_TYPE_DOUBLE:
+      gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, g_strtod (value, NULL), NULL);
       break;
     default:
       break;
@@ -408,6 +415,11 @@ gst_tag_to_vorbis_comments (const GstTagList *list, const gchar *tag)
 	g_assert (gst_tag_list_get_string_index (list, tag, i, &str));
 	result = g_strdup_printf ("%s=%s", vorbis_tag, str);
 	break;
+      }
+      case G_TYPE_DOUBLE: {
+	gdouble value;
+	g_assert (gst_tag_list_get_double_index (list, tag, i, &value));
+	result = g_strdup_printf ("%s=%f", vorbis_tag, value);
       }
       default:
 	GST_DEBUG ("Couldn't write tag %s", tag);
