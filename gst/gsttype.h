@@ -27,7 +27,7 @@
 
 
 /* type of function used to check a stream for equality with type */
-typedef gboolean (*GstTypeFindFunc) (GstBuffer *buf,gpointer *priv);
+typedef gboolean (*GstTypeFindFunc) (GstBuffer *buf,gpointer priv);
 
 typedef struct _GstType GstType;
 typedef struct _GstTypeFactory GstTypeFactory;
@@ -81,4 +81,11 @@ GList *gst_type_get_sink_to_src(guint16 sinkid, guint16 srcid);
 GList *gst_type_get_list();
 
 void gst_type_dump();
+
+xmlNodePtr gst_type_save_thyself(GstType *type, xmlNodePtr parent);
+guint16 gst_type_load_thyself(xmlNodePtr parent);
+
+xmlNodePtr gst_typefactory_save_thyself(GstTypeFactory *factory, xmlNodePtr parent);
+GstTypeFactory *gst_typefactory_load_thyself(xmlNodePtr parent);
+
 #endif /* __GST_TYPE_H__ */

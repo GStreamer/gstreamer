@@ -21,20 +21,21 @@ int main(int argc,char *argv[])
   }
 
   gst_init(&argc,&argv);
-  gst_plugin_load_all();
-  g_print("\n");
 
   /* create a new bin to hold the elements */
   pipeline = gst_pipeline_new("pipeline");
+  g_assert(pipeline != NULL);
 
   /* create a disk reader */
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
+  g_assert(disksrc != NULL);
   gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
   gtk_signal_connect(GTK_OBJECT(disksrc),"eos",
                      GTK_SIGNAL_FUNC(eos),NULL);
 
   /* and an audio sink */
   audiosink = gst_elementfactory_make("audiosink", "play_audio");
+  g_assert(audiosink != NULL);
 
   /* add objects to the main pipeline */
   gst_bin_add(GST_BIN(pipeline), disksrc);

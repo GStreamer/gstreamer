@@ -199,6 +199,9 @@ GstElement *gst_elementfactory_create(GstElementFactory *factory,
 // FIXME this name is wrong, probably so is the one above it
 GstElement *gst_elementfactory_make(gchar *factoryname,gchar *name);
 
+xmlNodePtr gst_elementfactory_save_thyself(GstElementFactory *factory, xmlNodePtr parent); 
+GstElementFactory *gst_elementfactory_load_thyself(xmlNodePtr parent);
+
 int gst_element_loopfunc_wrapper(int argc,char **argv);
 
 #ifdef __cplusplus

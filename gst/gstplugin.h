@@ -37,7 +37,8 @@ struct _GstPlugin {
 
   GList *types;			/* list of types provided */
   GList *elements;		/* list of elements provided */
-  GList *identifiers;		/* list of identifiers */
+
+  gboolean loaded;              /* if the plugin is in memory */
 };
 
 
@@ -53,9 +54,16 @@ gboolean gst_library_load(gchar *name);
 gboolean gst_plugin_load_absolute(gchar *name);
 
 void gst_plugin_add_factory(GstPlugin *plugin,GstElementFactory *factory);
+void gst_plugin_add_type(GstPlugin *plugin,GstTypeFactory *factory);
 
-GstPlugin *gst_plugin_find(gchar *name);
+GstPlugin *gst_plugin_find(const gchar *name);
 GList *gst_plugin_get_list();
 GstElementFactory *gst_plugin_find_elementfactory(gchar *name);
+
+GstElementFactory *gst_plugin_load_elementfactory(gchar *name);
+void gst_plugin_load_typefactory(gchar *mime);
+
+xmlNodePtr gst_plugin_save_thyself(xmlNodePtr parent);
+void gst_plugin_load_thyself(xmlNodePtr parent);
 
 #endif /* __GST_PLUGIN_H__ */

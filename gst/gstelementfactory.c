@@ -18,6 +18,7 @@
  */
 
 #include <gst/gstelement.h>
+#include <gst/gstplugin.h>
 
 
 /* global list of registered elementfactories */
@@ -113,6 +114,9 @@ GstElement *gst_elementfactory_create(GstElementFactory *factory,
   GstElementClass *oclass;
 
   g_return_val_if_fail(factory != NULL, NULL);
+
+  factory = gst_plugin_load_elementfactory(factory->name);
+
   g_return_val_if_fail(factory->type != 0, NULL);
 
   // create an instance of the element
@@ -133,6 +137,7 @@ GstElement *gst_elementfactory_make(gchar *factoryname,gchar *name) {
   GstElementFactory *factory;
   GstElement *element;
 
+  gst_plugin_load_elementfactory(factoryname);
   factory = gst_elementfactory_find(factoryname);
   if (factory == NULL) return NULL;
   element = gst_elementfactory_create(factory,name);
@@ -149,5 +154,91 @@ void gst_elementfactory_add_sink(GstElementFactory *elementfactory, guint16 id) 
   guint type = id;
 
   elementfactory->sink_types = g_list_prepend(elementfactory->sink_types, GUINT_TO_POINTER(type));
+}
+
+xmlNodePtr gst_elementfactory_save_thyself(GstElementFactory *factory, xmlNodePtr parent) {
+  GList *types;
+  xmlNodePtr subtree;
+
+  xmlNewChild(parent,NULL,"name",factory->name);
+  xmlNewChild(parent,NULL,"longname", factory->details->longname);
+  xmlNewChild(parent,NULL,"class", factory->details->class);
+  xmlNewChild(parent,NULL,"description", factory->details->description);
+  xmlNewChild(parent,NULL,"version", factory->details->version);
+  xmlNewChild(parent,NULL,"author", factory->details->author);
+  xmlNewChild(parent,NULL,"copyright", factory->details->copyright);
+
+  types = factory->src_types;
+  if (types) {
+    subtree = xmlNewChild(parent,NULL,"sources",NULL);
+    while (types) {
+      guint16 typeid = GPOINTER_TO_UINT(types->data);
+      GstType *type = gst_type_find_by_id(typeid);
+
+      gst_type_save_thyself(type, subtree);
+
+      types = g_list_next(types);
+    }
+  }
+  types = factory->sink_types;
+  if (types) {
+    subtree = xmlNewChild(parent,NULL,"sinks",NULL);
+    while (types) {
+      guint16 typeid = GPOINTER_TO_UINT(types->data);
+      GstType *type = gst_type_find_by_id(typeid);
+
+      gst_type_save_thyself(type, subtree);
+
+      types = g_list_next(types);
+    }
+  }
+
+  return parent;
+}
+
+GstElementFactory *gst_elementfactory_load_thyself(xmlNodePtr parent) {
+  GstElementFactory *factory = g_new0(GstElementFactory, 1);
+  xmlNodePtr children = parent->childs;
+  factory->details = g_new0(GstElementDetails, 1);
+  factory->sink_types = NULL;
+  factory->src_types = NULL;
+
+  while (children) {
+    if (!strcmp(children->name, "name")) {
+      factory->name = g_strdup(xmlNodeGetContent(children));
+    }
+    if (!strcmp(children->name, "longname")) {
+      factory->details->longname = g_strdup(xmlNodeGetContent(children));
+    }
+    if (!strcmp(children->name, "class")) {
+      factory->details->class = g_strdup(xmlNodeGetContent(children));
+    }
+    if (!strcmp(children->name, "description")) {
+      factory->details->description = g_strdup(xmlNodeGetContent(children));
+    }
+    if (!strcmp(children->name, "version")) {
+      factory->details->version = g_strdup(xmlNodeGetContent(children));
+    }
+    if (!strcmp(children->name, "author")) {
+      factory->details->author = g_strdup(xmlNodeGetContent(children));
+    }
+    if (!strcmp(children->name, "copyright")) {
+      factory->details->copyright = g_strdup(xmlNodeGetContent(children));
+    }
+    if (!strcmp(children->name, "sources")) {
+      guint16 typeid = gst_type_load_thyself(children);
+
+      gst_type_add_src(typeid, factory);
+    }
+    if (!strcmp(children->name, "sinks")) {
+      guint16 typeid = gst_type_load_thyself(children);
+
+      gst_type_add_sink(typeid, factory);
+    }
+
+    children = children->next;
+  }
+
+  return factory;
 }
 

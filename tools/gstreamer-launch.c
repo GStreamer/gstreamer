@@ -1,5 +1,7 @@
 #include <glib.h>
 #include <gst/gst.h>
+#include <string.h>
+#include <stdlib.h>
 
 typedef struct _launch_delayed_pad launch_delayed_pad;
 struct _launch_delayed_pad {
@@ -17,11 +19,11 @@ void launch_newpad(GstElement *element,GstPad *pad,launch_delayed_pad *peer) {
   }
 }
 
-gint parse(int argc,char *argv[],GstElement *parent,gint offset,gchar endchar) {
+void parse(int argc,char *argv[],GstElement *parent,gint offset,gchar endchar) {
   gint i = offset;
   gchar *plugin;
-  GstElement *element, *prevelement;
-  GstPad *prevpad,*nextpad;
+  GstElement *element = NULL, *prevelement;
+  GstPad *prevpad = NULL,*nextpad;
   gchar *prevpadname = NULL,*nextpadname = NULL;
   gchar *ptr;
   gint len;
@@ -64,7 +66,7 @@ gint parse(int argc,char *argv[],GstElement *parent,gint offset,gchar endchar) {
       // snag the length in advance;
       len = strlen(argv[i]);
       // if it's just a connection, pick the 'src' pad and move on
-      if (ptr = strchr(argv[i],'|')) {
+      if ((ptr = strchr(argv[i],'|')) != 0) {
         // if there's a previous pad name
         if (ptr != argv[i]) {
           ptr[0] = '\0';
@@ -98,7 +100,7 @@ int main(int argc,char *argv[]) {
   gst_info("\n\n");
 
   pipeline = gst_elementfactory_make("thread","launch");
-  if (t = atoi(argv[1]))
+  if ((t = atoi(argv[1])))
     parse(argc,argv,pipeline,2,0);
   else
     parse(argc,argv,pipeline,1,0);
@@ -112,4 +114,6 @@ int main(int argc,char *argv[]) {
     sleep(t);
   else
     sleep(5);
+
+  return 1;
 }

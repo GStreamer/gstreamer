@@ -24,7 +24,6 @@
 
 GstTypeFactory _factories[] = {
   { "audio/raw", ".raw", NULL },
-  { "audio/ac3", ".ac3", NULL },
   { "video/raw image/raw", ".raw", NULL },
   { NULL, NULL, NULL },
 };
@@ -42,6 +41,7 @@ GstPlugin *plugin_init(GModule *module) {
 
   while (_factories[i].mime) {
     gst_type_register(&_factories[i]);
+    gst_plugin_add_type(plugin, &_factories[i]);
 //    DEBUG("added factory #%d '%s'\n",i,_factories[i].mime);
     i++;
   }

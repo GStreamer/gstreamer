@@ -315,6 +315,7 @@ main (int argc, char *argv[])
   glade_init();
   glade_gnome_init();
   gst_init(&argc,&argv);
+  //gst_plugin_load_all();
 
   g_print("using %s\n", DATADIR"gstplay.glade");
   /* load the interface */
@@ -366,13 +367,6 @@ main (int argc, char *argv[])
                                gst_element_get_pad(show,"sink"));
 
   glade_xml_signal_autoconnect(xml);
-
-  gst_plugin_load("mpeg1parse");
-  gst_plugin_load("mpeg2parse");
-  gst_plugin_load("mp1videoparse");
-  gst_plugin_load("mp3parse");
-  gst_plugin_load("parsewav");
-  gst_plugin_load("parseavi");
 
   video_render_queue = gst_elementfactory_make("queue","video_render_queue");
   gtk_object_set(GTK_OBJECT(video_render_queue),"max_level",BUFFER,NULL);

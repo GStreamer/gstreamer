@@ -32,9 +32,9 @@ extern gint _gst_trace_on;
 void gst_init(int *argc,char **argv[]) {
   GstTrace *gst_trace;
 
-  gtk_init(argc,argv);
-
   if (!g_thread_supported()) g_thread_init (NULL);
+
+  gtk_init(argc,argv);
 
   _gst_type_initialize();
   _gst_plugin_initialize();
@@ -48,8 +48,8 @@ void gst_init(int *argc,char **argv[]) {
   gst_elementfactory_register(gst_elementfactory_new(
     "thread",gst_thread_get_type(),&gst_thread_details));
 
-  gst_plugin_load("libgsttypes.so");
-  gst_plugin_load("libgstelements.so");
+  //gst_plugin_load_elementfactory("gsttypes");
+  //gst_plugin_load("libgstelements.so");
 
   _gst_trace_on = 0;
   if (_gst_trace_on) {

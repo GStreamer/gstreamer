@@ -6,5 +6,6 @@ Makefile.in
 .deps
 .libs
 
-launch
+gstreamer-launch
+gstreamer-register
 *.xml
