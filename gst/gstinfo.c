@@ -81,9 +81,8 @@ static gchar *_gst_info_category_strings[] = {
   "REFCOUNTING",
   "EVENT",
   "PARAMS",
-  "",
-  "",
-  "CALL_TRACE",
+
+  [30] = "CALL_TRACE",
 };
 
 /**

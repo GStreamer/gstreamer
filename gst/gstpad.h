@@ -128,18 +128,6 @@ typedef enum {
   GST_PAD_QUERY_RATE
 } GstPadQueryType;
 
-#ifdef G_HAVE_ISO_VARARGS
-#define GST_PAD_QUERY_TYPE_FUNCTION(functionname, ...)  \
-static const GstPadQueryType*                           \
-functionname (GstPad *pad)                              \
-{                                                       \
-  static const GstPadQueryType types[] = {              \
-    __VA_ARGS__,                                        \
-    0                                              	\
-  };                                                    \
-  return types;                                         \
-}
-#elif defined(G_HAVE_GNUC_VARARGS)
 #define GST_PAD_QUERY_TYPE_FUNCTION(functionname, a...) \
 static const GstPadQueryType*                           \
 functionname (GstPad *pad)                              \
@@ -150,7 +138,6 @@ functionname (GstPad *pad)                              \
   };                                                    \
   return types;                                         \
 }
-#endif
 
  
 /* this defines the functions used to chain buffers
@@ -348,30 +335,6 @@ struct _GstPadTemplateClass {
   void (*pad_created)	(GstPadTemplate *templ, GstPad *pad);
 };
 
-#ifdef G_HAVE_ISO_VARARGS
-#define GST_PAD_TEMPLATE_NEW(padname, dir, pres, ...) \
-  gst_pad_template_new (                        \
-    padname,                                    \
-    dir,                                        \
-    pres,                                       \
-    __VA_ARGS__ ,				\
-    NULL)
-
-#define GST_PAD_TEMPLATE_FACTORY(name, padname, dir, pres, ...) \
-static GstPadTemplate*                          \
-name (void)                                     \
-{                                               \
-  static GstPadTemplate *templ = NULL;       	\
-  if (!templ) {                              	\
-    templ = GST_PAD_TEMPLATE_NEW (            	\
-      padname,                          	\
-      dir,                                      \
-      pres,                                     \
-      __VA_ARGS__ );                            \
-  }                                             \
-  return templ;                              	\
-}
-#elif defined(G_HAVE_GNUC_VARARGS)
 /* CR1: the space after 'a' is necessary because of preprocessing in gcc */
 #define GST_PAD_TEMPLATE_NEW(padname, dir, pres, a...) \
   gst_pad_template_new (                        \
@@ -395,7 +358,6 @@ name (void)                                     \
   }                                             \
   return templ;                              	\
 }
-#endif
 
 #define GST_PAD_TEMPLATE_GET(fact) (fact)()
 
