@@ -524,6 +524,14 @@ gst_ape_demux_stream_init (GstApeDemux * ape)
   /* start off, we'll want byte-reading here */
   bs = gst_bytestream_new (ape->sinkpad);
 
+  /* peek one byte to not confuse the typefinder */
+  while (gst_bytestream_peek_bytes (bs, &data, 1) != 1) {
+    if (!gst_ape_demux_handle_event (ape, bs)) {
+      res = FALSE;
+      goto the_city;
+    }
+  }
+
   /* can we seek? */
   if (!gst_bytestream_seek (bs, 0, GST_SEEK_METHOD_END)) {
     seekable = FALSE;
@@ -599,6 +607,7 @@ gst_ape_demux_stream_init (GstApeDemux * ape)
       goto the_city;
     }
   }
+
   if (!memcmp (data, "APETAGEX", 8)) {
     GST_LOG ("Found tags at end");
 
