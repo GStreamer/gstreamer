@@ -1,3 +1,14 @@
+2004-01-29  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/elements/gstfilesrc.c: (gst_filesrc_get),
+	(gst_filesrc_uri_handler_init): Fixing seeking by making FLUSH happen
+	again and even before DISCONT.
+	* gst/gstpad.c: (gst_pad_event_default): Remove a unused switch case.
+	* libs/gst/bytestream/bytestream.c: (gst_bytestream_get_next_buf): Fix
+	bytestream so that it's not stopping to fill the bytestream if events
+	different than EOS or DISCONT are received. Instead it process them so
+	that they go downstream.
+
 2004-01-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/Makefile.am:

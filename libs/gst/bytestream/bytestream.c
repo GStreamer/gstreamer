@@ -156,8 +156,19 @@ gst_bytestream_get_next_buf (GstByteStream *bs)
     return FALSE;
 
   if (GST_IS_EVENT (nextbuf)) {
-    bs->event = GST_EVENT (nextbuf);
-    return FALSE;
+    GstEvent *event = GST_EVENT (nextbuf);
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_EOS:
+      case GST_EVENT_DISCONTINUOUS:
+        GST_DEBUG ("get_next_buf: received EOS event.");
+        bs->event = event;
+        return FALSE;
+      default:
+        GST_DEBUG ("get_next_buf: received event %d, forwarding",
+                   GST_EVENT_TYPE (event));
+        gst_pad_event_default (bs->pad, event);
+        return TRUE;
+    }
   }
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (nextbuf))

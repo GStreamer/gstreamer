@@ -667,6 +667,12 @@ gst_filesrc_get (GstPad *pad)
   src = GST_FILESRC (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN), NULL);
 
+  /* check for flush */
+  if (src->need_flush) {
+    src->need_flush = FALSE;
+    GST_DEBUG_OBJECT (src, "sending flush");
+    return GST_DATA (gst_event_new_flush ());
+  }
   /* check for seek */
   if (src->seek_happened) {
     GstEvent *event;
@@ -674,14 +680,7 @@ gst_filesrc_get (GstPad *pad)
     src->seek_happened = FALSE;
     GST_DEBUG_OBJECT (src, "sending discont");
     event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
-    src->need_flush = FALSE;
     return GST_DATA (event);
-  }
-  /* check for flush */
-  if (src->need_flush) {
-    src->need_flush = FALSE;
-    GST_DEBUG_OBJECT (src, "sending flush");
-    return GST_DATA (gst_event_new_flush ());
   }
 
   /* check for EOF */
@@ -997,4 +996,3 @@ gst_filesrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_uri = gst_filesrc_uri_get_uri;
   iface->set_uri = gst_filesrc_uri_set_uri;
 }
-

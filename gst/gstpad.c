@@ -3527,7 +3527,6 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
 	}
       }
     }
-    case GST_EVENT_FLUSH:
     default:
       return gst_pad_event_default_dispatch (pad, element, event);
   }
