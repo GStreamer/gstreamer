@@ -64,6 +64,12 @@ typedef enum {
 	GST_PLAY_ERROR_LAST,
 } GstPlayError;
 
+typedef enum {
+	GST_PLAY_SINK_TYPE_AUDIO,
+	GST_PLAY_SINK_TYPE_VIDEO,
+	GST_PLAY_SINK_TYPE_ANY,
+} GstPlaySinkType;
+
 #define GST_PLAY_ERROR 		gst_play_error_quark ()
 
 #define GST_TYPE_PLAY            (gst_play_get_type())
@@ -169,7 +175,8 @@ gst_play_set_idle_timeout_funcs (	GstPlay *play,
 									GstPlayIdleAdd idle_add_func);
 GstElement*
 gst_play_get_sink_element (	GstPlay *play,
-							GstElement *element);
+							GstElement *element,
+							GstPlaySinkType sink_type);
 
 /* Set/Get state */
 

@@ -196,7 +196,10 @@ gst_play_audiot_set_audio (	GstPlay *play,
 	gst_bin_add (GST_BIN (play->pipeline), play->audio_sink);
 	gst_element_link (play->volume, play->audio_sink);
 
-	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
+	play->audio_sink_element = gst_play_get_sink_element (
+										play,
+										audio_sink,
+										GST_PLAY_SINK_TYPE_AUDIO);
 	
 	if (play->audio_sink_element != NULL) {
 		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
@@ -344,7 +347,10 @@ gst_play_audioht_set_audio (	GstPlay *play,
 	gst_bin_add (GST_BIN (audio_thread), play->audio_sink);
 	gst_element_link (play->volume, play->audio_sink);
 
-	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
+	play->audio_sink_element = gst_play_get_sink_element (
+												play,
+												audio_sink,
+												GST_PLAY_SINK_TYPE_AUDIO);
 	
 	if (play->audio_sink_element != NULL) {
 		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
@@ -604,7 +610,10 @@ gst_play_video_set_video (	GstPlay *play,
 	gst_bin_add (GST_BIN (video_bin), play->video_sink);
 	gst_element_link (video_mate, play->video_sink);
 
-	play->video_sink_element = gst_play_get_sink_element (play, video_sink);
+	play->video_sink_element = gst_play_get_sink_element (
+											play,
+											video_sink,
+											GST_PLAY_SINK_TYPE_VIDEO);
 
 	if (play->video_sink_element != NULL) {
 		g_signal_connect (	G_OBJECT (play->video_sink_element),
@@ -646,7 +655,10 @@ gst_play_video_set_audio (	GstPlay *play,
 	gst_bin_add (GST_BIN (audio_bin), play->audio_sink);
 	gst_element_link (play->volume, play->audio_sink);
 
-	play->audio_sink_element = gst_play_get_sink_element (play, audio_sink);
+	play->audio_sink_element = gst_play_get_sink_element (
+										play,
+										audio_sink,
+										GST_PLAY_SINK_TYPE_AUDIO);
 
 	if (play->audio_sink_element != NULL) {
 		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
