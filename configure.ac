@@ -1049,6 +1049,7 @@ dnl thomas: the next line doesn't give errors
 AM_CONDITIONAL(HAVE_FLACLIB,        test "x$HAVE_FLACLIB" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
+AM_CONDITIONAL(HAVE_XMMS,           test "x$HAVE_XMMS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_LIBAA,          test "x$HAVE_LIBAA" = "xyes")

@@ -742,6 +742,7 @@ int main(int argc, char *argv[])
 # Configure paths for ARTS
 # Philip Stadermann   2001-06-21
 # stolen from esd.m4
+# adapted and scrubbed by thomas
 
 dnl AM_PATH_ARTS([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
 dnl Test for ARTS, and define ARTS_CFLAGS and ARTS_LIBS
@@ -771,15 +772,15 @@ AC_ARG_ENABLE(artstest, [  --disable-artstest      Do not try to compile and run
   fi
 
   AC_PATH_PROG(ARTS_CONFIG, artsc-config, no)
-  
   min_arts_version=ifelse([$1], ,0.9.5,$1)
   AC_MSG_CHECKING(for ARTS artsc - version >= $min_arts_version)
   no_arts=""
   if test "$ARTS_CONFIG" = "no" ; then
     no_arts=yes
   else
-    ARTS_CFLAGS=`$ARTS_CONFIG $artsconf_args --cflags`
-    ARTS_LIBS=`$ARTS_CONFIG $artsconf_args --libs`
+    # FIXME : thomas added this sed to get arts path instead of artsc
+    ARTS_CFLAGS=`$ARTS_CONFIG $artsconf_args --cflags | sed 's/artsc$/arts/'`
+    ARTS_LIBS=`$ARTS_CONFIG $artsconf_args --libs | sed 's/artsc$/arts/'`
 
     arts_major_version=`$ARTS_CONFIG $arts_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
@@ -796,12 +797,16 @@ dnl
 dnl Now check if the installed ARTS is sufficiently new. (Also sanity
 dnl checks the results of artsc-config to some extent)
 dnl
-      rm -f conf.artstest
+dnl thomas: ask nicely for C++ compilation
+AC_LANG_PUSH(C++)
+AC_SUBST(CPPFLAGS,"$CPPFLAGS $ARTS_CFLAGS")
+AC_SUBST(LDFLAGS,"$LDFLAGS $ARTS_CLIBS") 
+     rm -f conf.artstest
       AC_TRY_RUN([
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <artsc.h>
+#include <artsflow.h>
 
 char*
 my_strdup (char *str)
@@ -810,7 +815,8 @@ my_strdup (char *str)
   
   if (str)
     {
-      new_str = malloc ((strlen (str) + 1) * sizeof(char));
+      // thomas: the original test did not have the typecast
+      new_str = (char *) malloc ((strlen (str) + 1) * sizeof(char));
       strcpy (new_str, str);
     }
   else
@@ -875,7 +881,7 @@ int main ()
           LIBS="$LIBS $ARTS_LIBS"
           AC_TRY_LINK([
 #include <stdio.h>
-#include <artsc.h>
+#include <artsflow.h>
 ],      [ return 0; ],
         [ echo "*** The test program compiled, but did not run. This usually means"
           echo "*** that the run-time linker is not finding ARTS or finding the wrong"
@@ -902,3 +908,5 @@ int main ()
   AC_SUBST(ARTS_LIBS)
   rm -f conf.artstest
 ])
+dnl release C++ question
+
