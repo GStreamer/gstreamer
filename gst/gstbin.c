@@ -628,11 +628,21 @@ gst_bin_change_state (GstElement * element)
   pending = GST_STATE_PENDING (element);
   transition = GST_STATE_TRANSITION (element);
 
-  GST_INFO_ELEMENT (GST_CAT_STATES, element, "changing childrens' state from %s to %s",
-		    gst_element_state_get_name (old_state), gst_element_state_get_name (pending));
+  GST_INFO_ELEMENT (GST_CAT_STATES, element,
+                    "changing childrens' state from %s to %s",
+		    gst_element_state_get_name (old_state),
+                    gst_element_state_get_name (pending));
 
   if (pending == GST_STATE_VOID_PENDING)
     return GST_STATE_SUCCESS;
+
+  if (old_state == pending)
+  {
+    GST_INFO_ELEMENT (GST_CAT_STATES, element,
+                      "old and pending state are both %s, returning",
+                      gst_element_state_get_name (pending));
+    return GST_STATE_SUCCESS;
+  }
 
   children = bin->children;
 
@@ -655,7 +665,8 @@ gst_bin_change_state (GstElement * element)
           /* reset to what is was */
           GST_STATE_PENDING (element) = old_state;
 	  
-          gst_bin_change_state (element);
+          /* FIXME: what about the return value ? why recursive ? */
+          /* gst_bin_change_state (element); */
 	  /* see if the old state was set */
 	  if (GST_STATE (element) == old_state) 
 	    return GST_STATE_SUCCESS;

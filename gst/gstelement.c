@@ -2098,6 +2098,14 @@ gst_element_set_state (GstElement *element, GstElementState state)
   /* start with the current state */
   curpending = GST_STATE(element);
 
+  if (state == curpending)
+  {
+    GST_DEBUG_ELEMENT (GST_CAT_STATES, element,
+                       "element is already in requested state %s",
+                       gst_element_state_get_name (state));
+    return (GST_STATE_SUCCESS);
+  }
+
   GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "setting state from %s to %s",
                      gst_element_state_get_name (curpending),
                      gst_element_state_get_name (state));
@@ -2141,8 +2149,8 @@ gst_element_set_state (GstElement *element, GstElementState state)
          * did change the state... */
         if (GST_STATE (element) != curpending) {
           GST_DEBUG_ELEMENT (GST_CAT_STATES, element, 
-			     "element claimed state-change success,"
-			     "but state didn't change %s, %s <-> %s",
+			     "element claimed state-change success, "
+			     "but state didn't change (now %s, %s <-> %s",
                      	     gst_element_state_get_name (GST_STATE (element)),
                      	     gst_element_state_get_name (GST_STATE_PENDING (element)),
                      	     gst_element_state_get_name (curpending));
