@@ -231,6 +231,12 @@ gst_mpeg2enc_loop (GstElement * element)
 
     /* make sure we've had data */
     data = gst_pad_pull (enc->sinkpad);
+    /* forward any events */
+    if (GST_IS_EVENT (data)) {
+      gst_pad_event_default (enc->sinkpad, GST_EVENT (data));
+      return;
+    }
+
     gst_pad_set_element_private (enc->sinkpad, data);
 
     if (!(caps = GST_PAD_CAPS (enc->sinkpad))) {
