@@ -1,3 +1,12 @@
+2004-12-22  Archana Shah  <archana.shah@wipro.com>
+
+	Reviewed by:  Ronald S. Bultje <rbultje@ronald.bitfreak.net>
+
+	* sys/sunaudio/gstsunmixer.c: (gst_sunaudiomixer_set_volume):
+	  Normalizing the value before setting
+	(gst_sunaudiomixer_get_volume):
+	  Normalizing the value after getting. Fixes bug# 161980
+
 2004-12-22  Christian Fredrik Kalager Schaller  <uraeus@gnome.org>
 
 	* Makefile.am: Make sure docs gets disted
