@@ -4,30 +4,27 @@
  */
 
 #include <config.h>
-
-//#define DEBUG_ENABLED
-
 #include <gnome.h>
-#include <glade/glade.h>
 
 #include "gstmediaplay.h"
-
 
 int
 main (int argc, char *argv[])
 {
   GstMediaPlay *play;
 
-  gst_init(&argc,&argv);
+  gst_init (&argc,&argv);
   gnome_init ("gstreamer", VERSION, argc, argv);
 
-  play = gst_media_play_new();
+  play = gst_media_play_new ();
 
   if (argc > 1) {
-    gst_media_play_start_uri(play, argv[1]);
+    gst_media_play_start_uri (play, argv[1]);
   }
 
-  gst_main();
+  gdk_threads_enter ();
+  gst_main ();
+  gdk_threads_leave ();
 
   return 0;
 }

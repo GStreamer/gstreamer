@@ -65,9 +65,7 @@ void gst_init(int *argc,char **argv[]) {
  * Enter the main GStreamer processing loop 
  */
 void gst_main() {
-  gdk_threads_enter();
   gtk_main();
-  gdk_threads_leave();
 }
 
 /**

@@ -271,6 +271,8 @@ gst_media_play_state_changed (GstPlay *play,
   g_return_if_fail (GST_IS_PLAY (play));
   g_return_if_fail (GST_IS_MEDIA_PLAY (mplay));
 
+
+  gdk_threads_enter ();
   update_buttons (mplay, state);
 
   switch (state) {
@@ -287,6 +289,7 @@ gst_media_play_state_changed (GstPlay *play,
       area_state =  GST_STATUS_AREA_STATE_INIT;
   }
   gst_status_area_set_state (mplay->status, area_state);
+  gdk_threads_leave ();
 }
 
 void 
@@ -324,9 +327,11 @@ gst_media_play_frame_displayed (GstPlay *play,
   current_offset = gst_play_get_media_offset (play);
 
   if (current_time != mplay->last_time) {
+    gdk_threads_enter ();
     gst_media_play_update_status_area (mplay, current_time, total_time);
     update_slider (mplay, mplay->adjustment, current_offset*100.0/size);
     mplay->last_time = current_time;
+    gdk_threads_leave ();
   }
 }
 
@@ -347,7 +352,9 @@ void
 on_toggle_play_toggled (GtkToggleButton *togglebutton,
                         GstMediaPlay    *play)
 {
+  gdk_threads_leave ();
   gst_play_play (play->play);
+  gdk_threads_enter ();
   update_buttons (play, GST_PLAY_STATE(play->play));
 }
 
@@ -355,7 +362,9 @@ void
 on_toggle_pause_toggled (GtkToggleButton *togglebutton,
                          GstMediaPlay    *play)
 {
+  gdk_threads_leave ();
   gst_play_pause (play->play);
+  gdk_threads_enter ();
   update_buttons (play, GST_PLAY_STATE(play->play));
 }
 
@@ -363,7 +372,9 @@ void
 on_toggle_stop_toggled (GtkToggleButton *togglebutton,
                         GstMediaPlay    *play)
 {
+  gdk_threads_leave ();
   gst_play_stop (play->play);
+  gdk_threads_enter ();
   update_buttons (play, GST_PLAY_STATE(play->play));
 }
 
