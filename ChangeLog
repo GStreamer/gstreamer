@@ -1,3 +1,19 @@
+2004-07-21  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/theoradec.c: (gst_theora_dec_init),
+	(theora_get_formats), (theora_get_event_masks),
+	(theora_get_query_types), (theora_dec_src_convert),
+	(theora_dec_sink_convert), (theora_dec_src_query),
+	(theora_dec_src_event), (theora_dec_event), (theora_dec_chain):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_get_formats),
+	(vorbis_get_event_masks), (vorbis_get_query_types),
+	(gst_vorbis_dec_init), (vorbis_dec_convert),
+	(vorbis_dec_src_query), (vorbis_dec_src_event), (vorbis_dec_event):
+	Added query/convert/formats functions to vorbis and theora decoders
+	so that the outside world can use them too. Fixed seeking on an
+	ogg/theora/vorbis file by disabling the seeking seeking on the 
+	theora srcpad.
+
 2004-07-21  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_new),

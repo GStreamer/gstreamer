@@ -69,7 +69,8 @@ static GstElementDetails theora_dec_details = {
   "TheoraDec",
   "Codec/Decoder/Video",
   "decode raw theora streams to raw YUV video",
-  "Benjamin Otte <in7y118@public.uni-hamburg.de>",
+  "Benjamin Otte <in7y118@public.uni-hamburg.de>, "
+      "Wim Taymans <wim@fluendo.com>",
 };
 
 static GstStaticPadTemplate theora_dec_src_factory =
@@ -96,6 +97,15 @@ static GstElementStateReturn theora_dec_change_state (GstElement * element);
 static gboolean theora_dec_src_event (GstPad * pad, GstEvent * event);
 static gboolean theora_dec_src_query (GstPad * pad,
     GstQueryType query, GstFormat * format, gint64 * value);
+static gboolean theora_dec_src_convert (GstPad * pad,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value);
+static gboolean theora_dec_sink_convert (GstPad * pad,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value);
+static const GstFormat *theora_get_formats (GstPad * pad);
+static const GstEventMask *theora_get_event_masks (GstPad * pad);
+static const GstQueryType *theora_get_query_types (GstPad * pad);
 
 
 static void
@@ -126,6 +136,8 @@ gst_theora_dec_init (GstTheoraDec * dec)
   dec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&theora_dec_sink_factory), "sink");
+  gst_pad_set_formats_function (dec->sinkpad, theora_get_formats);
+  gst_pad_set_convert_function (dec->sinkpad, theora_dec_sink_convert);
   gst_pad_set_chain_function (dec->sinkpad, theora_dec_chain);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
@@ -133,8 +145,13 @@ gst_theora_dec_init (GstTheoraDec * dec)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&theora_dec_src_factory), "src");
   gst_pad_use_explicit_caps (dec->srcpad);
+  gst_pad_set_event_mask_function (dec->srcpad, theora_get_event_masks);
   gst_pad_set_event_function (dec->srcpad, theora_dec_src_event);
+  gst_pad_set_query_type_function (dec->srcpad, theora_get_query_types);
   gst_pad_set_query_function (dec->srcpad, theora_dec_src_query);
+  gst_pad_set_formats_function (dec->srcpad, theora_get_formats);
+  gst_pad_set_convert_function (dec->srcpad, theora_dec_src_convert);
+
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   GST_FLAG_SET (dec, GST_ELEMENT_EVENT_AWARE);
@@ -153,65 +170,151 @@ _theora_ilog (unsigned int v)
   return (ret);
 }
 
-static gboolean
-theora_dec_from_granulepos (GstTheoraDec * dec, GstFormat format, guint64 from,
-    guint64 * to)
+static const GstFormat *
+theora_get_formats (GstPad * pad)
 {
-  guint64 framecount;
-  guint ilog = _theora_ilog (dec->info.keyframe_frequency_force - 1);
+  static GstFormat src_formats[] = {
+    GST_FORMAT_DEFAULT,         /* frames in this case */
+    GST_FORMAT_TIME,
+    GST_FORMAT_BYTES,
+    0
+  };
+  static GstFormat sink_formats[] = {
+    GST_FORMAT_DEFAULT,
+    GST_FORMAT_TIME,
+    0
+  };
 
-  if (dec->packetno < 1)
-    return FALSE;
-
-  /* granulepos is last ilog bits for counting pframes since last iframe and 
-   * bits in front of that for the framenumber of the last iframe. */
-  framecount = from >> ilog;
-  framecount += from - (framecount << ilog);
-
-  switch (format) {
-    case GST_FORMAT_TIME:
-      *to = framecount * (GST_SECOND * dec->info.fps_denominator /
-          dec->info.fps_numerator);
-      break;
-    case GST_FORMAT_DEFAULT:
-      *to = framecount;
-      break;
-    case GST_FORMAT_BYTES:
-      *to = framecount * dec->info.height * dec->info.width * 3 / 2;
-      break;
-    default:
-      return FALSE;
-  }
-  return TRUE;
+  return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
 
-/* FIXME: we can only seek to keyframes... */
-static gboolean
-theora_dec_to_granulepos (GstTheoraDec * dec, GstFormat format, guint64 from,
-    guint64 * to)
+static const GstEventMask *
+theora_get_event_masks (GstPad * pad)
 {
-  guint64 framecount;
+  static const GstEventMask theora_src_event_masks[] = {
+    {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH},
+    {0,}
+  };
 
+  return theora_src_event_masks;
+}
+
+static const GstQueryType *
+theora_get_query_types (GstPad * pad)
+{
+  static const GstQueryType theora_src_query_types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
+    0
+  };
+
+  return theora_src_query_types;
+}
+
+
+static gboolean
+theora_dec_src_convert (GstPad * pad,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value)
+{
+  gboolean res = TRUE;
+  GstTheoraDec *dec;
+  guint64 scale = 1;
+
+  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+
+  /* we need the info part before we can done something */
   if (dec->packetno < 1)
     return FALSE;
 
-  switch (format) {
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_value =
+              src_value * 2 / (dec->info.height * dec->info.width * 3);
+          break;
+        case GST_FORMAT_TIME:
+          /* seems like a rather silly conversion, implement me if you like */
+        default:
+          res = FALSE;
+      }
+      break;
     case GST_FORMAT_TIME:
-      framecount =
-          from * dec->info.fps_numerator / (GST_SECOND *
-          dec->info.fps_denominator);
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          scale = 4 * (dec->info.width * dec->info.height) / 3;
+        case GST_FORMAT_DEFAULT:
+          *dest_value = src_value * scale * dec->info.fps_numerator /
+              (dec->info.fps_denominator * GST_SECOND);
+          break;
+        default:
+          res = FALSE;
+      }
       break;
     case GST_FORMAT_DEFAULT:
-      framecount = from;
-      break;
-    case GST_FORMAT_BYTES:
-      framecount = from * 8 / (dec->info.height * dec->info.width * 12);
+      switch (*dest_format) {
+        case GST_FORMAT_TIME:
+          *dest_value = src_value * (GST_SECOND * dec->info.fps_denominator /
+              dec->info.fps_numerator);
+          break;
+        case GST_FORMAT_BYTES:
+          *dest_value =
+              src_value * 3 * (dec->info.width * dec->info.height) / 2;
+          break;
+        default:
+          res = FALSE;
+      }
       break;
     default:
-      return FALSE;
+      res = FALSE;
   }
-  *to = framecount << _theora_ilog (dec->info.keyframe_frequency_force - 1);
-  return TRUE;
+
+  return res;
+}
+
+static gboolean
+theora_dec_sink_convert (GstPad * pad,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value)
+{
+  gboolean res = TRUE;
+  GstTheoraDec *dec;
+
+  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+
+  /* we need the info part before we can done something */
+  if (dec->packetno < 1)
+    return FALSE;
+
+  switch (src_format) {
+    case GST_FORMAT_DEFAULT:
+    {
+      guint64 framecount;
+      guint ilog;
+
+      ilog = _theora_ilog (dec->info.keyframe_frequency_force - 1);
+
+      /* granulepos is last ilog bits for counting pframes since last iframe and 
+       * bits in front of that for the framenumber of the last iframe. */
+      framecount = src_value >> ilog;
+      framecount += src_value - (framecount << ilog);
+
+      switch (*dest_format) {
+        case GST_FORMAT_TIME:
+          *dest_value = framecount * (GST_SECOND * dec->info.fps_denominator /
+              dec->info.fps_numerator);
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    }
+    default:
+      res = FALSE;
+  }
+
+  return res;
 }
 
 static gboolean
@@ -221,16 +324,25 @@ theora_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
   gint64 granulepos;
   GstTheoraDec *dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
   GstFormat my_format = GST_FORMAT_DEFAULT;
+  guint64 time;
 
   if (query == GST_QUERY_POSITION) {
+    /* this is easy, we can convert a granule position to everything */
     granulepos = dec->granulepos;
   } else {
+    /* for the total, we just forward the query to the peer */
     if (!gst_pad_query (GST_PAD_PEER (dec->sinkpad), query, &my_format,
             &granulepos))
       return FALSE;
   }
 
-  if (!theora_dec_from_granulepos (dec, *format, granulepos, value))
+  /* and convert to the final format in two steps with time as the 
+   * intermediate step */
+  my_format = GST_FORMAT_TIME;
+  if (!theora_dec_sink_convert (dec->sinkpad, granulepos, GST_FORMAT_DEFAULT,
+          &my_format, &time))
+    return FALSE;
+  if (!theora_dec_src_convert (pad, my_format, time, format, value))
     return FALSE;
 
   GST_LOG_OBJECT (dec,
@@ -244,6 +356,7 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstTheoraDec *dec;
+  GstFormat format;
 
   dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
 
@@ -251,17 +364,23 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEEK:{
       guint64 value;
 
-      res = theora_dec_to_granulepos (dec, GST_EVENT_SEEK_FORMAT (event),
-          GST_EVENT_SEEK_OFFSET (event), &value);
+      /* convert to granulepos, this will fail as we cannot generate
+       * a granulepos, only convert an existing one to something else,
+       * which basically means that seeking doesn't work this way */
+      format = GST_FORMAT_DEFAULT;
+      res = theora_dec_sink_convert (pad, GST_EVENT_SEEK_FORMAT (event),
+          GST_EVENT_SEEK_OFFSET (event), &format, &value);
       if (res) {
         GstEvent *real_seek = gst_event_new_seek (
             (GST_EVENT_SEEK_TYPE (event) & ~GST_SEEK_FORMAT_MASK) |
             GST_FORMAT_DEFAULT,
             value);
 
-        /* sync to keyframe */
-        dec->need_keyframe = TRUE;
         res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
+        if (res) {
+          /* sync to keyframe */
+          dec->need_keyframe = TRUE;
+        }
       }
       gst_event_unref (event);
       break;
@@ -300,22 +419,31 @@ theora_dec_event (GstTheoraDec * dec, GstEvent * event)
                     GST_FORMAT_TIME, (guint64) 0, GST_FORMAT_DEFAULT,
                     (guint64) 0, GST_FORMAT_BYTES, (guint64) 0, 0)));
       } else {
-        dec->packetno = 3;
+        GstFormat time_format, default_format, bytes_format;
+
+        time_format = GST_FORMAT_TIME;
+        default_format = GST_FORMAT_DEFAULT;
+        bytes_format = GST_FORMAT_BYTES;
+
         /* if one of them works, all of them work */
-        if (theora_dec_from_granulepos (dec, GST_FORMAT_TIME, dec->granulepos,
-                &time)
-            && theora_dec_from_granulepos (dec, GST_FORMAT_DEFAULT,
-                dec->granulepos, &value)
-            && theora_dec_from_granulepos (dec, GST_FORMAT_BYTES,
-                dec->granulepos, &bytes)) {
+        if (theora_dec_sink_convert (dec->sinkpad, GST_FORMAT_DEFAULT,
+                dec->granulepos, &time_format, &time)
+            && theora_dec_src_convert (dec->srcpad, GST_FORMAT_TIME, time,
+                &default_format, &value)
+            && theora_dec_src_convert (dec->srcpad, GST_FORMAT_TIME, time,
+                &bytes_format, &bytes)) {
           gst_pad_push (dec->srcpad,
               GST_DATA (gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
                       time, GST_FORMAT_DEFAULT, value, GST_FORMAT_BYTES, bytes,
                       0)));
+          /* store new framenumber */
+          dec->packetno = value + 3;
         } else {
           GST_ERROR_OBJECT (dec,
               "failed to parse data for DISCONT event, not sending any");
         }
+        /* sync to keyframe */
+        dec->need_keyframe = TRUE;
       }
       break;
     default:
@@ -331,6 +459,7 @@ theora_dec_chain (GstPad * pad, GstData * data)
   GstTheoraDec *dec;
   ogg_packet packet;
   guint64 offset_end;
+  GstClockTime outtime;
 
   dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
   if (GST_IS_EVENT (data)) {
@@ -340,9 +469,22 @@ theora_dec_chain (GstPad * pad, GstData * data)
 
   buf = GST_BUFFER (data);
 
-  offset_end = GST_BUFFER_OFFSET_END (buf);
-  if (offset_end != -1) {
-    dec->granulepos = offset_end;
+  if (dec->packetno >= 3) {
+    offset_end = GST_BUFFER_OFFSET_END (buf);
+    if (offset_end != -1) {
+      dec->granulepos = offset_end;
+      /* granulepos to time */
+      outtime = GST_SECOND * theora_granule_time (&dec->state, dec->granulepos);
+    } else {
+      GstFormat time_format = GST_FORMAT_TIME;
+
+      /* framenumber to time */
+      theora_dec_src_convert (dec->srcpad, GST_FORMAT_DEFAULT,
+          dec->packetno - 3, &time_format, &outtime);
+    }
+  } else {
+    /* we don't know yet */
+    outtime = -1;
   }
 
   /* make ogg_packet out of the buffer */
@@ -412,54 +554,39 @@ theora_dec_chain (GstPad * pad, GstData * data)
       gst_data_unref (data);
       return;
     }
-#if 0
-    {
-      GTimeVal tv;
-      guint64 time;
-
-      g_get_current_time (&tv);
-      time = GST_TIMEVAL_TO_TIME (tv);
-#endif
-      if (theora_decode_packetin (&dec->state, &packet)) {
-        GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-            (NULL), ("theora decoder did not read data packet"));
-        gst_data_unref (data);
-        return;
-      }
-      if (theora_decode_YUVout (&dec->state, &yuv) < 0) {
-        GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-            (NULL), ("couldn't read out YUV image"));
-        gst_data_unref (data);
-        return;
-      }
-      g_return_if_fail (yuv.y_width == dec->info.width);
-      g_return_if_fail (yuv.y_height == dec->info.height);
-      out = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE,
-          yuv.y_width * yuv.y_height * 12 / 8);
-      y = GST_BUFFER_DATA (out);
-      u = y + yuv.y_width * yuv.y_height;
-      v = u + yuv.y_width * yuv.y_height / 4;
-      for (i = 0; i < yuv.y_height; i++) {
-        memcpy (y + i * yuv.y_width, yuv.y + i * yuv.y_stride, yuv.y_width);
-      }
-      for (i = 0; i < yuv.y_height / 2; i++) {
-        memcpy (u + i * yuv.uv_width, yuv.u + i * yuv.uv_stride, yuv.uv_width);
-        memcpy (v + i * yuv.uv_width, yuv.v + i * yuv.uv_stride, yuv.uv_width);
-      }
-      GST_BUFFER_OFFSET (out) = dec->packetno - 4;
-      GST_BUFFER_OFFSET_END (out) = dec->packetno - 3;
-      GST_BUFFER_DURATION (out) =
-          GST_SECOND * ((gdouble) dec->info.fps_denominator) /
-          dec->info.fps_numerator;
-      GST_BUFFER_TIMESTAMP (out) =
-          GST_BUFFER_OFFSET (out) * GST_BUFFER_DURATION (out);
-#if 0
-      g_get_current_time (&tv);
-      time = GST_TIMEVAL_TO_TIME (tv) - time;
-      if (time > 10000000)
-        g_print ("w00t, you're sl0000w!! - %llu\n", time);
+    if (theora_decode_packetin (&dec->state, &packet)) {
+      GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+          (NULL), ("theora decoder did not read data packet"));
+      gst_data_unref (data);
+      return;
     }
-#endif
+    if (theora_decode_YUVout (&dec->state, &yuv) < 0) {
+      GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+          (NULL), ("couldn't read out YUV image"));
+      gst_data_unref (data);
+      return;
+    }
+    g_return_if_fail (yuv.y_width == dec->info.width);
+    g_return_if_fail (yuv.y_height == dec->info.height);
+    out = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE,
+        yuv.y_width * yuv.y_height * 3 / 2);
+    y = GST_BUFFER_DATA (out);
+    u = y + yuv.y_width * yuv.y_height;
+    v = u + yuv.y_width * yuv.y_height / 4;
+    for (i = 0; i < yuv.y_height; i++) {
+      memcpy (y + i * yuv.y_width, yuv.y + i * yuv.y_stride, yuv.y_width);
+    }
+    for (i = 0; i < yuv.y_height / 2; i++) {
+      memcpy (u + i * yuv.uv_width, yuv.u + i * yuv.uv_stride, yuv.uv_width);
+      memcpy (v + i * yuv.uv_width, yuv.v + i * yuv.uv_stride, yuv.uv_width);
+    }
+    GST_BUFFER_OFFSET (out) = dec->packetno - 4;
+    GST_BUFFER_OFFSET_END (out) = dec->packetno - 3;
+    GST_BUFFER_DURATION (out) =
+        GST_SECOND * ((gdouble) dec->info.fps_denominator) /
+        dec->info.fps_numerator;
+    GST_BUFFER_TIMESTAMP (out) = outtime;
+
     gst_pad_push (dec->srcpad, GST_DATA (out));
   }
   gst_data_unref (data);
