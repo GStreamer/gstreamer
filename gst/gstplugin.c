@@ -361,9 +361,12 @@ gst_plugin_is_loaded (GstPlugin *plugin)
 GstPluginFeature*
 gst_plugin_find_feature (GstPlugin *plugin, const gchar *name, GType type)
 {
-  GList *features = plugin->features;
-
+  GList *features;
+  
+  g_return_val_if_fail (plugin != NULL, NULL);
   g_return_val_if_fail (name != NULL, NULL);
+
+  features = plugin->features;
 
   while (features) {
     GstPluginFeature *feature = GST_PLUGIN_FEATURE (features->data);

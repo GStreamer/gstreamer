@@ -563,7 +563,7 @@ gst_registry_pool_plugin_list (void)
     walk = g_list_next (walk);
   }
   
-  return g_list_concat (_gst_registry_pool_plugins, result);
+  return g_list_concat (g_list_copy (_gst_registry_pool_plugins), result);
 }
 
 /**
