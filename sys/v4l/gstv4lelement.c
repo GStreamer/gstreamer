@@ -293,9 +293,10 @@ gst_v4lelement_set_property (GObject      *object,
       break;
     case ARG_FREQUENCY:
       v4lelement->frequency = g_value_get_ulong(value);
-      if (gst_v4l_has_tuner(v4lelement))
-        if (!gst_v4l_set_frequency(v4lelement, v4lelement->frequency))
+      if (gst_v4l_has_tuner(v4lelement)){
+        if (!gst_v4l_set_frequency(v4lelement, v4lelement->frequency)){
           return;
+	}
       }
       break;
     case ARG_MUTE:
