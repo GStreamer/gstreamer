@@ -1,3 +1,10 @@
+2004-11-25  Johan Dahlin  <johan@gnome.org>
+
+	* gst/interfaces.override:
+	* gst/xoverlay.override:
+
+	redefine broken implement casting macros to something saner
+	
 2004-11-23  Johan Dahlin  <johan@gnome.org>
 
 	* testsuite/*: Put test_ prefix on all test filenames
