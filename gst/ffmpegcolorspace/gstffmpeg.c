@@ -32,6 +32,7 @@ extern gboolean gst_ffmpegcolorspace_register (GstPlugin * plugin);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  avcodec_init ();
   gst_ffmpegcolorspace_register (plugin);
 
   /* Now we can return the pointer to the newly created Plugin object. */

@@ -25,14 +25,10 @@
  * DSP utils
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "avcodec.h"
 #include "dsputil.h"
 
-uint8_t cropTbl[256 + 2 * MAX_NEG_CROP];
+uint8_t cropTbl[256 + 2 * MAX_NEG_CROP] = { 0, };
 
 /* init static data */
 void

@@ -23,14 +23,35 @@
 #include <avcodec.h>
 #include <gst/gst.h>
 
-/* Template caps */
+/*
+ * _codectype_to_caps () gets the GstCaps that belongs to
+ * a certain CodecType for a pad with uncompressed data.
+ */
 
 GstCaps *
-gst_ffmpeg_pix_fmt_to_caps (void);
+gst_ffmpegcsp_codectype_to_caps (enum CodecType  codec_type,
+                                 AVCodecContext *context);
 
-/* Disect a GstCaps */
+/*
+ * caps_with_codectype () transforms a GstCaps that belongs to
+ * a pad for uncompressed data to a filled-in context.
+ */
 
-enum PixelFormat
-gst_ffmpeg_caps_to_pix_fmt (const GstCaps *caps);
+void
+gst_ffmpegcsp_caps_with_codectype (enum CodecType  type,
+                                   const GstCaps  *caps,
+                                   AVCodecContext *context);
+
+/*
+ * Fill in pointers in an AVPicture, aligned by 4 (required by X).
+ */
+
+int
+gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
+			      uint8_t *   ptr,
+			      enum PixelFormat pix_fmt,
+			      int         width,
+			      int         height);
 
 #endif /* __GST_FFMPEG_CODECMAP_H__ */
+

@@ -22,13 +22,18 @@
  * default memory allocator for libavcodec.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "avcodec.h"
 
+/* here we can use OS dependant allocation functions */
+#undef malloc
+#undef free
+#undef realloc
+
 #include <stdlib.h>
+
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 
 /* you can redefine av_malloc and av_free in your project to use your
    memory allocator. You do not need to suppress this file because the
@@ -44,7 +49,14 @@ av_malloc (unsigned int size)
 {
   void *ptr;
 
-#if defined (HAVE_MEMALIGN)
+#ifdef MEMALIGN_HACK
+  int diff;
+
+  ptr = malloc (size + 16 + 1);
+  diff = ((-(int) ptr - 1) & 15) + 1;
+  ptr += diff;
+  ((char *) ptr)[-1] = diff;
+#elif defined (HAVE_MEMALIGN)
   ptr = memalign (16, size);
   /* Why 64? 
      Indeed, we should align it:
@@ -86,7 +98,17 @@ av_malloc (unsigned int size)
 void *
 av_realloc (void *ptr, unsigned int size)
 {
+#ifdef MEMALIGN_HACK
+  //FIXME this isnt aligned correctly though it probably isnt needed
+  int diff;
+
+  if (!ptr)
+    return av_malloc (size);
+  diff = ((char *) ptr)[-1];
+  return realloc (ptr - diff, size + diff) + diff;
+#else
   return realloc (ptr, size);
+#endif
 }
 
 /* NOTE: ptr = NULL is explicetly allowed */
@@ -95,5 +117,9 @@ av_free (void *ptr)
 {
   /* XXX: this test should not be needed on most libcs */
   if (ptr)
+#ifdef MEMALIGN_HACK
+    free (ptr - ((char *) ptr)[-1]);
+#else
     free (ptr);
+#endif
 }

@@ -31,21 +31,21 @@
 GST_DEBUG_CATEGORY (ffmpegcolorspace_debug);
 #define GST_CAT_DEFAULT ffmpegcolorspace_debug
 
-#define GST_TYPE_FFMPEGCOLORSPACE \
-  (gst_ffmpegcolorspace_get_type())
-#define GST_FFMPEGCOLORSPACE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGCOLORSPACE,GstFFMpegColorspace))
-#define GST_FFMPEGCOLORSPACE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGCOLORSPACE,GstFFMpegColorspace))
-#define GST_IS_FFMPEGCOLORSPACE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGCOLORSPACE))
-#define GST_IS_FFMPEGCOLORSPACE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGCOLORSPACE))
+#define GST_TYPE_FFMPEGCSP \
+  (gst_ffmpegcsp_get_type())
+#define GST_FFMPEGCSP(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGCSP,GstFFMpegCsp))
+#define GST_FFMPEGCSP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGCSP,GstFFMpegCsp))
+#define GST_IS_FFMPEGCSP(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGCSP))
+#define GST_IS_FFMPEGCSP_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGCSP))
 
-typedef struct _GstFFMpegColorspace GstFFMpegColorspace;
-typedef struct _GstFFMpegColorspaceClass GstFFMpegColorspaceClass;
+typedef struct _GstFFMpegCsp GstFFMpegCsp;
+typedef struct _GstFFMpegCspClass GstFFMpegCspClass;
 
-struct _GstFFMpegColorspace
+struct _GstFFMpegCsp
 {
   GstElement element;
 
@@ -55,17 +55,18 @@ struct _GstFFMpegColorspace
   gfloat fps;
   enum PixelFormat from_pixfmt, to_pixfmt;
   AVPicture from_frame, to_frame;
+  AVPaletteControl *palette;
   GstCaps *sinkcaps;
 };
 
-struct _GstFFMpegColorspaceClass
+struct _GstFFMpegCspClass
 {
   GstElementClass parent_class;
 };
 
 /* elementfactory information */
-static GstElementDetails ffmpegcolorspace_details = {
-  "FFMPEG-based colorspace converter in gst-plugins",
+static GstElementDetails ffmpegcsp_details = {
+  "FFMPEG Colorspace converter",
   "Filter/Converter/Video",
   "Converts video from one colorspace to another",
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
@@ -81,35 +82,34 @@ enum
 
 enum
 {
-  ARG_0
+  ARG_0,
 };
 
-static GType gst_ffmpegcolorspace_get_type (void);
+static GType gst_ffmpegcsp_get_type (void);
 
-static void gst_ffmpegcolorspace_base_init (GstFFMpegColorspaceClass * klass);
-static void gst_ffmpegcolorspace_class_init (GstFFMpegColorspaceClass * klass);
-static void gst_ffmpegcolorspace_init (GstFFMpegColorspace * space);
+static void gst_ffmpegcsp_base_init (GstFFMpegCspClass * klass);
+static void gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass);
+static void gst_ffmpegcsp_init (GstFFMpegCsp * space);
 
-static void gst_ffmpegcolorspace_set_property (GObject * object,
+static void gst_ffmpegcsp_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_ffmpegcolorspace_get_property (GObject * object,
+static void gst_ffmpegcsp_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstPadLinkReturn
-gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps);
+gst_ffmpegcsp_pad_link (GstPad * pad, const GstCaps * caps);
 
-static void gst_ffmpegcolorspace_chain (GstPad * pad, GstData * data);
-static GstElementStateReturn
-gst_ffmpegcolorspace_change_state (GstElement * element);
+static void gst_ffmpegcsp_chain (GstPad * pad, GstData * data);
+static GstElementStateReturn gst_ffmpegcsp_change_state (GstElement * element);
 
 static GstPadTemplate *srctempl, *sinktempl;
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_ffmpegcolorspace_signals[LAST_SIGNAL] = { 0 }; */
+/*static guint gst_ffmpegcsp_signals[LAST_SIGNAL] = { 0 }; */
 
 
 static GstCaps *
-gst_ffmpegcolorspace_caps_remove_format_info (GstCaps * caps)
+gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
 {
   int i;
   GstStructure *structure;
@@ -143,20 +143,20 @@ gst_ffmpegcolorspace_caps_remove_format_info (GstCaps * caps)
 }
 
 static GstCaps *
-gst_ffmpegcolorspace_getcaps (GstPad * pad)
+gst_ffmpegcsp_getcaps (GstPad * pad)
 {
-  GstFFMpegColorspace *space;
-  GstCaps *othercaps = NULL;
+  GstFFMpegCsp *space;
+  GstCaps *othercaps;
   GstCaps *caps;
   GstPad *otherpad;
 
-  space = GST_FFMPEGCOLORSPACE (gst_pad_get_parent (pad));
+  space = GST_FFMPEGCSP (gst_pad_get_parent (pad));
 
   otherpad = (pad == space->srcpad) ? space->sinkpad : space->srcpad;
 
   othercaps = gst_pad_get_allowed_caps (otherpad);
 
-  othercaps = gst_ffmpegcolorspace_caps_remove_format_info (othercaps);
+  othercaps = gst_ffmpegcsp_caps_remove_format_info (othercaps);
 
   caps = gst_caps_intersect (othercaps, gst_pad_get_pad_template_caps (pad));
   gst_caps_free (othercaps);
@@ -165,41 +165,44 @@ gst_ffmpegcolorspace_getcaps (GstPad * pad)
 }
 
 static GstPadLinkReturn
-gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps)
+gst_ffmpegcsp_pad_link (GstPad * pad, const GstCaps * caps)
 {
-  GstFFMpegColorspace *space;
   GstStructure *structure;
+  AVCodecContext *ctx;
+  GstFFMpegCsp *space;
   const GstCaps *othercaps;
   GstPad *otherpad;
   GstPadLinkReturn ret;
-  enum PixelFormat pix_fmt;
   int height, width;
   double framerate;
   const GValue *par = NULL;
 
-  space = GST_FFMPEGCOLORSPACE (gst_pad_get_parent (pad));
+  space = GST_FFMPEGCSP (gst_pad_get_parent (pad));
+
   GST_DEBUG_OBJECT (space, "pad_link on %s:%s with caps %" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
+
+  otherpad = (pad == space->srcpad) ? space->sinkpad : space->srcpad;
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
   gst_structure_get_double (structure, "framerate", &framerate);
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
-  if (par) {
-    GST_DEBUG_OBJECT (space, "setting PAR %d/%d",
-        gst_value_get_fraction_numerator (par),
-        gst_value_get_fraction_denominator (par));
-  }
-
-  otherpad = (pad == space->srcpad) ? space->sinkpad : space->srcpad;
 
   /* FIXME attempt and/or check for passthru */
 
   /* loop over all possibilities and select the first one we can convert and
    * is accepted by the peer */
-  pix_fmt = gst_ffmpeg_caps_to_pix_fmt (caps);
-  if (pix_fmt == PIX_FMT_NB) {
+  ctx = avcodec_alloc_context ();
+
+  ctx->width = width;
+  ctx->height = height;
+  ctx->pix_fmt = PIX_FMT_NB;
+  gst_ffmpegcsp_caps_with_codectype (CODEC_TYPE_VIDEO, caps, ctx);
+  if (ctx->pix_fmt == PIX_FMT_NB) {
+    av_free (ctx);
+
     /* we disable ourself here */
     if (pad == space->srcpad) {
       space->to_pixfmt = PIX_FMT_NB;
@@ -213,32 +216,35 @@ gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps)
   /* set the size on the otherpad */
   othercaps = gst_pad_get_negotiated_caps (otherpad);
   if (othercaps) {
-    GstCaps *newothercaps = gst_caps_copy (othercaps);
+    GstCaps *caps = gst_caps_copy (othercaps);
 
-    gst_caps_set_simple (newothercaps,
+    gst_caps_set_simple (caps,
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         "framerate", G_TYPE_DOUBLE, framerate, NULL);
     if (par) {
-      GST_DEBUG_OBJECT (space, "setting PAR %d/%d",
-          gst_value_get_fraction_numerator (par),
-          gst_value_get_fraction_denominator (par));
-      gst_caps_set_simple (newothercaps,
+      gst_caps_set_simple (caps,
           "pixel-aspect-ratio", GST_TYPE_FRACTION,
           gst_value_get_fraction_numerator (par),
           gst_value_get_fraction_denominator (par), NULL);
     }
-    ret = gst_pad_try_set_caps (otherpad, newothercaps);
+    ret = gst_pad_try_set_caps (otherpad, caps);
     if (GST_PAD_LINK_FAILED (ret)) {
       return ret;
     }
   }
 
   if (pad == space->srcpad) {
-    space->to_pixfmt = pix_fmt;
+    space->to_pixfmt = ctx->pix_fmt;
   } else {
-    space->from_pixfmt = pix_fmt;
+    space->from_pixfmt = ctx->pix_fmt;
+
+    /* palette */
+    if (space->palette)
+      av_free (space->palette);
+    space->palette = ctx->palctrl;
   }
+  av_free (ctx);
 
   space->width = width;
   space->height = height;
@@ -247,42 +253,42 @@ gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps)
 }
 
 static GType
-gst_ffmpegcolorspace_get_type (void)
+gst_ffmpegcsp_get_type (void)
 {
-  static GType ffmpegcolorspace_type = 0;
+  static GType ffmpegcsp_type = 0;
 
-  if (!ffmpegcolorspace_type) {
-    static const GTypeInfo ffmpegcolorspace_info = {
-      sizeof (GstFFMpegColorspaceClass),
-      (GBaseInitFunc) gst_ffmpegcolorspace_base_init,
+  if (!ffmpegcsp_type) {
+    static const GTypeInfo ffmpegcsp_info = {
+      sizeof (GstFFMpegCspClass),
+      (GBaseInitFunc) gst_ffmpegcsp_base_init,
       NULL,
-      (GClassInitFunc) gst_ffmpegcolorspace_class_init,
+      (GClassInitFunc) gst_ffmpegcsp_class_init,
       NULL,
       NULL,
-      sizeof (GstFFMpegColorspace),
+      sizeof (GstFFMpegCsp),
       0,
-      (GInstanceInitFunc) gst_ffmpegcolorspace_init,
+      (GInstanceInitFunc) gst_ffmpegcsp_init,
     };
 
-    ffmpegcolorspace_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstFFMpegColorspace", &ffmpegcolorspace_info, 0);
+    ffmpegcsp_type = g_type_register_static (GST_TYPE_ELEMENT,
+        "GstFFMpegColorspace", &ffmpegcsp_info, 0);
   }
 
-  return ffmpegcolorspace_type;
+  return ffmpegcsp_type;
 }
 
 static void
-gst_ffmpegcolorspace_base_init (GstFFMpegColorspaceClass * klass)
+gst_ffmpegcsp_base_init (GstFFMpegCspClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class, srctempl);
   gst_element_class_add_pad_template (element_class, sinktempl);
-  gst_element_class_set_details (element_class, &ffmpegcolorspace_details);
+  gst_element_class_set_details (element_class, &ffmpegcsp_details);
 }
 
 static void
-gst_ffmpegcolorspace_class_init (GstFFMpegColorspaceClass * klass)
+gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -292,59 +298,52 @@ gst_ffmpegcolorspace_class_init (GstFFMpegColorspaceClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class->set_property = gst_ffmpegcolorspace_set_property;
-  gobject_class->get_property = gst_ffmpegcolorspace_get_property;
+  gobject_class->set_property = gst_ffmpegcsp_set_property;
+  gobject_class->get_property = gst_ffmpegcsp_get_property;
 
-  gstelement_class->change_state = gst_ffmpegcolorspace_change_state;
+  gstelement_class->change_state = gst_ffmpegcsp_change_state;
 
   GST_DEBUG_CATEGORY_INIT (ffmpegcolorspace_debug, "ffmpegcolorspace", 0,
       "FFMPEG-based colorspace converter");
 }
 
 static void
-gst_ffmpegcolorspace_init (GstFFMpegColorspace * space)
+gst_ffmpegcsp_init (GstFFMpegCsp * space)
 {
   space->sinkpad = gst_pad_new_from_template (sinktempl, "sink");
-  gst_pad_set_link_function (space->sinkpad, gst_ffmpegcolorspace_pad_link);
-  gst_pad_set_getcaps_function (space->sinkpad, gst_ffmpegcolorspace_getcaps);
-  gst_pad_set_chain_function (space->sinkpad, gst_ffmpegcolorspace_chain);
+  gst_pad_set_link_function (space->sinkpad, gst_ffmpegcsp_pad_link);
+  gst_pad_set_getcaps_function (space->sinkpad, gst_ffmpegcsp_getcaps);
+  gst_pad_set_chain_function (space->sinkpad, gst_ffmpegcsp_chain);
   gst_element_add_pad (GST_ELEMENT (space), space->sinkpad);
 
   space->srcpad = gst_pad_new_from_template (srctempl, "src");
   gst_element_add_pad (GST_ELEMENT (space), space->srcpad);
-  gst_pad_set_link_function (space->srcpad, gst_ffmpegcolorspace_pad_link);
-  gst_pad_set_getcaps_function (space->srcpad, gst_ffmpegcolorspace_getcaps);
+  gst_pad_set_link_function (space->srcpad, gst_ffmpegcsp_pad_link);
+  gst_pad_set_getcaps_function (space->srcpad, gst_ffmpegcsp_getcaps);
 
   space->from_pixfmt = space->to_pixfmt = PIX_FMT_NB;
+  space->palette = NULL;
 }
 
 static void
-gst_ffmpegcolorspace_chain (GstPad * pad, GstData * data)
+gst_ffmpegcsp_chain (GstPad * pad, GstData * data)
 {
   GstBuffer *inbuf = GST_BUFFER (data);
-  GstFFMpegColorspace *space;
+  GstFFMpegCsp *space;
   GstBuffer *outbuf = NULL;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (inbuf != NULL);
 
-  space = GST_FFMPEGCOLORSPACE (gst_pad_get_parent (pad));
+  space = GST_FFMPEGCSP (gst_pad_get_parent (pad));
 
   g_return_if_fail (space != NULL);
-  g_return_if_fail (GST_IS_FFMPEGCOLORSPACE (space));
+  g_return_if_fail (GST_IS_FFMPEGCSP (space));
 
   if (!GST_PAD_IS_USABLE (space->srcpad)) {
     gst_buffer_unref (inbuf);
     return;
-  }
-
-  if (!gst_pad_is_negotiated (space->srcpad)) {
-    if (GST_PAD_LINK_FAILED (gst_pad_renegotiate (space->srcpad))) {
-      GST_ELEMENT_ERROR (space, CORE, NEGOTIATION, (NULL), GST_ERROR_SYSTEM);
-      gst_buffer_unref (inbuf);
-      return;
-    }
   }
 
   if (space->from_pixfmt == PIX_FMT_NB || space->to_pixfmt == PIX_FMT_NB) {
@@ -357,32 +356,23 @@ gst_ffmpegcolorspace_chain (GstPad * pad, GstData * data)
   if (space->from_pixfmt == space->to_pixfmt) {
     outbuf = inbuf;
   } else {
-    /* use bufferpool here */
-    AVPicture *from_p, *to_p;
-
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
     guint size = avpicture_get_size (space->to_pixfmt,
-        space->width,
-        space->height);
-
-    GST_LOG_OBJECT (space, "convert from format %d, %dx%d, buffer size %d",
-        space->from_pixfmt, space->width, space->height,
-        GST_BUFFER_SIZE (inbuf));
-    GST_LOG_OBJECT (space, "convert to format %d, %dx%d, buffer size %d",
-        space->to_pixfmt, space->width, space->height, size);
+        ROUND_UP_4 (space->width), ROUND_UP_4 (space->height));
 
     outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size);
 
     /* convert */
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
-    from_p = &(space->from_frame);
-    avpicture_fill (from_p, GST_BUFFER_DATA (inbuf),
+    gst_ffmpegcsp_avpicture_fill (&space->from_frame,
+        GST_BUFFER_DATA (inbuf),
         space->from_pixfmt, space->width, space->height);
-    to_p = &(space->to_frame);
-    avpicture_fill (to_p, GST_BUFFER_DATA (outbuf),
+    if (space->palette)
+      space->from_frame.data[1] = (uint8_t *) space->palette;
+    gst_ffmpegcsp_avpicture_fill (&space->to_frame,
+        GST_BUFFER_DATA (outbuf),
         space->to_pixfmt, space->width, space->height);
-
-    img_convert (to_p, space->to_pixfmt, from_p, space->from_pixfmt,
-        space->width, space->height);
+    img_convert (&space->to_frame, space->to_pixfmt,
+        &space->from_frame, space->from_pixfmt, space->width, space->height);
 
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
@@ -394,14 +384,17 @@ gst_ffmpegcolorspace_chain (GstPad * pad, GstData * data)
 }
 
 static GstElementStateReturn
-gst_ffmpegcolorspace_change_state (GstElement * element)
+gst_ffmpegcsp_change_state (GstElement * element)
 {
-  GstFFMpegColorspace *space;
+  GstFFMpegCsp *space;
 
-  space = GST_FFMPEGCOLORSPACE (element);
+  space = GST_FFMPEGCSP (element);
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_READY:
+      if (space->palette)
+        av_free (space->palette);
+      space->palette = NULL;
       break;
   }
 
@@ -412,14 +405,14 @@ gst_ffmpegcolorspace_change_state (GstElement * element)
 }
 
 static void
-gst_ffmpegcolorspace_set_property (GObject * object,
+gst_ffmpegcsp_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstFFMpegColorspace *space;
+  GstFFMpegCsp *space;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_FFMPEGCOLORSPACE (object));
-  space = GST_FFMPEGCOLORSPACE (object);
+  g_return_if_fail (GST_IS_FFMPEGCSP (object));
+  space = GST_FFMPEGCSP (object);
 
   switch (prop_id) {
     default:
@@ -428,14 +421,14 @@ gst_ffmpegcolorspace_set_property (GObject * object,
 }
 
 static void
-gst_ffmpegcolorspace_get_property (GObject * object,
+gst_ffmpegcsp_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstFFMpegColorspace *space;
+  GstFFMpegCsp *space;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_FFMPEGCOLORSPACE (object));
-  space = GST_FFMPEGCOLORSPACE (object);
+  g_return_if_fail (GST_IS_FFMPEGCSP (object));
+  space = GST_FFMPEGCSP (object);
 
   switch (prop_id) {
     default:
@@ -450,14 +443,15 @@ gst_ffmpegcolorspace_register (GstPlugin * plugin)
   GstCaps *caps;
 
   /* template caps */
-  caps = gst_ffmpeg_pix_fmt_to_caps ();
+  caps = gst_ffmpegcsp_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);
 
   /* build templates */
   srctempl = gst_pad_template_new ("src",
       GST_PAD_SRC, GST_PAD_ALWAYS, gst_caps_copy (caps));
+
+  /* the sink template will do palette handling as well... */
   sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
 
-  avcodec_init ();
   return gst_element_register (plugin, "ffmpegcolorspace",
-      GST_RANK_PRIMARY, GST_TYPE_FFMPEGCOLORSPACE);
+      GST_RANK_NONE, GST_TYPE_FFMPEGCSP);
 }
