@@ -1257,9 +1257,12 @@ gst_avimux_do_video_buffer (GstAviMux *avimux)
   }
   else
   {
+    guint flags = 0x2;
+    if (GST_BUFFER_FLAG_IS_SET (data, GST_BUFFER_KEY_UNIT))
+      flags |= 0x10;
     avimux->data_size += total_size;
     avimux->num_frames++;
-    gst_avimux_add_index(avimux, "00db", 0x12, GST_BUFFER_SIZE(data));
+    gst_avimux_add_index(avimux, "00db", flags, GST_BUFFER_SIZE(data));
   }
 
   gst_pad_push(avimux->srcpad, header);
