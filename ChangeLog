@@ -1,3 +1,8 @@
+2004-03-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/kio/kiosrc.cpp: (process_events):
+	  update handling event processing if inside KDE - untested
+
 2004-03-29  David Schleef  <ds@schleef.org>
 
 	* ext/hermes/gsthermescolorspace.c: (plugin_init): decrease rank
