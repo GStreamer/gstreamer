@@ -498,12 +498,9 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
           expected_ts / (GST_SECOND / AV_TIME_BASE),
           expected_ts / (GST_SECOND / AV_TIME_BASE));
 
-      if (res == 0)
+      if (res == 0 || size == 0)
         break;
-      else if (size == 0) {
-        bsize = 0;
-        break;
-      } else {
+      else {
         bsize -= res;
         bdata += res;
       }

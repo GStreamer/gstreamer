@@ -1,5 +1,10 @@
 2004-12-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	  Small parsing fix in comb. with ffdemux_mpeg.
+
+2004-12-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
 	(gst_ffmpegdec_close), (gst_ffmpegdec_open), (gst_ffmpegdec_chain):
 	  Include optional parser if supported (currently only MPEG-1/-2
