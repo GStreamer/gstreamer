@@ -18,6 +18,7 @@
  */
 
 #include <gst/play/play.h>
+#include <gst/gconf/gconf.h>
 
 static GMainLoop *loop = NULL;
 static gint64 length = 0;
@@ -121,10 +122,16 @@ main (int argc, char *argv[])
   }
 
   /* Getting default audio and video plugins from GConf */
-  audio_sink = gst_element_factory_make ("osssink", "audio_sink");
-  video_sink = gst_element_factory_make ("ximagesink", "video_sink");
   vis_element = gst_element_factory_make ("goom", "vis_element");
   data_src = gst_element_factory_make ("gnomevfssrc", "source");
+
+  audio_sink = gst_gconf_get_default_audio_sink ();
+  if (!GST_IS_ELEMENT (audio_sink))
+    g_error ("Could not get default audio sink from GConf");
+  video_sink = gst_gconf_get_default_video_sink ();
+  if (!GST_IS_ELEMENT (video_sink))
+    g_error ("Could not get default video sink from GConf");
+
 
   /* Let's send them to GstPlay object */
   if (!gst_play_set_audio_sink (play, audio_sink))
@@ -158,7 +165,7 @@ main (int argc, char *argv[])
   /* Change state to PLAYING */
   if (gst_element_set_state (GST_ELEMENT (play),
           GST_STATE_PLAYING) == GST_STATE_FAILURE)
-    g_warning ("Could not set state to PLAYING");
+    g_error ("Could not set state to PLAYING");
 
   g_idle_add ((GSourceFunc) idle_iterate, play);
   g_timeout_add (20000, (GSourceFunc) seek_timer, play);
