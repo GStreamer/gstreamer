@@ -208,7 +208,7 @@ mp1videoparse_parse_seq (Mp1VideoParse *mp1videoparse, GstBuffer *buf)
 	"pixel_width",  G_TYPE_INT, p_w,
 	"pixel_height", G_TYPE_INT, p_h, NULL);
 
-    GST_DEBUG_CAPS ("New mpeg1videoparse caps", caps);
+    GST_DEBUG ("New mpeg1videoparse caps: " GST_PTR_FORMAT, caps);
 
     gst_pad_set_explicit_caps (mp1videoparse->srcpad, caps);
   }

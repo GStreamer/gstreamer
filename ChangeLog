@@ -1,5 +1,18 @@
 2004-02-04  David Schleef  <ds@schleef.org>
 
+	Convert GST_DEBUG_CAPS() to GST_DEBUG():
+	* gst/mpeg1videoparse/gstmp1videoparse.c:
+	(mp1videoparse_parse_seq):
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream):
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_getcaps):
+	* sys/xvideo/gstxwindow.c: (_gst_xwindow_new):
+	* sys/xvideo/xvideosink.c: (gst_xvideosink_sinkconnect),
+	(gst_xvideosink_getcaps):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support):
+	* testsuite/gst-lint: more tests
+
+2004-02-04  David Schleef  <ds@schleef.org>
+
 	Replace use of GST_PAD_FORMATS_FUNCTION() and similar macros
 	with the code that they would expand to.
 	* ext/flac/gstflacdec.c: (gst_flacdec_get_src_formats),
