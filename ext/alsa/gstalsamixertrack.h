@@ -24,6 +24,7 @@
 
 G_BEGIN_DECLS
 
+#define GST_ALSA_MIXER_TRACK_TYPE		(gst_alsa_mixer_track_get_type ())
 #define GST_ALSA_MIXER_TRACK(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_MIXER_TRACK,GstAlsaMixerTrack))
 #define GST_ALSA_MIXER_TRACK_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_MIXER_TRACK,GstAlsaMixerTrackClass))
 #define GST_IS_ALSA_MIXER_TRACK(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_MIXER_TRACK))
@@ -50,7 +51,6 @@ GstMixerTrack *	gst_alsa_mixer_track_new	(snd_mixer_elem_t *	element,
 						 gint			track_num,
 						 gint			channels,
 						 gint			flags);
-void		gst_alsa_mixer_track_free	(GstAlsaMixerTrack *	alsa_track);
 
 G_END_DECLS
 

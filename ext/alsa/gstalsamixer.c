@@ -262,7 +262,7 @@ gst_alsa_mixer_free_list (GstAlsaMixer *mixer)
 {
   g_return_if_fail (((gint) mixer->mixer_handle) != -1);
 
-  g_list_foreach (mixer->tracklist, (GFunc) gst_alsa_mixer_track_free, NULL);
+  g_list_foreach (mixer->tracklist, (GFunc) g_object_unref, NULL);
   g_list_free (mixer->tracklist);
   mixer->tracklist = NULL;
 }

@@ -24,7 +24,6 @@
 #include "gstalsamixertrack.h"
 
 static void	gst_alsa_mixer_track_init	(GstAlsaMixerTrack *	alsa_track);
-static void	gst_alsa_mixer_track_dispose	(GObject *		object);
 static void	gst_alsa_mixer_track_class_init	(gpointer		g_class,
 						 gpointer		class_data);
 
@@ -57,24 +56,13 @@ gst_alsa_mixer_track_get_type (void)
 static void
 gst_alsa_mixer_track_class_init (gpointer g_class, gpointer class_data)
 {
-  GObjectClass *object_class = (GObjectClass *) g_class;
-
   if (parent_class == NULL)
     parent_class = g_type_class_ref (GST_TYPE_MIXER_TRACK);
-
-  object_class->dispose = gst_alsa_mixer_track_dispose;
 }
 
 static void
 gst_alsa_mixer_track_init (GstAlsaMixerTrack *alsa_track)
 { }
-
-static void
-gst_alsa_mixer_track_dispose (GObject *object)
-{
-  if (object != NULL)
-    gst_alsa_mixer_track_free (GST_ALSA_MIXER_TRACK (object));
-}
 
 GstMixerTrack *
 gst_alsa_mixer_track_new (snd_mixer_elem_t *element,
@@ -85,7 +73,7 @@ gst_alsa_mixer_track_new (snd_mixer_elem_t *element,
   gint i;
   long min, max;
 
-  GstMixerTrack *track = (GstMixerTrack *) g_new (GstAlsaMixerTrack, 1);
+  GstMixerTrack *track = g_object_new (GST_ALSA_MIXER_TRACK_TYPE, NULL);
   GstAlsaMixerTrack *alsa_track = (GstAlsaMixerTrack *) track;
 
   /* set basic information */
@@ -117,14 +105,3 @@ gst_alsa_mixer_track_new (snd_mixer_elem_t *element,
 
   return track;
 }
-
-void
-gst_alsa_mixer_track_free (GstAlsaMixerTrack *alsa_track)
-{
-  if (alsa_track != NULL) {
-    g_free (GST_MIXER_TRACK (alsa_track)->label);
-    g_free (alsa_track);
-  }
-}
-
-

@@ -1,5 +1,13 @@
 2004-03-13  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_free_list):
+	* ext/alsa/gstalsamixertrack.c: (gst_alsa_mixer_track_class_init),
+	(gst_alsa_mixer_track_new):
+	* ext/alsa/gstalsamixertrack.h:
+	  Fix ancient leftovers... MixerTrack is a GObject.
+
+2004-03-13  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_class_probe_devices):
 	* sys/oss/gstosselement.c: (gst_osselement_class_probe_devices):
 	  Don't block during probing...
