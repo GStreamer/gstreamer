@@ -320,8 +320,10 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
     SDL_Event event;
     while (SDL_PollEvent(&event));
 
-    if (!gst_sdlvideosink_lock(sdlvideosink))
+    if (!gst_sdlvideosink_lock(sdlvideosink)) {
+      g_message ("could not lock\n");
       return FALSE;
+    }
 
     /* Draw bands of color on the raw surface, as run indicator for debugging */
     sbuffer = (char *)sdlvideosink->screen->pixels;
@@ -436,7 +438,7 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
 	gst_pad_event_default (pad, event);
 	break;
     }
-    gst_event_free (event);
+    gst_event_unref (event);
     return;
   }
 
@@ -446,8 +448,10 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
 		  sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf), NULL);
   }
 
-  if (!gst_sdlvideosink_lock(sdlvideosink))
+  if (!gst_sdlvideosink_lock(sdlvideosink)) {
+    g_message ("could not lock\n");
     return;
+  }
 
   /* buf->yuv */
   if (sdlvideosink->format == GST_MAKE_FOURCC('I','4','2','0') ||
