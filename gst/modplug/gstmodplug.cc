@@ -16,6 +16,14 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+ 
+/* 
+   Code based on modplugxmms
+   XMMS plugin:
+     Kenton Varda <temporal@gauge3d.org>
+   Sound Engine:
+     Olivier Lapicque <olivierl@jps.net>  
+*/
 
 #include "libmodplug/stdafx.h"
 #include "libmodplug/sndfile.h"
@@ -28,9 +36,11 @@
 GstElementDetails modplug_details = {
   "ModPlug",
   "Audio/Module",
-  "Module decoder based on modplug engine from (Olivier ..)",
+  "Module decoder based on modplug engine",
   VERSION,
-  "Jeremy SIMON <jsimon13@yahoo.fr>",
+  "Jeremy SIMON <jsimon13@yahoo.fr> "
+  "Kenton Varda <temporal@gauge3d.org> "
+  "Olivier Lapicque <olivierl@jps.net>",
   "(C) 2001"
 };
 
@@ -260,7 +270,7 @@ gst_modplug_setup (GstModPlug *modplug)
     modplug->mSoundFile->SetWaveConfig ( modplug->frequency, 8,  modplug->channel );
   
   modplug->mSoundFile->SetWaveConfigEx ( modplug->surround, !modplug->oversamp, modplug->reverb, true, modplug->megabass, modplug->noise_reduction, false );
-  modplug->mSoundFile->SetResamplingMode ( SRCMODE_SPLINE );
+  modplug->mSoundFile->SetResamplingMode ( SRCMODE_POLYPHASE );
 
   if ( modplug->surround )
     modplug->mSoundFile->SetSurroundParameters( modplug->surround_depth, modplug->surround_delay );
@@ -281,6 +291,7 @@ gst_modplug_loop (GstElement *element)
   GstModPlug *modplug;
   GstBuffer *buffer_in, *buffer_out;
   gint mode16bits;
+	guint64 total_samples, sync_point;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_MODPLUG (element));
@@ -334,14 +345,14 @@ gst_modplug_loop (GstElement *element)
 			      "rate",        GST_PROPS_INT (modplug->frequency),
 			      "channels",    GST_PROPS_INT (modplug->channel)));
 
-  modplug->length = 512000 / modplug->frequency + 1;
-  modplug->length *= modplug->frequency;
-  modplug->length /= 1000;
-  modplug->length *= modplug->channel;
+  modplug->length = 1152 * modplug->channel;
+  
   if ( modplug->_16bit )
     modplug->length *= 2;
     
   modplug->audiobuffer = (guchar *) g_malloc( modplug->length );
+  total_samples = 0;
+  sync_point = 0;
   			    
   do {
     if( modplug->mSoundFile->Read ( modplug->audiobuffer, modplug->length ) != 0 )
@@ -349,14 +360,18 @@ gst_modplug_loop (GstElement *element)
       buffer_out = gst_buffer_new();
       GST_BUFFER_DATA( buffer_out ) = (guchar *) g_memdup( modplug->audiobuffer, modplug->length );
       GST_BUFFER_SIZE( buffer_out ) = modplug->length;
-
-      gst_pad_push( srcpad, buffer_out );
+ 	  
+      total_samples+=1152;		
+	  GST_BUFFER_TIMESTAMP( buffer_out ) = total_samples * 1000000LL / modplug->frequency;
+ 	  	
+	  gst_pad_push( srcpad, buffer_out );
 	  gst_element_yield (element);      
     }
     else
     {	    
+	  free( modplug->audiobuffer );
       gst_element_set_eos (GST_ELEMENT (modplug));
-      gst_pad_push (modplug->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+      gst_pad_push (modplug->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));	  
     }
   } 
   while ( 1 );
