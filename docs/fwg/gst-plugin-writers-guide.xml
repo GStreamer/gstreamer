@@ -4,14 +4,14 @@
 <!ENTITY % magic-entities SYSTEM "magic">
 %magic-entities;
 
-<!ENTITY TITLEPAGE SYSTEM "titlepage.sgml">
-<!ENTITY INTRO SYSTEM "intro.sgml">
-<!ENTITY TESTAPP SYSTEM "testapp.sgml">
-<!ENTITY LOOPBASED SYSTEM "loopbased.sgml">
-<!ENTITY BUFFERS SYSTEM "buffers.sgml">
-<!ENTITY SRCNSINK SYSTEM "srcnsink.sgml">
-<!ENTITY STATEMANAGE SYSTEM "statemanage.sgml">
-<!ENTITY CHECKLIST SYSTEM "checklist.sgml">
+<!ENTITY TITLEPAGE SYSTEM "titlepage.xml">
+<!ENTITY INTRO SYSTEM "intro.xml">
+<!ENTITY TESTAPP SYSTEM "testapp.xml">
+<!ENTITY LOOPBASED SYSTEM "loopbased.xml">
+<!ENTITY BUFFERS SYSTEM "buffers.xml">
+<!ENTITY SRCNSINK SYSTEM "srcnsink.xml">
+<!ENTITY STATEMANAGE SYSTEM "statemanage.xml">
+<!ENTITY CHECKLIST SYSTEM "checklist.xml">
 <!ENTITY GStreamer "<application>GStreamer</application>">
 ]>
 
