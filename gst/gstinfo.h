@@ -116,12 +116,14 @@ extern const gchar *_gst_category_colors[32];
 //#endif
 
 
-typedef void (*GstDebugHandler) (gint category,gboolean core,gchar *file,gchar *function,
-                                 gint line,gchar *debug_string,
+typedef void (*GstDebugHandler) (gint category,gboolean core,
+				 const gchar *file,const gchar *function,
+                                 gint line,const gchar *debug_string,
                                  void *element,gchar *string);
 
-void gst_default_debug_handler (gint category,gboolean incore,gchar *file,gchar *function,
-                                gint line,gchar *debug_string,
+void gst_default_debug_handler (gint category,gboolean incore,
+				const gchar *file, const gchar *function,
+                                gint line,const gchar *debug_string,
                                 void *element,gchar *string);
 
 extern guint32 _gst_debug_categories;
@@ -233,12 +235,14 @@ G_GNUC_UNUSED static GModule *_debug_self_module = NULL;
  * INFO system
  **********************************************************************/
 
-typedef void (*GstInfoHandler) (gint category,gboolean incore,gchar *file,gchar *function,
-                                gint line,gchar *debug_string,
+typedef void (*GstInfoHandler) (gint category,gboolean incore,
+				const gchar *file,const gchar *function,
+                                gint line,const gchar *debug_string,
                                 void *element,gchar *string);
 
-void gst_default_info_handler (gint category,gboolean incore,gchar *file,gchar *function,
-                               gint line,gchar *debug_string,
+void gst_default_info_handler (gint category,gboolean incore,
+			       const gchar *file,const gchar *function,
+                               gint line,const gchar *debug_string,
                                void *element,gchar *string);
 
 extern GstInfoHandler _gst_info_handler;

@@ -142,9 +142,10 @@ guint32 _gst_debug_categories = 0x00000000;
  *   DEBUG(pid:cid):gst_function:542(args): [elementname] something neat happened
  */
 void
-gst_default_debug_handler (gint category, gboolean incore, gchar *file, gchar *function,
-                            gint line, gchar *debug_string,
-                            void *element, gchar *string)
+gst_default_debug_handler (gint category, gboolean incore,
+			   const gchar *file, const gchar *function,
+			   gint line, const gchar *debug_string,
+			   void *element, gchar *string)
 {
   gchar *empty = "";
   gchar *elementname = empty,*location = empty;
@@ -257,9 +258,10 @@ guint32 _gst_info_categories = 0x00000001;
  *   INFO:gst_function:542(args): [elementname] something neat happened
  */
 void
-gst_default_info_handler (gint category, gboolean incore,gchar *file, gchar *function,
-                           gint line, gchar *debug_string,
-                           void *element, gchar *string)
+gst_default_info_handler (gint category, gboolean incore,
+			  const gchar *file, const gchar *function,
+			  gint line, const gchar *debug_string,
+			  void *element, gchar *string)
 {
   gchar *empty = "";
   gchar *elementname = empty,*location = empty;

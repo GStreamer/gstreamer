@@ -100,18 +100,18 @@ struct _GTypeInfo
   /* interface types, classed types, instantiated types */
   guint16                class_size;
 
-  gpointer               base_init;
+  GBaseInitFunc          base_init;
   gpointer               base_finalize;
 
   /* classed types, instantiated types */
-  gpointer               class_init;
+  GClassInitFunc         class_init;
   gpointer               class_finalize;
   gconstpointer          class_data;
   
   /* instantiated types */
   guint16                instance_size;
   guint16                n_preallocs;
-  gpointer               instance_init;
+  GInstanceInitFunc      instance_init;
 
   /* value handling */
   const gpointer         value_table;
