@@ -730,7 +730,11 @@ dnl ##############################
 dnl # Set up the defaults cflags #
 dnl ##############################
 dnl CC="kgcc"
-CFLAGS="$CORE_CFLAGS $CFLAGS -O6 -Wall"
+if test "x$USE_PROFILING" = xyes; then
+  CFLAGS="$CORE_CFLAGS $CFLAGS -Wall"
+else
+  CFLAGS="$CORE_CFLAGS $CFLAGS -O6 -Wall"
+fi
 LIBS="$CORE_LIBS $LIBS"
 AC_SUBST(CORE_LIBS)
 AC_SUBST(CORE_CFLAGS)
