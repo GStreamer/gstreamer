@@ -108,7 +108,7 @@ cothread_create (cothread_context *ctx)
 
   GST_DEBUG (0,"pthread_self() %ld\n",pthread_self());
   //if (0) {
-  if (pthread_self() == 0) {
+  if (pthread_self() == 0) {	// FIXME uh, what does this test really do?
     s = (cothread_state *)malloc(sizeof(int) * COTHREAD_STACKSIZE);
     GST_DEBUG (0,"new stack (case 1) at %p\n",s);
   } else {

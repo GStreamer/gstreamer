@@ -47,9 +47,14 @@ typedef struct _GstAutopluggerClass GstAutopluggerClass;
 struct _GstAutoplugger {
   GstBin bin;
 
-  GstGhostPad *srcghost, *sinkghost;
+  GstElement *cache;
+  GstPad *cache_sinkpad, *cache_srcpad;
 
-  GstElement *cache, *typefind;
+  GstElement *typefind;
+  GstPad *typefind_sinkpad;
+
+  GstPad *sinkpadpeer, *srcpadpeer;
+  GstCaps *sinkcaps, *srccaps;
 };
 
 struct _GstAutopluggerClass {
@@ -67,7 +72,7 @@ enum {
 };
 
 
-static void			gst_autoplugger_class_init		(GstAutopluggerClass *klass);
+static void			gst_autoplugger_class_init	(GstAutopluggerClass *klass);
 static void			gst_autoplugger_init		(GstAutoplugger *queue);
 
 static void			gst_autoplugger_set_arg		(GtkObject *object, GtkArg *arg, guint id);
@@ -78,6 +83,12 @@ static void			gst_autoplugger_get_arg		(GtkObject *object, GtkArg *arg, guint id
 
 static void	gst_autoplugger_external_sink_caps_changed	(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger);
 static void	gst_autoplugger_external_src_caps_changed	(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger);
+
+static void	gst_autoplugger_external_sink_connected		(GstPad *pad, GstPad *peerpad, GstAutoplugger *autoplugger);
+static void	gst_autoplugger_external_src_connected		(GstPad *pad, GstPad *peerpad, GstAutoplugger *autoplugger);
+
+static void	gst_autoplugger_typefind_have_type		(GstElement *element, GstCaps *caps, GstAutoplugger *autoplugger);
+static void	gst_autoplugger_cache_first_buffer		(GstElement *element,GstBuffer *buf,GstAutoplugger *autoplugger);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_autoplugger_signals[LAST_SIGNAL] = { 0 };
@@ -137,30 +148,36 @@ gst_autoplugger_class_init (GstAutopluggerClass *klass)
 static void
 gst_autoplugger_init (GstAutoplugger *autoplugger)
 {
-  GstPad *srcpad, *sinkpad;
-
   // create the autoplugger cache, which is the fundamental unit of the autopluggerger
   // FIXME we need to find a way to set element's name before _init
   // FIXME ... so we can name the subelements uniquely
   autoplugger->cache = gst_elementfactory_make("autoplugcache", "unnamed_autoplugcache");
   g_return_if_fail (autoplugger->cache != NULL);
 
+  // attach signals to the cache
+  gtk_signal_connect (GTK_OBJECT (autoplugger->cache), "first_buffer",
+                      GTK_SIGNAL_FUNC (gst_autoplugger_cache_first_buffer), autoplugger);
+
   // add the cache to self
   gst_bin_add (GST_BIN(autoplugger), autoplugger->cache);
 
   // get the cache's pads so we can attach stuff to them
-  sinkpad = gst_element_get_pad (autoplugger->cache, "sink");
-  srcpad = gst_element_get_pad (autoplugger->cache, "src");
+  autoplugger->cache_sinkpad = gst_element_get_pad (autoplugger->cache, "sink");
+  autoplugger->cache_srcpad = gst_element_get_pad (autoplugger->cache, "src");
 
   // attach handlers to the typefind pads
-  gtk_signal_connect (GTK_OBJECT (sinkpad), "caps_changed",
+  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_sinkpad), "caps_changed",
                       GTK_SIGNAL_FUNC (gst_autoplugger_external_sink_caps_changed), autoplugger);
-  gtk_signal_connect (GTK_OBJECT (srcpad), "caps_changed",
+  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_srcpad), "caps_changed",
                       GTK_SIGNAL_FUNC (gst_autoplugger_external_src_caps_changed), autoplugger);
+  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_sinkpad), "connected",
+                      GTK_SIGNAL_FUNC (gst_autoplugger_external_sink_connected), autoplugger);
+  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_srcpad), "connected",
+                      GTK_SIGNAL_FUNC (gst_autoplugger_external_src_connected), autoplugger);
 
   // ghost both of these pads to the outside world
-  gst_element_add_ghost_pad (GST_ELEMENT(autoplugger), sinkpad, "sink");
-  gst_element_add_ghost_pad (GST_ELEMENT(autoplugger), srcpad, "src");
+  gst_element_add_ghost_pad (GST_ELEMENT(autoplugger), autoplugger->cache_sinkpad, "sink");
+  gst_element_add_ghost_pad (GST_ELEMENT(autoplugger), autoplugger->cache_srcpad, "src");
 }
 
 
@@ -168,12 +185,146 @@ static void
 gst_autoplugger_external_sink_caps_changed(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger)
 {
   GST_INFO(GST_CAT_AUTOPLUG, "have cache:sink caps of %s\n",gst_caps_get_mime(caps));
+  autoplugger->sinkcaps = caps;
 }
 
 static void
 gst_autoplugger_external_src_caps_changed(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger)
 {
   GST_INFO(GST_CAT_AUTOPLUG, "have cache:src caps of %s\n",gst_caps_get_mime(caps));
+  autoplugger->srccaps = caps;
+}
+
+static void
+gst_autoplugger_external_sink_connected(GstPad *pad, GstPad *peerpad, GstAutoplugger *autoplugger)
+{
+  GstPadTemplate *peertemplate;
+  GstCaps *peercaps, *peertemplatecaps;
+
+  GST_INFO(GST_CAT_AUTOPLUG, "have cache:sink connected\n");
+  autoplugger->sinkpadpeer = peerpad;
+
+  if (autoplugger->sinkpadpeer) {
+    peercaps = GST_PAD_CAPS(autoplugger->sinkpadpeer);
+    if (peercaps)
+      GST_INFO(GST_CAT_AUTOPLUG, "there are some caps on this pad's peer: %s\n",
+               gst_caps_get_mime(peercaps));
+    peertemplate = GST_PAD_PADTEMPLATE(autoplugger->sinkpadpeer);
+    if (peertemplate) {
+      peertemplatecaps = GST_PADTEMPLATE_CAPS(peertemplate);
+      if (peertemplatecaps) {
+        GST_INFO(GST_CAT_AUTOPLUG, "there are some caps on this pad's peer's padtemplate %s\n",
+                 gst_caps_get_mime(peertemplatecaps));
+        GST_DEBUG(GST_CAT_AUTOPLUG, "turning on caps nego proxying in cache\n");
+        gtk_object_set(GTK_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
+      }
+    }
+  }
+}
+
+static void
+gst_autoplugger_external_src_connected(GstPad *pad, GstPad *peerpad, GstAutoplugger *autoplugger)
+{
+  GstPadTemplate *peertemplate;
+  GstCaps *peercaps, *peertemplatecaps;
+
+  GST_INFO(GST_CAT_AUTOPLUG, "have cache:src connected\n");
+  autoplugger->srcpadpeer = peerpad;
+
+  if (autoplugger->srcpadpeer) {
+    peercaps = GST_PAD_CAPS(autoplugger->srcpadpeer);
+    if (peercaps)
+      GST_INFO(GST_CAT_AUTOPLUG, "there are some caps on this pad's peer: %s\n",
+               gst_caps_get_mime(peercaps));
+    peertemplate = GST_PAD_PADTEMPLATE(autoplugger->srcpadpeer);
+    if (peertemplate) {
+      peertemplatecaps = GST_PADTEMPLATE_CAPS(peertemplate);
+      if (peertemplatecaps) {
+        GST_INFO(GST_CAT_AUTOPLUG, "there are some caps on this pad's peer's padtemplate %s\n",
+                 gst_caps_get_mime(peertemplatecaps));
+        GST_DEBUG(GST_CAT_AUTOPLUG, "turning on caps nego proxying in cache\n");
+        gtk_object_set(GTK_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
+      }
+    }
+  }
+}
+
+static void
+gst_autoplugger_typefind_have_type(GstElement *element, GstCaps *caps, GstAutoplugger *autoplugger) 
+{
+  GST_INFO(GST_CAT_AUTOPLUG, "typefind claims to have a type: %s",gst_caps_get_mime(caps));
+
+gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
+
+// try to PAUSE the whole thing
+gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
+
+  // first disconnect the typefind and shut it down
+  GST_DEBUG(GST_CAT_AUTOPLUG, "disconnecting typefind from the cache\n");
+  gst_element_disconnect(autoplugger->cache,"src",autoplugger->typefind,"sink");
+  gst_bin_remove(GST_BIN(autoplugger),autoplugger->typefind);
+
+  // FIXME FIXME now we'd compare caps and see if we need to autoplug something in the middle, but for 
+  // now we're going to just reconnect where we left off  
+
+  // re-attach the srcpad's original peer to the cache
+  GST_DEBUG(GST_CAT_AUTOPLUG, "reconnecting the cache to the downstream peer\n");
+  gst_pad_connect(autoplugger->cache_srcpad,autoplugger->srcpadpeer);
+
+  // now reset the autoplugcache
+  GST_DEBUG(GST_CAT_AUTOPLUG, "resetting the cache to send first buffer(s) again\n");
+  gtk_object_set(GTK_OBJECT(autoplugger->cache),"reset",TRUE,NULL);
+
+// try to PLAY the whole thing
+gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
+
+  GST_INFO(GST_CAT_AUTOPLUG, "typefind_have_type finished");
+gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
+}
+
+static void
+gst_autoplugger_cache_first_buffer(GstElement *element,GstBuffer *buf,GstAutoplugger *autoplugger)
+{
+  GST_INFO(GST_CAT_AUTOPLUG, "have first buffer through cache");
+
+  // if there are no established caps, worry
+  if (!autoplugger->sinkcaps && !autoplugger->srccaps) {
+    GST_INFO(GST_CAT_AUTOPLUG, "have no caps for the buffer, Danger Will Robinson!");
+
+gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
+
+// try to PAUSE the whole thing
+gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
+
+    // detach the srcpad
+    GST_DEBUG(GST_CAT_AUTOPLUG, "disconnecting cache from its downstream peer\n");
+    gst_pad_disconnect(autoplugger->cache_srcpad,autoplugger->srcpadpeer);
+
+    // instantiate the typefind and set up the signal handlers
+    if (!autoplugger->typefind) {
+      GST_DEBUG(GST_CAT_AUTOPLUG, "creating typefind and setting signal handler\n");
+      autoplugger->typefind = gst_elementfactory_make("typefind","unnamed_typefind");
+      autoplugger->typefind_sinkpad = gst_element_get_pad(autoplugger->typefind,"sink");
+      gtk_signal_connect(GTK_OBJECT(autoplugger->typefind),"have_type",
+                         GTK_SIGNAL_FUNC (gst_autoplugger_typefind_have_type), autoplugger);
+    }
+    // add it to self and attach it
+    GST_DEBUG(GST_CAT_AUTOPLUG, "adding typefind to self and connecting to cache\n");
+    gst_bin_add(GST_BIN(autoplugger),autoplugger->typefind);
+    gst_pad_connect(autoplugger->cache_srcpad,autoplugger->typefind_sinkpad);
+
+    // bring the typefind into playing state
+    GST_DEBUG(GST_CAT_AUTOPLUG, "setting typefind state to PLAYING\n");
+    gst_element_set_state(autoplugger->cache,GST_STATE_PLAYING);
+
+// try to PLAY the whole thing
+gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
+
+    GST_INFO(GST_CAT_AUTOPLUG,"here we go into nothingness, hoping the typefind will return us to safety");
+gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
+  } else {
+    GST_INFO(GST_CAT_AUTOPLUG, "caps are set, nothing happening here, move along");
+  }
 }
 
 static void

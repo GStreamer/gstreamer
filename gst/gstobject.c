@@ -158,7 +158,8 @@ gst_object_ref (GstObject *object)
 {
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "ref\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "ref '%s' %d->%d\n",GST_OBJECT_NAME(object),
+             GTK_OBJECT(object)->ref_count,GTK_OBJECT(object)->ref_count+1);
 
   gtk_object_ref (GTK_OBJECT (object));
 
@@ -178,7 +179,8 @@ gst_object_unref (GstObject *object)
 {
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "unref\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "unref '%s' %d->%d\n",GST_OBJECT_NAME(object),
+             GTK_OBJECT(object)->ref_count,GTK_OBJECT(object)->ref_count-1);
 
   gtk_object_unref (GTK_OBJECT (object));
 }
@@ -198,7 +200,7 @@ gst_object_sink (GstObject *object)
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "sink\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "sink '%s'\n",GST_OBJECT_NAME(object));
   if (GST_OBJECT_FLOATING (object))
   {
     GST_FLAG_UNSET (object, GST_FLOATING);
@@ -212,7 +214,7 @@ gst_object_destroy (GstObject *object)
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy '%s'\n",GST_OBJECT_NAME(object));
   if (!GST_OBJECT_DESTROYED (object))
   {
     /* need to hold a reference count around all class method
@@ -227,7 +229,7 @@ gst_object_destroy (GstObject *object)
 static void
 gst_object_shutdown (GtkObject *object)
 {
-  GST_DEBUG (GST_CAT_REFCOUNTING, "shutdown\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "shutdown '%s'\n",GST_OBJECT_NAME(object));
   GST_FLAG_SET (GST_OBJECT (object), GST_DESTROYED);
   parent_class->shutdown (GTK_OBJECT (object));
 }
@@ -236,7 +238,7 @@ gst_object_shutdown (GtkObject *object)
 static void
 gst_object_real_destroy (GtkObject *gtk_object)
 {
-  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy '%s'\n",GST_OBJECT_NAME(gtk_object));
 
   GST_OBJECT_PARENT (gtk_object) = NULL;
 
@@ -251,7 +253,7 @@ gst_object_finalize (GtkObject *gtk_object)
 
   object = GST_OBJECT (gtk_object);
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "finalize\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "finalize '%s'\n",GST_OBJECT_NAME(object));
   if (object->name != NULL)
     g_free (object->name);
 

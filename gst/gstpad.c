@@ -79,6 +79,7 @@ gst_pad_init (GstPad *pad)
 enum {
   REAL_SET_ACTIVE,
   REAL_CAPS_CHANGED,
+  REAL_CAPS_NEGO_FAILED,
   REAL_CONNECTED,
   REAL_DISCONNECTED,
   /* FILL ME */
@@ -147,6 +148,10 @@ gst_real_pad_class_init (GstRealPadClass *klass)
                     GTK_SIGNAL_OFFSET (GstRealPadClass, caps_changed),
                     gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
                     GTK_TYPE_POINTER);
+  gst_real_pad_signals[REAL_CAPS_NEGO_FAILED] =
+    gtk_signal_new ("caps_nego_failed", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstRealPadClass, caps_nego_failed),
+                    gtk_marshal_NONE__NONE, GTK_TYPE_NONE, 0);
   gst_real_pad_signals[REAL_CONNECTED] =
     gtk_signal_new ("connected", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstRealPadClass, connected),
@@ -633,18 +638,6 @@ gst_pad_connect (GstPad *srcpad,
   GST_RPAD_PEER(realsrc) = realsink;
   GST_RPAD_PEER(realsink) = realsrc;
 
-  /* FIXME: set connected flag */
-
-  /* fire off a signal to each of the pads telling them that they've been connected */
-  gtk_signal_emit(GTK_OBJECT(realsrc), gst_real_pad_signals[REAL_CONNECTED], realsink);
-  gtk_signal_emit(GTK_OBJECT(realsink), gst_real_pad_signals[REAL_CONNECTED], realsrc);
-
-  // now tell the scheduler(s)
-  if (realsrc->sched)
-    GST_SCHEDULE_PAD_CONNECT (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
-  else if (realsink->sched)
-    GST_SCHEDULE_PAD_CONNECT (realsink->sched, (GstPad *)realsrc, (GstPad *)realsink);
-
   if (GST_PAD_CAPS (srcpad)) {
     negotiated = gst_pad_renegotiate (srcpad);
   }
@@ -660,6 +653,16 @@ gst_pad_connect (GstPad *srcpad,
     gst_pad_disconnect (GST_PAD (realsrc), GST_PAD (realsink));
     return FALSE;
   }
+
+  /* fire off a signal to each of the pads telling them that they've been connected */
+  gtk_signal_emit(GTK_OBJECT(realsrc), gst_real_pad_signals[REAL_CONNECTED], realsink);
+  gtk_signal_emit(GTK_OBJECT(realsink), gst_real_pad_signals[REAL_CONNECTED], realsrc);
+
+  // now tell the scheduler(s)
+  if (realsrc->sched)
+    GST_SCHEDULE_PAD_CONNECT (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
+  else if (realsink->sched)
+    GST_SCHEDULE_PAD_CONNECT (realsink->sched, (GstPad *)realsrc, (GstPad *)realsink);
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "connected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
@@ -1272,6 +1275,13 @@ gst_pad_renegotiate (GstPad *pad)
                      gst_real_pad_signals[REAL_CAPS_CHANGED],GST_PAD_CAPS(currentpad));
     gtk_signal_emit (GTK_OBJECT(otherpad), 
                      gst_real_pad_signals[REAL_CAPS_CHANGED],GST_PAD_CAPS(otherpad));
+  } else {
+    GST_DEBUG (GST_CAT_NEGOTIATION, "firing caps_nego_failed signal on %s:%s and %s:%s\n",
+               GST_DEBUG_PAD_NAME(currentpad),GST_DEBUG_PAD_NAME(otherpad));
+    gtk_signal_emit (GTK_OBJECT(currentpad), 
+                     gst_real_pad_signals[REAL_CAPS_NEGO_FAILED]);
+    gtk_signal_emit (GTK_OBJECT(otherpad), 
+                     gst_real_pad_signals[REAL_CAPS_NEGO_FAILED]);
   }
 
   return result;

@@ -165,12 +165,13 @@ struct _GstRealPadClass {
   GstPadClass parent_class;
 
   /* signal callbacks */
-  void (*set_active)	(GstPad *pad, gboolean active);
-  void (*caps_changed)	(GstPad *pad, GstCaps *newcaps);
-  void (*connected)	(GstPad *pad, GstPad *peer);
-  void (*disconnected)	(GstPad *pad, GstPad *peer);
+  void (*set_active)		(GstPad *pad, gboolean active);
+  void (*caps_changed)		(GstPad *pad, GstCaps *newcaps);
+  void (*caps_nego_failed)	(GstPad *pad);
+  void (*connected)		(GstPad *pad, GstPad *peer);
+  void (*disconnected)		(GstPad *pad, GstPad *peer);
 
-  void (*eos)		(GstPad *pad);
+  void (*eos)			(GstPad *pad);
 };
 
 struct _GstGhostPad {

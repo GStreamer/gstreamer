@@ -1186,7 +1186,8 @@ gst_schedule_add_element (GstSchedule *sched, GstElement *element)
   GST_ELEMENT_SCHED(element) = sched;
 
   // only deal with elements after this point, not bins
-  if (GST_IS_BIN (element)) return;
+  // exception is made for Bin's that are schedulable, like the autoplugger
+  if (GST_IS_BIN (element) && !GST_FLAG_IS_SET(element, GST_BIN_SELF_SCHEDULABLE)) return;
 
   // first add it to the list of elements that are to be scheduled
   sched->elements = g_list_prepend (sched->elements, element);

@@ -857,14 +857,16 @@ gst_element_change_state (GstElement *element)
 
   if ((GST_STATE_TRANSITION(element) == GST_STATE_READY_TO_PLAYING) ||
       (GST_STATE_TRANSITION(element) == GST_STATE_PAUSED_TO_PLAYING)) {
+    g_return_val_if_fail(GST_ELEMENT_SCHED(element), GST_STATE_FAILURE);
     if (GST_ELEMENT_PARENT(element))
-    fprintf(stderr,"READY->PLAYING: element \"%s\" has parent \"%s\" and sched %p\n",
+      fprintf(stderr,"PAUSED->PLAYING: element \"%s\" has parent \"%s\" and sched %p\n",
 GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEMENT_SCHED(element));
     GST_SCHEDULE_ENABLE_ELEMENT (element->sched,element);
   }
   else if ((GST_STATE_TRANSITION(element) == GST_STATE_PLAYING_TO_READY) ||
-           (GST_STATE_TRANSITION(element) == GST_STATE_PLAYING_TO_READY))
+           (GST_STATE_TRANSITION(element) == GST_STATE_PLAYING_TO_PAUSED)) {
     GST_SCHEDULE_DISABLE_ELEMENT (element->sched,element);
+  }
 
   GST_STATE (element) = GST_STATE_PENDING (element);
   GST_STATE_PENDING (element) = GST_STATE_NONE_PENDING;
@@ -876,7 +878,7 @@ GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEM
   // unlocks, then emits this. 
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[STATE_CHANGE],
                    GST_STATE (element));
-  return TRUE;
+  return GST_STATE_SUCCESS;
 }
 
 static void

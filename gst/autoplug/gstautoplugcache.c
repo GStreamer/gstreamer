@@ -49,6 +49,8 @@ struct _GstAutoplugCache {
 
   GstPad *sinkpad, *srcpad;
 
+  gboolean caps_proxy;
+
   GList *cache;
   GList *cache_start;
   gint buffer_count;
@@ -59,12 +61,14 @@ struct _GstAutoplugCache {
 struct _GstAutoplugCacheClass {
   GstElementClass parent_class;
 
+  void		(*first_buffer)		(GstElement *element, GstBuffer *buf);
   void		(*cache_empty)		(GstElement *element);
 };
 
 
 /* Cache signals and args */
 enum {
+  FIRST_BUFFER,
   CACHE_EMPTY,
   LAST_SIGNAL
 };
@@ -72,6 +76,7 @@ enum {
 enum {
   ARG_0,
   ARG_BUFFER_COUNT,
+  ARG_CAPS_PROXY,
   ARG_RESET
 };
 
@@ -123,6 +128,11 @@ gst_autoplugcache_class_init (GstAutoplugCacheClass *klass)
 
   parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 
+  gst_autoplugcache_signals[FIRST_BUFFER] =
+    gtk_signal_new ("first_buffer", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstAutoplugCacheClass, first_buffer),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GTK_TYPE_POINTER);
   gst_autoplugcache_signals[CACHE_EMPTY] =
     gtk_signal_new ("cache_empty", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstAutoplugCacheClass, cache_empty),
@@ -131,6 +141,8 @@ gst_autoplugcache_class_init (GstAutoplugCacheClass *klass)
 
   gtk_object_add_arg_type ("GstAutoplugCache::buffer_count", GTK_TYPE_INT,
                            GTK_ARG_READABLE, ARG_BUFFER_COUNT);
+  gtk_object_add_arg_type ("GstAutoplugCache::caps_proxy", GTK_TYPE_BOOL,
+                           GTK_ARG_READWRITE, ARG_CAPS_PROXY);
   gtk_object_add_arg_type ("GstAutoplugCache::reset", GTK_TYPE_BOOL,
                            GTK_ARG_WRITABLE, ARG_RESET);
 
@@ -146,12 +158,14 @@ gst_autoplugcache_init (GstAutoplugCache *cache)
   gst_element_set_loop_function(GST_ELEMENT(cache), GST_DEBUG_FUNCPTR(gst_autoplugcache_loop));
 
   cache->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
-  gst_pad_set_negotiate_function (cache->sinkpad, gst_autoplugcache_nego_sink);
+//  gst_pad_set_negotiate_function (cache->sinkpad, gst_autoplugcache_nego_sink);
   gst_element_add_pad (GST_ELEMENT(cache), cache->sinkpad);
 
   cache->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_pad_set_negotiate_function (cache->sinkpad, gst_autoplugcache_nego_src);
+//  gst_pad_set_negotiate_function (cache->srcpad, gst_autoplugcache_nego_src);
   gst_element_add_pad (GST_ELEMENT(cache), cache->srcpad);
+
+  cache->caps_proxy = FALSE;
 
   // provide a zero basis for the cache
   cache->cache = g_list_prepend(NULL, NULL);
@@ -195,6 +209,8 @@ gst_autoplugcache_loop (GstElement *element)
 
       // set the current_playout pointer
       cache->current_playout = cache->cache;
+
+      gtk_signal_emit (GTK_OBJECT(cache), gst_autoplugcache_signals[FIRST_BUFFER], buf);
 
       // send the buffer on its way
       gst_pad_push (cache->srcpad, buf);
@@ -275,6 +291,16 @@ gst_autoplugcache_set_arg (GtkObject *object, GtkArg *arg, guint id)
   cache = GST_AUTOPLUGCACHE (object);
 
   switch (id) {
+    case ARG_CAPS_PROXY:
+      cache->caps_proxy = GTK_VALUE_BOOL(*arg);
+      if (cache->caps_proxy) {
+        gst_pad_set_negotiate_function (cache->sinkpad, gst_autoplugcache_nego_sink);
+        gst_pad_set_negotiate_function (cache->srcpad, gst_autoplugcache_nego_src);
+      } else {
+        gst_pad_set_negotiate_function (cache->sinkpad, NULL);
+        gst_pad_set_negotiate_function (cache->srcpad, NULL);
+      }
+      break;
     case ARG_RESET:
       // no idea why anyone would set this to FALSE, but just in case ;-)
       if (GTK_VALUE_BOOL(*arg)) {
@@ -301,6 +327,8 @@ gst_autoplugcache_get_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_BUFFER_COUNT:
       GTK_VALUE_INT(*arg) = cache->buffer_count;
       break;
+    case ARG_CAPS_PROXY:
+      GTK_VALUE_BOOL(*arg) = cache->caps_proxy;
     default:
       arg->type = GTK_TYPE_INVALID;
       break;

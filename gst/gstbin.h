@@ -47,6 +47,8 @@ extern GstElementDetails gst_bin_details;
 typedef enum {
   /* this bin is a manager of child elements, i.e. a pipeline or thread */
   GST_BIN_FLAG_MANAGER		= GST_ELEMENT_FLAG_LAST,
+  /* this bin is actually a meta-bin, and may need to be scheduled */
+  GST_BIN_SELF_SCHEDULABLE,
 
   /* we prefer to have cothreads when its an option, over chain-based */
   GST_BIN_FLAG_PREFER_COTHREADS,
