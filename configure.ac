@@ -68,6 +68,9 @@ AC_ISC_POSIX
 
 AC_HEADER_STDC([])
 
+dnl Check for a way to display the function name in debug output
+GST_CHECK_FUNCTION()
+
 dnl define correct errorlevel for debugging messages. We want to have GST_ERROR
 dnl messages printed when running cvs builds
 if test "x$GST_CVS" = "xyes"; then
