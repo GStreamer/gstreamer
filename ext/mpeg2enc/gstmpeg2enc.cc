@@ -106,8 +106,6 @@ static void gst_mpeg2enc_loop         (GstElement   *element);
 static GstPadLinkReturn
             gst_mpeg2enc_sink_link    (GstPad       *pad,
 				       const GstCaps *caps);
-static GstCaps *
-            gst_mpeg2enc_src_getcaps  (GstPad       *pad);
 
 static GstElementStateReturn
             gst_mpeg2enc_change_state (GstElement  *element);
@@ -214,7 +212,7 @@ gst_mpeg2enc_init (GstMpeg2enc *enc)
 
   enc->srcpad = gst_pad_new_from_template (
 	gst_element_class_get_pad_template (klass, "src"), "src");
-  gst_pad_set_getcaps_function (enc->srcpad, gst_mpeg2enc_src_getcaps);
+  gst_pad_use_explicit_caps (enc->srcpad);
   gst_element_add_pad (element, enc->srcpad);
 
   enc->options = new GstMpeg2EncOptions ();
@@ -249,7 +247,7 @@ gst_mpeg2enc_loop (GstElement *element)
 
     /* and set caps on other side */
     caps = enc->encoder->getFormat ();
-    if (gst_pad_try_set_caps (enc->srcpad, caps) <= 0) {
+    if (gst_pad_set_explicit_caps (enc->srcpad, caps) <= 0) {
       gst_element_error (element,
 			 "Failed to set up encoder properly");
       delete enc->encoder;
@@ -276,19 +274,6 @@ gst_mpeg2enc_sink_link (GstPad        *pad,
   }
 
   return GST_PAD_LINK_OK;
-}
-
-static GstCaps *
-gst_mpeg2enc_src_getcaps (GstPad *pad)
-{
-  GstMpeg2enc *enc = GST_MPEG2ENC (gst_pad_get_parent (pad));
-
-  if (enc->encoder) {
-    return enc->encoder->getFormat ();
-  }
-
-  return gst_caps_copy (gst_pad_template_get_caps (
-	gst_element_get_pad_template (gst_pad_get_parent (pad), "src")));
 }
 
 static void

@@ -179,6 +179,7 @@ gst_afsrc_init (GstAFSrc *afsrc)
   afsrc->srcpad = gst_pad_new_from_template (
       gst_element_get_pad_template (GST_ELEMENT (afsrc), "src"), "src");
   gst_element_add_pad (GST_ELEMENT (afsrc), afsrc->srcpad);
+  gst_pad_use_explicit_caps (afsrc->srcpad);
   gst_pad_set_get_function (afsrc->srcpad, gst_afsrc_get);
 
   afsrc->bytes_per_read = 4096;
@@ -339,8 +340,7 @@ gst_afsrc_open_file (GstAFSrc *src)
   }
   
   /* set caps on src */
-  /*FIXME: add all the possible formats, especially float ! */ 
-  gst_pad_try_set_caps (src->srcpad, 
+  gst_pad_set_explicit_caps (src->srcpad, 
       gst_caps_new_simple ("audio/x-raw-int",
         "endianness", G_TYPE_INT, G_BYTE_ORDER,
         "signed",     G_TYPE_BOOLEAN, src->is_signed,

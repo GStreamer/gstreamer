@@ -158,27 +158,6 @@ gst_swfdec_class_init(GstSwfdecClass *klass)
   gstelement_class->change_state = gst_swfdec_change_state;
 }
 
-static GstCaps *gst_swfdec_videosrc_getcaps(GstPad *pad)
-{
-  GstSwfdec *swfdec;
-  GstCaps *caps;
-
-  swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
-
-  caps = gst_caps_copy (gst_pad_template_get_caps (
-      gst_static_pad_template_get (&video_template_factory)));
-
-  if (swfdec->height) {
-    gst_caps_set_simple (caps,
-	"framerate", G_TYPE_DOUBLE, swfdec->frame_rate,
-	"height",G_TYPE_INT,swfdec->height,
-	"width",G_TYPE_INT,swfdec->width,
-	NULL);
-  }
-
-  return caps;
-}
-
 static void
 gst_swfdec_loop(GstElement *element)
 {
@@ -217,14 +196,22 @@ gst_swfdec_loop(GstElement *element)
 	}
 
 	if(ret==SWF_CHANGE){
+	  	GstCaps *caps;
+
 		swfdec_decoder_get_image_size(swfdec->state,
 			&swfdec->width, &swfdec->height);
 		swfdec_decoder_get_rate(swfdec->state, &swfdec->rate);
 		swfdec->interval = GST_SECOND / swfdec->rate;
 
-		GST_DEBUG_CAPS ("caps", gst_swfdec_videosrc_getcaps(swfdec->videopad));
-		gst_pad_try_set_caps(swfdec->videopad,
-			gst_swfdec_videosrc_getcaps(swfdec->videopad));
+		caps = gst_caps_copy (gst_pad_get_pad_template_caps (
+		      swfdec->videopad));
+		gst_caps_set_simple (caps,
+		      "framerate", G_TYPE_DOUBLE, (double)swfdec->frame_rate,
+		      "height",G_TYPE_INT,swfdec->height,
+		      "width",G_TYPE_INT,swfdec->width,
+		      NULL);
+		gst_pad_set_explicit_caps(swfdec->videopad, caps);
+
 		return;
 	}
 
@@ -280,8 +267,7 @@ gst_swfdec_init (GstSwfdec *swfdec)
 		"video_00");
   gst_pad_set_query_function (swfdec->videopad,
 		GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
-  gst_pad_set_getcaps_function (swfdec->videopad,
-		GST_DEBUG_FUNCPTR (gst_swfdec_videosrc_getcaps));
+  gst_pad_use_explicit_caps (swfdec->videopad);
   gst_element_add_pad(GST_ELEMENT(swfdec), swfdec->videopad);
 
   swfdec->audiopad = gst_pad_new_from_template(

@@ -151,6 +151,7 @@ gst_mp1videoparse_init (Mp1VideoParse *mp1videoparse)
   mp1videoparse->srcpad = gst_pad_new_from_template (
 	gst_static_pad_template_get (&src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(mp1videoparse),mp1videoparse->srcpad);
+  gst_pad_use_explicit_caps (mp1videoparse->srcpad);
 
   mp1videoparse->partialbuf = NULL;
   mp1videoparse->need_resync = FALSE;
@@ -209,11 +210,7 @@ mp1videoparse_parse_seq (Mp1VideoParse *mp1videoparse, GstBuffer *buf)
 
     GST_DEBUG_CAPS ("New mpeg1videoparse caps", caps);
 
-    if (gst_pad_try_set_caps (mp1videoparse->srcpad, caps) <= 0) {
-      gst_element_error (GST_ELEMENT (mp1videoparse),
-                         "mp1videoparse: failed to negotiate a new format");
-      return; 
-    }
+    gst_pad_set_explicit_caps (mp1videoparse->srcpad, caps);
   }
 }
 

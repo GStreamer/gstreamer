@@ -150,6 +150,7 @@ gst_afparse_init (GstAFParse *afparse)
 {
   afparse->srcpad = gst_pad_new_from_template (
       gst_element_get_pad_template (GST_ELEMENT (afparse), "src"), "src");
+  gst_pad_use_explicit_caps (afparse->srcpad);
   gst_element_add_pad (GST_ELEMENT (afparse), afparse->srcpad);
 
   afparse->sinkpad = gst_pad_new_from_template (
@@ -381,7 +382,7 @@ gst_afparse_open_file (GstAFParse *afparse)
   
   /* set caps on src */
   /*FIXME: add all the possible formats, especially float ! */ 
-  gst_pad_try_set_caps (afparse->srcpad, 
+  gst_pad_set_explicit_caps (afparse->srcpad, 
       gst_caps_new_simple (
         "audio/x-raw-int",
         "endianness", G_TYPE_INT, G_BYTE_ORDER,
