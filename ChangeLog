@@ -1,3 +1,9 @@
+2004-06-14  Johan Dahlin  <johan@gnome.org>
+
+	* tools/gst-inspect.c (main): Add two new command line options: -a
+	to print all elements and -n to print the name on each line. Also
+	fix some error reporting.
+
 2004-06-13  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/gstconfig.h:
