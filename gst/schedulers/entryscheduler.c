@@ -551,7 +551,7 @@ can_schedule (Entry * entry)
       return FALSE;
     if (GST_FLAG_IS_SET (priv->element, GST_ELEMENT_DECOUPLED)) {
       g_assert (PAD_PRIVATE (priv->schedule_pad));
-      return PAD_PRIVATE (priv->schedule_pad)->bufpen == NULL;
+      return TRUE;
     }
     for (list = priv->element->pads; list; list = g_list_next (list)) {
       GstPad *pad = GST_PAD (list->data);
@@ -629,7 +629,7 @@ schedule_forward (Entry * entry)
     GstElement *element = ((CothreadPrivate *) entry)->element;
 
     if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED))
-      return FALSE;
+      return NULL;
     for (list = element->pads; list; list = g_list_next (list)) {
       if (GST_PAD_IS_SINK (list->data))
         continue;
@@ -1087,14 +1087,14 @@ gst_entry_scheduler_iterate (GstScheduler * scheduler)
     gst_entry_scheduler_show (scheduler);
 #endif
     return GST_SCHEDULER_STATE_ERROR;
+#if 0
   } else if (GST_STATE (GST_SCHEDULER (sched)->parent) == GST_STATE_PLAYING &&
       ret == GST_SCHEDULER_STATE_STOPPED && scheduler->schedulers == NULL) {
     GST_ERROR_OBJECT (sched,
         "returning error because we contain running elements and we didn't do a thing");
-#if 0
     gst_entry_scheduler_show (scheduler);
-#endif
     return GST_SCHEDULER_STATE_ERROR;
+#endif
   } else if (ret == GST_SCHEDULER_STATE_STOPPED) {
     GST_INFO_OBJECT (sched, "done iterating returning STOPPED");
     return GST_SCHEDULER_STATE_STOPPED;

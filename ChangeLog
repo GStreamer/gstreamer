@@ -1,3 +1,11 @@
+2004-04-05  Benjamin Otte  <otte@gnome.org>
+
+	* gst/schedulers/entryscheduler.c: (some functions, dunno which,
+	prepareChangeLog doesn't work when cvs indents):
+	  don't throw an error when no element can be scheduled, there's too
+	  many weird reasons why it doesn't work. Return STOPPED instead.
+	  decoupled elemts' schedulability doesn't depend on bufpens.
+
 2004-04-04  Benjamin Otte  <otte@gnome.org>
 
 	* gst/schedulers/gstbasicscheduler.c:
