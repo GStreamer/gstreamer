@@ -2069,7 +2069,10 @@ gst_element_query (GstElement *element, GstQueryType type,
   if (oclass->query)
     return oclass->query (element, type, format, value);
   else {
-    GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
+    GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SRC);
+    if (pad)
+      return gst_pad_query (pad, type, format, value);
+    pad = gst_element_get_random_pad (element, GST_PAD_SINK);
     if (pad)
       return gst_pad_query (GST_PAD_PEER (pad), type, format, value);
   }
