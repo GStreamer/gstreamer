@@ -268,8 +268,8 @@ GST_PLUGINS_ALL="\
         monoscope oneton overlay passthrough playondemand qtdemux \
 	realmedia rtp rtjpeg silence sine smooth smpte \
 	spectrum speed stereo synaesthesia tcp udp vbidec \
-	videocrop videofilter videoflip videoscale videotestsrc \
-	volenv volume wavenc wavparse y4m"
+	videocrop videodrop videofilter videoflip videoscale \
+	videotestsrc volenv volume wavenc wavparse y4m"
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
@@ -1216,6 +1216,7 @@ gst/tcp/Makefile
 gst/udp/Makefile
 gst/vbidec/Makefile
 gst/videocrop/Makefile
+gst/videodrop/Makefile
 gst/videofilter/Makefile
 gst/videoflip/Makefile
 gst/videoscale/Makefile
