@@ -486,7 +486,7 @@ Input and output plugin for the ALSA soundcard driver architecture.
 
 %files -n gstreamer-alsa
 %defattr(-, root, root)
-%{prefix}/lib/gst/libdvd*
+%{prefix}/lib/gst/libalsa*
 
 %package -n gstreamer-libdvd
 Summary: GStreamer plugins for DVD playback
@@ -669,7 +669,7 @@ Library for transfering data with the RTP protocol
 %setup
 
 %build
-CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir} --mandir=$RPM_BUILD_ROOT%{prefix}/share/man
+CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir} --mandir=$RPM_BUILD_ROOT%{prefix}/share/man  --enable-glib2
 
 if [ "$SMP" != "" ]; then
   (make "MAKE=make -k -j $SMP"; exit 0)
