@@ -1,6 +1,16 @@
 <chapter id="cha-dynamic">
   <title>Dynamic pipelines</title>
   <para> 
+    this chapter we will see how you can create a dynamic pipleine. A dynamic
+    pipeline is a pipeline that is updated or created while media is flowing 
+    through it. We will create a partial pipeline first and add more elements
+    while the pipeline is playing. Dynamic pipelines cause all sorts of
+    scheduling issues and will remain a topic of research for a long time in
+    GStreamer.
+  </para>
+  <para> 
+    We will show how to create an mpeg1 video player using the dynamic pipeline
+
   </para>
 
 </chapter>

@@ -6,20 +6,43 @@
 #include <glib.h>
 #include <gst/gst.h>
 
-GstElement *mux;
-GstElement *merge_subtitles;
+static GstElement *mux = NULL;
+static GstElement *merge_subtitles;
+static GstElement *fdsink;
 
-void eof(GstElement *src) {
+static void 
+eof(GstElement *src) 
+{
   g_print("have eos, quitting\n");
   exit(0);
 }
 
-void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
+static GstPad* 
+create_muxer (GstElement *pipeline, gchar *type, gchar *number) 
+{
+  if (!mux) {
+    mux = gst_elementfactory_make("system_encode","mux");
+    g_return_val_if_fail(mux != NULL, NULL);
+
+    gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(mux));
+    gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(fdsink));
+    gst_pad_connect(gst_element_get_pad(mux,"src"),
+                    gst_element_get_pad(fdsink,"sink"));
+  }
+  gtk_object_set(GTK_OBJECT(mux), type, number,NULL);
+  
+  return gst_element_get_pad(mux,g_strconcat (type, "_", number, NULL));
+}
+
+static void 
+mp2tomp1 (GstElement *parser, GstPad *pad, GstElement *pipeline) 
+{
   GstElement *parse_audio, *parse_video, *decode, *decode_video, *play, *encode, *audio_resample;
   GstElement *smooth, *median;
   GstElement *audio_queue, *video_queue;
   GstElement *audio_thread, *video_thread;
   GstElement *videoscale, *audio_encode;
+  GstPad *muxerpad;
 
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
@@ -27,10 +50,6 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
   // connect to audio pad
   //if (0) {
   if (strncmp(gst_pad_get_name(pad), "private_stream_1.0", 18) == 0) {
-    gst_plugin_load("ac3parse");
-    gst_plugin_load("ac3dec");
-    gst_plugin_load("audioscale");
-    gst_plugin_load("mpegaudio");
     // construct internal pipeline elements
     parse_audio = gst_elementfactory_make("ac3parse","parse_audio");
     g_return_if_fail(parse_audio != NULL);
@@ -54,7 +73,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audio_resample));
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audio_encode));
 
-    gtk_object_set(GTK_OBJECT(mux),"audio","00",NULL);
+    muxerpad = create_muxer (pipeline, "audio", "00");
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
@@ -66,7 +85,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_pad_connect(gst_element_get_pad(audio_resample,"src"),
                     gst_element_get_pad(audio_encode,"sink"));
     gst_pad_connect(gst_element_get_pad(audio_encode,"src"),
-                    gst_element_get_pad(mux,"audio_00"));
+                    muxerpad);
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");
@@ -83,11 +102,9 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     g_print("setting to READY state\n");
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
   } else if (strncmp(gst_pad_get_name(pad), "subtitle_stream_4", 17) == 0) {
-    gst_pad_connect(pad,
-                    gst_element_get_pad(merge_subtitles,"subtitle"));
+    //gst_pad_connect(pad,
+    //                gst_element_get_pad(merge_subtitles,"subtitle"));
   } else if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0) {
-    gst_plugin_load("mp3parse");
-    gst_plugin_load("mpg123");
     // construct internal pipeline elements
     parse_audio = gst_elementfactory_make("mp3parse","parse_audio");
     g_return_if_fail(parse_audio != NULL);
@@ -129,21 +146,14 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
   //} else if (0) {
 
-    gst_plugin_load("mp1videoparse");
-    gst_plugin_load("mpeg2play");
-    gst_plugin_load("mpeg2subt");
-    gst_plugin_load("smooth");
-    gst_plugin_load("median");
-    gst_plugin_load("videoscale");
-    gst_plugin_load("mpeg2enc");
     //gst_plugin_load("mpeg1encoder");
     // construct internal pipeline elements
-    parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
+    parse_video = gst_elementfactory_make("mp2videoparse","parse_video");
     g_return_if_fail(parse_video != NULL);
     decode_video = gst_elementfactory_make("mpeg2play","decode_video");
     g_return_if_fail(decode_video != NULL);
-    merge_subtitles = gst_elementfactory_make("mpeg2subt","merge_subtitles");
-    g_return_if_fail(merge_subtitles != NULL);
+    //merge_subtitles = gst_elementfactory_make("mpeg2subt","merge_subtitles");
+    //g_return_if_fail(merge_subtitles != NULL);
     videoscale = gst_elementfactory_make("videoscale","videoscale");
     g_return_if_fail(videoscale != NULL);
     gtk_object_set(GTK_OBJECT(videoscale),"width",352, "height", 288,NULL);
@@ -158,12 +168,12 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gtk_object_set(GTK_OBJECT(smooth),"active",FALSE,NULL);
     encode = gst_elementfactory_make("mpeg2enc","encode");
     g_return_if_fail(encode != NULL);
-    //gtk_object_set(GTK_OBJECT(encode),"frames_per_second",25.0,NULL);
-    gtk_object_set(GTK_OBJECT(encode),"frames_per_second",29.97,NULL);
+    gtk_object_set(GTK_OBJECT(encode),"frames_per_second",25.0,NULL);
+    //gtk_object_set(GTK_OBJECT(encode),"frames_per_second",29.97,NULL);
     //encode = gst_elementfactory_make("mpeg1encoder","encode");
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
 
-    gtk_object_set(GTK_OBJECT(mux),"video","00",NULL);
+    muxerpad = create_muxer (pipeline, "video", "00");
 
     // create the thread and pack stuff into it
     video_thread = gst_thread_new("video_thread");
@@ -185,15 +195,15 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_pad_connect(gst_element_get_pad(decode_video,"src"),
                     gst_element_get_pad(median,"sink"));
     gst_pad_connect(gst_element_get_pad(median,"src"),
-                    gst_element_get_pad(merge_subtitles,"video"));
-    gst_pad_connect(gst_element_get_pad(merge_subtitles,"src"),
+    //                gst_element_get_pad(merge_subtitles,"video"));
+    //gst_pad_connect(gst_element_get_pad(merge_subtitles,"src"),
                     gst_element_get_pad(videoscale,"sink"));
     gst_pad_connect(gst_element_get_pad(videoscale,"src"),
                     gst_element_get_pad(smooth,"sink"));
     gst_pad_connect(gst_element_get_pad(smooth,"src"),
                     gst_element_get_pad(encode,"sink"));
     gst_pad_connect(gst_element_get_pad(encode,"src"),
-                    gst_element_get_pad(mux,"video_00"));
+                    muxerpad);
 
     // construct queue and connect everything in the main pipeline
     video_queue = gst_elementfactory_make("queue","video_queue");
@@ -216,15 +226,12 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
 int main(int argc,char *argv[]) {
   GstElement *pipeline, *src, *parse;
-  GstElement *fdsink;
   GstElementFactory *fdsinkfactory;
   int fd;
 
   g_print("have %d args\n",argc);
 
   gst_init(&argc,&argv);
-  gst_plugin_load("mpeg2parse");
-  gst_plugin_load("system_encode");
 
   pipeline = gst_pipeline_new("pipeline");
   g_return_val_if_fail(pipeline != NULL, -1);
@@ -244,8 +251,6 @@ int main(int argc,char *argv[]) {
   parse = gst_elementfactory_make("mpeg2parse","parse");
   g_return_val_if_fail(parse != NULL, -1);
 
-  mux = gst_elementfactory_make("system_encode","mux");
-  g_return_val_if_fail(mux != NULL, -1);
   fd = open(argv[2],O_CREAT|O_RDWR|O_TRUNC, S_IREAD|S_IWRITE);
   g_return_val_if_fail(fd >= 0, -1);
   fdsinkfactory = gst_elementfactory_find("fdsink");
@@ -256,8 +261,7 @@ int main(int argc,char *argv[]) {
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(mux));
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(fdsink));
+
 
   gtk_signal_connect(GTK_OBJECT(parse),"new_pad",mp2tomp1, pipeline);
 
@@ -265,8 +269,6 @@ int main(int argc,char *argv[]) {
 
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(parse,"sink"));
-  gst_pad_connect(gst_element_get_pad(mux,"src"),
-                  gst_element_get_pad(fdsink,"sink"));
 
   g_print("setting to READY state\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
