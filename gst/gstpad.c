@@ -552,8 +552,6 @@ gst_pad_disconnect (GstPad *srcpad,
  * @sinkpad: the sink pad to connect
  *
  * Connects the source pad to the sink pad.
- *
- * Returns: TRUE if the pad could be connected
  */
 void
 gst_pad_connect (GstPad *srcpad,
