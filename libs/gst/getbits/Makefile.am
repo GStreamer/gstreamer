@@ -15,7 +15,7 @@ libgstgetbits_la_SOURCES = getbits.c gstgetbits_inl.h gstgetbits_generic.c $(GST
 EXTRA_libgstgetbits_la_SOURCES = gstgetbits_i386.s
 
 libgstgetbits_la_CFLAGS = $(GST_CFLAGS) -funroll-all-loops -finline-functions -ffast-math
-libgstgetbits_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstgetbits_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = getbits.h gstgetbits_inl.h
 

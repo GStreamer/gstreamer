@@ -19,4 +19,4 @@ libgstcontrol_la_SOURCES = \
     dplinearinterp.c
 
 libgstcontrol_la_CFLAGS = $(GST_CFLAGS) -finline-functions -ffast-math
-libgstcontrol_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstcontrol_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
