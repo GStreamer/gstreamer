@@ -357,13 +357,14 @@ gst_bin_unset_element_sched (GstElement *element, GstScheduler *sched)
 
       /* if the peer element exists and is a candidate */
       if (GST_PAD_PEER (pad)) {
-        if (gst_pad_get_scheduler (GST_PAD_PEER (pad)) == sched) {
+        if (sched && gst_pad_get_scheduler (GST_PAD_PEER (pad)) == sched) {
           GST_INFO (GST_CAT_SCHEDULING, "peer is in same scheduler, telling scheduler");
 
-          if (GST_PAD_IS_SRC (pad))
+          if (GST_PAD_IS_SRC (pad)){
             gst_scheduler_pad_unlink (sched, pad, GST_PAD_PEER (pad));
-          else
+	  }else{
             gst_scheduler_pad_unlink (sched, GST_PAD_PEER (pad), pad);
+	  }
         }
       }
     }
