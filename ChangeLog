@@ -1,3 +1,10 @@
+2004-03-29  David Schleef  <ds@schleef.org>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_fixate): Don't fixate fields that
+	aren't in the caps.
+	* gst/sine/gstsinesrc.c: change rate caps to [1,MAX]
+	* gst/videocrop/gstvideocrop.c: (plugin_init): Change rank to NONE.
+
 2004-03-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst-libs/gst/riff/riff-media.c:
