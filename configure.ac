@@ -1183,6 +1183,13 @@ GST_CHECK_FEATURE(LIBPNG, [libpng PNG encoder], pngenc, [
   AC_SUBST(LIBPNG_LIBS)
 ])
 
+dnl *** libmng ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMNG, true)
+GST_CHECK_FEATURE(LIBMNG, [libmng library], mngdec, [
+  GST_CHECK_LIBHEADER(LIBMNG, mng, mng_initialize,, libmng.h, LIBMNG_LIBS="-lmng")
+  AC_SUBST(LIBMNG_LIBS)
+])
+
 dnl *** librfb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBRFB, true)
 GST_CHECK_FEATURE(LIBRFB, [librfb Remote Framebuffer], rfbsrc, [
@@ -1899,6 +1906,7 @@ ext/lcs/Makefile
 ext/libcaca/Makefile
 ext/libfame/Makefile
 ext/libpng/Makefile
+ext/libmng/Makefile
 ext/librfb/Makefile
 ext/libvisual/Makefile
 ext/mad/Makefile
