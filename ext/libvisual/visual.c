@@ -22,13 +22,8 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/bytestream/adapter.h>
 #include <gst/video/video.h>
-/* FIXME !
- * This is a bit hacky, but we only do 1 image per incoming buffer. And since
- * those buffers have undefined sizes we need to make sure we have an undefined 
- * framerate. */
-#undef GST_VIDEO_FPS_RANGE
-#define GST_VIDEO_FPS_RANGE "(double) 0"
 #include <gst/audio/audio.h>
 #include <libvisual/libvisual.h>
 
@@ -60,6 +55,10 @@ struct _GstVisual
   gdouble fps;
   gint width;
   gint height;
+
+  /* state stuff */
+  GstAdapter *adapter;
+  guint count;
 };
 
 struct _GstVisualClass
@@ -75,7 +74,7 @@ GType gst_visual_get_type (void);
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx_HOST_ENDIAN "; "
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN "; "
         GST_VIDEO_CAPS_BGR "; " GST_VIDEO_CAPS_RGB_16)
     );
 
@@ -93,6 +92,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 static void gst_visual_class_init (gpointer g_class, gpointer class_data);
 static void gst_visual_init (GstVisual * visual);
+static void gst_visual_dispose (GObject * object);
 
 static GstElementStateReturn gst_visual_change_state (GstElement * element);
 static void gst_visual_chain (GstPad * pad, GstData * _data);
@@ -131,7 +131,8 @@ static void
 gst_visual_class_init (gpointer g_class, gpointer class_data)
 {
   GstVisualClass *klass = GST_VISUAL_CLASS (g_class);
-  GstElementClass *element = GST_ELEMENT_CLASS (klass);
+  GstElementClass *element = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *object = G_OBJECT_CLASS (g_class);
 
   klass->plugin = class_data;
 
@@ -159,6 +160,7 @@ gst_visual_class_init (gpointer g_class, gpointer class_data)
     g_free (details.longname);
   }
 
+  object->dispose = gst_visual_dispose;
 }
 
 static void
@@ -179,6 +181,20 @@ gst_visual_init (GstVisual * visual)
   gst_pad_set_getcaps_function (visual->srcpad, gst_visual_getcaps);
   gst_element_add_pad (GST_ELEMENT (visual), visual->srcpad);
 
+  visual->adapter = gst_adapter_new ();
+}
+
+static void
+gst_visual_dispose (GObject * object)
+{
+  GstVisual *visual = GST_VISUAL (object);
+
+  if (visual->adapter) {
+    g_object_unref (visual->adapter);
+    visual->adapter = NULL;
+  }
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
 static GstCaps *
@@ -194,7 +210,7 @@ gst_visual_getcaps (GstPad * pad)
   if (visual_actor_depth_is_supported (visual->actor,
           VISUAL_VIDEO_CONTEXT_32BIT) == 1) {
     gst_caps_append (ret,
-        gst_caps_from_string (GST_VIDEO_CAPS_BGRx_HOST_ENDIAN));
+        gst_caps_from_string (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN));
   }
   if (visual_actor_depth_is_supported (visual->actor,
           VISUAL_VIDEO_CONTEXT_24BIT) == 1) {
@@ -253,30 +269,30 @@ gst_visual_sinklink (GstPad * pad, const GstCaps * caps)
 static void
 gst_visual_chain (GstPad * pad, GstData * _data)
 {
-  GstBuffer *ret, *buffer = GST_BUFFER (_data);
-  guint i, size = GST_BUFFER_SIZE (buffer) / 4;
-  guint16 *data = (guint16 *) GST_BUFFER_DATA (buffer);
+  GstBuffer *ret;
+  guint i;
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
 
-  if (size < 512) {
-    /* FIXME */
-    GST_WARNING_OBJECT (visual, "incoming buffer to small, discarding.");
-    gst_data_unref (_data);
-    return;
-  }
+  /* spf = samples per frame */
+  guint spf = visual->rate / visual->fps;
 
-  for (i = 0; i < 512; i++) {
-    visual->audio.plugpcm[0][i] = *data++;
-    visual->audio.plugpcm[1][i] = *data++;
+  gst_adapter_push (visual->adapter, GST_BUFFER (_data));
+  while (gst_adapter_available (visual->adapter) > MAX (512, spf) * 4) {
+    const guint16 *data =
+        (const guint16 *) gst_adapter_peek (visual->adapter, 512);
+    for (i = 0; i < 512; i++) {
+      visual->audio.plugpcm[0][i] = *data++;
+      visual->audio.plugpcm[1][i] = *data++;
+    }
+    ret = gst_pad_alloc_buffer (visual->srcpad, GST_BUFFER_OFFSET_NONE,
+        visual->video->width * visual->video->width * visual->video->bpp);
+    visual_video_set_buffer (visual->video, GST_BUFFER_DATA (ret));
+    visual_actor_run (visual->actor, &visual->audio);
+    GST_BUFFER_TIMESTAMP (ret) = GST_SECOND * visual->count++ / visual->fps;
+    GST_BUFFER_DURATION (ret) = GST_SECOND / visual->fps;
+    gst_pad_push (visual->srcpad, GST_DATA (ret));
+    gst_adapter_flush (visual->adapter, spf * 4);
   }
-  ret = gst_pad_alloc_buffer (visual->srcpad, GST_BUFFER_OFFSET_NONE,
-      visual->video->width * visual->video->width * visual->video->bpp);
-  visual_video_set_buffer (visual->video, GST_BUFFER_DATA (ret));
-  visual_actor_run (visual->actor, &visual->audio);
-  GST_BUFFER_TIMESTAMP (ret) = GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_DURATION (ret) = GST_SECOND / visual->fps;
-  gst_data_unref (_data);
-  gst_pad_push (visual->srcpad, GST_DATA (ret));
   /* so we're on the safe side */
   visual_video_set_buffer (visual->video, NULL);
 }
@@ -299,6 +315,8 @@ gst_visual_change_state (GstElement * element)
       }
       break;
     case GST_STATE_READY_TO_PAUSED:
+      gst_adapter_clear (visual->adapter);
+      visual->count = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -325,6 +343,9 @@ plugin_init (GstPlugin * plugin)
 {
   guint i;
   VisList *list;
+
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
 
   if (visual_init (NULL, NULL) != 0)
     return FALSE;
