@@ -213,7 +213,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
   vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
 
   if (!vorbisenc->setup) {
-    gst_element_error (GST_ELEMENT (vorbisenc), "encoder not initialized");
+    gst_element_error (GST_ELEMENT (vorbisenc), "encoder not initialized (input is not audio?)");
     if (GST_IS_BUFFER (buf))
       gst_buffer_unref (buf);
     else
