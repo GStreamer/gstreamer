@@ -134,14 +134,25 @@ __gst_element_details_clear (GstElementDetails * dp)
   dp->author = NULL;
 }
 
+#define VALIDATE_SET(__dest, __src, __entry)				\
+G_STMT_START {								\
+  if (g_utf8_validate (__src->__entry, -1, NULL)) {			\
+    __dest->__entry = g_strdup (__src->__entry);			\
+  } else {								\
+    g_warning ("Invalid UTF-8 in " G_STRINGIFY (__entry) ": %s",	\
+        __src->__entry);						\
+    __dest->__entry = g_strdup ("[ERROR: invalid UTF-8]");		\
+  }									\
+} G_STMT_END
+
 void
 __gst_element_details_set (GstElementDetails * dest,
     const GstElementDetails * src)
 {
-  dest->longname = g_strdup (src->longname);
-  dest->klass = g_strdup (src->klass);
-  dest->description = g_strdup (src->description);
-  dest->author = g_strdup (src->author);
+  VALIDATE_SET (dest, src, longname);
+  VALIDATE_SET (dest, src, klass);
+  VALIDATE_SET (dest, src, description);
+  VALIDATE_SET (dest, src, author);
 }
 
 void
@@ -151,6 +162,7 @@ __gst_element_details_copy (GstElementDetails * dest,
   __gst_element_details_clear (dest);
   __gst_element_details_set (dest, src);
 }
+
 static void
 gst_element_factory_cleanup (GstElementFactory * factory)
 {

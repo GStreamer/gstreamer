@@ -1,5 +1,13 @@
 2004-07-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	patch by: Benjamin Otte
+
+	* gst/gstelementfactory.c: (__gst_element_details_set):
+	  fix for #147929: running gst-register in non-utf8 locale can cause
+	  invalid registry
+
+2004-07-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	patch by: Wim Taymans
 
 	* gst/schedulers/gstoptimalscheduler.c: (group_num_elements),
