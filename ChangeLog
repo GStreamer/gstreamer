@@ -2,6 +2,10 @@
 
 	* gst/matroska/ebml-read.c: (gst_ebml_peed_id), (gst_ebml_read_element_id),
 	handle EOS correctly
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_video_pad_link):
+	* gst/matroska/matroska-mux.h:
+	added BITMAPINFOHEADER structure, mux video/x-divx and video/x-xvid in
+	VFW compatibility mode
 
 2004-08-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
