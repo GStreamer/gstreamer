@@ -778,7 +778,7 @@ GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
 dnl **** Free AAC Decoder (FAAD) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
 GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
-  GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, , faad.h, FAAD_LIBS="-lfaad")
+  GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h, FAAD_LIBS="-lfaad -lm")
   AS_SCRUB_INCLUDE(FAAD_CFLAGS)
   AC_SUBST(FAAD_LIBS)
 ])
