@@ -42,3 +42,9 @@ CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = gsttcp-marshal.list
 
+noinst_PROGRAMS = fdsetstress
+
+fdsetstress_SOURCES = fdsetstress.c gstfdset.c 
+fdsetstress_CFLAGS = $(GST_CFLAGS) $(GTK_CFLAGS)
+fdsetstress_LDFLAGS = $(GST_LIBS) $(GTK_LIBS)
+

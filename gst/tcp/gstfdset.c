@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define MIN_POLLFDS	4096
+#define MIN_POLLFDS	32
 #define INIT_POLLFDS	MIN_POLLFDS
 
 #include <sys/poll.h>
@@ -72,26 +72,44 @@ struct _GstFDSet
 static gint
 nearest_pow (gint num)
 {
-  gint n = 1;
+  /* hacker's delight page 48 */
+  num -= 1;
+  num |= num >> 1;
+  num |= num >> 2;
+  num |= num >> 4;
+  num |= num >> 8;
+  num |= num >> 16;
 
-  while (n < num)
-    n <<= 1;
+  return num + 1;
+}
 
-  return n;
+/* resize a given pollfd array from old_size number of items
+ * to new_size number of items. Also initializes the new elements
+ * with the default values. */
+static struct pollfd *
+resize (struct pollfd *fds, gint old_size, gint new_size)
+{
+  struct pollfd *res;
+  gint i;
+
+  res = g_realloc (fds, new_size * sizeof (struct pollfd));
+  for (i = old_size; i < new_size; i++) {
+    res[i].fd = -1;
+    res[i].events = 0;
+    res[i].revents = 0;
+  }
+  return res;
 }
 
 static void
 ensure_size (GstFDSet * set, gint len)
 {
-  guint need = len * sizeof (struct pollfd);
+  if (len > set->size) {
+    len = nearest_pow (len);
+    len = MAX (len, MIN_POLLFDS);
 
-  if (need > set->size) {
-    need = nearest_pow (need);
-    need = MAX (need, MIN_POLLFDS * sizeof (struct pollfd));
-
-    set->pollfds = g_realloc (set->pollfds, need);
-
-    set->size = need;
+    set->pollfds = resize (set->pollfds, set->size, len);
+    set->size = len;
   }
 }
 
@@ -117,7 +135,7 @@ gst_fdset_new (GstFDSetMode mode)
       ensure_size (nset, MIN_POLLFDS);
       break;
     case GST_FDSET_MODE_EPOLL:
-      g_warning ("implement me");
+      g_warning ("implement EPOLL mode in GstFDSet");
       break;
     default:
       break;
@@ -138,7 +156,7 @@ gst_fdset_free (GstFDSet * set)
       g_mutex_free (set->poll_lock);
       break;
     case GST_FDSET_MODE_EPOLL:
-      g_warning ("implement me");
+      g_warning ("implement EPOLL mode in GstFDSet");
       break;
     default:
       break;
@@ -152,7 +170,7 @@ gst_fdset_set_mode (GstFDSet * set, GstFDSetMode mode)
 {
   g_return_if_fail (set != NULL);
 
-  g_warning ("implement me");
+  g_warning ("implement set_mode in GstFDSet");
 }
 
 GstFDSetMode
@@ -275,14 +293,22 @@ gst_fdset_fd_ctl_write (GstFDSet * set, GstFD * fd, gboolean active)
       break;
     case GST_FDSET_MODE_POLL:
     {
-      gint events = set->pollfds[fd->idx].events;
+      gint idx;
 
-      if (active)
-        events |= POLLOUT;
-      else
-        events &= ~POLLOUT;
+      g_mutex_lock (set->poll_lock);
 
-      set->pollfds[fd->idx].events = events;
+      idx = fd->idx;
+      if (idx >= 0) {
+        gint events = set->pollfds[idx].events;
+
+        if (active)
+          events |= POLLOUT;
+        else
+          events &= ~POLLOUT;
+
+        set->pollfds[idx].events = events;
+      }
+      g_mutex_unlock (set->poll_lock);
       break;
     }
     case GST_FDSET_MODE_EPOLL:
@@ -305,14 +331,22 @@ gst_fdset_fd_ctl_read (GstFDSet * set, GstFD * fd, gboolean active)
       break;
     case GST_FDSET_MODE_POLL:
     {
-      gint events = set->pollfds[fd->idx].events;
+      gint idx;
 
-      if (active)
-        events |= (POLLIN | POLLPRI);
-      else
-        events &= ~(POLLIN | POLLPRI);
+      g_mutex_lock (set->poll_lock);
 
-      set->pollfds[fd->idx].events = events;
+      idx = fd->idx;
+      if (idx >= 0) {
+        gint events = set->pollfds[idx].events;
+
+        if (active)
+          events |= (POLLIN | POLLPRI);
+        else
+          events &= ~(POLLIN | POLLPRI);
+
+        set->pollfds[idx].events = events;
+      }
+      g_mutex_unlock (set->poll_lock);
       break;
     }
     case GST_FDSET_MODE_EPOLL:
@@ -334,9 +368,11 @@ gst_fdset_fd_has_closed (GstFDSet * set, GstFD * fd)
       break;
     case GST_FDSET_MODE_POLL:
     {
-      gint idx = fd->idx;
+      gint idx;
 
       g_mutex_lock (set->poll_lock);
+      idx = fd->idx;
+
       if (idx >= 0 && idx < set->last_testpollfds) {
         res = (set->testpollfds[idx].revents & POLLHUP) != 0;
       }
@@ -363,9 +399,11 @@ gst_fdset_fd_has_error (GstFDSet * set, GstFD * fd)
       break;
     case GST_FDSET_MODE_POLL:
     {
-      gint idx = fd->idx;
+      gint idx;
 
       g_mutex_lock (set->poll_lock);
+      idx = fd->idx;
+
       if (idx >= 0 && idx < set->last_testpollfds) {
         res = (set->testpollfds[idx].revents & (POLLERR | POLLNVAL)) != 0;
       }
@@ -392,9 +430,11 @@ gst_fdset_fd_can_read (GstFDSet * set, GstFD * fd)
       break;
     case GST_FDSET_MODE_POLL:
     {
-      gint idx = fd->idx;
+      gint idx;
 
       g_mutex_lock (set->poll_lock);
+      idx = fd->idx;
+
       if (idx >= 0 && idx < set->last_testpollfds) {
         res = (set->testpollfds[idx].revents & (POLLIN | POLLPRI)) != 0;
       }
@@ -421,9 +461,11 @@ gst_fdset_fd_can_write (GstFDSet * set, GstFD * fd)
       break;
     case GST_FDSET_MODE_POLL:
     {
-      gint idx = fd->idx;
+      gint idx;
 
       g_mutex_lock (set->poll_lock);
+      idx = fd->idx;
+
       if (idx >= 0 && idx < set->last_testpollfds) {
         res = (set->testpollfds[idx].revents & POLLOUT) != 0;
       }
@@ -469,7 +511,7 @@ gst_fdset_wait (GstFDSet * set, int timeout)
     {
       g_mutex_lock (set->poll_lock);
       if (set->testsize != set->size) {
-        set->testpollfds = g_realloc (set->testpollfds, set->size);
+        set->testpollfds = resize (set->testpollfds, set->testsize, set->size);
         set->testsize = set->size;
       }
       set->last_testpollfds = set->last_pollfds;
