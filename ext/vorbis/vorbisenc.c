@@ -96,7 +96,8 @@ gst_vorbisenc_get_formats (GstPad * pad)
 #define BITRATE_DEFAULT 	-1
 #define MIN_BITRATE_DEFAULT 	-1
 #define QUALITY_DEFAULT 	0.3
-#define LOWEST_BITRATE 8000     /* lowest allowed for a 8 kHz stream */
+#define LOWEST_BITRATE 		6000    /* lowest allowed for a 8 kHz stream */
+#define HIGHEST_BITRATE 	250001  /* highest allowed for a 44 kHz stream */
 
 static void gst_vorbisenc_base_init (gpointer g_class);
 static void gst_vorbisenc_class_init (VorbisEncClass * klass);
@@ -198,16 +199,20 @@ gst_vorbisenc_class_init (VorbisEncClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_BITRATE,
       g_param_spec_int ("max-bitrate", "Maximum Bitrate",
-          "Specify a maximum bitrate (in bps). Useful for encoding for a fixed-size channel",
-          -1, G_MAXINT, MAX_BITRATE_DEFAULT, G_PARAM_READWRITE));
+          "Specify a maximum bitrate (in bps). Useful for streaming "
+          "applications. (-1 == disabled)",
+          -1, HIGHEST_BITRATE, MAX_BITRATE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_int ("bitrate", "Target Bitrate",
-          "Specify a target average bitrate (in bps). ",
-          -1, G_MAXINT, BITRATE_DEFAULT, G_PARAM_READWRITE));
+          "Attempt to encode at a bitrate averaging this (in bps). "
+          "This uses the bitrate management engine, and is not recommended for most users. "
+          "Quality is a better alternative. (-1 == disabled)",
+          -1, HIGHEST_BITRATE, BITRATE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MIN_BITRATE,
       g_param_spec_int ("min_bitrate", "Minimum Bitrate",
-          "Specify a minimum bitrate (in bps).",
-          -1, G_MAXINT, MIN_BITRATE_DEFAULT, G_PARAM_READWRITE));
+          "Specify a minimum bitrate (in bps). Useful for encoding for a "
+          "fixed-size channel. (-1 == disabled)",
+          -1, HIGHEST_BITRATE, MIN_BITRATE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_float ("quality", "Quality",
           "Specify quality instead of specifying a particular bitrate.",
