@@ -55,9 +55,9 @@ struct _GstAviMux {
   /* pads */
   GstPad *srcpad;
   GstPad *audiosinkpad[MAX_NUM_AUDIO_PADS];
-  gint num_audio_pads;
+  gint num_audio_pads, num_audio_pads_connected;
   GstPad *videosinkpad[MAX_NUM_VIDEO_PADS];
-  gint num_video_pads;
+  gint num_video_pads, num_video_pads_connected;
 
   /* timestamps of first and current frame + num_frames for fps calculation */
   gdouble framerate;
