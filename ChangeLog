@@ -1,3 +1,11 @@
+2005-01-09  Francis Labonte  <francis_labonte@hotmail.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	  Don't call mad_stream_sync() directly after recovering sync.
+	  Fixes #151661.
+
 2005-01-09  Martin Eikermann  <meiker@upb.de>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

@@ -1270,6 +1270,7 @@ gst_mad_chain (GstPad * pad, GstData * _data)
       guint64 time_offset;
       guint64 time_duration;
       unsigned char const *before_sync, *after_sync;
+      gboolean resync = TRUE;
 
       mad->in_error = FALSE;
 
@@ -1329,6 +1330,9 @@ gst_mad_chain (GstPad * pad, GstData * _data)
              * id3 tags, so we need to flush one byte less than the tagsize */
             mad_stream_skip (&mad->stream, tagsize - 1);
 
+            /* When we skip, we don't want to call sync */
+            resync = FALSE;
+
             tag = id3_tag_parse (data, tagsize);
             if (tag) {
               GstTagList *list;
@@ -1350,23 +1354,27 @@ gst_mad_chain (GstPad * pad, GstData * _data)
             }
           }
         }
+        //Should not sync here if mad_skip has been used before, the offset
+        //is "pending" inside mad and will be applied on next call to decode.
+        if (resync) {
+          mad_frame_mute (&mad->frame);
+          mad_synth_mute (&mad->synth);
+          before_sync = mad->stream.ptr.byte;
+          if (mad_stream_sync (&mad->stream) != 0)
+            GST_WARNING ("mad_stream_sync failed");
+          after_sync = mad->stream.ptr.byte;
+          /* a succesful resync should make us drop bytes as consumed, so
+             calculate from the byte pointers before and after resync */
+          consumed = after_sync - before_sync;
+          GST_DEBUG ("resynchronization consumes %d bytes", consumed);
+          GST_DEBUG ("synced to data: 0x%0x 0x%0x", *mad->stream.ptr.byte,
+              *(mad->stream.ptr.byte + 1));
 
-        mad_frame_mute (&mad->frame);
-        mad_synth_mute (&mad->synth);
-        before_sync = mad->stream.ptr.byte;
-        if (mad_stream_sync (&mad->stream) != 0)
-          GST_WARNING ("mad_stream_sync failed");
-        after_sync = mad->stream.ptr.byte;
-        /* a succesful resync should make us drop bytes as consumed, so
-           calculate from the byte pointers before and after resync */
-        consumed = after_sync - before_sync;
-        GST_DEBUG ("resynchronization consumes %d bytes", consumed);
-        GST_DEBUG ("synced to data: 0x%0x 0x%0x", *mad->stream.ptr.byte,
-            *(mad->stream.ptr.byte + 1));
 
+          mad_stream_sync (&mad->stream);
+          /* recoverable errors pass */
+        }
 
-        mad_stream_sync (&mad->stream);
-        /* recoverable errors pass */
         goto next;
       }
 
