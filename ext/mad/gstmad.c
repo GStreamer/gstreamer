@@ -99,9 +99,6 @@ enum {
 
 enum {
   ARG_0,
-  ARG_LAYER,
-  ARG_MODE,
-  ARG_EMPHASIS,
   ARG_HALF,
   ARG_IGNORE_CRC,
   ARG_METADATA,
@@ -194,7 +191,7 @@ gst_mad_get_type (void)
 }
 
 #define GST_TYPE_MAD_LAYER (gst_mad_layer_get_type())
-static GType
+G_GNUC_UNUSED static GType
 gst_mad_layer_get_type(void) {
   static GType mad_layer_type = 0;
   static GEnumValue mad_layer[] = {
@@ -211,7 +208,7 @@ gst_mad_layer_get_type(void) {
 }
 
 #define GST_TYPE_MAD_MODE (gst_mad_mode_get_type())
-static GType
+G_GNUC_UNUSED static GType
 gst_mad_mode_get_type(void) {
   static GType mad_mode_type = 0;
   static GEnumValue mad_mode[] = {
@@ -229,7 +226,7 @@ gst_mad_mode_get_type(void) {
 }
 
 #define GST_TYPE_MAD_EMPHASIS (gst_mad_emphasis_get_type())
-static GType
+G_GNUC_UNUSED static GType
 gst_mad_emphasis_get_type(void) {
   static GType mad_emphasis_type = 0;
   static GEnumValue mad_emphasis[] = {
@@ -265,15 +262,6 @@ gst_mad_class_init (GstMadClass *klass)
   /* init properties */
   /* currently, string representations are used, we might want to change that */
   /* FIXME: descriptions need to be more technical, default values and ranges need to be selected right */
-  g_object_class_install_property (gobject_class, ARG_LAYER,
-    g_param_spec_enum ("layer", "Layer", "The audio MPEG Layer this stream is encoded in",
-			GST_TYPE_MAD_LAYER, 0, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_MODE,
-    g_param_spec_enum ("mode", "Mode", "The current mode of the channels",
-		       GST_TYPE_MAD_MODE, -1, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_EMPHASIS,
-    g_param_spec_enum ("emphasis", "Emphasis", "Emphasis",
-		       GST_TYPE_MAD_EMPHASIS, -1, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, ARG_HALF,
     g_param_spec_boolean ("half", "Half", "Generate PCM at 1/2 sample rate",
 		          FALSE, G_PARAM_READWRITE));
@@ -322,6 +310,8 @@ gst_mad_init (GstMad *mad)
   mad->restart = FALSE;
   mad->header.mode = -1;
   mad->header.emphasis = -1;
+  mad->metadata = NULL;
+  mad->streaminfo = NULL;
 
   mad->half = FALSE;
   mad->ignore_crc = FALSE;
@@ -710,15 +700,6 @@ gst_mad_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
   mad = GST_MAD (object);
 
   switch (prop_id) {
-    case ARG_LAYER:
-      g_value_set_enum (value, mad->header.layer);
-      break;
-    case ARG_MODE:
-      g_value_set_enum (value, mad->header.mode);
-      break;
-    case ARG_EMPHASIS:
-      g_value_set_enum (value, mad->header.emphasis);
-      break;
     case ARG_HALF:
       g_value_set_boolean (value, mad->half);
       break;
@@ -737,22 +718,55 @@ gst_mad_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
   }
 }
 
+static GstCaps*
+gst_mad_get_streaminfo (GstMad *mad)
+{
+  GstCaps *caps;
+  GstProps *props;
+  GstPropsEntry *entry;
+  GEnumValue *value;
+  GEnumClass *klass;
+
+  props = gst_props_empty_new ();
+
+  entry = gst_props_entry_new ("layer", GST_PROPS_INT (mad->header.layer));
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+
+  klass = g_type_class_ref (GST_TYPE_MAD_MODE);
+  value = g_enum_get_value (klass,
+		            mad->header.mode);
+  entry = gst_props_entry_new ("mode", GST_PROPS_STRING (value->value_nick));
+  g_type_class_unref (klass);
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+
+  klass = g_type_class_ref (GST_TYPE_MAD_EMPHASIS);
+  value = g_enum_get_value (klass,
+		            mad->header.emphasis);
+  entry = gst_props_entry_new ("emphasis", GST_PROPS_STRING (value->value_nick));
+  g_type_class_unref (klass);
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+
+  caps = gst_caps_new ("mad_streaminfo",
+		       "application/x-gst-streaminfo",
+		       props);
+  return caps;
+}
+
 static void
 gst_mad_update_info (GstMad *mad)
 {
   gint abr = mad->vbr_average;
   struct mad_header *header = &mad->frame.header;
+  gboolean changed = FALSE;
 
 #define CHECK_HEADER(h1,str) 					\
 G_STMT_START{							\
   if (mad->header.h1 != header->h1 || mad->new_header) {	\
     mad->header.h1 = header->h1;				\
-    g_object_notify (G_OBJECT (mad), str);			\
+     changed = TRUE;						\
   };								\
 } G_STMT_END
   
-  g_object_freeze_notify (G_OBJECT (mad));
-
   /* update average bitrate */
   if (mad->new_header) {
     mad->framecount = 1;
@@ -772,8 +786,14 @@ G_STMT_START{							\
     mad->header.bitrate = header->bitrate;
   }
   mad->new_header = FALSE;
-  
-  g_object_thaw_notify (G_OBJECT (mad));
+
+  if (changed) {
+    if (mad->streaminfo) {
+      gst_caps_unref (mad->streaminfo);
+    }
+    mad->streaminfo = gst_mad_get_streaminfo (mad);
+    g_object_notify (G_OBJECT (mad), "streaminfo");
+  }
   
 #undef CHECK_HEADER
 }
@@ -910,45 +930,6 @@ fail:
 
   return caps;
 }
-static GstCaps *
-gst_mad_get_streaminfo (GstMad *mad)
-{
-  GstCaps *caps;
-  GstProps *props;
-  GstPropsEntry *entry;
-  GEnumValue *value;
-  GEnumClass *klass;
-
-  props = gst_props_empty_new ();
-
-  entry = gst_props_entry_new ("layer", GST_PROPS_INT (mad->header.layer));
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
-
-  klass = g_type_class_ref (GST_TYPE_MAD_MODE);
-  value = g_enum_get_value (klass,
-		            mad->header.mode);
-  entry = gst_props_entry_new ("mode", GST_PROPS_STRING (value->value_nick));
-  g_type_class_unref (klass);
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
-
-  klass = g_type_class_ref (GST_TYPE_MAD_EMPHASIS);
-  value = g_enum_get_value (klass,
-		            mad->header.emphasis);
-  entry = gst_props_entry_new ("emphasis", GST_PROPS_STRING (value->value_nick));
-  g_type_class_unref (klass);
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
-
-  /*
-  entry = gst_props_entry_new ("emphasis", GST_PROPS_INT ( mad->header.layer));
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
-  */
- 
-  caps = gst_caps_new ("mad_streaminfo",
-		       "application/x-gst-streaminfo",
-		       props);
-  return caps;
-}
-
 
 static void
 gst_mad_chain (GstPad *pad, GstBuffer *buffer)
@@ -1117,8 +1098,6 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       if (mad->channels != nchannels || mad->rate != rate) {
         if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE) 
 	  rate >>=1;
-	mad->streaminfo = gst_mad_get_streaminfo (mad);
-	g_object_notify (G_OBJECT (mad), "streaminfo");
 
 	/* we set the caps even when the pad is not connected so they
 	 * can be gotten for streaminfo */
@@ -1254,6 +1233,8 @@ gst_mad_change_state (GstElement *element)
       mad_frame_finish (&mad->frame);
       mad_stream_finish (&mad->stream);
       mad->restart = TRUE;
+      mad->metadata = NULL;
+      mad->streaminfo = NULL;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
