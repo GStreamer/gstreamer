@@ -44,9 +44,9 @@ AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
 dnl objective-c for OSX (should check if os is darwin)
+AM_CONDITIONAL([am__fastdepOBJC], false)
 case "$host" in
   *-*darwin*)
-  AM_CONDITIONAL([am__fastdepOBJC], false)
   OBJC="${CC}"
   AC_SUBST(OBJC)
   OBJCFLAGS="${CFLAGS}"
@@ -489,11 +489,16 @@ GST_CHECK_FEATURE(OSX_AUDIO, [OSX audio], osxaudiosrc osxaudiosink, [
 dnl *** OS X video ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_VIDEO, true)
 HAVE_OSX_VIDEO="no"
+GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
+  AC_CHECK_HEADER(OpenGL/gl.h, HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no")
+])
+dnl in case header OpenGL/gl.h is found on other platforms
 case "$host" in
   *-*darwin*)
-    GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
-      AC_CHECK_HEADER(OpenGL/gl.h, HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no")
-    ])
+    dnl do nothing
+    ;;
+  *)
+    HAVE_OSX_VIDEO="no"
     ;;
 esac
 
