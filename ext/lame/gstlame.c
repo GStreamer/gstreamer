@@ -72,7 +72,7 @@ gst_lame_mode_get_type (void)
     {2, "2", "Dual channel"},
     {3, "3", "Mono"},
     {4, "4", "Auto"},
-    {0, NULL, NULL},
+    {0, NULL, NULL}
   };
 
   if (!lame_mode_type) {
@@ -97,7 +97,7 @@ gst_lame_quality_get_type (void)
     {7, "7", "7"},
     {8, "8", "8"},
     {9, "9", "9 - Worst"},
-    {0, NULL, NULL},
+    {0, NULL, NULL}
   };
 
   if (!lame_quality_type) {
@@ -115,7 +115,7 @@ gst_lame_padding_get_type (void)
     {0, "0", "No Padding"},
     {1, "1", "Always Pad"},
     {2, "2", "Adjust Padding"},
-    {0, NULL, NULL},
+    {0, NULL, NULL}
   };
 
   if (!lame_padding_type) {
@@ -142,6 +142,28 @@ gst_lame_vbrmode_get_type (void)
   }
 
   return lame_vbrmode_type;
+}
+
+#define GST_TYPE_LAME_PRESET (gst_lame_preset_get_type())
+static GType
+gst_lame_preset_get_type (void)
+{
+  static GType gst_lame_preset = 0;
+  static GEnumValue gst_lame_presets[] = {
+    {0, "0", "None"},
+    {MEDIUM, "1", "Medium"},
+    {STANDARD, "2", "Standard"},
+    {EXTREME, "3", "Extreme"},
+    {INSANE, "4", "Insane"},
+    {0, NULL, NULL}
+  };
+
+  if (!gst_lame_preset) {
+    gst_lame_preset =
+        g_enum_register_static ("GstLamePreset", gst_lame_presets);
+  }
+
+  return gst_lame_preset;
 }
 
 /********** Standard stuff for signals and arguments **********/
@@ -186,7 +208,8 @@ enum
   ARG_NO_SHORT_BLOCKS,
   ARG_EMPHASIS,
   ARG_VBR_QUALITY,
-  ARG_XINGHEADER
+  ARG_XINGHEADER,
+  ARG_PRESET
 };
 
 static void gst_lame_base_init (gpointer g_class);
@@ -369,6 +392,9 @@ gst_lame_class_init (GstLameClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_XINGHEADER,
       g_param_spec_boolean ("xingheader", "Output Xing Header",
           "Output Xing Header", FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PRESET,
+      g_param_spec_enum ("preset", "Lame Preset", "Lame Preset",
+          GST_TYPE_LAME_PRESET, 0, G_PARAM_READWRITE));
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
 
@@ -538,7 +564,7 @@ gst_lame_init (GstLame * lame)
   lame->no_short_blocks = TRUE; /* lame_get_no_short_blocks (lame->lgf); */
   lame->emphasis = lame_get_emphasis (lame->lgf);
   lame->xingheader = FALSE;
-
+  lame->preset = 0;
   lame->tags = gst_tag_list_new ();
 
   id3tag_init (lame->lgf);
@@ -745,6 +771,9 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_XINGHEADER:
       lame->xingheader = g_value_get_boolean (value);
       break;
+    case ARG_PRESET:
+      lame->preset = g_value_get_enum (value);
+      break;
     default:
       break;
   }
@@ -858,6 +887,9 @@ gst_lame_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_XINGHEADER:
       g_value_set_boolean (value, lame->xingheader);
+      break;
+    case ARG_PRESET:
+      g_value_set_enum (value, lame->preset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1045,6 +1077,9 @@ gst_lame_setup (GstLame * lame)
   CHECK_ERROR (lame_set_no_short_blocks (lame->lgf, lame->no_short_blocks));
   CHECK_ERROR (lame_set_emphasis (lame->lgf, lame->emphasis));
   CHECK_ERROR (lame_set_bWriteVbrTag (lame->lgf, lame->xingheader ? 1 : 0));
+  if (lame->preset > 0) {
+    CHECK_ERROR (lame_set_preset (lame->lgf, lame->preset));
+  }
   gst_lame_set_metadata (lame);
 
   /* initialize the lame encoder */
