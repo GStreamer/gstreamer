@@ -109,6 +109,7 @@ read_config ($0);
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}",
   "m1v", "mpegdemux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
   "m2v", "mpegdemux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
+  "m4a", "qtdemux ! { queue .audio_00! faad ! $cfg{AUDIOSINK} }",
   "mod", "modplug !  $cfg{AUDIOSINK}",
   "mp2", "mad ! $cfg{AUDIOSINK}",
   "mp3", "mad ! $cfg{AUDIOSINK}",
@@ -120,6 +121,7 @@ read_config ($0);
   "vob", "mpegdemux name=demux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }  { demux. ! queue ! a52dec ! $cfg{AUDIOSINK} }",
   "wav", "wavparse ! $cfg{AUDIOSINK}",
   "wm", "asfdemux name=demux ! { queue ! ffmpegdecall ! $cfg{VIDEOSINK} } { demux. ! queue ! mad ! $cfg{AUDIOSINK} }",
+### a wma file can use wmav1 or wmav2 codec so we must use spider to decode it  
   "wma", "asfdemux name=demux ! spider ! $cfg{AUDIOSINK}",
   "wmv", "asfdemux name=demux ! { queue ! ffmpegdecall ! $cfg{VIDEOSINK} } { demux. ! queue ! mad ! $cfg{AUDIOSINK} }",
 );
