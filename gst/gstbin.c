@@ -352,8 +352,13 @@ gst_bin_add (GstBin *bin, GstElement *element)
   g_return_if_fail (GST_ELEMENT_PARENT (element) == NULL);
 
   /* then check to see if the element's name is already taken in the bin */
-  g_return_if_fail (gst_object_check_uniqueness (bin->children, GST_ELEMENT_NAME (element)) ==
-		    TRUE);
+  if (gst_object_check_uniqueness (bin->children, 
+	                           GST_ELEMENT_NAME (element)) == FALSE)
+  {
+    g_warning ("Name %s is not unique in bin %s, not adding\n",
+	       GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
+    return;
+  }
 
   /* set the element's parent and add the element to the bin's list of children */
   gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
