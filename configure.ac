@@ -376,12 +376,6 @@ dnl FIXME: thomasvs: I don't understand this, have replaced the check
 dnl translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
 dnl GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
 
-dnl Check for xmms
-dnl translit(dnm, m, l) AM_CONDITIONAL(USE_LIBXMMS, true)
-dnl GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
-dnl  AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
-dnl ], disabled)
-
 dnl Check for alsa
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
 GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
@@ -450,7 +444,7 @@ ARTS_MCOPFLAGS="$ARTS_CFLAGS"
 AC_SUBST(ARTS_MCOPFLAGS)   
 
 dnl Check for xmms
-AM_PATH_XMMS(0.9.4, HAVE_XXMS=yes, HAVE_XMMS=no)
+AM_PATH_XMMS(0.9.4, HAVE_XMMS=yes, HAVE_XMMS=no)
 
 dnl Check for libglade
 HAVE_LIBGLADE_GNOME="no"
