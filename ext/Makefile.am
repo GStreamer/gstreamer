@@ -214,6 +214,12 @@ else
 SMOOTHWAVE_DIR=
 endif
 
+if USE_SNDFILE
+SNDFILE_DIR=sndfile
+else
+SNDFILE_DIR=
+endif
+
 if USE_SWFDEC
 SWFDEC_DIR=swfdec
 else
