@@ -82,7 +82,7 @@ Container formats
 1 - AVI (Microsoft RIFF/AVI)
     MIME type: video/x-msvideo
     Properties:
-    Parser: avidemux
+    Parser: avidemux, ffdemux_avi
     Formatter: avimux
 
 2 - Quicktime (Apple)
@@ -94,19 +94,19 @@ Container formats
 3 - MPEG (MPEG LA)
     MIME type: video/mpeg
     Properties: 'systemstream' = TRUE (BOOLEAN)
-    Parser: mpegdemux
+    Parser: mpegdemux, ffdemux_mpeg (PS), ffdemux_mpegts (TS), dvddemux
     Formatter: mplex
 
 4 - ASF (Microsoft)
     MIME type: video/x-ms-asf
     Properties:
-    Parser: asfdemux
+    Parser: asfdemux, ffdemux_asf
     Formatter: asfmux
 
 5 - WAV (Microsoft RIFF/WAV)
     MIME type: audio/x-wav
     Properties:
-    Parser: wavparse
+    Parser: wavparse, ffdemux_wav
     Formatter: wavenc
 
 6 - RealMedia (Real)
@@ -118,7 +118,7 @@ Container formats
 7 - DV (Digital Video)
     MIME type: video/x-dv
     Properties: 'systemstream' = TRUE (BOOLEAN)
-    Parser: gst1394
+    Parser: gst1394, ffdemux_dv
     Formatter:
 
 8 - Ogg (Xiph)
@@ -130,13 +130,13 @@ Container formats
 9 - Matroska
     MIME type: video/x-mkv
     Properties:
-    Parser: matroskademux
+    Parser: matroskademux, ffdemux_matroska
     Formatter: matroskamux
 
 10 - Shockwave (Macromedia)
      MIME type: application/x-shockwave-flash
      Properties:
-     Parser: swfdec
+     Parser: swfdec, ffdemux_swf
      Formatter:
 
 11 - AU audio (Sun)
@@ -172,7 +172,7 @@ Container formats
 16 - SID audio
      MIME type: audio/x-sid
      Properties:
-     Parser:
+     Parser: siddec
      Formatter:
 
 Please note that we try to keep these MIME types as similar as possible to the
@@ -239,12 +239,12 @@ framerate = 0 - MAXFLOAT (FLOAT)
     MIME type: video/x-h263
     Properties:
     Known fourccs: H263, i263, M263, x263, VDOW, VIVO
-    Encoder:
-    Decoder:
+    Encoder: ffenc_h263, ffenc_h263p
+    Decoder: ffdec_h263, ffdec_h263i
 
 7 - RealVideo (Real)
     MIME type: video/x-pn-realvideo
-    Properties: systemstream = FALSE (BOOLEAN)
+    Properties: rmversion = "1"/"2"/"3"/"4" (INT)
     Known fourccs: RV10, RV20, RV30, RV40
     Encoder: ffenc_rv10
     Decoder: ffdec_rv10, ffdec_rv20
@@ -253,13 +253,13 @@ framerate = 0 - MAXFLOAT (FLOAT)
     MIME type: video/x-dv
     Properties: systemstream = FALSE (BOOLEAN)
     Known fourccs: DVSD, dvsd
-    Encoder:
-    Decoder: dvdec
+    Encoder: ffenc_dvvideo
+    Decoder: dvdec, ffdec_dvvideo
 
 9 - Windows Media Video 1, 2 and 3 (WMV)
     MIME type: video/x-wmv
     Properties: wmvversion = 1/2/3 (INT)
-    Encoder:
+    Encoder: ffenc_wmv1, ffenc_wmv2, none
     Decoder: ffdec_wmv1, ffdec_wmv2, none
 
 10 - XviD (xvid.org)
@@ -269,7 +269,7 @@ framerate = 0 - MAXFLOAT (FLOAT)
      Encoder: xvidenc
      Decoder: xviddec, ffdec_mpeg4
 
-11 - 3IVX (3ixv.org)
+11 - 3IVX (3ivx.org)
      MIME type: video/x-3ivx
      Properties:
      Known fourccs: 3IV0, 3IV1, 3IV2
@@ -291,8 +291,8 @@ framerate = 0 - MAXFLOAT (FLOAT)
 14 - Ogg/Theora (Xiph, VP3-like)
      MIME type: video/x-theora
      Properties:
-     Encoder:
-     Decoder:
+     Encoder: theoraenc
+     Decoder: theoradec, ffdec_theora
      This is the raw stream that comes out of an ogg file.
 
 15 - Huffyuv
@@ -312,25 +312,25 @@ framerate = 0 - MAXFLOAT (FLOAT)
      MIME type: video/x-h264
      Properties:
      Encoder:
-     Decoder:
+     Decoder: ffdec_h264
 
 18 - Indeo 3 (Intel)
      MIME type: video/x-indeo
      Properties: indeoversion = 3 (INT)
      Encoder:
-     Decoder:
+     Decoder: ffdec_indeo3
 
 19 - Portable Network Graphics (PNG)
      MIME type: video/x-png
      Properties:
-     Encoder:
-     Decoder:
+     Encoder: pngenc
+     Decoder: pngdec, gdkpixbufdec
 
 20 - Cinepak
      MIME type: video/x-cinepak
      Properties:
      Encoder:
-     Decoder:
+     Decoder: ffdec_cinepak
 
 TODO: subsampling information for YUV?
 
@@ -367,7 +367,7 @@ channels = 1 - MAXINT (INT, number of audio channels)
     MIME type: audio/mpeg
     Properties: mpegversion = 1 (INT)
                 layer = 1/2/3 (INT)
-    Encoder: lame
+    Encoder: lame, ffdec_mp3
     Decoder: mad
 
 4 - Ogg/Vorbis
@@ -385,19 +385,19 @@ channels = 1 - MAXINT (INT, number of audio channels)
     MIME type: audio/x-ac3
     Properties:
     Encoder: ffenc_ac3
-    Decoder: a52dec
+    Decoder: a52dec, ac3parse
 
 7 - FLAC (Free Lossless Audio Codec)
     MIME type: audio/x-flac
     Properties:
     Encoder: flacenc
-    Decoder: flacdec
+    Decoder: flacdec, ffdec_flac
 
 8 - MACE 3/6 (Quicktime audio)
     MIME type: audio/x-mace
     Properties: maceversion = 3/6 (INT)
     Encoder:
-    Decoder:
+    Decoder: ffdec_mace3, ffdec_mace6
 
 9 - MPEG-4 AAC
     MIME type: audio/mpeg
@@ -408,8 +408,8 @@ channels = 1 - MAXINT (INT, number of audio channels)
 10 - (IMA) ADPCM (Quicktime/WAV/Microsoft/4XM)
      MIME type: audio/x-adpcm
      Properties: layout = "quicktime"/"wav"/"microsoft"/"4xm"/"g721"/"g722"/"g723_3"/"g723_5" (STRING)
-     Encoder:
-     Decoder:
+     Encoder: ffenc_adpcm_ima_[qt/wav/dk3/dk4/ws/smjpeg], ffenc_adpcm_[ms/4xm/xa/adx/ea]
+     Decoder: ffdec_adpcm_ima_[qt/wav/dk3/dk4/ws/smjpeg], ffdec_adpcm_[ms/4xm/xa/adx/ea]
 
      Note: The difference between each of these four PCM formats is the number
            of samples packed together per channel. For WAV, for example, each
@@ -420,8 +420,8 @@ channels = 1 - MAXINT (INT, number of audio channels)
 
 11 - RealAudio (Real)
      MIME type: audio/x-pn-realaudio
-     Properties: bitrate = 14400/28800 (INT)
-     Known fourccs: .ra4, .ra5
+     Properties: raversion ="1"/"2" (INT)
+     Known fourccs: 14_4, 28_8
      Encoder:
      Decoder: ffdec_real_144 / ffdec_real_288
 
@@ -434,8 +434,8 @@ channels = 1 - MAXINT (INT, number of audio channels)
 13 - GSM Audio
      MIME type: audio/x-gsm
      Properties:
-     Encoder: gsmenc
-     Decoder: gsmdec
+     Encoder: gsmenc, rtpgsmenc
+     Decoder: gsmdec, rtpgsmparse
 
 14 - Speex audio
      MIME type: audio/x-speex
