@@ -1,0 +1,86 @@
+<!-- ##### SECTION Title ##### -->
+GstFormat
+
+<!-- ##### SECTION Short_Description ##### -->
+Dynamically register new formats
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstFormats functions are used to register a new format to the gstreamer core.
+formats can be used to perform seeking or conversions/query operations.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GstFormat ##### -->
+<para>
+Standard predefined formats
+</para>
+
+@GST_FORMAT_UNDEFINED: undefined format
+@GST_FORMAT_DEFAULT: the default format of the pad/element
+@GST_FORMAT_BYTES: bytes
+@GST_FORMAT_TIME: time in nanoseconds
+@GST_FORMAT_BUFFERS: buffers
+@GST_FORMAT_PERCENT: percentage of stream
+@GST_FORMAT_UNITS: frames for video, samples for audio, other definitions as 
+                   defined by the media type.
+
+<!-- ##### STRUCT GstFormatDefinition ##### -->
+<para>
+A format definition
+</para>
+
+@value: The unique id of this format
+@nick: A short nick of the format
+@description: A longer description of the format
+
+<!-- ##### MACRO GST_FORMATS_FUNCTION ##### -->
+<para>
+A convenience function to define a function that returns an array
+of formats.
+</para>
+
+@functionname: The name of the function
+@...: comma separated list of functions closed with 0
+
+
+<!-- ##### FUNCTION gst_format_register ##### -->
+<para>
+
+</para>
+
+@nick: 
+@description: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_format_get_by_nick ##### -->
+<para>
+
+</para>
+
+@nick: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_format_get_details ##### -->
+<para>
+
+</para>
+
+@format: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_format_get_definitions ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
