@@ -151,11 +151,7 @@ gst_ffmpegcolorspace_getcaps (GstPad * pad)
 
   otherpad = (pad == space->srcpad) ? space->sinkpad : space->srcpad;
 
-  /* use already negotiated caps if they exist */
-  if (GST_PAD_CAPS (otherpad))
-    othercaps = gst_caps_copy (GST_PAD_CAPS (otherpad));
-  if (!othercaps)
-    othercaps = gst_pad_get_allowed_caps (otherpad);
+  othercaps = gst_pad_get_allowed_caps (otherpad);
 
   othercaps = gst_ffmpegcolorspace_caps_remove_format_info (othercaps);
 

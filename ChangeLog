@@ -1,3 +1,9 @@
+2004-04-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcolorspace_getcaps):
+          remove broken nego fix
+
 2004-04-30  Benjamin Otte  <otte@gnome.org>
 
 	* configure.ac:
