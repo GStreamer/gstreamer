@@ -436,9 +436,10 @@ dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_in
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
 dnl *** dvdread ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDVDREAD, true)
-GST_CHECK_FEATURE(LIBDVDREAD, [dvdread library], libdvdread, [
-  GST_CHECK_LIBHEADER(LIBDVDREAD, dvdread, DVDOpen, , dvdread/dvd_reader.h, LIBDVDREAD_LIBS="-ldvdread")
+translit(dnm, m, l) AM_CONDITIONAL(USE_DVDREAD, true)
+GST_CHECK_FEATURE(DVDREAD, [dvdread library], libdvdread, [
+  GST_CHECK_LIBHEADER(DVDREAD, dvdread, DVDOpen, , dvdread/dvd_reader.h, DVDREAD_LIBS="-ldvdread")
+  AC_SUBST(DVDREAD_LIBS)
 ])
 
 dnl **** ESound ****
@@ -860,10 +861,6 @@ if test "x$HAVE_LIBHERMES" = "xyes"; then
   AC_DEFINE(HAVE_LIBHERMES)
 fi
 
-if test "x$HAVE_LIBDVDREAD" = xyes; then
-  AC_DEFINE(HAVE_LIBDVDREAD)
-fi
-
 if test "x$HAVE_A52DEC" = xyes; then
   AC_DEFINE(HAVE_A52DEC)
 fi
@@ -895,7 +892,6 @@ AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
 AM_CONDITIONAL(HAVE_LIBMIKMOD,      test "x$HAVE_LIBMIKMOD" = "xyes")
-AM_CONDITIONAL(HAVE_LIBDVDREAD,     test "x$HAVE_LIBDVDREAD" = "xyes")
 AM_CONDITIONAL(HAVE_LIBJPEG,        test "x$HAVE_LIBJPEG" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSDL,         test "x$HAVE_LIBSDL" = "xyes")
 AM_CONDITIONAL(HAVE_LIBHERMES,      test "x$HAVE_LIBHERMES" = "xyes")

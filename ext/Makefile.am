@@ -22,6 +22,12 @@ else
 AUDIOFILE_DIR=
 endif
 
+if USE_DVDREAD
+DVDREAD_DIR=dvdread
+else
+DVDREAD_DIR=
+endif
+
 if USE_ESD
 ESD_DIR=esd
 else
