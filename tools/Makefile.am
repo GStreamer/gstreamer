@@ -14,6 +14,7 @@ bin_PROGRAMS = 	gst-launch 		\
 		$(GST_REGISTRY_SRC) 	\
 		gst-inspect 		\
 		gst-xmlinspect 		\
+		gst-typefind 		\
 		$(GST_LOADSAVE_SRC) 	\
 		gst-md5sum 		
 
@@ -29,6 +30,10 @@ gst_launch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
 
 gst_md5sum_LDADD = $(GST_LIBS) #-lefence
 gst_md5sum_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
+	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
+
+gst_typefind_LDADD = $(GST_LIBS) #-lefence
+gst_typefind_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
 	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
 
 gst_inspect_LDADD = $(GST_LIBS) ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
