@@ -94,6 +94,7 @@ static void gst_quarktv_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_quarktv_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_quarktv_dispose (GObject * object);
 
 static void gst_quarktv_chain (GstPad * pad, GstData * _data);
 
@@ -164,6 +165,7 @@ gst_quarktv_class_init (GstQuarkTVClass * klass)
 
   gobject_class->set_property = gst_quarktv_set_property;
   gobject_class->get_property = gst_quarktv_get_property;
+  gobject_class->dispose = gst_quarktv_dispose;
 
   gstelement_class->change_state = gst_quarktv_change_state;
 }
@@ -287,8 +289,6 @@ gst_quarktv_change_state (GstElement * element)
           gst_buffer_unref (filter->planetable[i]);
         filter->planetable[i] = NULL;
       }
-      g_free (filter->planetable);
-      filter->planetable = NULL;
       break;
     }
     default:
@@ -361,4 +361,21 @@ gst_quarktv_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_quarktv_dispose (GObject * object)
+{
+  GstQuarkTV *filter = GST_QUARKTV (object);
+  gint i;
+
+  for (i = 0; i < filter->planes; i++) {
+    if (filter->planetable[i])
+      gst_buffer_unref (filter->planetable[i]);
+    filter->planetable[i] = NULL;
+  }
+  g_free (filter->planetable);
+  filter->planetable = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }

@@ -1,3 +1,11 @@
+2005-01-25  Edward Hervey  <bilboed@bilboed.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/effectv/gstquark.c: (gst_quarktv_class_init),
+	(gst_quarktv_change_state), (gst_quarktv_dispose):
+	  Memory free'ing location fix (#164708).
+
 2005-01-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybasebin.c: (group_commit),
