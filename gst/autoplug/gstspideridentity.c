@@ -232,30 +232,40 @@ gst_spider_identity_link (GstPad *pad, const GstCaps *caps)
   else
     otherpad = spider_identity->src;
 
-  if (otherpad != NULL)
-    return gst_pad_proxy_link (otherpad, caps);
-  
-  return GST_PAD_LINK_OK;
+  g_return_val_if_fail (otherpad != NULL, GST_PAD_LINK_REFUSED);
+  if (GST_PAD_PEER (otherpad) == NULL)
+    return GST_PAD_LINK_DELAYED;
+
+  return gst_pad_try_set_caps (otherpad, gst_caps_copy (caps));
 }
 
 static GstCaps*
 gst_spider_identity_getcaps (GstPad *pad)
 {
-  GstSpiderIdentity *spider_identity = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
+  GstSpiderIdentity *ident = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
   GstPad *otherpad;
-  GstPad *peer;
 
-  if (pad == spider_identity->src) 
-    otherpad = spider_identity->sink;
+  if (pad == ident->src) 
+    otherpad = ident->sink;
   else
-    otherpad = spider_identity->src;
+    otherpad = ident->src;
 
   if (otherpad != NULL) {
-    peer = GST_PAD_PEER (otherpad);
+    GstPad *peer = GST_PAD_PEER (otherpad);
 
-    if (peer)
-      return gst_pad_get_caps (peer);
+    if (peer) {
+      GstCaps *ret = gst_pad_get_caps (peer);
+      if (ident->caps) {
+	GstCaps *ret2 = gst_caps_intersect (ident->caps, ret);
+	gst_caps_free (ret);
+	ret = ret2;
+      }
+      return ret;
+    }
   }
+  if (ident->caps)
+    return gst_caps_copy (ident->caps);
+
   return gst_caps_new_any ();
 }
 
@@ -318,6 +328,9 @@ gst_spider_identity_change_state (GstElement *element)
   g_return_val_if_fail (GST_IS_SPIDER_IDENTITY (ident), GST_STATE_FAILURE);
   
   switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_PAUSED_TO_READY:
+      gst_caps_replace (&ident->caps, NULL);
+      break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* autoplugger check */
       spider = GST_SPIDER (GST_ELEMENT_PARENT (ident));
@@ -327,13 +340,16 @@ gst_spider_identity_change_state (GstElement *element)
       /* start typefinding or plugging */
       if ((GST_RPAD_PEER (ident->sink) != NULL) && (GST_RPAD_PEER (ident->src) == NULL))
       {
-        if (gst_pad_get_caps ((GstPad *) GST_PAD_PEER (ident->sink)) == NULL)
+	GstCaps *caps = gst_pad_get_caps ((GstPad *) GST_PAD_PEER (ident->sink));
+        if (gst_caps_is_any (caps) || gst_caps_is_empty (caps))
         {
           gst_spider_identity_start_type_finding (ident);
+	  gst_caps_free (caps);
           break;
         } else {
           gst_spider_identity_plug (ident);
         }
+	gst_caps_free (caps);
       }
       /* autoplug on src */
       if ((GST_RPAD_PEER (ident->src) != NULL) && (GST_RPAD_PEER (ident->sink) == NULL))
@@ -461,8 +477,11 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   find.buffer = GST_BUFFER (data);
   /* maybe there are already valid caps now? */
   find.caps = gst_pad_get_caps (ident->sink);
-  if (find.caps != NULL) {
+  if (! gst_caps_is_empty (find.caps) && !gst_caps_is_any (find.caps)) {
     goto plug;
+  } else {
+    gst_caps_free (find.caps);
+    find.caps = NULL;
   }
   
   /* now do the actual typefinding with the supplied buffer */
@@ -499,9 +518,13 @@ end:
 
 plug:
   GST_INFO ("typefind function found caps"); 
+  ident->caps = find.caps;
   g_assert (gst_pad_try_set_caps (ident->src, find.caps) > 0);
-  gst_caps_debug (find.caps, "spider starting caps");
-  gst_caps_free (find.caps);
+  {
+    gchar *str = gst_caps_to_string (find.caps);
+    GST_LOG_OBJECT (ident, "spider starting caps: %s", str);
+    g_free (str);
+  }
   if (type_list)
     g_list_free (type_list);
 

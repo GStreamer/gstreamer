@@ -54,7 +54,6 @@ struct _GstSpiderIdentity {
 	
   /* Caps from typefinding */
   GstCaps *caps;
-
 };
 
 struct _GstSpiderIdentityClass {

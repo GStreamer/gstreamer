@@ -28,10 +28,8 @@
 #include "gstsearchfuncs.h"
 
 /* FIXME: "evil hack" alarm, we need a better way to get a category in here */
-#ifndef GST_DISABLE_GST_DEBUG
-extern GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT;
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_AUTOPLUG_ATTEMPT);
 #define GST_CAT_DEFAULT GST_CAT_AUTOPLUG_ATTEMPT
-#endif
 
 /* function that really misses in GLib
  * though the GLib version should take a function as argument...
@@ -62,16 +60,14 @@ gst_autoplug_caps_intersect (const GstCaps *src, const GstCaps *sink)
 {
   GstCaps *caps;
 
-  /* if there are no caps, we can link */
-  if ((src == NULL) && (sink == NULL))
-    return TRUE;
-
   /* get an intersection */
   caps = gst_caps_intersect (src, sink);
   
   /* if the caps can't link, there is no intersection */
-  if (caps == NULL)
+  if (gst_caps_is_empty (caps)) {
+    gst_caps_free (caps);
     return FALSE;
+  }
   
   /* hurrah, we can link, now remove the intersection */
   gst_caps_free (caps);

@@ -1,3 +1,13 @@
+2003-12-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/autoplug/gstsearchfuncs.c: (gst_autoplug_caps_intersect):
+	* gst/autoplug/gstspideridentity.c: (gst_spider_identity_link),
+	(gst_spider_identity_getcaps), (gst_spider_identity_change_state),
+	(gst_spider_identity_sink_loop_type_finding):
+	* gst/autoplug/gstspideridentity.h:
+	  Fix autoplugging in spider element, so it works with new caps.
+	  This was mainly caused by identifying empty caps incorrectly.
+
 2003-12-22  David Schleef  <ds@schleef.org>
 
 	* gststructure.c, gstvalue.c, gstvalue.h: Add
