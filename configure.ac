@@ -2109,11 +2109,12 @@ pkgconfig/gstreamer-plugins-uninstalled.pc
 po/Makefile.in
 common/Makefile
 common/m4/Makefile
-docs/Makefile
-docs/libs/Makefile
-docs/version.entities
 m4/Makefile
 )
+dnl disabled until it actually passes make distcheck
+dnl docs/Makefile
+dnl docs/libs/Makefile
+dnl docs/version.entities
 AC_OUTPUT
 
 echo -n "configure: *** Plug-ins that will be built :"
