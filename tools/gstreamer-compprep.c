@@ -42,7 +42,7 @@ int main(int argc,char *argv[]) {
       xmlNewChild (factorynode, NULL, "name", gst_object_get_name (GST_OBJECT (factory)));
 
       element = gst_elementfactory_create(factory,"element");
-      fprintf(stderr,"adding factory %s\n", 
+      fprintf(stdout,"adding factory %s\n", 
               gst_object_get_name (GST_OBJECT (factory)));
       if (element == NULL) {
         fprintf(stderr,"couldn't construct element from factory %s\n", 
@@ -100,7 +100,11 @@ int main(int argc,char *argv[]) {
     }
   }
 
+#ifdef HAVE_LIBXML2
+  xmlSaveFormatFile(GST_CONFIG_DIR "/compreg.xml",doc,1);
+#else
   xmlSaveFile(GST_CONFIG_DIR "/compreg.xml",doc);
+#endif
 
   return 0;
 }
