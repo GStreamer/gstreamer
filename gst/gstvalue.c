@@ -1569,13 +1569,28 @@ gst_value_deserialize (GValue * dest, const gchar * src)
   return FALSE;
 }
 
-enum
+/*
+ * gst_type_is_fixed:
+ * @type:
+ *
+ * Returns:
+ */
+gboolean
+gst_type_is_fixed (GType type)
 {
-  _GST_TYPE_FOURCC = G_TYPE_RESERVED_USER_FIRST,
-  _GST_TYPE_INT_RANGE,
-  _GST_TYPE_DOUBLE_RANGE,
-  _GST_TYPE_VALUE_LIST
-};
+  if (type == GST_TYPE_INT_RANGE || type == GST_TYPE_DOUBLE_RANGE ||
+      type == GST_TYPE_LIST) {
+    return FALSE;
+  }
+  if (G_TYPE_IS_FUNDAMENTAL (type) &&
+      type < G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_GLIB_LAST)) {
+    return TRUE;
+  }
+  if (type == GST_TYPE_BUFFER || type == GST_TYPE_FOURCC) {
+    return TRUE;
+  }
+  return FALSE;
+}
 
 void
 _gst_value_initialize (void)

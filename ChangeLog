@@ -1,5 +1,16 @@
 2004-04-16  David Schleef  <ds@schleef.org>
 
+	* gst/gstcaps.c: (gst_caps_is_fixed_foreach):
+	* gst/gstpad.c: (_gst_pad_default_fixate_foreach):
+	* gst/gstvalue.c: (gst_value_serialize_buffer),
+	(gst_value_deserialize_buffer), (gst_type_is_fixed),
+	(_gst_value_initialize): Create a new function gst_type_is_fixed()
+	to indicate types that are fixed wrt caps or not.  Switching to
+	this function fixes (bug #140298).
+	* gst/gstvalue.h:
+
+2004-04-16  David Schleef  <ds@schleef.org>
+
 	* common/m4/gst-arch.m4:  Implmenent a whitelist and blacklist
 	for GST_UNALIGNED_ACESS, since we essentially know which archs
 	are ok.

@@ -148,6 +148,8 @@ void                     gst_value_register_intersect_func (GType               
 							    GType                 type2,
 							    GstValueIntersectFunc func);
 
+gboolean                 gst_type_is_fixed                 (GType type);
+
 /* private */
 void                     _gst_value_initialize (void);
 

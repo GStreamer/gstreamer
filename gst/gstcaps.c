@@ -527,13 +527,7 @@ gst_caps_is_fixed_foreach (GQuark field_id, GValue * value, gpointer unused)
 {
   GType type = G_VALUE_TYPE (value);
 
-  if (G_TYPE_IS_FUNDAMENTAL (type))
-    return TRUE;
-  if (type == GST_TYPE_FOURCC)
-    return TRUE;
-  if (type == GST_TYPE_BUFFER)
-    return TRUE;
-  return FALSE;
+  return gst_type_is_fixed (type);
 }
 
 /**
