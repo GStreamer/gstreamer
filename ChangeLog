@@ -1,5 +1,10 @@
 2004-05-18  David Schleef  <ds@schleef.org>
 
+	* gst/ffmpegcolorspace/imgconvert.c: (img_convert): Fixes for
+	warnings (bugs, actually) noticed by gcc but not forte.
+
+2004-05-18  David Schleef  <ds@schleef.org>
+
 	* sys/sunaudio/Makefile.am:
 	* sys/sunaudio/gstsunaudio.c: New sunaudiosink
 

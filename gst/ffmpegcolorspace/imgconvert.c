@@ -1616,7 +1616,7 @@ img_convert (AVPicture * dst, int dst_pix_fmt,
   static int inited;
   int i, ret, dst_width, dst_height, int_pix_fmt;
   PixFmtInfo *src_pix, *dst_pix;
-  ConvertEntry *ce;
+  convert_func convert;
   AVPicture tmp1, *tmp = &tmp1;
 
   if (src_pix_fmt < 0 || src_pix_fmt >= PIX_FMT_NB ||
@@ -1641,10 +1641,10 @@ img_convert (AVPicture * dst, int dst_pix_fmt,
     return 0;
   }
 
-  ce = convert_table_lookup (src_pix_fmt, dst_pix_fmt);
-  if (ce->convert) {
+  convert = convert_table_lookup (src_pix_fmt, dst_pix_fmt);
+  if (convert) {
     /* specific convertion routine */
-    ce->convert (dst, src, dst_width, dst_height);
+    convert (dst, src, dst_width, dst_height);
     return 0;
   }
 
