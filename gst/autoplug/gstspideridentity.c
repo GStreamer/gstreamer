@@ -174,12 +174,10 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
     {
       GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (ident);
       GList *list = spider->connections;
-      g_print("have EOS in chain\n");
       while (list)
       {
 	GstSpiderConnection *conn = (GstSpiderConnection *) list->data;
 	list = g_list_next (list);
-        g_print("forwarding EOS to conn\n");
 	gst_element_set_eos (GST_ELEMENT (conn->src));
         gst_pad_push (conn->src->src, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));  
       }
@@ -442,7 +440,6 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
       switch (GST_EVENT_TYPE (GST_EVENT (buf))){
       case GST_EVENT_EOS:
         getmorebuf = FALSE;
-	g_print("have EOS\n");
 	/* FIXME Notify the srcs that EOS has happened */
         gst_pad_event_default (ident->sink, GST_EVENT (buf));
 	break;

@@ -313,7 +313,6 @@ gst_spider_connection_new (GstSpiderIdentity *src)
   conn->src = src;
   conn->path = NULL;
   conn->current = (GstElement *) spider->sink_ident;
-  g_print("creating new connection\n");
   spider->connections = g_list_prepend (spider->connections, conn);
   
   return conn;
