@@ -14,14 +14,11 @@ DOC_SOURCE_DIR=$(top_srcdir)/plugins
 
 EXTRA_DIST=$(DOC_MODULE).types.in $(DOC_MODULE)-sections.txt $(DOC_MAIN_SGML_FILE) gstdoc-mkdb gstdoc-mktmpl gstdoc-scanobj
 
-HTML_DIR=$(datadir)/$(DOC_MODULE)/html
-
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
 
 tmpl_sources =				\
 	tmpl/videoraw.sgml
 
-gstreamer_docdir = $(HTML_DIR)
 gstreamer_doc_DATA =		\
 	$(DOC_MODULE).html		\
 	$(DOC_MODULE).hierarchy	\
