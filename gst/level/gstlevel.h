@@ -1,6 +1,10 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
+ * gstlevel.c: signals RMS, peak and decaying peak levels
+ * Copyright (C) 2000,2001,2002,2003
+ *           Thomas Vander Stichele <thomas at apestaart dot org>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -24,8 +28,8 @@
 
 #include <config.h>
 #include <gst/gst.h>
-/* #include <gst/meta/audioraw.h> */
 
+#include "gstlevel-marshal.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,14 +53,32 @@ typedef struct _GstLevelClass GstLevelClass;
 struct _GstLevel {
   GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad, *srcpad;
+  gboolean signal;		/* whether or not to emit signals */
+  gdouble interval;		/* how many seconds between emits */
 
-  /*MetaAudioRaw meta; */
+  gint rate;			/* caps variables */
+  gint width;
+  gint channels;
 
+  gdouble decay_peak_ttl;	/* time to live for peak in seconds */
+  gdouble decay_peak_falloff;	/* falloff in dB/sec */
+  gdouble num_samples;		/* cumulative sample count */
+
+  /* per-channel arrays for intermediate values */
+  gdouble *CS;			/* normalized Cumulative Square */
+  gdouble *peak;		/* normalized Peak value over buffer */
+  gdouble *last_peak;		/* last normalized Peak value over interval */
+  gdouble *decay_peak;		/* running decaying normalized Peak */
+  gdouble *MS;			/* normalized Mean Square of buffer */
+  gdouble *RMS_dB;		/* RMS in dB to emit */
+  gdouble *decay_peak_age;	/* age of last peak */
 };
 
 struct _GstLevelClass {
   GstElementClass parent_class;
+  void (*level) (GstElement *element, gint channel,
+                 gdouble RMS_dB, gdouble peak_dB, gdouble decay_peak_dB);
 };
 
 GType gst_level_get_type(void);

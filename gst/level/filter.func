@@ -1,45 +1,34 @@
+/* process one (interleaved) channel of incoming samples
+ * calculate square sum of samples
+ * normalize and return normalized Cumulative Square
+ * caller must assure num is a multiple of channels
+ * this filter only accepts signed audio data, so mid level is always 0
+ */
 {
-  guint j;
-  double squaresum = 0.0;
-  double RMS = 0.0;
-  double RMS_dB = 0.0;
-  static int threshold_dB = -80;
-  static long int sample = 0;
-  double timepoint;
+  register int j;
+  double squaresum = 0.0;	/* square sum of the integer samples */
+  register double square = 0.0;		/* Square */
+  register double PSS = 0.0;		/* Peak Square Sample */
+
+  *CS = 0.0;      /* Cumulative Square for this block */
+
+  gdouble normalizer = (double) (1 << resolution);
 
   /*
    * process data here  
    * input sample data enters in *in_data as 8 or 16 bit data
    * samples for left and right channel are interleaved
+   * returns the Mean Square of the samples as a double between 0 and 1
    */
-/*
-  for(j = 0; j < num_samples; j++) {
-     out_data[j] = in_data[j];
-     squaresum += in_data[j] * in_data[j];
-  }
-  RMS = sqrt (squaresum / (float) num_samples);
-  printf ("RMS for this block : %f\n", RMS);
-  RMS_dB = 20 * log (RMS / 32767);
-  printf ("RMS in dB (for 16bit) : %f\n", RMS_dB);
-*/
 
-  for(j = 0; j < num_samples; j++) {
-     out_data[j] = in_data[j];
-     squaresum += pow ((double) in_data[j] / 32767.0, 2);
-  }
-  RMS = sqrt (squaresum / (float) num_samples);
-  RMS_dB = 10 * log (RMS);
-  sample += num_samples;
-  timepoint = sample / (44100.0 * 2);
-
-  if (RMS_dB > (double) threshold_dB)
+  for (j = 0; j < num; j += channels)
   {
-/*    printf ("Reached %d dB at %f sec (%f dB)\n", 
-	    threshold_dB, timepoint, RMS_dB);
-*/
-    threshold_dB += 1;
+    square = (double) (in[j] * in[j]);
+    if (square > PSS) PSS = square;
+    squaresum += square;
   }
-/*  printf ("RMS in dB (for 16bit) : %f\n", RMS_dB); */
-    printf ("%f s %f dB\n", timepoint, RMS_dB);
+  *peak = PSS / ((double) normalizer * (double) normalizer);
+  
+  /* return normalized cumulative square */
+  *CS = squaresum / ((double) normalizer * (double) normalizer);
 }
-
