@@ -1,3 +1,11 @@
+2004-04-17  Benjamin Otte  <otte@gnome.org>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support),
+	(gst_xvimagesink_xcontext_get), (gst_xvimagesink_change_state),
+	(gst_xvimagesink_set_xwindow_id):
+	  call GST_ELEMENT_ERROR whenever get_xcontext fails. Includes
+	  assorted cleanup fixes.
+
 2004-04-16  David Schleef  <ds@schleef.org>
 
 	* sys/ximage/ximagesink.h: Compile fix for FreeBSD. (bug #140268)
