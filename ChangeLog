@@ -1,3 +1,8 @@
+2004-06-09  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gstbuffer.c (gst_buffer_default_copy): Don't forget to merge
+	the flags from the buffer we're copying.
+
 2004-06-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfakesink.c: (gst_fakesink_chain):
