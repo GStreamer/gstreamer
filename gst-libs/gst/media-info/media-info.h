@@ -100,6 +100,8 @@ typedef struct
 #define GST_MEDIA_INFO_FORMAT		1 << 5
 #define GST_MEDIA_INFO_ALL		((1 << 6) - 1)
 
+GQuark		gst_media_info_error_quark	(void);
+
 void		gst_media_info_init		(void);
 GType           gst_media_info_get_type		(void);
 
