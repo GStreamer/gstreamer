@@ -273,6 +273,7 @@ AC_ARG_ENABLE(alsasink,
 esac],
 [HAVE_LIBASOUND=$HAVE_LIBASOUND])
 
+
 dnl Check for libaudiofile
 AC_PATH_PROG(AUDIOFILE_CONFIG, audiofile-config, no)
 if test x$AUDIOFILE_CONFIG = xno; then
@@ -412,7 +413,11 @@ AC_SUBST(X_LIBS)
 
 dnl Check for the Xv library
 xvsave_LIBS=${LIBS}
-AC_CHECK_LIB(Xv, XvQueryExtension, HAVE_LIBXV=yes, HAVE_LIBXV=no, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
+AC_CHECK_LIB(Xv, XvQueryExtension,
+  HAVE_LIBXV=yes,
+  HAVE_LIBXV=no,
+  $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS
+)
 LIBS=${xvsave_LIBS}
 AC_CHECK_HEADER(X11/extensions/Xv.h, :, HAVE_LIBXV=no)
 AC_CHECK_HEADER(X11/extensions/Xvlib.h, :, HAVE_LIBXV=no)
@@ -907,7 +912,7 @@ AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_LIBAA,          test "x$HAVE_LIBAA" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
-AM_CONDITIONAL(HAVE_LIBGSM, 	    test "x$HAVE_LIBGSM" = "xyes")
+AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
 
 
 dnl ############################
@@ -942,7 +947,11 @@ dnl ##############################
 dnl # Set up the defaults cflags #
 dnl ##############################
 dnl CC="kgcc"
-CFLAGS="$CORE_CFLAGS $CFLAGS -O6 -Wall"
+if test "x$USE_PROFILING" = xyes; then
+  CFLAGS="$CORE_CFLAGS $CFLAGS -Wall"
+else
+  CFLAGS="$CORE_CFLAGS $CFLAGS -O6 -Wall"
+fi
 LIBS="$CORE_LIBS $LIBS"
 AC_SUBST(CORE_LIBS)
 AC_SUBST(CORE_CFLAGS)
@@ -950,17 +959,17 @@ AC_SUBST(CORE_CFLAGS)
 dnl FIXME: having to AC_SUBST these is messy.  Not sure if CPPFLAGS and LDFLAGS
 dnl need it, either.
 
-dnl Private vars for libgst only
-LIBGST_LIBS="$LIBS"
-LIBGST_CFLAGS="$CFLAGS"
-AC_SUBST(LIBGST_LIBS)
-AC_SUBST(LIBGST_CFLAGS)
-
 dnl Vars for everyone else
 GST_LIBS="\$(top_builddir)/gst/libgst.la"
 GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include"
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
+
+dnl Private vars for libgst only
+LIBGST_LIBS="$LIBS"
+LIBGST_CFLAGS="$CFLAGS $GST_CFLAGS"
+AC_SUBST(LIBGST_LIBS)
+AC_SUBST(LIBGST_CFLAGS)
 
 dnl CFLAGS for everyone else
 CFLAGS="$CFLAGS $GST_CFLAGS"

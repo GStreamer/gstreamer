@@ -11,6 +11,7 @@ GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
 PACKAGE=gstreamer
 VERSION=$GST_VERSION
+
 AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
 AC_SUBST(PACKAGE)
@@ -248,6 +249,7 @@ AC_ARG_ENABLE(artsd,
 
 dnl AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 
+
 dnl Check for libasound
 alsa_save_LIBS=$LIBS
 alsa_save_CFLAGS=$CFLAGS
@@ -264,9 +266,9 @@ CFLAGS=$alsa_save_CFLAGS
 AC_ARG_ENABLE(alsasink,
 [  --enable-alsasink          enable the building of the alsasink],
 [case "${enableval}" in
-	yes) HAVE_LIBASOUND=$HAVE_LIBASOUND ;;
-	no) HAVE_LIBASOUND=no ;;
-	*) AC_MSG_ERROR(bad value ${enableval} for --enable-alsasink) ;;
+        yes) HAVE_LIBASOUND=$HAVE_LIBASOUND ;;
+        no) HAVE_LIBASOUND=no ;;
+        *) AC_MSG_ERROR(bad value ${enableval} for --enable-alsasink) ;;
 esac],
 [HAVE_LIBASOUND=$HAVE_LIBASOUND])
 
@@ -278,11 +280,11 @@ if test x$AUDIOFILE_CONFIG = xno; then
   AUDIOFILE_LIBS=
   HAVE_LIBAUDIOFILE=no
 else
-  AC_MSG_WARN(did find audiofile-config: delete this msg)
   AUDIOFILE_LIBS=`audiofile-config --libs`
   HAVE_LIBAUDIOFILE=yes
 fi
 AC_SUBST(AUDIOFILE_LIBS)
+
 
 dnl Check for libgdk-pixbuf
 AC_PATH_PROG(GDK_PIXBUF_CONFIG, gdk-pixbuf-config, no)
@@ -410,9 +412,8 @@ AC_SUBST(X_LIBS)
 
 dnl Check for the Xv library
 xvsave_LIBS=${LIBS}
-AC_CHECK_LIB(Xv, XvQueryExtension, 
-  HAVE_LIBXV=yes 
-  AC_DEFINE(HAVE_LIBXV),
+AC_CHECK_LIB(Xv, XvQueryExtension,
+  HAVE_LIBXV=yes,
   HAVE_LIBXV=no,
   $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS
 )
@@ -421,14 +422,11 @@ AC_CHECK_HEADER(X11/extensions/Xv.h, :, HAVE_LIBXV=no)
 AC_CHECK_HEADER(X11/extensions/Xvlib.h, :, HAVE_LIBXV=no)
 
 dnl Check for OSS audio
-AC_CHECK_HEADER(sys/soundcard.h,
-  AC_DEFINE(HAVE_OSS) 
-  HAVE_OSS=yes, []
-)
+AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS=yes, HAVE_OSS=no)
 
 dnl Check for xaudio
 AC_CHECK_HEADER(xaudio/decoder.h,
-  AC_DEFINE(HAVE_XAUDIO) 
+  AC_DEFINE(HAVE_XAUDIO)
   HAVE_XAUDIO="yes",
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: gstxa
@@ -438,8 +436,8 @@ AC_CHECK_HEADER(xaudio/decoder.h,
 
 dnl Check for libmad
 AC_MSG_CHECKING(MAD library)
-AC_CHECK_LIB(mad, mad_decoder_finish, 
-  HAVE_LIBMAD=yes 
+AC_CHECK_LIB(mad, mad_decoder_finish,
+  HAVE_LIBMAD=yes
   AC_DEFINE(HAVE_LIBMAD),
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: mad
@@ -449,8 +447,8 @@ AC_CHECK_LIB(mad, mad_decoder_finish,
 
 dnl Check for libvorbis
 AC_MSG_CHECKING(Vorbis library)
-AC_CHECK_LIB(vorbis, ogg_sync_init, 
-  HAVE_VORBIS=yes 
+AC_CHECK_LIB(vorbis, ogg_sync_init,
+  HAVE_VORBIS=yes
   AC_DEFINE(HAVE_VORBIS),
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: vorbisdec vorbisenc
@@ -460,8 +458,8 @@ AC_CHECK_LIB(vorbis, ogg_sync_init,
 
 dnl Check for libjpeg
 AC_MSG_CHECKING(libjpeg library)
-AC_CHECK_LIB(jpeg, jpeg_set_defaults, 
-  HAVE_LIBJPEG=yes 
+AC_CHECK_LIB(jpeg, jpeg_set_defaults,
+  HAVE_LIBJPEG=yes
   AC_DEFINE(HAVE_LIBJPEG),
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: jpegdec jpegenc
@@ -469,22 +467,10 @@ AC_CHECK_LIB(jpeg, jpeg_set_defaults,
   HAVE_LIBJPEG=no,
 )
 
-dnl Check for libgsm
-AC_MSG_CHECKING(libgsm library)
-AC_CHECK_LIB(gsm, gsm_create, 
-  HAVE_LIBGSM=yes 
-  AC_DEFINE(HAVE_LIBGSM),
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: gsmdec gsmenc
-)
-  HAVE_LIBGSM=no,
-)
-AC_CHECK_HEADER(gsm/gsm.h, :, HAVE_LIBGSM=no)
-
-dnl Check for Hermes
+dnl Check for libHermes
 AC_MSG_CHECKING(Hermes library)
-AC_CHECK_LIB(Hermes, Hermes_ConverterInstance, 
-  HAVE_LIBHERMES=yes 
+AC_CHECK_LIB(Hermes, Hermes_ConverterInstance,
+  HAVE_LIBHERMES=yes
   AC_DEFINE(HAVE_LIBHERMES),
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: colorspace
@@ -492,6 +478,18 @@ AC_CHECK_LIB(Hermes, Hermes_ConverterInstance,
   HAVE_LIBHERMES=no,
 )
 AC_CHECK_HEADER(Hermes/Hermes.h, :, HAVE_LIBHERMES=no)
+
+dnl Check for libgsm
+AC_MSG_CHECKING(GSM library)
+AC_CHECK_LIB(gsm, gsm_create,
+  HAVE_LIBGSM=yes
+  AC_DEFINE(HAVE_LIBGSM),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: gsmdec, gsmenc
+)
+  HAVE_LIBGSM=no,
+)
+AC_CHECK_HEADER(gsm/gsm.h, :, HAVE_LIBGSM=no)
 
 dnl Check for cdparanoia
 AC_MSG_CHECKING(CDparanoia library)
@@ -551,6 +549,7 @@ AC_MSG_CHECKING(openquicktime)
 AC_CHECK_LIB(openquicktime, quicktime_init, HAVE_LIBOPENQUICKTIME=yes, HAVE_LIBOPENQUICKTIME=no, )
 AC_CHECK_HEADER(openquicktime/openquicktime.h, :, HAVE_LIBOPENQUICKTIME=no)
 
+
 dnl check if css-auth.c exists (FIXME)
 AC_MSG_CHECKING(DVD CSS code)
 if test -f plugins/dvdsrc/css-auth.c
@@ -585,12 +584,12 @@ AC_SUBST(SDL_CFLAGS)
 
 dnl Check for linux/cdrom.h
 AC_CHECK_HEADER(linux/cdrom.h,
-  HAVE_LINUX_CDROM=yes, []
+  HAVE_LINUX_CDROM=yes, HAVE_LINUX_CDROM=no
 )
 
 dnl Check for linux/videodev.h
 AC_CHECK_HEADER(linux/videodev.h,
-  HAVE_LINUX_VIDEODEV=yes, []
+  HAVE_LINUX_VIDEODEV=yes, HAVE_LINUX_VIDEODEV=no
 )
 
 
@@ -907,10 +906,8 @@ AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_LIBAA,          test "x$HAVE_LIBAA" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
-AM_CONDITIONAL(HAVE_LIBSDL,         test "x$HAVE_LIBSDL" = "xyes")
-AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME,      test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
+AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
-
 
 
 dnl ############################
@@ -1087,9 +1084,9 @@ plugins/artsd/Makefile
 plugins/quicktime/Makefile
 plugins/xmms/Makefile
 plugins/arts/Makefile
+plugins/gsm/Makefile
 plugins/1394/Makefile
 plugins/sdlsink/Makefile
-plugins/gsm/Makefile
 plugins/dv/Makefile
 gstplay/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
@@ -1100,8 +1097,8 @@ tests/Makefile
 tests/sched/Makefile
 tests/eos/Makefile
 testsuite/Makefile
-testsuite/refcounting/Makefile
 testsuite/capsnego/Makefile
+testsuite/refcounting/Makefile
 tests/nego/Makefile
 examples/Makefile
 examples/autoplug/Makefile
@@ -1133,7 +1130,7 @@ docs/fwg/Makefile
 debian/Makefile
 stamp.h
 gstreamer-config
-gstreamer.spec
 gstreamer.pc
-gstreamer-uninstalled.pc])
+gstreamer-uninstalled.pc
+gstreamer.spec])
 AC_OUTPUT_COMMANDS([chmod +x gstreamer-config])
