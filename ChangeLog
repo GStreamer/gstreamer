@@ -1,3 +1,10 @@
+2004-04-29  David Schleef  <ds@schleef.org>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream), (qtdemux_parse),
+	(qtdemux_parse_trak), (get_size), (gst_qtdemux_handle_esds): Hacked
+	up qtdemux to make it spit out codec_data.  Do _not_ look at this
+	code; you will no longer respect me.
+
 2004-04-29  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* ext/alsa/gstalsa.c : (gst_alsa_class_probe_devices)
