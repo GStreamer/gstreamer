@@ -469,12 +469,7 @@ gst_vorbisenc_add_metadata (VorbisEnc *vorbisenc, GstCaps *caps)
       if (!value || strlen (value) == 0)
 	continue;
 
-      if (!strcmp (name, "comment")) {
-        vorbis_comment_add (&vorbisenc->vc, g_strdup (value));
-      }
-      else {
-        vorbis_comment_add_tag (&vorbisenc->vc, g_strdup (name), g_strdup (value));
-      }
+      vorbis_comment_add_tag (&vorbisenc->vc, g_strdup (name), g_strdup (value));
     }
   }
 }
