@@ -598,7 +598,7 @@ GST_CHECK_FEATURE(AALIB, [aasink plug-in], aasink, [
 dnl *** alsa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
 GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
-   AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
+   AM_PATH_ALSA(0.9.1, HAVE_ALSA=yes, HAVE_ALSA=no)
 ])
 
 dnl *** arts ***
