@@ -1,5 +1,10 @@
 2004-10-31  Benjamin Otte  <otte@gnome.org>
 
+	* gst/tags/gstvorbistag.c: (gst_vorbis_tag_chain):
+	  lotsa memleaks today. But they're all small...
+
+2004-10-31  Benjamin Otte  <otte@gnome.org>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_push):
 	  another memleak crushed
 
