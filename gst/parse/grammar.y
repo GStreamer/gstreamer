@@ -611,6 +611,8 @@ link:		linkpart LINK linkpart	      { $$ = $1;
 						  if (!$$->caps)
 						    ERROR (GST_PARSE_ERROR_LINK, "could not parse caps \"%s\"", $2);
 						  gst_parse_strfree ($2);
+						  gst_caps_ref($$->caps);
+						  gst_caps_sink($$->caps);
 						}
 						$$->sink_name = $3->src_name;
 						$$->sink_pads = $3->src_pads;
