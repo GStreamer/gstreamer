@@ -379,13 +379,14 @@ gst_a52dec_loop (GstElement *element)
   int i, length, flags, sample_rate, bit_rate;
   int stream_channels;
   GstBuffer *buf;
+  guint8 got_bytes;
 
   a52dec = GST_A52DEC (element);
 
   /* find and read header */
   while (1) {
-    data = gst_bytestream_peek_bytes (a52dec->bs, 7);
-    if (!data) {
+    got_bytes = gst_bytestream_peek_bytes (a52dec->bs, &data, 7);
+    if (got_bytes < 7) {
       gst_a52dec_handle_event (a52dec);
       return;
     }
@@ -418,8 +419,8 @@ gst_a52dec_loop (GstElement *element)
   }
 
   /* read the header + rest of frame */
-  buf = gst_bytestream_read (a52dec->bs, length);
-  if (!buf) {
+  got_bytes = gst_bytestream_read (a52dec->bs, &buf, length);
+  if (got_bytes < length) {
     gst_a52dec_handle_event (a52dec);
     return;
   }
