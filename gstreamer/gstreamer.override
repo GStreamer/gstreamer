@@ -81,7 +81,7 @@ call_connect_function (GstPad *pad, GstCaps *caps)
 	retval = (PyObject*)PyObject_CallFunction (function,
 			"OO",
 			pad_private(pad)->pad,
-			PyCObject_FromVoidPtr (caps, NULL));
+    			pyg_boxed_new(GST_TYPE_CAPS, caps, TRUE, TRUE));
 
 	if (PyErr_Occurred ()) {
 		PyErr_Print ();
@@ -124,7 +124,7 @@ _wrap_gst_pad_set_connect_function (PyGObject *self,
 override gst_pad_set_chain_function kwargs
 
 static void
-call_chain_function (GstPad *pad, GstBuffer *buf)
+call_chain_function(GstPad *pad, GstBuffer *buf)
 {
 	PyObject *function;
 	
@@ -133,7 +133,7 @@ call_chain_function (GstPad *pad, GstBuffer *buf)
 	PyObject_CallFunction (function,
 			"OO", 
 			pad_private(pad)->pad,
-			PyCObject_FromVoidPtr (buf, NULL));
+    			pyg_boxed_new(GST_TYPE_BUFFER, buf, TRUE, TRUE));
 
 	if (PyErr_Occurred ()) {
 		PyErr_Print ();
@@ -142,9 +142,9 @@ call_chain_function (GstPad *pad, GstBuffer *buf)
 }
 
 static PyObject*
-_wrap_gst_pad_set_chain_function (PyGObject *self,
-				   PyObject  *args,
-				   PyObject  *kwargs)
+_wrap_gst_pad_set_chain_function(PyGObject *self,
+				PyObject  *args,
+				PyObject  *kwargs)
 {
 	static char *kwlist[] = { "chain_function", NULL };
 	PyObject *chain_function;
@@ -171,95 +171,41 @@ _wrap_gst_pad_set_chain_function (PyGObject *self,
 	return Py_None;
 }
 %%
-override gst_pad_push kwargs
-
-static PyObject*
-_wrap_gst_pad_push (PyGObject *self,
-		PyObject  *args,
-		PyObject  *kwargs)
-{
-	static char *kwlist[] = { "buffer", NULL };
-	PyObject *pybuf;
-	GstBuffer *buf;
-	GstPad *pad;
-	
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-	                                 "O:GstPad.push",
-					 kwlist,
-					 &pybuf)) {
-		return NULL;
-	}
-	
-	if (!PyCObject_Check(pybuf)) {
-		PyErr_SetString(PyExc_TypeError, "push expecting a PyCObject");
-		return NULL;
-	}
-	
-	pad = (GstPad*)pygobject_get(self);
-	buf = (GstBuffer*)PyCObject_AsVoidPtr(pybuf);
-	gst_pad_push(pad, buf);
-
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-%%
 override gst_buffer_get_data
 
 static PyObject*
-_wrap_gst_buffer_get_data (PyObject *self,
-		PyObject  *args)
+_wrap_gst_buffer_get_data(PyObject *self)
 {
-	PyObject *pybuf;
 	GstBuffer *buf;
 	
-	if (!PyArg_ParseTuple(args,
-				"O:GstBuffer:get_data",
-				&pybuf)) {
-		return NULL;
-	}
-	
-	if (!PyCObject_Check(pybuf)) {
-		PyErr_SetString(PyExc_TypeError, "get_data expecting a PyCObject");
-		return NULL;
-	}
-	
-	buf = (GstBuffer*)PyCObject_AsVoidPtr(pybuf);
+	buf = pyg_boxed_get(self, GstBuffer);
 
 	return PyString_FromStringAndSize(
 			GST_BUFFER_DATA(buf),
 			GST_BUFFER_SIZE(buf));
 }
 %%
-override gst_buffer_set_data
+override gst_buffer_set_data kwargs
 
 static PyObject*
-_wrap_gst_buffer_set_data (PyObject *self,
-		PyObject  *args)
+_wrap_gst_buffer_set_data(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-	PyObject *pybuf;
+	static char *kwlist[] = {"data", NULL};
 	PyObject *data;
 	GstBuffer *buf;
 	
-	if (!PyArg_ParseTuple(args,
-				"OO:GstBuffer:set_data",
-				&pybuf, &data)) {
-		return NULL;
-	}
-	
-	if (!PyCObject_Check(pybuf)) {
-		PyErr_SetString(PyExc_TypeError, "set_data expecting a PyCObject");
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstBuffer:set_data", kwlist, &data)) {
 		return NULL;
 	}
 	if (!PyString_Check(data)) {
-		PyErr_SetString(PyExc_TypeError, "set_data expecting a string");
+		PyErr_SetString(PyExc_TypeError, "data should be a string");
 		return NULL;
 	}
+	buf = pyg_boxed_get(self, GstBuffer);
 	if (GST_BUFFER_FLAGS(buf) & GST_BUFFER_READONLY) {
 		PyErr_SetString(PyExc_TypeError, "set_data can't use a READONLY buffer");
 		return NULL;
 	}
-	
-	buf = (GstBuffer*)PyCObject_AsVoidPtr(pybuf);
 	GST_BUFFER_SIZE(buf) = PyString_Size(data);
 	GST_BUFFER_DATA(buf) = g_new0(char, GST_BUFFER_SIZE(buf));
 
@@ -269,20 +215,4 @@ _wrap_gst_buffer_set_data (PyObject *self,
 
 	Py_INCREF(Py_None);
 	return Py_None;
-}
-%%
-override gst_buffer_new
-
-static PyObject*
-_wrap_gst_buffer_new (PyObject *self,
-		PyObject  *args)
-{
-	GstBuffer *newbuf;
-	
-	if (!PyArg_ParseTuple(args, ":GstBuffer:set_data")) {
-		return NULL;
-	}
-	
-	newbuf = gst_buffer_new();
-	return PyCObject_FromVoidPtr (newbuf, NULL);
 }

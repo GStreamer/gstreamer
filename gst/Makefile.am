@@ -23,7 +23,7 @@ GST_INCLUDES=$(wildcard $(GST_INCLUDEDIR)/gst/*.h)
 gstreamer-base.defs: $(GST_INCLUDES)
 	$(PYTHON) $(PYGTK_H2DEF) $(GST_INCLUDES) > gstreamer-base.defs
 
-gstreamer.defs: gstreamer-base.defs gstreamer-extra.defs
+gstreamer.defs: gstreamer-base.defs gstreamer-extra.defs $(top_srcdir)/gstreamer/gstreamer-arg-types.py
 	cat gstreamer-base.defs gstreamer-extra.defs > gstreamer.defs
 
 .defs.c:

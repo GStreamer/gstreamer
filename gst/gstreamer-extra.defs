@@ -1,20 +1,52 @@
 ;;
+;; Boxed types
+;;
+
+(define-boxed Buffer
+  (in-module "Gst")
+  (c-name "GstBuffer")
+  (gtype-id "GST_TYPE_BUFFER")
+)
+
+(define-boxed BufferPool
+  (in-module "Gst")
+  (c-name "GstBufferPool")
+  (gtype-id "GST_TYPE_BUFFER_POOL")
+)
+
+(define-boxed Caps
+  (in-module "Gst")
+  (c-name "GstCaps")
+  (gtype-id "GST_TYPE_CAPS")
+)
+
+(define-boxed Event
+  (in-module "Gst")
+  (c-name "GstEvent")
+  (gtype-id "GST_TYPE_EVENT")
+)
+
+(define-boxed Props
+  (in-module "Gst")
+  (c-name "GstProps")
+  (gtype-id "GST_TYPE_PROPS")
+)
+
+;;
 ;; HACK
 ;;
 
-(define-function gst_buffer_get_data
+(define-method get_data
+  (of-object "GstBuffer")
   (c-name "gst_buffer_get_data")
   (return-type "char*")
-  (parameters
-    '("GstBuffer*" "buf")
-  )
 )
 
-(define-function gst_buffer_set_data
+(define-method set_data
+  (of-object "GstBuffer")
   (c-name "gst_buffer_set_data")
   (return-type "none")
   (parameters
-    '("GstBuffer*" "buf")
     '("char*" "data")
   )
 )

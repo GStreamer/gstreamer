@@ -1,3 +1,21 @@
+2002-10-04  David I. Lehn <dlehn@vt.edu>
+
+	* README: basic info.
+
+	* COPYING: remove the literal "^L" strings.
+
+	* configure.ac: require GStreamer core 0.4.1.
+
+	* gstreamer/gstreamer-extra.defs: add boxed type defs, convert buffer
+	get/set_data to methods vs functions.
+
+	* gstreamer/gstreamer.overrides: remove boxed type generated code,
+	adapt rest to boxed types.
+
+	* examples/gstreamer/*: set interpreter to "python" vs "python2.2",
+	adapt to newer generated code (Pipeline vs gst_pipeline_new()), adapt
+	to newer api.
+
 2002-05-09  David I. Lehn  <dlehn@vt.edu>
 
 	* examples/gstreamer/dvdplay.py: adjust state changes,
