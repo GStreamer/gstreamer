@@ -64,6 +64,8 @@ struct _GstAggregator {
 
   gint numsinkpads;
   GList *sinkpads;
+
+  gchar *last_message;
 };
 
 struct _GstAggregatorClass {

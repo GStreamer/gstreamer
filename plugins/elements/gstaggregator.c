@@ -43,6 +43,7 @@ enum {
   ARG_NUM_PADS,
   ARG_SILENT,
   ARG_SCHED,
+  ARG_LAST_MESSAGE,
   /* FILL ME */
 };
 
@@ -132,6 +133,9 @@ gst_aggregator_class_init (GstAggregatorClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCHED,
     g_param_spec_enum ("sched", "sched", "sched",
                       GST_TYPE_AGGREGATOR_SCHED, AGGREGATOR_CHAIN, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
+    g_param_spec_string ("last_message", "last_message", "last_message",
+                         NULL, G_PARAM_READABLE));
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR(gst_aggregator_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR(gst_aggregator_get_property);
@@ -248,6 +252,9 @@ gst_aggregator_get_property (GObject *object, guint prop_id, GValue *value, GPar
     case ARG_SCHED:
       g_value_set_enum (value, aggregator->sched);
       break;
+    case ARG_LAST_MESSAGE:
+      g_value_set_string (value, aggregator->last_message);
+      break;
     default:
       break;
   }
@@ -256,9 +263,14 @@ gst_aggregator_get_property (GObject *object, guint prop_id, GValue *value, GPar
 static void 
 gst_aggregator_push (GstAggregator *aggregator, GstPad *pad, GstBuffer *buf, guchar *debug) 
 {
-  if (!aggregator->silent)
-    gst_element_info (GST_ELEMENT (aggregator), "%10.10s ******* (%s:%s)a (%d bytes, %llu) \n",
+  if (!aggregator->silent) {
+    g_free (aggregator->last_message);
+
+    aggregator->last_message = g_strdup_printf ("%10.10s ******* (%s:%s)a (%d bytes, %llu)",
             debug, GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+
+    g_object_notify (G_OBJECT (aggregator), "last_message");
+  }
 
   gst_pad_push (aggregator->srcpad, buf);
 }
