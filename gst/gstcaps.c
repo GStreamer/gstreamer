@@ -24,16 +24,20 @@
 
 #include <gst/gst.h>
 
-#define CAPS_POISON(caps) do{ \
-  GstCaps *_newcaps = gst_caps_copy (caps); \
-  gst_caps_free(caps); \
-  caps = _newcaps; \
-} while (0)
-#define STRUCTURE_POISON(structure) do{ \
-  GstStructure *_newstruct = gst_structure_copy (structure); \
-  gst_structure_free(structure); \
-  structure = _newstruct; \
-} while (0)
+#define CAPS_POISON(caps) G_STMT_START{ \
+  if (caps) { \
+    GstCaps *_newcaps = gst_caps_copy (caps); \
+    gst_caps_free(caps); \
+    caps = _newcaps; \
+  } \
+} G_STMT_END
+#define STRUCTURE_POISON(structure) G_STMT_START{ \
+  if (structure) { \
+    GstStructure *_newstruct = gst_structure_copy (structure); \
+    gst_structure_free(structure); \
+    structure = _newstruct; \
+  } \
+} G_STMT_END
 
 
 static void _gst_caps_transform_to_string (const GValue *src_value,

@@ -357,9 +357,10 @@ Preface - (optional) properties for all audio formats:
 
 2 - Raw Audio (floating point format)
   mimetype: audio/x-raw-float
-  properties: 'depth' = X (INT) <- 32=float, 64=double
+  properties: 'width' = X (INT) <- 32=float, 64=double
               'endianness' = 1234/4321 (INT) <- use G_BIG/LITTLE_ENDIAN!
               'buffer-frames' = (INT)
+		  number of samples per buffer, 0 means undefined
   With regards to the signal: 0.0 represents no signal, +/- 1.0 is 0 dB.
 
 3 - Alaw Raw Audio

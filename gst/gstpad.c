@@ -2118,8 +2118,10 @@ gst_pad_proxy_getcaps (GstPad *pad)
     GstCaps *temp;
 
     if (otherpad != pad) {
-      temp = gst_caps_intersect (caps, gst_pad_get_allowed_caps (otherpad));
+      GstCaps *allowed = gst_pad_get_allowed_caps (otherpad);
+      temp = gst_caps_intersect (caps, allowed);
       gst_caps_free (caps);
+      gst_caps_free (allowed);
       caps = temp;
     }
 
@@ -3508,10 +3510,21 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
     {
       guint64 time;
 	      
-      if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
-      	if (gst_element_requires_clock (element) && element->clock) {
+      if (gst_element_requires_clock (element) && element->clock) {
+	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
 	  gst_element_set_time (element, time); 
-  	}
+	} else {
+	  GstFormat format = GST_FORMAT_TIME;
+	  guint i;
+	  for (i = 0; i < event->event_data.discont.noffsets; i++) {
+	    if (gst_pad_convert (pad, event->event_data.discont.offsets[i].format, 
+		event->event_data.discont.offsets[i].value, &format, &time)) {
+	      gst_element_set_time (element, time);
+	    } else if (i == event->event_data.discont.noffsets) {
+	      g_warning ("can't adjust clock to new time when time not provided");
+	    }
+	  } 
+	}
       }
     }
     case GST_EVENT_FLUSH:

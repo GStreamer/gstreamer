@@ -257,7 +257,7 @@ static gboolean
 gst_filesrc_set_location (GstFileSrc *src, const gchar *location)
 {
   /* the element must be stopped in order to do this */
-  if (GST_STATE (src) == GST_STATE_PLAYING)
+  if (GST_STATE (src) != GST_STATE_NULL)
     return FALSE;
 
   if (src->filename) g_free (src->filename);

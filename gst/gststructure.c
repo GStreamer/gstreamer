@@ -586,6 +586,53 @@ gst_structure_remove_field(GstStructure *structure, const gchar *fieldname)
 }
 
 /**
+ * gst_structure_remove_fields:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to remove
+ * @...: NULL-terminated list of more fieldnames to remove
+ *
+ * Removes the field with the given names. If a field does not exist, the
+ * argument is ignored.
+ */
+void 
+gst_structure_remove_fields(GstStructure *structure, const gchar *fieldname, ...)
+{
+  va_list varargs;
+
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (fieldname != NULL);
+
+  va_start(varargs, fieldname);
+
+  gst_structure_remove_fields_valist (structure, fieldname, varargs);
+
+  va_end(varargs);
+}
+
+/**
+ * gst_structure_remove_fields_valist:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to remove
+ * @varargs: NULL-terminated list of more fieldnames to remove
+ *
+ * Removes the field with the given names. If a field does not exist, the
+ * argument is ignored.
+ */
+void 
+gst_structure_remove_fields_valist(GstStructure *structure, 
+    const gchar *fieldname, va_list varargs)
+{
+  gchar *field = (gchar *) fieldname;
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (fieldname != NULL);
+
+  while (field) {
+    gst_structure_remove_field (structure, field);
+    field = va_arg (varargs, char *); 
+  }
+}
+
+/**
  * gst_structure_remove_all_fields:
  * @structure: a #GstStructure
  *

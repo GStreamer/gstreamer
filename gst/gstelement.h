@@ -204,7 +204,7 @@ struct _GstElementClass {
   void (*pad_removed)	(GstElement *element, GstPad *pad);
   void (*error)		(GstElement *element, GstElement *source, GError *error, gchar *debug);
   void (*eos)		(GstElement *element);
-  void (*found_tag)	(GstElement *element, GstElement *source, GstTagList *tag_list);
+  void (*found_tag)	(GstElement *element, GstElement *source, const GstTagList *tag_list);
 
   /* local pointers for get/set */
   void (*set_property) 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -359,7 +359,7 @@ gboolean		gst_element_convert		(GstElement *element,
 		 					 GstFormat  src_format,  gint64  src_value,
 							 GstFormat *dest_format, gint64 *dest_value);
 
-void			gst_element_found_tags		(GstElement *element, GstTagList *tag_list);
+void			gst_element_found_tags		(GstElement *element, const GstTagList *tag_list);
 void			gst_element_found_tags_for_pad	(GstElement *element, GstPad *pad, GstClockTime timestamp, 
 							 GstTagList *list);
 

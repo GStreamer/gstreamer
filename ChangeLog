@@ -1,3 +1,30 @@
+2004-01-29  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* docs/random/mimetypes:
+	  update docs for audio/x-raw-float. Add "buffer-frames=0 means
+	  undefined"
+	* gst/elements/gstfilesrc.c: (gst_filesrc_set_location):
+	  make it only work in NULL.
+	* gst/gstcaps.c:
+	  don't posion NULL caps
+	* gst/gstelement.c: (gst_element_set_time):
+	  add debugging statement
+	* gst/gstelement.c: (gst_element_emit_found_tag),
+	(gst_element_found_tag_func), (gst_element_found_tags):
+	* gst/gstelement.h:
+	  These functions take const taglists
+	* gst/gstpad.c: (gst_pad_proxy_getcaps):
+	  fix memleak
+	* gst/gstpad.c: (gst_pad_event_default):
+	  make more effort on handling discont and clocks, g_warn if everything
+	  fails
+	* gst/gststructure.c: (gst_structure_remove_fields),
+	(gst_structure_remove_fields_valist):
+	* gst/gststructure.h:
+	  add gst_structure_remove_fields(_valist)
+	* gst/gsttag.c:
+	  fix doc glitch
+
 2004-01-28  David Schleef  <ds@schleef.org>
 
 	* docs/random/ds/element-checklist: Notes about gst_caps_to_string()

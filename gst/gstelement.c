@@ -69,7 +69,7 @@ static void 			gst_element_dispose 		(GObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
 static void			gst_element_error_func		(GstElement* element, GstElement *source, GError *error, gchar *debug);
-static void			gst_element_found_tag_func	(GstElement* element, GstElement *source, GstTagList *tag_list);
+static void			gst_element_found_tag_func	(GstElement* element, GstElement *source, const GstTagList *tag_list);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr		gst_element_save_thyself	(GstObject *object, xmlNodePtr parent);
@@ -896,7 +896,8 @@ gst_element_set_time (GstElement *element, GstClockTime time)
       break;
     case GST_STATE_PLAYING:
       event_time = gst_clock_get_event_time (element->clock);
-      GST_LOG_OBJECT (element, "clock time %llu: setting element time to %llu", event_time, time);
+      GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element, 
+	  "clock time %llu: setting element time to %llu", event_time, time);
       element->base_time = event_time - time;
       break;
     default:
@@ -3193,14 +3194,14 @@ gst_element_set_loop_function (GstElement *element,
   }
 }
 static inline void
-gst_element_emit_found_tag (GstElement* element, GstElement *source, GstTagList *tag_list)
+gst_element_emit_found_tag (GstElement* element, GstElement *source, const GstTagList *tag_list)
 {
   gst_object_ref (GST_OBJECT (element));
   g_signal_emit (element, gst_element_signals[FOUND_TAG], 0, source, tag_list);
   gst_object_unref (GST_OBJECT (element));
 }
 static void
-gst_element_found_tag_func (GstElement* element, GstElement *source, GstTagList *tag_list)
+gst_element_found_tag_func (GstElement* element, GstElement *source, const GstTagList *tag_list)
 {
   /* tell the parent */
   if (GST_OBJECT_PARENT (element)) {
@@ -3220,7 +3221,7 @@ gst_element_found_tag_func (GstElement* element, GstElement *source, GstTagList 
  * not when you handle an event.
  */
 void
-gst_element_found_tags (GstElement *element, GstTagList *tag_list)
+gst_element_found_tags (GstElement *element, const GstTagList *tag_list)
 {
   gst_element_emit_found_tag (element, element, tag_list);
 }

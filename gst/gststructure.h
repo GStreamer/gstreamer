@@ -67,6 +67,10 @@ G_CONST_RETURN GValue *gst_structure_id_get_value(const GstStructure *structure,
 G_CONST_RETURN GValue *gst_structure_get_value(const GstStructure *structure,
     const gchar *field);
 void gst_structure_remove_field(GstStructure *structure, const gchar *field);
+void gst_structure_remove_fields(GstStructure *structure, 
+    const gchar *fieldname, ...);
+void gst_structure_remove_fields_valist(GstStructure *structure, 
+    const gchar *fieldname, va_list varargs);
 void gst_structure_remove_all_fields(GstStructure *structure);
 
 GType gst_structure_get_field_type(const GstStructure *structure,

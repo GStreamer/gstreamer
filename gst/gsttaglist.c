@@ -275,7 +275,6 @@ gst_tag_lookup (GQuark entry)
  * with that name is already registered, that one is used.
  * The old registration may have used a different type however. So don't rely
  * on your supplied values.
- * If you know the type is already registered, use gst_tag_lookup instead.
  * This function takes ownership of all supplied variables.
  */
 void
