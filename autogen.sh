@@ -82,7 +82,7 @@ test ! -z "$CONFIGURE_DEF_OPT" && echo "  ./configure default flags: $CONFIGURE_
 test ! -z "$CONFIGURE_EXT_OPT" && echo "  ./configure external flags: $CONFIGURE_EXT_OPT"
 echo
 
-./configure $CONFIGURE_OPT $CONFIGURE_EXT_OPT || {
+./configure $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT || {
         echo "  configure failed"
         exit 1
 }
