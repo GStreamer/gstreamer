@@ -24,6 +24,7 @@
 #endif
 
 #include <string.h>
+#include <gst/gstutils.h>
 
 #include "riff-ids.h"
 #include "riff-read.h"
@@ -173,9 +174,9 @@ gst_riff_peek_head (GstRiffRead * riff,
   }
 
   /* parse tag + length (if wanted) */
-  *tag = GUINT32_FROM_LE (((guint32 *) data)[0]);
+  *tag = GST_READ_UINT32_LE (data);
   if (length)
-    *length = GUINT32_FROM_LE (((guint32 *) data)[1]);
+    *length = GST_READ_UINT32_LE (((guint32 *) data) + 1);
 
   /* level */
   if (level_up)
@@ -302,7 +303,7 @@ gst_riff_peek_list (GstRiffRead * riff)
     return 0;
   }
 
-  return GUINT32_FROM_LE (((guint32 *) data)[2]);
+  return GST_READ_UINT32_LE (((guint32 *) data) + 2);
 }
 
 /*
@@ -672,7 +673,7 @@ gst_riff_read_list (GstRiffRead * riff, guint32 * tag)
     return FALSE;
   }
   gst_bytestream_flush_fast (riff->bs, 4);
-  *tag = GUINT32_FROM_LE (*(guint32 *) data);
+  *tag = GST_READ_UINT32_LE (data);
 
   /* remember level */
   level = g_new (GstRiffLevel, 1);
@@ -868,7 +869,7 @@ gst_riff_read_header (GstRiffRead * riff, guint32 * doctype)
     return FALSE;
   }
   gst_bytestream_flush_fast (riff->bs, 4);
-  *doctype = GUINT32_FROM_LE (*(guint32 *) data);
+  *doctype = GST_READ_UINT32_LE (data);
 
   /* remember level */
   level = g_new (GstRiffLevel, 1);

@@ -124,7 +124,7 @@ parse_generic (GstMPEGPacketize * packetize)
 
   buf += 4;
 
-  length += GUINT16_FROM_BE (*(guint16 *) buf);
+  length += GST_READ_UINT16_BE (buf);
   GST_DEBUG ("packetize: header_length %d", length);
 
   got_bytes = gst_bytestream_read (packetize->bs, &outbuf, length);
@@ -150,7 +150,7 @@ parse_chunk (GstMPEGPacketize * packetize)
 
   offset = 4;
 
-  code = GUINT32_FROM_BE (*((guint32 *) (buf + offset)));
+  code = GST_READ_UINT32_BE (buf + offset);
 
   GST_DEBUG ("code = %08x", code);
 
@@ -192,7 +192,7 @@ find_start_code (GstMPEGPacketize * packetize)
 
   offset = 4;
 
-  code = GUINT32_FROM_BE (*((guint32 *) (buf)));
+  code = GST_READ_UINT32_BE (buf);
 
   GST_DEBUG ("code = %08x %p %08x", code, buf, chunksize);
 

@@ -21,6 +21,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <gst/gstutils.h>
 #include <gst/riff/riff-ids.h>
 #include "gstasfdemux.h"
 #include "gstasfmux.h"          /* for the type registering */
@@ -276,17 +277,17 @@ _read_var_length (GstASFDemux * asf_demux, guint8 type, guint32 * rsize)
 
   switch (type) {
     case 1:
-      ret = GUINT32_FROM_LE (*(guint32 *) var) & 0xff;
+      ret = (GST_READ_UINT32_LE (var)) & 0xff;
       gst_bytestream_flush (bs, 1);
       *rsize += 1;
       break;
     case 2:
-      ret = GUINT32_FROM_LE (*(guint32 *) var) & 0xffff;
+      ret = (GST_READ_UINT32_LE (var)) & 0xffff;
       gst_bytestream_flush (bs, 2);
       *rsize += 2;
       break;
     case 3:
-      ret = GUINT32_FROM_LE (*(guint32 *) var);
+      ret = GST_READ_UINT32_LE (var);
       gst_bytestream_flush (bs, 4);
       *rsize += 4;
       break;
@@ -307,7 +308,7 @@ _read_uint ## bits (GstASFDemux *asf_demux, guint ## bits *ret)	        	\
 										\
   do {										\
     if (gst_bytestream_peek_bytes (asf_demux->bs, &data, bits / 8) == bits / 8) { \
-      *ret = GUINT ## bits ## _FROM_LE (*((guint ## bits *) data));		\
+      *ret = GST_READ_UINT ## bits ## _LE (data);				\
       gst_bytestream_flush (asf_demux->bs, bits / 8);				\
       return TRUE;								\
     }										\
@@ -317,9 +318,7 @@ _read_uint ## bits (GstASFDemux *asf_demux, guint ## bits *ret)	        	\
   return FALSE;									\
 }
 
-#ifndef GUINT8_FROM_LE
-# define GUINT8_FROM_LE(x) (x)
-#endif
+#define GST_READ_UINT8_LE(x) GST_READ_UINT8(x)
 READ_UINT_BITS_FUNCTION (8)
     READ_UINT_BITS_FUNCTION (16)
     READ_UINT_BITS_FUNCTION (32)

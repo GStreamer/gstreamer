@@ -499,7 +499,7 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   buf = GST_BUFFER_DATA (buffer);
   buf += 4;
 
-  header_length = GUINT16_FROM_BE (*(guint16 *) buf);
+  header_length = GST_READ_UINT16_BE (buf);
   GST_DEBUG_OBJECT (mpeg_demux, "header_length %d", header_length);
   buf += 2;
 
@@ -632,7 +632,7 @@ gst_mpeg_demux_parse_packet (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   buf += 4;
 
   /* start parsing */
-  packet_length = GUINT16_FROM_BE (*((guint16 *) buf));
+  packet_length = GST_READ_UINT16_BE (buf);
 
   GST_DEBUG_OBJECT (mpeg_demux, "got packet_length %d", packet_length);
   headerlen = 2;
@@ -779,7 +779,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   buf += 4;
 
   /* start parsing */
-  packet_length = GUINT16_FROM_BE (*((guint16 *) buf));
+  packet_length = GST_READ_UINT16_BE (buf);
 
   GST_DEBUG_OBJECT (mpeg_demux, "packet_length %d", packet_length);
   buf += 2;
