@@ -101,10 +101,12 @@ if test "x$broken-plugins" = "$xyes"; then
   AC_MSG_WARN(building broken plugins)
   USE_ARTS="yes"
   USE_ARTSC="yes"
+  USE_VGA="yes"
 else
   AC_MSG_NOTICE(not building broken plugins)
   USE_ARTS="no"
   USE_ARTSC="no"
+  USE_VGA="no"
 fi
 
 
@@ -415,9 +417,9 @@ GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
 ])
 
 dnl *** VGA ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_VGASINK, true)
-GST_CHECK_FEATURE(VGA, [VGA sink], vgavideosink, [
-  AC_CHECK_HEADER(asm/vga.h, HAVE_VGASINK="yes", HAVE_VGASINK="no")
+translit(dnm, m, l) AM_CONDITIONAL(USE_VGA, true)
+GST_CHECK_FEATURE(VGA, [VGA], vgavideosink, [
+  AC_CHECK_HEADER(asm/vga.h, HAVE_VGA="yes", HAVE_VGA="no")
 ])
 
 
@@ -1216,9 +1218,9 @@ sys/Makefile
 sys/oss/Makefile
 sys/qcam/Makefile
 sys/v4l/Makefile
-sys/vcdsrc/Makefile
-sys/vgasink/Makefile
-sys/xvideosink/Makefile
+sys/vcd/Makefile
+sys/vga/Makefile
+sys/xvideo/Makefile
 )
 
 echo -e "configure: *** Plugins that will be built : $GST_PLUGINS_YES"
