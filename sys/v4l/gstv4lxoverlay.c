@@ -37,6 +37,9 @@
 #include "gstv4lelement.h"
 #include "v4l_calls.h"
 
+GST_DEBUG_CATEGORY_STATIC (v4lxv_debug);
+#define GST_CAT_DEFAULT v4lxv_debug
+
 struct _GstV4lXv
 {
   Display *dpy;
@@ -52,6 +55,9 @@ gst_v4l_xoverlay_interface_init (GstXOverlayClass * klass)
 {
   /* default virtual functions */
   klass->set_xwindow_id = gst_v4l_xoverlay_set_xwindow_id;
+
+  GST_DEBUG_CATEGORY_INIT (v4lxv_debug, "v4lxv", 0,
+      "V4L XOverlay interface debugging");
 }
 
 void
@@ -169,13 +175,19 @@ gst_v4l_xoverlay_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
   XWindowAttributes attr;
   gboolean change = (v4lelement->xwindow_id != xwindow_id);
 
+  GST_LOG_OBJECT (v4lelement, "Changing port to %lx", xwindow_id);
+
   if (v4lxv)
     g_mutex_lock (v4lxv->mutex);
 
   if (change) {
-    if (v4lelement->xwindow_id) {
+    if (v4lelement->xwindow_id && v4lxv) {
+      GST_DEBUG_OBJECT (v4lelement,
+          "Disabling port %lx", v4lelement->xwindow_id);
+
       XvSelectPortNotify (v4lxv->dpy, v4lxv->port, 0);
       XvSelectVideoNotify (v4lxv->dpy, v4lelement->xwindow_id, 0);
+      XvStopVideo (v4lxv->dpy, v4lxv->port, v4lelement->xwindow_id);
     }
 
     v4lelement->xwindow_id = xwindow_id;
@@ -188,6 +200,8 @@ gst_v4l_xoverlay_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
   }
 
   if (change) {
+    GST_DEBUG_OBJECT (v4lelement, "Enabling port %lx", xwindow_id);
+
     /* draw */
     XvSelectPortNotify (v4lxv->dpy, v4lxv->port, 1);
     XvSelectVideoNotify (v4lxv->dpy, v4lelement->xwindow_id, 1);
