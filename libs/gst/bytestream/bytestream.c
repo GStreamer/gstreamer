@@ -159,7 +159,6 @@ gst_bytestream_get_next_buf (GstByteStream *bs)
 {
   GstBuffer *nextbuf, *lastbuf, *headbuf;
   GSList *end;
-  GstClockTime ts;
 
   /* if there is an event pending, return FALSE */
   if (bs->event)
@@ -176,9 +175,8 @@ gst_bytestream_get_next_buf (GstByteStream *bs)
     return FALSE;
   }
 
-  ts = GST_BUFFER_TIMESTAMP (nextbuf);
-  if (ts != GST_CLOCK_TIME_NONE)
-    bs->last_ts = ts;
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (nextbuf))
+    bs->last_ts = GST_BUFFER_TIMESTAMP (nextbuf);
 
   bs_print ("get_next_buf: got buffer of %d bytes", GST_BUFFER_SIZE (nextbuf));
 
