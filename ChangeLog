@@ -1,5 +1,17 @@
 2004-07-22  Wim Taymans  <wim@fluendo.com>
 
+	* gst/alpha/Makefile.am:
+	* gst/alpha/gstalphacolor.c: (gst_alpha_color_get_type),
+	(gst_alpha_color_base_init), (gst_alpha_color_class_init),
+	(gst_alpha_color_init), (gst_alpha_color_set_property),
+	(gst_alpha_color_get_property), (gst_alpha_color_sink_link),
+	(transform), (gst_alpha_color_chain),
+	(gst_alpha_color_change_state), (plugin_init):
+	Stupid plugin to to RGBA to AYUV conversion because none of
+	the colorspace plugins can handle that yet.
+
+2004-07-22  Wim Taymans  <wim@fluendo.com>
+
 	* examples/seeking/seek.c: (update_scale), (main):
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_get_type),
 	(gst_decode_bin_class_init), (gst_decode_bin_is_dynamic),
