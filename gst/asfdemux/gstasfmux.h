@@ -21,6 +21,7 @@
 #define __GST_ASFMUX_H__
 
 #include <gst/gst.h>
+
 #include "asfheaders.h"
 
 #ifdef __cplusplus

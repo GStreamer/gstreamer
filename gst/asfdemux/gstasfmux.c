@@ -46,6 +46,7 @@
 /* for audio codec IDs */
 #include <gst/riff/riff-ids.h>
 
+#include "asfheaders.h"
 #include "gstasfmux.h"
 
 /* elementfactory information */

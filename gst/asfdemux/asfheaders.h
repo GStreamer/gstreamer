@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef ASFHEADERS_H
-#define ASFHEADERS_H
+#ifndef __ASFHEADERS_H__
+#define __ASFHEADERS_H__
 
 typedef struct {
   guint32 v1;
@@ -65,18 +65,9 @@ enum {
   ASF_CORRECTION_OFF,
 };
 
-static ASFGuidHash asf_correction_guids[] = {
-  { ASF_CORRECTION_ON,     { 0xBFC3CD50, 0x11CF618F, 0xAA00B28B, 0x20E2B400 }},
-/*  { ASF_CORRECTION_OFF,    { 0x20FB5700, 0x11CF5B55, 0x8000FDA8, 0x2B445C5F }},*/
-  { ASF_CORRECTION_OFF,    { 0x49F1A440, 0x11D04ECE, 0xA000ACA3, 0xF64803C9 }},
-  { ASF_CORRECTION_UNDEFINED,  { 0, 0, 0, 0 }},
-};
+extern ASFGuidHash asf_correction_guids[];
 
-static ASFGuidHash asf_stream_guids[] = {
-  { ASF_STREAM_VIDEO,      { 0xBC19EFC0, 0x11CF5B4D, 0x8000FDA8, 0x2B445C5F }},
-  { ASF_STREAM_AUDIO,      { 0xF8699E40, 0x11CF5B4D, 0x8000FDA8, 0x2B445C5F }},
-  { ASF_STREAM_UNDEFINED,  { 0, 0, 0, 0 }},
-};
+extern ASFGuidHash asf_stream_guids[];
 
 struct _asf_obj_header {
   guint32 num_objects;
@@ -233,25 +224,6 @@ struct _asf_bitrate_record {
 
 typedef struct _asf_bitrate_record asf_bitrate_record;
 
-static ASFGuidHash asf_object_guids[] = {
-  { ASF_OBJ_STREAM,           { 0xB7DC0791, 0x11CFA9B7, 0xC000E68E, 0x6553200C }},
-  { ASF_OBJ_DATA,             { 0x75b22636, 0x11cf668e, 0xAA00D9a6, 0x6Cce6200 }},
-  { ASF_OBJ_FILE,             { 0x8CABDCA1, 0x11CFA947, 0xC000E48E, 0x6553200C }},
-  { ASF_OBJ_HEADER,           { 0x75B22630, 0x11CF668E, 0xAA00D9A6, 0x6CCE6200 }},
-  { ASF_OBJ_CONCEAL_NONE,     { 0x20fb5700, 0x11cf5b55, 0x8000FDa8, 0x2B445C5f }},
-  { ASF_OBJ_COMMENT,          { 0x75b22633, 0x11cf668e, 0xAA00D9a6, 0x6Cce6200 }},
-  { ASF_OBJ_CODEC_COMMENT,    { 0x86D15240, 0x11D0311D, 0xA000A4A3, 0xF64803C9 }},
-  { ASF_OBJ_CODEC_COMMENT1,   { 0x86d15241, 0x11d0311d, 0xA000A4a3, 0xF64803c9 }},
-  { ASF_OBJ_INDEX,            { 0x33000890, 0x11cfe5b1, 0xA000F489, 0xCB4903c9 }},
-  { ASF_OBJ_HEAD1,            { 0x5fbf03b5, 0x11cfa92e, 0xC000E38e, 0x6553200c }},
-  { ASF_OBJ_HEAD2,            { 0xabd3d211, 0x11cfa9ba, 0xC000E68e, 0x6553200c }},
-  { ASF_OBJ_PADDING,          { 0x1806D474, 0x4509CADF, 0xAB9ABAA4, 0xE8AA96CD }},
-  { ASF_OBJ_BITRATE_PROPS,    { 0x7bf875ce, 0x11d1468d, 0x6000828d, 0xb2a2c997 }},
-  { ASF_OBJ_EXT_CONTENT_DESC, { 0xd2d0a440, 0x11d2e307, 0xa000f097, 0x50a85ec9 }},
-  { ASF_OBJ_BITRATE_MUTEX,    { 0xd6e229dc, 0x11d135da, 0xa0003490, 0xbe4903c9 }},
-  { ASF_OBJ_UNDEFINED,        { 0, 0, 0, 0 }},
-};
+extern ASFGuidHash asf_object_guids[];
 
-
-/* ASFHEADERS_H */
-#endif
+#endif /* __ASFHEADERS_H__ */

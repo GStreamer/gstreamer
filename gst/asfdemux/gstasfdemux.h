@@ -23,12 +23,11 @@
 
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
-#include "asfheaders.h"
 
 G_BEGIN_DECLS
   
 #define GST_TYPE_ASF_DEMUX \
-  (asf_demux_get_type())
+  (gst_asf_demux_get_type())
 #define GST_ASF_DEMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ASF_DEMUX,GstASFDemux))
 #define GST_ASF_DEMUX_CLASS(klass) \
@@ -107,11 +106,7 @@ struct _GstASFDemuxClass {
   GstElementClass parent_class;
 };
 
-GType gst_asf_demux_get_type(void);
-
-gboolean 	gst_asf_demux_plugin_init 	(GModule *module, GstPlugin *plugin);
-
-
+GType gst_asf_demux_get_type (void);
 
 G_END_DECLS
 

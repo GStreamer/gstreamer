@@ -21,19 +21,12 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <gst/gstutils.h>
 #include <gst/riff/riff-ids.h>
-#include "gstasfdemux.h"
-#include "gstasfmux.h"          /* for the type registering */
-#include "asfheaders.h"
 
-/* elementfactory information */
-static GstElementDetails gst_asf_demux_details = {
-  "ASF Demuxer",
-  "Codec/Demuxer",
-  "Demultiplexes ASF Streams",
-  "Owen Fraser-Green <owen@discobabe.net>",
-};
+#include "gstasfdemux.h"
+#include "asfheaders.h"
 
 static GstStaticPadTemplate gst_asf_demux_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -83,7 +76,7 @@ static GstPadTemplate *videosrctempl, *audiosrctempl;
 static GstElementClass *parent_class = NULL;
 
 GType
-asf_demux_get_type (void)
+gst_asf_demux_get_type (void)
 {
   static GType asf_demux_type = 0;
 
@@ -103,6 +96,8 @@ asf_demux_get_type (void)
     asf_demux_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstASFDemux",
         &asf_demux_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (asf_debug, "asfdemux", 0, "asf demuxer element");
   }
   return asf_demux_type;
 }
@@ -111,6 +106,12 @@ static void
 gst_asf_demux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  static GstElementDetails gst_asf_demux_details = {
+    "ASF Demuxer",
+    "Codec/Demuxer",
+    "Demultiplexes ASF Streams",
+    "Owen Fraser-Green <owen@discobabe.net>"
+  };
   int i;
   GstCaps *audcaps, *vidcaps, *temp;
   guint32 vid_list[] = {
@@ -518,6 +519,17 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
 {
   asf_obj_comment object;
   GstByteStream *bs = asf_demux->bs;
+  gchar *utf8_comments[5] = { NULL, NULL, NULL, NULL, NULL };
+  guchar *data;
+  const gchar *tags[5] = { GST_TAG_TITLE, GST_TAG_ARTIST, GST_TAG_COPYRIGHT,
+    GST_TAG_COMMENT, NULL /* ? */
+  };
+  guint16 *lengths = (guint16 *) & object;
+  gint i;
+  gsize in, out;
+  GstTagList *taglist;
+  const GList *padlist;
+  GValue value = { 0 };
 
   GST_INFO ("Object is a comment.");
 
@@ -527,15 +539,52 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
       ("Comment lengths: title=%d author=%d copyright=%d description=%d rating=%d",
       object.title_length, object.author_length, object.copyright_length,
       object.description_length, object.rating_length);
+  g_print ("comment\n");
+  for (i = 0; i < 5; i++) {
+    /* might be just '/0', '/0'... */
+    if (lengths[i] > 2 && lengths[i] % 2 == 0) {
+      if (gst_bytestream_peek_bytes (bs, &data, lengths[i]) != lengths[i])
+        goto fail;
+      gst_bytestream_flush_fast (bs, lengths[i]);
 
-  /* We don't do anything with them at the moment so just skip them */
-  gst_bytestream_flush (bs, object.title_length);
-  gst_bytestream_flush (bs, object.author_length);
-  gst_bytestream_flush (bs, object.copyright_length);
-  gst_bytestream_flush (bs, object.description_length);
-  gst_bytestream_flush (bs, object.rating_length);
+      /* check null-termination (malicious input) */
+      if (data[lengths[i] - 1] != '\0' || data[lengths[i] - 2] != '\0')
+        continue;
+
+      /* convert to UTF-8 */
+      utf8_comments[i] = g_convert (data, lengths[i],
+          "UTF-8", "Unicode", &in, &out, NULL);
+    }
+  }
+
+  /* parse metadata into taglist */
+  taglist = gst_tag_list_new ();
+  g_value_init (&value, G_TYPE_STRING);
+  for (i = 0; i < 5; i++) {
+    if (utf8_comments[i] && tags[i]) {
+      g_value_set_string (&value, utf8_comments[i]);
+      gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
+          tags[i], &value, NULL);
+      g_free (utf8_comments[i]);
+    }
+  }
+  g_value_unset (&value);
+
+  for (padlist = gst_element_get_pad_list (GST_ELEMENT (asf_demux));
+      padlist != NULL; padlist = padlist->next) {
+    if (GST_PAD_IS_SRC (padlist->data) && GST_PAD_IS_USABLE (padlist->data)) {
+      gst_pad_push (GST_PAD (padlist->data),
+          GST_DATA (gst_event_new_tag (taglist)));
+    }
+  }
+  gst_element_found_tags (GST_ELEMENT (asf_demux), taglist);
 
   return TRUE;
+
+fail:
+  for (i = 0; i < 5; i++)
+    g_free (utf8_comments[i]);
+  return FALSE;
 }
 
 
@@ -1730,27 +1779,3 @@ gst_asf_demux_setup_pad (GstASFDemux * asf_demux,
 
   return TRUE;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
-
-  /* create an elementfactory for the asf_demux element */
-  if (!gst_element_register (plugin, "asfdemux", GST_RANK_PRIMARY,
-          GST_TYPE_ASF_DEMUX)
-      || !gst_element_register (plugin, "asfmux", GST_RANK_NONE,
-          GST_TYPE_ASFMUX))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (asf_debug, "asfdemux", 0, "asf demuxer element");
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "asf",
-    "Demuxes and muxes audio and video in Microsofts ASF format",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
