@@ -10,7 +10,7 @@ CLEANFILES = $(man_MANS) $(bin_SCRIPTS)
 
 EXTRA_DIST = \
 	gst-launch-ext-m.m gst-visualise-m.m \
-	gst-launch-ext.in gst-visualise.in
+	gst-launch-ext.1.in gst-visualise.1.in
 
 # generate versioned scripts from templates
 %-@GST_MAJORMINOR@: %-m.m
