@@ -2005,9 +2005,10 @@ swap_line (guint8 * d1, guint8 * d2, guint8 * tmp, gint bytes)
 static GstBuffer *
 gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
 {
-  buf = gst_buffer_copy_on_write (buf);
   gint y, h = stream->height, w = stream->width;
   guint8 *tmp = g_malloc (w);
+
+  buf = gst_buffer_copy_on_write (buf);
 
   for (y = 0; y < h / 2; y++) {
     swap_line (GST_BUFFER_DATA (buf) + w * y,
