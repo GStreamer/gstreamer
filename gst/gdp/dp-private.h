@@ -48,6 +48,7 @@ G_BEGIN_DECLS
 #define GST_DP_HEADER_CRC_HEADER(x)     GST_DP_GUINT16 (x + 56)
 #define GST_DP_HEADER_CRC_PAYLOAD(x)    GST_DP_GUINT16 (x + 58)
 
+void gst_dp_init (void);
 void gst_dp_dump_byte_array (guint8 *array, guint length);
 
 G_END_DECLS
