@@ -1,5 +1,13 @@
 2004-11-03  Wim Taymans  <wim@fluendo.com>
 
+	* gst/videomixer/videomixer.c: (gst_videomixer_blend_ayuv_i420),
+	(gst_videomixer_fill_checker), (gst_videomixer_fill_color),
+	(gst_videomixer_blend_buffers), (gst_videomixer_loop):
+	Fix stride issues. Does not completely work for odd
+	heights.
+
+2004-11-03  Wim Taymans  <wim@fluendo.com>
+
 	* gst/alpha/gstalpha.c: (gst_alpha_method_get_type),
 	(gst_alpha_chroma_key), (gst_alpha_chain):
 	Fix stride issues. Does not completely work for odd

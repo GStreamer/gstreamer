@@ -746,6 +746,9 @@ gst_videomixer_handle_src_event (GstPad * pad, GstEvent * event)
 #define BLEND_MODE BLEND_HARDLIGHT
 #endif
 
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+#define ROUND_UP_2(x) (((x) + 1) & ~1)
+
 /* note that this function does packing conversion and blending at the
  * same time */
 static void
@@ -753,7 +756,7 @@ gst_videomixer_blend_ayuv_i420 (guint8 * src, gint xpos, gint ypos,
     gint src_width, gint src_height, gdouble src_alpha,
     guint8 * dest, gint dest_width, gint dest_height)
 {
-  gint dest_size;
+  gint dest_size, dest_size2;
   gint alpha, b_alpha;
   guint8 *destY1, *destY2, *destU, *destV;
   gint accumU;
@@ -763,9 +766,17 @@ gst_videomixer_blend_ayuv_i420 (guint8 * src, gint xpos, gint ypos,
   gint src_add, destY_add, destC_add;
   guint8 *src1, *src2;
   gint Y, U, V;
+  gint dest_stride, dest_stride2;
+  gint w2, h2;
 
   src_stride = src_width * 4;
-  dest_size = dest_width * dest_height;
+
+  dest_stride = ROUND_UP_4 (dest_width);
+  dest_size = dest_stride * dest_height;
+  w2 = (dest_width + 1) >> 1;
+  dest_stride2 = ROUND_UP_4 (w2);
+  h2 = (dest_height + 1) >> 1;
+  dest_size2 = dest_stride2 * h2;
 
   b_alpha = (gint) (src_alpha * 255);
 
@@ -788,14 +799,14 @@ gst_videomixer_blend_ayuv_i420 (guint8 * src, gint xpos, gint ypos,
     src_height = dest_height - ypos;
   }
 
-  src_add = 2 * src_stride - (4 * src_width);
-  destY_add = 2 * dest_width - (src_width);
-  destC_add = dest_width / 2 - (src_width / 2);
+  src_add = 2 * src_stride - (8 * ROUND_UP_2 (src_width) / 2);
+  destY_add = 2 * dest_stride - (2 * (src_width / 2));
+  destC_add = dest_stride2 - (src_width / 2);
 
-  destY1 = dest + xpos + (ypos * dest_width);
-  destY2 = destY1 + dest_width;
-  destU = dest + dest_size + xpos / 2 + (ypos / 2 * dest_width / 2);
-  destV = destU + dest_size / 4;
+  destY1 = dest + xpos + (ypos * dest_stride);
+  destY2 = destY1 + dest_stride;
+  destU = dest + dest_size + (xpos / 2) + ((ypos / 2) * dest_stride2);
+  destV = destU + dest_size2;
 
   src1 = src;
   src2 = src + src_stride;
@@ -829,8 +840,8 @@ gst_videomixer_blend_ayuv_i420 (guint8 * src, gint xpos, gint ypos,
       accumV += V;
 
       /* take the average of the 4 chroma samples to get the final value */
-      destU[0] = accumU / 4;
-      destV[0] = accumV / 4;
+      destU[0] = (accumU + 2) >> 2;
+      destV[0] = (accumV + 2) >> 2;
 
       src1 += 8;
       src2 += 8;
@@ -868,27 +879,35 @@ gst_videomixer_sort_pads (GstVideoMixer * mix)
 static void
 gst_videomixer_fill_checker (guint8 * dest, gint width, gint height)
 {
-  gint size = width * height;
+  gint size, size2;
+  gint stride;
   gint i, j;
   static int tab[] = { 80, 160, 80, 160 };
 
+  stride = ROUND_UP_4 (width);
+  size = stride * height;
+  size2 = ROUND_UP_4 ((width + 1) >> 1) * ((height + 1) >> 1);
+
   for (i = 0; i < height; i++) {
-    for (j = 0; j < width; j++) {
+    for (j = 0; j < stride; j++) {
       *dest++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];
     }
   }
-  memset (dest, 128, size / 2);
+  memset (dest, 128, 2 * size2);
 }
 
 static void
 gst_videomixer_fill_color (guint8 * dest, gint width, gint height,
     gint colY, gint colU, gint colV)
 {
-  gint size = width * height;
+  gint size, size2;
+
+  size = ROUND_UP_4 (width) * height;
+  size2 = ROUND_UP_4 ((width + 1) >> 1) * ((height + 1) >> 1);
 
   memset (dest, colY, size);
-  memset (dest + size, colU, size / 4);
-  memset (dest + size + size / 4, colV, size / 4);
+  memset (dest + size, colU, size2);
+  memset (dest + size + size2, colV, size2);
 }
 
 /* try to get a buffer on all pads. As long as the queued value is
@@ -1080,7 +1099,9 @@ gst_videomixer_loop (GstElement * element)
     mix->out_height = new_height;
   }
 
-  outsize = 3 * (mix->out_width * mix->out_height) / 2;
+  outsize = ROUND_UP_4 (mix->out_width) * mix->out_height +
+      2 * ROUND_UP_4 ((mix->out_width + 1) >> 1) * ((mix->out_height + 1) >> 1);
+
   outbuf = gst_pad_alloc_buffer (mix->srcpad, GST_BUFFER_OFFSET_NONE, outsize);
   switch (mix->background) {
     case VIDEO_MIXER_BACKGROUND_CHECKER:
