@@ -57,7 +57,19 @@ populate (GstMemChunk *mem_chunk)
   return TRUE;
 }
 
-
+/**
+ * gst_mem_chunk_new:
+ * @name: the name of the chunk
+ * @atom_size: the size of the allocated atoms
+ * @area_size: the initial size of the memory area
+ * @type: the allocation strategy to use
+ *
+ * Creates a new memchunk that will allocate atom_sized memchunks.
+ * The initial area is set to area_size and will grow automatically 
+ * when it is too small (with a small overhead when that happens)
+ *
+ * Returns: a new #GstMemChunk
+ */
 GstMemChunk*
 gst_mem_chunk_new (gchar* name, gint atom_size, gulong area_size, gint type)
 {
@@ -90,6 +102,12 @@ free_area (gpointer key, gpointer value, gpointer user_data)
   return TRUE;
 }
 
+/**
+ * gst_mem_chunk_destroy:
+ * @mem_chunk: the GstMemChunk to destroy
+ *
+ * Free the memory allocated by the memchunk
+ */
 void
 gst_mem_chunk_destroy (GstMemChunk *mem_chunk) 
 {
@@ -113,6 +131,16 @@ gst_mem_chunk_destroy (GstMemChunk *mem_chunk)
   g_free (mem_chunk);
 }
 
+/**
+ * gst_mem_chunk_alloc:
+ * @mem_chunk: the mem chunk to use
+ *
+ * Allocate a new memory region from the chunk. The size
+ * of the allocated memory was specified when the memchunk
+ * was created.
+ *
+ * Returns: a pointer to the allocated memory region.
+ */
 gpointer
 gst_mem_chunk_alloc (GstMemChunk *mem_chunk)
 {
@@ -134,6 +162,16 @@ again:
   return GST_MEM_CHUNK_DATA (chunk);
 }
 
+/**
+ * gst_mem_chunk_alloc0:
+ * @mem_chunk: the mem chunk to use
+ *
+ * Allocate a new memory region from the chunk. The size
+ * of the allocated memory was specified when the memchunk
+ * was created. The memory will be set to all zeroes.
+ *
+ * Returns: a pointer to the allocated memory region.
+ */
 gpointer
 gst_mem_chunk_alloc0 (GstMemChunk *mem_chunk)
 {
@@ -145,6 +183,13 @@ gst_mem_chunk_alloc0 (GstMemChunk *mem_chunk)
   return mem;
 }
 
+/**
+ * gst_mem_chunk_free:
+ * @mem_chunk: the mem chunk to use
+ * @mem: the memory region to hand back to the chunk
+ *
+ * Free the memeory region allocated from the chunk.
+ */
 void
 gst_mem_chunk_free (GstMemChunk *mem_chunk, gpointer mem)
 {
