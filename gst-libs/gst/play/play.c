@@ -46,6 +46,10 @@ struct _GstPlayPrivate {
   guint length_id;
   
   gulong handoff_hid;
+
+  /* error/debug handling */
+  GError *error;
+  gchar *debug;
 };
 
 static guint gst_play_signals[LAST_SIGNAL] = { 0 };
@@ -58,8 +62,64 @@ static GstPipelineClass *parent_class = NULL;
 /*                                                         */
 /* ======================================================= */
 
+static GQuark
+gst_play_error_quark (void)
+{
+  static GQuark quark = 0;
+  if (quark == 0)
+    quark = g_quark_from_static_string ("gst-play-error-quark");
+  return quark;
+}
+
+/* General GError creation */
+static void
+gst_play_error_create (GError ** error, const gchar *message)
+{
+  /* check if caller wanted an error reported */
+  if (error == NULL)
+    return;
+
+  *error = g_error_new (GST_PLAY_ERROR, 0, message);
+  return;
+}
+
+/* GError creation when plugin is missing */
+/* FIXME: what if multiple elements could have been used and they're all
+ * missing ? varargs ? */
+static void
+gst_play_error_plugin (const gchar *element, GError ** error)
+{
+  gchar *message;
+
+  message = g_strdup_printf ("The %s element could not be found. "
+                             "This element is essential for playback. "
+                             "Please install the right plug-in and verify "
+                             "that it works by running 'gst-inspect %s'",
+                             element, element);
+  gst_play_error_create (error, message);
+  g_free (message);
+  return;
+}
+
+#define GST_PLAY_MAKE_OR_ERROR(el, factory, name, error)	\
+G_STMT_START {							\
+  el = gst_element_factory_make (factory, name);		\
+  if (!GST_IS_ELEMENT (el))					\
+  {								\
+    gst_play_error_plugin (factory, error);			\
+    return FALSE;						\
+  }								\
+} G_STMT_END
+
+#define GST_PLAY_ERROR_RETURN(error, message)			\
+G_STMT_START {							\
+  gst_play_error_create (error, message);			\
+    return FALSE;						\
+} G_STMT_END
+
+
 static gboolean
-gst_play_pipeline_setup (GstPlay *play)
+gst_play_pipeline_setup (GstPlay *play, GError **error)
 {
   /* Threads */
   GstElement *work_thread, *audio_thread, *video_thread;
@@ -81,47 +141,29 @@ gst_play_pipeline_setup (GstPlay *play)
   
   /* Creating main thread and its elements */
   {
-  work_thread = gst_element_factory_make ("thread", "work_thread");
-  if (!GST_IS_ELEMENT (work_thread))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (work_thread, "thread", "work_thread", error);
   g_hash_table_insert (play->priv->elements, "work_thread", work_thread);
   gst_bin_add (GST_BIN (play), work_thread);
 
   /* Placeholder for datasrc */
-  source = gst_element_factory_make ("fakesrc", "source");
-  if (!GST_IS_ELEMENT (source))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (source, "fakesrc", "source", error);
   g_hash_table_insert (play->priv->elements, "source", source);
   
   /* Autoplugger */
-  autoplugger = gst_element_factory_make ("spider", "autoplugger");
-  if (!GST_IS_ELEMENT (autoplugger))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (autoplugger, "spider", "autoplugger", error);
   g_hash_table_insert (play->priv->elements, "autoplugger", autoplugger);
   
   /* Make sure we convert audio to the needed format */
-  audioconvert = gst_element_factory_make ("audioconvert",
-                                           "audioconvert");
-  if (!GST_IS_ELEMENT (audioconvert))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (audioconvert, "audioconvert", "audioconvert", error);
+  /* FIXME: why are volume and audioconvert switched around for the insert ) */
   g_hash_table_insert (play->priv->elements, "volume", audioconvert);
   
   /* Volume control */
-  volume = gst_element_factory_make ("volume", "volume");
-  if (!GST_IS_ELEMENT (volume))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (volume, "volume", "volume", error);
   g_hash_table_insert (play->priv->elements, "audioconvert", volume);
   
   /* Duplicate audio signal to audio sink and visualization thread */
-  tee = gst_element_factory_make ("tee", "tee");
-  if (!GST_IS_ELEMENT (tee))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (tee, "tee", "tee", error);
   tee_pad1 = gst_element_get_request_pad (tee, "src%d");
   tee_pad2 = gst_element_get_request_pad (tee, "src%d");
   g_hash_table_insert (play->priv->elements, "tee_pad1", tee_pad1);
@@ -130,48 +172,45 @@ gst_play_pipeline_setup (GstPlay *play)
   
   gst_bin_add_many (GST_BIN (work_thread), source, autoplugger,/* audioconvert,*/
                     volume, tee, NULL);
-  gst_element_link_many (source, autoplugger,/* audioconvert,*/ volume, tee, NULL);
+  if (!gst_element_link_many (source, autoplugger,/* audioconvert,*/ volume, tee, NULL))
+    GST_PLAY_ERROR_RETURN (error, "Could not link source thread elements");
   
   /* identity ! colorspace ! switch  */
-  identity = gst_element_factory_make ("identity", "identity");
-  if (!GST_IS_ELEMENT (identity))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (identity, "identity", "identity", error);
   g_hash_table_insert (play->priv->elements, "identity", identity);
   
   identity_cs = gst_element_factory_make ("ffcolorspace", "identity_cs");
   if (!GST_IS_ELEMENT (identity_cs)) {
     identity_cs = gst_element_factory_make ("colorspace", "identity_cs");
     if (!GST_IS_ELEMENT (identity_cs))
+    {
+      gst_play_error_plugin ("colorspace", error);
       return FALSE;
+    }
   }
-  
   g_hash_table_insert (play->priv->elements, "identity_cs", identity_cs);
-    
   gst_bin_add_many (GST_BIN (work_thread), identity, identity_cs,  NULL);
-  gst_element_link_many (autoplugger, identity, identity_cs, NULL);
+  if (!gst_element_link_many (autoplugger, identity, identity_cs, NULL))
+    GST_PLAY_ERROR_RETURN (error, "Could not link work thread elements");
   }
   
   /* Visualization bin (note: it s not added to the pipeline yet) */
   {
   vis_bin = gst_bin_new ("vis_bin");
   if (!GST_IS_ELEMENT (vis_bin))
+  {
+    gst_play_error_plugin ("bin", error);
     return FALSE;
+  }
   
   g_hash_table_insert (play->priv->elements, "vis_bin", vis_bin);
   
   /* Buffer queue for video data */
-  vis_queue = gst_element_factory_make ("queue", "vis_queue");
-  if (!GST_IS_ELEMENT (vis_queue))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (vis_queue, "queue", "vis_queue", error);
   g_hash_table_insert (play->priv->elements, "vis_queue", vis_queue);
   
   /* Visualization element placeholder */
-  vis_element = gst_element_factory_make ("identity", "vis_element");
-  if (!GST_IS_ELEMENT (vis_element))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (vis_element, "identity", "vis_element", error);
   g_hash_table_insert (play->priv->elements, "vis_element", vis_element);
   
   /* Colorspace conversion */
@@ -179,36 +218,31 @@ gst_play_pipeline_setup (GstPlay *play)
   if (!GST_IS_ELEMENT (vis_cs)) {
     vis_cs = gst_element_factory_make ("colorspace", "vis_cs");
     if (!GST_IS_ELEMENT (vis_cs))
+    {
+      gst_play_error_plugin ("colorspace", error);
       return FALSE;
+    }
   }
   
   g_hash_table_insert (play->priv->elements, "vis_cs", vis_cs);
   
   gst_bin_add_many (GST_BIN (vis_bin), vis_queue, vis_element, vis_cs, NULL);
-  gst_element_link_many (vis_queue, vis_element, vis_cs, NULL);
+  if (!gst_element_link_many (vis_queue, vis_element, vis_cs, NULL))
+    GST_PLAY_ERROR_RETURN (error, "Could not link visualisation thread elements");
   gst_element_add_ghost_pad (vis_bin,
                              gst_element_get_pad (vis_cs, "src"), "src");
   }
   /* Creating our video output bin */
   {
-  video_thread = gst_element_factory_make ("thread", "video_thread");
-  if (!GST_IS_ELEMENT (video_thread))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (video_thread, "thread", "video_thread", error);
   g_hash_table_insert (play->priv->elements, "video_thread", video_thread);
   gst_bin_add (GST_BIN (work_thread), video_thread);
   
   /* Buffer queue for video data */
-  video_queue = gst_element_factory_make ("queue", "video_queue");
-  if (!GST_IS_ELEMENT (video_queue))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (video_queue, "queue", "video_queue", error);
   g_hash_table_insert (play->priv->elements, "video_queue", video_queue);
   
-  video_switch = gst_element_factory_make ("switch", "video_switch");
-  if (!GST_IS_ELEMENT (video_switch))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (video_switch, "switch", "video_switch", error);
   g_hash_table_insert (play->priv->elements, "video_switch", video_switch);
   
   /* Colorspace conversion */
@@ -216,79 +250,67 @@ gst_play_pipeline_setup (GstPlay *play)
   if (!GST_IS_ELEMENT (video_cs)) {
     video_cs = gst_element_factory_make ("colorspace", "video_cs");
     if (!GST_IS_ELEMENT (video_cs))
+    {
+      gst_play_error_plugin ("colorspace", error);
       return FALSE;
+    }
   }
-  
   g_hash_table_insert (play->priv->elements, "video_cs", video_cs);
   
   /* Software colorbalance */
-  video_balance = gst_element_factory_make ("videobalance",
-                                            "video_balance");
-  if (!GST_IS_ELEMENT (video_balance))
-    return FALSE;
-  
-  g_hash_table_insert (play->priv->elements, "video_balance",
-                       video_balance);
+  GST_PLAY_MAKE_OR_ERROR (video_balance, "videobalance", "video_balance", error);
+  g_hash_table_insert (play->priv->elements, "video_balance", video_balance);
   
   /* Colorspace conversion */
   balance_cs = gst_element_factory_make ("ffcolorspace", "balance_cs");
   if (!GST_IS_ELEMENT (balance_cs)) {
     balance_cs = gst_element_factory_make ("colorspace", "balance_cs");
     if (!GST_IS_ELEMENT (balance_cs))
+    {
+      gst_play_error_plugin ("colorspace", error);
       return FALSE;
+    }
   }
-  
   g_hash_table_insert (play->priv->elements, "balance_cs", balance_cs);
   
   /* Software scaling of video stream */
-  video_scaler = gst_element_factory_make ("videoscale", "video_scaler");
-  if (!GST_IS_ELEMENT (video_scaler))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (video_scaler, "videoscale", "video_scaler", error);
   g_hash_table_insert (play->priv->elements, "video_scaler", video_scaler);
   
   /* Placeholder for future video sink bin */
-  video_sink = gst_element_factory_make ("fakesink", "video_sink");
-  if (!GST_IS_ELEMENT (video_sink))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (video_sink, "fakesink", "video_sink", error);
   g_hash_table_insert (play->priv->elements, "video_sink", video_sink);
   
   gst_bin_add_many (GST_BIN (video_thread), video_queue, video_switch, video_cs,
                     video_balance, balance_cs, video_scaler, video_sink, NULL);
-  gst_element_link_many (video_queue, video_switch, video_cs, video_balance,
-                         balance_cs, video_scaler, video_sink, NULL);
+  if (!gst_element_link_many (video_queue, video_switch, video_cs,
+                              video_balance, balance_cs, video_scaler,
+                              video_sink, NULL))
+    GST_PLAY_ERROR_RETURN (error, "Could not link video output thread elements");
   gst_element_add_ghost_pad (video_thread,
                              gst_element_get_pad (video_queue, "sink"),
                              "sink");
-  gst_element_link (identity_cs, video_thread);
+  if (!gst_element_link (identity_cs, video_thread))
+    GST_PLAY_ERROR_RETURN (error, "Could not link video output thread elements");
   }
   /* Creating our audio output bin 
      { queue ! fakesink } */
   {
-  audio_thread = gst_element_factory_make ("thread", "audio_thread");
-  if (!GST_IS_ELEMENT (audio_thread))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (audio_thread, "thread", "audio_thread", error);
   g_hash_table_insert (play->priv->elements, "audio_thread", audio_thread);
   gst_bin_add (GST_BIN (work_thread), audio_thread);
   
   /* Buffer queue for our audio thread */
-  audio_queue = gst_element_factory_make ("queue", "audio_queue");
-  if (!GST_IS_ELEMENT (audio_queue))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (audio_queue, "queue", "audio_queue", error);
   g_hash_table_insert (play->priv->elements, "audio_queue", audio_queue);
   
   /* Placeholder for future audio sink bin */
-  audio_sink = gst_element_factory_make ("fakesink", "audio_sink");
-  if (!GST_IS_ELEMENT (audio_sink))
-    return FALSE;
-  
+  GST_PLAY_MAKE_OR_ERROR (audio_sink, "fakesink", "audio_sink", error);
   g_hash_table_insert (play->priv->elements, "audio_sink", audio_sink);
   
   gst_bin_add_many (GST_BIN (audio_thread), audio_queue, audio_sink, NULL);
-  gst_element_link (audio_queue, audio_sink);
+  if (!gst_element_link (audio_queue, audio_sink))
+    GST_PLAY_ERROR_RETURN (error, "Could not link audio output thread elements");
   gst_element_add_ghost_pad (audio_thread,
                              gst_element_get_pad (audio_queue, "sink"),
                              "sink");
@@ -486,9 +508,14 @@ gst_play_init (GstPlay *play)
   play->priv->length_nanos = 0;
   play->priv->time_nanos = 0;
   play->priv->elements = g_hash_table_new (g_str_hash, g_str_equal);
+  play->priv->error = NULL;
+  play->priv->debug = NULL;
   
-  if (!gst_play_pipeline_setup (play))
-    g_warning ("libgstplay: failed initializing pipeline");
+  if (!gst_play_pipeline_setup (play, &play->priv->error))
+  {
+    g_warning ("libgstplay: failed initializing pipeline, error: %s",
+               play->priv->error->message);
+  }
 }
 
 static void
@@ -1094,9 +1121,15 @@ gst_play_get_sink_element (GstPlay *play,
 }
 
 GstPlay *
-gst_play_new (void)
+gst_play_new (GError **error)
 {
   GstPlay *play = g_object_new (GST_TYPE_PLAY, NULL);
+
+  if (play->priv->error)
+  {
+    *error = play->priv->error;
+    play->priv->error = NULL;
+  }
   
   return play;
 }
