@@ -263,6 +263,8 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
   v4lmjpegsink = GST_V4LMJPEGSINK (gst_pad_get_parent (pad));
 
   if (v4lmjpegsink->clock) {
+    GstClockID id;
+
     GST_DEBUG (0,"videosink: clock wait: %llu", GST_BUFFER_TIMESTAMP(buf));
 
     jitter = 0; /* FIXME: jitter = gst_clock_current_diff(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf)); */
@@ -270,7 +272,9 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
     if (jitter > 500000 || jitter < -500000)
       GST_DEBUG (0, "jitter: %lld", jitter);
 
-    gst_element_clock_wait(GST_ELEMENT(v4lmjpegsink), v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf), NULL);
+    id = gst_clock_new_single_shot_id (v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf));
+    gst_element_clock_wait(GST_ELEMENT(v4lmjpegsink), id, NULL);
+    gst_clock_id_free (id);
   }
 
   if (GST_BUFFER_POOL(buf) == v4lmjpegsink->bufferpool)
