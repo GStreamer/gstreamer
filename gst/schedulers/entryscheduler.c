@@ -114,8 +114,6 @@ typedef struct
   CothreadPrivate *sink;
   /* current data */
   GstData *bufpen;
-  /* if this link needs a discont - FIXME: remove when core ready for this */
-  gboolean need_discont;
 }
 LinkPrivate;
 
@@ -315,48 +313,14 @@ setup_loop (GstEntryScheduler * sched, GstElement * element)
  * CHAINBASED
  */
 
-/* this function returns the buffer currently in the bufpen
- * it's this complicated because we check that we don't need to invent 
- * a DISCONT event first. 
- * FIXME: The whole if part should go when the core supports this.
- */
 static GstData *
 get_buffer (GstEntryScheduler * sched, GstRealPad * pad)
 {
   LinkPrivate *priv = PAD_PRIVATE (pad);
-  GstData *data;
+  GstData *data = priv->bufpen;
 
-  g_assert (GST_PAD_IS_SINK (pad));
-  if (priv->need_discont && GST_IS_BUFFER (priv->bufpen)) {
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (priv->bufpen)) {
-      data =
-          GST_DATA (gst_event_new_discontinuous (TRUE, GST_FORMAT_TIME,
-              GST_BUFFER_TIMESTAMP (priv->bufpen),
-              GST_BUFFER_OFFSET_IS_VALID (priv->
-                  bufpen) ? GST_FORMAT_DEFAULT : 0,
-              GST_BUFFER_OFFSET (priv->bufpen), 0));
-      GST_WARNING_OBJECT (sched,
-          "needed to invent a DISCONT (time %" G_GUINT64_FORMAT
-          ") for %s:%s => %s:%s, fix it please",
-          GST_BUFFER_TIMESTAMP (priv->bufpen),
-          GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
-    } else {
-      data = GST_DATA (gst_event_new_discontinuous (TRUE,
-              GST_BUFFER_OFFSET_IS_VALID (priv->
-                  bufpen) ? GST_FORMAT_DEFAULT : 0,
-              GST_BUFFER_OFFSET (priv->bufpen), 0));
-      GST_WARNING_OBJECT (sched,
-          "needed to invent a DISCONT (no time) for %s:%s => %s:%s, fix it please",
-          GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
-    }
-    sched->schedule_now = g_list_prepend (sched->schedule_now, priv);
-  } else {
-    data = priv->bufpen;
-    priv->bufpen = NULL;
-  }
+  priv->bufpen = NULL;
   g_assert (data);
-  if (GST_IS_EVENT (data) && GST_EVENT_TYPE (data) == GST_EVENT_DISCONTINUOUS)
-    priv->need_discont = FALSE;
   return data;
 }
 
@@ -378,12 +342,7 @@ gst_entry_scheduler_chain_wrapper (int argc, char **argv)
     if (pad->chainfunc) {
       GstData *data = get_buffer (priv->sched, pad);
 
-      if (GST_IS_EVENT (data)
-          && !GST_FLAG_IS_SET (element, GST_ELEMENT_EVENT_AWARE)) {
-        gst_pad_event_default (GST_PAD (pad), GST_EVENT (data));
-      } else {
-        pad->chainfunc (GST_PAD (pad), data);
-      }
+      gst_pad_call_chain_function (GST_PAD (pad), data);
       /* don't do anything after here with the pad, it might already be dead! 
          the element is still alive though */
     } else {
@@ -445,7 +404,7 @@ gst_entry_scheduler_get_wrapper (int argc, char **argv)
     GST_LOG_OBJECT (priv->sched, "calling getfunc for pad %s:%s",
         GST_DEBUG_PAD_NAME (pad));
     if (pad->getfunc) {
-      GstData *data = pad->getfunc (GST_PAD (pad));
+      GstData *data = gst_pad_call_get_function (GST_PAD (pad));
 
       /* make sure the pad still exists and is linked */
       if (!g_list_find (element->pads, pad)) {
@@ -470,7 +429,7 @@ gst_entry_scheduler_get_wrapper (int argc, char **argv)
           ("get-based element %s removed getfunc during processing",
               GST_OBJECT_NAME (element)));
     }
-    GST_LOG_OBJECT (priv->sched, "done calling chainfunc for element %s",
+    GST_LOG_OBJECT (priv->sched, "done calling getfunc for element %s",
         GST_ELEMENT_NAME (element));
 
     priv->wait = WAIT_FOR_PADS;
@@ -878,7 +837,6 @@ static GstElementStateReturn
 gst_entry_scheduler_state_transition (GstScheduler * scheduler,
     GstElement * element, gint transition)
 {
-  GList *list;
   GstEntryScheduler *sched = GST_ENTRY_SCHEDULER (scheduler);
 
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED))
@@ -889,15 +847,6 @@ gst_entry_scheduler_state_transition (GstScheduler * scheduler,
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
-      for (list = element->pads; list; list = g_list_next (list)) {
-        GstPad *pad = list->data;
-
-        if (!GST_IS_REAL_PAD (pad))
-          continue;
-        if (PAD_PRIVATE (pad)) {
-          PAD_PRIVATE (pad)->need_discont = TRUE;
-        }
-      }
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -967,7 +916,6 @@ gst_entry_scheduler_pad_link (GstScheduler * scheduler, GstPad * srcpad,
 
   priv = g_new0 (LinkPrivate, 1);
   priv->entry.type = ENTRY_LINK;
-  priv->need_discont = TRUE;
   /* wrap srcpad */
   element = gst_pad_get_parent (srcpad);
   priv->srcpad = GST_REAL_PAD (srcpad);

@@ -518,6 +518,11 @@ xmlNodePtr              gst_ghost_pad_save_thyself   		(GstPad *pad,
 						     		 xmlNodePtr parent);
 #endif
 
+/* for schedulers only */
+void			gst_pad_call_chain_function		(GstPad *pad, GstData *data);
+GstData *		gst_pad_call_get_function		(GstPad *pad);
+
+
 G_END_DECLS
 
 

@@ -261,7 +261,6 @@ static int unknown_group_schedule_function (int argc, char *argv[]);
  */
 static void gst_opt_scheduler_loop_wrapper (GstPad * sinkpad, GstData * data);
 static GstData *gst_opt_scheduler_get_wrapper (GstPad * srcpad);
-static void gst_opt_scheduler_chain_wrapper (GstPad * sinkpad, GstData * data);
 
 
 /*
@@ -1182,7 +1181,7 @@ get_group_schedule_function (int argc, char *argv[])
     GST_DEBUG ("doing get and push on pad \"%s:%s\" in group %p",
         GST_DEBUG_PAD_NAME (pad), group);
 
-    data = GST_RPAD_GETFUNC (pad) (pad);
+    data = gst_pad_call_get_function (pad);
     if (data) {
       if (GST_EVENT_IS_INTERRUPT (data)) {
         gst_event_unref (GST_EVENT (data));
@@ -1367,24 +1366,6 @@ gst_opt_scheduler_get_wrapper (GstPad * srcpad)
   return data;
 }
 
-/* this function is a chain wrapper for non-event-aware plugins,
- * it'll simply dispatch the events to the (default) event handler */
-static void
-gst_opt_scheduler_chain_wrapper (GstPad * sinkpad, GstData * data)
-{
-  if (GST_IS_EVENT (data)) {
-    gst_pad_send_event (sinkpad, GST_EVENT (data));
-  } else {
-    GST_RPAD_CHAINFUNC (sinkpad) (sinkpad, data);
-  }
-}
-
-static void
-clear_queued (GstData * data, gpointer user_data)
-{
-  gst_data_unref (data);
-}
-
 static void
 pad_clear_queued (GstPad * srcpad, gpointer user_data)
 {
@@ -1392,7 +1373,7 @@ pad_clear_queued (GstPad * srcpad, gpointer user_data)
 
   if (buflist) {
     GST_LOG ("need to clear some buffers");
-    g_list_foreach (buflist, (GFunc) clear_queued, NULL);
+    g_list_foreach (buflist, (GFunc) gst_data_unref, NULL);
     g_list_free (buflist);
     GST_PAD_BUFPEN (srcpad) = NULL;
   }
@@ -1908,11 +1889,8 @@ gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
       GST_LOG ("get to chain based link");
 
       /* setup get/chain handlers */
-      GST_RPAD_GETHANDLER (srcpad) = GST_RPAD_GETFUNC (srcpad);
-      if (GST_ELEMENT_IS_EVENT_AWARE (sink_element))
-        GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
-      else
-        GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_chain_wrapper;
+      GST_RPAD_GETHANDLER (srcpad) = gst_pad_call_get_function;
+      GST_RPAD_CHAINHANDLER (sinkpad) = gst_pad_call_chain_function;
 
       /* the two elements should be put into the same group, 
        * this also means that they are in the same chain automatically */
@@ -1933,10 +1911,7 @@ gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
     case GST_OPT_CHAIN_TO_CHAIN:
       GST_LOG ("loop/chain to chain based link");
 
-      if (GST_ELEMENT_IS_EVENT_AWARE (sink_element))
-        GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
-      else
-        GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_chain_wrapper;
+      GST_RPAD_CHAINHANDLER (sinkpad) = gst_pad_call_chain_function;
 
       /* the two elements should be put into the same group, this also means
        * that they are in the same chain automatically, in case of a loop-based
@@ -1948,7 +1923,7 @@ gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
     case GST_OPT_GET_TO_LOOP:
       GST_LOG ("get to loop based link");
 
-      GST_RPAD_GETHANDLER (srcpad) = GST_RPAD_GETFUNC (srcpad);
+      GST_RPAD_GETHANDLER (srcpad) = gst_pad_call_get_function;
 
       /* the two elements should be put into the same group, this also means
        * that they are in the same chain automatically, sink_element is

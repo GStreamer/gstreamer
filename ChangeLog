@@ -1,3 +1,36 @@
+2004-04-16  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_link_new),
+	(gst_pad_link_free), (gst_pad_link_try), (_invent_event),
+	(gst_pad_pull):
+	  implement enforcing discont events before buffers are passed. This
+	  allows state changes of only some elements and later correctly going
+	  on where they left off (or in short: you can now set audio sinks to
+	  NULL to release the device when the pipeline is paused)
+	* gst/gstpad.c: (gst_pad_call_chain_function),
+	(gst_pad_call_get_function):
+	* gst/gstpad.h:
+	  add gst_pad_call_chain_function and gst_pad_call_get_function for
+	  scheduler interaction. They are required because of the changes
+	  above.
+	* gst/schedulers/entryscheduler.c: (get_buffer),
+	(gst_entry_scheduler_chain_wrapper),
+	(gst_entry_scheduler_get_wrapper),
+	(gst_entry_scheduler_state_transition),
+	(gst_entry_scheduler_pad_link):
+	* gst/schedulers/gstbasicscheduler.c:
+	(gst_basic_scheduler_chain_wrapper),
+	(gst_basic_scheduler_src_wrapper),
+	(gst_basic_scheduler_chainhandler_proxy),
+	(gst_basic_scheduler_gethandler_proxy),
+	(gst_basic_scheduler_cothreaded_chain),
+	(gst_basic_scheduler_chain_elements):
+	* gst/schedulers/gstoptimalscheduler.c:
+	(get_group_schedule_function), (pad_clear_queued),
+	(gst_opt_scheduler_pad_link):
+	  use the new functions instead of calling get/chain-functions
+	  directly.
+
 2004-04-15  David Schleef  <ds@schleef.org>
 
 	* docs/gst/gstreamer-sections.txt: Remove deprecated symbols.

@@ -362,7 +362,7 @@ gst_basic_scheduler_chain_wrapper (int argc, char **argv)
               GST_CAT_DEBUG (debug_dataflow,
                   "calling chain function of %s:%s %p", name,
                   GST_PAD_NAME (pad), data);
-              GST_RPAD_CHAINFUNC (realpad) (pad, data);
+              gst_pad_call_chain_function (GST_PAD (realpad), data);
               GST_CAT_DEBUG (debug_dataflow,
                   "calling chain function of element %s done", name);
             }
@@ -421,8 +421,7 @@ gst_basic_scheduler_src_wrapper (int argc, char **argv)
         inf_loop = FALSE;
         GST_CAT_DEBUG (debug_dataflow, "calling _getfunc for %s:%s",
             GST_DEBUG_PAD_NAME (realpad));
-        g_return_val_if_fail (GST_RPAD_GETFUNC (realpad) != NULL, 0);
-        data = GST_RPAD_GETFUNC (realpad) (GST_PAD (realpad));
+        data = gst_pad_call_get_function (GST_PAD (realpad));
         if (data) {
           GST_CAT_DEBUG (debug_dataflow, "calling gst_pad_push on pad %s:%s %p",
               GST_DEBUG_PAD_NAME (realpad), data);
@@ -691,11 +690,11 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
             if (GST_RPAD_DIRECTION (peerpad) == GST_PAD_SINK) {
               GST_DEBUG ("copying chain func into push proxy for peer %s:%s",
                   GST_DEBUG_PAD_NAME (peerpad));
-              GST_RPAD_CHAINHANDLER (peerpad) = GST_RPAD_CHAINFUNC (peerpad);
+              GST_RPAD_CHAINHANDLER (peerpad) = gst_pad_call_chain_function;
             } else {
               GST_DEBUG ("copying get func into pull proxy for peer %s:%s",
                   GST_DEBUG_PAD_NAME (peerpad));
-              GST_RPAD_GETHANDLER (peerpad) = GST_RPAD_GETFUNC (peerpad);
+              GST_RPAD_GETHANDLER (peerpad) = gst_pad_call_get_function;
             }
           }
         }
@@ -709,11 +708,11 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
         if (GST_RPAD_DIRECTION (pad) == GST_PAD_SINK) {
           GST_DEBUG ("copying chain function into push proxy for %s:%s",
               GST_DEBUG_PAD_NAME (pad));
-          GST_RPAD_CHAINHANDLER (pad) = GST_RPAD_CHAINFUNC (pad);
+          GST_RPAD_CHAINHANDLER (pad) = gst_pad_call_chain_function;
         } else {
           GST_DEBUG ("copying get function into pull proxy for %s:%s",
               GST_DEBUG_PAD_NAME (pad));
-          GST_RPAD_GETHANDLER (pad) = GST_RPAD_GETFUNC (pad);
+          GST_RPAD_GETHANDLER (pad) = gst_pad_call_get_function;
         }
       }
       /* otherwise we really are a cothread */

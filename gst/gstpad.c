@@ -36,6 +36,28 @@
 #define GST_CAT_DEFAULT GST_CAT_PADS
 
 
+struct _GstPadLink
+{
+  GType type;
+
+  gboolean bla;
+  gboolean srcnotify;
+  gboolean sinknotify;
+
+  GstPad *srcpad;
+  GstPad *sinkpad;
+
+  GstCaps *srccaps;
+  GstCaps *sinkcaps;
+  GstCaps *filtercaps;
+  GstCaps *caps;
+
+  GstPadFixateFunction app_fixate;
+
+  gboolean engaged;
+  GstData *temp_store;          /* used only when we invented a DISCONT */
+};
+
 enum
 {
   TEMPL_PAD_CREATED,
@@ -412,6 +434,7 @@ gst_pad_set_active (GstPad * pad, gboolean active)
 {
   GstRealPad *realpad;
   gboolean old;
+  GstPadLink *link;
 
   g_return_if_fail (GST_IS_PAD (pad));
 
@@ -430,6 +453,17 @@ gst_pad_set_active (GstPad * pad, gboolean active)
     GST_CAT_DEBUG (GST_CAT_PADS, "de-activating pad %s:%s",
         GST_DEBUG_PAD_NAME (realpad));
     GST_FLAG_SET (realpad, GST_PAD_DISABLED);
+  }
+  link = GST_RPAD_LINK (realpad);
+  if (link) {
+    link->engaged = FALSE;
+    if (link->temp_store) {
+      GST_CAT_INFO (GST_CAT_PADS,
+          "deleting cached buffer from bufpen of pad %s:%s",
+          GST_DEBUG_PAD_NAME (realpad));
+      gst_data_unref (link->temp_store);
+      link->temp_store = NULL;
+    }
   }
 
   g_object_notify (G_OBJECT (realpad), "active");
@@ -999,25 +1033,6 @@ gst_pad_is_linked (GstPad * pad)
   return GST_PAD_PEER (pad) != NULL;
 }
 
-struct _GstPadLink
-{
-  GType type;
-
-  gboolean bla;
-  gboolean srcnotify;
-  gboolean sinknotify;
-
-  GstPad *srcpad;
-  GstPad *sinkpad;
-
-  GstCaps *srccaps;
-  GstCaps *sinkcaps;
-  GstCaps *filtercaps;
-  GstCaps *caps;
-
-  GstPadFixateFunction app_fixate;
-};
-
 static gboolean
 gst_pad_check_schedulers (GstRealPad * realsrc, GstRealPad * realsink)
 {
@@ -1051,6 +1066,8 @@ gst_pad_link_new (void)
   link = g_new0 (GstPadLink, 1);
   link->sinknotify = TRUE;
   link->srcnotify = TRUE;
+
+  link->engaged = FALSE;
   return link;
 }
 
@@ -1065,6 +1082,8 @@ gst_pad_link_free (GstPadLink * link)
     gst_caps_free (link->filtercaps);
   if (link->caps)
     gst_caps_free (link->caps);
+  if (link->temp_store)
+    gst_data_unref (link->temp_store);
 #ifdef USE_POISONING
   memset (link, 0xff, sizeof (*link));
 #endif
@@ -1316,8 +1335,12 @@ gst_pad_link_try (GstPadLink * link)
 
   GST_RPAD_PEER (srcpad) = GST_REAL_PAD (link->sinkpad);
   GST_RPAD_PEER (sinkpad) = GST_REAL_PAD (link->srcpad);
-  if (oldlink)
+  if (oldlink) {
+    link->temp_store = oldlink->temp_store;
+    link->engaged = oldlink->engaged;
+    oldlink->temp_store = NULL;
     gst_pad_link_free (oldlink);
+  }
   GST_RPAD_LINK (srcpad) = link;
   GST_RPAD_LINK (sinkpad) = link;
   if (ret == GST_PAD_LINK_OK) {
@@ -3001,6 +3024,31 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
 }
 #endif /* GST_DISABLE_LOADSAVE */
 
+static GstData *
+_invent_event (GstPad * pad, GstBuffer * buffer)
+{
+  GstData *data;
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+    data = GST_DATA (gst_event_new_discontinuous (TRUE, GST_FORMAT_TIME,
+            GST_BUFFER_TIMESTAMP (buffer), GST_BUFFER_OFFSET_IS_VALID (buffer) ?
+            GST_FORMAT_DEFAULT : 0, GST_BUFFER_OFFSET (buffer), 0));
+    GST_CAT_WARNING (GST_CAT_DATAFLOW,
+        "needed to invent a DISCONT (time %" G_GUINT64_FORMAT
+        ") for %s:%s => %s:%s", GST_BUFFER_TIMESTAMP (buffer),
+        GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
+  } else {
+    data = GST_DATA (gst_event_new_discontinuous (TRUE,
+            GST_BUFFER_OFFSET_IS_VALID (buffer) ? GST_FORMAT_DEFAULT : 0,
+            GST_BUFFER_OFFSET (buffer), 0));
+    GST_CAT_WARNING_OBJECT (GST_CAT_DATAFLOW,
+        "needed to invent a DISCONT (no time) for %s:%s => %s:%s",
+        GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
+  }
+
+  return data;
+}
+
 /**
  * gst_pad_push:
  * @pad: a source #GstPad.
@@ -3094,15 +3142,38 @@ gst_pad_pull (GstPad * pad)
   } else {
   restart:
     if (peer->gethandler) {
+      GstPadLink *link = GST_RPAD_LINK (pad);
       GstData *data;
 
       GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad,
           "calling gethandler %s of peer pad %s:%s",
           GST_DEBUG_FUNCPTR_NAME (peer->gethandler), GST_DEBUG_PAD_NAME (peer));
 
-      data = (peer->gethandler) (GST_PAD (peer));
+      if (link->temp_store) {
+        g_assert (link->engaged);
+        data = link->temp_store;
+        link->temp_store = NULL;
+      } else {
+        data = (peer->gethandler) (GST_PAD (peer));
+        /* refetch - we might have been relinked */
+        link = GST_RPAD_LINK (pad);
+      }
 
       if (data) {
+        if (!link->engaged) {
+          g_assert (link->temp_store == NULL);
+          if (GST_IS_BUFFER (data)) {
+            link->temp_store = data;
+            link->engaged = TRUE;
+            data = _invent_event (pad, GST_BUFFER (data));
+          } else if (GST_IS_EVENT (data) &&
+              GST_EVENT_TYPE (data) == GST_EVENT_DISCONTINUOUS) {
+            link->engaged = TRUE;
+            GST_CAT_LOG (GST_CAT_DATAFLOW,
+                "link engaged by discont event for pad %s:%s",
+                GST_DEBUG_PAD_NAME (pad));
+          }
+        }
         if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
           goto restart;
         return data;
@@ -4139,4 +4210,72 @@ gst_pad_get_formats (GstPad * pad)
     return GST_RPAD_FORMATSFUNC (rpad) (GST_PAD (pad));
 
   return NULL;
+}
+
+#define CALL_CHAINFUNC(pad, data) G_STMT_START {\
+  if (GST_IS_EVENT (data) && \
+      !GST_FLAG_IS_SET (gst_pad_get_parent (pad), GST_ELEMENT_EVENT_AWARE)) { \
+    gst_pad_send_event (pad, GST_EVENT (data)); \
+  } else { \
+    GST_RPAD_CHAINFUNC (pad) (pad, data); \
+  } \
+}G_STMT_END
+/**
+ * gst_pad_call_chain_function:
+ * @pad: sink pad to call chain function on
+ * @data: data to call the chain function with
+ *
+ * Calls the chain function of the given pad while making sure the internal
+ * consistency is kept. Use this function inside schedulers instead of calling
+ * the chain function yourself.
+ */
+void
+gst_pad_call_chain_function (GstPad * pad, GstData * data)
+{
+  GstPadLink *link;
+
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_PAD_IS_SINK (pad));
+  g_return_if_fail (data != NULL);
+  g_return_if_fail (GST_RPAD_CHAINFUNC (pad) != NULL);
+  g_return_if_fail (GST_RPAD_LINK (pad) != NULL);
+
+  link = GST_RPAD_LINK (pad);
+  if (!link->engaged) {
+    g_assert (link->temp_store == NULL);
+    if (GST_IS_BUFFER (data)) {
+      link->temp_store = data;
+      link->engaged = TRUE;
+      CALL_CHAINFUNC (pad, _invent_event (pad, GST_BUFFER (data)));
+      g_assert (link->temp_store == data);
+      link->temp_store = NULL;
+    } else if (GST_IS_EVENT (data) &&
+        GST_EVENT_TYPE (data) == GST_EVENT_DISCONTINUOUS) {
+      link->engaged = TRUE;
+      GST_CAT_LOG (GST_CAT_DATAFLOW,
+          "link engaged by discont event for pad %s:%s",
+          GST_DEBUG_PAD_NAME (pad));
+    }
+  }
+  CALL_CHAINFUNC (pad, data);
+}
+
+/**
+ * gst_pad_call_get_function:
+ * @pad: sink pad to call chain function on
+ *
+ * Calls the get function of the given pad while making sure the internal
+ * consistency is kept. Use this function inside schedulers instead of calling
+ * the get function yourself.
+ *
+ * Returns: the data provided by the pad or NULL if no data was available.
+ */
+GstData *
+gst_pad_call_get_function (GstPad * pad)
+{
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), NULL);
+  g_return_val_if_fail (GST_PAD_IS_SRC (pad), NULL);
+  g_return_val_if_fail (GST_RPAD_GETFUNC (pad) != NULL, NULL);
+
+  return GST_RPAD_GETFUNC (pad) (pad);
 }
