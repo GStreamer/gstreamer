@@ -342,6 +342,7 @@ GST_PLUGINS_ALL="\
 	debug \
 	deinterlace \
 	effectv \
+	equalizer \
 	festival \
 	ffmpegcolorspace \
 	filter \
@@ -1832,6 +1833,7 @@ gst/cutter/Makefile
 gst/debug/Makefile
 gst/deinterlace/Makefile
 gst/effectv/Makefile
+gst/equalizer/Makefile
 gst/festival/Makefile
 gst/ffmpegcolorspace/Makefile
 gst/filter/Makefile

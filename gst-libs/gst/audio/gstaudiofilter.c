@@ -141,15 +141,17 @@ gst_audiofilter_link (GstPad * pad, const GstCaps * caps)
   if (strcmp (gst_structure_get_name (structure), "audio/x-raw-int") == 0) {
     ret = gst_structure_get_int (structure, "depth", &audiofilter->depth);
     ret &= gst_structure_get_int (structure, "width", &audiofilter->width);
-    ret &=
-        gst_structure_get_int (structure, "channels", &audiofilter->channels);
   } else if (strcmp (gst_structure_get_name (structure), "audio/x-raw-float")
       == 0) {
-
+    ret &= gst_structure_get_int (structure, "width", &audiofilter->width);
   } else {
     g_assert_not_reached ();
   }
   ret &= gst_structure_get_int (structure, "rate", &audiofilter->rate);
+  ret &= gst_structure_get_int (structure, "channels", &audiofilter->channels);
+
+  if (!ret)
+    return GST_PAD_LINK_REFUSED;
 
   audiofilter->bytes_per_sample = (audiofilter->width / 8) *
       audiofilter->channels;
