@@ -1,5 +1,17 @@
 2004-04-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/Makefile.am:
+          make docs exit on scanning problems
+          fix nonsrcdir build issues
+	* docs/gst/gstreamer-sections.txt:
+          adding stuff from -unused
+	* gst/gstqueue.h:
+          create GstQueueSize
+	* gst/schedulers/cothreads_compat.h:
+          fix cothread warnings
+
+2004-04-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/gstreamer-sections.txt:
           remove defines deprecated by Benjamin
 

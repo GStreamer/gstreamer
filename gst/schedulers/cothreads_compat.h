@@ -34,7 +34,7 @@
  *
  * "cothread" and "cothread_context" need to be defined
  */
-typedef cothread_state cothread;
+typedef struct _cothread_state cothread;
 
 /* define functions
  * the macros are prepended with "do_" 

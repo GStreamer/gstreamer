@@ -154,13 +154,14 @@ all-local: html-build.stamp
 
 #### scan ####
 
-
-# wingo addition
+# in the case of non-srcdir builds, the built gst directory gets added
+# to gtk-doc scanning; but only then, to avoid duplicates
 scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
 	@echo '*** Scanning header files ***'
 	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null ; then \
 	    if test x"$(srcdir)" != x. ; then \
 	        cp $(srcdir)/$(DOC_MODULE).types . ; \
+	        chmod u+w $(DOC_MODULE).types ; \
 	    fi ; \
 	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" $(GTK_DOC_SCANOBJ) --type-init-func="gst_init(NULL,NULL)" --module=$(DOC_MODULE) ; \
 	else \
@@ -169,7 +170,16 @@ scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
                test -f $$i || touch $$i ; \
 	    done \
 	fi
-	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers="$(IGNORE_HFILES)" $(SCAN_OPTIONS) $(EXTRA_HFILES)
+	if test "x$(top_srcdir)" != "x$(top_builddir)"; \
+        then \
+          export BUILT_OPTIONS="--source-dir=$(top_builddir)/gst"; \
+        fi; \
+	gtkdoc-scan \
+		--module=$(DOC_MODULE) \
+		--source-dir=$(DOC_SOURCE_DIR) \
+		$$BUILT_OPTIONS \
+		--ignore-headers="$(IGNORE_HFILES)" \
+		$(SCAN_OPTIONS) $(EXTRA_HFILES)
 	touch scan-build.stamp
 
 $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
@@ -180,10 +190,12 @@ $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
 tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_OVERRIDES)
 	@echo '*** Rebuilding template files ***'
 	if test x"$(srcdir)" != x. ; then \
-	    cp $(srcdir)/$(DOC_MODULE)-decl.txt . ; \
 	    cp $(srcdir)/$(DOC_MODULE)-sections.txt . ; \
+	    touch $(DOC_MODULE)-decl.txt ; \
 	fi
-	gtkdoc-mktmpl --module=$(DOC_MODULE)
+	gtkdoc-mktmpl --module=$(DOC_MODULE) | tee tmpl-build.log
+	@if grep "WARNING:" tmpl-build.log > /dev/null; then exit 1; fi
+	rm -f tmpl-build.log
 	touch tmpl-build.stamp
 
 tmpl.stamp: tmpl-build.stamp
@@ -193,7 +205,9 @@ tmpl.stamp: tmpl-build.stamp
 
 sgml-build.stamp: tmpl.stamp $(CFILE_GLOB)
 	@echo '*** Building SGML ***'
-	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
+	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS) | tee sgml-build.log
+	@if grep "WARNING:" sgml-build.log > /dev/null; then exit 1; fi
+	rm sgml-build.log
 	touch sgml-build.stamp
 
 sgml.stamp: sgml-build.stamp

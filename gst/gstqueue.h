@@ -48,7 +48,14 @@ enum {
 };
 
 typedef struct _GstQueue GstQueue;
+typedef struct _GstQueueSize GstQueueSize;
 typedef struct _GstQueueClass GstQueueClass;
+
+struct _GstQueueSize {
+    guint   buffers;	/* no. of buffers */
+    guint   bytes;	/* no. of bytes */
+    guint64 time;	/* amount of time */
+};
 
 struct _GstQueue {
   GstElement element;
@@ -59,11 +66,8 @@ struct _GstQueue {
   /* the queue of data we're keeping our grubby hands on */
   GQueue *queue;
 
-  struct {
-    guint   buffers;	/* no. of buffers */
-    guint   bytes;	/* no. of bytes */
-    guint64 time;	/* amount of time */
-  } cur_level,		/* currently in the queue */
+  GstQueueSize
+    cur_level,		/* currently in the queue */
     max_size,		/* max. amount of data allowed in the queue */
     min_threshold;	/* min. amount of data required to wake reader */
 
