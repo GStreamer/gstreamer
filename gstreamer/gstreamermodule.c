@@ -26,6 +26,7 @@
 
 /* include this first, before NO_IMPORT_PYGOBJECT is defined */
 #include <pygobject.h>
+#include <gst/gst.h>
 
 void pygstreamer_register_classes (PyObject *d);
 void pygstreamer_add_constants(PyObject *module, const gchar *strip_prefix);
@@ -44,7 +45,7 @@ init_gstreamer (void)
 	d = PyModule_GetDict (m);
 
 	pygstreamer_register_classes (d);
-	pygstreamer_add_constants (m, "GSTREAMER_");
+	pygstreamer_add_constants (m, "GST_");
 	
 	if (PyErr_Occurred ()) {
 		Py_FatalError ("can't initialize module gstreamer");
