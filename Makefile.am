@@ -18,7 +18,7 @@ SUBDIRS = include gst libs plugins tools test tests examples \
 $(SUBDIRS_LGG) $(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
-DIST_SUBDIRS = include gst libs plugins tools test tests examples gstplay editor docs
+DIST_SUBDIRS = include gst libs plugins tools test tests examples gstplay editor docs debian
 
 
 bin_SCRIPTS = gstreamer-config
