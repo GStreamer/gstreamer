@@ -2692,6 +2692,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
       return gst_caps_from_string ("video/mpeg, "
           "mpegversion = (int) 4, " "systemstream = (boolean) false");
     case GST_MAKE_FOURCC ('3', 'I', 'V', '1'):
+    case GST_MAKE_FOURCC ('3', 'I', 'V', '2'):
       return gst_caps_from_string ("video/x-3ivx");
     case GST_MAKE_FOURCC ('c', 'v', 'i', 'd'):
       /* Cinepak */
