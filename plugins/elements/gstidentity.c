@@ -51,6 +51,7 @@ enum {
   ARG_DROP_PROBABILITY,
   ARG_SILENT,
   ARG_LAST_MESSAGE,
+  ARG_DUMP,
 };
 
 
@@ -116,6 +117,9 @@ gst_identity_class_init (GstIdentityClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
     g_param_spec_string ("last-message", "last-message", "last-message",
                          NULL, G_PARAM_READABLE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
+    g_param_spec_boolean("dump","Dump","Dump buffer contents",
+                         FALSE, G_PARAM_READWRITE));
 
   gst_identity_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
@@ -174,6 +178,7 @@ gst_identity_init (GstIdentity *identity)
   identity->error_after = -1;
   identity->drop_probability = 0.0;
   identity->silent = FALSE;
+  identity->dump = FALSE;
 }
 
 static void 
@@ -205,6 +210,9 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
       gst_buffer_unref (buf);
       return;
     }
+  }
+  if (identity->dump) {
+    gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   }
 
   for (i = identity->duplicate; i; i--) {
@@ -275,6 +283,9 @@ gst_identity_set_property (GObject *object, guint prop_id, const GValue *value, 
     case ARG_DUPLICATE:
       identity->duplicate = g_value_get_uint (value);
       break;
+    case ARG_DUMP:
+      identity->dump = g_value_get_boolean (value);
+      break;
     case ARG_ERROR_AFTER:
       identity->error_after = g_value_get_uint (value);
       break;
@@ -312,6 +323,9 @@ static void gst_identity_get_property(GObject *object, guint prop_id, GValue *va
       break;
     case ARG_SILENT:
       g_value_set_boolean (value, identity->silent);
+      break;
+    case ARG_DUMP:
+      g_value_set_boolean (value, identity->dump);
       break;
     case ARG_LAST_MESSAGE:
       g_value_set_string (value, identity->last_message);

@@ -90,7 +90,7 @@ struct _GstClockClass {
 GType           	gst_clock_get_type 		(void);
 
 void 			gst_clock_set_speed		(GstClock *clock, gdouble speed);
-void 			gst_clock_get_speed		(GstClock *clock, gdouble speed);
+gdouble 		gst_clock_get_speed		(GstClock *clock);
 
 void 			gst_clock_activate		(GstClock *clock, gboolean active);
 gboolean 		gst_clock_is_active		(GstClock *clock);

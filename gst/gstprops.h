@@ -113,7 +113,7 @@ GstPropsType		gst_props_entry_get_type	(const GstPropsEntry *entry);
 const gchar*		gst_props_entry_get_name	(const GstPropsEntry *entry);
 gboolean		gst_props_entry_is_fixed	(const GstPropsEntry *entry);
 
-gboolean		gst_props_entry_get		(const GstPropsEntry *props, ...);
+gboolean		gst_props_entry_get		(const GstPropsEntry *entry, ...);
 
 gboolean		gst_props_entry_get_int		(const GstPropsEntry *entry, gint *val);
 gboolean		gst_props_entry_get_float	(const GstPropsEntry *entry, gfloat *val);

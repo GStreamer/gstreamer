@@ -1261,8 +1261,9 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
 
 /**
  * gst_pad_try_reconnect_filtered:
- * @pad: the pad to reconnect
- * @caps: the capabilities to use in the reconnectiong
+ * @srcpad: the source"pad to reconnect
+ * @sinkpad: the sink pad to reconnect
+ * @filtercaps: the capabilities to use in the reconnectiong
  *
  * Try to reconnect this pad and its peer with the specified caps
  *
@@ -1287,8 +1288,9 @@ gst_pad_try_reconnect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filter
 
 /**
  * gst_pad_reconnect_filtered:
- * @pad: the pad to reconnect
- * @caps: the capabilities to use in the reconnectiong
+ * @srcpad: the source"pad to reconnect
+ * @sinkpad: the sink pad to reconnect
+ * @filtercaps: the capabilities to use in the reconnectiong
  *
  * Try to reconnect this pad and its peer with the specified caps. 
  *
@@ -1499,11 +1501,12 @@ gst_pad_get_allowed_caps (GstPad *pad)
 }
 
 /**
- * gst_pad_recac_allowed_caps:
+ * gst_pad_recalc_allowed_caps:
  * @pad: the pad to recaculate the caps of
  *
- * Attempt to reconnect the pad to its peer through its filter, set with gst_pad_[re]connect_filtered.
- * FIXME: no one calls this function. why is it here?
+ * Attempt to reconnect the pad to its peer through its filter, 
+ * set with gst_pad_[re]connect_filtered. This function is useful when a
+ * plugin has new capabilities on a pad and wants to notify the peer.
  *
  * Returns: TRUE on success, FALSE otherwise.
  */
@@ -2257,21 +2260,22 @@ static GstPad *ghost_pad_parent_class = NULL;
 /* static guint gst_ghost_pad_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-gst_ghost_pad_get_type(void) {
+gst_ghost_pad_get_type (void) 
+{
   if (!_gst_ghost_pad_type) {
     static const GTypeInfo pad_info = {
-      sizeof(GstGhostPadClass),
+      sizeof (GstGhostPadClass),
       NULL,
       NULL,
-      (GClassInitFunc)gst_ghost_pad_class_init,
+      (GClassInitFunc) gst_ghost_pad_class_init,
       NULL,
       NULL,
       sizeof(GstGhostPad),
       8,
-      (GInstanceInitFunc)gst_ghost_pad_init,
+      (GInstanceInitFunc) gst_ghost_pad_init,
       NULL
     };
-    _gst_ghost_pad_type = g_type_register_static(GST_TYPE_PAD, "GstGhostPad", &pad_info, 0);
+    _gst_ghost_pad_type = g_type_register_static (GST_TYPE_PAD, "GstGhostPad", &pad_info, 0);
   }
   return _gst_ghost_pad_type;
 }
@@ -2281,9 +2285,9 @@ gst_ghost_pad_class_init (GstGhostPadClass *klass)
 {
   GObjectClass *gobject_class;
 
-  gobject_class = (GObjectClass*)klass;
+  gobject_class = (GObjectClass*) klass;
 
-  ghost_pad_parent_class = g_type_class_ref(GST_TYPE_PAD);
+  ghost_pad_parent_class = g_type_class_ref (GST_TYPE_PAD);
 }
 
 static void

@@ -138,6 +138,9 @@ gst_clock_class_init (GstClockClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
+  if (!g_thread_supported ())
+    g_thread_init (NULL);
+
   _gst_clock_entries_chunk = g_mem_chunk_new ("GstClockEntries",
                      sizeof (GstClockEntry), sizeof (GstClockEntry) * 32,
                      G_ALLOC_AND_FREE);
@@ -159,6 +162,14 @@ gst_clock_init (GstClock *clock)
   clock->active_cond = g_cond_new ();
 }
 
+/**
+ * gst_clock_async_supported
+ * @clock: The clock to query
+ *
+ * Check if this clock can support async notification.
+ *
+ * Returns: TRUE if async notification is supported.
+ */
 gboolean
 gst_clock_async_supported (GstClock *clock)
 {
@@ -167,7 +178,45 @@ gst_clock_async_supported (GstClock *clock)
   return clock->async_supported;
 }
 
+/**
+ * gst_clock_set_speed
+ * @clock: The clock to modify
+ * @speed: The speed to set on the clock
+ *
+ * Set the speed on the given clock. 1.0 is the default 
+ * speed.
+ */
+void
+gst_clock_set_speed (GstClock *clock, gdouble speed)
+{
+  g_return_if_fail (GST_IS_CLOCK (clock));
 
+  clock->speed = speed;
+}
+
+/**
+ * gst_clock_get_speed
+ * @clock: The clock to query
+ *
+ * Get the speed of the given clock.
+ *
+ * Returns: the speed of the clock.
+ */
+gdouble
+gst_clock_get_speed (GstClock *clock)
+{
+  g_return_val_if_fail (GST_IS_CLOCK (clock), 0.0);
+
+  return clock->speed;
+}
+
+
+/**
+ * gst_clock_reset
+ * @clock: The clock to reset
+ *
+ * Reset the clock to time 0.
+ */
 void
 gst_clock_reset (GstClock *clock)
 {
@@ -186,6 +235,14 @@ gst_clock_reset (GstClock *clock)
   GST_UNLOCK (clock);
 }
 
+/**
+ * gst_clock_activate
+ * @clock: The clock to activate
+ * @active: flag indication activate or deactivate
+ *
+ * Activates or deactivates the clock based on the activate paramater.
+ * As soon as the clock is activated, the time will start ticking.
+ */
 void
 gst_clock_activate (GstClock *clock, gboolean active)
 {
@@ -213,6 +270,14 @@ gst_clock_activate (GstClock *clock, gboolean active)
   g_mutex_unlock (clock->active_mutex);	
 }
 
+/**
+ * gst_clock_is_active
+ * @clock: The clock to query
+ *
+ * Checks if the given clock is active.
+ * 
+ * Returns: TRUE if the clock is active.
+ */
 gboolean
 gst_clock_is_active (GstClock *clock)
 {
@@ -221,6 +286,15 @@ gst_clock_is_active (GstClock *clock)
   return clock->active;
 }
 
+/**
+ * gst_clock_get_time
+ * @clock: The clock to query
+ *
+ * Get the current time of the given clock. The time is always
+ * monotonically increasing.
+ * 
+ * Returns: the time of the clock.
+ */
 GstClockTime
 gst_clock_get_time (GstClock *clock)
 {
@@ -270,6 +344,15 @@ gst_clock_wait_async_func (GstClock *clock, GstClockTime time,
   return entry;
 }
 
+/**
+ * gst_clock_wait
+ * @clock: The clock to wait on
+ * @time: The time to wait for
+ *
+ * Wait and block till the clock reaches the specified time.
+ *
+ * Returns: result of the operation.
+ */
 GstClockReturn
 gst_clock_wait (GstClock *clock, GstClockTime time)
 {
@@ -284,6 +367,19 @@ gst_clock_wait (GstClock *clock, GstClockTime time)
   return res;
 }
 
+/**
+ * gst_clock_wait_async
+ * @clock: The clock to wait on
+ * @time: The time to wait for
+ * @func: The callback function 
+ * @user_data: User data passed in the calback
+ *
+ * Register a callback on the given clock that will be triggered 
+ * when the clock has reached the given time. A ClockID is returned
+ * that can be used to cancel the request.
+ *
+ * Returns: the clock id or NULL when async notification is not supported.
+ */
 GstClockID
 gst_clock_wait_async (GstClock *clock, GstClockTime time,
 		      GstClockCallback func, gpointer user_data)
@@ -296,6 +392,52 @@ gst_clock_wait_async (GstClock *clock, GstClockTime time,
   return NULL;
 }
 
+/**
+ * gst_clock_cancel_wait_async
+ * @clock: The clock to cancel the request on
+ * @id: The id to cancel
+ *
+ * Cancel an outstanding async notification request with the given ID.
+ */
+void
+gst_clock_cancel_wait_async (GstClock *clock, GstClockID id)
+{
+  g_warning ("not supported");
+}
+
+/**
+ * gst_clock_notify_async
+ * @clock: The clock to wait on
+ * @interval: The interval between notifications
+ * @func: The callback function 
+ * @user_data: User data passed in the calback
+ *
+ * Register a callback on the given clock that will be periodically
+ * triggered with the specified interval. A ClockID is returned
+ * that can be used to cancel the request.
+ *
+ * Returns: the clock id or NULL when async notification is not supported.
+ */
+GstClockID
+gst_clock_notify_async (GstClock *clock, GstClockTime interval,
+		        GstClockCallback func, gpointer user_data) 
+{
+  g_warning ("not supported");
+}
+
+/**
+ * gst_clock_remove_notify_async
+ * @clock: The clock to cancel the request on
+ * @id: The id to cancel
+ *
+ * Cancel an outstanding async notification request with the given ID.
+ */
+void
+gst_clock_remove_notify_async (GstClock *clock, GstClockID id)
+{
+  g_warning ("not supported");
+}
+
 static void
 gst_clock_unlock_func (GstClock *clock, GstClockTime time, GstClockID id, gpointer user_data)
 {
@@ -306,6 +448,15 @@ gst_clock_unlock_func (GstClock *clock, GstClockTime time, GstClockID id, gpoint
   GST_CLOCK_ENTRY_UNLOCK (entry);
 }
 
+/**
+ * gst_clock_wait_id
+ * @clock: The clock to wait on
+ * @id: The clock id to wait on
+ *
+ * Wait and block on the clockid obtained with gst_clock_wait_async.
+ *
+ * Returns: result of the operation.
+ */
 GstClockReturn
 gst_clock_wait_id (GstClock *clock, GstClockID id)
 {
@@ -341,6 +492,14 @@ gst_clock_wait_id (GstClock *clock, GstClockID id)
   return res;
 }
 
+/**
+ * gst_clock_get_next_id
+ * @clock: The clock to query
+ *
+ * Get the clockid of the next event.
+ *
+ * Returns: a clockid or NULL is no event is pending.
+ */
 GstClockID
 gst_clock_get_next_id (GstClock *clock)
 {
@@ -354,6 +513,14 @@ gst_clock_get_next_id (GstClock *clock)
   return (GstClockID *) entry;
 }
 
+/**
+ * gst_clock_id_get_time
+ * @id: The clockid to query
+ *
+ * Get the time of the clock ID
+ *
+ * Returns: the time of the given clock id
+ */
 GstClockTime
 gst_clock_id_get_time (GstClockID id)
 {
@@ -372,6 +539,13 @@ gst_clock_free_entry (GstClock *clock, GstClockEntry *entry)
   g_mutex_unlock (_gst_clock_entries_chunk_lock);
 }
 
+/**
+ * gst_clock_unlock_id
+ * @clock: The clock that own the id
+ * @id: The clockid to unlock
+ *
+ * Unlock the ClockID.
+ */
 void
 gst_clock_unlock_id (GstClock *clock, GstClockID id)
 {
@@ -383,6 +557,13 @@ gst_clock_unlock_id (GstClock *clock, GstClockID id)
   gst_clock_free_entry (clock, entry);
 }
 
+/**
+ * gst_clock_set_resolution
+ * @clock: The clock set the resolution on
+ * @resolution: The resolution to set
+ *
+ * Set the accuracy of the clock.
+ */
 void
 gst_clock_set_resolution (GstClock *clock, guint64 resolution)
 {
@@ -392,6 +573,14 @@ gst_clock_set_resolution (GstClock *clock, guint64 resolution)
     CLASS (clock)->set_resolution (clock, resolution);
 }
 
+/**
+ * gst_clock_get_resolution
+ * @clock: The clock get the resolution of
+ *
+ * Get the accuracy of the clock.
+ *
+ * Returns: the resolution of the clock in microseconds.
+ */
 guint64
 gst_clock_get_resolution (GstClock *clock)
 {

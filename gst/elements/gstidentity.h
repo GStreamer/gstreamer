@@ -63,6 +63,7 @@ struct _GstIdentity {
   gfloat drop_probability;
   guint sleep_time;
   gboolean silent;
+  gboolean dump;
   gchar *last_message;
 };
 

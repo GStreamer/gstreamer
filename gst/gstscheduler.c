@@ -193,7 +193,7 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
 /**
  * gst_scheduler_remove_element:
  * @sched: the schedulerr
- * @element: the element to remov
+ * @element: the element to remove
  *
  * Remove an element from the schedulerr.
  */
@@ -270,6 +270,13 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
   return GST_STATE_SUCCESS;
 }
 
+/**
+ * gst_scheduler_add_scheduler:
+ * @sched: the schedulerr
+ * @sched2: the scheduler to add
+ *
+ a Notifies the scheduler that it has to monitor this scheduler.
+ */
 void
 gst_scheduler_add_scheduler (GstScheduler *sched, GstScheduler *sched2)
 {
@@ -283,6 +290,13 @@ gst_scheduler_add_scheduler (GstScheduler *sched, GstScheduler *sched2)
     CLASS (sched)->add_scheduler (sched, sched2);
 }
 
+/**
+ * gst_scheduler_remove_scheduler:
+ * @sched: the schedulerr
+ * @sched2: the scheduler to remove
+ *
+ a Notifies the scheduler that it can stop monitoring this scheduler.
+ */
 void
 gst_scheduler_remove_scheduler (GstScheduler *sched, GstScheduler *sched2)
 {
@@ -295,7 +309,6 @@ gst_scheduler_remove_scheduler (GstScheduler *sched, GstScheduler *sched2)
   if (CLASS (sched)->remove_scheduler)
     CLASS (sched)->remove_scheduler (sched, sched2);
 }
-
 
 /**
  * gst_scheduler_lock_element:
@@ -387,6 +400,14 @@ gst_scheduler_interrupt (GstScheduler *sched, GstElement *element)
   return FALSE;
 }
 
+/**
+ * gst_scheduler_get_clock:
+ * @sched: the scheduler
+ *
+ * Get the current clock used by the scheduler
+ *
+ * Returns: a GstClock
+ */
 GstClock*
 gst_scheduler_get_clock (GstScheduler *sched)
 {
@@ -420,6 +441,15 @@ gst_scheduler_get_clock (GstScheduler *sched)
   return clock;
 }
 
+/**
+ * gst_scheduler_use_clock:
+ * @sched: the scheduler
+ * @clock: the clock to use
+ *
+ * Force the scheduler to use the given clock. The scheduler will
+ * always use the given clock even if new clock providers are added
+ * to this scheduler.
+ */
 void
 gst_scheduler_use_clock (GstScheduler *sched, GstClock *clock)
 {
@@ -430,6 +460,14 @@ gst_scheduler_use_clock (GstScheduler *sched, GstClock *clock)
   sched->clock = clock;
 }
 
+/**
+ * gst_scheduler_set_clock:
+ * @sched: the scheduler
+ * @clock: the clock to set
+ *
+ * Set the clock for the scheduler. The clock will be distributed 
+ * to all the elements managed by the scheduler. 
+ */
 void
 gst_scheduler_set_clock (GstScheduler *sched, GstClock *clock)
 {
@@ -458,6 +496,12 @@ gst_scheduler_set_clock (GstScheduler *sched, GstClock *clock)
   }
 }
 
+/**
+ * gst_scheduler_auto_clock:
+ * @sched: the scheduler
+ *
+ * Let the scheduler select a clock automatically.
+ */
 void
 gst_scheduler_auto_clock (GstScheduler *sched)
 {
@@ -471,10 +515,13 @@ gst_scheduler_auto_clock (GstScheduler *sched)
 /**
  * gst_scheduler_clock_wait:
  * @sched: the scheduler
+ * @element: the element that wants to wait
+ * @clock: the clock to use
+ * @time: the time to wait for
  *
- * Perform one iteration on the schedulerr.
+ * Wait till the clock reaches a specific time
  *
- * Returns: a boolean indicating something usefull has happened.
+ * Returns: the status of the operation
  */
 GstClockReturn
 gst_scheduler_clock_wait (GstScheduler *sched, GstElement *element, GstClock *clock, GstClockTime time)

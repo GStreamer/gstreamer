@@ -327,6 +327,12 @@ gst_props_new (const gchar *firstname, ...)
 } 
 
 
+/**
+ * gst_props_debug:
+ * @props: the props to debug
+ *
+ * Dump the contents of the given properties into the DEBUG log.
+ */
 void
 gst_props_debug (GstProps *props)
 {
@@ -583,7 +589,7 @@ gst_props_newv (const gchar *firstname, va_list var_args)
  * For the optional args, use GST_PROPS_FOO, where FOO is INT,
  * STRING, etc. This macro expands to a variable number of arguments,
  * hence the lack of precision in the function prototype. No
- * terminating NULL is necessary.
+ * terminating NULL is necessary as only one property can be changed.
  *
  * Returns: the new modified property structure.
  */
@@ -762,6 +768,16 @@ gst_props_copy_on_write (GstProps *props)
   return new;
 }
 
+/**
+ * gst_props_get_entry:
+ * @props: the props to query
+ * @name: the name of the entry to get
+ *
+ * Get the props entry with the geven name
+ *
+ * Returns: The props entry with the geven name or NULL when
+ * the entry was not found.
+ */
 const GstPropsEntry*
 gst_props_get_entry (GstProps *props, const gchar *name)
 {
@@ -783,12 +799,31 @@ gst_props_get_entry (GstProps *props, const gchar *name)
   return NULL;
 }
 
+/**
+ * gst_props_has_property:
+ * @props: the props to check
+ * @name: the name of the key to find
+ *
+ * Checks if a given props has a property with the given name.
+ *
+ * Returns: TRUE if the property was found, FALSE otherwise.
+ */
 gboolean
 gst_props_has_property (GstProps *props, const gchar *name)
 {
   return (gst_props_get_entry (props, name) != NULL);
 }
 
+/**
+ * gst_props_has_property_typed:
+ * @props: the props to check
+ * @name: the name of the key to find
+ * @type: the type of the required property
+ *
+ * Checks if a given props has a property with the given name and the given type.
+ *
+ * Returns: TRUE if the property was found, FALSE otherwise.
+ */
 gboolean
 gst_props_has_property_typed (GstProps *props, const gchar *name, GstPropsType type)
 {
@@ -801,6 +836,16 @@ gst_props_has_property_typed (GstProps *props, const gchar *name, GstPropsType t
   return (entry->propstype == type);
 }
 
+/**
+ * gst_props_has_fixed_property:
+ * @props: the props to check
+ * @name: the name of the key to find
+ *
+ * Checks if a given props has a property with the given name that 
+ * is also fixed, ie. is not a list or a range.
+ *
+ * Returns: TRUE if the property was found, FALSE otherwise.
+ */
 gboolean
 gst_props_has_fixed_property (GstProps *props, const gchar *name)
 {
@@ -813,6 +858,14 @@ gst_props_has_fixed_property (GstProps *props, const gchar *name)
   return !GST_PROPS_ENTRY_IS_VARIABLE (entry);
 }
 
+/**
+ * gst_props_entry_get_type:
+ * @entry: the props entry to query
+ *
+ * Get the type of the given props entry. 
+ *
+ * Returns: The type of the props entry.
+ */
 GstPropsType
 gst_props_entry_get_type (const GstPropsEntry *entry)
 {
@@ -821,6 +874,14 @@ gst_props_entry_get_type (const GstPropsEntry *entry)
   return entry->propstype;
 }
 
+/**
+ * gst_props_entry_get_name:
+ * @entry: the props entry to query
+ *
+ * Get the name of the given props entry. 
+ *
+ * Returns: The name of the props entry.
+ */
 const gchar*
 gst_props_entry_get_name (const GstPropsEntry *entry)
 {
@@ -829,6 +890,15 @@ gst_props_entry_get_name (const GstPropsEntry *entry)
   return g_quark_to_string (entry->propid);
 }
 
+/**
+ * gst_props_entry_is_fixed:
+ * @entry: the props entry to query
+ *
+ * Checks if the props entry is fixe, ie. is not a list
+ * or a range.
+ *
+ * Returns: TRUE is the props entry is fixed.
+ */
 gboolean
 gst_props_entry_is_fixed (const GstPropsEntry *entry)
 {
@@ -847,6 +917,15 @@ gst_props_entry_getv (const GstPropsEntry *entry, gboolean safe, va_list var_arg
   return result;
 }
 
+/**
+ * gst_props_entry_get:
+ * @entry: the props entry to query
+ * @...: a pointer to a type that can hold the value.
+ *
+ * Gets the contents of the entry.
+ *
+ * Returns: TRUE is the props entry could be fetched.
+ */
 gboolean
 gst_props_entry_get (const GstPropsEntry *entry, ...)
 {
@@ -877,6 +956,16 @@ gst_props_entry_get_safe (const GstPropsEntry *entry, ...)
   return result;
 }
 
+/**
+ * gst_props_get:
+ * @props: the props to query
+ * @first_name: the first key
+ * @...: a pointer to a datastructure that can hold the value.
+ *
+ * Gets the contents of the props into given key/value pairs.
+ *
+ * Returns: TRUE is the props entry could be fetched.
+ */
 gboolean
 gst_props_get (GstProps *props, gchar *first_name, ...)
 {
@@ -899,54 +988,135 @@ gst_props_get (GstProps *props, gchar *first_name, ...)
   return TRUE;
 }
 
+/**
+ * gst_props_entry_get_int:
+ * @entry: the props entry to query
+ * @val: a pointer to a gint to hold the value.
+ *
+ * Get the contents of the entry into the given gint.
+ *
+ * Returns: TRUE is the value could be fetched. FALSE if the 
+ * entry is not of given type.
+ */
 gboolean
 gst_props_entry_get_int (const GstPropsEntry *entry, gint *val)
 {
   return gst_props_entry_get_safe (entry, GST_PROPS_INT_TYPE, val);
 }
 
+/**
+ * gst_props_entry_get_float:
+ * @entry: the props entry to query
+ * @val: a pointer to a gfloat to hold the value.
+ *
+ * Get the contents of the entry into the given gfloat.
+ *
+ * Returns: TRUE is the value could be fetched. FALSE if the 
+ * entry is not of given type.
+ */
 gboolean
 gst_props_entry_get_float (const GstPropsEntry *entry, gfloat *val)
 {
   return gst_props_entry_get_safe (entry, GST_PROPS_FLOAT_TYPE, val);
 }
 
+/**
+ * gst_props_entry_get_fourcc_int:
+ * @entry: the props entry to query
+ * @val: a pointer to a guint32 to hold the value.
+ *
+ * Get the contents of the entry into the given guint32.
+ *
+ * Returns: TRUE is the value could be fetched. FALSE if the 
+ * entry is not of given type.
+ */
 gboolean
 gst_props_entry_get_fourcc_int (const GstPropsEntry *entry, guint32 *val)
 {
   return gst_props_entry_get_safe (entry, GST_PROPS_FOURCC_TYPE, val);
 }
 
+/**
+ * gst_props_entry_get_boolean:
+ * @entry: the props entry to query
+ * @val: a pointer to a gboolean to hold the value.
+ *
+ * Get the contents of the entry into the given gboolean.
+ *
+ * Returns: TRUE is the value could be fetched. FALSE if the 
+ * entry is not of given type.
+ */
 gboolean
 gst_props_entry_get_boolean (const GstPropsEntry *entry, gboolean *val)
 {
   return gst_props_entry_get_safe (entry, GST_PROPS_BOOL_TYPE, val);
 }
 
+/**
+ * gst_props_entry_get_string:
+ * @entry: the props entry to query
+ * @val: a pointer to a gchar* to hold the value.
+ *
+ * Get the contents of the entry into the given gchar*.
+ *
+ * Returns: TRUE is the value could be fetched. FALSE if the 
+ * entry is not of given type.
+ */
 gboolean
 gst_props_entry_get_string (const GstPropsEntry *entry, const gchar **val)
 {
   return gst_props_entry_get_safe (entry, GST_PROPS_STRING_TYPE, val);
 }
 
+/**
+ * gst_props_entry_get_int_range:
+ * @entry: the props entry to query
+ * @min: a pointer to a gint to hold the minimun value.
+ * @max: a pointer to a gint to hold the maximum value.
+ *
+ * Get the contents of the entry into the given gints.
+ *
+ * Returns: TRUE is the value could be fetched. FALSE if the 
+ * entry is not of given type.
+ */
 gboolean
 gst_props_entry_get_int_range (const GstPropsEntry *entry, gint *min, gint *max)
 {
   return gst_props_entry_get_safe (entry, GST_PROPS_INT_RANGE_TYPE, min, max);
 }
 
+/**
+ * gst_props_entry_get_float_range:
+ * @entry: the props entry to query
+ * @min: a pointer to a gfloat to hold the minimun value.
+ * @max: a pointer to a gfloat to hold the maximum value.
+ *
+ * Get the contents of the entry into the given gfloats.
+ *
+ * Returns: TRUE is the value could be fetched. FALSE if the 
+ * entry is not of given type.
+ */
 gboolean
 gst_props_entry_get_float_range (const GstPropsEntry *entry, gfloat *min, gfloat *max)
 {
   return gst_props_entry_get_safe (entry, GST_PROPS_FLOAT_RANGE_TYPE, min, max);
 }
 
+/**
+ * gst_props_entry_get_list:
+ * @entry: the props entry to query
+ * @val: a pointer to a GList to hold the value.
+ *
+ * Get the contents of the entry into the given GList.
+ *
+ * Returns: TRUE is the value could be fetched. FALSE if the 
+ * entry is not of given type.
+ */
 gboolean
 gst_props_entry_get_list (const GstPropsEntry *entry, const GList **val)
 {
   return gst_props_entry_get_safe (entry, GST_PROPS_LIST_TYPE, val);
 }
-
 
 /**
  * gst_props_merge:
@@ -1495,6 +1665,15 @@ end:
   return intersection;
 }
 
+/**
+ * gst_props_normalize:
+ * @props: a property
+ *
+ * Unrolls all lists in the given GstProps. This is usefull if you
+ * want to loop over the props.
+ *
+ * Returns: A GList with the unrolled props entries.
+ */
 GList*
 gst_props_normalize (GstProps *props)
 {

@@ -26,7 +26,6 @@
 #include "gstevent.h"
 #include "gstbin.h"
 #include "gstxml.h"
-#include "gstsystemclock.h"
 
 #include "gstscheduler.h"
 
@@ -152,6 +151,14 @@ gst_bin_new (const gchar * name)
   return gst_elementfactory_make ("bin", name);
 }
 
+/**
+ * gst_bin_get_clock:
+ * @bin: the bin to get the clock of
+ *
+ * Get the current clock of the bin
+ *
+ * Returns: the clock of the bin
+ */
 GstClock*
 gst_bin_get_clock (GstBin *bin)
 {
@@ -164,6 +171,14 @@ gst_bin_get_clock (GstBin *bin)
   return NULL;
 }
 
+/**
+ * gst_bin_use_clock:
+ * @bin: the bin to set the clock for
+ * @clock: the clock to use.
+ *
+ * Force the bin to use the given clock. Use NULL to 
+ * force it to use no clock at all.
+ */
 void
 gst_bin_use_clock (GstBin *bin, GstClock *clock)
 {
@@ -174,6 +189,12 @@ gst_bin_use_clock (GstBin *bin, GstClock *clock)
     gst_scheduler_use_clock (GST_ELEMENT_SCHED (bin), clock);
 }
 
+/**
+ * gst_bin_auto_clock:
+ * @bin: the bin to autoclock
+ *
+ * Let the bin select a clock automatically.
+ */
 void
 gst_bin_auto_clock (GstBin *bin)
 {
@@ -273,14 +294,13 @@ gst_bin_unset_element_sched (GstElement *element, GstScheduler *sched)
 
 
 /**
- * gst_element_connect_elements_many:
+ * gst_bin_add_many:
+ * @bin: the bin to add the elements to
  * @element_1: the first element to add to the bin
  * @...: NULL-terminated list of elements to add to the bin
  * 
  * Add a list of elements to a bin. Uses #gst_bin_add.
- **/
-/* API FIXME: this should be called gst_element_connect_many, and connect_elements
- * should just be connect */
+ */
 void
 gst_bin_add_many (GstBin *bin, GstElement *element_1, ...)
 {

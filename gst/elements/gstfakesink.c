@@ -266,8 +266,7 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
 
   g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0, buf, pad);
 
-  if (fakesink->dump)
-  {
+  if (fakesink->dump) {
     gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   }
 

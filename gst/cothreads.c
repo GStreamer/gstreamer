@@ -374,12 +374,11 @@ cothread_getcurrent (void)
 }
 
 /**
- * cothread_set_data:
+ * cothread_set_private:
  * @thread: the cothread state
- * @key: a key for the data
  * @data: the data
  *
- * adds data to a cothread
+ * set private data for the cothread.
  */
 void
 cothread_set_private (cothread_state *thread, gpointer data)
@@ -387,6 +386,14 @@ cothread_set_private (cothread_state *thread, gpointer data)
   thread->priv = data;
 }
 
+/**
+ * cothread_context_set_data:
+ * @thread: the cothread state
+ * @key: a key for the data
+ * @data: the data
+ *
+ * adds data to a cothread
+ */
 void
 cothread_context_set_data (cothread_state *thread, gchar *key, gpointer data)
 {
@@ -396,13 +403,12 @@ cothread_context_set_data (cothread_state *thread, gchar *key, gpointer data)
 }
 
 /**
- * cothread_get_data:
+ * cothread_get_private:
  * @thread: the cothread state
- * @key: a key for the data
  *
- * get data from the cothread
+ * get the private data from the cothread
  *
- * Returns: the data assiciated with the key
+ * Returns: the private data of the cothread
  */
 gpointer
 cothread_get_private (cothread_state *thread)
@@ -410,6 +416,15 @@ cothread_get_private (cothread_state *thread)
   return thread->priv;
 }
 
+/**
+ * cothread_context_get_data:
+ * @thread: the cothread state
+ * @key: a key for the data
+ *
+ * get data from the cothread
+ *
+ * Returns: the data associated with the key
+ */
 gpointer
 cothread_context_get_data (cothread_state * thread, gchar * key)
 {

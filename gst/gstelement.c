@@ -288,6 +288,8 @@ gst_element_set_clock (GstElement *element, GstClock *clock)
  * @element: GstElement to get the clock of
  *
  * Get the clock of the element
+ *
+ * Returns: the clock of the element.
  */
 GstClock*
 gst_element_get_clock (GstElement *element)
@@ -308,6 +310,8 @@ gst_element_get_clock (GstElement *element)
  * @time: the time to wait for
  *
  * Wait for a specific time on the clock
+ *
+ * Returns: the result of the wait operation
  */
 GstClockReturn
 gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time)
@@ -717,7 +721,8 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
   gboolean templ_found = FALSE;
   GList *list;
   gint n;
-  gchar *str, *data, *endptr;
+  const gchar *data;
+  gchar *str, *endptr;
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
@@ -867,7 +872,7 @@ gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
  + It will use request pads if possible. But both pads will not be requested.
  * If multiple connections are possible, only one is established.
  *
- * Return: TRUE if the elements could be connected.
+ * Returns: TRUE if the elements could be connected.
  */
 gboolean
 gst_element_connect_elements_filtered (GstElement *src, GstElement *dest, 
@@ -960,7 +965,7 @@ gst_element_connect_elements_filtered (GstElement *src, GstElement *dest,
  * Chain together a series of elements. Uses #gst_element_connect_elements.
  *
  * Returns: TRUE on success, FALSE otherwise.
- **/
+ */
 /* API FIXME: this should be called gst_element_connect_many, and connect_elements
  * should just be connect */
 gboolean
@@ -998,7 +1003,7 @@ gst_element_connect_elements_many (GstElement *element_1, GstElement *element_2,
  * connected yet. If multiple connections are possible, only one is
  * established.
  *
- * Return: TRUE if the elements could be connected.
+ * Returns: TRUE if the elements could be connected.
  */
 gboolean
 gst_element_connect_elements (GstElement *src, GstElement *dest)
@@ -1019,7 +1024,7 @@ gst_element_connect_elements (GstElement *src, GstElement *dest)
  * child of the parent of the other element.  If they have different
  * parents, the connection fails.
  *
- * Return: TRUE if the pads could be connected.
+ * Returns: TRUE if the pads could be connected.
  */
 gboolean
 gst_element_connect_filtered (GstElement *src, const gchar *srcpadname,
@@ -1063,7 +1068,7 @@ gst_element_connect_filtered (GstElement *src, const gchar *srcpadname,
  * child of the parent of the other element.  If they have different
  * parents, the connection fails.
  *
- * Return: TRUE if the pads could be connected.
+ * Returns: TRUE if the pads could be connected.
  */
 gboolean
 gst_element_connect (GstElement *src, const gchar *srcpadname,

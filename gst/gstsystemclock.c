@@ -87,6 +87,13 @@ gst_system_clock_init (GstSystemClock *clock)
 {
 }
 
+/**
+ * gst_system_clock_obtain 
+ *
+ * Get a handle to the default system clock.
+ *
+ * Returns: the default clock.
+ */
 GstClock*
 gst_system_clock_obtain (void)
 {

@@ -697,6 +697,17 @@ gst_caps_intersect (GstCaps *caps1, GstCaps *caps2)
   return result;
 }
 
+/**
+ * gst_caps_normalize:
+ * @caps: a capabilty
+ *
+ * Make the normalisation of the caps. This will return a new caps
+ * that is equivalent to the input caps with the exception that all
+ * lists are unrolled. This function is useful when you want to iterate
+ * the caps.
+ *
+ * Returns: The normalisation of the caps.
+ */
 GstCaps*
 gst_caps_normalize (GstCaps *caps)
 {
