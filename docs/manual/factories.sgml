@@ -21,8 +21,8 @@
     <programlisting>
   ...    
   /* now it's time to get the parser */
-  parse = gst_elementfactory_make("mp3parse","parse");
-  decoder = gst_elementfactory_make("mpg123","decoder");
+  parse = gst_elementfactory_make ("mp3parse", "parse");
+  decoder = gst_elementfactory_make ("mpg123", "decoder");
   ...
     </programlisting>
 
@@ -158,7 +158,7 @@ struct _GstType {
       <programlisting>
   guint16 id;
   
-  id = gst_type_find_by_mime("audio/mpeg");
+  id = gst_type_find_by_mime ("audio/mpeg");
       </programlisting>
       <para> 
         This function will return 0 if the type was not known.
@@ -174,7 +174,7 @@ struct _GstType {
       <programlisting>
   GstType *type;
   
-  type = gst_type_find_by_id(id);
+  type = gst_type_find_by_id (id);
       </programlisting>
       <para> 
         This function will return NULL if the id was associated with
@@ -191,7 +191,7 @@ struct _GstType {
       <programlisting>
   guint16 id;
   
-  id = gst_type_find_by_ext(".mp3");
+  id = gst_type_find_by_ext (".mp3");
       </programlisting>
       <para> 
         This function will return 0 if the extension was not known.
@@ -211,7 +211,7 @@ struct _GstType {
       <programlisting>
   GList *list;
 
-  list = gst_type_gst_srcs(id);
+  list = gst_type_gst_srcs (id);
       </programlisting>
 
       <para>
@@ -220,7 +220,7 @@ struct _GstType {
       <programlisting>
   GList *list;
 
-  list = gst_type_gst_sinks(id);
+  list = gst_type_gst_sinks (id);
       </programlisting>
       <para>
         When you have a list of elements, you can simply take the first
@@ -269,7 +269,7 @@ struct _GstType {
       <programlisting>
   GList *list;
 
-  list = gst_type_gst_sink_to_src(sourceid, sinkid);
+  list = gst_type_gst_sink_to_src (sourceid, sinkid);
       </programlisting>
       <para>
         This piece of code will give you the elements needed to construct
@@ -293,7 +293,7 @@ struct _GstType {
   // obtain the factory
   factory = ... 
 
-  element = gst_elementfactory_create(factory, "name");
+  element = gst_elementfactory_create (factory, "name");
     </programlisting>
     <para>
       This way, you do not have to create elements by name which

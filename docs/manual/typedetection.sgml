@@ -61,44 +61,44 @@ main(int argc, char *argv[])
 {
   GstElement *bin, *disksrc, *typefind;
 
-  gst_init(&amp;argc,&amp;argv);
+  gst_init (&amp;argc, &amp;argv);
 
   if (argc != 2) {
-    g_print("usage: &percnt;s &lt;filename&gt;\n", argv[0]);
-    exit(-1);
+    g_print ("usage: &percnt;s &lt;filename&gt;\n", argv[0]);
+    exit (-1);
   }
 
   /* create a new bin to hold the elements */
-  bin = gst_bin_new("bin");
-  g_assert(bin != NULL);
+  bin = gst_bin_new ("bin");
+  g_assert (bin != NULL);
 
   /* create a disk reader */
-  disksrc = gst_elementfactory_make("disksrc", "disk_source");
-  g_assert(disksrc != NULL);
-  gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
+  disksrc = gst_elementfactory_make ("disksrc", "disk_source");
+  g_assert (disksrc != NULL);
+  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
 
   /* create the typefind element */
-  typefind = gst_elementfactory_make("typefind", "typefind");
-  g_assert(typefind != NULL);
+  typefind = gst_elementfactory_make ("typefind", "typefind");
+  g_assert (typefind != NULL);
 
   /* add objects to the main pipeline */
-  gst_bin_add(GST_BIN(bin), disksrc);
-  gst_bin_add(GST_BIN(bin), typefind);
+  gst_bin_add (GST_BIN (bin), disksrc);
+  gst_bin_add (GST_BIN (bin), typefind);
 
-  gtk_signal_connect (GTK_OBJECT (typefind), "have_type", 
-		  type_found, NULL);
+  g_signal_connectc (G_OBJECT (typefind), "have_type", 
+		     G_CALLBACK (type_found), NULL, FALSE);
 
-  gst_pad_connect(gst_element_get_pad(disksrc,"src"),
-                  gst_element_get_pad(typefind,"sink"));
+  gst_pad_connect (gst_element_get_pad (disksrc, "src"),
+                   gst_element_get_pad (typefind, "sink"));
 
   /* start playing */
-  gst_element_set_state(GST_ELEMENT(bin), GST_STATE_PLAYING);
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
 
-  gst_bin_iterate(GST_BIN(bin));
+  gst_bin_iterate (GST_BIN (bin));
 
-  gst_element_set_state(GST_ELEMENT(bin), GST_STATE_NULL);
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
 
-  exit(0);
+  exit (0);
 }
   </programlisting>
   <para>

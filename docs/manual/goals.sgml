@@ -38,8 +38,8 @@
     <sect2 id="sec-goals-object">
       <title>Object oriented</title>
       <para>
-        Adhere as much as possible to the GTK+ object model. A programmer familiar
-	with GTK+ will be confortable with GStreamer.
+        Adhere as much as possible to the glib2.0 object model. A programmer familiar
+	with glib2 and GTK+ will be confortable with GStreamer.
       </para> 
       <para>
         GStreamer uses the mechanism of signals and object arguments. 
@@ -53,7 +53,7 @@
     <sect2 id="sec-goals-extensible">
       <title>Extensible</title>
       <para> 
-	All GStreamer Objects can be extended using the GTK+ inheritance methods.
+	All GStreamer Objects can be extended using the glib2 inheritance methods.
       </para> 
       <para> 
         All plugins are loaded dynamically and can be extended and upgraded
@@ -65,7 +65,7 @@
       <title>Allow binary only plugins</title>
       <para> 
         plugins are shared libraries that are loaded at runtime. since all the
-	properties of the plugin can be set using the GtkObject arguments, there
+	properties of the plugin can be set using the GObject properties, there
 	is no need to have any header files installed for the plugins.
       </para> 
       <para> 

@@ -29,11 +29,11 @@
 
   <para> 
     The standard <application>GStreamer</application> queue implementation has some
-    properties that can be changed using the gtk_objet_set () method. To set the 
+    properties that can be changed using the g_objet_set () method. To set the 
     maximum number of buffers that can be queued to 30, do:
   </para>
   <programlisting>
-  gtk_object_set (GTK_OBJECT (queue), "max_level", 30, NULL);
+  g_object_set (G_OBJECT (queue), "max_level", 30, NULL);
   </programlisting>
 
   <para> 
@@ -81,9 +81,9 @@ main (int argc, char *argv[])
   /* create a disk reader */
   disksrc = gst_elementfactory_make ("disksrc", "disk_source");
   g_assert (disksrc != NULL);
-  gtk_object_set (GTK_OBJECT (disksrc), "location", argv[1], NULL);
-  gtk_signal_connect (GTK_OBJECT (disksrc), "eos",
-                      GTK_SIGNAL_FUNC (eos), thread);
+  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
+  g_signal_connectc (G_OBJECT (disksrc), "eos",
+                     G_CALLBACK (eos), thread, FALSE);
 
   queue = gst_elementfactory_make ("queue", "queue");
 
@@ -114,8 +114,6 @@ main (int argc, char *argv[])
 
   gst_bin_add (GST_BIN (bin), thread);
 
-  /* make it ready */
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY);
   /* start playing */
   gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
 

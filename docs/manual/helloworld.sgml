@@ -36,7 +36,7 @@ main (int argc, char *argv[])
 
   /* create a disk reader */
   disksrc = gst_elementfactory_make ("disksrc", "disk_source");
-  gtk_object_set (GTK_OBJECT (disksrc),"location", argv[1], NULL);
+  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
 
   /* now it's time to get the parser */
   parse = gst_elementfactory_make ("mp3parse", "parse");
@@ -127,13 +127,13 @@ main (int argc, char *argv[])
 
     <para>
       We then create a disk source element. The disk source element is able to
-      read from a file.  We use the standard GTK+ argument mechanism to set
+      read from a file.  We use the standard GObject property mechanism to set
       a property of the element: the file to read from.
     </para>
     <programlisting>
   /* create a disk reader */
   disksrc = gst_elementfactory_make ("disksrc", "disk_source");
-  gtk_object_set (GTK_OBJECT (disksrc),"location", argv[1], NULL);
+  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
     </programlisting>
     <note>
       <para>

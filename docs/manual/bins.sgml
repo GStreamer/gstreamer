@@ -137,17 +137,17 @@
       <programlisting>
 
   // create the mp3player element
-  GstElement *mp3player = gst_elementfactory_make("mp3player","mp3player");
+  GstElement *mp3player = gst_elementfactory_make ("mp3player", "mp3player");
   // set the source mp3 audio file
-  gtk_object_set(GTK_OBJECT(mp3player), "location", "helloworld.mp3", NULL);
+  g_object_set (G_OBJECT (mp3player), "location", "helloworld.mp3", NULL);
   // start playback
-  gst_element_set_state(GST_ELEMENT(mp3player),GST_STATE_PLAYING);
+  gst_element_set_state (GST_ELEMENT (mp3player), GST_STATE_PLAYING);
    ...
   // pause playback
-  gst_element_set_state(GST_ELEMENT(mp3player),GST_STATE_PAUSED);
+  gst_element_set_state (GST_ELEMENT (mp3player), GST_STATE_PAUSED);
    ...
   // stop
-  gst_element_set_state(GST_ELEMENT(mp3player),GST_STATE_NULL);
+  gst_element_set_state (GST_ELEMENT (mp3player), GST_STATE_NULL);
       </programlisting>
 
       Custom bins can be created with a plugin or an XML description. You will find more 

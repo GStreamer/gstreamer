@@ -1,7 +1,7 @@
 <chapter id="cha-utility">
   <title>Utility functions</title>
   <para> 
-    while you can use the regular gtk_object_getv () function to
+    while you can use the regular g_object_getv () function to
     query the value of an object property, <application>GStreamer</application>
     provides some easy wrappers for this common operation.
   </para>
@@ -14,7 +14,7 @@
   guchar *value;
 
   arg.name = argname;
-  gtk_object_getv (GTK_OBJECT (object), 1, &amp;arg);
+  g_object_getv (G_OBJECT (object), 1, &amp;arg);
   value = GTK_VALUE_STRING (arg);
   </programlisting>
   <para> 
@@ -61,11 +61,6 @@
          gpointer: with gst_util_get_pointer_arg ();
         </para>
       </listitem>
-      <listitem>
-        <para>
-         GtkWidget*: with gst_util_get_widget_arg ();
-        </para>
-      </listitem>
     </itemizedlist>
   </para> 
   <para> 
@@ -75,7 +70,7 @@
     to by mem.
   </para> 
   <programlisting>
-  void gst_util_dump_mem(guchar *mem, guint size);
+  void gst_util_dump_mem (guchar *mem, guint size);
   </programlisting>
 
 </chapter>

@@ -67,8 +67,8 @@
         The first chapter of the book gives you an overview of <application>GStreamer</application>
         design goals. Chapter 2 rapidly covers the basics of <application>GStreamer</application>
         programming. In chapter 3 we will move on to the examples. 
-        Since <application>GStreamer</application> adheres to the GTK+ programming model, the reader is 
-        assumed to understand the basics of GTK+.
+        Since <application>GStreamer</application> adheres to the GTK+/glib2 programming model, the reader is 
+        assumed to understand the basics of GTK+ and the glib2.0 object model.
         For a gentle introduction to GTK+, you may wish to read the <emphasis>GTK+
         Tutorial</emphasis> or Eric Harlow's book <emphasis>Developing Linux
         Applications with GTK+ and GDK</emphasis>.  

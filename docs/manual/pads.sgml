@@ -105,7 +105,7 @@ main(int argc, char *argv[])
   ...
   
   mpeg2parser = gst_elementfactory_make ("mpeg2parse", "mpeg2parse");
-  gtk_signal_connect (GTK_OBJECT (mpeg2parser), "new_pad", pad_connect_func, pipeline);  
+  g_signal_connectc (G_OBJECT (mpeg2parser), "new_pad", pad_connect_func, pipeline, FALSE);  
   ...
 
   // start the pipeline
@@ -411,7 +411,7 @@ GstProps*     gst_props_new   (const gchar *firstname, ...);
             </para>
           </listitem>
         </itemizedlist>
-        All of the above values can be given with a list too using:
+        All of the above values can be given with a list too, using:
         <itemizedlist>
           <listitem>
             <para>

@@ -46,7 +46,7 @@ main(int argc, char *argv[])
 
   src = gst_elementfactory_make ("disksrc", "src");
   g_return_val_if_fail (src != NULL, -1);
-  gtk_object_set (GTK_OBJECT (src), "location", argv[1], NULL);
+  g_object_set (G_OBJECT (src), "location", argv[1], NULL);
 
   parse = gst_elementfactory_make ("mpeg1parse", "parse");
   g_return_val_if_fail (parse != NULL, -1);
@@ -54,11 +54,11 @@ main(int argc, char *argv[])
   gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (src));
   gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (parse));
 
-  gtk_signal_connect (GTK_OBJECT (parse), "new_pad",
-                      GTK_SIGNAL_FUNC (new_pad_created), pipeline);
+  g_signal_connectc (G_OBJECT (parse), "new_pad",
+                     G_CALLBACK (new_pad_created), pipeline, FALSE);
 
-  gtk_signal_connect (GTK_OBJECT (src), "eos",
-                      GTK_SIGNAL_FUNC (eof), NULL);
+  g_signal_connectc (G_OBJECT (src), "eos",
+                     G_CALLBACK (eof), NULL, FALSE);
 
   gst_pad_connect (gst_element_get_pad (src, "src"),
                    gst_element_get_pad (parse, "sink"));
@@ -83,8 +83,8 @@ main(int argc, char *argv[])
     'new_pad' that we connected to the mpeg1parser using:
   </para>
   <programlisting>
-  gtk_signal_connect (GTK_OBJECT (parse), "new_pad",
-                      GTK_SIGNAL_FUNC (new_pad_created), pipeline);
+  g_signal_connectc (G_OBJECT (parse), "new_pad",
+                     G_CALLBACK (new_pad_created), pipeline, FALSE);
   </programlisting>
   <para> 
     When an elementary stream has been detected in the system stream,
@@ -191,7 +191,7 @@ new_pad_created (GstElement *parse, GstPad *pad, GstElement *pipeline)
                      gst_element_get_pad (video_thread, "sink"));
 
     // set up thread state and kick things off
-    gtk_object_set (GTK_OBJECT (video_thread), "create_thread", TRUE, NULL);
+    g_object_set (G_OBJECT (video_thread), "create_thread", TRUE, NULL);
     g_print ("setting to READY state\n");
     gst_element_set_state (GST_ELEMENT (video_thread), GST_STATE_READY);
   }
