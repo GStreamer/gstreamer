@@ -34,12 +34,12 @@
  * See below for why we use this.
  */
 
-#define GST_FF_VID_CAPS_NEW(mimetype, props...)			\
+#define GST_FF_VID_CAPS_NEW(mimetype, ...)			\
     gst_caps_new_simple (mimetype,			      	\
 	"width",     GST_TYPE_INT_RANGE, 16, 4096,      	\
 	"height",    GST_TYPE_INT_RANGE, 16, 4096,	      	\
 	"framerate", GST_TYPE_DOUBLE_RANGE, 0., G_MAXDOUBLE,	\
-	##props, NULL)
+	__VA_ARGS__)
 
 /* Convert a FFMPEG Pixel Format and optional AVCodecContext
  * to a GstCaps. If the context is ommitted, no fixed values

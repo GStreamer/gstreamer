@@ -19,7 +19,6 @@ SUBDIRS = \
 	media-info \
 	mixer \
 	navigation \
-	play \
 	propertyprobe \
 	resample \
 	riff \
@@ -27,7 +26,9 @@ SUBDIRS = \
 	tuner \
 	video \
 	xoverlay \
-	$(X_DIR)
+	$(X_DIR) \
+	. \
+	play
 
 DIST_SUBDIRS = \
 	audio \

@@ -26,9 +26,9 @@ pcverfiles_gconf = $(GCONF_PC) $(GCONF_PC_UNINSTALLED)
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 
 ### how to generate versioned .pc files from .pc files in this dir
-$(pcverfiles): %-@GST_MAJORMINOR@.pc: %.pc
+%-@GST_MAJORMINOR@.pc: %.pc
 	cp $< $@
-$(pcverfiles_uninstalled): %-@GST_MAJORMINOR@-uninstalled.pc: %-uninstalled.pc
+%-@GST_MAJORMINOR@-uninstalled.pc: %-uninstalled.pc
 	cp $< $@
 
 pkgconfigdir = $(libdir)/pkgconfig
