@@ -107,7 +107,8 @@ html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
 $(DOC).ps: $(BUILDDIR)/$(MAIN) $(EPS_BUILT) $(PNG_SRC) $(FIG_SRC)
 	@echo "*** Generating PS output ***"
 	@cp $(srcdir)/../image-eps $(BUILDDIR)/image.entities
-	export LC_PAPER=$(PAPER_LOCALE) && cd $(BUILDDIR) && xmlto ps -o .. $(MAIN)
+#	export LC_PAPER=$(PAPER_LOCALE) && cd $(BUILDDIR) && xmlto ps -o .. $(MAIN)
+	export LC_PAPER=$(PAPER_LOCALE) && cd $(BUILDDIR) && docbook2ps -o .. $(MAIN)
 
 $(DOC).pdf: $(DOC).ps
 	@echo "*** Generating PDF output ***"

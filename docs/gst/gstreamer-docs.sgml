@@ -2,7 +2,6 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
 <!ENTITY Gst SYSTEM "xml/gst.xml">
-<!ENTITY GstAutoplug SYSTEM "xml/gstautoplug.xml">
 <!ENTITY GstAtomic SYSTEM "xml/gstatomic.xml">
 <!ENTITY GstBin SYSTEM "xml/gstbin.xml">
 <!ENTITY GstConfig SYSTEM "xml/gstconfig.xml">
@@ -44,10 +43,6 @@
 <!ENTITY GstIndex SYSTEM "xml/gstindex.xml">
 <!ENTITY cothreads SYSTEM "xml/cothreads.xml">
 
-<!-- if none of the API is documented, these shouldn't go in
-<!ENTITY GstStaticAutoplug SYSTEM "xml/gststaticautoplug.xml">
-<!ENTITY GstStaticAutoplugRender SYSTEM "xml/gststaticautoplugrender.xml">
--->
 <!ENTITY GstAggregator SYSTEM "xml/gstaggregator.xml">
 <!ENTITY GstFakeSrc SYSTEM "xml/gstfakesrc.xml">
 <!ENTITY GstFakeSink SYSTEM "xml/gstfakesink.xml">
@@ -155,18 +150,6 @@ with some more specialized elements.</para>
     &GstTee;
     -->
   </chapter>
-
-<!-- no API is documented of these elements
-  <chapter id="autopluggers">
-    <title>GStreamer Autopluggers</title>
-
-    <para>the autopluggers provide a way to automatically construct elements based on
-    sink and src capabilities</para>
-
-    &GstStaticAutoplug;
-    &GstStaticAutoplugRender;
-  </chapter>
--->
 
 <!--
   <chapter id="gst-index">
