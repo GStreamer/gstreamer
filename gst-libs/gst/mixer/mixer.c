@@ -120,7 +120,7 @@ gst_mixer_class_init (GstMixerClass * klass)
  * gst_mixer_list_tracks:
  * @mixer: the #GstMixer (a #GstElement) to get the tracks from.
  *
- * Returns a list of avialable tracks for this mixer/element. Note
+ * Returns a list of available tracks for this mixer/element. Note
  * that it is allowed for sink (output) elements to only provide
  * the output tracks in this list. Likewise, for sources (inputs),
  * it is allowed to only provide input elements in this list.
