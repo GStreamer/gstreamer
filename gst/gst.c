@@ -341,6 +341,7 @@ init_pre (void)
   gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/types");
   gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/autoplug");
   gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/schedulers");
+  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/caches");
 #else
   /* add the main (installed) library path */
   gst_registry_add_path (_global_registry, PLUGINS_DIR);
@@ -447,6 +448,7 @@ init_post (void)
 #ifndef GST_DISABLE_AUTOPLUG
   gst_autoplug_factory_get_type ();
 #endif
+  gst_cache_factory_get_type ();
 
 
   plugin_path = g_getenv ("GST_PLUGIN_PATH");
