@@ -33,6 +33,10 @@
 GtkWidget *elapsed;
 GtkWidget *scale;
 
+#ifndef M_LN10
+#define M_LN10 (log(10.0))
+#endif
+
 static void
 value_changed_callback (GtkWidget * widget, GstElement * volume)
 {
@@ -40,7 +44,7 @@ value_changed_callback (GtkWidget * widget, GstElement * volume)
   gdouble level;
 
   value = gtk_range_get_value (GTK_RANGE (widget));
-  level = exp10 (value / 20.0);
+  level = exp (value / 20.0 * M_LN10);
   g_print ("Value: %f dB, level: %f\n", value, level);
   g_object_set (volume, "volume", level, NULL);
 }
