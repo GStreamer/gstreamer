@@ -1,3 +1,10 @@
+2004-01-03  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstbin.c: (gst_bin_class_init):
+	Change the marshalling of element_added/element_removed
+	to use gst_marshal_VOID__OBJECT, since gst_marshal_VOID__POINTER 
+	complains that GST_TYPE_ELEMENT is not G_TYPE_POINTER
+
 2004-01-01  David Schleef  <ds@schleef.org>
 
 	* gst/gstpad.c: (gst_pad_set_explicit_caps),

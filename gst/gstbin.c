@@ -135,11 +135,11 @@ gst_bin_class_init (GstBinClass * klass)
   gst_bin_signals[ELEMENT_ADDED] =
     g_signal_new ("element_added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
 		  G_STRUCT_OFFSET (GstBinClass, element_added), NULL, NULL,
-		  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+		  gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
   gst_bin_signals[ELEMENT_REMOVED] =
     g_signal_new ("element_removed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
 		  G_STRUCT_OFFSET (GstBinClass, element_removed), NULL, NULL,
-		  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+		  gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
   gst_bin_signals[ITERATE] =
     g_signal_new ("iterate", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
 		  G_STRUCT_OFFSET (GstBinClass, iterate),
