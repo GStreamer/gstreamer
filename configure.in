@@ -834,6 +834,7 @@ plugins/filters/median/Makefile
 plugins/filters/ladspa/Makefile
 plugins/filters/stereo2mono/Makefile
 plugins/filters/passthrough/Makefile
+plugins/filters/adder/Makefile
 plugins/filters/colorspace/Makefile
 plugins/filters/volenv/Makefile
 plugins/icecast/Makefile
@@ -887,6 +888,7 @@ examples/launch/Makefile
 examples/xml/Makefile
 examples/plugins/Makefile
 examples/typefind/Makefile
+examples/mixer/Makefile
 editor/Makefile
 editor/pixmaps/Makefile
 tools/Makefile
