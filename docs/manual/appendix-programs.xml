@@ -53,13 +53,13 @@ main (int argc, char *argv[])
   gst_init (&amp;argc, &amp;argv);
 
   if (argc != 2) {
-    g_print ("usage: &percnt;s &lt;filename&gt;\n", argv[0]);
+    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
     return -1;
   }
 
   pipeline = gst_parse_launch ("filesrc name=my_filesrc ! mad ! osssink", &amp;error);
   if (!pipeline) {
-    g_print ("Parse error: &percnt;s\n", error->message);
+    g_print ("Parse error: %s\n", error->message);
     exit (1);
   }
   

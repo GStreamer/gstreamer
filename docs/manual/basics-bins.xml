@@ -112,7 +112,7 @@
   while (elements) {
     GstElement *element = GST_ELEMENT (elements-&gt;data);
 
-    g_print ("element in bin: &percnt;s\n", GST_OBJECT_NAME (GST_OBJECT (element)));
+    g_print ("element in bin: %s\n", GST_OBJECT_NAME (GST_OBJECT (element)));
 
     elements = g_list_next (elements);
   }
