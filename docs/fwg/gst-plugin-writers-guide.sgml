@@ -163,7 +163,7 @@
       </para>
     </chapter>
 
-    <chapter id="cha-chainloop">
+    <chapter id="cha-autopluggers">
       <title>Autopluggers</title>
       <para>
         &GStreamer; has an autoplugging mechanism, which enables application
@@ -542,6 +542,9 @@
     <chapter id="cha-defineelt">
       <title>Defining an element</title>
       <para>
+        A new element is defined by creating an element factory.  This is a
+	structure containing all the information needed to create an instance
+	of the element.
       </para>
 
       <sect1 id="sect-defineelt-pads">
@@ -563,6 +566,15 @@
       </sect1>
     </chapter>
 
+    <chapter id="cha-definetype">
+      <title>Defining a type</title>
+      <para>
+        A new type is defined by creating an type factory.  This is a
+	structure containing all the information needed to create an instance
+	of the type.
+      </para>
+    </chapter>
+
     <chapter id="cha-plugininit">
       <title>The plugin_init function</title>
       <para>
@@ -571,9 +583,12 @@
 	function, which is called as soon as the plugin is loaded, and
 	must return a pointer to a newly allocated GstPlugin structure.
 	This structure contains the details of all the facilities provided
-	by the plugin.  Helper functions are provided to help fill the
+	by the plugin, and is the mechanism by which the definitions are
+	made available to the rest of the &GStreamer; system.  Helper
+	functions are provided to help fill the
 	structure: for future compatability it is recommended that these
-	functions are used, as documented below.
+	functions are used, as documented below, rather than attempting to
+	access the structure directly. 
       </para>
       <para>
         Note that the information returned by the plugin_init() function
@@ -590,6 +605,7 @@
       <sect1 id="sect-plugininit-types">
         <title>Registering new types</title>
         <para>
+	  
         </para>
         <programlisting>
   void gst_plugin_add_type(GstPlugin *plugin,
