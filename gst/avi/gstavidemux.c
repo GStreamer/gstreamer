@@ -31,6 +31,8 @@
 GST_DEBUG_CATEGORY_STATIC (avidemux_debug);
 #define GST_CAT_DEFAULT avidemux_debug
 
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_EVENT);
+
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -512,15 +514,19 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
   GstAviDemux *avi = GST_AVI_DEMUX (gst_pad_get_parent (pad));
   avi_stream_context *stream;
 
-  if (!avi->index_entries)
+  GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, avi,
+      "have event type %d: %p on src pad", GST_EVENT_TYPE (event), event);
+  if (!avi->index_entries) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, avi, "no index entries, returning");
     return FALSE;
+  }
 
   stream = gst_pad_get_element_private (pad);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      GST_DEBUG ("seek format %d, %08x", GST_EVENT_SEEK_FORMAT (event),
-          stream->strh->type);
+      GST_DEBUG_OBJECT (avi, "seek format %d, %08x",
+          GST_EVENT_SEEK_FORMAT (event), stream->strh->type);
 
       switch (GST_EVENT_SEEK_FORMAT (event)) {
         case GST_FORMAT_BYTES:
@@ -535,7 +541,8 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
             res = FALSE;
             goto done;
           }
-          GST_DEBUG ("seeking to %" G_GINT64_FORMAT, desired_offset);
+          GST_DEBUG_OBJECT (avi, "seeking to %" G_GINT64_FORMAT,
+              desired_offset);
 
           flags = GST_RIFF_IF_KEYFRAME;
           switch (GST_EVENT_SEEK_FORMAT (event)) {
@@ -559,9 +566,9 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
             avi->seek_flush =
                 (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH);
             avi->seek_entry = entry->index_nr;
-            GST_DEBUG ("Will seek to entry %d", avi->seek_entry);
+            GST_DEBUG_OBJECT (avi, "Will seek to entry %d", avi->seek_entry);
           } else {
-            GST_DEBUG ("no index entry found for format=%d value=%"
+            GST_DEBUG_OBJECT (avi, "no index entry found for format=%d value=%"
                 G_GINT64_FORMAT, GST_EVENT_SEEK_FORMAT (event), desired_offset);
             res = FALSE;
           }
@@ -1321,7 +1328,8 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
     stream->total_bytes += target->size;
     stream->total_frames++;
 
-    GST_DEBUG ("Adding index entry %d (%d) for stream %d of size %u "
+    GST_DEBUG_OBJECT (avi,
+        "Adding index entry %d (%d) for stream %d of size %u "
         "at offset %" G_GUINT64_FORMAT " and time %" GST_TIME_FORMAT,
         target->index_nr, stream->total_frames - 1,
         target->stream_nr, target->size, target->offset,
@@ -1334,7 +1342,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
     avi_stream_context *stream;
 
     stream = &avi->stream[i];
-    GST_DEBUG ("stream %u: %u frames, %" G_GINT64_FORMAT " bytes",
+    GST_DEBUG_OBJECT (avi, "stream %u: %u frames, %" G_GINT64_FORMAT " bytes",
         i, stream->total_frames, stream->total_bytes);
   }
 
@@ -1597,7 +1605,7 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
     stream->total_frames++;
 
     list = g_list_prepend (list, entry);
-    GST_DEBUG ("Added index entry %d (in stream: %d), offset %"
+    GST_DEBUG_OBJECT (avi, "Added index entry %d (in stream: %d), offset %"
         G_GUINT64_FORMAT ", time %" GST_TIME_FORMAT " for stream %d",
         index_size - 1, entry->frames_before, entry->offset,
         GST_TIME_ARGS (entry->ts), entry->stream_nr);
@@ -1943,7 +1951,7 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
 
   /* at this point we know all the streams and we can signal the no more
    * pads signal */
-  GST_DEBUG ("signaling no more pads");
+  GST_DEBUG_OBJECT (avi, "signaling no more pads");
   gst_element_no_more_pads (GST_ELEMENT (avi));
 
   return TRUE;
@@ -2004,7 +2012,8 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
       avi_stream_context *stream;
 
       if (entry->stream_nr >= avi->num_streams) {
-        GST_DEBUG ("Entry has non-existing stream nr %d", entry->stream_nr);
+        GST_DEBUG_OBJECT (avi,
+            "Entry has non-existing stream nr %d", entry->stream_nr);
         continue;
       }
 
@@ -2045,7 +2054,8 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
         gst_pad_push (stream->pad, GST_DATA (buf));
         processed = TRUE;
       } else {
-        GST_DEBUG ("Unusable pad or zero chunksize, skipping entry");
+        GST_DEBUG_OBJECT (avi,
+            "Unusable pad or zero chunksize, skipping entry");
         processed = TRUE;
       }
       stream->current_frame = entry->frames_before + 1;
@@ -2125,7 +2135,8 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         GST_BUFFER_TIMESTAMP (buf) = next_ts;
         gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &dur_ts);
         GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
-        GST_DEBUG ("Pushing buffer with time=%" GST_TIME_FORMAT " over pad %s",
+        GST_DEBUG_OBJECT (avi,
+            "Pushing buffer with time=%" GST_TIME_FORMAT " over pad %s",
             GST_TIME_ARGS (next_ts), gst_pad_get_name (stream->pad));
         gst_pad_push (stream->pad, GST_DATA (buf));
       }
