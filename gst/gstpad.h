@@ -230,8 +230,8 @@ struct _GstGhostPadClass {
 
 /***** PadTemplate *****/
 #define GST_TYPE_PADTEMPLATE		(gst_padtemplate_get_type ())
-#define GST_PADTEMPLATE(obj)		(GTK_CHECK_CAST ((obj), GST_TYPE_PADTEMPLATE,GstPad))
-#define GST_PADTEMPLATE_CLASS(klass)	(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_PADTEMPLATE,GstPadClass))
+#define GST_PADTEMPLATE(obj)		(GTK_CHECK_CAST ((obj), GST_TYPE_PADTEMPLATE,GstPadTemplate))
+#define GST_PADTEMPLATE_CLASS(klass)	(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_PADTEMPLATE,GstPadTemplateClass))
 #define GST_IS_PADTEMPLATE(obj)		(GTK_CHECK_TYPE ((obj), GST_TYPE_PADTEMPLATE))
 #define GST_IS_PADTEMPLATE_CLASS(obj)	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_PADTEMPLATE))
 
