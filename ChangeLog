@@ -1,5 +1,18 @@
 2004-10-15  Wim Taymans  <wim@fluendo.com>
 
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_class_init),
+	(gst_dv1394src_init), (gst_dv1394src_set_property),
+	(gst_dv1394src_get_property), (gst_dv1394src_iso_receive),
+	(gst_dv1394src_discover_avc_node), (gst_dv1394src_change_state):
+	* ext/raw1394/gstdv1394src.h:
+	Added AV/C VTR control support needed for some cameras.
+	Added automatic port detection.
+	Added properties for selecting the channel.
+	The configure.ac script is not yet updated to reflect the
+	new libavc1394 and librom1394 dependencies.
+
+2004-10-15  Wim Taymans  <wim@fluendo.com>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
 	(qtdemux_parse), (gst_qtdemux_handle_esds):
 	An esds box is not a container.
