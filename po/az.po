@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-27 14:17+0200\n"
+"POT-Creation-Date: 2004-10-06 18:20+0200\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -16,12 +16,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.0.2\n"
 
-#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
+#: ext/audiofile/gstafsink.c:345 ext/sndfile/gstsf.c:618
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "\"%s\" faylı yazma üçün açıla bilmədi."
 
-#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
+#: ext/audiofile/gstafsink.c:367 ext/audiofile/gstafsrc.c:373
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "\"%s\" faylı bağlana bilmədi."
@@ -35,31 +35,36 @@ msgstr "\"%s\" faylı oxuma üçün açıla bilmədi."
 msgid "Could not open CD device for reading."
 msgstr "CD avadanlığı oxuma üçün açıla bilmədi."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
+#: ext/gnomevfs/gstgnomevfssrc.c:1156
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "\"%s\" vfs faylı oxuma üçün açıla bilmədi."
 
-#: ext/gnomevfs/gstgnomevfssink.c:344
+#: ext/gnomevfs/gstgnomevfssrc.c:1164
+#, fuzzy
+msgid "No filename given."
+msgstr "Fayl adı verilməyib."
+
+#: ext/gnomevfs/gstgnomevfssink.c:428
 #, fuzzy, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "\"%s\" vfs faylı yazma üçün açıla bilmədi."
 
-#: ext/gnomevfs/gstgnomevfssink.c:351
+#: ext/gnomevfs/gstgnomevfssink.c:435
 #, fuzzy
 msgid "No filename given"
 msgstr "Fayl adı verilməyib."
 
-#: ext/gnomevfs/gstgnomevfssink.c:377
+#: ext/gnomevfs/gstgnomevfssink.c:463
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "\"%s\" vfs faylı bağlana bilmədi."
 
-#: ext/sndfile/gstsf.c:582
+#: ext/sndfile/gstsf.c:579
 msgid "No filename specified."
 msgstr "Fayl adı verilməyib."
 
-#: ext/sndfile/gstsf.c:835
+#: ext/sndfile/gstsf.c:832
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "\"%s\" faylına yazıla bilmədi."
@@ -82,32 +87,32 @@ msgid ""
 "Please install one and restart."
 msgstr ""
 
-#: sys/dxr3/dxr3audiosink.c:298
+#: sys/dxr3/dxr3audiosink.c:297
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "\"%s\" audio avadanlığı yazma üçün açıla bilmədi."
 
-#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
+#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:283
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "\"%s\" idarə avadanlığı yazma üçün açıla bilmədi."
 
-#: sys/dxr3/dxr3audiosink.c:343
+#: sys/dxr3/dxr3audiosink.c:342
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "\"%s\" audio avadanlığı quraşdırıla bilmədi."
 
-#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
+#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "\"%s\" audio avadanlığı %d Hz-ə keçirilə bilmədi."
 
-#: sys/dxr3/dxr3audiosink.c:422
+#: sys/dxr3/dxr3audiosink.c:421
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "\"%s\" audio avadanlığı bağlana bilmədi."
 
-#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
+#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:308
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
