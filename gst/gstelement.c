@@ -2786,6 +2786,24 @@ gst_element_set_loop_function (GstElement *element,
   }
 }
 
+static inline void
+gst_element_set_eos_recursive (GstElement *element)
+{
+  /* this function is only called, when we were in PLAYING before. So every 
+     parent that's PAUSED was PLAYING before. That means it has reached EOS. */
+  GstElement *parent;
+
+  GST_DEBUG (GST_CAT_EVENT, "setting recursive EOS on %s", 
+             GST_OBJECT_NAME (element));
+  g_signal_emit (G_OBJECT (element), gst_element_signals[EOS], 0);
+
+  if (!GST_OBJECT_PARENT (element))
+    return;
+  
+  parent = GST_ELEMENT (GST_OBJECT_PARENT (element));
+  if (GST_STATE (parent) == GST_STATE_PAUSED)
+    gst_element_set_eos_recursive (parent);
+}
 /**
  * gst_element_set_eos:
  * @element: a #GstElement to set to the EOS state.
@@ -2795,25 +2813,16 @@ gst_element_set_loop_function (GstElement *element,
 void
 gst_element_set_eos (GstElement *element)
 {
-  GstElement *parent;
-  GstElementState parent_state = GST_STATE_NULL; /* silence compilers */
- 
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   GST_DEBUG (GST_CAT_EVENT, "setting EOS on element %s", 
              GST_OBJECT_NAME (element));
 
-  parent = GST_ELEMENT (GST_OBJECT_PARENT (element));
-  if (parent)
-    parent_state = GST_STATE (parent);
-
-  gst_element_set_state (element, GST_STATE_PAUSED);
-
-  g_signal_emit (G_OBJECT (element), gst_element_signals[EOS], 0);
-
-  if (parent && parent_state == GST_STATE_PLAYING && 
-      GST_STATE (parent) == GST_STATE_PAUSED) {
-    gst_element_set_eos (parent);
+  if (GST_STATE (element) == GST_STATE_PLAYING) {
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_eos_recursive (element);
+  } else {
+    g_signal_emit (G_OBJECT (element), gst_element_signals[EOS], 0);
   }
 }
 
