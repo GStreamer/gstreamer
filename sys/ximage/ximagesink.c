@@ -619,8 +619,8 @@ gst_ximagesink_change_state (GstElement *element)
       break;
   }
 
-  if (parent_class->change_state)
-    return parent_class->change_state (element);
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
   
   return GST_STATE_SUCCESS;
 }
