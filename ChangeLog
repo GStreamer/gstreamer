@@ -1,3 +1,22 @@
+2004-05-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/.cvsignore:
+	  ignore enums
+	* gst/tcp/Makefile.am:
+	* gst/tcp/README:
+	* gst/tcp/gsttcp.c:
+	* gst/tcp/gsttcp.h:
+	* gst/tcp/gsttcpclientsink.c:
+	* gst/tcp/gsttcpclientsink.h:
+	* gst/tcp/gsttcpclientsrc.c:
+	* gst/tcp/gsttcpclientsrc.h:
+	* gst/tcp/gsttcpplugin.c:
+	* gst/tcp/gsttcpserversink.c:
+	* gst/tcp/gsttcpserversink.h:
+	* gst/tcp/gsttcpserversrc.c:
+	* gst/tcp/gsttcpserversrc.h:
+          add new tcp elements
+
 2004-05-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/law/mulaw-conversion.c: (mulaw_encode):

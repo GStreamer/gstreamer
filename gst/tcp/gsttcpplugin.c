@@ -23,15 +23,35 @@
 
 #include "gsttcpsrc.h"
 #include "gsttcpsink.h"
+#include "gsttcpclientsrc.h"
+#include "gsttcpclientsink.h"
+#include "gsttcpserversrc.h"
+#include "gsttcpserversink.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (!gst_library_load ("gstdataprotocol"))
+    return FALSE;
+
   if (!gst_element_register (plugin, "tcpsink", GST_RANK_NONE,
           GST_TYPE_TCPSINK))
     return FALSE;
 
   if (!gst_element_register (plugin, "tcpsrc", GST_RANK_NONE, GST_TYPE_TCPSRC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "tcpclientsink", GST_RANK_NONE,
+          GST_TYPE_TCPCLIENTSINK))
+    return FALSE;
+  if (!gst_element_register (plugin, "tcpclientsrc", GST_RANK_NONE,
+          GST_TYPE_TCPCLIENTSRC))
+    return FALSE;
+  if (!gst_element_register (plugin, "tcpserversink", GST_RANK_NONE,
+          GST_TYPE_TCPSERVERSINK))
+    return FALSE;
+  if (!gst_element_register (plugin, "tcpserversrc", GST_RANK_NONE,
+          GST_TYPE_TCPSERVERSRC))
     return FALSE;
 
   return TRUE;

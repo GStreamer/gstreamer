@@ -1,6 +1,49 @@
+This part of the documentation is for the new tcp elements:
+- tcpclientsrc
+- tcpclientsink
+- tcpserversrc
+- tcpserversink
+                                                                                
+which are created to replace the old tcpsrc/tcpsink
+                                                                                
+TESTS
+-----
+Use these tests to test functionality of the various tcp plugins
+
+* server: nc -l -p 3000
+  client: nc localhost 3000
+  everything you type in the server is shown on the client
+  everything you type in the client is shown on the server
+
+* server: nc -l -p 3000
+  client: gst-launch tcpclientsrc protocol=none port=3000 ! fdsink fd=2
+  everything you type in the server is shown on the client
+
+* server: nc -l -p 3000
+  client: gst-launch fdsrc fd=1 ! tcpclientsink protocol=none port=3000
+  everything you type in the client is shown on the server
+
+* server: gst-launch tcpserversrc protocol=none port=3000 ! fdsink fd=2
+  client: gst-launch fdsrc fd=1 ! tcpclientsink protocol=none port=3000
+
+
+TODO
+----
+- implement DNS resolution
+
+--------
+
+This is the old documentation for the original tcpsrc/tcpsink elements.
+
 * What is TCP src/sink?
 
-solution, like icecast or realaudio or whatever. But the future RTP plugins shall not do the actual transmission/reception of packets on the network themselve but the Application developer would be encouraged to use either the TCP or the UDP plugins for that. UDP would be used mostly but there could be situations where TCP would be the only available choice. For example streaming accross firewalls that do not allow UDP.
+solution, like icecast or realaudio or whatever.
+But the future RTP plugins shall not do the actual transmission/reception
+of packets on the network themselve but the Application developer would be
+encouraged to use either the TCP or the UDP plugins for that. UDP would be
+used mostly but there could be situations where TCP would be the only
+available choice. For example streaming accross firewalls that do not
+allow UDP.
 
 * Shortcomings
 
