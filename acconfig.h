@@ -5,6 +5,7 @@
 #undef HAVE_LIBGHTTP
 #undef HAVE_LIBXML
 #undef HAVE_LIBMMX
+#undef HAVE_XAUDIO
 
 #undef HAVE_ATOMIC_H
 

@@ -65,10 +65,21 @@ AC_DEFINE(HAVE_LIBXML)
 AM_CONDITIONAL(HAVE_LIBXML, test "x$HAVE_LIBXML" = "xyes")
 
 
-AC_CHECK_HEADER(mmx.h,[HAVE_LIBMMX=yes],)
-AC_DEFINE(HAVE_LIBMMX)
+AC_CHECK_HEADER(mmx.h,[
+  AC_DEFINE(HAVE_LIBMMX), []])
 AM_CONDITIONAL(HAVE_LIBMMX, test "x$HAVE_LIBMMX" = "xyes")
 
+AC_CHECK_HEADER(xaudio/decoder.h,[
+  AC_DEFINE(HAVE_XAUDIO) 
+  HAVE_XAUDIO="yes", []
+])
+AM_CONDITIONAL(HAVE_XAUDIO, test "x$HAVE_XAUDIO" = "xyes")
+
+AC_CHECK_HEADER(xaudio/decoder.h,[
+  AC_DEFINE(HAVE_XAUDIO) 
+  HAVE_XAUDIO="yes", []
+])
+AM_CONDITIONAL(HAVE_XAUDIO, test "x$HAVE_XAUDIO" = "xyes")
 
 PLUGINS_DIR=${libdir}/plugins
 AC_DEFINE_UNQUOTED(PLUGINS_DIR,"$PLUGINS_DIR")
@@ -91,6 +102,19 @@ AC_ARG_ENABLE(debug,
 AC_ARG_ENABLE(profiling,
 [  --enable-profiling		adds -pg to compiler commandline, for profiling],
 [CFLAGS="$CFLAGS -pg"])
+
+AC_MSG_CHECKING(DVD CSS code)
+
+dnl check if css.c exists (FIXME)
+if test -f plugins/dvdsrc/css.c
+then
+  AC_MSG_RESULT(yes)
+  HAVE_DECSS="yes"
+else
+  AC_MSG_RESULT(no)
+  HAVE_DECSS="no"
+fi
+AM_CONDITIONAL(HAVE_DECSS, test "x$HAVE_DECSS" = "xyes")
 
 
 AC_SUBST(CFLAGS)

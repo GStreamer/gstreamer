@@ -1,5 +1,5 @@
-LDFLAGS = $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/libgst.la \
-	$(shell gnome-config --libs gnomeui)
+LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la 
+LDFLAGS = $(shell gnome-config --libs gnomeui)
 INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir)/gst \
            $(shell gnome-config --cflags gnomeui)
 
