@@ -6,9 +6,9 @@ Data-passing buffer type, supporting sub-buffers and metadata
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Buffers are the basic unit of data transfer in GST.  The GstBuffer type
+Buffers are the basic unit of data transfer in GStreamer.  The GstBuffer type
 provides all the state necessary to define a region of memory as part of a
-stream.  Sub-buffer are also supported, allowing a smaller region of a
+stream.  Sub-buffers are also supported, allowing a smaller region of a
 buffer to become its own buffer, with mechanisms in place to ensure that
 neither memory space goes away.  Metadata is supported as a list of
 pointers to arbitrary metadata.
@@ -27,7 +27,6 @@ buffer data.
   GST_BUFFER_SIZE (buffer) = size;
   GST_BUFFER_DATA (buffer) = g_alloc (size);
   ...
-  
 </programlisting>
 </para>
 <para>
@@ -62,197 +61,194 @@ regardless of the refcount (dangerous).
 
 <!-- ##### MACRO GST_IS_BUFFER ##### -->
 <para>
-Check if the object is a buffer.
+Checks if the object is a buffer.
 </para>
 
-@buf: The object to check
+@buf: object to check
 
 
 <!-- ##### MACRO GST_BUFFER ##### -->
 <para>
-Cast an object to a GstBuffer
+Casts an object to a GstBuffer.
 </para>
 
-@buf: The object to cast.
+@buf: object to cast
 
 
 <!-- ##### MACRO GST_BUFFER_FLAGS ##### -->
 <para>
-Get the flags from this buffer.
+Gets the flags from this buffer.
 </para>
 
-@buf: GstBuffer to retrieve the flags from
+@buf: #GstBuffer to retrieve the flags from
 
 
 <!-- ##### MACRO GST_BUFFER_FLAG_IS_SET ##### -->
 <para>
-Gives the status of a given flag.
+Gives the status of a given #GstBufferFlag.
 </para>
 
-@buf: GstBuffer to query
-@flag: the flag to check
+@buf: #GstBuffer to query
+@flag: the #GstBufferFlag to check
 
 
 <!-- ##### MACRO GST_BUFFER_FLAG_SET ##### -->
 <para>
-Set a flag in a buffer.
+Sets a buffer flag.
 </para>
 
-@buf: GstBuffer to query
-@flag: the flag to set
+@buf: #GstBuffer to modify
+@flag: #GstBufferFlag to set
 
 
 <!-- ##### MACRO GST_BUFFER_FLAG_UNSET ##### -->
 <para>
-Clear a flag in a buffer.
+Clears a buffer flag.
 </para>
 
-@buf: GstBuffer to modify
-@flag: the flag to clear
+@buf: #GstBuffer to modify
+@flag: #GstBufferFlag to clear
 
 
 <!-- ##### MACRO GST_BUFFER_DATA ##### -->
 <para>
-Retrieves a pointer to the data element of this buffer
+Retrieves a pointer to the data element of this buffer.
 </para>
 
-@buf: GstBuffer
+@buf: #GstBuffer to get data pointer of
 
 
 <!-- ##### MACRO GST_BUFFER_SIZE ##### -->
 <para>
-Get the size of the data in this buffer.
+Gets the size of the data in this buffer.
 </para>
 
-@buf: GstBuffer
+@buf: #GstBuffer to get data size of
 
 
 <!-- ##### MACRO GST_BUFFER_OFFSET ##### -->
 <para>
-Get the offset in the source file of this buffer.
+Gets the offset in the source file of this buffer.
 </para>
 
-@buf: GstBuffer
+@buf: #GstBuffer to get offset of
 
 
 <!-- ##### MACRO GST_BUFFER_MAXSIZE ##### -->
 <para>
-Gets the maximun size of this buffer.
+Gets the maximum size of this buffer.
 </para>
 
-@buf: GstBuffer
+@buf: #GstBuffer to get maximum size of
 
 
 <!-- ##### MACRO GST_BUFFER_TIMESTAMP ##### -->
 <para>
-Get the timestamp for this buffer.
+Gets the timestamp for this buffer.
 </para>
 
-@buf: GstBuffer
+@buf: #GstBuffer to get timestamp of
 
 
 <!-- ##### MACRO GST_BUFFER_BUFFERPOOL ##### -->
 <para>
-Get the bufferpool for this buffer.
+Gets the bufferpool for this buffer.
 </para>
 
-@buf: GstBuffer
+@buf: #GstBuffer to get bufferpool of
 
 
 <!-- ##### MACRO GST_BUFFER_POOL_PRIVATE ##### -->
 <para>
-Get the bufferpool private data.
+Gets the bufferpool private data.
 </para>
 
-@buf: GstBuffer
+@buf: #GstBuffer to get bufferpool's private data of
 
 
 <!-- ##### MACRO GST_BUFFER_LOCK ##### -->
 <para>
-This macro will obtain a lock on the object, making serialization
-possible.
-
+Obtains a lock on the object, making serialization possible.
 </para>
 
-@buf: GstBuffer to lock
+@buf: #GstBuffer to lock
 
 
 <!-- ##### MACRO GST_BUFFER_TRYLOCK ##### -->
 <para>
-This macro will try to obtain a lock on the object, but will return with
-FALSE if it can't get it immediately.
-
+Tries to obtain a lock on the buffer.
+If it can't get immediately, will return FALSE.
 </para>
 
-@buf: GstBuffer to try to lock
+@buf: #GstBuffer to try to lock
 
 
 <!-- ##### MACRO GST_BUFFER_UNLOCK ##### -->
 <para>
-This macro releases a lock on the object.
+Releases a lock on the buffer.
 
 </para>
 
-@buf: GstBuffer to unlock.
+@buf: #GstBuffer to unlock
 
 
 <!-- ##### MACRO GST_BUFFER_PARENT ##### -->
 <para>
-Get the parent of this buffer. The parent is set on subbuffers.
+Gets the parent of this buffer. The parent is set on sub-buffers.
 </para>
 
-@buf: GstBuffer to get the parent of.
+@buf: #GstBuffer to get parent of
 
 
 <!-- ##### MACRO GST_BUFFER_MAXAGE ##### -->
 <para>
-Get the maximun age of a buffer.
+Gets the maximum age of a buffer.
 </para>
 
-@buf: GstBuffer to get the maxage of.
+@buf: #GstBuffer to get maximum age of
 
 
 <!-- ##### MACRO GST_BUFFER_COPY_FUNC ##### -->
 <para>
-Call the buffer specific copy function on the given buffer.
+Calls the buffer-specific copy function on the given buffer.
 </para>
 
-@buf: the buffer to copy.
+@buf: #GstBuffer to copy
 
 
 <!-- ##### MACRO GST_BUFFER_FREE_FUNC ##### -->
 <para>
-Call the buffer specific free function on the given buffer.
+Calls the buffer-specific free function on the given buffer.
 </para>
 
-@buf: the buffer to free.
+@buf: #GstBuffer to free
 
 
 <!-- ##### USER_FUNCTION GstBufferCopyFunc ##### -->
 <para>
-This function is used to copy the buffer contents.
+This supplied function is used to copy the buffer contents.
 </para>
 
-@srcbuf: the src buffer
-@Returns: The copied buffer
+@srcbuf: #GstBuffer to copy from
+@Returns: newly allocated #GstBuffer copy of srcbuf
 
 
 <!-- ##### USER_FUNCTION GstBufferFreeFunc ##### -->
 <para>
-The function called when the buffer data has to be freed
+This supplied function is called when the buffer data has to be freed.
 </para>
 
-@buf: the buffer to clear the buffer data of.
+@buf: #GstBuffer to clear the buffer data of
 
 
-<!-- ##### ENUM GstBufferFlags ##### -->
+<!-- ##### ENUM GstBufferFlag ##### -->
 <para>
-
+This enumeration type describes the flags that can be used for a buffer.
 </para>
 
-@GST_BUFFER_READONLY: the buffer is read only
-@GST_BUFFER_ORIGINAL: this buffer not a copy
-@GST_BUFFER_DONTFREE: do not try to free the data when this buffer is unref-ed
+@GST_BUFFER_READONLY: buffer is read-only
+@GST_BUFFER_ORIGINAL: buffer is not a copy of another buffer
+@GST_BUFFER_DONTFREE: do not try to free the data when this buffer is unreferenced
 
 <!-- ##### STRUCT GstBuffer ##### -->
 <para>

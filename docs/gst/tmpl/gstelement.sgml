@@ -444,26 +444,6 @@ instead.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_get_compatible_static_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@templ: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_compatible_request_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@templ: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_element_get_compatible_pad_filtered ##### -->
 <para>
 

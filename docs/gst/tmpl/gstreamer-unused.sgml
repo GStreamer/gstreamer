@@ -5441,6 +5441,24 @@ must be defined to activate the tracing functionality.
 @parent: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_element_get_compatible_request_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@templ: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_get_compatible_static_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@templ: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_element_get_pad_template_by_name ##### -->
 <para>
 

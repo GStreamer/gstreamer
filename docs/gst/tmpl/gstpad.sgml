@@ -789,6 +789,7 @@ Destroy the pad.
 @sched_private: 
 @peer: 
 @bufpen: 
+@regiontype: 
 @offset: 
 @len: 
 @chainfunc: 

@@ -65,7 +65,7 @@
 
     <para>libgst.la provides all the core GStreamer services,
 including initialization, plugin management and types, as 
-well as the object hiarchy that defines elements and bins, along
+well as the object hierarchy that defines elements and bins, along
 with some more specialized elements.</para>
 
     &Gst;

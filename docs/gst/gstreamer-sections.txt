@@ -240,7 +240,7 @@ GST_BUFFER_COPY_FUNC
 GST_BUFFER_FREE_FUNC
 GstBufferCopyFunc
 GstBufferFreeFunc
-GstBufferFlags
+GstBufferFlag
 GstBuffer
 gst_buffer_new
 gst_buffer_new_from_pool
