@@ -31,6 +31,7 @@
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 
+#include "gstffmpeg.h"
 
 typedef struct _GstProtocolInfo GstProtocolInfo;
 

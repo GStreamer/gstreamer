@@ -33,16 +33,9 @@
 #include <ffmpeg/avformat.h>
 #endif
 
-GST_DEBUG_CATEGORY_STATIC (ffmpeg_debug);
-#define GST_CAT_DEFAULT ffmpeg_debug
+#include "gstffmpeg.h"
 
-extern gboolean gst_ffmpegdemux_register (GstPlugin * plugin);
-extern gboolean gst_ffmpegdec_register (GstPlugin * plugin);
-extern gboolean gst_ffmpegenc_register (GstPlugin * plugin);
-extern gboolean gst_ffmpegmux_register (GstPlugin * plugin);
-extern gboolean gst_ffmpegcsp_register (GstPlugin * plugin);
-
-extern URLProtocol gstreamer_protocol;
+GST_DEBUG_CATEGORY (ffmpeg_debug);
 
 static void
 gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)

@@ -32,6 +32,7 @@
 
 #include <gst/gst.h>
 
+#include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
 
 typedef struct _GstFFMpegDec GstFFMpegDec;
@@ -462,6 +463,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     return;
   }
 
+  GST_DEBUG ("Received new data of size %d", GST_BUFFER_SIZE (inbuf));
+
   /* FIXME: implement event awareness (especially EOS
    * (av_close_codec ()) and FLUSH/DISCONT
    * (avcodec_flush_buffers ()))
@@ -490,7 +493,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 
   do {
     /* parse, if at all possible */
-    if (ffmpegdec->pctx) {
+    if (ffmpegdec->pctx && ffmpegdec->context->codec_id != CODEC_ID_MP3) {
       gint res;
 
       res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
@@ -515,6 +518,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
       case CODEC_TYPE_VIDEO:
         len = avcodec_decode_video (ffmpegdec->context,
             ffmpegdec->picture, &have_data, data, size);
+        GST_DEBUG ("Decode video: len=%d, have_data=%d", len, have_data);
 
         if (len >= 0 && have_data) {
           /* libavcodec constantly crashes on stupid buffer allocation
@@ -557,6 +561,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
         outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
         len = avcodec_decode_audio (ffmpegdec->context,
             (int16_t *) GST_BUFFER_DATA (outbuf), &have_data, data, size);
+        GST_DEBUG ("Decode audio: len=%d, have_data=%d", len, have_data);
+
         if (have_data < 0) {
           GST_WARNING_OBJECT (ffmpegdec,
               "FFmpeg error: len %d, have_data: %d < 0 !",
@@ -587,9 +593,13 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
       GST_ERROR_OBJECT (ffmpegdec, "ffdec_%s: decoding error",
           oclass->in_plugin->name);
       break;
+    } else if (len == 0) {
+      break;
     }
 
     if (have_data) {
+      GST_DEBUG ("Decoded data, now pushing");
+
       if (!GST_PAD_CAPS (ffmpegdec->srcpad)) {
         if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
           gst_buffer_unref (outbuf);
@@ -603,13 +613,15 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
         gst_buffer_unref (outbuf);
     }
 
-    if (!ffmpegdec->pctx) {
+    if (!ffmpegdec->pctx || ffmpegdec->context->codec_id == CODEC_ID_MP3) {
       bsize -= len;
       bdata += len;
     }
   } while (bsize > 0);
 
   if (ffmpegdec->pctx && bsize > 0) {
+    GST_DEBUG ("Keeping %d bytes of data", bsize);
+
     ffmpegdec->pcache = gst_buffer_create_sub (inbuf,
         GST_BUFFER_SIZE (inbuf) - bsize, bsize);
   }

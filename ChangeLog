@@ -1,5 +1,20 @@
 2004-12-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegcolorspace.c:
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	  Add debugging category everywhere (correctly this time). Don't
+	  parse mp3 data (the parser is a piece of crap). Fixes #155274
+	  mostly. Seeking pending.
+
+2004-12-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_formatid_to_caps):
 	  Add ID3 mime. Should partially fix #155274 (although raw mp3
 	  sounds awful, it doesn't parse correctly in the decoder-only

@@ -120,15 +120,5 @@ int
 gst_ffmpeg_img_convert (AVPicture * dst, int dst_pix_fmt,
     const AVPicture * src, int src_pix_fmt, int src_width, int src_height);
 
-
-/*
- * FFMPEG debugging function; maybe move to a different file.
- */
-
-GST_DEBUG_CATEGORY_EXTERN (ffmpeg_debug);
-
-static void
-gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl);
-
 #endif /* __GST_FFMPEG_CODECMAP_H__ */
 

@@ -32,6 +32,7 @@
 
 #include <gst/gst.h>
 
+#include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
 
 typedef struct _GstFFMpegDemux GstFFMpegDemux;

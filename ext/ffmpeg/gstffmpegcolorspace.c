@@ -30,6 +30,7 @@
 #include <ffmpeg/avcodec.h>
 #endif
 
+#include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
 
 #define GST_TYPE_FFMPEGCSP \
