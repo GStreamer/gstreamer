@@ -721,26 +721,37 @@ gst_vorbisfile_src_convert (GstPad *pad,
 	gint i;
 	gint64 count = 0;
 
-	if (src_value >= vorbisfile->vf.links) {
-	  count = ov_pcm_total (&vorbisfile->vf, -1);
-	}
-	else {
-	  for (i = 0; i < src_value; i++) {
-	    count += ov_pcm_total (&vorbisfile->vf, i);
-	  }
-	}
         switch (*dest_format) {
           case GST_FORMAT_BYTES:
-	    scale = bytes_per_sample;
+            res = FALSE;
+            break;
           case GST_FORMAT_UNITS:
-	    *dest_value = count *scale;
+	    if (src_value > vorbisfile->vf.links) {
+	      src_value = vorbisfile->vf.links;
+	    }
+	    for (i = 0; i < src_value; i++) {
+	      vi = ov_info (&vorbisfile->vf, i);
+
+	      count += ov_pcm_total (&vorbisfile->vf, i);
+	    }
+	    *dest_value = count;
             break;
           case GST_FORMAT_TIME:
-	    if (vi->rate == 0)
-	      return FALSE;
+	  {
+	    if (src_value > vorbisfile->vf.links) {
+	      src_value = vorbisfile->vf.links;
+	    }
+	    for (i = 0; i < src_value; i++) {
+	      vi = ov_info (&vorbisfile->vf, i);
+	      if (vi->rate) 
+	        count += ov_pcm_total (&vorbisfile->vf, i) * GST_SECOND / vi->rate;
+	      else
+	        count += ov_time_total (&vorbisfile->vf, i) * GST_SECOND;
+	    }
 	    /* we use the pcm totals to get the total time, it's more accurate */
-	    *dest_value = count * GST_SECOND / vi->rate;
+	    *dest_value = count;
             break;
+	  }
           default:
             res = FALSE;
 	}
