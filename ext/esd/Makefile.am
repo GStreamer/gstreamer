@@ -1,16 +1,16 @@
 plugindir = $(libdir)/gst
 
-plugin_LTLIBRARIES = libesdsink.la libesdmon.la
+plugin_LTLIBRARIES = libgstesdsink.la libgstesdmon.la
 
-libesdsink_la_SOURCES = esdsink.c
-libesdsink_la_CFLAGS = $(GST_CFLAGS) $(ESD_CFLAGS)
-libesdsink_la_LIBADD = $(ESD_LIBS)
-libesdsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstesdsink_la_SOURCES = esdsink.c
+libgstesdsink_la_CFLAGS = $(GST_CFLAGS) $(ESD_CFLAGS)
+libgstesdsink_la_LIBADD = $(ESD_LIBS)
+libgstesdsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-libesdmon_la_SOURCES = esdmon.c
-libesdmon_la_CFLAGS = $(GST_CFLAGS) $(ESD_CFLAGS)
-libesdmon_la_LIBADD = $(ESD_LIBS)
-libesdmon_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstesdmon_la_SOURCES = esdmon.c
+libgstesdmon_la_CFLAGS = $(GST_CFLAGS) $(ESD_CFLAGS)
+libgstesdmon_la_LIBADD = $(ESD_LIBS)
+libgstesdmon_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = esdsink.h
 EXTRA_DIST = README
