@@ -155,7 +155,7 @@ gst_dvdec_quality_get_type (void)
       {2, "DV_QUALITY_AC_2", "Highest quality mono decoding"},
       {3, "DV_QUALITY_DC|DV_QUALITY_COLOUR", "Fastest colour decoding"},
       {4, "DV_QUALITY_AC_1|DV_QUALITY_COLOUR",
-            "Colour, using only the first AC coefficient"},
+          "Colour, using only the first AC coefficient"},
       {5, "DV_QUALITY_BEST", "Highest quality colour decoding"},
     };
 
@@ -426,6 +426,7 @@ gst_dvdec_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
             scale = dvdec->decoder->audio->num_channels * 2;
           /* fallthrough */
         case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
           if (pad == dvdec->videosrcpad)
             *dest_value = src_value * dvdec->framerate * scale / GST_SECOND;
           else if (pad == dvdec->audiosrcpad)

@@ -15,7 +15,8 @@ libgstdebug_la_SOURCES = \
 	gstdebug.c \
 	breakmydata.c \
 	negotiation.c \
-	gstnavseek.c
+	gstnavseek.c \
+	progressreport.c
 
 libgstdebug_la_CFLAGS = $(GST_CFLAGS)
 libgstdebug_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
