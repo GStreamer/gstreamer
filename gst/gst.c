@@ -99,7 +99,12 @@ gst_init_check (int     *argc,
       if (!strncmp ("--gst-info-mask=", (*argv)[i], 16)) {
 	guint32 val;
 
-	sscanf ((*argv)[i]+16, "%08x", &val);
+        // handle either 0xHEX or dec
+        if (*((*argv)[i]+17) == 'x') {
+          sscanf ((*argv)[i]+18, "%08x", &val);
+        } else {
+          sscanf ((*argv)[i]+16, "%d", &val);
+        }
 
 	gst_info_set_categories (val);
 
@@ -108,7 +113,12 @@ gst_init_check (int     *argc,
       else if (!strncmp ("--gst-info-mask=", (*argv)[i], 16)) {
 	guint32 val;
 
-	sscanf ((*argv)[i]+16, "%08x", &val);
+        // handle either 0xHEX or dec
+        if (*((*argv)[i]+17) == 'x') {
+          sscanf ((*argv)[i]+18, "%08x", &val);
+        } else {
+          sscanf ((*argv)[i]+16, "%d", &val);
+        }
 
 	//FIXME
 	//gst_info_set_categories (val);
@@ -146,7 +156,7 @@ gst_init_check (int     *argc,
     g_print ("\nGStreamer info/debug FLAGS (to be OR'ed)\n");
 
     for (i = 0; i<GST_CAT_MAX_CATEGORY; i++) {
-      g_print ("   %08x    %s     %s\n", 1<<i, 
+      g_print ("   0x%08x    %s     %s\n", 1<<i, 
                   (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
 		   gst_get_category_name (i));
     }

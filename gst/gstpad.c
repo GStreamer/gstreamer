@@ -510,6 +510,9 @@ gst_pad_connect (GstPad *srcpad,
 
   /* set the connected flag */
   /* FIXME: set connected flag */
+
+  GST_INFO (GST_CAT_ELEMENT_PADS, "connected %s:%s and %s:%s",
+            GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
 }
 
 /**
