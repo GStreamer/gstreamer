@@ -12,7 +12,7 @@ m4_define(pygtk_required_version,             1.99.14)
 
 m4_define(glib_required_version,              2.0.0)
 m4_define(gtk_required_version,               2.0.0)
-m4_define(gstreamer_required_version,         0.5.0)
+m4_define(gstreamer_required_version,         0.5.1.1)
 m4_define(gstreamer_majorminor,               0.5)
 
 AC_INIT(gst-python, gst_python_version,

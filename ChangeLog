@@ -6,6 +6,8 @@
 
 	* gstreamer/Makefile.am: ignore gstcompat.h
 
+	* configure.ac: require GStreamer core 0.5.1.1
+
 2003-01-04  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* gstreamer/gstreamer.override, gstreamer/gstreamer-extra.defs: add
