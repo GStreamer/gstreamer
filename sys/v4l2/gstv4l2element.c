@@ -22,12 +22,14 @@
 #endif
 
 #include "v4l2_calls.h"
-#include "gstv4l2element-marshal.h"
+#include "gstv4l2tuner.h"
+#include "gstv4l2xoverlay.h"
+#include "gstv4l2colorbalance.h"
 
 /* elementfactory details */
 static GstElementDetails gst_v4l2element_details = {
 	"Generic video4linux2 Element",
-	"None/Video",
+	"Generic/Video",
 	"LGPL",
 	"Generic plugin for handling common video4linux2 calls",
 	VERSION,
@@ -40,50 +42,63 @@ enum {
 	/* FILL ME */
 	SIGNAL_OPEN,
 	SIGNAL_CLOSE,
-	SIGNAL_SET_VIDEOWINDOW,
-	SIGNAL_GET_ATTRIBUTE,
-	SIGNAL_SET_ATTRIBUTE,
 	LAST_SIGNAL
 };
 
 enum {
 	ARG_0,
-	ARG_CHANNEL,
-	ARG_CHANNEL_NAMES,
-	ARG_OUTPUT,
-	ARG_OUTPUT_NAMES,
-	ARG_NORM,
-	ARG_NORM_NAMES,
-	ARG_HAS_TUNER,
-	ARG_FREQUENCY,
-	ARG_SIGNAL_STRENGTH,
-	ARG_HAS_AUDIO,
-	ARG_ATTRIBUTES,
 	ARG_DEVICE,
 	ARG_DEVICE_NAME,
-	ARG_DEVICE_HAS_CAPTURE,
-	ARG_DEVICE_HAS_OVERLAY,
-	ARG_DEVICE_HAS_PLAYBACK,
-	ARG_DISPLAY,
-	ARG_DO_OVERLAY,
+	ARG_FLAGS
 };
 
 
-static void			gst_v4l2element_class_init	(GstV4l2ElementClass *klass);
-static void			gst_v4l2element_init		(GstV4l2Element      *v4lelement);
-static void			gst_v4l2element_set_property	(GObject             *object,
-								 guint               prop_id,
-								 const GValue        *value,
-								 GParamSpec          *pspec);
-static void			gst_v4l2element_get_property	(GObject             *object,
-								 guint               prop_id,
-								 GValue              *value,
-								 GParamSpec          *pspec);
-static GstElementStateReturn	gst_v4l2element_change_state	(GstElement          *element);
+static void	gst_v4l2element_class_init	(GstV4l2ElementClass *klass);
+static void	gst_v4l2element_init		(GstV4l2Element *v4lelement);
+static void	gst_v4l2element_dispose		(GObject        *object);
+static void	gst_v4l2element_set_property	(GObject        *object,
+						 guint          prop_id,
+						 const GValue   *value,
+						 GParamSpec     *pspec);
+static void	gst_v4l2element_get_property	(GObject        *object,
+						 guint          prop_id,
+						 GValue         *value,
+						 GParamSpec     *pspec);
+static GstElementStateReturn
+		gst_v4l2element_change_state	(GstElement     *element);
 
 
 static GstElementClass *parent_class = NULL;
 static guint gst_v4l2element_signals[LAST_SIGNAL] = { 0 };
+
+
+static gboolean
+gst_v4l2_iface_supported (GstInterface *iface,
+			  GType         iface_type)
+{
+	GstV4l2Element *v4l2element = GST_V4L2ELEMENT (iface);
+
+	g_assert (iface_type == GST_TYPE_TUNER ||
+		  iface_type == GST_TYPE_X_OVERLAY ||
+		  iface_type == GST_TYPE_COLOR_BALANCE);
+
+	if (v4l2element->video_fd == -1)
+		return FALSE;
+
+	if (iface_type == GST_TYPE_X_OVERLAY &&
+	    !GST_V4L2_IS_OVERLAY(v4l2element))
+		return FALSE;
+
+	return TRUE;
+}
+
+
+static void
+gst_v4l2_interface_init (GstInterfaceClass *klass)
+{
+	/* default virtual functions */
+	klass->supported = gst_v4l2_iface_supported;
+}
 
 
 GType
@@ -104,12 +119,77 @@ gst_v4l2element_get_type (void)
 			(GInstanceInitFunc) gst_v4l2element_init,
 			NULL
 		};
-		v4l2element_type = g_type_register_static(GST_TYPE_ELEMENT,
-					"GstV4l2Element", &v4l2element_info, 0);
+		static const GInterfaceInfo v4l2iface_info = {
+			(GInterfaceInitFunc) gst_v4l2_interface_init,
+			NULL,
+			NULL,
+		};
+		static const GInterfaceInfo v4l2_tuner_info = {
+			(GInterfaceInitFunc) gst_v4l2_tuner_interface_init,
+			NULL,
+			NULL,
+		};
+		static const GInterfaceInfo v4l2_xoverlay_info = {
+			(GInterfaceInitFunc) gst_v4l2_xoverlay_interface_init,
+			NULL,
+			NULL,
+		};
+		static const GInterfaceInfo v4l2_colorbalance_info = {
+			(GInterfaceInitFunc) gst_v4l2_color_balance_interface_init,
+			NULL,
+			NULL,
+		};
+
+		v4l2element_type =
+			g_type_register_static(GST_TYPE_ELEMENT,
+				"GstV4l2Element", &v4l2element_info, 0);
+
+		g_type_add_interface_static (v4l2element_type,
+					     GST_TYPE_INTERFACE,
+					     &v4l2iface_info);
+		g_type_add_interface_static (v4l2element_type,
+					     GST_TYPE_TUNER,
+					     &v4l2_tuner_info);
+		g_type_add_interface_static (v4l2element_type,
+					     GST_TYPE_X_OVERLAY,
+					     &v4l2_xoverlay_info);
+		g_type_add_interface_static (v4l2element_type,
+					     GST_TYPE_COLOR_BALANCE,
+					     &v4l2_colorbalance_info);
 	}
+
 	return v4l2element_type;
 }
 
+
+#define GST_TYPE_V4L2_DEVICE_FLAGS (gst_v4l2_device_get_type ())
+GType
+gst_v4l2_device_get_type (void)
+{
+	static GType v4l2_device_type = 0;
+
+	if (v4l2_device_type == 0) {
+		static const GFlagsValue values[] = {
+			{ V4L2_CAP_VIDEO_CAPTURE, "CAPTURE",
+			  "Device can capture" },
+			{ V4L2_CAP_VIDEO_OUTPUT,  "PLAYBACK",
+			  "Device can playback" },
+			{ V4L2_CAP_VIDEO_OVERLAY, "OVERLAY",
+			  "Device can do overlay" },
+			{ V4L2_CAP_TUNER,         "TUNER",
+			  "Device has a tuner" },
+			{ V4L2_CAP_AUDIO,         "AUDIO",
+			  "Device handles audio" },
+			{ 0, NULL, NULL }
+		};
+
+		v4l2_device_type =
+			g_flags_register_static ("GstV4l2DeviceTypeFlags",
+						 values);
+	}
+
+	return v4l2_device_type;
+}
 
 
 static void
@@ -123,96 +203,15 @@ gst_v4l2element_class_init (GstV4l2ElementClass *klass)
 
 	parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNEL,
-		g_param_spec_int("channel","channel","channel",
-		G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNEL_NAMES,
-		g_param_spec_pointer("channel_names","channel_names","channel_names",
-		G_PARAM_READABLE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OUTPUT,
-		g_param_spec_int("output","output","output",
-		G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OUTPUT_NAMES,
-		g_param_spec_pointer("output_names","output_names","output_names",
-		G_PARAM_READABLE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NORM,
-		g_param_spec_int("norm","norm","norm",
-		G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NORM_NAMES,
-		g_param_spec_pointer("norm_names","norm_names","norm_names",
-		G_PARAM_READABLE));
-
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HAS_TUNER,
-		g_param_spec_boolean("has_tuner","has_tuner","has_tuner",
-		0,G_PARAM_READABLE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
-		g_param_spec_ulong("frequency","frequency","frequency",
-		0,G_MAXULONG,0,G_PARAM_READWRITE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SIGNAL_STRENGTH,
-		g_param_spec_ulong("signal_strength","signal_strength","signal_strength",
-		0,G_MAXULONG,0,G_PARAM_READABLE));
-
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HAS_AUDIO,
-		g_param_spec_boolean("has_audio","has_audio","has_audio",
-		0,G_PARAM_READABLE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ATTRIBUTES,
-		g_param_spec_pointer("attributes","attributes","attributes",
-		G_PARAM_READABLE));
-
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE,
-		g_param_spec_string("device","device","device",
-		NULL, G_PARAM_READWRITE));
+		g_param_spec_string("device", "Device", "Device location",
+			NULL, G_PARAM_READWRITE));
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_NAME,
-		g_param_spec_string("device_name","device_name","device_name",
-		NULL, G_PARAM_READABLE));
-
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_HAS_CAPTURE,
-		g_param_spec_boolean("can_capture","can_capture","can_capture",
-		0,G_PARAM_READABLE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_HAS_PLAYBACK,
-		g_param_spec_boolean("can_playback","can_playback","can_playback",
-		0,G_PARAM_READABLE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_HAS_OVERLAY,
-		g_param_spec_boolean("has_overlay","has_overlay","has_overlay",
-		0,G_PARAM_READABLE));
-
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DISPLAY,
-		g_param_spec_string("display","display","display",
-		NULL, G_PARAM_WRITABLE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DO_OVERLAY,
-		g_param_spec_boolean("do_overlay","do_overlay","do_overlay",
-		0,G_PARAM_WRITABLE));
-
-	/* actions */
-	gst_v4l2element_signals[SIGNAL_SET_VIDEOWINDOW] =
-		g_signal_new ("set_videowindow",
-			G_TYPE_FROM_CLASS(klass),
-			G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-			G_STRUCT_OFFSET(GstV4l2ElementClass, set_videowindow),
-			NULL, NULL,
-			gstv4l2_cclosure_marshal_BOOLEAN__INT_INT_INT_INT_POINTER_INT,
-			G_TYPE_BOOLEAN, 6,
-			G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT,
-			G_TYPE_POINTER, G_TYPE_INT);
-	klass->set_videowindow = gst_v4l2_set_window;
-	gst_v4l2element_signals[SIGNAL_GET_ATTRIBUTE] =
-		g_signal_new ("get_attribute",
-			G_TYPE_FROM_CLASS(klass),
-			G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-			G_STRUCT_OFFSET(GstV4l2ElementClass, get_attribute),
-			NULL, NULL,
-			gstv4l2_cclosure_marshal_BOOLEAN__STRING_POINTER,
-			G_TYPE_BOOLEAN, 2, G_TYPE_STRING, G_TYPE_POINTER);
-	klass->get_attribute = gst_v4l2_get_attribute;
-	gst_v4l2element_signals[SIGNAL_SET_ATTRIBUTE] =
-		g_signal_new ("set_attribute",
-			G_TYPE_FROM_CLASS(klass),
-			G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-			G_STRUCT_OFFSET(GstV4l2ElementClass, set_attribute),
-			NULL, NULL,
-			gstv4l2_cclosure_marshal_BOOLEAN__STRING_INT,
-			G_TYPE_BOOLEAN, 2, G_TYPE_STRING, G_TYPE_INT);
-	klass->set_attribute = gst_v4l2_set_attribute;
+		g_param_spec_string("device_name", "Device name",
+			"Name of the device", NULL, G_PARAM_READABLE));
+	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FLAGS,
+		g_param_spec_flags("flags", "Flags", "Device type flags",
+			GST_TYPE_V4L2_DEVICE_FLAGS, 0, G_PARAM_READABLE));
 
 	/* signals */
 	gst_v4l2element_signals[SIGNAL_OPEN] =
@@ -228,6 +227,7 @@ gst_v4l2element_class_init (GstV4l2ElementClass *klass)
 
 	gobject_class->set_property = gst_v4l2element_set_property;
 	gobject_class->get_property = gst_v4l2element_get_property;
+	gobject_class->dispose = gst_v4l2element_dispose;
 
 	gstelement_class->change_state = gst_v4l2element_change_state;
 }
@@ -239,24 +239,37 @@ gst_v4l2element_init (GstV4l2Element *v4l2element)
 	/* some default values */
 	v4l2element->video_fd = -1;
 	v4l2element->buffer = NULL;
-	v4l2element->device = NULL;
+	v4l2element->device = g_strdup("/dev/video");
+	v4l2element->display = g_strdup(g_getenv("DISPLAY"));
 
-	v4l2element->norm = -1;
-	v4l2element->channel = -1;
-	v4l2element->output = -1;
-	v4l2element->frequency = 0;
-
-	v4l2element->controls = NULL;
-	v4l2element->menus = NULL;
-	v4l2element->control_specs = NULL;
-	v4l2element->outputs = NULL;
-	v4l2element->output_names = NULL;
-	v4l2element->inputs = NULL;
-	v4l2element->input_names = NULL;
+	v4l2element->channels = NULL;
 	v4l2element->norms = NULL;
-	v4l2element->norm_names = NULL;
+	v4l2element->colors = NULL;
+
+	v4l2element->overlay = gst_v4l2_xoverlay_new(v4l2element);
 }
 
+
+static void
+gst_v4l2element_dispose (GObject *object)
+{
+  GstV4l2Element *v4l2element = GST_V4L2ELEMENT(object);
+
+  if (v4l2element->overlay) {
+    gst_v4l2_xoverlay_free(v4l2element);
+  }
+
+  if (v4l2element->display) {
+    g_free (v4l2element->display);
+  }
+
+  if (v4l2element->device) {
+    g_free (v4l2element->device);
+  }
+
+  if (((GObjectClass *) parent_class)->dispose)
+    ((GObjectClass *) parent_class)->dispose(object);
+}
 
 static void
 gst_v4l2element_set_property (GObject      *object,
@@ -271,49 +284,11 @@ gst_v4l2element_set_property (GObject      *object,
 	v4l2element = GST_V4L2ELEMENT(object);
 
 	switch (prop_id) {
-		case ARG_CHANNEL:
-			v4l2element->channel = g_value_get_int(value);
-			if (GST_V4L2_IS_OPEN(v4l2element) && !GST_V4L2_IS_ACTIVE(v4l2element)) {
-				if (!gst_v4l2_set_input(v4l2element, g_value_get_int(value)))
-					return;
-			}
-			break;
-		case ARG_OUTPUT:
-			v4l2element->output = g_value_get_int(value);
-			if (GST_V4L2_IS_OPEN(v4l2element) && !GST_V4L2_IS_ACTIVE(v4l2element)) {
-				if (!gst_v4l2_set_output(v4l2element, g_value_get_int(value)))
-					return;
-			}
-			break;
-		case ARG_NORM:
-			v4l2element->norm = g_value_get_int(value);
-			if (GST_V4L2_IS_OPEN(v4l2element) && !GST_V4L2_IS_ACTIVE(v4l2element)) {
-				if (!gst_v4l2_set_norm(v4l2element, g_value_get_int(value)))
-					return;
-			}
-			break;
-		case ARG_FREQUENCY:
-			v4l2element->frequency = g_value_get_ulong(value);
-			if (GST_V4L2_IS_OPEN(v4l2element) && !GST_V4L2_IS_ACTIVE(v4l2element)) {
-				if (!gst_v4l2_set_frequency(v4l2element, g_value_get_ulong(value)))
-					return;
-			}
-			break;
 		case ARG_DEVICE:
 			if (!GST_V4L2_IS_OPEN(v4l2element)) {
 				if (v4l2element->device)
 					g_free(v4l2element->device);
 				v4l2element->device = g_strdup(g_value_get_string(value));
-			}
-			break;
-		case ARG_DISPLAY:
-			if (!gst_v4l2_set_display(v4l2element, g_value_get_string(value)))
-				return;
-			break;
-		case ARG_DO_OVERLAY:
-			if (GST_V4L2_IS_OPEN(v4l2element)) {
-				if (!gst_v4l2_enable_overlay(v4l2element, g_value_get_boolean(value)))
-					return;
 			}
 			break;
 		default:
@@ -330,88 +305,31 @@ gst_v4l2element_get_property (GObject    *object,
                               GParamSpec *pspec)
 {
 	GstV4l2Element *v4l2element;
-	gint temp_i = 0;
-	gulong temp_ul = 0;
 
 	/* it's not null if we got it, but it might not be ours */
 	g_return_if_fail(GST_IS_V4L2ELEMENT(object));
 	v4l2element = GST_V4L2ELEMENT(object);
 
 	switch (prop_id) {
-		case ARG_CHANNEL:
-			if (GST_V4L2_IS_OPEN(v4l2element))
-				gst_v4l2_get_input(v4l2element, &temp_i);
-			g_value_set_int(value, temp_i);
-			break;
-		case ARG_CHANNEL_NAMES:
-			g_value_set_pointer(value, v4l2element->input_names);
-			break;
-		case ARG_OUTPUT:
-			if (GST_V4L2_IS_OPEN(v4l2element))
-				gst_v4l2_get_output(v4l2element, &temp_i);
-			g_value_set_int(value, temp_i);
-			break;
-		case ARG_OUTPUT_NAMES:
-			g_value_set_pointer(value, v4l2element->output_names);
-			break;
-		case ARG_NORM:
-			if (GST_V4L2_IS_OPEN(v4l2element))
-				gst_v4l2_get_norm(v4l2element, &temp_i);
-			g_value_set_int(value, temp_i);
-			break;
-		case ARG_NORM_NAMES:
-			g_value_set_pointer(value, v4l2element->norm_names);
-			break;
-		case ARG_HAS_TUNER:
-			if (GST_V4L2_IS_OPEN(v4l2element))
-				g_value_set_boolean(value,
-					gst_v4l2_has_tuner(v4l2element, &temp_i));
-			break;
-		case ARG_FREQUENCY:
-			if (GST_V4L2_IS_OPEN(v4l2element))
-				gst_v4l2_get_frequency(v4l2element, &temp_ul);
-			g_value_set_ulong(value, temp_ul);
-			break;
-		case ARG_SIGNAL_STRENGTH:
-			if (GST_V4L2_IS_OPEN(v4l2element))
-				gst_v4l2_signal_strength(v4l2element, &temp_ul);
-			g_value_set_ulong(value, temp_ul);
-			break;
-		case ARG_HAS_AUDIO:
-			if (GST_V4L2_IS_OPEN(v4l2element))
-				temp_i = gst_v4l2_has_audio(v4l2element);
-			g_value_set_boolean(value, temp_i>0?TRUE:FALSE);
-			break;
-		case ARG_ATTRIBUTES:
-			g_value_set_pointer(value, v4l2element->control_specs);
-			break;
 		case ARG_DEVICE:
 			g_value_set_string(value, v4l2element->device);
 			break;
-		case ARG_DEVICE_NAME:
+		case ARG_DEVICE_NAME: {
+			gchar *new = NULL;
 			if (GST_V4L2_IS_OPEN(v4l2element))
-				g_value_set_string(value, v4l2element->vcap.card);
+				new = v4l2element->vcap.card;
+			g_value_set_string(value, new);
 			break;
-		case ARG_DEVICE_HAS_CAPTURE:
-			if (GST_V4L2_IS_OPEN(v4l2element) &&
-			    v4l2element->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE &&
-			    v4l2element->vcap.capabilities & V4L2_CAP_STREAMING)
-				temp_i = 1;
-			g_value_set_boolean(value, temp_i>0?TRUE:FALSE);
+		}
+		case ARG_FLAGS: {
+			guint flags = 0;
+			if (GST_V4L2_IS_OPEN(v4l2element)) {
+				flags |= v4l2element->vcap.capabilities &
+					30007;
+			}
+			g_value_set_flags(value, flags);
 			break;
-		case ARG_DEVICE_HAS_OVERLAY:
-			if (GST_V4L2_IS_OPEN(v4l2element) &&
-			    v4l2element->vcap.capabilities & V4L2_CAP_VIDEO_OVERLAY)
-				temp_i = 1;
-			g_value_set_boolean(value, temp_i>0?TRUE:FALSE);
-			break;
-		case ARG_DEVICE_HAS_PLAYBACK:
-			if (GST_V4L2_IS_OPEN(v4l2element) &&
-			    v4l2element->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT &&
-			    v4l2element->vcap.capabilities & V4L2_CAP_STREAMING)
-				temp_i = 1;
-			g_value_set_boolean(value, temp_i>0?TRUE:FALSE);
-			break;
+		}
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
@@ -433,29 +351,21 @@ gst_v4l2element_change_state (GstElement *element)
 	 */
 	switch (GST_STATE_TRANSITION(element)) {
 		case GST_STATE_NULL_TO_READY:
+			gst_v4l2_set_display(v4l2element);
+
 			if (!gst_v4l2_open(v4l2element))
 				return GST_STATE_FAILURE;
+
+			gst_v4l2_xoverlay_open(v4l2element);
 
 			/* emit a signal! whoopie! */
 			g_signal_emit(G_OBJECT(v4l2element),
 				gst_v4l2element_signals[SIGNAL_OPEN], 0,
 				v4l2element->device);
-
-			/* now, sync options */
-			if (v4l2element->norm >= 0)
-				if (!gst_v4l2_set_norm(v4l2element, v4l2element->norm))
-					return GST_STATE_FAILURE;
-			if (v4l2element->channel >= 0)
-				if (!gst_v4l2_set_input(v4l2element, v4l2element->channel))
-					return GST_STATE_FAILURE;
-			if (v4l2element->output >= 0)
-				if (!gst_v4l2_set_output(v4l2element, v4l2element->output))
-					return GST_STATE_FAILURE;
-			if (v4l2element->frequency > 0)
-				if (!gst_v4l2_set_frequency(v4l2element, v4l2element->frequency))
-					return GST_STATE_FAILURE;
 			break;
 		case GST_STATE_READY_TO_NULL:
+			gst_v4l2_xoverlay_close(v4l2element);
+
 			if (!gst_v4l2_close(v4l2element))
 				return GST_STATE_FAILURE;
 
@@ -477,6 +387,10 @@ gboolean
 gst_v4l2element_factory_init (GstPlugin *plugin)
 {
 	GstElementFactory *factory;
+
+	/* we can run without... But not yet. ;). */
+	if (!gst_library_load ("xwindowlistener"))
+		return FALSE;
 
 	/* create an elementfactory for the v4l2element */
 	factory = gst_element_factory_new("v4l2element", GST_TYPE_V4L2ELEMENT,

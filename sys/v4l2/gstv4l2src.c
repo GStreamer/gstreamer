@@ -24,6 +24,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include "v4l2src_calls.h"
+#include "gstv4l2tuner.h"
 
 /* elementfactory details */
 static GstElementDetails gst_v4l2src_details = {
@@ -247,9 +248,8 @@ gst_v4l2src_close (GstElement  *element,
 static gfloat
 gst_v4l2src_get_fps (GstV4l2Src *v4l2src)
 {
-	gint norm;
-	struct v4l2_standard *std;
-	gfloat fps;
+	v4l2_std_id norm;
+	const GList *item;
 
 	if (!v4l2src->use_fixed_fps &&
 	    v4l2src->clock != NULL &&
@@ -267,11 +267,14 @@ gst_v4l2src_get_fps (GstV4l2Src *v4l2src)
 
 	if (!gst_v4l2_get_norm(GST_V4L2ELEMENT(v4l2src), &norm))
 		return 0.;
+	for (item = GST_V4L2ELEMENT(v4l2src)->norms;
+	     item != NULL; item = item->next) {
+		GstV4l2TunerNorm *v4l2norm = item->data;
+		if (v4l2norm->index == norm)
+			return GST_TUNER_NORM(v4l2norm)->fps;
+	}
 
-	std = ((struct v4l2_standard *) g_list_nth_data(GST_V4L2ELEMENT(v4l2src)->norms, norm));
-	fps = (1. * std->frameperiod.denominator) / std->frameperiod.numerator;
-
-	return fps;
+	return 0.;
 }
 
 
