@@ -82,7 +82,7 @@ install: build
 	#   debian/gstreamer/usr/share/gstreamer/html/gstreamer-libs \
 	#   debian/gstreamer/usr/share/gst/html/gstreamer \
 	#   debian/gstreamer/usr/share/doc/gstreamer-doc
-	-cp -r docs/fwg/gst-plugin-writers-guide \
+	-cp -r docs/pwg/gst-plugin-writers-guide \
 	   docs/manual/gstreamer-manual \
 	   debian/gstreamer/usr/share/doc/gstreamer-doc
 

@@ -511,7 +511,7 @@ docs/libs/Makefile
 docs/plugins/Makefile
 docs/plugins/gstreamer-plugins.types
 docs/manual/Makefile
-docs/fwg/Makefile
+docs/pwg/Makefile
 docs/xsl/Makefile
 docs/devhelp/Makefile
 docs/devhelp/html2xml.py
