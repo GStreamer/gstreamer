@@ -304,7 +304,7 @@ parse_mdvdsub (GstSubparse * self, guint64 * out_start_time,
 
   /* FIXME: hardcoded for now, but detecting the correct value is
    * not going to be easy, I suspect... */
-  const double frames_per_sec = 24000 / 1001;
+  const double frames_per_sec = 24000 / 1001.;
   GString *markup;
   gchar *rv;
 
