@@ -320,25 +320,29 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
 
       realpad = GST_REAL_PAD_CAST (pad);
 
-      if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SINK && GST_PAD_IS_USABLE (realpad)) {
+      if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SINK && 
+	  GST_PAD_IS_USABLE (realpad)) {
 	GstBuffer *buf;
 
-	GST_DEBUG (GST_CAT_DATAFLOW, "pulling data from %s:%s", name, GST_PAD_NAME (pad));
+	GST_DEBUG (GST_CAT_DATAFLOW, "pulling data from %s:%s", name, 
+	           GST_PAD_NAME (pad));
 	buf = gst_pad_pull (pad);
 	if (buf) {
 	  if (GST_IS_EVENT (buf) && !GST_ELEMENT_IS_EVENT_AWARE (element)) {
 	    gst_pad_send_event (pad, GST_EVENT (buf));
 	  }
 	  else {
-	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of %s:%s %p", name,
-		       GST_PAD_NAME (pad), buf);
+	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of %s:%s %p", 
+		       name, GST_PAD_NAME (pad), buf);
 	    GST_RPAD_CHAINFUNC (realpad) (pad, buf);
-	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of element %s done", name);
+	    GST_DEBUG (GST_CAT_DATAFLOW, 
+		       "calling chain function of element %s done", name);
 	  }
 	}
       }
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+
   GST_FLAG_UNSET (element, GST_ELEMENT_COTHREAD_STOPPING);
 
   /* due to oddities in the cothreads code, when this function returns it will
