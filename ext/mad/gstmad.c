@@ -58,6 +58,9 @@ struct _GstMad {
   struct mad_header header;
   gboolean new_header;
   gint channels;
+  guint framecount;
+  gint vbr_average; /* average bitrate */
+  gulong vbr_rate; /* average * framecount */
 };
 
 struct _GstMadClass {
@@ -89,6 +92,7 @@ enum {
   ARG_BITRATE,
   ARG_SAMPLERATE,
   ARG_CHANNELS,
+  ARG_AVERAGE_BITRATE,
   /* FILL ME */
 };
 
@@ -138,7 +142,7 @@ static GstElementStateReturn
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_mad_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_mad_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_mad_get_type (void)
@@ -197,6 +201,9 @@ gst_mad_class_init (GstMadClass *klass)
   g_object_class_install_property (gobject_class, ARG_BITRATE,
     g_param_spec_int ("bitrate", "Bitrate", "current bitrate of the stream",
                        0, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_AVERAGE_BITRATE,
+    g_param_spec_int ("average-bitrate", "average bitrate", "average bitrate of the stream",
+                       0, G_MAXINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, ARG_SAMPLERATE,
     g_param_spec_int ("samplerate", "Samplerate", "current samplerate of the stream",
                        0, G_MAXINT, 0, G_PARAM_READABLE));
@@ -227,6 +234,9 @@ gst_mad_init (GstMad *mad)
   mad->total_samples = 0;
   mad->sync_point = 0;
   mad->new_header = TRUE;
+  mad->framecount = 0;
+  mad->vbr_average = 0;
+  mad->vbr_rate = 0;
 }
 
 static void
@@ -295,6 +305,9 @@ gst_mad_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
     case ARG_BITRATE:
       g_value_set_int (value, mad->header.bitrate);
       break;
+    case ARG_AVERAGE_BITRATE:
+      g_value_set_int (value, mad->vbr_average);
+      break;
     case ARG_SAMPLERATE:
       g_value_set_int (value, mad->header.samplerate);
       break;
@@ -309,6 +322,7 @@ gst_mad_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
 static void
 gst_mad_update_info (GstMad *mad, struct mad_header const *header)
 {
+  gint abr = mad->vbr_average;
 #define CHECK_HEADER(h1,str) 				\
 G_STMT_START{							\
   if (mad->header.h1 != header->h1 || mad->new_header) {	\
@@ -316,8 +330,25 @@ G_STMT_START{							\
     g_object_notify (G_OBJECT (mad), str);			\
   };								\
 } G_STMT_END
-
+  
   g_object_freeze_notify (G_OBJECT (mad));
+
+  /* update average bitrate */
+  if (mad->new_header)
+  {
+    mad->framecount = 1;
+    mad->vbr_rate = header->bitrate;
+    abr = 0;
+  } else {
+    mad->framecount++;
+    mad->vbr_rate += header->bitrate;
+  }
+  mad->vbr_average = (gint) (mad->vbr_rate / mad->framecount);
+  if (abr != mad->vbr_average)
+  {
+    g_object_notify (G_OBJECT (mad), "average_bitrate");
+  }
+
   CHECK_HEADER (layer, 	    "layer");
   CHECK_HEADER (mode, 	    "mode");
   CHECK_HEADER (emphasis,   "emphasis");
@@ -328,6 +359,7 @@ G_STMT_START{							\
     g_object_notify (G_OBJECT (mad), "channels");
   }
   mad->new_header = FALSE;
+  
   g_object_thaw_notify (G_OBJECT (mad));
   
 #undef CHECK_HEADER
@@ -396,13 +428,13 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       left_ch   = mad->synth.pcm.samples[0];
       right_ch  = mad->synth.pcm.samples[1];
 
+      mad->total_samples += nsamples;
+
       gst_mad_update_info (mad, &mad->frame.header);
 
       outbuffer = gst_buffer_new ();
       outdata = (gint16 *) GST_BUFFER_DATA (outbuffer) = g_malloc (nsamples * nchannels * 2);
       GST_BUFFER_SIZE (outbuffer) = nsamples * nchannels * 2;
-
-      mad->total_samples += nsamples;
 
       if (GST_BUFFER_TIMESTAMP (buffer) != -1) {
         if (GST_BUFFER_TIMESTAMP (buffer) > mad->sync_point) {
