@@ -1,5 +1,11 @@
 2004-01-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(qtdemux_parse_trak):
+	  fix audio chunk size/timestamp calculation
+
+2004-01-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
 	  fix SVQ3 caps
 
