@@ -142,11 +142,8 @@ test -f $srcfile || {
 	exit 1
 }
 
-echo "+ creating acinclude.m4"
-cat m4/*.m4 > acinclude.m4
-
 echo "+ running aclocal ..."
-aclocal $ACLOCAL_FLAGS || {
+aclocal -I m4 $ACLOCAL_FLAGS || {
 	echo
 	echo "aclocal failed - check that all needed development files are present on system"
 	exit 1
