@@ -58,7 +58,7 @@ static void 			gst_queue_init		(GstQueue *queue);
 static void 			gst_queue_set_arg	(GtkObject *object, GtkArg *arg, guint id);
 static void 			gst_queue_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
-static void 			gst_queue_push		(GstConnection *connection);
+static void 			gst_queue_pull		(GstPad *pad);
 static void 			gst_queue_chain		(GstPad *pad, GstBuffer *buf);
 
 static void 			gst_queue_flush		(GstQueue *queue);
@@ -107,8 +107,6 @@ gst_queue_class_init (GstQueueClass *klass)
   gtk_object_add_arg_type ("GstQueue::max_level", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_MAX_LEVEL);
 
-  gstconnection_class->push = gst_queue_push;
-
   gtkobject_class->set_arg = gst_queue_set_arg;  
   gtkobject_class->get_arg = gst_queue_get_arg;
 
@@ -123,6 +121,7 @@ gst_queue_init (GstQueue *queue)
   gst_pad_set_chain_function (queue->sinkpad, gst_queue_chain);
 
   queue->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_pull_function (queue->srcpad, gst_queue_pull);
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
 
   queue->queue = NULL;
@@ -219,14 +218,14 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
 }
 
 static void 
-gst_queue_push (GstConnection *connection) 
+gst_queue_pull (GstPad *pad) 
 {
-  GstQueue *queue = GST_QUEUE (connection);
+  GstQueue *queue = GST_QUEUE (gst_pad_get_parent(pad));
   GstBuffer *buf = NULL;
   GSList *front;
   gboolean tosignal = FALSE;
   const guchar *name;
-  
+
   name = gst_element_get_name (GST_ELEMENT (queue));
 
   /* have to lock for thread-safety */

@@ -92,13 +92,28 @@ G_GNUC_UNUSED static GModule *_debug_self_module = NULL;
   }
 
 #ifdef GST_DEBUG_ENABLED
-#define DEBUG(format,args...) fprintf(stderr,GST_DEBUG_PREFIX(": "format , ## args ))
-#define DEBUG_ENTER(format, args...) fprintf(stderr,GST_DEBUG_PREFIX(format": entering\n" , ## args ))
-#define DEBUG_LEAVE(format, args...) fprintf(stderr,GST_DEBUG_PREFIX(format": leaving\n" , ## args ))
+#define DEBUG(format,args...) \
+  (_debug_string != NULL) ? \
+    fprintf(stderr,GST_DEBUG_PREFIX("%s: "format , _debug_string , ## args )) : \
+    fprintf(stderr,GST_DEBUG_PREFIX(": "format , ## args ))
+#define DEBUG_ENTER(format, args...) \
+  fprintf(stderr,GST_DEBUG_PREFIX(format": entering\n" , ## args ))
+#define DEBUG_SET_STRING(format, args...) \
+  gchar *_debug_string = g_strdup_printf(format , ## args )
+#define DEBUG_ENTER_STRING DEBUG_ENTER("%s",_debug_string)
+#define DEBUG_LEAVE(format, args...) \
+  if (_debug_string != NULL) g_free(_debug_string),\
+fprintf(stderr,GST_DEBUG_PREFIX(format": leaving\n" , ## args ))
 #else
 #define DEBUG(format, args...)
 #define DEBUG_ENTER(format, args...)
 #define DEBUG_LEAVE(format, args...)
 #endif
+
+
+
+/********** some convenience macros for debugging **********/
+#define GST_DEBUG_PAD_NAME(pad) \
+  ((pad)->parent != NULL) ? gst_element_get_name(GST_ELEMENT((pad)->parent)) : "''", gst_pad_get_name(pad)
 
 #endif /* __GST_H__ */

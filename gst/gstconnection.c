@@ -91,24 +91,3 @@ gst_connection_new (gchar *name)
   
   return connection;
 }
-
-/**
- * gst_connection_push:
- * @connection: the connection to push
- *
- * Push a buffer along a connection
- */
-void 
-gst_connection_push (GstConnection *connection) 
-{
-  GstConnectionClass *oclass;
-
-  g_return_if_fail (connection != NULL);
-  g_return_if_fail (GST_IS_CONNECTION (connection));
-
-  oclass = (GstConnectionClass *)(GTK_OBJECT (connection)->klass);
-
-  g_return_if_fail (oclass->push != NULL);
-
-  (oclass->push)(connection);
-}

@@ -50,15 +50,10 @@ struct _GstConnection {
 
 struct _GstConnectionClass {
   GstElementClass parent_class;
-
-  /* push function */
-  void (*push) (GstConnection *connection);
 };
 
 GtkType 	gst_connection_get_type		(void);
 GstElement*	gst_connection_new		(gchar *name);
-
-void 		gst_connection_push		(GstConnection *connection);
 
 #ifdef __cplusplus
 }

@@ -240,9 +240,11 @@ gst_pad_set_pull_function (GstPad *pad,
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
-  g_print("gstpad: pad setting pull function\n");
+  // the if and such should optimize out when DEBUG is off
+  DEBUG("setting pull function for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
 
   pad->pullfunc = pull;
+  DEBUG("pullfunc for %s:%s(%p) at %p is set to %p\n",GST_DEBUG_PAD_NAME(pad),pad,&pad->pullfunc,pull);
 }
 
 /**

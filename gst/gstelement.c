@@ -111,6 +111,7 @@ gst_element_init (GstElement *element)
   element->numpads = 0;
   element->pads = NULL;
   element->loopfunc = NULL;
+  element->threadstate = NULL;
 }
 
 /**
