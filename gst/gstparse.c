@@ -250,10 +250,8 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
           gst_dpman_set_mode(dpman, "synchronous");
           dparam = gst_dparam_new(dparam_type);
           gst_dpman_attach_dparam (dpman, argname, dparam);
-          GST_DPARAM_LOCK(dparam);
           gst_dparam_set_value_from_string(GST_DPARAM_GET_POINT(dparam, 0LL)[0], argval);
           GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
-          GST_DPARAM_UNLOCK(dparam);
         }
 
       } else {
