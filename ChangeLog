@@ -1,5 +1,11 @@
 2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (group_destroy):
+	  Remove hack to get rid of assert and get rid of unlinked
+	  signals properly.
+
+2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstplaybasebin.c: (setup_source):
 	  Set source to NULL so that resources are free'ed. Fixes issues
 	  with playback of CDDA and similar device-accessing things.
