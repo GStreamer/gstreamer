@@ -175,6 +175,11 @@ automake -a -c || {
 
 CONFIGURE_OPT='--enable-maintainer-mode'
 
+# work around some wierd sort of autotools buglet
+for i in config.sub config.guess missing ltmain.sh; do
+  ln -s ../../$i $i
+done
+
 test -n "$NOCONFIGURE" && {
     echo "skipping configure stage for package $package, as requested."
     echo "autogen.sh done."

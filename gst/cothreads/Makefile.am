@@ -9,6 +9,7 @@ noinst_LTLIBRARIES = libpth-mctx.la
 libpth_mctx_la_SOURCES = pth_mctx.c pth_p.h pth_vers.c pth.h pth_acdef.h pth_acmac.h
 
 noinst_PROGRAMS = test-pth test-pth-pthreads test-pthreads test-pth-pthreads2
+noinst_HEADERS = linuxthreads-internals.h
 
 test_pth_LDADD = libpth-mctx.la
 test_pth_pthreads_LDADD = libpth-mctx.la -lpthread
@@ -16,6 +17,8 @@ test_pthreads_LDADD = -lpthread
 test_pth_pthreads2_LDADD = -lpthread libpth-mctx.la
 
 BUILT_SOURCES = pth_p.h
+
+EXTRA_DIST = ltmain.sh mkinstalldirs config.guess config.sub install-sh missing
 
 HSRCS = $(srcdir)/pth_debug.c $(srcdir)/pth_errno.c $(srcdir)/pth_mctx.c
 
