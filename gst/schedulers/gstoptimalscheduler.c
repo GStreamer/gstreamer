@@ -272,8 +272,8 @@ static void
 gst_opt_scheduler_init (GstOptScheduler *scheduler)
 {
   scheduler->elements = NULL;
-  //scheduler->use_cothreads = FALSE;
-  scheduler->use_cothreads = TRUE;
+  scheduler->use_cothreads = FALSE;
+  //scheduler->use_cothreads = TRUE;
   scheduler->iterations = 1;
 }
 
@@ -1046,7 +1046,7 @@ gst_opt_scheduler_remove_element (GstScheduler *sched, GstElement *element)
 
   GST_INFO (GST_CAT_SCHEDULING, "removing element \"%s\" from scheduler", GST_ELEMENT_NAME (element));
 
-  /* decoupled elements are not added to the scheduler lists and should therefor
+  /* decoupled elements are not added to the scheduler lists and should therefore
    * no be removed */
   if (GST_ELEMENT_IS_DECOUPLED (element))
     return;
@@ -1125,7 +1125,7 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
   element1 = GST_PAD_PARENT (srcpad);
   element2 = GST_PAD_PARENT (sinkpad);
 
-  /* first we need to figure out whar type of connection we're dealing
+  /* first we need to figure out what type of connection we're dealing
    * with */
   if (element1->loopfunc && element2->loopfunc)
     type = GST_OPT_LOOP_TO_LOOP;
@@ -1252,7 +1252,7 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
       break;
     }
     case GST_OPT_INVALID:
-      g_warning ("(internal error) invalid element connection");
+      g_warning ("(internal error) invalid element connection, what are you doing?");
       break;
   }
 }
