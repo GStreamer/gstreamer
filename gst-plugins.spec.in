@@ -100,8 +100,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.la
 rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
-rm -f $RPM_BUILD_ROOT%{_includedir}/gstreamer-%{majorminor}/gst/media-info/media-info.h
-rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 
 %clean
@@ -151,6 +149,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstefence.so
 %{_libdir}/gstreamer-%{majorminor}/libgsteffectv.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
+%{_libdir}/gstreamer-%{majorminor}/libgstffmpegcolorspace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfilter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstflxdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgamma.so
@@ -285,16 +284,19 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/xwindowlistener/xwindowlistener.h
 # library headers
 @USE_GCONF_TRUE@%{_includedir}/gstreamer-%{majorminor}/gst/gconf/gconf.h
+%{_includedir}/gstreamer-%{majorminor}/gst/media-info/media-info.h
 %{_includedir}/gstreamer-%{majorminor}/gst/play/play.h
 %{_includedir}/gstreamer-%{majorminor}/gst/play/play-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/tag.h
 # pkg-config files
-%{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-interfaces-%{majorminor}.pc
 @USE_GCONF_TRUE@%{_libdir}/pkgconfig/gstreamer-gconf-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-interfaces-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-media-info-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
 # .so files
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so
+%{_libdir}/libgstmedia-info-%{majorminor}.so
 %{_libdir}/libgstplay-%{majorminor}.so
 
 # Here are packages not in the base plugins package but not dependant
@@ -805,6 +807,10 @@ GStreamer support libraries header files.
 
 
 %changelog
+* Mon Mar 15 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- put back media-info
+- add ffmpegcolorspace plugin
+
 * Tue Mar 02 2004 Thomas Vander Stichele <thomas at apestaart dot org>
 - Libraries/Multimedia doesn't exist, remove it
 
