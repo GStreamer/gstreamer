@@ -1,3 +1,8 @@
+2004-04-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* configure.ac:
+	  save libs correctly when checking mad
+
 2004-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/mad/gstid3tag.c: (plugin_init):
