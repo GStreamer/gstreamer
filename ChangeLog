@@ -1,3 +1,13 @@
+2004-12-16  Edward Hervey  <bilboed@bilboed.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_class_init),
+	(gst_dvd_demux_reset), (gst_dvd_demux_change_state):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_reset),
+	(gst_mpeg_demux_change_state):
+	  Reset on ready. Fixes 160276.
+
 2004-12-16  Sebastien Cote  <sc5@hermes.usherb.ca>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
