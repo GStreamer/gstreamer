@@ -8,6 +8,10 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 
+  if (argc != 2) {
+    g_print ("usage: %s <filename>\n", argv[0]);
+    return -1;
+  }
   pipeline = gst_pipeline_new ("my_pipeline");
 
   gst_parse_launch ("disksrc[my_disksrc] ! mp3parse ! mpg123 ! osssink", GST_BIN (pipeline));
@@ -21,4 +25,5 @@ main (int argc, char *argv[])
   
   gst_element_set_state (pipeline, GST_STATE_NULL);
   
+  return 0;
 }
