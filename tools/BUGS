@@ -1,1 +1,1 @@
-gstreamer-launch should not crash with bad options
+gst-launch should not crash with bad options
