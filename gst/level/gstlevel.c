@@ -36,6 +36,49 @@ static GstElementDetails level_details = {
   "(C) 2001, 2003, 2003",
 };
 
+/* pad templates */
+
+GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
+  "level_sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "level_sink",
+    "audio/x-raw-int",
+      "signed", GST_PROPS_BOOLEAN (TRUE),
+      "width", GST_PROPS_LIST (
+                 GST_PROPS_INT (8),
+                 GST_PROPS_INT (16)
+               ),
+      "depth", GST_PROPS_LIST (
+                 GST_PROPS_INT (8),
+                 GST_PROPS_INT (16)
+               ),
+      "rate", GST_PROPS_INT_RANGE (1, G_MAXINT),
+      "channels", GST_PROPS_INT_RANGE (1, 2)
+  )
+)
+
+GST_PAD_TEMPLATE_FACTORY (src_template_factory,
+  "level_src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "level_src",
+    "audio/x-raw-int",
+    "signed", GST_PROPS_BOOLEAN (TRUE),
+    "width", GST_PROPS_LIST (
+               GST_PROPS_INT (8),
+               GST_PROPS_INT (16)
+             ),
+    "depth", GST_PROPS_LIST (
+               GST_PROPS_INT (8),
+               GST_PROPS_INT (16)
+             ),
+    "rate", GST_PROPS_INT_RANGE (1, G_MAXINT),
+    "channels", GST_PROPS_INT_RANGE (1, 2)
+  )
+)
 
 /* Filter signals and args */
 enum {
@@ -51,50 +94,6 @@ enum {
   ARG_PEAK_TTL,
   ARG_PEAK_FALLOFF
 };
-
-static GstPadTemplate*
-level_src_factory (void)
-{
-  static GstPadTemplate *template = NULL;
-
-  if (!template) {
-    template = gst_pad_template_new (
-      "src",
-      GST_PAD_SRC,
-      GST_PAD_ALWAYS,
-      gst_caps_new (
-        "test_src",
-        "audio/raw",
-	gst_props_new (
-          "channels", GST_PROPS_INT_RANGE (1, 2),
-          "signed", GST_PROPS_BOOLEAN (TRUE),
-	  NULL)),
-      NULL);
-  }
-  return template;
-}
-
-static GstPadTemplate*
-level_sink_factory (void)
-{
-  static GstPadTemplate *template = NULL;
-
-  if (!template) {
-    template = gst_pad_template_new (
-      "sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      gst_caps_new (
-        "test_src",
-        "audio/raw",
-	gst_props_new (
-          "channels", GST_PROPS_INT_RANGE (1, 2),
-          "signed", GST_PROPS_BOOLEAN (TRUE),
-	  NULL)),
-      NULL);
-  }
-  return template;
-}
 
 static void		gst_level_class_init		(GstLevelClass *klass);
 static void		gst_level_init			(GstLevel *filter);
@@ -406,9 +405,9 @@ gst_level_class_init (GstLevelClass *klass)
 static void
 gst_level_init (GstLevel *filter)
 {
-  filter->sinkpad = gst_pad_new_from_template (level_sink_factory (), "sink");
+  filter->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
   gst_pad_set_link_function (filter->sinkpad, gst_level_connect);
-  filter->srcpad = gst_pad_new_from_template (level_src_factory (), "src");
+  filter->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_template_factory), "src");
   gst_pad_set_link_function (filter->srcpad, gst_level_connect);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
@@ -439,8 +438,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
                                      &level_details);
   g_return_val_if_fail (factory != NULL, FALSE);
   
-  gst_element_factory_add_pad_template (factory, level_src_factory ());
-  gst_element_factory_add_pad_template (factory, level_sink_factory ());
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
