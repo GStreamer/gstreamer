@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define DEBUG_ENABLED
+#define GST_DEBUG_ENABLED
 #include "gst_private.h"
 
 #include "gstprops.h"
@@ -29,6 +29,14 @@
 
 static gboolean 	gst_props_entry_check_compatibility 	(GstPropsEntry *entry1, GstPropsEntry *entry2);
 	
+static guint _arg_len[] = {
+  0,  // GST_PROPS_END_ID_NUM = 0,
+  0,  // GST_PROPS_LIST_ID_NUM,
+  1,  // GST_PROPS_INT_ID_NUM,
+  2,  // GST_PROPS_INT_RANGE_ID_NUM,
+  1,  // GST_PROPS_FOURCC_ID_NUM,
+  1,  // GST_PROPS_BOOL_ID_NUM,
+};
 
 void 
 _gst_props_initialize (void) 
@@ -177,32 +185,66 @@ gst_props_new (GstPropsFactoryEntry entry, ...)
   va_list var_args;
   GstPropsFactoryEntry value;
   gint i = 0;
-  gint size;
+  gint size, skip;
   GstPropsFactoryEntry *factory;
+  gboolean inlist = FALSE;
+  GstProps *props;
 
+#define add_value(value) {\
+    DEBUG ("%d %p\n", i, value);\
+    factory[i++] = value;  \
+    if (i >= size) {       \
+      size += 16;          \
+      factory = (GstPropsFactoryEntry *) g_realloc (factory, size*sizeof(GstPropsFactoryEntry));\
+    }\
+}
 
   size = 16;
   factory = (GstPropsFactoryEntry *) g_malloc (size*sizeof(GstPropsFactoryEntry));
 
   va_start (var_args, entry);
-
+  // property name
   value = (GstPropsFactoryEntry) entry;
-
+  
+  // properties
   while (value) {
-    DEBUG ("%p\n", value);
+    if (!inlist) {
+      // add name
+      add_value (value);
 
-    factory[i++] = value;
-
-    if (i >= size) {
-      size += 16;
-      factory = (GstPropsFactoryEntry *) g_realloc (factory, size*sizeof(GstPropsFactoryEntry));
+      // get value
+      value = va_arg (var_args, GstPropsFactoryEntry);
     }
+    switch (GPOINTER_TO_INT (value)) {
+      case GST_PROPS_END_ID: 
+	g_assert (inlist == TRUE);
 
-    value = va_arg (var_args, GstPropsFactoryEntry);
+	inlist = FALSE;
+	skip = 0;
+	break;
+      case GST_PROPS_LIST_ID: 
+      {
+	g_assert (inlist == FALSE);
+
+	skip = 0;
+	inlist = TRUE;
+	break;
+      }
+      default:
+	skip = _arg_len[GPOINTER_TO_INT (value)];
+        break;
+    }
+    do {
+      add_value (value);
+      value = va_arg (var_args, GstPropsFactoryEntry);
+    }
+    while (skip--);
   }
   factory[i++] = NULL;
 
-  return gst_props_register (factory);
+  props = gst_props_register (factory);
+
+  return props;
 }
 
 /**

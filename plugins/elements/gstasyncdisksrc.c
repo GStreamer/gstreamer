@@ -121,7 +121,6 @@ gst_asyncdisksrc_init (GstAsyncDiskSrc *asyncdisksrc)
 {
 //  GST_FLAG_SET (asyncdisksrc, GST_SRC_ASYNC);
 
-  g_print("init\n");
   asyncdisksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_get_function (asyncdisksrc->srcpad,gst_asyncdisksrc_get);
   gst_pad_set_getregion_function (asyncdisksrc->srcpad,gst_asyncdisksrc_get_region);
@@ -245,6 +244,8 @@ gst_asyncdisksrc_get (GstPad *pad)
 
   src->curoffset += GST_BUFFER_SIZE (buf);
 
+  g_print ("offset %d\n", src->curoffset);
+
   if (src->new_seek) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
     src->new_seek = FALSE;
@@ -291,6 +292,8 @@ gst_asyncdisksrc_get_region (GstPad *pad, gulong offset, gulong size)
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
+  g_print ("offset %d\n", offset);
+
   if ((offset + size) > src->size) {
     GST_BUFFER_SIZE (buf) = src->size - offset;
     // FIXME: set the buffer's EOF bit here
@@ -327,6 +330,7 @@ gboolean gst_asyncdisksrc_open_file (GstAsyncDiskSrc *src)
       return FALSE;
     }
     GST_FLAG_SET (src, GST_ASYNCDISKSRC_OPEN);
+    src->new_seek = FALSE;
   }
   return TRUE;
 }
@@ -348,13 +352,14 @@ gst_asyncdisksrc_close_file (GstAsyncDiskSrc *src)
   src->map = NULL;
   src->curoffset = 0;
   src->seq = 0;
+  src->new_seek = FALSE;
 
   GST_FLAG_UNSET (src, GST_ASYNCDISKSRC_OPEN);
 }
 
 
-static 
-GstElementStateReturn gst_asyncdisksrc_change_state (GstElement *element) 
+static GstElementStateReturn 
+gst_asyncdisksrc_change_state (GstElement *element) 
 {
   g_return_val_if_fail (GST_IS_ASYNCDISKSRC (element), GST_STATE_FAILURE);
 

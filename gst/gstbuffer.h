@@ -73,6 +73,7 @@ typedef enum {
   GST_BUFFER_DONTFREE,
   GST_BUFFER_FLUSH,
   GST_BUFFER_EOS,
+  GST_BUFFER_DISCONTINUOUS,
 } GstBufferFlags;
 
 

@@ -260,7 +260,6 @@ gst_plugin_load_absolute (gchar *name)
   if (module != NULL) {
     if (g_module_symbol(module,"plugin_init",(gpointer *)&initfunc)) {
       if ((plugin = (initfunc)(module))) {
-//        DEBUG("gstplugin: plugin %s loaded\n", plugin->name);
         INFO(0,"plugin %s loaded", plugin->name);
         plugin->filename = g_strdup(name);
         plugin->loaded = TRUE;
@@ -403,17 +402,21 @@ gst_plugin_load_elementfactory (gchar *name)
   while (plugins) {
     plugin = (GstPlugin *)plugins->data;
     factories = plugin->elements;
+    
     while (factories) {
       factory = (GstElementFactory*)(factories->data);
+      
       if (!strcmp(factory->name,name)) {
 	if (!plugin->loaded) {
           gchar *filename = g_strdup (plugin->filename);
-//	  DEBUG("gstplugin: loading element factory %s from plugin %s\n", name, plugin->name);
+	  gchar *pluginname = g_strdup (plugin->name);
+	  
           INFO("loaded elementfactory %s from plugin %s",name,plugin->name);
 	  gst_plugin_remove(plugin);
 	  if (!gst_plugin_load_absolute(filename)) {
-	    DEBUG("gstplugin: error loading element factory %s from plugin %s\n", name, plugin->name);
+	    DEBUG("gstplugin: error loading element factory %s from plugin %s\n", name, pluginname);
 	  }
+	  g_free (pluginname);
 	  g_free (filename);
 	}
 	factory = gst_plugin_find_elementfactory(name);
@@ -446,18 +449,22 @@ gst_plugin_load_typefactory (gchar *mime)
   while (plugins) {
     plugin = (GstPlugin *)plugins->data;
     factories = plugin->types;
+    
     while (factories) {
       factory = (GstTypeFactory*)(factories->data);
+      
       if (!strcmp(factory->mime,mime)) {
 	if (!plugin->loaded) {
           gchar *filename = g_strdup (plugin->filename);
-//	  DEBUG("gstplugin: loading type factory for \"%s\" from plugin %s\n", mime, plugin->name);
+	  gchar *pluginname = g_strdup (plugin->name);
+	  
           INFO(GST_INFO_PLUGIN_LOAD,"loading type factory for \"%s\" from plugin %s",mime,plugin->name);
 	  gst_plugin_remove(plugin);
 	  if (!gst_plugin_load_absolute(filename)) {
-	    DEBUG("gstplugin: error loading type factory \"%s\" from plugin %s\n", mime, plugin->name);
+	    DEBUG("gstplugin: error loading type factory \"%s\" from plugin %s\n", mime, pluginname);
 	  }
 	  g_free (filename);
+	  g_free (pluginname);
 	}
 	return;
       }

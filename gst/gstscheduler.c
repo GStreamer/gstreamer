@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+#define GST_DEBUG_ENABLED
 #include "gst_private.h"
 
 #include "gstscheduler.h"
@@ -398,7 +398,7 @@ void gst_bin_schedule_func(GstBin *bin) {
 
           g_assert(pad->peer != NULL);
           g_assert(pad->peer->parent != NULL);
-          g_assert(GST_ELEMENT(pad->peer->parent)->manager != NULL);
+          //g_assert(GST_ELEMENT(pad->peer->parent)->manager != NULL);
 
 	  DEBUG("peer pad %p\n", pad->peer);
           // only bother with if the pad's peer's parent is this bin or it's DECOUPLED

@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+#define GST_DEBUG_ENABLED
 #include "gst_private.h"
 
 #include "gstpipeline.h"
@@ -360,7 +360,9 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
     pad = (GstPad *)gst_element_get_pad_list (element)->data;
 
     base_factories[i] = factories[i] = gst_autoplug_caps (src_caps, pad->caps);
-    i++;
+    // if we have a succesfull connection, proceed
+    if (factories[i] != NULL)
+      i++;
 
     elements = g_list_next(elements);
   }
