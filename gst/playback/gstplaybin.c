@@ -229,13 +229,31 @@ gst_play_bin_dispose (GObject * object)
 
   play_bin = GST_PLAY_BIN (object);
 
-  remove_sinks (play_bin);
-  g_hash_table_destroy (play_bin->cache);
+  if (play_bin->cache != NULL) {
+    remove_sinks (play_bin);
+    g_hash_table_destroy (play_bin->cache);
+    play_bin->cache = NULL;
+  }
+
+  if (play_bin->audio_sink != NULL) {
+    gst_object_unref (GST_OBJECT (play_bin->audio_sink));
+    play_bin->audio_sink = NULL;
+  }
+  if (play_bin->video_sink != NULL) {
+    gst_object_unref (GST_OBJECT (play_bin->video_sink));
+    play_bin->video_sink = NULL;
+  }
+  if (play_bin->visualisation != NULL) {
+    gst_object_unref (GST_OBJECT (play_bin->visualisation));
+    play_bin->visualisation = NULL;
+  }
+
 
   if (G_OBJECT_CLASS (parent_class)->dispose) {
     G_OBJECT_CLASS (parent_class)->dispose (object);
   }
 }
+
 
 static void
 gst_play_bin_set_property (GObject * object, guint prop_id,
@@ -249,18 +267,39 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_VIDEO_SINK:
+      if (play_bin->video_sink != NULL) {
+        gst_object_unref (GST_OBJECT (play_bin->video_sink));
+      }
       play_bin->video_sink = g_value_get_object (value);
+      if (play_bin->video_sink != NULL) {
+        gst_object_ref (GST_OBJECT (play_bin->video_sink));
+        gst_object_sink (GST_OBJECT (play_bin->video_sink));
+      }
       /* when changing the videosink, we just remove the
        * video pipeline from the cache so that it will be 
        * regenerated with the new sink element */
       g_hash_table_remove (play_bin->cache, "vbin");
       break;
     case ARG_AUDIO_SINK:
+      if (play_bin->audio_sink != NULL) {
+        gst_object_unref (GST_OBJECT (play_bin->audio_sink));
+      }
       play_bin->audio_sink = g_value_get_object (value);
+      if (play_bin->audio_sink != NULL) {
+        gst_object_ref (GST_OBJECT (play_bin->audio_sink));
+        gst_object_sink (GST_OBJECT (play_bin->audio_sink));
+      }
       g_hash_table_remove (play_bin->cache, "abin");
       break;
     case ARG_VIS_PLUGIN:
+      if (play_bin->visualisation != NULL) {
+        gst_object_unref (GST_OBJECT (play_bin->visualisation));
+      }
       play_bin->visualisation = g_value_get_object (value);
+      if (play_bin->visualisation != NULL) {
+        gst_object_ref (GST_OBJECT (play_bin->visualisation));
+        gst_object_sink (GST_OBJECT (play_bin->visualisation));
+      }
       break;
     case ARG_VOLUME:
       if (play_bin->volume_element) {
@@ -381,7 +420,6 @@ gen_video_element (GstPlayBin * play_bin)
   gst_element_set_state (element, GST_STATE_READY);
 
   /* ref before adding to the cache */
-  g_object_ref (G_OBJECT (element));
   g_hash_table_insert (play_bin->cache, "vbin", element);
 
 done:
@@ -453,7 +491,6 @@ gen_audio_element (GstPlayBin * play_bin)
   gst_element_set_state (element, GST_STATE_READY);
 
   /* ref before adding to the cache */
-  g_object_ref (G_OBJECT (element));
   g_hash_table_insert (play_bin->cache, "abin", element);
 
 done:
