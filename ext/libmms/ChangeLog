@@ -1,6 +1,0 @@
-2004-12-22  Maciej Katafiasz  <mathrick@freedesktop.org>
-
-	* AUTHORS, ChangeLog, Makefile.am, README, gstmms.c, gstmms.h:
-	First commit. To my knowledge should be in working state, playbin
-	is supported, apart from small warning when setting URI.
-
