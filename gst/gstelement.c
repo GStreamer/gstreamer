@@ -735,7 +735,7 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
       }
   }
   
-  if (templ == NULL)
+  if (!templ_found)
       return NULL;
   
   pad = gst_element_request_pad (element, templ, req_name);
@@ -1907,4 +1907,19 @@ gst_element_install_std_props (GstElementClass * klass, const char *first_name, 
   }
 
   va_end (args);
+}
+
+GstBin*
+gst_element_get_managing_bin (GstElement *element)
+{
+  GstBin *bin;
+
+  g_return_val_if_fail (element != NULL, NULL);
+
+  bin = GST_BIN (gst_object_get_parent (GST_OBJECT_CAST (element)));
+
+  while (bin && !GST_FLAG_IS_SET (GST_OBJECT_CAST (bin), GST_BIN_FLAG_MANAGER))
+    bin = GST_BIN (gst_object_get_parent (GST_OBJECT_CAST (bin)));
+  
+  return bin;
 }
