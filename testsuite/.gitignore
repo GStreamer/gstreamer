@@ -1,0 +1,10 @@
+Makefile
+Makefile.in
+*.o
+*.lo
+*.la
+.deps
+.libs
+
+test-registry.xml 
+elementstest-registry.xml
