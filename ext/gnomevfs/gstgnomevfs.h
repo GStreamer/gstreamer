@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,27 +17,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
 
-#include <riff.h>
+#ifndef __GST_GNOME_VFS_H__
+#define __GST_GNOME_VFS_H__
 
-static gboolean
-plugin_init (GstPlugin *plugin)
-{
-  return TRUE;
-}
+#include <glib-object.h>
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gstriff",
-  "RIFF convenience routines",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_COPYRIGHT,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+G_BEGIN_DECLS
+  
+
+GType gst_gnomevfssink_get_type (void);
+GType gst_gnomevfssrc_get_type (void);
+
+
+G_END_DECLS
+
+#endif /* __GST_GNOME_VFS_H__ */

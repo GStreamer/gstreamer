@@ -1,12 +1,10 @@
  
-plugin_LTLIBRARIES = libgstgnomevfssrc.la libgstgnomevfssink.la
+plugin_LTLIBRARIES = libgstgnomevfs.la
  
-libgstgnomevfssrc_la_SOURCES = gstgnomevfssrc.c
-libgstgnomevfssrc_la_CFLAGS = $(GST_CFLAGS) $(GNOME_VFS_CFLAGS)
-libgstgnomevfssrc_la_LIBADD = $(GNOME_VFS_LIBS)
-libgstgnomevfssrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstgnomevfs_la_SOURCES = gstgnomevfs.c gstgnomevfssrc.c gstgnomevfssink.c
+libgstgnomevfs_la_CFLAGS = $(GST_CFLAGS) $(GNOME_VFS_CFLAGS)
+libgstgnomevfs_la_LIBADD = $(GNOME_VFS_LIBS)
+libgstgnomevfs_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-libgstgnomevfssink_la_SOURCES = gstgnomevfssink.c
-libgstgnomevfssink_la_CFLAGS = $(GST_CFLAGS) $(GNOME_VFS_CFLAGS)
-libgstgnomevfssink_la_LIBADD = $(GNOME_VFS_LIBS)
-libgstgnomevfssink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+noinst_HEADERS = gstgnomevfs.h
+

@@ -1,5 +1,7 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
+ *
+ * gnomevfs.c: register gnomevfs elements
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,19 +23,27 @@
 #  include "config.h"
 #endif
 
-#include <riff.h>
+#include "gstgnomevfs.h"
+#include <gst/gst.h>
 
-static gboolean
-plugin_init (GstPlugin *plugin)
+static gboolean 
+plugin_init(GstPlugin *plugin)
 {
+  if (!gst_element_register (plugin, "gnomevfssrc", 
+	       GST_RANK_SECONDARY, gst_gnomevfssrc_get_type()) ||
+      !gst_element_register (plugin, "gnomevfssink", 
+	       GST_RANK_SECONDARY, gst_gnomevfssink_get_type())) {
+    return FALSE;
+  }
+
   return TRUE;
 }
 
 GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "gstriff",
-  "RIFF convenience routines",
+  "gnomevfs",
+  "elements to access the Gnome vfs",
   plugin_init,
   VERSION,
   GST_LICENSE,
@@ -41,3 +51,4 @@ GST_PLUGIN_DEFINE (
   GST_PACKAGE,
   GST_ORIGIN
 )
+

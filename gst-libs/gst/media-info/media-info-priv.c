@@ -182,9 +182,8 @@ gmi_seek_to_track (GstMediaInfo *info, long track)
   res = gst_pad_send_event (info->priv->decoder_pad, event);
   if (!res)
   {
-    g_warning ("seek to logical track on pad %s:%s failed of element %s",
-               GST_DEBUG_PAD_NAME(info->priv->decoder_pad),
-               gst_element_get_factory((gst_pad_get_parent(info->priv->decoder_pad)))->details->longname);
+    g_warning ("seek to logical track on pad %s:%s failed",
+               GST_DEBUG_PAD_NAME(info->priv->decoder_pad));
     return FALSE;
   }
   /* clear structs because of the seek */

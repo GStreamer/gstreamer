@@ -25,12 +25,13 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include "gstgnomevfs.h"
+
 #include <gst/gst.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <string.h>
 #include <errno.h>
-
-GstElementDetails gst_gnomevfssink_details;
 
 
 #define GST_TYPE_GNOMEVFSSINK \
@@ -74,18 +75,13 @@ struct _GstGnomeVFSSinkClass {
   void (*erase_ask) (GstElement *element,GstPad *pad);
 };
 
-GType gst_gnomevfssink_get_type(void);
-
 /* elementfactory information */
-GstElementDetails gst_gnomevfssink_details = {
+static GstElementDetails gst_gnomevfssink_details = GST_ELEMENT_DETAILS (
   "GnomeVFS Sink",
   "Sink/File",
-  "LGPL",
   "Write stream to a GnomeVFS URI",
-  VERSION,
-  "Bastien Nocera <hadess@hadess.net>",
-  "(C) 2001"
-};
+  "Bastien Nocera <hadess@hadess.net>"
+);
 
 
 /* GnomeVFSSink signals and args */
@@ -103,6 +99,7 @@ enum {
 };
 
 
+static void	gst_gnomevfssink_base_init	(gpointer g_class);
 static void	gst_gnomevfssink_class_init	(GstGnomeVFSSinkClass *klass);
 static void	gst_gnomevfssink_init	(GstGnomeVFSSink *gnomevfssink);
 
@@ -126,7 +123,8 @@ gst_gnomevfssink_get_type (void)
 
   if (!gnomevfssink_type) {
     static const GTypeInfo gnomevfssink_info = {
-      sizeof(GstGnomeVFSSinkClass),      NULL,
+      sizeof(GstGnomeVFSSinkClass),
+      gst_gnomevfssink_base_init,
       NULL,
       (GClassInitFunc)gst_gnomevfssink_class_init,
       NULL,
@@ -138,6 +136,14 @@ gst_gnomevfssink_get_type (void)
     gnomevfssink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstGnomeVFSSink", &gnomevfssink_info, 0);
   }
   return gnomevfssink_type;
+}
+
+static void
+gst_gnomevfssink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_gnomevfssink_details);
 }
 
 static void
@@ -356,24 +362,3 @@ gst_gnomevfssink_change_state (GstElement *element)
   return GST_STATE_SUCCESS;
 }
 
-static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
-{ 
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the aasink element */
-  factory = gst_element_factory_new("gnomevfssink", GST_TYPE_GNOMEVFSSINK,
-		  &gst_gnomevfssink_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
-}
-
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gnomevfssink",
-  plugin_init
-};

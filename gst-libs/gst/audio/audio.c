@@ -17,6 +17,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "audio.h"
 
 int
@@ -175,15 +179,20 @@ gst_audio_is_buffer_framed (GstPad* pad, GstBuffer* buf)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  gst_plugin_set_longname (plugin, "Support services for audio plugins");
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstaudio",
-  plugin_init
-};
+  "Support services for audio plugins",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+);

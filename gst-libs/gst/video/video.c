@@ -18,6 +18,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "video.h"
 
 /* This is simply a convenience function, nothing more or less */
@@ -97,15 +101,20 @@ gst_video_get_size (GstPad *pad,
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  gst_plugin_set_longname (plugin, "Convenience routines for video plugins");
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstvideo",
-  plugin_init
-};
+  "Convenience routines for video plugins",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

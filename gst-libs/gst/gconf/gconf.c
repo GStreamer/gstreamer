@@ -315,17 +315,3 @@ gst_gconf_get_default_visualization_element (void)
   return ret;
 }
 
-static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
-{
-    gst_plugin_set_longname (plugin, 
-	                     "Convenience routines for GConf interaction");
-      return TRUE;
-}
-
-GstPluginDesc plugin_desc = {
-    GST_VERSION_MAJOR,
-      GST_VERSION_MINOR,
-        "gstgconf",
-	  plugin_init
-};

@@ -559,7 +559,7 @@ mpeg1_parse_header (GstTypeFind *tf, guint64 offset)
  *					1-(1-1/2^(65*GST_MPEG_TYPEFIND_TRY_HEADERS))^GST_MPEG_TYPEFIND_TRY_SYNC
  * for current values:
  *					1-(1-1/2^(65*2)^50000
- *  and that value is way smaller than 0,1%
+ *				      = 3.6734..*10^-35
  */
 #define GST_MPEG_TYPEFIND_TRY_HEADERS 2
 #define GST_MPEG_TYPEFIND_TRY_SYNC (GST_TYPE_FIND_MAXIMUM * 500) /* 50kB */
@@ -937,12 +937,15 @@ jng_type_find (GstTypeFind *tf, gpointer unused)
 static void
 bmp_type_find (GstTypeFind *tf, gpointer unused)
 {
-  guint8 *data = gst_type_find_peek (tf, 0, 14);
+  guint8 *data = gst_type_find_peek (tf, 0, 18);
 
   if (data && memcmp (data, "BM", 2) == 0) {
-    if (data[14] == GUINT16_TO_LE (12) ||
-	data[14] == GUINT16_TO_LE (64) ||
-	data[14] == GUINT16_TO_LE (40)) {
+    if ((data[14] == 0x0C ||
+	 data[14] == 0x28 ||
+	 data[14] == 0xF0) &&
+	data[15] == 0 &&
+	data[16] == 0 &&
+	data[17] == 0) {
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, BMP_CAPS);
     }
   }
@@ -951,7 +954,8 @@ bmp_type_find (GstTypeFind *tf, gpointer unused)
 /*** image/tiff ********************/
 #define TIFF_CAPS(endian) (endian == 0 ? \
     GST_CAPS_NEW ("tiff_type_find", "image/tiff", \
-    "endianness", GST_PROPS_INT_RANGE (G_LITTLE_ENDIAN, G_BIG_ENDIAN)) : \
+    "endianness", GST_PROPS_LIST (GST_PROPS_INT ( \
+	G_LITTLE_ENDIAN), GST_PROPS_INT (G_BIG_ENDIAN))) : \
     GST_CAPS_NEW ("tiff_type_find", "image/tiff",  \
     "endianness", GST_PROPS_INT (endian)))
 static void
@@ -1066,8 +1070,12 @@ sid_type_find (GstTypeFind *tf, gpointer private)
 
 /*** plugin initialization ****************************************************/
 
+#define TYPE_FIND_REGISTER(plugin,name,rank,func,ext,caps,priv) G_BEGIN_DECLS{\
+  if (!gst_type_find_register (plugin, name, rank, func, ext, caps, priv))\
+    return FALSE; \
+}G_END_DECLS
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
   /* can't initialize this via a struct as caps can't be statically initialized */
  
@@ -1109,79 +1117,85 @@ plugin_init (GModule *module, GstPlugin *plugin)
   
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions", GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
 
-  gst_type_find_factory_register (plugin, "video/x-ms-asf", GST_ELEMENT_RANK_SECONDARY,
+  TYPE_FIND_REGISTER (plugin, "video/x-ms-asf", GST_RANK_SECONDARY,
 	  asf_type_find, asf_exts, ASF_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "audio/x-au", GST_ELEMENT_RANK_MARGINAL,
+  TYPE_FIND_REGISTER (plugin, "audio/x-au", GST_RANK_MARGINAL,
 	  au_type_find, au_exts, AU_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "video/avi", GST_ELEMENT_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "video/avi", GST_RANK_PRIMARY,
 	  avi_type_find, avi_exts, AVI_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "video/x-cdxa", GST_ELEMENT_RANK_SECONDARY,
+  TYPE_FIND_REGISTER (plugin, "video/x-cdxa", GST_RANK_SECONDARY,
 	  cdxa_type_find, cdxa_exts, CDXA_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "audio/x-flac", GST_ELEMENT_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "audio/x-flac", GST_RANK_PRIMARY,
 	  flac_type_find, flac_exts, FLAC_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "video/x-fli", GST_ELEMENT_RANK_MARGINAL,
+  TYPE_FIND_REGISTER (plugin, "video/x-fli", GST_RANK_MARGINAL,
 	  flx_type_find, flx_exts, FLX_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "application/x-id3", GST_ELEMENT_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "application/x-id3", GST_RANK_PRIMARY,
 	  id3_type_find, id3_exts, ID3_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "audio/x-mod", GST_ELEMENT_RANK_SECONDARY,
+  TYPE_FIND_REGISTER (plugin, "audio/x-mod", GST_RANK_SECONDARY,
 	  mod_type_find, mod_exts, MOD_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "audio/mpeg", GST_ELEMENT_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "audio/mpeg", GST_RANK_PRIMARY,
 	  mp3_type_find, mp3_exts, MP3_CAPS (0), NULL);
-  gst_type_find_factory_register (plugin, "video/mpeg1", GST_ELEMENT_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "video/mpeg1", GST_RANK_PRIMARY,
 	  mpeg1_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS (1), NULL);
-  gst_type_find_factory_register (plugin, "video/mpeg2", GST_ELEMENT_RANK_SECONDARY,
+  TYPE_FIND_REGISTER (plugin, "video/mpeg2", GST_RANK_SECONDARY,
 	  mpeg2_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS (2), NULL);
-  gst_type_find_factory_register (plugin, "application/ogg", GST_ELEMENT_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "application/ogg", GST_RANK_PRIMARY,
 	  ogg_type_find, ogg_exts, OGG_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "video/quicktime", GST_ELEMENT_RANK_SECONDARY,
+  TYPE_FIND_REGISTER (plugin, "video/quicktime", GST_RANK_SECONDARY,
 	  qt_type_find, qt_exts, QT_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "application/vnd.rn-realmedia", GST_ELEMENT_RANK_SECONDARY,
+  TYPE_FIND_REGISTER (plugin, "application/vnd.rn-realmedia", GST_RANK_SECONDARY,
 	  rm_type_find, rm_exts, RM_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "application/x-shockwave-flash", GST_ELEMENT_RANK_SECONDARY,
+  TYPE_FIND_REGISTER (plugin, "application/x-shockwave-flash", GST_RANK_SECONDARY,
 	  swf_type_find, swf_exts, SWF_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "text/plain", GST_ELEMENT_RANK_MARGINAL,
+  TYPE_FIND_REGISTER (plugin, "text/plain", GST_RANK_MARGINAL,
 	  utf8_type_find, utf8_exts, UTF8_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "text/uri-list", GST_ELEMENT_RANK_MARGINAL,
+  TYPE_FIND_REGISTER (plugin, "text/uri-list", GST_RANK_MARGINAL,
 	  uri_type_find, uri_exts, URI_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "audio/x-wav", GST_ELEMENT_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "audio/x-wav", GST_RANK_PRIMARY,
 	  wav_type_find, wav_exts, WAV_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "audio/x-aiff", GST_ELEMENT_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "audio/x-aiff", GST_RANK_SECONDARY,
 	  aiff_type_find, aiff_exts, AIFF_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "audio/x-shorten", GST_ELEMENT_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "audio/x-shorten", GST_RANK_SECONDARY,
 	  shn_type_find, shn_exts, SHN_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "image/jpeg", GST_ELEMENT_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "image/jpeg", GST_RANK_PRIMARY,
 	  jpeg_type_find, jpeg_exts, JPEG_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "image/gif", GST_ELEMENT_RANK_PRIMARY,
-				  gif_type_find, gif_exts, GIF_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "image/png", GST_ELEMENT_RANK_PRIMARY,
-				  png_type_find, png_exts, PNG_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "image/bmp", GST_ELEMENT_RANK_PRIMARY,
-				  bmp_type_find, bmp_exts, BMP_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "image/tiff", GST_ELEMENT_RANK_PRIMARY,
-				  tiff_type_find, tiff_exts, TIFF_CAPS(0), NULL);
-  gst_type_find_factory_register (plugin, "video/x-matroska", GST_ELEMENT_RANK_SECONDARY,
+  TYPE_FIND_REGISTER (plugin, "image/gif", GST_RANK_PRIMARY,
+	  gif_type_find, gif_exts, GIF_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "image/png", GST_RANK_PRIMARY,
+	  png_type_find, png_exts, PNG_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "image/bmp", GST_RANK_PRIMARY,
+	  bmp_type_find, bmp_exts, BMP_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "image/tiff", GST_RANK_PRIMARY,
+	  tiff_type_find, tiff_exts, TIFF_CAPS(0), NULL);
+  TYPE_FIND_REGISTER (plugin, "video/x-matroska", GST_RANK_SECONDARY,
 	  matroska_type_find, matroska_exts, MATROSKA_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "video/x-dv", GST_ELEMENT_RANK_SECONDARY,
+  TYPE_FIND_REGISTER (plugin, "video/x-dv", GST_RANK_SECONDARY,
 	  dv_type_find, dv_exts, DV_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "video/x-sid", GST_ELEMENT_RANK_MARGINAL,
+  TYPE_FIND_REGISTER (plugin, "video/x-sid", GST_RANK_MARGINAL,
 	  sid_type_find, sid_exts, SID_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "image/x-xcf", GST_ELEMENT_RANK_SECONDARY,
-				  xcf_type_find, xcf_exts, XCF_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "video/x-mng", GST_ELEMENT_RANK_SECONDARY,
-				  mng_type_find, mng_exts, MNG_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "image/x-jng", GST_ELEMENT_RANK_SECONDARY,
-				  jng_type_find, jng_exts, JNG_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "image/x-xpixmap", GST_ELEMENT_RANK_SECONDARY,
-				  xpm_type_find, xpm_exts, XPM_CAPS, NULL);
-  gst_type_find_factory_register (plugin, "image/x-sun-raster", GST_ELEMENT_RANK_SECONDARY,
-				  ras_type_find, ras_exts, RAS_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "image/x-xcf", GST_RANK_SECONDARY,
+	  xcf_type_find, xcf_exts, XCF_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/x-mng", GST_RANK_SECONDARY,
+	  mng_type_find, mng_exts, MNG_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "image/x-jng", GST_RANK_SECONDARY,
+	  jng_type_find, jng_exts, JNG_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "image/x-xpixmap", GST_RANK_SECONDARY,
+	  xpm_type_find, xpm_exts, XPM_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "image/x-sun-raster", GST_RANK_SECONDARY,
+	  ras_type_find, ras_exts, RAS_CAPS, NULL);
   
   return TRUE;
 }
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "typefindfunctions",
-  plugin_init
-};
+  "default typefind functions",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 

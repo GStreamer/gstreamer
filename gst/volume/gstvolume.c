@@ -32,11 +32,8 @@
 static GstElementDetails volume_details = {
   "Volume",
   "Filter/Audio/Effect",
-  "LGPL",
   "Set volume on audio/raw streams",
-  VERSION,
   "Andy Wingo <apwingo@eos.ncsu.edu>",
-  "(C) 2001"
 };
 
 
@@ -95,7 +92,8 @@ GST_PAD_TEMPLATE_FACTORY (volume_src_factory,
   )
 );
 
-static void		volume_class_init		(GstVolumeClass *klass);
+static void		volume_base_init	(gpointer g_class);
+static void		volume_class_init	(GstVolumeClass *klass);
 static void		volume_init		(GstVolume *filter);
 
 static void		volume_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -178,7 +176,8 @@ gst_volume_get_type(void) {
 
   if (!volume_type) {
     static const GTypeInfo volume_info = {
-      sizeof(GstVolumeClass),      NULL,
+      sizeof(GstVolumeClass),
+      volume_base_init,
       NULL,
       (GClassInitFunc)volume_class_init,
       NULL,
@@ -191,7 +190,15 @@ gst_volume_get_type(void) {
   }
   return volume_type;
 }
-
+static void
+volume_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_add_pad_template (element_class, volume_src_factory ());
+  gst_element_class_add_pad_template (element_class, volume_sink_factory ());
+  gst_element_class_set_details (element_class, &volume_details);
+}
 static void
 volume_class_init (GstVolumeClass *klass)
 {
@@ -415,27 +422,22 @@ volume_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("volume",GST_TYPE_VOLUME,
-                                   &volume_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  
-  gst_element_factory_add_pad_template (factory, volume_src_factory ());
-  gst_element_factory_add_pad_template (factory, volume_sink_factory ());
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  /* initialize dparam support library */
   gst_control_init(NULL,NULL);
-  return TRUE;
+  
+  return gst_element_register (plugin, "volume", GST_RANK_PRIMARY, GST_TYPE_VOLUME);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "volume",
-  plugin_init
-};
+  "element for controlling audio volume",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

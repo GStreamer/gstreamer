@@ -30,6 +30,8 @@
 #include "config.h"
 #endif
 
+#include "gstgnomevfs.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -48,7 +50,6 @@
 /* gnome-vfs.h doesn't include the following header, which we need: */
 #include <libgnomevfs/gnome-vfs-standard-callbacks.h>
 
-GstElementDetails gst_gnomevfssrc_details;
 
 #define GST_TYPE_GNOMEVFSSRC \
   (gst_gnomevfssrc_get_type())
@@ -123,16 +124,12 @@ struct _GstGnomeVFSSrcClass {
 	GstElementClass parent_class;
 };
 
-/* elementfactory information */
-GstElementDetails gst_gnomevfssrc_details = {
+static GstElementDetails gst_gnomevfssrc_details = GST_ELEMENT_DETAILS (
 	"GnomeVFS Source",
 	"Source/File",
-	"LGPL",
 	"Read from any GnomeVFS file",
-	VERSION,
-	"Bastien Nocera <hadess@hadess.net>",
-	"(C) 2001",
-};
+	"Bastien Nocera <hadess@hadess.net>"
+);
 
 GST_PAD_FORMATS_FUNCTION (gst_gnomevfssrc_get_formats,
 	GST_FORMAT_BYTES
@@ -169,8 +166,7 @@ enum {
 	ARG_SEEKABLE,
 };
 
-GType gst_gnomevfssrc_get_type(void);
-
+static void 		gst_gnomevfssrc_base_init	(gpointer g_class);
 static void 		gst_gnomevfssrc_class_init	(GstGnomeVFSSrcClass *klass);
 static void 		gst_gnomevfssrc_init		(GstGnomeVFSSrc *gnomevfssrc);
 static void 		gst_gnomevfssrc_dispose		(GObject *object);
@@ -205,7 +201,8 @@ GType gst_gnomevfssrc_get_type(void)
 
 	if (!gnomevfssrc_type) {
 		static const GTypeInfo gnomevfssrc_info = {
-			sizeof(GstGnomeVFSSrcClass),      NULL,
+			sizeof(GstGnomeVFSSrcClass), 
+			gst_gnomevfssrc_base_init,
 			NULL,
 			(GClassInitFunc) gst_gnomevfssrc_class_init,
 			NULL,
@@ -221,6 +218,14 @@ GType gst_gnomevfssrc_get_type(void)
 					0);
 	}
 	return gnomevfssrc_type;
+}
+
+static void
+gst_gnomevfssrc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_gnomevfssrc_details);
 }
 
 static void gst_gnomevfssrc_class_init(GstGnomeVFSSrcClass *klass)
@@ -1150,22 +1155,6 @@ static GstElementStateReturn gst_gnomevfssrc_change_state(GstElement *element)
 	return GST_STATE_SUCCESS;
 }
 
-static gboolean plugin_init(GModule *module, GstPlugin *plugin)
-{
-	GstElementFactory *factory;
-
-	/* create an elementfactory for the aasink element */
-	factory =
-	    gst_element_factory_new("gnomevfssrc", GST_TYPE_GNOMEVFSSRC,
-				   &gst_gnomevfssrc_details);
-	g_return_val_if_fail(factory != NULL, FALSE);
-
-	gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-	return TRUE;
-}
-
-
 static gboolean
 gst_gnomevfssrc_srcpad_query (GstPad *pad, GstQueryType type,
 		              GstFormat *format, gint64 *value)
@@ -1258,16 +1247,3 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 
 	return TRUE;
 }
-
-GstPluginDesc plugin_desc = {
-	GST_VERSION_MAJOR,
-	GST_VERSION_MINOR,
-	"gnomevfssrc",
-	plugin_init
-};
-
-/*
-  Local Variables:
-  c-file-style: "linux"
-  End:
-*/
