@@ -240,10 +240,10 @@ void gst_caps_append_structure (GstCaps *caps, GstStructure *structure)
 {
   g_return_if_fail(caps != NULL);
 
-#ifdef USE_POISONING
-  STRUCTURE_POISON (structure);
-#endif
   if (structure){
+#ifdef USE_POISONING
+    STRUCTURE_POISON (structure);
+#endif
     g_ptr_array_add (caps->structs, structure);
   }
 }

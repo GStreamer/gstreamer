@@ -1,3 +1,11 @@
+2004-01-06  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstcaps.c: (gst_caps_append_structure):
+	  Move the poisoning to allow a NULL structure
+	* gst/gstevent.c: (_gst_event_free):
+	  When freeing a navigation event, free the structure
+	  also
+
 2004-01-04  David Schleef  <ds@schleef.org>
 
 	* gst/elements/gsttee.c: (gst_tee_init), (gst_tee_request_new_pad):
