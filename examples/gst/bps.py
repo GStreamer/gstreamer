@@ -37,7 +37,7 @@ class BPS(object):
         dt = end - self.start
         bps = self.buffers/dt
         spb = dt/self.buffers
-        print '%d buffers / %fs\t= %f bps\t= %f spb' % (self.buffers, dt, bps, spb)
+        print '\t%d buffers / %fs\t= %f bps\t= %f spb' % (self.buffers, dt, bps, spb)
 
     def eos(self, sink):
         self.done()
