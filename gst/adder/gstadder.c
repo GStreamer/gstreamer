@@ -32,15 +32,12 @@
 #define GST_ADDER_NUM_BUFFERS 8
 
 /* elementfactory information */
-GstElementDetails adder_details = {
+static GstElementDetails adder_details = GST_ELEMENT_DETAILS (
   "Adder",
   "Filter/Audio",
-  "LGPL",
   "Add N audio channels together",
-  VERSION,
-  "Thomas <thomas@apestaart.org>",
-  "(C) 2001, 2002",
-};
+  "Thomas <thomas@apestaart.org>"
+);
 
 /* Adder signals and args */
 enum {
@@ -276,6 +273,12 @@ gst_adder_class_init (GstAdderClass *klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+
+  gst_element_class_add_pad_template (gstelement_class,
+    GST_PAD_TEMPLATE_GET (gst_adder_src_template_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+    GST_PAD_TEMPLATE_GET (gst_adder_sink_template_factory));
+  gst_element_class_set_details (gstelement_class, &adder_details);
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -599,29 +602,28 @@ gst_adder_change_state (GstElement *element)
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  factory = gst_element_factory_new ("adder", GST_TYPE_ADDER, &adder_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory,
-    GST_PAD_TEMPLATE_GET (gst_adder_src_template_factory));
-  gst_element_factory_add_pad_template (factory,
-    GST_PAD_TEMPLATE_GET (gst_adder_sink_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "adder", GST_RANK_NONE, GST_TYPE_ADDER)) {
+    return FALSE;
+  }
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE(
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "adder",
-  plugin_init
-};
+  "Adds multiple streams",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
+
