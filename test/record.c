@@ -37,7 +37,8 @@ int main(int argc,char *argv[]) {
   g_print("\nok, runnable, hitting 'play'...\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 
-  while(1)
-    gst_src_push(GST_SRC(audiosrc));
+  while(1) {
+    gst_bin_iterate(GST_BIN(pipeline));
+  }
 }
 

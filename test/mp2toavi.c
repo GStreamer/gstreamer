@@ -283,9 +283,9 @@ int main(int argc,char *argv[]) {
                   gst_element_get_pad(fdsink,"sink"));
 
   g_print("setting to READY state\n");
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 
   while (1) {
-    gst_src_push(GST_SRC(src));
+    gst_bin_iterate(GST_BIN(pipeline));
   }
 }

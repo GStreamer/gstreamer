@@ -42,7 +42,7 @@ int main(int argc,char *argv[]) {
       subtree = xmlNewChild(tree,NULL,"longname",
                             element->details->longname);
       subtree = xmlNewChild(tree,NULL,"class",
-                            element->details->class);
+                            element->details->klass);
       subtree = xmlNewChild(tree,NULL,"description",
                             element->details->description);
       subtree = xmlNewChild(tree,NULL,"version",

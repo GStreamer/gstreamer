@@ -58,9 +58,10 @@ int main(int argc,char *argv[]) {
 
   g_print("setting to READY state\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 
   g_print("about to enter loop\n");
   while (1) {
-    gst_src_push(GST_SRC(src));
-	}
+    gst_bin_iterate(GST_BIN(pipeline));
+  }
 }

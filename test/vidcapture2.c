@@ -77,6 +77,6 @@ int main(int argc,char *argv[]) {
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 
   while(1)
-    gst_src_push(GST_SRC(videosrc));
+    gst_bin_iterate(GST_BIN(pipeline));
 }
 

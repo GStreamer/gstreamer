@@ -170,7 +170,7 @@ int main(int argc,char *argv[]) {
 
   g_print("about to enter loop\n");
 
-  g_idle_add(idle_func,src);
+  g_idle_add(idle_func,pipeline);
 
   gdk_threads_enter();
   gtk_main();
@@ -180,6 +180,6 @@ int main(int argc,char *argv[]) {
 }
 
 gboolean idle_func(gpointer data) {
-  gst_src_push(GST_SRC(data));
+  gst_bin_iterate(GST_BIN(data));
   return TRUE;
 }

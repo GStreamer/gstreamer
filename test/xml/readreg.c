@@ -88,7 +88,7 @@ int main(int argc,char *argv[]) {
         else if (!strcmp(field->name,"longname"))
           element->details.longname = getcontents(doc,field);
         else if (!strcmp(field->name,"class"))
-          element->details.class = getcontents(doc,field);
+          element->details.klass = getcontents(doc,field);
         else if (!strcmp(field->name,"description"))
           element->details.description = getcontents(doc,field);
         else if (!strcmp(field->name,"version"))
@@ -117,7 +117,7 @@ int main(int argc,char *argv[]) {
         g_print("Plugin filename: %s\n",element->plugin->filename);
         g_print("Element name: %s\n",element->name);
         g_print("Element long name: %s\n",element->details.longname);
-        g_print("Element class: %s\n",element->details.class);
+        g_print("Element class: %s\n",element->details.klass);
         g_print("Element description: %s\n",element->details.description);
         g_print("Element version: %s\n",element->details.version);
         g_print("Element author: %s\n",element->details.author);

@@ -48,12 +48,12 @@ int main(int argc,char *argv[]) {
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);
 
-  g_idle_add(idle_func,src);
+  g_idle_add(idle_func,bin);
 
   gtk_main();
 }
 
 gboolean idle_func(gpointer data) {
-  gst_src_push(GST_SRC(data));
+  gst_bin_iterate(GST_BIN(data));
   return TRUE;
 }

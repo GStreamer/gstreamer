@@ -59,5 +59,5 @@ int main(int argc,char *argv[]) {
 
   g_print("about to enter loop\n");
   while (1)
-    gst_src_push(GST_SRC(src));
+    gst_bin_iterate(GST_BIN(pipeline));
 }

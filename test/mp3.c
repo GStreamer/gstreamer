@@ -57,7 +57,7 @@ int main(int argc,char *argv[]) {
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);
 
   while (playing)
-    gst_src_push(GST_SRC(src));
+    gst_bin_iterate(GST_BIN(bin));
 
   return 0;
 }

@@ -4,7 +4,7 @@ noinst_PROGRAMS = qtest spectrum record wave mp3 teardown buffer mp3parse \
 		  aviparse vidcapture avi2mpg mp2tomp1 mp1tomp1 pipetest \
 		  vidcapture2 mp2toavi mp3tovorbis
 
-SUBDIRS = xml cothreads bindings
+SUBDIRS = xml bindings
 
 CFLAGS = -Wall $(shell gnome-config --cflags gnomeui)
 LDFLAGS = $(shell gnome-config --libs gnomeui)
