@@ -236,6 +236,7 @@ gst_queue_init (GstQueue *queue)
   queue->writer = FALSE;
   queue->not_empty = g_cond_new ();
   queue->not_full = g_cond_new ();
+  queue->events = g_async_queue_new();
   GST_DEBUG_ELEMENT (GST_CAT_THREAD, queue, "initialized queue's not_empty & not_full conditions");
 }
 
@@ -247,6 +248,8 @@ gst_queue_dispose (GObject *object)
   g_mutex_free (queue->qlock);
   g_cond_free (queue->not_empty);
   g_cond_free (queue->not_full);
+
+  g_async_queue_unref(queue->events);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -297,6 +300,16 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
+  
+  /* check for events to send upstream */
+  g_async_queue_lock(queue->events);
+  while (g_async_queue_length_unlocked(queue->events) > 0){
+    GstEvent *event = (GstEvent*)g_async_queue_pop_unlocked(queue->events);
+    g_print("sending event upstream\n");
+    gst_pad_event_default (pad, event);
+    g_print("event sent\n");
+  }
+  g_async_queue_unlock(queue->events);
 
 restart:
   /* we have to lock the queue since we span threads */
@@ -441,6 +454,8 @@ gst_queue_get (GstPad *pad)
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
+
+
 restart:
   /* have to lock for thread-safety */
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld", pthread_self ());
@@ -542,35 +557,28 @@ static gboolean
 gst_queue_handle_src_event (GstPad *pad, GstEvent *event)
 {
   GstQueue *queue;
-  gboolean res = TRUE;
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
+  /* push the event to the queue for upstream consumption */
+  g_async_queue_push(queue->events, event);
+
   g_mutex_lock (queue->qlock);
-
-  if (gst_element_get_state (GST_ELEMENT (queue)) == GST_STATE_PLAYING) {
-    g_mutex_unlock (queue->qlock);
-    g_warning ("queue event in playing state");
-    return FALSE;
-  }
-
-  res = gst_pad_event_default (pad, event); 
-  if (res) { 
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_FLUSH:
-        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "FLUSH event, flushing queue\n");
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH:
+      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "FLUSH event, flushing queue\n");
+      gst_queue_locked_flush (queue);
+      break;
+    case GST_EVENT_SEEK:
+      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH)
         gst_queue_locked_flush (queue);
-        break;
-      case GST_EVENT_SEEK:
-	if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH)
-          gst_queue_locked_flush (queue);
-      default:
-        break;
-    }
+    default:
+      break;
   }
   g_mutex_unlock (queue->qlock);
 
-  return res;
+  /* we have to claim success, but we don't really know */
+  return TRUE;
 }
 
 static gboolean

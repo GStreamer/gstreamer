@@ -87,6 +87,7 @@ struct _GstQueue {
   GCond *not_full;	/* signals space now available for writing */
 
   GTimeVal *timeval;	/* the timeout for the queue locking */
+  GAsyncQueue *events;	/* upstream events get decoupled here */
 };
 
 struct _GstQueueClass {
