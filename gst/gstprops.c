@@ -423,7 +423,7 @@ gst_props_entry_from_string_no_name (gchar *s, gchar **after, gboolean has_type)
       if (*check == ')') break;
       if (*check++ != ',') goto error;
     } while (TRUE);
-    *check++;
+    check++;
     while (g_ascii_isspace (*check)) check++;    
     *after = check;
     return entry;    
