@@ -1,4 +1,4 @@
-SUBDIRS = refcounting capsnego plugin
+SUBDIRS = refcounting capsnego plugin bytestream
 
 testprogs = test_gst_init
 
@@ -11,4 +11,4 @@ LIBS += $(GST_LIBS)
 CFLAGS += $(GST_CFLAGS)
 
 
-DIST_SUBDIRS = refcounting capsnego
+DIST_SUBDIRS = refcounting capsnego bytestream
