@@ -116,7 +116,6 @@
 	  make sure to handle the case where there's no current chain
 	  gracefully.
 
->>>>>>> 1.392
 2004-03-05  David Schleef  <ds@schleef.org>
 
 	* ext/aalib/gstaasink.c: (gst_aasink_fixate), (gst_aasink_init):
