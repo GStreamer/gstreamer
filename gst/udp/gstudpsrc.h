@@ -75,6 +75,7 @@ struct _GstUDPSrc {
   GstClock *clock;
 
   gboolean first_buf;
+  GstData *defer_data;
 };
 
 struct _GstUDPSrcClass {

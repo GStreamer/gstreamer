@@ -175,6 +175,7 @@ gst_udpsrc_init (GstUDPSrc * udpsrc)
   udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
 
   udpsrc->first_buf = TRUE;
+  udpsrc->defer_data = NULL;
 }
 
 static GstData *
@@ -192,6 +193,13 @@ gst_udpsrc_get (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   udpsrc = GST_UDPSRC (GST_OBJECT_PARENT (pad));
+
+  if (udpsrc->defer_data != NULL) {
+    GstData *outdata = udpsrc->defer_data;
+
+    udpsrc->defer_data = NULL;
+    return outdata;
+  }
 
   FD_ZERO (&read_fds);
   FD_SET (udpsrc->sock, &read_fds);
@@ -275,7 +283,7 @@ gst_udpsrc_get (GstPad * pad)
           discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
               current_time, NULL);
 
-          gst_pad_push (udpsrc->srcpad, GST_DATA (discont));
+          udpsrc->defer_data = GST_DATA (discont);
         }
 
         udpsrc->first_buf = FALSE;
@@ -296,12 +304,21 @@ gst_udpsrc_get (GstPad * pad)
         gst_buffer_unref (outbuf);
         outbuf = NULL;
       }
-
     }
   } else {
     perror ("select");
     outbuf = NULL;
   }
+  if (udpsrc->defer_data) {
+    GstData *databuf = udpsrc->defer_data;
+
+    udpsrc->defer_data = GST_DATA (outbuf);
+    return databuf;
+  }
+
+  if (outbuf == NULL)
+    return GST_DATA (gst_event_new (GST_EVENT_EMPTY));
+
   return GST_DATA (outbuf);
 }
 
