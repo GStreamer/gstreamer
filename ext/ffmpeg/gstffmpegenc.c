@@ -284,11 +284,6 @@ gst_ffmpegenc_connect (GstPad  *pad,
   ffmpegenc->context->qmax = 15;
   ffmpegenc->context->max_qdiff = 3;
 
-  /* fill in the context (width/height/pixfmt or
-   * rate/channels/samplefmt) */
-  gst_ffmpeg_caps_to_codectype (oclass->in_plugin->type,
-				caps, ffmpegenc->context);
-
   /* no edges */
   ffmpegenc->context->flags |= CODEC_FLAG_EMU_EDGE;
 
@@ -298,11 +293,23 @@ gst_ffmpegenc_connect (GstPad  *pad,
   ffmpegenc->context->frame_rate = 25 * DEFAULT_FRAME_RATE_BASE;
   ffmpegenc->context->frame_rate_base = DEFAULT_FRAME_RATE_BASE;
 
-  /* open codec */
-  if (avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
-    GST_DEBUG (GST_CAT_PLUGIN_INFO,
-		"ffenc_%s: Failed to open FFMPEG codec",
-		oclass->in_plugin->name);
+  for (ret_caps = caps; ret_caps != NULL; ret_caps = ret_caps->next) {
+    /* fetch pix_fmt and so on */
+    gst_ffmpeg_caps_to_codectype (oclass->in_plugin->type,
+				  caps, ffmpegenc->context);
+
+    /* open codec */
+    if (avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
+      GST_DEBUG (GST_CAT_PLUGIN_INFO,
+		 "ffenc_%s: Failed to open FFMPEG codec",
+		 oclass->in_plugin->name);
+      continue;
+    }
+
+    break;
+  }
+
+  if (ret_caps == NULL) {
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -373,6 +380,13 @@ gst_ffmpegenc_chain (GstPad    *pad,
     default:
       g_assert(0);
       break;
+  }
+
+  if (ret_size < 0) {
+    g_warning("ffenc_%s: failed to encode buffer",
+	      oclass->in_plugin->name);
+    gst_buffer_unref (inbuf);
+    return;
   }
 
   /* bla */
