@@ -347,6 +347,7 @@ void
 gst_buffer_ref_by_count (GstBuffer *buffer, gint count)
 {
   g_return_if_fail (buffer != NULL);
+  if (count == 0) return; /* no error when no need to ref */
   g_return_if_fail (count > 0);
 
 #ifdef HAVE_ATOMIC_H
