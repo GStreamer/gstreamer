@@ -911,7 +911,7 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	    xmlregistry->parser = gst_xml_registry_parse_index_factory;
 	  }
 	  else {
-            g_warning ("unkown feature type");
+            g_warning ("unknown feature type");
 	  }
 	}
       }

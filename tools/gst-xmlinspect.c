@@ -87,7 +87,7 @@ print_query_types (const GstQueryType *types, gint pfx)
       PUT_STRING (pfx, "<query-type id=\"%d\" nick=\"%s\">%s</query-type>",
                   *types, definition->nick, definition->description);
     else
-      PUT_STRING (pfx, "<query-type id=\"%d\">unkown</query-type>",
+      PUT_STRING (pfx, "<query-type id=\"%d\">unknown</query-type>",
                   *types);
 
     types++;

@@ -29,7 +29,7 @@ main (gint argc, gchar *argv[])
 
   caps = GST_CAPS_NEW (
 		  "testcaps",
-		  "unkown/unknown",
+		  "unknown/unknown",
 		  NULL);
 
   /* newly crrated caps without props is fixed */
