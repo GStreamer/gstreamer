@@ -1,3 +1,12 @@
+2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/esd/esdsink.c: (gst_esdsink_chain):
+	  Make error actually say something useful (fixes #156798).
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data),
+	(gst_riff_create_video_template_caps):
+	  Add Intel Video 5.0 fourcc (IV50).
+
 2004-12-01  Christophe Fergeau  <teuf@gnome.org>
 
 	* ext/mad/gstmad.c: (mpg123_parse_xing_header): fix xing header 
