@@ -268,35 +268,39 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
   while (vorbis_analysis_blockout (&vorbisenc->vd, &vorbisenc->vb) == 1) {
 
     /* analysis */
-    vorbis_analysis (&vorbisenc->vb, &vorbisenc->op);
+    vorbis_analysis (&vorbisenc->vb, NULL);
+    vorbis_bitrate_addblock(&vorbisenc->vb);
+    
+    while(vorbis_bitrate_flushpacket(&vorbisenc->vd, &vorbisenc->op)) {
 
-    /* weld the packet into the bitstream */
-    ogg_stream_packetin (&vorbisenc->os, &vorbisenc->op);
+      /* weld the packet into the bitstream */
+      ogg_stream_packetin (&vorbisenc->os, &vorbisenc->op);
 
-    /* write out pages (if any) */
-    while (!vorbisenc->eos) {
-      int result = ogg_stream_pageout (&vorbisenc->os, &vorbisenc->og);
-      GstBuffer *outbuf;
+      /* write out pages (if any) */
+      while (!vorbisenc->eos) {
+        int result = ogg_stream_pageout (&vorbisenc->os, &vorbisenc->og);
+        GstBuffer *outbuf;
 
-      if (result == 0)
-	break;
+        if (result == 0)
+	  break;
 
-      outbuf = gst_buffer_new ();
-      GST_BUFFER_DATA (outbuf) = g_malloc (vorbisenc->og.header_len + vorbisenc->og.body_len);
-      GST_BUFFER_SIZE (outbuf) = vorbisenc->og.header_len + vorbisenc->og.body_len;
+        outbuf = gst_buffer_new ();
+        GST_BUFFER_DATA (outbuf) = g_malloc (vorbisenc->og.header_len + vorbisenc->og.body_len);
+        GST_BUFFER_SIZE (outbuf) = vorbisenc->og.header_len + vorbisenc->og.body_len;
 
-      memcpy (GST_BUFFER_DATA (outbuf), vorbisenc->og.header, vorbisenc->og.header_len);
-      memcpy (GST_BUFFER_DATA (outbuf) + vorbisenc->og.header_len, vorbisenc->og.body,
-	      vorbisenc->og.body_len);
+        memcpy (GST_BUFFER_DATA (outbuf), vorbisenc->og.header, vorbisenc->og.header_len);
+        memcpy (GST_BUFFER_DATA (outbuf) + vorbisenc->og.header_len, vorbisenc->og.body,
+	        vorbisenc->og.body_len);
 
-      GST_DEBUG (0, "vorbisenc: encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
+        GST_DEBUG (0, "vorbisenc: encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
 
-      gst_pad_push (vorbisenc->srcpad, outbuf);
+        gst_pad_push (vorbisenc->srcpad, outbuf);
 
-      /* this could be set above, but for illustrative purposes, I do
-         it here (to show that vorbis does know where the stream ends) */
-      if (ogg_page_eos (&vorbisenc->og)) {
-	vorbisenc->eos = 1;
+        /* this could be set above, but for illustrative purposes, I do
+           it here (to show that vorbis does know where the stream ends) */
+        if (ogg_page_eos (&vorbisenc->og)) {
+	  vorbisenc->eos = 1;
+        }
       }
     }
   }

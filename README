@@ -4,8 +4,16 @@ plugins for GStreamer
 
 * to develop against uninstalled GStreamer core :
   add path to gstreamer-uninstalled.pc to PKG_CONFIG_PATH
+  or run configure --with-pkg-config-path=(path to gstreamer uninstalled)
 
 * to register plugins in source tree
   run gst-register --gst-plugin-path=.
 
+* if a certain plugin doesn't build, then redo configure with
+  --disable-(plugin)
+  to disable it from the build
 
+* Additional documentation :
+
+REQUIREMENTS
+	supporting libraries for plugins
