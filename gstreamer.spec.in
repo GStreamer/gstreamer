@@ -22,7 +22,7 @@ BuildRequires: 	glib2-devel >= %_glib2
 BuildRequires: 	libxml2-devel >= %_libxml2
 BuildRequires: 	bison
 BuildRequires: 	flex
-BuildRequires: 	gtk-doc >= 0.7
+BuildRequires: 	gtk-doc >= 1.0
 BuildRequires: 	gcc
 BuildRequires: 	zlib-devel
 BuildRequires:  popt > 1.6
@@ -236,6 +236,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 
 %changelog
+* Thu Feb 05 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- bump gtk-doc required version to 1.0 for the new options used
+
 * Wed Feb 04 2004 Thomas Vander Stichele <thomas at apestaart dot org>
 - add -common package containing frontend wrapper binaries
 
