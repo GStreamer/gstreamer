@@ -420,12 +420,12 @@ gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
 
   iclass = GST_INDEX_GET_CLASS (index);
 
-  if (iclass->resolve_writer) {
-    success = iclass->resolve_writer (index, writer, id, &writer_string);
-  }
-
   if (index->resolver) {
     success = index->resolver (index, writer, id, &writer_string, index->resolver_user_data);
+  }
+
+  if (iclass->resolve_writer) {
+    success = iclass->resolve_writer (index, writer, id, &writer_string);
   }
 
   return success;
