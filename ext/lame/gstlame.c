@@ -581,6 +581,7 @@ gst_lame_init (GstLame * lame)
 
   id3tag_init (lame->lgf);
 
+  lame->newmediacount = 0;
   GST_DEBUG_OBJECT (lame, "done initializing");
 }
 
@@ -950,6 +951,21 @@ gst_lame_chain (GstPad * pad, GstData * _data)
           g_assert_not_reached ();
         }
         gst_pad_event_default (pad, GST_EVENT (buf));
+        break;
+      case GST_EVENT_DISCONTINUOUS:
+        if (GST_EVENT_DISCONT_NEW_MEDIA (GST_EVENT (buf))) {
+          /* do not re-initialise if it is first new media discont */
+          if (lame->newmediacount++ > 0) {
+            lame_close (lame->lgf);
+            lame->lgf = lame_init ();
+            lame->initialized = FALSE;
+            lame->last_ts = GST_CLOCK_TIME_NONE;
+
+            gst_lame_setup (lame);
+          }
+        }
+        gst_pad_event_default (pad, GST_EVENT (buf));
+
         break;
       default:
         gst_pad_event_default (pad, GST_EVENT (buf));
