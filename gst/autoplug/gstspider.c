@@ -591,6 +591,15 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
   GST_DEBUG ("trying to plug from %s:%s to %s", 
 	     GST_DEBUG_PAD_NAME (srcpad), GST_ELEMENT_NAME (conn->src));
   
+  /* see if they match already */
+  if (gst_pad_link (srcpad, conn->src->sink)) {
+    GST_DEBUG ("%s:%s and %s:%s can link directly", 
+	       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (conn->src->sink));
+    gst_pad_unlink (srcpad, conn->src->sink);
+    gst_spider_create_and_plug (conn, NULL);
+    return GST_PAD_LINK_OK;
+  }
+      
   /* find a path from src to sink */
   plugpath = gst_autoplug_sp (gst_pad_get_caps (srcpad), gst_pad_get_caps (conn->src->sink), spider->factories);
   
