@@ -46,10 +46,10 @@ int
 main (int argc, char *argv[])
 {
   /* options */
-  gboolean silent = TRUE;
+  gboolean verbose = FALSE;
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
-    {"verbose",	'v',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &silent,   1,
+    {"verbose",	'v',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &verbose,   0,
      "do not output status information", NULL},
     POPT_TABLEEND
   };
@@ -85,7 +85,7 @@ main (int argc, char *argv[])
     return 1;
   }
   
-  if (!silent)
+  if (verbose)
   {
     gchar **exclude_list = exclude_args ? g_strsplit (exclude_args, ",", 0) 
                                         : NULL;
