@@ -1,6 +1,16 @@
 2004-12-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
+	* check/gst/gstdata.c:
+	* check/gst/gstobject.c:
+	* check/gstcheck.h:
+	* gst/gstdata.c:
+	* gst/gstdata.h:
+	  adding gstdata tests, cleaning up source files
+
+2004-12-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
 	* check/gst-libs/gdp.c:
 	* check/gst/gstobject.c:
 	* check/gstcheck.c:

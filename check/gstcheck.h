@@ -125,6 +125,12 @@ G_STMT_START {							\
   g_mutex_unlock (mutex);					\
 } G_STMT_END;
 
+#define THREAD_SWITCH()						\
+G_STMT_START {							\
+  /* a minimal sleep is a context switch */			\
+  g_usleep (1);							\
+} G_STMT_END;
+
 #define THREAD_TEST_RUNNING()	(_gst_check_threads_running == TRUE)
 
 #endif /* __GST_CHECK_H__ */

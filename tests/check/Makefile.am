@@ -1,4 +1,7 @@
-TESTS = gst/gstobject gst-libs/gdp
+TESTS = \
+	gst/gstdata	\
+	gst/gstobject	\
+	gst-libs/gdp
 
 check_PROGRAMS = $(TESTS)
 
