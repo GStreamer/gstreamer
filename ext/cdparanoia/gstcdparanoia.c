@@ -272,6 +272,11 @@ cdparanoia_class_init (CDParanoiaClass * klass)
       g_param_spec_string ("discid", "discid", "The dics id", NULL,
           G_PARAM_READABLE));
 
+  /* tags */
+  gst_tag_register ("discid", GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("discid"), _("CDDA discid for metadata retrieval"),
+      gst_tag_merge_use_first);
+
   gobject_class->set_property = cdparanoia_set_property;
   gobject_class->get_property = cdparanoia_get_property;
   gobject_class->dispose = cdparanoia_dispose;
@@ -520,6 +525,9 @@ cdparanoia_get (GstPad * pad)
     buf = gst_buffer_new_and_alloc (CD_FRAMESIZE_RAW);
     memcpy (GST_BUFFER_DATA (buf), cdda_buf, CD_FRAMESIZE_RAW);
     GST_BUFFER_TIMESTAMP (buf) = timestamp;
+    gst_pad_convert (pad, GST_FORMAT_BYTES, CD_FRAMESIZE_RAW,
+        &format, &timestamp);
+    GST_BUFFER_DURATION (buf) = timestamp;
 
     /* update current sector */
     src->cur_sector++;
@@ -650,6 +658,7 @@ add_index_associations (CDParanoia * src)
 static gboolean
 cdparanoia_open (CDParanoia * src)
 {
+  GstTagList *taglist;
   gint i;
   gint paranoia_mode;
 
@@ -703,6 +712,11 @@ cdparanoia_open (CDParanoia * src)
   g_object_freeze_notify (G_OBJECT (src));
   g_object_notify (G_OBJECT (src), "discid");
   g_object_thaw_notify (G_OBJECT (src));
+
+  taglist = gst_tag_list_new ();
+  gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, "discid", src->discid, NULL);
+  gst_element_found_tags (GST_ELEMENT (src), taglist);
+  /* no need to forward, because discid is useless to other elements */
 
   if (src->toc_bias) {
     src->toc_offset -= cdda_track_firstsector (src->d, 1);
