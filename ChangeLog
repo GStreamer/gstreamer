@@ -1,4 +1,8 @@
-== gst-python 0.7.99 ==
+2004-03-31  Johan Dahlin  <johan@gnome.org>
+
+	* Makefile.am (EXTRA_DIST): Add codegen/* Can't believe distcheck passed
+
+== gst-python 0.7.90 ==
 
 2004-03-30  Johan Dahlin  <johan@gnome.org>
 
