@@ -1,3 +1,8 @@
+2004-11-03  Christophe Fergeau  <teuf@gnome.org>
+
+	* gst/elements/gstidentity.c: (gst_identity_class_init): GstBuffer is 
+	a boxed type, marshal the signal with VOID__BOXED, not VOID__POINTER
+
 2004-11-03  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
