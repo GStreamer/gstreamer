@@ -25,6 +25,7 @@
 
 /*#include <ml.h> */
 #include <resample.h>
+#include <config.h>
 
 
 
