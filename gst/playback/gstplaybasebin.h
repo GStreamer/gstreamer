@@ -75,7 +75,7 @@ struct _GstPlayBaseBin {
   gchar 	*uri;
   GstElement	*source;
   GstElement	*decoder;
-  GList		*subtitles; /* additional filesrc ! subparse bins */
+  GstElement	*subtitle; /* additional filesrc ! subparse bin */
   gboolean	 need_rebuild;
 
   /* group management */

@@ -1,5 +1,16 @@
 2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_init),
+	(gen_preroll_element), (remove_groups), (setup_subtitle),
+	(gen_source_element), (setup_source):
+	* gst/playback/gstplaybasebin.h:
+	  Multiple .sub files is just a stupid idea... Fix some threading
+	  mistakes. Interestingly, external .sub files cause playbin to
+	  hang, I don't know why... Parsing fixes contributed by Felix
+	  Kooman <fkooman@tuxed.net>.
+
+2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* testsuite/embed/Makefile.am:
 	  Fix buildbot.
 
