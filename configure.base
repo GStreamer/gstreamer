@@ -1162,6 +1162,7 @@ plugins/filters/adder/Makefile
 plugins/filters/colorspace/Makefile
 plugins/filters/volenv/Makefile
 plugins/filters/level/Makefile
+plugins/filters/lav/Makefile
 plugins/filters/cutter/Makefile
 plugins/gnomevfs/Makefile
 plugins/icecast/Makefile
