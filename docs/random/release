@@ -1,0 +1,56 @@
+Release TODO
+------------
+
+* make distcheck should pass
+
+* test suite should pass
+
+* autotools have latest config.{guess,sub}
+  This is needed in order to support newer platforms.
+  On Debian install the autotools-dev package to get these.
+
+* depending on how the API has changed update the libtool versioning
+  in configure.ac.  Look at the libtool info page about versioning for
+  guidelines.
+
+* update package version
+
+* tag tree
+  http://gstreamer.net/dev/cvs.php
+  add tag to above page
+
+* update web site release notes
+
+* update web site news items for release
+
+* upload to sourceforge
+
+* announce to:
+  freshmeat
+  gstreamer-{devel, announce}
+  linux-audio-dev (?)
+  gnome lists (?)
+  lwn (if it's a big release)
+
+
+Should work:
+
+* autoconf feature to allow building outside source dir
+
+
+
+Package version policy
+----------------------
+
+Use major.minor.micro versioning
+
+Before 1.0.0
+
+Update micro until code and API are fairly stable, then update minor.
+
+
+After 1.0.0
+
+Update major when code and api hit new level of stability or major features.
+Update minor on API changes.
+Update micro on API-compatible changes.
