@@ -35,7 +35,7 @@ DIST_SUBDIRS=ext gst-libs \
 	pkgconfig
 
 EXTRA_DIST=gst-plugins.spec depcomp \
-	   AUTHORS COPYING COPYING.LIB README RELEASE REQUIREMENTS \
+	   AUTHORS COPYING COPYING.LIB NEWS README RELEASE REQUIREMENTS \
 	   ChangeLog autogen.sh common m4
 
 DISTCLEANFILES=_stdint.h
