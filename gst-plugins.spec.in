@@ -106,7 +106,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/gst/libgstresample.so
 %{_libdir}/gst/libgstriff.so
 %{_libdir}/gst/libgstvideo.so
-%{_libdir}/gst/libgstmedia-info.so.0.0.0
+%{_libdir}/libgstmedia-info.so.0.0.0
 
 %package -n gstreamer-plugins-devel
 Summary: 	GStreamer Plugin Library Headers.
@@ -126,7 +126,7 @@ GStreamer support libraries header files.
 %{_includedir}/gst-plugins-%{version}/gst/riff/riff.h
 %{_includedir}/gst-plugins-%{version}/gst/video/video.h
 %{_includedir}/gst-plugins-%{version}/gst/play/play.h
-%{_includedir}/gst-plugins-%{version}/gst/media-info.h
+%{_includedir}/gst-plugins-%{version}/gst/media-info/media-info.h
 %{_datadir}/aclocal/gst-element-check.m4
 %{_libdir}/pkgconfig/gstreamer-libs.pc
 %{_libdir}/pkgconfig/gstreamer-play.pc
