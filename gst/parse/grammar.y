@@ -95,12 +95,9 @@ typedef struct {
 
 #ifdef G_HAVE_ISO_VARARGS
 #define SET_ERROR(error, type, ...) G_STMT_START{ \
-  if (error) { \
-    if (*(error)) { \
-      g_warning (__VA_ARGS__); \
-    } else { \
-      g_set_error ((error), GST_PARSE_ERROR, (type), __VA_ARGS__); \
-    }\
+  GST_CAT_ERROR (GST_CAT_PIPELINE, __VA_ARGS__); \
+  if ((error) && !*(error)) { \
+    g_set_error ((error), GST_PARSE_ERROR, (type), __VA_ARGS__); \
   } \
 }G_STMT_END
 #define ERROR(type, ...) SET_ERROR (((graph_t *) graph)->error, (type), __VA_ARGS__ )
@@ -120,12 +117,9 @@ typedef struct {
 #elif defined(G_HAVE_GNUC_VARARGS)
 
 #define SET_ERROR(error, type, args...) G_STMT_START{ \
-  if (error) { \
-    if (*(error)) { \
-      g_warning ( args ); \
-    } else { \
-      g_set_error ((error), GST_PARSE_ERROR, (type), args ); \
-    }\
+  GST_CAT_ERROR (GST_CAT_PIPELINE, args ); \
+  if ((error) && !*(error)) { \
+    g_set_error ((error), GST_PARSE_ERROR, (type), args ); \
   } \
 }G_STMT_END
 #define ERROR(type, args...) SET_ERROR (((graph_t *) graph)->error, (type) , args )
@@ -145,12 +139,9 @@ typedef struct {
 #else
 
 #define SET_ERROR(error, type, ...) G_STMT_START{ \
-  if (error) { \
-    if (*(error)) { \
-      g_warning ("error while parsing"); \
-    } else { \
-      g_set_error ((error), GST_PARSE_ERROR, (type), "error while parsing"); \
-    }\
+  GST_CAT_ERROR (GST_CAT_PIPELINE, "error while parsing" ); \
+  if ((error) && !*(error)) { \
+    g_set_error ((error), GST_PARSE_ERROR, (type), "error while parsing"); \
   } \
 }G_STMT_END
 #define ERROR(type, ...) SET_ERROR (((graph_t *) graph)->error, (type), "error while parsing")

@@ -1,5 +1,10 @@
 2004-05-04  Benjamin Otte  <otte@gnome.org>
 
+	* gst/parse/grammar.y:
+	  use GST_ERROR instead of g_warning, and always throw a GST_ERROR 
+
+2004-05-04  Benjamin Otte  <otte@gnome.org>
+
 	* testsuite/caps/renegotiate.c: (main):
 	  improve output in error case
 
