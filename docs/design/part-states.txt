@@ -1,7 +1,7 @@
 States
 ======
 
-Both elements an pads can be in different states. The states of the pads are 
+Both elements and pads can be in different states. The states of the pads are 
 linked to the state of the element so the design of the states is mainly
 focused around the element states.
 

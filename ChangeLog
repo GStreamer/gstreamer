@@ -1,3 +1,22 @@
+2005-02-23  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-states.txt:
+	* gst/base/gstbasesink.c: (gst_basesink_get_template),
+	(gst_basesink_base_init), (gst_basesink_class_init),
+	(gst_basesink_init), (gst_base_sink_get_template),
+	(gst_base_sink_get_caps), (gst_base_sink_set_caps),
+	(gst_base_sink_alloc_buffer), (gst_basesink_finish_preroll),
+	(gst_basesink_event), (gst_basesink_get_times),
+	(gst_basesink_do_sync), (gst_basesink_chain_unlocked),
+	(gst_basesink_activate), (gst_basesink_change_state):
+	* gst/base/gstbasesink.h:
+	* gst/elements/gstfakesink.c: (gst_fakesink_class_init),
+	(gst_fakesink_get_times), (gst_fakesink_event),
+	(gst_fakesink_preroll), (gst_fakesink_render):
+	Add clock and sync handling to the base sink class.
+	Make fakesink extend the base sink class.
+	Fix some typos.
+
 2005-02-23  Andy Wingo  <wingo@pobox.com>
 
 	* check/Makefile.am (TESTS): Add pipelines/simple_launch_lines.

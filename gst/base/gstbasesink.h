@@ -35,6 +35,9 @@ G_BEGIN_DECLS
 #define GST_IS_BASESINK(obj)  		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASESINK))
 #define GST_IS_BASESINK_CLASS(obj) 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASESINK))
 
+#define GST_BASESINK_CLOCK(obj)		(GST_BASESINK (obj)->clock)
+#define GST_BASESINK_PAD(obj)		(GST_BASESINK (obj)->sinkpad)
+
 typedef struct _GstBaseSink GstBaseSink;
 typedef struct _GstBaseSinkClass GstBaseSinkClass;
 
@@ -48,8 +51,9 @@ struct _GstBaseSink {
   gboolean 	 has_loop;
   gboolean 	 has_chain;
 
-  gboolean 	 sync;
   GstClock 	*clock;
+  GstClockID     clock_id;
+  GstClockTime   end_time;
   
   gboolean       eos;
   gboolean       need_preroll;
@@ -66,6 +70,9 @@ struct _GstBaseSinkClass {
 
   GstBuffer*    (*alloc_buffer) (GstBaseSink *sink, guint64 offset, guint size,
 		                 GstCaps *caps);
+
+  void		(*get_times)    (GstBaseSink *sink, GstBuffer *buffer, 
+		                 GstClockTime *start, GstClockTime *end);
 
   void          (*event)        (GstBaseSink *sink, GstEvent *event);
   GstFlowReturn (*preroll)      (GstBaseSink *sink, GstBuffer *buffer);

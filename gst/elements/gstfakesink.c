@@ -117,6 +117,8 @@ static GstFlowReturn gst_fakesink_preroll (GstBaseSink * bsink,
 static GstFlowReturn gst_fakesink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
 static void gst_fakesink_event (GstBaseSink * bsink, GstEvent * event);
+static void gst_fakesink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end);
 
 static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
 
@@ -179,6 +181,7 @@ gst_fakesink_class_init (GstFakeSinkClass * klass)
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_fakesink_event);
   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_fakesink_preroll);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_fakesink_render);
+  gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_fakesink_get_times);
 }
 
 static void
@@ -252,6 +255,17 @@ gst_fakesink_get_property (GObject * object, guint prop_id, GValue * value,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
+  }
+}
+
+static void
+gst_fakesink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end)
+{
+  GstFakeSink *sink = GST_FAKESINK (bsink);
+
+  if (sink->sync) {
+    GST_BASESINK_CLASS (parent_class)->get_times (bsink, buffer, start, end);
   }
 }
 
