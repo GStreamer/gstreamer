@@ -1,23 +1,141 @@
-GTK-DOC stuff
--------------
+GStreamer documentation notes
 
-* starting files in CVS:
+IMPORTANT
+=========
+
+Please make sure you've read and understood everything in this file
+before you try changing documentation.
+
+OVERVIEW
+========
+
+GStreamer has two sets of documentation that we maintain:
+* API references, using gtk-doc (gstreamer, gstreamer-libs)
+* "books", using DocBook/XML (faq, manual, pwg)
+
+DOCBOOK NOTES
+=============
+
+OK, I've grown so tired of having to coax the docs to build every time I
+get round to it that I've decided to note down some of the things that
+are important to know.
+
+OVERVIEW
+--------
+* Our documentation should all be Docbook/XML.  No SGML.
+* The source for the documentation is:
+  - one or more .xml files, with the main one being gstreamer-(whatever).xml
+  - image files
+    - in .fig
+    - in .png (and maybe others)
+* We want to generate docs in HTML, PS and PDF
+* We want to use xmlto to generate these
+
+CONVENTIONS
+-----------
+We stick to some simple conventions for writing docbook documentation.
+* id names:
+  - all id's start with chapter-, part-, section-, or misc-
+  - verify this is the case by looking at the generated file names in html/
+  - sections should also include the chapter name;
+    for example in a chapter called chapter-example, a section would be
+    called section-example-hello-world
+
+HOW IMAGES ARE HANDLED
+----------------------
+* the format of images used is:
+  - PNG for html
+  - EPS for ps
+  - PDF for pdf
+
+* images may need to be converted from their source format to the end format
+
+* a file called image.entities is generated that provides two entities:
+  &image; and &IMAGE;
+  &image; is the file extension (png, ps, pdf)
+* all generated images will be put in images/
+
+HOW THE BUILD WORKS FOR EACH FORMAT
+-----------------------------------
+* HTML:
+  - xmlto html gstreamer-whatever.xml should produce the html docs.
+  - We do this in the html subdir of the doc builddir.
+  - images are copied to (builddir)/html/images
+  - PNGS should be set to all of the png's referenced for html, both
+    already there and auto-generated
+
+* PS :
+  - images are converted to .ps files in EPS format.  Generated images are
+    put in images/
+  - xmlto ps gstreamer-whatever.xml generates the ps file
+
+* PDF :
+  There are two ways:
+  - ps2pdf is the easiest
+  - we specify ps, PS as the image type, but using xmlto the build will fail
+    because it uses ps2pdf internally and it fails to generate the images
+    By hand-generating .pdf images before xmlto we can make the build succeed.
+    (This is why image-pdf has file ext pdf but type EPS; this tricks xmlto in
+     doing the right thing)
+    xmlto pdf gstreamer-whatever.xml generates pdf (but seems to fail on the
+    FAQ, so for now we use ps2pdf)
+
+HOW THE BUILD SYSTEM IS SET UP
+------------------------------
+* make all should build html, ps, and pdf
+* html is built in a subdir, with the png/ps images copied there
+* ps and pdf are built in the current dir, in one file
+
+
+GTK-DOC NOTES
+=============
+
+* files under CVS control:
   - Makefile.am
   - gstreamer-sections.txt, gstreamer.types.in, gstreamer-docs.sgml
   - tmpl/
+  (FIXME: describe what each of these files do)
 
-* what is done in the gst dir ?
+* checklist:
+  - make sure -sections.txt has a <TITLE> set for each <FILE>
 
-- headers are scanned based on $(MODULE).types
-  $(MODULE)-scan is created
-  gtkdoc-scan is called with a sourcedir and a module name,
-  where the module name is  $(MODULE)
-  $(MODULE)-sections.txt is created if it doesn't exist yet (it should),
-  as well as $(MODULE)-decl.txt and $(MODULE)-decl-list.txt
+* what happens during a gtk-doc build ?
+  - headers are scanned based on $(MODULE).types
+    $(MODULE)-scan is created
+    gtkdoc-scan is called with a sourcedir and a module name,
+    where the module name is  $(MODULE)
+    $(MODULE)-sections.txt is created if it doesn't exist yet (it should),
+    as well as $(MODULE)-decl.txt and $(MODULE)-decl-list.txt
     
-  and .args, .hierarchy and .signals files are created
-  gtkdoc-scan is called 
+    and .args, .hierarchy and .signals files are created
+    gtkdoc-scan is called 
+
+  (FIXME: why is there gstreamer.types.in and gst-plugins.types.in ?)
 
 
-* TODO:
-  why is there gstreamer.types.in and gst-plugins.types.in ?
+WBSITE DOCUMENTATION
+====================
+
+Updating the online documentation is pretty simple.
+Make sure that you
+a) have a working freedesktop.org account
+b) $HOME/.ssh/config set up so that it has the right User for the Host
+   (for example, I have:
+Host freedesktop.org
+  User thomasvs
+c) verify this works by doing ssh freedesktop.org and being logged in without
+   a password prompt
+d) have verified your changes build documentation locally.
+
+Then, after updating any of the docs, run "make upload" from that directory.
+Or, run "make upload" from this (docs) directory.
+
+RANDOM THINGS I'VE LEARNED
+==========================
+
+* for clean builddir != srcdir separation, I wanted to use xmlto --searchpath
+  so the source xml could find the built entity file.
+  But xmlto --searchpath is (right now) for TeX input, not xml input.
+  xsltproc has a --path option (that xmlto doesn't use yet), but it
+  resolves single files to $(specified_path)/$(srcdir)/$(file)
+  For now, we need to hack around it by copying xml to the build dir.

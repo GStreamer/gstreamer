@@ -1,3 +1,11 @@
+2004-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/95NonPath:
+	* docs/HACKING:
+	* docs/README:
+	* docs/building-the-docs-on-debian:
+          collect relevant bits of doc info
+
 2004-01-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced_tagging.xml:
