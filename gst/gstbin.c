@@ -726,12 +726,16 @@ gst_bin_change_state (GstElement * element)
   if (pending == GST_STATE_VOID_PENDING)
     return GST_STATE_SUCCESS;
 
-  if (old_state == pending) {
-    GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
-        "old and pending state are both %s, returning",
-        gst_element_state_get_name (pending));
-    return GST_STATE_SUCCESS;
-  }
+  /* we want to recurse into children anyway, regardless of our old
+   * state */
+  /*
+     if (old_state == pending) {
+     GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
+     "old and pending state are both %s, returning",
+     gst_element_state_get_name (pending));
+     return GST_STATE_SUCCESS;
+     }
+   */
 
   children = bin->children;
 

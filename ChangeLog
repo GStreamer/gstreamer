@@ -1,5 +1,21 @@
 2004-07-09  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gsttypes.sgml:
+	* gst/gstbin.c: (gst_bin_change_state):
+	* gst/gstelement.c: (gst_element_set_state),
+	(gst_element_change_state):
+	  rework so that for bins we try to set the state on all children
+	  as well even if the bin is in the correct state already.
+	  change while to do so at least one iteration is done.
+	  For regular elements, we fall back to the previous behaviour for
+	  now since we first need a new plugins release.
+	* testsuite/states/parent.c: (main):
+	  test for this case
+	  Fixes #123774
+
+2004-07-09  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* gst/gstqueue.c: (gst_queue_class_init), (gst_queue_finalize),
 	(gst_queue_chain), (gst_queue_get), (gst_queue_handle_src_event),
 	(gst_queue_release_locks), (gst_queue_change_state),

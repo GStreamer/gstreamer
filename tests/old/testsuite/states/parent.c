@@ -100,8 +100,9 @@ main (gint argc, gchar * argv[])
   g_assert (GST_STATE (bin2) == GST_STATE_PAUSED);
   g_assert (GST_STATE (fakesrc) == GST_STATE_PAUSED);
   //FIXME: fix core so that this assert works
-  //g_assert (GST_STATE (identity) == GST_STATE_PAUSED);
+  g_assert (GST_STATE (identity) == GST_STATE_PAUSED);
   g_assert (GST_STATE (fakesink) == GST_STATE_PAUSED);
 
+  g_print ("passed.\n");
   return 0;
 }

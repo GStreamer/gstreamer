@@ -2725,13 +2725,22 @@ gst_element_set_state (GstElement * element, GstElementState state)
   GstElementStateReturn return_val = GST_STATE_SUCCESS;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  /* for bins, we allow calls to change_state where old == new
+   * for elements, too many of them break with g_assert_not_reached(),
+   * so weed those out first.  This is done in gst-plugins CVS and can
+   * be fixed here after a new plugins reelase.
+   * FIXME: of course this file should not have ties to gstbin.h *at all*,
+   * but someone else added a function at the bottom using it.
+   * Fix this properly for 0.9 */
 
   /* start with the current state */
   curpending = GST_STATE (element);
 
-  if (state == curpending) {
+  if (!GST_IS_BIN (element) && state == curpending) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-        "element is already in requested state %s",
+        "non-bin element is already in requested state %s, returning",
         gst_element_state_get_name (state));
     return (GST_STATE_SUCCESS);
   }
@@ -2740,17 +2749,11 @@ gst_element_set_state (GstElement * element, GstElementState state)
       gst_element_state_get_name (curpending),
       gst_element_state_get_name (state));
 
-  /* loop until the final requested state is set */
-  while (GST_STATE (element) != state
-      && GST_STATE (element) != GST_STATE_VOID_PENDING) {
-    /* move the curpending state in the correct direction */
-    if (curpending < state)
-      curpending <<= 1;
-    else
-      curpending >>= 1;
+  /* loop until the final requested state is set;
+   * loop at least once, starting with the current state */
+  do {
 
     /* set the pending state variable */
-    /* FIXME: should probably check to see that we don't already have one */
     GST_STATE_PENDING (element) = curpending;
 
     if (curpending != state) {
@@ -2758,10 +2761,13 @@ gst_element_set_state (GstElement * element, GstElementState state)
           "intermediate: setting state from %s to %s",
           gst_element_state_get_name (GST_STATE (element)),
           gst_element_state_get_name (curpending));
+    } else {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+          "start: setting current state %s again",
+          gst_element_state_get_name (GST_STATE (element)));
     }
 
     /* call the state change function so it can set the state */
-    oclass = GST_ELEMENT_GET_CLASS (element);
     if (oclass->change_state)
       return_val = (oclass->change_state) (element);
 
@@ -2780,7 +2786,8 @@ gst_element_set_state (GstElement * element, GstElementState state)
         /* if it did not, this is an error - fix the element that does this */
         if (GST_STATE (element) != curpending) {
           g_warning ("element %s claimed state-change success,"
-              "but state didn't change to %s. State is %s (%s pending), fix the element",
+              "but state didn't change to %s. State is %s (%s pending), "
+              "fix the element",
               GST_ELEMENT_NAME (element),
               gst_element_state_get_name (curpending),
               gst_element_state_get_name (GST_STATE (element)),
@@ -2793,7 +2800,14 @@ gst_element_set_state (GstElement * element, GstElementState state)
         /* somebody added a GST_STATE_ and forgot to do stuff here ! */
         g_assert_not_reached ();
     }
-  }
+    /* move the curpending state in the correct direction */
+    if (curpending < state)
+      curpending <<= 1;
+    else
+      curpending >>= 1;
+  } while (GST_STATE (element) != state
+      && GST_STATE (element) != GST_STATE_VOID_PENDING);
+
 exit:
 
   return return_val;
