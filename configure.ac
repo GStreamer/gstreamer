@@ -88,13 +88,22 @@ AC_MSG_RESULT($PYGTK_H2DEF)
 #dnl check to make sure we can find gtk
 #AM_PATH_GTK_2_0(gtk_required_version,,[AC_MSG_ERROR(maybe you want the gtk-gnome-1-2 branch?)],$extra_mods)
 
-AC_MSG_CHECKING(for gstreamer include dir)
+AC_MSG_CHECKING(for GStreamer include dir)
 GST_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer-$GST_MAJORMINOR`
-
-AC_SUBST(GST_INCLUDEDIR)
 AC_MSG_RESULT($GST_INCLUDEDIR)
 if test "x$GST_INCLUDEDIR" = "x"; then
-  AC_MSG_ERROR(no gstreamer include dir found)
+  AC_MSG_ERROR(no GStreamer include dir found)
+fi
+AC_SUBST(GST_INCLUDEDIR)
+
+if test "x$GST_MAJORMINOR" != "x0.6"; then
+  AC_MSG_CHECKING(for GStreamer interfaces include dir)
+  GST_INTERFACES_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer-interfaces-$GST_MAJORMINOR`
+  AC_MSG_RESULT($GST_INTERFACES_INCLUDEDIR)
+  if test "x$GST_INTERFACES_INCLUDEDIR" = "x"; then
+    AC_MSG_ERROR(no GStreamer interfaces include dir found)
+  fi
+  AC_SUBST(GST_INTERFACES_INCLUDEDIR)
 fi
 
 
@@ -143,6 +152,7 @@ changequote([,])dnl
 AC_OUTPUT([
   Makefile
   gstreamer/Makefile
+  gstinterfaces/Makefile
   pkgconfig/Makefile
   pkgconfig/gst-python.pc
   pkgconfig/gst-python-uninstalled.pc

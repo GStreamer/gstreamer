@@ -27,3 +27,47 @@ headers
 #include <gst/gst.h>
 
 #include "0.7.h"
+%%
+override gst_structure_new kwargs
+
+static int
+_wrap_gst_structure_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:GstStructure.__init__", kwlist, &name))
+        return -1;
+    self->gtype = GST_TYPE_STRUCTURE;
+    self->free_on_dealloc = FALSE;
+    self->boxed = gst_structure_new(name, NULL);
+
+    if (!self->boxed) {
+        PyErr_SetString(PyExc_RuntimeError, "could not create GstStructure object");
+        return -1;
+    }
+    self->free_on_dealloc = TRUE;
+    return 0;
+}
+%%
+override gst_structure_set_value kwargs
+
+static PyObject *
+_wrap_gst_structure_set_value(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "field", "value", NULL };
+    char *field;
+    PyObject *py_value = NULL;
+    GValue value = { 0 };
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sO:GstStructure.set_value", kwlist, &field, &py_value))
+        return NULL;
+    g_value_init(&value, G_TYPE_STRING);
+    if (pyg_value_from_pyobject(&value, py_value) != 0) {
+        return NULL;
+    }
+    gst_structure_set_value(pyg_boxed_get(self, GstStructure), field, &value);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}

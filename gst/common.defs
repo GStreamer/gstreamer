@@ -8,12 +8,6 @@
   (gtype-id "GST_TYPE_BUFFER")
 )
 
-(define-boxed BufferPool
-  (in-module "Gst")
-  (c-name "GstBufferPool")
-  (gtype-id "GST_TYPE_BUFFER_POOL")
-)
-
 (define-boxed Caps
   (in-module "Gst")
   (c-name "GstCaps")
@@ -24,28 +18,6 @@
   (in-module "Gst")
   (c-name "GstEvent")
   (gtype-id "GST_TYPE_EVENT")
-)
-
-(define-boxed Props
-  (in-module "Gst")
-  (c-name "GstProps")
-  (gtype-id "GST_TYPE_PROPS")
-)
-
-(define-boxed PropsEntry
-  (in-module "Gst")
-  (c-name "GstPropsEntry")
-  (gtype-id "GST_TYPE_PROPS_ENTRY")
-)
-
-;;
-;; Access GstProps properties list
-;;
-
-(define-method get_list
-  (of-object "GstProps")
-  (c-name "gst_props_get_list")
-  (return-type "const-GList*")
 )
 
 ;;

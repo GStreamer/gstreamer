@@ -1,3 +1,32 @@
+2004-01-27  David I. Lehn  <dlehn@users.sourceforge.net>
+
+	* Makefile.am: add gstinterfaces dir
+	* configure.ac: get interfaces include dirs
+	* gstreamer/.cvsignore: add .py[co]
+	* gstreamer/0.6.defs:
+	* gstreamer/0.6.override:
+	* gstreamer/0.7.defs:
+	* gstreamer/0.7.override:
+	* gstreamer/common.defs:
+	* gstreamer/common.override: rearrange code for both 0.6 and 0.7
+	support
+	* gstreamer/Makefile.am: add -fno-strict-aliasing due to python
+	issues
+	* gstinterfaces/.cvsignore:
+	* gstinterfaces/0.7.c:
+	* gstinterfaces/0.7.defs:
+	* gstinterfaces/0.7.h:
+	* gstinterfaces/0.7.override:
+	* gstinterfaces/Makefile.am:
+	* gstinterfaces/__init__.py:
+	* gstinterfaces/arg-types.py:
+	* gstinterfaces/common.c:
+	* gstinterfaces/common.defs:
+	* gstinterfaces/common.h:
+	* gstinterfaces/common.override:
+	* gstinterfaces/gstinterfacesmodule.c: messy start of interfaces
+	handling
+
 2003-12-07  Gustavo J. A. M. Carneiro  <gustavo@users.sourceforge.net>
 
 	* gstreamer/common.override

@@ -30,7 +30,7 @@ _gstreamermodule_la_SOURCES = \
 	gstreamermodule.c \
 	common.c common.h \
 	$(VERSOURCES)
-_gstreamermodule_la_CFLAGS = $(GST_CFLAGS)
+_gstreamermodule_la_CFLAGS = $(GST_CFLAGS) -fno-strict-aliasing
 _gstreamermodule_la_LIBADD = $(GST_LIBS)
 _gstreamermodule_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_gstreamer
 nodist__gstreamermodule_la_SOURCES = gstreamer.c

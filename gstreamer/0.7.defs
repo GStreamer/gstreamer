@@ -1,0 +1,9 @@
+;;
+;; 0.7 Boxed types
+;;
+
+(define-boxed Structure
+  (in-module "Gst")
+  (c-name "GstStructure")
+  (gtype-id "GST_TYPE_STRUCTURE")
+)
