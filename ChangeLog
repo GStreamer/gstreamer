@@ -1,3 +1,10 @@
+2004-01-29  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_get): Fixing seeking
+	emiting FLUSH and even before DISCONT.
+	* gst-libs/gst/play/gstplay.c: (gst_play_seek_to_time): Fix seeking to
+	get the best instant seeking as possible yay!
+
 2004-01-29  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/mpeg1videoparse/gstmp1videoparse.c:

@@ -986,20 +986,23 @@ static GstData *gst_gnomevfssrc_get(GstPad *pad)
 		GST_BUFFER_DATA(buf) = g_malloc(src->bytes_per_read);
 		g_return_val_if_fail(GST_BUFFER_DATA(buf) != NULL, NULL);
 
-		if (src->new_seek)
-		{
-			GstEvent *event;
-
-			gst_buffer_unref (buf);
-			GST_DEBUG ("new seek %" G_GINT64_FORMAT, src->curoffset);
-			src->new_seek = FALSE;
-
-			GST_DEBUG ("gnomevfssrc sending discont");
-			event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
-			src->need_flush = FALSE;
-
-			return GST_DATA (event);
-		}
+                if (src->need_flush) {
+                  GstEvent *event = gst_event_new_flush ();
+                  src->need_flush = FALSE;
+                  gst_buffer_unref (buf);
+                  GST_DEBUG ("gnomevfssrc sending flush");
+                  return GST_DATA (event);
+                }
+                
+                if (src->new_seek) {
+                  GstEvent *event;
+                  gst_buffer_unref (buf);
+                  GST_DEBUG ("new seek %" G_GINT64_FORMAT, src->curoffset);
+                  src->new_seek = FALSE;
+                  GST_DEBUG ("gnomevfssrc sending discont");
+                  event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
+                  return GST_DATA (event);
+                }
 
 		result = gnome_vfs_read(src->handle, GST_BUFFER_DATA(buf),
 				   src->bytes_per_read, &readbytes);
