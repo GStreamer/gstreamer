@@ -28,7 +28,7 @@
 static GstElementDetails gst_rtpL16enc_details = {
   "RTP RAW Audio Encoder",
   "Codec/Encoder/Network",
-  "Encodes Raw Audio into an RTP packet",
+  "Encodes Raw Audio into a RTP packet",
   "Zeeshan Ali <zak147@yahoo.com>"
 };
 

@@ -75,7 +75,7 @@ struct wave_header
 
 static GstElementDetails gst_wavenc_details =
 GST_ELEMENT_DETAILS ("WAV encoder",
-    "Codec/Encoder/Audio",
+    "Codec/Muxer/Audio",
     "Encode raw audio into WAV",
     "Iain Holmes <iain@prettypeople.org>");
 

@@ -51,11 +51,10 @@ static GstStaticPadTemplate gst_auparse_src_template =
     GST_PAD_SOMETIMES,          /* FIXME: spider */
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "       /* 24-bit PCM is barely supported by gstreamer actually */
         GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS "; "  /* 64-bit float is barely supported by gstreamer actually */
-        "audio/x-alaw, "
-        "rate = (int) [ 8000, 192000 ], "
-        "channels = (int) [ 1, 2 ]; "
-        "audio/x-mulaw, "
-        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
+        "audio/x-alaw, " "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]; " "audio/x-mulaw, " "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]"        /*"; "
+                                                                                                                                                                                   "audio/x-adpcm, "
+                                                                           "layout = (string) { g721, g722, g723_3, g723_5 }" */ )
+                                                                        /* Nothing to decode those ADPCM streams for now */
     );
 
 /* AuParse signals and args */
@@ -314,6 +313,11 @@ Samples :
           "width", G_TYPE_INT, depth,
           "endianness", G_TYPE_INT,
           auparse->le ? G_LITTLE_ENDIAN : G_BIG_ENDIAN, NULL);
+/*
+    } else if (layout) {
+      tempcaps = gst_caps_new_simple ("audio/x-adpcm",
+          "layout", G_TYPE_STRING, layout, NULL);
+*/
     } else {
       tempcaps = gst_caps_new_simple ("audio/x-raw-int",
           "endianness", G_TYPE_INT,
