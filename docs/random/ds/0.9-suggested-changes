@@ -43,6 +43,10 @@ API:
  - fakesrc handoff should be changed to return a GstData * or carry a
     GstData **, wo the user can provide own buffers and events.
 
+ - remove GST_OBJECT_DESTROYED()
+
+ - fix plugin code to load plugins with RTLD_LOCAL
+
 caps:
 
   (Company:)
