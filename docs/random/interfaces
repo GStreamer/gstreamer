@@ -99,14 +99,6 @@ I'll give two examples.
 4) Examples
 ===========
 
-typedef struct _GstInterface {
-  /* note: this struct indeed has no parent. That's normal. */
-
-  /* since we will mostly need a pointer to the element,
-   * we put it here! */
-  GstElement *element;
-} GstInterface;
-
 /* This small extra virtual function is here to provide an
  * interface functionality on a per-instance basis rather
  * than a per-class basis, which is the case for glib.
@@ -263,12 +255,8 @@ typedef struct _GstMixerChannel {
          flags;
 } GstMixerChannel;
 
-typedef struct _GstMixer {
-  GstInterface interface;
-} GstMixer;
-
 typedef struct _GstMixerClass {
-  GstInterfaceClass klass;
+  GTypeInterface klass;
 
   /* virtual functions */
   GList *  (* list_channels) (GstMixer        *mixer);
@@ -288,37 +276,13 @@ typedef struct _GstMixerClass {
 			      gboolean         record);
 } GstMixerClass;
 
-Name for in the element list: "mixer". Gstaudio provides wrapper
-functions for each of the class' virtual functions. Possibly also
-some macros for GST_MIXER_CHANNEL_HAS_FLAG () or _get_channel ().
-
-How to register these? Let's say that we use osssrc as an example.
-
-typedef struct _GstOssMixer {
-  GstMixer mixer;
-
-  [.. more? ..]
-} GstOssMixer;
-
-typedef struct _GstOssMixerClass {
-  GstMixerClass klass;
-} GstOssMixerClass;
-
-[..]
-
-static void
-gst_osssrc_init (GstOssSrc *osssrc)
-{
-  GstOssMixer *mixer = GST_OSS_MIXER (osssrc);
-[..]
-  gst_interface_set_element (GST_INTERFACE (mixer),
-			     GST_ELEMENT (osssrc));
-[..]
-}
+libgstmixer.la/so provides wrapper functions for each of the
+class' virtual functions. Possibly also some macros for
+GST_MIXER_CHANNEL_HAS_FLAG () or _get_channel ().
 
 The rest is done automatically, as described in the already-
 mentioned glib documentation for GInterface. This includes
-things like the class_init () function of the GstOssMixerClass,
+things like the base_init () function of the GstMixerClass,
 which fills all the virtual functions for the mixer, and the
 actual function implementations. The mixer, basically, operates
 as an element on its own. It gets the file descriptor from
@@ -345,38 +309,10 @@ simple as one function. Possible extendible by providing inputs
 (like in the mixer) and norms, although that only applies to
 input-to-analog, not to-digital... Others simply return NULL.
 
-#define GST_OVERLAY_CHANNEL_INPUT  (1<<0)
-#define GST_OVERLAY_CHANNEL_OUTPUT (1<<1)
-#define GST_OVERLAY_CHANNEL_TUNER  (1<<2)
-
-typedef struct _GstOverlayChannel {
-  gchar *label;
-  gint flags;
-} GstOverlayChannel;
-
-typedef struct _GstOverlayNorm {
-  gchar *label;
-  gfloat framerate;
-} GstOverlayNorm;
-
-typedef struct _GstOverlay {
-  GstInterface interface;
-} GstOverlay;
-
 typedef struct _GstOverlayClass {
-  GstInterfaceClass klass;
+  GTypeInterface klass;
 
   /* virtual functions */
-  GList * (* list_channels) (GstOverlay        *overlay);
-  void    (* set_channel)   (GstOverlay        *overlay,
-			     gint               index);
-  gint    (* get_channel)   (GstOverlay        *overlay);
-
-  GList * (* list_norms)    (GstOverlay        *overlay);
-  void    (* set_norm)      (GstOverlay        *overlay,
-			     gint               index);
-  gint    (* get_norm)      (GstOverlay        *overlay);
-
   void    (* set_xwindowid) (GstOverlay        *overlay,
 			     XID                xid);
 } GstOverlayClass;
