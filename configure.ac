@@ -504,6 +504,12 @@ GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
   AC_SUBST(FLAC_LIBS)
 ])
 
+dnl *** FFMPEG ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_FFMPEG, true)
+GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
+  AM_PATH_FFMPEG(0.4.6, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
+])
+
 dnl *** Gnome VFS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)
 GST_CHECK_FEATURE(GNOME_VFS, [Gnome VFS], gnomevfssrc, [

@@ -21,7 +21,7 @@
 #include <string.h>
 #include "media-info.h"
 
-static gboolean _gst_media_info_debug = FALSE;
+static gboolean _gst_media_info_debug = TRUE;
 #define GMI_DEBUG(format, args...) \
   { if (_gst_media_info_debug) { g_print ( format , ## args ); }}
 
@@ -260,6 +260,16 @@ gst_media_info_get_property (GObject *object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+GstMediaInfo *
+gst_media_info_new (const gchar *source_element)
+{
+  GstMediaInfo *info = g_object_new (GST_MEDIA_INFO_TYPE, NULL);
+  if (source_element)
+    g_object_set (G_OBJECT (info), "source", source_element);
+
+  return info;
 }
 
 /**
@@ -631,6 +641,7 @@ gst_media_info_find_streaminfo (GstMediaInfo *info)
         /* substract to get the length */
 	GMI_DEBUG("DEBUG: start %lld, end %lld\n", value_start, value_end);
 	value_end -= value_start;
+	g_print ("DEBUG: length: %d\n", (int) value_end);
 	length = gst_props_entry_new ("length", GST_PROPS_INT ((int) value_end));
 	gst_props_add_entry (gst_caps_get_props (streaminfo), length);
       }
