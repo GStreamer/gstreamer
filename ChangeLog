@@ -1,3 +1,18 @@
+2004-08-31  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_build_list):
+	* ext/alsa/gstalsamixertrack.c: (gst_alsa_mixer_track_new):
+	  Re-commit ALSA switches.
+	* gst/adder/gstadder.c: (gst_adder_loop):
+	  64-bit fix (#151416).
+	* gst/debug/progressreport.c: (gst_progressreport_report):
+	  64-bit fix (#151419).
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_contents):
+	  64-bit fix (#151420).
+	* gst/playback/test3.c: (update_scale):
+	  64-bit fix (#151421).
+
 2004-08-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
