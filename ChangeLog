@@ -1,14 +1,18 @@
 2004-03-12  Johan Dahlin  <johan@gnome.org>
 
+	* gst/gstcaps.h (GST_CAPS_IS_SIMPLE): Capitalize macro
+	* gst/gstcaps.h: Clean up
+
 	* gst/gst.c (init_post): call gst_caps_get_type() instead of
 	_gst_caps_initalize()
 
 	* gst/gstcaps.c: Style fixes, stay closer to glib and friends
 	(_gst_caps_initialize): Remove, in favor for gst_caps_get_type()
 
-	* gst/gstcaps.h (GST_CAPS_IS_SIMPLE): Capitalize macro
-	* gst/gstcaps.h: Clean up
+	* gst/gststructure.c (gst_structure_get_type): Ditto
 
+	* gst/gststructure.h: Ditto
+	
 2004-03-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstqueue.c: (gst_queue_init):
