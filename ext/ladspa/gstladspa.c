@@ -61,6 +61,7 @@ ladspa_src_factory (gchar *name)
 }
 
 static void			gst_ladspa_class_init		(GstLADSPAClass *klass);
+static void			gst_ladspa_base_init		(GstLADSPAClass *klass);
 static void			gst_ladspa_init			(GstLADSPA *ladspa);
 
 static void			gst_ladspa_update_int		(const GValue *value, gpointer data);
@@ -98,12 +99,72 @@ GST_DEBUG_CATEGORY_STATIC (ladspa_debug);
     GST_CAT_LEVEL_LOG (ladspa_debug, GST_LEVEL_DEBUG, obj, __VA_ARGS__)
 
 static void
+gst_ladspa_base_init (GstLADSPAClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstPadTemplate *templ;
+  GstElementDetails *details;
+  LADSPA_Descriptor *desc;
+  gint j, sinkcount,srccount;
+
+  desc = g_hash_table_lookup(ladspa_descriptors,
+		GINT_TO_POINTER(G_TYPE_FROM_CLASS(klass)));
+
+  /* construct the element details struct */
+  details = g_new0(GstElementDetails,1);
+  details->longname = g_strdup(desc->Name);
+  details->klass = "Filter/Audio/LADSPA";
+  details->description = details->longname;
+  details->author = g_strdup(desc->Maker);
+  gst_element_class_set_details (element_class, details);
+
+  /* pad templates */
+  klass->numports = desc->PortCount;
+  klass->numsinkpads = 0;
+  klass->numsrcpads = 0;
+  for (j=0;j<desc->PortCount;j++) {
+    if (LADSPA_IS_PORT_AUDIO(desc->PortDescriptors[j])) {
+      gchar *name = g_strdup((gchar *)desc->PortNames[j]);
+      g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
+
+      /* the factories take ownership of the name */
+      if (LADSPA_IS_PORT_INPUT(desc->PortDescriptors[j])) {
+        templ = ladspa_sink_factory (name);
+        klass->numsinkpads++;
+      } else {
+        templ = ladspa_src_factory (name);
+        klass->numsrcpads++;
+      }
+
+      gst_element_class_add_pad_template (element_class, templ);
+    }
+  }
+
+  klass->srcpad_portnums = g_new0(gint,klass->numsrcpads);
+  klass->sinkpad_portnums = g_new0(gint,klass->numsinkpads);
+  sinkcount = 0;
+  srccount = 0;
+
+  /* walk through the ports, note the portnums for srcpads, sinkpads */
+  for (j=0; j<desc->PortCount; j++) {
+    if (LADSPA_IS_PORT_AUDIO(desc->PortDescriptors[j])) {
+      if (LADSPA_IS_PORT_INPUT(desc->PortDescriptors[j]))
+        klass->sinkpad_portnums[sinkcount++] = j;
+      else
+        klass->srcpad_portnums[srccount++] = j;
+    }
+  }
+
+  klass->descriptor = desc;
+}
+
+static void
 gst_ladspa_class_init (GstLADSPAClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   LADSPA_Descriptor *desc;
-  gint i,current_portnum,sinkcount,srccount,controlcount;
+  gint i,current_portnum,controlcount;
   gint hintdesc;
   gint argtype,argperms;
   GParamSpec *paramspec = NULL;
@@ -118,23 +179,15 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
   gstelement_class->change_state = gst_ladspa_change_state;
 
   /* look up and store the ladspa descriptor */
-  klass->descriptor = g_hash_table_lookup(ladspa_descriptors,GINT_TO_POINTER(G_TYPE_FROM_CLASS(klass)));
-  desc = klass->descriptor;
+  desc = g_hash_table_lookup(ladspa_descriptors,
+		GINT_TO_POINTER(G_TYPE_FROM_CLASS(klass)));
 
-  klass->numports = desc->PortCount;
-
-  klass->numsinkpads = 0;
-  klass->numsrcpads = 0;
   klass->numcontrols = 0;
 
   /* walk through the ports, count the input, output and control ports */
   for (i=0; i<desc->PortCount; i++) {
-    if (LADSPA_IS_PORT_AUDIO(desc->PortDescriptors[i]))
-      if (LADSPA_IS_PORT_INPUT(desc->PortDescriptors[i]))
-        klass->numsinkpads++;
-      else
-        klass->numsrcpads++;
-    else if (LADSPA_IS_PORT_INPUT(desc->PortDescriptors[i]))
+    if (!LADSPA_IS_PORT_AUDIO(desc->PortDescriptors[i]) &&
+        LADSPA_IS_PORT_INPUT(desc->PortDescriptors[i]))
       klass->numcontrols++;
   }
 
@@ -142,22 +195,13 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
          g_type_name (G_TYPE_FROM_CLASS (klass)),
          klass->numsinkpads, klass->numsrcpads, klass->numcontrols);
 
-  klass->srcpad_portnums = g_new0(gint,klass->numsrcpads);
-  klass->sinkpad_portnums = g_new0(gint,klass->numsinkpads);
   klass->control_portnums = g_new0(gint,klass->numcontrols);
-  sinkcount = 0;
-  srccount = 0;
   controlcount = 0;
 
-  /* walk through the ports, note the portnums for srcpads, sinkpads and control
-     params */
+  /* walk through the ports, note the portnums for control params */
   for (i=0; i<desc->PortCount; i++) {
-    if (LADSPA_IS_PORT_AUDIO(desc->PortDescriptors[i]))
-      if (LADSPA_IS_PORT_INPUT(desc->PortDescriptors[i]))
-        klass->sinkpad_portnums[sinkcount++] = i;
-      else
-        klass->srcpad_portnums[srccount++] = i;
-    else if (LADSPA_IS_PORT_INPUT(desc->PortDescriptors[i]))
+    if (!LADSPA_IS_PORT_AUDIO(desc->PortDescriptors[i]) &&
+        LADSPA_IS_PORT_INPUT(desc->PortDescriptors[i]))
       klass->control_portnums[controlcount++] = i;
   }
 
@@ -912,12 +956,10 @@ ladspa_describe_plugin(const char *pcFullFilename,
                        LADSPA_Descriptor_Function pfDescriptorFunction)
 {
   const LADSPA_Descriptor *desc;
-  int i,j;
-  
-  GstElementDetails *details;
+  gint i;
   GTypeInfo typeinfo = {
       sizeof(GstLADSPAClass),
-      NULL,
+      (GBaseInitFunc)gst_ladspa_base_init,
       NULL,
       (GClassInitFunc)gst_ladspa_class_init,
       NULL,
@@ -927,7 +969,6 @@ ladspa_describe_plugin(const char *pcFullFilename,
       (GInstanceInitFunc)gst_ladspa_init,
   };
   GType type;
-  GstElementFactory *factory;
 
   /* walk through all the plugins in this pluginlibrary */
   i = 0;
@@ -944,44 +985,18 @@ ladspa_describe_plugin(const char *pcFullFilename,
     }
     /* create the type now */
     type = g_type_register_static(GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
-
-    /* construct the element details struct */
-    details = g_new0(GstElementDetails,1);
-    details->longname = g_strdup(desc->Name);
-    details->klass = "Filter/Audio/LADSPA";
-    details->license = g_strdup (desc->Copyright);
-    details->description = details->longname;
-    details->version = g_strdup_printf("%ld",desc->UniqueID);
-    details->author = g_strdup(desc->Maker);
-    details->copyright = g_strdup(desc->Copyright);
-
-    /* register the plugin with gstreamer */
-    factory = gst_element_factory_new(type_name,type,details);
-    g_return_if_fail(factory != NULL);
-    gst_plugin_add_feature (ladspa_plugin, GST_PLUGIN_FEATURE (factory));
+    if (!gst_element_register (ladspa_plugin, type_name, GST_RANK_NONE, type))
+      continue;
 
     /* add this plugin to the hash */
     g_hash_table_insert(ladspa_descriptors,
                         GINT_TO_POINTER(type),
                         (gpointer)desc);
-    
-
-    for (j=0;j<desc->PortCount;j++) {
-      if (LADSPA_IS_PORT_AUDIO(desc->PortDescriptors[j])) {
-        gchar *name = g_strdup((gchar *)desc->PortNames[j]);
-        g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
-        /* the factories take ownership of the name */
-        if (LADSPA_IS_PORT_INPUT(desc->PortDescriptors[j]))
-          gst_element_factory_add_pad_template (factory, ladspa_sink_factory (name));
-        else
-          gst_element_factory_add_pad_template (factory, ladspa_src_factory (name));
-      }
-    }
   }
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
   GST_DEBUG_CATEGORY_INIT (ladspa_debug, "ladspa",
                            GST_DEBUG_FG_GREEN | GST_DEBUG_BG_BLACK | GST_DEBUG_BOLD,
@@ -1000,9 +1015,15 @@ plugin_init (GModule *module, GstPlugin *plugin)
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "ladspa",
-  plugin_init
-};
+  "All LADSPA plugins",
+  plugin_init,
+  LADSPA_VERSION,
+  "LGPL",
+  "(c) 2003 The LADSPA team",
+  "LADSPA",
+  "http://www.ladspa.org/"
+)
