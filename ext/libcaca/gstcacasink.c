@@ -53,22 +53,26 @@ GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
+  //GST_STATIC_CAPS (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24));
   GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB));
 
-static void	gst_cacasink_base_init	(gpointer g_class);
-static void	gst_cacasink_class_init	(GstCACASinkClass *klass);
-static void	gst_cacasink_init		(GstCACASink *cacasink);
-static void	gst_cacasink_interface_init	(GstImplementsInterfaceClass *klass);
-static gboolean	gst_cacasink_interface_supported (GstImplementsInterface *iface, GType type);
-static void     gst_cacasink_navigation_init  (GstNavigationInterface *iface);
-static void     gst_cacasink_navigation_send_event (GstNavigation *navigation, GstStructure *structure);
+static void gst_cacasink_base_init (gpointer g_class);
+static void gst_cacasink_class_init (GstCACASinkClass *klass);
+static void gst_cacasink_init (GstCACASink *cacasink);
+static void gst_cacasink_interface_init	(GstImplementsInterfaceClass *klass);
+static gboolean	gst_cacasink_interface_supported (GstImplementsInterface *iface,
+						  GType type);
+static void gst_cacasink_navigation_init (GstNavigationInterface *iface);
+static void gst_cacasink_navigation_send_event (GstNavigation *navigation, 
+				GstStructure *structure);
 
-static void	gst_cacasink_chain	(GstPad *pad, GstData *_data);
+static void gst_cacasink_chain (GstPad *pad, GstData *_data);
 
-static void	gst_cacasink_set_property	(GObject *object, guint prop_id, 
-					 const GValue *value, GParamSpec *pspec);
-static void	gst_cacasink_get_property	(GObject *object, guint prop_id, 
-					 GValue *value, GParamSpec *pspec);
+static void gst_cacasink_set_property (GObject *object, guint prop_id, 
+				const GValue *value, GParamSpec *pspec);
+static void gst_cacasink_get_property (GObject *object, guint prop_id, 
+				 GValue *value, GParamSpec *pspec);
+static void gst_cacasink_dispose (GObject *object);
 
 static GstElementStateReturn gst_cacasink_change_state (GstElement *element);
 
@@ -179,6 +183,7 @@ gst_cacasink_class_init (GstCACASinkClass *klass)
 
   gobject_class->set_property = gst_cacasink_set_property;
   gobject_class->get_property = gst_cacasink_get_property;
+  gobject_class->dispose = gst_cacasink_dispose;
 
   gstelement_class->change_state = gst_cacasink_change_state;
 }
@@ -242,13 +247,34 @@ gst_cacasink_sinkconnect (GstPad *pad, const GstCaps *caps)
   gst_structure_get_int (structure, "green_mask", &cacasink->green_mask);
   gst_structure_get_int (structure, "blue_mask", &cacasink->blue_mask);
 
-  gst_video_sink_got_video_size (GST_VIDEOSINK (cacasink), GST_VIDEOSINK_WIDTH (cacasink), GST_VIDEOSINK_HEIGHT (cacasink));
-
-  /*if (cacasink->bitmap != NULL) {
+  if (cacasink->bitmap) {
     caca_free_bitmap (cacasink->bitmap);
   }
 
-  caca->bitmap = caca_create_bitmap (cacasink->bpp, cacasink->image_width, cacasink->image_height, cacasink->image_width * cacasink->bpp/8, cacasink->red_mask, cacasink->green_mask, cacasink->blue_mask);*/
+  cacasink->bitmap = caca_create_bitmap (
+			cacasink->bpp, 
+			//32, 
+			GST_VIDEOSINK_WIDTH (cacasink), 
+			GST_VIDEOSINK_HEIGHT (cacasink), 
+			//GST_VIDEOSINK_WIDTH (cacasink) * cacasink->bpp/8, 
+			((GST_VIDEOSINK_WIDTH (cacasink) + 15) & ~15) 
+			* cacasink->bpp/8, 
+			0x000000ff, 
+			0x0000ff00, 
+			0x00ff0000, 
+			//cacasink->red_mask, 
+			//cacasink->green_mask, 
+			//cacasink->blue_mask,
+			0);
+
+  //g_print ("Bpp: %u, width: %u, height: %u\n", cacasink->bpp, GST_VIDEOSINK_WIDTH (cacasink), GST_VIDEOSINK_HEIGHT (cacasink));
+  g_print ("red: %x, green: %x, blue: %x\n", cacasink->red_mask, cacasink->green_mask, cacasink->blue_mask);
+
+  if (!cacasink->bitmap) {
+     return GST_PAD_LINK_DELAYED;
+  }
+     
+  //gst_video_sink_got_video_size (GST_VIDEOSINK (cacasink), GST_VIDEOSINK_WIDTH (cacasink), GST_VIDEOSINK_HEIGHT (cacasink));
 
   return GST_PAD_LINK_OK;
 }
@@ -272,7 +298,11 @@ gst_cacasink_init (GstCACASink *cacasink)
   cacasink->blue_mask = GST_CACA_DEFAULT_BLUE_MASK;
 
   cacasink->bitmap = NULL;
+  caca_init ();
 
+  cacasink->screen_width = caca_get_width ();
+  cacasink->screen_height = caca_get_height ();
+  
   GST_FLAG_SET(cacasink, GST_ELEMENT_THREAD_SUGGESTED);
 }
 
@@ -305,7 +335,7 @@ gst_cacasink_chain (GstPad *pad, GstData *_data)
     cacasink->id = NULL;
   }
 
-  //caca_clear ();
+  caca_clear ();
   caca_draw_bitmap (0, 0, cacasink->screen_width-1, cacasink->screen_height-1, cacasink->bitmap, GST_BUFFER_DATA (buf));
   caca_refresh ();
 
@@ -316,10 +346,23 @@ gst_cacasink_chain (GstPad *pad, GstData *_data)
     cacasink->correction = 0;
   }
 
-
   gst_buffer_unref(buf);
 }
 
+
+static void
+gst_cacasink_dispose (GObject *object) 
+{
+  GstCACASink *cacasink = GST_CACASINK (object);
+
+  if (cacasink->bitmap) {
+    caca_free_bitmap (cacasink->bitmap);
+  }
+
+  caca_end ();
+  
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
 
 static void
 gst_cacasink_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -334,6 +377,7 @@ gst_cacasink_set_property (GObject *object, guint prop_id, const GValue *value, 
   switch (prop_id) {
     case ARG_DITHER: {
       cacasink->dither = g_value_get_enum (value);
+      caca_set_dithering (cacasink->dither + CACA_DITHERING_NONE);
       break;
     }
     default:
@@ -374,22 +418,6 @@ gst_cacasink_open (GstCACASink *cacasink)
 {
   g_return_val_if_fail (!GST_FLAG_IS_SET (cacasink ,GST_CACASINK_OPEN), FALSE);
 
-  caca_init ();
-
-  cacasink->screen_width = caca_get_width ();
-  cacasink->screen_height = caca_get_height ();
-  caca_set_dithering (cacasink->dither + CACA_DITHERING_NONE);
-
-  cacasink->bitmap = caca_create_bitmap (
-			cacasink->bpp, 
-			GST_VIDEOSINK_WIDTH (cacasink), 
-			GST_VIDEOSINK_HEIGHT (cacasink), 
-			GST_VIDEOSINK_WIDTH (cacasink) * cacasink->bpp/8, 
-			cacasink->red_mask, 
-			cacasink->green_mask, 
-			cacasink->blue_mask,
-			0);
-
   GST_FLAG_SET (cacasink, GST_CACASINK_OPEN);
 
   return TRUE;
@@ -399,10 +427,6 @@ static void
 gst_cacasink_close (GstCACASink *cacasink)
 {
   g_return_if_fail (GST_FLAG_IS_SET (cacasink ,GST_CACASINK_OPEN));
-
-  caca_free_bitmap (cacasink->bitmap);
-  cacasink->bitmap = NULL;
-  caca_end ();
 
   GST_FLAG_UNSET (cacasink, GST_CACASINK_OPEN);
 }
