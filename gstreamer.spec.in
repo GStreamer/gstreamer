@@ -31,7 +31,8 @@ plugins.
 %{prefix}/bin/gstreamer-compprep
 %{prefix}/bin/gstreamer-inspect
 %{prefix}/bin/gstreamer-launch
-%{prefix}/bin/gstreamer-register 
+%{prefix}/bin/gstreamer-register
+%{prefix}/bin/gstreamer-guilaunch 
 %{prefix}/lib/lib*.so*
 %{prefix}/lib/gst/libadder*
 %{prefix}/lib/gst/libalaw*
