@@ -78,6 +78,9 @@ the function that will be called when a QoS message is sent.
 
 </para>
 
+@GST_PAD_UNKNOWN: 
+@GST_PAD_SRC: 
+@GST_PAD_SINK: 
 
 <!-- ##### FUNCTION gst_pad_new ##### -->
 <para>
@@ -276,5 +279,15 @@ the function that will be called when a QoS message is sent.
 @pad: 
 @parent: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_load_and_connect ##### -->
+<para>
+
+</para>
+
+@parent: 
+@element: 
+@elements: 
 
 

@@ -1,12 +1,21 @@
 <!-- ##### SECTION Title ##### -->
-gstbufferpool
+GstBufferPool
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Create buffers from a pool
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+A bufferpool is used to create buffers in an efficient way. En element
+can maintain a bufferpool with a fixed number of buffers. This will reduce
+the g_malloc and g_free overhead.
+</para>
 
+<para>
+A bufferpool can also be used to implement direct access. A bufferpool can be
+sent from one element to another so that the latter can directly write into
+the memory of the element that maintains the bufferpool. This can greatly reduce
+the number of memcpy operations.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -14,19 +23,15 @@ gstbufferpool
 
 </para>
 
-<!-- ##### MACRO GST_BUFFER_POOL ##### -->
-<para>
-
-</para>
-
-@buf: 
-
-
 <!-- ##### STRUCT GstBufferPool ##### -->
 <para>
 
 </para>
 
+@new_buffer: 
+@new_user_data: 
+@destroy_user_data: 
+@destroy_buffer: 
 
 <!-- ##### USER_FUNCTION GstBufferPoolCreateFunction ##### -->
 <para>

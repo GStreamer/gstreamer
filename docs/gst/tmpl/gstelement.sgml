@@ -69,6 +69,11 @@ temporary stops the data flow.
 </tbody></tgroup></informaltable>
 </para>
 
+@GST_STATE_NONE_PENDING: 
+@GST_STATE_NULL: 
+@GST_STATE_READY: 
+@GST_STATE_PLAYING: 
+@GST_STATE_PAUSED: 
 
 <!-- ##### ENUM GstElementStateReturn ##### -->
 <para>
@@ -98,6 +103,9 @@ can return after a state change.
 
 </para>
 
+@GST_STATE_FAILURE: 
+@GST_STATE_SUCCESS: 
+@GST_STATE_ASYNC: 
 
 <!-- ##### MACRO GST_STATE ##### -->
 <para>
@@ -132,6 +140,8 @@ may have.
 
 </para>
 
+@GST_ELEMENT_MULTI_IN: 
+@GST_ELEMENT_THREAD_SUGGESTED: 
 
 <!-- ##### MACRO GST_ELEMENT_IS_MULTI_IN ##### -->
 <para>
@@ -140,6 +150,14 @@ Query whether this object has multiple input pads.
 </para>
 
 @obj: Element to query for multiple input pads.
+
+
+<!-- ##### MACRO GST_ELEMENT_IS_THREAD_SUGGESTED ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 
 <!-- ##### STRUCT GstElement ##### -->
@@ -154,6 +172,12 @@ This struct is used to define public information about the element.  It
 describes the element, mostly for the benefit of editors.
 </para>
 
+@longname: 
+@class: 
+@description: 
+@version: 
+@author: 
+@copyright: 
 
 <!-- ##### STRUCT GstElementFactory ##### -->
 <para>
@@ -162,6 +186,11 @@ of the element, the GtkType value for it, as well as a pointer to the
 GstElementDetails struct for the element.
 </para>
 
+@name: 
+@type: 
+@details: 
+@src_types: 
+@sink_types: 
 
 <!-- ##### USER_FUNCTION GstElementLoopFunction ##### -->
 <para>
@@ -317,6 +346,16 @@ circumstances.
 
 @element: 
 @parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@elements: 
 @Returns: 
 
 

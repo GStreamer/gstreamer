@@ -18,19 +18,13 @@ features of the CPU.
 
 </para>
 
-<!-- ##### MACRO GST_CPU_FLAG_MMX ##### -->
+<!-- ##### ENUM GstCPUFlags ##### -->
 <para>
-A flag indicating that MMX instructions are supported.
+
 </para>
 
-
-
-<!-- ##### MACRO GST_CPU_FLAG_SSE ##### -->
-<para>
-A flag indicating that SSE instructions are supported.
-</para>
-
-
+@GST_CPU_FLAG_MMX: 
+@GST_CPU_FLAG_SSE: 
 
 <!-- ##### FUNCTION gst_cpu_get_flags ##### -->
 <para>

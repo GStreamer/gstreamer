@@ -30,6 +30,7 @@ audio source. It provides data for the next element in the graph.
 </tbody></tgroup></informaltable>
 </para>
 
+@GST_SRC_ASYNC: 
 
 <!-- ##### MACRO GST_SRC_FLAGS ##### -->
 <para>

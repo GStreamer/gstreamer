@@ -69,12 +69,22 @@ valid mp3 decoder, and thus the whole point of the type system.
 
 </para>
 
+@id: 
+@mime: 
+@exts: 
+@typefindfunc: 
+@srcs: 
+@sinks: 
+@converters: 
 
 <!-- ##### STRUCT GstTypeFactory ##### -->
 <para>
 
 </para>
 
+@mime: 
+@exts: 
+@typefindfunc: 
 
 <!-- ##### FUNCTION gst_type_register ##### -->
 <para>

@@ -40,6 +40,16 @@ gstclock
 
 </para>
 
+@name: 
+@start_time: 
+@current_time: 
+@adjust: 
+@locking: 
+@sinkobjects: 
+@num: 
+@num_locked: 
+@sinkmutex: 
+@lock: 
 
 <!-- ##### FUNCTION gst_clock_new ##### -->
 <para>

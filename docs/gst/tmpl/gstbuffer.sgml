@@ -167,12 +167,28 @@ used when data in a stream has been skipped</entry>
 
 </para>
 
+@GST_BUFFER_READONLY: 
+@GST_BUFFER_EOS: 
+@GST_BUFFER_ORIGINAL: 
+@GST_BUFFER_DONTFREE: 
+@GST_BUFFER_FLUSH: 
 
 <!-- ##### STRUCT GstBuffer ##### -->
 <para>
 
 </para>
 
+@lock: 
+@flags: 
+@data: 
+@size: 
+@maxsize: 
+@offset: 
+@timestamp: 
+@maxage: 
+@metas: 
+@parent: 
+@pool: 
 
 <!-- ##### FUNCTION gst_buffer_new ##### -->
 <para>

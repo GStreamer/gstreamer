@@ -43,6 +43,9 @@ to be dealt with in the separate thread.
 
 </para>
 
+@GST_THREAD_CREATE: 
+@GST_THREAD_STATE_SPINNING: 
+@GST_THREAD_STATE_REAPING: 
 
 <!-- ##### STRUCT GstThread ##### -->
 <para>
@@ -57,22 +60,6 @@ to be dealt with in the separate thread.
 
 @name: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_thread_main_loop ##### -->
-<para>
-
-</para>
-
-@arg: 
-
-
-<!-- ##### FUNCTION gst_thread_iterate ##### -->
-<para>
-
-</para>
-
-@thread: 
 
 
 <!-- ##### ARG GstThread:create_thread ##### -->

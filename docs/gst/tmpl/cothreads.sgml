@@ -47,12 +47,25 @@ cothreads
 
 </para>
 
+@ctx: 
+@threadnum: 
+@func: 
+@argc: 
+@argv: 
+@flags: 
+@sp: 
+@top_sp: 
+@pc: 
+@jmp: 
 
 <!-- ##### STRUCT cothread_context ##### -->
 <para>
 
 </para>
 
+@threads: 
+@nthreads: 
+@current: 
 
 <!-- ##### USER_FUNCTION cothread_func ##### -->
 <para>

@@ -1,12 +1,11 @@
 <!-- ##### SECTION Title ##### -->
-spectrum
+GstExtraTypes
 
 <!-- ##### SECTION Short_Description ##### -->
-Frequencies of a spectrum analysis.
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Frequencies of a spectrum analysis.
 
 </para>
 
@@ -15,16 +14,18 @@ Frequencies of a spectrum analysis.
 
 </para>
 
-<!-- ##### STRUCT MetaAudioSpectrum ##### -->
+<!-- ##### MACRO GST_TYPE_FILENAME ##### -->
 <para>
 
 </para>
 
-@meta: 
-@bands: 
-@channels: 
-@interleaved: 
-@lowfreq: 
-@highfreq: 
-@steps: 
+
+
+<!-- ##### FUNCTION gst_extra_get_filename_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 

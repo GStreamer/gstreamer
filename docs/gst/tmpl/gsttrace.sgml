@@ -27,12 +27,21 @@ Tracing functionality
 
 </para>
 
+@filename: 
+@fd: 
+@buf: 
+@bufsize: 
+@bufoffset: 
 
 <!-- ##### STRUCT GstTraceEntry ##### -->
 <para>
 
 </para>
 
+@timestamp: 
+@sequence: 
+@data: 
+@message: 
 
 <!-- ##### FUNCTION gst_trace_new ##### -->
 <para>

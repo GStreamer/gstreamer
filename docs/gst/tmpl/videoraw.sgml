@@ -19,6 +19,10 @@ Information about video buffers.
 
 </para>
 
+@meta: 
+@format: 
+@visual: 
+@height: 
 
 <!-- ##### STRUCT MetaDGA ##### -->
 <para>
@@ -31,10 +35,18 @@ Information about video buffers.
 
 </para>
 
+@width: 
+@height: 
+@did_overlay: 
+@fully_obscured: 
 
 <!-- ##### STRUCT OverlayClip ##### -->
 <para>
 
 </para>
 
+@x1: 
+@x2: 
+@y1: 
+@y2: 
 

@@ -30,6 +30,7 @@ with seeking capabilities use a <classname>GstAsynDiskSrc</classname> instead.
 
 </para>
 
+@GST_DISKSRC_OPEN: 
 
 <!-- ##### ARG GstDiskSrc:location ##### -->
 <para>

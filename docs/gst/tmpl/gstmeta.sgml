@@ -112,6 +112,8 @@ it, is there?
 
 </para>
 
+@meta: 
+<!-- # Unused Parameters # -->
 @buf: 
 
 
@@ -147,12 +149,17 @@ it, is there?
 
 </para>
 
+@GST_META_FREEABLE: 
 
 <!-- ##### STRUCT GstMeta ##### -->
 <para>
 
 </para>
 
+@lock: 
+@flags: 
+@data: 
+@size: 
 
 <!-- ##### FUNCTION gst_meta_new_size ##### -->
 <para>

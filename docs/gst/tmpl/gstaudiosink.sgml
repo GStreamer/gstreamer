@@ -20,6 +20,7 @@ The buffer is sent to the sound card.
 </para>
 
 @gstaudiosink: the object which received the signal.
+<!-- # Unused Parameters # -->
 @arg1: the audiosink.
 
 <!-- ##### ARG GstAudioSink:mute ##### -->

@@ -15,12 +15,40 @@ All GstElements can be serialized to an XML presentation
 
 </para>
 
+<!-- ##### STRUCT GstXML ##### -->
+<para>
+
+</para>
+
+@object: 
+@elements: 
+
+<!-- ##### FUNCTION gst_xml_new ##### -->
+<para>
+
+</para>
+
+@fname: 
+@root: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_xml_write ##### -->
 <para>
 
 </para>
 
 @element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_xml_get_element ##### -->
+<para>
+
+</para>
+
+@xml: 
+@name: 
 @Returns: 
 
 
