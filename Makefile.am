@@ -23,6 +23,8 @@ SUBDIRS=gst-libs \
 	$(GCONF_DIR) \
 	testsuite \
 	po \
+	common \
+	m4 \
 	pkgconfig
 
 DIST_SUBDIRS=ext gst-libs \
@@ -32,16 +34,14 @@ DIST_SUBDIRS=ext gst-libs \
 	gconf \
 	testsuite \
 	po \
+	common \
+	m4 \
 	pkgconfig
 
 EXTRA_DIST=gst-plugins.spec depcomp \
 	   AUTHORS COPYING COPYING.LIB NEWS README RELEASE REQUIREMENTS \
-	   ChangeLog autogen.sh common m4
+	   ChangeLog autogen.sh
 
 DISTCLEANFILES=_stdint.h
-
-dist-hook:
-	rm -rf `find $(distdir)/common -name CVS`
-	rm -rf `find $(distdir)/m4 -name CVS`
 
 include $(top_srcdir)/common/release.mak
