@@ -153,8 +153,8 @@ distclean-local: clean
 	rm -rf $(DOC_MODULE)-decl-list.txt
 	rm -rf gstreamer-*.txt
 	rm -rf tmpl/*.sgml
-	rm gstreamer.hierarchy
-	rm *.stamp	
+	rm -f gstreamer.hierarchy
+	rm -f *.stamp || true
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
