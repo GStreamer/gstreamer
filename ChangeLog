@@ -1,3 +1,35 @@
+2004-07-05  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* gst/playback/Makefile.am:
+	* gst/playback/decodetest.c: (main):
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_get_type),
+	(gst_decode_bin_class_init), (gst_decode_bin_factory_filter),
+	(compare_ranks), (gst_decode_bin_init), (gst_decode_bin_dispose),
+	(find_compatibles), (close_pad_link), (try_to_link_1), (new_pad),
+	(close_link), (type_found), (gst_decode_bin_set_property),
+	(gst_decode_bin_get_property), (gst_decode_bin_change_state),
+	(gst_decode_bin_get_event_masks), (gst_decode_bin_send_event),
+	(gst_decode_bin_get_formats), (gst_decode_bin_convert),
+	(gst_decode_bin_get_query_types), (gst_decode_bin_query),
+	(plugin_init):
+	* gst/playback/gstplaybin.c: (gst_play_bin_get_type),
+	(gst_play_bin_class_init), (gst_play_bin_init),
+	(gst_play_bin_dispose), (gen_default_output), (rebuild_pipeline),
+	(collect_sink_pads), (find_compatibles), (close_pad_link),
+	(try_to_link_1), (new_pad), (close_link), (type_found),
+	(setup_source), (gst_play_bin_set_property),
+	(gst_play_bin_get_property), (gst_play_bin_factory_filter),
+	(compare_ranks), (gst_play_bin_collect_factories),
+	(gst_play_bin_change_state), (gst_play_bin_add_element),
+	(gst_play_bin_remove_element), (gst_play_bin_get_event_masks),
+	(gst_play_bin_send_event), (gst_play_bin_get_formats),
+	(gst_play_bin_convert), (gst_play_bin_get_query_types),
+	(gst_play_bin_query), (gst_play_bin_get_clock), (plugin_init):
+	* gst/playback/test.c: (main):
+	Added some playback helper elements and some test apps, very alpha
+	still.
+
 2004-07-04  Benjamin Otte  <otte@gnome.org>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_xrun_recovery):

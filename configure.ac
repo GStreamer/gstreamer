@@ -381,6 +381,7 @@ GST_PLUGINS_ALL="\
 	multipart \
 	overlay \
 	passthrough \
+	playback \
 	playondemand \
 	qtdemux \
 	realmedia \
@@ -1843,6 +1844,7 @@ gst/monoscope/Makefile
 gst/multipart/Makefile
 gst/overlay/Makefile
 gst/passthrough/Makefile
+gst/playback/Makefile
 gst/playondemand/Makefile
 gst/qtdemux/Makefile
 gst/realmedia/Makefile
