@@ -1,3 +1,8 @@
+2004-05-07  David Schleef  <ds@schleef.org>
+
+	* common/m4/as-compiler-flag.m4: Properly quote arguments,
+	which may contain commas.  Fixes detection of -Wa,-mregnames
+
 2004-05-06  David Schleef  <ds@schleef.org>
 
 	Changes to handle compilers that don't have variadic macro
