@@ -131,6 +131,7 @@ This enum defines the standard flags that an element may have.
 @GST_ELEMENT_NEW_LOOPFUNC: 
 @GST_ELEMENT_COTHREAD_STOPPING: 
 @GST_ELEMENT_USE_COTHREAD: 
+@GST_ELEMENT_EOS: 
 @GST_ELEMENT_FLAG_LAST: 
 
 <!-- ##### MACRO GST_ELEMENT_IS_THREAD_SUGGESTED ##### -->
@@ -147,6 +148,14 @@ Queries whether the cothread holding this element needs to be stopped.
 </para>
 
 @obj: The element to query
+
+
+<!-- ##### MACRO GST_ELEMENT_IS_EOS ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 
 <!-- ##### STRUCT GstElement ##### -->
@@ -306,6 +315,7 @@ circumstances.
 
 @element: 
 @pad: 
+@name: 
 
 
 <!-- ##### FUNCTION gst_element_remove_ghost_pad ##### -->

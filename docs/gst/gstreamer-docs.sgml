@@ -14,6 +14,7 @@
 <!entity GstPad SYSTEM "sgml/gstpad.sgml">
 <!entity GstPipeline SYSTEM "sgml/gstpipeline.sgml">
 <!entity GstAutoplug SYSTEM "sgml/gstautoplug.sgml">
+<!entity GstParse SYSTEM "sgml/gstparse.sgml">
 <!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
 <!entity GstThread SYSTEM "sgml/gstthread.sgml">
 <!entity GstTrace SYSTEM "sgml/gsttrace.sgml">
@@ -61,27 +62,27 @@ well as the object hiarchy that defines elements and bins, along
 with some more specialized elements.</para>
 
     &Gst;
-    &GstInfo;
-    &GstObject;
-    &GstElement;
-    &GstBin;
-    &GstPipeline;
     &GstAutoplug;
+    &GstBin;
     &GstBuffer;
     &GstBufferPool;
-    &GstPad;
-    &GstPlugin;
-    &GstThread;
-    &GstQueue;
-    &GstTypeFind;
-
-    &GstType;
     &GstCaps;
-    &GstProps;
-    &GstMeta;
-    &GstUtils;
     &GstCpu;
+    &GstElement;
+    &GstInfo;
+    &GstMeta;
+    &GstObject;
+    &GstPad;
+    &GstParse;
+    &GstPipeline;
+    &GstPlugin;
+    &GstProps;
+    &GstQueue;
+    &GstThread;
     &GstTrace;
+    &GstType;
+    &GstTypeFind;
+    &GstUtils;
     &GstXml;
 
     &cothreads;

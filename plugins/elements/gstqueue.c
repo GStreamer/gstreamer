@@ -56,7 +56,6 @@ enum {
   ARG_LEVEL,
   ARG_MAX_LEVEL,
   ARG_BLOCK,
-  ARG_TIMEOUT,
 };
 
 
@@ -115,8 +114,6 @@ gst_queue_class_init (GstQueueClass *klass)
                            GTK_ARG_READWRITE, ARG_MAX_LEVEL);
   gtk_object_add_arg_type ("GstQueue::block", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, ARG_BLOCK);
-  gtk_object_add_arg_type ("GstQueue::timeout", GTK_TYPE_INT,
-                           GTK_ARG_READWRITE, ARG_TIMEOUT);
 
   gtkobject_class->set_arg = gst_queue_set_arg;
   gtkobject_class->get_arg = gst_queue_get_arg;
@@ -351,8 +348,6 @@ gst_queue_set_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_BLOCK:
       queue->block = GTK_VALUE_BOOL (*arg);
       break;
-    case ARG_TIMEOUT:
-      break;
     default:
       break;
   }
@@ -377,8 +372,6 @@ gst_queue_get_arg (GtkObject *object, GtkArg *arg, guint id)
       break;
     case ARG_BLOCK:
       GTK_VALUE_BOOL (*arg) = queue->block;
-      break;
-    case ARG_TIMEOUT:
       break;
     default:
       arg->type = GTK_TYPE_INVALID;

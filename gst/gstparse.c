@@ -59,7 +59,7 @@ gst_parse_newpad(GstElement *element,GstPad *pad,launch_delayed_pad *peer)
 }
 */
 
-gchar *
+static gchar *
 gst_parse_unique_name(gchar *type,gst_parse_priv *priv)
 {
   gint count;
@@ -304,7 +304,18 @@ GST_DEBUG_PAD_NAME(srcpad),gst_element_get_name(GST_ELEMENT(parent)),gst_pad_get
   return i+1;
 }
 
-gint gst_parse_launch(const gchar *cmdline,GstBin *parent) {
+/**
+ * gst_parse_launch:
+ * @cmdline: the command line describing the pipeline
+ * @parent: the parent bin for the resulting pipeline
+ *
+ * Create a new pipeline based on command line syntax.
+ *
+ * Returns: ?
+ */
+gint
+gst_parse_launch(const gchar *cmdline,GstBin *parent)
+{
   gst_parse_priv priv;
   gchar **argvn;
   gint newargc;

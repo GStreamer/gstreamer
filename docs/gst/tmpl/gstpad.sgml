@@ -374,25 +374,25 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_add_ghost_parent ##### -->
+<!-- ##### FUNCTION gst_pad_add_ghost_pad ##### -->
 <para>
 
 </para>
 
 @pad: 
-@parent: 
+@ghostpad: 
 
 
-<!-- ##### FUNCTION gst_pad_remove_ghost_parent ##### -->
+<!-- ##### FUNCTION gst_pad_remove_ghost_pad ##### -->
 <para>
 
 </para>
 
 @pad: 
-@parent: 
+@ghostpad: 
 
 
-<!-- ##### FUNCTION gst_pad_get_ghost_parents ##### -->
+<!-- ##### FUNCTION gst_pad_get_ghost_pad_list ##### -->
 <para>
 
 </para>
@@ -486,15 +486,6 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_eos_func ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_pad_handle_qos ##### -->
 <para>
 
@@ -506,10 +497,10 @@ Destroy the pad.
 
 <!-- ##### MACRO gst_pad_eos ##### -->
 <para>
-
+Call the EOS function of the pad
 </para>
 
-@pad: 
+@pad: the pad to call the eos function of.
 
 
 <!-- ##### FUNCTION gst_pad_save_thyself ##### -->
@@ -551,7 +542,7 @@ Destroy the pad.
 @pushfunc: 
 @pullfunc: 
 @pullregionfunc: 
-@ghostparents: 
+@ghostpads: 
 
 <!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
 <para>
@@ -664,6 +655,16 @@ Get the real pad of this ghost pad.
 
 @pad: 
 @realpad: 
+
+<!-- ##### FUNCTION gst_ghost_pad_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@pad: 
+@Returns: 
+
 
 <!-- ##### TYPEDEF GstPadFactoryEntry ##### -->
 <para>

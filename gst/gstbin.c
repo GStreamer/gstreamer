@@ -510,6 +510,9 @@ gst_bin_use_cothreads (GstBin *bin,
  * @bin: #Gstbin to iterate
  *
  * Iterates over the elements in this bin.
+ *
+ * Returns: TRUE if the bin did something usefull. This value
+ *          can be used to determine it the bin is in EOS.
  */
 gboolean
 gst_bin_iterate (GstBin *bin)

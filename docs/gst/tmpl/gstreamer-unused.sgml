@@ -400,6 +400,12 @@ GstEsdSink
 </para>
 
 
+<!-- ##### ARG GstQueue:timeout ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gst_fakesrc_new ##### -->
 <para>
 
@@ -808,6 +814,14 @@ audio source. It provides data for the next element in the graph.
 </para>
 
 @klass: 
+
+<!-- ##### FUNCTION gst_pad_add_ghost_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
 
 <!-- ##### MACRO GST_SINK_CLASS ##### -->
 <para>
@@ -1482,6 +1496,14 @@ Query a GstSrc for the ASYNC flag
 </para>
 
 
+<!-- ##### FUNCTION gst_pad_get_ghost_parents ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
 <!-- ##### STRUCT GstAudioSrc ##### -->
 <para>
 
@@ -1646,6 +1668,14 @@ Query the element for the current mime type
 @GST_PROPS_INT_RANGE_ID_NUM: 
 @GST_PROPS_FOURCC_ID_NUM: 
 @GST_PROPS_BOOL_ID_NUM: 
+
+<!-- ##### FUNCTION gst_pad_eos_func ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
 
 <!-- ##### STRUCT GstEsdSinkClass ##### -->
 <para>
@@ -1991,6 +2021,14 @@ Indicates this pad is active
 
 </para>
 
+
+<!-- ##### FUNCTION gst_pad_remove_ghost_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
 
 <!-- ##### SECTION ./tmpl/GstElement.sgml:Title ##### -->
 GstElement

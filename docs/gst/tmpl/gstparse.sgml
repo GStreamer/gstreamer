@@ -2,11 +2,12 @@
 GstParse
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Parses commandline syntax into a pipeline.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+This method allows you to create a pipeline from a command
+line syntax description.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

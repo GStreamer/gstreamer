@@ -216,10 +216,7 @@ gint print_element_info(GstElementFactory *factory) {
       if (realpad->qosfunc)
         printf("      Has qosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->qosfunc));
       if (realpad->eosfunc) {
-        if (realpad->eosfunc == gst_pad_eos_func)
-          printf("      Has default eosfunc() gst_pad_eos_func()\n");
-        else
-          printf("      Has eosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->eosfunc));
+        printf("      Has eosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->eosfunc));
       }
 
       if (pad->padtemplate)

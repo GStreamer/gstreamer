@@ -34,6 +34,17 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_xml_new_from_memory ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@root: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_xml_write ##### -->
 <para>
 

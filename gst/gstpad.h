@@ -183,16 +183,16 @@ struct _GstGhostPadClass {
 #define GST_PAD_PEER(pad)		GST_RPAD_PEER(GST_PAD_REALIZE(pad))
 
 /* Some check functions (unused?) */
-#define GST_PAD_CONNECTED(pad) 		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->peer != NULL)
-#define GST_PAD_CAN_PULL(pad) 		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->pullfunc != NULL)
+#define GST_PAD_CONNECTED(pad)		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->peer != NULL)
+#define GST_PAD_CAN_PULL(pad)		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->pullfunc != NULL)
 
 
 /***** PadTemplate *****/
-#define GST_TYPE_PADTEMPLATE           	(gst_padtemplate_get_type ())
-#define GST_PADTEMPLATE(obj)           	(GTK_CHECK_CAST ((obj), GST_TYPE_PADTEMPLATE,GstPad))
-#define GST_PADTEMPLATE_CLASS(klass)   	(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_PADTEMPLATE,GstPadClass))
-#define GST_IS_PADTEMPLATE(obj)        	(GTK_CHECK_TYPE ((obj), GST_TYPE_PADTEMPLATE))
-#define GST_IS_PADTEMPLATE_CLASS(obj)  	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_PADTEMPLATE))
+#define GST_TYPE_PADTEMPLATE		(gst_padtemplate_get_type ())
+#define GST_PADTEMPLATE(obj)		(GTK_CHECK_CAST ((obj), GST_TYPE_PADTEMPLATE,GstPad))
+#define GST_PADTEMPLATE_CLASS(klass)	(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_PADTEMPLATE,GstPadClass))
+#define GST_IS_PADTEMPLATE(obj)		(GTK_CHECK_TYPE ((obj), GST_TYPE_PADTEMPLATE))
+#define GST_IS_PADTEMPLATE_CLASS(obj)	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_PADTEMPLATE))
 
 typedef enum {
   GST_PAD_ALWAYS,
@@ -201,12 +201,12 @@ typedef enum {
 } GstPadPresence;
 
 struct _GstPadTemplate {
-  GstObject 	  object;
+  GstObject	  object;
 
   gchar           *name_template;
   GstPadDirection direction;
   GstPadPresence  presence;
-  GList  	  *caps;
+  GList		  *caps;
 };
 
 struct _GstPadTemplateClass {
@@ -221,19 +221,19 @@ struct _GstPadTemplateClass {
 typedef gpointer GstPadFactoryEntry;
 typedef GstPadFactoryEntry GstPadFactory[];
 
-#define GST_PAD_FACTORY_ALWAYS 		GINT_TO_POINTER(GST_PAD_ALWAYS)
-#define GST_PAD_FACTORY_SOMETIMES 	GINT_TO_POINTER(GST_PAD_SOMETIMES)
-#define GST_PAD_FACTORY_REQUEST 	GINT_TO_POINTER(GST_PAD_REQUEST)
+#define GST_PAD_FACTORY_ALWAYS		GINT_TO_POINTER(GST_PAD_ALWAYS)
+#define GST_PAD_FACTORY_SOMETIMES	GINT_TO_POINTER(GST_PAD_SOMETIMES)
+#define GST_PAD_FACTORY_REQUEST		GINT_TO_POINTER(GST_PAD_REQUEST)
 
-#define GST_PAD_FACTORY_SRC	 	GINT_TO_POINTER(GST_PAD_SRC)
-#define GST_PAD_FACTORY_SINK 		GINT_TO_POINTER(GST_PAD_SINK)
+#define GST_PAD_FACTORY_SRC		GINT_TO_POINTER(GST_PAD_SRC)
+#define GST_PAD_FACTORY_SINK		GINT_TO_POINTER(GST_PAD_SINK)
 
-#define GST_PAD_FACTORY_CAPS(a...) 	GINT_TO_POINTER(1),##a,NULL
+#define GST_PAD_FACTORY_CAPS(a...)	GINT_TO_POINTER(1),##a,NULL
 
 
-GtkType 		gst_pad_get_type		(void);
-GtkType 		gst_real_pad_get_type		(void);
-GtkType 		gst_ghost_pad_get_type		(void);
+GtkType			gst_pad_get_type		(void);
+GtkType			gst_real_pad_get_type		(void);
+GtkType			gst_ghost_pad_get_type		(void);
 
 GstPad*			gst_pad_new			(gchar *name, GstPadDirection direction);
 #define 		gst_pad_destroy(pad) 		gst_object_destroy (GST_OBJECT (pad))
@@ -288,10 +288,9 @@ GstBuffer*		gst_pad_pull_region		(GstPad *pad, gulong offset, gulong size);
 
 GstPad *		gst_pad_select			(GstPad *nextpad, ...);
 
-#define			gst_pad_eos(pad)	(GST_RPAD_EOSFUNC(GST_RPAD_PEER(pad))(GST_PAD(GST_RPAD_PEER(pad))))
+#define			gst_pad_eos(pad)		(GST_RPAD_EOSFUNC(GST_RPAD_PEER(pad))(GST_PAD(GST_RPAD_PEER(pad))))
 gboolean		gst_pad_set_eos			(GstPad *pad);
 
-gboolean		gst_pad_eos_func		(GstPad *pad);
 void 			gst_pad_handle_qos		(GstPad *pad, glong qos_message);
 
 xmlNodePtr 		gst_pad_save_thyself		(GstPad *pad, xmlNodePtr parent);

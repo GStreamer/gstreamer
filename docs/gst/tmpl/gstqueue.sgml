@@ -2,18 +2,22 @@
 GstQueue
 
 <!-- ##### SECTION Short_Description ##### -->
-Simple data queue. (queue)
+Simple asynchronous data queue.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 Simple data queue. Data is queued till max_level buffers any subsequent buffers
 sent to this filter will block until free space becomes available in the buffer.
+The queue is typically used in conjunction with a thread.
 </para>
 <para>
 You can query how many buffers are queued with the level argument.
 </para>
 <para>
 The default queue length is set to 10.
+</para>
+<para>
+The queue blocks by default.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -34,11 +38,6 @@ blocks.
 
 <!-- ##### ARG GstQueue:block ##### -->
 <para>
-
-</para>
-
-<!-- ##### ARG GstQueue:timeout ##### -->
-<para>
-
+Specify wether the queue blocks or not. 
 </para>
 

@@ -64,7 +64,6 @@ static void			gst_thread_restore_thyself	(GstElement *element,xmlNodePtr parent,
 
 static void			gst_thread_signal_thread	(GstThread *thread);
 static void			gst_thread_wait_thread		(GstThread *thread);
-static void			gst_thread_create_plan_dummy	(GstBin *bin);
 static void			gst_thread_schedule_dummy	(GstBin *bin);
 
 static void*			gst_thread_main_loop		(void *arg);
@@ -114,7 +113,6 @@ gst_thread_class_init (GstThreadClass *klass)
   gstelement_class->save_thyself =	gst_thread_save_thyself;
   gstelement_class->restore_thyself =	gst_thread_restore_thyself;
 
-  //gstbin_class->create_plan = gst_thread_create_plan_dummy;
   gstbin_class->schedule = gst_thread_schedule_dummy;
 
   gtkobject_class->set_arg = gst_thread_set_arg;
@@ -145,15 +143,6 @@ gst_thread_schedule_dummy (GstBin *bin)
 
   if (!GST_FLAG_IS_SET (GST_THREAD (bin), GST_THREAD_STATE_SPINNING))
     GST_INFO (GST_CAT_THREAD,"gstthread: scheduling delayed until thread starts");
-}
-
-static void
-gst_thread_create_plan_dummy (GstBin *bin)
-{
-  g_return_if_fail (GST_IS_THREAD (bin));
-
-  if (!GST_FLAG_IS_SET (GST_THREAD (bin), GST_THREAD_STATE_SPINNING))
-    GST_INFO (GST_CAT_THREAD,"gstthread: create plan delayed until thread starts");
 }
 
 static void

@@ -66,16 +66,18 @@ struct _GstXMLClass {
   GtkObjectClass parent_class;
 };
 
-GtkType 	gst_xml_get_type	(void);
+GtkType		gst_xml_get_type	(void);
 
 
 /* create an XML document out of a pipeline */
-xmlDocPtr 	gst_xml_write		(GstElement *element);
+xmlDocPtr	gst_xml_write		(GstElement *element);
 
 GstXML*		gst_xml_new		(const guchar *fname, const guchar *root);
+GstXML*		gst_xml_new_from_memory	(guchar *buffer, guint size, const gchar *root);
+
 
 GstElement*	gst_xml_get_element	(GstXML *xml, const guchar *name);
-GList* 		gst_xml_get_topelements (GstXML *xml);
+GList*		gst_xml_get_topelements (GstXML *xml);
 
 #ifdef __cplusplus
 }

@@ -103,6 +103,7 @@ Flags for a bin.
 </para>
 
 @bin: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_bin_create_plan ##### -->

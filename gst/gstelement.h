@@ -110,7 +110,7 @@ typedef enum {
   /* the element has to be scheduled as a cothread for any sanity */
   GST_ELEMENT_USE_COTHREAD,
 
-  // if this element is in EOS
+  /* if this element is in EOS */
   GST_ELEMENT_EOS,
 
   /* use some padding for future expansion */
