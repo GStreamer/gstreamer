@@ -850,7 +850,7 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
           /* nothing serious, resource was unavailable, try again later */
           more = FALSE;
         } else {
-          GST_DEBUG_OBJECT (sink, "could not write, removing client on fd %d",
+          GST_WARNING_OBJECT (sink, "could not write, removing client on fd %d",
               fd);
           client->status = GST_CLIENT_STATUS_ERROR;
           return FALSE;
@@ -1101,30 +1101,30 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
         return;
       }
     } else {
-      GST_INFO_OBJECT (sink, "wait done: %d", result);
+      GST_LOG_OBJECT (sink, "wait done: %d", result);
       /* read all commands */
       if (gst_fdset_fd_can_read (sink->fdset, &READ_SOCKET (sink))) {
-        GST_INFO_OBJECT (sink, "have a command");
+        GST_LOG_OBJECT (sink, "have a command");
         while (TRUE) {
           gchar command;
           int res;
 
           READ_COMMAND (sink, command, res);
           if (res < 0) {
-            GST_INFO_OBJECT (sink, "no more commands");
+            GST_LOG_OBJECT (sink, "no more commands");
             /* no more commands */
             break;
           }
 
           switch (command) {
             case CONTROL_RESTART:
-              GST_INFO_OBJECT (sink, "restart");
+              GST_LOG_OBJECT (sink, "restart");
               /* need to restart the select call as the fd_set changed */
               try_again = TRUE;
               break;
               /* need to restart the select call as the fd_set changed */
             case CONTROL_STOP:
-              GST_INFO_OBJECT (sink, "stop");
+              GST_LOG_OBJECT (sink, "stop");
               /* stop this function */
               stop = TRUE;
               break;
