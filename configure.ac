@@ -509,6 +509,7 @@ AC_CHECK_LIB(gsm, gsm_create,
 )
   HAVE_LIBGSM=no,
 )
+AC_CHECK_HEADER(gsm/gsm.h, :, HAVE_LIBGSM=no)
 
 dnl Check for cdparanoia
 AC_MSG_CHECKING(CDparanoia library)
