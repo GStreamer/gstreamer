@@ -1,3 +1,16 @@
+Current requirements for building the docs :
+--------------------------------------------
+
+libxslt >= 1.0.6
+libxml2 >= 2.4.12
+
+These are not included with RH72.  They are in debian.  GDE has good rpms.
+
+Wingo's new comments on the doc building :
+------------------------------------------
+* Well he should add them soon here since he overhauled it. And did a good 
+  job on it too ;)
+
 Thomas's new comments on the doc building :
 -------------------------------------------
 * originally the manual was written with DocBook 3.0 in mind, which 
