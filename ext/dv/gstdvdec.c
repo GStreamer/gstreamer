@@ -400,6 +400,7 @@ gst_dvdec_init (GstDVDec * dvdec)
   dvdec->height = 0;
   dvdec->frequency = 0;
   dvdec->channels = 0;
+  dvdec->wide = FALSE;
   dvdec->drop_factor = 1;
 
   dvdec->clamp_luma = FALSE;
@@ -771,7 +772,7 @@ gst_dvdec_video_getcaps (GstPad * pad)
     gint par_x, par_y;
 
     if (dvdec->PAL) {
-      if (dv_format_wide (dvdec->decoder)) {
+      if (dvdec->wide) {
         par_x = PAL_WIDE_PAR_X;
         par_y = PAL_WIDE_PAR_Y;
       } else {
@@ -779,7 +780,7 @@ gst_dvdec_video_getcaps (GstPad * pad)
         par_y = PAL_NORMAL_PAR_Y;
       }
     } else {
-      if (dv_format_wide (dvdec->decoder)) {
+      if (dvdec->wide) {
         par_x = NTSC_WIDE_PAR_X;
         par_y = NTSC_WIDE_PAR_Y;
       } else {
@@ -882,6 +883,7 @@ gst_dvdec_loop (GstElement * element)
   guint32 length, got_bytes;
   GstClockTime ts, duration;
   gdouble fps;
+  gboolean wide;
 
   dvdec = GST_DVDEC (element);
 
@@ -912,6 +914,7 @@ gst_dvdec_loop (GstElement * element)
   fps = (dvdec->PAL ? PAL_FRAMERATE : NTSC_FRAMERATE);
   height = (dvdec->PAL ? PAL_HEIGHT : NTSC_HEIGHT);
   length = (dvdec->PAL ? PAL_BUFFER : NTSC_BUFFER);
+  wide = dv_format_wide (dvdec->decoder);
 
   if (length != dvdec->length) {
     dvdec->length = length;
@@ -1002,9 +1005,11 @@ gst_dvdec_loop (GstElement * element)
     }
     dvdec->framecount = 0;
 
-    if ((dvdec->framerate != fps) || (dvdec->height != height)) {
+    if ((dvdec->framerate != fps) || (dvdec->height != height)
+        || dvdec->wide != wide) {
       dvdec->height = height;
       dvdec->framerate = fps;
+      dvdec->wide = wide;
 
       if (GST_PAD_LINK_FAILED (gst_pad_renegotiate (dvdec->videosrcpad))) {
         GST_ELEMENT_ERROR (dvdec, CORE, NEGOTIATION, (NULL), (NULL));
@@ -1038,6 +1043,7 @@ gst_dvdec_loop (GstElement * element)
   } else {
     dvdec->height = height;
     dvdec->framerate = fps;
+    dvdec->wide = wide;
   }
 
 end:

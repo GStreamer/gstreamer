@@ -59,8 +59,9 @@ struct _GstDVDec {
   gboolean PAL;
   gdouble	 framerate;
   gint		 height;
-  gint     frequency;
-  gint     channels;
+  gint     	 frequency;
+  gint     	 channels;
+  gboolean	 wide;
   
   gint 		 length;
   gint		 framecount;
