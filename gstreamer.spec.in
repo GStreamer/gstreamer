@@ -21,7 +21,7 @@ plugins.
 
 %files
 %defattr(-, root, root)
-%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING html
+%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING 
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
 %{_bindir}/gst-inspect
@@ -64,6 +64,7 @@ applications and plugins for GStreamer.
 
 %files devel
 %defattr(-, root, root)
+%doc html
 %{_includedir}/gst
 %{_libdir}/libgstreamer.a
 %{_libdir}/libgstreamer.la
