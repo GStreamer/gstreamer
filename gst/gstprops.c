@@ -74,22 +74,32 @@ transform_func (const GValue *src_value,
 {
   GstProps *props = g_value_peek_pointer (src_value);
   GString *result = g_string_new ("");
-  GList *propslist = props->properties;
 
-  while (propslist) { 
-    GstPropsEntry *entry = (GstPropsEntry *)propslist->data;
-    const gchar *name = g_quark_to_string (entry->propid);
+  if (props) {
+    GList *propslist = props->properties;
 
-    switch (entry->propstype) {
-      case GST_PROPS_STRING_TYPE:
-	g_string_append_printf (result, "%s='%s'", name, entry->data.string_data.string);
-      default:
-	break;
-    }
+    while (propslist) { 
+      GstPropsEntry *entry = (GstPropsEntry *)propslist->data;
+      const gchar *name = g_quark_to_string (entry->propid);
+
+      switch (entry->propstype) {
+        case GST_PROPS_STRING_TYPE:
+	  g_string_append_printf (result, "%s=(string) '%s'", name, entry->data.string_data.string);
+	  break;
+        case GST_PROPS_INT_TYPE:
+  	  g_string_append_printf (result, "%s=(int) %d", name, entry->data.int_data);
+	  break;
+        case GST_PROPS_FOURCC_TYPE:
+  	  g_string_append_printf (result, "%s=(fourcc) '%4.4s'", name, (gchar *)&entry->data.fourcc_data);
+	  break;
+        default:
+	  break;
+      }
     
-    propslist = g_list_next (propslist);
-    if (propslist) {
-      g_string_append (result, "; ");
+      propslist = g_list_next (propslist);
+      if (propslist) {
+        g_string_append (result, "; ");
+      }
     }
   }
   dest_value->data[0].v_pointer = result->str;
