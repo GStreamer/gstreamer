@@ -1,5 +1,10 @@
 2004-01-14  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream):
+	  Fix for using incremental number on padnames.
+
+2004-01-14  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/divx/gstdivxdec.c:
 	* ext/divx/gstdivxenc.c:
 	  Set category to divx4linux instead of divx (too generic).
