@@ -91,7 +91,7 @@ read_config ();
 %pipes = ( 
   "ac3", "a52dec ! $cfg{AUDIOSINK}",
   "au", "auparse ! $cfg{AUDIOSINK}",
-  "avi", "avidemux video_%02d! { queue ! windec ! $cfg{VIDEOSINK} } avidemux0.audio_%02d! { queue ! mad ! $cfg{AUDIOSINK} }",
+  "avi", "avidemux video_%02d! { queue ! ffmpegdecall ! $cfg{VIDEOSINK} } avidemux0.audio_%02d! { queue ! mad ! $cfg{AUDIOSINK} }",
   "flac", "flacdec ! $cfg{AUDIOSINK}",
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}",
   "m1v", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
