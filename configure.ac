@@ -118,5 +118,7 @@ AC_OUTPUT([
   pkgconfig/gst-python-uninstalled.pc
   examples/Makefile
   examples/gstreamer/Makefile
+  docs/Makefile
+  docs/HEAD
   gst-python.spec
 ])
