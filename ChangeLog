@@ -1,5 +1,10 @@
 2004-12-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_index):
+	  Work for truncated (unfinished download etc.) files. Fixes #160514.
+
+2004-12-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_loop):
 	  Fix for integer overflow. Makes #156001 not crash. Probably masks
 	  the real bug.

@@ -1198,17 +1198,29 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
   pos_before = gst_bytestream_tell (riff->bs);
 
   /* skip movi
-   *
-   * FIXME:
-   * - we want to add error handling here so we can recover.
    */
+  if (pos_before + 8 > length) {
+    return TRUE;
+  } else {
+    guint8 *data;
+
+    if (gst_bytestream_peek_bytes (riff->bs, &data, 8) == 8) {
+      guint len = GST_READ_UINT32_LE (&data[4]);
+
+      if (pos_before + 8 + len >= length) {
+        GST_WARNING ("No index avail");
+        return TRUE;
+      }
+    }
+  }
+  /* hmm... */
   if (!gst_riff_read_skip (riff))
     return FALSE;
 
   /* assure that we've got data left */
   pos_after = gst_bytestream_tell (riff->bs);
   if (pos_after + 8 > length) {
-    g_warning ("File said that it has an index, but there is no index data!");
+    GST_WARNING ("File said that it has an index, but there is no index data!");
     goto end;
   }
 
