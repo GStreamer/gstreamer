@@ -1,13 +1,5 @@
 #include <gst/gst.h>
 
-gboolean idle_func (gpointer data);
-
-gboolean 
-idle_func (gpointer data)
-{
-  return gst_bin_iterate ((GstBin*) (data));
-}
-
 int main (int argc, char *argv[]) 
 {
     GstElement *osssink, *pipe1, *pipe2, *bin, *filesrc, *mad, *fakesink;
@@ -29,34 +21,37 @@ int main (int argc, char *argv[])
     
     g_object_set(G_OBJECT(filesrc), "location", argv[1], NULL);
     
+    // make the first pipeline
     gst_bin_add (GST_BIN(pipe1), filesrc);
     gst_bin_add (GST_BIN(pipe1), fakesink);
     gst_element_connect(filesrc, "src", fakesink, "sink");
     
+    // initialize cothreads
     gst_element_set_state(pipe1, GST_STATE_PLAYING);
-    gst_bin_iterate(GST_BIN(pipe1));
     gst_element_set_state(pipe1, GST_STATE_READY);
     
+    // destroy the fakesink, but keep filesrc (its state is GST_STATE_READY)
     gst_element_disconnect(filesrc, "src", fakesink, "sink");
     gst_object_ref(GST_OBJECT(filesrc));
     gst_bin_remove(GST_BIN(pipe1), filesrc);
     gst_bin_remove(GST_BIN(pipe1), fakesink);
     
-    gst_bin_add (GST_BIN(pipe2), filesrc);
+    // make a new pipeline
     gst_bin_add (GST_BIN(pipe2), mad);
-    gst_element_connect(filesrc, "src", mad, "sink");
     gst_bin_add (GST_BIN(pipe2), osssink);
     gst_element_connect(mad, "src", osssink, "sink");
     
+    // change the new pipeline's state to READY (is this necessary?)
+    gst_element_set_state(pipe2, GST_STATE_READY);
+    gst_bin_add (GST_BIN(pipe2), filesrc);
+    gst_element_connect(filesrc, "src", mad, "sink");
+    
+    // show the pipeline state
     xmlDocDump(stdout, gst_xml_write(pipe2));
     
+    // try to iterate the pipeline
     gst_element_set_state(pipe2, GST_STATE_PLAYING);
-    g_idle_add(idle_func, pipe2);
-#ifdef USE_GLIB2
-    g_main_loop_run (g_main_loop_new (NULL, FALSE));
-#else
-    gst_main();
-#endif
+    gst_bin_iterate(GST_BIN(pipe2));
     gst_element_set_state(pipe2, GST_STATE_NULL);
     
     return 0;
