@@ -1,5 +1,14 @@
 2004-05-18  David Schleef  <ds@schleef.org>
 
+	* gst-libs/gst/resample/resample.c: (gst_resample_sinc_ft_s16),
+	(gst_resample_sinc_ft_float): Remove use of static temporary
+	buffer.  This code was obviously not supposed to last long, but
+	it's stuck in our ABI, so it required a little hack to make it
+	ABI-compatible.  Fixes #142585.
+	* gst-libs/gst/resample/resample.h: same.
+
+2004-05-18  David Schleef  <ds@schleef.org>
+
 	* configure.ac: Add sunaudio
 	* examples/Makefile.am: make gstplay depend on gconf
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c: Remove c99-isms
