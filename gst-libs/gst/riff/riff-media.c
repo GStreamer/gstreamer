@@ -160,6 +160,12 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
         *codec_name = g_strdup ("Xirlink H.263");
       break;
 
+    case GST_MAKE_FOURCC ('h', '2', '6', '4'):
+      caps = gst_caps_new_simple ("video/x-h264", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("ITU H.264");
+      break;
+
     case GST_MAKE_FOURCC ('V', 'S', 'S', 'H'):
       caps = gst_caps_new_simple ("video/x-h264", NULL);
       if (codec_name)
@@ -589,7 +595,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('D', 'I', 'V', '3'),
     GST_MAKE_FOURCC ('M', 'P', 'E', 'G'),
     GST_MAKE_FOURCC ('H', '2', '6', '3'),
-    GST_MAKE_FOURCC ('V', 'S', 'S', 'H'),
+    GST_MAKE_FOURCC ('h', '2', '6', '4'),
     GST_MAKE_FOURCC ('D', 'I', 'V', 'X'),
     GST_MAKE_FOURCC ('D', 'X', '5', '0'),
     GST_MAKE_FOURCC ('X', 'V', 'I', 'D'),
