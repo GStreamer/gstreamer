@@ -1,5 +1,7 @@
 #include <config.h>
 
+#include <string.h>
+
 #include "gstplay.h"
 #include "gstplayprivate.h"
 #include "full-screen.h"
@@ -368,6 +370,7 @@ GstPlayReturn
 gst_play_set_uri (GstPlay *play, const guchar *uri)
 {
 	GstPlayPrivate *priv;
+	gchar* uriloc;
 
 	g_return_val_if_fail (play != NULL, GST_PLAY_ERROR);
 	g_return_val_if_fail (GST_IS_PLAY (play), GST_PLAY_ERROR);
@@ -378,17 +381,31 @@ gst_play_set_uri (GstPlay *play, const guchar *uri)
 	if (priv->uri)
 		g_free (priv->uri);
 
-	priv->uri = g_strdup (uri);
 
-	priv->src = gst_elementfactory_make ("gnomevfssrc", "srcelement");
+	/* see if it looks like a ARI */
+	if ((uriloc = strstr (uri, ":/"))) {
+	  priv->src = gst_elementfactory_make ("gnomevfssrc", "srcelement");
+
+	  if (!priv->src) {
+	    if (strstr (uri, "file:/")) {
+	      uri += strlen ("file:/");
+	    }
+	    else
+	      return GST_PLAY_CANNOT_PLAY;
+	  }
+	}
+
 	if (priv->src == NULL) {
 	  priv->src = gst_elementfactory_make ("disksrc", "srcelement");
 	}
+
+	priv->uri = g_strdup (uri);
+
 	//priv->src = gst_elementfactory_make ("dvdsrc", "disk_src");
 	priv->offset_element = priv->src;
 	g_return_val_if_fail (priv->src != NULL, GST_PLAY_CANNOT_PLAY);
 
-	gtk_object_set (GTK_OBJECT (priv->src), "location", uri, NULL);
+	gtk_object_set (GTK_OBJECT (priv->src), "location", priv->uri, NULL);
 
 
 	priv->cache = gst_elementfactory_make ("autoplugcache", "cache");
