@@ -1678,7 +1678,7 @@ gst_alsa_get_formats (GstPad *pad)
 {
   static const GstFormat formats[] = {
     GST_FORMAT_TIME,
-    GST_FORMAT_UNITS,
+    GST_FORMAT_DEFAULT,
     GST_FORMAT_BYTES,
     0
   };
@@ -1696,8 +1696,7 @@ gst_alsa_convert (GstAlsa *this, GstFormat src_format, gint64 src_value,
 {
   gboolean res = TRUE;
 
-  if (src_format == *dest_format || (src_format == GST_FORMAT_UNITS && *dest_format == GST_FORMAT_DEFAULT)) {
-    *dest_format = GST_FORMAT_UNITS;
+  if (src_format == *dest_format) {
     *dest_value = src_value;
     return TRUE;
   }
@@ -1708,12 +1707,10 @@ gst_alsa_convert (GstAlsa *this, GstFormat src_format, gint64 src_value,
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_UNITS;
+	  *dest_value = gst_alsa_bytes_to_samples (this, (guint) src_value);
+          break;
         case GST_FORMAT_TIME:
 	  *dest_value = gst_alsa_bytes_to_timestamp (this, (guint) src_value);
-          break;
-        case GST_FORMAT_UNITS:
-	  *dest_value = gst_alsa_samples_to_timestamp (this, (guint) src_value);
           break;
         default:
           res = FALSE;
@@ -1723,8 +1720,6 @@ gst_alsa_convert (GstAlsa *this, GstFormat src_format, gint64 src_value,
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_UNITS;
-        case GST_FORMAT_UNITS:
 	  *dest_value = gst_alsa_timestamp_to_samples (this, (GstClockTime) src_value);
           break;
         case GST_FORMAT_BYTES:
@@ -1735,7 +1730,7 @@ gst_alsa_convert (GstAlsa *this, GstFormat src_format, gint64 src_value,
 	  break;
       }
       break;
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {	  
         case GST_FORMAT_TIME:
 	  *dest_value = gst_alsa_samples_to_timestamp (this, (guint) src_value);
@@ -1777,11 +1772,11 @@ gst_alsa_query_func (GstElement *element, GstQueryType type, GstFormat *format, 
     case GST_QUERY_LATENCY: {
       snd_pcm_sframes_t delay;
       ERROR_CHECK (snd_pcm_delay (this->handle, &delay), "Error getting delay: %s");
-      res = gst_alsa_convert (this, GST_FORMAT_UNITS, (gint64) delay, format, value); 
+      res = gst_alsa_convert (this, GST_FORMAT_DEFAULT, (gint64) delay, format, value); 
       break;
     }
     case GST_QUERY_POSITION:
-      res = gst_alsa_convert (this, GST_FORMAT_UNITS, this->transmitted, format, value);
+      res = gst_alsa_convert (this, GST_FORMAT_DEFAULT, this->transmitted, format, value);
       break;
     default:
       break;
