@@ -1,3 +1,11 @@
+2004-03-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/oss/gstosssink.c: (gst_osssink_init), (gst_osssink_get_time),
+	(gst_osssink_chain), (gst_osssink_change_state):
+	  Latest fixes for A/V sync, audio playback and such. This is about
+	  all... MPEG playback issues are mostly related to the async build-
+	  up of MPEG files, I cannot fix that. Use basicgthread to solve it.
+
 2004-03-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch from: Stephane Loeuillet
