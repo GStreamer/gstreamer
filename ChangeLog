@@ -1,3 +1,12 @@
+2004-07-11  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstclock.h:
+	  GST_SECOND shouldn't cause a conversion to unsigned.
+	* testsuite/clock/.cvsignore:
+	* testsuite/clock/Makefile.am:
+	* testsuite/clock/signedness.c: (main):
+	  make sure it never will again
+
 2004-07-11  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbin.c (gst_bin_add_func): If we're adding an element
