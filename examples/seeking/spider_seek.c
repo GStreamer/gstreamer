@@ -264,7 +264,6 @@ stop_seek (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 				  GST_SEEK_FLAG_FLUSH, real);
 
     res = gst_element_send_event (seekable, s_event);
-    gst_event_free (s_event);
 
     walk = g_list_next (walk);
   }
@@ -371,7 +370,8 @@ main (int argc, char **argv)
 
   gtk_main ();
 
-  //g_mem_chunk_info();
+  gst_buffer_print_stats();
+  gst_event_print_stats();
 
   return 0;
 }
