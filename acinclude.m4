@@ -1,6 +1,7 @@
 dnl Configure Paths for Alsa
-dnl Christopher Lansdown (lansdoct@cs.alfred.edu)
-dnl 29/10/1998
+dnl Christopher Lansdown <lansdoct@cs.alfred.edu>
+dnl Jaroslav Kysela <perex@suse.cz>
+dnl Last modification: 07/12/2000
 dnl AM_PATH_ALSA(MINIMUM-VERSION)
 dnl Test for libasound, and define ALSA_CFLAGS and ALSA_LIBS as appropriate.
 dnl enables arguments --with-alsa-prefix= --with-alsa-enc-prefix= --disable-alsatest
@@ -9,17 +10,17 @@ AC_DEFUN(AM_PATH_ALSA,
 [dnl
 dnl Get the clfags and libraries for alsa
 dnl
-AC_ARG_WITH(alsa-prefix,[ --with-alsa-prefix=PFX  Prefix where Alsa library is installed(optional)],
+AC_ARG_WITH(alsa-prefix,[  --with-alsa-prefix=PFX  Prefix where Alsa library is installed(optional)],
 	[alsa_prefix="$withval"], [alsa_prefix=""])
-AC_ARG_WITH(alsa-inc-prefix, [ --with-alsa-inc-prefix=PFX  Prefix where include libraries are (optional)],
+AC_ARG_WITH(alsa-inc-prefix, [  --with-alsa-inc-prefix=PFX  Prefix where include libraries are (optional)],
 	[alsa_inc_prefix="$withval"], [alsa_inc_prefix=""])
-AC_ARG_ENABLE(alsatest, [ --disable-alsatest       Do not try to compile and run a test Alsa program], [enable_alsatest=no], [enable_alsatest=yes])
+AC_ARG_ENABLE(alsatest, [  --disable-alsatest      Do not try to compile and run a test Alsa program], [enable_alsatest=no], [enable_alsatest=yes])
 
 dnl Add any special include directories
 AC_MSG_CHECKING(for ALSA CFLAGS)
 if test "$alsa_inc_prefix" != "" ; then
 	ALSA_CFLAGS="$ALSA_CFLAGS -I$alsa_inc_prefix"
-	CFLAGS="-I$alsa_inc_prefix"
+	CFLAGS="$CFLAGS -I$alsa_inc_prefix"
 fi
 AC_MSG_RESULT($ALSA_CFLAGS)
 
@@ -27,32 +28,14 @@ dnl add any special lib dirs
 AC_MSG_CHECKING(for ALSA LDFLAGS)
 if test "$alsa_prefix" != "" ; then
 	ALSA_LIBS="$ALSA_LIBS -L$alsa_prefix"
-	LIBS="-L$alsa_prefix"
+	LDFLAGS="$LDFLAGS -L$alsa_prefix"
 fi
 
 dnl add the alsa library
-ALSA_LIBS="$ALSA_LIBS -lasound"
-LDFLAGS="$ALSA_LIBS -lasound"
+ALSA_LIBS="$ALSA_LIBS -lasound -lm -ldl"
+alsa_save_LIBS="$LIBS"
+LIBS="$LIBS -lasound -lm -ldl"
 AC_MSG_RESULT($ALSA_LIBS)
-
-dnl Check for the presence of the library
-dnl if test $enable_alsatest = yes; then
-dnl   AC_MSG_CHECKING(for working libasound)
-dnl   AC_TRY_RUN([
-dnl #include <sys/asoundlib.h>
-dnl void main(void)
-dnl {
-dnl   snd_cards();
-dnl   exit(0);
-dnl }
-dnl ],
-dnl    [AC_MSG_RESULT("present")],
-dnl    [AC_MSG_RESULT("not found. ")
-dnl    AC_MSG_ERROR(Fatal error: Install alsa-lib package or use --with-alsa-prefix option...)],
-dnl    [AC_MSG_RESULT(unsopported)
-dnl     AC_MSG_ERROR(Cross-compiling isn't supported...)]
-dnl  )
-dnl fi
 
 dnl Check for a working version of libasound that is of the right version.
 min_alsa_version=ifelse([$1], ,0.1.1,$1)
@@ -107,18 +90,20 @@ exit(0);
 ],
   [AC_MSG_RESULT(found.)],
   [AC_MSG_RESULT(not present.)
-   AC_MSG_WARN(Sufficiently new version of libasound not found.)]
+   AC_MSG_WARN(Sufficiently new version of libasound not found.)
+   LIBS="$alsa_save_LIBS"
+   ]
 )
 AC_LANG_RESTORE
 
 dnl Now that we know that we have the right version, let's see if we have the library and not just the headers.
-AC_CHECK_LIB([asound], [snd_cards],,
-	[AC_MSG_WARN(No linkable libasound was found.)]
+AC_CHECK_LIB([asound], [snd_defaults_card],,
+	[AC_MSG_WARN(No linkable libasound was found.)
+	 LIBS="$alsa_save_LIBS"]
 )
 
 dnl That should be it.  Now just export out symbols:
 AC_SUBST(ALSA_CFLAGS)
 AC_SUBST(ALSA_LIBS)
 ])
-
 
