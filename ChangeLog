@@ -1,3 +1,18 @@
+2004-06-07  Tim-Philipp Müller  <t.i.m@zen.co.uk>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* gst/mixmatrix/mixmatrix.c: (gst_mixmatrix_init):
+	  create a NULL-initialized array of pads, so we don't think they
+	  exist already. (fixes #143130)
+
+2004-06-07  Benjamin Otte  <otte@gnome.org>
+
+	* gst/mixmatrix/mixmatrix.c: (gst_mixmatrix_init),
+	(mixmatrix_resize), (gst_mixmatrix_set_all_caps),
+	(gst_mixmatrix_request_new_pad), (gst_mixmatrix_loop):
+	  don't use // coments
+
 2004-06-07  Benjamin Otte  <otte@gnome.org>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_samples_to_timestamp):
