@@ -7,7 +7,7 @@
 // FIXME - remove this HAVE_LIBMMX - let configure set it.
 #undef HAVE_LIBMMX
 
-#include <byteswap.h>
+//#include <byteswap.h>
 
 #ifdef HAVE_LIBMMX
 #include <mmx.h>
@@ -30,7 +30,7 @@
 #else
 #  if defined (__i386__)
 #    define swab32(x) __i386_swab32(x)
-     static inline const guint32 __i386_swab32(guint32 x)
+     static inline const unsigned long __i386_swab32(unsigned long x)
       {
          __asm__("bswap %0" : "=r" (x) : "0" (x));
          return x;

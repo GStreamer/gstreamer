@@ -5,10 +5,10 @@ filter_LTLIBRARIES = libgstgetbits.la
 if HAVE_CPU_I386
 GSTARCH_SRCS = gstgetbits_i386.s
 else
-GSTARCH_SRCS = gstgetbits_generic.c
+GSTARCH_SRCS = 
 endif
 
-libgstgetbits_la_SOURCES = gstgetbits.c gstgetbits_inl.h $(GSTARCH_SRCS)
+libgstgetbits_la_SOURCES = gstgetbits.c gstgetbits_inl.h gstgetbits_generic.c $(GSTARCH_SRCS)
 EXTRA_libgstgetbits_la_SOURCES = gstgetbits_i386.s gstgetbits_generic.c
 
 libgstgetbitsincludedir = $(includedir)/gst/libs/gstgetbits
