@@ -38,15 +38,43 @@ Do not install a fault handler
 .B  \-t, \-\-trace
 Print memory allocation traces. The feature must be enabled at compile time to
 work.
+
+.
+.SH "GSTREAMER OPTIONS"
+.l
+\fIgst\-launch\fP also accepts the following options that are common
+to all GStreamer applications:
 .TP 8
-.B  \-\-gst\-info\-mask=FLAGS
-\fIGStreamer\fP info flags to set (list with \-\-gst\-mask\-help)
+.B  \-\-gst\-version
+Prints the version string of the \fIGStreamer\fP core library.
 .TP 8
-.B  \-\-gst\-debug\-mask=FLAGS
+.B  \-\-gst\-fatal\-warnings
+Causes \fIGStreamer\fP to abort if a warning message occurs.
+.TP 8
+.B  \-\-gst\-debug=STRING
 \fIGStreamer\fP debugging flags to set (list with \-\-gst\-mask\-help)
 .TP 8
-.B  \-\-gst\-mask=FLAGS
-\fIGStreamer\fP info and debugging flags to set (list with \-\-gst\-mask\-help)
+.B  \-\-gst\-debug\-level=LEVEL
+Sets the threshold for printing debugging messages.  A higher level
+will print more messages.  The useful range is 0-5, with the default
+being 0.
+.TP 8
+.B  \-\-gst\-debug\-no\-color
+\fIGStreamer\fP normally prints debugging messages so that the
+messages are color-coded when printed to a terminal that handles
+ANSI escape sequences.  Using this option causes \fIGstreamer\fP
+to print messages without color.
+.TP 8
+.B  \-\-gst\-disable\-debug
+Disables debugging.
+.TP 8
+.B  \-\-gst\-debug\-help
+Prints a list of available debug categories and their default debugging level.
+.TP 8
+.B  \-\-gst\-disable\-cpu\-opt
+\fIGStreamer\fP normally automatically detects the capabilities of the
+current CPU and selects the optimal implementation for some functions.
+Using this flag disables detection, which is useful for debugging.
 .TP 8
 .B  \-\-gst\-plugin\-spew
 \fIGStreamer\fP info flags to set
