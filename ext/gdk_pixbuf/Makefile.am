@@ -8,7 +8,7 @@ libgstgdkpixbuf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 
 if HAVE_GDK_LOADERS
-loaderdir = $(GDK_PIXBUF_LOADER_DIR)/gtk-2.0/$(GTK_VERSION)/loaders
+loaderdir = $(GDK_PIXBUF_LOADER_DIR)
 loader_LTLIBRARIES = gst_loader.la
 
 gst_loader_la_CFLAGS = $(GST_CFLAGS) $(GTK_CFLAGS) -DGDK_PIXBUF_ENABLE_BACKEND
