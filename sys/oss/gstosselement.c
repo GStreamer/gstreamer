@@ -608,7 +608,7 @@ gst_osselement_set_property (GObject *object,
     case ARG_DEVICE:
       /* disallow changing the device while it is opened
          get_property("device") should return the right one */
-      if (gst_element_get_state (GST_ELEMENT (oss)) != GST_STATE_NULL) {
+      if (gst_element_get_state (GST_ELEMENT (oss)) == GST_STATE_NULL) {
         g_free (oss->device);
         oss->device = g_strdup (g_value_get_string (value));
       }
@@ -616,7 +616,7 @@ gst_osselement_set_property (GObject *object,
     case ARG_MIXERDEV:
       /* disallow changing the device while it is opened
          get_property("mixerdev") should return the right one */
-      if (gst_element_get_state (GST_ELEMENT (oss)) != GST_STATE_NULL) {
+      if (gst_element_get_state (GST_ELEMENT (oss)) == GST_STATE_NULL) {
         g_free (oss->mixer_dev);
         oss->mixer_dev = g_strdup (g_value_get_string (value));
       }
