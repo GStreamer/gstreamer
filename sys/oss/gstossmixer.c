@@ -1,7 +1,7 @@
 /* GStreamer OSS Mixer implementation
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
- * gstossmixer.h: mixer interface implementation for OSS
+ * gstossmixer.c: mixer interface implementation for OSS
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -37,26 +37,72 @@
 #define MASK_BIT_IS_SET(mask, bit) \
   (mask & (1 << bit))
 
-static gboolean		gst_ossmixer_supported	   (GstInterface   *iface,
-						    GType           iface_type);
+static void	gst_ossmixer_track_class_init (GstOssMixerTrackClass *klass);
+static void	gst_ossmixer_track_init    (GstOssMixerTrack *track);
 
-static const GList *	gst_ossmixer_list_tracks   (GstMixer       *ossmixer);
+static gboolean	gst_ossmixer_supported	   (GstInterface   *iface,
+					    GType           iface_type);
+static const GList *
+		gst_ossmixer_list_tracks   (GstMixer       *ossmixer);
 
-static void		gst_ossmixer_set_volume	   (GstMixer       *ossmixer,
-						    GstMixerTrack  *track,
-						    gint           *volumes);
-static void		gst_ossmixer_get_volume	   (GstMixer       *ossmixer,
-						    GstMixerTrack  *track,
-						    gint           *volumes);
+static void	gst_ossmixer_set_volume	   (GstMixer       *ossmixer,
+					    GstMixerTrack  *track,
+					    gint           *volumes);
+static void	gst_ossmixer_get_volume	   (GstMixer       *ossmixer,
+					    GstMixerTrack  *track,
+					    gint           *volumes);
 
-static void		gst_ossmixer_set_record	   (GstMixer       *ossmixer,
-						    GstMixerTrack  *track,
-						    gboolean        record);
-static void		gst_ossmixer_set_mute	   (GstMixer       *ossmixer,
-						    GstMixerTrack  *track,
-						    gboolean        mute);
+static void	gst_ossmixer_set_record	   (GstMixer       *ossmixer,
+					    GstMixerTrack  *track,
+					    gboolean        record);
+static void	gst_ossmixer_set_mute	   (GstMixer       *ossmixer,
+					    GstMixerTrack  *track,
+					    gboolean        mute);
 
 static const gchar *labels[SOUND_MIXER_NRDEVICES] = SOUND_DEVICE_LABELS;
+static GstMixerTrackClass *parent_class = NULL;
+
+
+GType
+gst_ossmixer_track_get_type (void)
+{
+  static GType gst_ossmixer_track_type = 0;
+
+  if (!gst_ossmixer_track_type) {
+    static const GTypeInfo ossmixer_track_info = {
+      sizeof (GstOssMixerTrackClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_ossmixer_track_class_init,
+      NULL,
+      NULL,
+      sizeof (GstOssMixerTrack),
+      0,
+      (GInstanceInitFunc) gst_ossmixer_track_init,
+      NULL
+    };
+
+    gst_ossmixer_track_type =
+	g_type_register_static (GST_TYPE_MIXER_TRACK,
+				"GstOssMixerTrack",
+				&ossmixer_track_info, 0);
+  }
+
+  return gst_ossmixer_track_type;
+}
+
+static void
+gst_ossmixer_track_class_init (GstOssMixerTrackClass *klass)
+{
+  parent_class = g_type_class_ref (GST_TYPE_MIXER_TRACK);
+}
+
+static void
+gst_ossmixer_track_init (GstOssMixerTrack *track)
+{
+  track->lvol = track->rvol = 0;
+  track->track_num = 0;
+}
 
 GstMixerTrack *
 gst_ossmixer_track_new (GstOssElement *oss,
@@ -64,32 +110,26 @@ gst_ossmixer_track_new (GstOssElement *oss,
                         gint max_chans,
                         gint flags)
 {
-  GstMixerTrack *track = (GstMixerTrack *) g_new (GstOssMixerTrack, 1);
+  GstOssMixerTrack *osstrack;
+  GstMixerTrack *track;
   gint volumes[2];
 
+  osstrack = g_object_new (GST_TYPE_OSSMIXER_TRACK, NULL);
+  track = GST_MIXER_TRACK (osstrack);
   track->label = g_strdup (labels[track_num]);
   track->num_channels = max_chans;
   track->flags = flags;
   track->min_volume = 0;
   track->max_volume = 100;
-  ((GstOssMixerTrack *) track)->track_num = track_num;
+  osstrack->track_num = track_num;
 
   /* volume */
   gst_ossmixer_get_volume (GST_MIXER (oss), track, volumes);
-  if (max_chans == 1) {
-    volumes[1] = 0;
-  }
-  ((GstOssMixerTrack *) track)->lvol = volumes[0];
-  ((GstOssMixerTrack *) track)->rvol = volumes[1];
+  osstrack->lvol = volumes[0];
+  if (max_chans == 2)
+    osstrack->rvol = volumes[1];
 
   return track;
-}
-
-void
-gst_ossmixer_track_free (GstMixerTrack *track)
-{
-  g_free (track->label);
-  g_free (track);
 }
 
 void
@@ -119,13 +159,22 @@ gst_ossmixer_supported (GstInterface *iface,
   return (GST_OSSELEMENT (iface)->mixer_fd != -1);
 }
 
+static gboolean
+gst_ossmixer_contains_track (GstOssElement    *oss,
+			     GstOssMixerTrack *osstrack)
+{
+  const GList *item;
+
+  for (item = oss->tracklist; item != NULL; item = item->next)
+    if (item->data == osstrack)
+      return TRUE;
+
+  return FALSE;
+}
+
 static const GList *
 gst_ossmixer_list_tracks (GstMixer *mixer)
 {
-  GstOssElement *oss = GST_OSSELEMENT (mixer);
-
-  g_return_val_if_fail (oss->mixer_fd != -1, NULL);
-
   return (const GList *) GST_OSSELEMENT (mixer)->tracklist;
 }
 
@@ -136,9 +185,11 @@ gst_ossmixer_get_volume (GstMixer      *mixer,
 {
   gint volume;
   GstOssElement *oss = GST_OSSELEMENT (mixer);
-  GstOssMixerTrack *osstrack = (GstOssMixerTrack *) track;
+  GstOssMixerTrack *osstrack = GST_OSSMIXER_TRACK (track);
 
+  /* assert that we're opened and that we're using a known item */
   g_return_if_fail (oss->mixer_fd != -1);
+  g_return_if_fail (gst_ossmixer_contains_track (oss, osstrack));
 
   if (track->flags & GST_MIXER_TRACK_MUTE) {
     volumes[0] = osstrack->lvol;
@@ -167,9 +218,11 @@ gst_ossmixer_set_volume (GstMixer      *mixer,
 {
   gint volume;
   GstOssElement *oss = GST_OSSELEMENT (mixer);
-  GstOssMixerTrack *osstrack = (GstOssMixerTrack *) track;
+  GstOssMixerTrack *osstrack = GST_OSSMIXER_TRACK (track);
 
+  /* assert that we're opened and that we're using a known item */
   g_return_if_fail (oss->mixer_fd != -1);
+  g_return_if_fail (gst_ossmixer_contains_track (oss, osstrack));
 
   /* prepare the value for ioctl() */
   if (!(track->flags & GST_MIXER_TRACK_MUTE)) {
@@ -199,9 +252,11 @@ gst_ossmixer_set_mute (GstMixer      *mixer,
 {
   int volume;
   GstOssElement *oss = GST_OSSELEMENT (mixer);
-  GstOssMixerTrack *osstrack = (GstOssMixerTrack *) track;
+  GstOssMixerTrack *osstrack = GST_OSSMIXER_TRACK (track);
 
+  /* assert that we're opened and that we're using a known item */
   g_return_if_fail (oss->mixer_fd != -1);
+  g_return_if_fail (gst_ossmixer_contains_track (oss, osstrack));
 
   if (mute) {
     volume = 0;
@@ -231,9 +286,11 @@ gst_ossmixer_set_record (GstMixer      *mixer,
 			 gboolean       record)
 {
   GstOssElement *oss = GST_OSSELEMENT (mixer);
-  GstOssMixerTrack *osstrack = (GstOssMixerTrack *) track;
+  GstOssMixerTrack *osstrack = GST_OSSMIXER_TRACK (track);
 
+  /* assert that we're opened and that we're using a known item */
   g_return_if_fail (oss->mixer_fd != -1);
+  g_return_if_fail (gst_ossmixer_contains_track (oss, osstrack));
 
   /* if we're exclusive, then we need to unset the current one(s) */
   if (oss->mixcaps & SOUND_CAP_EXCL_INPUT) {
@@ -270,22 +327,40 @@ void
 gst_ossmixer_build_list (GstOssElement *oss)
 {
   gint i, devmask;
+  const GList *pads = gst_element_get_pad_list (GST_ELEMENT (oss));
+  GstPadDirection dir = GST_PAD_UNKNOWN;
+  struct mixer_info minfo;
 
   g_return_if_fail (oss->mixer_fd == -1);
 
   oss->mixer_fd = open (oss->mixer_dev, O_RDWR);
   if (oss->mixer_fd == -1) {
-    g_warning ("Failed to open mixer device %s, mixing disabled: %s",
+    /* this is valid. OSS devices don't need to expose a mixer */
+    GST_DEBUG ("Failed to open mixer device %s, mixing disabled: %s",
 	       oss->mixer_dev, strerror (errno));
     return;
   }
 
+  /* get direction */
+  if (pads && g_list_length ((GList *) pads) == 1)
+    dir = GST_PAD_DIRECTION (GST_PAD (pads->data));
+
   /* get masks */
-  ioctl (oss->mixer_fd, SOUND_MIXER_READ_RECMASK, &oss->recmask);
-  ioctl (oss->mixer_fd, SOUND_MIXER_READ_RECSRC, &oss->recdevs);
-  ioctl (oss->mixer_fd, SOUND_MIXER_READ_STEREODEVS, &oss->stereomask);
-  ioctl (oss->mixer_fd, SOUND_MIXER_READ_DEVMASK, &devmask);
-  ioctl (oss->mixer_fd, SOUND_MIXER_READ_CAPS, &oss->mixcaps);
+  if (ioctl (oss->mixer_fd, SOUND_MIXER_READ_RECMASK, &oss->recmask) < 0 ||
+      ioctl (oss->mixer_fd, SOUND_MIXER_READ_RECSRC, &oss->recdevs) < 0 ||
+      ioctl (oss->mixer_fd, SOUND_MIXER_READ_STEREODEVS, &oss->stereomask) < 0 ||
+      ioctl (oss->mixer_fd, SOUND_MIXER_READ_DEVMASK, &devmask) < 0 ||
+      ioctl (oss->mixer_fd, SOUND_MIXER_READ_CAPS, &oss->mixcaps) < 0) {
+    GST_DEBUG ("Failed to get device masks - disabling mixer");
+    close (oss->mixer_fd);
+    oss->mixer_fd = -1;
+    return;
+  }
+
+  /* get name */
+  if (ioctl (oss->mixer_fd, SOUND_MIXER_INFO, &minfo) == 0) {
+    oss->device_name = g_strdup (minfo.name);
+  }
 
   /* build track list */
   for (i = 0; i < SOUND_MIXER_NRDEVICES; i++) {
@@ -301,11 +376,16 @@ gst_ossmixer_build_list (GstOssElement *oss)
       if (MASK_BIT_IS_SET (oss->recdevs, i))
         record = TRUE;
 
+      /* do we want this in our list? */
+      if ((dir == GST_PAD_SRC && input == FALSE) ||
+          (dir == GST_PAD_SINK && i == SOUND_MIXER_PCM))
+        continue;
+
       /* add track to list */
       track = gst_ossmixer_track_new (oss, i, stereo ? 2 : 1,
-                                        (record ? GST_MIXER_TRACK_RECORD : 0) |
-                                        (input ? GST_MIXER_TRACK_INPUT :
-                                                 GST_MIXER_TRACK_OUTPUT));
+					  (record ? GST_MIXER_TRACK_RECORD : 0) |
+					  (input ? GST_MIXER_TRACK_INPUT :
+						   GST_MIXER_TRACK_OUTPUT));
       oss->tracklist = g_list_append (oss->tracklist, track);
     }
   }
@@ -314,11 +394,17 @@ gst_ossmixer_build_list (GstOssElement *oss)
 void
 gst_ossmixer_free_list (GstOssElement *oss)
 {
-  g_return_if_fail (oss->mixer_fd != -1);
+  if (oss->mixer_fd == -1)
+    return;
 
-  g_list_foreach (oss->tracklist, (GFunc) gst_ossmixer_track_free, NULL);
+  g_list_foreach (oss->tracklist, (GFunc) g_object_unref, NULL);
   g_list_free (oss->tracklist);
   oss->tracklist = NULL;
+
+  if (oss->device_name) {
+    g_free (oss->device_name);
+    oss->device_name = NULL;
+  }
 
   close (oss->mixer_fd);
   oss->mixer_fd = -1;

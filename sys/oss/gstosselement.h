@@ -82,6 +82,7 @@ struct _GstOssElement
 		 recmask,
 		 mixcaps;
   gint		 mixer_fd;
+  gchar		*device_name;
 };
 
 struct _GstOssElementClass {

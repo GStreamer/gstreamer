@@ -40,6 +40,7 @@ enum {
   ARG_0,
   ARG_DEVICE,
   ARG_MIXERDEV,
+  ARG_DEVICE_NAME,
 };
 
 /* elementfactory information */
@@ -124,12 +125,15 @@ gst_osselement_class_init (GstOssElementClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE,
-    g_param_spec_string ("device", "device", "oss device (/dev/dspN usually)",
+    g_param_spec_string ("device", "Device", "OSS device (/dev/dspN usually)",
                          "default", G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MIXERDEV,
-    g_param_spec_string ("mixerdev", "mixer device",
-			 "oss mixer device (/dev/mixerN usually)",
+    g_param_spec_string ("mixerdev", "Mixer device",
+			 "OSS mixer device (/dev/mixerN usually)",
                          "default", G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MIXERDEV,
+    g_param_spec_string ("device_name", "Device name", "Name of the device",
+                         NULL, G_PARAM_READABLE));
   
   gobject_class->set_property = gst_osselement_set_property;
   gobject_class->get_property = gst_osselement_get_property;
@@ -146,6 +150,7 @@ gst_osselement_init (GstOssElement *oss)
   oss->fd = -1;
   oss->mixer_fd = -1;
   oss->tracklist = NULL;
+  oss->device_name = NULL;
 
   gst_osselement_reset (oss);
 }
@@ -631,6 +636,9 @@ gst_osselement_get_property (GObject *object,
       break;
     case ARG_MIXERDEV:
       g_value_set_string (value, oss->mixer_dev);
+      break;
+    case ARG_DEVICE_NAME:
+      g_value_set_string (value, oss->device_name);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
