@@ -1785,7 +1785,7 @@ gst_element_interrupt (GstElement *element)
 }
 
 /**
- * gst_element_set_sched:
+ * gst_element_set_scheduler:
  * @element: Element to set manager of.
  * @sched: @GstScheduler to set.
  *
@@ -1793,7 +1793,7 @@ gst_element_interrupt (GstElement *element)
  * writing a new bin subclass.
  */
 void
-gst_element_set_sched (GstElement *element,
+gst_element_set_scheduler (GstElement *element,
 		       GstScheduler *sched)
 {
   g_return_if_fail (GST_IS_ELEMENT (element));
@@ -1804,7 +1804,7 @@ gst_element_set_sched (GstElement *element,
 }
 
 /**
- * gst_element_get_sched:
+ * gst_element_get_scheduler:
  * @element: Element to get manager of.
  *
  * Returns the scheduler of the element.
@@ -1812,7 +1812,7 @@ gst_element_set_sched (GstElement *element,
  * Returns: Element's scheduler
  */
 GstScheduler*
-gst_element_get_sched (GstElement *element)
+gst_element_get_scheduler (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 

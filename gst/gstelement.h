@@ -194,8 +194,8 @@ GstClockReturn		gst_element_clock_wait 		(GstElement *element, GstClock *clock, 
 
 void			gst_element_yield		(GstElement *element);
 gboolean		gst_element_interrupt		(GstElement *element);
-void			gst_element_set_sched		(GstElement *element, GstScheduler *sched);
-GstScheduler*		gst_element_get_sched		(GstElement *element);
+void			gst_element_set_scheduler	(GstElement *element, GstScheduler *sched);
+GstScheduler*		gst_element_get_scheduler	(GstElement *element);
 
 void			gst_element_add_pad		(GstElement *element, GstPad *pad);
 void			gst_element_remove_pad		(GstElement *element, GstPad *pad);

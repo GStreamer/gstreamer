@@ -700,7 +700,7 @@ gst_fast_scheduler_add_element (GstScheduler * sched, GstElement * element)
       continue;
 
     /* set the pad's sched pointer */
-    gst_pad_set_sched (pad, sched);
+    gst_pad_set_scheduler (pad, sched);
 
     /* if the peer element exists and is a candidate */
     if (GST_PAD_PEER (pad)) {

@@ -449,7 +449,7 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_get_sched ##### -->
+<!-- ##### FUNCTION gst_pad_get_scheduler ##### -->
 <para>
 
 </para>
@@ -458,7 +458,7 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_set_sched ##### -->
+<!-- ##### FUNCTION gst_pad_set_scheduler ##### -->
 <para>
 
 </para>
@@ -467,7 +467,7 @@ Destroy the pad.
 @sched: 
 
 
-<!-- ##### FUNCTION gst_pad_unset_sched ##### -->
+<!-- ##### FUNCTION gst_pad_unset_scheduler ##### -->
 <para>
 
 </para>

@@ -470,7 +470,7 @@ circumstances.
 @element: The element in question.
 
 
-<!-- ##### FUNCTION gst_element_get_sched ##### -->
+<!-- ##### FUNCTION gst_element_get_scheduler ##### -->
 <para>
 
 </para>
@@ -479,7 +479,7 @@ circumstances.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_set_sched ##### -->
+<!-- ##### FUNCTION gst_element_set_scheduler ##### -->
 <para>
 
 </para>

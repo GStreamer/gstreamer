@@ -817,14 +817,14 @@ gst_pad_get_pad_template (GstPad *pad)
 
 
 /**
- * gst_pad_set_sched:
+ * gst_pad_set_scheduler:
  * @pad: the pad to set the scheduler for
  * @sched: The scheduler to set
  *
  * Set the scheduler for the pad
  */
 void
-gst_pad_set_sched (GstPad *pad, GstScheduler *sched)
+gst_pad_set_scheduler (GstPad *pad, GstScheduler *sched)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -833,7 +833,7 @@ gst_pad_set_sched (GstPad *pad, GstScheduler *sched)
 }
  
 /**
- * gst_pad_get_sched:
+ * gst_pad_get_scheduler:
  * @pad: the pad to get the scheduler from
  *
  * Get the scheduler of the pad
@@ -841,7 +841,7 @@ gst_pad_set_sched (GstPad *pad, GstScheduler *sched)
  * Returns: the scheduler of the pad.
  */
 GstScheduler*
-gst_pad_get_sched (GstPad *pad)
+gst_pad_get_scheduler (GstPad *pad)
 {
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
@@ -850,13 +850,13 @@ gst_pad_get_sched (GstPad *pad)
 }
 
 /**
- * gst_pad_unset_sched:
+ * gst_pad_unset_scheduler:
  * @pad: the pad to unset the scheduler for
  *
  * Unset the scheduler for the pad
  */
 void
-gst_pad_unset_sched (GstPad *pad)
+gst_pad_unset_scheduler (GstPad *pad)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));

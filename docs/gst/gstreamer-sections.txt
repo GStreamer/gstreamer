@@ -361,8 +361,8 @@ GstElementSetClockFunction
 
 gst_element_set_loop_function
 GstElementLoopFunction
-gst_element_get_sched
-gst_element_set_sched
+gst_element_get_scheduler
+gst_element_set_scheduler
 gst_element_get_parent
 gst_element_set_parent
 gst_element_get_managing_bin
@@ -603,9 +603,9 @@ gst_pad_set_element_private
 gst_pad_get_element_private
 gst_pad_set_parent
 gst_pad_get_parent
-gst_pad_get_sched
-gst_pad_set_sched
-gst_pad_unset_sched
+gst_pad_get_scheduler
+gst_pad_set_scheduler
+gst_pad_unset_scheduler
 gst_pad_get_real_parent
 gst_pad_add_ghost_pad
 gst_pad_remove_ghost_pad

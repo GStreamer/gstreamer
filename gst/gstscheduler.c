@@ -218,7 +218,7 @@ gst_scheduler_remove_element (GstScheduler *sched, GstElement *element)
     GstPad *pad = GST_PAD (pads->data);
     
     if (GST_IS_REAL_PAD (pad)) {
-      gst_pad_unset_sched (GST_PAD (pads->data));
+      gst_pad_unset_scheduler (GST_PAD (pads->data));
     }
   }
 }

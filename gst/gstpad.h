@@ -373,9 +373,9 @@ void			gst_pad_set_parent			(GstPad *pad, GstObject *parent);
 GstElement*		gst_pad_get_parent			(GstPad *pad);
 GstElement*		gst_pad_get_real_parent			(GstPad *pad);
 
-void			gst_pad_set_sched			(GstPad *pad, GstScheduler *sched);
-GstScheduler*		gst_pad_get_sched			(GstPad *pad);
-void			gst_pad_unset_sched			(GstPad *pad);
+void			gst_pad_set_scheduler			(GstPad *pad, GstScheduler *sched);
+GstScheduler*		gst_pad_get_scheduler			(GstPad *pad);
+void			gst_pad_unset_scheduler			(GstPad *pad);
 
 void			gst_pad_add_ghost_pad			(GstPad *pad, GstPad *ghostpad);
 void			gst_pad_remove_ghost_pad		(GstPad *pad, GstPad *ghostpad);
