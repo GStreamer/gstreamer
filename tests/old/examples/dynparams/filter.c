@@ -61,7 +61,7 @@ gst_bin_find_unconnected_pad (GstBin *bin, GstPadDirection direction,
 {
   GstPad *pad = NULL;
   GList *elements = NULL;
-  GList *pads = NULL;
+  const GList *pads = NULL;
   GstElement *element = NULL;
 
   g_print ("DEBUG: find_unconnected start\n");

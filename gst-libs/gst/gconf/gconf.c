@@ -26,7 +26,7 @@ gst_bin_find_unconnected_pad (GstBin *bin, GstPadDirection direction)
 {
   GstPad *pad = NULL;
   GList *elements = NULL;
-  GList *pads = NULL;
+  const GList *pads = NULL;
   GstElement *element = NULL;
 
   elements = (GList *) gst_bin_get_list (bin);

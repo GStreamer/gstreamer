@@ -260,7 +260,8 @@ static GstPadConnectReturn
 gst_adder_connect (GstPad *pad, GstCaps *caps)
 {
   GstAdder *adder;
-  GList *sinkpads, *remove = NULL;
+  const GList *sinkpads;
+  GList *remove = NULL;
   GSList *channels;
   GstPad *p;
   
