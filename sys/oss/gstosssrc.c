@@ -25,7 +25,9 @@
 #include <fcntl.h>
 #include <sys/soundcard.h>
 #include <sys/ioctl.h>
+#include <errno.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <gstosssrc.h>
 #include <gstosscommon.h>
@@ -258,22 +260,31 @@ gst_osssrc_get (GstPad *pad)
   
   readbytes = read (src->common.fd,GST_BUFFER_DATA (buf),
                     src->buffersize);
+  if (readbytes < 0) {
+    gst_buffer_unref (buf);
+    gst_element_error (GST_ELEMENT (src), "error reading data (%s)",
+		    strerror (errno));
+    return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+  }
 
   if (readbytes == 0) {
+    gst_buffer_unref (buf);
     gst_element_set_eos (GST_ELEMENT (src));
-    return NULL;
+    return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
   }
 
   if (!GST_PAD_CAPS (pad)) {
     /* nothing was negotiated, we can decide on a format */
     if (!gst_osssrc_negotiate (pad)) {
+      gst_buffer_unref (buf);
       gst_element_error (GST_ELEMENT (src), "could not negotiate format");
-      return NULL;
+      return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
     }
   }
   if (src->common.bps == 0) {
+    gst_buffer_unref (buf);
     gst_element_error (GST_ELEMENT (src), "no format negotiated");
-    return NULL;
+    return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
   }
 
   GST_BUFFER_SIZE (buf) = readbytes;
