@@ -27,7 +27,6 @@
 #include "gstmarshal.h"
 #include "gstscheduler.h"
 #include "gstinfo.h"
-#include "gstlog.h"
 
 #define GST_CAT_DEFAULT GST_CAT_THREAD
 #define STACK_SIZE 0x200000

@@ -21,6 +21,19 @@ in a pipeline.
 </para>
 
 
+<!-- ##### SIGNAL GstIndex::entry-added ##### -->
+<para>
+Is emited when a new entry is added to the index.
+</para>
+
+@gstindex: the object which received the signal.
+@arg1: The entry added to the index.
+
+<!-- ##### ARG GstIndex:resolver ##### -->
+<para>
+
+</para>
+
 <!-- ##### MACRO GST_TYPE_INDEX_ENTRY ##### -->
 <para>
 
@@ -539,17 +552,4 @@ The GstIndexFactory object
 @name: 
 @Returns: 
 
-
-<!-- ##### SIGNAL GstIndex::entry-added ##### -->
-<para>
-Is emited when a new entry is added to the index.
-</para>
-
-@gstindex: the object which received the signal.
-@arg1: The entry added to the index.
-
-<!-- ##### ARG GstIndex:resolver ##### -->
-<para>
-
-</para>
 

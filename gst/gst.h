@@ -94,6 +94,4 @@ void		gst_main_quit			(void);
 
 G_END_DECLS
 
-#include <gst/gstlog.h>
-
 #endif /* __GST_H__ */

@@ -22,8 +22,7 @@
 
 #include <string.h>
 
-#include "gstlog.h"
-
+#include "gst_private.h"
 #include "gstformat.h"
 
 static GList *_gst_formats = NULL;

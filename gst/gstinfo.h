@@ -27,7 +27,6 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gst/gstatomic.h>
-#include <gst/gstlog.h>
 #include <gst/gstconfig.h>
 
 G_BEGIN_DECLS

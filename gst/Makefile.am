@@ -172,7 +172,6 @@ gst_headers =			\
 	gstindex.h		\
 	gstinfo.h		\
 	gstinterface.h		\
-	gstlog.h		\
 	gstmacros.h		\
 	gstmemchunk.h		\
 	gstpad.h		\
@@ -230,7 +229,7 @@ gstmarshal.h: gstmarshal.list
 
 gstmarshal.c: gstmarshal.list
 	echo "#include \"glib-object.h\"" >gstmarshal.c.tmp
-	echo "#include \"gstlog.h\"" >> gstmarshal.c.tmp
+	echo "#include \"gst_private.h\"" >> gstmarshal.c.tmp
 	echo "#include \"gstmarshal.h\"" >> gstmarshal.c.tmp
 	glib-genmarshal --body --prefix=gst_marshal $^ >> gstmarshal.c.tmp
 	mv gstmarshal.c.tmp gstmarshal.c

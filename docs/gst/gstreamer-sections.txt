@@ -1460,13 +1460,6 @@ GST_TIME_ARGS
 </SECTION>
 
 <SECTION>
-<FILE>gstlog</FILE>
-g_log_domain_gstreamer
-GST_SHOW_INFO
-gst_info
-</SECTION>
-
-<SECTION>
 <FILE>gstmacros</FILE>
 GST_GNUC_CONSTRUCTOR
 GST_INLINE_FUNC

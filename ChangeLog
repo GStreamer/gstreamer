@@ -1,3 +1,41 @@
+2004-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/pwg/pwg.xml:
+          remove hardcoded stylesheet path (duh)
+	* docs/random/release:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/Makefile.am:
+	* gst/gst.h:
+	* gst/gst_private.h:
+	* gst/gstcaps.c:
+	* gst/gstevent.c:
+	* gst/gstformat.c:
+	* gst/gstinfo.c:
+	* gst/gstinfo.h:
+	* gst/gstinterface.c:
+	* gst/gstmemchunk.c:
+	* gst/gstprobe.c:
+	* gst/gstquery.c:
+	* gst/gstregistry.c:
+	* gst/gstregistrypool.c:
+	* gst/gststructure.c:
+	* gst/gsttaginterface.c:
+	* gst/gstthread.c:
+	* gst/gsttrace.c:
+	* gst/gsttypefind.c: (gst_type_find_factory_get_type):
+	* gst/gsturi.c:
+	* gst/gstvalue.c:
+          deprecate gst_info; remove gstlog.h
+   
+
+2004-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* po/en_GB.po:
+	* po/sv.po:
+	* po/uk.po:
+          updated translations
+
 2004-05-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstbin.c: (gst_bin_dispose):

@@ -24,6 +24,18 @@ A Thread can act as a toplevel bin as it has its own scheduler.
 </para>
 
 
+<!-- ##### SIGNAL GstThread::shutdown ##### -->
+<para>
+
+</para>
+
+@gstthread: the object which received the signal.
+
+<!-- ##### ARG GstThread:priority ##### -->
+<para>
+The thread priority
+</para>
+
 <!-- ##### VARIABLE gst_thread_current ##### -->
 <para>
 
@@ -65,16 +77,4 @@ Thread flags:
 
 @Returns: 
 
-
-<!-- ##### SIGNAL GstThread::shutdown ##### -->
-<para>
-
-</para>
-
-@gstthread: the object which received the signal.
-
-<!-- ##### ARG GstThread:priority ##### -->
-<para>
-The thread priority
-</para>
 

@@ -50,6 +50,8 @@ TODO :
       that these bugs are fixed, or reassign to a later milestone if not
     - Check later milestone bugs, and if any of them are fixed, reassign to
       this milestone
+    - Check the list of bugs resolved with milestone HEAD, which should be
+      assigned to an actual milestone
   - create a new $(version).xml file in www/src/htdocs/releases/$(module)
     and add that to cvs
   - Start updating the release notes on the www cvs tree

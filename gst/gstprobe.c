@@ -21,8 +21,8 @@
  */
 
 
-#include "gstlog.h"
 #include "gstprobe.h"
+#include "gst_private.h"
 
 /**
  * gst_probe_new:

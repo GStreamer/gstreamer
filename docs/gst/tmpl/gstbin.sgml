@@ -225,31 +225,3 @@ Flags for a bin.
 @child: 
 
 
-<!-- ##### SIGNAL GstBin::element-added ##### -->
-<para>
-
-</para>
-
-@gstbin: the object which received the signal.
-@arg1: the element that was added to the bin
-
-<!-- ##### SIGNAL GstBin::element-removed ##### -->
-<para>
-
-</para>
-
-@gstbin: the object which received the signal.
-@arg1: the element that was removed from the bin
-
-<!-- ##### SIGNAL GstBin::iterate ##### -->
-<para>
-This signal is emitted when a bin iterates, either automatically or
-due to a #gst_bin_iterate() call.  The return value is used to
-determine if the object method handler processed any data.
-In most normal cases, a user-provided signal handler should return
-FALSE.
-</para>
-
-@gstbin: the object which received the signal.
-@Returns: TRUE if the state of the bin was advanced.
-

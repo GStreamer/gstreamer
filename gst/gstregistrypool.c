@@ -26,7 +26,6 @@
 
 #include "gstinfo.h"
 #include "gstregistrypool.h"
-#include "gstlog.h"
 #include "gstfilter.h"
 
 /* list of registries in the pool */

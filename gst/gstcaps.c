@@ -25,6 +25,8 @@
 
 #include <gst/gst.h>
 
+#include "gst_private.h"
+
 #define CAPS_POISON(caps) G_STMT_START{ \
   if (caps) { \
     GstCaps *_newcaps = gst_caps_copy (caps); \

@@ -34,7 +34,6 @@
 
 #include "gst_private.h"
 
-#include "gstlog.h"
 #include "gsttrace.h"
 
 static

@@ -28,11 +28,13 @@ Get the name of the feature
 @feature: The feature to query
 
 
-<!-- ##### TYPEDEF GstTypeNameData ##### -->
+<!-- ##### STRUCT GstTypeNameData ##### -->
 <para>
 
 </para>
 
+@name: 
+@type: 
 
 <!-- ##### USER_FUNCTION GstPluginFeatureFilter ##### -->
 <para>

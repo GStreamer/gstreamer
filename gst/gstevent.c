@@ -28,7 +28,6 @@
 #include "gstinfo.h"
 #include "gstmemchunk.h"
 #include "gstevent.h"
-#include "gstlog.h"
 #include "gsttag.h"
 
 #ifndef GST_DISABLE_TRACE

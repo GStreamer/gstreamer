@@ -39,7 +39,6 @@
 #endif
 #include <string.h>             /* G_VA_COPY */
 #include "gstinfo.h"
-#include "gstlog.h"
 #include "gst_private.h"
 #include "gstelement.h"
 #include "gstpad.h"

@@ -28,6 +28,7 @@
 #include "gstinfo.h"
 #include "gstregistrypool.h"
 #include "gstmarshal.h"
+#include "gst_private.h"
 
 #include <string.h>
 

@@ -25,8 +25,8 @@
 #include "config.h"
 #endif
 
+#include "gst_private.h"
 #include "gstinterface.h"
-#include "gstlog.h"
 
 static void
 gst_implements_interface_class_init (GstImplementsInterfaceClass * ifklass);

@@ -27,6 +27,21 @@ clock so that the clock is always a good measure of the time in the pipeline.
 </para>
 
 
+<!-- ##### ARG GstClock:event-diff ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstClock:max-diff ##### -->
+<para>
+Maximum allowed diff for clock sync requests against the real time.
+</para>
+
+<!-- ##### ARG GstClock:stats ##### -->
+<para>
+Boolean property to activate stat generation on the clock.
+</para>
+
 <!-- ##### TYPEDEF GstClockTime ##### -->
 <para>
 A datatype to hold a time, measured in nanoseconds.
@@ -428,19 +443,4 @@ Get the clock flags
 
 @id: 
 
-
-<!-- ##### ARG GstClock:event-diff ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstClock:max-diff ##### -->
-<para>
-Maximum allowed diff for clock sync requests against the real time.
-</para>
-
-<!-- ##### ARG GstClock:stats ##### -->
-<para>
-Boolean property to activate stat generation on the clock.
-</para>
 

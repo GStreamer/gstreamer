@@ -20,6 +20,47 @@ gsttypes
 </para>
 
 
+<!-- ##### SIGNAL GstObject::deep-notify ##### -->
+<para>
+The deep notify signal is used to be notified of property changes.
+it is typically attached to the toplevel bin to receive notifications
+from all the elements contained in that bin.
+</para>
+
+@gstobject: the object which received the signal.
+@arg1: the object that originated the signal
+@arg2: the property that changed
+
+<!-- ##### SIGNAL GstObject::object-saved ##### -->
+<para>
+Is trigered whenever a new object is saved to XML. You can connect to
+this signal to insert custom XML tags into the core XML.
+</para>
+
+@gstobject: the object which received the signal.
+@arg1: the xmlNodePtr of the parent node
+
+<!-- ##### SIGNAL GstObject::parent-set ##### -->
+<para>
+Is emitted when the parent of an object is set.
+</para>
+
+@gstobject: the object which received the signal.
+@arg1: the new parent
+
+<!-- ##### SIGNAL GstObject::parent-unset ##### -->
+<para>
+Is emitted when the parent of an object is unset.
+</para>
+
+@gstobject: the object which received the signal.
+@arg1: the old parent
+
+<!-- ##### ARG GstObject:name ##### -->
+<para>
+The name of the object
+</para>
+
 <!-- ##### STRUCT GstObjectClass ##### -->
 <para>
 
@@ -57,6 +98,15 @@ The padtemplate object.
 </para>
 
 
+<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
+<para>
+This signal is fired when an element creates a pad from this 
+template.
+</para>
+
+@gstpadtemplate: the object which received the signal.
+@arg1: The pad that was created.
+
 <!-- ##### STRUCT GstPadTemplateClass ##### -->
 <para>
 
@@ -71,6 +121,59 @@ The padtemplate object.
 
 </para>
 
+
+<!-- ##### SIGNAL GstElement::eos ##### -->
+<para>
+Signal emited when the element goes to PAUSED due to an end-of-stream
+condition.
+</para>
+
+@gstelement: the object which received the signal.
+
+<!-- ##### SIGNAL GstElement::error ##### -->
+<para>
+This signal is emitted when an element has encountered an error that caused
+it to fail performing its function.
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the original #GstElement that generated the error.
+@arg2: a #GError containing the translated error message.
+@arg3: a debug string providing additional untranslated debug information, or NULL.
+
+<!-- ##### SIGNAL GstElement::found-tag ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
+@arg2: 
+
+<!-- ##### SIGNAL GstElement::new-pad ##### -->
+<para>
+Is triggered whenever a new pad is added to an element.
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the new pad that was added
+
+<!-- ##### SIGNAL GstElement::pad-removed ##### -->
+<para>
+Is triggered whenever a pad has been removed from the element.
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: The pad that was removed.
+
+<!-- ##### SIGNAL GstElement::state-change ##### -->
+<para>
+Is triggered whenever the state of an element changes.
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the new state of the object
+@arg2: 
 
 <!-- ##### STRUCT GstElementClass ##### -->
 <para>
@@ -112,6 +215,34 @@ The padtemplate object.
 
 </para>
 
+
+<!-- ##### SIGNAL GstBin::element-added ##### -->
+<para>
+
+</para>
+
+@gstbin: the object which received the signal.
+@arg1: the element that was added to the bin
+
+<!-- ##### SIGNAL GstBin::element-removed ##### -->
+<para>
+
+</para>
+
+@gstbin: the object which received the signal.
+@arg1: the element that was removed from the bin
+
+<!-- ##### SIGNAL GstBin::iterate ##### -->
+<para>
+This signal is emitted when a bin iterates, either automatically or
+due to a #gst_bin_iterate() call.  The return value is used to
+determine if the object method handler processed any data.
+In most normal cases, a user-provided signal handler should return
+FALSE.
+</para>
+
+@gstbin: the object which received the signal.
+@Returns: TRUE if the state of the bin was advanced.
 
 <!-- ##### STRUCT GstBinClass ##### -->
 <para>

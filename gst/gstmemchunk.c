@@ -20,7 +20,6 @@
 
 #include <string.h>             /* memset */
 
-#include "gstlog.h"
 #include "gstutils.h"
 #include "gstmemchunk.h"
 #include "gsttrashstack.h"

@@ -37,7 +37,6 @@
 
 #include "gstinfo.h"
 #include "gstregistry.h"
-#include "gstlog.h"
 #include "gstmarshal.h"
 #include "gstfilter.h"
 
