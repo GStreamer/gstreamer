@@ -168,6 +168,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_bindir}/gst-register
 %{_bindir}/gst-feedback
 %{_bindir}/gst-xmllaunch
+%{_bindir}/gst-typefind
 %{_mandir}/man1/gst-feedback.*
 %{_mandir}/man1/gst-xmllaunch.*
 %{_mandir}/man1/gst-complete.*
@@ -195,6 +196,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/libgstcontrol-%{majorminor}.so
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-control-%{majorminor}.pc
 ## we specify the API docs as regular files since %docs doesn't fail when
 #  files aren't found anymore for RPM >= 4
 #  we list all of the files we really need to trap incomplete doc builds
@@ -202,49 +204,11 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 ## gstreamer API
 %dir %{_datadir}/gtk-doc/html/%{name}-%{majorminor}
 %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/%{name}-%{majorminor}.devhelp
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/autopluggers.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/book1.html
 %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/element-types.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstautoplugfactory.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstautoplug.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstbin.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstclock.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstelement.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gst-index.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstobject.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstpad.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstpipeline.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstpluginfeature.html
-# %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-cothreads.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstbuffer.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstbufferpool.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstcaps.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstcpu.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstdata.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstevent.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gst.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstinfo.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstparse.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstplugin.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstprops.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gststaticautoplug.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gststaticautoplugrender.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gsttype.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstutils.html
 %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstschedulerfactory.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstscheduler.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstthread.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gsttypefactory.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstxml.html
 %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/index.sgml
 ## gstreamer-libs API
 %dir %{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/%{name}-libs-%{majorminor}.devhelp
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/book1.html
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/%{name}-libs-gstcolorspace.html
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/%{name}-libs-gstgetbits.html
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/%{name}-libs.html
 %{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/index.sgml
 ## this catches all of the rest of the docs we might have forgotten
 %{_datadir}/gtk-doc/html/*

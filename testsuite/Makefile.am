@@ -11,7 +11,7 @@ GST_DEBUG_DIRS = debug
 endif
 
 # FIXME : threads bytestream
-SUBDIRS = caps plugin elements clock refcounting threads indexers $(GST_PARSE_DIRS) $(GST_DEBUG_DIRS) ## cleanup dynparams
+SUBDIRS = caps plugin elements clock refcounting threads indexers debug $(GST_PARSE_DIRS) $(GST_DEBUG_DIRS) ## cleanup dynparams
 
 TOP_BUILDDIR=$(shell cd $(top_builddir) && pwd)
 TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(TOP_BUILDDIR) GST_REGISTRY=$(TOP_BUILDDIR)/testsuite/test-registry.xml
@@ -39,6 +39,6 @@ AM_CFLAGS = $(GST_CFLAGS)
 CLEANFILES = test-registry.xml
 
 DIST_SUBDIRS = bytestream caps cleanup clock dynparams elements indexers \
-		plugin refcounting threads parse
+		plugin refcounting threads parse debug
 
 EXTRA_DIST = gst-inspect-check
