@@ -1,3 +1,8 @@
+2004-11-11  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/v4l/gstv4lelement.c: (gst_v4l_iface_supported):
+	Fix compilation if HAVE_XVIDEO is not defined
+
 2004-11-11  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/goom/gstgoom.c: (gst_goom_class_init), (gst_goom_init),
