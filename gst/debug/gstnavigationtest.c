@@ -73,7 +73,7 @@ static void gst_navigationtest_planar411 (GstVideofilter * videofilter,
     void *dest, void *src);
 static void gst_navigationtest_setup (GstVideofilter * videofilter);
 
-GstVideofilterClass *parent_class = NULL;
+static GstVideofilterClass *parent_class = NULL;
 
 GType
 gst_navigationtest_get_type (void)
