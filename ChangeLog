@@ -1,3 +1,12 @@
+2004-03-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstqueue.c: (gst_queue_init):
+	  Reset default max. values in queues. Reason is simply to avoid
+	  braindead use. If you want wider values, use the properties. The
+	  default is supposed to always work. Wider values would make this
+	  beast a memory hog by default (250 full-PAL RGB32 video frames?
+	  That's 440 MB! No thank you).
+
 2004-03-10  David Schleef  <ds@schleef.org>
 
 	* tools/gst-run.c: (main):  Fix crash when no relevant tools

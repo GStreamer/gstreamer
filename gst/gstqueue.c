@@ -267,9 +267,9 @@ gst_queue_init (GstQueue *queue)
   queue->cur_level.buffers	= 0; /* no content */
   queue->cur_level.bytes	= 0; /* no content */
   queue->cur_level.time		= 0; /* no content */
-  queue->max_size.buffers	= 250; /* high limit */
-  queue->max_size.bytes		= 0; /* unlimited */
-  queue->max_size.time		= 0; /* unlimited */
+  queue->max_size.buffers	= 100; /* 100 buffers */
+  queue->max_size.bytes		= 10 * 1024 * 1024; /* 10 MB */
+  queue->max_size.time		= GST_SECOND; /* 1 s. */
   queue->min_threshold.buffers	= 0; /* no threshold */
   queue->min_threshold.bytes	= 0; /* no threshold */
   queue->min_threshold.time	= 0; /* no threshold */
