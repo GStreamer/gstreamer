@@ -49,6 +49,7 @@ enum {
   ARG_OUTPUT,
   ARG_PATTERN,
   ARG_NUM_BUFFERS,
+  ARG_EOS,
 };
 
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())
@@ -124,6 +125,8 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
                            GTK_ARG_READWRITE, ARG_PATTERN);
   gtk_object_add_arg_type ("GstFakeSrc::num_buffers", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_NUM_BUFFERS);
+  gtk_object_add_arg_type ("GstFakeSrc::eos", GTK_TYPE_BOOL,
+                           GTK_ARG_READWRITE, ARG_EOS);
 
   gtkobject_class->set_arg = gst_fakesrc_set_arg;
   gtkobject_class->get_arg = gst_fakesrc_get_arg;
@@ -217,6 +220,10 @@ gst_fakesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_NUM_BUFFERS:
       src->num_buffers = GTK_VALUE_INT (*arg);
       break;
+    case ARG_EOS:
+      src->eos = GTK_VALUE_BOOL (*arg);
+GST_INFO (0, "will EOS on next buffer");
+      break;
     default:
       break;
   }
@@ -248,6 +255,8 @@ gst_fakesrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_NUM_BUFFERS:
       GTK_VALUE_INT (*arg) = src->num_buffers;
       break;
+    case ARG_EOS:
+      GTK_VALUE_BOOL (*arg) = src->eos;
     default:
       arg->type = GTK_TYPE_INVALID;
       break;
@@ -282,6 +291,12 @@ gst_fakesrc_get(GstPad *pad)
   else {
     if (src->num_buffers > 0)
       src->num_buffers--;
+  }
+
+  if (src->eos) {
+    GST_INFO (0, "fakesrc is setting eos on pad");
+    gst_pad_set_eos (pad);
+    return NULL;
   }
 
   g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
@@ -325,6 +340,12 @@ gst_fakesrc_loop(GstElement *element)
       else {
       if (src->num_buffers > 0)
          src->num_buffers--;
+      }
+
+      if (src->eos) {
+        GST_INFO (0, "fakesrc is setting eos on pad");
+        gst_pad_set_eos (pad);
+        return NULL;
       }
 
       buf = gst_buffer_new();

@@ -26,6 +26,7 @@
 #include "gstelement.h"
 #include "gstextratypes.h"
 #include "gstbin.h"
+#include "gstscheduler.h"
 
 
 /* Element signals and args */
@@ -768,6 +769,11 @@ gst_element_change_state (GstElement *element)
 
 //  g_print("gst_element_change_state(\"%s\",%d)\n",
 //          element->name,state);
+
+  if (GST_STATE_TRANSITION(element) == GST_STATE_READY_TO_PLAYING)
+    GST_SCHEDULE_ENABLE_ELEMENT (element->sched,element);
+  else if (GST_STATE_TRANSITION(element) == GST_STATE_PLAYING_TO_READY)
+    GST_SCHEDULE_DISABLE_ELEMENT (element->sched,element);
 
   GST_STATE (element) = GST_STATE_PENDING (element);
   GST_STATE_PENDING (element) = GST_STATE_NONE_PENDING;

@@ -65,6 +65,7 @@ struct _GstFakeSrc {
   GstElement element;
 
   gboolean loop_based;
+  gboolean eos;
   gint numsrcpads;
   GSList *srcpads;
   GstFakeSrcOutputType output;

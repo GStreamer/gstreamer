@@ -902,6 +902,18 @@ gst_bin_create_plan_func (GstBin *bin)
 static gboolean
 gst_bin_iterate_func (GstBin *bin)
 {
+  // only iterate if this is the manager bin
+  if (GST_ELEMENT_SCHED(bin)->parent == bin) {
+    return GST_SCHEDULE_ITERATE(GST_ELEMENT_SCHED(bin));
+  } else {
+    GST_DEBUG (GST_CAT_SCHEDULING, "this bin can't be iterated on!\n");
+  }
+
+  return FALSE;
+}
+
+/*
+{
   GList *chains;
   _GstBinChain *chain;
   GList *entries;
@@ -991,4 +1003,4 @@ gst_bin_iterate_func (GstBin *bin)
   GST_DEBUG_LEAVE("(%s)", GST_ELEMENT_NAME (bin));
   return !eos;
 }
-
+*/

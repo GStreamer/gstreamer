@@ -62,27 +62,40 @@ struct _GstSchedule {
 
   void (*add_element)		(GstSchedule *sched, GstElement *element);
   void (*remove_element)	(GstSchedule *sched, GstElement *element);
+  void (*enable_element)	(GstSchedule *sched, GstElement *element);
+  void (*disable_element)	(GstSchedule *sched, GstElement *element);
   void (*pad_connect)		(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
   void (*pad_disconnect)	(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
+  gboolean (*iterate)		(GstSchedule *sched);
 };
 
 struct _GstScheduleClass {
   GstObjectClass parent_class;
 };
 
+//#define GST_SCHEDULE_SAFETY if (sched)
+#define GST_SCHEDULE_SAFETY
 #define GST_SCHEDULE_ADD_ELEMENT(sched,element) \
-  ((sched)->add_element((sched),(element)))
+  GST_SCHEDULE_SAFETY ((sched)->add_element((sched),(element)))
 #define GST_SCHEDULE_REMOVE_ELEMENT(sched,element) \
-  ((sched)->remove_element((sched),(element)))
+  GST_SCHEDULE_SAFETY ((sched)->remove_element((sched),(element)))
+#define GST_SCHEDULE_ENABLE_ELEMENT(sched,element) \
+  GST_SCHEDULE_SAFETY ((sched)->enable_element((sched),(element)))
+#define GST_SCHEDULE_DISABLE_ELEMENT(sched,element) \
+  GST_SCHEDULE_SAFETY ((sched)->disable_element((sched),(element)))
 #define GST_SCHEDULE_PAD_CONNECT(sched,srcpad,sinkpad) \
-  ((sched)->pad_connect((sched),(srcpad),(sinkpad)))
+  GST_SCHEDULE_SAFETY ((sched)->pad_connect((sched),(srcpad),(sinkpad)))
 #define GST_SCHEDULE_PAD_DISCONNECT(sched,srcpad,sinkpad) \
-  ((sched)->pad_disconnect((sched),(srcpad),(sinkpad)))
+  GST_SCHEDULE_SAFETY ((sched)->pad_disconnect((sched),(srcpad),(sinkpad)))
+#define GST_SCHEDULE_ITERATE(sched) \
+  ((sched)->iterate((sched)))
 
 
 
 struct _GstScheduleChain {
   GstSchedule *sched;
+
+  GList *disabled;
 
   GList *elements;
   gint num_elements;
@@ -101,10 +114,13 @@ GstSchedule *	gst_schedule_new		(GstElement *parent);
 
 void	gst_schedule_add_element	(GstSchedule *sched, GstElement *element);
 void	gst_schedule_remove_element	(GstSchedule *sched, GstElement *element);
+void	gst_schedule_enable_element	(GstSchedule *sched, GstElement *element);
+void	gst_schedule_disable_element	(GstSchedule *sched, GstElement *element);
 void	gst_schedule_pad_connect	(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
 void	gst_schedule_pad_disconnect	(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
 
 void	gst_schedule_show		(GstSchedule *sched);
+gboolean gst_schedule_iterate (GstSchedule *sched);
 
 
 #ifdef __cplusplus   
