@@ -44,7 +44,7 @@ static GstElementDetails mpeg_parse_details = {
 
 #define CLASS(o)	GST_MPEG_PARSE_CLASS (G_OBJECT_GET_CLASS (o))
 
-#define DEFAULT_MAX_DISCONT	10000
+#define DEFAULT_MAX_DISCONT	45000
 
 /* GstMPEGParse signals and args */
 enum
@@ -163,7 +163,7 @@ gst_mpeg_parse_class_init (GstMPEGParseClass * klass)
           FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_DISCONT,
       g_param_spec_int ("max_discont", "Max Discont",
-          "The maximun allowed SCR discontinuity", 0, G_MAXINT,
+          "The maximum allowed SCR discontinuity", 0, G_MAXINT,
           DEFAULT_MAX_DISCONT, G_PARAM_READWRITE));
   /* FIXME: Default is TRUE to make the behavior backwards compatible.
      It probably should be FALSE. */
