@@ -507,20 +507,20 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesink], [
   AC_PATH_XTRA
-dnl  if test "x$X_CFLAGS" == "x" -o "$X_CFLAGS" == "-DX_DISPLAY_MISSING"
-  if test "x$X_DISPLAY_MISSING" = "x1"
+  dnl now try to find the HEADER
+  AC_CHECK_HEADER(X11/Xlib.h, HAVE_X="yes", HAVE_X="no")
+
+  if test "x$HAVE_X" = "xno"
   then
     AC_MSG_NOTICE([cannot find X11 development files])
-    HAVE_X="no"
   else
     dnl this is much more than we want
     X_LIBS="$X_LIBS $X_PRE_LIBS $X_EXTRA_LIBS"
-    dnl AC_PATH_XTRA only defines the path needed to find the X libs, not the libs
-    dnl therefore we add them here
+    dnl AC_PATH_XTRA only defines the path needed to find the X libs,
+    dnl it does not add the libs; therefore we add them here
     X_LIBS="$X_LIBS -lX11"
     AC_SUBST(X_CFLAGS)
     AC_SUBST(X_LIBS)
-    HAVE_X="yes"
   fi
   AC_SUBST(HAVE_X)
 ])
