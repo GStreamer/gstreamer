@@ -56,8 +56,6 @@ struct _GstLibfame {
 
   /* video state */
   gint format;
-  gint width;
-  gint height;
   /* the size of the output buffer */
   gint outsize;
 

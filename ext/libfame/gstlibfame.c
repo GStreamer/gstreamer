@@ -22,7 +22,7 @@
 
 #include "gstlibfame.h"
 
-#define LIBFAME_BUFFER_SIZE (1024 * 1024) /* FIXME: do this properly */
+#define LIBFAME_BUFFER_SIZE (300 * 1024) 
 
 /* elementfactory information */
 static GstElementDetails gst_libfame_details = {
@@ -46,33 +46,9 @@ enum {
   ARG_VERSION,
   ARG_FPS,
   ARG_QUALITY,
-  ARG_BITRATE,
   ARG_PATTERN,
   /* FILL ME */
 };
-
-/* FIXME: either use or delete this */
-/*
-static double video_rates[16] =
-{
-  0.0,
-  24000.0/1001.,
-  24.0,
-  25.0,
-  30000.0/1001.,
-  30.0,
-  50.0,
-  60000.0/1001.,
-  60.0,
-  1,
-  5,
-  10,
-  12,
-  15,
-  0,
-  0
-};
-*/
 
 GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   "sink",
@@ -160,11 +136,6 @@ gst_libfame_class_init (GstLibfameClass *klass)
     g_param_spec_double ("frames_per_second", "Frames per second", 
 	                 "Number of frames per second",
                         -G_MAXDOUBLE, G_MAXDOUBLE, 25.0, G_PARAM_READWRITE));
-/*
-  g_object_class_install_property (gobject_class, ARG_BITRATE,
-    g_param_spec_int ("bitrate", "bitrate", "bitrate",
-                      0, 1500000, 10, G_PARAM_READWRITE)); */
-  /* CHECKME */
   g_object_class_install_property (gobject_class, ARG_QUALITY,
     g_param_spec_int ("quality", "Quality", 
 	              "Percentage of quality of compression (versus size)",
@@ -172,7 +143,7 @@ gst_libfame_class_init (GstLibfameClass *klass)
   g_object_class_install_property (gobject_class, ARG_PATTERN,
     g_param_spec_string ("pattern", "Pattern", 
 	                 "Encoding pattern of I, P, and B frames",
-                         0, G_PARAM_READWRITE)); /* CHECKME */
+                         "IPP", G_PARAM_READWRITE)); /* CHECKME */
 }
 
 static GstPadConnectReturn
@@ -186,8 +157,7 @@ gst_libfame_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps)) 
     return GST_PAD_CONNECT_DELAYED;
 
-  if (libfame->initialized)
-  {
+  if (libfame->initialized) {
     GST_DEBUG(0, "error: libfame encoder already initialized !");
     return GST_PAD_CONNECT_REFUSED;
   }
@@ -203,19 +173,18 @@ gst_libfame_sinkconnect (GstPad *pad, GstCaps *caps)
   libfame->fp.width = width;
   libfame->fp.height = height;
   libfame->fp.coding = (const char *) libfame->pattern;
-  g_warning ("Using pattern %s for encoding\n", libfame->fp.coding);
 
   /* FIXME: choose good parameters */
   libfame->fp.slices_per_frame = 1;
-  libfame->fp.frames_per_sequence = 0xffffffff; /* infinite */
+  libfame->fp.frames_per_sequence = 12; /* infinite */
   /* FIXME: 25 fps */
   libfame->fp.frame_rate_num = 25;
   libfame->fp.frame_rate_den = 1;
 
   /* FIXME: handle these properly */
-  libfame->fp.shape_quality = 100;
+  libfame->fp.shape_quality = 75;
   libfame->fp.search_range = 0;
-  libfame->fp.verbose = 1;
+  libfame->fp.verbose = 0;
   libfame->fp.profile = "mpeg1";
   libfame->fp.total_frames = 0;
   libfame->fp.retrieve_cb = NULL;
@@ -225,6 +194,7 @@ gst_libfame_sinkconnect (GstPad *pad, GstCaps *caps)
   g_print ("libfame: init done.\n");
   g_assert (libfame->fc != NULL); /* FIXME */
   libfame->initialized = TRUE;
+
   return GST_PAD_CONNECT_OK;
 }
 
@@ -251,17 +221,18 @@ gst_libfame_init (GstLibfame *libfame)
   /* FIXME: set some more handler functions here */
 
   /* reset the initial video state */
-  libfame->width = -1;
-  libfame->height = -1;
+  libfame->fp.width = -1;
+  libfame->fp.height = -1;
   libfame->initialized = FALSE;
 
   /* defaults */
   libfame->fp.quality = 75;
   libfame->fp.frame_rate_num = 25;
   libfame->fp.frame_rate_den = 1; /* avoid floating point exceptions */
-  libfame->fp.profile = g_strdup_printf ("mpeg1");
+  libfame->fp.profile = g_strdup ("mpeg1");
 
-  libfame->pattern = g_strdup_printf ("I");
+  libfame->pattern = g_strdup ("IPP");
+
   /* allocate space for the buffer */
   libfame->buffer_size = LIBFAME_BUFFER_SIZE; /* FIXME */
   libfame->buffer = (unsigned char *) g_malloc (libfame->buffer_size);
@@ -280,11 +251,11 @@ gst_libfame_dispose (GObject *object)
 static void
 gst_libfame_chain (GstPad *pad, GstBuffer *buf)
 {
-  GstLibfame *libfame = NULL;
-  guchar *data = NULL;
+  GstLibfame *libfame;
+  guchar *data;
   gulong size;
-  GstBuffer *outbuf = NULL;
-  int length;
+  gint frame_size;
+  gint length;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -295,6 +266,7 @@ gst_libfame_chain (GstPad *pad, GstBuffer *buf)
 
   data = (guchar *) GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
+
   GST_DEBUG (0,"gst_libfame_chain: got buffer of %ld bytes in '%s'", 
 	     size, GST_OBJECT_NAME (libfame));
 
@@ -302,29 +274,38 @@ gst_libfame_chain (GstPad *pad, GstBuffer *buf)
    * w * h / 4 */
   libfame->fy.w = libfame->fp.width;
   libfame->fy.h = libfame->fp.height;
+
+  frame_size = libfame->fp.width * libfame->fp.height;
+
   libfame->fy.p = 0; /* FIXME: is this pointing to previous data ? */
   libfame->fy.y = data;
-  libfame->fy.u = data + libfame->fp.width * libfame->fp.height;
-  libfame->fy.v = data + 5 * libfame->fp.width * libfame->fp.height / 4;
+  libfame->fy.u = data + frame_size;
+  libfame->fy.v = libfame->fy.u + (frame_size >> 2);
+
   fame_start_frame (libfame->fc, &libfame->fy, NULL);
 
-  while ((length = fame_encode_slice (libfame->fc)) != 0)
-  {
+  while ((length = fame_encode_slice (libfame->fc)) != 0) {
+    GstBuffer *outbuf;
+
     outbuf = gst_buffer_new ();
 
     /* FIXME: safeguard, remove me when a better way is found */
     if (length > LIBFAME_BUFFER_SIZE)
       g_warning ("LIBFAME_BUFFER_SIZE is defined too low, encoded slice has size %d !\n", length);
+
     GST_BUFFER_SIZE (outbuf) = length;
     GST_BUFFER_DATA (outbuf) = g_malloc (length);
     memcpy (GST_BUFFER_DATA(outbuf), libfame->buffer, length);
+
     GST_DEBUG (0,"gst_libfame_chain: pushing buffer of size %d",
                GST_BUFFER_SIZE(outbuf));
+
     gst_pad_push (libfame->srcpad, outbuf);
-    gst_buffer_unref(buf);
   }
 
   fame_end_frame (libfame->fc, NULL); /* FIXME: get stats */
+
+  gst_buffer_unref(buf);
 }
 
 static void
@@ -336,61 +317,35 @@ gst_libfame_set_property (GObject *object, guint prop_id,
   g_return_if_fail (GST_IS_LIBFAME (object));
   src = GST_LIBFAME (object);
 
-  if (src->initialized)
-  {
-      GST_DEBUG(0, "error: libfame encoder already initialized, cannot set properties !");
-      return;
+  if (src->initialized) {
+    GST_DEBUG(0, "error: libfame encoder already initialized, cannot set properties !");
+    return;
   }
 
   switch (prop_id) {
     case ARG_VERSION:
-      {
-        int version = g_value_get_int (value);
-	if (version != 1 && version != 4)
-	{
-	  g_warning ("libfame: only use MPEG version 1 or 4 !");
-	  break;
-	}
-	/*
-	if (src->fp.profile) 
-	{ g_free (src->fp.profile); src->fp.profile = NULL; }
-	src->fp.profile = g_strdup_printf ("mpeg%d", version);
-	*/
-	/* FIXME: this should be done using fame_register */
-	break;
+    {
+      gint version = g_value_get_int (value);
+
+      if (version != 1 && version != 4) {
+	g_warning ("libfame: only use MPEG version 1 or 4 !");
       }
+      break;
+    }
     case ARG_FPS:
-	/* FIXME: we could do a much better job of finding num and den here */
-	src->fp.frame_rate_num = g_value_get_double (value);
-	src->fp.frame_rate_den = 1;
-	gst_info ("libfame: setting framerate for encoding to %f (%d/%d)\n", 
+      /* FIXME: we could do a much better job of finding num and den here */
+      src->fp.frame_rate_num = g_value_get_double (value);
+      src->fp.frame_rate_den = 1;
+      gst_info ("libfame: setting framerate for encoding to %f (%d/%d)\n", 
 		  (float) src->fp.frame_rate_num / src->fp.frame_rate_den,
 		  src->fp.frame_rate_num, src->fp.frame_rate_den);
-	break;
-
+      break;
     case ARG_QUALITY:
-      {
-	int quality;
-
-    	quality = g_value_get_int (value);
-	/* quality is a percentage */
-	if (quality < 0) quality = 0;
-	if (quality > 100) quality = 100;
-	src->fp.quality = quality;
-	gst_info ("libfame: setting quality for encoding to %d\n",  quality);
-	g_warning ("libfame: setting quality for encoding to %d\n",  quality);
-        break;
-      }
-    case ARG_BITRATE:
-	g_warning ("bitrate not implemented yet !\n");
-	/*
-      src->encoder->seq.bit_rate = g_value_get_int (value);
-      */
+      src->fp.quality = CLAMP (g_value_get_int (value), 0, 100);
       break;
     case ARG_PATTERN:
-      if (src->pattern) g_free (src->pattern);
+      g_free (src->pattern);
       src->pattern = g_strdup (g_value_get_string (value));
-      g_warning ("setting pattern to %s\n", src->pattern);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -415,12 +370,8 @@ gst_libfame_get_property (GObject *object, guint prop_id,
     case ARG_QUALITY:
       g_value_set_int (value, src->fp.quality);
       break;
-    case ARG_BITRATE:
-      g_warning ("You think you WANT to know bitrate ? Think AGAIN !\n");
-      /* g_value_set_int (value, src->encoder->seq.bit_rate); */
-      break;
     case ARG_PATTERN:
-      g_value_set_string (value, src->pattern);
+      g_value_set_string (value, g_strdup (src->pattern));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
