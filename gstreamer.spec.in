@@ -185,7 +185,7 @@ Requires: %{name} = %{ver}
 Plugin for the very nice synaesthesia visual effect.
 
 %package -n gstreamer-vcd
-Summary: Gstremar Video CD plugin 
+Summary: GStreamer Video CD plugin 
 Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
 
@@ -193,11 +193,21 @@ Requires: %{name} = %{ver}
 Video CD playback plugin
 
 # %package -n gstreamer-alsa
-# Summary: Gstreamer plugins for the ALSA sound architecture
+# Summary: GStreamer plugins for the ALSA sound architecture
 # Group: Libraries/Multimedia
 
 # %description -n gstreamer-alsa
 # Input and output plugin for the ALSA soundcard driver architecture.
+
+%package -n gstreamer-au
+Summary: GStreamer au audiofile plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-au
+Plugin for playback of the SUN au audio format.
+
+
 
 %changelog
 * Sat Jun 02 2001 Christian Schaller <Uraeus@linuxrising.org>
@@ -250,7 +260,6 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/bin/gstmediaplay
 %{prefix}/bin/gstreamer-complete
 %{prefix}/bin/gstreamer-compprep
-%{prefix}/bin/gstreamer-config
 %{prefix}/bin/gstreamer-inspect
 %{prefix}/bin/gstreamer-launch
 %{prefix}/bin/gstreamer-register
@@ -258,9 +267,11 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/lib/gst/libadder*
 %{prefix}/lib/gst/libalaw*
 %{prefix}/lib/gst/libaudioscale*
-%{prefix}/lib/gst/libgstautoplug*
+%{prefix}/lib/gst/libcutter*
+%{prefix}/lib/gst/libgstaudio*
 %{prefix}/lib/gst/libcolorspace*
 %{prefix}/lib/gst/libgstcolorspace*
+%{prefix}/lib/gst/libgstautoplug*
 %{prefix}/lib/gst/libgstelements*
 %{prefix}/lib/gst/libgstgetbits*
 %{prefix}/lib/gst/libgstidct*
@@ -282,6 +293,11 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/lib/gst/libvol*
 %{prefix}/lib/gst/libvu*
 %{prefix}/lib/gst/libxvideosink*
+%{prefix}/lib/gst/libgstparsewav*
+%{prefix}/lib/gst/libgstspectrum*
+%{prefix}/lib/gst/libgststaticautoplug*
+%{prefix}/lib/gst/libgsttypes*
+%{prefix}/lib/gst/liblavencode*
 %{prefix}/lib/gst/libmp*
 %{prefix}/share/gsteditor/*
 %{prefix}/share/gstmediaplay/*
@@ -295,7 +311,6 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/lib/lib*.so
 %{prefix}/lib/pkgconfig/*
 %{prefix}/share/aclocal/*
-
 
 %files -n gstreamer-esd
 %defattr(-, root, root)
@@ -340,7 +355,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 
 %files -n gstreamer-ac3dec
 %defattr(-, root, root)
-%{prefix}/lib/gst/libac3dec*
+%{prefix}/lib/gst/libac3*
 
 %files -n gstreamer-afs
 %defattr(-, root, root)
@@ -349,6 +364,14 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %files -n gstreamer-ladspa
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstladspa*
+
+%files -n gstreamer-mad
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstmad*
+
+%files -n gstreamer-au
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstparseau*
 
 %files -n gstreamer-v4l
 %defattr(-, root, root)
