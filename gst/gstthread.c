@@ -498,15 +498,7 @@ gst_thread_change_state (GstElement * element)
       g_thread_join (thread->thread_id);
 
       thread->thread_id = NULL;
-      
-      /* the stack was allocated when we created the thread
-       * using scheduler->get_preferred_stack */
-      if (thread->stack) {
-        GST_DEBUG (GST_CAT_THREAD, "freeing allocated stack (%p)", 
-	           thread->stack);
-        free (thread->stack);
-        thread->stack = NULL;
-      }
+      thread->stack = NULL;
      
       THR_DEBUG ("unlocking mutex");
       g_mutex_unlock (thread->lock);
