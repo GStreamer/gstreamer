@@ -25,7 +25,7 @@
 #include <config.h>
 #include <gst/gst.h>
 #include <riff.h>
-#include <gst/gstbytestream.h>
+#include <gst/bytestream/bytestream.h>
 
 #ifdef __cplusplus
 extern "C" {
