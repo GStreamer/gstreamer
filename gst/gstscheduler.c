@@ -170,9 +170,9 @@ gst_scheduler_pad_select (GstScheduler *sched, GList *padlist)
 /**
  * gst_scheduler_add_element:
  * @sched: the scheduler
- * @element: the element to add to the schedulerr
+ * @element: the element to add to the scheduler
  *
- * Add an element to the schedulerr.
+ * Add an element to the scheduler.
  */
 void
 gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
@@ -195,10 +195,10 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
 
 /**
  * gst_scheduler_remove_element:
- * @sched: the schedulerr
+ * @sched: the scheduler
  * @element: the element to remove
  *
- * Remove an element from the schedulerr.
+ * Remove an element from the scheduler.
  */
 void
 gst_scheduler_remove_element (GstScheduler *sched, GstElement *element)
@@ -305,7 +305,7 @@ gst_scheduler_add_scheduler (GstScheduler *sched, GstScheduler *sched2)
 
 /**
  * gst_scheduler_remove_scheduler:
- * @sched: the schedulerr
+ * @sched: the scheduler
  * @sched2: the scheduler to remove
  *
  a Notifies the scheduler that it can stop monitoring this scheduler.
@@ -562,7 +562,7 @@ gst_scheduler_clock_wait (GstScheduler *sched, GstElement *element, GstClock *cl
  * gst_scheduler_iterate:
  * @sched: the scheduler
  *
- * Perform one iteration on the schedulerr.
+ * Perform one iteration on the scheduler.
  *
  * Returns: a boolean indicating something usefull has happened.
  */
@@ -582,7 +582,7 @@ gst_scheduler_iterate (GstScheduler *sched)
  * gst_scheduler_show:
  * @sched: the scheduler
  *
- * Dump the state of the schedulerr
+ * Dump the state of the scheduler
  */
 void
 gst_scheduler_show (GstScheduler *sched)
