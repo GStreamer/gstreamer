@@ -324,9 +324,9 @@ gst_ffmpegdec_chain (GstPad    *pad,
   gint have_data;
 
   if (!ffmpegdec->opened) {
-    gst_element_error (GST_ELEMENT (ffmpegdec),
-		       "ffdec_%s: input format was not set before data-start",
-		       oclass->in_plugin->name);
+    gst_element_error (ffmpegdec, CORE, NEGOTIATION, NULL,
+		       ("ffdec_%s: input format was not set before data start",
+		       oclass->in_plugin->name));
     return;
   }
 
@@ -414,9 +414,9 @@ gst_ffmpegdec_chain (GstPad    *pad,
 					     ffmpegdec->context);
         if (caps == NULL ||
             !gst_pad_set_explicit_caps (ffmpegdec->srcpad, caps)) {
-          gst_element_error (GST_ELEMENT (ffmpegdec),
-			     "Failed to link ffmpeg decoder (%s) to next element",
-			     oclass->in_plugin->name);
+          gst_element_error (ffmpegdec, CORE, NEGOTIATION, NULL,
+			     ("Failed to link ffmpeg decoder (%s) to next element",
+			     oclass->in_plugin->name));
           return;
         }
       }
