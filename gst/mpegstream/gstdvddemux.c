@@ -159,6 +159,7 @@ static void gst_dvd_demux_set_cur_audio
 static void gst_dvd_demux_set_cur_subpicture
     (GstDVDDemux * dvd_demux, gint stream_nr);
 
+static GstElementStateReturn gst_dvd_demux_change_state (GstElement * element);
 
 static GstMPEGDemuxClass *parent_class = NULL;
 
@@ -242,6 +243,8 @@ gst_dvd_demux_class_init (GstDVDDemuxClass * klass)
   gstelement_class = (GstElementClass *) klass;
   mpeg_parse_class = (GstMPEGParseClass *) klass;
   mpeg_demux_class = (GstMPEGDemuxClass *) klass;
+
+  gstelement_class->change_state = gst_dvd_demux_change_state;
 
   mpeg_parse_class->send_discont = gst_dvd_demux_send_discont;
 
@@ -946,6 +949,50 @@ gst_dvd_demux_set_cur_subpicture (GstDVDDemux * dvd_demux, gint stream_nr)
   }
 }
 
+static void
+gst_dvd_demux_reset (GstDVDDemux * dvd_demux)
+{
+  int i;
+
+  GST_INFO ("Resetting the dvd demuxer");
+  for (i = 0; i < GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS; i++) {
+    if (dvd_demux->subpicture_stream[i]) {
+      gst_element_remove_pad (GST_ELEMENT (dvd_demux),
+          dvd_demux->subpicture_stream[i]->pad);
+      g_free (dvd_demux->subpicture_stream[i]);
+      dvd_demux->subpicture_stream[i] = NULL;
+    }
+    dvd_demux->subpicture_time[i] = 0;
+  }
+  gst_pad_set_explicit_caps (dvd_demux->cur_video, NULL);
+  gst_pad_set_explicit_caps (dvd_demux->cur_audio, NULL);
+  gst_pad_set_explicit_caps (dvd_demux->cur_subpicture, NULL);
+
+  dvd_demux->cur_video_nr = 0;
+  dvd_demux->cur_audio_nr = 0;
+  dvd_demux->cur_subpicture_nr = 0;
+  dvd_demux->mpeg_version = 0;
+  dvd_demux->last_end_ptm = 0;
+
+  dvd_demux->just_flushed = FALSE;
+  dvd_demux->discont_time = GST_CLOCK_TIME_NONE;
+}
+
+static GstElementStateReturn
+gst_dvd_demux_change_state (GstElement * element)
+{
+  GstDVDDemux *dvd_demux = GST_DVD_DEMUX (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_PAUSED_TO_READY:
+      gst_dvd_demux_reset (dvd_demux);
+      break;
+    default:
+      break;
+  }
+
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+}
 
 gboolean
 gst_dvd_demux_plugin_init (GstPlugin * plugin)

@@ -1048,17 +1048,67 @@ gst_mpeg_demux_handle_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+static void
+gst_mpeg_demux_reset (GstMPEGDemux * mpeg_demux)
+{
+  int i;
+
+  /* Reset the element */
+
+  GST_INFO ("Resetting the MPEG Demuxer");
+
+  /* free the streams , remove the pads */
+  /* filled in init_stream */
+  /* check get_audio/video_stream because it can be derivated */
+  for (i = 0; i < GST_MPEG_DEMUX_NUM_VIDEO_STREAMS; i++)
+    if (mpeg_demux->video_stream[i]) {
+      gst_element_remove_pad (GST_ELEMENT (mpeg_demux),
+          mpeg_demux->video_stream[i]->pad);
+      g_free (mpeg_demux->video_stream[i]);
+      mpeg_demux->video_stream[i] = NULL;
+    }
+  for (i = 0; i < GST_MPEG_DEMUX_NUM_AUDIO_STREAMS; i++)
+    if (mpeg_demux->audio_stream[i]) {
+      gst_element_remove_pad (GST_ELEMENT (mpeg_demux),
+          mpeg_demux->audio_stream[i]->pad);
+      g_free (mpeg_demux->audio_stream[i]);
+      mpeg_demux->audio_stream[i] = NULL;
+    }
+  for (i = 0; i < GST_MPEG_DEMUX_NUM_PRIVATE_STREAMS; i++)
+    if (mpeg_demux->private_stream[i]) {
+      gst_element_remove_pad (GST_ELEMENT (mpeg_demux),
+          mpeg_demux->private_stream[i]->pad);
+      g_free (mpeg_demux->private_stream[i]);
+      mpeg_demux->private_stream[i] = NULL;
+    }
+
+  mpeg_demux->in_flush = FALSE;
+  mpeg_demux->header_length = 0;
+  mpeg_demux->rate_bound = 0;
+  mpeg_demux->audio_bound = 0;
+  mpeg_demux->video_bound = 0;
+  mpeg_demux->fixed = FALSE;
+  mpeg_demux->constrained = FALSE;
+  mpeg_demux->audio_lock = FALSE;
+  mpeg_demux->video_lock = FALSE;
+
+  mpeg_demux->packet_rate_restriction = FALSE;
+  mpeg_demux->total_size_bound = 0LL;
+
+  mpeg_demux->index = NULL;
+
+  mpeg_demux->adjust = 0;
+
+}
+
 static GstElementStateReturn
 gst_mpeg_demux_change_state (GstElement * element)
 {
-  /* GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (element); */
+  GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (element);
 
   switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
-      break;
     case GST_STATE_PAUSED_TO_READY:
-      break;
-    case GST_STATE_READY_TO_NULL:
+      gst_mpeg_demux_reset (mpeg_demux);
       break;
     default:
       break;
