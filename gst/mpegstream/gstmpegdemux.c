@@ -394,6 +394,7 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       gchar *name = NULL;
       GstMPEGStream **outstream = NULL;
       GstPadTemplate *newtemp = NULL;
+      GstCaps *caps = NULL;
 
       stream_id = *buf++;
       if (!(stream_id & 0x80)) {
@@ -437,6 +438,22 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 	name = g_strdup_printf ("video_%02d", stream_id & 0x0F);
 	outstream = &mpeg_demux->video_stream[stream_id & 0x0F];
         newtemp = GST_PAD_TEMPLATE_GET (video_src_factory);
+	if (!GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux)) {
+	  caps = GST_CAPS_NEW (
+	    "mpeg_demux_video_mpeg1",
+	    "video/mpeg",
+	    "mpegversion",  GST_PROPS_INT (1),
+	    "systemstream",  GST_PROPS_BOOLEAN (FALSE)
+	  );
+	}
+        else {
+	  caps = GST_CAPS_NEW (
+	    "mpeg_demux_video_mpeg2",
+	    "video/mpeg",
+	    "mpegversion",  GST_PROPS_INT (2),
+	    "systemstream",  GST_PROPS_BOOLEAN (FALSE)
+	  );
+        }
       } else {
 	GST_DEBUG ("unkown stream id %d", stream_id);
       }
@@ -452,15 +469,19 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
        */
       if (outstream && *outstream == NULL) {
 	GstPad **outpad;
-	GstCaps *caps;
 
 	*outstream = gst_mpeg_demux_new_stream ();
         outpad = &((*outstream)->pad);
 			
 	*outpad = gst_pad_new_from_template (newtemp, name);
-	caps = gst_pad_template_get_caps (newtemp);
-	gst_pad_try_set_caps (*outpad, caps);
-	gst_caps_unref (caps);
+	if (!caps) {
+          caps = gst_pad_template_get_caps (newtemp);
+          gst_pad_try_set_caps (*outpad, caps);
+          gst_caps_unref(caps);
+        }
+        else {
+          gst_pad_try_set_caps (*outpad, caps);
+        }
 
 	gst_pad_set_formats_function (*outpad, gst_mpeg_demux_get_src_formats);
 	gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
@@ -851,6 +872,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   /* the app and used to attach to desired streams.			*/
   if ((*outstream) == NULL) {
     gchar *name = NULL;
+    GstCaps *caps = NULL;
 
     /* we have to name the stream approriately */
     if (id == 0xBD) {
@@ -885,13 +907,28 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       /* video */
       name = g_strdup_printf ("video_%02d", id - 0xE0);
       newtemp = GST_PAD_TEMPLATE_GET (video_src_factory);
+      if (!GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux)) {
+        caps = GST_CAPS_NEW (
+	  "mpeg_demux_video_mpeg1",
+          "video/mpeg",
+          "mpegversion",  GST_PROPS_INT (1),
+          "systemstream",  GST_PROPS_BOOLEAN (FALSE)
+	);
+      }
+      else {
+        caps = GST_CAPS_NEW (
+          "mpeg_demux_video_mpeg2",
+          "video/mpeg",
+          "mpegversion",  GST_PROPS_INT (2),
+          "systemstream",  GST_PROPS_BOOLEAN (FALSE)
+        );
+      }
     } else {
       /* unkown */
       name = g_strdup_printf ("unknown");
     }
     
     if (newtemp) {
-      GstCaps *caps;
 
       *outstream = gst_mpeg_demux_new_stream ();
       outpad = &((*outstream)->pad);
@@ -899,9 +936,14 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       /* create the pad and add it to self */
       *outpad = gst_pad_new_from_template (newtemp, name);
       if (ps_id_code < 0xA0 || ps_id_code > 0xA7) {
-        caps = gst_pad_template_get_caps (newtemp);
-        gst_pad_try_set_caps (*outpad, caps);
-        gst_caps_unref (caps);
+	if (!caps) {
+	  caps = gst_pad_template_get_caps (newtemp);
+          gst_pad_try_set_caps (*outpad, caps);
+          gst_caps_unref(caps);
+        }
+        else {
+          gst_pad_try_set_caps (*outpad, caps);
+        }
       }
       else {
         gst_mpeg_demux_lpcm_set_caps(*outpad,
