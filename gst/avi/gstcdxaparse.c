@@ -46,14 +46,14 @@ static GstElementDetails gst_cdxa_parse_details = {
   "(C) 2002",
 };
 
-static GstCaps* cdxa_typefind (GstBuffer *buf, gpointer private);
+static GstCaps* cdxa_type_find (GstBuffer *buf, gpointer private);
 
 /* typefactory for 'cdxa' */
 static GstTypeDefinition cdxadefinition = {
   "cdxaparse_video/avi",
   "video/avi",
   ".dat",
-  cdxa_typefind,
+  cdxa_type_find,
 };
 
 /* CDXAParse signals and args */
@@ -67,7 +67,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (sink_templ,
+GST_PAD_TEMPLATE_FACTORY (sink_templ,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -78,7 +78,7 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (src_templ,
+GST_PAD_TEMPLATE_FACTORY (src_templ,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -144,11 +144,11 @@ gst_cdxa_parse_init (GstCDXAParse *cdxa_parse)
   GST_FLAG_SET (cdxa_parse, GST_ELEMENT_EVENT_AWARE);
 				
   cdxa_parse->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sink_templ), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_templ), "sink");
   gst_element_add_pad (GST_ELEMENT (cdxa_parse), cdxa_parse->sinkpad);
 
   cdxa_parse->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_templ), "src");
+		  GST_PAD_TEMPLATE_GET (src_templ), "src");
   gst_element_add_pad (GST_ELEMENT (cdxa_parse), cdxa_parse->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (cdxa_parse), gst_cdxa_parse_loop);
@@ -156,7 +156,7 @@ gst_cdxa_parse_init (GstCDXAParse *cdxa_parse)
 }
 
 static GstCaps*
-cdxa_typefind (GstBuffer *buf,
+cdxa_type_find (GstBuffer *buf,
               gpointer private)
 {
   gchar *data = GST_BUFFER_DATA (buf);
@@ -169,7 +169,7 @@ cdxa_typefind (GstBuffer *buf,
   if (GUINT32_FROM_LE (((guint32 *)data)[2]) != GST_RIFF_RIFF_CDXA)
     return NULL;
 
-  new = GST_CAPS_NEW ("cdxa_typefind",
+  new = GST_CAPS_NEW ("cdxa_type_find",
 		      "video/avi", 
 		        "RIFF", GST_PROPS_STRING ("CDXA"));
 
@@ -339,14 +339,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
   }
 
   /* create an elementfactory for the cdxa_parse element */
-  factory = gst_elementfactory_new ("cdxaparse", GST_TYPE_CDXA_PARSE,
+  factory = gst_element_factory_new ("cdxaparse", GST_TYPE_CDXA_PARSE,
                                     &gst_cdxa_parse_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_templ));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
 
-  type = gst_typefactory_new (&cdxadefinition);
+  type = gst_type_factory_new (&cdxadefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));

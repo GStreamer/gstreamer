@@ -35,14 +35,14 @@ static GstElementDetails gst_avi_demux_details = {
   "(C) 1999",
 };
 
-static GstCaps* avi_typefind (GstBuffer *buf, gpointer private);
+static GstCaps* avi_type_find (GstBuffer *buf, gpointer private);
 
 /* typefactory for 'avi' */
 static GstTypeDefinition avidefinition = {
   "avidemux_video/avi",
   "video/avi",
   ".avi",
-  avi_typefind,
+  avi_type_find,
 };
 
 /* AviDemux signals and args */
@@ -60,7 +60,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (sink_templ,
+GST_PAD_TEMPLATE_FACTORY (sink_templ,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -71,7 +71,7 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (src_video_templ,
+GST_PAD_TEMPLATE_FACTORY (src_video_templ,
   "video_[00-32]",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
@@ -114,7 +114,7 @@ GST_PADTEMPLATE_FACTORY (src_video_templ,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (src_audio_templ,
+GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
   "audio_[00-32]",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
@@ -225,7 +225,7 @@ gst_avi_demux_init (GstAviDemux *avi_demux)
   GST_FLAG_SET (avi_demux, GST_ELEMENT_EVENT_AWARE);
 				
   avi_demux->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sink_templ), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_templ), "sink");
   gst_element_add_pad (GST_ELEMENT (avi_demux), avi_demux->sinkpad);
 
   gst_element_set_loop_function (GST_ELEMENT (avi_demux), gst_avi_demux_loop);
@@ -252,7 +252,7 @@ gst_avi_demux_init (GstAviDemux *avi_demux)
 }
 
 static GstCaps*
-avi_typefind (GstBuffer *buf,
+avi_type_find (GstBuffer *buf,
               gpointer private)
 {
   gchar *data = GST_BUFFER_DATA (buf);
@@ -265,7 +265,7 @@ avi_typefind (GstBuffer *buf,
   if (GUINT32_FROM_LE (((guint32 *)data)[2]) != GST_RIFF_RIFF_AVI)
     return NULL;
 
-  new = GST_CAPS_NEW ("avi_typefind",
+  new = GST_CAPS_NEW ("avi_type_find",
 		      "video/avi", 
 		        "format", GST_PROPS_STRING ("AVI"));
 
@@ -379,7 +379,7 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
   GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux:  imp_colors  %d", GUINT32_FROM_LE (strf->imp_colors));
 
   srcpad =  gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d", 
+		  GST_PAD_TEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d", 
 			  avi_demux->num_video_pads));
 
   capslist = gst_caps_append(NULL, GST_CAPS_NEW (
@@ -458,7 +458,7 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
   GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux:  size        %d", GUINT16_FROM_LE (strf->size));
 
   srcpad =  gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_audio_templ), g_strdup_printf ("audio_%02d", 
+		  GST_PAD_TEMPLATE_GET (src_audio_templ), g_strdup_printf ("audio_%02d", 
 			  avi_demux->num_audio_pads));
 
   capslist = gst_caps_append(NULL, GST_CAPS_NEW (
@@ -529,7 +529,7 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
   GST_INFO (GST_CAT_PLUGIN_INFO, "gst_avi_demux:  DVReserved2 %08x", GUINT32_FROM_LE (strf->DVReserved2));
 
   srcpad =  gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d", 
+		  GST_PAD_TEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d", 
 			  avi_demux->num_video_pads));
 
   capslist = gst_caps_append(NULL, GST_CAPS_NEW (
@@ -945,15 +945,15 @@ plugin_init (GModule *module, GstPlugin *plugin)
   }
 
   /* create an elementfactory for the avi_demux element */
-  factory = gst_elementfactory_new ("avidemux",GST_TYPE_AVI_DEMUX,
+  factory = gst_element_factory_new ("avidemux",GST_TYPE_AVI_DEMUX,
                                     &gst_avi_demux_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_audio_templ));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_video_templ));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_audio_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_video_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
 
-  type = gst_typefactory_new (&avidefinition);
+  type = gst_type_factory_new (&avidefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));

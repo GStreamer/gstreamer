@@ -80,7 +80,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (src_template,
+GST_PAD_TEMPLATE_FACTORY (src_template,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -99,7 +99,7 @@ GST_PADTEMPLATE_FACTORY (src_template,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (sink_template,
+GST_PAD_TEMPLATE_FACTORY (sink_template,
   "sink",					/* the name of the pads */
   GST_PAD_SINK,				/* type of the pad */
   GST_PAD_ALWAYS,				/* ALWAYS/SOMETIMES */
@@ -186,9 +186,9 @@ gst_goom_init (GstGOOM *goom)
 {
   /* create the sink and src pads */
   goom->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sink_template ), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_template ), "sink");
   goom->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_template ), "src");
+		  GST_PAD_TEMPLATE_GET (src_template ), "src");
   gst_element_add_pad (GST_ELEMENT (goom), goom->sinkpad);
   gst_element_add_pad (GST_ELEMENT (goom), goom->srcpad);
 
@@ -345,12 +345,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the goom element */
-  factory = gst_elementfactory_new("goom",GST_TYPE_GOOM,
+  factory = gst_element_factory_new("goom",GST_TYPE_GOOM,
                                    &gst_goom_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_template));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_template));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

@@ -79,7 +79,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (osssink_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (osssink_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -235,7 +235,7 @@ static void
 gst_osssink_init (GstOssSink *osssink) 
 {
   osssink->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (osssink_sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (osssink_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (osssink), osssink->sinkpad);
   gst_pad_set_connect_function (osssink->sinkpad, gst_osssink_sinkconnect);
   gst_pad_set_bufferpool_function (osssink->sinkpad, gst_osssink_get_bufferpool);
@@ -733,10 +733,10 @@ gst_osssink_factory_init (GstPlugin *plugin)
 { 
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new ("osssink", GST_TYPE_OSSSINK, &gst_osssink_details);
+  factory = gst_element_factory_new ("osssink", GST_TYPE_OSSSINK, &gst_osssink_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (osssink_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (osssink_sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

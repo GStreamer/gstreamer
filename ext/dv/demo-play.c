@@ -33,16 +33,16 @@ main (int argc,char *argv[])
   bin = gst_pipeline_new("pipeline");
 
   if (argc == 1) {
-    src = gst_elementfactory_make ("dv1394src", "src");
+    src = gst_element_factory_make ("dv1394src", "src");
   } else {
-    src = gst_elementfactory_make ("filesrc", "src");
+    src = gst_element_factory_make ("filesrc", "src");
     gtk_object_set(GTK_OBJECT(src),"location",argv[1],"bytesperread",480,NULL);
   }
-  dvdec = gst_elementfactory_make ("dvdec", "decoder");
+  dvdec = gst_element_factory_make ("dvdec", "decoder");
   if (!dvdec) fprintf(stderr,"no dvdec\n"),exit(1);
-/*  cspace = gst_elementfactory_make ("colorspace", "cspace"); */
-  deint = gst_elementfactory_make ("deinterlace", "deinterlace");
-  videosink = gst_elementfactory_make ("xvideosink", "videosink");
+/*  cspace = gst_element_factory_make ("colorspace", "cspace"); */
+  deint = gst_element_factory_make ("deinterlace", "deinterlace");
+  videosink = gst_element_factory_make ("xvideosink", "videosink");
   if (!videosink) fprintf(stderr,"no dvdec\n"),exit(1);
   gtk_object_set(GTK_OBJECT(videosink),"width",720,"height",576,NULL);
 

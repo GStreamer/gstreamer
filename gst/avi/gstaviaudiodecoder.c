@@ -47,7 +47,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (sink_templ,
+GST_PAD_TEMPLATE_FACTORY (sink_templ,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -58,7 +58,7 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (src_audio_templ,
+GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -174,12 +174,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the avi_audio_decoder element */
-  factory = gst_elementfactory_new ("aviaudiodecoder",GST_TYPE_AVI_AUDIO_DECODER,
+  factory = gst_element_factory_new ("aviaudiodecoder",GST_TYPE_AVI_AUDIO_DECODER,
                                     &gst_avi_audio_decoder_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_templ));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_audio_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_audio_templ));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

@@ -22,9 +22,11 @@
 #define __GST_JPEGENC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
-
+/* this is a hack hack hack to get around jpeglib header bugs... */
+#ifdef HAVE_STDLIB_H
+# undef HAVE_STDLIB_H
+#endif
 #include <jpeglib.h>
 
 #ifdef __cplusplus

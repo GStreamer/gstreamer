@@ -65,7 +65,7 @@ enum {
  * can have.  They can be quite complex, but for this dvdec plugin
  * they are rather simple.
  */
-GST_PADTEMPLATE_FACTORY (sink_temp,
+GST_PAD_TEMPLATE_FACTORY (sink_temp,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -77,7 +77,7 @@ GST_PADTEMPLATE_FACTORY (sink_temp,
 )
 
 
-GST_PADTEMPLATE_FACTORY (video_src_temp,
+GST_PAD_TEMPLATE_FACTORY (video_src_temp,
   "video",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -102,7 +102,7 @@ GST_PADTEMPLATE_FACTORY (video_src_temp,
   )
 )
 
-GST_PADTEMPLATE_FACTORY ( audio_src_temp,
+GST_PAD_TEMPLATE_FACTORY ( audio_src_temp,
   "audio",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -208,13 +208,13 @@ gst_dvdec_class_init (GstDVDecClass *klass)
 static void
 gst_dvdec_init(GstDVDec *dvdec)
 {
-  dvdec->sinkpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (sink_temp), "sink");
+  dvdec->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_temp), "sink");
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->sinkpad);
 
-  dvdec->videosrcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (video_src_temp), "video");
+  dvdec->videosrcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (video_src_temp), "video");
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->videosrcpad);
 
-  dvdec->audiosrcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET(audio_src_temp), "audio");
+  dvdec->audiosrcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET(audio_src_temp), "audio");
   gst_element_add_pad(GST_ELEMENT(dvdec),dvdec->audiosrcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (dvdec), gst_dvdec_loop);
@@ -463,7 +463,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
    * This consists of the name of the element, the GType identifier,
    * and a pointer to the details structure at the top of the file.
    */
-  factory = gst_elementfactory_new("dvdec", GST_TYPE_DVDEC, &dvdec_details);
+  factory = gst_element_factory_new("dvdec", GST_TYPE_DVDEC, &dvdec_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
   /* The pad templates can be easily generated from the factories above,
@@ -471,9 +471,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
    * Note that the generated padtemplates are stored in static global
    * variables, for the gst_dvdec_init function to use later on.
    */
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET(sink_temp));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET(video_src_temp));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET(audio_src_temp));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET(sink_temp));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET(video_src_temp));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET(audio_src_temp));
 
   /* The very last thing is to register the elementfactory with the plugin. */
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));

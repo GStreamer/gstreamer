@@ -93,7 +93,7 @@ enum {
   ARG_HOST,
 };
 
-GST_PADTEMPLATE_FACTORY (src_factory,
+GST_PAD_TEMPLATE_FACTORY (src_factory,
   "src",				/* the name of the pads */
   GST_PAD_SRC,				/* type of the pad */
   GST_PAD_ALWAYS,			/* ALWAYS/SOMETIMES */
@@ -237,7 +237,7 @@ static void
 gst_esdmon_init(GstEsdmon *esdmon)
 {
   esdmon->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (src_factory), "src");
   gst_pad_set_get_function(esdmon->srcpad, gst_esdmon_get);
   gst_element_add_pad(GST_ELEMENT(esdmon), esdmon->srcpad);
 
@@ -409,11 +409,11 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("esdmon", GST_TYPE_ESDMON,
+  factory = gst_element_factory_new("esdmon", GST_TYPE_ESDMON,
 				   &esdmon_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate(factory, GST_PADTEMPLATE_GET (src_factory));
+  gst_element_factory_add_pad_template(factory, GST_PAD_TEMPLATE_GET (src_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

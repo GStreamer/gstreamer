@@ -37,7 +37,7 @@ gst_dv1394src_factory (void)
   static GstPadTemplate *template = NULL;
 
   if (!template) {
-    template = gst_padtemplate_new (
+    template = gst_pad_template_new (
       "src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,

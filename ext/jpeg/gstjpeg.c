@@ -61,7 +61,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstCaps *raw_caps, *jpeg_caps;
 
   /* create an elementfactory for the jpegdec element */
-  enc = gst_elementfactory_new("jpegenc",GST_TYPE_JPEGENC,
+  enc = gst_element_factory_new("jpegenc",GST_TYPE_JPEGENC,
                                    &gst_jpegenc_details);
   g_return_val_if_fail(enc != NULL, FALSE);
 
@@ -69,35 +69,35 @@ plugin_init (GModule *module, GstPlugin *plugin)
   jpeg_caps = jpeg_caps_factory ();
 
   /* register sink pads */
-  jpegenc_sink_template = gst_padtemplate_new ("sink", GST_PAD_SINK, 
+  jpegenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                              GST_PAD_ALWAYS, 
 					      raw_caps, NULL);
-  gst_elementfactory_add_padtemplate (enc, jpegenc_sink_template);
+  gst_element_factory_add_pad_template (enc, jpegenc_sink_template);
 
   /* register src pads */
-  jpegenc_src_template = gst_padtemplate_new ("src", GST_PAD_SRC, 
+  jpegenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                             GST_PAD_ALWAYS, 
 					     jpeg_caps, NULL);
-  gst_elementfactory_add_padtemplate (enc, jpegenc_src_template);
+  gst_element_factory_add_pad_template (enc, jpegenc_src_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
 
   /* create an elementfactory for the jpegdec element */
-  dec = gst_elementfactory_new("jpegdec",GST_TYPE_JPEGDEC,
+  dec = gst_element_factory_new("jpegdec",GST_TYPE_JPEGDEC,
                                    &gst_jpegdec_details);
   g_return_val_if_fail(dec != NULL, FALSE);
  
   /* register sink pads */
-  jpegdec_sink_template = gst_padtemplate_new ("sink", GST_PAD_SINK, 
+  jpegdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                              GST_PAD_ALWAYS, 
 					      jpeg_caps, NULL);
-  gst_elementfactory_add_padtemplate (dec, jpegdec_sink_template);
+  gst_element_factory_add_pad_template (dec, jpegdec_sink_template);
 
   /* register src pads */
-  jpegdec_src_template = gst_padtemplate_new ("src", GST_PAD_SRC, 
+  jpegdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                             GST_PAD_ALWAYS, 
 					     raw_caps, NULL);
-  gst_elementfactory_add_padtemplate (dec, jpegdec_src_template);
+  gst_element_factory_add_pad_template (dec, jpegdec_src_template);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
 

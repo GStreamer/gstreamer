@@ -69,7 +69,7 @@ static GstPadTemplate*
 ossgst_src_factory (void)
 {
   return
-    gst_padtemplate_new (
+    gst_pad_template_new (
   	"src",
   	GST_PAD_SRC,
   	GST_PAD_ALWAYS,
@@ -435,11 +435,11 @@ gst_ossgst_factory_init (GstPlugin *plugin)
   plugin_dir = g_strjoinv (G_DIR_SEPARATOR_S, path);
   g_strfreev (path);
 
-  factory = gst_elementfactory_new ("ossgst", GST_TYPE_OSSGST, &gst_ossgst_details);
+  factory = gst_element_factory_new ("ossgst", GST_TYPE_OSSGST, &gst_ossgst_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
   gst_ossgst_src_template = ossgst_src_factory ();
-  gst_elementfactory_add_padtemplate (factory, gst_ossgst_src_template);
+  gst_element_factory_add_pad_template (factory, gst_ossgst_src_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

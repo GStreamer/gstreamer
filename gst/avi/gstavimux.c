@@ -65,7 +65,7 @@ enum {
   ARG_FRAMERATE,
 };
 
-GST_PADTEMPLATE_FACTORY (src_factory,
+GST_PAD_TEMPLATE_FACTORY (src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -76,7 +76,7 @@ GST_PADTEMPLATE_FACTORY (src_factory,
   )
 )
     
-GST_PADTEMPLATE_FACTORY (video_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (video_sink_factory,
   "video_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
@@ -123,7 +123,7 @@ GST_PADTEMPLATE_FACTORY (video_sink_factory,
   )
 )
     
-GST_PADTEMPLATE_FACTORY (audio_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
   "audio_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
@@ -238,7 +238,7 @@ gst_avimux_init (GstAviMux *avimux)
 {
   gint i;
   avimux->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (avimux), avimux->srcpad);
 
   GST_FLAG_SET (GST_ELEMENT(avimux), GST_ELEMENT_EVENT_AWARE);
@@ -429,7 +429,7 @@ gst_avimux_request_new_pad (GstElement     *element,
 
   avimux = GST_AVIMUX (element);
 
-  if (templ == GST_PADTEMPLATE_GET (audio_sink_factory)) {
+  if (templ == GST_PAD_TEMPLATE_GET (audio_sink_factory)) {
     g_return_val_if_fail(avimux->num_audio_pads == 0 /*< MAX_NUM_AUDIO_PADS*/, NULL);
     name = g_strdup_printf ("audio_%02d", avimux->num_audio_pads);
     newpad = gst_pad_new_from_template (templ, name);
@@ -438,7 +438,7 @@ gst_avimux_request_new_pad (GstElement     *element,
     avimux->audiosinkpad[avimux->num_audio_pads] = newpad;
     avimux->num_audio_pads++;
   }
-  else if (templ == GST_PADTEMPLATE_GET (video_sink_factory)) {
+  else if (templ == GST_PAD_TEMPLATE_GET (video_sink_factory)) {
     g_return_val_if_fail(avimux->num_video_pads == 0 /*< MAX_NUM_VIDEO_PADS*/, NULL);
     name = g_strdup_printf ("video_%02d", avimux->num_video_pads);
     newpad = gst_pad_new_from_template (templ, name);
@@ -1111,13 +1111,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
 #endif
 
   /* create an elementfactory for the avimux element */
-  factory = gst_elementfactory_new ("avimux", GST_TYPE_AVIMUX,
+  factory = gst_element_factory_new ("avimux", GST_TYPE_AVIMUX,
                                     &gst_avimux_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (audio_sink_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (video_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (audio_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_sink_factory));
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

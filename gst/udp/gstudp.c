@@ -31,12 +31,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *src, *sink;
 
   /* create an elementfactory for the udpsrc element */
-  sink = gst_elementfactory_new ("udpsink",GST_TYPE_UDPSINK,
+  sink = gst_element_factory_new ("udpsink",GST_TYPE_UDPSINK,
                                    &gst_udpsink_details);
   g_return_val_if_fail (sink != NULL, FALSE);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (sink));
 
-  src = gst_elementfactory_new ("udpsrc",GST_TYPE_UDPSRC,
+  src = gst_element_factory_new ("udpsrc",GST_TYPE_UDPSRC,
                                    &gst_udpsrc_details);
   g_return_val_if_fail (src != NULL, FALSE);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (src));

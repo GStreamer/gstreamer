@@ -48,7 +48,7 @@ enum {
   ARG_HOST,
 };
 
-GST_PADTEMPLATE_FACTORY (sink_factory,
+GST_PAD_TEMPLATE_FACTORY (sink_factory,
   "sink",					/* the name of the pads */
   GST_PAD_SINK,				/* type of the pad */
   GST_PAD_ALWAYS,			/* ALWAYS/SOMETIMES */
@@ -189,7 +189,7 @@ static void
 gst_esdsink_init(GstEsdsink *esdsink)
 {
   esdsink->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(esdsink), esdsink->sinkpad);
   gst_pad_set_chain_function(esdsink->sinkpad, GST_DEBUG_FUNCPTR(gst_esdsink_chain));
   gst_pad_set_connect_function(esdsink->sinkpad, gst_esdsink_sinkconnect);
@@ -331,11 +331,11 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("esdsink", GST_TYPE_ESDSINK,
+  factory = gst_element_factory_new("esdsink", GST_TYPE_ESDSINK,
 				   &esdsink_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate(factory, GST_PADTEMPLATE_GET (sink_factory));
+  gst_element_factory_add_pad_template(factory, GST_PAD_TEMPLATE_GET (sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

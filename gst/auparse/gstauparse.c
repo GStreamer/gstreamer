@@ -38,13 +38,13 @@ static GstElementDetails gst_auparse_details = {
 };
 
 static GstCaps*
-au_typefind (GstBuffer *buf, gpointer private)
+au_type_find (GstBuffer *buf, gpointer private)
 {
   GstCaps *new = NULL;
   gulong *head = (gulong *) GST_BUFFER_DATA (buf);
 
   if (*head == 0x2e736e64 || *head == 0x646e732e)
-    new = gst_caps_new ("au_typefind", "audio/au", NULL);
+    new = gst_caps_new ("au_type_find", "audio/au", NULL);
 
   return new;
 }
@@ -54,10 +54,10 @@ static GstTypeDefinition audefinition = {
   "auparse_audio/au",
   "audio/au",
   ".au",
-  au_typefind,
+  au_type_find,
 };
 
-GST_PADTEMPLATE_FACTORY (sink_factory_templ,
+GST_PAD_TEMPLATE_FACTORY (sink_factory_templ,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -69,7 +69,7 @@ GST_PADTEMPLATE_FACTORY (sink_factory_templ,
 )
 
 
-GST_PADTEMPLATE_FACTORY (src_factory_templ,
+GST_PAD_TEMPLATE_FACTORY (src_factory_templ,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -150,12 +150,12 @@ static void
 gst_auparse_init (GstAuParse *auparse) 
 {
   auparse->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sink_factory_templ), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_factory_templ), "sink");
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->sinkpad);
   gst_pad_set_chain_function (auparse->sinkpad, gst_auparse_chain);
 
   auparse->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_factory_templ), "src");
+		  GST_PAD_TEMPLATE_GET (src_factory_templ), "src");
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
 
   auparse->offset = 0;
@@ -297,14 +297,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   /* create the plugin structure */
   /* create an elementfactory for the auparse element and list it */
-  factory = gst_elementfactory_new ("auparse", GST_TYPE_AUPARSE,
+  factory = gst_element_factory_new ("auparse", GST_TYPE_AUPARSE,
                                     &gst_auparse_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_factory_templ));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_factory_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory_templ));
 
-  type = gst_typefactory_new (&audefinition);
+  type = gst_type_factory_new (&audefinition);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));

@@ -48,7 +48,7 @@ level_src_factory (void)
   static GstPadTemplate *template = NULL;
 
   if (!template) {
-    template = gst_padtemplate_new (
+    template = gst_pad_template_new (
       "src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
@@ -69,7 +69,7 @@ level_sink_factory (void)
   static GstPadTemplate *template = NULL;
 
   if (!template) {
-    template = gst_padtemplate_new (
+    template = gst_pad_template_new (
       "sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
@@ -240,12 +240,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("level",GST_TYPE_LEVEL,
+  factory = gst_element_factory_new("level",GST_TYPE_LEVEL,
                                    &level_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   
-  gst_elementfactory_add_padtemplate (factory, level_src_factory ());
-  gst_elementfactory_add_padtemplate (factory, level_sink_factory ());
+  gst_element_factory_add_pad_template (factory, level_src_factory ());
+  gst_element_factory_add_pad_template (factory, level_sink_factory ());
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

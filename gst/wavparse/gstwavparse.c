@@ -25,7 +25,7 @@
 static void		gst_wavparse_class_init	(GstWavParseClass *klass);
 static void		gst_wavparse_init	(GstWavParse *wavparse);
 
-static GstCaps*		wav_typefind		(GstBuffer *buf, gpointer private);
+static GstCaps*		wav_type_find		(GstBuffer *buf, gpointer private);
 
 static void		gst_wavparse_chain	(GstPad *pad, GstBuffer *buf);
 
@@ -39,7 +39,7 @@ static GstElementDetails gst_wavparse_details = {
   "(C) 1999",
 };
 
-GST_PADTEMPLATE_FACTORY (sink_template_factory,
+GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   "wavparse_sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -50,7 +50,7 @@ GST_PADTEMPLATE_FACTORY (sink_template_factory,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (src_template_factory,
+GST_PAD_TEMPLATE_FACTORY (src_template_factory,
   "wavparse_src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -81,7 +81,7 @@ wavdefinition =
   "wavparse_audio/wav",
   "audio/wav",
   ".wav",
-  wav_typefind,
+  wav_type_find,
 };
 
 
@@ -133,11 +133,11 @@ gst_wavparse_class_init (GstWavParseClass *klass)
 static void 
 gst_wavparse_init (GstWavParse *wavparse) 
 {
-  wavparse->sinkpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (sink_template_factory), "sink");
+  wavparse->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->sinkpad);
   gst_pad_set_chain_function (wavparse->sinkpad, gst_wavparse_chain);
 
-  wavparse->srcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (src_template_factory), "src");
+  wavparse->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_template_factory), "src");
   gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->srcpad);
 
   wavparse->riff = NULL;
@@ -150,14 +150,14 @@ gst_wavparse_init (GstWavParse *wavparse)
 }
 
 static GstCaps*
-wav_typefind (GstBuffer *buf, gpointer private)
+wav_type_find (GstBuffer *buf, gpointer private)
 {
   gchar *data = GST_BUFFER_DATA (buf);
 
   if (strncmp (&data[0], "RIFF", 4)) return NULL;
   if (strncmp (&data[8], "WAVE", 4)) return NULL;
 
-  return gst_caps_new ("wav_typefind", "audio/wav", NULL);
+  return gst_caps_new ("wav_type_find", "audio/wav", NULL);
 }
 
 
@@ -344,17 +344,17 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstTypeFactory *type;
 
   /* create an elementfactory for the wavparse element */
-  factory = gst_elementfactory_new ("wavparse", GST_TYPE_WAVPARSE,
+  factory = gst_element_factory_new ("wavparse", GST_TYPE_WAVPARSE,
                                     &gst_wavparse_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
   /* register src pads */
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_template_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_template_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
-  type = gst_typefactory_new (&wavdefinition);
+  type = gst_type_factory_new (&wavdefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;

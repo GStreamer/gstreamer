@@ -39,7 +39,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("dv1394src",GST_TYPE_DV1394SRC,
+  factory = gst_element_factory_new("dv1394src",GST_TYPE_DV1394SRC,
                                    &gst_dv1394src_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 

@@ -24,7 +24,7 @@
 extern GstElementDetails flacenc_details;
 extern GstElementDetails flacdec_details;
 
-static GstCaps* 	flac_typefind 	(GstBuffer *buf, gpointer private);
+static GstCaps* 	flac_type_find 	(GstBuffer *buf, gpointer private);
 
 GstPadTemplate *dec_src_template, *dec_sink_template; 
 GstPadTemplate *enc_src_template, *enc_sink_template;
@@ -62,18 +62,18 @@ static GstTypeDefinition flacdefinition = {
   "flac_audio/x-flac",
   "audio/x-flac",
   ".flac",
-  flac_typefind,
+  flac_type_find,
 };
 
 static GstCaps* 
-flac_typefind (GstBuffer *buf, gpointer private) 
+flac_type_find (GstBuffer *buf, gpointer private) 
 {
   gulong head = GULONG_FROM_BE (*((gulong *)GST_BUFFER_DATA (buf)));
 
   if (head  != 0x664C6143)
     return NULL;
 
-  return gst_caps_new ("flac_typefind", "audio/x-flac", NULL);
+  return gst_caps_new ("flac_type_find", "audio/x-flac", NULL);
 }
 
 
@@ -87,7 +87,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_plugin_set_longname (plugin, "The FLAC Lossless compressor Codec");
 
   /* create an elementfactory for the flacenc element */
-  enc = gst_elementfactory_new ("flacenc", GST_TYPE_FLACENC,
+  enc = gst_element_factory_new ("flacenc", GST_TYPE_FLACENC,
                                 &flacenc_details);
   g_return_val_if_fail (enc != NULL, FALSE);
 
@@ -95,39 +95,39 @@ plugin_init (GModule *module, GstPlugin *plugin)
   flac_caps = flac_caps_factory ();
 
   /* register sink pads */
-  enc_sink_template = gst_padtemplate_new ("sink", GST_PAD_SINK, 
+  enc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                              GST_PAD_ALWAYS, 
 					      raw_caps, NULL);
-  gst_elementfactory_add_padtemplate (enc, enc_sink_template);
+  gst_element_factory_add_pad_template (enc, enc_sink_template);
 
   /* register src pads */
-  enc_src_template = gst_padtemplate_new ("src", GST_PAD_SRC, 
+  enc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                             GST_PAD_ALWAYS, 
 					     flac_caps, NULL);
-  gst_elementfactory_add_padtemplate (enc, enc_src_template);
+  gst_element_factory_add_pad_template (enc, enc_src_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
 
   /* create an elementfactory for the flacdec element */
-  dec = gst_elementfactory_new("flacdec",GST_TYPE_FLACDEC,
+  dec = gst_element_factory_new("flacdec",GST_TYPE_FLACDEC,
                                &flacdec_details);
   g_return_val_if_fail(dec != NULL, FALSE);
  
   /* register sink pads */
-  dec_sink_template = gst_padtemplate_new ("sink", GST_PAD_SINK, 
+  dec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                              GST_PAD_ALWAYS, 
 					      flac_caps, NULL);
-  gst_elementfactory_add_padtemplate (dec, dec_sink_template);
+  gst_element_factory_add_pad_template (dec, dec_sink_template);
 
   /* register src pads */
-  dec_src_template = gst_padtemplate_new ("src", GST_PAD_SRC, 
+  dec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                             GST_PAD_ALWAYS, 
 					     raw_caps, NULL);
-  gst_elementfactory_add_padtemplate (dec, dec_src_template);
+  gst_element_factory_add_pad_template (dec, dec_src_template);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
 
-  type = gst_typefactory_new (&flacdefinition);
+  type = gst_type_factory_new (&flacdefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;

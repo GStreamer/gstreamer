@@ -60,31 +60,31 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *mulawenc_factory, *mulawdec_factory;
   GstCaps* mulaw_caps, *linear_caps;
 
-  mulawenc_factory = gst_elementfactory_new("mulawencode",GST_TYPE_MULAWENC,
+  mulawenc_factory = gst_element_factory_new("mulawencode",GST_TYPE_MULAWENC,
                                             &mulawenc_details);
   g_return_val_if_fail(mulawenc_factory != NULL, FALSE);
-  mulawdec_factory = gst_elementfactory_new("mulawdecode",GST_TYPE_MULAWDEC,
+  mulawdec_factory = gst_element_factory_new("mulawdecode",GST_TYPE_MULAWDEC,
 					    &mulawdec_details);
   g_return_val_if_fail(mulawdec_factory != NULL, FALSE);
 
   mulaw_caps = mulaw_factory ();
   linear_caps = linear_factory ();
  
-  mulawenc_src_template = gst_padtemplate_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+  mulawenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 		   		               mulaw_caps, NULL);
-  mulawenc_sink_template = gst_padtemplate_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+  mulawenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
 		   			        linear_caps, NULL);
 
-  gst_elementfactory_add_padtemplate (mulawenc_factory, mulawenc_src_template);
-  gst_elementfactory_add_padtemplate (mulawenc_factory, mulawenc_sink_template);
+  gst_element_factory_add_pad_template (mulawenc_factory, mulawenc_src_template);
+  gst_element_factory_add_pad_template (mulawenc_factory, mulawenc_sink_template);
 
-  mulawdec_src_template = gst_padtemplate_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+  mulawdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 		  				linear_caps, NULL);
-  mulawdec_sink_template = gst_padtemplate_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+  mulawdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
 		   				mulaw_caps, NULL);
   
-  gst_elementfactory_add_padtemplate (mulawdec_factory, mulawdec_src_template);
-  gst_elementfactory_add_padtemplate (mulawdec_factory, mulawdec_sink_template);
+  gst_element_factory_add_pad_template (mulawdec_factory, mulawdec_src_template);
+  gst_element_factory_add_pad_template (mulawdec_factory, mulawdec_sink_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (mulawenc_factory));
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (mulawdec_factory));

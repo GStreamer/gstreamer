@@ -55,7 +55,7 @@ enum {
   ARG_FREQUENCY
 };
 
-GST_PADTEMPLATE_FACTORY (osssrc_src_factory,
+GST_PAD_TEMPLATE_FACTORY (osssrc_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -160,7 +160,7 @@ static void
 gst_osssrc_init (GstOssSrc *osssrc) 
 {
   osssrc->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (osssrc_src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (osssrc_src_factory), "src");
   gst_pad_set_get_function(osssrc->srcpad,gst_osssrc_get);
   gst_element_add_pad (GST_ELEMENT (osssrc), osssrc->srcpad);
 
@@ -420,10 +420,10 @@ gst_osssrc_factory_init (GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new ("osssrc", GST_TYPE_OSSSRC, &gst_osssrc_details);
+  factory = gst_element_factory_new ("osssrc", GST_TYPE_OSSSRC, &gst_osssrc_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (osssrc_src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (osssrc_src_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

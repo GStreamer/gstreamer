@@ -30,7 +30,7 @@ static GstPadTemplate*
 ladspa_src_factory (void)
 {
   return 
-    gst_padtemplate_new (
+    gst_pad_template_new (
     "src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -52,7 +52,7 @@ static GstPadTemplate*
 ladspa_sink_factory (void) 
 {
   return 
-    gst_padtemplate_new (
+    gst_pad_template_new (
       "sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
@@ -936,7 +936,7 @@ ladspa_describe_plugin(const char *pcFullFilename,
     details->copyright = g_strdup(desc->Copyright);
 
     /* register the plugin with gstreamer */
-    factory = gst_elementfactory_new(type_name,type,details);
+    factory = gst_element_factory_new(type_name,type,details);
     g_return_if_fail(factory != NULL);
     gst_plugin_add_feature (ladspa_plugin, GST_PLUGIN_FEATURE (factory));
 
@@ -951,13 +951,13 @@ ladspa_describe_plugin(const char *pcFullFilename,
       if (LADSPA_IS_PORT_AUDIO(desc->PortDescriptors[j]) &&
           LADSPA_IS_PORT_INPUT(desc->PortDescriptors[j])) {
         sinktempl = ladspa_sink_factory();
-        gst_elementfactory_add_padtemplate (factory, sinktempl);
+        gst_element_factory_add_pad_template (factory, sinktempl);
         break;
       }
     }
   
     srctempl = ladspa_src_factory();
-    gst_elementfactory_add_padtemplate (factory, srctempl);
+    gst_element_factory_add_pad_template (factory, srctempl);
 
   }
 }

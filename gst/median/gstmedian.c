@@ -30,7 +30,7 @@ static GstElementDetails median_details = {
   "(C) 2000",
 };
 
-GST_PADTEMPLATE_FACTORY (median_src_factory,
+GST_PAD_TEMPLATE_FACTORY (median_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -41,7 +41,7 @@ GST_PADTEMPLATE_FACTORY (median_src_factory,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (median_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (median_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -143,13 +143,13 @@ gst_median_sinkconnect (GstPad *pad, GstCaps *caps)
 void gst_median_init (GstMedian *median)
 {
   median->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (median_sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (median_sink_factory), "sink");
   gst_pad_set_connect_function (median->sinkpad, gst_median_sinkconnect);
   gst_pad_set_chain_function (median->sinkpad, gst_median_chain);
   gst_element_add_pad (GST_ELEMENT (median), median->sinkpad);
 
   median->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (median_src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (median_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (median), median->srcpad);
 
   median->filtersize = 5;
@@ -378,12 +378,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("median",GST_TYPE_MEDIAN,
+  factory = gst_element_factory_new("median",GST_TYPE_MEDIAN,
                                    &median_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (median_sink_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (median_src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (median_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (median_src_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

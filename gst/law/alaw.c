@@ -60,26 +60,26 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *alawenc_factory, *alawdec_factory;
   GstCaps* alaw_caps, *linear_caps;
 
-  alawenc_factory = gst_elementfactory_new("alawencode",GST_TYPE_ALAWENC,
+  alawenc_factory = gst_element_factory_new("alawencode",GST_TYPE_ALAWENC,
                                             &alawenc_details);
   g_return_val_if_fail(alawenc_factory != NULL, FALSE);
-  alawdec_factory = gst_elementfactory_new("alawdecode",GST_TYPE_ALAWDEC,
+  alawdec_factory = gst_element_factory_new("alawdecode",GST_TYPE_ALAWDEC,
 					    &alawdec_details);
   g_return_val_if_fail(alawdec_factory != NULL, FALSE);
 
   alaw_caps = alaw_factory ();
   linear_caps = linear_factory ();
  
-  alawenc_src_template = gst_padtemplate_new ("src",GST_PAD_SRC,GST_PAD_ALWAYS,alaw_caps, NULL);
-  alawenc_sink_template = gst_padtemplate_new ("sink",GST_PAD_SINK,GST_PAD_ALWAYS,linear_caps, NULL);
-  gst_elementfactory_add_padtemplate (alawenc_factory, alawenc_src_template);
-  gst_elementfactory_add_padtemplate (alawenc_factory, alawenc_sink_template);
+  alawenc_src_template = gst_pad_template_new ("src",GST_PAD_SRC,GST_PAD_ALWAYS,alaw_caps, NULL);
+  alawenc_sink_template = gst_pad_template_new ("sink",GST_PAD_SINK,GST_PAD_ALWAYS,linear_caps, NULL);
+  gst_element_factory_add_pad_template (alawenc_factory, alawenc_src_template);
+  gst_element_factory_add_pad_template (alawenc_factory, alawenc_sink_template);
 
-  alawdec_src_template = gst_padtemplate_new ("src",GST_PAD_SRC,GST_PAD_ALWAYS,linear_caps, NULL);
-  alawdec_sink_template = gst_padtemplate_new ("sink",GST_PAD_SINK,GST_PAD_ALWAYS,alaw_caps, NULL);
+  alawdec_src_template = gst_pad_template_new ("src",GST_PAD_SRC,GST_PAD_ALWAYS,linear_caps, NULL);
+  alawdec_sink_template = gst_pad_template_new ("sink",GST_PAD_SINK,GST_PAD_ALWAYS,alaw_caps, NULL);
   
-  gst_elementfactory_add_padtemplate (alawdec_factory, alawdec_src_template);
-  gst_elementfactory_add_padtemplate (alawdec_factory, alawdec_sink_template);
+  gst_element_factory_add_pad_template (alawdec_factory, alawdec_src_template);
+  gst_element_factory_add_pad_template (alawdec_factory, alawdec_sink_template);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (alawenc_factory));
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (alawdec_factory));
 

@@ -56,7 +56,7 @@ enum {
   ARG_FRAME_TIME,
 };
 
-GST_PADTEMPLATE_FACTORY (sink_template,
+GST_PAD_TEMPLATE_FACTORY (sink_template,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -267,7 +267,7 @@ static void
 gst_aasink_init (GstAASink *aasink)
 {
   aasink->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sink_template), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (aasink), aasink->sinkpad);
   gst_pad_set_chain_function (aasink->sinkpad, gst_aasink_chain);
   gst_pad_set_connect_function (aasink->sinkpad, gst_aasink_sinkconnect);
@@ -532,12 +532,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the aasink element */
-  factory = gst_elementfactory_new("aasink",GST_TYPE_AASINK,
+  factory = gst_element_factory_new("aasink",GST_TYPE_AASINK,
                                    &gst_aasink_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, 
-		  GST_PADTEMPLATE_GET (sink_template));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (sink_template));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

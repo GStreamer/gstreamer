@@ -24,7 +24,7 @@
 
 #define JIFFIE  (1000000/70)
 
-static GstCaps* flxdec_typefind(GstBuffer *buf, gpointer private);
+static GstCaps* flxdec_type_find(GstBuffer *buf, gpointer private);
 
 /* flx element information */
 static GstElementDetails flxdec_details = {
@@ -40,7 +40,7 @@ static GstTypeDefinition flxdec_definition = {
   "flxdec_video/fli",
   "video/fli",
   ".flc .fli",
-  flxdec_typefind,
+  flxdec_type_find,
 };
 
 /* Flx signals and args */
@@ -54,7 +54,7 @@ enum {
 };
 
 /* input */
-GST_PADTEMPLATE_FACTORY (sink_factory,
+GST_PAD_TEMPLATE_FACTORY (sink_factory,
   "sink",          
   GST_PAD_SINK, 
   GST_PAD_ALWAYS,
@@ -66,7 +66,7 @@ GST_PADTEMPLATE_FACTORY (sink_factory,
 )
 
 /* output */
-GST_PADTEMPLATE_FACTORY (src_video_factory,
+GST_PAD_TEMPLATE_FACTORY (src_video_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -108,7 +108,7 @@ static void 	flx_decode_delta_flc	(GstFlxDec *, guchar *, guchar *);
 static GstElementClass *parent_class = NULL;
 
 static GstCaps* 
-flxdec_typefind (GstBuffer *buf, gpointer private)
+flxdec_type_find (GstBuffer *buf, gpointer private)
 {
   guchar *data = GST_BUFFER_DATA(buf);
   GstCaps *new;
@@ -119,7 +119,7 @@ flxdec_typefind (GstBuffer *buf, gpointer private)
       /* check the frame type of the first frame */
       if ((data[132] == 0x00 || data[132] == 0xfa) && data[133] == 0xf1) {
         g_print("GstFlxDec: found supported flx format\n");
-        new = gst_caps_new("flxdec_typefind","video/fli", NULL);
+        new = gst_caps_new("flxdec_type_find","video/fli", NULL);
         return new;
       }
   }
@@ -172,12 +172,12 @@ static void
 gst_flxdec_init(GstFlxDec *flxdec) 
 {
   flxdec->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(flxdec),flxdec->sinkpad);
   gst_element_set_loop_function(GST_ELEMENT(flxdec),gst_flxdec_loop);
 
   flxdec->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_video_factory), "src");
+		  GST_PAD_TEMPLATE_GET (src_video_factory), "src");
   gst_element_add_pad(GST_ELEMENT(flxdec),flxdec->srcpad);
 
   flxdec->bs = NULL;
@@ -682,15 +682,15 @@ plugin_init (GModule *module, GstPlugin *plugin)
     return FALSE;
   }
 
-  factory = gst_elementfactory_new("flxdec", GST_TYPE_FLXDEC, &flxdec_details);
+  factory = gst_element_factory_new("flxdec", GST_TYPE_FLXDEC, &flxdec_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_video_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_video_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
-  type = gst_typefactory_new (&flxdec_definition);
+  type = gst_type_factory_new (&flxdec_definition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;

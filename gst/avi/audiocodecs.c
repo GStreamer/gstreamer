@@ -83,9 +83,9 @@ static GstPad *gst_avi_decoder_get_audio_srcpad_MPEG(GstAviDecoder *avi_decoder,
   GstElement *parse_audio, *decode;
   GstPad *srcpad, *sinkpad, *newpad;
 
-  parse_audio = gst_elementfactory_make("mp3parse", "parse_audio");
+  parse_audio = gst_element_factory_make("mp3parse", "parse_audio");
   g_return_val_if_fail(parse_audio != NULL, NULL);
-  decode = gst_elementfactory_make("mpg123", "decode_audio");
+  decode = gst_element_factory_make("mpg123", "decode_audio");
   g_return_val_if_fail(decode != NULL, NULL);
 
   gst_element_set_state(GST_ELEMENT(gst_object_get_parent(GST_OBJECT(avi_decoder))), GST_STATE_PAUSED);
