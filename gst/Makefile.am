@@ -145,7 +145,6 @@ gst_headers =			\
 	gstbuffer.h		\
 	gstbufferpool-default.h \
 	gstcaps.h		\
-	gstcaps2.h		\
 	gstclock.h		\
 	gstcompat.h		\
 	gstcpu.h		\
