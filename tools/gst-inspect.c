@@ -110,21 +110,17 @@ print_props (GstProps *properties, gchar *pfx)
 static void 
 print_formats (const GstFormat *formats) 
 {
-  GType format_type;
-  GEnumClass *klass;
-
-  format_type = gst_format_get_type();
-  klass = (GEnumClass *) g_type_class_ref (format_type);
-
   while (formats && *formats) {
-    GEnumValue *value;
+    const gchar *nick;
+    const gchar *description;
     
-    value = g_enum_get_value (klass, *formats);
-    
-    printf ("\t\t(%d):\t%s (%s)\n", value->value, value->value_nick, value->value_name);
+    if (gst_format_get_details (*formats, &nick, &description))
+      g_print ("\t\t(%d):\t%s (%s)\n", *formats, nick, description);
+    else
+      g_print ("\t\t(%d):\tUnknown format\n", *formats);
+
     formats++;
   }
-  g_type_class_unref (klass);
 }
 
 static void 
@@ -315,12 +311,22 @@ print_element_properties (GstElement *element)
         else if (G_IS_PARAM_SPEC_ENUM (param)) {
           GEnumValue *values;
 	  guint j = 0;
+	  gint enum_value;
 
-          printf("%-23.23s Enum \"%s\" (default %d)", "", 
-			  g_type_name (G_VALUE_TYPE (&value)),
-			  g_value_get_enum (&value));
 	  values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
+	  enum_value = g_value_get_enum (&value);
 
+	  while (values[j].value_name) {
+	    if (values[j].value == enum_value)
+	      break;
+	    j++; 
+	  }
+
+          g_print ("%-23.23s Enum \"%s\" (default %d, \"%s\")", "", 
+			  g_type_name (G_VALUE_TYPE (&value)),
+			  enum_value, values[j].value_nick);
+
+	  j = 0;
 	  while (values[j].value_name) {
             printf("\n%-23.23s    (%d): \t%s", "", values[j].value, values[j].value_nick);
 	    j++; 

@@ -40,47 +40,6 @@ idle_func (gpointer data)
   return busy;
 }
 
-static void
-property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec, gchar **excluded_props)
-{
-  GValue value = { 0, }; /* the important thing is that value.type = 0 */
-  gchar *str = 0;
-
-  if (pspec->flags & G_PARAM_READABLE) {
-    /* let's not print these out for excluded properties... */
-    while (excluded_props != NULL && *excluded_props != NULL)
-    {
-      if (strcmp (pspec->name, *excluded_props) == 0)
-	return;
-      excluded_props++;
-    }
-    g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-    g_object_get_property (G_OBJECT (orig), pspec->name, &value);
-
-    if (G_IS_PARAM_SPEC_ENUM (pspec)) {
-      GEnumValue *enum_value;
-      enum_value = g_enum_get_value (G_ENUM_CLASS (g_type_class_ref (pspec->value_type)), 
-		      g_value_get_enum (&value));
-
-      str = g_strdup_printf ("%s (%d)", enum_value->value_nick, enum_value->value);
-    }
-    else {
-      str = g_strdup_value_contents (&value);
-    }
-    g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
-    g_free (str);
-    g_value_unset(&value);
-  } else {
-    g_warning ("Parameter not readable. What's up with that?");
-  }
-}
-
-static void
-error_callback (GObject *object, GstObject *orig, gchar *error)
-{
-  g_print ("ERROR: %s: %s\n", GST_OBJECT_NAME (orig), error);
-}
-
 static GstElement*
 xmllaunch_parse_cmdline (const gchar **argv) 
 {
@@ -190,9 +149,9 @@ main(int argc, char *argv[])
   if (!silent)
   {
     gchar **exclude_list = exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
-    g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), exclude_list);
+    g_signal_connect (pipeline, "deep_notify", G_CALLBACK (gst_element_default_deep_notify), exclude_list);
   }
-  g_signal_connect (pipeline, "error", G_CALLBACK (error_callback), NULL);
+  g_signal_connect (pipeline, "error", G_CALLBACK (gst_element_default_error), NULL);
   
 #ifndef GST_DISABLE_LOADSAVE
   if (savefile) {
@@ -218,6 +177,7 @@ main(int argc, char *argv[])
     } else {
         g_print ("waiting for the state change...\n");
         gst_element_wait_state_change (pipeline);
+        g_print ("got the state change...\n");
     }
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
