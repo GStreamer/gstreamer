@@ -374,7 +374,7 @@ no_difference:
 	  int samples = MIN (bytes, sample_diff) *
 	             (element->numpads == 1 ? this->format->channels : 1);
 	  int size = samples * snd_pcm_format_physical_width (this->format->format) / 8;
-	  GST_INFO_OBJECT (this, "Allocating %d bytes (%ld samples) now to resync: sample %ld expected, but got %ld\n", 
+	  GST_INFO_OBJECT (this, "Allocating %d bytes (%ld samples) now to resync: sample %ld expected, but got %ld", 
 			   size, MIN (bytes, sample_diff), time_sample, samplestamp);
 	  sink->data[i] = g_try_malloc (size);
 	  if (!sink->data[i]) {
@@ -387,7 +387,7 @@ no_difference:
 	  }
 	  sink->behaviour[i] = 1;
 	} else if (gst_alsa_samples_to_bytes (this, -sample_diff) >= sink->buf[i]->size) {
-	  GST_INFO_OBJECT (this, "Skipping %lu samples to resync (complete buffer): sample %ld expected, but got %ld\n", 
+	  GST_INFO_OBJECT (this, "Skipping %lu samples to resync (complete buffer): sample %ld expected, but got %ld", 
 			   gst_alsa_bytes_to_samples (this, sink->buf[i]->size), time_sample, samplestamp);	              
 	  /* this buffer is way behind */
 	  gst_buffer_unref (sink->buf[i]);
@@ -395,7 +395,7 @@ no_difference:
 	  continue;
 	} else if (sample_diff < 0) {
 	  gint difference = gst_alsa_samples_to_bytes (this, -samplestamp);
-	  GST_INFO_OBJECT (this, "Skipping %lu samples to resync: sample %ld expected, but got %ld\n",
+	  GST_INFO_OBJECT (this, "Skipping %lu samples to resync: sample %ld expected, but got %ld",
 			   (gulong) -sample_diff, time_sample, samplestamp);
 	  /* this buffer is only a bit behind */
           sink->size[i] = sink->buf[i]->size - difference;

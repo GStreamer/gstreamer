@@ -564,6 +564,7 @@ gst_ogg_demux_chain (GstPad *pad, GstData *buffer)
 	      GST_FLAG_SET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
 	      goto out;
 	    }
+	    gst_ogg_add_chain (ogg);
 	    GST_OGG_SET_STATE (ogg, GST_OGG_STATE_PLAY);
 	    /* fall through */
 	  case GST_OGG_STATE_SEEK:

@@ -720,6 +720,9 @@ gst_alsa_change_state (GstElement *element)
         GST_ERROR_OBJECT (this, "Error unpausing sound: %s", snd_strerror (err));
         return GST_STATE_FAILURE;
       }
+    } else if (! (GST_FLAG_IS_SET (element, GST_ALSA_RUNNING) ||
+	gst_alsa_start_audio (this))) {
+      return GST_STATE_FAILURE;
     }
     gst_alsa_clock_start (this->clock);
     break;
@@ -730,11 +733,13 @@ gst_alsa_change_state (GstElement *element)
           GST_ERROR_OBJECT (this, "Error pausing sound: %s", snd_strerror (err));
           return GST_STATE_FAILURE;
         }
-        gst_alsa_clock_stop (this->clock);
       }
       break;
     }
+    gst_alsa_clock_stop (this->clock);
     /* if device doesn't know how to pause, we just stop */
+    if (GST_FLAG_IS_SET (element, GST_ALSA_RUNNING)) gst_alsa_stop_audio (this);
+    break;
   case GST_STATE_PAUSED_TO_READY:
     if (GST_FLAG_IS_SET (element, GST_ALSA_RUNNING)) gst_alsa_stop_audio (this);
     g_free (this->format);
@@ -836,7 +841,6 @@ gst_alsa_start (GstAlsa *this)
       g_assert_not_reached ();
       break;
   }
-  /* gst_alsa_clock_start (this->clock); */
   return TRUE;
 }
 void
@@ -1071,7 +1075,6 @@ gst_alsa_drain_audio (GstAlsa *this)
   switch (snd_pcm_state (this->handle)) {
     case SND_PCM_STATE_XRUN:
     case SND_PCM_STATE_RUNNING:
-      gst_alsa_clock_stop (this->clock);
       /* fall through - clock is already stopped when paused */
     case SND_PCM_STATE_PAUSED:
       /* snd_pcm_drain only works in blocking mode */
@@ -1098,7 +1101,6 @@ gst_alsa_stop_audio (GstAlsa *this)
   switch (snd_pcm_state (this->handle)) {
     case SND_PCM_STATE_XRUN:
     case SND_PCM_STATE_RUNNING:
-      gst_alsa_clock_stop (this->clock);
       /* fall through - clock is already stopped when paused */
     case SND_PCM_STATE_PAUSED:
       ERROR_CHECK (snd_pcm_drop (this->handle),
