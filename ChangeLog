@@ -1,3 +1,11 @@
+2004-09-26 Iain <iaingnome@gmail.com>
+
+	* gst/wavenc/gstwavenc.c (gst_wavenc_chain): Company says we need to
+	call the sinkpad's default event handler and not the srcpads. He also
+	says this is confusing :)
+	(gst_wavenc_stop_file): Company says that seek events only go upstream
+	we should send a discontinuous downstream instead.
+
 2004-09-25  Christian Schaller <christian@fluendo.com>
 
 	* Update SPEC file to be usable in conjunction with Fedora Core,
