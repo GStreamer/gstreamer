@@ -216,7 +216,7 @@ GST_PLUGINS_ALL="\
         median mixmatrix mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
         mpegaudio mpegaudioparse mpegstream mpegtypes\
         monoscope passthrough playondemand qtdemux rtjpeg silence sine\
-        smooth spectrum speed stereo stereomono synaesthesia\
+        smooth smpte spectrum speed stereo stereomono synaesthesia\
         udp videocrop videoscale videotestsrc volenv volume\ 
         vumeter wavenc wavparse y4m"
 
