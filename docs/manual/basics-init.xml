@@ -1,31 +1,31 @@
-<chapter id="chapter-init">
-  <title>Initializing &GStreamer;</title>
+<chapter id="chapter-initialisation">
+  <title>Initializing <application>GStreamer</application></title>
   <para> 
-    When writing a &GStreamer; application, you can simply include
-    <filename>gst/gst.h</filename> to get access to the library
-    functions. Besides that, you will also need to intialize the
-    &GStreamer; library.
+    When writing a <application>GStreamer</application> application, you can
+    simply include <filename class='headerfile'>gst/gst.h</filename> to get 
+    access to the library functions.
+  </para> 
+  <para> 
+    Before the <application>GStreamer</application> libraries can be used,
+    <function>gst_init</function> has to be called from the main application. 
+    This call will perform the necessary initialization of the library as
+    well as parse the GStreamer-specific command line options.
+  </para>
+  <para> 
+    A typical program
+    &EXAFOOT;
+    would have code to initialize GStreamer that
+    looks like this:
   </para>
 
-  <sect1 id="section-init-c">
-    <title>Simple initialization</title>
-    <para>
-      Before the &GStreamer; libraries can be used,
-      <function>gst_init</function> has to be called from the main
-      application. This call will perform the necessary initialization
-      of the library as well as parse the &GStreamer;-specific command
-      line options.
-    </para>
-    <para> 
-      A typical program &EXAFOOT; would have code to initialize
-      &GStreamer; that looks like this:
-    </para>
-    <programlisting>
-#include &lt;gst/gst.h&gt;
+  <programlisting>
+<![CDATA[
+/* example-begin init.c */
+
+#include <gst/gst.h>
 
 int
-main (int   argc,
-      char *argv[])
+main (int argc, char *argv[])
 {
   guint major, minor, micro;
 
@@ -37,35 +37,35 @@ main (int   argc,
 
   return 0;
 }
-    </programlisting>
-    <para>
-      Use the <symbol>GST_VERSION_MAJOR</symbol>,
-      <symbol>GST_VERSION_MINOR</symbol> and <symbol>GST_VERSION_MICRO</symbol>
-      macros to get the &GStreamer; version you are building against, or
-      use the function <function>gst_version</function> to get the version
-      your application is linked against. &GStreamer; currently uses a
-      scheme where versions with the same major and minor versions are
-      API-/ and ABI-compatible.
-    </para>
-    <para>
-      It is also possible to call the <function>gst_init</function> function
-      with two <symbol>NULL</symbol> arguments, in which case no command line
-      options will be parsed by <application>GStreamer</application>.
-    </para>
-  </sect1>
-
+/* example-end init.c */
+]]>
+  </programlisting>
+  <para>
+    Use the <symbol>GST_VERSION_MAJOR</symbol>,
+    <symbol>GST_VERSION_MINOR</symbol> and <symbol>GST_VERSION_MICRO</symbol>
+    macros to get the <application>GStreamer</application> version you are
+    building against, or use the function <function>gst_version</function>
+    to get the version your application is linked against.
+<!--    FIXME: include an automatically generated list of these options. -->
+  </para>
+  <para>
+    It is also possible to call the <function>gst_init</function> function
+    with two <symbol>NULL</symbol> arguments, in which case no command line
+    options will be parsed by <application>GStreamer</application>.
+  </para>
   <sect1>
     <title>The popt interface</title>
     <para>
-      You can also use a popt table to initialize your own parameters as
-      shown in the next example:
+You can also use a popt table to initialize your own parameters as shown in the
+next example:
     </para>
     <programlisting>
+/* example-begin popt.c */
+
 #include &lt;gst/gst.h&gt;
 
 int
-main (int   argc,
-      char *argv[])
+main(int argc, char *argv[])
 {
   gboolean silent = FALSE;
   gchar *savefile = NULL;
@@ -83,6 +83,7 @@ main (int   argc,
 
   return 0;
 }
+/* example-end popt.c */
     </programlisting>
     <para>
       As shown in this fragment, you can use a <ulink
@@ -94,4 +95,5 @@ main (int   argc,
       <application>GStreamer</application> options.
     </para>
   </sect1>
+
 </chapter>

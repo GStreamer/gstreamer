@@ -1,534 +1,244 @@
-<chapter id="chapter-pads" xreflabel="Pads and capabilities">
-  <title>Pads and capabilities</title>
+<chapter id="chapter-pads">
+  <title>Pads</title>
   <para>
-    As we have seen in <xref linkend="chapter-elements"/>, the pads are
-    the element's interface to the outside world. Data streams from one
-    element's source pad to another element's sink pad. The specific
-    type of media that the element can handle will be exposed by the
-    pad's capabilities. We will talk more on capabilities later in this
-    chapter (see <xref linkend="section-caps"/>).
+    As we have seen in <xref linkend="chapter-elements"/>, the pads are the element's
+    interface to the outside world. 
+  </para>
+  <para>
+    The specific type of media that the element can handle will be exposed by the pads.
+    The description of this media type is done with capabilities(see
+    <xref linkend="section-caps"/>)
   </para>
 
-  <sect1 id="section-pads">
-    <title>Pads</title>
-    <para>
-      A pad type is defined by two properties: its direction and its
-      availability. As we've mentioned before, &GStreamer; defines two
-      pad directions: source pads and sink pads. This terminology is
-      defined from the view of within the element: elements receive data
-      on their sink pads and generate data on their source pads.
-      Schematically, sink pads are drawn on the left side of an element,
-      whereas source pads are drawn on the right side of an element. In
-      such graphs, data flows from left to right.
-      <footnote>
-        <para>
-          In reality, there is no objection to data flowing from a
-          source pad to the sink pad of an element upstream (to the
-          left of this element in drawings). Data will, however, always
-          flow from a source pad of one element to the sink pad of
-          another.
-        </para>
-      </footnote>
-    </para>
-
-    <para>
-      Pad directions are very simple compared to pad availability. A pad
-      can have any of three availabilities: always, sometimes and on
-      request. The meaning of those three types is exactly as it says:
-      always pads always exist, sometimes pad exist only in certain
-      cases (and can disappear randomly), and on-request pads appear
-      only if explicitely requested by applications.
-    </para>
-
-    <sect2 id="section-pads-dynamic">
-      <title>Dynamic (or sometimes) pads</title>
+  <para>
+    Pads are either source or sink pads.  The terminology is defined from the
+    view of the element itself: elements accept data on their sink pads, and
+    send data out on their source pads.  Sink pads are drawn on the left,
+    while source pads are drawn on the right of an element.  In general,
+    data flows from left to right in the graph.<footnote>
       <para>
+        In reality, there is no objection to data flowing from a
+        source pad to the sink pad of an element upstream.  Data will, however,
+        always flow from a source pad of one element to the sink pad of
+        another.
+      </para></footnote>
+  </para>
+
+  <sect1 id="section-pads-type">
+    <title>Types of pad</title>
+ 
+    <sect2 id="section-pads-dynamic">
+      <title>Dynamic pads</title>
+      <para> 
         Some elements might not have all of their pads when the element is
-        created. This can happen, for example, with an Ogg demuxer element.
-        The element will read the Ogg stream and create dynamic pads for
-        each contained elementary stream (vorbis, theora) when it detects
-        such a stream in the Ogg stream. Likewise, it will delete the pad
-        when the stream ends. This principle is very useful for demuxer
-        elements, for example.
+        created. This
+        can happen, for example, with an MPEG system demultiplexer. The
+        demultiplexer will create its pads at runtime when it detects the
+        different elementary streams in the MPEG system stream.
       </para> 
       <para> 
-        Running <application>gst-inspect oggdemux</application> will show
-        that the element has only one pad: a sink pad called 'sink'. The
-        other pads are <quote>dormant</quote>. You can see this in the pad
-        template because there is an <quote>Exists: Sometimes</quote>
-	property. Depending on the type of Ogg file you play, the pads will
-        be created. We will see that this is very important when you are
-        going to create dynamic pipelines. You can attach a signal handler
-        to an element to inform you when the element has created a new pad
-        from one of its <quote>sometimes</quote> pad templates. The
-        following piece of code is an example of how to do this:
+        Running <application>gst-inspect mpegdemux</application> will show that
+	the element has only one pad: a sink pad called 'sink'. The other pads are 
+	"dormant".  You can see this in the pad template because there is
+        an 'Exists: Sometimes'
+	property. Depending on the type of MPEG file you play, the pads will
+        be created. We
+	will see that this is very important when you are going to create dynamic 
+	pipelines later on in this manual.
       </para> 
-      <programlisting>
-static void
-cb_new_pad (GstElement *element,
-	    GstPad     *pad,
-	    gpointer    data)
-{
-  g_print ("A new pad %s was created\n", gst_pad_get_name (pad));
-
-  /* here, you would setup a new pad link for the newly created pad */
-[..]
-}
-
-int 
-main(int argc, char *argv[]) 
-{
-  GstElement *pipeline, *source, *demux;
-
-  /* init */
-  gst_init (&amp;argc, &amp;argv);
-
-  /* create elements */
-  pipeline = gst_pipeline_new ("my_pipeline");
-  source = gst_element_factory_make ("filesrc", "source");
-  g_object_set (source, "location", argv[1], NULL);
-  demux = gst_element_factory_make ("oggdemux", "demuxer");
-
-  /* you would normally check that the elements were created properly */
-
-  /* put together a pipeline */
-  gst_bin_add_many (GST_BIN (pipeline), source, demux, NULL);
-  gst_element_link (source, demux);
-
-  /* listen for newly created pads */
-  g_signal_connect (demux, "new-pad", G_CALLBACK (cb_new_pad), NULL);
-
-  /* start the pipeline */
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-  while (gst_bin_iterate (GST_BIN (pipeline)));
-
-[..]
-}
-      </programlisting>
     </sect2>
-
     <sect2 id="section-pads-request">
       <title>Request pads</title>
       <para> 
         An element can also have request pads. These pads are not created
         automatically but are only created on demand. This is very useful
-        for multiplexers, aggregators and tee elements. Aggregators are
-        elements that merge the content of several input streams together
-        into one output stream. Tee elements are the reverse: they are
-        elements that have one input stream and copy this stream to each
-        of their output pads, which are created on request. Whenever an
-        application needs another copy of the stream, it can simply request
-        a new output pad from the tee element.
+        for multiplexers, aggregators and tee elements.
       </para> 
       <para> 
-        The following piece of code shows how you can request a new output
-        pad from a <quote>tee</quote> element:
-      </para>
-      <programlisting>
-static void
-some_function (GstElement *tee)
-{
-  GstPad * pad;
-
-  pad = gst_element_get_request_pad (tee, "src%d");
-  g_print ("A new pad %s was created\n", gst_pad_get_name (pad));
-
-  /* here, you would link the pad */
-[..]
-}
-      </programlisting>
-      <para> 
-        The <function>gst_element_get_request_pad ()</function> method
-        can be used to get a pad from the element based on the name of
-        the pad template. It is also possible to request a pad that is
-        compatible with another pad template. This is very useful if
-        you want to link an element to a multiplexer element and you
-        need to request a pad that is compatible. The method
-        <function>gst_element_get_compatible_pad ()</function> can be
-        used to request a compatible pad, as shown in the next example.
-        It will request a compatible pad from an Ogg multiplexer from
-        any input.
+        The tee element, for example, has one input pad and a request padtemplate for the
+	output pads. Whenever an element wants to get an output pad from the tee element, it 
+	has to request the pad.
       </para> 
-      <programlisting>
-static void
-link_to_multiplexer (GstPad     *tolink_pad,
-		     GstElement *mux)
-{
-  GstPad *pad;
-
-  pad = gst_element_get_compatible_pad (mux, tolink_pad);
-  gst_pad_link (tolinkpad, pad);
-
-  g_print ("A new pad %s was created and linked to %s\n",
-	   gst_pad_get_name (pad), gst_pad_get_name (tolink_pad));
-}
-      </programlisting>
     </sect2>
+
   </sect1>
 
   <sect1 id="section-caps">
     <title>Capabilities of a pad</title>
     <para> 
-      Since the pads play a very important role in how the element is
-      viewed by the outside world, a mechanism is implemented to describe
-      the data that can flow or currently flows through the pad by using
-      capabilities. Here,w e will briefly describe what capabilities are
-      and how to use them, enough to get an understanding of the concept.
-      For an in-depth look into capabilities and a list of all capabilities
-      defined in &GStreamer;, see the <ulink type="http"
-      url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/index.html">Plugin
-      Writers Guide</ulink>.
+      Since the pads play a very important role in how the element is viewed by the
+      outside world, a mechanism is implemented to describe the data that can
+      flow through the pad by using capabilities.
     </para>
-    <para>
-      Capabilities are attached to pad templates and to pads. For pad
-      templates, it will describe the types of media that may stream
-      over a pad created from this template. For pads, it can either
-      be a list of possible caps (usually a copy of the pad template's
-      capabilities), in which case the pad is not yet negotiated, or it
-      is the type of media that currently streams over this pad, in
-      which case the pad has been negotiated already.
+    <para> 
+      We will briefly describe what capabilities are, enough for you to get a basic understanding
+      of the concepts. You will find more information on how to create capabilities in the 
+      Plugin Writer's Guide.
     </para>
 
-    <sect2 id="section-caps-structure">
-      <title>Dissecting capabilities</title>
-      <para>
-        A pads capabilities are described in a <classname>GstCaps</classname>
-        object. Internally, a <ulink type="http"
-        url="../../gstreamer/html/gstreamer-GstCaps.html"><classname>GstCaps</classname></ulink>
-        will contain one or more <ulink type="http"
-        url="../../gstreamer/html/gstreamer-GstStructure.html"><classname>GstStructure</classname></ulink>
-        that will describe one media type. A negotiated pad will have
-        capabilities set that contain exactly <emphasis>one</emphasis>
-        structure. Also, this structure will contain only
-        <emphasis>fixed</emphasis> values. These constraints are not
-        true for unnegotiated pads or pad templates.
+    <sect2 id="section-pads-caps">
+      <title>Capabilities</title>
+      <para> 
+        Capabilities are attached to a pad in order to describe
+        what type of media the pad can handle.
+      </para>
+      <para> 
+        Capabilities is shorthand for "capability chain".  A capability chain
+        is a chain of one capability or more.
       </para>
       <para>
-        As an example, below is a dump of the capabilities of the
-        <quote>vorbisdec</quote> element, which you will get by running
-        <command>gst-inspect vorbisdec</command>. You will see two pads:
-        a source and a sink pad. Both of these pads are always available,
-        and both have capabilities attached to them. The sink pad will
-        accept vorbis-encoded audio data, with the mime-type
-        <quote>audio/x-vorbis</quote>. The source pad will be used
-        to send raw (decoded) audio samples to the next element, with
-        a raw audio mime-type (either <quote>audio/x-raw-int</quote> or
-        <quote>audio/x-raw-float</quote>). The source pad will also
-        contain properties for the audio samplerate and the amount of
-        channels, plus some more that you don't need to worry about
-        for now.
+        The basic entity is a capability, and is defined by a name, a MIME
+        type and a set of properties.  A capability can be chained to
+        another capability, which is why we commonly refer to a chain of
+        capability entities as "capabilities".
+        <footnote>
+          <para>
+            It is important to understand that the term "capabilities" refers
+            to a chain of one capability or more.  This will be clearer when
+            you see the structure definition of a <ulink type="http"
+            url="../../gstreamer/html/gstreamer-GstCaps.html"><classname>GstCaps
+            </classname></ulink>element.
+          </para>
+        </footnote>
+      </para>
+      <para> 
+        Below is a dump of the capabilities of the element mad, as shown by 
+	<command>gst-inspect</command>.    
+	You can see two pads: sink and src. Both pads have capability information attached to them.
+      </para>
+      <para> 
+	The sink pad (input pad) is called 'sink' and takes data of MIME type 'audio/mp3'. It also has
+	three properties: layer, bitrate and framed.
+      </para>
+      <para> 
+        The source pad (output pad) is called 'src' and outputs data of
+        MIME type 'audio/raw'. It also has four properties: format, depth,
+        rate and channels.
       </para>
       <programlisting>
-Pad Templates:
-  SRC template: 'src'
-    Availability: Always
-    Capabilities:
-      audio/x-raw-float
-                   rate: [ 8000, 50000 ]
-               channels: [ 1, 2 ]
-             endianness: 1234
-                  width: 32
-          buffer-frames: 0
- 
+Pads:
   SINK template: 'sink'
     Availability: Always
     Capabilities:
-      audio/x-vorbis
+      'mad_sink':
+        MIME type: 'audio/mp3':
+
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      'mad_src':
+        MIME type: 'audio/raw':
+        format: String: int
+        endianness: Integer: 1234
+        width: Integer: 16
+        depth: Integer: 16
+        channels: Integer range: 1 - 2
+        law: Integer: 0
+        signed: Boolean: TRUE
+        rate: Integer range: 11025 - 48000
       </programlisting>
     </sect2>
-
-    <sect2 id="section-caps-props">
-      <title>Properties and values</title>
+    <sect2 id="section-pads-props">
+      <title>What are properties ?</title>
       <para> 
         Properties are used to describe extra information for 
         capabilities. A property consists of a key (a string) and
         a value. There are different possible value types that can be used:
       </para> 
+
       <itemizedlist>
         <listitem>
           <para>
-            Basic types, this can be pretty much any
-            <classname>GType</classname> registered with Glib. Those
-            properties indicate a specific, non-dynamic value for this
-            property. Examples include:
+            basic types:
           </para>
           <itemizedlist>
             <listitem>
               <para>
-                An integer value (<classname>G_TYPE_INT</classname>):
-                the property has this exact value. 
+                an integer value: the property has this exact value. 
               </para>
             </listitem>
             <listitem>
               <para>
-    	        A boolean value (<classname>G_TYPE_BOOLEAN</classname>):
-                the property is either TRUE or FALSE.
+    	        a boolean value: the property is either TRUE or FALSE.
               </para>
             </listitem>
             <listitem>
               <para>
-                A float value (<classname>G_TYPE_FLOAT</classname>):
-                the property has this exact floating point value.
+    	        a fourcc value: this is a value that is commonly used to
+                describe an encoding for video,
+    	        as used for example by the AVI specification.
+                <footnote><para>
+                  fourcc values consist of four bytes.
+                  <ulink url="http://www.fourcc.org" type="http">The FOURCC
+                  Definition List</ulink> is the most complete resource
+                  on the allowed fourcc values.
+                </para></footnote>
               </para>
             </listitem>
             <listitem>
               <para>
-                A string value (<classname>G_TYPE_STRING</classname>):
-                the property contains a UTF-8 string.
+    	        a float value: the property has this exact floating point value.
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+    	        a string value.
               </para>
             </listitem>
           </itemizedlist>
         </listitem>
+
         <listitem>
           <para>
-            Range types are <classname>GType</classname>s registered by
-            &GStreamer; to indicate a range of possible values. They are
-            used for indicating allowed audio samplerate values or
-            supported video sizes. The two types defined in &GStreamer;
-            are:
+            range types:
           </para>
           <itemizedlist>
            <listitem>
               <para>
-                An integer range value
-                (<classname>GST_TYPE_INT_RANGE</classname>): the property
-                denotes a range of possible integers, with a lower and an
-                upper boundary. The <quote>vorbisdec</quote> element, for
-                example, has a rate property that can be between 8000 and
-                50000.
+                an integer range value: the property denotes a range of 
+                possible integers. For example, the wavparse element has
+                a source pad where the "rate" property can go from 8000 to
+                48000.
               </para>
             </listitem>
             <listitem>
               <para>
-    	        A float range value
-                (<classname>GST_TYPE_FLOAT_RANGE</classname>): the property
-                denotes a range of possible floating point values, with a
-                lower and an upper boundary.
+    	        a float range value: the property denotes a range of possible
+                floating point values.
               </para>
             </listitem>
           </itemizedlist>
         </listitem>
         <listitem>
           <para>
-    	    A list value (<classname>GST_TYPE_LIST</classname>): the
-            property can take any value from a list of basic values
-            given in this list.
+    	    a list value: the property can take any value from a list of
+            basic value types or range types.
+          </para>
+        </listitem>
+      </itemizedlist>
+
+    </sect2>
+    <sect2 id="section-pads-caps-use">
+      <title>What capabilities are used for</title>
+      <para> 
+        Capabilities describe in great detail the type of media that is handled by the pads.
+	They are mostly used for:
+      </para> 
+      <itemizedlist>
+        <listitem>
+          <para>
+            Autoplugging: automatically finding plugins for a set of capabilities
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Compatibility detection: when two pads are linked, <application>GStreamer</application>
+	    can verify if the two pads are talking about the same media types.
+            The process of linking two pads and checking if they are compatible
+            is called "caps negotiation".
           </para>
         </listitem>
       </itemizedlist>
     </sect2>
-  </sect1>
-
-  <sect1 id="section-caps-api">
-    <title>What capabilities are used for</title>
-    <para> 
-      Capabilities describe the type of data that is streamed between
-      two pads, or that one pad (template) supports. This makes them
-      very useful for various purposes:
-    </para> 
-    <itemizedlist>
-      <listitem>
-        <para>
-          Autoplugging: automatically finding elements to link to a
-          pad based on its capabilities. All autopluggers use this
-          method.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          Compatibility detection: when two pads are linked, &GStreamer;
-          can verify if the two pads are talking about the same media
-          type. The process of linking two pads and checking if they
-          are compatible is called <quote>caps negotiation</quote>.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          Metadata: by reading the capabilities from a pad, applications
-          can provide information about the type of media that is being
-          streamed over the pad, which is information about the stream
-          thatis currently being played back.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          Filtering: an application can use capabilities to limit the
-          possible media types that can stream between two pads to a
-          specific subset of their supported stream types. An application
-          can, for example, use <quote>filtered caps</quote> to set a
-          specific (non-fixed) video size that will stream between two
-          pads.
-        </para>
-      </listitem>
-    </itemizedlist>
-
-    <sect2 id="section-caps-metadata">
-      <title>Using capabilities for metadata</title>
-      <para> 
-        A pad can have a set (i.e. one or more) of capabilities attached
-        to it. You can get values of properties in a set of capabilities
-        by querying individual properties of one structure. You can get
-        a structure from a caps using
-        <function>gst_caps_get_structure ()</function>:
-      </para>
-      <programlisting>
-static void
-read_video_props (GstCaps *caps)
-{
-  gint width, height;
-  const GstStructure *str;
-
-  str = gst_caps_get_structure (caps);
-  if (!gst_structure_get_int (str, "width", &amp;width) ||
-      !gst_structure_get_int (str, "height", &amp;height)) {
-    g_print ("No width/height available\n");
-    return;
-  }
-
-  g_print ("The video size of this set of capabilities is %dx%d\n",
-	   width, height);
-}
-      </programlisting>
-    </sect2>
-
-    <sect2 id="section-caps-filter">
-      <title>Creating capabilities for filtering</title>
-      <para> 
-        While capabilities are mainly used inside a plugin to describe the
-        media type of the pads, the application programmer also has to have
-        basic understanding of capabilities in order to interface with the
-        plugins, especially when using filtered caps. When you're using
-        filtered caps or fixation, you're limiting the allowed types of
-        media that can stream between two pads to a subset of their supported
-        media types. You do this by filtering using your own set of
-        capabilities. In order to do this, you need to create your own
-        <classname>GstCaps</classname>. The simplest way to do this is by
-        using the convenience function <function>gst_caps_new_simple
-        ()</function>:
-      </para>
-      <programlisting>
-static void
-link_pads_with_filter (GstPad *one,
-		       GstPad *other)
-{
-  GstCaps *caps;
-
-  caps = gst_caps_new_simple ("video/x-raw-yuv",
-			      "width", G_TYPE_INT, 384,
-			      "height", G_TYPE_INT, 288,
-			      "framerate", G_TYPE_DOUBLE, 25.,
-			      NULL);
-  gst_pad_link_filtered (one, other, caps);
-}
-      </programlisting>
-      <para>
-        In some cases, you will want to create a more elaborate set of
-        capabilities to filter a link between two pads. Then, this function
-        is too simplistic and you'll want to use the method
-        <function>gst_caps_new_full ()</function>:
-      </para>
-      <programlisting>
-static void
-link_pads_with_filter (GstPad *one,
-                       GstPad *other)
-{
-  GstCaps *caps;
-                                                                                
-  caps = gst_caps_new_full (
-      gst_structure_new ("video/x-raw-yuv",
-			 "width", G_TYPE_INT, 384,
-			 "height", G_TYPE_INT, 288,
-			 "framerate", G_TYPE_DOUBLE, 25.,
-			 NULL),
-      gst_structure_new ("video/x-raw-rgb",
-			 "width", G_TYPE_INT, 384,
-			 "height", G_TYPE_INT, 288,
-			 "framerate", G_TYPE_DOUBLE, 25.,
-			 NULL),
-      NULL);
-
-  gst_pad_link_filtered (one, other, caps);
-}
-      </programlisting>
-      <para>
-        See the API references for the full API of
-        <classname>GstStructure</classname> and
-        <classname>GstCaps</classname>.
-      </para>
-    </sect2>
-  </sect1>
-
-  <sect1 id="section-pads-ghost">
-    <title>Ghost pads</title>
-    <para>
-      You can see from <xref linkend="section-bin-noghost-img"/> how a bin
-      has no pads of its own. This is where "ghost pads" come into play.
-    </para>
-    <figure float="1" id="section-bin-noghost-img">
-      <title>Visualisation of a <ulink type="http"
-      url="../../gstreamer/html/GstBin.html"><classname>GstBin</classname></ulink>
-      element without ghost pads</title>
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/bin-element-noghost.&image;"
-          format="&IMAGE;"/>
-        </imageobject>
-      </mediaobject>  
-    </figure>
-    <para>
-      A ghost pad is a pad from some element in the bin that can be
-      accessed directly from the bin as well. Compare it to a symbolic
-      link in UNIX filesystems. Using ghost pads on bins, the bin also
-      has a pad and can transparently be used as an element in other
-      parts of your code.
-    </para>
-    
-    <figure float="1" id="section-bin-ghost-img">
-      <title>Visualisation of a <ulink type="http"
-      url="../../gstreamer/html/GstBin.html"><classname>GstBin</classname></ulink>
-      element with a ghost pad</title>
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/bin-element-ghost.&image;"
-          format="&IMAGE;"/>
-        </imageobject>
-      </mediaobject>  
-    </figure>
-    <para>
-      <xref linkend="section-bin-ghost-img"/> is a representation of a
-      ghost pad. The sink pad of element one is now also a pad of the bin.
-      Obviously, ghost pads can be added to any type of elements, not just
-      to a <classname>GstBin</classname>.
-    </para>
-    <para>
-      A ghostpad is created using the function
-      <function>gst_element_add_ghost_pad ()</function>:
-    </para>
-    <programlisting>
-int
-main (int   argc,
-      char *argv[])
-{
-  GstElement *bin, *sink;
-
-  /* init */
-  gst_init (&amp;argc, &amp;argv);
-
-  /* create element, add to bin, add ghostpad */
-  sink = gst_element_factory_make ("fakesink", "sink");
-  bin = gst_bin_new ("mybin");
-  gst_bin_add (GST_BIN (bin), sink);
-  gst_element_add_ghost_pad (bin,
-      gst_element_get_pad (sink, "sink"), "sink");
-
-[..]
-}
-    </programlisting>
-    <para>
-      In the above example, the bin now also has a pad: the pad called
-      <quote>sink</quote> of the given element. The bin can, from here
-      on, be used as a substitute for the sink element. You could, for
-      example, link another element to the bin.
-    </para>
   </sect1>
 </chapter>
