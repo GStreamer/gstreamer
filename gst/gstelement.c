@@ -670,7 +670,7 @@ gst_element_load_thyself (xmlNodePtr parent,
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (type != NULL, NULL);
 
-  INFO(0,NULL,"loading \"%s\" of type \"%s\"\n", name, type);
+  INFO(GST_INFO_XML,"loading \"%s\" of type \"%s\"\n", name, type);
 
   element = gst_elementfactory_make (type, name);
 

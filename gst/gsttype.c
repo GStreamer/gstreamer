@@ -27,8 +27,6 @@
  * I'm not overly worried yet...
  */
 
-#include <string.h>
-
 #include "gst_private.h"
 
 #include "gsttype.h"

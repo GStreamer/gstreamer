@@ -20,7 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 /* this file makes too much noise for most debugging sessions */
 #define GST_DEBUG_FORCE_DISABLE
 #include "gst_private.h"
@@ -50,7 +49,7 @@ gst_buffer_new(void)
   GstBuffer *buffer;
 
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
-  DEBUG("allocating new buffer %p\n",buffer);
+  INFO(GST_INFO_BUFFER,"creating new buffer %p",buffer);
 
 //  g_print("allocating new mutex\n");
   buffer->lock = g_mutex_new ();
@@ -109,7 +108,7 @@ gst_buffer_create_sub (GstBuffer *parent,
   g_return_val_if_fail ((offset+size) <= parent->size, NULL);
 
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
-  DEBUG("allocating new subbuffer %p, parent %p\n", buffer, parent);
+  INFO(GST_INFO_BUFFER,"creating new subbuffer %p from parent %p", buffer, parent);
 
   buffer->lock = g_mutex_new ();
 #ifdef HAVE_ATOMIC_H
@@ -164,6 +163,8 @@ gst_buffer_append (GstBuffer *buffer,
   g_return_val_if_fail (append != NULL, NULL);
   g_return_val_if_fail (buffer->pool == NULL, NULL);
 
+  INFO(GST_INFO_BUFFER,"appending buffers %p and %p",buffer,append);
+
   GST_BUFFER_LOCK (buffer);
   // the buffer is not used by anyone else
   if (GST_BUFFER_REFCOUNT (buffer) == 1 && buffer->parent == NULL 
@@ -201,12 +202,7 @@ void gst_buffer_destroy (GstBuffer *buffer)
 
   g_return_if_fail (buffer != NULL);
 
-  if (buffer->parent != NULL) {
-    DEBUG("freeing subbuffer %p\n", buffer);
-  }
-  else {
-    DEBUG("freeing buffer %p\n", buffer);
-  }
+  INFO(GST_INFO_BUFFER,"freeing %sbuffer %p", (buffer->parent?"sub":""),buffer);
 
   // free the data only if there is some, DONTFREE isn't set, and not sub
   if (GST_BUFFER_DATA (buffer) &&

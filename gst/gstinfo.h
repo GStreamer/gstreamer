@@ -31,6 +31,8 @@
 #include <config.h>
 #endif
 
+#include "cothreads.h"
+
 
 /**********************************************************************
  * DEBUG system
@@ -166,28 +168,57 @@ G_GNUC_UNUSED static GModule *_debug_self_module = NULL;
  * INFO system
  **********************************************************************/
 
-typedef void (*GstInfoHandler) (gint level,gchar *file,gchar *function,
+typedef void (*GstInfoHandler) (gint category,gchar *file,gchar *function,
                                 gint line,gchar *debug_string,
                                 void *element,gchar *string);
 
-void gst_default_info_handler (gint level,gchar *file,gchar *function,
+void gst_default_info_handler (gint category,gchar *file,gchar *function,
                                gint line,gchar *debug_string,
                                void *element,gchar *string);
 
 extern GstInfoHandler _gst_info_handler;
+extern guint32 _gst_info_categories;
 
 
-#define INFO(lvl,format,args...) \
-  _gst_info_handler(lvl,__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
-                    NULL,g_strdup_printf( format , ## args ))
+#define INFO(cat,format,args...) G_STMT_START{ \
+  if ((1<<cat) & _gst_info_categories) \
+    _gst_info_handler(cat,__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
+                      NULL,g_strdup_printf( format , ## args )); \
+}G_STMT_END
 
-#define INFO_ELEMENT(lvl,element,object,format,args...) \
-  _gst_info_handler(lvl,__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
-                    element,g_strdup_printf( format , ## args ))
+#define INFO_ELEMENT(cat,element,format,args...) G_STMT_START{ \
+  if ((1<<cat) & _gst_info_categories) \
+    _gst_info_handler(cat,__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
+                      element,g_strdup_printf( format , ## args )); \
+}G_STMT_END
 
 
-#define GST_INFO_PLUGIN_LOAD 0
-
+//#define GST_INFO_PLUGIN_LOAD 0
+enum {
+  GST_INFO_GST_INIT = 0,	// Library initialization
+  GST_INFO_COTHREADS,		// Cothread creation, etc.
+  GST_INFO_COTHREAD_SWITCH,	// Cothread switching
+  GST_INFO_AUTOPLUG,		// Successful autoplug results
+  GST_INFO_AUTOPLUG_ATTEMPT,	// Attempted autoplug operations
+  GST_INFO_PARENTAGE,		// GstBin parentage issues
+  GST_INFO_STATES,		// State changes and such
+  GST_INFO_PLANNING,		// Plan generation
+  GST_INFO_SCHEDULING,		// Schedule construction
+  GST_INFO_OPERATION,		// Events during actual data movement
+  GST_INFO_BUFFER,		// Buffer creation/destruction
+  GST_INFO_CAPS,		// Capabilities matching
+  GST_INFO_CLOCK,		// Clocking
+  GST_INFO_ELEMENT_PADS,	// Element pad management
+  GST_INFO_ELEMENTFACTORY,	// Elementfactory stuff
+  GST_INFO_PADS,		// Pad creation/connection
+  GST_INFO_PIPELINE,		// Pipeline stuff
+  GST_INFO_PLUGIN_LOADING,	// Plugin loading
+  GST_INFO_PLUGIN_ERRORS,	// Errors during plugin loading
+  GST_INFO_PROPERTIES,		// Properties
+  GST_INFO_THREAD,		// Thread creation/management
+  GST_INFO_TYPES,		// Typing
+  GST_INFO_XML,			// XML load/save of everything
+};
 
 
 
@@ -214,8 +245,6 @@ extern GstErrorHandler _gst_error_handler;
   _gst_error_handler(__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
                      element,object,g_strdup_printf( format , ## args ))
 
-
-#define GST_ERROR_PLUGIN_LOAD 0
 
 
 #endif /* __GSTINFO_H__ */

@@ -20,8 +20,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "gst_private.h"
 #include "gst.h"
-
 
 extern gchar *_gst_progname;
 
@@ -33,26 +33,53 @@ GHashTable *__gst_function_pointers = NULL;
 
 /***** INFO system *****/
 GstInfoHandler _gst_info_handler = gst_default_info_handler;
+guint32 _gst_info_categories = 0xffffffff;
+
+static gchar *_gst_info_category_strings[] = {
+  "GST_INIT",
+  "COTHREADS",
+  "COTHREAD_SWITCH",
+  "AUTOPLUG",
+  "AUTOPLUG_ATTEMPT",
+  "PARENTAGE",
+  "STATES",
+  "PLANING",
+  "SCHEDULING",
+  "OPERATION",
+  "BUFFER",
+  "CAPS",
+  "CLOCK",
+  "ELEMENT_PADS",
+  "ELEMENTFACTORY",
+  "PADS",
+  "PIPELINE",
+  "PLUGIN_LOADING",
+  "PLUGIN_ERRORS",
+  "PROPERTIES",
+  "THREAD",
+  "TYPES",
+  "XML",
+};
 
 void
-gst_default_info_handler (gint level, gchar *file, gchar *function,
+gst_default_info_handler (gint category, gchar *file, gchar *function,
                            gint line, gchar *debug_string,
                            void *element, gchar *string)
 {
   if (element) {
     if (debug_string)
-      fprintf(stderr,"INFO:%d:%s:%d%s: [%s] %s\n",
-              level,function,line,debug_string,gst_element_get_name(element),string);
+      fprintf(stderr,"INFO:%s:%d%s: [%s] %s\n",
+              function,line,debug_string,gst_element_get_name(element),string);
      else
-      fprintf(stderr,"INFO:%d:%s:%d: [%s] %s\n",
-              level,function,line,gst_element_get_name(element),string);
+      fprintf(stderr,"INFO:%s:%d: [%s] %s\n",
+              function,line,gst_element_get_name(element),string);
   } else {
     if (debug_string)
-      fprintf(stderr,"INFO:%d:%s:%d%s: %s\n",
-              level,function,line,debug_string,string);
+      fprintf(stderr,"INFO:%s:%d%s: %s\n",
+              function,line,debug_string,string);
     else
-      fprintf(stderr,"INFO:%d:%s:%d: %s\n",
-              level,function,line,string);
+      fprintf(stderr,"INFO:%s:%d: %s\n",
+              function,line,string);
   }
 
   g_free(string);
@@ -141,8 +168,6 @@ gst_default_error_handler (gchar *file, gchar *function,
                            void *element, void *object, gchar *string)
 {
   int chars = 0;
-  GSList *parentage;
-  GstObject *parent;
   gchar *path;
   int i;
 

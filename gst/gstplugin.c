@@ -24,7 +24,6 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
-#include <string.h>
 
 //#define GST_DEBUG_ENABLED
 #include "gst_private.h"
@@ -411,7 +410,7 @@ gst_plugin_load_elementfactory (gchar *name)
           gchar *filename = g_strdup (plugin->filename);
 	  gchar *pluginname = g_strdup (plugin->name);
 	  
-          INFO("loaded elementfactory %s from plugin %s",name,plugin->name);
+          INFO(GST_INFO_PLUGIN_LOADING,"loaded elementfactory %s from plugin %s",name,plugin->name);
 	  gst_plugin_remove(plugin);
 	  if (!gst_plugin_load_absolute(filename)) {
 	    DEBUG("gstplugin: error loading element factory %s from plugin %s\n", name, pluginname);
@@ -458,7 +457,7 @@ gst_plugin_load_typefactory (gchar *mime)
           gchar *filename = g_strdup (plugin->filename);
 	  gchar *pluginname = g_strdup (plugin->name);
 	  
-          INFO(GST_INFO_PLUGIN_LOAD,"loading type factory for \"%s\" from plugin %s",mime,plugin->name);
+          INFO(GST_INFO_PLUGIN_LOADING,"loading type factory for \"%s\" from plugin %s",mime,plugin->name);
 	  gst_plugin_remove(plugin);
 	  if (!gst_plugin_load_absolute(filename)) {
 	    DEBUG("gstplugin: error loading type factory \"%s\" from plugin %s\n", mime, pluginname);
@@ -630,6 +629,6 @@ gst_plugin_load_thyself (xmlNodePtr parent)
     kinderen = kinderen->next;
   }
 //  DEBUG("gstplugin: added %d registered factories and %d types\n", elementcount, typecount);
-  INFO(GST_INFO_PLUGIN_LOAD,"added %d registered factories and %d types",elementcount,typecount);
+  INFO(GST_INFO_PLUGIN_LOADING,"added %d registered factories and %d types",elementcount,typecount);
 }
 

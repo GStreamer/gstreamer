@@ -175,6 +175,8 @@ gst_bin_add (GstBin *bin,
   bin->numchildren++;
   gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
 
+  INFO_ELEMENT (GST_INFO_PARENTAGE, bin, "added child %s", gst_element_get_name(element));
+
   /* we know we have at least one child, we just added one... */
 //  if (GST_STATE(element) < GST_STATE_READY)
 //    gst_bin_change_state_norecurse(bin,GST_STATE_READY);
@@ -203,9 +205,17 @@ gst_bin_remove (GstBin *bin,
   g_return_if_fail ((GST_STATE (bin) == GST_STATE_NULL) ||
 		    (GST_STATE (bin) == GST_STATE_PAUSED));
 
+  if (g_list_find(bin->children, element) == NULL) {
+    // FIXME this should be a warning!!!
+    ERROR_OBJECT(bin,element,"no such element in bin");
+    return;
+  }
+
   gst_object_unparent (GST_OBJECT (element));
   bin->children = g_list_remove (bin->children, element);
   bin->numchildren--;
+
+  INFO_ELEMENT (GST_INFO_PARENTAGE, bin, "removed child %s", gst_element_get_name(element));
 
   /* if we're down to zero children, force state to NULL */
   if (bin->numchildren == 0)
@@ -226,9 +236,13 @@ gst_bin_change_state (GstElement *element)
 
   bin = GST_BIN (element);
 
-  DEBUG("currently %d(%s), %d(%s) pending\n", GST_STATE (element),
-          _gst_print_statename (GST_STATE (element)), GST_STATE_PENDING (element),
-          _gst_print_statename (GST_STATE_PENDING (element)));
+//  DEBUG("currently %d(%s), %d(%s) pending\n",GST_STATE (element),
+//          _gst_print_statename (GST_STATE (element)), GST_STATE_PENDING (element),
+//          _gst_print_statename (GST_STATE_PENDING (element)));
+
+  INFO_ELEMENT (GST_INFO_STATES, element, "changing bin's state from %s to %s",
+                _gst_print_statename (GST_STATE (element)),
+                _gst_print_statename (GST_STATE_PENDING (element)));
 
 //  g_return_val_if_fail(bin->numchildren != 0, GST_STATE_FAILURE);
 
@@ -386,9 +400,8 @@ gst_bin_get_by_name (GstBin *bin,
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  g_print("gstbin: lookup element \"%s\" in \"%s\"\n", name, 
-		  gst_element_get_name (GST_ELEMENT (bin)));
-  
+  INFO_ELEMENT (GST_INFO_PARENTAGE, bin, "looking up child element %s", name);
+
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
@@ -436,6 +449,8 @@ gst_bin_save_thyself (GstElement *element,
 
   childlist = xmlNewChild (parent,NULL,"children",NULL);
 
+  INFO_ELEMENT (GST_INFO_XML, bin, "saving %d children", bin->numchildren);
+
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
@@ -454,10 +469,11 @@ gst_bin_restore_thyself (GstElement *element,
   xmlNodePtr field = parent->childs;
   xmlNodePtr childlist;
 
-  g_print("gstbin: restore \"%s\"\n", gst_element_get_name (element));
+//  g_print("gstbin: restore \"%s\"\n", gst_element_get_name (element));
 
   while (field) {
     if (!strcmp (field->name, "children")) {
+      INFO_ELEMENT (GST_INFO_XML, element, "loading children");
       childlist = field->childs;
       while (childlist) {
         if (!strcmp (childlist->name, "element")) {
@@ -556,6 +572,8 @@ gst_bin_create_plan_func (GstBin *bin)
 
   DEBUG_SET_STRING("(\"%s\")",gst_element_get_name (GST_ELEMENT (bin)));
   DEBUG_ENTER_STRING;
+
+  INFO_ELEMENT (GST_INFO_PLANNING, bin, "creating plan");
 
   // first figure out which element is the manager of this and all child elements
   // if we're a managing bin ourselves, that'd be us

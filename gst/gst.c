@@ -52,6 +52,8 @@ gst_init (int *argc, char **argv[])
 {
   GstTrace *gst_trace;
 
+  INFO (GST_INFO_GST_INIT, "Initializing GStreamer Core Library\n");
+
   if (!g_thread_supported ()) g_thread_init (NULL);
 
   _gst_progname = g_strdup(*argv[0]);

@@ -20,7 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 //#define GST_DEBUG_ENABLED
 #include "gst_private.h"
 
@@ -116,7 +115,7 @@ gst_pad_init (GstPad *pad)
   pad->getregionfunc = NULL;
   pad->qosfunc = NULL;
 
-  pad->pushfunc = NULL; //GST_DEBUG_FUNCPTR(gst_pad_push_func);
+  pad->pushfunc = GST_DEBUG_FUNCPTR(gst_pad_push_func);
   pad->pullfunc = NULL;
   pad->pullregionfunc = NULL;
 
