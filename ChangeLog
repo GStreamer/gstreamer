@@ -1,3 +1,8 @@
+2005-03-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	  Add MPEG-4 audio for debugging.
+
 2005-02-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_link):
@@ -24,16 +29,6 @@
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
 	  Don´t SIGFPE right away.
-
-2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
-
-	reviewed by: <delete if not using a buddy>
-
-	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_lowres_get_type),
-	(gst_ffmpegdec_skipframe_get_type), (gst_ffmpegdec_class_init),
-	(gst_ffmpegdec_init), (gst_ffmpegdec_connect),
-	(gst_ffmpegdec_frame), (gst_ffmpegdec_set_property),
-	(gst_ffmpegdec_get_property):
 
 2005-01-31  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 

@@ -403,9 +403,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_AAC:
     case CODEC_ID_MPEG4AAC:
-      /* ffmpeg uses libfaac/libfaad for those. We do not ship these as
-       * part of ffmpeg, so defining those is useless. Besides, we have
-       * our own faad/faac plugins. */
+      caps = GST_FF_AUD_CAPS_NEW ("audio/mpeg",
+          "mpegversion", G_TYPE_INT, 4, NULL);
       break;
 
     case CODEC_ID_ASV1:
