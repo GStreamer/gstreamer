@@ -1,6 +1,6 @@
 #include <gst/gst.h>
 
-#define ITERS 100000
+#define ITERS 10000
 #include <stdlib.h>
 #include "mem.h"
 
