@@ -1,5 +1,12 @@
 2003-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstplugin.c:
+	* gst/gstversion.h.in:
+	* gst/parse/grammar.y:
+          change comment block from /** to /* when not gtk-doc comments
+
+2003-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
         * gst/gst.c: whitespace and doc style fixes
 
 2003-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>

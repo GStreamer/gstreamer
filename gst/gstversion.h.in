@@ -24,10 +24,10 @@
 #ifndef __GST_VERSION_H__
 #define __GST_VERSION_H__
 
-/**
+/*
  * Use these only when you want to know what GStreamer version your stuff was
  * compiled against.
- * Use the #gst_version function if you want to know which versiuon of 
+ * Use the #gst_version function if you want to know which version of 
  * GStreamer you are currently linked against.
  */
 #define GST_VERSION_MAJOR (@GST_VERSION_MAJOR@)

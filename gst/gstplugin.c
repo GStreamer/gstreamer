@@ -205,7 +205,7 @@ gst_plugin_register_func (GstPlugin *plugin, GModule *module, GstPluginDesc *des
   return plugin;
 }
 
-/**
+/*
  * _gst_plugin_fault_handler_restore:
  * segfault handler restorer
  */
@@ -220,7 +220,7 @@ _gst_plugin_fault_handler_restore (void)
   sigaction (SIGSEGV, &action, NULL);
 }
 
-/**
+/*
  * _gst_plugin_fault_handler_sighandler:
  * segfault handler implementation
  */
@@ -247,7 +247,7 @@ _gst_plugin_fault_handler_sighandler (int signum)
   }
 }
 
-/**
+/*
  * _gst_plugin_fault_handler_setup:
  * sets up the segfault handler
  */
