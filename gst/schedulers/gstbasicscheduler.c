@@ -320,7 +320,7 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
 
       realpad = GST_REAL_PAD_CAST (pad);
 
-      if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SINK) {
+      if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SINK && GST_PAD_IS_USABLE (realpad)) {
 	GstBuffer *buf;
 
 	GST_DEBUG (GST_CAT_DATAFLOW, "pulling data from %s:%s", name, GST_PAD_NAME (pad));
@@ -376,7 +376,7 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
       realpad = GST_REAL_PAD_CAST (pads->data);
 
       pads = g_list_next (pads);
-      if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SRC) {
+      if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SRC && GST_PAD_IS_USABLE (realpad)) {
 	GST_DEBUG (GST_CAT_DATAFLOW, "calling _getfunc for %s:%s", GST_DEBUG_PAD_NAME (realpad));
 	g_return_val_if_fail (GST_RPAD_GETFUNC (realpad) != NULL, 0);
 	buf = GST_RPAD_GETFUNC (realpad) (GST_PAD_CAST (realpad));
