@@ -96,6 +96,7 @@ enum
 {
   ARG_0,
   ARG_LOCATION,
+  ARG_DEVICE,
   ARG_TITLE,
   ARG_CHAPTER,
   ARG_ANGLE
@@ -188,8 +189,12 @@ dvdreadsrc_class_init (DVDReadSrcClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
-      g_param_spec_string ("location", "location", "location",
+      g_param_spec_string ("location", "Location",
+          "DVD device location (deprecated; use device)",
           NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE,
+      g_param_spec_string ("device", "Device",
+          "DVD device location", NULL, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TITLE,
       g_param_spec_int ("title", "title", "title",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
@@ -229,7 +234,7 @@ dvdreadsrc_init (DVDReadSrc * dvdreadsrc)
       dvdreadsrc_get_formats);
   gst_element_add_pad (GST_ELEMENT (dvdreadsrc), dvdreadsrc->priv->srcpad);
 
-  dvdreadsrc->priv->location = g_strdup ("/dev/cdrom");
+  dvdreadsrc->priv->location = g_strdup ("/dev/dvd");
   dvdreadsrc->priv->new_seek = TRUE;
   dvdreadsrc->priv->new_cell = TRUE;
   dvdreadsrc->priv->title = 0;
@@ -269,11 +274,11 @@ dvdreadsrc_set_property (GObject * object, guint prop_id, const GValue * value,
 
   switch (prop_id) {
     case ARG_LOCATION:
+    case ARG_DEVICE:
       /* the element must be stopped in order to do this */
       /*g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
 
-      if (priv->location)
-        g_free (priv->location);
+      g_free (priv->location);
       /* clear the filename if we get a NULL (is that possible?) */
       if (g_value_get_string (value) == NULL)
         priv->location = g_strdup ("/dev/dvd");
@@ -313,6 +318,7 @@ dvdreadsrc_get_property (GObject * object, guint prop_id, GValue * value,
   priv = src->priv;
 
   switch (prop_id) {
+    case ARG_DEVICE:
     case ARG_LOCATION:
       g_value_set_string (value, priv->location);
       break;
