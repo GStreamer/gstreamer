@@ -31,8 +31,10 @@ HFILE_GLOB=$(DOC_SOURCE_DIR)/*.h
 CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
 
 # this is a wingo addition
+# thomasvs: another nice wingo addition would be an explanation on why
+# this is useful ;)
 SCANOBJ_DEPS = $(top_builddir)/gst/elements/libgstelements.la \
-	$(top_builddir)/gst/schedulers/libgstbasicscheduler.la
+	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
 
 # Header files to ignore when scanning.
 IGNORE_HFILES=
