@@ -1,3 +1,9 @@
+2004-07-27  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xwindow_decorate):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xwindow_decorate): When
+	the atom is not available we have to unlock the mutex. Fixes #148023
+
 2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* gst-libs/gst/media-info/media-info.h:
