@@ -1,0 +1,162 @@
+Packaging guidelines for GStreamer
+----------------------------------
+
+Here are some guidelines for people trying to package GStreamer.
+
+VERSIONS
+--------
+
+First of all, there are two concepts of version in GStreamer.
+The first is the source package version; it is either of the form
+x.y.z or x.y.z.n
+
+x is the major number, y is the minor number, z is the micro number, and
+n (if it exists) is the nano number.
+
+In the first case, it is an official release of GStreamer.
+In the second case, it is a cvs version tarball if n == 1, and a prerelease
+for the next version if n > 1.
+
+Source releases where y is even are considered "stable", and source releases
+where y is uneven are considered "unstable" or "development".  This is similar
+to a lot of projects, including GLib and the kernel.
+
+The second version is an "interface" version, used in versioning tools, the
+library name, packages, GConf install paths, registry locations, and so on.
+It is of the form x.y
+Commonly, it is refered to as the "major/minor" number of GStreamer.
+In most cases it is the same as the one used in the source version; only
+when we are doing release candidates for a new major/minor source version do
+we manually force the major/minor to be the same as the one for the next
+new version.  This is done to shake out bugs that can arise due to this change
+before we do an actual x.y.0 release.
+
+PARALLEL INSTALLABILITY
+-----------------------
+Versions of GStreamer with a different "interface" or major/minor version are
+supposed to be parallel-installable.  If they're not then it's considered to
+be a bug.
+
+There are parallel-installable versions from the 0.6 set and onwards.
+
+In practice, this means that
+- libraries contain the major/minor version in their name
+- plugins are installed in a major/minor-versioned directory
+- include headers are installed in separate directories
+- registry is saved in major/minor-versioned locations
+- major/minor-versioned tools are installed, together with versioned man pages
+- non-versioned front-end tools are also installed, that call the
+  versioned ones, and only depend on glib and popt.
+
+So, all parts of GStreamer are parallel-installable, EXCEPT for the
+non-versioned tools and man pages.  However, only one of these sets needs
+to be present, and preferably the latest source version of them.
+
+PACKAGING
+---------
+To make packages of different major/minor versions parallel installable, the
+important part is to separate the package of the nonversioned tools and
+man pages, and make them usable for all the GStreamer library packages.
+
+We recommend putting the versioned binaries and man pages in the same package
+as the base GStreamer library.
+
+The base GStreamer library should require a version of the non-versioned tools,
+so that users can expect the non-versioned tools to be present in all cases,
+and our documentation agrees with the install.
+
+As for package names, we recommend the following system:
+
+- "gstreamer" as the base name should be used for the latest stable version
+  of GStreamer.
+- "gstreamerxy" should be used for all other versions (older stable version,
+  as well as current development version)
+
+As an example:
+  - 0.7 is current development version, and 0.6 is latest stable version:
+  "gstreamer" for 0.6 and "gstreamer07" for 0.7
+  - 0.8.0 gets released:
+  "gstreamer06" for 0.6, "gstreamer07" is kept for 0.7, and
+  "gstreamer" for 0.8, where:
+    - the 0.8 "gstreamer" package can now obsolete the 0.7 package
+    - the 0.6 "gstreamer06" package can obsolete previous "gstreamer" packages
+      with lower version/release
+
+This ensures that users who just want the latest stable version of GStreamer
+can just install the "gstreamer"-named set of packages, while automatic
+tools can still upgrade cleanly, maintaining compatibility for applications
+requiring older versions.
+
+This base named should be used for all GStreamer packages;
+for example gstreamer07-plugins is a package of plugins to work with
+the gstreamer07 base library package.
+
+SPLITTING OF PLUGIN PACKAGES
+----------------------------
+Since GStreamer can depend on, but isn't forced to depend on, more than
+40 additional libraries, choosing how to package these is a challenge
+compared to other projects.
+
+Three approaches have been used in the past.  One was "one package per
+dependency library", so that users could choose exactly what functionality
+they want installed.
+A second one was "split according to functionality".  This is more arbitrary.
+A third one, used by some distributors, is "put everything we want to ship
+in one big package".
+
+Packagers seem to agree that the first approach is too hard and users do not
+care this much about fine-grained control.
+We decided on a mix of 2) and 3); preferring to follow the base distribution's
+decision for the base -plugins package, then creating additional packages
+based on functionality.
+
+Plugins are put in -audio, -video, -dvd and -alsa packages.  Also, some
+plugins are put in -extras- packages because they are distributed from a
+different location, are not as well maintained, have other issues, ...
+
+In the case of Fedora, for example, mp3 plugins are shipped in -extras-audio,
+and distributed on FreshRPMS or rpm.livna.org
+For Mandrake, for example, they would be shipped from PLF.
+
+Now, to make sure other packages can require functionality they need,
+virtual provides are added for plugin packages, combining the base gstreamer
+name with the name of the actual GStreamer plugin.
+
+Assuming 0.7, and the mad plugin, the package "gstreamer07-plugins-extra-audio"
+would virtual-provide "gstreamer07-mad".  It would contain the file
+libgstmad.so in the correct directory.
+
+PACKAGING TIPS FOR RPMS
+-----------------------
+* use a define for the base package name for all GStreamer spec files:
+%define         gstreamer       gstreamer07
+* use a define for the major/minor version of the package:
+%define		majorminor	0.7
+
+This ensures you can easily migrate your spec files when a new major/minor
+version is released.
+
+* always use the correctly versioned gst-register-x.y tool in post scripts
+  that install plugins.
+  It helps to create a define for this as well:
+%define         register        %{_bindir}/gst-register-%{majorminor} > /dev/null 2>&1
+
+* make each package that installs plugins have (pre) and (post) requires
+  on the versioned register binary
+
+* make each package that installs plugins have a requires on the corresponding
+  base plugins package
+
+* make sure that the nonversioned tools and man pages are put in a package
+  that is named "gstreamer-tools" no matter what the major/minor version is.
+  This way, the latest version of this package can be used for all previous
+  major/minor packages.  If you do not want this package twice, with different
+  versions, then write your spec so that you don't package the tools for
+  previous versions, and only for the latest version.
+
+* applications that require specific plugins to function should require
+  the correct -plugins package, as well as any additional virtual provides
+  they need to pull in.
+
+* stable releases can obsolete: the previous development releases to ensure
+  they get removed when installing the new stable version.
