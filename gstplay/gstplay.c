@@ -187,7 +187,7 @@ gst_play_init (GstPlay *play)
 				   "sink");
 	}
 	else {
-	  GST_FLAG_SET (priv->video_element, GST_ELEMENT_THREAD_SUGGESTED);
+	  //GST_FLAG_SET (priv->video_element, GST_ELEMENT_THREAD_SUGGESTED);
 	  gst_bin_add (GST_BIN (priv->video_element), colorspace);
 	  gst_element_connect (colorspace, "src", priv->video_show, "sink");
 	  gst_element_add_ghost_pad (priv->video_element, 
