@@ -94,7 +94,7 @@ $(BUILDDIR)/$(MAIN): $(XML) $(CSS)
 html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
 	@echo "*** Generating HTML output ***"
 	@-mkdir -p html
-	@cp $(srcdir)/../image-png $(BUILDDIR)/image.entities
+	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
 	@cd $(BUILDDIR) && xmlto html -o ../html $(MAIN)
 	@test "x$(CSS)" != "x" && \
           echo "Copying .css files: $(CSS)" && \
@@ -106,8 +106,9 @@ html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
 
 $(DOC).ps: $(BUILDDIR)/$(MAIN) $(EPS_BUILT) $(PNG_SRC) $(FIG_SRC)
 	@echo "*** Generating PS output ***"
-	@cp $(srcdir)/../image-eps $(BUILDDIR)/image.entities
-	export LC_PAPER=$(PAPER_LOCALE) && cd $(BUILDDIR) && xmlto ps -o .. $(MAIN)
+	@cp -f $(srcdir)/../image-eps $(BUILDDIR)/image.entities
+	cd $(BUILDDIR) && docbook2ps -o .. $(MAIN)
+#	export LC_PAPER=$(PAPER_LOCALE) && cd $(BUILDDIR) && xmlto ps -o .. $(MAIN)
 
 $(DOC).pdf: $(DOC).ps
 	@echo "*** Generating PDF output ***"
@@ -115,7 +116,7 @@ $(DOC).pdf: $(DOC).ps
 
 #$(DOC).pdf: $(MAIN) $(PDF) $(FIG_SRC)
 #	@echo "*** Generating PDF output ***"
-#	@cp $(srcdir)/../image-pdf image.entities
+#	@cp -f $(srcdir)/../image-pdf image.entities
 #	@export LC_PAPER=$(PAPER_LOCALE) && xmlto pdf $(MAIN)
 #	@rm image.entities
 
