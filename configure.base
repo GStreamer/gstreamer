@@ -307,13 +307,13 @@ GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
 
 dnl Check for alsa
 GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
-  HAVE_ALSA=yes
   AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
-  if test x$HAVE_ALSA = xno; then
-    ALSA_CFLAGS=
-    ALSA_LIBS=
-  fi
 ])
+if test x$HAVE_ALSA = xno; then
+  unset USE_ALSA
+  ALSA_CFLAGS=
+  ALSA_LIBS=
+fi
 
 dnl Check for libaudiofile
 GST_CHECK_FEATURE(LIBAUDIOFILE, [use gdk pixbuf], afsink afsrc, [
