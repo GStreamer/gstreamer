@@ -36,11 +36,7 @@ struct _GstMemChunkElement
 
 struct _GstMemChunk
 {
-#if 0
-  volatile GstMemChunkElement *free;	/* the first free element */
-  volatile gulong cnt;			/* used to avoid ABA problem */
-#endif
-  GstAtomicSwap	swap;
+  GstAtomicSwap	 swap;
 
   gchar 	*name;
   gulong 	 area_size;

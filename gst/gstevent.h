@@ -64,11 +64,21 @@ extern GType _gst_event_type;
 #define GST_SEEK_METHOD_MASK	0x000f0000
 #define GST_SEEK_FLAGS_MASK	0xfff00000
 
-/* seek events */
 typedef enum {
-  GST_SEEK_METHOD_CUR		= (1 << GST_SEEK_METHOD_SHIFT),
-  GST_SEEK_METHOD_SET		= (2 << GST_SEEK_METHOD_SHIFT),
-  GST_SEEK_METHOD_END		= (3 << GST_SEEK_METHOD_SHIFT),
+  GST_EVENT_FLAG_NONE = 0
+} GstEventFlag;
+
+typedef struct
+{
+  GstEventType 	type;
+  GstEventFlag 	flags;
+} GstEventMask;
+
+/* seek events, extends GstEventFlag */
+typedef enum {
+  GST_SEEK_METHOD_CUR		= (1 << (GST_SEEK_METHOD_SHIFT + 0)),
+  GST_SEEK_METHOD_SET		= (1 << (GST_SEEK_METHOD_SHIFT + 1)),
+  GST_SEEK_METHOD_END		= (1 << (GST_SEEK_METHOD_SHIFT + 2)),
 
   GST_SEEK_FLAG_FLUSH		= (1 << (GST_SEEK_FLAGS_SHIFT + 0)),
   GST_SEEK_FLAG_ACCURATE	= (1 << (GST_SEEK_FLAGS_SHIFT + 1)),
