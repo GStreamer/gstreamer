@@ -301,7 +301,7 @@ gst_flacdec_error_callback (const FLAC__SeekableStreamDecoder *decoder,
       error = "CRC mismatch";
       break;
     default:
-      error = "unkown error";
+      error = "unknown error";
       break;
   }
 

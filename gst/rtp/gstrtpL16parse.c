@@ -194,7 +194,7 @@ gst_rtpL16parse_payloadtype_change (GstRtpL16Parse *rtpL16parse, rtp_payload_t p
       		rtpL16parse->channels = 2;
 		break;
 	default:
-		g_warning ("unkown payload_t %d\n", pt);
+		g_warning ("unknown payload_t %d\n", pt);
   }
 
   gst_rtpL16_caps_nego (rtpL16parse);

@@ -242,7 +242,7 @@ main (gint argc, gchar *argv[])
       pipeline = make_mpeg_decoder_pipeline (argv[2], index);
       break;
     default:
-      g_print ("unkown type %d\n", atoi (argv[1]));
+      g_print ("unknown type %d\n", atoi (argv[1]));
       return -1;
   }
 
