@@ -1,3 +1,11 @@
+2005-03-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gststructure.c: (gst_structure_parse_field),
+	(gst_structure_from_string):
+	  Handle escaped spaces in structure string, so that
+	  gst_parse_launch() can deal with spaces in filtered
+	  link caps (fixes #164479).
+
 2005-03-20  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstbuffer.h:
