@@ -98,7 +98,8 @@ void gst_resample_init(gst_resample_t *r);
 
 void gst_resample_reinit(gst_resample_t *r);
 
+void gst_resample_close (gst_resample_t * r);
+
 void gst_resample_scale(gst_resample_t *r, void *i_buf, unsigned int size);
 
 #endif /* __GST_RESAMPLE_H__ */
-
