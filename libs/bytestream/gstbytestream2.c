@@ -177,6 +177,44 @@ gst_bytestream2_peek (GstByteStream2 *bs, guint32 len) {
 }
 
 guint8 *
+gst_bytestream2_peek_bytes (GstByteStream2 *bs, guint32 len) {
+  GstBuffer *headbuf;
+  guint8 *data = NULL;
+
+  g_return_val_if_fail(bs != NULL, NULL);
+  g_return_val_if_fail(len > 0, NULL);
+
+  bs_print("peek_bytes: asking for %d bytes\n",len);
+
+  // make sure we have enough
+  bs_print("peek_bytes: there are %d bytes in the list\n",bs->listavail);
+  if (len > bs->listavail) {
+    gst_bytestream2_fill_bytes(bs,len);
+    bs_print("peek_bytes: there are now %d bytes in the list\n",bs->listavail);
+  }
+  gst_bytestream2_print_status(bs);
+
+  // extract the head buffer
+  headbuf = GST_BUFFER(bs->buflist->data);
+
+  // if the requested bytes are in the current buffer
+  bs_print("peek_bytes: headbufavail is %d\n",bs->headbufavail);
+  if (len <= bs->headbufavail) {
+    bs_print("peek_bytes: there are enough bytes in headbuf (need %d, have %d)\n",len,bs->headbufavail);
+    // create a sub-buffer of the headbuf
+    data = GST_BUFFER_DATA(headbuf) + (GST_BUFFER_SIZE(headbuf) - bs->headbufavail);
+
+  // otherwise we need to figure out how to assemble one
+  } else {
+    bs_print("peek_bytes: current buffer is not big enough for len %d\n",len);
+
+    data = gst_bytestream2_assemble(bs,len);
+  }
+
+  return data;
+}
+
+guint8 *
 gst_bytestream2_assemble(GstByteStream2 *bs, guint32 len)
 {
   guint8 *data = g_malloc(len);

@@ -181,6 +181,7 @@ gst_identity_loop (GstElement *element)
 
   identity = GST_IDENTITY (element);
 
+/* THIS IS THE BUFFER BASED ONE
   do {
 //    g_print("\n");
 
@@ -197,6 +198,23 @@ gst_identity_loop (GstElement *element)
 
     exit(1);
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
+*/
+
+/* THIS IS THE BYTE BASED ONE*/
+  do {
+    for (i=0;i<identity->count;i++) {
+      buf = gst_buffer_new();
+      // note that this is dangerous, as it does *NOT* refcount the data, it can go away!!!
+      GST_BUFFER_DATA(buf) = gst_bytestream2_peek_bytes(identity->bs,identity->byte_size);
+      GST_BUFFER_SIZE(buf) = identity->byte_size;
+      GST_BUFFER_FLAG_SET(buf,GST_BUFFER_DONTFREE);
+      gst_pad_push(identity->srcpad,buf);
+      gst_bytestream2_flush(identity->bs,identity->byte_size);
+    }
+
+    exit(1);
+  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
+/**/
 }
 
 static void 
