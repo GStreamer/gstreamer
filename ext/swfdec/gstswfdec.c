@@ -210,16 +210,16 @@ gst_swfdec_loop(GstElement *element)
 		if(GST_IS_EVENT(buf)){
 			switch (GST_EVENT_TYPE (buf)) {
 			case GST_EVENT_EOS:
-				printf("got eos\n");
+				GST_DEBUG("got eos");
 				break;
 			default:
-				printf("got event\n");
+				GST_DEBUG("got event");
 				break;
 			}
 
 		}else{
 			if(!GST_BUFFER_DATA(buf)){
-				printf("expected non-null buffer\n");
+				GST_DEBUG("expected non-null buffer");
 			}
 			ret = swfdec_decoder_addbits(swfdec->state,
 				GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf));
