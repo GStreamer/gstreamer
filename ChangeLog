@@ -1,3 +1,11 @@
+2004-01-12  David Schleef  <ds@schleef.org>
+
+	* gst/debug/efence.c: (gst_efence_init), (gst_efence_chain),
+	(gst_efence_buffer_alloc), (gst_fenced_buffer_new),
+	(gst_fenced_buffer_default_free), (gst_fenced_buffer_default_copy):
+	Fix negotiation.  Add a bufferalloc function for the sink pad,
+	and generally clean up some of the code.
+
 2004-01-12  Julien MOUTTE <julien@moutte.net>
 
 	* gst-libs/gst/colorbalance/colorbalancechannel.c:
