@@ -1632,10 +1632,11 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
       /* MPEG-4 AAC */
       return gst_caps_from_string ("audio/mpeg, "
 	  "mpegversion = (int) 4");
-    case GST_MAKE_FOURCC('q','t','v','r'):
-      /* ? */
     case GST_MAKE_FOURCC('Q','D','M','2'):
       /* QDesign music version 2 (no constant) */
+      return gst_caps_from_string ("audio/x-qdm2");
+    case GST_MAKE_FOURCC('q','t','v','r'):
+      /* ? */
     case GST_MAKE_FOURCC('Q','D','M','C'):
       /* QDesign music */
     case GST_MAKE_FOURCC('i','m','a','4'):
