@@ -36,15 +36,12 @@
 #define SPEED_NUMBUF 6
 
 /* elementfactory information */
-static GstElementDetails speed_details = {
+static GstElementDetails speed_details = GST_ELEMENT_DETAILS (
   "Speed",
   "Filter/Audio/Effect",
-  "LGPL",
   "Set speed/pitch on audio/raw streams (resampler)",
-  VERSION,
-  "Andy Wingo <apwingo@eos.ncsu.edu>",
-  "(C) 2001"
-};
+  "Andy Wingo <apwingo@eos.ncsu.edu>"
+);
 
 
 /* Filter signals and args */
@@ -102,6 +99,7 @@ speed_sink_get_bufferpool (GstPad *pad)
   return filter->sinkpool;
 }
 
+static void		speed_base_init			(gpointer g_class);
 static void		speed_class_init		(GstSpeedClass *klass);
 static void		speed_init		(GstSpeed *filter);
 
@@ -170,7 +168,8 @@ gst_speed_get_type(void) {
 
   if (!speed_type) {
     static const GTypeInfo speed_info = {
-      sizeof(GstSpeedClass),      NULL,
+      sizeof(GstSpeedClass),
+      speed_base_init,
       NULL,
       (GClassInitFunc)speed_class_init,
       NULL,
@@ -184,6 +183,16 @@ gst_speed_get_type(void) {
   return speed_type;
 }
 
+static void
+speed_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &speed_details);
+
+  gst_element_class_add_pad_template (element_class, speed_src_factory ());
+  gst_element_class_add_pad_template (element_class, speed_sink_factory ());
+}
 static void
 speed_class_init (GstSpeedClass *klass)
 {
@@ -303,24 +312,20 @@ speed_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *p
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("speed", GST_TYPE_SPEED, &speed_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, speed_src_factory ());
-  gst_element_factory_add_pad_template (factory, speed_sink_factory ());
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register(plugin, "speed", GST_RANK_NONE, GST_TYPE_SPEED);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "speed",
-  plugin_init
-};
+  "Set speed/pitch on audio/raw streams (resampler)",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

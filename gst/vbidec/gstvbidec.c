@@ -63,15 +63,12 @@ struct _GstVBIDecClass {
 GType gst_vbidec_get_type(void);
 
 /* elementfactory information */
-static GstElementDetails gst_vbidec_details = {
+static GstElementDetails gst_vbidec_details = GST_ELEMENT_DETAILS (
   "VBI decoder",
   "Codec/Video/Decoder",
-  "GPL",
   "Decodes closed captions and XDS data from VBI data",
-  VERSION,
-  "David I. Lehn <dlehn@users.sourceforge.net>",
-  "(C) 2002"
-};
+  "David I. Lehn <dlehn@users.sourceforge.net>"
+);
 
 /* VBIDec signals and args */
 enum {
@@ -131,6 +128,7 @@ gst_vbidec_caption_type_get_type (void)
   return vbidec_caption_type_type;
 }
 
+static void		gst_vbidec_base_init		(gpointer g_class);
 static void		gst_vbidec_class_init		(GstVBIDecClass *klass);
 static void		gst_vbidec_init		(GstVBIDec *vbidec);
 
@@ -152,7 +150,7 @@ gst_vbidec_get_type (void)
   if (!vbidec_type) {
     static const GTypeInfo vbidec_info = {
       sizeof(GstVBIDecClass),      
-      NULL,
+      gst_vbidec_base_init,
       NULL,
       (GClassInitFunc)gst_vbidec_class_init,
       NULL,
@@ -166,6 +164,16 @@ gst_vbidec_get_type (void)
   return vbidec_type;
 }
 
+static void
+gst_vbidec_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_vbidec_details);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_template_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_template_factory));
+}
 static void
 gst_vbidec_class_init(GstVBIDecClass *klass)
 {
@@ -358,27 +366,20 @@ gst_vbidec_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the vbidec element */
-  factory = gst_element_factory_new("vbidec",GST_TYPE_VBIDEC,
-                                   &gst_vbidec_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "vbidec", GST_RANK_NONE, GST_TYPE_VBIDEC);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "vbidec",
-  plugin_init
-};
+  "Decodes closed captions and XDS data from VBI data",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

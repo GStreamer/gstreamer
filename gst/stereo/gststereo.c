@@ -17,21 +17,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* This effect is borrowed from xmms-0.6.1, though I mangled it so badly in
+ * the process of copying it over that the xmms people probably won't want
+ * any credit for it ;-)
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 #include <gststereo.h>
 
 /* elementfactory information */
-static GstElementDetails stereo_details = {
+static GstElementDetails stereo_details = GST_ELEMENT_DETAILS (
   "Stereo effect",
   "Filter/Audio/Effect",
-  "LGPL",
   "Muck with the stereo signal, enhance it's 'stereo-ness'",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 
 /* Stereo signals and args */
@@ -47,6 +49,7 @@ enum {
 };
 
 
+static void	gst_stereo_base_init		(gpointer g_class);
 static void	gst_stereo_class_init		(GstStereoClass *klass);
 static void	gst_stereo_init			(GstStereo *stereo);
 
@@ -64,7 +67,8 @@ gst_stereo_get_type(void) {
 
   if (!stereo_type) {
     static const GTypeInfo stereo_info = {
-      sizeof(GstStereoClass),      NULL,
+      sizeof(GstStereoClass),
+      gst_stereo_base_init,
       NULL,
       (GClassInitFunc)gst_stereo_class_init,
       NULL,
@@ -78,6 +82,12 @@ gst_stereo_get_type(void) {
   return stereo_type;
 }
 
+static void
+gst_stereo_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  gst_element_class_set_details (element_class, &stereo_details);
+}
 static void
 gst_stereo_class_init (GstStereoClass *klass)
 {
@@ -210,22 +220,21 @@ gst_stereo_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("stereo",GST_TYPE_STEREO,
-                                   &stereo_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "stereo", GST_RANK_NONE, GST_TYPE_STEREO);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "stereo",
-  plugin_init
-};
+  "Muck with the stereo signal, enhance it's 'stereo-ness'",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 
