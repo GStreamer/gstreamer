@@ -65,9 +65,9 @@ sdl		(for the sdl sink)
 			http://www.libsdl.org
 xmms		(for the xmms plugins wrapper)
 			http://www.xmms.org
-mpeg2dec/ac3dec	(for mpeg2 related plugins and dvd playback)
-			http://linuxvideo.org/mpeg2dec/
-			and http://linuxvideo.org/ac3dec/
+mpeg2dec/a52dec	(for mpeg2 related plugins and dvd playback)
+			http://libmpeg2.sourceforge.net/
+			and http://liba52.sourceforge.net/
 avifile		(for the avi windows decoder plugins)
                         http://avifile.sourceforge.net/
 			you might want to get the windows libraries 
