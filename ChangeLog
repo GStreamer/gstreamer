@@ -1,3 +1,16 @@
+2005-02-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/speed/Makefile.am:
+	* gst/speed/demo-mp3.c: (main):
+	* gst/speed/filter.func:
+	* gst/speed/gstspeed.c: (speed_link), (speed_parse_caps),
+	(speed_class_init), (speed_init), (speed_chain_int16),
+	(speed_chain_float32), (speed_chain), (speed_set_property),
+	(speed_get_property), (speed_change_state):
+	* gst/speed/gstspeed.h:
+	  Fix speed element and make it chain-based (fixes #156467),
+	  and make it handle more than one channel.
+
 2005-02-10  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/dts/gstdtsdec.c: (gst_dtsdec_init), (gst_dtsdec_channels),
