@@ -141,39 +141,52 @@ gst_adder_get_type(void) {
 static gboolean
 gst_adder_parse_caps (GstAdder *adder, GstCaps *caps)
 {
-  const gchar *format = gst_caps_get_string (caps, "format");
+  const gchar *format;
+  
+  gst_caps_get_string (caps, "format", &format);
 
   if (adder->format == GST_ADDER_FORMAT_UNSET) {
     /* the caps haven't been set yet at all, so we need to go ahead and set all
        the relevant values. */
     if (strcmp (format, "int") == 0) {
       adder->format     = GST_ADDER_FORMAT_INT;
-      adder->width      = gst_caps_get_int (caps, "width");
-      adder->depth      = gst_caps_get_int (caps, "depth");
-      adder->law        = gst_caps_get_int (caps, "law");
-      adder->endianness = gst_caps_get_int (caps, "endianness");
-      adder->is_signed  = gst_caps_get_int (caps, "signed");
-      adder->channels   = gst_caps_get_int (caps, "channels");
+      gst_caps_get_int     (caps, "width",      &adder->width);
+      gst_caps_get_int     (caps, "depth",      &adder->depth);
+      gst_caps_get_int     (caps, "law",        &adder->law);
+      gst_caps_get_int     (caps, "endianness", &adder->endianness);
+      gst_caps_get_boolean (caps, "signed",     &adder->is_signed);
+      gst_caps_get_int     (caps, "channels",   &adder->channels);
     } else if (strcmp (format, "float") == 0) {
       adder->format     = GST_ADDER_FORMAT_FLOAT;
-      adder->layout     = gst_caps_get_string (caps, "layout");
-      adder->intercept  = gst_caps_get_float  (caps, "intercept");
-      adder->slope      = gst_caps_get_float  (caps, "slope");
-      adder->channels   = gst_caps_get_int (caps, "channels");
+      gst_caps_get_string  (caps, "layout",    &adder->layout);
+      gst_caps_get_float   (caps, "intercept", &adder->intercept);
+      gst_caps_get_float   (caps, "slope",     &adder->slope);
+      gst_caps_get_int     (caps, "channels",  &adder->channels);
     }
   } else {
     /* otherwise, a previously-connected pad has set all the values. we should
        barf if some of the attempted new values don't match. */
     if (strcmp (format, "int") == 0) {
+      gint width, channels;
+      gboolean is_signed;
+
+      gst_caps_get_int     (caps, "width",     &width);
+      gst_caps_get_int     (caps, "channels",  &channels);
+      gst_caps_get_boolean (caps, "signed",    &is_signed);
+
       if ((adder->format != GST_ADDER_FORMAT_INT) ||
-          (adder->width  != gst_caps_get_int (caps, "width")) ||
-          (adder->channels != gst_caps_get_int (caps, "channels")) ||
-          (adder->is_signed != gst_caps_get_int (caps, "signed"))) {
+          (adder->width  != width) ||
+          (adder->channels != channels) ||
+          (adder->is_signed != is_signed)) {
         return FALSE;
       }
     } else if (strcmp (format, "float") == 0) {
+      gint channels;
+
+      gst_caps_get_int     (caps, "channels",  &channels);
+
       if ((adder->format != GST_ADDER_FORMAT_FLOAT) ||
-          (adder->channels != gst_caps_get_int (caps, "channels"))) {
+          (adder->channels != channels)) {
         return FALSE;
       }
     } else {

@@ -191,8 +191,8 @@ gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
 
   for (caps = vscapslist; caps != NULL; caps = vscapslist = vscapslist->next)
   {
-    v4lmjpegsink->width = gst_caps_get_int (caps, "width");
-    v4lmjpegsink->height = gst_caps_get_int (caps, "height");
+    gst_caps_get_int (caps, "width", &v4lmjpegsink->width);
+    gst_caps_get_int (caps, "height", &v4lmjpegsink->height);
 
     if (!gst_v4lmjpegsink_set_playback(v4lmjpegsink,
          v4lmjpegsink->width, v4lmjpegsink->height,

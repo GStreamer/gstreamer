@@ -433,6 +433,14 @@ GST_CHECK_FEATURE(HTTP, [http plugins], gsthttpsrc, [
 ])
 
 dnl *** Jack ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LCS, true)
+GST_CHECK_FEATURE(LCS, Lcs, lcs, [
+  PKG_CHECK_MODULES(LCS, lcs, HAVE_LCS="yes", HAVE_LCS="no")
+  AC_SUBST(LCS_CFLAGS)
+  AC_SUBST(LCS_LIBS)
+])
+
+dnl *** Jack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
 GST_CHECK_FEATURE(JACK, Jack, jack, [
   PKG_CHECK_MODULES(JACK, jack, HAVE_JACK="yes", HAVE_JACK="no")
@@ -796,6 +804,7 @@ ext/hermes/Makefile
 ext/http/Makefile
 ext/jack/Makefile
 ext/jpeg/Makefile
+ext/lcs/Makefile
 ext/ladspa/Makefile
 ext/lame/Makefile
 ext/mad/Makefile

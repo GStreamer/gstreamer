@@ -119,8 +119,8 @@ gst_vorbisenc_sinkconnect (GstPad * pad, GstCaps * caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
 
-  vorbisenc->channels = gst_caps_get_int (caps, "channels");
-  vorbisenc->frequency = gst_caps_get_int (caps, "rate");
+  gst_caps_get_int (caps, "channels", &vorbisenc->channels);
+  gst_caps_get_int (caps, "rate",     &vorbisenc->frequency);
 
   gst_vorbisenc_setup (vorbisenc);
 
@@ -165,8 +165,10 @@ gst_vorbisenc_setup (VorbisEnc * vorbisenc)
   /* add a comment */
   vorbis_comment_init (&vorbisenc->vc);
   vorbis_comment_add (&vorbisenc->vc, (gchar *)comment);
+  /*
   gst_element_send_event (GST_ELEMENT (vorbisenc),
              gst_event_new_info ("comment", GST_PROPS_STRING (comment), NULL));
+	     */
 
   /* set up the analysis state and auxiliary encoding storage */
   vorbis_analysis_init (&vorbisenc->vd, &vorbisenc->vi);

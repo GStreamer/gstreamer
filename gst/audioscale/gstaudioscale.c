@@ -166,12 +166,15 @@ gst_audioscale_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   Audioscale *audioscale;
   resample_t *r;
+  gint rate;
 
   audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
   r = audioscale->resample;
 
-  r->i_rate = gst_caps_get_int (caps, "rate");
-  r->channels = gst_caps_get_int (caps, "channels");
+  gst_caps_get_int (caps, "rate",     &rate);
+  gst_caps_get_int (caps, "channels", &r->channels);
+
+  r->i_rate = rate;
   
   resample_reinit(r);
   /*g_print("audioscale: unsupported scaling method %d\n", audioscale->method); */

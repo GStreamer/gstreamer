@@ -137,18 +137,19 @@ volume_parse_caps (GstVolume *filter, GstCaps *caps)
   g_return_val_if_fail(filter!=NULL,-1);
   g_return_val_if_fail(caps!=NULL,-1);
   
-  format = gst_caps_get_string(caps, "format");
+  gst_caps_get_string (caps, "format", &format);
   
-  filter->rate       = gst_caps_get_int (caps, "rate");
-  filter->channels   = gst_caps_get_int (caps, "channels");
+  gst_caps_get_int (caps, "rate",       &filter->rate);
+  gst_caps_get_int (caps, "channels",   &filter->channels);
   
   if (strcmp(format, "int")==0) {
     filter->format        = GST_VOLUME_FORMAT_INT;
-    filter->width         = gst_caps_get_int (caps, "width");
-    filter->depth         = gst_caps_get_int (caps, "depth");
-    filter->law           = gst_caps_get_int (caps, "law");
-    filter->endianness    = gst_caps_get_int (caps, "endianness");
-    filter->is_signed     = gst_caps_get_int (caps, "signed");
+    gst_caps_get_int (caps, "width",      &filter->width);
+    gst_caps_get_int (caps, "depth",      &filter->depth);
+    gst_caps_get_int (caps, "law",        &filter->law);
+    gst_caps_get_int (caps, "endianness", &filter->endianness);
+    gst_caps_get_int (caps, "signed",     &filter->is_signed);
+    
     if (!filter->silent) {
       g_print ("Volume : channels %d, rate %d\n",  
                filter->channels, filter->rate);
@@ -157,9 +158,10 @@ volume_parse_caps (GstVolume *filter, GstCaps *caps)
     }
   } else if (strcmp(format, "float")==0) {
     filter->format     = GST_VOLUME_FORMAT_FLOAT;
-    filter->layout     = gst_caps_get_string(caps, "layout");
-    filter->intercept  = gst_caps_get_float(caps, "intercept");
-    filter->slope      = gst_caps_get_float(caps, "slope");
+    gst_caps_get_string (caps, "layout",    &filter->layout); 
+    gst_caps_get_float  (caps, "intercept", &filter->intercept);
+    gst_caps_get_float  (caps, "slope",     &filter->slope);
+
     if (!filter->silent) {
       g_print ("Volume : channels %d, rate %d\n",  
                filter->channels, filter->rate);

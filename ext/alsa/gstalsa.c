@@ -318,7 +318,7 @@ gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
     GList *l;
     GstAlsaPad *pad;
     
-    g_return_val_if_fail (this = GST_ALSA(element), NULL);
+    g_return_val_if_fail ((this = GST_ALSA(element)), NULL);
     
     /* you can't request a pad if the non-request pad is connected */
     g_return_val_if_fail (this->data_interleaved == FALSE ||
@@ -510,22 +510,22 @@ gst_alsa_change_state(GstElement *element)
 static gboolean
 gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
 {
-    gint law, endianness, width, depth;
+    gint law, endianness, width, depth, channels;
     gboolean sign;
     gint format = -1;
     const gchar* format_name;
 
-    format_name = gst_caps_get_string(caps, "format");
+    gst_caps_get_string(caps, "format", &format_name);
     
     if (format_name == NULL) {
         return FALSE;
     } else if (strcmp(format_name, "int")==0) {
-        width = gst_caps_get_int (caps, "width");
-        depth = gst_caps_get_int (caps, "depth");
+        gst_caps_get_int (caps, "width", &width);
+        gst_caps_get_int (caps, "depth", &depth);
         
-        law = gst_caps_get_int (caps, "law");
-        endianness = gst_caps_get_int (caps, "endianness");
-        sign = gst_caps_get_boolean (caps, "signed");
+        gst_caps_get_int (caps, "law", &law);
+        gst_caps_get_int (caps, "endianness", &endianness);
+        gst_caps_get_boolean (caps, "signed", &sign);
         
         if (law == 0) {
             if (width == 8) {
@@ -585,7 +585,11 @@ gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
             return FALSE;
         }
     } else if (strcmp(format_name, "float")==0) {
-        if (strcmp(gst_caps_get_string(caps, "layout"), "gfloat")==0) {
+	const gchar *layout;
+
+        gst_caps_get_string(caps, "layout", &layout);
+
+        if (strcmp(layout, "gfloat")==0) {
             format = SND_PCM_FORMAT_FLOAT;
         } else {
             return FALSE;
@@ -597,10 +601,12 @@ gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
     }
     
     this->format = format;
-    this->rate = gst_caps_get_int(caps, "rate");
+    gst_caps_get_int(caps, "rate", &this->rate);
+    gst_caps_get_int(caps, "channels", &channels);
+
     if (this->data_interleaved)
-        this->channels = gst_caps_get_int(caps, "channels");
-    else if (gst_caps_get_int(caps, "channels") != 1)
+        this->channels = channels;
+    else if (channels != 1)
         return FALSE;
     
     return TRUE;

@@ -191,9 +191,9 @@ gst_videoscale_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_CONNECT_DELAYED;
   }
 
-  videoscale->width = gst_caps_get_int (caps, "width");
-  videoscale->height = gst_caps_get_int (caps, "height");
-  videoscale->format = gst_caps_get_int (caps, "format");
+  gst_caps_get_int (caps, "width", &videoscale->width);
+  gst_caps_get_int (caps, "height", &videoscale->height);
+  gst_caps_get_int (caps, "format", &videoscale->format);
 
   gst_videoscale_setup(videoscale);
 
@@ -256,7 +256,7 @@ gst_videoscale_chain (GstPad *pad, GstBuffer *buf)
   size = GST_BUFFER_SIZE(buf);
 
   if(!videoscale->scale_cc){
-    videoscale->format = gst_caps_get_int (gst_pad_get_caps(pad), "format");
+    gst_caps_get_int (gst_pad_get_caps(pad), "format", &videoscale->format);
     gst_videoscale_setup(videoscale);
   }
   GST_DEBUG (0,"gst_videoscale_chain: got buffer of %ld bytes in '%s'",size,

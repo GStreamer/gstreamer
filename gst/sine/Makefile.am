@@ -10,7 +10,7 @@ libgstsinesrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 noinst_HEADERS = gstsinesrc.h
 
 if HAVE_GTK
-noinst_PROGRAMS = demo-dparams
+noinst_PROGRAMS = demo_dparams
 endif
 
 demo_dparams_SOURCES = demo-dparams.c
