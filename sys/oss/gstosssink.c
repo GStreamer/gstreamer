@@ -462,24 +462,29 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
     if (!osssink->mute) {
       guchar *data = GST_BUFFER_DATA (buf);
       gint size = GST_BUFFER_SIZE (buf);
-      gint frag = osssink->fragment;
+      /* gint frag = osssink->fragment;   <-- unused, for reason see above */
 
       if (osssink->clock) {
         /* FIXME, NEW_MEDIA/DISCONT?. Try to get our start point */
         if (osssink->offset == -1LL && buftime != -1LL) {
-	  //g_print ("%lld  %lld %lld\n", osssink->offset, buftime, gst_clock_get_time (osssink->clock));
+	  /* g_print ("%lld  %lld %lld\n", osssink->offset, buftime, gst_clock_get_time (osssink->clock)); */
 	  osssink->offset = buftime;
 	  osssink->handled = 0;
           gst_element_clock_wait (GST_ELEMENT (osssink), osssink->clock, buftime);
         }
-
+	
+	
+	/* FIXME: reverted wtay's patch.
+	   The way that's commented out isn't working on BE machines.
+	   I guess it should be sample accurate and not capped inbetween.
 	while (size) {
           gint tosend = MIN (size, frag);
           write (osssink->fd, data, tosend);
-	  data += frag;
-	  size -= frag;
+	  data += tosend;
+	  size -= tosend;
           osssink->handled += tosend;
-	}
+	} */
+	write (osssink->fd, data, size);
       }
       /* no clock, try to be as fast as possible */
       else {
@@ -687,7 +692,7 @@ gst_osssink_change_state (GstElement *element)
       osssink->offset = -1LL;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      //gst_clock_adjust (osssink->clock, osssink->offset - gst_clock_get_time (osssink->clock));
+      /* gst_clock_adjust (osssink->clock, osssink->offset - gst_clock_get_time (osssink->clock)); */
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
     {
