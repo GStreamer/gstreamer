@@ -143,7 +143,7 @@ gst_init_check (int     *argc,
     g_print ("  --gst-info-mask=FLAGS               Gst info flags to set (current %08x)\n", gst_info_get_categories());
     g_print ("  --gst-debug-mask=FLAGS              Gst debugging flags to set\n");
 
-    g_print ("\nGStreamer info/debug FLAGS (to be ored)\n");
+    g_print ("\nGStreamer info/debug FLAGS (to be OR'ed)\n");
 
     for (i = 0; i<GST_CAT_MAX_CATEGORY; i++) {
       g_print ("   %08x    %s     %s\n", 1<<i, 
