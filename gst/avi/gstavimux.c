@@ -453,7 +453,7 @@ gst_avimux_audsinkconnect (GstPad * pad, const GstCaps * vscaps)
 
   avimux->auds_hdr.rate = avimux->auds.blockalign * avimux->auds.rate;
   avimux->auds_hdr.samplesize = avimux->auds.blockalign;
-  avimux->auds_hdr.scale = avimux->auds.blockalign;
+  avimux->auds_hdr.scale = 1;
   return GST_PAD_LINK_OK;
 }
 
@@ -1039,6 +1039,29 @@ gst_avimux_stop_file (GstAviMux * avimux)
     }
   }
 
+  /* set rate and everything having to do with that */
+  avimux->avi_hdr.max_bps = 0;
+  if (avimux->audio_pad_connected) {
+    /* calculate bps if needed */
+    if (!avimux->auds.av_bps) {
+      if (avimux->audio_time) {
+        avimux->auds.av_bps =
+            (GST_SECOND * avimux->audio_size) / avimux->audio_time;
+      } else {
+        GST_ELEMENT_ERROR (avimux, STREAM, MUX,
+            (_("No or invalid input audio, AVI stream will be corrupt.")),
+            (NULL));
+        avimux->auds.av_bps = 0;
+      }
+      avimux->auds_hdr.rate = avimux->auds.av_bps * avimux->auds_hdr.scale;
+    }
+    avimux->avi_hdr.max_bps += avimux->auds.av_bps;
+  }
+  if (avimux->video_pad_connected) {
+    avimux->avi_hdr.max_bps += ((avimux->vids.bit_cnt + 7) / 8) *
+        (1000000. / avimux->avi_hdr.us_frame) * avimux->vids.image_size;
+  }
+
   /* statistics/total_frames/... */
   avimux->avi_hdr.tot_frames = avimux->num_frames;
   if (avimux->video_pad_connected) {
@@ -1046,30 +1069,7 @@ gst_avimux_stop_file (GstAviMux * avimux)
   }
   if (avimux->audio_pad_connected) {
     avimux->auds_hdr.length =
-        (avimux->audio_time * avimux->auds.rate) / GST_SECOND;
-  }
-
-  /* set rate and everything having to do with that */
-  avimux->avi_hdr.max_bps = 0;
-  if (avimux->audio_pad_connected) {
-    /* calculate bps if needed */
-    if (!avimux->auds.av_bps) {
-      if (avimux->audio_time) {
-        avimux->auds_hdr.rate =
-            (GST_SECOND * avimux->audio_size) / avimux->audio_time;
-      } else {
-        GST_ELEMENT_ERROR (avimux, STREAM, MUX,
-            (_("No or invalid input audio, AVI stream will be corrupt.")),
-            (NULL));
-        avimux->auds_hdr.rate = 0;
-      }
-      avimux->auds.av_bps = avimux->auds_hdr.rate * avimux->auds_hdr.scale;
-    }
-    avimux->avi_hdr.max_bps += avimux->auds.av_bps;
-  }
-  if (avimux->video_pad_connected) {
-    avimux->avi_hdr.max_bps += ((avimux->vids.bit_cnt + 7) / 8) *
-        (1000000. / avimux->avi_hdr.us_frame) * avimux->vids.image_size;
+        (avimux->audio_time * avimux->auds_hdr.rate) / GST_SECOND;
   }
 
   /* seek and rewrite the header */
