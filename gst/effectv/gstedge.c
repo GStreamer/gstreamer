@@ -129,7 +129,7 @@ gst_edgetv_class_init (GstEdgeTVClass * klass)
   gobject_class->get_property = gst_edgetv_get_property;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_edgetv_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   GstEdgeTV *filter;

@@ -207,7 +207,7 @@ gst_wavenc_setup (GstWavEnc *wavenc)
   return TRUE;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_wavenc_sinkconnect (GstPad *pad,
 			GstCaps *caps)
 {

@@ -155,7 +155,7 @@ gst_dicetv_class_init (GstDiceTVClass * klass)
   gobject_class->get_property = gst_dicetv_get_property;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_dicetv_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   GstDiceTV *filter;

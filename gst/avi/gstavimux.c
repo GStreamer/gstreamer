@@ -293,7 +293,7 @@ gst_avimux_init (GstAviMux *avimux)
   gst_element_set_loop_function(GST_ELEMENT(avimux), gst_avimux_loop);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
 {
   GstAviMux *avimux;

@@ -50,7 +50,7 @@ static void			gst_speexenc_class_init	(GstSpeexEnc *klass);
 static void			gst_speexenc_init		(GstSpeexEnc *speexenc);
 
 static void			gst_speexenc_chain	(GstPad *pad,GstBuffer *buf);
-static GstPadConnectReturn	gst_speexenc_sinkconnect 	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn	gst_speexenc_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_speexenc_signals[LAST_SIGNAL] = { 0 };
@@ -114,7 +114,7 @@ gst_speexenc_init (GstSpeexEnc *speexenc)
   speexenc->n_packets = 20;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_speexenc_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstSpeexEnc *speexenc;

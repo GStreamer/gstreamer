@@ -120,7 +120,7 @@ gst_level_get_type (void)
   return level_type;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_level_connect (GstPad *pad, GstCaps *caps)
 {
   GstLevel *filter;

@@ -149,7 +149,7 @@ gst_agingtv_class_init (GstAgingTVClass * klass)
   gobject_class->get_property = gst_agingtv_get_property;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_agingtv_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   GstAgingTV *filter;

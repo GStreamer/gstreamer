@@ -235,7 +235,7 @@ gst_aasink_class_init (GstAASinkClass *klass)
   gstelement_class->set_clock    = gst_aasink_set_clock;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_aasink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstAASink *aasink;

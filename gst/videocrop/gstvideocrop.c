@@ -110,7 +110,7 @@ static void		gst_video_crop_set_property	(GObject *object, guint prop_id,
 static void		gst_video_crop_get_property	(GObject *object, guint prop_id, 
 							 GValue *value, GParamSpec *pspec);
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 			gst_video_crop_sink_connect 	(GstPad *pad, GstCaps *caps);
 static void 		gst_video_crop_chain 		(GstPad *pad, GstBuffer *buffer);
 
@@ -253,7 +253,7 @@ gst_video_crop_get_property (GObject *object, guint prop_id, GValue *value, GPar
   }
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_video_crop_sink_connect (GstPad *pad, GstCaps *caps)
 {
   GstVideoCrop *video_crop;

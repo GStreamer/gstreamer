@@ -68,7 +68,7 @@ static gboolean			gst_v4l2src_srcconvert		(GstPad          *pad,
 								 gint64          src_value,
 								 GstFormat       *dest_format,
 								 gint64          *dest_value);
-static GstPadConnectReturn	gst_v4l2src_srcconnect		(GstPad          *pad,
+static GstPadLinkReturn	gst_v4l2src_srcconnect		(GstPad          *pad,
 								 GstCaps         *caps);
 static GstCaps *		gst_v4l2src_getcaps		(GstPad          *pad,
 								 GstCaps         *caps);
@@ -576,7 +576,7 @@ gst_v4l2src_caps_intersect (GstCaps *caps1,
 }
 
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_v4l2src_srcconnect (GstPad  *pad,
                         GstCaps *vscapslist)
 {
@@ -628,7 +628,7 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 					                        format->flags & V4L2_FMT_FLAG_COMPRESSED);
 					GstCaps *onecaps;
 					for (;lastcaps != NULL; lastcaps = lastcaps->next) {
-						GstPadConnectReturn ret_val;
+						GstPadLinkReturn ret_val;
 						onecaps = gst_caps_copy_1(lastcaps);
 						if ((ret_val = gst_pad_try_set_caps(v4l2src->srcpad, onecaps)) > 0) {
 							if (gst_v4l2src_capture_init(v4l2src))

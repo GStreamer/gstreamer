@@ -47,7 +47,7 @@ static GstElementClass *parent_class = NULL;
 /*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 };*/
 
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 mulawdec_connect_sink (GstPad *pad, GstCaps *caps)
 {
   GstCaps *newcaps;

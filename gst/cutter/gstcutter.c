@@ -108,7 +108,7 @@ gst_cutter_get_type(void) {
   return cutter_type;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_cutter_connect (GstPad *pad, GstCaps *caps)
 {
   GstCutter *filter;

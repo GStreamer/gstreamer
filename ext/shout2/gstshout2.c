@@ -83,7 +83,7 @@ static void			gst_shout2send_class_init	(GstShout2sendClass *klass);
 static void			gst_shout2send_init		(GstShout2send *shout2send);
 
 static void			gst_shout2send_chain		(GstPad *pad, GstBuffer *buf);
-static GstPadConnectReturn      gst_shout2send_connect         (GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn      gst_shout2send_connect         (GstPad *pad, GstCaps *caps);
 
 static void			gst_shout2send_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void			gst_shout2send_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -353,7 +353,7 @@ gst_shout2send_get_property (GObject *object, guint prop_id, GValue *value, GPar
   }
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_shout2send_connect (GstPad *pad, GstCaps *caps)
 
 {

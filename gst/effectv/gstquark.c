@@ -154,7 +154,7 @@ gst_quarktv_class_init (GstQuarkTVClass * klass)
   gstelement_class->change_state = gst_quarktv_change_state;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_quarktv_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   GstQuarkTV *filter;

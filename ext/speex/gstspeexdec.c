@@ -49,7 +49,7 @@ static void			gst_speexdec_class_init	(GstSpeexDec *klass);
 static void			gst_speexdec_init		(GstSpeexDec *speexdec);
 
 static void			gst_speexdec_chain	(GstPad *pad, GstBuffer *buf);
-static GstPadConnectReturn	gst_speexdec_sinkconnect 	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn	gst_speexdec_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_speexdec_signals[LAST_SIGNAL] = { 0 }; */
@@ -100,7 +100,7 @@ gst_speexdec_init (GstSpeexDec *speexdec)
 
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_speexdec_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstSpeexDec *speexdec;

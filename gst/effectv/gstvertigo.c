@@ -172,7 +172,7 @@ gst_vertigotv_reset_handler (GstElement *element)
 }
 
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_vertigotv_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   GstVertigoTV *filter;

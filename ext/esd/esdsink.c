@@ -87,7 +87,7 @@ static gboolean			gst_esdsink_open_audio		(GstEsdsink *sink);
 static void			gst_esdsink_close_audio		(GstEsdsink *sink);
 static GstElementStateReturn	gst_esdsink_change_state	(GstElement *element);
 static gboolean			gst_esdsink_sync_parms		(GstEsdsink *esdsink);
-static GstPadConnectReturn	gst_esdsink_sinkconnect		(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn	gst_esdsink_sinkconnect		(GstPad *pad, GstCaps *caps);
 
 static void			gst_esdsink_chain		(GstPad *pad, GstBuffer *buf);
 
@@ -218,7 +218,7 @@ gst_esdsink_sync_parms (GstEsdsink *esdsink)
   return gst_esdsink_open_audio (esdsink);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_esdsink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstEsdsink *esdsink;

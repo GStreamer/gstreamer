@@ -140,7 +140,7 @@ gst_udpsink_class_init (GstUDPSink *klass)
 }
 
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstUDPSink *udpsink;

@@ -145,7 +145,7 @@ gst_warptv_class_init (GstWarpTVClass * klass)
   gobject_class->get_property = gst_warptv_get_property;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_warptv_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   GstWarpTV *filter;

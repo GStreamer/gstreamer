@@ -65,7 +65,7 @@ static void		gst_flacenc_init		(FlacEnc *flacenc);
 static void		gst_flacenc_class_init		(FlacEncClass *klass);
 static void 		gst_flacenc_dispose 		(GObject *object);
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 			gst_flacenc_sinkconnect 	(GstPad *pad, GstCaps *caps);
 static void		gst_flacenc_chain		(GstPad *pad, GstBuffer *buf);
 
@@ -298,7 +298,7 @@ gst_flacenc_dispose (GObject *object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   FlacEnc *flacenc;

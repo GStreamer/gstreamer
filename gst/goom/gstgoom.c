@@ -130,7 +130,7 @@ static void		gst_goom_get_property	(GObject *object, guint prop_id,
 
 static void		gst_goom_chain		(GstPad *pad, GstBuffer *buf);
 
-static GstPadConnectReturn 
+static GstPadLinkReturn 
 			gst_goom_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
@@ -207,7 +207,7 @@ gst_goom_init (GstGOOM *goom)
 
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_goom_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstGOOM *goom;

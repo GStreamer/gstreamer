@@ -102,7 +102,7 @@ static void gst_bpwsinc_get_property	(GObject * object, guint prop_id,
                                          GValue * value, GParamSpec * pspec);
 
 static void gst_bpwsinc_chain		(GstPad * pad, GstBuffer * buf);
-static GstPadConnectReturn
+static GstPadLinkReturn
        gst_bpwsinc_sink_connect 		(GstPad * pad, GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
@@ -174,14 +174,14 @@ gst_bpwsinc_init (GstBPWSinc * filter)
   filter->kernel = NULL;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_bpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
 {
   int i = 0;
   double sum = 0.0;
   int len = 0;
   double *kernel_lp, *kernel_hp;
-  GstPadConnectReturn set_retval;
+  GstPadLinkReturn set_retval;
   
   GstBPWSinc *filter = GST_BPWSINC (gst_pad_get_parent (pad));
 

@@ -85,7 +85,7 @@ GST_PAD_TEMPLATE_FACTORY (osssrc_src_factory,
 static void 			gst_osssrc_class_init	(GstOssSrcClass *klass);
 static void 			gst_osssrc_init		(GstOssSrc *osssrc);
 
-static GstPadConnectReturn 	gst_osssrc_srcconnect 	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn 	gst_osssrc_srcconnect 	(GstPad *pad, GstCaps *caps);
 static const GstFormat* 	gst_osssrc_get_formats 	(GstPad *pad);
 static gboolean 		gst_osssrc_convert 	(GstPad *pad, 
 							 GstFormat src_format, gint64 src_value,
@@ -183,7 +183,7 @@ gst_osssrc_init (GstOssSrc *osssrc)
   osssrc->curoffset = 0;
 }
 
-static GstPadConnectReturn 
+static GstPadLinkReturn 
 gst_osssrc_srcconnect (GstPad *pad, GstCaps *caps)
 {
   GstOssSrc *src;

@@ -138,7 +138,7 @@ gst_shagadelictv_class_init (GstShagadelicTVClass * klass)
   gobject_class->get_property = gst_shagadelictv_get_property;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_shagadelictv_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   GstShagadelicTV *filter;

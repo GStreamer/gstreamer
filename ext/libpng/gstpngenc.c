@@ -108,7 +108,7 @@ gst_pngenc_class_init (GstPngEncClass * klass)
 }
 
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_pngenc_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   GstPngEnc *pngenc;
