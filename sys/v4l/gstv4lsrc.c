@@ -325,7 +325,7 @@ gst_v4lsrc_srcconnect (GstPad  *pad,
     if (!gst_pad_try_set_caps(v4lsrc->srcpad, newcaps))
       continue;
     else
-      return GST_PAD_CONNECT_DONE;
+      return GST_PAD_CONNECT_OK;
   }
 
   /* still nothing - no good caps */
@@ -444,6 +444,9 @@ gst_v4lsrc_change_state (GstElement *element)
   GstV4lSrc *v4lsrc;
   GstElementStateReturn parent_value;
   gint transition = GST_STATE_TRANSITION (element);
+  guint32 fourcc;
+  gint depth=0, bpp=0;
+  GstCaps *caps;
 
   g_return_val_if_fail(GST_IS_V4LSRC(element), GST_STATE_FAILURE);
   
@@ -453,6 +456,63 @@ gst_v4lsrc_change_state (GstElement *element)
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
+      /* extremely ugly hack for a weird behaviour in the capsnego system - try capsnego again */
+      switch (v4lsrc->mmap.format)
+      {
+        case VIDEO_PALETTE_RGB555:
+          fourcc = GST_MAKE_FOURCC('R','G','B',' ');
+          bpp = 16;
+          depth = 15;
+          break;
+        case VIDEO_PALETTE_RGB565:
+          fourcc = GST_MAKE_FOURCC('R','G','B',' ');
+          bpp = 16;
+          depth = 16;
+          break;
+        case VIDEO_PALETTE_RGB24:
+          fourcc = GST_MAKE_FOURCC('R','G','B',' ');
+          bpp = 24;
+          depth = 24;
+          break;
+        case VIDEO_PALETTE_RGB32:
+          fourcc = GST_MAKE_FOURCC('R','G','B',' ');
+          bpp = 32;
+          depth = 32;
+          break;
+        case VIDEO_PALETTE_YUV411:
+          fourcc = GST_MAKE_FOURCC('Y','4','1','P');
+          break;
+        case VIDEO_PALETTE_YUV422:
+          fourcc = GST_MAKE_FOURCC('Y','U','Y','2');
+          break;
+        case VIDEO_PALETTE_YUV420P:
+          fourcc = GST_MAKE_FOURCC('I','4','2','0');
+          break;
+        case VIDEO_PALETTE_UYVY:
+          fourcc = GST_MAKE_FOURCC('U','Y','V','Y');
+          break;
+      }
+      if (bpp && depth)
+        caps = gst_caps_new("v4lsrc_caps",
+                            "video/raw",
+                            gst_props_new(
+                              "format", GST_PROPS_FOURCC(fourcc),
+                              "width",  GST_PROPS_INT(v4lsrc->width),
+                              "height", GST_PROPS_INT(v4lsrc->height),
+                              "bpp",    GST_PROPS_INT(bpp),
+                              "depth",  GST_PROPS_INT(depth),
+                              NULL      ) );
+      else
+        caps = gst_caps_new("v4lsrc_caps",
+                            "video/raw",
+                            gst_props_new(
+                              "format", GST_PROPS_FOURCC(fourcc),
+                              "width",  GST_PROPS_INT(v4lsrc->width),
+                              "height", GST_PROPS_INT(v4lsrc->height),
+                              NULL      ) );
+      if (!gst_pad_try_set_caps(v4lsrc->srcpad, caps))
+        return GST_STATE_FAILURE;
+
       if (!gst_v4lsrc_capture_init(v4lsrc))
         return GST_STATE_FAILURE;
       break;
