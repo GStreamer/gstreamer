@@ -28,4 +28,6 @@
 #define GST_VERSION_MINOR @GST_VERSION_MINOR@
 #define GST_VERSION_MICRO @GST_VERSION_MICRO@
 
+void    gst_version     (guint *major, guint *minor, guint *micro);
+
 #endif /* __GST_H__ */

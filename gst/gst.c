@@ -24,6 +24,7 @@
 
 #include "gst_private.h"
 
+#include "gstversion.h"
 #include "gstcpu.h"
 #include "gsttype.h"
 #include "gstplugin.h"
@@ -308,3 +309,24 @@ gst_main_quit (void)
   gtk_main_quit ();
 #endif
 }
+
+/**
+ * gst_version:
+ * @major: pointer to a guint to store the major version number
+ * @minor: pointer to a guint to store the minor version number
+ * @micro: pointer to a guint to store the micro version number
+ *
+ * Gets the version number of the GStreamer library
+ */
+void 
+gst_version (guint *major, guint *minor, guint *micro)
+{
+  g_return_if_fail (major);
+  g_return_if_fail (minor);
+  g_return_if_fail (micro);
+
+  *major = GST_VERSION_MAJOR;
+  *minor = GST_VERSION_MINOR;
+  *micro = GST_VERSION_MICRO;
+}
+
