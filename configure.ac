@@ -15,8 +15,6 @@ dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 ACLOCAL="$ACLOCAL -I common/m4 $ACLOCAL_FLAGS"
 
-AM_MAINTAINER_MODE
-
 AC_PROG_CC
 AM_PROG_CC_STDC
 AM_PROG_AS
