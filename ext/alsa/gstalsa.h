@@ -1,7 +1,8 @@
+/* -*- c-basic-offset: 4 -*- */
 /*
     Copyright (C) 2001 CodeFactory AB
     Copyright (C) 2001 Thomas Nyberg <thomas@codefactory.se>
-    Copyright (C) 2001 Andy Wingo <apwingo@eos.ncsu.edu>
+    Copyright (C) 2001-2002 Andy Wingo <apwingo@eos.ncsu.edu>
                             
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -113,6 +114,8 @@ struct _GstAlsa {
     guint buffer_frames;
     guint period_count; /* 'number of fragments' in oss-speak */
     guint period_frames;
+
+    gboolean debug;
 };
 
 struct _GstAlsaClass {

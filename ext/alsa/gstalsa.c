@@ -1,7 +1,8 @@
+/* -*- c-basic-offset: 4 -*- */
 /*
     Copyright (C) 2001 CodeFactory AB
     Copyright (C) 2001 Thomas Nyberg <thomas@codefactory.se>
-    Copyright (C) 2001 Andy Wingo <apwingo@eos.ncsu.edu>
+    Copyright (C) 2001-2002 Andy Wingo <apwingo@eos.ncsu.edu>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public
@@ -57,7 +58,7 @@ static GstPad* gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *te
 static void gst_alsa_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_alsa_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static GstElementStateReturn gst_alsa_change_state(GstElement *element);
-/*static GstPadNegotiateReturn gst_alsa_negotiate(GstPad *pad, GstCaps **caps, gpointer *user_data); */
+static GstPadConnectReturn gst_alsa_connect(GstPad *pad, GstCaps *caps);
 
 static GstCaps* gst_alsa_caps (GstAlsa *this);
 
@@ -87,73 +88,99 @@ enum {
     ARG_CHANNELS,
     ARG_RATE,
     ARG_PERIODCOUNT,
-    ARG_PERIODFRAMES
+    ARG_PERIODFRAMES,
+    ARG_DEBUG
 };
+
+#define GST_TYPE_ALSA_FORMAT (gst_alsa_format_get_type())
+static GType
+gst_alsa_format_get_type (void) 
+{
+    static GType type = 0;
+    static GEnumValue *values = NULL;
+    gint i, len = SND_PCM_FORMAT_GSM + 3;
+
+    if (values == NULL) {
+        /* the three: for -1, 0, and the terminating NULL */
+        values = g_new0 (GEnumValue, len);
+    
+        for (i=0; i<len-1; i++) {
+            values[i].value = i-1; /* UNKNOWN is -1 */
+            values[i].value_name = g_strdup_printf ("%d", i-1);
+            values[i].value_nick = g_strdup (snd_pcm_format_name ((snd_pcm_format_t)i-1));
+        }
+    }
+
+    if (!type) {
+        type = g_enum_register_static ("GstAlsaFormat", values);
+    }
+    return type;
+}
 
 GType
 gst_alsa_get_type (void) 
 {
-  static GType alsa_type = 0;
-
-  if (!alsa_type) {
-    static const GTypeInfo alsa_info = {
-      sizeof(GstAlsaClass),
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      sizeof(GstAlsa),
-      0,
-      NULL,
-    };
-    alsa_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAlsa", &alsa_info, 0);
-  }
-  return alsa_type;
+    static GType alsa_type = 0;
+    
+    if (!alsa_type) {
+        static const GTypeInfo alsa_info = {
+            sizeof(GstAlsaClass),
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            sizeof(GstAlsa),
+            0,
+            NULL,
+        };
+        alsa_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAlsa", &alsa_info, 0);
+    }
+    return alsa_type;
 }
 
 GType
 gst_alsa_sink_get_type (void) 
 {
-  static GType alsa_type = 0;
+    static GType alsa_type = 0;
 
-  if (!alsa_type) {
-    static const GTypeInfo alsa_info = {
-      sizeof(GstAlsaClass),
-      NULL,
-      NULL,
-      (GClassInitFunc)gst_alsa_class_init,
-      NULL,
-      NULL,
-      sizeof(GstAlsa),
-      0,
-      (GInstanceInitFunc)gst_alsa_init,
-    };
-    alsa_type = g_type_register_static (GST_TYPE_ALSA, "GstAlsaSink", &alsa_info, 0);
-  }
-  return alsa_type;
+    if (!alsa_type) {
+        static const GTypeInfo alsa_info = {
+            sizeof(GstAlsaClass),
+            NULL,
+            NULL,
+            (GClassInitFunc)gst_alsa_class_init,
+            NULL,
+            NULL,
+            sizeof(GstAlsa),
+            0,
+            (GInstanceInitFunc)gst_alsa_init,
+        };
+        alsa_type = g_type_register_static (GST_TYPE_ALSA, "GstAlsaSink", &alsa_info, 0);
+    }
+    return alsa_type;
 }
 
 GType
 gst_alsa_src_get_type (void) 
 {
-  static GType alsa_type = 0;
-
-  if (!alsa_type) {
-    static const GTypeInfo alsa_info = {
-      sizeof(GstAlsaClass),
-      NULL,
-      NULL,
-      (GClassInitFunc)gst_alsa_class_init,
-      NULL,
-      NULL,
-      sizeof(GstAlsa),
-      0,
-      (GInstanceInitFunc)gst_alsa_init,
-    };
-    alsa_type = g_type_register_static (GST_TYPE_ALSA, "GstAlsaSrc", &alsa_info, 0);
-  }
-  return alsa_type;
+    static GType alsa_type = 0;
+    
+    if (!alsa_type) {
+        static const GTypeInfo alsa_info = {
+            sizeof(GstAlsaClass),
+            NULL,
+            NULL,
+            (GClassInitFunc)gst_alsa_class_init,
+            NULL,
+            NULL,
+            sizeof(GstAlsa),
+            0,
+            (GInstanceInitFunc)gst_alsa_init,
+        };
+        alsa_type = g_type_register_static (GST_TYPE_ALSA, "GstAlsaSrc", &alsa_info, 0);
+    }
+    return alsa_type;
 }
 
 static GstPadTemplate*
@@ -163,8 +190,8 @@ gst_alsa_src_pad_factory(void)
     
     if (!template)
         template = gst_pad_template_new("src", GST_PAD_SRC, GST_PAD_SOMETIMES, 
-                                       gst_caps_new("src", "audio/raw", NULL),
-                                       NULL);
+                                        gst_caps_new("src", "audio/raw", NULL),
+                                        NULL);
     
     return template;
 }
@@ -176,9 +203,9 @@ gst_alsa_src_request_pad_factory(void)
     
     if (!template)
         template = gst_pad_template_new("src%d", GST_PAD_SRC, GST_PAD_REQUEST, 
-                                       gst_caps_new("src", "audio/raw",
-                                                    gst_props_new("channels", GST_PROPS_INT(1), NULL)),
-                                       NULL);
+                                        gst_caps_new("src-request", "audio/raw",
+                                                     gst_props_new("channels", GST_PROPS_INT(1), NULL)),
+                                        NULL);
     
     return template;
 }
@@ -190,8 +217,8 @@ gst_alsa_sink_pad_factory(void)
     
     if (!template)
         template = gst_pad_template_new("sink", GST_PAD_SINK, GST_PAD_SOMETIMES, 
-                                       gst_caps_new("sink", "audio/raw", NULL),
-                                       NULL);
+                                        gst_caps_new("sink", "audio/raw", NULL),
+                                        NULL);
     
     return template;
 }
@@ -203,9 +230,9 @@ gst_alsa_sink_request_pad_factory(void)
     
     if (!template)
         template = gst_pad_template_new("sink%d", GST_PAD_SINK, GST_PAD_REQUEST, 
-                                       gst_caps_new("sink-request", "audio/raw",
-                                                    gst_props_new("channels", GST_PROPS_INT(1), NULL)),
-                                       NULL);
+                                        gst_caps_new("sink-request", "audio/raw",
+                                                     gst_props_new("channels", GST_PROPS_INT(1), NULL)),
+                                        NULL);
     
     return template;
 }
@@ -226,29 +253,32 @@ gst_alsa_class_init(GstAlsaClass *klass)
     object_class->set_property = gst_alsa_set_property;
     
     g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE,
-                                    g_param_spec_string("device","device","alsa device: please see README for details",
+                                    g_param_spec_string("device","Device","Alsa device, as defined in an asoundrc",
                                                      "default",
-                                                     G_PARAM_READWRITE));
+                                                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORMAT,
-                                    g_param_spec_int("format","format","format",
-                                                     0, SND_PCM_FORMAT_LAST, SND_PCM_FORMAT_S16,
+                                    g_param_spec_enum("format","Format","PCM audio format",
+                                                     GST_TYPE_ALSA_FORMAT, -1,
                                                      G_PARAM_READWRITE));
     g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
-                                    g_param_spec_int("channels","channels","channels",
-                                                     1, 64, 1,
-                                                     G_PARAM_READWRITE));
+                                    g_param_spec_int("channels","Channels","Number of channels",
+                                                     1, 64, 2,
+                                                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RATE,
-                                    g_param_spec_int("rate","rate","rate",
+                                    g_param_spec_int("rate","Rate","Sample rate, in Hz",
                                                      8000, 192000, 44100,
-                                                     G_PARAM_READWRITE));
+                                                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PERIODCOUNT,
-                                    g_param_spec_int("period_count","period count","period count",
+                                    g_param_spec_int("period-count","Period count","Number of hardware buffers to use",
                                                      2, 64, 2,
-                                                     G_PARAM_READWRITE));
+                                                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PERIODFRAMES,
-                                    g_param_spec_int("period_frames","period frames","period frames",
-                                                     64, 4096, 256,
-                                                     G_PARAM_READWRITE));
+                                    g_param_spec_int("period-frames","Period frames","Number of frames (samples on each channel) in one hardware period",
+                                                     64, 8192, 8192,
+                                                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEBUG,
+                                    g_param_spec_boolean("debug","Debug","Set to TRUE to output PCM state info",
+                                                     FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     
     element_class->change_state = gst_alsa_change_state;
     
@@ -261,23 +291,6 @@ gst_alsa_init(GstAlsa *this)
     /* init values */
     this->handle = NULL;
     
-    /* i tried to trim this down to only the essentials needed for proper
-     * functioning; we'll be setting this values 'in earnest' when caps come */
-    
-    this->rate = 44100;
-    this->channels = 2;
-    
-    /* i wish i could leave these to defaults, but when caps come and typically
-     * the number of channels doubles, you can't have the default count and size
-     * that alsa gives you from the pre-caps setup apply to the post-caps setup
-     * due to internal hw buffer size restrictions. these values seem to be
-     * pretty common, though, although not pushing latency limits */
-    this->period_count = 2;
-    this->period_frames = 4096;
-    
-    this->device = g_strdup("default");
-    
-    /* is this right? */
     GST_FLAG_SET(this, GST_ELEMENT_THREAD_SUGGESTED);
     
     if (G_OBJECT_TYPE(this) == GST_TYPE_ALSA_SRC) {
@@ -293,10 +306,6 @@ gst_alsa_init(GstAlsa *this)
         this->process = gst_alsa_sink_process;
         this->format = SND_PCM_FORMAT_UNKNOWN; /* we don't know until caps are
                                                 * set */
-    } else {
-        g_print("you cannot instantiate an object of type gstalsa. use alsasink or alsasrc instead.\n");
-        G_BREAKPOINT();
-        return;
     }
     
     GST_ALSA_PAD(this->pads)->channel = -1;
@@ -305,7 +314,7 @@ gst_alsa_init(GstAlsa *this)
     
     gst_element_add_pad(GST_ELEMENT(this), GST_ALSA_PAD(this->pads)->pad);
     
-    /*gst_pad_set_negotiate_function(GST_ALSA_PAD(this->pads)->pad, gst_alsa_negotiate); */
+    gst_pad_set_connect_function(GST_ALSA_PAD(this->pads)->pad, gst_alsa_connect);
     gst_element_set_loop_function(GST_ELEMENT(this), gst_alsa_loop);
 }
 
@@ -329,11 +338,8 @@ gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
                           NULL);
     
     if (name) {
-        if (sscanf(name, templ->name_template, &channel) != 1) {
-            g_warning("invalid pad name %s (trying to fit with %s)", name,
-                      templ->name_template);
-            return NULL;
-        }
+        channel = atoi (name + (strchr (templ->name_template, '%') - templ->name_template));
+        
         l = this->pads;
         while (l) {
             if (GST_ALSA_PAD(l)->channel == channel) {
@@ -352,13 +358,13 @@ gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
         }
     }
     
-    newname = g_strdup_printf (templ->name_template, channel);
+    newname = g_strdup (name);
     
     pad = g_new0(GstAlsaPad, 1);
     pad->channel = channel;
     pad->pad = gst_pad_new_from_template (templ, newname);
     gst_element_add_pad (GST_ELEMENT (this), pad->pad);
-    /*gst_pad_set_negotiate_function(pad->pad, gst_alsa_negotiate); */
+    gst_pad_set_connect_function(pad->pad, gst_alsa_connect);
     
     if (this->data_interleaved && this->pads) {
         gst_element_remove_pad (GST_ELEMENT (this), GST_ALSA_PAD(this->pads)->pad);
@@ -394,7 +400,7 @@ gst_alsa_set_property(GObject *object, guint prop_id, const GValue *value, GPara
         this->device = g_strdup(g_value_get_string (value));
         break;
     case ARG_FORMAT:
-        this->format = g_value_get_int (value);
+        this->format = g_value_get_enum (value);
         break;
     case ARG_CHANNELS:
         this->channels = g_value_get_int (value);
@@ -410,6 +416,9 @@ gst_alsa_set_property(GObject *object, guint prop_id, const GValue *value, GPara
         this->period_frames = g_value_get_int (value);
         this->buffer_frames = this->period_count * this->period_frames;
         break;
+    case ARG_DEBUG:
+        this->debug = g_value_get_boolean (value);
+        return;
     default:
         GST_DEBUG(0, "Unknown arg");
         return;
@@ -439,7 +448,7 @@ gst_alsa_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec 
         g_value_set_string (value, this->device);
         break;
     case ARG_FORMAT:
-        g_value_set_int (value, this->format);
+        g_value_set_enum (value, this->format);
         break;
     case ARG_CHANNELS:
         g_value_set_int (value, this->channels);
@@ -452,6 +461,9 @@ gst_alsa_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec 
         break;
     case ARG_PERIODFRAMES:
         g_value_set_int (value, this->period_frames);
+        break;
+    case ARG_DEBUG:
+        g_value_set_boolean (value, this->debug);
         break;
     default:
         GST_DEBUG(0, "Unknown arg");
@@ -506,7 +518,7 @@ gst_alsa_change_state(GstElement *element)
 
     return GST_STATE_SUCCESS;
 }
-/* defined but not used
+
 static gboolean
 gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
 {
@@ -515,17 +527,20 @@ gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
     gint format = -1;
     const gchar* format_name;
 
-    gst_caps_get_string(caps, "format", &format_name);
+    if (!gst_caps_get_string (caps, "format", &format_name))
+        return FALSE;
     
     if (format_name == NULL) {
         return FALSE;
     } else if (strcmp(format_name, "int")==0) {
-        gst_caps_get_int (caps, "width", &width);
-        gst_caps_get_int (caps, "depth", &depth);
-        
-        gst_caps_get_int (caps, "law", &law);
-        gst_caps_get_int (caps, "endianness", &endianness);
-        gst_caps_get_boolean (caps, "signed", &sign);
+	if (!gst_caps_get (caps,
+                           "width", &width,
+                           "depth", &depth,
+                           "law", &law,
+                           "endianness", &endianness,
+                           "signed", &sign,
+                           NULL))
+            return FALSE;
         
         if (law == 0) {
             if (width == 8) {
@@ -571,13 +586,13 @@ gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
                         format = SND_PCM_FORMAT_U32_BE;
                 }
             }
-        } else if (law == 1) { *//* mu law *//*
+        } else if (law == 1) { /* mu law */
             if (width == depth && width == 8 && sign == FALSE) {
                 format = SND_PCM_FORMAT_MU_LAW;
             } else {
                 return FALSE;
             }
-        } else if (law == 2) { *//* a law, ug. *//*
+        } else if (law == 2) { /* a law, ug. */
             if (width == depth && width == 8 && sign == FALSE) {
                 format = SND_PCM_FORMAT_A_LAW;
             }
@@ -587,22 +602,25 @@ gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
     } else if (strcmp(format_name, "float")==0) {
 	const gchar *layout;
 
-        gst_caps_get_string(caps, "layout", &layout);
-
+        if (!gst_caps_get_string (caps, "layout", &layout))
+            return FALSE;
+        
         if (strcmp(layout, "gfloat")==0) {
             format = SND_PCM_FORMAT_FLOAT;
         } else {
             return FALSE;
-            *//* if you need float64, chat w/ me on irc.gstreamer.net and i'll tell you what needs to
-             * be done. i'm 'wingo'. *//*
+            /* you need doubles? jeez... */
         }
     } else {
         return FALSE;
     }
     
     this->format = format;
-    gst_caps_get_int(caps, "rate", &this->rate);
-    gst_caps_get_int(caps, "channels", &channels);
+    if (!gst_caps_get (caps,
+                       "rate", &this->rate,
+                       "channels", &channels,
+                       NULL))
+        return FALSE;
 
     if (this->data_interleaved)
         this->channels = channels;
@@ -611,7 +629,7 @@ gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
     
     return TRUE;
 }
-*/
+
 /* caps are so painful sometimes. */
 static GstCaps*
 gst_alsa_caps (GstAlsa *this)
@@ -721,30 +739,23 @@ gst_alsa_caps (GstAlsa *this)
 /*
  * Negotiates the caps, "borrowed" from gstosssink.c
  */
-#if 0
-GstPadNegotiateReturn
-gst_alsa_negotiate(GstPad *pad, GstCaps **caps, gpointer *user_data)
+GstPadConnectReturn
+gst_alsa_connect(GstPad *pad, GstCaps *caps)
 {
     GstAlsa *this;
     gboolean need_mmap;
-    
-    g_return_val_if_fail (pad != NULL, GST_PAD_NEGOTIATE_FAIL);
-    g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_NEGOTIATE_FAIL);
-    
+
+    g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_REFUSED);
+    g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_REFUSED);
+
     this = GST_ALSA(gst_pad_get_parent(pad));
     
-    /* we decide */
-    if (user_data == NULL) {
-        *caps = NULL;
-        return GST_PAD_NEGOTIATE_TRY;
-    }
-    /* have we got caps? */
-    else if (*caps) {
+    if (GST_CAPS_IS_FIXED (caps)) {
         if (this->handle == NULL)
             if (!gst_alsa_open_audio(this))
-                return GST_PAD_NEGOTIATE_FAIL;
+                return GST_PAD_CONNECT_REFUSED;
         
-        if (gst_alsa_parse_caps(this, *caps)) {
+        if (gst_alsa_parse_caps(this, caps)) {
             need_mmap = this->mmap_open;
             
             /* sync the params */
@@ -757,23 +768,22 @@ gst_alsa_negotiate(GstPad *pad, GstCaps **caps, gpointer *user_data)
             /* FIXME send out another caps if nego fails */
             
             if (!gst_alsa_open_audio(this))
-                return GST_PAD_NEGOTIATE_FAIL;
+                return GST_PAD_CONNECT_REFUSED;
             
             if (!gst_alsa_start_audio(this))
-                return GST_PAD_NEGOTIATE_FAIL;
+                return GST_PAD_CONNECT_REFUSED;
             
             if (need_mmap && !gst_alsa_get_channel_addresses(this))
-                return GST_PAD_NEGOTIATE_FAIL;
+                return GST_PAD_CONNECT_REFUSED;
             
-            return GST_PAD_NEGOTIATE_AGREE;
+            return GST_PAD_CONNECT_OK;
         }
         
-        return GST_PAD_NEGOTIATE_FAIL;
+        return GST_PAD_CONNECT_REFUSED;
     }
     
-    return GST_PAD_NEGOTIATE_FAIL;
+    return GST_PAD_CONNECT_DELAYED;
 }
-#endif
 
 /* shamelessly stolen from pbd's audioengine. thanks, paul! */
 static void
@@ -823,7 +833,7 @@ gst_alsa_loop (GstElement *element)
         xrun_detected = FALSE;
         
         this->avail = snd_pcm_avail_update (this->handle);
-/*        g_print ("snd_pcm_avail_update() = %d\n", this->avail); */
+//        g_print ("snd_pcm_avail_update() = %d\n", (int)this->avail);
         
         if (this->avail < 0) {
             if (this->avail == -EPIPE) {
@@ -835,6 +845,11 @@ gst_alsa_loop (GstElement *element)
             }
         }
         
+        /* round down to nearest period_frames avail */
+        this->avail -= this->avail % this->period_frames;
+
+//        g_print ("snd_pcm_avail_update(), rounded down = %d\n", (int)this->avail);
+
         /* pretty sophisticated eh? */
         if (xrun_detected)
             g_warning ("xrun detected"); 
@@ -956,13 +971,15 @@ gst_alsa_sink_process (GstAlsa *this, snd_pcm_uframes_t frames)
      * underestimate the amount of data we will need by peeking 'frames' only.
      * */
     
+    /* FIXME: if 0 < peek_bytes < len, play the peek_bytes */
+
     if (!this->sample_bytes) {
         if (!GST_ALSA_PAD(this->pads)->bs)
             GST_ALSA_PAD(this->pads)->bs = gst_bytestream_new(GST_ALSA_PAD(this->pads)->pad);
         
-        if (gst_bytestream_peek_bytes(GST_ALSA_PAD(this->pads)->bs, &peeked, frames) != frames) {
-            g_warning("initial pull on pad %s returned NULL", GST_OBJECT_NAME(GST_ALSA_PAD(this->pads)->pad));
-            gst_element_set_state(GST_ELEMENT(this), GST_STATE_PAUSED);
+        if (gst_bytestream_peek_bytes (GST_ALSA_PAD (this->pads)->bs, &peeked, frames) != frames) {
+            g_warning("could not make initial pull of %d bytes on pad %s:%s", (int)frames, GST_DEBUG_PAD_NAME(GST_ALSA_PAD(this->pads)->pad));
+            gst_element_set_eos (GST_ELEMENT(this));
             return FALSE;
         }
         
@@ -1156,8 +1173,9 @@ gst_alsa_set_params (GstAlsa *this)
         g_warning("could not set sw_params: %s", snd_strerror(ret));
         return FALSE;
     }
-    
-    snd_pcm_dump(this->handle, this->out);
+
+    if (this->debug)
+        snd_pcm_dump(this->handle, this->out);
     
     this->access_interleaved = !(snd_pcm_hw_params_get_access (hw_param) ==
                                  SND_PCM_ACCESS_MMAP_NONINTERLEAVED);
