@@ -74,6 +74,12 @@ main (gint argc, gchar *argv[])
   /* caps too */
   g_assert (!GST_CAPS_IS_FIXED (caps));
 
+  gst_props_set (props, "foo", GST_PROPS_INT (5));
+  /* props should be fixed again now */
+  g_assert (GST_PROPS_IS_FIXED (props));
+  /* caps too */
+  g_assert (GST_CAPS_IS_FIXED (caps));
+
 
   return 0;
 }
