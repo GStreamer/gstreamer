@@ -511,7 +511,7 @@ gst_multipart_mux_loop (GstElement * element)
       GstCaps *newcaps;
 
       newcaps = gst_caps_new_simple ("multipart/x-mixed-replace",
-          "boundary=", G_TYPE_STRING, mux->boundary, NULL);
+          "boundary", G_TYPE_STRING, mux->boundary, NULL);
 
       if (GST_PAD_LINK_FAILED (gst_pad_try_set_caps (mux->srcpad, newcaps))) {
         GST_ELEMENT_ERROR (mux, CORE, NEGOTIATION, (NULL), (NULL));
