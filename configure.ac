@@ -704,7 +704,7 @@ GST_CHECK_FEATURE(MJPEGTOOLS, [mjpegtools], jpegmmxenc jpegmmxdec, [
 dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
 GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
-  PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.3.0,
+  PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.3.1,
       HAVE_MPEG2DEC="yes", HAVE_MPEG2DEC="no")
   AC_SUBST(MPEG2DEC_CFLAGS)
   AC_SUBST(MPEG2DEC_LIBS)
