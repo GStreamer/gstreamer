@@ -1,3 +1,8 @@
+2004-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/videorate/gstvideorate.c:
+	  Handle all video formats. Fixes #159186. 
+
 2004-11-16  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst/synaesthesia/gstsynaesthesia.c:
 	(gst_synaesthesia_class_init), (gst_synaesthesia_init),
