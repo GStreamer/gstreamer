@@ -31,12 +31,15 @@
 
 static GstClock *_the_system_clock = NULL;
 
-static void		gst_system_clock_class_init	(GstSystemClockClass *klass);
-static void		gst_system_clock_init		(GstSystemClock *clock);
+static void			gst_system_clock_class_init	(GstSystemClockClass *klass);
+static void			gst_system_clock_init		(GstSystemClock *clock);
 
-static GstClockTime	gst_system_clock_get_internal_time	(GstClock *clock);
-static guint64		gst_system_clock_get_resolution (GstClock *clock);
+static GstClockTime		gst_system_clock_get_internal_time	(GstClock *clock);
+static guint64			gst_system_clock_get_resolution (GstClock *clock);
+static GstClockEntryStatus	gst_system_clock_wait		(GstClock *clock, GstClockEntry *entry);
 
+static GCond 	*_gst_sysclock_cond = NULL;
+static GMutex 	*_gst_sysclock_mutex = NULL;
 
 static GstClockClass *parent_class = NULL;
 /* static guint gst_system_clock_signals[LAST_SIGNAL] = { 0 }; */
@@ -78,8 +81,12 @@ gst_system_clock_class_init (GstSystemClockClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_CLOCK);
 
-  gstclock_class->get_internal_time =	gst_system_clock_get_internal_time;
-  gstclock_class->get_resolution =	gst_system_clock_get_resolution;
+  gstclock_class->get_internal_time 	= gst_system_clock_get_internal_time;
+  gstclock_class->get_resolution 	= gst_system_clock_get_resolution;
+  gstclock_class->wait		 	= gst_system_clock_wait;
+
+  _gst_sysclock_cond  = g_cond_new ();
+  _gst_sysclock_mutex = g_mutex_new ();
 }
 
 static void
@@ -99,6 +106,7 @@ gst_system_clock_obtain (void)
 {
   if (_the_system_clock == NULL) {
     _the_system_clock = GST_CLOCK (g_object_new (GST_TYPE_SYSTEM_CLOCK, NULL));
+    
     gst_object_set_name (GST_OBJECT (_the_system_clock), "GstSystemClock");
   }
   return _the_system_clock;
@@ -120,4 +128,30 @@ gst_system_clock_get_resolution (GstClock *clock)
   return 1 * GST_USECOND;
 }
 
+static GstClockEntryStatus	
+gst_system_clock_wait (GstClock *clock, GstClockEntry *entry)
+{
+  GstClockEntryStatus res = GST_CLOCK_ENTRY_OK;
+  GstClockTime current, target;
+	  
+  current = gst_clock_get_time (clock);
+  target = gst_system_clock_get_internal_time (clock) +
+           GST_CLOCK_ENTRY_TIME (entry) - current;
+		   
+  GST_DEBUG (GST_CAT_CLOCK, "real_target %llu,  target %llu, now %llu",
+                      target, GST_CLOCK_ENTRY_TIME (entry), current);
+		       
+  if (((gint64)target) > 0) {
+    GTimeVal tv;
+
+    GST_TIME_TO_TIMEVAL (target, tv);
+    g_mutex_lock (_gst_sysclock_mutex);
+    g_cond_timed_wait (_gst_sysclock_cond, _gst_sysclock_mutex, &tv);
+    g_mutex_unlock (_gst_sysclock_mutex);
+  }
+  else {
+    res = GST_CLOCK_ENTRY_EARLY;
+  }
+  return res;
+}
 

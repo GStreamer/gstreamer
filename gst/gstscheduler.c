@@ -566,6 +566,7 @@ gst_scheduler_set_clock (GstScheduler *sched, GstClock *clock)
 
     GST_DEBUG (GST_CAT_CLOCK, "scheduler setting clock %p (%s) on element %s", clock, 
 		(clock ? GST_OBJECT_NAME (clock) : "nil"), GST_ELEMENT_NAME (element));
+    
     gst_element_set_clock (element, clock);
     receivers = g_list_next (receivers);
   }
@@ -618,7 +619,11 @@ gst_scheduler_clock_wait (GstScheduler *sched, GstElement *element, GstClock *cl
   if (CLASS (sched)->clock_wait)
     return CLASS (sched)->clock_wait (sched, element, clock, time, jitter);
   else
-    return gst_clock_wait (clock, time, jitter);
+  {
+    GstClockID id = gst_clock_new_single_shot_id (clock, time);
+
+    return gst_clock_id_wait (id, jitter);
+  }
 
   return GST_CLOCK_TIMEOUT;
 }

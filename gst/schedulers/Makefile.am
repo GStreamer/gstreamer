@@ -5,7 +5,8 @@ plugin_LTLIBRARIES = \
 	libgstbasicwingoscheduler.la \
 	libgstfastomegascheduler.la \
 	libgstfastwingoscheduler.la \
-	libgstoptomegascheduler.la
+	libgstoptomegascheduler.la \
+	libgstoptwingoscheduler.la
 
 libgstbasicomegascheduler_la_SOURCES = gstbasicscheduler.c 
 libgstbasicomegascheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_OMEGA
@@ -39,6 +40,13 @@ libgstoptomegascheduler_la_SOURCES = gstoptimalscheduler.c
 libgstoptomegascheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_OMEGA
 libgstoptomegascheduler_la_LIBADD = ../libcothreads.la
 libgstoptomegascheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+libgstoptwingoscheduler_la_SOURCES = gstoptimalscheduler.c 
+libgstoptwingoscheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_WINGO
+libgstoptwingoscheduler_la_CFLAGS += -I$(top_builddir)/libs/ext/cothreads
+libgstoptwingoscheduler_la_CFLAGS += -I$(top_srcdir)/libs/ext/cothreads
+libgstoptwingoscheduler_la_LIBADD = $(top_builddir)/libs/ext/cothreads/cothreads/libcothreads-gthreads.la
+libgstoptwingoscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 ## this is a REALLY evil hack 
 ## but we need to keep it as long as we have libs/gst and libs/ext

@@ -139,9 +139,6 @@ gst_bin_init (GstBin * bin)
   bin->post_iterate_func = NULL;
   bin->pre_iterate_private = NULL;
   bin->post_iterate_private = NULL;
-
-  bin->iterate_mutex = g_mutex_new ();
-  bin->iterate_cond = g_cond_new ();
 }
 
 /**
@@ -218,11 +215,6 @@ gst_bin_set_element_sched (GstElement *element, GstScheduler *sched)
   GList *children;
   GstElement *child;
 
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (sched != NULL);
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
-
   GST_INFO (GST_CAT_SCHEDULING, "setting element \"%s\" sched to %p", GST_ELEMENT_NAME (element),
 	    sched);
 
@@ -249,7 +241,34 @@ gst_bin_set_element_sched (GstElement *element, GstScheduler *sched)
   }
   /* otherwise, if it's just a regular old element */
   else {
+    GList *pads;
+	  
     gst_scheduler_add_element (sched, element);
+	      
+    /* set the sched pointer in all the pads */
+    pads = element->pads;
+    while (pads) {
+      GstPad *pad;
+
+      pad = GST_PAD (pads->data);
+      pads = g_list_next (pads);
+					                                  
+      /* we only operate on real pads */
+      if (!GST_IS_REAL_PAD (pad))
+        continue;
+
+      /* if the peer element exists and is a candidate */
+      if (GST_PAD_PEER (pad)) {
+        if (gst_pad_get_scheduler (GST_PAD_PEER (pad)) == sched) {
+          GST_INFO (GST_CAT_SCHEDULING, "peer is in same scheduler, telling scheduler");
+		        
+          if (GST_PAD_IS_SRC (pad))
+            gst_scheduler_pad_connect (sched, pad, GST_PAD_PEER (pad));
+          else
+            gst_scheduler_pad_connect (sched, GST_PAD_PEER (pad), pad);
+        }
+      }
+    }
   }
 }
 
@@ -259,9 +278,6 @@ gst_bin_unset_element_sched (GstElement *element, GstScheduler *sched)
 {
   GList *children;
   GstElement *child;
-
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_ELEMENT (element));
 
   if (GST_ELEMENT_SCHED (element) == NULL) {
     GST_INFO (GST_CAT_SCHEDULING, "element \"%s\" has no scheduler",
@@ -296,6 +312,32 @@ gst_bin_unset_element_sched (GstElement *element, GstScheduler *sched)
   }
   /* otherwise, if it's just a regular old element */
   else {
+    GList *pads;
+
+    /* set the sched pointer in all the pads */
+    pads = element->pads;
+    while (pads) {
+      GstPad *pad;
+
+      pad = GST_PAD (pads->data);
+      pads = g_list_next (pads);
+
+      /* we only operate on real pads */
+      if (!GST_IS_REAL_PAD (pad))
+        continue;
+
+      /* if the peer element exists and is a candidate */
+      if (GST_PAD_PEER (pad)) {
+        if (gst_pad_get_scheduler (GST_PAD_PEER (pad)) == sched) {
+          GST_INFO (GST_CAT_SCHEDULING, "peer is in same scheduler, telling scheduler");
+
+          if (GST_PAD_IS_SRC (pad))
+            gst_scheduler_pad_disconnect (sched, pad, GST_PAD_PEER (pad));
+          else
+            gst_scheduler_pad_disconnect (sched, GST_PAD_PEER (pad), pad);
+        }
+      }
+    }
     gst_scheduler_remove_element (GST_ELEMENT_SCHED (element), element);
   }
 }
@@ -489,6 +531,11 @@ gst_bin_child_state_change (GstBin *bin, GstElementState oldstate, GstElementSta
 	GST_STATE_PENDING (bin) = state;
         GST_UNLOCK (bin);
 	gst_bin_change_state_norecurse (bin);
+	if (state != GST_STATE (bin)) {
+          g_warning ("%s: state change in cllback %d %d", 
+			  GST_ELEMENT_NAME (bin),
+			  state, GST_STATE (bin));
+	}
 	return;
       }
       break;

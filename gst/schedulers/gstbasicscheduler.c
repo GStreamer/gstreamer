@@ -1012,9 +1012,6 @@ gst_basic_scheduler_reset (GstScheduler *sched)
 static void
 gst_basic_scheduler_add_element (GstScheduler * sched, GstElement * element)
 {
-  GList *pads;
-  GstPad *pad;
-  GstElement *peerelement;
   GstSchedulerChain *chain;
   GstBasicScheduler *bsched = GST_BASIC_SCHEDULER (sched);
 
@@ -1032,27 +1029,6 @@ gst_basic_scheduler_add_element (GstScheduler * sched, GstElement * element)
   /* create a chain to hold it, and add */
   chain = gst_basic_scheduler_chain_new (bsched);
   gst_basic_scheduler_chain_add_element (chain, element);
-
-  /* set the sched pointer in all the pads */
-  pads = element->pads;
-  while (pads) {
-    pad = GST_PAD (pads->data);
-    pads = g_list_next (pads);
-
-    /* we only operate on real pads */
-    if (!GST_IS_REAL_PAD (pad))
-      continue;
-
-    /* if the peer element exists and is a candidate */
-    if (GST_PAD_PEER (pad)) {
-      peerelement = GST_PAD_PARENT (GST_PAD_PEER (pad));
-      if (GST_ELEMENT_SCHED (element) == GST_ELEMENT_SCHED (peerelement)) {
-	GST_INFO (GST_CAT_SCHEDULING, "peer is in same scheduler, chaining together");
-	/* make sure that the two elements are in the same chain */
-	gst_basic_scheduler_chain_elements (bsched, element, peerelement);
-      }
-    }
-  }
 }
 
 static void
@@ -1296,7 +1272,11 @@ static GstClockReturn
 gst_basic_scheduler_clock_wait (GstScheduler *sched, GstElement *element,
 				GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter)
 {
-  return gst_clock_wait (clock, time, jitter);
+  GstClockID id;
+  
+  id = gst_clock_new_single_shot_id (clock, time);
+
+  return gst_clock_id_wait (id, jitter);
 }
 
 static GstSchedulerState

@@ -20,7 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_CLOCK_H__
 #define __GST_CLOCK_H__
 
@@ -45,88 +44,156 @@ typedef gpointer 	GstClockID;
 
 #define GST_CLOCK_TIME_NONE  ((guint64)-1)
 
-#define GST_SECOND  ((guint64)G_USEC_PER_SEC * 1000LL)
-#define GST_MSECOND ((guint64)GST_SECOND/1000LL)
-#define GST_USECOND ((guint64)GST_SECOND/1000000LL)
-#define GST_NSECOND ((guint64)GST_SECOND/1000000000LL)
+#define GST_SECOND  ((guint64) G_USEC_PER_SEC * 1000LL)
+#define GST_MSECOND ((guint64) GST_SECOND / 1000LL)
+#define GST_USECOND ((guint64) GST_SECOND / 1000000LL)
+#define GST_NSECOND ((guint64) GST_SECOND / 1000000000LL)
 
-#define GST_CLOCK_DIFF(s, e) 		(GstClockTimeDiff)((s)-(e))
+#define GST_CLOCK_DIFF(s, e) 		(GstClockTimeDiff)((s) - (e))
 #define GST_TIMEVAL_TO_TIME(tv)		((tv).tv_sec * GST_SECOND + (tv).tv_usec * GST_USECOND)
 #define GST_TIME_TO_TIMEVAL(t,tv)			\
 G_STMT_START { 						\
-  (tv).tv_sec  = (t) / GST_SECOND;			\
+  (tv).tv_sec  =  (t) / GST_SECOND;			\
   (tv).tv_usec = ((t) / GST_USECOND) % GST_MSECOND;	\
 } G_STMT_END
 
+typedef struct _GstClockEntry 	GstClockEntry;
 typedef struct _GstClock 	GstClock;
 typedef struct _GstClockClass 	GstClockClass;
 
-typedef void (*GstClockCallback) (GstClock *clock, GstClockTime time, GstClockID id, gpointer user_data);
+typedef gboolean (*GstClockCallback) (GstClock *clock, GstClockTime time, GstClockID id, gpointer user_data);
+
+typedef enum {
+  /*< protected >*/
+  GST_CLOCK_ENTRY_OK,
+  GST_CLOCK_ENTRY_EARLY,
+  GST_CLOCK_ENTRY_RESTART,
+} GstClockEntryStatus;
+
+typedef enum {
+  /*< protected >*/
+  GST_CLOCK_ENTRY_SINGLE,
+  GST_CLOCK_ENTRY_PERIODIC,
+} GstClockEntryType;
+
+#define GST_CLOCK_ENTRY(entry)		((GstClockEntry *)(entry))
+#define GST_CLOCK_ENTRY_CLOCK(entry)	((entry)->clock)
+#define GST_CLOCK_ENTRY_TYPE(entry)	((entry)->type)
+#define GST_CLOCK_ENTRY_TIME(entry)	((entry)->time)
+#define GST_CLOCK_ENTRY_INTERVAL(entry)	((entry)->interval)
+#define GST_CLOCK_ENTRY_STATUS(entry)	((entry)->status)
+
+struct _GstClockEntry {
+  /*< protected >*/
+  GstClock	 	*clock;
+  GstClockEntryType 	 type;
+  GstClockTime 		 time;
+  GstClockTime 		 interval;
+  GstClockEntryStatus 	 status;
+  GstClockCallback 	 func;
+  gpointer		 user_data;
+};
 
 typedef enum
 {
   GST_CLOCK_STOPPED 	= 0,
   GST_CLOCK_TIMEOUT 	= 1,
   GST_CLOCK_EARLY 	= 2,
-  GST_CLOCK_ERROR 	= 3
+  GST_CLOCK_ERROR 	= 3,
+  GST_CLOCK_UNSUPPORTED	= 4
 } GstClockReturn;
+
+typedef enum
+{
+  GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC     = (1 << 1),
+  GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC    = (1 << 2),
+  GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC   = (1 << 3),
+  GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC  = (1 << 4),
+  GST_CLOCK_FLAG_CAN_SET_RESOLUTION     = (1 << 5),
+  GST_CLOCK_FLAG_CAN_SET_SPEED          = (1 << 6),
+} GstClockFlags;
+
+#define GST_CLOCK_FLAGS(clock)  (GST_CLOCK(clock)->flags)
 
 struct _GstClock {
   GstObject 	 object;
 
+  GstClockFlags	 flags;
+
+  /*< protected >*/
   GstClockTime	 start_time;
   GstClockTime	 last_time;
+
+  /*< private >*/
   gboolean 	 accept_discont;
   gdouble 	 speed;
+  guint64	 resolution;
   gboolean 	 active;
   GList		*entries;
-  gboolean	 async_supported;
-
   GMutex	*active_mutex;
   GCond		*active_cond;
+  gboolean	 stats;
 };
 
 struct _GstClockClass {
   GstObjectClass        parent_class;
 
   /* vtable */
+  gdouble               (*change_speed)         (GstClock *clock,
+		                                 gdouble oldspeed, gdouble newspeed);
+  gdouble               (*get_speed)            (GstClock *clock);
+  guint64               (*change_resolution)    (GstClock *clock, guint64 old_resolution,
+  						 guint64 new_resolution);
+  guint64               (*get_resolution)       (GstClock *clock);
+
   GstClockTime 		(*get_internal_time)	(GstClock *clock);
 
-  void 			(*set_resolution)	(GstClock *clock, guint64 resolution);
-  guint64		(*get_resolution)	(GstClock *clock);
+  /* waiting on an ID */
+  GstClockEntryStatus   (*wait)        		(GstClock *clock, GstClockEntry *entry);
+  GstClockEntryStatus   (*wait_async)           (GstClock *clock, GstClockEntry *entry,
+		                                 GstClockCallback func, gpointer user_data);
+  void                  (*unschedule)        	(GstClock *clock, GstClockEntry *entry);
+  void                  (*unlock)            	(GstClock *clock, GstClockEntry *entry);
 
   /* signals */
+  void                  (*object_sync)          (GstClock *clock, GstObject *object, 
+		   				 GstClockID id);
 };
 
 GType           	gst_clock_get_type 		(void);
 
-void 			gst_clock_set_speed		(GstClock *clock, gdouble speed);
+gdouble			gst_clock_set_speed		(GstClock *clock, gdouble speed);
 gdouble 		gst_clock_get_speed		(GstClock *clock);
+
+guint64			gst_clock_set_resolution	(GstClock *clock, guint64 resolution);
+guint64			gst_clock_get_resolution	(GstClock *clock);
 
 void 			gst_clock_set_active		(GstClock *clock, gboolean active);
 gboolean 		gst_clock_is_active		(GstClock *clock);
 void 			gst_clock_reset			(GstClock *clock);
 gboolean		gst_clock_handle_discont	(GstClock *clock, guint64 time);
-gboolean 		gst_clock_async_supported	(GstClock *clock);
 
 GstClockTime		gst_clock_get_time		(GstClock *clock);
 
-GstClockReturn		gst_clock_wait			(GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter);
-GstClockID		gst_clock_wait_async		(GstClock *clock, GstClockTime time, 
-						 	 GstClockCallback func, gpointer user_data);
-void			gst_clock_cancel_wait_async	(GstClock *clock, GstClockID id);
-GstClockID		gst_clock_notify_async		(GstClock *clock, GstClockTime interval, 
-						 	 GstClockCallback func, gpointer user_data);
-void 			gst_clock_remove_notify_async	(GstClock *clock, GstClockID id);
-GstClockReturn		gst_clock_wait_id		(GstClock *clock, GstClockID id, GstClockTimeDiff *jitter);
-
 GstClockID		gst_clock_get_next_id		(GstClock *clock);
-void			gst_clock_unlock_id		(GstClock *clock, GstClockID id);
 
+/* creating IDs that can be used to get notifications */
+GstClockID		gst_clock_new_single_shot_id	(GstClock *clock, 
+							 GstClockTime time); 
+GstClockID		gst_clock_new_periodic_id	(GstClock *clock, 
+							 GstClockTime start_time,
+		 					 GstClockTime interval); 
+
+/* operations on IDs */
 GstClockTime		gst_clock_id_get_time		(GstClockID id);
-
-void 			gst_clock_set_resolution	(GstClock *clock, guint64 resolution);
-guint64			gst_clock_get_resolution	(GstClock *clock);
+GstClockReturn		gst_clock_id_wait		(GstClockID id, 
+							 GstClockTimeDiff *jitter);
+GstClockReturn		gst_clock_id_wait_async		(GstClockID id, 
+						 	 GstClockCallback func, 
+							 gpointer user_data);
+void 			gst_clock_id_unschedule		(GstClockID id);
+void			gst_clock_id_unlock		(GstClockID id);
+void			gst_clock_id_free		(GstClockID id);
 
 G_END_DECLS
 

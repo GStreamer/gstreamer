@@ -74,9 +74,6 @@ struct _GstBin {
   gint 		 numchildren;
   GList 	*children;
 
-  GMutex        *iterate_mutex;
-  GCond         *iterate_cond;
-
   GstElementState child_states[GST_NUM_STATES];
 
   gpointer 	 sched_private;
@@ -90,12 +87,16 @@ struct _GstBin {
 struct _GstBinClass {
   GstElementClass parent_class;
 
+  /* vtable */
+  void		(*add_element)		(GstBin *bin, GstElement);
+  void		(*remove_element)	(GstBin *bin, GstElement);
+  /* run a full iteration of operation */
+  gboolean	(*iterate)		(GstBin *bin);
+
   /* signals */
   void		(*object_added)		(GstObject *object, GstObject *child);
   void		(*object_removed)	(GstObject *object, GstObject *child);
 
-  /* run a full iteration of operation */
-  gboolean	(*iterate)		(GstBin *bin);
 };
 
 GType		gst_bin_get_type		(void);
