@@ -26,6 +26,7 @@
 
 #include "gstbuffer.h"
 
+/* #define MEMPROF */
 
 GType _gst_buffer_type;
 
@@ -88,7 +89,11 @@ gst_buffer_new (void)
   GstBuffer *buffer;
 
   g_mutex_lock (_gst_buffer_chunk_lock);
+#ifdef MEMPROF
+  buffer = g_new0 (GstBuffer, 1);
+#else
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
+#endif
   _gst_buffer_live++;
   g_mutex_unlock (_gst_buffer_chunk_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new buffer %p",buffer);
@@ -169,7 +174,11 @@ gst_buffer_create_sub (GstBuffer *parent,
   g_return_val_if_fail ((offset+size) <= parent->size, NULL);
 
   g_mutex_lock (_gst_buffer_chunk_lock);
+#ifdef MEMPROF
+  buffer = g_new0 (GstBuffer, 1);
+#else
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
+#endif
   _gst_buffer_live++;
   g_mutex_unlock (_gst_buffer_chunk_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new subbuffer %p from parent %p (size %u, offset %u)", 
@@ -314,7 +323,11 @@ gst_buffer_destroy (GstBuffer *buffer)
 
   /* remove it entirely from memory */
   g_mutex_lock (_gst_buffer_chunk_lock);
+#ifdef MEMPROF
+  g_free (buffer);
+#else
   g_mem_chunk_free (_gst_buffer_chunk,buffer);
+#endif
   _gst_buffer_live--;
   g_mutex_unlock (_gst_buffer_chunk_lock);
 }

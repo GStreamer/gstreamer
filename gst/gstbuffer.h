@@ -84,7 +84,6 @@ typedef enum {
   GST_BUFFER_READONLY,
   GST_BUFFER_ORIGINAL,
   GST_BUFFER_DONTFREE,
-
 } GstBufferFlag;
 
 
