@@ -84,12 +84,38 @@ static GstTypeDefinition vorbisdefinition = {
 static GstCaps* 
 vorbis_type_find (GstBuffer *buf, gpointer private) 
 {
-  gulong head = GULONG_FROM_BE (*((gulong *)GST_BUFFER_DATA (buf)));
+  guint32 head;
+  gint offset;
+  guint8 *data;
+  gint size;
 
-  if (head  != 0x4F676753)
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+
+  if (size < sizeof(guint32))
     return NULL;
 
-  return gst_caps_new ("vorbis_type_find", "application/x-ogg", NULL);
+  head = GUINT32_FROM_BE (*((guint32 *)data));
+
+  if (head  == 0x4F676753) {
+    return gst_caps_new ("vorbis_type_find", "application/x-ogg", NULL);
+  } else {
+    /* checks for existance of vorbis identification header in case
+     * there's an ID3 tag */
+    for (offset = 0; offset < size-7; offset++) {
+      if (data[offset] == 0x01 && 
+          data[offset+1] == 'v' && 
+          data[offset+2] == 'o' &&
+          data[offset+3] == 'r' && 
+          data[offset+4] == 'b' &&
+          data[offset+5] == 'i' && 
+          data[offset+6] == 's' ) {
+        return gst_caps_new ("vorbis_type_find", "application/x-ogg", NULL);
+      }
+    }
+  }
+
+  return NULL;
 }
 
 
