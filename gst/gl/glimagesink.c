@@ -164,6 +164,11 @@ gst_glimagesink_ximage_destroy (GstGLImageSink * glimagesink,
 static void
 gst_glimagesink_ximage_put (GstGLImageSink * glimagesink, GstGLImage * ximage)
 {
+  float xmax;
+  float ymax;
+  float px;
+  float py;
+
   g_return_if_fail (ximage != NULL);
   g_return_if_fail (GST_IS_GLIMAGESINK (glimagesink));
 
@@ -197,8 +202,8 @@ gst_glimagesink_ximage_put (GstGLImageSink * glimagesink, GstGLImage * ximage)
   glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, ximage->width, ximage->height,
       GL_RGB, GL_UNSIGNED_BYTE, ximage->data);
 
-  float xmax = (float) ximage->width / TEX_XSIZE;
-  float ymax = (float) ximage->height / TEX_YSIZE;
+  xmax = (float) ximage->width / TEX_XSIZE;
+  ymax = (float) ximage->height / TEX_YSIZE;
 
   //float aspect = ximage->width/(float)ximage->height;
 
@@ -236,9 +241,8 @@ gst_glimagesink_ximage_put (GstGLImageSink * glimagesink, GstGLImage * ximage)
   if (glimagesink->pointer_button[0])
     glColor3f (1, 0, 0);
 
-  float px = 2 * glimagesink->pointer_x / (float) ximage->width - 1.0;
-  float py = 2 * glimagesink->pointer_y / (float) ximage->height - 1.0;
-
+  px = 2 * glimagesink->pointer_x / (float) ximage->width - 1.0;
+  py = 2 * glimagesink->pointer_y / (float) ximage->height - 1.0;
   glPointSize (10);
   glBegin (GL_POINTS);
   glVertex2f (px, -py);
@@ -257,6 +261,8 @@ gst_glimagesink_xwindow_new (GstGLImageSink * glimagesink, gint width,
 {
   GstGLWindow *xwindow = NULL;
   GstXContext *xcontext = glimagesink->xcontext;
+  Colormap cmap;
+  Atom wmDelete;
 
   if (glimagesink->signal_handoffs) {
     g_warning ("NOT CREATING any window due to signal_handoffs !\n");
@@ -272,8 +278,6 @@ gst_glimagesink_xwindow_new (GstGLImageSink * glimagesink, gint width,
   xwindow->internal = TRUE;
 
   g_mutex_lock (glimagesink->x_lock);
-
-  Colormap cmap;
 
   /* create a color map */
   cmap =
@@ -300,16 +304,14 @@ gst_glimagesink_xwindow_new (GstGLImageSink * glimagesink, gint width,
       ExposureMask | KeyPressMask | ButtonPressMask | StructureNotifyMask;
 
   /* create a window in window mode */
-  xwindow->win =
-      XCreateWindow (xcontext->disp, /*xcontext->root, */
+  xwindow->win = XCreateWindow (xcontext->disp, /*xcontext->root, */
       RootWindow (xcontext->disp, xcontext->visualinfo->screen),
       0, 0, xwindow->width, xwindow->height, 0, xcontext->visualinfo->depth,
       InputOutput, xcontext->visualinfo->visual,
       CWBorderPixel | CWColormap | CWEventMask, &xwindow->attr);
 
   /* only set window title and handle wm_delete_events if in windowed mode */
-  Atom wmDelete = XInternAtom (xcontext->disp, "WM_DELETE_WINDOW", True);
-
+  wmDelete = XInternAtom (xcontext->disp, "WM_DELETE_WINDOW", True);
   XSetWMProtocols (xcontext->disp, xwindow->win, &wmDelete, 1);
   XSetStandardProperties (xcontext->disp, xwindow->win, "glsink",
       "glsink", None, NULL, 0, NULL);
@@ -652,9 +654,12 @@ static int attrListDouble[] = {
 static GstXContext *
 gst_glimagesink_xcontext_get (GstGLImageSink * glimagesink)
 {
-  printf ("Acquiring X context\n");
-
   GstXContext *xcontext = NULL;
+  int glxMajorVersion, glxMinorVersion;
+  XPixmapFormatValues *px_formats = NULL;
+  gint nb_formats = 0, i;
+
+  printf ("Acquiring X context\n");
 
   g_return_val_if_fail (GST_IS_GLIMAGESINK (glimagesink), NULL);
 
@@ -689,8 +694,6 @@ gst_glimagesink_xcontext_get (GstGLImageSink * glimagesink)
   } else {
     GST_DEBUG ("Got Doublebuffered Visual!\n");
   }
-  int glxMajorVersion, glxMinorVersion;
-
   glXQueryVersion (xcontext->disp, &glxMajorVersion, &glxMinorVersion);
   GST_DEBUG ("glX-Version %d.%d\n", glxMajorVersion, glxMinorVersion);
 
@@ -713,8 +716,6 @@ gst_glimagesink_xcontext_get (GstGLImageSink * glimagesink)
   xcontext->root = DefaultRootWindow (xcontext->disp);
 
 #if 1
-  XPixmapFormatValues *px_formats = NULL;
-  gint nb_formats = 0, i;
 
   xcontext->white = XWhitePixel (xcontext->disp, xcontext->screen_num);
   xcontext->black = XBlackPixel (xcontext->disp, xcontext->screen_num);
@@ -828,10 +829,10 @@ Element stuff
 static GstCaps *
 gst_glimagesink_fixate (GstPad * pad, const GstCaps * caps)
 {
-  printf ("Linking the sink\n");
-
   GstStructure *structure;
   GstCaps *newcaps;
+
+  printf ("Linking the sink\n");
 
   if (gst_caps_get_size (caps) > 1)
     return NULL;
