@@ -107,6 +107,9 @@ gst_index_init (GstIndex *index)
 
   index->writers = g_hash_table_new (NULL, NULL);
   index->last_id = 0;
+
+  GST_FLAG_SET (index, GST_INDEX_WRITABLE);
+  GST_FLAG_SET (index, GST_INDEX_READABLE);
   
   GST_DEBUG(0, "created new index");
 }
@@ -118,7 +121,7 @@ gst_index_init (GstIndex *index)
  *
  * Returns: a new index object
  */
-GstIndex *
+GstIndex*
 gst_index_new()
 {
   GstIndex *index;
@@ -127,6 +130,27 @@ gst_index_new()
 
   return index;
 }
+
+/**
+ * gst_index_commit:
+ * @index: the index to commit
+ * @id: the writer that commited the index
+ *
+ * Tell the index that the writer with the given id is done
+ * with this index and is not going to write any more entries
+ * to it.
+ */
+void
+gst_index_commit (GstIndex *index, gint id)
+{
+  GstIndexClass *iclass;
+
+  iclass = GST_INDEX_GET_CLASS (index);
+
+  if (iclass->commit)
+    iclass->commit (index, id);
+}
+
 
 /**
  * gst_index_get_group:
@@ -295,6 +319,9 @@ gst_index_add_format (GstIndex *index, gint id, GstFormat format)
 
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (format != 0, NULL);
+
+  if (!GST_INDEX_IS_WRITABLE (index))
+    return NULL;
   
   entry = g_new0 (GstIndexEntry, 1);
   entry->type = GST_INDEX_ENTRY_FORMAT;
@@ -332,6 +359,9 @@ gst_index_add_id (GstIndex *index, gint id, gchar *description)
 
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (description != NULL, NULL);
+  
+  if (!GST_INDEX_IS_WRITABLE (index))
+    return NULL;
   
   entry = g_new0 (GstIndexEntry, 1);
   entry->type = GST_INDEX_ENTRY_ID;
@@ -432,6 +462,9 @@ gst_index_add_association (GstIndex *index, gint id, GstAssocFlags flags,
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (format != 0, NULL);
   
+  if (!GST_INDEX_IS_WRITABLE (index))
+    return NULL;
+  
   va_start (args, value);
 
   cur_format = format;
@@ -495,6 +528,9 @@ GstIndexEntry*
 gst_index_add_object (GstIndex *index, gint id, gchar *key,
 		      GType type, gpointer object)
 {
+  if (!GST_INDEX_IS_WRITABLE (index))
+    return NULL;
+  
   return NULL;
 }
 

@@ -131,6 +131,16 @@ typedef gboolean 	(*GstIndexResolver) 		(GstIndex *index,
 						   	 gint *writer_id,
 						   	 gchar **writer_string,
 						   	 gpointer user_data);
+typedef enum {
+  GST_INDEX_WRITABLE 		= GST_OBJECT_FLAG_LAST,	
+  GST_INDEX_READABLE,	
+
+  GST_INDEX_FLAG_LAST 		= GST_OBJECT_FLAG_LAST + 8
+} GstIndexFlags;
+
+#define GST_INDEX_IS_READABLE(obj)    (GST_FLAG_IS_SET (obj, GST_INDEX_READABLE))
+#define GST_INDEX_IS_WRITABLE(obj)    (GST_FLAG_IS_SET (obj, GST_INDEX_WRITABLE))
+
 struct _GstIndex {
   GstObject		 object;
 
@@ -156,6 +166,8 @@ struct _GstIndexClass {
   gboolean	(*resolve_writer)	(GstIndex *index, GstObject *writer, 
 		  			 gint *writer_id, gchar **writer_string);
 
+  void		(*commit)		(GstIndex *index, gint id);
+
   /* abstract methods */
   void		(*add_entry)		(GstIndex *index, GstIndexEntry *entry);
 
@@ -172,6 +184,7 @@ struct _GstIndexClass {
 
 GType			gst_index_get_type		(void);
 GstIndex*		gst_index_new			(void);
+void			gst_index_commit		(GstIndex *index, gint id);
 
 gint			gst_index_get_group		(GstIndex *index);
 gint			gst_index_new_group		(GstIndex *index);
