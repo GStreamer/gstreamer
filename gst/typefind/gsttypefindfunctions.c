@@ -29,6 +29,7 @@
 #include <gst/gstelement.h>
 #include <gst/gstversion.h>
 #include <gst/gstinfo.h>
+#include <gst/gstutils.h>
 
 #include <string.h>
 #include <ctype.h>
@@ -350,7 +351,7 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
         }
         if (!head_data)
           break;
-        head = GUINT32_FROM_BE (*((guint32 *) head_data));
+        head = GST_READ_UINT32_BE (head_data);
         if (!(length = mp3_type_frame_length_from_header (head, &layer,
                     &channels, &bitrate, &samplerate))) {
           GST_LOG ("%d. header at offset %" G_GUINT64_FORMAT
@@ -498,7 +499,7 @@ mpeg1_parse_header (GstTypeFind * tf, guint64 offset)
         GST_LOG ("couldn't get MPEG pack header bytes");
         return 1;
       }
-      size = GUINT16_FROM_BE (*(guint16 *) data) + 6;
+      size = GST_READ_UINT16_BE (data) + 6;
       offset += 2;
       data = gst_type_find_peek (tf, offset, size - 6);
       if (!data) {
@@ -524,7 +525,7 @@ mpeg1_parse_header (GstTypeFind * tf, guint64 offset)
         GST_LOG ("couldn't get MPEG pack header bytes");
         return 1;
       }
-      size = GUINT16_FROM_BE (*(guint16 *) data) + 6;
+      size = GST_READ_UINT16_BE (data) + 6;
       /* FIXME: we could check PTS/DTS marker bits here... (bit overkill) */
       break;
   }
@@ -729,7 +730,7 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       tip = GST_TYPE_FIND_MAXIMUM;
       break;
     }
-    offset += GUINT32_FROM_BE (*((guint32 *) data));
+    offset += GST_READ_UINT32_BE (data);
   }
   if (tip > 0) {
     gst_type_find_suggest (tf, tip, QT_CAPS);
@@ -1168,17 +1169,17 @@ speex_type_find (GstTypeFind * tf, gpointer private)
     data += 32;
 
     /* 4 byte header size >= 80 */
-    if (GINT32_FROM_LE (*((gint32 *) data)) < 80)
+    if (GST_READ_UINT32_LE (data) < 80)
       return;
     data += 4;
 
     /* 4 byte sample rate <= 48000 */
-    if (GINT32_FROM_LE (*((gint32 *) data)) > 48000)
+    if (GST_READ_UINT32_LE (data) > 48000)
       return;
     data += 4;
 
     /* currently there are only 3 speex modes. */
-    if (GINT32_FROM_LE (*((gint32 *) data)) > 3)
+    if (GST_READ_UINT32_LE (data) > 3)
       return;
     data += 12;
 

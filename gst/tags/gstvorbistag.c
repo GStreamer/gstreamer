@@ -24,8 +24,8 @@
 #endif
 #include <gst/gsttaginterface.h>
 #include "gsttageditingprivate.h"
+#include <stdlib.h>
 #include <string.h>
-
 
 GST_DEBUG_CATEGORY_STATIC (gst_vorbis_tag_debug);
 #define GST_CAT_DEFAULT gst_vorbis_tag_debug
@@ -353,7 +353,7 @@ gst_tag_list_from_vorbiscomment_buffer (const GstBuffer * buffer,
   data += x;									\
   size -= x;									\
   if (size < 4) goto error;							\
-  cur_size = GUINT32_FROM_LE (*((guint32 *) data));				\
+  cur_size = GST_READ_UINT32_LE (data);						\
   data += 4;									\
   size -= 4;									\
   if (cur_size > size) goto error;						\

@@ -1,3 +1,56 @@
+2004-04-20  Daniel Gazard  <daniel.gazard@epita.fr>
+
+	reviewed by David Schleef
+
+	* configure.ac: bump required gstreamer version to 0.8.1.1
+	because of following changes [--ds]
+
+	* gst-libs/gst/riff/riff-read.c:  Include gst/gstutils.h.
+	(gst_riff_peek_head, gst_riff_peek_list, gst_riff_read_list)
+	(gst_riff_read_header):  Use GST_READ_UINT*
+	macros to access possibly unaligned memory.
+
+	* gst/typefind/gsttypefindfunctions.c: Include gst/gstutils.h.
+	(mp3_type_find):  Use GST_READ_UINT*
+	macros to access possibly unaligned memory.
+	(mp3_type_find, mpeg1_parse_header, qt_type_find)
+	(speex_type_find): Likewise
+
+	* gst/tags/gstvorbistag.c: (ADVANCE): Likewise
+
+	* gst/qtdemux/qtdemux.c: Include stdlib.h (needed by realloc).
+	(QTDEMUX_GUINT32_GET, QTDEMUX_GUINT16_GET, QTDEMUX_FP32_GET)
+	(QTDEMUX_FP16_GET, QTDEMUX_FOURCC_GET)
+	(gst_qtdemux_loop_header, gst_qtdemux_loop_header)
+	(qtdemux_node_dump_foreach, qtdemux_tree_get_child_by_type)
+	(qtdemux_tree_get_sibling_by_type):  Use GST_READ_UINT*
+	macros to access possibly unaligned memory.
+
+	* gst/mpegstream/gstmpegpacketize.c: (parse_generic, parse_chunk):
+	Likewise.
+
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_syshead)
+	(gst_mpeg_demux_parse_packet, gst_mpeg_demux_parse_pes): Likewise.
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_chain):
+	Likewise.
+
+	* gst/mpeg2sub/gstmpeg2subt.c: (GST_BUFFER_DATA)
+	(gst_mpeg2subt_chain_subtitle): Likewise.
+
+	* gst/mpeg1videoparse/gstmp1videoparse.c: (mp1videoparse_parse_seq)
+	(gst_mp1videoparse_time_code, gst_mp1videoparse_real_chain):
+	Likewise.
+
+	* gst/mpeg1sys/buffer.c: (mpeg1mux_buffer_update_audio_info):
+	Likewise.
+
+	* gst/cdxaparse/gstcdxaparse.c: (gst_bytestream_peek_bytes):
+	Likewise.
+
+	* gst/asfdemux/gstasfdemux.c: (_read_var_length, _read_uint):
+	Likewise.
+
 2004-04-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
