@@ -118,7 +118,11 @@ else
 JPEG_DIR=
 endif
 
+if USE_LADSPA
 LADSPA_DIR=ladspa
+else
+LADPSA_DIR=
+endif
 
 if USE_LAME
 LAME_DIR=lame
