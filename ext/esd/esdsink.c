@@ -213,6 +213,7 @@ gst_esdsink_link (GstPad *pad, const GstCaps *caps)
   /* FIXME: is it supposed to be correct to have closed audio when caps nego 
      failed? */
 
+  GST_DEBUG ("esd link function could not negotiate, returning delayed");
   return GST_PAD_LINK_REFUSED;
 }
 
