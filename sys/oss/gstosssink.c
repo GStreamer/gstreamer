@@ -237,7 +237,9 @@ gst_osssink_sink_fixate (GstPad *pad, const GstCaps *caps, gpointer user_data)
     return newcaps;
   }
 
-  return newcaps;
+  gst_caps_free (newcaps);
+
+  return NULL;
 }
 
 static GstPadLinkReturn 
