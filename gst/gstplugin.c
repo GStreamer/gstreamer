@@ -61,6 +61,7 @@ static GstPlugin* 	gst_plugin_register_func 	(GstPluginDesc *desc, GstPlugin *pl
 void
 _gst_plugin_initialize (void)
 {
+  GList *gst_plugin_default_paths = NULL;
 #ifndef GST_DISABLE_REGISTRY
   xmlDocPtr doc;
   xmlNodePtr root;
@@ -69,26 +70,22 @@ _gst_plugin_initialize (void)
   main_module =  g_module_open (NULL, G_MODULE_BIND_LAZY);
   gst_plugin_register_statics (main_module);
 
-  /* add the main (installed) library path */
-  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths, PLUGINS_DIR);
-
-  /* if this is set, we add build-directory paths to the list */
 #ifdef PLUGINS_USE_BUILDDIR
-  /* the catch-all plugins directory */
-  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
-                                      PLUGINS_BUILDDIR "/plugins");
-  /* the libreary directory */
-  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
-                                      PLUGINS_BUILDDIR "/libs");
+  /* the library directory */
+  gst_plugin_default_paths = g_list_prepend (gst_plugin_default_paths,
+                                             PLUGINS_BUILDDIR "/libs/gst");
   /* location libgstelements.so */
-  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
-                                      PLUGINS_BUILDDIR "/gst/elements");
-  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
-                                      PLUGINS_BUILDDIR "/gst/types");
-  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
-                                      PLUGINS_BUILDDIR "/gst/autoplug");
-  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
-                                      PLUGINS_BUILDDIR "/gst/schedulers");
+  gst_plugin_default_paths = g_list_prepend (gst_plugin_default_paths,
+                                             PLUGINS_BUILDDIR "/gst/elements");
+  gst_plugin_default_paths = g_list_prepend (gst_plugin_default_paths,
+                                             PLUGINS_BUILDDIR "/gst/types");
+  gst_plugin_default_paths = g_list_prepend (gst_plugin_default_paths,
+                                             PLUGINS_BUILDDIR "/gst/autoplug");
+  gst_plugin_default_paths = g_list_prepend (gst_plugin_default_paths,
+                                             PLUGINS_BUILDDIR "/gst/schedulers");
+#else
+  /* add the main (installed) library path */
+  gst_plugin_default_paths = g_list_prepend (gst_plugin_default_paths, PLUGINS_DIR);
 #endif /* PLUGINS_USE_BUILDDIR */
 
 #ifndef GST_DISABLE_REGISTRY
@@ -102,13 +99,17 @@ _gst_plugin_initialize (void)
   {
     if (_gst_warn_old_registry)
 	g_error ("gstplugin: registry needs rebuild: run gstreamer-register\n");
+    _gst_plugin_paths = g_list_concat (_gst_plugin_paths, gst_plugin_default_paths);
     gst_plugin_load_all ();
     /* gst_plugin_unload_all (); */
     return;
   }
+  /* this will pull in the plugin paths for us */
   gst_plugin_load_thyself (doc->xmlRootNode);
 
   xmlFreeDoc (doc);
+#else
+  _gst_plugin_paths = g_list_concat (_gst_plugin_paths, gst_plugin_default_paths);
 #endif /* GST_DISABLE_REGISTRY */
 }
 
@@ -758,7 +759,7 @@ xmlNodePtr
 gst_plugin_save_thyself (xmlNodePtr parent)
 {
   xmlNodePtr tree, subtree;
-  GList *plugins = NULL;
+  GList *l = NULL, *plugins = NULL;
 
   plugins = _gst_plugins;
   while (plugins) {
@@ -787,6 +788,14 @@ gst_plugin_save_thyself (xmlNodePtr parent)
       features = g_list_next (features);
     }
   }
+  
+  /* save the plugin search path in reverse order (because they are cons'd back on) */
+  l=g_list_last(_gst_plugin_paths);
+  while(l) {
+    xmlNewChild (parent, NULL, "plugin-path", l->data);
+    l = l->prev;
+  }
+    
   return parent;
 }
 
@@ -808,11 +817,11 @@ gst_plugin_load_thyself (xmlNodePtr parent)
     if (!strcmp (kinderen->name, "plugin")) {
       xmlNodePtr field = kinderen->xmlChildrenNode;
       GstPlugin *plugin = g_new0 (GstPlugin, 1);
-
+      
       plugin->numfeatures = 0;
       plugin->features = NULL;
       plugin->module = NULL;
-
+      
       while (field) {
 	if (!strcmp (field->name, "name")) {
           pluginname = xmlNodeGetContent (field);
@@ -852,8 +861,11 @@ gst_plugin_load_thyself (xmlNodePtr parent)
         _gst_plugins = g_list_prepend (_gst_plugins, plugin);
         _gst_plugins_seqno++;
       }
+    } else if (!strcmp (kinderen->name, "plugin-path")) {
+      _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
+                                          xmlNodeGetContent (kinderen));
     }
-
+    
     kinderen = kinderen->next;
   }
   GST_INFO (GST_CAT_PLUGIN_LOADING, "added %d features ", featurecount);
