@@ -25,6 +25,8 @@
 #ifndef __GSTCOMPAT_H__
 #define __GSTCOMPAT_H__
 
+G_BEGIN_DECLS
+
 #ifndef GST_DISABLE_DEPRECATED
 /* 0.5.2 changes */
 
@@ -68,5 +70,7 @@ typedef GstPadLinkFunction		GstPadConnectFunction;
  * GST_RPAD_LINKFUNC
  */
 #endif /* not GST_DISABLE_DEPRECATED */
+
+G_END_DECLS
 
 #endif /* __GSTCOMPAT_H__ */

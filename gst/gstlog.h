@@ -23,6 +23,8 @@
 #ifndef __GST_LOG_H__
 #define __GST_LOG_H__
 
+G_BEGIN_DECLS
+
 extern const char             *g_log_domain_gstreamer;
 
 #ifdef G_HAVE_ISO_VARARGS
@@ -45,5 +47,7 @@ extern const char             *g_log_domain_gstreamer;
 #define gst_info(format,args...)
 #endif
 #endif
+
+G_END_DECLS
 
 #endif /* __GST_LOG_H__ */

@@ -24,6 +24,8 @@
 #ifndef __GST_CPU_H__
 #define __GST_CPU_H__
 
+G_BEGIN_DECLS
+
 typedef enum {
   GST_CPU_FLAG_MMX      = (1<<0),
   GST_CPU_FLAG_SSE      = (1<<1),
@@ -34,5 +36,7 @@ typedef enum {
 void 		_gst_cpu_initialize	(gboolean useopt);
 
 GstCPUFlags 	gst_cpu_get_flags	(void);
+
+G_END_DECLS
 
 #endif /* __GST_CPU_H__ */
