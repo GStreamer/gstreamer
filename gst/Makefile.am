@@ -1,6 +1,6 @@
-# cheap trick to build . first...
 
 lib_LTLIBRARIES = libgst.la
+noinst_LTLIBRARIES = libcothreads.la
 
 if HAVE_CPU_I386
 GSTARCH_SRCS = gstcpuid_i386.s
@@ -44,11 +44,12 @@ endif
 
 EXTRA_libgst_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
 
+# cheap trick to build . first...
 SUBDIRS = . types elements $(GST_AUTOPLUG_DIRS) schedulers
 DIST_SUBDIRS = types elements autoplug schedulers
 
+libcothreads_la_SOURCES = cothreads.c
 libgst_la_SOURCES =		\
-	cothreads.c		\
 	gst.c			\
 	gstmarshal.c		\
 	gstobject.c		\
@@ -82,16 +83,6 @@ libgst_la_SOURCES =		\
 	$(GSTARCH_SRCS)		\
 	$(GST_LOADSAVE_SRC)
 
-
-# FIXME this only lists the x86 arch file, we really should merge them all
-cothreads.lo: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h \
-  $(top_builddir)/config.h $(srcdir)/gstinfo.c $(srcdir)/gstarch.h
-	$(LIBTOOL) --mode=compile $(COMPILE) -O2 -c $<
-cothreads.o: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h \
-  $(top_builddir)/config.h $(srcdir)/gstinfo.c $(srcdir)/gstarch.h
-	$(COMPILE) -O2 -c $<
-
-##### Other built sources #####
 
 BUILT_SOURCES = gstmarshal.h gstmarshal.c
 
@@ -164,8 +155,10 @@ libgst_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
 	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\"
 
-libgst_la_LIBADD = $(LIBGST_LIBS)
+# the compiler shoots cothreads.c in the head at -O6
+libcothreads_la_CFLAGS = $(libgst_la_CFLAGS) -O2
 
+libgst_la_LIBADD = $(LIBGST_LIBS) libcothreads.la
 libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION) -release $(GST_VERSION)
 
 EXTRA_DIST = ROADMAP
