@@ -328,7 +328,7 @@ gst_buffer_store_get_buffer (GstBufferStore *store, guint64 offset, guint size)
   GList *walk;
   guint8 *data;
   guint tmp;
-  guint64 cur_offset;
+  guint64 cur_offset = 0;
   gboolean have_offset;
   GstBuffer *ret = NULL;
 
@@ -418,10 +418,10 @@ guint
 gst_buffer_store_get_size (GstBufferStore *store, guint64 offset)
 {
   GList *walk;
-  guint64 cur_offset;
+  guint64 cur_offset = 0;
   gboolean have_offset;
   gboolean counting = FALSE;
-  GstBuffer *current;
+  GstBuffer *current = NULL;
   guint ret = 0;
 
   g_return_val_if_fail (GST_IS_BUFFER_STORE (store), 0);
