@@ -1,3 +1,11 @@
+2004-10-26  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_event),
+	(gst_ogg_demux_handle_event), (_find_chain_get_unknown_part),
+	(_find_streams_check), (gst_ogg_demux_push):
+	Fix EOS again. Needs to be done in a better way. We should not
+	remove the pad if there is no new chained stream.
+
 2004-10-26 Iain <iaingnome@gmail.com>
 
 	* ext/ogg/gstoggdemux.c (gst_ogg_pad_new): Free the tag list.
