@@ -1,3 +1,13 @@
+2004-08-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
+	(gst_multifdsink_add), (gst_multifdsink_get_stats),
+	(gst_multifdsink_client_remove),
+	(gst_multifdsink_handle_client_read),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_queue_buffer), (gst_multifdsink_handle_clients):
+	Do a bit more logging, make the client_read code more robust.
+
 2004-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/jpeg/gstjpegdec.c: (gst_jpegdec_init_source),

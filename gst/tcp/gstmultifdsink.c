@@ -478,9 +478,13 @@ gst_multifdsink_handle_client_read (GstMultiFdSink * sink,
 
   fd = client->fd;
 
-  ioctl (fd, FIONREAD, &avail);
+  if (ioctl (fd, FIONREAD, &avail) < 0) {
+    GST_WARNING_OBJECT (sink, "ioctl failed for fd %d", fd);
+    ret = FALSE;
+    return ret;
+  }
 
-  GST_LOG_OBJECT (sink, "select reports client read on fd %d of %d bytes",
+  GST_DEBUG_OBJECT (sink, "select reports client read on fd %d of %d bytes",
       fd, avail);
 
   ret = TRUE;
@@ -488,6 +492,9 @@ gst_multifdsink_handle_client_read (GstMultiFdSink * sink,
   if (avail == 0) {
     /* client sent close, so remove it */
     GST_DEBUG_OBJECT (sink, "client asked for close, removing on fd %d", fd);
+    ret = FALSE;
+  } else if (avail < 0) {
+    GST_WARNING_OBJECT (sink, "avail < 0, removing on fd %d", fd);
     ret = FALSE;
   } else {
     guint8 dummy[512];
@@ -500,9 +507,12 @@ gst_multifdsink_handle_client_read (GstMultiFdSink * sink,
       /* this is the maximum we can read */
       gint to_read = MIN (avail, 512);
 
+      GST_DEBUG_OBJECT (sink, "client on fd %d wants us to read %d bytes",
+          fd, to_read);
+
       nread = read (fd, dummy, to_read);
       if (nread < -1) {
-        GST_DEBUG_OBJECT (sink, "could not read bytes from fd %d: %s",
+        GST_WARNING_OBJECT (sink, "could not read bytes from fd %d: %s",
             fd, g_strerror (errno));
         ret = FALSE;
         break;
@@ -1048,8 +1058,8 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
 
     client = (GstTCPClient *) clients->data;
 
-    GST_LOG_OBJECT (sink, "removing client %p with fd %d with errors", client,
-        client->fd);
+    GST_WARNING_OBJECT (sink, "removing client %p with fd %d with errors",
+        client, client->fd);
     gst_multifdsink_client_remove (sink, client);
   }
   g_list_free (error);
