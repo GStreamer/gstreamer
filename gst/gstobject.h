@@ -29,10 +29,6 @@
 #include <glib-object.h>	/* note that this gets wrapped in __GST_OBJECT_H__ */
 #include <gst/gstmarshal.h>
 
-#ifdef HAVE_ATOMIC_H
-#include <asm/atomic.h>
-#endif
-
 #include <gst/gsttrace.h>
 #include <gst/gsttypes.h>
 
