@@ -57,6 +57,7 @@ struct _GstTheoraDec
   guint packetno;
   guint64 granulepos;
 
+  gboolean initialized;
   gboolean need_keyframe;
   gint width, height;
   gint offset_x, offset_y;
@@ -530,9 +531,12 @@ theora_dec_chain (GstPad * pad, GstData * data)
   packet.packet = GST_BUFFER_DATA (buf);
   packet.bytes = GST_BUFFER_SIZE (buf);
   packet.granulepos = dec->granulepos;
-  packet.packetno = dec->packetno++;
+  packet.packetno = dec->packetno;
   packet.b_o_s = (packet.packetno == 0) ? 1 : 0;
   packet.e_o_s = 0;
+
+  GST_DEBUG_OBJECT (dec, "header=%d packetno=%d", packet.packet[0],
+      packet.packetno);
 
   /* switch depending on packet type */
   if (packet.packet[0] & 0x80) {
@@ -543,7 +547,9 @@ theora_dec_chain (GstPad * pad, GstData * data)
       gst_data_unref (data);
       return;
     }
-    if (packet.packetno == 1) {
+    if (packet.packetno == 0) {
+      dec->packetno++;
+    } else if (packet.packetno == 1) {
       gchar *encoder = NULL;
       GstTagList *list =
           gst_tag_list_from_vorbiscomment_buffer (buf, "\201theora", 7,
@@ -561,6 +567,8 @@ theora_dec_chain (GstPad * pad, GstData * data)
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_ENCODER_VERSION, dec->info.version_major, NULL);
       gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, 0, list);
+
+      dec->packetno++;
     } else if (packet.packetno == 2) {
       GstCaps *caps;
       gint par_num, par_den;
@@ -621,6 +629,9 @@ theora_dec_chain (GstPad * pad, GstData * data)
           dec->height, NULL);
       gst_pad_set_explicit_caps (dec->srcpad, caps);
       gst_caps_free (caps);
+
+      dec->initialized = TRUE;
+      dec->packetno++;
     }
   } else {
     /* normal data packet */
@@ -632,6 +643,13 @@ theora_dec_chain (GstPad * pad, GstData * data)
     gint stride_y, stride_uv;
     gint width, height;
     gint cwidth, cheight;
+
+    dec->packetno++;
+
+    if (!dec->initialized) {
+      gst_data_unref (data);
+      return;
+    }
 
     /* the second most significant bit of the first data byte is cleared 
      * for keyframes */
@@ -739,6 +757,7 @@ theora_dec_change_state (GstElement * element)
       theora_info_init (&dec->info);
       theora_comment_init (&dec->comment);
       dec->need_keyframe = TRUE;
+      dec->initialized = FALSE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
