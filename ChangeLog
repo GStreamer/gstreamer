@@ -1,5 +1,12 @@
 2004-05-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/vorbis/vorbisenc.c: (vorbis_granule_time_copy),
+	(gst_vorbisenc_buffer_from_packet), (gst_vorbisenc_push_buffer),
+	(gst_vorbisenc_push_packet), (gst_vorbisenc_chain):
+        split up push_packet into two functions
+
+2004-05-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/tcp/.cvsignore:
 	  ignore enums
 	* gst/tcp/Makefile.am:
