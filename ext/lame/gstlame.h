@@ -29,7 +29,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include <lame.h>
+#include <lame/lame.h>
 
 #define GST_TYPE_LAME \
   (gst_lame_get_type())
