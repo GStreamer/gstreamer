@@ -297,6 +297,16 @@ gst_filesink_handle_event (GstPad *pad, GstEvent *event)
           break;
       }
       break;
+    case GST_EVENT_DISCONTINUOUS:
+    {
+      gint64 offset;
+      
+      if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &offset))
+        fseek(filesink->file, offset, SEEK_SET);
+
+      gst_event_free (event);
+      break;
+    }
     case GST_EVENT_NEW_MEDIA:
       /* we need to open a new file! */
       gst_filesink_close_file(filesink);
