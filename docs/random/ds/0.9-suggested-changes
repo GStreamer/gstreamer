@@ -2,6 +2,8 @@
 
 API:
 
+  - MAKE A DOCUMENT THAT LISTS ALL API CHANGES AND HOW TO DEAL WITH THEM
+
  - replace object/structure set/get macros with actual functions.
 
  - events should all use GstStructure
@@ -57,6 +59,8 @@ API:
    as a subclass of GObject.
 
  - remove unnecessary headers from gst.h (gstqueue.h in particular)
+
+ - make sure GstClockTime is used wherever it shoud (e.g. gstplay)
 
 caps:
 
