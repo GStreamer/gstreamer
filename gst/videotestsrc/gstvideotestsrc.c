@@ -149,8 +149,6 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
   GST_DEBUG (0, "gst_videotestsrc_srcconnect");
   videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
 
-  gst_caps_debug(caps,"moo");
-
   videotestsrc->fourcc = paintinfo_find_by_caps(caps);
   if(!videotestsrc->fourcc){
     return GST_PAD_LINK_DELAYED;
@@ -162,16 +160,8 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
   gst_caps_get_int (caps, "width", &videotestsrc->width);
   gst_caps_get_int (caps, "height", &videotestsrc->height);
 
-#if 0
-  /* FIXME */
-  if (videotestsrc->forced_format && videotestsrc->format != videotestsrc->forced_format) {
-    return GST_PAD_LINK_REFUSED;
-  }
-#endif
-
   videotestsrc->make_image = gst_videotestsrc_smpte;
   videotestsrc->make_image = gst_videotestsrc_snow;
-  /* videotestsrc->make_image = gst_videotestsrc_colors_yuv; */
   videotestsrc->bpp = videotestsrc->fourcc->bitspp;
 
   GST_DEBUG (0, "size %d x %d", videotestsrc->width, videotestsrc->height);
@@ -235,9 +225,15 @@ gst_videotestsrc_getcaps (GstPad * pad, GstCaps * caps)
     caps1 = gst_videotestsrc_get_capslist ();
   }
 
-  caps2 = GST_CAPS_NEW("ack","video/raw",
-		"width", GST_PROPS_INT (640),
-		"height", GST_PROPS_INT (480));
+  if(vts->width){
+    caps2 = GST_CAPS_NEW("ack","video/raw",
+		"width",GST_PROPS_INT(vts->width),
+		"height",GST_PROPS_INT(vts->height));
+  }else{
+    caps2 = GST_CAPS_NEW("ack","video/raw",
+		"width",GST_PROPS_INT_RANGE(16,4096),
+		"height",GST_PROPS_INT_RANGE(16,4096));
+  }
 
   return gst_caps_intersect(caps1,caps2);
 }
@@ -249,7 +245,6 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
 
   videotestsrc->srcpad =
     gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (videotestsrc_src_template_factory), "src");
-  /*gst_pad_set_negotiate_function(videotestsrc->srcpad,videotestsrc_negotiate_src); */
   gst_pad_set_getcaps_function (videotestsrc->srcpad, gst_videotestsrc_getcaps);
   gst_element_add_pad (GST_ELEMENT (videotestsrc), videotestsrc->srcpad);
   gst_pad_set_get_function (videotestsrc->srcpad, gst_videotestsrc_get);
