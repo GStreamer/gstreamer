@@ -102,16 +102,16 @@ gst_data_copy (const GstData *data)
 }
 
 /**
- * gst_data_is_readonly:
+ * gst_data_is_writeable:
  * @data: a #GstData to copy
  *
  * Query if the gstdata needs to be copied before it can safely be modified.
  *
- * Returns: TRUE if the given #GstData is potentially shared and needs to
+ * Returns: FALSE if the given #GstData is potentially shared and needs to
  * be copied before it can be modified safely.
  */
 gboolean
-gst_data_is_readonly (GstData *data) 
+gst_data_is_writeable (GstData *data) 
 {
   gint refcount;
 
@@ -246,4 +246,3 @@ gst_data_unref (GstData *data)
       data->free (data); 
   }
 }
-
