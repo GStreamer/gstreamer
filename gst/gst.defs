@@ -295,6 +295,11 @@
   (return-type "GstBuffer*")
 )
 
+(define-method set_buffer_data
+  (of-object "GstBuffer")
+  (c-name "gst_buffer_set_data")
+  (return-type "none")
+)
 
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstcaps.h
@@ -1243,11 +1248,11 @@
   )
 )
 
-(define-method unlink_many
-  (of-object "GstElement")
+(define-function element_unlink_many
   (c-name "gst_element_unlink_many")
   (return-type "none")
   (parameters
+    '("GstElement*" "element_1")
     '("GstElement*" "element_2")
   )
   (varargs #t)

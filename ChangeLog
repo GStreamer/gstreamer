@@ -1,3 +1,10 @@
+2004-10-11  set REAL_NAME environment variable  <set EMAIL_ADDRESS environment variable>
+
+	* gst/gst.defs:
+	* gst/gst.override:
+	Fixes element_unlink_many and adds a set_buffer_data method to GstBuffer
+	Fixes bug #154451 and #154692
+
 2004-10-11  Johan Dahlin  <johan@gnome.org>
 
 	* gst/arg-types.py:

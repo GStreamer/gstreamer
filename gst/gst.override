@@ -337,7 +337,7 @@ _wrap_gst_element_unlink_many(PyObject *self, PyObject *args)
 	len = PyTuple_Size(args);
 	if (len < 2)
 	{
-		PyErr_SetString(PyExc_TypeError, "gst.element_unlink_many requires at least two argument");
+		PyErr_SetString(PyExc_TypeError, "gst.element_unlink_many requires at least two arguments");
 		return NULL;
 	}
        
@@ -368,8 +368,8 @@ _wrap_gst_element_unlink_many(PyObject *self, PyObject *args)
 	
 		i++;
 	}
-
-	return PyInt_FromLong(1);
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 %%
 override GstPad.get_negotiated_caps
