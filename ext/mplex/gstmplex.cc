@@ -247,7 +247,7 @@ gst_mplex_init (GstMPlex *mplex)
 }
 
 static GstPadLinkReturn
-gst_mplex_video_connect (GstPad *pad, GstCaps *caps)
+gst_mplex_video_link (GstPad *pad, GstCaps *caps)
 {   
   GstMPlex *mplex;
   gint version;
@@ -301,7 +301,7 @@ gst_mplex_request_new_pad (GstElement     *element,
 
     pad = gst_pad_new (name, GST_PAD_SINK);
     /* we still need to figure out the mpeg version */
-    gst_pad_set_connect_function (pad, gst_mplex_video_connect);
+    gst_pad_set_link_function (pad, gst_mplex_video_link);
     g_free (name);
 
     stream->type = GST_MPLEX_STREAM_UNKOWN;
