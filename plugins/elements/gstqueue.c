@@ -322,7 +322,7 @@ gst_queue_getcaps (GstPad *pad)
 
   queue = GST_QUEUE (gst_pad_get_parent (pad));
 
-  if (queue->queue->length > 0) {
+  if (queue->cur_level.bytes > 0) {
     return gst_caps_copy (queue->negotiated_caps);
   }
 
@@ -337,7 +337,7 @@ gst_queue_link (GstPad *pad, const GstCaps *caps)
 
   queue = GST_QUEUE (gst_pad_get_parent (pad));
 
-  if (queue->queue->length > 0) {
+  if (queue->cur_level.bytes > 0) {
     if (gst_caps_is_equal_fixed (caps, queue->negotiated_caps)) {
       return GST_PAD_LINK_OK;
     }

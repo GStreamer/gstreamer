@@ -1,3 +1,8 @@
+2004-01-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstqueue.c: (gst_queue_getcaps), (gst_queue_link):
+	  query if buffers are inside the pool, ignore events
+
 2004-01-13  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstclock.c: (gst_clock_class_init), (gst_clock_init),
