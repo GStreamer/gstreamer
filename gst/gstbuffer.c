@@ -140,15 +140,20 @@ GstBuffer *
 gst_buffer_default_copy (GstBuffer * buffer)
 {
   GstBuffer *copy;
+  guint16 flags;
 
   g_return_val_if_fail (buffer != NULL, NULL);
 
   /* create a fresh new buffer */
   copy = gst_buffer_alloc_chunk ();
 
+  /* copy relevant flags */
+  flags = GST_DATA_FLAG_SHIFT (GST_BUFFER_KEY_UNIT) |
+      GST_DATA_FLAG_SHIFT (GST_BUFFER_IN_CAPS);
+
   _GST_DATA_INIT (GST_DATA (copy),
       _gst_buffer_type,
-      0,
+      flags,
       (GstDataFreeFunction) gst_buffer_default_free,
       (GstDataCopyFunction) gst_buffer_default_copy);
 

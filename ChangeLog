@@ -1,3 +1,10 @@
+2004-05-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbuffer.c: (gst_buffer_default_copy):
+	* gst/gstbuffer.h:
+	Added Comment to a flag.
+	copy relevant flags in _buffer_copy.
+
 2004-05-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	reviewed by: Wim Taymans <wim at fluendo dot com>
