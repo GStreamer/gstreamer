@@ -27,8 +27,8 @@
 static void	gst_mpeg2subt_class_init	(GstMpeg2SubtClass *klass);
 static void	gst_mpeg2subt_init		(GstMpeg2Subt *mpeg2subt);
 
-static void	gst_mpeg2subt_chain_video	(GstPad *pad,GstBuffer *buf);
-static void	gst_mpeg2subt_chain_subtitle	(GstPad *pad,GstBuffer *buf);
+static void	gst_mpeg2subt_chain_video	(GstPad *pad,GstData *_data);
+static void	gst_mpeg2subt_chain_subtitle	(GstPad *pad,GstData *_data);
 
 static void	gst_mpeg2subt_merge_title	(GstMpeg2Subt *mpeg2subt, GstBuffer *buf);
 
@@ -152,8 +152,9 @@ gst_mpeg2subt_init (GstMpeg2Subt *mpeg2subt)
 }
 
 static void
-gst_mpeg2subt_chain_video (GstPad *pad, GstBuffer *buf)
+gst_mpeg2subt_chain_video (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstMpeg2Subt *mpeg2subt;
   guchar *data;
   glong size;
@@ -172,7 +173,7 @@ gst_mpeg2subt_chain_video (GstPad *pad, GstBuffer *buf)
     mpeg2subt->duration--;
   }
 
-  gst_pad_push(mpeg2subt->srcpad, buf);
+  gst_pad_push(mpeg2subt->srcpad, GST_DATA (buf));
 }
 
 
@@ -346,8 +347,9 @@ next_line:
 }
 
 static void
-gst_mpeg2subt_chain_subtitle (GstPad *pad, GstBuffer *buf)
+gst_mpeg2subt_chain_subtitle (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstMpeg2Subt *mpeg2subt;
   guchar *data;
   glong size = 0;

@@ -52,7 +52,7 @@ enum {
 static void			gst_gsmdec_class_init	(GstGSMDec *klass);
 static void			gst_gsmdec_init		(GstGSMDec *gsmdec);
 
-static void			gst_gsmdec_chain	(GstPad *pad, GstBuffer *buf);
+static void			gst_gsmdec_chain	(GstPad *pad, GstData *_data);
 static GstPadLinkReturn	gst_gsmdec_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
@@ -137,8 +137,9 @@ gst_gsmdec_sinkconnect (GstPad *pad, GstCaps *caps)
 }
 
 static void
-gst_gsmdec_chain (GstPad *pad, GstBuffer *buf)
+gst_gsmdec_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstGSMDec *gsmdec;
   gsm_byte *data;
   guint size;
@@ -164,7 +165,7 @@ gst_gsmdec_chain (GstPad *pad, GstBuffer *buf)
 
     gsm_decode (gsmdec->state, gsmdec->buffer, (gsm_signal *) GST_BUFFER_DATA (outbuf));
 
-    gst_pad_push (gsmdec->srcpad, outbuf);
+    gst_pad_push (gsmdec->srcpad, GST_DATA (outbuf));
 
     size -= (33 - gsmdec->bufsize);
     data += (33 - gsmdec->bufsize);
@@ -180,7 +181,7 @@ gst_gsmdec_chain (GstPad *pad, GstBuffer *buf)
     
     gsm_decode (gsmdec->state, data, (gsm_signal *)GST_BUFFER_DATA (outbuf));
 
-    gst_pad_push (gsmdec->srcpad, outbuf);
+    gst_pad_push (gsmdec->srcpad, GST_DATA (outbuf));
 
     size -= 33;
     data += 33;

@@ -77,7 +77,7 @@ GST_PAD_TEMPLATE_FACTORY (smooth_sink_factory,
 static void	gst_smooth_class_init	(GstSmoothClass *klass);
 static void	gst_smooth_init		(GstSmooth *smooth);
 
-static void	gst_smooth_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_smooth_chain	(GstPad *pad, GstData *_data);
 static void	smooth_filter		(unsigned char* dest, unsigned char* src,
 					 int width, int height, int tolerance, int filtersize);
 
@@ -218,8 +218,9 @@ smooth_filter (unsigned char* dest, unsigned char* src, int width, int height, i
 }
 
 static void
-gst_smooth_chain (GstPad *pad, GstBuffer *buf)
+gst_smooth_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstSmooth *smooth;
   guchar *data;
   gulong size;
@@ -233,7 +234,7 @@ gst_smooth_chain (GstPad *pad, GstBuffer *buf)
   smooth = GST_SMOOTH (GST_OBJECT_PARENT (pad));
 
   if (!smooth->active) {
-    gst_pad_push(smooth->srcpad,buf);
+    gst_pad_push(smooth->srcpad,GST_DATA (buf));
     return;
   }
 
@@ -265,7 +266,7 @@ gst_smooth_chain (GstPad *pad, GstBuffer *buf)
 
   gst_buffer_unref (buf);
 
-  gst_pad_push (smooth->srcpad, outbuf);
+  gst_pad_push (smooth->srcpad, GST_DATA (outbuf));
 }
 
 static void

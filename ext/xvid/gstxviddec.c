@@ -216,8 +216,9 @@ gst_xviddec_dispose (GObject *object)
 
 static void
 gst_xviddec_chain (GstPad    *pad,
-                   GstBuffer *buf)
+                   GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstXvidDec *xviddec;
   GstBuffer *outbuf;
   XVID_DEC_FRAME xframe;
@@ -262,7 +263,7 @@ gst_xviddec_chain (GstPad    *pad,
     return;
   }
 
-  gst_pad_push(xviddec->srcpad, outbuf);
+  gst_pad_push(xviddec->srcpad, GST_DATA (outbuf));
   gst_buffer_unref(buf);
 }
 

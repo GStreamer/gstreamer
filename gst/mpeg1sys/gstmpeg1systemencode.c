@@ -91,7 +91,7 @@ static void	gst_system_encode_init			(GstMPEG1SystemEncode *system_encode);
 
 static GstPad* 	gst_system_encode_request_new_pad 	(GstElement *element, GstPadTemplate *templ,
                                                          const gchar *unused);
-static void	gst_system_encode_chain			(GstPad *pad, GstBuffer *buf);
+static void	gst_system_encode_chain			(GstPad *pad, GstData *_data);
 
 static void	gst_system_encode_set_property		(GObject *object, guint prop_id, 
 							 const GValue *value, GParamSpec *pspec);
@@ -459,7 +459,7 @@ gst_system_encode_multiplex(GstMPEG1SystemEncode *system_encode)
     GST_BUFFER_SIZE(outbuf) = system_encode->sector->length_of_sector;
     memcpy(GST_BUFFER_DATA(outbuf),system_encode->sector->buf, system_encode->sector->length_of_sector);
     system_encode->bytes_output += GST_BUFFER_SIZE(outbuf);
-    gst_pad_push(system_encode->srcpad,outbuf);
+    gst_pad_push(system_encode->srcpad,GST_DATA (outbuf));
 
     GST_DEBUG ("system_encode::multiplex: writing %02x", mb->stream_id);
 
@@ -471,8 +471,9 @@ gst_system_encode_multiplex(GstMPEG1SystemEncode *system_encode)
 }
 
 static void
-gst_system_encode_chain (GstPad *pad, GstBuffer *buf)
+gst_system_encode_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstMPEG1SystemEncode *system_encode;
   guchar *data;
   gulong size;

@@ -51,7 +51,7 @@ enum {
 static void	gst_rtjpegdec_class_init	(GstRTJpegDecClass *klass);
 static void	gst_rtjpegdec_init		(GstRTJpegDec *rtjpegdec);
 
-static void	gst_rtjpegdec_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_rtjpegdec_chain		(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_rtjpegdec_signals[LAST_SIGNAL] = { 0 }; */
@@ -98,8 +98,9 @@ gst_rtjpegdec_init (GstRTJpegDec *rtjpegdec)
 }
 
 static void
-gst_rtjpegdec_chain (GstPad *pad, GstBuffer *buf)
+gst_rtjpegdec_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstRTJpegDec *rtjpegdec;
   guchar *data;
   gulong size;
@@ -114,5 +115,5 @@ gst_rtjpegdec_chain (GstPad *pad, GstBuffer *buf)
 
   gst_info("would be encoding frame here\n");
 
-  gst_pad_push(rtjpegdec->srcpad,buf);
+  gst_pad_push(rtjpegdec->srcpad,GST_DATA (buf));
 }

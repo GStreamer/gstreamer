@@ -139,7 +139,7 @@ static void		gst_vbidec_set_property	(GObject *object, guint prop_id,
 static void		gst_vbidec_get_property	(GObject *object, guint prop_id, 
 							 GValue *value, GParamSpec *pspec);
 
-static void		gst_vbidec_chain		(GstPad *pad, GstBuffer *buffer);
+static void		gst_vbidec_chain		(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_vbidec_signals[LAST_SIGNAL] = { 0 };*/
@@ -253,8 +253,9 @@ dvd_user_data_decode(GstVBIDec *vbidec, guint8 *data, guint32 size)
 }
 
 static void
-gst_vbidec_chain (GstPad *pad, GstBuffer *buf)
+gst_vbidec_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstVBIDec *vbidec = GST_VBIDEC (gst_pad_get_parent (pad));
   guint32 size;
   guint8 *data;
@@ -304,7 +305,7 @@ gst_vbidec_show_text (GstVBIDec *vbidec, char *text, int len)
       //GST_BUFFER_TIMESTAMP (buf) = vbidec->...
       //...
       //fprintf(stderr, "vbi text pushed\n");
-      gst_pad_push (vbidec->srcpad, buf);
+      gst_pad_push (vbidec->srcpad, GST_DATA (buf));
     }
   }
 }

@@ -80,7 +80,7 @@ static GstElementStateReturn	gst_massink_change_state	(GstElement *element);
 static gboolean			gst_massink_sync_parms		(GstMassink *massink);
 static GstPadLinkReturn	gst_massink_sinkconnect		(GstPad *pad, GstCaps *caps);
 
-static void			gst_massink_chain		(GstPad *pad, GstBuffer *buf);
+static void			gst_massink_chain		(GstPad *pad, GstData *_data);
 
 static void			gst_massink_set_property	(GObject *object, guint prop_id, 
 								 const GValue *value, GParamSpec *pspec);
@@ -213,8 +213,9 @@ gst_massink_sinkconnect (GstPad *pad, GstCaps *caps)
 }
 
 static void
-gst_massink_chain (GstPad *pad, GstBuffer *buf)
+gst_massink_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   gint32 err;
     
   g_return_if_fail(pad != NULL);

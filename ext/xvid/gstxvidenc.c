@@ -251,8 +251,9 @@ gst_xvidenc_setup (GstXvidEnc *xvidenc)
 
 static void
 gst_xvidenc_chain (GstPad    *pad,
-                   GstBuffer *buf)
+                   GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstXvidEnc *xvidenc;
   GstBuffer *outbuf;
   XVID_ENC_FRAME xframe;
@@ -297,7 +298,7 @@ gst_xvidenc_chain (GstPad    *pad,
     GST_BUFFER_FLAG_SET(outbuf, GST_BUFFER_KEY_UNIT);
 
   /* go out, multiply! */
-  gst_pad_push(xvidenc->srcpad, outbuf);
+  gst_pad_push(xvidenc->srcpad, GST_DATA (outbuf));
 
   /* proclaim destiny */
   g_signal_emit(G_OBJECT(xvidenc),gst_xvidenc_signals[FRAME_ENCODED], 0);

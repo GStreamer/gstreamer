@@ -683,7 +683,7 @@ gst_modplug_loop (GstElement *element)
         GstEvent *discont;
     
         discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, value, NULL);
-        gst_pad_push (modplug->srcpad, GST_BUFFER (discont));        
+        gst_pad_push (modplug->srcpad, GST_DATA (discont));        
       
         modplug->need_discont= FALSE;
       }
@@ -694,7 +694,7 @@ gst_modplug_loop (GstElement *element)
       GST_BUFFER_TIMESTAMP (buffer_out) = value;
       
       if (GST_PAD_IS_USABLE (modplug->srcpad))
-        gst_pad_push (modplug->srcpad, buffer_out);   
+        gst_pad_push (modplug->srcpad, GST_DATA (buffer_out));   
     }
     else
       if (GST_PAD_IS_LINKED (modplug->srcpad))
@@ -703,7 +703,7 @@ gst_modplug_loop (GstElement *element)
         gst_bytestream_flush (modplug->bs, 1);
 	
         event = gst_event_new (GST_EVENT_EOS);
-        gst_pad_push (modplug->srcpad, GST_BUFFER (event));
+        gst_pad_push (modplug->srcpad, GST_DATA (event));
         gst_element_set_eos (element);
         modplug->eos = TRUE;
       }

@@ -83,7 +83,7 @@ static void	gst_y4mencode_get_property	(GObject       *object,
 						 GParamSpec    *pspec);
 
 static void	gst_y4mencode_chain		(GstPad        *pad,
-						 GstBuffer     *buf);
+						 GstData       *_data);
 static GstElementStateReturn
 		gst_y4mencode_change_state 	(GstElement    *element);
 
@@ -190,8 +190,9 @@ gst_y4mencode_init (GstY4mEncode *filter)
 }
 
 static void
-gst_y4mencode_chain (GstPad *pad,GstBuffer *buf)
+gst_y4mencode_chain (GstPad *pad,GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstY4mEncode *filter;
   GstBuffer* outbuf;
   gchar *header;
@@ -225,7 +226,7 @@ gst_y4mencode_chain (GstPad *pad,GstBuffer *buf)
 
   gst_buffer_unref(buf);
 
-  gst_pad_push(filter->srcpad,outbuf);
+  gst_pad_push(filter->srcpad,GST_DATA (outbuf));
 }
 
 static void

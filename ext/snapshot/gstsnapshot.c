@@ -87,7 +87,7 @@ static GType 	gst_snapshot_get_type 	(void);
 static void	gst_snapshot_class_init	(GstSnapshotClass *klass);
 static void	gst_snapshot_init	(GstSnapshot *snapshot);
 
-static void	gst_snapshot_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_snapshot_chain	(GstPad *pad, GstData *_data);
 
 static void	gst_snapshot_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_snapshot_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -249,8 +249,9 @@ gst_snapshot_init (GstSnapshot *snapshot)
 
 
 static void
-gst_snapshot_chain (GstPad *pad, GstBuffer *buf)
+gst_snapshot_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstSnapshot *snapshot;
   guchar *data, *data_to_convert, *buffer_i420, *data_converted;
   gulong size,image_size;
@@ -330,7 +331,7 @@ gst_snapshot_chain (GstPad *pad, GstBuffer *buf)
     }
   }
 
-  gst_pad_push(snapshot->srcpad,buf );
+  gst_pad_push(snapshot->srcpad,GST_DATA (buf ));
 }
 
 static void

@@ -53,7 +53,7 @@ enum {
 static void			gst_gsmenc_class_init	(GstGSMEnc *klass);
 static void			gst_gsmenc_init		(GstGSMEnc *gsmenc);
 
-static void			gst_gsmenc_chain	(GstPad *pad,GstBuffer *buf);
+static void			gst_gsmenc_chain	(GstPad *pad,GstData *_data);
 static GstPadLinkReturn	gst_gsmenc_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
@@ -142,8 +142,9 @@ gst_gsmenc_sinkconnect (GstPad *pad, GstCaps *caps)
 }
 
 static void
-gst_gsmenc_chain (GstPad *pad, GstBuffer *buf)
+gst_gsmenc_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstGSMEnc *gsmenc;
   gsm_signal *data;
   guint size;
@@ -179,7 +180,7 @@ gst_gsmenc_chain (GstPad *pad, GstBuffer *buf)
     gsm_encode (gsmenc->state, gsmenc->buffer, (gsm_byte *) GST_BUFFER_DATA (outbuf));
 
     GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
-    gst_pad_push (gsmenc->srcpad, outbuf);
+    gst_pad_push (gsmenc->srcpad, GST_DATA (outbuf));
     gsmenc->next_ts += (160.0 / gsmenc->rate) * 1000000;
 
     size -= (160 - gsmenc->bufsize); 
@@ -197,7 +198,7 @@ gst_gsmenc_chain (GstPad *pad, GstBuffer *buf)
     gsm_encode (gsmenc->state, data, (gsm_byte *) GST_BUFFER_DATA (outbuf));
 
     GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
-    gst_pad_push (gsmenc->srcpad, outbuf);
+    gst_pad_push (gsmenc->srcpad, GST_DATA (outbuf));
     gsmenc->next_ts += (160 / gsmenc->rate) * GST_SECOND;
 
     size -= 160;

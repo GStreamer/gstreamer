@@ -104,7 +104,7 @@ static void gst_bpwsinc_set_property	(GObject * object, guint prop_id,
 static void gst_bpwsinc_get_property	(GObject * object, guint prop_id,
                                          GValue * value, GParamSpec * pspec);
 
-static void gst_bpwsinc_chain		(GstPad * pad, GstBuffer * buf);
+static void gst_bpwsinc_chain		(GstPad * pad, GstData *_data);
 static GstPadLinkReturn
        gst_bpwsinc_sink_connect 		(GstPad * pad, GstCaps * caps);
 
@@ -273,8 +273,9 @@ gst_bpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
 }
 
 static void
-gst_bpwsinc_chain (GstPad *pad, GstBuffer *buf)
+gst_bpwsinc_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstBPWSinc *filter;
   gfloat *src;
   gfloat *input;
@@ -321,7 +322,7 @@ gst_bpwsinc_chain (GstPad *pad, GstBuffer *buf)
   }
   
   g_free (input);
-  gst_pad_push (filter->srcpad, buf);
+  gst_pad_push (filter->srcpad, GST_DATA (buf));
 }
 
 static void

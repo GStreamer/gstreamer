@@ -58,7 +58,7 @@ enum
 static void 	gst_tarkinenc_class_init 	(TarkinEncClass *klass);
 static void 	gst_tarkinenc_init 		(TarkinEnc *arkinenc);
 
-static void 	gst_tarkinenc_chain 		(GstPad *pad, GstBuffer *buf);
+static void 	gst_tarkinenc_chain 		(GstPad *pad, GstData *_data);
 static void 	gst_tarkinenc_setup 		(TarkinEnc *tarkinenc);
 
 static void 	gst_tarkinenc_get_property 	(GObject *object, guint prop_id, GValue *value,
@@ -184,24 +184,24 @@ TarkinError packet_out (void *stream, ogg_packet *op)
     GST_BUFFER_DATA (outbuf) = og.header;
     GST_BUFFER_SIZE (outbuf) = og.header_len;
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DONTFREE);
-    gst_pad_push (te->srcpad, outbuf);
+    gst_pad_push (te->srcpad, GST_DATA (outbuf));
     outbuf = gst_buffer_new ();
     GST_BUFFER_DATA (outbuf) = og.body;
     GST_BUFFER_SIZE (outbuf) = og.body_len;
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DONTFREE);
-    gst_pad_push (te->srcpad, outbuf);
+    gst_pad_push (te->srcpad, GST_DATA (outbuf));
   } else {
     while (ogg_stream_pageout (&te->os, &og)){
       outbuf = gst_buffer_new ();
       GST_BUFFER_DATA (outbuf) = og.header;
       GST_BUFFER_SIZE (outbuf) = og.header_len;
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DONTFREE);
-      gst_pad_push (te->srcpad, outbuf);
+      gst_pad_push (te->srcpad, GST_DATA (outbuf));
       outbuf = gst_buffer_new ();
       GST_BUFFER_DATA (outbuf) = og.body;
       GST_BUFFER_SIZE (outbuf) = og.body_len;
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DONTFREE);
-      gst_pad_push (te->srcpad, outbuf);
+      gst_pad_push (te->srcpad, GST_DATA (outbuf));
     }
   }
   return (TARKIN_OK);
@@ -243,20 +243,21 @@ gst_tarkinenc_setup (TarkinEnc *tarkinenc)
   GST_BUFFER_DATA (outbuf) = tarkinenc->og.header;
   GST_BUFFER_SIZE (outbuf) = tarkinenc->og.header_len;
   GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DONTFREE);
-  gst_pad_push (tarkinenc->srcpad, outbuf);
+  gst_pad_push (tarkinenc->srcpad, GST_DATA (outbuf));
 
   outbuf = gst_buffer_new ();
   GST_BUFFER_DATA (outbuf) = tarkinenc->og.body;
   GST_BUFFER_SIZE (outbuf) = tarkinenc->og.body_len;
   GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DONTFREE);
-  gst_pad_push (tarkinenc->srcpad, outbuf);
+  gst_pad_push (tarkinenc->srcpad, GST_DATA (outbuf));
 
   tarkinenc->setup = TRUE;
 }
 
 static void
-gst_tarkinenc_chain (GstPad *pad, GstBuffer *buf)
+gst_tarkinenc_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   TarkinEnc *tarkinenc;
 
   g_return_if_fail (pad != NULL);

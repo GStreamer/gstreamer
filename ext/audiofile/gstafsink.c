@@ -104,7 +104,7 @@ static void		gst_afsink_init		(GstAFSink *afsink);
 static gboolean 	gst_afsink_open_file 	(GstAFSink *sink);
 static void 		gst_afsink_close_file 	(GstAFSink *sink);
 
-static void		gst_afsink_chain	(GstPad *pad,GstBuffer *buf);
+static void		gst_afsink_chain	(GstPad *pad,GstData *_data);
 
 static void		gst_afsink_set_property	(GObject *object, guint prop_id, const GValue *value, 
 						 GParamSpec *pspec);
@@ -389,8 +389,9 @@ gst_afsink_close_file (GstAFSink *sink)
  * take the buffer from the pad and write to file if it's open
  */
 static void 
-gst_afsink_chain (GstPad *pad, GstBuffer *buf) 
+gst_afsink_chain (GstPad *pad, GstData *_data) 
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstAFSink *afsink;
   int ret = 0;
 

@@ -118,7 +118,7 @@ static void		gst_video_crop_get_property	(GObject *object, guint prop_id,
 
 static GstPadLinkReturn
 			gst_video_crop_sink_connect 	(GstPad *pad, GstCaps *caps);
-static void 		gst_video_crop_chain 		(GstPad *pad, GstBuffer *buffer);
+static void 		gst_video_crop_chain 		(GstPad *pad, GstData *_data);
 
 static GstElementStateReturn
 			gst_video_crop_change_state	(GstElement *element);
@@ -345,8 +345,9 @@ gst_video_crop_i420 (GstVideoCrop *video_crop, GstBuffer *src_buffer, GstBuffer 
 }
 
 static void
-gst_video_crop_chain (GstPad *pad, GstBuffer *buffer)
+gst_video_crop_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buffer = GST_BUFFER (_data);
   GstVideoCrop *video_crop;
   GstBuffer *outbuf;
   gint new_width, new_height;
@@ -391,7 +392,7 @@ gst_video_crop_chain (GstPad *pad, GstBuffer *buffer)
   gst_video_crop_i420 (video_crop, buffer, outbuf);
   gst_buffer_unref (buffer);
 
-  gst_pad_push (video_crop->srcpad, outbuf);
+  gst_pad_push (video_crop->srcpad, GST_DATA (outbuf));
 }
 
 static GstElementStateReturn

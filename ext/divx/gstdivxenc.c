@@ -339,8 +339,9 @@ gst_divxenc_dispose (GObject *object)
 
 static void
 gst_divxenc_chain (GstPad    *pad,
-                   GstBuffer *buf)
+                   GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstDivxEnc *divxenc;
   GstBuffer *outbuf;
   ENC_FRAME xframe;
@@ -376,7 +377,7 @@ gst_divxenc_chain (GstPad    *pad,
     GST_BUFFER_FLAG_SET(outbuf, GST_BUFFER_KEY_UNIT);
 
   /* go out, multiply! */
-  gst_pad_push(divxenc->srcpad, outbuf);
+  gst_pad_push(divxenc->srcpad, GST_DATA (outbuf));
 
   /* proclaim destiny */
   g_signal_emit(G_OBJECT(divxenc),gst_divxenc_signals[FRAME_ENCODED], 0);

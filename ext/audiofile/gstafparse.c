@@ -195,7 +195,7 @@ gst_afparse_loop(GstElement *element)
   /* just stop if we cannot open the file */
   if (!gst_afparse_open_file (afparse)){
     gst_bytestream_destroy ((GstByteStream *) afparse->vfile->closure);
-    gst_pad_push (afparse->srcpad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));  
+    gst_pad_push (afparse->srcpad, GST_DATA(gst_event_new (GST_EVENT_EOS)));
     gst_element_set_eos (GST_ELEMENT (afparse));
     return;
   }
@@ -236,14 +236,14 @@ gst_afparse_loop(GstElement *element)
         gst_bytestream_get_status (bs, &waiting, &event);
         if (event && GST_EVENT_TYPE(event) == GST_EVENT_EOS) {
           gst_pad_push (afparse->srcpad, 
-	                GST_BUFFER (gst_event_new (GST_EVENT_EOS)));  
+	                GST_DATA (gst_event_new (GST_EVENT_EOS)));
           gst_element_set_eos (GST_ELEMENT (afparse));
           break;
         }
       }
       else {
         GST_BUFFER_TIMESTAMP(buf) = afparse->timestamp;
-        gst_pad_push (afparse->srcpad, buf);
+        gst_pad_push (afparse->srcpad, GST_DATA (buf));
 	if (got_bytes != bytes_per_read){
 	  /* this shouldn't happen very often */
 	  /* FIXME calculate the timestamps based on the fewer bytes received */
@@ -269,12 +269,12 @@ gst_afparse_loop(GstElement *element)
       if (numframes < 1){
         gst_buffer_unref(buf);
 
-        gst_pad_push (afparse->srcpad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));  
+        gst_pad_push (afparse->srcpad, GST_DATA(gst_event_new (GST_EVENT_EOS)));
         gst_element_set_eos (GST_ELEMENT (afparse));
         break;
       }
       GST_BUFFER_SIZE(buf) = numframes * frames_to_bytes;
-      gst_pad_push (afparse->srcpad, buf);
+      gst_pad_push (afparse->srcpad, GST_DATA (buf));
       afparse->timestamp += numframes * 1E9 / afparse->rate;
     }
     while (TRUE);

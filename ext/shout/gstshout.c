@@ -92,7 +92,7 @@ sink_template_factory (void)
 static void		gst_icecastsend_class_init	(GstIcecastSendClass *klass);
 static void		gst_icecastsend_init		(GstIcecastSend *icecastsend);
 
-static void		gst_icecastsend_chain		(GstPad *pad, GstBuffer *buf);
+static void		gst_icecastsend_chain		(GstPad *pad, GstData *_data);
 
 static void		gst_icecastsend_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		gst_icecastsend_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -215,8 +215,9 @@ gst_icecastsend_init (GstIcecastSend *icecastsend)
 }
 
 static void
-gst_icecastsend_chain (GstPad *pad, GstBuffer *buf)
+gst_icecastsend_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstIcecastSend *icecastsend;
   glong ret;
 

@@ -89,7 +89,7 @@ static void gst_iir_set_property	(GObject * object, guint prop_id,
 static void gst_iir_get_property	(GObject * object, guint prop_id,
                                          GValue * value, GParamSpec * pspec);
 
-static void gst_iir_chain		(GstPad * pad, GstBuffer * buf);
+static void gst_iir_chain		(GstPad * pad, GstData *_data);
 static GstPadLinkReturn
        gst_iir_sink_connect 		(GstPad * pad, GstCaps * caps);
 
@@ -188,8 +188,9 @@ gst_iir_sink_connect (GstPad * pad, GstCaps * caps)
 }
 
 static void
-gst_iir_chain (GstPad * pad, GstBuffer * buf)
+gst_iir_chain (GstPad * pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstIIR *filter;
   gfloat *src;
   int i;
@@ -205,7 +206,7 @@ gst_iir_chain (GstPad * pad, GstBuffer * buf)
   for (i = 0; i < GST_BUFFER_SIZE (buf) / sizeof (gfloat); ++i)
     *(src + i) = (gfloat) IIR_filter (filter->state, (double) *(src + i));
 
-  gst_pad_push (filter->srcpad, buf);
+  gst_pad_push (filter->srcpad, GST_DATA (buf));
 }
 
 static void

@@ -609,7 +609,7 @@ gst_ivorbisfile_loop (GstElement *element)
         discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, 
 		    			     GST_FORMAT_DEFAULT, samples, NULL); 
 
-        gst_pad_push (ivorbisfile->srcpad, GST_BUFFER (discont));
+        gst_pad_push (ivorbisfile->srcpad, GST_DATA (discont));
       }
     }
 
@@ -623,7 +623,7 @@ gst_ivorbisfile_loop (GstElement *element)
     }
   
     if (GST_PAD_IS_USABLE (ivorbisfile->srcpad)) 
-      gst_pad_push (ivorbisfile->srcpad, outbuf);
+      gst_pad_push (ivorbisfile->srcpad, GST_DATA (outbuf));
     else
       gst_buffer_unref (outbuf);
   }

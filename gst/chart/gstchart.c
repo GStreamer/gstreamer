@@ -116,7 +116,7 @@ static void	gst_chart_init		(GstChart *chart);
 static void	gst_chart_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_chart_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void	gst_chart_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_chart_chain		(GstPad *pad, GstData *_data);
 
 static GstPadLinkReturn 
 		gst_chart_sinkconnect 	(GstPad *pad, GstCaps *caps);
@@ -306,8 +306,9 @@ draw_chart_16bpp(guchar * output, gint width, gint height,
 }
 
 static void
-gst_chart_chain (GstPad *pad, GstBuffer *bufin)
+gst_chart_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *bufin = GST_BUFFER (_data);
   GstChart *chart;
   GstBuffer *bufout;
   guint32 samples_in;
@@ -381,7 +382,7 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
 	  GST_DEBUG ("CHART: outputting buffer");
 	  /* output buffer */
 	  GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_READONLY);
-	  gst_pad_push (chart->srcpad, bufout);
+	  gst_pad_push (chart->srcpad, GST_DATA (bufout));
       }
   } else {
       GST_DEBUG ("CHART: skipping buffer");

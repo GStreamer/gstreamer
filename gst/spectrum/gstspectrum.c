@@ -52,7 +52,7 @@ static void	gst_spectrum_init	(GstSpectrum *spectrum);
 
 static void	gst_spectrum_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 
-static void	gst_spectrum_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_spectrum_chain	(GstPad *pad, GstData *_data);
 
 #define fixed short
 int gst_spectrum_fix_fft(fixed fr[], fixed fi[], int m, int inverse);
@@ -131,8 +131,9 @@ gst_spectrum_set_property (GObject *object, guint prop_id, const GValue *value, 
 }
 
 static void
-gst_spectrum_chain (GstPad *pad, GstBuffer *buf)
+gst_spectrum_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstSpectrum *spectrum;
   gint spec_base, spec_len;
   gint16 *re, *im, *loud;
@@ -188,7 +189,7 @@ gst_spectrum_chain (GstPad *pad, GstBuffer *buf)
   GST_BUFFER_DATA(newbuf) = spect;
   GST_BUFFER_SIZE(newbuf) = spectrum->width;
 
-  gst_pad_push(spectrum->srcpad,newbuf);
+  gst_pad_push(spectrum->srcpad,GST_DATA (newbuf));
 }
 
 static gboolean

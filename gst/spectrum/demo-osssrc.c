@@ -3,7 +3,7 @@
 
 extern gboolean _gst_plugin_spew;
 
-void spectrum_chain(GstPad *pad,GstBuffer *buf);
+void spectrum_chain(GstPad *pad,GstData *_data);
 gboolean idle_func(gpointer data);
 
 GtkWidget *drawingarea;
@@ -62,7 +62,8 @@ int main(int argc,char *argv[]) {
 }
 
 
-void spectrum_chain(GstPad *pad,GstBuffer *buf) {
+void spectrum_chain(GstPad *pad,GstData *_data) {
+  GstBuffer *buf = GST_BUFFER (_data);
   gint i;
   guchar *data = buf->data;
 

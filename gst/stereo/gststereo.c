@@ -53,7 +53,7 @@ static void	gst_stereo_init			(GstStereo *stereo);
 static void	gst_stereo_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_stereo_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void	gst_stereo_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_stereo_chain		(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
@@ -114,8 +114,9 @@ gst_stereo_init (GstStereo *stereo)
 }
 
 static void
-gst_stereo_chain (GstPad *pad,GstBuffer *buf)
+gst_stereo_chain (GstPad *pad,GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstStereo *stereo;
   gint16 *data;
   gint samples;
@@ -162,7 +163,7 @@ gst_stereo_chain (GstPad *pad,GstBuffer *buf)
     /*} */
   }
 
-  gst_pad_push(stereo->srcpad,buf);
+  gst_pad_push(stereo->srcpad,GST_DATA (buf));
 }
 
 static void

@@ -206,7 +206,7 @@ gst_swfdec_loop(GstElement *element)
 
 	ret = swfdec_decoder_parse(swfdec->state);
 	if(ret==SWF_NEEDBITS){
-		buf = gst_pad_pull(swfdec->sinkpad);
+		buf = GST_BUFFER (gst_pad_pull(swfdec->sinkpad));
 		if(GST_IS_EVENT(buf)){
 			switch (GST_EVENT_TYPE (buf)) {
 			case GST_EVENT_EOS:
@@ -253,7 +253,7 @@ gst_swfdec_loop(GstElement *element)
 		swfdec->timestamp += swfdec->interval;
 		GST_BUFFER_TIMESTAMP(newbuf) = swfdec->timestamp;
 
-		gst_pad_push(swfdec->videopad, newbuf);
+		gst_pad_push(swfdec->videopad, GST_DATA (newbuf));
 
 		/* audio stuff */
 
@@ -265,15 +265,15 @@ gst_swfdec_loop(GstElement *element)
 			GST_BUFFER_DATA(newbuf) = data;
 			GST_BUFFER_TIMESTAMP(newbuf) = swfdec->timestamp;
 
-			gst_pad_push(swfdec->audiopad, newbuf);
+			gst_pad_push(swfdec->audiopad, GST_DATA (newbuf));
 
 			data = swfdec_decoder_get_sound_chunk(swfdec->state, &len);
 		}
 	}
 
 	if(ret==SWF_EOF){
-		gst_pad_push(swfdec->videopad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
-		gst_pad_push(swfdec->audiopad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+		gst_pad_push(swfdec->videopad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
+		gst_pad_push(swfdec->audiopad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
 	}
 }
 

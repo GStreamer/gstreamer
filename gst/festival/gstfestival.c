@@ -82,7 +82,7 @@ static void		gst_festival_init		(GstFestival *festival);
 
 static GstCaps*		text_type_find			(GstByteStream *bs, gpointer private);
 
-static void		gst_festival_chain		(GstPad *pad, GstBuffer *buf);
+static void		gst_festival_chain		(GstPad *pad, GstData *_data);
 static GstElementStateReturn 
 			gst_festival_change_state 	(GstElement *element);
 
@@ -231,8 +231,9 @@ text_type_find (GstByteStream *bs, gpointer private)
 
 
 static void
-gst_festival_chain (GstPad *pad, GstBuffer *buf)
+gst_festival_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   gchar *wavefile;
   int filesize;
   FILE *fd;
@@ -302,7 +303,7 @@ gst_festival_chain (GstPad *pad, GstBuffer *buf)
        				  "channels",  	GST_PROPS_INT (1)
 				  ));
       }
-      gst_pad_push (festival->srcpad, outbuf);
+      gst_pad_push (festival->srcpad, GST_DATA (outbuf));
 
       wavefile = NULL;
     }

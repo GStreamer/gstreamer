@@ -56,7 +56,7 @@ enum
 static void 	gst_tarkindec_class_init 	(TarkinDecClass *klass);
 static void 	gst_tarkindec_init 		(TarkinDec *arkindec);
 
-static void 	gst_tarkindec_chain 		(GstPad *pad, GstBuffer *buf);
+static void 	gst_tarkindec_chain 		(GstPad *pad, GstData *_data);
 static void 	gst_tarkindec_setup 		(TarkinDec *tarkindec);
 static GstElementStateReturn
 		gst_tarkindec_change_state 	(GstElement *element);
@@ -145,8 +145,9 @@ gst_tarkindec_setup (TarkinDec *tarkindec)
 }
 
 static void
-gst_tarkindec_chain (GstPad *pad, GstBuffer *buf)
+gst_tarkindec_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   TarkinDec *tarkindec;
 
   g_return_if_fail (pad != NULL);
@@ -234,7 +235,7 @@ gst_tarkindec_chain (GstPad *pad, GstBuffer *buf)
 	    GST_BUFFER_DATA (outbuf) = rgb;
 	    GST_BUFFER_SIZE (outbuf) = layer->width * layer->height * 3;
 	    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DONTFREE);
-	    gst_pad_push (tarkindec->srcpad, outbuf);
+	    gst_pad_push (tarkindec->srcpad, GST_DATA (outbuf));
 	    
 	    tarkin_synthesis_freeframe (tarkindec->tarkin_stream, rgb);
           }

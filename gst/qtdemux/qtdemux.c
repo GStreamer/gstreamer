@@ -462,7 +462,7 @@ static void gst_qtdemux_loop_header (GstElement *element)
     if(index==-1){
       for(i=0;i<qtdemux->n_streams;i++){
         gst_pad_push(qtdemux->streams[i]->pad,
-	    GST_BUFFER(gst_event_new (GST_EVENT_EOS)));
+	    GST_DATA(gst_event_new (GST_EVENT_EOS)));
       }
       ret = gst_bytestream_seek(qtdemux->bs, 0, GST_SEEK_METHOD_END);
       GST_DEBUG ("seek returned %d",ret);
@@ -516,7 +516,7 @@ static void gst_qtdemux_loop_header (GstElement *element)
 
       GST_BUFFER_TIMESTAMP(buf) = stream->samples[stream->sample_index].timestamp;
       GST_BUFFER_DURATION(buf) = stream->samples[stream->sample_index].duration;
-      gst_pad_push(stream->pad, buf);
+      gst_pad_push(stream->pad, GST_DATA (buf));
     }
     stream->sample_index++;
     break;

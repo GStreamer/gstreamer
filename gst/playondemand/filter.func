@@ -6,7 +6,7 @@ filter_data = (_TYPE_ *) filter->buffer;
 num_filter = filter->buffer_bytes / sizeof(_TYPE_);
 
 do {
-  if (in == NULL && ! filter->eos) in = gst_pad_pull(filter->sinkpad);
+  if (in == NULL && ! filter->eos) in = GST_BUFFER (gst_pad_pull(filter->sinkpad));
 
   /****************************************************************************/
   /* see if we've got any events coming through ... */
@@ -23,10 +23,10 @@ do {
       filter->eos = FALSE;
       filter->write = 0;
     } else {
-      gst_pad_push(filter->srcpad, in);
+      gst_pad_push(filter->srcpad, GST_DATA (in));
     }
 
-    in = gst_pad_pull(filter->sinkpad);
+    in = GST_BUFFER (gst_pad_pull(filter->sinkpad));
   }
 
   /****************************************************************************/
@@ -114,7 +114,7 @@ do {
   /****************************************************************************/
   /* push out the buffer. */
 
-  gst_pad_push(filter->srcpad, out);
+  gst_pad_push(filter->srcpad, GST_DATA (out));
 
   if (gst_element_interrupt (GST_ELEMENT (filter))) break;
 

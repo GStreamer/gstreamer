@@ -434,7 +434,7 @@ play_on_demand_loop (GstElement *elem)
     filter->bufpool = gst_buffer_pool_get_default(GST_POD_BUFPOOL_SIZE,
                                                   GST_POD_BUFPOOL_NUM);
 
-  in = gst_pad_pull(filter->sinkpad);
+  in = GST_BUFFER (gst_pad_pull(filter->sinkpad));
 
   if (filter->format == GST_PLAYONDEMAND_FORMAT_INT) {
     if (filter->width == 16) {

@@ -123,7 +123,7 @@ static GstElementStateReturn	gst_qcamsrc_change_state	(GstElement *element);
 static void			gst_qcamsrc_close		(GstQCamSrc *src);
 static gboolean			gst_qcamsrc_open		(GstQCamSrc *src);
 
-static GstBuffer*		gst_qcamsrc_get			(GstPad *pad);
+static GstData*		gst_qcamsrc_get			(GstPad *pad);
 
 static GstElementClass *parent_class = NULL;
 /*//static guint gst_qcamsrc_signals[LAST_SIGNAL] = { 0 }; */
@@ -227,7 +227,7 @@ gst_qcamsrc_init (GstQCamSrc *qcamsrc)
     qcip_set_autoexposure_mode (qcamsrc->autoexposure);
 }
 
-static GstBuffer*
+static GstData*
 gst_qcamsrc_get (GstPad *pad)
 {
   GstQCamSrc *qcamsrc;
@@ -275,7 +275,7 @@ gst_qcamsrc_get (GstPad *pad)
   memset (outdata+frame, 128, frame>>1);
   g_free (scan);
 
-  return buf;
+  return GST_DATA (buf);
 }
 
 static void

@@ -274,21 +274,21 @@ gst_overlay_loop (GstElement *element)
 
   overlay = GST_OVERLAY (element);
 
-  in1 = gst_pad_pull (overlay->sinkpad1);
+  in1 = GST_BUFFER (gst_pad_pull (overlay->sinkpad1));
   if (GST_IS_EVENT (in1)) {
-    gst_pad_push (overlay->srcpad, in1);
+    gst_pad_push (overlay->srcpad, GST_DATA (in1));
     /* FIXME */
     return;
   }
-  in2 = gst_pad_pull (overlay->sinkpad2);
+  in2 = GST_BUFFER (gst_pad_pull (overlay->sinkpad2));
   if (GST_IS_EVENT (in2)) {
-    gst_pad_push (overlay->srcpad, in2);
+    gst_pad_push (overlay->srcpad, GST_DATA (in2));
     /* FIXME */
     return;
   }
-  in3 = gst_pad_pull (overlay->sinkpad3);
+  in3 = GST_BUFFER (gst_pad_pull (overlay->sinkpad3));
   if (GST_IS_EVENT (in3)) {
-    gst_pad_push (overlay->srcpad, in3);
+    gst_pad_push (overlay->srcpad, GST_DATA (in3));
     /* FIXME */
     return;
   }
@@ -333,7 +333,7 @@ gst_overlay_loop (GstElement *element)
   gst_buffer_unref (in2);
   gst_buffer_unref (in3);
 
-  gst_pad_push (overlay->srcpad, out);
+  gst_pad_push (overlay->srcpad, GST_DATA (out));
 }
 
 static void

@@ -49,7 +49,7 @@ static gboolean              gst_sdlvideosink_create       (GstSDLVideoSink     
 static GstPadLinkReturn   gst_sdlvideosink_sinkconnect  (GstPad               *pad,
                                                             GstCaps              *caps);
 static void                  gst_sdlvideosink_chain        (GstPad               *pad,
-                                                            GstBuffer            *buf);
+                                                            GstData              *data);
 
 static void                  gst_sdlvideosink_set_property (GObject              *object,
                                                             guint                 prop_id,
@@ -339,8 +339,9 @@ gst_sdlvideosink_sinkconnect (GstPad  *pad,
 
 
 static void
-gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
+gst_sdlvideosink_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstSDLVideoSink *sdlvideosink;
   SDL_Event sdl_event;
 

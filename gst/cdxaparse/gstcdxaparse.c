@@ -305,7 +305,7 @@ gst_cdxa_parse_loop (GstElement *element)
     outbuf = gst_buffer_create_sub (buf, 24, CDXA_DATA_SIZE);
     gst_buffer_unref (buf);
 
-    gst_pad_push (cdxa_parse->srcpad, outbuf);
+    gst_pad_push (cdxa_parse->srcpad, GST_DATA (outbuf));
   }
 }
 

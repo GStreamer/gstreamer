@@ -97,7 +97,7 @@ static void	dxr3spusink_set_clock		(GstElement *element,
                                                  GstClock *clock);
 
 static gboolean dxr3spusink_handle_event  	(GstPad *pad, GstEvent *event);
-static void	dxr3spusink_chain		(GstPad *pad,GstBuffer *buf);
+static void	dxr3spusink_chain		(GstPad *pad,GstData *_data);
 
 static GstElementStateReturn dxr3spusink_change_state (GstElement *element);
 
@@ -381,8 +381,9 @@ dxr3spusink_handle_event (GstPad *pad, GstEvent *event)
 
 
 static void 
-dxr3spusink_chain (GstPad *pad, GstBuffer *buf) 
+dxr3spusink_chain (GstPad *pad, GstData *_data) 
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   Dxr3SpuSink *sink;
   gint bytes_written = 0;
 

@@ -86,7 +86,7 @@ static void 	gst_xsharpen_set_property 	(GObject * object, guint prop_id,
 static void 	gst_xsharpen_get_property 	(GObject * object, guint prop_id,
 					  	 GValue * value, GParamSpec * pspec);
 
-static void 	gst_xsharpen_chain 		(GstPad * pad, GstBuffer * buf);
+static void 	gst_xsharpen_chain 		(GstPad * pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 
@@ -167,8 +167,9 @@ gst_xsharpen_init (GstXsharpen * sharpen)
 }
 
 static void
-gst_xsharpen_chain (GstPad * pad, GstBuffer * buf)
+gst_xsharpen_chain (GstPad * pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstXsharpen *xsharpen;
   GstBuffer   *outbuf;
   gint        x, y;
@@ -414,7 +415,7 @@ gst_xsharpen_chain (GstPad * pad, GstBuffer * buf)
 
   gst_buffer_unref (buf);
 
-  gst_pad_push (xsharpen->srcpad, outbuf);
+  gst_pad_push (xsharpen->srcpad, GST_DATA (outbuf));
 }
 
 static void

@@ -105,7 +105,7 @@ static void		gst_afsrc_init			(GstAFSrc *afsrc);
 static gboolean 	gst_afsrc_open_file 		(GstAFSrc *src);
 static void 		gst_afsrc_close_file 		(GstAFSrc *src);
 
-static GstBuffer*	gst_afsrc_get			(GstPad *pad);
+static GstData*	gst_afsrc_get			(GstPad *pad);
 
 static void		gst_afsrc_set_property		(GObject *object, guint prop_id, 
 							 const GValue *value, GParamSpec *pspec);
@@ -190,7 +190,7 @@ gst_afsrc_init (GstAFSrc *afsrc)
   afsrc->framestamp = 0;
 }
 
-static GstBuffer *
+static GstData *
 gst_afsrc_get (GstPad *pad)
 {
   GstAFSrc *src;
@@ -216,7 +216,7 @@ gst_afsrc_get (GstPad *pad)
   readbytes = readframes * (src->channels * src->width / 8);
   if (readbytes == 0) {
     gst_element_set_eos (GST_ELEMENT (src));
-    return GST_BUFFER (gst_event_new (GST_EVENT_EOS));  
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));  
   }
   
   GST_BUFFER_SIZE (buf) = readbytes;
@@ -231,7 +231,7 @@ gst_afsrc_get (GstPad *pad)
         GST_BUFFER_TIMESTAMP (buf) / 1E9);
 
 /*  g_print("DEBUG: gstafsrc: pushed buffer of %ld bytes\n", readbytes); */
-  return buf;
+  return GST_DATA (buf);
 }
 
 static void

@@ -68,7 +68,7 @@ static void			vcdsrc_init		(VCDSrc *vcdsrc);
 static void			vcdsrc_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void			vcdsrc_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static GstBuffer *		vcdsrc_get		(GstPad *pad);
+static GstData *		vcdsrc_get		(GstPad *pad);
 /*static GstBuffer *		vcdsrc_get_region	(GstPad *pad,gulong offset,gulong size); */
 static GstElementStateReturn	vcdsrc_change_state	(GstElement *element);
 
@@ -222,7 +222,7 @@ vcdsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *
   }
 }
 
-static GstBuffer *
+static GstData *
 vcdsrc_get (GstPad *pad)
 {
   VCDSrc *vcdsrc;
@@ -266,7 +266,7 @@ vcdsrc_get (GstPad *pad)
     if (++error_count > vcdsrc->max_errors)
       {
 	gst_element_set_eos (GST_ELEMENT (vcdsrc));
-	return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+	return GST_DATA (gst_event_new (GST_EVENT_EOS));
       }
 
     fprintf (stderr, "%s while reading raw data from cdrom at %d:%d:%d\n",
@@ -283,7 +283,7 @@ vcdsrc_get (GstPad *pad)
   GST_BUFFER_SIZE(buf) = vcdsrc->bytes_per_read;
   vcdsrc->curoffset += 1;
 
-  return buf;
+  return GST_DATA (buf);
 }
 
 /* open the file, necessary to go to RUNNING state */

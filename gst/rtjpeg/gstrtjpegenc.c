@@ -49,7 +49,7 @@ enum {
 static void	gst_rtjpegenc_class_init	(GstRTJpegEncClass *klass);
 static void	gst_rtjpegenc_init		(GstRTJpegEnc *rtjpegenc);
 
-static void	gst_rtjpegenc_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_rtjpegenc_chain		(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_rtjpegenc_signals[LAST_SIGNAL] = { 0 }; */
@@ -96,8 +96,9 @@ gst_rtjpegenc_init (GstRTJpegEnc *rtjpegenc)
 }
 
 static void
-gst_rtjpegenc_chain (GstPad *pad, GstBuffer *buf)
+gst_rtjpegenc_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstRTJpegEnc *rtjpegenc;
   guchar *data;
   gulong size;
@@ -112,5 +113,5 @@ gst_rtjpegenc_chain (GstPad *pad, GstBuffer *buf)
 
   gst_info("would be encoding frame here\n");
 
-  gst_pad_push(rtjpegenc->srcpad,buf);
+  gst_pad_push(rtjpegenc->srcpad,GST_DATA (buf));
 }

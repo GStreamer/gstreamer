@@ -452,7 +452,7 @@ fprintf(stderr,"attempting to get gain for %dx%d\n",i,j);
 
   for (i=0;i<mix->srcpadalloc;i++) {
     if (mix->srcpads[i] != NULL) {
-      gst_pad_push(mix->srcpads[i],outbufs[i]);
+      gst_pad_push(mix->srcpads[i],GST_DATA (outbufs[i]));
     }
   }
 }

@@ -87,7 +87,7 @@ GST_PAD_TEMPLATE_FACTORY(sink_template,
 
 static void	gst_videodrop_class_init	(GstVideodropClass *klass);
 static void	gst_videodrop_init		(GstVideodrop *videodrop);
-static void	gst_videodrop_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_videodrop_chain		(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_videodrop_signals[LAST_SIGNAL] = { 0 }; */
@@ -199,8 +199,9 @@ gst_videodrop_init (GstVideodrop *videodrop)
 }
 
 static void
-gst_videodrop_chain (GstPad *pad, GstBuffer *buf)
+gst_videodrop_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstVideodrop *videodrop;
 
   GST_DEBUG ("gst_videodrop_chain");
@@ -212,7 +213,7 @@ gst_videodrop_chain (GstPad *pad, GstBuffer *buf)
   videodrop = GST_VIDEODROP (gst_pad_get_parent (pad));
 
   if (GST_IS_EVENT (buf)) {
-    gst_pad_push (videodrop->srcpad, buf);
+    gst_pad_push (videodrop->srcpad, GST_DATA (buf));
     return;
   }
 
@@ -221,7 +222,7 @@ gst_videodrop_chain (GstPad *pad, GstBuffer *buf)
 	 (gfloat) videodrop->pass / videodrop->total) {
     videodrop->pass++;
     gst_buffer_ref (buf);
-    gst_pad_push (videodrop->srcpad, buf);
+    gst_pad_push (videodrop->srcpad, GST_DATA (buf));
   }
 
   gst_buffer_unref (buf);

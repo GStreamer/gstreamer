@@ -56,7 +56,7 @@ static void	gst_smoothwave_init		(GstSmoothWave *smoothwave);
 static void	gst_smoothwave_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_smoothwave_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void	gst_smoothwave_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_smoothwave_chain		(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_smoothwave_signals[LAST_SIGNAL] = { 0 }; */
@@ -146,8 +146,9 @@ gst_smoothwave_init (GstSmoothWave *smoothwave)
 }
 
 static void
-gst_smoothwave_chain (GstPad *pad, GstBuffer *buf)
+gst_smoothwave_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstSmoothWave *smoothwave;
   gint16 *samples;
   gint samplecount,i;

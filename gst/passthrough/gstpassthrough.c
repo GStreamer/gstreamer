@@ -95,7 +95,7 @@ static void		passthrough_get_property	(GObject *object, guint prop_id, GValue *v
 
 static GstPadLinkReturn passthrough_connect_sink	(GstPad *pad, GstCaps *caps);
 
-static void		passthrough_chain		(GstPad *pad, GstBuffer *buf);
+static void		passthrough_chain		(GstPad *pad, GstData *_data);
 static void inline 	passthrough_fast_float_chain 	(gfloat* data, guint numsamples);
 static void inline 	passthrough_fast_16bit_chain 	(gint16* data, guint numsamples);
 static void inline 	passthrough_fast_8bit_chain	(gint8* data, guint numsamples);
@@ -213,8 +213,9 @@ passthrough_init (GstPassthrough *filter)
 }
 
 static void
-passthrough_chain (GstPad *pad, GstBuffer *buf)
+passthrough_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstPassthrough *filter;
   gint16 *int_data;
   gfloat *float_data;
@@ -254,7 +255,7 @@ passthrough_chain (GstPad *pad, GstBuffer *buf)
     break;
   }
   
-  gst_pad_push (filter->srcpad, buf);
+  gst_pad_push (filter->srcpad, GST_DATA (buf));
 }
 
 static void inline

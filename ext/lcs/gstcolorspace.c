@@ -104,7 +104,7 @@ static GstPadLinkReturn
 			gst_colorspace_srcconnect 		(GstPad *pad, GstCaps *caps);
 static GstPadLinkReturn
 			gst_colorspace_srcconnect_func 		(GstPad *pad, GstCaps *caps, gboolean newcaps);
-static void		gst_colorspace_chain			(GstPad *pad, GstBuffer *buf);
+static void		gst_colorspace_chain			(GstPad *pad, GstData *_data);
 static GstElementStateReturn
 			gst_colorspace_change_state 		(GstElement *element);
 
@@ -383,8 +383,9 @@ gst_colorspace_init (GstColorspace *space)
 }
 
 static void
-gst_colorspace_chain (GstPad *pad,GstBuffer *buf)
+gst_colorspace_chain (GstPad *pad,GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstColorspace *space;
   GstBuffer *outbuf = NULL;
 
@@ -433,7 +434,7 @@ gst_colorspace_chain (GstPad *pad,GstBuffer *buf)
 
     gst_buffer_unref (buf);
   }
-  gst_pad_push (space->srcpad, outbuf);
+  gst_pad_push (space->srcpad, GST_DATA (outbuf));
 }
 
 static GstElementStateReturn

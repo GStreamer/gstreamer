@@ -85,7 +85,7 @@ enum {
 static void	gst_mp1videoparse_class_init	(Mp1VideoParseClass *klass);
 static void	gst_mp1videoparse_init		(Mp1VideoParse *mp1videoparse);
 
-static void	gst_mp1videoparse_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_mp1videoparse_chain		(GstPad *pad, GstData *_data);
 static void	gst_mp1videoparse_real_chain	(Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstPad *outpad);
 static void	gst_mp1videoparse_flush		(Mp1VideoParse *mp1videoparse);
 static GstElementStateReturn
@@ -277,8 +277,9 @@ gst_mp1videoparse_flush (Mp1VideoParse *mp1videoparse)
 }
 
 static void
-gst_mp1videoparse_chain (GstPad *pad,GstBuffer *buf)
+gst_mp1videoparse_chain (GstPad *pad,GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   Mp1VideoParse *mp1videoparse;
 
   g_return_if_fail (pad != NULL);
@@ -317,7 +318,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
       case GST_EVENT_EOS:
         gst_mp1videoparse_flush(mp1videoparse);
         gst_event_ref(event);
-        gst_pad_push(outpad, GST_BUFFER (event));
+        gst_pad_push(outpad, GST_DATA (event));
         gst_element_set_eos (GST_ELEMENT (mp1videoparse));
         break;
       default:
@@ -438,7 +439,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
 
     if (GST_PAD_CAPS (outpad) != NULL) {
       GST_DEBUG ("mp1videoparse: pushing  %d bytes %" G_GUINT64_FORMAT, GST_BUFFER_SIZE(outbuf), GST_BUFFER_TIMESTAMP(outbuf));
-      gst_pad_push(outpad, outbuf);
+      gst_pad_push(outpad, GST_DATA (outbuf));
       GST_DEBUG ("mp1videoparse: pushing  done");
     } else {
       GST_DEBUG ("No capsnego yet, delaying buffer push");

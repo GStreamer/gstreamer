@@ -703,7 +703,7 @@ gst_sf_loop (GstElement *element)
         data = (gfloat*)GST_BUFFER_DATA (out);
         for (j=0; j<read; j++)
           data[j] = buf[j * nchannels + i % nchannels];
-        gst_pad_push (channel->pad, out);
+        gst_pad_push (channel->pad, GST_DATA (out));
       }
 
     this->time += read * (GST_SECOND / this->rate);
@@ -715,7 +715,7 @@ gst_sf_loop (GstElement *element)
         eos = 0;
       } else {
         for (l=this->channels; l; l=l->next)
-          gst_pad_push (GST_SF_CHANNEL (l)->pad, (GstBuffer*)gst_event_new (GST_EVENT_EOS));
+          gst_pad_push (GST_SF_CHANNEL (l)->pad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
         gst_element_set_eos (element);
       }
     }
@@ -740,7 +740,7 @@ gst_sf_loop (GstElement *element)
     for (i=0,l=this->channels; l; l=l->next,i++) {
       channel = GST_SF_CHANNEL (l);
       
-      in = gst_pad_pull (channel->pad);
+      in = GST_BUFFER (gst_pad_pull (channel->pad));
 
       if (buffer_frames == 0) {
         /* pulling a buffer from the pad should have caused capsnego to occur,

@@ -90,7 +90,7 @@ static void		gst_deinterlace_set_property		(GObject *object, guint prop_id,
 static void		gst_deinterlace_get_property		(GObject *object, guint prop_id, 
 								 GValue *value, GParamSpec *pspec);
 
-static void		gst_deinterlace_chain			(GstPad *pad, GstBuffer *buf);
+static void		gst_deinterlace_chain			(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
@@ -187,8 +187,9 @@ gst_deinterlace_init (GstDeInterlace *filter)
 }
 
 static void
-gst_deinterlace_chain (GstPad *pad, GstBuffer *buf)
+gst_deinterlace_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstDeInterlace *filter;
   gint y0, y1, y2, y3;
   guchar *psrc1, *psrc2, *psrc3, *pdst1, *yuvptr, *src;
@@ -295,7 +296,7 @@ gst_deinterlace_chain (GstPad *pad, GstBuffer *buf)
     }
   }
 
-  gst_pad_push (filter->srcpad, buf);
+  gst_pad_push (filter->srcpad, GST_DATA (buf));
 }
 
 static void

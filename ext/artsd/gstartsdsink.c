@@ -83,7 +83,7 @@ static void			gst_artsdsink_close_audio		(GstArtsdsink *sink);
 static GstElementStateReturn	gst_artsdsink_change_state		(GstElement *element);
 static gboolean			gst_artsdsink_sync_parms		(GstArtsdsink *artsdsink);
 static GstPadLinkReturn		gst_artsdsink_link			(GstPad *pad, GstCaps *caps);
-static void			gst_artsdsink_chain			(GstPad *pad, GstBuffer *buf);
+static void			gst_artsdsink_chain			(GstPad *pad, GstData *_data);
 
 static void			gst_artsdsink_set_property		(GObject *object, guint prop_id, 
 									 const GValue *value, GParamSpec *pspec);
@@ -188,8 +188,9 @@ gst_artsdsink_link (GstPad *pad, GstCaps *caps)
 }
 
 static void
-gst_artsdsink_chain (GstPad *pad, GstBuffer *buf)
+gst_artsdsink_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstArtsdsink *artsdsink;
 
   g_return_if_fail(pad != NULL);

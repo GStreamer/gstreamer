@@ -38,11 +38,11 @@
           i_float = i_float - nin;
           lower = in_data[nin-1];
           gst_buffer_unref(in);
-          in = gst_pad_pull (filter->sinkpad);
+          in = GST_BUFFER (gst_pad_pull (filter->sinkpad));
           
           while (GST_IS_EVENT (in)) {
             gst_pad_event_default (filter->srcpad, GST_EVENT (in));
-            in = gst_pad_pull (filter->sinkpad);
+            in = GST_BUFFER (gst_pad_pull (filter->sinkpad));
           }
           
           in_data = (_FORMAT*) GST_BUFFER_DATA(in);
@@ -59,7 +59,7 @@
         lower = in_data[i];
       }
       
-      gst_pad_push(filter->srcpad, out);
+      gst_pad_push(filter->srcpad, GST_DATA (out));
 
       gst_element_yield (element);
     } while (TRUE);

@@ -392,7 +392,7 @@ gst_mplex_write_callback (PS_Stream *stream, uint8_t *data, size_t size, void *u
     outbuf = gst_buffer_new_and_alloc (size);
     memcpy (GST_BUFFER_DATA (outbuf), data, size);
 
-    gst_pad_push (mplex->srcpad, outbuf);
+    gst_pad_push (mplex->srcpad, GST_DATA (outbuf));
   }
 
   return size;
@@ -476,7 +476,7 @@ gst_mplex_loop (GstElement *element)
     case GST_MPLEX_END:
     {
       mplex->ostrm->Close ();
-      gst_pad_push (mplex->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+      gst_pad_push (mplex->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
       gst_element_set_eos (element);
       break;
     }

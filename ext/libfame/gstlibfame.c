@@ -168,7 +168,7 @@ static void	gst_fameenc_set_property	(GObject *object, guint prop_id,
 static void	gst_fameenc_get_property	(GObject *object, guint prop_id, 
 						 GValue *value, GParamSpec *pspec);
 
-static void	gst_fameenc_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_fameenc_chain		(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_fameenc_signals[LAST_SIGNAL] = { 0 };*/
@@ -415,8 +415,9 @@ gst_fameenc_dispose (GObject *object)
 }
 
 static void
-gst_fameenc_chain (GstPad *pad, GstBuffer *buf)
+gst_fameenc_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstFameEnc *fameenc;
   guchar *data;
   gulong size;
@@ -474,7 +475,7 @@ gst_fameenc_chain (GstPad *pad, GstBuffer *buf)
     GST_DEBUG ("gst_fameenc_chain: pushing buffer of size %d",
                GST_BUFFER_SIZE(outbuf));
 
-    gst_pad_push (fameenc->srcpad, outbuf);
+    gst_pad_push (fameenc->srcpad, GST_DATA (outbuf));
   }
 
   fame_end_frame (fameenc->fc, NULL); 

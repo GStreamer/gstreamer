@@ -133,7 +133,7 @@ static void	dxr3videosink_write_data	(Dxr3VideoSink *sink,
 static void	dxr3videosink_parse_data	(Dxr3VideoSink *sink);
 
 static gboolean dxr3videosink_handle_event	(GstPad *pad, GstEvent *event);
-static void	dxr3videosink_chain		(GstPad *pad,GstBuffer *buf);
+static void	dxr3videosink_chain		(GstPad *pad,GstData *_data);
 
 static GstElementStateReturn dxr3videosink_change_state (GstElement *element);
 
@@ -624,8 +624,9 @@ dxr3videosink_handle_event (GstPad *pad, GstEvent *event)
 
 
 static void 
-dxr3videosink_chain (GstPad *pad, GstBuffer *buf) 
+dxr3videosink_chain (GstPad *pad, GstData *_data) 
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   Dxr3VideoSink *sink;
   GstBuffer *merged;
 

@@ -323,18 +323,18 @@ gst_smpte_loop (GstElement *element)
   ts = smpte->position * GST_SECOND / smpte->fps;
 
   while (GST_PAD_IS_USABLE (smpte->sinkpad1) && in1 == NULL) {
-    in1 = gst_pad_pull (smpte->sinkpad1);
+    in1 = GST_BUFFER (gst_pad_pull (smpte->sinkpad1));
     if (GST_IS_EVENT (in1)) {
-      gst_pad_push (smpte->srcpad, in1);
+      gst_pad_push (smpte->srcpad, GST_DATA (in1));
       in1 = NULL;
     }
     else 
       ts = GST_BUFFER_TIMESTAMP (in1);
   }
   if (GST_PAD_IS_USABLE (smpte->sinkpad2) && in2 == NULL) {
-    in2 = gst_pad_pull (smpte->sinkpad2);
+    in2 = GST_BUFFER (gst_pad_pull (smpte->sinkpad2));
     if (GST_IS_EVENT (in2)) {
-      gst_pad_push (smpte->srcpad, in2);
+      gst_pad_push (smpte->srcpad, GST_DATA (in2));
       in2 = NULL;
     }
     else 
@@ -390,7 +390,7 @@ gst_smpte_loop (GstElement *element)
     gst_buffer_unref (in2);
 
   GST_BUFFER_TIMESTAMP (outbuf) = ts;
-  gst_pad_push (smpte->srcpad, outbuf);
+  gst_pad_push (smpte->srcpad, GST_DATA (outbuf));
 }
 
 static void
