@@ -447,7 +447,7 @@ sink_restart:
           int width = snd_pcm_format_physical_width (this->format->format);
           int size = samples * width / 8;
 
-          if (size / (width / 8) != samples) {
+          if (size / (width / 8) != samples || samples > max_discont) {
             GST_WARNING_OBJECT (this,
                 "Integer overflow for size=%d/samples=%d - broken stream",
                 size, samples);
