@@ -28,15 +28,12 @@
 
 
 /* elementfactory information */
-static GstElementDetails videoscale_details = {
+static GstElementDetails videoscale_details = GST_ELEMENT_DETAILS (
   "Video scaler",
   "Filter/Video",
-  "LGPL",
   "Resizes video",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 /* GstVideoscale signals and args */
 enum {
@@ -68,57 +65,25 @@ gst_videoscale_method_get_type (void)
   return videoscale_method_type;
 }
 
-static void	gst_videoscale_class_init	(GstVideoscaleClass *klass);
-static void	gst_videoscale_init		(GstVideoscale *videoscale);
-
-static void	gst_videoscale_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_videoscale_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
-
-static void	gst_videoscale_chain		(GstPad *pad, GstData *_data);
-static GstCaps * gst_videoscale_get_capslist(void);
-
-static GstElementClass *parent_class = NULL;
-/*static guint gst_videoscale_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_videoscale_get_type (void)
+static GstCaps *
+gst_videoscale_get_capslist(void)
 {
-  static GType videoscale_type = 0;
+  static GstCaps *capslist = NULL;
+  GstCaps *caps;
+  int i;
 
-  if (!videoscale_type) {
-    static const GTypeInfo videoscale_info = {
-      sizeof(GstVideoscaleClass),      NULL,
-      NULL,
-      (GClassInitFunc)gst_videoscale_class_init,
-      NULL,
-      NULL,
-      sizeof(GstVideoscale),
-      0,
-      (GInstanceInitFunc)gst_videoscale_init,
-    };
-    videoscale_type = g_type_register_static(GST_TYPE_ELEMENT, "GstVideoscale", &videoscale_info, 0);
+  if (capslist){
+    gst_caps_ref(capslist);
+    return capslist;
   }
-  return videoscale_type;
-}
 
-static void
-gst_videoscale_class_init (GstVideoscaleClass *klass)
-{
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  for(i=0;i<videoscale_n_formats;i++){
+    caps = videoscale_get_caps(videoscale_formats + i);
+    capslist = gst_caps_append(capslist, caps);
+  }
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_METHOD,
-    g_param_spec_enum("method","method","method",
-                      GST_TYPE_VIDEOSCALE_METHOD,0,G_PARAM_READWRITE)); /* CHECKME! */
-
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
-
-  gobject_class->set_property = gst_videoscale_set_property;
-  gobject_class->get_property = gst_videoscale_get_property;
-
+  gst_caps_ref(capslist);
+  return capslist;
 }
 
 static GstPadTemplate *
@@ -179,25 +144,69 @@ gst_videoscale_sink_template_factory(void)
   return templ;
 }
 
-static GstCaps *
-gst_videoscale_get_capslist(void)
+static void	gst_videoscale_base_init	(gpointer g_class);
+static void	gst_videoscale_class_init	(GstVideoscaleClass *klass);
+static void	gst_videoscale_init		(GstVideoscale *videoscale);
+
+static void	gst_videoscale_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void	gst_videoscale_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+
+static void	gst_videoscale_chain		(GstPad *pad, GstData *_data);
+static GstCaps * gst_videoscale_get_capslist(void);
+
+static GstElementClass *parent_class = NULL;
+/*static guint gst_videoscale_signals[LAST_SIGNAL] = { 0 }; */
+
+GType
+gst_videoscale_get_type (void)
 {
-  static GstCaps *capslist = NULL;
-  GstCaps *caps;
-  int i;
+  static GType videoscale_type = 0;
 
-  if (capslist){
-    gst_caps_ref(capslist);
-    return capslist;
+  if (!videoscale_type) {
+    static const GTypeInfo videoscale_info = {
+      sizeof(GstVideoscaleClass),
+      gst_videoscale_base_init,
+      NULL,
+      (GClassInitFunc)gst_videoscale_class_init,
+      NULL,
+      NULL,
+      sizeof(GstVideoscale),
+      0,
+      (GInstanceInitFunc)gst_videoscale_init,
+    };
+    videoscale_type = g_type_register_static(GST_TYPE_ELEMENT, "GstVideoscale", &videoscale_info, 0);
   }
+  return videoscale_type;
+}
 
-  for(i=0;i<videoscale_n_formats;i++){
-    caps = videoscale_get_caps(videoscale_formats + i);
-    capslist = gst_caps_append(capslist, caps);
-  }
+static void
+gst_videoscale_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_caps_ref(capslist);
-  return capslist;
+  gst_element_class_set_details (element_class, &videoscale_details);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_videoscale_sink_template_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_videoscale_src_template_factory));
+}
+static void
+gst_videoscale_class_init (GstVideoscaleClass *klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+
+  gobject_class = (GObjectClass*)klass;
+  gstelement_class = (GstElementClass*)klass;
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_METHOD,
+    g_param_spec_enum("method","method","method",
+                      GST_TYPE_VIDEOSCALE_METHOD,0,G_PARAM_READWRITE)); /* CHECKME! */
+
+  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+
+  gobject_class->set_property = gst_videoscale_set_property;
+  gobject_class->get_property = gst_videoscale_get_property;
+
 }
 
 static GstCaps *
@@ -485,26 +494,20 @@ gst_videoscale_get_property (GObject *object, guint prop_id, GValue *value, GPar
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the videoscale element */
-  factory = gst_element_factory_new("videoscale",GST_TYPE_VIDEOSCALE,
-                                   &videoscale_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_videoscale_sink_template_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_videoscale_src_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "videoscale", GST_RANK_NONE, GST_TYPE_VIDEOSCALE);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "videoscale",
-  plugin_init
-};
+  "Resizes video",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

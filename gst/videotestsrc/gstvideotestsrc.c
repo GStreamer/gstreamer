@@ -31,15 +31,12 @@
 
 
 /* elementfactory information */
-static GstElementDetails videotestsrc_details = {
+static GstElementDetails videotestsrc_details = GST_ELEMENT_DETAILS (
   "Video test source",
   "Source/Video",
-  "LGPL",
   "Creates a test video stream",
-  VERSION,
-  "David A. Schleef <ds@schleef.org>",
-  "(C) 2002",
-};
+  "David A. Schleef <ds@schleef.org>"
+);
 
 /* GstVideotestsrc signals and args */
 enum
@@ -60,6 +57,7 @@ enum
   /* FILL ME */
 };
 
+static void gst_videotestsrc_base_init (gpointer g_class);
 static void gst_videotestsrc_class_init (GstVideotestsrcClass * klass);
 static void gst_videotestsrc_init (GstVideotestsrc * videotestsrc);
 static GstElementStateReturn gst_videotestsrc_change_state (GstElement * element);
@@ -101,7 +99,8 @@ gst_videotestsrc_get_type (void)
 
   if (!videotestsrc_type) {
     static const GTypeInfo videotestsrc_info = {
-      sizeof (GstVideotestsrcClass), NULL,
+      sizeof (GstVideotestsrcClass),
+      gst_videotestsrc_base_init,
       NULL,
       (GClassInitFunc) gst_videotestsrc_class_init,
       NULL,
@@ -136,6 +135,16 @@ gst_videotestsrc_pattern_get_type (void)
   return videotestsrc_pattern_type;
 }
 
+static void
+gst_videotestsrc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &videotestsrc_details);
+
+  gst_element_class_add_pad_template (element_class,
+	  GST_PAD_TEMPLATE_GET (videotestsrc_src_template_factory));
+}
 static void
 gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
 {
@@ -568,28 +577,23 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value, 
 
 
 static gboolean
-plugin_init (GModule * module, GstPlugin * plugin)
+plugin_init (GstPlugin * plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the videotestsrc element */
-  factory = gst_element_factory_new ("videotestsrc", GST_TYPE_VIDEOTESTSRC, &videotestsrc_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory,
-					GST_PAD_TEMPLATE_GET (videotestsrc_src_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "videotestsrc", GST_RANK_NONE, GST_TYPE_VIDEOTESTSRC);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "videotestsrc",
-  plugin_init
-};
+  "Creates a test video stream",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 
 
 
