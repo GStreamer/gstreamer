@@ -62,6 +62,16 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @argv: 
 
 
+<!-- ##### FUNCTION gst_init_with_popt_table ##### -->
+<para>
+
+</para>
+
+@argc: 
+@argv: 
+@popt_options: 
+
+
 <!-- ##### FUNCTION gst_version ##### -->
 <para>
 
@@ -84,6 +94,12 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 
 </para>
 
+
+
+<!-- ##### VARIABLE g_log_domain_gstreamer ##### -->
+<para>
+
+</para>
 
 
 <!-- ##### MACRO GST_VERSION_MAJOR ##### -->

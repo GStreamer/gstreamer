@@ -24,6 +24,15 @@ Some convenience functions
 @value: 
 
 
+<!-- ##### FUNCTION gst_util_set_value_from_string ##### -->
+<para>
+
+</para>
+
+@value: 
+@value_str: 
+
+
 <!-- ##### FUNCTION gst_util_get_int_arg ##### -->
 <para>
 

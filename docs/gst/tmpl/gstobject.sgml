@@ -245,6 +245,8 @@ Check if the object has been destroyed.
 </para>
 
 @object: 
+@self: 
+<!-- # Unused Parameters # -->
 @parent: 
 
 
@@ -278,6 +280,15 @@ Check if the object has been destroyed.
 @func_data: 
 @Returns: 
 
+
+<!-- ##### SIGNAL GstObject::deep-notify ##### -->
+<para>
+
+</para>
+
+@gstobject: the object which received the signal.
+@arg1: 
+@arg2: 
 
 <!-- ##### SIGNAL GstObject::object-saved ##### -->
 <para>

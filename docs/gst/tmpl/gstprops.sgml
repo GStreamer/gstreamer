@@ -20,10 +20,40 @@ are usually used in conjunction with GstCaps.
 
 </para>
 
-@refcount: 
-@lock: 
-@fixed: 
+@refcount: a refcount for this struct
+@fixed: indicates that this props has no lists or ranges
 @properties: the properties
+
+<!-- ##### STRUCT GstPropsEntry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM GstPropsType ##### -->
+<para>
+
+</para>
+
+@GST_PROPS_END_TYPE: 
+@GST_PROPS_INVALID_TYPE: 
+@GST_PROPS_INT_TYPE: 
+@GST_PROPS_FLOAT_TYPE: 
+@GST_PROPS_FOURCC_TYPE: 
+@GST_PROPS_BOOL_TYPE: 
+@GST_PROPS_STRING_TYPE: 
+@GST_PROPS_VAR_TYPE: 
+@GST_PROPS_LIST_TYPE: 
+@GST_PROPS_FLOAT_RANGE_TYPE: 
+@GST_PROPS_INT_RANGE_TYPE: 
+@GST_PROPS_LAST_TYPE: 
+
+<!-- ##### MACRO GST_TYPE_PROPS ##### -->
+<para>
+The GType of the props boxed type, for use in GValues.
+</para>
+
+
 
 <!-- ##### MACRO GST_MAKE_FOURCC ##### -->
 <para>
@@ -73,7 +103,7 @@ Create an integer property.
 
 <!-- ##### MACRO GST_PROPS_INT_ANY ##### -->
 <para>
-
+Create an integer property that can hold any int.
 </para>
 
 
@@ -89,7 +119,7 @@ Create an integer range property.
 
 <!-- ##### MACRO GST_PROPS_INT_NEGATIVE ##### -->
 <para>
-
+Create an integer property that can hold negative ints.
 </para>
 
 
@@ -137,17 +167,9 @@ Create a float range value.
 
 <!-- ##### MACRO GST_PROPS_INT_POSITIVE ##### -->
 <para>
-
+Create an integer property that can hold positive ints.
 </para>
 
-
-
-<!-- ##### MACRO GST_PROPS_ENTRY_IS_VARIABLE ##### -->
-<para>
-
-</para>
-
-@a: 
 
 
 <!-- ##### FUNCTION gst_props_new ##### -->
@@ -268,7 +290,18 @@ Create a float range value.
 @value: 
 
 
-<!-- ##### FUNCTION gst_props_get_boolean ##### -->
+<!-- ##### FUNCTION gst_props_get ##### -->
+<para>
+
+</para>
+
+@props: 
+@first_name: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_has_fixed_property ##### -->
 <para>
 
 </para>
@@ -278,43 +311,14 @@ Create a float range value.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_props_get_fourcc_int ##### -->
+<!-- ##### FUNCTION gst_props_has_property_typed ##### -->
 <para>
 
 </para>
 
 @props: 
 @name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_props_get_int ##### -->
-<para>
-
-</para>
-
-@props: 
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_props_get_string ##### -->
-<para>
-
-</para>
-
-@props: 
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_props_get_float ##### -->
-<para>
-
-</para>
-
-@props: 
-@name: 
+@type: 
 @Returns: 
 
 
@@ -352,6 +356,137 @@ Create a float range value.
 </para>
 
 @parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_get_entry ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_get ##### -->
+<para>
+
+</para>
+
+@entry: 
+@Varargs: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@props: 
+
+
+<!-- ##### FUNCTION gst_props_entry_get_boolean ##### -->
+<para>
+
+</para>
+
+@entry: 
+@val: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_get_float ##### -->
+<para>
+
+</para>
+
+@entry: 
+@val: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_get_float_range ##### -->
+<para>
+
+</para>
+
+@entry: 
+@min: 
+@max: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_get_fourcc_int ##### -->
+<para>
+
+</para>
+
+@entry: 
+@val: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_get_int ##### -->
+<para>
+
+</para>
+
+@entry: 
+@val: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_get_int_range ##### -->
+<para>
+
+</para>
+
+@entry: 
+@min: 
+@max: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_get_list ##### -->
+<para>
+
+</para>
+
+@entry: 
+@val: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_get_name ##### -->
+<para>
+
+</para>
+
+@entry: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_get_string ##### -->
+<para>
+
+</para>
+
+@entry: 
+@val: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_get_type ##### -->
+<para>
+
+</para>
+
+@entry: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_entry_is_fixed ##### -->
+<para>
+
+</para>
+
+@entry: 
 @Returns: 
 
 

@@ -35,6 +35,7 @@ Get the current stack frame.
 
 @ctx: 
 @threadnum: 
+@priv: 
 @func: 
 @argc: 
 @argv: 
@@ -92,6 +93,24 @@ Indicates the cothread is destroyed.
 @ctx: 
 
 
+<!-- ##### FUNCTION cothread_get_private ##### -->
+<para>
+
+</para>
+
+@thread: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cothread_set_private ##### -->
+<para>
+
+</para>
+
+@thread: 
+@data: 
+
+
 <!-- ##### FUNCTION cothread_create ##### -->
 <para>
 
@@ -136,17 +155,7 @@ Indicates the cothread is destroyed.
 @thread: 
 
 
-<!-- ##### FUNCTION cothread_set_data ##### -->
-<para>
-
-</para>
-
-@thread: 
-@key: 
-@data: 
-
-
-<!-- ##### FUNCTION cothread_get_data ##### -->
+<!-- ##### FUNCTION cothread_context_get_data ##### -->
 <para>
 
 </para>
@@ -154,6 +163,16 @@ Indicates the cothread is destroyed.
 @thread: 
 @key: 
 @Returns: 
+
+
+<!-- ##### FUNCTION cothread_context_set_data ##### -->
+<para>
+
+</para>
+
+@thread: 
+@key: 
+@data: 
 
 
 <!-- ##### FUNCTION cothread_lock ##### -->

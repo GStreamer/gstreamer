@@ -40,6 +40,14 @@ Get the state of the scheduler.
 @GST_SCHEDULER_STATE_STOPPED: 
 @GST_SCHEDULER_STATE_ERROR: 
 
+<!-- ##### ENUM GstSchedulerFlags ##### -->
+<para>
+
+</para>
+
+@GST_SCHEDULER_FLAG_FIXED_CLOCK: 
+@GST_SCHEDULER_FLAG_LAST: 
+
 <!-- ##### MACRO gst_scheduler_destroy ##### -->
 <para>
 Destroy the scheduler
@@ -166,6 +174,71 @@ Destroy the scheduler
 
 @sched: 
 @padlist: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_scheduler_add_scheduler ##### -->
+<para>
+
+</para>
+
+@sched: 
+@sched2: 
+
+
+<!-- ##### FUNCTION gst_scheduler_remove_scheduler ##### -->
+<para>
+
+</para>
+
+@sched: 
+@sched2: 
+
+
+<!-- ##### FUNCTION gst_scheduler_auto_clock ##### -->
+<para>
+
+</para>
+
+@sched: 
+
+
+<!-- ##### FUNCTION gst_scheduler_get_clock ##### -->
+<para>
+
+</para>
+
+@sched: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_scheduler_set_clock ##### -->
+<para>
+
+</para>
+
+@sched: 
+@clock: 
+
+
+<!-- ##### FUNCTION gst_scheduler_use_clock ##### -->
+<para>
+
+</para>
+
+@sched: 
+@clock: 
+
+
+<!-- ##### FUNCTION gst_scheduler_clock_wait ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+@clock: 
+@time: 
 @Returns: 
 
 

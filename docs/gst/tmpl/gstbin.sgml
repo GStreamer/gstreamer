@@ -53,6 +53,8 @@ Flags for a bin.
 @GST_BIN_FLAG_MANAGER: 
 @GST_BIN_SELF_SCHEDULABLE: 
 @GST_BIN_FLAG_PREFER_COTHREADS: 
+@GST_BIN_FLAG_FIXED_CLOCK: 
+@GST_BIN_SELF_ITERATING: 
 @GST_BIN_FLAG_LAST: 
 
 <!-- ##### STRUCT GstBin ##### -->
@@ -85,6 +87,16 @@ Free the memory allocated by this bin
 
 @bin: 
 @element: 
+
+
+<!-- ##### FUNCTION gst_bin_add_many ##### -->
+<para>
+
+</para>
+
+@bin: 
+@element_1: 
+@Varargs: 
 
 
 <!-- ##### FUNCTION gst_bin_remove ##### -->
@@ -156,13 +168,30 @@ Free the memory allocated by this bin
 @child: 
 
 
-<!-- ##### FUNCTION gst_bin_child_error ##### -->
+<!-- ##### FUNCTION gst_bin_auto_clock ##### -->
 <para>
 
 </para>
 
 @bin: 
-@child: 
+
+
+<!-- ##### FUNCTION gst_bin_get_clock ##### -->
+<para>
+
+</para>
+
+@bin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_use_clock ##### -->
+<para>
+
+</para>
+
+@bin: 
+@clock: 
 
 
 <!-- ##### SIGNAL GstBin::object-added ##### -->

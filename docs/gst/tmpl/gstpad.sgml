@@ -121,26 +121,26 @@ Can this pad be used to pull a buffer.
 
 <!-- ##### MACRO GST_PAD_IS_SINK ##### -->
 <para>
-
+Check if the pad is a sinkpad.
 </para>
 
-@pad: 
+@pad: the pad to query
 
 
 <!-- ##### MACRO GST_PAD_IS_SRC ##### -->
 <para>
-
+Check if the pad is a srcpad.
 </para>
 
-@pad: 
+@pad: the pad to query
 
 
 <!-- ##### MACRO GST_PAD_IS_CONNECTED ##### -->
 <para>
-
+Checks if the pad is connected
 </para>
 
-@pad: 
+@pad: the pad to query
 
 
 <!-- ##### STRUCT GstPad ##### -->
@@ -193,12 +193,13 @@ from this pad.
 
 <!-- ##### USER_FUNCTION GstPadGetCapsFunction ##### -->
 <para>
-
+Return the caps of the specified pad. By default this function
+will return the pad template caps but can optionally be overridden.
 </para>
 
-@pad: 
-@caps: 
-@Returns: 
+@pad: The pad to get the caps of
+@caps: The peer caps, can be used to filter the caps.
+@Returns: The caps of the pad.
 
 
 <!-- ##### ENUM GstRegionType ##### -->
@@ -226,22 +227,22 @@ a start/stop timecode pair.
 
 <!-- ##### USER_FUNCTION GstPadEventFunction ##### -->
 <para>
-
+Function signature to handle an event for the pad.
 </para>
 
-@pad: 
-@event: 
-@Returns: 
+@pad: The pad to handle the event
+@event: The event to handle
+@Returns: TRUE if the pad could handle the event.
 
 
 <!-- ##### USER_FUNCTION GstPadConnectFunction ##### -->
 <para>
-
+Function signature to handle a new connection on the pad.
 </para>
 
-@pad: 
-@caps: 
-@Returns: 
+@pad: The pad that is connected.
+@caps: The peer caps.
+@Returns: the result of the connection with the specified caps.
 
 
 <!-- ##### ENUM GstPadConnectReturn ##### -->
@@ -250,9 +251,9 @@ a start/stop timecode pair.
 </para>
 
 @GST_PAD_CONNECT_REFUSED: 
+@GST_PAD_CONNECT_DELAYED: 
 @GST_PAD_CONNECT_OK: 
 @GST_PAD_CONNECT_DONE: 
-@GST_PAD_CONNECT_DELAYED: 
 
 <!-- ##### ENUM GstPadDirection ##### -->
 <para>
@@ -466,6 +467,14 @@ Destroy the pad.
 @sched: 
 
 
+<!-- ##### FUNCTION gst_pad_unset_sched ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
 <!-- ##### FUNCTION gst_pad_get_real_parent ##### -->
 <para>
 
@@ -537,9 +546,12 @@ Destroy the pad.
 
 </para>
 
-@pad: 
+@srcpad: 
+@sinkpad: 
 @filtercaps: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@pad: 
 
 
 <!-- ##### FUNCTION gst_pad_try_reconnect_filtered ##### -->
@@ -547,9 +559,12 @@ Destroy the pad.
 
 </para>
 
-@pad: 
+@srcpad: 
+@sinkpad: 
 @filtercaps: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@pad: 
 
 
 <!-- ##### FUNCTION gst_pad_disconnect ##### -->
@@ -559,6 +574,27 @@ Destroy the pad.
 
 @srcpad: 
 @sinkpad: 
+
+
+<!-- ##### FUNCTION gst_pad_can_connect ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@sinkpad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_can_connect_filtered ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@sinkpad: 
+@filtercaps: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_push ##### -->
@@ -659,6 +695,16 @@ Destroy the pad.
 </para>
 
 @pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_perform_negotiate ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@sinkpad: 
 @Returns: 
 
 
@@ -833,18 +879,18 @@ Get the chain function of the real pad.
 
 <!-- ##### MACRO GST_RPAD_FILTER ##### -->
 <para>
-
+Get the filter from the pad
 </para>
 
-@pad: 
+@pad: the pad to query
 
 
 <!-- ##### MACRO GST_RPAD_APPFILTER ##### -->
 <para>
-
+Get the application filter for this pad
 </para>
 
-@pad: 
+@pad: the pad to query
 
 
 <!-- ##### MACRO GST_RPAD_GETFUNC ##### -->
@@ -913,18 +959,18 @@ Get the gethandler function of this real pad.
 
 <!-- ##### MACRO GST_RPAD_CONNECTFUNC ##### -->
 <para>
-
+Get the connect function of the pad
 </para>
 
-@pad: 
+@pad: the pad to query
 
 
 <!-- ##### MACRO GST_RPAD_GETCAPSFUNC ##### -->
 <para>
-
+Get the getcaps function of this pad
 </para>
 
-@pad: 
+@pad: the pad to query
 
 
 <!-- ##### MACRO GST_GPAD_REALPAD ##### -->
@@ -940,8 +986,6 @@ Get the real pad of this ghost pad.
 
 </para>
 
-@pad: 
-@realpad: 
 
 <!-- ##### FUNCTION gst_ghost_pad_new ##### -->
 <para>

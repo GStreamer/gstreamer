@@ -18,24 +18,34 @@ with the buffer. (fakesink)
 
 <!-- ##### SIGNAL GstFakeSink::handoff ##### -->
 <para>
-
+This signal is emmitted when a buffer is handled.
 </para>
 
 @gstfakesink: the object which received the signal.
-@arg1: 
+@arg1: The buffer that is received.
 
 <!-- ##### ARG GstFakeSink:num-sinks ##### -->
 <para>
-
+The number of sink pads.
 </para>
 
 <!-- ##### ARG GstFakeSink:silent ##### -->
 <para>
-
+Indicates the plugin should not emit messages.
 </para>
 
 <!-- ##### ARG GstFakeSink:dump ##### -->
 <para>
+Dump the contents of the buffer
+</para>
 
+<!-- ##### ARG GstFakeSink:sync ##### -->
+<para>
+Sync on the clock
+</para>
+
+<!-- ##### ARG GstFakeSink:last-message ##### -->
+<para>
+The last message this plugin emmited.
 </para>
 

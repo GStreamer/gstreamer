@@ -4,15 +4,22 @@ gst_object_get_type
 gst_xml_get_type
 gst_element_get_type
 gst_bin_get_type
+gst_clock_get_type
 gst_pipeline_get_type
 gst_pad_get_type
+gst_padtemplate_get_type
+gst_ghost_pad_get_type
 gst_thread_get_type
 gst_tee_get_type
 gst_plugin_feature_get_type
+gst_autoplug_get_type
 gst_autoplugfactory_get_type
 gst_typefactory_get_type
 gst_elementfactory_get_type
 gst_schedulerfactory_get_type
+gst_scheduler_get_type
+gst_system_clock_get_type
+gst_timecache_get_type
 gst_xml_get_type
 
 gst_aggregator_get_type
@@ -23,11 +30,13 @@ gst_filesrc_get_type
 gst_fdsrc_get_type
 
 gst_fdsink_get_type
+gst_disksink_get_type
 
 gst_pipefilter_get_type
 gst_identity_get_type
 gst_queue_get_type
 
 gst_statistics_get_type
+gst_md5sink_get_type
 gst_typefind_get_type
 

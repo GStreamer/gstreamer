@@ -29,6 +29,7 @@
 <!entity GstCaps SYSTEM "sgml/gstcaps.sgml">
 <!entity GstProps SYSTEM "sgml/gstprops.sgml">
 <!entity GstClock SYSTEM "sgml/gstclock.sgml">
+<!entity GstSystemClock SYSTEM "sgml/gstsystemclock.sgml">
 <!entity GstUtils SYSTEM "sgml/gstutils.sgml">
 <!entity GstXML SYSTEM "sgml/gstxml.sgml">
 <!entity GstQueue SYSTEM "sgml/gstqueue.sgml">
@@ -48,6 +49,7 @@
 <!entity GstIdentity SYSTEM "sgml/gstidentity.sgml">
 <!entity GstPipefilter SYSTEM "sgml/gstpipefilter.sgml">
 <!entity GstStatistics SYSTEM "sgml/gststatistics.sgml">
+<!entity GstMD5Sink SYSTEM "sgml/gstmd5sink.sgml">
 <!entity GstTee SYSTEM "sgml/gsttee.sgml">
 
 <!entity gstreamer-tree-index SYSTEM "sgml/tree_index.sgml">
@@ -91,6 +93,7 @@ with some more specialized elements.</para>
     &GstQueue;
     &GstScheduler;
     &GstSchedulerFactory;
+    &GstSystemClock;
     &GstThread;
     &GstTimeCache;
     &GstType;
@@ -126,6 +129,7 @@ with some more specialized elements.</para>
     &GstIdentity;
 
     &GstStatistics;
+    &GstMD5Sink;
 
     &GstTee;
   </chapter>

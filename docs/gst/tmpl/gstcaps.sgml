@@ -103,28 +103,11 @@ GST_CAPS_FACTORY() macro as shown below.
 #GstProps, #GstPad
 </para>
 
-<!-- ##### MACRO GST_CAPS_LOCK ##### -->
+<!-- ##### MACRO GST_TYPE_CAPS ##### -->
 <para>
-Lock the caps structure
+The GType of the caps boxed type, for use in GValues.
 </para>
 
-@caps: The caps structure to lock
-
-
-<!-- ##### MACRO GST_CAPS_TRYLOCK ##### -->
-<para>
-Try to lock the caps structure
-</para>
-
-@caps: The caps structure to try to lock
-
-
-<!-- ##### MACRO GST_CAPS_UNLOCK ##### -->
-<para>
-Unlock the caps structure
-</para>
-
-@caps: The caps structure to unlock
 
 
 <!-- ##### MACRO GST_CAPS_NEW ##### -->
@@ -157,18 +140,18 @@ A convenience macro to get a GstCaps from the given capsfactory.
 
 <!-- ##### MACRO GST_CAPS_IS_CHAINED ##### -->
 <para>
-
+Check if the GstCaps is chained.
 </para>
 
-@caps: 
+@caps: the caps to query
 
 
 <!-- ##### MACRO GST_CAPS_IS_FIXED ##### -->
 <para>
-
+Check if the GstCaps has fixed properties, ie. it has no ranges or lists.
 </para>
 
-@caps: 
+@caps: the caps to query
 
 
 <!-- ##### STRUCT GstCaps ##### -->
@@ -179,8 +162,7 @@ A convenience macro to get a GstCaps from the given capsfactory.
 @name: the name of the capability, for the application
 @id: the typeid of the capability
 @refcount: a refcounter for this caps structure
-@lock: the lock for this caps structure
-@fixed: 
+@fixed: a boolean indicating that this caps structure is fixed
 @properties: the properties of the capability
 @next: a pointer to the next caps.
 
@@ -233,6 +215,15 @@ A convenience macro to get a GstCaps from the given capsfactory.
 
 
 <!-- ##### FUNCTION gst_caps_copy ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_copy_1 ##### -->
 <para>
 
 </para>
@@ -305,9 +296,6 @@ A convenience macro to get a GstCaps from the given capsfactory.
 
 @caps: 
 @type_id: 
-<!-- # Unused Parameters # -->
-@Param2: 
-@typeid: 
 
 
 <!-- ##### FUNCTION gst_caps_get_type_id ##### -->
@@ -368,11 +356,29 @@ A convenience macro to get a GstCaps from the given capsfactory.
 
 <!-- ##### MACRO gst_caps_has_property ##### -->
 <para>
-
+Check if the GstCaps has a property with the given name
 </para>
 
-@caps: 
-@name: 
+@caps: the caps to query
+@name: the name of the property
+
+
+<!-- ##### MACRO gst_caps_has_fixed_property ##### -->
+<para>
+Check if the GstCaps has a fixed property with the given name
+</para>
+
+@caps: the caps to query
+@name: the name of the property
+
+
+<!-- ##### MACRO gst_caps_has_property_typed ##### -->
+<para>
+Check if the GstCaps has a property with the given type
+</para>
+
+@caps: the caps to query
+@name: the name of the property
 
 
 <!-- ##### FUNCTION gst_caps_normalize ##### -->
@@ -394,6 +400,16 @@ Set a property of a caps structure.
 @args...: the new value of the property
 
 
+<!-- ##### MACRO gst_caps_get ##### -->
+<para>
+Get key/value pairs from the given GstCaps.
+</para>
+
+@caps: the caps to get the values from
+@name: the name of the first key
+@args...: a pointer to the variable that can hold the result followed by more key/value pairs.
+
+
 <!-- ##### FUNCTION gst_caps_intersect ##### -->
 <para>
 
@@ -411,6 +427,7 @@ Get the value of the named property as a boolean.
 
 @caps: the caps to query
 @name: the name of the property to get
+@res: a pointer to a gboolean to store the result
 
 
 <!-- ##### FUNCTION gst_caps_get_by_name ##### -->
@@ -430,6 +447,7 @@ Get the value of the named property as a fourcc.
 
 @caps: the caps to query
 @name: the name of the property to get
+@res: a pointer to a guint32 to store the fourcc value
 
 
 <!-- ##### MACRO gst_caps_get_int ##### -->
@@ -439,6 +457,7 @@ Get the value of the named property as an int.
 
 @caps: the caps to query
 @name: the name of the property to get
+@res: a pointer to a gint to store the value
 
 
 <!-- ##### MACRO gst_caps_get_string ##### -->
@@ -448,6 +467,7 @@ Get the value of the named property as a string.
 
 @caps: the caps to query
 @name: the name of the property to get
+@res: a pointer to a gchar* to store the string
 
 
 <!-- ##### MACRO gst_caps_get_float ##### -->
@@ -457,6 +477,7 @@ Get the value of the named property as a float.
 
 @caps: the caps to query
 @name: the name of the property to get
+@res: a pointer to a gfloat to store the result
 
 
 <!-- ##### FUNCTION gst_caps_save_thyself ##### -->
@@ -484,5 +505,6 @@ Get the value of the named property as a float.
 </para>
 
 @caps: 
+@label: 
 
 

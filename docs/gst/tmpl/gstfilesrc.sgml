@@ -2,11 +2,12 @@
 GstFileSrc
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Read data from a file
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+FileSrc is used to read buffers from a file. It efficiently uses mmap
+and subbuffers.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -14,38 +15,38 @@ GstFileSrc
 
 </para>
 
+<!-- ##### ARG GstFileSrc:offset ##### -->
+<para>
+The offset in the file that is currently being read.
+</para>
+
 <!-- ##### ARG GstFileSrc:location ##### -->
 <para>
-
+The filename 
 </para>
 
 <!-- ##### ARG GstFileSrc:filesize ##### -->
 <para>
-
+The filesize.
 </para>
 
 <!-- ##### ARG GstFileSrc:fd ##### -->
 <para>
-
+The file descriptor.
 </para>
 
 <!-- ##### ARG GstFileSrc:blocksize ##### -->
 <para>
-
-</para>
-
-<!-- ##### ARG GstFileSrc:offset ##### -->
-<para>
-
+The size of the buffers to pass to the peer element.
 </para>
 
 <!-- ##### ARG GstFileSrc:mmapsize ##### -->
 <para>
-
+The size of the mmapped area.
 </para>
 
 <!-- ##### ARG GstFileSrc:touch ##### -->
 <para>
-
+Indicates the mmapped area should be touched to bring it into memory.
 </para>
 

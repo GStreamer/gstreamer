@@ -86,12 +86,6 @@ gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
 
 </para>
 
-@object: 
-@name_template: 
-@direction: 
-@presence: 
-@caps: 
-@fixed: 
 
 <!-- ##### MACRO GST_PADTEMPLATE_CAPS ##### -->
 <para>
@@ -159,18 +153,18 @@ Get the padtemplate of the factory created with GST_PADTEMPLATE_FACTORY()
 
 <!-- ##### MACRO GST_PADTEMPLATE_FIXED ##### -->
 <para>
-
+Get the flag indicating the properties are fixed from the template.
 </para>
 
-@templ: 
+@templ: the template to query
 
 
 <!-- ##### MACRO GST_PADTEMPLATE_IS_FIXED ##### -->
 <para>
-
+Check if the properties of the padtemplate are fixed
 </para>
 
-@templ: 
+@templ: the template to query
 
 
 <!-- ##### FUNCTION gst_padtemplate_new ##### -->
@@ -223,4 +217,12 @@ Get the padtemplate of the factory created with GST_PADTEMPLATE_FACTORY()
 @name: 
 @Returns: 
 
+
+<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
+<para>
+
+</para>
+
+@gstpadtemplate: the object which received the signal.
+@arg1: 
 

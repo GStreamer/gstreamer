@@ -38,6 +38,26 @@ Information about audio buffers.
 audioraw
 
 
+<!-- ##### SECTION ./tmpl/gobject2gtk.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gobject2gtk.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gobject2gtk.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gobject2gtk.sgml:Title ##### -->
+GObject
+
+
 <!-- ##### SECTION ./tmpl/gstasyncdisksrc.sgml:Long_Description ##### -->
 <para>
 Reads data from a file. You can seek to a specific location by setting
@@ -685,6 +705,27 @@ Retrieves the type id of the data in the buffer.
 </para>
 
 @buf: GstBuffer
+
+<!-- ##### MACRO GST_CAPS_LOCK ##### -->
+<para>
+Lock the caps structure
+</para>
+
+@caps: The caps structure to lock
+
+<!-- ##### MACRO GST_CAPS_TRYLOCK ##### -->
+<para>
+Try to lock the caps structure
+</para>
+
+@caps: The caps structure to try to lock
+
+<!-- ##### MACRO GST_CAPS_UNLOCK ##### -->
+<para>
+Unlock the caps structure
+</para>
+
+@caps: The caps structure to unlock
 
 <!-- ##### MACRO GST_CONNECTION ##### -->
 <para>
@@ -1419,6 +1460,13 @@ Indicates a srcpad for the padfactory.
 
 </para>
 
+
+<!-- ##### MACRO GST_PROPS_ENTRY_IS_VARIABLE ##### -->
+<para>
+
+</para>
+
+@a: 
 
 <!-- ##### MACRO GST_PROPS_FLOAT_RANGE_STRING ##### -->
 <para>
@@ -2538,24 +2586,19 @@ the pool.
 </para>
 
 
-<!-- ##### SIGNAL GstDiskSink::handoff ##### -->
-<para>
-Is emited after the buffer has been written to the disk.
-</para>
-
-@gstdisksink: the object which received the signal.
-
 <!-- ##### ARG GstDiskSink:closed ##### -->
 <para>
 
 </para>
 
 
-<!-- ##### ARG GstDiskSink:location ##### -->
+<!-- ##### ENUM GstDiskSinkFlags ##### -->
 <para>
-The filename to write to.
+
 </para>
 
+@GST_DISKSINK_OPEN: 
+@GST_DISKSINK_FLAG_LAST: 
 
 <!-- ##### STRUCT GstDiskSrc ##### -->
 <para>
@@ -2615,6 +2658,14 @@ Get the size of the file.
 
 @GST_DISKSRC_OPEN: 
 @GST_DISKSRC_FLAG_LAST: 
+
+<!-- ##### SIGNAL GstElement::event ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
 
 <!-- ##### SIGNAL GstElement::ghost-pad-removed ##### -->
 <para>
@@ -2885,14 +2936,6 @@ The function that will be called when a QoS message is sent.
 @pad: the pad that sent the QoS message
 @qos_message: the message
 
-<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
-<para>
-
-</para>
-
-@gstpadtemplate: the object which received the signal.
-@arg1: 
-
 <!-- ##### STRUCT GstPipelineClass ##### -->
 <para>
 
@@ -3126,13 +3169,20 @@ Query the element for the current mime type
 </para>
 
 
-<!-- ##### SIGNAL GstXML::object-loaded ##### -->
+<!-- ##### STRUCT GstXML ##### -->
 <para>
-Is trigered whenever the state of an element changes
+
 </para>
 
-@gstelement: the object which received the signal.
-@arg1: the new state of the object
+
+<!-- ##### SIGNAL GstXml::object-loaded ##### -->
+<para>
+
+</para>
+
+@gstxml: the object which received the signal.
+@arg1: 
+@arg2: 
 
 <!-- ##### MACRO INFO ##### -->
 <para>
@@ -3237,6 +3287,15 @@ must be defined to activate the tracing functionality.
 </para>
 
 
+<!-- ##### FUNCTION cothread_get_data ##### -->
+<para>
+
+</para>
+
+@thread: 
+@key: 
+@Returns: 
+
 <!-- ##### FUNCTION cothread_getcurrent ##### -->
 <para>
 
@@ -3249,6 +3308,15 @@ must be defined to activate the tracing functionality.
 </para>
 
 @Returns: 
+
+<!-- ##### FUNCTION cothread_set_data ##### -->
+<para>
+
+</para>
+
+@thread: 
+@key: 
+@data: 
 
 <!-- ##### FUNCTION g2g_object_class_find_property ##### -->
 <para>
@@ -3570,12 +3638,6 @@ must be defined to activate the tracing functionality.
 @list: 
 @llink: 
 @Returns: 
-
-<!-- ##### VARIABLE g_log_domain_gstreamer ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### MACRO g_object_class_find_property ##### -->
 <para>
@@ -4159,6 +4221,14 @@ must be defined to activate the tracing functionality.
 @bin: 
 @element: 
 
+<!-- ##### FUNCTION gst_bin_child_error ##### -->
+<para>
+
+</para>
+
+@bin: 
+@child: 
+
 <!-- ##### FUNCTION gst_bin_create_plan ##### -->
 <para>
 
@@ -4306,6 +4376,46 @@ must be defined to activate the tracing functionality.
 @Returns: 
 @count: 
 
+<!-- ##### FUNCTION gst_clock_current_diff ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_get_system ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_register ##### -->
+<para>
+
+</para>
+
+@clock: 
+@obj: 
+
+<!-- ##### FUNCTION gst_clock_set ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+
 <!-- ##### FUNCTION gst_connection_get_type ##### -->
 <para>
 
@@ -4356,6 +4466,24 @@ must be defined to activate the tracing functionality.
 </para>
 
 @Returns: 
+
+<!-- ##### FUNCTION gst_element_info ##### -->
+<para>
+
+</para>
+
+@element: 
+@info: 
+@Varargs: 
+
+<!-- ##### FUNCTION gst_element_install_std_props ##### -->
+<para>
+
+</para>
+
+@klass: 
+@first_name: 
+@Varargs: 
 
 <!-- ##### FUNCTION gst_element_load_thyself ##### -->
 <para>
@@ -4409,6 +4537,14 @@ must be defined to activate the tracing functionality.
 @element: 
 @parent: 
 @Returns: 
+
+<!-- ##### FUNCTION gst_element_send_event ##### -->
+<para>
+
+</para>
+
+@element: 
+@event: 
 
 <!-- ##### FUNCTION gst_element_signal_eos ##### -->
 <para>
@@ -5107,6 +5243,51 @@ Call the EOS function of the pad
 @name: 
 @major: 
 @minor: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_props_get_boolean ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_props_get_float ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_props_get_fourcc_int ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_props_get_int ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_props_get_string ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_props_register ##### -->

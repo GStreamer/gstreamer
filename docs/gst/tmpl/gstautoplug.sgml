@@ -98,7 +98,6 @@ Use the regular gst_object_destroy() call to destroy the autoplugger.
 
 </para>
 
-@object: 
 
 <!-- ##### ENUM GstAutoplugFlags ##### -->
 <para>
@@ -141,4 +140,12 @@ The type of the autoplugger.
 @Varargs: 
 @Returns: 
 
+
+<!-- ##### SIGNAL GstAutoplug::new-object ##### -->
+<para>
+
+</para>
+
+@gstautoplug: the object which received the signal.
+@arg1: 
 

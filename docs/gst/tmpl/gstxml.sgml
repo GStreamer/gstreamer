@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-GstXml
+GstXML
 
 <!-- ##### SECTION Short_Description ##### -->
 Convert Elements into an XML presentation.
@@ -14,15 +14,6 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 <para>
 
 </para>
-
-<!-- ##### STRUCT GstXML ##### -->
-<para>
-
-</para>
-
-@object: 
-@topelements: 
-@ns: 
 
 <!-- ##### FUNCTION gst_xml_new ##### -->
 <para>
@@ -104,7 +95,17 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 @Returns: 
 
 
-<!-- ##### SIGNAL GstXml::object-loaded ##### -->
+<!-- ##### FUNCTION gst_xml_make_element ##### -->
+<para>
+
+</para>
+
+@cur: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### SIGNAL GstXML::object-loaded ##### -->
 <para>
 
 </para>
@@ -112,8 +113,10 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 @gstxml: the object which received the signal.
 @arg1: 
 @arg2: 
+<!-- # Unused Parameters # -->
+@gstelement: the object which received the signal.
 
-<!-- ##### SIGNAL GstXml::object-loaded ##### -->
+<!-- ##### SIGNAL GstXML::object-loaded ##### -->
 <para>
 
 </para>
@@ -121,4 +124,6 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 @gstxml: the object which received the signal.
 @arg1: 
 @arg2: 
+<!-- # Unused Parameters # -->
+@gstelement: the object which received the signal.
 

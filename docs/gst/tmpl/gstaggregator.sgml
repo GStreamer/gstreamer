@@ -40,3 +40,8 @@ methods to request buffers from its pads.
 
 </para>
 
+<!-- ##### ARG GstAggregator:last-message ##### -->
+<para>
+
+</para>
+

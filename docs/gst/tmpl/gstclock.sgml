@@ -2,90 +2,231 @@
 GstClock
 
 <!-- ##### SECTION Short_Description ##### -->
-Clocking and synchronisation.
+Abstract class for global clocks
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-GstClock provides an easy way to synchonize against a global clock.
+
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GstSystemClock
 </para>
 
 <!-- ##### TYPEDEF GstClockTime ##### -->
 <para>
-
+A datatype to hold a time, measured in microseconds.
 </para>
 
 
 <!-- ##### TYPEDEF GstClockTimeDiff ##### -->
 <para>
-
+A datatype to hold a timedifference, measured in microseconds.
 </para>
 
+
+<!-- ##### USER_FUNCTION GstClockCallback ##### -->
+<para>
+The function prototype of the callback.
+</para>
+
+@clock: The clock that triggered the callback
+@time: The time it was triggered
+@id: The id that expired
+@user_data: user data passed in the async_wait call
+
+
+<!-- ##### TYPEDEF GstClockID ##### -->
+<para>
+A detatype to hold the handle to an outstanding async clock callback
+</para>
+
+
+<!-- ##### ENUM GstClockReturn ##### -->
+<para>
+The return value of a clock operation.
+</para>
+
+@GST_CLOCK_STOPPED: The clock is stopped.
+@GST_CLOCK_TIMEOUT: The operation timed out.
+@GST_CLOCK_EARLY: The operation was scheduled too late.
+@GST_CLOCK_ERROR: An error occured
 
 <!-- ##### MACRO GST_CLOCK_DIFF ##### -->
 <para>
-Calculate the difference between to timestamps. This does not create
-and absolute difference so the result might be negative if the first 
-timestamp is less than the second timestamp.
+Calculate a difference between to clock times.
 </para>
 
-@s: first timestamp
-@e: second timestamp
+@s: the first time
+@e: the second time
+
+
+<!-- ##### MACRO GST_TIMEVAL_TO_TIME ##### -->
+<para>
+Convert a GTimeVal to a GstClockTime
+</para>
+
+@tv: the timeval to convert
 
 
 <!-- ##### STRUCT GstClock ##### -->
 <para>
-
+The opaque data structure of the clock.
 </para>
 
-@name: 
-@start_time: 
-@current_time: 
-@adjust: 
-@locking: 
-@sinkobjects: 
-@num: 
-@num_locked: 
-@sinkmutex: 
-@lock: 
 
-<!-- ##### FUNCTION gst_clock_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_get_system ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_register ##### -->
+<!-- ##### FUNCTION gst_clock_activate ##### -->
 <para>
 
 </para>
 
 @clock: 
-@obj: 
+@active: 
 
 
-<!-- ##### FUNCTION gst_clock_set ##### -->
+<!-- ##### FUNCTION gst_clock_is_active ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_async_supported ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_wait_async ##### -->
 <para>
 
 </para>
 
 @clock: 
 @time: 
+@func: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_cancel_wait_async ##### -->
+<para>
+
+</para>
+
+@clock: 
+@id: 
+
+
+<!-- ##### FUNCTION gst_clock_notify_async ##### -->
+<para>
+
+</para>
+
+@clock: 
+@interval: 
+@func: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_remove_notify_async ##### -->
+<para>
+
+</para>
+
+@clock: 
+@id: 
+
+
+<!-- ##### FUNCTION gst_clock_unlock_id ##### -->
+<para>
+
+</para>
+
+@clock: 
+@id: 
+
+
+<!-- ##### FUNCTION gst_clock_wait_id ##### -->
+<para>
+
+</para>
+
+@clock: 
+@id: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_get_next_id ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_get_time ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_id_get_time ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_get_resolution ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_set_resolution ##### -->
+<para>
+
+</para>
+
+@clock: 
+@resolution: 
+
+
+<!-- ##### FUNCTION gst_clock_set_speed ##### -->
+<para>
+
+</para>
+
+@clock: 
+@speed: 
+
+
+<!-- ##### FUNCTION gst_clock_get_speed ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@speed: 
 
 
 <!-- ##### FUNCTION gst_clock_reset ##### -->
@@ -97,16 +238,6 @@ timestamp is less than the second timestamp.
 
 
 <!-- ##### FUNCTION gst_clock_wait ##### -->
-<para>
-
-</para>
-
-@clock: 
-@time: 
-@obj: 
-
-
-<!-- ##### FUNCTION gst_clock_current_diff ##### -->
 <para>
 
 </para>
