@@ -33,7 +33,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-GstElementDetails gst_type_find_details;
+extern GstElementDetails gst_type_find_details;
 
 #define GST_TYPE_TYPE_FIND \
   (gst_type_find_get_type())

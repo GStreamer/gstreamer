@@ -33,7 +33,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-GstElementDetails gst_queue_details;
+extern GstElementDetails gst_queue_details;
 
 
 #define GST_TYPE_QUEUE \
