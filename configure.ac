@@ -451,7 +451,7 @@ GST_CHECK_CONFIGPROG(GNOME_VFS, gnome-config vfs)
 dnl *** gsm ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBGSM, true)
 GST_CHECK_FEATURE(LIBGSM, [GSM library], gsmenc gsmdec, [
-GST_CHECK_LIBHEADER(LIBGSM, gsm, gsm_create, , gsm/gsm.h, LIBGSM_LIBS="-lgsm"; LIBGSM_CFLAGS="-DGSM_HEADER_IN_SUBDIR")
+GST_CHECK_LIBHEADER(LIBGSM, gsm, gsm_create, , gsm/gsm.h, LIBGSM_LIBS="-lgsm" && LIBGSM_CFLAGS="-DGSM_HEADER_IN_SUBDIR")
 ])
 
 dnl *** Hermes ***
