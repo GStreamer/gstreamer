@@ -125,7 +125,7 @@ enum
 static GstStaticPadTemplate gst_qtdemux_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
-    GST_PAD_SOMETIMES,
+    GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/quicktime; audio/x-m4a")
     );
 
@@ -159,7 +159,7 @@ static void qtdemux_parse_tree (GstQTDemux * qtdemux);
 static GstCaps *qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     const guint8 * stsd_data);
 static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc,
-    const guint8 * data);
+    const guint8 * data, int len);
 
 static GType
 gst_qtdemux_get_type (void)
@@ -797,6 +797,10 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 #define FOURCC_cmov	GST_MAKE_FOURCC('c','m','o','v')
 #define FOURCC_dcom	GST_MAKE_FOURCC('d','c','o','m')
 #define FOURCC_cmvd	GST_MAKE_FOURCC('c','m','v','d')
+#define FOURCC_hint	GST_MAKE_FOURCC('h','i','n','t')
+#define FOURCC_mp4a	GST_MAKE_FOURCC('m','p','4','a')
+#define FOURCC_wave	GST_MAKE_FOURCC('w','a','v','e')
+#define FOURCC_esds	GST_MAKE_FOURCC('e','s','d','s')
 
 
 static void qtdemux_dump_mvhd (GstQTDemux * qtdemux, void *buffer, int depth);
@@ -815,6 +819,8 @@ static void qtdemux_dump_stco (GstQTDemux * qtdemux, void *buffer, int depth);
 static void qtdemux_dump_co64 (GstQTDemux * qtdemux, void *buffer, int depth);
 static void qtdemux_dump_dcom (GstQTDemux * qtdemux, void *buffer, int depth);
 static void qtdemux_dump_cmvd (GstQTDemux * qtdemux, void *buffer, int depth);
+static void qtdemux_dump_unknown (GstQTDemux * qtdemux, void *buffer,
+    int depth);
 
 QtNodeType qt_node_types[] = {
   {FOURCC_moov, "movie", QT_CONTAINER,},
@@ -872,6 +878,9 @@ QtNodeType qt_node_types[] = {
       qtdemux_dump_dcom},
   {FOURCC_cmvd, "compressed movie data", 0,
       qtdemux_dump_cmvd},
+  {FOURCC_hint, "hint", 0, qtdemux_dump_unknown},
+  {FOURCC_mp4a, "mp4a", 0, qtdemux_dump_unknown},
+  {FOURCC_wave, "wave", QT_CONTAINER},
   {0, "unknown", 0},
 };
 static int n_qt_node_types = sizeof (qt_node_types) / sizeof (qt_node_types[0]);
@@ -980,6 +989,9 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
 
   type = qtdemux_type_get (fourcc);
 
+  if (fourcc == 0 || node_length == 8)
+    return;
+
   GST_LOG ("parsing '" GST_FOURCC_FORMAT "', length=%d",
       GST_FOURCC_ARGS (fourcc), node_length);
 
@@ -997,6 +1009,10 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         GST_LOG ("buffer overrun");
       }
       len = QTDEMUX_GUINT32_GET (buf);
+      if (len < 8) {
+        GST_LOG ("bad length");
+        break;
+      }
 
       child = g_node_new (buf);
       g_node_append (node, child);
@@ -1005,6 +1021,53 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
       buf += len;
     }
   } else {
+    if (fourcc == FOURCC_stsd) {
+      void *buf;
+      guint32 len;
+
+      buf = buffer + 16;
+      end = buffer + length;
+      while (buf < end) {
+        GNode *child;
+
+        if (buf + 8 >= end) {
+          /* FIXME: get annoyed */
+          GST_LOG ("buffer overrun");
+        }
+        len = QTDEMUX_GUINT32_GET (buf);
+
+        child = g_node_new (buf);
+        g_node_append (node, child);
+        qtdemux_parse (qtdemux, child, buf, len);
+
+        buf += len;
+      }
+    } else if (fourcc == FOURCC_mp4a) {
+      void *buf;
+      guint32 len;
+      guint32 version;
+
+      version = QTDEMUX_GUINT32_GET (buffer + 16);
+      if (version == 0x00010000) {
+        buf = buffer + 0x34;
+        end = buffer + length;
+        while (buf < end) {
+          GNode *child;
+
+          if (buf + 8 >= end) {
+            /* FIXME: get annoyed */
+            GST_LOG ("buffer overrun");
+          }
+          len = QTDEMUX_GUINT32_GET (buf);
+
+          child = g_node_new (buf);
+          g_node_append (node, child);
+          qtdemux_parse (qtdemux, child, buf, len);
+
+          buf += len;
+        }
+      }
+    }
 #if 0
     if (fourcc == FOURCC_cmvd) {
       int uncompressed_length;
@@ -1047,6 +1110,9 @@ qtdemux_type_get (guint32 fourcc)
     if (qt_node_types[i].fourcc == fourcc)
       return qt_node_types + i;
   }
+
+  GST_LOG ("unknown QuickTime node type " GST_FOURCC_FORMAT,
+      GST_FOURCC_ARGS (fourcc));
   return qt_node_types + n_qt_node_types - 1;
 }
 
@@ -1433,6 +1499,13 @@ qtdemux_dump_cmvd (GstQTDemux * qtdemux, void *buffer, int depth)
   GST_LOG ("%*s  length: %d", depth, "", QTDEMUX_GUINT32_GET (buffer + 8));
 }
 
+static void
+qtdemux_dump_unknown (GstQTDemux * qtdemux, void *buffer, int depth)
+{
+  GST_LOG ("%*s  length: %d", depth, "", QTDEMUX_GUINT32_GET (buffer + 8));
+
+}
+
 
 static GNode *
 qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc)
@@ -1520,6 +1593,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GNode *stco;
   GNode *co64;
   GNode *stts;
+  GNode *mp4a;
+  GNode *wave;
+  GNode *esds;
   int n_samples;
   QtDemuxSample *samples;
   int n_samples_per_chunk;
@@ -1588,7 +1664,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   } else if (stream->subtype == FOURCC_soun) {
     int version, samplesize;
     guint32 fourcc;
+    int len;
 
+    len = QTDEMUX_GUINT32_GET (stsd->data + 16);
     GST_LOG ("st type:          " GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4)));
 
@@ -1628,7 +1706,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           QTDEMUX_GUINT32_GET (stsd->data + offset + 12));
       stream->compression = 1;
       offset = 68;
-    } else {
+    } else if (version == 0x00000000) {
       stream->bytes_per_frame = stream->n_channels * samplesize / 8;
       stream->samples_per_packet = 1;
       stream->compression = 1;
@@ -1640,11 +1718,28 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         stream->compression = 3;
       if (fourcc == GST_MAKE_FOURCC ('i', 'm', 'a', '4'))
         stream->compression = 4;
+    } else {
+      GST_ERROR ("unknown version %08x", version);
     }
 
-    stream->caps = qtdemux_audio_caps (qtdemux, fourcc,
-        (QTDEMUX_GUINT32_GET (stsd->data) >
-            offset) ? stsd->data + offset : NULL);
+    stream->caps = qtdemux_audio_caps (qtdemux, fourcc, NULL, 0);
+
+    mp4a = qtdemux_tree_get_child_by_type (stsd, FOURCC_mp4a);
+    wave = NULL;
+    if (mp4a)
+      wave = qtdemux_tree_get_child_by_type (mp4a, FOURCC_wave);
+    esds = NULL;
+    if (wave)
+      esds = qtdemux_tree_get_child_by_type (wave, FOURCC_esds);
+    if (esds) {
+      GstBuffer *buffer;
+      int len = QTDEMUX_GUINT32_GET (esds->data);
+
+      buffer = gst_buffer_new_and_alloc (len - 8);
+      memcpy (GST_BUFFER_DATA (buffer), esds->data + 8, len - 8);
+
+      gst_caps_set_simple (stream->caps, "esds", GST_TYPE_BUFFER, buffer, NULL);
+    }
     GST_INFO ("type " GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4)),
         stream->caps);
@@ -1935,23 +2030,37 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
       /* Cinepak */
       return gst_caps_from_string ("video/x-cinepak");
     case GST_MAKE_FOURCC ('r', 'p', 'z', 'a'):
+      /* Apple Video */
+      return gst_caps_from_string ("video/x-apple-video");
     case GST_MAKE_FOURCC ('r', 'l', 'e', ' '):
       /* Run-length encoding */
     case GST_MAKE_FOURCC ('s', 'm', 'c', ' '):
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
+#if 0
       g_critical ("Don't know how to convert fourcc '" GST_FOURCC_FORMAT
           "' to caps\n", GST_FOURCC_ARGS (fourcc));
       return NULL;
+#endif
+      {
+        char *s;
+
+        s = g_strdup_printf ("video/x-gst-fourcc-" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (fourcc));
+        return gst_caps_new_simple (s, NULL);
+      }
   }
 }
 
 static GstCaps *
-qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data)
+qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data,
+    int len)
 {
   switch (fourcc) {
+#if 0
     case GST_MAKE_FOURCC ('N', 'O', 'N', 'E'):
       return NULL;              /*gst_caps_from_string ("audio/raw"); */
+#endif
     case GST_MAKE_FOURCC ('r', 'a', 'w', ' '):
       /* FIXME */
       return gst_caps_from_string ("audio/x-raw-int, "
@@ -1961,7 +2070,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data)
       return gst_caps_from_string ("audio/x-raw-int, "
           "width = (int) 16, "
           "depth = (int) 16, "
-          "endianness = (int) G_BIG_ENDIAN, " "signed = (boolean) true");
+          "endianness = (int) BIG_ENDIAN, " "signed = (boolean) true");
     case GST_MAKE_FOURCC ('s', 'o', 'w', 't'):
       /* FIXME */
       return gst_caps_from_string ("audio/x-raw-int, "
@@ -2021,17 +2130,16 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data)
       return gst_caps_from_string ("audio/x-dv");
     case GST_MAKE_FOURCC ('m', 'p', '4', 'a'):
       /* MPEG-4 AAC */
-      return gst_caps_from_string ("audio/mpeg, " "mpegversion = (int) 4");
+      return gst_caps_new_simple ("audio/mpeg",
+          "mpegversion", G_TYPE_INT, 4, NULL);
     case GST_MAKE_FOURCC ('Q', 'D', 'M', '2'):
       /* FIXME: QDesign music version 2 (no constant) */
-      if (QTDEMUX_GUINT32_GET (data) <= 100) {
-        gst_util_dump_mem ((guint8 *) data, 100);
-        return gst_caps_new_simple ("audio/x-qdm2",
-            "framesize", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 52),
-            "bitrate", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 40),
-            "blocksize", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 44), NULL);
-      }
+      return gst_caps_new_simple ("audio/x-qdm2",
+          "framesize", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 52),
+          "bitrate", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 40),
+          "blocksize", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 44), NULL);
     case GST_MAKE_FOURCC ('a', 'g', 's', 'm'):
+      /* GSM */
       return gst_caps_new_simple ("audio/x-gsm", NULL);
     case GST_MAKE_FOURCC ('q', 't', 'v', 'r'):
       /* ? */
@@ -2042,8 +2150,17 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data)
     case GST_MAKE_FOURCC ('Q', 'c', 'l', 'p'):
       /* QUALCOMM PureVoice */
     default:
+#if 0
       g_critical ("Don't know how to convert fourcc '" GST_FOURCC_FORMAT
           "' to caps\n", GST_FOURCC_ARGS (fourcc));
       return NULL;
+#endif
+      {
+        char *s;
+
+        s = g_strdup_printf ("audio/x-gst-fourcc-" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (fourcc));
+        return gst_caps_new_simple (s, NULL);
+      }
   }
 }
