@@ -459,6 +459,8 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
     {
       gint version = (codec_id - GST_RIFF_WAVE_FORMAT_WMAV1) + 1;
 
+      channels_max = 6;
+
       block_align = TRUE;
 
       caps = gst_caps_new_simple ("audio/x-wma",
@@ -613,6 +615,7 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_DVI_ADPCM,
     GST_RIFF_WAVE_FORMAT_WMAV1,
     GST_RIFF_WAVE_FORMAT_WMAV2,
+    GST_RIFF_WAVE_FORMAT_WMAV3,
     /* FILL ME */
     0
   };
