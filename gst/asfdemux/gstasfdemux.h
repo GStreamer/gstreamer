@@ -54,6 +54,9 @@ typedef struct {
 typedef struct {
   guint8     obj_id;
   GstASFGuid guid; 
+  gboolean (*process_object) (GstASFDemux *asf_demux, 
+			      guint64 *filepos, 
+			      guint64 *obj_size);
 } GstASFGuidHash;
 
 struct _GstASFStreamContext {
@@ -82,7 +85,8 @@ struct _GstASFDemux {
 
 #define GST_ASF_DEMUX_NUM_VIDEO_PADS 16
 #define GST_ASF_DEMUX_NUM_AUDIO_PADS 32
-#define GST_ASF_DEMUX_NUM_STREAMS 16
+#define GST_ASF_DEMUX_NUM_STREAMS 23
+#define GST_ASF_DEMUX_NUM_STREAM_IDS 127
 
   /* stream output pads */
   GstPad *video_pad[GST_ASF_DEMUX_NUM_VIDEO_PADS];
@@ -93,6 +97,8 @@ struct _GstASFDemux {
 
   guint64  last_seek;
   gboolean restart;
+
+  guint32 bitrate[GST_ASF_DEMUX_NUM_STREAM_IDS];
 
   /* Demuxing state */
   guint32 num_audio_streams;
