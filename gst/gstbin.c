@@ -187,7 +187,7 @@ static void
 gst_bin_distribute_clock (GstBin *bin, GList *needing, GstClock *clock)
 {
   while (needing) {
-    GST_DEBUG (GST_CAT_CLOCK, "setting clock on %s\n", GST_ELEMENT_NAME (needing->data));
+    GST_DEBUG (GST_CAT_CLOCK, "setting clock on %s", GST_ELEMENT_NAME (needing->data));
     gst_element_set_clock (GST_ELEMENT (needing->data), clock);
 
     needing = g_list_next (needing);
@@ -209,7 +209,7 @@ gst_bin_distribute_clocks (GstBin *bin)
     clock = gst_element_get_clock (GST_ELEMENT (providing->data));	
   }
   else {
-    GST_DEBUG (GST_CAT_CLOCK, "no clock provided, using default clock\n");
+    GST_DEBUG (GST_CAT_CLOCK, "no clock provided, using default clock");
     clock = gst_system_clock_obtain ();
   }
 
@@ -382,7 +382,7 @@ gst_bin_add (GstBin * bin, GstElement * element)
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  GST_DEBUG (GST_CAT_PARENTAGE, "adding element \"%s\" to bin \"%s\"\n",
+  GST_DEBUG (GST_CAT_PARENTAGE, "adding element \"%s\" to bin \"%s\"",
 	     GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
 
   /* must be not be in PLAYING state in order to modify bin */
@@ -550,7 +550,7 @@ gst_bin_change_state (GstElement * element)
     switch (gst_element_set_state (child, pending)) {
       case GST_STATE_FAILURE:
 	GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
-	GST_DEBUG (GST_CAT_STATES, "child '%s' failed to go to state %d(%s)\n",
+	GST_DEBUG (GST_CAT_STATES, "child '%s' failed to go to state %d(%s)",
 		   GST_ELEMENT_NAME (child), pending, gst_element_statename (pending));
 
 	gst_element_set_state (child, old_state);
@@ -562,7 +562,7 @@ gst_bin_change_state (GstElement * element)
 	}
 	break;
       case GST_STATE_ASYNC:
-	GST_DEBUG (GST_CAT_STATES, "child '%s' is changing state asynchronously\n",
+	GST_DEBUG (GST_CAT_STATES, "child '%s' is changing state asynchronously",
 		   GST_ELEMENT_NAME (child));
 	have_async = TRUE;
 	break;
@@ -663,7 +663,7 @@ gst_bin_set_state_type (GstBin * bin, GstElementState state, GType type)
 {
   GstBinClass *oclass;
 
-  GST_DEBUG (GST_CAT_STATES, "gst_bin_set_state_type(\"%s\",%d,%s)\n",
+  GST_DEBUG (GST_CAT_STATES, "gst_bin_set_state_type(\"%s\",%d,%s)",
 	     GST_ELEMENT_NAME (bin), state, G_OBJECT_TYPE_NAME (type));
 
   g_return_val_if_fail (bin != NULL, FALSE);
@@ -683,7 +683,7 @@ gst_bin_dispose (GObject * object)
   GList *children, *orig;
   GstElement *child;
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "dispose\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "dispose");
 
   if (gst_element_get_state (GST_ELEMENT (object)) == GST_STATE_PLAYING)
     gst_element_set_state (GST_ELEMENT (object), GST_STATE_PAUSED);

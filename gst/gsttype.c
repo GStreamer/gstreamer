@@ -178,7 +178,7 @@ gst_type_register (GstTypeFactory *factory)
 
     /* if there is no existing typefind function, try to use new one  */
   }
-  GST_DEBUG (GST_CAT_TYPES,"gsttype: %s(%p) gave new mime type '%s', id %d\n", 
+  GST_DEBUG (GST_CAT_TYPES,"gsttype: %s(%p) gave new mime type '%s', id %d", 
 		    GST_OBJECT_NAME (factory), factory, type->mime, type->id);
   type->factories = g_slist_prepend (type->factories, factory);
 
@@ -196,12 +196,12 @@ gst_type_find_by_mime_func (const gchar *mime)
   g_return_val_if_fail (mime != NULL, 0);
 
   walk = _gst_types;
-/*  GST_DEBUG (GST_CAT_TYPES,"searching for '%s'\n",mime); */
+/*  GST_DEBUG (GST_CAT_TYPES,"searching for '%s'",mime); */
   mimelen = strlen (mime);
   while (walk) {
     type = (GstType *)walk->data;
     search = type->mime;
-/*    GST_DEBUG (GST_CAT_TYPES,"checking against '%s'\n",search); */
+/*    GST_DEBUG (GST_CAT_TYPES,"checking against '%s'",search); */
     typelen = strlen (search);
     while ((search - type->mime) < typelen) {
       found = strstr (search, mime);
@@ -344,7 +344,7 @@ gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
 {
   GstTypeFactory *factory = (GstTypeFactory *)priv;
 
-  GST_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s\n", factory->mime);
+  GST_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s", factory->mime);
 
   if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
     if (factory->typefindfunc) {

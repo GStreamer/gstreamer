@@ -99,7 +99,7 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   GstElement *filesrc;
   GstElement *cache;
 
-  GST_DEBUG (0,"GstPipeline: play have type\n");
+  GST_DEBUG (0,"GstPipeline: play have type");
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 

@@ -233,7 +233,7 @@ gst_spider_request_new_pad (GstElement *element, GstPadTemplate *templ, const gc
   gst_bin_add (GST_BIN (element), GST_ELEMENT (identity));
   
   returnpad = gst_element_add_ghost_pad (element, returnpad, padname);
-  GST_DEBUG (GST_CAT_ELEMENT_PADS, "successuflly created requested pad %s:%s\n", GST_DEBUG_PAD_NAME (returnpad));
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "successuflly created requested pad %s:%s", GST_DEBUG_PAD_NAME (returnpad));
   
   return returnpad;
 }
@@ -314,7 +314,7 @@ gst_spider_connect_sometimes (GstElement *src, GstPad *pad, GstSpiderConnection 
   
   /* try to autoplug the elements */
   if (gst_spider_plug_from_srcpad (conn, pad) != GST_PAD_CONNECT_REFUSED) {
-    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "%s:%s was autoplugged to %s:%s, removing callback\n", GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (sinkpad));
+    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "%s:%s was autoplugged to %s:%s, removing callback", GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (sinkpad));
     g_signal_handler_disconnect (src, signal_id);
     signal_id = 0;
   }
@@ -351,7 +351,7 @@ gst_spider_connection_destroy (GstSpiderConnection *conn)
 static void
 gst_spider_connection_reset (GstSpiderConnection *conn, GstElement *to)
 {
-  GST_DEBUG (GST_CAT_AUTOPLUG, "resetting connection from %s to %s, currently at %s to %s\n", GST_ELEMENT_NAME (conn->sink), 
+  GST_DEBUG (GST_CAT_AUTOPLUG, "resetting connection from %s to %s, currently at %s to %s", GST_ELEMENT_NAME (conn->sink), 
 	     GST_ELEMENT_NAME (conn->src), GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (to));
   while ((conn->path != NULL) && ((GstElement *) conn->path->data != to))
   {
@@ -546,7 +546,7 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
         GstPadTemplate *templ = (GstPadTemplate *) templs->data;
         if ((GST_PADTEMPLATE_DIRECTION (templ) == GST_PAD_SRC) && (GST_PADTEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
         {
-          GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "adding callback to connect element %s to %s\n", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
+          GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "adding callback to connect element %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
           conn->signal_id = g_signal_connect (G_OBJECT (conn->current), "new_pad", 
 					      G_CALLBACK (gst_spider_connect_sometimes), conn);
 	  g_list_free (plugpath);
@@ -554,11 +554,11 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
         }
         templs = g_list_next (templs);
       }
-      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no chance to connect element %s to %s\n", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
+      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no chance to connect element %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
       g_list_free (plugpath);
       return GST_PAD_CONNECT_REFUSED;
     }
-    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "added element %s and attached it to element %s\n", GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (conn->current));
+    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "added element %s and attached it to element %s", GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (conn->current));
     gst_spider_connection_add (conn, element);
     if (plugpath != NULL)
       plugpath = g_list_delete_link (plugpath, plugpath);
@@ -618,7 +618,7 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
   GstElement *startelement = conn->current;
 
   g_assert ((GstElement *) GST_OBJECT_PARENT (srcpad) == conn->current);
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "trying to plug from %s:%s to %s\n", GST_DEBUG_PAD_NAME (srcpad), GST_ELEMENT_NAME (conn->src));
+  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "trying to plug from %s:%s to %s", GST_DEBUG_PAD_NAME (srcpad), GST_ELEMENT_NAME (conn->src));
   
   /* find a path from src to sink */
   /* FIXME: make that if go away and work anyway */
@@ -640,10 +640,10 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
     
   /* if there is no way to plug: return */
   if (plugpath == NULL) {
-    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no chance to plug from %s to %s\n", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
+    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no chance to plug from %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
     return GST_PAD_CONNECT_REFUSED;
   }
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found a connection that needs %d elements\n", g_list_length (plugpath));
+  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found a connection that needs %d elements", g_list_length (plugpath));
 
   /* now remove non-needed elements from the beginning of the path 
    * alter src to point to the new element where we need to start 
@@ -656,7 +656,7 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
     plugpath = g_list_delete_link (plugpath, plugpath);
   }
   
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "%d elements must be inserted to establish the connection\n", g_list_length (plugpath));
+  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "%d elements must be inserted to establish the connection", g_list_length (plugpath));
   /* create the elements and plug them */
   result = gst_spider_create_and_plug (conn, plugpath);
   

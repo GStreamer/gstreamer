@@ -147,7 +147,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
   GList *sinkpads;
   gboolean connected = FALSE;
 
-  GST_DEBUG (0,"gstpipeline: autoplug pad connect function for \"%s\" to \"%s\"\n",
+  GST_DEBUG (0,"gstpipeline: autoplug pad connect function for \"%s\" to \"%s\"",
 		  GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
 
   sinkpads = gst_element_get_pad_list(sink);
@@ -162,20 +162,20 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
         gst_pad_connect(pad, sinkpad);
         GST_DEBUG (0,"gstpipeline: autoconnect pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
 		       GST_ELEMENT_NAME(src));
-        GST_DEBUG (0,"pad \"%s\" in element %s\n", GST_PAD_NAME (sinkpad),
+        GST_DEBUG (0,"pad \"%s\" in element %s", GST_PAD_NAME (sinkpad),
 		      GST_ELEMENT_NAME(sink));
         connected = TRUE;
         break;
       }
       else {
-	GST_DEBUG (0,"pads incompatible %s, %s\n", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
+	GST_DEBUG (0,"pads incompatible %s, %s", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
       }
     }
     sinkpads = g_list_next(sinkpads);
   }
 
   if (!connected) {
-    GST_DEBUG (0,"gstpipeline: no path to sinks for type\n");
+    GST_DEBUG (0,"gstpipeline: no path to sinks for type");
   }
   return connected;
 }
@@ -192,7 +192,7 @@ autoplug_dynamic_pad (GstElement *element, GstPad *pad, gpointer data)
   dynamic_pad_struct *info = (dynamic_pad_struct *)data;
   GList *pads = gst_element_get_pad_list (element);
 
-  GST_DEBUG (0,"attempting to dynamically create a ghostpad for %s=%s\n", GST_ELEMENT_NAME (element),
+  GST_DEBUG (0,"attempting to dynamically create a ghostpad for %s=%s", GST_ELEMENT_NAME (element),
 		  GST_PAD_NAME (pad));
 
   while (pads) {
@@ -202,7 +202,7 @@ autoplug_dynamic_pad (GstElement *element, GstPad *pad, gpointer data)
 
     if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (templ), info->endcap)) {
       gst_element_add_ghost_pad (info->result, pad, g_strdup_printf("src_%02d", info->i));
-      GST_DEBUG (0,"gstpipeline: new dynamic pad %s\n", GST_PAD_NAME (pad));
+      GST_DEBUG (0,"gstpipeline: new dynamic pad %s", GST_PAD_NAME (pad));
       break;
     }
   }
@@ -226,7 +226,7 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
   }
 
   if (!connected) {
-    GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"\n",
+    GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"",
 		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
     g_signal_connect (G_OBJECT(src), "new_pad", 
 		    G_CALLBACK (gst_autoplug_pads_autoplug_func), sink);
@@ -366,7 +366,7 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
       }
     }
 
-    GST_DEBUG (0,"common factory \"%s\"\n", GST_OBJECT_NAME (factory));
+    GST_DEBUG (0,"common factory \"%s\"", GST_OBJECT_NAME (factory));
     
     /* it is likely that the plugin is not loaded yet. thus when it loads it
      * will replace the elementfactory that gst built from the cache, and the
@@ -428,10 +428,10 @@ differ:
 
       factory = (GstElementFactory *)(factories[i]->data);
 
-      GST_DEBUG (0,"factory \"%s\"\n", GST_OBJECT_NAME (factory));
+      GST_DEBUG (0,"factory \"%s\"", GST_OBJECT_NAME (factory));
       element = gst_elementfactory_create(factory, GST_OBJECT_NAME (factory));
 
-      GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
+      GST_DEBUG (0,"adding element %s", GST_ELEMENT_NAME (element));
       gst_bin_add(GST_BIN(thebin), element);
       gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (element));
       
@@ -452,7 +452,7 @@ differ:
       gboolean have_pad = FALSE;
       endcaps = g_list_next (endcaps);
 
-      GST_DEBUG (0,"attempting to create a ghostpad for %s\n", GST_ELEMENT_NAME (thesrcelement));
+      GST_DEBUG (0,"attempting to create a ghostpad for %s", GST_ELEMENT_NAME (thesrcelement));
 
       while (pads) {
 	GstPad *pad = GST_PAD (pads->data);
@@ -472,7 +472,7 @@ differ:
 	data->endcap = endcap;
 	data->i = i;
 
-        GST_DEBUG (0,"delaying the creation of a ghostpad for %s\n", GST_ELEMENT_NAME (thesrcelement));
+        GST_DEBUG (0,"delaying the creation of a ghostpad for %s", GST_ELEMENT_NAME (thesrcelement));
 	g_signal_connect (G_OBJECT (thesrcelement), "new_pad", 
 			G_CALLBACK (autoplug_dynamic_pad), data);
       }

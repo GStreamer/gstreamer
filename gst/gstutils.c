@@ -263,7 +263,7 @@ gst_util_set_value_from_string(GValue *value, const gchar *value_str)
 	g_return_if_fail(value != NULL);
 	g_return_if_fail(value_str != NULL);
 	
-	GST_DEBUG(GST_CAT_PARAMS, "parsing '%s' to type %s\n", value_str, g_type_name(G_VALUE_TYPE(value)));
+	GST_DEBUG(GST_CAT_PARAMS, "parsing '%s' to type %s", value_str, g_type_name(G_VALUE_TYPE(value)));
 
 	switch (G_VALUE_TYPE(value)) {
 		case G_TYPE_STRING:
@@ -350,7 +350,7 @@ gst_util_set_object_arg (GObject * object, const gchar * name, const gchar * val
       return;
     }
 
-    GST_DEBUG (0, "paramspec->flags is %d, paramspec->value_type is %d\n",
+    GST_DEBUG (0, "paramspec->flags is %d, paramspec->value_type is %d",
 	       paramspec->flags, (gint) paramspec->value_type);
 
     if (paramspec->flags & G_PARAM_WRITABLE) {

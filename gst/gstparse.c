@@ -151,10 +151,10 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
 
         *ptr = '\0'; /* it was a '.' before */
         
-	GST_DEBUG (0, "have pad for element %s\n", element_name);
+	GST_DEBUG (0, "have pad for element %s", element_name);
 	new = gst_bin_get_by_name_recurse_up (parent, element_name);
 	if (!new) {
-	  GST_DEBUG (0, "element %s does not exist! trying to continue\n", element_name);
+	  GST_DEBUG (0, "element %s does not exist! trying to continue", element_name);
 	} else {
 	  previous = new;
 	  srcpadname = ptr + 1;
@@ -162,7 +162,7 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
 	}
       }
 
-      GST_DEBUG (0, "have srcpad %s, sinkpad %s\n", srcpadname, sinkpadname);
+      GST_DEBUG (0, "have srcpad %s, sinkpad %s", srcpadname, sinkpadname);
 
       g_slist_free (srcpads);
       srcpads = NULL;
@@ -193,9 +193,9 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
 	    numsrcpads++;
 	  }
 	  if (!temppad) {
-	    GST_DEBUG (0, "NO SUCH pad %s in element %s\n", tempname, GST_ELEMENT_NAME (previous));
+	    GST_DEBUG (0, "NO SUCH pad %s in element %s", tempname, GST_ELEMENT_NAME (previous));
 	  } else {
-	    GST_DEBUG (0, "have src pad %s:%s\n", GST_DEBUG_PAD_NAME (temppad));
+	    GST_DEBUG (0, "have src pad %s:%s", GST_DEBUG_PAD_NAME (temppad));
 	  }
 
 	  /* if there is no more commas in srcpadname then we're done */
@@ -205,14 +205,14 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
 	}
       } else {
 	/* check through the list to find the first src pad */
-	GST_DEBUG (0, "CHECKING element %s for pad named %s\n", GST_ELEMENT_NAME (previous),
+	GST_DEBUG (0, "CHECKING element %s for pad named %s", GST_ELEMENT_NAME (previous),
 		   srcpadname);
 	pads = gst_element_get_pad_list (previous);
 	while (pads) {
 	  temppad = GST_PARSE_LISTPAD (pads);
-	  GST_DEBUG (0, "have pad %s:%s\n", GST_DEBUG_PAD_NAME (temppad));
+	  GST_DEBUG (0, "have pad %s:%s", GST_DEBUG_PAD_NAME (temppad));
 	  if (GST_IS_GHOST_PAD (temppad))
-	    GST_DEBUG (0, "it's a ghost pad\n");
+	    GST_DEBUG (0, "it's a ghost pad");
 	  if (gst_pad_get_direction (temppad) == GST_PAD_SRC) {
 	    srcpads = g_slist_append (srcpads, temppad);
 	    numsrcpads++;
@@ -221,9 +221,9 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
 	  pads = g_list_next (pads);
 	}
 	if (!srcpads)
-	  GST_DEBUG (0, "error, can't find a src pad!!!\n");
+	  GST_DEBUG (0, "error, can't find a src pad!!!");
 	else
-	  GST_DEBUG (0, "have src pad %s:%s\n", GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (srcpads)));
+	  GST_DEBUG (0, "have src pad %s:%s", GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (srcpads)));
       }
     } else if (strchr (arg, '=')) {
       gchar *propname;
@@ -239,7 +239,7 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
       propval = pos + 1;
       
       /* use g_object_set in the future when gst_util_{set|get} go away */
-      GST_DEBUG (0, "attempting to set property '%s' to '%s' on element '%s'\n",
+      GST_DEBUG (0, "attempting to set property '%s' to '%s' on element '%s'",
 		 propname, propval, GST_ELEMENT_NAME (previous));
       gst_util_set_object_arg (G_OBJECT (previous), propname, propval);
       g_free (propname);
@@ -287,7 +287,7 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
             fprintf (stderr, "Couldn't create a bin!\n");
             return GST_PARSE_ERROR_CREATING_ELEMENT;
           }
-          GST_DEBUG (0, "CREATED bin %s\n", GST_ELEMENT_NAME (element));
+          GST_DEBUG (0, "CREATED bin %s", GST_ELEMENT_NAME (element));
         } else if (arg[0] == '{') {
           /* create a thread and add it to the current parent */
           priv->threadcount++;
@@ -296,7 +296,7 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
             fprintf (stderr, "Couldn't create a thread!\n");
             return GST_PARSE_ERROR_CREATING_ELEMENT;
           }
-          GST_DEBUG (0, "CREATED thread %s\n", GST_ELEMENT_NAME (element));
+          GST_DEBUG (0, "CREATED thread %s", GST_ELEMENT_NAME (element));
         } else {
           fprintf (stderr, "Illegal argument: %s\n", arg);
           return GST_PARSE_ERROR_CREATING_ELEMENT;
@@ -328,7 +328,7 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
           return GST_PARSE_ERROR_NOSUCH_ELEMENT;
         }
         
-        GST_DEBUG (0, "CREATED element %s\n", GST_ELEMENT_NAME (element));
+        GST_DEBUG (0, "CREATED element %s", GST_ELEMENT_NAME (element));
         gst_bin_add (GST_BIN (parent), element);
       }
       
@@ -362,9 +362,9 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
             numsinkpads++;
           }
           if (!temppad) {
-            GST_DEBUG (0, "NO SUCH pad %s in element %s\n", tempname, GST_ELEMENT_NAME (element));
+            GST_DEBUG (0, "NO SUCH pad %s in element %s", tempname, GST_ELEMENT_NAME (element));
           } else {
-            GST_DEBUG (0, "have sink pad %s:%s\n", GST_DEBUG_PAD_NAME (temppad));
+            GST_DEBUG (0, "have sink pad %s:%s", GST_DEBUG_PAD_NAME (temppad));
           }
           
           /* if there is no more commas in sinkpadname then we're done */
@@ -387,9 +387,9 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
       }
       
       if (!sinkpads)
-        GST_DEBUG (0, "can't find a sink pad for element\n");
+        GST_DEBUG (0, "can't find a sink pad for element");
       else
-        GST_DEBUG (0, "have sink pad %s:%s\n", GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (sinkpads)));
+        GST_DEBUG (0, "have sink pad %s:%s", GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (sinkpads)));
       
       if (!srcpads && sinkpads && previous && srcpadname) {
         dyn_connect *connect = g_malloc (sizeof (dyn_connect));
@@ -398,14 +398,14 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
         connect->target = GST_PARSE_LISTPAD (sinkpads);
         connect->pipeline = GST_ELEMENT (parent);
         
-        GST_DEBUG (0, "SETTING UP dynamic connection %s:%s and %s:%s\n",
+        GST_DEBUG (0, "SETTING UP dynamic connection %s:%s and %s:%s",
                    gst_element_get_name (previous),
                    srcpadname, GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (sinkpads)));
         
         g_signal_connect (G_OBJECT (previous), "new_pad", G_CALLBACK (dynamic_connect), connect);
       } else {
         for (j = 0; (j < numsrcpads) && (j < numsinkpads); j++) {
-          GST_DEBUG (0, "CONNECTING %s:%s and %s:%s\n",
+          GST_DEBUG (0, "CONNECTING %s:%s and %s:%s",
                      GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (g_slist_nth (srcpads, j))),
                      GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (g_slist_nth (sinkpads, j))));
           if (!gst_pad_connect (GST_PARSE_LISTPAD (g_slist_nth (srcpads, j)),
@@ -437,7 +437,7 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
           else if (gst_pad_get_direction (temppad) == GST_PAD_SINK) {
             gst_element_add_ghost_pad (GST_ELEMENT (parent), temppad,
                                        g_strdup_printf ("%s-ghost", GST_PAD_NAME (temppad)));
-            GST_DEBUG (0, "GHOSTED %s:%s to %s as %s-ghost\n",
+            GST_DEBUG (0, "GHOSTED %s:%s to %s as %s-ghost",
                        GST_DEBUG_PAD_NAME (temppad), GST_ELEMENT_NAME (GST_ELEMENT (parent)),
                        GST_PAD_NAME (temppad));
           }
@@ -463,7 +463,7 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
       else if (gst_pad_get_direction (temppad) == GST_PAD_SRC) {
 	gst_element_add_ghost_pad (GST_ELEMENT (parent), temppad,
 				   g_strdup_printf ("%s-ghost", GST_PAD_NAME (temppad)));
-	GST_DEBUG (0, "GHOSTED %s:%s to %s as %s-ghost\n",
+	GST_DEBUG (0, "GHOSTED %s:%s to %s as %s-ghost",
 		   GST_DEBUG_PAD_NAME (temppad), GST_ELEMENT_NAME (parent), GST_PAD_NAME (temppad));
       }
     }
@@ -589,7 +589,7 @@ gst_parse_launch (const gchar * pipeline_description)
   /* now allocate the new argv array, with room for NULL termination */
   argvn = g_new0 (char *, newargc + 1);
 
-  GST_DEBUG (0, "got %d args\n", newargc);
+  GST_DEBUG (0, "got %d args", newargc);
 
   /* reverse the list and put the strings in the new array */
   i = newargc;
@@ -601,7 +601,7 @@ gst_parse_launch (const gchar * pipeline_description)
 
   /* print them out */
   while (argvn[i++]) {
-    GST_DEBUG (0, "arg %d is: %s\n", i-1, argvn[i-1]);
+    GST_DEBUG (0, "arg %d is: %s", i-1, argvn[i-1]);
   }
 
   /* do it! */

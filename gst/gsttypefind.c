@@ -165,7 +165,7 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   typefind = GST_TYPEFIND (GST_OBJECT_PARENT (pad));
-  GST_DEBUG (0,"got buffer of %d bytes in '%s'\n",
+  GST_DEBUG (0,"got buffer of %d bytes in '%s'",
         GST_BUFFER_SIZE (buf), GST_OBJECT_NAME (typefind));
 
   type_list = gst_type_get_list ();
@@ -181,9 +181,9 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
       GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
       GstCaps *caps;
 
-      GST_DEBUG (0,"try type :%d \"%s\"\n", type->id, type->mime);
+      GST_DEBUG (0,"try type :%d \"%s\"", type->id, type->mime);
       if (typefindfunc && (caps = typefindfunc (buf, factory))) {
-        GST_DEBUG (0,"found type :%d \"%s\" \"%s\"\n", caps->id, type->mime, 
+        GST_DEBUG (0,"found type :%d \"%s\" \"%s\"", caps->id, type->mime, 
 			gst_caps_get_name (caps));
 	typefind->caps = caps;
 
@@ -197,7 +197,7 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
           g_signal_emit (G_OBJECT (typefind), gst_typefind_signals[HAVE_TYPE], 0,
 	                      typefind->caps);
 /*          if (GST_STATE(typefind) != oldstate) {
-            GST_DEBUG(0, "state changed during signal, aborting\n");
+            GST_DEBUG(0, "state changed during signal, aborting");
 	    gst_element_interrupt (GST_ELEMENT (typefind));
             } */
 	  gst_object_unref (GST_OBJECT (typefind));

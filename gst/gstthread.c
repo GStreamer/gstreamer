@@ -136,7 +136,7 @@ gst_thread_init (GstThread *thread)
   const gchar *schedname;
   GstScheduler *scheduler;
 
-  GST_DEBUG (GST_CAT_THREAD, "initializing thread\n");
+  GST_DEBUG (GST_CAT_THREAD, "initializing thread");
 
   /* we're a manager by default */
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
@@ -162,7 +162,7 @@ gst_thread_dispose (GObject *object)
 {
   GstThread *thread = GST_THREAD (object);
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "dispose\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "dispose");
 
   g_mutex_free (thread->lock);
   g_cond_free (thread->cond);
@@ -360,13 +360,13 @@ gst_thread_change_state (GstElement * element)
 	      continue;		/* deal with case where there's no peer */
 
 	    if (!GST_FLAG_IS_SET (peerelement, GST_ELEMENT_DECOUPLED)) {
-	      GST_DEBUG (GST_CAT_THREAD, "peer element isn't DECOUPLED\n");
+	      GST_DEBUG (GST_CAT_THREAD, "peer element isn't DECOUPLED");
 	      continue;
 	    }
 
 	    /* FIXME this needs to go away eventually */
 	    if (!GST_IS_QUEUE (peerelement)) {
-	      GST_DEBUG (GST_CAT_THREAD, "peer element isn't a Queue\n");
+	      GST_DEBUG (GST_CAT_THREAD, "peer element isn't a Queue");
 	      continue;
 	    }
 
@@ -593,7 +593,7 @@ static void
 gst_thread_restore_thyself (GstObject *object,
 		            xmlNodePtr self)
 {
-  GST_DEBUG (GST_CAT_THREAD,"gstthread: restore\n");
+  GST_DEBUG (GST_CAT_THREAD,"gstthread: restore");
 
   if (GST_OBJECT_CLASS (parent_class)->restore_thyself)
     GST_OBJECT_CLASS (parent_class)->restore_thyself (object, self);

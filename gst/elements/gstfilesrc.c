@@ -559,7 +559,7 @@ gst_filesrc_open_file (GstFileSrc *src)
 {
   g_return_val_if_fail (!GST_FLAG_IS_SET (src ,GST_FILESRC_OPEN), FALSE);
 
-  GST_DEBUG(0, "opening file %s\n",src->filename);
+  GST_DEBUG(0, "opening file %s",src->filename);
 
   /* open the file */
   src->fd = open (src->filename, O_RDONLY);

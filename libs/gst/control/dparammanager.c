@@ -160,7 +160,7 @@ gst_dpman_add_required_dparam_callback (GstDParamManager *dpman,
 
 	g_return_val_if_fail (dpwrap != NULL, FALSE);
 
-	GST_DEBUG(GST_CAT_PARAMS,"adding required callback dparam '%s'\n", g_param_spec_get_name(param_spec));
+	GST_DEBUG(GST_CAT_PARAMS,"adding required callback dparam '%s'", g_param_spec_get_name(param_spec));
 
 	dpwrap->update_func = update_func;
 	dpwrap->update_data = update_data;
@@ -192,7 +192,7 @@ gst_dpman_add_required_dparam_direct (GstDParamManager *dpman,
 
 	g_return_val_if_fail (dpwrap != NULL, FALSE);
 
-	GST_DEBUG(GST_CAT_PARAMS,"adding required direct dparam '%s'\n", g_param_spec_get_name(param_spec));
+	GST_DEBUG(GST_CAT_PARAMS,"adding required direct dparam '%s'", g_param_spec_get_name(param_spec));
 
 	dpwrap->update_data = update_data;
 
@@ -224,7 +224,7 @@ gst_dpman_add_required_dparam_array (GstDParamManager *dpman,
 
 	g_return_val_if_fail (dpwrap != NULL, FALSE);
 
-	GST_DEBUG(GST_CAT_PARAMS,"adding required array dparam '%s'\n", g_param_spec_get_name(param_spec));
+	GST_DEBUG(GST_CAT_PARAMS,"adding required array dparam '%s'", g_param_spec_get_name(param_spec));
 
 	dpwrap->update_data = update_data;
 
@@ -251,7 +251,7 @@ gst_dpman_remove_required_dparam (GstDParamManager *dpman, gchar *dparam_name)
 	g_return_if_fail(dpwrap != NULL);
 	g_return_if_fail(dpwrap->dparam == NULL);
 
-	GST_DEBUG(GST_CAT_PARAMS, "removing required dparam: %s\n", dparam_name);
+	GST_DEBUG(GST_CAT_PARAMS, "removing required dparam: %s", dparam_name);
 	
 	g_hash_table_remove(GST_DPMAN_DPARAMS(dpman), dparam_name);
 	GST_DPMAN_DPARAMS_LIST(dpman) = g_slist_remove(GST_DPMAN_DPARAMS_LIST(dpman), dpwrap);
@@ -428,7 +428,7 @@ gst_dpman_register_mode (GstDParamManagerClass *klass,
 	mode->teardownfunc = teardownfunc;
 	
 	g_hash_table_insert(klass->modes, modename, mode);
-	GST_DEBUG(GST_CAT_PARAMS, "mode '%s' registered\n", modename);
+	GST_DEBUG(GST_CAT_PARAMS, "mode '%s' registered", modename);
 }
 
 /**
@@ -454,11 +454,11 @@ gst_dpman_set_mode(GstDParamManager *dpman, gchar *modename)
 	g_return_val_if_fail (mode != NULL, FALSE);
 	
 	if (GST_DPMAN_MODE(dpman) == mode) {
-		GST_DEBUG(GST_CAT_PARAMS, "mode %s already set\n", modename);
+		GST_DEBUG(GST_CAT_PARAMS, "mode %s already set", modename);
 		return TRUE;
 	}
 	
-	GST_DEBUG(GST_CAT_PARAMS, "setting mode to %s\n", modename);
+	GST_DEBUG(GST_CAT_PARAMS, "setting mode to %s", modename);
 	if (GST_DPMAN_MODE(dpman) && GST_DPMAN_TEARDOWNFUNC(dpman)){
 		GST_DPMAN_TEARDOWNFUNC(dpman)(dpman);
 	}
@@ -581,7 +581,7 @@ gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, Gst
 	g_return_if_fail (GST_IS_DPMAN (dpman));
 	
 	if (new_state == GST_STATE_PLAYING){
-		GST_DEBUG(GST_CAT_PARAMS, "initialising params\n");
+		GST_DEBUG(GST_CAT_PARAMS, "initialising params");
 			
 		/* force all params to be updated */
 		dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
@@ -609,7 +609,7 @@ gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDParamManager *dpman)
 	
 	GST_DPMAN_RATE(dpman) = gst_caps_get_int (caps, "rate");
 	
-	GST_DEBUG(GST_CAT_PARAMS, "got caps change %d\n", GST_DPMAN_RATE(dpman));
+	GST_DEBUG(GST_CAT_PARAMS, "got caps change %d", GST_DPMAN_RATE(dpman));
 }
 
 static guint 
@@ -636,7 +636,7 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 				/* direct method - set the value directly in the struct of the element */
 				case GST_DPMAN_DIRECT:
 					GST_DPARAM_DO_UPDATE(dparam, timestamp, dpwrap->value);
-					GST_DEBUG(GST_CAT_PARAMS, "doing direct update\n");
+					GST_DEBUG(GST_CAT_PARAMS, "doing direct update");
 					switch (G_VALUE_TYPE(dpwrap->value)){
 						case G_TYPE_INT:
 							*(gint*)dpwrap->update_data = g_value_get_int(dpwrap->value);
@@ -655,14 +655,14 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 				/* callback method - call the element's callback so it can do what it likes */
 				case GST_DPMAN_CALLBACK:
 					GST_DPARAM_DO_UPDATE(dparam, timestamp, dpwrap->value);
-					GST_DEBUG(GST_CAT_PARAMS, "doing callback update\n");
+					GST_DEBUG(GST_CAT_PARAMS, "doing callback update");
 					GST_DPMAN_DO_UPDATE(dpwrap);
 					break;
 					
 				/* array method - generate an array of the right size  */
 				/* with each value being the same (in synchronous update mode) */
 				case GST_DPMAN_ARRAY:
-					GST_DEBUG(GST_CAT_PARAMS, "doing array update\n");
+					GST_DEBUG(GST_CAT_PARAMS, "doing array update");
 					switch (G_VALUE_TYPE(dpwrap->value)){
 						case G_TYPE_INT:
 							break;

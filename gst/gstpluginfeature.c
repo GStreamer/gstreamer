@@ -125,7 +125,7 @@ gst_plugin_feature_ensure_loaded (GstPluginFeature *feature)
   GstPlugin *plugin = (GstPlugin *) (feature->manager);
 
   if (plugin && !gst_plugin_is_loaded (plugin)) {
-    GST_DEBUG (GST_CAT_PLUGIN_LOADING, "loading plugin %s for feature\n", plugin->name);
+    GST_DEBUG (GST_CAT_PLUGIN_LOADING, "loading plugin %s for feature", plugin->name);
     
     return gst_plugin_load_plugin (plugin);
   }

@@ -38,7 +38,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
     factory = gst_typefactory_new (&_definitions[i]);
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-    GST_DEBUG(0, "added factory #%d '%s'\n", i, _definitions[i].name);
+    GST_DEBUG(0, "added factory #%d '%s'", i, _definitions[i].name);
     i++;
   }
 

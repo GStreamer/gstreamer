@@ -157,7 +157,7 @@ gst_dpsmooth_set_property (GObject *object, guint prop_id, const GValue *value, 
 
 		case ARG_SLOPE_TIME:
 			dpsmooth->slope_time = g_value_get_int64 (value);
-			GST_DEBUG(GST_CAT_PARAMS, "dpsmooth->slope_time:%lld\n",dpsmooth->slope_time);
+			GST_DEBUG(GST_CAT_PARAMS, "dpsmooth->slope_time:%lld",dpsmooth->slope_time);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			break;
 
@@ -208,20 +208,20 @@ gst_dpsmooth_time_since_last_update(GstDParam *dparam, gint64 timestamp)
 	last_update_diff = timestamp - dpsmooth->last_update_timestamp;
 	time_diff = MIN(dpsmooth->update_period, last_update_diff);
 
-	GST_DEBUG(GST_CAT_PARAMS, "last_update_diff:%lld\n",last_update_diff);
-	GST_DEBUG(GST_CAT_PARAMS, "time_diff:%lld\n",time_diff);
+	GST_DEBUG(GST_CAT_PARAMS, "last_update_diff:%lld",last_update_diff);
+	GST_DEBUG(GST_CAT_PARAMS, "time_diff:%lld",time_diff);
 		
 	dpsmooth->last_update_timestamp = GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam);  
 	if(GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) <= timestamp && dpsmooth->update_period > 0LL){
 		
-		GST_DEBUG(GST_CAT_PARAMS, "dpsmooth->update_period:%lld\n",dpsmooth->update_period);
+		GST_DEBUG(GST_CAT_PARAMS, "dpsmooth->update_period:%lld",dpsmooth->update_period);
 		num_update_periods = last_update_diff / dpsmooth->update_period;
 		
-		GST_DEBUG(GST_CAT_PARAMS, "num_update_periods:%lld\n",num_update_periods);
+		GST_DEBUG(GST_CAT_PARAMS, "num_update_periods:%lld",num_update_periods);
 		
 		GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = dpsmooth->update_period * (num_update_periods + 1LL);
 	}
-	GST_DEBUG(GST_CAT_PARAMS, "last:%lld current:%lld next:%lld\n",
+	GST_DEBUG(GST_CAT_PARAMS, "last:%lld current:%lld next:%lld",
 	                           dpsmooth->last_update_timestamp, timestamp, GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam));
 	return time_diff;
 }
@@ -248,7 +248,7 @@ gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value
 
 	max_change = time_ratio * dpsmooth->slope_delta_float;
 
-	GST_DEBUG(GST_CAT_PARAMS, "target:%f current:%f max_change:%f \n", 
+	GST_DEBUG(GST_CAT_PARAMS, "target:%f current:%f max_change:%f ", 
 	                           target, current, max_change);
 	                           
 	if (GST_DPARAM_IS_LOG(dparam)){
@@ -262,8 +262,8 @@ gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value
 			current_log = log(current);
 			current_diff = ABS(current_log - log(target));
 			
-			GST_DEBUG(GST_CAT_PARAMS, "current_log:%f\n",current_log);
-			GST_DEBUG(GST_CAT_PARAMS, "current_diff:%f\n",current_diff);
+			GST_DEBUG(GST_CAT_PARAMS, "current_log:%f",current_log);
+			GST_DEBUG(GST_CAT_PARAMS, "current_diff:%f",current_diff);
 	
 			if (current_diff > max_change)
 				final_val = (target < current) ? exp(current_log-max_change) : exp(current_log+max_change);
@@ -285,7 +285,7 @@ gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value
 	g_value_set_float(value, final_val);
 
 		                           
- 	GST_DEBUG(GST_CAT_PARAMS, "target:%f current:%f final:%f actual:%f\n", target, current, final_val, g_value_get_float(value));
+ 	GST_DEBUG(GST_CAT_PARAMS, "target:%f current:%f final:%f actual:%f", target, current, final_val, g_value_get_float(value));
 
 	GST_DPARAM_UNLOCK(dparam);
 }

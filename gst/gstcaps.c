@@ -155,13 +155,13 @@ gst_caps_debug (GstCaps *caps, const gchar *label)
 {
   GST_DEBUG_ENTER ("caps debug: %s", label);
   while (caps) {
-    GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s\n", caps, caps->name, gst_caps_get_mime (caps));
+    GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s", caps, caps->name, gst_caps_get_mime (caps));
 
     if (caps->properties) {
       gst_props_debug (caps->properties);
     }
     else {
-      GST_DEBUG (GST_CAT_CAPS, "no properties\n");
+      GST_DEBUG (GST_CAT_CAPS, "no properties");
     }
 
     caps = caps->next;
@@ -561,7 +561,7 @@ static gboolean
 gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
 {
   if (fromcaps->id != tocaps->id) {
-    GST_DEBUG (GST_CAT_CAPS,"mime types differ (%s to %s)\n",
+    GST_DEBUG (GST_CAT_CAPS,"mime types differ (%s to %s)",
 	       gst_type_find_by_id (fromcaps->id)->mime, 
 	       gst_type_find_by_id (tocaps->id)->mime);
     return FALSE;
@@ -572,13 +572,13 @@ gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
       return gst_props_check_compatibility (fromcaps->properties, tocaps->properties);
     }
     else {
-      GST_DEBUG (GST_CAT_CAPS,"no source caps\n");
+      GST_DEBUG (GST_CAT_CAPS,"no source caps");
       return FALSE;
     }
   }
   else {
     /* assume it accepts everything */
-    GST_DEBUG (GST_CAT_CAPS,"no caps\n");
+    GST_DEBUG (GST_CAT_CAPS,"no caps");
     return TRUE;
   }
 }
@@ -597,17 +597,17 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
 {
   if (fromcaps == NULL) {
     if (tocaps == NULL) {
-      GST_DEBUG (GST_CAT_CAPS,"no caps\n");
+      GST_DEBUG (GST_CAT_CAPS,"no caps");
       return TRUE;
     }
     else {
-      GST_DEBUG (GST_CAT_CAPS,"no source but destination caps\n");
+      GST_DEBUG (GST_CAT_CAPS,"no source but destination caps");
       return FALSE;
     }
   }
   else {
     if (tocaps == NULL) {
-      GST_DEBUG (GST_CAT_CAPS,"source caps and no destination caps\n");
+      GST_DEBUG (GST_CAT_CAPS,"source caps and no destination caps");
       return TRUE;
     }
   }
@@ -633,7 +633,7 @@ gst_caps_intersect_func (GstCaps *caps1, GstCaps *caps2)
   GstProps *props;
 
   if (caps1->id != caps2->id) {
-    GST_DEBUG (GST_CAT_CAPS,"mime types differ (%s to %s)\n",
+    GST_DEBUG (GST_CAT_CAPS,"mime types differ (%s to %s)",
 	       gst_type_find_by_id (caps1->id)->mime, 
 	       gst_type_find_by_id (caps2->id)->mime);
     return NULL;
@@ -670,11 +670,11 @@ gst_caps_intersect (GstCaps *caps1, GstCaps *caps2)
   GstCaps *result = NULL, *walk = NULL;
 
   if (caps1 == NULL) {
-    GST_DEBUG (GST_CAT_CAPS, "first caps is NULL, return other caps\n");
+    GST_DEBUG (GST_CAT_CAPS, "first caps is NULL, return other caps");
     return gst_caps_copy (caps2);
   }
   if (caps2 == NULL) {
-    GST_DEBUG (GST_CAT_CAPS, "second caps is NULL, return other caps\n");
+    GST_DEBUG (GST_CAT_CAPS, "second caps is NULL, return other caps");
     return gst_caps_copy (caps1);
   }
 

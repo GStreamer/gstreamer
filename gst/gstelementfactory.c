@@ -122,7 +122,7 @@ gst_elementfactory_find (const gchar *name)
   }
 
   /* this should be an ERROR */
-  GST_DEBUG (GST_CAT_ELEMENTFACTORY,"no such elementfactory \"%s\"\n", name);
+  GST_DEBUG (GST_CAT_ELEMENTFACTORY,"no such elementfactory \"%s\"", name);
   return NULL;
 }
 
@@ -223,7 +223,7 @@ gst_elementfactory_create (GstElementFactory *factory,
 
   g_return_val_if_fail(factory != NULL, NULL);
 
-  GST_DEBUG (GST_CAT_ELEMENTFACTORY,"creating element from factory \"%s\" with name \"%s\" and type %d\n", 
+  GST_DEBUG (GST_CAT_ELEMENTFACTORY,"creating element from factory \"%s\" with name \"%s\" and type %d", 
              GST_OBJECT_NAME (factory), name, (gint) factory->type);
 
   if (!gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory)))
@@ -242,7 +242,7 @@ gst_elementfactory_create (GstElementFactory *factory,
   /* attempt to set the elemenfactory class pointer if necessary */
   oclass = GST_ELEMENT_CLASS(G_OBJECT_GET_CLASS(element));
   if (oclass->elementfactory == NULL) {
-    GST_DEBUG (GST_CAT_ELEMENTFACTORY,"class %s\n", GST_OBJECT_NAME (factory));
+    GST_DEBUG (GST_CAT_ELEMENTFACTORY,"class %s", GST_OBJECT_NAME (factory));
     oclass->elementfactory = factory;
 
     /* copy pad template pointers to the element class, allow for custom padtemplates */
@@ -274,7 +274,7 @@ gst_elementfactory_make (const gchar *factoryname, const gchar *name)
 
   g_return_val_if_fail (factoryname != NULL, NULL);
 
-  GST_DEBUG (GST_CAT_ELEMENTFACTORY, "gstelementfactory: make \"%s\" \"%s\"\n", factoryname, name);
+  GST_DEBUG (GST_CAT_ELEMENTFACTORY, "gstelementfactory: make \"%s\" \"%s\"", factoryname, name);
 
   /* gst_plugin_load_elementfactory(factoryname); */
   factory = gst_elementfactory_find(factoryname);

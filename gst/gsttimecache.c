@@ -72,7 +72,7 @@ gst_timecache_group_new(guint groupnum)
   tcgroup->minlocation = 0LL;
   tcgroup->maxlocation = 0LL;
 
-  GST_DEBUG(0, "created new timecache group %d\n",groupnum);
+  GST_DEBUG(0, "created new timecache group %d",groupnum);
 
   return tcgroup;
 }
@@ -83,7 +83,7 @@ gst_timecache_init (GstTimeCache *tc)
   tc->curgroup = gst_timecache_group_new(0);
   tc->maxgroup = 0;
   tc->groups = g_list_prepend(NULL, tc->curgroup);
-  GST_DEBUG(0, "created new timecache\n");
+  GST_DEBUG(0, "created new timecache");
 }
 
 /**
@@ -131,7 +131,7 @@ gst_timecache_new_group(GstTimeCache *tc)
 {
   tc->curgroup = gst_timecache_group_new(++tc->maxgroup);
   tc->groups = g_list_append(tc->groups,tc->curgroup);
-  GST_DEBUG(0, "created new group %d in timecache\n",tc->maxgroup);
+  GST_DEBUG(0, "created new group %d in timecache",tc->maxgroup);
   return tc->maxgroup;
 }
 
@@ -162,13 +162,13 @@ gst_timecache_set_group(GstTimeCache *tc, gint groupnum)
     list = g_list_next(list);
     if (tcgroup->groupnum == groupnum) {
       tc->curgroup = tcgroup;
-      GST_DEBUG(0, "switched to timecache group %d\n", tcgroup->groupnum);
+      GST_DEBUG(0, "switched to timecache group %d", tcgroup->groupnum);
       return TRUE;
     }
   }
 
   /* couldn't find the group in question */
-  GST_DEBUG(0, "couldn't find timecache group %d\n",groupnum);
+  GST_DEBUG(0, "couldn't find timecache group %d",groupnum);
   return FALSE;
 }
 
@@ -225,7 +225,7 @@ gst_timecache_add_entry (GstTimeCache *tc, guint64 location, gint64 timestamp)
   if (tc->curgroup->minlocation > location) tc->curgroup->minlocation = location;
   if (tc->curgroup->maxlocation < location) tc->curgroup->maxlocation = location;
 
-  GST_DEBUG(0, "added entry to timecache group %d\n",tc->curgroup->groupnum);
+  GST_DEBUG(0, "added entry to timecache group %d",tc->curgroup->groupnum);
 }
 
 static gint 
@@ -255,7 +255,7 @@ gst_timecache_find_location (GstTimeCache *tc, guint64 location, gint64 *timesta
 
   /* first check to see if it's in the current group */
   if ((tc->curgroup->minlocation <= location) && (location <= tc->curgroup->maxlocation)) {
-    GST_DEBUG(0, "location %Ld is in group %d\n",location,tc->curgroup->groupnum);
+    GST_DEBUG(0, "location %Ld is in group %d",location,tc->curgroup->groupnum);
     list = g_list_find_custom(tc->curgroup->entries,&location,(GCompareFunc)_gst_timecache_find_location);
     if (list) entry = (GstTimeCacheEntry *)(list->data);
     if (entry) *timestamp = entry->timestamp;
@@ -296,7 +296,7 @@ gst_timecache_find_timestamp (GstTimeCache *tc, gint64 timestamp, guint64 *locat
 
   /* first check to see if it's in the current group */
   if ((tc->curgroup->mintimestamp <= timestamp) && (timestamp <= tc->curgroup->maxtimestamp)) {
-    GST_DEBUG(0, "timestamp %Ld may be in group %d\n",timestamp,tc->curgroup->groupnum);
+    GST_DEBUG(0, "timestamp %Ld may be in group %d",timestamp,tc->curgroup->groupnum);
     entries = g_list_find_custom(tc->curgroup->entries,&timestamp,(GCompareFunc)_gst_timecache_find_timestamp);
     if (entries) entry = (GstTimeCacheEntry *)(entries->data);
     if (entry) {
@@ -311,7 +311,7 @@ gst_timecache_find_timestamp (GstTimeCache *tc, gint64 timestamp, guint64 *locat
     groups = g_list_next(groups);
 
     if ((group->mintimestamp <= timestamp) && (timestamp <= group->maxtimestamp)) {
-      GST_DEBUG(0, "timestamp %Ld may be in group %d\n",timestamp,group->groupnum);
+      GST_DEBUG(0, "timestamp %Ld may be in group %d",timestamp,group->groupnum);
       entries = g_list_find_custom(group->entries,&timestamp,(GCompareFunc)_gst_timecache_find_timestamp);
       if (entries) entry = (GstTimeCacheEntry *)(entries->data);
       if (entry) {

@@ -280,7 +280,7 @@ gst_spider_identity_request_new_pad  (GstElement *element, GstPadTemplate *templ
     case GST_PAD_SINK:
       if (ident->sink != NULL) break;
       /* sink */
-      GST_DEBUG(0, "element %s requests new sink pad\n", GST_ELEMENT_NAME(ident));
+      GST_DEBUG(0, "element %s requests new sink pad", GST_ELEMENT_NAME(ident));
       ident->sink = gst_pad_new ("sink", GST_PAD_SINK);
       gst_element_add_pad (GST_ELEMENT (ident), ident->sink);
       gst_pad_set_connect_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_connect));
@@ -289,7 +289,7 @@ gst_spider_identity_request_new_pad  (GstElement *element, GstPadTemplate *templ
     case GST_PAD_SRC:
       /* src */
       if (ident->src != NULL) break;
-      GST_DEBUG(0, "element %s requests new src pad\n", GST_ELEMENT_NAME(ident));
+      GST_DEBUG(0, "element %s requests new src pad", GST_ELEMENT_NAME(ident));
       ident->src = gst_pad_new ("src", GST_PAD_SRC);
       gst_element_add_pad (GST_ELEMENT (ident), ident->src);
       gst_pad_set_connect_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_connect));
@@ -299,7 +299,7 @@ gst_spider_identity_request_new_pad  (GstElement *element, GstPadTemplate *templ
       break;
   }
   
-  GST_DEBUG(0, "element %s requested a new pad but none could be created\n", GST_ELEMENT_NAME(ident));
+  GST_DEBUG(0, "element %s requested a new pad but none could be created", GST_ELEMENT_NAME(ident));
   return NULL;
 }
 
@@ -359,7 +359,7 @@ gst_spider_identity_start_typefinding (GstSpiderIdentity *ident)
   GstElement* typefind;
   gboolean restart = FALSE;
   
-  GST_DEBUG (GST_CAT_AUTOPLUG, "element %s starts typefinding\n", GST_ELEMENT_NAME(ident));
+  GST_DEBUG (GST_CAT_AUTOPLUG, "element %s starts typefinding", GST_ELEMENT_NAME(ident));
   if (GST_STATE (GST_ELEMENT_PARENT (ident)) == GST_STATE_PLAYING)
   {
     gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT (ident)), GST_STATE_PAUSED);
@@ -497,7 +497,7 @@ gst_spider_identity_sink_loop_typefinding (GstSpiderIdentity *ident)
 
   /* add it to the end of the cache */
   gst_buffer_ref (buf);
-  GST_DEBUG (0, "element %s adds buffer %p (size %d) to cache\n", GST_ELEMENT_NAME(ident),  buf, GST_BUFFER_SIZE (buf));
+  GST_DEBUG (0, "element %s adds buffer %p (size %d) to cache", GST_ELEMENT_NAME(ident),  buf, GST_BUFFER_SIZE (buf));
   ident->cache_end = g_list_prepend (ident->cache_end, buf);
   if (ident->cache_start == NULL)
     ident->cache_start = ident->cache_end;
@@ -522,7 +522,7 @@ gst_spider_identity_sink_loop_emptycache (GstSpiderIdentity *ident)
   /* now check if we have more buffers to push */
   if (ident->cache_start == NULL)
   {
-    GST_DEBUG(0, "cache from %s is empty, changing loop function\n", GST_ELEMENT_NAME(ident));
+    GST_DEBUG(0, "cache from %s is empty, changing loop function", GST_ELEMENT_NAME(ident));
     /* free cache */
     g_list_free (ident->cache_end);
     ident->cache_end = NULL;

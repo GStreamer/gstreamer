@@ -484,7 +484,7 @@ gst_schedulerfactory_find (const gchar *name)
 
   g_return_val_if_fail(name != NULL, NULL);
 
-  GST_DEBUG (0,"gstscheduler: find \"%s\"\n", name);
+  GST_DEBUG (0,"gstscheduler: find \"%s\"", name);
 
   walk = _gst_schedulerfactories;
   while (walk) {

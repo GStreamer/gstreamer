@@ -293,7 +293,7 @@ gst_autoplugfactory_find (const gchar *name)
 
   g_return_val_if_fail(name != NULL, NULL);
 
-  GST_DEBUG (0,"gstautoplug: find \"%s\"\n", name);
+  GST_DEBUG (0,"gstautoplug: find \"%s\"", name);
 
   walk = _gst_autoplugfactories;
   while (walk) {

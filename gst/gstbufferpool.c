@@ -59,7 +59,7 @@ gst_buffer_pool_new (void)
   GstBufferPool *pool;
 
   pool = g_new0 (GstBufferPool, 1);
-  GST_DEBUG (GST_CAT_BUFFER,"allocating new buffer pool %p\n", pool);
+  GST_DEBUG (GST_CAT_BUFFER,"allocating new buffer pool %p", pool);
   
   /* all hooks and user data set to NULL or 0 by g_new0 */
   
@@ -84,7 +84,7 @@ gst_buffer_pool_ref (GstBufferPool *pool)
 {
   g_return_if_fail (pool != NULL);
 
-  GST_DEBUG(GST_CAT_BUFFER,"referencing buffer pool %p from %d\n", pool, GST_BUFFER_POOL_REFCOUNT(pool));
+  GST_DEBUG(GST_CAT_BUFFER,"referencing buffer pool %p from %d", pool, GST_BUFFER_POOL_REFCOUNT(pool));
   
 #ifdef HAVE_ATOMIC_H
   atomic_inc (&(pool->refcount));
@@ -135,7 +135,7 @@ gst_buffer_pool_unref (GstBufferPool *pool)
 
   g_return_if_fail (pool != NULL);
 
-  GST_DEBUG(GST_CAT_BUFFER, "unreferencing buffer pool %p from %d\n", pool, GST_BUFFER_POOL_REFCOUNT(pool));
+  GST_DEBUG(GST_CAT_BUFFER, "unreferencing buffer pool %p from %d", pool, GST_BUFFER_POOL_REFCOUNT(pool));
 
 #ifdef HAVE_ATOMIC_H
   g_return_if_fail (atomic_read (&(pool->refcount)) > 0);
@@ -332,7 +332,7 @@ gst_buffer_pool_get_default (guint buffer_size, guint pool_size)
   g_hash_table_insert(_default_pools,GINT_TO_POINTER(real_buffer_size),pool);
   g_mutex_unlock (_default_pool_lock);
   
-  GST_DEBUG(GST_CAT_BUFFER,"new buffer pool %p bytes:%d size:%d\n", pool, real_buffer_size, pool_size);
+  GST_DEBUG(GST_CAT_BUFFER,"new buffer pool %p bytes:%d size:%d", pool, real_buffer_size, pool_size);
   
   return pool;
 }
@@ -381,7 +381,7 @@ gst_buffer_pool_default_destroy_hook (GstBufferPool *pool, gpointer user_data)
   GstBufferPoolDefault *def = (GstBufferPoolDefault*) user_data;
   GMemChunk *data_chunk = def->mem_chunk;
   
-  GST_DEBUG(GST_CAT_BUFFER,"destroying default buffer pool %p\n", pool);
+  GST_DEBUG(GST_CAT_BUFFER,"destroying default buffer pool %p", pool);
   
   g_mutex_free (pool->lock);
   g_mem_chunk_reset(data_chunk);

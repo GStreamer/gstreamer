@@ -164,19 +164,19 @@ gst_dparam_set_property (GObject *object, guint prop_id, const GValue *value, GP
 
 	switch (prop_id) {
 		case ARG_VALUE_FLOAT:
-			GST_DEBUG(GST_CAT_PARAMS, "setting value from %f to %f\n", dparam->value_float, g_value_get_float (value));
+			GST_DEBUG(GST_CAT_PARAMS, "setting value from %f to %f", dparam->value_float, g_value_get_float (value));
 			dparam->value_float = g_value_get_float (value);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			break;
 			
 		case ARG_VALUE_INT:
-			GST_DEBUG(GST_CAT_PARAMS, "setting value from %d to %d\n", dparam->value_int, g_value_get_int (value));
+			GST_DEBUG(GST_CAT_PARAMS, "setting value from %d to %d", dparam->value_int, g_value_get_int (value));
 			dparam->value_int = g_value_get_int (value);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			break;
 			
 		case ARG_VALUE_INT64:
-			GST_DEBUG(GST_CAT_PARAMS, "setting value from %lld to %lld\n", dparam->value_int64, g_value_get_int64 (value));
+			GST_DEBUG(GST_CAT_PARAMS, "setting value from %lld to %lld", dparam->value_int64, g_value_get_int64 (value));
 			dparam->value_int64 = g_value_get_int (value);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			break;
@@ -193,7 +193,7 @@ gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value
 	GST_DPARAM_LOCK(dparam);
 	
 	g_return_if_fail (G_VALUE_TYPE(value) == GST_DPARAM_TYPE(dparam));
-	GST_DEBUG(GST_CAT_PARAMS, "updating value for %s(%p)\n",GST_DPARAM_NAME (dparam),dparam);
+	GST_DEBUG(GST_CAT_PARAMS, "updating value for %s(%p)",GST_DPARAM_NAME (dparam),dparam);
 	
 	switch (G_VALUE_TYPE(value)) {
 		case G_TYPE_FLOAT:
@@ -252,7 +252,7 @@ gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GParamSpec *par
 	GST_DPARAM_MANAGER(dparam) = manager;
 	dparam->is_log = is_log;
 	dparam->is_rate = is_rate;
-	GST_DEBUG(GST_CAT_PARAMS, "attaching %s to dparam %p\n",GST_DPARAM_NAME (dparam),dparam);
+	GST_DEBUG(GST_CAT_PARAMS, "attaching %s to dparam %p",GST_DPARAM_NAME (dparam),dparam);
 
 }
 
@@ -269,7 +269,7 @@ gst_dparam_detach (GstDParam *dparam)
 	g_return_if_fail (dparam != NULL);
 	g_return_if_fail (GST_IS_DPARAM (dparam));
 
-	GST_DEBUG(GST_CAT_PARAMS, "detaching %s from dparam %p\n",GST_DPARAM_NAME (dparam),dparam);
+	GST_DEBUG(GST_CAT_PARAMS, "detaching %s from dparam %p",GST_DPARAM_NAME (dparam),dparam);
 	
 	GST_DPARAM_NAME(dparam) = NULL;
 	GST_DPARAM_PARAM_SPEC(dparam) = NULL;

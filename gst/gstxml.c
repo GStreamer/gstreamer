@@ -345,14 +345,14 @@ gst_xml_get_element (GstXML *xml, const guchar *name)
   g_return_val_if_fail(xml != NULL, NULL);
   g_return_val_if_fail(name != NULL, NULL);
 
-  GST_DEBUG (0,"gstxml: getting element \"%s\"\n", name);
+  GST_DEBUG (0,"gstxml: getting element \"%s\"", name);
 
   topelements = gst_xml_get_topelements (xml);
 
   while (topelements) {
     GstElement *top = GST_ELEMENT (topelements->data);
 
-    GST_DEBUG (0,"gstxml: getting element \"%s\"\n", name);
+    GST_DEBUG (0,"gstxml: getting element \"%s\"", name);
     if (!strcmp (GST_ELEMENT_NAME (top), name)) {
       return top;
     }

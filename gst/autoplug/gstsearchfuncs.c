@@ -336,7 +336,7 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
   /* check if we even have possible endpoints */
   if (bestnode == NULL)
   {
-    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no factory found that could connect to sink caps\n");
+    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no factory found that could connect to sink caps");
     g_list_free_list_and_elements (factory_nodes);
     return NULL;
   }
@@ -346,12 +346,12 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
   {
     GList *nodes = factory_nodes;
     guint nextcost = GST_AUTOPLUG_MAX_COST; /* next cost to check */
-    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "iterating at current cost %d, bestnode %s at %d\n", curcost, GST_OBJECT_NAME (bestnode->fac), bestnode->cost);
+    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "iterating at current cost %d, bestnode %s at %d", curcost, GST_OBJECT_NAME (bestnode->fac), bestnode->cost);
     /* check if we already have a valid best connection to the sink */
     if (bestnode->cost <= curcost)
     {
       GList *ret;
-      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found a way to connect via %s\n", GST_OBJECT_NAME ((GstObject *) bestnode->fac));    
+      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found a way to connect via %s", GST_OBJECT_NAME ((GstObject *) bestnode->fac));    
       /* enter all factories into the return list */
       ret = g_list_prepend (NULL, bestnode->fac);
       bestnode = bestnode->prev;
@@ -405,7 +405,7 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
     curcost = nextcost;
   }
   
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found no path from source caps to sink caps\n");    
+  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found no path from source caps to sink caps");    
   g_list_free_list_and_elements (factory_nodes);
   return NULL;  
 }

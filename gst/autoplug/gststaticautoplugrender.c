@@ -175,7 +175,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
   gboolean connected = FALSE;
   GstElementState state = GST_STATE (gst_element_get_parent (src));
 
-  GST_DEBUG (0,"gstpipeline: autoplug pad connect function for %s %s:%s to \"%s\"\n",
+  GST_DEBUG (0,"gstpipeline: autoplug pad connect function for %s %s:%s to \"%s\"",
 		  GST_ELEMENT_NAME (src), GST_DEBUG_PAD_NAME(pad), GST_ELEMENT_NAME(sink));
 
   if (state == GST_STATE_PLAYING)
@@ -194,7 +194,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
 	break;
       }
       else {
-        GST_DEBUG (0,"pads incompatible %s, %s\n", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
+        GST_DEBUG (0,"pads incompatible %s, %s", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
       }
     }
     sinkpads = g_list_next(sinkpads);
@@ -204,7 +204,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     gst_element_set_state (GST_ELEMENT (gst_element_get_parent (src)), GST_STATE_PLAYING);
 
   if (!connected) {
-    GST_DEBUG (0,"gstpipeline: no path to sinks for type\n");
+    GST_DEBUG (0,"gstpipeline: no path to sinks for type");
   }
   return connected;
 }
@@ -230,7 +230,7 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
   }
 
   if (!connected) {
-    GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"\n",
+    GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"",
 		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
     g_signal_connect (G_OBJECT(src),"new_pad",
                        G_CALLBACK (gst_autoplug_pads_autoplug_func), sink);
@@ -396,7 +396,7 @@ next:
       }
     }
 
-    GST_DEBUG (0,"common factory \"%s\"\n", GST_OBJECT_NAME (factory));
+    GST_DEBUG (0,"common factory \"%s\"", GST_OBJECT_NAME (factory));
 
     element = gst_elementfactory_create (factory, g_strdup (GST_OBJECT_NAME (factory)));
     gst_bin_add (GST_BIN(result), element);
@@ -456,7 +456,7 @@ differ:
       if (factories[i]) {
         factory = (GstElementFactory *)(factories[i]->data);
 
-        GST_DEBUG (0,"factory \"%s\"\n", GST_OBJECT_NAME (factory));
+        GST_DEBUG (0,"factory \"%s\"", GST_OBJECT_NAME (factory));
         element = gst_elementfactory_create(factory, g_strdup (GST_OBJECT_NAME (factory)));
       }
       else {
@@ -472,11 +472,11 @@ differ:
 
 	use_thread = FALSE;
 
-        GST_DEBUG (0,"sugest new thread for \"%s\" %08x\n", GST_ELEMENT_NAME (element), GST_FLAGS(element));
+        GST_DEBUG (0,"sugest new thread for \"%s\" %08x", GST_ELEMENT_NAME (element), GST_FLAGS(element));
 
 	/* create a new queue and add to the previous bin */
         queue = gst_elementfactory_make("queue", g_strconcat("queue_", GST_ELEMENT_NAME(element), NULL));
-        GST_DEBUG (0,"adding element \"%s\"\n", GST_ELEMENT_NAME (element));
+        GST_DEBUG (0,"adding element \"%s\"", GST_ELEMENT_NAME (element));
 
 	/* this will be the new bin for all following elements */
         thebin = gst_elementfactory_make("thread", g_strconcat("thread_", GST_ELEMENT_NAME(element), NULL));
@@ -488,17 +488,17 @@ differ:
 
         gst_autoplug_pads_autoplug(thesrcelement, queue);
 
-	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
+	GST_DEBUG (0,"adding element %s", GST_ELEMENT_NAME (element));
         gst_bin_add(GST_BIN(thebin), element);
         gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (element));
-	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (thebin));
+	GST_DEBUG (0,"adding element %s", GST_ELEMENT_NAME (thebin));
         gst_bin_add(GST_BIN(current_bin), thebin);
         gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (thebin));
         thesrcelement = queue;
       }
       /* no thread needed, easy case */
       else {
-	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
+	GST_DEBUG (0,"adding element %s", GST_ELEMENT_NAME (element));
         gst_bin_add(GST_BIN(thebin), element);
         gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (element));
       }

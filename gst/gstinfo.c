@@ -507,7 +507,7 @@ void __cyg_profile_func_enter(void *this_fn,void *call_site)
   gchar *name = _gst_debug_nameof_funcptr (this_fn);
   gchar *site = _gst_debug_nameof_funcptr (call_site);
 	
-  GST_DEBUG(GST_CAT_CALL_TRACE, "entering function %s from %s\n", name, site);
+  GST_DEBUG(GST_CAT_CALL_TRACE, "entering function %s from %s", name, site);
   stack_trace = g_slist_prepend (stack_trace, g_strdup_printf ("%8p in %s from %p (%s)", this_fn, name, call_site, site));
 
   g_free (name);
@@ -519,7 +519,7 @@ void __cyg_profile_func_exit(void *this_fn,void *call_site)
 {
   gchar *name = _gst_debug_nameof_funcptr (this_fn);
 
-  GST_DEBUG(GST_CAT_CALL_TRACE, "leaving function %s\n", name);
+  GST_DEBUG(GST_CAT_CALL_TRACE, "leaving function %s", name);
   g_free (stack_trace->data);
   stack_trace = g_slist_delete_link (stack_trace, stack_trace);
 

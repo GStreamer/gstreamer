@@ -175,7 +175,7 @@ cothread_create (cothread_context *ctx)
   stack_end = (guchar *) ((gulong) sp & ~(STACK_SIZE - 1));
 
   thread = (cothread_state *) (stack_end + ((slot - 1) * COTHREAD_STACKSIZE));
-  GST_DEBUG (0, "new stack at %p\n", thread);
+  GST_DEBUG (0, "new stack at %p", thread);
 
   if (mmap ((void *) thread, COTHREAD_STACKSIZE,
 	    PROT_READ | PROT_WRITE | PROT_EXEC, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0) == MAP_FAILED) {
@@ -298,7 +298,7 @@ cothread_stop (cothread_state * thread)
 cothread_state *
 cothread_main (cothread_context * ctx)
 {
-  GST_DEBUG (0, "returning %p, the 0th cothread\n", ctx->threads[0]);
+  GST_DEBUG (0, "returning %p, the 0th cothread", ctx->threads[0]);
   return ctx->threads[0];
 }
 
@@ -474,21 +474,21 @@ cothread_switch (cothread_state * thread)
 #endif
   enter = setjmp (current->jmp);
   if (enter != 0) {
-    GST_DEBUG (0, "enter thread #%d %d %p<->%p (%d)\n", current->threadnum, enter,
+    GST_DEBUG (0, "enter thread #%d %d %p<->%p (%d)", current->threadnum, enter,
 	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp);
     return;
   }
-  GST_DEBUG (0, "exit thread #%d %d %p<->%p (%d)\n", current->threadnum, enter,
+  GST_DEBUG (0, "exit thread #%d %d %p<->%p (%d)", current->threadnum, enter,
 	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp);
   enter = 1;
 
   if (current->flags & COTHREAD_DESTROYED)
     cothread_destroy (current);
 
-  GST_DEBUG (0, "set stack to %p\n", thread->sp);
+  GST_DEBUG (0, "set stack to %p", thread->sp);
   /* restore stack pointer and other stuff of new cothread */
   if (thread->flags & COTHREAD_STARTED) {
-    GST_DEBUG (0, "in thread \n");
+    GST_DEBUG (0, "in thread ");
     /* switch to it */
     longjmp (thread->jmp, 1);
   }
@@ -497,7 +497,7 @@ cothread_switch (cothread_state * thread)
     GST_ARCH_SET_SP (thread->sp);
     /* start it */
     GST_ARCH_CALL (cothread_stub);
-    GST_DEBUG (0, "exit thread \n");
+    GST_DEBUG (0, "exit thread ");
     ctx->current = 0;
   }
 
