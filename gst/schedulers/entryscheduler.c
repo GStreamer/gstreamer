@@ -198,6 +198,7 @@ static GstData *gst_entry_scheduler_select (GstScheduler * sched,
 static GstSchedulerState gst_entry_scheduler_iterate (GstScheduler * sched);
 static void gst_entry_scheduler_show (GstScheduler * scheduler);
 
+static gboolean can_schedule_pad (GstRealPad * pad);
 static void schedule_next_element (GstEntryScheduler * sched);
 
 static void
@@ -488,7 +489,7 @@ _can_schedule_get (GstRealPad * pad)
   g_assert (PAD_PRIVATE (pad));
   return PAD_PRIVATE (pad)->bufpen == NULL &&
       PAD_PRIVATE (pad)->src->wait == WAIT_FOR_PADS &&
-      PAD_PRIVATE (pad)->sink->can_schedule (PAD_PRIVATE (pad)->sinkpad);
+      can_schedule_pad (PAD_PRIVATE (pad)->sinkpad);
 }
 
 static CothreadPrivate *
@@ -508,6 +509,21 @@ setup_get (GstEntryScheduler * sched, GstElement * element)
  */
 
 static gboolean
+can_schedule_pad (GstRealPad * pad)
+{
+  LinkPrivate *link = PAD_PRIVATE (pad);
+
+  g_assert (link);
+  if (GST_STATE (gst_pad_get_parent (GST_PAD (pad))) != GST_STATE_PLAYING)
+    return FALSE;
+  if (GST_PAD_IS_SINK (pad)) {
+    return link->sink->can_schedule (pad);
+  } else {
+    return link->src->can_schedule (pad);
+  }
+}
+
+static gboolean
 can_schedule (Entry * entry)
 {
   if (ENTRY_IS_LINK (entry)) {
@@ -524,12 +540,14 @@ can_schedule (Entry * entry)
     }
     if (priv->wait != WAIT_FOR_PADS)
       return FALSE;
-    return priv->can_schedule (pad);
+    return can_schedule_pad (pad);
   } else if (ENTRY_IS_COTHREAD (entry)) {
     CothreadPrivate *priv = (CothreadPrivate *) entry;
     GList *list;
 
     if (priv->wait != WAIT_FOR_NOTHING)
+      return FALSE;
+    if (GST_STATE (priv->element) != GST_STATE_PLAYING)
       return FALSE;
     if (GST_FLAG_IS_SET (priv->element, GST_ELEMENT_DECOUPLED)) {
       g_assert (PAD_PRIVATE (priv->schedule_pad));
@@ -561,6 +579,9 @@ schedule (GstEntryScheduler * sched, Entry * entry)
   CothreadPrivate *schedule_me;
 
   g_assert (can_schedule (entry));
+  sched->schedule_now = g_list_remove (sched->schedule_now, entry);
+  sched->schedule_possible = g_list_remove (sched->schedule_possible, entry);
+  sched->schedule_possible = g_list_append (sched->schedule_possible, entry);
   if (ENTRY_IS_LINK (entry)) {
     LinkPrivate *link = (LinkPrivate *) entry;
 
@@ -595,6 +616,34 @@ schedule (GstEntryScheduler * sched, Entry * entry)
   safe_cothread_switch (sched, schedule_me->thread);
 }
 
+/* this function will die a horrible death if you have cyclic pipelines */
+static Entry *
+schedule_forward (Entry * entry)
+{
+  if (can_schedule (entry))
+    return entry;
+  if (ENTRY_IS_LINK (entry)) {
+    return schedule_forward ((Entry *) ((LinkPrivate *) entry)->sink);
+  } else if (ENTRY_IS_COTHREAD (entry)) {
+    GList *list;
+    Entry *entry;
+    GstElement *element = ((CothreadPrivate *) entry)->element;
+
+    if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED))
+      return FALSE;
+    for (list = element->pads; list; list = g_list_next (list)) {
+      if (GST_PAD_IS_SINK (list->data))
+        continue;
+      entry = schedule_forward ((Entry *) PAD_PRIVATE (list->data));
+      if (entry)
+        return entry;
+    }
+  } else {
+    g_assert_not_reached ();
+  }
+  return NULL;
+}
+
 static void
 schedule_next_element (GstEntryScheduler * scheduler)
 {
@@ -608,23 +657,9 @@ schedule_next_element (GstEntryScheduler * scheduler)
     GList *test;
 
     for (test = scheduler->schedule_now; test; test = g_list_next (test)) {
-      Entry *entry = test->data;
+      Entry *entry = schedule_forward ((Entry *) test->data);
 
-      if (can_schedule (entry)) {
-        scheduler->schedule_now =
-            g_list_remove (scheduler->schedule_now, entry);
-        schedule (scheduler, entry);
-        return;
-      }
-    }
-    for (test = scheduler->schedule_possible; test; test = g_list_next (test)) {
-      Entry *entry = test->data;
-
-      if (can_schedule (entry)) {
-        scheduler->schedule_possible =
-            g_list_remove (scheduler->schedule_possible, entry);
-        scheduler->schedule_possible =
-            g_list_append (scheduler->schedule_possible, entry);
+      if (entry) {
         schedule (scheduler, entry);
         return;
       }
@@ -1106,9 +1141,9 @@ print_entry (GstEntryScheduler * sched, Entry * entry)
 
     g_print ("    %s", can_schedule (entry) ? "OK" : "  ");
     g_print (" %s:%s%s =>", GST_DEBUG_PAD_NAME (link->srcpad),
-        link->src->can_schedule (link->srcpad) ? " (active)" : "");
+        can_schedule_pad (link->srcpad) ? " (active)" : "");
     g_print (" %s:%s%s", GST_DEBUG_PAD_NAME (link->sinkpad),
-        link->sink->can_schedule (link->sinkpad) ? " (active)" : "");
+        can_schedule_pad (link->sinkpad) ? " (active)" : "");
     g_print ("%s\n", link->bufpen ? " FILLED" : "");
 /*    g_print ("    %s %s:%s%s => %s:%s%s%s\n", can_schedule (entry) ? "OK" : "  ", GST_DEBUG_PAD_NAME (link->srcpad),
         link->src->can_schedule (link->srcpad) ? " (active)" : "",
