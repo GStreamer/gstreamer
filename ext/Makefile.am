@@ -190,6 +190,12 @@ else
 MPEG2DEC_DIR=
 endif
 
+if USE_MPEG2ENC
+MPEG2ENC_DIR=mpeg2enc
+else
+MPEG2ENC_DIR=
+endif
+
 if USE_MPLEX
 MPLEX_DIR=mplex
 else
@@ -318,6 +324,7 @@ SUBDIRS=\
 	$(MAS_DIR) \
 	$(MIKMOD_DIR) \
 	$(MPEG2DEC_DIR) \
+	$(MPEG2ENC_DIR) \
 	$(MPLEX_DIR) \
 	$(OGG_DIR) \
 	$(PANGO_DIR) \
@@ -367,6 +374,7 @@ DIST_SUBDIRS=\
 	mad \
 	mikmod \
 	mpeg2dec \
+	mpeg2enc \
 	mplex \
 	ogg \
 	pango \
