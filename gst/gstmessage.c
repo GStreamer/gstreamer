@@ -356,7 +356,7 @@ gst_message_parse_state_changed (GstMessage * message, GstElementState * old,
  * gst_message_parse_error:
  * @message: A valid #GstMessage of type GST_MESSAGE_ERROR.
  *
- * Extracts the GError and debug strung from the GstMessage. The values returned
+ * Extracts the GError and debug string from the GstMessage. The values returned
  * in the output arguments are copies; the caller must free them when done.
  *
  * MT safe.
@@ -381,7 +381,7 @@ gst_message_parse_error (GstMessage * message, GError ** gerror, gchar ** debug)
  * gst_message_parse_warning:
  * @message: A valid #GstMessage of type GST_MESSAGE_WARNING.
  *
- * Extracts the GError and debug strung from the GstMessage. The values returned
+ * Extracts the GError and debug string from the GstMessage. The values returned
  * in the output arguments are copies; the caller must free them when done.
  *
  * MT safe.

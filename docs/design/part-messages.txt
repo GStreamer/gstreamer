@@ -1,0 +1,6 @@
+Messages
+--------
+
+Messages are refcounted lightweight objects to signal the application
+of pipeline events. 
+

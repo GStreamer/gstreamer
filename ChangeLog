@@ -1,3 +1,15 @@
+2005-03-22  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	* docs/design/part-events.txt:
+	* docs/design/part-gstbin.txt:
+	* docs/design/part-gstbus.txt:
+	* docs/design/part-gstpipeline.txt:
+	* docs/design/part-messages.txt:
+	* gst/gstbus.c:
+	* gst/gstmessage.c:
+	Docs updates
+
 2005-03-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbus.c: (gst_bus_post):

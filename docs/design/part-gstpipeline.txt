@@ -1,0 +1,88 @@
+GstPipeline
+-----------
+
+A GstPipeline is usually a toplevel bin an provides all of its 
+children with a clock and a bus.
+
+The GstPipeline will also collect EOS messages from its children and
+will forward the EOS message to the application when all of the
+sinks are in EOS.
+
+The pipeline also calculates the stream time based on the selected
+clock (see part-clocks.txt).
+
+The pipeline manages the seek operation for the application.
+
+
+GstBus
+------
+
+The pipeline creates a GstBus and attaches a sync handler to receive
+the EOS events.
+
+Since the pipeline subclasses GstBin, all of its children will receive
+the same bus when added to the Gstbin.
+
+The application can retrieve the GstBus and integrate it in the 
+mainloop or it can just _pop() messages off in its own thread.
+
+
+Clock selection
+---------------
+
+Since all of the children of a GstPipeline must use the same clock, the
+pipeline must select a clock.
+
+The default clock selection algorithm works as follows:
+
+ - If the application selected a clock, use that clock. (see below)
+ - use clock of source elements (*)
+ - use clock of other element, starting from the sinks going upstream. 
+   (+)
+ - use GstSystemClock.
+
+(*) currently not implemented.
+(+) traversing the graph upstream to find the best clock is not implemented,
+    currently the first element found that provides a clock is used.
+
+The application can influence this clock selection with two methods:
+gst_pipeline_use_clock() and gst_pipeline_auto_clock(). 
+
+The _use_clock() method forces the use of a specific clock on the pipeline 
+regardless of what clock providers are children of the pipeline. Setting 
+NULL disables the clock completely and makes the pipeline run as fast as 
+possible.
+
+The _auto_clock() method removes the fixed clock and reactivates the auto-
+matic clock selection algorithm described above.
+
+
+EOS
+---
+
+The sink elements will post an EOS event on the bus when they reach EOS. The
+EOS message is only posted to the bus when the element is in PLAYING.
+
+The pipeline collects all EOS messages and forwards it to the application as
+soon as all the sinks have posted an EOS.
+
+The list of queued EOS messages is cleared when the pipeline goes to PAUSED
+again. This means that all elements should repost the EOS message when going
+to PLAYING again.
+
+
+Seeking
+-------
+
+When performing a seek on the pipeline element using gst_element_send_event(),
+the pipeline performs the following actions:
+
+ - record the current state of the pipeline.
+ - set the pipeline to paused
+ - send the seek event to all sinks
+ - update the stream time with the time of the seek
+ - restore old state of the pipeline.
+
+
+
+

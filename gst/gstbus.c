@@ -482,8 +482,11 @@ bus_watch_destroy (GstBusWatch * watch)
 
 /**
  * gst_bus_add_watch_full:
- * @bus: a #GstBus to create the watch for
+ * @bus: a #GstBus to create the watch for.
+ * @priority: The priority of the watch.
  * @handler: A function to call when a message is received.
+ * @user_data: user data passed to @handler.
+ * @notify: the function to call when the source is removed.
  *
  * Adds the bus to the mainloop with the given priority. If the handler returns
  * TRUE, the message will then be popped off the queue. When the handler is
@@ -528,6 +531,8 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
 /**
  * gst_bus_add_watch:
  * @bus: a #GstBus to create the watch for
+ * @handler: A function to call when a message is received.
+ * @user_data: user data passed to @handler.
  *
  * Adds the bus to the mainloop with the default priority.
  *

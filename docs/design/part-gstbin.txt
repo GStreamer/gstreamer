@@ -1,0 +1,53 @@
+GstBin
+------
+
+GstBin is a container element for other GstElements. This makes it possible
+to group elements together so that they can be treated as one single 
+GstElement.
+
+
+Add/removing elements
+---------------------
+
+The basic functionality of a bin is to add and remove GstElements to/from it.
+gst_bin_add() and gst_bin_remove() perform these operations respectively.
+
+The bin maintains a parent-child relationship with its elements (see part-
+relations.txt).
+
+
+Retrieving elements
+-------------------
+
+GstBin provides a number of functions to retrieve one or more children from
+itself. A few examples of the provided functions:
+
+gst_bin_get_by_name() retrieves an element by name.
+
+gst_bin_iterate_elements() returns an iterator to all the children.
+
+
+element management
+------------------
+
+The most important function of the GstBin is to distribute all GstElement
+operations on itself to all of its children. This includes:
+
+ - state changes
+ - index get/set
+ - clock gst/set
+ - bus set/get
+ - scheduler set/get
+
+The state change distribution is the most complex and is explained in 
+part-states.txt.
+
+
+Subclassing
+-----------
+
+Subclasses of GstBin are free to implement their own add/remove implementations.
+It is a good idea to update the GList of children so that the _iterate() functions
+can still be used.
+
+
