@@ -621,6 +621,8 @@ Element for text-to-speech using the festival server.
 @USE_SDL_TRUE@Requires: SDL >= 1.2.0
 @USE_SDL_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_SDL_TRUE@BuildRequires: SDL-devel >= 1.2.0
+@USE_SDL_TRUE@SDL-devel should require XFree86-devel because it links to it
+@USE_SDL_TRUE@BuildRequires: XFree86-devel
 @USE_SDL_TRUE@
 @USE_SDL_TRUE@%description -n gstreamer-sdl
 @USE_SDL_TRUE@Plugin for sending output to the Simple Direct Media architecture.
