@@ -30,6 +30,7 @@
 #include <gst/gstbuffer.h>
 #include <gst/cothreads.h>
 #include <gst/gstcaps.h>
+#include <gst/gstevent.h>
 
 
 #ifdef __cplusplus
