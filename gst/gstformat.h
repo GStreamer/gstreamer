@@ -84,6 +84,9 @@ GstFormat	gst_format_register		(const gchar *nick,
 						 const gchar *description);
 GstFormat	gst_format_get_by_nick		(const gchar *nick);
 
+/* check if a format is in an array of formats */
+gboolean	gst_formats_contains		(const GstFormat *formats, GstFormat format);
+
 /* query for format details */
 const GstFormatDefinition*	
 		gst_format_get_details		(GstFormat format);
