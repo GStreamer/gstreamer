@@ -1,5 +1,13 @@
 2004-10-26  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/avi/gstavimux.c: (gst_avimux_audsinkconnect),
+	(gst_avimux_stop_file):
+	  First calculate the rate, and only then use it. Hdr.rate is a
+	  multiple and not a derivative of hdr.scale. Scale is not the
+	  same as blockalign but is solely related to rate.
+
+2004-10-26  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnomevfssink_init),
 	(gst_gnomevfssink_handle_event), (gst_gnomevfssink_chain):
 	  Implement seeking.
