@@ -9,7 +9,7 @@
 use File::Basename;
 
 
-my %pipes;
+my (%pipes, %cfg);
 
 sub extension
 {
@@ -47,9 +47,9 @@ sub read_config
   {
     print "No configuration file $config_file found.  You might want to create one.\n";
   }
-  if (!defined $cfg{AUDIOSINK}) { $cfg{AUDIOSINK} = "osssink"; }
-  if (!defined $cfg{VIDEOSINK}) { $cfg{VIDEOSINK} = "sdlvideosink"; }
-  if (!defined $cfg{CVS_PATH})  { $cfg{CVS_PATH} =  `echo -n ~`."/gst/cvs"; }
+  if (!defined $cfg{AUDIOSINK})  { $cfg{AUDIOSINK} = "osssink"; }
+  if (!defined $cfg{VIDEOSINK})  { $cfg{VIDEOSINK} = "sdlvideosink"; }
+  if (!defined $cfg{CVS_PATH})   { $cfg{CVS_PATH} =  `echo -n ~`."/gst/cvs"; }
 }
 
 sub playfile($$)
@@ -81,17 +81,23 @@ read_config ();
 
 %pipes = ( 
   "mp3", "mad ! $cfg{AUDIOSINK}",
-  "vis.mp3", "mad ! tee silent=true 'tee1.src0!' queue leaky=1 ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee1.src1!' $cfg{AUDIOSINK}",
   "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
-  "vis.ogg", "vorbisdec ! tee silent=true 'tee1.src0!' queue leaky=1 ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee1.src1!' $cfg{AUDIOSINK}",
   "mpg", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
   "avi", "avidemux video_00! { queue ! windec ! $cfg{VIDEOSINK} } avidemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
   "vob", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! a52dec ! $cfg{AUDIOSINK} }",
   "wav", "wavparse ! $cfg{AUDIOSINK}",
-  "vis.wav", "wavparse ! tee silent=true 'tee1.src0!' queue leaky=1 ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee1.src1!' $cfg{AUDIOSINK}",
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}"
 
 );
+
+if ($cfg{VISUALIZER}) {
+  %pipes = (
+    %pipes,
+    "vis.mp3", "mad ! tee silent=true 'tee1.src0!' queue leaky=1 ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee1.src1!' $cfg{AUDIOSINK}",
+    "vis.ogg", "vorbisdec ! tee silent=true 'tee1.src0!' queue leaky=1 ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee1.src1!' $cfg{AUDIOSINK}",
+    "vis.wav", "wavparse ! tee silent=true 'tee1.src0!' queue leaky=1 ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee1.src1!' $cfg{AUDIOSINK}",
+  );
+}              
 
 if ($#ARGV == -1) {
     print STDERR "Usage: gst-launch-ext filename[s]\n";
