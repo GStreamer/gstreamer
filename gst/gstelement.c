@@ -825,6 +825,7 @@ gst_element_error (GstElement *element, const gchar *error, ...)
  * gst_element_info:
  * @element: Element with the info
  * @info: String describing the info
+ * @...: arguments for the string.
  *
  * This function is used internally by elements to signal an info
  * condition.  It results in the "info" signal.
@@ -1281,6 +1282,13 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 }
 #endif /* GST_DISABLE_LOADSAVE */
 
+/**
+ * gst_element_yield:
+ * @element: Element to yield
+ *
+ * Request a yield operation for the child. The scheduler will typically
+ * give control to another element.
+ */
 void
 gst_element_yield (GstElement *element)
 {
@@ -1289,6 +1297,16 @@ gst_element_yield (GstElement *element)
   }
 }
 
+/**
+ * gst_element_interrupt:
+ * @element: Element to interrupt
+ *
+ * Request the scheduler of this element to interrupt the execution of
+ * this element and scheduler another one.
+ *
+ * Returns: a boolean indicating that the child should exit its chain/loop/get
+ * function ASAP, depending on the scheduler implementation.
+ */
 gboolean
 gst_element_interrupt (GstElement *element)
 {
@@ -1512,6 +1530,7 @@ gst_element_populate_std_props (GObjectClass * klass,
  * @klass: the class to add the properties to
  * @first_name: the first in a NULL terminated
  * 'name', 'id', 'flags' triplet list.
+ * @...: the triplet list
  * 
  * Add a list of standardized properties with types to the @klass.
  * the id is for the property switch in your get_prop method, and

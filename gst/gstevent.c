@@ -134,7 +134,8 @@ gst_event_new_seek (GstSeekType type, guint64 offset, gboolean flush)
 
 /**
  * gst_event_new_info:
- * @props: The GstProps for this info event
+ * @firstname: the first property name
+ * @...: properties
  *
  * Allocate a new info event with the given props.
  *

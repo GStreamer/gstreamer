@@ -547,6 +547,12 @@ gst_schedulerfactory_make (const gchar *name, GstElement *parent)
   return gst_schedulerfactory_create (factory, parent);
 }
 
+/**
+ * gst_schedulerfactory_set_default_name:
+ * @name: the name of the factory used as a default
+ *
+ * Set the default schedulerfactory name.
+ */
 void
 gst_schedulerfactory_set_default_name (const gchar* name)
 {
@@ -556,6 +562,13 @@ gst_schedulerfactory_set_default_name (const gchar* name)
   _default_name = g_strdup (name);
 }
 
+/**
+ * gst_schedulerfactory_get_default_name:
+ *
+ * Get the default schedulerfactory name.
+ *
+ * Returns: the name of the default scheduler.
+ */
 const gchar*
 gst_schedulerfactory_get_default_name (void)
 {

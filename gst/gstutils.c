@@ -94,11 +94,11 @@ gst_util_get_long_arg (GObject * object, const gchar * argname)
 }
 
 /**
- * gst_util_get_long_arg:
+ * gst_util_get_int64_arg:
  * @object: the object to query
  * @argname: the name of the argument
  *
- * Retrieves a property of an object as a long.
+ * Retrieves a property of an object as an int64.
  *
  * Returns: the property of the object
  */

@@ -362,8 +362,18 @@ gst_bin_remove (GstBin * bin, GstElement * element)
   }
 }
 
+/**
+ * gst_bin_child_state_change:
+ * @bin: #GstBin with the child
+ * @oldstate: The old child state
+ * @newstate: The new child state
+ * @child: #GstElement that signaled an changed state
+ *
+ * An internal function to inform the parent bin about a state change
+ * of a child.
+ */
 void
-gst_bin_child_state_change (GstBin *bin, GstElementState old, GstElementState new,
+gst_bin_child_state_change (GstBin *bin, GstElementState oldstate, GstElementState newstate,
 			    GstElement *child)
 {
   gint old_idx = 0, new_idx = 0, i;
@@ -394,6 +404,13 @@ gst_bin_child_state_change (GstBin *bin, GstElementState old, GstElementState ne
   GST_UNLOCK (bin);
 }
 
+/**
+ * gst_bin_child_error:
+ * @bin: #GstBin with the child
+ * @child: #GstElement that signaled an error
+ *
+ * An internal function to inform the parent bin about a failed child.
+ */
 void
 gst_bin_child_error (GstBin *bin, GstElement *child)
 {
