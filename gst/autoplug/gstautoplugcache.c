@@ -234,9 +234,8 @@ gst_autoplugcache_loop (GstElement *element)
       gst_object_ref (GST_OBJECT (cache));
       g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[CACHE_EMPTY], 0, NULL);
       if (GST_STATE(cache) != oldstate) {
-        gst_object_ref (GST_OBJECT (cache));
+        gst_object_unref (GST_OBJECT (cache));
         GST_DEBUG(GST_CAT_AUTOPLUG, "state changed during signal, aborting");
-        gst_element_yield (GST_ELEMENT (cache));
 	return;
       }
       gst_object_unref (GST_OBJECT (cache));

@@ -400,6 +400,8 @@ gst_spider_identity_src_loop (GstSpiderIdentity *ident)
     gst_spider_identity_dumb_loop (ident);
     return;
   }
+
+  gst_element_interrupt (GST_ELEMENT (ident));
 }
 /* This loop function is only needed when typefinding.
  */

@@ -1590,8 +1590,8 @@ gst_opt_scheduler_iterate (GstScheduler *sched)
         scheduled = TRUE;
       }
 
-      /* don't schedule any more chains when interrupted or in error */
-      if (osched->state != GST_OPT_SCHEDULER_STATE_RUNNING)
+      /* don't schedule any more chains when in error */
+      if (osched->state == GST_OPT_SCHEDULER_STATE_ERROR)
         break;
     }
 
