@@ -1,13 +1,10 @@
-### FIXME use HAVE_ stuff to decide on dirs
 if USE_OSS
 OSS_DIR=oss
 else
 OSS_DIR=
 endif
 
-# FIXME it's broken
-# hadess@hadess.net
-if HAVE_NASM
+if USE_QCAM
 QCAM_DIR=qcam
 else
 QCAM_DIR=
