@@ -10,7 +10,7 @@ if test "x$1" = "x-d"; then echo "DEBUG output wanted."; DEBUG=defined; fi
 debug ()
 # print out a debug message if DEBUG is a defined variable
 {
-  if test ! -z $DEBUG
+  if test ! -z "$DEBUG"
   then
     echo "DEBUG: $1"
   fi
@@ -50,8 +50,8 @@ version_check ()
   pkg_major=`echo $pkg_version | cut -d. -f1`
   pkg_minor=`echo $pkg_version | cut -d. -f2`
   pkg_micro=`echo $pkg_version | cut -d. -f3`
-  test -z $pkg_minor && pkg_minor=0
-  test -z $pkg_micro && pkg_micro=0
+  test -z "$pkg_minor" && pkg_minor=0
+  test -z "$pkg_micro" && pkg_micro=0
 
   debug "found major $pkg_major minor $pkg_minor micro $pkg_micro"
 
@@ -71,7 +71,7 @@ version_check ()
     fi
   fi
 
-  if test ! -z $WRONG; then
+  if test ! -z "$WRONG"; then
     echo
     echo "You must have $PACKAGE $VERSION or greater to compile $package."
     echo "Get the latest version from $URL"
