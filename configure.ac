@@ -721,7 +721,7 @@ GST_CHECK_FEATURE(SHOUT, [shout plug-in], icecastsend, [
 dnl *** shout2 *** 
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
 GST_CHECK_FEATURE(SHOUT2, [shout2 plug-in], shout2send, [
-  AM_PATH_SHOUT2(HAVE_SHOUT2="true", HAVE_SHOUT2="false")
+  AM_PATH_SHOUT2(HAVE_SHOUT2=yes, HAVE_SHOUT2=no)
   AC_SUBST(SHOUT2_CFLAGS)
   AC_SUBST(SHOUT2_LIBS)
 ])
@@ -742,14 +742,14 @@ GST_CHECK_FEATURE(SMOOTHWAVE, [smoothwave plug-in], smoothwave, [
 dnl *** snapshot ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBPNG, true)
 GST_CHECK_FEATURE(LIBPNG, [snapshot plug-in], snapshot, [
-  GST_CHECK_LIBHEADER(LIBPNG, png, png_read_info, -lz, png.h, LIBPNG_LIBS="-lpng -lz")
+  GST_CHECK_LIBHEADER(LIBPNG, png, png_read_info, -lz -lm, png.h, LIBPNG_LIBS="-lpng -lz -lm")
   AC_SUBST(LIBPNG_LIBS)
 ])
 
 dnl *** swfdec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SWFDEC, true)
 GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
-  PKG_CHECK_MODULES(SWFDEC, libswfdec, HAVE_SWFDEC="yes", HAVE_SWFDEC="no")
+  PKG_CHECK_MODULES(SWFDEC, libswfdec, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
   AC_SUBST(SWFDEC_CFLAGS)
   AC_SUBST(SWFDEC_LIBS)
 ])
