@@ -1,3 +1,11 @@
+2005-01-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Ronald Bultje <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybasebin.c:
+	* gst/wavparse/gstwavparse.c:
+	  Fix for #154773 - fixes playback of small .wav files
+
 2005-01-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Ronald Bultje <rbultje@ronald.bitfreak.net>

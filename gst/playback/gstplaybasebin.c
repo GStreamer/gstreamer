@@ -1173,8 +1173,6 @@ gst_play_base_bin_change_state (GstElement * element)
 
         gst_element_set_state (play_base_bin->thread, GST_STATE_READY);
 
-        g_signal_connect (G_OBJECT (play_base_bin->thread), "eos",
-            G_CALLBACK (play_base_eos), play_base_bin);
         g_signal_connect (play_base_bin->thread, "found_tag",
             G_CALLBACK (gst_play_base_bin_found_tag), play_base_bin);
       } else {
@@ -1263,6 +1261,8 @@ gst_play_base_bin_change_state (GstElement * element)
          * because one stream was unrecognized. */
         g_signal_connect (play_base_bin->thread, "error",
             G_CALLBACK (gst_play_base_bin_error), play_base_bin);
+        g_signal_connect (G_OBJECT (play_base_bin->thread), "eos",
+            G_CALLBACK (play_base_eos), play_base_bin);
         GST_DEBUG ("emit signal");
         g_signal_emit (play_base_bin,
             gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL], 0);
@@ -1281,6 +1281,8 @@ gst_play_base_bin_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       g_signal_handlers_disconnect_by_func (play_base_bin->thread,
           G_CALLBACK (gst_play_base_bin_error), play_base_bin);
+      g_signal_handlers_disconnect_by_func (play_base_bin->thread,
+          G_CALLBACK (play_base_eos), play_base_bin);
       ret = gst_element_set_state (play_base_bin->thread, GST_STATE_READY);
       play_base_bin->need_rebuild = TRUE;
       remove_groups (play_base_bin);
