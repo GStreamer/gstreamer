@@ -110,12 +110,13 @@ struct _GstAviDemux {
   guint 	 num_streams;
   guint 	 num_v_streams;
   guint 	 num_a_streams;
-
   avi_stream_context stream[GST_AVI_DEMUX_MAX_STREAMS];
 
   gboolean 	 seek_pending;
   gint64 	 seek_offset;
   guint64 	 last_seek;
+
+  GstCaps	*metadata, *streaminfo;
 };
 
 struct _GstAviDemuxClass {
