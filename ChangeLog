@@ -1,3 +1,8 @@
+2005-01-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/elements/gstfilesink.c: (gst_filesink_handle_event):
+	  Don't unref seek event twice when fflush() fails
+	  
 2005-01-22  David Schleef  <ds@schleef.org>
 
 	* configure.ac: Add --disable-valgrind. (partial fix for #164890)

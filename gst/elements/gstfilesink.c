@@ -363,6 +363,7 @@ gst_filesink_handle_event (GstPad * pad, GstEvent * event)
           GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
               (_("Error while writing to file \"%s\"."), filesink->filename),
               GST_ERROR_SYSTEM);
+          return FALSE;
         }
       }
 
