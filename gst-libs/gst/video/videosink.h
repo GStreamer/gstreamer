@@ -70,7 +70,6 @@ struct _GstVideoSinkClass {
   
   /* public virtual methods */
   void (*set_video_out) (GstVideoSink *videosink, gpointer video_out);
-  void (*push_ui_event) (GstVideoSink *videosink, GstEvent *event);
   void (*set_geometry)  (GstVideoSink *videosink, gint width, gint height);
   
   /* signals */
@@ -85,7 +84,6 @@ GType gst_videosink_get_type (void);
 
 /* public virtual methods */
 void gst_video_sink_set_video_out (GstVideoSink *videosink, gpointer video_out);
-void gst_video_sink_push_ui_event (GstVideoSink *videosink, GstEvent *event);
 void gst_video_sink_set_geometry  (GstVideoSink *videosink, gint width,
                                    gint height);
 
