@@ -4,21 +4,19 @@ TODO list (short term):
     to 'guint16 palette' in gstv4lsrc.[ch]
 * v4lsrc: actually try the format out on capsnego
 * all three: fix interlacing (not handled at all...)
-* libgstrec: build (a library for video recording)
-For other plugins:
-* SDL: seems okay for now
-* jpegmmxenc/dec: seems okay for now
-* avidemux: seems okay for now, though it doesn't really handle
-    events yet
-* avimux: interaction with disksink, maxfilesize support, events 
-    (GST_EVENT_RESTART!!->s/RESTART/NEW_MEDIA/), etc. - big TODO
+* add overlay handling in v4lelement
+* libgstrec
+* avidemux: add events (seek)
+* avimux: fps calculations
 
 TODO list (long term):
 ======================
-* v4lmpegsrc: build (*hint* MPEG card needed *hint*)
-* v4l2element && v4l2src: build (v4l2 supports far more features than
-    v4l1 so I really want seperate plugins for it)
-* BSD-videosrc: build (based on Meteor API)
+* v4lmpegsrc (*hint* MPEG card needed *hint*)
+* v4l2element && v4l2src
+* BSD-videosrc (meteorsrc?)
+* color correction (brightness, hue, etc.)
+* gamma correction
+* dxr3sink
 
 Useful Documentation:
 =====================
