@@ -159,18 +159,14 @@ gst_mad_input (void *user_data,
 
   mad = GST_MAD (user_data);
 
-  // HACK HACK HACK HACK because mad's API is fragged, we have to try to
-  // trap COTHREAD_STOPPING here
-  if (GST_ELEMENT_IS_COTHREAD_STOPPING (mad)) {
-    GST_DEBUG(0, "HACK HACK HACK, switching to cothread zero on COTHREAD_STOPPING\n");
-    cothread_switch(cothread_current_main());
-  }
+  /* we yield here because the loop function doesn't return */
+  gst_element_yield (GST_ELEMENT (mad));
 
   do {
     GstBuffer *inbuf;
     inbuf = gst_pad_pull (mad->sinkpad);
 
-    // deal with events
+    /* deal with events */
     if (GST_IS_EVENT (inbuf)) {
       GstEvent *event = GST_EVENT (inbuf);
 
@@ -375,14 +371,13 @@ static void
 gst_mad_loop (GstElement *element)
 {
   GstMad *mad;
+  gint ret;
 
   mad = GST_MAD (element);
 
-  do {
-    GST_DEBUG (0, "decoder_run\n");
-    mad_decoder_run (&mad->decoder, MAD_DECODER_MODE_SYNC);
-    GST_DEBUG (0, "decoder_run done\n");
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+  GST_DEBUG (0, "decoder_run\n");
+  ret = mad_decoder_run (&mad->decoder, MAD_DECODER_MODE_SYNC);
+  GST_DEBUG (0, "decoder_run done %d\n", ret);
 }
 
 
