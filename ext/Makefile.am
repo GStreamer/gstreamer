@@ -34,6 +34,12 @@ else
 CDPARANOIA_DIR=
 endif
 
+if USE_DV
+DV_DIR=dv
+else
+DV_DIR=
+endif
+
 if USE_DVDREAD
 DVDREAD_DIR=dvdread
 else
@@ -62,6 +68,12 @@ if USE_FLAC
 FLAC_DIR=flac
 else
 FLAC_DIR=
+endif
+
+if USE_GNOME_VFS
+GNOME_VFS_DIR=gnomevfs
+else
+GNOME_VFS_DIR=
 endif
 
 if USE_HERMES
@@ -106,6 +118,12 @@ else
 OPENQUICKTIME_DIR=
 endif
 
+if USE_RTP
+RTP_DIR=rtp
+else
+RTP_DIR=
+endif
+
 if USE_SDL
 SDL_DIR=sdl
 else
@@ -131,12 +149,12 @@ XMMS_DIR=
 endif
 
 SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) $(AUDIOFILE_DIR) \
-	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
-        $(FESTIVAL_DIR) $(FLAC_DIR) $(GSM_DIR) $(HERMES_DIR) \
+	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DV_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
+        $(FESTIVAL_DIR) $(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) $(HERMES_DIR) \
 	$(JPEG_DIR) $(LAME_DIR) $(MAD_DIR) $(MIKMOD_DIR) $(MPEG2DEC_DIR) \
-	$(OPENQUICKTIME_DIR) $(SDL_DIR) $(SHOUT_DIR) $(VORBIS_DIR) \
+	$(OPENQUICKTIME_DIR) $(RTP_DIR) $(SDL_DIR) $(SHOUT_DIR) $(VORBIS_DIR) \
 	$(XMMS_DIR)
 
-DIST_SUBDIRS=a52 aalib alsa avifile audiofile cdparanoia dvdread esd \
-	     festival flac gsm hermes jpeg lame mad mikmod mpeg2dec \
-	     openquicktime sdl shout vorbis xmms
+DIST_SUBDIRS=a52 aalib alsa avifile audiofile cdparanoia dv dvdread esd \
+	     festival flac gnomevfs gsm hermes jpeg lame mad mikmod mpeg2dec \
+	     openquicktime rtp sdl shout vorbis xmms

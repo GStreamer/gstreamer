@@ -31,3 +31,8 @@
 * make sidplay stuff ok, the source is on the net ;)
 
 * fix xmms plugin, doesn't register atm
+
+* arts and artsd need a good onceover
+
+
+* check if we can drop some of the AC_SUBST's for libs and cflags
