@@ -59,6 +59,7 @@ static void			gst_element_real_destroy	(GtkObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
 
+GstElement* 			gst_element_restore_thyself 	(xmlNodePtr self, GstObject *parent);
 static xmlNodePtr		gst_element_save_thyself	(GstObject *object, xmlNodePtr parent);
 
 static GstObjectClass *parent_class = NULL;
