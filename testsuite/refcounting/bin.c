@@ -10,10 +10,13 @@ create_bin (void)
   GstElement *element;
 
   bin = gst_bin_new ("testbin");
+  g_assert (GST_IS_BIN (bin));
   element = gst_element_factory_make ("fakesrc", NULL);
+  g_assert (GST_IS_ELEMENT (element));
   gst_element_set_name (element, "test1");
   gst_bin_add (GST_BIN (bin), element);
   element = gst_element_factory_make ("fakesrc", NULL);
+  g_assert (GST_IS_ELEMENT (element));
   gst_element_set_name (element, "test2");
   gst_bin_add (GST_BIN (bin), element);
 
