@@ -255,6 +255,8 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
             GST_FORMAT_DEFAULT,
             value);
 
+        /* sync to keyframe */
+        dec->need_keyframe = TRUE;
         res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
       }
       gst_event_unref (event);

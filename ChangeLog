@@ -1,3 +1,9 @@
+2004-07-09  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/theoradec.c: (theora_dec_from_granulepos),
+	(theora_dec_src_query), (theora_dec_src_event), (theora_dec_chain):
+	Sync to keyframe after seek
+
 2004-07-09  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_change_state):
