@@ -502,7 +502,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
       case GST_EVENT_DISCONTINUOUS:
       {
 	gint64 value;
-	
+
         ioctl (osssink->fd, SNDCTL_DSP_RESET);
 	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
           if (!gst_clock_handle_discont (osssink->clock, value))
@@ -510,13 +510,14 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 	  osssink->handled = 0;
 	}
 	osssink->resync = TRUE;
-        return;
+        break;
       }
       default:
 	gst_pad_event_default (pad, event);
         return;
     }
     gst_event_free (event);
+    return;
   }
 
   if (!osssink->bps) {
