@@ -862,11 +862,11 @@ gst_pad_unlink (GstPad *srcpad,
   g_return_if_fail ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) &&
                     (GST_RPAD_DIRECTION (realsink) == GST_PAD_SINK));
 
-  if (GST_RPAD_UNLINKFUNC (srcpad)) {
-    GST_RPAD_UNLINKFUNC (srcpad) (srcpad);
+  if (GST_RPAD_UNLINKFUNC (realsrc)) {
+    GST_RPAD_UNLINKFUNC (realsrc) (GST_PAD_CAST (realsrc));
   }
-  if (GST_RPAD_UNLINKFUNC (sinkpad)) {
-    GST_RPAD_UNLINKFUNC (sinkpad) (sinkpad);
+  if (GST_RPAD_UNLINKFUNC (realsink)) {
+    GST_RPAD_UNLINKFUNC (realsink) (GST_PAD_CAST (realsink));
   }
 
   /* get the schedulers before we unlink */
