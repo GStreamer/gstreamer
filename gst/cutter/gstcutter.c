@@ -107,6 +107,27 @@ gst_cutter_get_type(void) {
   return cutter_type;
 }
 
+static GstPadConnectReturn
+gst_cutter_connect (GstPad *pad, GstCaps *caps)
+{
+  GstCutter *filter;
+  GstPad *otherpad;
+  
+  filter = GST_CUTTER (gst_pad_get_parent (pad));
+  g_return_val_if_fail (filter != NULL, GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (GST_IS_CUTTER (filter), GST_PAD_CONNECT_REFUSED);
+  otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
+
+  if (GST_CAPS_IS_FIXED (caps)) 
+  {
+    if (!gst_pad_try_set_caps (otherpad, caps))
+      return GST_PAD_CONNECT_REFUSED;
+
+    return GST_PAD_CONNECT_OK;
+  }
+  return GST_PAD_CONNECT_DELAYED;
+}
+
 static void
 gst_cutter_class_init (GstCutterClass *klass)
 {
@@ -162,8 +183,10 @@ gst_cutter_init (GstCutter *filter)
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_cutter_chain);
+  gst_pad_set_connect_function (filter->sinkpad, gst_cutter_connect);
   filter->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
+  gst_pad_set_connect_function (filter->srcpad, gst_cutter_connect);
 }
 
 static void
@@ -174,7 +197,7 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
   double RMS = 0.0;			/* RMS of signal in buffer */
   double ms = 0.0;			/* mean square value of buffer */
   static gboolean silent_prev = FALSE;  /* previous value of silent */
-  GstBuffer* prebuf;                    /* pointer to a prebuffer element */
+  GstBuffer *prebuf;                    /* pointer to a prebuffer element */
  
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -184,8 +207,10 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (filter != NULL);
   g_return_if_fail (GST_IS_CUTTER (filter));
 
-  g_return_if_fail (gst_audio_is_buffer_framed (pad, buf) == TRUE);
-
+  /* FIXME: this doesn't seem to be working well anymore */
+  if (gst_audio_is_buffer_framed (pad, buf) == FALSE)
+    g_warning ("cutter: audio buffer is not framed !\n");
+  
   if (!filter->have_caps) gst_cutter_get_caps (pad, filter);
 
   in_data = (gint16 *) GST_BUFFER_DATA (buf);
@@ -214,7 +239,9 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
   /* if RMS below threshold, add buffer length to silent run length count 
    * if not, reset
    */
-  /*g_print ("DEBUG: cutter: ms %f, RMS %f\n", ms, RMS); */
+  GST_DEBUG (GST_CAT_PLUGIN_INFO,
+             "DEBUG: cutter: ms %f, RMS %f, audio length %f\n", 
+	     ms, RMS, gst_audio_length (filter->srcpad, buf));
   if (RMS < filter->threshold_level)
     filter->silent_run_length += gst_audio_length (filter->srcpad, buf);
   else
@@ -257,14 +284,19 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
   /* now check if we have to add the new buffer to the cache or to the pad */
   if (filter->silent)
   {
+      /* we ref it before putting it in the pre_buffer */
+      gst_buffer_ref (buf);
       filter->pre_buffer = g_list_append (filter->pre_buffer, buf);
       filter->pre_run_length += gst_audio_length (filter->srcpad, buf);
       while (filter->pre_run_length > filter->pre_length)
       {
         prebuf = (g_list_first (filter->pre_buffer))->data;
+	g_assert (GST_IS_BUFFER (prebuf));
         filter->pre_buffer = g_list_remove (filter->pre_buffer, prebuf);
-        gst_pad_push (filter->srcpad, prebuf);
         filter->pre_run_length -= gst_audio_length (filter->srcpad, prebuf);
+        gst_pad_push (filter->srcpad, prebuf);
+        /* we unref it after getting it out of the pre_buffer */
+	gst_buffer_unref (prebuf);
       }
   }
   else
@@ -387,6 +419,7 @@ gst_cutter_get_caps (GstPad *pad, GstCutter* filter)
 
   caps = GST_PAD_CAPS (pad);
     /* FIXME : Please change this to a better warning method ! */
+  g_assert (caps != NULL);
   if (caps == NULL)
     printf ("WARNING: cutter: get_caps: Could not get caps of pad !\n");
   gst_caps_get_int (caps, "width", &filter->width);
