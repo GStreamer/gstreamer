@@ -10,21 +10,21 @@ Plugins
 plugins are basically shared libraries with a plugin_init
 function.
 
-they provide the GStreamer core library with the folowing
+they provide the GStreamer core library with the following
 information:
 
-  - elementfactories
-  - typefactories
-  - metadatafactories?
+  - element factories
+  - type factories
+  - metadata factories?
 
 ElementFactory
 --------------
 
-elementfactories provide the core library with elements (duh)
+element factories provide the core library with elements (duh)
 
-an elementfactory has the following information:
+an element factory has the following information:
 
-  - a unique name for the element
+  - a unique name for the element factory
   - strings describing the element (name, desciption, copyright,...)
   - a description of the media types it accepts (as capabilities) 
   - a description of the media types it outputs (as capabilities)
@@ -44,7 +44,7 @@ has the following properties:
 XML registry
 ------------
 
-The complete plugin tree will be exported into an XML desciption so
+The complete plugin tree will be exported into an XML description so
 that the definitions of the factories can be obtained without having
 to load and plugin_init the plugins.
 
