@@ -1,0 +1,11 @@
+level plugin by thomas <thomas@apestaart.org>
+
+basic level indicator; prints out RMS values averaged over the buffer of
+one iteration.  Insert this into an audio/raw chain.
+
+You can plot the level envelope of the track using gnuplot, example :
+
+tools/gstreamer-launch disksrc location=foo.wav ! parsewav ! level ! \
+  fakesink silent=true > foo.level
+graph -T gif foo.level > foo.gif
+xview dark.gif

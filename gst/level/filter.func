@@ -1,0 +1,45 @@
+{
+  guint j;
+  double squaresum = 0.0;
+  double RMS = 0.0;
+  double RMS_dB = 0.0;
+  static int threshold_dB = -80;
+  static long int sample = 0;
+  double timepoint;
+
+  /*
+   * process data here  
+   * input sample data enters in *in_data as 8 or 16 bit data
+   * samples for left and right channel are interleaved
+   */
+/*
+  for(j = 0; j < num_samples; j++) {
+     (*out_data)[j] = in_data[j];
+     squaresum += in_data[j] * in_data[j];
+  }
+  RMS = sqrt (squaresum / (float) num_samples);
+  printf ("RMS for this block : %f\n", RMS);
+  RMS_dB = 20 * log (RMS / 32767);
+  printf ("RMS in dB (for 16bit) : %f\n", RMS_dB);
+*/
+
+  for(j = 0; j < num_samples; j++) {
+     (*out_data)[j] = in_data[j];
+     squaresum += pow ((double) in_data[j] / 32767.0, 2);
+  }
+  RMS = sqrt (squaresum / (float) num_samples);
+  RMS_dB = 10 * log (RMS);
+  sample += num_samples;
+  timepoint = sample / (44100.0 * 2);
+
+  if (RMS_dB > (double) threshold_dB)
+  {
+/*    printf ("Reached %d dB at %f sec (%f dB)\n", 
+	    threshold_dB, timepoint, RMS_dB);
+*/
+    threshold_dB += 1;
+  }
+/*  printf ("RMS in dB (for 16bit) : %f\n", RMS_dB); */
+    printf ("%f %f\n", timepoint, RMS_dB);
+}
+

@@ -1,0 +1,28 @@
+* What is UDP src/sink?
+
+This plugin is *not* meant to be a professional stream broadcast
+solution, like icecast or realaudio or whatever.
+
+This plugin is basically for testing and simple hacks: raw audio
+or packetized gsm should be fine.
+
+
+* Shortcomings
+
+Even given our modest ambitions, the current code is doesn't handle
+caps negotiation robustly.
+
+
+* Todo
+
+This plugin should offer different modes for caps negotiation: none,
+udp, or tcp.  The udp mode should include the caps every five packets
+(approx).  The tcp mode can do bi-directional negotiation.
+
+Perhaps this plugin can be the example of how to do caps negotiation
+via a point-to-point protocol.
+
+
+12 Sep 2001
+Wim Taymans <wim.taymans@chello.be>
+Joshua N Pritikin <vishnu@pobox.com>

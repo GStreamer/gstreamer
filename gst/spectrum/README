@@ -1,0 +1,5 @@
+This is a simple, rather lame spectrum analyzer made from the fix_fft.c
+code, as found I think in xmms-0.9.1 (the 75-wide output sounds like xmms
+to me), which is actually written by other people (see fix_fft.c for
+credits).  It worked last time I had GiST working, which was a while ago.
+Yes, GiST is not included here yet, it will be in 0.1.0.
