@@ -146,6 +146,11 @@ GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
     "avidemux_src_audio",
     "audio/mp3",
       NULL
+  ),
+  GST_CAPS_NEW (
+    "avidemux_src_audio",
+    "application/x-ogg",
+    NULL
   )
 )
 
@@ -511,13 +516,13 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
   /* let's try some gstreamer-formatted mime types */
   switch (GUINT16_FROM_LE(strf->format))
   {
-    case 0x0050:
-    case 0x0055: /* mp3 */
+    case GST_RIFF_WAVE_FORMAT_MPEGL3:
+    case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp3 */
       newcaps = gst_caps_new ("avidemux_audio_src",
                               "audio/mp3",
                                 NULL);
       break;
-    case 0x0001: /* PCM/wav */
+    case GST_RIFF_WAVE_FORMAT_PCM: /* PCM/wav */
       newcaps = gst_caps_new ("avidemux_audio_src",
                               "audio/raw",
                               gst_props_new (
@@ -532,6 +537,16 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
                                 "channels",   GST_PROPS_INT (GUINT16_FROM_LE (strf->channels)),
                                 NULL
                               ));
+      break;
+    case GST_RIFF_WAVE_FORMAT_VORBIS1: /* ogg/vorbis mode 1 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS2: /* ogg/vorbis mode 2 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS3: /* ogg/vorbis mode 3 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS1PLUS: /* ogg/vorbis mode 1+ */
+    case GST_RIFF_WAVE_FORMAT_VORBIS2PLUS: /* ogg/vorbis mode 2+ */
+    case GST_RIFF_WAVE_FORMAT_VORBIS3PLUS: /* ogg/vorbis mode 3+ */
+      newcaps = gst_caps_new ("avidemux_audio_src",
+                              "application/x-ogg",
+                              NULL);
       break;
   }
 

@@ -157,6 +157,11 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
     "avimux_sink_audio",
     "audio/mp3",
       NULL
+  ),
+  GST_CAPS_NEW (
+    "avimux_sink_audio",
+    "application/x-ogg",
+      NULL
   )
 )
     
@@ -422,6 +427,11 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
       avimux->auds.format      = (layer == 3?
                                    GST_RIFF_WAVE_FORMAT_MPEGL3 : 
 				   GST_RIFF_WAVE_FORMAT_MPEGL12);
+      goto done;
+    }
+    else if (!strcmp (mimetype, "application/x-ogg"))
+    {
+      avimux->auds.format = GST_RIFF_WAVE_FORMAT_VORBIS1;
       goto done;
     }
   }
