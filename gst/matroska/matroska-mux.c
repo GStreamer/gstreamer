@@ -38,8 +38,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_METADATA,
-  /* FILL ME */
+  ARG_METADATA
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",

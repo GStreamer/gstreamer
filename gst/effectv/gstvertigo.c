@@ -77,7 +77,7 @@ enum
 {
   ARG_0,
   ARG_SPEED,
-  ARG_ZOOM_SPEED,
+  ARG_ZOOM_SPEED
 };
 
 static void gst_vertigotv_base_init (gpointer g_class);

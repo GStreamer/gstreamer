@@ -43,7 +43,7 @@ enum
 enum
 {
   /* FILL ME */
-  ARG_0,
+  ARG_0
 };
 
 static GstStaticPadTemplate gst_rtpgsmenc_sink_template =

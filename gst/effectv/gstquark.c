@@ -81,7 +81,7 @@ enum
 enum
 {
   ARG_0,
-  ARG_PLANES,
+  ARG_PLANES
 };
 
 static void gst_quarktv_base_init (gpointer g_class);

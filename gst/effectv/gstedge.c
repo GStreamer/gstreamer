@@ -66,7 +66,7 @@ enum
 
 enum
 {
-  ARG_0,
+  ARG_0
 };
 
 static void gst_edgetv_base_init (gpointer g_class);

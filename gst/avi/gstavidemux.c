@@ -41,8 +41,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_STREAMINFO,
-  /* FILL ME */
+  ARG_STREAMINFO
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",

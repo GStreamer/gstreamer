@@ -75,7 +75,7 @@ enum
 enum
 {
   ARG_0,
-  ARG_CUBE_BITS,
+  ARG_CUBE_BITS
 };
 
 static void gst_dicetv_base_init (gpointer g_class);

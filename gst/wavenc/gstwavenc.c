@@ -98,7 +98,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 enum
 {
-  PROP_0,
+  PROP_0
 };
 
 static GstElementClass *parent_class = NULL;

@@ -38,7 +38,7 @@ enum
 {
   ARG_0,
   ARG_FREQUENCY,
-  ARG_PAYLOAD_TYPE,
+  ARG_PAYLOAD_TYPE
 };
 
 static GstStaticPadTemplate gst_rtpL16parse_src_template =

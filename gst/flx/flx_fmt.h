@@ -58,7 +58,7 @@ enum Flx_TypeChunk
 	FLX_REGION		= 37,
 	FLX_WAVE		= 38,
 	FLX_USERSTRING		= 39,
-	FLX_RGN_MASK		= 40,
+	FLX_RGN_MASK		= 40
 
 };
 
@@ -67,7 +67,7 @@ enum Flx_MagicHdr
 	FLX_MAGICHDR_FLI	= 0xaf11,
 	FLX_MAGICHDR_FLC	= 0xaf12,
 	FLX_MAGICHDR_FLX	= 0xaf44,
-	FLX_MAGICHDR_HUFFBWT	= 0xaf30,
+	FLX_MAGICHDR_HUFFBWT	= 0xaf30
 };
 
 

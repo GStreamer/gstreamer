@@ -81,8 +81,8 @@ enum
 
 enum
 {
-  ARG_0,
-  /* FILL ME */
+  ARG_0
+      /* FILL ME */
 };
 
 #if G_BYTE_ORDER == G_BIG_ENDIAN

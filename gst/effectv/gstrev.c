@@ -94,7 +94,7 @@ enum
   ARG_0,
   ARG_DELAY,
   ARG_LINESPACE,
-  ARG_GAIN,
+  ARG_GAIN
 };
 
 static void gst_revtv_base_init (gpointer g_class);

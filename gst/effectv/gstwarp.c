@@ -89,8 +89,8 @@ enum
 
 enum
 {
-  ARG_0,
-  /* FILL ME */
+  ARG_0
+      /* FILL ME */
 };
 
 static void gst_warptv_base_init (gpointer g_class);

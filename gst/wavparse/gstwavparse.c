@@ -96,7 +96,7 @@ enum
 
 enum
 {
-  PROP_0,
+  PROP_0
 };
 
 static GstElementClass *parent_class = NULL;

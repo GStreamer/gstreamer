@@ -80,8 +80,8 @@ enum
   ARG_GAMMA,
   ARG_GAMMA_R,
   ARG_GAMMA_G,
-  ARG_GAMMA_B,
-  /* FILL ME */
+  ARG_GAMMA_B
+      /* FILL ME */
 };
 
 static void gst_gamma_base_init (gpointer g_class);
