@@ -1393,16 +1393,21 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
     return FALSE;
 
   /* Support for rec-list files */
-  if (tag == GST_RIFF_TAG_LIST) {
-    if (!(tag = gst_riff_peek_list (riff)))
-      return FALSE;
-    if (tag == GST_RIFF_rec) {
-      /* Simply skip the list */
-      if (!gst_riff_read_list (riff, &tag))
+  switch (tag) {
+    case GST_RIFF_TAG_LIST:
+      if (!(tag = gst_riff_peek_list (riff)))
         return FALSE;
-      if (!(tag = gst_riff_peek_tag (riff, NULL)))
-        return FALSE;
-    }
+      if (tag == GST_RIFF_rec) {
+        /* Simply skip the list */
+        if (!gst_riff_read_list (riff, &tag))
+          return FALSE;
+        if (!(tag = gst_riff_peek_tag (riff, NULL)))
+          return FALSE;
+      }
+      break;
+
+    case GST_RIFF_TAG_JUNK:
+      return gst_riff_read_skip (riff);
   }
 
   stream_nr = CHUNKID_TO_STREAMNR (tag);
