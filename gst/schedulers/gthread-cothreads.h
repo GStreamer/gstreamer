@@ -113,6 +113,7 @@ do_cothread_context_destroy (cothread_context *context)
   while (context->cothreads) {
     do_cothread_destroy ((cothread *) context->cothreads->data);
   }
+  g_mutex_free (context->mutex);
   
   g_free (context);
 }
