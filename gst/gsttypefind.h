@@ -43,18 +43,21 @@ typedef struct _GstTypeFind 		GstTypeFind;
 typedef struct _GstTypeFindClass 	GstTypeFindClass;
 
 struct _GstTypeFind {
-  GstElement element;
+  GstElement 	 element;
 
-  GstPad *sinkpad;
+  GstPad 	*sinkpad;
 
-  GstCaps *caps;
+  GstCaps 	*caps;
+
+  gint 		 num_buffer;
+  gint 		 max_buffers;
 };
 
 struct _GstTypeFindClass {
-  GstElementClass parent_class;
+  GstElementClass 	parent_class;
 
   /* signals */
-  void (*have_type) (GstElement *element);
+  void 			(*have_type) 	(GstElement *element);
 };
 
 GType gst_type_find_get_type (void);
