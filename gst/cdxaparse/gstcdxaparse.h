@@ -23,7 +23,8 @@
 #define __GST_CDXA_PARSE_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include "gst/riff/riff-ids.h"
+#include "gst/riff/riff-read.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,31 +41,49 @@ extern "C" {
 #define GST_IS_CDXA_PARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDXA_PARSE))
 
-#define CDXA_SECTOR_SIZE  	2352
-#define CDXA_DATA_SIZE  	2324
+#define GST_CDXA_SECTOR_SIZE  	2352
+#define GST_CDXA_DATA_SIZE  	2324
 
-typedef enum
-{
-  CDXA_PARSE_HEADER,
-  CDXA_PARSE_DATA,
+typedef enum {
+  GST_CDXA_PARSE_START,
+  GST_CDXA_PARSE_FMT,
+  GST_CDXA_PARSE_OTHER,
+  GST_CDXA_PARSE_DATA,
 } GstCDXAParseState;
 
 typedef struct _GstCDXAParse GstCDXAParse;
 typedef struct _GstCDXAParseClass GstCDXAParseClass;
 
 struct _GstCDXAParse {
-  GstElement element;
+  GstRiffRead parent;
 
   /* pads */
-  GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
-  GstByteStream *bs;
-
+  /* CDXA decoding state */
   GstCDXAParseState state;
 
+  /* useful CDXA data 
   guint32 riff_size;
   guint32 data_size;
   guint32 sectors;
+
+#define CDXA_SUB_MODE_EOF(c)    ((c&0x80)>>7)
+#define CDXA_SUB_MODE_RT(c)     ((c&0x40)>>6)
+#define CDXA_SUB_MODE_FORM(c)   ((c&0x20)>>5)
+#define CDXA_SUB_MODE_TRIGGER(c)((c&0x10)>>4)
+#define CDXA_SUB_MODE_DATA(c)   ((c&0x08)>>3)
+#define CDXA_SUB_MODE_VIDEO(c)  ((c&0x04)>>2)
+#define CDXA_SUB_MODE_AUDIO(c)  ((c&0x02)>>1)
+#define CDXA_SUB_MODE_EOR(c)    ((c&0x01)   )
+
+*/
+
+  guint64 dataleft;
+  int byteoffset;
+  
+  gboolean seek_pending;
+  guint64 seek_offset;
 };
 
 struct _GstCDXAParseClass {
@@ -77,4 +96,6 @@ GType 		gst_cdxa_parse_get_type		(void);
 }
 #endif /* __cplusplus */
 
+
 #endif /* __GST_CDXA_PARSE_H__ */
+
