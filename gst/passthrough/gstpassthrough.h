@@ -25,7 +25,6 @@
 
 #include <config.h>
 #include <gst/gst.h>
-// #include <gst/meta/audioraw.h>
 
 
 #ifdef __cplusplus
@@ -46,7 +45,7 @@ extern "C" {
 
 typedef struct _GstPassthrough GstPassthrough;
 typedef struct _GstPassthroughClass GstPassthroughClass;
-typedef enum _GstPassthroughFormat GstPassthroughFormat;
+typedef enum   _GstPassthroughFormat GstPassthroughFormat;
 
 enum _GstPassthroughFormat {
   GST_PASSTHROUGH_FORMAT_INT,
@@ -57,35 +56,28 @@ struct _GstPassthrough {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
+  GstBufferPool *bufpool;
 
   gboolean silent;
   
   /* the next three are valid for both int and float */
   
   GstPassthroughFormat format;
-  
-  guint rate;
-  
+  guint rate;  
   guint channels;
   
   /* the next five are valid only for format==GST_PASSTHROUGH_FORMAT_INT */
   
   guint width;
-  
   guint depth;
-
   guint endianness;
-  
   guint law;
-  
   gboolean is_signed;
   
   /* the next three are valid only for format==GST_PASSTHROUGH_FORMAT_FLOAT */
   
   const gchar *layout;
-  
   gfloat slope;
-  
   gfloat intercept;
 };
 
