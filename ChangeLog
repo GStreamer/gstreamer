@@ -1,3 +1,8 @@
+2004-02-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_do_caps_nego):
+	  that should be !=, not == (fixes #132519)
+
 2004-02-04  David Schleef  <ds@schleef.org>
 
 	Make sure set_explicit_caps() is called before adding pad.
