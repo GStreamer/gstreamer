@@ -78,6 +78,10 @@ static GstElementStateReturn
 			vorbis_dec_change_state		(GstElement *		element);
 static gboolean		vorbis_dec_src_event		(GstPad *		pad,
 							 GstEvent *		event);
+static gboolean		vorbis_dec_src_query		(GstPad *		pad, 
+							 GstQueryType		query, 
+							 GstFormat *		format, 
+							 gint64 *		value);
 
 
 static void
@@ -144,11 +148,13 @@ gst_vorbis_dec_init (GstVorbisDec *dec)
   gst_pad_set_link_function (dec->srcpad, vorbis_dec_link);
   gst_pad_set_getcaps_function (dec->srcpad, vorbis_dec_getcaps);
   gst_pad_set_event_function (dec->srcpad, vorbis_dec_src_event);
+  gst_pad_set_query_function (dec->srcpad, vorbis_dec_src_query);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   GST_FLAG_SET (dec, GST_ELEMENT_EVENT_AWARE);
 }
 
+/* FIXME: plug this to the pad convert function */
 static gboolean
 vorbis_dec_to_granulepos (GstVorbisDec *dec, GstFormat format, guint64 from, guint64 *to)
 {
@@ -170,12 +176,48 @@ vorbis_dec_to_granulepos (GstVorbisDec *dec, GstFormat format, guint64 from, gui
 }
 
 static gboolean
+vorbis_dec_from_granulepos (GstVorbisDec *dec, GstFormat format, guint64 from, guint64 *to)
+{
+  if (dec->packetno < 1) return FALSE;
+  
+  switch (format) {
+    case GST_FORMAT_TIME:
+      *to = from * GST_SECOND / dec->vi.rate;
+      return TRUE;
+    case GST_FORMAT_DEFAULT:
+      *to = from;
+      return TRUE;
+    case GST_FORMAT_BYTES:
+      *to = from * sizeof (float) * dec->vi.channels;
+      return TRUE;
+    default:
+      return FALSE;
+  }
+}
+
+
+static gboolean
+vorbis_dec_src_query (GstPad *pad, GstQueryType query, GstFormat *format, gint64 *value)
+{
+  gint64 granulepos;
+  GstVorbisDec *dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
+  GstFormat my_format = GST_FORMAT_DEFAULT;
+
+  if (!gst_pad_query (GST_PAD_PEER (dec->sinkpad), query, &my_format, &granulepos))
+    return FALSE;
+
+  if (!vorbis_dec_from_granulepos (dec, *format, granulepos, value))
+    return FALSE;
+
+  g_print ("peer returned granulepos: %llu - we return %llu\n", granulepos, *value);
+  return TRUE;
+}
+
+static gboolean
 vorbis_dec_src_event (GstPad *pad, GstEvent *event)
 {
   gboolean res = TRUE;
-  GstVorbisDec *dec;
-
-  dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
+  GstVorbisDec *dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK: {

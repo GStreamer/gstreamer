@@ -211,6 +211,7 @@ gst_ogg_demux_init (GstOggDemux *ogg)
   /* initalize variables */
   GST_OGG_SET_STATE (ogg, GST_OGG_STATE_START);
   ogg->chains = g_array_new (TRUE, TRUE, sizeof (GstOggChain));
+  ogg->current_chain = -1;
   
   GST_FLAG_SET (ogg, GST_ELEMENT_EVENT_AWARE);
 }
@@ -273,14 +274,14 @@ gst_ogg_demux_src_query (GstPad *pad, GstQueryType type,
   switch (type) {
     case GST_QUERY_TOTAL: {
       if (*format == GST_FORMAT_DEFAULT) {
-	*value = cur->known_offset;
+	*value = cur->length;
 	res = TRUE;
       }
       break;
     }
     case GST_QUERY_POSITION:
       if (*format == GST_FORMAT_DEFAULT && cur->length != 0) {
-	*value = cur->length;
+	*value = cur->known_offset;
 	res = TRUE;
       }
       break;

@@ -1,3 +1,17 @@
+2004-01-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	  removee video/x-theora from vp3 decoder, it doesn't handle raw
+	  theora streams
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_init):
+	  fix bug with finalizing element that never went to PAUSED
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_query):
+	  length and position queries were swapped
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_init),
+	(vorbis_dec_from_granulepos), (vorbis_dec_src_query),
+	(vorbis_dec_src_event):
+	  implement querying time and bytes
+
 2004-01-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
         * just about every source file:
