@@ -50,7 +50,19 @@ struct _GstIdentity {
   GstPad 	*sinkpad;
   GstPad 	*srcpad;
 
-  gboolean 	 loop_based;
+  GstData	*pen_data;
+  GMutex	*pen_lock;
+  GCond		*pen_cond;
+  gboolean	 pen_flushing;
+
+  gboolean 	 has_chain;
+  gboolean 	 has_getrange;
+  gboolean 	 has_src_loop;
+  gboolean 	 has_sink_loop;
+  GstActivateMode sink_mode;
+  GstActivateMode src_mode;
+  gboolean       decoupled;
+  
   guint 	 duplicate;
   gint 	 	 error_after;
   gfloat 	 drop_probability;
@@ -67,7 +79,7 @@ struct _GstIdentity {
   gchar 	*last_message;
   GstCaps	*srccaps;
 
-  guint64	 bytes_handled;
+  guint64	 offset;
 };
 
 struct _GstIdentityClass {

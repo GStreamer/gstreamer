@@ -472,8 +472,6 @@ print_element_info (GstElementFactory * factory)
   GstPad *pad;
   GstRealPad *realpad;
   GstPadTemplate *padtemplate;
-  GList *children;
-  GstElement *child;
   gint maxlevel = 0;
 
   element = gst_element_factory_create (factory, "element");
@@ -533,31 +531,16 @@ print_element_info (GstElementFactory * factory)
   PUT_END_TAG (1, "pad-templates");
 
   PUT_START_TAG (1, "element-flags");
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
-    PUT_ESCAPED (2, "flag", "GST_ELEMENT_DECOUPLED");
-  }
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_EVENT_AWARE)) {
-    PUT_ESCAPED (2, "flag", "GST_ELEMENT_EVENT_AWARE");
-  }
   PUT_END_TAG (1, "element-flags");
 
   if (GST_IS_BIN (element)) {
     PUT_START_TAG (1, "bin-flags");
 
-    if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_MANAGER)) {
-      PUT_ESCAPED (2, "flag", "GST_BIN_FLAG_MANAGER");
-    }
-    if (GST_FLAG_IS_SET (element, GST_BIN_SELF_SCHEDULABLE)) {
-      PUT_ESCAPED (2, "flag", "GST_BIN_SELF_SCHEDULABLE");
-    }
     PUT_END_TAG (1, "bin-flags");
   }
 
 
   PUT_START_TAG (1, "element-implementation");
-  if (element->loopfunc)
-    PUT_STRING (2, "<loop-based function=\"%s\"/>",
-        GST_DEBUG_FUNCPTR_NAME (element->loopfunc));
 
   PUT_STRING (2, "<state-change function=\"%s\"/>",
       GST_DEBUG_FUNCPTR_NAME (gstelement_class->change_state));
@@ -619,9 +602,9 @@ print_element_info (GstElementFactory * factory)
       if (realpad->chainfunc)
         PUT_STRING (4, "<chain-based function=\"%s\"/>",
             GST_DEBUG_FUNCPTR_NAME (realpad->chainfunc));
-      if (realpad->getfunc)
-        PUT_STRING (4, "<get-based function=\"%s\"/>",
-            GST_DEBUG_FUNCPTR_NAME (realpad->getfunc));
+      if (realpad->getrangefunc)
+        PUT_STRING (4, "<get-range-based function=\"%s\"/>",
+            GST_DEBUG_FUNCPTR_NAME (realpad->getrangefunc));
       if (realpad->formatsfunc != gst_pad_get_formats_default) {
         PUT_STRING (4, "<formats-function function=\"%s\">",
             GST_DEBUG_FUNCPTR_NAME (realpad->formatsfunc));
@@ -672,17 +655,21 @@ print_element_info (GstElementFactory * factory)
   print_element_signals (element, 1);
 
   /* for compound elements */
-  if (GST_IS_BIN (element)) {
-    PUT_START_TAG (1, "children");
-    children = (GList *) GST_BIN (element)->children;
-    while (children) {
-      child = GST_ELEMENT (children->data);
-      children = g_list_next (children);
+  /* FIXME: gst_bin_get_list does not exist anymore
+     if (GST_IS_BIN (element)) {
+     GList *children;
+     GstElement *child;
+     PUT_START_TAG (1, "children");
+     children = (GList *) gst_bin_get_list (GST_BIN (element));
+     while (children) {
+     child = GST_ELEMENT (children->data);
+     children = g_list_next (children);
 
-      PUT_ESCAPED (2, "child", GST_ELEMENT_NAME (child));
-    }
-    PUT_END_TAG (1, "children");
-  }
+     PUT_ESCAPED (2, "child", GST_ELEMENT_NAME (child));
+     }
+     PUT_END_TAG (1, "children");
+     }
+   */
   PUT_END_TAG (0, "element");
 
   return 0;

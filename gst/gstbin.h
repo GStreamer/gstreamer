@@ -60,9 +60,6 @@ GST_EXPORT GType _gst_bin_type;
  * and (un)set using GST_FLAG_SET () and GST_FLAG_UNSET ().
  */
 typedef enum {
-  GST_BIN_FLAG_MANAGER          = GST_ELEMENT_FLAG_LAST,
-  GST_BIN_SELF_SCHEDULABLE,
-  GST_BIN_STATE_LOCKED,
   /* padding */
   GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 5
 } GstBinFlags;
@@ -84,8 +81,6 @@ struct _GstBin {
   GList 	*children;
   guint32	 children_cookie;
 
-  GstElementState child_states[GST_NUM_STATES];
-
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -94,13 +89,6 @@ struct _GstBinClass {
   GstElementClass parent_class;
 
   /*< public >*/
-
-  /* run a full iteration of operation */
-  gboolean	(*iterate)		(GstBin *bin);
-  void		(*child_state_change)	(GstBin *bin, GstElementState oldstate, 
-					 GstElementState newstate, GstElement *element);
-
-
   /* signals */
   void		(*element_added)	(GstBin *bin, GstElement *child);
   void		(*element_removed)	(GstBin *bin, GstElement *child);
@@ -132,15 +120,6 @@ GstIterator*    gst_bin_iterate_recurse		 (GstBin *bin);
 
 GstIterator*	gst_bin_iterate_sinks	 	 (GstBin *bin);
 GstIterator*	gst_bin_iterate_all_by_interface (GstBin *bin, GType interface);
-
-gboolean	gst_bin_iterate			(GstBin *bin);
-
-GstElementStateReturn gst_bin_sync_children_state (GstBin *bin);
-
-/* internal */
-/* one of our childs signaled a state change */
-void 		gst_bin_child_state_change 		(GstBin *bin, GstElementState oldstate, 
-							 GstElementState newstate, GstElement *child);
 
 G_END_DECLS
 

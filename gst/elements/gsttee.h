@@ -49,6 +49,12 @@ struct _GstTee {
   GstPad *sinkpad;
 
   gboolean silent;
+  gboolean has_chain;
+  gboolean has_sink_loop;
+  gint pad_counter;
+  guint64 offset;
+  GstActivateMode sink_mode;
+  
   gchar    *last_message;
 };
 

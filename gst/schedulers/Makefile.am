@@ -1,82 +1,15 @@
-if GST_DISABLE_OMEGA_COTHREADS
-omegaschedulers =
-omegaschedulers_nola =
-else
-omegaschedulers = \
-	libgstbasicomegascheduler.la \
-	libgstentryomegascheduler.la \
-	libgstoptomegascheduler.la
-omegaschedulers_nola = \
-	libgstbasicomegascheduler \
-	libgstentryomegascheduler \
-	libgstoptomegascheduler
-endif
 
 plugin_LTLIBRARIES = \
-	$(omegaschedulers) \
-	libgstbasicgthreadscheduler.la \
-	libgstentrygthreadscheduler.la \
-	libgstoptscheduler.la \
-	libgstoptgthreadscheduler.la \
-	libgstfairgthreadscheduler.la
+	libthreadscheduler.la
 AS_LIBTOOL_LIBS = \
-	$(omegaschedulers_nola) \
-	libgstbasicgthreadscheduler \
-	libgstentrygthreadscheduler \
-	libgstoptscheduler \
-	libgstoptgthreadscheduler \
-	libgstfairgthreadscheduler 
+	libthreadscheduler
 
-if GST_DISABLE_OMEGA_COTHREADS
-else
-libgstbasicomegascheduler_la_SOURCES = gstbasicscheduler.c 
-libgstbasicomegascheduler_la_CFLAGS = $(GST_OBJ_CFLAGS) -D_COTHREADS_OMEGA
-libgstbasicomegascheduler_la_LIBADD = $(GST_OBJ_LIBS) ../libcothreads.la
-libgstbasicomegascheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
-endif
+libthreadscheduler_la_SOURCES = threadscheduler.c 
+libthreadscheduler_la_CFLAGS = $(GST_OBJ_CFLAGS) 
+libthreadscheduler_la_LIBADD = $(GST_OBJ_LIBS)
+libthreadscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-libgstbasicgthreadscheduler_la_SOURCES = gstbasicscheduler.c 
-libgstbasicgthreadscheduler_la_CFLAGS = $(GST_OBJ_CFLAGS) -D_COTHREADS_GTHREAD
-libgstbasicgthreadscheduler_la_LIBADD = $(GST_OBJ_LIBS)
-libgstbasicgthreadscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
-
-libgstentrygthreadscheduler_la_SOURCES = entryscheduler.c 
-libgstentrygthreadscheduler_la_CFLAGS = $(GST_OBJ_CFLAGS) -D_COTHREADS_GTHREAD
-libgstentrygthreadscheduler_la_LIBADD = $(GST_OBJ_LIBS)
-libgstentrygthreadscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
-
-if GST_DISABLE_OMEGA_COTHREADS
-else
-libgstentryomegascheduler_la_SOURCES = entryscheduler.c 
-libgstentryomegascheduler_la_CFLAGS = $(GST_OBJ_CFLAGS) -D_COTHREADS_OMEGA
-libgstentryomegascheduler_la_LIBADD = $(GST_OBJ_LIBS) ../libcothreads.la
-libgstentryomegascheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
-endif
-
-libgstoptscheduler_la_SOURCES = gstoptimalscheduler.c 
-libgstoptscheduler_la_CFLAGS = $(GST_OBJ_CFLAGS) 
-libgstoptscheduler_la_LIBADD = $(GST_OBJ_LIBS)
-libgstoptscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
-
-if GST_DISABLE_OMEGA_COTHREADS
-else
-libgstoptomegascheduler_la_SOURCES = gstoptimalscheduler.c 
-libgstoptomegascheduler_la_CFLAGS = $(GST_OBJ_CFLAGS) -D_COTHREADS_OMEGA -DUSE_COTHREADS
-libgstoptomegascheduler_la_LIBADD = $(GST_OBJ_LIBS) ../libcothreads.la
-libgstoptomegascheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
-endif
-
-libgstoptgthreadscheduler_la_SOURCES = gstoptimalscheduler.c 
-libgstoptgthreadscheduler_la_CFLAGS = $(GST_OBJ_CFLAGS) -D_COTHREADS_GTHREAD -DUSE_COTHREADS
-libgstoptgthreadscheduler_la_LIBADD = $(GST_OBJ_LIBS)
-libgstoptgthreadscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
-
-libgstfairgthreadscheduler_la_SOURCES = fairscheduler.c faircothreads.c
-libgstfairgthreadscheduler_la_CFLAGS = $(GST_OBJ_CFLAGS) -D_COTHREADS_GTHREAD
-libgstfairgthreadscheduler_la_LIBADD = $(GST_OBJ_LIBS)
-libgstfairgthreadscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
-
-noinst_HEADERS = cothreads_compat.h gthread-cothreads.h faircothreads.h
+noinst_HEADERS = 
 
 if AS_LIBTOOL_WIN32
 

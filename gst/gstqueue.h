@@ -27,7 +27,6 @@
 
 #include <gst/gstelement.h>
 
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_QUEUE \
@@ -80,23 +79,14 @@ struct _GstQueue {
 
   /* it the queue should fail on possible deadlocks */
   gboolean may_deadlock;
-
   gboolean interrupt;
   gboolean flush;
 
   GMutex *qlock;	/* lock for queue (vs object lock) */
   GCond *item_add;	/* signals buffers now available for reading */
   GCond *item_del;	/* signals space now available for writing */
-  GCond *event_done;	/* upstream event signaller */
 
-  GTimeVal *timeval;	/* the timeout for the queue locking */
-  GQueue *events;	/* upstream events get decoupled here */
-
-  GstCaps *negotiated_caps;
-
-  GMutex *event_lock;	/* lock when handling the events queue */
-
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstQueueClass {

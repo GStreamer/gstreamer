@@ -170,13 +170,17 @@ static void gst_filesrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_filesrc_check_filesize (GstFileSrc * src);
-static GstData *gst_filesrc_get (GstPad * pad);
+static GstFlowReturn gst_filesrc_get (GstPad * pad, GstBuffer ** buffer);
+static GstFlowReturn gst_filesrc_getrange (GstPad * pad, guint64 offset,
+    guint length, GstBuffer ** buffer);
 static gboolean gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event);
 static gboolean gst_filesrc_srcpad_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
 
+static gboolean gst_filesrc_activate (GstPad * pad, GstActivateMode mode);
 static GstElementStateReturn gst_filesrc_change_state (GstElement * element);
 
+static GstCaps *gst_filesrc_type_find (GstFileSrc * src);
 static void gst_filesrc_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
@@ -247,7 +251,8 @@ gst_filesrc_init (GstFileSrc * src)
   src->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
-  gst_pad_set_get_function (src->srcpad, gst_filesrc_get);
+  gst_pad_set_getrange_function (src->srcpad, gst_filesrc_getrange);
+  gst_pad_set_activate_function (src->srcpad, gst_filesrc_activate);
   gst_pad_set_event_function (src->srcpad, gst_filesrc_srcpad_event);
   gst_pad_set_event_mask_function (src->srcpad, gst_filesrc_get_event_mask);
   gst_pad_set_query_function (src->srcpad, gst_filesrc_srcpad_query);
@@ -672,7 +677,7 @@ gst_filesrc_get_read (GstFileSrc * src)
   if (ret == 0) {
     GST_DEBUG ("non-regular file hits EOS");
     gst_buffer_unref (buf);
-    gst_element_set_eos (GST_ELEMENT (src));
+    //gst_element_set_eos (GST_ELEMENT (src));
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
   readsize = ret;
@@ -686,20 +691,36 @@ gst_filesrc_get_read (GstFileSrc * src)
   return GST_DATA (buf);
 }
 
-static GstData *
-gst_filesrc_get (GstPad * pad)
+static GstFlowReturn
+gst_filesrc_getrange (GstPad * pad, guint64 offset, guint length,
+    GstBuffer ** buffer)
 {
   GstFileSrc *src;
 
-  g_return_val_if_fail (pad != NULL, NULL);
-  src = GST_FILESRC (gst_pad_get_parent (pad));
-  g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN), NULL);
+  src = GST_FILESRC (GST_PAD_PARENT (pad));
+
+  src->curoffset = offset;
+  src->block_size = length;
+
+  return gst_filesrc_get (pad, buffer);
+}
+
+static GstFlowReturn
+gst_filesrc_get (GstPad * pad, GstBuffer ** buffer)
+{
+  GstFileSrc *src;
+  GstData *data;
+
+  src = GST_FILESRC (GST_PAD_PARENT (pad));
+
+  g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN),
+      GST_FLOW_WRONG_STATE);
 
   /* check for flush */
   if (src->need_flush) {
     src->need_flush = FALSE;
     GST_DEBUG_OBJECT (src, "sending flush");
-    return GST_DATA (gst_event_new_flush ());
+    gst_pad_push_event (pad, gst_event_new_flush (TRUE));
   }
   /* check for seek */
   if (src->need_discont) {
@@ -710,7 +731,7 @@ gst_filesrc_get (GstPad * pad)
         gst_event_new_discontinuous (src->need_discont > 1, GST_FORMAT_BYTES,
         (guint64) src->curoffset, GST_FORMAT_UNDEFINED);
     src->need_discont = 0;
-    return GST_DATA (event);
+    gst_pad_push_event (pad, event);
   }
 
   /* check for EOF if it's a regular file */
@@ -721,20 +742,33 @@ gst_filesrc_get (GstPad * pad)
         GST_DEBUG_OBJECT (src, "eos %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
             src->curoffset, src->filelen);
       }
-      gst_element_set_eos (GST_ELEMENT (src));
-      return GST_DATA (gst_event_new (GST_EVENT_EOS));
+      //gst_element_set_eos (GST_ELEMENT (src));
+      gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
+      return GST_FLOW_WRONG_STATE;
 
     }
   }
 #ifdef HAVE_MMAP
   if (src->using_mmap) {
-    return gst_filesrc_get_mmap (src);
+    data = gst_filesrc_get_mmap (src);
   } else {
-    return gst_filesrc_get_read (src);
+    data = gst_filesrc_get_read (src);
   }
 #else
-  return gst_filesrc_get_read (src);
+  data = gst_filesrc_get_read (src);
 #endif
+  if (data == NULL) {
+    GST_DEBUG_OBJECT (src, "could not get data");
+    return GST_FLOW_ERROR;
+  }
+
+  if (GST_IS_EVENT (data)) {
+    gst_pad_push_event (pad, GST_EVENT (data));
+  } else {
+    *buffer = GST_BUFFER (data);
+  }
+
+  return GST_FLOW_OK;
 }
 
 /* TRUE if the filesize of the file was updated */
@@ -821,6 +855,22 @@ gst_filesrc_open_file (GstFileSrc * src)
     src->curoffset = 0;
 
     GST_FLAG_SET (src, GST_FILESRC_OPEN);
+
+    {
+      GstCaps *caps;
+      guint64 offset;
+      guint length;
+
+      offset = src->curoffset;
+      length = src->block_size;
+
+      caps = gst_filesrc_type_find (src);
+      gst_pad_set_caps (src->srcpad, caps);
+
+      src->curoffset = offset;
+      src->block_size = length;
+    }
+
   }
   return TRUE;
 }
@@ -848,10 +898,77 @@ gst_filesrc_close_file (GstFileSrc * src)
   GST_FLAG_UNSET (src, GST_FILESRC_OPEN);
 }
 
+static void
+gst_filesrc_loop (GstPad * pad)
+{
+  GstFileSrc *filesrc;
+  gboolean result;
+  GstBuffer *buffer;
+
+  filesrc = GST_FILESRC (GST_PAD_PARENT (pad));
+
+  GST_STREAM_LOCK (pad);
+
+  result = gst_filesrc_get (pad, &buffer);
+  if (result != GST_FLOW_OK) {
+    gst_task_pause (GST_RPAD_TASK (pad));
+    goto done;
+  }
+  result = gst_pad_push (pad, buffer);
+  if (result != GST_FLOW_OK) {
+    gst_task_pause (GST_RPAD_TASK (pad));
+  }
+done:
+  GST_STREAM_UNLOCK (pad);
+}
+
+
+static gboolean
+gst_filesrc_activate (GstPad * pad, GstActivateMode mode)
+{
+  gboolean result = FALSE;
+  GstFileSrc *filesrc;
+
+  filesrc = GST_FILESRC (GST_OBJECT_PARENT (pad));
+
+  switch (mode) {
+    case GST_ACTIVATE_PUSH:
+      /* if we have a scheduler we can start the task */
+      if (GST_ELEMENT_SCHEDULER (filesrc)) {
+        GST_STREAM_LOCK (pad);
+        GST_RPAD_TASK (pad) =
+            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (filesrc),
+            (GstTaskFunction) gst_filesrc_loop, pad);
+
+        gst_task_start (GST_RPAD_TASK (pad));
+        result = TRUE;
+        GST_STREAM_UNLOCK (pad);
+      }
+      break;
+    case GST_ACTIVATE_PULL:
+      result = TRUE;
+      break;
+    case GST_ACTIVATE_NONE:
+      /* step 1, unblock clock sync (if any) */
+
+      /* step 2, make sure streaming finishes */
+      GST_STREAM_LOCK (pad);
+      /* step 3, stop the task */
+      gst_task_stop (GST_RPAD_TASK (pad));
+      GST_STREAM_UNLOCK (pad);
+
+      result = TRUE;
+      break;
+  }
+  return result;
+}
+
 
 static GstElementStateReturn
 gst_filesrc_change_state (GstElement * element)
 {
+  GstElementStateReturn result = GST_STATE_SUCCESS;
+
   GstFileSrc *src = GST_FILESRC (element);
 
   switch (GST_STATE_TRANSITION (element)) {
@@ -866,6 +983,17 @@ gst_filesrc_change_state (GstElement * element)
       }
       src->need_discont = 2;
       break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      gst_task_start (GST_RPAD_TASK (src->srcpad));
+      break;
+  }
+
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_PLAYING_TO_PAUSED:
+      gst_task_start (GST_RPAD_TASK (src->srcpad));
+      break;
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_FILESRC_OPEN))
         gst_filesrc_close_file (GST_FILESRC (element));
@@ -874,10 +1002,7 @@ gst_filesrc_change_state (GstElement * element)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return result;
 }
 
 static gboolean
@@ -1011,6 +1136,90 @@ gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event)
 error:
   gst_event_unref (event);
   return FALSE;
+}
+
+typedef struct
+{
+  GstFileSrc *src;
+  guint best_probability;
+  GstCaps *caps;
+
+  GstBuffer *buffer;
+}
+FileSrcTypeFind;
+
+static guint8 *
+filesrc_find_peek (gpointer data, gint64 offset, guint size)
+{
+  FileSrcTypeFind *find;
+  GstBuffer *buffer;
+  GstFileSrc *src;
+
+  if (size == 0)
+    return NULL;
+
+  find = (FileSrcTypeFind *) data;
+  src = find->src;
+
+  if (offset < 0) {
+    offset += src->filelen;
+  }
+
+  buffer = NULL;
+  gst_filesrc_getrange (src->srcpad, offset, size, &buffer);
+
+  if (find->buffer) {
+    gst_buffer_unref (find->buffer);
+  }
+  find->buffer = buffer;
+
+  return GST_BUFFER_DATA (buffer);
+}
+
+static void
+filesrc_find_suggest (gpointer data, guint probability, const GstCaps * caps)
+{
+  FileSrcTypeFind *find = (FileSrcTypeFind *) data;
+
+  if (probability > find->best_probability) {
+    gst_caps_replace (&find->caps, gst_caps_copy (caps));
+    find->best_probability = probability;
+  }
+}
+
+
+static GstCaps *
+gst_filesrc_type_find (GstFileSrc * src)
+{
+  GstTypeFind gst_find;
+  FileSrcTypeFind find;
+  GList *walk, *type_list = NULL;
+  GstCaps *result = NULL;
+
+  walk = type_list = gst_type_find_factory_get_list ();
+
+  find.src = src;
+  find.best_probability = 0;
+  find.caps = NULL;
+  find.buffer = NULL;
+  gst_find.data = &find;
+  gst_find.peek = filesrc_find_peek;
+  gst_find.suggest = filesrc_find_suggest;
+  gst_find.get_length = NULL;
+
+  while (walk) {
+    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
+
+    gst_type_find_factory_call_function (factory, &gst_find);
+    if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)
+      break;
+    walk = g_list_next (walk);
+  }
+
+  if (find.best_probability > 0)
+    result = find.caps;
+
+  return result;
 }
 
 /*** GSTURIHANDLER INTERFACE *************************************************/

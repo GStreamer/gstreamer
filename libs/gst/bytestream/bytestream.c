@@ -154,7 +154,7 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
     return FALSE;
 
   GST_DEBUG ("get_next_buf: pulling buffer");
-  nextbuf = GST_BUFFER (gst_pad_pull (bs->pad));
+  gst_pad_pull (bs->pad, &nextbuf);
 
   if (!nextbuf)
     return FALSE;

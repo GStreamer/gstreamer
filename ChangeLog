@@ -1,3 +1,193 @@
+2005-03-21  Wim Taymans  <wim@fluendo.com>
+
+	* check/Makefile.am:
+	* gst/Makefile.am:
+	* gst/elements/Makefile.am:
+	* gst/elements/gstelements.c:
+	* gst/elements/gstfakesink.c: (gst_fakesink_init),
+	(gst_fakesink_event), (gst_fakesink_chain):
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init),
+	(gst_fakesrc_init), (gst_fakesrc_get_event_mask),
+	(gst_fakesrc_event_handler), (gst_fakesrc_set_pad_functions),
+	(gst_fakesrc_set_all_pad_functions), (gst_fakesrc_request_new_pad),
+	(gst_fakesrc_set_property), (gst_fakesrc_get_property),
+	(gst_fakesrc_get_range_unlocked), (gst_fakesrc_get_range),
+	(gst_fakesrc_loop), (gst_fakesrc_activate),
+	(gst_fakesrc_change_state):
+	* gst/elements/gstfakesrc.h:
+	* gst/elements/gstfilesrc.c: (gst_filesrc_init),
+	(gst_filesrc_get_read), (gst_filesrc_getrange), (gst_filesrc_get),
+	(gst_filesrc_open_file), (gst_filesrc_loop),
+	(gst_filesrc_activate), (gst_filesrc_change_state),
+	(filesrc_find_peek), (filesrc_find_suggest),
+	(gst_filesrc_type_find):
+	* gst/elements/gstidentity.c: (gst_identity_finalize),
+	(gst_identity_class_init), (gst_identity_init),
+	(gst_identity_proxy_getcaps), (identity_queue_push),
+	(identity_queue_pop), (identity_queue_flush), (gst_identity_event),
+	(gst_identity_getrange), (gst_identity_chain),
+	(gst_identity_sink_loop), (gst_identity_src_loop),
+	(gst_identity_handle_buffer), (gst_identity_set_dataflow_funcs),
+	(gst_identity_set_property), (gst_identity_get_property),
+	(gst_identity_change_state):
+	* gst/elements/gstidentity.h:
+	* gst/elements/gsttee.c: (gst_tee_class_init), (gst_tee_init),
+	(gst_tee_update_pad_functions), (gst_tee_request_new_pad),
+	(gst_tee_set_property), (gst_tee_get_property), (gst_tee_do_push),
+	(gst_tee_handle_buffer), (gst_tee_chain), (gst_tee_loop),
+	(gst_tee_sink_activate):
+	* gst/elements/gsttee.h:
+	* gst/gst.c: (gst_register_core_elements), (init_post):
+	* gst/gst.h:
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_set_bus),
+	(gst_bin_set_scheduler), (gst_bin_add_func), (gst_bin_add),
+	(gst_bin_remove_func), (gst_bin_remove), (gst_bin_get_state),
+	(gst_bin_change_state):
+	* gst/gstbin.h:
+	* gst/gstbus.c: (gst_bus_get_type), (gst_bus_class_init),
+	(gst_bus_init), (gst_bus_dispose), (gst_bus_set_property),
+	(gst_bus_get_property), (gst_bus_new), (gst_bus_post),
+	(gst_bus_have_pending), (gst_bus_pop), (gst_bus_peek),
+	(gst_bus_set_sync_handler), (gst_bus_create_watch),
+	(bus_watch_callback), (bus_watch_destroy),
+	(gst_bus_add_watch_full), (gst_bus_add_watch), (poll_handler),
+	(poll_timeout), (gst_bus_poll):
+	* gst/gstbus.h:
+	* gst/gstcaps.h:
+	* gst/gstdata.h:
+	* gst/gstelement.c: (gst_element_class_init), (gst_element_init),
+	(gst_element_post_message), (gst_element_message_full),
+	(gst_element_get_state_func), (gst_element_get_state),
+	(gst_element_abort_state), (gst_element_commit_state),
+	(gst_element_lost_state), (gst_element_set_state),
+	(gst_element_pads_activate), (gst_element_change_state),
+	(gst_element_dispose), (gst_element_set_manager_func),
+	(gst_element_set_bus_func), (gst_element_set_scheduler_func),
+	(gst_element_set_manager), (gst_element_get_manager),
+	(gst_element_set_bus), (gst_element_get_bus),
+	(gst_element_set_scheduler), (gst_element_get_scheduler):
+	* gst/gstelement.h:
+	* gst/gstevent.c: (gst_event_new_segment_seek),
+	(gst_event_new_flush):
+	* gst/gstevent.h:
+	* gst/gstmessage.c: (_gst_message_initialize), (_gst_message_copy),
+	(_gst_message_free), (gst_message_get_type), (gst_message_new),
+	(gst_message_new_eos), (gst_message_new_error),
+	(gst_message_new_warning), (gst_message_new_tag),
+	(gst_message_new_state_changed), (gst_message_new_application),
+	(gst_message_get_structure), (gst_message_parse_tag),
+	(gst_message_parse_state_changed), (gst_message_parse_error),
+	(gst_message_parse_warning):
+	* gst/gstmessage.h:
+	* gst/gstpad.c: (gst_real_pad_class_init), (gst_real_pad_init),
+	(gst_real_pad_set_property), (gst_pad_set_active),
+	(gst_pad_is_active), (gst_pad_set_blocked_async),
+	(gst_pad_set_blocked), (gst_pad_is_blocked),
+	(gst_pad_set_activate_function), (gst_pad_set_loop_function),
+	(gst_pad_set_getrange_function), (gst_pad_set_acceptcaps_function),
+	(gst_pad_set_fixatecaps_function), (gst_pad_set_setcaps_function),
+	(gst_pad_unlink), (gst_pad_link_prepare_filtered),
+	(gst_pad_link_filtered), (gst_pad_relink_filtered),
+	(gst_real_pad_get_caps_unlocked), (gst_pad_get_caps),
+	(gst_pad_peer_get_caps), (gst_pad_fixate_caps),
+	(gst_pad_accept_caps), (gst_pad_peer_accept_caps),
+	(gst_pad_set_caps), (gst_pad_configure_sink),
+	(gst_pad_configure_src), (gst_pad_get_negotiated_caps),
+	(gst_pad_get_filter_caps), (gst_pad_alloc_buffer),
+	(gst_real_pad_dispose), (gst_real_pad_finalize),
+	(handle_pad_block), (gst_pad_push), (gst_pad_pull_range),
+	(gst_pad_event_default_dispatch), (gst_pad_event_default),
+	(gst_pad_push_event), (gst_pad_send_event), (gst_pad_get_formats):
+	* gst/gstpad.h:
+	* gst/gstpipeline.c: (gst_pipeline_init), (is_eos),
+	(pipeline_bus_handler), (gst_pipeline_change_state),
+	(gst_pipeline_get_scheduler), (gst_pipeline_get_bus):
+	* gst/gstpipeline.h:
+	* gst/gstprobe.h:
+	* gst/gstqueue.c: (gst_queue_class_init), (gst_queue_init),
+	(gst_queue_finalize), (gst_queue_getcaps), (gst_queue_link_sink),
+	(gst_queue_link_src), (gst_queue_bufferalloc),
+	(gst_queue_locked_flush), (gst_queue_handle_sink_event),
+	(gst_queue_is_empty), (gst_queue_is_filled), (gst_queue_chain),
+	(gst_queue_loop), (gst_queue_handle_src_event),
+	(gst_queue_handle_src_query), (gst_queue_src_activate),
+	(gst_queue_change_state):
+	* gst/gstqueue.h:
+	* gst/gstscheduler.c: (gst_scheduler_init),
+	(gst_scheduler_dispose), (gst_scheduler_create_task),
+	(gst_scheduler_factory_create):
+	* gst/gstscheduler.h:
+	* gst/gststructure.c: (gst_structure_get_type),
+	(gst_structure_copy_conditional):
+	* gst/gststructure.h:
+	* gst/gsttaginterface.h:
+	* gst/gsttask.c: (gst_task_get_type), (gst_task_class_init),
+	(gst_task_init), (gst_task_dispose), (gst_task_create),
+	(gst_task_get_state), (gst_task_start), (gst_task_stop),
+	(gst_task_pause):
+	* gst/gsttask.h:
+	* gst/gstthread.c:
+	* gst/gstthread.h:
+	* gst/gsttypes.h:
+	* gst/schedulers/Makefile.am:
+	* gst/schedulers/cothreads_compat.h:
+	* gst/schedulers/entryscheduler.c:
+	* gst/schedulers/faircothreads.c:
+	* gst/schedulers/faircothreads.h:
+	* gst/schedulers/fairscheduler.c:
+	* gst/schedulers/gstbasicscheduler.c:
+	* gst/schedulers/gstoptimalscheduler.c:
+	* gst/schedulers/gthread-cothreads.h:
+	* gst/schedulers/threadscheduler.c:
+	(gst_thread_scheduler_task_get_type),
+	(gst_thread_scheduler_task_class_init),
+	(gst_thread_scheduler_task_init),
+	(gst_thread_scheduler_task_start),
+	(gst_thread_scheduler_task_stop),
+	(gst_thread_scheduler_task_pause), (gst_thread_scheduler_get_type),
+	(gst_thread_scheduler_class_init), (gst_thread_scheduler_func),
+	(gst_thread_scheduler_init), (gst_thread_scheduler_create_task),
+	(gst_thread_scheduler_setup), (gst_thread_scheduler_reset),
+	(plugin_init):
+	* libs/gst/Makefile.am:
+	* libs/gst/bytestream/bytestream.c: (gst_bytestream_get_next_buf):
+	* libs/gst/bytestream/filepad.c: (gst_file_pad_init),
+	(gst_file_pad_parent_set):
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packet_from_event),
+	(gst_dp_event_from_packet):
+	* tests/complexity.c: (main):
+	* tests/mass_elements.c: (main):
+	* testsuite/states/locked.c: (message_received), (main):
+	* testsuite/states/parent.c: (main):
+	* tools/gst-inspect.c: (print_element_flag_info),
+	(print_implementation_info), (print_pad_info):
+	* tools/gst-launch.c: (check_intr), (play_handler), (event_loop),
+	(main):
+	* tools/gst-md5sum.c: (event_loop), (main):
+	* tools/gst-typefind.c: (main):
+	* tools/gst-xmlinspect.c: (print_element_info):
+	Next big merge.
+	Added GstBus for mainloop integration.
+	Added GstMessage for sending notifications on the bus.
+	Added GstTask as an abstraction for pipeline entry points.
+	Removed GstThread.
+	Removed Schedulers.
+	Simplified GstQueue for multithreaded core.
+	Made _link threadsafe, removed old capsnego.
+	Added STREAM_LOCK and PREROLL_LOCK in GstPad.
+	Added pad blocking functions.
+	Reworked scheduling functions in GstPad to prepare for
+	scheduling updates soon.
+	Moved events out of data stream.
+	Simplified GstEvent types.
+	Added return values to push/pull.
+	Removed clocking from GstElement.
+	Added prototypes for state change function for next merge.
+	Removed iterate from bins and state change management.
+	Fixed some elements, disabled others for now.
+	Fixed -inspect and -launch.
+	Added check for GstBus.
+
 2005-03-10  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-MT-refcounting.txt:

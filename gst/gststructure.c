@@ -61,7 +61,7 @@ static gboolean gst_structure_parse_simple_string (gchar * s, gchar ** end);
 GType
 gst_structure_get_type (void)
 {
-  static GType gst_structure_type;
+  static GType gst_structure_type = 0;
 
   if (!gst_structure_type) {
     gst_structure_type = g_boxed_type_register_static ("GstStructure",

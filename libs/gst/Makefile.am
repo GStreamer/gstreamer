@@ -1,1 +1,1 @@
-SUBDIRS = bytestream control dataprotocol getbits 
+SUBDIRS = control dataprotocol getbits 

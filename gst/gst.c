@@ -535,9 +535,8 @@ gst_register_core_elements (GstPlugin * plugin)
           GST_TYPE_BIN) ||
       !gst_element_register (plugin, "pipeline", GST_RANK_PRIMARY,
           GST_TYPE_PIPELINE) ||
-      !gst_element_register (plugin, "thread", GST_RANK_PRIMARY,
-          GST_TYPE_THREAD) ||
-      !gst_element_register (plugin, "queue", GST_RANK_NONE, GST_TYPE_QUEUE))
+      !gst_element_register (plugin, "queue", GST_RANK_NONE, GST_TYPE_QUEUE)
+      )
     g_assert_not_reached ();
 
   return TRUE;
@@ -617,6 +616,7 @@ init_post (void)
   _gst_plugin_initialize ();
   _gst_event_initialize ();
   _gst_buffer_initialize ();
+  _gst_message_initialize ();
   _gst_tag_initialize ();
 
 #ifndef GST_DISABLE_REGISTRY

@@ -68,8 +68,6 @@ main (int argc, char *argv[])
     gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
     while (!FOUND) {
-      if (!gst_bin_iterate (GST_BIN (pipeline)))
-        break;
     }
     if (!FOUND) {
       g_print ("%s - No type found\n", argv[i]);

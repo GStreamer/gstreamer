@@ -46,7 +46,7 @@ struct _GstTagSetterIFace
   /* virtual table */
 };
 
-GType		gst_tag_setter_get_type		(void) G_GNUC_CONST;
+GType		gst_tag_setter_get_type		(void);
 
 void		gst_tag_setter_merge		(GstTagSetter *		setter,
 						 const GstTagList *	list,

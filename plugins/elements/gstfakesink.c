@@ -113,7 +113,8 @@ static void gst_fakesink_get_property (GObject * object, guint prop_id,
 
 static GstElementStateReturn gst_fakesink_change_state (GstElement * element);
 
-static void gst_fakesink_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_fakesink_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_fakesink_event (GstPad * pad, GstEvent * event);
 
 static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
 
@@ -188,6 +189,7 @@ gst_fakesink_init (GstFakeSink * fakesink)
       "sink");
   gst_element_add_pad (GST_ELEMENT (fakesink), pad);
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
+  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_event));
 
   fakesink->silent = FALSE;
   fakesink->dump = FALSE;
@@ -195,8 +197,6 @@ gst_fakesink_init (GstFakeSink * fakesink)
   fakesink->last_message = NULL;
   fakesink->state_error = FAKESINK_STATE_ERROR_NONE;
   fakesink->signal_handoffs = FALSE;
-
-  GST_FLAG_SET (fakesink, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -307,47 +307,43 @@ gst_fakesink_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static void
-gst_fakesink_chain (GstPad * pad, GstData * _data)
+static gboolean
+gst_fakesink_event (GstPad * pad, GstEvent * event)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstFakeSink *fakesink;
-
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
 
   fakesink = GST_FAKESINK (GST_OBJECT_PARENT (pad));
 
-  if (GST_IS_EVENT (buf)) {
-    GstEvent *event = GST_EVENT (buf);
+  if (!fakesink->silent) {
+    g_free (fakesink->last_message);
 
-    if (!fakesink->silent) {
-      g_free (fakesink->last_message);
+    fakesink->last_message =
+        g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
+        GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE (event), event);
 
-      fakesink->last_message =
-          g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
-          GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE (event), event);
-
-      g_object_notify (G_OBJECT (fakesink), "last_message");
-    }
-
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_DISCONTINUOUS:
-        if (fakesink->sync && fakesink->clock) {
-          gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
-
-          gst_element_set_time (GST_ELEMENT (fakesink), value);
-        }
-      default:
-        gst_pad_event_default (pad, event);
-        break;
-    }
-    return;
+    g_object_notify (G_OBJECT (fakesink), "last_message");
   }
 
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_DISCONTINUOUS:
+    default:
+      gst_pad_event_default (pad, event);
+      break;
+  }
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_fakesink_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstBuffer *buf = GST_BUFFER (buffer);
+  GstFakeSink *fakesink;
+
+  fakesink = GST_FAKESINK (GST_OBJECT_PARENT (pad));
+
   if (fakesink->sync && fakesink->clock) {
-    gst_element_wait (GST_ELEMENT (fakesink), GST_BUFFER_TIMESTAMP (buf));
+    //gst_element_wait (GST_ELEMENT (fakesink), GST_BUFFER_TIMESTAMP (buf));
   }
 
   if (!fakesink->silent) {
@@ -374,6 +370,8 @@ gst_fakesink_chain (GstPad * pad, GstData * _data)
   }
 
   gst_buffer_unref (buf);
+
+  return GST_FLOW_OK;
 }
 
 static GstElementStateReturn

@@ -34,24 +34,30 @@ G_BEGIN_DECLS
 
 GST_EXPORT GType _gst_event_type;
 
+/**
+ * GstEventType:
+ * @GST_EVENT_UNKNOWN: 
+ * @GST_EVENT_EOS:
+ * @GST_EVENT_FLUSH:
+ * @GST_EVENT_DISCONTINUOUS:
+ * @GST_EVENT_QOS:
+ * @GST_EVENT_SEEK:
+ * @GST_EVENT_SIZE:
+ * @GST_EVENT_RATE:
+ * @GST_EVENT_NAVIGATION:
+ * @GST_EVENT_TAG:
+ */
 typedef enum {
   GST_EVENT_UNKNOWN		= 0,
   GST_EVENT_EOS			= 1,
   GST_EVENT_FLUSH		= 2,
-  GST_EVENT_EMPTY		= 3,
-  GST_EVENT_DISCONTINUOUS	= 4,
-  /*GST_EVENT_NEW_MEDIA		= 5, <- removed */
-  GST_EVENT_QOS			= 6,
-  GST_EVENT_SEEK		= 7,
-  GST_EVENT_SEEK_SEGMENT	= 8,
-  GST_EVENT_SEGMENT_DONE	= 9,
-  GST_EVENT_SIZE		= 10,
-  GST_EVENT_RATE		= 11,
-  GST_EVENT_FILLER		= 12,
-  GST_EVENT_TS_OFFSET		= 13,
-  GST_EVENT_INTERRUPT		= 14,
-  GST_EVENT_NAVIGATION		= 15,
-  GST_EVENT_TAG			= 16
+  GST_EVENT_DISCONTINUOUS	= 3,
+  GST_EVENT_QOS			= 4,
+  GST_EVENT_SEEK		= 5,
+  GST_EVENT_SIZE		= 8,
+  GST_EVENT_RATE		= 9,
+  GST_EVENT_NAVIGATION		= 10,
+  GST_EVENT_TAG			= 11
 } GstEventType;
 #define GST_EVENT_ANY GST_EVENT_NAVIGATION
 
@@ -87,7 +93,6 @@ typedef struct
   GstEventFlag	flags;
 } GstEventMask;
 
-#ifndef GST_DISABLE_DEPRECATED
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_EVENT_MASK_FUNCTION(type,functionname, ...)      \
 static const GstEventMask*                              \
@@ -110,7 +115,6 @@ functionname (type pad)					\
   };							\
   return masks;						\
 }
-#endif
 #endif
 
 /* seek events, extends GstEventFlag */
@@ -153,6 +157,8 @@ typedef struct
 #define GST_EVENT_DISCONT_OFFSET(event,i)	(GST_EVENT(event)->event_data.discont.offsets[i])
 #define GST_EVENT_DISCONT_OFFSET_LEN(event)	(GST_EVENT(event)->event_data.discont.noffsets)
 
+#define GST_EVENT_FLUSH_DONE(event)		(GST_EVENT(event)->event_data.flush.done)
+
 #define GST_EVENT_SIZE_FORMAT(event)		(GST_EVENT(event)->event_data.size.format)
 #define GST_EVENT_SIZE_VALUE(event)		(GST_EVENT(event)->event_data.size.value)
 
@@ -178,6 +184,9 @@ struct _GstEvent {
       gint		noffsets;
       gboolean		new_media;
     } discont;
+    struct {
+      gboolean		done;
+    } flush;
     struct {
       GstFormat		format;
       gint64		value;
@@ -226,12 +235,9 @@ GstEvent*	gst_event_new_discontinuous_valist	(gboolean new_media,
 gboolean	gst_event_discont_get_value	(GstEvent *event, GstFormat format, gint64 *value);
 
 #define		gst_event_new_filler()		gst_event_new(GST_EVENT_FILLER)
-GstEvent*	gst_event_new_filler_stamped	(guint64 time,
-						 guint64 duration);
-guint64		gst_event_filler_get_duration	(GstEvent *event);
 
 /* flush events */
-#define		gst_event_new_flush()		gst_event_new(GST_EVENT_FLUSH)
+GstEvent*	gst_event_new_flush 		(gboolean done);
 
 G_END_DECLS
 

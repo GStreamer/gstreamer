@@ -1,0 +1,141 @@
+/* GStreamer
+ * Copyright (C) 2004 Wim Taymans <wim@fluendo.com>
+ *
+ * gstmessage.h: Header for GstMessage subsystem
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifndef __GST_MESSAGE_H__
+#define __GST_MESSAGE_H__
+
+#include <gst/gsttypes.h>
+#include <gst/gstdata.h>
+#include <gst/gstobject.h>
+#include <gst/gsttag.h>
+#include <gst/gststructure.h>
+
+G_BEGIN_DECLS 
+
+GST_EXPORT GType _gst_message_type;
+
+/**
+ * GstMessageType:
+ * @GST_MESSAGE_UNKNOWN: an undefined message
+ * @GST_MESSAGE_EOS: end-of-stream reached in a pipeline
+ * @GST_MESSAGE_ERROR: an error occured
+ * @GST_MESSAGE_WARNING: a warning occured.
+ * @GST_MESSAGE_INFO: an info message occured
+ * @GST_MESSAGE_TAG: a tag was found.
+ * @GST_MESSAGE_BUFFERING: the pipeline is buffering
+ * @GST_MESSAGE_STATE_CHANGED: a state change happened
+ * @GST_MESSAGE_STEP_DONE: a framestep finished.
+ * @GST_MESSAGE_NEW_CLOCK: a new clock was selected in the pipeline
+ * @GST_MESSAGE_STRUCTURE_CHANGE: the structure of the pipeline changed.
+ * @GST_MESSAGE_STREAM_STATUS: status about a stream, emited when it starts,
+ *                             stops, errors, etc..
+ * @GST_MESSAGE_APPLICATION: message posted by the application, possibly
+ *                           via an application-specific element.
+ * @GST_MESSAGE_ANY: mask for all of the above messages.
+ */
+typedef enum
+{
+  GST_MESSAGE_UNKNOWN           = 0,
+  GST_MESSAGE_EOS               = (1 << 0),
+  GST_MESSAGE_ERROR             = (1 << 1),
+  GST_MESSAGE_WARNING           = (1 << 2),
+  GST_MESSAGE_INFO              = (1 << 3),
+  GST_MESSAGE_TAG               = (1 << 4),
+  GST_MESSAGE_BUFFERING         = (1 << 5),
+  GST_MESSAGE_STATE_CHANGED     = (1 << 6),
+  GST_MESSAGE_STEP_DONE         = (1 << 7),
+  GST_MESSAGE_NEW_CLOCK         = (1 << 8),
+  GST_MESSAGE_STRUCTURE_CHANGE  = (1 << 9),
+  GST_MESSAGE_STREAM_STATUS     = (1 << 10),
+  GST_MESSAGE_APPLICATION       = (1 << 11),
+  GST_MESSAGE_ANY               = 0xffffffff
+} GstMessageType;
+
+#define GST_MESSAGE_TRACE_NAME	"GstMessage"
+
+#define GST_TYPE_MESSAGE	(_gst_message_type)
+#define GST_MESSAGE(message)	((GstMessage*)(message))
+#define GST_IS_MESSAGE(message)	(GST_DATA_TYPE(message) == GST_TYPE_MESSAGE)
+
+/* the lock is used to handle the synchronous handling of messages,
+ * the emiting thread is block until the handling thread processed
+ * the message using this mutex/cond pair */
+#define GST_MESSAGE_GET_LOCK(message)	(GST_MESSAGE(message)->lock)
+#define GST_MESSAGE_LOCK(message)	g_mutex_lock(GST_MESSAGE_GET_LOCK(message))
+#define GST_MESSAGE_UNLOCK(message)	g_mutex_unlock(GST_MESSAGE_GET_LOCK(message))
+#define GST_MESSAGE_COND(message)	(GST_MESSAGE(message)->cond)
+#define GST_MESSAGE_WAIT(message)	g_cond_wait(GST_MESSAGE_COND(message),GST_MESSAGE_GET_LOCK(message))
+#define GST_MESSAGE_SIGNAL(message)	g_cond_signal(GST_MESSAGE_COND(message))
+
+#define GST_MESSAGE_TYPE(message)	(GST_MESSAGE(message)->type)
+#define GST_MESSAGE_TIMESTAMP(message)	(GST_MESSAGE(message)->timestamp)
+#define GST_MESSAGE_SRC(message)	(GST_MESSAGE(message)->src)
+
+struct _GstMessage
+{
+  GstData data;
+
+  /*< public > *//* with MESSAGE_LOCK */
+  GMutex *lock;                 /* lock and cond for async delivery */
+  GCond *cond;
+
+  /*< public > *//* with COW */
+  GstMessageType type;
+  guint64 timestamp;
+  GstObject *src;
+
+  GstStructure *structure;
+  
+  /*< private > */
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+void 		_gst_message_initialize 	(void);
+
+GType 		gst_message_get_type 		(void);
+GstMessage *	gst_message_new 		(GstMessageType type, GstObject * src);
+
+/* refcounting */
+#define         gst_message_ref(ev)		GST_MESSAGE (gst_data_ref (GST_DATA (ev)))
+#define         gst_message_ref_by_count(ev,c)	GST_MESSAGE (gst_data_ref_by_count (GST_DATA (ev), c))
+#define         gst_message_unref(ev)		gst_data_unref (GST_DATA (ev))
+/* copy message */
+#define         gst_message_copy(ev)		GST_MESSAGE (gst_data_copy (GST_DATA (ev)))
+
+GstMessage *	gst_message_new_eos 		(GstObject * src);
+GstMessage *	gst_message_new_error 		(GstObject * src, GError * error, gchar * debug);
+GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * debug);
+GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
+GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstElementState old_state,
+                                                 GstElementState new_state);
+GstMessage *	gst_message_new_application 	(GstStructure *structure);
+
+const GstStructure *  gst_message_get_structure	(GstMessage *message);
+
+void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
+void		gst_message_parse_state_changed	(GstMessage *message, GstElementState *old_state,
+                                                 GstElementState *new_state);
+void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
+void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
+
+
+G_END_DECLS
+#endif /* __GST_MESSAGE_H__ */

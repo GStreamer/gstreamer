@@ -505,28 +505,12 @@ print_element_flag_info (GstElement * element)
   n_print ("\n");
   n_print ("Element Flags:\n");
 
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
-    n_print ("  GST_ELEMENT_DECOUPLED\n");
-    have_flags = TRUE;
-  }
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_EVENT_AWARE)) {
-    n_print ("  GST_ELEMENT_EVENT_AWARE\n");
-    have_flags = TRUE;
-  }
   if (!have_flags)
     n_print ("  no flags set\n");
 
   if (GST_IS_BIN (element)) {
     n_print ("\n");
     n_print ("Bin Flags:\n");
-    if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_MANAGER)) {
-      n_print ("  GST_BIN_FLAG_MANAGER\n");
-      have_flags = TRUE;
-    }
-    if (GST_FLAG_IS_SET (element, GST_BIN_SELF_SCHEDULABLE)) {
-      n_print ("  GST_BIN_SELF_SCHEDULABLE\n");
-      have_flags = TRUE;
-    }
     if (!have_flags)
       n_print ("  no flags set\n");
   }
@@ -544,11 +528,7 @@ print_implementation_info (GstElement * element)
   n_print ("\n");
   n_print ("Element Implementation:\n");
 
-  if (element->loopfunc)
-    n_print ("  loopfunc()-based element: %s\n",
-        GST_DEBUG_FUNCPTR_NAME (element->loopfunc));
-  else
-    n_print ("  No loopfunc(), must be chain-based or not configured yet\n");
+  n_print ("  No loopfunc(), must be chain-based or not configured yet\n");
 
   n_print ("  Has change_state() function: %s\n",
       GST_DEBUG_FUNCPTR_NAME (gstelement_class->change_state));
@@ -647,9 +627,9 @@ print_pad_info (GstElement * element)
     if (realpad->chainfunc)
       n_print ("      Has chainfunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (realpad->chainfunc));
-    if (realpad->getfunc)
-      n_print ("      Has getfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (realpad->getfunc));
+    if (realpad->getrangefunc)
+      n_print ("      Has getrangefunc(): %s\n",
+          GST_DEBUG_FUNCPTR_NAME (realpad->getrangefunc));
     if (realpad->formatsfunc != gst_pad_get_formats_default) {
       n_print ("      Supports seeking/conversion/query formats:\n");
       print_formats (gst_pad_get_formats (GST_PAD (realpad)));

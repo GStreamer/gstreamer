@@ -76,13 +76,15 @@ typedef struct _GstFakeSrcClass GstFakeSrcClass;
 struct _GstFakeSrc {
   GstElement     element;
 
-  gboolean 	 loop_based;
+  gboolean 	 has_loop;
+  gboolean 	 has_getrange;
   gboolean 	 eos;
 
   GstFakeSrcOutputType output;
   GstFakeSrcDataType   data;
   GstFakeSrcSizeType   sizetype;
   GstFakeSrcFillType   filltype;
+  GstActivateMode      pad_mode;
 
   guint 	 sizemin;
   guint 	 sizemax;

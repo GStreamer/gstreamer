@@ -54,7 +54,7 @@ struct _GstStructure {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType                   gst_structure_get_type             (void) G_GNUC_CONST;
+GType                   gst_structure_get_type             (void);
 
 GstStructure *          gst_structure_empty_new            (const gchar *            name);
 GstStructure *          gst_structure_id_empty_new         (GQuark                   quark);

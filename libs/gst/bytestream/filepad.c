@@ -39,7 +39,7 @@ GST_BOILERPLATE_FULL (GstFilePad, gst_file_pad, GstRealPad, GST_TYPE_REAL_PAD,
      static void gst_file_pad_dispose (GObject * object);
      static void gst_file_pad_finalize (GObject * object);
 
-     static void gst_file_pad_chain (GstPad * pad, GstData * data);
+     //static void gst_file_pad_chain (GstPad * pad, GstData * data);
      static void gst_file_pad_parent_set (GstObject * object,
     GstObject * parent);
 
@@ -68,7 +68,7 @@ gst_file_pad_init (GstFilePad * pad)
   /* must do this for set_chain_function to work */
   real->direction = GST_PAD_SINK;
 
-  gst_pad_set_chain_function (GST_PAD (real), gst_file_pad_chain);
+  //gst_pad_set_chain_function (GST_PAD (real), gst_file_pad_chain);
 
   pad->adapter = gst_adapter_new ();
   pad->in_seek = FALSE;
@@ -98,6 +98,7 @@ gst_file_pad_finalize (GObject * object)
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
+#if 0
 static void
 gst_file_pad_chain (GstPad * gst_pad, GstData * data)
 {
@@ -174,6 +175,7 @@ gst_file_pad_chain (GstPad * gst_pad, GstData * data)
     }
   }
 }
+#endif
 
 static void
 gst_file_pad_parent_set (GstObject * object, GstObject * parent)
@@ -183,10 +185,8 @@ gst_file_pad_parent_set (GstObject * object, GstObject * parent)
   /* FIXME: we can only be added to elements, right? */
   element = GST_ELEMENT (parent);
 
-  if (element->loopfunc)
-    g_warning ("attempt to add a GstFilePad to a loopbased element.");
-  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_EVENT_AWARE))
-    g_warning ("elements using GstFilePad must be event-aware.");
+  //if (element->loopfunc)
+  //  g_warning ("attempt to add a GstFilePad to a loopbased element.");
 
   GST_CALL_PARENT (GST_OBJECT_CLASS, parent_set, (object, parent));
 }

@@ -24,23 +24,24 @@ endif
 
 libgstelements_la_DEPENDENCIES = ../libgstreamer-@GST_MAJORMINOR@.la
 libgstelements_la_SOURCES =	\
-	gstaggregator.c		\
-	gstbufferstore.c	\
-	gstelements.c		\
-	gstfakesink.c		\
 	gstfakesrc.c		\
-	gstfilesink.c		\
+	gstfakesink.c		\
 	gstfilesrc.c		\
-	gstfdsink.c		\
-	gstfdsrc.c		\
 	gstidentity.c		\
-	gstmd5sink.c		\
-	$(multifilesrc)		\
-	$(pipefilter)		\
-	gstshaper.c		\
-	gststatistics.c		\
-	gsttee.c		\
-	gsttypefindelement.c
+	gstelements.c		\
+	gsttee.c
+
+# 	gstaggregator.c		\
+# 	gstbufferstore.c	\
+# 	gstfilesink.c		\
+# 	gstfdsink.c		\
+# 	gstfdsrc.c		\
+# 	gstmd5sink.c		\
+# 	$(multifilesrc)		\
+# 	$(pipefilter)		\
+# 	gstshaper.c		\
+# 	gststatistics.c		\
+# 	gsttypefindelement.c
 
 libgstelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstelements_la_LIBADD = $(GST_OBJ_LIBS)
