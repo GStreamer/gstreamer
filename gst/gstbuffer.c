@@ -39,6 +39,9 @@ static GstAllocTrace *_gst_buffer_trace;
 
 static GstMemChunk *chunk;
 
+static GstBuffer *gst_buffer_alloc_chunk (void);
+static void gst_buffer_free_chunk (GstBuffer * buffer);
+
 void
 _gst_buffer_initialize (void)
 {
@@ -71,10 +74,7 @@ _gst_buffer_sub_free (GstBuffer * buffer)
 
   _GST_DATA_DISPOSE (GST_DATA (buffer));
 
-  gst_mem_chunk_free (chunk, GST_DATA (buffer));
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_free (_gst_buffer_trace, buffer);
-#endif
+  gst_buffer_free_chunk (buffer);
 }
 
 /**
@@ -102,10 +102,7 @@ gst_buffer_default_free (GstBuffer * buffer)
 
   _GST_DATA_DISPOSE (GST_DATA (buffer));
 
-  gst_mem_chunk_free (chunk, GST_DATA (buffer));
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_free (_gst_buffer_trace, buffer);
-#endif
+  gst_buffer_free_chunk (buffer);
 }
 
 /**
@@ -144,10 +141,7 @@ gst_buffer_default_copy (GstBuffer * buffer)
   g_return_val_if_fail (buffer != NULL, NULL);
 
   /* create a fresh new buffer */
-  copy = gst_mem_chunk_alloc (chunk);
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_gst_buffer_trace, copy);
-#endif
+  copy = gst_buffer_alloc_chunk ();
 
   _GST_DATA_INIT (GST_DATA (copy),
       _gst_buffer_type,
@@ -168,6 +162,28 @@ gst_buffer_default_copy (GstBuffer * buffer)
   return copy;
 }
 
+static GstBuffer *
+gst_buffer_alloc_chunk (void)
+{
+  GstBuffer *newbuf;
+
+  newbuf = gst_mem_chunk_alloc (chunk);
+#ifndef GST_DISABLE_TRACE
+  gst_alloc_trace_new (_gst_buffer_trace, newbuf);
+#endif
+
+  return newbuf;
+}
+
+static void
+gst_buffer_free_chunk (GstBuffer * buffer)
+{
+  gst_mem_chunk_free (chunk, GST_DATA (buffer));
+#ifndef GST_DISABLE_TRACE
+  gst_alloc_trace_free (_gst_buffer_trace, buffer);
+#endif
+}
+
 /**
  * gst_buffer_new:
  *
@@ -180,10 +196,7 @@ gst_buffer_new (void)
 {
   GstBuffer *newbuf;
 
-  newbuf = gst_mem_chunk_alloc (chunk);
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_gst_buffer_trace, newbuf);
-#endif
+  newbuf = gst_buffer_alloc_chunk ();
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p", newbuf);
 
@@ -263,10 +276,7 @@ gst_buffer_create_sub (GstBuffer * parent, guint offset, guint size)
   gst_data_ref (GST_DATA (parent));
 
   /* create the new buffer */
-  buffer = gst_mem_chunk_alloc (chunk);
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_gst_buffer_trace, buffer);
-#endif
+  buffer = gst_buffer_alloc_chunk ();
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p (parent %p)", buffer, parent);
 
