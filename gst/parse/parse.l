@@ -10,9 +10,9 @@
 #include "grammar.tab.h"
 
 #ifdef G_HAVE_ISO_VARARGS
-#define PRINT(...) GST_CAT_DEBUG (GST_CAT_PIPELINE, "flex: "__VA_ARGS__)
+#define PRINT(...) GST_CAT_DEBUG (GST_CAT_PIPELINE, "flex: " __VA_ARGS__)
 #elif defined(G_HAVE_GNUC_VARARGS)
-#define PRINT(args...) GST_CAT_DEBUG (GST_CAT_PIPELINE, "flex: "##args)
+#define PRINT(args...) GST_CAT_DEBUG (GST_CAT_PIPELINE, "flex: " args)
 #else
 #define PRINT(args...)
 #endif

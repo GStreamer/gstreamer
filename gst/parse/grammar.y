@@ -123,21 +123,21 @@ typedef struct {
 #define SET_ERROR(error, type, args...) G_STMT_START{ \
   if (error) { \
     if (*(error)) { \
-      g_warning ( ## args ); \
+      g_warning ( args ); \
     } else { \
-      g_set_error ((error), GST_PARSE_ERROR, (type), ## args ); \
+      g_set_error ((error), GST_PARSE_ERROR, (type), args ); \
     }\
   } \
 }G_STMT_END
-#define ERROR(type, args...) SET_ERROR (((graph_t *) graph)->error, (type), ## args )
+#define ERROR(type, args...) SET_ERROR (((graph_t *) graph)->error, (type) , args )
 #ifndef GST_DISABLE_GST_DEBUG
 #  define YYDEBUG 1
    /* bison 1.35 calls this macro with side effects, we need to make sure the
       side effects work - crappy bison
-#  define YYFPRINTF(a, args...) GST_CAT_DEBUG (GST_CAT_PIPELINE, ## args )
+#  define YYFPRINTF(a, args...) GST_CAT_DEBUG (GST_CAT_PIPELINE, args )
  */
 #  define YYFPRINTF(a, args...) G_STMT_START{ \
-     gchar *temp = g_strdup_printf ( ## args ); \
+     gchar *temp = g_strdup_printf ( args ); \
      GST_CAT_DEBUG (GST_CAT_PIPELINE, temp); \
      g_free (temp); \
    }G_STMT_END

@@ -6,6 +6,15 @@ API:
 
  - events should all use GstStructure
 
+ - reorganize headers (split app headers vs plugin headers maybe)
+
+ - make GstPadLinkReturn internal (to either plugins+core or just core)
+   and return gboolean to apps.
+
+ - rewrite GstIndex
+
+ - gst_init() et al. need to work correctly when called multiple times
+   and from libraries, etc.
 
 caps:
 
@@ -27,6 +36,11 @@ caps:
   I'd _really_ like to have - especially during gst_register.
 
   But that's 0.10 material."
+
+negotiation:
+
+  autopluggers would be easier to write if there was a core method
+  to do what plugidentities do.
 
 bugs with interesting info:
  

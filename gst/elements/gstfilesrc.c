@@ -484,7 +484,7 @@ gst_filesrc_get_mmap (GstFileSrc *src)
     /* ('cause by definition if readend is in the buffer, so's readstart) */
     if (readend <= mapend) {
       GST_LOG_OBJECT (src, "read buf %llu+%d lives in current mapbuf %lld+%d, creating subbuffer of mapbuf",
-             src->curoffset, readsize, mapstart, mapsize);
+             src->curoffset, (int)readsize, mapstart, mapsize);
       buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - mapstart,
                                    readsize);
       GST_BUFFER_OFFSET (buf) = src->curoffset;
@@ -516,12 +516,13 @@ gst_filesrc_get_mmap (GstFileSrc *src)
   /* then deal with the case where the read buffer is totally outside */
   if (buf == NULL) {
     /* first check to see if there's a map that covers the right region already */
-    GST_LOG_OBJECT (src, "searching for mapbuf to cover %llu+%d",src->curoffset,readsize);
+    GST_LOG_OBJECT (src, "searching for mapbuf to cover %llu+%d",
+        src->curoffset,(int)readsize);
     
     /* if the read buffer crosses a mmap region boundary, create a one-off region */
     if ((src->curoffset / src->mapsize) != (readend / src->mapsize)) {
       GST_LOG_OBJECT (src, "read buf %llu+%d crosses a %d-byte boundary, creating a one-off",
-	     src->curoffset,readsize,src->mapsize);
+	     src->curoffset,(int)readsize,(int)src->mapsize);
       buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
       if (buf == NULL)
 	return NULL;
@@ -539,7 +540,8 @@ gst_filesrc_get_mmap (GstFileSrc *src)
 
       /* double the mapsize as long as the readsize is smaller */
       while (readsize - (src->curoffset - nextmap) > mapsize) {
-	GST_LOG_OBJECT (src, "readsize smaller then mapsize %08x %d", readsize, mapsize);
+	GST_LOG_OBJECT (src, "readsize smaller then mapsize %08x %d",
+            readsize, (int)mapsize);
 	mapsize <<=1;
       }
       /* create a new one */

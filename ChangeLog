@@ -1,5 +1,13 @@
 2004-02-06  David Schleef  <ds@schleef.org>
 
+	* docs/random/ds/0.9-suggested-changes: Random ramblings
+	* gst/elements/gstfilesrc.c: (gst_filesrc_get_mmap): Cast size_t
+	to int before printing.
+	* gst/parse/grammar.y: Fix gcc-2.95 style variadic macros.
+	* gst/parse/parse.l: same.  See bug #129600
+
+2004-02-06  David Schleef  <ds@schleef.org>
+
 	* gst/gstindex.c: (gst_index_add_format), (gst_index_add_id),
 	(gst_index_add_entry), (gst_index_add_associationv),
 	(gst_index_add_association): Add gst_index_add_associationv()
