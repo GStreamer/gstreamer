@@ -82,14 +82,15 @@
       <itemizedlist>
         <listitem>
 	  <para>
-	    Using GLib g_mem_chunk where possible to minimize dynamic memory
-	    allocation.
+	    Using GLib g_mem_chunk and fast non-blocking allocation algorithms 
+	    where possible to minimize dynamic memory allocation.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
 	    Extremely light-weight connections between plugins. Data can travel
-	    the pipeline with minimal overhead.
+	    the pipeline with minimal overhead. Data passing between plugins only involves
+	    a pointer dereference in a typical pipeline.
 	  </para>
         </listitem>
         <listitem>
@@ -108,7 +109,8 @@
         <listitem>
 	  <para>
 	    The use of cothreads to minimize the threading overhead. Cothreads are a simple and fast
-	    user-space method for switching between subtasks.
+	    user-space method for switching between subtasks. Cothreads were measured  to
+	    consume as little as 600 cpu cycles.
 	  </para>
         </listitem>
         <listitem>
@@ -123,7 +125,24 @@
 	    used.
 	  </para>
         </listitem>
+        <listitem>
+	  <para>
+	    All critical data passing is free of locks and mutexes.
+	  </para>
+        </listitem>
       </itemizedlist>
     </sect2>
+
+    <sect2 id="sec-goals-testbed">
+      <title>Provide a framework for codec experimentation</title>
+      <para>
+        GStreamer also wants to be an easy framework where codec developers 
+	can experiment with different algorithms, speeding up the development
+	of open and free multimedia codecs like tarking and vorbis.
+      </para>
+      <para> 
+      </para> 
+    </sect2>
+
   </sect1>
 </chapter>

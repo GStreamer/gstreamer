@@ -27,7 +27,8 @@
       very wide variety of formats including mp3, Ogg Vorbis, Mpeg1, Mpeg2, Avi, Quicktime, mod
       and so on. 
       GStreamer, however, is much more than just another media player. Its
-      main advantages are that the pluggable components also make it possible
+      main advantages are that the pluggable components can be mixed and matched into 
+      abitrary pipelines so that it's possible
       to write a full fledged video or audio editing application. 
     </para> 
 
@@ -48,6 +49,7 @@
     <para>
       This book is about GStreamer from a developer's point of view; it describes
       how to write a GStreamer application using the GStreamer libraries and tools.
+      For an explanation about writing plugins, we suggest the Plugin Writers Guide.
     </para> 
 
   </sect1>

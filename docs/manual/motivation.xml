@@ -56,7 +56,9 @@
       <para> 
         Your typical media player might have a plugin for different media
         types. Two media players will typically implement their own plugin
-        mechanism so that the codecs cannot be easily exchanged. 
+        mechanism so that the codecs cannot be easily exchanged. The plugin system
+	of the typical media player is also very tailored to the specific needs
+	of the application.
       </para> 
       <para> 
         The lack of a unified plugin mechanism also seriously hinders the 
@@ -67,7 +69,8 @@
         While GStreamer also uses it own plugin system it offers a very rich
 	framework for the plugin developper and ensures the plugin can be used
 	in a wide range of applications, transparently interacting with other
-	plugins.
+	plugins. The Framework that GStreamer provides for the plugins is
+	flexible enough to host even the most demanding plugins.
       </para> 
     </sect2>
 
@@ -83,9 +86,10 @@
 	the GNOME object embedding using Bonobo.
       </para> 
       <para> 
-        While the GStreamer core does not use network transparent technologies
-	at the lowest level, it shouldn't be hard to create a wrapper around the
-	core components.
+        The GStreamer cores does not use network transparent technologies at the
+	lowest level as it only adds overhead for the local case. 
+	That said, it shouldn't be hard to create a wrapper around the
+	core components. 
       </para> 
     </sect2>
 

@@ -28,16 +28,17 @@ main (int argc, char *argv[])
 }
   </programlisting>
   <para>
-    It is also possible to call the gst_init method with two NULL argumants.
+    It is also possible to call the gst_init method with two NULL arguments.
   </para>
   <para> 
     Use the GST_VERSION_MAJOR, GST_VERSION_MINOR and GST_VERSION_MICRO macros to
-    get the <application>GStreamer</application> version you are building against.
+    get the <application>GStreamer</application> version you are building against or
+    use gst_version() to get the version you are linked against.
   </para>
   <sect1>
     <title>The popt interface</title>
     <para>
-      more info here
+      You can also use a popt table to initialize your own parameters as shown in the next code fragment:
     </para>
     <programlisting>
 int
