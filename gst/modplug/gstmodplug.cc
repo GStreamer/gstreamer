@@ -345,12 +345,6 @@ gst_modplug_init (GstModPlug *modplug)
   modplug->channel         = 2;
   modplug->frequency       = 44100;
 
-  modplug->buffer_in = (guint8 *) g_malloc( 1024 *1024 * 2 );
-  modplug->state = MODPLUG_STATE_NEED_TUNE;
-  
-  modplug->metadata = NULL;
-  modplug->streaminfo = NULL;
-  
   /*modplug->bs = NULL;*/
 }
 
@@ -464,9 +458,6 @@ gst_modplug_src_event (GstPad *pad, GstEvent *event)
 
       /* shave off the flush flag, we'll need it later */
       flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
-
-      /* assume the worst */
-      res = FALSE;
 
       modplug->seek_at = GST_EVENT_SEEK_OFFSET (event);
     }
@@ -607,52 +598,6 @@ modplug_negotiate (GstModPlug *modplug)
 }
 
 static void
-gst_modplug_handle_event (GstPad *pad, GstBuffer *buffer)
-{
-  GstEvent *event = GST_EVENT (buffer);
-  GstModPlug *modplug = GST_MODPLUG (gst_pad_get_parent (pad));
-  
-  switch (GST_EVENT_TYPE (event))
-  {
-    case GST_EVENT_DISCONTINUOUS:
-    {
-      gint n = GST_EVENT_DISCONT_OFFSET_LEN (event);
-      gint i;
-
-      for (i = 0; i < n; i++)
-      {
-        const GstFormat *formats;
-
-	formats = gst_pad_get_formats (pad);
-
-        if (gst_formats_contains (formats,
-			            GST_EVENT_DISCONT_OFFSET(event, i).format))
-        {
-          gint64 value = GST_EVENT_DISCONT_OFFSET (event, i).value;
-          GstEvent *discont;
-          
-          gst_event_unref (event);
-
-          if (GST_PAD_IS_USABLE (modplug->srcpad))
-	        {
-            discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-			                           value, NULL);
-            gst_pad_push (modplug->srcpad, GST_BUFFER (discont));
-          }
-        }
-      }
-      modplug->state = MODPLUG_STATE_NEED_TUNE;
-      break;
-    }
-    default:
-      break;
-  }
-}    
-
-          
-
-
-static void
 gst_modplug_loop (GstElement *element)
 {
   GstModPlug *modplug;  
@@ -678,17 +623,17 @@ gst_modplug_loop (GstElement *element)
       GstEvent *event = GST_EVENT (buf);
 
       switch (GST_EVENT_TYPE (buf)) {
-	      case GST_EVENT_EOS:             
-             modplug->state = MODPLUG_STATE_LOAD_TUNE;
-	           break;
-	      case GST_EVENT_DISCONTINUOUS:
-	           break;
-	      default:
-	           /* bail out, we're not going to do anything */
-             gst_event_unref (event);
-	           gst_pad_send_event (modplug->srcpad, gst_event_new (GST_EVENT_EOS));
-	           gst_element_set_eos (element);
-	           return;
+        case GST_EVENT_EOS:             
+          modplug->state = MODPLUG_STATE_LOAD_TUNE;
+          break;
+        case GST_EVENT_DISCONTINUOUS:
+          break;
+        default:
+          /* bail out, we're not going to do anything */
+          gst_event_unref (event);
+          gst_pad_send_event (modplug->srcpad, gst_event_new (GST_EVENT_EOS));
+          gst_element_set_eos (element);
+          return;
       }
       gst_event_unref (event);
     }
@@ -698,13 +643,6 @@ gst_modplug_loop (GstElement *element)
 
       gst_buffer_unref (buf);
     }
-    
- /*   modplug->song_size = gst_bytestream_length (modplug->bs);    
-    modplug->bytes_read = gst_bytestream_peek_bytes (modplug->bs, &modplug->buffer_in, modplug->song_size);    
-    if (modplug->bytes_read != modplug->song_size )
-      gst_element_error (GST_ELEMENT (modplug), "could not read data %lld asked, %lld gotten", modplug->song_size, modplug->bytes_read);     
-
-    modplug->state = MODPLUG_STATE_LOAD_TUNE;*/
   }  
   
   if (modplug->state == MODPLUG_STATE_LOAD_TUNE) 
@@ -728,13 +666,6 @@ gst_modplug_loop (GstElement *element)
       
   if (modplug->state == MODPLUG_STATE_PLAY_TUNE) 
   {
-    GstBuffer *buf;
-    
-    /* Pull a buffer to handle events */
-    buf = gst_pad_pull (modplug->sinkpad);
-    if (GST_IS_EVENT (buf))
-      gst_modplug_handle_event (modplug->sinkpad, buf);       
-    
     if (modplug->seek_at != -1)
     {
       gint seek_to_pos;
@@ -775,7 +706,7 @@ gst_modplug_loop (GstElement *element)
       GST_BUFFER_SIZE (buffer_out) = modplug->length;
       GST_BUFFER_TIMESTAMP (buffer_out) = value;
       
- 	  	gst_pad_push (modplug->srcpad, buffer_out);   
+      gst_pad_push (modplug->srcpad, buffer_out);   
     }
     else
       if (GST_PAD_IS_USABLE (modplug->srcpad))
@@ -799,8 +730,10 @@ gst_modplug_change_state (GstElement *element)
     case GST_STATE_NULL_TO_READY:
     case GST_STATE_READY_TO_PAUSED:   
       modplug->song_size = 0;
-    /*  if ( modplug->bs == NULL )
-        modplug->bs = gst_bytestream_new (modplug->sinkpad);*/
+      modplug->buffer_in = (guint8 *) g_malloc( 1024 *1024 * 2 );
+      modplug->state = MODPLUG_STATE_NEED_TUNE;
+      modplug->metadata = NULL;
+      modplug->streaminfo = NULL;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -810,7 +743,6 @@ gst_modplug_change_state (GstElement *element)
       /*gst_bytestream_destroy (modplug->bs);*/
       modplug->mSoundFile->Destroy ();      
       g_free (modplug->audiobuffer);      
-     /* modplug->bs = NULL;*/
       modplug->audiobuffer = NULL;
       break;
     case GST_STATE_READY_TO_NULL:         

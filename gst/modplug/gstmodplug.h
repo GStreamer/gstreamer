@@ -28,7 +28,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include <gst/gst.h>
-/*#include <gst/bytestream/bytestream.h>*/
 	
 #include "modplug_types.h"	
 
@@ -48,7 +47,6 @@ struct _GstModPlug {
   GstElement element;
   GstPad *sinkpad, *srcpad;
   guint8 *buffer_in;
-  /*GstByteStream *bs;*/
   GstCaps *metadata;
   GstCaps	*streaminfo;
 
