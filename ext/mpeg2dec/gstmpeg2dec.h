@@ -52,6 +52,13 @@ typedef enum
   MPEG2DEC_FORMAT_YV12,
 } Mpeg2decFormat;
 
+typedef enum 
+{
+  MPEG2DEC_DISC_NONE 		= 0,
+  MPEG2DEC_DISC_NEW_PICTURE,
+  MPEG2DEC_DISC_NEW_KEYFRAME,
+} DiscontState;
+
 struct _GstMpeg2dec {
   GstElement 	 element;
 
@@ -62,14 +69,13 @@ struct _GstMpeg2dec {
   GstBufferPool *peerpool;
 
   mpeg2dec_t 	*decoder;
-  guint32	 accel;
   gboolean	 closed;
 
   /* the timestamp of the next frame */
-  gboolean	 first;
-  gboolean	 discont_pending;
+  DiscontState	 discont_state;
   gint64	 next_time;
-  gint64	 last_PTS;
+  gint64	 segment_start;
+  gint64	 segment_end;
 
   /* video state */
   Mpeg2decFormat format;
@@ -80,8 +86,10 @@ struct _GstMpeg2dec {
   gint		 frame_rate_code;
   gint64	 total_frames;
   gint64	 frame_period;
+  gboolean	 need_sequence;
 
   GstCaps	*streaminfo;
+  GstEvent	*pending_event;
 
   GstIndex	*index;
   gint		 index_id;

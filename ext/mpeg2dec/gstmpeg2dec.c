@@ -203,8 +203,27 @@ gst_mpeg2dec_init (GstMpeg2dec *mpeg2dec)
 
   /* initialize the mpeg2dec acceleration */
   mpeg2_accel (MPEG2_ACCEL_DETECT);
+  mpeg2dec->closed = TRUE;
 
   GST_FLAG_SET (GST_ELEMENT (mpeg2dec), GST_ELEMENT_EVENT_AWARE);
+}
+
+static void
+gst_mpeg2dec_close_decoder (GstMpeg2dec *mpeg2dec)
+{
+  if (!mpeg2dec->closed) {
+    mpeg2_close (mpeg2dec->decoder);
+    mpeg2dec->closed = TRUE;
+    mpeg2dec->decoder = NULL;
+  }
+}
+
+static void
+gst_mpeg2dec_open_decoder (GstMpeg2dec *mpeg2dec)
+{
+  gst_mpeg2dec_close_decoder (mpeg2dec);
+  mpeg2dec->decoder = mpeg2_init ();
+  mpeg2dec->closed = FALSE;
 }
 
 static void
@@ -212,10 +231,7 @@ gst_mpeg2dec_dispose (GObject *object)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (object);
 
-  if (!mpeg2dec->closed) {
-    mpeg2_close (mpeg2dec->decoder);
-    mpeg2dec->closed = TRUE;
-  }
+  gst_mpeg2dec_close_decoder (mpeg2dec);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -238,7 +254,7 @@ gst_mpeg2dec_get_index (GstElement *element)
   return mpeg2dec->index;
 }
 
-static gboolean
+static GstBuffer*
 gst_mpeg2dec_alloc_buffer (GstMpeg2dec *mpeg2dec, const mpeg2_info_t *info, gint64 offset)
 {
   GstBuffer *outbuf = NULL;
@@ -280,7 +296,7 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec *mpeg2dec, const mpeg2_info_t *info, gint
    * because we need it for indexing */
   GST_BUFFER_OFFSET (outbuf) = offset;
 
-  return TRUE;
+  return outbuf;
 }
 
 static gboolean
@@ -385,23 +401,15 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
       {
-	//gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
-	//mpeg2dec->decoder->is_sequence_needed = 1;
 	GST_DEBUG (GST_CAT_EVENT, "discont\n"); 
-        mpeg2dec->first = TRUE;
-        mpeg2dec->last_PTS = -1;
         mpeg2dec->next_time = 0;
-        mpeg2dec->discont_pending = TRUE;
+        mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
         gst_pad_event_default (pad, event);
 	return;
       }
       case GST_EVENT_EOS:
-        if (!mpeg2dec->closed) {
-          mpeg2_close (mpeg2dec->decoder); 
-	  mpeg2dec->closed = TRUE;
-	  if (mpeg2dec->index) {
-	    gst_index_commit (mpeg2dec->index, mpeg2dec->index_id);
-	  }
+	if (mpeg2dec->index && mpeg2dec->closed) {
+	  gst_index_commit (mpeg2dec->index, mpeg2dec->index_id);
         }
       default:
         gst_pad_event_default (pad, event);
@@ -431,7 +439,10 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
   mpeg2_buffer (mpeg2dec->decoder, data, end);
 
   while (!done) {
+    gboolean slice = FALSE;
+
     state = mpeg2_parse (mpeg2dec->decoder);
+    GST_DEBUG (0, "state %d", state);
     switch (state) {
       case STATE_SEQUENCE:
       {
@@ -452,7 +463,18 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 
 	update_streaminfo (mpeg2dec);
 
+	/* alloc 3 buffers */
 	gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
+	gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
+	gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
+
+	mpeg2dec->need_sequence = FALSE;
+	if (mpeg2dec->pending_event) {
+	  done = GST_EVENT_SEEK_FLAGS (mpeg2dec->pending_event) & GST_SEEK_FLAG_FLUSH;
+	  
+          gst_mpeg2dec_src_event (mpeg2dec->srcpad, mpeg2dec->pending_event);
+	  mpeg2dec->pending_event = NULL;
+	}
         break;
       }
       case STATE_SEQUENCE_REPEATED:
@@ -463,20 +485,19 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
       case STATE_PICTURE:
       {
 	gboolean key_frame = FALSE;
+	GstBuffer *outbuf;
 
         if (info->current_picture) {
 	  key_frame = (info->current_picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I;
 	}
-	gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
+	outbuf = gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
 
-        if (key_frame && mpeg2dec->discont_pending) {
-	  mpeg2dec->discont_pending = FALSE;
-	  mpeg2dec->first = TRUE;
-          if (pts != -1 && mpeg2dec->last_PTS == -1) {
-            mpeg2dec->last_PTS = pts;
-            mpeg2dec->next_time = pts;
-          }
-	}
+	GST_DEBUG (0, "picture %d, %p, %lld, %lld", 
+			key_frame, outbuf, GST_BUFFER_OFFSET (outbuf), pts);
+
+	if (mpeg2dec->discont_state == MPEG2DEC_DISC_NEW_PICTURE && key_frame)
+	  mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_KEYFRAME;
+
 	if (!GST_PAD_IS_USABLE (mpeg2dec->srcpad))
 	  mpeg2_skip (mpeg2dec->decoder, 1);
 	else
@@ -488,12 +509,19 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	GST_DEBUG (0, "slice 1st");
         break;
       case STATE_PICTURE_2ND:
-	GST_DEBUG (0, "picture second\n");
+	GST_DEBUG (0, "picture second");
         break;
       case STATE_SLICE:
+	slice = TRUE;
       case STATE_END:
       {
 	GstBuffer *outbuf = NULL;
+
+	if (!slice) {
+	  mpeg2dec->need_sequence = TRUE;
+	}
+	GST_DEBUG (0, "picture end %p %p %p %p", info->display_fbuf, info->display_picture, info->current_picture,
+			(info->display_fbuf ? info->display_fbuf->id : NULL));
 
 	if (info->display_fbuf && info->display_fbuf->id) {
           const picture_t *picture;
@@ -503,6 +531,13 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	  picture = info->display_picture;
 
 	  key_frame = (picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I;
+	  GST_DEBUG (0, "picture keyfame %d", key_frame);
+
+	  if (key_frame) {
+            GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT);
+	  }
+	  if (mpeg2dec->discont_state == MPEG2DEC_DISC_NEW_KEYFRAME && key_frame)
+	    mpeg2dec->discont_state = MPEG2DEC_DISC_NONE;
 
 	  if (picture->flags & PIC_FLAG_PTS) {
             GstClockTime time = MPEGTIME_TO_GSTTIME (picture->pts);
@@ -531,24 +566,20 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	  }
 
 	  
-	  /*
-	  if (picture->flags & PIC_FLAG_SKIP ||
-	      mpeg2dec->discont_pending ||
-	      (mpeg2dec->first && !GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_KEY_UNIT))) 
-	  */
 	  if (picture->flags & PIC_FLAG_SKIP || 
-	      !GST_PAD_IS_USABLE (mpeg2dec->srcpad)) {
+	      !GST_PAD_IS_USABLE (mpeg2dec->srcpad) || 
+	      mpeg2dec->discont_state != MPEG2DEC_DISC_NONE ||
+	      mpeg2dec->next_time < mpeg2dec->segment_start) 
+	  {
 	    gst_buffer_unref (outbuf);
 	  }
 	  else {
-            mpeg2dec->first = FALSE;
 	    gst_pad_push (mpeg2dec->srcpad, outbuf);
 	  }
 	}
 	if (info->discard_fbuf && info->discard_fbuf->id) {
 	  gst_buffer_unref ((GstBuffer *)info->discard_fbuf->id);
 	}
-
         break;
       }
       /* need more data */
@@ -603,6 +634,9 @@ gst_mpeg2dec_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
   const mpeg2_info_t *info;
 	      
   mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
+
+  if (mpeg2dec->decoder == NULL)
+    return FALSE;
 
   info = mpeg2_info (mpeg2dec->decoder);
 
@@ -661,6 +695,9 @@ gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   guint64 scale = 1;
 	      
   mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
+
+  if (mpeg2dec->decoder == NULL)
+    return FALSE;
 
   info = mpeg2_info (mpeg2dec->decoder);
 
@@ -813,12 +850,15 @@ gst_mpeg2dec_get_src_event_masks (GstPad *pad)
 }
 
 static gboolean 
-index_seek (GstMpeg2dec *mpeg2dec, GstEvent *event)
+index_seek (GstPad *pad, GstEvent *event)
 {
   GstIndexEntry *entry;
+  GstMpeg2dec *mpeg2dec;
+
+  mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
   
   entry = gst_index_get_assoc_entry (mpeg2dec->index, mpeg2dec->index_id,
-		             GST_INDEX_LOOKUP_BEFORE,
+		             GST_INDEX_LOOKUP_BEFORE, GST_ACCOCIATION_FLAG_KEY_UNIT,
 			     GST_EVENT_SEEK_FORMAT (event),
 			     GST_EVENT_SEEK_OFFSET (event));
 
@@ -833,13 +873,13 @@ index_seek (GstMpeg2dec *mpeg2dec, GstEvent *event)
       if (gst_index_entry_assoc_map (entry, *peer_formats, &value)) {
         GstEvent *seek_event;
 
-        g_print ("entry %p %lld\n", entry, value);
-
         /* lookup succeeded, create the seek */
         seek_event = gst_event_new_seek (*peer_formats | GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, value);
         /* do the seekk */
         if (gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), seek_event)) {
           /* seek worked, we're done, loop will exit */
+          while (mpeg2_parse (mpeg2dec->decoder) != -1);
+	  mpeg2dec->segment_start = GST_EVENT_SEEK_OFFSET (event);
           return TRUE;
         }
       }
@@ -849,6 +889,68 @@ index_seek (GstMpeg2dec *mpeg2dec, GstEvent *event)
   return FALSE;
 }
 
+
+static gboolean 
+normal_seek (GstPad *pad, GstEvent *event)
+{
+  gint64 src_offset;
+  gboolean flush;
+  GstFormat format;
+  const GstFormat *peer_formats;
+  gboolean res = FALSE;
+  GstMpeg2dec *mpeg2dec;
+
+  mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
+
+  format = GST_FORMAT_TIME;
+
+  /* first bring the src_format to TIME */
+  if (!gst_pad_convert (pad,
+            GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
+            &format, &src_offset))
+  {
+    /* didn't work, probably unsupported seek format then */
+    return res;
+  }
+
+  /* shave off the flush flag, we'll need it later */
+  flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
+
+  /* get our peer formats */
+  peer_formats = gst_pad_get_formats (GST_PAD_PEER (mpeg2dec->sinkpad));
+
+  /* while we did not exhaust our seek formats without result */
+  while (peer_formats && *peer_formats) {
+    gint64 desired_offset;
+
+    format = *peer_formats;
+
+    /* try to convert requested format to one we can seek with on the sinkpad */
+    if (gst_pad_convert (mpeg2dec->sinkpad, GST_FORMAT_TIME, src_offset, &format, &desired_offset))
+    {
+      GstEvent *seek_event;
+
+      /* conversion succeeded, create the seek */
+      seek_event = gst_event_new_seek (format | GST_SEEK_METHOD_SET | flush, desired_offset);
+      /* do the seekk */
+      if (gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), seek_event)) {
+        /* seek worked, we're done, loop will exit */
+	mpeg2dec->segment_start = GST_EVENT_SEEK_OFFSET (event);
+        res = TRUE;
+	break;
+      }
+    }
+    peer_formats++;
+  }
+  /* at this point, either the seek worked and res = TRUE or res == FALSE and the seek
+   * failed */
+  if (res && flush) {
+    /* if we need to flush, iterate until the buffer is empty */
+    while (mpeg2_parse (mpeg2dec->decoder) != -1);
+  }
+
+  return res;
+}
 static gboolean 
 gst_mpeg2dec_src_event (GstPad *pad, GstEvent *event)
 {
@@ -857,68 +959,26 @@ gst_mpeg2dec_src_event (GstPad *pad, GstEvent *event)
 
   mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
 
+  if (mpeg2dec->decoder == NULL)
+    return FALSE;
+
   switch (GST_EVENT_TYPE (event)) {
     /* the all-formats seek logic */
     case GST_EVENT_SEEK:
-    {
-      gint64 src_offset;
-      gboolean flush;
-      GstFormat format;
-      const GstFormat *peer_formats;
-
-      if (mpeg2dec->index)
-	return index_seek (mpeg2dec, event);
-			                
-      format = GST_FORMAT_TIME;
-
-      /* first bring the src_format to TIME */
-      if (!gst_pad_convert (pad,
-                GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
-                &format, &src_offset))
-      {
-        /* didn't work, probably unsupported seek format then */
-        res = FALSE;
-        break;
+      if (mpeg2dec->need_sequence) {
+        mpeg2dec->pending_event = event;
+	return TRUE;
       }
-
-      /* shave off the flush flag, we'll need it later */
-      flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
-
-      /* assume the worst */
-      res = FALSE;
-
-      /* get our peer formats */
-      peer_formats = gst_pad_get_formats (GST_PAD_PEER (mpeg2dec->sinkpad));
-
-      /* while we did not exhaust our seek formats without result */
-      while (peer_formats && *peer_formats) {
-        gint64 desired_offset;
-
-        format = *peer_formats;
-
-        /* try to convert requested format to one we can seek with on the sinkpad */
-        if (gst_pad_convert (mpeg2dec->sinkpad, GST_FORMAT_TIME, src_offset, &format, &desired_offset))
-        {
-          GstEvent *seek_event;
-
-          /* conversion succeeded, create the seek */
-          seek_event = gst_event_new_seek (format | GST_SEEK_METHOD_SET | flush, desired_offset);
-          /* do the seekk */
-          if (gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), seek_event)) {
-            /* seek worked, we're done, loop will exit */
-            res = TRUE;
-          }
-        }
-	peer_formats++;
-      }
-      /* at this point, either the seek worked and res = TRUE or res == FALSE and the seek
-       * failed */
-      if (res && flush) {
-        /* if we need to flush, iterate until the buffer is empty */
-        while (mpeg2_parse (mpeg2dec->decoder) != -1);
+      else {
+        if (mpeg2dec->index)
+          res = index_seek (pad, event);
+	else
+          res = normal_seek (pad, event);
+	
+	if (res)
+          mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
       }
       break;
-    }
     default:
       res = FALSE;
       break;
@@ -944,13 +1004,13 @@ gst_mpeg2dec_change_state (GstElement *element)
       mpeg2dec->format = MPEG2DEC_FORMAT_NONE;
       mpeg2dec->width = -1;
       mpeg2dec->height = -1;
-      mpeg2dec->first = TRUE;
-      mpeg2dec->last_PTS = -1;
-      mpeg2dec->discont_pending = TRUE;
+      mpeg2dec->segment_start = 0;
+      mpeg2dec->segment_end = -1;
+      mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
       mpeg2dec->frame_period = 0;
       mpeg2dec->streaminfo = NULL;
-      mpeg2dec->decoder = mpeg2_init ();
-      mpeg2dec->closed = FALSE;
+      gst_mpeg2dec_open_decoder (mpeg2dec);
+      mpeg2dec->need_sequence = TRUE;
       break;
     }
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -967,12 +1027,7 @@ gst_mpeg2dec_change_state (GstElement *element)
       }
       break;
     case GST_STATE_PAUSED_TO_READY:
-      /* if we are not closed by an EOS event do so now, this cen send a few frames but
-       * we are prepared to not really send them (see above) */
-      if (!mpeg2dec->closed) {
-        mpeg2_close (mpeg2dec->decoder); 
-	mpeg2dec->closed = TRUE;
-      }
+      gst_mpeg2dec_close_decoder (mpeg2dec);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -980,9 +1035,7 @@ gst_mpeg2dec_change_state (GstElement *element)
       break;
   }
 
-  GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 }
 
 static void
