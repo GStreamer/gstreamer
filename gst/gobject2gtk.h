@@ -50,33 +50,34 @@ typedef struct _GObjectClass GObjectClass;
 #define G_TYPE_PARAM				GTK_TYPE_PARAM
 
 // marshallers
-#define g_cclosure_marshal_VOID__VOID		gtk_marshal_NONE__NONE
-#define g_cclosure_marshal_VOID__BOOLEAN	gtk_marshal_NONE__BOOL
-#define g_cclosure_marshal_VOID__CHAR		gtk_marshal_NONE__CHAR
-#define g_cclosure_marshal_VOID__UCHAR		gtk_marshal_NONE__UCHAR
-#define g_cclosure_marshal_VOID__INT		gtk_marshal_NONE__INT
-#define g_cclosure_marshal_VOID__UINT		gtk_marshal_NONE__UINT
-#define g_cclosure_marshal_VOID__LONG		gtk_marshal_NONE__LONG
-#define g_cclosure_marshal_VOID__ULONG		gtk_marshal_NONE__ULONG
-#define g_cclosure_marshal_VOID__ENUM		gtk_marshal_NONE__ENUM
-#define g_cclosure_marshal_VOID__FLAGS		gtk_marshal_NONE__FLAGS
-#define g_cclosure_marshal_VOID__FLOAT		gtk_marshal_NONE__FLOAT
-#define g_cclosure_marshal_VOID__DOUBLE		gtk_marshal_NONE__DOUBLE
-#define g_cclosure_marshal_VOID__STRING		gtk_marshal_NONE__STRING
-#define g_cclosure_marshal_VOID__PARAM		gtk_marshal_NONE__PARAM
-#define g_cclosure_marshal_VOID__BOXED		gtk_marshal_NONE__BOXED
-#define g_cclosure_marshal_VOID__POINTER	gtk_marshal_NONE__POINTER
-#define g_cclosure_marshal_VOID__OBJECT		gtk_marshal_NONE__OBJECT
-#define g_cclosure_marshal_STRING__OBJECT_POINTER	gtk_marshal_STRING__OBJECT_POINTER
-#define g_cclosure_marshal_VOID__UINT_POINTER	gtk_marshal_NONE__UINT_POINTER
+#define g_cclosure_marshal_VOID__VOID			gtk_marshal_NONE__NONE
+#define g_cclosure_marshal_VOID__BOOLEAN		gtk_marshal_NONE__BOOL
+#define g_cclosure_marshal_VOID__CHAR			gtk_marshal_NONE__CHAR
+#define g_cclosure_marshal_VOID__UCHAR			gtk_marshal_NONE__UCHAR
+#define g_cclosure_marshal_VOID__INT			gtk_marshal_NONE__INT
+#define g_cclosure_marshal_VOID__UINT			gtk_marshal_NONE__UINT
+#define g_cclosure_marshal_VOID__LONG			gtk_marshal_NONE__LONG
+#define g_cclosure_marshal_VOID__ULONG			gtk_marshal_NONE__ULONG
+#define g_cclosure_marshal_VOID__ENUM			gtk_marshal_NONE__ENUM
+#define g_cclosure_marshal_VOID__FLAGS			gtk_marshal_NONE__FLAGS
+#define g_cclosure_marshal_VOID__FLOAT			gtk_marshal_NONE__FLOAT
+#define g_cclosure_marshal_VOID__DOUBLE			gtk_marshal_NONE__DOUBLE
+#define g_cclosure_marshal_VOID__STRING			gtk_marshal_NONE__STRING
+#define g_cclosure_marshal_VOID__PARAM			gtk_marshal_NONE__PARAM
+#define g_cclosure_marshal_VOID__BOXED			gtk_marshal_NONE__BOXED
+#define g_cclosure_marshal_VOID__POINTER		gtk_marshal_NONE__POINTER
+#define g_cclosure_marshal_VOID__OBJECT			gtk_marshal_NONE__OBJECT
+#define g_cclosure_marshal_STRING__OBJECT_POINTER	gtk_marshal_STRING__POINTER_POINTER
+#define g_cclosure_marshal_VOID__UINT_POINTER		gtk_marshal_NONE__UINT_POINTER
 
-#define gst_marshal_VOID__OBJECT_POINTER	gtk_marshal_NONE__POINTER
-#define gst_marshal_VOID__INT_INT		gtk_marshal_NONE__INT_INT
-#define gst_marshal_VOID__INT			gtk_marshal_NONE__INT
-#define gst_marshal_VOID__STRING		gtk_marshal_NONE__STRING
 #define gst_marshal_VOID__VOID			gtk_marshal_NONE__NONE
 #define gst_marshal_VOID__BOOLEAN		gtk_marshal_NONE__BOOL
+#define gst_marshal_VOID__INT			gtk_marshal_NONE__INT
+#define gst_marshal_VOID__STRING		gtk_marshal_NONE__STRING
 #define gst_marshal_VOID__POINTER		gtk_marshal_NONE__POINTER
+#define gst_marshal_VOID__OBJECT		gtk_marshal_NONE__POINTER
+#define gst_marshal_VOID__OBJECT_POINTER	gtk_marshal_NONE__POINTER_POINTER
+#define gst_marshal_VOID__INT_INT		gtk_marshal_NONE__INT_INT
 
 /* General macros */
 #ifdef  __cplusplus
