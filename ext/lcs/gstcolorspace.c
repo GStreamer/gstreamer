@@ -161,13 +161,13 @@ colorspace_find_lcs_format (GstCaps *caps)
   gst_caps_get_fourcc_int (caps, "format", &space);
 
   if (space == GST_MAKE_FOURCC ('R','G','B',' ')) {
-    gint mask, bpp;
+    gint mask, depth;
 
     gulong red_bits, red_shift;
     gulong green_bits, green_shift;
     gulong blue_bits, blue_shift;
      
-    gst_caps_get_int (caps, "bpp", &bpp);
+    gst_caps_get_int (caps, "depth", &depth);
     gst_caps_get_int (caps, "red_mask", &mask);
     lcs_utils_mask_to_shift (mask, &red_bits, &red_shift);
     gst_caps_get_int (caps, "green_mask", &mask);
@@ -176,7 +176,7 @@ colorspace_find_lcs_format (GstCaps *caps)
     lcs_utils_mask_to_shift (mask, &blue_bits, &blue_shift);
 
     format = lcs_format_new_simple_rgb_packed (red_bits, green_bits, blue_bits, 0,
-		    red_shift, green_shift, blue_shift, 0, bpp);
+		    red_shift, green_shift, blue_shift, 0, depth, G_BYTE_ORDER);
 
     g_print ("%lu %lu %lu %lu %lu %lu %s\n", red_bits, green_bits, blue_bits, 
 		    red_shift, green_shift, blue_shift, lcs_format_get_layout (format));
