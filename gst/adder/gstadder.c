@@ -186,10 +186,13 @@ gst_adder_sinkpad_connect (GstPad *pad, GstCaps *caps)
     }
   }
 
-  if (GST_CAPS_IS_FIXED (caps) && ! gst_pad_try_set_caps (adder->srcpad, caps))
-    return GST_PAD_CONNECT_REFUSED;
-  
-  return GST_PAD_CONNECT_DELAYED;
+  if (GST_CAPS_IS_FIXED (caps))
+    if (gst_pad_try_set_caps (adder->srcpad, caps))
+      return GST_PAD_CONNECT_OK;
+    else
+      return GST_PAD_CONNECT_REFUSED;
+  else
+    return GST_PAD_CONNECT_DELAYED;
 }
 
 static void
