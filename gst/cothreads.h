@@ -51,9 +51,8 @@ struct _cothread_state {
   int			 flags;
   void			*sp;
   jmp_buf		 jmp;
-  /* is this needed any more? */
-  void			*top_sp;
-  void			*pc;
+  void			*stack_base;
+  unsigned long		 stack_size;
 
   int			 magic_number;
 };

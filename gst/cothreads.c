@@ -166,8 +166,6 @@ cothread_context_init (void)
   ctx->cothreads[0]->priv = NULL;
   ctx->cothreads[0]->flags = COTHREAD_STARTED;
   ctx->cothreads[0]->sp = (void *) CURRENT_STACK_FRAME;
-  ctx->cothreads[0]->top_sp = ctx->cothreads[0]->sp;
-  ctx->cothreads[0]->pc = 0;
 
   GST_INFO (GST_CAT_COTHREADS, "0th cothread is %p at sp:%p", 
             ctx->cothreads[0], ctx->cothreads[0]->sp);
@@ -256,11 +254,25 @@ cothread_create (cothread_context *ctx)
   }
 #endif
 
+#ifdef _SC_PAGESIZE
+  page_size = sysconf(_SC_PAGESIZE);
+#else
+  page_size = getpagesize();
+#endif
+
   /* The mmap is necessary on Linux/i386, and possibly others, since the
    * kernel is picky about when we can expand our stack. */
   GST_DEBUG (GST_CAT_COTHREADS, "mmaping %p, size 0x%08x", cothread,
              COTHREAD_STACKSIZE);
-  mmaped = mmap ((void *) cothread, COTHREAD_STACKSIZE,
+  /* Remap with a guard page. This decreases our stack size by 8 kB (for
+   * 4 kB pages) and also wastes almost 4 kB for the cothreads
+   * structure */
+  munmap((void *)cothread, COTHREAD_STACKSIZE);
+  mmaped = mmap ((void *) cothread, page_size,
+                 PROT_READ | PROT_WRITE,
+                 MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  mmaped = mmap (((void *) cothread) + page_size * 2,
+		 COTHREAD_STACKSIZE - page_size * 2,
                  PROT_READ | PROT_WRITE | PROT_EXEC,
                  MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   GST_DEBUG (GST_CAT_COTHREADS, "coming out of mmap");
@@ -268,20 +280,10 @@ cothread_create (cothread_context *ctx)
     perror ("mmap'ing cothread stack space");
     return NULL;
   }
-  if (mmaped != cothread) {
+  if (mmaped != (void *)cothread + page_size * 2) {
     g_warning ("could not mmap requested memory for cothread");
     return NULL;
   }
-
-#ifdef _SC_PAGESIZE
-  page_size = sysconf(_SC_PAGESIZE);
-#else
-  page_size = getpagesize();
-#endif
-  /* Unmap a guard page. This decreases our stack size by 8 kB (for
-   * 4 kB pages) and also wastes almost 4 kB for the cothreads
-   * structure */
-  munmap((void *)cothread + page_size, page_size);
 
   cothread->magic_number = COTHREAD_MAGIC_NUMBER;
   GST_DEBUG (GST_CAT_COTHREADS, "create  cothread %d with magic number 0x%x",
@@ -291,9 +293,8 @@ cothread_create (cothread_context *ctx)
   cothread->flags = 0;
   cothread->priv = NULL;
   cothread->sp = ((guchar *) cothread + COTHREAD_STACKSIZE);
-  cothread->sp -= 16; /* necessary for PowerPC */
-  cothread->top_sp = cothread->sp; /* for debugging purposes 
-				      to detect stack overruns */
+  cothread->stack_size = COTHREAD_STACKSIZE - page_size * 2;
+  cothread->stack_base = (void *)cothread + 2 * page_size;
 
   GST_INFO (GST_CAT_COTHREADS, 
             "created cothread #%d in slot %d: %p at sp:%p", 
@@ -425,7 +426,6 @@ cothread_setfunc (cothread_state * thread, cothread_func func, int argc, char **
   thread->func = func;
   thread->argc = argc;
   thread->argv = argv;
-  thread->pc = (void *) func;
 }
 
 /**
@@ -438,8 +438,6 @@ void
 cothread_stop (cothread_state * thread)
 {
   thread->flags &= ~COTHREAD_STARTED;
-  thread->pc = 0;
-  thread->sp = thread->top_sp;
 }
 
 /**
@@ -495,6 +493,8 @@ cothread_stub (void)
   register cothread_state *thread = ctx->cothreads[ctx->current];
 
   GST_DEBUG_ENTER ("");
+
+  GST_DEBUG (GST_CAT_COTHREADS, "stack addr %p\n", &ctx);
 
   thread->flags |= COTHREAD_STARTED;
 
@@ -685,14 +685,12 @@ cothread_switch (cothread_state * thread)
   enter = setjmp (current->jmp);
   if (enter != 0) {
     GST_DEBUG (GST_CAT_COTHREADS, 
-	       "enter cothread #%d %d %p<->%p (%d) %p", 
-	       current->cothreadnum, enter, current->sp, current->top_sp, 
-	       (char*) current->top_sp - (char*) current->sp, current->jmp);
+	       "enter cothread #%d %d sp=%p jmpbuf=%p", 
+	       current->cothreadnum, enter, current->sp, current->jmp);
     return;
   }
-  GST_DEBUG (GST_CAT_COTHREADS, "exit cothread #%d %d %p<->%p (%d) %p", 
-             current->cothreadnum, enter, current->sp, current->top_sp, 
-	     (char *) current->top_sp - (char *) current->sp, current->jmp);
+  GST_DEBUG (GST_CAT_COTHREADS, "exit cothread #%d %d sp=%p jmpbuf=%p", 
+             current->cothreadnum, enter, current->sp, current->jmp);
   enter = 1;
 
   if (current->flags & COTHREAD_DESTROYED) {
@@ -702,15 +700,30 @@ cothread_switch (cothread_state * thread)
   GST_DEBUG (GST_CAT_COTHREADS, "set stack to %p", thread->sp);
   /* restore stack pointer and other stuff of new cothread */
   if (thread->flags & COTHREAD_STARTED) {
-    GST_DEBUG (GST_CAT_COTHREADS, "in thread %p", thread->jmp);
+    GST_DEBUG (GST_CAT_COTHREADS, "via longjmp() jmpbuf %p", thread->jmp);
     /* switch to it */
     longjmp (thread->jmp, 1);
   }
   else {
+#ifdef HAVE_MAKECONTEXT
+    ucontext_t ucp;
+
+    GST_DEBUG (GST_CAT_COTHREADS, "making context");
+
+    g_assert(thread != cothread_main(ctx));
+
+    getcontext(&ucp);
+    ucp.uc_stack.ss_sp = (void *)thread->stack_base;
+    ucp.uc_stack.ss_size = thread->stack_size;
+    makecontext(&ucp, cothread_stub, 0);
+    setcontext(&ucp);
+#else
     GST_ARCH_SETUP_STACK ((char*)thread->sp);
     GST_ARCH_SET_SP (thread->sp);
     /* start it */
     GST_ARCH_CALL (cothread_stub);
+#endif
+
     GST_DEBUG (GST_CAT_COTHREADS, "exit thread ");
     ctx->current = 0;
   }
