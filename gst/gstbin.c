@@ -38,7 +38,7 @@ static GstElementDetails gst_bin_details = GST_ELEMENT_DETAILS ("Generic bin",
     "Simple container object",
     "Erik Walthinsen <omega@cse.ogi.edu>");
 
-GType _gst_bin_type = 0;
+GSTREAMER_EXPORT GType _gst_bin_type = 0;
 
 static gboolean _gst_boolean_did_something_accumulator (GSignalInvocationHint *
     ihint, GValue * return_accu, const GValue * handler_return, gpointer dummy);

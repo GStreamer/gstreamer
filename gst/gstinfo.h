@@ -627,7 +627,11 @@ G_CONST_RETURN gchar*
 
 #define GST_DEBUG_CATEGORY(var)				/* NOP */
 #define GST_DEBUG_CATEGORY_EXTERN(var)			/* NOP */
+#if !defined(G_HAVE_GNUC_VARARGS) && !defined(G_HAVE_ISO_VARARGS)
+#define GST_DEBUG_CATEGORY_STATIC(var)			static GstDebugCategory *var = NULL
+#else
 #define GST_DEBUG_CATEGORY_STATIC(var)			/* NOP */
+#endif
 #define GST_DEBUG_CATEGORY_INIT(var,name,color,desc)	/* NOP */
 #define gst_debug_category_free(category)		/* NOP */
 #define gst_debug_category_set_threshold(category,level) /* NOP */

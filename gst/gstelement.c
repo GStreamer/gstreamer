@@ -83,7 +83,7 @@ static xmlNodePtr gst_element_save_thyself (GstObject * object,
 static void gst_element_restore_thyself (GstObject * parent, xmlNodePtr self);
 #endif
 
-GType _gst_element_type = 0;
+GSTREAMER_EXPORT GType _gst_element_type = 0;
 
 static GstObjectClass *parent_class = NULL;
 static guint gst_element_signals[LAST_SIGNAL] = { 0 };

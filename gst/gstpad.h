@@ -36,9 +36,9 @@
 
 G_BEGIN_DECLS
 
-extern GType _gst_pad_type;
-extern GType _gst_real_pad_type;
-extern GType _gst_ghost_pad_type;
+GSTREAMER_EXPORT GType _gst_pad_type;
+GSTREAMER_EXPORT GType _gst_real_pad_type;
+GSTREAMER_EXPORT GType _gst_ghost_pad_type;
 
 /* 
  * Pad base class

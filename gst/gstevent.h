@@ -32,7 +32,7 @@
 
 G_BEGIN_DECLS
 
-extern GType _gst_event_type;
+GSTREAMER_EXPORT GType _gst_event_type;
 
 typedef enum {
   GST_EVENT_UNKNOWN		= 0,

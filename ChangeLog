@@ -1,5 +1,17 @@
 2004-06-12  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* gst/gst.c:
+	* gst/gstbin.*:
+	* gst/gstelement.*:
+	* gst/gstevent.h:
+	* gst/gstobject.*:
+	* gst/gstpad.h:
+	* tools/gst-register.c:
+	* win32/gstreamer.def:
+          extern symbols are now exported for the Windows DLL
+
+2004-06-12  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* gst/gstinfo.h:
           fix a problem to enable/disable DEBUG under MSVC
 

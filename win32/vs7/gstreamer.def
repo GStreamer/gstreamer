@@ -24,20 +24,14 @@ EXPORTS
         gst_pad_convert_default
         gst_pad_get_formats
         gst_pad_get_formats_default
-        _gst_ghost_pad_type
         gst_pad_get_name
         gst_pad_get_direction
-        _gst_real_pad_type
-        _gst_pad_type
         gst_element_get_pad_list
         gst_element_is_indexable
         gst_element_get_clock
         gst_element_provides_clock
         gst_element_requires_clock
-        _gst_bin_type
         gst_plugin_feature_get_type
-        _gst_element_type
-        _gst_object_type
         gst_element_factory_create
         gst_structure_foreach
         gst_structure_get_name
@@ -64,6 +58,7 @@ EXPORTS
         gst_bin_get_clock
         gst_element_set_state
         gst_bin_add
+        gst_bin_add_many
         gst_element_factory_make
         gst_xml_write_file
         gst_element_default_error
@@ -90,13 +85,11 @@ EXPORTS
         gst_registry_add_path
         gst_registry_get_type
         gst_registry_pool_list
-        _gst_registry_auto_load
         gst_data_unref
         gst_buffer_new
         gst_buffer_create_sub
         gst_buffer_merge
         gst_buffer_is_span_fast
-        _gst_event_type
         gst_pad_pull
         gst_pad_send_event
         gst_event_new_seek
@@ -122,9 +115,9 @@ EXPORTS
         gst_util_dump_mem
         gst_element_wait
         gst_element_set_time
+        gst_element_link_pads
         gst_element_error_full
         gst_core_error_quark
-        _gst_element_error_printf
         gst_pad_set_formats_function
         gst_pad_set_query_type_function
         gst_pad_set_query_function
@@ -185,6 +178,31 @@ EXPORTS
         gst_seek_type_get_type
         gst_event_type_get_type
         gst_pad_unnegotiate
+        gst_pipeline_new
+        gst_bin_new
+        gst_bin_get_by_interface
+        gst_bin_get_all_by_interface
+        gst_alloc_trace_live_all
+        gst_element_link_many
+        gst_caps_new_empty
+        gst_caps_new_simple
+        gst_caps_is_fixed
+        gst_caps_to_string
+        gst_type_fourcc
+        gst_structure_new
+        gst_caps_new_full
+        gst_caps_append
+        gst_caps_append_structure
         gst_marshal_VOID__UINT_BOXED
         gst_marshal_BOOLEAN__POINTER
         gst_marshal_VOID__POINTER_OBJECT
+        _gst_element_error_printf
+        _gst_bin_type           DATA
+        _gst_element_type       DATA
+        _gst_object_type        DATA
+        _gst_registry_auto_load DATA
+        _gst_pad_type           DATA
+        _gst_real_pad_type      DATA
+        _gst_ghost_pad_type     DATA
+        _gst_event_type         DATA
+
