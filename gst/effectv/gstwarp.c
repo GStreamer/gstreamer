@@ -90,7 +90,6 @@ static void 	gst_warptv_class_init 		(GstWarpTVClass * klass);
 static void 	gst_warptv_init 		(GstWarpTV * filter);
 
 static void 	gst_warptv_initialize 		(GstWarpTV *filter);
-static void 	gst_warptv_dispose 		(GObject *object);
 
 static void 	gst_warptv_set_property 	(GObject * object, guint prop_id,
 					  	 const GValue * value, GParamSpec * pspec);
@@ -136,7 +135,6 @@ gst_warptv_class_init (GstWarpTVClass * klass)
 
   gobject_class->set_property = gst_warptv_set_property;
   gobject_class->get_property = gst_warptv_get_property;
-  gobject_class->dispose      = gst_warptv_dispose;
 }
 
 static GstPadConnectReturn
@@ -173,6 +171,8 @@ gst_warptv_init (GstWarpTV * filter)
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->tval = 0;
+  filter->disttable = NULL;
+  filter->offstable = NULL;
 }
 
 
@@ -230,21 +230,15 @@ initDistTable (GstWarpTV *filter)
 static void 
 gst_warptv_initialize (GstWarpTV *filter) 
 {
+  g_free (filter->disttable);
+  g_free (filter->offstable);
+
   filter->offstable = (guint32 *) g_malloc (filter->height * sizeof (guint32));      
   filter->disttable = g_malloc (filter->width * filter->height * sizeof (guint32));
 
   initSinTable (filter);
   initOffsTable (filter);
   initDistTable (filter);
-}
-
-static void 
-gst_warptv_dispose (GObject *object) 
-{
-  GstWarpTV *filter = GST_WARPTV (object);
-
-  g_free (filter->disttable);
-  g_free (filter->offstable);
 }
 
 static void
