@@ -18,6 +18,9 @@
  */
 
 #ifdef HAVE_CDROM_BSD_NETBSD /* net & open */
+#ifndef CDIOREADTOCHDR
+#define CDIOREADTOCHDR CDIOREADTOCHEADER
+#endif
 gboolean cd_init(struct cd *cd,const gchar *device)
 {
 	struct ioc_toc_header toc_header;
@@ -318,7 +321,11 @@ gint cd_current_track(struct cd *cd)
 		return -1;
 	}
 
+#ifdef __NetBSD__
+	return sub_channel.data->what.track_info.track_number;
+#else
 	return sub_channel.data->track_number;
+#endif
 }
 
 gboolean cd_close(struct cd *cd)
