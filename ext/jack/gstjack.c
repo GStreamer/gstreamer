@@ -392,7 +392,7 @@ gst_jack_change_state (GstElement *element)
             l = this->pads;
             while (l) {
                 pad = GST_JACK_PAD (l);
-                caps = gst_pad_get_caps (pad->pad);
+                caps = gst_caps_copy (gst_pad_get_negotiated_caps (pad->pad));
                 gst_caps_set_simple (caps,
                     "rate", G_TYPE_INT, (int)this->bin->rate,
                     "buffer-frames", G_TYPE_INT, (gint)this->bin->nframes,
