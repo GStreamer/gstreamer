@@ -43,6 +43,15 @@ enum {
   ARG_DEVICE_NAME,
 };
 
+/* elementfactory information */
+static GstElementDetails gst_osselement_details = GST_ELEMENT_DETAILS (
+  "Audio Mixer (OSS)",
+  "Generic/Audio",
+  "OSS-based mixer element",
+  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
+);
+
+static void			gst_osselement_base_init	(GstOssElementClass *klass);
 static void 			gst_osselement_class_init	(GstOssElementClass *klass);
 static void 			gst_osselement_init		(GstOssElement *oss);
 static void 			gst_osselement_dispose		(GObject *object);
@@ -68,7 +77,7 @@ gst_osselement_get_type (void)
   if (!osselement_type) {
     static const GTypeInfo osselement_info = {
       sizeof(GstOssElementClass),
-      NULL,
+      (GBaseInitFunc)gst_osselement_base_init,
       NULL,
       (GClassInitFunc)gst_osselement_class_init,
       NULL,
@@ -100,6 +109,14 @@ gst_osselement_get_type (void)
   }
 
   return osselement_type;
+}
+
+static void
+gst_osselement_base_init (GstOssElementClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_set_details (element_class, &gst_osselement_details);
 }
 
 static void

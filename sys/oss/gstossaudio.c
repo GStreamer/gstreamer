@@ -50,9 +50,14 @@ plugin_init (GstPlugin *plugin)
   __gst_oss_plugin_dir = g_strjoinv (G_DIR_SEPARATOR_S, path);
   g_strfreev (path);
 
-  if (!gst_element_register (plugin, "osssrc", GST_RANK_PRIMARY, GST_TYPE_OSSSRC) ||
-      !gst_element_register (plugin, "osssink", GST_RANK_PRIMARY, GST_TYPE_OSSSINK) ||
-      !gst_element_register (plugin, "ossgst", GST_RANK_MARGINAL, GST_TYPE_OSSGST)) {
+  if (!gst_element_register (plugin, "ossmixer", GST_RANK_PRIMARY,
+			     GST_TYPE_OSSELEMENT) ||
+      !gst_element_register (plugin, "osssrc", GST_RANK_PRIMARY,
+			     GST_TYPE_OSSSRC) ||
+      !gst_element_register (plugin, "osssink", GST_RANK_PRIMARY,
+			     GST_TYPE_OSSSINK) ||
+      !gst_element_register (plugin, "ossgst", GST_RANK_MARGINAL,
+			     GST_TYPE_OSSGST)) {
     return FALSE;
   }
 
