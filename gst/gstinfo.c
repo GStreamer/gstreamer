@@ -317,10 +317,10 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
  * gst_debug_message_get:
  * @message: a debug message
  *
- * Gets the string representation of a GstDebugMessage. This function is used
+ * Gets the string representation of a #GstDebugMessage. This function is used
  * in debug handlers to extract the message.
  *
- * Returns: the string representation
+ * Returns: the string representation of a #GstDebugMessage.
  */
 const gchar *
 gst_debug_message_get (GstDebugMessage * message)

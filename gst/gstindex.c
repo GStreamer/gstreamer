@@ -413,7 +413,7 @@ gst_index_set_resolver (GstIndex * index,
  *
  * Copies an entry and returns the result.
  *
- * Returns:
+ * Returns: a newly allocated #GstIndexEntry.
  */
 GstIndexEntry *
 gst_index_entry_copy (GstIndexEntry * entry)

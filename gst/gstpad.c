@@ -2261,7 +2261,7 @@ gst_pad_proxy_getcaps (GstPad * pad)
 
 /**
  * gst_pad_proxy_pad_link:
- * @pad: a #GstPad to proxy.
+ * @pad: a #GstPad to proxy from
  * @caps: the #GstCaps to link with
  *
  * Calls gst_pad_try_set_caps() for every other pad belonging to the
@@ -2760,7 +2760,7 @@ gst_pad_recover_caps_error (GstPad * pad, const GstCaps * allowed)
 
 /**
  * gst_pad_alloc_buffer:
- * @pad: a source #GstPad.
+ * @pad: a source #GstPad
  * @offset: the offset of the new buffer in the stream
  * @size: the size of the new buffer
  *

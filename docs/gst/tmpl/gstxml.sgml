@@ -115,10 +115,6 @@ GstXML
 
 </para>
 
-@: 
-@: 
-@:
-
 @gstxml: the object which received the signal.
 @arg1: 
 @arg2: 
@@ -128,7 +124,7 @@ GstXML
 
 </para>
 
-@gstxml: the object which received the signal.
-@arg1: 
-@arg2: 
+@: 
+@: 
+@: 
 

@@ -2447,10 +2447,10 @@ _gst_element_error_printf (const gchar * format, ...)
  * @message: an allocated message to be used as a replacement for the default
  *           message connected to code, or NULL
  * @debug: an allocated debug message to be used as a replacement for the
- *        default debugging information, or NULL
- * @file: source filename
- * @function: source function
- * @line: source line
+ *         default debugging information, or NULL
+ * @file: the source code file where the error was generated
+ * @function: the source code function where the error was generated
+ * @line: the source code line where the error was generated
  *
  * Signals an error condition on an element.
  * This function is used internally by elements.

@@ -176,12 +176,12 @@ gst_element_factory_cleanup (GstElementFactory * factory)
 
 /**
  * gst_element_register:
- * @plugin:
+ * @plugin: #GstPlugin to register the element with
  * @name: name of elements of this type
  * @rank: rank of element (higher rank means more importance when autoplugging)
  * @type: GType of element to register
  *
- * Create a new elementfactory capable of insantiating objects of the
+ * Create a new elementfactory capable of instantiating objects of the
  * given type.
  *
  * Returns: TRUE, if the registering succeeded, FALSE on error

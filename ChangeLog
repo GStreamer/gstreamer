@@ -1,3 +1,17 @@
+2004-03-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstcaps.c:
+	* gst/gstelement.c:
+	* gst/gstelementfactory.c: (gst_element_factory_get_type):
+	* gst/gstindex.c: (gst_index_resolver_get_type),
+	(gst_index_get_type), (gst_index_factory_get_type):
+	* gst/gstinfo.c:
+	* gst/gstpad.c:
+	* gst/gstplugin.c:
+	* gst/gsturi.c: (gst_uri_handler_get_type):
+	* gst/gstvalue.c:
+          first batch of documentation fixes
+
 2004-03-29  David Schleef  <ds@schleef.org>
 
 	* docs/gst/Makefile.am:  Disable a bunch of headers from being scanned
