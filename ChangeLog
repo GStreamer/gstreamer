@@ -1,3 +1,25 @@
+2004-07-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  fix requirement of core
+	* gst-libs/gst/play/play.c: (gst_play_error_plugin),
+	(gst_play_pipeline_setup):
+	  don't use colorspace element.  do use hermescolorspace element.
+	  make macro to get a colorspace element.
+	  mark strings for translation.
+	* po/POTFILES.in:
+	  add play.c
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/nl.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	  update translations
+
 2004-07-30  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/libpng/gstpngenc.c: (gst_pngenc_class_init):
