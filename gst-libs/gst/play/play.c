@@ -685,8 +685,11 @@ gst_play_set_video_sink (GstPlay *play, GstElement *video_sink)
   if (GST_IS_ELEMENT (video_sink_element)) {
     g_hash_table_replace (play->priv->elements, "video_sink_element",
                           video_sink_element);
-    g_signal_connect (G_OBJECT (video_sink_element), "have_video_size",
-                      G_CALLBACK (gst_play_have_video_size), play);
+    if (GST_IS_X_OVERLAY (video_sink_element)) {
+      g_signal_connect (G_OBJECT (video_sink_element),
+                        "desired_size_changed",
+                         G_CALLBACK (gst_play_have_video_size), play);
+    }
   } 
   
   gst_element_set_state (video_sink, GST_STATE (GST_ELEMENT(play)));
