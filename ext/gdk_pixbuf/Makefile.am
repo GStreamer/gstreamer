@@ -8,7 +8,7 @@ libgstgdkpixbuf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 
 if HAVE_GDK_LOADERS
-loaderdir = $(GTK_BASE_DIR)/lib/gtk-2.0/$(GTK_VERSION)/loaders
+loaderdir = $(GDK_PIXBUF_LIBDIR)/gtk-2.0/$(GTK_VERSION)/loaders
 loader_LTLIBRARIES = gst_loader.la
 
 gst_loader_la_CFLAGS = $(GST_CFLAGS) $(GTK_CFLAGS) -DGDK_PIXBUF_ENABLE_BACKEND
@@ -20,9 +20,11 @@ gst_loader_la_LIBADD = $(GTK_LIBS) $(GST_LIBS)
 
 gst_loader_headers = gstgdkanimation.h
 
-install-data-hook:
-	$(mkinstalldirs) $(GTK_BASE_DIR)/etc/gtk-2.0 ; \
-	$(QUERYLOADERS) > $(GTK_BASE_DIR)/etc/gtk-2.0/gdk-pixbuf.loaders ;
+#install-data-hook:
+#	if test -z "$(DESTDIR)"  ; then
+#	  $(mkinstalldirs) $(DESTDIR)$(GDK_PIXBUF_SYSCONFDIR)/gtk-2.0 ; \
+#	  $(QUERYLOADERS) > $(DESTDIR)$(GDK_PIXBUF_SYSCONFDIR)/gtk-2.0/gdk-pixbuf.loaders ; \
+#	fi
 
 else
 gst_loader_headers =
