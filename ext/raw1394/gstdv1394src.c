@@ -78,7 +78,8 @@ GST_ELEMENT_DETAILS ("Firewire (1394) DV Source",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-dv, " "format = (string) { NTSC, PAL }")
+    GST_STATIC_CAPS ("video/x-dv, "
+        "format = (string) { NTSC, PAL }, " "systemstream = (boolean) true")
     );
 
 static void gst_dv1394src_base_init (gpointer g_class);
@@ -361,7 +362,8 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
           GST_DEBUG ("PAL data");
           if (!gst_pad_set_explicit_caps (dv1394src->srcpad,
                   gst_caps_new_simple ("video/x-dv",
-                      "format", G_TYPE_STRING, "PAL", NULL))) {
+                      "format", G_TYPE_STRING, "PAL",
+                      "systemstream", G_TYPE_BOOLEAN, TRUE, NULL))) {
             GST_ELEMENT_ERROR (dv1394src, CORE, NEGOTIATION, (NULL),
                 ("Could not set source caps for PAL"));
             return 0;
@@ -374,7 +376,7 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
               ("NTSC data [untested] - please report success/failure to <dan@f3c.com>");
           if (!gst_pad_set_explicit_caps (dv1394src->srcpad,
                   gst_caps_new_simple ("video/x-dv", "format", G_TYPE_STRING,
-                      "NTSC", NULL))) {
+                      "NTSC", "systemstream", G_TYPE_BOOLEAN, TRUE, NULL))) {
             GST_ELEMENT_ERROR (dv1394src, CORE, NEGOTIATION, (NULL),
                 ("Could not set source caps for NTSC"));
             return 0;
