@@ -110,7 +110,11 @@ AC_MSG_RESULT(no)
 ])
 
 dnl check for makecontext and define HAVE_MAKECONTEXT if we have it
-GST_CHECK_MAKECONTEXT()
+AC_CHECK_MCSC()
+if test "$ac_cv_check_mcsc" == "yes"; then
+  AC_DEFINE_UNQUOTED(HAVE_MAKECONTEXT, $HAVE_MAKECONTEXT,
+                     [defined if we have makecontext ()])
+fi
 
 dnl Check for a way to display the function name in debug output
 GST_CHECK_FUNCTION()
@@ -153,12 +157,12 @@ GST_CHECK_LIBHEADER(POPT, popt, poptStrippedArgv,, popt.h, POPT_LIBS="-lpopt",
                 ftp://ftp.rpm.org/pub/rpm/dist/rpm-4.0.x/])
 )
 AC_MSG_NOTICE(Checking for POPT_TABLEEND)
-AC_TRY_RUN([
+AC_COMPILE_IFELSE([
 #include <popt.h>
 int main ()
 {
 #ifndef POPT_TABLEEND
-  return 1;
+#error
 #else
   return 0;
 #endif
@@ -176,19 +180,15 @@ dnl defines the wrong default symbol as well (HAVE_ASM_ATOMIC_H)
 AC_CHECK_HEADER(asm/atomic.h, HAVE_ATOMIC_H=yes, HAVE_ATOMIC_H=no)
 dnl Do a compile to check that it has atomic_set (eg, linux 2.0 didn't)
 if test x$HAVE_ATOMIC_H = xyes; then
-  AC_TRY_RUN([
+  AC_LINK_IFELSE([
 #include "asm/atomic.h"
-main() { atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0;}
+main() {atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0;}
   ],, [
     # Not successful
     if test x$HAVE_ATOMIC_H = xyes; then
       AC_MSG_WARN(Atomic reference counting is out of date: doing without.)
     fi
     HAVE_ATOMIC_H=no
-  ], [
-    # Cross compiling
-    AC_MSG_RESULT(yes)
-    AC_MSG_WARN(Can't check properly for atomic reference counting.  Assuming OK.)
   ])
 fi
 
