@@ -334,6 +334,7 @@ static void gst_qtdemux_loop_header (GstElement *element)
     GST_DEBUG ("length %08x",length);
     fourcc = GUINT32_FROM_LE(*(guint32 *)(data+4));
     GST_DEBUG ("fourcc " GST_FOURCC_FORMAT, GST_FOURCC_ARGS(fourcc));
+
     if(length==0){
       length = gst_bytestream_length(qtdemux->bs) - cur_offset;
     }
@@ -820,8 +821,8 @@ static void qtdemux_parse(GstQTDemux *qtdemux, GNode *node, void *buffer, int le
 
   type = qtdemux_type_get(fourcc);
   
-  //g_print("parsing '" GST_FOURCC_FORMAT "', length=%d\n",
-      //GST_FOURCC_ARGS(fourcc), node_length);
+  /*g_print("parsing '" GST_FOURCC_FORMAT "', length=%d\n",
+      GST_FOURCC_ARGS(fourcc), node_length);*/
 
   if(type->flags & QT_CONTAINER){
     void *buf;
@@ -1235,8 +1236,11 @@ static void qtdemux_parse_tree(GstQTDemux *qtdemux)
   trak = qtdemux_tree_get_child_by_type(qtdemux->moov_node, FOURCC_trak);
   qtdemux_parse_trak(qtdemux, trak);
 
-  trak = qtdemux_tree_get_sibling_by_type(trak, FOURCC_trak);
-  if(trak)qtdemux_parse_trak(qtdemux, trak);
+/*  trak = qtdemux_tree_get_sibling_by_type(trak, FOURCC_trak);
+  if(trak)qtdemux_parse_trak(qtdemux, trak);*/
+
+  while ((trak = qtdemux_tree_get_sibling_by_type(trak, FOURCC_trak)) != NULL)
+    qtdemux_parse_trak(qtdemux, trak);
 }
 
 static void qtdemux_parse_trak(GstQTDemux *qtdemux, GNode *trak)
@@ -1697,6 +1701,7 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
 	  NULL);
     case 0x6d730055:
       /* MPEG layer 3, CBR only (pre QT4.1) */
+    case 0x5500736d:
     case GST_MAKE_FOURCC('.','m','p','3'):
       /* MPEG layer 3, CBR & VBR (QT4.1 and later) */
       return GST_CAPS_NEW("_mp3_caps","audio/mpeg",
