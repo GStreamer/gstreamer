@@ -1,3 +1,8 @@
+2004-04-29  David Schleef  <ds@schleef.org>
+
+	* gst/elements/gstfilesink.c: (gst_filesink_handle_event):
+	Patch from Sebastien Cote to fix leakage of events. (bug #141414)
+
 2004-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init):

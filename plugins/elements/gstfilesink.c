@@ -332,22 +332,30 @@ gst_filesink_handle_event (GstPad * pad, GstEvent * event)
 
   filesink = GST_FILESINK (gst_pad_get_parent (pad));
 
-  /* FIXME: should the event be unreferenced ? */
-  if (!(GST_FLAG_IS_SET (filesink, GST_FILESINK_OPEN)))
+
+  if (!(GST_FLAG_IS_SET (filesink, GST_FILESINK_OPEN))) {
+    gst_event_unref (event);
     return FALSE;
+  }
+
 
   type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
   switch (type) {
     case GST_EVENT_SEEK:
-      g_return_val_if_fail (GST_EVENT_SEEK_FORMAT (event) == GST_FORMAT_BYTES,
-          FALSE);
+      if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
+        gst_event_unref (event);
+        return FALSE;
+      }
 
-      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH)
-        if (fflush (filesink->file))
+      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
+        if (fflush (filesink->file)) {
+          gst_event_unref (event);
           GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
               (_("Error while writing to file \"%s\"."), filesink->filename),
               GST_ERROR_SYSTEM);
+        }
+      }
 
       switch (GST_EVENT_SEEK_METHOD (event)) {
         case GST_SEEK_METHOD_SET:
@@ -363,6 +371,7 @@ gst_filesink_handle_event (GstPad * pad, GstEvent * event)
           g_warning ("unknown seek method!");
           break;
       }
+      gst_event_unref (event);
       break;
     case GST_EVENT_DISCONTINUOUS:
     {
@@ -376,12 +385,14 @@ gst_filesink_handle_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_FLUSH:
       if (fflush (filesink->file)) {
+        gst_event_unref (event);
         GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
             (_("Error while writing to file \"%s\"."), filesink->filename),
             GST_ERROR_SYSTEM);
       }
       break;
     case GST_EVENT_EOS:
+      gst_event_unref (event);
       gst_filesink_close_file (filesink);
       gst_element_set_eos (GST_ELEMENT (filesink));
       break;
