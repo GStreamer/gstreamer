@@ -1,3 +1,7 @@
+2004-11-13  Arwed v. Merkatz  <v.merkatz@gmx.net>
+	* configure.ac:
+	  fix mplex configure check segfaulting on some systems (bug #140994)
+
 2004-11-13  Benjamin Otte  <otte@gnome.org>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_pcm_wait):
