@@ -1,5 +1,11 @@
 2004-11-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/videotestsrc/videotestsrc.c: (paint_setup_Y41B),
+	(paint_hline_Y41B), (paint_setup_Y42B), (paint_hline_Y42B):
+	Added two more colorspaces.
+
+2004-11-05  Wim Taymans  <wim@fluendo.com>
+
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
 	(gst_ffmpegcsp_avpicture_fill):
 	* gst/ffmpegcolorspace/imgconvert.c: (avpicture_get_size),
