@@ -401,7 +401,7 @@ gst_ossmixer_set_record (GstMixer      *mixer,
 void
 gst_ossmixer_build_list (GstOssElement *oss)
 {
-  gint i, devmask;
+  gint i, devmask, master = -1;
   const GList *pads = gst_element_get_pad_list (GST_ELEMENT (oss));
   GstPadDirection dir = GST_PAD_UNKNOWN;
 #ifdef SOUND_MIXER_INFO
@@ -443,6 +443,15 @@ gst_ossmixer_build_list (GstOssElement *oss)
   oss->device_name = g_strdup ("Unknown");
 #endif
 
+  /* find master volume */
+  if (devmask & SOUND_MASK_VOLUME)
+    master = SOUND_MIXER_VOLUME;
+  else if (devmask & SOUND_MASK_PCM)
+    master = SOUND_MIXER_PCM;
+  else if (devmask & SOUND_MASK_SPEAKER)
+    master = SOUND_MIXER_SPEAKER; /* doubtful... */
+  /* else: no master, so we won't set any */
+
   /* build track list */
   for (i = 0; i < SOUND_MIXER_NRDEVICES; i++) {
     if (devmask & (1 << i)) {
@@ -466,7 +475,9 @@ gst_ossmixer_build_list (GstOssElement *oss)
       track = gst_ossmixer_track_new (oss, i, stereo ? 2 : 1,
 					  (record ? GST_MIXER_TRACK_RECORD : 0) |
 					  (input ? GST_MIXER_TRACK_INPUT :
-						   GST_MIXER_TRACK_OUTPUT));
+						   GST_MIXER_TRACK_OUTPUT) |
+					  ((master != i) ? 0 :
+						   GST_MIXER_TRACK_MASTER));
       oss->tracklist = g_list_append (oss->tracklist, track);
     }
   }
