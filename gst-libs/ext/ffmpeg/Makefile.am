@@ -74,15 +74,6 @@ install: all
 uninstall:
 	@true
 
-# override recursive targets
-# FIXME: maybe this can be prettier, so it doesn't generate warnings
-dvi-recursive:
-	true
-check-recursive:
-	true
-installcheck-recursive:
-	true
-
 
 
 noinst_LTLIBRARIES = libavformat.la libavcodec.la
@@ -168,8 +159,9 @@ libavformat_la_SOURCES = \
 	ffmpeg/libavformat/yuv.c
 
 libavformat_la_LDFLAGS = -lm -lz
-libavformat_la_CFLAGS = $(defs) -Wall -I$(srcdir)/ffmpeg -I$(srcdir)/ffmpeg/libavformat \
-	-I$(srcdir)/ffmpeg/libavcodec -DHAVE_AV_CONFIG_H \
+libavformat_la_CFLAGS = $(defs) -Wall -I$(srcdir) -I$(srcdir)/ffmpeg \
+	-I$(srcdir)/ffmpeg/libavformat -I$(srcdir)/ffmpeg/libavcodec \
+	-I$(top_srcdir)/gst-libs/ext/linux/ -DHAVE_AV_CONFIG_H \
 	-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE
 
 

@@ -11,7 +11,7 @@ libgstvideo4linux2_la_SOURCES = \
 	gstv4l2colorbalance.c
 libgstvideo4linux2_la_CFLAGS = $(GST_CFLAGS)
 libgstvideo4linux2_la_LIBADD = \
-	$(top_srcdir)/gst-libs/gst/libgstinterfaces-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst-libs/gst/libgstinterfaces-@GST_MAJORMINOR@.la
 libgstvideo4linux2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstv4l2element.h v4l2_calls.h \
