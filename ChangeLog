@@ -1,3 +1,12 @@
+=== release 0.8.2 ===
+
+2004-10-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Release 0.8.2.
+
 2004-10-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
