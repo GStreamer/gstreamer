@@ -1,5 +1,14 @@
 2004-05-09  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/gnomevfs/gstgnomevfssink.c:
+	(_gst_boolean_allow_overwrite_accumulator),
+	(gst_gnomevfssink_class_init), (gst_gnomevfssink_open_file):
+	  Run glib's default signal handler (??) in RUN_CLEANUP rather than
+	  RUN_LAST, and don't use that to set the accumulator value because
+	  then it's always FALSE.
+
+2004-05-09  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst-libs/gst/riff/riff-media.c:
 	(gst_riff_create_video_caps_with_data),
 	(gst_riff_create_audio_caps),
