@@ -634,12 +634,14 @@ gst_avi_demux_parse_index (GstAviDemux *avi_demux,
     GstEvent *event;
   
     gst_bytestream_get_status (avi_demux->bs, &remaining, &event);
+    gst_event_unref (event);
 
     got_bytes = gst_bytestream_read (avi_demux->bs, &buf, 8);
   }
 		  
   if (GST_BUFFER_OFFSET (buf) != filepos + offset || GST_BUFFER_SIZE (buf) != 8) {
-    GST_INFO (GST_CAT_PLUGIN_INFO, "avidemux: could not get index");
+    GST_INFO (GST_CAT_PLUGIN_INFO, "avidemux: could not get index, got %lld %d, expected %ld", 
+		    GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf), filepos + offset);
     goto end;
   }
 
@@ -957,12 +959,19 @@ gst_avi_demux_send_event (GstElement *element, GstEvent *event)
     GstPad *pad = GST_PAD (pads->data);
 
     if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
-      return gst_avi_demux_handle_src_event (pad, event);
+      /* we ref the event here as we might have to try again if the event
+       * failed on this pad */
+      gst_event_ref (event);
+      if (gst_avi_demux_handle_src_event (pad, event)) {
+	gst_event_unref (event);
+	return TRUE;
+      }
     }
     
     pads = g_list_next (pads);
   }
   
+  gst_event_unref (event);
   return FALSE;
 }
 
@@ -977,6 +986,7 @@ gst_avi_demux_handle_src_event (GstPad *pad, GstEvent *event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
+      GST_DEBUG (0, "seek format %d, %08x", GST_EVENT_SEEK_FORMAT (event), stream->strh.type);
       switch (GST_EVENT_SEEK_FORMAT (event)) {
 	case GST_FORMAT_BYTES:
 	case GST_FORMAT_UNITS:
@@ -989,8 +999,10 @@ gst_avi_demux_handle_src_event (GstPad *pad, GstEvent *event)
           guint64 min_index;
 
 	  /* no seek on audio yet */
-	  if (stream->strh.type == GST_RIFF_FCC_auds)
-	    return FALSE;
+	  if (stream->strh.type == GST_RIFF_FCC_auds) {
+	    res = FALSE;
+	    goto done;
+	  }
 
           flags = GST_RIFF_IF_KEYFRAME;
 
@@ -1007,6 +1019,7 @@ gst_avi_demux_handle_src_event (GstPad *pad, GstEvent *event)
 	    avi_demux->last_seek = seek_entry->ts;
 	  }
 	  else {
+            GST_DEBUG (0, "no index entry found for time %lld", desired_offset);
 	    res = FALSE;
 	  }
 	  break;
@@ -1020,7 +1033,10 @@ gst_avi_demux_handle_src_event (GstPad *pad, GstEvent *event)
       res = FALSE;
       break;
   }
-  
+
+done:
+  gst_event_unref (event);
+
   return res;
 }
 
@@ -1037,6 +1053,7 @@ gst_avi_demux_handle_sink_event (GstAviDemux *avi_demux)
 
   switch (type) {
     case GST_EVENT_EOS:
+      gst_bytestream_flush (avi_demux->bs, remaining);
       gst_pad_event_default (avi_demux->sinkpad, event);
       break;
     case GST_EVENT_FLUSH:
@@ -1045,15 +1062,16 @@ gst_avi_demux_handle_sink_event (GstAviDemux *avi_demux)
     case GST_EVENT_DISCONTINUOUS:
     {
       gint i;
+      GstEvent *discont;
 
       for (i = 0; i < avi_demux->num_streams; i++) {
         avi_stream_context *stream = &avi_demux->stream[i];
 
 	GST_DEBUG (GST_CAT_EVENT, "sending discont on %d %lld + %lld = %lld", i, 
 			avi_demux->last_seek, stream->delay, avi_demux->last_seek + stream->delay);
-        event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
+        discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 			avi_demux->last_seek + stream->delay , NULL);
-	gst_pad_push (stream->pad, GST_BUFFER (event));
+	gst_pad_push (stream->pad, GST_BUFFER (discont));
       }
       break;
     }
@@ -1061,6 +1079,8 @@ gst_avi_demux_handle_sink_event (GstAviDemux *avi_demux)
       g_warning ("unhandled event %d", type);
       break;
   }
+
+  gst_event_unref (event);
 
   return TRUE;
 }
@@ -1164,6 +1184,7 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
             GstEvent *event;
 
             gst_bytestream_get_status (avi_demux->bs, &remaining, &event);
+	    gst_event_unref (event);
 	  }
 	  if  (avi_demux->avih.bufsize)
 	    gst_bytestream_size_hint (avi_demux->bs, avi_demux->avih.bufsize);
