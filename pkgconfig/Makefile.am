@@ -37,6 +37,7 @@ pkgconfig_DATA = \
 	gstreamer-libs-@GST_MAJORMINOR@.pc \
 	gstreamer-play-@GST_MAJORMINOR@.pc
 
+CLEANFILES = $(pcfiles) $(pcfiles_uninstalled)
 EXTRA_DIST= \
            gstreamer-libs.pc.in gstreamer-libs-uninstalled.pc.in \
            gstreamer-play.pc.in gstreamer-play-uninstalled.pc.in
