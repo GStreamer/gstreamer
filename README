@@ -1,0 +1,2 @@
+This is a sandbox module to test if our build setup for external libraries
+(for example FFmpeg) is sane.
