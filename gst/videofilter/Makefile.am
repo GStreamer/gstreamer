@@ -6,7 +6,7 @@ noinst_LTLIBRARIES = libgstvideoexample.la
 noinst_HEADERS = gstvideofilter.h gstvideoflip.h gstvideobalance.h
 
 EXTRA_DIST = gstvideotemplate.c make_filter
-EXTRA_CLEAN = gstvideoexample.c
+CLEANFILES = gstvideoexample.c
 
 libgstvideofilter_la_SOURCES = gstvideofilter.c
 libgstvideofilter_la_CFLAGS = $(GST_CFLAGS)
@@ -29,7 +29,6 @@ libgstvideobalance_la_LIBADD =
 libgstvideobalance_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -lm
 
 
-# no, this doesn't work if $(srcdir) != (builddir)
 gstvideoexample.c: $(srcdir)/make_filter $(srcdir)/gstvideotemplate.c
-	$(srcdir)/make_filter Videoexample
+	$(srcdir)/make_filter Videoexample $(srcdir)/gstvideotemplate.c
 
