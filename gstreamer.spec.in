@@ -152,7 +152,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 %files
 %defattr(-, root, root, -)
-%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING RELEASE 
+%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
@@ -180,11 +180,12 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_bindir}/gst-register-%{majorminor}
 %{_bindir}/gst-xmllaunch-%{majorminor}
 %{_bindir}/gst-typefind-%{majorminor}
-%{_bindir}/gst-feedback
+%{_bindir}/gst-feedback-%{majorminor}
 %{_mandir}/man1/gst-inspect-%{majorminor}.*
 %{_mandir}/man1/gst-launch-%{majorminor}.*
 %{_mandir}/man1/gst-md5sum-%{majorminor}.*
 %{_mandir}/man1/gst-typefind-%{majorminor}.*
+%{_mandir}/man1/gst-feedback-%{majorminor}.*
 
 %files common
 %defattr(-, root, root, -)

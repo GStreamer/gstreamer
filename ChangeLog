@@ -1,3 +1,7 @@
+2004-02-11  Christian Schaller <Uraeus@gnome.org>
+
+	* Adding versioned gst-feedback files to spec
+
 2004-02-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* po/POTFILES.in:
