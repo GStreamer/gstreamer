@@ -2,15 +2,21 @@ plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = \
 	libgstbasicomegascheduler.la \
+	libgstbasicgthreadscheduler.la \
 	libgstbasicwingoscheduler.la \
 	libgstoptscheduler.la \
 	libgstoptomegascheduler.la \
+	libgstoptgthreadscheduler.la \
 	libgstoptwingoscheduler.la
 
 libgstbasicomegascheduler_la_SOURCES = gstbasicscheduler.c 
 libgstbasicomegascheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_OMEGA
 libgstbasicomegascheduler_la_LIBADD = ../libcothreads.la
 libgstbasicomegascheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+libgstbasicgthreadscheduler_la_SOURCES = gstbasicscheduler.c 
+libgstbasicgthreadscheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_GTHREAD
+libgstbasicgthreadscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 # some silly bug prevents us from putting both $(top_builddir) and
 # $(src_dir) on the same line for CFLAGS (try it, reverse them, see the
@@ -31,6 +37,10 @@ libgstoptomegascheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_OMEGA -DUSE_COTHR
 libgstoptomegascheduler_la_LIBADD = ../libcothreads.la
 libgstoptomegascheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
+libgstoptgthreadscheduler_la_SOURCES = gstoptimalscheduler.c 
+libgstoptgthreadscheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_GTHREAD -DUSE_COTHREADS
+libgstoptgthreadscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
 libgstoptwingoscheduler_la_SOURCES = gstoptimalscheduler.c 
 libgstoptwingoscheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_WINGO -DUSE_COTHREADS
 libgstoptwingoscheduler_la_CFLAGS += -I$(top_builddir)/libs/ext/cothreads
@@ -43,4 +53,4 @@ libgstoptwingoscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 $(top_builddir)/libs/ext/cothreads/cothreads/libcothreads-gthreads.la:
 	cd $(top_builddir)/libs/ext/cothreads/cothreads && ${MAKE}
 
-noinst_HEADERS = cothreads_compat.h
+noinst_HEADERS = cothreads_compat.h gthread-cothreads.h

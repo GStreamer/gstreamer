@@ -63,7 +63,7 @@ typedef cothread_state cothread;
 #define do_cothread_lock(cothread)		cothread_lock(cothread)
 #define do_cothread_unlock(cothread)		cothread_unlock(cothread)
 
-#define do_cothread_get_current()		(cothread_current())
+#define do_cothread_get_current(context)		(cothread_current())
 #define do_cothread_get_main(context)		(cothread_current_main())
   
   
@@ -81,7 +81,7 @@ typedef cothread_state cothread;
 
 /* unify the structs 
  *
- * "cothread" and "cothread_context" need to vbe defined
+ * "cothread" and "cothread_context" need to be defined
  */
 typedef cothread cothread_context;
 
@@ -129,12 +129,18 @@ static void do_cothread_switch(cothread *to)
 #define do_cothread_lock(cothread)		/* FIXME */
 #define do_cothread_unlock(cothread)		/* FIXME */
 
-#define do_cothread_get_current()		(cothread_self())
+#define do_cothread_get_current(context)		(cothread_self())
 #define do_cothread_get_main(context)		(context)
 
 
 
 
+/* use the new cothreads implementation in libs/ext/cothreads */
+#elif defined(_COTHREADS_GTHREAD)
+
+#include "gthread-cothreads.h"
+  
+  
 /* bail out with an error if no cothreads package is defined */
 #else
 #error "No cothreads package defined"
