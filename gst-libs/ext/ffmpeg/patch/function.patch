@@ -1,0 +1,65 @@
+diff -urN ffmpeg.patch/libavformat/allformats.c ffmpeg/libavformat/allformats.c
+--- ffmpeg.patch/libavformat/allformats.c	2002-11-05 01:38:06.000000000 +0100
++++ ffmpeg/libavformat/allformats.c	2003-01-16 17:31:13.000000000 +0100
+@@ -38,13 +38,13 @@
+     asf_init();
+     avienc_init();
+     avidec_init();
+-    wav_init();
++    avf_wav_init();
+     swf_init();
+     au_init();
+     gif_init();
+     mov_init();
+     jpeg_init();
+-    dv_init();
++    avf_dv_init();
+     
+ #ifdef CONFIG_VORBIS
+     ogg_init();
+diff -urN ffmpeg.patch/libavformat/avformat.h ffmpeg/libavformat/avformat.h
+--- ffmpeg.patch/libavformat/avformat.h	2002-12-04 11:04:03.000000000 +0100
++++ ffmpeg/libavformat/avformat.h	2003-01-16 17:31:14.000000000 +0100
+@@ -228,7 +228,7 @@
+ int au_init(void);
+ 
+ /* wav.c */
+-int wav_init(void);
++int avf_wav_init(void);
+ 
+ /* raw.c */
+ int raw_init(void);
+@@ -237,7 +237,7 @@
+ int ogg_init(void);
+ 
+ /* dv.c */
+-int dv_init(void);
++int avf_dv_init(void);
+ 
+ /* ffm.c */
+ int ffm_init(void);
+diff -urN ffmpeg.patch/libavformat/dv.c ffmpeg/libavformat/dv.c
+--- ffmpeg.patch/libavformat/dv.c	2002-11-11 10:05:57.000000000 +0100
++++ ffmpeg/libavformat/dv.c	2003-01-16 17:31:15.000000000 +0100
+@@ -126,7 +126,7 @@
+ };
+ #endif
+ 
+-int dv_init(void)
++int avf_dv_init(void)
+ {
+     av_register_input_format(&dv_iformat);
+     //    av_register_output_format(&dv_oformat);
+diff -urN ffmpeg.patch/libavformat/wav.c ffmpeg/libavformat/wav.c
+--- ffmpeg.patch/libavformat/wav.c	2002-11-11 10:09:06.000000000 +0100
++++ ffmpeg/libavformat/wav.c	2003-01-16 17:31:16.000000000 +0100
+@@ -318,7 +318,7 @@
+     wav_write_trailer,
+ };
+ 
+-int wav_init(void)
++int avf_wav_init(void)
+ {
+     av_register_input_format(&wav_iformat);
+     av_register_output_format(&wav_oformat);
+}
