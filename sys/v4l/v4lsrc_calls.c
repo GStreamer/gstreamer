@@ -28,6 +28,10 @@
 #include <string.h>
 #include <errno.h>
 #include "v4lsrc_calls.h"
+#include <sys/time.h>
+
+/* number of buffers to be queued *at least* before syncing */
+#define MIN_BUFFERS_QUEUED 2
 
 /* On some systems MAP_FAILED seems to be missing */
 #ifndef MAP_FAILED
@@ -81,7 +85,7 @@ static void *
 gst_v4lsrc_soft_sync_thread (void *arg)
 {
   GstV4lSrc *v4lsrc = GST_V4LSRC(arg);
-  guint16 frame = 0;
+  gint frame = 0;
 
 #ifdef DEBUG
   fprintf(stderr, "gst_v4lsrc_soft_sync_thread()\n");
@@ -95,20 +99,30 @@ gst_v4lsrc_soft_sync_thread (void *arg)
   {
     /* are there queued frames left? */
     pthread_mutex_lock(&(v4lsrc->mutex_queued_frames));
-    if (v4lsrc->num_queued_frames < 1)
+    if (v4lsrc->num_queued_frames < MIN_BUFFERS_QUEUED)
     {
+#ifdef DEBUG
+      fprintf(stderr, "Waiting for new frames to be queued (%d < %d)\n",
+        v4lsrc->num_queued_frames, MIN_BUFFERS_QUEUED);
+#endif
       pthread_cond_wait(&(v4lsrc->cond_queued_frames),
         &(v4lsrc->mutex_queued_frames));
     }
     pthread_mutex_unlock(&(v4lsrc->mutex_queued_frames));
 
     /* if still wrong, we got interrupted and we should exit */
-    if (v4lsrc->num_queued_frames < 1)
+    if (v4lsrc->num_queued_frames < MIN_BUFFERS_QUEUED)
     {
+#ifdef DEBUG
+      fprintf(stderr, "Still not enough frames, quitting...\n");
+#endif
       goto end;
     }
 
     /* sync on the frame */
+#ifdef DEBUG
+    fprintf(stderr, "Sync\'ing on frame %d\n", frame);
+#endif
 retry:
     if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCSYNC, &frame) < 0)
     {
@@ -142,7 +156,7 @@ retry:
 
 end:
 #ifdef DEBUG
-  fprintf(stderr, "Software sync thread got signalled to exit");
+  fprintf(stderr, "Software sync thread got signalled to exit\n");
 #endif
   pthread_exit(NULL);
 }
@@ -159,25 +173,27 @@ gst_v4lsrc_sync_next_frame (GstV4lSrc *v4lsrc,
                             gint      *num)
 {
 #ifdef DEBUG
-  fprintf(stderr, "V4LSRC: gst_v4lsrc_sync_frame(), num = %d\n",
-    num);
+  fprintf(stderr, "V4LSRC: gst_v4lsrc_sync_frame()\n");
 #endif
 
-  *num = (v4lsrc->sync_frame + 1)%v4lsrc->mbuf.frames;
+  *num = v4lsrc->sync_frame = (v4lsrc->sync_frame + 1)%v4lsrc->mbuf.frames;
 
   /* "software sync()" on the frame */
   pthread_mutex_lock(&(v4lsrc->mutex_soft_sync));
-  if (v4lsrc->isready_soft_sync[*num])
+  if (v4lsrc->isready_soft_sync[*num] == 0)
   {
+#ifdef DEBUG
+    fprintf(stderr, "Waiting for frame %d to be synced on\n",
+      *num);
+#endif
     pthread_cond_wait(&(v4lsrc->cond_soft_sync[*num]),
       &(v4lsrc->mutex_soft_sync));
   }
-  pthread_mutex_unlock(&(v4lsrc->mutex_soft_sync));
 
   if (v4lsrc->isready_soft_sync[*num] < 0)
     return FALSE;
-
   v4lsrc->isready_soft_sync[*num] = 0;
+  pthread_mutex_unlock(&(v4lsrc->mutex_soft_sync));
 
   v4lsrc->frame_queued[*num] = FALSE;
 
@@ -240,12 +256,20 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
     return FALSE;
   }
 
+  if (v4lsrc->mbuf.frames < MIN_BUFFERS_QUEUED)
+  {
+    gst_element_error(GST_ELEMENT(v4lsrc),
+      "Too little buffers. We got %d, we want at least %d",
+      v4lsrc->mbuf.frames, MIN_BUFFERS_QUEUED);
+    return FALSE;
+  }
+
   gst_element_info(GST_ELEMENT(v4lsrc),
     "Got %d buffers of size %d KB",
     v4lsrc->mbuf.frames, v4lsrc->mbuf.size/(v4lsrc->mbuf.frames*1024));
 
   /* keep trakc of queued buffers */
-  v4lsrc->frame_queued = (gint *) malloc(sizeof(gint) * v4lsrc->mbuf.frames);
+  v4lsrc->frame_queued = (gint *) malloc(sizeof(int) * v4lsrc->mbuf.frames);
   if (!v4lsrc->frame_queued)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),

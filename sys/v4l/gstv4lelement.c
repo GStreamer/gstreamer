@@ -465,7 +465,7 @@ gst_v4lelement_change_state (GstElement *element)
 {
   GstV4lElement *v4lelement;
   
-  g_return_val_if_fail(GST_IS_V4LELEMENT(element), FALSE);
+  g_return_val_if_fail(GST_IS_V4LELEMENT(element), GST_STATE_FAILURE);
   
   v4lelement = GST_V4LELEMENT(element);
 

@@ -317,23 +317,13 @@ static GstElementStateReturn
 gst_v4lmjpegsink_change_state (GstElement *element)
 {
   GstV4lMjpegSink *v4lmjpegsink;
+  GstElementStateReturn parent_value;
 
   g_return_val_if_fail (GST_IS_V4LMJPEGSINK (element), GST_STATE_FAILURE);
   v4lmjpegsink = GST_V4LMJPEGSINK(element);
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
   /* set up change state */
   switch (GST_STATE_TRANSITION(element)) {
-    case GST_STATE_NULL_TO_READY:
-      if (GST_V4LELEMENT(v4lmjpegsink)->norm >= VIDEO_MODE_PAL &&
-          GST_V4LELEMENT(v4lmjpegsink)->norm < VIDEO_MODE_AUTO &&
-          GST_V4LELEMENT(v4lmjpegsink)->channel < 0)
-        if (!gst_v4l_set_chan_norm(GST_V4LELEMENT(v4lmjpegsink),
-             0, GST_V4LELEMENT(v4lmjpegsink)->norm))
-          return GST_STATE_FAILURE;
-      break;
     case GST_STATE_READY_TO_PAUSED:
       /* set buffer info */
       if (!gst_v4lmjpegsink_set_buffer(v4lmjpegsink,
@@ -358,6 +348,22 @@ gst_v4lmjpegsink_change_state (GstElement *element)
         return GST_STATE_FAILURE;
       break;
   }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    parent_value = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  if (GST_STATE_TRANSITION(element) == GST_STATE_NULL_TO_READY)
+  {
+    if ((GST_V4LELEMENT(v4lmjpegsink)->norm >= VIDEO_MODE_PAL ||
+         GST_V4LELEMENT(v4lmjpegsink)->norm < VIDEO_MODE_AUTO) ||
+        GST_V4LELEMENT(v4lmjpegsink)->channel < 0)
+      if (!gst_v4l_set_chan_norm(GST_V4LELEMENT(v4lmjpegsink),
+           0, GST_V4LELEMENT(v4lmjpegsink)->norm))
+        return GST_STATE_FAILURE;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return parent_value;
 
   return GST_STATE_SUCCESS;
 }
