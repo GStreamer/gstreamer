@@ -36,7 +36,7 @@ static const gchar* lines[] = {
 
 static void
 debug_not_reached (GstDebugCategory *category, GstDebugLevel level, const gchar *file,
-                   const gchar *function, gint line, GObject *object, gchar *message,
+                   const gchar *function, gint line, GObject *object, GstDebugMessage *message,
 		   gpointer thread)
 {
   g_assert_not_reached ();

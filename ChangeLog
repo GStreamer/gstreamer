@@ -1,3 +1,9 @@
+2004-01-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/debug/commandline.c: (debug_not_reached):
+	* testsuite/debug/output.c: (check_message):
+          fix testsuite
+
 2004-01-12  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* examples/cutter/.cvsignore:
@@ -42,7 +48,7 @@
 	  update - this is huge, because it includes *.bb, *.bbg and *.da files
 	  which are generated for gcov.
 
-2004-01-11  David Schleef,,,  <set EMAIL_ADDRESS environment variable>
+2004-01-11  David Schleef  <ds@schleef.org>
 
 	* gst/gststructure.c: (gst_strtoi), (gst_value_from_string): Add
 	a function to parse integers in ways that strto[u]l() does not.

@@ -29,7 +29,7 @@ static GstElement *pipeline;
 
 static void
 check_message (GstDebugCategory *category, GstDebugLevel level, const gchar *file,
-	       const gchar *function, gint line, GObject *object, gchar *message,
+	       const gchar *function, gint line, GObject *object, GstDebugMessage *message,
 	       gpointer unused)
 {
   gint temp;
@@ -39,7 +39,7 @@ check_message (GstDebugCategory *category, GstDebugLevel level, const gchar *fil
   /* <0 means no checks */
   if (count < 0) return;
   
-  g_print ("expecting \"%s\"...", message);
+  g_print ("expecting \"%s\"...", (gchar *) message);
   /* level */
   temp = (count % 5) + 1;
   g_assert (level == temp);
