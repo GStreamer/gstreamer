@@ -74,7 +74,21 @@ GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+  GST_STATIC_CAPS (
+    "audio/x-raw-int, "
+      "endianness = (int) BYTE_ORDER, "
+      "signed = (boolean) TRUE, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "rate = (int) { 8000, 11025, 22050, 44100 }, " /* FIXME? */
+      "channels = (int) [ 1, 2 ]; "
+    "audio/x-raw-int, "
+      "signed = (boolean) FALSE, "
+      "width = (int) 8, "
+      "depth = (int) 8, "
+      "rate = (int) { 8000, 11025, 22050, 44100 }, " /* FIXME? */
+      "channels = (int) [ 1, 2 ]"
+  )
 );
 
 static GstStaticPadTemplate modplug_sink_template_factory =
@@ -426,43 +440,6 @@ gst_modplug_update_metadata (GstModPlug *modplug)
 }
 #endif
 
-
-static GstPadLinkReturn
-modplug_negotiate (GstModPlug *modplug)
-{
-  GstPadLinkReturn ret = GST_PAD_LINK_OK;
-  gboolean sign;
-  modplug->length = 1152 * modplug->channel;
-  
-  if (modplug->_16bit)
-  {
-    modplug->length *= 2;
-    modplug->bitsPerSample = 16;
-    sign = TRUE;
-  }
-  else {
-    modplug->bitsPerSample = 8;
-    sign = FALSE;
-  }
-    
-  if ((ret = gst_pad_try_set_caps (modplug->srcpad, 
-	  gst_caps_new_simple ("audio/x-raw-int",
-	    "endianness",   G_TYPE_INT, G_BYTE_ORDER,
-	    "signed",     	G_TYPE_BOOLEAN, sign,
-	    "width",      	G_TYPE_INT, modplug->bitsPerSample,
-	    "depth",      	G_TYPE_INT, modplug->bitsPerSample,
-	    "rate",       	G_TYPE_INT, modplug->frequency,
-	    "channels",     G_TYPE_INT, modplug->channel,
-	    NULL))) <= 0) {
-    return ret;
-  }
-  
-  gst_modplug_setup (modplug);
-
-  return ret;
-}
-
-
 static GstPadLinkReturn
 gst_modplug_srclink (GstPad *pad, const GstCaps *caps)
 {
@@ -479,7 +456,10 @@ gst_modplug_srclink (GstPad *pad, const GstCaps *caps)
   gst_structure_get_int (structure, "channels", &modplug->channel);
   gst_structure_get_int (structure, "rate", &modplug->frequency);
 
-  return modplug_negotiate(modplug);
+  modplug->length = 1152 * modplug->channel * depth / 8;
+  gst_modplug_setup (modplug);
+
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -574,7 +554,7 @@ gst_modplug_loop (GstElement *element)
     modplug->mSoundFile = new CSoundFile;
     
     if (!GST_PAD_CAPS (modplug->srcpad) &&
-        modplug_negotiate (modplug) <= 0) {
+        GST_PAD_LINK_FAILED (gst_pad_renegotiate (modplug->srcpad))) {
       GST_ELEMENT_ERROR (modplug, CORE, NEGOTIATION, (NULL), (NULL));
       return;
     }
