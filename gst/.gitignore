@@ -6,3 +6,5 @@ Makefile.in
 .deps
 .libs
 gstversion.h
+gstmarshal.c
+gstmarshal.h
