@@ -117,7 +117,7 @@ struct _GstOggDemux
   GstOggState state;
   GArray *chains;
   gint current_chain;
-  guint flags;
+  gboolean bos;
 
   /* ogg stuff */
   ogg_sync_state sync;
@@ -376,8 +376,7 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
 
       GST_OGG_SET_STATE (ogg, GST_OGG_STATE_SEEK);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       GST_DEBUG_OBJECT (ogg, "initiating seeking to offset %" G_GUINT64_FORMAT,
           offset);
       ogg->seek_pad = cur;
@@ -424,8 +423,7 @@ gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       GST_FLAG_UNSET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       break;
     case GST_EVENT_EOS:
       if (ogg->state == GST_OGG_STATE_SETUP) {
@@ -704,6 +702,10 @@ br:
       CURRENT_CHAIN (ogg)->pads =
           g_slist_prepend (CURRENT_CHAIN (ogg)->pads, cur);
     }
+    ogg->bos = TRUE;
+  } else if (ogg->bos) {
+    gst_element_no_more_pads (GST_ELEMENT (ogg));
+    ogg->bos = FALSE;
   }
   if (cur == NULL) {
     GST_ELEMENT_ERROR (ogg, STREAM, DECODE, (NULL),
