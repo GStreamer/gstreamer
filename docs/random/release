@@ -33,7 +33,8 @@ contain the definitive tarball for that version.
 TODO :
   - Decide on the next version number (major, minor or micro upgrade ?)
   - Get a fresh copy to do the necessary tests on
-  - Create branch; with 0.3.3 as an example, tag is BRANCH-RELEASE-0_3_3
+  - If this isn't on the stable branch (like for 0.6), then create a new branch;
+    - with 0.3.3 as an example, tag is BRANCH-RELEASE-0_3_3
       cvs tag BRANCH-RELEASE-0_3_3-ROOT
       cvs tag -b BRANCH-RELEASE-0_3_3
       cvs update -r BRANCH-RELEASE-0_3_3
@@ -92,9 +93,9 @@ TODO :
     - policy is at http://gstreamer.net/dev/cvs.php
     - we stopped adding CODENAMES to cvs
       --> all of this is not done anymore
-      - decide on a tag name : RELEASE-(VERSION)-(CODE)
-      - tag; for example for 0.3.3 :
-           cvs tag RELEASE-0_3_3-GUADECBYFOOT
+      - decide on a tag name : RELEASE-(VERSION)
+      - tag; for example for 0.6.3 :
+           cvs tag RELEASE-0_6_3
   - add tag 
   - roll the tarball, build rpms
   - FIXME: update status table cvs status and then click on the release link
