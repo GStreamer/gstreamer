@@ -1,3 +1,11 @@
+2004-10-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Submitted by: Kjartan Maraas <kmaraas@broadpark.no>
+
+	* po/LINGUAS:
+	* po/nb.po:
+	  Added Norwegian Bokmaal translation
+
 2004-10-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* tools/gst-inspect.c: (print_signal_info):
