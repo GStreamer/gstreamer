@@ -1,3 +1,13 @@
+2004-06-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/audiorate/Makefile.am:
+	* gst/audiorate/gstaudiorate.c: (gst_audiorate_get_type),
+	(gst_audiorate_base_init), (gst_audiorate_class_init),
+	(gst_audiorate_link), (gst_audiorate_init), (gst_audiorate_chain),
+	(gst_audiorate_set_property), (gst_audiorate_get_property),
+	(gst_audiorate_change_state), (plugin_init):
+	Added an audiorate converter that fills in gaps.
+
 2004-06-17  Johan Dahlin  <johan@gnome.org>
 
 	* ext/tcp/*: Revert Zaheer changes.

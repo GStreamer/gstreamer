@@ -340,6 +340,7 @@ GST_PLUGINS_ALL="\
 	asfdemux \
 	audioconvert \
 	audioscale \
+	audiorate \
 	auparse \
 	avi \
 	cdxaparse \
@@ -395,6 +396,7 @@ GST_PLUGINS_ALL="\
 	videoflip \
 	videofilter \
 	videomixer \
+	videorate \
 	videoscale \
 	videotestsrc \
 	volenv \
@@ -1781,6 +1783,7 @@ gst/adder/Makefile
 gst/alpha/Makefile
 gst/audioconvert/Makefile
 gst/audioscale/Makefile
+gst/audiorate/Makefile
 gst/auparse/Makefile
 gst/avi/Makefile
 gst/asfdemux/Makefile
@@ -1840,6 +1843,7 @@ gst/videofilter/Makefile
 gst/videoflip/Makefile
 gst/videomixer/Makefile
 gst/videoscale/Makefile
+gst/videorate/Makefile
 gst/videotestsrc/Makefile
 gst/volenv/Makefile
 gst/volume/Makefile
