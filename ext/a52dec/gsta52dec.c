@@ -379,7 +379,7 @@ gst_a52dec_loop (GstElement *element)
   int i, length, flags, sample_rate, bit_rate;
   int stream_channels;
   GstBuffer *buf;
-  guint8 got_bytes;
+  guint32 got_bytes;
 
   a52dec = GST_A52DEC (element);
 
