@@ -21,7 +21,7 @@ LIBS = $(GST_LIBS)
 AM_CFLAGS = $(GST_CFLAGS)
 
 # we makes them, we gots to clean them
-CLEANFILES = test-registry.xml elementstest-registry.xml
+CLEANFILES = test-registry.xml elementstest-registry.xml threastest-registry.xml
 
 DIST_SUBDIRS = bytestream caps cleanup clock dynparams elements indexers \
 		plugin refcounting threads

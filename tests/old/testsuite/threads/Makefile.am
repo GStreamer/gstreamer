@@ -24,5 +24,3 @@ thread4_SOURCES = thread.c
 thread4_CFLAGS = -DTESTNUM=4 $(AM_CFLAGS)
 thread5_SOURCES = thread.c
 thread5_CFLAGS = -DTESTNUM=5 $(AM_CFLAGS)
-
-CLEANFILES = threadstest-registry.xml
