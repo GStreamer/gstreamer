@@ -1,0 +1,399 @@
+/* GStreamer
+ * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2003> David Schleef <ds@schleef.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#include "gstoverlay.h"
+
+/* elementfactory information */
+static GstElementDetails overlay_details = {
+  "Video Overlay",
+  "Filter/Video",
+  "LGPL",
+  "Overlay multiple video streams",
+  VERSION,
+  "David Schleef <ds@schleef.org>",
+  "(C) 2002, 2003",
+};
+
+GST_PAD_TEMPLATE_FACTORY (overlay_src_factory,
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+   "overlay_src",
+   "video/x-raw-yuv",
+     "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+     "width",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
+     "height",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
+     "framerate",GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
+  )
+)
+
+GST_PAD_TEMPLATE_FACTORY (overlay_sink1_factory,
+  "sink1",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+   "overlay_sink1",
+   "video/x-raw-yuv",
+     "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+     "width",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
+     "height",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
+     "framerate",GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
+  )
+)
+
+GST_PAD_TEMPLATE_FACTORY (overlay_sink2_factory,
+  "sink2",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+   "overlay_sink2",
+   "video/x-raw-yuv",
+     "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+     "width",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
+     "height",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
+     "framerate",GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
+  )
+)
+
+GST_PAD_TEMPLATE_FACTORY (overlay_sink3_factory,
+  "sink3",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+   "overlay_sink2",
+   "video/x-raw-yuv",
+     "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+     "width",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
+     "height",	 GST_PROPS_INT_RANGE (1, G_MAXINT),
+     "framerate",GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
+  )
+)
+
+/* OVERLAY signals and args */
+enum {
+  /* FILL ME */
+  LAST_SIGNAL
+};
+
+enum {
+  ARG_0,
+};
+
+
+static void	gst_overlay_class_init		(GstOverlayClass *klass);
+static void	gst_overlay_init			(GstOverlay *overlay);
+
+static void	gst_overlay_loop			(GstElement *element);
+
+static void	gst_overlay_set_property		(GObject *object, guint prop_id, 
+						 const GValue *value, GParamSpec *pspec);
+static void	gst_overlay_get_property		(GObject *object, guint prop_id, 
+						 GValue *value, GParamSpec *pspec);
+
+static GstElementClass *parent_class = NULL;
+/*static guint gst_overlay_signals[LAST_SIGNAL] = { 0 }; */
+
+static GType
+gst_overlay_get_type (void)
+{
+  static GType overlay_type = 0;
+
+  if (!overlay_type) {
+    static const GTypeInfo overlay_info = {
+      sizeof(GstOverlayClass),      
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_overlay_class_init,
+      NULL,
+      NULL,
+      sizeof(GstOverlay),
+      0,
+      (GInstanceInitFunc)gst_overlay_init,
+    };
+    overlay_type = g_type_register_static(GST_TYPE_ELEMENT, "GstOverlay", &overlay_info, 0);
+  }
+  return overlay_type;
+}
+
+static void
+gst_overlay_class_init (GstOverlayClass *klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+
+  gobject_class = (GObjectClass*)klass;
+  gstelement_class = (GstElementClass*)klass;
+
+  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+
+  gobject_class->set_property = gst_overlay_set_property;
+  gobject_class->get_property = gst_overlay_get_property;
+
+}
+
+#if 0
+static GstCaps *gst_overlay_getcaps(GstPad *pad)
+{
+  GstCaps *caps;
+  GstOverlay *overlay;
+
+  overlay = GST_OVERLAY (gst_pad_get_parent (pad));
+
+  if(overlay->width && overlay->height){
+    caps = GST_CAPS_NEW (
+      "overlay_sink2",
+      "video/raw",
+        "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+        "width",	 GST_PROPS_INT (overlay->width),
+        "height",	 GST_PROPS_INT (overlay->height)
+     );
+  }else{
+    caps = GST_CAPS_NEW (
+      "overlay_sink2",
+      "video/raw",
+        "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+        "width",	 GST_PROPS_INT_RANGE (0, 4096),
+        "height",	 GST_PROPS_INT_RANGE (0, 4096)
+     );
+  }
+
+  return caps;
+}
+#endif
+
+static gboolean
+gst_overlay_sinkconnect (GstPad *pad, GstCaps *caps)
+{
+  GstOverlay *overlay;
+
+  overlay = GST_OVERLAY (gst_pad_get_parent (pad));
+
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_LINK_DELAYED;
+
+  gst_caps_get_int (caps, "width", &overlay->width);
+  gst_caps_get_int (caps, "height", &overlay->height);
+  gst_caps_get_float (caps, "framerate", &overlay->framerate);
+
+  /* forward to the next plugin */
+  return gst_pad_try_set_caps(overlay->srcpad, gst_caps_copy_1(caps));
+}
+
+static void 
+gst_overlay_init (GstOverlay *overlay)
+{
+  overlay->sinkpad1 = gst_pad_new_from_template (
+		  GST_PAD_TEMPLATE_GET (overlay_sink1_factory), "sink1");
+  gst_pad_set_link_function (overlay->sinkpad1, gst_overlay_sinkconnect);
+  gst_element_add_pad (GST_ELEMENT (overlay), overlay->sinkpad1);
+
+  overlay->sinkpad2 = gst_pad_new_from_template (
+		  GST_PAD_TEMPLATE_GET (overlay_sink2_factory), "sink2");
+  gst_pad_set_link_function (overlay->sinkpad2, gst_overlay_sinkconnect);
+  gst_element_add_pad (GST_ELEMENT (overlay), overlay->sinkpad2);
+
+  overlay->sinkpad3 = gst_pad_new_from_template (
+		  GST_PAD_TEMPLATE_GET (overlay_sink3_factory), "sink3");
+  gst_pad_set_link_function (overlay->sinkpad3, gst_overlay_sinkconnect);
+  gst_element_add_pad (GST_ELEMENT (overlay), overlay->sinkpad3);
+
+  overlay->srcpad = gst_pad_new_from_template (
+		  GST_PAD_TEMPLATE_GET (overlay_src_factory), "src");
+  gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);
+
+  gst_element_set_loop_function (GST_ELEMENT (overlay), gst_overlay_loop);
+}
+
+static void
+gst_overlay_blend_i420 (guint8 *out, guint8 *in1, guint8 *in2, guint8 *in3,
+		      gint width, gint height)
+{
+  int mask;
+  int i, j;
+  guint8 *in1u, *in1v, *in2u, *in2v, *outu, *outv; 
+  int lumsize;
+  int chromsize;
+  int width2 = width/2;
+  int height2 = height/2;
+
+  lumsize = width * height;
+  chromsize = width2 * height2;
+
+  in1u = in1 + lumsize; in1v = in1u + chromsize;
+  in2u = in2 + lumsize; in2v = in2u + chromsize;
+  outu = out + lumsize; outv = outu + chromsize;
+  
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < width; j++) {
+      mask = in3[i*width + j];
+      out[i*width+j] = ((in1[i*width+j] * mask) +
+	  (in2[i*width+j] * (255 - mask))) >> 8;
+    }
+  }
+
+  for (i = 0; i < height/2; i++) {
+    for (j = 0; j < width/2; j++) {
+      mask = (in3[(i*2)*width + (j*2)] + in3[(i*2 + 1)*width + (j*2)] +
+          in3[(i*2)*width + (j*2 + 1)] + in3[(i*2 + 1)*width + (j*2 + 1)]) / 4;
+      outu[i*width2 + j] = ((in1u[i*width2+j] * mask) +
+	  (in2u[i*width2 + j] * (255 - mask))) >> 8;
+      outv[i*width2 + j] = ((in1v[i*width2+j] * mask) +
+	  (in2v[i*width2 + j] * (255 - mask))) >> 8;
+    }
+  }
+}
+
+static void
+gst_overlay_loop (GstElement *element)
+{
+  GstOverlay *overlay;
+  GstBuffer *out;
+  GstBuffer *in1 = NULL, *in2 = NULL, *in3 = NULL;
+  int size;
+
+  overlay = GST_OVERLAY (element);
+
+  in1 = gst_pad_pull (overlay->sinkpad1);
+  if (GST_IS_EVENT (in1)) {
+    gst_pad_push (overlay->srcpad, in1);
+    /* FIXME */
+    return;
+  }
+  in2 = gst_pad_pull (overlay->sinkpad2);
+  if (GST_IS_EVENT (in2)) {
+    gst_pad_push (overlay->srcpad, in2);
+    /* FIXME */
+    return;
+  }
+  in3 = gst_pad_pull (overlay->sinkpad3);
+  if (GST_IS_EVENT (in3)) {
+    gst_pad_push (overlay->srcpad, in3);
+    /* FIXME */
+    return;
+  }
+
+  g_return_if_fail(in1 != NULL);
+  g_return_if_fail(in2 != NULL);
+  g_return_if_fail(in3 != NULL);
+
+  size = (overlay->width * overlay->height * 3)/2;
+  g_return_if_fail(GST_BUFFER_SIZE(in1) != size);
+  g_return_if_fail(GST_BUFFER_SIZE(in2) != size);
+  g_return_if_fail(GST_BUFFER_SIZE(in3) != size);
+
+  out = gst_buffer_new_and_alloc (size);
+
+  if (!GST_PAD_CAPS (overlay->srcpad)) {
+    if (!gst_pad_try_set_caps (overlay->srcpad,
+      GST_CAPS_NEW (
+		    "overlay_srccaps",
+		    "video/x-raw-yuv",
+		      "format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+		      "width",    GST_PROPS_INT (overlay->width),
+		      "height",   GST_PROPS_INT (overlay->height),
+		      "framerate",GST_PROPS_FLOAT (overlay->framerate)
+		    )))
+    {
+      gst_element_error (element, "cannot set caps");
+      return;
+    }
+  }
+
+  gst_overlay_blend_i420 (GST_BUFFER_DATA (out),
+      			  GST_BUFFER_DATA (in1), 
+		          GST_BUFFER_DATA (in2), 
+		          GST_BUFFER_DATA (in3), 
+	                  overlay->width, overlay->height);
+
+  GST_BUFFER_TIMESTAMP (out) = GST_BUFFER_TIMESTAMP (in1);
+  GST_BUFFER_DURATION (out) = GST_BUFFER_DURATION (in1);
+
+  gst_buffer_unref (in1);
+  gst_buffer_unref (in2);
+  gst_buffer_unref (in3);
+
+  gst_pad_push (overlay->srcpad, out);
+}
+
+static void
+gst_overlay_set_property (GObject *object, guint prop_id, 
+		        const GValue *value, GParamSpec *pspec)
+{
+  GstOverlay *overlay;
+
+  overlay = GST_OVERLAY(object);
+
+  switch (prop_id) {
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_overlay_get_property (GObject *object, guint prop_id, 
+		        GValue *value, GParamSpec *pspec)
+{
+  GstOverlay *overlay;
+
+  overlay = GST_OVERLAY(object);
+
+  switch (prop_id) {
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
+{
+  GstElementFactory *factory;
+
+  factory = gst_element_factory_new("overlay",GST_TYPE_OVERLAY,
+                                   &overlay_details);
+  g_return_val_if_fail(factory != NULL, FALSE);
+
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (overlay_sink1_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (overlay_sink2_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (overlay_sink3_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (overlay_src_factory));
+
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+
+  return TRUE;
+}
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "overlay",
+  plugin_init
+};
+
