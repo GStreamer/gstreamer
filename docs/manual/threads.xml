@@ -139,7 +139,7 @@ main (int argc, char *argv[])
   gst_element_link_many (filesrc, decoder, audiosink, NULL);
 
   /* start playing */
-  gst_element_set_state (GST_ELEMENT (thread), GST_STATE_PLAYING);
+  gst_element_set_state (thread, GST_STATE_PLAYING);
 
   /* do whatever you want here, the thread will be playing */
   g_print ("thread is playing\n");
@@ -147,7 +147,7 @@ main (int argc, char *argv[])
   can_quit = TRUE;
   gst_main ();
 
-  gst_pipeline_destroy (thread);
+  gst_object_unref (GST_OBJECT (thread));
 
   exit (0);
 }
