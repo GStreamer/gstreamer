@@ -103,7 +103,7 @@ static void                  gst_v4lmjpegsrc_set_clock    (GstElement     *eleme
 static GstElementStateReturn gst_v4lmjpegsrc_change_state (GstElement     *element);
 
 /* requeue buffer after use */
-static void                  gst_v4lmjpegsrc_buffer_free  (GstData        *data);
+static void                  gst_v4lmjpegsrc_buffer_free  (GstBuffer      *buffer);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_v4lmjpegsrc_signals[LAST_SIGNAL] = { 0 };
@@ -578,7 +578,7 @@ gst_v4lmjpegsrc_get (GstPad *pad)
   }
 
   buf = gst_buffer_new ();
-  GST_DATA (buf)->free = gst_v4lmjpegsrc_buffer_free;
+  GST_BUFFER_FREE_DATA_FUNC (buf) = gst_v4lmjpegsrc_buffer_free;
   GST_BUFFER_PRIVATE (buf) = v4lmjpegsrc;
   GST_BUFFER_DATA(buf) = gst_v4lmjpegsrc_get_buffer(v4lmjpegsrc, num);
   GST_BUFFER_SIZE(buf) = v4lmjpegsrc->last_size;
@@ -792,9 +792,8 @@ gst_v4lmjpegsrc_buffer_new (GstBufferPool *pool,
 #endif
 
 static void
-gst_v4lmjpegsrc_buffer_free (GstData *data)
+gst_v4lmjpegsrc_buffer_free (GstBuffer *buf)
 {
-  GstBuffer *buf = GST_BUFFER (data);
   GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC (GST_BUFFER_PRIVATE (buf));
   int n;
 
@@ -814,7 +813,4 @@ gst_v4lmjpegsrc_buffer_free (GstData *data)
   if (n == v4lmjpegsrc->breq.count)
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
       "Couldn't find the buffer");
-
-  /* free the buffer struct et all */
-  gst_buffer_default_free(buf);
 }
