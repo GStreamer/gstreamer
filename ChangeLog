@@ -1,3 +1,13 @@
+2005-01-09  Martin Eikermann  <meiker@upb.de>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/snapshot/gstsnapshot.c: (gst_snapshot_class_init),
+	(snapshot_handler), (gst_snapshot_sinkconnect),
+	(gst_snapshot_chain):
+	  Allocate resources when required, fix recursive signal emission
+	  and fix caps. Fixes #161667.
+
 2005-01-09  Gergely Nagy  <algernon@bonehunter.rulez.org>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
