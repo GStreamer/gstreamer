@@ -90,6 +90,43 @@ make_mod_pipeline (const gchar *location)
 }
 
 static GstElement*
+make_dv_pipeline (const gchar *location) 
+{
+  GstElement *pipeline;
+  GstElement *src, *decoder, *audiosink, *videosink;
+  GstPad *seekable;
+  
+  pipeline = gst_pipeline_new ("app");
+
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
+  decoder = gst_element_factory_make_or_warn ("dvdec", "decoder");
+  videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
+  //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
+
+  g_object_set (G_OBJECT (src), "location", location, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), decoder);
+  gst_bin_add (GST_BIN (pipeline), audiosink);
+  gst_bin_add (GST_BIN (pipeline), videosink);
+
+  gst_element_connect (src, decoder);
+  gst_element_connect (decoder, audiosink);
+  gst_element_connect (decoder, videosink);
+
+  seekable = gst_element_get_pad (decoder, "video");
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, seekable);
+  seekable = gst_element_get_pad (decoder, "audio");
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (decoder, "sink"));
+
+  return pipeline;
+}
+
+static GstElement*
 make_wav_pipeline (const gchar *location) 
 {
   GstElement *pipeline;
@@ -687,7 +724,7 @@ main (int argc, char **argv)
   gtk_init (&argc, &argv);
 
   if (argc != 3) {
-    g_print ("usage: %s <type 0=mp3 1=avi 2=mpeg1 3=mpegparse 4=vorbis 5=sid 6=flac 7=wav 8=mod> <filename>\n", argv[0]);
+    g_print ("usage: %s <type 0=mp3 1=avi 2=mpeg1 3=mpegparse 4=vorbis 5=sid 6=flac 7=wav 8=mod 9=dv> <filename>\n", argv[0]);
     exit (-1);
   }
 
@@ -709,6 +746,8 @@ main (int argc, char **argv)
     pipeline = make_wav_pipeline (argv[2]);
   else if (atoi (argv[1]) == 8) 
     pipeline = make_mod_pipeline (argv[2]);
+  else if (atoi (argv[1]) == 9) 
+    pipeline = make_dv_pipeline (argv[2]);
 
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
