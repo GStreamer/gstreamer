@@ -80,9 +80,6 @@ static void	gst_filesink_get_property	(GObject *object, guint prop_id,
 static gboolean gst_filesink_open_file 		(GstFileSink *sink);
 static void 	gst_filesink_close_file 	(GstFileSink *sink);
 
-static const GstEventMask *
-		gst_filesink_get_event_mask	(GstPad *pad);
-
 static gboolean gst_filesink_handle_event       (GstPad *pad, GstEvent *event);
 static gboolean	gst_filesink_pad_query		(GstPad *pad, GstQueryType type,
 						 GstFormat *format, gint64 *value);
@@ -150,8 +147,6 @@ gst_filesink_init (GstFileSink *filesink)
   gst_pad_set_chain_function (pad, gst_filesink_chain);
 
   GST_FLAG_SET (GST_ELEMENT(filesink), GST_ELEMENT_EVENT_AWARE);
-  gst_pad_set_event_function(pad, gst_filesink_handle_event);
-  gst_pad_set_event_mask_function(pad, gst_filesink_get_event_mask);
 
   gst_pad_set_query_function (pad, gst_filesink_pad_query);
   gst_pad_set_query_type_function (pad, gst_filesink_get_query_types);
@@ -288,37 +283,6 @@ gst_filesink_pad_query (GstPad *pad, GstQueryType type,
   return TRUE;
 }
 
-/* supported events */
-static const GstEventMask *
-gst_filesink_get_event_mask (GstPad *pad)
-{
-  GstFileSink *filesink = GST_FILESINK (gst_pad_get_parent (pad));
-  struct stat filestat;
-  static const GstEventMask seek_masks[] = {
-    { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR |
-                      GST_SEEK_METHOD_SET |
-                      GST_SEEK_METHOD_END |
-                      GST_SEEK_FLAG_FLUSH },
-    { GST_EVENT_FLUSH, 0 },
-    { GST_EVENT_DISCONTINUOUS, 0 },
-    { 0, 0 }
-  }, noseek_masks[] = {
-    { GST_EVENT_FLUSH, 0 },
-    { 0, 0 }
-  }, *selected = seek_masks;
-
-  if (filesink->file != NULL) {
-    if (fstat (fileno (filesink->file), &filestat) == 0) {
-      if (S_ISFIFO (filestat.st_mode) ||
-	  S_ISSOCK (filestat.st_mode)) {
-        selected = noseek_masks;
-      }
-    }
-  }
-
-  return selected;
-}
-
 /* handle events (search) */
 static gboolean
 gst_filesink_handle_event (GstPad *pad, GstEvent *event)
@@ -356,7 +320,7 @@ gst_filesink_handle_event (GstPad *pad, GstEvent *event)
           fseek (filesink->file, GST_EVENT_SEEK_OFFSET (event), SEEK_END);
           break;
         default:
-          g_warning("unkown seek method!\n");
+          g_warning ("unknown seek method!");
           break;
       }
       break;
