@@ -228,7 +228,7 @@ gst_xviddec_chain (GstPad * pad, GstData * _data)
 
   /* decode and so ... */
   gst_xvid_init_struct (xframe);
-  xframe.general = 0;
+  xframe.general = XVID_LOWDELAY;
   xframe.bitstream = (void *) GST_BUFFER_DATA (buf);
   xframe.length = GST_BUFFER_SIZE (buf);
   xframe.output.csp = xviddec->csp;
