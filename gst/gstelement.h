@@ -159,7 +159,7 @@ struct _GstElementClass {
 
 struct _GstElementDetails {
   gchar *longname;              /* long, english name */
-  gchar *klass;                 /* type of element, kinda */
+  gchar *klass;                 /* type of element, as hierarchy */
   gchar *description;           /* insights of one form or another */
   gchar *version;               /* version of the element */
   gchar *author;                /* who wrote this thing? */

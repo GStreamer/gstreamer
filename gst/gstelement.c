@@ -536,7 +536,7 @@ gst_element_set_name (GstElement *element, const gchar *name)
 
 /**
  * gst_element_get_name:
- * @element: GstElement to set name of
+ * @element: GstElement to get name of
  *
  * Get the name of the element.
  *
