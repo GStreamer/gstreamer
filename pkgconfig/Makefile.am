@@ -14,21 +14,23 @@ pcfiles_uninstalled = \
 	gstreamer-libs-@GST_MAJORMINOR@-uninstalled.pc \
 	gstreamer-play-@GST_MAJORMINOR@-uninstalled.pc
 
-all-local: $(pcfiles) $(pcfiles_uninstalled) \
-	$(GCONF_PC) \
-	$(GCONF_PC_UNINSTALLED)
+pcfiles_gconf = $(GCONF_PC) $(GCONF_PC_UNINSTALLED)
+all-local: $(pcfiles) $(pcfiles_uninstalled) $(pcfiles_gconf)
 
-### how to generate pc files
+### how to generate pc files from .pc files in this dir
 $(pcfiles): %-@GST_MAJORMINOR@.pc: %.pc
 	cp $< $@
 $(pcfiles_uninstalled): %-@GST_MAJORMINOR@-uninstalled.pc: %-uninstalled.pc
 	cp $< $@
 
-gstreamer-gconf-@GST_MAJORMINOR@.pc: \
-	$(srcdir)/../gst-libs/gst/gconf/gstreamer-gconf.pc
-	cp $< $@
-gstreamer-gconf-@GST_MAJORMINOR@-uninstalled.pc: \
-	$(srcdir)/../gst-libs/gst/gconf/gstreamer-gconf-uninstalled.pc
+### how to generate gconf dir pc files from their pc.in files
+### somebody smart could figure out how to fold this back into one rule
+$(srcdir)/../gst-libs/gst/gconf/gstreamer-gconf*.pc:
+	cd $(srcdir)/../gst-libs/gst/gconf && make gstreamer-gconf.pc gstreamer-gconf-uninstalled.pc
+
+### how to generate pc files from base .pc file in other dir
+$(pcfiles_gconf): gstreamer-gconf-@GST_MAJORMINOR@%.pc: \
+	$(srcdir)/../gst-libs/gst/gconf/gstreamer-gconf%.pc
 	cp $< $@
 
 pkgconfigdir = $(libdir)/pkgconfig
