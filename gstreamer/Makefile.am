@@ -14,7 +14,7 @@ _gstreamermodule_la_CFLAGS = $(GST_CFLAGS)
 _gstreamermodule_la_LIBADD = $(GST_LIBS)
 _gstreamermodule_la_LDFLAGS = -module -avoid-version -export-symbols-regex initgstreamer
 nodist__gstreamermodule_la_SOURCES = gstreamer.c
-CLEANFILES = gstreamer.c gstreamer-base.defs
+CLEANFILES = gstreamer.c gstreamer-base.defs gstreamer.defs
 EXTRA_DIST = gstreamer-extra.defs gstreamer.override
 gstreamer.c: gstreamer.defs gstreamer.override
 
