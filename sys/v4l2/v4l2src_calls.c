@@ -172,7 +172,7 @@ gst_v4l2src_get_capture (GstV4l2Src *v4l2src)
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_G_FMT, &v4l2src->format) < 0) {
 		gst_element_error (v4l2src, RESOURCE, SETTINGS, NULL,
 				   ("failed to get pixelformat for device %s: %s",
-				   n, GST_V4L2ELEMENT(v4l2src)->device, g_strerror (errno)));
+				    GST_V4L2ELEMENT(v4l2src)->device, g_strerror (errno)));
 		return FALSE;
 	}
 
