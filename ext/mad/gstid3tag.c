@@ -871,11 +871,9 @@ gst_id3_tag_chain (GstPad *pad, GstData *data)
 	  }
 	} else {
 	  GST_WARNING_OBJECT (tag, "detected ID3v1 tag, but couldn't parse it");
-	  tag->v2tag_size = 0;
 	}
       } else if (tag->v1tag_size != 0) {
 	GST_WARNING_OBJECT (tag, "bad non-ID3v1 tag at end of file");
-	tag->v1tag_size = 0;
       } else {
 	GST_LOG_OBJECT (tag, "no ID3v1 tag (%"G_GUINT64_FORMAT")", GST_BUFFER_OFFSET (tag->buffer));
       }
