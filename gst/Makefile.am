@@ -107,6 +107,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gstformat.c		\
 	$(GST_INDEX_SRC)	\
 	gstinfo.c		\
+	gstinterface.c		\
 	gstmemchunk.c		\
 	gstpad.c		\
 	gstpipeline.c		\
@@ -167,6 +168,7 @@ gst_headers =			\
 	gstformat.h		\
 	gstindex.h		\
 	gstinfo.h		\
+	gstinterface.h		\
 	gstlog.h		\
 	gstmacros.h		\
 	gstmemchunk.h		\

@@ -144,13 +144,76 @@ gst_element_implements_interface (GstElement *element,
   return FALSE;
 }
 
-We could use this in the GST_IS_... () macros. For example, the
-macro GST_IS_MIXER () would then look like this:
+Let's now add some functions so we can abuse this in case/check
+functions.
 
+GstInterface *
+gst_interface_cast (gpointer from,
+		    GType    type)
+{
+  GstInterface *iface;
+
+  /* check cast, give warning+fail if it's invalid */
+  if (!(iface = G_TYPE_CHECK_INSTANCE_CAST (G_OBJECT (element),
+					    type, GstInterface))) {
+    return NULL;
+  }
+
+  /* if we're an element, take care that this interface
+   * is actually implemented */
+  if (GST_IS_ELEMENT (from)) {
+    gboolean interface_is_implemented =
+	gst_element_implements_interface (GST_ELEMENT (from),
+					  type);
+    g_return_val_if_fail (interface_is_implemented == TRUE, NULL);
+  }
+
+  return iface;
+}
+
+gboolean
+gst_interface_check (gpointer from,
+		     GType    type)
+{
+  GstInterface *iface;
+
+  /* check cast, return FALSE if it fails, don't give a warning... */
+  if (!G_TYPE_CHECK_INSTANCE_CAST (from, type,
+				   GstInterface)) {
+    return FALSE;
+  }
+
+  iface = G_TYPE_CHECK_INSTANCE_CAST (G_OBJECT (element),
+				      type, GstInterface);
+
+  /* now, if we're an element (or derivative), is this thing
+   * actually implemented for real? */
+  if (GST_IS_ELEMENT (from)) {
+    if (!gst_element_implements_interface (GST_ELEMENT (from),
+					   type)) {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+#define GST_INTERFACE_CHECK_INSTANCE_CAST(obj, type, cast_t) \
+  ((cast_t *) gst_interface_cast ((obj), (type))
+#define GST_INTERFACE_CHECK_INSTANCE_TYPE(obj, type) \
+  (gst_interface_check ((obj), (type))
+
+We could use this in the GST_IS_... () macros. For example, the
+macros GST_IS_MIXER () and GST_MIXER () would then look like this:
+
+/* Note that this is a non-standard macro, and with a reason! */
+#define GST_MIXER(obj) \
+  (GST_INTERFACE_CHECK_INSTANCE_CAST ((obj), \
+				      GST_TYPE_MIXER,
+				      GstMixer))
 #define GST_IS_MIXER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MIXER) && \
-   gst_element_implements_interface (GST_ELEMENT (obj), \
-				     GST_TYPE_MIXER))
+  (GST_INTERFACE_CHECK_INSTANCE_TYPE ((obj), \
+				      GST_TYPE_MIXER))
 
 So the application would just tread it with the known macro, and
 everything would look extremely simple to the end user.
@@ -184,7 +247,8 @@ And alsa* would surely implement the same interface.
 
 /* This is confusing naming... (i.e. FIXME)
  * A channel is referred to both as the number of simultaneous
- * sounds the input can handle as well as the in-/output itself
+ * sound streams the input can handle as well as the in-/output
+ * itself
  */
 
 #define GST_MIXER_CHANNEL_INPUT  (1<<0)
