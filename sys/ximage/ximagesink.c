@@ -61,7 +61,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "
-        "framerate = (double) [ 1.0, 100.0 ], "
+        "framerate = (double) [ 0.0, MAX ], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
@@ -707,7 +707,7 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
       "blue_mask", G_TYPE_INT, xcontext->visual->blue_mask,
       "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0, NULL);
+      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
 
   g_mutex_unlock (ximagesink->x_lock);
 

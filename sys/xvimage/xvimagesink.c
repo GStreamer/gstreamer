@@ -62,11 +62,11 @@ static GstStaticPadTemplate gst_xvimagesink_sink_template_factory =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "
-        "framerate = (double) [ 1.0, 100.0 ], "
+        "framerate = (double) [ 0.0, MAX ], "
         "width = (int) [ 1, MAX ], "
         "height = (int) [ 1, MAX ]; "
         "video/x-raw-yuv, "
-        "framerate = (double) [ 1.0, 100.0 ], "
+        "framerate = (double) [ 0.0, MAX ], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
@@ -726,7 +726,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
             "red_mask", G_TYPE_INT, formats[i].blue_mask,
             "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
             "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0, NULL);
+            "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
 
         /* For RGB caps we store them and the image 
            format so that we can get back the format
@@ -750,7 +750,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
             "format", GST_TYPE_FOURCC, formats[i].id,
             "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
             "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0, NULL);
+            "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
         break;
       default:
         g_assert_not_reached ();
