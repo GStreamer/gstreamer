@@ -23,7 +23,9 @@ libmplex_la_SOURCES = \
 	stillsstream.cc stillsstream.hh \
 	mjpeg_logging.cc mjpeg_logging.h \
 	yuv4mpeg.cc yuv4mpeg_ratio.cc yuv4mpeg.h \
-	mpegconsts.cc mpegconsts.h
+	mpegconsts.cc mpegconsts.h mjpeg_types.h format_codes.h \
+	fastintfns.h mjpeg_logging.h mpegconsts.h yuv4mpeg_intern.h \
+	mjpeg_types.h yuv4mpeg.h
 
 libmplex_la_CXXFLAGS = $(GST_CFLAGS) 
 libmplex_la_LIBADD = -lstdc++ $(LIBM_LIBS)
