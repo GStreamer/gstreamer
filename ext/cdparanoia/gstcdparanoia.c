@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
+
 /* taken from linux/cdrom.h */
 #define CD_MSF_OFFSET       150 /* MSF numbering offset of first frame */
 #define CD_SECS              60 /* seconds per minute */
@@ -308,8 +309,6 @@ cdparanoia_set_property (GObject *object, guint prop_id, const GValue *value, GP
 
   switch (prop_id) {
     case ARG_LOCATION:
-      /* the element must be stopped in order to do this */
-/*      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
       if (src->device) g_free (src->device);
       /* clear the filename if we get a NULL (is that possible?) */
       if (!g_ascii_strcasecmp( g_value_get_string (value),""))
@@ -319,8 +318,6 @@ cdparanoia_set_property (GObject *object, guint prop_id, const GValue *value, GP
         src->device = g_strdup (g_value_get_string (value));
       break;
     case ARG_GENERIC_DEVICE:
-      /* the element must be stopped in order to do this */
-/*      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
 
       if (src->generic_device) g_free (src->generic_device);
       /* reset the device if we get a NULL (is that possible?) */
@@ -380,7 +377,6 @@ cdparanoia_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 {
   CDParanoia *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_CDPARANOIA (object));
 
   src = CDPARANOIA (object);
@@ -472,10 +468,6 @@ cdparanoia_get (GstPad *pad)
   src = CDPARANOIA (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, CDPARANOIA_OPEN), NULL);
 
-  /* create a new buffer */
-  buf = gst_buffer_new ();
-  g_return_val_if_fail (buf, NULL);
-
   /* read a sector */
 /* NOTE: if you have a patched cdparanoia, set this to 1 to save cycles */
 #if 0
@@ -498,9 +490,11 @@ cdparanoia_get (GstPad *pad)
 
     /* have to copy the buffer for now since we don't own it... */
     /* FIXME must ask monty about allowing ownership transfer */
-    GST_BUFFER_DATA (buf) = g_malloc(CD_FRAMESIZE_RAW);
+    buf = gst_buffer_new_and_alloc (CD_FRAMESIZE_RAW);
     memcpy (GST_BUFFER_DATA (buf), cdda_buf, CD_FRAMESIZE_RAW);
-    GST_BUFFER_SIZE (buf) = CD_FRAMESIZE_RAW;
+
+    GST_BUFFER_TIMESTAMP (buf) = ((CD_FRAMESIZE_RAW >> 2 ) * src->seq * GST_SECOND) / 44100;
+    src->seq++;
   }
 
   /* we're done, push the buffer off now */
@@ -533,8 +527,8 @@ static inline void lba_to_msf (const gint lba, byte *m, byte *s, byte *f)
 	*f += (*s)*75;	
 }
 
-void lba_toc_to_msf_toc (TOC *lba_toc, toc_msf *
-		msf_toc, gint tracks)
+static void 
+lba_toc_to_msf_toc (TOC *lba_toc, toc_msf *msf_toc, gint tracks)
 {
 	gint i;
 	for (i =0; i <= tracks; i++)
@@ -543,7 +537,8 @@ void lba_toc_to_msf_toc (TOC *lba_toc, toc_msf *
 }
 
 /* the cddb hash function */
-guint cddb_sum(gint n) 
+static guint
+cddb_sum(gint n) 
 {
 	guint ret;
 	ret = 0;
@@ -555,7 +550,8 @@ guint cddb_sum(gint n)
 	return ret;
 }
 
-void cddb_discid(gchar *discid,toc_msf *toc, gint tracks)
+static void 
+cddb_discid(gchar *discid,toc_msf *toc, gint tracks)
 {
 	guint i = 0, t = 0, n = 0;
 
@@ -571,8 +567,9 @@ void cddb_discid(gchar *discid,toc_msf *toc, gint tracks)
 }
 
 /* get all the cddb info at once */
-void get_cddb_info(TOC *toc, gint tracks,gchar *discid, gchar *offsets,
-		gchar *total_seconds)
+static void 
+get_cddb_info(TOC *toc, gint tracks,gchar *discid, gchar *offsets,
+	      gchar *total_seconds)
 {
 	toc_msf 	msf_toc[MAXTRK];
 	gint		i;
@@ -660,11 +657,18 @@ cdparanoia_open (CDParanoia *src)
   */
    
   src->discid 		= g_new0(gchar,20) ;
+  /* FIXME convert to pad_query/convert */
   src->offsets 		= g_new0(gchar,4096);
   src->total_seconds 	= g_new0(gchar, 4);
 
   get_cddb_info(&src->d->disc_toc[0], src->no_tracks,src->discid,
 		  src->offsets,src->total_seconds);
+
+  g_object_freeze_notify (G_OBJECT (src));
+  g_object_notify (G_OBJECT (src), "discid");
+  g_object_notify (G_OBJECT (src), "offsets");
+  g_object_notify (G_OBJECT (src), "total-time");
+  g_object_thaw_notify (G_OBJECT (src));
 	
   if (src->toc_bias) {
     src->toc_offset -= cdda_track_firstsector (src->d, 1);
@@ -751,20 +755,34 @@ cdparanoia_close (CDParanoia *src)
 static GstElementStateReturn
 cdparanoia_change_state (GstElement *element)
 {
+  CDParanoia *cdparanoia;
+
   g_return_val_if_fail (GST_IS_CDPARANOIA (element), GST_STATE_FAILURE);
 
-  /* if going down into NULL state, close the file if it's open */
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, CDPARANOIA_OPEN))
-      cdparanoia_close (CDPARANOIA (element));
-  /* otherwise (READY or higher) we need to open the file */
-  } else {
-    if (!GST_FLAG_IS_SET (element, CDPARANOIA_OPEN)) {
+  cdparanoia = CDPARANOIA (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
       if (!cdparanoia_open (CDPARANOIA (element))) {
-        g_print("failed opening cd\n");
+        g_warning ("cdparanoia: failed opening cd");
         return GST_STATE_FAILURE;
       }
-    }
+      cdparanoia->seq = 0;
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      cdparanoia_close (CDPARANOIA (element));
+      cdparanoia->seq = 0;
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+    default:
+      break;
   }
 
   /* if we haven't failed already, give the parent class a chance too ;-) */
