@@ -8,6 +8,8 @@ configure
 gst-plugins.spec
 gstreamer-libs-uninstalled.pc
 gstreamer-libs.pc
+gstreamer-play-uninstalled.pc
+gstreamer-play.pc
 libtool
 stamp-h
 stamp-h.in
