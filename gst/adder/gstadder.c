@@ -153,11 +153,13 @@ gst_adder_parse_caps (GstAdder *adder, GstCaps *caps)
       adder->law        = gst_caps_get_int (caps, "law");
       adder->endianness = gst_caps_get_int (caps, "endianness");
       adder->is_signed  = gst_caps_get_int (caps, "signed");
+      adder->channels   = gst_caps_get_int (caps, "channels");
     } else if (strcmp (format, "float") == 0) {
       adder->format     = GST_ADDER_FORMAT_FLOAT;
       adder->layout     = gst_caps_get_string (caps, "layout");
       adder->intercept  = gst_caps_get_float  (caps, "intercept");
       adder->slope      = gst_caps_get_float  (caps, "slope");
+      adder->channels   = gst_caps_get_int (caps, "channels");
     }
   } else {
     /* otherwise, a previously-connected pad has set all the values. we should
@@ -165,11 +167,13 @@ gst_adder_parse_caps (GstAdder *adder, GstCaps *caps)
     if (strcmp (format, "int") == 0) {
       if ((adder->format != GST_ADDER_FORMAT_INT) ||
           (adder->width  != gst_caps_get_int (caps, "width")) ||
+          (adder->channels != gst_caps_get_int (caps, "channels")) ||
           (adder->is_signed != gst_caps_get_int (caps, "signed"))) {
         return FALSE;
       }
     } else if (strcmp (format, "float") == 0) {
-      if (adder->format != GST_ADDER_FORMAT_FLOAT) {
+      if ((adder->format != GST_ADDER_FORMAT_FLOAT) ||
+          (adder->channels != gst_caps_get_int (caps, "channels"))) {
         return FALSE;
       }
     } else {
@@ -184,7 +188,8 @@ static GstPadConnectReturn
 gst_adder_connect (GstPad *pad, GstCaps *caps)
 {
   GstAdder *adder;
-  GList *sinkpads;
+  GList *sinkpads, *remove = NULL;
+  GSList *channels;
   GstPad *p;
   
   g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_REFUSED);
@@ -205,10 +210,25 @@ gst_adder_connect (GstPad *pad, GstCaps *caps)
             GST_DEBUG (0, "caps mismatch; disconnecting and removing pad %s:%s (peer %s:%s)\n",
                        GST_DEBUG_PAD_NAME (p), GST_DEBUG_PAD_NAME (GST_PAD_PEER (p)));
             gst_pad_disconnect (GST_PAD (GST_PAD_PEER (p)), p);
-            gst_element_remove_pad (GST_ELEMENT (adder), p);
+            remove = g_list_prepend (remove, p);
           }
         }
         sinkpads = g_list_next (sinkpads);
+      }
+      while (remove) {
+        gst_element_remove_pad (GST_ELEMENT (adder), GST_PAD_CAST (remove->data));
+      restart:
+        channels = adder->input_channels;
+        while (channels) {
+          GstAdderInputChannel *channel = (GstAdderInputChannel*) channels->data;
+          if (channel->sinkpad == GST_PAD_CAST (remove->data)) {
+            gst_bytestream_destroy (channel->bytestream);
+            adder->input_channels = g_slist_remove_link (adder->input_channels, channels);
+            goto restart;
+          }
+          channels = g_slist_next (channels);
+        }
+        remove = g_list_next (remove);
       }
       return GST_PAD_CONNECT_OK;
     } else {
