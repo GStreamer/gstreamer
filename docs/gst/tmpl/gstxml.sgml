@@ -2,18 +2,19 @@
 GstXML
 
 <!-- ##### SECTION Short_Description ##### -->
-Convert Elements into an XML presentation.
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-All GstElements can be serialized to an XML presentation and subsequently loaded back.
 
 </para>
+
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
+
 
 <!-- ##### FUNCTION gst_xml_new ##### -->
 <para>

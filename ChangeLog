@@ -1,3 +1,13 @@
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+          remove </SUBSECTION>
+	* gst/gstplugin.c:
+	* gst/gstregistry.c: (gst_registry_add_plugin):
+	* gst/registries/gstxmlregistry.c: (gst_xml_registry_get_type),
+	(gst_xml_registry_open_func), (gst_xml_registry_close_func):
+          add debugging and fix some comment blocks
+
 2004-03-15  Johan Dahlin  <johan@gnome.org>
 
 	* *.h: Revert indent changes.

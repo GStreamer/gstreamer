@@ -36,11 +36,7 @@
 #include "gstfilter.h"
 
 
-#ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING
-#else
-#define GST_CAT_DEFAULT 0
-#endif
 
 static GModule *main_module = NULL;
 static GList *_gst_plugin_static = NULL;
@@ -624,7 +620,8 @@ typedef struct
   gboolean first;
   gpointer user_data;
   GList *result;
-} FeatureFilterData;
+}
+FeatureFilterData;
 
 static gboolean
 _feature_filter (GstPlugin * plugin, gpointer user_data)

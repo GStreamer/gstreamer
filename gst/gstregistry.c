@@ -3,7 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *
  * gstregistry.c: handle registry
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -67,6 +67,7 @@ gst_registry_get_type (void)
       (GInstanceInitFunc) gst_registry_init,
       NULL
     };
+
     registry_type = g_type_register_static (G_TYPE_OBJECT, "GstRegistry",
 	&registry_info, G_TYPE_FLAG_ABSTRACT);
   }
@@ -209,7 +210,7 @@ gst_registry_unload (GstRegistry * registry)
 /**
  * gst_registry_add_path:
  * @registry: the registry to add the path to
- * @path: the path to add to the registry 
+ * @path: the path to add to the registry
  *
  * Add the given path to the registry. The syntax of the
  * path is specific to the registry. If the path has already been
@@ -268,8 +269,7 @@ gst_registry_clear_paths (GstRegistry * registry)
  * @registry: the registry to add the plugin to
  * @plugin: the plugin to add
  *
- * Add the plugin to the registry. The plugin-added signal 
- * will be emitted.
+ * Add the plugin to the registry. The plugin-added signal will be emitted.
  *
  * Returns: TRUE on success.
  */
@@ -281,6 +281,7 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
   plugin->manager = registry;
   registry->plugins = g_list_prepend (registry->plugins, plugin);
 
+  GST_DEBUG ("emitting plugin-added for filename %s", plugin->filename);
   g_signal_emit (G_OBJECT (registry), gst_registry_signals[PLUGIN_ADDED], 0,
       plugin);
 
@@ -310,7 +311,7 @@ gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
  * @user_data: user data passed to the filter function
  *
  * Runs a filter against all plugins in the registry and returns a GList with
- * the results. If the first flag is set, only the first match is 
+ * the results. If the first flag is set, only the first match is
  * returned (as a list with a single object).
  *
  * Returns: a GList of plugins, g_list_free after use.
@@ -332,9 +333,9 @@ gst_registry_plugin_filter (GstRegistry * registry,
  * @first: only return first match
  * @user_data: user data passed to the filter function
  *
- * Runs a filter against all features of the plugins in the registry 
- * and returns a GList with the results. 
- * If the first flag is set, only the first match is 
+ * Runs a filter against all features of the plugins in the registry
+ * and returns a GList with the results.
+ * If the first flag is set, only the first match is
  * returned (as a list with a single object).
  *
  * Returns: a GList of plugin features, g_list_free after use.
@@ -385,7 +386,7 @@ gst_registry_find_plugin (GstRegistry * registry, const gchar * name)
  *
  * Find the pluginfeature with the given name and type in the registry.
  *
- * Returns: The pluginfeature with the given name and type or NULL 
+ * Returns: The pluginfeature with the given name and type or NULL
  * if the plugin was not found.
  */
 GstPluginFeature *
@@ -422,7 +423,7 @@ gst_registry_find_feature (GstRegistry * registry, const gchar * name,
  *
  * Bring the plugin from the registry into memory.
  *
- * Returns: a value indicating the result 
+ * Returns: a value indicating the result
  */
 GstRegistryReturn
 gst_registry_load_plugin (GstRegistry * registry, GstPlugin * plugin)
@@ -447,7 +448,7 @@ gst_registry_load_plugin (GstRegistry * registry, GstPlugin * plugin)
  *
  * Unload the plugin from the given registry.
  *
- * Returns: a value indicating the result 
+ * Returns: a value indicating the result
  */
 GstRegistryReturn
 gst_registry_unload_plugin (GstRegistry * registry, GstPlugin * plugin)
@@ -472,7 +473,7 @@ gst_registry_unload_plugin (GstRegistry * registry, GstPlugin * plugin)
  *
  * Update the plugin in the given registry.
  *
- * Returns: a value indicating the result 
+ * Returns: a value indicating the result
  */
 GstRegistryReturn
 gst_registry_update_plugin (GstRegistry * registry, GstPlugin * plugin)

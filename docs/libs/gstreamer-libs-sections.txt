@@ -165,11 +165,9 @@ gst_dpman_set_mode
 gst_dpman_set_parent
 gst_dpman_get_manager
 gst_dpman_bypass_dparam
-</SUBSECTION>
 <SUBSECTION Dynamic Parameters>
 gst_dparam_new
 gst_dparam_attach
 gst_dparam_detach
 gst_dparam_do_update_default
-</SUBSECTION>
 </SECTION>

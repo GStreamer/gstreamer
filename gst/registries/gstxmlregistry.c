@@ -476,6 +476,7 @@ gst_xml_registry_open_func (GstXMLRegistry * registry, GstXMLRegistryMode mode)
 
   gst_registry = GST_REGISTRY (registry);
   paths = gst_registry->paths;
+  GST_CAT_DEBUG (GST_CAT_GST_INIT, "opening registry %s", registry->location);
 
   g_return_val_if_fail (registry->open == FALSE, FALSE);
 
@@ -515,16 +516,20 @@ gst_xml_registry_open_func (GstXMLRegistry * registry, GstXMLRegistryMode mode)
 	  return FALSE;
 	}
       } else {
-	GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,
+	GST_CAT_INFO (GST_CAT_GST_INIT,
 	    "Can't write to this registry and it's out of date, ignoring it");
 	return FALSE;
       }
     }
 
+    GST_CAT_DEBUG (GST_CAT_GST_INIT, "opening registry %s for reading",
+	registry->location);
     registry->regfile = fopen (registry->location, "r");
   } else if (mode == GST_XML_REGISTRY_WRITE) {
     g_return_val_if_fail (gst_registry->flags & GST_REGISTRY_WRITABLE, FALSE);
 
+    GST_CAT_DEBUG (GST_CAT_GST_INIT, "opening registry %s for writing",
+	registry->location);
     registry->regfile = fopen (registry->location, "w");
   }
 
@@ -562,6 +567,7 @@ gst_xml_registry_save_func (GstXMLRegistry * registry, gchar * format, ...)
 static gboolean
 gst_xml_registry_close_func (GstXMLRegistry * registry)
 {
+  GST_CAT_DEBUG (GST_CAT_GST_INIT, "closing registry %s", registry->location);
   fclose (registry->regfile);
 
   registry->open = FALSE;
