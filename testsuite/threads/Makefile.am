@@ -1,5 +1,5 @@
-testprogs = thread1 thread2 thread3 thread5 threadb
-testsfailing = threadc threadd threade threadf thread4
+testprogs = thread1 thread2 thread3 thread5
+testsfailing = threadb threadc threadd threade threadf thread4
 
 TESTS = $(testprogs)
 
