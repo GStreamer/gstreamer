@@ -26,11 +26,7 @@
 #include <config.h>
 #include <gst/gst.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_VIDEOTESTSRC \
   (gst_videotestsrc_get_type())
@@ -83,9 +79,6 @@ static GType gst_videotestsrc_get_type(void);
 
 static void gst_videotestsrc_setup(GstVideotestsrc *);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_VIDEOTESTSRC_H__ */
