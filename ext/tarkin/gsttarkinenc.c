@@ -31,7 +31,7 @@ static GstPadTemplate *enc_src_template, *enc_sink_template;
 /* elementfactory information */
 GstElementDetails tarkinenc_details = {
   "Ogg Tarkin encoder",
-  "Filter/Video/Encoder",
+  "Codec/Encoder/Video",
   "Encodes video in OGG Tarkin format",
   "Monty <monty@xiph.org>, " "Wim Taymans <wim.taymans@chello.be>",
 };
