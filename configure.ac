@@ -711,7 +711,7 @@ AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 dnl Check for sidplay
 AC_PATH_LIBSIDPLAY
 
-nl Check for librtp
+dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
 AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
 dnl FIXME header check needs to use GLIB_CFLAGS in order to succeed for rtp
@@ -721,7 +721,7 @@ dnl AC_CHECK_HEADERS(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
 dnl AC_CHECK_HEADERS(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 
-nl Check for linux/cdrom.h
+dnl Check for linux/cdrom.h
 AC_CHECK_HEADER(linux/cdrom.h,
   HAVE_LINUX_CDROM=yes, HAVE_LINUX_CDROM=no
 )
