@@ -42,7 +42,7 @@ GstMpeg2EncPictureReader::GstMpeg2EncPictureReader (GstPad        *in_pad,
 
 GstMpeg2EncPictureReader::~GstMpeg2EncPictureReader ()
 {
-  gst_caps_unref (caps);
+  gst_caps_free (caps);
 }
 
 /*
@@ -52,12 +52,13 @@ GstMpeg2EncPictureReader::~GstMpeg2EncPictureReader ()
 void
 GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams &strm)
 {
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
   gint width, height;
-  gfloat fps;
+  gdouble fps;
 
-  gst_caps_get (caps, "width",     &width,
-		      "height",    &height,
-		      "framerate", &fps, NULL);
+  gst_structure_get_int (structure, "width", &width);
+  gst_structure_get_int (structure, "height", &height);
+  gst_structure_get_double (structure, "framerate", &fps);
 
   strm.horizontal_size = width;
   strm.vertical_size = height;

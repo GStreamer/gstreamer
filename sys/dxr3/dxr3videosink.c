@@ -78,23 +78,19 @@ enum {
 #define START_CODE_SEQUENCE_HEADER 0xB3
 #define START_CODE_SEQUENCE_END 0xB7
 
-
-GST_PAD_TEMPLATE_FACTORY (dxr3videosink_sink_factory,
+static GstStaticPadTemplate dxr3videosink_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "dxr3videosink_sink",
-    "video/mpeg",
-      "mpegversion",	GST_PROPS_LIST (
-	                  GST_PROPS_INT (1),
-	                  GST_PROPS_INT (2)
-                        ),
-      "systemstream",	GST_PROPS_BOOLEAN (FALSE)
+  GST_STATIC_CAPS (
+    "video/mpeg, "
+      "mpegversion = (int) { 1, 2 }, "
+      "systemstream = (boolean) FALSE"
       /* width/height/framerate omitted, we don't
        * need a parsed stream */
   )
-)
+);
 
 
 GST_PAD_EVENT_MASK_FUNCTION (dxr3videosink_get_event_mask,
@@ -178,7 +174,7 @@ dxr3videosink_base_init (Dxr3VideoSinkClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (dxr3videosink_sink_factory));
+	gst_static_pad_template_get (&dxr3videosink_sink_factory));
   gst_element_class_set_details (element_class,
 				 &dxr3videosink_details);
 }
@@ -218,7 +214,7 @@ dxr3videosink_init (Dxr3VideoSink *sink)
   GstPad *pad;
 
   pad = gst_pad_new_from_template (
-      GST_PAD_TEMPLATE_GET (dxr3videosink_sink_factory), "sink");
+      gst_static_pad_template_get (&dxr3videosink_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (sink), pad);
   gst_pad_set_chain_function (pad, dxr3videosink_chain);
 

@@ -61,11 +61,12 @@ enum {
 };
 
 
-GST_PAD_TEMPLATE_FACTORY (dxr3spusink_sink_factory,
+static GstStaticPadTemplate dxr3spusink_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  NULL
+  GST_STATIC_CAPS_ANY
 );
 
 
@@ -149,7 +150,7 @@ dxr3spusink_base_init (Dxr3SpuSinkClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (dxr3spusink_sink_factory));
+	gst_static_pad_template_get (&dxr3spusink_sink_factory));
   gst_element_class_set_details (element_class,
 				 &dxr3spusink_details);
 }
@@ -222,7 +223,7 @@ dxr3spusink_init (Dxr3SpuSink *sink)
   GstPad *pad;
 
   pad = gst_pad_new_from_template (
-      GST_PAD_TEMPLATE_GET (dxr3spusink_sink_factory), "sink");
+      gst_static_pad_template_get (&dxr3spusink_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (sink), pad);
   gst_pad_set_chain_function (pad, dxr3spusink_chain);
 

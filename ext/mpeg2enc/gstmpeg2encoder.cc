@@ -85,11 +85,11 @@ GstMpeg2Encoder::getFormat ()
 {
   gdouble fps = Y4M_RATIO_DBL (mpeg_framerate (options.frame_rate));
 
-  return GST_CAPS_NEW ("mpeg2enc_src",
-		       "video/mpeg",
-			 "systemstream", GST_PROPS_BOOLEAN (FALSE),
-			 "mpegversion",  GST_PROPS_INT (options.mpeg),
-			 "width",        GST_PROPS_INT (options.in_img_width),
-			 "height",       GST_PROPS_INT (options.in_img_height),
-			 "framerate",    GST_PROPS_FLOAT (fps));
+  return gst_caps_new_simple ("video/mpeg",
+			      "systemstream", G_TYPE_BOOLEAN, FALSE,
+			      "mpegversion",  G_TYPE_INT, options.mpeg,
+			      "width",        G_TYPE_INT, options.in_img_width,
+			      "height",       G_TYPE_INT, options.in_img_height,
+			      "framerate",    G_TYPE_DOUBLE, fps,
+			      NULL);
 }

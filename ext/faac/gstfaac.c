@@ -23,54 +23,44 @@
 
 #include "gstfaac.h"
 
-GST_PAD_TEMPLATE_FACTORY (src_template,
+static GstStaticPadTemplate src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "faac_mpeg_templ",
-    "audio/mpeg",
-      "systemstream", GST_PROPS_BOOLEAN (FALSE),
-      "mpegversion",  GST_PROPS_LIST (
-                        GST_PROPS_INT (4), /* we prefer 4 */
-                        GST_PROPS_INT (2)
-                      ),
-      "channels",     GST_PROPS_INT_RANGE (1, 6),
-      "samplerate",   GST_PROPS_INT_RANGE (8000, 96000)
+  GST_STATIC_CAPS (
+    "audio/mpeg, "
+      "mpegversion = (int) { 4, 2 }, "
+      "channels = (int) [ 1, 6 ], "
+      "rate = (int) [ 8000, 96000 ]"
   )
 );
 
-GST_PAD_TEMPLATE_FACTORY (sink_template,
+static GstStaticPadTemplate sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "faac_int16_templ",
-    "audio/x-raw-int",
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",     GST_PROPS_BOOLEAN (TRUE),
-      "width",      GST_PROPS_INT (16),
-      "depth",      GST_PROPS_INT (16),
-      "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-      "channels",   GST_PROPS_INT_RANGE (1, 6)
-  ),
-  GST_CAPS_NEW (
-    "faac_int24_templ",
-    "audio/x-raw-int",
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",     GST_PROPS_BOOLEAN (TRUE),
-      "width",      GST_PROPS_INT (32),
-      "depth",      GST_PROPS_INT (24),
-      "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-      "channels",   GST_PROPS_INT_RANGE (1, 6)
-  ),
-  GST_CAPS_NEW (
-    "faac_float_templ",
-    "audio/x-raw-float",
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "depth",      GST_PROPS_INT (32), /* float  */
-      "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-      "channels",   GST_PROPS_INT_RANGE (1, 6)
+  GST_STATIC_CAPS (
+    "audio/x-raw-int, "
+      "endianness = (int) BYTE_ORDER, "
+      "signed = (boolean) TRUE, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "rate = (int) [ 8000, 96000 ], "
+      "channels = (int) [ 1, 6]; "
+    "audio/x-raw-int, "
+      "endianness = (int) BYTE_ORDER, "
+      "signed = (boolean) TRUE, "
+      "width = (int) 32, "
+      "depth = (int) 24, "
+      "rate = (int) [ 8000, 96000], "
+      "channels = (int) [ 1, 6]; "
+    "audio/x-raw-float, "
+      "endianness = (int) BYTE_ORDER, "
+      "depth = (int) 32, " /* sizeof (gfloat) */
+      "rate = (int) [ 8000, 96000], "
+      "channels = (int) [ 1, 6]"
   )
 );
 
@@ -99,10 +89,10 @@ static void     gst_faac_get_property (GObject      *object,
 
 static GstPadLinkReturn
                 gst_faac_sinkconnect  (GstPad       *pad,
-				       GstCaps      *caps);
+				       const GstCaps *caps);
 static GstPadLinkReturn
                 gst_faac_srcconnect   (GstPad       *pad,
-				       GstCaps      *caps);
+				       const GstCaps *caps);
 static void     gst_faac_chain        (GstPad       *pad,
 				       GstData      *data);
 static GstElementStateReturn
@@ -149,9 +139,9 @@ gst_faac_base_init (GstFaacClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (src_template));
+	gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (sink_template));
+	gst_static_pad_template_get (&sink_template));
 
   gst_element_class_set_details (element_class, &gst_faac_details);
 }
@@ -245,13 +235,13 @@ gst_faac_init (GstFaac *faac)
   GST_FLAG_SET (faac, GST_ELEMENT_EVENT_AWARE);
 
   faac->sinkpad = gst_pad_new_from_template (
-	GST_PAD_TEMPLATE_GET (sink_template), "sink");
+	gst_static_pad_template_get (&sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (faac), faac->sinkpad);
   gst_pad_set_chain_function (faac->sinkpad, gst_faac_chain);
   gst_pad_set_link_function (faac->sinkpad, gst_faac_sinkconnect);
 
   faac->srcpad = gst_pad_new_from_template (
-	GST_PAD_TEMPLATE_GET (src_template), "src");
+	gst_static_pad_template_get (&src_template), "src");
   gst_element_add_pad (GST_ELEMENT (faac), faac->srcpad);
   gst_pad_set_link_function (faac->srcpad, gst_faac_srcconnect);
 
@@ -264,12 +254,16 @@ gst_faac_init (GstFaac *faac)
 }
 
 static GstPadLinkReturn
-gst_faac_sinkconnect (GstPad  *pad,
-		      GstCaps *caps)
+gst_faac_sinkconnect (GstPad        *pad,
+		      const GstCaps *caps)
 {
   GstFaac *faac = GST_FAAC (gst_pad_get_parent (pad));
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  faacEncHandle *handle;
+  gint channels, samplerate, depth;
+  gulong samples, bytes, fmt = 0, bps = 0;
 
-  if (!GST_CAPS_IS_FIXED (caps))
+  if (!gst_caps_is_fixed (caps))
     return GST_PAD_LINK_DELAYED;
 
   if (faac->handle) {
@@ -281,66 +275,58 @@ gst_faac_sinkconnect (GstPad  *pad,
     faac->cache = NULL;
   }
 
-  for (; caps != NULL; caps = caps->next) {
-    faacEncHandle *handle;
-    gint channels, samplerate, depth;
-    gulong samples, bytes, fmt = 0, bps = 0;
+  gst_structure_get_int (structure, "channels", &channels);
+  gst_structure_get_int (structure, "rate", &samplerate);
+  gst_structure_get_int (structure, "depth", &depth);
 
-    gst_caps_get (caps, "channels", &channels,
-			"rate",     &samplerate,
-			"depth",    &depth, NULL);
+  /* open a new handle to the encoder */
+  if (!(handle = faacEncOpen (samplerate, channels,
+			      &samples, &bytes)))
+    return GST_PAD_LINK_REFUSED;
 
-    /* open a new handle to the encoder */
-    if (!(handle = faacEncOpen (samplerate, channels,
-				&samples, &bytes)))
-      continue;
-
-    switch (depth) {
-      case 16:
-        fmt = FAAC_INPUT_16BIT;
-        bps = 2;
-        break;
-      case 24:
-        fmt = FAAC_INPUT_32BIT; /* 24-in-32, actually */
-        bps = 4;
-        break;
-      case 32:
-        fmt = FAAC_INPUT_FLOAT; /* see template, this is right */
-        bps = 4;
-        break;
-    }
-
-    if (!fmt) {
-      faacEncClose (handle);
-      continue;
-    }
-
-    faac->format = fmt;
-    faac->bps = bps;
-    faac->handle = handle;
-    faac->bytes = bytes;
-    faac->samples = samples;
-    faac->channels = channels;
-    faac->samplerate = samplerate;
-
-    /* if the other side was already set-up, redo that */
-    if (GST_PAD_CAPS (faac->srcpad))
-      return gst_faac_srcconnect (faac->srcpad,
-				  gst_pad_get_allowed_caps (faac->srcpad));
-
-    /* else, that'll be done later */
-    return GST_PAD_LINK_OK;
+  switch (depth) {
+    case 16:
+      fmt = FAAC_INPUT_16BIT;
+      bps = 2;
+      break;
+    case 24:
+      fmt = FAAC_INPUT_32BIT; /* 24-in-32, actually */
+      bps = 4;
+      break;
+    case 32:
+      fmt = FAAC_INPUT_FLOAT; /* see template, this is right */
+      bps = 4;
+      break;
   }
 
-  return GST_PAD_LINK_REFUSED;
+  if (!fmt) {
+    faacEncClose (handle);
+    return GST_PAD_LINK_REFUSED;
+  }
+
+  faac->format = fmt;
+  faac->bps = bps;
+  faac->handle = handle;
+  faac->bytes = bytes;
+  faac->samples = samples;
+  faac->channels = channels;
+  faac->samplerate = samplerate;
+
+  /* if the other side was already set-up, redo that */
+  if (GST_PAD_CAPS (faac->srcpad))
+    return gst_faac_srcconnect (faac->srcpad,
+				gst_pad_get_caps (GST_PAD_PEER (faac->srcpad)));
+
+  /* else, that'll be done later */
+  return GST_PAD_LINK_OK;
 }
 
 static GstPadLinkReturn
-gst_faac_srcconnect (GstPad  *pad,
-		     GstCaps *caps)
+gst_faac_srcconnect (GstPad        *pad,
+		     const GstCaps *caps)
 {
   GstFaac *faac = GST_FAAC (gst_pad_get_parent (pad));
-  GstCaps *t;
+  gint n;
 
   if (!faac->handle ||
       (faac->samplerate == -1 || faac->channels == -1)) {
@@ -348,20 +334,22 @@ gst_faac_srcconnect (GstPad  *pad,
   }
 
   /* we do samplerate/channels ourselves */
-  for (t = caps; t != NULL; t = t->next) {
-    gst_props_remove_entry_by_name (t->properties, "rate");
-    gst_props_remove_entry_by_name (t->properties, "channels");
+  for (n = 0; n < gst_caps_get_size (caps); n++) {
+    GstStructure *structure = gst_caps_get_structure (caps, n);
+    gst_structure_remove_field (structure, "rate");
+    gst_structure_remove_field (structure, "channels");
   }
 
   /* go through list */
   caps = gst_caps_normalize (caps);
-  for ( ; caps != NULL; caps = caps->next) {
+  for (n = 0; n < gst_caps_get_size (caps); n++) {
+    GstStructure *structure = gst_caps_get_structure (caps, n);
     faacEncConfiguration *conf;
     gint mpegversion = 0;
     GstCaps *newcaps;
     GstPadLinkReturn ret;
 
-    gst_caps_get_int (caps, "mpegversion", &mpegversion);
+    gst_structure_get_int (structure, "mpegversion", &mpegversion);
 
     /* new conf */
     conf = faacEncGetCurrentConfiguration (faac->handle);
@@ -388,12 +376,11 @@ gst_faac_srcconnect (GstPad  *pad,
       continue;
     }
 
-    newcaps = GST_CAPS_NEW ("faac_mpeg_caps",
-			    "audio/mpeg",
-			      "systemstream", GST_PROPS_BOOLEAN (FALSE),
-			      "mpegversion",  GST_PROPS_INT (mpegversion),
-			      "channels",     GST_PROPS_INT (faac->channels),
-			      "rate",         GST_PROPS_INT (faac->samplerate));
+    newcaps = gst_caps_new_simple ("audio/mpeg",
+				   "mpegversion", G_TYPE_INT, mpegversion,
+				   "channels",    G_TYPE_INT, faac->channels,
+				   "rate",        G_TYPE_INT, faac->samplerate,
+				   NULL);
     ret = gst_pad_try_set_caps (faac->srcpad, newcaps);
 
     switch (ret) {

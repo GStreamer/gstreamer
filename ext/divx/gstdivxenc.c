@@ -34,48 +34,30 @@ GstElementDetails gst_divxenc_details = {
   "Ronald Bultje <rbultje@ronald.bitfreak.net>"
 };
 
-GST_PAD_TEMPLATE_FACTORY(sink_template,
+static GstStaticPadTemplate sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  gst_caps_new(
-    "divxdec_src",
-    "video/x-raw-yuv",
-      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS(
-        GST_PROPS_LIST(
-          GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
-          GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','4','2','0')),
-          GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','Y','2')),
-          GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','1','2')),
-          GST_PROPS_FOURCC(GST_MAKE_FOURCC('U','Y','V','Y'))
-        )
-      )
-  ),
-  gst_caps_new(
-    "divxdec_src_rgb1",
-    "video/x-raw-rgb",
-      GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32
-  ),
-  gst_caps_new(
-    "divxdec_src_rgb2",
-    "video/x-raw-rgb",
-      GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_15_16
+  GST_STATIC_CAPS (
+    GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("{ I420, YUY2, YV12, YVYU, UYVY }")
+    /* FIXME: 15/16/24/32bpp RGB */
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY(src_template,
+static GstStaticPadTemplate src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW(
-    "divxenc_sink",
-    "video/x-divx",
-      "divxversion", GST_PROPS_INT(5),
-      "width",       GST_PROPS_INT_RANGE(0, G_MAXINT),
-      "height",      GST_PROPS_INT_RANGE(0, G_MAXINT),
-      "framerate",   GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT)
+  GST_STATIC_CAPS (
+    "video/x-divx, "
+      "divxversion = (int) 5, "
+      "width = (int) [ 16, 4096 ], "
+      "height = (int) [ 16, 4096 ], "
+      "framerate = (double) [ 0, MAX ]"
   )
-)
+);
 
 
 /* DivxEnc signals and args */
@@ -100,7 +82,7 @@ static void             gst_divxenc_dispose      (GObject         *object);
 static void             gst_divxenc_chain        (GstPad          *pad,
                                                   GstData         *data);
 static GstPadLinkReturn gst_divxenc_connect      (GstPad          *pad,
-                                                  GstCaps         *vscapslist);
+                                                  const GstCaps   *vscapslist);
 
 /* properties */
 static void             gst_divxenc_set_property (GObject         *object,
@@ -181,9 +163,9 @@ gst_divxenc_base_init (GstDivxEncClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_template));
+		gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (src_template));
+		gst_static_pad_template_get (&src_template));
 
   gst_element_class_set_details (element_class, &gst_divxenc_details);
 }
@@ -239,7 +221,7 @@ gst_divxenc_init (GstDivxEnc *divxenc)
 {
   /* create the sink pad */
   divxenc->sinkpad = gst_pad_new_from_template(
-                       GST_PAD_TEMPLATE_GET(sink_template),
+                       gst_static_pad_template_get (&sink_template),
                        "sink");
   gst_element_add_pad(GST_ELEMENT(divxenc), divxenc->sinkpad);
 
@@ -248,7 +230,7 @@ gst_divxenc_init (GstDivxEnc *divxenc)
 
   /* create the src pad */
   divxenc->srcpad = gst_pad_new_from_template(
-                      GST_PAD_TEMPLATE_GET(src_template),
+                      gst_static_pad_template_get (&src_template),
                       "src");
   gst_element_add_pad(GST_ELEMENT(divxenc), divxenc->srcpad);
 
@@ -397,11 +379,16 @@ gst_divxenc_chain (GstPad    *pad,
 
 
 static GstPadLinkReturn
-gst_divxenc_connect (GstPad  *pad,
-                     GstCaps *vscaps)
+gst_divxenc_connect (GstPad        *pad,
+                     const GstCaps *caps)
 {
   GstDivxEnc *divxenc;
-  GstCaps *caps;
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  gint w,h;
+  gdouble fps;
+  guint32 fourcc;
+  guint32 divx_cs;
+  gint bitcnt = 0;
 
   divxenc = GST_DIVXENC(gst_pad_get_parent (pad));
 
@@ -409,36 +396,32 @@ gst_divxenc_connect (GstPad  *pad,
   gst_divxenc_unset(divxenc);
 
   /* we are not going to act on variable caps */
-  if (!GST_CAPS_IS_FIXED(vscaps))
+  if (!gst_caps_is_fixed(caps))
     return GST_PAD_LINK_DELAYED;
 
-  for (caps = vscaps; caps != NULL; caps = caps->next) {
-    gint w,h,d;
-    gfloat fps;
-    guint32 fourcc;
-    guint32 divx_cs;
-    gint bitcnt = 0;
-    gst_caps_get_int(caps, "width", &w);
-    gst_caps_get_int(caps, "height", &h);
-    gst_caps_get_float(caps, "framerate", &fps);
-    gst_caps_get_fourcc_int(caps, "format", &fourcc);
+  gst_structure_get_int(structure, "width", &w);
+  gst_structure_get_int(structure, "height", &h);
+  gst_structure_get_double(structure, "framerate", &fps);
+  gst_structure_get_fourcc(structure, "format", &fourcc);
 
-    switch (fourcc) {
-      case GST_MAKE_FOURCC('I','4','2','0'):
-        divx_cs = GST_MAKE_FOURCC('I','4','2','0');
-        break;
-      case GST_MAKE_FOURCC('Y','U','Y','2'):
-        divx_cs = GST_MAKE_FOURCC('Y','U','Y','2');
-        break;
-      case GST_MAKE_FOURCC('Y','V','1','2'):
-        divx_cs = GST_MAKE_FOURCC('Y','V','1','2');
-        break;
-      case GST_MAKE_FOURCC('Y','V','Y','U'):
-        divx_cs = GST_MAKE_FOURCC('Y','V','Y','U');
-        break;
-      case GST_MAKE_FOURCC('U','Y','V','Y'):
-        divx_cs = GST_MAKE_FOURCC('U','Y','V','Y');
-        break;
+  switch (fourcc) {
+    case GST_MAKE_FOURCC('I','4','2','0'):
+      divx_cs = GST_MAKE_FOURCC('I','4','2','0');
+      break;
+    case GST_MAKE_FOURCC('Y','U','Y','2'):
+      divx_cs = GST_MAKE_FOURCC('Y','U','Y','2');
+      break;
+    case GST_MAKE_FOURCC('Y','V','1','2'):
+      divx_cs = GST_MAKE_FOURCC('Y','V','1','2');
+      break;
+    case GST_MAKE_FOURCC('Y','V','Y','U'):
+      divx_cs = GST_MAKE_FOURCC('Y','V','Y','U');
+      break;
+    case GST_MAKE_FOURCC('U','Y','V','Y'):
+      divx_cs = GST_MAKE_FOURCC('U','Y','V','Y');
+      break;
+#if 0
+    /* someone fix RGB please */
       case GST_MAKE_FOURCC('R','G','B',' '):
         gst_caps_get_int(caps, "depth", &d);
         switch (d) {
@@ -450,43 +433,35 @@ gst_divxenc_connect (GstPad  *pad,
             divx_cs = 0;
             bitcnt = 32;
             break;
-          default:
-            goto trynext;
-        }
-        break;
-      default:
-        goto trynext;
+#endif
+    default:
+      return GST_PAD_LINK_REFUSED;
+  }
+
+  divxenc->csp = divx_cs;
+  divxenc->bitcnt = bitcnt;
+  divxenc->width = w;
+  divxenc->height = h;
+  divxenc->fps = fps;
+
+  /* try it */
+  if (gst_divxenc_setup(divxenc)) {
+    GstPadLinkReturn ret;
+    GstCaps *new_caps;
+
+    new_caps = gst_caps_new_simple ("video/x-divx",
+				    "divxversion", G_TYPE_INT, 5,
+				    "width",       G_TYPE_INT, w,
+				    "height",      G_TYPE_INT, h,
+				    "framerate",   G_TYPE_DOUBLE, fps,
+				    NULL);
+
+    ret = gst_pad_try_set_caps(divxenc->srcpad, new_caps);
+    if (ret <= 0) {
+      gst_divxenc_unset(divxenc);
     }
 
-    divxenc->csp = divx_cs;
-    divxenc->bitcnt = bitcnt;
-    divxenc->width = w;
-    divxenc->height = h;
-    divxenc->fps = fps;
-
-    /* try it */
-    if (gst_divxenc_setup(divxenc)) {
-      GstPadLinkReturn ret;
-      GstCaps *new_caps;
-
-      new_caps = GST_CAPS_NEW("divxenc_src_caps",
-                              "video/x-divx",
-			        "divxversion", GST_PROPS_INT(5),
-                                "width",       GST_PROPS_INT(w),
-                                "height",      GST_PROPS_INT(h),
-                                "framerate",   GST_PROPS_FLOAT(fps));
-
-      ret = gst_pad_try_set_caps(divxenc->srcpad, new_caps);
-
-      if (ret <= 0) {
-        gst_divxenc_unset(divxenc);
-      }
-
-      return ret;
-    }
-
-trynext:
-    continue;
+    return ret;
   }
 
   /* if we got here - it's not good */

@@ -25,52 +25,76 @@
 
 #include "gstmpeg2enc.hh"
 
-GST_PAD_TEMPLATE_FACTORY (sink_templ,
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "mpeg2enc_sink",
-     "video/x-raw-yuv",
-       "format",       GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-       "width",        GST_PROPS_INT_RANGE (16, 4096),
-       "height",       GST_PROPS_INT_RANGE (16, 4096),
-       "framerate",    GST_PROPS_LIST (
-			 GST_PROPS_FLOAT (24/1.001),
-			 GST_PROPS_FLOAT (24.),
-			 GST_PROPS_FLOAT (25.),
-			 GST_PROPS_FLOAT (30/1.001),
-			 GST_PROPS_FLOAT (30.),
-			 GST_PROPS_FLOAT (50.),
-			 GST_PROPS_FLOAT (60/1.001),
-			 GST_PROPS_FLOAT (60.)
-                       )
-  )
-)
+/*
+ * We can't use fractions in static pad templates, so
+ * we do something manual...
+ */
+static void
+add_fps (GstCaps *caps)
+{
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  GValue list = { 0 }, fps = { 0 };
+  gdouble fpss[] = { 24.0/1.001, 24.0, 25.0,
+		     30.0/1.001, 30.0, 50.0,
+		     60.0/1.001, 60.0, 0 };
+  guint n;
 
-GST_PAD_TEMPLATE_FACTORY (src_templ,
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "mpeg2enc_src",
-     "video/mpeg",
-       "systemstream", GST_PROPS_BOOLEAN (FALSE),
-       "mpegversion",  GST_PROPS_INT_RANGE (1, 2),
-       "width",        GST_PROPS_INT_RANGE (16, 4096),
-       "height",       GST_PROPS_INT_RANGE (16, 4096),
-       "framerate",    GST_PROPS_LIST (
-			 GST_PROPS_FLOAT (24/1.001),
-			 GST_PROPS_FLOAT (24.),
-			 GST_PROPS_FLOAT (25.),
-			 GST_PROPS_FLOAT (30/1.001),
-			 GST_PROPS_FLOAT (30.),
-			 GST_PROPS_FLOAT (50.),
-			 GST_PROPS_FLOAT (60/1.001),
-			 GST_PROPS_FLOAT (60.)
-                       )
-  )
-)
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&fps, G_TYPE_DOUBLE);
+  for (n = 0; fpss[n] != 0; n++) {
+    g_value_set_double (&fps, fpss[n]);
+    gst_value_list_append_value (&list, &fps);
+  }
+  gst_structure_set_value (structure, "framerate", &list);
+  g_value_unset (&list);
+  g_value_unset (&fps);
+}
+
+static GstPadTemplate *
+sink_templ (void)
+{
+  static GstPadTemplate *templ = NULL;
+
+  if (!templ) {
+    GstCaps *caps;
+
+    caps = gst_caps_new_simple ("video/x-raw-yuv",
+				"format", GST_TYPE_FOURCC,
+					GST_MAKE_FOURCC ('I','4','2','0'),
+				"width",  GST_TYPE_INT_RANGE, 16, 4096,
+				"height", GST_TYPE_INT_RANGE, 16, 4096,
+				NULL);
+    add_fps (caps);
+
+    templ = gst_pad_template_new ("sink", GST_PAD_SINK,
+				  GST_PAD_ALWAYS, caps);
+  }
+
+  return templ;
+}
+
+static GstPadTemplate *
+src_templ (void)
+{
+  static GstPadTemplate *templ = NULL;
+
+  if (!templ) {
+    GstCaps *caps;
+
+    caps = gst_caps_new_simple ("video/mpeg",
+				"systemstream", G_TYPE_BOOLEAN, FALSE,
+				"mpegversion", GST_TYPE_INT_RANGE, 1, 2,
+				"width",  GST_TYPE_INT_RANGE, 16, 4096,
+				"height", GST_TYPE_INT_RANGE, 16, 4096,
+				NULL);
+    add_fps (caps);
+
+    templ = gst_pad_template_new ("sink", GST_PAD_SINK,
+				  GST_PAD_ALWAYS, caps);
+  }
+
+  return templ;
+}
 
 static void gst_mpeg2enc_base_init    (GstMpeg2encClass *klass);
 static void gst_mpeg2enc_class_init   (GstMpeg2encClass *klass);
@@ -81,10 +105,9 @@ static void gst_mpeg2enc_loop         (GstElement   *element);
 
 static GstPadLinkReturn
             gst_mpeg2enc_sink_link    (GstPad       *pad,
-				       GstCaps      *caps);
+				       const GstCaps *caps);
 static GstCaps *
-            gst_mpeg2enc_src_getcaps  (GstPad       *pad,
-				       GstCaps      *caps);
+            gst_mpeg2enc_src_getcaps  (GstPad       *pad);
 
 static GstElementStateReturn
             gst_mpeg2enc_change_state (GstElement  *element);
@@ -140,10 +163,8 @@ gst_mpeg2enc_base_init (GstMpeg2encClass *klass)
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (src_templ));
-  gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (sink_templ));
+  gst_element_class_add_pad_template (element_class, src_templ ());
+  gst_element_class_add_pad_template (element_class, sink_templ ());
   gst_element_class_set_details (element_class,
 				 &gst_mpeg2enc_details);
 }
@@ -235,12 +256,12 @@ gst_mpeg2enc_loop (GstElement *element)
 }
 
 static GstPadLinkReturn
-gst_mpeg2enc_sink_link (GstPad  *pad,
-			GstCaps *caps)
+gst_mpeg2enc_sink_link (GstPad        *pad,
+			const GstCaps *caps)
 {
   GstMpeg2enc *enc = GST_MPEG2ENC (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
+  if (!gst_caps_is_fixed (caps))
     return GST_PAD_LINK_DELAYED;
 
   if (enc->encoder) {
@@ -252,8 +273,7 @@ gst_mpeg2enc_sink_link (GstPad  *pad,
 }
 
 static GstCaps *
-gst_mpeg2enc_src_getcaps (GstPad  *pad,
-			  GstCaps *caps)
+gst_mpeg2enc_src_getcaps (GstPad *pad)
 {
   GstMpeg2enc *enc = GST_MPEG2ENC (gst_pad_get_parent (pad));
 
@@ -261,8 +281,8 @@ gst_mpeg2enc_src_getcaps (GstPad  *pad,
     return enc->encoder->getFormat ();
   }
 
-  return gst_caps_ref (gst_pad_template_get_caps (
-	gst_element_get_pad_template (gst_pad_get_parent (pad), "src")));
+  return (GstCaps* ) gst_pad_template_get_caps (
+	gst_element_get_pad_template (gst_pad_get_parent (pad), "src"));
 }
 
 static void

@@ -65,39 +65,32 @@ enum {
   ARG_DIGITAL_PCM
 };
 
-
-GST_PAD_TEMPLATE_FACTORY (dxr3audiosink_pcm_sink_factory,
+static GstStaticPadTemplate dxr3audiosink_pcm_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "pcm_sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "dxr3audiosink_pcm_sink",
-    "audio/x-raw-int",
-       "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
-       "signed",           GST_PROPS_BOOLEAN (TRUE),
-       "width",            GST_PROPS_INT (16),
-       "depth",            GST_PROPS_INT (16),
-       "rate",             GST_PROPS_LIST (
-	                     GST_PROPS_INT (32000),
-	                     GST_PROPS_INT (44100),
-	                     GST_PROPS_INT (48000),
-	                     GST_PROPS_INT (66000)
-                           ),
-       "channels",         GST_PROPS_INT (2)
+  GST_STATIC_CAPS (
+    "audio/x-raw-int, "
+      "endianness = (int) BYTE_ORDER, "
+      "signed = (boolean) TRUE, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "rate = (int) { 32000, 44100, 48000, 66000 }, "
+      "channels = (int) 2"
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (dxr3audiosink_ac3_sink_factory,
+static GstStaticPadTemplate dxr3audiosink_ac3_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "ac3_sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "dxr3audiosink_ac3_sink",
-    "audio/x-ac3",
-    NULL
+  GST_STATIC_CAPS (
+    "audio/x-ac3"
     /* no parameters needed, we don't need a parsed stream */
   )
-)
+);
 
 
 GST_PAD_EVENT_MASK_FUNCTION(dxr3audiosink_get_event_mask,
@@ -128,7 +121,7 @@ static void	dxr3audiosink_set_clock		(GstElement *element,
                                                  GstClock *clock);
 
 static GstPadLinkReturn	dxr3audiosink_pcm_sinklink (GstPad *pad,
-                                                    GstCaps *caps);
+                                                    const GstCaps *caps);
 static void	dxr3audiosink_set_scr		(Dxr3AudioSink *sink,
                                                  guint32 scr);
 
@@ -182,9 +175,9 @@ dxr3audiosink_base_init (Dxr3AudioSinkClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (dxr3audiosink_pcm_sink_factory));
+	gst_static_pad_template_get (&dxr3audiosink_pcm_sink_factory));
   gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (dxr3audiosink_ac3_sink_factory));
+	gst_static_pad_template_get (&dxr3audiosink_ac3_sink_factory));
   gst_element_class_set_details (element_class,
 				 &dxr3audiosink_details);
 }
@@ -226,22 +219,18 @@ dxr3audiosink_class_init (Dxr3AudioSinkClass *klass)
 static void 
 dxr3audiosink_init (Dxr3AudioSink *sink) 
 {
-  GstCaps *caps;
   GstPadTemplate *temp;
 
   /* Create the PCM pad. */
-  temp = GST_PAD_TEMPLATE_GET (dxr3audiosink_pcm_sink_factory);
+  temp = gst_static_pad_template_get (&dxr3audiosink_pcm_sink_factory);
   sink->pcm_sinkpad = gst_pad_new_from_template (temp, "pcm_sink");
   gst_pad_set_chain_function (sink->pcm_sinkpad, dxr3audiosink_chain_pcm);
   gst_pad_set_link_function (sink->pcm_sinkpad, dxr3audiosink_pcm_sinklink);
   gst_element_add_pad (GST_ELEMENT (sink), sink->pcm_sinkpad);
 
   /* Create the AC3 pad. */
-  temp = GST_PAD_TEMPLATE_GET (dxr3audiosink_ac3_sink_factory);
+  temp = gst_static_pad_template_get (&dxr3audiosink_ac3_sink_factory);
   sink->ac3_sinkpad = gst_pad_new_from_template (temp, "ac3_sink");
-  caps = gst_pad_template_get_caps (temp);
-  gst_pad_try_set_caps (sink->ac3_sinkpad, caps);
-  gst_caps_unref (caps);
   gst_pad_set_chain_function (sink->ac3_sinkpad, dxr3audiosink_chain_ac3);
   gst_element_add_pad (GST_ELEMENT (sink), sink->ac3_sinkpad);
 
@@ -506,30 +495,17 @@ dxr3audiosink_set_clock (GstElement *element, GstClock *clock)
 
 
 static GstPadLinkReturn
-dxr3audiosink_pcm_sinklink (GstPad *pad, GstCaps *caps)
+dxr3audiosink_pcm_sinklink (GstPad *pad, const GstCaps *caps)
 {
   Dxr3AudioSink *sink = DXR3AUDIOSINK (gst_pad_get_parent (pad));
-  const gchar* mimetype;
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
   gint rate;
 
-  if (!GST_CAPS_IS_FIXED(caps)) {
+  if (!gst_caps_is_fixed (caps)) {
     return GST_PAD_LINK_DELAYED;
   }
 
-  mimetype = gst_caps_get_mime(caps);
-  if (strcmp (mimetype, "audio/x-raw-int") != 0) {
-    return GST_PAD_LINK_REFUSED;
-  }
-
-  if (!gst_caps_has_property (caps, "rate")) {
-    return GST_PAD_LINK_REFUSED;
-  }
-
-  gst_caps_get_int (caps, "rate", &rate);
-  if (rate != 32000 && rate != 44100 &&
-      rate != 48000 && rate != 66000) {
-    return GST_PAD_LINK_DELAYED;
-  }
+  gst_structure_get_int (structure, "rate", &rate);
   sink->rate = rate;
 
   return GST_PAD_LINK_OK;
