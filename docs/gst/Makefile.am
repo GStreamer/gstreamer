@@ -89,7 +89,7 @@ gstreamer-decl.txt:
 
 scanobj: $(srcdir)/$(DOC_MODULE).types
 	rm gstreamer-scan.o; ln -s gstreamer-scan.lo gstreamer-scan.o
-	env CC="$(LIBTOOL) $(CC)" CFLAGS="$(GST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS) -I../../" LDFLAGS="$(GST_LIBS)"\
+	env CC="$(LIBTOOL) $(CC)" CFLAGS="$(LIBGST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS) -I../../" LDFLAGS="$(GST_LIBS)"\
 	gtkdoc-scanobj --module=$(DOC_MODULE) 
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
 

@@ -127,9 +127,12 @@ The function that will be called when pulling a region buffer.
 </para>
 
 @pad: the pad to get a buffer from
+@type: 
 @offset: the offset of the region to get
-@size: the size of the region to get
+@len: 
 @Returns: a #GstBuffer
+<!-- # Unused Parameters # -->
+@size: the size of the region to get
 
 
 <!-- ##### USER_FUNCTION GstPadQoSFunction ##### -->
@@ -175,9 +178,12 @@ The function that will be called when pulling a region buffer.
 </para>
 
 @pad: the pad to pull
+@type: 
 @offset: the offset of the region to pull
-@size: the size of the region to pull
+@len: 
 @Returns: a GstBuffer
+<!-- # Unused Parameters # -->
+@size: the size of the region to pull
 
 
 <!-- ##### ENUM GstPadDirection ##### -->
@@ -446,24 +452,17 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_pull_region ##### -->
+<!-- ##### FUNCTION gst_pad_pullregion ##### -->
 <para>
 
 </para>
 
 @pad: 
+@type: 
 @offset: 
-@size: 
+@len: 
 @Returns: 
-
-
-<!-- ##### MACRO gst_pad_pullregion ##### -->
-<para>
-
-</para>
-
-@pad: 
-@offset: 
+<!-- # Unused Parameters # -->
 @size: 
 
 
@@ -526,6 +525,9 @@ Call the EOS function of the pad
 @threadstate: 
 @peer: 
 @bufpen: 
+@regiontype: 
+@offset: 
+@len: 
 @chainfunc: 
 @getfunc: 
 @getregionfunc: 

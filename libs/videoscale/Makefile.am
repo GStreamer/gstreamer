@@ -16,4 +16,4 @@ libgstvideoscaleinclude_HEADERS = gstvideoscale.h
 noinst_HEADERS = gstscale_x86.h
 
 #CFLAGS += -S -O1 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math
-CFLAGS = $(GLIB_CFLAGS) $(GST_CFLAGS) $(XML_CFLAGS) -O5 -fomit-frame-pointer -ffast-math
+CFLAGS = $(GLIB_CFLAGS) $(LIBGST_CFLAGS) $(XML_CFLAGS) -O5 -fomit-frame-pointer -ffast-math
