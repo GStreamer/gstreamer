@@ -91,8 +91,13 @@ AC_MSG_RESULT(no)
 dnl Check for essential libraries first:
 dnl ====================================
 
+dnl === GLib 2 ===
+dnl Minimum required version of GLib2
+GLIB2_REQ="1.3.12"
+AC_SUBST(GLIB2_REQ)
+
 dnl Check for glib2
-PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0,
+PKG_CHECK_MODULES(GLIB2, glib-2.0 >= $GLIB2_REQ gobject-2.0 gthread-2.0 gmodule-2.0,
   HAVE_GLIB2=yes,HAVE_GLIB2=no)
 GLIB_LIBS=$GLIB2_LIBS
 GLIB_CFLAGS=$GLIB2_CFLAGS
@@ -106,8 +111,14 @@ fi
 GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
   
+dnl === libxml 2 ===
+dnl Minimum required version of libxml2
+LIBXML2_REQ="2.4.0"
+AC_SUBST(LIBXML2_REQ)
+
+dnl check for libxml2
 LIBXML_PKG=', libxml-2.0'
-PKG_CHECK_MODULES(XML, libxml-2.0, HAVE_LIBXML2=yes, HAVE_LIBXML2=no)
+PKG_CHECK_MODULES(XML, libxml-2.0 >= $LIBXML2_REQ, HAVE_LIBXML2=yes, HAVE_LIBXML2=no)
 if test "x$HAVE_LIBXML2" = "xyes"; then
   AC_DEFINE(HAVE_LIBXML2)
 else
