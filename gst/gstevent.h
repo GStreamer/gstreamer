@@ -39,8 +39,10 @@ typedef enum {
   GST_EVENT_SEEK,
 } GstEventType;
 
+extern GType _gst_event_type;
+
 #define GST_EVENT(event)	((GstEvent*)(event))
-#define GST_IS_EVENT(event)	(GST_DATA_TYPE(event) == gst_event_get_type())
+#define GST_IS_EVENT(event)	(GST_DATA_TYPE(event) == _gst_event_type)
 
 #define GST_EVENT_TYPE(event)	(GST_EVENT(event)->type)
 
@@ -52,8 +54,8 @@ struct _GstEvent {
   GstEventType type;
 };
 
-GType		gst_event_get_type	(void);
-
+void 		_gst_event_initialize 	(void);
+	
 GstEvent*	gst_event_empty_new	(GstEventType type);
 void		gst_event_free 		(GstEvent* event);
 

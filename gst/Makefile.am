@@ -69,6 +69,7 @@ libgst_la_SOURCES =		\
 	gstdparammanager.c	\
 	gstelement.c		\
 	gstelementfactory.c	\
+	gstevent.c		\
 	gstextratypes.c		\
 	gstinfo.c		\
 	gstpad.c		\
