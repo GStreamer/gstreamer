@@ -31,12 +31,14 @@
 #include "gstffmpegallcodecmap.h"
 
 typedef struct _GstFFMpegDecAll {
-  GstElement element;
+  GstElement 	 element;
 
-  GstPad *srcpad, *sinkpad;
+  GstPad 	*srcpad, 
+  		*sinkpad;
 
   AVCodecContext *context;
-  AVFrame picture;
+  AVFrame 	 picture;
+  gboolean	 opened;
 } GstFFMpegDecAll;
 
 typedef struct _GstFFMpegDecAllClass {
@@ -255,6 +257,7 @@ gst_ffmpegdecall_init(GstFFMpegDecAll *ffmpegdec)
                       ffmpegdec->srcpad);
 
   ffmpegdec->context = avcodec_alloc_context();
+  ffmpegdec->opened = FALSE;
 }
 
 static void
@@ -262,7 +265,10 @@ gst_ffmpegdecall_destroy (GObject *obj)
 {
   GstFFMpegDecAll *ffmpegdec = GST_FFMPEGDECALL(obj);
   g_print ("ffmpeg: destroying codec\n");
-  avcodec_close(ffmpegdec->context);
+  if (ffmpegdec->opened) {
+    avcodec_close(ffmpegdec->context);
+    ffmpegdec->opened = FALSE;
+  }
   av_free(ffmpegdec->context);
 }
 
@@ -297,8 +303,10 @@ gst_ffmpegdecall_connect (GstPad *pad, GstCaps *caps)
   if (avcodec_open(ffmpegdec->context, plugin)) {
     GST_DEBUG(GST_CAT_PLUGIN_INFO,
               "Failed to open FFMPEG codec for id=%d", id);
+    ffmpegdec->opened = FALSE;
     return GST_PAD_LINK_REFUSED;
   }
+  ffmpegdec->opened = TRUE;
 
   return GST_PAD_LINK_OK;
 }
