@@ -393,60 +393,51 @@ gst_tcpclientsrc_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_tcpclientsrc_init_receive (GstTCPClientSrc * this)
 {
-  int ret, error;
-  gchar *tempport;
-
-  struct addrinfo hints, *res, *ressave;
+  int ret;
+  gchar *ip;
 
   /* create receiving client socket */
   GST_DEBUG_OBJECT (this, "opening receiving client socket to %s:%d",
       this->host, this->port);
-
-  memset (&hints, 0, sizeof (struct addrinfo));
-
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-
-  tempport = g_strdup_printf ("%d", this->port);
-
-  error = getaddrinfo (this->host, tempport, &hints, &res);
-  g_free (tempport);
-  if (error != 0) {
-    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ,
-        (_("Error getting address info (%s:%d): %s"), this->host, this->port,
-            gai_strerror (error)), (NULL));
-    return FALSE;
-  }
-
-  ressave = res;
-
-  this->sock_fd = -1;
-  while (res) {
-    this->sock_fd = socket (res->ai_family, res->ai_socktype, res->ai_protocol);
-    if (this->sock_fd >= 0) {
-      ret = connect (this->sock_fd, res->ai_addr, res->ai_addrlen);
-      if (ret == 0)
-        break;
-      close (this->sock_fd);
-      this->sock_fd = -1;
-    }
-    res = res->ai_next;
-  }
-  freeaddrinfo (ressave);
-
-  if (errno == ECONNREFUSED) {
-    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ,
-        (_("Connection to %s:%d refused."), this->host, this->port), (NULL));
-    return FALSE;
-  }
-
-  if (this->sock_fd == -1) {
+  if ((this->sock_fd = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL), GST_ERROR_SYSTEM);
     return FALSE;
   }
   GST_DEBUG_OBJECT (this, "opened receiving client socket with fd %d",
       this->sock_fd);
 
+  /* look up name if we need to */
+  ip = gst_tcp_host_to_ip (GST_ELEMENT (this), this->host);
+  if (!ip)
+    return FALSE;
+  GST_DEBUG_OBJECT (this, "IP address for host %s is %s", this->host, ip);
+
+  /* connect to server */
+  memset (&this->server_sin, 0, sizeof (this->server_sin));
+  this->server_sin.sin_family = AF_INET;        /* network socket */
+  this->server_sin.sin_port = htons (this->port);       /* on port */
+  this->server_sin.sin_addr.s_addr = inet_addr (ip);    /* on host ip */
+
+  GST_DEBUG_OBJECT (this, "connecting to server");
+  ret = connect (this->sock_fd, (struct sockaddr *) &this->server_sin,
+      sizeof (this->server_sin));
+
+  if (ret) {
+    switch (errno) {
+      case ECONNREFUSED:
+        GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ,
+            (_("Connection to %s:%d refused."), this->host, this->port),
+            (NULL));
+        return FALSE;
+        break;
+      default:
+        GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
+            ("connect to %s:%d failed: %s", this->host, this->port,
+                g_strerror (errno)));
+        return FALSE;
+        break;
+    }
+  }
 
   this->send_discont = TRUE;
   this->buffer_after_discont = NULL;

@@ -1,3 +1,7 @@
+2004-06-17  Johan Dahlin  <johan@gnome.org>
+
+	* ext/tcp/*: Revert Zaheer changes.
+
 2004-06-16  Wim Taymans  <wim@fluendo.com>
 
 	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_get):

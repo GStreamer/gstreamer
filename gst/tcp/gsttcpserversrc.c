@@ -456,50 +456,18 @@ gst_tcpserversrc_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_tcpserversrc_init_receive (GstTCPServerSrc * this)
 {
-  int ret, error;
-  struct addrinfo hints, *res, *ressave;
-  gchar *tempport;
-  struct sockaddr_storage client_address;
-  int client_address_len;
+  int ret;
 
-  /* name the socket */
-  memset (&hints, 0, sizeof (struct addrinfo));
-  hints.ai_flags = AI_PASSIVE;
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  tempport = g_strdup_printf ("%d", this->server_port);
+  /* reset caps_received flag */
+  this->caps_received = FALSE;
 
-  error = getaddrinfo (this->host, tempport, &hints, &res);
-  g_free (tempport);
-  if (error != 0) {
-    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
-        ("getaddrinfo failed: %s", gai_strerror (error)));
+  /* create the server listener socket */
+  if ((this->server_sock_fd = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
+    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL), GST_ERROR_SYSTEM);
     return FALSE;
   }
-  ressave = res;
-
-  /* Try open socket with each address getaddrinfo returned, until getting
-     a valid listening socket */
-  this->server_sock_fd = -1;
-  while (res) {
-    this->server_sock_fd =
-        socket (res->ai_family, res->ai_socktype, res->ai_protocol);
-    if (this->server_sock_fd >= 0) {
-      ret = bind (this->server_sock_fd, res->ai_addr, res->ai_addrlen);
-      if (ret == 0)
-        break;
-      close (this->server_sock_fd);
-      this->server_sock_fd = -1;
-    }
-    res = res->ai_next;
-  }
-  freeaddrinfo (ressave);
-
-  if (this->server_sock_fd < 0) {
-    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
-        ("bind failed: %s", g_strerror (errno)));
-    return FALSE;
-  }
+  GST_DEBUG_OBJECT (this, "opened receiving server socket with fd %d",
+      this->server_sock_fd);
 
   /* make address reusable */
   if (setsockopt (this->server_sock_fd, SOL_SOCKET, SO_REUSEADDR, &ret,
@@ -509,8 +477,35 @@ gst_tcpserversrc_init_receive (GstTCPServerSrc * this)
     return FALSE;
   }
 
-  /* reset caps_received flag */
-  this->caps_received = FALSE;
+  /* name the socket */
+  memset (&this->server_sin, 0, sizeof (this->server_sin));
+  this->server_sin.sin_family = AF_INET;        /* network socket */
+  this->server_sin.sin_port = htons (this->server_port);        /* on port */
+  if (this->host) {
+    gchar *host = gst_tcp_host_to_ip (GST_ELEMENT (this), this->host);
+
+    if (!host)
+      return FALSE;
+
+    this->server_sin.sin_addr.s_addr = inet_addr (host);
+    g_free (host);
+  } else
+    this->server_sin.sin_addr.s_addr = htonl (INADDR_ANY);
+
+  /* bind it */
+  GST_DEBUG_OBJECT (this, "binding server socket to address");
+  ret = bind (this->server_sock_fd, (struct sockaddr *) &this->server_sin,
+      sizeof (this->server_sin));
+
+  if (ret) {
+    switch (errno) {
+      default:
+        GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
+            ("bind failed: %s", g_strerror (errno)));
+        return FALSE;
+        break;
+    }
+  }
 
   GST_DEBUG_OBJECT (this, "listening on server socket %d with queue of %d",
       this->server_sock_fd, TCP_BACKLOG);
@@ -524,8 +519,8 @@ gst_tcpserversrc_init_receive (GstTCPServerSrc * this)
      somewhere else */
   GST_DEBUG_OBJECT (this, "waiting for client");
   this->client_sock_fd =
-      accept (this->server_sock_fd, (struct sockaddr *) &client_address,
-      &client_address_len);
+      accept (this->server_sock_fd, (struct sockaddr *) &this->client_sin,
+      &this->client_sin_len);
   if (this->client_sock_fd == -1) {
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
         ("Could not accept client on server socket: %s", g_strerror (errno)));
