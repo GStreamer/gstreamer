@@ -318,10 +318,10 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
     GST_DEBUG ("GstWavParse: checking for RIFF format");
 
     /* create a new RIFF parser */
-    wavparse->riff = gst_riff_new ();
+    wavparse->riff = gst_riff_parser_new (NULL, NULL);
 
     /* give it the current buffer to start parsing */
-    retval = gst_riff_next_buffer (wavparse->riff, buf, 0);
+    retval = gst_riff_parser_next_buffer (wavparse->riff, buf, 0);
     buffer_riffed = TRUE;
     if (retval < 0) {
       GST_DEBUG ("sorry, isn't RIFF");
@@ -347,12 +347,12 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 
     /* there's a good possibility we may not have parsed this buffer */
     if (buffer_riffed == FALSE) {
-      gst_riff_next_buffer (wavparse->riff, buf, GST_BUFFER_OFFSET (buf));
+      gst_riff_parser_next_buffer (wavparse->riff, buf, GST_BUFFER_OFFSET (buf));
       buffer_riffed = TRUE;
     }
 
     /* see if the fmt chunk is available yet */
-    fmt = gst_riff_get_chunk (wavparse->riff, "fmt ");
+    fmt = gst_riff_parser_get_chunk (wavparse->riff, GST_RIFF_TAG_fmt);
 
     /* if we've got something, deal with it */
     if (fmt != NULL) {
@@ -444,11 +444,11 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 
     /* again, we might need to parse the buffer */
     if (buffer_riffed == FALSE) {
-      gst_riff_next_buffer (wavparse->riff, buf, GST_BUFFER_OFFSET (buf));
+      gst_riff_parser_next_buffer (wavparse->riff, buf, GST_BUFFER_OFFSET (buf));
       buffer_riffed = TRUE;
     }
 
-    datachunk = gst_riff_get_chunk (wavparse->riff, "data");
+    datachunk = gst_riff_parser_get_chunk (wavparse->riff, GST_RIFF_TAG_data);
 
     if (datachunk != NULL) {
       gulong subsize;
@@ -480,7 +480,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       wavparse->state = GST_WAVPARSE_DATA;
 
       /* however, we may be expecting another chunk at some point */
-      wavparse->riff_nextlikely = gst_riff_get_nextlikely (wavparse->riff);
+      wavparse->riff_nextlikely = gst_riff_parser_get_nextlikely (wavparse->riff);
     } else {
       /* otherwise we just sort of give up for this buffer */
       gst_buffer_unref (buf);
@@ -704,6 +704,10 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   GstTypeFactory *type;
+
+  if(gst_library_load("gstriff") == FALSE){
+    return FALSE;
+  }
 
   /* create an elementfactory for the wavparse element */
   factory = gst_element_factory_new ("wavparse", GST_TYPE_WAVPARSE,
