@@ -37,7 +37,7 @@ static GstElementDetails flxdec_details = {
   "LGPL",
   "FLX decoder",
   VERSION,
-  "Sepp Wijnands <mrrazz@garbage-coderz.net>"
+  "Sepp Wijnands <mrrazz@garbage-coderz.net>",
   "(C) 2001",
 };
 
