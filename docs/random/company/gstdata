@@ -1,0 +1,209 @@
+NB: This document does not represent the current state of CVS but my current plans on how to implement this.
+
+Basics
+======
+
+Hierarchy
+---------
+GstData
+  GstInstream
+    GstBuffer
+    GstEventNewMedia
+    GstEventDiscontinuous
+    GstEventEOS
+    GstEventLength
+  GstOutOfStream
+    GstEventLock
+    GstEventUnLock
+    GstEventSeek
+    GstEventFlush
+    GstEventEmpty
+
+
+GstData
+=======
+
+typedef GstData * (*GstDataCopyFunction) (GstData *data);
+typedef void (*GstDataFreeFunction) (GstData *data);
+
+struct _GstData
+{
+  /* inheritance */
+  GstDataClass *	klass;
+  
+  /* refcounting */
+#ifdef HAVE_ATOMIC_H
+  atomic_t 		refcount;
+#else
+  gint 			refcount;
+  GMutex *		reflock;
+#endif
+  
+  /* flags */
+  guint			flags;
+};
+
+struct _GstDataClass
+{
+  GstDataType		type;
+
+  GstDataCopyFunction	copy;
+  GstDataFreeFunction	free;
+};
+
+Inheritance
+-----------
+A GstData descandant GstMyData, would look like this:
+struct _GstMyData {
+  GstData parent;
+  /* more stuff specific to GstMyData */
+}
+
+You can even enhance the class struct, if you want to. This works just like inheritance in GLib.
+
+If it can be a parent class, it should implement these three functions publically:
+void gst_my_data_init (GstData *data) {
+  /* call the parent's init function, eg: */
+  gst_data_init (data);
+  /* initialize your data now */
+}
+void gst_my_data_dispose (GstData *data) {
+  /* free every data, that needs to be freed */
+  /* call the parent's dispose function, eg: */
+  gst_data_dispose (data);
+  /* do NOT free the data */
+}
+GstData *gst_my_data_do_copy (GstData *to, GstData *from) {
+  /* call the parent's copy function, eg: */
+  gst_data_do_copy (to, from);
+  /* copy relevant stuff from your struct now */
+  /* note: the copy function must return a writable object, you may not set GST_DATA_READONLY here */
+}
+
+If GstMyData should be instantiable, you should do this:
+Get a class struct, something like this:
+static GstDataClass my_data_class = { GST_TYPE_MY_DATA,
+      gst_my_data_copy_func,
+      gst_my_data_free_func };
+FIXME: At the moment all types need to be specified in a big enum in gstdata.h.
+       We might want to change that when we support event plugins.
+The two functions above should look something like this:
+GstData *gst_my_data_copy_func (GstData *from) {
+  /* allocate memory */
+  GstMyData *copy = g_new (GstData, 1);
+  /* copy relevant variables or initialize them */
+  gst_my_data_copy (copy, from);
+  
+  return copy;
+}
+void gst_my_data_free_func (GstData *data) {
+  /* first dispose all data */
+  gst_my_data_dispose (data);
+  /* now free the struct */
+  g_free (data);
+}
+      
+Now you just need a function that can be called from the real world:
+GstMyData *gst_my_data_new (void) {
+  /* allocate memory */
+  GstMyData *my_data = g_new (GstData, 1);
+  /* initialize the variables */
+  gst_my_data_init (GST_DATA (my_data));
+  /* set the right type */
+  GST_DATA (my_data)->type = &my_data_class;
+  
+  return my_data;
+}
+
+summary of inheritance:
+- define structs like GObject inheritance
+- inheritance works by calling the functions of the parent when creating/copying/freeing an object
+- type recognition is done by the type field in the class struct
+- memory allocation is specific to the struct.
+
+Refcounting
+-----------
+GstData provides threadsafe refcounting. If you create a new object - either by copying or explicit creation -  the refcount is initialized to 1.
+This reference is owned by the creator of the object.
+If the reference count reaches 0, the object is freed. The free function of the class is called for that purpose.
+In accordance with GLib, that uses g_object_(un)ref for everything, gst_data_(un)ref is used and no wrapper macros are created.
+
+MT safety
+---------
+Manipulating data inside an object is not threadsafe unless otherwise noted.
+If an object has a reference count of 1 it is assumed that the reference holder is the only user of that object and he may modify it the way he likes.
+If the reference count is greater than 1, the object may not be modified. If you need to modify it, you have to copy the object and use that copy instead.
+NB: Object creation and refcounting are threadsafe - or must be implemented that way.
+
+Flags
+-----
+Flags work and can be used like the GstObject flags.
+GstData defines only one flag: GST_DATA_READONLY. If this flag is set, you are not allowed to modify the contents of a struct, even if the refcount is 1.
+
+GBoxed
+------
+
+
+GstInstream
+===========
+
+GstInstream is the base class for events and buffers that are passed inside the stream.
+It enhances the GstData struct by
+guint64		offset[GST_OFFSET_TYPES];
+This field describes the offset in the current stream in various different ways:
+GST_OFFSET_BYTES:  The number of bytes from the beginning of the stream.
+GST_OFFSET_TIME:   The timestamp in microseconds. The beginning of the stream equals timestamp 0. In buffers the timestamp should match the beginning of the data.
+GST_OFFSET_FRAMES: This type is specific to the stream and should be defined there. (video will probably use it for frame numbers, audio to count samples)
+If an offset can't be specified, it is set to GST_OFFSET_INVALID, which equals (guint64) -1. The byte offset always has to be specified. It is an error if it is invalid.
+A plugin playing data from an "infinite" source (eg a shoutcast stream from the internet) it should start with byteoffset 0.
+
+
+GstBuffer
+=========
+
+The buffer enhances the GstInstream struct by including a data and a size field.
+
+Memory allocation
+-----------------
+Memory is allocated via a special memchunk implementation, that is threadsafe. The default implementation uses a mutex and GMemChunks.
+FIXME: This is not true, we use g_malloc/g_free for now.
+
+GstBufferClass
+--------------
+GstBufferClasses (note the plural) replace bufferpools. The default class uses g_free/g_malloc for storing data. However, you are free to write your own if
+you need buffers that store data in another way.
+Note however that the copy function needs to supply a writable copy of your buffer.
+
+Subbuffers
+----------
+Subbuffers have been replaced by a special kind of GstBufferClass.
+
+
+Instream events
+===============
+
+GstEventNewMedia
+----------------
+Signals the start of a new stream. This must be send before any buffer of a new stream can be send.
+FIXME: The "must be send" can only be enforced if all elements are event aware. And this is necessary if we don't want to get parts of stream 1 inside stream 2.
+
+GstEventDiscontinuous
+---------------------
+This must be send between buffers, that don't have continuous data. This is necessary for example after seeking or when data is dropped for speed.
+
+GstEventEOS
+-----------
+Signals the end of a stream. Must be send after all data is finished. If you want to start a new stream, don't send this event, send a GstEventNewMedia instead.
+After having processed this event, elements in the pipeline switch their state to paused.
+
+GstEventLength
+--------------
+Specifies the length of the stream.
+FIXME: Write more, when sure how to do this.
+
+Upstream events
+===============
+These will be discussed in a seperate doc.
+
+
+
