@@ -81,7 +81,8 @@ static GstElementDetails gst_alsa_src_details = GST_ELEMENT_DETAILS (
 );
 
 /* GObject functions */
-static void			gst_alsa_class_init		(GstAlsaClass *		klass);
+static void			gst_alsa_class_init		(gpointer               g_class,
+                                                                 gpointer               class_data);
 static void			gst_alsa_init			(GstAlsa *		this);
 static void			gst_alsa_dispose		(GObject *		object);
 static void			gst_alsa_set_property		(GObject *		object,
@@ -97,7 +98,8 @@ static void			gst_alsa_get_property		(GObject *		object,
 static GstPadTemplate *		gst_alsa_sink_pad_factory 	(void);
 static GstPadTemplate *		gst_alsa_sink_request_pad_factory (void);
 static void			gst_alsa_sink_base_init		(gpointer		g_class);
-static void			gst_alsa_sink_class_init	(GstAlsaSinkClass *	klass);
+static void			gst_alsa_sink_class_init	(gpointer               g_class,
+                                                                 gpointer               class_data);
 static void			gst_alsa_sink_init		(GstAlsaSink *		this);
 static inline void		gst_alsa_sink_flush_one_pad	(GstAlsaSink *		sink,
 								 gint 			i);
@@ -115,7 +117,8 @@ static GstElementStateReturn	gst_alsa_sink_change_state	(GstElement *		element);
 static GstPadTemplate *		gst_alsa_src_pad_factory 	(void);
 static GstPadTemplate *		gst_alsa_src_request_pad_factory (void);
 static void			gst_alsa_src_base_init		(gpointer		g_class);
-static void			gst_alsa_src_class_init		(GstAlsaSrcClass *	klass);
+static void			gst_alsa_src_class_init		(gpointer		g_class,
+                                                                 gpointer               class_data);
 static void			gst_alsa_src_init		(GstAlsaSrc *		this);
 static int			gst_alsa_src_mmap		(GstAlsa *		this,
 								 snd_pcm_sframes_t *	avail);
@@ -183,7 +186,8 @@ static gboolean 		gst_alsa_stop_audio		(GstAlsa *		this);
 static gboolean 		gst_alsa_close_audio		(GstAlsa *		this);
 
 /* clock functions */
-static void	 		gst_alsa_clock_class_init 	(GstAlsaClockClass *	klass);
+static void	 		gst_alsa_clock_class_init 	(gpointer               g_class,
+                                                                 gpointer               class_data);
 static void 			gst_alsa_clock_init 		(GstAlsaClock *		clock);
 static GstAlsaClock *		gst_alsa_clock_new		(gchar *name, 
 								 GstAlsaClockGetTimeFunc func,
@@ -233,7 +237,7 @@ gst_alsa_get_type (void)
       sizeof (GstAlsaClass),
       NULL,
       NULL,
-      (GClassInitFunc) gst_alsa_class_init,
+      gst_alsa_class_init,
       NULL,
       NULL,
       sizeof (GstAlsa),
@@ -263,13 +267,15 @@ enum
 static GstElement *parent_class = NULL;
 
 static void
-gst_alsa_class_init (GstAlsaClass *klass)
+gst_alsa_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *object_class;
   GstElementClass *element_class;
+  GstAlsaClass *klass;
 
-  object_class = (GObjectClass *) klass;
-  element_class = (GstElementClass *) klass;
+  klass = (GstAlsaClass *)g_class;
+  object_class = (GObjectClass *) g_class;
+  element_class = (GstElementClass *) g_class;
 
   if (parent_class == NULL)
     parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
@@ -278,25 +284,25 @@ gst_alsa_class_init (GstAlsaClass *klass)
   object_class->get_property = gst_alsa_get_property;
   object_class->set_property = gst_alsa_set_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE,
+  g_object_class_install_property (object_class, ARG_DEVICE,
     g_param_spec_string ("device", "Device", "Alsa device, as defined in an asoundrc",
                          "default", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PERIODCOUNT,
+  g_object_class_install_property (object_class, ARG_PERIODCOUNT,
     g_param_spec_int ("period-count", "Period count", "Number of hardware buffers to use",
                       2, 64, 2, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PERIODSIZE,
+  g_object_class_install_property (object_class, ARG_PERIODSIZE,
     g_param_spec_int ("period-size", "Period size", "Number of frames (samples on each channel) in one hardware period",
                       2, 8192, 8192, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFERSIZE,
+  g_object_class_install_property (object_class, ARG_BUFFERSIZE,
     g_param_spec_int ("buffer-size", "Buffer size", "Number of frames the hardware buffer can hold",
                       4, 65536, 16384, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_AUTORECOVER,
+  g_object_class_install_property (object_class, ARG_AUTORECOVER,
     g_param_spec_boolean ("autorecover", "Automatic xrun recovery", "When TRUE tries to reduce processor load on xruns",
                           TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MMAP,
+  g_object_class_install_property (object_class, ARG_MMAP,
     g_param_spec_boolean ("mmap", "Use mmap'ed access", "Wether to use mmap (faster) or standard read/write (more compatible)",
                           TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAXDISCONT,
+  g_object_class_install_property (object_class, ARG_MAXDISCONT,
     g_param_spec_uint64 ("max-discont", "Maximum Discontinuity", "GStreamer timeunits before the timestamp syncing starts dropping/insertting samples",
    /* rounding errors */ 1000, GST_SECOND, GST_ALSA_DEFAULT_DISCONT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
@@ -449,7 +455,7 @@ gst_alsa_sink_get_type (void)
       sizeof (GstAlsaSinkClass),
       gst_alsa_sink_base_init,
       NULL,
-      (GClassInitFunc) gst_alsa_sink_class_init,
+      gst_alsa_sink_class_init,
       NULL,
       NULL,
       sizeof (GstAlsaSink),
@@ -474,12 +480,14 @@ gst_alsa_sink_base_init (gpointer g_class)
 }
 
 static void
-gst_alsa_sink_class_init (GstAlsaSinkClass *klass)
+gst_alsa_sink_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *object_class;
   GstElementClass *element_class;
   GstAlsaClass *alsa_class;
+  GstAlsaSinkClass *klass;
 
+  klass = (GstAlsaSinkClass *) g_class;
   object_class = (GObjectClass *) klass;
   element_class = (GstElementClass *) klass;
   alsa_class = (GstAlsaClass *) klass;
@@ -618,7 +626,7 @@ gst_alsa_sink_mmap (GstAlsa *this, snd_pcm_sframes_t *avail)
   int i, err, width = snd_pcm_format_physical_width (this->format->format);
 
   /* areas points to the memory areas that belong to gstreamer. */
-  src = calloc(this->format->channels, sizeof(snd_pcm_channel_area_t));
+  src = g_malloc0 (this->format->channels * sizeof(snd_pcm_channel_area_t));
 
   if (((GstElement *) this)->numpads == 1) {
     /* interleaved */
@@ -875,7 +883,7 @@ gst_alsa_src_get_type (void)
       sizeof (GstAlsaSrcClass),
       gst_alsa_src_base_init,
       NULL,
-      (GClassInitFunc) gst_alsa_src_class_init,
+      gst_alsa_src_class_init,
       NULL,
       NULL,
       sizeof (GstAlsaSrc),
@@ -900,12 +908,14 @@ gst_alsa_src_base_init (gpointer g_class)
 }
 
 static void
-gst_alsa_src_class_init (GstAlsaSrcClass *klass)
+gst_alsa_src_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *object_class;
   GstElementClass *element_class;
   GstAlsaClass *alsa_class;
+  GstAlsaSrcClass *klass;
 
+  klass = (GstAlsaSrcClass *) g_class;
   object_class = (GObjectClass *) klass;
   element_class = (GstElementClass *) klass;
   alsa_class = (GstAlsaClass *) klass;
@@ -946,7 +956,7 @@ gst_alsa_src_mmap (GstAlsa *this, snd_pcm_sframes_t *avail)
   GstAlsaSrc *alsa_src = GST_ALSA_SRC (this);
 
   /* areas points to the memory areas that belong to gstreamer. */
-  dst = calloc(this->format->channels, sizeof(snd_pcm_channel_area_t));
+  dst = g_malloc0 (this->format->channels * sizeof(snd_pcm_channel_area_t));
 
   if (((GstElement *) this)->numpads == 1) {
     /* interleaved */
@@ -1077,7 +1087,7 @@ gst_alsa_src_set_caps (GstAlsaSrc *src, gboolean aggressive)
       gst_caps_set (caps, "rate", GST_PROPS_INT (rate));
       for (channels = aggressive ? max_channels : MIN (max_channels, 2); channels >= min_channels; channels--) {
         gst_caps_set (caps, "channels", GST_PROPS_INT (channels));
-        GST_DEBUG ("trying new caps: %ssigned, endianness: %d, width %d, depth %d, channels %d, rate %d\n",
+        GST_DEBUG ("trying new caps: %ssigned, endianness: %d, width %d, depth %d, channels %d, rate %d",
                    sign ? "" : "un", endian, width, depth, channels, rate);
         if (gst_pad_try_set_caps (this->pad[0], caps) != GST_PAD_LINK_REFUSED)
           gst_alsa_link (this->pad[0], caps);
@@ -1529,7 +1539,7 @@ gst_alsa_link (GstPad *pad, GstCaps *caps)
     if (format == NULL)
       return GST_PAD_LINK_DELAYED;
     
-    GST_DEBUG ("found format %s\n", snd_pcm_format_name (format->format));
+    GST_DEBUG ("found format %s", snd_pcm_format_name (format->format));
     
     if (!GST_FLAG_IS_SET (this, GST_ALSA_CAPS_NEGO)) {
       gint i;
@@ -2154,7 +2164,7 @@ gst_alsa_clock_get_type (void)
       sizeof (GstAlsaClockClass),
       NULL,
       NULL,
-      (GClassInitFunc) gst_alsa_clock_class_init,
+      gst_alsa_clock_class_init,
       NULL,
       NULL,
       sizeof (GstAlsaClock),
@@ -2168,12 +2178,14 @@ gst_alsa_clock_get_type (void)
   return clock_type;
 }
 static void
-gst_alsa_clock_class_init (GstAlsaClockClass *klass)
+gst_alsa_clock_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
   GstClockClass *gstclock_class;
+  GstAlsaClockClass *klass;
 
+  klass = (GstAlsaClockClass *) g_class;
   gobject_class = (GObjectClass*) klass;
   gstobject_class = (GstObjectClass*) klass;
   gstclock_class = (GstClockClass*) klass;
