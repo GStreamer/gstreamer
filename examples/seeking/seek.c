@@ -14,8 +14,8 @@ static gboolean stats = FALSE;
 
 static guint update_id;
 
-#define SOURCE "gnomevfssrc"
-//#define SOURCE "filesrc"
+//#define SOURCE "gnomevfssrc"
+#define SOURCE "filesrc"
 
 #define UPDATE_INTERVAL 500
 
@@ -231,7 +231,7 @@ make_parse_pipeline (const gchar *location)
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   parser = gst_element_factory_make_or_warn ("mpegparse", "parse");
   fakesink = gst_element_factory_make_or_warn ("fakesink", "sink");
-  g_object_set (G_OBJECT (fakesink), "sync", TRUE, NULL);
+  g_object_set (G_OBJECT (fakesink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
@@ -404,7 +404,8 @@ make_mpeg_pipeline (const gchar *location)
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
   demux = gst_element_factory_make_or_warn ("mpegdemux", "demux");
-  g_object_set (G_OBJECT (demux), "sync", FALSE, NULL);
+  //g_object_set (G_OBJECT (demux), "sync", FALSE, NULL);
+  g_object_set (G_OBJECT (demux), "sync", TRUE, NULL);
 
   seekable_elements = g_list_prepend (seekable_elements, demux);
 
@@ -435,12 +436,28 @@ make_mpeg_pipeline (const gchar *location)
   video_bin = gst_bin_new ("v_decoder_bin");
   v_decoder = gst_element_factory_make_or_warn ("mpeg2dec", "v_dec");
   video_thread = gst_thread_new ("v_decoder_thread");
+  g_object_set (G_OBJECT (video_thread), "schedpolicy", 2, NULL);
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
   v_filter = gst_element_factory_make_or_warn ("colorspace", "v_filter");
   videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
-  gst_element_connect_many (v_decoder, v_queue, videosink, NULL);
+  gst_element_connect_many (v_decoder, v_queue, v_filter, NULL);
+  
+  /*
+  gst_element_connect_pads_filtered (v_filter, "src", videosink, "sink",
+		  			GST_CAPS_NEW ("filtercaps",
+						      "video/raw",
+						      "format", GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
+				                      "bpp",        GST_PROPS_INT (16),
+				                      "depth",      GST_PROPS_INT (16),
+				                      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+				                      "red_mask",   GST_PROPS_INT (0xf800),
+				                      "green_mask", GST_PROPS_INT (0x07e0),
+				                      "blue_mask",  GST_PROPS_INT (0x001f)
+						     ));
+						     */
+  gst_element_connect_pads (v_filter, "src", videosink, "sink");
   gst_bin_add_many (GST_BIN (video_bin), v_decoder, video_thread, NULL);
-  gst_bin_add_many (GST_BIN (video_thread), v_queue, videosink, NULL);
+  gst_bin_add_many (GST_BIN (video_thread), v_queue, v_filter, videosink, NULL);
 
   setup_dynamic_connection (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
 
@@ -651,7 +668,6 @@ stop_seek (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 				  GST_SEEK_FLAG_FLUSH, real);
 
     res = gst_pad_send_event (seekable, s_event);
-    gst_event_free (s_event);
 
     walk = g_list_next (walk);
   }
@@ -667,7 +683,6 @@ stop_seek (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 				  GST_SEEK_FLAG_FLUSH, real);
 
     res = gst_element_send_event (seekable, s_event);
-    gst_event_free (s_event);
 
     walk = g_list_next (walk);
   }
@@ -788,6 +803,10 @@ main (int argc, char **argv)
   gtk_widget_show_all (window);
 
   gtk_main ();
+
+  //gst_object_unref (GST_OBJECT (pipeline));
+  gst_buffer_print_stats();
+  gst_event_print_stats();
 
   //g_mem_chunk_info();
 
