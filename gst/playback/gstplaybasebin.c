@@ -381,6 +381,7 @@ static gboolean
 setup_source (GstPlayBaseBin * play_base_bin)
 {
   GstElement *old_src;
+  GstElement *old_dec;
   GstPad *srcpad = NULL;
 
   if (!play_base_bin->need_rebuild)
@@ -408,6 +409,14 @@ setup_source (GstPlayBaseBin * play_base_bin)
       return FALSE;
     }
   }
+
+  old_dec = play_base_bin->decoder;
+  if (old_dec) {
+    GST_LOG ("removing old decoder element %s", gst_element_get_name (old_dec));
+    gst_bin_remove (GST_BIN (play_base_bin->thread), old_dec);
+  }
+
+  remove_prerolls (play_base_bin);
 
   /* now see if the source element emits raw audio/video all by itself,
    * if so, we can create streams for the pads and be done with it 
@@ -461,9 +470,6 @@ setup_source (GstPlayBaseBin * play_base_bin)
   {
     gboolean res;
     gint sig1, sig2, sig3, sig4;
-    GstElement *old_dec;
-
-    old_dec = play_base_bin->decoder;
 
     play_base_bin->decoder = gst_element_factory_make ("decodebin", "decoder");
     if (!play_base_bin->decoder) {
@@ -471,15 +477,10 @@ setup_source (GstPlayBaseBin * play_base_bin)
       play_base_bin->decoder = old_dec;
       return FALSE;
     } else {
-      if (old_dec) {
-        GST_LOG ("removing old decoder element %s",
-            gst_element_get_name (old_dec));
-        gst_bin_remove (GST_BIN (play_base_bin->thread), old_dec);
-      }
+      /* ref decoder so that the bin does not take ownership */
+      gst_object_ref (GST_OBJECT (play_base_bin->decoder));
       gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->decoder);
     }
-
-    remove_prerolls (play_base_bin);
 
     res = gst_pad_link (srcpad,
         gst_element_get_pad (play_base_bin->decoder, "sink"));
