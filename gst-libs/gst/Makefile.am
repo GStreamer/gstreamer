@@ -1,3 +1,3 @@
-SUBDIRS = audio idct resample riff floatcast
+SUBDIRS = audio idct resample riff floatcast gconf
 
-DIST_SUBDIRS = audio idct resample riff floatcast
+DIST_SUBDIRS = audio idct resample riff floatcast gconf
