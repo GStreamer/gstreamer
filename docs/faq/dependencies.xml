@@ -56,7 +56,7 @@ Does GStreamer offer support for DVD decoder cards like dxr2/3 ?
 
       <answer>
         <para>
-We do have support for the dxr3, although dxr2 support is unkown. 
+We do have support for the dxr3, although dxr2 support is unknown. 
 GStreamer can easily accomodate hardware acceleration by writing new 
 device-specific elements.
         </para>

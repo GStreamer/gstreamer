@@ -511,7 +511,7 @@ print_element_info (GstElementFactory * factory)
       else if (padtemplate->direction == GST_PAD_SINK)
         PUT_ESCAPED (3, "direction", "sink");
       else
-        PUT_ESCAPED (3, "direction", "unkown");
+        PUT_ESCAPED (3, "direction", "unknown");
 
       if (padtemplate->presence == GST_PAD_ALWAYS)
         PUT_ESCAPED (3, "presence", "always");
@@ -522,7 +522,7 @@ print_element_info (GstElementFactory * factory)
         PUT_ESCAPED (3, "request-function",
             GST_DEBUG_FUNCPTR_NAME (gstelement_class->request_new_pad));
       } else
-        PUT_ESCAPED (3, "presence", "unkown");
+        PUT_ESCAPED (3, "presence", "unknown");
 
       if (padtemplate->caps) {
         print_caps (padtemplate->caps, 3);
@@ -616,7 +616,7 @@ print_element_info (GstElementFactory * factory)
       else if (gst_pad_get_direction (pad) == GST_PAD_SINK)
         PUT_ESCAPED (3, "direction", "sink");
       else
-        PUT_ESCAPED (3, "direction", "unkown");
+        PUT_ESCAPED (3, "direction", "unknown");
 
       if (GST_IS_GHOST_PAD (pad))
         PUT_ESCAPED (3, "ghost", gst_pad_get_name (pad));
