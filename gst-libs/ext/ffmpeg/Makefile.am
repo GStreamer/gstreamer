@@ -40,6 +40,7 @@ DISTFILES = \
 	ffmpeg/ffmpeg.c \
 	ffmpeg/ffserver.c \
 	ffmpeg/berrno.h \
+	ffmpeg/config.h \
 	ffmpeg/libavcodec/alpha/*.c \
 	ffmpeg/libavcodec/alpha/*.h \
 	ffmpeg/libavcodec/alpha/*.S \
@@ -53,6 +54,8 @@ DISTFILES = \
 	ffmpeg/libavcodec/ppc/*.h \
 	ffmpeg/libavcodec/ps2/*.c \
 	ffmpeg/libavcodec/ps2/*.h \
+	ffmpeg/libavcodec/libpostproc/*.h \
+	ffmpeg/libavcodec/libpostproc/*.c \
 	ffmpeg/libavcodec/*.c \
 	ffmpeg/libavcodec/*.h \
 	ffmpeg/libavcodec/Makefile \
