@@ -200,7 +200,7 @@ gst_osssrc_get (GstPad *pad)
                     src->bytes_per_read);
 
   if (readbytes == 0) {
-    gst_element_signal_eos (GST_ELEMENT (src));
+    gst_element_set_eos (GST_ELEMENT (src));
     return NULL;
   }
 
