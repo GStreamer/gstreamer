@@ -1019,7 +1019,7 @@ gst_ogg_demux_get_data (GstOggDemux * ogg)
   GstBuffer *buffer;
   gint size;
 
-  GST_LOG_OBJECT (ogg, "get data %lld", ogg->offset);
+  GST_LOG_OBJECT (ogg, "get data %lld %lld", ogg->offset, ogg->length);
   if (ogg->offset == ogg->length)
     return 0;
 
@@ -1696,6 +1696,8 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
   gst_object_unref (GST_OBJECT (peer));
   if (!res)
     goto no_length;
+
+  GST_DEBUG ("file length %lld", ogg->length);
 
   /* read chain from offset 0, this is the first chain of the
    * ogg file. */

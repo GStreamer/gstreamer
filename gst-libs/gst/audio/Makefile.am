@@ -45,9 +45,4 @@ libgstaudiofilterexample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 gstaudiofilterexample.c: $(srcdir)/make_filter $(srcdir)/gstaudiofiltertemplate.c
 	$(srcdir)/make_filter AudiofilterExample $(srcdir)/gstaudiofiltertemplate.c
 
-noinst_PROGRAMS = testchannels
-testchannels_SOURCES = testchannels.c
-testchannels_CFLAGS = $(GST_CFLAGS)
-testchannels_LDFLAGS = $(GST_LIBS)
-
 include $(top_srcdir)/common/glib-gen.mak

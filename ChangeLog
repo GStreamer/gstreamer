@@ -1,3 +1,26 @@
+2005-04-06  Wim Taymans  <wim@fluendo.com>
+
+	* ext/gnomevfs/Makefile.am:
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_get_type),
+	(gst_gnomevfssrc_class_init), (gst_gnomevfssrc_init),
+	(gst_gnomevfssrc_set_property), (gst_gnomevfssrc_get_property),
+	(gst_gnomevfssrc_create), (gst_gnomevfssrc_is_seekable),
+	(gst_gnomevfssrc_get_size), (gst_gnomevfssrc_start),
+	(gst_gnomevfssrc_stop):
+	* ext/ogg/Makefile.am:
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_get_data),
+	(gst_ogg_demux_find_chains), (gst_ogg_demux_sink_activate):
+	* ext/theora/Makefile.am:
+	* ext/theora/theoradec.c: (_inc_granulepos),
+	(theora_dec_sink_event), (theora_dec_chain):
+	* ext/vorbis/Makefile.am:
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query),
+	(vorbis_dec_sink_event), (vorbis_dec_chain):
+	* gst-libs/gst/audio/Makefile.am:
+	* sys/xvimage/Makefile.am:
+	Make gnomevfssrc extend the source base class.
+	Fix linking against libs in various plugins.
+
 2005-04-06  Andy Wingo  <wingo@pobox.com>
 
 	* gst-libs/gst/video/Makefile.am (libgstvideo_la_LDFLAGS): Use
