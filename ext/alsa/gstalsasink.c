@@ -254,7 +254,9 @@ gst_alsa_sink_mmap (GstAlsa * this, snd_pcm_sframes_t * avail)
   const snd_pcm_channel_area_t *dst;
   snd_pcm_channel_area_t *src;
   GstAlsaSink *sink = GST_ALSA_SINK (this);
-  int i, err, width = snd_pcm_format_physical_width (this->format->format);
+  int i;
+  int err = -1;
+  int width = snd_pcm_format_physical_width (this->format->format);
 
   /* areas points to the memory areas that belong to gstreamer. */
   src = g_malloc0 (this->format->channels * sizeof (snd_pcm_channel_area_t));
@@ -277,7 +279,7 @@ gst_alsa_sink_mmap (GstAlsa * this, snd_pcm_sframes_t * avail)
 
   if ((err = snd_pcm_mmap_begin (this->handle, &dst, &offset, avail)) < 0) {
     GST_ERROR_OBJECT (this, "mmap failed: %s", snd_strerror (err));
-    return -1;
+    goto out;
   }
 
   if ((err =
@@ -285,13 +287,15 @@ gst_alsa_sink_mmap (GstAlsa * this, snd_pcm_sframes_t * avail)
               *avail, this->format->format)) < 0) {
     snd_pcm_mmap_commit (this->handle, offset, 0);
     GST_ERROR_OBJECT (this, "data copy failed: %s", snd_strerror (err));
-    return -1;
+    goto out;
   }
   if ((err = snd_pcm_mmap_commit (this->handle, offset, *avail)) < 0) {
     GST_ERROR_OBJECT (this, "mmap commit failed: %s", snd_strerror (err));
-    return -1;
+    goto out;
   }
 
+ out:
+  g_free (src);
   return err;
 }
 static int
