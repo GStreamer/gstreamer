@@ -28,18 +28,24 @@ int main(int argc,char *argv[]) {
 
   fprintf(stderr,"\nSWITCHING to READY:\n");
   gst_element_set_state (thread, GST_STATE_READY);
+  fprintf(stderr,"\nPIPELINE sched:\n");
   gst_schedule_show(GST_ELEMENT_SCHED(pipeline));
+  fprintf(stderr,"\nTHREAD sched:\n");
   gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
-/*
   fprintf(stderr,"\nSWITCHING to PLAYING:\n");
   gst_element_set_state (thread, GST_STATE_PLAYING);
   gst_schedule_show(GST_ELEMENT_SCHED(pipeline));
   gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
+fprintf(stderr,"sleeping...\n");
+sleep(1);
+fprintf(stderr,"done sleeping...\n");
+
   fprintf(stderr,"\nSWITCHING to READY:\n");
   gst_element_set_state (thread, GST_STATE_READY);
   gst_schedule_show(GST_ELEMENT_SCHED(pipeline));
   gst_schedule_show(GST_ELEMENT_SCHED(thread));
-*/
+
+sleep(1);
 }

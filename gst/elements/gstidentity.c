@@ -108,7 +108,8 @@ gst_identity_init (GstIdentity *identity)
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
 
   identity->loop_based = FALSE;
-  identity->sleep_time = 10000;
+//  identity->sleep_time = 10000;
+  identity->sleep_time = 0;
 }
 
 static void 
@@ -125,7 +126,8 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
   
   gst_pad_push (identity->srcpad, buf);
 
-  usleep (identity->sleep_time);
+  if (identity->sleep_time)
+    usleep (identity->sleep_time);
 }
 
 static void 

@@ -775,9 +775,6 @@ void gst_bin_schedule_func(GstBin *bin) {
 
 /*************** INCREMENTAL SCHEDULING CODE STARTS HERE ***************/
 
-//static GstSchedule realsched;
-//static GstSchedule *sched = &realsched;
-
 
 static void	gst_schedule_class_init	(GstScheduleClass *klass);
 static void	gst_schedule_init	(GstSchedule *schedule);
@@ -898,6 +895,10 @@ gst_schedule_chain_add_element (GstScheduleChain *chain, GstElement *element)
 {
   GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to chain", GST_ELEMENT_NAME (element));
 
+  // set the sched pointer for the element
+  element->sched = chain->sched;
+
+  // add the element to the list of 'disabled' elements
   chain->disabled = g_list_prepend (chain->disabled, element);
   chain->num_elements++;
 }
@@ -950,6 +951,9 @@ gst_schedule_chain_remove_element (GstScheduleChain *chain, GstElement *element)
   // if there are no more elements in the chain, destroy the chain
   if (chain->num_elements == 0)
     gst_schedule_chain_destroy(chain);
+
+  // unset the sched pointer for the element
+  element->sched = NULL;
 }
 
 void
@@ -1128,11 +1132,19 @@ gst_schedule_add_element (GstSchedule *sched, GstElement *element)
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT(element));
 
+  // if it's already in this schedule, don't bother doing anything
+  if (GST_ELEMENT_SCHED(element) == sched) return;
+
   GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to schedule",
     GST_ELEMENT_NAME(element));
 
+  // if the element already has a different scheduler, remove the element from it
+  if (GST_ELEMENT_SCHED(element)) {
+    gst_schedule_remove_element(GST_ELEMENT_SCHED(element),element);
+  }
+
   // set the sched pointer in the element itself
-  gst_element_set_sched (element, sched);
+  GST_ELEMENT_SCHED(element) = sched;
 
   // only deal with elements after this point, not bins
   if (GST_IS_BIN (element)) return;
@@ -1209,9 +1221,6 @@ gst_schedule_remove_element (GstSchedule *sched, GstElement *element)
     // find what chain the element is in
     chain = gst_schedule_find_chain(sched, element);
 
-    // disable the element, i.e. remove from chain's active list
-    gst_schedule_chain_disable_element (chain, element);
-
     // remove it from its chain
     gst_schedule_chain_remove_element (chain, element);
 
@@ -1220,7 +1229,7 @@ gst_schedule_remove_element (GstSchedule *sched, GstElement *element)
     sched->num_elements--;
 
     // unset the scheduler pointer in the element
-    gst_element_set_sched (element, NULL);
+    GST_ELEMENT_SCHED(element) = NULL;
   }
 }
 

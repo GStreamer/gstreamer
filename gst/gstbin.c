@@ -273,6 +273,7 @@ gst_bin_add (GstBin *bin,
   // then check to see if the element's name is already taken in the bin
   g_return_if_fail (gst_object_check_uniqueness (bin->children, GST_ELEMENT_NAME(element)) == TRUE);
 
+  // set the element's parent and add the element to the bin's list of children
   gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
   bin->children = g_list_append (bin->children, element);
   bin->numchildren++;
@@ -284,10 +285,6 @@ gst_bin_add (GstBin *bin,
     gst_bin_set_element_sched (element, GST_ELEMENT_SCHED(bin));
 
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "added child \"%s\"", GST_ELEMENT_NAME (element));
-
-  /* we know we have at least one child, we just added one... */
-//  if (GST_STATE(element) < GST_STATE_READY)
-//    gst_bin_change_state_norecurse(bin,GST_STATE_READY);
 
   gtk_signal_emit (GTK_OBJECT (bin), gst_bin_signals[OBJECT_ADDED], element);
 }

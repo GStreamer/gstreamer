@@ -139,9 +139,9 @@ gst_thread_init (GstThread *thread)
 
   // default is to create a thread
   GST_FLAG_SET (thread, GST_THREAD_CREATE);
-  
+
   thread->lock = g_mutex_new();
-  
+
   thread->cond = g_cond_new();
 
   GST_ELEMENT_SCHED(thread) = gst_schedule_new(GST_ELEMENT(thread));
@@ -407,7 +407,7 @@ gst_thread_signal_thread (GstThread *thread, gboolean spinning)
 {
   // set the spinning state
   if (spinning) GST_FLAG_SET(thread,GST_THREAD_STATE_SPINNING);
-  else GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
+  else GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 
   GST_DEBUG (GST_CAT_THREAD, "sync-main: locking\n");
   g_mutex_lock(thread->lock);
