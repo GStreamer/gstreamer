@@ -1,3 +1,9 @@
+2004-12-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data):
+	  Add BLZ0 (Blizzard's version of DivX) fourcc.
+
 2004-12-18  David Schleef  <ds@schleef.org>
 
 	* gst/tta/gstttadec.c: (gst_tta_dec_link): And yet another
