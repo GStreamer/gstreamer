@@ -25,7 +25,7 @@
 #define __GST_BUFFER_H__
 
 #include <gst/gstobject.h>
-#include <gst/gstmeta.h>
+//#include <gst/gstmeta.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -80,7 +80,13 @@ typedef enum {
 } GstBufferFlags;
 
 
+
 typedef struct _GstBuffer GstBuffer;
+
+
+typedef void	(*GstBufferFreeFunc)	(GstBuffer *buf);
+typedef void	(*GstBufferCopyFunc)	(GstBuffer *srcbuf,GstBuffer *dstbuf);
+
 
 #include <gst/gstbufferpool.h>
 
@@ -112,7 +118,7 @@ struct _GstBuffer {
   guint64 maxage;
 
   /* pointer to metadata, is really lame right now */
-  GSList *metas;
+//  GSList *metas;
 
   /* subbuffer support, who's my parent? */
   GstBuffer *parent;
@@ -120,6 +126,10 @@ struct _GstBuffer {
   /* this is a pointer to the buffer pool (if any) */
   GstBufferPool *pool;
   gpointer pool_private;
+
+  /* utility function pointers */
+  GstBufferFreeFunc free;		// free the data associated with the buffer
+  GstBufferCopyFunc copy;		// copy the data from one buffer to another
 };
 
 /* initialisation */
@@ -146,10 +156,12 @@ void 		gst_buffer_destroy		(GstBuffer *buffer);
 GstBuffer*	gst_buffer_copy			(GstBuffer *buffer);
 
 /* add, retrieve, and remove metadata from the buffer */
+/* DEPRACATED!!!
 void 		gst_buffer_add_meta		(GstBuffer *buffer, GstMeta *meta);
 void 		gst_buffer_remove_meta		(GstBuffer *buffer, GstMeta *meta);
 GstMeta*	gst_buffer_get_first_meta	(GstBuffer *buffer);
 GSList*		gst_buffer_get_metas		(GstBuffer *buffer);
+*/
 
 #ifdef __cplusplus
 }
