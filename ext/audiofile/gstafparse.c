@@ -188,11 +188,11 @@ gst_afparse_loop(GstElement *element)
 
   afparse = GST_AFPARSE(element);
 
-  afparse->vfile->closure = bs = gst_bytestream_new(afparse->sinkpad);
+  afparse->vfile->closure = bs = gst_bytestream_new (afparse->sinkpad);
 
   /* just stop if we cannot open the file */
   if (!gst_afparse_open_file (afparse)){
-    gst_bytestream_destroy((GstByteStream*)afparse->vfile->closure);
+    gst_bytestream_destroy ((GstByteStream *) afparse->vfile->closure);
     gst_pad_push (afparse->srcpad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));  
     gst_element_set_eos (GST_ELEMENT (afparse));
     return;
@@ -206,7 +206,7 @@ gst_afparse_loop(GstElement *element)
   if (afGetCompression != AF_COMPRESSION_NONE ||
       afGetByteOrder(afparse->file, AF_DEFAULT_TRACK) != afGetVirtualByteOrder(afparse->file, AF_DEFAULT_TRACK) ||
       s_format != v_format || 
-      s_width != v_width){
+      s_width != v_width) {
     bypass_afread = FALSE;
   }
 
@@ -233,7 +233,8 @@ gst_afparse_loop(GstElement *element)
         /* we need to check for an event. */
         gst_bytestream_get_status (bs, &waiting, &event);
         if (event && GST_EVENT_TYPE(event) == GST_EVENT_EOS) {
-          gst_pad_push (afparse->srcpad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));  
+          gst_pad_push (afparse->srcpad, 
+	                GST_BUFFER (gst_event_new (GST_EVENT_EOS)));  
           gst_element_set_eos (GST_ELEMENT (afparse));
           break;
         }
@@ -279,13 +280,14 @@ gst_afparse_loop(GstElement *element)
   gst_afparse_close_file (afparse);
   gst_buffer_pool_unref(bufpool);
   
-  gst_bytestream_destroy((GstByteStream*)afparse->vfile->closure);
+  gst_bytestream_destroy ((GstByteStream*) afparse->vfile->closure);
 
 }
 
 
 static void
-gst_afparse_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_afparse_set_property (GObject *object, guint prop_id, 
+                          const GValue *value, GParamSpec *pspec)
 {
   GstAFParse *afparse;
 
@@ -299,11 +301,11 @@ gst_afparse_set_property (GObject *object, guint prop_id, const GValue *value, G
 }
 
 static void   
-gst_afparse_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_afparse_get_property (GObject *object, guint prop_id, 
+                          GValue *value, GParamSpec *pspec)
 {
   GstAFParse *afparse;
  
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AFPARSE (object));
  
   afparse = GST_AFPARSE (object);
@@ -332,15 +334,9 @@ gst_afparse_plugin_init (GModule *module, GstPlugin *plugin)
 
   /* load audio support library */
   if (!gst_library_load ("gstaudio"))
-  {
-    gst_info ("gstafparse/sink: could not load support library: 'gstaudio'\n");
     return FALSE;
-  }
   if (!gst_library_load ("gstbytestream"))
-  {
-    gst_info ("gstafparse/sink: could not load support library: 'gstbytestream'\n");
     return FALSE;
-  }
   return TRUE;
 }
 

@@ -487,10 +487,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
     GstElementFactory *factory;
     
-    if (!gst_library_load ("gstbytestream")) {
-        gst_info("jack: could not load support library: 'gstbytestream'\n");
+    if (!gst_library_load ("gstbytestream"))
         return FALSE;
-    }
     
     factory = gst_element_factory_new ("jackbin", GST_TYPE_JACK_BIN, &gst_jack_bin_details);
     g_return_val_if_fail (factory != NULL, FALSE);

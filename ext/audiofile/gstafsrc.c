@@ -286,10 +286,7 @@ gst_afsrc_plugin_init (GModule *module, GstPlugin *plugin)
 
   /* load audio support library */
   if (!gst_library_load ("gstaudio"))
-  {
-    gst_info ("gstafsrc/sink: could not load support library: 'gstaudio'\n");
     return FALSE;
-  }
   
   return TRUE;
 }
