@@ -644,19 +644,20 @@ gst_filesrc_change_state (GstElement *element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
       if (!GST_FLAG_IS_SET (element, GST_FILESRC_OPEN)) {
         if (!gst_filesrc_open_file (GST_FILESRC (element)))
           return GST_STATE_FAILURE;
       }
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_FILESRC_OPEN))
         gst_filesrc_close_file (GST_FILESRC (element));
-      break;
-    case GST_STATE_READY_TO_PAUSED:
-    case GST_STATE_PAUSED_TO_READY:
-      src->curoffset = 0;
       src->seek_happened = TRUE;
+      break;
     default:
       break;
   }
