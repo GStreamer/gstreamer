@@ -70,6 +70,12 @@ else
 MAS_DIR=
 endif
 
+if USE_FAAD
+FAAD_DIR=faad
+else
+FAAD_DIR=
+endif
+
 ## if USE_FESTIVAL
 ## FESTIVAL_DIR=festival
 ## else
@@ -274,31 +280,98 @@ else
 SPEEX_DIR=
 endif
 
-SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
-	$(ARTS_DIR) $(ARTSC_DIR) $(AUDIOFILE_DIR) \
-	$(CDPARANOIA_DIR) $(DIVX_DIR) \
-	$(DVDREAD_DIR) $(DVDNAV_DIR) $(ESD_DIR) $(MAS_DIR) \
-	$(FFMPEG_DIR) $(FLAC_DIR) $(GDK_PIXBUF_DIR) \
-	$(GNOMEVFS_DIR) $(GSM_DIR) $(HERMES_DIR) \
-	$(JACK_DIR) $(JPEG_DIR) \
-	$(LADSPA_DIR) $(LAME_DIR) $(LCS_DIR) \
-	$(LIBDV_DIR) $(LIBFAME_DIR) $(LIBPNG_DIR) \
-	$(MAD_DIR) $(MATROSKA_DIR) $(MIKMOD_DIR) \
-	$(MPEG2DEC_DIR) $(MPLEX_DIR) $(PANGO_DIR) $(RAW1394_DIR) \
-	$(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
-	$(SMOOTHWAVE_DIR) $(SNDFILE_DIR) $(SWFDEC_DIR) $(TARKIN_DIR) \
-	$(VORBIS_DIR) $(XVID_DIR) $(SNAPSHOT_DIR) $(SPEEX_DIR)
+SUBDIRS=\
+	$(A52DEC_DIR) \
+	$(AALIB_DIR) \
+	$(ALSA_DIR) \
+	$(ARTS_DIR) \
+	$(ARTSC_DIR) \
+	$(AUDIOFILE_DIR) \
+	$(CDPARANOIA_DIR) \
+	$(DIVX_DIR) \
+	$(DVDREAD_DIR) \
+	$(DVDNAV_DIR) \
+	$(ESD_DIR) \
+	$(FAAD_DIR) \
+	$(FFMPEG_DIR) \
+	$(FLAC_DIR) \
+	$(GDK_PIXBUF_DIR) \
+	$(GNOMEVFS_DIR) \
+	$(GSM_DIR) \
+	$(HERMES_DIR) \
+	$(JACK_DIR) \
+	$(JPEG_DIR) \
+	$(LADSPA_DIR) \
+	$(LAME_DIR) \
+	$(LCS_DIR) \
+	$(LIBDV_DIR) \
+	$(LIBFAME_DIR) \
+	$(LIBPNG_DIR) \
+	$(MAD_DIR) \
+	$(MAS_DIR) \
+	$(MATROSKA_DIR) \
+	$(MIKMOD_DIR) \
+	$(MPEG2DEC_DIR) \
+	$(MPLEX_DIR) \
+	$(PANGO_DIR) \
+	$(RAW1394_DIR) \
+	$(SDL_DIR) \
+	$(SHOUT_DIR) \
+	$(SIDPLAY_DIR) \
+	$(SMOOTHWAVE_DIR) \
+	$(SNAPSHOT_DIR) \
+	$(SNDFILE_DIR) \
+	$(SPEEX_DIR) \
+	$(SWFDEC_DIR) \
+	$(TARKIN_DIR) \
+	$(VORBIS_DIR) \
+	$(XVID_DIR)
 
 DIST_SUBDIRS=\
-	a52dec aalib alsa arts artsd \
-	audiofile cdparanoia divx dv \
-	dvdread dvdnav esd mas ffmpeg \
-	flac gdk_pixbuf gnomevfs gsm \
-	hermes ivorbis jack jpeg \
-	ladspa lame lcs libfame libpng \
-	mad matroska mikmod \
-	mpeg2dec mplex pango raw1394 \
-	sdl snapshot sndfile \
-	shout shout2 sidplay \
-	smoothwave swfdec tarkin vorbis \
-	xvid speex
+	a52dec \
+	aalib \
+	alsa \
+	arts \
+	artsd \
+	audiofile \
+	cdparanoia \
+	divx \
+	dv \
+	dvdread \
+	dvdnav \
+	esd \
+	mas \
+	faad \
+	ffmpeg \
+	flac \
+	gdk_pixbuf \
+	gnomevfs \
+	gdm \
+	hermes \
+	ivorbis \
+	jack \
+	jpeg \
+	ladspa \
+	lame \
+	lcs \
+	libfame \
+	libpng \
+	mad \
+	matroska \
+	mikmod \
+	mpeg2dec \
+	mplex \
+	pango \
+	raw1394 \
+	sdl \
+	snapshot \
+	sndfile \
+	shout \
+	shout2 \
+	sidplay \
+	smoothwave \
+	speex \
+	swfdec \
+	tarkin \
+	vorbis \
+	xvid
