@@ -1,70 +1,134 @@
-#include <stdlib.h>
 #include <gst/gst.h>
 
-/* eos will be called when the src element has an end of stream */
-void eos(GstElement *element)  
+static void
+gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
 {
-  g_print("have eos, quitting\n");
+  GstElement *osssink;
+  GstElement *new_element;
+  GstAutoplug *autoplug;
+  GstElement *autobin;
+  GstElement *disksrc;
+  GstElement *cache;
 
-  gst_main_quit();
-}
+  GST_DEBUG (0,"GstPipeline: play have type\n");
 
-int main(int argc,char *argv[]) 
-{
-  GstElement *disksrc, *osssink;
-  GstElement *pipeline, *thread;
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
-  gst_init(&argc,&argv);
+  disksrc = gst_bin_get_by_name (GST_BIN (pipeline), "disk_source");
+  autobin = gst_bin_get_by_name (GST_BIN (pipeline), "autobin");
+  cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
 
-  if (argc != 2) {
-    g_print("usage: %s <filename>\n", argv[0]);
-    exit(-1);
-  }
-
-  thread = gst_thread_new("main_thread");
-  g_assert(thread != NULL);
-
-  /* create a new bin to hold the elements */
-  pipeline = gst_pipeline_new("pipeline");
-  g_assert(pipeline != NULL);
-
-
-  /* create a disk reader */
-  disksrc = gst_elementfactory_make("disksrc", "disk_source");
-  g_assert(disksrc != NULL);
-  g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
-  g_signal_connectc(G_OBJECT(disksrc),"eos",
-                     G_CALLBACK(eos),NULL,FALSE);
-
+  // disconnect the typefind from the pipeline and remove it
+  gst_element_disconnect (cache, "src", typefind, "sink");
+  gst_bin_remove (GST_BIN (autobin), typefind);
+      
   /* and an audio sink */
   osssink = gst_elementfactory_make("osssink", "play_audio");
   g_assert(osssink != NULL);
 
-  /* add objects to the main pipeline */
-  /*
-  gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
-  gst_pipeline_add_sink(GST_PIPELINE(pipeline), osssink);
+  autoplug = gst_autoplugfactory_make ("staticrender");
+  g_assert (autoplug != NULL);
 
-  if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
-    g_print("unable to handle stream\n");
-    exit(-1);
+  new_element = gst_autoplug_to_renderers (autoplug,
+           caps,
+           osssink,
+           NULL);
+
+  if (!new_element) {
+    g_print ("could not autoplug, no suitable codecs found...\n");
+    exit (-1);
   }
-  */
 
-  // hmmmm hack? FIXME
-  GST_FLAG_UNSET (pipeline, GST_BIN_FLAG_MANAGER);
- 
-  gst_bin_add(GST_BIN(thread), pipeline);
+  gst_element_set_name (new_element, "new_element");
+
+  gst_bin_add (GST_BIN (autobin), new_element);
+
+  g_object_set (G_OBJECT (cache), "reset", TRUE, NULL);
+
+  gst_element_connect (cache, "src", new_element, "sink");
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+}
+
+static void
+gst_play_cache_empty (GstElement *element, GstElement *pipeline)
+{
+  GstElement *autobin;
+  GstElement *disksrc;
+  GstElement *cache;
+  GstElement *new_element;
+
+  fprintf (stderr, "have cache empty\n");
+
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+  disksrc = gst_bin_get_by_name (GST_BIN (pipeline), "disk_source");
+  autobin = gst_bin_get_by_name (GST_BIN (pipeline), "autobin");
+  cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
+  new_element = gst_bin_get_by_name (GST_BIN (autobin), "new_element");
+
+  gst_element_disconnect (disksrc, "src", cache, "sink");
+  gst_element_disconnect (cache, "src", new_element, "sink");
+  gst_bin_remove (GST_BIN (autobin), cache);
+  gst_element_connect (disksrc, "src", new_element, "sink");
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  fprintf (stderr, "done with cache_empty\n");
+}
+
+int 
+main (int argc, char *argv[]) 
+{
+  GstElement *disksrc;
+  GstElement *pipeline;
+  GstElement *autobin;
+  GstElement *typefind;
+  GstElement *cache;
+
+  gst_init (&argc, &argv);
+
+  if (argc != 2) {
+    g_print ("usage: %s <filename>\n", argv[0]);
+    exit (-1);
+  }
+
+  /* create a new pipeline to hold the elements */
+  pipeline = gst_pipeline_new ("pipeline");
+  g_assert (pipeline != NULL);
+
+  /* create a disk reader */
+  disksrc = gst_elementfactory_make ("disksrc", "disk_source");
+  g_assert (disksrc != NULL);
+  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
+  gst_bin_add (GST_BIN (pipeline), disksrc);
+
+  autobin = gst_bin_new ("autobin");
+  cache = gst_elementfactory_make ("autoplugcache", "cache");
+  g_signal_connectc (G_OBJECT (cache), "cache_empty", 
+		     G_CALLBACK (gst_play_cache_empty), pipeline, FALSE);
+
+  typefind = gst_elementfactory_make ("typefind", "typefind");
+  g_signal_connectc (G_OBJECT (typefind), "have_type", 
+		     G_CALLBACK (gst_play_have_type), pipeline, FALSE);
+  gst_bin_add (GST_BIN (autobin), cache);
+  gst_bin_add (GST_BIN (autobin), typefind);
+
+  gst_element_connect (cache, "src", typefind, "sink");
+  gst_element_add_ghost_pad (autobin, gst_element_get_pad (cache, "sink"), "sink");
+
+  gst_bin_add (GST_BIN( pipeline), autobin);
+  gst_element_connect (disksrc, "src", autobin, "sink");
 
   /* start playing */
-  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_PLAYING);
+  gst_element_set_state( GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-  gst_main();
+  while (gst_bin_iterate (GST_BIN (pipeline)));
 
-  /* stop the bin */
-  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_NULL);
+  /* stop the pipeline */
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 
-  gst_pipeline_destroy(thread);
+  gst_object_unref (GST_OBJECT (pipeline));
 
   exit(0);
 }
