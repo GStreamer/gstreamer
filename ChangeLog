@@ -1,3 +1,11 @@
+2004-07-02  David Schleef  <ds@schleef.org>
+
+	* gst/gstinfo.h: wrap #pragmas in #ifdefs for the correct compiler
+	* gst/gstobject.h:
+	* gst/gstparse.h:
+	* gst/gsttrace.h:
+	* gst/gstxml.h:
+
 2004-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstpad.c: (gst_pad_check_schedulers),

@@ -133,6 +133,7 @@ extern gint _gst_trace_on;
 
 #else /* GST_DISABLE_TRACE */
 
+#if defined _GNUC_ && _GNUC_ >= 3
 #pragma GCC poison 	gst_trace_new	
 #pragma GCC poison	gst_trace_destroy
 #pragma GCC poison 	gst_trace_flush
@@ -144,6 +145,7 @@ extern gint _gst_trace_on;
 #pragma GCC poison 	_gst_trace_add_entry
 #pragma GCC poison 	gst_trace_read_tsc
 #pragma GCC poison 	gst_trace_add_entry
+#endif
 
 #define		gst_alloc_trace_register(name)
 #define		gst_alloc_trace_new(trace, mem) 

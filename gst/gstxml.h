@@ -89,6 +89,7 @@ G_END_DECLS
 
 #else /* GST_DISABLE_LOADSAVE */
 
+#if defined _GNUC_ && _GNUC_ >= 3
 #pragma GCC poison gst_xml_write
 #pragma GCC poison gst_xml_new
 #pragma GCC poison gst_xml_parse_doc
@@ -96,6 +97,7 @@ G_END_DECLS
 #pragma GCC poison gst_xml_parse_memory
 #pragma GCC poison gst_xml_get_element
 #pragma GCC poison gst_xml_get_topelements
+#endif
 
 #endif /* GST_DISABLE_LOADSAVE */
 

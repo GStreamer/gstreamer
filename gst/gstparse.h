@@ -49,8 +49,10 @@ GstElement*	gst_parse_launchv	(const gchar **argv, GError **error);
 
 #else /* GST_DISABLE_PARSE */
 
+#if defined _GNUC_ && _GNUC_ >= 3
 #pragma GCC poison gst_parse_launch
 #pragma GCC poison gst_parse_launchv
+#endif
 
 #endif /* GST_DISABLE_PARSE */
 
