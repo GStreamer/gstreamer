@@ -861,7 +861,7 @@ gst_alsa_get_caps (GstPad * pad)
             min_channels, max_channels);
 
         /* channel configuration */
-        for (n = min_channels; n < max_channels; n++) {
+        for (n = min_channels; n <= max_channels; n++) {
           if (snd_pcm_hw_params_test_channels (this->handle, hw_params, n) == 0) {
             GstStructure *str;
             GstAudioChannelPosition pos[8] = {
@@ -894,7 +894,9 @@ gst_alsa_get_caps (GstPad * pad)
             if (pos[0] != GST_AUDIO_CHANNEL_POSITION_INVALID) {
               str = gst_structure_copy (gst_caps_get_structure (caps, 0));
               gst_structure_set (str, "channels", G_TYPE_INT, n, NULL);
-              gst_audio_set_channel_positions (str, pos);
+              if (n > 2) {
+                gst_audio_set_channel_positions (str, pos);
+              }
               if (!ret) {
                 ret = gst_caps_new_empty ();
               }
