@@ -113,6 +113,8 @@ gst_arts_class_init (GstARTSClass *klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
+  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 }
@@ -145,8 +147,6 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *gstarts;
-
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   gstarts = gst_element_factory_new("gstarts",GST_TYPE_ARTS,&gst_arts_details);
   g_return_val_if_fail(gstarts != NULL, FALSE);
