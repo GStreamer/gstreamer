@@ -101,9 +101,7 @@ static void gst_tee_init(GstTee *tee) {
  * Returns: the new tee element
  */
 GstElement *gst_tee_new(gchar *name) {
-  GstElement *tee = GST_ELEMENT(gtk_type_new(GST_TYPE_TEE));
-  gst_element_set_name(GST_ELEMENT(tee),name);
-  return tee;
+  return gst_elementfactory_make ("tee", name);
 }
 
 /**
