@@ -501,9 +501,9 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink)
   GST_DEBUG ("sdlvideosink: setting %08x (" GST_FOURCC_FORMAT ")",
 	     sdlvideosink->format, GST_FOURCC_ARGS(sdlvideosink->format));
 
-  gst_video_sink_got_video_size (GST_VIDEOSINK (sdlvideosink),
-                                 GST_VIDEOSINK_WIDTH (sdlvideosink),
-                                 GST_VIDEOSINK_HEIGHT (sdlvideosink));
+  gst_x_overlay_got_desired_size (GST_X_OVERLAY (sdlvideosink),
+                                  GST_VIDEOSINK_WIDTH (sdlvideosink),
+                                  GST_VIDEOSINK_HEIGHT (sdlvideosink));
   return TRUE;
 }
 
