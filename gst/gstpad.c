@@ -1011,7 +1011,7 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
 
   while (field) {
     if (!strcmp(field->name, "nametemplate")) {
-      factory->name_template = g_strdup(xmlNodeGetContent(field));
+      factory->name_template = xmlNodeGetContent(field);
     }
     if (!strcmp(field->name, "direction")) {
       gchar *value = xmlNodeGetContent(field);
@@ -1023,6 +1023,7 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
       else if (!strcmp(value, "src")) {
         factory->direction = GST_PAD_SRC;
       }
+      g_free (value);
     }
     if (!strcmp(field->name, "presence")) {
       gchar *value = xmlNodeGetContent(field);
@@ -1033,6 +1034,7 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
       else if (!strcmp(value, "sometimes")) {
         factory->presence = GST_PAD_SOMETIMES;
       }
+      g_free (value);
     }
     else if (!strcmp(field->name, "caps")) {
       factory->caps = g_list_append(factory->caps, gst_caps_load_thyself (field));

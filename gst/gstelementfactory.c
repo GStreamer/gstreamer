@@ -393,25 +393,25 @@ gst_elementfactory_load_thyself (xmlNodePtr parent)
 
   while (children) {
     if (!strcmp(children->name, "name")) {
-      factory->name = g_strdup(xmlNodeGetContent(children));
+      factory->name = xmlNodeGetContent(children);
     }
     if (!strcmp(children->name, "longname")) {
-      factory->details->longname = g_strdup(xmlNodeGetContent(children));
+      factory->details->longname = xmlNodeGetContent(children);
     }
     if (!strcmp(children->name, "class")) {
-      factory->details->klass = g_strdup(xmlNodeGetContent(children));
+      factory->details->klass = xmlNodeGetContent(children);
     }
     if (!strcmp(children->name, "description")) {
-      factory->details->description = g_strdup(xmlNodeGetContent(children));
+      factory->details->description = xmlNodeGetContent(children);
     }
     if (!strcmp(children->name, "version")) {
-      factory->details->version = g_strdup(xmlNodeGetContent(children));
+      factory->details->version = xmlNodeGetContent(children);
     }
     if (!strcmp(children->name, "author")) {
-      factory->details->author = g_strdup(xmlNodeGetContent(children));
+      factory->details->author = xmlNodeGetContent(children);
     }
     if (!strcmp(children->name, "copyright")) {
-      factory->details->copyright = g_strdup(xmlNodeGetContent(children));
+      factory->details->copyright = xmlNodeGetContent(children);
     }
     if (!strcmp(children->name, "padtemplate")) {
        GstPadTemplate *template;

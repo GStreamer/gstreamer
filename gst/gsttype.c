@@ -272,10 +272,10 @@ gst_typefactory_load_thyself (xmlNodePtr parent)
 
   while (field) {
     if (!strcmp (field->name, "mime")) {
-      factory->mime = g_strdup (xmlNodeGetContent (field));
+      factory->mime = xmlNodeGetContent (field);
     }
     else if (!strcmp (field->name, "extensions")) {
-      factory->exts = g_strdup (xmlNodeGetContent (field));
+      factory->exts = xmlNodeGetContent (field);
     }
     else if (!strcmp (field->name, "typefind")) {
       factory->typefindfunc = gst_type_typefind_dummy;

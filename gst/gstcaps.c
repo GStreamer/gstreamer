@@ -41,13 +41,13 @@ get_type_for_mime (const gchar *mime)
 
   typeid = gst_type_find_by_mime (mime);
   if (typeid == 0) {
-     GstTypeFactory *factory = g_new0 (GstTypeFactory, 1);
+     GstTypeFactory factory; // = g_new0 (GstTypeFactory, 1);
 
-     factory->mime = g_strdup (mime);
-     factory->exts = NULL;
-     factory->typefindfunc = NULL;
+     factory.mime = g_strdup (mime);
+     factory.exts = NULL;
+     factory.typefindfunc = NULL;
 
-     typeid = gst_type_register (factory);
+     typeid = gst_type_register (&factory);
   }
   return typeid;
 }
@@ -401,13 +401,16 @@ gst_caps_load_thyself (xmlNodePtr parent)
 {
   GstCaps *caps = g_new0 (GstCaps, 1);
   xmlNodePtr field = parent->childs;
+  gchar *content;
 
   while (field) {
     if (!strcmp (field->name, "name")) {
-      caps->name = g_strdup (xmlNodeGetContent (field));
+      caps->name = xmlNodeGetContent (field);
     }
     if (!strcmp (field->name, "type")) {
-      caps->id = get_type_for_mime (xmlNodeGetContent (field));
+      content = xmlNodeGetContent (field);
+      caps->id = get_type_for_mime (content);
+      g_free (content);
     }
     else if (!strcmp (field->name, "properties")) {
       caps->properties = gst_props_load_thyself (field);

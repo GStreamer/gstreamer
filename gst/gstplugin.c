@@ -90,6 +90,8 @@ _gst_plugin_initialize (void)
     return;
   }
   gst_plugin_load_thyself (doc->root);
+
+  xmlFreeDoc (doc);
 }
 
 static time_t
@@ -155,6 +157,7 @@ gst_plugin_load_recurse (gchar *directory, gchar *name)
   DIR *dir;
   struct dirent *dirent;
   gboolean loaded = FALSE;
+  gchar *dirname;
 
   //g_print("recursive load of '%s' in '%s'\n", name, directory);
   dir = opendir(directory);
@@ -162,9 +165,13 @@ gst_plugin_load_recurse (gchar *directory, gchar *name)
     while ((dirent = readdir(dir))) {
       /* don't want to recurse in place or backwards */
       if (strcmp(dirent->d_name,".") && strcmp(dirent->d_name,"..")) {
-        loaded = gst_plugin_load_recurse(g_strjoin("/",directory,dirent->d_name,
-                                              NULL),name);
-	if (loaded && name) return TRUE;
+        dirname = g_strjoin("/",directory,dirent->d_name,NULL);
+        loaded = gst_plugin_load_recurse(dirname,name);
+        g_free(dirname);
+	if (loaded && name) {
+          closedir(dir);
+          return TRUE;
+        }
       }
     }
     closedir(dir);
@@ -267,6 +274,7 @@ gst_plugin_load (const gchar *name)
   GList *path;
   gchar *libspath;
   GstPlugin *plugin;
+  gchar *pluginname;
 
   //g_print("attempting to load plugin '%s'\n",name);
 
@@ -276,19 +284,28 @@ gst_plugin_load (const gchar *name)
 
   path = _gst_plugin_paths;
   while (path != NULL) {
-    if (gst_plugin_load_absolute(g_module_build_path(path->data,name)))
+    pluginname = g_module_build_path(path->data,name);
+    if (gst_plugin_load_absolute(pluginname)) {
+      g_free(pluginname);
       return TRUE;
+    }
+    g_free(pluginname);
     libspath = g_strconcat(path->data,"/.libs",NULL);
     //g_print("trying to load '%s'\n",g_module_build_path(libspath,name));
-    if (gst_plugin_load_absolute(g_module_build_path(libspath,name))) {
-      g_free(libspath);
-      return TRUE;
-    }
+    pluginname = g_module_build_path(libspath,name);
     g_free(libspath);
-    //g_print("trying to load '%s' from '%s'\n",name,path->data);
-    if (gst_plugin_load_recurse(path->data,g_module_build_path("",name))) {
+    if (gst_plugin_load_absolute(pluginname)) {
+      g_free(pluginname);
       return TRUE;
     }
+    g_free(pluginname);
+    //g_print("trying to load '%s' from '%s'\n",name,path->data);
+    pluginname = g_module_build_path("",name);
+    if (gst_plugin_load_recurse(path->data,pluginname)) {
+      g_free(pluginname);
+      return TRUE;
+    }
+    g_free(pluginname);
     path = g_list_next(path);
   }
   return FALSE;
@@ -738,6 +755,7 @@ gst_plugin_load_thyself (xmlNodePtr parent)
   xmlNodePtr kinderen;   
   gint elementcount = 0;
   gint typecount = 0;
+  gchar *pluginname;
   
   kinderen = parent->childs; // Dutch invasion :-)
   while (kinderen) {
@@ -750,20 +768,21 @@ gst_plugin_load_thyself (xmlNodePtr parent)
 
       while (field) {
 	if (!strcmp(field->name, "name")) {
-	  if (gst_plugin_find(xmlNodeGetContent(field))) {
+          pluginname = xmlNodeGetContent(field);
+	  if (gst_plugin_find(pluginname)) {
+            g_free(pluginname);
             g_free(plugin);
 	    plugin = NULL;
             break;
-	  }
-	  else {
-	    plugin->name = g_strdup(xmlNodeGetContent(field));
+	  } else {
+	    plugin->name = pluginname;
 	  }
 	}
 	else if (!strcmp(field->name, "longname")) {
-	  plugin->longname = g_strdup(xmlNodeGetContent(field));
+	  plugin->longname = xmlNodeGetContent(field);
 	}
 	else if (!strcmp(field->name, "filename")) {
-	  plugin->filename = g_strdup(xmlNodeGetContent(field));
+	  plugin->filename = xmlNodeGetContent(field);
 	}
 	else if (!strcmp(field->name, "element")) {
 	  GstElementFactory *factory = gst_elementfactory_load_thyself(field);

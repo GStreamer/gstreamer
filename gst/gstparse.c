@@ -86,7 +86,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
   GList *pads;
   gint elementcount = 0;
   gint retval = 0;
-          
+
   priv->binlevel++; 
 
   if (GST_IS_PIPELINE(parent)) { closingchar = '\0';DEBUG("in pipeline "); }
@@ -205,7 +205,9 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
       } else {
         // we have an element
         DEBUG("attempting to create element '%s'\n",arg);
-        element = gst_elementfactory_make(arg,gst_parse_unique_name(arg,priv));
+        ptr = gst_parse_unique_name(arg,priv);
+        element = gst_elementfactory_make(arg,ptr);
+        g_free(ptr);
         if (!element) {
           fprintf(stderr,"Couldn't create a '%s', no such element or need to run gstraemer-register?\n",arg);
 //          exit(-1);

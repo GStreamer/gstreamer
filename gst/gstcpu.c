@@ -71,6 +71,7 @@ _gst_cpu_initialize (void)
   }
 
   GST_INFO (GST_CAT_GST_INIT, "CPU features: %s",featurelist);
+  g_free(featurelist);
 }
 
 GstCPUFlags 

@@ -469,24 +469,35 @@ static xmlNodePtr
 gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
 {
   xmlNodePtr subtree;
+  gchar *str;
 
   switch (entry->propstype) {
     case GST_PROPS_INT_ID_NUM: 
       subtree = xmlNewChild (parent, NULL, "int", NULL);
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
-      xmlNewProp (subtree, "value", g_strdup_printf ("%d", entry->data.int_data));
+      str = g_strdup_printf ("%d", entry->data.int_data);
+      xmlNewProp (subtree, "value", str);
+      g_free(str);
       break;
     case GST_PROPS_INT_RANGE_ID_NUM: 
       subtree = xmlNewChild (parent, NULL, "range", NULL);
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
-      xmlNewProp (subtree, "min", g_strdup_printf ("%d", entry->data.int_range_data.min));
-      xmlNewProp (subtree, "max", g_strdup_printf ("%d", entry->data.int_range_data.max));
+      str = g_strdup_printf ("%d", entry->data.int_range_data.min);
+      xmlNewProp (subtree, "min", str);
+      g_free(str);
+      str = g_strdup_printf ("%d", entry->data.int_range_data.max);
+      xmlNewProp (subtree, "max", str);
+      g_free(str);
       break;
     case GST_PROPS_FOURCC_ID_NUM: 
-      xmlAddChild (parent, xmlNewComment (g_strdup_printf ("%4.4s", (gchar *)&entry->data.fourcc_data)));
+      str = g_strdup_printf ("%4.4s", (gchar *)&entry->data.fourcc_data);
+      xmlAddChild (parent, xmlNewComment (str));
+      g_free(str);
       subtree = xmlNewChild (parent, NULL, "fourcc", NULL);
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
-      xmlNewProp (subtree, "hexvalue", g_strdup_printf ("%08x", entry->data.fourcc_data));
+      str = g_strdup_printf ("%08x", entry->data.fourcc_data);
+      xmlNewProp (subtree, "hexvalue", str);
+      g_free(str);
       break;
     case GST_PROPS_BOOL_ID_NUM: 
       subtree = xmlNewChild (parent, NULL, "boolean", NULL);
@@ -541,30 +552,49 @@ static GstPropsEntry*
 gst_props_load_thyself_func (xmlNodePtr field)
 {
   GstPropsEntry *entry;
+  gchar *prop;
 
   entry = g_new0 (GstPropsEntry, 1);
 
   if (!strcmp(field->name, "int")) {
     entry->propstype = GST_PROPS_INT_ID_NUM;
-    entry->propid = g_quark_from_string (xmlGetProp(field, "name"));
-    sscanf (xmlGetProp(field, "value"), "%d", &entry->data.int_data);
+    prop = xmlGetProp(field, "name");
+    entry->propid = g_quark_from_string (prop);
+    g_free (prop);
+    prop = xmlGetProp(field, "value");
+    sscanf (prop, "%d", &entry->data.int_data);
+    g_free (prop);
   }
   else if (!strcmp(field->name, "range")) {
     entry->propstype = GST_PROPS_INT_RANGE_ID_NUM;
-    entry->propid = g_quark_from_string (xmlGetProp(field, "name"));
-    sscanf (xmlGetProp(field, "min"), "%d", &entry->data.int_range_data.min);
-    sscanf (xmlGetProp(field, "max"), "%d", &entry->data.int_range_data.max);
+    prop = xmlGetProp(field, "name");
+    entry->propid = g_quark_from_string (prop);
+    g_free (prop);
+    prop = xmlGetProp (field, "min");
+    sscanf (prop, "%d", &entry->data.int_range_data.min);
+    g_free (prop);
+    prop = xmlGetProp (field, "min");
+    sscanf (prop, "%d", &entry->data.int_range_data.max);
+    g_free (prop);
   }
   else if (!strcmp(field->name, "boolean")) {
     entry->propstype = GST_PROPS_BOOL_ID_NUM;
-    entry->propid = g_quark_from_string (xmlGetProp(field, "name"));
-    if (!strcmp (xmlGetProp(field, "value"), "false")) entry->data.bool_data = 0;
+    prop = xmlGetProp(field, "name");
+    entry->propid = g_quark_from_string (prop);
+    g_free (prop);
+    prop = xmlGetProp (field, "value");
+    if (!strcmp (prop, "false")) entry->data.bool_data = 0;
     else entry->data.bool_data = 1;
+    g_free (prop);
   }
   else if (!strcmp(field->name, "fourcc")) {
     entry->propstype = GST_PROPS_FOURCC_ID_NUM;
-    entry->propid = g_quark_from_string (xmlGetProp(field, "name"));
-    sscanf (xmlGetProp(field, "hexvalue"), "%08x", &entry->data.fourcc_data);
+    prop = xmlGetProp(field, "name");
+    entry->propid = g_quark_from_string (prop);
+    g_free (prop);
+    prop = xmlGetProp (field, "hexvalue");
+    sscanf (prop, "%08x", &entry->data.fourcc_data);
+    g_free (prop);
   }
 
   return entry;
@@ -583,6 +613,7 @@ gst_props_load_thyself (xmlNodePtr parent)
 {
   GstProps *props = g_new0 (GstProps, 1);
   xmlNodePtr field = parent->childs;
+  gchar *prop;
 
   while (field) {
     if (!strcmp (field->name, "list")) {
@@ -591,7 +622,9 @@ gst_props_load_thyself (xmlNodePtr parent)
 
       entry = g_new0 (GstPropsEntry, 1);
       entry->propstype = GST_PROPS_LIST_ID_NUM;
-      entry->propid = g_quark_from_string (xmlGetProp(field, "name"));
+      prop = xmlGetProp (field, "name");
+      entry->propid = g_quark_from_string (prop);
+      g_free (prop);
 
       while (subfield) {
         GstPropsEntry *subentry = gst_props_load_thyself_func (subfield);
