@@ -431,19 +431,17 @@ _fixate_caps_to_int (GstCaps ** caps, const gchar * field, gint value)
   gboolean ret = FALSE;
   guint i;
 
-  try =
-      gst_caps_new_simple ("audio/x-raw-int", field, GST_TYPE_INT_RANGE,
-      G_MININT, value - 1, NULL), gst_caps_append (try,
-      gst_caps_new_simple ("audio/x-raw-float", field, GST_TYPE_INT_RANGE,
-          G_MININT, value - 1, NULL));
+  try = gst_caps_new_simple ("audio/x-raw-int", field, GST_TYPE_INT_RANGE,
+      G_MININT, value - 1, NULL);
+  gst_caps_append (try, gst_caps_new_simple ("audio/x-raw-float", field,
+          GST_TYPE_INT_RANGE, G_MININT, value - 1, NULL));
   intersection = gst_caps_intersect (*caps, try);
   if (!gst_caps_is_empty (intersection)) {
     gst_caps_free (try);
-    try =
-        gst_caps_new_simple ("audio/x-raw-int", field, GST_TYPE_INT_RANGE,
-        value, G_MAXINT, NULL), gst_caps_append (try,
-        gst_caps_new_simple ("audio/x-raw-float", field, GST_TYPE_INT_RANGE,
-            value, G_MAXINT, NULL));
+    try = gst_caps_new_simple ("audio/x-raw-int", field, GST_TYPE_INT_RANGE,
+        value, G_MAXINT, NULL);
+    gst_caps_append (try, gst_caps_new_simple ("audio/x-raw-float", field,
+            GST_TYPE_INT_RANGE, value, G_MAXINT, NULL));
     gst_caps_free (intersection);
     intersection = gst_caps_intersect (*caps, try);
     if (!gst_caps_is_empty (intersection)) {
@@ -454,6 +452,7 @@ _fixate_caps_to_int (GstCaps ** caps, const gchar * field, gint value)
       gst_caps_free (intersection);
     }
   }
+  gst_caps_free (try);
   for (i = 0; i < gst_caps_get_size (*caps); i++) {
     GstStructure *structure = gst_caps_get_structure (*caps, i);
 

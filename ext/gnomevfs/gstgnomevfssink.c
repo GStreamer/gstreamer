@@ -157,18 +157,16 @@ gst_gnomevfssink_base_init (gpointer g_class)
 }
 
 static gboolean
-_gst_boolean_did_something_accumulator (GSignalInvocationHint * ihint,
+_gst_boolean_allow_overwrite_accumulator (GSignalInvocationHint * ihint,
     GValue * return_accu, const GValue * handler_return, gpointer dummy)
 {
-  gboolean did_something;
+  gboolean allow_overwrite;
 
-  did_something = g_value_get_boolean (handler_return);
-  if (did_something) {
-    g_value_set_boolean (return_accu, TRUE);
-  }
+  allow_overwrite = g_value_get_boolean (handler_return);
+  g_value_set_boolean (return_accu, allow_overwrite);
 
-  /* always continue emission */
-  return TRUE;
+  /* stop emission if signal doesn't allow overwriting */
+  return allow_overwrite;
 }
 
 static void
@@ -193,9 +191,9 @@ gst_gnomevfssink_class_init (GstGnomeVFSSinkClass * klass)
           "GnomeVFSHandle", "Handle for GnomeVFS", G_PARAM_READWRITE));
 
   gst_gnomevfssink_signals[SIGNAL_ERASE_ASK] =
-      g_signal_new ("erase-ask", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstGnomeVFSSinkClass, erase_ask),
-      _gst_boolean_did_something_accumulator, NULL,
+      g_signal_new ("allow-overwrite", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstGnomeVFSSinkClass, erase_ask),
+      _gst_boolean_allow_overwrite_accumulator, NULL,
       gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
 
 

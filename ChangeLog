@@ -1,3 +1,22 @@
+2004-04-09  Benjamin Otte  <otte@gnome.org>
+
+	* ext/gnomevfs/gstgnomevfssink.c:
+	(_gst_boolean_allow_overwrite_accumulator),
+	(gst_gnomevfssink_class_init):
+	  fix erase signal - if any handler returns false the file will not be
+	  overwritten. If no handler is connected, the file will not be
+	  overwritten either.
+	  renamed signal to "allow-overwrite"
+	* ext/mad/gstid3tag.c: (tag_list_to_id3_tag_foreach):
+	  free string when adding it to ID3 failed
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_event):
+	  unref event when done
+	* gst/audioconvert/gstaudioconvert.c: (_fixate_caps_to_int):
+	  free caps
+	* gst/typefind/gsttypefindfunctions.c:
+	(mpeg_video_stream_type_find):
+	  fix invalid read 
+
 2004-04-08  David Schleef  <ds@schleef.org>
 
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:

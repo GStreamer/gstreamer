@@ -647,7 +647,7 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
     if (skipped > GST_MPEGVID_TYPEFIND_TRY_SYNC)
       break;
 
-    if (size < 4) {
+    if (size < 5) {
       data = gst_type_find_peek (tf, skipped, GST_MPEGVID_TYPEFIND_SYNC_SIZE);
       if (!data)
         break;

@@ -309,6 +309,7 @@ vorbis_dec_event (GstVorbisDec * dec, GstEvent * event)
           GST_ERROR_OBJECT (dec,
               "failed to parse data for DISCONT event, not sending any");
         }
+        gst_data_unref (GST_DATA (event));
 #ifdef HAVE_VORBIS_SYNTHESIS_RESTART
         vorbis_synthesis_restart (&dec->vd);
 #endif
