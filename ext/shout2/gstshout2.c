@@ -28,11 +28,9 @@
 static GstElementDetails shout2send_details = {
   "An Icecast plugin",
   "Sink/Network",
-  "LGPL",
   "Sends data to an icecast server",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>, Pedro Corte-Real <typo@netcabo.pt>",
-  "(C) 2000",
+  "Wim Taymans <wim.taymans@chello.be>\n"
+  "Pedro Corte-Real <typo@netcabo.pt>"
 };
 
 unsigned int audio_format = 100;
@@ -87,6 +85,7 @@ sink_template_factory (void)
 }
 
 static void			gst_shout2send_class_init	(GstShout2sendClass *klass);
+static void			gst_shout2send_base_init	(GstShout2sendClass *klass);
 static void			gst_shout2send_init		(GstShout2send *shout2send);
 
 static void			gst_shout2send_chain		(GstPad *pad, GstData *_data);
@@ -125,7 +124,8 @@ gst_shout2send_get_type(void)
 
   if (!shout2send_type) {
     static const GTypeInfo shout2send_info = {
-      sizeof(GstShout2sendClass),      NULL,
+      sizeof(GstShout2sendClass),
+      (GBaseInitFunc)gst_shout2send_base_init,
       NULL,
       (GClassInitFunc)gst_shout2send_class_init,
       NULL,
@@ -137,6 +137,15 @@ gst_shout2send_get_type(void)
     shout2send_type = g_type_register_static(GST_TYPE_ELEMENT, "GstShout2send", &shout2send_info, 0);
   }
   return shout2send_type;
+}
+
+static void
+gst_shout2send_base_init (GstShout2sendClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class, sink_template_factory());
+  gst_element_class_set_details (element_class, &shout2send_details);
 }
 
 static void
@@ -519,24 +528,21 @@ gst_shout2send_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("shout2send", GST_TYPE_SHOUT2SEND, &shout2send_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, sink_template_factory ());
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "shout2send", GST_RANK_NONE,
+			       GST_TYPE_SHOUT2SEND);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "shout2send",
-  plugin_init
-};
-
+  "Sends data to an icecast server using libshout2",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  "libshout2",
+  "http://www.icecast.org/download.html"
+)
