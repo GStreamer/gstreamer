@@ -549,7 +549,7 @@ gst_filesrc_get (GstPad *pad)
 
   /* we're done, return the buffer */
   src->curoffset += GST_BUFFER_SIZE(buf);
-  //g_object_notify (G_OBJECT (src), "offset");
+  g_object_notify (G_OBJECT (src), "offset");
   return buf;
 }
 
@@ -590,7 +590,7 @@ gst_filesrc_open_file (GstFileSrc *src)
     /* now notify of the changes */
     g_object_freeze_notify (G_OBJECT (src));
     g_object_notify (G_OBJECT (src), "filesize");
-    //g_object_notify (G_OBJECT (src), "offset");
+    g_object_notify (G_OBJECT (src), "offset");
     g_object_thaw_notify (G_OBJECT (src));
 
     GST_FLAG_SET (src, GST_FILESRC_OPEN);
@@ -614,7 +614,7 @@ gst_filesrc_close_file (GstFileSrc *src)
   /* and notify that things changed */
   g_object_freeze_notify (G_OBJECT (src));
   g_object_notify (G_OBJECT (src), "filesize");
-  //g_object_notify (G_OBJECT (src), "offset");
+  g_object_notify (G_OBJECT (src), "offset");
   g_object_thaw_notify (G_OBJECT (src));
 
   if (src->mapbuf)

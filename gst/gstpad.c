@@ -2039,6 +2039,11 @@ name_is_valid (const gchar *name, GstPadPresence presence)
                  " type '%%d' or '%%s' for GST_PAD_REQUEST padtemplate", name);
       return FALSE;
     }
+    if (str && (*(str+2) != '\0')) {
+      g_warning ("invalid name template %s: conversion specification must appear"
+                 " at the end of the GST_PAD_REQUEST padtemplate name", name);
+      return FALSE;
+    }
   }
   
   return TRUE;

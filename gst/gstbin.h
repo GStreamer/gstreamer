@@ -51,16 +51,14 @@ extern GType _gst_bin_type;
 typedef enum {
   /* this bin is a manager of child elements, i.e. a pipeline or thread */
   GST_BIN_FLAG_MANAGER		= GST_ELEMENT_FLAG_LAST,
-  /* this bin is actually a meta-bin, and may need to be scheduled */
+
+  /* this bin iterates itself */
   GST_BIN_SELF_SCHEDULABLE,
 
   /* we prefer to have cothreads when its an option, over chain-based */
   GST_BIN_FLAG_PREFER_COTHREADS,
 
   GST_BIN_FLAG_FIXED_CLOCK,
-
-  /* bin iterates itself, like a bin with a jack element in it */
-  GST_BIN_SELF_ITERATING,
 
   /* padding */
   GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 5,

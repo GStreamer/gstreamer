@@ -14,8 +14,8 @@ libgststandardscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 libgstfastscheduler_la_SOURCES = gstfastscheduler.c 
 libgstfastscheduler_la_CFLAGS = $(GST_CFLAGS)
-libgstfastscheduler_la_LIBADD = $(GST_LIBS) ../libcothreads.la
-libgstfastscheduler_la_LDFLAGS = @GST_LT_LDFLAGS@
+libgstfastscheduler_la_LIBADD = ../libcothreads.la
+libgstfastscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 ## this is a REALLY evil hack 
 ## but we need to keep it as long as we have libs/gst and libs/ext

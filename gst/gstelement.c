@@ -717,7 +717,7 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
   gboolean templ_found = FALSE;
   GList *list;
   gint n;
-  gchar *str;
+  gchar *str, *data, *endptr;
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
@@ -734,16 +734,22 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
     while (!templ_found && list) {
       templ = (GstPadTemplate*) list->data;
       if (templ->presence == GST_PAD_REQUEST) {
-        /* we know that %s and %d are the ony possibilities because of sanity
+        /* we know that %s and %d are the only possibilities because of sanity
            checks in gst_padtemplate_new */
-        if (strstr (templ->name_template, "%d")) {
-          if (sscanf(name, templ->name_template, &n)) {
-            templ_found = TRUE;
-            req_name = name;
-            break;
-          }
-        } else if (strstr (templ->name_template, "%s")) {
-          if (sscanf(name, templ->name_template, &str)) {
+        if ((str = strchr (templ->name_template, '%')) &&
+            strncmp (templ->name_template, name, str - templ->name_template) == 0 &&
+            strlen (name) > str - templ->name_template) {
+          data = name + (str - templ->name_template);
+          if (*(str+1) == 'd') {
+            /* it's an int */
+            n = (gint) strtol (data, &endptr, 10);
+            if (endptr == NULL) {
+              templ_found = TRUE;
+              req_name = name;
+              break;
+            }
+          } else {
+            /* it's a string */
             templ_found = TRUE;
             req_name = name;
             break;
@@ -774,7 +780,6 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
  *
  * Returns: the pad to which a connection can be made
  */
-
 GstPad*			
 gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, GstCaps *filtercaps)
 {

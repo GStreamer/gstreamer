@@ -43,15 +43,12 @@ property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec)
 {
   GValue value = { 0, }; /* the important thing is that value.type = 0 */
   gchar *str = 0;
-  
-  if (pspec->flags & G_PARAM_READABLE) {
+
+  /* let's not print these out for the offset property... */
+  if (pspec->flags & G_PARAM_READABLE && strcmp (pspec->name, "offset") != 0) {
     g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
     g_object_get_property (G_OBJECT (orig), pspec->name, &value);
-    /* fix current bug with g_strdup_value_contents not working with gint64 */
-    if (G_IS_PARAM_SPEC_INT64 (pspec))
-      str = g_strdup_printf ("%lld", g_value_get_int64 (&value));
-    else
-      str = g_strdup_value_contents (&value);
+    str = g_strdup_value_contents (&value);
     g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
     g_free (str);
     g_value_unset(&value);
@@ -162,8 +159,6 @@ main(int argc, char *argv[])
   launch_argc = argc;
   launch_argv = argv;
 
-  //gst_schedulerfactory_set_default_name ("fast");
-
   /* make a null-terminated version of argv */
   argvn = g_new0 (char *,argc);
   memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
@@ -196,12 +191,12 @@ main(int argc, char *argv[])
       exit (-1);
     }
 
-    if (!GST_FLAG_IS_SET (GST_OBJECT (pipeline), GST_BIN_SELF_ITERATING)) {
+    if (!GST_FLAG_IS_SET (GST_OBJECT (pipeline), GST_BIN_SELF_SCHEDULABLE)) {
         g_idle_add (idle_func, pipeline);
         gst_main ();
     } else {
-        g_print ("sleeping 100...\n");
-        sleep (100);
+        g_print ("waiting for the state change...\n");
+        gst_element_wait_state_change (pipeline);
     }
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
