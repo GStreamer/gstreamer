@@ -60,6 +60,7 @@ main (gint argc, gchar *argv[])
     fprintf (stderr, "-");
     gst_object_unref (GST_OBJECT (pipeline));
   }
+  fprintf (stderr, "\n");
   g_mem_chunk_info ();
 
   return 0;
