@@ -42,7 +42,7 @@ entry_added (GstIndex * index, GstIndexEntry * entry)
       g_print ("%p, %d: %08x ", entry, entry->id,
           GST_INDEX_ASSOC_FLAGS (entry));
       for (i = 0; i < GST_INDEX_NASSOCS (entry); i++) {
-        g_print ("%d %lld ", GST_INDEX_ASSOC_FORMAT (entry, i),
+        g_print ("%d %" G_GINT64_FORMAT " ", GST_INDEX_ASSOC_FORMAT (entry, i),
             GST_INDEX_ASSOC_VALUE (entry, i));
       }
       g_print ("\n");

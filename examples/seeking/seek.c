@@ -580,8 +580,8 @@ format_value (GtkScale * scale, gdouble value)
   seconds = (gint64) real / GST_SECOND;
   subseconds = (gint64) real / (GST_SECOND / 100);
 
-  return g_strdup_printf ("%02lld:%02lld:%02lld",
-      seconds / 60, seconds % 60, subseconds % 100);
+  return g_strdup_printf ("%02" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT ":%02"
+      G_GINT64_FORMAT, seconds / 60, seconds % 60, subseconds % 100);
 }
 
 typedef struct
@@ -616,7 +616,7 @@ query_rates (void)
       format = seek_formats[i].format;
 
       if (gst_pad_convert (pad, GST_FORMAT_TIME, GST_SECOND, &format, &value)) {
-        g_print ("%s %13lld | ", seek_formats[i].name, value);
+        g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
       } else {
         g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
@@ -647,7 +647,7 @@ query_durations_elems ()
       format = seek_formats[i].format;
       res = gst_element_query (element, GST_QUERY_TOTAL, &format, &value);
       if (res) {
-        g_print ("%s %13lld | ", seek_formats[i].name, value);
+        g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
       } else {
         g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
@@ -677,7 +677,7 @@ query_durations_pads ()
       format = seek_formats[i].format;
       res = gst_pad_query (pad, GST_QUERY_TOTAL, &format, &value);
       if (res) {
-        g_print ("%s %13lld | ", seek_formats[i].name, value);
+        g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
       } else {
         g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
@@ -707,7 +707,7 @@ query_positions_elems ()
       format = seek_formats[i].format;
       res = gst_element_query (element, GST_QUERY_POSITION, &format, &value);
       if (res) {
-        g_print ("%s %13lld | ", seek_formats[i].name, value);
+        g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
       } else {
         g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
@@ -737,7 +737,7 @@ query_positions_pads ()
       format = seek_formats[i].format;
       res = gst_pad_query (pad, GST_QUERY_POSITION, &format, &value);
       if (res) {
-        g_print ("%s %13lld | ", seek_formats[i].name, value);
+        g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
       } else {
         g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
@@ -851,7 +851,7 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
     while (walk) {
       GstPad *seekable = GST_PAD (walk->data);
 
-      g_print ("seek to %lld on pad %s:%s\n", real,
+      g_print ("seek to %" G_GINT64_FORMAT " on pad %s:%s\n", real,
           GST_DEBUG_PAD_NAME (seekable));
       s_event =
           gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
@@ -867,7 +867,7 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
     while (walk) {
       GstElement *seekable = GST_ELEMENT (walk->data);
 
-      g_print ("seek to %lld on element %s\n", real,
+      g_print ("seek to %" G_GINT64_FORMAT " on element %s\n", real,
           gst_element_get_name (seekable));
       s_event =
           gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |

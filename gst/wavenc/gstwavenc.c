@@ -303,8 +303,7 @@ struct _maps
   guint32 id;
   char *name;
 }
-maps[] =
-{
+maps[] = {
   {
   GST_RIFF_INFO_IARL, "Location"}
   , {
@@ -618,7 +617,7 @@ gst_wavenc_chain (GstPad * pad, GstData * _data)
 #endif
 
       gst_wavenc_stop_file (wavenc);
-      gst_pad_push (wavenc->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
+      gst_pad_push (wavenc->srcpad, _data);
       gst_element_set_eos (GST_ELEMENT (wavenc));
     } else {
       gst_pad_event_default (wavenc->srcpad, GST_EVENT (buf));

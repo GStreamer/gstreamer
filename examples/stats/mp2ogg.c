@@ -86,12 +86,13 @@ main (gint argc, gchar * argv[])
         &format, &bitrate_dec);
 
     g_print ("[%2dm %.2ds] of [%2dm %.2ds], "
-        "src avg bitrate: %lld, dest avg birate: %lld, ratio [%02.2f]    \r",
+        "src avg bitrate: %" G_GINT64_FORMAT ", dest avg birate: %"
+        G_GINT64_FORMAT ", ratio [%02.2f]    \r",
         (gint) (position / (GST_SECOND * 60)),
         (gint) (position / (GST_SECOND)) % 60,
         (gint) (duration / (GST_SECOND * 60)),
-        (gint) (duration / (GST_SECOND)) % 60,
-        bitrate_dec, bitrate_enc, (gfloat) bitrate_dec / bitrate_enc);
+        (gint) (duration / (GST_SECOND)) % 60, bitrate_dec, bitrate_enc,
+        (gfloat) bitrate_dec / bitrate_enc);
   }
 
   g_print ("\n");

@@ -68,6 +68,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static void gst_esdsink_base_init (gpointer g_class);
 static void gst_esdsink_class_init (gpointer g_class, gpointer class_data);
 static void gst_esdsink_init (GTypeInstance * instance, gpointer g_class);
+static void gst_esdsink_dispose (GObject * object);
 
 static gboolean gst_esdsink_open_audio (GstEsdsink * sink);
 static void gst_esdsink_close_audio (GstEsdsink * sink);
@@ -145,6 +146,7 @@ gst_esdsink_class_init (gpointer g_class, gpointer class_data)
 
   gobject_class->set_property = gst_esdsink_set_property;
   gobject_class->get_property = gst_esdsink_get_property;
+  gobject_class->dispose = gst_esdsink_dispose;
 
   gstelement_class->change_state = gst_esdsink_change_state;
   gstelement_class->set_clock = gst_esdsink_set_clock;
@@ -184,6 +186,14 @@ gst_esdsink_init (GTypeInstance * instance, gpointer g_class)
   esdsink->sync = TRUE;
   esdsink->fallback = FALSE;
   esdsink->link_open = FALSE;
+}
+
+static void
+gst_esdsink_dispose (GObject * object)
+{
+  GstEsdsink *esdsink = GST_ESDSINK (object);
+
+  g_free (esdsink->host);
 }
 
 #ifdef unused
