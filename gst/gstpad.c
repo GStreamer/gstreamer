@@ -2233,13 +2233,20 @@ gst_ghost_pad_new (gchar *name,
                    GstPad *pad)
 {
   GstGhostPad *ghostpad;
+  GstRealPad *realpad;
 
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   ghostpad = g_object_new (gst_ghost_pad_get_type () ,NULL);
   gst_pad_set_name (GST_PAD (ghostpad), name);
-  GST_GPAD_REALPAD (ghostpad) = GST_PAD_REALIZE (pad);
+
+  realpad = (GstRealPad *) pad;
+
+  while (!GST_IS_REAL_PAD (realpad)) {
+    realpad = GST_PAD_REALIZE (realpad);
+  }
+  GST_GPAD_REALPAD (ghostpad) = realpad;
   GST_PAD_PADTEMPLATE (ghostpad) = GST_PAD_PADTEMPLATE (pad);
 
   /* add ourselves to the real pad's list of ghostpads */
@@ -2264,12 +2271,12 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element, GstEvent *even
     /* for all pads in the opposite direction that are connected */
     if (GST_PAD_DIRECTION (eventpad) != GST_PAD_DIRECTION (pad) && GST_PAD_IS_CONNECTED (eventpad)) {
       if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
-        gst_pad_push (eventpad, GST_BUFFER (gst_event_new (GST_EVENT_TYPE (event))));
+        gst_pad_push (eventpad, GST_BUFFER (gst_event_copy (event)));
       }
       else {
 	GstPad *peerpad = GST_PAD_CAST (GST_RPAD_PEER (eventpad));
 
-        gst_pad_send_event (peerpad, gst_event_new (GST_EVENT_TYPE (event)));
+        gst_pad_send_event (peerpad, gst_event_copy (event));
       }
     }
   }
@@ -2293,14 +2300,12 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
     case GST_EVENT_EOS:
       gst_element_set_eos (element);
       gst_pad_event_default_dispatch (pad, element, event);
-      gst_event_free (event);
       /* we have to try to schedule another element because this one is disabled */
       gst_element_yield (element);
       break;
     case GST_EVENT_FLUSH:
     default:
       gst_pad_event_default_dispatch (pad, element, event);
-      gst_event_free (event);
       break;
   }
 }
