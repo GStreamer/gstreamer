@@ -1,5 +1,10 @@
 2004-06-12  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* docs/manual/win32.xml:
+          attempt to transform the Win32 README into an XML doc
+
+2004-06-12  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* gst/gst.c:
 	* gst/gstbin.*:
 	* gst/gstelement.*:
