@@ -137,7 +137,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
     "audio/raw",
       "format",           GST_PROPS_STRING ("int"),
       "law",              GST_PROPS_INT (0),
-      "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
+      "endianness",       GST_PROPS_INT (G_LITTLE_ENDIAN),
       "signed",           GST_PROPS_LIST (
       			    GST_PROPS_BOOLEAN (TRUE),
       			    GST_PROPS_BOOLEAN (FALSE)
