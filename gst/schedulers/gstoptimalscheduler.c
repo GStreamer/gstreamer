@@ -1078,6 +1078,20 @@ gst_opt_scheduler_reset (GstScheduler *sched)
 { 
 #ifdef USE_COTHREADS
   GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  GSList *chains = osched->chains;
+
+  while (chains) {
+    GstOptSchedulerChain *chain = (GstOptSchedulerChain *) chains->data;
+    GSList *groups = chain->groups;
+
+    while (groups) {
+      GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) groups->data;
+
+      destroy_group_scheduler (group);
+      groups = groups->next;
+    }
+    chains = chains->next;
+  }
 	      
   if (osched->context) {
     do_cothread_context_destroy (osched->context);
