@@ -1,11 +1,16 @@
 2004-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-	reviewed by: <delete if not using a buddy>
-
 	* configure.ac:
+	  prerel bump
+
+2004-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Steve Lhomme
+
 	* gst/elements/gstfakesrc.c:
 	* gst/elements/gstidentity.c:
 	* gst/gstthread.c:
+	  Fix for #153881
 
 2004-10-01  Wim Taymans  <wim at fluendo dot com>
 
