@@ -191,12 +191,15 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     GST_PLAY_MAKE_OR_ERROR (identity, "identity", "identity", error);
     g_hash_table_insert (play->priv->elements, "identity", identity);
 
-    identity_cs = gst_element_factory_make ("ffcolorspace", "identity_cs");
+    identity_cs = gst_element_factory_make ("ffmpegcolorspace", "identity_cs");
     if (!GST_IS_ELEMENT (identity_cs)) {
-      identity_cs = gst_element_factory_make ("colorspace", "identity_cs");
+      identity_cs = gst_element_factory_make ("ffcolorspace", "identity_cs");
       if (!GST_IS_ELEMENT (identity_cs)) {
-	gst_play_error_plugin ("colorspace", error);
-	return FALSE;
+	identity_cs = gst_element_factory_make ("colorspace", "identity_cs");
+	if (!GST_IS_ELEMENT (identity_cs)) {
+	  gst_play_error_plugin ("colorspace", error);
+	  return FALSE;
+	}
       }
     }
     g_hash_table_insert (play->priv->elements, "identity_cs", identity_cs);
@@ -224,12 +227,15 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     g_hash_table_insert (play->priv->elements, "vis_element", vis_element);
 
     /* Colorspace conversion */
-    vis_cs = gst_element_factory_make ("ffcolorspace", "vis_cs");
+    vis_cs = gst_element_factory_make ("ffmpegcolorspace", "vis_cs");
     if (!GST_IS_ELEMENT (vis_cs)) {
-      vis_cs = gst_element_factory_make ("colorspace", "vis_cs");
+      vis_cs = gst_element_factory_make ("ffcolorspace", "vis_cs");
       if (!GST_IS_ELEMENT (vis_cs)) {
-	gst_play_error_plugin ("colorspace", error);
-	return FALSE;
+	vis_cs = gst_element_factory_make ("colorspace", "vis_cs");
+	if (!GST_IS_ELEMENT (vis_cs)) {
+	  gst_play_error_plugin ("colorspace", error);
+	  return FALSE;
+	}
       }
     }
 
@@ -256,12 +262,15 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     g_hash_table_insert (play->priv->elements, "video_switch", video_switch);
 
     /* Colorspace conversion */
-    video_cs = gst_element_factory_make ("ffcolorspace", "video_cs");
+    video_cs = gst_element_factory_make ("ffmpegcolorspace", "video_cs");
     if (!GST_IS_ELEMENT (video_cs)) {
-      video_cs = gst_element_factory_make ("colorspace", "video_cs");
+      video_cs = gst_element_factory_make ("ffcolorspace", "video_cs");
       if (!GST_IS_ELEMENT (video_cs)) {
-	gst_play_error_plugin ("colorspace", error);
-	return FALSE;
+	video_cs = gst_element_factory_make ("colorspace", "video_cs");
+	if (!GST_IS_ELEMENT (video_cs)) {
+	  gst_play_error_plugin ("colorspace", error);
+	  return FALSE;
+	}
       }
     }
     g_hash_table_insert (play->priv->elements, "video_cs", video_cs);
@@ -272,12 +281,15 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     g_hash_table_insert (play->priv->elements, "video_balance", video_balance);
 
     /* Colorspace conversion */
-    balance_cs = gst_element_factory_make ("ffcolorspace", "balance_cs");
+    balance_cs = gst_element_factory_make ("ffmpegcolorspace", "balance_cs");
     if (!GST_IS_ELEMENT (balance_cs)) {
-      balance_cs = gst_element_factory_make ("colorspace", "balance_cs");
+      balance_cs = gst_element_factory_make ("ffcolorspace", "balance_cs");
       if (!GST_IS_ELEMENT (balance_cs)) {
-	gst_play_error_plugin ("colorspace", error);
-	return FALSE;
+	balance_cs = gst_element_factory_make ("colorspace", "balance_cs");
+	if (!GST_IS_ELEMENT (balance_cs)) {
+	  gst_play_error_plugin ("colorspace", error);
+	  return FALSE;
+	}
       }
     }
     g_hash_table_insert (play->priv->elements, "balance_cs", balance_cs);

@@ -1,0 +1,12 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst/media-info
+includedir=${pcfiledir}/../gst-libs
+
+Name: GStreamer Media Info Library, uninstalled
+Description: Streaming-media framework, media info libraries, not installed
+Requires: gstreamer-@GST_MAJORMINOR@ >= @VERSION@
+Version: @VERSION@
+
+Libs: ${libdir}/libgstmedia-info-@GST_MAJORMINOR@.la
+Cflags: -I${includedir}
