@@ -447,7 +447,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
 
       if (g_str_has_prefix (mimetype, "audio/x-raw") ||
           g_str_has_prefix (mimetype, "video/x-raw")) {
-        new_decoded_pad (play_base_bin->source, pad, g_list_next (pad) == NULL,
+        new_decoded_pad (play_base_bin->source, pad, g_list_next (pads) == NULL,
             play_base_bin);
 
         is_raw = TRUE;
