@@ -1,5 +1,14 @@
 2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_codecid), (gst_ffmpeg_get_codecid_longname):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	  Re-add H263I as intel-h263 (which is not h263-compliant...).
+	  Increase rank of mpeg2video since it plays more videos than
+	  its gst-plugins counterpart, with no regressions.
+
+2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
 	  Don't unref NULL data...
 

@@ -891,12 +891,10 @@ gst_ffmpegdec_register (GstPlugin * plugin)
      * and use rank=none for H263I for now, until I know what the diff
      * is. */
     switch (in_plugin->id) {
+      case CODEC_ID_MPEG2VIDEO:
       case CODEC_ID_MPEG4:
       case CODEC_ID_MSMPEG4V3:
         rank = GST_RANK_PRIMARY;
-        break;
-      case CODEC_ID_H263I:
-        rank = GST_RANK_NONE;
         break;
       default:
         rank = GST_RANK_MARGINAL;

@@ -165,8 +165,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       /* I don't know the exact differences between those... Anyone? */
     case CODEC_ID_H263:
     case CODEC_ID_H263P:
-    case CODEC_ID_H263I:
       caps = GST_FF_VID_CAPS_NEW ("video/x-h263", NULL);
+      break;
+
+    case CODEC_ID_H263I:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-intel-h263", NULL);
       break;
 
     case CODEC_ID_H261:
@@ -1389,7 +1392,10 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     id = CODEC_ID_DVAUDIO;
     audio = TRUE;
   } else if (!strcmp (mimetype, "video/x-h263")) {
-    id = CODEC_ID_H263;         /* or H263[IP] */
+    id = CODEC_ID_H263;         /* or H263P */
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-intel-h263")) {
+    id = CODEC_ID_H263I;
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-h261")) {
     id = CODEC_ID_H261;
@@ -1802,7 +1808,7 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       name = "H.263 (P) video";
       break;
     case CODEC_ID_H263I:
-      name = "H.263 (I) video";
+      name = "Intel H.263 video";
       break;
     case CODEC_ID_FLV1:
       name = "FLV video";
