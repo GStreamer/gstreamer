@@ -746,7 +746,6 @@ static GstPadLinkReturn
 gst_ximagesink_sink_link (GstPad * pad, const GstCaps * caps)
 {
   GstXImageSink *ximagesink;
-  char *caps_str1, *caps_str2;
   gboolean ret;
   GstStructure *structure;
 
@@ -755,13 +754,9 @@ gst_ximagesink_sink_link (GstPad * pad, const GstCaps * caps)
   if (!ximagesink->xcontext)
     return GST_PAD_LINK_DELAYED;
 
-  caps_str1 = gst_caps_to_string (ximagesink->xcontext->caps);
-  caps_str2 = gst_caps_to_string (caps);
-
-  GST_DEBUG ("sinkconnect %s with %s", caps_str1, caps_str2);
-
-  g_free (caps_str1);
-  g_free (caps_str2);
+  GST_DEBUG_OBJECT (xvimagesink,
+      "sinkconnect possible caps %" GST_PTR_FORMAT " with given caps %"
+      GST_PTR_FORMAT, xvimagesink->xcontext->caps, caps);
 
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_int (structure, "width",

@@ -723,6 +723,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
 
   xcontext = g_new0 (GstXContext, 1);
+  xcontext->im_format = 0;
 
   g_mutex_lock (xvimagesink->x_lock);
 
@@ -1004,19 +1005,15 @@ static GstPadLinkReturn
 gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
 {
   GstXvImageSink *xvimagesink;
-  char *caps_str1, *caps_str2;
   GstStructure *structure;
+  gint im_format = 0;
   gboolean ret;
 
   xvimagesink = GST_XVIMAGESINK (gst_pad_get_parent (pad));
 
-  caps_str1 = gst_caps_to_string (xvimagesink->xcontext->caps);
-  caps_str2 = gst_caps_to_string (caps);
-
-  GST_DEBUG ("sinkconnect %s with %s", caps_str1, caps_str2);
-
-  g_free (caps_str1);
-  g_free (caps_str2);
+  GST_DEBUG_OBJECT (xvimagesink,
+      "sinkconnect possible caps %" GST_PTR_FORMAT " with given caps %"
+      GST_PTR_FORMAT, xvimagesink->xcontext->caps, caps);
 
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_int (structure, "width",
@@ -1028,14 +1025,12 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
   if (!ret)
     return GST_PAD_LINK_REFUSED;
 
-  xvimagesink->xcontext->im_format = 0;
-  if (!gst_structure_get_fourcc (structure, "format",
-          &xvimagesink->xcontext->im_format)) {
-    xvimagesink->xcontext->im_format =
+  if (!gst_structure_get_fourcc (structure, "format", &im_format)) {
+    im_format =
         gst_xvimagesink_get_fourcc_from_caps (xvimagesink,
         gst_caps_copy (caps));
   }
-  if (xvimagesink->xcontext->im_format == 0) {
+  if (im_format == 0) {
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -1056,14 +1051,28 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
           GST_VIDEOSINK_HEIGHT (xvimagesink));
   }
 
-  if ((xvimagesink->xvimage) && ((GST_VIDEOSINK_WIDTH (xvimagesink) != xvimagesink->xvimage->width) || (GST_VIDEOSINK_HEIGHT (xvimagesink) != xvimagesink->xvimage->height))) { /* We renew our xvimage only if size changed */
+  /* We renew our xvimage only if size or format changed */
+  if ((xvimagesink->xvimage) &&
+      ((xvimagesink->xcontext->im_format != im_format) ||
+          (GST_VIDEOSINK_WIDTH (xvimagesink) != xvimagesink->xvimage->width) ||
+          (GST_VIDEOSINK_HEIGHT (xvimagesink) !=
+              xvimagesink->xvimage->height))) {
+    GST_DEBUG_OBJECT (xvimagesink,
+        "old format " GST_FOURCC_FORMAT ", new format " GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (xvimagesink->xcontext->im_format),
+        GST_FOURCC_ARGS (im_format));
+    GST_DEBUG_OBJECT (xvimagesink, "renewing xvimage");
     gst_xvimagesink_xvimage_destroy (xvimagesink, xvimagesink->xvimage);
 
+    xvimagesink->xcontext->im_format = im_format;
     xvimagesink->xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
         GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
-  } else if (!xvimagesink->xvimage)     /* If no xvimage, creating one */
+  } else if (!xvimagesink->xvimage) {
+    /* If no xvimage, creating one */
+    xvimagesink->xcontext->im_format = im_format;
     xvimagesink->xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
         GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
+  }
 
   gst_x_overlay_got_desired_size (GST_X_OVERLAY (xvimagesink),
       GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
