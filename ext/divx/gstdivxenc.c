@@ -534,7 +534,6 @@ plugin_init (GModule   *module,
     g_warning("Version mismatch! This plugin was compiled for "
               "DivX version %d, while your library has version %d!",
               ENCORE_VERSION, lib_version);
-    return FALSE;
   }
 
   if (!gst_library_load("gstvideo"))

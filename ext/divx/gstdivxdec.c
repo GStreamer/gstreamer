@@ -418,7 +418,6 @@ plugin_init (GModule   *module,
     g_warning("Version mismatch! This plugin was compiled for "
               "DivX version %d, while your library has version %d!",
               DECORE_VERSION, lib_version);
-    return FALSE;
   }
 
   /* create an elementfactory for the v4lmjpegsrcparse element */
