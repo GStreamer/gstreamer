@@ -406,7 +406,8 @@ gst_adder_loop (GstElement * element)
           gint32 *out = (gint32 *) GST_BUFFER_DATA (buf_out);
 
           for (i = 0; i < GST_BUFFER_SIZE (buf_out) / 4; i++)
-            out[i] = CLAMP (out[i] + in[i], MIN_INT_32, MAX_INT_32);
+            out[i] = CLAMP (((gint64) out[i]) + ((gint64) in[i]),
+                MIN_INT_32, MAX_INT_32);
         } else if (adder->width == 16) {
           gint16 *in = (gint16 *) raw_in;
           gint16 *out = (gint16 *) GST_BUFFER_DATA (buf_out);

@@ -30,7 +30,7 @@ update_scale (GstElement * element)
   gst_element_query (element, GST_QUERY_TOTAL, &format, &duration);
   gst_element_query (element, GST_QUERY_POSITION, &format, &position);
 
-  g_print ("%lld %lld\n", duration, position);
+  g_print ("%" G_GINT64_FORMAT " %" G_GINT64_FORMAT "\n", duration, position);
 
   return TRUE;
 }
