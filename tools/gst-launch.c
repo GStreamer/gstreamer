@@ -9,11 +9,24 @@
 #include <sys/wait.h>
 #include <gst/gst.h>
 
+/* FIXME: This is just a temporary hack.  We should have a better
+ * check for siginfo handling. */
+#ifdef SA_SIGINFO
+#define USE_SIGINFO
+#endif
+
+extern volatile gboolean glib_on_error_halt;
+static void fault_restore (void);
+static void fault_spin (void);
+static void sigint_restore (void);
+
 static guint64 iterations = 0;
 static guint64 sum = 0;
 static guint64 min = G_MAXINT64;
 static guint64 max = 0;
 static GstClock *s_clock;
+static GstElement *pipeline;
+gboolean caught_intr = FALSE;
 
 gboolean
 idle_func (gpointer data)
@@ -38,7 +51,7 @@ idle_func (gpointer data)
   min = MIN (min, diff);
   max = MAX (max, diff);
 
-  if (!busy) {
+  if (!busy || caught_intr) {
     gst_main_quit ();
     g_print ("execution ended after %" G_GUINT64_FORMAT " iterations (sum %" G_GUINT64_FORMAT " ns, average %" G_GUINT64_FORMAT " ns, min %" G_GUINT64_FORMAT " ns, max %" G_GUINT64_FORMAT " ns)\n", 
 		    iterations, sum, sum/iterations, min, max);
@@ -113,16 +126,6 @@ xmllaunch_parse_cmdline (const gchar **argv)
 }
 #endif
 
-extern volatile gboolean glib_on_error_halt;
-static void fault_restore(void);
-static void fault_spin (void);
-
-/* FIXME: This is just a temporary hack.  We should have a better
- * check for siginfo handling. */
-#ifdef SA_SIGINFO
-#define USE_SIGINFO
-#endif
-
 #ifndef USE_SIGINFO
 static void 
 fault_handler_sighandler (int signum)
@@ -175,22 +178,11 @@ fault_spin (void)
 
   wait (NULL);
 
-#if 1
   /* FIXME how do we know if we were run by libtool? */
   g_print ("Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
   	   "Ctrl-C to quit, or Ctrl-\\ to dump core.\n",
   	   (gint) getpid ());
   while (spinning) g_usleep (1000000);
-#else
-  /* This spawns a gdb and attaches it to gst-launch. */
-  {
-    char str[40];
-    sprintf (str, "gdb -quiet gst-launch %d", (gint) getpid ());
-    system (str);
-  }
-
-  _exit(0);
-#endif
 }
 
 static void 
@@ -222,6 +214,39 @@ fault_setup (void)
   sigaction (SIGQUIT, &action, NULL);
 }
 
+/* we only use sighandler here because the registers are not important */
+static void 
+sigint_handler_sighandler (int signum)
+{
+  g_print ("Caught interrupt\n");
+  
+  sigint_restore();
+
+  caught_intr = TRUE;
+}
+
+static void
+sigint_setup (void)
+{
+  struct sigaction action;
+
+  memset (&action, 0, sizeof (action));
+  action.sa_handler = sigint_handler_sighandler;
+
+  sigaction (SIGINT, &action, NULL);
+}
+
+static void 
+sigint_restore (void)
+{
+  struct sigaction action;
+
+  memset (&action, 0, sizeof (action));
+  action.sa_handler = SIG_DFL;
+
+  sigaction(SIGINT, &action, NULL);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -241,14 +266,13 @@ main(int argc, char *argv[])
     {"output",	'o',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &savefile, 0,
      "save xml representation of pipeline to FILE and exit", "FILE"},
 #endif
-    {"no_fault", 'f', POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &no_fault,   0,
+    {"no-fault", 'f', POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &no_fault,   0,
      "Do not install a fault handler", NULL},
     {"trace",   't',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &trace,   0,
      "print alloc trace if enabled at compile time", NULL},
     POPT_TABLEEND
   };
 
-  GstElement *pipeline;
   gchar **argvn;
   GError *error = NULL;
   gint res = 0;
@@ -279,6 +303,8 @@ main(int argc, char *argv[])
 
   if (!no_fault)
     fault_setup();
+
+  sigint_setup();
   
   if (trace) {
     if (!gst_alloc_trace_available()) {
