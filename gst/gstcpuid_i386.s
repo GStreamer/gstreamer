@@ -34,12 +34,3 @@ L4:	popl %edx
 	popl %ebp
 	ret
 
-/ doesn't work in user mode (MSRs are privileged)
-.globl siddisable
-siddisable:
-	movl 0x119,%ecx
-	rdmsr
-	orl 0x200000,%eax
-	wrmsr
-	ret
-	

@@ -42,7 +42,7 @@ unsigned long _getbits_masks[] = {
   0x1fffffff, 0x3fffffff, 0x7fffffff, 0xffffffff,
 };
 
-#ifdef HAVE_LIBMMX
+#ifdef unused
 unsigned long _getbits_64_minus_index[] = {
   64,63,62,61,60,59,58,57,56,55,54,53,52,51,50,49,48,47,46,45,44,43,42,41,
   40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,
@@ -160,7 +160,7 @@ void gst_getbits_init(gst_getbits_t *gb, GstGetbitsCallback callback, void *data
   gb->callback = callback;
   gb->data = data;
 
-#ifdef HAVE_LIBMMX
+#ifdef unused
   if (1) {
     gb->getbits = _gst_getbits_mmx;
 /*    gb->backbits = _gst_getbits_back_mmx; */
@@ -207,7 +207,7 @@ void gst_getbits_newbuf(gst_getbits_t *gb,unsigned char *buffer, unsigned long l
   gb->ptr = buffer;
   gb->endptr = buffer+len;
   gb->bits = 0;
-#ifdef HAVE_LIBMMX
+#ifdef unused
 /*  gb->qword = 0; */
 #endif /* HAVE_LIBMMX */
 }

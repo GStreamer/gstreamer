@@ -7,16 +7,6 @@
 #define GST_DEBUG_FORCE_DISABLE
 #include <gst/gst.h>
 
-/* disabled for now */
-#undef HAVE_LIBMMX
-
-#ifdef HAVE_LIBMMX
-#include <mmx.h>
-#endif /* HAVE_LIBMMX */
-#ifdef HAVE_LIBSSE
-#include <sse.h>
-#endif /* HAVE_LIBSSE */
-
 #define swab32(x) GUINT32_FROM_BE(x)
 
 typedef struct _gst_getbits_t gst_getbits_t;
@@ -44,14 +34,6 @@ struct _gst_getbits_t {
   unsigned long (*showbits)(gst_getbits_t *gb, unsigned long bits);
   void (*flushbits)(gst_getbits_t *gb, unsigned long bits);	
   void (*backbits)(gst_getbits_t *gb, unsigned long bits);
-
-#ifdef HAVE_LIBMMX
-  mmx_t qword;			/* qword */
-#endif /* HAVE_LIBMMX */
-
-#ifdef HAVE_LIBSSE
-  sse_t oword;			/* oword */
-#endif /* HAVE_LIBSSE */
 };
 
 

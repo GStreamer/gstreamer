@@ -1,3 +1,10 @@
+2004-03-05  David Schleef  <ds@schleef.org>
+
+	* gst/gstcpuid_i386.s:  Remove unused code
+	* libs/gst/getbits/getbits.c: (gst_getbits_init),
+	(gst_getbits_newbuf): Remove MMX code
+	* libs/gst/getbits/getbits.h: Remove MMX code
+
 2004-03-04  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* debian/.cvsignore:
