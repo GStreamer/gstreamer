@@ -316,21 +316,27 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
       gint n;
 
       for (n = 0;; n++) {
-        vtun.tuner = n;
-        if (ioctl (v4lelement->video_fd, VIDIOCGTUNER, &vtun) < 0)
-          break;                /* no more tuners */
-        if (!strcmp (vtun.name, vchan.name)) {
-          v4lchannel->tuner = n;
-          channel->flags |= GST_TUNER_CHANNEL_FREQUENCY;
-          channel->freq_multiplicator =
-              62.5 * ((vtun.flags & VIDEO_TUNER_LOW) ? 1 : 1000);
-          channel->min_frequency = vtun.rangelow;
-          channel->max_frequency = vtun.rangehigh;
-          channel->min_signal = 0;
-          channel->max_signal = 0xffff;
-          break;
+        if (n >= vchan.tuners) {
+          vtun.tuner = 0;
+        } else {
+          vtun.tuner = n;
+          if (ioctl (v4lelement->video_fd, VIDIOCGTUNER, &vtun) >= 0)
+            continue;           /* no more tuners */
+          if (strcmp (vtun.name, vchan.name) != 0) {
+            continue;
+          }
         }
+        v4lchannel->tuner = n;
+        channel->flags |= GST_TUNER_CHANNEL_FREQUENCY;
+        channel->freq_multiplicator =
+            62.5 * ((vtun.flags & VIDEO_TUNER_LOW) ? 1 : 1000);
+        channel->min_frequency = vtun.rangelow;
+        channel->max_frequency = vtun.rangehigh;
+        channel->min_signal = 0;
+        channel->max_signal = 0xffff;
+        break;
       }
+
     }
     if (vchan.flags & VIDEO_VC_AUDIO) {
       struct video_audio vaud;
