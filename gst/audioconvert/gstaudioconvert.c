@@ -21,7 +21,7 @@
 /* Element-Checklist-Version: 5 */
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#include "config.h"
 #endif
 
 #include <gst/gst.h>
@@ -535,8 +535,7 @@ gst_audio_convert_link (GstPad *pad, const GstCaps *caps)
     this->srccaps = ac_caps;
     this->sinkcaps = other_ac_caps;
   }
-  g_print ("negotiated sink to %" GST_PTR_FORMAT, this->sinkcaps);
-  
+
   GST_DEBUG ("negotiated sink to %" GST_PTR_FORMAT, this->sinkcaps);
   GST_DEBUG ("negotiated src to %" GST_PTR_FORMAT, this->srccaps);
   return GST_PAD_LINK_OK;
