@@ -79,8 +79,8 @@ sub playfile($$)
 
 read_config ();
 
-###  "ac3", "ac3parse ! $cfg{AUDIOSINK}",
 %pipes = ( 
+  "ac3", "ac3parse ! $cfg{AUDIOSINK}",
   "au", "auparse ! $cfg{AUDIOSINK}",
   "avi", "avidemux video_%02d! { queue ! windec ! $cfg{VIDEOSINK} } avidemux0.audio_%02d! { queue ! mad ! $cfg{AUDIOSINK} }",
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}",
@@ -89,8 +89,9 @@ read_config ();
   "mpg", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_%02d! { queue ! mad ! $cfg{AUDIOSINK} }",
   "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
   "sid", "siddec ! $cfg{AUDIOSINK}",
-  "vob", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }  mpegdemux0.private_stream_1_%02d! { queue ! a52dec ! $cfg{AUDIOSINK} }",
   "swf", "swfdec video_%02d! { queue ! colorspace ! $cfg{VIDEOSINK} }  swfdec0.audio_%02d! { queue ! $cfg{AUDIOSINK} }",
+  "vob", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }  mpegdemux0.private_stream_1_%02d! { queue ! a52dec ! $cfg{AUDIOSINK} }",
+  "wav", "wavparse ! $cfg{AUDIOSINK}",
 );
 
 if ($cfg{VISUALIZER}) {
