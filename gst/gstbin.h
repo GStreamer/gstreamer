@@ -94,10 +94,6 @@ struct _GstBinClass {
   void		(*object_added)		(GstObject *object, GstObject *child);
   void		(*object_removed)	(GstObject *object, GstObject *child);
 
-  /* change the state of elements of the given type */
-  gboolean	(*change_state_type)	(GstBin *bin,
-					 GstElementState state,
-					 GType type);
   /* run a full iteration of operation */
   gboolean	(*iterate)		(GstBin *bin);
 };
@@ -115,8 +111,6 @@ void		gst_bin_remove			(GstBin *bin, GstElement *element);
 GstElement*	gst_bin_get_by_name		(GstBin *bin, const gchar *name);
 GstElement*	gst_bin_get_by_name_recurse_up	(GstBin *bin, const gchar *name);
 const GList*	gst_bin_get_list		(GstBin *bin);
-
-gboolean	gst_bin_set_state_type		(GstBin *bin, GstElementState state, GType type);
 
 gboolean	gst_bin_iterate			(GstBin *bin);
 

@@ -46,9 +46,6 @@ static void 			gst_bin_dispose 		(GObject * object);
 
 static GstElementStateReturn	gst_bin_change_state		(GstElement *element);
 static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
-static gboolean			gst_bin_change_state_type	(GstBin *bin,
-								 GstElementState state,
-								 GType type);
 
 static gboolean 		gst_bin_iterate_func 		(GstBin * bin);
 
@@ -125,7 +122,6 @@ gst_bin_class_init (GstBinClass * klass)
 
   gstelement_class->change_state 	= GST_DEBUG_FUNCPTR (gst_bin_change_state);
 
-  klass->change_state_type 		= GST_DEBUG_FUNCPTR (gst_bin_change_state_type);
   klass->iterate 			= GST_DEBUG_FUNCPTR (gst_bin_iterate_func);
 }
 
@@ -591,62 +587,6 @@ gst_bin_change_state_norecurse (GstBin * bin)
     return GST_STATE_FAILURE;
 }
 
-static gboolean
-gst_bin_change_state_type (GstBin * bin, GstElementState state, GType type)
-{
-  GList *children;
-  GstElement *child;
-
-  g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
-  g_return_val_if_fail (bin->numchildren != 0, FALSE);
-
-  children = bin->children;
-  while (children) {
-    child = GST_ELEMENT (children->data);
-    if (GST_IS_BIN (child)) {
-      if (!gst_bin_set_state_type (GST_BIN (child), state, type))
-	return FALSE;
-    }
-    else if (G_TYPE_CHECK_INSTANCE_TYPE (child, type)) {
-      if (!gst_element_set_state (child, state))
-	return FALSE;
-    }
-    children = g_list_next (children);
-  }
-  if (type == GST_TYPE_BIN)
-    gst_element_set_state (GST_ELEMENT (bin), state);
-
-  return TRUE;
-}
-
-/**
- * gst_bin_set_state_type:
- * @bin: #GstBin to set the state
- * @state: the new state to set the elements to
- * @type: the type of elements to change
- *
- * Sets the state of only those objects of the given type.
- *
- * Returns: indication if the state change was successfull
- */
-gboolean
-gst_bin_set_state_type (GstBin * bin, GstElementState state, GType type)
-{
-  GstBinClass *oclass;
-
-  GST_DEBUG (GST_CAT_STATES, "gst_bin_set_state_type(\"%s\",%d,%s)",
-	     GST_ELEMENT_NAME (bin), state, G_OBJECT_TYPE_NAME (type));
-
-  g_return_val_if_fail (bin != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
-
-  oclass = GST_BIN_CLASS (G_OBJECT_GET_CLASS (bin));
-
-  if (oclass->change_state_type)
-    (oclass->change_state_type) (bin, state, type);
-  return TRUE;
-}
-
 static void
 gst_bin_dispose (GObject * object)
 {
@@ -903,6 +843,10 @@ void
 gst_bin_set_pre_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer func_data)
 {
   g_return_if_fail (GST_IS_BIN (bin));
+
+  if (!GST_FLAG_IS_SET (bin, GST_BIN_FLAG_MANAGER))
+    g_warning ("setting pre_iterate on a non MANAGER bin has no effect");
+  
   bin->pre_iterate_func = func;
   bin->pre_iterate_private = func_data;
 }
@@ -920,6 +864,10 @@ void
 gst_bin_set_post_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer func_data)
 {
   g_return_if_fail (GST_IS_BIN (bin));
+
+  if (!GST_FLAG_IS_SET (bin, GST_BIN_FLAG_MANAGER))
+    g_warning ("setting post_iterate on a non MANAGER bin has no effect");
+
   bin->post_iterate_func = func;
   bin->post_iterate_private = func_data;
 }
