@@ -282,6 +282,7 @@ gst_thread_change_state (GstElement *element)
 
       GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
       gst_thread_signal_thread (thread);
+      pthread_join(thread->thread_id,NULL);
       break;
     default:
       break;
@@ -324,7 +325,8 @@ gst_thread_main_loop (void *arg)
   }
 
   GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
-  //pthread_join (thread->thread_id, 0);
+// FIXME this should be removed (why's it here???)
+//  //pthread_join (thread->thread_id, 0);
 
   GST_INFO (GST_CAT_THREAD, "gstthread: thread \"%s\" is stopped",
 		  GST_ELEMENT_NAME (thread));

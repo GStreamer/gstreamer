@@ -40,6 +40,7 @@ gchar *_gst_progname;
 
 
 extern gint _gst_trace_on;
+extern gboolean _gst_plugin_spew;
 
 
 static gboolean 	gst_init_check 		(int *argc, gchar ***argv);
@@ -128,6 +129,16 @@ gst_init_check (int     *argc,
 
 	(*argv)[i] = NULL;
       }
+      else if (!strncmp ("--gst-plugin-spew", (*argv)[i], 17)) {
+        _gst_plugin_spew = TRUE;
+
+        (*argv)[i] = NULL;
+      }
+      else if (!strncmp ("--gst-plugin-path=", (*argv)[i], 17)) {
+        gst_plugin_add_path ((*argv)[i]+18);
+
+        (*argv)[i] = NULL;
+      }
       else if (!strncmp ("--help", (*argv)[i], 6)) {
 	showhelp = TRUE;
       }
@@ -153,8 +164,10 @@ gst_init_check (int     *argc,
     g_print ("usage %s [OPTION...]\n", (*argv)[0]);
 
     g_print ("\nGStreamer options\n");
-    g_print ("  --gst-info-mask=FLAGS               Gst info flags to set (current %08x)\n", gst_info_get_categories());
-    g_print ("  --gst-debug-mask=FLAGS              Gst debugging flags to set\n");
+    g_print ("  --gst-info-mask=FLAGS               GST info flags to set (current %08x)\n", gst_info_get_categories());
+    g_print ("  --gst-debug-mask=FLAGS              GST debugging flags to set\n");
+    g_print ("  --gst-plugin-spew                   Enable printout of errors while loading GST plugins\n");
+    g_print ("  --gst-plugin-path=PATH              Add a directory to the plugin search path\n");
 
     g_print ("\n  Mask (to be OR'ed)   info/debug         FLAGS   \n");
     g_print ("--------------------------------------------------------\n");
