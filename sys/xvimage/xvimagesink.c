@@ -922,19 +922,8 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
   if (GST_IS_EVENT (data))
     {
       GstEvent *event = GST_EVENT (data);
-      gint64 offset;
-
-      switch (GST_EVENT_TYPE (event))
-        {
-          case GST_EVENT_DISCONTINUOUS:
-            offset = GST_EVENT_DISCONT_OFFSET (event, 0).value;
-            GST_DEBUG ("xvimage discont %" G_GINT64_FORMAT "\n", offset);
-            break;
-          default:
-            gst_pad_event_default (pad, event);
-            return;
-        }
-      gst_event_unref (event);
+      
+      gst_pad_event_default (pad, event);
       return;
     }
   

@@ -207,8 +207,8 @@ gst_alsa_sink_check_event (GstAlsaSink *sink, gint pad_nr)
         break;
       case GST_EVENT_DISCONTINUOUS: 
 	{
-	  gint64 value;
-	  
+	  GstClockTime value;
+
 	  /* only the first pad my seek */
 	  if (pad_nr != 0) {
 	    break;	    
@@ -217,26 +217,6 @@ gst_alsa_sink_check_event (GstAlsaSink *sink, gint pad_nr)
 	    gst_element_set_time (GST_ELEMENT (this), value);
           }
 
-	  if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value)) {
-            /* don't change the value ; it's in samples already */
-          } else if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value)) {
-            if (this->format) value = gst_alsa_bytes_to_samples (this, value);
-          } else if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
-            if (this->format) value = gst_alsa_timestamp_to_samples (this, value);
-          } else {
-            GST_WARNING_OBJECT (this, "could not acquire samplecount after seek, the clock might screw your pipeline now");
-            break;
-          }
-
-          /* if the clock is running */
-	  if (GST_CLOCK_TIME_IS_VALID (this->clock->start_time)) {
-	    g_assert (this->format);
-            /* adjust the start time */
-	    this->clock->start_time +=
-	      gst_alsa_samples_to_timestamp (this, this->transmitted) -
-	      gst_alsa_samples_to_timestamp (this, value);
-	  }
-	  this->transmitted = value;
 	  break;
         }
       default:
@@ -327,7 +307,7 @@ static void
 gst_alsa_sink_loop (GstElement *element)
 {
   snd_pcm_sframes_t avail, avail2, copied, sample_diff, max_discont;
-  snd_pcm_uframes_t samplestamp;
+  snd_pcm_uframes_t samplestamp, time_sample;
   gint i;
   guint bytes; /* per channel */
   GstAlsa *this = GST_ALSA (element);
@@ -367,7 +347,10 @@ sink_restart:
         }
         samplestamp = gst_alsa_timestamp_to_samples (this, GST_BUFFER_TIMESTAMP (sink->buf[i]));
         max_discont = gst_alsa_timestamp_to_samples (this, this->max_discont);
-        sample_diff = samplestamp - this->transmitted;
+        time_sample = gst_alsa_timestamp_to_samples (this, gst_element_get_time (GST_ELEMENT (this)));
+	snd_pcm_delay (this->handle, &sample_diff);
+	/* actual diff = buffer samplestamp - played - to_play */
+	sample_diff = samplestamp - time_sample - sample_diff;
 
         if ((!GST_BUFFER_TIMESTAMP_IS_VALID (sink->buf[i])) ||
             (-max_discont <= sample_diff && sample_diff <= max_discont)) {
@@ -383,7 +366,7 @@ no_difference:
 	             (element->numpads == 1 ? this->format->channels : 1);
 	  int size = samples * snd_pcm_format_physical_width (this->format->format) / 8;
 	  GST_INFO_OBJECT (this, "Allocating %d bytes (%ld samples) now to resync: sample %ld expected, but got %ld\n", 
-			   size, MIN (bytes, sample_diff), this->transmitted, samplestamp);
+			   size, MIN (bytes, sample_diff), time_sample, samplestamp);
 	  sink->data[i] = g_try_malloc (size);
 	  if (!sink->data[i]) {
 	    GST_WARNING_OBJECT (this, "error allocating %d bytes, buffers unsynced now.", size);
@@ -396,7 +379,7 @@ no_difference:
 	  sink->behaviour[i] = 1;
 	} else if (gst_alsa_samples_to_bytes (this, -sample_diff) >= sink->buf[i]->size) {
 	  GST_INFO_OBJECT (this, "Skipping %lu samples to resync (complete buffer): sample %ld expected, but got %ld\n", 
-			   gst_alsa_bytes_to_samples (this, sink->buf[i]->size), this->transmitted, samplestamp);	              
+			   gst_alsa_bytes_to_samples (this, sink->buf[i]->size), time_sample, samplestamp);	              
 	  /* this buffer is way behind */
 	  gst_buffer_unref (sink->buf[i]);
 	  sink->buf[i] = NULL;
@@ -404,7 +387,7 @@ no_difference:
 	} else if (sample_diff < 0) {
 	  gint difference = gst_alsa_samples_to_bytes (this, -samplestamp);
 	  GST_INFO_OBJECT (this, "Skipping %lu samples to resync: sample %ld expected, but got %ld\n",
-			   (gulong) -sample_diff, this->transmitted, samplestamp);
+			   (gulong) -sample_diff, time_sample, samplestamp);
 	  /* this buffer is only a bit behind */
           sink->size[i] = sink->buf[i]->size - difference;
           sink->data[i] = sink->buf[i]->data + difference;
