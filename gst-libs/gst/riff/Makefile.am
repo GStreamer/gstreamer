@@ -1,6 +1,5 @@
-librarydir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
-library_LTLIBRARIES = libgstriff.la
+plugin_LTLIBRARIES = libgstriff.la
 
 libgstriff_la_SOURCES = riffparse.c riffencode.c riffutil.c riff.c
 
