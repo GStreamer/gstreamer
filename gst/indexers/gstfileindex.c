@@ -508,13 +508,16 @@ _file_index_id_save_entries (gpointer *_key,
 			     GstFileIndexId *ii,
 			     gchar *prefix)
 {
+  GError *err;
+  gchar *path;
+  GIOChannel *chan;
+
   if (!ii->array)
     return;
 
-  GError *err = NULL;
-  gchar *path = g_strdup_printf ("%s/%d", prefix, ii->id);
-  GIOChannel *chan =
-    g_io_channel_new_file (path, "w", &err);
+  err = NULL;
+  path = g_strdup_printf ("%s/%d", prefix, ii->id);
+  chan = g_io_channel_new_file (path, "w", &err);
   g_free (path);
   if (err) goto fail;
   
