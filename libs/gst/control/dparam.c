@@ -154,11 +154,11 @@ gst_dparam_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 			break;
 			
 		case ARG_VALUE_INT:
-			g_value_set_float (value, dparam->value_int);
+			g_value_set_int (value, dparam->value_int);
 			break;
 			
 		case ARG_VALUE_INT64:
-			g_value_set_float (value, dparam->value_int64);
+			g_value_set_int64 (value, dparam->value_int64);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -194,7 +194,7 @@ gst_dparam_set_property (GObject *object, guint prop_id, const GValue *value, GP
 						  G_GINT64_FORMAT " to %"
 						  G_GINT64_FORMAT,
 				  dparam->value_int64, g_value_get_int64 (value));
-			dparam->value_int64 = g_value_get_int (value);
+			dparam->value_int64 = g_value_get_int64 (value);
 			GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			break;
