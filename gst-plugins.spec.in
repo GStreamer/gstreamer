@@ -86,8 +86,8 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 
 # Clean out files that should not be part of the rpm.
 # This is the recommended way of dealing with it for RH8
-rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}reamer-%{majorminor}/*.la
-rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}reamer-%{majorminor}/*.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.la
+rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 rm -f $RPM_BUILD_ROOT%{_includedir}/gstreamer-%{majorminor}/gst/media-info/media-info.h
@@ -99,7 +99,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 
 %files
 %defattr(-, root, root)
-%doc AUTHORS COPYING README RELEASE
+%doc AUTHORS COPYING README RELEASE REQUIREMENTS
 %{_bindir}/gst-launch-ext
 %{_bindir}/gst-visualise
 %{_mandir}/man1/gst-launch-ext.*
