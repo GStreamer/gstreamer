@@ -162,6 +162,80 @@ gst_audioscale_class_init (AudioscaleClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 }
 
+static void
+gst_audioscale_expand_value (GValue * dest, const GValue * src)
+{
+  int rate_min, rate_max;
+
+  if (G_VALUE_TYPE (src) == G_TYPE_INT ||
+      G_VALUE_TYPE (src) == GST_TYPE_INT_RANGE) {
+    if (G_VALUE_TYPE (src) == G_TYPE_INT) {
+      rate_min = g_value_get_int (src);
+      rate_max = rate_min;
+    } else {
+      rate_min = gst_value_get_int_range_min (src);
+      rate_max = gst_value_get_int_range_max (src);
+    }
+
+    rate_min /= 2;
+    if (rate_min < 1)
+      rate_min = 1;
+    if (rate_max < G_MAXINT / 2) {
+      rate_max *= 2;
+    } else {
+      rate_max = G_MAXINT;
+    }
+
+    g_value_init (dest, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (dest, rate_min, rate_max);
+    return;
+  }
+
+  if (G_VALUE_TYPE (src) == GST_TYPE_LIST) {
+    int i;
+
+    g_value_init (dest, GST_TYPE_LIST);
+    for (i = 0; i < gst_value_list_get_size (src); i++) {
+      const GValue *s = gst_value_list_get_value (src, i);
+      GValue d = { 0 };
+      int j;
+
+      gst_audioscale_expand_value (&d, s);
+
+      for (j = 0; j < gst_value_list_get_size (dest); j++) {
+        const GValue *s2 = gst_value_list_get_value (dest, j);
+        GValue d2 = { 0 };
+
+        gst_value_union (&d2, &d, s2);
+        if (G_VALUE_TYPE (&d2) == GST_TYPE_INT_RANGE) {
+          g_value_unset ((GValue *) s2);
+          gst_value_init_and_copy ((GValue *) s2, &d2);
+          break;
+        }
+        g_value_unset (&d2);
+      }
+      if (j == gst_value_list_get_size (dest)) {
+        gst_value_list_append_value (dest, &d);
+      }
+      g_value_unset (&d);
+    }
+
+    if (gst_value_list_get_size (dest) == 1) {
+      const GValue *s = gst_value_list_get_value (dest, 0);
+      GValue d = { 0 };
+
+      gst_value_init_and_copy (&d, s);
+      g_value_unset (dest);
+      gst_value_init_and_copy (dest, &d);
+      g_value_unset (&d);
+    }
+
+    return;
+  }
+
+  GST_ERROR ("unexpected value type");
+}
+
 static GstCaps *
 gst_audioscale_getcaps (GstPad * pad)
 {
@@ -179,33 +253,19 @@ gst_audioscale_getcaps (GstPad * pad)
   /* we do this hack, because the audioscale lib doesn't handle
    * rate conversions larger than a factor of 2 */
   for (i = 0; i < gst_caps_get_size (caps); i++) {
-    int rate_min, rate_max;
     GstStructure *structure = gst_caps_get_structure (caps, i);
     const GValue *value;
+    GValue dest = { 0 };
 
     value = gst_structure_get_value (structure, "rate");
-    if (value == NULL)
-      return NULL;
-
-    if (G_VALUE_TYPE (value) == G_TYPE_INT) {
-      rate_min = g_value_get_int (value);
-      rate_max = rate_min;
-    } else if (G_VALUE_TYPE (value) == GST_TYPE_INT_RANGE) {
-      rate_min = gst_value_get_int_range_min (value);
-      rate_max = gst_value_get_int_range_max (value);
-    } else {
+    if (value == NULL) {
+      GST_ERROR ("caps structure doesn't have required rate field");
       return NULL;
     }
 
-    rate_min /= 2;
-    if (rate_max < G_MAXINT / 2) {
-      rate_max *= 2;
-    } else {
-      rate_max = G_MAXINT;
-    }
+    gst_audioscale_expand_value (&dest, value);
 
-    gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, rate_min,
-        rate_max, NULL);
+    gst_structure_set_value (structure, "rate", &dest);
   }
 
   return caps;
