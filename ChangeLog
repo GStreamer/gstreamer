@@ -1,3 +1,12 @@
+2004-10-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_query),
+	(gst_ogg_demux_src_event), (_find_chain_seek),
+	(gst_ogg_pad_push):
+	  Check for pad availability before using it.
+	* ext/ogg/gstoggdemux.c: (_find_chain_process):
+	  Fix parsing of chained ogg. Needs more work on the decoder side.
+
 2004-10-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/spectrum/Makefile.am:
