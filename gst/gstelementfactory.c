@@ -160,14 +160,26 @@ gst_elementfactory_new (const gchar *name, GType type,
   g_return_val_if_fail(type != 0, NULL);
 
   factory = gst_elementfactory_find (name);
-  if (!factory) {
-    factory = GST_ELEMENTFACTORY (g_object_new (GST_TYPE_ELEMENTFACTORY, NULL));
-  }
+
+  if (factory)
+    {
+      if (!type)
+	g_warning ("gst_elementfactory_new for `%s' still didn't set type",
+		   name);
+
+      if (!factory->type)
+	factory->type = type;
+      else if (factory->type != type)
+	g_critical ("%s type changed", name);
+
+      return factory;
+    }
+
+  // probably created by the registry
+  factory = GST_ELEMENTFACTORY (g_object_new (GST_TYPE_ELEMENTFACTORY, NULL));
 
   gst_object_set_name (GST_OBJECT (factory), name);
   factory->type = type;
-  if (factory->details)
-    g_free (factory->details);
   factory->details = details;
 
   return factory;
@@ -199,7 +211,12 @@ gst_elementfactory_create (GstElementFactory *factory,
 
   gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory));
 
-  g_return_val_if_fail(factory->type != 0, NULL);
+  if (factory->type == 0)
+    {
+      g_critical ("Factory for `%s' has no type",
+		  gst_object_get_name (GST_OBJECT (factory)));
+      return NULL;
+    }
 
   // create an instance of the element
   element = GST_ELEMENT(g_object_new(factory->type,NULL));
