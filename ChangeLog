@@ -1,3 +1,32 @@
+2004-06-26  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/Makefile.am:
+	* gst/tcp/gstmultifdsink.c: (gst_recover_policy_get_type),
+	(gst_multifdsink_get_type), (gst_multifdsink_base_init),
+	(gst_multifdsink_class_init), (gst_multifdsink_init),
+	(gst_multifdsink_debug_fdset), (gst_multifdsink_client_remove),
+	(gst_multifdsink_handle_client_read),
+	(gst_multifdsink_client_queue_data),
+	(gst_multifdsink_client_queue_caps),
+	(gst_multifdsink_client_queue_buffer),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_recover_client), (gst_multifdsink_queue_buffer),
+	(gst_multifdsink_handle_clients), (gst_multifdsink_thread),
+	(gst_multifdsink_chain), (gst_multifdsink_set_property),
+	(gst_multifdsink_get_property), (gst_multifdsink_init_send),
+	(gst_multifdsink_close), (gst_multifdsink_change_state):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcpplugin.c: (plugin_init):
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_get_type),
+	(gst_tcpserversink_class_init), (gst_tcpserversink_init),
+	(gst_tcpserversink_handle_server_read),
+	(gst_tcpserversink_handle_select),
+	(gst_tcpserversink_set_property), (gst_tcpserversink_get_property),
+	(gst_tcpserversink_init_send), (gst_tcpserversink_close):
+	* gst/tcp/gsttcpserversink.h:
+	Added multifdsink, made tcpserversink a subclass of fdsink, removed
+	one of the locks, added recovery policy to multifdsink.
+
 2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/videorate/gstvideorate.c: (gst_videorate_chain):
