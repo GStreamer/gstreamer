@@ -1665,6 +1665,13 @@ gst_asf_demux_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Windows Media Video 8");
       break;
 
+    case GST_MAKE_FOURCC ('W', 'M', 'V', '3'):
+      caps = gst_caps_new_simple ("video/x-wmv",
+          "wmvversion", G_TYPE_INT, 3, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Windows Media Video 9");
+      break;
+
     case GST_MAKE_FOURCC ('M', 'P', 'G', '4'):
       caps = gst_caps_new_simple ("video/x-msmpeg",
           "msmpegversion", G_TYPE_INT, 41, NULL);
