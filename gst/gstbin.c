@@ -441,10 +441,9 @@ static int gst_bin_loopfunc_wrapper(int argc,char *argv[]) {
     DEBUG("** gst_bin_loopfunc_wrapper(): element is chain-based, calling in infinite loop\n");
     if (GST_IS_SRC(element)) {
       //while (1) {
-      while (GST_STATE(element) == GST_STATE_PLAYING) {
         DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of source\n");
         gst_src_push(GST_SRC(element));
-      }
+      //}
     } else {
       while (1) {
         pads = element->pads;
@@ -625,8 +624,8 @@ void gst_bin_iterate_func(GstBin *bin) {
   if (bin->need_cothreads) {
     // all we really have to do is switch to the first child
     // FIXME this should be lots more intelligent about where to start
-  //g_print("** in gst_bin_iterate_func()==================================%s\n",
-  //        gst_element_get_name(GST_ELEMENT(bin->children->data)));
+  DEBUG("** in gst_bin_iterate_func()==================================%s\n",
+          gst_element_get_name(GST_ELEMENT(bin->children->data)));
     cothread_switch(GST_ELEMENT(bin->children->data)->threadstate);
   } else {
     entries = bin->entries;

@@ -45,8 +45,8 @@ int main(int argc,char *argv[])
   g_assert(audiosink != NULL);
 
   /* add objects to the main pipeline */
-  gst_bin_add(GST_BIN(pipeline), disksrc);
-  gst_bin_add(GST_BIN(pipeline), audiosink);
+  gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
+  gst_pipeline_add_sink(GST_PIPELINE(pipeline), audiosink);
 
   if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
     g_print("unable to handle stream\n");

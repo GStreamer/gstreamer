@@ -55,9 +55,6 @@ libgstinclude_HEADERS =	\
 	gstbufferpool.h	\
 	gstclock.h	\
 	gstcpu.h	\
-	gstarch.h       \
-	gsti386.h       \
-	gstppc.h        \
 	gstelement.h	\
 	gstbin.h	\
 	gstpipeline.h	\
@@ -74,6 +71,11 @@ libgstinclude_HEADERS =	\
 	gsttee.h	\
 	gstxml.h	\
 	cothreads.h
+
+noinst_HEADERS =	\
+	gstarch.h       \
+	gsti386.h       \
+	gstppc.h        
 
 CFLAGS += -O2 -Wall
 

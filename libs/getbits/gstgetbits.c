@@ -184,7 +184,7 @@ void gst_getbits_init(gst_getbits_t *gb, GstGetbitsCallback callback, void *data
       gb->showbits = _gst_showbits_i386;
       gb->flushbits = _gst_flushbits_i386;
       gb->backbits = _gst_getbits_back_i386;
-      printf("gstgetbits: using intel optimized versions\n");
+      printf("gstgetbits: using i386 optimized versions\n");
 #else
       gb->get1bit = _gst_get1bit_int;
       gb->getbits = _gst_getbits_int;

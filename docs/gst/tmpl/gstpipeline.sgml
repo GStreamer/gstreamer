@@ -36,6 +36,24 @@ pipeline figure out what plugins to use.</para>
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_pipeline_add_sink ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+@sink: 
+
+
+<!-- ##### FUNCTION gst_pipeline_add_src ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+@src: 
+
+
 <!-- ##### FUNCTION gst_pipeline_autoplug ##### -->
 <para>
 

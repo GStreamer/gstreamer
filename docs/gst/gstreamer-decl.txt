@@ -1328,6 +1328,9 @@ extern GstElementDetails gst_pipeline_details;
 <NAME>GstPipeline</NAME>
 struct GstPipeline {
   GstBin bin;
+
+  GstElement *src;         // we only allow one src element
+  GList      *sinks;	   // and multiple sinks
 };
 </STRUCT>
 <STRUCT>
@@ -1354,6 +1357,16 @@ guchar *name
 <NAME>gst_pipeline_autoplug</NAME>
 <RETURNS>gboolean  </RETURNS>
 GstPipeline *pipeline
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_pipeline_add_src</NAME>
+<RETURNS>void  </RETURNS>
+GstPipeline *pipeline, GstElement *src
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_pipeline_add_sink</NAME>
+<RETURNS>void  </RETURNS>
+GstPipeline *pipeline, GstElement *sink
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_pipeline_iterate</NAME>
@@ -2066,6 +2079,36 @@ GstBufferPool *pool
 <RETURNS>guint32  </RETURNS>
 
 </FUNCTION>
+<MACRO>
+<NAME>GET_SP</NAME>
+#define GET_SP(target) \
+  __asm__("movl %%esp, %0" : "=m"(target) : : "esp", "ebp");
+</MACRO>
+<MACRO>
+<NAME>SET_SP</NAME>
+#define SET_SP(source) \
+  __asm__("movl %0, %%esp\n" : "=m"(thread->sp));
+</MACRO>
+<MACRO>
+<NAME>JUMP</NAME>
+#define JUMP(target) \
+    __asm__("jmp " SYMBOL_NAME_STR(cothread_stub))
+</MACRO>
+<MACRO>
+<NAME>GET_SP</NAME>
+#define GET_SP(target) \
+	__asm__("stw 1,%0" : "=m"(target) : : "r1");
+</MACRO>
+<MACRO>
+<NAME>SET_SP</NAME>
+#define SET_SP(source) \
+	__asm__("lwz 1,%0" : "=m"(source))
+</MACRO>
+<MACRO>
+<NAME>JUMP</NAME>
+#define JUMP(target) \
+    __asm__("b " SYMBOL_NAME_STR(cothread_stub))
+</MACRO>
 <MACRO>
 <NAME>GST_TYPE_ASYNCDISKSRC</NAME>
 #define GST_TYPE_ASYNCDISKSRC \

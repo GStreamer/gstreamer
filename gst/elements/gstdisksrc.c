@@ -221,7 +221,6 @@ void gst_disksrc_push(GstSrc *src) {
   else if (readbytes == 0) {
     gst_src_signal_eos(GST_SRC(disksrc));
     gst_buffer_unref(buf);
-    GST_STATE(src) = GST_STATE_PAUSED;
     return;
   }
 

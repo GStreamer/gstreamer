@@ -124,10 +124,12 @@ void cothread_switch(cothread_state *thread) {
     exit(2);
   }
 
+  /*
   if (current == thread) {
     g_print("cothread: trying to switch to same thread, legal but not necessary\n");
-    return;
+    //return;
   }
+  */
 
   // find the number of the thread to switch to
   ctx->current = thread->threadnum;
@@ -150,10 +152,10 @@ void cothread_switch(cothread_state *thread) {
     // switch to it
     longjmp(thread->jmp,1);
   } else {
-    DEBUG("cothread: exit thread \n");
     SET_SP(thread->sp);
     // start it
     //JUMP(cothread_stub);
     cothread_stub();
+    DEBUG("cothread: exit thread \n");
   }
 }

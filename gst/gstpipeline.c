@@ -91,6 +91,8 @@ gst_pipeline_class_init(GstPipelineClass *klass) {
 }
 
 static void gst_pipeline_init(GstPipeline *pipeline) {
+  pipeline->src = NULL;
+  pipeline->sinks = NULL;
 }
 
 
@@ -111,7 +113,8 @@ GstElement *gst_pipeline_new(guchar *name) {
 }
 
 static void gst_pipeline_prepare(GstPipeline *pipeline) {
-  g_print("GstPipeline: preparing pipeline \"%s\" for playing\n", gst_element_get_name(GST_ELEMENT(pipeline)));
+  g_print("GstPipeline: preparing pipeline \"%s\" for playing\n", 
+		  gst_element_get_name(GST_ELEMENT(pipeline)));
 }
 
 static void gst_pipeline_have_type(GstSink *sink, GstSink *sink2, gpointer data) {
@@ -125,7 +128,8 @@ static guint16 gst_pipeline_typefind(GstPipeline *pipeline, GstElement *element)
   GstElement *typefind;
   guint16 type_id = 0;
 
-  g_print("GstPipeline: typefind for element \"%s\" %p\n", gst_element_get_name(element), &found);
+  g_print("GstPipeline: typefind for element \"%s\" %p\n", 
+		  gst_element_get_name(element), &found);
 
   typefind = gst_elementfactory_make("typefind","typefind");
   g_return_val_if_fail(typefind != NULL, FALSE);
@@ -142,6 +146,7 @@ static guint16 gst_pipeline_typefind(GstPipeline *pipeline, GstElement *element)
   gst_element_set_state(GST_ELEMENT(element),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(element),GST_STATE_PLAYING);
 
+  // keep pushing buffers... the have_type signal handler will set the found flag
   while (!found) {
     gst_src_push(GST_SRC(element));
   }
@@ -150,9 +155,8 @@ static guint16 gst_pipeline_typefind(GstPipeline *pipeline, GstElement *element)
 
   if (found) {
     type_id = gst_util_get_int_arg(GTK_OBJECT(typefind),"type");
+    gst_pad_set_type_id(gst_element_get_pad(element, "src"), type_id);
   }
-
-  gst_pad_set_type_id(gst_element_get_pad(element, "src"), type_id);
 
   gst_pad_disconnect(gst_element_get_pad(element,"src"),
                     gst_element_get_pad(typefind,"sink"));
@@ -165,6 +169,7 @@ static guint16 gst_pipeline_typefind(GstPipeline *pipeline, GstElement *element)
 static void gst_pipeline_pads_autoplug_func(GstElement *src, GstPad *pad, GstElement *sink) {
   GList *sinkpads;
   GstPad *sinkpad;
+  gboolean connected = FALSE;
 
   g_print("gstpipeline: autoplug pad connect function type %d\n", pad->type);
 
@@ -173,13 +178,23 @@ static void gst_pipeline_pads_autoplug_func(GstElement *src, GstPad *pad, GstEle
     sinkpad = (GstPad *)sinkpads->data;
 
     // if we have a match, connect the pads
-    if (sinkpad->type == pad->type && sinkpad->direction == GST_PAD_SINK && !GST_PAD_CONNECTED(sinkpad)) {
+    if (sinkpad->type == pad->type && 
+        sinkpad->direction == GST_PAD_SINK && 
+        !GST_PAD_CONNECTED(sinkpad)) 
+    {
       gst_pad_connect(pad, sinkpad);
-      g_print("gstpipeline: autoconnect pad \"%s\" (%d) in element %s <-> ", pad->name, pad->type, gst_element_get_name(src));
-      g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, sinkpad->type, gst_element_get_name(sink));
+      g_print("gstpipeline: autoconnect pad \"%s\" (%d) in element %s <-> ", pad->name, 
+		      pad->type, gst_element_get_name(src));
+      g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, sinkpad->type, 
+		      gst_element_get_name(sink));
+      connected = TRUE;
       break;
     }
     sinkpads = g_list_next(sinkpads);
+  }
+
+  if (!connected) {
+    g_print("gstpipeline: no path to sinks for type %d\n", pad->type);
   }
 }
 
@@ -201,10 +216,14 @@ static void gst_pipeline_pads_autoplug(GstElement *src, GstElement *sink) {
         sinkpad = (GstPad *)sinkpads->data;
 
 	// if we have a match, connect the pads
-	if (sinkpad->type == srcpad->type && sinkpad->direction == GST_PAD_SINK && !GST_PAD_CONNECTED(sinkpad)) {
+	if (sinkpad->type == srcpad->type && 
+	    sinkpad->direction == GST_PAD_SINK && 
+	    !GST_PAD_CONNECTED(sinkpad)) {
           gst_pad_connect(srcpad, sinkpad);
-          g_print("gstpipeline: autoconnect pad \"%s\" (%d) in element %s <-> ", srcpad->name, srcpad->type, gst_element_get_name(src));
-          g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, sinkpad->type, gst_element_get_name(sink));
+          g_print("gstpipeline: autoconnect pad \"%s\" (%d) in element %s <-> ", 
+			  srcpad->name, srcpad->type, gst_element_get_name(src));
+          g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, 
+			  sinkpad->type, gst_element_get_name(sink));
 	  connected = TRUE;
 	  goto end;
 	}
@@ -220,6 +239,51 @@ end:
     gtk_signal_connect(GTK_OBJECT(src),"new_pad",
                  GTK_SIGNAL_FUNC(gst_pipeline_pads_autoplug_func), sink);
   }
+}
+
+/**
+ * gst_pipeline_add_src:
+ * @pipeline: the pipeline to add the src to
+ * @src: the src to add to the pipeline
+ *
+ * Adds a src element to the pipeline. This element
+ * will be used as a src for autoplugging. If you add more
+ * than one src element, the previously added element will
+ * be removed.
+ */
+void gst_pipeline_add_src(GstPipeline *pipeline, GstElement *src) 
+{
+  g_return_if_fail(pipeline != NULL);
+  g_return_if_fail(GST_IS_PIPELINE(pipeline));
+  g_return_if_fail(src != NULL);
+  g_return_if_fail(GST_IS_ELEMENT(src));
+
+  if (pipeline->src) {
+    printf("gstpipeline: *WARNING* removing previously added element \"%s\"\n",
+			  gst_element_get_name(pipeline->src));
+    gst_bin_remove(GST_BIN(pipeline), pipeline->src);
+  }
+  pipeline->src = src;
+  gst_bin_add(GST_BIN(pipeline), src);
+}
+
+/**
+ * gst_pipeline_add_sink:
+ * @pipeline: the pipeline to add the sink to
+ * @sink: the sink to add to the pipeline
+ *
+ * Adds a sink element to the pipeline. This element
+ * will be used as a sink for autoplugging
+ */
+void gst_pipeline_add_sink(GstPipeline *pipeline, GstElement *sink) 
+{
+  g_return_if_fail(pipeline != NULL);
+  g_return_if_fail(GST_IS_PIPELINE(pipeline));
+  g_return_if_fail(sink != NULL);
+  g_return_if_fail(GST_IS_ELEMENT(sink));
+
+  pipeline->sinks = g_list_prepend(pipeline->sinks, sink);
+  gst_bin_add(GST_BIN(pipeline), sink);
 }
 
 /**
@@ -240,70 +304,70 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
   guint16 src_type = 0, sink_type = 0;
   gboolean complete = FALSE;
 
+  g_return_val_if_fail(pipeline != NULL, FALSE);
   g_return_val_if_fail(GST_IS_PIPELINE(pipeline), FALSE);
 
-  g_print("GstPipeline: autopluging pipeline \"%s\"\n", gst_element_get_name(GST_ELEMENT(pipeline)));
+  g_print("GstPipeline: autopluging pipeline \"%s\"\n", 
+		  gst_element_get_name(GST_ELEMENT(pipeline)));
 
-  elements = gst_bin_get_list(GST_BIN(pipeline));
 
-  // fase 1, find all the sinks and sources... FIXME need better way to do this...
+  // fase 1, run typedetect on the source if needed... 
+  if (!pipeline->src) {
+    g_print("GstPipeline: no source detected, can't autoplug pipeline \"%s\"\n", 
+		gst_element_get_name(GST_ELEMENT(pipeline)));
+    return FALSE;
+  }
+
+  factory = gst_element_get_factory(pipeline->src);
+
+  src_types = factory->src_types;
+  if (src_types == NULL) {
+    g_print("GstPipeline: source \"%s\" has no MIME type, running typefind...\n", 
+		gst_element_get_name(pipeline->src));
+
+    src_type = gst_pipeline_typefind(pipeline, pipeline->src);
+
+    if (src_type) {
+      g_print("GstPipeline: source \"%s\" type found %d\n", gst_element_get_name(pipeline->src), 
+		  src_type);
+    }
+    else {
+      g_print("GstPipeline: source \"%s\" has no type\n", gst_element_get_name(pipeline->src));
+      return FALSE;
+    }
+  }
+  else {
+    while (src_types) {
+      // FIXME loop over types and find paths...
+      src_types = g_list_next(src_types);
+    }
+  }
+
+  srcelement = pipeline->src;
+
+  elements = pipeline->sinks;
+
+  // fase 2, find all the sinks.. 
   while (elements) {
     element = GST_ELEMENT(elements->data);
 
     if (GST_IS_SINK(element)) {
       g_print("GstPipeline: found sink \"%s\"\n", gst_element_get_name(element));
 
-      if (sink_type) {
-        g_print("GstPipeline: multiple sinks detected, can't autoplug pipeline \"%s\"\n", gst_element_get_name(GST_ELEMENT(pipeline)));
-	return FALSE;
-      }
       sinkelement = element;
       factory = gst_element_get_factory(element);
       
       sink_types = factory->sink_types;
       if (sink_types == NULL) {
-        g_print("GstPipeline: sink \"%s\" has no MIME type, can't autoplug \n", gst_element_get_name(element));
+        g_print("GstPipeline: sink \"%s\" has no MIME type, can't autoplug \n", 
+			gst_element_get_name(element));
 	return FALSE;
       }
       else {
 	sink_type = GPOINTER_TO_UINT(sink_types->data);
-        g_print("GstPipeline: sink \"%s\" has MIME type %d \n", gst_element_get_name(element), sink_type);
+        g_print("GstPipeline: sink \"%s\" has MIME type %d \n", 
+			gst_element_get_name(element), sink_type);
       }
-    }
-    else if (GST_IS_SRC(element)) {
-      g_print("GstPipeline: found source \"%s\"\n", gst_element_get_name(element));
-
-      if (src_type) {
-        g_print("GstPipeline: multiple sources detected, can't autoplug pipeline \"%s\"\n", gst_element_get_name(GST_ELEMENT(pipeline)));
-	return FALSE;
-      }
-
-      srcelement = element;
-
-      factory = gst_element_get_factory(element);
-
-      src_types = factory->src_types;
-      if (src_types == NULL) {
-        g_print("GstPipeline: source \"%s\" has no MIME type, running typefind...\n", gst_element_get_name(element));
-
-	src_type = gst_pipeline_typefind(pipeline, element);
-
-	if (src_type) {
-          g_print("GstPipeline: source \"%s\" type found %d\n", gst_element_get_name(element), src_type);
-	}
-	else {
-          g_print("GstPipeline: source \"%s\" has no type\n", gst_element_get_name(element));
-	  return FALSE;
-	}
-      }
-      else {
-        while (src_types) {
-	  src_types = g_list_next(src_types);
-        }
-      }
-    }
-    else {
-      g_print("GstPipeline: found invalid element \"%s\", not source or sink\n", gst_element_get_name(element));
     }
 
     elements = g_list_next(elements);
@@ -312,7 +376,7 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
   factories = gst_type_get_sink_to_src(src_type, sink_type);
 
   while (factories) {
-    // fase 2: find elements to form a pad
+    // fase 3: find elements to form a pad
        
     factory = (GstElementFactory *)(factories->data);
 
@@ -335,7 +399,8 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
     return TRUE;
   }
   
-  g_print("GstPipeline: unable to autoplug pipeline \"%s\"\n", gst_element_get_name(GST_ELEMENT(pipeline)));
+  g_print("GstPipeline: unable to autoplug pipeline \"%s\"\n", 
+		  gst_element_get_name(GST_ELEMENT(pipeline)));
   return FALSE;
 }
 

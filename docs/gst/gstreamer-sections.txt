@@ -16,6 +16,9 @@ cothread_setfunc
 cothread_switch
 cothread_main
 <SUBSECTION Standard>
+GET_SP
+JUMP
+SET_SP
 </SECTION>
 
 <SECTION>
@@ -297,6 +300,8 @@ gst_pad_get_type
 <TITLE>GstPipeline</TITLE>
 GstPipeline
 gst_pipeline_new
+gst_pipeline_add_sink
+gst_pipeline_add_src
 gst_pipeline_autoplug
 gst_pipeline_destroy
 gst_pipeline_iterate

@@ -48,6 +48,9 @@ typedef struct _GstPipelineClass GstPipelineClass;
 
 struct _GstPipeline {
   GstBin bin;
+
+  GstElement *src;         // we only allow one src element
+  GList      *sinks;	   // and multiple sinks
 };
 
 struct _GstPipelineClass {
@@ -59,6 +62,9 @@ GstElement *gst_pipeline_new(guchar *name);
 #define gst_pipeline_destroy(pipeline) gst_object_destroy(GST_OBJECT(pipeline))
 
 gboolean gst_pipeline_autoplug(GstPipeline *pipeline);
+
+void gst_pipeline_add_src(GstPipeline *pipeline, GstElement *src);
+void gst_pipeline_add_sink(GstPipeline *pipeline, GstElement *sink);
 
 void gst_pipeline_iterate(GstPipeline *pipeline);
 
