@@ -1,3 +1,10 @@
+2003-12-21  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstqueue.c: (gst_queue_handle_pending_events),
+	(gst_queue_chain), (gst_queue_handle_src_event):
+	  implement timeout for sending events. Workaround for if the
+	  pipeline on this queue is not passing any data.
+
 2003-12-21  Ronald Bultje <rbultje@ronald.bitfreak.net>
                                                                                 
         * ChangeLog: moved to gstreamer/docs/random/old/ChangeLog.gstreamer
