@@ -142,7 +142,7 @@ gst_play_init (GstPlay *play)
 
 	colorspace = gst_elementfactory_make ("colorspace", "colorspace");
 	if (colorspace == NULL) {
-	  g_warning ("could not create a colorspace element, doing without");
+	  g_warning ("could not create the 'colorspace' element, doing without");
 	  gst_element_add_ghost_pad (priv->video_element, 
 				   gst_element_get_pad (priv->video_show, "sink"),
 				   "sink");
@@ -237,7 +237,7 @@ gst_play_object_introspect (GstObject *object, const gchar *property, GstElement
 	GtkArgInfo *arg;
 	GstElement *element;
 
-	if (!GST_IS_ELEMENT (object))
+	if (!GST_IS_ELEMENT (object) && !GST_IS_BIN (object))
 		return;
 
 	element = GST_ELEMENT (object);
@@ -270,20 +270,16 @@ gst_play_object_added (GstAutoplug* autoplug, GstObject *object, GstPlay *play)
 		priv->can_seek = FALSE;
 	}
 
-	if (GST_IS_BIN (object)) {
-		//gtk_signal_connect (GTK_OBJECT (object), "object_added", gst_play_object_added, play);
-	}
-	else {
-		// first come first serve here...
-		if (!priv->offset_element)
-			gst_play_object_introspect (object, "offset", &priv->offset_element);
-		if (!priv->bit_rate_element)
-			gst_play_object_introspect (object, "bit_rate", &priv->bit_rate_element);
-		if (!priv->media_time_element)
-			gst_play_object_introspect (object, "media_time", &priv->media_time_element);
-		if (!priv->current_time_element)
-			gst_play_object_introspect (object, "current_time", &priv->current_time_element);
-	}
+	// first come first serve here...
+	if (!priv->offset_element)
+		gst_play_object_introspect (object, "offset", &priv->offset_element);
+	if (!priv->bit_rate_element)
+		gst_play_object_introspect (object, "bit_rate", &priv->bit_rate_element);
+	if (!priv->media_time_element)
+		gst_play_object_introspect (object, "media_time", &priv->media_time_element);
+	if (!priv->current_time_element)
+		gst_play_object_introspect (object, "current_time", &priv->current_time_element);
+
 }
 
 static void
@@ -390,7 +386,7 @@ gst_play_set_uri (GstPlay *play, const guchar *uri)
 		g_free (priv->uri);
 
 
-	/* see if it looks like a ARI */
+	/* see if it looks like an URI */
 	if ((uriloc = strstr (uri, ":/"))) {
 	  priv->src = gst_elementfactory_make ("gnomevfssrc", "srcelement");
 
