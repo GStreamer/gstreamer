@@ -52,8 +52,6 @@ struct _GstXML {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-typedef struct _GstXMLNs GstXMLNs;
-
 struct _GstXMLClass {
   GstObjectClass parent_class;
 

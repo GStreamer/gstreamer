@@ -33,12 +33,6 @@ XML save/restore operations of pipelines
 @arg1: 
 @arg2: 
 
-<!-- ##### STRUCT GstXMLNs ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### FUNCTION gst_xml_write ##### -->
 <para>
 

@@ -151,6 +151,15 @@ Example #2:
  - osssink.iterate() is called
 
 
+Evil:
+
+  fakesrc ! tee ! fakesink tee0. ! never_accept_a_buffer_sink
+
+  sinesrc ! osssink videotestsrc ! ximagesink
+  
+  fakesrc ! fakesink (pausing)
+
+  sinesrc ! identity ! osssink
 
 
 

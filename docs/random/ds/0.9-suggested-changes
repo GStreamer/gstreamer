@@ -86,6 +86,8 @@ API:
 
  - rename GST_TYPE_FIXED_LIST to GST_TYPE_ARRAY
 
+ - remove GstMemChunk
+
 caps:
 
   (Company:)

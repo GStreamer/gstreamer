@@ -1,3 +1,28 @@
+2004-08-18  David Schleef  <ds@schleef.org>
+
+	* docs/gst/Makefile.am: Remove --ignore-fail-on-non-empty (#150331)
+	* docs/libs/Makefile.am: same
+	* docs/gst/tmpl/gstxml.sgml: Remove GstXMLNs
+	* docs/random/ds/0.9-planning: random additions
+	* docs/random/ds/0.9-suggested-changes: same
+	* gst/gstxml.h: remove vestigal GstXMLNs definition
+
+	Preferred caps: (#147789)
+	* docs/gst/gstreamer-sections.txt: Add symbols
+	* docs/gst/tmpl/gstcaps.sgml: Add symbols
+	* gst/gstcaps.c: (gst_caps_copy), (gst_caps_free),
+	(gst_caps_append), (gst_caps_copy_1), (gst_caps_intersect),
+	(gst_caps_union), (gst_caps_save_thyself), (gst_caps_load_thyself),
+	(gst_caps_get_preferred), (gst_caps_set_preferred),
+	(gst_caps_get_structure_by_id), (gst_caps_prefer_foreach),
+	(gst_caps_use_preferred): Handle caps preferences
+	* gst/gstcaps.h: Add caps preferences
+	* gst/gstpad.c: (gst_pad_link_get_preferred),
+	(gst_pad_link_fixate), (gst_pad_link_call_link_functions),
+	(gst_pad_renegotiate), (gst_pad_guess_preferred),
+	(gst_pad_get_caps), (gst_pad_push):  Use caps preferences for
+	negotiation.
+
 2004-08-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/autoplug/gstspideridentity.c:

@@ -142,6 +142,7 @@ GST_CAPS_IS_SIMPLE
 gst_caps_is_simple
 GST_DEBUG_CAPS
 GST_STATIC_CAPS
+GST_STATIC_CAPS_PREFERRED
 GstCaps
 GstStaticCaps
 gst_caps_new_empty
@@ -181,6 +182,9 @@ gst_caps_from_string
 gst_caps_structure_fixate_field_nearest_int
 gst_caps_structure_fixate_field_nearest_double
 gst_caps_subtract
+gst_caps_get_preferred
+gst_caps_set_preferred
+gst_caps_use_preferred
 <SUBSECTION Standard>
 GST_CAPS
 GST_IS_CAPS
