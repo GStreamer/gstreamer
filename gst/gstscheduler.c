@@ -705,8 +705,6 @@ gst_scheduler_clock_wait (GstScheduler *sched, GstElement *element,
     return sclass->clock_wait (sched, element, id, jitter);
   else 
     return gst_clock_id_wait (id, jitter);
-
-  return GST_CLOCK_TIMEOUT;
 }
 
 /**
