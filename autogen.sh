@@ -4,94 +4,85 @@
 DIE=0
 package=GStreamer
 srcfile=gst/gstobject.h
+#DEBUG=defined
 
-(autoconf --version) < /dev/null > /dev/null 2>&1 || {
-	echo
-	echo "You must have autoconf installed to compile $package."
-	echo "Download the appropriate package for your distribution,"
-	echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/autoconf/"
-	DIE=1
+debug ()
+# print out a debug message if DEBUG is a defined variable
+{
+  if test ! -z $DEBUG
+  then
+    echo "DEBUG: $1"
+  fi
 }
 
-# thomasvs added an autoconf version check
-AC_MAJOR=2
-AC_MINOR=52
-AC_VERSION=$AC_MAJOR.$AC_MINOR
-autoconfvermin=`(autoconf --version|head -n 1|sed 's/^.* //;s/\./ /g;';echo "$AC_MAJOR $AC_MINOR")|sort -n|head -n 1`
+version_check ()
+# check the version of a package
+# first argument : package name (executable)
+# second argument : source download url
+# rest of arguments : major, minor, micro version
+{
+  PACKAGE=$1
+  URL=$2
+  MAJOR=$3
+  MINOR=$4
+  MICRO=$5
 
-if test "x$autoconfvermin" != "x$AC_MAJOR $AC_MINOR"; then
-# version is less than the minimum suitable version
-	echo
-	echo "You must have autoconf version $AC_VERSION or greater installed."
-	echo "Download the appropriate package for your distribution,"
-	echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/autoconf/"
-	DIE=1
-fi
+  debug "major $MAJOR minor $MINOR micro $MICRO"
+  VERSION=$MAJOR
+  if test ! -z $MINOR; then VERSION=$VERSION.$MINOR; else MINOR=0; fi
+  if test ! -z $MICRO; then VERSION=$VERSION.$MICRO; else MICRO=0; fi
 
-(automake --version) < /dev/null > /dev/null 2>&1 || {
+  debug "major $MAJOR minor $MINOR micro $MICRO"
+  echo "Checking for $1 > $VERSION ..."
+  ($PACKAGE --version) < /dev/null > /dev/null 2>&1 || 
+  {
 	echo
-	echo "You must have automake installed to compile $package."
+	echo "You must have $PACKAGE installed to compile $package."
 	echo "Download the appropriate package for your distribution,"
-	echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/automake/"
-	DIE=1
+	echo "or get the source tarball at $URL"
+	return 1
+  }
+  # the following line is carefully crafted sed magic
+  pkg_version=`$PACKAGE --version|head -n 1|sed 's/^[a-zA-z\.\ ()]*//;s/ .*$//'`
+  debug "pkg_version $pkg_version"
+  pkg_major=`echo $pkg_version | cut -d. -f1`
+  pkg_minor=`echo $pkg_version | cut -d. -f2`
+  pkg_micro=`echo $pkg_version | cut -d. -f3`
+  test -z $pkg_minor && pkg_minor=0
+  test -z $pkg_micro && pkg_micro=0
+
+  debug "found major $pkg_major minor $pkg_minor micro $pkg_micro"
+
+  #if test -z "$pkg_micro"; then
+  #  pkg_micro=0
+  #fi
+
+  #start checking the version
+  debug echo "version check"
+  if [ $pkg_major -le $MAJOR ]; then
+    if [ $pkg_major -lt $MAJOR ]; then
+      WRONG=1
+    elif [ $pkg_minor -le $MINOR ]; then
+      if [ $pkg_minor -lt $MINOR ]; then
+        WRONG=1
+      elif [ $pkg_micro -lt $MICRO ]; then
+	WRONG=1
+      fi
+    fi
+  fi
+
+  if test "$WRONG" = 1; then
+    echo
+    echo "You must have $PACKAGE $VERSION or greater to compile $package."
+    echo "Get the latest version from $URL"
+    return 1
+  fi
 }
-automakevermin=`(automake --version|head -n 1|sed 's/^.* //;s/\./ /g;';echo "1 5")|sort -n|head -n 1`
-if test "x$automakevermin" != "x1 5"; then
-# version is less than 1.5, the minimum suitable version
-	echo
-	echo "You must have automake version 1.5 or greater installed."
-	echo "Download the appropriate package for your distribution,"
-	echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/automake/"
-	DIE=1
-fi
 
-(pkg-config --version) < /dev/null > /dev/null 2>&1 || {
-	echo
-	echo "You must have pkg-config installed to compile $package."
-	echo "Download the appropriate package for your distribution,"
-	echo "or get the source tarball at:"
-	echo "http://www.freedesktop.org/software/pkgconfig/"
-	DIE=1
-}
-
-LT_MAJOR=1
-LT_MINOR=4
-LT_MICRO=0
-LT_VERSION=$LT_MAJOR.$LT_MINOR.$LT_MICRO
-(libtool --version) < /dev/null > /dev/null 2>&1 || {
-	echo
-	echo "You must have libtool installed to compile $package."
-	echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
-	DIE=1
-}
-
-libtool_version=`libtool --version | sed 's/^.* \([0-9a-z\.]*\) .*$/\1/'`
-libtool_major=`echo $libtool_version | cut -d. -f1`
-libtool_minor=`echo $libtool_version | cut -d. -f2`
-libtool_micro=`echo $libtool_version | cut -d. -f3`
-if [ x$libtool_micro = x ]; then
-	libtool_micro=0
-fi
-if [ $libtool_major -le $LT_MAJOR ]; then
-	if [ $libtool_major -lt $LT_MAJOR ]; then
-		echo
-		echo "You must have libtool $LT_VERSION or greater to compile $package."
-		echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
-		DIE=1
-	elif [ $libtool_minor -le $LT_MINOR ]; then
-		if [ $libtool_minor -lt $LT_MINOR ]; then
-			echo
-			echo "You must have libtool $LT_VERSION or greater to compile $package."
-			echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
-			DIE=1
-		elif [ $libtool_micro -lt $LT_MICRO ]; then
-			echo
-			echo "You must have libtool $LT_VERSION or greater to compile $package."
-			echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
-			DIE=1
-		fi
-	fi
-fi
+version_check "autoconf" "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
+version_check "automake" "ftp://ftp.gnu.org/pub/gnu/automake/" 1 5 || DIE=1
+version_check "libtool" "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
+version_check "pkg-config" "http://www.freedesktop.org/software/pkgconfig" 0 7 0 || DIE=1
 
 if test "$DIE" -eq 1; then
 	exit 1
