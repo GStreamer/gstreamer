@@ -193,14 +193,6 @@ Get access to the free function of the data
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_data_free ##### -->
-<para>
-
-</para>
-
-@data: 
-
-
 <!-- ##### FUNCTION gst_data_ref ##### -->
 <para>
 

@@ -338,15 +338,6 @@ If the refcount is 1, this function just returns the original buffer.
 @Returns: the #GstBuffer that can safely be written to.
 
 
-<!-- ##### MACRO gst_buffer_free ##### -->
-<para>
-Frees the given buffer, regardless of the refcount. 
-It is dangerous to use this function, you should use gst_buffer_unref() instead.
-</para>
-
-@buf: a #GstBuffer to free.
-
-
 <!-- ##### FUNCTION gst_buffer_create_sub ##### -->
 <para>
 

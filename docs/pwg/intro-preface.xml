@@ -108,7 +108,8 @@
           are described in the chapters on 
           <!--FIXME: WRITEME <xref linkend="chapter-building-props"/> -->
           (WRITEME)
-          and <xref linkend="chapter-building-signals"/>. Finally, you will see in
+          and <xref linkend="chapter-building-signals"/>.
+          Finally, you will see in
           <!--<xref linkend="chapter-building-testapp"/>-->(WRITEME) 
           how to write a short test
           application to try out your new plugin.

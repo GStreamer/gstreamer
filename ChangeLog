@@ -1,3 +1,28 @@
+2004-03-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+          remove whitespace
+	* docs/gst/tmpl/gstbuffer.sgml:
+	* docs/gst/tmpl/gstdata.sgml:
+	* docs/gst/tmpl/gstreamer-unused.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+          doc update
+	* docs/manuals.mak:
+          add a FIXME
+	* docs/pwg/intro-preface.xml:
+	* docs/pwg/pwg.xml:
+          remove GNOME
+	* gst/gst.c: (init_post):
+          try GST_PLUGIN_PATH paths for the _global_registry first
+	* gst/gstelement.h:
+          add the error message as well, otherwise (null) debug info doesn't
+          make much sense
+	* tools/gst-register.c: (main):
+          spill paths to next registry if this registry is not writable
+	* po/fr.po:
+	* po/nl.po:
+          translation updates
+
 2004-03-01  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gstbuffer.c (_gst_buffer_initialize): 

@@ -532,7 +532,7 @@ init_post (void)
 
   plugin_path = g_getenv ("GST_PLUGIN_PATH");
 #ifndef GST_DISABLE_REGISTRY
-  split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func, _user_registry);
+  split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func, _global_registry);
 #endif /* GST_DISABLE_REGISTRY */
 
   /* register core plugins */

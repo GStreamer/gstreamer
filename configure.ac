@@ -478,10 +478,8 @@ dnl #############################
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
 AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
-
 AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
-
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
 
 
@@ -510,7 +508,7 @@ AC_HELP_STRING([--with-package-origin],[specify package origin URL to use in plu
   no) AC_MSG_ERROR(bad value ${withval} for --with-package-origin) ;;
   *) GST_ORIGIN="${withval}" ;;
 esac], 
-[GST_ORIGIN="http://gstreamer.net"]) dnl Default value
+[GST_ORIGIN="http://gstreamer.net/"]) dnl Default value
 AC_MSG_NOTICE(Using $GST_ORIGIN as package origin)
 AC_DEFINE_UNQUOTED(GST_ORIGIN, "$GST_ORIGIN", [package origin])
 

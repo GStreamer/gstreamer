@@ -7620,6 +7620,14 @@ Free the memory allocated by this bin
 
 @Returns: 
 
+<!-- ##### MACRO gst_buffer_free ##### -->
+<para>
+Frees the given buffer, regardless of the refcount. 
+It is dangerous to use this function, you should use gst_buffer_unref() instead.
+</para>
+
+@buf: a #GstBuffer to free.
+
 <!-- ##### FUNCTION gst_buffer_get_first_meta ##### -->
 <para>
 
@@ -8194,6 +8202,13 @@ safely be modified.
 </para>
 
 @Returns: 
+
+<!-- ##### FUNCTION gst_data_free ##### -->
+<para>
+
+</para>
+
+@data: 
 
 <!-- ##### FUNCTION gst_data_needs_copy_on_write ##### -->
 <para>

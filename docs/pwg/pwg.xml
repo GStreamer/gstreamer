@@ -81,12 +81,12 @@
 
   <!-- ############ part ############# -->
 
-  <part id="part-building" xreflabel="Building a Filter">
-    <title>Building a Filter</title>
+  <part id="part-building" xreflabel="Building a Plugin">
+    <title>Building a Plugin</title>
     <partintro>
       <para>
         You are now ready to learn how to build a plugin. In this part of the
-        guide, you will learn how to apply basic &GStreamer; and GNOME
+        guide, you will learn how to apply basic &GStreamer;
         programming concepts to write a simple plugin. The previous parts of the
         guide have contained no explicit example code, perhaps making things a
         bit abstract and difficult to understand. In contrast, this section will
@@ -94,7 +94,8 @@
         example audio filter plugin called <quote>ExampleFilter</quote>.
       </para>
       <para>
-        The example filter will begin with a single input pad and a single
+        The example filter element will begin with a single input pad and a 
+        single
         output pad. The filter will, at first, simply pass media and event data
         from its sink pad to its source pad without modification. But by the end
         of this part of the guide, you will learn to add some more interesting

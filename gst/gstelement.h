@@ -144,6 +144,7 @@ typedef enum {
 #define GST_ELEMENT_ERROR(el, domain, code, message, debug) G_STMT_START { \
   gchar *__msg = _gst_element_error_printf message; \
   gchar *__dbg = _gst_element_error_printf debug; \
+  GST_ERROR_OBJECT (el, "%s", __msg); \
   GST_ERROR_OBJECT (el, "%s", __dbg); \
   gst_element_error_full (GST_ELEMENT(el), \
   GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code, \

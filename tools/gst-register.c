@@ -128,6 +128,12 @@ int main (int argc,char *argv[])
 	                            gst_registry_get_path_list (registry));
 	g_assert (path_spill != NULL);
       }
+      /* also move over paths if the registry wasn't writable
+       * FIXME: we should check if the paths that were loaded from this
+         registry get removed from the path_list so we only try to
+         spill paths that could not be registered */
+      path_spill = g_list_concat (path_spill,
+                                  gst_registry_get_path_list (registry));
     }
 
     dir_list = gst_registry_get_path_list(registry);

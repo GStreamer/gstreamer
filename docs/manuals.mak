@@ -28,6 +28,7 @@ SRC = $(XML) $(PNG_SRC) $(FIG_SRC) $(CSS) $(EXTRA_SOURCES)
 PAPER_LOCALE = nl_NL
 
 ### generate all documentation by default
+# FIXME: I don't think this rule survives automake in any of the dirs ?
 all: html ps pdf
 
 # can we generate HTML ?
