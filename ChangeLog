@@ -1,3 +1,10 @@
+2004-04-29  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* ext/alsa/gstalsa.c : (gst_alsa_class_probe_devices)
+	* ext/alsa/gstalsa.h :
+	change alsa pcm device discovery to find more than 1 device
+	per card. code review by Ronald.
+
 2004-04-29  David Schleef  <ds@schleef.org>
 
 	* sys/oss/gstosselement.c: (gst_osselement_rate_probe_check):
