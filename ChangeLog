@@ -1,3 +1,19 @@
+2004-05-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/asfdemux/Makefile.am:
+	* gst/asfdemux/asfheaders.c:
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/gstasf.c: (plugin_init):
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_get_type),
+	(gst_asf_demux_base_init), (gst_asf_demux_process_comment),
+	(gst_asf_demux_setup_pad):
+	* gst/asfdemux/gstasfdemux.h:
+	* gst/asfdemux/gstasfmux.c:
+	* gst/asfdemux/gstasfmux.h:
+	  Add tagging support to demuxer, split out registration in its own
+	  file instead of in demux (hacky), and prevent having some tables
+	  in our memory multiple times (in asfheaders.h).
+
 2004-05-01  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/matroska/matroska-demux.c:
