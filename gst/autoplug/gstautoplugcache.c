@@ -92,8 +92,6 @@ static void			gst_autoplugcache_get_property	(GObject *object, guint prop_id,
 
 static void			gst_autoplugcache_loop		(GstElement *element);
 
-static GstPadNegotiateReturn    gst_autoplugcache_nego_src	(GstPad *pad, GstCaps **caps, gpointer *data);
-static GstPadNegotiateReturn    gst_autoplugcache_nego_sink	(GstPad *pad, GstCaps **caps, gpointer *data);
 static GstElementStateReturn	gst_autoplugcache_change_state	(GstElement *element);
 
 
@@ -207,6 +205,10 @@ gst_autoplugcache_loop (GstElement *element)
   if (cache->current_playout == NULL) {
     /* get a buffer */
     buf = gst_pad_pull (cache->sinkpad);
+    if (GST_IS_EVENT (buf)) {
+      gst_pad_event_default (cache->sinkpad, GST_EVENT (buf));
+      return;
+    }
 
     /* add it to the cache, though cache == NULL */
     gst_buffer_ref (buf);
@@ -240,6 +242,10 @@ gst_autoplugcache_loop (GstElement *element)
 
     /* get a buffer */
     buf = gst_pad_pull (cache->sinkpad);
+    if (GST_IS_EVENT (buf)) {
+      gst_pad_event_default (cache->sinkpad, GST_EVENT (buf));
+      return;
+    }
 
     /* add it to the front of the cache */
     gst_buffer_ref (buf);
@@ -268,23 +274,6 @@ gst_autoplugcache_loop (GstElement *element)
   }
 }
 
-static GstPadNegotiateReturn
-gst_autoplugcache_nego_src (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstAutoplugCache *cache = GST_AUTOPLUGCACHE (GST_PAD_PARENT (pad));
-
-  return gst_pad_negotiate_proxy (pad, cache->sinkpad, caps);
-}
-
-static GstPadNegotiateReturn
-gst_autoplugcache_nego_sink (GstPad *pad, GstCaps **caps, gpointer *data)
-{
-  GstAutoplugCache *cache = GST_AUTOPLUGCACHE (GST_PAD_PARENT (pad));
-
-  return gst_pad_negotiate_proxy (pad, cache->srcpad, caps);
-}
-
-
 static GstElementStateReturn
 gst_autoplugcache_change_state (GstElement *element)
 {
@@ -307,11 +296,7 @@ gst_autoplugcache_set_property (GObject *object, guint prop_id, const GValue *va
       cache->caps_proxy = g_value_get_boolean (value);
 GST_DEBUG(0,"caps_proxy is %d\n",cache->caps_proxy);
       if (cache->caps_proxy) {
-        gst_pad_set_negotiate_function (cache->sinkpad, GST_DEBUG_FUNCPTR(gst_autoplugcache_nego_sink));
-        gst_pad_set_negotiate_function (cache->srcpad, GST_DEBUG_FUNCPTR(gst_autoplugcache_nego_src));
       } else {
-        gst_pad_set_negotiate_function (cache->sinkpad, NULL);
-        gst_pad_set_negotiate_function (cache->srcpad, NULL);
       }
       break;
     case ARG_RESET:
