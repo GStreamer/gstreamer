@@ -11,12 +11,14 @@ libdvdsrc_la_CFLAGS = $(GST_CFLAGS)
 
 noinst_HEADERS = dvdsrc.h
 
-if HAVE_GTK
-noinst_PROGRAMS = demo-play
-endif
+# fix this
 
-demo_play_SOURCES = demo-play.c
-demo_play_CFLAGS  = $(GST_CFLAGS) $(GTK_CFLAGS)
-demo_play_LDFLAGS = $(GST_LIBS) $(GTK_LIBS)
+#noinst_PROGRAMS = demo-play
+#
+#demo_play_SOURCES = demo-play.c
+#demo_play_CFLAGS  = $(GST_CFLAGS) $(GNOME_CFLAGS)
+#demo_play_LDFLAGS = $(GST_LIBS) $(GNOME_LIBS)
 
-EXTRA_DIST = README
+#EXTRA_DIST = README
+
+EXTRA_DIST = demo-play.c README
