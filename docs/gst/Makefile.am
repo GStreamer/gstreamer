@@ -93,7 +93,7 @@ scanobj: $(srcdir)/$(DOC_MODULE).types
 
 # FIXME: this is nasty, we shouldn't have to do this, HELP
 tmpl: scanobj gstreamer-decl.txt
-	cp $(top_srcdir)/docs/gst/gstreamer-sections.txt .
+	if test ! -e gstreamer-sections.txt; then cp $(top_srcdir)/docs/gst/gstreamer-sections.txt .; fi
 	gtkdoc-mktmpl --module=$(DOC_MODULE)
 
 sgml: tmpl
