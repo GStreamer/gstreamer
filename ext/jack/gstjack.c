@@ -439,7 +439,7 @@ gst_jack_loop (GstElement *element)
         pad = GST_JACK_PAD (pads);
             
         if (this->direction == GST_PAD_SINK) {
-            buffer = gst_pad_pull (pad->pad);
+            buffer = GST_BUFFER (gst_pad_pull (pad->pad));
                 
             if (GST_IS_EVENT (buffer)) {
                 GstEvent *event = GST_EVENT (buffer);
@@ -470,7 +470,7 @@ gst_jack_loop (GstElement *element)
             gst_buffer_set_data (buffer, pad->data, len);
             GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_DONTFREE);
                 
-            gst_pad_push (pad->pad, buffer);
+            gst_pad_push (pad->pad, GST_DATA (buffer));
         }
         pads = g_list_next (pads);
     }
