@@ -1,7 +1,7 @@
 ### this is the part you can customize if you need to
 
 # base name of doc
-DOC = gstreamer-faq
+DOC = faq
 
 # main xml file
 MAIN = $(DOC).xml
