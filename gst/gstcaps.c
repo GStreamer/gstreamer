@@ -976,8 +976,10 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
         gst_caps_append_structure (dest, gst_structure_copy (min));
       }
     }
-    if (gst_caps_is_empty (dest))
+    if (gst_caps_is_empty (dest)) {
+      gst_caps_free (src);
       return dest;
+    }
   }
 
   gst_caps_free (src);

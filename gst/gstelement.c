@@ -3220,6 +3220,8 @@ gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
       /* FIXME: can this just be g_object_set ? */
       gst_util_set_object_arg (G_OBJECT (element), name, value);
       /* g_object_set (G_OBJECT (element), name, value, NULL); */
+      g_free (name);
+      g_free (value);
     }
     children = children->next;
   }

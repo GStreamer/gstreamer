@@ -3002,11 +3002,13 @@ gst_pad_load_and_link (xmlNodePtr self, GstObject * parent)
   gchar **split;
   GstElement *target;
   GstObject *grandparent;
+  gchar *name = NULL;
 
   while (field) {
     if (!strcmp (field->name, "name")) {
-      pad = gst_element_get_pad (GST_ELEMENT (parent),
-          xmlNodeGetContent (field));
+      name = xmlNodeGetContent (field);
+      pad = gst_element_get_pad (GST_ELEMENT (parent), name);
+      g_free (name);
     } else if (!strcmp (field->name, "peer")) {
       peer = xmlNodeGetContent (field);
     }
@@ -3023,8 +3025,11 @@ gst_pad_load_and_link (xmlNodePtr self, GstObject * parent)
     GST_CAT_DEBUG (GST_CAT_XML,
         "Could not parse peer '%s' for pad %s:%s, leaving unlinked",
         peer, GST_DEBUG_PAD_NAME (pad));
+
+    g_free (peer);
     return;
   }
+  g_free (peer);
 
   g_return_if_fail (split[0] != NULL);
   g_return_if_fail (split[1] != NULL);
