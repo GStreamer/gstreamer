@@ -38,12 +38,9 @@
 static GstElementDetails dvdec_details = {
   "DV (smpte314) decoder plugin",
   "Codec/Video/Decoder",
-  "LGPL",
   "Uses libdv to decode DV video (libdv.sourceforge.net)",
-  VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"
   "Wim Taymans <wim.taymans@tvd.be>",
-  "(C) 2001-2002",
 };
 
 
@@ -175,6 +172,7 @@ gst_dvdec_quality_get_type (void)
 }
 
 /* A number of functon prototypes are given so we can refer to them later. */
+static void		gst_dvdec_base_init		(gpointer g_class);
 static void		gst_dvdec_class_init		(GstDVDecClass *klass);
 static void		gst_dvdec_init			(GstDVDec *dvdec);
 
@@ -225,7 +223,7 @@ gst_dvdec_get_type (void)
   if (!dvdec_type) {
     static const GTypeInfo dvdec_info = {
       sizeof (GstDVDecClass),      
-      NULL,      
+      gst_dvdec_base_init,      
       NULL,
       (GClassInitFunc) gst_dvdec_class_init,
       NULL,
@@ -237,6 +235,23 @@ gst_dvdec_get_type (void)
     dvdec_type = g_type_register_static (GST_TYPE_ELEMENT, "GstDVDec", &dvdec_info, 0);
   }
   return dvdec_type;
+}
+
+static void
+gst_dvdec_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  /* The pad templates can be easily generated from the factories above,
+   * and then added to the list of padtemplates for the elementfactory.
+   * Note that the generated padtemplates are stored in static global
+   * variables, for the gst_dvdec_init function to use later on.
+   */
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET(sink_temp));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET(video_src_temp));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET(audio_src_temp));
+
+  gst_element_class_set_details (element_class, &dvdec_details);
 }
 
 /* In order to create an instance of an object, the class must be
@@ -964,39 +979,26 @@ gst_dvdec_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
  * this function is called to register everything that the plugin provides.
  */
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  /* We need to create an ElementFactory for each element we provide.
-   * This consists of the name of the element, the GType identifier,
-   * and a pointer to the details structure at the top of the file.
-   */
-  factory = gst_element_factory_new("dvdec", GST_TYPE_DVDEC, &dvdec_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
-  /* The pad templates can be easily generated from the factories above,
-   * and then added to the list of padtemplates for the elementfactory.
-   * Note that the generated padtemplates are stored in static global
-   * variables, for the gst_dvdec_init function to use later on.
-   */
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET(sink_temp));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET(video_src_temp));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET(audio_src_temp));
-
-  /* The very last thing is to register the elementfactory with the plugin. */
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "dvdec", GST_RANK_PRIMARY, gst_dvdec_get_type()))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "dvdec",
-  plugin_init
-};
+  "Uses libdv to decode DV video (libdv.sourceforge.net)",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+);
