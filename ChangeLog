@@ -1,3 +1,12 @@
+2004-01-25  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/elements/gstbufferstore.c: (gst_buffer_store_get_buffer):
+	  fix bug where buffer was not assembled correctly
+	* gst/elements/gsttee.c: (gst_tee_class_init), (gst_tee_init):
+	  silence by default
+	* gst/elements/gsttypefind.c: (gst_type_find_element_chain):
+	  only seek if there's no more buffers that could work without seeking
+
 2004-01-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gsttag.c: (_gst_tag_initialize):

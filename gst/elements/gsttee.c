@@ -99,7 +99,7 @@ gst_tee_class_init (GstTeeClass *klass)
                       0, G_MAXINT, 0, G_PARAM_READABLE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
     g_param_spec_boolean ("silent", "silent", "silent",
-                      FALSE, G_PARAM_READWRITE));
+                      TRUE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
     g_param_spec_string ("last_message", "last_message", "last_message",
 			 NULL, G_PARAM_READABLE));
@@ -120,7 +120,6 @@ gst_tee_init (GstTee *tee)
   gst_pad_set_link_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
   gst_pad_set_getcaps_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
 
-  tee->silent = FALSE;
   tee->last_message = NULL;
 }
 

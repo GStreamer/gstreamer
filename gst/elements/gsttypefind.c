@@ -490,7 +490,12 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
       gst_pad_push (typefind->src, data);
       return;
     case MODE_TYPEFIND: {
+      guint64 current_offset;
+      
       gst_buffer_store_add_buffer (typefind->store, GST_BUFFER (data));
+      current_offset = GST_BUFFER_OFFSET_IS_VALID (data) ? 
+	  GST_BUFFER_OFFSET (data) + GST_BUFFER_SIZE (data) : 
+	  gst_buffer_store_get_size (typefind->store, 0);
       gst_data_unref (data);
       if (typefind->possibilities == NULL) {
 	/* not yet started, get all typefinding functions into our "queue" */
@@ -563,30 +568,38 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
 	/* set up typefind element for next iteration */
 	typefind->possibilities = g_list_sort (typefind->possibilities, compare_type_find_entry);
 	
-	walk = typefind->possibilities;
-	while (walk) {
+	/* look for typefind functions that require data without seeking */
+	for (walk = typefind->possibilities; walk; walk = g_list_next (walk)) {
 	  entry = (TypeFindEntry *) walk->data;
-	  walk = g_list_next (walk);
-	  if (entry->requested_size > 0) {
-	    /* FIXME: need heuristic to find out if we should seek */
-	    gint64 seek_offset;
-	    GstEvent *event;
+	  if (entry->requested_offset <= current_offset &&
+	      entry->requested_offset + entry->requested_size > current_offset)
+	    break;
+	}
+	if (!walk) {
+	  /* find out if we should seek */
+	  for (walk = typefind->possibilities; walk; walk = g_list_next (walk)) {
+	    entry = (TypeFindEntry *) walk->data;
+	    if (entry->requested_size > 0) {
+	      /* FIXME: need heuristic to find out if we should seek */
+	      gint64 seek_offset;
+	      GstEvent *event;
 
-	    seek_offset = entry->requested_offset > 0 ? entry->requested_offset : 
-			  find_element_get_length (entry) + entry->requested_offset;
-	    seek_offset += gst_buffer_store_get_size (typefind->store, seek_offset);
-	    event = gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET, seek_offset);
-	    if (gst_pad_send_event (GST_PAD_PEER (typefind->sink), event)) {
-	      /* done seeking */
-	      GST_DEBUG_OBJECT (typefind, "'%s' was reset - seeked to %"G_GINT64_FORMAT, 
-		      GST_PLUGIN_FEATURE_NAME (entry->factory), seek_offset);
-	      break;
-	    } else if (entry->requested_offset < 0) {
-	      /* impossible to seek */
-	      GST_DEBUG_OBJECT (typefind, "'%s' was reset - couldn't seek to %"G_GINT64_FORMAT, 
-		      GST_PLUGIN_FEATURE_NAME (entry->factory), seek_offset);
-	      entry->requested_size = 0;
-	      entry->requested_offset = 0;
+	      seek_offset = entry->requested_offset > 0 ? entry->requested_offset : 
+			    find_element_get_length (entry) + entry->requested_offset;
+	      seek_offset += gst_buffer_store_get_size (typefind->store, seek_offset);
+	      event = gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET, seek_offset);
+	      if (gst_pad_send_event (GST_PAD_PEER (typefind->sink), event)) {
+		/* done seeking */
+		GST_DEBUG_OBJECT (typefind, "'%s' was reset - seeked to %"G_GINT64_FORMAT, 
+			GST_PLUGIN_FEATURE_NAME (entry->factory), seek_offset);
+		break;
+	      } else if (entry->requested_offset < 0) {
+		/* impossible to seek */
+		GST_DEBUG_OBJECT (typefind, "'%s' was reset - couldn't seek to %"G_GINT64_FORMAT, 
+			GST_PLUGIN_FEATURE_NAME (entry->factory), seek_offset);
+		entry->requested_size = 0;
+		entry->requested_offset = 0;
+	      }
 	    }
 	  }
 	}

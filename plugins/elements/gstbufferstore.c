@@ -364,6 +364,7 @@ gst_buffer_store_get_buffer (GstBufferStore *store, guint64 offset, guint size)
 	walk = g_list_next (walk);
 	tmp = MIN (GST_BUFFER_SIZE (current), size);
 	memcpy (data, GST_BUFFER_DATA (current), tmp);
+	data += tmp;
 	size -= tmp;
       }
     }
