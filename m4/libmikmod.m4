@@ -12,10 +12,16 @@ AC_DEFUN(AM_PATH_LIBMIKMOD,
 [dnl 
 dnl Get the cflags and libraries from the libmikmod-config script
 dnl
-AC_ARG_WITH(libmikmod-prefix,[  --with-libmikmod-prefix=PFX   Prefix where libmikmod is installed (optional)],
-            libmikmod_config_prefix="$withval", libmikmod_config_prefix="")
-AC_ARG_WITH(libmikmod-exec-prefix,[  --with-libmikmod-exec-prefix=PFX Exec prefix where libmikmod is installed (optional)],
-            libmikmod_config_exec_prefix="$withval", libmikmod_config_exec_prefix="")
+AC_ARG_WITH(libmikmod-prefix,
+  AC_HELP_STRING([--with-libmikmod-prefix=PFX],
+                 [prefix where libmikmod is installed (optional)]),
+  libmikmod_config_prefix="$withval", libmikmod_config_prefix="")
+
+AC_ARG_WITH(libmikmod-exec-prefix, 
+  AC_HELP_STRING([--with-libmikmod-exec-prefix=PFX],
+                 [exec prefix where libmikmod is installed (optional)]),
+  libmikmod_config_exec_prefix="$withval", libmikmod_config_exec_prefix="")
+
 AC_ARG_ENABLE(libmikmodtest,
   AC_HELP_STRING([--disable-libmikmodtest],
                  [Do not try to compile and run a test libmikmod program]),
