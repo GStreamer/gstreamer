@@ -6,7 +6,8 @@ endif
 
 SUBDIRS = audio idct resample riff floatcast \
 		$(GCONF_DIR) media-info mixer \
-		play video
+		navigation play video
 
 DIST_SUBDIRS = audio idct resample riff floatcast \
-		gconf media-info mixer play video
+		gconf media-info mixer navigation \
+		play video
