@@ -1,5 +1,18 @@
 2005-03-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_get_direction):
+	* gst/gstpad.h:
+	* testsuite/bins/interface.c: (main):
+	* testsuite/refcounting/bin.c: (add_remove_test1),
+	(add_remove_test2), (main):
+	* testsuite/refcounting/element.c: (main):
+	* testsuite/refcounting/element_pad.c: (main):
+	* testsuite/refcounting/pad.c: (main):
+	Fix pad_get_direction wrt ghostpads.
+	Fix some more testsuites.
+
+2005-03-09  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_set_index_func),
 	(gst_bin_set_clock_func), (gst_bin_get_clock_func),
 	(gst_bin_add_func), (gst_bin_add), (gst_bin_remove_func),

@@ -357,7 +357,7 @@ struct _GstGhostPadClass {
 /* GstGhostPad */
 #define GST_GPAD_REALPAD(pad)		(((GstGhostPad *)(pad))->realpad)
 
-/* Generic */
+/* Generic, be VERY carefull with these macros as the ghostpad could be lost */
 #define GST_PAD_REALIZE(pad)		(GST_IS_REAL_PAD(pad) ? ((GstRealPad *)(pad)) : GST_GPAD_REALPAD(pad))
 #define GST_PAD_DIRECTION(pad)		GST_RPAD_DIRECTION(GST_PAD_REALIZE(pad))
 #define GST_PAD_CAPS(pad)		GST_RPAD_CAPS(GST_PAD_REALIZE (pad))

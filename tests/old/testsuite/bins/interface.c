@@ -25,8 +25,8 @@ gint
 main (gint argc, gchar * argv[])
 {
   GstBin *bin, *bin2;
-  GstIterator *it;
   GstElement *filesrc;
+  GstIterator *it;
   gpointer item;
 
   gst_init (&argc, &argv);
@@ -41,6 +41,7 @@ main (gint argc, gchar * argv[])
 
   g_assert (gst_bin_get_by_interface (bin, GST_TYPE_URI_HANDLER) == filesrc);
   it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
+  g_assert (it != NULL);
   g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
   g_assert (item == (gpointer) filesrc);
   g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
@@ -52,6 +53,7 @@ main (gint argc, gchar * argv[])
       gst_element_factory_make ("identity", NULL), NULL);
   g_assert (gst_bin_get_by_interface (bin, GST_TYPE_URI_HANDLER) == filesrc);
   it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
+  g_assert (it != NULL);
   g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
   g_assert (item == (gpointer) filesrc);
   g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);

@@ -35,10 +35,10 @@ main (int argc, gchar * argv[])
       gst_alloc_trace_live_all () - usage1);
 
   element = gst_element_factory_make ("fakesrc", NULL);
-  g_assert (GST_OBJECT_FLOATING (element));
+  g_assert (GST_OBJECT_IS_FLOATING (element));
   gst_object_ref (GST_OBJECT (element));
   gst_object_sink (GST_OBJECT (element));
-  g_assert (!GST_OBJECT_FLOATING (element));
+  g_assert (!GST_OBJECT_IS_FLOATING (element));
   gst_object_unref (GST_OBJECT (element));
   g_print ("create/ref/sink/unref new element %d\n",
       gst_alloc_trace_live_all () - usage1);
@@ -55,9 +55,9 @@ main (int argc, gchar * argv[])
 
 #if 0
   element = gst_element_factory_make ("fakesrc", NULL);
-  g_assert (!GST_OBJECT_DESTROYED (element));
+  g_assert (!GST_OBJECT_IS_DESTROYED (element));
   gst_object_unref (GST_OBJECT (element));
-  g_assert (GST_OBJECT_DESTROYED (element));
+  g_assert (GST_OBJECT_IS_DESTROYED (element));
   gst_object_unref (GST_OBJECT (element));
   g_print ("create/destroy/unref new element %d\n",
       gst_alloc_trace_live_all () - usage1);

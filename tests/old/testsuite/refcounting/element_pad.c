@@ -27,8 +27,8 @@ main (int argc, gchar * argv[])
   g_assert (GST_IS_ELEMENT (element));
   pad = gst_element_get_pad (element, "sink");
   g_assert (GST_IS_PAD (pad));
-  g_assert (GST_OBJECT_FLOATING (element));
-  g_assert (!GST_OBJECT_FLOATING (pad));
+  g_assert (GST_OBJECT_IS_FLOATING (element));
+  g_assert (!GST_OBJECT_IS_FLOATING (pad));
   g_assert (gst_pad_get_parent (pad) == element);
   gst_object_unref (GST_OBJECT (element));
   g_print ("create/addpad/unref 1 new element: %ld\n", vmsize () - usage1);

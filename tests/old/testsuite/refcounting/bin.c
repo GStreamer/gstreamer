@@ -50,9 +50,9 @@ add_remove_test1 (void)
   bin = gst_bin_new ("testbin");
   element = gst_element_factory_make ("fakesrc", NULL);
   gst_element_set_name (element, "test1");
-  g_assert (GST_OBJECT_FLOATING (element));
+  g_assert (GST_OBJECT_IS_FLOATING (element));
   gst_bin_add (GST_BIN (bin), element);
-  g_assert (!GST_OBJECT_FLOATING (element));
+  g_assert (!GST_OBJECT_IS_FLOATING (element));
   gst_bin_remove (GST_BIN (bin), element);
 
   gst_object_unref (GST_OBJECT (bin));
@@ -68,16 +68,16 @@ add_remove_test2 (void)
   element = gst_element_factory_make ("fakesrc", NULL);
   gst_element_set_name (element, "test1");
   gst_object_ref (GST_OBJECT (element));
-  g_assert (GST_OBJECT_FLOATING (element));
+  g_assert (GST_OBJECT_IS_FLOATING (element));
   gst_bin_add (GST_BIN (bin), element);
-  g_assert (!GST_OBJECT_FLOATING (element));
+  g_assert (!GST_OBJECT_IS_FLOATING (element));
   gst_bin_remove (GST_BIN (bin), element);
-  g_assert (!GST_OBJECT_FLOATING (element));
-  g_assert (!GST_OBJECT_DESTROYED (element));
+  g_assert (!GST_OBJECT_IS_FLOATING (element));
+  g_assert (!GST_OBJECT_IS_DESTROYED (element));
 
   gst_object_unref (GST_OBJECT (element));
 #if 0
-  g_assert (GST_OBJECT_DESTROYED (element));
+  g_assert (GST_OBJECT_IS_DESTROYED (element));
   gst_object_unref (GST_OBJECT (element));
 #endif
 
@@ -169,10 +169,10 @@ main (int argc, gchar * argv[])
       gst_alloc_trace_live_all () - usage1);
 
   bin = gst_bin_new ("somebin");
-  g_assert (GST_OBJECT_FLOATING (bin));
+  g_assert (GST_OBJECT_IS_FLOATING (bin));
   gst_object_ref (GST_OBJECT (bin));
   gst_object_sink (GST_OBJECT (bin));
-  g_assert (!GST_OBJECT_FLOATING (bin));
+  g_assert (!GST_OBJECT_IS_FLOATING (bin));
   gst_object_unref (GST_OBJECT (bin));
   g_print ("create/ref/sink/unref new bin %d\n",
       gst_alloc_trace_live_all () - usage1);
@@ -188,10 +188,10 @@ main (int argc, gchar * argv[])
       gst_alloc_trace_live_all () - usage1);
 
   bin = gst_bin_new ("somebin");
-  g_assert (!GST_OBJECT_DESTROYED (bin));
+  g_assert (!GST_OBJECT_IS_DESTROYED (bin));
   gst_object_unref (GST_OBJECT (bin));
 #if 0
-  g_assert (GST_OBJECT_DESTROYED (bin));
+  g_assert (GST_OBJECT_IS_DESTROYED (bin));
   gst_object_unref (GST_OBJECT (bin));
 #endif
   g_print ("create/destroy/unref new bin %d\n",
