@@ -179,13 +179,13 @@ automake -a -c || {
 	exit 1
 }
 
-echo
-echo "+ running autogen.sh in libs/ext/cothreads..."
-pushd libs/ext/cothreads > /dev/null
-echo
-./autogen.sh --autogen-noconfigure --autogen-nocheck
-popd > /dev/null
-echo
+dnl echo
+dnl echo "+ running autogen.sh in libs/ext/cothreads..."
+dnl pushd libs/ext/cothreads > /dev/null
+dnl echo
+dnl ./autogen.sh --autogen-noconfigure --autogen-nocheck
+dnl popd > /dev/null
+dnl echo
 
 test -n "$NOCONFIGURE" && {
     echo "skipping configure stage for package $package, as requested."
