@@ -1722,7 +1722,10 @@ gst_props_intersect (GstProps *props1, GstProps *props2)
     while (entry1->propid < entry2->propid) {
       GstPropsEntry *toadd;
 
-      GST_DEBUG (GST_CAT_PROPERTIES,"source is more specific in \"%s\"", g_quark_to_string (entry1->propid));
+      /* FIXME: this needs more explanation; 
+       * I've had format "int" < format "int" ! */
+      GST_DEBUG (GST_CAT_PROPERTIES, "source is more specific in \"%s\"", 
+		 g_quark_to_string (entry1->propid));
 
       toadd = gst_props_entry_copy (entry1);
       if (GST_PROPS_ENTRY_IS_VARIABLE (toadd))
