@@ -305,6 +305,7 @@ void gst_debug_log_valist (GstDebugCategory *category, GstDebugLevel level,
     entry->func (category, level, file, function, line, object, &message, entry->user_data);
   }
   g_free (message.message);
+  va_end (message.arguments);
 }
 /**
  * gst_debug_message_get:
