@@ -67,15 +67,15 @@ BuildRequires:  XFree86-devel
 @USE_OSS_TRUE@BuildRequires: glibc-devel
 @USE_PANGO_TRUE@Requires:        pango
 @USE_PANGO_TRUE@BuildRequires:   pango-devel
-@USE_RAW1394_TRUE@Requires:      libraw1394
-@USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
+# @USE_RAW1394_TRUE@Requires:      libraw1394
+# @USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
 @USE_SDL_TRUE@Requires:      SDL >= 1.2.0
 @USE_SDL_TRUE@BuildRequires: SDL-devel >= 1.2.0
 @USE_SDL_TRUE@#SDL-devel should require XFree86-devel because it links to it
 @USE_SDL_TRUE@#only it doesn't seem to do that currently
 @USE_SDL_TRUE@BuildRequires: 	XFree86-devel
 @USE_SPEEX_TRUE@Requires:	speex
-@USE_SPEEX_TRUE@BuildRequires:	speex-devel
+@USE_SPEEX_TRUE@BuildRequires:	libspeex-devel
 @USE_SMOOTHWAVE_TRUE@Requires:	gtk2
 @USE_SMOOTHWAVE_TRUE@BuildRequires:	gtk2-devel
 @USE_VORBIS_TRUE@Requires:      libogg >= 1.0
@@ -84,7 +84,6 @@ BuildRequires:  XFree86-devel
 @USE_VORBIS_TRUE@BuildRequires: libvorbis-devel >= 1.0
 @USE_XVIDEO_TRUE@Requires: 	XFree86-libs
 @USE_XVIDEO_TRUE@BuildRequires: XFree86-devel
-# Snapshot plugin
 @USE_HERMES_TRUE@@USE_LIBPNG_TRUE@Requires:	libpng
 
 %description
@@ -202,6 +201,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstswitch.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsynaesthesia.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttagedit.so
+%{_libdir}/gstreamer-%{majorminor}/libgstapetag.so
+%{_libdir}/gstreamer-%{majorminor}/libgsttta.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttypefindfunctions.so
 %{_libdir}/gstreamer-%{majorminor}/libgstudp.so
@@ -231,6 +232,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstvideorate.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmng.so
+%{_libdir}/gstreamer-%{majorminor}/libgstequalizer.so
 
 # gstreamer-plugins with external dependencies but in the main package
 @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -238,6 +240,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_AUDIOFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaudiofile.so
 @USE_CDPARANOIA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcdparanoia.so
 @USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesd.so
+@USE_POLYP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libpolypaudio.so
 @USE_FLAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstflac.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
 @USE_HERMES_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthermescolorspace.so
@@ -249,8 +252,8 @@ rm -rf $RPM_BUILD_ROOT
 @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstogg.so
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
 @USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstossaudio.so
-@USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
-@USE_RAW1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
+@USE_GST_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
+#@USE_RAW1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 # Snapshot plugin uses libpng
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsnapshot.so
 @USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttextoverlay.so
@@ -467,6 +470,8 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audio.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audioclock.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiofilter.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/multichannel-enumtypes.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/multichannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/floatcast/floatcast.h
 %{_includedir}/gstreamer-%{majorminor}/gst/idct/idct.h
 %{_includedir}/gstreamer-%{majorminor}/gst/resample/resample.h
