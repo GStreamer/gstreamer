@@ -83,6 +83,7 @@ print_element_info (GstElementFactory *factory)
   GtkArg *args;
   guint32 *flags;
   gint num_args,i;
+  gboolean have_flags;
 
   element = gst_elementfactory_create(factory,"element");
   if (!element) {
@@ -151,17 +152,26 @@ print_element_info (GstElementFactory *factory)
   } else
     printf("  none\n\n");
 
+  have_flags = FALSE;
+
   printf("Element Flags:\n");
-  if (GST_FLAG_IS_SET(element,GST_ELEMENT_COMPLEX))
+  if (GST_FLAG_IS_SET(element,GST_ELEMENT_COMPLEX)) {
     printf("  GST_ELEMENT_COMPLEX\n");
-  if (GST_FLAG_IS_SET(element,GST_ELEMENT_DECOUPLED))
+    have_flags = TRUE;
+  }
+  if (GST_FLAG_IS_SET(element,GST_ELEMENT_DECOUPLED)) {
     printf("  GST_ELEMENT_DECOUPLED\n");
-  if (GST_FLAG_IS_SET(element,GST_ELEMENT_THREAD_SUGGESTED))
+    have_flags = TRUE;
+  }
+  if (GST_FLAG_IS_SET(element,GST_ELEMENT_THREAD_SUGGESTED)) {
     printf("  GST_ELEMENT_THREADSUGGESTED\n");
-  if (GST_FLAG_IS_SET(element,GST_ELEMENT_NO_SEEK))
+    have_flags = TRUE;
+  }
+  if (GST_FLAG_IS_SET(element,GST_ELEMENT_NO_SEEK)) {
     printf("  GST_ELEMENT_NO_SEEK\n");
-  if (! GST_FLAG_IS_SET(element, GST_ELEMENT_COMPLEX | GST_ELEMENT_DECOUPLED |
-                                 GST_ELEMENT_THREAD_SUGGESTED | GST_ELEMENT_NO_SEEK))
+    have_flags = TRUE;
+  }
+  if (!have_flags)
     printf("  no flags set\n");
   printf("\n");
 
