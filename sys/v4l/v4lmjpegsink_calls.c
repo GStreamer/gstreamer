@@ -226,7 +226,7 @@ gst_v4lmjpegsink_set_playback (GstV4lMjpegSink *v4lmjpegsink,
 #endif
 
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsink));
-  GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lmjpegsink));
+  //GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lmjpegsink));
 
   if (ioctl(GST_V4LELEMENT(v4lmjpegsink)->video_fd, MJPIOC_G_PARAMS, &bparm) < 0)
   {
