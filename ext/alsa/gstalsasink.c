@@ -576,7 +576,7 @@ gst_alsa_sink_get_time (GstAlsa * this)
   if (!GST_FLAG_IS_SET (this, GST_ALSA_RUNNING)) {
     delay = 0;
   } else if (snd_pcm_delay (this->handle, &delay) != 0) {
-    return this->played / this->format->rate;
+    delay = 0;
   }
   if (this->played <= delay) {
     return 0;
