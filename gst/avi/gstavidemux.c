@@ -885,6 +885,8 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
   avi_stream_context *stream;
   gint blockalign = 0, bitrate = 0;
   guint64 *locations = NULL;
+  GstTagList *list = gst_tag_list_new ();
+  gboolean have_tag = FALSE;
   union
   {
     gst_riff_strf_vids *vids;
@@ -984,7 +986,6 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
     case GST_RIFF_FCC_vids:
     {
       char *codec_name = NULL;
-      GstTagList *list = gst_tag_list_new ();
       guint32 tag;
 
       padname = g_strdup_printf ("video_%02d", avi->num_v_streams);
@@ -995,12 +996,12 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
         tag = strh->fcc_handler;
       caps = gst_riff_create_video_caps_with_data (tag,
           strh, strf.vids, extradata, initdata, &codec_name);
-      gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
-          codec_name, NULL);
-      gst_element_found_tags (GST_ELEMENT (avi), list);
-      gst_tag_list_free (list);
-      if (codec_name)
+      if (codec_name) {
+        gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
+            codec_name, NULL);
+        have_tag = TRUE;
         g_free (codec_name);
+      }
       g_free (strf.vids);
       avi->num_v_streams++;
       break;
@@ -1008,19 +1009,18 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
     case GST_RIFF_FCC_auds:
     {
       char *codec_name = NULL;
-      GstTagList *list = gst_tag_list_new ();
 
       padname = g_strdup_printf ("audio_%02d", avi->num_a_streams);
       templ = gst_element_class_get_pad_template (klass, "audio_%02d");
       caps =
           gst_riff_create_audio_caps_with_data (strf.auds->format, strh,
           strf.auds, extradata, initdata, &codec_name);
-      gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
-          codec_name, NULL);
-      gst_element_found_tags (GST_ELEMENT (avi), list);
-      gst_tag_list_free (list);
-      if (codec_name)
+      if (codec_name) {
+        gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
+            codec_name, NULL);
+        have_tag = TRUE;
         g_free (codec_name);
+      }
       blockalign = strf.auds->blockalign;
       bitrate = strf.auds->av_bps;
       g_free (strf.auds);
@@ -1030,18 +1030,17 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
     case GST_RIFF_FCC_iavs:
     {
       char *codec_name = NULL;
-      GstTagList *list = gst_tag_list_new ();
 
       padname = g_strdup_printf ("video_%02d", avi->num_v_streams);
       templ = gst_element_class_get_pad_template (klass, "video_%02d");
       caps = gst_riff_create_iavs_caps (strh->fcc_handler, strh, strf.iavs,
           &codec_name);
-      gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
-          codec_name, NULL);
-      gst_element_found_tags (GST_ELEMENT (avi), list);
-      gst_tag_list_free (list);
-      if (codec_name)
+      if (codec_name) {
+        gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
+            codec_name, NULL);
+        have_tag = TRUE;
         g_free (codec_name);
+      }
       g_free (strf.iavs);
       avi->num_v_streams++;
       break;
@@ -1088,6 +1087,15 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
     gst_buffer_unref (initdata);
   if (extradata)
     gst_buffer_unref (extradata);
+
+  if (have_tag) {
+    GstEvent *event = gst_event_new_tag (list);
+
+    gst_element_found_tags (GST_ELEMENT (avi), list);
+    gst_pad_push (pad, GST_DATA (event));
+  } else {
+    gst_tag_list_free (list);
+  }
 
   return TRUE;
 
