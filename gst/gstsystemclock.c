@@ -100,9 +100,16 @@ gst_system_clock_init (GstSystemClock *clock)
 static void
 gst_system_clock_dispose (GObject *object)
 {
-  g_warning ("disposing systemclock!");
+  GstClock *clock = (GstClock *) object;
 
-  /* no parent dispose here, this is bad enough already */
+  /* there are subclasses of GstSystemClock running around... */
+  if (_the_system_clock == clock) {
+    g_warning ("disposing systemclock!");
+
+    /* no parent dispose here, this is bad enough already */
+  } else {
+    G_OBJECT_CLASS (parent_class)->dispose (object);
+  }
 }
 
 /**
@@ -118,6 +125,12 @@ gst_system_clock_obtain (void)
   GstClock *clock = _the_system_clock;
 
   if (clock == NULL) {
+    g_mutex_lock (_gst_sysclock_mutex);
+    if (clock != NULL) {
+      g_mutex_unlock (_gst_sysclock_mutex);
+      goto have_clock;
+    }
+      
     clock = GST_CLOCK (g_object_new (GST_TYPE_SYSTEM_CLOCK, NULL));
     
     gst_object_set_name (GST_OBJECT (clock), "GstSystemClock");
@@ -126,9 +139,11 @@ gst_system_clock_obtain (void)
     gst_object_sink (GST_OBJECT (clock));
 
     _the_system_clock = clock;
+    g_mutex_unlock (_gst_sysclock_mutex);
   }
-  gst_object_ref (GST_OBJECT (clock));
 
+have_clock:
+  gst_object_ref (GST_OBJECT (clock));
   return clock;
 }
 
