@@ -45,6 +45,7 @@ G_BEGIN_DECLS
 #define GST_MIXER_TYPE(klass) (klass->mixer_type)
 
 typedef struct _GstMixer GstMixer;
+typedef struct _GstMixerClass GstMixerClass;
 
 typedef enum
 {
@@ -52,7 +53,7 @@ typedef enum
   GST_MIXER_SOFTWARE
 } GstMixerType;
 
-typedef struct _GstMixerClass {
+struct _GstMixerClass {
   GTypeInterface klass;
 
   GstMixerType mixer_type;
@@ -97,7 +98,7 @@ typedef struct _GstMixerClass {
 			   gchar         *option);
 
   gpointer _gst_reserved[GST_PADDING-3];
-} GstMixerClass;
+};
 
 GType		gst_mixer_get_type	(void);
 

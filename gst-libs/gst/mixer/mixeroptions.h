@@ -42,25 +42,31 @@ G_BEGIN_DECLS
 #define GST_IS_MIXER_OPTIONS_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MIXER_OPTIONS))
 
-typedef struct _GstMixerOptions {
+typedef struct _GstMixerOptions GstMixerOptions;
+typedef struct _GstMixerOptionsClass GstMixerOptionsClass;
+
+struct _GstMixerOptions {
   GstMixerTrack parent;
 
   /* list of strings */
   GList        *values;
 
   gpointer _gst_reserved[GST_PADDING];
-} GstMixerOptions;
+};
 
-typedef struct _GstMixerOptionsClass {
+struct _GstMixerOptionsClass {
   GstMixerTrackClass parent;
 
+  /* signals */
   void (* option_changed) (GstMixerOptions *opts,
 			   gchar           *value);
 
   gpointer _gst_reserved[GST_PADDING];
-} GstMixerOptionsClass;
+};
 
 GType		gst_mixer_options_get_type	(void);
+
+GList * gst_mixer_options_get_values (GstMixerOptions *mixer_options);
 
 G_END_DECLS
 
