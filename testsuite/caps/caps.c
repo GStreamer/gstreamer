@@ -128,6 +128,24 @@ test2 (void)
 
 }
 
+void
+test3 (void)
+{
+  GstCaps *caps1;
+  GstCaps *caps2;
+
+  caps1 = gst_caps_new_any ();
+  caps2 = gst_caps_new_simple ("audio/raw", NULL);
+
+  gst_caps_append (caps1, caps2);
+  g_print ("%s\n", gst_caps_to_string (caps1));
+
+  g_assert (gst_caps_is_any (caps1));
+  g_assert (gst_caps_get_size (caps1) == 0);
+
+  gst_caps_free (caps1);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -135,6 +153,7 @@ main (int argc, char *argv[])
 
   test1 ();
   test2 ();
+  test3 ();
 
   return 0;
 }
