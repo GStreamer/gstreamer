@@ -445,8 +445,6 @@ gst_thread_change_state (GstElement * element)
       gst_element_state_get_name (GST_STATE (element)),
       gst_element_state_get_name (GST_STATE_PENDING (element)));
 
-  transition = GST_STATE_TRANSITION (element);
-
   thread = GST_THREAD (element);
 
   /* boolean to check if we called the state change in the same thread as
@@ -458,12 +456,15 @@ gst_thread_change_state (GstElement * element)
 
   gst_thread_sync (thread, is_self);
 
-  /* FIXME: (or GStreamers ideas about "threading"): the element variables are
-     commonly accessed by multiple threads at the same time (see bug #111146
-     for an example) */
-  if (transition != GST_STATE_TRANSITION (element)) {
-    g_warning ("inconsistent state information, fix threading please");
-  }
+  /* no iteration is allowed during this state change because an iteration
+   * can cause another state change conflicting with this one */
+  /* do not try to grab the lock if this method is called from the
+   * same thread as the iterate thread, the lock might be held and we 
+   * might deadlock */
+  if (!is_self)
+    g_mutex_lock (thread->iterate_lock);
+
+  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
@@ -560,11 +561,6 @@ gst_thread_change_state (GstElement * element)
   GST_LOG_OBJECT (thread, "unlocking lock");
   g_mutex_unlock (thread->lock);
 
-  /* do not try to grab the lock if this method is called from the
-   * same thread as the iterate thread, the lock might be held and we 
-   * might deadlock */
-  if (!is_self)
-    g_mutex_lock (thread->iterate_lock);
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
     ret = GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT (thread));
   } else {
@@ -582,6 +578,9 @@ error_out:
       GST_ELEMENT_NAME (element));
 
   g_mutex_unlock (thread->lock);
+
+  if (!is_self)
+    g_mutex_unlock (thread->iterate_lock);
 
   return GST_STATE_FAILURE;
 }

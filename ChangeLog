@@ -1,5 +1,13 @@
 2004-10-07  Wim Taymans  <wim at fluendo dot com>
 
+	* gst/gstthread.c: (gst_thread_change_state),
+	(gst_thread_child_state_change):
+	Make sure no iteration happens while performing
+	the state change as it could mess up the internal
+	consistency of the thread state.
+
+2004-10-07  Wim Taymans  <wim at fluendo dot com>
+
 	* gst/gstthread.c: (gst_thread_dispose), (gst_thread_sync),
 	(gst_thread_change_state), (gst_thread_child_state_change):
 	Do not try to grab the iterate lock in the state change method
