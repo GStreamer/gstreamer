@@ -735,9 +735,10 @@ gst_scheduler_factory_get_list (void)
  * @parent: the parent element of this scheduler
  *
  * Create a new #GstScheduler instance from the 
- * given schedulerfactory with the given parent.
+ * given schedulerfactory with the given parent. @parent will
+ * have its scheduler set to the returned #GstScheduler instance.
  *
- * Returns: A new #GstScheduler instance.
+ * Returns: A new #GstScheduler instance with a reference count of %1.
  */
 GstScheduler*
 gst_scheduler_factory_create (GstSchedulerFactory *factory, GstElement *parent)
@@ -745,12 +746,19 @@ gst_scheduler_factory_create (GstSchedulerFactory *factory, GstElement *parent)
   GstScheduler *new = NULL;
 
   g_return_val_if_fail (factory != NULL, NULL);
+  g_return_val_if_fail (parent != NULL, NULL);
 
   if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
     g_return_val_if_fail (factory->type != 0, NULL);
 
     new = GST_SCHEDULER (g_object_new (factory->type, NULL));
     new->parent = parent;
+
+    GST_ELEMENT_SCHED (parent) = new;
+
+    /* let's refcount the scheduler */
+    gst_object_ref (GST_OBJECT (new));
+    gst_object_sink (GST_OBJECT (new));
   }
 
   return new;
@@ -762,18 +770,22 @@ gst_scheduler_factory_create (GstSchedulerFactory *factory, GstElement *parent)
  * @parent: the parent element of this scheduler
  *
  * Create a new #GstScheduler instance from the 
- * schedulerfactory with the given name and parent.
+ * schedulerfactory with the given name and parent. @parent will
+ * have its scheduler set to the returned #GstScheduler instance.
+ * If %NULL is passed as @name, the default scheduler name will
+ * be used.
  *
- * Returns: A new #GstScheduler instance.
+ * Returns: A new #GstScheduler instance with a reference count of %1.
  */
 GstScheduler*
 gst_scheduler_factory_make (const gchar *name, GstElement *parent)
 {
   GstSchedulerFactory *factory;
 
-  g_return_val_if_fail (name != NULL, NULL);
-
-  factory = gst_scheduler_factory_find (name);
+  if (name)
+    factory = gst_scheduler_factory_find (name);
+  else
+    factory = gst_scheduler_factory_find (gst_scheduler_factory_get_default_name ());
 
   if (factory == NULL)
     return NULL;

@@ -118,12 +118,10 @@ gst_thread_class_init (GstThreadClass *klass)
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself =	GST_DEBUG_FUNCPTR (gst_thread_save_thyself);
-  gstobject_class->restore_thyself =	GST_DEBUG_FUNCPTR(gst_thread_restore_thyself);
+  gstobject_class->restore_thyself =	GST_DEBUG_FUNCPTR (gst_thread_restore_thyself);
 #endif
 
   gstelement_class->change_state =	GST_DEBUG_FUNCPTR (gst_thread_change_state);
-
-/*  gstbin_class->schedule = gst_thread_schedule_dummy; */
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_thread_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_thread_get_property);
@@ -133,24 +131,16 @@ gst_thread_class_init (GstThreadClass *klass)
 static void
 gst_thread_init (GstThread *thread)
 {
-  const gchar *schedname;
   GstScheduler *scheduler;
 
   GST_DEBUG (GST_CAT_THREAD, "initializing thread");
 
-  /* we're a manager by default */
+  /* threads are managing bins and iterate themselves */
   /* CR1: the GstBin code checks these flags */
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
   GST_FLAG_SET (thread, GST_BIN_SELF_SCHEDULABLE);
 
-  schedname = gst_scheduler_factory_get_default_name ();
-
-  scheduler = gst_scheduler_factory_make (schedname, GST_ELEMENT (thread));
-
-  GST_ELEMENT_SCHED (thread) = scheduler;
-
-  gst_object_ref (GST_OBJECT (scheduler));
-  gst_object_sink (GST_OBJECT (scheduler));
+  scheduler = gst_scheduler_factory_make (NULL, GST_ELEMENT (thread));
 
   thread->lock = g_mutex_new ();
   thread->cond = g_cond_new ();
