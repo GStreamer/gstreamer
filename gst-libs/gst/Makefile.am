@@ -12,17 +12,42 @@ X_DIR =
 X_INTERFACE_LIBS =
 endif
 
-SUBDIRS = audio colorbalance floatcast \
-		$(GCONF_DIR) idct media-info \
-		mixer navigation play propertyprobe \
-		resample riff tag tuner video \
-		$(X_DIR)
+SUBDIRS = \
+	audio \
+	colorbalance \
+	floatcast \
+	$(GCONF_DIR) \
+	idct \
+	media-info \
+	mixer \
+	navigation \
+	play \
+	propertyprobe \
+	resample \
+	riff \
+	tag \
+	tuner \
+	video \
+	$(X_DIR)
 
-DIST_SUBDIRS = audio colorbalance floatcast \
-		gconf idct media-info \
-		mixer navigation play propertyprobe \
-		resample riff tag tuner video \
-		xoverlay xwindowlistener
+DIST_SUBDIRS = \
+	audio \
+	colorbalance \
+	floatcast \
+	gconf \
+	idct \
+	media-info \
+	mixer \
+	navigation \
+	play \
+	propertyprobe \
+	resample \
+	riff \
+	tag \
+	tuner \
+	video \
+	xoverlay \
+	xwindowlistener
 
 
 lib_LTLIBRARIES = libgstinterfaces-@GST_MAJORMINOR@.la
