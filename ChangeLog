@@ -1,3 +1,8 @@
+2005-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_link):
+	  PAR can be non-fixed when not provided as argument (#162626).
+
 2005-01-29  David Moore  <dcm@acm.org>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
