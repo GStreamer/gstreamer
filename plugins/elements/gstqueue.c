@@ -28,7 +28,7 @@
 #define STATUS(A) 
 #endif
 
-#include <gstqueue.h>
+#include "gstqueue.h"
 
 #include <gst/gstarch.h>
 

@@ -252,8 +252,18 @@ void gst_object_sink(GstObject *object) {
 #endif /* gst_object_sink */
 
 
-
-gchar *gst_object_get_path_string(GstObject *object) {
+/**
+ * gst_object_get_path_string:
+ * @object: GstObject to get the path from
+ *
+ * Generates a string describing the path of the object in
+ * the object hierarchy. Usefull for debugging
+ * 
+ * Returns: a string describing the path of the object
+ */
+gchar*
+gst_object_get_path_string(GstObject *object) 
+{
   GSList *parentage = NULL;
   GSList *parents;
   void *parent;

@@ -165,6 +165,15 @@ This macro releases a lock on the object.
 @object: the object
 
 
+<!-- ##### FUNCTION gst_object_get_path_string ##### -->
+<para>
+
+</para>
+
+@object: 
+@Returns: 
+
+
 <!-- ##### SIGNAL GstObject::parent-set ##### -->
 <para>
 

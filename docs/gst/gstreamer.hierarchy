@@ -4,23 +4,19 @@ GtkObject
       GstBin
         GstPipeline
         GstThread
-      GstFilter
-        GstTee
-        GstPipefilter
-        GstIdentity
-      GstSink
-        GstFakeSink
-        GstAudioSink
-        GstFdSink
-        GstTypeFind
-      GstSrc
-        GstFakeSrc
-        GstDiskSrc
-        GstAsyncDiskSrc
-        GstHttpSrc
-        GstFdSrc
-        GstAudioSrc
-        GstSineSrc
-      GstConnection
-        GstQueue
+      GstTee
+      GstFakeSrc
+      GstFakeSink
+      GstDiskSrc
+      GstAsyncDiskSrc
+      GstHttpSrc
+      GstFdSrc
+      GstAudioSrc
+      GstSineSrc
+      GstAudioSink
+      GstFdSink
+      GstPipefilter
+      GstIdentity
+      GstQueue
+      GstTypeFind
     GstPad

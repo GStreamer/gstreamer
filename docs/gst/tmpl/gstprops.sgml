@@ -1,0 +1,149 @@
+<!-- ##### SECTION Title ##### -->
+GstProps
+
+<!-- ##### SECTION Short_Description ##### -->
+Properties
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstProps is used to attach certain properties to a pad. Properties
+are usually used in conjunction with GstCaps.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+GstCaps
+</para>
+
+<!-- ##### STRUCT GstProps ##### -->
+<para>
+
+</para>
+
+@properties: the properties
+
+<!-- ##### TYPEDEF GstPropsFactoryEntry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstPropsFactory[] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PROPS_LIST ##### -->
+<para>
+Create a list of properties
+</para>
+
+@a...: the list of GstProps
+
+
+<!-- ##### MACRO GST_PROPS_INT ##### -->
+<para>
+Create an integer property
+</para>
+
+@a: the integer property
+
+
+<!-- ##### MACRO GST_PROPS_INT_RANGE ##### -->
+<para>
+Create an integer range property
+</para>
+
+@a: the min value for the range
+@b: the max value for the range
+
+
+<!-- ##### MACRO GST_PROPS_FOURCC ##### -->
+<para>
+Construct a fourcc property out of four bytes
+</para>
+
+@a: first byte
+@b: second byte
+@c: third byte
+@d: fourth byte
+
+
+<!-- ##### MACRO GST_PROPS_FOURCC_INT ##### -->
+<para>
+Create a fourcc property out of an integer value
+</para>
+
+@a: the integer value
+
+
+<!-- ##### MACRO GST_PROPS_BOOLEAN ##### -->
+<para>
+Create a boolean property
+</para>
+
+@a: the boolean property
+
+
+<!-- ##### FUNCTION gst_props_register ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_new ##### -->
+<para>
+
+</para>
+
+@entry: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_merge ##### -->
+<para>
+
+</para>
+
+@props: 
+@tomerge: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_check_compatibility ##### -->
+<para>
+
+</para>
+
+@fromprops: 
+@toprops: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@props1: 
+@props2: 
+
+
+<!-- ##### FUNCTION gst_props_save_thyself ##### -->
+<para>
+
+</para>
+
+@props: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+

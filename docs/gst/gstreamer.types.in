@@ -7,11 +7,7 @@ gst_object_get_type
 gst_element_get_type
 gst_bin_get_type
 gst_pipeline_get_type
-gst_filter_get_type
-gst_sink_get_type
-gst_src_get_type
 gst_pad_get_type
-gst_connection_get_type
 gst_thread_get_type
 gst_tee_get_type
 

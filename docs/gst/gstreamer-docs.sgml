@@ -2,13 +2,12 @@
 
 <!entity gstreamer-cothreads SYSTEM "sgml/cothreads.sgml">
 <!entity Gst SYSTEM "sgml/gst.sgml">
+<!entity GstInfo SYSTEM "sgml/gstinfo.sgml">
 <!entity GstBin SYSTEM "sgml/gstbin.sgml">
 <!entity GstBuffer SYSTEM "sgml/gstbuffer.sgml">
 <!entity GstBufferPool SYSTEM "sgml/gstbufferpool.sgml">
-<!entity GstConnection SYSTEM "sgml/gstconnection.sgml">
 <!entity GstCpu SYSTEM "sgml/gstcpu.sgml">
 <!entity GstElement SYSTEM "sgml/gstelement.sgml">
-<!entity GstFilter SYSTEM "sgml/gstfilter.sgml">
 <!entity GstLog SYSTEM "sgml/gstlog.sgml">
 <!entity GstMeta SYSTEM "sgml/gstmeta.sgml">
 <!entity GstObject SYSTEM "sgml/gstobject.sgml">
@@ -16,8 +15,6 @@
 <!entity GstPipeline SYSTEM "sgml/gstpipeline.sgml">
 <!entity GstAutoplug SYSTEM "sgml/gstautoplug.sgml">
 <!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
-<!entity GstSink SYSTEM "sgml/gstsink.sgml">
-<!entity GstSrc SYSTEM "sgml/gstsrc.sgml">
 <!entity GstTee SYSTEM "sgml/gsttee.sgml">
 <!entity GstThread SYSTEM "sgml/gstthread.sgml">
 <!entity GstTrace SYSTEM "sgml/gsttrace.sgml">
@@ -65,18 +62,15 @@ well as the object hiarchy that defines elements and bins, along
 with some more specialized elements.</para>
 
     &Gst;
+    &GstInfo;
     &GstObject;
     &GstElement;
     &GstBin;
     &GstPipeline;
     &GstAutoplug;
-    &GstFilter;
-    &GstSink;
-    &GstSrc;
     &GstBuffer;
     &GstBufferPool;
     &GstPad;
-    &GstConnection;
     &GstPlugin;
     &GstThread;
     &GstTee;

@@ -337,6 +337,14 @@ circumstances.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_signal_eos ##### -->
+<para>
+
+</para>
+
+@element: 
+
+
 <!-- ##### FUNCTION gst_element_save_thyself ##### -->
 <para>
 
@@ -496,4 +504,11 @@ Is trigered whenever an error occured
 
 @gstelement: the object which received the signal.
 @arg1: the error message
+
+<!-- ##### SIGNAL GstElement::eos ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
 

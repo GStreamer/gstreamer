@@ -19,6 +19,7 @@ cothread_main
 cothread_set_data
 cothread_get_data
 <SUBSECTION Standard>
+SETUP_STACK
 GET_SP
 JUMP
 SET_SP
@@ -30,15 +31,32 @@ SET_SP
 gst_init
 gst_main
 gst_main_quit
-DEBUG
+<SUBSECTION Standard>
+</SECTION>
+
+<SECTION>
+<FILE>gstinfo</FILE>
+<TITLE>gstinfo</TITLE>
 GST_DEBUG_ENABLED
+GST_DEBUG_PREFIX
+DEBUG
+DEBUG_NOPREFIX
+DEBUG_ENTER
 DEBUG_SET_STRING
 DEBUG_ENTER_STRING
-DEBUG_ENTER
-DEBUG_LEAVE_STRING
 DEBUG_LEAVE
-<SUBSECTION Standard>
-SETUP_STACK
+DEBUG_LEAVE_STRING
+GST_DEBUG_PAD_NAME
+GST_DEBUG_FUNCPTR
+GST_DEBUG_FUNCPTR_NAME
+GstInfoHandler
+gst_default_info_handler
+INFO
+INFO_ELEMENT
+GstErrorHandler
+gst_default_error_handler
+ERROR
+ERROR_OBJECT
 </SECTION>
 
 <SECTION>
@@ -133,22 +151,6 @@ GST_BUFFER_POOL
 </SECTION>
 
 <SECTION>
-<FILE>gstconnection</FILE>
-<TITLE>GstConnection</TITLE>
-GstConnection
-gst_connection_new
-gst_connection_push
-<SUBSECTION Standard>
-GST_TYPE_CONNECTION
-gst_connection_get_type
-GST_CONNECTION
-GST_CONNECTION_CLASS
-GST_IS_CONNECTION
-GST_IS_CONNECTION_CLASS
-GstConnectionClass
-</SECTION>
-
-<SECTION>
 <FILE>gstelement</FILE>
 <TITLE>GstElement</TITLE>
 GstElementState
@@ -185,6 +187,7 @@ gst_element_connect
 gst_element_set_state
 gst_element_error
 gst_element_get_factory
+gst_element_signal_eos
 gst_element_save_thyself
 gst_element_load_thyself
 gst_elementfactory_new
@@ -206,22 +209,6 @@ GST_ELEMENT_CLASS
 GST_IS_ELEMENT
 GST_IS_ELEMENT_CLASS
 gst_element_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstfilter</FILE>
-<TITLE>GstFilter</TITLE>
-GstFilter
-GST_FILTER_FLAG_LAST
-gst_filter_new
-<SUBSECTION Standard>
-GstFilterClass
-gst_filter_get_type
-GST_TYPE_FILTER
-GST_FILTER
-GST_FILTER_CLASS
-GST_IS_FILTER
-GST_IS_FILTER_CLASS
 </SECTION>
 
 <SECTION>
@@ -282,6 +269,7 @@ gst_object_ref
 gst_object_unref
 gst_object_sink
 gst_object_destroy
+gst_object_get_path_string
 <SUBSECTION Standard>
 gst_object_get_type
 GstObjectClass
@@ -432,39 +420,6 @@ gst_plugin_save_thyself
 </SECTION>
 
 <SECTION>
-<FILE>gstsink</FILE>
-<TITLE>GstSink</TITLE>
-GstSink
-GST_SINK_FLAG_LAST
-gst_sink_new
-<SUBSECTION Standard>
-GstSinkClass
-gst_sink_get_type
-GST_TYPE_SINK
-GST_SINK
-GST_SINK_CLASS
-GST_IS_SINK
-GST_IS_SINK_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>gstsrc</FILE>
-<TITLE>GstSrc</TITLE>
-GstSrcFlags
-GST_SRC_IS_ASYNC
-GstSrc
-gst_src_signal_eos
-<SUBSECTION Standard>
-gst_src_get_type
-GstSrcClass
-GST_TYPE_SRC
-GST_SRC
-GST_SRC_CLASS
-GST_IS_SRC
-GST_IS_SRC_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>gsttee</FILE>
 <TITLE>GstTee</TITLE>
 GstTee
@@ -571,6 +526,7 @@ gst_props_load_thyself
 GstPropsEntry
 GstPropsListFactory[]
 GstPropsId
+GST_PROPS_END_ID
 GST_PROPS_LIST_ID
 GST_PROPS_INT_ID
 GST_PROPS_INT_RANGE_ID

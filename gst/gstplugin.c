@@ -259,7 +259,7 @@ gst_plugin_load_absolute (gchar *name)
   if (module != NULL) {
     if (g_module_symbol(module,"plugin_init",(gpointer *)&initfunc)) {
       if ((plugin = (initfunc)(module))) {
-        INFO(0,"plugin %s loaded", plugin->name);
+        INFO(GST_INFO_PLUGIN_LOADING,"plugin %s loaded", plugin->name);
         plugin->filename = g_strdup(name);
         plugin->loaded = TRUE;
         _gst_modules = g_list_prepend(_gst_modules,module);
@@ -628,7 +628,6 @@ gst_plugin_load_thyself (xmlNodePtr parent)
 
     kinderen = kinderen->next;
   }
-//  DEBUG("gstplugin: added %d registered factories and %d types\n", elementcount, typecount);
   INFO(GST_INFO_PLUGIN_LOADING,"added %d registered factories and %d types",elementcount,typecount);
 }
 

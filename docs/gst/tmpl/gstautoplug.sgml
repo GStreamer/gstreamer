@@ -1,0 +1,54 @@
+<!-- ##### SECTION Title ##### -->
+GstAutoplug
+
+<!-- ##### SECTION Short_Description ##### -->
+Provide automatic element selection
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+The autoplugger can select a list of elements that are needed
+to convert a certain GstCaps to another one.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_AUTOPLUG_MAX_COST ##### -->
+<para>
+The max cost of a certain connection
+</para>
+
+
+
+<!-- ##### USER_FUNCTION GstAutoplugCostFunction ##### -->
+<para>
+Calculate the cost between two elements
+</para>
+
+@src: the source element
+@dest: the destination element
+@data: optional user data
+@Returns: the cost for a connection between the two elements
+
+
+<!-- ##### USER_FUNCTION GstAutoplugListFunction ##### -->
+<para>
+Get a list of all elements. These elements will be used in autoplugging
+</para>
+
+@data: user data
+@Returns: a GList of elements
+
+
+<!-- ##### FUNCTION gst_autoplug_caps ##### -->
+<para>
+Perform autoplugging between the two given caps.
+</para>
+
+@srccaps: the source capability structure
+@sinkcaps: the sink capability structure
+@Returns: th GList of elements that convert srccaps into sinkcaps.
+
+

@@ -173,6 +173,7 @@ used when data in a stream has been skipped</entry>
 @GST_BUFFER_FLUSH: this buffer is not related to previous buffers. This flag is mainly
 used when data in a stream has been skipped
 @GST_BUFFER_EOS: this buffer is the last one in the stream
+@GST_BUFFER_DISCONTINUOUS: 
 
 <!-- ##### STRUCT GstBuffer ##### -->
 <para>

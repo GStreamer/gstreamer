@@ -1,0 +1,217 @@
+<!-- ##### SECTION Title ##### -->
+gstinfo
+
+<!-- ##### SECTION Short_Description ##### -->
+info/debugging/error handling
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstInfo contains a lot of functions to add debugging information
+to your application.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_DEBUG_ENABLED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DEBUG_PREFIX ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO DEBUG ##### -->
+<para>
+Use this macro to show debugging info. This is only usefull when developing new
+plugin elements.
+If you #define DEBUG_ENABLED before including gst/gst.h, this macro will produce
+g_print messages.
+</para>
+
+@format: the format specification as in g_print
+@args...: arguments
+
+
+<!-- ##### MACRO DEBUG_NOPREFIX ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO DEBUG_ENTER ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO DEBUG_SET_STRING ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO DEBUG_ENTER_STRING ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO DEBUG_LEAVE ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO DEBUG_LEAVE_STRING ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DEBUG_PAD_NAME ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_DEBUG_FUNCPTR ##### -->
+<para>
+
+</para>
+
+@ptr: 
+
+
+<!-- ##### MACRO GST_DEBUG_FUNCPTR_NAME ##### -->
+<para>
+
+</para>
+
+@ptr: 
+
+
+<!-- ##### USER_FUNCTION GstInfoHandler ##### -->
+<para>
+
+</para>
+
+@category: 
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@string: 
+
+
+<!-- ##### FUNCTION gst_default_info_handler ##### -->
+<para>
+
+</para>
+
+@category: 
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@string: 
+
+
+<!-- ##### MACRO INFO ##### -->
+<para>
+
+</para>
+
+@cat: 
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO INFO_ELEMENT ##### -->
+<para>
+
+</para>
+
+@cat: 
+@element: 
+@format: 
+@args...: 
+
+
+<!-- ##### USER_FUNCTION GstErrorHandler ##### -->
+<para>
+
+</para>
+
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@object: 
+@string: 
+
+
+<!-- ##### FUNCTION gst_default_error_handler ##### -->
+<para>
+
+</para>
+
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@object: 
+@string: 
+
+
+<!-- ##### MACRO ERROR ##### -->
+<para>
+
+</para>
+
+@element: 
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO ERROR_OBJECT ##### -->
+<para>
+
+</para>
+
+@element: 
+@object: 
+@format: 
+@args...: 
+
+

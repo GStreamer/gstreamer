@@ -7,5 +7,6 @@ gstreamer.types
 gstreamer.html
 gstreamer-unused.txt
 gstreamer-decl-list.txt
+gstreamer-decl.txt
 gstreamer.args
-
+*.tgz

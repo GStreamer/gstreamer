@@ -1,0 +1,116 @@
+<!-- ##### SECTION Title ##### -->
+GstCaps
+
+<!-- ##### SECTION Short_Description ##### -->
+Capabilities of pads
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstCaps is used to attach capabilities to a pad. Capabilities are made of
+a mime-type and a set of properties.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstCaps ##### -->
+<para>
+
+</para>
+
+@id: the typeid of the capability
+@properties: the properties of the capability
+
+<!-- ##### TYPEDEF GstCapsFactoryEntry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstCapsFactory[] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_caps_new ##### -->
+<para>
+
+</para>
+
+@mime: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_new_with_props ##### -->
+<para>
+
+</para>
+
+@mime: 
+@props: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_register ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_set_props ##### -->
+<para>
+
+</para>
+
+@caps: 
+@props: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_get_props ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_check_compatibility ##### -->
+<para>
+
+</para>
+
+@fromcaps: 
+@tocaps: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@caps1: 
+@caps2: 
+
+
+<!-- ##### FUNCTION gst_caps_save_thyself ##### -->
+<para>
+
+</para>
+
+@caps: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+

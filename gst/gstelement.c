@@ -840,8 +840,8 @@ gst_element_set_loop_function(GstElement *element,
 }
 
 /**
- * gst_src_signal_eos:
- * @src: source to trigger the eos signal of
+ * gst_element_signal_eos:
+ * @element: element to trigger the eos signal of
  * 
  * singals the eos signal to indicate that the end of the stream
  * is reached.
