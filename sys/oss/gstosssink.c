@@ -786,62 +786,63 @@ gst_osssink_open_audio (GstOssSink *sink)
   GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: attempting to open sound device");
 
   /* first try to open the sound card */
-  sink->fd = open(sink->device, O_WRONLY | O_NONBLOCK);
+  sink->fd = open (sink->device, O_WRONLY | O_NONBLOCK);
   if (errno == EBUSY) {
     g_warning ("osssink: unable to open the sound device (in use ?)\n");
     return FALSE;
   }
 
   /* re-open the sound device in blocking mode */
-  close(sink->fd);
-  sink->fd = open(sink->device, O_WRONLY);
+  close (sink->fd);
+  sink->fd = open (sink->device, O_WRONLY);
 
-  /* if we have it, set the default parameters and go have fun */
-  if (sink->fd >= 0) {
-    /* set card state */
-    ioctl(sink->fd, SNDCTL_DSP_GETCAPS, &caps);
+  if (sink->fd < 0) {
+    g_warning ("osssink: unable to open the sound device (errno=%d)\n", errno); 
+    return FALSE;
+  }
+	
+  /* we have it, set the default parameters and go have fun */
+  /* set card state */
+  ioctl (sink->fd, SNDCTL_DSP_GETCAPS, &caps);
 
-    GST_INFO(GST_CAT_PLUGIN_INFO, "osssink: Capabilities %08x", caps);
+  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: Capabilities %08x", caps);
 
-    if (caps & DSP_CAP_DUPLEX)   	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Full duplex");
-    if (caps & DSP_CAP_REALTIME) 	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Realtime");
-    if (caps & DSP_CAP_BATCH)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Batch");
-    if (caps & DSP_CAP_COPROC)   	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Has coprocessor");
-    if (caps & DSP_CAP_TRIGGER)  	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Trigger");
-    if (caps & DSP_CAP_MMAP)     	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Direct access");
+  if (caps & DSP_CAP_DUPLEX)	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Full duplex");
+  if (caps & DSP_CAP_REALTIME) 	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Realtime");
+  if (caps & DSP_CAP_BATCH)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Batch");
+  if (caps & DSP_CAP_COPROC)   	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Has coprocessor");
+  if (caps & DSP_CAP_TRIGGER)  	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Trigger");
+  if (caps & DSP_CAP_MMAP)     	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Direct access");
 
 #ifdef DSP_CAP_MULTI
-    if (caps & DSP_CAP_MULTI)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Multiple open");
+  if (caps & DSP_CAP_MULTI)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Multiple open");
 #endif /* DSP_CAP_MULTI */
 
 #ifdef DSP_CAP_BIND
-    if (caps & DSP_CAP_BIND)     	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Channel binding");
+  if (caps & DSP_CAP_BIND)     	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Channel binding");
 #endif /* DSP_CAP_BIND */
 
-    ioctl(sink->fd, SNDCTL_DSP_GETFMTS, &caps);
+  ioctl(sink->fd, SNDCTL_DSP_GETFMTS, &caps);
 
-    GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: Formats %08x", caps);
-    if (caps & AFMT_MU_LAW)   		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   MU_LAW");
-    if (caps & AFMT_A_LAW)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   A_LAW");
-    if (caps & AFMT_IMA_ADPCM)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   IMA_ADPCM");
-    if (caps & AFMT_U8)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   U8");
-    if (caps & AFMT_S16_LE)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   S16_LE");
-    if (caps & AFMT_S16_BE)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   S16_BE");
-    if (caps & AFMT_S8)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   S8");
-    if (caps & AFMT_U16_LE)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   U16_LE");
-    if (caps & AFMT_U16_BE)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   U16_BE");
-    if (caps & AFMT_MPEG)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   MPEG");
+  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: Formats %08x", caps);
+  if (caps & AFMT_MU_LAW)   		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   MU_LAW");
+  if (caps & AFMT_A_LAW)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   A_LAW");
+  if (caps & AFMT_IMA_ADPCM)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   IMA_ADPCM");
+  if (caps & AFMT_U8)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   U8");
+  if (caps & AFMT_S16_LE)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   S16_LE");
+  if (caps & AFMT_S16_BE)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   S16_BE");
+  if (caps & AFMT_S8)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   S8");
+  if (caps & AFMT_U16_LE)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   U16_LE");
+  if (caps & AFMT_U16_BE)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   U16_BE");
+  if (caps & AFMT_MPEG)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   MPEG");
 #ifdef AFMT_AC3
-    if (caps & AFMT_AC3)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   AC3");
+  if (caps & AFMT_AC3)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   AC3");
 #endif
 
-    GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: opened audio (%s) with fd=%d", sink->device, sink->fd);
-    GST_FLAG_SET (sink, GST_OSSSINK_OPEN);
+  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: opened audio (%s) with fd=%d", sink->device, sink->fd);
+  GST_FLAG_SET (sink, GST_OSSSINK_OPEN);
 
-    return TRUE;
-  }
-
-  return FALSE;
+  return TRUE;
 }
 
 static void
