@@ -375,8 +375,11 @@ gst_v4lsrc_get (GstPad *pad)
     return NULL;
   GST_BUFFER_DATA(buf) = gst_v4lsrc_get_buffer(v4lsrc, num);
   GST_BUFFER_SIZE(buf) = v4lsrc->buffer_size;
-  buf->timestamp = v4lsrc->timestamp_soft_sync[num].tv_sec * 1000000000 +
-    v4lsrc->timestamp_soft_sync[num].tv_usec * 1000;
+
+  g_print ("%lu %lu\n", v4lsrc->timestamp_soft_sync[num].tv_sec, v4lsrc->timestamp_soft_sync[num].tv_usec);
+
+  buf->timestamp = v4lsrc->timestamp_soft_sync[num].tv_sec * 1000000 +
+    v4lsrc->timestamp_soft_sync[num].tv_usec;
 
   return buf;
 }
