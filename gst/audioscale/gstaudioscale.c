@@ -587,6 +587,7 @@ static void gst_audioscale_dispose (GObject * object)
   Audioscale *audioscale = GST_AUDIOSCALE (object);
 
   if (audioscale->gst_resample) {
+    gst_resample_close (audioscale->gst_resample);
     g_free (audioscale->gst_resample);
     audioscale->gst_resample = NULL;
   }
