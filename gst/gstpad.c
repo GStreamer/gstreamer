@@ -1513,10 +1513,12 @@ gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
     GST_INFO (GST_CAT_PADS, "pads %s:%s and %s:%s have no common type",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
     return FALSE;
-  } else if (intersection) {
+  } else  {
     GST_INFO (GST_CAT_PADS, "pads %s:%s and %s:%s intersected to %s caps",
-         GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink), 
-	 ((intersection && GST_CAPS_IS_FIXED (intersection)) ? "fixed" : "variable"));
+       GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink), 
+       (intersection ?
+	   (GST_CAPS_IS_FIXED (intersection) ? "fixed" : "variable") :
+	   "NULL"));
 
     /* then filter this against the app filter */
     if (filtercaps) {
