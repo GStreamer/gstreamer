@@ -25,7 +25,6 @@
 #define scope_width 256
 #define scope_height 128
 
-static gint16 newEq[CONVOLVE_BIG];      // latest block of 512 samples.
 static gint16 copyEq[CONVOLVE_BIG];
 static int avgEq[CONVOLVE_SMALL];      // a running average of the last few.
 static int avgMax;                     // running average of max sample.
@@ -50,7 +49,7 @@ void monoscope_init (guint32 resx, guint32 resy)
     colors_init(colors);
 }
 
-guint32 * monoscope_update (gint16 data [2][512])
+guint32 * monoscope_update (gint16 data [512])
 {
     /* Note that CONVOLVE_BIG must == data size here, ie 512. */
     /* Really, we want samples evenly spread over the available data.
@@ -59,19 +58,14 @@ guint32 * monoscope_update (gint16 data [2][512])
     int foo;
     int bar;  
     int h;
-    guchar bits[ 257 * 129];
     guint32 *loc;
 
 	int factor;
 	int val;
 	int max = 1;
 	short * thisEq;
-    for (i = 0; i < CONVOLVE_BIG; i++) {
-	/* Average the two channels. */
-	newEq[i] = (((int) data[0][i]) + (int) data[1][i]) >> 1;
-    }
 
-	memcpy (copyEq, newEq, sizeof (short) * CONVOLVE_BIG);
+	memcpy (copyEq, data, sizeof (short) * CONVOLVE_BIG);
 	thisEq = copyEq;
 #if 1					
 	val = convolve_match (avgEq, copyEq, state);
