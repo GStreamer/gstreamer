@@ -143,6 +143,17 @@ gst_dparam_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 	dparam = GST_DPARAM(object);
   
 	switch (prop_id) {   
+		case ARG_VALUE_FLOAT:
+			g_value_set_float (value, dparam->value_float);
+			break;
+			
+		case ARG_VALUE_INT:
+			g_value_set_float (value, dparam->value_int);
+			break;
+			
+		case ARG_VALUE_INT64:
+			g_value_set_float (value, dparam->value_int64);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 			break;
