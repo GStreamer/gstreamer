@@ -305,6 +305,7 @@ gst_pngenc_chain (GstPad * pad, GstData * _data)
 
   png_destroy_info_struct (pngenc->png_struct_ptr, &pngenc->png_info_ptr);
   png_destroy_write_struct (&pngenc->png_struct_ptr, (png_infopp) NULL);
+  gst_buffer_stamp (pngenc->buffer_out, buf);
   gst_buffer_unref (buf);
 
   gst_pad_push (pngenc->srcpad, GST_DATA (pngenc->buffer_out));

@@ -1,5 +1,14 @@
 2004-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	patch by: Edward Hervey <bilboed@bilboed.com>
+
+	* ext/libpng/gstpngenc.c:
+	  Copy over buffer properties.  Fixes #158832
+
+2004-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Tim-Philipp Müller <t.i.m@zen.co.uk>
+
 	* ext/dvdread/dvdreadsrc.c:
 	  Fixes invalid reads (#158462)
 
