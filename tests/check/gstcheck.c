@@ -57,7 +57,9 @@ void gst_check_log_critical_func
     fail ("Unexpected critical/warning: %s", message);
   }
 
-  g_print ("\nExpected critical/warning: %s\n", message);
+  if (_gst_check_debug) {
+    g_print ("\nExpected critical/warning: %s\n", message);
+  }
 
   if (log_level & G_LOG_LEVEL_CRITICAL)
     _gst_check_raised_critical = TRUE;
