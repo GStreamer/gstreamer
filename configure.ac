@@ -393,6 +393,8 @@ dnl #########################
 dnl libs/ext/Makefile
 AC_OUTPUT(
 Makefile
+common/Makefile
+common/m4/Makefile
 include/Makefile
 gst/Makefile
 gst/gstversion.h

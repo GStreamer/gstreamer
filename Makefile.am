@@ -23,7 +23,7 @@ SUBDIRS = include gst libs tools \
 	$(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) $(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
-DIST_SUBDIRS = include libs gst tools tests testsuite examples docs
+DIST_SUBDIRS = common include libs gst tools tests testsuite examples docs
 
 
 pkgconfigdir = $(libdir)/pkgconfig
