@@ -8,5 +8,5 @@ noinst_HEADERS = monoscope.h convolve.h
 
 libgstmonoscope_la_CFLAGS = -O2 -ffast-math $(GST_CFLAGS)
 libgstmonoscope_la_LIBADD = $(GST_LIBS)
-libgstmonoscope_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstmonoscope_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
