@@ -57,7 +57,7 @@ struct _GstSpeexDec {
 
   void 		*state;
   SpeexStereoState stereo;
-  SpeexMode 	*mode;
+  const SpeexMode * mode;
   SpeexHeader 	*header;
   SpeexCallback  callback;
   SpeexBits      bits;

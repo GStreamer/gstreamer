@@ -70,7 +70,7 @@ struct _GstSpeexEnc {
 
   SpeexBits 	 bits;
   SpeexHeader 	 header;
-  SpeexMode 	*speex_mode;
+  const SpeexMode 	*speex_mode;
   void 		*state;
   GstSpeexMode	 mode;
   GstAdapter    *adapter;

@@ -657,6 +657,9 @@ gst_dvdec_handle_sink_event (GstDVDec * dvdec)
         gst_event_ref (event);
         gst_pad_push (dvdec->audiosrcpad, GST_DATA (event));
       }
+      if (type == GST_EVENT_EOS) {
+        gst_element_set_eos (GST_ELEMENT (dvdec));
+      }
       break;
     }
     case GST_EVENT_DISCONTINUOUS:
