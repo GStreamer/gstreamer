@@ -1144,7 +1144,7 @@ _gst_value_initialize (void)
     };
     info.value_table = &value_table;
     gst_type_fourcc = g_type_register_static (G_TYPE_BOXED, "GstFourcc", &info, 0);
-    gst_value.type = gst_type_int_range;
+    gst_value.type = gst_type_fourcc;
     gst_value_register (&gst_value);
   }
 
@@ -1213,7 +1213,7 @@ _gst_value_initialize (void)
     };
     info.value_table = &value_table;
     gst_type_list = g_type_register_static (G_TYPE_BOXED, "GstValueList", &info, 0);
-    gst_value.type = gst_type_double_range;
+    gst_value.type = gst_type_list;
     gst_value_register (&gst_value);
   }
 
