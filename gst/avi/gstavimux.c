@@ -71,7 +71,7 @@ static GstStaticPadTemplate video_sink_factory =
         "format = (fourcc) { YUY2, I420 }, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ]; "
-        "video/x-jpeg, "
+        "image/jpeg, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ]; "
         "video/x-divx, "
@@ -317,7 +317,7 @@ gst_avimux_vidsinkconnect (GstPad * pad, const GstCaps * vscaps)
     /* find format */
     if (!strcmp (mimetype, "video/x-huffyuv")) {
       avimux->vids.compression = GST_MAKE_FOURCC ('H', 'F', 'Y', 'U');
-    } else if (!strcmp (mimetype, "video/x-jpeg")) {
+    } else if (!strcmp (mimetype, "image/jpeg")) {
       avimux->vids.compression = GST_MAKE_FOURCC ('M', 'J', 'P', 'G');
     } else if (!strcmp (mimetype, "video/x-divx")) {
       gint divxversion;

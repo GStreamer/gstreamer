@@ -11,7 +11,8 @@ libgstnavigationtest_la_SOURCES = gstnavigationtest.c
 libgstnavigationtest_la_CFLAGS = $(GST_CFLAGS) -I$(top_srcdir)/gst/videofilter
 libgstnavigationtest_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-libgstdebug_la_SOURCES = gstdebug.c \
+libgstdebug_la_SOURCES = \
+	gstdebug.c \
 	breakmydata.c \
 	negotiation.c \
 	gstnavseek.c

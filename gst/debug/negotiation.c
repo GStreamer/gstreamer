@@ -48,6 +48,8 @@ struct _GstNegotiation
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
+
+  GstCaps *caps;
 };
 
 struct _GstNegotiationClass
@@ -75,7 +77,8 @@ enum
 
 enum
 {
-  ARG_0
+  ARG_0,
+  ARG_ALLOWED_CAPS
 };
 
 static GstStaticPadTemplate gst_negotiation_sink_factory =
@@ -103,6 +106,7 @@ static void gst_negotiation_set_property (GObject * object, guint prop_id,
 static void gst_negotiation_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static void gst_negotiation_update_caps (GstNegotiation * negotiation);
 static void gst_negotiation_chain (GstPad * pad, GstData * _data);
 
 static GstElementClass *parent_class = NULL;
@@ -164,6 +168,11 @@ gst_negotiation_class_init (GstNegotiationClass * klass)
 
   gobject_class->set_property = gst_negotiation_set_property;
   gobject_class->get_property = gst_negotiation_get_property;
+
+  g_object_class_install_property (gobject_class, ARG_ALLOWED_CAPS,
+      g_param_spec_boxed ("allowed-caps", "Caps",
+          "The range of formats allowed by " "this element's peers",
+          GST_TYPE_CAPS, G_PARAM_READABLE));
 }
 
 static void
@@ -200,6 +209,8 @@ gst_negotiation_getcaps (GstPad * pad)
   GST_ERROR ("getcaps called on %" GST_PTR_FORMAT ", returning %"
       GST_PTR_FORMAT, pad, caps);
 
+  gst_negotiation_update_caps (negotiation);
+
   return caps;
 }
 
@@ -219,6 +230,25 @@ gst_negotiation_pad_link (GstPad * pad, const GstCaps * caps)
       GST_PTR_FORMAT ", returning %d", pad, caps, ret);
 
   return ret;
+}
+
+static void
+gst_negotiation_update_caps (GstNegotiation * negotiation)
+{
+  GstCaps *srccaps;
+  GstCaps *sinkcaps;
+  GstCaps *icaps;
+
+  srccaps = gst_pad_get_allowed_caps (negotiation->srcpad);
+  sinkcaps = gst_pad_get_allowed_caps (negotiation->sinkpad);
+
+  icaps = gst_caps_intersect (srccaps, sinkcaps);
+  gst_caps_free (srccaps);
+  gst_caps_free (sinkcaps);
+
+  gst_caps_replace (&negotiation->caps, icaps);
+  g_object_notify (G_OBJECT (negotiation), "allowed-caps");
+  g_print ("notify %s", gst_caps_to_string (icaps));
 }
 
 static void
@@ -255,6 +285,9 @@ gst_negotiation_get_property (GObject * object, guint prop_id,
   filter = GST_NEGOTIATION (object);
 
   switch (prop_id) {
+    case ARG_ALLOWED_CAPS:
+      g_value_set_boxed (value, filter->caps);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

@@ -1,5 +1,20 @@
 2004-04-13  David Schleef  <ds@schleef.org>
 
+	* common/m4/gst-feature.m4: Call -config scripts with
+	--plugin-libs if it is supported.
+	* gst/avi/gstavimux.c: (gst_avimux_vidsinkconnect): sequences of
+	JPEG images are image/jpeg.
+	* gst/debug/Makefile.am:
+	* gst/debug/negotiation.c: (gst_negotiation_class_init),
+	(gst_negotiation_getcaps), (gst_negotiation_pad_link),
+	(gst_negotiation_update_caps), (gst_negotiation_get_property),
+	(gst_negotiation_plugin_init): Add a property that acts like
+	filter caps.
+	* testsuite/gst-lint:  Move license checking to be a standard
+	test.
+
+2004-04-13  David Schleef  <ds@schleef.org>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_reset): Fix memleak.
 	patch from Sebastien Cote (bug #139958)
 
