@@ -52,6 +52,7 @@ typedef enum {
 	GST_PLAY_PIPE_AUDIO_THREADED,
 	GST_PLAY_PIPE_AUDIO_HYPER_THREADED,
 	GST_PLAY_PIPE_VIDEO,
+	GST_PLAY_PIPE_VIDEO_VISUALISATION,
 } GstPlayPipeType;
 
 typedef enum {
@@ -151,6 +152,8 @@ struct _GstPlayClass
 								gint64 length_nanos);
 	void (*have_xid)	  	(	GstPlay* play,
 								gint xid);
+	void (*have_vis_xid)	 (	GstPlay* play,
+								gint xid);
 	void (*have_video_size)	(	GstPlay* play,
 								gint width,
 								gint height);
@@ -220,9 +223,20 @@ gboolean
 gst_play_set_video_sink (	GstPlay *play,
 							GstElement *video_sink);
 gboolean
+gst_play_set_visualisation_video_sink (	GstPlay *play,
+										GstElement *video_sink);
+gboolean
 gst_play_set_audio_sink (	GstPlay *play,
 							GstElement *audio_sink);
 
+gboolean
+gst_play_set_visualisation_element (	GstPlay *play,
+										GstElement *element);
+										
+gboolean
+gst_play_connect_visualisation (	GstPlay *play,
+									gboolean connect);
+									
 GType
 gst_play_get_type (void);
 
