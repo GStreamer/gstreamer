@@ -8,3 +8,5 @@ Makefile.in
 gstversion.h
 gstmarshal.c
 gstmarshal.h
+gstenumtypes.h
+gstenumtypes.c
