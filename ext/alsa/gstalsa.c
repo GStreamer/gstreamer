@@ -25,6 +25,9 @@
 #include <sys/time.h>
 #include "gstalsa.h"
 
+GST_DEBUG_CATEGORY_STATIC (alsa_debug);
+#define GST_CAT_DEFAULT alsa_debug
+
 /* error checking for standard alsa functions */
 #define SIMPLE_ERROR_CHECK(value) G_STMT_START{ \
   int err = (value); \
@@ -36,7 +39,7 @@
 #define ERROR_CHECK(value, ...) G_STMT_START{ \
   int err = (value); \
   if (err < 0) { \
-    g_warning ( __VA_ARGS__, snd_strerror (err)); \
+    GST_ERROR_OBJECT (this, __VA_ARGS__, snd_strerror (err)); \
     return FALSE; \
   } \
 }G_STMT_END
@@ -44,7 +47,7 @@
 #define ERROR_CHECK(value, args...) G_STMT_START{ \
   int err = (value); \
   if (err < 0) { \
-    g_warning ( ## args, snd_strerror (err)); \
+    GST_ERROR_OBJECT (this, ## args, snd_strerror (err)); \
     return FALSE; \
   } \
 }G_STMT_END
@@ -52,7 +55,7 @@
 #define ERROR_CHECK(value, args...) G_STMT_START{ \
   int err = (value); \
   if (err < 0) { \
-    g_warning (snd_strerror (err)); \
+    GST_ERROR_OBJECT (this, snd_strerror (err)); \
     return FALSE; \
   } \
 }G_STMT_END
@@ -560,12 +563,12 @@ gst_alsa_sink_check_event (GstAlsaSink *sink, gint pad_nr)
 	  }
 	  if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
 	    if (!gst_clock_handle_discont (GST_ELEMENT (this)->clock, value))
-	      g_printerr ("GstAlsa: clock couldn't handle discontinuity\n");
+	      GST_WARNING_OBJECT (this, "clock couldn't handle discontinuity");
 	  }
 	  if (!gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value)) {
 	    if (!gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value)) {
 	      if (!gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
-	        g_warning ("GstAlsa: Could not acquire samplecount after seek, the clock might screw your pipeline now");
+	        GST_WARNING_OBJECT (this, "could not acquire samplecount after seek, the clock might screw your pipeline now");
 	        break;
 	      } else {
 	        if (this->format) /* discont event before any data (and before any caps...) */
@@ -586,7 +589,7 @@ gst_alsa_sink_check_event (GstAlsaSink *sink, gint pad_nr)
 	  break;
         }
       default:
-        g_warning ("GstAlsa: got an unknown event (Type: %d)", GST_EVENT_TYPE (event));
+        GST_INFO_OBJECT (this, "got an unknown event (Type: %d)", GST_EVENT_TYPE (event));
         break;
     }
     gst_event_unref (event);
@@ -626,17 +629,17 @@ gst_alsa_sink_mmap (GstAlsa *this, snd_pcm_sframes_t *avail)
   }
 
   if ((err = snd_pcm_mmap_begin (this->handle, &dst, &offset, avail)) < 0) {
-    g_warning ("gstalsa: mmap failed: %s", snd_strerror (err));
+    GST_ERROR_OBJECT (this, "mmap failed: %s", snd_strerror (err));
     return -1;
   }
 
   if ((err = snd_pcm_areas_copy (dst, offset, src, 0, this->format->channels, *avail, this->format->format)) < 0) {
     snd_pcm_mmap_commit (this->handle, offset, 0);
-    g_warning ("gstalsa: data copy failed: %s", snd_strerror (err));
+    GST_ERROR_OBJECT (this, "data copy failed: %s", snd_strerror (err));
     return -1;
   }
   if ((err = snd_pcm_mmap_commit (this->handle, offset, *avail)) < 0) {
-    g_warning ("gstalsa: mmap commit failed: %s", snd_strerror (err));
+    GST_ERROR_OBJECT (this, "mmap commit failed: %s", snd_strerror (err));
     return -1;
   }
 
@@ -665,7 +668,7 @@ gst_alsa_sink_write (GstAlsa *this, snd_pcm_sframes_t *avail)
       gst_alsa_xrun_recovery (this);
       return 0;
     }
-    g_warning ("error on data access: %s", snd_strerror (err));
+    GST_ERROR_OBJECT (this, "error on data access: %s", snd_strerror (err));
   }
   return err;
 }
@@ -727,27 +730,27 @@ no_difference:
 	  int size = samples * snd_pcm_format_physical_width (this->format->format) / 8;
 	  g_printerr ("Allocating %d bytes (%ld samples) now to resync: sample %ld expected, but got %ld\n", 
 	              size, MIN (bytes, samplestamp - this->transmitted), this->transmitted, samplestamp);
-	  sink->data[i] = g_malloc (size);
+	  sink->data[i] = g_try_malloc (size);
 	  if (!sink->data[i]) {
-	    g_warning ("GstAlsa: error allocating %d bytes, buffers unsynced now.", size);
+	    GST_WARNING_OBJECT (this, "error allocating %d bytes, buffers unsynced now.", size);
 	    goto no_difference;
 	  }
 	  sink->size[i] = size;
 	  if (0 != snd_pcm_format_set_silence (this->format->format, sink->data[i], samples)) {
-	    g_warning ("GstAlsa: error silencing buffer, enjoy the noise.");
+	    GST_WARNING_OBJECT (this, "error silencing buffer, enjoy the noise.");
 	  }
 	  sink->behaviour[i] = 1;
 	} else if (gst_alsa_samples_to_bytes (this, this->transmitted - samplestamp) >= sink->buf[i]->size) {
-	  g_printerr ("Skipping %lu samples to resync (complete buffer): sample %ld expected, but got %ld\n", 
-	              gst_alsa_bytes_to_samples (this, sink->buf[i]->size), this->transmitted, samplestamp);	              
+	  GST_INFO_OBJECT (this, "Skipping %lu samples to resync (complete buffer): sample %ld expected, but got %ld\n", 
+			   gst_alsa_bytes_to_samples (this, sink->buf[i]->size), this->transmitted, samplestamp);	              
 	  /* this buffer is way behind */
 	  gst_buffer_unref (sink->buf[i]);
 	  sink->buf[i] = NULL;
 	  continue;
 	} else if (this->transmitted > samplestamp) {
 	  gint difference = gst_alsa_samples_to_bytes (this, this->transmitted - samplestamp);	
-	  g_printerr ("Skipping %lu samples to resync: sample %ld expected, but got %ld\n",
-		      (gulong) this->transmitted - samplestamp, this->transmitted, samplestamp);
+	  GST_INFO_OBJECT (this, "Skipping %lu samples to resync: sample %ld expected, but got %ld\n",
+			   (gulong) this->transmitted - samplestamp, this->transmitted, samplestamp);
 	  /* this buffer is only a bit behind */
           sink->size[i] = sink->buf[i]->size - difference;
           sink->data[i] = sink->buf[i]->data + difference;
@@ -942,16 +945,16 @@ gst_alsa_src_mmap (GstAlsa *this, snd_pcm_sframes_t *avail)
   }
 
   if ((err = snd_pcm_mmap_begin (this->handle, &src, &offset, avail)) < 0) {
-    g_warning ("gstalsa: mmap failed: %s", snd_strerror (err));
+    GST_ERROR_OBJECT (this, "mmap failed: %s", snd_strerror (err));
     return -1;
   }
   if (*avail > 0 && (err = snd_pcm_areas_copy (dst, 0, src, offset, this->format->channels, *avail, this->format->format)) < 0) {
     snd_pcm_mmap_commit (this->handle, offset, 0);
-    g_warning ("gstalsa: data copy failed: %s", snd_strerror (err));
+    GST_ERROR_OBJECT (this, "data copy failed: %s", snd_strerror (err));
     return -1;
   }
   if ((err = snd_pcm_mmap_commit (this->handle, offset, *avail)) < 0) {
-    g_warning ("gstalsa: mmap commit failed: %s", snd_strerror (err));
+    GST_ERROR_OBJECT (this, "mmap commit failed: %s", snd_strerror (err));
     return -1;
   }
 
@@ -980,7 +983,7 @@ gst_alsa_src_read (GstAlsa *this, snd_pcm_sframes_t *avail)
       gst_alsa_xrun_recovery (this);
       return 0;
     }
-    g_warning ("error on data access: %s", snd_strerror (err));
+    GST_ERROR_OBJECT (this, "error on data access: %s", snd_strerror (err));
   }
   return err;
 }
@@ -1194,14 +1197,14 @@ gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ,
     channel = (gint) strtol (name + (strchr (templ->name_template, '%') -
                             templ->name_template), NULL, 0);
     if (channel < 1 || channel >= GST_ALSA_MAX_CHANNELS) {
-      g_warning ("invalid channel requested. (%d)", channel);
+      GST_INFO_OBJECT (this, "invalid channel requested. (%d)", channel);
       return NULL;
     }
   }
 
   /* make sure the requested channel is free. */
   if (channel > 0 || this->pad[channel] != NULL) {
-    g_warning ("requested channel %d already in use.", channel);
+    GST_INFO_OBJECT (this, "requested channel %d already in use.", channel);
     return NULL;
   }
 
@@ -1352,7 +1355,7 @@ gst_alsa_get_caps_internal (snd_pcm_format_t format)
         gst_props_add_entry (props, gst_props_entry_new ("endianness", GST_PROPS_INT (G_LITTLE_ENDIAN)));
         break;
       default:
-        g_warning("ALSA: Unknown byte order in sound driver. Continuing by assuming system byte order.");
+        GST_WARNING ("Unknown byte order in sound driver. Continuing by assuming system byte order.");
         gst_props_add_entry (props, gst_props_entry_new ("endianness", GST_PROPS_INT (G_BYTE_ORDER)));
         break;
       }
@@ -1593,7 +1596,7 @@ gst_alsa_change_state (GstElement *element)
     if (snd_pcm_state (this->handle) == SND_PCM_STATE_PAUSED) {
       int err = snd_pcm_pause (this->handle, 0);
       if (err < 0) {
-        g_warning ("Error unpausing sound: %s", snd_strerror (err));
+        GST_ERROR_OBJECT (this, "Error unpausing sound: %s", snd_strerror (err));
         return GST_STATE_FAILURE;
       }
       gst_alsa_clock_start (this->clock);
@@ -1604,7 +1607,7 @@ gst_alsa_change_state (GstElement *element)
       if (snd_pcm_state (this->handle) == SND_PCM_STATE_RUNNING) {
         int err = snd_pcm_pause (this->handle, 1);
         if (err < 0) {
-          g_warning ("Error pausing sound: %s", snd_strerror (err));
+          GST_ERROR_OBJECT (this, "Error pausing sound: %s", snd_strerror (err));
           return GST_STATE_FAILURE;
         }
         gst_alsa_clock_stop (this->clock);
@@ -1770,7 +1773,7 @@ gst_alsa_update_avail (GstAlsa *this)
     if (avail == -EPIPE) {
       gst_alsa_xrun_recovery (this);
     } else {
-      g_warning ("unknown ALSA avail_update return value (%d)", (int) avail);
+      GST_WARNING_OBJECT (this, "unknown ALSA avail_update return value (%d)", (int) avail);
     }
   }
   return avail;
@@ -1792,7 +1795,7 @@ gst_alsa_pcm_wait (GstAlsa *this)
           return FALSE;
         }
       }
-      g_warning ("error waiting for alsa pcm: (%d: %s)", err, snd_strerror (err));
+      GST_ERROR_OBJECT (this, "error waiting for alsa pcm: (%d: %s)", err, snd_strerror (err));
       return FALSE;
     }
   }
@@ -1845,7 +1848,7 @@ gst_alsa_xrun_recovery (GstAlsa *this)
   snd_pcm_status_alloca (&status);
 
   if ((err = snd_pcm_status (this->handle, status)) < 0)
-    g_warning ("status error: %s", snd_strerror (err));
+    GST_ERROR_OBJECT (this, "status error: %s", snd_strerror (err));
 
   if (snd_pcm_status_get_state (status) == SND_PCM_STATE_XRUN) {
     struct timeval now, diff, tstamp;
@@ -1853,7 +1856,7 @@ gst_alsa_xrun_recovery (GstAlsa *this)
     gettimeofday (&now, 0);
     snd_pcm_status_get_trigger_tstamp (status, &tstamp);
     timersub (&now, &tstamp, &diff);
-    g_warning ("alsa: xrun of at least %.3f msecs", diff.tv_sec * 1000 + diff.tv_usec / 1000.0);
+    GST_INFO_OBJECT (this, "alsa: xrun of at least %.3f msecs", diff.tv_sec * 1000 + diff.tv_usec / 1000.0);
 
     /* if we're allowed to recover, ... */
     if (this->autorecover) {
@@ -2249,14 +2252,14 @@ gst_alsa_clock_wait (GstClock *clock, GstClockEntry *entry)
     return GST_CLOCK_ENTRY_EARLY;
     
   if (diff > clock->max_diff) {
-    g_warning ("GstAlsaClock: abnormal clock request diff: %" G_GINT64_FORMAT") >"
-               "  %"G_GINT64_FORMAT, diff, clock->max_diff);
+    GST_INFO_OBJECT (this, "GstAlsaClock: abnormal clock request diff: %" G_GINT64_FORMAT") >"
+		     "  %"G_GINT64_FORMAT, diff, clock->max_diff);
     return GST_CLOCK_ENTRY_EARLY;
   }
   
   target = entry_time + diff;
 
-  GST_DEBUG ("real_target %" G_GUINT64_FORMAT
+  GST_DEBUG_OBJECT (this, "real_target %" G_GUINT64_FORMAT
 		            " target %" G_GUINT64_FORMAT
 			    " now %" G_GUINT64_FORMAT,
                             target, GST_CLOCK_ENTRY_TIME (entry), entry_time);
@@ -2350,6 +2353,8 @@ static gboolean
 plugin_init (GModule * module, GstPlugin * plugin)
 {
   GstElementFactory *factory;
+
+  GST_DEBUG_CATEGORY_INIT (alsa_debug, "alsa", 0, "alsa plugins");
 
   factory = gst_element_factory_new ("alsasrc", GST_TYPE_ALSA_SRC, &gst_alsa_src_details);
   g_return_val_if_fail (factory != NULL, FALSE);
