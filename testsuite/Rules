@@ -1,7 +1,7 @@
 
 TESTS_ENVIRONMENT=\
 	G_DEBUG=fatal_warnings \
-	GST_PLUGIN_PATH=$(top_builddir)/gst:. \
+	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/testsuite \
 	GST_REGISTRY=$(top_builddir)/testsuite/test-registry.xml
 
 

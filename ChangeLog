@@ -1,3 +1,8 @@
+2004-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/Rules:
+	  change path
+
 2004-07-02  Benjamin Otte  <otte@gnome.org>
 
 	* tests/.cvsignore:
@@ -31,6 +36,11 @@
 	  make disconts without position info an error in debugging
 	* tests/spidey_bench.c: (handoff), (main):
 	  don't count first try when averaging
+
+2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstplugin.c: (gst_plugin_load_file):
+	  figure out problem with dynamic test
 
 2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
