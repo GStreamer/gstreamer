@@ -269,7 +269,8 @@ gst_videotestsrc_getcaps (GstPad * pad, GstCaps * caps)
 		"height",GST_PROPS_INT_RANGE(16,4096));
   }
 
-  return gst_caps_intersect(caps1,caps2);
+  /* ref intersection and return it */
+  return gst_caps_ref (gst_caps_intersect(caps1,caps2));
 }
 
 static void
@@ -318,6 +319,12 @@ gst_videotestsrc_get (GstPad * pad)
   buf = NULL;
   if (videotestsrc->pool) {
     buf = gst_buffer_new_from_pool (videotestsrc->pool, 0, 0);
+    /* if the buffer we get is too small, make our own */
+    if (GST_BUFFER_SIZE (buf) < newsize)
+    {
+      gst_buffer_unref (buf);
+      buf = NULL;
+    }
   }
   if (!buf) {
     buf = gst_buffer_new ();
