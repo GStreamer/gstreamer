@@ -308,6 +308,7 @@ gst_avimux_init (GstAviMux *avimux)
   memset(&(avimux->auds),0,sizeof(gst_riff_strf_auds));
   avimux->vids_hdr.type = GST_MAKE_FOURCC('v','i','d','s');
   avimux->vids_hdr.rate = 1000000;
+  avimux->avi_hdr.max_bps = 10000000;
   avimux->auds_hdr.type = GST_MAKE_FOURCC('a','u','d','s');
   avimux->vids_hdr.quality = 0xFFFFFFFF;
   avimux->auds_hdr.quality = 0xFFFFFFFF;
@@ -934,27 +935,13 @@ gst_avimux_write_index (GstAviMux *avimux)
   avimux->avi_hdr.flags |= GST_RIFF_AVIH_HASINDEX;
 }
 
-static gboolean
-gst_avimux_can_seek(GstAviMux *avimux)
-{
-  const GstEventMask *masks = gst_pad_get_event_masks(GST_PAD_PEER(avimux->srcpad));
-
-  while (masks->type != 0) {
-    if (masks->type == GST_EVENT_SEEK) {
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
 static void
 gst_avimux_bigfile(GstAviMux *avimux, gboolean last)
 {
   GstBuffer *header;
   GstEvent *event;
     
-  if (avimux->is_bigfile && gst_avimux_can_seek(avimux))
+  if (avimux->is_bigfile)
   {
     /* sarch back */
     event = gst_event_new_seek (GST_FORMAT_BYTES | 
@@ -1076,16 +1063,14 @@ gst_avimux_stop_file (GstAviMux *avimux)
   }
 
   /* seek and rewrite the header */
-  if (gst_avimux_can_seek(avimux)) {
-    header = gst_avimux_riff_get_avi_header(avimux);
-    event = gst_event_new_seek (GST_FORMAT_BYTES | 
-				GST_SEEK_METHOD_SET, 0);
-    gst_pad_push(avimux->srcpad, GST_DATA(event));
-    gst_pad_push(avimux->srcpad, GST_DATA (header));
-    event = gst_event_new_seek (GST_FORMAT_BYTES |
-				GST_SEEK_METHOD_SET, avimux->total_data);
-    gst_pad_push(avimux->srcpad, GST_DATA(event));
-  }
+  header = gst_avimux_riff_get_avi_header(avimux);
+  event = gst_event_new_seek (GST_FORMAT_BYTES | 
+			      GST_SEEK_METHOD_SET, 0);
+  gst_pad_push(avimux->srcpad, GST_DATA(event));
+  gst_pad_push(avimux->srcpad, GST_DATA (header));
+  event = gst_event_new_seek (GST_FORMAT_BYTES |
+			      GST_SEEK_METHOD_SET, avimux->total_data);
+  gst_pad_push(avimux->srcpad, GST_DATA(event));
 
   avimux->write_header = TRUE;
 }
