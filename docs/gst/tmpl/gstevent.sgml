@@ -24,7 +24,7 @@ gst_event_new_flush() creates a new flush event.
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-#GstPad
+#GstPad, #GstElement
 </para>
 
 <!-- ##### ENUM GstEventType ##### -->
@@ -46,7 +46,8 @@ The different major types of events.
 @GST_EVENT_RATE: adjust the output rate of an element
 @GST_EVENT_FILLER: a dummy event that should be ignored by plugins
 @GST_EVENT_TS_OFFSET: an event to set the time offset on buffers
-@GST_EVENT_INTERRUPT: 
+@GST_EVENT_INTERRUPT: mainly used by _get based elements when they were interrupted
+                      while waiting for a buffer.
 
 <!-- ##### MACRO GST_EVENT_TYPE ##### -->
 <para>
@@ -82,7 +83,30 @@ Event flags are used when querying for supported events
 
 <!-- ##### ENUM GstSeekType ##### -->
 <para>
-The different types of seek events.
+The different types of seek events. When constructing a seek event a format,
+a seek method and optional flags are OR-ed together. The seek event is then
+inserted into the graph with #gst_pad_send_event() or #gst_element_send_event().
+
+ <informalexample>
+  Following example illustrates how to insert a seek event (1 second in the stream)
+  in a pipeline.
+ 
+  <programlisting>
+  gboolean res;
+  GstEvent *event;
+
+  event = gst_event_new_seek (
+            GST_FORMAT_TIME |		/* seek on time */
+	    GST_SEEK_METHOD_SET |	/* set the absolute position */
+	    GST_SEEK_FLAG_FLUSH,	/* flush any pending data */
+	    1 * GST_SECOND);		/* the seek offset (1 second) */
+
+  res = gst_element_send_event (GST_ELEMENT (osssink), event);
+  if (!res) {
+    g_warning ("seek failed");
+  }
+  </programlisting>
+ </informalexample>
 </para>
 
 @GST_SEEK_METHOD_CUR: Seek to an relative position

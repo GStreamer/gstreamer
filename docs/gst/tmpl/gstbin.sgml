@@ -127,6 +127,16 @@ Free the memory allocated by this bin
 @element: 
 
 
+<!-- ##### FUNCTION gst_bin_remove_many ##### -->
+<para>
+
+</para>
+
+@bin: 
+@element_1: 
+@Varargs: 
+
+
 <!-- ##### FUNCTION gst_bin_get_by_name ##### -->
 <para>
 

@@ -218,6 +218,7 @@ gst_bin_destroy
 gst_bin_add
 gst_bin_add_many
 gst_bin_remove
+gst_bin_remove_many
 gst_bin_get_by_name
 gst_bin_get_by_name_recurse_up
 gst_bin_get_list
