@@ -60,7 +60,14 @@ API:
 
  - remove unnecessary headers from gst.h (gstqueue.h in particular)
 
- - make sure GstClockTime is used wherever it shoud (e.g. gstplay)
+ - make sure GstClockTime is used wherever it should (e.g. gstplay)
+
+ - make gst_bin_get_list virtual so subclasses can override it (e.g.
+   gst-play which contains an internal thread not inside the bin that is
+   gstplay)
+ - make gst_bin_get_by_interface search on the list provided by this get_list
+   so that you can search a GstPlay for an element implementing the interface
+   (right now gstplay has added a gst_play_get_by_interface)
 
 caps:
 
