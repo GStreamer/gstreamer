@@ -26,7 +26,7 @@ else
 SUBDIRS_EXAMPLES =
 endif
 
-SUBDIRS = include gst libs plugins tools $(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) components\
+SUBDIRS = include gst libs plugins tools $(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) \
 $(SUBDIRS_LGG) $(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
