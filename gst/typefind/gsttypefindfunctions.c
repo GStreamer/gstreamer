@@ -894,8 +894,25 @@ aiff_type_find (GstTypeFind * tf, gpointer unused)
 
   if (data && memcmp (data, "FORM", 4) == 0) {
     data += 8;
-    if (memcmp (data, "AIFF", 4) == 0)
+    if (memcmp (data, "AIFF", 4) == 0 || memcmp (data, "AIFC", 4) == 0)
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, AIFF_CAPS);
+  }
+}
+
+/*** audio/x-aiff *********************************************/
+
+static GstStaticCaps svx_caps = GST_STATIC_CAPS ("audio/x-svx");
+
+#define SVX_CAPS gst_static_caps_get(&svx_caps)
+static void
+svx_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 4);
+
+  if (data && memcmp (data, "FORM", 4) == 0) {
+    data += 8;
+    if (memcmp (data, "8SVX", 4) == 0 || memcmp (data, "16SV", 4) == 0)
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SVX_CAPS);
   }
 }
 
@@ -1170,6 +1187,61 @@ tiff_type_find (GstTypeFind * tf, gpointer ununsed)
     }
   }
 }
+
+static GstStaticCaps sds_caps = GST_STATIC_CAPS ("audio/x-sds");
+
+#define SDS_CAPS (gst_static_caps_get(&sds_caps))
+static void
+sds_type_find (GstTypeFind * tf, gpointer ununsed)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 4);
+  guint8 mask[4] = { 0xFF, 0xFF, 0x80, 0xFF };
+  guint8 match[4] = { 0xF0, 0x7E, 0, 0x01 };
+  gint x;
+
+  if (data) {
+    for (x = 0; x < 4; x++) {
+      if ((data[x] & mask[x]) != match[x]) {
+        return;
+      }
+    }
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SDS_CAPS);
+  }
+}
+
+static GstStaticCaps ircam_caps = GST_STATIC_CAPS ("audio/x-ircam");
+
+#define IRCAM_CAPS (gst_static_caps_get(&ircam_caps))
+static void
+ircam_type_find (GstTypeFind * tf, gpointer ununsed)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 4);
+  guint8 mask[4] = { 0xFF, 0xFF, 0xF8, 0xFF };
+  guint8 match[4] = { 0x64, 0xA3, 0x00, 0x00 };
+  gint x;
+  gboolean matched = TRUE;
+
+  if (!data) {
+    return;
+  }
+  for (x = 0; x < 4; x++) {
+    if ((data[x] & mask[x]) != match[x]) {
+      matched = FALSE;
+    }
+  }
+  if (matched) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, IRCAM_CAPS);
+    return;
+  }
+  // now try the reverse version
+  matched = TRUE;
+  for (x = 0; x < 4; x++) {
+    if ((data[x] & mask[3 - x]) != match[3 - x]) {
+      matched = FALSE;
+    }
+  }
+}
+
 
 /*** video/x-matroska ********************/
 static GstStaticCaps matroska_caps = GST_STATIC_CAPS ("video/x-matroska");
@@ -1499,6 +1571,13 @@ plugin_init (GstPlugin * plugin)
   static gchar *utf8_exts[] = { "txt", NULL };
   static gchar *wav_exts[] = { "wav", NULL };
   static gchar *aiff_exts[] = { "aiff", "aif", "aifc", NULL };
+  static gchar *svx_exts[] = { "iff", "svx", NULL };
+  static gchar *paris_exts[] = { "paf", NULL };
+  static gchar *nist_exts[] = { "nist", NULL };
+  static gchar *voc_exts[] = { "voc", NULL };
+  static gchar *sds_exts[] = { "sds", NULL };
+  static gchar *ircam_exts[] = { "sf", NULL };
+  static gchar *w64_exts[] = { "w64", NULL };
   static gchar *shn_exts[] = { "shn", NULL };
   static gchar *ape_exts[] = { "ape", NULL };
   static gchar *uri_exts[] = { "ram", NULL };
@@ -1536,6 +1615,8 @@ plugin_init (GstPlugin * plugin)
       musepack_exts, "MP+", 3, GST_TYPE_FIND_MAXIMUM - 1);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-au", GST_RANK_MARGINAL,
       au_exts, ".snd", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-au", GST_RANK_MARGINAL,
+      au_exts, "dns.", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_RIFF (plugin, "video/x-msvideo", GST_RANK_PRIMARY,
       avi_exts, "AVI ");
   TYPE_FIND_REGISTER_RIFF (plugin, "video/x-cdxa", GST_RANK_PRIMARY,
@@ -1583,6 +1664,22 @@ plugin_init (GstPlugin * plugin)
       "WAVE");
   TYPE_FIND_REGISTER (plugin, "audio/x-aiff", GST_RANK_SECONDARY,
       aiff_type_find, aiff_exts, AIFF_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-svx", GST_RANK_SECONDARY,
+      svx_type_find, svx_exts, SVX_CAPS, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-paris",
+      GST_RANK_SECONDARY, paris_exts, " paf", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-paris",
+      GST_RANK_SECONDARY, paris_exts, "fap ", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-nist",
+      GST_RANK_SECONDARY, nist_exts, "NIST", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-voc",
+      GST_RANK_SECONDARY, voc_exts, "Creative", 8, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER (plugin, "audio/x-sds", GST_RANK_SECONDARY,
+      sds_type_find, sds_exts, SDS_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-ircam", GST_RANK_SECONDARY,
+      ircam_type_find, ircam_exts, IRCAM_CAPS, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-w64",
+      GST_RANK_SECONDARY, w64_exts, "riff", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "audio/x-shorten", GST_RANK_SECONDARY,
       shn_type_find, shn_exts, SHN_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-ape", GST_RANK_SECONDARY,
