@@ -1,5 +1,12 @@
 2005-02-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/elements/gstfakesink.c: (gst_fakesink_get_property),
+	(gst_fakesink_finish_preroll), (gst_fakesink_event),
+	(gst_fakesink_change_state):
+	Fix properties.
+
+2005-02-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/elements/gstfakesink.c: (gst_fakesink_init),
 	(gst_fakesink_finish_preroll), (gst_fakesink_event),
 	(gst_fakesink_chain_unlocked), (gst_fakesink_activate),

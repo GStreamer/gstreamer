@@ -334,6 +334,12 @@ gst_fakesink_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_STATE_ERROR:
       g_value_set_enum (value, sink->state_error);
       break;
+    case ARG_HAS_LOOP:
+      g_value_set_boolean (value, sink->has_loop);
+      break;
+    case ARG_HAS_CHAIN:
+      g_value_set_boolean (value, sink->has_chain);
+      break;
     case ARG_SILENT:
       g_value_set_boolean (value, sink->silent);
       break;
