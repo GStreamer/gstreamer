@@ -362,7 +362,7 @@ gst_modplug_loop (GstElement *element)
       GST_BUFFER_SIZE( buffer_out ) = modplug->length;
  	  
       total_samples+=1152;		
-	  GST_BUFFER_TIMESTAMP( buffer_out ) = total_samples * 1000000LL / modplug->frequency;
+	  GST_BUFFER_TIMESTAMP( buffer_out ) = total_samples * GST_SECOND / modplug->frequency;
  	  	
 	  gst_pad_push( srcpad, buffer_out );
 	  gst_element_yield (element);      
