@@ -1,7 +1,6 @@
 # variables used for enum/marshal generation
 glib_enum_headers=$(tuner_headers)
 glib_enum_define=GST_TUNER
-glib_root=tuner
 glib_enum_prefix=gst_tuner
 
 libgsttunerincludedir = \
@@ -12,9 +11,13 @@ tuner_headers = \
 	tunernorm.h \
 	tunerchannel.h
 
+built_sources =	\
+	tuner-marshal.c \
+	tuner-enumtypes.c
+
 built_headers =	\
-	$(glib_root)-marshal.h \
-	$(glib_root)-enumtypes.h
+	tuner-marshal.h \
+	tuner-enumtypes.h
 
 libgsttunerinclude_HEADERS = $(tuner_headers) $(built_headers)
 
@@ -24,16 +27,15 @@ libgsttuner_la_SOURCES = \
 	tuner.c \
 	tunernorm.c \
 	tunerchannel.c \
-	$(glib_root)-marshal.c
+	$(built_sources)
 
 libgsttuner_la_CFLAGS = $(GST_CFLAGS)
 
 BUILT_SOURCES = \
-	$(glib_root)-marshal.c \
-	$(glib_root)-enumtypes.c \
+	$(built_sources) \
 	$(built_headers)
 
-EXTRA_DIST = $(glib_root)-marshal.list
+EXTRA_DIST = tuner-marshal.list
 
 CLEANFILES = $(BUILT_SOURCES)
 
