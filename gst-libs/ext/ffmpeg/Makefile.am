@@ -73,8 +73,8 @@ checkout:
 	cvs -d:pserver:anonymous@cvs.ffmpeg.sourceforge.net:/cvsroot/ffmpeg co ffmpeg
 
 # on running make install, make sure make has been run first
-install:
-	cd ffmpeg && $(MAKE)
+install: all
+	@true
 
 # we don't install stuff so no need to uninstall
 uninstall:
