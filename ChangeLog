@@ -1,3 +1,15 @@
+2004-06-07  Jan Schmidt <thaytan@mad.scientist.com>
+	* AUTHORS:
+	Add me to the authors file
+	* configure.ac:
+	Increase the libdv requirement to >= version 0.100
+	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_src_convert),
+	(gst_dvdec_src_query), (gst_dvdec_handle_sink_event),
+	(gst_dvdec_push), (gst_dvdec_loop), (gst_dvdec_change_state):
+	* ext/dv/gstdvdec.h:
+	Add support for the new_media flag when sending DISCONT events
+	Make the querying work when video pad is not linked
+
 2004-06-07  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>
