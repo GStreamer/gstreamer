@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "configure" ]; then
+   gst-register --gst-mask=0 || true
+   gst-compprep --gst-mask=0 || true
+fi
+
+#DEBHELPER#
+
+exit 0
+

@@ -1,0 +1,173 @@
+#!/usr/bin/make -f
+# Sample debian/rules that uses debhelper. 
+# GNU copyright 1997 by Joey Hess.
+#
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This is the debhelper compatability version to use.
+export DH_COMPAT=3
+
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
+
+# The plugins are basically the same.
+# Link special names to a template file.
+# still need "*.files" to be done by hand
+
+PLUGINS=a52dec aa alsa arts artsd audiofile avifile cdparanoia colorspace dvd esd festival flac gnomevfs gsm jpeg lame mad mikmod misc mpeg2dec oss sdl sid vorbis x
+
+setup-links:
+	for i in $(PLUGINS); do \
+		(cd debian; \
+		ln -fs gstreamer-plugin-template.postinst \
+			gstreamer-$$i.postinst; \
+		ln -fs gstreamer-plugin-template.postrm \
+			gstreamer-$$i.postrm; \
+		) \
+	done
+
+export DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+export DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	# Add here commands to configure the package.
+	./configure \
+		--build=$(DEB_BUILD_GNU_TYPE) \
+		--host=$(DEB_HOST_GNU_TYPE) \
+		--prefix=/usr \
+		--mandir=\$${prefix}/share/man \
+		--infodir=\$${prefix}/share/info \
+		--sysconfdir=/etc \
+		--with-configdir=/etc/gstreamer \
+		--disable-plugin-builddir \
+		--disable-tests \
+		--disable-examples \
+		--disable-docs-build \
+		--disable-plugin-docs \
+		--enable-DEBUG \
+		--enable-debug
+
+		# FIXME reenable when build is less painful
+		#--enable-docs-build \
+		#--disable-plugin-docs \
+
+	touch configure-stamp
+
+build: configure-stamp build-stamp
+build-stamp:
+	dh_testdir
+
+	# Add here commands to compile the package.
+	$(MAKE)
+
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+
+	# why does distclean not get the docs? who knows?
+	-(cd docs; $(MAKE) clean)
+	-$(MAKE) distclean
+
+	dh_clean
+
+	# get rid of the sym links
+	for i in $(PLUGINS); do \
+		rm -f debian/gstreamer-$$i.postinst; \
+		rm -f debian/gstreamer-$$i.postrm; \
+	done
+
+	# FIXME some extra clean up
+	rm -rf debian/gst-plugins
+	find . -name \*.stamp | xargs rm || true
+	find . -name Makefile | xargs rm || true
+
+
+install: DH_OPTIONS=
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	# Add here commands to install the package into debian/gst-plugins.
+	$(MAKE) prefix=$(CURDIR)/debian/gst-plugins/usr install
+
+	dh_movefiles --sourcedir=debian/gst-plugins
+
+
+# Build architecture-independent files here.
+# Pass -i to all debhelper commands in this target to reduce clutter.
+binary-indep: DH_OPTIONS=-i
+binary-indep: build install
+# Need this version of debhelper for DH_OPTIONS to work.
+	dh_testdir
+	dh_testroot
+#	dh_installdebconf
+	dh_installdocs -A debian/README.Debian
+	dh_installexamples
+	dh_installmenu
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installinit
+#	dh_installcron
+	dh_installman
+#	dh_installinfo
+#	dh_undocumented
+	dh_installchangelogs
+	dh_strip
+#	dh_link
+	dh_compress
+	dh_fixperms
+# You may want to make some executables suid here.
+#	dh_suidregister
+#	dh_makeshlibs
+	dh_installdeb
+#	dh_perl
+#	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+# Build architecture-dependent files here.
+# Pass -a to all debhelper commands in this target to reduce clutter.
+binary-arch: DH_OPTIONS=-a
+binary-arch: build install setup-links
+# Need this version of debhelper for DH_OPTIONS to work.
+	dh_testdir
+	dh_testroot
+#	dh_installdebconf
+	dh_installdocs -A debian/README.Debian
+	dh_installexamples
+	dh_installmenu
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installinit
+#	dh_installcron
+	dh_installman
+#	dh_installinfo
+#	dh_undocumented
+	dh_installchangelogs
+	dh_strip
+#	dh_link
+	dh_compress
+	dh_fixperms
+# You may want to make some executables suid here.
+#	dh_suidregister
+	dh_makeshlibs
+	dh_installdeb
+#	dh_perl
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+#binary: binary-indep binary-arch
+binary: binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure
