@@ -391,7 +391,7 @@ gst_mpeg_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
     /* This stream may have been created by a derived class, reset the
        size. */
     video_str = g_renew (GstMPEGVideoStream, str, 1);
-    str = (GstMPEGStream *) video_str;
+    mpeg_demux->video_stream[stream_nr] = str = (GstMPEGStream *) video_str;
   }
 
   if (str->type != GST_MPEG_DEMUX_VIDEO_MPEG ||

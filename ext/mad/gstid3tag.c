@@ -438,7 +438,7 @@ gst_id3_tag_src_event (GstPad * pad, GstEvent * event)
 
         switch (GST_EVENT_SEEK_METHOD (event)) {
           case GST_SEEK_METHOD_SET:
-            diff = tag->v2tag_size_new - tag->v2tag_size;
+            diff = tag->v2tag_size - tag->v2tag_size_new;
             break;
           case GST_SEEK_METHOD_CUR:
             break;
@@ -709,6 +709,7 @@ gst_id3_tag_handle_event (GstPad * pad, GstEvent * event)
         case GST_ID3_TAG_STATE_SEEKING_TO_V1_TAG:
           /* just assume it's the right seek for now */
           gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_READING_V1_TAG);
+          gst_data_unref (GST_DATA (event));
           break;
         case GST_ID3_TAG_STATE_READING_V1_TAG:
           GST_ELEMENT_ERROR (tag, CORE, EVENT, (NULL),
@@ -718,6 +719,7 @@ gst_id3_tag_handle_event (GstPad * pad, GstEvent * event)
         case GST_ID3_TAG_STATE_SEEKING_TO_NORMAL:
           /* just assume it's the right seek for now */
           gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_NORMAL_START);
+          gst_data_unref (GST_DATA (event));
           break;
         case GST_ID3_TAG_STATE_NORMAL_START:
           GST_ERROR_OBJECT (tag, "tag event not sent, FIXME");

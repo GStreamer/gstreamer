@@ -1559,6 +1559,7 @@ gst_asf_demux_video_caps (guint32 codec_fcc,
           "format", GST_TYPE_FOURCC, codec_fcc, NULL);
       if (codec_name)
         *codec_name = g_strdup ("Raw, uncompressed I420");
+      break;
     case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
       caps = gst_caps_new_simple ("video/x-raw-yuv",
           "format", GST_TYPE_FOURCC, codec_fcc, NULL);
@@ -1570,10 +1571,12 @@ gst_asf_demux_video_caps (guint32 codec_fcc,
       caps = gst_caps_new_simple ("video/x-jpeg", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Motion JPEG");
+      break;
     case GST_MAKE_FOURCC ('J', 'P', 'E', 'G'):
       caps = gst_caps_new_simple ("video/x-jpeg", NULL);
       if (codec_name)
         *codec_name = g_strdup ("JPEG Still Image");
+      break;
     case GST_MAKE_FOURCC ('P', 'I', 'X', 'L'):
     case GST_MAKE_FOURCC ('V', 'I', 'X', 'L'):
       caps = gst_caps_new_simple ("video/x-jpeg", NULL);
