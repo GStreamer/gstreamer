@@ -480,13 +480,16 @@ gst_play_video_fixate (GstPad * pad, const GstCaps * caps, gpointer user_data)
   newcaps = gst_caps_copy (caps);
   structure = gst_caps_get_structure (newcaps, 0);
 
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 320)) {
+  if (gst_structure_has_field (structure, "width") &&
+      gst_caps_structure_fixate_field_nearest_int (structure, "width", 320)) {
     return newcaps;
   }
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "height", 240)) {
+  if (gst_structure_has_field (structure, "height") &&
+      gst_caps_structure_fixate_field_nearest_int (structure, "height", 240)) {
     return newcaps;
   }
-  if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
+  if (gst_structure_has_field (structure, "framerate") &&
+      gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
           30.0)) {
     return newcaps;
   }
@@ -509,16 +512,20 @@ gst_play_audio_fixate (GstPad * pad, const GstCaps * caps, gpointer user_data)
       NULL);
   structure = gst_caps_get_structure (newcaps, 0);
 
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100)) {
+  if (gst_structure_has_field (structure, "rate") &&
+      gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100)) {
     return newcaps;
   }
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "depth", 16)) {
+  if (gst_structure_has_field (structure, "depth") &&
+      gst_caps_structure_fixate_field_nearest_int (structure, "depth", 16)) {
     return newcaps;
   }
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 16)) {
+  if (gst_structure_has_field (structure, "width") &&
+      gst_caps_structure_fixate_field_nearest_int (structure, "width", 16)) {
     return newcaps;
   }
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "channels", 2)) {
+  if (gst_structure_has_field (structure, "channels") &&
+      gst_caps_structure_fixate_field_nearest_int (structure, "channels", 2)) {
     return newcaps;
   }
 
