@@ -147,10 +147,10 @@ gst_queue_class_init (GstQueueClass *klass)
     g_param_spec_int("max_level","Maximum Level","How many buffers the queue holds.",
                      0,G_MAXINT,100,G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_queue_set_property;
-  gobject_class->get_property = gst_queue_get_property;
+  gobject_class->set_property = GST_DEBUG_FUNCPTR(gst_queue_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR(gst_queue_get_property);
 
-  gstelement_class->change_state = gst_queue_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR(gst_queue_change_state);
 }
 
 static void
@@ -162,14 +162,14 @@ gst_queue_init (GstQueue *queue)
   queue->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_pad_set_chain_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_chain));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
-  gst_pad_set_eos_function (queue->sinkpad, gst_queue_handle_eos);
-  gst_pad_set_negotiate_function (queue->sinkpad, gst_queue_handle_negotiate_sink);
-  gst_pad_set_bufferpool_function (queue->sinkpad, gst_queue_get_bufferpool);
+  gst_pad_set_eos_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_handle_eos));
+  gst_pad_set_negotiate_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_handle_negotiate_sink));
+  gst_pad_set_bufferpool_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_get_bufferpool));
 
   queue->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_get_function (queue->srcpad, GST_DEBUG_FUNCPTR(gst_queue_get));
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
-  gst_pad_set_negotiate_function (queue->srcpad, gst_queue_handle_negotiate_src);
+  gst_pad_set_negotiate_function (queue->srcpad, GST_DEBUG_FUNCPTR(gst_queue_handle_negotiate_src));
 
   queue->queue = NULL;
   queue->level_buffers = 0;
