@@ -1,3 +1,11 @@
+2004-01-31  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* docs/random/mimetypes:
+	  update raw int/float info
+	* gst/gsttag.c: (_gst_tag_initialize):
+	* gst/gsttag.h:
+	  add GST_TAG_ENCODER
+
 2004-01-30  David Schleef  <ds@schleef.org>
 
 	* gst/cothreads.c: Add another fallback if MAP_ANONYMOUS is

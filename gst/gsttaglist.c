@@ -177,6 +177,11 @@ _gst_tag_initialize (void)
 		    _("maximum bitrate"),
 		    _("maximum bitrate in bits/s"),
 		    NULL);
+  gst_tag_register (GST_TAG_ENCODER, GST_TAG_FLAG_ENCODED,
+		    G_TYPE_STRING,
+		    _("encoder"),
+		    _("encoder used to encode this stream"),
+		    NULL);
   gst_tag_register (GST_TAG_ENCODER_VERSION, GST_TAG_FLAG_ENCODED,
 		    G_TYPE_UINT,
 		    _("encoder version"),

@@ -248,6 +248,7 @@ GstTagList *	gst_event_tag_get_list		(GstEvent *		tag_event);
 #define GST_TAG_MINIMUM_BITRATE		"minimum-bitrate"
 #define GST_TAG_MAXIMUM_BITRATE		"maximum-bitrate"
 #define GST_TAG_SERIAL			"serial"
+#define GST_TAG_ENCODER			"encoder"
 #define GST_TAG_ENCODER_VERSION		"encoder-version"
 #define GST_TAG_TRACK_GAIN		"replaygain-track-gain"
 #define GST_TAG_TRACK_PEAK		"replaygain-track-peak"

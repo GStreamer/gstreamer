@@ -533,7 +533,6 @@ format-specific properties:
 
 rate = 1 - MAXINT (INT, sampling rate)
 channels = 1 - MAXINT (INT, number of audio channels)
-buffer-frames = 1 - MAXINT (INT, number of frames per buffer)
 endianness = 1234/4321 (INT) <- use G_BIG/LITTLE_ENDIAN
 
 3 - Raw audio (integer format)
@@ -545,7 +544,6 @@ endianness = 1234/4321 (INT) <- use G_BIG/LITTLE_ENDIAN
 4 - Raw audio (floating point format)
     MIME type: audio/x-raw-float
     Properties: width = 32/64 (INT)
-                endianness: 1234/4321 (INT)
                 buffer-frames: number of audio frames per buffer, 0=undefined
 
 Plugin Guidelines
