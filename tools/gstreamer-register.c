@@ -130,11 +130,15 @@ int main(int argc,char *argv[])
 {
     xmlDocPtr doc;
 
+    // remove the old registry file first
+    // FIXME this could fail, at which point we're spinning
+    unlink(GLOBAL_REGISTRY_FILE);
+
     // Init gst
     _gst_plugin_spew = TRUE;
     _gst_warn_old_registry = FALSE;
-    gst_init(&argc,&argv);
     gst_info_enable_category(GST_CAT_PLUGIN_LOADING);
+    gst_init(&argc,&argv);
 
     // Check args
     if (argc != 1) usage(argv[0]);
