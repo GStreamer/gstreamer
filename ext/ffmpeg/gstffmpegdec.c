@@ -344,6 +344,13 @@ gst_ffmpegdec_chain (GstPad    *pad,
 
     switch (oclass->in_plugin->type) {
       case CODEC_TYPE_VIDEO:
+	/* workaround:
+	   libavcodec/svq1.c:svq1_decode_frame writes to the given buffer */
+	if (oclass->in_plugin->id == CODEC_ID_SVQ1) {
+	  inbuf = gst_buffer_copy_on_write(inbuf);
+	  data = GST_BUFFER_DATA (inbuf);
+	  size = GST_BUFFER_SIZE (inbuf);
+	}
         len = avcodec_decode_video (ffmpegdec->context,
 				    ffmpegdec->picture,
 				    &have_data,
@@ -473,6 +480,7 @@ gst_ffmpegdec_register (GstPlugin *plugin)
 
     /* no quasi-codecs, please */
     if (in_plugin->id == CODEC_ID_RAWVIDEO ||
+	in_plugin->id == CODEC_ID_SVQ3 || /* segfaults */
 	(in_plugin->id >= CODEC_ID_PCM_S16LE &&
 	 in_plugin->id <= CODEC_ID_PCM_ALAW)) {
       goto next;
