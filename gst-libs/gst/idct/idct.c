@@ -35,20 +35,7 @@ gst_idct_new (GstIDCTMethod method)
   new->need_transpose = FALSE;
 
   if (method == GST_IDCT_DEFAULT) {
-#ifdef HAVE_LIBMMX
-    if (gst_cpu_get_flags () & GST_CPU_FLAG_MMX) {
-      method = GST_IDCT_MMX;
-    }
-    /* disabled for now 
-       if (gst_cpu_get_flags() & GST_CPU_FLAG_SSE) {
-       method = GST_IDCT_SSE;
-       }
-     */
-    else
-#endif /* HAVE_LIBMMX */
-    {
-      method = GST_IDCT_FAST_INT;
-    }
+    method = GST_IDCT_FAST_INT;
   }
 
   new->convert_sparse = gst_idct_int_sparse_idct;
