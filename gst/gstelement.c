@@ -203,6 +203,7 @@ gst_element_get_pad (GstElement *element, gchar *name)
   if (!element->numpads)
     return NULL;
 
+  /* look through the list, matching by name */ 
   walk = element->pads;
   while (walk) {
     if (!strcmp (((GstPad *)(walk->data))->name, name))
@@ -227,6 +228,7 @@ gst_element_get_pad_list (GstElement *element)
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
+  /* return the list of pads */
   return element->pads;
 }
 
@@ -256,24 +258,22 @@ gst_element_connect (GstElement *src, gchar *srcpadname,
   g_return_if_fail (GST_IS_ELEMENT(dest));
   g_return_if_fail (destpadname != NULL);
 
+  /* obtain the pads requested */
   srcpad = gst_element_get_pad (src, srcpadname);
   destpad = gst_element_get_pad (dest, destpadname);
-
   g_return_if_fail (srcpad != NULL);
   g_return_if_fail (destpad != NULL);
 
+  /* find the parent elements of each element */
   srcparent = gst_object_get_parent (GST_OBJECT (src));
   destparent = gst_object_get_parent (GST_OBJECT (dest));
   
-  /* we can't do anything if neither have parents */
-  if ((srcparent == NULL) && (destparent == NULL))
+  /* have to make sure that they have the same parents... */
+  if (srcparent != destparent)
     return;
 
-  /* and we have to make sure that they have the same parents... */
-  if ((srcparent == NULL) && (destparent == NULL)) {
-    if (srcparent != destparent)
-      return;
-  }
+  /* we're satisified they can be connected, let's do it */
+  gst_pad_connect(srcpad,destpad);
 }
 
 /**
@@ -288,6 +288,8 @@ void
 gst_element_error (GstElement *element, gchar *error) 
 {
   g_error("GstElement: error in element '%s': %s\n", element->name, error);
+
+  /* FIXME: this is not finished!!! */
 
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[ERROR], error);
 }
@@ -316,23 +318,30 @@ gst_element_set_state (GstElement *element, GstElementState state)
   g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
+  /* start with the current state */
   curpending = GST_STATE(element);
+
+  /* loop until the final requested state is set */
   while (GST_STATE(element) != state) {
+    /* move the curpending state in the correct direction */
     if (curpending < state) curpending++;
     else curpending--;
 
-    // first we set the pending state variable
-    // FIXME should probably check to see that we don't already have one
+    /* set the pending state variable */
+    // FIXME: should probably check to see that we don't already have one
     GST_STATE_PENDING (element) = curpending;
 
-    // now we call the state change function so it can set the state
+    /* call the state change function so it can set the state */
     oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
     if (oclass->change_state)
       return_val = (oclass->change_state)(element);
 
-    if (return_val == GST_STATE_FAILURE) return return_val;
+    /* if that outright didn't work, we need to bail right away */
+    /* NOTE: this will bail on ASYNC as well! */
+    if (return_val != GST_STATE_SUCCESS) return return_val;
   }
 
+  /* this is redundant, really, it will always return SUCCESS */
   return return_val;
 }
 
@@ -709,7 +718,6 @@ gst_element_load_thyself (xmlNodePtr parent,
   }
 
   oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
-
   if (oclass->restore_thyself)
     (oclass->restore_thyself) (element, parent, elements);
 
@@ -769,6 +777,9 @@ gst_element_set_loop_function(GstElement *element,
 {
   element->loopfunc = loop;
   
+  /* if there's a threadstate, reset the function pointer */
+  /* FIXME: need to figure out how to make the loop functions exit when there's
+   * a new one, so we can hotswap them. */
   if (element->threadstate != NULL)
     // note that this casts a GstElement * to a char **.  Ick.
     cothread_setfunc (element->threadstate, gst_element_loopfunc_wrapper,
