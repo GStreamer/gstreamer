@@ -81,7 +81,7 @@ gst_v4l2_set_display (GstV4l2Element *v4l2element,
  ******************************************************/
 
 gboolean
-gst_v4l2_set_window (GstV4l2Element   *v4l2element,
+gst_v4l2_set_window (GstElement       *element,
                      gint              x,
                      gint              y,
                      gint              w,
@@ -90,6 +90,7 @@ gst_v4l2_set_window (GstV4l2Element   *v4l2element,
                      gint              num_clips)
 {
 	struct v4l2_format fmt;
+	GstV4l2Element *v4l2element = GST_V4L2ELEMENT(element);
 
 	DEBUG("trying to set video window to %dx%d,%d,%d", x,y,w,h);
 	GST_V4L2_CHECK_OVERLAY(v4l2element);

@@ -45,7 +45,7 @@ struct _GstV4l2Src {
 	GstPad *srcpad;
 
 	/* internal lists */
-	GList /*v4l2_fmtdesc*/ *formats; /* list of available capture formats */
+	GList /*v4l2_fmtdesc*/ *formats, *format_list; /* list of available capture formats */
 
 	/* buffer properties */
 	struct v4l2_buffer bufsettings;

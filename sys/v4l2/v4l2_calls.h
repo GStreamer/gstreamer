@@ -89,17 +89,14 @@ gboolean	gst_v4l2_get_norm		(GstV4l2Element *v4l2element,
 						 gint           *norm);
 gboolean	gst_v4l2_set_norm		(GstV4l2Element *v4l2element,
 						 gint            norm);
-GList *		gst_v4l2_get_norm_names		(GstV4l2Element *v4l2element);
 gboolean	gst_v4l2_get_input		(GstV4l2Element *v4l2element,
 						 gint           *input);
 gboolean	gst_v4l2_set_input		(GstV4l2Element *v4l2element,
 						 gint            input);
-GList *		gst_v4l2_get_input_names	(GstV4l2Element *v4l2element);
 gboolean	gst_v4l2_get_output		(GstV4l2Element *v4l2element,
 						 gint           *output);
 gboolean	gst_v4l2_set_output		(GstV4l2Element *v4l2element,
 						 gint            output);
-GList *		gst_v4l2_get_output_names	(GstV4l2Element *v4l2element);
 
 /* frequency control */
 gboolean	gst_v4l2_has_tuner		(GstV4l2Element *v4l2element,
@@ -113,18 +110,17 @@ gboolean	gst_v4l2_signal_strength	(GstV4l2Element *v4l2element,
 
 /* attribute control */
 gboolean	gst_v4l2_has_audio		(GstV4l2Element *v4l2element);
-GList *		gst_v4l2_get_attributes		(GstV4l2Element *v4l2element);
-gboolean	gst_v4l2_get_attribute		(GstV4l2Element *v4l2element,
-						 gint            attribute_num,
-						 gint           *value);
-gboolean	gst_v4l2_set_attribute		(GstV4l2Element *v4l2element,
-						 gint            attribute_num,
-						 gint            value);
+gboolean	gst_v4l2_get_attribute		(GstElement     *element,
+						 const char     *attribute,
+						 int            *value);
+gboolean	gst_v4l2_set_attribute		(GstElement     *element,
+						 const char     *attribute,
+						 const int       value);
 
 /* overlay */
 gboolean	gst_v4l2_set_display		(GstV4l2Element *v4l2element,
 						 const gchar    *display);
-gboolean	gst_v4l2_set_window		(GstV4l2Element *v4l2element,
+gboolean	gst_v4l2_set_window		(GstElement     *element,
 						 gint x,         gint y,
 						 gint w,         gint h,
 						 struct v4l2_clip *clips,
