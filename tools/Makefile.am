@@ -112,6 +112,7 @@ EXTRA_DIST = \
 	gst-launch.1.in \
 	gst-md5sum.1.in \
 	gst-register.1.in \
+	gst-typefind.1.in \
 	gst-xmllaunch.1.in \
 	gst-feedback
 
