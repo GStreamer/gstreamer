@@ -207,15 +207,13 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec *mpeg2dec, const mpeg2_info_t *info)
   GstBuffer *outbuf = NULL;
   gint size = mpeg2dec->width * mpeg2dec->height;
   guint8 *buf[3], *out;
+  const picture_t *picture;
 
   if (mpeg2dec->peerpool) {
     outbuf = gst_buffer_new_from_pool (mpeg2dec->peerpool, 0, 0);
   }
   if (!outbuf) {
-    outbuf = gst_buffer_new ();
-
-    GST_BUFFER_SIZE (outbuf) = (size * 3) / 2;
-    GST_BUFFER_DATA (outbuf) = g_malloc0 ((size * 3)/2);
+    outbuf = gst_buffer_new_and_alloc ((size * 3) / 2);
   }
 
   out = GST_BUFFER_DATA (outbuf);
@@ -233,10 +231,15 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec *mpeg2dec, const mpeg2_info_t *info)
   gst_buffer_ref (outbuf);
   mpeg2_set_buf (mpeg2dec->decoder, buf, outbuf);
 
-  if (info->current_picture && (info->current_picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I)
+  picture = info->current_picture;
+
+  if (picture && (picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I)
+  {
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT);
-  else
+  }
+  else {
     GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_KEY_UNIT);
+  }
 
   return TRUE;
 }
@@ -313,9 +316,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	//mpeg2dec->decoder->is_sequence_needed = 1;
 	GST_DEBUG (GST_CAT_EVENT, "mpeg2dec: discont\n"); 
         mpeg2dec->first = TRUE;
-        mpeg2dec->frames_per_PTS = 0;
         mpeg2dec->last_PTS = -1;
-        mpeg2dec->adjust = 0;
         mpeg2dec->next_time = 0;
         mpeg2dec->discont_pending = TRUE;
         gst_pad_event_default (pad, event);
@@ -341,7 +342,9 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
   info = mpeg2_info (mpeg2dec->decoder);
   end = data + size;
 
+  mpeg2_pts (mpeg2dec->decoder, GSTTIME_TO_MPEGTIME (pts));
   mpeg2_buffer (mpeg2dec->decoder, data, end);
+
   while (!done) {
     state = mpeg2_parse (mpeg2dec->decoder);
     switch (state) {
@@ -352,6 +355,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	mpeg2dec->pixel_width = info->sequence->pixel_width;
 	mpeg2dec->pixel_height = info->sequence->pixel_height;
 	mpeg2dec->total_frames = 0;
+        mpeg2dec->frame_period = info->sequence->frame_period * GST_USECOND / 27;
 
 	if (!gst_mpeg2dec_negotiate_format (mpeg2dec)) {
           gst_element_error (GST_ELEMENT (mpeg2dec), "could not negotiate format");
@@ -361,6 +365,8 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	gst_mpeg2dec_alloc_buffer (mpeg2dec, info);
         break;
       }
+      case STATE_SEQUENCE_REPEATED:
+        break;
       case STATE_GOP:
         break;
       case STATE_PICTURE:
@@ -387,13 +393,30 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	GstBuffer *outbuf = NULL;
 
 	if (info->display_fbuf && info->display_fbuf->id) {
+          const picture_t *picture;
+	  
 	  outbuf = (GstBuffer *) info->display_fbuf->id;
+	  picture = info->display_picture;
 
-          GST_BUFFER_TIMESTAMP (outbuf) = mpeg2dec->next_time;
-          mpeg2dec->next_time += info->sequence->frame_period * GST_USECOND / 27;
+	  if (picture->flags & PIC_FLAG_PTS) {
+            GstClockTime time = MPEGTIME_TO_GSTTIME (picture->pts);
 
-	  if (mpeg2dec->discont_pending ||
-	      (mpeg2dec->first && !GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_KEY_UNIT))) {
+            GST_BUFFER_TIMESTAMP (outbuf) = time;
+
+            mpeg2dec->next_time = time + mpeg2dec->frame_period;
+	  }
+	  else {
+            GST_BUFFER_TIMESTAMP (outbuf) = mpeg2dec->next_time;
+            mpeg2dec->next_time += mpeg2dec->frame_period;
+	  }
+
+	  /*
+	  if (picture->flags & PIC_FLAG_SKIP ||
+	      mpeg2dec->discont_pending ||
+	      (mpeg2dec->first && !GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_KEY_UNIT))) 
+	  {
+	  */
+	  if (picture->flags & PIC_FLAG_SKIP) {
 	    gst_buffer_unref (outbuf);
 	  }
 	  else {
@@ -412,10 +435,14 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	done = TRUE;
 	break;
       /* error */
-      default:
       case STATE_INVALID:
 	gst_element_error (GST_ELEMENT (mpeg2dec), "fatal error");
 	done = TRUE;
+        break;
+      default:
+	g_warning ("%s: unhandled state %d, FIXME", 
+			gst_element_get_name (GST_ELEMENT (mpeg2dec)),
+			state);
         break;
     }
   }
@@ -520,8 +547,8 @@ gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_BYTES:
 	  scale = 6 * (mpeg2dec->width * mpeg2dec->height >> 2);
         case GST_FORMAT_UNITS:
-	  if (info->sequence && info->sequence->frame_period) {
-            *dest_value = src_value * scale * 27 / (info->sequence->frame_period * GST_USECOND);
+	  if (info->sequence && mpeg2dec->frame_period) {
+            *dest_value = src_value * scale / mpeg2dec->frame_period;
             break;
 	  }
         default:
@@ -533,7 +560,7 @@ gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_DEFAULT:
           *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
-          *dest_value = src_value * info->sequence->frame_period * GST_USECOND / 27;
+          *dest_value = src_value * mpeg2dec->frame_period;
 	  break;
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * 6 * ((mpeg2dec->width * mpeg2dec->height) >> 2);
@@ -745,10 +772,9 @@ gst_mpeg2dec_change_state (GstElement *element)
       mpeg2dec->width = -1;
       mpeg2dec->height = -1;
       mpeg2dec->first = TRUE;
-      mpeg2dec->frames_per_PTS = 0;
       mpeg2dec->last_PTS = -1;
-      mpeg2dec->adjust = 0;
       mpeg2dec->discont_pending = TRUE;
+      mpeg2dec->frame_period = 0;
       break;
     }
     case GST_STATE_PAUSED_TO_PLAYING:

@@ -43,6 +43,9 @@ extern "C" {
 #define GST_IS_MPEG2DEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MPEG2DEC))
 
+#define MPEGTIME_TO_GSTTIME(time) (((time) * (GST_MSECOND/10)) / 9LL)
+#define GSTTIME_TO_MPEGTIME(time) (((time) * 9LL) / (GST_MSECOND/10))
+
 typedef struct _GstMpeg2dec GstMpeg2dec;
 typedef struct _GstMpeg2decClass GstMpeg2decClass;
 
@@ -70,8 +73,6 @@ struct _GstMpeg2dec {
   gboolean	 discont_pending;
   gint64	 next_time;
   gint64	 last_PTS;
-  gint		 frames_per_PTS;
-  gint		 adjust;
 
   /* video state */
   Mpeg2decFormat format;
@@ -81,6 +82,7 @@ struct _GstMpeg2dec {
   gint		 pixel_height;
   gint		 frame_rate_code;
   gint64	 total_frames;
+  gint64	 frame_period;
 };
 
 struct _GstMpeg2decClass {
