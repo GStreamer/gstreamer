@@ -13,24 +13,26 @@ struct probe_context {
   gint        total_ls;
 
   GstCaps    *metadata;
-  GstCaps    *tags;
+  GstCaps    *streaminfo;
   GstCaps    *caps;
 };
 
 static void
-print_metadata (GstCaps *caps)
+print_caps (GstCaps *caps)
 {
-  g_print ("  metadata:\n");
-  if (!caps || caps->properties == NULL) {
-    g_print ("    none\n");
-    return;
-  }
-
+  if (caps == NULL) return;
   if (!strcmp (gst_caps_get_mime (caps), "application/x-gst-metadata") ||
-      !strcmp (gst_caps_get_mime (caps), "application/x-gst-tags"))
+      !strcmp (gst_caps_get_mime (caps), "application/x-gst-streaminfo"))
   {
     GstProps *props = caps->properties;
-    GList *walk = props->properties;
+    GList *walk;
+    /* ugly hack, but ok for now.  If needed, fix by individual strcmp */
+    g_print ("  %s:\n", gst_caps_get_mime (caps) + 18);
+    if (props == NULL) {
+      g_print ("    none\n");
+      return;
+    }
+    walk = props->properties;
 
     while (walk) {
       GstPropsEntry *entry = (GstPropsEntry *) walk->data;
@@ -58,7 +60,7 @@ print_metadata (GstCaps *caps)
     }
   }
   else {
-    g_print (" unkown metadata type\n");
+    g_print (" unkown caps type\n");
   }
   
 }
@@ -91,6 +93,7 @@ print_lbs_info (struct probe_context *context, gint stream)
 {
   const GstFormat *formats;
   
+  /* FIXME: need a better name here */
   g_print ("  stream info:\n");
 
   /* report info in all supported formats */
@@ -150,11 +153,11 @@ deep_notify (GObject *object, GstObject *origin,
     g_object_get_property (G_OBJECT (origin), pspec->name, &value);
     context->metadata = g_value_peek_pointer (&value);
   }
-  else if (!strcmp (pspec->name, "tags")) {
+  else if (!strcmp (pspec->name, "streaminfo")) {
     
     g_value_init (&value, pspec->value_type);
     g_object_get_property (G_OBJECT (origin), pspec->name, &value);
-    context->tags = g_value_peek_pointer (&value);
+    context->streaminfo = g_value_peek_pointer (&value);
   } else if (!strcmp (pspec->name, "caps")) {
     if (GST_IS_PAD (origin) && GST_PAD (origin) == context->pad) {
       g_value_init (&value, pspec->value_type);
@@ -194,8 +197,8 @@ collect_logical_stream_properties (struct probe_context *context, gint stream)
     if (count > 10) break;
   }
   
-  print_metadata (context->tags);
-  print_metadata (context->metadata);
+  print_caps (context->metadata);
+  print_caps (context->streaminfo);
   print_format (context->caps);
   print_lbs_info (context, stream);
 
