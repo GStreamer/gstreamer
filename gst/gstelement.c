@@ -33,7 +33,9 @@
 enum {
   STATE_CHANGE,
   NEW_PAD,
+  PAD_REMOVED,
   NEW_GHOST_PAD,
+  GHOST_PAD_REMOVED,
   ERROR,
   EOS,
   LAST_SIGNAL
@@ -100,9 +102,19 @@ gst_element_class_init (GstElementClass *klass)
                     GTK_SIGNAL_OFFSET (GstElementClass, new_pad),
                     gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
                     GST_TYPE_PAD);
+  gst_element_signals[PAD_REMOVED] =
+    gtk_signal_new ("pad_removed", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstElementClass, pad_removed),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GST_TYPE_PAD);
   gst_element_signals[NEW_GHOST_PAD] =
     gtk_signal_new ("new_ghost_pad", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstElementClass, new_ghost_pad),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GST_TYPE_PAD);
+  gst_element_signals[GHOST_PAD_REMOVED] =
+    gtk_signal_new ("ghost_pad_removed", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstElementClass, ghost_pad_removed),
                     gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
                     GST_TYPE_PAD);
   gst_element_signals[ERROR] =
@@ -294,6 +306,36 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
 
   /* emit the NEW_PAD signal */
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[NEW_PAD], pad);
+}
+
+/**
+ * gst_element_remove_pad:
+ * @element: element to remove pad from
+ * @pad: pad to remove
+ *
+ * Remove a pad (connection point) from the element, 
+ */
+void
+gst_element_remove_pad (GstElement *element, GstPad *pad)
+{
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  g_return_if_fail (GST_PAD_PARENT (pad) == element);
+
+  /* add it to the list */
+  element->pads = g_list_remove (element->pads, pad);
+  element->numpads--;
+  if (gst_pad_get_direction (pad) == GST_PAD_SRC)
+    element->numsrcpads--;
+  else
+    element->numsinkpads--;
+
+  gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[NEW_PAD], pad);
+
+  gst_object_unparent (GST_OBJECT (pad));
 }
 
 /**

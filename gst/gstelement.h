@@ -166,11 +166,13 @@ struct _GstElementClass {
   GstElementFactory *elementfactory;
 
   /* signal callbacks */
-  void (*state_change)	(GstElement *element,GstElementState state);
-  void (*new_pad)	(GstElement *element,GstPad *pad);
-  void (*new_ghost_pad) (GstElement *element,GstPad *pad);
-  void (*error)		(GstElement *element,gchar *error);
-  void (*eos)		(GstElement *element);
+  void (*state_change)		(GstElement *element,GstElementState state);
+  void (*new_pad)		(GstElement *element,GstPad *pad);
+  void (*pad_removed)		(GstElement *element,GstPad *pad);
+  void (*new_ghost_pad) 	(GstElement *element,GstPad *pad);
+  void (*ghost_pad_removed)	(GstElement *element,GstPad *pad);
+  void (*error)			(GstElement *element,gchar *error);
+  void (*eos)			(GstElement *element);
 
   /* local pointers for get/set */
   void (*set_arg) (GtkObject *object,
@@ -222,6 +224,7 @@ void			gst_element_set_sched		(GstElement *element, GstSchedule *sched);
 GstSchedule*		gst_element_get_sched		(GstElement *element);
 
 void			gst_element_add_pad		(GstElement *element, GstPad *pad);
+void			gst_element_remove_pad		(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);
 GList*			gst_element_get_pad_list	(GstElement *element);
 GList*			gst_element_get_padtemplate_list	(GstElement *element);

@@ -238,6 +238,8 @@ gst_object_real_destroy (GtkObject *gtk_object)
 {
   GST_DEBUG (GST_CAT_REFCOUNTING, "destroy\n");
 
+  GST_OBJECT_PARENT (gtk_object) = NULL;
+
   parent_class->destroy (gtk_object);
 }
 
