@@ -163,24 +163,6 @@ gst_mp3parse_init (GstMPEGAudioParse *mp3parse)
   mp3parse->rate = mp3parse->channels = mp3parse->layer = -1;
 }
 
-static guint32
-gst_mp3parse_next_header (guchar *buf,guint32 len,guint32 start)
-{
-  guint32 offset = start;
-  int f = 0;
-
-  while (offset < (len - 4)) {
-    if (buf[offset] == 0xff)
-      f = 1;
-    else if (f && ((buf[offset] >> 4) == 0x0f))
-      return offset - 1;
-    else
-      f = 0;
-    offset++;
-  }
-  return -1;
-}
-
 static void
 gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
 {
