@@ -463,21 +463,25 @@ draw_puzzle (GstVideofilter * videofilter, void *destp, void *srcp)
   height = gst_videofilter_get_input_height (videofilter);
   gst_video_image_setup (&dest, puzzle->format, destp, width, height);
   gst_video_image_setup (&src, puzzle->format, srcp, width, height);
-  if (width % puzzle->columns != 0) {
-    guint w = width % puzzle->columns;
-
-    gst_video_image_copy_area (&dest, width - w, 0, &src, width - w, 0, w,
-        height);
-  }
-  if (height % puzzle->rows != 0) {
-    guint h = height % puzzle->rows;
-
-    gst_video_image_copy_area (&dest, 0, height - h, &src, 0, height - h, width,
-        h);
-  }
   /* use multiples of 4 here to get around drawing problems with YUV colorspaces */
   width = (width / puzzle->columns) & ~3;
   height = (height / puzzle->rows) & ~3;
+  if (width * puzzle->columns != gst_videofilter_get_input_width (videofilter)) {
+    guint w =
+        gst_videofilter_get_input_width (videofilter) - width * puzzle->columns;
+
+    gst_video_image_copy_area (&dest, width * puzzle->columns, 0, &src,
+        width * puzzle->columns, 0, w,
+        gst_videofilter_get_input_height (videofilter));
+  }
+  if (height * puzzle->rows != gst_videofilter_get_input_height (videofilter)) {
+    guint h =
+        gst_videofilter_get_input_width (videofilter) - height * puzzle->rows;
+
+    gst_video_image_copy_area (&dest, 0, height * puzzle->rows, &src, 0,
+        height * puzzle->rows, gst_videofilter_get_input_width (videofilter),
+        h);
+  }
 
   for (i = 0; i < puzzle->tiles; i++) {
     if (!puzzle->solved && i == puzzle->position) {
