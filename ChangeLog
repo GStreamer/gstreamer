@@ -1,5 +1,9 @@
 2004-07-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* docs/manual/goals.xml: Grammar fix
+
+2004-07-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* docs/manual/motivation.xml:
 	Bonobo is no longer "emerging" and added sentence regarding tcp plugins
 

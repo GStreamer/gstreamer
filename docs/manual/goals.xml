@@ -29,7 +29,7 @@
 	    The plugin programmer. Plugin programmers are provided a clean and
 	    simple API to create self contained plugins. An extensive debugging
 	    and tracing mechanism has been integrated. GStreamer also comes with
-	    an extensive set of real-life plugins that serve as an example too.
+	    an extensive set of real-life plugins that serve as examples too.
 	  </para>
         </listitem>
       </itemizedlist>
