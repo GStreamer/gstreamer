@@ -374,7 +374,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
       {
 	GstBuffer *outbuf = NULL;
 
-	if (info->display_fbuf) {
+	if (info->display_fbuf && info->display_fbuf->id) {
 	  outbuf = (GstBuffer *) info->display_fbuf->id;
 
           GST_BUFFER_TIMESTAMP (outbuf) = mpeg2dec->next_time;
@@ -389,7 +389,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	    gst_pad_push (mpeg2dec->srcpad, outbuf);
 	  }
 	}
-	if (info->discard_fbuf) {
+	if (info->discard_fbuf && info->discard_fbuf->id) {
 	  gst_buffer_unref ((GstBuffer *)info->discard_fbuf->id);
 	}
 
