@@ -142,6 +142,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_mandir}/man1/gst-inspect.*
 %{_mandir}/man1/gst-launch.*
 %{_mandir}/man1/gst-register.*
+%{_mandir}/man1/gst-launch-ext.*
 
 
 %files devel
