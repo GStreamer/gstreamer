@@ -146,7 +146,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-register-%{majorminor}
 %{_bindir}/gst-xmllaunch-%{majorminor}
 %{_bindir}/gst-typefind-%{majorminor}
-%{_bindir}/gst-feedback*
 %{_mandir}/man1/gst-xmlinspect-%{majorminor}.*
 %{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
 %{_mandir}/man1/gst-complete-%{majorminor}.*
