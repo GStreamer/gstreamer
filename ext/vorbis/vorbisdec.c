@@ -378,9 +378,9 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
     /* header packet */
     if (packet.packet[0] / 2 != packet.packetno) {
       /* FIXME: just skip? */
-      GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
-          (NULL), ("unexpected packet type %d, expected %d",
-              (gint) packet.packet[0], (gint) packet.packetno));
+      GST_WARNING_OBJECT (GST_ELEMENT (vd),
+          "unexpected packet type %d, expected %d",
+          (gint) packet.packet[0], (gint) packet.packetno);
       gst_data_unref (data);
       return;
     }

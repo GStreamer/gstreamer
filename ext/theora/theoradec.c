@@ -339,6 +339,24 @@ theora_dec_sink_convert (GstPad * pad,
       }
       break;
     }
+    case GST_FORMAT_TIME:
+    {
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+        {
+          guint ilog = _theora_ilog (dec->info.keyframe_frequency_force - 1);
+
+          *dest_value = src_value * dec->info.fps_numerator /
+              (GST_SECOND * dec->info.fps_denominator);
+          *dest_value <<= ilog;
+          break;
+        }
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    }
     default:
       res = FALSE;
   }
