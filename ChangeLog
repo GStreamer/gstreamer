@@ -1,5 +1,12 @@
 2005-03-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* configure.ac:
+	  Dev.
+
+=== release 0.8.4 ===
+
+2005-03-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* NEWS:
 	* RELEASE:
 	* configure.ac:
