@@ -11,6 +11,8 @@ lib_LTLIBRARIES = libgstmediaplay.la
 gladedir = $(datadir)/gstmediaplay
 glade_DATA = gstmediaplay.glade play.xpm stop.xpm pause.xpm
 
+EXTRA_DIST = $(glade_DATA)
+
 libgstmediaplay_la_SOURCES = \
 	gstplay.c \
 	gstmediaplay.c \
