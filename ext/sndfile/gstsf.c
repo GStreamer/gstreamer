@@ -790,7 +790,7 @@ gst_sf_loop (GstElement *element)
       written = sf_writef_float (this->file, buf, num_to_write);
       if (written != num_to_write)
         gst_element_error (element, RESOURCE, WRITE,
-                             (_("Error while writing to file \"%s\""), this->filename),
+                             (_("Could not write to file \"%s\""), this->filename),
                              ("soundfile error: %s", sf_strerror (this->file)));
     }
 
@@ -817,6 +817,12 @@ plugin_init (GstPlugin *plugin)
 
   if (!gst_element_register (plugin, "sfsink", GST_RANK_NONE, GST_TYPE_SFSINK))
     return FALSE;
+
+#ifdef ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain (GETTEXT_PACKAGE);
+#endif /* ENABLE_NLS */
 
   return TRUE;
 }

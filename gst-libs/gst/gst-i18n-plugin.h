@@ -23,15 +23,12 @@
 #ifndef __GST_I18N_PLUGIN_H__
 #define __GST_I18N_PLUGIN_H__
 
-#if 0
 #include "gettext.h" /* included with gettext distribution and copied */
-#endif
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
 
-#if 0
 #ifndef GETTEXT_PACKAGE
 #error You must define GETTEXT_PACKAGE before including this header.
 #endif
@@ -40,10 +37,5 @@
 #define _(String) dgettext (GETTEXT_PACKAGE, String)
 #define N_(String) gettext_noop (String)
 /* FIXME: if we need it, we can add Q_ as well, like in glib */
-#endif
-
-/* FIXME: we define them as passthrough first */
-#define _(String) String
-#define N_(String) String
 
 #endif /* __GST_I18N_PLUGIN_H__ */

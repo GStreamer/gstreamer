@@ -295,7 +295,13 @@ gst_afsrc_plugin_init (GstPlugin *plugin)
 
   if (!gst_element_register (plugin, "afsrc", GST_RANK_NONE, GST_TYPE_AFSRC))
     return FALSE;
-  
+
+#ifdef ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain (GETTEXT_PACKAGE);
+#endif /* ENABLE_NLS */
+
   return TRUE;
 }
 

@@ -464,7 +464,7 @@ dxr3videosink_write_data (Dxr3VideoSink *sink, guint cut)
       written = write (sink->video_fd, data, size);
       if (written < 0) {
         gst_element_error (sink, RESOURCE, WRITE,
-                           (_("Could not write to device %s"), sink->video_filename),
+                           (_("Could not write to device \"%s\""), sink->video_filename),
                            GST_ERROR_SYSTEM);
         break;
       }
