@@ -1217,6 +1217,11 @@ gst_mad_change_state (GstElement *element)
       mad->rate = 0;
       mad->channels = 0;
       mad->vbr_average = 0;
+      mad->base_time = 0;
+      mad->framestamp = 0;
+      mad->new_header = TRUE;
+      mad->framecount = 0;
+      mad->vbr_rate = 0;
       mad->frame.header.samplerate = 0;
       if (mad->ignore_crc) options |= MAD_OPTION_IGNORECRC;
       if (mad->half) options |= MAD_OPTION_HALFSAMPLERATE;
