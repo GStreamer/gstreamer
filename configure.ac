@@ -67,6 +67,12 @@ AC_ARG_WITH(pkg-config-path,
 GST_DOC()
 GST_ARCH()
 
+dnl Perl is used in building documentation
+AC_PATH_PROG(PERL_PATH, perl, no)
+if test x$PERL_PATH = xno; then
+  AC_MSG_ERROR(Could not find perl)
+fi
+
 dnl we require bison for building of some of the marshal files
 dnl FIXME: check if AC_PROG_YACC is suitable here
 AC_PATH_PROG(BISON_PATH, bison, no)
@@ -361,6 +367,11 @@ dnl test if we have posix_memalign; FreeBSD doesn't
 AC_CHECK_FUNC(posix_memalign,
    AC_DEFINE(HAVE_POSIX_MEMALIGN, 1,
              [Defined if we have posix_memalign ()]))
+
+dnl test for sigaction()
+AC_CHECK_FUNC(sigaction,
+   AC_DEFINE(HAVE_SIGACTION, 1,
+             [Defined if we have sigaction ()]))
 
 if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
   AC_DEFINE(PLUGINS_USE_BUILDDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
