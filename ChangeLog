@@ -1,3 +1,8 @@
+2004-01-20  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
+	  fix thomas' error errors.
+
 2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/mpeg2enc/gstmpeg2enc.cc:
