@@ -24,6 +24,7 @@
 
 #include "gstinfo.h"
 #include "gstdata_private.h"
+#include "gstmemchunk.h"
 #include "gstevent.h"
 #include "gstlog.h"
 
@@ -32,6 +33,8 @@
 #include "gsttrace.h"
 static GstAllocTrace *_event_trace;
 #endif
+
+static GstMemChunk *chunk;
 
 /* #define MEMPROF */
 
@@ -48,6 +51,9 @@ _gst_event_initialize (void)
 #ifndef GST_DISABLE_TRACE
   _event_trace = gst_alloc_trace_register (GST_EVENT_TRACE_NAME);
 #endif
+
+  chunk = gst_mem_chunk_new ("GstEventChunk", sizeof (GstEvent),
+                                 sizeof (GstEvent) * 50, 0);
 }
 
 static GstEvent*
@@ -55,7 +61,7 @@ _gst_event_copy (GstEvent *event)
 {
   GstEvent *copy;
 
-  copy = g_new0(GstEvent, 1);
+  copy = gst_mem_chunk_alloc (chunk);
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_event_trace, copy);
 #endif
@@ -83,8 +89,7 @@ _gst_event_free (GstEvent* event)
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_event_trace, event);
 #endif
-
-  g_free (event);
+  gst_mem_chunk_free (chunk, event);
 }
 
 /**
@@ -134,7 +139,7 @@ gst_event_new (GstEventType type)
 {
   GstEvent *event;
 
-  event = g_new0(GstEvent, 1);
+  event = gst_mem_chunk_alloc0 (chunk);
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_event_trace, event);
 #endif
