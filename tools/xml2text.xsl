@@ -10,6 +10,8 @@
   <xsl:apply-templates select="element-flags"/>
   <xsl:apply-templates select="element-implementation"/>
   <xsl:apply-templates select="clocking-interaction"/>
+  <xsl:apply-templates select="indexing-capabilities"/>
+  <xsl:apply-templates select="dyn-params"/>
   <xsl:apply-templates select="pads"/>
   <xsl:apply-templates select="element-properties"/>
   <xsl:apply-templates select="element-signals"/>
@@ -172,8 +174,42 @@
   <xsl:text>&#10;</xsl:text>
  </xsl:template>
 
+ <xsl:template match="requires-clock">
+  <xsl:text>   element requires a clock&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="provides-clock">
+  <xsl:text>   element provides a clock: </xsl:text>
+  <xsl:value-of select="@name"/>
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
  <xsl:template match="clocking-interaction">
   <xsl:text>Clocking Interaction:&#10;</xsl:text>
+  <xsl:choose>
+   <xsl:when test="count(*) = 0">
+    <xsl:text>  none&#10;</xsl:text>
+   </xsl:when>
+   <xsl:otherwise>
+    <xsl:apply-templates select="*"/>
+   </xsl:otherwise>
+  </xsl:choose>
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="indexing-capabilities">
+  <xsl:text>   element can do indexing</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="dyn-params">
+  <xsl:text>  Dynamic Parameters:&#10;</xsl:text>
+  <xsl:choose>
+   <xsl:when test="count(*) = 0">
+    <xsl:text>  none&#10;</xsl:text>
+   </xsl:when>
+   <xsl:otherwise>
+   </xsl:otherwise>
+  </xsl:choose>
   <xsl:text>&#10;</xsl:text>
  </xsl:template>
 
@@ -283,8 +319,8 @@
 
  <xsl:template match="element-properties">
   <xsl:text>Element Arguments:&#10;</xsl:text>
-  <xsl:text>&#10;</xsl:text>
   <xsl:apply-templates select="element-property"/>
+  <xsl:text>&#10;</xsl:text>
  </xsl:template>
 
  <xsl:template match="default">
@@ -305,13 +341,54 @@
   <xsl:text>&#10;</xsl:text>
  </xsl:template>
 
+ <xsl:template match="params">
+  <xsl:for-each select="type">
+   <xsl:text>,&#10;          </xsl:text>
+   <xsl:value-of select="."/>
+   <xsl:text> arg</xsl:text>
+   <xsl:value-of select="position()"/>
+  </xsl:for-each>
+ </xsl:template>
+
+ <xsl:template match="signal">
+  <xsl:text>  &quot;</xsl:text>
+  <xsl:value-of select="name"/>
+  <xsl:text>&quot; :</xsl:text>
+  <xsl:value-of select="return-type"/>
+  <xsl:text> user_function </xsl:text>
+  <xsl:value-of select="concat ('(', object-type, '* object')"/>
+  <xsl:apply-templates select="params"/>
+ </xsl:template>
+ 
  <xsl:template match="element-signals">
   <xsl:text>Element Signals:&#10;</xsl:text>
+  <xsl:choose>
+   <xsl:when test="count(*) = 0">
+    <xsl:text>  none&#10;</xsl:text>
+   </xsl:when>
+   <xsl:otherwise>
+    <xsl:for-each select="signal">
+     <xsl:apply-templates select="."/>
+     <xsl:text>,&#10;        gpointer user_data);&#10;</xsl:text>
+    </xsl:for-each>
+   </xsl:otherwise>
+  </xsl:choose>
   <xsl:text>&#10;</xsl:text>
  </xsl:template>
 
  <xsl:template match="element-actions">
   <xsl:text>Element Actions:&#10;</xsl:text>
+  <xsl:choose>
+   <xsl:when test="count(*) = 0">
+    <xsl:text>  none&#10;</xsl:text>
+   </xsl:when>
+   <xsl:otherwise>
+    <xsl:for-each select="signal">
+     <xsl:apply-templates select="."/>
+     <xsl:text>);&#10;</xsl:text>
+    </xsl:for-each>
+   </xsl:otherwise>
+  </xsl:choose>
   <xsl:text>&#10;</xsl:text>
  </xsl:template>
 
