@@ -24,7 +24,13 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include "gst-libs/gst/gst-i18n-plugin.h"
+
 #include <gst/gst.h>
+#include <string.h>
+#include <errno.h>
+
 #include "gstafsink.h"
 
 /* elementfactory information */
@@ -32,7 +38,7 @@ static GstElementDetails afsink_details = {
   "Audiofile Sink",
   "Sink/Audio",
   "Write audio streams to disk using libaudiofile",
-  "Thomas <thomas@apestaart.org>",
+  "Thomas Vander Stichele <thomas@apestaart.org>",
 };
 
 
@@ -288,16 +294,6 @@ gst_afsink_open_file (GstAFSink *sink)
   
   g_return_val_if_fail (!GST_FLAG_IS_SET (sink, GST_AFSINK_OPEN), FALSE);
 
-  /* open the file */
-/* we use audiofile now
-  sink->file = fopen (sink->filename, "w");
-  if (sink->file == NULL) {
-    perror ("open");
-    gst_element_error (GST_ELEMENT (sink), g_strconcat("opening file \"", sink->filename, "\"", NULL));
-    return FALSE;
-  } 
-*/
-
   /* get the audio parameters */
   g_return_val_if_fail (GST_IS_PAD (sink->sinkpad), FALSE);
   caps = GST_PAD_CAPS (sink->sinkpad);
@@ -345,8 +341,9 @@ gst_afsink_open_file (GstAFSink *sink)
   sink->file = afOpenFile (sink->filename, "w", outfilesetup);
   if (sink->file == AF_NULL_FILEHANDLE)
   {
-    perror ("open");
-    gst_element_error (GST_ELEMENT (sink), g_strconcat("opening file \"", sink->filename, "\"", NULL));
+   gst_element_error (sink, RESOURCE, OPEN_WRITE,
+                         (_("Could not open file \"%s\" for writing"), sink->filename),
+                         ("system error: %s", strerror (errno)));
     return FALSE;
   } 
 
@@ -367,9 +364,9 @@ gst_afsink_close_file (GstAFSink *sink)
 /*  if (fclose (sink->file) != 0) */
   if (afCloseFile (sink->file) != 0)
   {
-    g_print ("WARNING: afsink: oops, error closing !\n");
-    perror ("close");
-    gst_element_error (GST_ELEMENT (sink), g_strconcat("closing file \"", sink->filename, "\"", NULL));
+    gst_element_error (sink, RESOURCE, CLOSE,
+                       (_("Error closing file \"%s\""), sink->filename),
+                       GST_ERROR_SYSTEM);
   }
   else {
     GST_FLAG_UNSET (sink, GST_AFSINK_OPEN);

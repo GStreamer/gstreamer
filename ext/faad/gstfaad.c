@@ -359,8 +359,7 @@ gst_faad_chain (GstPad  *pad,
     faad->channels = channels;
     if (gst_faad_srcconnect (faad->srcpad,
 			     gst_pad_get_allowed_caps (faad->srcpad)) <= 0) {
-      gst_element_error (GST_ELEMENT (faad),
-			 "Failed to negotiate output format with next element");
+      gst_element_error (faad, CORE, NEGOTIATION, NULL, NULL);
       gst_buffer_unref (buf);
       return;
     }
@@ -369,9 +368,9 @@ gst_faad_chain (GstPad  *pad,
   out = faacDecDecode (faad->handle, &info,
 		       GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   if (info.error) {
-    gst_element_error (GST_ELEMENT (faad),
-		       "Failed to decode buffer: %s",
-		       faacDecGetErrorMessage (info.error));
+    gst_element_error (faad, STREAM, DECODE, NULL,
+		       ("Failed to decode buffer: %s",
+		        faacDecGetErrorMessage (info.error)));
     gst_buffer_unref (buf);
     return;
   }
@@ -382,8 +381,7 @@ gst_faad_chain (GstPad  *pad,
     faad->channels = info.channels;
     if (gst_faad_srcconnect (faad->srcpad,
 			     gst_pad_get_allowed_caps (faad->srcpad)) <= 0) {
-      gst_element_error (GST_ELEMENT (faad),
-			 "Failed to re-negotiate format with next element");
+      gst_element_error (faad, CORE, NEGOTIATION, NULL, NULL);
       gst_buffer_unref (buf);
       return;
     }

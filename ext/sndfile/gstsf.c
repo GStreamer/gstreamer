@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include "gst-libs/gst/gst-i18n-plugin.h"
 #include <string.h>
 #include <gst/gst.h>
 
@@ -558,7 +559,9 @@ gst_sf_open_file (GstSF *this)
   this->time = 0;
 
   if (!this->filename) {
-    gst_element_error (GST_ELEMENT (this), "sndfile: 'location' was not set");
+    gst_element_error (this, RESOURCE, NOT_FOUND,
+                         (_("No filename specified")),
+                         NULL);
     return FALSE;
   }
     
@@ -584,8 +587,8 @@ gst_sf_open_file (GstSF *this)
               this->filename, info.samplerate, info.channels, info.format);
 
     if (!sf_format_check (&info)) {
-      gst_element_error (GST_ELEMENT (this),
-                         g_strdup_printf ("Input parameters (rate:%d, channels:%d, format:0x%x) invalid",
+      gst_element_error (this, STREAM, ENCODE, NULL,
+                           ("Input parameters (rate:%d, channels:%d, format:0x%x) invalid",
                                           info.samplerate, info.channels, info.format));
       return FALSE;
     }
@@ -594,9 +597,9 @@ gst_sf_open_file (GstSF *this)
   this->file = sf_open (this->filename, mode, &info);
 
   if (!this->file) {
-    gst_element_error (GST_ELEMENT (this),
-                       g_strdup_printf ("could not open file \"%s\": %s",
-                                        this->filename, sf_strerror (NULL)));
+    gst_element_error (this, RESOURCE, OPEN_WRITE,
+                       (_("Could not open file \"%s\" for writing"), this->filename),
+                         ("soundfile error: %s", sf_strerror (NULL)));
     return FALSE;
   }
 
@@ -633,9 +636,9 @@ gst_sf_close_file (GstSF *this)
   INFO_OBJ (this, "Closing file %s", this->filename);
 
   if ((err = sf_close (this->file)))
-    gst_element_error (GST_ELEMENT (this),
-                       g_strdup_printf ("sndfile: could not close file \"%s\": %s",
-                                        this->filename, sf_error_number (err)));
+    gst_element_error (this, RESOURCE, CLOSE,
+                       ("Could not close file file \"%s\"", this->filename),
+                       ("soundfile error: %s", strerror (err)));
   else
     GST_FLAG_UNSET (this, GST_SF_OPEN);
 
@@ -654,7 +657,7 @@ gst_sf_loop (GstElement *element)
   this = (GstSF*)element;
   
   if (this->channels == NULL) {
-    gst_element_error (element, "You must connect at least one pad to sndfile elements.");
+    gst_element_error (element, CORE, PAD, NULL, ("You must connect at least one pad to sndfile elements."));
     return;
   }
 
@@ -704,9 +707,8 @@ gst_sf_loop (GstElement *element)
               "buffer-frames", G_TYPE_INT, this->buffer_frames,
               NULL);
           if (!gst_pad_try_set_caps (GST_SF_CHANNEL (l)->pad, caps)) {
-            gst_element_error (GST_ELEMENT (this),
-                               g_strdup_printf ("Opened file with sample rate %d, but could not set caps",
-                                                this->rate));
+            gst_element_error (this, CORE, NEGOTIATION, NULL,
+                               ("Opened file with sample rate %d, but could not set caps", this->rate));
             gst_sf_close_file (this);
             return;
           }
@@ -761,7 +763,8 @@ gst_sf_loop (GstElement *element)
            which then would set this->buffer_frames to a new value */
         buffer_frames = this->buffer_frames;
         if (buffer_frames == 0) {
-          gst_element_error (element, "Caps were never set, bailing...");
+          gst_element_error (element, CORE, NEGOTIATION, NULL,
+                             ("format wasn't negotiated before chain function"));
           return;
         }
         buf = this->buffer;
@@ -786,7 +789,9 @@ gst_sf_loop (GstElement *element)
     if (num_to_write) {
       written = sf_writef_float (this->file, buf, num_to_write);
       if (written != num_to_write)
-        gst_element_error (element, "Error writing file: %s", sf_strerror (this->file));
+        gst_element_error (element, RESOURCE, WRITE,
+                             (_("Error while writing to file \"%s\""), this->filename),
+                             ("soundfile error: %s", sf_strerror (this->file)));
     }
 
     this->time += num_to_write * (GST_SECOND / this->rate);

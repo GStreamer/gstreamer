@@ -417,7 +417,7 @@ gst_faac_chain (GstPad  *pad,
 					 NULL, 0,
 					 GST_BUFFER_DATA (outbuf),
 					 faac->bytes)) < 0) {
-            gst_element_error (GST_ELEMENT (faac), "Error during AAC encoding");
+            gst_element_error (faac, LIBRARY, ENCODE, NULL, NULL);
             gst_event_unref (event);
             gst_buffer_unref (outbuf);
             return;
@@ -445,8 +445,8 @@ gst_faac_chain (GstPad  *pad,
   inbuf = GST_BUFFER (data);
 
   if (!faac->handle) {
-    gst_element_error (GST_ELEMENT (faac),
-		       "No input format negotiated");
+    gst_element_error (faac, CORE, NEGOTIATION, NULL,
+                       ("format wasn't negotiated before chain function"));
     gst_buffer_unref (inbuf);
     return;
   }
@@ -454,8 +454,8 @@ gst_faac_chain (GstPad  *pad,
   if (!GST_PAD_CAPS (faac->srcpad)) {
     if (gst_faac_srcconnect (faac->srcpad,
 			     gst_pad_get_allowed_caps (faac->srcpad)) <= 0) {
-      gst_element_error (GST_ELEMENT (faac),
-			 "Failed to negotiate MPEG/AAC format with next element");
+      gst_element_error (faac, CORE, NEGOTIATION, NULL,
+			 ("failed to negotiate MPEG/AAC format with next element"));
       gst_buffer_unref (inbuf);
       return;
     }
@@ -516,7 +516,7 @@ gst_faac_chain (GstPad  *pad,
 				   GST_BUFFER_SIZE (subbuf) / faac->bps,
 				   GST_BUFFER_DATA (outbuf),
 				   faac->bytes)) < 0) {
-      gst_element_error (GST_ELEMENT (faac), "Error during AAC encoding");
+      gst_element_error (faac, LIBRARY, ENCODE, NULL, NULL);
       gst_buffer_unref (inbuf);
       gst_buffer_unref (subbuf);
       return;

@@ -561,15 +561,15 @@ gst_ivorbisfile_loop (GstElement *element)
     ivorbisfile->offset = 0;
     ivorbisfile->total_bytes = 0;
     ivorbisfile->may_eos = FALSE;
-    ivorbisfile->vf.seekable = gst_bytestream_seek (ivorbisfile->bs, 0, 
+    ivorbisfile->vf.seekable = gst_bytestream_seek (ivorbisfile->bs, 0,
 		                                   GST_SEEK_METHOD_SET);
     GST_DEBUG ("ivorbisfile: seekable: %s\n",
 	       ivorbisfile->vf.seekable ? "yes" : "no");
 
     /* open our custom ivorbisfile data object with the callbacks we provide */
-    if (ov_open_callbacks (ivorbisfile, &ivorbisfile->vf, NULL, 0, 
+    if (ov_open_callbacks (ivorbisfile, &ivorbisfile->vf, NULL, 0,
 			   ivorbisfile_ov_callbacks) < 0) {
-      gst_element_error (element, "this is not a vorbis file");
+      gst_element_error (element, STREAM, DECODE, NULL, NULL);
       return;
     }
     ivorbisfile->need_discont = TRUE;
@@ -633,7 +633,7 @@ gst_ivorbisfile_loop (GstElement *element)
   /* we update the caps for each logical stream */
   if (ivorbisfile->vf.current_link != ivorbisfile->current_link) {
     if (!gst_ivorbisfile_new_link (ivorbisfile, ivorbisfile->vf.current_link)) {
-      gst_element_error (GST_ELEMENT (ivorbisfile), "could not negotiate format");
+      gst_element_error (ivorbisfile, CORE, NEGOTIATION, NULL, NULL);
     }
     return;
   }

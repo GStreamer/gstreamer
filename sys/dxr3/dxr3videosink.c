@@ -276,10 +276,9 @@ dxr3videosink_open (Dxr3VideoSink *sink)
 
   sink->video_fd = open (sink->video_filename, O_WRONLY);
   if (sink->video_fd < 0) {
-    gst_element_error (GST_ELEMENT (sink),
-                       g_strconcat ("Error opening device file \"",
-                                    sink->video_filename, "\": ",
-                                    g_strerror (errno), NULL));
+    gst_element_error (sink, RESOURCE, OPEN_WRITE,
+                       (_("Could not open video device \"%s\" for writing"), sink->video_filename),
+                        GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -289,10 +288,9 @@ dxr3videosink_open (Dxr3VideoSink *sink)
 
   sink->control_fd = open (sink->control_filename, O_WRONLY);
   if (sink->control_fd < 0) {
-    gst_element_error (GST_ELEMENT (sink),
-                       g_strconcat ("Error opening device file \"",
-                                    sink->control_filename, "\": ",
-                                    g_strerror (errno), NULL));
+    gst_element_error (sink, RESOURCE, OPEN_WRITE,
+                       (_("Could not open control device \"%s\" for writing"), sink->control_filename),
+                        GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -309,19 +307,17 @@ dxr3videosink_close (Dxr3VideoSink *sink)
 
   if (close (sink->video_fd) != 0)
   {
-    gst_element_error (GST_ELEMENT (sink),
-                       g_strconcat ("Error closing file \"",
-                                    sink->video_filename, "\": ",
-                                    g_strerror (errno), NULL));
+    gst_element_error (sink, RESOURCE, CLOSE,
+                       (_("Could not close video device \"%s\""), sink->video_filename),
+                        GST_ERROR_SYSTEM);
     return;
   }
 
   if (close (sink->control_fd) != 0)
   {
-    gst_element_error (GST_ELEMENT (sink),
-                       g_strconcat ("Error closing file \"",
-                                    sink->control_filename, "\": ",
-                                    g_strerror (errno), NULL));
+    gst_element_error (sink, RESOURCE, CLOSE,
+                       (_("Could not close control device \"%s\""), sink->audio_filename),
+                        GST_ERROR_SYSTEM);
     return;
   }
 
@@ -467,8 +463,9 @@ dxr3videosink_write_data (Dxr3VideoSink *sink, guint cut)
     while (size > 0) {
       written = write (sink->video_fd, data, size);
       if (written < 0) {
-        gst_element_error (GST_ELEMENT (sink), "Writing to %s: %s",
-                           sink->video_filename, strerror (errno));
+        gst_element_error (sink, RESOURCE, WRITE,
+                           (_("Could not write to device %s"), sink->video_filename),
+                           GST_ERROR_SYSTEM);
         break;
       }
       size = size - written;

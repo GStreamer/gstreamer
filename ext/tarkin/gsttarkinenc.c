@@ -319,7 +319,7 @@ gst_tarkinenc_chain (GstPad *pad, GstData *_data)
   tarkinenc = GST_TARKINENC (gst_pad_get_parent (pad));
 
   if (!tarkinenc->setup) {
-    gst_element_error (GST_ELEMENT (tarkinenc), "encoder not initialized (input is not audio?)");
+    gst_element_error (tarkinenc, CORE, NEGOTIATION, NULL, ("encoder not initialized (input is not tarkin?)"));
     if (GST_IS_BUFFER (buf))
       gst_buffer_unref (buf);
     else

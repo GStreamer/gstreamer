@@ -65,3 +65,4 @@ libgstinterfaces_@GST_MAJORMINOR@_la_LIBADD = \
 
 libgstinterfaces_@GST_MAJORMINOR@_la_LDFLAGS = @GST_PLUGINS_LT_LDFLAGS@ -version-info @GST_PLUGINS_LIBVERSION@
 
+noinst_HEADERS = gst-i18n-plugin.h

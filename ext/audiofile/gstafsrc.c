@@ -24,8 +24,13 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include "gst-libs/gst/gst-i18n-plugin.h"
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
+#include <string.h>
+#include <errno.h>
+
 #include "gstafsrc.h"
 
 /* elementfactory information */
@@ -305,10 +310,9 @@ gst_afsrc_open_file (GstAFSrc *src)
   src->file = afOpenFile (src->filename, "r", AF_NULL_FILESETUP);
   if (src->file == AF_NULL_FILEHANDLE)
   {
-    g_print ("ERROR: gstafsrc: Could not open file %s for reading\n",
-		src->filename);
-    gst_element_error (GST_ELEMENT (src), g_strconcat ("opening file \"",
-			src->filename, "\"", NULL));
+     gst_element_error (src, RESOURCE, OPEN_READ,
+                        (_("Could not open file \"%s\" for reading"), src->filename),
+                        ("system error: %s", strerror (errno)));
     return FALSE;
   }
 
@@ -364,11 +368,10 @@ gst_afsrc_close_file (GstAFSrc *src)
 /*  if (fclose (src->file) != 0) 	*/
   if (afCloseFile (src->file) != 0)
   {
-    g_print ("WARNING: afsrc: oops, error closing !\n");
-    perror ("close");
-    gst_element_error (GST_ELEMENT (src), g_strconcat("closing file \"", src->filename, "\"", NULL));
-  }
-  else {
+    gst_element_error (src, RESOURCE, CLOSE,
+                       (_("Error closing file \"%s\""), src->filename),
+                       GST_ERROR_SYSTEM);
+  } else {
     GST_FLAG_UNSET (src, GST_AFSRC_OPEN);
   }
 }

@@ -201,10 +201,10 @@ gst_xviddec_setup (GstXvidDec *xviddec)
 
   if ((ret = xvid_decore(NULL, XVID_DEC_CREATE,
                          &xdec, NULL)) < 0) {
-    gst_element_error(GST_ELEMENT(xviddec),
-		      "Setting parameters %dx%d@%d failed: %s (%d)",
+    gst_element_error (xviddec, LIBRARY, SETTINGS, NULL,
+		      ("Setting parameters %dx%d@%d failed: %s (%d)",
 	              xviddec->width, xviddec->height, xviddec->csp,
-		      gst_xvid_error(ret), ret);
+		      gst_xvid_error(ret), ret));
     return FALSE;
   }
 
@@ -228,8 +228,8 @@ gst_xviddec_chain (GstPad    *pad,
   g_return_if_fail(GST_IS_PAD(pad));
 
   if (!xviddec->handle) {
-    gst_element_error(GST_ELEMENT(xviddec),
-                      "No format set - aborting");
+    gst_element_error (xviddec, CORE, NEGOTIATION, NULL,
+         ("format wasn't negotiated before chain function"));
     gst_buffer_unref(buf);
     return;
   }
@@ -263,9 +263,9 @@ gst_xviddec_chain (GstPad    *pad,
 
   if ((ret = xvid_decore(xviddec->handle, XVID_DEC_DECODE,
                          &xframe, NULL)) < 0) {
-    gst_element_error(GST_ELEMENT(xviddec),
-                      "Error decoding xvid frame: %s (%d)\n",
-		      gst_xvid_error(ret), ret);
+    gst_element_error (xviddec, STREAM, DECODE, NULL,
+                      ("Error decoding xvid frame: %s (%d)\n",
+		      gst_xvid_error(ret), ret));
     gst_buffer_unref(buf);
     gst_buffer_unref(outbuf);
     return;

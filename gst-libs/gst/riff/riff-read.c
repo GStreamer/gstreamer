@@ -199,7 +199,7 @@ gst_riff_peek_head (GstRiffRead *riff,
       gst_pad_event_default (riff->sinkpad, event);
     } else {
       gst_event_unref (event);
-      gst_element_error (GST_ELEMENT (riff), "Read error");
+      gst_element_error (riff, RESOURCE, READ, NULL, NULL);
     }
     return FALSE;
   }
@@ -228,7 +228,7 @@ gst_riff_read_element_data (GstRiffRead *riff,
   GstBuffer *buf = NULL;
 
   if (gst_bytestream_peek (riff->bs, &buf, length) != length) {
-    gst_element_error (GST_ELEMENT (riff), "Read error");
+    gst_element_error (riff, RESOURCE, READ, NULL, NULL);
     if (buf)
       gst_buffer_unref (buf);
     return NULL;
@@ -271,7 +271,7 @@ gst_riff_read_seek (GstRiffRead *riff,
 
   /* now seek */
   if (!gst_bytestream_seek (riff->bs, offset, GST_SEEK_METHOD_SET)) {
-    gst_element_error (GST_ELEMENT (riff), "Seek failed");
+    gst_element_error (riff, RESOURCE, SEEK, NULL, NULL);
     return NULL;
   }
 
@@ -283,8 +283,8 @@ gst_riff_read_seek (GstRiffRead *riff,
   /* get the discont event and return */
   gst_bytestream_get_status (riff->bs, &remaining, &event);
   if (!event || GST_EVENT_TYPE (event) != GST_EVENT_DISCONTINUOUS) {
-    gst_element_error (GST_ELEMENT (riff),
-		       "No discontinuity event after seek");
+    gst_element_error (riff, CORE, EVENT, NULL,
+		       ("No discontinuity event after seek"));
     if (event)
       gst_event_unref (event);
     return NULL;
@@ -327,7 +327,7 @@ gst_riff_peek_list (GstRiffRead *riff)
   }
 
   if (gst_bytestream_peek_bytes (riff->bs, &data, 12) != 12) {
-    gst_element_error (GST_ELEMENT (riff), "Read error");
+    gst_element_error (riff, RESOURCE, READ, NULL, NULL);
     return 0;
   }
 
@@ -687,7 +687,7 @@ gst_riff_read_list (GstRiffRead *riff,
   }
   gst_bytestream_flush_fast (riff->bs, 8);
   if (gst_bytestream_peek_bytes (riff->bs, &data, 4) != 4) {
-    gst_element_error (GST_ELEMENT (riff), "Read error");
+    gst_element_error (riff, RESOURCE, READ, NULL, NULL);
     return FALSE;
   }
   gst_bytestream_flush_fast (riff->bs, 4);
@@ -845,15 +845,14 @@ gst_riff_read_header (GstRiffRead *riff,
   if (!gst_riff_peek_head (riff, &tag, &length, NULL))
     return FALSE;
   if (tag != GST_RIFF_TAG_RIFF) {
-    gst_element_error (GST_ELEMENT (riff),
-		       "Not a RIFF file");
+    gst_element_error (riff, STREAM, WRONG_TYPE, NULL, NULL);
     return FALSE;
   }
   gst_bytestream_flush_fast (riff->bs, 8);
 
   /* doctype */
   if (gst_bytestream_peek_bytes (riff->bs, &data, 4) != 4) {
-    gst_element_error (GST_ELEMENT (riff), "Read error");
+    gst_element_error (riff, RESOURCE, READ, NULL, NULL);
     return FALSE;
   }
   gst_bytestream_flush_fast (riff->bs, 4);

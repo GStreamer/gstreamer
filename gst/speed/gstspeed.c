@@ -245,7 +245,8 @@ speed_loop (GstElement *element)
 #include "filter.func"
 #undef _FORMAT
   } else {
-    gst_element_error (element, "capsnego was never performed, bailing...");
+   gst_element_error (filter, CORE, NEGOTIATION, NULL,
+                      ("format wasn't negotiated before chain function"));
     gst_element_yield (element);
   }
 }

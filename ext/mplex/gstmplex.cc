@@ -279,8 +279,8 @@ gst_mplex_loop (GstElement *element)
     }
 
     if (!mplex->job->video_tracks && !mplex->job->audio_tracks) {
-      gst_element_error (element,
-			 "No input stream set-up");
+      gst_element_error (element, CORE, NEGOTIATION, NULL,
+			 ("no input video or audio tracks set up before loop function"));
       return;
     }
 
