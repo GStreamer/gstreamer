@@ -65,6 +65,13 @@ typedef enum
 
 typedef enum
 {
+  GST_SYNC_METHOD_NONE,
+  GST_SYNC_METHOD_WAIT,
+  GST_SYNC_METHOD_BURST,
+} GstSyncMethod;
+
+typedef enum
+{
   GST_UNIT_TYPE_BUFFERS,
   GST_UNIT_TYPE_TIME,
   GST_UNIT_TYPE_BYTES,
@@ -127,9 +134,6 @@ struct _GstMultiFdSink {
   GstFDSetMode mode;
   GstFDSet *fdset;
 
-  //fd_set readfds; /* all the client file descriptors that we can read from */
-  //fd_set writefds; /* all the client file descriptors that we can write to */
-
   GstFD control_sock[2];/* sockets for controlling the select call */
 
   GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
@@ -146,7 +150,7 @@ struct _GstMultiFdSink {
   gint units_soft_max;	/* max units a client can lag before recovery starts */
   GstRecoverPolicy recover_policy;
   GstClockTime timeout;	/* max amount of nanoseconds to remain idle */
-  gboolean sync_clients;/* sync clients to keyframe */
+  GstSyncMethod sync_method;	/* what method to use for connecting clients */
 
   /* stats */
   gint buffers_queued;	/* number of queued buffers */
