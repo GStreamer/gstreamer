@@ -180,8 +180,8 @@ automake -a -c || {
 }
 
 echo
-echo "+ running autogen.sh in gst/cothreads..."
-pushd gst/cothreads > /dev/null
+echo "+ running autogen.sh in libs/ext/cothreads..."
+pushd libs/ext/cothreads > /dev/null
 echo
 ./autogen.sh --autogen-noconfigure --autogen-nocheck
 popd > /dev/null

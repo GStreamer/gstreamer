@@ -1,3 +1,3 @@
-SUBDIRS = gst
+SUBDIRS = gst ext
 
-DIST_SUBDIRS = gst
+DIST_SUBDIRS = gst ext
