@@ -58,7 +58,7 @@ struct _GstAudioConvert {
   GstPad *	sink;
   GstPad *	src;
   /* properties */
-  gboolean	agressive;
+  gboolean	aggressive;
   /* caps: 0 = sink, 1 = src, so always convert from 0 to 1 */
   gboolean	caps_set[2];
   gint		law[2];
@@ -113,7 +113,7 @@ enum {
 };
 enum {
   ARG_0,
-  ARG_AGRESSIVE,
+  ARG_AGGRESSIVE,
 };
 
 /*** GSTREAMER PROTOTYPES *****************************************************/
@@ -209,7 +209,7 @@ gst_audio_convert_class_init (GstAudioConvertClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_AGRESSIVE,
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_AGGRESSIVE,
     g_param_spec_boolean("aggressive","aggressive mode","if true, tries any possible format before giving up",
                          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
@@ -247,8 +247,8 @@ gst_audio_convert_set_property (GObject *object, guint prop_id, const GValue *va
   audio_convert = GST_AUDIO_CONVERT(object);
 
   switch (prop_id) {
-    case ARG_AGRESSIVE:
-      audio_convert->agressive = g_value_get_boolean (value);
+    case ARG_AGGRESSIVE:
+      audio_convert->aggressive = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -266,8 +266,8 @@ gst_audio_convert_get_property (GObject *object, guint prop_id, GValue *value, G
   audio_convert = GST_AUDIO_CONVERT(object);
 
   switch (prop_id) {
-    case ARG_AGRESSIVE:
-      g_value_set_boolean (value, audio_convert->agressive);
+    case ARG_AGGRESSIVE:
+      g_value_set_boolean (value, audio_convert->aggressive);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -467,7 +467,7 @@ gst_audio_convert_set_caps (GstPad *pad)
         for (width = 4; width >= 1; width--) { 
 	
 	  /* width */
-	  for (depth = width * 8; depth >= 1; depth -= this->agressive ? 1 : 8) {
+	  for (depth = width * 8; depth >= 1; depth -= this->aggressive ? 1 : 8) {
 
 	    /* rate - not supported yet*/
 
