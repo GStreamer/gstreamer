@@ -523,7 +523,7 @@ AC_SUBST(MAD_LIBS)
 
 dnl *** mikmod ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMIKMOD, true)
-GST_CHECK_FEATURE(LIBMIKMOD, [mikmod plugin], mikmod, [
+GST_CHECK_FEATURE(MIKMOD, [mikmod plugin], mikmod, [
   AM_PATH_LIBMIKMOD(, HAVE_LIBMIKMOD=yes, HAVE_LIBMIKMOD=no)
 ])
 
@@ -534,11 +534,11 @@ GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
   AC_SUBST(MPEG2DEC_LIBS)
 ])
 
-dnl *** quicktime ***
-dnl FIXME: make this be called openquicktime
-translit(dnm, m, l) AM_CONDITIONAL(USE_QUICKTIME, true)
-GST_CHECK_FEATURE(QUICKTIME, [Open Quicktime], quicktime_parser quicktime_decoder quicktime_demux,[
-  GST_CHECK_LIBHEADER(QUICKTIME, openquicktime, quicktime_init,, openquicktime/openquicktime.h, QUICKTIME_LIBS="-lopenquicktime")
+dnl *** openquicktime ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENQUICKTIME, true)
+GST_CHECK_FEATURE(OPENQUICKTIME, [Open Quicktime], quicktime_parser quicktime_decoder quicktime_demux,[
+  GST_CHECK_LIBHEADER(OPENQUICKTIME, openquicktime, quicktime_init,, openquicktime/openquicktime.h, OPENQUICKTIME_LIBS="-lopenquicktime")
+  AC_SUBST(OPENQUICKTIME_LIBS)
 ])
 
 dnl *** raw1394 ***
@@ -912,7 +912,6 @@ AM_CONDITIONAL(HAVE_XMMS,           test "x$HAVE_XMMS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
-AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
 AM_CONDITIONAL(HAVE_SIDPLAY,        test "x$have_sidplay" = "xyes")
@@ -1075,6 +1074,7 @@ ext/jpeg/Makefile
 ext/lame/Makefile
 ext/mad/Makefile
 ext/mpeg2dec/Makefile
+ext/openquicktime/Makefile
 ext/shout/Makefile
 ext/sdl/Makefile
 ext/vorbis/Makefile
