@@ -1,5 +1,23 @@
 2004-05-10  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstogg.c: (plugin_init):
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_plugin_init),
+	(gst_ogg_print):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_get_type),
+	(gst_ogg_mux_base_init), (gst_ogg_mux_class_init),
+	(gst_ogg_mux_get_sink_event_masks), (gst_ogg_mux_init),
+	(gst_ogg_mux_sinkconnect), (gst_ogg_mux_pad_link),
+	(gst_ogg_mux_pad_unlink), (gst_ogg_mux_request_new_pad),
+	(gst_ogg_mux_handle_src_event), (gst_ogg_mux_next_buffer),
+	(gst_ogg_mux_push_page), (gst_ogg_mux_compare_pads),
+	(gst_ogg_mux_queue_pads), (gst_ogg_mux_loop),
+	(gst_ogg_mux_get_property), (gst_ogg_mux_set_property),
+	(gst_ogg_mux_change_state), (gst_ogg_mux_plugin_init):
+	Added an ogg muxer.
+	Small typo fixes in the demuxer.
+
+2004-05-10  Wim Taymans  <wim@fluendo.com>
+
 	* ext/theora/theoraenc.c: (gst_theora_enc_class_init),
 	(theora_enc_sink_link), (theora_push_packet), (theora_enc_chain),
 	(theora_enc_change_state), (theora_enc_set_property),
