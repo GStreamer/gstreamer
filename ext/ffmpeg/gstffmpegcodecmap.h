@@ -61,4 +61,8 @@ gst_ffmpeg_caps_to_codectype (enum CodecType  type,
 GstCaps *
 gst_ffmpeg_formatid_to_caps (const gchar *format_name);
 
+enum CodecID
+gst_ffmpeg_caps_to_codecid   (GstCaps *caps,
+                              enum CodecID *id);
+
 #endif /* __GST_FFMPEG_CODECMAP_H__ */

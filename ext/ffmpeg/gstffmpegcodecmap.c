@@ -768,3 +768,11 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name)
 
   return caps;
 }
+
+enum CodecID
+gst_ffmpeg_caps_to_codecid (GstCaps *caps, enum CodecID *id)
+{
+  /* FIXME */
+  return 0;
+}
+
