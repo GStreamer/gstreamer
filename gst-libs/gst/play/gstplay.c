@@ -624,7 +624,7 @@ gst_play_get_location (GstPlay *play)
 gboolean
 gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
 {
-  GstElement *audio_sink_element, *video_sink_element;
+  GstElement *audio_seek_element, *video_seek_element, *audio_sink_element;
   
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
@@ -632,20 +632,23 @@ gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
   if (time_nanos < 0LL)
     time_nanos = 0LL;
   
+  audio_seek_element = g_hash_table_lookup (play->priv->elements,
+                                            "audioconvert");
   audio_sink_element = g_hash_table_lookup (play->priv->elements,
                                             "audio_sink_element");
-  video_sink_element = g_hash_table_lookup (play->priv->elements,
-                                            "video_sink_element");
+  video_seek_element = g_hash_table_lookup (play->priv->elements,
+                                            "identity");
   
-  if (GST_IS_ELEMENT (audio_sink_element) &&
-      GST_IS_ELEMENT (video_sink_element)) {
+  if (GST_IS_ELEMENT (audio_seek_element) &&
+      GST_IS_ELEMENT (video_seek_element) &&
+      GST_IS_ELEMENT (audio_sink_element)) {
     gboolean s = FALSE;
    
-    s = gst_element_seek (video_sink_element, GST_FORMAT_TIME |
+    s = gst_element_seek (video_seek_element, GST_FORMAT_TIME |
                           GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH,
                           time_nanos);
     if (!s) {
-      s = gst_element_seek (audio_sink_element, GST_FORMAT_TIME |
+      s = gst_element_seek (audio_seek_element, GST_FORMAT_TIME |
                             GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH,
                             time_nanos);
     }
