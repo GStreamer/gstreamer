@@ -1208,6 +1208,7 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 	  list = gst_tag_list_new ();
 	  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, 
 			    GST_TAG_DURATION, (gint64)time*1000*1000*1000,
+			    GST_TAG_BITRATE, bitrate,
 			    NULL);
 	  gst_element_found_tags (GST_ELEMENT (mad), list);
 	  if (GST_PAD_IS_USABLE (mad->srcpad)) {
