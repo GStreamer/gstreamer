@@ -1,5 +1,7 @@
 2004-03-05  Johan Dahlin  <johan@gnome.org>
 
+	* testsuite/element.py: Update to new api
+
 	* codegen/*: Copy PyGTK code generator here, to avoid depending on
 	latest version.
 
