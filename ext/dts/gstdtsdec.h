@@ -61,10 +61,10 @@ struct _GstDtsDec {
   sample_t 	*samples;
   dts_state_t 	*state;
 
-  GstByteStream *bs;
-
+  /* Data left over from the previous buffer */
+  GstBuffer	*cache;
+  
   /* keep track of time */
-  GstClockTime	last_ts;
   GstClockTime	current_ts;
 };
 

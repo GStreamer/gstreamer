@@ -84,7 +84,7 @@ static void gst_dtsdec_base_init (GstDtsDecClass * klass);
 static void gst_dtsdec_class_init (GstDtsDecClass * klass);
 static void gst_dtsdec_init (GstDtsDec * dtsdec);
 
-static void gst_dtsdec_loop (GstElement * element);
+static void gst_dtsdec_chain (GstPad * pad, GstData * data);
 static GstElementStateReturn gst_dtsdec_change_state (GstElement * element);
 
 static void gst_dtsdec_set_property (GObject * object, guint prop_id,
@@ -168,8 +168,8 @@ gst_dtsdec_init (GstDtsDec * dtsdec)
   dtsdec->sinkpad =
       gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
           (dtsdec), "sink"), "sink");
+  gst_pad_set_chain_function (dtsdec->sinkpad, gst_dtsdec_chain);
   gst_element_add_pad (element, dtsdec->sinkpad);
-  gst_element_set_loop_function (element, gst_dtsdec_loop);
 
   dtsdec->srcpad =
       gst_pad_new_from_template (gst_element_get_pad_template (element,
@@ -185,14 +185,20 @@ static gint
 gst_dtsdec_channels (uint32_t flags, GstAudioChannelPosition ** pos)
 {
   gint chans = 0;
+  GstAudioChannelPosition *tpos = NULL;
+
+  if (pos) {
+    /* Allocate the maximum, for ease */
+    tpos = *pos = g_new (GstAudioChannelPosition, 7);
+    if (!tpos)
+      return 0;
+  }
 
   switch (flags & DTS_CHANNEL_MASK) {
     case DTS_MONO:
       chans = 1;
-      if (pos) {
-        *pos = g_new (GstAudioChannelPosition, 2);
-        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
-      }
+      if (tpos)
+        tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
       break;
       /* case DTS_CHANNEL: */
     case DTS_STEREO:
@@ -200,71 +206,64 @@ gst_dtsdec_channels (uint32_t flags, GstAudioChannelPosition ** pos)
     case DTS_STEREO_TOTAL:
     case DTS_DOLBY:
       chans = 2;
-      if (pos) {
-        *pos = g_new (GstAudioChannelPosition, 3);
-        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      if (tpos) {
+        tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        tpos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
       }
       break;
     case DTS_3F:
       chans = 3;
-      if (pos) {
-        *pos = g_new (GstAudioChannelPosition, 4);
-        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      if (tpos) {
+        tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        tpos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        tpos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
       }
       break;
     case DTS_2F1R:
       chans = 3;
-      if (pos) {
-        *pos = g_new (GstAudioChannelPosition, 4);
-        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-        *pos[2] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+      if (tpos) {
+        tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        tpos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        tpos[2] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
       }
       break;
     case DTS_3F1R:
       chans = 4;
-      if (pos) {
-        *pos = g_new (GstAudioChannelPosition, 5);
-        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-        *pos[3] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+      if (tpos) {
+        tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        tpos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        tpos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        tpos[3] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
       }
       break;
     case DTS_2F2R:
       chans = 4;
-      if (pos) {
-        *pos = g_new (GstAudioChannelPosition, 5);
-        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-        *pos[2] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-        *pos[3] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+      if (tpos) {
+        tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        tpos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        tpos[2] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+        tpos[3] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
       }
       break;
     case DTS_3F2R:
       chans = 5;
-      if (pos) {
-        *pos = g_new (GstAudioChannelPosition, 6);
-        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-        *pos[3] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-        *pos[4] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+      if (tpos) {
+        tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        tpos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        tpos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        tpos[3] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+        tpos[4] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
       }
       break;
     case DTS_4F2R:
       chans = 6;
-      if (pos) {
-        *pos = g_new (GstAudioChannelPosition, 7);
-        *pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER;
-        *pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER;
-        *pos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[3] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-        *pos[4] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-        *pos[5] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+      if (tpos) {
+        tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER;
+        tpos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER;
+        tpos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        tpos[3] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        tpos[4] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+        tpos[5] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
       }
       break;
     default:
@@ -273,8 +272,8 @@ gst_dtsdec_channels (uint32_t flags, GstAudioChannelPosition ** pos)
       return 0;
   }
   if (flags & DTS_LFE) {
-    if (pos) {
-      *pos[chans] = GST_AUDIO_CHANNEL_POSITION_LFE;
+    if (tpos) {
+      tpos[chans] = GST_AUDIO_CHANNEL_POSITION_LFE;
     }
     chans += 1;
   }
@@ -305,13 +304,8 @@ gst_dtsdec_renegotiate (GstDtsDec * dts)
 }
 
 static void
-gst_dtsdec_handle_event (GstDtsDec * dts)
+gst_dtsdec_handle_event (GstDtsDec * dts, GstEvent * event)
 {
-  guint32 remaining;
-  GstEvent *event;
-
-  gst_bytestream_get_status (dts->bs, &remaining, &event);
-
   if (!event) {
     GST_ELEMENT_ERROR (dts, RESOURCE, READ, (NULL), (NULL));
     return;
@@ -322,8 +316,22 @@ gst_dtsdec_handle_event (GstDtsDec * dts)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_DISCONTINUOUS:
+    {
+      gint64 val;
+
+      if (!gst_event_discont_get_value (event, GST_FORMAT_TIME, &val) ||
+          !GST_CLOCK_TIME_IS_VALID (val)) {
+        GST_WARNING ("No time discont value in event %p", event);
+      } else {
+        dts->current_ts = val;
+      }
+    }
+      /* Fallthrough */
     case GST_EVENT_FLUSH:
-      gst_bytestream_flush_fast (dts->bs, remaining);
+      if (dts->cache) {
+        gst_buffer_unref (dts->cache);
+        dts->cache = NULL;
+      }
       break;
     default:
       break;
@@ -346,42 +354,16 @@ gst_dtsdec_update_streaminfo (GstDtsDec * dts)
       dts->srcpad, dts->current_ts, taglist);
 }
 
-static void
-gst_dtsdec_loop (GstElement * element)
+static gboolean
+gst_dtsdec_handle_frame (GstDtsDec * dts, guint8 * data,
+    guint length, gint flags, gint sample_rate, gint bit_rate)
 {
-  GstDtsDec *dts = GST_DTSDEC (element);
-  guint8 *data;
-  GstBuffer *buf, *out;
-  sample_t *samples;
-  gint i, length, flags, sample_rate, bit_rate, frame_length, s, c, num_c;
-  gint channels, skipped = 0, num_blocks;
-  guint32 got_bytes;
   gboolean need_renegotiation = FALSE;
   GstClockTime timestamp = 0;
-
-  /* find sync. Don't know what 3840 is based on...  */
-#define MAX_SKIP 3840
-  while (skipped < MAX_SKIP) {
-    got_bytes = gst_bytestream_peek_bytes (dts->bs, &data, 7);
-    if (got_bytes < 7) {
-      gst_dtsdec_handle_event (dts);
-      return;
-    }
-    length = dts_syncinfo (dts->state, data, &flags,
-        &sample_rate, &bit_rate, &frame_length);
-    if (length == 0) {
-      /* shift window to re-find sync */
-      gst_bytestream_flush_fast (dts->bs, 1);
-      skipped++;
-      GST_LOG ("Skipped");
-    } else
-      break;
-  }
-
-  if (skipped >= MAX_SKIP) {
-    GST_ELEMENT_ERROR (dts, RESOURCE, SYNC, (NULL), (NULL));
-    return;
-  }
+  gint channels, num_blocks;
+  GstBuffer *out;
+  gint i, s, c, num_c;
+  sample_t *samples;
 
   /* go over stream properties, update caps/streaminfo if needed */
   if (dts->sample_rate != sample_rate) {
@@ -396,30 +378,13 @@ gst_dtsdec_loop (GstElement * element)
     gst_dtsdec_update_streaminfo (dts);
   }
 
-  /* read the header + rest of frame */
-  got_bytes = gst_bytestream_read (dts->bs, &buf, length);
-  if (got_bytes < length) {
-    gst_dtsdec_handle_event (dts);
-    return;
-  }
-
-  data = GST_BUFFER_DATA (buf);
-  timestamp = gst_bytestream_get_timestamp (dts->bs);
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    if (timestamp == dts->last_ts) {
-      timestamp = dts->current_ts;
-    } else {
-      dts->last_ts = timestamp;
-    }
-  }
-
   /* process */
   flags = dts->request_channels | DTS_ADJUST_LEVEL;
   dts->level = 1;
 
   if (dts_frame (dts->state, data, &flags, &dts->level, dts->bias)) {
     GST_WARNING ("dts_frame error");
-    goto end;
+    return FALSE;
   }
 
   channels = flags & (DTS_CHANNEL_MASK | DTS_LFE);
@@ -433,7 +398,7 @@ gst_dtsdec_loop (GstElement * element)
     GST_DEBUG ("dtsdec: sample_rate:%d stream_chans:0x%x using_chans:0x%x",
         dts->sample_rate, dts->stream_channels, dts->using_channels);
     if (!gst_dtsdec_renegotiate (dts))
-      goto end;
+      return FALSE;
   }
 
   if (dts->dynamic_range_compression == FALSE) {
@@ -451,6 +416,11 @@ gst_dtsdec_loop (GstElement * element)
     samples = dts_samples (dts->state);
     num_c = gst_dtsdec_channels (dts->using_channels, NULL);
     out = gst_buffer_new_and_alloc ((SAMPLE_WIDTH / 8) * 256 * num_c);
+    if (!out) {
+      GST_ELEMENT_ERROR (dts, RESOURCE, FAILED, (NULL), ("Out of memory"));
+      return FALSE;
+    }
+
     GST_BUFFER_TIMESTAMP (out) = timestamp;
     GST_BUFFER_DURATION (out) = GST_SECOND * 256 / dts->sample_rate;
 
@@ -466,13 +436,81 @@ gst_dtsdec_loop (GstElement * element)
 
     /* push on */
     gst_pad_push (dts->srcpad, GST_DATA (out));
-
     timestamp += GST_SECOND * 256 / dts->sample_rate;
   }
 
   dts->current_ts = timestamp;
+  return TRUE;
+}
 
-end:
+static void
+gst_dtsdec_chain (GstPad * pad, GstData * _data)
+{
+  GstDtsDec *dts;
+  guint8 *data;
+  gint64 size;
+  GstBuffer *buf;
+  gint length, flags, sample_rate, bit_rate, frame_length;
+
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (_data != NULL);
+
+  dts = GST_DTSDEC (gst_pad_get_parent (pad));
+
+  if (GST_IS_EVENT (_data)) {
+    gst_dtsdec_handle_event (dts, GST_EVENT (_data));
+    return;
+  }
+
+  /* merge with cache, if any. Also make sure timestamps match */
+  buf = GST_BUFFER (_data);
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    dts->current_ts = GST_BUFFER_TIMESTAMP (buf);
+    GST_DEBUG_OBJECT (dts, "Received buffer with ts %" GST_TIME_FORMAT
+        " duration %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+  }
+
+  if (dts->cache) {
+    buf = gst_buffer_join (dts->cache, buf);
+    dts->cache = NULL;
+  }
+
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+  length = 0;
+  while (size >= 7) {
+    length = dts_syncinfo (dts->state, data, &flags,
+        &sample_rate, &bit_rate, &frame_length);
+    if (length == 0) {
+      /* shift window to re-find sync */
+      data++;
+      size--;
+    } else if (length <= size) {
+      GST_DEBUG ("Sync: frame size %d", length);
+      if (!gst_dtsdec_handle_frame (dts, data,
+              length, flags, sample_rate, bit_rate)) {
+        size = 0;
+        break;
+      }
+      size -= length;
+      data += length;
+    } else {
+      GST_LOG ("Not enough data available (needed %d had %d)", length, size);
+      break;
+    }
+  }
+
+  /* keep cache */
+  if (length == 0) {
+    GST_LOG ("No sync found");
+  }
+  if (size > 0) {
+    dts->cache = gst_buffer_create_sub (buf,
+        GST_BUFFER_SIZE (buf) - size, size);
+  }
+
   gst_buffer_unref (buf);
 }
 
@@ -486,7 +524,6 @@ gst_dtsdec_change_state (GstElement * element)
       GstCPUFlags cpuflags;
       uint32_t mm_accel = 0;
 
-      dts->bs = gst_bytestream_new (dts->sinkpad);
       cpuflags = gst_cpu_get_flags ();
       if (cpuflags & GST_CPU_FLAG_MMX)
         mm_accel |= MM_ACCEL_X86_MMX;
@@ -508,15 +545,12 @@ gst_dtsdec_change_state (GstElement * element)
       dts->using_channels = 0;
       dts->level = 1;
       dts->bias = 0;
-      dts->last_ts = 0;
       dts->current_ts = 0;
       break;
     case GST_STATE_PAUSED_TO_READY:
       dts->samples = NULL;
       break;
     case GST_STATE_READY_TO_NULL:
-      gst_bytestream_destroy (dts->bs);
-      dts->bs = NULL;
       dts_free (dts->state);
       dts->state = NULL;
       break;
