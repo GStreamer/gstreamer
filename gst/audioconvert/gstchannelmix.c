@@ -24,6 +24,7 @@
 #endif
 
 #include <math.h>
+#include <string.h>
 #include <gst/audio/multichannel.h>
 
 #include "gstchannelmix.h"
@@ -532,6 +533,7 @@ gst_audio_convert_mix (GstAudioConvert * this,
 {
   gint in, out, n;
   gint64 res;
+  gint32 tmp[this->srccaps.channels];
   gboolean backwards = this->srccaps.channels > this->sinkcaps.channels;
 
   /* FIXME: use liboil here? */
@@ -550,9 +552,9 @@ gst_audio_convert_mix (GstAudioConvert * this,
         res = G_MININT32;
       else if (res > G_MAXINT32)
         res = G_MAXINT32;
-
-      /* store */
-      out_data[n * this->srccaps.channels + out] = res;
+      tmp[out] = res;
     }
+    memcpy (&out_data[n * this->srccaps.channels], tmp,
+        sizeof (gint32) * this->srccaps.channels);
   }
 }
