@@ -1,3 +1,10 @@
+2001-12-23 Thomas Vander Stichele  <thomas@apestaart.org>
+
+	* moved plugins out of the core to gst-plugins
+	* moved some of the libs out of the core to gst-plugins
+	* moved the other libs around so headers get installed in
+	  <gst/(lib)/...>
+
 2001-12-15 Thomas Vander Stichele  <thomas@apestaart.org>
 
 	* configure.ac : major overhaul
