@@ -47,6 +47,7 @@ enum {
   ARG_FPS,
   ARG_QUALITY,
   ARG_BITRATE,
+  ARG_PATTERN,
   /* FILL ME */
 };
 
@@ -168,6 +169,10 @@ gst_libfame_class_init (GstLibfameClass *klass)
     g_param_spec_int ("quality", "Quality", 
 	              "Percentage of quality of compression (versus size)",
                       0, 100, 75, G_PARAM_READWRITE)); /* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_PATTERN,
+    g_param_spec_string ("pattern", "Pattern", 
+	                 "Encoding pattern of I, P, and B frames",
+                         0, G_PARAM_READWRITE)); /* CHECKME */
 }
 
 static GstPadConnectReturn
@@ -197,7 +202,8 @@ gst_libfame_sinkconnect (GstPad *pad, GstCaps *caps)
 
   libfame->fp.width = width;
   libfame->fp.height = height;
-  libfame->fp.coding = "I";
+  libfame->fp.coding = (const char *) libfame->pattern;
+  g_warning ("Using pattern %s for encoding\n", libfame->fp.coding);
 
   /* FIXME: choose good parameters */
   libfame->fp.slices_per_frame = 1;
@@ -255,6 +261,7 @@ gst_libfame_init (GstLibfame *libfame)
   libfame->fp.frame_rate_den = 1; /* avoid floating point exceptions */
   libfame->fp.profile = g_strdup_printf ("mpeg1");
 
+  libfame->pattern = g_strdup_printf ("I");
   /* allocate space for the buffer */
   libfame->buffer_size = LIBFAME_BUFFER_SIZE; /* FIXME */
   libfame->buffer = (unsigned char *) g_malloc (libfame->buffer_size);
@@ -297,8 +304,8 @@ gst_libfame_chain (GstPad *pad, GstBuffer *buf)
   libfame->fy.h = libfame->fp.height;
   libfame->fy.p = 0; /* FIXME: is this pointing to previous data ? */
   libfame->fy.y = data;
-  libfame->fy.u = data + libfame->width * libfame->height;
-  libfame->fy.v = data + 5 * libfame->width * libfame->height / 4;
+  libfame->fy.u = data + libfame->fp.width * libfame->fp.height;
+  libfame->fy.v = data + 5 * libfame->fp.width * libfame->fp.height / 4;
   fame_start_frame (libfame->fc, &libfame->fy, NULL);
 
   while ((length = fame_encode_slice (libfame->fc)) != 0)
@@ -380,6 +387,11 @@ gst_libfame_set_property (GObject *object, guint prop_id,
       src->encoder->seq.bit_rate = g_value_get_int (value);
       */
       break;
+    case ARG_PATTERN:
+      if (src->pattern) g_free (src->pattern);
+      src->pattern = (gchar *) g_value_get_string (value);
+      g_warning ("setting pattern to %s\n", src->pattern);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -406,6 +418,9 @@ gst_libfame_get_property (GObject *object, guint prop_id,
     case ARG_BITRATE:
       g_warning ("You think you WANT to know bitrate ? Think AGAIN !\n");
       /* g_value_set_int (value, src->encoder->seq.bit_rate); */
+      break;
+    case ARG_PATTERN:
+      g_value_set_string (value, src->pattern);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

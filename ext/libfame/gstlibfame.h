@@ -61,6 +61,9 @@ struct _GstLibfame {
   /* the size of the output buffer */
   gint outsize;
 
+  /* encoding pattern string */
+  gchar *pattern;
+
   /* libfame stuff */
   fame_context_t *fc;
   fame_parameters_t fp;
