@@ -12,7 +12,8 @@ tests_pass = \
 	intersect2 \
 	caps \
 	value_compare \
-	value_intersect
+	value_intersect \
+	audioscale
 
 tests_fail =
 

@@ -1009,6 +1009,46 @@ gst_value_deserialize_string (GValue * dest, const char *s)
 /*************************************/
 /* unions */
 
+static gboolean
+gst_value_union_int_int_range (GValue * dest, const GValue * src1,
+    const GValue * src2)
+{
+  g_return_val_if_fail (G_VALUE_TYPE (src1) == G_TYPE_INT, FALSE);
+  g_return_val_if_fail (G_VALUE_TYPE (src2) == GST_TYPE_INT_RANGE, FALSE);
+
+  if (src2->data[0].v_int <= src1->data[0].v_int &&
+      src2->data[1].v_int >= src1->data[0].v_int) {
+    gst_value_init_and_copy (dest, src2);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+gst_value_union_int_range_int_range (GValue * dest, const GValue * src1,
+    const GValue * src2)
+{
+  int min;
+  int max;
+
+  g_return_val_if_fail (G_VALUE_TYPE (src1) == GST_TYPE_INT_RANGE, FALSE);
+  g_return_val_if_fail (G_VALUE_TYPE (src2) == GST_TYPE_INT_RANGE, FALSE);
+
+  min = MAX (src1->data[0].v_int, src2->data[0].v_int);
+  max = MIN (src1->data[1].v_int, src2->data[1].v_int);
+
+  if (min <= max) {
+    g_value_init (dest, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (dest,
+        MIN (src1->data[0].v_int, src2->data[0].v_int),
+        MAX (src1->data[1].v_int, src2->data[1].v_int));
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 /*************************************/
 /* intersection */
 
@@ -1226,6 +1266,9 @@ gst_value_can_union (const GValue * value1, const GValue * value2)
     if (union_info->type1 == G_VALUE_TYPE (value1) &&
         union_info->type2 == G_VALUE_TYPE (value2))
       return TRUE;
+    if (union_info->type1 == G_VALUE_TYPE (value2) &&
+        union_info->type2 == G_VALUE_TYPE (value1))
+      return TRUE;
   }
 
   return FALSE;
@@ -1251,7 +1294,15 @@ gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
     union_info = &g_array_index (gst_value_union_funcs, GstValueUnionInfo, i);
     if (union_info->type1 == G_VALUE_TYPE (value1) &&
         union_info->type2 == G_VALUE_TYPE (value2)) {
-      return union_info->func (dest, value1, value2);
+      if (union_info->func (dest, value1, value2)) {
+        return TRUE;
+      }
+    }
+    if (union_info->type1 == G_VALUE_TYPE (value2) &&
+        union_info->type2 == G_VALUE_TYPE (value1)) {
+      if (union_info->func (dest, value2, value1)) {
+        return TRUE;
+      }
     }
   }
 
@@ -1641,4 +1692,9 @@ _gst_value_initialize (void)
       gst_value_intersect_double_double_range);
   gst_value_register_intersect_func (GST_TYPE_DOUBLE_RANGE,
       GST_TYPE_DOUBLE_RANGE, gst_value_intersect_double_range_double_range);
+
+  gst_value_register_union_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
+      gst_value_union_int_int_range);
+  gst_value_register_union_func (GST_TYPE_INT_RANGE, GST_TYPE_INT_RANGE,
+      gst_value_union_int_range_int_range);
 }

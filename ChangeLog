@@ -1,3 +1,14 @@
+2004-03-31  David Schleef  <ds@schleef.org>
+
+	* gst/gstvalue.c: (gst_value_union_int_int_range),
+	(gst_value_union_int_range_int_range), (gst_value_can_union),
+	(gst_value_union), (_gst_value_initialize):  Add some union
+	implementations.  We didn't have any previously.
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/audioscale.c: (gst_audioscale_expand_value),
+	(gst_audioscale_getcaps), (test_caps), (main): A little test
+	that is the same as the caps manipulation in audioscale.
+
 2004-03-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* docs/faq/general.xml:
