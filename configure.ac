@@ -218,7 +218,7 @@ GST_PLUGINS_ALL="\
         monoscope passthrough playondemand qtdemux rtjpeg silence sine\
         smooth spectrum speed stereo stereomono synaesthesia\
         udp videocrop videoscale videotestsrc volenv volume\ 
-        vumeter wavparse y4m"
+        vumeter wavenc wavparse y4m"
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
@@ -977,6 +977,7 @@ gst/videocrop/Makefile
 gst/volenv/Makefile
 gst/volume/Makefile
 gst/vumeter/Makefile
+gst/wavenc/Makefile
 gst/wavparse/Makefile
 gst/y4m/Makefile
 sys/Makefile
