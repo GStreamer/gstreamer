@@ -83,6 +83,12 @@ enum {
 
 enum {
   ARG_0,
+  ARG_LAYER,
+  ARG_MODE,
+  ARG_EMPHASIS,
+  ARG_BITRATE,
+  ARG_SAMPLERATE,
+  ARG_CHANNELS,
   /* FILL ME */
 };
 
@@ -120,6 +126,11 @@ static void 		gst_mad_class_init	(GstMadClass *klass);
 static void 		gst_mad_init		(GstMad *mad);
 static void 		gst_mad_dispose 	(GObject *object);
 
+static void		gst_mad_set_property	(GObject *object, guint prop_id, 
+						 const GValue *value, GParamSpec *pspec);
+static void		gst_mad_get_property	(GObject *object, guint prop_id, 
+						 GValue *value, GParamSpec *pspec);
+
 static void 		gst_mad_chain 		(GstPad *pad, GstBuffer *buffer);
 
 static GstElementStateReturn
@@ -150,6 +161,10 @@ gst_mad_get_type (void)
   return mad_type;
 }
 
+static gchar *layers[]   = { "unknown", "I", "II", "III" };
+static gchar *modes[]    = { "single channel", "dual channel", "joint stereo", "stereo" };
+static gchar *emphases[] = { "none", "50/15 microseconds", "CCITT J.17" };
+
 static void
 gst_mad_class_init (GstMadClass *klass)
 {
@@ -161,9 +176,34 @@ gst_mad_class_init (GstMadClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
+  gobject_class->set_property = gst_mad_set_property;
+  gobject_class->get_property = gst_mad_get_property;
   gobject_class->dispose = gst_mad_dispose;
 
   gstelement_class->change_state = gst_mad_change_state;
+  
+  /* init properties */
+  /* currently, string representations are used, we might want to change that */
+  /* FIXME: descriptions need to be more technical, default values and ranges need to be selected right */
+  g_object_class_install_property (gobject_class, ARG_LAYER,
+    g_param_spec_string ("layer", "Layer", "The audio MPEG Layer this stream is encoded in",
+			 layers[0], G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_MODE,
+    g_param_spec_string ("mode", "Mode", "The current mode of the channels",
+			 modes[0], G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_EMPHASIS,
+    g_param_spec_string ("emphasis", "Emphasis", "Emphasis",
+			 emphases[0], G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_BITRATE,
+    g_param_spec_int ("bitrate", "Bitrate", "current bitrate of the stream",
+                       0, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_SAMPLERATE,
+    g_param_spec_int ("samplerate", "Samplerate", "current samplerate of the stream",
+                       0, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_CHANNELS,
+    g_param_spec_int ("channels", "Channels", "number of channels",
+                       1, 2, 1, G_PARAM_READABLE));
+  
 }
 
 static void
@@ -215,35 +255,82 @@ scale (mad_fixed_t sample)
   return sample >> (MAD_F_FRACBITS + 1 - 16);
 }
 
-static gchar *layers[]   = { "unknown", "I", "II", "III" };
-static gchar *modes[]    = { "single channel", "dual channel", "joint stereo", "stereo" };
-static gchar *emphases[] = { "none", "50/15 microseconds", "CCITT J.17" };
+/* do we need this function? */
+static void
+gst_mad_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+  GstMad *mad;
+	    
+  /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail (GST_IS_MAD (object));
+	      
+  mad = GST_MAD (object);
 
+  switch (prop_id) {
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+static void
+gst_mad_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+  GstMad *mad;
+	    
+  /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail (GST_IS_MAD (object));
+	      
+  mad = GST_MAD (object);
+
+  switch (prop_id) {
+    case ARG_LAYER:
+      g_value_set_string (value, layers[mad->header.layer]);
+      break;
+    case ARG_MODE:
+      g_value_set_string (value, modes[mad->header.mode]);
+      break;
+    case ARG_EMPHASIS:
+      g_value_set_string (value, emphases[mad->header.emphasis]);
+      break;
+    case ARG_BITRATE:
+      g_value_set_int (value, mad->header.bitrate);
+      break;
+    case ARG_SAMPLERATE:
+      g_value_set_int (value, mad->header.samplerate);
+      break;
+    case ARG_CHANNELS:
+      g_value_set_int (value, mad->channels);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 static void
 gst_mad_update_info (GstMad *mad, struct mad_header const *header)
 {
-#define CHECK_HEADER(h1,str,prop) 				\
+#define CHECK_HEADER(h1,str) 				\
 G_STMT_START{							\
   if (mad->header.h1 != header->h1 || mad->new_header) {	\
     mad->header.h1 = header->h1;				\
-    gst_element_send_event (GST_ELEMENT (mad),			\
-	gst_event_new_info (str, prop, NULL));			\
+    g_object_notify (G_OBJECT (mad), str);			\
   };								\
-}G_STMT_END
+} G_STMT_END
 
-  CHECK_HEADER (layer, 	    "layer",      GST_PROPS_STRING (layers[header->layer]));
-  CHECK_HEADER (mode, 	    "mode",       GST_PROPS_STRING (modes[header->mode]));
-  CHECK_HEADER (emphasis,   "emphasis",   GST_PROPS_STRING (emphases[header->emphasis]));
-  CHECK_HEADER (bitrate,    "bitrate",    GST_PROPS_INT (header->bitrate));
-  CHECK_HEADER (samplerate, "samplerate", GST_PROPS_INT (header->samplerate));
+  g_object_freeze_notify (G_OBJECT (mad));
+  CHECK_HEADER (layer, 	    "layer");
+  CHECK_HEADER (mode, 	    "mode");
+  CHECK_HEADER (emphasis,   "emphasis");
+  CHECK_HEADER (bitrate,    "bitrate");
+  CHECK_HEADER (samplerate, "samplerate");
   if (mad->channels != MAD_NCHANNELS (header) || mad->new_header) {
     mad->channels = MAD_NCHANNELS (header);
-    gst_element_send_event (GST_ELEMENT (mad),
-	gst_event_new_info ("channels", GST_PROPS_INT (mad->channels), NULL));
-
+    g_object_notify (G_OBJECT (mad), "channels");
   }
-
   mad->new_header = FALSE;
+  g_object_thaw_notify (G_OBJECT (mad));
+  
+#undef CHECK_HEADER
 }
 
 static void
