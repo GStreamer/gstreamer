@@ -873,10 +873,6 @@ if test "x$HAVE_LIBMIKMOD" = xyes; then
   AC_DEFINE(HAVE_LIBMIKMOD)
 fi
 
-if test "x$HAVE_A52DEC" = xyes; then
-  AC_DEFINE(HAVE_A52DEC)
-fi
-
 if test "x$HAVE_LIBGSM" = xyes; then
   AC_DEFINE(HAVE_LIBGSM)
 fi
@@ -1071,24 +1067,31 @@ ext/Makefile
 ext/a52/Makefile
 ext/aalib/Makefile
 ext/alsa/Makefile
+ext/arts/Makefile
+ext/artsd/Makefile
 ext/audiofile/Makefile
 ext/avifile/Makefile
 ext/cdparanoia/Makefile
+ext/dv/Makefile
 ext/dvdread/Makefile
 ext/esd/Makefile
+ext/festival/Makefile
 ext/flac/Makefile
 ext/gnomevfs/Makefile
 ext/gsm/Makefile
 ext/hermes/Makefile
 ext/jpeg/Makefile
+ext/ladspa/Makefile
 ext/lame/Makefile
 ext/mad/Makefile
+ext/mikmod/Makefile
 ext/mpeg2dec/Makefile
 ext/openquicktime/Makefile
 ext/raw1394/Makefile
 ext/rtp/Makefile
-ext/shout/Makefile
 ext/sdl/Makefile
+ext/shout/Makefile
+ext/sidplay/Makefile
 ext/vorbis/Makefile
 ext/xmms/Makefile
 gst-libs/Makefile
