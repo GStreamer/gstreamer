@@ -453,7 +453,7 @@ gst_dvdec_handle_sink_event (GstDVDec *dvdec)
   switch (type) {
     case GST_EVENT_EOS:
       gst_pad_event_default (dvdec->sinkpad, event);
-      break;
+      return TRUE;
     case GST_EVENT_FLUSH:
       break;
     case GST_EVENT_DISCONTINUOUS:
@@ -483,7 +483,7 @@ gst_dvdec_handle_sink_event (GstDVDec *dvdec)
       g_warning ("unhandled event %d\n", type);
       break;
   }
-  gst_event_free (event);
+  gst_event_unref (event);
   return TRUE;
 }
 
@@ -527,6 +527,7 @@ gst_dvdec_handle_src_event (GstPad *pad, GstEvent *event)
       res = FALSE;
       break;
   }
+  gst_event_unref (event);
   return res;
 }
 
@@ -751,6 +752,8 @@ gst_dvdec_change_state (GstElement *element)
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
+      if (dvdec->pool)
+	gst_buffer_pool_unref (dvdec->pool);
       dvdec->pool = NULL;
       break;
     case GST_STATE_PAUSED_TO_READY:
