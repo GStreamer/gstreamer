@@ -818,6 +818,8 @@ gst_alsa_loop (GstElement *element)
     }
     
     do {
+        xrun_detected = FALSE;
+        
         if (poll (&pfd, 1, 1000) < 0) {
             if (errno == EINTR) {
                 /* this happens mostly when run
@@ -831,8 +833,7 @@ gst_alsa_loop (GstElement *element)
         }
         
         if (pfd.revents & POLLERR) {
-            g_warning("alsa: poll reports error.");
-            return;
+            xrun_detected = TRUE;
         }
         
         if (pfd.revents == 0) {
@@ -843,15 +844,12 @@ gst_alsa_loop (GstElement *element)
             continue;
         }
         
-        xrun_detected = FALSE;
-        
         this->avail = snd_pcm_avail_update (this->handle);
         DEBUG ("snd_pcm_avail_update() = %d", (int)this->avail);
         
         if (this->avail < 0) {
             if (this->avail == -EPIPE) {
-                gst_alsa_xrun_recovery (this);
-                this->avail = 0;
+                xrun_detected = TRUE;
             } else {
                 g_warning("unknown ALSA avail_update return value (%d)",
                           (int)this->avail);
@@ -859,6 +857,11 @@ gst_alsa_loop (GstElement *element)
             }
         }
         
+        if (xrun_detected) {
+            gst_alsa_xrun_recovery (this);
+            this->avail = 0;
+        }
+
         /* round down to nearest period_frames avail */
         this->avail -= this->avail % this->period_frames;
 
