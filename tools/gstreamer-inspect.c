@@ -80,7 +80,7 @@ print_element_info (GstElementFactory *factory)
   GstPad *pad;
   GstRealPad *realpad;
   GstPadTemplate *padtemplate;
-  GtkArg *args;
+  GtkArg *args, *args2;
   guint32 *flags;
   gint num_args,i;
   GList *children;
@@ -258,20 +258,22 @@ print_element_info (GstElementFactory *factory)
 
   printf("\nElement Arguments:\n");
   args = gtk_object_query_args(GTK_OBJECT_TYPE(element), &flags, &num_args);
+  args2 = gtk_object_query_args(GTK_OBJECT_TYPE(element), &flags, &num_args);
   for (i=0;i<num_args;i++) {
 
 // FIXME should say whether it's read-only or not
+    gtk_object_getv (GTK_OBJECT (element), num_args, args2);
 
     printf("  %s: ",args[i].name);
     switch (args[i].type) {
-      case GTK_TYPE_STRING: printf("String");break;
-      case GTK_TYPE_BOOL: printf("Boolean");break;
-      case GTK_TYPE_ULONG:
-      case GTK_TYPE_LONG:
-      case GTK_TYPE_UINT:
-      case GTK_TYPE_INT: printf("Integer");break;
-      case GTK_TYPE_FLOAT:
-      case GTK_TYPE_DOUBLE: printf("Float");break;
+      case GTK_TYPE_STRING: printf("String (Default \"%s\")", GTK_VALUE_STRING (args2[i]));break;
+      case GTK_TYPE_BOOL: printf("Boolean (Default %s)", (GTK_VALUE_BOOL (args2[i])?"true":"false"));break;
+      case GTK_TYPE_ULONG: printf("Unsigned Long (Default %lu)", GTK_VALUE_ULONG (args2[i]));break;
+      case GTK_TYPE_LONG: printf("Long (Default %ld)", GTK_VALUE_LONG (args2[i]));break;
+      case GTK_TYPE_UINT: printf("Unsigned Integer (Default %u)", GTK_VALUE_UINT (args2[i]));break;
+      case GTK_TYPE_INT: printf("Integer (Default %d)", GTK_VALUE_INT (args2[i]));break;
+      case GTK_TYPE_FLOAT: printf("Float (Default %f)", GTK_VALUE_FLOAT (args2[i]));break;
+      case GTK_TYPE_DOUBLE: printf("Double (Default %lf)", GTK_VALUE_DOUBLE (args2[i]));break;
       default:
         if (args[i].type == GST_TYPE_FILENAME)
           printf("Filename");
