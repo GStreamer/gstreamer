@@ -1,5 +1,6 @@
 2004-03-04  David I. Lehn  <dlehn@users.sourceforge.net>
 
+	* debian/.cvsignore:
 	* debian/README.Debian:
 	* debian/changelog:
 	* debian/control:

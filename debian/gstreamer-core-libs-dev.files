@@ -1,5 +1,0 @@
-usr/include/gstreamer-*/gst/bytestream
-usr/include/gstreamer-*/gst/control
-usr/include/gstreamer-*/gst/getbits
-usr/include/gstreamer-*/gst/putbits
-usr/lib/libgstcontrol.{a,la,so}
