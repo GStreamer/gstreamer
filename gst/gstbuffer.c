@@ -391,9 +391,8 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 	                            buf1->data - parent->data + offset, len);
   }
   else {
-    GST_DEBUG (GST_CAT_BUFFER,
-	       "slow path taken while spanning buffers %p and %p", 
-	       buffer, append);
+    GST_DEBUG (GST_CAT_BUFFER, "slow path taken while spanning buffers %p and %p", 
+	       buf1, buf2);
     /* otherwise we simply have to brute-force copy the buffers */
     newbuf = gst_buffer_new_and_alloc (len);
 
