@@ -54,59 +54,40 @@ enum {
 
 enum {
   ARG_0,
-  ARG_STREAMINFO,
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_template_factory,
+static GstStaticPadTemplate src_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "mpeg2dec_src",
-    "video/x-raw-yuv",
-      "format",       GST_PROPS_LIST (
-	GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')),
-	GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0'))
-		      ),
-      "width",        GST_PROPS_INT_RANGE (16, 4096),
-      "height",       GST_PROPS_INT_RANGE (16, 4096),
-      "pixel_width",  GST_PROPS_INT_RANGE (1, 255),
-      "pixel_height", GST_PROPS_INT_RANGE (1, 255),
-      "framerate",    GST_PROPS_LIST (
-			GST_PROPS_FLOAT (24/1.001),
-			GST_PROPS_FLOAT (24.),
-			GST_PROPS_FLOAT (25.),
-			GST_PROPS_FLOAT (30/1.001),
-			GST_PROPS_FLOAT (30.),
-			GST_PROPS_FLOAT (50.),
-			GST_PROPS_FLOAT (60/1.001),
-			GST_PROPS_FLOAT (60.)
-		      )
-  )
+  GST_STATIC_CAPS ("video/x-raw-yuv, "
+      "format = (fourcc) { YV12, I420 }, "
+      "width = (int) [ 16, 4096 ], "
+      "height = (int) [ 16, 4096 ], "
+      "pixel_width = (int) [ 1, 255 ], "
+      "pixel_height = (int) [ 1, 255 ], "
+      "framerate = (double) { 23.976024, 24.0, "
+        "25.0, 29.970030, 30.0, 50.0, 59.940060, 60.0 }")
 );
 
-GST_PAD_TEMPLATE_FACTORY (user_data_template_factory,
+static GstStaticPadTemplate user_data_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "user_data",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "mpeg2dec_user_data",
-    "application/octet-stream",
-    NULL
-  )
+  GST_STATIC_CAPS_ANY
 );
 
-GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
+static GstStaticPadTemplate sink_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "mpeg2dec_sink",
-    "video/mpeg",
-      /* width/height/framerate not needed */
-      "mpegversion",  GST_PROPS_INT_RANGE (1, 2),
-      "systemstream", GST_PROPS_BOOLEAN (FALSE)
+  GST_STATIC_CAPS ("video/mpeg, "
+    "mpegversion = (int) [ 1, 2 ], "
+    "systemstream = (boolean) false"
   )
 );
 
@@ -175,9 +156,9 @@ gst_mpeg2dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_template_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_template_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (user_data_template_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&src_template_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&sink_template_factory));
+  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&user_data_template_factory));
 
   gst_element_class_set_details (element_class, &gst_mpeg2dec_details);
 }
@@ -193,10 +174,6 @@ gst_mpeg2dec_class_init(GstMpeg2decClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
-    g_param_spec_boxed ("streaminfo", "Streaminfo", "Streaminfo",
-                        GST_TYPE_CAPS, G_PARAM_READABLE));
-  
   gobject_class->set_property 	= gst_mpeg2dec_set_property;
   gobject_class->get_property 	= gst_mpeg2dec_get_property;
   gobject_class->dispose 	= gst_mpeg2dec_dispose;
@@ -211,14 +188,14 @@ gst_mpeg2dec_init (GstMpeg2dec *mpeg2dec)
 {
   /* create the sink and src pads */
   mpeg2dec->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
+		  gst_static_pad_template_get (&sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->sinkpad);
   gst_pad_set_chain_function (mpeg2dec->sinkpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_chain));
   gst_pad_set_formats_function (mpeg2dec->sinkpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_get_sink_formats));
   gst_pad_set_convert_function (mpeg2dec->sinkpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_convert_sink));
 
   mpeg2dec->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_template_factory), "src");
+		  gst_static_pad_template_get (&src_template_factory), "src");
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->srcpad);
   gst_pad_set_formats_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_get_src_formats));
   gst_pad_set_event_mask_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_get_src_event_masks));
@@ -228,7 +205,7 @@ gst_mpeg2dec_init (GstMpeg2dec *mpeg2dec)
   gst_pad_set_convert_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_convert_src));
 
   mpeg2dec->userdatapad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (user_data_template_factory), "user_data");
+		  gst_static_pad_template_get (&user_data_template_factory), "user_data");
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->userdatapad);
 
   /* initialize the mpeg2dec acceleration */
@@ -294,12 +271,7 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec *mpeg2dec, const mpeg2_info_t *info, gint
   guint8 *buf[3], *out;
   const mpeg2_picture_t *picture;
 
-  if (mpeg2dec->peerpool) {
-    outbuf = gst_buffer_new_from_pool (mpeg2dec->peerpool, 0, 0);
-  }
-  if (!outbuf) {
-    outbuf = gst_buffer_new_and_alloc ((size * 3) / 2);
-  }
+  outbuf = gst_buffer_new_and_alloc ((size * 3) / 2);
 
   out = GST_BUFFER_DATA (outbuf);
 
@@ -335,7 +307,9 @@ static gboolean
 gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
 {
   GstCaps *allowed;
-  GstCaps *intersect, *trylist, *head, *to_intersect;
+  GstCaps *caps;
+  guint32 fourcc;
+  GstPadLinkReturn ret;
 
   if (!GST_PAD_IS_LINKED (mpeg2dec->srcpad)) {
     mpeg2dec->format = MPEG2DEC_FORMAT_I420;
@@ -344,64 +318,34 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
 
   /* we what we are allowed to do */
   allowed = gst_pad_get_allowed_caps (mpeg2dec->srcpad);
-  /* we could not get allowed caps */
-  if (!allowed) {
-    allowed = GST_CAPS_NEW (
-                "mpeg2dec_negotiate",
-                "video/x-raw-yuv",
-               	  "format",        GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
-	      );
-  }
+  caps = gst_caps_copy_1 (allowed);
 
-  to_intersect = GST_CAPS_NEW (
-                   "mpeg2dec_negotiate",
-                      "video/x-raw-yuv",
-                      "width",        GST_PROPS_INT (mpeg2dec->width),
- 	              "height",       GST_PROPS_INT (mpeg2dec->height),
-                      "pixel_width",  GST_PROPS_INT (mpeg2dec->pixel_width),
- 	              "pixel_height", GST_PROPS_INT (mpeg2dec->pixel_height),
-		      "framerate",    GST_PROPS_FLOAT (1. * GST_SECOND / mpeg2dec->frame_period)
-                 );
+  gst_caps_set_simple (caps,
+      "width",        G_TYPE_INT, mpeg2dec->width,
+      "height",       G_TYPE_INT, mpeg2dec->height,
+      "pixel_width",  G_TYPE_INT, mpeg2dec->pixel_width,
+      "pixel_height", G_TYPE_INT, mpeg2dec->pixel_height,
+      "framerate",    G_TYPE_DOUBLE, 1. * GST_SECOND / mpeg2dec->frame_period,
+      NULL);
 
-  /* try to fix our height */
-  intersect = gst_caps_intersect (allowed, to_intersect);
-  gst_caps_unref (allowed);
-  gst_caps_unref (to_intersect);
+  ret = gst_pad_try_set_caps (mpeg2dec->srcpad, caps);
+  if (ret != GST_PAD_LINK_OK) return FALSE;
 
-  /* prepare for looping */
-  head = trylist = gst_caps_normalize (intersect);
-  gst_caps_unref (intersect);
-
-  while (trylist) {
-    GstCaps *to_try = gst_caps_copy_1 (trylist);
-
-    /* try each format */
-    if (gst_pad_try_set_caps (mpeg2dec->srcpad, to_try) > 0) {
-      guint32 fourcc;
-
-      /* it worked, try to find what it was again */
-      gst_caps_get_fourcc_int (to_try, "format", &fourcc);
+  /* it worked, try to find what it was again */
+  gst_structure_get_fourcc (gst_caps_get_structure (caps,0),
+      "format", &fourcc);
 								      
-      if (fourcc == GST_STR_FOURCC ("I420")) {
-	mpeg2dec->format = MPEG2DEC_FORMAT_I420;
-      }
-      else {
-	mpeg2dec->format = MPEG2DEC_FORMAT_YV12;
-      }
-      break;
-    }
-
-    trylist = trylist->next;
+  if (fourcc == GST_STR_FOURCC ("I420")) {
+    mpeg2dec->format = MPEG2DEC_FORMAT_I420;
+  } else {
+    mpeg2dec->format = MPEG2DEC_FORMAT_YV12;
   }
-  gst_caps_unref (head);
 
-  /* oops list exhausted and nothing was found... */
-  if (!trylist) {
-    return FALSE;
-  }
+  gst_caps_free (caps);
   return TRUE;
 }
 
+#if 0
 static void
 update_streaminfo (GstMpeg2dec *mpeg2dec)
 {
@@ -414,9 +358,9 @@ update_streaminfo (GstMpeg2dec *mpeg2dec)
 
   props = gst_props_empty_new ();
 
-  entry = gst_props_entry_new ("framerate", GST_PROPS_FLOAT (GST_SECOND/(float)mpeg2dec->frame_period));
+  entry = gst_props_entry_new ("framerate", G_TYPE_DOUBLE (GST_SECOND/(float)mpeg2dec->frame_period));
   gst_props_add_entry (props, entry);
-  entry = gst_props_entry_new ("bitrate", GST_PROPS_INT (info->sequence->byte_rate * 8));
+  entry = gst_props_entry_new ("bitrate", G_TYPE_INT (info->sequence->byte_rate * 8));
   gst_props_add_entry (props, entry);
 
   caps = gst_caps_new ("mpeg2dec_streaminfo",
@@ -426,6 +370,7 @@ update_streaminfo (GstMpeg2dec *mpeg2dec)
   gst_caps_replace_sink (&mpeg2dec->streaminfo, caps);
   g_object_notify (G_OBJECT (mpeg2dec), "streaminfo");
 }
+#endif
 
 static void
 gst_mpeg2dec_flush_decoder (GstMpeg2dec *mpeg2dec)
@@ -532,13 +477,6 @@ gst_mpeg2dec_chain (GstPad *pad, GstData *_data)
           gst_element_error (GST_ELEMENT (mpeg2dec), "could not negotiate format");
 	  goto exit;
 	}
-
-	/* now that we've negotiated, try to get a bufferpool */
-	mpeg2dec->peerpool = gst_pad_get_bufferpool (mpeg2dec->srcpad);
-	if (mpeg2dec->peerpool)
-	  GST_INFO ( "got pool %p", mpeg2dec->peerpool);
-
-	update_streaminfo (mpeg2dec);
 
 	if (!mpeg2dec->have_fbuf) {
 	  /* alloc 3 buffers */
@@ -1087,7 +1025,6 @@ gst_mpeg2dec_change_state (GstElement *element)
     case GST_STATE_READY_TO_PAUSED:
     {
       mpeg2dec->next_time = 0;
-      mpeg2dec->peerpool = NULL;
 
       /* reset the initial video state */
       mpeg2dec->format = MPEG2DEC_FORMAT_NONE;
@@ -1097,29 +1034,16 @@ gst_mpeg2dec_change_state (GstElement *element)
       mpeg2dec->segment_end = -1;
       mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
       mpeg2dec->frame_period = 0;
-      mpeg2dec->streaminfo = NULL;
       gst_mpeg2dec_open_decoder (mpeg2dec);
       mpeg2dec->need_sequence = TRUE;
       break;
     }
     case GST_STATE_PAUSED_TO_PLAYING:
-      /* if we've negotiated caps, try to get a bufferpool */
-      if (mpeg2dec->peerpool == NULL && mpeg2dec->width > 0) {
-	mpeg2dec->peerpool = gst_pad_get_bufferpool (mpeg2dec->srcpad);
-	if (mpeg2dec->peerpool)
-	  GST_INFO ( "got pool %p", mpeg2dec->peerpool);
-      }
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
-      /* need to clear things we get from other plugins, since we could be reconnected */
-      if (mpeg2dec->peerpool) {
-	gst_buffer_pool_unref (mpeg2dec->peerpool);
-	mpeg2dec->peerpool = NULL;
-      }
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_mpeg2dec_close_decoder (mpeg2dec);
-      gst_caps_replace (&mpeg2dec->streaminfo, NULL);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -1155,9 +1079,6 @@ gst_mpeg2dec_get_property (GObject *object, guint prop_id, GValue *value, GParam
   mpeg2dec = GST_MPEG2DEC (object);
 
   switch (prop_id) {
-    case ARG_STREAMINFO:
-      g_value_set_boxed (value, mpeg2dec->streaminfo);
-      break;
     default:
       break;
   }

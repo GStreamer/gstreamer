@@ -47,27 +47,25 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
+static GstStaticPadTemplate sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "rfc2250_enc_sink",
-    "video/mpeg",
-      "mpegversion",  GST_PROPS_INT_RANGE (1, 2),
-      "systemstream", GST_PROPS_BOOLEAN (FALSE)
+  GST_STATIC_CAPS ("video/mpeg, "
+      "mpegversion = (int) [ 1, 2 ], "
+      "systemstream = (boolean) FALSE"
   )
 );
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
+static GstStaticPadTemplate src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "rfc2250_enc_src",
-    "video/mpeg",
-      "mpegversion",  GST_PROPS_INT_RANGE (1, 2),
-      "systemstream", GST_PROPS_BOOLEAN (FALSE)
+  GST_STATIC_CAPS ("video/mpeg, "
+      "mpegversion = (int) [ 1, 2 ], "
+      "systemstream = (boolean) FALSE"
   )
 );
 
@@ -113,9 +111,9 @@ gst_rfc2250_enc_base_init (GstRFC2250EncClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (src_factory));
+		gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_factory));
+		gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &rfc2250_enc_details);
 }
 
@@ -146,11 +144,11 @@ static void
 gst_rfc2250_enc_init (GstRFC2250Enc *rfc2250_enc)
 {
   rfc2250_enc->sinkpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
+		  gst_static_pad_template_get (&sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(rfc2250_enc),rfc2250_enc->sinkpad);
   gst_element_set_loop_function (GST_ELEMENT (rfc2250_enc), gst_rfc2250_enc_loop);
   rfc2250_enc->srcpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (src_factory), "src");
+		  gst_static_pad_template_get (&src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(rfc2250_enc),rfc2250_enc->srcpad);
 
   /* initialize parser state */

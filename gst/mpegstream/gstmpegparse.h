@@ -78,8 +78,6 @@ struct _GstMPEGParse {
 
   GstIndex	*index;
   gint		 index_id;
-
-  GstCaps	*streaminfo;
 };
 
 struct _GstMPEGParseClass {

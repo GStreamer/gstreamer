@@ -65,7 +65,6 @@ struct _GstMpeg2dec {
   GstPad 	*sinkpad,
   		*srcpad,
   		*userdatapad;
-  GstBufferPool *peerpool;
 
   mpeg2dec_t 	*decoder;
   gboolean	 closed;
@@ -88,7 +87,6 @@ struct _GstMpeg2dec {
   gint64	 frame_period;
   gboolean	 need_sequence;
 
-  GstCaps	*streaminfo;
   GstEvent	*pending_event;
 
   GstIndex	*index;

@@ -51,7 +51,7 @@ struct _DVDNavSrc {
   GstElement element;
 
   /* pads */
-  GstPad *srcpad;
+  GstPad   *srcpad;
   GstCaps *streaminfo;
 
   /* location */
@@ -59,7 +59,6 @@ struct _DVDNavSrc {
 
   gboolean did_seek;
   gboolean need_flush;
-  GstBufferPool *bufferpool;
 
   int title, chapter, angle;
   dvdnav_t *dvdnav;
@@ -293,8 +292,6 @@ dvdnavsrc_init (DVDNavSrc *src)
 
   gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
 
-  src->bufferpool = gst_buffer_pool_get_default (DVD_VIDEO_LB_LEN, 2);
-
   src->location = g_strdup("/dev/dvd");
   src->did_seek = FALSE;
   src->need_flush = FALSE;
@@ -304,17 +301,6 @@ dvdnavsrc_init (DVDNavSrc *src)
   src->streaminfo = NULL;
   src->buttoninfo = NULL;
 }
-
-/* FIXME: this code is not being used */
-#ifdef PLEASEFIXTHISCODE
-static void
-dvdnavsrc_destroy (DVDNavSrc *dvdnavsrc)
-{
-  /* FIXME */
-  g_print("FIXME\n");
-  gst_buffer_pool_destroy (dvdnavsrc->bufferpool);
-}
-#endif
 
 static gboolean 
 dvdnavsrc_is_open (DVDNavSrc *src)
@@ -518,49 +504,36 @@ static void
 dvdnavsrc_update_streaminfo (DVDNavSrc *src)
 {
   GstCaps *caps;
-  GstProps *props;
-  GstPropsEntry *entry;
+  GstStructure *structure;
   gint64 value;
 
-  props = gst_props_empty_new ();
-
-  /*
-  entry = gst_props_entry_new ("title_string", GST_PROPS_STRING (""));
-  gst_props_add_entry (props, entry);
-  */
+  caps = gst_caps_new_empty();
+  structure = gst_structure_empty_new ("application/x-gst-streaminfo");
+  gst_caps_append_structure (caps, structure);
 
   if (dvdnavsrc_query(src->srcpad, GST_QUERY_TOTAL, &title_format, &value)) {
-    entry = gst_props_entry_new ("titles", GST_PROPS_INT (value));
-    gst_props_add_entry (props, entry);
+    gst_caps_set_simple (caps, "titles", G_TYPE_INT, value, NULL);
   }
   if (dvdnavsrc_query(src->srcpad, GST_QUERY_POSITION, &title_format, &value)) {
-    entry = gst_props_entry_new ("title", GST_PROPS_INT (value));
-    gst_props_add_entry (props, entry);
+    gst_caps_set_simple (caps, "title", G_TYPE_INT, value, NULL);
   }
 
   if (dvdnavsrc_query(src->srcpad, GST_QUERY_TOTAL, &chapter_format, &value)) {
-    entry = gst_props_entry_new ("chapters", GST_PROPS_INT (value));
-    gst_props_add_entry (props, entry);
+    gst_caps_set_simple (caps, "chapters", G_TYPE_INT, value, NULL);
   }
   if (dvdnavsrc_query(src->srcpad, GST_QUERY_POSITION, &chapter_format, &value)) {
-    entry = gst_props_entry_new ("chapter", GST_PROPS_INT (value));
-    gst_props_add_entry (props, entry);
+    gst_caps_set_simple (caps, "chapter", G_TYPE_INT, value, NULL);
   }
 
   if (dvdnavsrc_query(src->srcpad, GST_QUERY_TOTAL, &angle_format, &value)) {
-    entry = gst_props_entry_new ("angles", GST_PROPS_INT (value));
-    gst_props_add_entry (props, entry);
+    gst_caps_set_simple (caps, "angles", G_TYPE_INT, value, NULL);
   }
   if (dvdnavsrc_query(src->srcpad, GST_QUERY_POSITION, &angle_format, &value)) {
-    entry = gst_props_entry_new ("angle", GST_PROPS_INT (value));
-    gst_props_add_entry (props, entry);
+    gst_caps_set_simple (caps, "angle", G_TYPE_INT, value, NULL);
   }
 
-  caps = gst_caps_new ("dvdnavsrc_streaminfo",
-      "application/x-gst-streaminfo",
-      props);
   if (src->streaminfo) {
-    gst_caps_unref (src->streaminfo);
+    gst_caps_free (src->streaminfo);
   }
   src->streaminfo = caps;
   g_object_notify (G_OBJECT (src), "streaminfo");
@@ -570,23 +543,16 @@ static void
 dvdnavsrc_update_buttoninfo (DVDNavSrc *src)
 {
   GstCaps *caps;
-  GstProps *props;
-  GstPropsEntry *entry;
   pci_t *pci;
 
   pci = dvdnav_get_current_nav_pci(src->dvdnav);
   fprintf(stderr, "update button info total:%d\n", pci->hli.hl_gi.btn_ns);
 
-  props = gst_props_empty_new ();
-
-  entry = gst_props_entry_new ("total", GST_PROPS_INT (pci->hli.hl_gi.btn_ns));
-  gst_props_add_entry (props, entry);
-
-  caps = gst_caps_new ("dvdnavsrc_buttoninfo",
+  caps = gst_caps_new_simple ("dvdnavsrc_buttoninfo",
       "application/x-gst-dvdnavsrc-buttoninfo",
-      props);
+      "total", G_TYPE_INT, pci->hli.hl_gi.btn_ns, NULL);
   if (src->buttoninfo) {
-    gst_caps_unref (src->buttoninfo);
+    gst_caps_free (src->buttoninfo);
   }
   src->buttoninfo = caps;
   g_object_notify (G_OBJECT (src), "buttoninfo");
@@ -870,9 +836,7 @@ dvdnavsrc_get (GstPad *pad)
   /* loop processing blocks until data is pushed */
   have_buf = FALSE;
   while (!have_buf) {
-    /* allocate a pool for the buffer data */
-    /* FIXME: mem leak on non BLOCK_OK events */
-    buf = gst_buffer_new_from_pool (src->bufferpool, DVD_VIDEO_LB_LEN, 0);
+    buf = gst_buffer_new_and_alloc (DVD_VIDEO_LB_LEN);
     if (!buf) {
       gst_element_error (GST_ELEMENT (src), "Failed to create a new GstBuffer");
       return NULL;

@@ -49,41 +49,28 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_templ,
+static GstStaticPadTemplate sink_templ =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "siddecoder_sink",
-    "audio/x-sid",
-    NULL
-  )
-)
+  GST_STATIC_CAPS ("audio/x-sid")
+);
 
-GST_PAD_TEMPLATE_FACTORY (src_templ,
+static GstStaticPadTemplate src_templ =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "src_audio",
-    "audio/x-raw-int",
-        "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-	"signed",     GST_PROPS_LIST (
-	                GST_PROPS_BOOLEAN (TRUE),
-		        GST_PROPS_BOOLEAN (FALSE)
-		      ),
-	"width",      GST_PROPS_LIST (
-	                GST_PROPS_INT (8),
-		        GST_PROPS_INT (16)
-		      ),
-	"depth",      GST_PROPS_LIST (
-	                GST_PROPS_INT (8),
-		        GST_PROPS_INT (16)
-		      ),
-        "rate",       GST_PROPS_INT_RANGE (8000, 48000),
-        "channels",   GST_PROPS_INT_RANGE (1, 2)
+  GST_STATIC_CAPS ("audio/x-raw-int, "
+    "endianness = (int) BYTE_ORDER, "
+    "signed = (boolean) { true, false }, "
+    "width = (int) { 8, 16 }, "
+    "depth = (int) { 8, 16 }, "
+    "rate = (int) [ 8000, 48000 ], "
+    "channels = (int) [ 1, 2 ]"
   )
-)
+);
 
 enum {
   SID_STATE_NEED_TUNE = 1,
@@ -181,9 +168,9 @@ gst_siddec_base_init (gpointer g_class)
   gst_element_class_set_details (element_class, &gst_siddec_details);
 
   gst_element_class_add_pad_template (element_class,
-      GST_PAD_TEMPLATE_GET (src_templ));
+      gst_static_pad_template_get (&src_templ));
   gst_element_class_add_pad_template (element_class,
-      GST_PAD_TEMPLATE_GET (sink_templ));
+      gst_static_pad_template_get (&sink_templ));
 
 }
 
@@ -234,13 +221,13 @@ static void
 gst_siddec_init (GstSidDec *siddec) 
 {
   siddec->sinkpad = gst_pad_new_from_template (
-  		GST_PAD_TEMPLATE_GET (sink_templ), "sink");
+  		gst_static_pad_template_get (&sink_templ), "sink");
   gst_element_add_pad (GST_ELEMENT (siddec), siddec->sinkpad);
   gst_pad_set_query_function (siddec->sinkpad, NULL);
   gst_pad_set_convert_function (siddec->sinkpad, NULL);
 
   siddec->srcpad = gst_pad_new_from_template (
-  		GST_PAD_TEMPLATE_GET (src_templ), "src");
+  		gst_static_pad_template_get (&src_templ), "src");
   gst_pad_set_event_function (siddec->srcpad, NULL);
   gst_pad_set_convert_function (siddec->srcpad, gst_siddec_src_convert);
   gst_pad_set_query_function (siddec->srcpad, gst_siddec_src_query);
@@ -282,6 +269,7 @@ gst_siddec_init (GstSidDec *siddec)
   siddec->blocksize = DEFAULT_BLOCKSIZE;
 }
 
+#if 0
 static void 
 update_metadata (GstSidDec *siddec)
 {
@@ -293,15 +281,15 @@ update_metadata (GstSidDec *siddec)
     props = gst_props_empty_new ();
 
     if (info.nameString) {
-      entry = gst_props_entry_new ("Title", GST_PROPS_STRING (info.nameString));
+      entry = gst_props_entry_new ("Title", G_TYPE_STRING (info.nameString));
       gst_props_add_entry (props, entry);
     }
     if (info.authorString) {
-      entry = gst_props_entry_new ("Composer", GST_PROPS_STRING (info.authorString));
+      entry = gst_props_entry_new ("Composer", G_TYPE_STRING (info.authorString));
       gst_props_add_entry (props, entry);
     }
     if (info.copyrightString) {
-      entry = gst_props_entry_new ("Copyright", GST_PROPS_STRING (info.copyrightString));
+      entry = gst_props_entry_new ("Copyright", G_TYPE_STRING (info.copyrightString));
       gst_props_add_entry (props, entry);
     }
 
@@ -312,16 +300,17 @@ update_metadata (GstSidDec *siddec)
     g_object_notify (G_OBJECT (siddec), "metadata");
   }
 }
+#endif
 
 #define GET_FIXED_INT(caps, name, dest)         \
 G_STMT_START {                                  \
   if (gst_caps_has_fixed_property (caps, name)) \
-    gst_caps_get_int (caps, name, (gint*)dest);  \
+    gst_structure_get_int  (structure, name, (gint*)dest);  \
 } G_STMT_END
 #define GET_FIXED_BOOLEAN(caps, name, dest)     \
 G_STMT_START {                                  \
   if (gst_caps_has_fixed_property (caps, name)) \
-    gst_caps_get_boolean (caps, name, dest);    \
+    gst_structure_get_boolean  (structure, name, dest);    \
 } G_STMT_END
 
 static gboolean
@@ -330,13 +319,18 @@ siddec_negotiate (GstSidDec *siddec)
   GstCaps *allowed;
   gboolean sign = TRUE;
   gint width = 0, depth = 0;
+  GstStructure *structure;
+  int rate;
+  int channels;
 
   allowed = gst_pad_get_allowed_caps (siddec->srcpad);
   if (!allowed)
     return FALSE;
 
-  GET_FIXED_INT     (allowed, "width",      &width);
-  GET_FIXED_INT     (allowed, "depth",      &depth);
+  structure = gst_caps_get_structure (allowed, 0);
+
+  gst_structure_get_int (structure, "width", &width);
+  gst_structure_get_int (structure, "depth", &depth);
 
   if (width && depth && width != depth) {
     return FALSE;
@@ -347,24 +341,24 @@ siddec_negotiate (GstSidDec *siddec)
     siddec->config->bitsPerSample = width;
   }
 
-  GET_FIXED_BOOLEAN (allowed, "signed",     &sign);
-  GET_FIXED_INT     (allowed, "rate",       &siddec->config->frequency);
-  GET_FIXED_INT     (allowed, "channels",   &siddec->config->channels);
+  gst_structure_get_boolean (structure, "signed", &sign);
+  gst_structure_get_int (structure, "rate", &rate);
+  siddec->config->frequency = rate;
+  gst_structure_get_int (structure, "channels", &channels);
+  siddec->config->channels = channels;
 
   siddec->config->sampleFormat = (sign ? SIDEMU_SIGNED_PCM : SIDEMU_UNSIGNED_PCM);
   
   if (!GST_PAD_CAPS (siddec->srcpad)) {
     if (!gst_pad_try_set_caps (siddec->srcpad, 
-      GST_CAPS_NEW (
-        "siddec_src",
-        "audio/x-raw-int",
-            "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-            "signed",     GST_PROPS_BOOLEAN (sign),
-            "width",      GST_PROPS_INT (siddec->config->bitsPerSample),
-            "depth",      GST_PROPS_INT (siddec->config->bitsPerSample),
-            "rate",       GST_PROPS_INT (siddec->config->frequency),
-            "channels",   GST_PROPS_INT (siddec->config->channels)
-      )))
+          gst_caps_new_simple ("audio/x-raw-int",
+            "endianness", G_TYPE_INT, G_BYTE_ORDER,
+            "signed",     G_TYPE_BOOLEAN, sign,
+            "width",      G_TYPE_INT, siddec->config->bitsPerSample,
+            "depth",      G_TYPE_INT, siddec->config->bitsPerSample,
+            "rate",       G_TYPE_INT, siddec->config->frequency,
+            "channels",   G_TYPE_INT, siddec->config->channels,
+            NULL)))
     {
       return FALSE;
     }
@@ -420,7 +414,7 @@ gst_siddec_loop (GstElement *element)
       return;
     }
     
-    update_metadata (siddec);
+    //update_metadata (siddec);
 
     if (!siddec_negotiate (siddec)) {
       gst_element_error (GST_ELEMENT (siddec), "could not negotiate format");

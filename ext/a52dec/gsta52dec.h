@@ -62,8 +62,6 @@ struct _GstA52Dec {
 
   GstClockTime	last_ts;
   GstClockTime	current_ts;
-
-  GstCaps	*streaminfo;
 };
 
 struct _GstA52DecClass {

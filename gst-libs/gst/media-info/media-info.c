@@ -294,7 +294,8 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
       GMI_DEBUG("doing find_type_post\n");
       gmip_find_type_post (priv);
       GMI_DEBUG("finding out mime type\n");
-      mime = g_strdup (gst_caps_get_mime (priv->type));
+      mime = g_strdup (gst_structure_get_name (
+	    gst_caps_get_structure(priv->type, 0)));
       GMI_DEBUG("found out mime type: %s\n", mime);
       decoder = gmi_get_decoder (info, mime);
       if (decoder == NULL)
@@ -443,7 +444,8 @@ gst_media_info_read (GstMediaInfo *info, const char *location, guint16 flags)
 
   if (!gmip_find_type (priv)) return NULL;
 
-  mime = g_strdup (gst_caps_get_mime (priv->type));
+  mime = g_strdup (gst_structure_get_name (
+	    gst_caps_get_structure(priv->type, 0)));
   GMI_DEBUG("mime type: %s\n", mime);
 
   /* c) figure out decoder */

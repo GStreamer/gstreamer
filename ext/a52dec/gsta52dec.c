@@ -67,37 +67,32 @@ enum
 {
   ARG_0,
   ARG_DRC,
-  ARG_STREAMINFO
 };
 
 /*
  * "audio/a52" and "audio/ac3" are the same format.  The name
  * "ac3" is now deprecated and should not be used in new code.
  */
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
+static GstStaticPadTemplate sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "a52dec_sink",
-    "audio/x-ac3",
-     NULL
-  )
+  GST_STATIC_CAPS ("audio/x-ac3")
 );
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
+static GstStaticPadTemplate src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "a52dec_src",
-      "audio/x-raw-int",
-       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-       "signed", 	GST_PROPS_BOOLEAN (TRUE),
-       "width",	 	GST_PROPS_INT (16),
-       "depth", 	GST_PROPS_INT (16),
-       "rate", 		GST_PROPS_INT_RANGE (4000, 48000),
-       "channels", 	GST_PROPS_INT_RANGE (1, 6)
+  GST_STATIC_CAPS ("audio/x-raw-int, "
+    "endianness = (int) BYTE_ORDER, "
+    "signed = (boolean) true, "
+    "width = (int) 16, "
+    "depth = (int) 16, "
+    "rate = (int) [ 4000, 48000 ], "
+    "channels = (int) [ 1, 6 ]"
   )
 );
 
@@ -145,9 +140,9 @@ gst_a52dec_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (sink_factory));
+      gst_static_pad_template_get (&sink_factory));
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (src_factory));
+      gst_static_pad_template_get (&src_factory));
   gst_element_class_set_details (element_class, &gst_a52dec_details);
 }
 
@@ -165,9 +160,6 @@ gst_a52dec_class_init (GstA52DecClass * klass)
     g_param_spec_boolean ("drc", "Dynamic Range Compression",
                           "Use Dynamic Range Compression", FALSE,
                           G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
-    g_param_spec_boxed ("streaminfo", "Streaminfo", "Streaminfo",
-                        GST_TYPE_CAPS, G_PARAM_READABLE));
 
   gobject_class->set_property = gst_a52dec_set_property;
   gobject_class->get_property = gst_a52dec_get_property;
@@ -179,15 +171,16 @@ static void
 gst_a52dec_init (GstA52Dec * a52dec)
 {
   /* create the sink and src pads */
-  a52dec->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_factory), "sink");
+  a52dec->sinkpad = gst_pad_new_from_template (
+      gst_element_get_pad_template (GST_ELEMENT (a52dec), "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->sinkpad);
   gst_element_set_loop_function ((GstElement *) a52dec, gst_a52dec_loop);
 
-  a52dec->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_factory), "src");
+  a52dec->srcpad = gst_pad_new_from_template (
+      gst_element_get_pad_template (GST_ELEMENT (a52dec), "src"), "src");
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->srcpad);
 
   a52dec->dynamic_range_compression = FALSE;
-  a52dec->streaminfo = NULL;
 }
 
 /* BEGIN modified a52dec conversion code */
@@ -373,15 +366,14 @@ gst_a52dec_reneg (GstPad * pad, int channels, int rate)
   GST_INFO ( "a52dec: reneg channels:%d rate:%d\n", channels, rate);
 
   if (gst_pad_try_set_caps (pad, 
-		  GST_CAPS_NEW ("a52dec_src_caps",
-			        "audio/x-raw-int",
-				  "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-				  "signed", 	GST_PROPS_BOOLEAN (TRUE),
-				  "width", 	GST_PROPS_INT (16),
-				  "depth", 	GST_PROPS_INT (16),
-				  "channels", 	GST_PROPS_INT (channels),
-				  "rate", 	GST_PROPS_INT (rate))
-		    ) <= 0) {
+        gst_caps_new_simple ("audio/x-raw-int",
+          "endianness",	G_TYPE_INT, G_BYTE_ORDER,
+          "signed", 	G_TYPE_BOOLEAN, TRUE,
+          "width", 	G_TYPE_INT, 16,
+          "depth", 	G_TYPE_INT, 16,
+          "channels", 	G_TYPE_INT, channels,
+          "rate", 	G_TYPE_INT, rate,
+          NULL)) <= 0) {
     gst_element_error (GST_PAD_PARENT (pad), "could not set caps on source pad, aborting...");
   }
 }
@@ -408,6 +400,7 @@ gst_a52dec_handle_event (GstA52Dec *a52dec)
   }
 }
 
+#if 0
 static void
 gst_a52dec_update_streaminfo (GstA52Dec *a52dec)
 {
@@ -426,6 +419,7 @@ gst_a52dec_update_streaminfo (GstA52Dec *a52dec)
 				     props);
   g_object_notify (G_OBJECT (a52dec), "streaminfo");
 }
+#endif
 
 static void
 gst_a52dec_loop (GstElement *element)
@@ -471,7 +465,6 @@ gst_a52dec_loop (GstElement *element)
 
   if (bit_rate != a52dec->bit_rate) {
     a52dec->bit_rate = bit_rate;
-    gst_a52dec_update_streaminfo (a52dec);
   }
 
   /* read the header + rest of frame */
@@ -568,7 +561,6 @@ gst_a52dec_change_state (GstElement * element)
       a52dec->samples = NULL;
       a52_free (a52dec->state);
       a52dec->state = NULL;
-      gst_caps_unref (a52dec->streaminfo);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -613,9 +605,6 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value, GParam
   switch (prop_id) {
     case ARG_DRC:
       g_value_set_boolean (value, src->dynamic_range_compression);
-      break;
-    case ARG_STREAMINFO:
-      g_value_set_boxed (value, src->streaminfo);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

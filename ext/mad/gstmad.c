@@ -107,34 +107,31 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (mad_src_template_factory,
+static GstStaticPadTemplate mad_src_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "mad_src",
-    "audio/x-raw-int",
-      "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",      GST_PROPS_BOOLEAN (TRUE),
-      "width",       GST_PROPS_INT (16),
-      "depth",       GST_PROPS_INT (16),
-      "rate",        GST_PROPS_INT_RANGE (11025, 48000),
-      "channels",    GST_PROPS_INT_RANGE (1, 2)
+  GST_STATIC_CAPS ("audio/x-raw-int, "
+      "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
+      "signed = (boolean) true, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "rate = (int) [ 11025, 48000 ], "
+      "channels = (int) [ 1, 2 ]"
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (mad_sink_template_factory,
+static GstStaticPadTemplate mad_sink_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "mad_sink",
-    "audio/mpeg",
-      /* we don't need channel/rate ... */
-      "mpegversion", GST_PROPS_INT (1),
-      "layer", GST_PROPS_INT_RANGE (1, 3)
+  GST_STATIC_CAPS ("audio/mpeg, "
+      "mpegversion = (int) 1, "
+      "layer = (int) [ 1, 3 ]"
   )
-)
+);
 
 static void		gst_mad_base_init	(gpointer g_class);
 static void		gst_mad_class_init	(GstMadClass *klass);
@@ -256,9 +253,9 @@ gst_mad_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (mad_sink_template_factory));
+		  gst_static_pad_template_get (&mad_sink_template_factory));
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (mad_src_template_factory));
+		  gst_static_pad_template_get (&mad_src_template_factory));
   gst_element_class_set_details (element_class, &gst_mad_details);
 }
 static void
@@ -297,14 +294,14 @@ gst_mad_init (GstMad *mad)
 {
   /* create the sink and src pads */
   mad->sinkpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (mad_sink_template_factory), "sink");
+		  gst_static_pad_template_get (&mad_sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (mad), mad->sinkpad);
   gst_pad_set_chain_function (mad->sinkpad, GST_DEBUG_FUNCPTR (gst_mad_chain));
   gst_pad_set_convert_function (mad->sinkpad, GST_DEBUG_FUNCPTR (gst_mad_convert_sink));
   gst_pad_set_formats_function (mad->sinkpad, GST_DEBUG_FUNCPTR (gst_mad_get_formats));
 
   mad->srcpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (mad_src_template_factory), "src");
+		  gst_static_pad_template_get (&mad_src_template_factory), "src");
   gst_element_add_pad (GST_ELEMENT (mad), mad->srcpad);
   gst_pad_set_event_function (mad->srcpad, GST_DEBUG_FUNCPTR (gst_mad_src_event));
   gst_pad_set_event_mask_function (mad->srcpad, GST_DEBUG_FUNCPTR (gst_mad_get_event_masks));
@@ -1066,17 +1063,14 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 	/* we set the caps even when the pad is not connected so they
 	 * can be gotten for streaminfo */
         if (gst_pad_try_set_caps (mad->srcpad,
-	    gst_caps_new (
-	      "mad_src",
-              "audio/x-raw-int",
-              gst_props_new (
-                "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
-                "signed",      GST_PROPS_BOOLEAN (TRUE),
-                "width",       GST_PROPS_INT (16),
-                "depth",       GST_PROPS_INT (16),
-                "rate",        GST_PROPS_INT (rate),
-                "channels",    GST_PROPS_INT (nchannels),
-                NULL))) <= 0)
+	    gst_caps_new_simple ("audio/x-raw-int",
+	      "endianness",  G_TYPE_INT, G_BYTE_ORDER,
+	      "signed",      G_TYPE_BOOLEAN, TRUE,
+	      "width",       G_TYPE_INT, 16,
+	      "depth",       G_TYPE_INT, 16,
+	      "rate",        G_TYPE_INT, rate,
+	      "channels",    G_TYPE_INT, nchannels,
+	      NULL)) <= 0)
 	{
 	  if (!gst_pad_recover_caps_error (mad->srcpad, NULL)) {
 	    gst_buffer_unref (buffer);

@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/audio/audio.h>
 #include "synaescope.h"
 
 #define GST_TYPE_SYNAESTHESIA (gst_synaesthesia_get_type())
@@ -39,7 +40,6 @@ struct _GstSynaesthesia {
 
   /* pads */
   GstPad *sinkpad,*srcpad;
-  GstBufferPool *peerpool;
 
   /* the timestamp of the next frame */
   guint64 next_time;
@@ -81,41 +81,21 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_template,
+static GstStaticPadTemplate gst_synaesthesia_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "synaesthesiasrc",
-    "video/x-raw-rgb",
-      "bpp",		GST_PROPS_INT (32),
-      "depth",		GST_PROPS_INT (32),
-      "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN),
-      "red_mask",   	GST_PROPS_INT (R_MASK_32),
-      "green_mask", 	GST_PROPS_INT (G_MASK_32),
-      "blue_mask",  	GST_PROPS_INT (B_MASK_32),
-      "width",		GST_PROPS_INT_RANGE (16, 4096),
-      "height",		GST_PROPS_INT_RANGE (16, 4096),
-      "framerate",	GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
-  )
-)
+  GST_STATIC_CAPS (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32)
+);
 
-GST_PAD_TEMPLATE_FACTORY (sink_template,
-  "sink",					/* the name of the pads */
-  GST_PAD_SINK,				/* type of the pad */
-  GST_PAD_ALWAYS,				/* ALWAYS/SOMETIMES */
-  GST_CAPS_NEW (
-    "synaesthesiasink",				/* the name of the caps */
-    "audio/x-raw-int",				/* the mime type of the caps */
-       /* Properties follow: */
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",     GST_PROPS_BOOLEAN (TRUE),
-      "width",      GST_PROPS_INT (16),
-      "depth",      GST_PROPS_INT (16),
-      "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-      "channels",   GST_PROPS_INT (2)
-  )
-)
+static GstStaticPadTemplate gst_synaesthesia_sink_template =
+GST_STATIC_PAD_TEMPLATE (
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS ( GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS )
+);
 
 
 static void		gst_synaesthesia_base_init	(gpointer g_class);
@@ -133,7 +113,7 @@ static GstElementStateReturn
 			gst_synaesthesia_change_state	(GstElement *element);
 
 static GstPadLinkReturn 
-			gst_synaesthesia_sinkconnect 	(GstPad *pad, GstCaps *caps);
+			gst_synaesthesia_sink_link 	(GstPad *pad, const GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -166,9 +146,12 @@ gst_synaesthesia_base_init (gpointer g_class)
 
   gst_element_class_set_details (element_class, &gst_synaesthesia_details);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_template));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get(&gst_synaesthesia_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get(&gst_synaesthesia_sink_template));
 }
+
 static void
 gst_synaesthesia_class_init(GstSynaesthesiaClass *klass)
 {
@@ -201,14 +184,14 @@ gst_synaesthesia_init (GstSynaesthesia *synaesthesia)
 {
   /* create the sink and src pads */
   synaesthesia->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sink_template ), "sink");
+      gst_static_pad_template_get(&gst_synaesthesia_sink_template), "sink");
   synaesthesia->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_template ), "src");
+      gst_static_pad_template_get(&gst_synaesthesia_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->sinkpad);
   gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->srcpad);
 
   gst_pad_set_chain_function (synaesthesia->sinkpad, gst_synaesthesia_chain);
-  gst_pad_set_link_function (synaesthesia->sinkpad, gst_synaesthesia_sinkconnect);
+  gst_pad_set_link_function (synaesthesia->sinkpad, gst_synaesthesia_sink_link);
 
   GST_FLAG_SET (synaesthesia, GST_ELEMENT_EVENT_AWARE);
 
@@ -220,14 +203,10 @@ gst_synaesthesia_init (GstSynaesthesia *synaesthesia)
 }
 
 static GstPadLinkReturn
-gst_synaesthesia_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_synaesthesia_sink_link (GstPad *pad, const GstCaps *caps)
 {
   GstSynaesthesia *synaesthesia;
   synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
-
-  if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_LINK_DELAYED;
-  }
 
   return GST_PAD_LINK_OK;
 }
@@ -281,31 +260,8 @@ gst_synaesthesia_chain (GstPad *pad, GstData *_data)
   }
 
   if (synaesthesia->first_buffer) {
-    GstCaps *caps;
-
     synaesthesia_init (synaesthesia->width, synaesthesia->height);
 	
-    GST_DEBUG ("making new pad");
-
-    caps = GST_CAPS_NEW (
-		     "synaesthesiasrc",
-		     "video/x-raw-rgb",
-		       "format", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")), 
-		       "bpp", 		GST_PROPS_INT (32), 
-		       "depth", 	GST_PROPS_INT (32), 
-		       "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN), 
-		       "red_mask", 	GST_PROPS_INT (R_MASK_32), 
-		       "green_mask", 	GST_PROPS_INT (G_MASK_32), 
-		       "blue_mask", 	GST_PROPS_INT (B_MASK_32), 
-		       "width", 	GST_PROPS_INT (synaesthesia->width), 
-		       "height", 	GST_PROPS_INT (synaesthesia->height),
-                       "framerate",	GST_PROPS_FLOAT (synaesthesia->fps)
-		   );
-
-    if (gst_pad_try_set_caps (synaesthesia->srcpad, caps) <= 0) {
-      gst_element_error (GST_ELEMENT (synaesthesia), "could not set caps");
-      return;
-    }
     synaesthesia->first_buffer = FALSE;
   }
 
@@ -383,7 +339,6 @@ gst_synaesthesia_change_state (GstElement *element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_READY_TO_PAUSED:
       synaesthesia->next_time = 0;
-      synaesthesia->peerpool = NULL;
       synaesthesia->first_buffer = TRUE;
       break;
   }

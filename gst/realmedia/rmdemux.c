@@ -92,30 +92,29 @@ enum {
   ARG_0
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_templ,
+static GstStaticPadTemplate gst_rmdemux_sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "rmdemux_sink",
-     "video/x-pn-realvideo", 
-     NULL
-  )
-)
+  GST_STATIC_CAPS ("video/x-pn-realvideo")
+);
 
-GST_PAD_TEMPLATE_FACTORY (src_video_templ,
+static GstStaticPadTemplate gst_rmdemux_videosrc_template =
+GST_STATIC_PAD_TEMPLATE (
   "video_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  NULL
-)
+  GST_STATIC_CAPS_ANY
+);
 
-GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
+static GstStaticPadTemplate gst_rmdemux_audiosrc_template =
+GST_STATIC_PAD_TEMPLATE (
   "audio_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  NULL
-)
+  GST_STATIC_CAPS_ANY
+);
 
 static GstElementClass *parent_class = NULL;
 
@@ -168,11 +167,11 @@ static void gst_rmdemux_base_init (GstRMDemuxClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_templ));
+      gst_static_pad_template_get (&gst_rmdemux_sink_template));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (src_video_templ));
+      gst_static_pad_template_get (&gst_rmdemux_videosrc_template));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (src_audio_templ));
+      gst_static_pad_template_get (&gst_rmdemux_audiosrc_template));
   gst_element_class_set_details (element_class, &gst_rmdemux_details);
 }
 
@@ -192,7 +191,8 @@ static void gst_rmdemux_class_init (GstRMDemuxClass *klass)
 static void 
 gst_rmdemux_init (GstRMDemux *rmdemux) 
 {
-  rmdemux->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_templ), "sink");
+  rmdemux->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_rmdemux_sink_template), "sink");
   gst_element_set_loop_function (GST_ELEMENT (rmdemux), gst_rmdemux_loop);
   gst_element_add_pad (GST_ELEMENT (rmdemux), rmdemux->sinkpad);
 }
@@ -462,11 +462,10 @@ static void gst_rmdemux_loop (GstElement *element)
 
 }
 
-static GstCaps *gst_rmdemux_src_getcaps(GstPad *pad, GstCaps *caps)
+static GstCaps *gst_rmdemux_src_getcaps(GstPad *pad)
 {
   GstRMDemux *rmdemux;
   GstRMDemuxStream *stream;
-  int i;
 
   GST_DEBUG ("gst_rmdemux_src_getcaps");
 
@@ -474,22 +473,14 @@ static GstCaps *gst_rmdemux_src_getcaps(GstPad *pad, GstCaps *caps)
 
   g_return_val_if_fail(GST_IS_RMDEMUX(rmdemux), NULL);
 
-  GST_DEBUG ("looking for pad %p in rmdemux %p", pad, rmdemux);
-  GST_DEBUG ("n_streams is %d", rmdemux->n_streams);
-  for(i=0;i<rmdemux->n_streams;i++){
-    stream = rmdemux->streams[i];
-    if(stream->pad == pad){
-      return stream->caps;
-    }
-  }
-
-  GST_DEBUG ("Couldn't find stream cooresponding to pad\n");
-
-  return NULL;
+  stream = GST_PAD_ELEMENT_PRIVATE (pad);
+  return gst_caps_copy(stream->caps);
 }
 
+#ifdef unused
+/* This function is not useful currently */
 static GstPadLinkReturn
-gst_rmdemux_src_link(GstPad *pad, GstCaps *caps)
+gst_rmdemux_src_link(GstPad *pad, static GstCaps *caps)
 {
   GstRMDemux *rmdemux;
   GstRMDemuxStream *stream;
@@ -503,18 +494,14 @@ gst_rmdemux_src_link(GstPad *pad, GstCaps *caps)
   g_return_val_if_fail(GST_IS_RMDEMUX(rmdemux), GST_PAD_LINK_REFUSED);
 
   GST_DEBUG ("n_streams is %d\n", rmdemux->n_streams);
-  for(i=0;i<rmdemux->n_streams;i++){
-    stream = rmdemux->streams[i];
-    GST_DEBUG ("pad[%d] is %p\n", i, stream->pad);
-    if(stream->pad == pad){
-      return GST_PAD_LINK_OK;
-    }
-  }
+  stream = GST_PAD_ELEMENT_PRIVATE (pad);
+  return GST_PAD_LINK_OK;
 
   GST_DEBUG ("Couldn't find stream cooresponding to pad\n");
 
   return GST_PAD_LINK_REFUSED;
 }
+#endif
 
 static GstRMDemuxStream *gst_rmdemux_get_stream_by_id(GstRMDemux *rmdemux,
     int id)
@@ -536,48 +523,45 @@ void gst_rmdemux_add_stream(GstRMDemux *rmdemux, GstRMDemuxStream *stream)
 {
   if(stream->subtype == GST_RMDEMUX_STREAM_VIDEO){
     stream->pad = gst_pad_new_from_template (
-        GST_PAD_TEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d",
-	  rmdemux->n_video_streams));
-    if(stream->caps){
-      gst_caps_set(stream->caps,"width",GST_PROPS_INT(stream->width));
-      gst_caps_set(stream->caps,"height",GST_PROPS_INT(stream->height));
+	gst_static_pad_template_get (&gst_rmdemux_videosrc_template),
+        g_strdup_printf ("video_%02d", rmdemux->n_video_streams));
+    if(stream->caps) {
+      gst_caps_set_simple (stream->caps,
+	  "width", G_TYPE_INT, stream->width,
+	  "height", G_TYPE_INT, stream->height, NULL);
     }
     rmdemux->n_video_streams++;
   }else
   if(stream->subtype == GST_RMDEMUX_STREAM_AUDIO){
     stream->pad = gst_pad_new_from_template (
-        GST_PAD_TEMPLATE_GET (src_audio_templ), g_strdup_printf ("audio_%02d",
-	  rmdemux->n_audio_streams));
-    stream->caps = GST_CAPS_NEW("audio_caps","audio/a52",NULL);
-    gst_caps_ref(stream->caps);
-    gst_caps_sink(stream->caps);
-    if(stream->caps){
-      if(gst_caps_has_property(stream->caps,"rate")){
-        gst_caps_set(stream->caps,"rate",GST_PROPS_INT((int)stream->rate));
-      }
-      if(gst_caps_has_property(stream->caps,"channels")){
-        gst_caps_set(stream->caps,"channels",GST_PROPS_INT(stream->n_channels));
-      }
-    }
+	gst_static_pad_template_get (&gst_rmdemux_audiosrc_template),
+        g_strdup_printf ("audio_%02d", rmdemux->n_audio_streams));
+    stream->caps = gst_caps_new_simple("audio/a52",NULL);
+    gst_caps_set_simple (stream->caps,
+	"rate", G_TYPE_INT, (int)stream->rate,
+	"channels", G_TYPE_INT, stream->n_channels, NULL);
     rmdemux->n_audio_streams++;
   }else{
     g_print("not adding stream of type %d\n",stream->subtype);
   }
 
+  GST_PAD_ELEMENT_PRIVATE (stream->pad) = stream;
   rmdemux->streams[rmdemux->n_streams] = stream;
   rmdemux->n_streams++;
   g_print("n_streams is now %d\n", rmdemux->n_streams);
 
   if(stream->pad){
     gst_pad_set_getcaps_function(stream->pad, gst_rmdemux_src_getcaps);
+#ifdef unused
     gst_pad_set_link_function(stream->pad, gst_rmdemux_src_link);
+#endif
 
     g_print("adding pad %p to rmdemux %p\n", stream->pad, rmdemux);
     gst_element_add_pad(GST_ELEMENT (rmdemux), stream->pad);
 
     /* Note: we need to have everything set up before calling try_set_caps */
     if(stream->caps){
-      g_print("setting caps to %s\n",gst_caps_to_string(stream->caps));
+      GST_DEBUG_CAPS("setting caps",stream->caps);
 
       gst_pad_try_set_caps(stream->pad, stream->caps);
     }

@@ -12,78 +12,27 @@ struct probe_context {
 
   gint        total_ls;
 
-  GstCaps    *metadata;
-  GstCaps    *streaminfo;
-  GstCaps    *caps;
+  GstCaps   *metadata;
+  GstCaps   *streaminfo;
+  GstCaps   *caps;
 };
 
 static void
 print_caps (GstCaps *caps)
 {
-  if (caps == NULL) return;
-  if (!strcmp (gst_caps_get_mime (caps), "application/x-gst-metadata") ||
-      !strcmp (gst_caps_get_mime (caps), "application/x-gst-streaminfo"))
-  {
-    GstProps *props = caps->properties;
-    GList *walk;
-    /* ugly hack, but ok for now.  If needed, fix by individual strcmp */
-    g_print ("  %s:\n", gst_caps_get_mime (caps) + 18);
-    if (props == NULL) {
-      g_print ("    none\n");
-      return;
-    }
-    walk = props->properties;
-
-    while (walk) {
-      GstPropsEntry *entry = (GstPropsEntry *) walk->data;
-      const gchar *name;
-      const gchar *str_val;
-      gint int_val;
-      GstPropsType type;
-
-      name = gst_props_entry_get_name (entry);
-      type = gst_props_entry_get_props_type (entry);
-      switch (type) {
-	case GST_PROPS_STRING_TYPE:
-          gst_props_entry_get_string (entry, &str_val);
-          g_print ("    %s='%s'\n", name, str_val);
-          break;
-	case GST_PROPS_INT_TYPE:
-          gst_props_entry_get_int (entry, &int_val);
-          g_print ("    %s=%d\n", name, int_val);
-          break;
-	default:
-          break;
-      }
-      walk = g_list_next (walk);
-    }
-  }
-  else {
-    g_print (" unkown caps type\n");
-  }
+  char *s;
+  s = gst_caps_to_string (caps);
+  g_print("  %s\n", s);
+  g_free (s);
 }
 
 static void
 print_format (GstCaps *caps)
 {
-  g_print ("  format:\n");
-  if (!caps || caps->properties == NULL) {
-    g_print ("    unkown\n");
-    return;
-  }
-  if (!strcmp (gst_caps_get_mime (caps), "audio/raw")) {
-    gint channels;
-    gint rate;
-
-    gst_caps_get_int (caps, "channels", &channels);
-    gst_caps_get_int (caps, "rate", &rate);
-
-    g_print ("    channels: %d\n", channels);
-    g_print ("    rate: %d\n", rate);
-  }
-  else {
-    g_print (" unkown format\n");
-  }
+  char *s;
+  s = gst_caps_to_string (caps);
+  g_print("  format: %s\n", s);
+  g_free (s);
 }
 
 static void

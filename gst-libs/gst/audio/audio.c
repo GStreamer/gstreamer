@@ -35,22 +35,23 @@ gst_audio_frame_byte_size (GstPad* pad)
 
   int width = 0;
   int channels = 0;
-
-  GstCaps *caps = NULL;
+  GstCaps *caps;
+  GstStructure *structure;
 
   /* get caps of pad */
   caps = GST_PAD_CAPS (pad);
 
-  if (caps == NULL)
-  {
+  if (caps == NULL) {
     /* ERROR: could not get caps of pad */
     g_warning ("gstaudio: could not get caps of pad %s:%s\n", 
 	       GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
     return 0;
   }
 
-  gst_caps_get_int (caps, "width",    &width);
-  gst_caps_get_int (caps, "channels", &channels);
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_int (structure, "width",    &width);
+  gst_structure_get_int (structure, "channels", &channels);
   return (width / 8) * channels; 
 }
 
@@ -83,6 +84,7 @@ gst_audio_frame_rate (GstPad *pad)
 {
   GstCaps *caps = NULL;
   gint rate;
+  GstStructure *structure;
 
   /* get caps of pad */
   caps = GST_PAD_CAPS (pad);
@@ -94,7 +96,8 @@ gst_audio_frame_rate (GstPad *pad)
     return 0;
   }
   else {
-    gst_caps_get_int (caps, "rate", &rate);
+    structure = gst_caps_get_structure (caps, 0);
+    gst_structure_get_int  (structure, "rate", &rate);
     return rate;
   }
 }
@@ -115,6 +118,7 @@ gst_audio_length (GstPad* pad, GstBuffer* buf)
   double length;
 
   GstCaps *caps = NULL;
+  GstStructure *structure;
 
   g_assert (GST_IS_BUFFER (buf));
   /* get caps of pad */
@@ -128,10 +132,11 @@ gst_audio_length (GstPad* pad, GstBuffer* buf)
   }
   else
   {
+    structure = gst_caps_get_structure (caps, 0);
     bytes = GST_BUFFER_SIZE (buf);
-    gst_caps_get_int (caps, "width",    &width);
-    gst_caps_get_int (caps, "channels", &channels);
-    gst_caps_get_int (caps, "rate",     &rate);
+    gst_structure_get_int  (structure, "width",    &width);
+    gst_structure_get_int  (structure, "channels", &channels);
+    gst_structure_get_int  (structure, "rate",     &rate);
 
     g_assert (bytes != 0);
     g_assert (width != 0);
@@ -152,6 +157,7 @@ gst_audio_highest_sample_value (GstPad* pad)
   gboolean is_signed = FALSE;
   gint width = 0;
   GstCaps *caps = NULL;
+  GstStructure *structure;
   
   caps = GST_PAD_CAPS (pad);
   if (caps == NULL)
@@ -160,8 +166,9 @@ gst_audio_highest_sample_value (GstPad* pad)
 	       GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
   }
   
-  gst_caps_get_int (caps, "width", &width);
-  gst_caps_get_boolean (caps, "signed", &is_signed);
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int  (structure, "width", &width);
+  gst_structure_get_boolean  (structure, "signed", &is_signed);
   
   if (is_signed) --width;
   /* example : 16 bit, signed : samples between -32768 and 32767 */

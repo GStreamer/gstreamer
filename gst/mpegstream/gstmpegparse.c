@@ -56,27 +56,25 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
+static GstStaticPadTemplate sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "mpeg_parse_sink",
-    "video/mpeg",
-      "mpegversion",  GST_PROPS_INT_RANGE (1, 2),
-      "systemstream", GST_PROPS_BOOLEAN (TRUE)
+  GST_STATIC_CAPS ("video/mpeg, "
+      "mpegversion = (int) [ 1, 2 ], "
+      "systemstream = (boolean) TRUE"
   )
 );
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
+static GstStaticPadTemplate src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "mpeg_parse_src",
-    "video/mpeg",
-      "mpegversion",  GST_PROPS_INT_RANGE (1, 2),
-      "systemstream", GST_PROPS_BOOLEAN (TRUE)
+  GST_STATIC_CAPS ("video/mpeg, "
+      "mpegversion = (int) [ 1, 2 ], "
+      "systemstream = (boolean) TRUE"
   )
 );
 
@@ -136,9 +134,9 @@ gst_mpeg_parse_base_init (GstMPEGParseClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (src_factory));
+		gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_factory));
+		gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &mpeg_parse_details);
 }
 
@@ -159,9 +157,6 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_DISCONT,
     g_param_spec_int ("max_discont", "Max Discont", "The maximun allowed SCR discontinuity",
                       0, G_MAXINT, DEFAULT_MAX_DISCONT, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
-    g_param_spec_boxed ("streaminfo", "Streaminfo", "Streaminfo",
-                        GST_TYPE_CAPS, G_PARAM_READABLE));
 
   gobject_class->get_property = gst_mpeg_parse_get_property;
   gobject_class->set_property = gst_mpeg_parse_set_property;
@@ -185,13 +180,13 @@ static void
 gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
 {
   mpeg_parse->sinkpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
+		  gst_static_pad_template_get (&sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(mpeg_parse),mpeg_parse->sinkpad);
   gst_pad_set_formats_function (mpeg_parse->sinkpad, gst_mpeg_parse_get_src_formats);
   gst_pad_set_convert_function (mpeg_parse->sinkpad, gst_mpeg_parse_convert_src);
 
   mpeg_parse->srcpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (src_factory), "src");
+		  gst_static_pad_template_get (&src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(mpeg_parse),mpeg_parse->srcpad);
   gst_pad_set_formats_function (mpeg_parse->srcpad, gst_mpeg_parse_get_src_formats);
   gst_pad_set_convert_function (mpeg_parse->srcpad, gst_mpeg_parse_convert_src);
@@ -208,7 +203,6 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
   mpeg_parse->max_discont = DEFAULT_MAX_DISCONT;
   mpeg_parse->provided_clock = gst_mpeg_clock_new ("MPEGParseClock", 
 		  gst_mpeg_parse_get_time, mpeg_parse);
-  mpeg_parse->streaminfo = NULL;
 
   GST_FLAG_SET (mpeg_parse, GST_ELEMENT_EVENT_AWARE);
 }
@@ -238,6 +232,7 @@ gst_mpeg_parse_get_time (GstClock *clock, gpointer data)
   return MPEGTIME_TO_GSTTIME (parse->current_scr);
 }
 
+#if 0
 static void
 gst_mpeg_parse_update_streaminfo (GstMPEGParse *mpeg_parse)
 {
@@ -248,10 +243,10 @@ gst_mpeg_parse_update_streaminfo (GstMPEGParse *mpeg_parse)
 
   props = gst_props_empty_new ();
 
-  entry = gst_props_entry_new ("mpegversion", GST_PROPS_INT (mpeg2 ? 2 : 1));
+  entry = gst_props_entry_new ("mpegversion", G_TYPE_INT (mpeg2 ? 2 : 1));
   gst_props_add_entry (props, (GstPropsEntry *) entry);
 
-  entry = gst_props_entry_new ("bitrate", GST_PROPS_INT (mpeg_parse->mux_rate * 400)); 
+  entry = gst_props_entry_new ("bitrate", G_TYPE_INT (mpeg_parse->mux_rate * 400)); 
   gst_props_add_entry (props, (GstPropsEntry *) entry);
 
   caps = gst_caps_new ("mpeg_streaminfo",
@@ -261,6 +256,7 @@ gst_mpeg_parse_update_streaminfo (GstMPEGParse *mpeg_parse)
   gst_caps_replace_sink (&mpeg_parse->streaminfo, caps);
   g_object_notify (G_OBJECT (mpeg_parse), "streaminfo");
 }
+#endif
 
 static void
 gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime time)
@@ -279,13 +275,10 @@ gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime 
       gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
 
       if (gst_pad_try_set_caps (mpeg_parse->srcpad,
-		      GST_CAPS_NEW (
-    			"mpeg_parse_src",
-    			"video/mpeg",
-    			  "mpegversion",  GST_PROPS_INT (mpeg2 ? 2 : 1),
-    			  "systemstream", GST_PROPS_BOOLEAN (TRUE),
-    			  "parsed",       GST_PROPS_BOOLEAN (TRUE)
-			      )) < 0)
+	    gst_caps_new_simple ("video/mpeg",
+	      "mpegversion",  G_TYPE_INT,  (mpeg2 ? 2 : 1),
+	      "systemstream", G_TYPE_BOOLEAN, TRUE,
+	      "parsed",       G_TYPE_BOOLEAN, TRUE, NULL)) < 0)
       {
 	gst_element_error (GST_ELEMENT (mpeg_parse), "could no set source caps");
 	return;
@@ -414,7 +407,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   if (mpeg_parse->mux_rate != new_rate) {
     mpeg_parse->mux_rate = new_rate;
 
-    gst_mpeg_parse_update_streaminfo (mpeg_parse);
+    //gst_mpeg_parse_update_streaminfo (mpeg_parse);
     GST_DEBUG ("stream is %1.3fMbs", (mpeg_parse->mux_rate * 400) / 1000000.0);
   }
 
@@ -524,13 +517,10 @@ gst_mpeg_parse_loop (GstElement *element)
       gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
 
       if (gst_pad_try_set_caps (mpeg_parse->sinkpad,
-		      GST_CAPS_NEW (
-    			"mpeg_parse_src",
-    			"video/mpeg",
-    			  "mpegversion",  GST_PROPS_INT (mpeg2 ? 2 : 1),
-    			  "systemstream", GST_PROPS_BOOLEAN (TRUE),
-    			  "parsed",       GST_PROPS_BOOLEAN (TRUE)
-			      )) < 0)
+	    gst_caps_new_simple ("video/mpeg",
+	      "mpegversion",  G_TYPE_INT,  (mpeg2 ? 2 : 1),
+	      "systemstream", G_TYPE_BOOLEAN, TRUE,
+	      "parsed",       G_TYPE_BOOLEAN, TRUE, NULL)) < 0)
       {
 	gst_element_error (GST_ELEMENT (mpeg_parse), "could no set sink caps");
 	return;
@@ -830,7 +820,7 @@ gst_mpeg_parse_change_state (GstElement *element)
         gst_mpeg_packetize_destroy (mpeg_parse->packetize);
         mpeg_parse->packetize = NULL;
       }
-      gst_caps_replace (&mpeg_parse->streaminfo, NULL);
+      //gst_caps_replace (&mpeg_parse->streaminfo, NULL);
       break;
     default:
       break;
@@ -852,9 +842,6 @@ gst_mpeg_parse_get_property (GObject *object, guint prop_id, GValue *value, GPar
       break;
     case ARG_MAX_DISCONT: 
       g_value_set_int (value, mpeg_parse->max_discont);
-      break;
-    case ARG_STREAMINFO: 
-      g_value_set_boxed (value, mpeg_parse->streaminfo);
       break;
     default: 
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

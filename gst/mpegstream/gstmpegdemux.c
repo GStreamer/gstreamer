@@ -48,106 +48,76 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
+static GstStaticPadTemplate sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "mpeg_demux_sink",
-    "video/mpeg",
-      "mpegversion",  GST_PROPS_INT_RANGE (1, 2),
-      "systemstream", GST_PROPS_BOOLEAN (TRUE)
+  GST_STATIC_CAPS ("video/mpeg, "
+      "mpegversion = (int) [ 1, 2], "
+      "systemstream = (boolean) TRUE"
   )
 );
 
-GST_PAD_TEMPLATE_FACTORY (audio_factory,
+static GstStaticPadTemplate audio_factory =
+GST_STATIC_PAD_TEMPLATE (
   "audio_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  GST_CAPS_NEW (
-    "mpeg_demux_audio",
-    "audio/mpeg",
-      "mpegversion", GST_PROPS_INT (1)
+  GST_STATIC_CAPS ( "audio/mpeg, "
+      "mpegversion = (int) 1"
   )
 );
 
-GST_PAD_TEMPLATE_FACTORY (video_src_factory,
+static GstStaticPadTemplate video_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "video_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  GST_CAPS_NEW (
-    "mpeg_demux_video_mpeg1",
-    "video/mpeg",
-      "mpegversion",  GST_PROPS_INT (1),
-      "systemstream",  GST_PROPS_BOOLEAN (FALSE)
-  ),
-  GST_CAPS_NEW (
-    "mpeg_demux_video_mpeg2",
-    "video/mpeg",
-      "mpegversion",  GST_PROPS_INT (2),
-      "systemstream",  GST_PROPS_BOOLEAN (FALSE)
+  GST_STATIC_CAPS (
+    "video/mpeg, "
+      "mpegversion = (int) { 1, 2 }, "
+      "systemstream = (boolean) FALSE"
   )
 );
 
-
-GST_PAD_TEMPLATE_FACTORY (private1_factory,
+static GstStaticPadTemplate private1_factory =
+GST_STATIC_PAD_TEMPLATE (
   "private_stream_1_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  GST_CAPS_NEW (
-    "mpeg_demux_private1",
-    "audio/x-ac3",
-      NULL
-  )
+  GST_STATIC_CAPS ("audio/x-ac3")
 );
 
-GST_PAD_TEMPLATE_FACTORY (private2_factory,
+static GstStaticPadTemplate private2_factory =
+GST_STATIC_PAD_TEMPLATE (
   "private_stream_2",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  GST_CAPS_NEW (
-    "mpeg_demux_private_2",
-    "unknown/unknown",
-      NULL
-  )
+  GST_STATIC_CAPS_ANY
 );
 
-GST_PAD_TEMPLATE_FACTORY (pcm_factory,
+static GstStaticPadTemplate pcm_factory =
+GST_STATIC_PAD_TEMPLATE (
   "pcm_stream_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  GST_CAPS_NEW (
-    "mpeg_demux_pcm",
-    "audio/x-raw-int",
-       "endianness",       GST_PROPS_INT (G_BIG_ENDIAN),
-       "signed",           GST_PROPS_BOOLEAN (TRUE),
-       "width",            GST_PROPS_LIST (
-	                     GST_PROPS_INT (16),
-	                     GST_PROPS_INT (20),
-	                     GST_PROPS_INT (24)
-                           ),
-       "depth",            GST_PROPS_LIST (
-	                     GST_PROPS_INT (16),
-	                     GST_PROPS_INT (20),
-	                     GST_PROPS_INT (24)
-                           ),
-       "rate",             GST_PROPS_LIST (
-	                     GST_PROPS_INT (48000),
-	                     GST_PROPS_INT (96000)
-                           ),
-       "channels",         GST_PROPS_INT_RANGE (1, 8)
+  GST_STATIC_CAPS ("audio/x-raw-int, "
+       "endianness = (int) BIG_ENDIAN, "
+       "signed = (boolean) TRUE, "
+       "width = (int) { 16, 20, 24 }, "
+       "depth = (int) { 16, 20, 24 }, "
+       "rate = (int) { 48000, 96000 }, "
+       "channels = (int) [ 1, 8 ]"
   )
 );
 
-GST_PAD_TEMPLATE_FACTORY (subtitle_factory,
+static GstStaticPadTemplate subtitle_factory =
+GST_STATIC_PAD_TEMPLATE (
   "subtitle_stream_%d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  GST_CAPS_NEW (
-    "mpeg_demux_subtitle",
-    "unknown/unknown",
-    NULL
-  )
+  GST_STATIC_CAPS_ANY
 );
 
 static void 		gst_mpeg_demux_class_init	(GstMPEGDemuxClass *klass);
@@ -205,19 +175,19 @@ gst_mpeg_demux_base_init (GstMPEGDemuxClass *klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (sink_factory));
+		gst_static_pad_template_get (&sink_factory));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (video_src_factory));
+		gst_static_pad_template_get (&video_src_factory));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (private1_factory));
+		gst_static_pad_template_get (&private1_factory));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (private2_factory));
+		gst_static_pad_template_get (&private2_factory));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (pcm_factory));
+		gst_static_pad_template_get (&pcm_factory));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (subtitle_factory));
+		gst_static_pad_template_get (&subtitle_factory));
   gst_element_class_add_pad_template (element_class,
-		GST_PAD_TEMPLATE_GET (audio_factory));
+		gst_static_pad_template_get (&audio_factory));
   gst_element_class_set_details (element_class, &mpeg_demux_details);
 
 }
@@ -254,7 +224,7 @@ gst_mpeg_demux_init (GstMPEGDemux *mpeg_demux)
 
   gst_element_remove_pad (GST_ELEMENT (mpeg_parse), mpeg_parse->sinkpad);
   mpeg_parse->sinkpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
+		  gst_static_pad_template_get (&sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (mpeg_parse), mpeg_parse->sinkpad);
   gst_element_remove_pad (GST_ELEMENT (mpeg_parse), mpeg_parse->srcpad);
 
@@ -448,32 +418,25 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
         /* private_stream_2 */
 	name = g_strdup_printf ("private_stream_2");
 	outstream = &mpeg_demux->private_2_stream;
-	newtemp = GST_PAD_TEMPLATE_GET (private2_factory);
+	newtemp = gst_static_pad_template_get (&private2_factory);
       } else if (stream_id >= 0xC0 && stream_id < 0xE0) {
         /* Audio */
 	name = g_strdup_printf ("audio_%02d", stream_id & 0x1F);
 	outstream = &mpeg_demux->audio_stream[stream_id & 0x1F];
-	newtemp = GST_PAD_TEMPLATE_GET (audio_factory);
+	newtemp = gst_static_pad_template_get (&audio_factory);
       } else if (stream_id >= 0xE0 && stream_id < 0xF0) {
         /* Video */
 	name = g_strdup_printf ("video_%02d", stream_id & 0x0F);
 	outstream = &mpeg_demux->video_stream[stream_id & 0x0F];
-        newtemp = GST_PAD_TEMPLATE_GET (video_src_factory);
+        newtemp = gst_static_pad_template_get (&video_src_factory);
 	if (!GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux)) {
-	  caps = GST_CAPS_NEW (
-	    "mpeg_demux_video_mpeg1",
-	    "video/mpeg",
-	    "mpegversion",  GST_PROPS_INT (1),
-	    "systemstream",  GST_PROPS_BOOLEAN (FALSE)
-	  );
-	}
-        else {
-	  caps = GST_CAPS_NEW (
-	    "mpeg_demux_video_mpeg2",
-	    "video/mpeg",
-	    "mpegversion",  GST_PROPS_INT (2),
-	    "systemstream",  GST_PROPS_BOOLEAN (FALSE)
-	  );
+	  caps = gst_caps_new_simple ("video/mpeg",
+	      "mpegversion",  G_TYPE_INT, 1,
+	      "systemstream",  G_TYPE_BOOLEAN, FALSE, NULL);
+	} else {
+	  caps = gst_caps_new_simple ("video/mpeg",
+	    "mpegversion",  G_TYPE_INT, 2,
+	    "systemstream",  G_TYPE_BOOLEAN, FALSE, NULL);
         }
       } else {
 	GST_DEBUG ("unkown stream id %d", stream_id);
@@ -496,11 +459,8 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 			
 	*outpad = gst_pad_new_from_template (newtemp, name);
 	if (!caps) {
-          caps = gst_pad_template_get_caps (newtemp);
-          gst_pad_try_set_caps (*outpad, caps);
-          gst_caps_unref(caps);
-        }
-        else {
+          gst_pad_try_set_caps (*outpad, gst_pad_template_get_caps (newtemp));
+        } else {
           gst_pad_try_set_caps (*outpad, caps);
         }
 
@@ -903,46 +863,40 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
         gst_mpeg_demux_dvd_audio_clear (mpeg_demux, ps_id_code - 0x80);
 
         name = g_strdup_printf ("private_stream_1_%d",ps_id_code - 0x80);
-	newtemp = GST_PAD_TEMPLATE_GET (private1_factory);
+	newtemp = gst_static_pad_template_get (&private1_factory);
       } else if (ps_id_code >= 0xA0 && ps_id_code <= 0xA7) {
         /* Erase any DVD audio pads. */
         gst_mpeg_demux_dvd_audio_clear (mpeg_demux, ps_id_code - 0xA0);
 
         name = g_strdup_printf ("pcm_stream_%d", ps_id_code - 0xA0);
-	newtemp = GST_PAD_TEMPLATE_GET (pcm_factory);
+	newtemp = gst_static_pad_template_get (&pcm_factory);
       } else if (ps_id_code >= 0x20 && ps_id_code <= 0x2F) {
         name = g_strdup_printf ("subtitle_stream_%d",ps_id_code - 0x20);
-        newtemp = GST_PAD_TEMPLATE_GET (subtitle_factory);
+        newtemp = gst_static_pad_template_get (&subtitle_factory);
       } else {
         name = g_strdup_printf ("unknown_stream_%d",ps_id_code);
       }
     } else if (id == 0xBF) {
       /* private_stream_2 */
       name = g_strdup ("private_stream_2");
-      newtemp = GST_PAD_TEMPLATE_GET (private2_factory);
+      newtemp = gst_static_pad_template_get (&private2_factory);
     } else if (id >= 0xC0 && id <= 0xDF) {
       /* audio */
       name = g_strdup_printf ("audio_%02d", id - 0xC0);
-      newtemp = GST_PAD_TEMPLATE_GET (audio_factory);
+      newtemp = gst_static_pad_template_get (&audio_factory);
     } else if (id >= 0xE0 && id <= 0xEF) {
       /* video */
       name = g_strdup_printf ("video_%02d", id - 0xE0);
-      newtemp = GST_PAD_TEMPLATE_GET (video_src_factory);
+      newtemp = gst_static_pad_template_get (&video_src_factory);
       if (!GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux)) {
-        caps = GST_CAPS_NEW (
-	  "mpeg_demux_video_mpeg1",
-          "video/mpeg",
-          "mpegversion",  GST_PROPS_INT (1),
-          "systemstream",  GST_PROPS_BOOLEAN (FALSE)
-	);
+        caps = gst_caps_new_simple ("video/mpeg",
+          "mpegversion", G_TYPE_INT, 1,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       }
       else {
-        caps = GST_CAPS_NEW (
-          "mpeg_demux_video_mpeg2",
-          "video/mpeg",
-          "mpegversion",  GST_PROPS_INT (2),
-          "systemstream",  GST_PROPS_BOOLEAN (FALSE)
-        );
+        caps = gst_caps_new_simple ("video/mpeg",
+          "mpegversion", G_TYPE_INT, 2,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       }
     } else {
       /* unkown */
@@ -958,11 +912,8 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       *outpad = gst_pad_new_from_template (newtemp, name);
       if (ps_id_code < 0xA0 || ps_id_code > 0xA7) {
 	if (!caps) {
-	  caps = gst_pad_template_get_caps (newtemp);
-          gst_pad_try_set_caps (*outpad, caps);
-          gst_caps_unref(caps);
-        }
-        else {
+          gst_pad_try_set_caps (*outpad, gst_pad_template_get_caps (newtemp));
+        } else {
           gst_pad_try_set_caps (*outpad, caps);
         }
       }
@@ -1058,24 +1009,20 @@ gst_mpeg_demux_lpcm_set_caps (GstPad *pad, guint8 sample_info)
   /* Determine the rate. */
   if (sample_info & 0x10) {
     rate = 96000;
-  }
-  else {
+  } else {
     rate = 48000;
   }
 
   /* Determine the number of channels. */
   channels = (sample_info & 0x7) + 1;
 
-  caps = GST_CAPS_NEW (
-          "mpeg_demux_pcm",
-          "audio/x-raw-int",
-             "endianness",       GST_PROPS_INT (G_BIG_ENDIAN),
-             "signed",           GST_PROPS_BOOLEAN (TRUE),
-             "width",            GST_PROPS_INT (width),
-             "depth",            GST_PROPS_INT (width),
-             "rate",             GST_PROPS_INT (rate),
-             "channels",         GST_PROPS_INT (channels)
-	  );
+  caps = gst_caps_new_simple ("audio/x-raw-int",
+      "endianness",       G_TYPE_INT, G_BIG_ENDIAN,
+      "signed",           G_TYPE_BOOLEAN, TRUE,
+      "width",            G_TYPE_INT, width,
+      "depth",            G_TYPE_INT, width,
+      "rate",             G_TYPE_INT, rate,
+      "channels",         G_TYPE_INT, channels, NULL);
   gst_pad_try_set_caps (pad, caps);
 }
 

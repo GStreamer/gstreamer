@@ -68,137 +68,83 @@ enum {
   ARG_0,
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
+static GstStaticPadTemplate gst_asfmux_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "asfmux_src_video",
-    "video/x-ms-asf",
-    NULL
-  )
+  GST_STATIC_CAPS ("video/x-ms-asf")
 );
     
-GST_PAD_TEMPLATE_FACTORY (video_sink_factory,
+static GstStaticPadTemplate gst_asfmux_videosink_template =
+GST_STATIC_PAD_TEMPLATE (
   "video_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_NEW (
-    "asfmux_sink_video_yuv",
-    "video/x-raw-yuv",
-      "format", GST_PROPS_LIST (
-                  GST_PROPS_FOURCC (GST_MAKE_FOURCC('Y','U','Y','2')),
-                  GST_PROPS_FOURCC (GST_MAKE_FOURCC('I','4','2','0'))
-                ),
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "asfmux_sink_video_jpeg",
-    "video/x-jpeg",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "asfmux_sink_video_divx",
-    "video/x-divx",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096),
-      "divxversion", GST_PROPS_INT_RANGE (3, 5)
-  ),
-  GST_CAPS_NEW (
-    "asfmux_sink_video_xvid",
-    "video/x-xvid",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "asfmux_sink_video_3ivx",
-    "video/x-3ivx",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "asfmux_sink_video_msmpeg",
-    "video/x-msmpeg",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096),
-      "msmpegversion", GST_PROPS_INT_RANGE (41, 43)
-  ),
-  GST_CAPS_NEW (
-    "asfmux_sink_video_mpeg",
-    "video/mpeg",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096),
-      "mpegversion", GST_PROPS_INT (1),
-      "systemstream", GST_PROPS_BOOLEAN (FALSE)
-  ),
-  GST_CAPS_NEW (
-    "asfmux_sink_video_h263",
-    "video/x-h263",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "asfmux_sink_video_dv",
-    "video/x-dv",
-      "width",  GST_PROPS_INT (720),
-      "height", GST_PROPS_LIST (
-		  GST_PROPS_INT (576),
-		  GST_PROPS_INT (480)
-		),
-      "systemstream", GST_PROPS_BOOLEAN (FALSE)
-  ),
-  GST_CAPS_NEW (
-    "asfmux_sink_video_hfyu",
-    "video/x-huffyuv",
-      "width",  GST_PROPS_INT_RANGE (16, 4096),
-      "height", GST_PROPS_INT_RANGE (16, 4096)
+  GST_STATIC_CAPS (
+    "video/x-raw-yuv, "
+      "format = (fourcc) { YUY2, I420 }, "
+      "width = (int) [ 1, MAX], "
+      "height = (int) [ 1, MAX]; "
+    "video/x-jpeg, "
+      "width = (int) [ 1, MAX], "
+      "height = (int) [ 1, MAX]; "
+    "video/x-divx, "
+      "divxversion = (int) [ 3, 5 ], "
+      "width = (int) [ 1, MAX], "
+      "height = (int) [ 1, MAX]; "
+    "video/x-xvid, "
+      "width = (int) [ 1, MAX], "
+      "height = (int) [ 1, MAX]; "
+    "video/x-3ivx, "
+      "width = (int) [ 1, MAX], "
+      "height = (int) [ 1, MAX]; "
+    "video/x-msmpeg, "
+      "msmpegversion = (int) [ 41, 43 ], "
+      "width = (int) [ 1, MAX], "
+      "height = (int) [ 1, MAX]; "
+    "video/mpeg, "
+      "mpegversion = (int) 1,"
+      "systemstream = (boolean) false,"
+      "width = (int) [ 1, MAX], "
+      "height = (int) [ 1, MAX]; "
+    "video/x-h263, "
+      "width = (int) [ 1, MAX], "
+      "height = (int) [ 1, MAX]; "
+    "video/x-dv, "
+      "systemstream = (boolean) false,"
+      "width = (int) 720,"
+      "height = (int) { 576, 480 };"
+    "video/x-huffyuv, "
+      "width = (int) [ 1, MAX], "
+      "height = (int) [ 1, MAX]"
   )
 );
     
-GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
+static GstStaticPadTemplate gst_asfmux_audiosink_template =
+GST_STATIC_PAD_TEMPLATE (
   "audio_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS_NEW (
-    "asfmux_sink_audio_raw",
-    "audio/x-raw-int",
-      "endianness",       GST_PROPS_INT (G_LITTLE_ENDIAN),
-      "signed",           GST_PROPS_LIST (
-      			    GST_PROPS_BOOLEAN (TRUE),
-      			    GST_PROPS_BOOLEAN (FALSE)
-			  ),
-      "width",            GST_PROPS_LIST (
-      			    GST_PROPS_INT (8),
-      			    GST_PROPS_INT (16)
-			  ),
-      "depth",            GST_PROPS_LIST (
-      			    GST_PROPS_INT (8),
-      			    GST_PROPS_INT (16)
-			  ),
-      "rate",             GST_PROPS_INT_RANGE (1000, 96000),
-      "channels",         GST_PROPS_INT_RANGE (1, 2)
-  ),
-  GST_CAPS_NEW (
-    "asfmux_sink_audio_mpeg",
-    "audio/mpeg",
-      "mpegversion",      GST_PROPS_INT (1),
-      "layer",		  GST_PROPS_INT_RANGE (1, 3),
-      "rate",             GST_PROPS_INT_RANGE (1000, 96000),
-      "channels",         GST_PROPS_INT_RANGE (1, 2)
-  ),
-  GST_CAPS_NEW (
-    "asfmux_sink_audio_vorbis",
-    "audio/x-vorbis",
-      "rate",             GST_PROPS_INT_RANGE (1000, 96000),
-      "channels",         GST_PROPS_INT_RANGE (1, 2)
-  ),
-  GST_CAPS_NEW (
-    "asfmux_sink_audio_ac3",
-    "audio/x-ac3",
-      "rate",             GST_PROPS_INT_RANGE (1000, 96000),
-      "channels",         GST_PROPS_INT_RANGE (1, 6)
+  GST_STATIC_CAPS (
+    "audio/x-raw-int, "
+      "endianness = (int) LITTLE_ENDIAN, "
+      "signed = (boolean) { true, false }, "
+      "width = (int) { 8, 16 }, "
+      "depth = (int) { 8, 16 }, "
+      "rate = (int) [ 1000, 96000 ], "
+      "channels = (int) [ 1, 2]; "
+    "audio/mpeg, "
+      "mpegversion = (int) 1, "
+      "layer = (int) { 1, 3 }, "
+      "rate = (int) [ 1000, 96000 ], "
+      "channels = (int) [ 1, 2]; "
+    "audio/x-vorbis, "
+      "rate = (int) [ 1000, 96000 ], "
+      "channels = (int) [ 1, 2]; "
+    "audio/x-ac3, "
+      "rate = (int) [ 1000, 96000 ], "
+      "channels = (int) [ 1, 2]"
   )
 );
     
@@ -251,11 +197,11 @@ gst_asfmux_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-				      GST_PAD_TEMPLATE_GET (src_factory));
+      gst_static_pad_template_get (&gst_asfmux_src_template));
   gst_element_class_add_pad_template (element_class,
-				      GST_PAD_TEMPLATE_GET (audio_sink_factory));
+      gst_static_pad_template_get (&gst_asfmux_videosink_template));
   gst_element_class_add_pad_template (element_class,
-				      GST_PAD_TEMPLATE_GET (video_sink_factory));
+      gst_static_pad_template_get (&gst_asfmux_audiosink_template));
   gst_element_class_set_details (element_class, &gst_asfmux_details);
 }
 
@@ -287,10 +233,9 @@ static void
 gst_asfmux_init (GstAsfMux *asfmux) 
 {
   gint n;
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (asfmux);
 
   asfmux->srcpad = gst_pad_new_from_template (
-		  gst_element_class_get_pad_template (klass, "src"), "src");
+      gst_static_pad_template_get (&gst_asfmux_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (asfmux), asfmux->srcpad);
 
   GST_FLAG_SET (GST_ELEMENT (asfmux), GST_ELEMENT_EVENT_AWARE);
@@ -310,12 +255,15 @@ gst_asfmux_init (GstAsfMux *asfmux)
 }
 
 static GstPadLinkReturn
-gst_asfmux_vidsinkconnect (GstPad *pad, GstCaps *vscaps)
+gst_asfmux_vidsink_link (GstPad *pad, const GstCaps *caps)
 {
   GstAsfMux *asfmux;
-  GstCaps *caps;
   GstAsfMuxStream *stream = NULL;
+  GstStructure *structure;
   gint n;
+  const gchar* mimetype;
+  gint w, h;
+  gboolean ret;
 
   asfmux = GST_ASFMUX (gst_pad_get_parent (pad));
 
@@ -329,101 +277,98 @@ gst_asfmux_vidsinkconnect (GstPad *pad, GstCaps *vscaps)
   g_assert (stream != NULL);
   g_assert (stream->type == ASF_STREAM_VIDEO);
 
-  /* we are not going to act on variable caps */
-  if (!GST_CAPS_IS_FIXED (vscaps))
-    return GST_PAD_LINK_DELAYED;
-
   GST_DEBUG ("asfmux: video sinkconnect triggered on %s",
 	     gst_pad_get_name (pad));
 
-  for (caps = vscaps; caps != NULL; caps = caps->next) {
-    const gchar* mimetype = gst_caps_get_mime(caps);
-    gint w, h;
+  structure = gst_caps_get_structure (caps, 0);
 
-    /* global */
-    gst_caps_get (caps, "width", &w,
-			"height", &h,
-			NULL);
+  /* global */
+  ret = gst_structure_get_int (structure, "width", &w);
+  ret &= gst_structure_get_int (structure, "height", &h);
 
-    stream->header.video.stream.width = w;
-    stream->header.video.stream.height = h;
-    stream->header.video.stream.unknown = 2;
-    stream->header.video.stream.size = 40;
-    stream->bitrate = 0; /* TODO */
+  if(!ret) return GST_PAD_LINK_REFUSED;
 
-    if (!strcmp (mimetype, "video/x-raw-yuv")) {
-      guint32 format;
+  stream->header.video.stream.width = w;
+  stream->header.video.stream.height = h;
+  stream->header.video.stream.unknown = 2;
+  stream->header.video.stream.size = 40;
+  stream->bitrate = 0; /* TODO */
 
-      gst_caps_get_fourcc_int (caps, "format", &format);
-      stream->header.video.format.tag = format;
-      switch (format) {
-        case GST_MAKE_FOURCC ('Y','U','Y','2'):
-          stream->header.video.format.depth  = 16;
-          stream->header.video.format.planes = 1;
-          break;
-        case GST_MAKE_FOURCC ('I','4','2','0'):
-          stream->header.video.format.depth  = 12;
-          stream->header.video.format.planes = 3;
-          break;
-      }
+  mimetype = gst_structure_get_name (structure);
+  if (!strcmp (mimetype, "video/x-raw-yuv")) {
+    guint32 format;
 
-      goto done;
-    } else {
-      stream->header.video.format.depth  = 24;
-      stream->header.video.format.planes = 1;
-      stream->header.video.format.tag    = 0;
+    ret = gst_structure_get_fourcc (structure, "format", &format);
+    if(!ret) return GST_PAD_LINK_REFUSED;
 
-      /* find format */
-      if (!strcmp (mimetype, "video/x-huffyuv")) {
-        stream->header.video.format.tag = GST_MAKE_FOURCC ('H','F','Y','U');
-      } else if (!strcmp (mimetype, "video/x-jpeg")) {
-        stream->header.video.format.tag = GST_MAKE_FOURCC ('M','J','P','G');
-      } else if (!strcmp (mimetype, "video/x-divx")) {
-        gint divxversion;
-        gst_caps_get_int (caps, "divxversion", &divxversion);
-        switch (divxversion) {
-          case 3:
-            stream->header.video.format.tag = GST_MAKE_FOURCC ('D','I','V','3');
-            break;
-          case 4:
-            stream->header.video.format.tag = GST_MAKE_FOURCC ('D','I','V','X');
-            break;
-          case 5:
-            stream->header.video.format.tag = GST_MAKE_FOURCC ('D','X','5','0');
-            break;
-        }
-      } else if (!strcmp (mimetype, "video/x-xvid")) {
-        stream->header.video.format.tag = GST_MAKE_FOURCC ('X','V','I','D');
-      } else if (!strcmp (mimetype, "video/x-3ivx")) {
-        stream->header.video.format.tag = GST_MAKE_FOURCC ('3','I','V','2');
-      } else if (!strcmp (mimetype, "video/x-msmpeg")) {
-        gint msmpegversion;
-        gst_caps_get_int (caps, "msmpegversion", &msmpegversion);
-        switch (msmpegversion) {
-          case 41:
-            stream->header.video.format.tag = GST_MAKE_FOURCC ('M','P','G','4');
-            break;
-          case 42:
-            stream->header.video.format.tag = GST_MAKE_FOURCC ('M','P','4','2');
-            break;
-          case 43:
-            stream->header.video.format.tag = GST_MAKE_FOURCC ('M','P','4','3');
-            break;
-        }
-      } else if (!strcmp (mimetype, "video/x-dv")) {
-        stream->header.video.format.tag = GST_MAKE_FOURCC ('D','V','S','D');
-      } else if (!strcmp (mimetype, "video/x-h263")) {
-        stream->header.video.format.tag = GST_MAKE_FOURCC ('H','2','6','3');
-      } else if (!strcmp (mimetype, "video/mpeg")) {
-        stream->header.video.format.tag = GST_MAKE_FOURCC ('M','P','E','G');
-      }
-
-      if (!stream->header.video.format.tag) {
-        continue;
-      }
-
-      goto done;
+    stream->header.video.format.tag = format;
+    switch (format) {
+      case GST_MAKE_FOURCC ('Y','U','Y','2'):
+	stream->header.video.format.depth  = 16;
+	stream->header.video.format.planes = 1;
+	break;
+      case GST_MAKE_FOURCC ('I','4','2','0'):
+	stream->header.video.format.depth  = 12;
+	stream->header.video.format.planes = 3;
+	break;
     }
+
+    goto done;
+  } else {
+    stream->header.video.format.depth  = 24;
+    stream->header.video.format.planes = 1;
+    stream->header.video.format.tag    = 0;
+
+    /* find format */
+    if (!strcmp (mimetype, "video/x-huffyuv")) {
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('H','F','Y','U');
+    } else if (!strcmp (mimetype, "video/x-jpeg")) {
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('M','J','P','G');
+    } else if (!strcmp (mimetype, "video/x-divx")) {
+      gint divxversion;
+      gst_structure_get_int (structure, "divxversion", &divxversion);
+      switch (divxversion) {
+	case 3:
+	  stream->header.video.format.tag = GST_MAKE_FOURCC ('D','I','V','3');
+	  break;
+	case 4:
+	  stream->header.video.format.tag = GST_MAKE_FOURCC ('D','I','V','X');
+	  break;
+	case 5:
+	  stream->header.video.format.tag = GST_MAKE_FOURCC ('D','X','5','0');
+	  break;
+      }
+    } else if (!strcmp (mimetype, "video/x-xvid")) {
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('X','V','I','D');
+    } else if (!strcmp (mimetype, "video/x-3ivx")) {
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('3','I','V','2');
+    } else if (!strcmp (mimetype, "video/x-msmpeg")) {
+      gint msmpegversion;
+      gst_structure_get_int (structure, "msmpegversion", &msmpegversion);
+      switch (msmpegversion) {
+	case 41:
+	  stream->header.video.format.tag = GST_MAKE_FOURCC ('M','P','G','4');
+	  break;
+	case 42:
+	  stream->header.video.format.tag = GST_MAKE_FOURCC ('M','P','4','2');
+	  break;
+	case 43:
+	  stream->header.video.format.tag = GST_MAKE_FOURCC ('M','P','4','3');
+	  break;
+      }
+    } else if (!strcmp (mimetype, "video/x-dv")) {
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('D','V','S','D');
+    } else if (!strcmp (mimetype, "video/x-h263")) {
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('H','2','6','3');
+    } else if (!strcmp (mimetype, "video/mpeg")) {
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('M','P','E','G');
+    }
+
+    if (!stream->header.video.format.tag) {
+      return GST_PAD_LINK_REFUSED;
+    }
+
+    goto done;
   }
   return GST_PAD_LINK_REFUSED;
 
@@ -443,12 +388,15 @@ done:
 }
 
 static GstPadLinkReturn
-gst_asfmux_audsinkconnect (GstPad *pad, GstCaps *vscaps)
+gst_asfmux_audsink_link (GstPad *pad, const GstCaps *caps)
 {
   GstAsfMux *asfmux;
-  GstCaps *caps;
   GstAsfMuxStream *stream = NULL;
   gint n;
+  const gchar* mimetype;
+  gint rate, channels;
+  gboolean ret;
+  GstStructure *structure;
 
   asfmux = GST_ASFMUX (gst_pad_get_parent (pad));
 
@@ -462,75 +410,69 @@ gst_asfmux_audsinkconnect (GstPad *pad, GstCaps *vscaps)
   g_assert (stream != NULL);
   g_assert (stream->type == ASF_STREAM_AUDIO);
 
-  /* we are not going to act on variable caps */
-  if (!GST_CAPS_IS_FIXED (vscaps))
-    return GST_PAD_LINK_DELAYED;
-
-  GST_DEBUG ("asfmux: audio sinkconnect triggered on %s",
+  GST_DEBUG ("asfmux: audio sink_link triggered on %s",
 	     gst_pad_get_name (pad));
 
-  for (caps = vscaps; caps != NULL; caps = caps->next) {
-    const gchar* mimetype = gst_caps_get_mime(caps);
-    gint rate, channels;
+  structure = gst_caps_get_structure (caps, 0);
 
-    /* we want these for all */
-    gst_caps_get (caps, "channels", &channels,
-			"rate",     &rate,
-			NULL);
+  /* we want these for all */
+  ret = gst_structure_get_int (structure, "channels", &channels);
+  ret &= gst_structure_get_int (structure, "rate", &rate);
 
-    stream->header.audio.sample_rate = rate;
-    stream->header.audio.channels    = channels;
+  if (!ret) return GST_PAD_LINK_REFUSED;
 
-    if (!strcmp (mimetype, "audio/x-raw-int")) {
-      gint block, size;
+  stream->header.audio.sample_rate = rate;
+  stream->header.audio.channels    = channels;
 
-      stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_PCM;
+  mimetype = gst_structure_get_name (structure);
+  if (!strcmp (mimetype, "audio/x-raw-int")) {
+    gint block, size;
 
-      gst_caps_get (caps, "width",	&block,
-		          "depth",	&size,
-		          NULL);
+    stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_PCM;
 
-      stream->header.audio.block_align = block;
-      stream->header.audio.word_size   = size;
-      stream->header.audio.size        = 0;
+    gst_structure_get_int (structure, "width", &block);
+    gst_structure_get_int (structure, "depth", &size);
 
-      /* set some more info straight */
-      stream->header.audio.block_align /= 8;
-      stream->header.audio.block_align *= stream->header.audio.channels;
-      stream->header.audio.byte_rate = stream->header.audio.block_align *
-				       stream->header.audio.sample_rate;
-      goto done;
-    } else {
-      stream->header.audio.codec_tag = 0;
+    stream->header.audio.block_align = block;
+    stream->header.audio.word_size   = size;
+    stream->header.audio.size        = 0;
 
-      if (!strcmp (mimetype, "audio/mpeg")) {
-        gint layer = 3;
-        gst_caps_get_int(caps, "layer", &layer);
-        switch (layer) {
-          case 3:
-            stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_MPEGL3;
-            break;
-          case 1: case 2:
-            stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_MPEGL12;
-            break;
-        }
-      } else if (!strcmp (mimetype, "audio/x-vorbis")) {
-        stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_VORBIS3;
-      } else if (!strcmp (mimetype, "audio/x-ac3")) {
-        stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_A52;
+    /* set some more info straight */
+    stream->header.audio.block_align /= 8;
+    stream->header.audio.block_align *= stream->header.audio.channels;
+    stream->header.audio.byte_rate = stream->header.audio.block_align *
+				     stream->header.audio.sample_rate;
+    goto done;
+  } else {
+    stream->header.audio.codec_tag = 0;
+
+    if (!strcmp (mimetype, "audio/mpeg")) {
+      gint layer = 3;
+      gst_structure_get_int(structure, "layer", &layer);
+      switch (layer) {
+	case 3:
+	  stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_MPEGL3;
+	  break;
+	case 1: case 2:
+	  stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_MPEGL12;
+	  break;
       }
-
-      stream->header.audio.block_align = 1;
-      stream->header.audio.byte_rate   = 8 * 1024;
-      stream->header.audio.word_size   = 16;
-      stream->header.audio.size        = 0;
-
-      if (!stream->header.audio.codec_tag) {
-        continue;
-      }
-
-      goto done;
+    } else if (!strcmp (mimetype, "audio/x-vorbis")) {
+      stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_VORBIS3;
+    } else if (!strcmp (mimetype, "audio/x-ac3")) {
+      stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_A52;
     }
+
+    stream->header.audio.block_align = 1;
+    stream->header.audio.byte_rate   = 8 * 1024;
+    stream->header.audio.word_size   = 16;
+    stream->header.audio.size        = 0;
+
+    if (!stream->header.audio.codec_tag) {
+      return GST_PAD_LINK_REFUSED;
+    }
+
+    goto done;
   }
   return GST_PAD_LINK_REFUSED;
 
@@ -615,11 +557,11 @@ gst_asfmux_request_new_pad (GstElement     *element,
   if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
     padname = g_strdup_printf ("audio_%02d", asfmux->num_audio++);
     stream->type = ASF_STREAM_AUDIO;
-    linkfunc = gst_asfmux_audsinkconnect;
+    linkfunc = gst_asfmux_audsink_link;
   } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
     padname = g_strdup_printf ("video_%02d", asfmux->num_video++);
     stream->type = ASF_STREAM_VIDEO;
-    linkfunc = gst_asfmux_vidsinkconnect;
+    linkfunc = gst_asfmux_vidsink_link;
   } else {
     g_warning ("asfmux: this is not our template!\n");
     return NULL;

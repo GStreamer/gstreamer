@@ -92,25 +92,24 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (src_factory,
+static GstStaticPadTemplate gst_ac3parse_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW ("ac3parse_src",
-		"audio/ac3",
-		  "channels", GST_PROPS_INT_RANGE (1, 6),
-		  "rate",     GST_PROPS_INT_RANGE (32000, 48000)
-	       )
+  GST_STATIC_CAPS (
+    "audio/ac3, "
+    "channels = (int) [ 1, 6 ], "
+    "rate = (int) [ 32000, 48000 ]"
+  )
 );
 
-GST_PAD_TEMPLATE_FACTORY (sink_factory,
+static GstStaticPadTemplate gst_ac3parse_sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW ("ac3parse_sink",
-		"audio/x-ac3",
-		  NULL
-	       )
+  GST_STATIC_CAPS ("audio/x-ac3")
 );
 
 static void	gst_ac3parse_class_init	  (gpointer g_class);
@@ -167,9 +166,9 @@ gst_ac3parse_class_init (gpointer g_class)
   gstelement_class = (GstElementClass*)klass;
 
   gst_element_class_add_pad_template (gstelement_class,
-	GST_PAD_TEMPLATE_GET(src_factory));
+      gst_static_pad_template_get (&gst_ac3parse_src_template));
   gst_element_class_add_pad_template (gstelement_class,
-	GST_PAD_TEMPLATE_GET(sink_factory));
+      gst_static_pad_template_get (&gst_ac3parse_sink_template));
   gst_element_class_set_details (gstelement_class,
       &ac3parse_details);
 
@@ -189,12 +188,12 @@ static void
 gst_ac3parse_init (GstAc3Parse *ac3parse)
 {
   ac3parse->sinkpad = gst_pad_new_from_template (
-	GST_PAD_TEMPLATE_GET(sink_factory), "sink");
+      gst_static_pad_template_get (&gst_ac3parse_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (ac3parse), ac3parse->sinkpad);
   gst_pad_set_chain_function (ac3parse->sinkpad, gst_ac3parse_chain);
 
   ac3parse->srcpad = gst_pad_new_from_template (
-	GST_PAD_TEMPLATE_GET(src_factory), "src");
+      gst_static_pad_template_get (&gst_ac3parse_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (ac3parse), ac3parse->srcpad);
 
   ac3parse->partialbuf = NULL;
@@ -339,10 +338,9 @@ gst_ac3parse_chain (GstPad *pad, GstData *_data)
         }
         if (need_capsnego) {
           GstCaps *newcaps;
-          newcaps = GST_CAPS_NEW ("ac3parse_src",
-				  "audio/x-ac3",
-				    "channels", GST_PROPS_INT (channels),
-				    "rate",     GST_PROPS_INT (sample_rate));
+          newcaps = gst_caps_new_simple ("audio/x-ac3",
+	      "channels", G_TYPE_INT, channels,
+	      "rate",     G_TYPE_INT, sample_rate, NULL);
           if (gst_pad_try_set_caps (ac3parse->srcpad, newcaps) <= 0) {
             gst_element_error (GST_ELEMENT (ac3parse),
 			       "Ac3parse: failed to negotiate format with next element");
