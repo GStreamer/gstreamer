@@ -1500,7 +1500,7 @@ gst_real_pad_dispose (GObject *object)
   /* No connected pad can ever be disposed.
    * It has to have a parent to be connected and a parent would hold a reference */
   g_assert (GST_PAD_PEER (pad) == NULL);
-  
+
   GST_DEBUG (GST_CAT_REFCOUNTING, "dispose %s:%s\n", GST_DEBUG_PAD_NAME(pad));
 
   if (GST_PAD_PADTEMPLATE (pad)){

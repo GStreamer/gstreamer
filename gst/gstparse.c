@@ -621,7 +621,7 @@ gst_parse_launch (const gchar * pipeline_description)
   }
 
   /* do it! */
-  pipeline = gst_parse_launchv (argvn);
+  pipeline = gst_parse_launchv ((const char**) argvn);
 
   GST_DEBUG(0, "Finished - freeing temporary argument array");
   g_strfreev(argvn);
