@@ -181,7 +181,7 @@ gst_aggregator_request_new_pad (GstElement *element, GstPadTemplate *templ, cons
   g_return_val_if_fail (GST_IS_AGGREGATOR (element), NULL);
 
   if (templ->direction != GST_PAD_SINK) {
-    g_warning ("gstaggregator: request new pad that is not a SRC pad\n");
+    g_warning ("gstaggregator: request new pad that is not a sink pad\n");
     return NULL;
   }
 
