@@ -299,7 +299,7 @@ uninstall-local:
 	  echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/index.sgml' ; \
 	  rm -f $(DESTDIR)$(TARGET_DIR)/index.sgml; \
 	fi) 
-	if test -d $(DESTDIR)$(TARGET_DIR); then rmdir -p $(DESTDIR)$(TARGET_DIR) 2>/dev/null; fi
+	if test -d $(DESTDIR)$(TARGET_DIR); then rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(TARGET_DIR) 2>/dev/null; fi
 
 #
 # Require gtk-doc when making dist
