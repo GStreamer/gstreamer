@@ -17,6 +17,15 @@ init
 popt
 queue
 threads
+bin
+decodebin
+elementcreate
+elementfactory
+elementlink
+ghostpad
+pad
+playbin
+query
 
 xml-mp3
 xml
