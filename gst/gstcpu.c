@@ -37,10 +37,22 @@ void _gst_cpu_initialize(void)
 
   gst_cpuid(1, &eax, &ebx, &ecx, &edx);
 
-  if (edx & (1<<23)) _gst_cpu_flags |= GST_CPU_FLAG_MMX;
-  if (edx & (1<<25)) _gst_cpu_flags |= GST_CPU_FLAG_SSE;
+  g_print("CPU features : ");
 
-  g_print("CPU features (%08x)\n", _gst_cpu_flags);
+  if (edx & (1<<23)) {
+    _gst_cpu_flags |= GST_CPU_FLAG_MMX;
+    g_print("MMX ");
+  }
+  if (edx & (1<<25)) {
+    _gst_cpu_flags |= GST_CPU_FLAG_SSE;
+    g_print("SSE ");
+  }
+
+  if (!_gst_cpu_flags) {
+    g_print("NONE");
+  }
+  g_print("\n");
+
 }
 
 guint32 gst_cpu_get_flags(void) 

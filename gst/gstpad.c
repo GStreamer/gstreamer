@@ -262,8 +262,8 @@ void gst_pad_chain(GstPad *pad) {
 
 /**
  * gst_pad_handle_qos:
- * @element: element to change state of
- * @state: new element state
+ * @pad: the pad to handle the QoS message
+ * @qos_message: the QoS message to handle
  *
  */
 void gst_pad_handle_qos(GstPad *pad,

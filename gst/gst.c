@@ -59,12 +59,22 @@ void gst_init(int *argc,char **argv[]) {
   }
 }
 
+/**
+ * gst_main:
+ *
+ * Enter the main GStreamer processing loop 
+ */
 void gst_main() {
   gdk_threads_enter();
   gtk_main();
   gdk_threads_leave();
 }
 
+/**
+ * gst_main_quit:
+ *
+ * Exits the main GStreamer processing loop 
+ */
 void gst_main_quit() {
   gtk_main_quit();
 }

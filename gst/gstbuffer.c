@@ -67,11 +67,18 @@ GstBuffer *gst_buffer_new() {
   return buffer;
 }
 
+/**
+ * gst_buffer_new_from_pool:
+ * @pool: the buffer pool to use
+ *
+ * Create a new buffer using the specified bufferpool.
+ *
+ * Returns: new buffer
+ */
 GstBuffer *gst_buffer_new_from_pool(GstBufferPool *pool)
 {
   return gst_buffer_pool_new_buffer(pool);
 }
-
 
 /**
  * gst_buffer_create_sub:
@@ -126,12 +133,12 @@ GstBuffer *gst_buffer_create_sub(GstBuffer *parent,guint32 offset,guint32 size) 
 }
 
 /**
- * gst_buffer_append_:
+ * gst_buffer_append:
  * @buffer: a buffer
  * @append: the buffer to append
  *
- * Creates a new buffer by appending the data of eppend to the
- *  existing data of buffer.
+ * Creates a new buffer by appending the data of append to the
+ * existing data of buffer.
  *
  * Returns: new buffer
  */

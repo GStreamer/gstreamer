@@ -134,6 +134,17 @@ GstElement *gst_elementfactory_create(GstElementFactory *factory,
   return element;
 }
 
+/**
+ * gst_elementfactory_make:
+ * @factoryname: a named factory to instantiate
+ * @name: name of new element
+ *
+ * Create a new element of the type defined by the given elementfactory.
+ * It wll be given the name supplied, since all elements require a name as
+ * their first argument.
+ *
+ * Returns: new #GstElement
+ */
 GstElement *gst_elementfactory_make(gchar *factoryname,gchar *name) {
   GstElementFactory *factory;
   GstElement *element;
@@ -145,18 +156,43 @@ GstElement *gst_elementfactory_make(gchar *factoryname,gchar *name) {
   return element;
 }
 
+/**
+ * gst_elementfactory_add_src:
+ * @elementfactory: factory to add the src id to
+ * @id: the mime id of the src 
+ *
+ * Use this function to indicate that this factory can src
+ * the given type id.
+ */
 void gst_elementfactory_add_src(GstElementFactory *elementfactory, guint16 id) {
   guint type = id;
 
   elementfactory->src_types = g_list_prepend(elementfactory->src_types, GUINT_TO_POINTER(type));
 }
 
+/**
+ * gst_elementfactory_add_sink:
+ * @elementfactory: factory to add the sink id to
+ * @id: the type id of the sink 
+ *
+ * Use this function to indicate that this factory can sink
+ * the given type id.
+ */
 void gst_elementfactory_add_sink(GstElementFactory *elementfactory, guint16 id) {
   guint type = id;
 
   elementfactory->sink_types = g_list_prepend(elementfactory->sink_types, GUINT_TO_POINTER(type));
 }
 
+/**
+ * gst_elementfactory_save_thyself:
+ * @factory: factory to save
+ * @parent: the parent xmlNodePtr 
+ *
+ * Saves the factory into an XML tree
+ * 
+ * Returns: the new xmlNodePtr
+ */
 xmlNodePtr gst_elementfactory_save_thyself(GstElementFactory *factory, xmlNodePtr parent) {
   GList *types;
   xmlNodePtr subtree;
@@ -197,6 +233,14 @@ xmlNodePtr gst_elementfactory_save_thyself(GstElementFactory *factory, xmlNodePt
   return parent;
 }
 
+/**
+ * gst_elementfactory_load_thyself:
+ * @parent: the parent xmlNodePtr 
+ *
+ * Creates a new factory from an xmlNodePtr
+ * 
+ * Returns: the new factory
+ */
 GstElementFactory *gst_elementfactory_load_thyself(xmlNodePtr parent) {
   GstElementFactory *factory = g_new0(GstElementFactory, 1);
   xmlNodePtr children = parent->childs;

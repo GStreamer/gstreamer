@@ -277,7 +277,16 @@ static gboolean gst_bin_change_state_type(GstBin *bin,
   return TRUE;
 }
 
-
+/**
+ * gst_bin_set_state_type:
+ * @bin: #GstBin to set the state
+ * @state: the new state to set the elements to
+ * @type: the type of elements to change
+ *
+ * Sets the state of only those objects of the given type.
+ *
+ * Returns: indication if the state change was successfull
+ */
 gboolean gst_bin_set_state_type(GstBin *bin,
                                 GstElementState state,
                                 GtkType type) {
@@ -398,6 +407,12 @@ void gst_bin_iterate(GstBin *bin) {
     (oclass->iterate)(bin);
 }
 
+/**
+ * gst_bin_create_plan:
+ * @bin: #Gstbin to create the plan for
+ *
+ * let the bin figure out how to handle the plugins in it.
+ */
 void gst_bin_create_plan(GstBin *bin) {
   GstBinClass *oclass;
 

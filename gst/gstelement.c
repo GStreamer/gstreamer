@@ -277,10 +277,8 @@ void gst_element_error(GstElement *element,gchar *error) {
  * @element: element to change state of
  * @state: new element state
  *
- * Sets the state of the element, but more importantly fires off a signal
- * indicating the new state.  You can clear state by simply prefixing the
- * GstElementState value with ~, it will be detected and used to turn off
- * that bit.
+ * Sets the state of the element. This function will only set
+ * the elements pending state.
  *
  * Returns: whether or not the state was successfully set.
  */
@@ -306,6 +304,14 @@ gint gst_element_set_state(GstElement *element,GstElementState state) {
   return return_val;
 }
 
+/**
+ * gst_element_get_factory:
+ * @element: element to request the factory
+ *
+ * Retrieves the factory that was used to create this element
+ *
+ * Returns: the factory used for creating this element
+ */
 GstElementFactory *gst_element_get_factory(GstElement *element) {
   GstElementClass *oclass;
 
@@ -322,9 +328,8 @@ GstElementFactory *gst_element_get_factory(GstElement *element) {
  * @element: element to change state of
  *
  * Changes the state of the element, but more importantly fires off a signal
- * indicating the new state.  You can clear state by simply prefixing the
- * GstElementState value with ~, it will be detected and used to turn off
- * that bit.
+ * indicating the new state.  
+ * The element will have no pending states anymore.
  *
  * Returns: whether or not the state change was successfully set.
  */

@@ -222,6 +222,15 @@ end:
   }
 }
 
+/**
+ * gst_pipeline_autoplug:
+ * @pipeline: the pipeline to autoplug
+ *
+ * Constructs a complete pipeline by automatically
+ * detecting the plugins needed.
+ *
+ * Returns: a gboolean indicating success or failure.
+ */
 gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
   GList *elements;
   GstElement *element, *srcelement = NULL, *sinkelement= NULL;

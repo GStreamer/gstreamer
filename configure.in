@@ -420,6 +420,7 @@ plugins/dvdsrc/Makefile
 plugins/vcdsrc/Makefile
 plugins/cobin/Makefile
 plugins/rtjpeg/Makefile
+plugins/vorbis/Makefile
 plugins/capture/Makefile
 plugins/capture/v4l/Makefile
 gstplay/Makefile
