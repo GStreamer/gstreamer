@@ -154,7 +154,7 @@ gst_interface_check (gpointer from,
   GstInterface *iface;
 
   /* check cast, return FALSE if it fails, don't give a warning... */
-  if (!G_TYPE_CHECK_INSTANCE_CAST (from, type, GstInterface)) {
+  if (!G_TYPE_CHECK_INSTANCE_TYPE (from, type)) {
     return FALSE;
   }
 
