@@ -549,6 +549,7 @@ gst_scheduler_auto_clock (GstScheduler *sched)
  * @element: the element that wants to wait
  * @clock: the clock to use
  * @time: the time to wait for
+ * @jitter: the time difference between requested time and actual time
  *
  * Wait till the clock reaches a specific time
  *

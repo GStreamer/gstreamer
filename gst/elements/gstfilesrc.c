@@ -453,7 +453,7 @@ gst_filesrc_get (GstPad *pad)
     src->seek_happened = FALSE;
     GST_DEBUG (GST_CAT_EVENT, "filesrc sending discont\n");
     event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
-    GST_EVENT_DISCONT_FLUSH (event) = src->need_flush;
+    GST_EVENT_DISCONT_NEW_MEDIA (event) = FALSE;
     src->need_flush = FALSE;
     return GST_BUFFER (event);
   }

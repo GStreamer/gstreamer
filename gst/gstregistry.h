@@ -45,24 +45,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstRegistryWrite GstRegistryWrite;
-struct _GstRegistryWrite {
-  gchar *dir;
-  gchar *file;
-  gchar *tmp_file;
-};
-
-typedef struct _GstRegistryRead GstRegistryRead;
-struct _GstRegistryRead {
-  gchar *global_reg;
-  gchar *local_reg;
-};
-
-GstRegistryWrite 	*gst_registry_write_get  	(void);
-GstRegistryRead 	*gst_registry_read_get  	(void);
-void 			gst_registry_option_set 	(const gchar *registry);
-
-
 typedef enum {
   GST_REGISTRY_OK			= (0),
   GST_REGISTRY_LOAD_ERROR		= (1 << 1),

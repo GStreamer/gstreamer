@@ -116,6 +116,14 @@ gst_plugin_register_func (GstPluginDesc *desc, GstPlugin *plugin, GModule *modul
   return plugin;
 }
 
+/**
+ * gst_plugin_new:
+ * @filename: The filename of the plugin
+ *
+ * Creates a plugin from the given filename
+ *
+ * Returns: A new GstPlugin object
+ */
 GstPlugin*
 gst_plugin_new (const gchar *filename)
 {
@@ -331,6 +339,16 @@ gst_plugin_is_loaded (GstPlugin *plugin)
   return (plugin->module != NULL);
 }
 
+/**
+ * gst_plugin_find_feature:
+ * @plugin: plugin to get the feature from
+ * @name: The name of the feature to find
+ * @type: The type of the feature to find
+ *
+ * Find a feature of the given name and type in the given plugin.
+ *
+ * Returns: a GstPluginFeature or NULL if the feature was not found.
+ */
 GstPluginFeature*
 gst_plugin_find_feature (GstPlugin *plugin, const gchar *name, GType type)
 {

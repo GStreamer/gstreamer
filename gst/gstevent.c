@@ -149,7 +149,6 @@ gst_event_free (GstEvent* event)
  * gst_event_new_seek:
  * @type: The type of the seek event
  * @offset: The offset of the seek
- * @flush: A boolean indicating a flush has to be performed as well
  *
  * Allocate a new seek event with the given parameters.
  *
@@ -167,15 +166,25 @@ gst_event_new_seek (GstSeekType type, gint64 offset)
   return event;
 }
 
+/**
+ * gst_event_new_discontinuous:
+ * @new_media: A flag indicating a new media type starts
+ * @format1: The format of the discont value
+ * @...: more discont values and formats
+ *
+ * Allocate a new discontinuous event with the geven format/value pairs.
+ *
+ * Returns: A new discontinuous event.
+ */
 GstEvent*
-gst_event_new_discontinuous (gboolean flush, GstSeekType format1, ...)
+gst_event_new_discontinuous (gboolean new_media, GstSeekType format1, ...)
 {
   va_list var_args;
   GstEvent *event;
   gint count = 0;
 
   event = gst_event_new (GST_EVENT_DISCONTINUOUS);
-  GST_EVENT_DISCONT_FLUSH (event) = flush;
+  GST_EVENT_DISCONT_NEW_MEDIA (event) = new_media;
 
   va_start (var_args, format1);
 	        
@@ -195,8 +204,18 @@ gst_event_new_discontinuous (gboolean flush, GstSeekType format1, ...)
   return event;
 }
 
+/**
+ * gst_event_discont_get_value:
+ * @event: The event to query
+ * @format: The format of the discont value
+ * @value: A pointer to the value
+ *
+ * Get the value for the given format in the dicont event.
+ *
+ * Returns: TRUE if the discont event caries the specified format/value pair.
+ */
 gboolean
-gst_event_discont_get_value (GstEvent *event, GstSeekType type, gint64 *value)
+gst_event_discont_get_value (GstEvent *event, GstFormat format, gint64 *value)
 {
   gint i, n;
 
@@ -206,7 +225,7 @@ gst_event_discont_get_value (GstEvent *event, GstSeekType type, gint64 *value)
   n = GST_EVENT_DISCONT_OFFSET_LEN (event);
 
   for (i = 0; i < n; i++) {
-    if (GST_EVENT_DISCONT_OFFSET(event,i).format == type) {
+    if (GST_EVENT_DISCONT_OFFSET(event,i).format == format) {
       *value = GST_EVENT_DISCONT_OFFSET(event,i).value;
       return TRUE;
     }

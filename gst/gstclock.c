@@ -288,6 +288,17 @@ gst_clock_is_active (GstClock *clock)
   return clock->active;
 }
 
+/**
+ * gst_clock_handle_discont
+ * @clock: a #GstClock to notify of the discontinuity
+ * @time: The new time
+ *
+ * Notifies the clock of a discontinuity in time.
+ * 
+ * Returns: TRUE if the clock was updated. It is possible that
+ * the clock was not updated by this call because only the first
+ * discontinuitity in the pipeline is honoured.
+ */
 gboolean
 gst_clock_handle_discont (GstClock *clock, guint64 time)
 {
@@ -384,8 +395,12 @@ gst_clock_wait_async_func (GstClock *clock, GstClockTime time,
  * gst_clock_wait
  * @clock: a #GstClock to wait on
  * @time: The #GstClockTime to wait for
+ * @jitter: The jitter 
  *
  * Wait and block till the clock reaches the specified time.
+ * The jitter value contains the difference between the requested time and
+ * the actual time, negative values indicate that the requested time
+ * was allready passed when this call was made.
  *
  * Returns: the #GstClockReturn result of the operation.
  */
@@ -489,8 +504,10 @@ gst_clock_unlock_func (GstClock *clock, GstClockTime time, GstClockID id, gpoint
  * gst_clock_wait_id
  * @clock: The clock to wait on
  * @id: The clock id to wait on
+ * @jitter: The jitter 
  *
  * Wait and block on the clockid obtained with gst_clock_wait_async.
+ * The jitter value is described in gst_clock_wait().
  *
  * Returns: result of the operation.
  */

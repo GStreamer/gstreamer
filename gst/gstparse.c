@@ -439,10 +439,12 @@ pipeline_from_graph (graph_t *g, GError **error)
 /**
  * gst_parse_launchv:
  * @argv: null-terminated array of arguments
+ * @error: pointer to GError
  *
  * Create a new pipeline based on command line syntax.
  *
- * Returns: a new pipeline on success, NULL on failure
+ * Returns: a new pipeline on success, NULL on failure and error
+ * will contain the error message.
  */
 GstBin *
 gst_parse_launchv (const gchar **argv, GError **error)
@@ -511,6 +513,7 @@ void _gst_parse_unescape (gchar *str)
 /**
  * gst_parse_launch:
  * @pipeline_description: the command line describing the pipeline
+ * @error: the error message in case of a failure
  *
  * Create a new pipeline based on command line syntax.
  *

@@ -502,6 +502,23 @@ gst_pad_set_query_function (GstPad *pad, GstPadQueryFunction query)
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (query));
 }
 
+/**
+ * gst_pad_set_internal_connection_function:
+ * @pad: the pad to set the internal connection function for
+ * @intconn: the internal connection function
+ *
+ * Set the given internal connection function for the pad.
+ */
+void
+gst_pad_set_internal_connection_function (GstPad *pad, GstPadIntConnFunction intconn)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+
+  GST_RPAD_INTCONNFUNC(pad) = intconn;
+  GST_DEBUG (GST_CAT_PADS, "internal connection for %s:%s  set to %s",
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (intconn));
+}
 
 /**
  * gst_pad_set_connect_function:

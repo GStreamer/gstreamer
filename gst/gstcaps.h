@@ -97,7 +97,7 @@ void		gst_caps_destroy			(GstCaps *caps);
 void		gst_caps_debug				(GstCaps *caps, const gchar *label);
 
 GstCaps*	gst_caps_copy				(GstCaps *caps);
-GstCaps*	gst_caps_copy_first			(GstCaps *caps);
+GstCaps*	gst_caps_copy_1				(GstCaps *caps);
 GstCaps*	gst_caps_copy_on_write			(GstCaps *caps);
 
 const gchar*	gst_caps_get_name			(GstCaps *caps);

@@ -584,6 +584,14 @@ gst_element_request_pad (GstElement *element, GstPadTemplate *templ, const gchar
   return newpad;
 }
 
+/**
+ * gst_element_release_request_pad:
+ * @element: a #GstElement to release the request pad of
+ * @pad: The pad to release
+ *
+ * Make the element free the previously requested pad as obtained
+ * with gst_element_get_request_pad().
+ */
 void
 gst_element_release_request_pad (GstElement *element, GstPad *pad)
 {
@@ -713,6 +721,7 @@ gst_element_get_clock (GstElement *element)
  * @element: a #GstElement
  * @clock: the #GstClock to use
  * @time: the #GstClockTime to wait for on the clock
+ * @jitter: The difference between requested time and actual time
  *
  * Waits for a specific time on the clock.
  *
@@ -740,7 +749,7 @@ gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time,
  * gst_element_release_locks:
  * @element: an element 
  *
- * Instruct the element to release all the locks it is holding, ex
+ * Instruct the element to release all the locks it is holding, such as
  * blocking reads, waiting for the clock, ...
  *
  * Returns: TRUE if the locks could be released.
@@ -1125,7 +1134,7 @@ gst_element_get_pad_template (GstElement *element, const guchar *name)
 /**
  * gst_element_get_compatible_pad_template:
  * @element: element to get padtemplate of
- * @templ: a template to find a compatible template for
+ * @compattempl: a template to find a compatible template for
  *
  * Generate a padtemplate for this element compatible with the given
  * template, ie able to link to it.
@@ -1649,6 +1658,17 @@ gst_element_send_event_default (GstElement *element, GstEvent *event)
   return res;
 }
 
+/**
+ * gst_element_send_event:
+ * @element: The element to send the event to.
+ * @event: The event to send to the object.
+ *
+ * Sends an event to an element. If the element doesn't 
+ * implement an event handler, the event will be forwarded
+ * to a random sinkpad.
+ * 
+ * Returns: TRUE if the event was handled.
+ */
 gboolean
 gst_element_send_event (GstElement *element, GstEvent *event)
 {
@@ -1682,6 +1702,21 @@ gst_element_query_default (GstElement *element, GstPadQueryType type,
   return res;
 }
 
+/**
+ * gst_element_query:
+ * @element: The element to perform the query on.
+ * @type: The query type
+ * @format: a pointer to hold the format of the result
+ * @value: a pointer to the value of the result
+ *
+ * Perform a query on the given element. If the format is set
+ * to GST_FORMAT_DEFAULT and this function returns TRUE, the 
+ * format pointer will hold the default format.
+ * For element that don't implement a query handler, this function
+ * forwards the query to a random connected sinkpad of this element.
+ * 
+ * Returns: TRUE if the query could be performed.
+ */
 gboolean
 gst_element_query (GstElement *element, GstPadQueryType type,
 		   GstFormat *format, gint64 *value)
@@ -1695,8 +1730,6 @@ gst_element_query (GstElement *element, GstPadQueryType type,
 
   return FALSE;
 }
-
-
 
 /**
  * gst_element_error:
