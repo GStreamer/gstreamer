@@ -55,7 +55,7 @@ enum {
 
 enum {
   ARG_0,
-  ARG_LOCATIONS,
+  ARG_LOCATIONS
 };
 
 #define _do_init(bla) \

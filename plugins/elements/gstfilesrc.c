@@ -99,7 +99,7 @@ enum {
   ARG_FD,
   ARG_BLOCKSIZE,
   ARG_MMAPSIZE,
-  ARG_TOUCH,
+  ARG_TOUCH
 };
 
 GST_PAD_EVENT_MASK_FUNCTION (gst_filesrc_get_event_mask,

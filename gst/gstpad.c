@@ -126,7 +126,7 @@ enum {
 enum {
   REAL_ARG_0,
   REAL_ARG_CAPS,
-  REAL_ARG_ACTIVE,
+  REAL_ARG_ACTIVE
   /* FILL ME */
 };
 

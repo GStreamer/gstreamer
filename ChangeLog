@@ -1,3 +1,28 @@
+2004-01-30  Laurent Vivier <Laurent.Vivier@bull.net>
+
+	reviewed by Benjamin Otte 
+	  parts of the patch submitted in bug #113913
+
+	* configure.ac:
+	  use AC_C_INLINE. Use = instead of == with test
+	* examples/plugins/example.c:
+	* gst/autoplug/gstspideridentity.c:
+	* gst/elements/gstfdsrc.c:
+	* gst/elements/gstfilesrc.c:
+	* gst/elements/gstidentity.c:
+	* gst/elements/gstmultidisksrc.c:
+	* gst/elements/gststatistics.c:
+	* gst/gstelement.c:
+	* gst/gstobject.c:
+	* gst/gstpad.c:
+	* gst/gstpipeline.c:
+	* gst/gstthread.c:
+	  don't end enums with a comma
+	* gst/gstindex.c: (gst_index_compare_func):
+	  do explicit casting to gint
+	* gst/gsttrace.c: (gst_trace_text_flush):
+	  #define strsize as a macro
+
 2004-01-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/README:

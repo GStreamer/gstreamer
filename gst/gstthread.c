@@ -54,7 +54,7 @@ enum {
 
 enum {
   ARG_0,
-  ARG_PRIORITY,
+  ARG_PRIORITY
 };
 
 

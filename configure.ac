@@ -65,6 +65,7 @@ dnl *NOTE*: dnl this line before release, so release does static too
 dnl AM_DISABLE_STATIC
 
 AC_HEADER_STDC([])
+AC_C_INLINE
 
 dnl define correct errorlevel for debugging messages. We want to have GST_ERROR
 dnl messages printed when running cvs builds
@@ -149,7 +150,7 @@ AC_MSG_RESULT(no)
 
 dnl check for makecontext and define HAVE_MAKECONTEXT if we have it
 AC_CHECK_MCSC()
-if test "$ac_cv_check_mcsc" == "yes"; then
+if test "$ac_cv_check_mcsc" = "yes"; then
   AC_DEFINE_UNQUOTED(HAVE_MAKECONTEXT, $HAVE_MAKECONTEXT,
                      [defined if we have makecontext ()])
 fi

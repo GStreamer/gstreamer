@@ -42,7 +42,7 @@ enum {
 
 enum {
   ARG_0,
-  ARG_NAME,
+  ARG_NAME
   /* FILL ME */
 };
 

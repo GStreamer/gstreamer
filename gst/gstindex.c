@@ -35,7 +35,7 @@ enum {
 
 enum {
   ARG_0,
-  ARG_RESOLVER,
+  ARG_RESOLVER
   /* FILL ME */
 };
 
@@ -710,7 +710,7 @@ gst_index_compare_func (gconstpointer a,
                         gconstpointer b,
                         gpointer user_data)
 {
-  return a - b;  
+  return (gint)a - (gint)b;  
 }
 
 /**

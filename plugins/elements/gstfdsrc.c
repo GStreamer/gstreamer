@@ -55,7 +55,7 @@ enum {
 enum {
   ARG_0,
   ARG_FD,
-  ARG_BLOCKSIZE,
+  ARG_BLOCKSIZE
 };
 
 #define _do_init(bla) \

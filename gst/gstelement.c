@@ -47,7 +47,7 @@ enum {
 };
 
 enum {
-  ARG_0,
+  ARG_0
   /* FILL ME */
 };
 
