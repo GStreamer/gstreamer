@@ -376,6 +376,7 @@ GST_PLUGINS_ALL="\
 	cutter \
 	debug \
 	deinterlace \
+	dvdlpcmdec \
 	effectv \
 	equalizer \
 	festival \
@@ -1956,6 +1957,7 @@ gst/colorspace/Makefile
 gst/cutter/Makefile
 gst/debug/Makefile
 gst/deinterlace/Makefile
+gst/dvdlpcmdec/Makefile
 gst/effectv/Makefile
 gst/equalizer/Makefile
 gst/festival/Makefile
