@@ -30,4 +30,4 @@
 
 void    gst_version     (guint *major, guint *minor, guint *micro);
 
-#endif /* __GST_H__ */
+#endif /* __GST_VERSION_H__ */
