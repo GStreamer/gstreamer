@@ -27,6 +27,7 @@ BuildRequires: 	flex
 BuildRequires: 	m4
 BuildRequires: 	gtk-doc >= 1.1
 BuildRequires: 	gcc
+BuildRequires: 	gettext
 BuildRequires: 	zlib-devel
 BuildRequires:  popt > 1.6
 Prereq:		/sbin/ldconfig

@@ -80,18 +80,18 @@ gst_xmlinspect_@GST_MAJORMINOR@_LDADD = ../libs/gst/control/libgstcontrol-@GST_M
 
 ### man pages we want to install
 if GST_DISABLE_REGISTRY
-GST_REGISTRY_MAN = gst-register-@GST_MAJORMINOR@.1
-else
 GST_REGISTRY_MAN=
+else
+GST_REGISTRY_MAN = gst-register-@GST_MAJORMINOR@.1
 endif
 
 if GST_DISABLE_LOADSAVE
+GST_LOADSAVE_MAN=
+else
 GST_LOADSAVE_MAN = \
 	gst-complete-@GST_MAJORMINOR@.1 \
 	gst-compprep-@GST_MAJORMINOR@.1 \
 	gst-xmllaunch-@GST_MAJORMINOR@.1
-else
-GST_LOADSAVE_MAN=
 endif
 
 GST_OTHER_MAN = \

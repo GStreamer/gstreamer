@@ -1,5 +1,9 @@
 2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tools/Makefile.am: fix man page installation
+
+2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  don't check for libxml when load/save and registry disabled (#105844)
 	* gstreamer.spec.in:
