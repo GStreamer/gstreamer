@@ -6,10 +6,6 @@ CLEANFILES = grammar.tab.h grammar.tab.c lex._gst_parse_yy.c grammar.output
 
 EXTRA_DIST = grammar.y parse.l types.h
 
-# flex 2.5.31 produces code that causes compilation warnings
-# (and thus errors)
-DISABLE_FLEX_WARNING = -Wno-unused-function
-
 nodist_libgstparse_la_SOURCES = lex._gst_parse_yy.c grammar.tab.c
 libgstparse_la_CFLAGS = $(GST_CFLAGS) $(DISABLE_FLEX_WARNING)
 libgstparse_la_LIBADD = $(LIBGST_LIBS)

@@ -25,7 +25,6 @@
 #endif // G_HAVE_ISO_VARARGS
 
 #define YY_DECL int _gst_parse_yylex (YYSTYPE *lvalp)
-#define YY_NO_UNPUT
 %}
 
 _operators [(){}.:!,=]
@@ -47,6 +46,7 @@ _binref {_identifier}[[:space:]]*"."[[:space:]]*"("
 
 %x value
 %option noyywrap
+%option nounput
 %%
 
 {_assignment} {
