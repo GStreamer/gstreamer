@@ -159,6 +159,25 @@ struct minimal_stackframe {
 /* assume stackframe is 16 bytes */
 #define GST_ARCH_SETUP_STACK(sp) sp -= 4
 
+/***** S/390 *****/
+#elif defined(HAVE_CPU_S390)
+
+#define GST_ARCH_SET_SP(stackpointer) \
+    __asm__("lr 15,%0" : : "r"(stackpointer))
+
+#define GST_ARCH_CALL(target) \
+    __asm__( "basr 14,%0" : : "a"(target) );
+
+struct minimal_s390_stackframe {
+    unsigned long back_chain;
+    unsigned long reserved;
+    unsigned long greg[14];
+    double        freg[4];
+};
+
+#define GST_ARCH_SETUP_STACK(sp) \
+    sp = ((unsigned long *)(sp)) - 24; \
+    ((struct minimal_s390_stackframe *)sp)->back_chain = 0;
 
 
 #else
