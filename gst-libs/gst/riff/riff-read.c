@@ -158,19 +158,19 @@ gst_riff_peek_head (GstRiffRead *riff,
   guint8 *data;
 
   /* read */
-  if (gst_bytestream_peek_bytes (riff->bs, &data, 8) != 8) {
+  while (gst_bytestream_peek_bytes (riff->bs, &data, 8) != 8) {
     GstEvent *event = NULL;
     guint32 remaining;
 
     /* Here, we might encounter EOS */
     gst_bytestream_get_status (riff->bs, &remaining, &event);
-    if (event && GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    if (event) {
       gst_pad_event_default (riff->sinkpad, event);
     } else {
       gst_event_unref (event);
       GST_ELEMENT_ERROR (riff, RESOURCE, READ, NULL, NULL);
+      return FALSE;
     }
-    return FALSE;
   }
 
   /* parse tag + length (if wanted) */
@@ -222,7 +222,7 @@ gst_riff_read_seek (GstRiffRead *riff,
 {
   guint64 length = gst_bytestream_length (riff->bs);
   guint32 remaining;
-  GstEvent *event;
+  GstEvent *event = NULL;
   guchar *data;
 
   /* hack for AVI files with broken idx1 size chunk markers */
@@ -246,17 +246,21 @@ gst_riff_read_seek (GstRiffRead *riff,
 
   /* and now, peek a new byte. This will fail because there's a
    * pending event. Then, take the event and return it. */
-  if (gst_bytestream_peek_bytes (riff->bs, &data, 1))
-    g_warning ("Unexpected data after seek");
+  while (!event) {
+    if (gst_bytestream_peek_bytes (riff->bs, &data, 1)) {
+      GST_WARNING ("Unexpected data after seek - this means seek failed");
+      break;
+    }
 
-  /* get the discont event and return */
-  gst_bytestream_get_status (riff->bs, &remaining, &event);
-  if (!event || GST_EVENT_TYPE (event) != GST_EVENT_DISCONTINUOUS) {
-    GST_ELEMENT_ERROR (riff, CORE, EVENT, NULL,
-		       ("No discontinuity event after seek"));
-    if (event)
-      gst_event_unref (event);
-    return NULL;
+    /* get the discont event and return */
+    gst_bytestream_get_status (riff->bs, &remaining, &event);
+    if (!event) {
+      GST_WARNING ("No discontinuity event after seek - seek failed");
+      break;
+    } else if (GST_EVENT_TYPE (event) != GST_EVENT_DISCONTINUOUS) {
+      gst_pad_event_default (riff->sinkpad, event);
+      event = NULL;
+    }
   }
 
   return event;
