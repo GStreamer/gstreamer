@@ -2451,6 +2451,10 @@ gst_element_set_loop_function (GstElement *element,
 
   /* set the NEW_LOOPFUNC flag so everyone knows to go try again */
   GST_FLAG_SET (element, GST_ELEMENT_NEW_LOOPFUNC);
+
+  if (GST_ELEMENT_SCHED (element)) {
+    gst_scheduler_scheduling_change (GST_ELEMENT_SCHED (element), element);
+  }
 }
 
 /**
