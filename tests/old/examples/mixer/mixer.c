@@ -1,6 +1,18 @@
+/*
+ * mixer.c - stereo audio mixer - thomas@apestaart.org
+ * example based on helloworld by
+ * demonstrates the adder plugin and the volume envelope plugin 
+ * work in progress but do try it out 
+ * 
+ * Latest change : 	16/04/2001
+ * 					mixer & adder plugin now work with variable-size input buffers 
+ * Version :		0.2
+ */
+
 #include <stdlib.h>
 #include <gst/gst.h>
 #include "mixer.h"
+#include <unistd.h>
 
 //#define DEBUG
 
@@ -12,16 +24,13 @@ void				destroy_input_channel (input_channel_t *pipe);
 
 gboolean playing;
 
-/* example based on helloworld by thomas@apestaart.org
-   demonstrates the adder plugin and the volume envelope plugin 
-   work in progress but do try it out */
 
 /* eos will be called when the src element has an end of stream */
 void eos(GstElement *element) 
 {
-  g_print("have eos, quitting\n");
+  g_print("have eos, quitting ?\n");
 
-  playing = FALSE;
+//  playing = FALSE;
 }
 
 static void
@@ -128,13 +137,23 @@ int main(int argc,char *argv[])
   gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "10:1", NULL);
   gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "15:1", NULL);
   gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "20:0.000001", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "40:0.000001", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "45:0.5", NULL);
 
   gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "0:1", NULL);
   gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "5:1", NULL);
   gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "10:0.000001", NULL);
   gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "15:0.000001", NULL);
   gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "20:1", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "40:1", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "45:0.5", NULL);
 
+  /* sleep a few seconds */
+
+  printf ("Sleeping a few seconds ...\n");
+  sleep (2);
+  printf ("Waking up ...\n");
+  
   /* start playing */
   gst_element_set_state(main_bin, GST_STATE_PLAYING);
 
@@ -211,9 +230,10 @@ create_input_channel (int id, char* location)
   /* add disksrc to the bin before autoplug */
   gst_bin_add(GST_BIN(channel->pipe), channel->disksrc);
 
-/*  gtk_signal_connect(GTK_OBJECT(disksrc1),"eos",
+  /* connect signal to eos of disksrc */
+  gtk_signal_connect(GTK_OBJECT(channel->disksrc),"eos",
                      GTK_SIGNAL_FUNC(eos),NULL);
-*/
+
 
 #ifdef DEBUG
   printf ("DEBUG : c_i_p : creating volume envelope\n");
@@ -255,7 +275,7 @@ create_input_channel (int id, char* location)
     exit (-1);
   }
   
-  gst_bin_add(GST_BIN(channel->pipe), channel->volenv);
+  gst_bin_add (GST_BIN(channel->pipe), channel->volenv);
   gst_bin_add (GST_BIN (channel->pipe), new_element);
   
   gst_element_connect (channel->disksrc, "src", new_element, "sink");
