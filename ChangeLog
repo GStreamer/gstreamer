@@ -1,3 +1,8 @@
+2004-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstplugin.c: (gst_plugin_load_file):
+          fix segfault for when original plugin was loaded statically
+
 2004-04-05  Benjamin Otte  <otte@gnome.org>
 
 	* testsuite/debug/category.c: (main):

@@ -330,7 +330,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
       } else {
         free_plugin = FALSE;
         if (gst_plugin_is_loaded (plugin)) {
-          if (strcmp (plugin->filename, filename) != 0) {
+          if (plugin->filename && strcmp (plugin->filename, filename) != 0) {
             GST_WARNING
                 ("plugin %p from file \"%s\" with same name %s is already "
                 "loaded, aborting loading of \"%s\"", plugin, plugin->filename,
