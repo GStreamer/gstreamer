@@ -209,7 +209,7 @@ gst_util_set_object_arg (GObject * object, const gchar * name, const gchar * val
 	case G_TYPE_BOOLEAN:{
 	  gboolean i = FALSE;
 
-	  if (!strncmp ("true", value, 4))
+	  if (!g_strncasecmp ("true", value, 4))
 	    i = TRUE;
 	  g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
