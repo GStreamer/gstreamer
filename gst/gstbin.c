@@ -459,7 +459,7 @@ gst_bin_child_state_change (GstBin *bin, GstElementState oldstate, GstElementSta
 
   GST_INFO (GST_CAT_STATES, "child %s changed state in bin %s from %s to %s",
 	    GST_ELEMENT_NAME (child), GST_ELEMENT_NAME (bin),
-	    gst_element_statename (oldstate), gst_element_statename (newstate));
+	    gst_element_state_get_name (oldstate), gst_element_state_get_name (newstate));
 
   while (oldstate >>= 1) old_idx++;
   while (newstate >>= 1) new_idx++;
@@ -473,7 +473,7 @@ gst_bin_child_state_change (GstBin *bin, GstElementState oldstate, GstElementSta
       gint state = (1 << i);
       if (GST_STATE (bin) != state) {
 	GST_INFO (GST_CAT_STATES, "bin %s need state change to %s",
-		  GST_ELEMENT_NAME (bin), gst_element_statename (state));
+		  GST_ELEMENT_NAME (bin), gst_element_state_get_name (state));
 	GST_STATE_PENDING (bin) = state;
         GST_UNLOCK (bin);
 	gst_bin_change_state_norecurse (bin);
@@ -505,7 +505,7 @@ gst_bin_change_state (GstElement * element)
   transition = GST_STATE_TRANSITION (element);
 
   GST_INFO_ELEMENT (GST_CAT_STATES, element, "changing childrens' state from %s to %s",
-		    gst_element_statename (old_state), gst_element_statename (pending));
+		    gst_element_state_get_name (old_state), gst_element_state_get_name (pending));
 
   if (pending == GST_STATE_VOID_PENDING)
     return GST_STATE_SUCCESS;
@@ -520,7 +520,7 @@ gst_bin_change_state (GstElement * element)
       case GST_STATE_FAILURE:
 	GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
 	GST_DEBUG (GST_CAT_STATES, "child '%s' failed to go to state %d(%s)",
-		   GST_ELEMENT_NAME (child), pending, gst_element_statename (pending));
+		   GST_ELEMENT_NAME (child), pending, gst_element_state_get_name (pending));
 
 	gst_element_set_state (child, old_state);
 	if (GST_ELEMENT_SCHED (child) == GST_ELEMENT_SCHED (element)) {
@@ -539,9 +539,9 @@ gst_bin_change_state (GstElement * element)
   }
 
   GST_INFO_ELEMENT (GST_CAT_STATES, element, "done changing bin's state from %s to %s, now in %s",
-                gst_element_statename (old_state),
-                gst_element_statename (pending),
-                gst_element_statename (GST_STATE (element)));
+                gst_element_state_get_name (old_state),
+                gst_element_state_get_name (pending),
+                gst_element_state_get_name (GST_STATE (element)));
 
   if (have_async)
     ret = GST_STATE_ASYNC;

@@ -261,8 +261,8 @@ gst_thread_change_state (GstElement * element)
   transition = GST_STATE_TRANSITION (element);
 
   THR_INFO ("changing state from %s to %s",
-	    gst_element_statename (GST_STATE (element)),
-	    gst_element_statename (GST_STATE_PENDING (element)));
+	    gst_element_state_get_name (GST_STATE (element)),
+	    gst_element_state_get_name (GST_STATE_PENDING (element)));
 
   if (pthread_equal (self, thread->thread_id)) {
     GST_DEBUG (GST_CAT_THREAD,
@@ -478,9 +478,9 @@ gst_thread_main_loop (void *arg)
       case GST_STATE_READY:
         /* wait to be set to either the NULL or PAUSED states */
         THR_DEBUG_MAIN ("thread in %s state, waiting for either %s or %s",
-                        gst_element_statename (GST_STATE_READY),
-                        gst_element_statename (GST_STATE_NULL),
-                        gst_element_statename (GST_STATE_PAUSED));
+                        gst_element_state_get_name (GST_STATE_READY),
+                        gst_element_state_get_name (GST_STATE_NULL),
+                        gst_element_state_get_name (GST_STATE_PAUSED));
         g_cond_wait (thread->cond,thread->lock);
 	
 	/* this must have happened by a state change in the thread context */
@@ -503,9 +503,9 @@ gst_thread_main_loop (void *arg)
       case GST_STATE_PAUSED:
         /* wait to be set to either the READY or PLAYING states */
         THR_DEBUG_MAIN("thread in %s state, waiting for either %s or %s",
-                       gst_element_statename (GST_STATE_PAUSED),
-                       gst_element_statename (GST_STATE_READY),
-                       gst_element_statename (GST_STATE_PLAYING));
+                       gst_element_state_get_name (GST_STATE_PAUSED),
+                       gst_element_state_get_name (GST_STATE_READY),
+                       gst_element_state_get_name (GST_STATE_PLAYING));
         g_cond_wait (thread->cond, thread->lock);
 
 	/* this must have happened by a state change in the thread context */
@@ -551,8 +551,8 @@ gst_thread_main_loop (void *arg)
       case GST_STATE_PLAYING:
         /* wait to be set to PAUSED */
         THR_DEBUG_MAIN ("thread in %s state, waiting for %s",
-                        gst_element_statename(GST_STATE_PLAYING),
-                        gst_element_statename(GST_STATE_PAUSED));
+                        gst_element_state_get_name(GST_STATE_PLAYING),
+                        gst_element_state_get_name(GST_STATE_PAUSED));
         g_cond_wait (thread->cond,thread->lock);
 
         /* been signaled, we need to state transition now and signal back */
@@ -563,7 +563,7 @@ gst_thread_main_loop (void *arg)
         continue;
       case GST_STATE_NULL:
         THR_DEBUG_MAIN ("thread in %s state, preparing to die",
-                        gst_element_statename(GST_STATE_NULL));
+                        gst_element_state_get_name(GST_STATE_NULL));
         GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
         break;
       default:

@@ -1298,8 +1298,8 @@ gst_element_set_state (GstElement *element, GstElementState state)
   curpending = GST_STATE(element);
 
   GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "setting state from %s to %s",
-                     gst_element_statename (curpending),
-                     gst_element_statename (state));
+                     gst_element_state_get_name (curpending),
+                     gst_element_state_get_name (state));
 
   /* loop until the final requested state is set */
   while (GST_STATE (element) != state 
@@ -1317,8 +1317,8 @@ gst_element_set_state (GstElement *element, GstElementState state)
     if (curpending != state) {
       GST_DEBUG_ELEMENT (GST_CAT_STATES, element, 
 	                 "intermediate: setting state from %s to %s",
-			 gst_element_statename (state),
-                         gst_element_statename (curpending));
+			 gst_element_state_get_name (state),
+                         gst_element_state_get_name (curpending));
     }
 
     /* call the state change function so it can set the state */
@@ -1339,9 +1339,9 @@ gst_element_set_state (GstElement *element, GstElementState state)
         if (GST_STATE (element) != curpending) {
           GST_DEBUG_ELEMENT (GST_CAT_STATES, element, 
 			  "element claimed state-change success, but state didn't change %s, %s <-> %s",
-                     	  gst_element_statename (GST_STATE (element)),
-                     	  gst_element_statename (GST_STATE_PENDING (element)),
-                     	  gst_element_statename (curpending));
+                     	  gst_element_state_get_name (GST_STATE (element)),
+                     	  gst_element_state_get_name (GST_STATE_PENDING (element)),
+                     	  gst_element_state_get_name (curpending));
           return GST_STATE_FAILURE;
 	}
         break;
@@ -1450,8 +1450,8 @@ gst_element_change_state (GstElement *element)
   }
   
   GST_INFO (GST_CAT_STATES, "%s default handler sets state from %s to %s %d", GST_ELEMENT_NAME (element),
-                     gst_element_statename (old_state),
-                     gst_element_statename (old_pending),
+                     gst_element_state_get_name (old_state),
+                     gst_element_state_get_name (old_pending),
 		     GST_STATE_TRANSITION (element));
 
   /* we set the state change early for the negotiation functions */
@@ -1806,15 +1806,15 @@ gst_element_set_eos (GstElement *element)
 
 
 /**
- * gst_element_statename:
- * @state: The state to get the name of
+ * gst_element_state_get_name:
+ * @state: a #GstElementState to get the name of
  *
  * Gets a string representing the given state.
  *
  * Returns: a string with the statename.
  */
 const gchar*
-gst_element_statename (GstElementState state) 
+gst_element_state_get_name (GstElementState state) 
 {
   switch (state) {
 #ifdef GST_DEBUG_COLOR

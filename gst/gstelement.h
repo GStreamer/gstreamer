@@ -241,7 +241,7 @@ gint			gst_element_set_state		(GstElement *element, GstElementState state);
 
 void 			gst_element_wait_state_change 	(GstElement *element);
 	
-const gchar*		gst_element_statename		(GstElementState state);
+const gchar*		gst_element_state_get_name	(GstElementState state);
 
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 
