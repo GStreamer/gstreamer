@@ -192,12 +192,14 @@ gst_vorbisfile_init (VorbisFile * vorbisfile)
 {
   vorbisfile->sinkpad = gst_pad_new_from_template (dec_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (vorbisfile), vorbisfile->sinkpad);
+  gst_pad_set_convert_function (vorbisfile->sinkpad, NULL);
 
   gst_element_set_loop_function (GST_ELEMENT (vorbisfile), gst_vorbisfile_loop);
   vorbisfile->srcpad = gst_pad_new_from_template (dec_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (vorbisfile), vorbisfile->srcpad);
   gst_pad_set_query_function (vorbisfile->srcpad, gst_vorbisfile_src_query);
   gst_pad_set_event_function (vorbisfile->srcpad, gst_vorbisfile_src_event);
+  gst_pad_set_convert_function (vorbisfile->srcpad, NULL);
 
   vorbisfile->convsize = 4096;
   vorbisfile->total_out = 0;
@@ -444,11 +446,19 @@ gst_vorbisfile_loop (GstElement *element)
     }
 
     vorbisfile->may_eos = TRUE;
-    if (vorbisfile->vf.seekable) {
-      GST_BUFFER_TIMESTAMP (outbuf) = (gint64) (ov_time_tell (&vorbisfile->vf) * GST_SECOND);
+
+    {
+      GstFormat format;
+      gint64 value;
+
+      format = GST_FORMAT_TIME;
+      gst_vorbisfile_src_query (vorbisfile->srcpad, GST_PAD_QUERY_POSITION, &format, &value);
+
+      GST_BUFFER_TIMESTAMP (outbuf) = value;
     }
-    else {
-      GST_BUFFER_TIMESTAMP (outbuf) = 0;
+
+    if (!vorbisfile->vf.seekable) {
+      vorbisfile->total_bytes += GST_BUFFER_SIZE (outbuf);
     }
   
     gst_pad_push (vorbisfile->srcpad, outbuf);
@@ -461,24 +471,36 @@ gst_vorbisfile_src_query (GstPad *pad, GstPadQueryType type,
 {
   gboolean res = TRUE;
   VorbisFile *vorbisfile; 
-		  
+  vorbis_info *vi;
+  
   vorbisfile = GST_VORBISFILE (gst_pad_get_parent (pad));
+
+  vi = ov_info (&vorbisfile->vf, -1);
 
   switch (type) {
     case GST_PAD_QUERY_TOTAL:
     {
       switch (*format) {
         case GST_FORMAT_UNITS:
-	  *value = ov_pcm_total (&vorbisfile->vf, -1);
+          if (vorbisfile->vf.seekable)
+	    *value = ov_pcm_total (&vorbisfile->vf, -1);
+	  else
+	    return FALSE;
 	  break;
         case GST_FORMAT_BYTES:
-          res = FALSE;
+          if (vorbisfile->vf.seekable)
+	    *value = ov_pcm_total (&vorbisfile->vf, -1) * vi->channels * 2;
+	  else
+	    return FALSE;
 	  break;
         case GST_FORMAT_DEFAULT:
           *format = GST_FORMAT_TIME;
           /* fall through */
         case GST_FORMAT_TIME:
-	  *value = (gint64) (ov_time_total (&vorbisfile->vf, -1) * GST_SECOND);
+          if (vorbisfile->vf.seekable)
+	    *value = (gint64) (ov_time_total (&vorbisfile->vf, -1) * GST_SECOND);
+	  else
+	    return FALSE;
 	  break;
 	default:
           res = FALSE;
@@ -492,10 +514,22 @@ gst_vorbisfile_src_query (GstPad *pad, GstPadQueryType type,
           *format = GST_FORMAT_TIME;
           /* fall through */
         case GST_FORMAT_TIME:
-	  *value = (gint64) (ov_time_tell (&vorbisfile->vf) * GST_SECOND);
+          if (vorbisfile->vf.seekable)
+	    *value = (gint64) (ov_time_tell (&vorbisfile->vf) * GST_SECOND);
+	  else
+            *value = vorbisfile->total_bytes * GST_SECOND / (vi->rate * vi->channels * 2);
+	  break;
+        case GST_FORMAT_BYTES:
+          if (vorbisfile->vf.seekable)
+	    *value = ov_pcm_tell (&vorbisfile->vf) * vi->channels * 2;
+	  else
+            *value = vorbisfile->total_bytes;
 	  break;
         case GST_FORMAT_UNITS:
-	  *value = ov_pcm_tell (&vorbisfile->vf);
+          if (vorbisfile->vf.seekable)
+	    *value = ov_pcm_tell (&vorbisfile->vf);
+	  else
+            *value = vorbisfile->total_bytes / (vi->channels * 2);
 	  break;
         default:
           res = FALSE;
