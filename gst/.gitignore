@@ -8,3 +8,5 @@ Makefile.in
 .libs
 .deps
 gstreamer.c
+gstreamer-base.defs
+gstreamer.defs
