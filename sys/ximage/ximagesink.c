@@ -178,6 +178,11 @@ gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
       ximage->SHMInfo.readOnly = FALSE;
   
       XShmAttach (ximagesink->xcontext->disp, &ximage->SHMInfo);
+      
+      XSync (ximagesink->xcontext->disp, FALSE);
+      
+      shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
+      ximage->SHMInfo.shmid = -1;
     }
   else
 #endif /* HAVE_XSHM */
@@ -191,13 +196,11 @@ gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
                                      ximage->width, ximage->height,
                                      ximagesink->xcontext->bpp,
                                      ximage->width * (ximagesink->xcontext->bpp / 8));
-    }
-  
-  if (ximage->ximage)
-    {
+      
       XSync (ximagesink->xcontext->disp, FALSE);
     }
-  else
+  
+  if (!ximage->ximage)
     {
       if (ximage->data)
         g_free (ximage->data);

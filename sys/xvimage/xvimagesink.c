@@ -191,6 +191,11 @@ gst_xvimagesink_xvimage_new (GstXvImageSink *xvimagesink,
       xvimage->SHMInfo.readOnly = FALSE;
   
       XShmAttach (xvimagesink->xcontext->disp, &xvimage->SHMInfo);
+      
+      XSync (xvimagesink->xcontext->disp, FALSE);
+      
+      shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
+      xvimage->SHMInfo.shmid = -1;
     }
   else
 #endif /* HAVE_XSHM */
@@ -202,13 +207,11 @@ gst_xvimagesink_xvimage_new (GstXvImageSink *xvimagesink,
                                         xvimage->width, xvimage->height);
       
       xvimage->data = g_malloc (xvimage->xvimage->data_size);
-    }
-
-  if (xvimage->xvimage)
-    {
+      
       XSync (xvimagesink->xcontext->disp, FALSE);
     }
-  else
+
+  if (!xvimage->xvimage)
     {
       if (xvimage->data)
         g_free (xvimage->data);
