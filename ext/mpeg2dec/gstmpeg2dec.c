@@ -307,21 +307,17 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec *mpeg2dec, const mpeg2_info_t *info, gint
 static gboolean
 gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
 {
-  GstCaps *allowed;
   GstCaps *caps;
   guint32 fourcc;
-  GstPadLinkReturn ret;
+  gboolean ret;
 
   if (!GST_PAD_IS_LINKED (mpeg2dec->srcpad)) {
     mpeg2dec->format = MPEG2DEC_FORMAT_I420;
     return TRUE;
   }
 
-  /* we what we are allowed to do */
-  allowed = gst_pad_get_allowed_caps (mpeg2dec->srcpad);
-  caps = gst_caps_copy_1 (allowed);
-
-  gst_caps_set_simple (caps,
+  caps = gst_caps_new_simple ("video/x-raw-yuv",
+      "format",       GST_TYPE_FOURCC, GST_STR_FOURCC ("I420"),
       "width",        G_TYPE_INT, mpeg2dec->width,
       "height",       G_TYPE_INT, mpeg2dec->height,
       "pixel_width",  G_TYPE_INT, mpeg2dec->pixel_width,
@@ -330,7 +326,7 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
       NULL);
 
   ret = gst_pad_set_explicit_caps (mpeg2dec->srcpad, caps);
-  if (ret != GST_PAD_LINK_OK) return FALSE;
+  if (!ret) return FALSE;
 
   /* it worked, try to find what it was again */
   gst_structure_get_fourcc (gst_caps_get_structure (caps,0),
