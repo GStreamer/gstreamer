@@ -23,11 +23,11 @@ DIST_SUBDIRS = audio colorbalance floatcast \
 		xoverlay xwindowlistener
 
 
-lib_LTLIBRARIES = libgst-interfaces-@GST_MAJORMINOR@.la
+lib_LTLIBRARIES = libgstinterfaces-@GST_MAJORMINOR@.la
 
-libgst_interfaces_@GST_MAJORMINOR@_la_SOURCES = 
+libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = 
 
-libgst_interfaces_@GST_MAJORMINOR@_la_LIBADD = \
+libgstinterfaces_@GST_MAJORMINOR@_la_LIBADD = \
 	colorbalance/libgstcolorbalance.la \
 	mixer/libgstmixer.la \
 	navigation/libgstnavigation.la \
@@ -36,5 +36,5 @@ libgst_interfaces_@GST_MAJORMINOR@_la_LIBADD = \
 	xoverlay/libgstxoverlay.la \
 	$(GST_LIBS)
 
-libgst_interfaces_@GST_MAJORMINOR@_la_LDFLAGS = @GST_PLUGINS_LT_LDFLAGS@ -version-info @GST_PLUGINS_LIBVERSION@
+libgstinterfaces_@GST_MAJORMINOR@_la_LDFLAGS = @GST_PLUGINS_LT_LDFLAGS@ -version-info @GST_PLUGINS_LIBVERSION@
 
