@@ -29,6 +29,13 @@
 #define GST_IS_PLAY_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PLAY))
 #define GST_PLAY_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GTK_TYPE_PLAY, GstPlayClass))
 
+typedef enum
+{
+  GST_PLAY_SINK_TYPE_AUDIO,
+  GST_PLAY_SINK_TYPE_VIDEO,
+  GST_PLAY_SINK_TYPE_ANY,
+} GstPlaySinkType;
+
 typedef struct _GstPlay GstPlay;
 typedef struct _GstPlayClass GstPlayClass;
   
@@ -59,6 +66,9 @@ struct _GstPlayClass
 
 GType                 gst_play_get_type              (void);
 GstPlay *             gst_play_new                   (void);
+GstElement *          gst_play_get_sink_element      (GstPlay *play,
+				                      GstElement *element,
+				                      GstPlaySinkType sink_type);
 gboolean              gst_play_set_data_src          (GstPlay *play,
                                                       GstElement *data_src);
 gboolean              gst_play_set_video_sink        (GstPlay *play,

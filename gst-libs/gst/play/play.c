@@ -220,6 +220,53 @@ gst_play_pipeline_setup (GstPlay *play)
   return TRUE;
 }
 
+static void
+gst_play_have_video_size (GstElement *element, gint width,
+                          gint height, GstPlay *play)
+{
+  g_return_if_fail (play != NULL);
+  g_return_if_fail (GST_IS_PLAY (play));
+  g_signal_emit (G_OBJECT (play), gst_play_signals[HAVE_VIDEO_SIZE],
+                 0, width, height);
+}
+
+static gboolean
+gst_play_tick_callback (GstPlay *play)
+{
+  GstClock *clock = NULL;
+  
+  g_return_val_if_fail (play != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  
+  clock = gst_bin_get_clock (GST_BIN (play));
+  play->time_nanos = gst_clock_get_time (clock);
+  
+  g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
+                 0,play->time_nanos);
+  
+  return (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING);
+}
+
+static void
+gst_play_state_change (GstElement *element, GstElementState old,
+                       GstElementState state)
+{
+  GstPlay *play;
+  
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (GST_IS_PLAY (element));
+  
+  play = GST_PLAY (element);
+  
+  if (state == GST_STATE_PLAYING)
+    {
+      g_timeout_add (200, (GSourceFunc) gst_play_tick_callback, play);
+    }
+    
+  if (GST_ELEMENT_CLASS (parent_class)->state_change)
+    GST_ELEMENT_CLASS (parent_class)->state_change (element, old, state);
+}
+
 /* =========================================== */
 /*                                             */
 /*                 Interfaces                  */
@@ -323,11 +370,14 @@ static void
 gst_play_class_init (GstPlayClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_play_dispose;
 
+  element_class->state_change = gst_play_state_change;
+  
   gst_play_signals[TIME_TICK] =
     g_signal_new ("time_tick", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
                   G_STRUCT_OFFSET (GstPlayClass, time_tick), NULL, NULL,
@@ -511,7 +561,7 @@ gst_play_set_data_src (GstPlay *play, GstElement *data_src)
 gboolean
 gst_play_set_video_sink (GstPlay *play, GstElement *video_sink)
 {
-  GstElement *video_thread, *old_video_sink, *video_scaler;
+  GstElement *video_thread, *old_video_sink, *video_scaler, *video_sink_element;
   
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
@@ -539,6 +589,17 @@ gst_play_set_video_sink (GstPlay *play, GstElement *video_sink)
   gst_element_link (video_scaler, video_sink);
   
   g_hash_table_replace (play->elements, "video_sink", video_sink);
+  
+  video_sink_element = gst_play_get_sink_element (play, video_sink,
+                                                  GST_PLAY_SINK_TYPE_VIDEO);
+  if (GST_IS_ELEMENT (video_sink_element))
+    {
+      g_hash_table_replace (play->elements, "video_sink_element",
+                            video_sink_element);
+      g_signal_connect (G_OBJECT (video_sink_element), "have_video_size",
+                        G_CALLBACK (gst_play_have_video_size), play);
+    }
+  
   
   return TRUE;
 }
@@ -594,6 +655,125 @@ gst_play_set_audio_sink (GstPlay *play, GstElement *audio_sink)
   g_hash_table_replace (play->elements, "audio_sink_pad", audio_sink_pad);
   
   return TRUE;
+}
+
+/**
+ * gst_play_get_sink_element:
+ * @play: a #GstPlay.
+ * @element: a #GstElement.
+ * @sink_type: a #GstPlaySinkType.
+ *
+ * Searches recursively for a sink #GstElement with
+ * type @sink_type in @element which is supposed to be a #GstBin.
+ *
+ * Returns: the sink #GstElement of @element.
+ */
+GstElement *
+gst_play_get_sink_element (GstPlay *play,
+			   GstElement *element, GstPlaySinkType sink_type)
+{
+  GList *elements = NULL;
+  const GList *pads = NULL;
+  gboolean has_src, has_correct_type;
+
+  g_return_val_if_fail (play != NULL, NULL);
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PLAY (play), NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
+  if (!GST_IS_BIN (element))
+    {
+      /* since its not a bin, we'll presume this 
+       * element is a sink element */
+      return element;
+    }
+
+  elements = (GList *) gst_bin_get_list (GST_BIN (element));
+
+  /* traverse all elements looking for a src pad */
+
+  while (elements)
+    {
+
+      element = GST_ELEMENT (elements->data);
+
+      /* Recursivity :) */
+
+      if (GST_IS_BIN (element))
+	{
+	  element = gst_play_get_sink_element (play, element, sink_type);
+	  if (GST_IS_ELEMENT (element))
+	    {
+	      return element;
+	    }
+	}
+      else
+	{
+
+	  pads = gst_element_get_pad_list (element);
+	  has_src = FALSE;
+	  has_correct_type = FALSE;
+	  while (pads)
+	    {
+	      /* check for src pad */
+	      if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == GST_PAD_SRC)
+		{
+		  has_src = TRUE;
+		  break;
+		}
+	      else
+		{
+		  /* If not a src pad checking caps */
+		  GstCaps *caps;
+		  caps = gst_pad_get_caps (GST_PAD (pads->data));
+		  while (caps)
+		    {
+		      gboolean has_video_cap = FALSE, has_audio_cap = FALSE;
+		      if (g_ascii_strcasecmp (gst_caps_get_mime (caps),
+					      "audio/x-raw-int") == 0)
+			{
+			  has_audio_cap = TRUE;
+			}
+		      if ((g_ascii_strcasecmp (gst_caps_get_mime (caps),
+					      "video/x-raw-yuv") == 0) ||
+			  (g_ascii_strcasecmp (gst_caps_get_mime (caps),
+					       "video/x-raw-rgb") == 0))
+									 
+			{
+			  has_video_cap = TRUE;
+			}
+
+		      switch (sink_type)
+			{
+			case GST_PLAY_SINK_TYPE_AUDIO:
+			  if (has_audio_cap)
+			    has_correct_type = TRUE;
+			  break;;
+			case GST_PLAY_SINK_TYPE_VIDEO:
+			  if (has_video_cap)
+			    has_correct_type = TRUE;
+			  break;;
+			case GST_PLAY_SINK_TYPE_ANY:
+			  if ((has_video_cap) || (has_audio_cap))
+			    has_correct_type = TRUE;
+			  break;;
+			default:
+			  has_correct_type = FALSE;
+			}
+		      caps = caps->next;
+		    }
+		}
+	      pads = g_list_next (pads);
+	    }
+	  if ((!has_src) && (has_correct_type))
+	    {
+	      return element;
+	    }
+	}
+      elements = g_list_next (elements);
+    }
+  /* we didn't find a sink element */
+  return NULL;
 }
 
 GstPlay *
