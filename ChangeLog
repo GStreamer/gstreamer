@@ -1,3 +1,10 @@
+2003-10-09  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* configure.ac: require autoconf 2.57 and pygtk 2.0.0.
+
+	*  gstreamer/Makefile.am: fix libtool 1.5 build by fixing export
+	symbol typo s/initgstreamer/init_gstreamer/
+
 2003-10-05  Thomas Vander Stichele <thomas at apestaart dot org>
 
         * examples/gstreamer/*.py: use Element over gst_element_factory_make
@@ -15,6 +22,10 @@
 	* testsuite/element.py: test for Element class
 	* gstreamer/gstreamer.overrides: add a wrapper for Element ()
 	* gstreamer/gstreamer-extra.defs: add a constructor for Element
+
+2003-09-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gstreamer/gstrearem.override: fix Py_BuildValie for 64 bit ints
 
 2003-07-10  David I. Lehn <dlehn@users.sourceforge.net>
 
