@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-09-26 19:50+0200\n"
+"POT-Creation-Date: 2004-10-06 18:35+0200\n"
 "PO-Revision-Date: 2004-08-08 22:59+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -600,19 +600,19 @@ msgstr "Soubor \"%s\" je socket."
 msgid "Failed after iterations as requested."
 msgstr "Selhání po iteracích podle požadavku."
 
-#: gst/elements/gsttypefindelement.c:154
+#: gst/elements/gsttypefindelement.c:155
 msgid "caps"
 msgstr "schopnosti"
 
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:156
 msgid "detected capabilities in stream"
 msgstr "detekované schopnosti v proudu"
 
-#: gst/elements/gsttypefindelement.c:158
+#: gst/elements/gsttypefindelement.c:159
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:162
+#: gst/elements/gsttypefindelement.c:163
 msgid "maximum"
 msgstr "maximum"
 

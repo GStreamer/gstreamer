@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-09-26 19:50+0200\n"
+"POT-Creation-Date: 2004-10-06 18:35+0200\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -603,19 +603,19 @@ msgstr "\"%s\" dosyası düzenli bir dosya değil."
 msgid "Failed after iterations as requested."
 msgstr "İstenildiği gibi tekrarlama başarısız oldu."
 
-#: gst/elements/gsttypefindelement.c:154
+#: gst/elements/gsttypefindelement.c:155
 msgid "caps"
 msgstr "kabiliyetler"
 
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:156
 msgid "detected capabilities in stream"
 msgstr "akımda tesbit edilen kabiliyetler"
 
-#: gst/elements/gsttypefindelement.c:158
+#: gst/elements/gsttypefindelement.c:159
 msgid "minimum"
 msgstr "asgari"
 
-#: gst/elements/gsttypefindelement.c:162
+#: gst/elements/gsttypefindelement.c:163
 msgid "maximum"
 msgstr "azami"
 

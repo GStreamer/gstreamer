@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-09-26 19:50+0200\n"
+"POT-Creation-Date: 2004-10-06 18:35+0200\n"
 "PO-Revision-Date: 2004-08-03 10:53+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -608,19 +608,19 @@ msgstr "Файл \"%s\" є сокетом."
 msgid "Failed after iterations as requested."
 msgstr "Помилка після ітерацій у запитаному порядку."
 
-#: gst/elements/gsttypefindelement.c:154
+#: gst/elements/gsttypefindelement.c:155
 msgid "caps"
 msgstr "можливості"
 
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:156
 msgid "detected capabilities in stream"
 msgstr "визначені можливості у потоці"
 
-#: gst/elements/gsttypefindelement.c:158
+#: gst/elements/gsttypefindelement.c:159
 msgid "minimum"
 msgstr "мінімум"
 
-#: gst/elements/gsttypefindelement.c:162
+#: gst/elements/gsttypefindelement.c:163
 msgid "maximum"
 msgstr "максимум"
 

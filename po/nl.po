@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-09-26 19:50+0200\n"
+"POT-Creation-Date: 2004-10-06 18:35+0200\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -604,19 +604,19 @@ msgstr "Bestand \"%s\" is geen gewoon bestand."
 msgid "Failed after iterations as requested."
 msgstr "Fout na iteraties zoals gevraagd."
 
-#: gst/elements/gsttypefindelement.c:154
+#: gst/elements/gsttypefindelement.c:155
 msgid "caps"
 msgstr "mogelijkheden"
 
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:156
 msgid "detected capabilities in stream"
 msgstr "gedetecteerde mogelijkheden in stroom"
 
-#: gst/elements/gsttypefindelement.c:158
+#: gst/elements/gsttypefindelement.c:159
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:162
+#: gst/elements/gsttypefindelement.c:163
 msgid "maximum"
 msgstr "maximum"
 

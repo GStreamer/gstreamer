@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-09-26 19:50+0200\n"
+"POT-Creation-Date: 2004-10-06 18:35+0200\n"
 "PO-Revision-Date: 2004-03-13 01:47+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -610,19 +610,19 @@ msgid "Failed after iterations as requested."
 msgstr "Неуспех након траженог броја покушаја."
 
 # bug: this should be full word
-#: gst/elements/gsttypefindelement.c:154
+#: gst/elements/gsttypefindelement.c:155
 msgid "caps"
 msgstr "могућности"
 
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:156
 msgid "detected capabilities in stream"
 msgstr "препознате могућности у току"
 
-#: gst/elements/gsttypefindelement.c:158
+#: gst/elements/gsttypefindelement.c:159
 msgid "minimum"
 msgstr "најмање"
 
-#: gst/elements/gsttypefindelement.c:162
+#: gst/elements/gsttypefindelement.c:163
 msgid "maximum"
 msgstr "највише"
 
