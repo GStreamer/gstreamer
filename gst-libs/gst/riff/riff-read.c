@@ -179,7 +179,7 @@ gst_riff_peek_head (GstRiffRead * riff,
 
     /* Here, we might encounter EOS */
     gst_bytestream_get_status (riff->bs, &remaining, &event);
-    if (GST_IS_EVENT (event)) {
+    if (event && GST_IS_EVENT (event)) {
       gboolean eos = (GST_EVENT_TYPE (event) == GST_EVENT_EOS);
 
       gst_pad_event_default (riff->sinkpad, event);
@@ -220,7 +220,7 @@ gst_riff_read_element_data (GstRiffRead * riff, guint length, guint * got_bytes)
     guint32 remaining;
 
     gst_bytestream_get_status (riff->bs, &remaining, &event);
-    if (GST_IS_EVENT (event)) {
+    if (event && GST_IS_EVENT (event)) {
       gst_pad_event_default (riff->sinkpad, event);
       if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
 
@@ -276,8 +276,8 @@ gst_riff_read_seek (GstRiffRead * riff, guint64 offset)
   gst_bytestream_get_status (riff->bs, &remaining, &event);
   if (event) {
     g_warning ("Unexpected event before seek");
-    gst_event_unref (event);
   }
+
   if (remaining)
     gst_bytestream_flush_fast (riff->bs, remaining);
 
@@ -376,9 +376,13 @@ gst_riff_read_skip (GstRiffRead * riff)
 
   /* see if we have that much data available */
   gst_bytestream_get_status (riff->bs, &remaining, &event);
-  if (event) {
+  if (event && GST_IS_EVENT (event)) {
+    gboolean eos = (GST_EVENT_TYPE (event) == GST_EVENT_EOS);
+
     g_warning ("Unexpected event in skip");
-    gst_event_unref (event);
+    gst_pad_event_default (riff->sinkpad, event);
+    if (eos)
+      return FALSE;
   }
 
   /* yes */

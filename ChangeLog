@@ -1,3 +1,11 @@
+2004-08-24  Sebastien Cote  <sc5@hermes.usherb.ca>
+ 
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head),
+	(gst_riff_read_element_data), (gst_riff_read_seek),
+	(gst_riff_read_skip): fix infinite loop in wavparse, fixes bug
+	#144616, patch reviewed by Ronald and committed by Christophe Fergeau
+	<teuf@gnome.org>
+
 2004-08-23 Iain <iaingnome@gmail.com>
 
 	* ext/mad/gstid3tag.c (gst_mad_id3_to_tag_list): Special case COMM
