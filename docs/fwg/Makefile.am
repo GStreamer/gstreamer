@@ -13,8 +13,6 @@ PDFS=$(FIGS:.fig=.pdf)
 SRC=$(XML)
 CSS=base.css
 
-STYLESHEET_IMAGES=/usr/share/doc/docbook-xsl/images
-
 EXTRA_DIST = $(XML) $(FIGS)
 
 ## FIXME if we don't do this they don't get cleaned up in make distcheck

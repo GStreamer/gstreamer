@@ -12,7 +12,7 @@
 <!-- .. and customize them here:                               -->
 <xsl:include href="fileext.xsl"/>
 <xsl:include href="keycombo.xsl"/>
-<xsl:include href="admon.xsl"/>
+<!-- <xsl:include href="admon.xsl"/> -->
 <xsl:include href="css.xsl"/>
 
 </xsl:stylesheet>

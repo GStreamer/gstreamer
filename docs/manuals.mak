@@ -58,7 +58,6 @@ $(DOC): $(XML) $(PNGS) $(XSLHTML) $(XSLHTMLMODS)
 	cp magic-png magic
 	xsltproc $(XSLHTML) $(MAIN)
 	mv *.html $@
-	cp -a $(STYLESHEET_IMAGES) $@/stylesheet-images
 	cp $(CSS) $@
 	test "x$(PNGS)" != "x" && mkdir $@/images && cp $(PNGS) $@/images || true
 
