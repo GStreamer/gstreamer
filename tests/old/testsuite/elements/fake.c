@@ -33,6 +33,7 @@ main (int argc, char *argv[])
 {
   GstElement *pipeline = NULL;
   GstElement *src, *sink;
+  gint retval = 0;
 
   /* init */
   gst_init (&argc, &argv);
@@ -56,7 +57,13 @@ main (int argc, char *argv[])
   /* connect */
   g_print ("Connecting elements\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  gst_bin_iterate (GST_BIN (pipeline));
+
+  /* we expect this to give an error */
+  if (gst_bin_iterate (GST_BIN (pipeline)) != FALSE)
+  {
+    g_warning ("Iterating a bin with unconnected elements should return FALSE !\n");
+    retval = 1;
+  }
 
   gst_pad_connect (gst_element_get_pad (src, "src"),
       		   gst_element_get_pad (sink, "sink"));
@@ -64,9 +71,15 @@ main (int argc, char *argv[])
   /* set to play */
   g_print ("Doing 1 iteration\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  gst_bin_iterate (GST_BIN (pipeline));
+
+  /* we expect this to work */
+  if (gst_bin_iterate (GST_BIN (pipeline)) != TRUE)
+  {
+    g_error ("Iterating a bin with connected elements should return TRUE !\n");
+    retval = 1;
+  }
 
   g_print ("Done !\n");
-  return 0;
+  return retval;
 }
 
