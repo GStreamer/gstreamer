@@ -45,38 +45,46 @@ extern "C" {
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SCHEDULER))
 
 
-#define GST_SCHED_PARENT(sched)		((sched)->parent)
+#define GST_SCHEDULER_PARENT(sched)		((sched)->parent)
+#define GST_SCHEDULER_STATE(sched)		((sched)->state)
 
 /*typedef struct _GstScheduler GstScheduler; */
 /*typedef struct _GstSchedulerClass GstSchedulerClass; */
+typedef enum {
+  GST_SCHEDULER_STATE_NONE,
+  GST_SCHEDULER_STATE_RUNNING,
+  GST_SCHEDULER_STATE_STOPPED,
+  GST_SCHEDULER_STATE_ERROR,
+} GstSchedulerState;
 
 struct _GstScheduler {
   GstObject object;
 
   GstElement *parent;
+
+  GstSchedulerState state;
 };
 
 struct _GstSchedulerClass {
   GstObjectClass parent_class;
 
   /* virtual methods */
-  void (*setup)			(GstScheduler *sched);
-  void (*reset)			(GstScheduler *sched);
-  void (*add_element)		(GstScheduler *sched, GstElement *element);
-  void 	(*remove_element)	(GstScheduler *sched, GstElement *element);
-  GstElementStateReturn 
-	  (*state_transition)	(GstScheduler *sched, GstElement *element, gint transition);
-  void (*lock_element)		(GstScheduler *sched, GstElement *element);
-  void (*unlock_element)	(GstScheduler *sched, GstElement *element);
-  void (*yield)			(GstScheduler *sched, GstElement *element);
-  void (*interrupt)		(GstScheduler *sched, GstElement *element);
-  void (*error)			(GstScheduler *sched, GstElement *element);
-  void (*pad_connect)		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-  void (*pad_disconnect)	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-  void (*pad_select)		(GstScheduler *sched, GList *padlist);
-  gboolean (*iterate)		(GstScheduler *sched);
+  void 			(*setup)		(GstScheduler *sched);
+  void 			(*reset)		(GstScheduler *sched);
+  void 			(*add_element)		(GstScheduler *sched, GstElement *element);
+  void 			(*remove_element)	(GstScheduler *sched, GstElement *element);
+  GstElementStateReturn (*state_transition)	(GstScheduler *sched, GstElement *element, gint transition);
+  void 			(*lock_element)		(GstScheduler *sched, GstElement *element);
+  void 			(*unlock_element)	(GstScheduler *sched, GstElement *element);
+  void 			(*yield)		(GstScheduler *sched, GstElement *element);
+  void 			(*interrupt)		(GstScheduler *sched, GstElement *element);
+  void 			(*error)		(GstScheduler *sched, GstElement *element);
+  void 			(*pad_connect)		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+  void 			(*pad_disconnect)	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+  void 			(*pad_select)		(GstScheduler *sched, GList *padlist);
+  GstSchedulerState 	(*iterate)		(GstScheduler *sched);
   /* for debugging */
-  void (*show)			(GstScheduler *sched);
+  void 			(*show)			(GstScheduler *sched);
 
   /* signals go here */
 };

@@ -1478,7 +1478,7 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
     if (GST_IS_BUFFER (buf))
       gst_buffer_unref (buf);
     else
-      gst_pad_event_default (pad, GST_EVENT (buf));
+      gst_event_free (GST_EVENT (buf));
   }
 }
 #endif
@@ -2018,7 +2018,7 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
 	}
       }
       gst_event_free (event);
-      /* we have to try to schedule another element because this one is deisabled */
+      /* we have to try to schedule another element because this one is disabled */
       gst_element_yield (element);
       break;
     default:

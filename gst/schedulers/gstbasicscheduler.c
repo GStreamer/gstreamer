@@ -62,6 +62,13 @@ struct _GstSchedulerChain {
 
 #define GST_BASIC_SCHEDULER_CAST(sched)	((GstBasicScheduler *)(sched))
 
+typedef enum {
+  GST_BASIC_SCHEDULER_STATE_NONE,
+  GST_BASIC_SCHEDULER_STATE_STOPPED,
+  GST_BASIC_SCHEDULER_STATE_ERROR,
+  GST_BASIC_SCHEDULER_STATE_RUNNING,
+} GstBasicSchedulerState;
+
 struct _GstBasicScheduler {
   GstScheduler parent;
 
@@ -70,6 +77,8 @@ struct _GstBasicScheduler {
 
   GList *chains;
   gint num_chains;
+
+  GstBasicSchedulerState state;
 };
 
 struct _GstBasicSchedulerClass {
@@ -78,28 +87,29 @@ struct _GstBasicSchedulerClass {
 
 static GType _gst_basic_scheduler_type = 0;
 
-static void 	gst_basic_scheduler_class_init 		(GstBasicSchedulerClass * klass);
-static void 	gst_basic_scheduler_init 		(GstBasicScheduler * scheduler);
+static void 		gst_basic_scheduler_class_init 		(GstBasicSchedulerClass * klass);
+static void 		gst_basic_scheduler_init 		(GstBasicScheduler * scheduler);
 
-static void 	gst_basic_scheduler_dispose 		(GObject *object);
+static void 		gst_basic_scheduler_dispose 		(GObject *object);
 
-static void 	gst_basic_scheduler_setup 		(GstScheduler *sched);
-static void 	gst_basic_scheduler_reset 		(GstScheduler *sched);
-static void	gst_basic_scheduler_add_element		(GstScheduler *sched, GstElement *element);
-static void     gst_basic_scheduler_remove_element	(GstScheduler *sched, GstElement *element);
+static void 		gst_basic_scheduler_setup 		(GstScheduler *sched);
+static void 		gst_basic_scheduler_reset 		(GstScheduler *sched);
+static void		gst_basic_scheduler_add_element		(GstScheduler *sched, GstElement *element);
+static void     	gst_basic_scheduler_remove_element	(GstScheduler *sched, GstElement *element);
 static GstElementStateReturn  
-		gst_basic_scheduler_state_transition	(GstScheduler *sched, GstElement *element, gint transition);
-static void 	gst_basic_scheduler_lock_element 	(GstScheduler *sched, GstElement *element);
-static void 	gst_basic_scheduler_unlock_element 	(GstScheduler *sched, GstElement *element);
-static void 	gst_basic_scheduler_yield 		(GstScheduler *sched, GstElement *element);
-static void 	gst_basic_scheduler_interrupt 		(GstScheduler *sched, GstElement *element);
-static void 	gst_basic_scheduler_error	 	(GstScheduler *sched, GstElement *element);
-static void     gst_basic_scheduler_pad_connect		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-static void     gst_basic_scheduler_pad_disconnect 	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-static GstPad*  gst_basic_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
-static gboolean gst_basic_scheduler_iterate    		(GstScheduler *sched);
+			gst_basic_scheduler_state_transition	(GstScheduler *sched, GstElement *element, gint transition);
+static void 		gst_basic_scheduler_lock_element 	(GstScheduler *sched, GstElement *element);
+static void 		gst_basic_scheduler_unlock_element 	(GstScheduler *sched, GstElement *element);
+static void 		gst_basic_scheduler_yield 		(GstScheduler *sched, GstElement *element);
+static void 		gst_basic_scheduler_interrupt 		(GstScheduler *sched, GstElement *element);
+static void 		gst_basic_scheduler_error	 	(GstScheduler *sched, GstElement *element);
+static void     	gst_basic_scheduler_pad_connect		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+static void     	gst_basic_scheduler_pad_disconnect 	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+static GstPad*  	gst_basic_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
+static GstSchedulerState
+			gst_basic_scheduler_iterate    		(GstScheduler *sched);
 
-static void     gst_basic_scheduler_show  		(GstScheduler *sched);
+static void     	gst_basic_scheduler_show  		(GstScheduler *sched);
 
 static GstSchedulerClass *parent_class = NULL;
 
@@ -877,7 +887,7 @@ static void
 gst_basic_scheduler_reset (GstScheduler *sched)
 {
   cothread_context *ctx;
-  GstBin *bin = GST_BIN (GST_SCHED_PARENT (sched));
+  GstBin *bin = GST_BIN (GST_SCHEDULER_PARENT (sched));
   GList *elements = GST_BASIC_SCHEDULER_CAST (sched)->elements;
 
   while (elements) {
@@ -885,11 +895,11 @@ gst_basic_scheduler_reset (GstScheduler *sched)
     elements = g_list_next (elements);
   }
   
-  ctx = GST_BIN_THREADCONTEXT (GST_SCHED_PARENT (sched));
+  ctx = GST_BIN_THREADCONTEXT (GST_SCHEDULER_PARENT (sched));
 
   cothread_context_free (ctx);
   
-  GST_BIN_THREADCONTEXT (GST_SCHED_PARENT (sched)) = NULL;
+  GST_BIN_THREADCONTEXT (GST_SCHEDULER_PARENT (sched)) = NULL;
 }
 
 static void
@@ -984,21 +994,41 @@ gst_basic_scheduler_state_transition (GstScheduler *sched, GstElement *element, 
   GstSchedulerChain *chain;
   GstBasicScheduler *bsched = GST_BASIC_SCHEDULER (sched);
 
-  /* find the chain the element is in */
-  chain = gst_basic_scheduler_find_chain (bsched, element);
-
-  /* remove it from the chain */
-  if (chain) {
-    if (transition == GST_STATE_PLAYING_TO_PAUSED) 
-      gst_basic_scheduler_chain_disable_element (chain, element);
-    if (transition == GST_STATE_PAUSED_TO_PLAYING) 
-      if (!gst_basic_scheduler_chain_enable_element (chain, element)) {
-        GST_INFO (GST_CAT_SCHEDULING, "could not enable element \"%s\"", GST_ELEMENT_NAME (element));
-        return GST_STATE_FAILURE;
-      }
+  /* check if our parent changed state */
+  if (GST_SCHEDULER_PARENT (sched) == element) {
+    GST_INFO (GST_CAT_SCHEDULING, "parent \"%s\" changed state", GST_ELEMENT_NAME (element));
+    if (transition == GST_STATE_PLAYING_TO_PAUSED) {
+      GST_INFO (GST_CAT_SCHEDULING, "setting scheduler state to stopped");
+      GST_SCHEDULER_STATE (sched) = GST_SCHEDULER_STATE_STOPPED;
+    }
+    else if (transition == GST_STATE_PAUSED_TO_PLAYING) {
+      GST_INFO (GST_CAT_SCHEDULING, "setting scheduler state to running");
+      GST_SCHEDULER_STATE (sched) = GST_SCHEDULER_STATE_RUNNING;
+    }
+    else {
+      GST_INFO (GST_CAT_SCHEDULING, "no interesting state change, doing nothing");
+    }
   }
-  else {
-    GST_INFO (GST_CAT_SCHEDULING, "element \"%s\" not found in any chain, no state change", GST_ELEMENT_NAME (element));
+  else if (transition == GST_STATE_PLAYING_TO_PAUSED ||
+           transition == GST_STATE_PAUSED_TO_PLAYING) {
+    /* find the chain the element is in */
+    chain = gst_basic_scheduler_find_chain (bsched, element);
+
+    /* remove it from the chain */
+    if (chain) {
+      if (transition == GST_STATE_PLAYING_TO_PAUSED) {
+        gst_basic_scheduler_chain_disable_element (chain, element);
+      }
+      else if (transition == GST_STATE_PAUSED_TO_PLAYING) {
+        if (!gst_basic_scheduler_chain_enable_element (chain, element)) {
+          GST_INFO (GST_CAT_SCHEDULING, "could not enable element \"%s\"", GST_ELEMENT_NAME (element));
+          return GST_STATE_FAILURE;
+        }
+      }
+    }
+    else {
+      GST_INFO (GST_CAT_SCHEDULING, "element \"%s\" not found in any chain, no state change", GST_ELEMENT_NAME (element));
+    }
   }
 
   return GST_STATE_SUCCESS;
@@ -1044,7 +1074,7 @@ gst_basic_scheduler_error (GstScheduler *sched, GstElement *element)
     if (chain)
       gst_basic_scheduler_chain_disable_element (chain, element);
 
-    GST_STATE_PENDING (GST_SCHEDULER (sched)->parent) = GST_STATE_PAUSED;
+    GST_SCHEDULER_STATE (sched) = GST_SCHEDULER_STATE_ERROR;
 
     cothread_switch (cothread_current_main ());
   }
@@ -1161,14 +1191,13 @@ gst_basic_scheduler_pad_select (GstScheduler * sched, GList * padlist)
   return pad;
 }
 
-static gboolean
+static GstSchedulerState
 gst_basic_scheduler_iterate (GstScheduler * sched)
 {
   GstBin *bin = GST_BIN (sched->parent);
   GList *chains;
   GstSchedulerChain *chain;
   GstElement *entry;
-  gboolean eos = FALSE;
   GList *elements;
   gint scheduled = 0;
   GstBasicScheduler *bsched = GST_BASIC_SCHEDULER (sched);
@@ -1179,7 +1208,7 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
   chains = bsched->chains;
 
   if (chains == NULL)
-    return FALSE;
+    return GST_SCHEDULER_STATE_STOPPED;
 
   while (chains) {
     chain = (GstSchedulerChain *) (chains->data);
@@ -1210,7 +1239,10 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
 	  break;
       }
       if (entry) {
+	GstSchedulerState state;
+	      
 	GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
+
 	GST_DEBUG (GST_CAT_DATAFLOW, "set COTHREAD_STOPPING flag on \"%s\"(@%p)\n",
 		   GST_ELEMENT_NAME (entry), entry);
 	if (GST_ELEMENT_THREADSTATE (entry)) {
@@ -1218,8 +1250,10 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
 	}
 	else {
 	  GST_DEBUG (GST_CAT_DATAFLOW, "cothread switch not possible, element has no threadstate\n");
-	  return FALSE;
+	  return GST_SCHEDULER_STATE_ERROR;
 	}
+
+	state = GST_SCHEDULER_STATE (sched);
 
 	/* following is a check to see if the chain was interrupted due to a
 	 * top-half state_change().  (i.e., if there's a pending state.)
@@ -1228,28 +1262,32 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
 	 * execute the state change.
 	 */
 	GST_DEBUG (GST_CAT_DATAFLOW, "cothread switch ended or interrupted\n");
-	if (GST_STATE_PENDING (GST_SCHEDULER (sched)->parent) != GST_STATE_VOID_PENDING) {
-	  GST_DEBUG (GST_CAT_DATAFLOW, "handle pending state %d\n",
-		     GST_STATE_PENDING (GST_SCHEDULER (sched)->parent));
-	  return FALSE;
+
+	if (state != GST_SCHEDULER_STATE_RUNNING) {
+	  GST_INFO (GST_CAT_DATAFLOW, "scheduler is not running, in state %d", state);
+	  return state;
 	}
+
 	scheduled++;
       }
       else {
-	GST_INFO (GST_CAT_DATAFLOW, "NO ENTRY INTO CHAIN!");
-        if (scheduled == 0) 
-          eos = TRUE;
+        GST_INFO (GST_CAT_DATAFLOW, "no entry in this chain, trying the next one");
       }
     }
     else {
-      GST_INFO (GST_CAT_DATAFLOW, "NO ENABLED ELEMENTS IN CHAIN!!");
-      if (scheduled == 0) 
-        eos = TRUE;
+      GST_INFO (GST_CAT_DATAFLOW, "no enabled elements in this chain, trying the next one");
     }
   }
 
   GST_DEBUG (GST_CAT_DATAFLOW, "leaving (%s)\n", GST_ELEMENT_NAME (bin));
-  return !eos;
+  if (scheduled == 0) {
+    GST_INFO (GST_CAT_DATAFLOW, "nothing was scheduled, return STOPPED");
+    return GST_SCHEDULER_STATE_STOPPED;
+  }
+  else {
+    GST_INFO (GST_CAT_DATAFLOW, "scheduler still running, return RUNNING");
+    return GST_SCHEDULER_STATE_RUNNING;
+  }
 }
 
 

@@ -360,6 +360,8 @@ restart:
 	/* this means the other end is shut down */
 	/* try to signal to resolve the error */
 	if (!queue->may_deadlock) {
+          if (GST_IS_BUFFER (buf)) gst_buffer_unref (buf);
+	  else gst_event_free (GST_EVENT (buf));
           g_mutex_unlock (queue->qlock);
           gst_element_error (GST_ELEMENT (queue), "deadlock found, source pad elements are shut down");
 	  return;

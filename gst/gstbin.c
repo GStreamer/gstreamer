@@ -717,7 +717,16 @@ gst_bin_iterate_func (GstBin * bin)
 {
   /* only iterate if this is the manager bin */
   if (GST_ELEMENT_SCHED (bin)->parent == GST_ELEMENT (bin)) {
-    return gst_scheduler_iterate (GST_ELEMENT_SCHED (bin));
+    GstSchedulerState state;
+
+    state = gst_scheduler_iterate (GST_ELEMENT_SCHED (bin));
+
+    if (state == GST_SCHEDULER_STATE_RUNNING) {
+      return TRUE;
+    }
+    else if (state == GST_SCHEDULER_STATE_ERROR) {
+      gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
+    }
   }
   else {
     g_warning ("bin \"%d\" can't be iterated on!\n", GST_ELEMENT_NAME (bin));
