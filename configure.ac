@@ -556,7 +556,7 @@ GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
 dnl *** OSS audio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
 GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
-  AC_CHECK_HEADER(sys/soundcard.h)
+  AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS="yes", HAVE_OSS="no")
 ])
 
 dnl *** quicktime ***
