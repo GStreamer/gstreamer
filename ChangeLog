@@ -1,3 +1,12 @@
+2004-04-22  Benjamin Otte  <otte@gnome.org>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data):
+	  mpegversion is an int
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_base_init):
+	  don't try to create pad templates with NULL caps, use any caps
+	  instead.
+
 2004-04-20  David Schleef  <ds@schleef.org>
 
 	* ext/sdl/Makefile.am: Link against libgstinterfaces, not
