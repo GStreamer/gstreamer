@@ -2522,6 +2522,11 @@ gst_pad_convert (GstPad *pad,
   g_return_val_if_fail (dest_format, FALSE);
   g_return_val_if_fail (dest_value, FALSE);
 
+  if (src_format == *dest_format) {
+    *dest_value = src_value; 
+    return TRUE;
+  }     
+
   rpad = GST_PAD_REALIZE (pad);
 
   g_return_val_if_fail (rpad, FALSE);
