@@ -86,6 +86,9 @@ struct _GstAdder {
   gfloat          slope;
   gfloat          intercept;
 
+  /* counters to keep track of timestamps */
+  gint64     	  timestamp;
+  gint64     	  offset;
 };
 
 struct _GstAdderClass {
