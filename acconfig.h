@@ -10,13 +10,6 @@
 #undef HAVE_STPCPY
 
 #undef USE_GLIB2
-#undef HAVE_LIBXML2
-
-#undef PLUGINS_DIR
-#undef PLUGINS_BUILDDIR
-#undef PLUGINS_USE_BUILDDIR
-
-#undef GST_CONFIG_DIR
 
 #undef HAVE_CPU_I386
 #undef HAVE_CPU_PPC
