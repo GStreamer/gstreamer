@@ -5,9 +5,9 @@ SOME OF THE FIRST IDEAS, PRETTY OUTDATED
 During the course of a discussion on IRC, it turned out
 that there are many possible ways to handle the capabilities.
 
-A capabilitiy is bascially a set of properties attached to a 
+A capability is basically a set of properties attached to a 
 mimetype in order to more closely describe the mimetype. 
-Capabiltities are supposed to be attached to pads so that the
+Capabilities are supposed to be attached to pads so that the
 autoplugging algorithm has more specific information to connect
 compatible pads.
 

@@ -121,8 +121,10 @@ TODO :
   - Later on, if necessary, merge back latest release branch to current dev
     branch (if patches to source were made)
     * change to a HEAD branch, make sure it's updated
-    * cvs diff -r RELEASE-0_3_4-30SECONDFRENCHMAN -R
-      gives a list of differences between head and release tag
+    * cvs diff -R -r RELEASE-0_3_4-30SECONDFRENCHMAN
+      gives a list of differences between head and release tag,
+      stuff with > is how it's in HEAD, < is in the rel branch
+
     * cvs update -j BRANCH-RELEASE-0_3_4
       merges the difference made in that branch to the current source
       this is what you want to use when merging back the branch
