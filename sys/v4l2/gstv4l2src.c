@@ -768,6 +768,7 @@ gst_v4l2src_getcaps (GstPad * pad)
   int min_w, max_w, min_h, max_h;
   GSList *walk;
   GstStructure *structure;
+  gdouble fps;
 
   if (!GST_V4L2_IS_OPEN (GST_V4L2ELEMENT (v4l2src))) {
     return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
@@ -776,6 +777,7 @@ gst_v4l2src_getcaps (GstPad * pad)
   /* build our own capslist */
   caps = gst_caps_new_empty ();
   walk = v4l2src->formats;
+  fps = gst_v4l2src_get_fps (v4l2src);
   while (walk) {
     format = (struct v4l2_fmtdesc *) walk->data;
     walk = g_slist_next (walk);
@@ -793,7 +795,7 @@ gst_v4l2src_getcaps (GstPad * pad)
       gst_structure_set (structure,
           "width", GST_TYPE_INT_RANGE, min_w, max_w,
           "height", GST_TYPE_INT_RANGE, min_h, max_h,
-          "framerate", GST_TYPE_DOUBLE_RANGE, (double) 0, G_MAXDOUBLE, NULL);
+          "framerate", G_TYPE_DOUBLE, fps, NULL);
 
       gst_caps_append_structure (caps, structure);
     }

@@ -1,3 +1,13 @@
+2004-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/oss/gstosssrc.c: (gst_osssrc_get_time), (gst_osssrc_get),
+	(gst_osssrc_src_query):
+	* sys/oss/gstosssrc.h:
+	  OK, so people want offset in DEFAULT. This time, actually fix all
+	  cases.
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_getcaps):
+	  Add FPS properly.
+
 2004-10-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/asfdemux/gstasfmux.c:
