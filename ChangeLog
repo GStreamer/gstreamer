@@ -1,3 +1,14 @@
+2004-05-28  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* gst/elements    : gstaggregator.c gstfakesink.c gstfakesrc.c
+                            gstmd5sink.c gstshaper.c gsttee.c
+                            gsttypefindelement.c
+	* gst/schedulers  : gstbasicscheduler.c gstoptimalscheduler.c
+
+	  - removing trailing commas at end of enums
+	    it is correct C99 code but C90 compilers would complain (AIX, Forte, ...)
+	    ('should' fix #143290, at least partially)
+
 2004-05-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/schedulers/gstoptimalscheduler.c: (remove_from_chain),
