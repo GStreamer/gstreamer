@@ -159,7 +159,7 @@ static void
 gst_sinesrc_init (GstSineSrc *src) 
 {
   GstElement *element = GST_ELEMENT(src);
-  GstDparamManager *dpman;
+  GstDParamManager *dpman;
   
   src->srcpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (sinesrc_src_factory), "src");
@@ -215,7 +215,7 @@ gst_sinesrc_get(GstPad *pad)
 {
   GstSineSrc *src;
   GstBuffer *buf;
-  GstDparamManager *dpman;
+  GstDParamManager *dpman;
   
   gint16 *samples;
   gint i=0, frame_countdown;

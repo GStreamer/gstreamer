@@ -23,12 +23,12 @@
 
 #include "gstdparam.h"
 
-static void gst_dparam_class_init (GstDparamClass *klass);
-static void gst_dparam_base_class_init (GstDparamClass *klass);
-static void gst_dparam_init (GstDparam *dparam);
+static void gst_dparam_class_init (GstDParamClass *klass);
+static void gst_dparam_base_class_init (GstDParamClass *klass);
+static void gst_dparam_init (GstDParam *dparam);
 
-static void gst_dparam_do_update_realtime (GstDparam *dparam, gint64 timestamp);
-static GstDparamPoint* gst_dparam_get_point_realtime (GstDparam *dparam, gint64 timestamp);
+static void gst_dparam_do_update_realtime (GstDParam *dparam, gint64 timestamp);
+static GValue** gst_dparam_get_point_realtime (GstDParam *dparam, gint64 timestamp);
 
 GType 
 gst_dparam_get_type(void) {
@@ -36,23 +36,23 @@ gst_dparam_get_type(void) {
 
 	if (!dparam_type) {
 		static const GTypeInfo dparam_info = {
-			sizeof(GstDparamClass),
+			sizeof(GstDParamClass),
 			(GBaseInitFunc)gst_dparam_base_class_init,
 			NULL,
 			(GClassInitFunc)gst_dparam_class_init,
 			NULL,
 			NULL,
-			sizeof(GstDparam),
+			sizeof(GstDParam),
 			0,
 			(GInstanceInitFunc)gst_dparam_init,
 		};
-		dparam_type = g_type_register_static(GST_TYPE_OBJECT, "GstDparam", &dparam_info, 0);
+		dparam_type = g_type_register_static(GST_TYPE_OBJECT, "GstDParam", &dparam_info, 0);
 	}
 	return dparam_type;
 }
 
 static void
-gst_dparam_base_class_init (GstDparamClass *klass)
+gst_dparam_base_class_init (GstDParamClass *klass)
 {
 	GObjectClass *gobject_class;
 
@@ -61,14 +61,14 @@ gst_dparam_base_class_init (GstDparamClass *klass)
 }
 
 static void
-gst_dparam_class_init (GstDparamClass *klass)
+gst_dparam_class_init (GstDParamClass *klass)
 {
 	GObjectClass *gobject_class;
-	GstDparamClass *dparam_class;
+	GstDParamClass *dparam_class;
 	GstObjectClass *gstobject_class;
 
 	gobject_class = (GObjectClass*)klass;
-	dparam_class = (GstDparamClass*)klass;
+	dparam_class = (GstDParamClass*)klass;
 	gstobject_class = (GstObjectClass*) klass;
 
 	//gstobject_class->save_thyself = gst_dparam_save_thyself;
@@ -76,7 +76,7 @@ gst_dparam_class_init (GstDparamClass *klass)
 }
 
 static void
-gst_dparam_init (GstDparam *dparam)
+gst_dparam_init (GstDParam *dparam)
 {
 	g_return_if_fail (dparam != NULL);
 	GST_DPARAM_VALUE(dparam) = NULL;
@@ -86,12 +86,12 @@ gst_dparam_init (GstDparam *dparam)
 /**
  * gst_dparam_new:
  *
- * Returns: a new instance of GstDparam
+ * Returns: a new instance of GstDParam
  */
-GstDparam* 
+GstDParam* 
 gst_dparam_new ()
 {
-	GstDparam *dparam;
+	GstDParam *dparam;
 
 	dparam = g_object_new (gst_dparam_get_type (), NULL);
 	dparam->do_update_func = gst_dparam_do_update_realtime;
@@ -104,12 +104,12 @@ gst_dparam_new ()
 
 /**
  * gst_dparam_set_parent
- * @dparam: GstDparam instance
- * @parent: the GstDparamManager that this dparam belongs to
+ * @dparam: GstDParam instance
+ * @parent: the GstDParamManager that this dparam belongs to
  *
  */
 void
-gst_dparam_set_parent (GstDparam *dparam, GstObject *parent)
+gst_dparam_set_parent (GstDParam *dparam, GstObject *parent)
 {
 	g_return_if_fail (dparam != NULL);
 	g_return_if_fail (GST_IS_DPARAM (dparam));
@@ -132,10 +132,10 @@ gst_dparam_set_parent (GstDparam *dparam, GstObject *parent)
  *
  * Returns: an newly created point containing an array of GValues
  */
-GstDparamPoint*
+GValue**
 gst_dparam_new_point(gint64 timestamp, GType type, ...)
 {
-	GstDparamPoint *point;
+	GValue **point;
 	GValue *value;
 	guint x;
 	gint values_length = 0;
@@ -148,9 +148,7 @@ gst_dparam_new_point(gint64 timestamp, GType type, ...)
 	}
 	va_end (var_args);
 	
-	point = g_new0(GstDparamPoint,1);
-	point->values = g_new0(GValue*,values_length + 1);
-	point->timestamp = timestamp;
+	point = g_new0(GValue*,values_length + 1);
 
 	va_start (var_args, type);
 	for (x=0 ; x < values_length ; x++){
@@ -158,10 +156,10 @@ gst_dparam_new_point(gint64 timestamp, GType type, ...)
 		if (type != G_TYPE_NONE){
 			g_value_init(value, type);
 		}
-		point->values[x] = value;
+		point[x] = value;
 		type = va_arg (var_args, GType);
 	}
-	point->values[values_length] = NULL;
+	point[values_length] = NULL;
 	va_end (var_args);
 	
 	GST_DEBUG(GST_CAT_PARAMS, "point with %d values created\n", values_length);
@@ -170,18 +168,18 @@ gst_dparam_new_point(gint64 timestamp, GType type, ...)
 }
 
 static void
-gst_dparam_do_update_realtime (GstDparam *dparam, gint64 timestamp)
+gst_dparam_do_update_realtime (GstDParam *dparam, gint64 timestamp)
 {
 	GST_DEBUG(GST_CAT_PARAMS, "updating point for %s(%p)\n",GST_DPARAM_NAME (dparam),dparam);
 	
 	GST_DPARAM_LOCK(dparam);
 	GST_DPARAM_READY_FOR_UPDATE(dparam) = FALSE;
-	g_value_copy(dparam->point->values[0], GST_DPARAM_VALUE(dparam));
+	g_value_copy(dparam->point[0], GST_DPARAM_VALUE(dparam));
 	GST_DPARAM_UNLOCK(dparam);
 }
 
-static GstDparamPoint* 
-gst_dparam_get_point_realtime (GstDparam *dparam, gint64 timestamp)
+static GValue** 
+gst_dparam_get_point_realtime (GstDParam *dparam, gint64 timestamp)
 {
 	GST_DEBUG(GST_CAT_PARAMS, "getting point for %s(%p)\n",GST_DPARAM_NAME (dparam),dparam);
 	return dparam->point;

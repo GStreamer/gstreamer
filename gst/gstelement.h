@@ -150,7 +150,7 @@ struct _GstElement {
 
   GstElement *manager;
   GstSchedule *sched;
-  GstDparamManager *dpman;
+  GstDParamManager *dpman;
 };
 
 struct _GstElementClass {

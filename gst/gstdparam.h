@@ -31,7 +31,7 @@ extern "C" {
 
 #define GST_TYPE_DPARAM			(gst_dparam_get_type ())
 #define GST_DPARAM(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DPARAM,GstDparam))
-#define GST_DPARAM_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DPARAM,GstDparam))
+#define GST_DPARAM_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DPARAM,GstDParam))
 #define GST_IS_DPARAM(obj)			(G_TYPE_CHECK_INSTANCE_TYPE	((obj), GST_TYPE_DPARAM))
 #define GST_IS_DPARAM_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DPARAM))
 
@@ -65,61 +65,54 @@ typedef enum {
   GST_DPARAM_CLOSEST_AFTER,
   GST_DPARAM_CLOSEST_BEFORE,
   GST_DPARAM_EXACT,
-} GstDparamSearchFlag;
+} GstDParamSearchFlag;
 
 typedef enum {
   GST_DPARAM_NOT_FOUND = 0,
   GST_DPARAM_FOUND_EXACT,
   GST_DPARAM_FOUND_CLOSEST,
-} GstDparamSearchResult;
+} GstDParamSearchResult;
 
-typedef struct _GstDparam GstDparam;
-typedef struct _GstDparamClass GstDparamClass;
-typedef struct _GstDparamModel GstDparamModel;
-typedef struct _GstDparamPoint GstDparamPoint;
+typedef struct _GstDParam GstDParam;
+typedef struct _GstDParamClass GstDParamClass;
+typedef struct _GstDParamModel GstDParamModel;
 
-typedef GstDparamPoint* (*GstDparamInsertPointFunction) (GstDparam *dparam, guint64 timestamp);
-typedef void (*GstDparamRemovePointFunction) (GstDparam *dparam, GstDparamPoint* point);
-typedef GstDparamPoint* (*GstDparamGetPointFunction) (GstDparam *dparam, gint64 timestamp);
-typedef GstDparamSearchResult (*GstDparamFindPointFunction) (GstDparam *dparam, gint64 *timestamp, GstDparamSearchFlag search_flag);
+typedef GValue** (*GstDParamInsertPointFunction) (GstDParam *dparam, guint64 timestamp);
+typedef void (*GstDParamRemovePointFunction) (GstDParam *dparam, GValue** point);
+typedef GValue** (*GstDParamGetPointFunction) (GstDParam *dparam, gint64 timestamp);
+typedef GstDParamSearchResult (*GstDParamFindPointFunction) (GstDParam *dparam, gint64 *timestamp, GstDParamSearchFlag search_flag);
 
-typedef void (*GstDparamDoUpdateFunction) (GstDparam *dparam, gint64 timestamp);
+typedef void (*GstDParamDoUpdateFunction) (GstDParam *dparam, gint64 timestamp);
 
-struct _GstDparam {
+struct _GstDParam {
 	GstObject		object;
 
-	GstDparamGetPointFunction get_point_func;
-	GstDparamFindPointFunction find_point_func;
+	GstDParamGetPointFunction get_point_func;
+	GstDParamFindPointFunction find_point_func;
 
-	GstDparamDoUpdateFunction do_update_func;
+	GstDParamDoUpdateFunction do_update_func;
 	
-	GstDparamInsertPointFunction insert_point_func;
-	GstDparamRemovePointFunction remove_point_func;	
+	GstDParamInsertPointFunction insert_point_func;
+	GstDParamRemovePointFunction remove_point_func;	
 	
 	GMutex *lock;
 	GValue *value;
-	GstDparamPoint *point;
+	GValue **point;
 	gint64 next_update_timestamp;
 	gboolean ready_for_update;
 	
 };
 
-struct _GstDparamClass {
+struct _GstDParamClass {
 	GstObjectClass parent_class;
 
 	/* signal callbacks */
 };
 
-struct _GstDparamPoint {
-	GValue **values;
-	gint64 timestamp;
-};
-
-
 GType gst_dparam_get_type (void);
-GstDparam* gst_dparam_new ();
-void gst_dparam_set_parent (GstDparam *dparam, GstObject *parent);
-GstDparamPoint* gst_dparam_new_point(gint64 timestamp, GType type, ...);
+GstDParam* gst_dparam_new ();
+void gst_dparam_set_parent (GstDParam *dparam, GstObject *parent);
+GValue** gst_dparam_new_point(gint64 timestamp, GType type, ...);
 
 #ifdef __cplusplus
 }

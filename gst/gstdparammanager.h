@@ -30,8 +30,8 @@ extern "C" {
 #endif /* __cplusplus */
 
 #define GST_TYPE_DPMAN			(gst_dpman_get_type ())
-#define GST_DPMAN(obj)			(G_TYPE_CHECK_INSTANCE_CAST	((obj), GST_TYPE_DPMAN,GstDparamManager))
-#define GST_DPMAN_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST	((klass), GST_TYPE_DPMAN,GstDparamManager))
+#define GST_DPMAN(obj)			(G_TYPE_CHECK_INSTANCE_CAST	((obj), GST_TYPE_DPMAN,GstDParamManager))
+#define GST_DPMAN_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST	((klass), GST_TYPE_DPMAN,GstDParamManager))
 #define GST_IS_DPMAN(obj)			(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DPMAN))
 #define GST_IS_DPMAN_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DPMAN))
 
@@ -45,19 +45,19 @@ extern "C" {
 #define GST_DPMAN_MODE_DATA(dpman)				 ((dpman)->mode_data)
 #define GST_DPMAN_RATE(dpman)				 ((dpman)->rate)
 
-typedef struct _GstDparamManager GstDparamManager;
-typedef struct _GstDparamManagerClass GstDparamManagerClass;
+typedef struct _GstDParamManager GstDParamManager;
+typedef struct _GstDParamManagerClass GstDParamManagerClass;
 typedef struct _GstDpmMode GstDpmMode;
-typedef struct _GstDparamWrapper GstDparamWrapper;
+typedef struct _GstDParamWrapper GstDParamWrapper;
 
-typedef guint (*GstDpmModeFirstCountdownFunction) (GstDparamManager *dpman, guint frames, gint64 timestamp);
-typedef guint (*GstDpmModeCountdownFunction) (GstDparamManager *dpman, guint frame_count);
-typedef void (*GstDpmModeSetupFunction) (GstDparamManager *dpman);
-typedef void (*GstDpmModeTeardownFunction) (GstDparamManager *dpman);
+typedef guint (*GstDpmModeFirstCountdownFunction) (GstDParamManager *dpman, guint frames, gint64 timestamp);
+typedef guint (*GstDpmModeCountdownFunction) (GstDParamManager *dpman, guint frame_count);
+typedef void (*GstDpmModeSetupFunction) (GstDParamManager *dpman);
+typedef void (*GstDpmModeTeardownFunction) (GstDParamManager *dpman);
 
 typedef void (*GstDpmUpdateFunction) (GValue *value, gpointer data);
 
-struct _GstDparamManager {
+struct _GstDParamManager {
 	GstObject		object;
 
 	GHashTable *dparams;
@@ -71,7 +71,7 @@ struct _GstDparamManager {
 	guint rate;
 };
 
-struct _GstDparamManagerClass {
+struct _GstDParamManagerClass {
 	GstObjectClass parent_class;
 	
 	GHashTable *modes;
@@ -85,10 +85,10 @@ struct _GstDpmMode {
 	GstDpmModeTeardownFunction teardownfunc;
 };
 
-struct _GstDparamWrapper {
+struct _GstDParamWrapper {
 	gchar *dparam_name;
 	GValue *value;
-	GstDparam *dparam;
+	GstDParam *dparam;
 	GstDpmUpdateFunction update_func;
 	gpointer update_data;
 };
@@ -108,23 +108,23 @@ struct _GstDparamWrapper {
 #define GST_DPMAN_DO_UPDATE(dpwrap) ((dpwrap->update_func)(dpwrap->value, dpwrap->update_data))
 
 GType gst_dpman_get_type (void);
-GstDparamManager* gst_dpman_new (gchar *name, GstElement *parent);
-void gst_dpman_set_parent (GstDparamManager *dpman, GstElement *parent);
+GstDParamManager* gst_dpman_new (gchar *name, GstElement *parent);
+void gst_dpman_set_parent (GstDParamManager *dpman, GstElement *parent);
 
-gboolean gst_dpman_add_required_dparam (GstDparamManager *dpman, 
+gboolean gst_dpman_add_required_dparam (GstDParamManager *dpman, 
                                         gchar *dparam_name, 
                                         GType type, 
                                         GstDpmUpdateFunction update_func, 
                                         gpointer update_data);
-void gst_dpman_remove_required_dparam (GstDparamManager *dpman, gchar *dparam_name);
-gboolean gst_dpman_attach_dparam (GstDparamManager *dpman, gchar *dparam_name, GstDparam *dparam);
-void gst_dpman_dettach_dparam (GstDparamManager *dpman, gchar *dparam_name);                         
-GstDparam* gst_dpman_get_dparam(GstDparamManager *dpman, gchar *name);
+void gst_dpman_remove_required_dparam (GstDParamManager *dpman, gchar *dparam_name);
+gboolean gst_dpman_attach_dparam (GstDParamManager *dpman, gchar *dparam_name, GstDParam *dparam);
+void gst_dpman_dettach_dparam (GstDParamManager *dpman, gchar *dparam_name);                         
+GstDParam* gst_dpman_get_dparam(GstDParamManager *dpman, gchar *name);
 
-void gst_dpman_set_rate_change_pad(GstDparamManager *dpman, GstPad *pad);
+void gst_dpman_set_rate_change_pad(GstDParamManager *dpman, GstPad *pad);
 
-gboolean gst_dpman_set_mode(GstDparamManager *dpman, gchar *modename);
-void gst_dpman_register_mode (GstDparamManagerClass *klass,
+gboolean gst_dpman_set_mode(GstDParamManager *dpman, gchar *modename);
+void gst_dpman_register_mode (GstDParamManagerClass *klass,
                            gchar *modename, 
                            GstDpmModeFirstCountdownFunction firstcountdownfunc,
                            GstDpmModeCountdownFunction countdownfunc,

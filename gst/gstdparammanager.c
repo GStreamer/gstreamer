@@ -25,14 +25,14 @@
 #include <gst/gstelement.h>
 
 
-static void gst_dpman_base_class_init (GstDparamManagerClass *klass);
-static void gst_dpman_class_init (GstDparamManagerClass *klass);
-static void gst_dpman_init (GstDparamManager *dpman);
-static void gst_dpman_state_change (GstElement *element, gint state, GstDparamManager *dpman);
-static void gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDparamManager *dpman);
-static guint gst_dpman_first_countdown_synchronous(GstDparamManager *dpman, guint frames, gint64 timestamp);
-static guint gst_dpman_first_countdown_noop(GstDparamManager *dpman, guint frames, gint64 timestamp);
-static guint gst_dpman_countdown_noop(GstDparamManager *dpman, guint frame_count);
+static void gst_dpman_base_class_init (GstDParamManagerClass *klass);
+static void gst_dpman_class_init (GstDParamManagerClass *klass);
+static void gst_dpman_init (GstDParamManager *dpman);
+static void gst_dpman_state_change (GstElement *element, gint state, GstDParamManager *dpman);
+static void gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDParamManager *dpman);
+static guint gst_dpman_first_countdown_synchronous(GstDParamManager *dpman, guint frames, gint64 timestamp);
+static guint gst_dpman_first_countdown_noop(GstDParamManager *dpman, guint frames, gint64 timestamp);
+static guint gst_dpman_countdown_noop(GstDParamManager *dpman, guint frame_count);
 
 GType
 gst_dpman_get_type (void)
@@ -41,23 +41,23 @@ gst_dpman_get_type (void)
 
 	if (!dpman_type) {
 		static const GTypeInfo dpman_info = {
-			sizeof(GstDparamManagerClass),
+			sizeof(GstDParamManagerClass),
 			(GBaseInitFunc)gst_dpman_base_class_init,
 			NULL,
 			(GClassInitFunc)gst_dpman_class_init,
 			NULL,
 			NULL,
-			sizeof(GstDparamManager),
+			sizeof(GstDParamManager),
 			0,
 			(GInstanceInitFunc)gst_dpman_init,
 		};
-		dpman_type = g_type_register_static(GST_TYPE_OBJECT, "GstDparamManager", &dpman_info, 0);
+		dpman_type = g_type_register_static(GST_TYPE_OBJECT, "GstDParamManager", &dpman_info, 0);
 	}
 	return dpman_type;
 }
 
 static void
-gst_dpman_base_class_init (GstDparamManagerClass *klass)
+gst_dpman_base_class_init (GstDParamManagerClass *klass)
 {
 	GObjectClass *gobject_class;
 
@@ -66,7 +66,7 @@ gst_dpman_base_class_init (GstDparamManagerClass *klass)
 }
 
 static void
-gst_dpman_class_init (GstDparamManagerClass *klass)
+gst_dpman_class_init (GstDParamManagerClass *klass)
 {
 	GstObjectClass *gstobject_class;
 	GObjectClass *gobject_class;
@@ -86,7 +86,7 @@ gst_dpman_class_init (GstDparamManagerClass *klass)
 }
 
 static void
-gst_dpman_init (GstDparamManager *dpman)
+gst_dpman_init (GstDParamManager *dpman)
 {
 	GST_DPMAN_DPARAMS(dpman) = g_hash_table_new(g_str_hash,g_str_equal);
 	GST_DPMAN_DPARAMS_LIST(dpman) = NULL;
@@ -100,15 +100,15 @@ gst_dpman_init (GstDparamManager *dpman)
 
 /**
  * gst_dpman_new:
- * @name: name of the GstDparamManager instance
+ * @name: name of the GstDParamManager instance
  * @parent: element which created this instance
  *
- * Returns: a new instance of GstDparamManager
+ * Returns: a new instance of GstDParamManager
  */
-GstDparamManager* 
+GstDParamManager* 
 gst_dpman_new (gchar *name, GstElement *parent)
 {
-	GstDparamManager *dpman;
+	GstDParamManager *dpman;
 	
 	g_return_val_if_fail (name != NULL, NULL);
 
@@ -123,8 +123,8 @@ gst_dpman_new (gchar *name, GstElement *parent)
 
 /**
  * gst_dpman_add_required_dparam:
- * @dpman: GstDparamManager instance
- * @dparam_name: a parameter name unique to this GstDparamManager
+ * @dpman: GstDParamManager instance
+ * @dparam_name: a parameter name unique to this GstDParamManager
  * @type: the GValue type that this parameter will store
  * @update_func: callback to update the element with the new value
  * @update_data: will be included in the call to update_func
@@ -132,13 +132,13 @@ gst_dpman_new (gchar *name, GstElement *parent)
  * Returns: true if it was successfully added
  */
 gboolean 
-gst_dpman_add_required_dparam (GstDparamManager *dpman, 
+gst_dpman_add_required_dparam (GstDParamManager *dpman, 
                                 gchar *dparam_name, 
                                 GType type, 
                                 GstDpmUpdateFunction update_func, 
                                 gpointer update_data)
 {
-	GstDparamWrapper* dpwrap;
+	GstDParamWrapper* dpwrap;
 
 	g_return_val_if_fail (dpman != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), FALSE);
@@ -149,7 +149,7 @@ gst_dpman_add_required_dparam (GstDparamManager *dpman,
 
 	GST_DEBUG(GST_CAT_PARAMS,"adding required dparam: %s\n", dparam_name);
 	
-	dpwrap = g_new0(GstDparamWrapper,1);
+	dpwrap = g_new0(GstDParamWrapper,1);
 	dpwrap->dparam_name = dparam_name;
 	dpwrap->update_func = update_func;
 	dpwrap->update_data = update_data;
@@ -164,14 +164,14 @@ gst_dpman_add_required_dparam (GstDparamManager *dpman,
 
 /**
  * gst_dpman_remove_required_dparam:
- * @dpman: GstDparamManager instance
+ * @dpman: GstDParamManager instance
  * @dparam_name: the name of an existing parameter
  *
  */
 void 
-gst_dpman_remove_required_dparam (GstDparamManager *dpman, gchar *dparam_name)
+gst_dpman_remove_required_dparam (GstDParamManager *dpman, gchar *dparam_name)
 {
-	GstDparamWrapper* dpwrap;
+	GstDParamWrapper* dpwrap;
 
 	g_return_if_fail (dpman != NULL);
 	g_return_if_fail (GST_IS_DPMAN (dpman));
@@ -193,16 +193,16 @@ gst_dpman_remove_required_dparam (GstDparamManager *dpman, gchar *dparam_name)
 
 /**
  * gst_dpman_attach_dparam:
- * @dpman: GstDparamManager instance
+ * @dpman: GstDParamManager instance
  * @dparam_name: a name previously added with gst_dpman_add_required_dparam
- * @dparam: GstDparam instance to attach
+ * @dparam: GstDParam instance to attach
  *
  * Returns: true if it was successfully attached
  */
 gboolean 
-gst_dpman_attach_dparam (GstDparamManager *dpman, gchar *dparam_name, GstDparam *dparam)
+gst_dpman_attach_dparam (GstDParamManager *dpman, gchar *dparam_name, GstDParam *dparam)
 {
-	GstDparamWrapper* dpwrap;
+	GstDParamWrapper* dpwrap;
 
 	g_return_val_if_fail (dpman != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), FALSE);
@@ -226,14 +226,14 @@ gst_dpman_attach_dparam (GstDparamManager *dpman, gchar *dparam_name, GstDparam 
 
 /**
  * gst_dpman_dettach_dparam:
- * @dpman: GstDparamManager instance
- * @dparam_name: the name of a parameter with a previously attached GstDparam
+ * @dpman: GstDParamManager instance
+ * @dparam_name: the name of a parameter with a previously attached GstDParam
  *
  */
 void 
-gst_dpman_dettach_dparam (GstDparamManager *dpman, gchar *dparam_name)
+gst_dpman_dettach_dparam (GstDParamManager *dpman, gchar *dparam_name)
 {
-	GstDparamWrapper* dpwrap;
+	GstDParamWrapper* dpwrap;
 
 	g_return_if_fail (dpman != NULL);
 	g_return_if_fail (GST_IS_DPMAN (dpman));
@@ -253,15 +253,15 @@ gst_dpman_dettach_dparam (GstDparamManager *dpman, gchar *dparam_name)
 
 /**
  * gst_dpman_get_dparam:
- * @dpman: GstDparamManager instance
+ * @dpman: GstDParamManager instance
  * @name: the name of an existing dparam instance
  *
  * Returns: the dparam with the given name - or NULL otherwise
  */
-GstDparam *
-gst_dpman_get_dparam (GstDparamManager *dpman, gchar *name)
+GstDParam *
+gst_dpman_get_dparam (GstDParamManager *dpman, gchar *name)
 {
-	GstDparamWrapper* dpwrap;
+	GstDParamWrapper* dpwrap;
 
 	g_return_val_if_fail (dpman != NULL, NULL);
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), NULL);
@@ -275,7 +275,7 @@ gst_dpman_get_dparam (GstDparamManager *dpman, gchar *name)
 
 /**
  * gst_dpman_register_mode
- * @klass: GstDparamManagerClass class instance
+ * @klass: GstDParamManagerClass class instance
  * @modename: the unique name of the new mode
  * @firstcountdownfunc: the function which will be called before each buffer is processed
  * @countdownfunc: the function which may be called throughout the processing of a buffer
@@ -284,7 +284,7 @@ gst_dpman_get_dparam (GstDparamManager *dpman, gchar *name)
  *
  */
 void
-gst_dpman_register_mode (GstDparamManagerClass *klass,
+gst_dpman_register_mode (GstDParamManagerClass *klass,
                          gchar *modename, 
                          GstDpmModeFirstCountdownFunction firstcountdownfunc,
                          GstDpmModeCountdownFunction countdownfunc,
@@ -310,22 +310,22 @@ gst_dpman_register_mode (GstDparamManagerClass *klass,
 
 /**
  * gst_dpman_set_mode
- * @dpman: GstDparamManager instance
+ * @dpman: GstDParamManager instance
  * @modename: the name of the mode to use
  *
  * Returns: TRUE if the mode was set, FALSE otherwise
  */
 gboolean
-gst_dpman_set_mode(GstDparamManager *dpman, gchar *modename)
+gst_dpman_set_mode(GstDParamManager *dpman, gchar *modename)
 {
 	GstDpmMode *mode=NULL;
-	GstDparamManagerClass *oclass;
+	GstDParamManagerClass *oclass;
 	
 	g_return_val_if_fail (dpman != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), FALSE);
 	g_return_val_if_fail (modename != NULL, FALSE);
 
-	oclass = (GstDparamManagerClass*)(G_OBJECT_GET_CLASS(dpman));
+	oclass = (GstDParamManagerClass*)(G_OBJECT_GET_CLASS(dpman));
 	
 	mode = g_hash_table_lookup(oclass->modes, modename);
 	g_return_val_if_fail (mode != NULL, FALSE);
@@ -345,12 +345,12 @@ gst_dpman_set_mode(GstDparamManager *dpman, gchar *modename)
 
 /**
  * gst_dpman_set_parent
- * @dpman: GstDparamManager instance
- * @parent: the element that this GstDparamManager belongs to
+ * @dpman: GstDParamManager instance
+ * @parent: the element that this GstDParamManager belongs to
  *
  */
 void
-gst_dpman_set_parent (GstDparamManager *dpman, GstElement *parent)
+gst_dpman_set_parent (GstDParamManager *dpman, GstElement *parent)
 {
 	g_return_if_fail (dpman != NULL);
 	g_return_if_fail (GST_IS_DPMAN (dpman));
@@ -364,12 +364,12 @@ gst_dpman_set_parent (GstDparamManager *dpman, GstElement *parent)
 
 /**
  * gst_dpman_set_rate_change_pad
- * @dpman: GstDparamManager instance
+ * @dpman: GstDParamManager instance
  * @pad: the pad which may have a "rate" caps property
  *
  */
 void
-gst_dpman_set_rate_change_pad(GstDparamManager *dpman, GstPad *pad)
+gst_dpman_set_rate_change_pad(GstDParamManager *dpman, GstPad *pad)
 {
 	g_return_if_fail (dpman != NULL);
 	g_return_if_fail (GST_IS_DPMAN (dpman));
@@ -381,11 +381,11 @@ gst_dpman_set_rate_change_pad(GstDparamManager *dpman, GstPad *pad)
 }
 
 static void 
-gst_dpman_state_change (GstElement *element, gint state, GstDparamManager *dpman)
+gst_dpman_state_change (GstElement *element, gint state, GstDParamManager *dpman)
 {
 	GSList *dwraps;
-	GstDparam *dparam;
-	GstDparamWrapper *dpwrap;
+	GstDParam *dparam;
+	GstDParamWrapper *dpwrap;
 	
 	if (state == GST_STATE_PLAYING) return;
 	GST_DEBUG(GST_CAT_PARAMS, "initialising params\n");
@@ -396,7 +396,7 @@ gst_dpman_state_change (GstElement *element, gint state, GstDparamManager *dpman
 	// force all params to be updated
 	dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
 	while (dwraps){
-		dpwrap = (GstDparamWrapper*)dwraps->data;
+		dpwrap = (GstDParamWrapper*)dwraps->data;
 		dparam = dpwrap->dparam;
 		
 		if (dparam){
@@ -407,7 +407,7 @@ gst_dpman_state_change (GstElement *element, gint state, GstDparamManager *dpman
 }
 
 static void
-gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDparamManager *dpman)
+gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDParamManager *dpman)
 {
 	g_return_if_fail (caps != NULL);
 	g_return_if_fail (dpman != NULL);
@@ -419,11 +419,11 @@ gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDparamManager *dpman)
 }
 
 static guint 
-gst_dpman_first_countdown_synchronous(GstDparamManager *dpman, guint frames, gint64 timestamp)
+gst_dpman_first_countdown_synchronous(GstDParamManager *dpman, guint frames, gint64 timestamp)
 {
 	GSList *dwraps;
-	GstDparam *dparam;
-	GstDparamWrapper *dpwrap;
+	GstDParam *dparam;
+	GstDParamWrapper *dpwrap;
 
 	g_return_val_if_fail (dpman != NULL, frames);
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), frames);
@@ -431,7 +431,7 @@ gst_dpman_first_countdown_synchronous(GstDparamManager *dpman, guint frames, gin
 	// now check whether any passive dparams are ready for an update
 	dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
 	while (dwraps){
-		dpwrap = (GstDparamWrapper*)dwraps->data;
+		dpwrap = (GstDParamWrapper*)dwraps->data;
 		dparam = dpwrap->dparam;
 		
 		if (dparam && (GST_DPARAM_READY_FOR_UPDATE(dparam) || 
@@ -446,13 +446,13 @@ gst_dpman_first_countdown_synchronous(GstDparamManager *dpman, guint frames, gin
 }
 
 static guint 
-gst_dpman_first_countdown_noop(GstDparamManager *dpman, guint frames, gint64 timestamp)
+gst_dpman_first_countdown_noop(GstDParamManager *dpman, guint frames, gint64 timestamp)
 {
 	return frames;
 }
 
 static guint 
-gst_dpman_countdown_noop(GstDparamManager *dpman, guint frame_count)
+gst_dpman_countdown_noop(GstDParamManager *dpman, guint frame_count)
 {
 	return 0;
 }
