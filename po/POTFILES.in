@@ -5,6 +5,7 @@ ext/gnomevfs/gstgnomevfssrc.c
 ext/gnomevfs/gstgnomevfssink.c
 ext/sndfile/gstsf.c
 gst/avi/gstavimux.c
+gst-libs/gst/play/play.c
 sys/dxr3/dxr3audiosink.c
 sys/dxr3/dxr3audiosink.c
 sys/dxr3/dxr3videosink.c

@@ -6,261 +6,269 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins 0.7.6\n"
+"Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-03-09 19:31+0100\n"
-"PO-Revision-Date: 2004-03-17 17:22+0100\n"
+"POT-Creation-Date: 2004-06-22 16:47+0200\n"
+"PO-Revision-Date: 2004-07-02 23:59+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:349 ext/sndfile/gstsf.c:601
+#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kunde inte öppna filen \"%s\" för skrivning."
 
-#: ext/audiofile/gstafsink.c:372 ext/audiofile/gstafsrc.c:377
+#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: ext/audiofile/gstafsrc.c:319
+#: ext/audiofile/gstafsrc.c:320
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: ext/cdparanoia/gstcdparanoia.c:638 ext/cdparanoia/gstcdparanoia.c:655
+#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
 msgid "Could not open CD device for reading."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1066 ext/gnomevfs/gstgnomevfssrc.c:1089
+#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Kunde inte öppna vfs-filen \"%s\" för läsning."
 
-#: ext/gnomevfs/gstgnomevfssink.c:286
+#: ext/gnomevfs/gstgnomevfssink.c:344
 #, c-format
-msgid "Could not open vfs file \"%s\" for writing."
-msgstr "Kunde inte öppna vfs-filen \"%s\" för skrivning."
+msgid "Could not open vfs file \"%s\" for writing: %s."
+msgstr "Kunde inte öppna vfs-filen \"%s\" för skrivning: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:311
+#: ext/gnomevfs/gstgnomevfssink.c:351
+msgid "No filename given"
+msgstr "Inget filnamn angivet"
+
+#: ext/gnomevfs/gstgnomevfssink.c:377
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunde inte stänga vfs-filen \"%s\"."
 
-#: ext/sndfile/gstsf.c:563
+#: ext/sndfile/gstsf.c:582
 msgid "No filename specified."
 msgstr "Inget filnamn angivet."
 
-#: ext/sndfile/gstsf.c:805
+#: ext/sndfile/gstsf.c:835
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kunde inte skriva till filen \"%s\"."
 
-#: gst/avi/gstavimux.c:989
+#: gst/avi/gstavimux.c:1052
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."
 
-#: sys/dxr3/dxr3audiosink.c:314
+#: sys/dxr3/dxr3audiosink.c:298
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Kunde inte öppna ljudenheten \"%s\" för skrivning."
 
-#: sys/dxr3/dxr3audiosink.c:326 sys/dxr3/dxr3videosink.c:293
+#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Kunde inte öppna styrenheten \"%s\" för skrivning."
 
-#: sys/dxr3/dxr3audiosink.c:360
+#: sys/dxr3/dxr3audiosink.c:343
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Kunde inte konfigurera ljudenheten \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:374 sys/dxr3/dxr3audiosink.c:411
+#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Kan inte ställa in ljudenheten \"%s\" till %d Hz."
 
-#: sys/dxr3/dxr3audiosink.c:439
+#: sys/dxr3/dxr3audiosink.c:422
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Kunde inte stänga ljudenheten \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:446 sys/dxr3/dxr3videosink.c:320
+#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Kunde inte stänga styrenheten \"%s\"."
 
-#: sys/dxr3/dxr3videosink.c:281
+#: sys/dxr3/dxr3videosink.c:271
 #, c-format
 msgid "Could not open video device \"%s\" for writing."
 msgstr "Kunde inte öppna videoenheten \"%s\" för skrivning."
 
-#: sys/dxr3/dxr3videosink.c:312
+#: sys/dxr3/dxr3videosink.c:301
 #, c-format
 msgid "Could not close video device \"%s\"."
 msgstr "Kunde inte stänga vidoeenheten \"%s\"."
 
-#: sys/dxr3/dxr3videosink.c:468 sys/v4l2/v4l2src_calls.c:121
+#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Kunde inte skriva till enheten \"%s\"."
 
-#: sys/oss/gstosselement.c:724
+#: sys/oss/gstosselement.c:723
 #, c-format
 msgid "OSS device \"%s\" is already in use by another program."
 msgstr "OSS-enheten \"%s\" används redan av ett annat program."
 
-#: sys/oss/gstosselement.c:731 sys/oss/gstosselement.c:735
+#: sys/oss/gstosselement.c:730 sys/oss/gstosselement.c:734
 #, c-format
 msgid "Could not access device \"%s\", check its permissions."
 msgstr "Kunde inte komma åt enheten \"%s\". Kontrollera dess rättigheter."
 
-#: sys/oss/gstosselement.c:742
+#: sys/oss/gstosselement.c:741 sys/v4l/v4l_calls.c:167
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Enheten \"%s\" finns inte."
 
-#: sys/oss/gstosselement.c:749
+#: sys/oss/gstosselement.c:748
 #, c-format
 msgid "Could not open device \"%s\" for writing."
 msgstr "Kunde inte öppna enheten \"%s\" för skrivning."
 
-#: sys/oss/gstosselement.c:753
+#: sys/oss/gstosselement.c:752
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "Kunde inte öppna enheten \"%s\" för läsning."
 
-#: sys/oss/gstossmixer.c:86
+#: sys/oss/gstosselement.c:1129
+msgid "Your oss device could not be probed correctly"
+msgstr "Din oss-enhet kunde inte undersökas korrekt"
+
+#: sys/oss/gstossmixer.c:98
 msgid "Volume"
 msgstr "Volym"
 
-#: sys/oss/gstossmixer.c:87
+#: sys/oss/gstossmixer.c:100
 msgid "Bass"
 msgstr "Bass"
 
-#: sys/oss/gstossmixer.c:88
+#: sys/oss/gstossmixer.c:102
 msgid "Treble"
 msgstr "Diskant"
 
-#: sys/oss/gstossmixer.c:89
+#: sys/oss/gstossmixer.c:104
 msgid "Synth"
 msgstr "Synt"
 
-#: sys/oss/gstossmixer.c:90
+#: sys/oss/gstossmixer.c:106
 msgid "PCM"
 msgstr "PCM"
 
-#: sys/oss/gstossmixer.c:91
+#: sys/oss/gstossmixer.c:108
 msgid "Speaker"
 msgstr "Högtalare"
 
-#: sys/oss/gstossmixer.c:92
+#: sys/oss/gstossmixer.c:110
 msgid "Line-in"
 msgstr "Linje-in"
 
-#: sys/oss/gstossmixer.c:93
+#: sys/oss/gstossmixer.c:112
 msgid "Microphone"
 msgstr "Mikrofon"
 
-#: sys/oss/gstossmixer.c:94
+#: sys/oss/gstossmixer.c:114
 msgid "CD"
 msgstr "Cd"
 
-#: sys/oss/gstossmixer.c:95
+#: sys/oss/gstossmixer.c:116
 msgid "Mixer"
 msgstr "Mixer"
 
-#: sys/oss/gstossmixer.c:96
+#: sys/oss/gstossmixer.c:118
 msgid "PCM-2"
 msgstr "PCM-2"
 
-#: sys/oss/gstossmixer.c:97
+#: sys/oss/gstossmixer.c:120
 msgid "Record"
 msgstr "Spela in"
 
-#: sys/oss/gstossmixer.c:98
+#: sys/oss/gstossmixer.c:122
 msgid "In-gain"
 msgstr "Införstärkning"
 
-#: sys/oss/gstossmixer.c:99
+#: sys/oss/gstossmixer.c:124
 msgid "Out-gain"
 msgstr "Utförstärkning"
 
-#: sys/oss/gstossmixer.c:100
+#: sys/oss/gstossmixer.c:126
 msgid "Line-1"
 msgstr "Linje-1"
 
-#: sys/oss/gstossmixer.c:101
+#: sys/oss/gstossmixer.c:128
 msgid "Line-2"
 msgstr "Linje-2"
 
-#: sys/oss/gstossmixer.c:102
+#: sys/oss/gstossmixer.c:130
 msgid "Line-3"
 msgstr "Linje-3"
 
-#: sys/oss/gstossmixer.c:103
+#: sys/oss/gstossmixer.c:132
 msgid "Digital-1"
 msgstr "Digital-1"
 
-#: sys/oss/gstossmixer.c:104
+#: sys/oss/gstossmixer.c:134
 msgid "Digital-2"
 msgstr "Digital-2"
 
-#: sys/oss/gstossmixer.c:105
+#: sys/oss/gstossmixer.c:136
 msgid "Digital-3"
 msgstr "Digital-3"
 
-#: sys/oss/gstossmixer.c:106
+#: sys/oss/gstossmixer.c:138
 msgid "Phone-in"
 msgstr "Tele-in"
 
-#: sys/oss/gstossmixer.c:107
+#: sys/oss/gstossmixer.c:140
 msgid "Phone-out"
 msgstr "Tele-ut"
 
-#: sys/oss/gstossmixer.c:108
+#: sys/oss/gstossmixer.c:142
 msgid "Video"
 msgstr "Video"
 
-#: sys/oss/gstossmixer.c:109
+#: sys/oss/gstossmixer.c:144
 msgid "Radio"
 msgstr "Radio"
 
-#: sys/oss/gstossmixer.c:110
+#: sys/oss/gstossmixer.c:146
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/v4l/v4l_calls.c:115
+#: sys/v4l/v4l_calls.c:158
 msgid "No device specified."
 msgstr "Ingen enheten angiven."
 
-#: sys/v4l/v4l_calls.c:124 sys/v4l2/v4l2_calls.c:413
+#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 
-#: sys/v4l/v4l_calls.h:47
+#: sys/v4l/v4l_calls.h:50
 msgid "Device is not open."
 msgstr "Enheten är inte öppen."
 
-#: sys/v4l/v4l_calls.h:56
+#: sys/v4l/v4l_calls.h:59
 msgid "Device is open."
 msgstr "Enheten är öppen."
 
-#: sys/v4l2/v4l2_calls.c:427
+#: sys/v4l2/v4l2_calls.c:411
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "Enheten \"%s\" är ingen fångstenhet."
 
-#: sys/v4l2/v4l2src_calls.c:249
+#: sys/v4l2/v4l2src_calls.c:255
 #, c-format
 msgid "Could not get buffers from device \"%s\"."
 msgstr "Kunde inte få tag i buffertar från enheten \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:256
+#: sys/v4l2/v4l2src_calls.c:264
 #, c-format
 msgid "Could not get enough buffers from device \"%s\"."
 msgstr "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"."
