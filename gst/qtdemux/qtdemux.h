@@ -40,121 +40,34 @@ extern "C" {
 #define GST_IS_QTDEMUX_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QTDEMUX))
 
-#define GST_QTDEMUX_MAX_AUDIO_PADS	8	
-#define GST_QTDEMUX_MAX_VIDEO_PADS	8	
-
-  /*
-   * smartass macross that turns guint32 into sequence of bytes separated with comma
-   * to be used in printf("%c%c%c%c",GST_FOURCC_TO_CHARSEQ(fourcc)) fashion
-   */
-#define GST_FOURCC_TO_CHARSEQ(f) f&0xff, (f>>8)&0xff , (f>>16)&0xff, f>>24
+#define GST_QTDEMUX_MAX_STREAMS		8
 
 typedef struct _GstQTDemux GstQTDemux;
 typedef struct _GstQTDemuxClass GstQTDemuxClass;
-
-typedef struct {
-  guint64 start;
-  guint64 size; /* if 0, lasts till the end of file */
-  guint32 type;
-} GstQtpAtom;
-
-typedef struct {
-  guint32 size;
-  guint32 type;
-} GstQtpAtomMinHeader;
-
-#define GST_QTP_CONTAINER_ATOM 1
-
-typedef void GstQtpAtomTypeHandler (GstQTDemux * qtdemux,GstQtpAtom * atom,gboolean enter);
-
-typedef struct {
-  guint32 flags;
-  GstQtpAtomTypeHandler * handler;
-} GstQtpAtomType;
-
-typedef struct {
-  guint64 offset;
-  guint32 size;
-  guint32 timestamp;
-  struct _GstQtpTrack * track;
-} GstQtpSample;
-
-typedef struct _GstQtpTrack {
-  guint32 format;
-  guint32 width;
-  guint32 height;
-  guint32 time_scale; /* units per second */
-  guint32 sample_duration; /* units in sample */
-
-  /* temporary buffers with sample tables */
-  GstBuffer * stsd, * stts, * stsc, * stsz, * stco;
-
-  /* this track samples in array */
-  GstQtpSample * samples;
-
-  GstPad * pad;
-} GstQtpTrack;
-
-typedef struct {
-  guint32 size;
-  guint32 format;
-  char reserved[6];
-  guint16 dataref;
-} __attribute__((packed)) /* FIXME may it wasn't necessary? */ GstQtpStsdRec;
-
-typedef struct {
-  guint32 size;
-  guint32 format;
-  char reserved[6];
-  guint16 dataref;
-  guint16 version;
-  guint16 rev_level;
-  guint32 vendor;
-  guint32 temporal_quality;
-  guint32 spatial_quality;
-  guint16 width;
-  guint16 height;
-  guint32 hres;
-  guint32 vres;
-  guint32 data_size;
-  guint16 frame_count; /* frames per sample */
-  guint32 compressor_name;
-  guint16 depth;
-  guint16 color_table_id;
-} __attribute__((packed)) /* FIXME may it wasn't necessary? */ GstQtpStsdVideRec;
-
-typedef struct {
-  guint32 count;
-  guint32 duration;
-} GstQtpSttsRec;
-
-typedef struct {
-  guint32 first_chunk;
-  guint32 samples_per_chunk;
-  guint32 sample_desc;
-} GstQtpStscRec;
+typedef struct _QtDemuxStream QtDemuxStream;
 
 struct _GstQTDemux {
   GstElement element;
 
   /* pads */
   GstPad *sinkpad;
-  GstPad *video_pad[GST_QTDEMUX_MAX_VIDEO_PADS];
-  int num_video_pads;
+
+  QtDemuxStream *streams[GST_QTDEMUX_MAX_STREAMS];
+  int n_streams;
+  int n_video_streams;
+  int n_audio_streams;
 
   GstByteStream *bs;
-  guint64 bs_pos; /* current position in bs (coz bs won't tell) */
 
-  /* 
-   * nesting stack: everytime parser reads a header
-   * of a container atom it is added to the stack until 
-   * and removed whenever it's over (read completely)
-   */
-  GSList * nested;
-  int nested_cnt; /* just to make it simpler */
+  GNode *moov_node;
 
-  GList * tracks;
-  GTree * samples; /* samples of all the tracks ordered by the offset */
+  guint32 timescale;
+  guint32 duration;
+
+  int state;
+
+  /* track stuff */
+
 };
 
 struct _GstQTDemuxClass {
