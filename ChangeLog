@@ -1,3 +1,26 @@
+2004-03-05  David Schleef  <ds@schleef.org>
+
+	* ext/faad/gstfaad.c: (gst_faad_init), (gst_faad_srcgetcaps),
+	(gst_faad_chain): Fix negotiation.
+	* ext/librfb/gstrfbsrc.c: (gst_rfbsrc_handle_src_event): Add
+	key and button events.
+	* gst-libs/gst/floatcast/floatcast.h: Fix a minor bug in this
+	dung heap of code.
+	* gst-libs/gst/gconf/gstreamer-gconf-uninstalled.pc.in: gstgconf
+	depends on gconf
+	* gst-libs/gst/gconf/gstreamer-gconf.pc.in: same
+	* gst-libs/gst/play/play.c: (gst_play_pipeline_setup),
+	(gst_play_video_fixate), (gst_play_audio_fixate): Add a fixate
+	function to encourage better negotiation, particularly between
+	audioconvert and osssink.
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_chain):
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):  Make some debugging
+	more important.
+	* gst/typefind/gsttypefindfunctions.c:  Fix mistake in flash
+	typefinding.
+	* gst/vbidec/vbiscreen.c:  Add glib header
+	* pkgconfig/gstreamer-play.pc.in:  Depends on gst-interfaces.
+
 2004-03-06  Christophe Fergeau  <teuf@users.sourceforge.net>
 
 	* ext/mad/gstmad.c: Fix detection of Xing headers

@@ -67,6 +67,9 @@ static GstPipelineClass *parent_class = NULL;
 /*                                                         */
 /* ======================================================= */
 
+static GstCaps * gst_play_video_fixate (GstPad *pad, const GstCaps *caps, gpointer user_data);
+static GstCaps * gst_play_audio_fixate (GstPad *pad, const GstCaps *caps, gpointer user_data);
+
 static GQuark
 gst_play_error_quark (void)
 {
@@ -275,6 +278,8 @@ gst_play_pipeline_setup (GstPlay *play, GError **error)
   /* Software scaling of video stream */
   GST_PLAY_MAKE_OR_ERROR (video_scaler, "videoscale", "video_scaler", error);
   g_hash_table_insert (play->priv->elements, "video_scaler", video_scaler);
+  g_signal_connect (gst_element_get_pad(video_scaler, "src"), "fixate",
+      G_CALLBACK (gst_play_video_fixate), play);
   
   /* Placeholder for future video sink bin */
   GST_PLAY_MAKE_OR_ERROR (video_sink, "fakesink", "video_sink", error);
@@ -315,6 +320,8 @@ gst_play_pipeline_setup (GstPlay *play, GError **error)
   /* Volume control */
   GST_PLAY_MAKE_OR_ERROR (volume, "volume", "volume", error);
   g_hash_table_insert (play->priv->elements, "volume", volume);
+  g_signal_connect (gst_element_get_pad(volume, "src"), "fixate",
+      G_CALLBACK (gst_play_audio_fixate), play);
     
   /* Placeholder for future audio sink bin */
   GST_PLAY_MAKE_OR_ERROR (audio_sink, "fakesink", "audio_sink", error);
@@ -432,6 +439,65 @@ gst_play_get_length_callback (GstPlay *play)
   }
   else
     return TRUE;
+}
+
+static GstCaps *
+gst_play_video_fixate (GstPad *pad, const GstCaps *caps, gpointer user_data)
+{
+  GstStructure *structure;
+  GstCaps *newcaps;
+
+  GST_DEBUG ("video fixate %p %" GST_PTR_FORMAT, pad, caps);
+
+  if (gst_caps_get_size (caps) > 1) return NULL;
+
+  newcaps = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (newcaps, 0);
+
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 320)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "height", 240)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
+        30.0)) {
+    return newcaps;
+  }
+
+  /* failed to fixate */
+  gst_caps_free (newcaps);
+  return NULL;
+}
+
+static GstCaps *
+gst_play_audio_fixate (GstPad *pad, const GstCaps *caps, gpointer user_data)
+{
+  GstCaps *newcaps;
+  GstStructure *structure;
+
+  GST_DEBUG ("audio fixate %p %" GST_PTR_FORMAT, pad, caps);
+
+  newcaps = gst_caps_new_full (gst_structure_copy (
+        gst_caps_get_structure (caps, 0)), NULL); 
+  structure = gst_caps_get_structure (newcaps, 0);
+
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "depth", 16)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 16)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "channels", 2)) {
+    return newcaps;
+  }
+
+  gst_caps_free (newcaps);
+
+  return NULL;
 }
 
 static void

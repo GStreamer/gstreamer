@@ -894,7 +894,7 @@ mod_type_find (GstTypeFind *tf, gpointer unused)
 
 /*** application/x-shockwave-flash ********************************************/
 
-static GstStaticCaps swf_caps = GST_STATIC_CAPS ("audio/x-shockwave-flash");
+static GstStaticCaps swf_caps = GST_STATIC_CAPS ("application/x-shockwave-flash");
 #define SWF_CAPS (gst_static_caps_get(&swf_caps))
 static void
 swf_type_find (GstTypeFind *tf, gpointer unused)
