@@ -410,7 +410,9 @@ gst_wavparse_parse_adtl (GstWavParse *wavparse,
 
   g_object_notify (G_OBJECT (wavparse), "metadata");
 }
+#endif
 
+#if 0
 static void
 gst_wavparse_parse_info (GstWavParse *wavparse,
 												 int len)
@@ -525,7 +527,9 @@ gst_wavparse_parse_info (GstWavParse *wavparse,
 
   g_object_notify (G_OBJECT (wavparse), "metadata");
 }
+#endif
 
+#if 0
 static void
 gst_wavparse_parse_cues (GstWavParse *wavparse,
 			 int len)
@@ -589,6 +593,7 @@ gst_wavparse_parse_cues (GstWavParse *wavparse,
   
   g_object_notify (G_OBJECT (wavparse), "metadata");
 }
+#endif
 
 static void
 gst_wavparse_parse_fmt (GstWavParse *wavparse)
@@ -663,7 +668,6 @@ gst_wavparse_parse_fmt (GstWavParse *wavparse)
 							 wavparse->rate, wavparse->channels);
   }
 }
-#endif
 
 static gboolean
 gst_wavparse_handle_sink_event (GstWavParse *wavparse)
@@ -830,17 +834,14 @@ gst_wavparse_loop (GstElement *element)
 		
     switch (chunk.id) {
     case GST_RIFF_TAG_data:
-#if 0
       wavparse->state = GST_WAVPARSE_DATA;
-			wavparse->dataleft = chunk.size;
-			wavparse->byteoffset = 0;
-
-			flush = 0;
-#endif
+      wavparse->dataleft = chunk.size;
+      wavparse->byteoffset = 0;
+      flush = 0;
       break;
       
     case GST_RIFF_TAG_fmt:
-      //gst_wavparse_parse_fmt (wavparse);
+      gst_wavparse_parse_fmt (wavparse);
       break;
 
     case GST_RIFF_TAG_cue:
