@@ -197,6 +197,7 @@ ui_control_create (GstElement *element, GtkWidget *control, _filter_ui_t *ui)
       gst_dpman_set_mode(dpman, "asynchronous");
       g_signal_connect (widget, "value-changed",
 	                G_CALLBACK (cb_dynparm_value_changed), dparam);
+      cb_dynparm_value_changed (GTK_RANGE (widget), dparam);
 			
       gtk_container_add (GTK_CONTAINER (hbox), widget);
       gtk_widget_show (widget);      
@@ -300,8 +301,10 @@ cb_parse_clicked (GtkButton *button, gpointer *user_data)
   if (fd->input_pipe) g_free (fd->input_pipe);
   if (fd->output_pipe) g_free (fd->output_pipe);
   if (fd->filter_element) g_free (fd->filter_element);
-  fd->input_pipe = g_strdup (gtk_entry_get_text (GTK_ENTRY (fd->ui->input)));
-  fd->output_pipe = g_strdup (gtk_entry_get_text (GTK_ENTRY (fd->ui->output)));
+  fd->input_pipe = g_strdup_printf ("bin.( %s )",
+                     gtk_entry_get_text (GTK_ENTRY (fd->ui->input)));
+  fd->output_pipe = g_strdup_printf ("bin.( %s )",
+                     gtk_entry_get_text (GTK_ENTRY (fd->ui->output)));
   /* gtkcombo.h says I can access the entry field directly */
   fd->filter_element = g_strdup (gtk_entry_get_text (GTK_ENTRY (filter->entry)));
   g_print ("Input pipeline :\t%s (%d)\n", fd->input_pipe, strlen (fd->input_pipe));
@@ -315,7 +318,7 @@ cb_parse_clicked (GtkButton *button, gpointer *user_data)
     return;
   }
   if (fd->input) gst_bin_destroy (GST_BIN (fd->input));
-  fd->input = GST_ELEMENT (gst_parse_launch (fd->input_pipe, &error, "bin"));
+  fd->input = GST_ELEMENT (gst_parse_launch (fd->input_pipe, &error));
   if (error)
   {
     ui_feedback_add (fd->ui, "Error : parsing input pipeline : %s\n", 
@@ -330,7 +333,7 @@ cb_parse_clicked (GtkButton *button, gpointer *user_data)
     return;
   }
   if (fd->output) gst_bin_destroy (GST_BIN (fd->output));
-  fd->output = GST_ELEMENT (gst_parse_launch (fd->output_pipe, &error, "bin"));
+  fd->output = GST_ELEMENT (gst_parse_launch (fd->output_pipe, &error));
   if (error)
   {
     ui_feedback_add (fd->ui, "Error : parsing output pipeline : %s\n", 
