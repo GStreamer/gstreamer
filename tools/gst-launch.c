@@ -65,8 +65,10 @@ static guint64 min = G_MAXINT64;
 static guint64 max = 0;
 static GstClock *s_clock;
 static GstElement *pipeline;
-gboolean caught_intr = FALSE;
-gboolean caught_error = FALSE;
+static gboolean caught_intr = FALSE;
+static gboolean caught_error = FALSE;
+static gboolean need_new_state = FALSE;
+static GstElementState new_state;
 
 gboolean
 idle_func (gpointer data)
@@ -85,6 +87,11 @@ idle_func (gpointer data)
   sum += diff;
   min = MIN (min, diff);
   max = MAX (max, diff);
+
+  if (need_new_state) {
+    gst_element_set_state (pipeline, new_state);
+    need_new_state = FALSE;
+  }
 
   if (!busy || caught_intr || caught_error ||
       (max_iterations > 0 && iterations >= max_iterations)) {
@@ -195,15 +202,17 @@ fault_handler_sighandler (int signum)
 {
   fault_restore ();
 
+  /* printf is used instead of g_print(), since it's less likely to
+   * deadlock */
   switch (signum) {
     case SIGSEGV:
-      g_print ("Caught SIGSEGV\n");
+      printf ("Caught SIGSEGV\n");
       break;
     case SIGQUIT:
-      g_print ("Caught SIGQUIT\n");
+      printf ("Caught SIGQUIT\n");
       break;
     default:
-      g_print ("signo:  %d\n", signum);
+      printf ("signo:  %d\n", signum);
       break;
   }
 
@@ -217,17 +226,19 @@ fault_handler_sigaction (int signum, siginfo_t * si, void *misc)
 {
   fault_restore ();
 
+  /* printf is used instead of g_print(), since it's less likely to
+   * deadlock */
   switch (si->si_signo) {
     case SIGSEGV:
-      g_print ("Caught SIGSEGV accessing address %p\n", si->si_addr);
+      printf ("Caught SIGSEGV accessing address %p\n", si->si_addr);
       break;
     case SIGQUIT:
-      g_print ("Caught SIGQUIT\n");
+      printf ("Caught SIGQUIT\n");
       break;
     default:
-      g_print ("signo:  %d\n", si->si_signo);
-      g_print ("errno:  %d\n", si->si_errno);
-      g_print ("code:   %d\n", si->si_code);
+      printf ("signo:  %d\n", si->si_signo);
+      printf ("errno:  %d\n", si->si_errno);
+      printf ("code:   %d\n", si->si_code);
       break;
   }
 
@@ -246,7 +257,7 @@ fault_spin (void)
   wait (NULL);
 
   /* FIXME how do we know if we were run by libtool? */
-  g_print ("Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
+  printf ("Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
       "Ctrl-C to quit, or Ctrl-\\ to dump core.\n", (gint) getpid ());
   while (spinning)
     g_usleep (1000000);
@@ -330,8 +341,6 @@ error_cb (GObject * object, GstObject * source, GError * error, gchar * debug)
 static void
 sigint_handler_sighandler (int signum)
 {
-  g_print ("Caught interrupt.\n");
-
   sigint_restore ();
 
   caught_intr = TRUE;
@@ -364,12 +373,12 @@ play_handler (int signum)
 {
   switch (signum) {
     case SIGUSR1:
-      g_print ("Caught SIGUSR1 - Play request.\n");
-      gst_element_set_state (pipeline, GST_STATE_PLAYING);
+      new_state = GST_STATE_PLAYING;
+      need_new_state = TRUE;
       break;
     case SIGUSR2:
-      g_print ("Caught SIGUSR2 - Stop request.\n");
-      gst_element_set_state (pipeline, GST_STATE_NULL);
+      new_state = GST_STATE_NULL;
+      need_new_state = TRUE;
       break;
   }
 }
@@ -545,8 +554,10 @@ main (int argc, char *argv[])
       gst_element_wait_state_change (pipeline);
       g_print ("got the state change.\n");
     }
-    if (caught_intr)
+    if (caught_intr) {
+      g_print ("Caught interrupt.\n");
       res = 2;
+    }
     if (caught_error)
       res = 3;
 

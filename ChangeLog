@@ -1,5 +1,13 @@
 2005-01-05  David Schleef  <ds@schleef.org>
 
+	* tools/gst-launch.c: (idle_func), (fault_handler_sighandler),
+	(fault_handler_sigaction), (fault_spin),
+	(sigint_handler_sighandler), (play_handler), (main): Fix deadlocks
+	in signal.h-type signal handlers by not calling forbidden functions,
+	including gst_element_set_state().
+
+2005-01-05  David Schleef  <ds@schleef.org>
+
 	* gst/gstvalue.h: Mark _gst_reserved[] as private
 
 2005-01-05  David Schleef  <ds@schleef.org>
