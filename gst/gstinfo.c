@@ -118,7 +118,7 @@ const gchar *_gst_category_colors[32] = {
   [GST_CAT_PARAMS]		= "00;30;43",		// !!
 
   [GST_CAT_CALL_TRACE]		= "",
-  [31]				= "",
+  [31]				= "05;31",
 };
 
 /* colorization hash - DEPRACATED in favor of above */
