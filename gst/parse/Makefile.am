@@ -14,7 +14,7 @@ BUILT_SOURCES = grammar.tab.h grammar.tab.c lex._gst_parse_yy.c
 EXTRA_DIST = grammar.y parse.l types.h
 
 grammar.tab.c grammar.tab.h: grammar.y ../gstmarshal.h
-	$(BISON) grammar.y
+	$(BISON) $(src_dir)/grammar.y
  
 ## this is so make install without a previous make can work, because
 ## this dir needs gstmarshal.h generated
