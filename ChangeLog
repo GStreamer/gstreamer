@@ -1,3 +1,13 @@
+2004-07-08  Wim Taymans  <wim@fluendo.com>
+
+	* examples/seeking/seek.c: (make_dv_pipeline), (make_avi_pipeline),
+	(make_mpeg_pipeline), (make_mpegnt_pipeline),
+	(make_playerbin_pipeline), (query_durations_elems),
+	(query_durations_pads), (query_positions_elems),
+	(query_positions_pads), (update_scale), (iterate), (stop_seek),
+	(main):
+	Added playbin seeking example.
+
 2004-07-08  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* gst-libs/gst/play/play.c: (gst_play_set_location),
