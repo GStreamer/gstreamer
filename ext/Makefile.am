@@ -53,7 +53,7 @@ DIVX_DIR=
 endif
 
 if USE_DTS
-DTS_DIR=dvdread
+DTS_DIR=dts
 else
 DTS_DIR=
 endif
