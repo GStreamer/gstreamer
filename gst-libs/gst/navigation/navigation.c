@@ -59,6 +59,8 @@ gst_navigation_class_init (GstNavigationInterface * iface)
   iface->send_event = NULL;
 }
 
+/* The interface implementer should make sure that the object can handle
+ * the event. */
 void
 gst_navigation_send_event (GstNavigation * navigation, GstStructure * structure)
 {
