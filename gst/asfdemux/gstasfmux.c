@@ -372,7 +372,7 @@ gst_asfmux_vidsink_link (GstPad * pad, const GstCaps * caps)
 
     goto done;
   }
-  return GST_PAD_LINK_REFUSED;
+/*  return GST_PAD_LINK_REFUSED; */
 
 done:
   stream->bitrate = 1024 * 1024;
@@ -478,7 +478,7 @@ gst_asfmux_audsink_link (GstPad * pad, const GstCaps * caps)
 
     goto done;
   }
-  return GST_PAD_LINK_REFUSED;
+/*  return GST_PAD_LINK_REFUSED; */
 
 done:
   stream->bitrate = stream->header.audio.byte_rate * 8;
@@ -1056,7 +1056,7 @@ gst_asfmux_file_stop (GstAsfMux * asfmux)
     gst_pad_push (asfmux->srcpad, GST_DATA (footer));
   } else if (gst_asfmux_can_seek (asfmux)) {
     /* rewrite an updated header */
-    guint64 filesize;
+    gint64 filesize;
     GstFormat fmt = GST_FORMAT_BYTES;
     GstEvent *event;
 
