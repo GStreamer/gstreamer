@@ -1,4 +1,5 @@
 #!/usr/bin/perl -w
+use strict;
 
 # launch a gst-launch pipeline for the supplied media file
 # use the extension to determine the gst-launch pipeline
@@ -15,7 +16,7 @@ sub extension
   # .tar.gz extensions do we ?
   if ($path =~ /\./)
   {
-    my $ext = $path;
+    $ext = $path;
     $ext =~ s/^.*\.//;
   }
   else { $ext = ""; }
@@ -88,6 +89,7 @@ read_config ();
   "ac3", "a52dec ! $cfg{AUDIOSINK}",
   "au", "auparse ! $cfg{AUDIOSINK}",
   "avi", "avidemux video_%02d! { queue ! windec ! $cfg{VIDEOSINK} } avidemux0.audio_%02d! { queue ! mad ! $cfg{AUDIOSINK} }",
+  "flac", "flacdec ! $cfg{AUDIOSINK}",
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}",
   "m1v", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
   "m2v", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
@@ -119,6 +121,10 @@ if ($#ARGV == -1) {
 my $file;
 while ($file = shift @ARGV) {
     my $ext = extension ($file);
+    if (!$ext) { 
+      print "file $file doesn't have an extension !\n";
+      return -1;
+    }
     if ($ext eq 'm3u')
     {
 	open (PLAYLIST, '<', $file);
