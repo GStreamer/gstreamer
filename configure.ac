@@ -1759,7 +1759,8 @@ AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 
 dnl prefer internal headers to already installed ones
-GST_CFLAGS="-I\$(top_srcdir)/gst-libs $GST_CFLAGS $GST_ERROR"
+dnl also add builddir include for enumtypes and marshal
+GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $GST_ERROR"
 
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
