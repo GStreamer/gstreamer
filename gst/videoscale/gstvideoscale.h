@@ -29,6 +29,9 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/* debugging */
+GST_DEBUG_CATEGORY_EXTERN (videoscale_debug);
+#define GST_CAT_DEFAULT videoscale_debug
 
 #define GST_TYPE_VIDEOSCALE \
   (gst_videoscale_get_type())
