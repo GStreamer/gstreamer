@@ -1,21 +1,11 @@
 #include <gst/gst.h>
-#include <gnome.h>
-
-static void
-autoplug_have_size (GstElement *element, guint width, guint height,
-                   GtkWidget *socket)
-{
-  gtk_widget_set_usize(socket,width,height);
-}
 
 static void
 gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
 {
   GstElement *osssink, *videosink, *videoelement, *colorspace;
-  GtkWidget *appwindow;
   GstElement *new_element;
   GstAutoplug *autoplug;
-  GtkWidget *socket;
   GstElement *autobin;
   GstElement *filesrc;
   GstElement *cache;
@@ -39,7 +29,6 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   videosink = gst_bin_new ("videosink");
   /* and an video sink */
   videoelement = gst_elementfactory_make("xvideosink", "play_video");
-  //videosink = gst_elementfactory_make("aasink", "play_video");
   g_assert(videosink != NULL);
 
   colorspace = gst_elementfactory_make("colorspace", "colorspace");
@@ -70,39 +59,15 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
 
   gst_bin_add (GST_BIN (autobin), new_element);
 
-  gtk_object_set (GTK_OBJECT (cache), "reset", TRUE, NULL);
+  g_object_set (G_OBJECT (cache), "reset", TRUE, NULL);
 
   gst_element_connect (cache, "src", new_element, "sink");
-
-  appwindow = gnome_app_new ("autoplug demo","autoplug demo");
-
-  socket = gtk_socket_new ();
-  gtk_widget_show (socket);
-
-  gnome_app_set_contents (GNOME_APP (appwindow),
-    		GTK_WIDGET (socket));
-
-  gtk_widget_realize (socket);
-  gtk_socket_steal (GTK_SOCKET (socket), 
-		    gst_util_get_int_arg (GTK_OBJECT (videoelement), "xid"));
-  gtk_widget_set_usize(socket,320,240);
-
-  gtk_widget_show_all (appwindow);
-
-  gtk_signal_connect (GTK_OBJECT (videoelement), "have_size",
-                      GTK_SIGNAL_FUNC (autoplug_have_size), socket);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
       
 #ifndef GST_DISABLE_LOADSAVE
   gst_xml_write_file (GST_ELEMENT (pipeline), fopen ("xmlTest.gst", "w"));
 #endif
-}
-
-gboolean 
-idle_func (gpointer data)
-{
-  return gst_bin_iterate (GST_BIN (data));
 }
 
 static void
@@ -142,7 +107,6 @@ int main(int argc,char *argv[])
 
   g_thread_init(NULL);
   gst_init(&argc,&argv);
-  gnome_init("autoplug","0.0.1", argc,argv);
 
   if (argc != 2) {
     g_print("usage: %s <filename>\n", argv[0]);
@@ -156,15 +120,15 @@ int main(int argc,char *argv[])
   /* create a disk reader */
   filesrc = gst_elementfactory_make("filesrc", "disk_source");
   g_assert(filesrc != NULL);
-  gtk_object_set(GTK_OBJECT(filesrc),"location", argv[1],NULL);
+  g_object_set(G_OBJECT(filesrc),"location", argv[1],NULL);
   gst_bin_add (GST_BIN (pipeline), filesrc);
 
   autobin = gst_bin_new ("autobin");
   cache = gst_elementfactory_make ("autoplugcache", "cache");
-  gtk_signal_connect (GTK_OBJECT (cache), "cache_empty", GTK_SIGNAL_FUNC (gst_play_cache_empty), pipeline);
+  g_signal_connect (G_OBJECT (cache), "cache_empty", G_CALLBACK (gst_play_cache_empty), pipeline);
 
   typefind = gst_elementfactory_make ("typefind", "typefind");
-  gtk_signal_connect (GTK_OBJECT (typefind), "have_type", GTK_SIGNAL_FUNC (gst_play_have_type), pipeline);
+  g_signal_connect (G_OBJECT (typefind), "have_type", G_CALLBACK (gst_play_have_type), pipeline);
   gst_bin_add (GST_BIN (autobin), cache);
   gst_bin_add (GST_BIN (autobin), typefind);
 
@@ -177,8 +141,7 @@ int main(int argc,char *argv[])
   /* start playing */
   gst_element_set_state( GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-  gtk_idle_add (idle_func, pipeline);
-  gst_main ();
+  while (gst_bin_iterate (GST_BIN (pipeline)));
 
   /* stop the pipeline */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
