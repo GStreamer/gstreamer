@@ -1,5 +1,5 @@
 # cheap trick to build . first...
-SUBDIRS = . types meta elements
+SUBDIRS = . types elements autoplug
 
 lib_LTLIBRARIES = libgst.la
 
@@ -43,29 +43,48 @@ libgst_la_SOURCES =		\
 	gstparse.c		\
 	$(GSTARCH_SRCS)
 
+
+##### Oh this sucks so badly.  This isn't funny. #####
+
 # the compiler shoots cothreads.c in the head at -O6
 # FIXME: these manual rules break the dependency generation, so we have a
 # nasty hack here.  
-LTCOMPILE2=$(LTCOMPILE) -O2
-COMPILE2=$(COMPILE) -O2
-cothreads.lo: cothreads.c
-	@echo '$(LTCOMPILE2) -c $<'; \
-	$(LTCOMPILE2) -Wp,-MD,.deps/$(*F).pp -c $<
-	@-sed -e 's/^\([^:]*\)\.o[      ]*:/\1.lo \1.o :/' \
-	  < .deps/$(*F).pp > .deps/$(*F).P; \
-	tr ' ' '\012' < .deps/$(*F).pp \
-	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
-	    >> .deps/$(*F).P; \
-	rm -f .deps/$(*F).pp
-cothreads.o: cothreads.c
-	@echo '$(COMPILE2) -c $<'; \
-	$(COMPILE2) -Wp,-MD,.deps/$(*F).pp -c $<
-	@-sed -e 's/^\([^:]*\)\.o[      ]*:/\1.lo \1.o :/' \
-	  < .deps/$(*F).pp > .deps/$(*F).P; \
-	tr ' ' '\012' < .deps/$(*F).pp \
-	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
-	    >> .deps/$(*F).P; \
-	rm -f .deps/$(*F).pp
+#LTCOMPILE2=$(LTCOMPILE) -O2
+#COMPILE2=$(COMPILE) -O2
+
+cothreads.lo: cothreads.c cothreads.h gst_private.h ../config.h gstinfo.c \
+gstarch.h gsti386.h
+	$(LIBTOOL) --mode=compile $(COMPILE) -O2 -c $<
+cothreads.o: cothreads.c cothreads.h gst_private.h ../config.h gstinfo.c \
+gstarch.h gsti386.h
+	$(COMPILE) -O2 -c $<
+
+# NOTDEPEND.cothreads.lo: cothreads.c
+# NOTDEPEND	$(LTCOMPILE2) -c $<
+# NOTDEPEND.cothreads.o: cothreads.c
+# NOTDEPEND	$(COMPILE2) -c $<
+
+#cothreads.lo: cothreads.c
+#	@echo '$(LTCOMPILE2) -c $<'; \
+#	$(LTCOMPILE2) -Wp,-MD,.deps/$(*F).pp -c $<
+#	@-sed -e 's/^\([^:]*\)\.o[      ]*:/\1.lo \1.o :/' \
+#	  < .deps/$(*F).pp > .deps/$(*F).P; \
+#	tr ' ' '\012' < .deps/$(*F).pp \
+#	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+#	    >> .deps/$(*F).P; \
+#	rm -f .deps/$(*F).pp
+#cothreads.o: cothreads.c
+#	@echo '$(COMPILE2) -c $<'; \
+#	$(COMPILE2) -Wp,-MD,.deps/$(*F).pp -c $<
+#	@-sed -e 's/^\([^:]*\)\.o[      ]*:/\1.lo \1.o :/' \
+#	  < .deps/$(*F).pp > .deps/$(*F).P; \
+#	tr ' ' '\012' < .deps/$(*F).pp \
+#	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+#	    >> .deps/$(*F).P; \
+#	rm -f .deps/$(*F).pp
+
+##### end immense suckage #####
+
 
 libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
@@ -106,6 +125,7 @@ noinst_HEADERS = 	\
 	gstppc.h	\
 	gstalpha.h	\
 	gstarm.h	\
+	gstsparc.h	\
 	gstpropsprivate.h
 
 CFLAGS = $(LIBGST_CFLAGS)

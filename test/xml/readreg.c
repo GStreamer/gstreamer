@@ -2,6 +2,13 @@
 #include <gnome-xml/parser.h>
 #include <gst/gst.h>
 
+// Include compatability defines: if libxml hasn't already defined these,
+// we have an old version 1.x
+#ifndef xmlChildrenNode
+#define xmlChildrenNode childs
+#define xmlRootNode root
+#endif
+
 typedef struct _GstRegistryPlugin GstRegistryPlugin;
 typedef struct _GstRegistryElement GstRegistryElement;
 
@@ -17,7 +24,7 @@ struct _GstRegistryElement {
 };
 
 gchar *getcontents(xmlDocPtr doc,xmlNodePtr cur) {
-  return g_strdup(xmlNodeListGetString(doc,cur->childs,1));
+  return g_strdup(xmlNodeListGetString(doc,cur->xmlChildrenNode,1));
 }
 
 int main(int argc,char *argv[]) {
@@ -51,10 +58,10 @@ int main(int argc,char *argv[]) {
     exit(1);
   }
 
-  cur = cur->childs;	/* 'childs'???  He (Daniel) is Dutch, so... */
+  cur = cur->xmlChildrenNode;
   while (cur != NULL) {
     if (!strcmp(cur->name,"plugin")) {
-      xmlNodePtr field = cur->childs;
+      xmlNodePtr field = cur->xmlChildrenNode;
       GstRegistryPlugin *plugin = g_new0(GstRegistryPlugin,1);
 
       while (field) {
@@ -67,7 +74,7 @@ int main(int argc,char *argv[]) {
       g_print("new plugin '%s' at '%s'\n",plugin->name,plugin->filename);
       plugins = g_slist_prepend(plugins,plugin);
     } else if (!strcmp(cur->name,"element")) {
-      xmlNodePtr field = cur->childs;
+      xmlNodePtr field = cur->xmlChildrenNode;
       GstRegistryElement *element = g_new0(GstRegistryElement,1);
 
       while (field) {

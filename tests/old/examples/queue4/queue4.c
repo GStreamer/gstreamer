@@ -13,7 +13,7 @@ void eos(GstElement *element, gpointer data)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *disksrc, *audiosink, *queue, *queue2, *parse, *decode;
+  GstElement *disksrc, *osssink, *queue, *queue2, *parse, *decode;
   GstElement *bin;
   GstElement *thread, *thread2;
 
@@ -45,8 +45,8 @@ int main(int argc,char *argv[])
   queue2 = gst_elementfactory_make("queue", "queue2");
 
   /* and an audio sink */
-  audiosink = gst_elementfactory_make("audiosink", "play_audio");
-  g_assert(audiosink != NULL);
+  osssink = gst_elementfactory_make("osssink", "play_audio");
+  g_assert(osssink != NULL);
 
   parse = gst_elementfactory_make("mp3parse", "parse");
   decode = gst_elementfactory_make("mpg123", "decode");
@@ -59,7 +59,7 @@ int main(int argc,char *argv[])
   gst_bin_add(GST_BIN(thread), decode);
   gst_bin_add(GST_BIN(thread), queue2);
 
-  gst_bin_add(GST_BIN(thread2), audiosink);
+  gst_bin_add(GST_BIN(thread2), osssink);
   
   gst_pad_connect(gst_element_get_pad(disksrc,"src"),
                   gst_element_get_pad(queue,"sink"));
@@ -72,7 +72,7 @@ int main(int argc,char *argv[])
                   gst_element_get_pad(queue2,"sink"));
 
   gst_pad_connect(gst_element_get_pad(queue2,"src"),
-                  gst_element_get_pad(audiosink,"sink"));
+                  gst_element_get_pad(osssink,"sink"));
 
   gst_bin_add(GST_BIN(bin), thread);
   gst_bin_add(GST_BIN(bin), thread2);

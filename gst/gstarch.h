@@ -35,6 +35,8 @@
 #include "gstalpha.h"
 #elif defined(HAVE_CPU_ARM)
 #include "gstarm.h"
+#elif defined(HAVE_CPU_SPARC)
+#include "gstsparc.h"
 #else
 #error Need to know about this architecture, or have a generic implementation
 #endif

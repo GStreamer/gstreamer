@@ -120,6 +120,7 @@ gst_parse_launch
 GST_ARCH_CALL
 GST_ARCH_SET_SP
 GST_ARCH_SETUP_STACK
+GST_ARCH_PRESETJMP
 </SECTION>
 
 <SECTION>
@@ -191,6 +192,7 @@ GST_ELEMENT_IS_COTHREAD_STOPPING
 GST_ELEMENT_IS_EOS
 GST_ELEMENT_PARENT
 GST_ELEMENT_NAME
+GST_ELEMENT_PADS
 GstElement
 GstElementDetails
 GstElementFactory
@@ -227,8 +229,6 @@ gst_elementfactory_find
 gst_elementfactory_get_list
 gst_elementfactory_can_src_caps
 gst_elementfactory_can_sink_caps
-gst_elementfactory_can_src_caps_list
-gst_elementfactory_can_sink_caps_list
 gst_elementfactory_create
 gst_elementfactory_make
 gst_elementfactory_save_thyself
@@ -241,6 +241,32 @@ GST_ELEMENT_CLASS
 GST_IS_ELEMENT
 GST_IS_ELEMENT_CLASS
 gst_element_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstautoplug</FILE>
+<TITLE>GstAutoplug</TITLE>
+GstAutoplug
+GstAutoplugFlags
+GstAutoplugFactory
+gst_autoplug_signal_new_object
+gst_autoplug_to_caps
+gst_autoplug_to_renderers
+gst_autoplugfactory_new
+gst_autoplugfactory_destroy
+gst_autoplugfactory_find
+gst_autoplugfactory_get_list
+gst_autoplugfactory_create
+gst_autoplugfactory_make
+gst_autoplugfactory_save_thyself
+gst_autoplugfactory_load_thyself
+<SUBSECTION Standard>
+GST_AUTOPLUG
+GST_IS_AUTOPLUG
+GST_TYPE_AUTOPLUG
+gst_autoplug_get_type
+GST_AUTOPLUG_CLASS
+GST_IS_AUTOPLUG_CLASS
 </SECTION>
 
 <SECTION>
@@ -340,9 +366,16 @@ GstPadGetFunction
 GstPadGetRegionFunction
 GstPadQoSFunction
 GstPadEOSFunction
+GstPadNewCapsFunction
+
+
+GstPadNegotiateReturn
+GstPadNegotiateFunction
+
 
 GstPadPushFunction
 GstPadPullFunction
+GstRegionType
 GstPadPullRegionFunction
 
 GstPadDirection
@@ -354,11 +387,12 @@ gst_pad_get_direction
 gst_pad_set_chain_function
 gst_pad_set_get_function
 gst_pad_set_getregion_function
+gst_pad_set_negotiate_function
 gst_pad_set_qos_function
 gst_pad_set_eos_function
-gst_pad_set_caps_list
-gst_pad_get_caps_list
-gst_pad_get_caps_by_name
+gst_pad_set_newcaps_function
+gst_pad_set_caps
+gst_pad_get_caps
 gst_pad_check_compatibility
 gst_pad_set_name
 gst_pad_get_name
@@ -366,6 +400,7 @@ gst_pad_set_element_private
 gst_pad_get_element_private
 gst_pad_set_parent
 gst_pad_get_parent
+gst_pad_get_real_parent
 gst_pad_add_ghost_pad
 gst_pad_remove_ghost_pad
 gst_pad_get_ghost_pad_list
@@ -374,13 +409,20 @@ gst_pad_connect
 gst_pad_disconnect
 gst_pad_push
 gst_pad_pull
-gst_pad_pull_region
 gst_pad_pullregion
-gst_pad_select
 gst_pad_set_eos
 gst_pad_handle_qos
 gst_pad_eos
 gst_pad_load_and_connect
+gst_pad_negotiate_proxy
+gst_pad_renegotiate
+gst_pad_get_padtemplate
+gst_pad_get_padtemplate_caps
+
+
+GST_RPAD_LEN
+GST_RPAD_OFFSET
+GST_RPAD_REGIONTYPE
 
 GstRealPad
 GST_RPAD_DIRECTION
@@ -395,26 +437,24 @@ GST_RPAD_PULLFUNC
 GST_RPAD_PULLREGIONFUNC
 GST_RPAD_QOSFUNC
 GST_RPAD_EOSFUNC
+GST_RPAD_NEGOTIATEFUNC
+GST_RPAD_NEWCAPSFUNC
 
 GST_GPAD_REALPAD
 GstGhostPad
 gst_ghost_pad_new
 
-GstPadFactoryEntry
-GstPadFactory[]
-GST_PAD_FACTORY_SOMETIMES
-GST_PAD_FACTORY_ALWAYS
-GST_PAD_FACTORY_REQUEST
-GST_PAD_FACTORY_SINK
-GST_PAD_FACTORY_SRC
-GST_PAD_FACTORY_CAPS
-
 GstPadPresence
 GstPadTemplate
+GST_PADTEMPLATE_CAPS
+GST_PADTEMPLATE_DIRECTION
+GST_PADTEMPLATE_NAME_TEMPLATE
+GST_PADTEMPLATE_PRESENCE
 gst_padtemplate_new
-gst_padtemplate_create
 gst_padtemplate_load_thyself
 gst_padtemplate_save_thyself
+gst_padtemplate_get_caps
+gst_padtemplate_get_caps_by_name
 
 <SUBSECTION Standard>
 GstPadClass
@@ -455,9 +495,6 @@ gst_padtemplate_get_type
 <TITLE>GstPipeline</TITLE>
 GstPipeline
 gst_pipeline_new
-gst_pipeline_add_sink
-gst_pipeline_add_src
-gst_pipeline_autoplug
 gst_pipeline_destroy
 gst_pipeline_iterate
 <SUBSECTION Standard>
@@ -469,25 +506,6 @@ GST_PIPELINE_CLASS
 GST_IS_PIPELINE
 GST_IS_PIPELINE_CLASS
 gst_pipeline_details
-</SECTION>
-
-<SECTION>
-<FILE>gstautoplug</FILE>
-<TITLE>GstAutoplug</TITLE>
-GST_AUTOPLUG_MAX_COST
-GstAutoplugCostFunction
-GstAutoplugListFunction
-gst_autoplug_caps
-gst_autoplug_pads
-gst_autoplug_caps_list
-<SUBSECTION Standard>
-GstAutoplug
-GST_AUTOPLUG
-GST_IS_AUTOPLUG
-GST_TYPE_AUTOPLUG
-gst_autoplug_get_type
-GST_AUTOPLUG_CLASS
-GST_IS_AUTOPLUG_CLASS
 </SECTION>
 
 <SECTION>
@@ -506,16 +524,19 @@ gst_plugin_is_loaded
 gst_plugin_load_all
 gst_plugin_load
 gst_plugin_load_absolute
+gst_plugin_add_path
 gst_library_load
 gst_plugin_add_factory
 gst_plugin_add_type
+gst_plugin_add_autoplugger
 gst_plugin_find
 gst_plugin_get_list
 gst_plugin_get_factory_list
 gst_plugin_get_type_list
-gst_plugin_find_elementfactory
+gst_plugin_get_autoplug_list
 gst_plugin_load_elementfactory
 gst_plugin_load_typefactory
+gst_plugin_load_autoplugfactory
 gst_plugin_load_thyself
 gst_plugin_save_thyself
 <SUBSECTION Standard>
@@ -591,63 +612,79 @@ gst_typefactory_save_thyself
 <SECTION>
 <FILE>gstcaps</FILE>
 <TITLE>GstCaps</TITLE>
+GST_CAPS_LOCK
+GST_CAPS_TRYLOCK
+GST_CAPS_UNLOCK
 GstCaps
-GstCapsFactoryEntry
-GstCapsFactory[]
 gst_caps_new
-gst_caps_new_with_props
-gst_caps_register
-gst_caps_register_count
+gst_caps_destroy
+gst_caps_ref
+gst_caps_unref
+gst_caps_copy
+gst_caps_copy_on_write
+gst_caps_append
+gst_caps_prepend
+gst_caps_set_name
 gst_caps_get_name
-gst_caps_set_mime
 gst_caps_set_type_id
 gst_caps_get_type_id
+gst_caps_set_mime
 gst_caps_get_mime
-gst_caps_set_name
 gst_caps_set_props
 gst_caps_get_props
 gst_caps_check_compatibility
-gst_caps_list_check_compatibility
+
+gst_caps_set
+gst_caps_get_boolean
+gst_caps_get_by_name
+gst_caps_get_fourcc_int
+gst_caps_get_int
+gst_caps_get_string
+
 gst_caps_save_thyself
 gst_caps_load_thyself
 <SUBSECTION Standard>
+GST_CAPS
 </SECTION>
 
 <SECTION>
 <FILE>gstprops</FILE>
 <TITLE>GstProps</TITLE>
 GstProps
-GstPropsFactoryEntry
-GstPropsFactory[]
+GST_MAKE_FOURCC
 GST_PROPS_LIST
 GST_PROPS_INT
 GST_PROPS_INT_RANGE
 GST_PROPS_FOURCC
-GST_PROPS_FOURCC_INT
 GST_PROPS_BOOLEAN
-gst_props_register
-gst_props_register_count
+GST_PROPS_STRING
+GST_PROPS_FLOAT
+GST_PROPS_FLOAT_RANGE
 gst_props_new
+gst_props_newv
 gst_props_merge
+gst_props_copy
+gst_props_copy_on_write
+gst_props_destroy
+gst_props_ref
+gst_props_unref
 gst_props_check_compatibility
+gst_props_set
+gst_props_get_boolean
+gst_props_get_fourcc_int
+gst_props_get_int
+gst_props_get_string
 gst_props_save_thyself
 gst_props_load_thyself
 <SUBSECTION Standard>
 GstPropsEntry
-GstPropsListFactory[]
 GstPropsId
-GST_PROPS_END_ID
-GST_PROPS_LIST_ID
-GST_PROPS_INT_ID
-GST_PROPS_INT_RANGE_ID
-GST_PROPS_FOURCC_ID
-GST_PROPS_BOOL_ID
-GST_PROPS_LAST_ID
 </SECTION>
 
 <SECTION>
 <FILE>gstutils</FILE>
 <TITLE>GstUtils</TITLE>
+gst_util_set_object_arg
 gst_util_get_int_arg
 gst_util_get_bool_arg
 gst_util_get_long_arg
@@ -691,49 +728,29 @@ gst_cpu_get_flags
 </SECTION>
 
 <SECTION>
-<FILE>gstasyncdisksrc</FILE>
-<TITLE>GstAsyncDiskSrc</TITLE>
-GstAsyncDiskSrcFlags
+<FILE>gststaticautoplug</FILE>
+<TITLE>GstStaticAutoplug</TITLE>
 <SUBSECTION Standard>
-GstAsyncDiskSrc
-GstAsyncDiskSrcClass
-gst_asyncdisksrc_get_type
-GST_TYPE_ASYNCDISKSRC
-GST_ASYNCDISKSRC
-GST_ASYNCDISKSRC_CLASS
-GST_IS_ASYNCDISKSRC
-GST_IS_ASYNCDISKSRC_CLASS
+GstStaticAutoplug
+GST_STATIC_AUTOPLUG
+GST_IS_STATIC_AUTOPLUG
+GST_TYPE_STATIC_AUTOPLUG
+gst_static_autoplug_get_type
+GST_STATIC_AUTOPLUG_CLASS
+GST_IS_STATIC_AUTOPLUG_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>gstaudiosink</FILE>
-<TITLE>GstAudioSink</TITLE>
+<FILE>gststaticautoplugrender</FILE>
+<TITLE>GstStaticAutoplugRender</TITLE>
 <SUBSECTION Standard>
-GstAudioSink
-GstAudioSinkClass
-GstAudioSinkFlags
-gst_audiosink_get_type
-GST_TYPE_AUDIOSINK
-GST_AUDIOSINK
-GST_AUDIOSINK_CLASS
-GST_IS_AUDIOSINK
-GST_IS_AUDIOSINK_CLASS
-gst_audiosink_factory_init
-</SECTION>
-
-<SECTION>
-<FILE>gstaudiosrc</FILE>
-<TITLE>GstAudioSrc</TITLE>
-<SUBSECTION Standard>
-GstAudioSrc
-GstAudioSrcClass
-GstAudioSrcFlags
-gst_audiosrc_get_type
-GST_TYPE_AUDIOSRC
-GST_AUDIOSRC
-GST_AUDIOSRC_CLASS
-GST_IS_AUDIOSRC
-GST_IS_AUDIOSRC_CLASS
+GstStaticAutoplugRender
+GST_STATIC_AUTOPLUG_RENDER
+GST_IS_STATIC_AUTOPLUG_RENDER
+GST_TYPE_STATIC_AUTOPLUG_RENDER
+gst_static_autoplug_render_get_type
+GST_STATIC_AUTOPLUG_RENDER_CLASS
+GST_IS_STATIC_AUTOPLUG_RENDER_CLASS
 </SECTION>
 
 <SECTION>
@@ -749,7 +766,6 @@ GST_DISKSRC
 GST_DISKSRC_CLASS
 GST_IS_DISKSRC
 GST_IS_DISKSRC_CLASS
-gst_disksrc_details
 </SECTION>
 
 <SECTION>
@@ -896,23 +912,22 @@ GST_IS_TYPEFIND_CLASS
 </SECTION>
 
 <SECTION>
-<INCLUDE>gst/meta/audioraw.h</INCLUDE>
-<FILE>audioraw</FILE>
-MetaAudioRaw
+<FILE>gstmultidisksrc</FILE>
+<TITLE>GstMultiDiskSrc</TITLE>
+GstMultiDiskSrcFlags
+<SUBSECTION Standard>
+GstMultiDiskSrc
+GST_MULTIDISKSRC
+GST_IS_MULTIDISKSRC
+GST_TYPE_MULTIDISKSRC
+gst_multidisksrc_get_type
+GST_MULTIDISKSRC_CLASS
+GST_IS_MULTIDISKSRC_CLASS
 </SECTION>
 
 <SECTION>
 <INCLUDE>gst/meta/spectrum.h</INCLUDE>
 <FILE>spectrum</FILE>
 MetaAudioSpectrum
-</SECTION>
-
-<SECTION>
-<INCLUDE>gst/meta/videoraw.h</INCLUDE>
-<FILE>videoraw</FILE>
-MetaVideoRaw
-MetaDGA
-MetaOverlay
-OverlayClip
 </SECTION>
 

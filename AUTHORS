@@ -1,5 +1,16 @@
 Erik Walthinsen <omega@cse.ogi.edu>
+Matt Howell <mhowell@users.sourceforge.net>
+Brent Bradburn <bbradburn@users.sourceforge.net>
 Wim Taymans <wim.taymans@tvd.be>
 Richard Boulton <richard@tartarus.org>
-Chris Emerson (PPC port)
 Zaheer Merali <zaheer@grid9.net> (thread synchronization rework)
+David I. Lehn <dlehn@users.sourceforge.net>
+  - debian packaging
+  - various fixes
+Chris Emerson <chris@tartarus.org>
+  - PPC port
+  - small libxml patches
+Jens Thiele <karme@unforgettable.com>
+  - color conversion patches
+Thomas Nyberg <thomas@codefactory.se>
+  - gstreamer.m4 macros

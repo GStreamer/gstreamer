@@ -37,15 +37,23 @@ struct _GstPropsEntry {
     gboolean bool_data;
     guint32  fourcc_data;
     gint     int_data;
+    gfloat   float_data;
 
     /* structured values */
     struct {
       GList *entries;
     } list_data;
     struct {
+      gchar *string;
+    } string_data;
+    struct {
       gint min;
       gint max;
     } int_range_data;
+    struct {
+      gfloat min;
+      gfloat max;
+    } float_range_data;
   } data;
 };
 

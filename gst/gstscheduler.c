@@ -105,6 +105,7 @@ gst_bin_src_wrapper (int argc,char *argv[])
 //            fprintf(stderr,"error, no getregionfunc in \"%s\"\n", name);
 //          else
           buf = (GST_RPAD_GETREGIONFUNC(realpad))((GstPad*)realpad,realpad->regiontype,realpad->offset,realpad->len);
+	  realpad->regiontype = GST_REGION_NONE;
         } else {
           g_return_val_if_fail (GST_RPAD_GETFUNC(realpad) != NULL, 0);
 //          if (GST_RPAD_GETFUNC(realpad) == NULL)

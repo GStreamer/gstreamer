@@ -11,7 +11,7 @@ void eos(GstElement *element)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *disksrc, *audiosink;
+  GstElement *disksrc, *osssink;
   GstElement *pipeline, *thread;
 
   gst_init(&argc,&argv);
@@ -28,7 +28,6 @@ int main(int argc,char *argv[])
   pipeline = gst_pipeline_new("pipeline");
   g_assert(pipeline != NULL);
 
-  gst_bin_add(GST_BIN(thread), pipeline);
 
   /* create a disk reader */
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
@@ -38,20 +37,25 @@ int main(int argc,char *argv[])
                      GTK_SIGNAL_FUNC(eos),NULL);
 
   /* and an audio sink */
-  audiosink = gst_elementfactory_make("audiosink", "play_audio");
-  g_assert(audiosink != NULL);
+  osssink = gst_elementfactory_make("osssink", "play_audio");
+  g_assert(osssink != NULL);
 
   /* add objects to the main pipeline */
+  /*
   gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
-  gst_pipeline_add_sink(GST_PIPELINE(pipeline), audiosink);
+  gst_pipeline_add_sink(GST_PIPELINE(pipeline), osssink);
 
   if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
     g_print("unable to handle stream\n");
     exit(-1);
   }
+  */
 
-  /* make it ready */
-  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_READY);
+  // hmmmm hack? FIXME
+  GST_FLAG_UNSET (pipeline, GST_BIN_FLAG_MANAGER);
+ 
+  gst_bin_add(GST_BIN(thread), pipeline);
+
   /* start playing */
   gst_element_set_state(GST_ELEMENT(thread), GST_STATE_PLAYING);
 

@@ -51,11 +51,19 @@
 
 #include <gst/gstparse.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /* initialize GST */
 void gst_init(int *argc,char **argv[]);
 
 void gst_main		(void);
 void gst_main_quit	(void);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #include <gst/gstlog.h>
 

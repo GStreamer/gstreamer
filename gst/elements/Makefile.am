@@ -16,9 +16,8 @@ libgstelements_la_SOURCES =	\
 	gstfakesink.c		\
 	gstdisksrc.c		\
 	gstfdsrc.c		\
-	gstaudiosink.c		\
-	gstaudiosrc.c		\
 	gstfdsink.c		\
+	gstmultidisksrc.c	\
 	gstpipefilter.c		\
 	gsttee.c		\
 	gstsinesrc.c		\
@@ -30,9 +29,8 @@ noinst_HEADERS =		\
 	gstfakesink.h		\
 	gstdisksrc.h		\
 	gstfdsrc.h		\
+	gstmultidisksrc.h	\
 	gsthttpsrc.h		\
-	gstaudiosink.h		\
-	gstaudiosrc.h		\
 	gstfdsink.h		\
 	gstpipefilter.h		\
 	gsttee.h		\

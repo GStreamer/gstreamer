@@ -20,18 +20,19 @@ GstCaps
 
 </para>
 
+@refcount: 
+@lock: 
 @properties: the properties
 
-<!-- ##### TYPEDEF GstPropsFactoryEntry ##### -->
+<!-- ##### MACRO GST_MAKE_FOURCC ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### TYPEDEF GstPropsFactory[] ##### -->
-<para>
-
-</para>
+@a: 
+@b: 
+@c: 
+@d: 
 
 
 <!-- ##### MACRO GST_PROPS_LIST ##### -->
@@ -65,17 +66,10 @@ Construct a fourcc property out of four bytes.
 </para>
 
 @a: first byte
+<!-- # Unused Parameters # -->
 @b: second byte
 @c: third byte
 @d: fourth byte
-
-
-<!-- ##### MACRO GST_PROPS_FOURCC_INT ##### -->
-<para>
-Create a fourcc property out of an integer value.
-</para>
-
-@a: the integer value
 
 
 <!-- ##### MACRO GST_PROPS_BOOLEAN ##### -->
@@ -86,23 +80,29 @@ Create a boolean property.
 @a: the boolean property
 
 
-<!-- ##### FUNCTION gst_props_register ##### -->
+<!-- ##### MACRO GST_PROPS_STRING ##### -->
 <para>
 
 </para>
 
-@factory: 
-@Returns: 
+@a: 
 
 
-<!-- ##### FUNCTION gst_props_register_count ##### -->
+<!-- ##### MACRO GST_PROPS_FLOAT ##### -->
 <para>
 
 </para>
 
-@factory: 
-@counter: 
-@Returns: 
+@a: 
+
+
+<!-- ##### MACRO GST_PROPS_FLOAT_RANGE ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
 
 
 <!-- ##### FUNCTION gst_props_new ##### -->
@@ -110,8 +110,20 @@ Create a boolean property.
 
 </para>
 
-@entry: 
+@firstname: 
 @Varargs: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@entry: 
+
+
+<!-- ##### FUNCTION gst_props_newv ##### -->
+<para>
+
+</para>
+
+@firstname: 
+@var_args: 
 @Returns: 
 
 
@@ -125,6 +137,48 @@ Create a boolean property.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_props_copy ##### -->
+<para>
+
+</para>
+
+@props: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_copy_on_write ##### -->
+<para>
+
+</para>
+
+@props: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_destroy ##### -->
+<para>
+
+</para>
+
+@props: 
+
+
+<!-- ##### FUNCTION gst_props_ref ##### -->
+<para>
+
+</para>
+
+@props: 
+
+
+<!-- ##### FUNCTION gst_props_unref ##### -->
+<para>
+
+</para>
+
+@props: 
+
+
 <!-- ##### FUNCTION gst_props_check_compatibility ##### -->
 <para>
 
@@ -136,6 +190,60 @@ Create a boolean property.
 <!-- # Unused Parameters # -->
 @props1: 
 @props2: 
+
+
+<!-- ##### FUNCTION gst_props_set ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Varargs: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@entry: 
+@value: 
+
+
+<!-- ##### FUNCTION gst_props_get_boolean ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_get_fourcc_int ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_get_int ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_get_string ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_props_save_thyself ##### -->

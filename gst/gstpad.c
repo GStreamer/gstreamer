@@ -36,7 +36,6 @@ static void		gst_pad_init			(GstPad *pad);
 
 static xmlNodePtr	gst_pad_save_thyself		(GstObject *object, xmlNodePtr parent);
 
-
 static GstObject *pad_parent_class = NULL;
 
 GtkType
@@ -273,7 +272,6 @@ gst_pad_new_from_template (GstPadTemplate *templ,
   g_return_val_if_fail (templ != NULL, NULL);
 
   pad = gst_pad_new (name, templ->direction);
-  GST_PAD_CAPS(pad) = templ->caps;
   GST_PAD_PADTEMPLATE(pad) = templ;
 
   return pad;
@@ -423,6 +421,45 @@ gst_pad_set_eos_function (GstPad *pad,
              GST_DEBUG_PAD_NAME(pad),pad,&GST_RPAD_EOSFUNC(pad),eos);
 }
 
+/**
+ * gst_pad_set_negotiate_function:
+ * @pad: the pad to set the negotiate function for
+ * @nego: the negotiate function
+ *
+ * Set the given negotiate function for the pad.
+ */
+void
+gst_pad_set_negotiate_function (GstPad *pad,
+		                GstPadNegotiateFunction nego)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+
+  GST_RPAD_NEGOTIATEFUNC(pad) = nego;
+  GST_DEBUG (0,"negotiatefunc for %s:%s(@%p) at %p is set to %p\n",
+             GST_DEBUG_PAD_NAME(pad),pad,&GST_RPAD_NEGOTIATEFUNC(pad),nego);
+}
+
+
+/**
+ * gst_pad_set_newcaps_function:
+ * @pad: the pad to set the newcaps function for
+ * @newcaps: the newcaps function
+ *
+ * Set the given newcaps function for the pad.
+ */
+void
+gst_pad_set_newcaps_function (GstPad *pad,
+		              GstPadNewCapsFunction newcaps)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+
+  GST_RPAD_NEWCAPSFUNC (pad) = newcaps;
+  GST_DEBUG (0,"newcapsfunc for %s:%s(@%p) at %p is set to %p\n",
+             GST_DEBUG_PAD_NAME(pad),pad,&GST_RPAD_NEWCAPSFUNC(pad),newcaps);
+}
+
 
 
 static void
@@ -523,26 +560,32 @@ gst_pad_disconnect (GstPad *srcpad,
  * @sinkpad: the sink pad to connect
  *
  * Connects the source pad to the sink pad.
+ *
+ * Returns: TRUE if the pad could be connected
  */
-void
+gboolean
 gst_pad_connect (GstPad *srcpad,
 		 GstPad *sinkpad)
 {
   GstRealPad *realsrc, *realsink;
   GstRealPad *temppad;
+  gboolean negotiated = FALSE;
 
   /* generic checks */
-  g_return_if_fail(srcpad != NULL);
-  g_return_if_fail(GST_IS_PAD(srcpad));
-  g_return_if_fail(sinkpad != NULL);
-  g_return_if_fail(GST_IS_PAD(sinkpad));
+  g_return_val_if_fail(srcpad != NULL, FALSE);
+  g_return_val_if_fail(GST_IS_PAD(srcpad), FALSE);
+  g_return_val_if_fail(sinkpad != NULL, FALSE);
+  g_return_val_if_fail(GST_IS_PAD(sinkpad), FALSE);
+
+  GST_INFO (GST_CAT_ELEMENT_PADS, "about to connect %s:%s and %s:%s",
+            GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
 
   // now we need to deal with the real/ghost stuff
   realsrc = GST_PAD_REALIZE(srcpad);
   realsink = GST_PAD_REALIZE(sinkpad);
 
-  g_return_if_fail(GST_RPAD_PEER(realsrc) == NULL);
-  g_return_if_fail(GST_RPAD_PEER(realsink) == NULL);
+  g_return_val_if_fail(GST_RPAD_PEER(realsrc) == NULL, FALSE);
+  g_return_val_if_fail(GST_RPAD_PEER(realsink) == NULL, FALSE);
 
   /* check for reversed directions and swap if necessary */
   if ((GST_RPAD_DIRECTION(realsrc) == GST_PAD_SINK) &&
@@ -551,23 +594,14 @@ gst_pad_connect (GstPad *srcpad,
     realsrc = realsink;
     realsink = temppad;
   }
-  g_return_if_fail((GST_RPAD_DIRECTION(realsrc) == GST_PAD_SRC) &&
-                   (GST_RPAD_DIRECTION(realsink) == GST_PAD_SINK));
+  g_return_val_if_fail((GST_RPAD_DIRECTION(realsrc) == GST_PAD_SRC) &&
+                   (GST_RPAD_DIRECTION(realsink) == GST_PAD_SINK), FALSE);
 
-  if (!gst_pad_check_compatibility (srcpad, sinkpad)) {
-    g_warning ("gstpad: connecting incompatible pads (%s:%s) and (%s:%s)\n",
-                       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
-  }
-  else {
-    GST_DEBUG (0,"gstpad: connecting compatible pads (%s:%s) and (%s:%s)\n",
-                       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
-  }
 
   /* first set peers */
   GST_RPAD_PEER(realsrc) = realsink;
   GST_RPAD_PEER(realsink) = realsrc;
 
-  /* set the connected flag */
   /* FIXME: set connected flag */
 
   /* fire off a signal to each of the pads telling them that they've been connected */
@@ -582,6 +616,21 @@ gst_pad_connect (GstPad *srcpad,
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "connected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
+
+  if (GST_PAD_CAPS (srcpad)) {
+    negotiated = gst_pad_renegotiate (srcpad);
+  }
+  else if (GST_PAD_CAPS (sinkpad)) {
+    negotiated = gst_pad_renegotiate (sinkpad);
+  }
+  else 
+    negotiated = TRUE;
+
+  if (!negotiated) {
+    gst_pad_disconnect (GST_PAD (realsrc), GST_PAD (realsink));
+    return FALSE;
+  }
+  return TRUE;
 }
 
 /**
@@ -603,6 +652,23 @@ gst_pad_set_parent (GstPad *pad,
   g_return_if_fail ((gpointer)pad != (gpointer)parent);
 
   gst_object_set_parent (GST_OBJECT (pad), parent);
+}
+
+/**
+ * gst_pad_get_padtemplate:
+ * @pad: the pad to get the padtemplate from
+ *
+ * Get the padtemplate object of this pad.
+ *
+ * Returns: the padtemplate object
+ */
+GstPadTemplate*
+gst_pad_get_padtemplate (GstPad *pad)
+{
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  return GST_PAD_PADTEMPLATE (pad); 
 }
 
 /**
@@ -638,6 +704,25 @@ gst_pad_get_sched (GstPad *pad)
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   return GST_RPAD_SCHED(pad);
+}
+
+/**
+ * gst_pad_get_real_parent:
+ * @pad: the pad to get the parent from
+ *
+ * Get the real parent object of this pad. If the pad
+ * is a ghostpad, the actual owner of the real pad is
+ * returned, as opposed to the gst_pad_get_parent.
+ *
+ * Returns: the parent object
+ */
+GstObject*
+gst_pad_get_real_parent (GstPad *pad)
+{
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  return GST_PAD_PARENT (GST_PAD (GST_PAD_REALIZE (pad)));
 }
 
 /**
@@ -705,68 +790,101 @@ gst_pad_get_ghost_pad_list (GstPad *pad)
 }
 
 /**
- * gst_pad_set_caps_list:
+ * gst_pad_set_caps:
  * @pad: the pad to set the caps to
- * @caps: a GList of the capabilities to attach to this pad
+ * @caps: the capabilities to attach to this pad
  *
  * Set the capabilities of this pad.
+ *
+ * Returns: a boolean indicating the caps could be set on the pad
  */
-void
-gst_pad_set_caps_list (GstPad *pad,
-                       GList *caps)
+gboolean
+gst_pad_set_caps (GstPad *pad,
+                  GstCaps *caps)
 {
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_REAL_PAD (pad));		// NOTE this restriction
+  g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);		// NOTE this restriction
 
+  if (!gst_caps_check_compatibility (caps, gst_pad_get_padtemplate_caps (pad))) {
+    g_warning ("pad %s:%s tried to set caps incompatible with its padtemplate\n",
+		    GST_DEBUG_PAD_NAME (pad));
+    //return FALSE;
+  }
+  
+  if (GST_PAD_CAPS (pad))
+    gst_caps_unref (GST_PAD_CAPS (pad));
+
+  if (caps)
+    gst_caps_ref (caps);
   GST_PAD_CAPS(pad) = caps;
+
+  return gst_pad_renegotiate (pad);
 }
 
 /**
- * gst_pad_get_caps_list:
+ * gst_pad_get_caps:
+ * @pad: the pad to get the capabilities from
+ *
+ * Get the capabilities of this pad.
+ *
+ * Returns: the capabilities of this pad
+ */
+GstCaps*
+gst_pad_get_caps (GstPad *pad)
+{
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  if (GST_PAD_CAPS (pad))
+    return GST_PAD_CAPS (pad);
+  else if (GST_PAD_PADTEMPLATE (pad))
+    return GST_PADTEMPLATE_CAPS (GST_PAD_PADTEMPLATE (pad));
+
+  return NULL;
+}
+
+/**
+ * gst_pad_get_padtemplate_caps:
  * @pad: the pad to get the capabilities from
  *
  * Get the capabilities of this pad.
  *
  * Returns: a list of the capabilities of this pad
  */
-GList *
-gst_pad_get_caps_list (GstPad *pad)
+GstCaps*
+gst_pad_get_padtemplate_caps (GstPad *pad)
 {
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  return GST_PAD_CAPS(pad);
+  if (GST_PAD_PADTEMPLATE (pad))
+    return GST_PADTEMPLATE_CAPS (GST_PAD_PADTEMPLATE (pad));
+
+  return NULL;
 }
 
+
 /**
- * gst_pad_get_caps_by_name:
- * @pad: the pad to get the capabilities from
+ * gst_padtemplate_get_caps_by_name:
+ * @templ: the padtemplate to get the capabilities from
  * @name: the name of the capability to get
  *
- * Get the capabilities  with the given name from this pad.
+ * Get the capability with the given name from this padtemplate.
  *
  * Returns: a capability or NULL if not found
  */
-GstCaps *
-gst_pad_get_caps_by_name (GstPad *pad, gchar *name)
+GstCaps*
+gst_padtemplate_get_caps_by_name (GstPadTemplate *templ, const gchar *name)
 {
-  GList *caps;
+  GstCaps *caps;
 
-  g_return_val_if_fail (pad != NULL, NULL);
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+  g_return_val_if_fail (templ != NULL, NULL);
 
-  caps = GST_PAD_CAPS(pad);
+  caps = GST_PADTEMPLATE_CAPS (templ);
+  if (!caps) 
+    return NULL;
 
-  while (caps) {
-    GstCaps *cap = (GstCaps *)caps->data;
-
-    if (!strcmp (cap->name, name))
-      return cap;
-
-    caps = g_list_next (caps);
-  }
-
-  return NULL;
+  return gst_caps_get_by_name (caps, name);
 }
 
 /**
@@ -782,18 +900,13 @@ gst_pad_get_caps_by_name (GstPad *pad, gchar *name)
 gboolean
 gst_pad_check_compatibility (GstPad *srcpad, GstPad *sinkpad)
 {
-  GstRealPad *realsrc, *realsink;
-
   g_return_val_if_fail (srcpad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
   g_return_val_if_fail (sinkpad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
 
-  realsrc = GST_PAD_REALIZE(srcpad);
-  realsink = GST_PAD_REALIZE(sinkpad);
-
-  if (GST_RPAD_CAPS(realsrc) && GST_RPAD_CAPS(realsink)) {
-    if (!gst_caps_list_check_compatibility (GST_RPAD_CAPS(realsrc), GST_RPAD_CAPS(realsink))) {
+  if (GST_PAD_CAPS(srcpad) && GST_PAD_CAPS(sinkpad)) {
+    if (!gst_caps_check_compatibility (GST_PAD_CAPS(srcpad), GST_PAD_CAPS(sinkpad))) {
       return FALSE;
     }
     else {
@@ -801,8 +914,9 @@ gst_pad_check_compatibility (GstPad *srcpad, GstPad *sinkpad)
     }
   }
   else {
-    GST_DEBUG (0,"gstpad: could not check capabilities of pads (%s:%s) and (%s:%s)\n",
-		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+    GST_DEBUG (0,"gstpad: could not check capabilities of pads (%s:%s) and (%s:%s) %p %p\n",
+		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad), 
+		    GST_PAD_CAPS (srcpad), GST_PAD_CAPS (sinkpad));
     return TRUE;
   }
 }
@@ -848,7 +962,7 @@ void
 gst_pad_load_and_connect (xmlNodePtr self,
 		          GstObject *parent)
 {
-  xmlNodePtr field = self->childs;
+  xmlNodePtr field = self->xmlChildrenNode;
   GstPad *pad = NULL, *targetpad;
   guchar *peer = NULL;
   gchar **split;
@@ -893,6 +1007,225 @@ cleanup:
   g_strfreev (split);
 }
 
+static gboolean
+gst_pad_renegotiate_func (GstPad *pad, gpointer *data1, GstPad *peerpad, gpointer *data2, GstCaps **newcaps)
+{
+  GstRealPad *currentpad, *otherpad;
+  gpointer *currentdata, *otherdata;
+  GstPadNegotiateReturn result;
+  gint counter = 0;
+  
+  g_return_val_if_fail (pad != NULL, FALSE);
+
+  currentpad = GST_PAD_REALIZE (pad);
+  otherpad = GST_REAL_PAD (peerpad);
+  currentdata = data1;
+  otherdata = data2;
+
+  GST_DEBUG (GST_CAT_NEGOTIATION, "negotiating pad %s:%s and %s:%s data:%p\n",
+            GST_DEBUG_PAD_NAME(currentpad), GST_DEBUG_PAD_NAME(otherpad), currentdata);
+
+  do {
+    gboolean matchtempl;
+    
+    if (!*newcaps) {
+      if (otherpad->negotiatefunc) {
+        GstRealPad *temp;
+        gpointer *tempdata;
+
+        GST_DEBUG (GST_CAT_NEGOTIATION, "requesting other caps from pad %s:%s data:%p\n",
+                        GST_DEBUG_PAD_NAME(otherpad), otherdata);
+        otherpad->negotiatefunc (GST_PAD (otherpad), newcaps, otherdata);
+
+        temp = otherpad;
+        otherpad = currentpad;
+        currentpad = temp;
+
+        tempdata = otherdata;
+        otherdata = currentdata;
+        currentdata = tempdata;
+      }
+    }
+
+    GST_DEBUG (GST_CAT_NEGOTIATION, "checking compatibility with pad %s:%s\n",
+                     GST_DEBUG_PAD_NAME(otherpad));
+    matchtempl = gst_caps_check_compatibility (*newcaps, gst_pad_get_padtemplate_caps (GST_PAD (otherpad)));
+
+    GST_DEBUG (GST_CAT_NEGOTIATION, "caps compatibility check %s\n", (matchtempl?"ok":"fail"));
+
+    if (matchtempl) {
+      GST_DEBUG (GST_CAT_NEGOTIATION, "checking if other pad %s:%s can negotiate data:%p\n",
+                     GST_DEBUG_PAD_NAME(otherpad), otherdata);
+      if (otherpad->negotiatefunc) {
+        GstRealPad *temp;
+        gpointer *tempdata;
+
+        GST_DEBUG (GST_CAT_NEGOTIATION, "switching pad for next phase\n");
+
+        temp = currentpad;
+        currentpad = otherpad;
+        otherpad = temp;
+
+        tempdata = otherdata;
+        otherdata = currentdata;
+        currentdata = tempdata;
+      }
+      else if (gst_caps_check_compatibility (*newcaps, GST_PAD_CAPS (otherpad))) {
+        GST_DEBUG (GST_CAT_NEGOTIATION, "negotiation succeeded\n");
+        return TRUE;
+      }
+      else {
+	*newcaps = GST_PAD_CAPS (otherpad);
+	if (*newcaps) gst_caps_ref(*newcaps);
+      }
+    }
+    else {
+      *newcaps = GST_PAD_CAPS (otherpad);
+      if (*newcaps) gst_caps_ref(*newcaps);
+    }
+
+    counter++;
+
+    if (currentpad->negotiatefunc) {
+      GST_DEBUG (GST_CAT_NEGOTIATION, "calling negotiate function on pad %s:%s data: %p\n",
+		      GST_DEBUG_PAD_NAME (currentpad), currentdata);
+      result = currentpad->negotiatefunc (GST_PAD (currentpad), newcaps, currentdata);
+
+      switch (result) {
+        case GST_PAD_NEGOTIATE_FAIL:
+          GST_DEBUG (GST_CAT_NEGOTIATION, "negotiation failed\n");
+          return FALSE;
+        case GST_PAD_NEGOTIATE_AGREE:
+          GST_DEBUG (GST_CAT_NEGOTIATION, "negotiation succeeded\n");
+          return TRUE;
+        case GST_PAD_NEGOTIATE_TRY:
+          GST_DEBUG (GST_CAT_NEGOTIATION, "try another option\n");
+          break;
+	default:
+          GST_DEBUG (GST_CAT_NEGOTIATION, "invalid return\n");
+          break;
+      }
+    }
+    else {
+      GST_DEBUG (GST_CAT_NEGOTIATION, "negotiation failed, no more options\n");
+      return FALSE;
+    }
+      
+  } while (counter < 100);
+
+  g_warning ("negotiation between (%s:%s) and (%s:%s) failed: too many attempts (%d)\n",
+            GST_DEBUG_PAD_NAME(pad), GST_DEBUG_PAD_NAME(peerpad), counter);
+
+  GST_DEBUG (GST_CAT_NEGOTIATION, "negotiation failed, too many attempts\n");
+  
+  return FALSE;
+}
+
+/**
+ * gst_pad_renegotiate:
+ * @pad: the pad to perform the negotiation on
+ *
+ * Perform the negotiation process with the peer pad.
+ *
+ * Returns: TRUE if the negotiation process succeded
+ */
+gboolean
+gst_pad_renegotiate (GstPad *pad)
+{
+  GstCaps *newcaps = NULL;
+  GstRealPad *peerpad, *currentpad, *otherpad;
+  gboolean result;
+  gpointer data1 = NULL, data2 = NULL;
+  
+  g_return_val_if_fail (pad != NULL, FALSE);
+
+  peerpad = GST_PAD_PEER (pad);
+
+  currentpad = GST_PAD_REALIZE (pad);
+
+  if (!peerpad) {
+    GST_DEBUG (GST_CAT_NEGOTIATION, "no peer pad for pad %s:%s\n",
+                 GST_DEBUG_PAD_NAME(currentpad));
+    return TRUE;
+  }
+   
+  otherpad = GST_REAL_PAD (peerpad);
+
+  GST_INFO (GST_CAT_NEGOTIATION, "negotiating pad %s:%s and %s:%s",
+            GST_DEBUG_PAD_NAME(pad), GST_DEBUG_PAD_NAME(peerpad));
+
+  newcaps = GST_PAD_CAPS (pad);
+  
+  result = gst_pad_renegotiate_func (GST_PAD (currentpad), &data1, GST_PAD (otherpad), &data2, &newcaps);
+
+  if (result) {
+    GST_DEBUG (GST_CAT_NEGOTIATION, "pads aggreed on caps :)\n");
+
+    /* here we have some sort of aggreement of the caps */
+    GST_PAD_CAPS (currentpad) = newcaps;
+    if (GST_RPAD_NEWCAPSFUNC (currentpad))
+      GST_RPAD_NEWCAPSFUNC (currentpad) (GST_PAD (currentpad), newcaps);
+
+    GST_PAD_CAPS (otherpad) = newcaps;
+    if (GST_RPAD_NEWCAPSFUNC (otherpad))
+      GST_RPAD_NEWCAPSFUNC (otherpad) (GST_PAD (otherpad), newcaps);
+  }
+
+  return result;
+}
+
+/**
+ * gst_pad_negotiate_proxy:
+ * @srcpad: the pad that proxies
+ * @destpad: the pad to proxy the negotiation to
+ * @caps: the current caps
+ *
+ * Proxies the negotiation pad from srcpad to destpad. Further
+ * negotiation is done on the peers of both pad instead.
+ *
+ * Returns: the result of the negotiation preocess.
+ */
+GstPadNegotiateReturn
+gst_pad_negotiate_proxy (GstPad *srcpad, GstPad *destpad, GstCaps **caps)
+{
+  GstRealPad *srcpeer;
+  GstRealPad *destpeer;
+  gboolean result;
+  gpointer data1 = NULL, data2 = NULL;
+
+  g_return_val_if_fail (srcpad != NULL, GST_PAD_NEGOTIATE_FAIL);
+  g_return_val_if_fail (destpad != NULL, GST_PAD_NEGOTIATE_FAIL);
+
+  GST_DEBUG (GST_CAT_NEGOTIATION, "negotiation proxied from pad (%s:%s) to pad (%s:%s)\n", 
+		  GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
+
+  srcpeer = GST_RPAD_PEER (srcpad);
+  destpeer = GST_RPAD_PEER (destpad);
+
+  if (srcpeer && destpeer) {
+    result = gst_pad_renegotiate_func (GST_PAD (srcpeer), &data1, GST_PAD (destpeer), &data2, caps);
+
+    if (result) {
+      GST_DEBUG (GST_CAT_NEGOTIATION, "pads (%s:%s) and (%s:%s) aggreed on caps :)\n",
+		  GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
+
+      /* here we have some sort of aggreement of the caps */
+      GST_PAD_CAPS (destpeer) = *caps;
+      if (GST_RPAD_NEWCAPSFUNC (destpeer))
+        GST_RPAD_NEWCAPSFUNC (destpeer) (GST_PAD (destpeer), *caps);
+
+      GST_PAD_CAPS (destpad) = *caps;
+      if (GST_RPAD_NEWCAPSFUNC (destpad))
+        GST_RPAD_NEWCAPSFUNC (destpad) (GST_PAD (destpad), *caps);
+    }
+    else {
+      GST_DEBUG (GST_CAT_NEGOTIATION, "pads did not aggree on caps :(\n");
+      return GST_PAD_NEGOTIATE_FAIL;
+    }
+  }
+
+  return GST_PAD_NEGOTIATE_AGREE;
+}
 
 /**
  * gst_pad_save_thyself:
@@ -956,22 +1289,49 @@ gst_pad_ghost_save_thyself (GstPad *pad,
 }
 
 #ifndef gst_pad_push
-void gst_pad_push(GstPad *pad,GstBuffer *buf) {
-  GstRealPad *peer = GST_RPAD_PEER(pad);
-  GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+/**
+ * gst_pad_push:
+ * @pad: the pad to push
+ * @buf: the buffer to push
+ *
+ * Push a buffer to the peer of the pad.
+ */
+void 
+gst_pad_push (GstPad *pad, GstBuffer *buf) 
+{
+  GstRealPad *peer = GST_RPAD_PEER (pad);
+
+  g_return_if_fail (peer != NULL);
+  
+  GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
+  
   if (peer->pushfunc) {
-    GST_DEBUG (0,"calling pushfunc &%s of peer pad %s:%s\n",
-          GST_DEBUG_FUNCPTR_NAME(peer->pushfunc),GST_DEBUG_PAD_NAME(((GstPad*)peer)));
-    (peer->pushfunc)(((GstPad*)peer),buf);
+    GST_DEBUG (0, "calling pushfunc &%s of peer pad %s:%s\n",
+          GST_DEBUG_FUNCPTR_NAME (peer->pushfunc), GST_DEBUG_PAD_NAME (((GstPad*)peer)));
+    (peer->pushfunc) (((GstPad*)peer), buf);
   } else
-    GST_DEBUG (0,"no pushfunc\n");
+    GST_DEBUG (0, "no pushfunc\n");
 }
 #endif
 
 #ifndef gst_pad_pull
-GstBuffer *gst_pad_pull(GstPad *pad) {
+/**
+ * gst_pad_pull:
+ * @pad: the pad to pull
+ *
+ * Pull a buffer from the peer pad.
+ *
+ * Returns: a new buffer from the peer pad.
+ */
+GstBuffer*
+gst_pad_pull (GstPad *pad) 
+{
   GstRealPad *peer = GST_RPAD_PEER(pad);
+  
+  g_return_val_if_fail (peer != NULL, NULL);
+
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+
   if (peer->pullfunc) {
     GST_DEBUG (0,"calling pullfunc &%s (@%p) of peer pad %s:%s\n",
       GST_DEBUG_FUNCPTR_NAME(peer->pullfunc),&peer->pullfunc,GST_DEBUG_PAD_NAME(((GstPad*)peer)));
@@ -984,9 +1344,29 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
 #endif
 
 #ifndef gst_pad_pullregion
-GstBuffer *gst_pad_pullregion(GstPad *pad,GstRegionType type,guint64 offset,guint64 len) {
+/**
+ * gst_pad_pullregion:
+ * @pad: the pad to pull the region from
+ * @type: the regiontype
+ * @offset: the offset/start of the buffer to pull
+ * @len: the length of the buffer to pull
+ *
+ * Pull a buffer region from the peer pad. The region to pull can be 
+ * specified with a offset/lenght pair or with a start/legnth time
+ * indicator as specified by the type parameter.
+ *
+ * Returns: a new buffer from the peer pad with data in the specified
+ * region.
+ */
+GstBuffer*
+gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len) 
+{
   GstRealPad *peer = GST_RPAD_PEER(pad);
+  
+  g_return_val_if_fail (peer != NULL, NULL);
+
   GST_DEBUG_ENTER("(%s:%s,%d,%lld,%lld)",GST_DEBUG_PAD_NAME(pad),type,offset,len);
+
   if (peer->pullregionfunc) {
     GST_DEBUG (0,"calling pullregionfunc &%s of peer pad %s:%s\n",
           GST_DEBUG_FUNCPTR_NAME(peer->pullregionfunc),GST_DEBUG_PAD_NAME(((GstPad*)peer)));
@@ -1003,46 +1383,64 @@ GstBuffer *gst_pad_pullregion(GstPad *pad,GstRegionType type,guint64 offset,guin
  * templates
  *
  */
+static void		gst_padtemplate_class_init	(GstPadTemplateClass *klass);
+static void		gst_padtemplate_init		(GstPadTemplate *templ);
 
-/**
- * gst_padtemplate_new:
- * @factory: the padfactory to use
- *
- * Creates a new padtemplate from the factory.
- *
- * Returns: the new padtemplate
- */
-GstPadTemplate*
-gst_padtemplate_new (GstPadFactory *factory)
+enum {
+  TEMPL_PAD_CREATED,
+  /* FILL ME */
+  TEMPL_LAST_SIGNAL
+};
+
+static GstObject *padtemplate_parent_class = NULL;
+static guint gst_padtemplate_signals[TEMPL_LAST_SIGNAL] = { 0 };
+
+GtkType
+gst_padtemplate_get_type (void)
 {
-  GstPadTemplate *new;
-  GstPadFactoryEntry tag;
-  gint i = 0;
-  guint counter = 0;
+  static GtkType padtemplate_type = 0;
 
-  g_return_val_if_fail (factory != NULL, NULL);
-
-  new = g_new0 (GstPadTemplate, 1);
-
-  tag = (*factory)[i++];
-  g_return_val_if_fail (tag != NULL, new);
-  new->name_template = g_strdup ((gchar *)tag);
-
-  tag = (*factory)[i++];
-  new->direction = GPOINTER_TO_UINT (tag);
-
-  tag = (*factory)[i++];
-  new->presence = GPOINTER_TO_UINT (tag);
-
-  tag = (*factory)[i++];
-
-  while (GPOINTER_TO_INT (tag) == 1) {
-    new->caps = g_list_append (new->caps, gst_caps_register_count ((GstCapsFactory *)&(*factory)[i], &counter));
-    i+=counter;
-    tag = (*factory)[i++];
+  if (!padtemplate_type) {
+    static const GtkTypeInfo padtemplate_info = {
+      "GstPadTemplate",
+      sizeof(GstPadTemplate),
+      sizeof(GstPadTemplateClass),
+      (GtkClassInitFunc)gst_padtemplate_class_init,
+      (GtkObjectInitFunc)gst_padtemplate_init,
+      (GtkArgSetFunc)NULL,
+      (GtkArgGetFunc)NULL,
+      (GtkClassInitFunc)NULL,
+    };
+    padtemplate_type = gtk_type_unique(GST_TYPE_OBJECT,&padtemplate_info);
   }
+  return padtemplate_type;
+}
 
-  return new;
+static void
+gst_padtemplate_class_init (GstPadTemplateClass *klass)
+{
+  GtkObjectClass *gtkobject_class;
+  GstObjectClass *gstobject_class;
+
+  gtkobject_class = (GtkObjectClass*)klass;
+  gstobject_class = (GstObjectClass*)klass;
+
+  padtemplate_parent_class = gtk_type_class(GST_TYPE_OBJECT);
+
+  gst_padtemplate_signals[TEMPL_PAD_CREATED] =
+    gtk_signal_new ("pad_created", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstPadTemplateClass, pad_created),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GST_TYPE_PAD);
+
+  gtk_object_class_add_signals (gtkobject_class, gst_padtemplate_signals, TEMPL_LAST_SIGNAL);
+
+  gstobject_class->path_string_separator = "*";
+}
+
+static void
+gst_padtemplate_init (GstPadTemplate *templ)
+{
 }
 
 /**
@@ -1057,22 +1455,50 @@ gst_padtemplate_new (GstPadFactory *factory)
  * Returns: the new padtemplate
  */
 GstPadTemplate*
-gst_padtemplate_create (gchar *name_template,
-		        GstPadDirection direction, GstPadPresence presence,
-		        GList *caps)
+gst_padtemplate_new (gchar *name_template,
+		     GstPadDirection direction, GstPadPresence presence,
+		     GstCaps *caps, ...)
 {
   GstPadTemplate *new;
+  va_list var_args;
+  GstCaps *thecaps = NULL;
 
-  new = g_new0 (GstPadTemplate, 1);
+  g_return_val_if_fail (name_template != NULL, NULL);
 
-  new->name_template = name_template;
-  new->direction = direction;
-  new->presence = presence;
-  new->caps = caps;
+  new = gtk_type_new (gst_padtemplate_get_type ());
+
+  GST_PADTEMPLATE_NAME_TEMPLATE (new) = name_template;
+  GST_PADTEMPLATE_DIRECTION (new) = direction;
+  GST_PADTEMPLATE_PRESENCE (new) = presence;
+
+  va_start (var_args, caps);
+
+  while (caps) {
+    thecaps = gst_caps_append (thecaps, caps);
+    caps = va_arg (var_args, GstCaps*);
+  }
+  va_end (var_args);
+  
+  GST_PADTEMPLATE_CAPS (new) = thecaps;
 
   return new;
 }
 
+/**
+ * gst_padtemplate_get_caps:
+ * @templ: the padtemplate to use
+ *
+ * Get the capabilities of the padtemplate
+ *
+ * Returns: a GstCaps*
+ */
+GstCaps*
+gst_padtemplate_get_caps (GstPadTemplate *templ)
+{
+  g_return_val_if_fail (templ != NULL, NULL);
+
+  return GST_PADTEMPLATE_CAPS (templ);
+}
 
 /**
  * gst_padtemplate_save_thyself:
@@ -1087,8 +1513,9 @@ xmlNodePtr
 gst_padtemplate_save_thyself (GstPadTemplate *templ, xmlNodePtr parent)
 {
   xmlNodePtr subtree;
-  GList *caps;
   guchar *presence;
+
+  GST_DEBUG (0,"saving padtemplate %s\n", templ->name_template);
 
   xmlNewChild(parent,NULL,"nametemplate", templ->name_template);
   xmlNewChild(parent,NULL,"direction", (templ->direction == GST_PAD_SINK? "sink":"src"));
@@ -1109,14 +1536,9 @@ gst_padtemplate_save_thyself (GstPadTemplate *templ, xmlNodePtr parent)
   }
   xmlNewChild(parent,NULL,"presence", presence);
 
-  caps = templ->caps;
-  while (caps) {
-    GstCaps *cap = (GstCaps *)caps->data;
-
+  if (GST_PADTEMPLATE_CAPS (templ)) {
     subtree = xmlNewChild (parent, NULL, "caps", NULL);
-    gst_caps_save_thyself (cap, subtree);
-
-    caps = g_list_next (caps);
+    gst_caps_save_thyself (GST_PADTEMPLATE_CAPS (templ), subtree);
   }
 
   return parent;
@@ -1133,22 +1555,25 @@ gst_padtemplate_save_thyself (GstPadTemplate *templ, xmlNodePtr parent)
 GstPadTemplate*
 gst_padtemplate_load_thyself (xmlNodePtr parent)
 {
-  xmlNodePtr field = parent->childs;
-  GstPadTemplate *factory = g_new0 (GstPadTemplate, 1);
+  xmlNodePtr field = parent->xmlChildrenNode;
+  GstPadTemplate *factory;
+  gchar *name_template = NULL;
+  GstPadDirection direction = GST_PAD_UNKNOWN;
+  GstPadPresence presence = GST_PAD_ALWAYS;
+  GstCaps *caps = NULL;
 
   while (field) {
     if (!strcmp(field->name, "nametemplate")) {
-      factory->name_template = xmlNodeGetContent(field);
+      name_template = xmlNodeGetContent(field);
     }
     if (!strcmp(field->name, "direction")) {
       gchar *value = xmlNodeGetContent(field);
 
-      factory->direction = GST_PAD_UNKNOWN;
       if (!strcmp(value, "sink")) {
-        factory->direction = GST_PAD_SINK;
+        direction = GST_PAD_SINK;
       }
       else if (!strcmp(value, "src")) {
-        factory->direction = GST_PAD_SRC;
+        direction = GST_PAD_SRC;
       }
       g_free (value);
     }
@@ -1156,21 +1581,24 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
       gchar *value = xmlNodeGetContent(field);
 
       if (!strcmp(value, "always")) {
-        factory->presence = GST_PAD_ALWAYS;
+        presence = GST_PAD_ALWAYS;
       }
       else if (!strcmp(value, "sometimes")) {
-        factory->presence = GST_PAD_SOMETIMES;
+        presence = GST_PAD_SOMETIMES;
       }
       else if (!strcmp(value, "request")) {
-        factory->presence = GST_PAD_REQUEST;
+        presence = GST_PAD_REQUEST;
       }
       g_free (value);
     }
     else if (!strcmp(field->name, "caps")) {
-      factory->caps = g_list_append(factory->caps, gst_caps_load_thyself (field));
+      caps = gst_caps_load_thyself (field);
     }
     field = field->next;
   }
+
+  factory = gst_padtemplate_new (name_template, direction, presence, caps, NULL);
+
   return factory;
 }
 
@@ -1244,23 +1672,6 @@ gst_pad_set_eos(GstPad *pad)
   return TRUE;
 }
 
-/*
-GstPad *
-gst_pad_select(GstPad *nextpad, ...) {
-  va_list args;
-  GstPad *pad;
-  GSList *pads = NULL;
-
-  // construct the list of pads
-  va_start (args, nextpad);
-  while ((pad = va_arg (args, GstPad*)))
-    pads = g_slist_prepend (pads, pad);
-  va_end (args);
-
-  // now switch to the nextpad
-*/
-
-
 /**
  * gst_pad_set_element_private:
  * @pad: the pad to set the private data to
@@ -1290,13 +1701,6 @@ gst_pad_get_element_private (GstPad *pad)
 {
   return pad->element_private;
 }
-
-
-
-
-
-
-
 
 
 /***** ghost pads *****/

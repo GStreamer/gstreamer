@@ -3,15 +3,9 @@
 
 <!ENTITY INTRO SYSTEM "intro.sgml">
 
-<!ENTITY CONCEPTS SYSTEM "concepts.sgml">
-
-<!ENTITY FIRSTPLUGIN SYSTEM "firstplugin.sgml">
-
 <!ENTITY TESTAPP SYSTEM "testapp.sgml">
 
 <!ENTITY LOOPBASED SYSTEM "loopbased.sgml">
-
-<!ENTITY TYPESNPROPS SYSTEM "typesnprops.sgml">
 
 <!ENTITY BUFFERS SYSTEM ".sgml">
 
@@ -20,6 +14,8 @@
 <!ENTITY STATEMANAGE SYSTEM ".sgml">
 
 <!ENTITY CHECKLIST SYSTEM ".sgml">
+
+<!ENTITY GStreamer "<application>GStreamer</application>">
 ]>
 
 <book id="index">
@@ -30,22 +26,22 @@
   <part id="introduction"><title>Introduction</title>
     <partintro>
       <para>
-	<application>GStreamer</application> is a framework for creating
+	&GStreamer; is a framework for creating
 	streaming media applications.  It is extremely powerful and versatile,
 	and this versatility stems in part from its modularity, and its ability
 	to incorporate new modules seamlessly into its framework.
 	This document describes how to extend the capabilities of
-	<application>GStreamer</application> by creating new plugins.
+	&GStreamer; by creating new plugins.
       </para>
       <para>
 	It first describes the concepts required and the ways in which
-	<application>GStreamer</application> can be extended. It then goes
+	&GStreamer; can be extended. It then goes
 	through a worked example of how to write a simple filter (for data
 	processing), and how to test and debug it.  More advanced concepts are
 	then introduced, with worked examples of each.  Next, writing source
 	and sink elements (for performing input and output) is discussed.
 	Finally, checklists of things to be sure to do when extending
-	<application>GStreamer</application> are presented.
+	&GStreamer; are presented.
       </para>
     </partintro>
 
@@ -59,12 +55,361 @@
       <para>
 
 	This section introduces the basic concepts required to understand the
-	issues involved in extending <application>GStreamer</application>
+	issues involved in extending &GStreamer;
+      </para>
+      <para>
+        Many of these concepts are explained in greater detail in the
+	GStreamer Application Development Manual, and are merely mentioned
+	here to refresh your memory.
 
       </para>
     </partintro>
 
-      &CONCEPTS;
+
+    <chapter id="cha-plugins">
+      <title>Plugins</title>
+      <para>
+        Extensions to &GStreamer; can be made using a plugin mechanism.  This is
+        used extensively in &GStreamer; even if only the standard package is
+        being used: a few very basic functions reside in the core library, and
+        all others are implemented in plugins.
+      </para>
+      <para>
+        Plugins are only loaded when needed: a plugin registry is used to
+        store the details of the plugins so that it is not neccessary to load
+        all plugins to determine which are needed.
+        This registry needs to be updated whenever a new plugin is added to the
+        system: see the <emphasis>gstreamer-register</emphasis> utility and the
+        documentation in the <emphasis>GStreamer Application Development
+        Manual</emphasis> for more details.
+      </para>
+      <para>
+        User extensions to &GStreamer; can be installed in the main plugin
+        directory, and will immediately be available for use in applications.
+        <emphasis>gstreamer-register</emphasis> should be run to update
+        the repository: but the system should work correctly even if it hasn't
+        been - it will just take longer to load the correct plugin.
+      </para>
+      <para>
+        User specific plugin directories and registries will be available
+	in future versions of &GStreamer;.
+      </para>
+    </chapter>
+
+    <chapter id="cha-elements">
+      <title>Elements</title>
+      <para>
+        Elements are at the core of &GStreamer;.  Without elements, &GStreamer;
+	is just
+        a bunch of pipe fittings with nothing to connect.  A large number of
+        elements (filters, sources and sinks) ship with &GStreamer;, but extra
+        elements can also be written.
+      </para>
+      <para>
+        An element may be constructed in several different ways, but all must
+        conform to the same basic rules.  A simple filter may be built with the
+        FilterFactory, where the only code that need be written is the actual
+        filter code.  A more complex filter, or a source or sink, will need to
+	be written out fully for complete access to the features and
+	performance possible with &GStreamer;.
+      </para>
+      <para>
+        The implementation of a new element will be contained in a plugin:
+        a single plugin may contain the implementation of several elements, or
+        just a single one.
+      </para>
+    </chapter>
+
+    <chapter id="cha-buffers">
+      <title>Buffers</title>
+      <para>
+        Buffers are structures used to pass data between elements.  All streams
+        of data are chopped up into chunks which are stored in buffers.
+        Buffers can be of any size, and also contain metadata indicating the
+        type of data contained in them.  Buffers can be allocated by various
+	different schemes, and may either be passed on by elements or
+	unreferenced (and the memory used by the buffer freed).
+      </para>
+    </chapter>
+
+    <chapter id="cha-typing">
+      <title>Typing and Properties</title>
+      <para>
+        A type system is used to ensure that the data passed between elements
+	is in a recognised format, and that the various parameters required
+	to fully specify that format match up correctly.  Each connection
+	that is made between elements has a specified type.  This is related,
+	but different, to the metadata in buffers which describes the type
+	of data in that particular buffer.  See later in this document for
+	details of the available types.
+      </para>
+    </chapter>
+
+    <chapter id="cha-metadata">
+      <title>Metadata</title>
+      <para>
+      </para>
+    </chapter>
+
+    <chapter id="cha-scheduling">
+      <title>Scheduling</title>
+      <para>
+      </para>
+    </chapter>
+
+    <chapter id="cha-chainloop">
+      <title>Chain vs Loop Elements</title>
+      <para>
+      </para>
+    </chapter>
+
+    <chapter id="cha-autopluggers">
+      <title>Autopluggers</title>
+      <para>
+        &GStreamer; has an autoplugging mechanism, which enables application
+	writers to simply specify start and end elements for a path, and
+	the system will then create a path which links these elements,
+	in accordance with the type information provided by the elements.
+      </para>
+      <para>
+        It is possible to devise many different schemes for generating such
+	pathways, perhaps to optimise based on special criteria, or with
+	some specific constraints.  It is thus possible to define new
+	autoplugging systems, using the plugin system.
+      </para>
+    </chapter>
+
+  </part>
+
+<!-- ############ part ############# -->
+
+  <part id="typesnprops"><title>Types and Properties</title>
+    <partintro>
+      <para>
+        There is a very large set of possible types that may be used to
+	pass data between elements.  Indeed, each new element that is defined
+	may use a new data format (though unless at least one other element
+	recognises that format, it will be most likely be useless since
+	nothing will be able to link with it).
+      </para>
+      <para>
+	In order for types to be useful, and for systems like autopluggers to
+	work, it is neccessary that all elements
+	agree on the type definitions, and which properties are required
+	for each type.  The &GStreamer; framework itself
+	simply provides the ability to define types and parameters, but does
+	not fix the meaning of types and parameters, and does not enforce
+	standards on the creation of new types.  This is a matter for
+	a policy to decide, not technical systems to enforce.
+      </para>
+      <para>
+        For now, the policy is simple:
+	<itemizedlist>
+	  <listitem>
+	    <para>
+	      Do not create a new type if you could use one which already
+	      exists.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      If creating a new type, discuss it first with the other
+	      &GStreamer; developers, on at least one of: IRC, mailing lists,
+	      the &GStreamer; wiki.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Try to ensure that the name for a new format is as unlikely to
+	      conflict with anything else created already, and is not a more
+	      generalised name than it should be.  For example:
+	      "audio/compressed" would be too generalised a name to represent
+	      audio data compressed with an mp3 codec.  Instead "audio/mp3"
+	      might be an appropriate name, or "audio/compressed" could exist
+	      and have a property indicating the type of compression used.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Ensure that, when you do create a new type, you specify it
+	      clearly, and get it added to the list of known types so that
+	      other developers can use the type correctly when writing their
+	      elements.
+	    </para>
+	  </listitem>
+	</itemizedlist>
+      </para>
+    </partintro>
+
+    <chapter id="cha-basic-types">
+      <title>The basic types</title>
+      <para>
+        This is a list of the basic types used for buffers.  For each type, we
+	give the name ("mime type") of the type, the list of properties which
+	are associated with the type, the meaning of each property, and the
+	purpose of the type.
+      </para>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    <emphasis>audio/raw</emphasis>
+	    - Unstructured and uncompressed raw audio data.
+	  </para><para>
+	    <emphasis>law</emphasis>
+	    - The law used to describe the data.  This is an integer for which
+	    there are three valid values: 0 for linear, 1 for
+	    mu law, 2 for A law.
+	  </para><para>
+	    <emphasis>endianness</emphasis>
+	    - The order of bytes in a sample.  This is a boolean:
+	    0 means little-endian (ie, bytes are least significant first),
+	    1 means big-endian (ie, most significant byte first).
+	  </para><para>
+	    <emphasis>signed</emphasis>
+	    - Whether the samples are signed or not.  This is a boolean:
+	    0 means unsigned, 1 means signed.
+	  </para><para>
+	    <emphasis>width</emphasis>
+	    - The number of bits per sample.  This is extremely likely to be
+	    a multiple of 8, but as ever this is up to each element supporting
+	    this format to specify.
+	  </para><para>
+	    <emphasis>depth</emphasis>
+	    - The number of bits used per sample.  This must be less than or
+	    equal to the width: if less than the width, the low bits are
+	    assumed to be the ones used.  For example, width=32, depth=24
+	    means that each sample is stored in a 32 bit word, but only the
+	    low 24 bits are actually used.
+	  </para><para>
+	    <emphasis>rate</emphasis>
+	    - The sample rate of the data, in samples per second.
+	  </para><para>
+	    <emphasis>channels</emphasis>
+	    - The number of channels of audio data.
+	  </para>
+	  <para>
+	    For example: 16 bit, unsigned, linear, monophonic, big-endian,
+	    44100KHz audio would be represented by
+	    "law=0,endianness=1,signed=0,width=16,depth=16,rate=44100,channels=1"
+	  </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    <emphasis>audio/mp3</emphasis>
+	    - Audio data compressed using the mp3 encoding scheme.
+	  </para><para>
+	    <emphasis>framed</emphasis>
+	    - This is a boolean.  If true (1), each buffer contains exactly
+	    one frame.  If false (0), frames and buffers do not (necessarily)
+	    match up.  If the data is not framed, the values of some of the
+	    properties will not be available, but others will be assumed to
+	    be constant throughout the file, or may be found in other ways.
+	  </para><para>
+	    <emphasis>layer</emphasis>
+	    - The compression scheme layer used to compress the data.
+	    This is an integer, and can currently have the value 1, 2
+	    or 3.
+	  </para><para>
+	    <emphasis>bitrate</emphasis>
+	    - The bitrate, in kilobits per second.
+	    For VBR (variable bitrate) mp3 data, this is the average bitrate.
+	  </para><para>
+	    <emphasis>channels</emphasis>
+	    - The number of channels of audio data present.  This could
+	    theoretically be any integer greater than 0, but in practice will
+	    be either 1 or 2.
+	  </para><para>
+	    <emphasis>joint-stereo</emphasis>
+	    - Boolean.  If true, channels must not be zero.  If true, this
+	    implies that stereo data is stored as a combined signal and
+	    the difference between the signals, rather than as two entirely
+	    separate signals.
+	  </para><para>
+	    There are many other properties relevant for
+	    <emphasis>audio/mp3</emphasis> data: these may be added to this
+	    specification at a later date.
+	  </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    <emphasis>audio/x-ogg</emphasis>
+	    - Audio data compressed using the Ogg Vorbis encoding scheme.
+	    There are currently no parameters defined for this type.  FIXME.
+	  </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    <emphasis>video/raw</emphasis>
+	    - Raw video data.
+	  </para><para>
+	    <emphasis>fourcc</emphasis>
+	    - A FOURCC code identifying the format in which this data is
+	    stored.  FOURCC (Four Character Code) is a simple system to
+	    allow unambiguous identification of a video datastream format.
+	    See <ulink
+	    url="http://www.webartz.com/fourcc/"
+	    type="http">http://www.webartz.com/fourcc/</ulink>
+	  </para><para>
+	    <emphasis>width</emphasis>
+	    - The number of pixels wide that each video frame is.
+	  </para><para>
+	    <emphasis>height</emphasis>
+	    - The number of pixels high that each video frame is.
+	  </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    <emphasis>video/mpeg</emphasis>
+	    - Video data compressed using an mpeg encoding scheme.
+	  </para><para>
+	    <emphasis>mpegversion</emphasis>
+	  </para><para>
+	    <emphasis>systemstream</emphasis>
+	  </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    <emphasis>video/avi</emphasis>
+	    - Video data compressed using the AVI encoding scheme.
+	    There are currently no parameters defined for this type.  FIXME.
+	  </para>
+        </listitem>
+      </itemizedlist>
+    </chapter>
+
+    <chapter id="cha-types-test">
+      <title>Building a simple format for testing</title>
+      <para>
+      </para>
+    </chapter>
+    
+    <chapter id="cha-types-simplemime">
+      <title>A simple MIME type</title>
+      <para>
+      </para>
+    </chapter>
+
+    <chapter id="cha-types-props">
+      <title>Type properties</title>
+      <para>
+      </para>
+    </chapter>
+
+    <chapter id="cha-types-typefind">
+      <title>Typefind functions and autoplugging</title>
+      <para>
+      </para>
+    </chapter>
 
   </part>
 
@@ -86,7 +431,296 @@
       </para>
     </partintro>
 
-      &FIRSTPLUGIN;
+    <chapter id="cha-boilerplate">
+      <title>Constructing the boilerplate</title>
+      <para>
+        The first thing to do when making a new element is to specify some basic
+        details about it: what its name is, who wrote it, what version number it
+        is, etc.  We also need to define an object to represent the element and to
+        store the data the element needs.  I shall refer to these details
+        collectively as the <emphasis>boilerplate</emphasis>.
+      </para>
+
+      <sect1 id="sect-boilerplate-gobject">
+        <title>Doing it the hard way with GstObject</title>
+        <para>
+          The standard way of defining the boilerplate is simply to write some
+          code, and fill in some structures.  The easiest way to do this is to
+          copy an example and modify according to your needs.
+        </para>
+        <para>
+          First we will examine the code you would be likely to place in a header
+          file (although since the interface to the code is entirely defined 
+          by the pluging system, and doesn't depend on reading a header file,
+          this is not crucial.)
+
+          The code here can be found in
+          <filename>examples/plugins/example.h</filename>
+        </para>
+
+        <programlisting>
+  /* Definition of structure storing data for this element. */
+  typedef struct _GstExample GstExample;
+
+  struct _GstExample {
+    GstElement element;
+
+    GstPad *sinkpad,*srcpad;
+
+    gint8 active;
+  };
+
+  /* Standard definition defining a class for this element. */
+  typedef struct _GstExampleClass GstExampleClass;
+  struct _GstExampleClass {
+    GstElementClass parent_class;
+  };
+
+  /* Standard macros for defining types for this element.  */
+  #define GST_TYPE_EXAMPLE \
+    (gst_example_get_type())
+  #define GST_EXAMPLE(obj) \
+    (GTK_CHECK_CAST((obj),GST_TYPE_EXAMPLE,GstExample))
+  #define GST_EXAMPLE_CLASS(klass) \
+    (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_EXAMPLE,GstExample))
+  #define GST_IS_EXAMPLE(obj) \
+    (GTK_CHECK_TYPE((obj),GST_TYPE_EXAMPLE))
+  #define GST_IS_EXAMPLE_CLASS(obj) \
+    (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EXAMPLE))
+
+  /* Standard function returning type information. */
+  GtkType gst_example_get_type(void);
+        </programlisting>
+    
+      </sect1>
+
+      <sect1 id="sect-boilerplate-filterfactory">
+        <title>Doing it the easy way with FilterFactory</title>
+        <para>
+          A plan for the future is to create a FilterFactory, to make the
+          process of making a new filter a simple process of specifying a few
+          details, and writing a small amount of code to perform the actual
+          data processing.
+        </para>
+        <para>
+          Unfortunately, this hasn't yet been implemented.  It is also likely
+          that when it is, it will not be possible to cover all the possibilities
+          available by writing the boilerplate yourself, so some plugins will
+          always need to be manually registered.
+        </para>
+        <para>
+          As a rough outline of what is planned: the FilterFactory will take a
+          list of appropriate function pointers, and data structures to define
+          a filter.  With a reasonable measure of preprocessor magic, the
+          plugin writer will then simply need to provide definitions of the
+          functions and data structures desired, and a name for the filter, and
+          then call a macro from within plugin_init() which will register the
+          new filter.  All the fluff that goes into the definition of a filter
+          will thus be hidden from view.
+        </para>
+        <para>
+          Ideally, we will come up with a way for various FilterFactory-provided
+          functions to be overridden, to the point where you can construct
+          almost the most complex stuff with it, it just saves typing.
+        </para>
+        <para>
+          Of course, the filter factory can be used to create sources and sinks
+          too: simply create a filter with only source or sink pads.
+        </para>
+        <para>
+          You may be thinking that this should really be called an
+          ElementFactory.  Well, we agree, but there is already something else
+          justifiably ealled an ElementFactory (this is the thing which actually
+          makes instances of elements).  There is also already something called
+          a PluginFactory.  We just have too many factories and not enough words.
+          And since this isn't yet written, it doesn't get priority for claiming
+          a name.
+        </para>
+      </sect1>
+    </chapter>
+
+    <chapter id="cha-defineelt">
+      <title>Defining an element</title>
+      <para>
+        A new element is defined by creating an element factory.  This is a
+	structure containing all the information needed to create an instance
+	of the element.  Creating a factory requires two things: a type for
+	the element to be created
+	(this was defined in the boilerplate above: FIXME - reorganise),
+	and a GstElementDetails structure, which contains some
+	general information about the element to be created.
+      </para>
+
+      <sect1 id="sect-defineelt-eltdetails">
+        <title>GstElementDetails</title>
+	<para>
+	  The GstElementDetails structure gives a heirarchical type for
+	  the element, a human-readable description of the element, as
+	  well as author and version data.  The entries are:
+	</para>
+	<itemizedlist>
+	  <listitem><para>
+	      A long, english, name for the element.
+	  </para></listitem><listitem><para>
+	      The type of the element, as a heirarchy.  The heirarchy is defined
+	      by specifying the top level category, followed by a "/", followed
+	      by the next level category, etc.  The type should be defined
+	      according to the guidelines elsewhere in this document.
+	      (FIXME: write the guidelines, and give a better reference to them)
+	  </para></listitem><listitem><para>
+	      A brief description of the purpose of the element.
+	  </para></listitem><listitem><para>
+	      The version number of the element.  For elements in the main
+	      GStreamer source code, this will often simply be VERSION, which is
+	      a macro defined to be the version number of the current GStreamer
+	      version.  The only requirement, however, is that the version
+	      number should increase monotonically.
+	    </para><para>
+	      Version numbers should be stored in major.minor.patch form: ie, 3
+	      (decimal) numbers, separated by ".".
+	  </para></listitem><listitem><para>
+	      The name of the author of the element, optionally followed by
+	      a contact email address in angle brackets.
+	  </para></listitem><listitem><para>
+	      The copyright details for the element.
+	  </para></listitem>
+	</itemizedlist>
+	<para>
+	  For example:
+	</para>
+	<programlisting>
+  static GstElementDetails example_details = {
+      "An example plugin",
+      "Example/FirstExample",
+      "Shows the basic structure of a plugin",
+      VERSION,
+      "your name &lt;your.name@your.isp&gt;",
+      "(C) 2001",
+  };
+        </programlisting>
+      </sect1>
+
+      <sect1 id="sect-defineelt-constructors">
+        <title>Constructor functions</title>
+	<para>
+	  Each element has two functions which are used for construction of
+	  an element.  These are the _class_init() function, which is used to
+	  initialise the class (specifying what signals and arguments the class
+	  has and setting up global state), and the _init() function, which
+	  is used to initialise a specific instance of the class.
+	</para>
+      </sect1>
+
+      <sect1 id="sect-defineelt-pads">
+        <title>Specifying the pads</title>
+        <para>
+        </para>
+      </sect1>
+
+      <sect1 id="sect-defineelt-fns">
+        <title>Attaching functions</title>
+        <para>
+        </para>
+      </sect1>
+	
+      <sect1 id="sect-defineelt-chainfn">
+        <title>The chain function</title>
+        <para>
+        </para>
+      </sect1>
+	
+      <sect1 id="sect-defineelt-arguments">
+        <title>Adding arguments</title>
+        <para>
+	  Define arguments in enum.
+	  
+        </para>
+      </sect1>
+
+      <sect1 id="sect-defineelt-signals">
+        <title>Signals</title>
+        <para>
+	  Define signals in enum.
+
+        </para>
+      </sect1>
+    </chapter>
+
+    <chapter id="cha-definetype">
+      <title>Defining a type</title>
+      <para>
+        A new type is defined by creating an type factory.  This is a
+	structure containing all the information needed to create an instance
+	of the type.
+      </para>
+    </chapter>
+
+    <chapter id="cha-plugininit">
+      <title>The plugin_init function</title>
+      <para>
+        Once we have written code defining all the parts of the plugin,
+	we need to write the plugin_init() function.  This is a special
+	function, which is called as soon as the plugin is loaded, and
+	must return a pointer to a newly allocated GstPlugin structure.
+	This structure contains the details of all the facilities provided
+	by the plugin, and is the mechanism by which the definitions are
+	made available to the rest of the &GStreamer; system.  Helper
+	functions are provided to help fill the
+	structure: for future compatability it is recommended that these
+	functions are used, as documented below, rather than attempting to
+	access the structure directly. 
+      </para>
+      <para>
+        Note that the information returned by the plugin_init() function
+	will be cached in a central registry.  For this reason, it is
+	important that the same information is always returned by
+	the function: for example, it must not make element factories
+	available based on runtime conditions.  If an element can only
+	work in certain conditions (for example, if the soundcard is not
+	being used by some other process) this must be reflected by the
+	element being unable to enter the READY state if unavailable, rather
+	than the plugin attempting to deny existence of the plugin.
+      </para>
+
+      <sect1 id="sect-plugininit-types">
+        <title>Registering new types</title>
+        <para>
+	  
+        </para>
+        <programlisting>
+  void gst_plugin_add_type(GstPlugin *plugin,
+			   GstTypeFactory *factory);
+        </programlisting>
+	<para>
+	</para>
+      </sect1>
+
+      <sect1 id="sect-plugininit-filter">
+        <title>Registering new element factories</title>
+        <para>
+        </para>
+        <programlisting>
+  void gst_plugin_add_factory(GstPlugin *plugin,
+			      GstElementFactory *factory);
+        </programlisting>
+	<para>
+	  Multiple element factories can be provided by a single plugin:
+	  all it needs to do is call gst_plugin_add_factory() for each
+	  element factory it wishes to provide.
+	</para>
+      </sect1>
+	
+      <sect1 id="sect-plugininit-autopluggers">
+        <title>Registering new autopluggers</title>
+        <para>
+        </para>
+        <programlisting>
+  void gst_plugin_add_autoplugger(GstPlugin *plugin,
+				  GstAutoplugFactory *factory);
+        </programlisting>
+      </sect1>
+
+    </chapter>
 
   </part>
 
@@ -110,17 +744,6 @@
     </partintro>
 
       &LOOPBASED;
-  </part>
-
-<!-- ############ part ############# -->
-
-  <part id="typesnprops"><title>Types and Properties</title>
-    <partintro>
-      <para>
-      </para>
-    </partintro>
-
-      &TYPESNPROPS;
   </part>
 
 <!-- ############ part ############# -->

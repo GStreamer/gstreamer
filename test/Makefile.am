@@ -3,7 +3,7 @@
 noinst_PROGRAMS = qtest spectrum record wave mp3 teardown buffer mp3parse \
 		  mpeg2parse mp1parse mp3play ac3parse ac3play dvdcat fake cobin videotest \
 		  aviparse vidcapture avi2mpg mp2tomp1 mp1tomp1 pipetest \
-		  vidcapture2 mp2toavi mp3tovorbis
+		  vidcapture2 mp2toavi mp3tovorbis mpeg2parse2 xmmstest videotest2
 
 SUBDIRS = xml bindings
 
@@ -19,7 +19,7 @@ else
 xvlibs=
 endif
 
-LDADD = $(top_builddir)/plugins/videosink/gdkxvimage.lo ${xvlibs} -lXxf86vm
+LDADD = ${xvlibs} -lXxf86vm
 
 #LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la \
 #          $(top_builddir)/plugins/videosink/libvideosink.la -L/usr/X11/lib -lXxf86dga

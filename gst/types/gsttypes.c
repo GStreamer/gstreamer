@@ -40,11 +40,11 @@ plugin_init (GModule *module)
   while (_factories[i].mime) {
     gst_type_register (&_factories[i]);
     gst_plugin_add_type (plugin, &_factories[i]);
-//    DEBUG("added factory #%d '%s'\n",i,_factories[i].mime);
+    GST_DEBUG(0, "added factory #%d '%s'\n",i,_factories[i].mime);
     i++;
   }
 
-//  gst_info ("gsttypes: loaded %d standard types\n",i);
+  //gst_info ("gsttypes: loaded %d standard types\n",i);
 
   return plugin;
 }

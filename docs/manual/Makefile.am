@@ -1,5 +1,5 @@
 manualname = gstreamer-manual
-htmlname = gstreamer.html
+htmlname = index.html
 
 sgml_files = gstreamer-manual.sgml \
 	     advanced.sgml \
@@ -20,6 +20,7 @@ sgml_files = gstreamer-manual.sgml \
              motivation.sgml \
              plugins.sgml \
              programs.sgml \
+             debugging.sgml \
              queues.sgml \
              states.sgml \
              threads.sgml \

@@ -9,7 +9,10 @@ Required libraries:
 ===================
 glib v1.2.0 or better
 gtk+ v1.2.0 or better
-libxml
+libxml          (also called gnome-xml, available from http://xmlsoft.org/)
+
+These libraries are all central parts of gnome, and are available from the
+ftp.gnome.org or its mirrors, amongst other places.
 
 Optional libraries:
 ===================
@@ -24,6 +27,8 @@ libvorbis	(for vorbisenc, vorbisdec)
 libcdparanoia	(for cdparanoia ripper)
 liblame		(for lame mp3 encoder)
 libshout	(for the shoutcast plugin)
+libasound	(for the alsa src/sink plugin)
+librtp		(for the rtp sink plugin)
 
 for AVI playback you might want to get the windows libraries from
 http://divx.euro.ru/ and put the .dll files in /usr/lib/win32/

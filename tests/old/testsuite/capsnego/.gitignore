@@ -1,0 +1,11 @@
+Makefile
+Makefile.in
+*.o
+*.lo
+*.la
+.deps
+.libs
+capsnego
+converter
+converter2
+enum

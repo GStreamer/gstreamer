@@ -1,6 +1,5 @@
 Makefile
 Makefile.in
-tmpl
 html
 sgml
 gstreamer-libs-unused.txt

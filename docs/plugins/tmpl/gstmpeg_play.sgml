@@ -14,11 +14,3 @@ GstMpeg_play
 
 </para>
 
-<!-- ##### SIGNAL GstMpeg_play::frame-decoded ##### -->
-<para>
-
-</para>
-
-@gstmpeg_play: the object which received the signal.
-@arg1: 
-

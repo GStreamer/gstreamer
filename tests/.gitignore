@@ -6,7 +6,7 @@ Makefile.in
 .deps
 .libs
 *.xml
-
+*.gst
 init
 loadall
 simplefake
@@ -24,3 +24,6 @@ markup
 load
 padfactory
 tee
+autoplug2
+autoplug3
+capsconnect

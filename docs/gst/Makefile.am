@@ -19,17 +19,13 @@ GST_LIBS += ../../gst/elements/libgstelements.la
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
 
 tmpl_sources =				\
-	tmpl/audioraw.sgml              \
 	tmpl/cothreads.sgml             \
 	tmpl/gst.sgml                   \
 	tmpl/gstinfo.sgml               \
-	tmpl/gstasyncdisksrc.sgml       \
 	tmpl/gstautoplug.sgml           \
 	tmpl/gstscheduler.sgml          \
 	tmpl/gstprops.sgml              \
 	tmpl/gstcaps.sgml               \
-	tmpl/gstaudiosink.sgml          \
-	tmpl/gstaudiosrc.sgml           \
 	tmpl/gstbin.sgml                \
 	tmpl/gstbuffer.sgml             \
 	tmpl/gstbufferpool.sgml         \
@@ -56,8 +52,7 @@ tmpl_sources =				\
 	tmpl/gsttype.sgml               \
 	tmpl/gstutils.sgml              \
 	tmpl/gstxml.sgml                \
-	tmpl/spectrum.sgml              \
-	tmpl/videoraw.sgml
+	tmpl/spectrum.sgml              
 
 gstreamer_docdir = $(HTML_DIR)
 gstreamer_doc_DATA =		\
@@ -89,7 +84,7 @@ gstreamer-decl.txt:
 
 scanobj: $(srcdir)/$(DOC_MODULE).types
 	rm gstreamer-scan.o; ln -s gstreamer-scan.lo gstreamer-scan.o
-	env CC="$(LIBTOOL) $(CC)" CFLAGS="$(GST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS) -I../../" LDFLAGS="$(GST_LIBS)"\
+	env CC="$(LIBTOOL) $(CC)" CFLAGS="$(LIBGST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS) -I../../" LDFLAGS="$(GST_LIBS)"\
 	gtkdoc-scanobj --module=$(DOC_MODULE) 
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
 

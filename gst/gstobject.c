@@ -397,12 +397,14 @@ gst_object_get_path_string (GstObject *object)
   GSList *parentage = NULL;
   GSList *parents;
   void *parent;
-  gchar *prevpath, *path = "";
+  gchar *prevpath, *path;
   const char *component;
   gchar *separator = "";
   gboolean free_component;
 
   parentage = g_slist_prepend (NULL, object);
+
+  path = g_strdup ("");
 
   // first walk the object hierarchy to build a list of the parents
   do {
@@ -424,9 +426,9 @@ gst_object_get_path_string (GstObject *object)
   parents = parentage;
   while (parents) {
     if (GST_IS_OBJECT (parents->data)) {
-      GstObjectClass *oclass = GST_OBJECT_CLASS (GTK_OBJECT (parents->data));
+      GstObjectClass *oclass = GST_OBJECT_CLASS (GTK_OBJECT (parents->data)->klass);
 
-      component = GST_OBJECT_NAME (parents->data);
+      component = gst_object_get_name (parents->data);
       separator = oclass->path_string_separator;
       free_component = FALSE;
     } else {

@@ -60,10 +60,12 @@ static gchar *_gst_info_category_strings[] = {
   "PIPELINE",
   "PLUGIN_LOADING",
   "PLUGIN_ERRORS",
+  "PLUGIN_INFO",
   "PROPERTIES",
   "THREAD",
   "TYPES",
   "XML",
+  "NEGOTIATION",
 };
 
 /**
@@ -94,7 +96,11 @@ gst_default_info_handler (gint category, gchar *file, gchar *function,
   if (element && GST_IS_ELEMENT (element))
     elementname = g_strdup_printf (" [%s]", GST_OBJECT_NAME (element));
 
+#ifdef GST_DEBUG_ENABLED
+  fprintf(stderr,"INFO(%d:%d):%s%s %s\n",getpid(),cothread_getcurrent(),location,elementname,string);
+#else
   fprintf(stderr,"INFO:%s%s %s\n",location,elementname,string);
+#endif
 
   if (location != empty) g_free(location);
   if (elementname != empty) g_free(elementname);

@@ -31,7 +31,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     g_return_if_fail(parse_audio != NULL);
     decode = gst_elementfactory_make("mpg123","decode_audio");
     g_return_if_fail(decode != NULL);
-    play = gst_elementfactory_make("audiosink","play_audio");
+    play = gst_elementfactory_make("osssink","play_audio");
     g_return_if_fail(play != NULL);
 
     // create the thread and pack stuff into it
@@ -62,7 +62,6 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     // set up thread state and kick things off
     gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
     g_print("setting to READY state\n");
-    gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
   //} else if (0) {
 
@@ -116,7 +115,6 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     // set up thread state and kick things off
     gtk_object_set(GTK_OBJECT(video_thread),"create_thread",TRUE,NULL);
     g_print("setting to READY state\n");
-    gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_READY);
   }
   g_print("\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);

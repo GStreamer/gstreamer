@@ -13,7 +13,7 @@ void eos(GstElement *element, gpointer data)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *disksrc, *audiosink, *queue;
+  GstElement *disksrc, *osssink, *queue;
   GstElement *pipeline;
   GstElement *thread;
 
@@ -42,22 +42,24 @@ int main(int argc,char *argv[])
   queue = gst_elementfactory_make("queue", "queue");
 
   /* and an audio sink */
-  audiosink = gst_elementfactory_make("audiosink", "play_audio");
-  g_assert(audiosink != NULL);
+  osssink = gst_elementfactory_make("osssink", "play_audio");
+  g_assert(osssink != NULL);
 
   /* add objects to the main pipeline */
+  /*
   gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
   gst_pipeline_add_sink(GST_PIPELINE(pipeline), queue);
 
-  gst_bin_add(GST_BIN(thread), audiosink);
-  
+  gst_bin_add(GST_BIN(thread), osssink);
+
   gst_pad_connect(gst_element_get_pad(queue,"src"),
-                  gst_element_get_pad(audiosink,"sink"));
+                  gst_element_get_pad(osssink,"sink"));
 
   if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
     g_print("cannot autoplug pipeline\n");
     exit(-1);
   }
+  */
 
   gst_bin_add(GST_BIN(pipeline), thread);
 

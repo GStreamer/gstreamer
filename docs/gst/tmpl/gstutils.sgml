@@ -14,6 +14,16 @@ Some convenience functions
 
 </para>
 
+<!-- ##### FUNCTION gst_util_set_object_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@name: 
+@value: 
+
+
 <!-- ##### FUNCTION gst_util_get_int_arg ##### -->
 <para>
 

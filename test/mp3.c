@@ -31,7 +31,7 @@ int main(int argc,char *argv[]) {
     mp3factory = gst_elementfactory_find(argv[2]);
   else
     mp3factory = gst_elementfactory_find("xa");
-  sinkfactory = gst_elementfactory_find("audiosink");
+  sinkfactory = gst_elementfactory_find("osssink");
 
   src = gst_elementfactory_create(srcfactory,"src");
   g_return_val_if_fail(src != NULL, -1);

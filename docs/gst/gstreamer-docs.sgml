@@ -27,23 +27,20 @@
 <!entity GstTypeFind SYSTEM "sgml/gsttypefind.sgml">
 <!entity cothreads SYSTEM "sgml/cothreads.sgml">
 
+<!entity GstStaticAutoplug SYSTEM "sgml/gststaticautoplug.sgml">
+<!entity GstStaticAutoplugRender SYSTEM "sgml/gststaticautoplugrender.sgml">
 <!entity GstFakeSrc SYSTEM "sgml/gstfakesrc.sgml">
 <!entity GstFakeSink SYSTEM "sgml/gstfakesink.sgml">
 <!entity GstDiskSrc SYSTEM "sgml/gstdisksrc.sgml">
-<!entity GstAsyncDiskSrc SYSTEM "sgml/gstasyncdisksrc.sgml">
 <!entity GstHttpSrc SYSTEM "sgml/gsthttpsrc.sgml">
 <!entity GstFdSrc SYSTEM "sgml/gstfdsrc.sgml">
-<!entity GstAudioSrc SYSTEM "sgml/gstaudiosrc.sgml">
 <!entity GstSineSrc SYSTEM "sgml/gstsinesrc.sgml">
-<!entity GstAudioSink SYSTEM "sgml/gstaudiosink.sgml">
 <!entity GstFdSink SYSTEM "sgml/gstfdsink.sgml">
 <!entity GstIdentity SYSTEM "sgml/gstidentity.sgml">
 <!entity GstPipefilter SYSTEM "sgml/gstpipefilter.sgml">
 <!entity GstTee SYSTEM "sgml/gsttee.sgml">
 
-<!entity audioraw SYSTEM "sgml/audioraw.sgml">
 <!entity spectrum SYSTEM "sgml/spectrum.sgml">
-<!entity videoraw SYSTEM "sgml/videoraw.sgml">
 
 <!entity gstreamer-tree-index SYSTEM "sgml/tree_index.sgml">
 ]>
@@ -125,12 +122,8 @@ with some more specialized elements.</para>
     &GstFakeSink;
 
     &GstDiskSrc;
-    &GstAsyncDiskSrc;
     &GstHttpSrc;
     
-    &GstAudioSrc;
-    &GstAudioSink;
-
     &GstSineSrc;
 
     &GstFdSrc;
@@ -148,8 +141,16 @@ with some more specialized elements.</para>
     <para>MetaData is used to specify the content of buffers. See <classname>GstMeta</classname>. </para>
 
     &spectrum;
-    &audioraw;
-    &videoraw;
+  </chapter>
+
+  <chapter id="autopluggers">
+    <title>GStreamer Autoppluggers</title>
+
+    <para>the autopluggers provide a way to automatically construct elements based on
+    sink and src capabilities</para>
+
+    &GstStaticAutoplug;
+    &GstStaticAutoplugRender;
   </chapter>
 
   <chapter id="gst-index">

@@ -36,7 +36,7 @@ int main(int argc,char *argv[]) {
   }
 
 
-  audiosink = gst_audiosink_new("audiosink");
+  osssink = gst_osssink_new("osssink");
 
   gtk_signal_connect(GTK_OBJECT(disksrc),"eof",
                      GTK_SIGNAL_FUNC(eof),NULL);
@@ -44,18 +44,18 @@ int main(int argc,char *argv[]) {
   /* add objects to the main pipeline */
   gst_bin_add(GST_BIN(bin),GST_OBJECT(disksrc));
   gst_bin_add(GST_BIN(bin),GST_OBJECT(parse));
-  gst_bin_add(GST_BIN(bin),GST_OBJECT(audiosink));
+  gst_bin_add(GST_BIN(bin),GST_OBJECT(osssink));
 
   /* connect src to sink */
   gst_pad_connect(gst_element_get_pad(disksrc,"src"),
                   gst_element_get_pad(parse,"sink"));
   gst_pad_connect(gst_element_get_pad(parse,"src"),
-                  gst_element_get_pad(audiosink,"sink"));
+                  gst_element_get_pad(osssink,"sink"));
 
   while(1)
     gst_disksrc_push(GST_SRC(disksrc));
 
-  gst_object_destroy(GST_OBJECT(audiosink));
+  gst_object_destroy(GST_OBJECT(osssink));
   gst_object_destroy(GST_OBJECT(parse));
   gst_object_destroy(GST_OBJECT(disksrc));
   gst_object_destroy(GST_OBJECT(bin));

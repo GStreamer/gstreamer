@@ -341,6 +341,7 @@ gst_bin_change_state (GstElement *element)
   GstBin *bin;
   GList *children;
   GstElement *child;
+  GstElementStateReturn ret;
 
   GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME  (element));
 
@@ -368,9 +369,13 @@ gst_bin_change_state (GstElement *element)
 
       if (!parent || !GST_IS_BIN (parent))
         gst_bin_create_plan (bin);
+      else
+        GST_DEBUG (0,"not creating plan for '%s'\n",GST_ELEMENT_NAME  (bin));
 
       break;
     }
+    case GST_STATE_READY_TO_NULL:
+      GST_FLAG_UNSET (bin, GST_BIN_FLAG_MANAGER);
     default:
       break;
   }
@@ -396,7 +401,6 @@ gst_bin_change_state (GstElement *element)
     children = g_list_next (children);
   }
 //  g_print("<-- \"%s\"\n",GST_OBJECT_NAME(bin));
-
 
   GST_INFO_ELEMENT (GST_CAT_STATES, element, "done changing bin's state from %s to %s",
                 _gst_print_statename (GST_STATE (element)),
@@ -698,7 +702,7 @@ gst_bin_create_plan (GstBin *bin)
 static void
 gst_bin_received_eos (GstElement *element, GstBin *bin)
 {
-  GST_INFO_ELEMENT (GST_CAT_PLANNING, bin, "child %s fired eos, pending %d\n", GST_ELEMENT_NAME (element),
+  GST_INFO_ELEMENT (GST_CAT_PLANNING, bin, "child %s fired eos, pending %d", GST_ELEMENT_NAME (element),
 		  bin->num_eos_providers);
 
   GST_LOCK (bin);
@@ -875,7 +879,9 @@ gst_bin_create_plan_func (GstBin *bin)
       }
       // else it's not ours and we need to wait for EOS notifications
       else {
-        gtk_signal_connect (GTK_OBJECT (element), "eos", gst_bin_received_eos, bin);
+        GST_DEBUG (0,"setting up EOS signal from \"%s\" to \"%s\"\n", elementname,
+			gst_element_get_name (GST_ELEMENT(bin)->manager));
+        gtk_signal_connect (GTK_OBJECT (element), "eos", gst_bin_received_eos, GST_ELEMENT(bin)->manager);
         bin->eos_providers = g_list_prepend (bin->eos_providers, element);
         bin->num_eos_providers++;
       }
@@ -936,6 +942,8 @@ gst_bin_iterate_func (GstBin *bin)
     if (!chain->need_scheduling) continue;
 
     if (chain->need_cothreads) {
+      GList *entries;
+
       // all we really have to do is switch to the first child
       // FIXME this should be lots more intelligent about where to start
       GST_DEBUG (0,"starting iteration via cothreads\n");
@@ -1001,7 +1009,7 @@ gst_bin_iterate_func (GstBin *bin)
     if (bin->num_eos_providers) {
       GST_LOCK (bin);
       GST_DEBUG (0,"waiting for eos providers\n");
-      g_cond_wait (bin->eoscond, GST_OBJECT(bin)->lock);
+      g_cond_wait (bin->eoscond, GST_GET_LOCK(bin));
       GST_DEBUG (0,"num eos providers %d\n", bin->num_eos_providers);
       GST_UNLOCK (bin);
     }

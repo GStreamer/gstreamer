@@ -20,6 +20,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
+
+#include "gstextratypes.h"
 
 #include "gstutils.h"
 
@@ -32,7 +35,9 @@
  *
  * Returns: the property of the object
  */
-gint gst_util_get_int_arg(GtkObject *object,guchar *argname) {
+gint
+gst_util_get_int_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
@@ -49,7 +54,9 @@ gint gst_util_get_int_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-gint gst_util_get_bool_arg(GtkObject *object,guchar *argname) {
+gint
+gst_util_get_bool_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
@@ -66,7 +73,9 @@ gint gst_util_get_bool_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-glong gst_util_get_long_arg(GtkObject *object,guchar *argname) {
+glong
+gst_util_get_long_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
@@ -83,7 +92,9 @@ glong gst_util_get_long_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-gfloat gst_util_get_float_arg(GtkObject *object,guchar *argname) {
+gfloat
+gst_util_get_float_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
@@ -100,7 +111,9 @@ gfloat gst_util_get_float_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-gdouble gst_util_get_double_arg(GtkObject *object,guchar *argname) {
+gdouble 
+gst_util_get_double_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
@@ -117,7 +130,9 @@ gdouble gst_util_get_double_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-guchar *gst_util_get_string_arg(GtkObject *object,guchar *argname) {
+guchar*
+gst_util_get_string_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
@@ -134,11 +149,14 @@ guchar *gst_util_get_string_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-gpointer gst_util_get_pointer_arg(GtkObject *object,guchar *argname) {
+gpointer
+gst_util_get_pointer_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
   gtk_object_getv(GTK_OBJECT(object),1,&arg);
+  
   return GTK_VALUE_POINTER(arg);
 }
 
@@ -151,11 +169,14 @@ gpointer gst_util_get_pointer_arg(GtkObject *object,guchar *argname) {
  *
  * Returns: the property of the object
  */
-GtkWidget *gst_util_get_widget_arg(GtkObject *object,guchar *argname) {
+GtkWidget*
+gst_util_get_widget_arg (GtkObject *object,guchar *argname) 
+{
   GtkArg arg;
 
   arg.name = argname;
   gtk_object_getv(GTK_OBJECT(object),1,&arg);
+  
   return GTK_WIDGET(GTK_VALUE_OBJECT(arg));
 }
 
@@ -166,7 +187,9 @@ GtkWidget *gst_util_get_widget_arg(GtkObject *object,guchar *argname) {
  *
  * Dumps the memory block into a hex representation. Useful for debugging.
  */
-void gst_util_dump_mem(guchar *mem, guint size) {
+void 
+gst_util_dump_mem (guchar *mem, guint size) 
+{
   guint i, j;
 
   i = j =0;
@@ -182,4 +205,89 @@ void gst_util_dump_mem(guchar *mem, guint size) {
     i++;
   }
   g_print("\n");
+}
+
+/**
+ * gst_util_set_object_arg:
+ * @object: the object to set the argument of
+ * @name: the name of the argument to set
+ * @value: the string value to set
+ *
+ * Convertes the string value to the type of the objects argument and
+ * sets the argument with it.
+ */
+void
+gst_util_set_object_arg (GtkObject *object, guchar *name, gchar *value) 
+{
+  if (name && value) {
+    GtkType type = GTK_OBJECT_TYPE (object);
+    GtkArgInfo *info;
+    gchar *result;
+
+    result = gtk_object_arg_get_info (type, name, &info);
+
+    if (result) {
+      g_print("gstutil: %s\n", result);
+    }
+    else if (info->arg_flags & GTK_ARG_WRITABLE) {
+      switch (info->type) {
+        case GTK_TYPE_STRING:
+          gtk_object_set (GTK_OBJECT (object), name, value, NULL);
+          break;
+        case GTK_TYPE_INT: {
+          gint i;
+          sscanf (value, "%d", &i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_LONG: {
+	  glong i;
+	  sscanf (value, "%ld", &i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_ULONG: {
+	  gulong i;
+	  sscanf (value, "%lu", &i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_BOOL: {
+	  gboolean i = FALSE;
+	  if (!strcmp ("true", value)) i = TRUE;
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_CHAR: {
+	  gchar i;
+	  sscanf (value, "%c", &i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_UCHAR: {
+	  guchar i;
+	  sscanf (value, "%c", &i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_FLOAT: {
+	  gfloat i;
+	  sscanf (value, "%f", &i);
+          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  break;
+	}
+        case GTK_TYPE_DOUBLE: {
+	  gfloat i;
+	  sscanf (value, "%g", &i);
+          gtk_object_set (GTK_OBJECT (object), name, (gdouble)i, NULL);
+	  break;
+	}
+        default:
+	  if (info->type == GST_TYPE_FILENAME) {
+            gtk_object_set (GTK_OBJECT (object), name, value, NULL);
+	  }
+	  break;
+      }
+    }
+  }
 }

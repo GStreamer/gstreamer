@@ -17,6 +17,7 @@ static void gst_play_get_arg		(GtkObject *object,GtkArg *arg,guint id);
 static void gst_play_realize		(GtkWidget *play);
 
 static void gst_play_frame_displayed	(GstElement *element, GstPlay *play);
+static void gst_play_have_size 		(GstElement *element, guint width, guint height, GstPlay *play);
 static void gst_play_audio_handoff	(GstElement *element, GstPlay *play);
 
 /* signals and args */
@@ -41,8 +42,8 @@ enum {
 static GtkObject *parent_class = NULL;
 static guint gst_play_signals[LAST_SIGNAL] = { 0 };
 
-GtkType 
-gst_play_get_type (void) 
+GtkType
+gst_play_get_type (void)
 {
   static GtkType play_type = 0;
 
@@ -62,8 +63,8 @@ gst_play_get_type (void)
   return play_type;
 }
 
-static void 
-gst_play_class_init (GstPlayClass *klass) 
+static void
+gst_play_class_init (GstPlayClass *klass)
 {
   GtkObjectClass *object_class;
   GtkWidgetClass *widget_class;
@@ -108,39 +109,47 @@ gst_play_class_init (GstPlayClass *klass)
   object_class->set_arg = gst_play_set_arg;
   object_class->get_arg = gst_play_get_arg;
 
-  widget_class->realize = gst_play_realize; 
+  widget_class->realize = gst_play_realize;
 
 }
 
-static void 
-gst_play_init (GstPlay *play) 
+static void
+gst_play_init (GstPlay *play)
 {
-
   GstPlayPrivate *priv = g_new0 (GstPlayPrivate, 1);
+  GstElement *colorspace;
 
   play->priv = priv;
 
   /* create a new bin to hold the elements */
   priv->thread = gst_thread_new ("main_thread");
   g_assert (priv->thread != NULL);
-  priv->pipeline = gst_pipeline_new ("main_pipeline");
-  g_assert (priv->pipeline != NULL);
+  priv->bin = gst_bin_new ("main_bin");
+  g_assert (priv->bin != NULL);
 
-  /* and an audio sink */
-  priv->audio_play = gst_elementfactory_make ("audiosink","play_audio");
-  g_return_if_fail (priv->audio_play != NULL);
-  gtk_signal_connect (GTK_OBJECT (priv->audio_play), "handoff", 
+  priv->audio_element = gst_elementfactory_make ("osssink", "play_audio");
+  g_return_if_fail (priv->audio_element != NULL);
+  gtk_signal_connect (GTK_OBJECT (priv->audio_element), "handoff",
 		  GTK_SIGNAL_FUNC (gst_play_audio_handoff), play);
 
-  /* and a video sink */
-  priv->video_show = gst_elementfactory_make ("videosink","show");
+  priv->video_element = gst_elementfactory_make ("bin", "video_bin");
+  
+  priv->video_show = gst_elementfactory_make ("xvideosink", "show");
   g_return_if_fail (priv->video_show != NULL);
-  gtk_object_set (GTK_OBJECT (priv->video_show),"xv_enabled",FALSE,NULL);
-  gtk_signal_connect (GTK_OBJECT (priv->video_show), "frame_displayed", 
+  //gtk_object_set (GTK_OBJECT (priv->video_element), "xv_enabled", FALSE, NULL);
+  gtk_signal_connect (GTK_OBJECT (priv->video_show), "frame_displayed",
 		  GTK_SIGNAL_FUNC (gst_play_frame_displayed), play);
+  gtk_signal_connect (GTK_OBJECT (priv->video_show), "have_size",
+		  GTK_SIGNAL_FUNC (gst_play_have_size), play);
 
-  gst_pipeline_add_sink (GST_PIPELINE (priv->pipeline), priv->audio_play);
-  gst_pipeline_add_sink (GST_PIPELINE (priv->pipeline), priv->video_show);
+  colorspace = gst_elementfactory_make ("colorspace", "colorspace");
+  gst_bin_add (GST_BIN (priv->video_element), colorspace);
+  gst_bin_add (GST_BIN (priv->video_element), priv->video_show);
+
+  gst_element_connect (colorspace, "src", priv->video_show, "sink");
+  gst_element_add_ghost_pad (priv->video_element, 
+  		             gst_element_get_pad (colorspace, "sink"),
+			     "sink");
 
   play->state = GST_PLAY_STOPPED;
   play->flags = 0;
@@ -155,164 +164,288 @@ gst_play_init (GstPlay *play)
 }
 
 GstPlay *
-gst_play_new () 
+gst_play_new ()
 {
   return GST_PLAY (gtk_type_new (GST_TYPE_PLAY));
 }
 
-static void 
-gst_play_eos (GstElement *element, 
-	      GstPlay *play) 
+static void
+gst_play_eos (GstElement *element,
+	      GstPlay *play)
 {
-  g_print("gstplay: eos reached\n");
+  GST_DEBUG(0, "gstplay: eos reached\n");
   gst_play_stop(play);
 }
 
-static void 
-gst_play_frame_displayed (GstElement *element, 
-		          GstPlay *play) 
+static void
+gst_play_have_size (GstElement *element, guint width, guint height,
+		    GstPlay *play)
 {
+  GstPlayPrivate *priv;
+
+  priv = (GstPlayPrivate *)play->priv;
+
+  gtk_widget_set_usize (priv->video_widget, width, height);
+}
+
+static void
+gst_play_frame_displayed (GstElement *element,
+		          GstPlay *play)
+{
+  GstPlayPrivate *priv;
+  static int stolen = FALSE;
+
+  priv = (GstPlayPrivate *)play->priv;
+
+  gdk_threads_enter ();
+  if (!stolen) {
+    gtk_widget_realize (priv->video_widget);
+    gtk_socket_steal (GTK_SOCKET (priv->video_widget),
+               gst_util_get_int_arg (GTK_OBJECT(priv->video_show), "xid"));
+    gtk_widget_show (priv->video_widget);
+    stolen = TRUE;
+  }
+  gdk_threads_leave ();
+
   gtk_signal_emit (GTK_OBJECT (play), gst_play_signals[SIGNAL_FRAME_DISPLAYED],
 		  NULL);
 }
 
-static void 
-gst_play_audio_handoff (GstElement *element, 
-		        GstPlay *play) 
+static void
+gst_play_audio_handoff (GstElement *element,
+		        GstPlay *play)
 {
   gtk_signal_emit (GTK_OBJECT (play), gst_play_signals[SIGNAL_AUDIO_PLAYED],
 		  NULL);
 }
 
-static void 
-gst_play_object_introspect (GstElement *element, 
+static void
+gst_play_object_introspect (GstObject *object,
 		            const gchar *property,
 			    GstElement **target)
 {
   gchar *info;
   GtkArgInfo *arg;
+  GstElement *element;
 
-  info = gtk_object_arg_get_info( GTK_OBJECT_TYPE(element), property, &arg);
+  if (!GST_IS_ELEMENT (object))
+    return;
+
+  element = GST_ELEMENT (object);
+
+  info = gtk_object_arg_get_info (GTK_OBJECT_TYPE (element), property, &arg);
 
   if (info) {
     g_free(info);
   }
   else {
     *target = element;
-    g_print("gstplay: using element \"%s\" for %s property\n", 
+    GST_DEBUG(0, "gstplay: using element \"%s\" for %s property\n",
 		    gst_element_get_name(element), property);
   }
 }
 
 /* Dumb introspection of the interface...
- * this will change with glib 1.4 
+ * this will change with glib 1.4
  * */
-static void 
-gst_play_object_added (GstElement *pipeline, 
-		       GstElement *element,
-		       GstPlay *play) 
+static void
+gst_play_object_added (GstAutoplug* autoplug,
+		       GstObject *object,
+		       GstPlay *play)
 {
   GstPlayPrivate *priv;
-  
+
   g_return_if_fail (play != NULL);
 
   priv = (GstPlayPrivate *)play->priv;
 
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_NO_SEEK)) {
+  if (GST_FLAG_IS_SET (object, GST_ELEMENT_NO_SEEK)) {
     priv->can_seek = FALSE;
   }
 
-  if (GST_IS_BIN (element)) {
-    gtk_signal_connect (GTK_OBJECT (element), "object_added", gst_play_object_added, play);
+  if (GST_IS_BIN (object)) {
+    //gtk_signal_connect (GTK_OBJECT (object), "object_added", gst_play_object_added, play);
   }
   else {
     // first come first serve here...
-    if (!priv->offset_element) 
-      gst_play_object_introspect (element, "offset", &priv->offset_element);
-    if (!priv->bit_rate_element) 
-      gst_play_object_introspect (element, "bit_rate", &priv->bit_rate_element);
+    if (!priv->offset_element)
+      gst_play_object_introspect (object, "offset", &priv->offset_element);
+    if (!priv->bit_rate_element)
+      gst_play_object_introspect (object, "bit_rate", &priv->bit_rate_element);
     if (!priv->media_time_element)
-      gst_play_object_introspect (element, "media_time", &priv->media_time_element);
+      gst_play_object_introspect (object, "media_time", &priv->media_time_element);
     if (!priv->current_time_element)
-      gst_play_object_introspect (element, "current_time", &priv->current_time_element);
+      gst_play_object_introspect (object, "current_time", &priv->current_time_element);
   }
 }
 
-GstPlayReturn 
-gst_play_set_uri (GstPlay *play, 
-		  const guchar *uri) 
+static void
+gst_play_have_type (GstElement *sink, GstElement *sink2, gpointer data)
+{
+  GST_DEBUG (0,"GstPipeline: play have type %p\n", (gboolean *)data);
+
+  *(gboolean *)data = TRUE;
+}
+
+static GstCaps*
+gst_play_typefind (GstBin *bin, GstElement *element)
+{
+  gboolean found = FALSE;
+  GstElement *typefind;
+  GstCaps *caps = NULL;
+
+  GST_DEBUG (0,"GstPipeline: typefind for element \"%s\" %p\n",
+                  GST_ELEMENT_NAME(element), &found);
+
+  typefind = gst_elementfactory_make ("typefind", "typefind");
+  g_return_val_if_fail (typefind != NULL, FALSE);
+
+  gtk_signal_connect (GTK_OBJECT (typefind), "have_type",
+                      GTK_SIGNAL_FUNC (gst_play_have_type), &found);
+
+  gst_pad_connect (gst_element_get_pad (element, "src"),
+                   gst_element_get_pad (typefind, "sink"));
+
+  gst_bin_add (bin, typefind);
+
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
+
+  // push a buffer... the have_type signal handler will set the found flag
+  gst_bin_iterate (bin);
+
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+
+  if (found) {
+    caps = gst_util_get_pointer_arg (GTK_OBJECT (typefind), "caps");
+
+    gst_pad_set_caps (gst_element_get_pad (element, "src"), caps);
+  }
+
+  gst_pad_disconnect (gst_element_get_pad (element, "src"),
+  gst_element_get_pad (typefind, "sink"));
+  gst_bin_remove (bin, typefind);
+  gst_object_unref (GST_OBJECT (typefind));
+
+  return caps;
+}
+
+static gboolean
+connect_pads (GstElement *new_element, GstElement *target, gboolean add)
+{
+  GList *pads = gst_element_get_pad_list (new_element);
+  GstPad *targetpad = gst_element_get_pad (target, "sink");
+
+  while (pads) {
+    GstPad *pad = GST_PAD (pads->data);
+
+    if (gst_pad_check_compatibility (pad, targetpad)) {
+      if (add) {
+        gst_bin_add (GST_BIN (gst_element_get_parent (
+	             GST_ELEMENT (gst_pad_get_real_parent (pad)))),
+	  	     target);
+      }
+      gst_pad_connect (pad, targetpad);
+      return TRUE;
+    }
+    pads = g_list_next (pads);
+  }
+  return FALSE;
+}
+
+GstPlayReturn
+gst_play_set_uri (GstPlay *play,
+		  const guchar *uri)
 {
   GstPlayPrivate *priv;
+  GstCaps *src_caps;
+  GstElement *new_element;
+  GstAutoplug *autoplug;
 
   g_return_val_if_fail (play != NULL, GST_PLAY_ERROR);
   g_return_val_if_fail (GST_IS_PLAY (play), GST_PLAY_ERROR);
   g_return_val_if_fail (uri != NULL, GST_PLAY_ERROR);
-  
+
   priv = (GstPlayPrivate *)play->priv;
 
-  if (priv->src) {
-  }
-
-  if (priv->uri) g_free (priv->uri);
+  if (priv->uri)
+    g_free (priv->uri);
 
   priv->uri = g_strdup (uri);
 
-  //priv->src = gst_elementfactory_make ("disksrc", "disk_src");
   priv->src = gst_elementfactory_make ("disksrc", "disk_src");
   //priv->src = gst_elementfactory_make ("dvdsrc", "disk_src");
+  priv->offset_element = priv->src;
+
   g_return_val_if_fail (priv->src != NULL, -1);
-  gtk_object_set (GTK_OBJECT (priv->src),"location",uri,NULL);
-  gtk_signal_connect (GTK_OBJECT (priv->src), "eos", GTK_SIGNAL_FUNC (gst_play_eos), play);
+  gtk_object_set (GTK_OBJECT (priv->src), "location", uri, NULL);
 
-  gtk_signal_connect (GTK_OBJECT (priv->pipeline), "object_added", gst_play_object_added, play);
+  gst_bin_add (GST_BIN (priv->bin), priv->src);
 
-  gst_pipeline_add_src (GST_PIPELINE (priv->pipeline),GST_ELEMENT (priv->src));
+  src_caps = gst_play_typefind (GST_BIN (priv->bin), priv->src);
 
-  if (!gst_pipeline_autoplug (GST_PIPELINE (priv->pipeline))) {
+  if (!src_caps) {
     return GST_PLAY_UNKNOWN_MEDIA;
   }
 
-  if (GST_PAD_CONNECTED (gst_element_get_pad (priv->video_show, "sink"))) {
-    play->flags |= GST_PLAY_TYPE_VIDEO;
-  }
-  if (GST_PAD_CONNECTED (gst_element_get_pad (priv->audio_play, "sink"))) {
-    play->flags |= GST_PLAY_TYPE_AUDIO;
+  autoplug = gst_autoplugfactory_make ("staticrender");
+  g_assert (autoplug != NULL);
+
+  gtk_signal_connect (GTK_OBJECT (autoplug), "new_object", gst_play_object_added, play);
+
+  new_element = gst_autoplug_to_renderers (autoplug,
+	   gst_pad_get_caps (gst_element_get_pad (priv->src, "src")),
+	   priv->video_element,
+	   priv->audio_element,
+	   NULL);
+
+  if (!new_element) {
+    return GST_PLAY_CANNOT_PLAY;
   }
 
-  // hmmmm hack? FIXME
-  GST_FLAG_UNSET (priv->pipeline, GST_BIN_FLAG_MANAGER);
+  gst_bin_remove (GST_BIN (priv->bin), priv->src);
+  gst_bin_add (GST_BIN (priv->thread), priv->src);
 
-  gst_bin_add (GST_BIN (priv->thread), priv->pipeline);
+  gst_bin_add (GST_BIN (priv->bin), new_element);
+
+  gst_element_connect (priv->src, "src", new_element, "sink");
+
+  gst_bin_add (GST_BIN (priv->thread), priv->bin);
+  gtk_signal_connect (GTK_OBJECT (priv->thread), "eos", GTK_SIGNAL_FUNC (gst_play_eos), play);
 
   return GST_PLAY_OK;
 }
 
-static void 
-gst_play_realize (GtkWidget *widget) 
+static void
+gst_play_realize (GtkWidget *widget)
 {
   GstPlay *play;
-  GtkWidget *video_widget;
   GstPlayPrivate *priv;
-  
+
   g_return_if_fail (GST_IS_PLAY (widget));
+
+  //g_print ("realize\n");
 
   play = GST_PLAY (widget);
   priv = (GstPlayPrivate *)play->priv;
 
-  video_widget = gst_util_get_widget_arg (GTK_OBJECT (priv->video_show),"widget");
+  priv->video_widget = gtk_socket_new ();
 
-  if (video_widget) {
-    gtk_container_add (GTK_CONTAINER (widget), video_widget);
-    gtk_widget_show (video_widget);
-  }
+  gtk_container_add (GTK_CONTAINER (widget), priv->video_widget);
 
   if (GTK_WIDGET_CLASS (parent_class)->realize) {
     GTK_WIDGET_CLASS (parent_class)->realize (widget);
   }
+
+  //gtk_socket_steal (GTK_SOCKET (priv->video_widget),
+   //             gst_util_get_int_arg (GTK_OBJECT(priv->video_element), "xid"));
+
+  //gtk_widget_realize (priv->video_widget);
+  //gtk_socket_steal (GTK_SOCKET (priv->video_widget),
+   //             gst_util_get_int_arg (GTK_OBJECT(priv->video_element), "xid"));
 }
 
-void 
-gst_play_play (GstPlay *play) 
+void
+gst_play_play (GstPlay *play)
 {
   GstPlayPrivate *priv;
 
@@ -333,8 +466,8 @@ gst_play_play (GstPlay *play)
 		  play->state);
 }
 
-void 
-gst_play_pause (GstPlay *play) 
+void
+gst_play_pause (GstPlay *play)
 {
   GstPlayPrivate *priv;
 
@@ -353,8 +486,8 @@ gst_play_pause (GstPlay *play)
 		  play->state);
 }
 
-void 
-gst_play_stop (GstPlay *play) 
+void
+gst_play_stop (GstPlay *play)
 {
   GstPlayPrivate *priv;
 
@@ -365,8 +498,10 @@ gst_play_stop (GstPlay *play)
 
   priv = (GstPlayPrivate *)play->priv;
 
-  gst_element_set_state (GST_ELEMENT (priv->thread),GST_STATE_NULL);
+  // FIXME until state changes are handled properly
+  gst_element_set_state (GST_ELEMENT (priv->thread),GST_STATE_READY);
   gtk_object_set (GTK_OBJECT (priv->src),"offset",0,NULL);
+  //gst_element_set_state (GST_ELEMENT (priv->thread),GST_STATE_NULL);
 
   play->state = GST_PLAY_STOPPED;
 
@@ -374,8 +509,8 @@ gst_play_stop (GstPlay *play)
 		  play->state);
 }
 
-gulong          
-gst_play_get_media_size (GstPlay *play) 
+gulong
+gst_play_get_media_size (GstPlay *play)
 {
   GstPlayPrivate *priv;
 
@@ -387,7 +522,7 @@ gst_play_get_media_size (GstPlay *play)
   return gst_util_get_long_arg (GTK_OBJECT (priv->src), "size");
 }
 
-gulong          
+gulong
 gst_play_get_media_offset (GstPlay *play)
 {
   GstPlayPrivate *priv;
@@ -397,15 +532,18 @@ gst_play_get_media_offset (GstPlay *play)
 
   priv = (GstPlayPrivate *)play->priv;
 
-  return gst_util_get_long_arg (GTK_OBJECT (priv->offset_element), "offset");
+  if (priv->offset_element)
+    return gst_util_get_long_arg (GTK_OBJECT (priv->offset_element), "offset");
+  else
+    return 0;
 }
 
-gulong          
+gulong
 gst_play_get_media_total_time (GstPlay *play)
 {
   gulong total_time, bit_rate;
   GstPlayPrivate *priv;
-  
+
   g_return_val_if_fail (play != NULL, 0);
   g_return_val_if_fail (GST_IS_PLAY (play), 0);
 
@@ -419,7 +557,7 @@ gst_play_get_media_total_time (GstPlay *play)
 
   bit_rate = gst_util_get_long_arg (GTK_OBJECT (priv->bit_rate_element), "bit_rate");
 
-  if (bit_rate) 
+  if (bit_rate)
     total_time = (gst_play_get_media_size (play) * 8) / bit_rate;
   else
     total_time = 0;
@@ -427,12 +565,12 @@ gst_play_get_media_total_time (GstPlay *play)
   return total_time;
 }
 
-gulong          
+gulong
 gst_play_get_media_current_time (GstPlay *play)
 {
   gulong current_time, bit_rate;
   GstPlayPrivate *priv;
-	
+
   g_return_val_if_fail (play != NULL, 0);
   g_return_val_if_fail (GST_IS_PLAY (play), 0);
 
@@ -446,7 +584,7 @@ gst_play_get_media_current_time (GstPlay *play)
 
   bit_rate = gst_util_get_long_arg (GTK_OBJECT (priv->bit_rate_element), "bit_rate");
 
-  if (bit_rate) 
+  if (bit_rate)
     current_time = (gst_play_get_media_offset (play) * 8) / bit_rate;
   else
     current_time = 0;
@@ -454,7 +592,7 @@ gst_play_get_media_current_time (GstPlay *play)
   return current_time;
 }
 
-gboolean        
+gboolean
 gst_play_media_can_seek (GstPlay *play)
 {
   GstPlayPrivate *priv;
@@ -467,8 +605,8 @@ gst_play_media_can_seek (GstPlay *play)
   return priv->can_seek;
 }
 
-void            
-gst_play_media_seek (GstPlay *play, 
+void
+gst_play_media_seek (GstPlay *play,
 		     gulong offset)
 {
   GstPlayPrivate *priv;
@@ -482,10 +620,10 @@ gst_play_media_seek (GstPlay *play,
 }
 
 
-static void 
+static void
 gst_play_set_arg (GtkObject *object,
 		  GtkArg *arg,
-		  guint id) 
+		  guint id)
 {
   GstPlay *play;
 
@@ -503,10 +641,10 @@ gst_play_set_arg (GtkObject *object,
   }
 }
 
-static void 
+static void
 gst_play_get_arg (GtkObject *object,
 		  GtkArg *arg,
-		  guint id) 
+		  guint id)
 {
   GstPlay *play;
   GstPlayPrivate *priv;

@@ -14,7 +14,7 @@ void eos(GstElement *element, gpointer data)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *disksrc, *audiosink;
+  GstElement *disksrc, *osssink;
   GstElement *pipeline;
   GstElement *thread;
 
@@ -41,17 +41,19 @@ int main(int argc,char *argv[])
                      GTK_SIGNAL_FUNC(eos), thread);
 
   /* and an audio sink */
-  audiosink = gst_elementfactory_make("audiosink", "play_audio");
-  g_assert(audiosink != NULL);
+  osssink = gst_elementfactory_make("osssink", "play_audio");
+  g_assert(osssink != NULL);
 
   /* add objects to the main pipeline */
+  /*
   gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
-  gst_pipeline_add_sink(GST_PIPELINE(pipeline), audiosink);
+  gst_pipeline_add_sink(GST_PIPELINE(pipeline), osssink);
 
   if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
     g_print("unable to handle stream\n");
     exit(-1);
   }
+  */
 
   //gst_bin_remove(GST_BIN(pipeline), disksrc);
 

@@ -23,7 +23,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
   //if (0) {
   if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0) {
     // construct internal pipeline elements
-    play = gst_elementfactory_make("audiosink","play_audio");
+    play = gst_elementfactory_make("osssink","play_audio");
     g_return_if_fail(play != NULL);
 
     // create the thread and pack stuff into it

@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2001 Steve Baker <stevebaker_org@yahoo.co.uk>
  *
  * gstsinesrc.c: 
  *
@@ -20,10 +21,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/soundcard.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,20 +48,25 @@ enum {
   ARG_0,
   ARG_VOLUME,
   ARG_FORMAT,
-  ARG_CHANNELS,
-  ARG_FREQUENCY,
+  ARG_SAMPLERATE,
+  ARG_FREQ,
+  ARG_TABLESIZE,
+  ARG_BUFFER_SIZE,
 };
 
 
 static void gst_sinesrc_class_init(GstSineSrcClass *klass);
-static void gst_sinesrc_init(GstSineSrc *sinesrc);
+static void gst_sinesrc_init(GstSineSrc *src);
 static void gst_sinesrc_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 //static gboolean gst_sinesrc_change_state(GstElement *element,
 //                                          GstElementState state);
 //static void gst_sinesrc_close_audio(GstSineSrc *src);
 //static gboolean gst_sinesrc_open_audio(GstSineSrc *src);
-void gst_sinesrc_sync_parms(GstSineSrc *sinesrc);
+static void gst_sinesrc_populate_sinetable(GstSineSrc *src);
+static inline void gst_sinesrc_update_table_inc(GstSineSrc *src);
+static inline void gst_sinesrc_update_vol_scale(GstSineSrc *src);
+void gst_sinesrc_sync_parms(GstSineSrc *src);
 
 static GstBuffer * gst_sinesrc_get(GstPad *pad);
 
@@ -105,31 +107,44 @@ gst_sinesrc_class_init(GstSineSrcClass *klass) {
                           GTK_ARG_READWRITE, ARG_VOLUME);
   gtk_object_add_arg_type("GstSineSrc::format", GTK_TYPE_INT,
                           GTK_ARG_READWRITE, ARG_FORMAT);
-  gtk_object_add_arg_type("GstSineSrc::channels", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_CHANNELS);
-  gtk_object_add_arg_type("GstSineSrc::frequency", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_FREQUENCY);
-
+  gtk_object_add_arg_type("GstSineSrc::samplerate", GTK_TYPE_INT,
+                          GTK_ARG_READWRITE, ARG_SAMPLERATE);
+  gtk_object_add_arg_type("GstSineSrc::tablesize", GTK_TYPE_INT,
+                          GTK_ARG_READWRITE, ARG_TABLESIZE);
+  gtk_object_add_arg_type("GstSineSrc::freq", GTK_TYPE_DOUBLE,
+                          GTK_ARG_READWRITE, ARG_FREQ);
+  gtk_object_add_arg_type("GstSineSrc::buffersize", GTK_TYPE_INT,
+                          GTK_ARG_READWRITE, ARG_BUFFER_SIZE);
+                          
   gtkobject_class->set_arg = gst_sinesrc_set_arg;
   gtkobject_class->get_arg = gst_sinesrc_get_arg;
 
 //  gstelement_class->change_state = gst_sinesrc_change_state;
 }
 
-static void gst_sinesrc_init(GstSineSrc *sinesrc) {
-  sinesrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_pad_set_get_function(sinesrc->srcpad,gst_sinesrc_get);
-  gst_element_add_pad(GST_ELEMENT(sinesrc),sinesrc->srcpad);
+static void gst_sinesrc_init(GstSineSrc *src) {
+	
+  src->srcpad = gst_pad_new("src",GST_PAD_SRC);
+  gst_pad_set_get_function(src->srcpad, gst_sinesrc_get);
+  gst_element_add_pad(GST_ELEMENT(src), src->srcpad);
 
-  sinesrc->volume = 1.0;
+  src->volume = 1.0;
+  gst_sinesrc_update_vol_scale(src);
 
-  sinesrc->format = AFMT_S16_LE;
-  sinesrc->channels = 2;
-  sinesrc->frequency = 44100;
+  src->format = 16;
+  src->samplerate = 44100;
+  src->freq = 100.0;
+  src->newcaps = FALSE;
+  
+  src->table_pos = 0.0;
+  src->table_size = 1024;
+  gst_sinesrc_populate_sinetable(src);
+  gst_sinesrc_update_table_inc(src);
+  gst_sinesrc_sync_parms(src);
+  src->buffer_size=1024;
+  
+  src->seq = 0;
 
-  sinesrc->seq = 0;
-
-  sinesrc->sentmeta = FALSE;
 }
 
 static GstBuffer *
@@ -139,33 +154,50 @@ gst_sinesrc_get(GstPad *pad)
   GstBuffer *buf;
   gint16 *samples;
   gint i;
-  gint volume;
-  gdouble val;
-
+  
   g_return_val_if_fail (pad != NULL, NULL);
   src = GST_SINESRC(gst_pad_get_parent (pad));
 
   buf = gst_buffer_new();
   g_return_val_if_fail (buf, NULL);
-  GST_BUFFER_DATA(buf) = (gpointer)malloc(4096);
-  samples = (gint16*)GST_BUFFER_DATA(buf);
-  GST_BUFFER_SIZE(buf) = 4096;
+  samples = g_new(gint16, src->buffer_size);
+  GST_BUFFER_DATA(buf) = (gpointer) samples;
+  GST_BUFFER_SIZE(buf) = 2 * src->buffer_size;
+  
+  for (i=0 ; i < src->buffer_size; i++) {
+    src->table_lookup = (gint)(src->table_pos);
+    src->table_lookup_next = src->table_lookup + 1;
+    src->table_interp = src->table_pos - src->table_lookup;
+    
+    // wrap the array lookups if we're out of bounds
+    if (src->table_lookup_next >= src->table_size){
+      src->table_lookup_next -= src->table_size;
+      if (src->table_lookup >= src->table_size){
+        src->table_lookup -= src->table_size;
+        src->table_pos -= src->table_size;
+      }
+    }
+    
+    src->table_pos += src->table_inc;
 
-  volume = 65535 * src->volume;
-  for (i=0;i<1024;i++) {
-    val = sin((gdouble)i/src->frequency);
-    samples[i] = val * volume;
-    samples[i+1] = samples[i];
+    //no interpolation
+    //samples[i] = src->table_data[src->table_lookup]
+    //               * src->vol_scale;
+                  	
+    //linear interpolation
+    samples[i] = ((src->table_interp
+                   *(src->table_data[src->table_lookup_next]
+                    -src->table_data[src->table_lookup]
+                    )
+                  )+src->table_data[src->table_lookup]
+                 )* src->vol_scale;
   }
 
-  if (!src->sentmeta) {
-    MetaAudioRaw *newmeta = g_new(MetaAudioRaw,1);
-    memcpy(newmeta,&src->meta,sizeof(MetaAudioRaw));
-    gst_buffer_add_meta(buf,GST_META(newmeta));
-    src->sentmeta = TRUE;
+  if (src->newcaps) {
+    src->newcaps = FALSE;
   }
 
-  g_print(">");
+  //g_print(">");
   return buf;
 }
 
@@ -178,17 +210,35 @@ static void gst_sinesrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
 
   switch (id) {
     case ARG_VOLUME:
+      if (GTK_VALUE_DOUBLE(*arg) < 0.0 || GTK_VALUE_DOUBLE(*arg) > 1.0)
+        break;
       src->volume = GTK_VALUE_DOUBLE(*arg);
+      gst_sinesrc_update_vol_scale(src);
       break;
     case ARG_FORMAT:
       src->format = GTK_VALUE_INT(*arg);
+      gst_sinesrc_sync_parms(src);
       break;
-    case ARG_CHANNELS:
-      src->channels = GTK_VALUE_INT(*arg);
+    case ARG_SAMPLERATE:
+      src->samplerate = GTK_VALUE_INT(*arg);
+      gst_sinesrc_sync_parms(src);
+      gst_sinesrc_update_table_inc(src);
       break;
-    case ARG_FREQUENCY:
-      src->frequency = GTK_VALUE_INT(*arg);
+    case ARG_FREQ: {
+      if (GTK_VALUE_DOUBLE(*arg) <= 0.0 || GTK_VALUE_DOUBLE(*arg) > src->samplerate/2)
+        break;
+      src->freq = GTK_VALUE_DOUBLE(*arg);
+      gst_sinesrc_update_table_inc(src);
       break;
+    case ARG_TABLESIZE:
+      src->table_size = GTK_VALUE_INT(*arg);
+      gst_sinesrc_populate_sinetable(src);
+      gst_sinesrc_update_table_inc(src);
+      break;
+    case ARG_BUFFER_SIZE:
+      src->buffer_size = GTK_VALUE_INT(*arg);
+      break;
+    }
     default:
       break;
   }
@@ -208,11 +258,17 @@ static void gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
     case ARG_FORMAT:
       GTK_VALUE_INT(*arg) = src->format;
       break;
-    case ARG_CHANNELS:
-      GTK_VALUE_INT(*arg) = src->channels;
+    case ARG_SAMPLERATE:
+      GTK_VALUE_INT(*arg) = src->samplerate;
       break;
-    case ARG_FREQUENCY:
-      GTK_VALUE_INT(*arg) = src->frequency;
+    case ARG_FREQ:
+      GTK_VALUE_DOUBLE(*arg) = src->freq;
+      break;
+    case ARG_TABLESIZE:
+      GTK_VALUE_INT(*arg) = src->table_size;
+      break;
+    case ARG_BUFFER_SIZE:
+      GTK_VALUE_INT(*arg) = src->buffer_size;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
@@ -243,9 +299,30 @@ static gboolean gst_sinesrc_change_state(GstElement *element,
 }
 */
 
-void gst_sinesrc_sync_parms(GstSineSrc *sinesrc) {
-  sinesrc->meta.format = sinesrc->format;
-  sinesrc->meta.channels = sinesrc->channels;
-  sinesrc->meta.frequency = sinesrc->frequency;
-  sinesrc->sentmeta = FALSE;
+static void gst_sinesrc_populate_sinetable(GstSineSrc *src)
+{
+  gint i;
+  gdouble pi2scaled = M_PI * 2 / src->table_size;
+  gfloat *table = g_new(gfloat, src->table_size);
+
+  for(i=0 ; i < src->table_size ; i++){
+    table[i] = (gfloat)sin(i * pi2scaled);
+  }
+  
+  g_free(src->table_data);
+  src->table_data = table;
+}
+
+static inline void gst_sinesrc_update_table_inc(GstSineSrc *src)
+{
+  src->table_inc = src->table_size * src->freq / src->samplerate;
+}
+
+static inline void gst_sinesrc_update_vol_scale(GstSineSrc *src)
+{
+  src->vol_scale = 32767 * src->volume;
+}
+
+void gst_sinesrc_sync_parms(GstSineSrc *src) {
+  src->newcaps = TRUE;
 }

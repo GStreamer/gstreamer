@@ -15,22 +15,25 @@ void print_prop(GstPropsEntry *prop,gboolean showname,gchar *pfx) {
     printf(pfx);
 
   switch (prop->propstype) {
-    case GST_PROPS_INT_ID_NUM:
+    case GST_PROPS_INT_ID:
       printf("Integer: %d\n",prop->data.int_data);
       break;
-    case GST_PROPS_INT_RANGE_ID_NUM:
+    case GST_PROPS_INT_RANGE_ID:
       printf("Integer range: %d - %d\n",prop->data.int_range_data.min,
              prop->data.int_range_data.max);
       break;
-    case GST_PROPS_BOOL_ID_NUM:
+    case GST_PROPS_BOOL_ID:
       printf("Boolean: %s\n",prop->data.bool_data ? "TRUE" : "FALSE");
       break;
-    case GST_PROPS_FOURCC_ID_NUM:
+    case GST_PROPS_STRING_ID:
+      printf("String: %s\n",prop->data.string_data.string);
+      break;
+    case GST_PROPS_FOURCC_ID:
       printf("FourCC: %c%c%c%c\n",
              prop->data.fourcc_data & 0xff,prop->data.fourcc_data>>8 & 0xff,
              prop->data.fourcc_data>>16 & 0xff,prop->data.fourcc_data>>24 & 0xff);
       break;
-    case GST_PROPS_LIST_ID_NUM:
+    case GST_PROPS_LIST_ID:
       printf("List:\n");
       longprefix = g_strdup_printf("%s  ",pfx);
       list = prop->data.list_data.entries;
@@ -42,7 +45,7 @@ void print_prop(GstPropsEntry *prop,gboolean showname,gchar *pfx) {
       g_free(longprefix);
       break;
     default:
-      printf("\n");
+      printf("unknown props %d\n", prop->propstype);
   }
 }
 
@@ -59,38 +62,17 @@ void print_props(GstProps *properties,gchar *pfx) {
   }
 }
 
-/*
-struct _GstPropsEntry {
-  GQuark    propid;
-  GstPropsId propstype;
-
-  union {
-    // flat values
-    gboolean bool_data;
-    guint32  fourcc_data;
-    gint     int_data;
-
-    // structured values
-    struct {
-      GList *entries;
-    } list_data;
-    struct {
-      gint min;
-      gint max;
-    } int_range_data;
-  } data;
-};
-*/
-
-gint print_element_info(GstElementFactory *factory) {
+gint
+print_element_info (GstElementFactory *factory)
+{
   GstElement *element;
   GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
-  GList *pads, *caps;
+  GList *pads;
+  GstCaps *caps;
   GstPad *pad;
   GstRealPad *realpad;
   GstPadTemplate *padtemplate;
-  GstCaps *cap;
   GtkArg *args;
   guint32 *flags;
   gint num_args,i;
@@ -142,19 +124,18 @@ gint print_element_info(GstElementFactory *factory) {
         while (caps) {
  	  GstType *type;
 
-          cap = (GstCaps*)(caps->data);
-          caps = g_list_next(caps);
+          printf("      '%s':\n",caps->name);
 
-          printf("      '%s':\n",cap->name);
-
-	  type = gst_type_find_by_id (cap->id);
+	  type = gst_type_find_by_id (caps->id);
 	  if (type) 
             printf("        MIME type: '%s':\n",type->mime);
 	  else
             printf("        MIME type: 'unknown/unknown':\n");
 
-	  if (cap->properties)
-            print_props(cap->properties,"        ");
+	  if (caps->properties)
+            print_props(caps->properties,"        ");
+
+	  caps = caps->next;
         }
       }
 
@@ -231,19 +212,18 @@ gint print_element_info(GstElementFactory *factory) {
         while (caps) {
 	  GstType *type;
 
-          cap = (GstCaps*)(caps->data);
-          caps = g_list_next(caps);
+          printf("      '%s':\n",caps->name);
 
-          printf("      '%s':\n",cap->name);
-
-	  type = gst_type_find_by_id (cap->id);
+	  type = gst_type_find_by_id (caps->id);
 	  if (type) 
             printf("        MIME type: '%s':\n",type->mime);
 	  else
             printf("        MIME type: 'unknown/unknown':\n");
 
-	  if (cap->properties)
-            print_props(cap->properties,"        ");
+	  if (caps->properties)
+            print_props(caps->properties,"        ");
+
+	  caps = caps->next;
         }
       }
 
@@ -322,11 +302,9 @@ void print_element_list() {
   }
 }
 
-
-void print_plugin_info(GstPlugin *plugin) {
-  GList *factories;
-  GstElementFactory *factory;
-
+void
+print_plugin_info (GstPlugin *plugin)
+{
   printf("Plugin Details:\n");
   printf("  Name:\t\t%s\n",plugin->name);
   printf("  Long Name:\t%s\n",plugin->longname);
@@ -334,6 +312,9 @@ void print_plugin_info(GstPlugin *plugin) {
   printf("\n");
 
   if (plugin->numelements) {
+    GList *factories;
+    GstElementFactory *factory;
+
     printf("Element Factories:\n");
 
     factories = gst_plugin_get_factory_list(plugin);
@@ -342,6 +323,36 @@ void print_plugin_info(GstPlugin *plugin) {
       factories = g_list_next(factories);
 
       printf("  %s: %s\n",factory->name,factory->details->longname);
+    }
+  }
+  if (plugin->numautopluggers) {
+    GList *factories;
+    GstAutoplugFactory *factory;
+
+    printf("Autpluggers:\n");
+
+    factories = gst_plugin_get_autoplug_list(plugin);
+    while (factories) {
+      factory = (GstAutoplugFactory*)(factories->data);
+      factories = g_list_next(factories);
+
+      printf("  %s: %s\n", factory->name, factory->longdesc);
+    }
+  }
+  if (plugin->numtypes) {
+    GList *factories;
+    GstTypeFactory *factory;
+
+    printf("Types:\n");
+
+    factories = gst_plugin_get_type_list(plugin);
+    while (factories) {
+      factory = (GstTypeFactory*)(factories->data);
+      factories = g_list_next(factories);
+
+      printf("  %s: %s\n", factory->mime, factory->exts);
+      if (factory->typefindfunc)
+        printf("      Has typefind function: %s\n",GST_DEBUG_FUNCPTR_NAME(factory->typefindfunc));
     }
   }
   printf("\n");
@@ -357,7 +368,7 @@ int main(int argc,char *argv[]) {
 
   // if no arguments, print out list of elements
   if (argc == 1) {
-    print_element_list(); 
+    print_element_list();
 
   // else we try to get a factory
   } else {

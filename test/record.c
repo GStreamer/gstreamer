@@ -6,16 +6,16 @@
 
 int main(int argc,char *argv[]) {
   int fd;
-  GstElement *pipeline, *audiosrc, *fdsink;
-  GstElementFactory *audiosrcfactory, *fdsinkfactory;
+  GstElement *pipeline, *osssrc, *fdsink;
+  GstElementFactory *osssrcfactory, *fdsinkfactory;
   GList *padlist;
 
   gst_init(&argc,&argv);
 
   pipeline = GST_ELEMENT(gst_pipeline_new("pipeline"));
 
-  audiosrcfactory = gst_elementfactory_find("audiosrc");
-  audiosrc = gst_elementfactory_create(audiosrcfactory,"audiosrc");
+  osssrcfactory = gst_elementfactory_find("osssrc");
+  osssrc = gst_elementfactory_create(osssrcfactory,"osssrc");
 
   fd = open(argv[1],O_CREAT|O_RDWR);
 
@@ -24,11 +24,11 @@ int main(int argc,char *argv[]) {
   gtk_object_set(GTK_OBJECT(fdsink),"fd",fd,NULL);
 
   /* add objects to the main pipeline */
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audiosrc));
+  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(osssrc));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(fdsink));
 
   /* connect src to sink */
-  gst_pad_connect(gst_element_get_pad(audiosrc,"src"),
+  gst_pad_connect(gst_element_get_pad(osssrc,"src"),
                   gst_element_get_pad(fdsink,"sink"));
 
   g_print("\nok, runnable, hitting 'play'...\n");

@@ -69,8 +69,6 @@ static xmlNodePtr		gst_thread_save_thyself		(GstObject *object, xmlNodePtr paren
 static void			gst_thread_restore_thyself	(GstObject *object, xmlNodePtr self);
 
 static void			gst_thread_signal_thread	(GstThread *thread, gboolean spinning);
-static void
-gst_thread_wait_two_thread (GstThread *thread, guint syncflag, gboolean set,guint syncflag2, gboolean set2);
 static void			gst_thread_schedule_dummy	(GstBin *bin);
 
 static void*			gst_thread_main_loop		(void *arg);
@@ -256,6 +254,7 @@ gst_thread_change_state (GstElement *element)
 
         g_mutex_lock(thread->lock);
 
+        g_mutex_lock (thread->lock);
         // create the thread
         pthread_create (&thread->thread_id, NULL,
                         gst_thread_main_loop, thread);

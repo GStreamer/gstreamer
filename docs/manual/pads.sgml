@@ -34,7 +34,7 @@
  while (pads) {
    GstPad *pad = GST_PAD (pads-&gt;data);
 
-   g_print ("pad name %s\n", gst_pad_get_name (pad));
+   g_print ("pad name &percnt;s\n", gst_pad_get_name (pad));
    
    pads = g_list_next (pads);
  }
@@ -57,7 +57,7 @@
 	GstObject.
       </para> 
     </sect2>
-    <sect2 id="sec-pads-synamic">
+    <sect2 id="sec-pads-dynamic">
       <title>Dynamic pads</title>
       <para> 
         Some elements might not have their pads when they are created. This can, for 
@@ -82,7 +82,7 @@
 static void
 pad_connect_func (GstElement *parser, GstPad *pad, GstElement *pipeline)
 {
-  g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
+  g_print("***** a new pad &percnt;s was created\n", gst_pad_get_name(pad));
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
@@ -118,6 +118,58 @@ main(int argc, char *argv[])
           You need to set the pipeline to READY or NULL if you want to change it.
         </para> 
       </note>
+    </sect2>
+    <sect2 id="sec-pads-request">
+      <title>Request pads</title>
+      <para> 
+        An element can also have request pads. These pads are not created automatically
+	but are only created on demand. This is very usefull for muxers, aggregators
+	and tee elements.
+      </para> 
+      <para> 
+        The tee element, for example, has one input pad and a request padtemplate for the
+	output pads. Whenever an element wants to get an output pad from the tee element, it 
+	has to request the pad.
+      </para> 
+      <para> 
+        The following piece of code can be used to get a pad from the tee element. After
+	the pad has been requested, it can be used to connect another element to it.
+      </para> 
+      <programlisting>
+    ...
+  GstPad *pad;
+    ...
+  element = gst_elementfactory_make ("tee", "element");
+
+  pad = gst_element_request_pad_by_name (element, "src%d");
+  g_print ("new pad %s\n", gst_pad_get_name (pad));
+    ...
+      </programlisting>
+      <para> 
+        The gst_element_request_pad_by_name method can be used to get a pad
+	from the element based on the name_template of the padtemplate.
+      </para> 
+      <para> 
+        It is also possible to request a pad that is compatible with another
+	padtemplate. This is very usefull if you want to connect an element to
+	a muxer element and you need to request a pad that is compatible. The
+	gst_element_request_compatible_pad is used to request a compatible pad, as
+	is shown in the next example.
+      </para> 
+      <programlisting>
+    ...
+  GstPadTemplate *templ;
+  GstPad *pad;
+    ...
+  element = gst_elementfactory_make ("tee", "element");
+  mp3parse = gst_elementfactory_make ("mp3parse", "mp3parse");
+
+  templ = gst_element_get_padtemplate_by_name (mp3parse, "sink");
+
+  pad = gst_element_request_compatible_pad (element, templ);
+  g_print ("new pad %s\n", gst_pad_get_name (pad));
+  ...
+      </programlisting>
     </sect2>
   </sect1>
   <sect1 id="sec-pads-description">
@@ -258,12 +310,12 @@ Pads:
     ...
  caps = gst_pad_get_caps_list (pad);
 
- g_print ("pad name %s\n", gst_pad_get_name (pad));
+ g_print ("pad name &percnt;s\n", gst_pad_get_name (pad));
  
  while (caps) {
    GstCaps *cap = (GstCaps *) caps-&gt;data;
 
-   g_print (" Capability name %s, MIME type\n", gst_caps_get_name (cap), 
+   g_print (" Capability name &percnt;s, MIME type\n", gst_caps_get_name (cap), 
                                                 gst_caps_get_mime (cap));
    
    caps = g_list_next (caps);

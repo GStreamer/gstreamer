@@ -52,19 +52,20 @@ enum {
 };
 
 
-static void 	gst_typefind_class_init	(GstTypeFindClass *klass);
-static void 	gst_typefind_init	(GstTypeFind *typefind);
+static void	gst_typefind_class_init	(GstTypeFindClass *klass);
+static void	gst_typefind_init	(GstTypeFind *typefind);
 
-static void 	gst_typefind_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void 	gst_typefind_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void	gst_typefind_set_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void	gst_typefind_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
-static void 	gst_typefind_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_typefind_chain	(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_typefind_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
-gst_typefind_get_type(void) {
+gst_typefind_get_type (void)
+{
   static GtkType typefind_type = 0;
 
   if (!typefind_type) {
@@ -78,13 +79,13 @@ gst_typefind_get_type(void) {
       (GtkArgGetFunc)gst_typefind_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    typefind_type = gtk_type_unique(GST_TYPE_ELEMENT,&typefind_info);
+    typefind_type = gtk_type_unique (GST_TYPE_ELEMENT, &typefind_info);
   }
   return typefind_type;
 }
 
 static void
-gst_typefind_class_init (GstTypeFindClass *klass) 
+gst_typefind_class_init (GstTypeFindClass *klass)
 {
   GtkObjectClass *gtkobject_class;
 
@@ -107,22 +108,22 @@ gst_typefind_class_init (GstTypeFindClass *klass)
   gtkobject_class->get_arg = gst_typefind_get_arg;
 }
 
-static void 
-gst_typefind_init (GstTypeFind *typefind) 
+static void
+gst_typefind_init (GstTypeFind *typefind)
 {
   typefind->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->sinkpad);
   gst_pad_set_chain_function (typefind->sinkpad, gst_typefind_chain);
 }
 
-static void 
-gst_typefind_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+static void
+gst_typefind_set_arg (GtkObject *object, GtkArg *arg, guint id)
 {
   GstTypeFind *typefind;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TYPEFIND (object));
-  
+
   typefind = GST_TYPEFIND (object);
 
   switch(id) {
@@ -131,14 +132,14 @@ gst_typefind_set_arg (GtkObject *object, GtkArg *arg, guint id)
   }
 }
 
-static void 
-gst_typefind_get_arg (GtkObject *object, GtkArg *arg, guint id) 
+static void
+gst_typefind_get_arg (GtkObject *object, GtkArg *arg, guint id)
 {
   GstTypeFind *typefind;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TYPEFIND (object));
-  
+
   typefind = GST_TYPEFIND (object);
 
   switch(id) {
@@ -150,8 +151,8 @@ gst_typefind_get_arg (GtkObject *object, GtkArg *arg, guint id)
   }
 }
 
-static void 
-gst_typefind_chain (GstPad *pad, GstBuffer *buf) 
+static void
+gst_typefind_chain (GstPad *pad, GstBuffer *buf)
 {
   GstTypeFind *typefind;
   GList *type_list;
@@ -183,6 +184,7 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
 	typefind->caps = caps;
         gtk_signal_emit (GTK_OBJECT (typefind), gst_typefind_signals[HAVE_TYPE],
 	                      typefind->caps);
+	gst_pad_set_caps (pad, caps);
         goto end;
       }
       funcs = g_slist_next (funcs);

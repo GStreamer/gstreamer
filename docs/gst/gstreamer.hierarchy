@@ -9,12 +9,9 @@ GtkObject
       GstFakeSrc
       GstFakeSink
       GstDiskSrc
-      GstAsyncDiskSrc
       GstHttpSrc
       GstFdSrc
-      GstAudioSrc
       GstSineSrc
-      GstAudioSink
       GstFdSink
       GstPipefilter
       GstIdentity

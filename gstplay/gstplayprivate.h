@@ -12,9 +12,10 @@ typedef struct _GstPlayPrivate GstPlayPrivate;
 
 struct _GstPlayPrivate {
   GstElement *thread;
-  GstElement *pipeline;
-  GstElement *audio_play;
+  GstElement *bin;
+  GstElement *video_element, *audio_element;
   GstElement *video_show;
+  GtkWidget  *video_widget;
   GstElement *src;
 
   guchar *uri;

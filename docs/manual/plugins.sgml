@@ -15,6 +15,11 @@
         one or more typedefinitions
       </para>
     </listitem>
+    <listitem>
+      <para>
+        one or more autopluggers
+      </para>
+    </listitem>
   </itemizedlist>
   <para> 
     The plugins have one simple method: plugin_init () where all the elementfactories are
@@ -39,6 +44,8 @@ struct _GstPlugin {
   gint numtypes;
   GList *elements;              /* list of elements provided */
   gint numelements;
+  GList *autopluggers;          /* list of autopluggers provided */
+  gint numautopluggers;
 
   gboolean loaded;              /* if the plugin is in memory */
 };
@@ -55,7 +62,7 @@ struct _GstPlugin {
     while (plugins) {
       GstPlugin *plugin = (GstPlugin *)plugins-&gt;data;
 
-      g_print ("plugin: %s\n", gst_plugin_get_name (plugin));
+      g_print ("plugin: &percnt;s\n", gst_plugin_get_name (plugin));
 
       plugins = g_list_next (plugins);
     }

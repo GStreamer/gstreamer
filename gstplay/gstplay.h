@@ -31,6 +31,7 @@ typedef enum {
 typedef enum {
   GST_PLAY_OK,
   GST_PLAY_UNKNOWN_MEDIA,
+  GST_PLAY_CANNOT_PLAY,
   GST_PLAY_ERROR,
 } GstPlayReturn;
 

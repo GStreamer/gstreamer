@@ -1,0 +1,39 @@
+.TH GStreamer 1 "March 2001"
+.SH NAME
+gsteditor - a graphical GStreamer pipeline editor
+.SH SYNOPSIS
+.B  gsteditor [OPTION...] [FILE]
+.SH DESCRIPTION
+.PP
+\fIgsteditor\fP is a graphical \fIGStreamer\fP pipeline editor.  It can
+load, save, and run pipelines.
+.
+.SH OPTIONS
+.l
+\fIgsteditor\fP accepts the following options:
+.TP 8
+.B  FILE
+Pipeline to load
+.TP 8
+.B  \-\-help
+Print help synopsis and available FLAGS
+.TP 8
+.B  \-\-gst\-info\-mask=FLAGS
+\fIGStreamer\fP info flags to set (list with \-\-help)
+.TP 8
+.B  \-\-gst\-debug\-mask=FLAGS
+\fIGStreamer\fP debugging flags to set (list with \-\-help)
+.TP 8
+.B  \-\-gst\-plugin\-spew
+\fIGStreamer\fP info flags to set
+Enable printout of errors while loading \fIGStreamer\fP plugins
+.TP 8
+.B  \-\-gst\-plugin\-path=PATH
+Add directories separated with ':' to the plugin search path
+.SH SEE ALSO
+.BR gstreamer\-register (1),
+.BR gstreamer\-inspect (1),
+.BR gstreamer\-launch (1),
+.BR gstmediaplay (1)
+.SH AUTHOR
+The GStreamer team at http://gstreamer.net/

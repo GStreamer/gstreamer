@@ -20,7 +20,7 @@
 
 #include <config.h>
 
-#include <gst/gstcpu.h>
+#include <gst/gst.h>
 #include "gstidct.h"
 #include "dct.h"
 
@@ -53,38 +53,38 @@ GstIDCT *gst_idct_new(GstIDCTMethod method)
 
   switch (method) {
 	 case GST_IDCT_FAST_INT:
-		g_print("GstIDCT: using fast_int_idct\n");
+		GST_INFO (GST_CAT_PLUGIN_INFO, "GstIDCT: using fast_int_idct\n");
 	   gst_idct_init_fast_int_idct();
 		new->convert = gst_idct_fast_int_idct;
 		break;
 	 case GST_IDCT_INT:
-		g_print("GstIDCT: using int_idct\n");
+		GST_INFO (GST_CAT_PLUGIN_INFO, "GstIDCT: using int_idct\n");
 		new->convert = gst_idct_int_idct;
 		break;
 	 case GST_IDCT_FLOAT:
-		g_print("GstIDCT: using float_idct\n");
+		GST_INFO (GST_CAT_PLUGIN_INFO, "GstIDCT: using float_idct\n");
 		gst_idct_init_float_idct();
 		new->convert = gst_idct_float_idct;
 		break;
 #ifdef HAVE_LIBMMX
 	 case GST_IDCT_MMX:
-		g_print("GstIDCT: using MMX_idct\n");
+		GST_INFO (GST_CAT_PLUGIN_INFO, "GstIDCT: using MMX_idct\n");
 		new->convert = gst_idct_mmx_idct;
 		new->need_transpose = TRUE;
 		break;
 	 case GST_IDCT_MMX32:
-		g_print("GstIDCT: using MMX32_idct\n");
+		GST_INFO (GST_CAT_PLUGIN_INFO, "GstIDCT: using MMX32_idct\n");
 		new->convert = gst_idct_mmx32_idct;
 		new->need_transpose = TRUE;
 		break;
 	 case GST_IDCT_SSE:
-		g_print("GstIDCT: using SSE_idct\n");
+		GST_INFO (GST_CAT_PLUGIN_INFO, "GstIDCT: using SSE_idct\n");
 		new->convert = gst_idct_sse_idct;
 		new->need_transpose = TRUE;
 		break;
 #endif /* HAVE_LIBMMX */
 	 default:
-		g_print("GstIDCT: method not supported\n");
+		GST_INFO (GST_CAT_PLUGIN_INFO, "GstIDCT: method not supported\n");
 		g_free(new);
 		return NULL;
   }

@@ -16,13 +16,10 @@ gst_fakesrc_get_type
 gst_fakesink_get_type
 
 gst_disksrc_get_type
-gst_asyncdisksrc_get_type
 @GST_HTTPSRC_GET_TYPE@
 gst_fdsrc_get_type
-gst_audiosrc_get_type
 gst_sinesrc_get_type
 
-gst_audiosink_get_type
 gst_fdsink_get_type
 
 gst_pipefilter_get_type

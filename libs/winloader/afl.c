@@ -304,6 +304,7 @@ void MSACM_RegisterAllDrivers(void)
     
     MSACM_RegisterDriver("divxa32", (LPSTR)0x161, 0);
     MSACM_RegisterDriver("msadp32", (LPSTR)0x2, 0);
+    MSACM_RegisterDriver("l3codeca", (LPSTR)0x55, 0);
 }
 
 /***********************************************************************

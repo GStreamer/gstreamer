@@ -58,7 +58,7 @@ typedef enum {
 
 static inline char *_gst_print_statename(int state) {
   switch (state) {
-    case GST_STATE_NONE_PENDING: return "NONE PENDING";break;
+    case GST_STATE_NONE_PENDING: return "NONE_PENDING";break;
     case GST_STATE_NULL: return "NULL";break;
     case GST_STATE_READY: return "READY";break;
     case GST_STATE_PLAYING: return "PLAYING";break;
@@ -102,6 +102,9 @@ typedef enum {
   /* this element is incable of seeking (FIXME: does this apply to filters?) */
   GST_ELEMENT_NO_SEEK,
 
+  /***** !!!!! need to have a flag that says that an element must
+    *not* be an entry into a scheduling chain !!!!! *****/
+
   /* there is a new loopfunction ready for placement */
   GST_ELEMENT_NEW_LOOPFUNC,
   /* the cothread holding this element needs to be stopped */
@@ -124,6 +127,7 @@ typedef enum {
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
 #define GST_ELEMENT_MANAGER(obj)		(((GstElement*)(obj))->manager)
 #define GST_ELEMENT_SCHED(obj)			(((GstElement*)(obj))->sched)
+#define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
 //typedef struct _GstElement GstElement;
 //typedef struct _GstElementClass GstElementClass;
@@ -253,10 +257,10 @@ gboolean		gst_elementfactory_can_src_caps		(GstElementFactory *factory,
 								 GstCaps *caps);
 gboolean		gst_elementfactory_can_sink_caps	(GstElementFactory *factory,
 								 GstCaps *caps);
-gboolean		gst_elementfactory_can_src_caps_list	(GstElementFactory *factory,
-								 GList *caps);
-gboolean		gst_elementfactory_can_sink_caps_list	(GstElementFactory *factory,
-								 GList *caps);
+gboolean		gst_elementfactory_can_src_caps		(GstElementFactory *factory,
+								 GstCaps *caps);
+gboolean		gst_elementfactory_can_sink_caps	(GstElementFactory *factory,
+								 GstCaps *caps);
 
 GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
 								 const gchar *name);

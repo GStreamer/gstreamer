@@ -7,7 +7,7 @@ void paranoia_eos(GstPad *pad) {
 
 int main(int argc,char *argv[]) {
   GstPipeline *pipeline;
-  GstElement *paranoia,*queue,*audio_thread,*audiosink;
+  GstElement *paranoia,*queue,*audio_thread,*osssink;
   int i;
   int track = (argc == 2) ? atoi(argv[1]) : 1;
 
@@ -29,14 +29,14 @@ int main(int argc,char *argv[]) {
   gtk_object_set(GTK_OBJECT(queue),"max_level",750,NULL);
   g_return_val_if_fail(queue != NULL,4);
 
-  audiosink = gst_elementfactory_make("fakesink","audiosink");
-  g_return_val_if_fail(audiosink != NULL,4);
+  osssink = gst_elementfactory_make("fakesink","osssink");
+  g_return_val_if_fail(osssink != NULL,4);
 
   gst_bin_add(GST_BIN(pipeline),paranoia);
   gst_bin_add(GST_BIN(pipeline),queue);
-  gst_bin_add(GST_BIN(audio_thread),audiosink);
+  gst_bin_add(GST_BIN(audio_thread),osssink);
   gst_bin_add(GST_BIN(pipeline),audio_thread);
-  gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),gst_element_get_pad(audiosink,"sink"),"sink");
+  gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),gst_element_get_pad(osssink,"sink"),"sink");
 
   gst_element_connect(paranoia,"src",queue,"sink");
   gst_element_connect(queue,"src",audio_thread,"sink");
