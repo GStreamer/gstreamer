@@ -66,6 +66,7 @@ GST_STATIC_PAD_TEMPLATE (
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (
       GST_VIDEO_CAPS_xRGB "; "
+      GST_VIDEO_CAPS_BGRx "; "
       GST_VIDEO_CAPS_RGB "; "
       GST_VIDEO_CAPS_RGB_16
     )
@@ -627,7 +628,7 @@ GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "colorspace",
-  "Hermes colorspace converter",
+  "internal colorspace converter",
   plugin_init,
   VERSION,
   "LGPL",
