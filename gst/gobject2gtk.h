@@ -13,6 +13,7 @@
 #define G_TYPE_CHECK_CLASS_TYPE			GTK_CHECK_CLASS_TYPE
 #define G_TYPE_FROM_CLASS(klass)		(((GtkObjectClass *)(klass))->type)
 #define G_OBJECT_GET_CLASS(object)		(GTK_OBJECT(object)->klass)
+#define G_OBJECT_CLASS_TYPE(gclass)		(gclass->type)
 
 // types
 #define G_TYPE_NONE				GTK_TYPE_NONE
@@ -78,16 +79,13 @@ G_STMT_START{ \
 #define g_type_class_ref			gtk_type_class
 #define g_type_class_unref(c)
 #define g_type_name(t)				gtk_type_name(t)
+#define g_type_from_name(t)			gtk_type_from_name(t)
 #define GEnumValue				GtkEnumValue
 #define g_enum_register_static			gtk_type_register_enum
 
 /*********************************
  * FIXME API NOT in glib2.0
  ***********************************/
-
-#define g_type_enum_get_values
-
-
 
 
 // type registration
