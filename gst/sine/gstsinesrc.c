@@ -289,10 +289,12 @@ gst_sinesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       src->buffer_size = g_value_get_int (value);
       break;
     case ARG_FREQ:
-      /*gst_dpman_handle_set_prop(src->dpman, "freq", value); */
+      gst_dpman_bypass_dparam(src->dpman, "freq");
+      src->freq = g_value_get_float (value);
       break;
     case ARG_VOLUME:
-      /*gst_dpman_handle_set_prop(src->dpman, "volume", value); */
+      gst_dpman_bypass_dparam(src->dpman, "volume");
+      src->volume = g_value_get_float (value);
       break;
     default:
       break;
