@@ -347,7 +347,7 @@ DIST_SUBDIRS=\
 	flac \
 	gdk_pixbuf \
 	gnomevfs \
-	gdm \
+	gsm \
 	hermes \
 	ivorbis \
 	jack \
