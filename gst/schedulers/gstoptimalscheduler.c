@@ -313,11 +313,22 @@ GstPluginDesc plugin_desc = {
 static void
 delete_chain (GstOptScheduler *osched, GstOptSchedulerChain *chain)
 {
+  GSList *groups;
+  
   GST_INFO (GST_CAT_SCHEDULING, "delete chain %p", chain);
 
   g_assert (chain->sched == osched);
 
   osched->chains = g_slist_remove (osched->chains, chain);
+
+  groups = chain->groups;
+  while (groups) {
+    GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) groups->data;
+
+    group->chain = NULL;
+    
+    groups = g_slist_next (groups);
+  }
 
   g_slist_free (chain->groups);
   g_free (chain);
@@ -460,12 +471,24 @@ destroy_group_scheduler (GstOptSchedulerGroup *group)
 static void
 delete_group (GstOptSchedulerGroup *group)
 {
+  GSList *elements;
+  
   GST_INFO (GST_CAT_SCHEDULING, "delete group %p", group);
 
   g_assert (group->chain == NULL);
 
   if (group->flags & GST_OPT_SCHEDULER_GROUP_SCHEDULABLE)
     destroy_group_scheduler (group);
+
+  /* remove all elements from the group */
+  elements = group->elements;
+  while (elements) {
+    GstElement *element = GST_ELEMENT (elements->data);
+
+    GST_ELEMENT_SCHED_GROUP (element) = NULL;
+
+    elements = g_slist_next (elements);
+  }
 
   g_slist_free (group->elements);
   g_free (group);
@@ -1030,9 +1053,14 @@ gst_opt_scheduler_remove_element (GstScheduler *sched, GstElement *element)
   /* the element is guaranteed to live in it's own group/chain now */
   get_group (element, &group);
   if (group) {
+    
     if (group->chain) {
-      remove_from_chain (group->chain, group);
-      delete_chain (osched, group->chain);
+      GstOptSchedulerChain *chain;
+
+      chain = group->chain;
+
+      remove_from_chain (chain, group);
+      delete_chain (osched, chain);
     }
 
     delete_group (group);
