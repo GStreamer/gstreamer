@@ -1,18 +1,32 @@
-DOC=gst-plugin-writers-guide
-MAIN=$(DOC).xml
-XML=$(wildcard *.xml)
-XSLFO=$(srcdir)/../xsl/fo.xsl
-XSLFOMODS=$(srcdir)/../xsl/ulink.xsl $(srcdir)/../xsl/keycombo.xsl
-XSLHTML=$(srcdir)/../xsl/html.xsl
-XSLHTMLMODS=$(srcdir)/../xsl/fileext.xsl $(srcdir)/../xsl/admon.xsl \
-	$(srcdir)/../xsl/keycombo.xsl $(srcdir)/../xsl/css.xsl
-XSLS=$(XSLFO) $(XSLFOMODS) $(XSLHTML) $(XSLHTMLMODS)
-FIGS= # $(wildcard *.fig) (uncomment when pngs are added)
-PNGS=$(FIGS:.fig=.png)
-PDFS=$(FIGS:.fig=.pdf)
-SRC=$(XML)
-CSS=base.css
+### this is the part you can customize if you need to
 
-EXTRA_DIST = $(XML) $(FIGS) $(CSS) magic-png magic-pdf
+# base name of doc
+DOC = gst-plugin-writers-guide
 
+# main xml file
+MAIN = $(DOC).xml
+# all xml sources
+XML = $(notdir $(wildcard $(srcdir)/*.xml))
+# base style sheet
+CSS = base.css
+
+# image sources
+PNG_SRC = 
+FIG_SRC = $(notdir $(wildcard $(srcdir)/*.fig))
+
+### this is the generic bit and you shouln't need to change this
+
+# get the generic docbuilding Makefile stuff
 include $(srcdir)/../manuals.mak
+
+### this is standard automake stuff
+                                                                                
+# package up all the source
+EXTRA_DIST = $(SRC)
+                                                                                
+# install documentation
+docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)/$(DOC)
+doc_DATA = $(PDF_DAT) $(PS_DAT)
+                                                                                
+include $(srcdir)/../htmlinstall.mak
+

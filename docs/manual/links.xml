@@ -9,7 +9,7 @@
     <title>Visualisation of three linked elements</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/linked-elements.&magic;" format="&MAGIC;" />
+          <imagedata fileref="images/linked-elements.&image;" format="&IMAGE;" />
         </imageobject>
       </mediaobject>
   </figure>

@@ -181,7 +181,7 @@ main (int argc, char *argv[])
       <title>The Hello world pipeline</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/hello-world.&magic;" format="&MAGIC;" />
+          <imagedata fileref="images/hello-world.&image;" format="&IMAGE;" />
         </imageobject>
       </mediaobject>  
 
