@@ -1,3 +1,16 @@
+Thomas's new comments on the doc building :
+-------------------------------------------
+* originally the manual was written with DocBook 3.0 in mind, which 
+  supported the graphic tag.  That is now deprecated, so I changed it to 
+  the new mediaobject tag set.
+
+* eps files in images/ should be generated from the makefile.  You need to 
+  have fig2dev installed for that.
+
+
+Wtay's original comments :
+--------------------------
+
 For now use:
 
   db2html gstreamer-manual 
