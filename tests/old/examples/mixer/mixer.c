@@ -1,5 +1,14 @@
 #include <stdlib.h>
 #include <gst/gst.h>
+#include "mixer.h"
+
+#define DEBUG
+
+/* function prototypes */
+
+input_pipe_t*	create_input_pipe (int id, char* location);
+void			destroy_input_pipe (input_pipe_t *pipe);
+
 
 gboolean playing;
 
@@ -17,9 +26,10 @@ void eos(GstElement *element)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *bin_in1, *bin_in2, *main_bin;
-  GstElement *disksrc1, *decoder1, *volenv1;
-  GstElement *disksrc2, *decoder2, *volenv2;
+  input_pipe_t *channel_in1;
+  input_pipe_t *channel_in2;
+  
+  GstElement *main_bin;
   GstElement *adder;
   GstElement *audiosink;
 
@@ -32,64 +42,11 @@ int main(int argc,char *argv[])
     exit(-1);
   }
 
-  /* create input bins */
+  /* create input channels */
 
-  /* create bins to hold the input elements */
-  bin_in1 = gst_bin_new("bin");
-  bin_in2 = gst_bin_new("bin");
+  channel_in1 = create_input_pipe (1, argv[1]);
+  channel_in2 = create_input_pipe (2, argv[2]);
 
-  /* first input bin */
-
-  /* create elements */
-
-  disksrc1 = gst_elementfactory_make("disksrc", "disk_source1");
-  gtk_object_set(GTK_OBJECT(disksrc1),"location", argv[1],NULL);
-  gtk_signal_connect(GTK_OBJECT(disksrc1),"eos",
-                     GTK_SIGNAL_FUNC(eos),NULL);
-  decoder1 = gst_elementfactory_make("mad","decoder1");
-  volenv1 = gst_elementfactory_make("volenv", "volume1");
-
-  /* add to the bin */
-
-  gst_bin_add(GST_BIN(bin_in1), disksrc1);
-  gst_bin_add(GST_BIN(bin_in1), decoder1);
-  gst_bin_add(GST_BIN(bin_in1), volenv1);
-
-  /* connect elements */
-  gst_pad_connect(gst_element_get_pad(disksrc1,"src"),
-                  gst_element_get_pad(decoder1,"sink"));
-  gst_pad_connect(gst_element_get_pad(decoder1,"src"),
-                  gst_element_get_pad(volenv1,"sink"));
-
-  /* add a ghost pad */
-  gst_element_add_ghost_pad (bin_in1, gst_element_get_pad (volenv1, "src"), "channel1");
-
-  /* second input bin */
-
-  /* create elements */
-
-  disksrc2 = gst_elementfactory_make("disksrc", "disk_source2");
-  gtk_object_set(GTK_OBJECT(disksrc2),"location", argv[2],NULL);
-  gtk_signal_connect(GTK_OBJECT(disksrc2),"eos",
-                     GTK_SIGNAL_FUNC(eos),NULL);
-  decoder2 = gst_elementfactory_make("mad","decoder2");
-  volenv2 = gst_elementfactory_make("volenv", "volume2");
-
-  /* add to the bin */
-
-  gst_bin_add(GST_BIN(bin_in2), disksrc2);
-  gst_bin_add(GST_BIN(bin_in2), decoder2);
-  gst_bin_add(GST_BIN(bin_in2), volenv2);
-
-  /* connect elements */
-  gst_pad_connect(gst_element_get_pad(disksrc2,"src"),
-                  gst_element_get_pad(decoder2,"sink"));
-  gst_pad_connect(gst_element_get_pad(decoder2,"src"),
-                  gst_element_get_pad(volenv2,"sink"));
-
-  /* add a ghost pad */
-  gst_element_add_ghost_pad (bin_in2, gst_element_get_pad (volenv2, "src"), "channel2");
-  
 
   /* create adder */
   adder = gst_elementfactory_make("adder", "adderel");
@@ -100,8 +57,8 @@ int main(int argc,char *argv[])
   /* now create main bin */
   main_bin = gst_bin_new("bin");
 
-  gst_bin_add(GST_BIN(main_bin), bin_in1);
-  gst_bin_add(GST_BIN(main_bin), bin_in2);
+  gst_bin_add(GST_BIN(main_bin), channel_in1->pipe);
+  gst_bin_add(GST_BIN(main_bin), channel_in2->pipe);
   gst_bin_add(GST_BIN(main_bin), adder);
   gst_bin_add(GST_BIN(main_bin), audiosink);
 
@@ -109,10 +66,10 @@ int main(int argc,char *argv[])
 
   pad = gst_element_request_pad_by_name (adder, "sink%d");
   g_print ("new pad %s\n", gst_pad_get_name (pad));
-  gst_pad_connect (gst_element_get_pad (bin_in1, "channel1"), pad);
+  gst_pad_connect (gst_element_get_pad (channel_in1->pipe, "channel1"), pad);
   pad = gst_element_request_pad_by_name (adder, "sink%d");
   g_print ("new pad %s\n", gst_pad_get_name (pad));
-  gst_pad_connect (gst_element_get_pad (bin_in2, "channel2"), pad);
+  gst_pad_connect (gst_element_get_pad (channel_in2->pipe, "channel2"), pad);
 
   /* connect adder and audiosink */
 
@@ -121,17 +78,17 @@ int main(int argc,char *argv[])
 
   /* register the volume envelope */
 
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "0:0.000001", NULL);
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "5:0.000001", NULL);
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "10:1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "15:1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "20:0.000001", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "0:0.000001", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "5:0.000001", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "10:1", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "15:1", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "20:0.000001", NULL);
 
-  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "0:1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "5:1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "10:0.000001", NULL);
-  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "15:0.000001", NULL);
-  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "20:1", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "0:1", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "5:1", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "10:0.000001", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "15:0.000001", NULL);
+  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "20:1", NULL);
 
   /* start playing */
   gst_element_set_state(main_bin, GST_STATE_PLAYING);
@@ -145,20 +102,104 @@ int main(int argc,char *argv[])
   /* stop the bin */
   gst_element_set_state(main_bin, GST_STATE_NULL);
 
+  destroy_input_pipe (channel_in1);
+  destroy_input_pipe (channel_in2);
+  
   gst_object_destroy(GST_OBJECT(audiosink));
 
-  gst_object_destroy(GST_OBJECT(disksrc1));
-  gst_object_destroy(GST_OBJECT(decoder1));
-  gst_object_destroy(GST_OBJECT(volenv1));
-
-  gst_object_destroy(GST_OBJECT(disksrc2));
-  gst_object_destroy(GST_OBJECT(decoder2));
-  gst_object_destroy(GST_OBJECT(volenv2));
-
-  gst_object_destroy(GST_OBJECT(bin_in1));
-  gst_object_destroy(GST_OBJECT(bin_in2));
   gst_object_destroy(GST_OBJECT(main_bin));
 
   exit(0);
 }
+
+input_pipe_t*
+create_input_pipe (int id, char* location)
+{
+  /* create an input pipeline, reading from location
+   * return a pointer to the pipe
+   * return NULL if failed
+   */
+
+  input_pipe_t *pipe;
+  char buffer[20]; 		/* hold the names */
+
+
+#ifdef DEBUG
+  printf ("DEBUG : c_i_p : creating pipe with id %d for file %s\n",
+  		  id, location);
+#endif
+  
+  /* allocate pipe */
+
+  pipe = (input_pipe_t *) malloc (sizeof (input_pipe_t));
+  if (pipe == NULL)
+  {
+    printf ("create_input_pipe : could not allocate memory for pipe !\n");
+    return NULL;
+  }
+
+  /* create pipe */
+
+  pipe->pipe = gst_bin_new ("pipeline");
+     
+  /* create elements */
+
+  sprintf (buffer, "disksrc%d", id);
+  pipe->disksrc = gst_elementfactory_make ("disksrc", buffer);
+  gtk_object_set(GTK_OBJECT(pipe->disksrc),"location", location, NULL);
+/*  gtk_signal_connect(GTK_OBJECT(disksrc1),"eos",
+                     GTK_SIGNAL_FUNC(eos),NULL);
+*/
+  sprintf (buffer, "decoder%d", id);
+  pipe->decoder = gst_elementfactory_make("mad", buffer);
+  sprintf (buffer, "volume%d", id);
+  pipe->volenv = gst_elementfactory_make("volenv", buffer);
+
+  gst_bin_add(GST_BIN(pipe->pipe), pipe->disksrc);
+  gst_bin_add(GST_BIN(pipe->pipe), pipe->decoder);
+  gst_bin_add(GST_BIN(pipe->pipe), pipe->volenv);
+
+  /* connect elements */
+
+  gst_pad_connect(gst_element_get_pad(pipe->disksrc,"src"),
+                  gst_element_get_pad(pipe->decoder,"sink"));
+  gst_pad_connect(gst_element_get_pad(pipe->decoder,"src"),
+                  gst_element_get_pad(pipe->volenv,"sink"));
+
+  /* add a ghost pad */
+  sprintf (buffer, "channel%d", id);
+  gst_element_add_ghost_pad (pipe->pipe, 
+                             gst_element_get_pad (pipe->volenv, "src"), buffer);
+
+#ifdef DEBUG
+  printf ("DEBUG : c_i_p : end function\n");
+#endif
+
+  return pipe;
+}
+
+void
+destroy_input_pipe (input_pipe_t *pipe)
+{
+  /* 
+   * destroy an input pipeline
+   */
+   
+#ifdef DEBUG
+  printf ("DEBUG : d_i_p : start\n");
+#endif
+  
+  /* destroy elements */
+
+  gst_object_destroy (GST_OBJECT (pipe->disksrc));
+  gst_object_destroy (GST_OBJECT (pipe->decoder));
+  gst_object_destroy (GST_OBJECT (pipe->volenv));
+
+  gst_object_destroy (GST_OBJECT (pipe->pipe));
+
+  free (pipe);
+}
+
+
+
 
