@@ -26,7 +26,7 @@ available in your system PATH.</para>
 
 <para>There is now an existing package that has all these dependencies built with MSVC7.1. It exists either as precompiled librairies
 and headers in both Release and Debug mode, or as the source package to build it yourself. You can
-find it on <ulink url="http://mukoli.free.fr/gstreamer/">http://mukoli.free.fr/gstreamer/</ulink>.</para>
+find it on <ulink url="http://mukoli.free.fr/gstreamer/deps/">http://mukoli.free.fr/gstreamer/deps/</ulink>.</para>
 
 <note>
 <title>Notes</title>

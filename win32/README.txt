@@ -23,7 +23,7 @@ The GStreamer project depends on other libraries, namely :
 
 There is now an existing package that has all these dependencies built with MSVC7.1. It exists either
 a precompiled librairies and headers in both Release and Debug mode, or as the source package to build
-it yourself. You can find it on http://mukoli.free.fr/gstreamer/.
+it yourself. You can find it on http://mukoli.free.fr/gstreamer/deps/.
 
 NOTE : GNU tools needed that you can find on http://gnuwin32.sourceforge.net/
 - GNU flex      (tested with 2.5.4)
