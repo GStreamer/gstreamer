@@ -269,10 +269,11 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
     poptFreeContext (context);
     return FALSE;
   }
-  poptFreeContext (context);
 
   *argc = poptStrippedArgv (context, *argc, *argv);
   
+  poptFreeContext (context);
+
   return TRUE;
 }
 
