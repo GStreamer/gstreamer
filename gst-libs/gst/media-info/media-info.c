@@ -77,6 +77,16 @@ enum
 
 static GObjectClass *parent_class = NULL;
 
+GST_DEBUG_CATEGORY (gst_media_info_debug);
+void
+gst_media_info_init (void)
+{
+  /* register our debugging category */
+  GST_DEBUG_CATEGORY_INIT (gst_media_info_debug, "GST_MEDIA_INFO", 0,
+                           "GStreamer media-info library");
+  GST_DEBUG ("Initialized media-info library");
+}
+
 GType
 gst_media_info_get_type (void)
 {
@@ -271,7 +281,7 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
   {
     case GST_MEDIA_INFO_STATE_NULL:
       /* need to find type */
-      GMI_DEBUG("idler: NULL, need to find type\n");
+      GST_DEBUG ("idler: NULL, need to find type");
       return gmip_find_type_pre (priv);
 
     case GST_MEDIA_INFO_STATE_TYPEFIND:
@@ -279,7 +289,7 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
       gchar *mime;
       GstElement *decoder;
 
-      GMI_DEBUG("STATE_TYPEFIND\n");
+      GST_DEBUG ("STATE_TYPEFIND");
       if ((priv->type == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline)))
       {
 	GMI_DEBUG("?");
@@ -291,21 +301,21 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
 	return FALSE;
       }
       /* do the state transition */
-      GMI_DEBUG("doing find_type_post\n");
+      GST_DEBUG ("doing find_type_post");
       gmip_find_type_post (priv);
-      GMI_DEBUG("finding out mime type\n");
+      GST_DEBUG ("finding out mime type");
       mime = g_strdup (gst_structure_get_name (
 	    gst_caps_get_structure(priv->type, 0)));
-      GMI_DEBUG("found out mime type: %s\n", mime);
+      GST_DEBUG ("found out mime type: %s", mime);
       decoder = gmi_get_decoder (info, mime);
       if (decoder == NULL)
       {
         /* FIXME: pop up error */
-        GMI_DEBUG("DEBUG: no decoder found for mime %s\n", mime);
+        GST_DEBUG ("no decoder found for mime %s", mime);
         return FALSE;
       }
       priv->stream = gmi_stream_new ();
-      GMI_DEBUG("DEBUG: new stream: %p\n", priv->stream);
+      GST_DEBUG ("new stream: %p", priv->stream);
       priv->stream->mime = mime;
       priv->stream->path = priv->location;
       gmi_set_decoder (info, decoder);
@@ -314,7 +324,7 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
     }
     case GST_MEDIA_INFO_STATE_STREAM:
     {
-      GMI_DEBUG("STATE_STREAM\n");
+      GST_DEBUG ("STATE_STREAM");
       if ((priv->format == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline)))
       {
 	GMI_DEBUG("?");
@@ -348,11 +358,11 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
       if (priv->metadata == NULL)
       {
 	/* this is not a permanent failure */
-        GMI_DEBUG("Couldn't find metadata\n");
+        GST_DEBUG ("Couldn't find metadata");
       }
-      GMI_DEBUG("found metadata of track %ld\n", priv->current_track_num);
+      GST_DEBUG ("found metadata of track %ld", priv->current_track_num);
       if (!gmip_find_track_metadata_post (priv)) return FALSE;
-      GMI_DEBUG("METADATA: going to STREAMINFO\n");
+      GST_DEBUG ("METADATA: going to STREAMINFO");
       priv->state = GST_MEDIA_INFO_STATE_STREAMINFO;
       return gmip_find_track_streaminfo_pre (priv);
     }
@@ -367,10 +377,10 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
       if (priv->streaminfo == NULL)
       {
 	/* this is not a permanent failure */
-        GMI_DEBUG("Couldn't find streaminfo\n");
+        GST_DEBUG ("Couldn't find streaminfo");
       }
       else
-        GMI_DEBUG("found streaminfo of track %ld\n", priv->current_track_num);
+        GST_DEBUG ("found streaminfo of track %ld", priv->current_track_num);
       if (!gmip_find_track_streaminfo_post (priv)) return FALSE;
       priv->state = GST_MEDIA_INFO_STATE_FORMAT;
       return gmip_find_track_format_pre (priv);
@@ -388,7 +398,7 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
         g_warning ("Couldn't find format\n");
 	return FALSE;
       }
-      GMI_DEBUG("found format of track %ld\n", priv->current_track_num);
+      GST_DEBUG ("found format of track %ld", priv->current_track_num);
       if (!gmip_find_track_format_post (priv)) return FALSE;
       /* save the track info */
       priv->stream->tracks = g_list_append (priv->stream->tracks,
@@ -413,7 +423,7 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
       priv->state = GST_MEDIA_INFO_STATE_DONE;
       *streamp = priv->stream;
       priv->stream = NULL;
-      GMI_DEBUG("TOTALLY DONE, setting pointer *streamp to %p\n", *streamp);
+      GST_DEBUG ("TOTALLY DONE, setting pointer *streamp to %p", *streamp);
       gmi_clear_decoder (info);
       return TRUE;
     }
@@ -437,7 +447,7 @@ gst_media_info_read (GstMediaInfo *info, const char *location, guint16 flags)
   gchar *mime;
   int i;
 
-  GMI_DEBUG("DEBUG: gst_media_info_read: start\n");
+  GST_DEBUG ("DEBUG: gst_media_info_read: start");
   gmi_reset (info);		/* reset all structs */
   priv->location = g_strdup (location);
   priv->flags = flags;
@@ -446,7 +456,7 @@ gst_media_info_read (GstMediaInfo *info, const char *location, guint16 flags)
 
   mime = g_strdup (gst_structure_get_name (
 	    gst_caps_get_structure(priv->type, 0)));
-  GMI_DEBUG("mime type: %s\n", mime);
+  GST_DEBUG ("mime type: %s", mime);
 
   /* c) figure out decoder */
   decoder = gmi_get_decoder (info, mime);
@@ -473,13 +483,13 @@ gst_media_info_read (GstMediaInfo *info, const char *location, guint16 flags)
 
   /* e) if we have multiple tracks, loop over them; if not, just get
    * metadata and return it */
-  GMI_DEBUG("DEBUG: num tracks %ld\n", priv->stream->length_tracks);
+  GST_DEBUG ("num tracks %ld", priv->stream->length_tracks);
   for (i = 0; i < priv->stream->length_tracks; ++i)
   {
     priv->current_track = gmi_track_new ();
     if (i > 0)
     {
-      GMI_DEBUG("seeking to track %d\n", i);
+      GST_DEBUG ("seeking to track %d", i);
       gmi_seek_to_track (info, i);
     }
     if (flags & GST_MEDIA_INFO_METADATA)

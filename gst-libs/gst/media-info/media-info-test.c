@@ -46,6 +46,7 @@ main (int argc, char *argv[])
   g_assert (argc > 1);
 
   gst_init (&argc, &argv);
+  gst_media_info_init ();
 
   info = g_object_new (GST_MEDIA_INFO_TYPE, NULL);
   g_print ("stream: %p, &stream: %p\n", stream, &stream);

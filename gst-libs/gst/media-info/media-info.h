@@ -99,6 +99,7 @@ typedef struct
 #define GST_MEDIA_INFO_FORMAT		1 << 5
 #define GST_MEDIA_INFO_ALL		((1 << 6) - 1)
 
+void		gst_media_info_init		(void);
 GType           gst_media_info_get_type		(void);
 
 GstMediaInfo *	gst_media_info_new		(const char *source_element);
