@@ -120,7 +120,7 @@ gst_udpsink_class_init (GstUDPSink *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
-    g_param_spec_string ("host", "nost", "The host to send the packets to",
+    g_param_spec_string ("host", "host", "The host/IP to send the packets to",
                          UDP_DEFAULT_HOST, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
     g_param_spec_int ("port", "port", "The port to send the packets to",
@@ -368,16 +368,33 @@ static gboolean
 gst_udpsink_init_send (GstUDPSink *sink)
 {
   struct hostent *he;
+  struct in_addr addr;
   guint bc_val;
 
   bzero (&sink->theiraddr, sizeof (sink->theiraddr));
   sink->theiraddr.sin_family = AF_INET;         /* host byte order */
-  sink->theiraddr.sin_port = htons (sink->port);     /* short, network byte order */
-  if ((he = gethostbyname (sink->host)) == NULL) {
-    perror("gethostbyname");
-    return FALSE;
+  sink->theiraddr.sin_port = htons (sink->port); /* short, network byte order */
+
+  /* if its an IP address */
+  if (inet_aton (sink->host, &addr)) {
+    sink->theiraddr.sin_addr = 
+		*((struct in_addr *) g_memdup (&addr, sizeof (addr)));
   }
-  sink->theiraddr.sin_addr = *((struct in_addr *) he->h_addr);
+ 
+  /* we dont need to lookup for localhost */
+  else if (strcmp (sink->host, UDP_DEFAULT_HOST) == 0) {
+    sink->theiraddr.sin_addr = *((struct in_addr *) sink->host);
+  }
+
+  /* if its a hostname */
+  else if ((he = gethostbyname (sink->host))) {
+    sink->theiraddr.sin_addr = *((struct in_addr *) he->h_addr);
+  }
+  
+  else {
+     perror("hostname lookup error?");
+     return FALSE;
+  }
 
   if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1) {
      perror("socket");

@@ -41,6 +41,7 @@ extern "C" {
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <arpa/inet.h>
 #include "gstudp.h"
 
 #define GST_TYPE_UDPSINK \
