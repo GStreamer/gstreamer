@@ -90,11 +90,18 @@ else
 fi
 
 dnl check for gstreamer; uninstalled is selected preferentially -- see pkg-config(1)
-PKG_CHECK_MODULES(GST, gstreamer >= 0.3.1, HAVE_GST="yes", HAVE_GST="no")
+PKG_CHECK_MODULES(GST, gstreamer >= $GST_PLUGINS_MAJOR.$GST_PLUGINS_MINOR.$GST_PLUGINS_MICRO,
+  HAVE_GST="yes", HAVE_GST="no")
 
 if test "x$HAVE_GST" = "xno"; then
   AC_MSG_ERROR(no GStreamer found)
 fi
+
+GST_TOOLS_DIR=`pkg-config --variable=toolsdir gstreamer`
+if test -z $GST_TOOLS_DIR; then
+  AC_MSG_ERROR([no tools dir defined in GStreamer pkg-config file; core upgrade needed.])
+fi
+AC_SUBST(GST_TOOLS_DIR)
 
 dnl Set up conditionals for (target) architecture:
 dnl ==============================================
@@ -791,6 +798,7 @@ gst-libs/gst/riff/Makefile
 examples/capsfilter/Makefile
 examples/Makefile
 tools/Makefile
+testsuite/Makefile
 )
 
 AC_OUTPUT
