@@ -1,3 +1,8 @@
+2004-02-11  David Schleef  <ds@schleef.org>
+
+	* gst/gstpad.c: (gst_pad_link_intersect), (gst_pad_link_fixate),
+	(gst_pad_try_set_caps): Fix format strings for GST_PTR_FORMAT.
+
 2004-02-10  Julien MOUTTE <julien@moutte.net>
 
 	* gst/gstevent.c: (_gst_event_free): Sometimes a tag event arrives but

@@ -1046,21 +1046,21 @@ static void gst_pad_link_intersect (GstPadLink *link)
 
   GST_DEBUG ("intersecting link from %s:%s to %s:%s",
       GST_DEBUG_PAD_NAME (link->srcpad), GST_DEBUG_PAD_NAME (link->sinkpad));
-  GST_DEBUG ("srccaps " GST_PTR_FORMAT, link->srccaps);
-  GST_DEBUG ("sinkcaps " GST_PTR_FORMAT, link->sinkcaps);
-  GST_DEBUG ("filtercaps " GST_PTR_FORMAT, link->filtercaps);
+  GST_DEBUG ("srccaps %" GST_PTR_FORMAT, link->srccaps);
+  GST_DEBUG ("sinkcaps %" GST_PTR_FORMAT, link->sinkcaps);
+  GST_DEBUG ("filtercaps %" GST_PTR_FORMAT, link->filtercaps);
 
   pad_intersection = gst_caps_intersect (link->srccaps, link->sinkcaps);
 
   if (link->filtercaps) {
-    GST_DEBUG ("unfiltered intersection " GST_PTR_FORMAT, pad_intersection);
+    GST_DEBUG ("unfiltered intersection %" GST_PTR_FORMAT, pad_intersection);
     link->caps = gst_caps_intersect (pad_intersection, link->filtercaps);
     gst_caps_free (pad_intersection);
   } else {
     link->caps = pad_intersection;
   }
 
-  GST_DEBUG ("intersection " GST_PTR_FORMAT, link->caps);
+  GST_DEBUG ("intersection %" GST_PTR_FORMAT, link->caps);
 }
 
 static gboolean
@@ -1095,7 +1095,7 @@ gst_pad_link_fixate (GstPadLink *link)
   g_return_if_fail (caps != NULL);
   g_return_if_fail (!gst_caps_is_empty(caps));
 
-  GST_DEBUG ("trying to fixate caps " GST_PTR_FORMAT, caps);
+  GST_DEBUG ("trying to fixate caps %" GST_PTR_FORMAT, caps);
 
   while (!gst_caps_is_fixed (caps)) {
     int i;
@@ -1106,31 +1106,31 @@ gst_pad_link_fixate (GstPadLink *link)
 	case 0:
 	  g_signal_emit (G_OBJECT (link->srcpad),
 	      gst_real_pad_signals[REAL_FIXATE], 0, caps, &newcaps);
-	  GST_DEBUG ("app srcpad signal fixated to " GST_PTR_FORMAT, newcaps);
+	  GST_DEBUG ("app srcpad signal fixated to %" GST_PTR_FORMAT, newcaps);
 	  break;
 	case 1:
 	  g_signal_emit (G_OBJECT (link->sinkpad),
 	      gst_real_pad_signals[REAL_FIXATE], 0, caps, &newcaps);
-	  GST_DEBUG ("app sinkpad signal fixated to " GST_PTR_FORMAT, newcaps);
+	  GST_DEBUG ("app sinkpad signal fixated to %" GST_PTR_FORMAT, newcaps);
 	  break;
 	case 2:
           if (GST_RPAD_FIXATEFUNC(link->srcpad)) {
 	    newcaps = GST_RPAD_FIXATEFUNC(link->srcpad) (
 		GST_PAD (link->srcpad), caps);
-	    GST_DEBUG ("srcpad fixated to " GST_PTR_FORMAT, newcaps);
+	    GST_DEBUG ("srcpad fixated to %" GST_PTR_FORMAT, newcaps);
 	  }
 	  break;
 	case 3:
           if (GST_RPAD_FIXATEFUNC(link->sinkpad)) {
 	    newcaps = GST_RPAD_FIXATEFUNC(link->sinkpad) (
 		GST_PAD (link->sinkpad), caps);
-	    GST_DEBUG ("sinkpad fixated to " GST_PTR_FORMAT, newcaps);
+	    GST_DEBUG ("sinkpad fixated to %" GST_PTR_FORMAT, newcaps);
 	  }
 	  break;
 	case 4:
           newcaps = _gst_pad_default_fixate_func (
 	      GST_PAD(link->srcpad), caps);
-	  GST_DEBUG ("core fixated to GST_PTR_FORMAT", newcaps);
+	  GST_DEBUG ("core fixated to % "GST_PTR_FORMAT, newcaps);
 	  break;
       }
       if (newcaps) {
@@ -1332,7 +1332,7 @@ gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
     g_warning ("trying to set non fixed caps on pad %s:%s, not allowed",
                GST_DEBUG_PAD_NAME (pad));
 
-    GST_DEBUG ("unfixed caps " GST_PTR_FORMAT, caps);
+    GST_DEBUG ("unfixed caps %" GST_PTR_FORMAT, caps);
     return GST_PAD_LINK_REFUSED;
   }
 
