@@ -330,7 +330,7 @@ gst_mp3parse_chain (GstPad * pad, GstData * _data)
     GST_DEBUG ("mp3parse: offset %ld, size %ld ", offset, size);
 
     /* search for a possible start byte */
-    for (; ((data[offset] != 0xff) && (offset < size)); offset++)
+    for (; ((offset < size - 4) && (data[offset] != 0xff)); offset++)
       skipped++;
     if (skipped && !mp3parse->in_flush) {
       GST_DEBUG ("mp3parse: **** now at %ld skipped %d bytes", offset, skipped);
