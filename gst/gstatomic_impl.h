@@ -206,7 +206,7 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 }
 
 /***** Sun SPARC *****/
-#elif defined(HAVE_CPU_SPARC) && defined(__GNUC__)
+#elif defined(HAVE_CPU_SPARC) && defined(__GNUC__) && 0
 
 GST_INLINE_FUNC void 	gst_atomic_int_destroy 	(GstAtomicInt *aint) { } 
 
@@ -271,7 +271,7 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
   register int increment asm ("g2");
 
   ptr = &aint->counter;
-  increment = val;
+  increment = 1;
 
   __asm__ __volatile__(
     "mov    %%o7, %%g4\n\t"
