@@ -481,6 +481,52 @@ gst_pad_set_active (GstPad * pad, gboolean active)
 }
 
 /**
+ * gst_pad_set_active_recursive:
+ * @pad: the #GstPad to activate or deactivate.
+ * @active: TRUE to activate the pad.
+ *
+ * Activates or deactivates the given pad and all internally linked
+ * pads upstream until it finds an element with multiple source pads.
+ */
+void
+gst_pad_set_active_recursive (GstPad * pad, gboolean active)
+{
+  GstElement *parent;
+  const GList *int_links;
+
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (GST_PAD_IS_SRC (pad));
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+      "Recursively %s pad %s:%s", active ? "activating" : "deactivating",
+      GST_DEBUG_PAD_NAME (pad));
+
+  gst_pad_set_active (pad, active);
+
+  /* If we have more than one sourcepad, then the other pads should
+   * possibly be kept active. FIXME: maybe we should recurse
+   * activation if any one pad is active and recurse deactivation
+   * if no single pad is active? */
+  parent = gst_pad_get_parent (pad);
+  if (!parent || parent->numsrcpads > 1)
+    return;
+
+  for (int_links = gst_pad_get_internal_links (pad);
+      int_links; int_links = g_list_next (int_links)) {
+    GstPad *sinkpad = GST_PAD (int_links->data);
+    GstPad *peer = GST_PAD_PEER (sinkpad);
+
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, sinkpad,
+        "Recursing %s on pad %s:%s",
+        active ? "activation" : "deactivation", GST_DEBUG_PAD_NAME (sinkpad));
+
+    gst_pad_set_active (sinkpad, active);
+    if (peer)
+      gst_pad_set_active_recursive (peer, active);
+  }
+}
+
+/**
  * gst_pad_is_active:
  * @pad: the #GstPad to query
  *

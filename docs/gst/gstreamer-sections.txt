@@ -974,6 +974,7 @@ gst_pad_set_name
 gst_pad_get_name
 gst_pad_get_direction
 gst_pad_set_active
+gst_pad_set_active_recursive
 gst_pad_is_active
 gst_pad_set_element_private
 gst_pad_get_element_private

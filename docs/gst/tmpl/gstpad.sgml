@@ -529,6 +529,15 @@ Checks if the pad is a sink pad.
 @active: 
 
 
+<!-- ##### FUNCTION gst_pad_set_active_recursive ##### -->
+<para>
+
+</para>
+
+@pad: 
+@active: 
+
+
 <!-- ##### FUNCTION gst_pad_is_active ##### -->
 <para>
 

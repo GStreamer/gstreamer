@@ -366,6 +366,7 @@ G_CONST_RETURN gchar*	gst_pad_get_name			(GstPad *pad);
 GstPadDirection		gst_pad_get_direction			(GstPad *pad);
 
 void			gst_pad_set_active			(GstPad *pad, gboolean active);
+void			gst_pad_set_active_recursive		(GstPad *pad, gboolean active);
 gboolean		gst_pad_is_active			(GstPad *pad);
 
 void			gst_pad_set_element_private		(GstPad *pad, gpointer priv);
