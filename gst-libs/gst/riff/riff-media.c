@@ -297,6 +297,13 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
         *codec_name = g_strdup ("Xan Wing Commander 4");
       break;
 
+    case GST_MAKE_FOURCC ('I', 'V', '5', '0'):
+      caps = gst_caps_new_simple ("video/x-intel",
+          "ivversion", G_TYPE_INT, 5, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Intel Video 5");
+      break;
+
     default:
       GST_WARNING ("Unknown video fourcc " GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
@@ -584,6 +591,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('R', 'L', 'E', ' '),
     GST_MAKE_FOURCC ('D', 'I', 'B', ' '),
     GST_MAKE_FOURCC ('X', 'x', 'a', 'n'),
+    GST_MAKE_FOURCC ('I', 'V', '5', '0'),
     /* FILL ME */
     0
   };
