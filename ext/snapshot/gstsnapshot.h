@@ -38,18 +38,18 @@ extern "C" {
 #define GST_TYPE_SNAPSHOT \
   (gst_snapshot_get_type())
 #define GST_SNAPSHOT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SNAPSHOT,GstShot))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SNAPSHOT,GstSnapshot))
 #define GST_SNAPSHOT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SNAPSHOT,GstShot))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SNAPSHOT,GstSnapshot))
 #define GST_IS_SNAPSHOT(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SNAPSHOT))
 #define GST_IS_SNAPSHOT_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SNAPSHOT))
 
-typedef struct _GstShot GstShot;
-typedef struct _GstShotClass GstShotClass;
+typedef struct _GstSnapshot GstSnapshot;
+typedef struct _GstSnapshotClass GstSnapshotClass;
 
-struct _GstShot {
+struct _GstSnapshot {
   GstElement element;
 
   guint32 format;
@@ -69,7 +69,7 @@ struct _GstShot {
   GstPad *sinkpad,*srcpad;
 };
 
-struct _GstShotClass {
+struct _GstSnapshotClass {
   GstElementClass parent_class;
 
   void (*snapshot)  (GstElement *elem);
