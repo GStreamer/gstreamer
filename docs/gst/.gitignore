@@ -4,3 +4,7 @@ html
 sgml
 gstreamer.signals
 gstreamer.html
+gstreamer-unused.txt
+gstreamer-decl-list.txt
+gstreamer.args
+
