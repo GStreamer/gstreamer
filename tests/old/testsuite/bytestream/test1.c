@@ -185,12 +185,9 @@ main (int argc, char *argv[])
   bs = gst_element_factory_make ("bstest", "bs");
   g_assert (bs);
 
-  gst_element_connect (src, "src", bs, "sink");
-  gst_element_connect (bs, "src", sink, "sink");
+  gst_element_connect_many (src, bs, sink);
 
-  gst_bin_add (GST_BIN (pipeline), src);
-  gst_bin_add (GST_BIN (pipeline), bs);
-  gst_bin_add (GST_BIN (pipeline), sink);
+  gst_bin_add_many (GST_BIN (pipeline), src, bs, sink);
 
   walk = params;
 
