@@ -250,7 +250,11 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg2subt.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg2types.so
-
+%{_libdir}/gstreamer-%{majorminor}/libgstmplex.so
+%{_libdir}/gstreamer-%{majorminor}/libgstoverlay.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsmoothwave.so
+%{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
+%{_libdir}/gstreamer-%{majorminor}/libgsttextoverlay.so
 
 # non-core plugins with external dependencies
 @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -302,6 +306,8 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/resample/resample.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/audioclock.h
+
 %{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so
@@ -820,6 +826,9 @@ Plug-in for playing ASF movies under GStreamer.
 
 
 %changelog
+* Tue Aug 19 2003 Christian Schaller <Uraeus@Gnome.org>
+- Add new plugins
+
 * Sat Jul 12 2003 Thomas Vander Stichele <thomas at apestaart dot org>
 - move gst/ mpeg plugins to base package
 - remove hermes conditional from snapshot
