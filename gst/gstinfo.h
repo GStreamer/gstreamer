@@ -30,6 +30,8 @@
 #include <gst/gstlog.h>
 #include <gst/gstconfig.h>
 
+G_BEGIN_DECLS
+
 /*
  * GStreamer's debugging subsystem is an easy way to get information about what
  * the application is doing.
@@ -508,5 +510,7 @@ gchar*		_gst_debug_nameof_funcptr 	(void *			ptr);
 #endif /* GST_DISABLE_GST_DEBUG */
 
 void gst_debug_print_stack_trace (void);
+
+G_END_DECLS
 
 #endif /* __GSTINFO_H__ */
