@@ -55,6 +55,9 @@ static gboolean gst_initialized = FALSE;
 static gboolean _gst_initialization_failure = FALSE;
 extern gint _gst_trace_on;
 
+/* set to TRUE when segfaults need to be left as is */
+gboolean _gst_enable_segfault = FALSE;
+
 extern GThreadFunctions gst_thread_dummy_functions;
 
 
@@ -96,6 +99,7 @@ enum {
   ARG_PLUGIN_SPEW,
   ARG_PLUGIN_PATH,
   ARG_PLUGIN_LOAD,
+  ARG_SEGFAULT_ENABLE,
   ARG_SCHEDULER,
   ARG_REGISTRY
 };
@@ -122,6 +126,7 @@ static const struct poptOption gstreamer_options[] = {
   {"gst-plugin-spew",    NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_PLUGIN_SPEW,    N_("enable verbose plugin loading diagnostics"), NULL},
   {"gst-plugin-path",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH,    N_("'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins"), "PATHS"},
   {"gst-plugin-load",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD,    N_("comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH"), "PLUGINS"},
+  {"gst-enable-segfault",NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_SEGFAULT_ENABLE,N_("enable receiving of segmentation faults during plugin loading"), NULL},
   {"gst-scheduler",      NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,      N_("scheduler to use ('"GST_SCHEDULER_DEFAULT_NAME"' is the default)"), "SCHEDULER"},
   {"gst-registry",       NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,       N_("registry to use") , "REGISTRY"},
   POPT_TABLEEND
@@ -699,6 +704,9 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
       break;
     case ARG_PLUGIN_LOAD:
       split_and_iterate (arg, ",", prepare_for_load_plugin_func, NULL);
+      break;
+    case ARG_SEGFAULT_ENABLE:
+      _gst_enable_segfault = TRUE;
       break;
     case ARG_SCHEDULER:
       gst_scheduler_factory_set_default_name (arg);
