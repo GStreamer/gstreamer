@@ -23,8 +23,6 @@
 #include "config.h"
 #endif
 
-#include <glib.h>
-
 #include "mixertrack.h"
 
 enum
@@ -98,18 +96,18 @@ gst_mixer_track_class_init (GstMixerTrackClass * klass)
 
   g_object_class_install_property (object_klass, ARG_MIN_VOLUME,
       g_param_spec_int ("min_volume", "Minimum volume level",
-          "The minimum possible volume level", G_MININT32, G_MAXINT,
+          "The minimum possible volume level", G_MININT, G_MAXINT,
           0, G_PARAM_READABLE));
 
   g_object_class_install_property (object_klass, ARG_MAX_VOLUME,
       g_param_spec_int ("max_volume", "Maximum volume level",
-          "The maximum possible volume level", G_MININT32, G_MAXINT,
+          "The maximum possible volume level", G_MININT, G_MAXINT,
           0, G_PARAM_READABLE));
 
   g_object_class_install_property (object_klass, ARG_FLAGS,
       g_param_spec_uint ("flags", "Flags",
           "Flags indicating the type of mixer track",
-          0, G_MAXUINT32, 0, G_PARAM_READABLE));
+          0, G_MAXUINT, 0, G_PARAM_READABLE));
 
   g_object_class_install_property (object_klass, ARG_NUM_CHANNELS,
       g_param_spec_int ("num_channels", "Number of channels",
