@@ -28,7 +28,7 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_media_info_debug);
 #define GST_CAT_DEFAULT gst_media_info_debug
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 static gboolean _gmi_debug = TRUE;
 #else
@@ -115,11 +115,11 @@ void		deep_notify_callback            (GObject *object,
 						 GParamSpec *pspec,
 						 GstMediaInfoPriv *priv);
 void		found_tag_callback		(GObject *pipeline, GstElement *source, GstTagList *tags, GstMediaInfoPriv *priv);
-void		error_callback			(GObject *element, GstElement *source, GError *error, gchar *debug);
+void		error_callback			(GObject *element, GstElement *source, GError *error, gchar *debug, GstMediaInfoPriv *priv);
 
-gboolean	gmip_find_type_pre		(GstMediaInfoPriv *priv);
+gboolean	gmip_find_type_pre		(GstMediaInfoPriv *priv, GError **error);
 gboolean	gmip_find_type_post		(GstMediaInfoPriv *priv);
-gboolean	gmip_find_type			(GstMediaInfoPriv *priv);
+gboolean	gmip_find_type			(GstMediaInfoPriv *priv, GError **error);
 gboolean	gmip_find_stream_pre		(GstMediaInfoPriv *priv);
 gboolean	gmip_find_stream_post		(GstMediaInfoPriv *priv);
 gboolean	gmip_find_stream			(GstMediaInfoPriv *priv);

@@ -88,9 +88,11 @@ main (int argc, char *argv[])
   }
 
   g_assert (G_IS_OBJECT (info));
-  if (!gst_media_info_set_source (info, "gnomevfssrc"))
+  if (!gst_media_info_set_source (info, "gnomevfssrc", &error))
   {
     g_print ("Could not set gnomevfssrc as a source\n");
+    g_print ("reason: %s\n", error->message);
+    g_error_free (error);
     return -1;
   }
 
@@ -101,11 +103,16 @@ main (int argc, char *argv[])
     /*
     stream = gst_media_info_read (info, argv[i], GST_MEDIA_INFO_ALL);
     */
-    gst_media_info_read_with_idler (info, argv[i], GST_MEDIA_INFO_ALL);
-    while (gst_media_info_read_idler (info, &stream) && stream == NULL)
+    gst_media_info_read_with_idler (info, argv[i], GST_MEDIA_INFO_ALL, &error);
+    while (gst_media_info_read_idler (info, &stream, &error) && stream == NULL)
       /* keep idling */ g_print ("+");
     g_print ("\nFILE: %s\n", argv[i]);
     g_print ("stream: %p, &stream: %p\n", stream, &stream);
+    if (error)
+    {
+      g_print ("Error reading media info: %s\n", error->message);
+      g_error_free (error);
+    }
     if (stream)
       info_print (stream);
     else
