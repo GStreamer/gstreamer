@@ -1891,9 +1891,7 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
             break;
         }
 
-        if (((cluster_time + time == 0) ||
-                ((GstMatroskaTrackAudioContext *) demux->src[stream])->
-                first_frame)
+        if (((GstMatroskaTrackAudioContext *) demux->src[stream])->first_frame
             && (!strcmp (demux->src[stream]->codec_id,
                     GST_MATROSKA_CODEC_ID_AUDIO_VORBIS))) {
           /* start of the stream and vorbis audio, need to send the codec_priv
