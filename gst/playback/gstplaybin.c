@@ -261,7 +261,7 @@ gen_video_element (GstPlayBin * play_bin)
   GstElement *sink;
 
   element = gst_bin_new ("vbin");
-  conv = gst_element_factory_make ("ffmpegcolorspace", "conv");
+  conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
   if (play_bin->video_sink) {
     sink = play_bin->video_sink;
   } else {
@@ -288,7 +288,7 @@ gen_audio_element (GstPlayBin * play_bin)
   GstElement *sink;
 
   element = gst_bin_new ("abin");
-  conv = gst_element_factory_make ("audioconvert", "conv");
+  conv = gst_element_factory_make ("audioconvert", "aconv");
   if (play_bin->audio_sink) {
     sink = play_bin->audio_sink;
   } else {

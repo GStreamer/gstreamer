@@ -232,7 +232,7 @@ compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 static void
 print_feature (GstPluginFeature * feature)
 {
-  GST_DEBUG ("%s\n", gst_plugin_feature_get_name (feature));
+  GST_DEBUG ("%s", gst_plugin_feature_get_name (feature));
 }
 
 static void
@@ -383,14 +383,14 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
     GstElement *element;
     gboolean ret;
 
-    GST_DEBUG ("trying to link %s\n",
+    GST_DEBUG ("trying to link %s",
         gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
 
     element = gst_element_factory_create (factory, NULL);
     if (element == NULL)
       continue;
 
-    GST_DEBUG ("adding %s\n", gst_element_get_name (element));
+    GST_DEBUG ("adding %s", gst_element_get_name (element));
     gst_bin_add (GST_BIN (decode_bin), element);
     decode_bin->elements = g_list_prepend (decode_bin->elements, element);
 
@@ -428,7 +428,7 @@ no_more_pads (GstElement * element, GstDynamic * dynamic)
 {
   GstDecodeBin *decode_bin = dynamic->decode_bin;
 
-  GST_DEBUG ("decodebin: no more pads\n");
+  GST_DEBUG ("decodebin: no more pads");
 
   g_signal_handler_disconnect (G_OBJECT (dynamic->element), dynamic->np_sig_id);
   g_signal_handler_disconnect (G_OBJECT (dynamic->element),

@@ -38,6 +38,7 @@ typedef enum {
   GST_STREAM_TYPE_UNKNOWN = 0,
   GST_STREAM_TYPE_AUDIO   = 1,
   GST_STREAM_TYPE_VIDEO   = 2,
+  GST_STREAM_TYPE_TEXT    = 3,
 } GstStreamType;
 
 struct _GstStreamInfo {

@@ -64,7 +64,10 @@ static void gst_play_base_bin_add_element (GstBin * bin, GstElement * element);
 static void gst_play_base_bin_remove_element (GstBin * bin,
     GstElement * element);
 
+extern GstElementStateReturn gst_element_set_state_func (GstElement * element,
+    GstElementState state);
 
+static GstElementClass *element_class;
 static GstElementClass *parent_class;
 static guint gst_play_base_bin_signals[LAST_SIGNAL] = { 0 };
 
@@ -105,6 +108,7 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   gstelement_klass = (GstElementClass *) klass;
   gstbin_klass = (GstBinClass *) klass;
 
+  element_class = g_type_class_ref (gst_element_get_type ());
   parent_class = g_type_class_ref (gst_bin_get_type ());
 
   gobject_klass->set_property = gst_play_base_bin_set_property;
@@ -144,6 +148,8 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_base_bin_dispose);
 
+  /* we handle state changes like an element */
+  gstelement_klass->set_state = GST_ELEMENT_CLASS (element_class)->set_state;
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_base_bin_change_state);
 
@@ -250,7 +256,7 @@ unknown_type (GstElement * element, GstCaps * caps,
 static void
 no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
-  GST_DEBUG ("no more pads\n");
+  GST_DEBUG ("no more pads");
   g_mutex_lock (play_base_bin->preroll_lock);
   g_cond_signal (play_base_bin->preroll_cond);
   g_mutex_unlock (play_base_bin->preroll_lock);
@@ -268,12 +274,12 @@ new_stream (GstElement * element, GstPad * pad, gboolean last,
   GstStreamType type;
   GstPad *srcpad;
 
-  GST_DEBUG ("play base: new stream\n");
+  GST_DEBUG ("play base: new stream");
 
   caps = gst_pad_get_caps (pad);
 
   if (gst_caps_is_empty (caps)) {
-    g_warning ("no type on pad %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+    g_warning ("no type on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
     return;
   }
 
@@ -303,7 +309,7 @@ new_stream (GstElement * element, GstPad * pad, gboolean last,
         g_list_prepend (play_base_bin->preroll_elems, new_element);
 
     gst_pad_link (pad, gst_element_get_pad (new_element, "sink"));
-    gst_element_sync_state_with_parent (new_element);
+    gst_element_set_state (new_element, GST_STATE_PAUSED);
   }
 
   info = gst_stream_info_new (srcpad, type, NULL);
@@ -481,8 +487,7 @@ gst_play_base_bin_change_state (GstElement * element)
       if (sched) {
         gst_element_set_scheduler (play_base_bin->thread, sched);
 
-        gst_object_set_parent (GST_OBJECT (play_base_bin->thread),
-            GST_OBJECT (play_base_bin));
+        //gst_object_set_parent (GST_OBJECT (play_base_bin->thread), GST_OBJECT (play_base_bin));
 
         gst_element_set_state (play_base_bin->thread, GST_STATE_READY);
 
@@ -599,7 +604,7 @@ void
 gst_play_base_bin_mute_stream (GstPlayBaseBin * play_base_bin,
     GstStreamInfo * info, gboolean mute)
 {
-  GST_DEBUG ("mute\n");
+  GST_DEBUG ("mute");
 }
 
 void
@@ -624,11 +629,11 @@ gst_play_base_bin_link_stream (GstPlayBaseBin * play_base_bin,
   }
   if (info) {
     if (!gst_pad_link (info->pad, pad)) {
-      GST_DEBUG ("could not link\n");
+      GST_DEBUG ("could not link");
       gst_play_base_bin_mute_stream (play_base_bin, info, TRUE);
     }
   } else {
-    GST_DEBUG ("could not find pad to link\n");
+    GST_DEBUG ("could not find pad to link");
   }
 }
 
@@ -636,7 +641,7 @@ void
 gst_play_base_bin_unlink_stream (GstPlayBaseBin * play_base_bin,
     GstStreamInfo * info)
 {
-  GST_DEBUG ("unlink\n");
+  GST_DEBUG ("unlink");
 }
 
 const GList *
