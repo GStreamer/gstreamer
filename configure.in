@@ -540,6 +540,7 @@ examples/Makefile
 examples/autoplug/Makefile
 examples/helloworld/Makefile
 examples/helloworld2/Makefile
+examples/launch/Makefile
 examples/queue/Makefile
 examples/queue2/Makefile
 examples/queue3/Makefile
