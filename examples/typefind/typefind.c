@@ -18,7 +18,7 @@ type_found (GstElement *typefind, GstCaps* caps)
 int 
 main(int argc, char *argv[]) 
 {
-  GstElement *bin, *disksrc, *typefind;
+  GstElement *bin, *filesrc, *typefind;
 
   gst_init(&argc,&argv);
 
@@ -28,25 +28,25 @@ main(int argc, char *argv[])
   }
 
   /* create a new bin to hold the elements */
-  bin = gst_bin_new("bin");
+  bin = gst_pipeline_new("bin");
   g_assert(bin != NULL);
 
-  /* create a disk reader */
-  disksrc = gst_elementfactory_make("disksrc", "disk_source");
-  g_assert(disksrc != NULL);
-  g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
+  /* create a file reader */
+  filesrc = gst_elementfactory_make("filesrc", "file_source");
+  g_assert(filesrc != NULL);
+  g_object_set(G_OBJECT(filesrc),"location", argv[1],NULL);
 
   typefind = gst_elementfactory_make("typefind", "typefind");
   g_assert(typefind != NULL);
 
   /* add objects to the main pipeline */
-  gst_bin_add(GST_BIN(bin), disksrc);
+  gst_bin_add(GST_BIN(bin), filesrc);
   gst_bin_add(GST_BIN(bin), typefind);
 
   g_signal_connect (G_OBJECT (typefind), "have_type", 
 		    G_CALLBACK (type_found), NULL);
 
-  gst_pad_connect(gst_element_get_pad(disksrc,"src"),
+  gst_pad_connect(gst_element_get_pad(filesrc,"src"),
                   gst_element_get_pad(typefind,"sink"));
 
   /* start playing */
