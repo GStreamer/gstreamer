@@ -225,7 +225,7 @@ gst_vorbisfile_init (VorbisFile * vorbisfile)
 static size_t
 gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 {
-  guint32 got_bytes = 0;
+  guint32 got_bytes;
   guint8 *data;
   size_t read_size = size * nmemb;
 
@@ -243,9 +243,10 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
   if (read_size == 0 || vorbisfile->eos)
     return 0;
   
-  while (got_bytes == 0) {
+  do {
     got_bytes = gst_bytestream_peek_bytes (vorbisfile->bs, &data, read_size);
-    if (got_bytes < read_size) {
+
+    if (got_bytes == 0) {
       GstEvent *event;
       guint32 avail;
     
@@ -255,11 +256,8 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 	case GST_EVENT_EOS:
 	  GST_DEBUG (0, "eos");
           vorbisfile->eos = TRUE;
-          if (avail == 0) {
-            gst_event_unref (event);
-            return 0;
-	  }
-	  break;
+          gst_event_unref (event);
+          goto done;
 	case GST_EVENT_DISCONTINUOUS:
 	  GST_DEBUG (0, "discont");
 	  vorbisfile->need_discont = TRUE;
@@ -267,18 +265,15 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
           break;
       }
       gst_event_unref (event);
-      if (avail > 0) 
-        got_bytes = gst_bytestream_peek_bytes (vorbisfile->bs, &data, avail);
-      else
-	got_bytes = 0;
     }
-  }
+  } while (got_bytes == 0);
 
   memcpy (ptr, data, got_bytes);
   gst_bytestream_flush_fast (vorbisfile->bs, got_bytes);
 
   vorbisfile->offset += got_bytes;
 
+done:
   return got_bytes / size;
 }
 
