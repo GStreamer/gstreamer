@@ -57,11 +57,15 @@ struct _Audioscale {
 
   /* audio state */
   gboolean passthru;
-  gint64 offset;
+  gint64 gst_resample_offset;
 
-  gst_resample_t *gst_resample;
-
-  GstBuffer *outbuf;
+  gint64* offsets;
+  gboolean increase; /* is the rate change an increase */
+  gint num_iterations; /* number of iterations through gst_audioscale/(increase|decrease)_rate */
+  
+  gst_resample_t gst_resample_template;
+  gst_resample_t* gst_resample;
+  GstBuffer* outbuf;
 };
 
 struct _AudioscaleClass {
