@@ -1,3 +1,9 @@
+2004-10-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_class_init),
+	(cdparanoia_get), (cdparanoia_open):
+	  Report discid as metadata, add duration.
+
 2004-10-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (setup_source):
