@@ -1,3 +1,11 @@
+2004-07-30  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* ext/libpng/gstpngenc.c: (gst_pngenc_class_init),
+	(gst_pngenc_init), (gst_pngenc_chain), (gst_pngenc_get_property),
+	(gst_pngenc_set_property):
+	* ext/libpng/gstpngenc.h:
+	Added newmedia support to pngenc so now gst-launch-0.8 videotestsrc ! ffmpegcolorspace ! pngenc snapshot=false newmedia=true ! multifilesink location=blah%d.png works as expected
+
 2004-07-30  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoraenc.c: (gst_theora_enc_class_init),
