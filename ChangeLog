@@ -1,6 +1,11 @@
 2005-01-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybasebin.c: (probe_triggered):
+	  Of course, only pause if group is done...
+
+2005-01-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybasebin.c: (probe_triggered):
 	  Thread safety.
 
 2005-01-16  Jan Schmidt  <thaytan@mad.scientist.com>
