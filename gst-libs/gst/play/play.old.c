@@ -613,7 +613,7 @@ gst_play_class_init (GstPlayClass *klass)
 			      NULL, NULL,
 			      gst_marshal_VOID__OBJECT_PARAM, 
 			      G_TYPE_NONE, 2, 
-			      G_TYPE_OBJECT, G_TYPE_PARAM);
+			      G_TYPE_OBJECT, G_TYPE_STRING);
 	
 	gst_play_signals [STATE_CHANGE] = 
 		g_signal_new ("state_change", 
