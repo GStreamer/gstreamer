@@ -1232,8 +1232,6 @@ plugins/flac/Makefile
 plugins/jpeg/Makefile
 plugins/mp3decode/Makefile
 plugins/mp3decode/types/Makefile
-plugins/mp3decode/xa/Makefile
-plugins/mp3decode/mpg123/Makefile
 plugins/mp3decode/mad/Makefile
 plugins/mp3decode/parse/Makefile
 plugins/mp3encode/Makefile
@@ -1247,15 +1245,12 @@ plugins/mpeg2/video/Makefile
 plugins/mpeg2/mpeg2enc/Makefile
 plugins/mpeg2/mpeg2dec/Makefile
 plugins/mpeg2/subtitles/Makefile
-plugins/mpeg2/videoparse/Makefile
 plugins/mpeg2/mpegtypes/Makefile
 plugins/mpeg1/Makefile
 plugins/mpeg1/mpegtypes/Makefile
 plugins/mpeg1/mpegaudio/Makefile
 plugins/mpeg1/system_encode/Makefile
 plugins/mpeg1/mpeg1encoder/Makefile
-plugins/mpeg1video/Makefile
-plugins/mpeg1video/parse/Makefile
 plugins/oss/Makefile
 plugins/rtp/Makefile
 plugins/mulaw/Makefile
