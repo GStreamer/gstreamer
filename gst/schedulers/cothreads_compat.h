@@ -21,13 +21,13 @@
  */
 
 /* use the old cothreads implementation in gst/cothreads.[ch] */
-#if defined(_COTHREADS_BASIC)
+#if defined(_COTHREADS_OMEGA)
  
 #include "../cothreads.h"
 
 /* the name of this cothreads type */
-#define COTHREADS_NAME		"basic"
-#define COTHREADS_NAME_CAPITAL	"Basic"
+#define COTHREADS_NAME		"omega"
+#define COTHREADS_NAME_CAPITAL	"Omega"
 
 /* unify the structs 
  *
@@ -70,14 +70,14 @@ typedef cothread_state cothread;
   
   
 /* use the new cothreads implementation in libs/ext/cothreads */
-#elif defined(_COTHREADS_STANDARD)
+#elif defined(_COTHREADS_WINGO)
 
 #include <cothreads/cothreads.h>
 #include <errno.h>
 
 /* the name of this cothreads */
-#define COTHREADS_NAME		"standard"
-#define COTHREADS_NAME_CAPITAL	"Standard"
+#define COTHREADS_NAME		"wingo"
+#define COTHREADS_NAME_CAPITAL	"Wingo"
 
 /* unify the structs 
  *

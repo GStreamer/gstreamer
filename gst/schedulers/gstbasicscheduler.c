@@ -244,7 +244,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_plugin_set_longname (plugin, "A basic scheduler");
 
-  factory = gst_scheduler_factory_new (COTHREADS_NAME,
+  factory = gst_scheduler_factory_new ("basic"COTHREADS_NAME,
 	                              "A basic scheduler using "COTHREADS_NAME" cothreads",
 		                      gst_basic_scheduler_get_type());
 
@@ -260,7 +260,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 GstPluginDesc plugin_desc = {
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "gst"COTHREADS_NAME"scheduler",
+  "gstbasic"COTHREADS_NAME"scheduler",
   plugin_init
 };
 

@@ -198,7 +198,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_plugin_set_longname (plugin, "A fast scheduler");
 
   factory = gst_scheduler_factory_new ("fast"COTHREADS_NAME,
-	                              "A fast scheduler, it uses "COTHREADS_NAME" cothreads",
+	                              "A fast scheduler using "COTHREADS_NAME" cothreads",
 		                      gst_fast_scheduler_get_type());
 
   if (factory != NULL) {
@@ -213,7 +213,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 GstPluginDesc plugin_desc = {
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "gstfast"COTHREADS_NAME_CAPITAL"scheduler",
+  "gstfast"COTHREADS_NAME"scheduler",
   plugin_init
 };
 
