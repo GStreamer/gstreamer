@@ -50,6 +50,8 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
   GstProtocolInfo *info;
   GstPad *pad;
 
+  GST_LOG ("Opening %s", filename);
+
   info = g_new0 (GstProtocolInfo, 1);
   info->flags = flags;
 
@@ -96,7 +98,7 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
   guint32 total, request;
   guint8 *data;
   GstProtocolInfo *info;
-  gboolean have_event;
+  gboolean have_event, will_get_eos;
 
   info = (GstProtocolInfo *) h->priv_data;
 
@@ -108,12 +110,12 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
     return 0;
 
   do {
-    have_event = FALSE;
+    have_event = FALSE, will_get_eos = FALSE;
 
     /* prevent EOS */
-    if (gst_bytestream_tell (bs) + size > gst_bytestream_length (bs)) {
+    if (gst_bytestream_tell (bs) + size >= gst_bytestream_length (bs)) {
       request = (int) (gst_bytestream_length (bs) - gst_bytestream_tell (bs));
-      info->eos = TRUE;
+      will_get_eos = TRUE;
     } else {
       request = size;
     }
@@ -134,6 +136,8 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
         g_warning ("gstffmpegprotocol: no bytestream event");
         return total;
       }
+      GST_LOG ("Reading (req %d, got %d) gave event of type %d",
+          request, total, GST_EVENT_TYPE (event));
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_DISCONTINUOUS:
           gst_event_unref (event);
@@ -155,6 +159,10 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
           gst_pad_event_default (info->pad, event);
           break;
       }
+    } else {
+      GST_DEBUG ("got data (%d bytes)", request);
+      if (will_get_eos)
+        info->eos = TRUE;
     }
   } while ((!info->eos && total != request) || have_event);
 
@@ -170,12 +178,16 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
   GstByteStream *bs;
   GstProtocolInfo *info;
 
+  GST_DEBUG ("Reading %d bytes of data", size);
+
   info = (GstProtocolInfo *) h->priv_data;
   bs = info->bs;
   res = gst_ffmpegdata_peek (h, buf, size);
   if (res > 0) {
     gst_bytestream_flush_fast (bs, res);
   }
+
+  GST_DEBUG ("Returning %d bytes", res);
 
   return res;
 }
@@ -185,6 +197,8 @@ gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
 {
   GstProtocolInfo *info;
   GstBuffer *outbuf;
+
+  GST_DEBUG ("Writing %d bytes", size);
 
   info = (GstProtocolInfo *) h->priv_data;
 
@@ -206,6 +220,8 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
   GstSeekType seek_type = 0;
   GstProtocolInfo *info;
   guint64 newpos;
+
+  GST_DEBUG ("Seeking to %" G_GINT64_FORMAT ", whence=%d", pos, whence);
 
   info = (GstProtocolInfo *) h->priv_data;
 
@@ -312,6 +328,8 @@ gst_ffmpegdata_close (URLContext * h)
   GstProtocolInfo *info;
 
   info = (GstProtocolInfo *) h->priv_data;
+
+  GST_LOG ("Closing file");
 
   switch (info->flags) {
     case URL_WRONLY:{

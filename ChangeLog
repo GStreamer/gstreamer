@@ -1,5 +1,13 @@
 2004-12-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_open),
+	(gst_ffmpegdata_peek), (gst_ffmpegdata_read),
+	(gst_ffmpegdata_write), (gst_ffmpegdata_seek),
+	(gst_ffmpegdata_close):
+	  Add debug. Don't EOS unless all data was read.
+
+2004-12-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_peek),
 	(gst_ffmpegdata_read), (gst_ffmpegdata_seek):
 	  Some "seeking" hacks, and separate peek from read (read = peek +
