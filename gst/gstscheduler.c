@@ -402,7 +402,8 @@ gst_schedulerfactory_class_init (GstSchedulerFactoryClass *klass)
 #endif
 
   _gst_schedulerfactories = NULL;
-  _default_name = g_strdup ("basic");
+  if (!_default_name)
+    _default_name = g_strdup ("basic");
 }
 
 static void
