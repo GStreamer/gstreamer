@@ -1411,9 +1411,7 @@ gst_mad_change_state (GstElement *element)
       break;
   }
 
-  parent_class->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return parent_class->change_state (element);
 }
 
 static gboolean
