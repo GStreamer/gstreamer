@@ -1,0 +1,16 @@
+Presentation ideas for GUADEC 4 (thomasvs, April 8 2002)
+
+* use gst-editor to create pipelines that make a karaoke machine
+  in different steps and using different features
+
+1) pipeline 1: play the free software song by Richard Stallman
+2) pipeline 2: do the same but add a visualization plugin
+3) create a small video using actual RMS footage
+4) pipeline 3: play this video and the song together
+5) Stallman is a bit hard to understand.  We want text.
+   pipeline 4: use the subtitle reader to overlay text 
+   maybe also do a bouncing ball overlay !
+6) Stallman can't sing. Let's pitch-shift him.
+   this will need MIDI or dynparams to control a pitch shifter
+7) It sounds better, but still not quite there.  Replace him with a festival
+   voice doing the pitch shifting.

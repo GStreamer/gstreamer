@@ -1,0 +1,34 @@
+Reviewing the registry (thomasvs, April 8 2002)
+
+* added a --gst-registry flag to the core which allows any gst app
+  to specify a different registry for loading/saving
+
+  some stuff to do this went into gstreamer/gst/gstregistry.h
+
+* What location is used for writing ? (gst-register)
+
+  - if specified (using --gst-registry) then use the specified location
+  - if not specified :
+       - if GST_CONFIG_DIR is writable as the current user, do it there
+         (which should be sysconfdir/gstreamer) and reg.xml
+       - if not writable, then try ~/.gstreamer/reg.xml
+
+* What location is used for reading ? (gst-whatever)
+
+  - if specified (using --gst-registry) then use the specified location
+  - if not specified :
+    - try reading GST_CONFIG_DIR/reg.xml first
+    - TODO: then try reading ~/.gstreamer/reg.xml
+      AND replace every namespace collision with the new one
+
+* actual variables stuff (gstregistry.c)
+  - use gst_registry_write_get to get a GstRegistryWrite struct back 
+    listing the right location of dir, file and tmp file
+  - use gst_registry_read_get to get a GstRegistryRead struct back
+    listing the path of global and local file to read
+
+* QUESTIONS
+  - maybe it's better to try the global registry first (if unspecified),
+    and see if you have write permissions ? Because if you do, you might
+    as well do it there - the system gave you the permission.
+    useful for doing garnome installs as a user
