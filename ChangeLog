@@ -1,3 +1,8 @@
+2004-02-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_chain):
+          only signal tags for bitrate if they're > 0 (#134894)
+
 2004-02-24  David Schleef  <ds@schleef.org>
 
 	* gst/qtdemux/qtdemux.c: (plugin_init), (gst_qtdemux_loop_header),
