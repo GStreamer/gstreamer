@@ -19,15 +19,19 @@ built_headers =	\
 	tuner-marshal.h \
 	tuner-enumtypes.h
 
-libgsttunerinclude_HEADERS = $(tuner_headers) $(built_headers)
+libgsttunerinclude_HEADERS = \
+	$(tuner_headers) \
+	tuner-enumtypes.h
 
 noinst_LTLIBRARIES = libgsttuner.la
 
 libgsttuner_la_SOURCES = \
 	tuner.c \
 	tunernorm.c \
-	tunerchannel.c \
-	$(built_sources)
+	tunerchannel.c
+nodist_libgsttuner_la_SOURCES = \
+	$(built_sources) \
+	tuner-marshal.h
 
 libgsttuner_la_CFLAGS = $(GST_CFLAGS)
 
