@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wim.taymans@chello.be>
  *
- * gstevent.h: Header for GstEvent subsystem
+ * gstformat.h: Header for GstFormat types of offset
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -40,7 +40,7 @@ typedef enum {
   GST_FORMAT_SAMPLES 	= 3,
 
   /* video related */
-  GST_FORMAT_FRAMES 	= 4,
+  GST_FORMAT_FRAMES 	= 4,  /* can also be used for compressed audio */
   GST_FORMAT_FIELDS 	= 5,
 } GstFormat;
 
