@@ -228,7 +228,7 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
         desc->PortRangeHints[current_portnum].LowerBound;
     } else {
       if (argtype==G_TYPE_INT) klass->control_info[i].lowerbound = (gfloat)G_MININT;
-      if (argtype==G_TYPE_FLOAT) klass->control_info[i].lowerbound = -G_MINFLOAT;
+      if (argtype==G_TYPE_FLOAT) klass->control_info[i].lowerbound = -G_MAXFLOAT;
     }
     
     if (LADSPA_IS_HINT_BOUNDED_ABOVE(hintdesc)) {
@@ -855,6 +855,8 @@ gst_ladspa_loop(GstElement *element)
 
     ladspa->timestamp += ladspa->buffersize * 10^9 / ladspa->samplerate;
   } while (TRUE);
+
+  gst_buffer_pool_unref(bufpool);
 
   for (i=0 ; i<numsinkpads ; i++){
     gst_bytestream_destroy (bytestreams[i]);
