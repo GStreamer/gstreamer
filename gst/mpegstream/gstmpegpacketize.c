@@ -32,6 +32,7 @@ gst_mpeg_packetize_new (GstPad *pad, GstMPEGPacketizeType type)
   new = g_malloc (sizeof (GstMPEGPacketize));
   
   gst_object_ref (GST_OBJECT (pad));
+  new->resync = TRUE;
   new->id = 0;
   new->pad = pad;
   new->bs = gst_bytestream_new (pad);
