@@ -1,3 +1,9 @@
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstelement.h:
+          add G_STMT macros to gst_element_error, which isn't strictly
+          necessary but people tell me to anyway.
+
 2004-01-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/Makefile.am:
