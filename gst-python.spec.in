@@ -1,24 +1,39 @@
-Name:		gstreamer-python
-Version:	@VERSION@
-Release:	1
-Summary:	Python bindings for GStreamer.
+%define         gst_minver      0.8.0
+%define         gstp_minver     0.8.0
+%define         majorminor      0.8
+%define         gstreamer       gstreamer
 
-Group:		Development/Languages
-License: 	LGPL
+Name:           %{gstreamer}-python
+Version:        @VERSION@
+Release:        1
+Summary:        Python bindings for GStreamer.
+
+Group:          Development/Languages
+License:        LGPL
 URL:            http://gstreamer.net/
-Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
-Source: 	http://gstreamer.freedesktop.org/src/gst-python/gst-python-%{version}.tar.gz
-BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
+Source:         http://gstreamer.freedesktop.org/src/gst-python/gst-python-%{version}.tar.gz
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-%define _pygtk	@pygtk_required_version@
-%define _gtk	@gtk_required_version@
+Requires:	python >= 2
+Requires:	gnome-python2
+Requires:	pygtk2 >= 2.4.0
+Requires:	%{gstreamer}
+Requires:	%{gstreamer}-plugins
 
-Requires: 	python2
-Requires: 	gnome-python2 = %{version}
-Requires: 	pygtk2 >= %_pygtk
-Requires: 	gstreamer >= 0.8.1
-BuildRequires:	pygtk2-devel = %_pygtk
-BuildRequires:	python2-devel
+BuildRequires:	python >= 2
+BuildRequires:  python-devel >= 2
+BuildRequires:  pygtk2-devel >= 2.4.0
+BuildRequires:	xmlto
+BuildRequires:	links
+
+# xwindowlistener needs X11 headers
+BuildRequires:  XFree86-devel
+
+BuildRequires:	%{gstreamer}-devel
+BuildRequires:	%{gstreamer}-plugins-devel
+
+# sigh, libtool
+BuildRequires:  gcc-c++
 
 %description
 This module contains a wrapper that allows GStreamer applications
@@ -26,30 +41,47 @@ to be written in Python.
 
 %prep
 %setup -q -n gst-python-%{version}
-# export PYTHON=/usr/bin/python2.2
-CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{_prefix}
 
 %build
-make
+%configure
+make %{?_smp_mflags}
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
 %makeinstall
+find $RPM_BUILD_ROOT -type f -name "*.la" -exec rm -f {} ';'
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
-%defattr(644,root,root,755)
-%doc AUTHORS ChangeLog README NEWS examples/gstreamer/*.py
-%dir %{_libdir}/python?.?/site-packages/gstreamer
-%{_libdir}/python?.?/site-packages/gstreamer/__init__.*
-%{_libdir}/python?.?/site-packages/gstreamer/_gstreamermodule.so
+%defattr(-,root,root,-)
+%doc AUTHORS COPYING ChangeLog NEWS README
+%doc examples/gst/*.py
+%doc examples/gstplay/*.py
+%dir %{_libdir}/python?.?/site-packages/gst
+%{_libdir}/python?.?/site-packages/gst/__init__.py*
+%{_libdir}/python?.?/site-packages/gst/_gst.so
+%{_libdir}/python?.?/site-packages/gst/interfaces.so
+%{_libdir}/python?.?/site-packages/gst/play.so
+%dir %{_datadir}/gst-python
+%{_datadir}/gst-python/examples
+%{_datadir}/gst-python/2.0/defs/*.defs
+%{_libdir}/pkgconfig/gst-python-0.8.pc
 
 %changelog
-* Wed Jun 11 2003 Thomas Vander Stichele <thomas at apestaart dot org>
-- Update
+* Fri Nov 05 2004 Christian Schaller < uraeus at gnome org >
+- Remerged spec file with cvs version
 
-* Sat Mar 23 2002 David I. Lehn <dlehn@vt.edu>
-- new gst-python package based on pygtk and gconf binding packages
+* Tue Oct 12 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.7.93-0.fdr.1: new upstream release
+
+* Mon Jun 21 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.7.92-0.fdr.1: new upstream release
+
+* Wed Mar 31 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.7.91-0.fdr.1: new upstream release
+
+* Tue Sep 02 2003 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.1.0-0.fdr.1: first fedora release
