@@ -1,0 +1,3 @@
+SUBDIRS=sys
+
+DIST_SUBDIRS=sys
