@@ -1,5 +1,13 @@
 2004-07-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcolorspace_class_init), (gst_ffmpegcolorspace_chain):
+	* gst/ffmpegcolorspace/imgconvert.c: (avpicture_fill):
+	  handle stride, needs work if we want to move stride handling
+	  upstream, but works correctly for our purposes.
+
+2004-07-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/videoscale/README:
 	  add testing examples
 	* gst/videoscale/gstvideoscale.c: (gst_videoscale_link),
