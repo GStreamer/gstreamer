@@ -622,6 +622,10 @@ gst_pad_connect (GstPad *srcpad,
   realsrc = GST_PAD_REALIZE(srcpad);
   realsink = GST_PAD_REALIZE(sinkpad);
 
+  if ((realsrc != srcpad) || (realsink != sinkpad))
+    GST_INFO (GST_CAT_PADS, "*actually* connecting %s:%s and %s:%s",
+              GST_DEBUG_PAD_NAME(realsrc), GST_DEBUG_PAD_NAME(realsink));
+
   g_return_val_if_fail(GST_RPAD_PEER(realsrc) == NULL, FALSE);
   g_return_val_if_fail(GST_RPAD_PEER(realsink) == NULL, FALSE);
 

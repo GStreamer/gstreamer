@@ -780,7 +780,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
   g_return_val_if_fail (element->sched != NULL, GST_STATE_FAILURE);
 
   GST_DEBUG (GST_CAT_STATES,"setting element '%s' to state %s\n",GST_ELEMENT_NAME (element),
-             _gst_print_statename(state));
+             gst_element_statename(state));
 
   /* start with the current state */
   curpending = GST_STATE(element);
@@ -795,7 +795,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
     // FIXME: should probably check to see that we don't already have one
     GST_STATE_PENDING (element) = curpending;
     GST_DEBUG (GST_CAT_STATES,"intermediate: setting element '%s' to state %s\n",
-               GST_ELEMENT_NAME (element),_gst_print_statename(curpending));
+               GST_ELEMENT_NAME (element),gst_element_statename(curpending));
 
     /* call the state change function so it can set the state */
     oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
@@ -853,7 +853,7 @@ gst_element_change_state (GstElement *element)
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
   GST_DEBUG (GST_CAT_STATES, "default handler sets '%s' state to %s\n",
-             GST_ELEMENT_NAME (element), _gst_print_statename(GST_STATE_PENDING(element)));
+             GST_ELEMENT_NAME (element), gst_element_statename(GST_STATE_PENDING(element)));
 
   if ((GST_STATE_TRANSITION(element) == GST_STATE_READY_TO_PLAYING) ||
       (GST_STATE_TRANSITION(element) == GST_STATE_PAUSED_TO_PLAYING)) {
@@ -1212,4 +1212,26 @@ gst_element_signal_eos (GstElement *element)
 
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[EOS]);
   GST_FLAG_SET(element,GST_ELEMENT_COTHREAD_STOPPING);
+}
+
+
+const gchar *gst_element_statename(int state) {
+  switch (state) {
+#ifdef GST_DEBUG_COLOR
+    case GST_STATE_NONE_PENDING: return "NONE_PENDING";break;
+    case GST_STATE_NULL: return "\033[01;37mNULL\033[00m";break;
+    case GST_STATE_READY: return "\033[01;31mREADY\033[00m";break;
+    case GST_STATE_PLAYING: return "\033[01;32mPLAYING\033[00m";break;
+    case GST_STATE_PAUSED: return "\033[01;33mPAUSED\033[00m";break;
+    default: return "\033[01;37;41mUNKNOWN!\033[00m";
+#else
+    case GST_STATE_NONE_PENDING: return "NONE_PENDING";break;
+    case GST_STATE_NULL: return "NULL";break;
+    case GST_STATE_READY: return "READY";break;
+    case GST_STATE_PLAYING: return "PLAYING";break;
+    case GST_STATE_PAUSED: return "PAUSED";break;
+    default: return "UNKNOWN!";
+#endif
+  }
+  return "";
 }

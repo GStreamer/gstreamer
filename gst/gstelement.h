@@ -56,17 +56,6 @@ typedef enum {
   GST_STATE_ASYNC		= 2,
 } GstElementStateReturn;
 
-static inline char *_gst_print_statename(int state) {
-  switch (state) {
-    case GST_STATE_NONE_PENDING: return "NONE_PENDING";break;
-    case GST_STATE_NULL: return "NULL";break;
-    case GST_STATE_READY: return "READY";break;
-    case GST_STATE_PLAYING: return "PLAYING";break;
-    case GST_STATE_PAUSED: return "PAUSED";break;
-    default: return "";
-  }
-  return "";
-}
 
 // NOTE: this probably should be done with an #ifdef to decide whether to safe-cast
 // or to just do the non-checking cast.
@@ -286,6 +275,9 @@ GstElement*		gst_elementfactory_make			(const gchar *factoryname, const gchar *n
 
 xmlNodePtr		gst_elementfactory_save_thyself		(GstElementFactory *factory, xmlNodePtr parent);
 GstElementFactory*	gst_elementfactory_load_thyself		(xmlNodePtr parent);
+
+
+const gchar *		gst_element_statename			(int state);
 
 #ifdef __cplusplus
 }

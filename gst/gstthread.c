@@ -245,8 +245,8 @@ gst_thread_change_state (GstElement *element)
 
   GST_INFO (GST_CAT_THREAD,"thread \"%s\" changing state to %s from %s",
                GST_ELEMENT_NAME (GST_ELEMENT (element)),
-	       _gst_print_statename(GST_STATE_PENDING (element)),
-	       _gst_print_statename(GST_STATE (element)));
+	       gst_element_statename(GST_STATE_PENDING (element)),
+	       gst_element_statename(GST_STATE (element)));
 
   //GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 

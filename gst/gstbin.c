@@ -360,12 +360,12 @@ gst_bin_change_state (GstElement *element)
   bin = GST_BIN (element);
 
 //  GST_DEBUG (GST_CAT_STATES,"currently %d(%s), %d(%s) pending\n",GST_STATE (element),
-//          _gst_print_statename (GST_STATE (element)), GST_STATE_PENDING (element),
-//          _gst_print_statename (GST_STATE_PENDING (element)));
+//          gst_element_statename (GST_STATE (element)), GST_STATE_PENDING (element),
+//          gst_element_statename (GST_STATE_PENDING (element)));
 
   GST_INFO_ELEMENT (GST_CAT_STATES, element, "changing bin's state from %s to %s",
-                _gst_print_statename (GST_STATE (element)),
-                _gst_print_statename (GST_STATE_PENDING (element)));
+                gst_element_statename (GST_STATE (element)),
+                gst_element_statename (GST_STATE_PENDING (element)));
 
 //  g_return_val_if_fail(bin->numchildren != 0, GST_STATE_FAILURE);
 
@@ -400,7 +400,7 @@ gst_bin_change_state (GstElement *element)
       case GST_STATE_FAILURE:
         GST_STATE_PENDING (element) = GST_STATE_NONE_PENDING;
         GST_DEBUG (GST_CAT_STATES,"child '%s' failed to go to state %d(%s)\n", GST_ELEMENT_NAME (child),
-              GST_STATE_PENDING (element), _gst_print_statename (GST_STATE_PENDING (element)));
+              GST_STATE_PENDING (element), gst_element_statename (GST_STATE_PENDING (element)));
         return GST_STATE_FAILURE;
         break;
       case GST_STATE_ASYNC:
@@ -413,8 +413,8 @@ gst_bin_change_state (GstElement *element)
 //  g_print("<-- \"%s\"\n",GST_OBJECT_NAME(bin));
 
   GST_INFO_ELEMENT (GST_CAT_STATES, element, "done changing bin's state from %s to %s",
-                _gst_print_statename (GST_STATE (element)),
-                _gst_print_statename (GST_STATE_PENDING (element)));
+                gst_element_statename (GST_STATE (element)),
+                gst_element_statename (GST_STATE_PENDING (element)));
 
   return gst_bin_change_state_norecurse (bin);
 }

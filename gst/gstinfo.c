@@ -276,7 +276,7 @@ gst_default_info_handler (gint category, gboolean incore,gchar *file, gchar *fun
 
 #ifdef GST_DEBUG_ENABLED
   #ifdef GST_DEBUG_COLOR
-    fprintf(stderr,"INFO (\033[00;%dm%5d\033[00m:\033[00;%dm%2d\033[00m)\033["
+    fprintf(stderr,"\033[01mINFO\033[00m (\033[00;%dm%5d\033[00m:\033[00;%dm%2d\033[00m)\033["
             GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
             pthread_color,pthread_id,cothread_color,cothread_id,
             _gst_category_colors[category],location,elementname,string);
@@ -286,7 +286,7 @@ gst_default_info_handler (gint category, gboolean incore,gchar *file, gchar *fun
   #endif /* GST_DEBUG_COLOR */
 #else
   #ifdef GST_DEBUG_COLOR
-    fprintf(stderr,"INFO:\033[" GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
+    fprintf(stderr,"\033[01mINFO\033[00m:\033[" GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
             location,elementname,_gst_category_colors[category],string);
   #else
     fprintf(stderr,"INFO:%s%s %s\n",
