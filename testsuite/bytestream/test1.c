@@ -29,18 +29,22 @@ run_test (GstBin *pipeline, gint iters)
 {
   gint vm = 0;
   gint maxiters = iters;
+  gint prev_percent = -1;
 
   count = 0;
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
   while (iters) {
     gint newvm = vmsize();
+    gint percent;
 
-    if (newvm - vm > VM_THRES) {
-      g_print ("\r%d (delta %d)              ", newvm, newvm - vm);
+    percent = (gint)((maxiters-iters+1)*100.0/maxiters);
+
+    if (percent != prev_percent || newvm - vm > VM_THRES) {
+      g_print ("\r%d (delta %d) %.3d%%               ", newvm, newvm - vm, percent);
+      prev_percent = percent;
       vm = newvm;
     }
-    g_print ("\b\b\b\b\b\b%.3d%%  ", (gint)((maxiters-iters+1)*100.0/maxiters));
     gst_bin_iterate (pipeline);
 
     if (iters > 0) iters--;
@@ -55,7 +59,7 @@ main (int argc, char *argv[])
   GstElement *sink;
   GstElement *bs;
   GstElement *pipeline;
-  gint i, testnum = 1;
+  gint testnum = 1;
 
   gst_init (&argc, &argv);
 
@@ -137,5 +141,7 @@ main (int argc, char *argv[])
   run_test (GST_BIN (pipeline), 50000);
 
   g_print ("\n\ndone\n");
+
+  return 0;
 
 }
