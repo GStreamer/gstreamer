@@ -29,7 +29,7 @@
 
 static GstElementDetails afparse_details = {
   "Audiofile Parse",
-  "Src",
+  "Codec/Parser",
   "Audiofile parser for audio/raw",
   VERSION,
   "Steve Baker <stevebaker_org@yahoo.co.uk>",
