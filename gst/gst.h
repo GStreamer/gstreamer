@@ -31,7 +31,6 @@
 #include <gst/gsttypes.h>
 #include <gst/gstversion.h>
 
-#include <gst/gstautoplug.h>
 #include <gst/gstbin.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstbufferpool-default.h>

@@ -378,8 +378,6 @@ GST_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
 
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_LOADSAVE, true)
 GST_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_AUTOPLUG, true)
-GST_SUBSYSTEM_DISABLE(AUTOPLUG,[autoplugger subsystem])
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_PARSE, true)
 GST_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_TRACE, true)

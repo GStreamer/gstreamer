@@ -828,15 +828,6 @@ print_element_list (void)
         g_print ("%s:  %s: %s\n", plugin->desc.name,
                 GST_PLUGIN_FEATURE_NAME (factory) ,factory->details.longname);
       }
-#ifndef GST_DISABLE_AUTOPLUG
-      else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
-        GstAutoplugFactory *factory;
-
-        factory = GST_AUTOPLUG_FACTORY (feature);
-        g_print ("%s:  %s: %s\n", plugin->desc.name,
-                GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
-      }
-#endif
 #ifndef GST_DISABLE_INDEX
       else if (GST_IS_INDEX_FACTORY (feature)) {
         GstIndexFactory *factory;
@@ -916,15 +907,6 @@ print_plugin_info (GstPlugin *plugin)
               factory->details.longname);
       num_elements++;
     }
-#ifndef GST_DISABLE_AUTOPLUG
-    else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
-      GstAutoplugFactory *factory;
-
-      factory = GST_AUTOPLUG_FACTORY (feature);
-      g_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
-      num_autoplug++;
-    }
-#endif
 #ifndef GST_DISABLE_INDEX
     else if (GST_IS_INDEX_FACTORY (feature)) {
       GstIndexFactory *factory;
@@ -1040,14 +1022,6 @@ main (int argc, char *argv[])
                                                    GST_TYPE_INDEX_FACTORY);
          if (feature) {
            g_print ("%s: an index\n", argv[1]);
-           return 0;
-         }
-#endif
-#ifndef GST_DISABLE_AUTOPLUG
-         feature = gst_registry_pool_find_feature (argv[1],
-                                                   GST_TYPE_AUTOPLUG_FACTORY);
-         if (feature) {
-           g_print ("%s: an autoplugger\n", argv[1]);
            return 0;
          }
 #endif

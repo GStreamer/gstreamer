@@ -15,14 +15,6 @@ else
 GST_LOADSAVE_SRC = gstxml.c
 endif
 
-if GST_DISABLE_AUTOPLUG
-GST_AUTOPLUG_SRC =
-GST_AUTOPLUG_DIRS =
-else
-GST_AUTOPLUG_SRC = gstautoplug.c
-GST_AUTOPLUG_DIRS = autoplug
-endif
-
 if GST_DISABLE_PARSE
 GST_PARSE_SRC = 
 GST_PARSE_DIRS = 
@@ -75,9 +67,9 @@ else
 GST_URI_SRC = gsturi.c
 endif
 
-EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gstparse.c gstautoplug.c gsttrace.c
+EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gstparse.c gsttrace.c
 
-SUBDIRS = $(GST_PARSE_DIRS) $(GST_REGISTRY_DIRS) . $(GST_AUTOPLUG_DIRS) elements schedulers $(GST_INDEX_DIRS) 
+SUBDIRS = $(GST_PARSE_DIRS) $(GST_REGISTRY_DIRS) . autoplug elements schedulers $(GST_INDEX_DIRS) 
 DIST_SUBDIRS = autoplug elements parse registries schedulers indexers
 
 libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
@@ -86,7 +78,6 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	$(GST_ENUMTYPES_SRC)	\
 	gstobject.c		\
 	gstatomic.c		\
-	$(GST_AUTOPLUG_SRC)	\
 	gstbin.c		\
 	gstbuffer.c		\
 	gstbufferpool-default.c	\
@@ -107,8 +98,8 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gstpipeline.c		\
 	gstplugin.c		\
 	gstpluginfeature.c	\
-	gstprobe.c		\
 	gstprops.c		\
+	gstprobe.c		\
 	gstqueue.c		\
 	gstquery.c		\
 	gstscheduler.c		\
@@ -150,7 +141,6 @@ gst_headers =			\
 	gst.h			\
 	gstatomic.h		\
 	gstobject.h		\
-	gstautoplug.h		\
 	gstbin.h		\
 	gstbuffer.h		\
 	gstbufferpool-default.h \

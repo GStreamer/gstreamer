@@ -640,45 +640,6 @@ GST_IS_ELEMENT_FACTORY_CLASS
 
 
 <SECTION>
-<FILE>gstautoplug</FILE>
-<TITLE>GstAutoplug</TITLE>
-GstAutoplug
-GstAutoplugFlags
-gst_autoplug_signal_new_object
-gst_autoplug_to_caps
-gst_autoplug_to_renderers
-<SUBSECTION Standard>
-GstAutoplugClass
-GST_AUTOPLUG
-GST_IS_AUTOPLUG
-GST_TYPE_AUTOPLUG
-gst_autoplug_get_type
-GST_AUTOPLUG_CLASS
-GST_IS_AUTOPLUG_CLASS
-GST_TYPE_AUTOPLUG_FLAGS
-gst_autoplug_flags_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstautoplugfactory</FILE>
-<TITLE>GstAutoplugFactory</TITLE>
-GstAutoplugFactory
-gst_autoplug_factory_new
-gst_autoplug_factory_destroy
-gst_autoplug_factory_find
-gst_autoplug_factory_create
-gst_autoplug_factory_make
-<SUBSECTION Standard>
-gst_autoplug_factory_get_type
-GstAutoplugFactoryClass
-GST_TYPE_AUTOPLUG_FACTORY
-GST_AUTOPLUG_FACTORY
-GST_AUTOPLUG_FACTORY_CLASS
-GST_IS_AUTOPLUG_FACTORY
-GST_IS_AUTOPLUG_FACTORY_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>gstclock</FILE>
 GstClockTime
 GstClockTimeDiff
@@ -1614,28 +1575,3 @@ GST_IS_INDEX_FACTORY_CLASS
 </SECTION>
 
 
-<SECTION>
-<FILE>gststaticautoplug</FILE>
-<TITLE>GstStaticAutoplug</TITLE>
-<SUBSECTION Standard>
-GstStaticAutoplug
-GST_STATIC_AUTOPLUG
-GST_IS_STATIC_AUTOPLUG
-GST_TYPE_STATIC_AUTOPLUG
-gst_static_autoplug_get_type
-GST_STATIC_AUTOPLUG_CLASS
-GST_IS_STATIC_AUTOPLUG_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>gststaticautoplugrender</FILE>
-<TITLE>GstStaticAutoplugRender</TITLE>
-<SUBSECTION Standard>
-GstStaticAutoplugRender
-GST_STATIC_AUTOPLUG_RENDER
-GST_IS_STATIC_AUTOPLUG_RENDER
-GST_TYPE_STATIC_AUTOPLUG_RENDER
-gst_static_autoplug_render_get_type
-GST_STATIC_AUTOPLUG_RENDER_CLASS
-GST_IS_STATIC_AUTOPLUG_RENDER_CLASS
-</SECTION>

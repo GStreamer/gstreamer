@@ -11,8 +11,6 @@ gst_pad_template_get_type
 gst_ghost_pad_get_type
 gst_thread_get_type
 gst_plugin_feature_get_type
-gst_autoplug_get_type
-gst_autoplug_factory_get_type
 gst_type_find_factory_get_type
 gst_element_factory_get_type
 gst_scheduler_factory_get_type
