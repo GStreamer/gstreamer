@@ -208,11 +208,17 @@ AC_PATH_PROG(XML_CONFIG, xml-config, no)
 if test x$XML_CONFIG = xno; then
   AC_MSG_ERROR(Couldn't find xml-config)
 fi
+xml_save_LIBS=$LIBS
+xml_save_CFLAGS=$CFLAGS
 XML_LIBS=`xml-config --libs`
 XML_CFLAGS=`xml-config --cflags`
+LIBS=$XML_LIBS
+CFLAGS=$XML_CFLAGS
 AC_CHECK_LIB(xml, xmlDocGetRootElement, ,
   [ AC_MSG_ERROR(Need version 1.8.1 or better of libxml) ],
   $XML_LIBS)
+LIBS=$xml_save_LIBS
+CFLAGS=$xml_save_CFLAGS
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
 CORE_LIBS="$CORE_LIBS $XML_LIBS"
