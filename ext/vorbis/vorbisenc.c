@@ -492,8 +492,10 @@ gst_vorbisenc_metadata_set1 (const GstTagList *list, const gchar *tag, gpointer 
       vorbistag = g_strdup ("ALBUM");
       g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
     } else if (strcmp (tag, GST_TAG_TRACK_NUMBER) == 0) {
+      guint track_no;
       vorbistag = g_strdup ("TRACKNUMBER");
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+      g_assert (gst_tag_list_get_uint_index (list, tag, i, &track_no));
+      vorbisvalue = g_strdup_printf ("%u", track_no);
     } else if (strcmp (tag, GST_TAG_ARTIST) == 0) {
       vorbistag = g_strdup ("ARTIST");
       g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
