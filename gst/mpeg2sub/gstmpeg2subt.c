@@ -25,6 +25,7 @@
 #include <gstmpeg2subt.h>
 
 static void	gst_mpeg2subt_class_init	(GstMpeg2SubtClass *klass);
+static void	gst_mpeg2subt_base_init		(GstMpeg2SubtClass *klass);
 static void	gst_mpeg2subt_init		(GstMpeg2Subt *mpeg2subt);
 
 static void	gst_mpeg2subt_chain_video	(GstPad *pad,GstData *_data);
@@ -39,13 +40,8 @@ static void	gst_mpeg2subt_get_property		(GObject *object, guint prop_id, GValue 
 static GstElementDetails mpeg2subt_details = {
   "MPEG2 subtitle Decoder",
   "Codec/Video/Decoder",
-  "LGPL",
   "Decodes and merges MPEG2 subtitles into a video frame",
-  VERSION,
-  "Samuel Hocevar <sam@via.ecp.fr>\n"
-  "Michel Lespinasse <walken@via.ecp.fr>\n"
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 /* GstMpeg2Subt signals and args */
@@ -92,7 +88,8 @@ gst_mpeg2subt_get_type (void)
 
   if (!mpeg2subt_type) {
     static const GTypeInfo mpeg2subt_info = {
-      sizeof(GstMpeg2SubtClass),      NULL,
+      sizeof(GstMpeg2SubtClass),
+      (GBaseInitFunc)gst_mpeg2subt_base_init,
       NULL,
       (GClassInitFunc)gst_mpeg2subt_class_init,
       NULL,
@@ -104,6 +101,14 @@ gst_mpeg2subt_get_type (void)
     mpeg2subt_type = g_type_register_static(GST_TYPE_ELEMENT, "GstMpeg2Subt", &mpeg2subt_info, 0);
   }
   return mpeg2subt_type;
+}
+
+static void
+gst_mpeg2subt_base_init (GstMpeg2SubtClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_set_details (element_class, &mpeg2subt_details);
 }
 
 static void
@@ -420,23 +425,22 @@ gst_mpeg2subt_get_property (GObject *object, guint prop_id, GValue *value, GPara
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the mpeg2subt element */
-  factory = gst_element_factory_new("mpeg2subt",GST_TYPE_MPEG2SUBT,
-                                   &mpeg2subt_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register(plugin, "mpeg2subt",
+			      GST_RANK_NONE, GST_TYPE_MPEG2SUBT);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "mpeg2subt",
-  plugin_init
-};
+  "mpeg2sub",
+  "MPEG-2 video subtitle parser",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  "(c) 2001 Samuel Hocevar <sam@via.ecp.fr>\n"
+  "(c) 2001 Michel Lespinasse <walken@via.ecp.fr>",
+  GST_PACKAGE,
+  GST_ORIGIN
+)
