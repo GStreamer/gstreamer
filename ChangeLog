@@ -1,5 +1,9 @@
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+        * po/nl.po: updated Dutch translation
+
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gsterror.c: (_gst_core_errors_init),
 	(_gst_library_errors_init), (_gst_resource_errors_init),
 	(_gst_stream_errors_init):
