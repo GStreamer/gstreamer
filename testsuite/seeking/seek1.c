@@ -13,6 +13,9 @@ static GtkAdjustment *adjustment;
 
 static guint update_id;
 
+#define SOURCE "gnomevfssrc"
+//#define SOURCE "filesrc"
+
 #define UPDATE_INTERVAL 500
 
 #define THREAD
@@ -63,7 +66,7 @@ make_parse_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make ("filesrc", "src");
+  src = gst_element_factory_make (SOURCE, "src");
   parser = gst_element_factory_make ("mpegparse", "parse");
   fakesink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (G_OBJECT (fakesink), "sync", TRUE, NULL);
@@ -94,7 +97,7 @@ make_vorbis_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make ("filesrc", "src");
+  src = gst_element_factory_make (SOURCE, "src");
   decoder = gst_element_factory_make ("vorbisfile", "decoder");
   audiosink = gst_element_factory_make ("osssink", "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
@@ -125,7 +128,7 @@ make_mp3_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make ("filesrc", "src");
+  src = gst_element_factory_make (SOURCE, "src");
   decoder = gst_element_factory_make ("mad", "dec");
   osssink = gst_element_factory_make ("osssink", "sink");
 
@@ -159,7 +162,7 @@ make_avi_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make ("filesrc", "src");
+  src = gst_element_factory_make (SOURCE, "src");
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
   demux = gst_element_factory_make ("avidemux", "demux");
@@ -228,7 +231,7 @@ make_mpeg_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make ("filesrc", "src");
+  src = gst_element_factory_make (SOURCE, "src");
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
   demux = gst_element_factory_make ("mpegdemux", "demux");
