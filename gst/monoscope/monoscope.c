@@ -56,11 +56,6 @@ guint32 * monoscope_update (gint16 data [2][512])
     /* Really, we want samples evenly spread over the available data.
      * Just taking a continuous chunk will do for now, though. */
     int i;
-    for (i = 0; i < CONVOLVE_BIG; i++) {
-	/* Average the two channels. */
-	newEq[i] = (((int) data[0][i]) + (int) data[1][i]) >> 1;
-    }
-
     int foo;
     int bar;  
     int h;
@@ -71,6 +66,11 @@ guint32 * monoscope_update (gint16 data [2][512])
 	int val;
 	int max = 1;
 	short * thisEq;
+    for (i = 0; i < CONVOLVE_BIG; i++) {
+	/* Average the two channels. */
+	newEq[i] = (((int) data[0][i]) + (int) data[1][i]) >> 1;
+    }
+
 	memcpy (copyEq, newEq, sizeof (short) * CONVOLVE_BIG);
 	thisEq = copyEq;
 #if 1					
