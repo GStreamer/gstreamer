@@ -273,8 +273,7 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
 	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of %s:%s\n", name,
 		       GST_PAD_NAME (pad));
 	    GST_RPAD_CHAINFUNC (realpad) (pad, buf);
-	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of %s:%s done\n", name,
-		       GST_PAD_NAME (pad));
+	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of element %s done\n", name);
 	  }
 	}
 	else {
