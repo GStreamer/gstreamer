@@ -49,8 +49,8 @@ struct _GstVideoCrop
 
   /* caps */
   gint width, height;
-  gdouble fps;
   gint crop_left, crop_right, crop_top, crop_bottom;
+  gboolean renegotiate_src_caps;
 };
 
 struct _GstVideoCropClass
@@ -66,13 +66,7 @@ GST_ELEMENT_DETAILS ("video crop filter",
     "Wim Taymans <wim.taymans@chello.be>");
 
 
-/* VideoCrop signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
+/* VideoCrop args */
 enum
 {
   ARG_0,
@@ -107,8 +101,10 @@ static void gst_video_crop_set_property (GObject * object, guint prop_id,
 static void gst_video_crop_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstCaps *gst_video_crop_getcaps (GstPad * pad);
+
 static GstPadLinkReturn
-gst_video_crop_sink_link (GstPad * pad, const GstCaps * caps);
+gst_video_crop_link (GstPad * pad, const GstCaps * caps);
 static void gst_video_crop_chain (GstPad * pad, GstData * _data);
 
 static GstElementStateReturn gst_video_crop_change_state (GstElement * element);
@@ -194,19 +190,20 @@ gst_video_crop_init (GstVideoCrop * video_crop)
       (&gst_video_crop_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (video_crop), video_crop->sinkpad);
   gst_pad_set_chain_function (video_crop->sinkpad, gst_video_crop_chain);
-  gst_pad_set_link_function (video_crop->sinkpad, gst_video_crop_sink_link);
+  gst_pad_set_getcaps_function (video_crop->sinkpad, gst_video_crop_getcaps);
+  gst_pad_set_link_function (video_crop->sinkpad, gst_video_crop_link);
 
   video_crop->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_video_crop_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (video_crop), video_crop->srcpad);
+  gst_pad_set_getcaps_function (video_crop->srcpad, gst_video_crop_getcaps);
+  gst_pad_set_link_function (video_crop->srcpad, gst_video_crop_link);
 
   video_crop->crop_right = 0;
   video_crop->crop_left = 0;
   video_crop->crop_top = 0;
   video_crop->crop_bottom = 0;
-
-  GST_FLAG_SET (video_crop, GST_ELEMENT_EVENT_AWARE);
 }
 
 /* do we need this function? */
@@ -245,7 +242,6 @@ gst_video_crop_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstVideoCrop *video_crop;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VIDEO_CROP (object));
 
   video_crop = GST_VIDEO_CROP (object);
@@ -267,34 +263,163 @@ gst_video_crop_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  if (gst_pad_is_negotiated (video_crop->srcpad))
+    video_crop->renegotiate_src_caps = TRUE;
+}
+
+static void
+gst_video_crop_add_to_struct_val (GstStructure * s, const gchar * field_name,
+    gint addval)
+{
+  const GValue *val;
+
+  val = gst_structure_get_value (s, field_name);
+
+  if (G_VALUE_HOLDS_INT (val)) {
+    gint ival = g_value_get_int (val);
+
+    gst_structure_set (s, field_name, G_TYPE_INT, ival + addval, NULL);
+    return;
+  }
+
+  if (GST_VALUE_HOLDS_INT_RANGE (val)) {
+    gint min = gst_value_get_int_range_min (val);
+    gint max = gst_value_get_int_range_max (val);
+
+    gst_structure_set (s, field_name, GST_TYPE_INT_RANGE, min + addval,
+        max + addval, NULL);
+    return;
+  }
+
+  if (GST_VALUE_HOLDS_LIST (val)) {
+    GValue newlist = { 0, };
+    gint i;
+
+    g_value_init (&newlist, GST_TYPE_LIST);
+    for (i = 0; i < gst_value_list_get_size (val); ++i) {
+      GValue newval = { 0, };
+      g_value_init (&newval, G_VALUE_TYPE (val));
+      g_value_copy (val, &newval);
+      if (G_VALUE_HOLDS_INT (val)) {
+        gint ival = g_value_get_int (val);
+
+        g_value_set_int (&newval, ival + addval);
+      } else if (GST_VALUE_HOLDS_INT_RANGE (val)) {
+        gint min = gst_value_get_int_range_min (val);
+        gint max = gst_value_get_int_range_max (val);
+
+        gst_value_set_int_range (&newval, min + addval, max + addval);
+      } else {
+        g_return_if_reached ();
+      }
+      gst_value_list_append_value (&newlist, &newval);
+      g_value_unset (&newval);
+    }
+    gst_structure_set_value (s, field_name, &newlist);
+    g_value_unset (&newlist);
+    return;
+  }
+
+  g_return_if_reached ();
+}
+
+static GstCaps *
+gst_video_crop_getcaps (GstPad * pad)
+{
+  GstVideoCrop *vc;
+  GstCaps *othercaps, *caps;
+  GstPad *otherpad;
+  gint i, delta_w, delta_h;
+
+  vc = GST_VIDEO_CROP (gst_pad_get_parent (pad));
+  otherpad = (pad == vc->srcpad) ? vc->sinkpad : vc->srcpad;
+  othercaps = gst_pad_get_allowed_caps (otherpad);
+
+  GST_DEBUG_OBJECT (pad, "othercaps of otherpad %s:%s are: %" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (otherpad), othercaps);
+
+  if (pad == vc->srcpad) {
+    delta_w = 0 - vc->crop_left - vc->crop_right;
+    delta_h = 0 - vc->crop_top - vc->crop_bottom;
+  } else {
+    delta_w = vc->crop_left + vc->crop_right;
+    delta_h = vc->crop_top + vc->crop_bottom;
+  }
+
+  for (i = 0; i < gst_caps_get_size (othercaps); i++) {
+    GstStructure *s = gst_caps_get_structure (othercaps, i);
+
+    gst_video_crop_add_to_struct_val (s, "width", delta_w);
+    gst_video_crop_add_to_struct_val (s, "height", delta_h);
+  }
+
+  caps = gst_caps_intersect (othercaps, gst_pad_get_pad_template_caps (pad));
+  gst_caps_free (othercaps);
+
+  GST_DEBUG_OBJECT (pad, "returning caps: %" GST_PTR_FORMAT, caps);
+  return caps;
 }
 
 static GstPadLinkReturn
-gst_video_crop_sink_link (GstPad * pad, const GstCaps * caps)
+gst_video_crop_link (GstPad * pad, const GstCaps * caps)
 {
-  GstVideoCrop *video_crop;
+  GstPadLinkReturn ret;
   GstStructure *structure;
-  gboolean ret;
+  GstVideoCrop *vc;
+  GstCaps *newcaps;
+  GstPad *otherpad;
+  gint w, h, other_w, other_h;
 
-  video_crop = GST_VIDEO_CROP (gst_pad_get_parent (pad));
+  vc = GST_VIDEO_CROP (gst_pad_get_parent (pad));
+
   structure = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (structure, "width", &w)
+      || !gst_structure_get_int (structure, "height", &h))
+    return GST_PAD_LINK_DELAYED;
 
-  ret = gst_structure_get_int (structure, "width", &video_crop->width);
-  ret &= gst_structure_get_int (structure, "height", &video_crop->height);
-  ret &= gst_structure_get_double (structure, "framerate", &video_crop->fps);
+  if (pad == vc->srcpad) {
+    other_w = w + vc->crop_left + vc->crop_right;
+    other_h = h + vc->crop_top + vc->crop_bottom;
+    otherpad = vc->sinkpad;
+    vc->width = other_w;
+    vc->height = other_h;
+  } else {
+    other_w = w - vc->crop_left - vc->crop_right;
+    other_h = h - vc->crop_top - vc->crop_bottom;
+    vc->width = w;
+    vc->height = h;
+    otherpad = vc->srcpad;
+  }
+
+  newcaps = gst_caps_copy (caps);
+
+  gst_caps_set_simple (newcaps,
+      "width", G_TYPE_INT, other_w, "height", G_TYPE_INT, other_h, NULL);
+
+  ret = gst_pad_try_set_caps (otherpad, newcaps);
+  gst_caps_free (newcaps);
+
+  if (ret == GST_PAD_LINK_REFUSED)
+    return GST_PAD_LINK_REFUSED;
 
   return GST_PAD_LINK_OK;
 }
 
-#define GST_VIDEO_I420_SIZE(width,height) ((width)*(height) + ((width)/2)*((height)/2)*2)
+/* these macros are adapted from videotestsrc.c, paint_setup_I420() */
+#define ROUND_UP_2(x)  (((x)+1)&~1)
+#define ROUND_UP_4(x)  (((x)+3)&~3)
+#define ROUND_UP_8(x)  (((x)+7)&~7)
 
-#define GST_VIDEO_I420_Y_OFFSET(width,height) (0)
-#define GST_VIDEO_I420_U_OFFSET(width,height) ((width)*(height))
-#define GST_VIDEO_I420_V_OFFSET(width,height) ((width)*(height) + ((width/2)*(height/2)))
+#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (ROUND_UP_4(width))
+#define GST_VIDEO_I420_U_ROWSTRIDE(width) (ROUND_UP_8(width)/2)
+#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
 
-#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (width)
-#define GST_VIDEO_I420_U_ROWSTRIDE(width) ((width)/2)
-#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((width)/2)
+#define GST_VIDEO_I420_Y_OFFSET(w,h) (0)
+#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*ROUND_UP_2(h)))
+#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+
+#define GST_VIDEO_I420_SIZE(w,h) (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
 
 static void
 gst_video_crop_i420 (GstVideoCrop * video_crop, GstBuffer * src_buffer,
@@ -308,30 +433,23 @@ gst_video_crop_i420 (GstVideoCrop * video_crop, GstBuffer * src_buffer,
       (video_crop->crop_left + video_crop->crop_right);
   gint out_height = video_crop->height -
       (video_crop->crop_top + video_crop->crop_bottom);
-  gint src_stride;
   gint j;
 
   src = GST_BUFFER_DATA (src_buffer);
   dest = GST_BUFFER_DATA (dest_buffer);
 
-  g_return_if_fail (GST_BUFFER_SIZE (dest_buffer) ==
-      GST_VIDEO_I420_SIZE (out_width, out_height));
-
   srcY = src + GST_VIDEO_I420_Y_OFFSET (video_crop->width, video_crop->height);
   destY = dest + GST_VIDEO_I420_Y_OFFSET (out_width, out_height);
 
-  src_stride = GST_VIDEO_I420_Y_ROWSTRIDE (video_crop->width);
-
   /* copy Y plane first */
-
-  srcY += src_stride * video_crop->crop_top + video_crop->crop_left;
+  srcY +=
+      (GST_VIDEO_I420_Y_ROWSTRIDE (video_crop->width) * video_crop->crop_top) +
+      video_crop->crop_left;
   for (j = 0; j < out_height; j++) {
     memcpy (destY, srcY, out_width);
-    srcY += src_stride;
-    destY += out_width;
+    srcY += GST_VIDEO_I420_Y_ROWSTRIDE (video_crop->width);
+    destY += GST_VIDEO_I420_Y_ROWSTRIDE (out_width);
   }
-
-  src_stride = GST_VIDEO_I420_U_ROWSTRIDE (video_crop->width);
 
   destU = dest + GST_VIDEO_I420_U_OFFSET (out_width, out_height);
   destV = dest + GST_VIDEO_I420_V_OFFSET (out_width, out_height);
@@ -339,19 +457,23 @@ gst_video_crop_i420 (GstVideoCrop * video_crop, GstBuffer * src_buffer,
   srcU = src + GST_VIDEO_I420_U_OFFSET (video_crop->width, video_crop->height);
   srcV = src + GST_VIDEO_I420_V_OFFSET (video_crop->width, video_crop->height);
 
-  srcU += src_stride * (video_crop->crop_top / 2) + (video_crop->crop_left / 2);
-  srcV += src_stride * (video_crop->crop_top / 2) + (video_crop->crop_left / 2);
+  srcU +=
+      (GST_VIDEO_I420_U_ROWSTRIDE (video_crop->width) * (video_crop->crop_top /
+          2)) + (video_crop->crop_left / 2);
+  srcV +=
+      (GST_VIDEO_I420_V_ROWSTRIDE (video_crop->width) * (video_crop->crop_top /
+          2)) + (video_crop->crop_left / 2);
 
   for (j = 0; j < out_height / 2; j++) {
     /* copy U plane */
     memcpy (destU, srcU, out_width / 2);
-    srcU += src_stride;
-    destU += out_width / 2;
+    srcU += GST_VIDEO_I420_U_ROWSTRIDE (video_crop->width);
+    destU += GST_VIDEO_I420_U_ROWSTRIDE (out_width);
 
     /* copy V plane */
     memcpy (destV, srcV, out_width / 2);
-    srcV += src_stride;
-    destV += out_width / 2;
+    srcV += GST_VIDEO_I420_V_ROWSTRIDE (video_crop->width);
+    destV += GST_VIDEO_I420_V_ROWSTRIDE (out_width);
   }
 }
 
@@ -365,23 +487,42 @@ gst_video_crop_chain (GstPad * pad, GstData * _data)
 
   video_crop = GST_VIDEO_CROP (gst_pad_get_parent (pad));
 
-  if (GST_IS_EVENT (buffer)) {
-    GstEvent *event = GST_EVENT (buffer);
-
-    switch (GST_EVENT_TYPE (event)) {
-      default:
-        gst_pad_event_default (pad, event);
-        break;
-    }
-    return;
-  }
-
   new_width = video_crop->width -
       (video_crop->crop_left + video_crop->crop_right);
   new_height = video_crop->height -
       (video_crop->crop_top + video_crop->crop_bottom);
 
-  outbuf = gst_buffer_new_and_alloc ((new_width * new_height * 3) / 2);
+  if (video_crop->renegotiate_src_caps || !GST_PAD_CAPS (video_crop->srcpad)) {
+    GstCaps *newcaps;
+
+    newcaps = gst_caps_copy (gst_pad_get_negotiated_caps (video_crop->sinkpad));
+
+    gst_caps_set_simple (newcaps,
+        "width", G_TYPE_INT, new_width, "height", G_TYPE_INT, new_height, NULL);
+
+    if (GST_PAD_LINK_FAILED (gst_pad_try_set_caps (video_crop->srcpad,
+                newcaps))) {
+      GST_ELEMENT_ERROR (video_crop, CORE, NEGOTIATION, (NULL), (NULL));
+      gst_caps_free (newcaps);
+      return;
+    }
+
+    gst_caps_free (newcaps);
+
+    video_crop->renegotiate_src_caps = FALSE;
+  }
+
+  /* passthrough if nothing to do */
+  if (new_width == video_crop->width && new_height == video_crop->height) {
+    gst_pad_push (video_crop->srcpad, GST_DATA (buffer));
+    return;
+  }
+
+  g_return_if_fail (GST_BUFFER_SIZE (buffer) >=
+      GST_VIDEO_I420_SIZE (video_crop->width, video_crop->height));
+
+  outbuf = gst_pad_alloc_buffer (video_crop->srcpad, GST_BUFFER_OFFSET (buffer),
+      GST_VIDEO_I420_SIZE (new_width, new_height));
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
 
   gst_video_crop_i420 (video_crop, buffer, outbuf);
@@ -399,6 +540,7 @@ gst_video_crop_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
+      video_crop->renegotiate_src_caps = TRUE;
       break;
     case GST_STATE_READY_TO_PAUSED:
       break;
@@ -412,7 +554,8 @@ gst_video_crop_change_state (GstElement * element)
       break;
   }
 
-  parent_class->change_state (element);
+  if (parent_class->change_state != NULL)
+    return parent_class->change_state (element);
 
   return GST_STATE_SUCCESS;
 }
