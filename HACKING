@@ -29,9 +29,23 @@ On head, the following things have been commited on top of this:
 Both the actually patched CVS ffmpeg code as well as the .pc dir need to be
 commited to CVS so the state of quilt wrt. the source is in sync.
 
+THE WARNING
+-----------
+
+***
+
+NEVER EVER commit stuff in gst-libs/ext/ffmpeg UNLESS your quilt stack is
+completely applied !
+This means, ALWAYS make sure quilt push -a has been run without problems.
+
+What's more, if you want to be on the safe side, make sure that you can
+unapply and reapply without problems, by running quilt pop -a then
+quilt push -a.
+
+***
+
 THE WAY
 -------
-
 - If you want to hack on our copy of the FFmpeg code, there are some basic
   rules you need to respect:
   - you need to use quilt.  If you don't use quilt, you can't hack on it.

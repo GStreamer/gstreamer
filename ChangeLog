@@ -1,5 +1,13 @@
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/ext/ffmpeg/m4/imlib.m4:
+	* gst-libs/ext/ffmpeg/m4/sdl.m4:
+	* gst-libs/ext/ffmpeg/m4/freetype2.m4:
+	* gst-libs/ext/ffmpeg/patches/autotools.patch:
+          fix underquotedness, add freetype2.m4
+
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/ext/ffmpeg/patches/autotools.patch:
           put in sdl.m4 and imlib.m4
 
