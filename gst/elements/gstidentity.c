@@ -357,9 +357,8 @@ gst_identity_event (GstPad * pad, GstEvent * event)
       gst_pad_event_default (pad, event);
       if (GST_EVENT_FLUSH_DONE (event)) {
         if (identity->sink_mode == GST_ACTIVATE_PULL) {
-          GST_STREAM_LOCK (identity->sinkpad);
+          /* already have the sink stream lock */
           gst_task_start (GST_RPAD_TASK (identity->sinkpad));
-          GST_STREAM_UNLOCK (identity->sinkpad);
         }
         if (identity->src_mode == GST_ACTIVATE_PUSH) {
           GST_STREAM_LOCK (identity->srcpad);
@@ -375,7 +374,11 @@ gst_identity_event (GstPad * pad, GstEvent * event)
       ret = TRUE;
       goto done;
     case GST_EVENT_EOS:
-      g_print ("identity got eos\n");
+      /* g_print ("identity got eos\n"); */
+      if (identity->sink_mode == GST_ACTIVATE_PULL) {
+        /* already have the sink stream lock */
+        gst_task_pause (GST_RPAD_TASK (identity->sinkpad));
+      }
       break;
     default:
       g_print ("identity got event %p of type %d\n", event,

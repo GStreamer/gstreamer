@@ -1,5 +1,9 @@
 2005-02-23  Andy Wingo  <wingo@pobox.com>
 
+	* gst/elements/gstidentity.c (gst_identity_event): Pause the sink
+	task, if any, during EOS. Don't need to take the stream lock, we
+	already have it.
+
 	* gst/gstmessage.h
 	* gst/gstmessage.c (_gst_message_free)
 	(gst_message_new_application): New message type, APPLICATION,
