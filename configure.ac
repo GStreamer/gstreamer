@@ -9,6 +9,7 @@ AS_LIBTOOL(GST, 0, 0, 0, yes)
 dnl we'll move this to a configure option later on which will be turned on
 dnl by autogen
 dnl GST_ERROR="-Wall -Werror"
+GST_ERROR="-Wall"
 
 AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
