@@ -123,8 +123,10 @@ gst_v4l2_fill_lists (GstV4l2Element * v4l2element)
           g_object_unref (G_OBJECT (channel));
           return FALSE;
         }
-        channel->min_frequency = vtun.rangelow;
-        channel->max_frequency = vtun.rangehigh;
+        channel->freq_multiplicator =
+            62.5 * ((vtun.capability & V4L2_TUNER_CAP_LOW) ? 1 : 1000);
+        channel->min_frequency = vtun.rangelow * channel->freq_multiplicator;
+        channel->max_frequency = vtun.rangehigh * channel->freq_multiplicator;
         channel->min_signal = 0;
         channel->max_signal = 0xffff;
       }
@@ -620,9 +622,12 @@ gst_v4l2_get_frequency (GstV4l2Element * v4l2element,
     gint tunernum, gulong * frequency)
 {
   struct v4l2_frequency freq;
+  GstTunerChannel *channel;
 
   DEBUG ("getting current tuner frequency");
   GST_V4L2_CHECK_OPEN (v4l2element);
+
+  channel = gst_tuner_get_channel (GST_TUNER (v4l2element));
 
   freq.tuner = tunernum;
   if (ioctl (v4l2element->video_fd, VIDIOC_G_FREQUENCY, &freq) < 0) {
@@ -632,7 +637,7 @@ gst_v4l2_get_frequency (GstV4l2Element * v4l2element,
     return FALSE;
   }
 
-  *frequency = freq.frequency;
+  *frequency = freq.frequency * channel->freq_multiplicator;
 
   return TRUE;
 }
@@ -649,15 +654,18 @@ gst_v4l2_set_frequency (GstV4l2Element * v4l2element,
     gint tunernum, gulong frequency)
 {
   struct v4l2_frequency freq;
+  GstTunerChannel *channel;
 
   DEBUG ("setting current tuner frequency to %lu", frequency);
   GST_V4L2_CHECK_OPEN (v4l2element);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2element);
 
+  channel = gst_tuner_get_channel (GST_TUNER (v4l2element));
+
   freq.tuner = tunernum;
   /* fill in type - ignore error */
   ioctl (v4l2element->video_fd, VIDIOC_G_FREQUENCY, &freq);
-  freq.frequency = frequency;
+  freq.frequency = frequency / channel->freq_multiplicator;
 
   if (ioctl (v4l2element->video_fd, VIDIOC_S_FREQUENCY, &freq) < 0) {
     GST_ELEMENT_ERROR (v4l2element, RESOURCE, SETTINGS, (NULL),

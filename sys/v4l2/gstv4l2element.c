@@ -383,7 +383,7 @@ gst_v4l2element_class_init (GstV4l2ElementClass * klass)
           "input/output to switch to", NULL, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_FREQUENCY,
       g_param_spec_ulong ("frequency", "frequency",
-          "frequency to tune to", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
+          "frequency to tune to (in Hz)", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
 
   /* signals */
   gst_v4l2element_signals[SIGNAL_OPEN] =
@@ -411,7 +411,7 @@ gst_v4l2element_init (GstV4l2Element * v4l2element)
   /* some default values */
   v4l2element->video_fd = -1;
   v4l2element->buffer = NULL;
-  v4l2element->device = g_strdup ("/dev/video");
+  v4l2element->device = g_strdup ("/dev/video0");
   v4l2element->display = g_strdup (g_getenv ("DISPLAY"));
 
   v4l2element->channels = NULL;
