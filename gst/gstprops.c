@@ -53,19 +53,19 @@ gst_props_debug_entry (GstPropsEntry *entry)
 {
   switch (entry->propstype) {
     case GST_PROPS_INT_ID:
-      GST_DEBUG (0, "%d\n", entry->data.int_data);
+      GST_DEBUG (GST_CAT_PROPERTIES, "%d\n", entry->data.int_data);
       break;
     case GST_PROPS_FOURCC_ID:
-      GST_DEBUG (0, "%4.4s\n", (gchar*)&entry->data.fourcc_data);
+      GST_DEBUG (GST_CAT_PROPERTIES, "%4.4s\n", (gchar*)&entry->data.fourcc_data);
       break;
     case GST_PROPS_BOOL_ID:
-      GST_DEBUG (0, "%d\n", entry->data.bool_data);
+      GST_DEBUG (GST_CAT_PROPERTIES, "%d\n", entry->data.bool_data);
       break;
     case GST_PROPS_STRING_ID:
-      GST_DEBUG (0, "%s\n", entry->data.string_data.string);
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s\n", entry->data.string_data.string);
       break;
     case GST_PROPS_INT_RANGE_ID:
-      GST_DEBUG (0, "%d-%d\n", entry->data.int_range_data.min,
+      GST_DEBUG (GST_CAT_PROPERTIES, "%d-%d\n", entry->data.int_range_data.min,
 		      entry->data.int_range_data.max);
       break;
     default:
@@ -584,7 +584,7 @@ gst_props_entry_check_list_compatibility (GstPropsEntry *entry1, GstPropsEntry *
 static gboolean
 gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry2)
 {
-  GST_DEBUG (0,"compare: %s %s\n", g_quark_to_string (entry1->propid),
+  GST_DEBUG (GST_CAT_PROPERTIES,"compare: %s %s\n", g_quark_to_string (entry1->propid),
 	                     g_quark_to_string (entry2->propid));
   switch (entry1->propstype) {
     case GST_PROPS_LIST_ID:
@@ -729,14 +729,14 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
     entry2 = (GstPropsEntry *)sinklist->data;
 
     while (entry1->propid < entry2->propid) {
-      GST_DEBUG (0,"source is more specific in \"%s\"\n", g_quark_to_string (entry1->propid));
+      GST_DEBUG (GST_CAT_PROPERTIES,"source is more specific in \"%s\"\n", g_quark_to_string (entry1->propid));
       more++;
       sourcelist = g_list_next (sourcelist);
       if (sourcelist) entry1 = (GstPropsEntry *)sourcelist->data;
       else goto end;
     }
     while (entry1->propid > entry2->propid) {
-      GST_DEBUG (0,"source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
+      GST_DEBUG (GST_CAT_PROPERTIES,"source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
       missing++;
       sinklist = g_list_next (sinklist);
       if (sinklist) entry2 = (GstPropsEntry *)sinklist->data;
@@ -745,7 +745,7 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
 
     if (!gst_props_entry_check_compatibility (entry1, entry2)) {
 	compatible = FALSE;
-	GST_DEBUG (0, "%s are not compatible\n:",
+	GST_DEBUG (GST_CAT_PROPERTIES, "%s are not compatible\n:",
 		   g_quark_to_string (entry1->propid));
 	gst_props_debug_entry (entry1);
 	gst_props_debug_entry (entry2);
@@ -758,7 +758,7 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
     GstPropsEntry *entry2;
     entry2 = (GstPropsEntry *)sinklist->data;
     missing++;
-    GST_DEBUG (0,"source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
+    GST_DEBUG (GST_CAT_PROPERTIES,"source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
   }
 end:
 
