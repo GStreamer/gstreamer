@@ -86,10 +86,11 @@ struct _GstPlayOnDemand {
 struct _GstPlayOnDemandClass {
   GstElementClass parent_class;
 
-  void (*play)   (GstElement *elem);
-  void (*clear)  (GstElement *elem);
-  void (*reset)  (GstElement *elem);
-  void (*played) (GstElement *elem);
+  void (*play)    (GstElement *elem);
+  void (*clear)   (GstElement *elem);
+  void (*reset)   (GstElement *elem);
+  void (*played)  (GstElement *elem);
+  void (*stopped) (GstElement *elem);
 };
 
 GType gst_play_on_demand_get_type(void);

@@ -6,22 +6,23 @@ filter_data = (_TYPE_ *) filter->buffer;
 num_filter = filter->buffer_bytes / sizeof(_TYPE_);
 
 do {
+  if (in == NULL && ! filter->eos) in = gst_pad_pull(filter->sinkpad);
+
   /****************************************************************************/
   /* see if we've got any events coming through ... */
 
   while (! filter->eos && GST_IS_EVENT(in)) {
     if (GST_EVENT_TYPE(in) == GST_EVENT_EOS) {
       gst_event_unref(in);
+      gst_buffer_free(in);
       filter->eos = TRUE;
     } else if ((GST_EVENT_TYPE(in) == GST_EVENT_SEEK) ||
                (GST_EVENT_TYPE(in) == GST_EVENT_FLUSH)) {
+      gst_event_unref(in);
+      gst_buffer_free(in);
       filter->eos = FALSE;
       filter->write = 0;
     } else {
-      if ((GST_EVENT_TYPE(in) == GST_EVENT_SEEK) ||
-          (GST_EVENT_TYPE(in) == GST_EVENT_FLUSH))
-        filter->write = 0;
-
       gst_pad_push(filter->srcpad, in);
     }
 
@@ -48,6 +49,8 @@ do {
   } else {
     out = gst_buffer_new_from_pool(filter->bufpool, 0, 0);
   }
+
+  in = NULL;
 
   /****************************************************************************/
   /* check to see if we have to add new play pointers. */
@@ -112,8 +115,6 @@ do {
   /* push out the buffer. */
 
   gst_pad_push(filter->srcpad, out);
-
-  in = (! filter->eos) ? gst_pad_pull(filter->sinkpad) : NULL;
 
   if (gst_element_interrupt (GST_ELEMENT (filter))) break;
 

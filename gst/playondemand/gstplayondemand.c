@@ -64,7 +64,7 @@ play_on_demand_sink_factory (void)
        gst_caps_append(gst_caps_new ("sink_int",  "audio/x-raw-int",
                                      GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
                        gst_caps_new ("sink_float", "audio/x-raw-float",
-                                     GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS)),
+                                     GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS)),
        NULL);
   }
   return template;
@@ -80,7 +80,7 @@ play_on_demand_src_factory (void)
     template = gst_pad_template_new
       ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
        gst_caps_append (gst_caps_new ("src_float", "audio/x-raw-float",
-                                      GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS),
+                                      GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS),
                         gst_caps_new ("src_int", "audio/x-raw-int",
                                       GST_AUDIO_INT_PAD_TEMPLATE_PROPS)),
        NULL);
@@ -140,6 +140,7 @@ gst_play_on_demand_get_type (void)
 enum {
   /* add signals here */
   PLAYED_SIGNAL,
+  STOPPED_SIGNAL,
   PLAY_SIGNAL,
   CLEAR_SIGNAL,
   RESET_SIGNAL,
@@ -174,6 +175,11 @@ play_on_demand_class_init (GstPlayOnDemandClass *klass)
                  G_STRUCT_OFFSET(GstPlayOnDemandClass, played),
                  NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
+  gst_pod_filter_signals[STOPPED_SIGNAL] =
+    g_signal_new("stopped", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                 G_STRUCT_OFFSET(GstPlayOnDemandClass, stopped),
+                 NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
   gst_pod_filter_signals[PLAY_SIGNAL] =
     g_signal_new("play", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GstPlayOnDemandClass, play),
@@ -206,7 +212,7 @@ play_on_demand_class_init (GstPlayOnDemandClass *klass)
                          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_BUFFER_TIME,
     g_param_spec_float("buffer-time", "Buffer length in seconds", "Number of seconds of audio the buffer holds",
-                       0.0, G_MAXUINT / GST_AUDIO_MAX_RATE - 10, GST_POD_BUFFER_TIME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                       0.0, G_MAXFLOAT, GST_POD_BUFFER_TIME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_MAX_PLAYS,
     g_param_spec_uint("max-plays", "Maximum simultaneous playbacks", "Maximum allowed number of simultaneous plays from the buffer",
                       1, G_MAXUINT, GST_POD_MAX_PLAYS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
@@ -243,7 +249,6 @@ play_on_demand_init (GstPlayOnDemand *filter)
   filter->plays = g_new(guint, filter->max_plays);
 
   play_on_demand_resize_buffer(filter);
-  play_on_demand_clear_handler(GST_ELEMENT(filter));
   play_on_demand_reset_handler(GST_ELEMENT(filter));
 }
 
@@ -268,8 +273,7 @@ play_on_demand_set_property (GObject *object, guint prop_id,
     play_on_demand_resize_buffer(filter);
 
     /* clear out now-invalid play pointers */
-    for (i = 0; i < filter->max_plays; i++)
-      filter->plays[i] = G_MAXUINT;
+    for (i = 0; i < filter->max_plays; i++) filter->plays[i] = G_MAXUINT;
 
     break;
   case PROP_MAX_PLAYS:
@@ -496,7 +500,7 @@ play_on_demand_clear_handler (GstElement *elem)
   filter->eos = FALSE;
 
   for (i = 0; i < filter->max_plays; i++) filter->plays[i] = G_MAXUINT;
-  for (i = 0; i < filter->buffer_bytes; i++) filter->buffer[i] = 0;
+  for (i = 0; i < filter->buffer_bytes; i++) filter->buffer[i] = (gchar) 0;
 }
 
 static void
@@ -536,7 +540,7 @@ play_on_demand_resize_buffer (GstPlayOnDemand *filter)
 
   new_buffer = g_new(gchar, new_size);
   for (i = 0; i < min_size; i++) new_buffer[i] = filter->buffer[i];
-  for (i = min_size; i < new_size; i++) new_buffer[i] = 0;
+  for (i = min_size; i < new_size; i++) new_buffer[i] = (gchar) 0;
 
   g_free(filter->buffer);
   filter->buffer = new_buffer;
