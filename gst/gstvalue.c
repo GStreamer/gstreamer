@@ -461,8 +461,13 @@ static void
 gst_value_transform_double_range_string (const GValue *src_value,
     GValue *dest_value)
 {
-  dest_value->data[0].v_pointer = g_strdup_printf("[%g,%g]",
-      src_value->data[0].v_double, src_value->data[1].v_double);
+  char s1[G_ASCII_DTOSTR_BUF_SIZE],s2[G_ASCII_DTOSTR_BUF_SIZE];
+
+  dest_value->data[0].v_pointer = g_strdup_printf("[%s,%s]",
+      g_ascii_dtostr (s1, G_ASCII_DTOSTR_BUF_SIZE,
+        src_value->data[0].v_double),
+      g_ascii_dtostr (s2, G_ASCII_DTOSTR_BUF_SIZE,
+        src_value->data[1].v_double));
 }
 
 static void
