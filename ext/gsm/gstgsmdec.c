@@ -25,17 +25,14 @@
 
 #include "gstgsmdec.h"
 
-extern GstPadTemplate *gsmdec_src_template, *gsmdec_sink_template;
+static GstPadTemplate *gsmdec_src_template, *gsmdec_sink_template;
 
 /* elementfactory information */
 GstElementDetails gst_gsmdec_details = {
   "gsm audio decoder",
   "Codec/Audio/Decoder",
-  "LGPL",
   ".gsm",
-  VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
 };
 
 /* GSMDec signals and args */
@@ -49,6 +46,7 @@ enum {
   /* FILL ME */
 };
 
+static void                     gst_gsmdec_base_init (gpointer g_class);
 static void			gst_gsmdec_class_init	(GstGSMDec *klass);
 static void			gst_gsmdec_init		(GstGSMDec *gsmdec);
 
@@ -64,7 +62,8 @@ gst_gsmdec_get_type(void) {
 
   if (!gsmdec_type) {
     static const GTypeInfo gsmdec_info = {
-      sizeof(GstGSMDecClass),      NULL,
+      sizeof(GstGSMDecClass),
+      gst_gsmdec_base_init,
       NULL,
       (GClassInitFunc)gst_gsmdec_class_init,
       NULL,
@@ -76,6 +75,45 @@ gst_gsmdec_get_type(void) {
     gsmdec_type = g_type_register_static(GST_TYPE_ELEMENT, "GstGSMDec", &gsmdec_info, 0);
   }
   return gsmdec_type;
+}
+
+GST_CAPS_FACTORY (gsm_caps_factory,
+  GST_CAPS_NEW (
+    "gsm_gsm",
+    "audio/x-gsm",
+      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
+      "channels",   GST_PROPS_INT (1)
+  )
+)
+
+GST_CAPS_FACTORY (raw_caps_factory,
+  GST_CAPS_NEW (
+    "gsm_raw",
+    "audio/x-raw-int",
+      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+      "signed",     GST_PROPS_BOOLEAN (TRUE),
+      "width",      GST_PROPS_INT (16),
+      "depth",      GST_PROPS_INT (16),
+      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
+      "channels",   GST_PROPS_INT (1)
+  )
+)
+
+static void
+gst_gsmdec_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *raw_caps, *gsm_caps;
+
+  gsmdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+					       GST_PAD_ALWAYS, 
+					       gsm_caps, NULL);
+  gsmdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+					      GST_PAD_ALWAYS, 
+					      raw_caps, NULL);
+  gst_element_class_add_pad_template (element_class, gsmdec_sink_template);
+  gst_element_class_add_pad_template (element_class, gsmdec_src_template);
+  gst_element_class_set_details (element_class, &gst_gsmdec_details);
 }
 
 static void

@@ -21,89 +21,25 @@
 #include "gstgsmdec.h"
 #include "gstgsmenc.h"
 
-/* elementfactory information */
-extern GstElementDetails gst_gsmdec_details;
-extern GstElementDetails gst_gsmenc_details;
-
-GstPadTemplate *gsmdec_src_template, *gsmdec_sink_template; 
-GstPadTemplate *gsmenc_src_template, *gsmenc_sink_template;
-
-GST_CAPS_FACTORY (gsm_caps_factory,
-  GST_CAPS_NEW (
-    "gsm_gsm",
-    "audio/x-gsm",
-      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
-      "channels",   GST_PROPS_INT (1)
-  )
-)
-
-GST_CAPS_FACTORY (raw_caps_factory,
-  GST_CAPS_NEW (
-    "gsm_raw",
-    "audio/x-raw-int",
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",     GST_PROPS_BOOLEAN (TRUE),
-      "width",      GST_PROPS_INT (16),
-      "depth",      GST_PROPS_INT (16),
-      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
-      "channels",   GST_PROPS_INT (1)
-  )
-)
-
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *dec, *enc;
-  GstCaps *raw_caps, *gsm_caps;
-
-  /* create an elementfactory for the gsmdec element */
-  enc = gst_element_factory_new("gsmenc",GST_TYPE_GSMENC,
-                                   &gst_gsmenc_details);
-  g_return_val_if_fail(enc != NULL, FALSE);
-
-  raw_caps = GST_CAPS_GET (raw_caps_factory);
-  gsm_caps = GST_CAPS_GET (gsm_caps_factory);
-
-  /* register sink pads */
-  gsmenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-		                              GST_PAD_ALWAYS, 
-					      raw_caps, NULL);
-  gst_element_factory_add_pad_template (enc, gsmenc_sink_template);
-
-  /* register src pads */
-  gsmenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-		                             GST_PAD_ALWAYS, 
-					     gsm_caps, NULL);
-  gst_element_factory_add_pad_template (enc, gsmenc_src_template);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
-
-  /* create an elementfactory for the gsmdec element */
-  dec = gst_element_factory_new("gsmdec",GST_TYPE_GSMDEC,
-                                   &gst_gsmdec_details);
-  g_return_val_if_fail(dec != NULL, FALSE);
-  gst_element_factory_set_rank (dec, GST_ELEMENT_RANK_PRIMARY);
- 
-  /* register sink pads */
-  gsmdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-		                              GST_PAD_ALWAYS, 
-					      gsm_caps, NULL);
-  gst_element_factory_add_pad_template (dec, gsmdec_sink_template);
-
-  /* register src pads */
-  gsmdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-		                             GST_PAD_ALWAYS, 
-					     raw_caps, NULL);
-  gst_element_factory_add_pad_template (dec, gsmdec_src_template);
-  
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
+  if (!gst_element_register (plugin, "gsmenc", GST_RANK_NONE, GST_TYPE_GSMENC))
+    return FALSE;
+  if (!gst_element_register (plugin, "gsmdec", GST_RANK_PRIMARY, GST_TYPE_GSMDEC))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gsm",
-  plugin_init
-};
+  "GSM Elements Plugin",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)

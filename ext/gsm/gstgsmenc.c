@@ -25,17 +25,14 @@
 
 #include "gstgsmenc.h"
 
-extern GstPadTemplate *gsmenc_src_template, *gsmenc_sink_template;
+static GstPadTemplate *gsmenc_src_template, *gsmenc_sink_template;
 
 /* elementfactory information */
 GstElementDetails gst_gsmenc_details = {
   "gsm audio encoder",
   "Codec/Audio/Encoder",
-  "LGPL",
   ".gsm",
-  VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
 };
 
 /* GSMEnc signals and args */
@@ -50,6 +47,7 @@ enum {
   /* FILL ME */
 };
 
+static void                     gst_gsmenc_base_init (gpointer g_class);
 static void			gst_gsmenc_class_init	(GstGSMEnc *klass);
 static void			gst_gsmenc_init		(GstGSMEnc *gsmenc);
 
@@ -67,7 +65,7 @@ gst_gsmenc_get_type (void)
   if (!gsmenc_type) {
     static const GTypeInfo gsmenc_info = {
       sizeof (GstGSMEncClass),
-      NULL,
+      gst_gsmenc_base_init, 
       NULL,
       (GClassInitFunc) gst_gsmenc_class_init,
       NULL,
@@ -81,6 +79,48 @@ gst_gsmenc_get_type (void)
   return gsmenc_type;
 }
 
+GST_CAPS_FACTORY (gsm_caps_factory,
+  GST_CAPS_NEW (
+    "gsm_gsm",
+    "audio/x-gsm",
+      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
+      "channels",   GST_PROPS_INT (1)
+  )
+)
+
+GST_CAPS_FACTORY (raw_caps_factory,
+  GST_CAPS_NEW (
+    "gsm_raw",
+    "audio/x-raw-int",
+      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+      "signed",     GST_PROPS_BOOLEAN (TRUE),
+      "width",      GST_PROPS_INT (16),
+      "depth",      GST_PROPS_INT (16),
+      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
+      "channels",   GST_PROPS_INT (1)
+  )
+)
+
+static void
+gst_gsmenc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *raw_caps, *gsm_caps;
+
+  raw_caps = GST_CAPS_GET (raw_caps_factory);
+  gsm_caps = GST_CAPS_GET (gsm_caps_factory);
+  
+  gsmenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+		                              GST_PAD_ALWAYS, 
+					      raw_caps, NULL);
+  gsmenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+		                             GST_PAD_ALWAYS, 
+					     gsm_caps, NULL);
+  gst_element_class_add_pad_template (element_class, gsmenc_sink_template);
+  gst_element_class_add_pad_template (element_class, gsmenc_src_template);
+  gst_element_class_set_details (element_class, &gst_gsmenc_details);
+}
+  
 static void
 gst_gsmenc_class_init (GstGSMEnc *klass)
 {
