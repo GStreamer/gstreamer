@@ -260,11 +260,20 @@ AC_CHECK_HEADER(lame.h, :, HAVE_LIBLAME=no)
 
 dnl check for gtkdoc
 AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scanobj, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scan, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mktmpl, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkhtml, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-fixxref, :, false)
 
-dnl check for db2html
+dnl check for docbook tools
 AC_CHECK_PROG(HAVE_DB2HTML, db2html, true, false)
 AC_CHECK_PROG(HAVE_DB2PS, db2ps, true, false)
-AC_CHECK_PROG(HAVE_DB2PDF, db2pdf, true, false)
+AC_CHECK_PROG(HAVE_PS2PDF, ps2pdf, true, false)
+
+dnl check for image conversion tool
+AC_CHECK_PROG(HAVE_FIG2DEV, fig2dev, true, false)
 
 
 dnl ######################################################################
@@ -432,8 +441,9 @@ AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXV,          test "x$HAVE_LIBXV" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 AM_CONDITIONAL(HAVE_DB2HTML,        $HAVE_DB2HTML)
-AM_CONDITIONAL(HAVE_DB2PDF,         $HAVE_DB2PDF)
 AM_CONDITIONAL(HAVE_DB2PS,          $HAVE_DB2PS)
+AM_CONDITIONAL(HAVE_PS2PDF,         $HAVE_PS2PDF)
+AM_CONDITIONAL(HAVE_FIG2DEV,        $HAVE_FIG2DEV)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 

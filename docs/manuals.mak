@@ -10,14 +10,34 @@
 PDFFILES=$(manualname).pdf
 PSFILES=$(manualname).ps
 
+if HAVE_FIG2DEV
 $(manualname)/$(htmlname): $(sgml_files) $(png_files)
+else
+$(manualname)/$(htmlname): $(sgml_files)
+endif
+if HAVE_DB2HTML
 	db2html $(manualname).sgml
+else
+	echo "Can't build $@: don't have db2html tool"
+endif
 
 $(manualname).pdf: $(manualname).ps
-	ps2pdf $< $@
+if HAVE_PS2PDF
+	@if [ -r $< ] ; then ps2pdf $< $@ ; fi
+else
+	echo "Can't build $@: don't have ps2pdf tool"
+endif
 
+if HAVE_FIG2DEV
 $(manualname).ps: $(sgml_files) $(eps_files)
-	db2ps $(manualname).sgml
+else
+$(manualname).ps: $(sgml_files)
+endif
+if HAVE_PS2PDF
+	@if [ -r $< ] ; then db2ps $(manualname).sgml ; fi
+else
+	echo "Can't build $@: don't have db2ps tool"
+endif
 
 images :
 	mkdir images
@@ -75,8 +95,9 @@ htmlinst:
 	    $(INSTALL_DATA) $(manualname)/*.html $(DESTDIR)$(docdatadir)/$(manualname) ; \
 	    for a in "x" $(png_files); do \
 	    if [ "x$$a" != "xx" ] ; then \
+	    if [ -r $$a ] ; then \
 	    $(INSTALL_DATA) $$a $(DESTDIR)$(docdatadir)/$(manualname)/images ; \
-	    fi; done \
+	    fi; fi; done \
 	else \
 	    if [ -r $(srcdir)/$(manualname)/$(htmlname) ] ; then \
 	        echo "Installing $(srcdir)/$(manualname)" ; \
@@ -85,8 +106,9 @@ htmlinst:
 	        $(INSTALL_DATA) $(srcdir)/$(manualname)/*.html $(DESTDIR)$(docdatadir)/$(manualname) ; \
 		for a in "x" $(png_files); do \
 		if [ "x$$a" != "xx" ] ; then \
+		if [ -r $$a ] ; then \
 		$(INSTALL_DATA) $$a $(DESTDIR)$(docdatadir)/$(manualname)/images ; \
-		fi; done \
+		fi; fi; done \
 	    else \
 	        echo "NOT installing HTML documentation: not present, and can't generate" ; \
 	    fi \

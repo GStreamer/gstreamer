@@ -5,10 +5,10 @@ else
 SUBDIRS_LGG =
 endif
 
-SUBDIRS = include gst libs plugins tools test tests examples $(SUBDIRS_LGG)
+SUBDIRS = include gst libs plugins tools test tests examples $(SUBDIRS_LGG) docs
 
 # These are all the possible subdirs
-DIST_SUBDIRS = include gst libs plugins tools test tests examples gstplay editor
+DIST_SUBDIRS = include gst libs plugins tools test tests examples gstplay editor docs
 
 
 bin_SCRIPTS = gstreamer-config

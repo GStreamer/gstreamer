@@ -59,7 +59,7 @@ install-data-local: html
 	  gtkdoc-fixxref --module=$(DOC_MODULE) --html-dir=$(HTML_DIR)|| true; \
 	fi)
 
-uninstall-local: html
+uninstall-local:
 	@echo '-- Uninstalling '$(DESTDIR)$(TARGET_DIR) ; \
 	$(RM) -rf $(DESTDIR)$(TARGET_DIR)
 

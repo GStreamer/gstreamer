@@ -64,7 +64,6 @@ gstreamer_docdir = $(HTML_DIR)
 gstreamer_doc_DATA =		\
 	gstreamer.html		\
 	gstreamer.types		\
-	gstreamer-decl.txt	\
 	gstreamer.hierarchy	\
 	gstreamer-sections.txt
 
@@ -87,17 +86,13 @@ sgml/gstreamer-doc.bottom: $(tmpl_sources)
 	$(MAKE) sgml
 
 gstreamer-decl.txt:
-	$(MAKE) scan
+	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers=""
 
 scanobj: $(srcdir)/$(DOC_MODULE).types
 	-CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" gtkdoc-scanobj --module=$(DOC_MODULE)
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
 
-
-scan:
-	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers=""
-
-tmpl: scanobj scan
+tmpl: scanobj gstreamer-decl.txt
 	gtkdoc-mktmpl --module=$(DOC_MODULE)
 
 sgml: tmpl
@@ -113,7 +108,7 @@ clean-local:
 maintainer-clean-local: clean
 	rm -rf sgml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt 
 
-install-data-local:
+install-data-local: gstreamer.html
 	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
 	(installfiles=`echo $(srcdir)/html/*.html`; \
 	if test "$$installfiles" = '$(srcdir)/html/*.html'; \
@@ -129,7 +124,7 @@ install-data-local:
 	  gtkdoc-fixxref --module=$(DOC_MODULE) --html-dir=$(HTML_DIR)|| true; \
 	fi)
 
-dist-hook:
+dist-hook: gstreamer.html
 	mkdir $(distdir)/html
 	mkdir $(distdir)/sgml
 	mkdir $(distdir)/tmpl
@@ -138,4 +133,4 @@ dist-hook:
 	-cp $(srcdir)/sgml/*.sgml $(distdir)/sgml
 	-cp $(srcdir)/sgml/*.bottom $(srcdir)/sgml/*.top $(distdir)/sgml
 
-.PHONY : html sgml templates scan
+.PHONY : html sgml tmpl
