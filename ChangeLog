@@ -1,3 +1,9 @@
+2004-06-10  Christophe Fergeau  <teuf@gnome.org>
+
+	* gst/tags/gstvorbistag.c: (gst_vorbis_tag_add): make sure parsed 
+	  vorbis comments are properly encoded in UTF-8 before adding them
+	  to a GstTagList
+
 2004-06-09  Benjamin Otte  <otte@gnome.org>
 
 	* ext/alsa/gstalsa.c: (add_channels):
