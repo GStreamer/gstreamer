@@ -202,6 +202,13 @@ dnl code be compiled with the same sizeof(off_t), so we use
 dnl the following crude hack.
 dnl
 
+dnl
+dnl GST_CFLAGS are split up as GST_EXT_CFLAGS and GST_INT_CFLAGS
+dnl same for libs
+dnl this is so we can make GST_CFLAGS for external modules available
+dnl without mixing in internal (uninstalled) CFLAGS
+dnl
+
 AC_MSG_CHECKING(for large file support)
 AC_TRY_RUN([
 #define _LARGEFILE_SOURCE
@@ -211,7 +218,7 @@ int main () { return !(sizeof(off_t) == 8); }
 ],
 [
 AC_MSG_RESULT(yes)
-GST_CFLAGS="$GST_CFLAGS -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+GST_EXT_CFLAGS="-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
 ],
 [
 AC_MSG_RESULT(no)
@@ -234,7 +241,7 @@ GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
   AC_SUBST(GLIB_CFLAGS)
 ], disabled, [
   AC_DEFINE(USE_GLIB2)
-  GST_CFLAGS="$GST_CFLAGS -DUSE_GLIB2"
+  GST_EXT_CFLAGS="$GST_EXT_CFLAGS -DUSE_GLIB2"
 ])
 AC_SUBST(USE_GLIB2)
 
@@ -293,7 +300,7 @@ else
   PKG_CHECK_MODULES(XML, $LIBXML_PKG, XML_CONFIG=yes, XML_CONFIG=no)
   AC_PATH_PROG(XML_CONFIG, xml-config, no)
   AC_DEFINE(HAVE_LIBXML2)
-  GST_CFLAGS="$GST_CFLAGS -DHAVE_LIBXML2"
+  GST_EXT_CFLAGS="$GST_EXT_CFLAGS -DHAVE_LIBXML2"
 fi
 AC_SUBST(LIBXML_PKG)
 AC_SUBST(XML_LIBS)
@@ -551,11 +558,7 @@ GST_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_REGISTRY, true)
 GST_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
 
-GST_CFLAGS="$GST_CFLAGS $GST_SUBSYSTEM_DISABLE_DEFINES"
-
-dnl for pkg-config
-GST_PKG_CFLAGS=$GST_CFLAGS
-AC_SUBST(GST_PKG_CFLAGS)
+GST_EXT_CFLAGS="$GST_EXT_CFLAGS $GST_SUBSYSTEM_DISABLE_DEFINES"
 
 dnl ################################################
 dnl # Set defines according to variables set above #
@@ -661,17 +664,29 @@ PLUGINS_BUILDDIR=`pwd`
 AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR,"$PLUGINS_BUILDDIR")
 AC_SUBST(PLUGINS_BUILDDIR)
 
+dnl finalize _CFLAGS and _LIBS
+dnl add GLIB and XML if necessary to EXT_*
+GST_EXT_CFLAGS="$GST_EXT_CFLAGS $XML_CFLAGS $GLIB_CFLAGS"
+GST_EXT_LIBS="$GST_EXT_LIBS $XML_LIBS $GLIB_LIBS"
+
+dnl for pkg-config
+GST_PKG_CFLAGS=$GST_EXT_CFLAGS
+GST_PKG_LIBS=$GST_EXT_LIBS
+AC_SUBST(GST_PKG_CFLAGS)
+AC_SUBST(GST_PKG_LIBS)
+
 dnl Private vars for libgst only
-LIBGST_LIBS="$GST_LIBS $XML_LIBS $GLIB_LIBS"
-LIBGST_CFLAGS="$GST_CFLAGS $XML_CFLAGS $GLIB_CFLAGS -I\$(top_srcdir)"
+LIBGST_LIBS="$GST_EXT_LIBS"
+LIBGST_CFLAGS="$GST_EXT_CFLAGS -I\$(top_srcdir)"
 AC_SUBST(LIBGST_LIBS)
 AC_SUBST(LIBGST_CFLAGS)
 
 dnl Vars for everyone else
-GST_LIBS="\$(top_builddir)/gst/libgst.la $LIBGST_LIBS"
-GST_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir)/include $LIBGST_CFLAGS"
-AC_SUBST(GST_LIBS)
-AC_SUBST(GST_CFLAGS)
+GST_INT_LIBS="\$(top_builddir)/gst/libgst.la"
+GST_INT_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir)/include"
+
+AC_SUBST(GST_CFLAGS, "$GST_EXT_CFLAGS $GST_INT_CFLAGS")
+AC_SUBST(GST_LIBS, "$GST_EXT_LIBS $GST_INT_LIBS")
 
 dnl ##################################################
 dnl # Prepare informative messages to display at end #
