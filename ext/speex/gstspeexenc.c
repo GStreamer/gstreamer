@@ -25,8 +25,6 @@
 
 #include "gstspeexenc.h"
 
-static GstPadTemplate *speexenc_src_template, *speexenc_sink_template;
-
 /* elementfactory information */
 GstElementDetails gst_speexenc_details = {
   "speex audio encoder",
@@ -85,7 +83,7 @@ gst_speexenc_get_type (void)
   return speexenc_type;
 }
 
-static GstStaticPadTemplate speex_sink_template =
+static GstStaticPadTemplate speexenc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -97,7 +95,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
     );
 
-static GstStaticPadTemplate speex_src_template = GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate speexenc_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-speex, "
@@ -110,9 +109,9 @@ gst_speexenc_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&speex_sink_template));
+      gst_static_pad_template_get (&speexenc_sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&speex_src_template));
+      gst_static_pad_template_get (&speexenc_src_template));
 
   gst_element_class_set_details (element_class, &gst_speexenc_details);
 }
@@ -140,12 +139,15 @@ gst_speexenc_init (GstSpeexEnc * speexenc)
 {
   /* create the sink and src pads */
   speexenc->sinkpad =
-      gst_pad_new_from_template (speexenc_sink_template, "sink");
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&speexenc_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (speexenc), speexenc->sinkpad);
   gst_pad_set_chain_function (speexenc->sinkpad, gst_speexenc_chain);
   gst_pad_set_link_function (speexenc->sinkpad, gst_speexenc_sinkconnect);
 
-  speexenc->srcpad = gst_pad_new_from_template (speexenc_src_template, "src");
+  speexenc->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&speexenc_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (speexenc), speexenc->srcpad);
 
   speex_bits_init (&speexenc->bits);
