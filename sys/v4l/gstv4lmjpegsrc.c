@@ -187,15 +187,15 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass *klass)
 #endif
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_QUALITY,
-    g_param_spec_int("quality","quality","quality",
-                     G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+    g_param_spec_int("quality","Quality","JPEG frame quality",
+                     1,100,50,G_PARAM_READWRITE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUMBUFS,
     g_param_spec_int("num_buffers","Num Buffers","Number of Buffers",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+                     1,256,64,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFSIZE,
     g_param_spec_int("buffer_size", "Buffer Size", "Size of buffers",
-                     0, G_MAXINT, 0, G_PARAM_READABLE));
+                     0, 512*1024, 128*1024, G_PARAM_READABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_USE_FIXED_FPS,
     g_param_spec_boolean("use_fixed_fps", "Use Fixed FPS",
@@ -712,7 +712,10 @@ gst_v4lmjpegsrc_get_property (GObject    *object,
       g_value_set_int(value, v4lmjpegsrc->quality);
       break;
     case ARG_NUMBUFS:
-      g_value_set_int(value, v4lmjpegsrc->breq.count);
+      if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc)))
+        g_value_set_int(value, v4lmjpegsrc->breq.count);
+      else
+        g_value_set_int(value, v4lmjpegsrc->numbufs);
       break;
     case ARG_BUFSIZE:
       g_value_set_int(value, v4lmjpegsrc->breq.size);
