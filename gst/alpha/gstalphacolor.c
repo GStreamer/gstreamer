@@ -49,6 +49,7 @@ struct _GstAlphaColor
 
   /* caps */
   gint in_width, in_height;
+  gboolean in_rgba;
   gint out_width, out_height;
 };
 
@@ -79,10 +80,10 @@ enum
 };
 
 static GstStaticPadTemplate gst_alpha_color_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA)
     );
 
 static GstStaticPadTemplate gst_alpha_color_src_template =
@@ -230,6 +231,7 @@ gst_alpha_color_sink_link (GstPad * pad, const GstCaps * caps)
   GstStructure *structure;
   gboolean ret;
   gdouble fps;
+  gint red_mask;
 
   alpha = GST_ALPHA_COLOR (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
@@ -237,9 +239,18 @@ gst_alpha_color_sink_link (GstPad * pad, const GstCaps * caps)
   ret = gst_structure_get_int (structure, "width", &alpha->in_width);
   ret &= gst_structure_get_int (structure, "height", &alpha->in_height);
   ret &= gst_structure_get_double (structure, "framerate", &fps);
+  ret &= gst_structure_get_int (structure, "red_mask", &red_mask);
 
   if (!ret)
     return GST_PAD_LINK_REFUSED;
+
+  alpha->in_rgba = TRUE;
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+  if (red_mask != 0x000000ff)
+#else
+  if (red_mask != 0x00ff0000)
+#endif
+    alpha->in_rgba = FALSE;
 
   caps = gst_caps_new_simple ("video/x-raw-yuv",
       "format", GST_TYPE_FOURCC, GST_STR_FOURCC ("AYUV"),
@@ -251,7 +262,7 @@ gst_alpha_color_sink_link (GstPad * pad, const GstCaps * caps)
 }
 
 static void
-transform (guint8 * data, gint size)
+transform_rgb (guint8 * data, gint size)
 {
   guint8 y, u, v;
 
@@ -259,6 +270,26 @@ transform (guint8 * data, gint size)
     y = data[0] * 0.299 + data[1] * 0.587 + data[2] * 0.114 + 0;
     u = data[0] * -0.169 + data[1] * -0.332 + data[2] * 0.500 + 128;
     v = data[0] * 0.500 + data[1] * -0.419 + data[2] * -0.0813 + 128;
+
+    data[0] = data[3];
+    data[1] = y;
+    data[2] = u;
+    data[3] = v;
+
+    data += 4;
+    size -= 4;
+  }
+}
+
+static void
+transform_bgr (guint8 * data, gint size)
+{
+  guint8 y, u, v;
+
+  while (size > 0) {
+    y = data[2] * 0.299 + data[1] * 0.587 + data[0] * 0.114 + 0;
+    u = data[2] * -0.169 + data[1] * -0.332 + data[0] * 0.500 + 128;
+    v = data[2] * 0.500 + data[1] * -0.419 + data[0] * -0.0813 + 128;
 
     data[0] = data[3];
     data[1] = y;
@@ -298,7 +329,10 @@ gst_alpha_color_chain (GstPad * pad, GstData * _data)
 
   outbuf = gst_buffer_copy_on_write (buffer);
 
-  transform (GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
+  if (alpha->in_rgba)
+    transform_rgb (GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
+  else
+    transform_bgr (GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
 
   gst_pad_push (alpha->srcpad, GST_DATA (outbuf));
 }

@@ -1,3 +1,11 @@
+2005-02-08  Gergely Nagy  <algernon@bonehunter.rulez.org>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/alpha/gstalphacolor.c: (gst_alpha_color_sink_link),
+	(transform_rgb), (transform_bgr), (gst_alpha_color_chain):
+	  Add BGRA handling (#165736).
+
 2005-02-08  Francis Labonte  <francis_labonte@hotmail.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
