@@ -34,8 +34,8 @@
 
 	* ext/vorbis/vorbisdec.c : sign warning fixes
 
-	* gst-libs/gst/mixer/mixertrack.c : forgoten include
-	  to define newly used G_MAXINT32, bad owen, bad
+	* gst-libs/gst/mixer/mixertrack.c :
+	  do no use defines which are glib 2.4 specific
 
 2004-06-01  Christophe Fergeau  <teuf@gnome.org>
 
