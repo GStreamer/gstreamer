@@ -25,6 +25,9 @@
 
 #include <gst/gst.h>
 
+GST_DEBUG_CATEGORY_EXTERN (oss_debug);
+#define GST_CAT_DEFAULT oss_debug
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_OSSELEMENT \

@@ -1,3 +1,9 @@
+2004-01-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/oss/gstossaudio.c: (plugin_init):
+	* sys/oss/gstosselement.h:
+          make an oss debugging category
+
 2004-01-11  David Schleef  <ds@schleef.org>
 
 	* ext/ffmpeg/gstffmpeg.c:

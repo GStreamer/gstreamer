@@ -27,6 +27,8 @@
 
 extern gchar *__gst_oss_plugin_dir;
 
+GST_DEBUG_CATEGORY (oss_debug);
+
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
@@ -42,6 +44,7 @@ plugin_init (GstPlugin *plugin)
     return FALSE;
   }
 
+  GST_DEBUG_CATEGORY_INIT (oss_debug, "oss", 0, "OSS elements");
   return TRUE;
 }
 
