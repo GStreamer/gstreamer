@@ -295,9 +295,13 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
 
   GST_BUFFER_DURATION (buffer)     = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET_END (buffer)   = GST_BUFFER_OFFSET_NONE;
-  /* make sure nobody overwrites data as it would overwrite in the parent.
-   * data in parent cannot be overwritten because we hold a ref */
-  GST_DATA_FLAG_SET (parent, GST_DATA_READONLY);
+
+  if (GST_BUFFER_FLAG_IS_SET (parent, GST_BUFFER_DONTKEEP)) {
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_DONTKEEP);
+  }
+  if (GST_BUFFER_FLAG_IS_SET (parent, GST_BUFFER_READONLY)) {
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_READONLY);
+  }
 
   return buffer;
 }

@@ -1,5 +1,10 @@
 2004-01-11  David Schleef  <ds@schleef.org>
 
+	* gst/gstbuffer.c: (gst_buffer_create_sub): Subbuffers should
+	inherit correct flags (READONLY and DONTKEEP).
+
+2004-01-11  David Schleef  <ds@schleef.org>
+
 	* gst/elements/gstfilesrc.c: (gst_filesrc_free_parent_mmap),
 	(gst_filesrc_map_region):
 	* gst/gstbuffer.c: (_gst_buffer_initialize),
