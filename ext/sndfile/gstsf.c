@@ -22,7 +22,7 @@
 #include "config.h"
 #endif
 
-#include "gst-libs/gst/gst-i18n-plugin.h"
+#include "gst/gst-i18n-plugin.h"
 #include <string.h>
 #include <gst/gst.h>
 
