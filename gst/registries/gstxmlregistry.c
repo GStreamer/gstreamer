@@ -573,7 +573,8 @@ gst_xml_registry_load (GstRegistry *registry)
 
   seconds = g_timer_elapsed (timer, NULL);
 
-  g_print ("loaded registry %s in %f seconds\n", registry->name, seconds);
+  g_print ("registry: loaded %s in %f seconds\n          (%s)\n", 
+	   registry->name, seconds, xmlregistry->location);
 
   CLASS (xmlregistry)->close_func (xmlregistry);
 
