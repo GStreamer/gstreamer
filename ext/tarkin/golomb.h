@@ -20,7 +20,7 @@ unsigned int required_bits (unsigned int x)
 static inline
 void write_number_binary (BitCoderState *b, unsigned int x, int bits, int u)
 {
-//printf ("wrote %i with %i bits (%i+%i)\n", x, u+bits, u, bits);
+/*printf ("wrote %i with %i bits (%i+%i)\n", x, u+bits, u, bits); */
    while (bits) {
       bits--;
       bitcoder_write_bit (b, (x >> bits) & 1);

@@ -98,9 +98,9 @@ LADSPAPluginSearch(LADSPAPluginSearchCallbackFunction fCallbackFunction) {
 
   pcLADSPAPath = getenv("LADSPA_PATH");
   if (!pcLADSPAPath) {
-//    fprintf(stderr,
-//	    "Warning: You do not have a LADSPA_PATH "
-//	    "environment variable set.\n");
+/*    fprintf(stderr, */
+/*	    "Warning: You do not have a LADSPA_PATH " */
+/*	    "environment variable set.\n"); */
     return;
   }
   

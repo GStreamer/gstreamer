@@ -24,7 +24,7 @@
 #include <sys/mman.h>
 #include <string.h>
 
-//#define DEBUG_ENABLED
+/*#define DEBUG_ENABLED */
 #include <gstqcamsrc.h>
 
 #include "qcamip.h"
@@ -121,7 +121,7 @@ static gboolean			gst_qcamsrc_open		(GstQCamSrc *src);
 static GstBuffer*		gst_qcamsrc_get			(GstPad *pad);
 
 static GstElementClass *parent_class = NULL;
-////static guint gst_qcamsrc_signals[LAST_SIGNAL] = { 0 };
+/*//static guint gst_qcamsrc_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_qcamsrc_get_type (void)
@@ -255,8 +255,8 @@ gst_qcamsrc_get (GstPad *pad)
   }
   scan = qc_scan (qcamsrc->qcam);
 
-  // FIXME, this doesn't seem to work...
-  //fixdark(qcamsrc->qcam, scan);
+  /* FIXME, this doesn't seem to work... */
+  /*fixdark(qcamsrc->qcam, scan); */
   
   if (qcamsrc->autoexposure != AE_NONE) 
     qcip_autoexposure(qcamsrc->qcam, scan);

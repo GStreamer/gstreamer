@@ -30,7 +30,7 @@
 #  include <Hermes/Hermes.h>
 #endif
 
-// #include <gst/meta/audioraw.h>
+/* #include <gst/meta/audioraw.h> */
 
 
 #ifdef __cplusplus

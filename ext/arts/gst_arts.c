@@ -21,7 +21,7 @@
 #include <math.h>
 #include <sys/soundcard.h>
 
-//#define DEBUG_ENABLED
+/*#define DEBUG_ENABLED */
 #include "gst_arts.h"
 #include "gst_artsio_impl.h"
 
@@ -115,7 +115,7 @@ static void			gst_arts_loop			(GstElement *element);
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_arts_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_arts_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_arts_get_type (void)
@@ -159,7 +159,7 @@ gst_arts_init (GstARTS *arts)
   arts->sinkpad = gst_pad_new_from_template(GST_PADTEMPLATE_GET(sink_temp),"sink");
   gst_element_add_pad(GST_ELEMENT(arts),arts->sinkpad);
 
-//  arts->srcpad = gst_pad_new_from_template(GST_PADTEMPLATE_GET(src_temp),"src");
+/*  arts->srcpad = gst_pad_new_from_template(GST_PADTEMPLATE_GET(src_temp),"src"); */
   arts->srcpad = gst_pad_new_from_template(mad_src_template_factory (), "src");
   gst_element_add_pad(GST_ELEMENT(arts),arts->srcpad);
 
@@ -223,7 +223,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail(gstarts != NULL, FALSE);
 
   gst_elementfactory_add_padtemplate(gstarts, GST_PADTEMPLATE_GET(sink_temp));
-//  gst_elementfactory_add_padtemplate(gstarts, GST_PADTEMPLATE_GET(src_temp));
+/*  gst_elementfactory_add_padtemplate(gstarts, GST_PADTEMPLATE_GET(src_temp)); */
   gst_elementfactory_add_padtemplate(gstarts, mad_src_template_factory ());
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (gstarts));

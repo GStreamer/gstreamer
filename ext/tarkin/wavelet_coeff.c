@@ -57,13 +57,13 @@ TYPE decode_coeff (ENTROPY_CODER significand_bitstream [],
    do {
       i--;
       significance |= INPUT_BIT(&significand_bitstream[i]) << i;
-//    if (ENTROPY_CODER_EOS(&significand_bitstream[i]))
-//       return 0;
+/*    if (ENTROPY_CODER_EOS(&significand_bitstream[i])) */
+/*       return 0; */
    } while (!significance && i > 0);
 
    sign = INPUT_BIT(&significand_bitstream[i]);
-// if (ENTROPY_CODER_EOS(&significand_bitstream[i]))
-//    return 0;
+/* if (ENTROPY_CODER_EOS(&significand_bitstream[i])) */
+/*    return 0; */
 
    while (--i >= 0)
       significance |= INPUT_BIT(&insignificand_bitstream[i]) << i;

@@ -24,7 +24,7 @@
 
 #include <gst/gst.h>
 
-//#undef HAVE_LIBMMX
+/*#undef HAVE_LIBMMX */
 
 #ifdef HAVE_LIBMMX
 #include "mmx.h"

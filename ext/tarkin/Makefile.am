@@ -9,7 +9,7 @@ libgsttarkin_la_SOURCES = tarkin.c \
 
 libgsttarkin_la_CFLAGS = $(GST_CFLAGS) $(VORBIS_CFLAGS) -DTYPE_BITS=10 -DTYPE=int16_t -DRLECODER 
 ## AM_PATH_VORBIS also sets VORBISENC_LIBS
-libgsttarkin_la_LIBADD = $(GST_LIBS) $(VORBIS_LIBS) $(VORBISENC_LIBS)
+libgsttarkin_la_LIBADD = $(VORBIS_LIBS) $(VORBISENC_LIBS)
 libgsttarkin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gsttarkinenc.h mem.h tarkin.h yuv.h wavelet.h

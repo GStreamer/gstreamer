@@ -5,9 +5,9 @@
 
 typedef struct tagITFILEHEADER
 {
-	DWORD id;			// 0x4D504D49
+	DWORD id;			/* 0x4D504D49 */
 	CHAR songname[26];
-	WORD reserved1;		// 0x1004
+	WORD reserved1;		/* 0x1004 */
 	WORD ordnum;
 	WORD insnum;
 	WORD smpnum;
@@ -42,11 +42,11 @@ typedef struct tagITENVELOPE
 	BYTE reserved;
 } ITENVELOPE;
 
-// Old Impulse Instrument Format (cmwt < 0x200)
+/* Old Impulse Instrument Format (cmwt < 0x200) */
 typedef struct tagITOLDINSTRUMENT
 {
-	DWORD id;			// IMPI = 0x49504D49
-	CHAR filename[12];	// DOS file name
+	DWORD id;			/* IMPI = 0x49504D49 */
+	CHAR filename[12];	/* DOS file name */
 	BYTE zero;
 	BYTE flags;
 	BYTE vls;
@@ -68,7 +68,7 @@ typedef struct tagITOLDINSTRUMENT
 } ITOLDINSTRUMENT;
 
 
-// Impulse Instrument Format
+/* Impulse Instrument Format */
 typedef struct tagITINSTRUMENT
 {
 	DWORD id;
@@ -97,14 +97,14 @@ typedef struct tagITINSTRUMENT
 	ITENVELOPE volenv;
 	ITENVELOPE panenv;
 	ITENVELOPE pitchenv;
-	BYTE dummy[4]; // was 7, but IT v2.17 saves 554 bytes
+	BYTE dummy[4]; /* was 7, but IT v2.17 saves 554 bytes */
 } ITINSTRUMENT;
 
 
-// IT Sample Format
+/* IT Sample Format */
 typedef struct ITSAMPLESTRUCT
 {
-	DWORD id;		// 0x53504D49
+	DWORD id;		/* 0x53504D49 */
 	CHAR filename[12];
 	BYTE zero;
 	BYTE gvl;

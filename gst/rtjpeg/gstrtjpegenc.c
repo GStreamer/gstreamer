@@ -48,7 +48,7 @@ static void	gst_rtjpegenc_init		(GstRTJpegEnc *rtjpegenc);
 static void	gst_rtjpegenc_chain		(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_rtjpegenc_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_rtjpegenc_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_rtjpegenc_get_type (void)

@@ -367,7 +367,7 @@ static void mpeg1mux_buffer_update_audio_info(Mpeg1MuxBuffer *mb) {
     printf("MPEG audio id = %08lx\n", id);
     if ((id & 0xfff00000) == AUDIO_SYNCWORD<<20) {
 
-      /*mpegver = (header >> 19) & 0x3; // don't need this for bpf */
+      /* mpegver = (header >> 19) & 0x3; don't need this for bpf */
       layer_index = (id >> 17) & 0x3;
       mb->info.audio.layer = 4 - layer_index;
       lsf = (id & (1 << 20)) ? ((id & (1 << 19)) ? 0 : 1) : 1;
@@ -442,7 +442,7 @@ static void mpeg1mux_buffer_update_audio_info(Mpeg1MuxBuffer *mb) {
   while (offset < mb->length-4) {
     id = GULONG_FROM_BE(*((gulong *)(data+offset)));
 
-    /*mpegver = (header >> 19) & 0x3; // don't need this for bpf */
+    /* mpegver = (header >> 19) & 0x3;  don't need this for bpf */
     layer_index = (id >> 17) & 0x3;
     mb->info.audio.layer = 4 - layer_index;
     lsf = (id & (1 << 20)) ? ((id & (1 << 19)) ? 0 : 1) : 1;

@@ -44,7 +44,7 @@ extern "C" {
 #define GST_IS_QCAMSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QCAMSRC))
 
-// NOTE: per-element flags start with 16 for now
+/* NOTE: per-element flags start with 16 for now */
 typedef enum {
   GST_QCAMSRC_OPEN            = GST_ELEMENT_FLAG_LAST,
 

@@ -20,7 +20,7 @@
 
 #include <riff.h>
 
-//#define debug(format,args...) g_print(format,##args)
+/*#define debug(format,args...) g_print(format,##args) */
 #define debug(format,args...)
 
 

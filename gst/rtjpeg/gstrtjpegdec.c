@@ -50,7 +50,7 @@ static void	gst_rtjpegdec_init		(GstRTJpegDec *rtjpegdec);
 static void	gst_rtjpegdec_chain		(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_rtjpegdec_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_rtjpegdec_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_rtjpegdec_get_type (void)

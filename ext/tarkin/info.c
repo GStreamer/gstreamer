@@ -270,7 +270,7 @@ static int _tarkin_unpack_layer_desc(TarkinInfo *vi,oggpack_buffer *opb){
     }
 
     vi->max_bitstream_len += layer->desc.bitstream_len
-        + 2 * 10 * sizeof(uint32_t) * layer->n_comp;    // truncation tables 
+        + 2 * 10 * sizeof(uint32_t) * layer->n_comp;    /* truncation tables  */
 
 #ifdef DBG_OGG
     printf("\n     layer%d: size %dx%dx%d, format %d, a_m %d, s_m %d, %d fpb\n",

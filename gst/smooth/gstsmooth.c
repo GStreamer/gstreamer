@@ -78,7 +78,7 @@ static void	gst_smooth_set_property	(GObject *object, guint prop_id, const GValu
 static void	gst_smooth_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_smooth_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_smooth_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_smooth_get_type (void)
@@ -114,13 +114,13 @@ gst_smooth_class_init (GstSmoothClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ACTIVE,
     g_param_spec_boolean("active","active","active",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TOLERANCE,
     g_param_spec_int("tolerance","tolerance","tolerance",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FILTERSIZE,
     g_param_spec_int("filtersize","filtersize","filtersize",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_smooth_set_property;
   gobject_class->get_property = gst_smooth_get_property;
@@ -199,10 +199,10 @@ smooth_filter (unsigned char* dest, unsigned char* src, int width, int height, i
             numvalues ++;
             sum += aktval;
           }
-        } //for fx
+        } /*for fx */
         fx1 += width;
         fx2 += width;
-      } //for fy
+      } /*for fy */
 
       src++;
       *dest++ = sum/numvalues;

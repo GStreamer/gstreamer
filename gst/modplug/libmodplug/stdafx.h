@@ -52,7 +52,7 @@ typedef void VOID;
 
 inline LONG MulDiv (long a, long b, long c)
 {
-  // if (!c) return 0;
+  /* if (!c) return 0; */
   return ((unsigned long long) a * (unsigned long long) b ) / c;
 }
 
@@ -63,7 +63,7 @@ inline LONG MulDiv (long a, long b, long c)
 #define lstrcpy strcpy
 #define lstrcmp strcmp
 #define WAVE_FORMAT_PCM 1
-//#define ENABLE_EQ
+/*#define ENABLE_EQ */
 
 #define  GHND   0
 
@@ -90,7 +90,7 @@ inline void ProcessPlugins(int n) {}
 #define TRUE	true
 #endif
 
-#endif // MSC_VER
+#endif /* MSC_VER */
 
 #endif
 

@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+/*#define GST_DEBUG_ENABLED */
 #include "gstmp1videoparse.h"
 
 /* Start codes. */
@@ -100,7 +100,7 @@ static void	gst_mp1videoparse_flush		(Mp1VideoParse *mp1videoparse);
 static GstPadTemplate *src_template, *sink_template;
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_mp1videoparse_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_mp1videoparse_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 mp1videoparse_get_type (void)
@@ -245,7 +245,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
   guint64 time_stamp;
   GstBuffer *temp;
 
-//  g_return_if_fail(GST_IS_BUFFER(buf));
+/*  g_return_if_fail(GST_IS_BUFFER(buf)); */
 
 
   time_stamp = GST_BUFFER_TIMESTAMP(buf);
@@ -310,7 +310,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
 
   while (offset < size-1) {
     sync_byte = *(data + offset);
-    //printf(" %d %02x\n", offset, sync_byte);
+    /*printf(" %d %02x\n", offset, sync_byte); */
     if (sync_byte == 0) {
       sync_state++;
     }
@@ -333,9 +333,9 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
       }
       else sync_state = 0;
     }
-    // something else...
+    /* something else... */
     else sync_state = 0;
-    // go down the buffer
+    /* go down the buffer */
     offset++;
   }
 
@@ -376,12 +376,12 @@ gst_mp1videoparse_change_state (GstElement *element)
   mp1videoparse = GST_MP1VIDEOPARSE(element);
   GST_DEBUG (0,"mp1videoparse: state pending %d\n", GST_STATE_PENDING(element));
 
-  // if going down into NULL state, clear out buffers
+  * if going down into NULL state, clear out buffers *
   if (GST_STATE_PENDING(element) == GST_STATE_READY) {
     gst_mp1videoparse_flush(mp1videoparse);
   }
 
-  // if we haven't failed already, give the parent class a chance to ;-)
+  * if we haven't failed already, give the parent class a chance to ;-) *
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
     return GST_ELEMENT_CLASS(parent_class)->change_state(element);
 

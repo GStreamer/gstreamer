@@ -24,7 +24,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
-// #include <gst/meta/audioraw.h>
+/* #include <gst/meta/audioraw.h> */
 
 
 #ifdef __cplusplus
@@ -55,8 +55,8 @@ struct _GstDeInterlace {
 
   gboolean show_deinterlaced_area_only;
   gboolean blend;
-  gint threshold_blend; // here we start blending
-  gint threshold;         // here we start interpolating TODO FIXME
+  gint threshold_blend; /* here we start blending */
+  gint threshold;         /* here we start interpolating TODO FIXME */
   gint edge_detect;
 
   gint picsize;

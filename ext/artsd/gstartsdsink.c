@@ -126,7 +126,7 @@ gst_artsdsink_channels_get_type (void)
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_artsdsink_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_artsdsink_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_artsdsink_get_type (void)
@@ -162,19 +162,19 @@ gst_artsdsink_class_init (GstArtsdsinkClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTE,
     g_param_spec_boolean("mute","mute","mute",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEPTH,
     g_param_spec_enum("depth","depth","depth",
-                      GST_TYPE_ARTSDSINK_DEPTHS,16,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_ARTSDSINK_DEPTHS,16,G_PARAM_READWRITE)); /* CHECKME! */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
     g_param_spec_enum("channels","channels","channels",
-                      GST_TYPE_ARTSDSINK_CHANNELS,2,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_ARTSDSINK_CHANNELS,2,G_PARAM_READWRITE)); /* CHECKME! */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RATE,
     g_param_spec_int("frequency","frequency","frequency",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NAME,
     g_param_spec_string("name","name","name",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_artsdsink_set_property;
   gobject_class->get_property = gst_artsdsink_get_property;
@@ -193,7 +193,7 @@ gst_artsdsink_init(GstArtsdsink *artsdsink)
   artsdsink->connected = FALSE;
   artsdsink->mute = FALSE;
 
-  // FIXME: get default from somewhere better than just putting them inline.
+  /* FIXME: get default from somewhere better than just putting them inline. */
   artsdsink->signd = TRUE;
   artsdsink->depth = 16;
   artsdsink->channels = 2;
@@ -209,7 +209,7 @@ gst_artsdsink_sync_parms (GstArtsdsink *artsdsink)
 
   if (!artsdsink->connected) return TRUE;
 
-  // Need to set stream to use new parameters: only way to do this is to reopen.
+  /* Need to set stream to use new parameters: only way to do this is to reopen. */
   gst_artsdsink_close_audio (artsdsink);
   return gst_artsdsink_open_audio (artsdsink);
 }
@@ -347,12 +347,12 @@ gst_artsdsink_open_audio (GstArtsdsink *sink)
   const char * connname = "gstreamer";
   int errcode;
 
-  // Name used by aRtsd for this connection.
+  /* Name used by aRtsd for this connection. */
   if (sink->connect_name != NULL) connname = sink->connect_name;
 
-  // FIXME: this should only ever happen once per process.
-  // Really, artsc needs to be made thread safe to fix this (and other related
-  // problems).
+  /* FIXME: this should only ever happen once per process. */
+  /* Really, artsc needs to be made thread safe to fix this (and other related */
+  /* problems). */
   errcode = arts_init();
   if(errcode < 0) {
       fprintf(stderr,"arts_init error: %s\n", arts_error_text(errcode));
@@ -362,8 +362,8 @@ gst_artsdsink_open_audio (GstArtsdsink *sink)
   GST_DEBUG (0, "artsdsink: attempting to open connection to aRtsd server\n");
   sink->stream = arts_play_stream(sink->frequency, sink->depth,
 				  sink->channels, connname);
-  // FIXME: check connection
-  //   GST_DEBUG (0, "artsdsink: can't open connection to aRtsd server\n");
+  /* FIXME: check connection */
+  /*   GST_DEBUG (0, "artsdsink: can't open connection to aRtsd server\n"); */
 
   GST_FLAG_SET (sink, GST_ARTSDSINK_OPEN);
   sink->connected = TRUE;

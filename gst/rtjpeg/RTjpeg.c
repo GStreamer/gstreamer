@@ -603,71 +603,71 @@ void RTjpeg_dctY(__u8 *idata, __s16 *odata, int rskip)
 	movq_m2r(*(dataptr+4), mm7);			/* m23:m22|m21:m20 - third line */
 	movq_r2r(mm0, mm2);
 
-	punpcklwd_m2r(*(dataptr+2), mm0);  	// m11:m01|m10:m00 - interleave first and second lines
+	punpcklwd_m2r(*(dataptr+2), mm0);  	/* m11:m01|m10:m00 - interleave first and second lines */
 	movq_r2r(mm7, mm4);
 
-	punpcklwd_m2r(*(dataptr+6), mm7);  	// m31:m21|m30:m20 - interleave third and fourth lines
+	punpcklwd_m2r(*(dataptr+6), mm7);  	/* m31:m21|m30:m20 - interleave third and fourth lines */
 	movq_r2r(mm0, mm1);
 
-	movq_m2r(*(dataptr+2), mm6);			// m13:m12|m11:m10 - second line
-	punpckldq_r2r(mm7, mm0);				// m30:m20|m10:m00 - interleave to produce result 1
+	movq_m2r(*(dataptr+2), mm6);			/* m13:m12|m11:m10 - second line */
+	punpckldq_r2r(mm7, mm0);				/* m30:m20|m10:m00 - interleave to produce result 1 */
 
-	movq_m2r(*(dataptr+6), mm5);			// m33:m32|m31:m30 - fourth line
-	punpckhdq_r2r(mm7, mm1);				// m31:m21|m11:m01 - interleave to produce result 2
+	movq_m2r(*(dataptr+6), mm5);			/* m33:m32|m31:m30 - fourth line */
+	punpckhdq_r2r(mm7, mm1);				/* m31:m21|m11:m01 - interleave to produce result 2 */
 
-	movq_r2r(mm0, mm7);						// write result 1
-	punpckhwd_r2r(mm6, mm2);				// m13:m03|m12:m02 - interleave first and second lines
+	movq_r2r(mm0, mm7);						/* write result 1 */
+	punpckhwd_r2r(mm6, mm2);				/* m13:m03|m12:m02 - interleave first and second lines */
 
-	psubw_m2r(*(dataptr+14), mm7);		// tmp07=x0-x7	/* Stage 1 */
-	movq_r2r(mm1, mm6);						// write result 2
+	psubw_m2r(*(dataptr+14), mm7);		/* tmp07=x0-x7: Stage 1 */
+	movq_r2r(mm1, mm6);						/* write result 2 */
 
-	paddw_m2r(*(dataptr+14), mm0);		// tmp00=x0+x7	/* Stage 1 */
-	punpckhwd_r2r(mm5, mm4);   			// m33:m23|m32:m22 - interleave third and fourth lines
+	paddw_m2r(*(dataptr+14), mm0);		/* tmp00=x0+x7: Stage 1 */
+	punpckhwd_r2r(mm5, mm4);   			/* m33:m23|m32:m22 - interleave third and fourth lines */
 
-	paddw_m2r(*(dataptr+12), mm1);		// tmp01=x1+x6	/* Stage 1 */
-	movq_r2r(mm2, mm3);						// copy first intermediate result
+	paddw_m2r(*(dataptr+12), mm1);		/* tmp01=x1+x6: Stage 1 */
+	movq_r2r(mm2, mm3);						/* copy first intermediate result */
 
-	psubw_m2r(*(dataptr+12), mm6);		// tmp06=x1-x6	/* Stage 1 */
-	punpckldq_r2r(mm4, mm2);				// m32:m22|m12:m02 - interleave to produce result 3
+	psubw_m2r(*(dataptr+12), mm6);		/* tmp06=x1-x6: Stage 1 */
+	punpckldq_r2r(mm4, mm2);				/* m32:m22|m12:m02 - interleave to produce result 3 */
 
    movq_r2m(mm7, tmp7);
-	movq_r2r(mm2, mm5);						// write result 3
+	movq_r2r(mm2, mm5);						/* write result 3 */
 
    movq_r2m(mm6, tmp6);
-	punpckhdq_r2r(mm4, mm3);				// m33:m23|m13:m03 - interleave to produce result 4
+	punpckhdq_r2r(mm4, mm3);				/* m33:m23|m13:m03 - interleave to produce result 4 */
 
-	paddw_m2r(*(dataptr+10), mm2);     	// tmp02=x2+5 /* Stage 1 */
-	movq_r2r(mm3, mm4);						// write result 4
+	paddw_m2r(*(dataptr+10), mm2);     	/* tmp02=x2+5: Stage 1 */
+	movq_r2r(mm3, mm4);						/* write result 4 */
 
 /************************************************************************************************
 					End of Transpose
 ************************************************************************************************/
 
 
-   paddw_m2r(*(dataptr+8), mm3);    	// tmp03=x3+x4 /* stage 1*/
+   paddw_m2r(*(dataptr+8), mm3);    	/* tmp03=x3+x4: stage 1 */
    movq_r2r(mm0, mm7);
 
-   psubw_m2r(*(dataptr+8), mm4);    	// tmp04=x3-x4 /* stage 1*/
+   psubw_m2r(*(dataptr+8), mm4);    	/* tmp04=x3-x4: stage 1 */
    movq_r2r(mm1, mm6);
 
-	paddw_r2r(mm3, mm0);  					// tmp10 = tmp00 + tmp03 /* even 2 */
-	psubw_r2r(mm3, mm7);  					// tmp13 = tmp00 - tmp03 /* even 2 */
+	paddw_r2r(mm3, mm0);  					/* tmp10 = tmp00 + tmp03: even 2 */
+	psubw_r2r(mm3, mm7);  					/* tmp13 = tmp00 - tmp03: even 2 */
 
-	psubw_r2r(mm2, mm6);  					// tmp12 = tmp01 - tmp02 /* even 2 */
-	paddw_r2r(mm2, mm1);  					// tmp11 = tmp01 + tmp02 /* even 2 */
+	psubw_r2r(mm2, mm6);  					/* tmp12 = tmp01 - tmp02: even 2 */
+	paddw_r2r(mm2, mm1);  					/* tmp11 = tmp01 + tmp02: even 2 */
 
-   psubw_m2r(*(dataptr+10), mm5);    	// tmp05=x2-x5 /* stage 1*/
-	paddw_r2r(mm7, mm6);						// tmp12 + tmp13
+   psubw_m2r(*(dataptr+10), mm5);    	/* tmp05=x2-x5: stage 1 */
+	paddw_r2r(mm7, mm6);						/* tmp12 + tmp13 */
 
 	/* stage 3 */
 
    movq_m2r(tmp6, mm2);
    movq_r2r(mm0, mm3);
 
-	psllw_i2r(2, mm6);			// m8 * 2^2
+	psllw_i2r(2, mm6);			/* m8 * 2^2 */
 	paddw_r2r(mm1, mm0);		
 
-	pmulhw_m2r(RTjpeg_C4, mm6);			// z1
+	pmulhw_m2r(RTjpeg_C4, mm6);			/* z1 */
 	psubw_r2r(mm1, mm3);		
 
    movq_r2m(mm0, *dataptr);
@@ -675,349 +675,349 @@ void RTjpeg_dctY(__u8 *idata, __s16 *odata, int rskip)
    
     /* Odd part */
    movq_r2m(mm3, *(dataptr+8));
-	paddw_r2r(mm5, mm4);						// tmp10
+	paddw_r2r(mm5, mm4);						/* tmp10 */
 
    movq_m2r(tmp7, mm3);
-	paddw_r2r(mm6, mm0);						// tmp32
+	paddw_r2r(mm6, mm0);						/* tmp32 */
 
-	paddw_r2r(mm2, mm5);						// tmp11
-	psubw_r2r(mm6, mm7);						// tmp33
+	paddw_r2r(mm2, mm5);						/* tmp11 */
+	psubw_r2r(mm6, mm7);						/* tmp33 */
 
    movq_r2m(mm0, *(dataptr+4));
-	paddw_r2r(mm3, mm2);						// tmp12
+	paddw_r2r(mm3, mm2);						/* tmp12 */
 
 	/* stage 4 */
 
    movq_r2m(mm7, *(dataptr+12));
-	movq_r2r(mm4, mm1);						// copy of tmp10
+	movq_r2r(mm4, mm1);						/* copy of tmp10 */
 
-	psubw_r2r(mm2, mm1);						// tmp10 - tmp12
-	psllw_i2r(2, mm4);			// m8 * 2^2
+	psubw_r2r(mm2, mm1);						/* tmp10 - tmp12 */
+	psllw_i2r(2, mm4);			/* m8 * 2^2 */
 
 	movq_m2r(RTjpeg_C2mC6, mm0);		
 	psllw_i2r(2, mm1);
 
-	pmulhw_m2r(RTjpeg_C6, mm1);			// z5
+	pmulhw_m2r(RTjpeg_C6, mm1);			/* z5 */
 	psllw_i2r(2, mm2);
 
-	pmulhw_r2r(mm0, mm4);					// z5
+	pmulhw_r2r(mm0, mm4);					/* z5 */
 
 	/* stage 5 */
 
 	pmulhw_m2r(RTjpeg_C2pC6, mm2);
 	psllw_i2r(2, mm5);
 
-	pmulhw_m2r(RTjpeg_C4, mm5);			// z3
-	movq_r2r(mm3, mm0);						// copy tmp7
+	pmulhw_m2r(RTjpeg_C4, mm5);			/* z3 */
+	movq_r2r(mm3, mm0);						/* copy tmp7 */
 
    movq_m2r(*(dataptr+1), mm7);
-	paddw_r2r(mm1, mm4);						// z2
+	paddw_r2r(mm1, mm4);						/* z2 */
 
-	paddw_r2r(mm1, mm2);						// z4
+	paddw_r2r(mm1, mm2);						/* z4 */
 
-	paddw_r2r(mm5, mm0);						// z11
-	psubw_r2r(mm5, mm3);						// z13
+	paddw_r2r(mm5, mm0);						/* z11 */
+	psubw_r2r(mm5, mm3);						/* z13 */
 
 	/* stage 6 */
 
-	movq_r2r(mm3, mm5);						// copy z13
-	psubw_r2r(mm4, mm3);						// y3=z13 - z2
+	movq_r2r(mm3, mm5);						/* copy z13 */
+	psubw_r2r(mm4, mm3);						/* y3=z13 - z2 */
 
-	paddw_r2r(mm4, mm5);						// y5=z13 + z2
-	movq_r2r(mm0, mm6);						// copy z11
+	paddw_r2r(mm4, mm5);						/* y5=z13 + z2 */
+	movq_r2r(mm0, mm6);						/* copy z11 */
 
-   movq_r2m(mm3, *(dataptr+6)); 			//save y3
-	psubw_r2r(mm2, mm0);						// y7=z11 - z4
+   movq_r2m(mm3, *(dataptr+6)); 			/*save y3 */
+	psubw_r2r(mm2, mm0);						/* y7=z11 - z4 */
 
-   movq_r2m(mm5, *(dataptr+10)); 		//save y5
-	paddw_r2r(mm2, mm6);						// y1=z11 + z4
+   movq_r2m(mm5, *(dataptr+10)); 		/*save y5 */
+	paddw_r2r(mm2, mm6);						/* y1=z11 + z4 */
 
-   movq_r2m(mm0, *(dataptr+14)); 		//save y7
+   movq_r2m(mm0, *(dataptr+14)); 		/*save y7 */
 
 	/************************************************
 	 *  End of 1st 4 rows
 	 ************************************************/
 
-   movq_m2r(*(dataptr+3), mm1); 			// load x1   /* stage 1 */
-	movq_r2r(mm7, mm0);						// copy x0
+   movq_m2r(*(dataptr+3), mm1); 			/* load x1: stage 1 */
+	movq_r2r(mm7, mm0);						/* copy x0 */
 
-   movq_r2m(mm6, *(dataptr+2)); 			//save y1
+   movq_r2m(mm6, *(dataptr+2)); 			/*save y1 */
 
-   movq_m2r(*(dataptr+5), mm2); 			// load x2   /* stage 1 */
-	movq_r2r(mm1, mm6);						// copy x1
+   movq_m2r(*(dataptr+5), mm2); 			/* load x2: stage 1 */
+	movq_r2r(mm1, mm6);						/* copy x1 */
 
-   paddw_m2r(*(dataptr+15), mm0);  		// tmp00 = x0 + x7
+   paddw_m2r(*(dataptr+15), mm0);  		/* tmp00 = x0 + x7 */
 
-   movq_m2r(*(dataptr+7), mm3); 			// load x3   /* stage 1 */
-	movq_r2r(mm2, mm5);						// copy x2
+   movq_m2r(*(dataptr+7), mm3); 			/* load x3 : stage 1 */
+	movq_r2r(mm2, mm5);						/* copy x2 */
 
-   psubw_m2r(*(dataptr+15), mm7);  		// tmp07 = x0 - x7
-	movq_r2r(mm3, mm4);						// copy x3
+   psubw_m2r(*(dataptr+15), mm7);  		/* tmp07 = x0 - x7 */
+	movq_r2r(mm3, mm4);						/* copy x3 */
 
-   paddw_m2r(*(dataptr+13), mm1);  		// tmp01 = x1 + x6
+   paddw_m2r(*(dataptr+13), mm1);  		/* tmp01 = x1 + x6 */
 
-	movq_r2m(mm7, tmp7);						// save tmp07
-	movq_r2r(mm0, mm7);						// copy tmp00
+	movq_r2m(mm7, tmp7);						/* save tmp07 */
+	movq_r2r(mm0, mm7);						/* copy tmp00 */
 
-   psubw_m2r(*(dataptr+13), mm6);  		// tmp06 = x1 - x6
+   psubw_m2r(*(dataptr+13), mm6);  		/* tmp06 = x1 - x6 */
 
    /* stage 2, Even Part */
 
-   paddw_m2r(*(dataptr+9), mm3);  		// tmp03 = x3 + x4
+   paddw_m2r(*(dataptr+9), mm3);  		/* tmp03 = x3 + x4 */
 
-	movq_r2m(mm6, tmp6);						// save tmp07
-	movq_r2r(mm1, mm6);						// copy tmp01
+	movq_r2m(mm6, tmp6);						/* save tmp07 */
+	movq_r2r(mm1, mm6);						/* copy tmp01 */
 
-   paddw_m2r(*(dataptr+11), mm2);  		// tmp02 = x2 + x5
-	paddw_r2r(mm3, mm0);              	// tmp10 = tmp00 + tmp03
+   paddw_m2r(*(dataptr+11), mm2);  		/* tmp02 = x2 + x5 */
+	paddw_r2r(mm3, mm0);              	/* tmp10 = tmp00 + tmp03 */
 
-	psubw_r2r(mm3, mm7);              	// tmp13 = tmp00 - tmp03
+	psubw_r2r(mm3, mm7);              	/* tmp13 = tmp00 - tmp03 */
 
-   psubw_m2r(*(dataptr+9), mm4);  		// tmp04 = x3 - x4
-	psubw_r2r(mm2, mm6);              	// tmp12 = tmp01 - tmp02
+   psubw_m2r(*(dataptr+9), mm4);  		/* tmp04 = x3 - x4 */
+	psubw_r2r(mm2, mm6);              	/* tmp12 = tmp01 - tmp02 */
 
-	paddw_r2r(mm2, mm1);              	// tmp11 = tmp01 + tmp02
+	paddw_r2r(mm2, mm1);              	/* tmp11 = tmp01 + tmp02 */
 
-   psubw_m2r(*(dataptr+11), mm5);  		// tmp05 = x2 - x5
-	paddw_r2r(mm7, mm6);              	//  tmp12 + tmp13
+   psubw_m2r(*(dataptr+11), mm5);  		/* tmp05 = x2 - x5 */
+	paddw_r2r(mm7, mm6);              	/*  tmp12 + tmp13 */
 
    /* stage 3, Even and stage 4 & 5 even */
 
-	movq_m2r(tmp6, mm2);            		// load tmp6
-	movq_r2r(mm0, mm3);						// copy tmp10
+	movq_m2r(tmp6, mm2);            		/* load tmp6 */
+	movq_r2r(mm0, mm3);						/* copy tmp10 */
 
-	psllw_i2r(2, mm6);			// shift z1
-	paddw_r2r(mm1, mm0);    				// y0=tmp10 + tmp11
+	psllw_i2r(2, mm6);			/* shift z1 */
+	paddw_r2r(mm1, mm0);    				/* y0=tmp10 + tmp11 */
 
-	pmulhw_m2r(RTjpeg_C4, mm6);    		// z1
-	psubw_r2r(mm1, mm3);    				// y4=tmp10 - tmp11
+	pmulhw_m2r(RTjpeg_C4, mm6);    		/* z1 */
+	psubw_r2r(mm1, mm3);    				/* y4=tmp10 - tmp11 */
 
-   movq_r2m(mm0, *(dataptr+1)); 			//save y0
-	movq_r2r(mm7, mm0);						// copy tmp13
+   movq_r2m(mm0, *(dataptr+1)); 			/*save y0 */
+	movq_r2r(mm7, mm0);						/* copy tmp13 */
   
 	/* odd part */
 
-   movq_r2m(mm3, *(dataptr+9)); 			//save y4
-	paddw_r2r(mm5, mm4);              	// tmp10 = tmp4 + tmp5
+   movq_r2m(mm3, *(dataptr+9)); 			/*save y4 */
+	paddw_r2r(mm5, mm4);              	/* tmp10 = tmp4 + tmp5 */
 
-	movq_m2r(tmp7, mm3);            		// load tmp7
-	paddw_r2r(mm6, mm0);              	// tmp32 = tmp13 + z1
+	movq_m2r(tmp7, mm3);            		/* load tmp7 */
+	paddw_r2r(mm6, mm0);              	/* tmp32 = tmp13 + z1 */
 
-	paddw_r2r(mm2, mm5);              	// tmp11 = tmp5 + tmp6
-	psubw_r2r(mm6, mm7);              	// tmp33 = tmp13 - z1
+	paddw_r2r(mm2, mm5);              	/* tmp11 = tmp5 + tmp6 */
+	psubw_r2r(mm6, mm7);              	/* tmp33 = tmp13 - z1 */
 
-   movq_r2m(mm0, *(dataptr+5)); 			//save y2
-	paddw_r2r(mm3, mm2);              	// tmp12 = tmp6 + tmp7
+   movq_r2m(mm0, *(dataptr+5)); 			/*save y2 */
+	paddw_r2r(mm3, mm2);              	/* tmp12 = tmp6 + tmp7 */
 
 	/* stage 4 */
 
-   movq_r2m(mm7, *(dataptr+13)); 		//save y6
-	movq_r2r(mm4, mm1);						// copy tmp10
+   movq_r2m(mm7, *(dataptr+13)); 		/*save y6 */
+	movq_r2r(mm4, mm1);						/* copy tmp10 */
 
-	psubw_r2r(mm2, mm1);    				// tmp10 - tmp12
-	psllw_i2r(2, mm4);			// shift tmp10
+	psubw_r2r(mm2, mm1);    				/* tmp10 - tmp12 */
+	psllw_i2r(2, mm4);			/* shift tmp10 */
 
-	movq_m2r(RTjpeg_C2mC6, mm0);			// load C2mC6
-	psllw_i2r(2, mm1);			// shift (tmp10-tmp12)
+	movq_m2r(RTjpeg_C2mC6, mm0);			/* load C2mC6 */
+	psllw_i2r(2, mm1);			/* shift (tmp10-tmp12) */
 
-	pmulhw_m2r(RTjpeg_C6, mm1);    		// z5
-	psllw_i2r(2, mm5);			// prepare for multiply 
+	pmulhw_m2r(RTjpeg_C6, mm1);    		/* z5 */
+	psllw_i2r(2, mm5);			/* prepare for multiply  */
 
-	pmulhw_r2r(mm0, mm4);					// multiply by converted real
+	pmulhw_r2r(mm0, mm4);					/* multiply by converted real */
 
 	/* stage 5 */
 
-	pmulhw_m2r(RTjpeg_C4, mm5);			// z3
-	psllw_i2r(2, mm2);			// prepare for multiply 
+	pmulhw_m2r(RTjpeg_C4, mm5);			/* z3 */
+	psllw_i2r(2, mm2);			/* prepare for multiply  */
 
-	pmulhw_m2r(RTjpeg_C2pC6, mm2);		// multiply
-	movq_r2r(mm3, mm0);						// copy tmp7
+	pmulhw_m2r(RTjpeg_C2pC6, mm2);		/* multiply */
+	movq_r2r(mm3, mm0);						/* copy tmp7 */
 
-	movq_m2r(*(dataptr+9), mm7);		 	// m03:m02|m01:m00 - first line (line 4)and copy into mm7
-	paddw_r2r(mm1, mm4);						// z2
+	movq_m2r(*(dataptr+9), mm7);		 	/* m03:m02|m01:m00 - first line (line 4)and copy into mm7 */
+	paddw_r2r(mm1, mm4);						/* z2 */
 
-	paddw_r2r(mm5, mm0);						// z11
-	psubw_r2r(mm5, mm3);						// z13
+	paddw_r2r(mm5, mm0);						/* z11 */
+	psubw_r2r(mm5, mm3);						/* z13 */
 
 	/* stage 6 */
 
-	movq_r2r(mm3, mm5);						// copy z13
-	paddw_r2r(mm1, mm2);						// z4
+	movq_r2r(mm3, mm5);						/* copy z13 */
+	paddw_r2r(mm1, mm2);						/* z4 */
 
-	movq_r2r(mm0, mm6);						// copy z11
-	psubw_r2r(mm4, mm5);						// y3
+	movq_r2r(mm0, mm6);						/* copy z11 */
+	psubw_r2r(mm4, mm5);						/* y3 */
 
-	paddw_r2r(mm2, mm6);						// y1
-	paddw_r2r(mm4, mm3);						// y5
+	paddw_r2r(mm2, mm6);						/* y1 */
+	paddw_r2r(mm4, mm3);						/* y5 */
 
-   movq_r2m(mm5, *(dataptr+7)); 			//save y3
+   movq_r2m(mm5, *(dataptr+7)); 			/*save y3 */
 
-   movq_r2m(mm6, *(dataptr+3)); 			//save y1
-	psubw_r2r(mm2, mm0);						// y7
+   movq_r2m(mm6, *(dataptr+3)); 			/*save y1 */
+	psubw_r2r(mm2, mm0);						/* y7 */
 	
 /************************************************************************************************
 					Start of Transpose
 ************************************************************************************************/
 
- 	movq_m2r(*(dataptr+13), mm6);		 	// m23:m22|m21:m20 - third line (line 6)and copy into m2
-	movq_r2r(mm7, mm5);						// copy first line
+ 	movq_m2r(*(dataptr+13), mm6);		 	/* m23:m22|m21:m20 - third line (line 6)and copy into m2 */
+	movq_r2r(mm7, mm5);						/* copy first line */
 
-	punpcklwd_r2r(mm3, mm7); 				// m11:m01|m10:m00 - interleave first and second lines
-	movq_r2r(mm6, mm2);						// copy third line
+	punpcklwd_r2r(mm3, mm7); 				/* m11:m01|m10:m00 - interleave first and second lines */
+	movq_r2r(mm6, mm2);						/* copy third line */
 
-	punpcklwd_r2r(mm0, mm6);  				// m31:m21|m30:m20 - interleave third and fourth lines
-	movq_r2r(mm7, mm1);						// copy first intermediate result
+	punpcklwd_r2r(mm0, mm6);  				/* m31:m21|m30:m20 - interleave third and fourth lines */
+	movq_r2r(mm7, mm1);						/* copy first intermediate result */
 
-	punpckldq_r2r(mm6, mm7);				// m30:m20|m10:m00 - interleave to produce result 1
+	punpckldq_r2r(mm6, mm7);				/* m30:m20|m10:m00 - interleave to produce result 1 */
 
-	punpckhdq_r2r(mm6, mm1);				// m31:m21|m11:m01 - interleave to produce result 2
+	punpckhdq_r2r(mm6, mm1);				/* m31:m21|m11:m01 - interleave to produce result 2 */
 
-	movq_r2m(mm7, *(dataptr+9));			// write result 1
-	punpckhwd_r2r(mm3, mm5);				// m13:m03|m12:m02 - interleave first and second lines
+	movq_r2m(mm7, *(dataptr+9));			/* write result 1 */
+	punpckhwd_r2r(mm3, mm5);				/* m13:m03|m12:m02 - interleave first and second lines */
 
-	movq_r2m(mm1, *(dataptr+11));			// write result 2
-	punpckhwd_r2r(mm0, mm2);				// m33:m23|m32:m22 - interleave third and fourth lines
+	movq_r2m(mm1, *(dataptr+11));			/* write result 2 */
+	punpckhwd_r2r(mm0, mm2);				/* m33:m23|m32:m22 - interleave third and fourth lines */
 
-	movq_r2r(mm5, mm1);						// copy first intermediate result
-	punpckldq_r2r(mm2, mm5);				// m32:m22|m12:m02 - interleave to produce result 3
+	movq_r2r(mm5, mm1);						/* copy first intermediate result */
+	punpckldq_r2r(mm2, mm5);				/* m32:m22|m12:m02 - interleave to produce result 3 */
 
-	movq_m2r(*(dataptr+1), mm0);			// m03:m02|m01:m00 - first line, 4x4
-	punpckhdq_r2r(mm2, mm1);				// m33:m23|m13:m03 - interleave to produce result 4
+	movq_m2r(*(dataptr+1), mm0);			/* m03:m02|m01:m00 - first line, 4x4 */
+	punpckhdq_r2r(mm2, mm1);				/* m33:m23|m13:m03 - interleave to produce result 4 */
 
-	movq_r2m(mm5, *(dataptr+13));			// write result 3
+	movq_r2m(mm5, *(dataptr+13));			/* write result 3 */
 
 	/****** last 4x4 done */
 
-	movq_r2m(mm1, *(dataptr+15));			// write result 4, last 4x4
+	movq_r2m(mm1, *(dataptr+15));			/* write result 4, last 4x4 */
 
-	movq_m2r(*(dataptr+5), mm2);			// m23:m22|m21:m20 - third line
-	movq_r2r(mm0, mm6);						// copy first line
+	movq_m2r(*(dataptr+5), mm2);			/* m23:m22|m21:m20 - third line */
+	movq_r2r(mm0, mm6);						/* copy first line */
 
-	punpcklwd_m2r(*(dataptr+3), mm0);  	// m11:m01|m10:m00 - interleave first and second lines
-	movq_r2r(mm2, mm7);						// copy third line
+	punpcklwd_m2r(*(dataptr+3), mm0);  	/* m11:m01|m10:m00 - interleave first and second lines */
+	movq_r2r(mm2, mm7);						/* copy third line */
 
-	punpcklwd_m2r(*(dataptr+7), mm2);  	// m31:m21|m30:m20 - interleave third and fourth lines
-	movq_r2r(mm0, mm4);						// copy first intermediate result
+	punpcklwd_m2r(*(dataptr+7), mm2);  	/* m31:m21|m30:m20 - interleave third and fourth lines */
+	movq_r2r(mm0, mm4);						/* copy first intermediate result */
 
 	
 
-	movq_m2r(*(dataptr+8), mm1);			// n03:n02|n01:n00 - first line 
-	punpckldq_r2r(mm2, mm0);				// m30:m20|m10:m00 - interleave to produce first result
+	movq_m2r(*(dataptr+8), mm1);			/* n03:n02|n01:n00 - first line  */
+	punpckldq_r2r(mm2, mm0);				/* m30:m20|m10:m00 - interleave to produce first result */
 
-	movq_m2r(*(dataptr+12), mm3);			// n23:n22|n21:n20 - third line
-	punpckhdq_r2r(mm2, mm4);				// m31:m21|m11:m01 - interleave to produce second result
+	movq_m2r(*(dataptr+12), mm3);			/* n23:n22|n21:n20 - third line */
+	punpckhdq_r2r(mm2, mm4);				/* m31:m21|m11:m01 - interleave to produce second result */
 
-	punpckhwd_m2r(*(dataptr+3), mm6);  	// m13:m03|m12:m02 - interleave first and second lines
-	movq_r2r(mm1, mm2);						// copy first line
+	punpckhwd_m2r(*(dataptr+3), mm6);  	/* m13:m03|m12:m02 - interleave first and second lines */
+	movq_r2r(mm1, mm2);						/* copy first line */
 
-	punpckhwd_m2r(*(dataptr+7), mm7);  	// m33:m23|m32:m22 - interleave third and fourth lines
-	movq_r2r(mm6, mm5);						// copy first intermediate result
+	punpckhwd_m2r(*(dataptr+7), mm7);  	/* m33:m23|m32:m22 - interleave third and fourth lines */
+	movq_r2r(mm6, mm5);						/* copy first intermediate result */
 
-	movq_r2m(mm0, *(dataptr+8));			// write result 1
-	punpckhdq_r2r(mm7, mm5);				// m33:m23|m13:m03 - produce third result
+	movq_r2m(mm0, *(dataptr+8));			/* write result 1 */
+	punpckhdq_r2r(mm7, mm5);				/* m33:m23|m13:m03 - produce third result */
 
-	punpcklwd_m2r(*(dataptr+10), mm1);  // n11:n01|n10:n00 - interleave first and second lines
-	movq_r2r(mm3, mm0);						// copy third line
+	punpcklwd_m2r(*(dataptr+10), mm1);  /* n11:n01|n10:n00 - interleave first and second lines */
+	movq_r2r(mm3, mm0);						/* copy third line */
 
-	punpckhwd_m2r(*(dataptr+10), mm2);  // n13:n03|n12:n02 - interleave first and second lines
+	punpckhwd_m2r(*(dataptr+10), mm2);  /* n13:n03|n12:n02 - interleave first and second lines */
 
-	movq_r2m(mm4, *(dataptr+10));			// write result 2 out
-	punpckldq_r2r(mm7, mm6);				// m32:m22|m12:m02 - produce fourth result
+	movq_r2m(mm4, *(dataptr+10));			/* write result 2 out */
+	punpckldq_r2r(mm7, mm6);				/* m32:m22|m12:m02 - produce fourth result */
 
-	punpcklwd_m2r(*(dataptr+14), mm3);  // n33:n23|n32:n22 - interleave third and fourth lines
-	movq_r2r(mm1, mm4);						// copy second intermediate result
+	punpcklwd_m2r(*(dataptr+14), mm3);  /* n33:n23|n32:n22 - interleave third and fourth lines */
+	movq_r2r(mm1, mm4);						/* copy second intermediate result */
 
-	movq_r2m(mm6, *(dataptr+12));			// write result 3 out
-	punpckldq_r2r(mm3, mm1);				// 
+	movq_r2m(mm6, *(dataptr+12));			/* write result 3 out */
+	punpckldq_r2r(mm3, mm1);				/*  */
 
-	punpckhwd_m2r(*(dataptr+14), mm0);  // n33:n23|n32:n22 - interleave third and fourth lines
-	movq_r2r(mm2, mm6);						// copy second intermediate result
+	punpckhwd_m2r(*(dataptr+14), mm0);  /* n33:n23|n32:n22 - interleave third and fourth lines */
+	movq_r2r(mm2, mm6);						/* copy second intermediate result */
 
-	movq_r2m(mm5, *(dataptr+14));			// write result 4 out
-	punpckhdq_r2r(mm3, mm4);				// n31:n21|n11:n01- produce second result
+	movq_r2m(mm5, *(dataptr+14));			/* write result 4 out */
+	punpckhdq_r2r(mm3, mm4);				/* n31:n21|n11:n01- produce second result */
 
-	movq_r2m(mm1, *(dataptr+1));			// write result 5 out - (first result for other 4 x 4 block)
-	punpckldq_r2r(mm0, mm2);				// n32:n22|n12:n02- produce third result
+	movq_r2m(mm1, *(dataptr+1));			/* write result 5 out - (first result for other 4 x 4 block) */
+	punpckldq_r2r(mm0, mm2);				/* n32:n22|n12:n02- produce third result */
 
-	movq_r2m(mm4, *(dataptr+3));			// write result 6 out
-	punpckhdq_r2r(mm0, mm6);				// n33:n23|n13:n03 - produce fourth result
+	movq_r2m(mm4, *(dataptr+3));			/* write result 6 out */
+	punpckhdq_r2r(mm0, mm6);				/* n33:n23|n13:n03 - produce fourth result */
 
-	movq_r2m(mm2, *(dataptr+5));			// write result 7 out
+	movq_r2m(mm2, *(dataptr+5));			/* write result 7 out */
 
-	movq_m2r(*dataptr, mm0);				// m03:m02|m01:m00 - first line, first 4x4
+	movq_m2r(*dataptr, mm0);				/* m03:m02|m01:m00 - first line, first 4x4 */
 
-	movq_r2m(mm6, *(dataptr+7));			// write result 8 out
+	movq_r2m(mm6, *(dataptr+7));			/* write result 8 out */
 
-// Do first 4x4 quadrant, which is used in the beginning of the DCT:
+/* Do first 4x4 quadrant, which is used in the beginning of the DCT: */
 
-	movq_m2r(*(dataptr+4), mm7);			// m23:m22|m21:m20 - third line
-	movq_r2r(mm0, mm2);						// copy first line
+	movq_m2r(*(dataptr+4), mm7);			/* m23:m22|m21:m20 - third line */
+	movq_r2r(mm0, mm2);						/* copy first line */
 
-	punpcklwd_m2r(*(dataptr+2), mm0);  	// m11:m01|m10:m00 - interleave first and second lines
-	movq_r2r(mm7, mm4);						// copy third line
+	punpcklwd_m2r(*(dataptr+2), mm0);  	/* m11:m01|m10:m00 - interleave first and second lines */
+	movq_r2r(mm7, mm4);						/* copy third line */
 	
-	punpcklwd_m2r(*(dataptr+6), mm7);  	// m31:m21|m30:m20 - interleave third and fourth lines
-	movq_r2r(mm0, mm1);						// copy first intermediate result
+	punpcklwd_m2r(*(dataptr+6), mm7);  	/* m31:m21|m30:m20 - interleave third and fourth lines */
+	movq_r2r(mm0, mm1);						/* copy first intermediate result */
 
-	movq_m2r(*(dataptr+2), mm6);			// m13:m12|m11:m10 - second line
-	punpckldq_r2r(mm7, mm0);				// m30:m20|m10:m00 - interleave to produce result 1
+	movq_m2r(*(dataptr+2), mm6);			/* m13:m12|m11:m10 - second line */
+	punpckldq_r2r(mm7, mm0);				/* m30:m20|m10:m00 - interleave to produce result 1 */
 
-	movq_m2r(*(dataptr+6), mm5);			// m33:m32|m31:m30 - fourth line
-	punpckhdq_r2r(mm7, mm1);				// m31:m21|m11:m01 - interleave to produce result 2
+	movq_m2r(*(dataptr+6), mm5);			/* m33:m32|m31:m30 - fourth line */
+	punpckhdq_r2r(mm7, mm1);				/* m31:m21|m11:m01 - interleave to produce result 2 */
 
-	movq_r2r(mm0, mm7);						// write result 1
-	punpckhwd_r2r(mm6, mm2);				// m13:m03|m12:m02 - interleave first and second lines
+	movq_r2r(mm0, mm7);						/* write result 1 */
+	punpckhwd_r2r(mm6, mm2);				/* m13:m03|m12:m02 - interleave first and second lines */
 
-	psubw_m2r(*(dataptr+14), mm7);		// tmp07=x0-x7	/* Stage 1 */
-	movq_r2r(mm1, mm6);						// write result 2
+	psubw_m2r(*(dataptr+14), mm7);		/* tmp07=x0-x7: Stage 1 */
+	movq_r2r(mm1, mm6);						/* write result 2 */
 
-	paddw_m2r(*(dataptr+14), mm0);		// tmp00=x0+x7	/* Stage 1 */
-	punpckhwd_r2r(mm5, mm4);   			// m33:m23|m32:m22 - interleave third and fourth lines
+	paddw_m2r(*(dataptr+14), mm0);		/* tmp00=x0+x7: Stage 1 */
+	punpckhwd_r2r(mm5, mm4);   			/* m33:m23|m32:m22 - interleave third and fourth lines */
 
-	paddw_m2r(*(dataptr+12), mm1);		// tmp01=x1+x6	/* Stage 1 */
-	movq_r2r(mm2, mm3);						// copy first intermediate result
+	paddw_m2r(*(dataptr+12), mm1);		/* tmp01=x1+x6: Stage 1 */
+	movq_r2r(mm2, mm3);						/* copy first intermediate result */
 
-	psubw_m2r(*(dataptr+12), mm6);		// tmp06=x1-x6	/* Stage 1 */
-	punpckldq_r2r(mm4, mm2);				// m32:m22|m12:m02 - interleave to produce result 3
+	psubw_m2r(*(dataptr+12), mm6);		/* tmp06=x1-x6: Stage 1 */
+	punpckldq_r2r(mm4, mm2);				/* m32:m22|m12:m02 - interleave to produce result 3 */
 
-	movq_r2m(mm7, tmp7);						// save tmp07
-	movq_r2r(mm2, mm5);						// write result 3
+	movq_r2m(mm7, tmp7);						/* save tmp07 */
+	movq_r2r(mm2, mm5);						/* write result 3 */
 
-	movq_r2m(mm6, tmp6);						// save tmp06
+	movq_r2m(mm6, tmp6);						/* save tmp06 */
 
-	punpckhdq_r2r(mm4, mm3);				// m33:m23|m13:m03 - interleave to produce result 4
+	punpckhdq_r2r(mm4, mm3);				/* m33:m23|m13:m03 - interleave to produce result 4 */
 
-	paddw_m2r(*(dataptr+10), mm2);   	// tmp02=x2+x5 /* stage 1 */
-	movq_r2r(mm3, mm4);						// write result 4
+	paddw_m2r(*(dataptr+10), mm2);   	/* tmp02=x2+x5: stage 1 */
+	movq_r2r(mm3, mm4);						/* write result 4 */
 
 /************************************************************************************************
 					End of Transpose 2
 ************************************************************************************************/
 
-   paddw_m2r(*(dataptr+8), mm3);    	// tmp03=x3+x4 /* stage 1*/
+   paddw_m2r(*(dataptr+8), mm3);    	/* tmp03=x3+x4: stage 1 */
    movq_r2r(mm0, mm7);
 
-   psubw_m2r(*(dataptr+8), mm4);    	// tmp04=x3-x4 /* stage 1*/
+   psubw_m2r(*(dataptr+8), mm4);    	/* tmp04=x3-x4: stage 1 */
    movq_r2r(mm1, mm6);
 
-	paddw_r2r(mm3, mm0);  					// tmp10 = tmp00 + tmp03 /* even 2 */
-	psubw_r2r(mm3, mm7);  					// tmp13 = tmp00 - tmp03 /* even 2 */
+	paddw_r2r(mm3, mm0);  					/* tmp10 = tmp00 + tmp03: even 2 */
+	psubw_r2r(mm3, mm7);  					/* tmp13 = tmp00 - tmp03: even 2 */
 
-	psubw_r2r(mm2, mm6);  					// tmp12 = tmp01 - tmp02 /* even 2 */
-	paddw_r2r(mm2, mm1);  					// tmp11 = tmp01 + tmp02 /* even 2 */
+	psubw_r2r(mm2, mm6);  					/* tmp12 = tmp01 - tmp02: even 2 */
+	paddw_r2r(mm2, mm1);  					/* tmp11 = tmp01 + tmp02: even 2 */
 
-   psubw_m2r(*(dataptr+10), mm5);    	// tmp05=x2-x5 /* stage 1*/
-	paddw_r2r(mm7, mm6);						// tmp12 + tmp13
+   psubw_m2r(*(dataptr+10), mm5);    	/* tmp05=x2-x5: stage 1 */
+	paddw_r2r(mm7, mm6);						/* tmp12 + tmp13 */
 
 	/* stage 3 */
 
    movq_m2r(tmp6, mm2);
    movq_r2r(mm0, mm3);
 
-	psllw_i2r(2, mm6);			// m8 * 2^2
+	psllw_i2r(2, mm6);			/* m8 * 2^2 */
 	paddw_r2r(mm1, mm0);		
 
-	pmulhw_m2r(RTjpeg_C4, mm6);			// z1
+	pmulhw_m2r(RTjpeg_C4, mm6);			/* z1 */
 	psubw_r2r(mm1, mm3);		
 
    movq_r2m(mm0, *dataptr);
@@ -1025,188 +1025,188 @@ void RTjpeg_dctY(__u8 *idata, __s16 *odata, int rskip)
    
     /* Odd part */
    movq_r2m(mm3, *(dataptr+8));
-	paddw_r2r(mm5, mm4);						// tmp10
+	paddw_r2r(mm5, mm4);						/* tmp10 */
 
    movq_m2r(tmp7, mm3);
-	paddw_r2r(mm6, mm0);						// tmp32
+	paddw_r2r(mm6, mm0);						/* tmp32 */
 
-	paddw_r2r(mm2, mm5);						// tmp11
-	psubw_r2r(mm6, mm7);						// tmp33
+	paddw_r2r(mm2, mm5);						/* tmp11 */
+	psubw_r2r(mm6, mm7);						/* tmp33 */
 
    movq_r2m(mm0, *(dataptr+4));
-	paddw_r2r(mm3, mm2);						// tmp12
+	paddw_r2r(mm3, mm2);						/* tmp12 */
 
 	/* stage 4 */
    movq_r2m(mm7, *(dataptr+12));
-	movq_r2r(mm4, mm1);						// copy of tmp10
+	movq_r2r(mm4, mm1);						/* copy of tmp10 */
 
-	psubw_r2r(mm2, mm1);						// tmp10 - tmp12
-	psllw_i2r(2, mm4);			// m8 * 2^2
+	psubw_r2r(mm2, mm1);						/* tmp10 - tmp12 */
+	psllw_i2r(2, mm4);			/* m8 * 2^2 */
 
 	movq_m2r(RTjpeg_C2mC6, mm0);
 	psllw_i2r(2, mm1);
 
-	pmulhw_m2r(RTjpeg_C6, mm1);			// z5
+	pmulhw_m2r(RTjpeg_C6, mm1);			/* z5 */
 	psllw_i2r(2, mm2);
 
-	pmulhw_r2r(mm0, mm4);					// z5
+	pmulhw_r2r(mm0, mm4);					/* z5 */
 
 	/* stage 5 */
 
 	pmulhw_m2r(RTjpeg_C2pC6, mm2);
 	psllw_i2r(2, mm5);
 
-	pmulhw_m2r(RTjpeg_C4, mm5);			// z3
-	movq_r2r(mm3, mm0);						// copy tmp7
+	pmulhw_m2r(RTjpeg_C4, mm5);			/* z3 */
+	movq_r2r(mm3, mm0);						/* copy tmp7 */
 
    movq_m2r(*(dataptr+1), mm7);
-	paddw_r2r(mm1, mm4);						// z2
+	paddw_r2r(mm1, mm4);						/* z2 */
 
-	paddw_r2r(mm1, mm2);						// z4
+	paddw_r2r(mm1, mm2);						/* z4 */
 
-	paddw_r2r(mm5, mm0);						// z11
-	psubw_r2r(mm5, mm3);						// z13
+	paddw_r2r(mm5, mm0);						/* z11 */
+	psubw_r2r(mm5, mm3);						/* z13 */
 
 	/* stage 6 */
 
-	movq_r2r(mm3, mm5);						// copy z13
-	psubw_r2r(mm4, mm3);						// y3=z13 - z2
+	movq_r2r(mm3, mm5);						/* copy z13 */
+	psubw_r2r(mm4, mm3);						/* y3=z13 - z2 */
 
-	paddw_r2r(mm4, mm5);						// y5=z13 + z2
-	movq_r2r(mm0, mm6);						// copy z11
+	paddw_r2r(mm4, mm5);						/* y5=z13 + z2 */
+	movq_r2r(mm0, mm6);						/* copy z11 */
 
-   movq_r2m(mm3, *(dataptr+6)); 			//save y3
-	psubw_r2r(mm2, mm0);						// y7=z11 - z4
+   movq_r2m(mm3, *(dataptr+6)); 			/*save y3 */
+	psubw_r2r(mm2, mm0);						/* y7=z11 - z4 */
 
-   movq_r2m(mm5, *(dataptr+10)); 		//save y5
-	paddw_r2r(mm2, mm6);						// y1=z11 + z4
+   movq_r2m(mm5, *(dataptr+10)); 		/*save y5 */
+	paddw_r2r(mm2, mm6);						/* y1=z11 + z4 */
 
-   movq_r2m(mm0, *(dataptr+14)); 		//save y7
+   movq_r2m(mm0, *(dataptr+14)); 		/*save y7 */
 
 	/************************************************
 	 *  End of 1st 4 rows
 	 ************************************************/
 
-   movq_m2r(*(dataptr+3), mm1); 			// load x1   /* stage 1 */
-	movq_r2r(mm7, mm0);						// copy x0
+   movq_m2r(*(dataptr+3), mm1); 			/* load x1  : stage 1 */
+	movq_r2r(mm7, mm0);						/* copy x0 */
 
-   movq_r2m(mm6, *(dataptr+2)); 			//save y1
+   movq_r2m(mm6, *(dataptr+2)); 			/*save y1 */
 
-   movq_m2r(*(dataptr+5), mm2); 			// load x2   /* stage 1 */
-	movq_r2r(mm1, mm6);						// copy x1
+   movq_m2r(*(dataptr+5), mm2); 			/* load x2  : stage 1 */
+	movq_r2r(mm1, mm6);						/* copy x1 */
 
-   paddw_m2r(*(dataptr+15), mm0);  		// tmp00 = x0 + x7
+   paddw_m2r(*(dataptr+15), mm0);  		/* tmp00 = x0 + x7 */
 
-   movq_m2r(*(dataptr+7), mm3); 			// load x3   /* stage 1 */
-	movq_r2r(mm2, mm5);						// copy x2
+   movq_m2r(*(dataptr+7), mm3); 			/* load x3  : stage 1 */
+	movq_r2r(mm2, mm5);						/* copy x2 */
 
-   psubw_m2r(*(dataptr+15), mm7);  		// tmp07 = x0 - x7
-	movq_r2r(mm3, mm4);						// copy x3
+   psubw_m2r(*(dataptr+15), mm7);  		/* tmp07 = x0 - x7 */
+	movq_r2r(mm3, mm4);						/* copy x3 */
 
-   paddw_m2r(*(dataptr+13), mm1);  		// tmp01 = x1 + x6
+   paddw_m2r(*(dataptr+13), mm1);  		/* tmp01 = x1 + x6 */
 
-	movq_r2m(mm7, tmp7);						// save tmp07
-	movq_r2r(mm0, mm7);						// copy tmp00
+	movq_r2m(mm7, tmp7);						/* save tmp07 */
+	movq_r2r(mm0, mm7);						/* copy tmp00 */
 
-   psubw_m2r(*(dataptr+13), mm6);  		// tmp06 = x1 - x6
+   psubw_m2r(*(dataptr+13), mm6);  		/* tmp06 = x1 - x6 */
 
    /* stage 2, Even Part */
 
-   paddw_m2r(*(dataptr+9), mm3);  		// tmp03 = x3 + x4
+   paddw_m2r(*(dataptr+9), mm3);  		/* tmp03 = x3 + x4 */
 
-	movq_r2m(mm6, tmp6);						// save tmp07
-	movq_r2r(mm1, mm6);						// copy tmp01
+	movq_r2m(mm6, tmp6);						/* save tmp07 */
+	movq_r2r(mm1, mm6);						/* copy tmp01 */
 
-   paddw_m2r(*(dataptr+11), mm2);  		// tmp02 = x2 + x5
-	paddw_r2r(mm3, mm0);              	// tmp10 = tmp00 + tmp03
+   paddw_m2r(*(dataptr+11), mm2);  		/* tmp02 = x2 + x5 */
+	paddw_r2r(mm3, mm0);              	/* tmp10 = tmp00 + tmp03 */
 
-	psubw_r2r(mm3, mm7);              	// tmp13 = tmp00 - tmp03
+	psubw_r2r(mm3, mm7);              	/* tmp13 = tmp00 - tmp03 */
 
-   psubw_m2r(*(dataptr+9), mm4);  		// tmp04 = x3 - x4
-	psubw_r2r(mm2, mm6);              	// tmp12 = tmp01 - tmp02
+   psubw_m2r(*(dataptr+9), mm4);  		/* tmp04 = x3 - x4 */
+	psubw_r2r(mm2, mm6);              	/* tmp12 = tmp01 - tmp02 */
 
-	paddw_r2r(mm2, mm1);              	// tmp11 = tmp01 + tmp02
+	paddw_r2r(mm2, mm1);              	/* tmp11 = tmp01 + tmp02 */
 
-   psubw_m2r(*(dataptr+11), mm5);  		// tmp05 = x2 - x5
-	paddw_r2r(mm7, mm6);              	//  tmp12 + tmp13
+   psubw_m2r(*(dataptr+11), mm5);  		/* tmp05 = x2 - x5 */
+	paddw_r2r(mm7, mm6);              	/*  tmp12 + tmp13 */
 
    /* stage 3, Even and stage 4 & 5 even */
 
-	movq_m2r(tmp6, mm2);            		// load tmp6
-	movq_r2r(mm0, mm3);						// copy tmp10
+	movq_m2r(tmp6, mm2);            		/* load tmp6 */
+	movq_r2r(mm0, mm3);						/* copy tmp10 */
 
-	psllw_i2r(2, mm6);			// shift z1
-	paddw_r2r(mm1, mm0);    				// y0=tmp10 + tmp11
+	psllw_i2r(2, mm6);			/* shift z1 */
+	paddw_r2r(mm1, mm0);    				/* y0=tmp10 + tmp11 */
 
-	pmulhw_m2r(RTjpeg_C4, mm6);    		// z1
-	psubw_r2r(mm1, mm3);    				// y4=tmp10 - tmp11
+	pmulhw_m2r(RTjpeg_C4, mm6);    		/* z1 */
+	psubw_r2r(mm1, mm3);    				/* y4=tmp10 - tmp11 */
 
-   movq_r2m(mm0, *(dataptr+1)); 			//save y0
-	movq_r2r(mm7, mm0);						// copy tmp13
+   movq_r2m(mm0, *(dataptr+1)); 			/*save y0 */
+	movq_r2r(mm7, mm0);						/* copy tmp13 */
   
 	/* odd part */
 
-   movq_r2m(mm3, *(dataptr+9)); 			//save y4
-	paddw_r2r(mm5, mm4);              	// tmp10 = tmp4 + tmp5
+   movq_r2m(mm3, *(dataptr+9)); 			/*save y4 */
+	paddw_r2r(mm5, mm4);              	/* tmp10 = tmp4 + tmp5 */
 
-	movq_m2r(tmp7, mm3);            		// load tmp7
-	paddw_r2r(mm6, mm0);              	// tmp32 = tmp13 + z1
+	movq_m2r(tmp7, mm3);            		/* load tmp7 */
+	paddw_r2r(mm6, mm0);              	/* tmp32 = tmp13 + z1 */
 
-	paddw_r2r(mm2, mm5);              	// tmp11 = tmp5 + tmp6
-	psubw_r2r(mm6, mm7);              	// tmp33 = tmp13 - z1
+	paddw_r2r(mm2, mm5);              	/* tmp11 = tmp5 + tmp6 */
+	psubw_r2r(mm6, mm7);              	/* tmp33 = tmp13 - z1 */
 
-   movq_r2m(mm0, *(dataptr+5)); 			//save y2
-	paddw_r2r(mm3, mm2);              	// tmp12 = tmp6 + tmp7
+   movq_r2m(mm0, *(dataptr+5)); 			/*save y2 */
+	paddw_r2r(mm3, mm2);              	/* tmp12 = tmp6 + tmp7 */
 
 	/* stage 4 */
 
-   movq_r2m(mm7, *(dataptr+13)); 		//save y6
-	movq_r2r(mm4, mm1);						// copy tmp10
+   movq_r2m(mm7, *(dataptr+13)); 		/*save y6 */
+	movq_r2r(mm4, mm1);						/* copy tmp10 */
 
-	psubw_r2r(mm2, mm1);    				// tmp10 - tmp12
-	psllw_i2r(2, mm4);			// shift tmp10
+	psubw_r2r(mm2, mm1);    				/* tmp10 - tmp12 */
+	psllw_i2r(2, mm4);			/* shift tmp10 */
 
-	movq_m2r(RTjpeg_C2mC6, mm0);			// load C2mC6
-	psllw_i2r(2, mm1);			// shift (tmp10-tmp12)
+	movq_m2r(RTjpeg_C2mC6, mm0);			/* load C2mC6 */
+	psllw_i2r(2, mm1);			/* shift (tmp10-tmp12) */
 
-	pmulhw_m2r(RTjpeg_C6, mm1);    		// z5
-	psllw_i2r(2, mm5);			// prepare for multiply 
+	pmulhw_m2r(RTjpeg_C6, mm1);    		/* z5 */
+	psllw_i2r(2, mm5);			/* prepare for multiply  */
 
-	pmulhw_r2r(mm0, mm4);					// multiply by converted real
+	pmulhw_r2r(mm0, mm4);					/* multiply by converted real */
 
 	/* stage 5 */
 
-	pmulhw_m2r(RTjpeg_C4, mm5);			// z3
-	psllw_i2r(2, mm2);			// prepare for multiply 
+	pmulhw_m2r(RTjpeg_C4, mm5);			/* z3 */
+	psllw_i2r(2, mm2);			/* prepare for multiply  */
 
-	pmulhw_m2r(RTjpeg_C2pC6, mm2);		// multiply
-	movq_r2r(mm3, mm0);						// copy tmp7
+	pmulhw_m2r(RTjpeg_C2pC6, mm2);		/* multiply */
+	movq_r2r(mm3, mm0);						/* copy tmp7 */
 
-	movq_m2r(*(dataptr+9), mm7);		 	// m03:m02|m01:m00 - first line (line 4)and copy into mm7
-	paddw_r2r(mm1, mm4);						// z2
+	movq_m2r(*(dataptr+9), mm7);		 	/* m03:m02|m01:m00 - first line (line 4)and copy into mm7 */
+	paddw_r2r(mm1, mm4);						/* z2 */
 
-	paddw_r2r(mm5, mm0);						// z11
-	psubw_r2r(mm5, mm3);						// z13
+	paddw_r2r(mm5, mm0);						/* z11 */
+	psubw_r2r(mm5, mm3);						/* z13 */
 
 	/* stage 6 */
 
-	movq_r2r(mm3, mm5);						// copy z13
-	paddw_r2r(mm1, mm2);						// z4
+	movq_r2r(mm3, mm5);						/* copy z13 */
+	paddw_r2r(mm1, mm2);						/* z4 */
 
-	movq_r2r(mm0, mm6);						// copy z11
-	psubw_r2r(mm4, mm5);						// y3
+	movq_r2r(mm0, mm6);						/* copy z11 */
+	psubw_r2r(mm4, mm5);						/* y3 */
 
-	paddw_r2r(mm2, mm6);						// y1
-	paddw_r2r(mm4, mm3);						// y5
+	paddw_r2r(mm2, mm6);						/* y1 */
+	paddw_r2r(mm4, mm3);						/* y5 */
 
-   movq_r2m(mm5, *(dataptr+7)); 			//save y3
-	psubw_r2r(mm2, mm0);						// yè=z11 - z4
+   movq_r2m(mm5, *(dataptr+7)); 			/*save y3 */
+	psubw_r2r(mm2, mm0);						/* yè=z11 - z4 */
 
-   movq_r2m(mm3, *(dataptr+11)); 		//save y5
+   movq_r2m(mm3, *(dataptr+11)); 		/*save y5 */
 
-   movq_r2m(mm6, *(dataptr+3)); 			//save y1
+   movq_r2m(mm6, *(dataptr+3)); 			/*save y1 */
 
-   movq_r2m(mm0, *(dataptr+15)); 		//save y7
+   movq_r2m(mm0, *(dataptr+15)); 		/*save y7 */
 	
 
 #endif
@@ -1257,126 +1257,126 @@ static mmx_t fix_108n184	= (mmx_t)(long long)0xcf04cf04cf04cf04LL;
 
     /* Odd part */
 
-	movq_m2r(*(idata+10), mm1);	// load idata[DCTSIZE*5]
+	movq_m2r(*(idata+10), mm1);	/* load idata[DCTSIZE*5] */
 
-	movq_m2r(*(idata+6), mm0);		// load idata[DCTSIZE*3]
+	movq_m2r(*(idata+6), mm0);		/* load idata[DCTSIZE*3] */
 
-	movq_m2r(*(idata+2), mm3);		// load idata[DCTSIZE*1]
+	movq_m2r(*(idata+2), mm3);		/* load idata[DCTSIZE*1] */
 
-	movq_r2r(mm1, mm2);				// copy tmp6	/* phase 6 */
+	movq_r2r(mm1, mm2);				/* copy tmp6	: phase 6 */ */
 
-	movq_m2r(*(idata+14), mm4);	// load idata[DCTSIZE*7]
+	movq_m2r(*(idata+14), mm4);	/* load idata[DCTSIZE*7] */
 
-	paddw_r2r(mm0, mm1);				// z13 = tmp6 + tmp5;
+	paddw_r2r(mm0, mm1);				/* z13 = tmp6 + tmp5; */
 
-	psubw_r2r(mm0, mm2);				// z10 = tmp6 - tmp5   
+	psubw_r2r(mm0, mm2);				/* z10 = tmp6 - tmp5    */
 
-	psllw_i2r(2, mm2);				// shift z10
-	movq_r2r(mm2, mm0); 				// copy z10
+	psllw_i2r(2, mm2);				/* shift z10 */
+	movq_r2r(mm2, mm0); 				/* copy z10 */
 
-	pmulhw_m2r(fix_184n261, mm2);	// MULTIPLY( z12, FIX_1_847759065); /* 2*c2 */
-	movq_r2r(mm3, mm5);				// copy tmp4
+	pmulhw_m2r(fix_184n261, mm2);	/* MULTIPLY( z12, FIX_1_847759065); : 2*c2 */
+	movq_r2r(mm3, mm5);				/* copy tmp4 */
 
-	pmulhw_m2r(fix_n184, mm0);		// MULTIPLY(z10, -FIX_1_847759065); /* 2*c2 */
-	paddw_r2r(mm4, mm3);				// z11 = tmp4 + tmp7;
+	pmulhw_m2r(fix_n184, mm0);		/* MULTIPLY(z10, -FIX_1_847759065); : 2*c2 */
+	paddw_r2r(mm4, mm3);				/* z11 = tmp4 + tmp7; */
 
-	movq_r2r(mm3, mm6);				// copy z11			/* phase 5 */
-	psubw_r2r(mm4, mm5);				// z12 = tmp4 - tmp7;
+	movq_r2r(mm3, mm6);				/* copy z11			: phase 5 */
+	psubw_r2r(mm4, mm5);				/* z12 = tmp4 - tmp7; */
 
-	psubw_r2r(mm1, mm6);				// z11-z13
-	psllw_i2r(2, mm5);				//	shift z12
+	psubw_r2r(mm1, mm6);				/* z11-z13 */
+	psllw_i2r(2, mm5);				/*	shift z12 */
 
-	movq_m2r(*(idata+12), mm4);	// load idata[DCTSIZE*6], even part
- 	movq_r2r(mm5, mm7);				//	copy z12
+	movq_m2r(*(idata+12), mm4);	/* load idata[DCTSIZE*6], even part */
+ 	movq_r2r(mm5, mm7);				/*	copy z12 */
 
-	pmulhw_m2r(fix_108n184, mm5); //	MULT(z12, (FIX_1_08-FIX_1_84)) //- z5; /* 2*(c2-c6) */ even part
-	paddw_r2r(mm1, mm3);				// tmp7 = z11 + z13;	
+	pmulhw_m2r(fix_108n184, mm5); /*	MULT(z12, (FIX_1_08-FIX_1_84)) //- z5; 2*(c2-c6): even part */
+	paddw_r2r(mm1, mm3);				/* tmp7 = z11 + z13;	 */
 
-	//ok
+	/*ok */
 
     /* Even part */
-	pmulhw_m2r(fix_184, mm7);		// MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) //+ z5; /* -2*(c2+c6) */
+	pmulhw_m2r(fix_184, mm7);		/* MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) //+ z5; -2*(c2+c6) */
 	psllw_i2r(2, mm6);
 
-	movq_m2r(*(idata+4), mm1);		// load idata[DCTSIZE*2]
+	movq_m2r(*(idata+4), mm1);		/* load idata[DCTSIZE*2] */
 
-	paddw_r2r(mm5, mm0);				//	tmp10
+	paddw_r2r(mm5, mm0);				/*	tmp10 */
 
-	paddw_r2r(mm7, mm2);				// tmp12
+	paddw_r2r(mm7, mm2);				/* tmp12 */
 
-	pmulhw_m2r(fix_141, mm6);		// tmp11 = MULTIPLY(z11 - z13, FIX_1_414213562); /* 2*c4 */
-	psubw_r2r(mm3, mm2);				// tmp6 = tmp12 - tmp7
+	pmulhw_m2r(fix_141, mm6);		/* tmp11 = MULTIPLY(z11 - z13, FIX_1_414213562); 2*c4 */
+	psubw_r2r(mm3, mm2);				/* tmp6 = tmp12 - tmp7 */
 
-	movq_r2r(mm1, mm5);				// copy tmp1
-	paddw_r2r(mm4, mm1);				// tmp13= tmp1 + tmp3;	/* phases 5-3 */
+	movq_r2r(mm1, mm5);				/* copy tmp1 */
+	paddw_r2r(mm4, mm1);				/* tmp13= tmp1 + tmp3; phases 5-3 */
 
-	psubw_r2r(mm4, mm5);				// tmp1-tmp3
-	psubw_r2r(mm2, mm6);				// tmp5 = tmp11 - tmp6;
+	psubw_r2r(mm4, mm5);				/* tmp1-tmp3 */
+	psubw_r2r(mm2, mm6);				/* tmp5 = tmp11 - tmp6; */
 
-	movq_r2m(mm1, *(wsptr));		// save tmp13 in workspace
-	psllw_i2r(2, mm5);	// shift tmp1-tmp3
+	movq_r2m(mm1, *(wsptr));		/* save tmp13 in workspace */
+	psllw_i2r(2, mm5);	/* shift tmp1-tmp3 */
     
-	movq_m2r(*(idata), mm7); 		// load idata[DCTSIZE*0]
+	movq_m2r(*(idata), mm7); 		/* load idata[DCTSIZE*0] */
 
-	pmulhw_m2r(fix_141, mm5);		// MULTIPLY(tmp1 - tmp3, FIX_1_414213562)
-	paddw_r2r(mm6, mm0);				// tmp4 = tmp10 + tmp5;
+	pmulhw_m2r(fix_141, mm5);		/* MULTIPLY(tmp1 - tmp3, FIX_1_414213562) */
+	paddw_r2r(mm6, mm0);				/* tmp4 = tmp10 + tmp5; */
 
-	movq_m2r(*(idata+8), mm4); 	// load idata[DCTSIZE*4]
+	movq_m2r(*(idata+8), mm4); 	/* load idata[DCTSIZE*4] */
 	
-	psubw_r2r(mm1, mm5);				// tmp12 = MULTIPLY(tmp1 - tmp3, FIX_1_414213562) - tmp13; /* 2*c4 */
+	psubw_r2r(mm1, mm5);				/* tmp12 = MULTIPLY(tmp1 - tmp3, FIX_1_414213562) - tmp13; 2*c4 */
 
-	movq_r2m(mm0, *(wsptr+4));		// save tmp4 in workspace
-	movq_r2r(mm7, mm1);			 	// copy tmp0	/* phase 3 */
+	movq_r2m(mm0, *(wsptr+4));		/* save tmp4 in workspace */
+	movq_r2r(mm7, mm1);			 	/* copy tmp0	: phase 3 */
 
-	movq_r2m(mm5, *(wsptr+2));		// save tmp12 in workspace
-	psubw_r2r(mm4, mm1);				// tmp11 = tmp0 - tmp2; 
+	movq_r2m(mm5, *(wsptr+2));		/* save tmp12 in workspace */
+	psubw_r2r(mm4, mm1);				/* tmp11 = tmp0 - tmp2;  */
 
-	paddw_r2r(mm4, mm7);				// tmp10 = tmp0 + tmp2;
-   movq_r2r(mm1, mm5);				// copy tmp11
+	paddw_r2r(mm4, mm7);				/* tmp10 = tmp0 + tmp2; */
+   movq_r2r(mm1, mm5);				/* copy tmp11 */
 	
-	paddw_m2r(*(wsptr+2), mm1);	// tmp1 = tmp11 + tmp12;
-	movq_r2r(mm7, mm4);				// copy tmp10		/* phase 2 */
+	paddw_m2r(*(wsptr+2), mm1);	/* tmp1 = tmp11 + tmp12; */
+	movq_r2r(mm7, mm4);				/* copy tmp10		: phase 2 */
 
-	paddw_m2r(*(wsptr), mm7);		// tmp0 = tmp10 + tmp13;	
+	paddw_m2r(*(wsptr), mm7);		/* tmp0 = tmp10 + tmp13;	 */
 
-	psubw_m2r(*(wsptr), mm4);		// tmp3 = tmp10 - tmp13;
-	movq_r2r(mm7, mm0);				//	copy tmp0
+	psubw_m2r(*(wsptr), mm4);		/* tmp3 = tmp10 - tmp13; */
+	movq_r2r(mm7, mm0);				/*	copy tmp0 */
 
-	psubw_m2r(*(wsptr+2), mm5);	// tmp2 = tmp11 - tmp12;
-	paddw_r2r(mm3, mm7);				//	wsptr[DCTSIZE*0] = (int) (tmp0 + tmp7);
+	psubw_m2r(*(wsptr+2), mm5);	/* tmp2 = tmp11 - tmp12; */
+	paddw_r2r(mm3, mm7);				/*	wsptr[DCTSIZE*0] = (int) (tmp0 + tmp7); */
 	
-	psubw_r2r(mm3, mm0);				// wsptr[DCTSIZE*7] = (int) (tmp0 - tmp7);
+	psubw_r2r(mm3, mm0);				/* wsptr[DCTSIZE*7] = (int) (tmp0 - tmp7); */
 
-	movq_r2m(mm7, *(wsptr));		//	wsptr[DCTSIZE*0]
-	movq_r2r(mm1, mm3);				//	copy tmp1
+	movq_r2m(mm7, *(wsptr));		/*	wsptr[DCTSIZE*0] */
+	movq_r2r(mm1, mm3);				/*	copy tmp1 */
 
-	movq_r2m(mm0, *(wsptr+14));		// wsptr[DCTSIZE*7]
-	paddw_r2r(mm2, mm1);				// wsptr[DCTSIZE*1] = (int) (tmp1 + tmp6);
+	movq_r2m(mm0, *(wsptr+14));		/* wsptr[DCTSIZE*7] */
+	paddw_r2r(mm2, mm1);				/* wsptr[DCTSIZE*1] = (int) (tmp1 + tmp6); */
 
-	psubw_r2r(mm2, mm3);				// wsptr[DCTSIZE*6] = (int) (tmp1 - tmp6);
+	psubw_r2r(mm2, mm3);				/* wsptr[DCTSIZE*6] = (int) (tmp1 - tmp6); */
 
-	movq_r2m(mm1, *(wsptr+2));		// wsptr[DCTSIZE*1]
-	movq_r2r(mm4, mm1);				//	copy tmp3
+	movq_r2m(mm1, *(wsptr+2));		/* wsptr[DCTSIZE*1] */
+	movq_r2r(mm4, mm1);				/*	copy tmp3 */
 
-	movq_r2m(mm3, *(wsptr+12));		// wsptr[DCTSIZE*6]
+	movq_r2m(mm3, *(wsptr+12));		/* wsptr[DCTSIZE*6] */
 
-	paddw_m2r(*(wsptr+4), mm4);	// wsptr[DCTSIZE*4] = (int) (tmp3 + tmp4);
+	paddw_m2r(*(wsptr+4), mm4);	/* wsptr[DCTSIZE*4] = (int) (tmp3 + tmp4); */
 
-	psubw_m2r(*(wsptr+4), mm1); 	// wsptr[DCTSIZE*3] = (int) (tmp3 - tmp4);
+	psubw_m2r(*(wsptr+4), mm1); 	/* wsptr[DCTSIZE*3] = (int) (tmp3 - tmp4); */
 
 	movq_r2m(mm4, *(wsptr+8));		
-	movq_r2r(mm5, mm7);				// copy tmp2
+	movq_r2r(mm5, mm7);				/* copy tmp2 */
 
-	paddw_r2r(mm6, mm5);				// wsptr[DCTSIZE*2] = (int) (tmp2 + tmp5)
+	paddw_r2r(mm6, mm5);				/* wsptr[DCTSIZE*2] = (int) (tmp2 + tmp5) */
 
 	movq_r2m(mm1, *(wsptr+6));	
-	psubw_r2r(mm6, mm7);				//	wsptr[DCTSIZE*5] = (int) (tmp2 - tmp5);
+	psubw_r2r(mm6, mm7);				/*	wsptr[DCTSIZE*5] = (int) (tmp2 - tmp5); */
 
 	movq_r2m(mm5, *(wsptr+4));	
 
 	movq_r2m(mm7, *(wsptr+10));		
 
-	//ok
+	/*ok */
 
 
 /*****************************************************************/
@@ -1386,118 +1386,118 @@ static mmx_t fix_108n184	= (mmx_t)(long long)0xcf04cf04cf04cf04LL;
 
 /*****************************************************************/
 
-	movq_m2r(*(idata+10), mm1);	// load idata[DCTSIZE*5]
+	movq_m2r(*(idata+10), mm1);	/* load idata[DCTSIZE*5] */
 
-	movq_m2r(*(idata+6), mm0);		// load idata[DCTSIZE*3]
+	movq_m2r(*(idata+6), mm0);		/* load idata[DCTSIZE*3] */
 
-	movq_m2r(*(idata+2),	mm3);		// load idata[DCTSIZE*1]
-	movq_r2r(mm1, mm2);				//	copy tmp6	/* phase 6 */
+	movq_m2r(*(idata+2),	mm3);		/* load idata[DCTSIZE*1] */
+	movq_r2r(mm1, mm2);				/*	copy tmp6	: phase 6 */ */
 
-	movq_m2r(*(idata+14),	mm4);		// load idata[DCTSIZE*7]
-	paddw_r2r(mm0, mm1);				//	z13 = tmp6 + tmp5;
+	movq_m2r(*(idata+14),	mm4);		/* load idata[DCTSIZE*7] */
+	paddw_r2r(mm0, mm1);				/*	z13 = tmp6 + tmp5; */
 
-	psubw_r2r(mm0, mm2);				//	z10 = tmp6 - tmp5   
+	psubw_r2r(mm0, mm2);				/*	z10 = tmp6 - tmp5    */
 
-	psllw_i2r(2, mm2);				//	shift z10
-	movq_r2r(mm2, mm0);				//	copy z10
+	psllw_i2r(2, mm2);				/*	shift z10 */
+	movq_r2r(mm2, mm0);				/*	copy z10 */
 
-	pmulhw_m2r(fix_184n261, mm2);	// MULTIPLY( z12, FIX_1_847759065); /* 2*c2 */
-	movq_r2r(mm3, mm5);				//	copy tmp4
+	pmulhw_m2r(fix_184n261, mm2);	/* MULTIPLY( z12, FIX_1_847759065); : 2*c2 */
+	movq_r2r(mm3, mm5);				/*	copy tmp4 */
 
-	pmulhw_m2r(fix_n184, mm0);		// MULTIPLY(z10, -FIX_1_847759065); /* 2*c2 */
-	paddw_r2r(mm4, mm3);				// z11 = tmp4 + tmp7;
+	pmulhw_m2r(fix_n184, mm0);		/* MULTIPLY(z10, -FIX_1_847759065); : 2*c2 */
+	paddw_r2r(mm4, mm3);				/* z11 = tmp4 + tmp7; */
 
-	movq_r2r(mm3, mm6);				// copy z11			/* phase 5 */
-	psubw_r2r(mm4, mm5);				//	z12 = tmp4 - tmp7;
+	movq_r2r(mm3, mm6);				/* copy z11			: phase 5 */
+	psubw_r2r(mm4, mm5);				/*	z12 = tmp4 - tmp7; */
 
-	psubw_r2r(mm1, mm6);				// z11-z13
-	psllw_i2r(2, mm5);				//	shift z12
+	psubw_r2r(mm1, mm6);				/* z11-z13 */
+	psllw_i2r(2, mm5);				/*	shift z12 */
 
-	movq_m2r(*(idata+12), mm4);	// load idata[DCTSIZE*6], even part
- 	movq_r2r(mm5, mm7);				// copy z12
+	movq_m2r(*(idata+12), mm4);	/* load idata[DCTSIZE*6], even part */
+ 	movq_r2r(mm5, mm7);				/* copy z12 */
 
-	pmulhw_m2r(fix_108n184, mm5);	// MULT(z12, (FIX_1_08-FIX_1_84)) //- z5; /* 2*(c2-c6) */ even part
-	paddw_r2r(mm1, mm3);				// tmp7 = z11 + z13;	
+	pmulhw_m2r(fix_108n184, mm5);	/* MULT(z12, (FIX_1_08-FIX_1_84)) //- z5; 2*(c2-c6) even part */
+	paddw_r2r(mm1, mm3);				/* tmp7 = z11 + z13;	 */
 
-	//ok
+	/*ok */
 
     /* Even part */
-	pmulhw_m2r(fix_184, mm7);		// MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) //+ z5; /* -2*(c2+c6) */
+	pmulhw_m2r(fix_184, mm7);		/* MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) //+ z5; -2*(c2+c6) */
 	psllw_i2r(2, mm6);
 
-	movq_m2r(*(idata+4), mm1);		// load idata[DCTSIZE*2]
+	movq_m2r(*(idata+4), mm1);		/* load idata[DCTSIZE*2] */
 
-	paddw_r2r(mm5, mm0);				//	tmp10
+	paddw_r2r(mm5, mm0);				/*	tmp10 */
 
-	paddw_r2r(mm7, mm2);				// tmp12
+	paddw_r2r(mm7, mm2);				/* tmp12 */
 
-	pmulhw_m2r(fix_141, mm6);		// tmp11 = MULTIPLY(z11 - z13, FIX_1_414213562); /* 2*c4 */
-	psubw_r2r(mm3, mm2);				// tmp6 = tmp12 - tmp7
+	pmulhw_m2r(fix_141, mm6);		/* tmp11 = MULTIPLY(z11 - z13, FIX_1_414213562); 2*c4 */
+	psubw_r2r(mm3, mm2);				/* tmp6 = tmp12 - tmp7 */
 
-	movq_r2r(mm1, mm5);				// copy tmp1
-	paddw_r2r(mm4, mm1);				// tmp13= tmp1 + tmp3;	/* phases 5-3 */
+	movq_r2r(mm1, mm5);				/* copy tmp1 */
+	paddw_r2r(mm4, mm1);				/* tmp13= tmp1 + tmp3;	phases 5-3 */
 
-	psubw_r2r(mm4, mm5);				// tmp1-tmp3
-	psubw_r2r(mm2, mm6);				// tmp5 = tmp11 - tmp6;
+	psubw_r2r(mm4, mm5);				/* tmp1-tmp3 */
+	psubw_r2r(mm2, mm6);				/* tmp5 = tmp11 - tmp6; */
 
-	movq_r2m(mm1, *(wsptr));		// save tmp13 in workspace
-	psllw_i2r(2, mm5); 				// shift tmp1-tmp3
+	movq_r2m(mm1, *(wsptr));		/* save tmp13 in workspace */
+	psllw_i2r(2, mm5); 				/* shift tmp1-tmp3 */
     
-	movq_m2r(*(idata), mm7);		// load idata[DCTSIZE*0]
-	paddw_r2r(mm6, mm0);				// tmp4 = tmp10 + tmp5;
+	movq_m2r(*(idata), mm7);		/* load idata[DCTSIZE*0] */
+	paddw_r2r(mm6, mm0);				/* tmp4 = tmp10 + tmp5; */
 
-	pmulhw_m2r(fix_141, mm5);		// MULTIPLY(tmp1 - tmp3, FIX_1_414213562)
+	pmulhw_m2r(fix_141, mm5);		/* MULTIPLY(tmp1 - tmp3, FIX_1_414213562) */
 
-	movq_m2r(*(idata+8), mm4);    // load idata[DCTSIZE*4]
+	movq_m2r(*(idata+8), mm4);    /* load idata[DCTSIZE*4] */
 	
-	psubw_r2r(mm1, mm5);				// tmp12 = MULTIPLY(tmp1 - tmp3, FIX_1_414213562) - tmp13; /* 2*c4 */
+	psubw_r2r(mm1, mm5);				/* tmp12 = MULTIPLY(tmp1 - tmp3, FIX_1_414213562) - tmp13; 2*c4 */
 
-	movq_r2m(mm0, *(wsptr+4));		// save tmp4 in workspace
-	movq_r2r(mm7, mm1);				// copy tmp0	/* phase 3 */
+	movq_r2m(mm0, *(wsptr+4));		/* save tmp4 in workspace */
+	movq_r2r(mm7, mm1);				/* copy tmp0: phase 3 */
 
-	movq_r2m(mm5, *(wsptr+2));		// save tmp12 in workspace
-	psubw_r2r(mm4, mm1);				// tmp11 = tmp0 - tmp2; 
+	movq_r2m(mm5, *(wsptr+2));		/* save tmp12 in workspace */
+	psubw_r2r(mm4, mm1);				/* tmp11 = tmp0 - tmp2;  */
 
-	paddw_r2r(mm4, mm7);				// tmp10 = tmp0 + tmp2;
-   movq_r2r(mm1, mm5);				// copy tmp11
+	paddw_r2r(mm4, mm7);				/* tmp10 = tmp0 + tmp2; */
+   movq_r2r(mm1, mm5);				/* copy tmp11 */
 	
-	paddw_m2r(*(wsptr+2), mm1);	// tmp1 = tmp11 + tmp12;
-	movq_r2r(mm7, mm4);				// copy tmp10		/* phase 2 */
+	paddw_m2r(*(wsptr+2), mm1);	/* tmp1 = tmp11 + tmp12; */
+	movq_r2r(mm7, mm4);				/* copy tmp10: phase 2 */
 
-	paddw_m2r(*(wsptr), mm7);		// tmp0 = tmp10 + tmp13;	
+	paddw_m2r(*(wsptr), mm7);		/* tmp0 = tmp10 + tmp13;	 */
 
-	psubw_m2r(*(wsptr), mm4);		// tmp3 = tmp10 - tmp13;
-	movq_r2r(mm7, mm0);				// copy tmp0
+	psubw_m2r(*(wsptr), mm4);		/* tmp3 = tmp10 - tmp13; */
+	movq_r2r(mm7, mm0);				/* copy tmp0 */
 
-	psubw_m2r(*(wsptr+2), mm5);	// tmp2 = tmp11 - tmp12;
-	paddw_r2r(mm3, mm7);				// wsptr[DCTSIZE*0] = (int) (tmp0 + tmp7);
+	psubw_m2r(*(wsptr+2), mm5);	/* tmp2 = tmp11 - tmp12; */
+	paddw_r2r(mm3, mm7);				/* wsptr[DCTSIZE*0] = (int) (tmp0 + tmp7); */
 	
-	psubw_r2r(mm3, mm0);				// wsptr[DCTSIZE*7] = (int) (tmp0 - tmp7);
+	psubw_r2r(mm3, mm0);				/* wsptr[DCTSIZE*7] = (int) (tmp0 - tmp7); */
 
-	movq_r2m(mm7, *(wsptr));		// wsptr[DCTSIZE*0]
-	movq_r2r(mm1, mm3);				// copy tmp1
+	movq_r2m(mm7, *(wsptr));		/* wsptr[DCTSIZE*0] */
+	movq_r2r(mm1, mm3);				/* copy tmp1 */
 
-	movq_r2m(mm0, *(wsptr+14));		// wsptr[DCTSIZE*7]
-	paddw_r2r(mm2, mm1);				// wsptr[DCTSIZE*1] = (int) (tmp1 + tmp6);
+	movq_r2m(mm0, *(wsptr+14));		/* wsptr[DCTSIZE*7] */
+	paddw_r2r(mm2, mm1);				/* wsptr[DCTSIZE*1] = (int) (tmp1 + tmp6); */
 
-	psubw_r2r(mm2, mm3);				// wsptr[DCTSIZE*6] = (int) (tmp1 - tmp6);
+	psubw_r2r(mm2, mm3);				/* wsptr[DCTSIZE*6] = (int) (tmp1 - tmp6); */
 
-	movq_r2m(mm1, *(wsptr+2));		// wsptr[DCTSIZE*1]
-	movq_r2r(mm4, mm1);				// copy tmp3
+	movq_r2m(mm1, *(wsptr+2));		/* wsptr[DCTSIZE*1] */
+	movq_r2r(mm4, mm1);				/* copy tmp3 */
 
-	movq_r2m(mm3, *(wsptr+12));		// wsptr[DCTSIZE*6]
+	movq_r2m(mm3, *(wsptr+12));		/* wsptr[DCTSIZE*6] */
 
-	paddw_m2r(*(wsptr+4), mm4);	// wsptr[DCTSIZE*4] = (int) (tmp3 + tmp4);
+	paddw_m2r(*(wsptr+4), mm4);	/* wsptr[DCTSIZE*4] = (int) (tmp3 + tmp4); */
 
-	psubw_m2r(*(wsptr+4), mm1);	// wsptr[DCTSIZE*3] = (int) (tmp3 - tmp4);
+	psubw_m2r(*(wsptr+4), mm1);	/* wsptr[DCTSIZE*3] = (int) (tmp3 - tmp4); */
 
 	movq_r2m(mm4, *(wsptr+8));		
-	movq_r2r(mm5, mm7);				// copy tmp2
+	movq_r2r(mm5, mm7);				/* copy tmp2 */
 
-	paddw_r2r(mm6, mm5);				// wsptr[DCTSIZE*2] = (int) (tmp2 + tmp5)
+	paddw_r2r(mm6, mm5);				/* wsptr[DCTSIZE*2] = (int) (tmp2 + tmp5) */
 
 	movq_r2m(mm1, *(wsptr+6));		
-	psubw_r2r(mm6, mm7);				// wsptr[DCTSIZE*5] = (int) (tmp2 - tmp5);
+	psubw_r2r(mm6, mm7);				/* wsptr[DCTSIZE*5] = (int) (tmp2 - tmp5); */
 
 	movq_r2m(mm5, *(wsptr+4));	
 
@@ -1514,355 +1514,355 @@ static mmx_t fix_108n184	= (mmx_t)(long long)0xcf04cf04cf04cf04LL;
 
 	wsptr--;
 
-//    tmp10 = ((DCTELEM) wsptr[0] + (DCTELEM) wsptr[4]);
-//    tmp13 = ((DCTELEM) wsptr[2] + (DCTELEM) wsptr[6]);
-//    tmp11 = ((DCTELEM) wsptr[0] - (DCTELEM) wsptr[4]);
-//    tmp14 = ((DCTELEM) wsptr[2] - (DCTELEM) wsptr[6]);
-	movq_m2r(*(wsptr), mm0);		// wsptr[0,0],[0,1],[0,2],[0,3]
+/*    tmp10 = ((DCTELEM) wsptr[0] + (DCTELEM) wsptr[4]); */
+/*    tmp13 = ((DCTELEM) wsptr[2] + (DCTELEM) wsptr[6]); */
+/*    tmp11 = ((DCTELEM) wsptr[0] - (DCTELEM) wsptr[4]); */
+/*    tmp14 = ((DCTELEM) wsptr[2] - (DCTELEM) wsptr[6]); */
+	movq_m2r(*(wsptr), mm0);		/* wsptr[0,0],[0,1],[0,2],[0,3] */
 
-	movq_m2r(*(wsptr+1),	mm1);		// wsptr[0,4],[0,5],[0,6],[0,7]
+	movq_m2r(*(wsptr+1),	mm1);		/* wsptr[0,4],[0,5],[0,6],[0,7] */
 	movq_r2r(mm0, mm2);
 	
-	movq_m2r(*(wsptr+2), mm3);		// wsptr[1,0],[1,1],[1,2],[1,3]
-	paddw_r2r(mm1, mm0);				// wsptr[0,tmp10],[xxx],[0,tmp13],[xxx]
+	movq_m2r(*(wsptr+2), mm3);		/* wsptr[1,0],[1,1],[1,2],[1,3] */
+	paddw_r2r(mm1, mm0);				/* wsptr[0,tmp10],[xxx],[0,tmp13],[xxx] */
 
-	movq_m2r(*(wsptr+3), mm4);		// wsptr[1,4],[1,5],[1,6],[1,7]
-	psubw_r2r(mm1, mm2);				// wsptr[0,tmp11],[xxx],[0,tmp14],[xxx]
+	movq_m2r(*(wsptr+3), mm4);		/* wsptr[1,4],[1,5],[1,6],[1,7] */
+	psubw_r2r(mm1, mm2);				/* wsptr[0,tmp11],[xxx],[0,tmp14],[xxx] */
 
 	movq_r2r(mm0, mm6);
 	movq_r2r(mm3, mm5);
 	
-	paddw_r2r(mm4, mm3);				// wsptr[1,tmp10],[xxx],[1,tmp13],[xxx]
+	paddw_r2r(mm4, mm3);				/* wsptr[1,tmp10],[xxx],[1,tmp13],[xxx] */
 	movq_r2r(mm2, mm1);
 
-	psubw_r2r(mm4, mm5);				// wsptr[1,tmp11],[xxx],[1,tmp14],[xxx]
-	punpcklwd_r2r(mm3, mm0);		// wsptr[0,tmp10],[1,tmp10],[xxx],[xxx]
+	psubw_r2r(mm4, mm5);				/* wsptr[1,tmp11],[xxx],[1,tmp14],[xxx] */
+	punpcklwd_r2r(mm3, mm0);		/* wsptr[0,tmp10],[1,tmp10],[xxx],[xxx] */
 
-	movq_m2r(*(wsptr+7), mm7);		// wsptr[3,4],[3,5],[3,6],[3,7]
-	punpckhwd_r2r(mm3, mm6);		// wsptr[0,tmp13],[1,tmp13],[xxx],[xxx]
+	movq_m2r(*(wsptr+7), mm7);		/* wsptr[3,4],[3,5],[3,6],[3,7] */
+	punpckhwd_r2r(mm3, mm6);		/* wsptr[0,tmp13],[1,tmp13],[xxx],[xxx] */
 
-	movq_m2r(*(wsptr+4), mm3);		// wsptr[2,0],[2,1],[2,2],[2,3]
-	punpckldq_r2r(mm6, mm0);		// wsptr[0,tmp10],[1,tmp10],[0,tmp13],[1,tmp13]
+	movq_m2r(*(wsptr+4), mm3);		/* wsptr[2,0],[2,1],[2,2],[2,3] */
+	punpckldq_r2r(mm6, mm0);		/* wsptr[0,tmp10],[1,tmp10],[0,tmp13],[1,tmp13] */
 
-	punpcklwd_r2r(mm5, mm1);		// wsptr[0,tmp11],[1,tmp11],[xxx],[xxx]
+	punpcklwd_r2r(mm5, mm1);		/* wsptr[0,tmp11],[1,tmp11],[xxx],[xxx] */
 	movq_r2r(mm3, mm4);
 
-	movq_m2r(*(wsptr+6), mm6);		// wsptr[3,0],[3,1],[3,2],[3,3]
-	punpckhwd_r2r(mm5, mm2);		// wsptr[0,tmp14],[1,tmp14],[xxx],[xxx]
+	movq_m2r(*(wsptr+6), mm6);		/* wsptr[3,0],[3,1],[3,2],[3,3] */
+	punpckhwd_r2r(mm5, mm2);		/* wsptr[0,tmp14],[1,tmp14],[xxx],[xxx] */
 
-	movq_m2r(*(wsptr+5), mm5);		// wsptr[2,4],[2,5],[2,6],[2,7]
-	punpckldq_r2r(mm2, mm1);		// wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14]
+	movq_m2r(*(wsptr+5), mm5);		/* wsptr[2,4],[2,5],[2,6],[2,7] */
+	punpckldq_r2r(mm2, mm1);		/* wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14] */
 
 	
-	paddw_r2r(mm5, mm3);				// wsptr[2,tmp10],[xxx],[2,tmp13],[xxx]
+	paddw_r2r(mm5, mm3);				/* wsptr[2,tmp10],[xxx],[2,tmp13],[xxx] */
 	movq_r2r(mm6, mm2);
 
-	psubw_r2r(mm5, mm4);				// wsptr[2,tmp11],[xxx],[2,tmp14],[xxx]
-	paddw_r2r(mm7, mm6);				// wsptr[3,tmp10],[xxx],[3,tmp13],[xxx]
+	psubw_r2r(mm5, mm4);				/* wsptr[2,tmp11],[xxx],[2,tmp14],[xxx] */
+	paddw_r2r(mm7, mm6);				/* wsptr[3,tmp10],[xxx],[3,tmp13],[xxx] */
 
 	movq_r2r(mm3, mm5);
-	punpcklwd_r2r(mm6, mm3);		// wsptr[2,tmp10],[3,tmp10],[xxx],[xxx]
+	punpcklwd_r2r(mm6, mm3);		/* wsptr[2,tmp10],[3,tmp10],[xxx],[xxx] */
 	
-	psubw_r2r(mm7, mm2);				// wsptr[3,tmp11],[xxx],[3,tmp14],[xxx]
-	punpckhwd_r2r(mm6, mm5);		// wsptr[2,tmp13],[3,tmp13],[xxx],[xxx]
+	psubw_r2r(mm7, mm2);				/* wsptr[3,tmp11],[xxx],[3,tmp14],[xxx] */
+	punpckhwd_r2r(mm6, mm5);		/* wsptr[2,tmp13],[3,tmp13],[xxx],[xxx] */
 
 	movq_r2r(mm4, mm7);
-	punpckldq_r2r(mm5, mm3);		// wsptr[2,tmp10],[3,tmp10],[2,tmp13],[3,tmp13]
+	punpckldq_r2r(mm5, mm3);		/* wsptr[2,tmp10],[3,tmp10],[2,tmp13],[3,tmp13] */
 						 
-	punpcklwd_r2r(mm2, mm4);		// wsptr[2,tmp11],[3,tmp11],[xxx],[xxx]
+	punpcklwd_r2r(mm2, mm4);		/* wsptr[2,tmp11],[3,tmp11],[xxx],[xxx] */
 
-	punpckhwd_r2r(mm2, mm7);		// wsptr[2,tmp14],[3,tmp14],[xxx],[xxx]
+	punpckhwd_r2r(mm2, mm7);		/* wsptr[2,tmp14],[3,tmp14],[xxx],[xxx] */
 
-	punpckldq_r2r(mm7, mm4);		// wsptr[2,tmp11],[3,tmp11],[2,tmp14],[3,tmp14]
+	punpckldq_r2r(mm7, mm4);		/* wsptr[2,tmp11],[3,tmp11],[2,tmp14],[3,tmp14] */
 	movq_r2r(mm1, mm6);
 
-	//ok
+	/*ok */
 
-//	mm0 = 	;wsptr[0,tmp10],[1,tmp10],[0,tmp13],[1,tmp13]
-//	mm1 =	;wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14]
+/*	mm0 = 	;wsptr[0,tmp10],[1,tmp10],[0,tmp13],[1,tmp13] */
+/*	mm1 =	;wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14] */
 
 
 	movq_r2r(mm0, mm2);
-	punpckhdq_r2r(mm4, mm6);		// wsptr[0,tmp14],[1,tmp14],[2,tmp14],[3,tmp14]
+	punpckhdq_r2r(mm4, mm6);		/* wsptr[0,tmp14],[1,tmp14],[2,tmp14],[3,tmp14] */
 
-	punpckldq_r2r(mm4, mm1);		// wsptr[0,tmp11],[1,tmp11],[2,tmp11],[3,tmp11]
+	punpckldq_r2r(mm4, mm1);		/* wsptr[0,tmp11],[1,tmp11],[2,tmp11],[3,tmp11] */
 	psllw_i2r(2, mm6);
 
 	pmulhw_m2r(fix_141, mm6);
-	punpckldq_r2r(mm3, mm0);		// wsptr[0,tmp10],[1,tmp10],[2,tmp10],[3,tmp10]
+	punpckldq_r2r(mm3, mm0);		/* wsptr[0,tmp10],[1,tmp10],[2,tmp10],[3,tmp10] */
 
-	punpckhdq_r2r(mm3, mm2);		// wsptr[0,tmp13],[1,tmp13],[2,tmp13],[3,tmp13]
+	punpckhdq_r2r(mm3, mm2);		/* wsptr[0,tmp13],[1,tmp13],[2,tmp13],[3,tmp13] */
 	movq_r2r(mm0, mm7);
 
-//    tmp0 = tmp10 + tmp13;
-//    tmp3 = tmp10 - tmp13;
-	paddw_r2r(mm2, mm0);				// [0,tmp0],[1,tmp0],[2,tmp0],[3,tmp0]
-	psubw_r2r(mm2, mm7);				// [0,tmp3],[1,tmp3],[2,tmp3],[3,tmp3]
+/*    tmp0 = tmp10 + tmp13; */
+/*    tmp3 = tmp10 - tmp13; */
+	paddw_r2r(mm2, mm0);				/* [0,tmp0],[1,tmp0],[2,tmp0],[3,tmp0] */
+	psubw_r2r(mm2, mm7);				/* [0,tmp3],[1,tmp3],[2,tmp3],[3,tmp3] */
 
-//    tmp12 = MULTIPLY(tmp14, FIX_1_414213562) - tmp13;
-	psubw_r2r(mm2, mm6);				// wsptr[0,tmp12],[1,tmp12],[2,tmp12],[3,tmp12]
-//    tmp1 = tmp11 + tmp12;
-//    tmp2 = tmp11 - tmp12;
+/*    tmp12 = MULTIPLY(tmp14, FIX_1_414213562) - tmp13; */
+	psubw_r2r(mm2, mm6);				/* wsptr[0,tmp12],[1,tmp12],[2,tmp12],[3,tmp12] */
+/*    tmp1 = tmp11 + tmp12; */
+/*    tmp2 = tmp11 - tmp12; */
 	movq_r2r(mm1, mm5);
 
-	//OK
+	/*OK */
 
     /* Odd part */
 
-//    z13 = (DCTELEM) wsptr[5] + (DCTELEM) wsptr[3];
-//    z10 = (DCTELEM) wsptr[5] - (DCTELEM) wsptr[3];
-//    z11 = (DCTELEM) wsptr[1] + (DCTELEM) wsptr[7];
-//    z12 = (DCTELEM) wsptr[1] - (DCTELEM) wsptr[7];
-	movq_m2r(*(wsptr), mm3);		// wsptr[0,0],[0,1],[0,2],[0,3]
-	paddw_r2r(mm6, mm1);				// [0,tmp1],[1,tmp1],[2,tmp1],[3,tmp1]
+/*    z13 = (DCTELEM) wsptr[5] + (DCTELEM) wsptr[3]; */
+/*    z10 = (DCTELEM) wsptr[5] - (DCTELEM) wsptr[3]; */
+/*    z11 = (DCTELEM) wsptr[1] + (DCTELEM) wsptr[7]; */
+/*    z12 = (DCTELEM) wsptr[1] - (DCTELEM) wsptr[7]; */
+	movq_m2r(*(wsptr), mm3);		/* wsptr[0,0],[0,1],[0,2],[0,3] */
+	paddw_r2r(mm6, mm1);				/* [0,tmp1],[1,tmp1],[2,tmp1],[3,tmp1] */
 
-	movq_m2r(*(wsptr+1), mm4);		// wsptr[0,4],[0,5],[0,6],[0,7]
-	psubw_r2r(mm6, mm5);				// [0,tmp2],[1,tmp2],[2,tmp2],[3,tmp2]
+	movq_m2r(*(wsptr+1), mm4);		/* wsptr[0,4],[0,5],[0,6],[0,7] */
+	psubw_r2r(mm6, mm5);				/* [0,tmp2],[1,tmp2],[2,tmp2],[3,tmp2] */
 
 	movq_r2r(mm3, mm6);
-	punpckldq_r2r(mm4, mm3);		// wsptr[0,0],[0,1],[0,4],[0,5]
+	punpckldq_r2r(mm4, mm3);		/* wsptr[0,0],[0,1],[0,4],[0,5] */
 
-	punpckhdq_r2r(mm6, mm4);		// wsptr[0,6],[0,7],[0,2],[0,3]
+	punpckhdq_r2r(mm6, mm4);		/* wsptr[0,6],[0,7],[0,2],[0,3] */
 	movq_r2r(mm3, mm2);
 
-//Save tmp0 and tmp1 in wsptr
-	movq_r2m(mm0, *(wsptr));		// save tmp0
-	paddw_r2r(mm4, mm2);				// wsptr[xxx],[0,z11],[xxx],[0,z13]
+/*Save tmp0 and tmp1 in wsptr */
+	movq_r2m(mm0, *(wsptr));		/* save tmp0 */
+	paddw_r2r(mm4, mm2);				/* wsptr[xxx],[0,z11],[xxx],[0,z13] */
 
 	
-//Continue with z10 --- z13
-	movq_m2r(*(wsptr+2), mm6);		// wsptr[1,0],[1,1],[1,2],[1,3]
-	psubw_r2r(mm4, mm3);				// wsptr[xxx],[0,z12],[xxx],[0,z10]
+/*Continue with z10 --- z13 */
+	movq_m2r(*(wsptr+2), mm6);		/* wsptr[1,0],[1,1],[1,2],[1,3] */
+	psubw_r2r(mm4, mm3);				/* wsptr[xxx],[0,z12],[xxx],[0,z10] */
 
-	movq_m2r(*(wsptr+3), mm0);		// wsptr[1,4],[1,5],[1,6],[1,7]
+	movq_m2r(*(wsptr+3), mm0);		/* wsptr[1,4],[1,5],[1,6],[1,7] */
 	movq_r2r(mm6, mm4);
 
-	movq_r2m(mm1, *(wsptr+1));		// save tmp1
-	punpckldq_r2r(mm0, mm6);		// wsptr[1,0],[1,1],[1,4],[1,5]
+	movq_r2m(mm1, *(wsptr+1));		/* save tmp1 */
+	punpckldq_r2r(mm0, mm6);		/* wsptr[1,0],[1,1],[1,4],[1,5] */
 
-	punpckhdq_r2r(mm4, mm0);		// wsptr[1,6],[1,7],[1,2],[1,3]
+	punpckhdq_r2r(mm4, mm0);		/* wsptr[1,6],[1,7],[1,2],[1,3] */
 	movq_r2r(mm6, mm1);
 	
-//Save tmp2 and tmp3 in wsptr
-	paddw_r2r(mm0, mm6);				// wsptr[xxx],[1,z11],[xxx],[1,z13]
+/*Save tmp2 and tmp3 in wsptr */
+	paddw_r2r(mm0, mm6);				/* wsptr[xxx],[1,z11],[xxx],[1,z13] */
 	movq_r2r(mm2, mm4);
 	
-//Continue with z10 --- z13
-	movq_r2m(mm5, *(wsptr+2));		// save tmp2
-	punpcklwd_r2r(mm6, mm2);		// wsptr[xxx],[xxx],[0,z11],[1,z11]
+/*Continue with z10 --- z13 */
+	movq_r2m(mm5, *(wsptr+2));		/* save tmp2 */
+	punpcklwd_r2r(mm6, mm2);		/* wsptr[xxx],[xxx],[0,z11],[1,z11] */
 
-	psubw_r2r(mm0, mm1);				// wsptr[xxx],[1,z12],[xxx],[1,z10]
-	punpckhwd_r2r(mm6, mm4);		// wsptr[xxx],[xxx],[0,z13],[1,z13]
+	psubw_r2r(mm0, mm1);				/* wsptr[xxx],[1,z12],[xxx],[1,z10] */
+	punpckhwd_r2r(mm6, mm4);		/* wsptr[xxx],[xxx],[0,z13],[1,z13] */
 
 	movq_r2r(mm3, mm0);
-	punpcklwd_r2r(mm1, mm3);		// wsptr[xxx],[xxx],[0,z12],[1,z12]
+	punpcklwd_r2r(mm1, mm3);		/* wsptr[xxx],[xxx],[0,z12],[1,z12] */
 
-	movq_r2m(mm7, *(wsptr+3));		// save tmp3
-	punpckhwd_r2r(mm1, mm0);		// wsptr[xxx],[xxx],[0,z10],[1,z10]
+	movq_r2m(mm7, *(wsptr+3));		/* save tmp3 */
+	punpckhwd_r2r(mm1, mm0);		/* wsptr[xxx],[xxx],[0,z10],[1,z10] */
 
-	movq_m2r(*(wsptr+4), mm6);		// wsptr[2,0],[2,1],[2,2],[2,3]
-	punpckhdq_r2r(mm2, mm0);		// wsptr[0,z10],[1,z10],[0,z11],[1,z11]
+	movq_m2r(*(wsptr+4), mm6);		/* wsptr[2,0],[2,1],[2,2],[2,3] */
+	punpckhdq_r2r(mm2, mm0);		/* wsptr[0,z10],[1,z10],[0,z11],[1,z11] */
 
-	movq_m2r(*(wsptr+5), mm7);	// wsptr[2,4],[2,5],[2,6],[2,7]
-	punpckhdq_r2r(mm4, mm3);		// wsptr[0,z12],[1,z12],[0,z13],[1,z13]
+	movq_m2r(*(wsptr+5), mm7);	/* wsptr[2,4],[2,5],[2,6],[2,7] */
+	punpckhdq_r2r(mm4, mm3);		/* wsptr[0,z12],[1,z12],[0,z13],[1,z13] */
 
-	movq_m2r(*(wsptr+6), mm1);	// wsptr[3,0],[3,1],[3,2],[3,3]
+	movq_m2r(*(wsptr+6), mm1);	/* wsptr[3,0],[3,1],[3,2],[3,3] */
 	movq_r2r(mm6, mm4);
 
-	punpckldq_r2r(mm7, mm6);		// wsptr[2,0],[2,1],[2,4],[2,5]
+	punpckldq_r2r(mm7, mm6);		/* wsptr[2,0],[2,1],[2,4],[2,5] */
 	movq_r2r(mm1, mm5);
 
-	punpckhdq_r2r(mm4, mm7);		// wsptr[2,6],[2,7],[2,2],[2,3]
+	punpckhdq_r2r(mm4, mm7);		/* wsptr[2,6],[2,7],[2,2],[2,3] */
 	movq_r2r(mm6, mm2);
 	
-	movq_m2r(*(wsptr+7), mm4);	// wsptr[3,4],[3,5],[3,6],[3,7]
-	paddw_r2r(mm7, mm6);				// wsptr[xxx],[2,z11],[xxx],[2,z13]
+	movq_m2r(*(wsptr+7), mm4);	/* wsptr[3,4],[3,5],[3,6],[3,7] */
+	paddw_r2r(mm7, mm6);				/* wsptr[xxx],[2,z11],[xxx],[2,z13] */
 
-	psubw_r2r(mm7, mm2);				// wsptr[xxx],[2,z12],[xxx],[2,z10]
-	punpckldq_r2r(mm4, mm1);		// wsptr[3,0],[3,1],[3,4],[3,5]
+	psubw_r2r(mm7, mm2);				/* wsptr[xxx],[2,z12],[xxx],[2,z10] */
+	punpckldq_r2r(mm4, mm1);		/* wsptr[3,0],[3,1],[3,4],[3,5] */
 
-	punpckhdq_r2r(mm5, mm4);		// wsptr[3,6],[3,7],[3,2],[3,3]
+	punpckhdq_r2r(mm5, mm4);		/* wsptr[3,6],[3,7],[3,2],[3,3] */
 	movq_r2r(mm1, mm7);
 
-	paddw_r2r(mm4, mm1);				// wsptr[xxx],[3,z11],[xxx],[3,z13]
-	psubw_r2r(mm4, mm7);				// wsptr[xxx],[3,z12],[xxx],[3,z10]
+	paddw_r2r(mm4, mm1);				/* wsptr[xxx],[3,z11],[xxx],[3,z13] */
+	psubw_r2r(mm4, mm7);				/* wsptr[xxx],[3,z12],[xxx],[3,z10] */
 
 	movq_r2r(mm6, mm5);
-	punpcklwd_r2r(mm1, mm6);		// wsptr[xxx],[xxx],[2,z11],[3,z11]
+	punpcklwd_r2r(mm1, mm6);		/* wsptr[xxx],[xxx],[2,z11],[3,z11] */
 
-	punpckhwd_r2r(mm1, mm5);		// wsptr[xxx],[xxx],[2,z13],[3,z13]
+	punpckhwd_r2r(mm1, mm5);		/* wsptr[xxx],[xxx],[2,z13],[3,z13] */
 	movq_r2r(mm2, mm4);
 
-	punpcklwd_r2r(mm7, mm2);		// wsptr[xxx],[xxx],[2,z12],[3,z12]
+	punpcklwd_r2r(mm7, mm2);		/* wsptr[xxx],[xxx],[2,z12],[3,z12] */
 
-	punpckhwd_r2r(mm7, mm4);		// wsptr[xxx],[xxx],[2,z10],[3,z10]
+	punpckhwd_r2r(mm7, mm4);		/* wsptr[xxx],[xxx],[2,z10],[3,z10] */
 
-	punpckhdq_r2r(mm6, mm4);		/// wsptr[2,z10],[3,z10],[2,z11],[3,z11]
+	punpckhdq_r2r(mm6, mm4);		/*/ wsptr[2,z10],[3,z10],[2,z11],[3,z11] */
 
-	punpckhdq_r2r(mm5, mm2);		// wsptr[2,z12],[3,z12],[2,z13],[3,z13]
+	punpckhdq_r2r(mm5, mm2);		/* wsptr[2,z12],[3,z12],[2,z13],[3,z13] */
 	movq_r2r(mm0, mm5);
 
-	punpckldq_r2r(mm4, mm0);		// wsptr[0,z10],[1,z10],[2,z10],[3,z10]
+	punpckldq_r2r(mm4, mm0);		/* wsptr[0,z10],[1,z10],[2,z10],[3,z10] */
 
-	punpckhdq_r2r(mm4, mm5);		// wsptr[0,z11],[1,z11],[2,z11],[3,z11]
+	punpckhdq_r2r(mm4, mm5);		/* wsptr[0,z11],[1,z11],[2,z11],[3,z11] */
 	movq_r2r(mm3, mm4);
 
-	punpckhdq_r2r(mm2, mm4);		// wsptr[0,z13],[1,z13],[2,z13],[3,z13]
+	punpckhdq_r2r(mm2, mm4);		/* wsptr[0,z13],[1,z13],[2,z13],[3,z13] */
 	movq_r2r(mm5, mm1);
 
-	punpckldq_r2r(mm2, mm3);		// wsptr[0,z12],[1,z12],[2,z12],[3,z12]
-//    tmp7 = z11 + z13;		/* phase 5 */
-//    tmp8 = z11 - z13;		/* phase 5 */
-	psubw_r2r(mm4, mm1);				// tmp8
+	punpckldq_r2r(mm2, mm3);		/* wsptr[0,z12],[1,z12],[2,z12],[3,z12] */
+/*    tmp7 = z11 + z13;		: phase 5 */
+/*    tmp8 = z11 - z13;		: phase 5 */
+	psubw_r2r(mm4, mm1);				/* tmp8 */
 
-	paddw_r2r(mm4, mm5);				// tmp7
-//    tmp21 = MULTIPLY(tmp8, FIX_1_414213562); /* 2*c4 */
+	paddw_r2r(mm4, mm5);				/* tmp7 */
+/*    tmp21 = MULTIPLY(tmp8, FIX_1_414213562); 2*c4  */
 	psllw_i2r(2, mm1);
 
 	psllw_i2r(2, mm0);
 
-	pmulhw_m2r(fix_141, mm1);		// tmp21
-//    tmp20 = MULTIPLY(z12, (FIX_1_082392200- FIX_1_847759065))  /* 2*(c2-c6) */
-//			+ MULTIPLY(z10, - FIX_1_847759065); /* 2*c2 */
+	pmulhw_m2r(fix_141, mm1);		/* tmp21 */
+/*    tmp20 = MULTIPLY(z12, (FIX_1_082392200- FIX_1_847759065))  2*(c2-c6) */
+/*			+ MULTIPLY(z10, - FIX_1_847759065); : 2*c2 */
 	psllw_i2r(2, mm3);
 	movq_r2r(mm0, mm7);
 
 	pmulhw_m2r(fix_n184, mm7);
 	movq_r2r(mm3, mm6);
 
-	movq_m2r(*(wsptr), mm2);		// tmp0,final1
+	movq_m2r(*(wsptr), mm2);		/* tmp0,final1 */
 
 	pmulhw_m2r(fix_108n184, mm6);
-//	 tmp22 = MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) /* -2*(c2+c6) */
-//			+ MULTIPLY(z12, FIX_1_847759065); /* 2*c2 */
-	movq_r2r(mm2, mm4);				// final1
+/*	 tmp22 = MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) : -2*(c2+c6) */
+/*			+ MULTIPLY(z12, FIX_1_847759065); 2*c2 */
+	movq_r2r(mm2, mm4);				/* final1 */
   
 	pmulhw_m2r(fix_184n261, mm0);
-	paddw_r2r(mm5, mm2);				// tmp0+tmp7,final1
+	paddw_r2r(mm5, mm2);				/* tmp0+tmp7,final1 */
 
 	pmulhw_m2r(fix_184, mm3);
-	psubw_r2r(mm5, mm4);				// tmp0-tmp7,final1
+	psubw_r2r(mm5, mm4);				/* tmp0-tmp7,final1 */
 
-//    tmp6 = tmp22 - tmp7;	/* phase 2 */
-	psraw_i2r(3, mm2);				// outptr[0,0],[1,0],[2,0],[3,0],final1
+/*    tmp6 = tmp22 - tmp7;	phase 2 */
+	psraw_i2r(3, mm2);				/* outptr[0,0],[1,0],[2,0],[3,0],final1 */
 
-	paddw_r2r(mm6, mm7);				// tmp20
-	psraw_i2r(3, mm4);				// outptr[0,7],[1,7],[2,7],[3,7],final1
+	paddw_r2r(mm6, mm7);				/* tmp20 */
+	psraw_i2r(3, mm4);				/* outptr[0,7],[1,7],[2,7],[3,7],final1 */
 
-	paddw_r2r(mm0, mm3);				// tmp22
+	paddw_r2r(mm0, mm3);				/* tmp22 */
 
-//    tmp5 = tmp21 - tmp6;
-	psubw_r2r(mm5, mm3);				// tmp6
+/*    tmp5 = tmp21 - tmp6; */
+	psubw_r2r(mm5, mm3);				/* tmp6 */
 
-//    tmp4 = tmp20 + tmp5;
-	movq_m2r(*(wsptr+1), mm0);		// tmp1,final2
-	psubw_r2r(mm3, mm1);				// tmp5
+/*    tmp4 = tmp20 + tmp5; */
+	movq_m2r(*(wsptr+1), mm0);		/* tmp1,final2 */
+	psubw_r2r(mm3, mm1);				/* tmp5 */
 
-	movq_r2r(mm0, mm6);				// final2
-	paddw_r2r(mm3, mm0);				// tmp1+tmp6,final2
+	movq_r2r(mm0, mm6);				/* final2 */
+	paddw_r2r(mm3, mm0);				/* tmp1+tmp6,final2 */
 
     /* Final output stage: scale down by a factor of 8 and range-limit */
 
 
-//    outptr[0] = range_limit[IDESCALE(tmp0 + tmp7, PASS1_BITS+3)
-//			    & RANGE_MASK];
-//    outptr[7] = range_limit[IDESCALE(tmp0 - tmp7, PASS1_BITS+3)
-//			    & RANGE_MASK];	final1
+/*    outptr[0] = range_limit[IDESCALE(tmp0 + tmp7, PASS1_BITS+3) */
+/*			    & RANGE_MASK]; */
+/*    outptr[7] = range_limit[IDESCALE(tmp0 - tmp7, PASS1_BITS+3) */
+/*			    & RANGE_MASK];	final1 */
 
 
-//    outptr[1] = range_limit[IDESCALE(tmp1 + tmp6, PASS1_BITS+3)
-//			    & RANGE_MASK];
-//    outptr[6] = range_limit[IDESCALE(tmp1 - tmp6, PASS1_BITS+3)
-//			    & RANGE_MASK];	final2
-	psubw_r2r(mm3, mm6);				// tmp1-tmp6,final2
-	psraw_i2r(3, mm0);				// outptr[0,1],[1,1],[2,1],[3,1]
+/*    outptr[1] = range_limit[IDESCALE(tmp1 + tmp6, PASS1_BITS+3) */
+/*			    & RANGE_MASK]; */
+/*    outptr[6] = range_limit[IDESCALE(tmp1 - tmp6, PASS1_BITS+3) */
+/*			    & RANGE_MASK];	final2 */
+	psubw_r2r(mm3, mm6);				/* tmp1-tmp6,final2 */
+	psraw_i2r(3, mm0);				/* outptr[0,1],[1,1],[2,1],[3,1] */
 
-	psraw_i2r(3, mm6);				// outptr[0,6],[1,6],[2,6],[3,6]
+	psraw_i2r(3, mm6);				/* outptr[0,6],[1,6],[2,6],[3,6] */
 	
-	packuswb_r2r(mm4, mm0);			// out[0,1],[1,1],[2,1],[3,1],[0,7],[1,7],[2,7],[3,7]
+	packuswb_r2r(mm4, mm0);			/* out[0,1],[1,1],[2,1],[3,1],[0,7],[1,7],[2,7],[3,7] */
 	
-	movq_m2r(*(wsptr+2), mm5);		// tmp2,final3
-	packuswb_r2r(mm6, mm2);			// out[0,0],[1,0],[2,0],[3,0],[0,6],[1,6],[2,6],[3,6]
+	movq_m2r(*(wsptr+2), mm5);		/* tmp2,final3 */
+	packuswb_r2r(mm6, mm2);			/* out[0,0],[1,0],[2,0],[3,0],[0,6],[1,6],[2,6],[3,6] */
 
-//    outptr[2] = range_limit[IDESCALE(tmp2 + tmp5, PASS1_BITS+3)
-//			    & RANGE_MASK];
-//    outptr[5] = range_limit[IDESCALE(tmp2 - tmp5, PASS1_BITS+3)
-//			    & RANGE_MASK];	final3
-	paddw_r2r(mm1, mm7);				// tmp4
+/*    outptr[2] = range_limit[IDESCALE(tmp2 + tmp5, PASS1_BITS+3) */
+/*			    & RANGE_MASK]; */
+/*    outptr[5] = range_limit[IDESCALE(tmp2 - tmp5, PASS1_BITS+3) */
+/*			    & RANGE_MASK];	final3 */
+	paddw_r2r(mm1, mm7);				/* tmp4 */
 	movq_r2r(mm5, mm3);
 
-	paddw_r2r(mm1, mm5);				// tmp2+tmp5
-	psubw_r2r(mm1, mm3);				// tmp2-tmp5
+	paddw_r2r(mm1, mm5);				/* tmp2+tmp5 */
+	psubw_r2r(mm1, mm3);				/* tmp2-tmp5 */
 
-	psraw_i2r(3, mm5);				// outptr[0,2],[1,2],[2,2],[3,2]
+	psraw_i2r(3, mm5);				/* outptr[0,2],[1,2],[2,2],[3,2] */
 
-	movq_m2r(*(wsptr+3), mm4);		// tmp3,final4
-	psraw_i2r(3, mm3);				// outptr[0,5],[1,5],[2,5],[3,5]
+	movq_m2r(*(wsptr+3), mm4);		/* tmp3,final4 */
+	psraw_i2r(3, mm3);				/* outptr[0,5],[1,5],[2,5],[3,5] */
 
 
 
-//    outptr[4] = range_limit[IDESCALE(tmp3 + tmp4, PASS1_BITS+3)
-//			    & RANGE_MASK];
-//    outptr[3] = range_limit[IDESCALE(tmp3 - tmp4, PASS1_BITS+3)
-//			    & RANGE_MASK];	final4
+/*    outptr[4] = range_limit[IDESCALE(tmp3 + tmp4, PASS1_BITS+3) */
+/*			    & RANGE_MASK]; */
+/*    outptr[3] = range_limit[IDESCALE(tmp3 - tmp4, PASS1_BITS+3) */
+/*			    & RANGE_MASK];	final4 */
 	movq_r2r(mm4, mm6);
-	paddw_r2r(mm7, mm4);				// tmp3+tmp4
+	paddw_r2r(mm7, mm4);				/* tmp3+tmp4 */
 
-	psubw_r2r(mm7, mm6);				// tmp3-tmp4
-	psraw_i2r(3, mm4);				// outptr[0,4],[1,4],[2,4],[3,4]
+	psubw_r2r(mm7, mm6);				/* tmp3-tmp4 */
+	psraw_i2r(3, mm4);				/* outptr[0,4],[1,4],[2,4],[3,4] */
 
-	// mov			ecx, [dataptr]
+	/* mov			ecx, [dataptr] */
 
-	psraw_i2r(3, mm6);				// outptr[0,3],[1,3],[2,3],[3,3]
+	psraw_i2r(3, mm6);				/* outptr[0,3],[1,3],[2,3],[3,3] */
 
-	packuswb_r2r(mm4, mm5);			// out[0,2],[1,2],[2,2],[3,2],[0,4],[1,4],[2,4],[3,4]
+	packuswb_r2r(mm4, mm5);			/* out[0,2],[1,2],[2,2],[3,2],[0,4],[1,4],[2,4],[3,4] */
 
-	packuswb_r2r(mm3, mm6);			// out[0,3],[1,3],[2,3],[3,3],[0,5],[1,5],[2,5],[3,5]
+	packuswb_r2r(mm3, mm6);			/* out[0,3],[1,3],[2,3],[3,3],[0,5],[1,5],[2,5],[3,5] */
 	movq_r2r(mm2, mm4);
 
 	movq_r2r(mm5, mm7);
-	punpcklbw_r2r(mm0, mm2);		// out[0,0],[0,1],[1,0],[1,1],[2,0],[2,1],[3,0],[3,1]
+	punpcklbw_r2r(mm0, mm2);		/* out[0,0],[0,1],[1,0],[1,1],[2,0],[2,1],[3,0],[3,1] */
 
-	punpckhbw_r2r(mm0, mm4);		// out[0,6],[0,7],[1,6],[1,7],[2,6],[2,7],[3,6],[3,7]
+	punpckhbw_r2r(mm0, mm4);		/* out[0,6],[0,7],[1,6],[1,7],[2,6],[2,7],[3,6],[3,7] */
 	movq_r2r(mm2, mm1);
 
-	punpcklbw_r2r(mm6, mm5);		// out[0,2],[0,3],[1,2],[1,3],[2,2],[2,3],[3,2],[3,3]
+	punpcklbw_r2r(mm6, mm5);		/* out[0,2],[0,3],[1,2],[1,3],[2,2],[2,3],[3,2],[3,3] */
 
-	// add		 	dataptr, 4
+	/* add		 	dataptr, 4 */
 
-	punpckhbw_r2r(mm6, mm7);		// out[0,4],[0,5],[1,4],[1,5],[2,4],[2,5],[3,4],[3,5]
+	punpckhbw_r2r(mm6, mm7);		/* out[0,4],[0,5],[1,4],[1,5],[2,4],[2,5],[3,4],[3,5] */
 
-	punpcklwd_r2r(mm5, mm2);		// out[0,0],[0,1],[0,2],[0,3],[1,0],[1,1],[1,2],[1,3]
+	punpcklwd_r2r(mm5, mm2);		/* out[0,0],[0,1],[0,2],[0,3],[1,0],[1,1],[1,2],[1,3] */
 	
-	// add			ecx, output_col
+	/* add			ecx, output_col */
 
 	movq_r2r(mm7, mm6);
-	punpckhwd_r2r(mm5, mm1);		// out[2,0],[2,1],[2,2],[2,3],[3,0],[3,1],[3,2],[3,3]
+	punpckhwd_r2r(mm5, mm1);		/* out[2,0],[2,1],[2,2],[2,3],[3,0],[3,1],[3,2],[3,3] */
 
 	movq_r2r(mm2, mm0);
-	punpcklwd_r2r(mm4, mm6);		// out[0,4],[0,5],[0,6],[0,7],[1,4],[1,5],[1,6],[1,7]
+	punpcklwd_r2r(mm4, mm6);		/* out[0,4],[0,5],[0,6],[0,7],[1,4],[1,5],[1,6],[1,7] */
 
-	// mov			idata, [dataptr]
+	/* mov			idata, [dataptr] */
 	
-	punpckldq_r2r(mm6, mm2);		// out[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7]
+	punpckldq_r2r(mm6, mm2);		/* out[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7] */
 
-	// add		 	dataptr, 4
+	/* add		 	dataptr, 4 */
 	 
 	movq_r2r(mm1, mm3);
 
-	// add			idata, output_col 
+	/* add			idata, output_col  */
 	
-	punpckhwd_r2r(mm4, mm7);		// out[2,4],[2,5],[2,6],[2,7],[3,4],[3,5],[3,6],[3,7]
+	punpckhwd_r2r(mm4, mm7);		/* out[2,4],[2,5],[2,6],[2,7],[3,4],[3,5],[3,6],[3,7] */
 	
 	movq_r2m(mm2, *(dataptr));
 	
-	punpckhdq_r2r(mm6, mm0);		// out[1,0],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],[1,7]
+	punpckhdq_r2r(mm6, mm0);		/* out[1,0],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],[1,7] */
 
 	dataptr += rskip;
 	movq_r2m(mm0, *(dataptr));
 
-	punpckldq_r2r(mm7, mm1);		// out[2,0],[2,1],[2,2],[2,3],[2,4],[2,5],[2,6],[2,7]
-	punpckhdq_r2r(mm7, mm3);		// out[3,0],[3,1],[3,2],[3,3],[3,4],[3,5],[3,6],[3,7]
+	punpckldq_r2r(mm7, mm1);		/* out[2,0],[2,1],[2,2],[2,3],[2,4],[2,5],[2,6],[2,7] */
+	punpckhdq_r2r(mm7, mm3);		/* out[3,0],[3,1],[3,2],[3,3],[3,4],[3,5],[3,6],[3,7] */
 	
 	dataptr += rskip;
 	movq_r2m(mm1, *(dataptr));
@@ -1876,302 +1876,302 @@ static mmx_t fix_108n184	= (mmx_t)(long long)0xcf04cf04cf04cf04LL;
 
 /*******************************************************************/
 
-//    tmp10 = ((DCTELEM) wsptr[0] + (DCTELEM) wsptr[4]);
-//    tmp13 = ((DCTELEM) wsptr[2] + (DCTELEM) wsptr[6]);
-//    tmp11 = ((DCTELEM) wsptr[0] - (DCTELEM) wsptr[4]);
-//    tmp14 = ((DCTELEM) wsptr[2] - (DCTELEM) wsptr[6]);
-	movq_m2r(*(wsptr), mm0);		// wsptr[0,0],[0,1],[0,2],[0,3]
+/*    tmp10 = ((DCTELEM) wsptr[0] + (DCTELEM) wsptr[4]); */
+/*    tmp13 = ((DCTELEM) wsptr[2] + (DCTELEM) wsptr[6]); */
+/*    tmp11 = ((DCTELEM) wsptr[0] - (DCTELEM) wsptr[4]); */
+/*    tmp14 = ((DCTELEM) wsptr[2] - (DCTELEM) wsptr[6]); */
+	movq_m2r(*(wsptr), mm0);		/* wsptr[0,0],[0,1],[0,2],[0,3] */
 
-	movq_m2r(*(wsptr+1), mm1);		// wsptr[0,4],[0,5],[0,6],[0,7]
+	movq_m2r(*(wsptr+1), mm1);		/* wsptr[0,4],[0,5],[0,6],[0,7] */
 	movq_r2r(mm0, mm2);
 	
-	movq_m2r(*(wsptr+2), mm3);		// wsptr[1,0],[1,1],[1,2],[1,3]
-	paddw_r2r(mm1, mm0);				// wsptr[0,tmp10],[xxx],[0,tmp13],[xxx]
+	movq_m2r(*(wsptr+2), mm3);		/* wsptr[1,0],[1,1],[1,2],[1,3] */
+	paddw_r2r(mm1, mm0);				/* wsptr[0,tmp10],[xxx],[0,tmp13],[xxx] */
 
-	movq_m2r(*(wsptr+3), mm4);		// wsptr[1,4],[1,5],[1,6],[1,7]
-	psubw_r2r(mm1, mm2);				// wsptr[0,tmp11],[xxx],[0,tmp14],[xxx]
+	movq_m2r(*(wsptr+3), mm4);		/* wsptr[1,4],[1,5],[1,6],[1,7] */
+	psubw_r2r(mm1, mm2);				/* wsptr[0,tmp11],[xxx],[0,tmp14],[xxx] */
 
 	movq_r2r(mm0, mm6);
 	movq_r2r(mm3, mm5);
 	
-	paddw_r2r(mm4, mm3);				// wsptr[1,tmp10],[xxx],[1,tmp13],[xxx]
+	paddw_r2r(mm4, mm3);				/* wsptr[1,tmp10],[xxx],[1,tmp13],[xxx] */
 	movq_r2r(mm2, mm1);
 
-	psubw_r2r(mm4, mm5);				// wsptr[1,tmp11],[xxx],[1,tmp14],[xxx]
-	punpcklwd_r2r(mm3, mm0);		// wsptr[0,tmp10],[1,tmp10],[xxx],[xxx]
+	psubw_r2r(mm4, mm5);				/* wsptr[1,tmp11],[xxx],[1,tmp14],[xxx] */
+	punpcklwd_r2r(mm3, mm0);		/* wsptr[0,tmp10],[1,tmp10],[xxx],[xxx] */
 
-	movq_m2r(*(wsptr+7), mm7);	// wsptr[3,4],[3,5],[3,6],[3,7]
-	punpckhwd_r2r(mm3, mm6);		// wsptr[0,tmp13],[1,tmp13],[xxx],[xxx]
+	movq_m2r(*(wsptr+7), mm7);	/* wsptr[3,4],[3,5],[3,6],[3,7] */
+	punpckhwd_r2r(mm3, mm6);		/* wsptr[0,tmp13],[1,tmp13],[xxx],[xxx] */
 
-	movq_m2r(*(wsptr+4),	mm3);		// wsptr[2,0],[2,1],[2,2],[2,3]
-	punpckldq_r2r(mm6, mm0);		// wsptr[0,tmp10],[1,tmp10],[0,tmp13],[1,tmp13]
+	movq_m2r(*(wsptr+4),	mm3);		/* wsptr[2,0],[2,1],[2,2],[2,3] */
+	punpckldq_r2r(mm6, mm0);		/* wsptr[0,tmp10],[1,tmp10],[0,tmp13],[1,tmp13] */
 
-	punpcklwd_r2r(mm5, mm1);		// wsptr[0,tmp11],[1,tmp11],[xxx],[xxx]
+	punpcklwd_r2r(mm5, mm1);		/* wsptr[0,tmp11],[1,tmp11],[xxx],[xxx] */
 	movq_r2r(mm3, mm4);
 
-	movq_m2r(*(wsptr+6), mm6);	// wsptr[3,0],[3,1],[3,2],[3,3]
-	punpckhwd_r2r(mm5, mm2);		// wsptr[0,tmp14],[1,tmp14],[xxx],[xxx]
+	movq_m2r(*(wsptr+6), mm6);	/* wsptr[3,0],[3,1],[3,2],[3,3] */
+	punpckhwd_r2r(mm5, mm2);		/* wsptr[0,tmp14],[1,tmp14],[xxx],[xxx] */
 
-	movq_m2r(*(wsptr+5), mm5);	// wsptr[2,4],[2,5],[2,6],[2,7]
-	punpckldq_r2r(mm2, mm1);		// wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14]
+	movq_m2r(*(wsptr+5), mm5);	/* wsptr[2,4],[2,5],[2,6],[2,7] */
+	punpckldq_r2r(mm2, mm1);		/* wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14] */
 
-	paddw_r2r(mm5, mm3);				// wsptr[2,tmp10],[xxx],[2,tmp13],[xxx]
+	paddw_r2r(mm5, mm3);				/* wsptr[2,tmp10],[xxx],[2,tmp13],[xxx] */
 	movq_r2r(mm6, mm2);
 
-	psubw_r2r(mm5, mm4);				// wsptr[2,tmp11],[xxx],[2,tmp14],[xxx]
-	paddw_r2r(mm7, mm6);				// wsptr[3,tmp10],[xxx],[3,tmp13],[xxx]
+	psubw_r2r(mm5, mm4);				/* wsptr[2,tmp11],[xxx],[2,tmp14],[xxx] */
+	paddw_r2r(mm7, mm6);				/* wsptr[3,tmp10],[xxx],[3,tmp13],[xxx] */
 
 	movq_r2r(mm3, mm5);
-	punpcklwd_r2r(mm6, mm3);		// wsptr[2,tmp10],[3,tmp10],[xxx],[xxx]
+	punpcklwd_r2r(mm6, mm3);		/* wsptr[2,tmp10],[3,tmp10],[xxx],[xxx] */
 	
-	psubw_r2r(mm7, mm2);				// wsptr[3,tmp11],[xxx],[3,tmp14],[xxx]
-	punpckhwd_r2r(mm6, mm5);		// wsptr[2,tmp13],[3,tmp13],[xxx],[xxx]
+	psubw_r2r(mm7, mm2);				/* wsptr[3,tmp11],[xxx],[3,tmp14],[xxx] */
+	punpckhwd_r2r(mm6, mm5);		/* wsptr[2,tmp13],[3,tmp13],[xxx],[xxx] */
 
 	movq_r2r(mm4, mm7);
-	punpckldq_r2r(mm5, mm3);		// wsptr[2,tmp10],[3,tmp10],[2,tmp13],[3,tmp13]
+	punpckldq_r2r(mm5, mm3);		/* wsptr[2,tmp10],[3,tmp10],[2,tmp13],[3,tmp13] */
 
-	punpcklwd_r2r(mm2, mm4);		// wsptr[2,tmp11],[3,tmp11],[xxx],[xxx]
+	punpcklwd_r2r(mm2, mm4);		/* wsptr[2,tmp11],[3,tmp11],[xxx],[xxx] */
 
-	punpckhwd_r2r(mm2, mm7);		// wsptr[2,tmp14],[3,tmp14],[xxx],[xxx]
+	punpckhwd_r2r(mm2, mm7);		/* wsptr[2,tmp14],[3,tmp14],[xxx],[xxx] */
 
-	punpckldq_r2r(mm7, mm4);		// wsptr[2,tmp11],[3,tmp11],[2,tmp14],[3,tmp14]
+	punpckldq_r2r(mm7, mm4);		/* wsptr[2,tmp11],[3,tmp11],[2,tmp14],[3,tmp14] */
 	movq_r2r(mm1, mm6);
 
-	//OK
+	/*OK */
 
-//	mm0 = 	;wsptr[0,tmp10],[1,tmp10],[0,tmp13],[1,tmp13]
-//	mm1 =	;wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14]
+/*	mm0 = 	;wsptr[0,tmp10],[1,tmp10],[0,tmp13],[1,tmp13] */
+/*	mm1 =	;wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14] */
 
 	movq_r2r(mm0, mm2);
-	punpckhdq_r2r(mm4, mm6);		// wsptr[0,tmp14],[1,tmp14],[2,tmp14],[3,tmp14]
+	punpckhdq_r2r(mm4, mm6);		/* wsptr[0,tmp14],[1,tmp14],[2,tmp14],[3,tmp14] */
 
-	punpckldq_r2r(mm4, mm1);		// wsptr[0,tmp11],[1,tmp11],[2,tmp11],[3,tmp11]
+	punpckldq_r2r(mm4, mm1);		/* wsptr[0,tmp11],[1,tmp11],[2,tmp11],[3,tmp11] */
 	psllw_i2r(2, mm6);
 
 	pmulhw_m2r(fix_141, mm6);
-	punpckldq_r2r(mm3, mm0);		// wsptr[0,tmp10],[1,tmp10],[2,tmp10],[3,tmp10]
+	punpckldq_r2r(mm3, mm0);		/* wsptr[0,tmp10],[1,tmp10],[2,tmp10],[3,tmp10] */
 
-	punpckhdq_r2r(mm3, mm2);		// wsptr[0,tmp13],[1,tmp13],[2,tmp13],[3,tmp13]
+	punpckhdq_r2r(mm3, mm2);		/* wsptr[0,tmp13],[1,tmp13],[2,tmp13],[3,tmp13] */
 	movq_r2r(mm0, mm7);
 
-//    tmp0 = tmp10 + tmp13;
-//    tmp3 = tmp10 - tmp13;
-	paddw_r2r(mm2, mm0);				// [0,tmp0],[1,tmp0],[2,tmp0],[3,tmp0]
-	psubw_r2r(mm2, mm7);				// [0,tmp3],[1,tmp3],[2,tmp3],[3,tmp3]
+/*    tmp0 = tmp10 + tmp13; */
+/*    tmp3 = tmp10 - tmp13; */
+	paddw_r2r(mm2, mm0);				/* [0,tmp0],[1,tmp0],[2,tmp0],[3,tmp0] */
+	psubw_r2r(mm2, mm7);				/* [0,tmp3],[1,tmp3],[2,tmp3],[3,tmp3] */
 
-//    tmp12 = MULTIPLY(tmp14, FIX_1_414213562) - tmp13;
-	psubw_r2r(mm2, mm6);				// wsptr[0,tmp12],[1,tmp12],[2,tmp12],[3,tmp12]
-//    tmp1 = tmp11 + tmp12;
-//    tmp2 = tmp11 - tmp12;
+/*    tmp12 = MULTIPLY(tmp14, FIX_1_414213562) - tmp13; */
+	psubw_r2r(mm2, mm6);				/* wsptr[0,tmp12],[1,tmp12],[2,tmp12],[3,tmp12] */
+/*    tmp1 = tmp11 + tmp12; */
+/*    tmp2 = tmp11 - tmp12; */
 	movq_r2r(mm1, mm5);
 
-	 //OK
+	 /*OK */
 
 
     /* Odd part */
 
-//    z13 = (DCTELEM) wsptr[5] + (DCTELEM) wsptr[3];
-//    z10 = (DCTELEM) wsptr[5] - (DCTELEM) wsptr[3];
-//    z11 = (DCTELEM) wsptr[1] + (DCTELEM) wsptr[7];
-//    z12 = (DCTELEM) wsptr[1] - (DCTELEM) wsptr[7];
-	movq_m2r(*(wsptr), mm3);		// wsptr[0,0],[0,1],[0,2],[0,3]
-	paddw_r2r(mm6, mm1);				// [0,tmp1],[1,tmp1],[2,tmp1],[3,tmp1]
+/*    z13 = (DCTELEM) wsptr[5] + (DCTELEM) wsptr[3]; */
+/*    z10 = (DCTELEM) wsptr[5] - (DCTELEM) wsptr[3]; */
+/*    z11 = (DCTELEM) wsptr[1] + (DCTELEM) wsptr[7]; */
+/*    z12 = (DCTELEM) wsptr[1] - (DCTELEM) wsptr[7]; */
+	movq_m2r(*(wsptr), mm3);		/* wsptr[0,0],[0,1],[0,2],[0,3] */
+	paddw_r2r(mm6, mm1);				/* [0,tmp1],[1,tmp1],[2,tmp1],[3,tmp1] */
 
-	movq_m2r(*(wsptr+1),	mm4);		// wsptr[0,4],[0,5],[0,6],[0,7]
-	psubw_r2r(mm6, mm5);				// [0,tmp2],[1,tmp2],[2,tmp2],[3,tmp2]
+	movq_m2r(*(wsptr+1),	mm4);		/* wsptr[0,4],[0,5],[0,6],[0,7] */
+	psubw_r2r(mm6, mm5);				/* [0,tmp2],[1,tmp2],[2,tmp2],[3,tmp2] */
 
 	movq_r2r(mm3, mm6);
-	punpckldq_r2r(mm4, mm3);		// wsptr[0,0],[0,1],[0,4],[0,5]
+	punpckldq_r2r(mm4, mm3);		/* wsptr[0,0],[0,1],[0,4],[0,5] */
 
-	punpckhdq_r2r(mm6, mm4);		// wsptr[0,6],[0,7],[0,2],[0,3]
+	punpckhdq_r2r(mm6, mm4);		/* wsptr[0,6],[0,7],[0,2],[0,3] */
 	movq_r2r(mm3, mm2);
 
-//Save tmp0 and tmp1 in wsptr
-	movq_r2m(mm0, *(wsptr));		// save tmp0
-	paddw_r2r(mm4, mm2);				// wsptr[xxx],[0,z11],[xxx],[0,z13]
+/*Save tmp0 and tmp1 in wsptr */
+	movq_r2m(mm0, *(wsptr));		/* save tmp0 */
+	paddw_r2r(mm4, mm2);				/* wsptr[xxx],[0,z11],[xxx],[0,z13] */
 
 	
-//Continue with z10 --- z13
-	movq_m2r(*(wsptr+2), mm6);		// wsptr[1,0],[1,1],[1,2],[1,3]
-	psubw_r2r(mm4, mm3);				// wsptr[xxx],[0,z12],[xxx],[0,z10]
+/*Continue with z10 --- z13 */
+	movq_m2r(*(wsptr+2), mm6);		/* wsptr[1,0],[1,1],[1,2],[1,3] */
+	psubw_r2r(mm4, mm3);				/* wsptr[xxx],[0,z12],[xxx],[0,z10] */
 
-	movq_m2r(*(wsptr+3), mm0);		// wsptr[1,4],[1,5],[1,6],[1,7]
+	movq_m2r(*(wsptr+3), mm0);		/* wsptr[1,4],[1,5],[1,6],[1,7] */
 	movq_r2r(mm6, mm4);
 
-	movq_r2m(mm1, *(wsptr+1));		// save tmp1
-	punpckldq_r2r(mm0, mm6);		// wsptr[1,0],[1,1],[1,4],[1,5]
+	movq_r2m(mm1, *(wsptr+1));		/* save tmp1 */
+	punpckldq_r2r(mm0, mm6);		/* wsptr[1,0],[1,1],[1,4],[1,5] */
 
-	punpckhdq_r2r(mm4, mm0);		// wsptr[1,6],[1,7],[1,2],[1,3]
+	punpckhdq_r2r(mm4, mm0);		/* wsptr[1,6],[1,7],[1,2],[1,3] */
 	movq_r2r(mm6, mm1);
 	
-//Save tmp2 and tmp3 in wsptr
-	paddw_r2r(mm0, mm6);				// wsptr[xxx],[1,z11],[xxx],[1,z13]
+/*Save tmp2 and tmp3 in wsptr */
+	paddw_r2r(mm0, mm6);				/* wsptr[xxx],[1,z11],[xxx],[1,z13] */
 	movq_r2r(mm2, mm4);
 	
-//Continue with z10 --- z13
-	movq_r2m(mm5, *(wsptr+2));		// save tmp2
-	punpcklwd_r2r(mm6, mm2);		// wsptr[xxx],[xxx],[0,z11],[1,z11]
+/*Continue with z10 --- z13 */
+	movq_r2m(mm5, *(wsptr+2));		/* save tmp2 */
+	punpcklwd_r2r(mm6, mm2);		/* wsptr[xxx],[xxx],[0,z11],[1,z11] */
 
-	psubw_r2r(mm0, mm1);				// wsptr[xxx],[1,z12],[xxx],[1,z10]
-	punpckhwd_r2r(mm6, mm4);		// wsptr[xxx],[xxx],[0,z13],[1,z13]
+	psubw_r2r(mm0, mm1);				/* wsptr[xxx],[1,z12],[xxx],[1,z10] */
+	punpckhwd_r2r(mm6, mm4);		/* wsptr[xxx],[xxx],[0,z13],[1,z13] */
 
 	movq_r2r(mm3, mm0);
-	punpcklwd_r2r(mm1, mm3);		// wsptr[xxx],[xxx],[0,z12],[1,z12]
+	punpcklwd_r2r(mm1, mm3);		/* wsptr[xxx],[xxx],[0,z12],[1,z12] */
 
-	movq_r2m(mm7, *(wsptr+3));		// save tmp3
-	punpckhwd_r2r(mm1, mm0);		// wsptr[xxx],[xxx],[0,z10],[1,z10]
+	movq_r2m(mm7, *(wsptr+3));		/* save tmp3 */
+	punpckhwd_r2r(mm1, mm0);		/* wsptr[xxx],[xxx],[0,z10],[1,z10] */
 
-	movq_m2r(*(wsptr+4), mm6);		// wsptr[2,0],[2,1],[2,2],[2,3]
-	punpckhdq_r2r(mm2, mm0);		// wsptr[0,z10],[1,z10],[0,z11],[1,z11]
+	movq_m2r(*(wsptr+4), mm6);		/* wsptr[2,0],[2,1],[2,2],[2,3] */
+	punpckhdq_r2r(mm2, mm0);		/* wsptr[0,z10],[1,z10],[0,z11],[1,z11] */
 
-	movq_m2r(*(wsptr+5), mm7);	// wsptr[2,4],[2,5],[2,6],[2,7]
-	punpckhdq_r2r(mm4, mm3);		// wsptr[0,z12],[1,z12],[0,z13],[1,z13]
+	movq_m2r(*(wsptr+5), mm7);	/* wsptr[2,4],[2,5],[2,6],[2,7] */
+	punpckhdq_r2r(mm4, mm3);		/* wsptr[0,z12],[1,z12],[0,z13],[1,z13] */
 
-	movq_m2r(*(wsptr+6), mm1);	// wsptr[3,0],[3,1],[3,2],[3,3]
+	movq_m2r(*(wsptr+6), mm1);	/* wsptr[3,0],[3,1],[3,2],[3,3] */
 	movq_r2r(mm6, mm4);
 
-	punpckldq_r2r(mm7, mm6);		// wsptr[2,0],[2,1],[2,4],[2,5]
+	punpckldq_r2r(mm7, mm6);		/* wsptr[2,0],[2,1],[2,4],[2,5] */
 	movq_r2r(mm1, mm5);
 
-	punpckhdq_r2r(mm4, mm7);		// wsptr[2,6],[2,7],[2,2],[2,3]
+	punpckhdq_r2r(mm4, mm7);		/* wsptr[2,6],[2,7],[2,2],[2,3] */
 	movq_r2r(mm6, mm2);
 	
-	movq_m2r(*(wsptr+7), mm4);	// wsptr[3,4],[3,5],[3,6],[3,7]
-	paddw_r2r(mm7, mm6);				// wsptr[xxx],[2,z11],[xxx],[2,z13]
+	movq_m2r(*(wsptr+7), mm4);	/* wsptr[3,4],[3,5],[3,6],[3,7] */
+	paddw_r2r(mm7, mm6);				/* wsptr[xxx],[2,z11],[xxx],[2,z13] */
 
-	psubw_r2r(mm7, mm2);				// wsptr[xxx],[2,z12],[xxx],[2,z10]
-	punpckldq_r2r(mm4, mm1);		// wsptr[3,0],[3,1],[3,4],[3,5]
+	psubw_r2r(mm7, mm2);				/* wsptr[xxx],[2,z12],[xxx],[2,z10] */
+	punpckldq_r2r(mm4, mm1);		/* wsptr[3,0],[3,1],[3,4],[3,5] */
 
-	punpckhdq_r2r(mm5, mm4);		// wsptr[3,6],[3,7],[3,2],[3,3]
+	punpckhdq_r2r(mm5, mm4);		/* wsptr[3,6],[3,7],[3,2],[3,3] */
 	movq_r2r(mm1, mm7);
 
-	paddw_r2r(mm4, mm1);				// wsptr[xxx],[3,z11],[xxx],[3,z13]
-	psubw_r2r(mm4, mm7);				// wsptr[xxx],[3,z12],[xxx],[3,z10]
+	paddw_r2r(mm4, mm1);				/* wsptr[xxx],[3,z11],[xxx],[3,z13] */
+	psubw_r2r(mm4, mm7);				/* wsptr[xxx],[3,z12],[xxx],[3,z10] */
 
 	movq_r2r(mm6, mm5);
-	punpcklwd_r2r(mm1, mm6);		// wsptr[xxx],[xxx],[2,z11],[3,z11]
+	punpcklwd_r2r(mm1, mm6);		/* wsptr[xxx],[xxx],[2,z11],[3,z11] */
 
-	punpckhwd_r2r(mm1, mm5);		// wsptr[xxx],[xxx],[2,z13],[3,z13]
+	punpckhwd_r2r(mm1, mm5);		/* wsptr[xxx],[xxx],[2,z13],[3,z13] */
 	movq_r2r(mm2, mm4);
 
-	punpcklwd_r2r(mm7, mm2);		// wsptr[xxx],[xxx],[2,z12],[3,z12]
+	punpcklwd_r2r(mm7, mm2);		/* wsptr[xxx],[xxx],[2,z12],[3,z12] */
 
-	punpckhwd_r2r(mm7, mm4);		// wsptr[xxx],[xxx],[2,z10],[3,z10]
+	punpckhwd_r2r(mm7, mm4);		/* wsptr[xxx],[xxx],[2,z10],[3,z10] */
 
-	punpckhdq_r2r(mm6, mm4);		// wsptr[2,z10],[3,z10],[2,z11],[3,z11]
+	punpckhdq_r2r(mm6, mm4);		/* wsptr[2,z10],[3,z10],[2,z11],[3,z11] */
 
-	punpckhdq_r2r(mm5, mm2);		// wsptr[2,z12],[3,z12],[2,z13],[3,z13]
+	punpckhdq_r2r(mm5, mm2);		/* wsptr[2,z12],[3,z12],[2,z13],[3,z13] */
 	movq_r2r(mm0, mm5);
 
-	punpckldq_r2r(mm4, mm0);		// wsptr[0,z10],[1,z10],[2,z10],[3,z10]
+	punpckldq_r2r(mm4, mm0);		/* wsptr[0,z10],[1,z10],[2,z10],[3,z10] */
 
-	punpckhdq_r2r(mm4, mm5);		// wsptr[0,z11],[1,z11],[2,z11],[3,z11]
+	punpckhdq_r2r(mm4, mm5);		/* wsptr[0,z11],[1,z11],[2,z11],[3,z11] */
 	movq_r2r(mm3, mm4);
 
-	punpckhdq_r2r(mm2, mm4);		// wsptr[0,z13],[1,z13],[2,z13],[3,z13]
+	punpckhdq_r2r(mm2, mm4);		/* wsptr[0,z13],[1,z13],[2,z13],[3,z13] */
 	movq_r2r(mm5, mm1);
 
-	punpckldq_r2r(mm2, mm3);		// wsptr[0,z12],[1,z12],[2,z12],[3,z12]
-//    tmp7 = z11 + z13;		/* phase 5 */
-//    tmp8 = z11 - z13;		/* phase 5 */
-	psubw_r2r(mm4, mm1);				// tmp8
+	punpckldq_r2r(mm2, mm3);		/* wsptr[0,z12],[1,z12],[2,z12],[3,z12] */
+/*    tmp7 = z11 + z13;		: phase 5 */
+/*    tmp8 = z11 - z13;		: phase 5 */
+	psubw_r2r(mm4, mm1);				/* tmp8 */
 
-	paddw_r2r(mm4, mm5);				// tmp7
-//    tmp21 = MULTIPLY(tmp8, FIX_1_414213562); /* 2*c4 */
+	paddw_r2r(mm4, mm5);				/* tmp7 */
+/*    tmp21 = MULTIPLY(tmp8, FIX_1_414213562);  2*c4 */
 	psllw_i2r(2, mm1);
 
 	psllw_i2r(2, mm0);
 
-	pmulhw_m2r(fix_141, mm1);		// tmp21
-//    tmp20 = MULTIPLY(z12, (FIX_1_082392200- FIX_1_847759065))  /* 2*(c2-c6) */
-//			+ MULTIPLY(z10, - FIX_1_847759065); /* 2*c2 */
+	pmulhw_m2r(fix_141, mm1);		/* tmp21 */
+/*    tmp20 = MULTIPLY(z12, (FIX_1_082392200- FIX_1_847759065)) :  2*(c2-c6) */
+/*			+ MULTIPLY(z10, - FIX_1_847759065); : 2*c2 */
 	psllw_i2r(2, mm3);
 	movq_r2r(mm0, mm7);
 
 	pmulhw_m2r(fix_n184, mm7);
 	movq_r2r(mm3, mm6);
 
-	movq_m2r(*(wsptr), mm2);		// tmp0,final1
+	movq_m2r(*(wsptr), mm2);		/* tmp0,final1 */
 
 	pmulhw_m2r(fix_108n184, mm6);
-//	 tmp22 = MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) /* -2*(c2+c6) */
-//			+ MULTIPLY(z12, FIX_1_847759065); /* 2*c2 */
-	movq_r2r(mm2, mm4);				// final1
+/*	 tmp22 = MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) : -2*(c2+c6) */
+/*			+ MULTIPLY(z12, FIX_1_847759065); : 2*c2 */
+	movq_r2r(mm2, mm4);				/* final1 */
   
 	pmulhw_m2r(fix_184n261, mm0);
-	paddw_r2r(mm5, mm2);				// tmp0+tmp7,final1
+	paddw_r2r(mm5, mm2);				/* tmp0+tmp7,final1 */
 
 	pmulhw_m2r(fix_184, mm3);
-	psubw_r2r(mm5, mm4);				// tmp0-tmp7,final1
+	psubw_r2r(mm5, mm4);				/* tmp0-tmp7,final1 */
 
-//    tmp6 = tmp22 - tmp7;	/* phase 2 */
-	psraw_i2r(3, mm2);				// outptr[0,0],[1,0],[2,0],[3,0],final1
+/*    tmp6 = tmp22 - tmp7;	phase 2 */
+	psraw_i2r(3, mm2);				/* outptr[0,0],[1,0],[2,0],[3,0],final1 */
 
-	paddw_r2r(mm6, mm7);				// tmp20
-	psraw_i2r(3, mm4);				// outptr[0,7],[1,7],[2,7],[3,7],final1
+	paddw_r2r(mm6, mm7);				/* tmp20 */
+	psraw_i2r(3, mm4);				/* outptr[0,7],[1,7],[2,7],[3,7],final1 */
 
-	paddw_r2r(mm0, mm3);				// tmp22
+	paddw_r2r(mm0, mm3);				/* tmp22 */
 
-//    tmp5 = tmp21 - tmp6;
-	psubw_r2r(mm5, mm3);				// tmp6
+/*    tmp5 = tmp21 - tmp6; */
+	psubw_r2r(mm5, mm3);				/* tmp6 */
 
-//    tmp4 = tmp20 + tmp5;
-	movq_m2r(*(wsptr+1), mm0);		// tmp1,final2
-	psubw_r2r(mm3, mm1);				// tmp5
+/*    tmp4 = tmp20 + tmp5; */
+	movq_m2r(*(wsptr+1), mm0);		/* tmp1,final2 */
+	psubw_r2r(mm3, mm1);				/* tmp5 */
 
-	movq_r2r(mm0, mm6);				// final2
-	paddw_r2r(mm3, mm0);				// tmp1+tmp6,final2
+	movq_r2r(mm0, mm6);				/* final2 */
+	paddw_r2r(mm3, mm0);				/* tmp1+tmp6,final2 */
 
     /* Final output stage: scale down by a factor of 8 and range-limit */
 
-//    outptr[0] = range_limit[IDESCALE(tmp0 + tmp7, PASS1_BITS+3)
-//			    & RANGE_MASK];
-//    outptr[7] = range_limit[IDESCALE(tmp0 - tmp7, PASS1_BITS+3)
-//			    & RANGE_MASK];	final1
+/*    outptr[0] = range_limit[IDESCALE(tmp0 + tmp7, PASS1_BITS+3) */
+/*			    & RANGE_MASK]; */
+/*    outptr[7] = range_limit[IDESCALE(tmp0 - tmp7, PASS1_BITS+3) */
+/*			    & RANGE_MASK];	final1 */
 
 
-//    outptr[1] = range_limit[IDESCALE(tmp1 + tmp6, PASS1_BITS+3)
-//			    & RANGE_MASK];
-//    outptr[6] = range_limit[IDESCALE(tmp1 - tmp6, PASS1_BITS+3)
-//			    & RANGE_MASK];	final2
-	psubw_r2r(mm3, mm6);				// tmp1-tmp6,final2
-	psraw_i2r(3, mm0);				// outptr[0,1],[1,1],[2,1],[3,1]
+/*    outptr[1] = range_limit[IDESCALE(tmp1 + tmp6, PASS1_BITS+3) */
+/*			    & RANGE_MASK]; */
+/*    outptr[6] = range_limit[IDESCALE(tmp1 - tmp6, PASS1_BITS+3) */
+/*			    & RANGE_MASK];	final2 */
+	psubw_r2r(mm3, mm6);				/* tmp1-tmp6,final2 */
+	psraw_i2r(3, mm0);				/* outptr[0,1],[1,1],[2,1],[3,1] */
 
-	psraw_i2r(3, mm6);				// outptr[0,6],[1,6],[2,6],[3,6]
+	psraw_i2r(3, mm6);				/* outptr[0,6],[1,6],[2,6],[3,6] */
 	
-	packuswb_r2r(mm4, mm0);			// out[0,1],[1,1],[2,1],[3,1],[0,7],[1,7],[2,7],[3,7]
+	packuswb_r2r(mm4, mm0);			/* out[0,1],[1,1],[2,1],[3,1],[0,7],[1,7],[2,7],[3,7] */
 	
-	movq_m2r(*(wsptr+2), mm5);		// tmp2,final3
-	packuswb_r2r(mm6, mm2);			// out[0,0],[1,0],[2,0],[3,0],[0,6],[1,6],[2,6],[3,6]
+	movq_m2r(*(wsptr+2), mm5);		/* tmp2,final3 */
+	packuswb_r2r(mm6, mm2);			/* out[0,0],[1,0],[2,0],[3,0],[0,6],[1,6],[2,6],[3,6] */
 
-//    outptr[2] = range_limit[IDESCALE(tmp2 + tmp5, PASS1_BITS+3)
-//			    & RANGE_MASK];
-//    outptr[5] = range_limit[IDESCALE(tmp2 - tmp5, PASS1_BITS+3)
-//			    & RANGE_MASK];	final3
-	paddw_r2r(mm1, mm7);				// tmp4
+/*    outptr[2] = range_limit[IDESCALE(tmp2 + tmp5, PASS1_BITS+3) */
+/*			    & RANGE_MASK]; */
+/*    outptr[5] = range_limit[IDESCALE(tmp2 - tmp5, PASS1_BITS+3) */
+/*			    & RANGE_MASK];	final3 */
+	paddw_r2r(mm1, mm7);				/* tmp4 */
 	movq_r2r(mm5, mm3);
 
-	paddw_r2r(mm1, mm5);				// tmp2+tmp5
-	psubw_r2r(mm1, mm3);				// tmp2-tmp5
+	paddw_r2r(mm1, mm5);				/* tmp2+tmp5 */
+	psubw_r2r(mm1, mm3);				/* tmp2-tmp5 */
 
-	psraw_i2r(3, mm5);				// outptr[0,2],[1,2],[2,2],[3,2]
+	psraw_i2r(3, mm5);				/* outptr[0,2],[1,2],[2,2],[3,2] */
 
-	movq_m2r(*(wsptr+3), mm4);		// tmp3,final4
-	psraw_i2r(3, mm3);				// outptr[0,5],[1,5],[2,5],[3,5]
+	movq_m2r(*(wsptr+3), mm4);		/* tmp3,final4 */
+	psraw_i2r(3, mm3);				/* outptr[0,5],[1,5],[2,5],[3,5] */
 
 
 
-//    outptr[4] = range_limit[IDESCALE(tmp3 + tmp4, PASS1_BITS+3)
-//			    & RANGE_MASK];
-//    outptr[3] = range_limit[IDESCALE(tmp3 - tmp4, PASS1_BITS+3)
-//			    & RANGE_MASK];	final4
+/*    outptr[4] = range_limit[IDESCALE(tmp3 + tmp4, PASS1_BITS+3) */
+/*			    & RANGE_MASK]; */
+/*    outptr[3] = range_limit[IDESCALE(tmp3 - tmp4, PASS1_BITS+3) */
+/*			    & RANGE_MASK];	final4 */
 	movq_r2r(mm4, mm6);
-	paddw_r2r(mm7, mm4);				// tmp3+tmp4
+	paddw_r2r(mm7, mm4);				/* tmp3+tmp4 */
 
-	psubw_r2r(mm7, mm6);				// tmp3-tmp4
-	psraw_i2r(3, mm4);				// outptr[0,4],[1,4],[2,4],[3,4]
+	psubw_r2r(mm7, mm6);				/* tmp3-tmp4 */
+	psraw_i2r(3, mm4);				/* outptr[0,4],[1,4],[2,4],[3,4] */
 
-	psraw_i2r(3, mm6);				// outptr[0,3],[1,3],[2,3],[3,3]
+	psraw_i2r(3, mm6);				/* outptr[0,3],[1,3],[2,3],[3,3] */
 
 	/*
    movq_r2m(mm4, *dummy);
@@ -2181,46 +2181,46 @@ static mmx_t fix_108n184	= (mmx_t)(long long)0xcf04cf04cf04cf04LL;
 	*/
 	
 
-	packuswb_r2r(mm4, mm5);			// out[0,2],[1,2],[2,2],[3,2],[0,4],[1,4],[2,4],[3,4]
+	packuswb_r2r(mm4, mm5);			/* out[0,2],[1,2],[2,2],[3,2],[0,4],[1,4],[2,4],[3,4] */
 
-	packuswb_r2r(mm3, mm6);			// out[0,3],[1,3],[2,3],[3,3],[0,5],[1,5],[2,5],[3,5]
+	packuswb_r2r(mm3, mm6);			/* out[0,3],[1,3],[2,3],[3,3],[0,5],[1,5],[2,5],[3,5] */
 	movq_r2r(mm2, mm4);
 
 	movq_r2r(mm5, mm7);
-	punpcklbw_r2r(mm0, mm2);		// out[0,0],[0,1],[1,0],[1,1],[2,0],[2,1],[3,0],[3,1]
+	punpcklbw_r2r(mm0, mm2);		/* out[0,0],[0,1],[1,0],[1,1],[2,0],[2,1],[3,0],[3,1] */
 
-	punpckhbw_r2r(mm0, mm4);		// out[0,6],[0,7],[1,6],[1,7],[2,6],[2,7],[3,6],[3,7]
+	punpckhbw_r2r(mm0, mm4);		/* out[0,6],[0,7],[1,6],[1,7],[2,6],[2,7],[3,6],[3,7] */
 	movq_r2r(mm2, mm1);
 
-	punpcklbw_r2r(mm6, mm5);		// out[0,2],[0,3],[1,2],[1,3],[2,2],[2,3],[3,2],[3,3]
+	punpcklbw_r2r(mm6, mm5);		/* out[0,2],[0,3],[1,2],[1,3],[2,2],[2,3],[3,2],[3,3] */
 	
-	punpckhbw_r2r(mm6, mm7);		// out[0,4],[0,5],[1,4],[1,5],[2,4],[2,5],[3,4],[3,5]
+	punpckhbw_r2r(mm6, mm7);		/* out[0,4],[0,5],[1,4],[1,5],[2,4],[2,5],[3,4],[3,5] */
 
-	punpcklwd_r2r(mm5, mm2);		// out[0,0],[0,1],[0,2],[0,3],[1,0],[1,1],[1,2],[1,3]
+	punpcklwd_r2r(mm5, mm2);		/* out[0,0],[0,1],[0,2],[0,3],[1,0],[1,1],[1,2],[1,3] */
 	
 	movq_r2r(mm7, mm6);
-	punpckhwd_r2r(mm5, mm1);		// out[2,0],[2,1],[2,2],[2,3],[3,0],[3,1],[3,2],[3,3]
+	punpckhwd_r2r(mm5, mm1);		/* out[2,0],[2,1],[2,2],[2,3],[3,0],[3,1],[3,2],[3,3] */
 
 	movq_r2r(mm2, mm0);
-	punpcklwd_r2r(mm4, mm6);		// out[0,4],[0,5],[0,6],[0,7],[1,4],[1,5],[1,6],[1,7]
+	punpcklwd_r2r(mm4, mm6);		/* out[0,4],[0,5],[0,6],[0,7],[1,4],[1,5],[1,6],[1,7] */
 
-	punpckldq_r2r(mm6, mm2);		// out[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7]
+	punpckldq_r2r(mm6, mm2);		/* out[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7] */
 
 	movq_r2r(mm1, mm3);
 
-	punpckhwd_r2r(mm4, mm7);		// out[2,4],[2,5],[2,6],[2,7],[3,4],[3,5],[3,6],[3,7]
+	punpckhwd_r2r(mm4, mm7);		/* out[2,4],[2,5],[2,6],[2,7],[3,4],[3,5],[3,6],[3,7] */
 	
 	dataptr += rskip;
 	movq_r2m(mm2, *(dataptr));
 
-	punpckhdq_r2r(mm6, mm0);		// out[1,0],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],[1,7]
+	punpckhdq_r2r(mm6, mm0);		/* out[1,0],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],[1,7] */
 
 	dataptr += rskip;
 	movq_r2m(mm0, *(dataptr));
 
-	punpckldq_r2r(mm7, mm1);		// out[2,0],[2,1],[2,2],[2,3],[2,4],[2,5],[2,6],[2,7]
+	punpckldq_r2r(mm7, mm1);		/* out[2,0],[2,1],[2,2],[2,3],[2,4],[2,5],[2,6],[2,7] */
 	
-	punpckhdq_r2r(mm7, mm3);		// out[3,0],[3,1],[3,2],[3,3],[3,4],[3,5],[3,6],[3,7]
+	punpckhdq_r2r(mm7, mm3);		/* out[3,0],[3,1],[3,2],[3,3],[3,4],[3,5],[3,6],[3,7] */
 
 	dataptr += rskip;
 	movq_r2m(mm1, *(dataptr));
@@ -2520,7 +2520,7 @@ void RTjpeg_init_decompress(__u32 *buf, int width, int height)
 
  RTjpeg_idct_init();
 
-// RTjpeg_color_init();
+/* RTjpeg_color_init(); */
 }
 
 int RTjpeg_compressYUV420(__s8 *sp, unsigned char *bp)
@@ -2851,7 +2851,7 @@ int RTjpeg_bcomp(__s16 *old, mmx_t *mask)
    for(i=0; i<16; i++)((__u64 *)old)[i]=((__u64 *)RTjpeg_block)[i];
   return 0;
  }
-// printf(".");
+/* printf("."); */
  return 1;
 }
 
@@ -2945,7 +2945,7 @@ int RTjpeg_mcompress(__s8 *sp, unsigned char *bp, __u16 lmask, __u16 cmask)
   bp2+=RTjpeg_width<<2;
   bp3+=RTjpeg_width<<2;
  }
- //printf ("%d\n", block - RTjpeg_old);
+ /*printf ("%d\n", block - RTjpeg_old); */
 #ifdef HAVE_LIBMMX
  emms();
 #endif
@@ -2978,7 +2978,7 @@ int RTjpeg_mcompress8(__s8 *sp, unsigned char *bp, __u16 lmask)
    if(RTjpeg_bcomp(block, &RTjpeg_lmask))
    {
     *((__u8 *)sp++)=255;
-//    printf("* %d ", sp[-1]);
+/*    printf("* %d ", sp[-1]); */
    } else sp+=RTjpeg_b2s(RTjpeg_block, sp, RTjpeg_lb8);
    block+=64;
   }

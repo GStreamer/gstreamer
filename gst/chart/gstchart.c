@@ -36,10 +36,10 @@ struct _GstChart {
   GstPad *sinkpad,*srcpad;
   GstBufferPool *peerpool;
 
-  // the timestamp of the next frame
+  /* the timestamp of the next frame */
   guint64 next_time;
 
-  // video state
+  /* video state */
   gint bpp;
   gint depth;
   gint width;
@@ -47,9 +47,9 @@ struct _GstChart {
   gboolean first_buffer;
 
   gint samplerate;
-  gint framerate; // desired frame rate
-  gint samples_between_frames; // number of samples between start of successive frames
-  gint samples_since_last_frame; // number of samples between start of successive frames
+  gint framerate; /* desired frame rate */
+  gint samples_between_frames; /* number of samples between start of successive frames */
+  gint samples_since_last_frame; /* number of samples between start of successive frames */
 };
 
 struct _GstChartClass {
@@ -217,7 +217,7 @@ gst_chart_init (GstChart *chart)
   chart->next_time = 0;
   chart->peerpool = NULL;
 
-  // reset the initial video state
+  /* reset the initial video state */
   chart->bpp = 16;
   chart->depth = 16;
   chart->first_buffer = TRUE;
@@ -225,8 +225,8 @@ gst_chart_init (GstChart *chart)
   chart->height = 128;
 
   chart->samplerate = -1;
-  chart->framerate = 25; // desired frame rate
-  chart->samples_between_frames = 0; // number of samples between start of successive frames
+  chart->framerate = 25; /* desired frame rate */
+  chart->samples_between_frames = 0; /* number of samples between start of successive frames */
   chart->samples_since_last_frame = 0;
 }
 
@@ -241,8 +241,8 @@ gst_chart_sinkconnect (GstPad *pad, GstCaps *caps)
 
   GST_DEBUG (0, "CHART: new sink caps: rate %d\n",
 	     chart->samplerate);
-  //gst_chart_sync_parms (chart);
-  //
+  /*gst_chart_sync_parms (chart); */
+  /* */
   return GST_PAD_CONNECT_OK;
 }
 
@@ -333,9 +333,9 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
   if (chart->samples_between_frames <= chart->samples_since_last_frame) {
       chart->samples_since_last_frame = 0;
 
-      // get data to draw into buffer
+      /* get data to draw into buffer */
       if (samples_in >= chart->width) {
-	  // make a new buffer for the output
+	  /* make a new buffer for the output */
 	  bufout = gst_buffer_new ();
 	  sizeout = chart->bpp / 8 * chart->width * chart->height;
 	  dataout = g_malloc (sizeout);
@@ -344,16 +344,16 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
 	  GST_DEBUG (0, "CHART: made new buffer: size %d, width %d, height %d\n",
 		     sizeout, chart->width, chart->height);
 
-	  // take data and draw to new buffer
-	  // FIXME: call different routines for different properties
+	  /* take data and draw to new buffer */
+	  /* FIXME: call different routines for different properties */
 	  draw_chart_16bpp(dataout, chart->width, chart->height, (gint16 *)datain, samples_in);
 
           gst_buffer_unref(bufin);
 
-	  // set timestamp
+	  /* set timestamp */
 	  GST_BUFFER_TIMESTAMP (bufout) = chart->next_time;
 
-          // Check if we need to renegotiate size.
+          /* Check if we need to renegotiate size. */
           if (chart->first_buffer) {
 	    GST_DEBUG (0, "making new pad\n");
 	    if (!gst_pad_try_set_caps (chart->srcpad,
@@ -378,7 +378,7 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
           }
 
 	  GST_DEBUG (0, "CHART: outputting buffer\n");
-	  // output buffer
+	  /* output buffer */
 	  GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_READONLY);
 	  gst_pad_push (chart->srcpad, bufout);
       }

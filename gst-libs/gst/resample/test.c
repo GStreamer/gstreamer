@@ -9,11 +9,11 @@
 #define AMP 16000
 #define I_RATE 48000
 #define O_RATE 44100
-//#define O_RATE 24000
+/*#define O_RATE 24000 */
 
-//#define test_func(x) 1
-//#define test_func(x) sin(2*M_PI*(x)*10)
-//#define test_func(x) sin(2*M_PI*(x)*(x)*1000)
+/*#define test_func(x) 1 */
+/*#define test_func(x) sin(2*M_PI*(x)*10) */
+/*#define test_func(x) sin(2*M_PI*(x)*(x)*1000) */
 #define test_func(x) sin(2*M_PI*(x)*(x)*12000)
 
 short i_buf[I_RATE*2*2];
@@ -53,7 +53,7 @@ struct timeval start_time;
 void start_timer(void)
 {
 	gettimeofday(&start_time,NULL);
-	//printf("start %ld.%06ld\n",start_time.tv_sec,start_time.tv_usec);
+	/*printf("start %ld.%06ld\n",start_time.tv_sec,start_time.tv_usec); */
 }
 
 void end_timer(void)
@@ -62,7 +62,7 @@ void end_timer(void)
 	double diff;
 
 	gettimeofday(&end_time,NULL);
-	//printf("end %ld.%06ld\n",end_time.tv_sec,end_time.tv_usec);
+	/*printf("end %ld.%06ld\n",end_time.tv_sec,end_time.tv_usec); */
 	diff = (end_time.tv_sec - start_time.tv_sec) +
 		1e-6*(end_time.tv_usec - start_time.tv_usec);
 
@@ -81,7 +81,7 @@ void test_res1(void)
 
 	for(i=0;i<I_RATE;i++){
 		i_buf[i*2+0] = rint(AMP * test_func((double)i/I_RATE));
-		//i_buf[i*2+1] = rint(AMP * test_func((double)i/I_RATE));
+		/*i_buf[i*2+1] = rint(AMP * test_func((double)i/I_RATE)); */
 		i_buf[i*2+1] = (i<1000)?AMP:0;
 	}
 
@@ -90,10 +90,10 @@ void test_res1(void)
 
 	r->i_rate = I_RATE;
 	r->o_rate = O_RATE;
-	//r->method = RESAMPLE_SINC_SLOW;
+	/*r->method = RESAMPLE_SINC_SLOW; */
 	r->method = RESAMPLE_SINC;
 	r->channels = 2;
-	//r->verbose = 1;
+	/*r->verbose = 1; */
 	r->filter_length = 64;
 	r->get_buffer = get_buffer;
 
@@ -115,7 +115,7 @@ void test_res1(void)
 
 	for(i=0;i<O_RATE;i++){
 		f = AMP*test_func((double)i/O_RATE);
-		//f = rint(AMP*test_func((double)i/O_RATE));
+		/*f = rint(AMP*test_func((double)i/O_RATE)); */
 		fprintf(out,"%d %d %d %g %g\n",i,
 			o_buf[2*i+0],o_buf[2*i+1],
 			f,o_buf[2*i+0]-f);
@@ -127,7 +127,7 @@ void test_res1(void)
 	n22k=0;
 	for(i=0;i<O_RATE;i++){
 		f = AMP*test_func((double)i/O_RATE);
-		//f = rint(AMP*test_func((double)i/O_RATE));
+		/*f = rint(AMP*test_func((double)i/O_RATE)); */
 		x = o_buf[2*i+0]-f;
 		if(((0.5*i)/O_RATE*I_RATE)<10000){
 			sum10k += x*x;
@@ -219,8 +219,8 @@ double sinc_poly(double x)
 		- x2 * INV3FAC
 		+ x2 * x2 * INV5FAC
 		- x2 * x2 * x2 * INV7FAC;
-		//+ x2 * x2 * x2 * x2 * INV9FAC
-		//- x2 * x2 * x2 * x2 * x2 * INV11FAC;
+		/*+ x2 * x2 * x2 * x2 * INV9FAC */
+		/*- x2 * x2 * x2 * x2 * x2 * INV11FAC; */
 }
 
 void test_res4(void)
@@ -297,10 +297,10 @@ void test_res7(void)
 
 	r->i_rate = I_RATE;
 	r->o_rate = O_RATE;
-	//r->method = RESAMPLE_SINC_SLOW;
+	/*r->method = RESAMPLE_SINC_SLOW; */
 	r->method = RESAMPLE_SINC;
 	r->channels = 1;
-	//r->verbose = 1;
+	/*r->verbose = 1; */
 	r->filter_length = 64;
 	r->get_buffer = get_buffer;
 
@@ -322,7 +322,7 @@ void test_res7(void)
 
 	for(i=0;i<O_RATE;i++){
 		f = AMP*test_func((double)i/O_RATE);
-		//f = rint(AMP*test_func((double)i/O_RATE));
+		/*f = rint(AMP*test_func((double)i/O_RATE)); */
 		fprintf(out,"%d %d %d %g %g\n",i,
 			o_buf[i],0,
 			f,o_buf[i]-f);
@@ -334,7 +334,7 @@ void test_res7(void)
 	n22k=0;
 	for(i=0;i<O_RATE;i++){
 		f = AMP*test_func((double)i/O_RATE);
-		//f = rint(AMP*test_func((double)i/O_RATE));
+		/*f = rint(AMP*test_func((double)i/O_RATE)); */
 		x = o_buf[i]-f;
 		if(((0.5*i)/O_RATE*I_RATE)<10000){
 			sum10k += x*x;

@@ -95,7 +95,7 @@ static void			gst_icecastsend_get_property		(GObject *object, guint prop_id, GVa
 static GstElementStateReturn	gst_icecastsend_change_state	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_icecastsend_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_icecastsend_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_icecastsend_get_type(void)
@@ -131,57 +131,57 @@ gst_icecastsend_class_init (GstIcecastSendClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_IP,
     g_param_spec_string("ip","ip","ip",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PORT,
     g_param_spec_int("port","port","port",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PASSWORD,
     g_param_spec_string("password","password","password",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PUBLIC,
     g_param_spec_boolean("public","public","public",
-                        TRUE, G_PARAM_READWRITE)); // CHECKME
+                        TRUE, G_PARAM_READWRITE)); /* CHECKME */
 
-  // metadata
+  /* metadata */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NAME,
     g_param_spec_string("name","name","name",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DESCRIPTION,
     g_param_spec_string("description","description","description",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_GENRE,
     g_param_spec_string("genre","genre","genre",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
-  // icecast only
+  /* icecast only */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MOUNT,
     g_param_spec_string("mount","mount","mount",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DUMPFILE,
     g_param_spec_string("dumpfile","dumpfile","dumpfile",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
-  // shoutcast only
+  /* shoutcast only */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ICY,
     g_param_spec_boolean("icy","icy","icy",
-                        FALSE, G_PARAM_READWRITE)); // CHECKME
+                        FALSE, G_PARAM_READWRITE)); /* CHECKME */
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_AIM,
     g_param_spec_string("aim","aim","aim",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ICQ,
     g_param_spec_string("icq","icq","icq",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_IRC,
     g_param_spec_string("irc","irc","irc",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
   
   gobject_class->set_property = gst_icecastsend_set_property;
@@ -405,10 +405,10 @@ gst_icecastsend_change_state (GstElement *element)
    case GST_STATE_NULL_TO_READY:
      shout_init_connection (&icecastsend->conn);
 
-     // --- FIXME: shout requires an ip, and fails if it is given a host.
-     // may want to put convert_to_ip(icecastsend->ip) here
+     /* --- FIXME: shout requires an ip, and fails if it is given a host. */
+     /* may want to put convert_to_ip(icecastsend->ip) here */
      icecastsend->conn.ip = icecastsend->ip; 
-     // ---
+     /* --- */
 
      icecastsend->conn.port = icecastsend->port;
      icecastsend->conn.password = icecastsend->password;
@@ -427,7 +427,7 @@ gst_icecastsend_change_state (GstElement *element)
        g_print ("connected to server...\n");
      }
      else {
-       // changed from g_warning, and included result code lookup.
+       /* changed from g_warning, and included result code lookup. */
        g_error ("couldn't connect to server... (%i: %s)\n", icecastsend->conn.error, SHOUT_ERRORS[icecastsend->conn.error]);
        shout_disconnect (&icecastsend->conn);
        return GST_STATE_FAILURE;

@@ -27,6 +27,6 @@ ieeetest_LDFLAGS = $(GST_LIBS)
 
 noinst_HEADERS = dct.h
 
-libgstidct_la_LIBADD = $(GST_LIBS)
+libgstidct_la_LIBADD =
 libgstidct_la_CFLAGS = $(GST_CFLAGS) -finline-functions -ffast-math
 libgstidct_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

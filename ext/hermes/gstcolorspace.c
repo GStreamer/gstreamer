@@ -97,7 +97,7 @@ static void		gst_colorspace_chain			(GstPad *pad, GstBuffer *buf);
 static GstElementStateReturn
 			gst_colorspace_change_state 		(GstElement *element);
 
-// FIXME
+/* FIXME */
 extern void 	gst_colorspace_yuy2_to_i420	(unsigned char *src, unsigned char *dest, 
 						 guint width, guint height);
 extern void 	gst_colorspace_rgb32_to_i420	(unsigned char *src, unsigned char *dest, 
@@ -106,7 +106,7 @@ extern void 	gst_colorspace_rgb32_to_yv12	(unsigned char *src, unsigned char *de
 						 guint width, guint height);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_colorspace_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_colorspace_signals[LAST_SIGNAL] = { 0 }; */
 
 static GstBufferPool* 
 colorspace_get_bufferpool (GstPad *pad)

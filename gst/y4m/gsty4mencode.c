@@ -76,7 +76,7 @@ static GstElementStateReturn 	gst_lavencode_change_state 	(GstElement *element);
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_lavencode_get_type(void) {

@@ -52,7 +52,7 @@ static void			gst_gsmdec_chain	(GstPad *pad, GstBuffer *buf);
 static GstPadConnectReturn	gst_gsmdec_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_gsmdec_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_gsmdec_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_gsmdec_get_type(void) {
@@ -141,7 +141,7 @@ gst_gsmdec_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
-  //g_return_if_fail(GST_IS_BUFFER(buf));
+  /*g_return_if_fail(GST_IS_BUFFER(buf)); */
 
   gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
 

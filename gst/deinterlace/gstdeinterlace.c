@@ -86,7 +86,7 @@ static void		gst_deinterlace_get_property		(GObject *object, guint prop_id,
 static void		gst_deinterlace_chain			(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
 static GType
 gst_deinterlace_get_type(void) {
@@ -121,16 +121,16 @@ gst_deinterlace_class_init (GstDeInterlaceClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DI_ONLY,
     g_param_spec_boolean("di_area_only","di_area_only","di_area_only",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BLEND,
     g_param_spec_boolean("blend","blend","blend",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_THRESHOLD,
     g_param_spec_int("threshold","threshold","threshold",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_EDGE_DETECT,
     g_param_spec_int("edge_detect","edge_detect","edge_detect",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_deinterlace_set_property;
   gobject_class->get_property = gst_deinterlace_get_property;
@@ -174,7 +174,7 @@ gst_deinterlace_init (GstDeInterlace *filter)
 
   filter->show_deinterlaced_area_only = FALSE;
   filter->blend = FALSE;
-  //filter->threshold_blend = 0; 
+  /*filter->threshold_blend = 0;  */
   filter->threshold = 50;
   filter->edge_detect = 25;
 
@@ -215,21 +215,21 @@ gst_deinterlace_chain (GstPad *pad, GstBuffer *buf)
 
   memcpy(filter->src, yuvptr, filter->picsize); 
 
-  y_dst = yuvptr;  // dst y pointer
-                   // we should not change u,v because one u, v value stands for
-                   // 2 pixels per 2 lines = 4 pixel and we don't want to change
-                   // the color of
+  y_dst = yuvptr;  /* dst y pointer */
+                   /* we should not change u,v because one u, v value stands for */
+                   /* 2 pixels per 2 lines = 4 pixel and we don't want to change */
+                   /* the color of */
 
   y_line  = width;
   y_src = src;
 
   iThreshold = iThreshold * iThreshold * 4;
-  // We don't want an integer overflow in the  interlace calculation.
+  /* We don't want an integer overflow in the  interlace calculation. */
   if (iEdgeDetect > 180)
     iEdgeDetect = 180;
   iEdgeDetect = iEdgeDetect * iEdgeDetect;
 
-  y1 = 0;		// Avoid compiler warning. The value is not used.
+  y1 = 0;		/* Avoid compiler warning. The value is not used. */
   for (x = 0; x < width; x++) {
     psrc3 = y_src + x;
     y3    = *psrc3;
@@ -264,24 +264,24 @@ gst_deinterlace_chain (GstPad *pad, GstBuffer *buf)
           if (bBlend) { 
             *pdst1 = (unsigned char)((y0 + 2*y1 + y2) >> 2);
           } else {
-            // this method seems to work better than blending if the
-            // quality is pretty bad and the half pics don't fit together
-            if ((y % 2)==1) {  // if odd simply copy the value
+            /* this method seems to work better than blending if the */
+            /* quality is pretty bad and the half pics don't fit together */
+            if ((y % 2)==1) {  /* if odd simply copy the value */
               *pdst1 = *psrc1;
-              //*pdst1 = 0; // FIXME this is for adjusting an initial iThreshold
-            } else {        // even interpolate the even line (upper + lower)/2
+              /**pdst1 = 0; // FIXME this is for adjusting an initial iThreshold */
+            } else {        /* even interpolate the even line (upper + lower)/2 */
               *pdst1 = (unsigned char)((y0 + y2) >> 1);
-              //*pdst1 = 0; // FIXME this is for adjusting an initial iThreshold
+              /**pdst1 = 0; // FIXME this is for adjusting an initial iThreshold */
             }
           } 
         } else {
-          // so we went below the treshold and therefore we don't have to 
-          // change anything
+          /* so we went below the treshold and therefore we don't have to  */
+          /* change anything */
           if (bShowDeinterlacedAreaOnly) {
-                // this is for testing to see how we should tune the treshhold
-                // and shows as the things that haven't change because the 
-                // threshhold was to low?? (or shows that everything is ok :-)
-            *pdst1 = 0; // blank the point and so the interlac area
+                /* this is for testing to see how we should tune the treshhold */
+                /* and shows as the things that haven't change because the  */
+                /* threshhold was to low?? (or shows that everything is ok :-) */
+            *pdst1 = 0; /* blank the point and so the interlac area */
           } else {
             *pdst1 = *psrc1;
           }

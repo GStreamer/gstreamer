@@ -107,7 +107,7 @@ static gboolean		speed_parse_caps          (GstSpeed *filter, GstCaps *caps);
 static void		speed_loop              (GstElement *element);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
 static GstPadConnectReturn
 speed_connect (GstPad *pad, GstCaps *caps)
@@ -207,7 +207,7 @@ speed_class_init (GstSpeedClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
     g_param_spec_boolean("silent","silent","silent",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SPEED,
     g_param_spec_float("speed","speed","speed",

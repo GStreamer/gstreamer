@@ -21,7 +21,7 @@ CLEANFILES = gst_artsio.h gst_artsio.cc gst_artsio.mcopclass gst_artsio.mcoptype
 libgstarts_la_SOURCES = gst_arts.c gst_artsio.cc gst_artsio_impl.cc
 libgstarts_la_CFLAGS = $(GST_CFLAGS)
 libgstarts_la_CXXFLAGS = $(ARTS_CXXFLAGS) $(GST_CFLAGS)
-libgstarts_la_LIBADD = $(GST_LIBS) $(ARTS_LIBS) -lartsflow
+libgstarts_la_LIBADD = $(ARTS_LIBS) -lartsflow
 libgstarts_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 EXTRA_DIST = gst_artsio.idl

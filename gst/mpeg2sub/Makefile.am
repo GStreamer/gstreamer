@@ -11,7 +11,7 @@ ARCHCFLAGS =
 endif
 
 libgstmpeg2subt_la_CFLAGS = -O3 $(ARCHCFLAGS) -fschedule-insns2 $(FOMIT_FRAME_POINTER) -finline-functions -ffast-math $(GST_CFLAGS)
-libgstmpeg2subt_la_LIBADD = $(GST_LIBS)
+libgstmpeg2subt_la_LIBADD =
 libgstmpeg2subt_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstmpeg2subt.h 

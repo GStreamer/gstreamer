@@ -76,6 +76,6 @@ void spectrum_chain(GstPad *pad,GstBuffer *buf) {
 }
 
 gboolean idle_func(gpointer data) {
-  //gst_src_push(GST_SRC(data));
+  /*gst_src_push(GST_SRC(data)); */
   return TRUE;
 }

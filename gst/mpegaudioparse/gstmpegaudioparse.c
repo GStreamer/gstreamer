@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+/*#define GST_DEBUG_ENABLED */
 #include <gstmpegaudioparse.h>
 
 
@@ -94,7 +94,7 @@ static void	gst_mp3parse_set_property		(GObject *object, guint prop_id, const GV
 static void	gst_mp3parse_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_mp3parse_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_mp3parse_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_mp3parse_get_type(void) {
@@ -127,10 +127,10 @@ gst_mp3parse_class_init (GstMPEGAudioParseClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SKIP,
     g_param_spec_int("skip","skip","skip",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BIT_RATE,
     g_param_spec_int("bit_rate","bit_rate","bit_rate",
-                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); /* CHECKME */
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
@@ -144,15 +144,15 @@ gst_mp3parse_init (GstMPEGAudioParse *mp3parse)
   mp3parse->sinkpad = gst_pad_new_from_template(sink_temp, "sink");
   gst_element_add_pad(GST_ELEMENT(mp3parse),mp3parse->sinkpad);
 
-#if 1	// set this to one to use the old chaining code
+#if 1	/* set this to one to use the old chaining code */
   gst_pad_set_chain_function(mp3parse->sinkpad,gst_mp3parse_chain);
-#else		// else you get the new loop-based code, which isn't complete yet
+#else		/* else you get the new loop-based code, which isn't complete yet */
   gst_element_set_loop_function (GST_ELEMENT(mp3parse),gst_mp3parse_loop);
 #endif
 
   mp3parse->srcpad = gst_pad_new_from_template(src_temp, "src");
   gst_element_add_pad(GST_ELEMENT(mp3parse),mp3parse->srcpad);
-  //gst_pad_set_type_id(mp3parse->srcpad, mp3frametype);
+  /*gst_pad_set_type_id(mp3parse->srcpad, mp3frametype); */
 
   mp3parse->partialbuf = NULL;
   mp3parse->skip = 0;
@@ -190,31 +190,31 @@ gst_mp3parse_loop (GstElement *element)
   gint bpf;
 
   while (1) {
-    // get a new buffer
+    /* get a new buffer */
     inbuf = gst_pad_pull (parse->sinkpad);
     size = GST_BUFFER_SIZE (inbuf);
     data = GST_BUFFER_DATA (inbuf);
     offset = 0;
 fprintf(stderr, "have buffer of %d bytes\n",size);
 
-    // loop through it and find all the frames
+    /* loop through it and find all the frames */
     while (offset < (size - 4)) {
       start = gst_mp3parse_next_header (data,size,offset);
 fprintf(stderr, "skipped %d bytes searching for the next header\n",start-offset);
       header = GULONG_FROM_BE(*((guint32 *)(data+start)));
 fprintf(stderr, "header is 0x%08x\n",header);
 
-      // figure out how big the frame is supposed to be
+      /* figure out how big the frame is supposed to be */
       bpf = bpf_from_header (parse, header);
 
-      // see if there are enough bytes in this buffer for the whole frame
+      /* see if there are enough bytes in this buffer for the whole frame */
       if ((start + bpf) <= size) {
         outbuf = gst_buffer_create_sub (inbuf,start,bpf);
 fprintf(stderr, "sending buffer of %d bytes\n",bpf);
         gst_pad_push (parse->srcpad, outbuf);
         offset = start + bpf;
 
-      // if not, we have to deal with it somehow
+      /* if not, we have to deal with it somehow */
       } else {
 fprintf(stderr,"don't have enough data for this frame\n");
         
@@ -238,7 +238,7 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
-//  g_return_if_fail(GST_IS_BUFFER(buf));
+/*  g_return_if_fail(GST_IS_BUFFER(buf)); */
 
   mp3parse = GST_MP3PARSE (gst_pad_get_parent (pad));
 
@@ -255,11 +255,11 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
     mp3parse->in_flush = TRUE;
     */
 
-  // if we have something left from the previous frame
+  /* if we have something left from the previous frame */
   if (mp3parse->partialbuf) {
 
     mp3parse->partialbuf = gst_buffer_append(mp3parse->partialbuf, buf);
-    // and the one we received..
+    /* and the one we received.. */
     gst_buffer_unref(buf);
   }
   else {
@@ -269,22 +269,22 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
   size = GST_BUFFER_SIZE(mp3parse->partialbuf);
   data = GST_BUFFER_DATA(mp3parse->partialbuf);
 
-  // while we still have bytes left -4 for the header
+  /* while we still have bytes left -4 for the header */
   while (offset < size-4) {
     int skipped = 0;
 
     GST_DEBUG (0,"mp3parse: offset %ld, size %ld \n",offset, size);
 
-    // search for a possible start byte
+    /* search for a possible start byte */
     for (;((data[offset] != 0xff) && (offset < size));offset++) skipped++;
     if (skipped && !mp3parse->in_flush) {
       GST_DEBUG (0,"mp3parse: **** now at %ld skipped %d bytes\n",offset,skipped);
     }
-    // construct the header word
+    /* construct the header word */
     header = GULONG_FROM_BE(*((gulong *)(data+offset)));
-    // if it's a valid header, go ahead and send off the frame
+    /* if it's a valid header, go ahead and send off the frame */
     if (head_check(header)) {
-      // calculate the bpf of the frame
+      /* calculate the bpf of the frame */
       bpf = bpf_from_header(mp3parse, header);
 
       /********************************************************************************
@@ -302,22 +302,22 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
       if ( mp3parse->in_flush ) {
         unsigned long header2;
 
-        if ((size-offset)<(bpf+4)) { if (mp3parse->in_flush) break; } // wait until we have the the entire current frame as well as the next frame header
+        if ((size-offset)<(bpf+4)) { if (mp3parse->in_flush) break; } /* wait until we have the the entire current frame as well as the next frame header */
 
         header2 = GULONG_FROM_BE(*((gulong *)(data+offset+bpf)));
         GST_DEBUG(0,"mp3parse: header=%08lX, header2=%08lX, bpf=%d\n", header, header2, bpf );
 
-        #define HDRMASK ~( (0xF<<12)/*bitrate*/ | (1<<9)/*padding*/ | (3<<4)/*mode extension*/ ) // mask the bits which are allowed to differ between frames
+        #define HDRMASK ~( (0xF<<12)/*bitrate*/ | (1<<9)/*padding*/ | (3<<4)/*mode extension*/ ) /* mask the bits which are allowed to differ between frames */
 
-        if ( (header2&HDRMASK) != (header&HDRMASK) ) { // require 2 matching headers in a row
+        if ( (header2&HDRMASK) != (header&HDRMASK) ) { /* require 2 matching headers in a row */
            GST_DEBUG(0,"mp3parse: next header doesn't match (header=%08lX, header2=%08lX, bpf=%d)\n", header, header2, bpf );
-           offset++; // This frame is invalid.  Start looking for a valid frame at the next position in the stream
+           offset++; /* This frame is invalid.  Start looking for a valid frame at the next position in the stream */
            continue;
         }
 
       }
 
-      // if we don't have the whole frame...
+      /* if we don't have the whole frame... */
       if ((size - offset) < bpf) {
         GST_DEBUG (0,"mp3parse: partial buffer needed %ld < %d \n",(size-offset), bpf);
 	break;
@@ -346,8 +346,8 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
       if (!mp3parse->in_flush) GST_DEBUG (0,"mp3parse: *** wrong header, skipping byte (FIXME?)\n");
     }
   }
-  // if we have processed this block and there are still
-  // bytes left not in a partial block, copy them over.
+  /* if we have processed this block and there are still */
+  /* bytes left not in a partial block, copy them over. */
   if (size-offset > 0) {
     glong remainder = (size - offset);
     GST_DEBUG (0,"mp3parse: partial buffer needed %ld for trailing bytes\n",remainder);
@@ -381,7 +381,7 @@ bpf_from_header (GstMPEGAudioParse *parse, unsigned long header)
   int layer_index,layer,lsf,samplerate_index,padding;
   long bpf;
 
-  //mpegver = (header >> 19) & 0x3; // don't need this for bpf
+  /*mpegver = (header >> 19) & 0x3; // don't need this for bpf */
   layer_index = (header >> 17) & 0x3;
   layer = 4 - layer_index;
   lsf = (header & (1 << 20)) ? ((header & (1 << 19)) ? 0 : 1) : 1;
@@ -399,8 +399,8 @@ bpf_from_header (GstMPEGAudioParse *parse, unsigned long header)
     bpf += padding;
   }
 
-  //g_print("%08x: layer %d lsf %d bitrate %d samplerate_index %d padding %d - bpf %d\n",
-//header,layer,lsf,bitrate,samplerate_index,padding,bpf);
+  /*g_print("%08x: layer %d lsf %d bitrate %d samplerate_index %d padding %d - bpf %d\n", */
+/*header,layer,lsf,bitrate,samplerate_index,padding,bpf); */
 
   return bpf;
 }

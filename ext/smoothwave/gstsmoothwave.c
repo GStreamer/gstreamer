@@ -55,7 +55,7 @@ static void	gst_smoothwave_get_property		(GObject *object, guint prop_id, GValue
 static void	gst_smoothwave_chain		(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_smoothwave_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_smoothwave_signals[LAST_SIGNAL] = { 0 }; */
 
 
 GType
@@ -92,13 +92,13 @@ gst_smoothwave_class_init (GstSmoothWaveClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_WIDTH,
     g_param_spec_int("width","width","width",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HEIGHT,
     g_param_spec_int("height","height","height",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_WIDGET,
     g_param_spec_object("widget","widget","widget",
-                        GTK_TYPE_WIDGET,G_PARAM_READABLE)); // CHECKME!
+                        GTK_TYPE_WIDGET,G_PARAM_READABLE)); /* CHECKME! */
 
   gobject_class->set_property = gst_smoothwave_set_property;
   gobject_class->get_property = gst_smoothwave_get_property;
@@ -116,21 +116,21 @@ gst_smoothwave_init (GstSmoothWave *smoothwave)
   smoothwave->srcpad = gst_pad_new("src",GST_PAD_SRC);
   gst_element_add_pad(GST_ELEMENT(smoothwave),smoothwave->srcpad);
 
-//  smoothwave->meta = NULL;
+/*  smoothwave->meta = NULL; */
   smoothwave->width = 512;
   smoothwave->height = 256;
 
   gdk_rgb_init();
-//  gtk_widget_set_default_colormap (gdk_rgb_get_cmap());
-//  gtk_widget_set_default_visual (gdk_rgb_get_visual());
+/*  gtk_widget_set_default_colormap (gdk_rgb_get_cmap()); */
+/*  gtk_widget_set_default_visual (gdk_rgb_get_visual()); */
 
-//  GST_DEBUG (0,"creating palette\n");
+/*  GST_DEBUG (0,"creating palette\n"); */
   for (i=0;i<256;i++)
     palette[i] = (i << 16) || (i << 8);
-//  GST_DEBUG (0,"creating cmap\n");
+/*  GST_DEBUG (0,"creating cmap\n"); */
   smoothwave->cmap = gdk_rgb_cmap_new(palette,256);
-//  GST_DEBUG (0,"created cmap\n");
-//  gtk_widget_set_default_colormap (smoothwave->cmap);
+/*  GST_DEBUG (0,"created cmap\n"); */
+/*  gtk_widget_set_default_colormap (smoothwave->cmap); */
 
   smoothwave->image = gtk_drawing_area_new();
   gtk_drawing_area_size(GTK_DRAWING_AREA(smoothwave->image),
@@ -153,29 +153,29 @@ gst_smoothwave_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
-//  g_return_if_fail(GST_IS_BUFFER(buf));
+/*  g_return_if_fail(GST_IS_BUFFER(buf)); */
 
   smoothwave = GST_SMOOTHWAVE(GST_OBJECT_PARENT (pad));
 
   /* first deal with audio metadata */
-//  if (buf->meta) {
-//    if (smoothwave->meta != NULL) {
-//      /* FIXME: need to unref the old metadata so it goes away */
-//    }
-//    /* we just make a copy of the pointer */
-//    smoothwave->meta = (MetaAudioRaw *)(buf->meta);
-//    /* FIXME: now we have to ref the metadata so it doesn't go away */
-//  }
+/*  if (buf->meta) { */
+/*    if (smoothwave->meta != NULL) { */
+/*      /* FIXME: need to unref the old metadata so it goes away */ */
+/*    } */
+/*    /* we just make a copy of the pointer */ */
+/*    smoothwave->meta = (MetaAudioRaw *)(buf->meta); */
+/*    /* FIXME: now we have to ref the metadata so it doesn't go away */ */
+/*  } */
 
-//  g_return_if_fail(smoothwave->meta != NULL);
+/*  g_return_if_fail(smoothwave->meta != NULL); */
 
   samples = (gint16 *)GST_BUFFER_DATA(buf);
-//  samplecount = buf->datasize / (smoothwave->meta->channels * sizeof(gint16));
+/*  samplecount = buf->datasize / (smoothwave->meta->channels * sizeof(gint16)); */
   samplecount = GST_BUFFER_SIZE(buf) / (2 * sizeof(gint16));
 
   qheight = smoothwave->height/4;
 
-//  GST_DEBUG (0,"traversing %d\n",smoothwave->width);
+/*  GST_DEBUG (0,"traversing %d\n",smoothwave->width); */
   for (i=0;i<MAX(smoothwave->width,samplecount);i++) {
     gint16 y1 = (gint32)(samples[i*2] * qheight) / 32768 +
                 qheight;
@@ -183,7 +183,7 @@ gst_smoothwave_chain (GstPad *pad, GstBuffer *buf)
                 (qheight*3);
     smoothwave->imagebuffer[y1*smoothwave->width + i] = 0xff;
     smoothwave->imagebuffer[y2*smoothwave->width + i] = 0xff;
-//    smoothwave->imagebuffer[i+(smoothwave->width*5)] = i;
+/*    smoothwave->imagebuffer[i+(smoothwave->width*5)] = i; */
   }
 
   ptr = (guint32 *)smoothwave->imagebuffer;
@@ -194,7 +194,7 @@ gst_smoothwave_chain (GstPad *pad, GstBuffer *buf)
       ptr++;
   }
 
-//  GST_DEBUG (0,"drawing\n");
+/*  GST_DEBUG (0,"drawing\n"); */
 /*  GST_DEBUG (0,"gdk_draw_indexed_image(%p,%p,%d,%d,%d,%d,%s,%p,%d,%p);\n",
         smoothwave->image->window,
 	smoothwave->image->style->fg_gc[GTK_STATE_NORMAL],
@@ -214,7 +214,7 @@ gst_smoothwave_chain (GstPad *pad, GstBuffer *buf)
 	GDK_RGB_DITHER_NORMAL,
 	smoothwave->imagebuffer,smoothwave->width);
 
-//  gst_trace_add_entry(NULL,0,buf,"smoothwave: calculated smoothwave");
+/*  gst_trace_add_entry(NULL,0,buf,"smoothwave: calculated smoothwave"); */
 
   gst_buffer_unref(buf);
 }
