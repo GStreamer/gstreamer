@@ -59,11 +59,13 @@
           ()</function> or <function>g_print ()</function>). Instead,
           elements should use the logging functions provided by &GStreamer;,
           named <function>GST_DEBUG ()</function>,
-          <function>GST_INFO ()</function>, <function>GST_INFO ()</function>,
+          <function>GST_LOG ()</function>, <function>GST_INFO ()</function>,
           <function>GST_WARNING ()</function> and
           <function>GST_ERROR ()</function>. The various logging levels can
           be turned on and off at runtime and can thus be used for solving
-          issues as they turn up.
+          issues as they turn up. Instead of <function>GST_LOG ()</function>
+          (as an example), you can also use <function>GST_LOG_OBJECT
+          ()</function> to print the object that you're logging output for.
         </para>
       </listitem>
       <listitem>
@@ -87,7 +89,7 @@ gst_myelement_class_init (GstMyelementClass *klass)
         </programlisting>
         <para>
           At runtime, you can turn on debugging using the commandline
-          <command>--gst-debug=myelement:5</command>.
+          option <command>--gst-debug=myelement:5</command>.
         </para>
       </listitem>
     </itemizedlist>

@@ -1,0 +1,241 @@
+<chapter id="chapter-dataaccess">
+  <title>Pipeline manipulation</title>
+  <para>
+    This chapter will discuss how you can manipulate your pipeline in several
+    ways from your application on. Parts of this chapter are downright
+    hackish, so be assured that you'll need some programming knowledge
+    before you start reading this.
+  </para>
+  <para>
+    Topics that will be discussed here include how you can insert data into
+    a pipeline from your application, how to read data from a pipeline,
+    how to manipulate the pipeline's speed, length, starting point and how
+    to listen to a pipeline's data processing.
+  </para>
+
+  <sect1 id="section-data-probe">
+    <title>Data probes</title>
+    <para>
+      Probes are best envisioned as pad listeners. They are attached to a
+      pad in a pipeline, and you can add callback functions to this probe.
+      Those callback functions will be called whenever data is being sent
+      over this pad. The callback can then decide whether the data should
+      be discarded or it can replace the piece of data with another piece
+      of data. In this callback, it can also trigger actions in the
+      application itself. For pipeline manipulation, probes are rather
+      limited, but for pipeline tracking, they can be very useful.
+    </para>
+  </sect1>
+
+  <sect1 id="section-data-spoof">
+    <title>Manually adding or removing data from/to a pipeline</title>
+    <para>
+      Many people have expressed the wish to use their own sources to inject
+      data into a pipeline. Some people have also expressed the wish to grab
+      the output in a pipeline and take care of the actual output inside
+      their application. While either of these methods are stongly
+      discouraged, &GStreamer; offers hacks to do this. <emphasis>However,
+      there is no support for those methods.</emphasis> If it doesn't work,
+      you're on your own. Also, synchronization, thread-safety and other
+      things that you've been able to take for granted so far are no longer
+      guanranteed if you use any of those methods. It's always better to
+      simply write a plugin and have the pipeline schedule and manage it.
+      See the Plugin Writer's Guide for more information on this topic. Also
+      see the next section, which will explain how to embed plugins statically
+      in your application.
+    </para>
+    <para>
+      After all those disclaimers, let's start. There's three possible
+      elements that you can use for the above-mentioned purposes. Those are
+      called <quote>fakesrc</quote> (an imaginary source),
+      <quote>fakesink</quote> (an imaginary sink) and <quote>identity</quote>
+      (an imaginary filter). The same method applies to each of those
+      elements. Here, we will discuss how to use those elements to insert
+      (using fakesrc) or grab (using fakesink or identity) data from a
+      pipeline, and how to set negotiation.
+    </para>
+
+    <sect2 id="section-spoof-handoff">
+      <title>Inserting or grabbing data</title>
+      <para>
+        The three before-mentioned elements (fakesrc, fakesink and identity)
+        each have a <quote>handoff</quote> signal that will be called in
+        the <function>_get ()</function>- (fakesrc) or <function>_chain
+        ()</function>-function (identity, fakesink). In the signal handler,
+        you can set (fakesrc) or get (identity, fakesink) data to/from the
+        provided buffer. Note that in the case of fakesrc, you have to set
+        the size of the provided buffer using the <quote>sizemax</quote>
+        property. For both fakesrc and fakesink, you also have to set the
+        <quote>signal-handoffs</quote> property for this method to work.
+      </para>
+      <para>
+        Note that your handoff function should <emphasis>not</emphasis>
+        block, since this will block pipeline iteration. Also, do not try
+        to use all sort of weird hacks in such functions to accomplish
+        something that looks like synchronization or so; it's not the right
+        way and will lead to issues elsewhere. If you're doing any of this,
+        you're basically misunderstanding the &GStreamer; design.
+      </para>
+    </sect2>
+
+    <sect2 id="section-spoof-format">
+      <title>Forcing a format</title>
+      <para>
+        Sometimes, when using fakesrc as a source in your pipeline, you'll
+        want to set a specific format, for example a video size and format
+        or an audio bitsize and number of channels. You can do this by
+        forcing a specific <classname>GstCaps</classname> on the pipeline,
+        which is possible by using <emphasis>filtered caps</emphasis>. You
+        can set a filtered caps on a link by using
+        <function>gst_pad_link_filtered ()</function>, where the third
+        argument is the format to force on the link.
+      </para>
+    </sect2>
+
+    <sect2 id="section-spoof-example">
+      <title>Example application</title>
+      <para>
+        This example application will generate black/white (it switches
+        every second) video to an X-window output by using fakesrc as a
+        source and using filtered caps to force a format. Since the depth
+        of the image depends on your X-server settings, we use a colorspace
+        conversion element to make sure that the output to your X server
+        will have the correct bitdepth. You can also set timestamps on the
+        provided buffers to override the fixed framerate.
+      </para>
+      <programlisting><!-- example-begin fakesrc.c -->
+#include &lt;string.h&gt; /* for memset () */
+#include &lt;gst/gst.h&gt;
+
+static void
+cb_handoff (GstElement *fakesrc,
+	    GstBuffer  *buffer,
+	    GstPad     *pad,
+	    gpointer    user_data)
+{
+  static gboolean white = FALSE;
+
+  /* this makes the image black/white */
+  memset (GST_BUFFER_DATA (buffer), white ? 0xff : 0x0,
+	  GST_BUFFER_SIZE (buffer));
+  white = !white;
+}
+
+gint
+main (gint   argc,
+      gchar *argv[])
+{
+  GstElement *pipeline, *fakesrc, *conv, *videosink;
+  GstCaps *filter;
+
+  /* init GStreamer */
+  gst_init (&amp;argc, &amp;argv);
+
+  /* setup pipeline */
+  pipeline = gst_pipeline_new ("pipeline");
+  fakesrc = gst_element_factory_make ("fakesrc", "source");
+  conv = gst_element_factory_make ("ffmpegcolorspace", "conv");
+  videosink = gst_element_factory_make ("ximagesink", "videosink");
+
+  /* setup */
+  filter = gst_caps_new_simple ("video/x-raw-rgb",
+				"width", G_TYPE_INT, 384,
+				"height", G_TYPE_INT, 288,
+				"framerate", G_TYPE_DOUBLE, (gdouble) 1.0,
+				"bpp", G_TYPE_INT, 16,
+				"depth", G_TYPE_INT, 16,
+				"endianness", G_TYPE_INT, G_BYTE_ORDER,
+				NULL);
+  gst_element_link_filtered (fakesrc, conv, filter);
+  gst_element_link (conv, videosink);
+  gst_bin_add_many (GST_BIN (pipeline), fakesrc, conv, videosink, NULL);
+
+  /* setup fake source */
+  g_object_set (G_OBJECT (fakesrc),
+		"signal-handoffs", TRUE,
+		"sizemax", 384 * 288 * 2,
+		"sizetype", 2, NULL);
+  g_signal_connect (fakesrc, "handoff", G_CALLBACK (cb_handoff), NULL);
+
+  /* play */
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  while (gst_bin_iterate (GST_BIN (pipeline))) ;
+
+  /* clean up */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (GST_OBJECT (pipeline));
+
+  return 0;
+}
+      <!-- example-end fakesrc.c --></programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="section-data-manager">
+    <title>Embedding static elements in your application</title>
+    <para>
+      The <ulink type="http"
+      url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/index.html">Plugin
+      Writer's Guide</ulink> describes in great detail how to write elements
+      for the &GStreamer; framework. In this section, we will solely discuss
+      how to embed such elements statically in your application. This can be
+      useful for application-specific elements that have no use elsewhere in
+      &GStreamer;.
+    </para>
+    <para>
+      Dynamically loaded plugins contain a structure that's defined using
+      <function>GST_PLUGIN_DEFINE ()</function>. This structure is loaded
+      when the plugin is loaded by the &GStreamer; core. The structure
+      contains an initialization function (usually called
+      <function>plugin_init</function>) that will be called right after that.
+      It's purpose is to register the elements provided by the plugin with
+      the &GStreamer; framework. If you want to embed elements directly in
+      your application, the only thing you need to do is to manually run
+      this structure using <function>_gst_plugin_register_static
+      ()</function>. The initialization will then be called, and the elements
+      will from then on be available like any other element, without
+      them having to be dynamically loadable libraries. In the example below,
+      you would be able to call <function>gst_element_factory_make
+      ("my-element-name", "some-name")</function> to create an instance
+      of the element.
+    </para>
+    <programlisting>
+/*
+ * Here, you would write the actual plugin code.
+ */
+
+[..]
+
+static gboolean
+register_elements (GstPlugin *plugin)
+{
+  return gst_element_register (plugin, "my-element-name",
+			       GST_RANK_NONE, MY_PLUGIN_TYPE);
+}
+
+static GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "my-private-plugins",
+  "Private elements of my application",
+  register_elements,
+  NULL,
+  "0.0.1",
+  "LGPL",
+  "my-application",
+  "http://www.my-application.net/",
+  GST_PADDING_INIT
+};
+
+/*
+ * Call this function right after calling gst_init ().
+ */
+
+void
+my_elements_init (void)
+{
+  _gst_plugin_register_static (&amp;plugin_desc);
+}
+    </programlisting>
+  </sect1>
+</chapter>

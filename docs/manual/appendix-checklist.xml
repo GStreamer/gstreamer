@@ -1,152 +1,163 @@
-<chapter id="chapter-debugging">
-  <title>Debugging</title>
-  <para> 
-    GStreamer has an extensive set of debugging tools for
-    plugin developers.
+<chapter id="chapter-checklist-element">
+  <title>Things to check when writing an application</title>
+  <para>
+    This chapter contains a fairly random selection of things that can be
+    useful to keep in mind when writing &GStreamer;-based applications. It's
+    up to you how much you're going to use the information provided here.
+    We will shortly discuss how to debug pipeline problems using &GStreamer;
+    applications. Also, we will touch upon how to acquire knowledge about
+    plugins and elements and how to test simple pipelines before building
+    applications around them.
   </para>
- 
-  <sect1 id="section-debugging-command-line">
-    <title>Command line options</title>
-    <para> 
-      Applications using the GStreamer libraries accept the following set
-      of command line argruments that help in debugging.
+
+  <sect1 id="section-checklist-programming">
+    <title>Good programming habits</title>
+    <itemizedlist>
+      <listitem>
+        <para>
+          Always connect to the <quote>error</quote> signal of your topmost
+          pipeline to be notified of errors in your pipeline.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Always check return values of &GStreamer; functions. Especially,
+          check return values of <function>gst_element_link ()</function>
+          and <function>gst_element_set_state ()</function>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Always use your pipeline object to keep track of the current state
+          of your pipeline. Don't keep private variables in your application.
+          Also, don't update your user interface if a user presses the
+          <quote>play</quote> button. Instead, connect to the
+          <quote>state-changed</quote> signal of your topmost pipeline and
+          update the user interface whenever this signal is triggered.
+        </para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+
+  <sect1 id="section-checklist-debug">
+    <title>Debugging</title>
+    <para>
+      Applications can make use of the extensive &GStreamer; debugging system
+      to debug pipeline problems. Elements will write output to this system
+      to log what they're doing. It's not used for error reporting, but it
+      is very useful for tracking what an element is doing exactly, which
+      can come in handy when debugging application issues (such as failing
+      seeks, out-of-sync media, etc.).
     </para>
-      
-    <para> 
+    <para>
+      Most &GStreamer;-based applications accept the commandline option
+      <option>--gst-debug=LIST</option> and related family members. The
+      list consists of a comma-separated list of category/level pairs,
+      which can set the debugging level for a specific debugging category.
+      For example, <option>--gst-debug=oggdemux:5</option> would turn
+      on debugging for the Ogg demuxer element. You can use wildcards as
+      well. A debugging level of 0 will turn off all debugging, and a level
+      of 5 will turn on all debugging. Intermediate values only turn on
+      some debugging (based on message severity; 2, for example, will only
+      display errors and warnings). Here's a list of all available options:
+    </para>
+    <para>
      <itemizedlist>
        <listitem>
          <para>
-          <option>--gst-debug-help</option> 
-	  Print available debug categories and exit
+          <option>--gst-debug-help</option> will print available debug
+          categories and exit.
          </para>
        </listitem>
        <listitem>
          <para>
           <option>--gst-debug-level=<replaceable>LEVEL</replaceable></option> 
-	  Sets the default debug level from 0 (no output) to 5 (everything)
+	  will set the default debug level (which can range from 0 (no
+          output) to 5 (everything)).
          </para>
        </listitem>
        <listitem>
          <para>
           <option>--gst-debug=<replaceable>LIST</replaceable></option> 
-	  Comma-separated list of category_name:level pairs to set specific
-          levels for the individual categories. 
-          Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3
+	  takes a comma-separated list of category_name:level pairs to
+          set specific levels for the individual categories. Example:
+          <option>GST_AUTOPLUG:5,avidemux:3</option>.
          </para>
        </listitem>
        <listitem>
          <para>
-          <option>--gst-debug-no-color</option> 
-	  Disable color debugging output
+          <option>--gst-debug-no-color</option> will disable color debugging.
          </para>
        </listitem>
        <listitem>
          <para>
-          <option>--gst-debug-disable</option> 
-	  Disable debugging
+          <option>--gst-debug-disable</option> disables debugging alltogether.
          </para>
        </listitem>
        <listitem>
          <para>
-          <option>--gst-plugin-spew</option> 
-	  Enable printout of errors while loading GStreamer plugins.
+          <option>--gst-plugin-spew</option> enables printout of errors while
+          loading &GStreamer; plugins.
          </para>
        </listitem>
      </itemizedlist>
     </para>
   </sect1>
 
-  <sect1 id="section-debugging-adding">
-    <title>Adding debugging to a plugin</title>
-    <para> 
-Plugins can define their own categories for the debugging system.
-Three things need to happen:
-      <itemizedlist>
-        <listitem>
-          <para>
-The debugging variable needs to be defined somewhere.
-If you only have one source file, you can Use GST_DEBUG_CATEGORY_STATIC to
-define a static debug category variable.
-          </para>
-          <para>
-If you have multiple source files, you should define the variable using
-GST_DEBUG_CATEGORY in the source file where you're initializing the debug
-category.  The other source files should use GST_DEBUG_CATEGORY_EXTERN to
-declare the debug category variable, possibly by including a common header
-that has this statement.
-          </para>
-        </listitem>
-        <listitem>
-          <para>
-The debugging category needs to be initialized.  This is done through
-GST_DEBUG_CATEGORY_INIT.
-If you're using a global debugging category for the complete plugin,
-you can call this in the
-plugin's <function>plugin_init</function>.
-If the debug category is only used for one of the elements, you can call it
-from the element's <function>_class_init</function> function.
-          </para>
-        </listitem>
-        <listitem>
-          <para>
-You should also define a default category to be used for debugging.  This is
-done by defining GST_CAT_DEFAULT for the source files where you're using
-debug macros.
-          </para>
-        </listitem>
-      </itemizedlist>
-    </para> 
-    <para> 
-Elements can then log debugging information using the set of macros.  There
-are five levels of debugging information:
-      <orderedlist>
-        <listitem>
-<para>ERROR for fatal errors (for example, internal errors)</para>
-        </listitem>
-        <listitem>
-<para>WARNING for warnings</para>
-        </listitem>
-        <listitem>
-<para>INFO for normal information</para>
-        </listitem>
-        <listitem>
-<para>DEBUG for debug information (for example, device parameters)</para>
-        </listitem>
-        <listitem>
-<para>LOG for regular operation information (for example, chain handlers)</para>
-        </listitem>
-      </orderedlist>
-    </para> 
+  <sect1 id="section-checklist-conversion">
+    <title>Conversion plugins</title>
     <para>
-For each of these levels, there are four macros to log debugging information.
-Taking the LOG level as an example, there is
-      <itemizedlist>
-        <listitem>
-          <para>
-          GST_CAT_LOG_OBJECT logs debug information in the given GstCategory
-          and for the given GstObject
-          </para>
-        </listitem>
-        <listitem>
-          <para>
-          GST_CAT_LOG logs debug information in the given GstCategory
-          but without a GstObject (this is useful for libraries, for example)
-          </para>
-        </listitem>
-        <listitem>
-          <para>
-          GST_LOG_OBJECT logs debug information in the default GST_CAT_DEFAULT
-          category (as defined somewhere in the source), for the given GstObject
-          </para>
-        </listitem>
-        <listitem>
-          <para>
-          GST_LOG logs debug information in the default GST_CAT_DEFAULT
-          category, without a GstObject
-          </para>
-        </listitem>
-      </itemizedlist>
-    </para> 
+      &GStreamer; contains a bunch of conversion plugins that most
+      applications will find useful. Specifically, those are videoscalers
+      (videoscale), colorspace convertors (ffmpegcolorspace), audio format
+      convertors and channel resamplers (audioconvert) and audio samplerate
+      convertors (audioscale). Those convertors don't do anything when not
+      required, they will act in passthrough mode. They will activate when
+      the hardware doesn't support a specific request, though. All
+      applications are recommended to use those elements.
+    </para>
   </sect1>
 
+  <sect1 id="section-checklist-applications">
+    <title>Utility applications provided with &GStreamer;</title>
+    <para>
+      &GStreamer; comes with a default set of command-line utilities that
+      can help in application development. We will discuss only
+      <command>gst-launch</command> and <command>gst-inspect</command> here.
+    </para>
+
+    <sect2 id="section-applications-launch">
+      <title><command>gst-launch</command></title>
+      <para>
+        <command>gst-launch</command> is a simple script-like commandline
+        application that can be used to test pipelines. For example, the
+        command <command>gst-launch sinesrc ! alsasink</command> will run
+        a pipeline which generates a sine-wave audio stream and plays it
+        to your ALSA audio card. <command>gst-launch</command> also allows
+        the use of threads (using curly brackets, so <quote>{</quote>
+        and <quote>}</quote>) and bins (using brackets, so <quote>(</quote>
+        and <quote>)</quote>). You can use dots to imply padnames on elements,
+        or even omit the padname to automatically select a pad. Using
+        all this, the pipeline <command>gst-launch filesrc location=file.ogg
+        ! oggdemux name=d { d. ! theoradec ! ffmpegcolorspace ! xvimagesink
+        } { d. ! vorbisdec ! alsasink }</command> will play an Ogg file
+        containing a Theora video-stream and a Vorbis audio-stream. You can
+        also use autopluggers such as decodebin on the commandline. See the
+        manual page of <command>gst-launch</command> for more information.
+      </para>
+    </sect2>
+
+    <sect2 id="section-applications-inspect">
+      <title><command>gst-inspect</command></title>
+      <para>
+        <command>gst-inspect</command> can be used to inspect all properties,
+        signals, dynamic parameters and the object hierarchy of an element.
+        This acn be very useful to see which <classname>GObject</classname>
+        properties or which signals (and using what arguments) an element
+        supports. Run <command>gst-inspect fakesrc</command> to get an idea
+        of what it does. See the manual page of <command>gst-inspect</command>
+        for more information.
+      </para>
+    </sect2>
+  </sect1>
 </chapter>

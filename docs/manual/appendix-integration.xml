@@ -1,95 +1,161 @@
-<chapter id="chapter-gnome">
-  <title>GNOME integration</title>
-  <para> 
-    GStreamer is fairly easy to integrate with GNOME applications.
-    GStreamer uses libxml 2.0, GLib 2.0 and popt, as do all other
-    GNOME applications.
-    There are however some basic issues you need to address in your GNOME
-    applications.
+<chapter id="chapter-intgration">
+  <title>Integration</title>
+  <para>
+    &GStreamer; tries to integrate closely with operating systems (such
+    as Linux and UNIX-like operating systems, OS X or Windows) and desktop
+    environments (such as GNOME or KDE). In this chapter, we'll mention
+    some specific techniques to integrate your application with your
+    operating system or desktop environment of choice.
   </para>
  
-  <sect1>
-    <title>Command line options</title>
+  <sect1 id="section-integration-nix">
+    <title>Linux and UNIX-like operating systems</title>
     <para>
-      GNOME applications call gnome_program_init () to parse command-line
-      options and initialize the necessary gnome modules.
-      GStreamer applications normally call gst_init (&amp;argc, &amp;argv) to
-      do the same for GStreamer.
+      &GStreamer; provides a basic set of elements that are useful when
+      integrating with Linux or a UNIX-like operating system.
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          For audio input and output, &GStreamer; provides input and
+          output elements for several audio subsystems. Amongst others,
+          &GStreamer; includes elements for ALSA (alsasrc, alsamixer,
+          alsasink), OSS (osssrc, ossmixer, osssink) and Sun audio
+          (sunaudiosrc, sunaudiomixer, sunaudiosink).
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          For video input, &GStreamer; contains source elements for
+          Video4linux (v4lsrc, v4lmjpegsrc, v4lelement and v4lmjpegisnk)
+          and Video4linux2 (v4l2src, v4l2element).
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          For video output, &GStreamer; provides elements for output
+          to X-windows (ximagesink), Xv-windows (xvimagesink; for
+          hardware-accelerated video), direct-framebuffer (dfbimagesink)
+          and openGL image contexts (glsink).
+        </para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+
+  <sect1 id="section-integration-gnome">
+    <title>GNOME desktop</title>
+    <para>
+      &GStreamer; has been the media backend of the <ulink type="http"
+      url="http://www.gnome.org/">GNOME</ulink> desktop since GNOME-2.2
+      onwards. Nowadays, a whole bunch of GNOME applications make use of
+      &GStreamer; for media-processing, including (but not limited to)
+      <ulink type="http" url="http://www.rhythmbox.org/">Rhythmbox</ulink>,
+      <ulink type="http" url="http://www.hadess.net/totem.php3">Totem</ulink>
+      and <ulink type="http"
+      url="http://www.burtonini.com/blog/computers/sound-juicer">Sound
+      Juicer</ulink>.
     </para>
     <para>
-      Each of these two swallows the program options passed to the program,
-      so we need a different way to allow both GNOME and GStreamer to parse
-      the command-line options.  This is shown in the following example.
-    </para>  
-
-    <programlisting>
-<!-- example-begin gnome.c -->
+      Most of these GNOME applications make use of some specific techniques
+      to integrate as closely as possible with the GNOME desktop:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          GNOME applications call <function>gnome_program_init ()</function>
+          to parse command-line options and initialize the necessary gnome
+          modules. &GStreamer; applications would normally call
+          <function>gst_init ()</function> to do the same for GStreamer.
+          This would mean that only one of the two can parse command-line
+          options. To work around this issue, &GStreamer; can provide a
+          <classname>poptOption</classname> array which can be passed to
+          <function>gnome_program_init ()</function>.
+        </para>
+        <programlisting><!-- example-begin gnome.c a -->
 #include &lt;gnome.h&gt;
 #include &lt;gst/gst.h&gt;
 
-int
-main (int argc, char **argv)
+gint
+main (gint   argc,
+      gchar *argv[])
 {
-  GstPoptOption options[] = {
-          { NULL, '\0', POPT_ARG_INCLUDE_TABLE, NULL, 0, "GStreamer", NULL },
-            POPT_TABLEEND
-        };
-  GnomeProgram *program;
-  poptContext context;
-  const gchar **argvn;
+  struct poptOption options[] = {
+    {NULL, '\0', POPT_ARG_INCLUDE_TABLE, NULL, 0, "GStreamer", NULL},
+    POPT_TABLEEND
+  };
 
-  GstElement *pipeline;
-  GstElement *src, *sink;
-
+  /* init GStreamer and GNOME using the GStreamer popt tables */
   options[0].arg = (void *) gst_init_get_popt_table ();
-  g_print ("Calling gnome_program_init with the GStreamer popt table\n");
-  /* gnome_program_init will initialize GStreamer now
-   * as a side effect of having the GStreamer popt table passed. */
-  if (! (program = gnome_program_init ("my_package", "0.1", LIBGNOMEUI_MODULE,
-                                       argc, argv,
-                                       GNOME_PARAM_POPT_TABLE, options,
-                                       NULL)))
-    g_error ("gnome_program_init failed");
-
-  g_print ("Getting gnome-program popt context\n");
-  g_object_get (program, "popt-context", &amp;context, NULL);
-  argvn = poptGetArgs (context);
-  if (!argvn) {
-    g_print ("Run this example with some arguments to see how it works.\n");
-    return 0;
-  }
-
-  g_print ("Printing rest of arguments\n");
-  while (*argvn) {
-    g_print ("argument: %s\n", *argvn);
-    ++argvn;
-  }
-
-  /* do some GStreamer things to show everything's initialized properly */
-  g_print ("Doing some GStreamer stuff to show that everything works\n");
-  pipeline = gst_pipeline_new ("pipeline");
-  src = gst_element_factory_make ("fakesrc", "src");
-  sink = gst_element_factory_make ("fakesink", "sink");
-  gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
-  gst_element_link (src, sink);
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  gst_bin_iterate (GST_BIN (pipeline));
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-
+  gnome_program_init ("my-application", "0.0.1", LIBGNOMEUI_MODULE, argc, argv,
+		      GNOME_PARAM_POPT_TABLE, options,
+		      NULL);
+<!-- example-end gnome.c a -->
+[..]<!-- example-begin gnome.c b --><!--
   return 0;
+--><!-- example-end gnome.c b -->
+<!-- example-begin gnome.c c -->
 }
-<!-- example-end gnome.c -->
-    </programlisting>
+        <!-- example-end gnome.c c --></programlisting>
+      </listitem>
+      <listitem>
+        <para>
+          GNOME stores the default video and audio sources and sinks in GConf.
+          &GStreamer; provides a small utility library that can be used to
+          get the elements from the registry using functions such as
+          <function>gst_gconf_get_default_video_sink ()</function>. See the
+          header file (<filename>gst/gconf/gconf.h</filename>) for details.
+          All GNOME applications are recommended to use those variables.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          &GStreamer; provides data input/output elements for use with the
+          GNOME-VFS system. These elements are called <quote>gnomevfssrc</quote>
+          and <quote>gnomevfssink</quote>.
+        </para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+
+  <sect1 id="section-integration-kde">
+    <title>KDE desktop</title>
     <para>
-      If you try out this program, you will see that when called with
-      --help, it will print out both GStreamer and GNOME help arguments.
-      All of the arguments that didn't belong to either end up in the
-      argvn pointer array.
+      &GStreamer; has been proposed for inclusion in KDE-4.0. Currently,
+      &GStreamer; is included as an optional component, and it's used by
+      several KDE applications, including <ulink type="http"
+      url="http://amarok.kde.org/">AmaroK</ulink> and <ulink type="http"
+      url="http://developer.kde.org/~wheeler/juk.html">JuK</ulink>. A
+      backend for <ulink type="http"
+      url="http://www.xs4all.nl/~jjvrieze/kmplayer.html">KMPlayer</ulink>
+      is currently under development.
     </para>
     <para>
-      FIXME: flesh this out more.  How do we get the GStreamer arguments
-      at the end ?
-      FIXME: add a GConf bit.
+      Although not yet as complete as the GNOME integration bits, there
+      are already some KDE integration specifics available. This list will
+      probably grow as &GStreamer; starts to be used in KDE-4.0:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          AmaroK contains a kiosrc element, which is a source element that
+          integrates with the KDE VFS subsystem KIO.
+        </para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+
+  <sect1 id="section-integration-osx">
+    <title>OS X</title>
+    <para>
+      &GStreamer; provides native video and audio output elements for OS X.
+      It builds using the standard development tools for OS X.
+    </para>
+  </sect1>
+
+  <sect1 id="section-integration-win32">
+    <title>Windows</title>
+    <para>
+      &GStreamer; builds using Microsoft Visual C .NET 2003 and using Cygwin.
     </para>
   </sect1>
 </chapter>

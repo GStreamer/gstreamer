@@ -63,11 +63,12 @@ U gst-template/gst-app/src/Makefile.am
   <!-- ############ sect1 ############# -->
 
   <sect1 id="section-boiler-project-stamp" xreflabel="Using the Project Stamp">
-    <title>!!! FIXME !!! Using the Project Stamp</title>
-    <para>
-      This section needs some fixing from someone that is aware of how this works.
-      The only tool that looks like the ones cited there is <filename>gst-plugins/tools/filterstamp.sh</filename>
-    </para>
+    <title>Using the Project Stamp</title>
+    <!-- FIXME 
+      This section needs some fixing from someone that is aware of how this
+      works. The only tool that looks like the ones cited there is
+      <filename>gst-plugins/tools/filterstamp.sh</filename>
+    -->
     <para>
       The first thing to do when making a new element is to specify some basic
       details about it: what its name is, who wrote it, what version number it

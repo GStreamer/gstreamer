@@ -1,3 +1,27 @@
+2004-12-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  Add section on how to use fakesrc/fakesink/identity in your
+	  application, plus section on how to embed plugins. Also mention
+	  probes.
+	* docs/manual/appendix-checklist.xml:
+	* docs/manual/appendix-debugging.xml:
+	* docs/manual/appendix-gnome.xml:
+	* docs/manual/appendix-integration.xml:
+	  Debug -> checklist, GNOME -> integration, add sections on Linux,
+	  KDE integration and add other things useful for application
+	  development.
+	* docs/manual/manual.xml:
+	  Remove some fixmes, update some file pointers.
+	* docs/pwg/appendix-checklist.xml:
+	  Fix typo.
+	* docs/pwg/building-boiler.xml:
+	  Remove ugly header and add commented fixme.
+	* docs/pwg/pwg.xml:
+	  Add fixme.
+	* examples/manual/Makefile.am:
+	  Add example for added docs.
+
 2004-12-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

@@ -47,9 +47,8 @@
 <!ENTITY COMPONENTS SYSTEM "highlevel-components.xml">
 
 <!-- Appendices -->
-<!ENTITY DEBUGGING SYSTEM "appendix-debugging.xml">
-<!ENTITY PROGRAMS SYSTEM "appendix-programs.xml">
-<!ENTITY GNOME SYSTEM "appendix-gnome.xml">
+<!ENTITY CHECKLIST SYSTEM "appendix-checklist.xml">
+<!ENTITY INTEGRATION SYSTEM "appendix-integration.xml">
 <!ENTITY WIN32 SYSTEM "appendix-win32.xml">
 <!ENTITY QUOTES SYSTEM "appendix-quotes.xml">
 
@@ -193,42 +192,6 @@
       </para>      
     </partintro>
 
-<!--
-Idea:
-* Querying and events
-   - seeking
-   - getting stream length
-   - prerolls and why
-* Stream info
-   - pads info (see 2.4)
-   - tags
-   - inserting tags
-* Interfaces
-   - each
-* Clocks & Synchronization
-   - stress that it's automated
-* Dynamic parameters
-   - ..
-* Threading
-   - gstthread & queues
-   - buffering (network, live network/video/audio source)
-   - when 1-to-N, N-to-1 and N-to-N elements need threads
-* Scheduling
-   - loop/chain/get etc. (internals)
-   - opt
-* Autoplugging principles
-   - type detection
-   - dynamic element lookup (registry, factories and categories)
-   - reference part4!
-   - Hello world 2
-* Pipeline manipulation
-   - data manipulation (identity, fakesrc, fakesink)
-   - probes (both events and data)
-   - length manipulation (managers, PWG)
-   - explain how to embed elements in applications
-   - explain why separate elements are to be preferred
--->
-
     &QUERYEVENTS;
     &METADATA;
     &INTERFACES;
@@ -313,9 +276,8 @@ Idea:
    - table please...
 -->
 
-    &DEBUGGING;
-    &PROGRAMS;
-    &GNOME;
+    &CHECKLIST;
+    &INTEGRATION;
     &WIN32;
     &QUOTES;
 

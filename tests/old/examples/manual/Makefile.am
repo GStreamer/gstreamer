@@ -36,6 +36,7 @@ EXAMPLES = \
 	query \
 	threads \
 	typefind \
+	fakesrc \
 	playbin \
 	decodebin \
 	$(GST_LOADSAVE_SRC)
@@ -52,9 +53,9 @@ pad.c ghostpad.c: $(top_srcdir)/docs/manual/basics-pads.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/manual/basics-pads.xml
 
-gnome.c: $(top_srcdir)/docs/manual/appendix-gnome.xml
+gnome.c: $(top_srcdir)/docs/manual/appendix-integration.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
-		$(top_srcdir)/docs/manual/appendix-gnome.xml
+		$(top_srcdir)/docs/manual/appendix-integration.xml
 
 helloworld.c: $(top_srcdir)/docs/manual/basics-helloworld.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
@@ -75,6 +76,10 @@ threads.c: $(top_srcdir)/docs/manual/advanced-threads.xml
 typefind.c dynamic.c: $(top_srcdir)/docs/manual/advanced-autoplugging.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/manual/advanced-autoplugging.xml
+
+fakesrc.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/advanced-dataaccess.xml
 
 playbin.c decodebin.c: $(top_srcdir)/docs/manual/highlevel-components.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \

@@ -144,6 +144,9 @@
     &ADVANCED_INTERFACES;
     &ADVANCED_TAGGING;
     &ADVANCED_EVENTS;
+
+    <!-- FIXME: add querying, event handling and conversion -->
+
   </part>
 
   <!-- ############ part ############# -->
