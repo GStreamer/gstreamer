@@ -22,6 +22,9 @@
 
 #include <gst/gst.h>
 
+/* FIXME : We should have a configure test for shm support */
+#define HAVE_SHM
+
 #ifdef HAVE_SHM
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -125,7 +128,7 @@ struct _GstXImageSinkClass {
   GstElementClass parent_class;
 };
 
-GType gst_ximagesink_get_type (void);
+GType gst_ximagesink_get_type(void);
 
 G_END_DECLS
 
