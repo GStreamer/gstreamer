@@ -150,6 +150,7 @@ gst_buffer_create_sub (GstBuffer *parent,
 
   g_mutex_lock (_gst_buffer_chunk_lock);
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
+  GST_DATA_TYPE(buffer) = _gst_buffer_type;
   g_mutex_unlock (_gst_buffer_chunk_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new subbuffer %p from parent %p (size %u, offset %u)", 
 		  buffer, parent, size, offset);
