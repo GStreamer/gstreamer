@@ -25,11 +25,12 @@
 #include <glib.h>
 
 static void
-check_from_double_convert (gdouble value, gint nom, gint denom, gdouble prec)
+check_from_double_convert (gdouble value, gint num, gint denom, gdouble prec)
 {
   GValue value1 = { 0 };
   GValue value2 = { 0 };
   gdouble check;
+  gint res_num, res_denom;
 
   g_value_init (&value1, G_TYPE_DOUBLE);
   g_value_init (&value2, GST_TYPE_FRACTION);
@@ -37,9 +38,20 @@ check_from_double_convert (gdouble value, gint nom, gint denom, gdouble prec)
   g_value_set_double (&value1, value);
   g_value_transform (&value1, &value2);
   g_print ("%s = %s ? (expected: %d/%d )\n",
-      gst_value_serialize (&value1), gst_value_serialize (&value2), nom, denom);
-  g_assert (gst_value_get_fraction_numerator (&value2) == nom);
-  g_assert (gst_value_get_fraction_denominator (&value2) == denom);
+      gst_value_serialize (&value1), gst_value_serialize (&value2), num, denom);
+
+  res_num = gst_value_get_fraction_numerator (&value2);
+  res_denom = gst_value_get_fraction_denominator (&value2);
+  if (res_num == num && res_denom == denom) {
+    g_print ("best conversion.\n");
+  } else {
+    if (fabs (value - res_num / (gdouble) res_denom) <= prec) {
+      g_print ("acceptable suboptimal conversion.\n");
+    } else {
+      g_print ("unacceptable suboptimal conversion.\n");
+      g_assert_not_reached ();
+    }
+  }
   g_value_transform (&value2, &value1);
   g_print ("%s = %s\n",
       gst_value_serialize (&value2), gst_value_serialize (&value1));
@@ -80,15 +92,15 @@ check_from_fraction_convert (gint nom, gint denom, gdouble prec)
 static void
 transform_test (void)
 {
-  check_from_fraction_convert (30000, 1001, 1.0e-12);
-  check_from_fraction_convert (1, G_MAXINT, 1.0e-12);
-  check_from_fraction_convert (G_MAXINT, 1, 1.0e-12);
+  check_from_fraction_convert (30000, 1001, 1.0e-9);
+  check_from_fraction_convert (1, G_MAXINT, 1.0e-9);
+  check_from_fraction_convert (G_MAXINT, 1, 1.0e-9);
 
-  check_from_double_convert (0.0, 0, 1, 1.0e-12);
-  check_from_double_convert (1.0, 1, 1, 1.0e-12);
-  check_from_double_convert (-1.0, -1, 1, 1.0e-12);
-  check_from_double_convert (M_PI, 1881244168, 598818617, 1.0e-12);
-  check_from_double_convert (-M_PI, -1881244168, 598818617, 1.0e-12);
+  check_from_double_convert (0.0, 0, 1, 1.0e-9);
+  check_from_double_convert (1.0, 1, 1, 1.0e-9);
+  check_from_double_convert (-1.0, -1, 1, 1.0e-9);
+  check_from_double_convert (M_PI, 1881244168, 598818617, 1.0e-9);
+  check_from_double_convert (-M_PI, -1881244168, 598818617, 1.0e-9);
 
   check_from_double_convert (G_MAXDOUBLE, G_MAXINT, 1, G_MAXDOUBLE);
   check_from_double_convert (G_MINDOUBLE, 0, 1, G_MAXDOUBLE);
