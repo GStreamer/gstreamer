@@ -520,9 +520,13 @@ gst_ffmpegdec_register (GstPlugin *plugin)
 		         GINT_TO_POINTER (0), 
 			 (gpointer) params);
     
-    /* create the gtype now */
+    /* create the gtype now
+     * (Ronald) MPEG-4 gets a higher priority because it has been well-
+     * tested and by far outperforms divxdec/xviddec - so we prefer it. */
     type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
-    if (!gst_element_register (plugin, type_name, GST_RANK_MARGINAL, type)) {
+    if (!gst_element_register (plugin, type_name,
+			       (in_plugin->id == CODEC_ID_MPEG4) ?
+			       GST_RANK_PRIMARY : GST_RANK_MARGINAL, type)) {
       g_free (type_name);
       return FALSE;
     }

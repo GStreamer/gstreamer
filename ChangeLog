@@ -1,5 +1,23 @@
 2004-03-09  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/Makefile.am:
+	  Prevent more symbol conflicts...
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	  Up priority/rank for MPEG-4 decoder. Reason is simple: it's well-
+	  tested and by far outperforms xviddec/divxdec. They'll get some
+	  other, slightly lower, rank.
+	* gst-libs/ext/ffmpeg/patch/autotools.diff:
+	  Tweaking...
+	* gst-libs/ext/ffmpeg/patch/disableinstalllibs.diff:
+	  Prevent more symbol conflicts. I changed this (to pass 'make
+	  distcheck') in the one patch, so need to change it here too.
+	* gst-libs/ext/ffmpeg/patch/disablemmx.diff:
+	  Re-enable MMX. :).
+	* gst-libs/ext/ffmpeg/patch/functions.diff:
+	  Bla.
+
+2004-03-09  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* configure.ac:
 	  Patch properly. Update version.
 	* gst-libs/ext/ffmpeg/Makefile.am:
