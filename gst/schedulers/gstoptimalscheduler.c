@@ -928,6 +928,19 @@ clear_queued (GstData *data, gpointer user_data)
   gst_data_unref (data);
 }
 
+static void
+pad_clear_queued (GstPad *srcpad, gpointer user_data)
+{
+  GList *buflist = GST_PAD_BUFLIST (srcpad);
+
+  if (buflist) {
+    GST_INFO (GST_CAT_SCHEDULING, "need to clear some buffers");
+    g_list_foreach (buflist, (GFunc) clear_queued, NULL);
+    g_list_free (buflist);
+    GST_PAD_BUFLIST (srcpad) = NULL;
+  }
+}
+
 static gboolean
 gst_opt_scheduler_event_wrapper (GstPad *srcpad, GstEvent *event)
 {
@@ -951,19 +964,13 @@ gst_opt_scheduler_event_wrapper (GstPad *srcpad, GstEvent *event)
   }
 
   if (flush) {
-    GList *buflist = GST_PAD_BUFLIST (srcpad);
-
     GST_INFO (GST_CAT_SCHEDULING, "event is flush");
 
-    if (buflist) {
-      GST_INFO (GST_CAT_SCHEDULING, "need to clear some buffers");
-      g_list_foreach (buflist, (GFunc) clear_queued, NULL);
-      g_list_free (buflist);
-      GST_PAD_BUFLIST (srcpad) = NULL;
-    }
+    pad_clear_queued (srcpad, NULL);
   }
   return GST_RPAD_EVENTFUNC (srcpad) (srcpad, event);
 }
+
 
 /* setup the scheduler context for a group. The right schedule function
  * is selected based on the group type and cothreads are created if 
@@ -1054,6 +1061,13 @@ gst_opt_scheduler_state_transition (GstScheduler *sched, GstElement *element, gi
       if (group) 
         group_element_set_enabled (group, element, FALSE);
       break;
+    case GST_STATE_PAUSED_TO_READY:
+    {  
+      GList *pads = (GList *) gst_element_get_pad_list (element);
+
+      g_list_foreach (pads, (GFunc) pad_clear_queued, NULL);
+      break;
+    }
     default:
       break;
   }
