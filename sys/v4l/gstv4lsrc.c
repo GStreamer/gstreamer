@@ -63,7 +63,8 @@ enum
   ARG_BUFSIZE,
   ARG_SYNC_MODE,
   ARG_COPY_MODE,
-  ARG_AUTOPROBE
+  ARG_AUTOPROBE,
+  ARG_LATENCY_OFFSET
 };
 
 GST_FORMATS_FUNCTION (GstPad *, gst_v4lsrc_get_formats,
@@ -212,6 +213,10 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
       g_param_spec_boolean ("autoprobe", "Autoprobe",
           "Whether the device should be probed for all possible features",
           TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LATENCY_OFFSET,
+      g_param_spec_int ("latency-offset", "Latency offset",
+          "A latency offset subtracted from timestamps set on buffers (in ns)",
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
 
   /* signals */
   gst_v4lsrc_signals[SIGNAL_FRAME_CAPTURE] =
@@ -273,6 +278,8 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc)
 
   v4lsrc->is_capturing = FALSE;
   v4lsrc->autoprobe = TRUE;
+
+  v4lsrc->latency_offset = 0;
 }
 
 static void
@@ -956,9 +963,20 @@ gst_v4lsrc_get (GstPad * pad)
     case GST_V4LSRC_SYNC_MODE_CLOCK:
       if (v4lsrc->clock) {
         GstClockTime time = gst_element_get_time (GST_ELEMENT (v4lsrc));
+        GstClockTimeDiff target_ts = 0;
 
-        /* FIXME: figure out a way to add the capture latency here */
-        GST_BUFFER_TIMESTAMP (buf) = time /* + 0.5 * GST_SECOND / fps */ ;
+        /* we can't go negative for timestamps.  FIXME: latency querying
+         * in the core generally should solve this */
+        target_ts = GST_CLOCK_DIFF (time, v4lsrc->latency_offset);
+        if (target_ts < 0)
+          target_ts = 0;
+        /* FIXME: create GST_TIME_DIFF_ARGS for target_ts */
+        GST_LOG_OBJECT (v4lsrc, "time: %" GST_TIME_FORMAT
+            ", latency-offset: %" GST_TIME_FORMAT
+            ", timestamp: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (time), GST_TIME_ARGS (v4lsrc->latency_offset),
+            GST_TIME_ARGS (target_ts));
+        GST_BUFFER_TIMESTAMP (buf) = target_ts;
       } else {
         GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
       }
@@ -1047,6 +1065,11 @@ gst_v4lsrc_set_property (GObject * object,
       }
       break;
 
+    case ARG_LATENCY_OFFSET:
+      v4lsrc->latency_offset = g_value_get_int (value);
+      break;
+
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1086,6 +1109,10 @@ gst_v4lsrc_get_property (GObject * object,
 
     case ARG_AUTOPROBE:
       g_value_set_boolean (value, v4lsrc->autoprobe);
+      break;
+
+    case ARG_LATENCY_OFFSET:
+      g_value_set_int (value, v4lsrc->latency_offset);
       break;
 
     default:

@@ -369,7 +369,7 @@ gst_videorate_chain (GstPad * pad, GstData * data)
           GST_TIME_ARGS (videorate->next_ts));
 
       /* output first one when its the best */
-      if (diff1 <= diff2) {
+      if (diff1 < diff2) {
         GstBuffer *outbuf;
 
         count++;
@@ -389,7 +389,7 @@ gst_videorate_chain (GstPad * pad, GstData * data)
       }
       /* continue while the first one was the best */
     }
-    while (diff1 <= diff2);
+    while (diff1 < diff2);
 
     /* if we outputed the first buffer more then once, we have dups */
     if (count > 1) {

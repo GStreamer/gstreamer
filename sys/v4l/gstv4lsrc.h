@@ -76,6 +76,7 @@ struct _GstV4lSrc
   gint num_queued;
   gint sync_frame, queue_frame;
   gboolean is_capturing;
+  GstClockTimeDiff latency_offset;
 
   /* True if we want to stop */
   gboolean quit;
