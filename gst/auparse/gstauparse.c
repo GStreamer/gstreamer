@@ -49,8 +49,12 @@ static GstStaticPadTemplate gst_auparse_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "       /* does not support 24bit without patch */
+        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS "; "
         "audio/x-alaw, "
+        "rate = (int) [ 8000, 48000 ], "
+        "channels = (int) [ 1, 2 ]; "
+        "audio/x-mulaw, "
         "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
@@ -155,8 +159,7 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
   gchar *data;
   glong size;
   GstCaps *tempcaps;
-  gint law, depth;
-  gboolean sign;
+  gint law, depth, ieee;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -193,9 +196,8 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
       /* and of course, someone had to invent a little endian
        * version.  Used by DEC systems. */
     } else if (GUINT32_FROM_LE (*head) == 0x0064732E) {
-      auparse->le = 1;
       head++;
-      auparse->le = 0;
+      auparse->le = 1;
       auparse->offset = GUINT32_FROM_LE (*head);
       head++;
       auparse->size = GUINT32_FROM_LE (*head);
@@ -222,38 +224,79 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
         auparse->offset, auparse->size, auparse->encoding, auparse->frequency,
         auparse->channels);
 
+/*
+Docs :
+	http://www.opengroup.org/public/pubs/external/auformat.html
+	http://astronomy.swin.edu.au/~pbourke/dataformats/au/
+Samples :
+	http://www.tsp.ece.mcgill.ca/MMSP/Documents/AudioFormats/AU/Samples.html
+*/
+
     switch (auparse->encoding) {
-      case 1:
+
+      case 1:                  /* 8-bit ISDN mu-law */
         law = 1;
         depth = 8;
-        sign = FALSE;
         break;
-      case 2:
+
+      case 2:                  /* 8-bit linear PCM */
         law = 0;
         depth = 8;
-        sign = FALSE;
         break;
-      case 3:
+      case 3:                  /* 16-bit linear PCM */
         law = 0;
         depth = 16;
-        sign = TRUE;
         break;
+      case 4:                  /* 24-bit linear PCM */
+        law = 0;
+        depth = 24;
+        break;
+      case 5:                  /* 32-bit linear PCM */
+        law = 0;
+        depth = 32;
+        break;
+
+      case 27:                 /* 8-bit ISDN a-law */
+        law = 2;
+        depth = 8;
+        break;
+
+      case 6:                  /* 32 bit IEEE floating point */
+        ieee = 1;
+        depth = 32;
+        break;
+      case 7:                  /* 64 bit IEEE floating point */
+        ieee = 1;
+        depth = 64;
+        break;
+
+      case 23:                 /* 4 bit CCITT G721 ADPCM */
+      case 24:                 /* CCITT G722 ADPCM */
+      case 25:                 /* CCITT G723 ADPCM */
+      case 26:                 /* 5 bit CCITT G723 ADPCM */
+
       default:
         g_warning ("help!, dont know how to deal with this format yet\n");
         return;
     }
 
     if (law) {
-      tempcaps = gst_caps_new_simple ("audio/x-alaw",
-          "rate", G_TYPE_INT, auparse->frequency,
-          "channels", G_TYPE_INT, auparse->channels, NULL);
+      tempcaps =
+          gst_caps_new_simple ((law == 1) ? "audio/x-mulaw" : "audio/x-alaw",
+          "rate", G_TYPE_INT, auparse->frequency, "channels", G_TYPE_INT,
+          auparse->channels, NULL);
+    } else if (ieee) {
+      tempcaps = gst_caps_new_simple ("audio/x-raw-float",
+          "width", G_TYPE_INT, depth,
+          "endianness", G_TYPE_INT,
+          auparse->le ? G_LITTLE_ENDIAN : G_BIG_ENDIAN, NULL);
     } else {
       tempcaps = gst_caps_new_simple ("audio/x-raw-int",
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-          "rate", G_TYPE_INT, auparse->frequency,
-          "channels", G_TYPE_INT, auparse->channels,
-          "depth", G_TYPE_INT, depth,
-          "width", G_TYPE_INT, depth, "signed", G_TYPE_BOOLEAN, sign, NULL);
+          "endianness", G_TYPE_INT,
+          auparse->le ? G_LITTLE_ENDIAN : G_BIG_ENDIAN, "rate", G_TYPE_INT,
+          auparse->frequency, "channels", G_TYPE_INT, auparse->channels,
+          "depth", G_TYPE_INT, depth, "width", G_TYPE_INT, depth, "signed",
+          G_TYPE_BOOLEAN, TRUE, NULL);
     }
 
     if (!gst_pad_set_explicit_caps (auparse->srcpad, tempcaps)) {
