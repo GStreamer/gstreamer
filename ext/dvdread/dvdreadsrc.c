@@ -777,10 +777,17 @@ _read (DVDReadSrcPrivate * priv, int angle, int new_seek, GstBuffer * buf)
   if (new_seek)
     priv->cur_cell = priv->start_cell;
 
+again:
+
   if (priv->cur_cell < priv->last_cell) {
     if (priv->new_cell || new_seek) {
-      if (!new_seek)
+      if (!new_seek) {
         priv->cur_cell = priv->next_cell;
+        if (priv->cur_cell >= priv->last_cell) {
+          GST_LOG ("last cell in chapter");
+          goto again;
+        }
+      }
 
       /* take angle into account */
       if (priv->cur_pgc->cell_playback[priv->cur_cell].block_type
