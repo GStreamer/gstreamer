@@ -47,7 +47,7 @@ void gst_meta_unref(GstMeta *meta) {
   if (meta->refcount == 0) {
 //    gst_trace_add_entry(NULL,0,meta,"destroy meta");
     g_free(meta);
-    g_print("freeing metadata\n");
+//    g_print("freeing metadata\n");
   }
 }
 
