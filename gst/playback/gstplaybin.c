@@ -212,10 +212,13 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_VIDEO_SINK:
+      play_bin->video_sink = g_value_get_object (value);
       break;
     case ARG_AUDIO_SINK:
+      play_bin->audio_sink = g_value_get_object (value);
       break;
     case ARG_VIS_PLUGIN:
+      play_bin->visualisation = g_value_get_object (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -235,10 +238,13 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case ARG_VIDEO_SINK:
+      g_value_set_object (value, play_bin->video_sink);
       break;
     case ARG_AUDIO_SINK:
+      g_value_set_object (value, play_bin->audio_sink);
       break;
     case ARG_VIS_PLUGIN:
+      g_value_set_object (value, play_bin->visualisation);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
