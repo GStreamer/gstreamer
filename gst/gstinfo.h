@@ -49,9 +49,11 @@ extern guint32 _gst_debug_categories;
 #define GST_DEBUG_ENABLED
 #endif
 
-#ifndef GST_DEBUG_ENABLE_CATEGORIES
-#define GST_DEBUG_ENABLE_CATEGORIES 0x00000000
-#endif
+//#ifdef GST_DEBUG_ENABLED
+#define GST_DEBUG_ENABLE_CATEGORIES 0xffffffff
+//#else
+//#define GST_DEBUG_ENABLE_CATEGORIES 0x00000000
+//#endif
 
 /* fallback, this should probably be a 'weak' symbol or something */
 G_GNUC_UNUSED static gchar *_debug_string = NULL;

@@ -110,14 +110,14 @@ gst_init_check (int     *argc,
 
 	(*argv)[i] = NULL;
       }
-      else if (!strncmp ("--gst-info-mask=", (*argv)[i], 16)) {
+      else if (!strncmp ("--gst-debug-mask=", (*argv)[i], 17)) {
 	guint32 val;
 
         // handle either 0xHEX or dec
-        if (*((*argv)[i]+17) == 'x') {
-          sscanf ((*argv)[i]+18, "%08x", &val);
+        if (*((*argv)[i]+18) == 'x') {
+          sscanf ((*argv)[i]+19, "%08x", &val);
         } else {
-          sscanf ((*argv)[i]+16, "%d", &val);
+          sscanf ((*argv)[i]+17, "%d", &val);
         }
 
 	gst_debug_set_categories (val);
