@@ -37,6 +37,7 @@ libgstelements_la_SOURCES =	\
 	gstmd5sink.c		\
 	$(multifilesrc)		\
 	$(pipefilter)		\
+	gstmultifdsink.c	\
 	gstshaper.c		\
 	gststatistics.c		\
 	gsttee.c		\

@@ -1,3 +1,15 @@
+2004-06-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/Makefile.am:
+	* gst/elements/gstelements.c:
+	* gst/elements/gstmultifdsink.c: (gst_multifdsink_base_init),
+	(gst_multifdsink_class_init), (gst_multifdsink_init),
+	(gst_multifdsink_add), (gst_multifdsink_remove),
+	(gst_multifdsink_clear), (gst_multifdsink_chain),
+	(gst_multifdsink_set_property), (gst_multifdsink_get_property):
+	* gst/elements/gstmultifdsink.h:
+	Added an element that writes to multiple filedescriptors at once.
+
 2004-06-24  Benjamin Otte  <otte@gnome.org>
 
 	* gst/parse/grammar.y:

@@ -37,6 +37,7 @@
 #include "gstidentity.h"
 #include "gstmd5sink.h"
 #include "gstmultifilesrc.h"
+#include "gstmultifdsink.h"
 #include "gstpipefilter.h"
 #include "gstshaper.h"
 #include "gststatistics.h"
@@ -68,6 +69,7 @@ static struct _elements_entry _elements[] = {
   {"multifilesrc", GST_RANK_NONE, gst_multifilesrc_get_type},
   {"pipefilter", GST_RANK_NONE, gst_pipefilter_get_type},
 #endif
+  {"multifdsink", GST_RANK_NONE, gst_multifdsink_get_type},
   {"shaper", GST_RANK_NONE, gst_shaper_get_type},
   {"statistics", GST_RANK_NONE, gst_statistics_get_type},
   {"tee", GST_RANK_NONE, gst_tee_get_type},
