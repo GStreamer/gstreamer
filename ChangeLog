@@ -1,5 +1,24 @@
 2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstelement.c: (gst_element_error_full):
+	* gst/gstelement.h:
+          change _extended to _full
+
+2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	reviewed by: <delete if not using a buddy>
+
+	* docs/gst/tmpl/gst.sgml:
+	* docs/gst/tmpl/gstbuffer.sgml:
+	* docs/gst/tmpl/gstclock.sgml:
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstreamer-unused.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+	* gst/gstelement.c: (gst_element_error_full):
+	* gst/gstelement.h:
+
+2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstelement.h: fix _gst_element_error_printf prototype
 
 2004-01-20  David Schleef  <ds@schleef.org>

@@ -140,7 +140,7 @@ typedef enum {
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
 #define gst_element_error(el, domain, code, message, debug) G_STMT_START { \
-  gst_element_error_extended (GST_ELEMENT(el), \
+  gst_element_error_full (GST_ELEMENT(el), \
   GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code, \
   _gst_element_error_printf message, \
   _gst_element_error_printf debug, \
@@ -365,8 +365,8 @@ void			gst_element_found_tags_for_pad	(GstElement *element, GstPad *pad, GstCloc
 
 void			gst_element_set_eos		(GstElement *element);
 
-gchar *			_gst_element_error_printf 	(const gchar *format, ...);
-void			gst_element_error_extended	(GstElement *element, GQuark domain, gint code, gchar *message, gchar *debug, const gchar *file, const gchar *function, gint line);
+gchar *			_gst_element_error_printf	(const gchar *format, ...);
+void			gst_element_error_full		(GstElement *element, GQuark domain, gint code, gchar *message, gchar *debug, const gchar *file, const gchar *function, gint line);
 
 gboolean		gst_element_is_locked_state	(GstElement *element);
 void			gst_element_set_locked_state	(GstElement *element, gboolean locked_state);

@@ -2373,7 +2373,7 @@ _gst_element_error_printf (const gchar *format, ...)
 }
 
 /**
- * gst_element_error_extended:
+ * gst_element_error_full:
  * @element: a #GstElement with the error.
  * @domain: the GStreamer error domain this error belongs to.
  * @code: the error code belonging to the domain
@@ -2382,12 +2382,12 @@ _gst_element_error_printf (const gchar *format, ...)
  * debug: an allocated debug message to be used as a replacement for the
  *        default debugging information, or NULL
  *
- * signals an error condition on an element.
+ * Signals an error condition on an element.
  * This function is used internally by elements.
  * It results in the "error" signal.
  */
 void
-gst_element_error_extended
+gst_element_error_full
 (GstElement *element, GQuark domain, gint code, gchar *message, gchar *debug,
  const gchar *file, const gchar *function, gint line)
 {
