@@ -1,3 +1,11 @@
+2005-01-16  Luca Ognibene  <luogni@tin.it>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_link),
+	(gst_ffmpegenc_chain_video):
+	  Workaround memory issues (#162905).
+
 2005-01-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_type_find):

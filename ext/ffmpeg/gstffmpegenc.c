@@ -368,6 +368,9 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
   /* set defaults */
   avcodec_get_context_defaults (ffmpegenc->context);
 
+  /* if we set it in _getcaps we should set it also in _link */
+  ffmpegenc->context->strict_std_compliance = -1;
+
   /* user defined properties */
   ffmpegenc->context->bit_rate = ffmpegenc->bitrate;
   ffmpegenc->context->bit_rate_tolerance = ffmpegenc->bitrate;
@@ -456,36 +459,41 @@ static void
 gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
 {
   GstBuffer *inbuf = GST_BUFFER (_data);
-  GstBuffer *outbuf = NULL;
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (gst_pad_get_parent (pad));
   GstFFMpegEncClass *oclass =
       (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
   gint ret_size = 0;
 
   /* FIXME: events (discont (flush!) and eos (close down) etc.) */
+  if (NULL != ffmpegenc->cache) 
+    gst_buffer_unref (ffmpegenc->cache);
 
-  outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
+  ffmpegenc->cache = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
+
   gst_ffmpeg_avpicture_fill ((AVPicture *) ffmpegenc->picture,
       GST_BUFFER_DATA (inbuf),
       ffmpegenc->context->pix_fmt,
       ffmpegenc->context->width, ffmpegenc->context->height);
+
   ffmpegenc->picture->pts = GST_BUFFER_TIMESTAMP (inbuf) / 1000;
+
+  gst_buffer_ref (ffmpegenc->cache);
   ret_size = avcodec_encode_video (ffmpegenc->context,
-      GST_BUFFER_DATA (outbuf),
-      GST_BUFFER_MAXSIZE (outbuf), ffmpegenc->picture);
+      GST_BUFFER_DATA (ffmpegenc->cache),
+      GST_BUFFER_MAXSIZE (ffmpegenc->cache), ffmpegenc->picture);
 
   if (ret_size < 0) {
     GST_ELEMENT_ERROR (ffmpegenc, LIBRARY, ENCODE, (NULL),
         ("ffenc_%s: failed to encode buffer", oclass->in_plugin->name));
     gst_buffer_unref (inbuf);
-    gst_buffer_unref (outbuf);
+    gst_buffer_unref (ffmpegenc->cache);
     return;
   }
 
-  GST_BUFFER_SIZE (outbuf) = ret_size;
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
-  gst_pad_push (ffmpegenc->srcpad, GST_DATA (outbuf));
+  GST_BUFFER_SIZE (ffmpegenc->cache) = ret_size;
+  GST_BUFFER_TIMESTAMP (ffmpegenc->cache) = GST_BUFFER_TIMESTAMP (inbuf);
+  GST_BUFFER_DURATION (ffmpegenc->cache) = GST_BUFFER_DURATION (inbuf);
+  gst_pad_push (ffmpegenc->srcpad, GST_DATA (ffmpegenc->cache));
 
   gst_buffer_unref (inbuf);
 }
