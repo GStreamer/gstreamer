@@ -3,6 +3,7 @@
 #exec_prefix=
 #includedir=${pcfiledir}/..
 #datadir=${pcfiledir}/..
+pyexecdir=${pcfiledir}/..
 
 # you can use the --variable=pygtkincludedir argument to
 # pkg-config to get this value.  You might want to use this to

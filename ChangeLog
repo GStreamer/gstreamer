@@ -1,3 +1,8 @@
+2004-11-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* pkgconfig/gst-python-uninstalled.pc.in:
+	  set pyexecdir for uninstalled as well
+
 === release 0.7.94 ===
 
 2004-11-05  Thomas Vander Stichele  <thomas at apestaart dot org>
