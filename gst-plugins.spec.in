@@ -162,12 +162,14 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_ARTS_TRUE@%post -n gstreamer-artsd
 @USE_ARTS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
-
 ### ARTS WRAPPER ###
 @USE_ARTSC_TRUE@%package -n gstreamer-arts
 @USE_ARTSC_TRUE@Summary: GStreamer arts wrapper plugin
 @USE_ARTSC_TRUE@Group: Libraries/Multimedia
 @USE_ARTSC_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_ARTSC_TRUE@Requires: kdelibs-sound >= 2
+@USE_ARTSC_TRUE@BuildRequires: kdelibs-sound-devel >= 2
+@USE_ARTSC_TRUE@BuildRequires: gcc-c++
 @USE_ARTSC_TRUE@
 @USE_ARTSC_TRUE@%description -n gstreamer-arts
 @USE_ARTSC_TRUE@Plugin for wrapping arts plugins
