@@ -224,7 +224,7 @@ gst_autoplugcache_loop (GstElement *element)
       // if we've been told to fire an empty signal (after a reset)
       if (cache->fire_empty) {
         int oldstate = GST_STATE(cache);
-        fprintf(stderr,"at front of cache, about to pull, but firing signal\n");
+        GST_DEBUG(0,"at front of cache, about to pull, but firing signal\n");
         gst_object_ref (GST_OBJECT (cache));
         gtk_signal_emit (GTK_OBJECT(cache), gst_autoplugcache_signals[CACHE_EMPTY], NULL);
         if (GST_STATE(cache) != oldstate) {
@@ -315,7 +315,7 @@ GST_DEBUG(0,"caps_proxy is %d\n",cache->caps_proxy);
     case ARG_RESET:
       // no idea why anyone would set this to FALSE, but just in case ;-)
       if (GTK_VALUE_BOOL(*arg)) {
-        fprintf(stderr,"resetting playout pointer\n");
+        GST_DEBUG(0,"resetting playout pointer\n");
         // reset the playout pointer to the begining again
         cache->current_playout = cache->cache_start;
         // now we can fire a signal when the cache runs dry
