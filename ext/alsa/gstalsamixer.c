@@ -31,14 +31,14 @@ static GstElementDetails gst_alsa_mixer_details = GST_ELEMENT_DETAILS (
   "Leif Johnson <leif@ambient.2y.net>"
 );
 
-static void			gst_alsa_interface_init		(GstInterfaceClass *klass);
+static void			gst_alsa_interface_init		(GstImplementsInterfaceClass *klass);
 
 static void			gst_alsa_mixer_class_init	(gpointer       g_class,
                                                                  gpointer       class_data);
 static void			gst_alsa_mixer_init		(GstAlsaMixer *	mixer);
 static void			gst_alsa_mixer_dispose		(GObject *	object);
 static void			gst_alsa_mixer_interface_init	(GstMixerClass*	klass);
-static gboolean			gst_alsa_mixer_supported	(GstInterface *	iface,
+static gboolean			gst_alsa_mixer_supported	(GstImplementsInterface *	iface,
 								 GType		iface_type);
 
 /* GStreamer stuff */
@@ -98,7 +98,7 @@ gst_alsa_mixer_get_type (void)
 
     alsa_mixer_type = g_type_register_static (GST_TYPE_ALSA, "GstAlsaMixer", &alsa_mixer_info, 0);
 
-    g_type_add_interface_static (alsa_mixer_type, GST_TYPE_INTERFACE, &alsa_iface_info);
+    g_type_add_interface_static (alsa_mixer_type, GST_TYPE_IMPLEMENTS_INTERFACE, &alsa_iface_info);
     g_type_add_interface_static (alsa_mixer_type, GST_TYPE_MIXER, &alsa_mixer_iface_info);
   }
 
@@ -180,7 +180,7 @@ gst_alsa_mixer_dispose (GObject * object)
 }
 
 static void
-gst_alsa_interface_init (GstInterfaceClass *klass)
+gst_alsa_interface_init (GstImplementsInterfaceClass *klass)
 {
   klass->supported = gst_alsa_mixer_supported;
 }
@@ -197,7 +197,7 @@ gst_alsa_mixer_interface_init (GstMixerClass *klass)
 }
 
 gboolean
-gst_alsa_mixer_supported (GstInterface *iface, GType iface_type)
+gst_alsa_mixer_supported (GstImplementsInterface *iface, GType iface_type)
 {
   g_assert (iface_type == GST_TYPE_MIXER);
 
