@@ -39,6 +39,7 @@
 #endif
 
 #define MAX_PATH_SPLIT	16
+#define GST_PLUGIN_SEPARATOR ","
 
 gchar *_gst_progname;
 
@@ -48,6 +49,9 @@ extern gboolean _gst_plugin_spew;
 
 
 static gboolean 	gst_init_check 		(int *argc, gchar ***argv);
+static void 		load_plugin_func 	(gpointer data, gpointer user_data);
+
+static GSList *preload_plugins = NULL;
 
 /**
  * gst_init:
@@ -109,6 +113,13 @@ gst_init (int *argc, char **argv[])
   _gst_buffer_initialize ();
   _gst_buffer_pool_initialize ();
 
+  /* if we need to preload plugins */
+  if (preload_plugins) {
+    g_slist_foreach (preload_plugins, load_plugin_func, NULL);
+    g_slist_free (preload_plugins);
+    preload_plugins = NULL;
+  }
+
   /* register some standard builtin types */
   gst_elementfactory_new ("bin", gst_bin_get_type (), &gst_bin_details);
   gst_elementfactory_new ("pipeline", gst_pipeline_get_type (), &gst_pipeline_details);
@@ -128,29 +139,56 @@ gst_init (int *argc, char **argv[])
 }
 
 static void
-gst_add_paths_func (const gchar *pathlist) 
+split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator) 
 {
-  gchar **paths;
+  gchar **strings;
   gint j = 0;
-  gchar *lastpath = g_strdup (pathlist);
+  gchar *lastlist = g_strdup (stringlist);
 
-  while (lastpath) {
-    paths = g_strsplit (lastpath, G_SEARCHPATH_SEPARATOR_S, MAX_PATH_SPLIT);
-    g_free (lastpath);
-    lastpath = NULL;
+  while (lastlist) {
+    strings = g_strsplit (lastlist, separator, MAX_PATH_SPLIT);
+    //strings = g_strsplit (lastlist, G_SEARCHPATH_SEPARATOR_S, MAX_PATH_SPLIT);
+    g_free (lastlist);
+    lastlist = NULL;
 
-    while (paths[j]) {
-      GST_INFO (GST_CAT_GST_INIT, "Adding plugin path: \"%s\"", paths[j]);
-      gst_plugin_add_path (paths[j]);
+    while (strings[j]) {
+      iterator (strings[j], NULL);
       if (++j == MAX_PATH_SPLIT) {
-        lastpath = g_strdup (paths[j]);
-        g_strfreev (paths); 
+        lastlist = g_strdup (strings[j]);
+        g_strfreev (strings); 
         j=0;
         break;
       }
     }
   }
 }
+
+static void 
+add_path_func (gpointer data, gpointer user_data)
+{
+  GST_INFO (GST_CAT_GST_INIT, "Adding plugin path: \"%s\"", (gchar *)data);
+  gst_plugin_add_path ((gchar *)data);
+}
+
+static void 
+prepare_for_load_plugin_func (gpointer data, gpointer user_data)
+{
+  preload_plugins = g_slist_prepend (preload_plugins, data);
+}
+
+static void 
+load_plugin_func (gpointer data, gpointer user_data)
+{
+  gboolean ret;
+  ret = gst_plugin_load ((gchar *)data);
+  if (ret)
+    GST_INFO (GST_CAT_GST_INIT, "Loaded plugin: \"%s\"", (gchar *)data);
+  else
+    GST_INFO (GST_CAT_GST_INIT, "Failed to load plugin: \"%s\"", (gchar *)data);
+
+  g_free (data);
+}
+
 
 /* returns FALSE if the program can be aborted */
 static gboolean
@@ -217,7 +255,12 @@ gst_init_check (int     *argc,
         (*argv)[i] = NULL;
       }
       else if (!strncmp ("--gst-plugin-path=", (*argv)[i], 17)) {
-	gst_add_paths_func ((*argv)[i]+18);
+        split_and_iterate ((*argv)[i]+18, G_SEARCHPATH_SEPARATOR_S, add_path_func);
+
+        (*argv)[i] = NULL;
+      }
+      else if (!strncmp ("--gst-plugin-load=", (*argv)[i], 17)) {
+        split_and_iterate ((*argv)[i]+18, ",", prepare_for_load_plugin_func);
 
         (*argv)[i] = NULL;
       }
@@ -248,7 +291,7 @@ gst_init_check (int     *argc,
   /* check for ENV variables */
   {
     const gchar *plugin_path = g_getenv("GST_PLUGIN_PATH");
-    gst_add_paths_func (plugin_path);
+    split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func);
   }
 
   if (showhelp) {
@@ -263,6 +306,8 @@ gst_init_check (int     *argc,
     g_print ("  --gst-plugin-spew                   Enable printout of errors while loading GST plugins\n");
     g_print ("  --gst-plugin-path=PATH              Add directories separated with '%s' to the plugin search path\n",
 		    G_SEARCHPATH_SEPARATOR_S);
+    g_print ("  --gst-plugin-load=PLUGINS           Load plugins separated with '%s'\n",
+		    GST_PLUGIN_SEPARATOR);
 
     g_print ("\n  Mask (to be OR'ed)   info/debug         FLAGS   \n");
     g_print ("--------------------------------------------------------\n");

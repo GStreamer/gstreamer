@@ -1419,7 +1419,7 @@ GST_DEBUG(GST_CAT_SCHEDULING,"there are %d elements in this chain\n",chain->num_
 
         } else {
           GST_INFO (GST_CAT_DATAFLOW,"NO ENTRY INTO CHAIN!");
-	  eos = TRUE;
+	  //eos = TRUE;
         }
       } else {
         GST_INFO (GST_CAT_DATAFLOW,"NO ENABLED ELEMENTS IN CHAIN!!");
