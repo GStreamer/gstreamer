@@ -21,7 +21,7 @@
 #define __V4L_CALLS_H__
 
 #include "gstv4lelement.h"
-#include "gst-libs/gst/gst-i18n-plugin.h"
+#include "gst/gst-i18n-plugin.h"
 
 #ifdef __cplusplus
 extern "C" {
