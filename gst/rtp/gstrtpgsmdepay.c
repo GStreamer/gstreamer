@@ -12,6 +12,10 @@
  * Library General Public License for more 
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <string.h>
 #include "gstrtpgsmparse.h"
 #include "gstrtp-common.h"

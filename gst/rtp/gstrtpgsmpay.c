@@ -17,6 +17,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <string.h>
 #include "gstrtpgsmenc.h"
 
@@ -53,7 +57,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
     			"audio/x-gsm",
       			"rate",       GST_PROPS_INT_RANGE (1000, 48000)
 		)
-);
+)
 
 GST_PAD_TEMPLATE_FACTORY (src_factory,
 		"src",
@@ -63,7 +67,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
 			"rtp",
 			"application/x-rtp",
 			NULL)
-);
+)
 
 static void gst_rtpgsmenc_class_init (GstRtpGSMEncClass * klass);
 static void gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc);
@@ -186,7 +190,7 @@ gst_rtpgsmenc_chain (GstPad * pad, GstBuffer * buf)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
-	GST_DEBUG (GST_CAT_EVENT, "discont"); 
+	GST_DEBUG ("discont"); 
         rtpgsmenc->next_time = 0;
         gst_pad_event_default (pad, event);
 	return;
