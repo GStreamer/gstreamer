@@ -1392,8 +1392,8 @@ gst_pad_pull (GstPad *pad)
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
 
   if (peer->pullfunc) {
-    GST_DEBUG (GST_CAT_DATAFLOW,"calling pullfunc &%s (@%p) of peer pad %s:%s\n",
-      GST_DEBUG_FUNCPTR_NAME(peer->pullfunc),&peer->pullfunc,GST_DEBUG_PAD_NAME(((GstPad*)peer)));
+    GST_DEBUG (GST_CAT_DATAFLOW,"calling pullfunc %s of peer pad %s:%s\n",
+      GST_DEBUG_FUNCPTR_NAME(peer->pullfunc),GST_DEBUG_PAD_NAME(peer));
     return (peer->pullfunc)(((GstPad*)peer));
   } else {
     GST_DEBUG (GST_CAT_DATAFLOW,"no pullfunc for peer pad %s:%s at %p\n",GST_DEBUG_PAD_NAME(((GstPad*)peer)),&peer->pullfunc);

@@ -82,8 +82,8 @@ gst_get_category_name (gint category) {
  */
 const gchar *_gst_category_colors[32] = {
   [GST_CAT_GST_INIT]		= "07;37",
-  [GST_CAT_COTHREADS]		= "07;32",
-  [GST_CAT_COTHREAD_SWITCH]	= "01;37;42",
+  [GST_CAT_COTHREADS]		= "00;32",
+  [GST_CAT_COTHREAD_SWITCH]	= "00;37;42",
   [GST_CAT_AUTOPLUG]		= "00;34",
   [GST_CAT_AUTOPLUG_ATTEMPT]	= "00;36;44",
   [GST_CAT_PARENTAGE]		= "01;37;41",		// !!

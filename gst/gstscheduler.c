@@ -27,7 +27,7 @@
 
 
 static int
-gst_bin_loopfunc_wrapper (int argc,char *argv[])
+gst_schedule_loopfunc_wrapper (int argc,char *argv[])
 {
   GstElement *element = GST_ELEMENT (argv);
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
@@ -36,7 +36,7 @@ gst_bin_loopfunc_wrapper (int argc,char *argv[])
 
   do {
     GST_DEBUG (GST_CAT_DATAFLOW,"calling loopfunc %s for element %s\n",
-          GST_DEBUG_FUNCPTR_NAME (element->loopfunc),name);
+               GST_DEBUG_FUNCPTR_NAME (element->loopfunc),name);
     (element->loopfunc) (element);
     GST_DEBUG (GST_CAT_DATAFLOW,"element %s ended loop function\n", name);
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
@@ -47,7 +47,7 @@ gst_bin_loopfunc_wrapper (int argc,char *argv[])
 }
 
 static int
-gst_bin_chain_wrapper (int argc,char *argv[])
+gst_schedule_chain_wrapper (int argc,char *argv[])
 {
   GstElement *element = GST_ELEMENT (argv);
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
@@ -57,6 +57,7 @@ gst_bin_chain_wrapper (int argc,char *argv[])
   GstBuffer *buf;
 
   GST_DEBUG_ENTER("(\"%s\")",name);
+
   GST_DEBUG (GST_CAT_DATAFLOW,"stepping through pads\n");
   do {
     pads = element->pads;
@@ -81,7 +82,7 @@ gst_bin_chain_wrapper (int argc,char *argv[])
 }
 
 static int
-gst_bin_src_wrapper (int argc,char *argv[])
+gst_schedule_src_wrapper (int argc,char *argv[])
 {
   GstElement *element = GST_ELEMENT (argv);
   GList *pads;
@@ -126,7 +127,7 @@ gst_bin_src_wrapper (int argc,char *argv[])
 }
 
 static void
-gst_bin_pushfunc_proxy (GstPad *pad, GstBuffer *buf)
+gst_schedule_pushfunc_proxy (GstPad *pad, GstBuffer *buf)
 {
   GstRealPad *peer = GST_RPAD_PEER(pad);
 
@@ -156,7 +157,7 @@ gst_bin_pushfunc_proxy (GstPad *pad, GstBuffer *buf)
 }
 
 static GstBuffer*
-gst_bin_pullfunc_proxy (GstPad *pad)
+gst_schedule_pullfunc_proxy (GstPad *pad)
 {
   GstBuffer *buf;
   GstRealPad *peer = GST_RPAD_PEER(pad);
@@ -186,7 +187,7 @@ gst_bin_pullfunc_proxy (GstPad *pad)
 }
 
 static GstBuffer*
-gst_bin_pullregionfunc_proxy (GstPad *pad,GstRegionType type,guint64 offset,guint64 len)
+gst_schedule_pullregionfunc_proxy (GstPad *pad,GstRegionType type,guint64 offset,guint64 len)
 {
   GstBuffer *buf;
   GstRealPad *peer = GST_RPAD_PEER(pad);
@@ -247,7 +248,7 @@ gst_schedule_cothreaded_chain (GstBin *bin, GstScheduleChain *chain) {
 
     // if the element has a loopfunc...
     if (element->loopfunc != NULL) {
-      wrapper_function = GST_DEBUG_FUNCPTR(gst_bin_loopfunc_wrapper);
+      wrapper_function = GST_DEBUG_FUNCPTR(gst_schedule_loopfunc_wrapper);
       GST_DEBUG (GST_CAT_SCHEDULING,"element '%s' is a loop-based\n",GST_ELEMENT_NAME(element));
     } else {
       // otherwise we need to decide what kind of cothread
@@ -255,10 +256,10 @@ gst_schedule_cothreaded_chain (GstBin *bin, GstScheduleChain *chain) {
       if (!GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
         // if it doesn't have any sinks, it must be a source (duh)
         if (element->numsinkpads == 0) {
-          wrapper_function = GST_DEBUG_FUNCPTR(gst_bin_src_wrapper);
+          wrapper_function = GST_DEBUG_FUNCPTR(gst_schedule_src_wrapper);
           GST_DEBUG (GST_CAT_SCHEDULING,"element '%s' is a source, using _src_wrapper\n",GST_ELEMENT_NAME(element));
         } else {
-          wrapper_function = GST_DEBUG_FUNCPTR(gst_bin_chain_wrapper);
+          wrapper_function = GST_DEBUG_FUNCPTR(gst_schedule_chain_wrapper);
           GST_DEBUG (GST_CAT_SCHEDULING,"element '%s' is a filter, using _chain_wrapper\n",GST_ELEMENT_NAME(element));
         }
       }
@@ -290,11 +291,11 @@ gst_schedule_cothreaded_chain (GstBin *bin, GstScheduleChain *chain) {
       } else {
         if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
           GST_DEBUG (GST_CAT_SCHEDULING,"setting cothreaded push proxy for sinkpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-          GST_RPAD_PUSHFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pushfunc_proxy);
+          GST_RPAD_PUSHFUNC(pad) = GST_DEBUG_FUNCPTR(gst_schedule_pushfunc_proxy);
         } else {
           GST_DEBUG (GST_CAT_SCHEDULING,"setting cothreaded pull proxy for srcpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-          GST_RPAD_PULLFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
-          GST_RPAD_PULLREGIONFUNC(pad) = GST_DEBUG_FUNCPTR(gst_bin_pullregionfunc_proxy);
+          GST_RPAD_PULLFUNC(pad) = GST_DEBUG_FUNCPTR(gst_schedule_pullfunc_proxy);
+          GST_RPAD_PULLREGIONFUNC(pad) = GST_DEBUG_FUNCPTR(gst_schedule_pullregionfunc_proxy);
         }
       }
     }
