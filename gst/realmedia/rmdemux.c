@@ -505,23 +505,35 @@ gst_rmdemux_get_stream_by_id (GstRMDemux * rmdemux, int id)
 void
 gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 {
+  int version = 0;
+
   if (stream->subtype == GST_RMDEMUX_STREAM_VIDEO) {
     stream->pad =
         gst_pad_new_from_template (gst_static_pad_template_get
         (&gst_rmdemux_videosrc_template), g_strdup_printf ("video_%02d",
             rmdemux->n_video_streams));
     switch (stream->fourcc) {
-      case GST_MAKE_FOURCC ('R', 'V', '1', '0'):
-      case GST_MAKE_FOURCC ('R', 'V', '2', '0'):
-      case GST_MAKE_FOURCC ('R', 'V', '3', '0'):
-      case GST_MAKE_FOURCC ('R', 'V', '4', '0'):
-        stream->caps = gst_caps_new_simple ("video/x-pn-realvideo", NULL);
-/*           "systemstream", G_TYPE_BOOLEAN, FALSE,
-            "rmversion", G_TYPE_INT, version, NULL); */
+      case GST_RM_VDO_RV10:
+        version = 1;
+        break;
+      case GST_RM_VDO_RV20:
+        version = 2;
+        break;
+      case GST_RM_VDO_RV30:
+        version = 3;
+        break;
+      case GST_RM_VDO_RV40:
+        version = 4;
         break;
       default:
         g_print ("Unknown video FOURCC code\n");
     }
+    if (version) {
+      stream->caps =
+          gst_caps_new_simple ("video/x-pn-realvideo", "rmversion", G_TYPE_INT,
+          (int) version, NULL);
+    }
+
     if (stream->caps) {
       gst_caps_set_simple (stream->caps,
           "width", G_TYPE_INT, stream->width,
@@ -534,14 +546,48 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         (&gst_rmdemux_audiosrc_template), g_strdup_printf ("audio_%02d",
             rmdemux->n_audio_streams));
     switch (stream->fourcc) {
-      case GST_MAKE_FOURCC ('.', 'r', 'a', '4'):
-      case GST_MAKE_FOURCC ('.', 'r', 'a', '5'):
-        stream->caps = gst_caps_new_simple ("audio/x-pn-realaudio", NULL);
-/*             "raversion", G_TYPE_INT, version, NULL); */
+        /* Older RealAudio Codecs */
+      case GST_RM_AUD_14_4:
+        version = 1;
+      case GST_RM_AUD_28_8:
+        version = 2;
         break;
+
+        /* DolbyNet (Dolby AC3, low bitrate) */
+      case GST_RM_AUD_DNET:
+        stream->caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+        break;
+
+        /* MPEG-4 based */
+      case GST_RM_AUD_RAAC:
+      case GST_RM_AUD_RACP:
+        stream->caps =
+            gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT,
+            (int) 4, NULL);
+        break;
+
+        /* RealAudio audio/RALF is lossless */
+      case GST_RM_AUD_COOK:
+      case GST_RM_AUD_RALF:
+
+        /* Sipro/ACELP-NET Voice Codec */
+      case GST_RM_AUD_SIPR:
+
+        /* Sony ATRAC3 */
+      case GST_RM_AUD_ATRC:
+        g_print ("Nothing known to decode this audio FOURCC code\n");
+        break;
+
       default:
         g_print ("Unknown audio FOURCC code\n");
     }
+
+    if (version) {
+      stream->caps =
+          gst_caps_new_simple ("audio/x-pn-realaudio", "raversion", G_TYPE_INT,
+          (int) version, NULL);
+    }
+
     if (stream->caps) {
       gst_caps_set_simple (stream->caps,
           "rate", G_TYPE_INT, (int) stream->rate,
@@ -731,6 +777,8 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, void *data, int length)
 
   stream->subtype = stream_type;
   switch (stream_type) {
+      int audio_fourcc_offset;
+
     case GST_RMDEMUX_STREAM_VIDEO:
       /* RV10/RV20/RV30/RV40 => video/x-pn-realvideo, version=1,2,3,4 */
       stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 8);
@@ -740,11 +788,25 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, void *data, int length)
       stream->rate = RMDEMUX_GUINT16_GET (data + offset + 16);
       break;
     case GST_RMDEMUX_STREAM_AUDIO:
-      /* .ra4/.ra5 => audio/x-pn-realaudio, version=4,5 */
+      /* .ra4/.ra5 */
       stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 8);
 
       stream->rate = RMDEMUX_GUINT32_GET (data + offset + 48);
-      /* cook (cook), sipro (sipr), dnet (dnet) */
+
+      switch (stream->fourcc) {
+        case GST_RM_AUD_xRA4:
+          audio_fourcc_offset = 62;
+          break;
+        case GST_RM_AUD_xRA5:
+          audio_fourcc_offset = 66;
+          break;
+        default:
+          g_print ("Unknown audio stream format\n");
+      }
+
+      /*  14_4, 28_8, cook, dnet, sipr, raac, racp, ralf, atrc */
+      stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + audio_fourcc_offset);
+
       break;
     case GST_RMDEMUX_STREAM_FILEINFO:
     {
