@@ -213,9 +213,9 @@ print_element_properties (GstElement *element)
       case G_TYPE_DOUBLE: 
       {
 	GParamSpecDouble *pdouble = G_PARAM_SPEC_DOUBLE (param);
-	printf("%-23.23s Double. Default: %15.7e\n", "", 
+	printf("%-23.23s Double. Default: %15.7g\n", "", 
 		g_value_get_double (&value));
-	printf("%-23.23s Range: %15.7e - %15.7e", "", 
+	printf("%-23.23s Range: %15.7g - %15.7g", "", 
 	       pdouble->minimum, pdouble->maximum);
 	break;
       }
