@@ -55,14 +55,6 @@ clock providers in the bin.
 
 </para>
 
-<!-- ##### MACRO GST_BIN_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-
 <!-- ##### ENUM GstBinFlags ##### -->
 <para>
 Flags for a bin.

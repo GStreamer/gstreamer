@@ -1,6 +1,5 @@
 <SECTION>
 <FILE>gstbin</FILE>
-GST_BIN_CLASS
 GstBinFlags
 <TITLE>GstBin</TITLE>
 gst_bin_new
@@ -24,6 +23,7 @@ GST_BIN
 GST_IS_BIN
 GST_TYPE_BIN
 gst_bin_get_type
+GST_BIN_CLASS
 GST_IS_BIN_CLASS
 GST_BIN_GET_CLASS
 </SECTION>

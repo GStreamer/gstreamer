@@ -44,9 +44,6 @@
 <!ENTITY GstValue SYSTEM "xml/gstvalue.xml">
 <!ENTITY GstXML SYSTEM "xml/gstxml.xml">
 <!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
-<!-- these are elements without API docs
-...
--->
 
 <!ENTITY GstAggregator SYSTEM "xml/gstaggregator.xml">
 <!ENTITY GstFakeSrc SYSTEM "xml/gstfakesrc.xml">
@@ -101,9 +98,6 @@ with some more specialized elements.</para>
     &GstPluginFeature;
     &GstProbe;
     &GstQuery;
-<!-- no API docs
-...
--->
     &GstQueue;
     &GstRegistry;
     &GstRegistryPool;

@@ -124,6 +124,8 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 </para>
 
+@:
+
 @gstelement: the object which received the signal.
 
 <!-- ##### SIGNAL GstElement::pad-removed ##### -->

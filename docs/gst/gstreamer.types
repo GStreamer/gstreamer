@@ -1,4 +1,5 @@
 #include <gst/gst.h>
+#include <gst/gstqueue.h>
 
 gst_object_get_type
 gst_element_get_type
@@ -18,4 +19,3 @@ gst_index_get_type
 gst_index_factory_get_type
 gst_xml_get_type
 gst_queue_get_type
-gst_xml_registry_get_type

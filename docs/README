@@ -29,7 +29,7 @@ OVERVIEW
     - in .fig
     - in .png (and maybe others)
 * We want to generate docs in HTML, PS and PDF
-* We want to use xmlto to generate these
+* We want to use xml to to generate these
 
 CONVENTIONS
 -----------
@@ -92,9 +92,17 @@ GTK-DOC NOTES
 
 * files under CVS control:
   - Makefile.am
-  - gstreamer-sections.txt, gstreamer.types.in, gstreamer-docs.sgml
+  - gstreamer-sections.txt
+    describes which symbols later appear on one api-doc page
+    configure which symbols are shown/invisible/private
+  - gstreamer.types
+    the types file lists all get_type() functions that register the GObject types
+  - gstreamer-docs.sgml
+    defines the overall structure of the api documentation
   - tmpl/
-  (FIXME: describe what each of these files do)
+    - only add the file to CVS if you have at least filled the short description
+      (filename corresponds to the <FILE> tag in the sections file)
+    - document as much as possible in the source (*.c files)
 
 * what to do when adding a new piece of API:
   - add both an entity and use the entity in gstreamer-docs.sgml
@@ -122,8 +130,8 @@ GTK-DOC NOTES
   - Warning: multiple "IDs" for constraint linkend: gst-tag-register.
     - check if gst_tag_register is listed more than once in -sections.txt
 
-WBSITE DOCUMENTATION
-====================
+WEBSITE DOCUMENTATION
+=====================
 
 Updating the online documentation is pretty simple.
 Make sure that you
