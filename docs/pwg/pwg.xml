@@ -33,7 +33,7 @@
 <!ENTITY APPENDIX_PYTHON      SYSTEM "appendix_python.xml">
 
 <!ENTITY GStreamer    "<application>GStreamer</application>">
-<!ENTITY GstVersion   "0.4.2.2">
+<!ENTITY GstVersion   "0.7.4">
 <!ENTITY GstAppDevMan "<emphasis>GStreamer Application Development Manual</emphasis>">
 <!ENTITY GstLibRef    "<emphasis>GStreamer Library Reference</emphasis>">
 ]>

@@ -41,6 +41,17 @@
 	  </para>
 	</authorblurb>
       </author>
+
+      <author>
+        <firstname>Ronald</firstname>
+        <othername>S.</othername>
+        <surname>Bultje</surname>
+        <authorblurb>
+          <para>
+            <email>rbultje@ronald.bitfreak.net</email>
+          </para>
+        </authorblurb>
+      </author>
     </authorgroup>
 
     <legalnotice id="legalnotice">

@@ -85,4 +85,583 @@
     <para>
     </para>
   </sect1>
+
+  <!-- ############ sect1 ############# -->
+                                                                                
+  <sect1 id="sect1-types-definitions" xreflabel="List of Defined Types">
+    <title>List of Defined Types</title>
+      <para>
+        Below is a list of all the defined types in &GStreamer;. They are split
+        up in separate tables for audio, video, container, text and other
+        types, for the sake of readability. Below each table might follow a
+        list of notes that apply to that table. In the definition of each type,
+        we try to follow the types and rules as defined by <ulink type="http"
+        url="http://www.isi.edu/in-notes/iana/assignments/media-types/media-types">
+        IANA</ulink> for as far as possible.
+      </para>
+      <para>
+        Note that many of the properties are not <emphasis>required</emphasis>,
+        but rather <emphasis>optional</emphasis> properties. This means that
+        most of these properties can be extracted from the container header,
+        but that - in case the container header does not provide these - they
+        can also be extracted by parsing the stream header or the stream
+        content. The policy is that your element should provide the data that
+        it knows about by only parsing its own content, not another element's
+        content. Example: the AVI header provides samplerate of the contained
+        audio stream in the header. MPEG system streams don't. This means that
+        an AVI stream demuxer would provide samplerate as a property for MPEG
+        audio streams, whereas an MPEG demuxer would not.
+      </para>
+
+      <table frame="all" id="table-audio-types" xreflabel="Table of Audio Types">
+        <title>Table of Audio Types</title>
+        <tgroup cols="6" align="left" colsep="1" rowsep="1">
+        <colspec colnum="1" colname="cola1" colwidth="1*"/>
+        <colspec colnum="6" colname="cola6" colwidth="6*"/>
+        <spanspec spanname="fullwidth" namest="cola1" nameend="cola6"/>
+
+        <thead>
+          <row>
+            <entry>Mime Type</entry>
+            <entry>Description</entry>
+            <entry>Property</entry>
+            <entry>Property Type</entry>
+            <entry>Property Values</entry>
+            <entry>Property Description</entry>
+          </row>
+        </thead>
+
+        <tbody valign="top">
+
+          <!-- ############ subtitle ############# -->
+
+          <row>
+            <entry spanname="fullwidth">
+              <emphasis>All audio types.</emphasis>
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry morerows="1">audio/*</entry>
+            <entry morerows="1">
+              <emphasis>All audio types</emphasis>
+            </entry>
+            <entry>rate</entry>
+            <entry>integer</entry>
+            <entry>greater than 0</entry>
+            <entry>
+              The sample rate of the data, in samples (per channel) per second.
+            </entry>
+          </row>
+          <row>
+            <entry>channels</entry>
+            <entry>integer</entry>
+            <entry>greater than 0</entry>
+            <entry>
+              The number of channels of audio data.
+            </entry>
+          </row>
+
+          <!-- ############ subtitle ############# -->
+                                                                                
+          <row>
+            <entry spanname="fullwidth">
+              <emphasis>All raw audio types.</emphasis>
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry morerows="3">audio/x-raw-int</entry>
+            <entry morerows="3">
+              Unstructured and uncompressed raw fixed-integer audio data.
+            </entry>
+            <entry>endianness</entry>
+            <entry>integer</entry>
+            <entry>G_BIG_ENDIAN (1234) or G_LITTLE_ENDIAN (4321)</entry>
+            <entry>
+              The order of bytes in a sample. The value G_LITTLE_ENDIAN (4321)
+              means <quote>little-endian</quote> (byte-order is <quote>least
+              significant byte first</quote>). The value G_BIG_ENDIAN (1234)
+              means <quote>big-endian</quote> (byte order is <quote>most
+              significant byte first</quote>).
+            </entry>
+          </row>
+          <row>
+            <entry>signed</entry>
+            <entry>boolean</entry>
+            <entry>TRUE or FALSE</entry>
+            <entry>
+              Whether the values of the integer samples are signed or not.
+              Signed samples use one bit to indicate sign (negative or
+              positive) of the value. Unsigned samples are always positive.
+            </entry>
+          </row>
+          <row>
+            <entry>width</entry>
+            <entry>integer</entry>
+            <entry>greater than 0</entry>
+            <entry>
+              Number of bits allocated per sample.
+            </entry>
+          </row>
+          <row>
+            <entry>depth</entry>
+            <entry>integer</entry>
+            <entry>greater than 0</entry>
+            <entry>
+              The number of bits used per sample. This must be less than or
+              equal to the width: If the depth is less than the width, the
+              low bits are assumed to be the ones used. For example, a width
+              of 32 and a depth of 24 means that each sample is stored in a
+              32 bit word, but only the low 24 bits are actually used.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry morerows="2">audio/x-raw-float</entry>
+            <entry morerows="2">
+              Unstructured and uncompressed raw floating-point audio data.
+            </entry>
+            <entry>endianness</entry>
+            <entry>integer</entry>
+            <entry>G_BIG_ENDIAN (1234) or G_LITTLE_ENDIAN (4321)</entry>
+            <entry>
+              The order of bytes in a sample. The value G_LITTLE_ENDIAN (4321)
+              means <quote>little-endian</quote> (byte-order is <quote>least
+              significant byte first</quote>). The value G_BIG_ENDIAN (1234)
+              means <quote>big-endian</quote> (byte order is <quote>most
+              significant byte first</quote>).
+            </entry>
+          </row>
+          <row>
+            <entry>width</entry>
+            <entry>integer</entry>
+            <entry>greater than 0</entry>
+            <entry>
+              The amount of bits used and allocated per sample.
+            </entry>
+          </row>
+          <row>
+            <entry>buffer-frames</entry>
+            <entry>integer</entry>
+            <entry>greater than 0</entry>
+            <entry>
+              The number of frames per buffer. The reason for this property
+              is that the element does not need to reuse buffers or use data
+              spanned over multiple buffers, so this property - when used
+              rightly - will decrease latency. Note that some people think that
+              this property is very ugly, whereas others think it is vital for
+              the use of &GStreamer; in professional audio applications.
+            </entry>
+          </row>
+
+          <!-- ############ subtitle ############# -->
+
+          <row>
+            <entry spanname="fullwidth">
+              <emphasis>All encoded audio types.</emphasis>
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-ac3</entry>
+            <entry>AC-3 or A52 audio streams.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-adpcm</entry>
+            <entry>ADPCM Audio streams.</entry>
+            <entry>layout</entry>
+            <entry>string</entry>
+            <entry>
+              <quote>quicktime</quote>, <quote>wav</quote>,
+              <quote>microsoft</quote> or <quote>4xm</quote>.
+            </entry>
+            <entry>
+              The layout defines the packing of the samples in the stream. In
+              ADPCM, most formats store multiple samples per channel together.
+              This number of samples differs per format, hence the different
+              layouts. On the long term, we probably want this variable to die
+              and use something more descriptive, but this will do for now.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-dv</entry>
+            <entry>Audio as provided in a Digital Video stream.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-flac</entry>
+            <entry>Free Lossless Audio codec (FLAC).</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-gsm</entry>
+            <entry>Data encoded by the GSM codec.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-alaw</entry>
+            <entry>A-Law Audio.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-mulaw</entry>
+            <entry>Mu-Law Audio.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-mace</entry>
+            <entry>MACE Audio (used in Quicktime).</entry>
+            <entry>maceversion</entry>
+            <entry>integer</entry>
+            <entry>3 or 6</entry>
+            <entry>
+              The version of the MACE audio codec used to encode the stream.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry morerows="3">audio/mpeg</entry>
+            <entry morerows="3">
+              Audio data compressed using the MPEG audio encoding scehem.
+            </entry>
+            <entry>mpegversion</entry>
+            <entry>integer</entry>
+            <entry>1, 2 or 4</entry>
+            <entry>
+              The MPEG-version used for encoding the data. The value 1 refers
+              to MPEG-1, -2 and -2.5 layer 1, 2 or 3. The values 2 and 4 refer
+              to the MPEG-AAC audio encoding schemes.
+            </entry>
+          </row>
+          <row>
+            <entry>framed</entry>
+            <entry>boolean</entry>
+            <entry>0 or 1</entry>
+            <entry>
+              A true value indicates that each buffer contains exactly one
+              frame. A false value indicates that frames and buffers do not
+              necessarily match up.
+            </entry>
+          </row>
+          <row>
+            <entry>layer</entry>
+            <entry>integer</entry>
+            <entry>1, 2, or 3</entry>
+            <entry>
+              The compression scheme layer used to compress the data
+              <emphasis>(only if mpegversion=1)</emphasis>.
+            </entry>
+          </row>
+          <row>
+            <entry>bitrate</entry>
+            <entry>integer</entry>
+            <entry>greater than 0</entry>
+            <entry>
+              The bitrate, in bits per second. For VBR (variable bitrate)
+              MPEG data, this is the average bitrate.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-pn-realaudio</entry>
+            <entry>Real Audio data.</entry>
+            <entry>raversion</entry>
+            <entry>integer</entry>
+            <entry>1 or 2</entry>
+            <entry>
+              The version of the Real Audio codec used to encode the stream.
+              1 stands for a 14k4 stream, 2 stands for a 28k8 stream.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-qdm2</entry>
+            <entry>Data encoded by the QDM version 2 codec.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-speex</entry>
+            <entry>Data encoded by the Speex audio codec</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-vorbis</entry>
+            <entry>Vorbis audio data.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-wma</entry>
+            <entry>Windows Media Audio</entry>
+            <entry>wmaversion</entry>
+            <entry>integer</entry>
+            <entry>1 or 2</entry>
+            <entry>
+              The version of the WMA codec used to encode the stream.
+            </entry>
+          </row>
+        </tbody>
+        </tgroup>
+      </table>
+      
+      <table frame="all" id="table-video-types" xreflabel="Table of Video Types">
+        <title>Table of Video Types</title>
+        <tgroup cols="6" align="left" colsep="1" rowsep="1">
+        <colspec colnum="1" colname="colv1" colwidth="1*"/>
+        <colspec colnum="6" colname="colv6" colwidth="6*"/>
+        <spanspec spanname="fullwidth" namest="colv1" nameend="colv6"/>
+
+        <thead>
+          <row>
+            <entry>Mime Type</entry>
+            <entry>Description</entry>
+            <entry>Property</entry>
+            <entry>Property Type</entry>
+            <entry>Property Values</entry>
+            <entry>Property Description</entry>
+          </row>
+        </thead>
+
+        <tbody valign="top">
+
+          <!-- ############ subtitle ############# -->
+
+          <row>
+            <entry spanname="fullwidth">
+              <emphasis>All video types.</emphasis>
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry morerows="2">video/*</entry>
+            <entry morerows="2">
+              <emphasis>All video types</emphasis>
+            </entry>
+            <entry>width</entry>
+            <entry>integer</entry>
+            <entry>greater than 0</entry>
+            <entry>The width of the video image</entry>
+          </row>
+          <row>
+            <entry>height</entry>
+            <entry>integer</entry>
+            <entry>greater than 0</entry>
+            <entry>The height of the video image</entry>
+          </row>
+          <row>
+            <entry>framerate</entry>
+            <entry>double</entry>
+            <entry>greater than 0</entry>
+            <entry>
+              The (average) framerate in frames per second. Note that this
+              property does not guarantee in <emphasis>any</emphasis> way that
+              it will actually come close to this value. If you need a fixed
+              framerate, please use an element that provides that (such as
+              <quote>videodrop</quote>).
+            </entry>
+          </row>
+
+          <!-- ############ subtitle ############# -->
+
+          <row>
+            <entry spanname="fullwidth">
+              <emphasis>All raw video types.</emphasis>
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-raw-yuv</entry>
+            <entry>YUV (or Y'Cb'Cr) video format.</entry>
+            <entry>format</entry>
+            <entry>fourcc</entry>
+            <entry>
+              YUY2, YVYU, UYVY, Y41P, IYU2, Y42B, YV12, I420, Y41B, YUV9, YVU9,
+              Y800
+            </entry>
+            <entry>
+              The layout of the video. See <ulink type="http"
+              url="http://www.fourcc.org/">FourCC definition site</ulink>
+              for references and definitions. YUY2, YVYU and UYVY are 4:2:2
+              packed-pixel, Y41P is 4:1:1 packed-pixel and IYU2 is 4:4:4
+              packed-pixel. Y42B is 4:2:2 planar, YV12 and I420 are 4:2:0
+              planar, Y41B is 4:1:1 planar and YUV9 and YVU9 are 4:1:0 planar.
+              Y800 contains Y-samples only (black/white).
+            </entry>
+          </row>
+
+          <row>
+            <entry morerows="3">video/x-raw-rgb</entry>
+            <entry morerows="3">Red-Green-Blue (RBG) video.</entry>
+            <entry>bpp</entry>
+            <entry>integer</entry>
+            <entry>greater than 0</entry>
+            <entry>
+              The number of bits allocated per pixel. This is usually 16, 24
+              or 32.
+            </entry>
+          </row>
+
+          <row>
+            <entry>depth</entry>
+            <entry>integer</entry>
+            <entry>greater than 0</entry>
+            <entry>
+              The number of bits used per pixel by the R/G/B components. This
+              is usually 15, 16 or 24.
+            </entry>
+          </row>
+
+          <row>
+            <entry>endianness</entry>
+            <entry>integer</entry>
+            <entry>G_BIG_ENDIAN (1234) or G_LITTLE_ENDIAN (4321)</entry>
+            <entry>
+              The order of bytes in a sample. The value G_LITTLE_ENDIAN (4321)
+              means <quote>little-endian</quote> (byte-order is <quote>least
+              significant byte first</quote>). The value G_BIG_ENDIAN (1234)
+              means <quote>big-endian</quote> (byte order is <quote>most
+              significant byte first</quote>). For 24/32bpp, this should always
+              be big endian because the byte order can be given in both.
+            </entry>
+          </row>
+
+          <row>
+            <entry>red_mask, green_mask and blue_mask</entry>
+            <entry>integer</entry>
+            <entry>any</entry>
+            <entry>
+              The masks that cover all the bits used by each of the samples.
+              The mask should be given in the endianness specified above. This
+              means that for 24/32bpp, the masks might be opposite to host byte
+              order (if you are working on little-endian computers).
+            </entry>
+          </row>
+
+          <!-- ############ subtitle ############# -->
+
+          <row>
+            <entry spanname="fullwidth">
+              <emphasis>All encoded video types.</emphasis>
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-divx</entry>
+            <entry>DivX video.</entry>
+            <entry>divxversion</entry>
+            <entry>integer</entry>
+            <entry>3, 4 or 5</entry>
+            <entry>
+              Version of the DivX codec used to encode the stream.
+            </entry>
+          </row>
+        </tbody>
+        </tgroup>
+      </table>
+  </sect1>
 </chapter>

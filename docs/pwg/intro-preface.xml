@@ -170,11 +170,10 @@
       The remainder of this introductory part of the guide presents a short
       overview of the basic concepts involved in &GStreamer; plugin development.
       Topics covered include <xref linkend="sect1-basics-elements"/>, <xref
-      linkend="sect1-basics-pads"/>, <xref linkend="sect1-basics-buffers"/>,
-      <xref linkend="sect1-basics-types"/>, and <xref
-      linkend="sect1-basics-events"/>. If you are already familiar with this
-      information, you can use this short overview to refresh your memory, or
-      you can skip to <xref linkend="part-building"/>.
+      linkend="sect1-basics-pads"/>, <xref linkend="sect1-basics-data"/> and
+      <xref linkend="sect1-basics-types"/>. If you are already familiar with
+      this information, you can use this short overview to refresh your memory,
+      or you can skip to <xref linkend="part-building"/>.
     </para>
     <para>
       As you can see, there a lot to learn, so let's get started!

@@ -103,16 +103,41 @@
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-basics-buffers" xreflabel="Buffers">
-    <title>Buffers</title>
+  <sect1 id="sect1-basics-data" xreflabel="Data, Buffers and Events">
+    <title>Data, Buffers and Events</title>
     <para>
       All streams of data in &GStreamer; are chopped up into chunks that are
       passed from a source pad on one element to a sink pad on another element.
-      <emphasis>Buffers</emphasis> are structures used to hold these chunks of
-      data. Buffers can be of any size, theoretically, and they may contain any
-      sort of data that the two linked pads know how to handle. Normally, a
-      buffer contains a chunk of some sort of audio or video data that flows
-      from one element to another.
+      <emphasis>Data</emphasis> are structures used to hold these chunks of
+      data.
+    </para>
+    <para>
+      Data contains the following important types:
+      <itemizedlist>
+        <listitem>
+          <para>
+            An exact type indicating what type of data (control, content, ...)
+            this Data is.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            A reference count indicating the number of elements currently
+            holding a reference to the buffer. When the buffer reference count
+            falls to zero, the buffer will be unlinked, and its memory will be
+            freed in some sense (see below for more details).
+          </para>
+        </listitem>
+      </itemizedlist>
+    </para>
+    <para>
+      There are two types of data defined: events (control) and buffers
+      (content).
+    </para>
+    <para>
+      Buffers may contain any sort of data that the two linked pads
+      know how to handle. Normally, a buffer contains a chunk of some sort of
+      audio or video data that flows from one element to another.
     </para>
     <para>
       Buffers also contain metadata describing the buffer's contents. Some of
@@ -130,16 +155,31 @@
         </listitem>
         <listitem>
           <para>
-            A <classname>GstData</classname> object describing the type of the
-            buffer's data.
+            A timestamp indicating the preferred display timestamp of the
+            content in the buffer.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </para>
+    <para>
+      Events
+      contain information on the state of the stream flowing between the two
+      linked pads. Events will only be sent if the element explicitely supports
+      them, else the core will (try to) handle the events automatically. Events
+      are used to indicate, for example, a clock discontinuity, the end of a
+      media stream or that the cache should be flushed.
+    </para>
+    <para>
+      Events may contain several of the following items:
+      <itemizedlist>
+        <listitem>
+          <para>
+            A subtype indicating the type of the contained event.
           </para>
         </listitem>
         <listitem>
           <para>
-            A reference count indicating the number of elements currently
-            holding a reference to the buffer. When the buffer reference count
-            falls to zero, the buffer will be unlinked, and its memory will be
-            freed in some sense (see below for more details).
+            The other contents of the event depend on the specific event type.
           </para>
         </listitem>
       </itemizedlist>
@@ -147,7 +187,9 @@
     <para>
       See the &GstLibRef; for the current implementation details of a <ulink
       type="http"
-      url="../gstreamer/gstreamer-gstbuffer.html"><classname>GstBuffer</classname></ulink>.
+      url="../gstreamer/gstreamer-gstdata.html"><classname>GstData</classname></ulink>, <ulink type="http"
+      url="../gstreamer/gstreamer-gstbuffer.html"><classname>GstBuffer</classname></ulink> and <ulink type="http"
+      url="../gstreamer/gstreamer-gstevent.html"><classname>GstEvent</classname></ulink>.
     </para>
 
     <sect2 id="sect2-buffers-bufferpools" xreflabel="Buffer Allocation and
@@ -163,14 +205,17 @@
       <para>
         To improve the latency in a media pipeline, many &GStreamer; elements
         use a <emphasis>buffer pool</emphasis> to handle buffer allocation and
-        unlinking. A buffer pool is a relatively large chunk of memory that is
-        the &GStreamer; process requests early on from the operating system.
-        Later, when elements request memory for a new buffer, the buffer pool
-        can serve the request quickly by giving out a piece of the allocated
-        memory. This saves a call to the operating system and lowers latency.
-        [If it seems at this point like &GStreamer; is acting like an operating
-        system (doing memory management, etc.), don't worry: &GStreamer;OS isn't
-        due out for quite a few years!]
+        releasing. A buffer pool is a virtual representation of one or more
+        buffers of which the data is not actually allocated by &GStreamer;
+        itself. Examples of these include hardware framebuffer memory in video
+        output elements or kernel-allocated DMA memory for video capture. The
+        huge advantage of using these buffers instead of creating our own is
+        that we do not have to copy memory from one place to another, thereby
+        saving a noticeable number of CPU cycles. Elements should not provide
+        a bufferpool to decrease the number of memory allocations: the kernel
+        will generally take care of that - and will probably do that much more
+        efficiently than we ever could. Using bufferpools in this way is highly
+        discouraged.
       </para>
       <para>
         Normally in a media pipeline, most filter elements in &GStreamer; deal
@@ -186,13 +231,14 @@
   <!-- ############ sect1 ############# -->
 
   <sect1 id="sect1-basics-types" xreflabel="Types and Properties">
-    <title>Types and Properties</title>
+    <title>Mimetypes and Properties</title>
     <para>
       &GStreamer; uses a type system to ensure that the data passed between
-      elements is in a recognized format. The type system is also important for
-      ensuring that the parameters required to fully specify a format match up
-      correctly when linking pads between elements. Each link that is
-      made between elements has a specified type.
+      elements is in a recognized format. The type system is also important
+      for ensuring that the parameters required to fully specify a format match
+      up correctly when linking pads between elements. Each link that is
+      made between elements has a specified type and optionally a set of
+      properties.
     </para>
 
     <!-- ############ sect2 ############# -->
@@ -201,9 +247,11 @@
       <title>The Basic Types</title>
       <para>
         &GStreamer; already supports many basic media types. Following is a
-        table of the basic types used for buffers in &GStreamer;. The table
-        contains the name ("mime type") and a description of the type, the
-        properties associated with the type, and the meaning of each property.
+        table of a few of the the basic types used for buffers in
+        &GStreamer;. The table contains the name ("mime type") and a
+        description of the type, the properties associated with the type, and
+        the meaning of each property. A full list of supported types is
+        included in <xref linkend="sect1-types-definitions"/>.
       </para>
 
       <table frame="all" id="table-basictypes" xreflabel="Table of Basic Types">
@@ -226,15 +274,15 @@
           <!-- ############ type ############# -->
 
           <row>
-            <entry morerows="10">audio/raw</entry>
-            <entry morerows="10">
-              Unstructured and uncompressed raw audio data.
+            <entry morerows="1">audio/*</entry>
+            <entry morerows="1">
+              <emphasis>All audio types</emphasis>
             </entry>
             <entry>rate</entry>
             <entry>integer</entry>
             <entry>greater than 0</entry>
             <entry>
-              The sample rate of the data, in samples per second.
+              The sample rate of the data, in samples (per channel) per second.
             </entry>
           </row>
           <row>
@@ -245,43 +293,33 @@
               The number of channels of audio data.
             </entry>
           </row>
+
+          <!-- ############ type ############# -->
+
           <row>
-            <entry>format</entry>
-            <entry>string</entry>
-            <entry><quote>int</quote> or <quote>float</quote></entry>
-            <entry>
-              The format in which the audio data is passed.
+            <entry morerows="3">audio/x-raw-int</entry>
+            <entry morerows="3">
+              Unstructured and uncompressed raw integer audio data.
             </entry>
-          </row>
-          <row>
-            <entry>law</entry>
-            <entry>integer</entry>
-            <entry>0, 1, or 2</entry>
-            <entry>
-              (Valid only if the data is in integer format.) The law used to
-              describe the data. The value 0 indicates <quote>linear</quote>, 1
-              indicates <quote>mu&nbsp;law</quote>, and 2 indicates
-              <quote>A&nbsp;law</quote>.
-            </entry>
-          </row>
-          <row>
             <entry>endianness</entry>
-            <entry>boolean</entry>
-            <entry>0 or 1</entry>
+            <entry>integer</entry>
+            <entry>G_BIG_ENDIAN (1234) or G_LITTLE_ENDIAN (4321)</entry>
             <entry>
-              (Valid only if the data is in integer format.) The order of bytes
-              in a sample. The value 0 means <quote>little-endian</quote> (bytes
-              are least significant first). The value 1 means
-              <quote>big-endian</quote> (most significant byte first).
+              The order of bytes in a sample. The value G_LITTLE_ENDIAN (4321)
+              means <quote>little-endian</quote> (byte-order is <quote>least
+              significant byte first</quote>). The value G_BIG_ENDIAN (1234)
+              means <quote>big-endian</quote> (byte order is <quote>most
+              significant byte first</quote>).
             </entry>
           </row>
           <row>
             <entry>signed</entry>
             <entry>boolean</entry>
-            <entry>0 or 1</entry>
+            <entry>TRUE or FALSE</entry>
             <entry>
-              (Valid only if the data is in integer format.) Whether the samples
-              are signed or not.
+              Whether the values of the integer samples are signed or not.
+              Signed samples use one bit to indicate sign (negative or
+              positive) of the value. Unsigned samples are always positive.
             </entry>
           </row>
           <row>
@@ -289,8 +327,7 @@
             <entry>integer</entry>
             <entry>greater than 0</entry>
             <entry>
-              (Valid only if the data is in integer format.) The number of bits
-              per sample.
+              Number of bits allocated per sample.
             </entry>
           </row>
           <row>
@@ -298,54 +335,31 @@
             <entry>integer</entry>
             <entry>greater than 0</entry>
             <entry>
-              (Valid only if the data is in integer format.) The number of bits
-              used per sample. This must be less than or equal to the width: If
-              the depth is less than the width, the low bits are assumed to be
-              the ones used. For example, a width of 32 and a depth of 24 means
-              that each sample is stored in a 32 bit word, but only the low 24
-              bits are actually used.
-            </entry>
-          </row>
-          <row>
-            <entry>layout</entry>
-            <entry>string</entry>
-            <entry><quote>gfloat</quote></entry>
-            <entry>
-              (Valid only if the data is in float format.) A string representing
-              the way in which the floating point data is represented.
-            </entry>
-          </row>
-          <row>
-            <entry>intercept</entry>
-            <entry>float</entry>
-            <entry>any, normally 0</entry>
-            <entry>
-              (Valid only if the data is in float format.) A floating point
-              value representing the value that the signal
-              <quote>centers</quote> on.
-            </entry>
-          </row>
-          <row>
-            <entry>slope</entry>
-            <entry>float</entry>
-            <entry>any, normally 1.0</entry>
-            <entry>
-              (Valid only if the data is in float format.) A floating point
-              value representing how far the signal deviates from the intercept.
-              A slope of 1.0 and an intercept of 0.0 would mean an audio signal
-              with minimum and maximum values of -1.0 and 1.0. A slope of
-              0.5 and intercept of 0.5 would represent values in the range 0.0
-              to 1.0.
+              The number of bits used per sample. This must be less than or
+              equal to the width: If the depth is less than the width, the
+              low bits are assumed to be the ones used. For example, a width
+              of 32 and a depth of 24 means that each sample is stored in a
+              32 bit word, but only the low 24 bits are actually used.
             </entry>
           </row>
 
           <!-- ############ type ############# -->
 
           <row>
-            <entry morerows="4">audio/mp3</entry>
-            <entry morerows="4">
-              Audio data compressed using the mp3 encoding scheme.
+            <entry morerows="3">audio/mpeg</entry>
+            <entry morerows="3">
+              Audio data compressed using the MPEG audio encoding scheme.
             </entry>
+            <entry>mpegversion</entry>
+            <entry>integer</entry>
+            <entry>1, 2 or 4</entry>
+            <entry>
+              The MPEG-version used for encoding the data. The value 1 refers
+              to MPEG-1, -2 and -2.5 layer 1, 2 or 3. The values 2 and 4 refer
+              to the MPEG-AAC audio encoding schemes.
+            </entry>
+          </row>
+          <row>
             <entry>framed</entry>
             <entry>boolean</entry>
             <entry>0 or 1</entry>
@@ -360,7 +374,8 @@
             <entry>integer</entry>
             <entry>1, 2, or 3</entry>
             <entry>
-              The compression scheme layer used to compress the data.
+              The compression scheme layer used to compress the data
+              <emphasis>(only if mpegversion=1)</emphasis>.
             </entry>
           </row>
           <row>
@@ -368,134 +383,26 @@
             <entry>integer</entry>
             <entry>greater than 0</entry>
             <entry>
-              The bitrate, in kilobits per second. For VBR (variable bitrate)
-              mp3 data, this is the average bitrate.
-            </entry>
-          </row>
-          <row>
-            <entry>channels</entry>
-            <entry>integer</entry>
-            <entry>greater than 0</entry>
-            <entry>
-              The number of channels of audio data present.
-            </entry>
-          </row>
-          <row>
-            <entry>joint-stereo</entry>
-            <entry>boolean</entry>
-            <entry>0 or 1</entry>
-            <entry>
-              If true, this implies that stereo data is stored as a combined
-              signal and the difference between the signals, rather than as two
-              entirely separate signals. If true, the <quote>channels</quote>
-              attribute must not be zero.
+              The bitrate, in bits per second. For VBR (variable bitrate)
+              MPEG data, this is the average bitrate.
             </entry>
           </row>
 
           <!-- ############ type ############# -->
 
           <row>
-            <entry morerows="0">audio/x-ogg</entry>
-            <entry morerows="0">
-              Audio data compressed using the Ogg Vorbis encoding scheme.
-            </entry>
+            <entry>audio/x-vorbis</entry>
+            <entry>Vorbis audio data</entry>
             <entry></entry>
             <entry></entry>
             <entry></entry>
             <entry>
-              FIXME: There are currently no parameters defined for this type.
+              There are currently no specific properties defined for this type.
             </entry>
           </row>
-
-          <!-- ############ type ############# -->
-
-          <row>
-            <entry morerows="2">video/raw</entry>
-            <entry morerows="2">
-              Raw video data.
-            </entry>
-            <entry>fourcc</entry>
-            <entry>FOURCC code</entry>
-            <entry></entry>
-            <entry>
-              A FOURCC code identifying the format in which this data is stored.
-              FOURCC (Four Character Code) is a simple system to allow
-              unambiguous identification of a video datastream format. See
-              <ulink url="http://www.webartz.com/fourcc/"
-              type="http">http://www.webartz.com/fourcc/</ulink>
-            </entry>
-          </row>
-          <row>
-            <entry>width</entry>
-            <entry>integer</entry>
-            <entry>greater than 0</entry>
-            <entry>
-              The number of pixels wide that each video frame is.
-            </entry>
-          </row>
-          <row>
-            <entry>height</entry>
-            <entry>integer</entry>
-            <entry>greater than 0</entry>
-            <entry>
-              The number of pixels high that each video frame is.
-            </entry>
-          </row>
-
-          <!-- ############ type ############# -->
-
-          <row>
-            <entry morerows="0">video/mpeg</entry>
-            <entry morerows="0">
-              Video data compressed using an MPEG encoding scheme.
-            </entry>
-            <entry></entry>
-            <entry></entry>
-            <entry></entry>
-            <entry>
-              FIXME: There are currently no parameters defined for this type.
-            </entry>
-          </row>
-
-          <!-- ############ type ############# -->
-
-          <row>
-            <entry morerows="0">video/x-msvideo</entry>
-            <entry morerows="0">
-              Video data compressed using the AVI encoding scheme.
-            </entry>
-            <entry></entry>
-            <entry></entry>
-            <entry></entry>
-            <entry>
-              FIXME: There are currently no parameters defined for this type.
-            </entry>
-          </row>
-
         </tbody>
       </tgroup>
       </table>
     </sect2>
-  </sect1>
-
-  <!-- ############ sect1 ############# -->
-
-  <sect1 id="sect1-basics-events" xreflabel="Events">
-    <title>Events</title>
-    <para>
-      Sometimes elements in a media processing pipeline need to know that
-      something has happened. An <emphasis>event</emphasis> is a special type of
-      data in &GStreamer; designed to serve this purpose. Events describe some
-      sort of activity that has happened somewhere in an element's pipeline, for
-      example, the end of the media stream or a clock discontinuity. Just like
-      any other data type, an event comes to an element on a sink pad and is
-      contained in a normal buffer. Unlike normal stream buffers, though, an
-      event buffer contains only an event, not any media stream data.
-    </para>
-    <para>
-      See the &GstLibRef; for the current implementation details of a <ulink
-      type="http"
-      url="../gstreamer/gstreamer-gstevent.html"><classname>GstEvent</classname></ulink>.
-    </para>
   </sect1>
 </chapter>

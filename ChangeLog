@@ -1,3 +1,15 @@
+2004-01-26  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced_types.xml:
+	* docs/pwg/intro_basics.xml:
+	* docs/pwg/intro_preface.xml:
+	* docs/pwg/pwg.xml:
+	* docs/pwg/titlepage.xml:
+	  First try to resurrect the PWG. I'm halfway integrating the mimetypes
+	  in here (docs/random/mimetypes), and will from there on work on both
+	  updating outdated parts and adding missing parts.
+	  That doesn't mean I'll fix it completely, but I'll try at least. ;).
+
 2004-01-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gsterror.h: reinstate GST_LIBRARY_ERROR_ENCODE until
