@@ -205,6 +205,19 @@ gst_element_request_pad (GstElement *element, GstPadTemplate *templ, const gchar
   return newpad;
 }
 
+void
+gst_element_release_request_pad (GstElement *element, GstPad *pad)
+{
+  GstElementClass *oclass;
+
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  oclass = CLASS (element);
+  if (oclass->release_pad)
+    (oclass->release_pad) (element, pad);
+}
+
 
 /**
  * gst_element_set_name:
@@ -1329,10 +1342,10 @@ gst_element_set_state (GstElement *element, GstElementState state)
     switch (return_val) {
       case GST_STATE_FAILURE:
         GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "have failed change_state return");
-	break;
+        goto exit;
       case GST_STATE_ASYNC:
         GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "element will change state async");
-	break;
+        goto exit;
       case GST_STATE_SUCCESS:
         /* Last thing we do is verify that a successful state change really
          * did change the state... */
@@ -1350,6 +1363,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
 	g_assert_not_reached ();
     }
   }
+exit:
 
   return return_val;
 }

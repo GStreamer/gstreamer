@@ -170,6 +170,7 @@ struct _GstElementClass {
   GstElementStateReturn (*change_state)		(GstElement *element);
   /* request a new pad */
   GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ, const gchar* name);
+  void			(*release_pad)		(GstElement *element, GstPad *pad);
 };
 
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);
@@ -203,6 +204,7 @@ void			gst_element_remove_ghost_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_static_pad	(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_request_pad	(GstElement *element, const gchar *name);
+void			gst_element_release_request_pad	(GstElement *element, GstPad *pad);
 
 GList*			gst_element_get_pad_list	(GstElement *element);
 GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
