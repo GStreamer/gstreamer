@@ -23,7 +23,7 @@ to create a GstCaps.
 	  "audio/raw",		/* mime type */
 	  gst_props_new (	/* properties */
 	    "format",   GST_PROPS_STRING ("float"),
-	    "layout",   GST_PROPS_INT (5),
+	    "channels",   GST_PROPS_INT (5),
 	    NULL));
 </programlisting>
 
