@@ -22,7 +22,7 @@ then
 fi
 . common/gst-autogen.sh
 
-CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-plugin-builddir'
+CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-failing-tests'
 
 autogen_options $@
 

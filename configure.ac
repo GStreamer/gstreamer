@@ -250,10 +250,12 @@ AC_HELP_STRING([--disable-failing-tests],[disable building tests known to fail])
   no)  BUILD_FAILING_TESTS=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --disable-failing-tests) ;;
 esac], 
-[BUILD_FAILING_TESTS=yes]) dnl Default value
+[BUILD_FAILING_TESTS=no]) dnl Default value
 AM_CONDITIONAL(BUILD_FAILING_TESTS, test "x$BUILD_FAILING_TESTS" = "xyes")
 if test x$BUILD_FAILING_TESTS = xyes; then
   AC_MSG_WARN([building tests known to fail, use --disable-failing-tests to disable])
+else
+  AC_MSG_WARN([Sissy ! By asking to not build the tests known to fail, you hereby waive your right to customer support.  If you do not agree with this EULA, please press Ctrl-C before the next line is printed.  By allowing the next line to be printed, you expressly acknowledge your acceptance of this EULA.])
 fi
 
 AC_ARG_ENABLE(examples,
