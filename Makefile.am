@@ -16,7 +16,8 @@ else
 EXAMPLES_DIR=
 endif
 
-all-local: gstreamer-libs-@GST_MAJORMINOR@.pc gstreamer-play-@GST_MAJORMINOR@.pc gstreamer-libs-@GST_MAJORMINOR@-uninstalled.pc gstreamer-play-@GST_MAJORMINOR@-uninstalled.pc
+all-local: gstreamer-libs-@GST_MAJORMINOR@.pc gstreamer-play-@GST_MAJORMINOR@.pc gstreamer-libs-@GST_MAJORMINOR@-uninstalled.pc gstreamer-play-@GST_MAJORMINOR@-uninstalled.pc gst-element-check-@GST_MAJORMINOR@.m4
+
 gstreamer-libs-@GST_MAJORMINOR@.pc: gstreamer-libs.pc gstreamer-libs.pc.in
 	cp gstreamer-libs.pc gstreamer-libs-@GST_MAJORMINOR@.pc
 gstreamer-play-@GST_MAJORMINOR@.pc: gstreamer-play.pc gstreamer-play.pc.in
@@ -26,7 +27,7 @@ gstreamer-libs-@GST_MAJORMINOR@-uninstalled.pc: gstreamer-libs-uninstalled.pc gs
 gstreamer-play-@GST_MAJORMINOR@-uninstalled.pc: gstreamer-play-uninstalled.pc gstreamer-play-uninstalled.pc.in
 	cp gstreamer-play-uninstalled.pc gstreamer-play-@GST_MAJORMINOR@-uninstalled.pc
 gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
-	cp gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
+	cp $(srcdir)/gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = \
