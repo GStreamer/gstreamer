@@ -436,7 +436,11 @@ gst_mpeg2dec_chain (GstPad *pad, GstData *_data)
     GST_DEBUG ("have pts: %" G_GINT64_FORMAT " (%" G_GINT64_FORMAT ")", 
 		  mpeg_pts, MPEGTIME_TO_GSTTIME (mpeg_pts));
 
+#if MPEG2_RELEASE >= MPEG2_VERSION(0,4,0)
+    mpeg2_tag_picture (mpeg2dec->decoder, mpeg_pts&0xffffffff, mpeg_pts>>32);
+#else
     mpeg2_pts (mpeg2dec->decoder, mpeg_pts);
+#endif
   }
   else {
     GST_DEBUG ("no pts");
@@ -553,18 +557,22 @@ gst_mpeg2dec_chain (GstPad *pad, GstData *_data)
 	  if (mpeg2dec->discont_state == MPEG2DEC_DISC_NEW_KEYFRAME && key_frame)
 	    mpeg2dec->discont_state = MPEG2DEC_DISC_NONE;
 
+#if MPEG2_RELEASE < MPEG2_VERSION(0,4,0)
 	  if (picture->flags & PIC_FLAG_PTS) {
             GstClockTime time = MPEGTIME_TO_GSTTIME (picture->pts);
+#else
+          if (1) {
+            GstClockTime time = MPEGTIME_TO_GSTTIME ((guint64) picture->tag2 << 32 | picture->tag);
+#endif
 
 	    GST_DEBUG ("picture had pts %" G_GINT64_FORMAT, time);
-            GST_BUFFER_TIMESTAMP (outbuf) = time;
-
-            mpeg2dec->next_time = time;
+            GST_BUFFER_TIMESTAMP (outbuf) = mpeg2dec->next_time = time;
 	  }
 	  else {
 	    GST_DEBUG ("picture didn't have pts using %" G_GINT64_FORMAT, mpeg2dec->next_time);
             GST_BUFFER_TIMESTAMP (outbuf) = mpeg2dec->next_time;
 	  }
+
           mpeg2dec->next_time += (mpeg2dec->frame_period * picture->nb_fields) >> 1;
 
 

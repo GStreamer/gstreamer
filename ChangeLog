@@ -1,5 +1,30 @@
 2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  Add support for mpeg2dec-0.4.0 (released two weeks ago). See
+	  #130416.
+
+2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	* ext/xvid/gstxvid.c: (gst_xvid_init), (gst_xvid_error),
+	(gst_xvid_structure_to_csp), (gst_xvid_csp_to_caps):
+	* ext/xvid/gstxvid.h:
+	* ext/xvid/gstxviddec.c: (gst_xviddec_class_init),
+	(gst_xviddec_init), (gst_xviddec_setup), (gst_xviddec_chain),
+	(gst_xviddec_src_link), (gst_xviddec_sink_link),
+	(gst_xviddec_change_state):
+	* ext/xvid/gstxviddec.h:
+	* ext/xvid/gstxvidenc.c: (gst_xvidenc_profile_get_type),
+	(gst_xvidenc_base_init), (gst_xvidenc_class_init),
+	(gst_xvidenc_init), (gst_xvidenc_setup), (gst_xvidenc_chain),
+	(gst_xvidenc_link), (gst_xvidenc_set_property),
+	(gst_xvidenc_get_property), (gst_xvidenc_change_state):
+	* ext/xvid/gstxvidenc.h:
+	  Update xvid plugin to latest xvid (1.0.0-beta3) API.
+
+2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/rtp/rtp-packet.c:
 	  Add sys/types.h include, since OS X doesn't define in_addr_t
 	  in netinet/in.h, like it does on Linux (see #129600).
