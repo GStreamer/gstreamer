@@ -483,6 +483,8 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
 
   vorbisenc->tags = gst_tag_list_new ();
 
+  vorbisenc->initial_delay = 0;
+
   /* we're chained and we can deal with events */
   GST_FLAG_SET (vorbisenc, GST_ELEMENT_EVENT_AWARE);
 }
@@ -716,16 +718,32 @@ static GstBuffer *
 gst_vorbisenc_buffer_from_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
 {
   GstBuffer *outbuf;
+  guint64 granulepos_delta, timestamp_delta;
+
+  /* header packets always need to have granulepos 0, 
+   * regardless of the initial delay */
+  if (packet->granulepos == 0) {
+    granulepos_delta = 0;
+    timestamp_delta = 0;
+  } else {
+    granulepos_delta =
+        vorbisenc->initial_delay * vorbisenc->frequency / GST_SECOND;
+    timestamp_delta = vorbisenc->initial_delay;
+  }
 
   outbuf = gst_buffer_new_and_alloc (packet->bytes);
   memcpy (GST_BUFFER_DATA (outbuf), packet->packet, packet->bytes);
   GST_BUFFER_OFFSET (outbuf) = vorbisenc->bytes_out;
-  GST_BUFFER_OFFSET_END (outbuf) = packet->granulepos;
+  GST_BUFFER_OFFSET_END (outbuf) = packet->granulepos + granulepos_delta;
   GST_BUFFER_TIMESTAMP (outbuf) =
       vorbis_granule_time_copy (&vorbisenc->vd,
-      packet->granulepos) * GST_SECOND;
+      packet->granulepos) * GST_SECOND + timestamp_delta;
 
-  GST_DEBUG ("encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
+  GST_DEBUG ("encoded buffer of %d bytes. granulepos = %" G_GINT64_FORMAT
+      " + %" G_GINT64_FORMAT " = %" G_GINT64_FORMAT, GST_BUFFER_SIZE (outbuf),
+      packet->granulepos, granulepos_delta,
+      packet->granulepos + granulepos_delta);
+
   return outbuf;
 }
 
@@ -816,6 +834,24 @@ gst_vorbisenc_chain (GstPad * pad, GstData * _data)
         }
         gst_pad_event_default (pad, event);
         return;
+      case GST_EVENT_DISCONTINUOUS:
+      {
+        guint64 val;
+
+        if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &val)) {
+          /* vorbis does not support discontinuities in the middle of
+           * a stream so we can't just increase the granulepos to reflect
+           * the new position, or can we? would that still be according
+           * to spec? */
+          if (vorbisenc->samples_in == 0) {
+            vorbisenc->initial_delay = val;
+            GST_DEBUG ("initial delay = %" G_GUINT64_FORMAT, val);
+          } else {
+            GST_DEBUG ("mid stream discont: val = %" G_GUINT64_FORMAT, val);
+          }
+        }
+      }
+        /* fall through */
       default:
         gst_pad_event_default (pad, event);
         return;
@@ -1045,6 +1081,11 @@ gst_vorbisenc_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       vorbisenc->setup = FALSE;
       vorbisenc->header_sent = FALSE;
+      vorbisenc->initial_delay = 0;
+      vorbisenc->samples_in = 0;
+      vorbisenc->bytes_out = 0;
+      vorbisenc->channels = -1;
+      vorbisenc->frequency = -1;
       gst_tag_list_free (vorbisenc->tags);
       vorbisenc->tags = gst_tag_list_new ();
       break;

@@ -103,7 +103,7 @@ struct _GstTheoraEnc
 
   guint packetno;
   guint64 bytes_out;
-  guint64 next_ts;
+  guint64 initial_delay;
 };
 
 struct _GstTheoraEncClass
@@ -361,13 +361,24 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
     GstClockTime timestamp, GstClockTime duration)
 {
   GstBuffer *buf;
+  guint64 granulepos_delta, timestamp_delta;
+
+  /* if duration is 0, it's a header packet and should
+   *  have granulepos 0 (so no delta regardless of delay) */
+  if (duration == 0) {
+    granulepos_delta = 0;
+    timestamp_delta = 0;
+  } else {
+    granulepos_delta = enc->initial_delay * enc->fps / GST_SECOND;
+    timestamp_delta = enc->initial_delay;
+  }
 
   buf = gst_pad_alloc_buffer (enc->srcpad,
       GST_BUFFER_OFFSET_NONE, packet->bytes);
   memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
   GST_BUFFER_OFFSET (buf) = enc->bytes_out;
-  GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
-  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_OFFSET_END (buf) = packet->granulepos + granulepos_delta;
+  GST_BUFFER_TIMESTAMP (buf) = timestamp + timestamp_delta;
   GST_BUFFER_DURATION (buf) = duration;
 
   /* the second most significant bit of the first data byte is cleared
@@ -381,6 +392,11 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
   }
 
   enc->packetno++;
+
+  GST_DEBUG ("encoded buffer of %d bytes. granulepos = %" G_GINT64_FORMAT
+      " + %" G_GINT64_FORMAT " = %" G_GINT64_FORMAT, GST_BUFFER_SIZE (buf),
+      packet->granulepos, granulepos_delta,
+      packet->granulepos + granulepos_delta);
 
   return buf;
 }
@@ -450,6 +466,26 @@ theora_enc_chain (GstPad * pad, GstData * data)
   enc = GST_THEORA_ENC (gst_pad_get_parent (pad));
   if (GST_IS_EVENT (data)) {
     switch (GST_EVENT_TYPE (data)) {
+      case GST_EVENT_DISCONTINUOUS:
+      {
+        guint64 val;
+
+        if (gst_event_discont_get_value (GST_EVENT (data), GST_FORMAT_TIME,
+                &val)) {
+          /* theora does not support discontinuities in the middle of
+           * a stream so we can't just increase the granulepos to reflect
+           * the new position, or can we? would that still be according
+           * to spec? */
+          if (enc->bytes_out == 0) {
+            enc->initial_delay = val;
+            GST_DEBUG ("initial delay = %" G_GUINT64_FORMAT, val);
+          } else {
+            GST_DEBUG ("mid stream discont: val = %" G_GUINT64_FORMAT, val);
+          }
+        }
+        gst_pad_event_default (pad, GST_EVENT (data));
+        return;
+      }
       case GST_EVENT_EOS:
         /* push last packet with eos flag */
         while (theora_encode_packetout (&enc->state, 1, &op)) {
@@ -669,6 +705,7 @@ theora_enc_change_state (GstElement * element)
       theora_info_init (&enc->info);
       theora_comment_init (&enc->comment);
       enc->packetno = 0;
+      enc->initial_delay = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;

@@ -77,6 +77,8 @@ struct _VorbisEnc {
   gboolean         setup;
   gboolean         header_sent;
   gchar		  *last_message;
+
+  guint64          initial_delay; /* for streams not starting at timestamp/sample 0 */
 };
 
 struct _VorbisEncClass {

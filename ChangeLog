@@ -1,5 +1,16 @@
 2005-01-31  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/theora/theoraenc.c: (theora_buffer_from_packet),
+	(theora_enc_chain), (theora_enc_change_state):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_init),
+	(gst_vorbisenc_buffer_from_packet), (gst_vorbisenc_chain),
+	(gst_vorbisenc_change_state):
+	* ext/vorbis/vorbisenc.h:
+	  Set granulepos and timestamp correctly for streams not
+	  starting at 0, taking into account the initial delay.
+
+2005-01-31  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/mpegstream/gstdvddemux.c:
 	  Add audio/x-dts to audio pad template caps
 
