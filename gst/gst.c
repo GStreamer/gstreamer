@@ -392,9 +392,11 @@ init_pre (void)
   }
   /* we need threading to be enabled right here */
   _gst_debug_init();
-  
+
+#ifdef ENABLE_NLS
   bindtextdomain (GETTEXT_PACKAGE, GST_LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif /* ENABLE_NLS */
 
 #ifndef GST_DISABLE_REGISTRY
   {
