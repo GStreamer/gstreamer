@@ -1514,6 +1514,7 @@ gst_asf_demux_audio_caps (guint16 codec_id,
             "codec_data", GST_TYPE_BUFFER, buffer,
             "block_align", G_TYPE_INT, audio->block_align,
             "bitrate", G_TYPE_INT, audio->byte_rate * 8, NULL);
+        gst_data_unref (GST_DATA (buffer));
       }
       if (codec_name)
         *codec_name = g_strdup ("Microsoft WMA V2");
