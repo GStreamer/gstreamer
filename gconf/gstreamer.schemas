@@ -34,7 +34,7 @@
         </locale>
       </schema>
       <schema>
-        <key>/schemas/system/gstreamer/default/videosink</key>
+        <key>/schemas/system/gstreamer/default/videosrc</key>
         <applyto>/system/gstreamer/default/videosink</applyto>
         <owner>gstreamer</owner>
         <type>string</type>
