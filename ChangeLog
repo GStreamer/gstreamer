@@ -1,3 +1,20 @@
+2004-02-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gststructure.c: (gst_structure_from_string):
+	  fix huge memleak
+	* gst/elements/gsttypefind.c: (gst_type_find_element_have_type),
+	(new_entry), (gst_type_find_element_chain):
+	* gst/gstelement.c: (gst_element_base_class_init),
+	(gst_element_class_set_details):
+	* gst/gstpad.c: (gst_pad_can_link_filtered):
+	  fix smaller memleaks
+	* gst/gstpad.c: (gst_real_pad_dispose):
+	  check that explicit caps are gone
+	* gst/gststructure.c: (gst_structure_free):
+	  actually free the structure
+	* gst/gstelement.c: (gst_element_clear_pad_caps):
+	  unset explicit caps
+
 2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tools/Makefile.am:

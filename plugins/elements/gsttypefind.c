@@ -124,7 +124,7 @@ gst_type_find_element_have_type (GstTypeFindElement *typefind, guint probability
 
   GST_INFO_OBJECT (typefind, "found caps %" GST_PTR_FORMAT, caps);
   typefind->caps = gst_caps_copy (caps);
-  gst_pad_set_explicit_caps (typefind->src, gst_caps_copy(caps));
+  gst_pad_set_explicit_caps (typefind->src, caps);
 }
 static void
 gst_type_find_element_base_init (gpointer g_class)
@@ -282,6 +282,12 @@ typedef struct {
   GList *		buffers;
   GstTypeFindElement *	self;
 } TypeFindEntry;
+
+static inline TypeFindEntry *
+new_entry (void)
+{
+  return g_new0 (TypeFindEntry, 1);
+}
 static void
 free_entry_buffers (TypeFindEntry *entry)
 {
@@ -499,7 +505,7 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
 	all_factories = g_list_sort (all_factories, compare_type_find_factory);
 	walk = all_factories;
 	while (all_factories) {
-	  entry = g_new0 (TypeFindEntry, 1);
+	  entry = new_entry ();
 	  
 	  entry->factory = GST_TYPE_FIND_FACTORY (all_factories->data);
 	  entry->self = typefind;
@@ -530,7 +536,6 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
 	  GstCaps *found_caps = entry->caps;
 	  guint probability = entry->probability;
 	  
-	  found_caps = gst_caps_copy (found_caps);
 	  GST_INFO_OBJECT (typefind, "'%s' returned %u/%u probability, using it NOW", 
 		  GST_PLUGIN_FEATURE_NAME (entry->factory), probability, typefind->max_probability);
 	  while (walk) {
@@ -545,7 +550,7 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
 	  typefind->possibilities = NULL;
 	  g_list_free (typefind->possibilities); 
 	  g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0, probability, found_caps);
-	  gst_caps_free (found_caps);
+	  free_entry (entry);
 	} else {
 	  typefind->possibilities = g_list_prepend (typefind->possibilities, entry);
 	}

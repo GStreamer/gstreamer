@@ -1539,9 +1539,12 @@ gst_pad_can_link_filtered (GstPad *srcpad, GstPad *sinkpad,
   if (filtercaps) link->filtercaps = gst_caps_copy (filtercaps);
 
   gst_pad_link_intersect (link);
-  if (gst_caps_is_empty (link->caps))
+  if (gst_caps_is_empty (link->caps)) {
+    gst_pad_link_free (link);
     return FALSE;
+  }
 
+  gst_pad_link_free (link);
   return TRUE;
 }
 
@@ -2716,6 +2719,11 @@ gst_real_pad_dispose (GObject *object)
     gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
   }
   
+  if (GST_RPAD_EXPLICIT_CAPS (pad)) {
+    GST_ERROR_OBJECT (pad, "still explicit caps %"GST_PTR_FORMAT" set", GST_RPAD_EXPLICIT_CAPS (pad));
+    g_warning ("pad %p has still explicit caps set", pad);
+    gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
+  }
   G_OBJECT_CLASS (real_pad_parent_class)->dispose (object);
 }
 
