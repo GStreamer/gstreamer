@@ -148,6 +148,7 @@ static guint8 UIDENTITY(guint8 x) { return x; };
 static gint8 IDENTITY(gint8 x) { return x; };
 #define POPULATE(format, be_func, le_func) {\
   format val = (format) int_value;\
+  format *p = data;\
   switch (src->endianness) {\
     case G_LITTLE_ENDIAN:\
       val = le_func (val);\
@@ -158,7 +159,6 @@ static gint8 IDENTITY(gint8 x) { return x; };
     default: \
       g_assert_not_reached ();\
   };\
-  format *p = data;\
   for (j = 0; j < src->channels; j++) {\
     *p = val;\
     p ++;\
