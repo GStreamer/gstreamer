@@ -1,3 +1,9 @@
+2004-10-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybasebin.c: (thread_error), (setup_source),
+	(gst_play_base_bin_change_state):
+	  Improve error reporting.
+
 2004-10-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/Makefile.am:
