@@ -103,14 +103,11 @@ static void
 gst_gsmdec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstCaps *raw_caps, *gsm_caps;
 
   gsmdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-					       GST_PAD_ALWAYS, 
-					       gsm_caps, NULL);
-  gsmdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-					      GST_PAD_ALWAYS, 
-					      raw_caps, NULL);
+      GST_PAD_ALWAYS, gsm_caps_factory(), NULL);
+  gsmdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC,
+      GST_PAD_ALWAYS, raw_caps_factory(), NULL);
   gst_element_class_add_pad_template (element_class, gsmdec_sink_template);
   gst_element_class_add_pad_template (element_class, gsmdec_src_template);
   gst_element_class_set_details (element_class, &gst_gsmdec_details);
