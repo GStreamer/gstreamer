@@ -299,26 +299,26 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
       if (!strncmp (format, "strf_vids", 9)) {
         avimux->vids.size        = sizeof(gst_riff_strf_vids);
 	gst_caps_get (caps,
-		      "width",       GST_PROPS_INT_TYPE,    &avimux->vids.width,
-		      "height",      GST_PROPS_INT_TYPE,    &avimux->vids.height,
-		      "planes",      GST_PROPS_INT_TYPE,    &avimux->vids.planes,
-		      "bit_cnt",     GST_PROPS_INT_TYPE,    &avimux->vids.bit_cnt,
-		      "compression", GST_PROPS_FOURCC_TYPE, &avimux->vids.compression,
-		      "image_size",  GST_PROPS_INT_TYPE,    &avimux->vids.image_size,
-		      "xpels_meter", GST_PROPS_INT_TYPE,    &avimux->vids.xpels_meter,
-		      "ypels_meter", GST_PROPS_INT_TYPE,    &avimux->vids.ypels_meter,
-		      "num_colors",  GST_PROPS_INT_TYPE,    &avimux->vids.num_colors,
-		      "imp_colors",  GST_PROPS_INT_TYPE,    &avimux->vids.imp_colors,
+		      "width",       &avimux->vids.width,
+		      "height",      &avimux->vids.height,
+		      "planes",      &avimux->vids.planes,
+		      "bit_cnt",     &avimux->vids.bit_cnt,
+		      "compression", &avimux->vids.compression,
+		      "image_size",  &avimux->vids.image_size,
+		      "xpels_meter", &avimux->vids.xpels_meter,
+		      "ypels_meter", &avimux->vids.ypels_meter,
+		      "num_colors",  &avimux->vids.num_colors,
+		      "imp_colors",  &avimux->vids.imp_colors,
 		      NULL);
       }
       else if (!strncmp (format, "strf_auds", 9)) {
 	gst_caps_get (caps,
-		      "format",      GST_PROPS_INT_TYPE,    &avimux->auds.format,
-		      "channels",    GST_PROPS_INT_TYPE,    &avimux->auds.channels,
-		      "rate",        GST_PROPS_INT_TYPE,    &avimux->auds.rate,
-		      "av_bps",      GST_PROPS_INT_TYPE,    &avimux->auds.av_bps,
-		      "blockalign",  GST_PROPS_INT_TYPE,    &avimux->auds.blockalign,
-		      "size",        GST_PROPS_INT_TYPE,    &avimux->auds.size,
+		      "format",      &avimux->auds.format,
+		      "channels",    &avimux->auds.channels,
+		      "rate",        &avimux->auds.rate,
+		      "av_bps",      &avimux->auds.av_bps,
+		      "blockalign",  &avimux->auds.blockalign,
+		      "size",        &avimux->auds.size,
 		      NULL);
       }
       goto done;
@@ -336,10 +336,8 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
         case GST_MAKE_FOURCC('Y','4','1','P'):
         case GST_MAKE_FOURCC('R','G','B',' '):
           avimux->vids.size        = sizeof(gst_riff_strf_vids);
-	  gst_caps_get (caps,
-		      "width",       GST_PROPS_INT_TYPE,    &avimux->vids.width,
-		      "height",      GST_PROPS_INT_TYPE,    &avimux->vids.height,
-		      NULL);
+	  gst_caps_get (caps, "width", &avimux->vids.width,
+		              "height", &avimux->vids.height, NULL);
           avimux->vids.planes      = 1;
           switch (format)
           {
@@ -365,10 +363,8 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
     else if (!strcmp (mimetype, "video/jpeg"))
     {
       avimux->vids.size        = sizeof(gst_riff_strf_vids);
-      gst_caps_get (caps,
-		      "width",       GST_PROPS_INT_TYPE,    &avimux->vids.width,
-		      "height",      GST_PROPS_INT_TYPE,    &avimux->vids.height,
-		      NULL);
+      gst_caps_get (caps, "width", &avimux->vids.width,
+		          "height", &avimux->vids.height, NULL);
       avimux->vids.planes      = 1;
       avimux->vids.bit_cnt     = 24;
       avimux->vids.compression = GST_MAKE_FOURCC('M','J','P','G');
@@ -380,12 +376,11 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
       gint width;
 
       avimux->auds.format      = GST_RIFF_WAVE_FORMAT_PCM;
-      gst_caps_get (caps,
-		      "channels",    GST_PROPS_INT_TYPE,    &avimux->auds.channels,
-		      "rate",        GST_PROPS_INT_TYPE,    &avimux->auds.rate,
-		      "width",       GST_PROPS_INT_TYPE,    &width,
-		      "depth",       GST_PROPS_INT_TYPE,    &avimux->auds.size,
-		      NULL);
+      gst_caps_get (caps, "channels", 	&avimux->auds.channels,
+		          "rate", 	&avimux->auds.rate,
+		          "width",	&width,
+		          "depth",	&avimux->auds.size,
+		          NULL);
       avimux->auds.av_bps      = width * avimux->auds.rate * avimux->auds.channels / 8;
       avimux->auds.blockalign  = width * avimux->auds.channels/8;
       goto done;

@@ -8,5 +8,3 @@ libgsteffectv_la_LIBADD =
 libgsteffectv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gsteffectv.h
-
-EXTRA_DIST = LICENSE
