@@ -109,6 +109,7 @@ static void gst_audio_convert_init (GstAudioConvert * audio_convert);
 static void gst_audio_convert_chain (GstPad * pad, GstData * _data);
 static GstPadLinkReturn gst_audio_convert_link (GstPad * pad,
     const GstCaps * caps);
+static GstCaps *gst_audio_convert_fixate (GstPad * pad, const GstCaps * caps);
 static GstCaps *gst_audio_convert_getcaps (GstPad * pad);
 static GstElementStateReturn gst_audio_convert_change_state (GstElement *
     element);
@@ -202,6 +203,7 @@ gst_audio_convert_init (GstAudioConvert * this)
       (&gst_audio_convert_sink_template), "sink");
   gst_pad_set_getcaps_function (this->sink, gst_audio_convert_getcaps);
   gst_pad_set_link_function (this->sink, gst_audio_convert_link);
+  gst_pad_set_fixate_function (this->sink, gst_audio_convert_fixate);
   gst_element_add_pad (GST_ELEMENT (this), this->sink);
 
   /* srcpad */
@@ -210,6 +212,7 @@ gst_audio_convert_init (GstAudioConvert * this)
       (&gst_audio_convert_src_template), "src");
   gst_pad_set_getcaps_function (this->src, gst_audio_convert_getcaps);
   gst_pad_set_link_function (this->src, gst_audio_convert_link);
+  gst_pad_set_fixate_function (this->src, gst_audio_convert_fixate);
   gst_element_add_pad (GST_ELEMENT (this), this->src);
 
   gst_pad_set_chain_function (this->sink, gst_audio_convert_chain);
@@ -386,6 +389,12 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
       }
     }
   }
+  if (this->sink == pad) {
+    this->sinkcaps = ac_caps;
+  } else {
+    this->srccaps = ac_caps;
+  }
+  GST_LOG_OBJECT (this, "trying to set caps to %" GST_PTR_FORMAT, othercaps);
   ret = gst_pad_try_set_caps_nonfixed (otherpad, othercaps);
   gst_caps_free (othercaps);
   if (ret < GST_PAD_LINK_OK)
@@ -406,9 +415,75 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
     this->sinkcaps = other_ac_caps;
   }
 
-  GST_DEBUG ("negotiated pad to %" GST_PTR_FORMAT, caps);
-  GST_DEBUG ("negotiated otherpad to %" GST_PTR_FORMAT, othercaps);
+  GST_DEBUG_OBJECT (this, "negotiated pad to %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (this, "negotiated otherpad to %" GST_PTR_FORMAT, othercaps);
   return GST_PAD_LINK_OK;
+}
+
+gboolean
+_fixate_caps_to_int (GstCaps ** caps, const gchar * field, gint value)
+{
+  GstCaps *try, *intersection;
+  gboolean ret = FALSE;
+  guint i;
+
+  try =
+      gst_caps_new_simple ("audio/x-raw-int", field, GST_TYPE_INT_RANGE,
+      G_MININT, value - 1, NULL), gst_caps_append (try,
+      gst_caps_new_simple ("audio/x-raw-float", field, GST_TYPE_INT_RANGE,
+          G_MININT, value - 1, NULL));
+  intersection = gst_caps_intersect (*caps, try);
+  if (!gst_caps_is_empty (intersection)) {
+    gst_caps_free (try);
+    try =
+        gst_caps_new_simple ("audio/x-raw-int", field, GST_TYPE_INT_RANGE,
+        value, G_MAXINT, NULL), gst_caps_append (try,
+        gst_caps_new_simple ("audio/x-raw-float", field, GST_TYPE_INT_RANGE,
+            value, G_MAXINT, NULL));
+    gst_caps_free (intersection);
+    intersection = gst_caps_intersect (*caps, try);
+    if (!gst_caps_is_empty (intersection)) {
+      gst_caps_free (*caps);
+      *caps = intersection;
+      ret = TRUE;
+    } else {
+      gst_caps_free (intersection);
+    }
+  }
+  for (i = 0; i < gst_caps_get_size (*caps); i++) {
+    GstStructure *structure = gst_caps_get_structure (*caps, i);
+
+    if (gst_structure_has_field (structure, field))
+      ret |=
+          gst_caps_structure_fixate_field_nearest_int (structure, field, value);
+  }
+  return ret;
+}
+
+static GstCaps *
+gst_audio_convert_fixate (GstPad * pad, const GstCaps * caps)
+{
+  GstAudioConvert *this =
+      GST_AUDIO_CONVERT (gst_object_get_parent (GST_OBJECT (pad)));
+  GstPad *otherpad = (pad == this->sink ? this->src : this->sink);
+  GstAudioConvertCaps ac_caps =
+      (pad == this->sink ? this->srccaps : this->sinkcaps);
+  GstCaps *copy;
+
+  /* only fixate when we're proxying, so we don't fixate to some crap the other side doesn't want */
+  if (!GST_PAD_IS_NEGOTIATING (otherpad))
+    return NULL;
+
+  copy = gst_caps_copy (caps);
+  if (_fixate_caps_to_int (&copy, "channels", ac_caps.channels))
+    return copy;
+  if (_fixate_caps_to_int (&copy, "width", ac_caps.is_int ? ac_caps.width : 16))
+    return copy;
+  if (_fixate_caps_to_int (&copy, "depth", ac_caps.is_int ? ac_caps.depth : 16))
+    return copy;
+
+  gst_caps_free (copy);
+  return NULL;
 }
 
 static GstElementStateReturn
