@@ -606,6 +606,7 @@ tests/threadstate/Makefile
 testsuite/Makefile
 testsuite/bytestream/Makefile
 testsuite/caps/Makefile
+testsuite/caps2/Makefile
 testsuite/cleanup/Makefile
 testsuite/clock/Makefile
 testsuite/debug/Makefile
