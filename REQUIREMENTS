@@ -72,6 +72,7 @@ libdvdnav	(for the dvdnavsrc)
 libesound	(for the esd sink 
 			ftp.gnome.org/pub/GNOME/stable/sources/esound)
 gnome-vfs	(for the gnome-vfs src)
+		>= 2.4.0
 libgsm		(for the gsm plugin)
 			http://kbs.cs.tu-berlin.de/~jutta/toast.html
 sdl		(for the sdl sink)
