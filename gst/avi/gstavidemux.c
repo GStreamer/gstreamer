@@ -602,8 +602,9 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
 static void
 gst_avi_debug_entry (const gchar *prefix, gst_avi_index_entry *entry)
 {
-  GST_DEBUG (0, "%s: %05d %d %08llx %05d %08lld %08x %08x %08x", prefix, entry->index_nr, entry->stream_nr, 
-		  entry->bytes_before, entry->frames_before, entry->ts, entry->flags, entry->offset, entry->size);
+  GST_DEBUG (0, "%s: %05d %d %08llx %05d %08lld %08x %08x (%d) %08x", prefix, entry->index_nr, entry->stream_nr, 
+		  entry->bytes_before, entry->frames_before, entry->ts, entry->flags, entry->offset, 
+		  entry->offset, entry->size);
 }
 
 static void
@@ -871,7 +872,7 @@ static gint32
 gst_avi_demux_sync_streams (GstAviDemux *avi_demux, guint64 time)
 {
   gint i;
-  guint64 min_index = -1;
+  guint32 min_index = G_MAXUINT;
   avi_stream_context *stream;
   gst_avi_index_entry *entry;
 
@@ -887,6 +888,7 @@ gst_avi_demux_sync_streams (GstAviDemux *avi_demux, guint64 time)
       min_index = MIN (entry->index_nr, min_index);
     }
   }
+  GST_DEBUG (0, "first index at %d", min_index);
   
   /* now we know the entry we need to sync on. calculate number of frames to
    * skip fro there on and the stream stats */
@@ -906,6 +908,7 @@ gst_avi_demux_sync_streams (GstAviDemux *avi_demux, guint64 time)
 
     GST_DEBUG (0, "%d skip %d", stream->num, stream->skip);
   }
+  GST_DEBUG (0, "final index at %d", min_index);
 
   return min_index;
 }
@@ -964,6 +967,8 @@ gst_avi_demux_handle_src_event (GstPad *pad, GstEvent *event)
 	    min_index = gst_avi_demux_sync_streams (avi_demux, desired_offset);
             seek_entry = &avi_demux->index_entries[min_index];
 	    
+            gst_avi_debug_entry ("syncing to entry", seek_entry);
+	    
 	    avi_demux->seek_offset = seek_entry->offset + avi_demux->index_offset;
             avi_demux->seek_pending = TRUE;
 	    avi_demux->last_seek = seek_entry->ts;
@@ -1001,9 +1006,6 @@ gst_avi_demux_handle_sink_event (GstAviDemux *avi_demux)
     case GST_EVENT_EOS:
       gst_pad_event_default (avi_demux->sinkpad, event);
       break;
-    case GST_EVENT_SEEK:
-      g_warning ("seek event");
-      break;
     case GST_EVENT_FLUSH:
       g_warning ("flush event");
       break;
@@ -1014,6 +1016,8 @@ gst_avi_demux_handle_sink_event (GstAviDemux *avi_demux)
       for (i = 0; i < avi_demux->num_streams; i++) {
         avi_stream_context *stream = &avi_demux->stream[i];
 
+	GST_DEBUG (GST_CAT_EVENT, "sending discont on %d %lld + %lld = %lld", i, 
+			avi_demux->last_seek, stream->delay, avi_demux->last_seek + stream->delay);
         event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 			avi_demux->last_seek + stream->delay, NULL);
 	gst_pad_push (stream->pad, GST_BUFFER (event));
@@ -1189,6 +1193,9 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
       if (stream->strh.init_frames == stream->current_frame && stream->delay==0)
 	stream->delay = next_ts;
 
+      stream->current_frame++;
+      stream->current_byte += *chunksize;
+
       if (stream->skip) {
 	stream->skip--;
       }
@@ -1206,15 +1213,13 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
                /* FIXME, do some flush event here */
               stream->need_flush = FALSE;
             }
-	    GST_DEBUG (0, "send stream %d: %lld %d %lld %08x", stream_id, next_ts, stream->current_frame,
+	    GST_DEBUG (0, "send stream %d: %lld %d %lld %08x", stream_id, next_ts, stream->current_frame - 1,
 			  stream->delay, *chunksize);
 
             gst_pad_push(stream->pad, buf);
 	  }
         }
       }
-      stream->current_frame++;
-      stream->current_byte += *chunksize;
 
       *chunksize = (*chunksize + 1) & ~1;
       break;
