@@ -184,13 +184,10 @@
 ;  (release-func "gst_data_free")
 ;)
 
-; HACK, should be boxed
-(define-pointer Event
+(define-boxed Event
   (in-module "Gst")
   (c-name "GstEvent")
   (gtype-id "GST_TYPE_EVENT")
-;  (copy-func "gst_event_copy")
-;  (release-func "gst_event_unref")
 )
 
 (define-boxed GError

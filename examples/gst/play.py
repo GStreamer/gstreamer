@@ -55,7 +55,7 @@ class VideoWidget(gtk.DrawingArea):
         self.set_size_request(400, 400)
         
         self.player = player
-        self.imagesink = gst.Element('xvimagesink')
+        self.imagesink = gst.element_factory_make('xvimagesink')
         self.player.set_video_sink(self.imagesink)
 
     def destroy_cb(self, da):

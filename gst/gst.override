@@ -1259,3 +1259,29 @@ _wrap_gst_tag_setter_get_list(PyGObject *self)
     /* pyg_boxed_new handles NULL checking */
     return pyg_boxed_new(GST_TYPE_TAG_LIST, ret, TRUE, TRUE);
 }
+%%
+override gst_element_send_event kwargs
+static PyObject *
+_wrap_gst_element_send_event(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "event", NULL };
+    PyObject *py_event;
+    int ret;
+    GstEvent *event = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstElement.send_event", kwlist, &py_event))
+        return NULL;
+    if (pyg_boxed_check(py_event, GST_TYPE_EVENT))
+        event = pyg_boxed_get(py_event, GstEvent);
+    else {
+        PyErr_SetString(PyExc_TypeError, "event should be a GstEvent");
+        return NULL;
+    }
+
+    /* The pipeline unrefs the event, but we want to keep the ownership */
+    gst_event_ref(event);
+    
+    ret = gst_element_send_event(GST_ELEMENT(self->obj), event);
+    return PyBool_FromLong(ret);
+
+}

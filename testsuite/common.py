@@ -36,6 +36,14 @@ try:
 except ImportError:
    pass
 
+# testhelper needs ltihooks
+import gst.ltihooks
+
+import testhelper
+
+# finally remove ltihooks
+gst.ltihooks.uninstall()
+
 _stderr = None
 
 def disable_stderr():

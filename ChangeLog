@@ -1,3 +1,23 @@
+2004-11-23  Johan Dahlin  <johan@gnome.org>
+
+	* examples/gst/play.py:
+	* gst/gst-types.defs:
+	* gst/gst.override:
+	* testsuite/Makefile.am:
+	* testsuite/common.py:
+	* testsuite/event.py:
+	* testsuite/test_event.py:
+
+	Use gst.element_factory_make in play example
+
+	Use boxed instead of pointer for gst.Event, it was such an ugly
+	hack.
+
+	Ref the event when sending using gst.element_send_event.
+
+	Add a bunch of testcases (and a C module), renamed event to
+	test_event.py 
+	
 === release 0.8.0 ===
 2004-11-15  Johan Dahlin  <johan@gnome.org>
 

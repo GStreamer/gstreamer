@@ -1,6 +1,6 @@
 import os
 import sys
-from common import gst, unittest
+from common import gst, unittest, testhelper
 
 class EventTest(unittest.TestCase):
     def setUp(self):
@@ -63,7 +63,20 @@ class EventFileSrcTest(unittest.TestCase):
         
         #print self.playAndIter()
         
+class TestEmit(unittest.TestCase):
+    def testEmit(self):
+        object = testhelper.get_object()
+        object.connect('event', self._event_cb)
         
+        # First emit from C
+        testhelper.emit_event(object)
+
+        # Then emit from Python
+        object.emit('event', gst.Event(gst.EVENT_UNKNOWN))
+        
+    def _event_cb(self, obj, event):
+        assert isinstance(event, gst.Event)
+    
 
 if __name__ == "__main__":
     unittest.main()
