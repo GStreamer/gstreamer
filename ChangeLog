@@ -1,5 +1,12 @@
 2004-12-31  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstevent.c: (gst_event_new_discontinuous_valist),
+	(gst_event_discont_get_value):
+	* gst/gstevent.h:
+	We'll need the end offset in discont soon.
+
+2004-12-31  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (gst_bin_set_index), (gst_bin_set_clock),
 	(gst_bin_set_bus), (gst_bin_set_scheduler), (gst_bin_add_func),
 	(gst_bin_iterate_elements), (gst_bin_change_state),
