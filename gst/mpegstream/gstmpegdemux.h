@@ -76,12 +76,14 @@ struct _GstMPEGDemux {
   gint64	 total_size_bound;
 
 #define NUM_PRIVATE_1_STREAMS 	 8
+#define NUM_PCM_STREAMS 	 8
 #define NUM_SUBTITLE_STREAMS 	16
 #define NUM_VIDEO_STREAMS 	16
 #define NUM_AUDIO_STREAMS 	32
 
   /* stream output */
   GstMPEGStream *private_1_stream[NUM_PRIVATE_1_STREAMS];	/* up to 8 ac3 audio tracks */
+  GstMPEGStream *pcm_stream[NUM_PCM_STREAMS];
   GstMPEGStream *subtitle_stream[NUM_SUBTITLE_STREAMS];
   GstMPEGStream *private_2_stream;
   GstMPEGStream *video_stream[NUM_VIDEO_STREAMS];

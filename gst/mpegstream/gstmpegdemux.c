@@ -116,6 +116,17 @@ GST_PAD_TEMPLATE_FACTORY (private2_factory,
   )
 );
 
+GST_PAD_TEMPLATE_FACTORY (pcm_factory,
+  "pcm_stream_%02d",
+  GST_PAD_SRC,
+  GST_PAD_SOMETIMES,
+  GST_CAPS_NEW (
+    "mpeg_demux_pcm",
+    "audio/x-lpcm",
+    NULL
+  )
+);
+
 GST_PAD_TEMPLATE_FACTORY (subtitle_factory,
   "subtitle_stream_%d",
   GST_PAD_SRC,
@@ -773,6 +784,11 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
           headerlen += 4;
           datalen -= 4;
           break;
+	case 0xA0 ... 0xA7:
+          GST_DEBUG (0, "we have a pcm_stream packet, track %d",
+                     ps_id_code - 0xA0);
+          outstream = &mpeg_demux->pcm_stream[ps_id_code - 0xA0];
+          break;
 	case 0x20 ... 0x2f:
           GST_DEBUG (0, "we have a subtitle_stream packet, track %d",
                      ps_id_code - 0x20);
@@ -824,6 +840,10 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 	  case 0x80 ... 0x87:
             name = g_strdup_printf ("private_stream_1.%d",ps_id_code - 0x80);
 	    newtemp = GST_PAD_TEMPLATE_GET (private1_factory);
+            break;
+          case 0xA0 ... 0xA7:
+            name = g_strdup_printf ("pcm_stream_%d", ps_id_code - 0xA0);
+	    newtemp = GST_PAD_TEMPLATE_GET (pcm_factory);
             break;
 	  case 0x20 ... 0x2F:
             name = g_strdup_printf ("subtitle_stream_%d",ps_id_code - 0x20);
@@ -1072,6 +1092,7 @@ gst_mpeg_demux_plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_mpeg2_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (private1_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (private2_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (pcm_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (subtitle_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (audio_factory));
 
