@@ -13,7 +13,7 @@ void eos(GstElement *element)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *bin, *disksrc, *parse, *decoder, *osssink;
+  GstElement *bin, *disksrc, *parse, *decoder, *downmix, *osssink;
 
   gst_init(&argc,&argv);
 
@@ -34,6 +34,7 @@ int main(int argc,char *argv[])
   /* now it's time to get the parser */
   parse = gst_elementfactory_make("mp3parse","parse");
   decoder = gst_elementfactory_make("mpg123","decoder");
+  downmix = gst_elementfactory_make("stereo2mono","stereo2mono");
   /* and an audio sink */
   osssink = gst_elementfactory_make("osssink", "play_audio");
 
@@ -41,6 +42,7 @@ int main(int argc,char *argv[])
   gst_bin_add(GST_BIN(bin), disksrc);
   gst_bin_add(GST_BIN(bin), parse);
   gst_bin_add(GST_BIN(bin), decoder);
+  gst_bin_add(GST_BIN(bin), downmix);
   gst_bin_add(GST_BIN(bin), osssink);
 
   /* connect src to sink */
@@ -49,6 +51,8 @@ int main(int argc,char *argv[])
   gst_pad_connect(gst_element_get_pad(parse,"src"),
                   gst_element_get_pad(decoder,"sink"));
   gst_pad_connect(gst_element_get_pad(decoder,"src"),
+                  gst_element_get_pad(downmix,"sink"));
+  gst_pad_connect(gst_element_get_pad(downmix,"src"),
                   gst_element_get_pad(osssink,"sink"));
 
   /* start playing */
@@ -66,6 +70,7 @@ int main(int argc,char *argv[])
   gst_object_destroy(GST_OBJECT(osssink));
   gst_object_destroy(GST_OBJECT(parse));
   gst_object_destroy(GST_OBJECT(decoder));
+  gst_object_destroy(GST_OBJECT(downmix));
   gst_object_destroy(GST_OBJECT(disksrc));
   gst_object_destroy(GST_OBJECT(bin));
 
