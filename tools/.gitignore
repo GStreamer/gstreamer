@@ -8,6 +8,7 @@ Makefile.in
 *.xml
 gst-complete
 gst-compprep
+gst-feedback
 gst-inspect
 gst-launch
 gst-md5sum
@@ -29,6 +30,7 @@ gst-xmllaunch.1
 *.da
 gst-complete-?.?*
 gst-compprep-?.?*
+gst-feedback-?.?*
 gst-inspect-?.?*
 gst-launch-?.?*
 gst-md5sum-?.?*
