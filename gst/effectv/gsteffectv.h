@@ -36,5 +36,8 @@ extern GstElementDetails gst_vertigotv_details;
 GType gst_revtv_get_type (void);
 extern GstElementDetails gst_revtv_details;
 
+GType gst_quarktv_get_type (void);
+extern GstElementDetails gst_quarktv_details;
+
 extern GstPadTemplate *gst_effectv_sink_factory ();
 extern GstPadTemplate *gst_effectv_src_factory ();
