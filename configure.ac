@@ -1223,9 +1223,7 @@ plugins/mpeg2/videoparse/Makefile
 plugins/mpeg2/mpegtypes/Makefile
 plugins/mpeg1/Makefile
 plugins/mpeg1/mpegtypes/Makefile
-plugins/mpeg1/mpeg_play/Makefile
 plugins/mpeg1/mpegaudio/Makefile
-plugins/mpeg1/parse/Makefile
 plugins/mpeg1/system_encode/Makefile
 plugins/mpeg1/mpeg1encoder/Makefile
 plugins/mpeg1video/Makefile
