@@ -22,7 +22,21 @@
 #endif
 #include <string.h>
 #include <math.h>
+
+#ifdef HAVE_OSS_INCLUDE_IN_SYS
 #include <sys/soundcard.h>
+#else
+
+#ifdef HAVE_OSS_INCLUDE_IN_ROOT
+#include <soundcard.h>
+#else
+
+#include <machine/soundcard.h>
+
+#endif /* HAVE_OSS_INCLUDE_IN_ROOT */
+
+#endif /* HAVE_OSS_INCLUDE_IN_SYS */
+
 
 /*#define DEBUG_ENABLED */
 #include "gst_arts.h"
