@@ -1,27 +1,17 @@
-.TH GStreamer 1 "March 2001"
+.TH GStreamer 1 "May 2003"
 .SH NAME
-gst\-inspect - print info about a GStreamer plugin or element
+gst\-typefind - print MIME type of file
 .SH SYNOPSIS
-.B  gst\-inspect [OPTION...] [PLUGIN|ELEMENT]
+.B  gst\-typefind <file>
 .SH DESCRIPTION
 .PP
-\fIgst\-inspect\fP is a tool that prints out information on
-available \fIGStreamer\fP plugins, information about a particular
-plugin, or information about a particular element.  When executed
-with no PLUGIN or ELEMENT argument, \fIgst\-inspect\fP will print
-a list of all plugins and elements.  When executed with a PLUGIN
-or ELEMENT argument, \fIgst\-inspect\fP will print information
-about that plug-in or element.
+\fIgst\-typefind\fP uses the GStreamer type finding system to
+determine the relevant GStreamer plugin to parse or decode \fBfile\fP,
+and the corresponding MIME type.
 .
 .SH OPTIONS
 .l
-\fIgst\-inspect\fP accepts the following arguments and options:
-.TP 8
-.B  PLUGIN
-Name of a plugin
-.TP 8
-.B  ELEMENT
-Name of an element
+\fIgst\-typefind\fP accepts the following options:
 .TP 8
 .B  \-\-help
 Print help synopsis and available FLAGS
