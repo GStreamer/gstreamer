@@ -321,9 +321,6 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
 
   GST_DEBUG_ENTER ("(%d,\"%s\")", argc, name);
 
-  if (element->pre_run_func)
-    element->pre_run_func (element);
-
   do {
     pads = element->pads;
     while (pads) {
