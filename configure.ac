@@ -1522,7 +1522,7 @@ GST_CHECK_FEATURE(THEORA, [ogg theora codec], theoradec theoraenc, [
     AC_SUBST(THEORA_LIBS)
     AC_SUBST(THEORA_CFLAGS)
   ], [
-    GST_CHECK_LIBHEADER(THEORA, theora, theora_version_string, , theora/theora.h, THEORA_LIBS="-ltheora")
+    GST_CHECK_LIBHEADER(THEORA, theora, theora_version_string, "-logg", theora/theora.h, THEORA_LIBS="-ltheora -logg")
     AC_SUBST(THEORA_LIBS)
   ])
 ])
