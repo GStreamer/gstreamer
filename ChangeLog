@@ -1,5 +1,16 @@
 2004-01-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/gst/play/play.old.c:
+	* gst-libs/gst/play/play.old.h:
+          after CVS surgery by moving, remove
+	* gst-libs/gst/play/playpipelines.c:
+          remove
+          
+	* gst/intfloat/float22int.c: (gst_float2_2_int_chain):
+          add negotiation error
+
+2004-01-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_event),
 	(gst_ogg_demux_push):
           add some seeking debug info
