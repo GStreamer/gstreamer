@@ -1168,10 +1168,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
     return FALSE;
   }
   
-  if (! gst_library_load ("gstcontrol")) {
-    gst_info ("gstladspa: could not load support library: 'gstcontrol'\n");
-    return FALSE;
-  }
+  /* initialize dparam support library */
+  gst_control_init(NULL,NULL);
   
   return TRUE;
 }
