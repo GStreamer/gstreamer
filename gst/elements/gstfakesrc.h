@@ -86,6 +86,7 @@ struct _GstFakeSrc {
   GstFakeSrcDataType   data;
   GstFakeSrcSizeType   sizetype;
   GstFakeSrcFillType   filltype;
+  GstActivateMode      pad_mode;
 
   guint 	 sizemin;
   guint 	 sizemax;

@@ -328,6 +328,7 @@ gst_fakesrc_init (GstFakeSrc * fakesrc)
   fakesrc->last_message = NULL;
   fakesrc->datarate = DEFAULT_DATARATE;
   fakesrc->sync = DEFAULT_SYNC;
+  fakesrc->pad_mode = GST_ACTIVATE_NONE;
 }
 
 static void
@@ -869,6 +870,9 @@ gst_fakesrc_get_range (GstPad * pad, guint64 offset, guint length,
 {
   GstFlowReturn fret;
 
+  g_assert (GST_FAKESRC (GST_OBJECT_PARENT (pad))->pad_mode ==
+      GST_ACTIVATE_PULL);
+
   GST_STREAM_LOCK (pad);
 
   fret = gst_fakesrc_get_range_unlocked (pad, offset, length, ret);
@@ -886,6 +890,8 @@ gst_fakesrc_loop (GstPad * pad)
   GstFlowReturn ret;
 
   src = GST_FAKESRC (GST_OBJECT_PARENT (pad));
+
+  g_assert (src->pad_mode == GST_ACTIVATE_PUSH);
 
   GST_STREAM_LOCK (pad);
   if (src->need_flush) {
@@ -956,6 +962,9 @@ gst_fakesrc_activate (GstPad * pad, GstActivateMode mode)
       result = TRUE;
       break;
   }
+
+  fakesrc->pad_mode = mode;
+
   return result;
 }
 

@@ -400,6 +400,9 @@ gst_fakesink_activate (GstPad * pad, GstActivateMode mode)
       result = TRUE;
       break;
   }
+
+  fakesink->pad_mode = mode;
+
   return result;
 }
 
@@ -494,6 +497,9 @@ gst_fakesink_chain (GstPad * pad, GstBuffer * buf)
 {
   GstFlowReturn result;
 
+  g_assert (GST_FAKESINK (GST_OBJECT_PARENT (pad))->pad_mode ==
+      GST_ACTIVATE_PUSH);
+
   GST_STREAM_LOCK (pad);
 
   result = gst_fakesink_chain_unlocked (pad, buf);
@@ -511,6 +517,8 @@ gst_fakesink_loop (GstPad * pad)
   GstFlowReturn result;
 
   fakesink = GST_FAKESINK (GST_OBJECT_PARENT (pad));
+
+  g_assert (fakesink->pad_mode == GST_ACTIVATE_PULL);
 
   GST_STREAM_LOCK (pad);
 

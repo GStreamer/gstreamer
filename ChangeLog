@@ -1,5 +1,16 @@
 2005-02-21  Andy Wingo  <wingo@pobox.com>
 
+	* gst/elements/gstfakesink.c:
+	* gst/elements/gstfakesrc.c:
+	(gst_fakesink_loop, gst_fakesrc_loop, gst_fakesink_chain)
+	(gst_fakesrc_get_range): Assert the pad has been activated in the
+	proper mode. This will fail right now for fakesrc ! identity !
+	fakesink. 
+	(gst_fakesrc_activate, gst_fakesink_activate): Record the pad
+	activation mode.
+
+	* gst/elements/gstfakesrc.h: Add a pad_mode instance variable.
+
 	* gst/gstpad.c (gst_real_pad_dispose): Free the stream lock (it
 	wasn't being freed before). 
 	(gst_real_pad_init): Allocate and initialize the stream lock.
