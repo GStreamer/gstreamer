@@ -44,9 +44,11 @@ GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
 [HAVE_EXPERIMENTAL=yes],disabled,
 [
   AC_MSG_WARN(building experimental plugins)
+  USE_RTP="yes"
   USE_TARKIN="yes"
 ],[
   AC_MSG_NOTICE(not building experimental plugins)
+  USE_RTP="no"
   USE_TARKIN="no"
 ])
 
