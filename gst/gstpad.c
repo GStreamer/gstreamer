@@ -3034,10 +3034,14 @@ gst_pad_query_default (GstPad *pad, GstQueryType type,
  * gst_pad_query:
  * @pad: a #GstPad to invoke the default query on.
  * @type: the #GstQueryType of the query to perform.
- * @format: a pointer to the #GstFormat of the result.
+ * @format: a pointer to the #GstFormat asked for.
+ *          On return contains the #GstFormat used.
  * @value: a pointer to the result.
  *
- * Queries a pad for one of the available properties.
+ * Queries a pad for one of the available properties. The format will be
+ * adjusted to the actual format used when specifying formats such as 
+ * GST_FORMAT_DEFAULT.
+ * FIXME: Tell if the format can be adjusted when specifying a definite format.
  *
  * Returns: TRUE if the query could be performed.
  */
