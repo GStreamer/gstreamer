@@ -158,6 +158,18 @@ gst_jpegdec_term_source (j_decompress_ptr cinfo)
   GST_DEBUG ("term_source");
 }
 
+METHODDEF (void)
+gst_jpegdec_my_output_message (j_common_ptr cinfo)
+{
+  // Do nothing
+}
+
+METHODDEF (void)
+gst_jpegdec_my_emit_message (j_common_ptr cinfo, int msg_level)
+{
+  // Do nothing
+}
+
 static void
 gst_jpegdec_init (GstJpegDec * jpegdec)
 {
@@ -193,6 +205,9 @@ gst_jpegdec_init (GstJpegDec * jpegdec)
   memset (&jpegdec->cinfo, 0, sizeof (jpegdec->cinfo));
   memset (&jpegdec->jerr, 0, sizeof (jpegdec->jerr));
   jpegdec->cinfo.err = jpeg_std_error (&jpegdec->jerr);
+  jpegdec->cinfo.err->output_message = gst_jpegdec_my_output_message;
+  jpegdec->cinfo.err->emit_message = gst_jpegdec_my_emit_message;
+
   jpeg_create_decompress (&jpegdec->cinfo);
 
   jpegdec->jsrc.init_source = gst_jpegdec_init_source;
