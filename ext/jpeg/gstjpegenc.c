@@ -389,6 +389,7 @@ gst_jpegenc_chain (GstPad * pad, GstData * _data)
   outsize = GST_BUFFER_SIZE (outbuf) = jpegenc->bufsize;
   outdata = GST_BUFFER_DATA (outbuf) = g_malloc (outsize);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
 
   width = jpegenc->width;
   height = jpegenc->height;
