@@ -213,11 +213,26 @@ gst_adder_link (GstPad *pad, const GstCaps *caps)
   GList *remove = NULL;
   GSList *channels;
   GstPad *p;
+  const GList *pads;
 
   g_return_val_if_fail (caps != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (pad  != NULL, GST_PAD_LINK_REFUSED);
 
   adder = GST_ADDER (GST_PAD_PARENT (pad));
+
+  pads = gst_element_get_pad_list (element);
+  while (pads) {
+    GstPad *otherpad = GST_PADD (pads->data);
+
+    if (otherpad != pad) {
+      ret = gst_pad_try_set_caps (otherpad, caps);
+      if (GST_PAD_LINK_FAILED (ret)) {
+        return ret;
+      }
+    }
+    pads = g_list_next (pads);
+  }
+
 
   if (!gst_adder_parse_caps (adder, gst_caps_get_structure (caps, 0)))
     return GST_PAD_LINK_REFUSED;
@@ -297,6 +312,7 @@ gst_adder_init (GstAdder *adder)
       gst_static_pad_template_get (&gst_adder_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (adder), adder->srcpad);
   gst_element_set_loop_function (GST_ELEMENT (adder), gst_adder_loop);
+  gst_pad_set_getcaps_function (adder->srcpad, gst_pad_proxy_getcaps);
   gst_pad_set_link_function (adder->srcpad, gst_adder_link);
 
   adder->format = GST_ADDER_FORMAT_UNSET;
@@ -339,6 +355,7 @@ gst_adder_request_new_pad (GstElement *element, GstPadTemplate *templ,
   input->bytestream = gst_bytestream_new (input->sinkpad);
 
   gst_element_add_pad (GST_ELEMENT (adder), input->sinkpad);
+  gst_pad_set_getcaps_function (input->sinkpad, gst_pad_proxy_getcaps);
   gst_pad_set_link_function(input->sinkpad, gst_adder_link);
 
   /* add the input_channel to the list of input channels */
