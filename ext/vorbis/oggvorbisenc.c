@@ -149,7 +149,7 @@ raw_caps_factory (void)
       "signed", G_TYPE_BOOLEAN, TRUE,
       "width", G_TYPE_INT, 16,
       "depth", G_TYPE_INT, 16,
-      "rate", GST_TYPE_INT_RANGE, 11025, 48000,
+      "rate", GST_TYPE_INT_RANGE, 8000, 50000,
       "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
 }
 

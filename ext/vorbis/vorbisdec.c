@@ -52,7 +52,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 11025, 48000 ], "
+        "rate = (int) [ 8000, 50000 ], "
         "channels = (int) [ 1, 2 ], " "endianness = (int) BYTE_ORDER, "
 /* no ifdef in macros, please
 #ifdef GST_VORBIS_DEC_SEQUENTIAL
