@@ -241,6 +241,7 @@ gst_mad_emphasis_get_type(void) {
     {MAD_EMPHASIS_NONE,       "0", "None"},
     {MAD_EMPHASIS_50_15_US,   "1", "50/15 Microseconds"},
     {MAD_EMPHASIS_CCITT_J_17, "2", "CCITT J.17"},
+    {MAD_EMPHASIS_RESERVED,   "3", "Reserved"},
     { 0, NULL, NULL},
   };
   if (!mad_emphasis_type) {
