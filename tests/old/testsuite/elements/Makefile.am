@@ -5,7 +5,7 @@ tests_pass = name tee property fake gst-inspect-check struct_size
 tests_fail =
 tests_ignore =
 
-noinst_HEADERS = property.h
+noinst_HEADERS = property.h struct_i386.h
 
 gst_inspect_check_SOURCES =
 gst-inspect-check$(EXEEXT): $(srcdir)/gst-inspect-check.in
