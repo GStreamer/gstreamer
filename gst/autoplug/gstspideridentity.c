@@ -190,7 +190,7 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
 
   if ((ident->src != NULL) && (GST_PAD_PEER (ident->src) != NULL)) {
     /* g_print("pushing buffer %p (refcount %d - buffersize %d) to pad %s:%s\n", buf, GST_BUFFER_REFCOUNT (buf), GST_BUFFER_SIZE (buf), GST_DEBUG_PAD_NAME (ident->src)); */
-    GST_DEBUG (0, "push %p %lld", buf, GST_BUFFER_OFFSET (buf));
+    GST_DEBUG (0, "push %p %" G_GINT64_FORMAT, buf, GST_BUFFER_OFFSET (buf));
     gst_pad_push (ident->src, buf);
   } else if (GST_IS_BUFFER (buf)) {
     gst_buffer_unref (buf);
