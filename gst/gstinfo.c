@@ -178,3 +178,12 @@ gst_default_error_handler (gchar *file, gchar *function,
 
   exit(1);
 }
+
+gst_info_init (int    *argc,
+	       char ***argv)
+{
+
+  if (argc && argv) {
+    
+  }
+}

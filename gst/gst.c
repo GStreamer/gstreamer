@@ -20,6 +20,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <stdlib.h>
+
 #include "gst_private.h"
 
 #include "gstcpu.h"
@@ -38,6 +40,7 @@ gchar *_gst_progname;
 extern gint _gst_trace_on;
 
 
+static gboolean 	gst_init_check 		(int *argc, gchar ***argv);
 
 /**
  * gst_init:
@@ -60,6 +63,10 @@ gst_init (int *argc, char **argv[])
 
   gtk_init (argc,argv);
 
+  if (!gst_init_check (argc,argv)) {
+    exit (0);
+  }
+
   _gst_cpu_initialize ();
   _gst_type_initialize ();
   _gst_plugin_initialize ();
@@ -75,6 +82,79 @@ gst_init (int *argc, char **argv[])
     gst_trace = gst_trace_new ("gst.trace",1024);
     gst_trace_set_default (gst_trace);
   }
+}
+
+/* returns FALSE if the program can be aborted */
+static gboolean
+gst_init_check (int     *argc,
+		gchar ***argv)
+{
+  gboolean ret = TRUE;
+  gboolean showhelp = FALSE;
+
+  if (argc && argv) {
+    gint i, j, k;
+
+    for (i=1; i< *argc; i++) {
+      if (!strncmp ("--gst-info-mask=", (*argv)[i], 16)) {
+	guint32 val;
+
+	sscanf ((*argv)[i]+16, "%08x", &val);
+
+	gst_info_set_categories (val);
+
+	(*argv)[i] = NULL;
+      }
+      else if (!strncmp ("--gst-info-mask=", (*argv)[i], 16)) {
+	guint32 val;
+
+	sscanf ((*argv)[i]+16, "%08x", &val);
+
+	//FIXME
+	//gst_info_set_categories (val);
+
+	(*argv)[i] = NULL;
+      }
+      else if (!strncmp ("--help", (*argv)[i], 6)) {
+	showhelp = TRUE;
+      }
+    }
+
+    for (i = 1; i < *argc; i++) {
+      for (k = i; k < *argc; k++)
+        if ((*argv)[k] != NULL)
+          break;
+
+      if (k > i) {
+        k -= i;
+        for (j = i + k; j < *argc; j++)
+          (*argv)[j-k] = (*argv)[j];
+        *argc -= k;
+      }
+    }
+  }
+
+  if (showhelp) {
+    guint i;
+
+    g_print ("usage %s [OPTION...]\n", (*argv)[0]);
+
+    g_print ("\nGStreamer options\n");
+    g_print ("  --gst-info-mask=FLAGS               Gst info flags to set (current %08x)\n", gst_info_get_categories());
+    g_print ("  --gst-debug-mask=FLAGS              Gst debugging flags to set\n");
+
+    g_print ("\nGStreamer info/debug FLAGS (to be ored)\n");
+
+    for (i = 0; i<GST_CAT_MAX_CATEGORY; i++) {
+      g_print ("   %08x    %s     %s\n", 1<<i, 
+                  (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
+		   gst_get_category_name (i));
+    }
+
+    ret = FALSE;
+  }
+
+  return ret;
 }
 
 /**

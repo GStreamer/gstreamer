@@ -41,9 +41,10 @@ static gchar *stringcat (gchar *a,gchar *b) {
   gchar *c;
   if (a) {
     c = g_strconcat(a,b,NULL);
-    g_free(a);
-  } else
+    g_free (a);
+  } else {
     c = g_strdup(b);
+  }
   return c;
 }
 
