@@ -411,8 +411,22 @@ NOTES:
 - what about starvation? We'll probably have to put the group
   at the end of the runqueue.
 
+- multi-out elements can introduce significant latency. consider:
 
+  (-group1----------) (-group2-----------------)
+  !                 ! !                        !
+  ! *filesrc -> mad --> *%identity -> osssink  !
+  (-----------------) (------------------------)
 
+  mad produces N output buffers, they are queued in the bufpen, when
+  group1 is done, group2 is scheduled to empty the bufpen queue.
+
+  The time it takes for the first buffer to arrive at osssink equals
+  the time needed to decode the N-1 other buffers.
+
+  Of course, given the right buffersize for filesrc N can be reduced
+  to 1. mad can also suggest a buffersize to filesrc with the 
+  BUFFER_SIZE event.
 
 
 
