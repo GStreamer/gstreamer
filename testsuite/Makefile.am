@@ -12,4 +12,4 @@ LIBS = $(GST_LIBS)
 CFLAGS = $(GST_CFLAGS)
 
 # FIXME : refcounting threadds
-DIST_SUBDIRS = caps plugin bytestream cleanup elements
+DIST_SUBDIRS = caps plugin bytestream cleanup elements dynparams
