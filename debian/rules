@@ -12,22 +12,6 @@ export DH_COMPAT=3
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
-# The plugins are basically the same.
-# Link special names to a template file.
-# still need "*.files" to be done by hand
-
-PLUGINS=a52dec aa alsa arts artsd audiofile avifile cdparanoia colorspace core dvd esd festival flac gnomevfs gsm jpeg lame mad mikmod misc mpeg2dec mpg123 oss sdl sid vorbis x
-
-setup-links:
-	for i in $(PLUGINS); do \
-		(cd debian; \
-		ln -fs gstreamer-plugin-template.postinst \
-			gstreamer-$$i.postinst; \
-		ln -fs gstreamer-plugin-template.postrm \
-			gstreamer-$$i.postrm; \
-		) \
-	done
-
 export DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 export DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
@@ -77,12 +61,6 @@ clean:
 	-$(MAKE) distclean
 
 	dh_clean
-
-	# get rid of the sym links
-	for i in $(PLUGINS); do \
-		rm -f debian/gstreamer-$$i.postinst; \
-		rm -f debian/gstreamer-$$i.postrm; \
-	done
 
 	# FIXME some extra clean up
 	rm -rf \
@@ -154,7 +132,7 @@ binary-indep: build install
 # Build architecture-dependent files here.
 # Pass -a to all debhelper commands in this target to reduce clutter.
 binary-arch: DH_OPTIONS=-a
-binary-arch: build install setup-links
+binary-arch: build install
 # Need this version of debhelper for DH_OPTIONS to work.
 	dh_testdir
 	dh_testroot
@@ -179,7 +157,7 @@ binary-arch: build install setup-links
 	dh_makeshlibs
 	dh_installdeb
 #	dh_perl
-	dh_shlibdeps -l`pwd`/debian/libgst1/usr/lib:`pwd`/debian/libgstmediaplay0/usr/lib:`pwd`/debian/libgsteditor0/usr/lib
+	dh_shlibdeps -l`pwd`/debian/libgst2/usr/lib
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb

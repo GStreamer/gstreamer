@@ -1,5 +1,0 @@
-?package(gstmediaplay): \
-  needs=X11 \
-  section=Apps/Viewers \
-  title="GStreamer Media Player" \
-  command="/usr/bin/gstmediaplay"

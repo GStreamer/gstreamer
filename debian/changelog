@@ -1,3 +1,17 @@
+gstreamer (0.3.1-1) unstable; urgency=low
+
+  * New upstream release
+  * Upstream broken into multiple packages
+  * Core plugins left in -core
+  * Core lib plugins moved to -core
+  * Other plugins now built from gst-plugins source pacakge
+  * libgst1 -> libgst2
+  * Tool prefix renamed upstream: s/gstreamer/gst/
+  * Moved gstreamer-guilaunch to gst-editor source package
+  * Removed gstreamer-config and .m4 in favor of pkg-config use
+
+ -- David I. Lehn <dlehn@vt.edu>  Mon,  7 Jan 2002 17:45:55 -0500
+
 gstreamer (0.3.0-3) unstable; urgency=low
 
   * Remove upstream ChangeLog from packages: 128k changelog.gz per

@@ -1,4 +1,3 @@
-usr/bin/gstreamer-complete
-usr/bin/gstreamer-guilaunch
-usr/bin/gstreamer-inspect
-usr/bin/gstreamer-launch
+usr/bin/gst-complete
+usr/bin/gst-inspect
+usr/bin/gst-launch

@@ -4,60 +4,13 @@ This package contains the GStreamer distribution.
 
 More information can be found at http://gstreamer.net/
 
-GStreamer is split into a number of base packages:
+GStreamer core is split into the following packages:
 
-   libgst1              shared core libs
+   libgst2              shared core libs
    libgst-dev           development libs and headers
    gstreamer-runtime    tools required by the libs (gstreamer-register)
    gstreamer-doc        documentation
    gstreamer-tools      useful tools
-
-pseudo plugins package:
-
-   gstreamer-all      depends on all the packages below
-
-recommended plugins:
-
-   gstreamer-core     core plugins
-   gstreamer-misc     many independent plugins
-
-optional plugins:
-
-   gstreamer-a52dec
-   gstreamer-aa
-   gstreamer-alsa
-   gstreamer-arts
-   gstreamer-artsd
-   gstreamer-audiofile
-   gstreamer-avifile
-   gstreamer-cdparanoia
-   gstreamer-colorspace
-   gstreamer-dvd
-   gstreamer-esd
-   gstreamer-festival
-   gstreamer-flac
-   gstreamer-gnomevfs
-   gstreamer-gsm
-   gstreamer-jpeg
-   gstreamer-lame
-   gstreamer-mad
-   gstreamer-mikmod
-   gstreamer-mpeg2dec
-   gstreamer-mpg123
-   gstreamer-oss
-   gstreamer-sdl
-   gstreamer-sid
-   gstreamer-vorbis
-   gstreamer-x
-
-and applications and their supporting libs:
-
-   libgstmediaplay0     media player libs
-   libgstmediaplay-dev  media player dev support
-   gstmediaplay         media player application
-
-   libgsteditor0        stream pipeline visual editor libs
-   libgsteditor-dev     stream pipeline visual editor dev support
-   gsteditor            stream pipeline visual editor application
+   gstreamer-core       core plugins and lib plugins
 
 David I. Lehn <dlehn@vt.edu>  Fri, 19 Jan 2001 19:13:06 -0500

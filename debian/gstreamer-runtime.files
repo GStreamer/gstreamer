@@ -1,2 +1,2 @@
-usr/bin/gstreamer-register
-usr/bin/gstreamer-compprep
+usr/bin/gst-register
+usr/bin/gst-compprep
