@@ -249,7 +249,7 @@ print_element_properties (GstElement *element)
 
   property_specs = g_object_class_list_properties
                      (G_OBJECT_GET_CLASS (element), &num_properties);
-  g_print("\nElement Arguments:\n");
+  g_print("\nElement Properties:\n");
 
   for (i = 0; i < num_properties; i++) {
     GValue value = { 0, };
