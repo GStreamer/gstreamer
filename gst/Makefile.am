@@ -142,6 +142,7 @@ gstmarshal.h: gstmarshal.list
 gstmarshal.c: gstmarshal.list
 	glib-genmarshal --header --prefix=gst_marshal gstmarshal.list > gstmarshal.h
 	echo "#include \"glib-object.h\"" >gstmarshal.c
+	echo "#include \"gstlog.h\"" >> gstmarshal.c
 	glib-genmarshal --body --prefix=gst_marshal gstmarshal.list >> gstmarshal.c
 
 ##### end built sources #####
