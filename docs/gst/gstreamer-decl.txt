@@ -136,25 +136,6 @@ struct GstBin {
   cothread_context *threadcontext;
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstBinClass</NAME>
-struct GstBinClass {
-  GstElementClass parent_class;
-
-  void (*object_added) (GstObject *object,GstObject *child);
-
-  /* change the state of elements of the given type */
-  gboolean (*change_state_type) (GstBin *bin,
-                                 GstElementState state,
-                                 GtkType type);
-
-  /* create a plan for the execution of the bin */
-  void (*create_plan) (GstBin *bin);
-
-  /* run a full iteration of operation */
-  void (*iterate) (GstBin *bin);
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_bin_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -359,64 +340,6 @@ GstBuffer *buffer
 <RETURNS>void  </RETURNS>
 GstBuffer *buffer,GstMeta *meta
 </FUNCTION>
-<TYPEDEF>
-<NAME>GstClockTime</NAME>
-typedef guint64 GstClockTime;
-</TYPEDEF>
-<TYPEDEF>
-<NAME>GstClockTimeDiff</NAME>
-typedef gint64 GstClockTimeDiff;
-</TYPEDEF>
-<MACRO>
-<NAME>GST_CLOCK_DIFF</NAME>
-#define GST_CLOCK_DIFF(s, e) (GstClockTimeDiff)((s)-(e))
-</MACRO>
-<STRUCT>
-<NAME>GstClock</NAME>
-</STRUCT>
-<STRUCT>
-<NAME>GstClock</NAME>
-struct GstClock {
-  gchar *name;
-  GstClockTime start_time;
-  GstClockTime current_time;
-  GstClockTimeDiff adjust;
-  gboolean locking;
-  GList *sinkobjects;
-  GMutex *sinkmutex;
-  GMutex *lock;
-};
-</STRUCT>
-<FUNCTION>
-<NAME>gst_clock_new</NAME>
-<RETURNS>GstClock  *</RETURNS>
-gchar *name
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_clock_get_system</NAME>
-<RETURNS>GstClock  *</RETURNS>
-void
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_clock_register</NAME>
-<RETURNS>void  </RETURNS>
-GstClock *clock, GstObject *obj
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_clock_set</NAME>
-<RETURNS>void  </RETURNS>
-GstClock *clock, GstClockTime time
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_clock_reset</NAME>
-<RETURNS>void  </RETURNS>
-GstClock *clock
-</FUNCTION>
-<FUNCTION>
-<NAME>gst_clock_wait</NAME>
-<RETURNS>void  </RETURNS>
-GstClock *clock, GstClockTime time, GstObject *obj
-</FUNCTION>
 <MACRO>
 <NAME>GST_TYPE_CONNECTION</NAME>
 #define GST_TYPE_CONNECTION \
@@ -452,15 +375,6 @@ GstClock *clock, GstClockTime time, GstObject *obj
 <NAME>GstConnection</NAME>
 struct GstConnection {
   GstElement element;
-};
-</STRUCT>
-<STRUCT>
-<NAME>GstConnectionClass</NAME>
-struct GstConnectionClass {
-  GstElementClass parent_class;
-
-  /* push function */
-  void (*push) (GstConnection *connection);
 };
 </STRUCT>
 <FUNCTION>
@@ -504,14 +418,16 @@ typedef enum {
 <NAME>GST_STATE_SET</NAME>
 #define GST_STATE_SET(obj,flag) \
 G_STMT_START{ (GST_STATE (obj) |= (flag)); \
-gst_info("set '%s' state %d\n",gst_element_get_name(obj),flag); \
+gst_info("set '%s' state %d(%s)\n",gst_element_get_name(obj),flag, \
+_gst_print_statename(flag)); \
 }G_STMT_END
 </MACRO>
 <MACRO>
 <NAME>GST_STATE_UNSET</NAME>
 #define GST_STATE_UNSET(obj,flag) \
 G_STMT_START{ (GST_STATE (obj) &= ~(flag)); \
-gst_info("unset '%s' state %d\n",gst_element_get_name(obj),flag); \
+gst_info("unset '%s' state %d(%s)\n",gst_element_get_name(obj),flag, \
+_gst_print_statename(flag)); \
 }G_STMT_END
 </MACRO>
 <MACRO>
@@ -538,6 +454,16 @@ gst_info("unset '%s' state %d\n",gst_element_get_name(obj),flag); \
 <NAME>GST_IS_ELEMENT_CLASS</NAME>
 #define GST_IS_ELEMENT_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT))
+</MACRO>
+<ENUM>
+<NAME>GstElementFlags</NAME>
+typedef enum {
+  GST_ELEMENT_MULTI_OUT		= (1 << 16),
+} GstElementFlags;
+</ENUM>
+<MACRO>
+<NAME>GST_ELEMENT_IS_MULTI_OUT</NAME>
+#define GST_ELEMENT_IS_MULTI_OUT(obj)	((GST_FLAGS(obj) & GST_ELEMENT_MULTI_OUT)
 </MACRO>
 <STRUCT>
 <NAME>GstElement</NAME>
@@ -572,32 +498,6 @@ struct GstElement {
   GList *pads;
 
   GstElement *manager;
-};
-</STRUCT>
-<STRUCT>
-<NAME>GstElementClass</NAME>
-struct GstElementClass {
-  GstObjectClass parent_class;
-
-  /* the elementfactory that created us */
-  GstElementFactory *elementfactory;
-
-  /* signal callbacks */
-  void (*state_change) (GstElement *element,GstElementState state);
-  void (*new_pad) (GstElement *element,GstPad *pad);
-  void (*new_ghost_pad) (GstElement *element,GstPad *pad);
-  void (*error) (GstElement *element,gchar *error);
-
-  /* events */
-  gboolean (*start) (GstElement *element,GstElementState state);
-  gboolean (*stop) (GstElement *element);
-
-  /* change the element state */
-  gboolean (*change_state) (GstElement *element,GstElementState state);
-
-  /* create or read XML representation of self */
-  xmlNodePtr (*save_thyself)(GstElement *element,xmlNodePtr parent);
-  void (*restore_thyself)(GstElement *element,xmlNodePtr *self);
 };
 </STRUCT>
 <STRUCT>
@@ -776,12 +676,6 @@ struct GstFilter {
   GstElement element;
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstFilterClass</NAME>
-struct GstFilterClass {
-  GstElementClass parent_class;
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_filter_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -926,17 +820,6 @@ struct GstObject {
   GstObject *parent;
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstObjectClass</NAME>
-struct GstObjectClass {
-  GtkObjectClass parent_class;
-
-  /* signals */
-  void (*parent_set) (GstObject *object,GstObject *parent);
-
-  /* functions go here */
-};
-</STRUCT>
 <MACRO>
 <NAME>GST_FLAGS</NAME>
 #define GST_FLAGS(obj)			GTK_OBJECT_FLAGS(obj)
@@ -1028,13 +911,11 @@ GstObject *object
 </MACRO>
 <MACRO>
 <NAME>GST_PAD_CONNECTED</NAME>
-#define GST_PAD_CONNECTED(pad) \
-	((pad)->peer != NULL)
+#define GST_PAD_CONNECTED(pad) ((pad)->peer != NULL)
 </MACRO>
 <MACRO>
 <NAME>GST_PAD_CAN_PULL</NAME>
-#define GST_PAD_CAN_PULL(pad) \
-	((pad)->pull != NULL)
+#define GST_PAD_CAN_PULL(pad) ((pad)->pullfunc != NULL)
 </MACRO>
 <STRUCT>
 <NAME>GstPad</NAME>
@@ -1049,7 +930,7 @@ GstPad *pad,GstBuffer *buf
 </USER_FUNCTION>
 <USER_FUNCTION>
 <NAME>GstPadPullFunction</NAME>
-<RETURNS>GstBuffer *</RETURNS>
+<RETURNS>void </RETURNS>
 GstPad *pad
 </USER_FUNCTION>
 <USER_FUNCTION>
@@ -1079,17 +960,12 @@ struct GstPad {
 
   GstBuffer *bufpen;
 
-  GstPadChainFunction chain;
-  GstPadPullFunction pull;
+  GstPadChainFunction chainfunc;
+  GstPadPullFunction pullfunc;
+  GstPadPushFunction pushfunc;
 
   GstObject *parent;
   GList *ghostparents;
-};
-</STRUCT>
-<STRUCT>
-<NAME>GstPadClass</NAME>
-struct GstPadClass {
-  GstObjectClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -1233,12 +1109,6 @@ struct GstPipeline {
   GstBin bin;
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstPipelineClass</NAME>
-struct GstPipelineClass {
-  GstBinClass parent_class;
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_pipeline_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -1368,12 +1238,6 @@ struct GstSink {
   GstElement element;
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstSinkClass</NAME>
-struct GstSinkClass {
-  GstElementClass parent_class;
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_sink_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -1436,19 +1300,6 @@ typedef enum {
 struct GstSrc {
   GstElement element;
   gint32 flags;
-};
-</STRUCT>
-<STRUCT>
-<NAME>GstSrcClass</NAME>
-struct GstSrcClass {
-  GstElementClass parent_class;
-
-  /* subclass functions */
-  void (*push) (GstSrc *src);
-  void (*push_region) (GstSrc *src,gulong offset,gulong size);
-
-  /* signals */
-  void (*eos) (GstSrc *src);
 };
 </STRUCT>
 <MACRO>
@@ -1523,12 +1374,6 @@ struct GstTee {
   GSList *srcpads;
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstTeeClass</NAME>
-struct GstTeeClass {
-  GstFilterClass parent_class;
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_tee_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -1593,18 +1438,9 @@ typedef enum {
 struct GstThread {
   GstBin bin;
 
-  GList *entries;		/* used to determine iterate behavior */
-  gint numentries;		/* number of above entry points */
-
   pthread_t thread_id;		/* id of the thread, if any */
   GMutex *lock;			/* thread lock/condititon pair... */
   GCond *cond;			/* used to control the thread */
-};
-</STRUCT>
-<STRUCT>
-<NAME>GstThreadClass</NAME>
-struct GstThreadClass {
-  GstBinClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -1825,6 +1661,64 @@ GtkObject *object,guchar *argname
 <RETURNS>xmlDocPtr  </RETURNS>
 GstElement *element
 </FUNCTION>
+<TYPEDEF>
+<NAME>GstClockTime</NAME>
+typedef guint64 GstClockTime;
+</TYPEDEF>
+<TYPEDEF>
+<NAME>GstClockTimeDiff</NAME>
+typedef gint64 GstClockTimeDiff;
+</TYPEDEF>
+<MACRO>
+<NAME>GST_CLOCK_DIFF</NAME>
+#define GST_CLOCK_DIFF(s, e) (GstClockTimeDiff)((s)-(e))
+</MACRO>
+<STRUCT>
+<NAME>GstClock</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstClock</NAME>
+struct GstClock {
+  gchar *name;
+  GstClockTime start_time;
+  GstClockTime current_time;
+  GstClockTimeDiff adjust;
+  gboolean locking;
+  GList *sinkobjects;
+  GMutex *sinkmutex;
+  GMutex *lock;
+};
+</STRUCT>
+<FUNCTION>
+<NAME>gst_clock_new</NAME>
+<RETURNS>GstClock  *</RETURNS>
+gchar *name
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_get_system</NAME>
+<RETURNS>GstClock  *</RETURNS>
+void
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_register</NAME>
+<RETURNS>void  </RETURNS>
+GstClock *clock, GstObject *obj
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_set</NAME>
+<RETURNS>void  </RETURNS>
+GstClock *clock, GstClockTime time
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_reset</NAME>
+<RETURNS>void  </RETURNS>
+GstClock *clock
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_wait</NAME>
+<RETURNS>void  </RETURNS>
+GstClock *clock, GstClockTime time, GstObject *obj
+</FUNCTION>
 <MACRO>
 <NAME>GST_TYPE_ASYNCDISKSRC</NAME>
 #define GST_TYPE_ASYNCDISKSRC \
@@ -1885,12 +1779,6 @@ struct GstAsyncDiskSrc {
   gulong seq;				/* buffer sequence number */
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstAsyncDiskSrcClass</NAME>
-struct GstAsyncDiskSrcClass {
-  GstSrcClass parent_class;
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_asyncdisksrc_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -1942,15 +1830,6 @@ struct GstAudioSink {
   gint format;
   gint channels;
   gint frequency;
-};
-</STRUCT>
-<STRUCT>
-<NAME>GstAudioSinkClass</NAME>
-struct GstAudioSinkClass {
-  GstSinkClass parent_class;
-
-  /* signals */
-  void (*handoff) (GstElement *element,GstPad *pad);
 };
 </STRUCT>
 <FUNCTION>
@@ -2014,12 +1893,6 @@ struct GstAudioSrc {
   MetaAudioRaw *meta;
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstAudioSrcClass</NAME>
-struct GstAudioSrcClass {
-  GstSrcClass parent_class;
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_audiosrc_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -2080,12 +1953,6 @@ struct GstDiskSrc {
   gulong seq;				/* buffer sequence number */
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstDiskSrcClass</NAME>
-struct GstDiskSrcClass {
-  GstSrcClass parent_class;
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_disksrc_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -2137,15 +2004,6 @@ struct GstEsdSink {
   gint frequency;
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstEsdSinkClass</NAME>
-struct GstEsdSinkClass {
-  GstFilterClass parent_class;
-
-  /* signals */
-  void (*handoff) (GstElement *element,GstPad *pad);
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_esdsink_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -2188,12 +2046,6 @@ struct GstFakeSink {
   GstSink sink;
 
   GstPad *sinkpad;
-};
-</STRUCT>
-<STRUCT>
-<NAME>GstFakeSinkClass</NAME>
-struct GstFakeSinkClass {
-  GstSinkClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -2240,12 +2092,6 @@ struct GstFakeSrc {
   GstPad *srcpad;
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstFakeSrcClass</NAME>
-struct GstFakeSrcClass {
-  GstSrcClass parent_class;
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_fakesrc_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -2290,12 +2136,6 @@ struct GstFdSink {
   GstPad *sinkpad;
 
   int fd;
-};
-</STRUCT>
-<STRUCT>
-<NAME>GstFdSinkClass</NAME>
-struct GstFdSinkClass {
-  GstSinkClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -2350,12 +2190,6 @@ struct GstFdSrc {
   gulong seq;				/* buffer sequence number */
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstFdSrcClass</NAME>
-struct GstFdSrcClass {
-  GstSrcClass parent_class;
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_fdsrc_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -2407,12 +2241,6 @@ struct GstHttpSrc {
   gulong bytes_per_read;		/* bytes per read */
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstHttpSrcClass</NAME>
-struct GstHttpSrcClass {
-  GstSrcClass parent_class;
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_httpsrc_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -2458,12 +2286,6 @@ struct GstIdentity {
   GstPad *srcpad;
 
   gint control;
-};
-</STRUCT>
-<STRUCT>
-<NAME>GstIdentityClass</NAME>
-struct GstIdentityClass {
-  GstFilterClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -2526,12 +2348,6 @@ struct GstQueue {
   GCond *fullcond;
 };
 </STRUCT>
-<STRUCT>
-<NAME>GstQueueClass</NAME>
-struct GstQueueClass {
-  GstConnectionClass parent_class;
-};
-</STRUCT>
 <FUNCTION>
 <NAME>gst_queue_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -2585,16 +2401,13 @@ struct GstSineSrc {
   gint channels;
   gint frequency;
 
+  /* state */
+  double mTheta;
+
   gulong seq;
 
   MetaAudioRaw meta;
   gboolean sentmeta;
-};
-</STRUCT>
-<STRUCT>
-<NAME>GstSineSrcClass</NAME>
-struct GstSineSrcClass {
-  GstSrcClass parent_class;
 };
 </STRUCT>
 <FUNCTION>

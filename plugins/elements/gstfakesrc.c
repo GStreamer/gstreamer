@@ -87,8 +87,8 @@ static void gst_fakesrc_init(GstFakeSrc *fakesrc) {
   fakesrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
   gst_element_add_pad(GST_ELEMENT(fakesrc),fakesrc->srcpad);
 
-  // we're already complete, since we don't have any args...
-  gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_COMPLETE);
+  // we're ready right away, since we don't have any args...
+//  gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_READY);
 }
 
 /**

@@ -52,9 +52,12 @@ typedef struct _GstBinClass GstBinClass;
 struct _GstBin {
   GstElement element;
 
+  // our children
   gint numchildren;
   GList *children;
 
+  // iteration state
+  gboolean need_cothreads;
   GList *entries;
   gint numentries;
 

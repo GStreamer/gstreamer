@@ -51,7 +51,7 @@ AM_PATH_GLIB(1.2.0,,
             glib gmodule gthread)
 dnl Put the glib flags into $LIBS and $CFLAGS since we always use them
 LIBS="$LIBS $GLIB_LIBS"
-CFLAGS="$FLAGS $GLIB_CFLAGS"
+CFLAGS="$CFLAGS $GLIB_CFLAGS"
 
 dnl Check for libxml
 AC_PATH_PROG(XML_CONFIG, xml-config, no)
@@ -306,7 +306,7 @@ AM_CONDITIONAL(HAVE_LIBMMX,     test "x$USE_LIBMMX" = "xyes")
 AM_CONDITIONAL(HAVE_ATOMIC_H,   test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(HAVE_XAUDIO,     test "x$HAVE_XAUDIO" = "xyes")
 AM_CONDITIONAL(HAVE_CSSAUTH,    test "x$HAVE_CSSAUTH" = "xyes")
-AM_CONDITIONAL(HAVE_GTK_DOC,    $HAVE_GTK_DOC)
+AM_CONDITIONAL(HAVE_GTK_DOC,    test "x$HAVE_GTK_DOC" = "xyes")
 
 
 dnl FIXME: having to AC_SUBST these is messy.  Not sure if CPPFLAGS and LDFLAGS

@@ -57,9 +57,6 @@ typedef struct _GstThreadClass GstThreadClass;
 struct _GstThread {
   GstBin bin;
 
-  GList *entries;		/* used to determine iterate behavior */
-  gint numentries;		/* number of above entry points */
-
   pthread_t thread_id;		/* id of the thread, if any */
   GMutex *lock;			/* thread lock/condititon pair... */
   GCond *cond;			/* used to control the thread */

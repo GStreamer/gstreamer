@@ -35,6 +35,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 
+#ifdef OLDSTATES
 typedef enum {
   GST_STATE_COMPLETE    = (1 << 0),
   GST_STATE_RUNNING     = (1 << 1),
@@ -47,17 +48,55 @@ typedef enum {
   GST_STATE_MAX		= (1 << 15),
 } GstElementState;
 
+typedef enum {
+  GST_STATE_FAILURE	= 0,
+  GST_STATE_SUCCESS	= 1,
+  GST_STATE_ASYNC	= 2,
+};
+#else
+typedef enum {
+  GST_STATE_NONE_PENDING	= -1,
+  GST_STATE_NULL	= 0,
+  GST_STATE_READY	= 1,
+  GST_STATE_PLAYING	= 2,
+  GST_STATE_PAUSED	= 3,
+} GstElementState;
 
-#define GST_STATE(obj)			(GST_ELEMENT(obj)->state)
+typedef enum {
+  GST_STATE_FAILURE	= 0,
+  GST_STATE_SUCCESS	= 1,
+  GST_STATE_ASYNC	= 2,
+} GstElementStateReturn;
+#endif
+
+static inline char *_gst_print_statename(int state) {
+  switch (state) {
+    case -1: return "none pending";break;
+    case 0: return "null";break;
+    case 1: return "ready";break;
+    case 2: return "playing";break;
+    case 3: return "paused";break;
+    default: return "";
+  }
+  return "";
+}
+
+#define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
+#define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
+
+#ifdef OLDSTATE
 #define GST_STATE_IS_SET(obj,flag)	(GST_STATE (obj) & (flag))
 #define GST_STATE_SET(obj,flag) \
 G_STMT_START{ (GST_STATE (obj) |= (flag)); \
-gst_info("GstElement: set '%s' state %d\n",gst_element_get_name(obj),flag); \
+gst_info("GstElement: set '%s' state %d(%s)\n",gst_element_get_name(obj),flag, \
+_gst_print_statename(flag)); \
 }G_STMT_END
 #define GST_STATE_UNSET(obj,flag) \
 G_STMT_START{ (GST_STATE (obj) &= ~(flag)); \
-gst_info("GstElement: unset '%s' state %d\n",gst_element_get_name(obj),flag); \
+gst_info("GstElement: unset '%s' state %d(%s)\n",gst_element_get_name(obj),flag, \
+_gst_print_statename(flag)); \
 }G_STMT_END
+#endif
 
 
 #define GST_TYPE_ELEMENT \
@@ -71,6 +110,13 @@ gst_info("GstElement: unset '%s' state %d\n",gst_element_get_name(obj),flag); \
 #define GST_IS_ELEMENT_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT))
 
+typedef enum {
+  GST_ELEMENT_MULTI_IN		= (1 << 16),
+} GstElementFlags;
+
+#define GST_ELEMENT_IS_MULTI_IN(obj)	(GST_FLAGS(obj) & GST_ELEMENT_MULTI_IN)
+
+
 typedef struct _GstElement GstElement;
 typedef struct _GstElementClass GstElementClass;
 typedef struct _GstElementDetails GstElementDetails;
@@ -83,7 +129,8 @@ struct _GstElement {
 
   gchar *name;
 
-  guint16 state;
+  guint8 current_state;
+  guint8 pending_state;
 
   GstElementLoopFunction loopfunc;
   cothread_state *threadstate;
@@ -107,11 +154,11 @@ struct _GstElementClass {
   void (*error) (GstElement *element,gchar *error);
 
   /* events */
-  gboolean (*start) (GstElement *element,GstElementState state);
-  gboolean (*stop) (GstElement *element);
+//  gboolean (*start) (GstElement *element,GstElementState state);
+//  gboolean (*stop) (GstElement *element);
 
   /* change the element state */
-  gboolean (*change_state) (GstElement *element,GstElementState state);
+  GstElementStateReturn (*change_state) (GstElement *element);
 
   /* create or read XML representation of self */
   xmlNodePtr (*save_thyself)(GstElement *element,xmlNodePtr parent);
@@ -156,13 +203,9 @@ void gst_element_connect(GstElement *src,gchar *srcpadname,
                          GstElement *dest,gchar *destpadname);
 
 /* called by the app to set the state of the element */
-gboolean gst_element_set_state(GstElement *element,GstElementState state);
+gint gst_element_set_state(GstElement *element,GstElementState state);
 
 void gst_element_error(GstElement *element,gchar *error);
-
-/* callback to actually set the state */
-gboolean gst_element_change_state(GstElement *element,
-                                  GstElementState state);
 
 #define gst_element_destroy(element) gst_object_destroy(GST_OBJECT(element))
 

@@ -86,8 +86,8 @@ static void gst_fakesink_init(GstFakeSink *fakesink) {
   gst_element_add_pad(GST_ELEMENT(fakesink),fakesink->sinkpad);
   gst_pad_set_chain_function(fakesink->sinkpad,gst_fakesink_chain);
 
-  // we're already complete, since we don't have any args...
-  gst_element_set_state(GST_ELEMENT(fakesink),GST_STATE_COMPLETE);
+  // we're ready right away, since we don't have any args...
+//  gst_element_set_state(GST_ELEMENT(fakesink),GST_STATE_READY);
 }
 
 /**
@@ -120,8 +120,8 @@ void gst_fakesink_chain(GstPad *pad,GstBuffer *buf) {
   g_return_if_fail(buf != NULL);
 
   fakesink = GST_FAKESINK(pad->parent);
-//  g_print("gst_fakesink_chain: got buffer of %d bytes in '%s'\n",
-//          buf->datasize,gst_element_get_name(GST_ELEMENT(fakesink)));
+//  g_print("gst_fakesink_chain: got buffer in '%s'\n",
+//          gst_element_get_name(GST_ELEMENT(fakesink)));
   g_print("<");
   gst_buffer_unref(buf);
 }

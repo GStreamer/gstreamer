@@ -105,7 +105,6 @@ void gst_clock_wait(GstClock *clock, GstClockTime time, GstObject *obj) {
   struct timeval tfnow;
   GstClockTime now;
   GstClockTimeDiff diff;
-  GList *elements;
 
   //DEBUG("gst_clock: requesting clock object 0x%p %08llu %08llu\n", obj, time, clock->current_time);
 

@@ -1,4 +1,4 @@
-SUBDIRS = gst plugins test editor tools docs libs
+SUBDIRS = gst libs plugins test editor tools docs tests
 
 bin_SCRIPTS = gstreamer-config
 

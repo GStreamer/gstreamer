@@ -31,13 +31,11 @@ GstElementDetails gst_bin_details = {
 
 void gst_bin_real_destroy(GtkObject *object);
 
-static gboolean gst_bin_change_state(GstElement *element,
-                                     GstElementState state);
+static GstElementStateReturn gst_bin_change_state(GstElement *element);
+static GstElementStateReturn gst_bin_change_state_norecurse(GstBin *bin);
 static gboolean gst_bin_change_state_type(GstBin *bin,
                                           GstElementState state,
                                           GtkType type);
-static gboolean gst_bin_change_state_norecurse(GstElement *element,
-                                     GstElementState state);
 
 static void gst_bin_create_plan_func(GstBin *bin);
 static void gst_bin_iterate_func(GstBin *bin);
@@ -143,28 +141,38 @@ void gst_bin_add(GstBin *bin,GstElement *element) {
   g_return_if_fail(element != NULL);
   g_return_if_fail(GST_IS_ELEMENT(element));
 
+  // must be NULL or PAUSED state in order to modify bin
+  g_return_if_fail((GST_STATE(bin) == GST_STATE_NULL) ||
+		   (GST_STATE(bin) == GST_STATE_PAUSED));
+
   bin->children = g_list_append(bin->children,element);
   bin->numchildren++;
   gst_object_set_parent(GST_OBJECT(element),GST_OBJECT(bin));
 
+#ifdef OLDSTATE
   /* FIXME: this isn't right, the bin should be complete whether or not
      the children are, I think. */
 //  if (GST_STATE_IS_SET(element,GST_STATE_COMPLETE)) {
     if (!GST_STATE_IS_SET(bin,GST_STATE_COMPLETE)) {
-      g_print("GstBin: adding complete element - \n");
-      gst_bin_change_state_norecurse(GST_ELEMENT(bin),GST_STATE_COMPLETE);
+      g_print("GstBin: adding complete element - ");
+      gst_bin_change_state_norecurse(GST_ELEMENT(bin));
     }
 //  } else {
 //    g_print("GstBin: adding element - ");
 //  gst_bin_change_state_norecurse(GST_ELEMENT(bin),~GST_STATE_COMPLETE);
 //  }
+#else
+  /* we know we have at least one child, we just added one... */
+//  if (GST_STATE(element) < GST_STATE_READY)
+//    gst_bin_change_state_norecurse(bin,GST_STATE_READY);
+#endif
 
   gtk_signal_emit(GTK_OBJECT(bin),gst_bin_signals[OBJECT_ADDED],element);
 }
 
 /**
  * gst_bin_remove:
- * @bin: #Gstbin to remove element from
+ * @bin: #GstBin to remove element from
  * @element: #GstElement to remove
  *
  * Remove the element from its associated bin, unparenting as well.
@@ -176,57 +184,74 @@ void gst_bin_remove(GstBin *bin,GstElement *element) {
   g_return_if_fail(GST_IS_ELEMENT(element));
   g_return_if_fail(bin->children != NULL);
 
+  // must be NULL or PAUSED state in order to modify bin
+  g_return_if_fail((GST_STATE(bin) == GST_STATE_NULL) ||
+		   (GST_STATE(bin) == GST_STATE_PAUSED));
+
   gst_object_unparent(GST_OBJECT(element));
   bin->children = g_list_remove(bin->children,element);
   bin->numchildren--;
+
+  /* if we're down to zero children, force state to NULL */
+  if (bin->numchildren == 0)
+    gst_element_set_state(GST_ELEMENT(bin),GST_STATE_NULL);
 }
 
 
-static gboolean gst_bin_change_state(GstElement *element,
-                                     GstElementState state) {
+static GstElementStateReturn gst_bin_change_state(GstElement *element) {
   GstBin *bin;
   GList *children;
   GstElement *child;
 
-//  g_print("gst_bin_change_state(\"%s\",%d);\n",
-//          gst_object_get_name(GST_OBJECT(bin)),state);
-
-  g_return_val_if_fail(GST_IS_BIN(element), FALSE);
+  g_return_val_if_fail(GST_IS_BIN(element), GST_STATE_FAILURE);
   bin = GST_BIN(element);
-  g_return_val_if_fail(bin->numchildren != 0, FALSE);
+
+  g_print("gst_bin_change_state(\"%s\"): currently %d(%s), %d(%s) pending\n",
+          gst_element_get_name(element),GST_STATE(element),
+          _gst_print_statename(GST_STATE(element)),GST_STATE_PENDING(element),
+          _gst_print_statename(GST_STATE_PENDING(element)));
+
+//  g_return_val_if_fail(bin->numchildren != 0, GST_STATE_FAILURE);
 
 //  g_print("-->\n");
   children = bin->children;
   while (children) {
     child = GST_ELEMENT(children->data);
-    //g_print("gst_bin_change_state setting state on \"%s\"\n",
-    //        gst_element_get_name(GST_ELEMENT(child)));
-    if (!gst_element_set_state(child,state)) {
-      g_print("GstBin: child %p failed to set state 0x%08x\n",child,state);
-      return FALSE;
+    g_print("gst_bin_change_state: setting state on '%s'\n",
+            gst_element_get_name(child));
+    switch (gst_element_set_state(child,GST_STATE_PENDING(element))) {
+      case GST_STATE_FAILURE:
+        GST_STATE_PENDING(element) = GST_STATE_NONE_PENDING;
+        g_print("child '%s' failed to go to state %d(%s)\n",gst_element_get_name(child),
+                GST_STATE_PENDING(element),_gst_print_statename(GST_STATE_PENDING(element)));
+        return GST_STATE_FAILURE;
+        break;
+      case GST_STATE_ASYNC:
+        g_print("child '%s' is changing state asynchronously\n",gst_element_get_name(child));
+        break;
     }
 //    g_print("\n");
     children = g_list_next(children);
   }
 //  g_print("<-- \"%s\"\n",gst_object_get_name(GST_OBJECT(bin)));
 
-  if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element,state);
-  return TRUE;
+//  if (GST_STATE_PENDING(element),
+
+  return gst_bin_change_state_norecurse(bin);
 }
 
 
-static gboolean gst_bin_change_state_norecurse(GstElement *element,
-                                     GstElementState state) {
-  GstBin *bin;
-
-  g_return_val_if_fail(GST_IS_BIN(element), FALSE);
-  bin = GST_BIN(element);
-  g_return_val_if_fail(bin->numchildren != 0, FALSE);
+static GstElementStateReturn gst_bin_change_state_norecurse(GstBin *bin) {
+/*
+  if ((state == GST_STATE_READY) && (GST_STATE(bin) < GST_STATE_READY)) {
+//    gst_bin_create_plan(
+  }
+*/
 
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element,state);
-  return TRUE;
+    return GST_ELEMENT_CLASS(parent_class)->change_state(bin);
+  else
+    return GST_STATE_FAILURE;
 }
 
 static gboolean gst_bin_change_state_type(GstBin *bin,
@@ -371,6 +396,7 @@ void gst_bin_iterate(GstBin *bin) {
 
   oclass = GST_BIN_CLASS(GTK_OBJECT(bin)->klass);
 
+g_print("gst_bin_iterate()\n");
   if (oclass->iterate)
     (oclass->iterate)(bin);
 }
@@ -384,6 +410,7 @@ void gst_bin_create_plan(GstBin *bin) {
     (oclass->create_plan)(bin);
 }
 
+#ifdef OLD_STUFF
 static void gst_bin_create_plan_func(GstBin *bin) {
   GList *elements;
   GstElement *element;
@@ -400,7 +427,8 @@ static void gst_bin_create_plan_func(GstBin *bin) {
   while (elements) {
     element = GST_ELEMENT(elements->data);
 
-    // have to use cothreads if any elements use loop functions
+    // have to use cothreads if any elements use loop functions, or if any
+    // of them have nontrivial chain functions
     if (element->loopfunc != NULL) {
       if (bin->threadcontext == NULL) {
         g_print("GstBin: initializing cothread context\n");
@@ -414,14 +442,14 @@ static void gst_bin_create_plan_func(GstBin *bin) {
       }
     }
 
-    /* we need to find all the entry points into the bin */
+    // we need to find all the entry points into the bin
     if (GST_IS_SRC(element)) {
       g_print("GstBin: element '%s' is a source entry point for the bin\n",
               gst_element_get_name(GST_ELEMENT(element)));
       bin->entries = g_list_prepend(bin->entries,element);
       bin->numentries++;
     } else {
-      /* go through the list of pads to see if there's a Connection */
+      // go through the list of pads to see if there's a Connection
       pads = gst_element_get_pad_list(element);
       while (pads) {
         pad = GST_PAD(pads->data);
@@ -449,31 +477,187 @@ for internal element '%s'\n",
     }
     elements = g_list_next(elements);
   }
-  g_print("GstBin: have %d entries into bin\n",bin->numentries);
+  g_print("have %d entries into bin\n",bin->numentries);
+}
+#endif
+
+static int gst_bin_loopfunc_wrapper(int argc,char *argv[]) {
+  GstElement *element = GST_ELEMENT(argv);
+  GList *pads;
+  GstPad *pad;
+  GstBuffer *buf;
+
+//  g_print("** gst_bin_loopfunc_wrapper(%d,\"%s\")\n",
+//          argc,gst_element_get_name(element));
+
+  if (element->loopfunc != NULL) {
+//    g_print("** gst_bin_loopfunc_wrapper(): element has loop function, calling it\n");
+    while (1) {
+      (element->loopfunc)(element);
+    }
+  } else {
+//    g_print("** gst_bin_loopfunc_wrapper(): element is chain-based, calling in infinite loop\n");
+    if (GST_IS_SRC(element)) {
+      while (1) {
+//        g_print("** gst_bin_loopfunc_wrapper(): calling push function of source\n");
+        gst_src_push(GST_SRC(element));
+      }
+    } else {
+      while (1) {
+        pads = element->pads;
+        while (pads) {
+          pad = GST_PAD(pads->data);
+          if (pad->direction == GST_PAD_SINK) {
+//            g_print("** gst_bin_loopfunc_wrapper(): pulling a buffer\n");
+            buf = gst_pad_pull(pad);
+//            g_print("** gst_bin_loopfunc_wrapper(): calling chain function\n");
+            (pad->chainfunc)(pad,buf);
+          }
+          pads = g_list_next(pads);
+        }
+      }
+    }
+  }
+}
+
+static void gst_bin_pullfunc_wrapper(GstPad *pad) {
+//  g_print("** in gst_bin_pullfunc_wrapper()============================= %s\n",
+//          gst_element_get_name(GST_ELEMENT(pad->parent)));
+  cothread_switch(GST_ELEMENT(pad->parent)->threadstate);
+}
+
+static void gst_bin_pushfunc_wrapper(GstPad *pad) {
+//  g_print("** in gst_bin_pushfunc_wrapper()============================= %s\n",
+//          gst_element_get_name(GST_ELEMENT(pad->parent)));
+  cothread_switch(GST_ELEMENT(pad->parent)->threadstate);
+}
+
+static void gst_bin_create_plan_func(GstBin *bin) {
+  GList *elements;
+  GstElement *element;
+  int sink_pads;
+  GList *pads;
+  GstPad *pad, *peer;
+  GstElement *outside;
+
+  g_print("creating plan for bin\n");
+
+  // first loop through all children to see if we need cothreads
+  // we break immediately when we find we need to, why keep searching?
+  elements = bin->children;
+  while (elements) {
+    element = GST_ELEMENT(elements->data);
+    // if it's a loop-based element, use cothreads
+    if (element->loopfunc != NULL) {
+      bin->need_cothreads = TRUE;
+      break;
+    }
+    // if it's a complex element, use cothreads
+    if (GST_ELEMENT_IS_MULTI_IN(element)) {
+      bin->need_cothreads = TRUE;
+      break;
+    }
+    // if it has more than one input pad, use cothreads
+    sink_pads = 0;
+    pads = gst_element_get_pad_list(element);
+    while (pads) {
+      pad = GST_PAD(pads->data);
+      if (pad->direction == GST_PAD_SINK)
+        sink_pads++;
+      pads = g_list_next(pads);
+    }
+    if (sink_pads > 1) {
+      bin->need_cothreads = TRUE;
+      break;
+    }
+    elements = g_list_next(elements);
+  }
+
+  if (bin->need_cothreads) {
+    g_print("BIN: need cothreads\n");
+
+    // first create thread context
+    if (bin->threadcontext == NULL) {
+      bin->threadcontext = cothread_init();
+      g_print("initialized cothread context\n");
+    }
+
+    // walk through all the children
+    elements = bin->children;
+    while (elements) {
+      element = GST_ELEMENT(elements->data);
+
+      // start by creating thread state for the element
+      if (element->threadstate == NULL) {
+        element->threadstate = cothread_create(bin->threadcontext);
+        cothread_setfunc(element->threadstate,gst_bin_loopfunc_wrapper,
+                         0,(char **)element);
+      }
+
+      pads = gst_element_get_pad_list(element);
+      while (pads) {
+        pad = GST_PAD(pads->data);
+g_print("setting push&pull handlers for %s:%s\n",
+gst_element_get_name(element),gst_pad_get_name(pad));
+//        if (pad->direction == GST_PAD_SRC)
+          pad->pushfunc = gst_bin_pushfunc_wrapper;
+//        else
+          pad->pullfunc = gst_bin_pullfunc_wrapper;
+        pads = g_list_next(pads);
+      }
+      elements = g_list_next(elements);
+   }
+  } else {
+    g_print("BIN: don't need cothreads, looking for entry points\n");
+    // clear previous plan state
+    g_list_free(bin->entries);
+    bin->numentries = 0;
+    // we have to find which elements will drive an iteration
+    elements = bin->children;
+    while (elements) {
+      element = GST_ELEMENT(elements->data);
+      if (GST_IS_SRC(element)) {
+        g_print("adding '%s' as entry point\n",gst_element_get_name(element));
+        bin->entries = g_list_prepend(bin->entries,element);
+        bin->numentries++;
+      }
+      elements = g_list_next(elements);
+    }
+  }
 }
 
 void gst_bin_iterate_func(GstBin *bin) {
   GList *entries;
   GstElement *entry;
-   
+
+  g_print("gst_bin_iterate_func()\n");
+
   g_return_if_fail(bin != NULL);
   g_return_if_fail(GST_IS_BIN(bin));
-//  g_return_if_fail(GST_FLAG_IS_SET(thread,GST_STATE_RUNNING));
+  g_return_if_fail(GST_STATE(bin) == GST_STATE_PLAYING);
   g_return_if_fail(bin->numentries > 0);
-  
-  entries = bin->entries;  
 
   g_print("GstBin: iterating\n");
 
-  while (entries) {
-    entry = GST_ELEMENT(entries->data);
-    if (GST_IS_SRC(entry))
-      gst_src_push(GST_SRC(entry));
-    else if (GST_IS_CONNECTION(entry))
-      gst_connection_push(GST_CONNECTION(entry));
-    else
-      g_assert_not_reached();
-    entries = g_list_next(entries);
+  if (bin->need_cothreads) {
+    // all we really have to do is switch to the first child
+    // FIXME this should be lots more intelligent about where to start
+//  g_print("** in gst_bin_iterate_func()==================================%s\n",
+//          gst_element_get_name(GST_ELEMENT(bin->children->data)));
+    cothread_switch(GST_ELEMENT(bin->children->data)->threadstate);
+  } else {
+    entries = bin->entries;
+
+    while (entries) {
+      entry = GST_ELEMENT(entries->data);
+      if (GST_IS_SRC(entry))
+        gst_src_push(GST_SRC(entry));
+      else if (GST_IS_CONNECTION(entry))
+        gst_connection_push(GST_CONNECTION(entry));
+      else
+        g_assert_not_reached();
+      entries = g_list_next(entries);
+    }
   }
 //  g_print(",");
 }

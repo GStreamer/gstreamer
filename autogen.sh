@@ -61,7 +61,7 @@ for dir in `find * -name autogen.sh -print | grep -v '^autogen.sh$' | \
   popd > /dev/null
 done
 
-./configure --enable-maintainer-mode "$@"
+./configure --enable-maintainer-mode --enable-debug "$@"
 
 echo 
 echo "Now type 'make' to compile $package."

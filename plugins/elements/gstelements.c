@@ -45,13 +45,13 @@ struct _elements_entry {
 };
 
 struct _elements_entry _elements[] = {
+  { "fakesrc", gst_fakesrc_get_type, &gst_fakesrc_details },
+  { "fakesink", gst_fakesink_get_type, &gst_fakesink_details },
   { "asyncdisksrc", gst_asyncdisksrc_get_type, &gst_asyncdisksrc_details },
   { "audiosink", gst_audiosink_get_type, &gst_audiosink_details },
   { "audiosrc", gst_audiosrc_get_type, &gst_audiosrc_details },
   { "disksrc", gst_disksrc_get_type, &gst_disksrc_details },
   { "identity", gst_identity_get_type, &gst_identity_details },
-  { "fakesink", gst_fakesink_get_type, &gst_fakesink_details },
-  { "fakesrc", gst_fakesrc_get_type, &gst_fakesrc_details },
   { "fdsink", gst_fdsink_get_type, &gst_fdsink_details },
   { "fdsrc", gst_fdsrc_get_type, &gst_fdsrc_details },
 #if HAVE_LIBGHTTP

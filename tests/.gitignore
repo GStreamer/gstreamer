@@ -1,0 +1,12 @@
+Makefile
+Makefile.in
+*.o
+*.lo
+*.la
+.deps
+.libs
+*.xml
+init
+loadall
+simplefake
+states

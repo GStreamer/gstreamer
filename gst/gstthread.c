@@ -47,8 +47,7 @@ static void gst_thread_init(GstThread *thread);
 
 static void gst_thread_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_thread_get_arg(GtkObject *object,GtkArg *arg,guint id);
-static gboolean gst_thread_change_state(GstElement *element,
-                                        GstElementState state);
+static GstElementStateReturn gst_thread_change_state(GstElement *element);
 
 static xmlNodePtr gst_thread_save_thyself(GstElement *element,xmlNodePtr parent);
 
@@ -104,8 +103,8 @@ gst_thread_class_init(GstThreadClass *klass) {
 static void gst_thread_init(GstThread *thread) {
   GST_FLAG_SET(thread,GST_THREAD_CREATE);
 
-  thread->entries = NULL;
-  thread->numentries = 0;
+//  thread->entries = NULL;
+//  thread->numentries = 0;
 
   thread->lock = g_mutex_new();
   thread->cond = g_cond_new();
@@ -145,6 +144,7 @@ static void gst_thread_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   }
 }
 
+
 /**
  * gst_thread_new:
  * @name: the name of the thread
@@ -162,6 +162,7 @@ GstElement *gst_thread_new(guchar *name) {
 }
 
 
+#ifdef OLD_STUFF
 static void gst_thread_prepare(GstThread *thread) {
   GList *elements;
   GstElement *element;
@@ -211,13 +212,14 @@ for internal element \"%s\"\n",
   }
   gst_info("gstthread: have %d entries into thread\n",thread->numentries);
 }
+#endif
 
 
-static gboolean gst_thread_change_state(GstElement *element,
-                                        GstElementState state) {
+static GstElementStateReturn gst_thread_change_state(GstElement *element) {
   GstThread *thread;
   gboolean stateset = TRUE;
 
+/*
   g_return_val_if_fail(GST_IS_THREAD(element), FALSE);
   thread = GST_THREAD(element);
 
@@ -225,18 +227,19 @@ static gboolean gst_thread_change_state(GstElement *element,
     stateset = GST_ELEMENT_CLASS(parent_class)->change_state(element,state);
 
   switch (state) {
-    case GST_STATE_RUNNING:
+    case GST_STATE_READY:
       if (!stateset) return FALSE;
-      /* we want to prepare our internal state for doing the iterations */
-      gst_info("gstthread: preparing thread \"%s\" for iterations:\n",
+      // we want to prepare our internal state for doing the iterations
+      gst_info("preparing thread \"%s\" for iterations:\n",
                gst_element_get_name(GST_ELEMENT(element)));
-      gst_thread_prepare(thread);
-      if (thread->numentries == 0)
-        return FALSE;
-      /* set the state to idle */
+//      gst_thread_prepare(thread);
+      gst_bin_create_plan(GST_BIN(thread));
+//      if (thread->numentries == 0)
+//        return FALSE;
+      // set the state to idle
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
-      /* create the thread if that's what we're supposed to do */
-      gst_info("gstthread: flags are 0x%08x\n",GST_FLAGS(thread));
+      // create the thread if that's what we're supposed to do
+      gst_info("flags are 0x%08x\n",GST_FLAGS(thread));
       if (GST_FLAG_IS_SET(thread,GST_THREAD_CREATE)) {
         gst_info("gstthread: starting thread \"%s\"\n",
                  gst_element_get_name(GST_ELEMENT(element)));
@@ -248,17 +251,18 @@ static gboolean gst_thread_change_state(GstElement *element,
       }
       return TRUE;
       break;
+#if OLDSTATE
     case ~GST_STATE_RUNNING:
-      /* stop, reap, and join the thread */
+      // stop, reap, and join the thread
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
       GST_FLAG_SET(thread,GST_THREAD_STATE_REAPING);
       gst_thread_signal_thread(thread);
-      //pthread_join(thread->thread_id,0);
-      /* tear down the internal state */
-      gst_info("gstthread: tearing down thread's \"%s\" iteration state\n",
-		      gst_element_get_name(GST_ELEMENT(element)));
-      /* FIXME do stuff */
+      pthread_join(thread->thread_id,0);
+      // tear down the internal state
+      gst_info("tearing down thread's iteration state\n");
+      // FIXME do stuff
       break;
+#endif
     case GST_STATE_PLAYING:
       if (!stateset) return FALSE;
       gst_info("gstthread: starting thread \"%s\"\n",
@@ -276,6 +280,7 @@ static gboolean gst_thread_change_state(GstElement *element,
     default:
       break;
   }
+*/
 
   return stateset;
 }
@@ -295,7 +300,7 @@ void *gst_thread_main_loop(void *arg) {
 
   while(!GST_FLAG_IS_SET(thread,GST_THREAD_STATE_REAPING)) {
     if (GST_FLAG_IS_SET(thread,GST_THREAD_STATE_SPINNING))
-      gst_thread_iterate(thread);
+      gst_bin_iterate(GST_BIN(thread));
     else {
       g_mutex_lock(thread->lock);
       g_cond_wait(thread->cond,thread->lock);
@@ -311,6 +316,7 @@ void *gst_thread_main_loop(void *arg) {
   return NULL;
 }
 
+#ifdef OLD_STUFF
 /**
  * gst_thread_iterate:
  * @thread: the thread to iterate
@@ -343,6 +349,7 @@ void gst_thread_iterate(GstThread *thread) {
   DEBUG("gstthread: %s: thread iterate done\n", gst_element_get_name(GST_ELEMENT(thread)));
   //g_print(",");
 }
+#endif
 
 static void gst_thread_signal_thread(GstThread *thread) {
   g_mutex_lock(thread->lock);

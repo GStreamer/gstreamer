@@ -39,10 +39,8 @@ extern "C" {
 #define GST_IS_PAD_CLASS(obj)        (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PAD))
 
 // quick test to see if the pad is connected
-#define GST_PAD_CONNECTED(pad) \
-	((pad)->peer != NULL)
-#define GST_PAD_CAN_PULL(pad) \
-	((pad)->pull != NULL)
+#define GST_PAD_CONNECTED(pad) ((pad)->peer != NULL)
+#define GST_PAD_CAN_PULL(pad) ((pad)->pullfunc != NULL)
 
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;
@@ -51,7 +49,7 @@ typedef struct _GstPadClass GstPadClass;
  * pad is the sink pad (so the same chain function can be used for N pads)
  * buf is the buffer being passed */
 typedef void (*GstPadChainFunction) (GstPad *pad,GstBuffer *buf);
-typedef GstBuffer *(*GstPadPullFunction) (GstPad *pad);
+typedef void (*GstPadPullFunction) (GstPad *pad);
 typedef void (*GstPadPushFunction) (GstPad *pad);
 typedef void (*GstPadQoSFunction) (GstPad *pad, glong qos_message);
 
@@ -76,9 +74,10 @@ struct _GstPad {
 
   GstBuffer *bufpen;
 
-  GstPadChainFunction chain;
-  GstPadPullFunction pull;
-  GstPadQoSFunction qos;
+  GstPadChainFunction chainfunc;
+  GstPadPullFunction pullfunc;
+  GstPadPushFunction pushfunc;
+  GstPadQoSFunction qosfunc;
 
   GstObject *parent;
   GList *ghostparents;

@@ -39,6 +39,9 @@ static void gst_element_class_init(GstElementClass *klass);
 static void gst_element_init(GstElement *element);
 static void gst_element_real_destroy(GtkObject *object);
 
+GstElementStateReturn gst_element_change_state(GstElement *element);
+
+
 static GstObjectClass *parent_class = NULL;
 static guint gst_element_signals[LAST_SIGNAL] = { 0 };
 
@@ -92,15 +95,14 @@ static void gst_element_class_init(GstElementClass *klass) {
 
   gtk_object_class_add_signals(gtkobject_class,gst_element_signals,LAST_SIGNAL);
 
-  klass->start = NULL;
-  klass->stop = NULL;
   klass->change_state = gst_element_change_state;
 
   gtkobject_class->destroy = gst_element_real_destroy;
 }
 
 static void gst_element_init(GstElement *element) {
-  element->state = 0;
+  element->current_state = GST_STATE_NULL;
+  element->pending_state = -1;
   element->numpads = 0;
   element->pads = NULL;
   element->loopfunc = NULL;
@@ -282,37 +284,31 @@ void gst_element_error(GstElement *element,gchar *error) {
  *
  * Returns: whether or not the state was successfully set.
  */
-gboolean gst_element_set_state(GstElement *element,GstElementState state) {
+gint gst_element_set_state(GstElement *element,GstElementState state) {
   GstElementClass *oclass;
-  gboolean stateset = FALSE;
+  GstElementStateReturn return_val = GST_STATE_SUCCESS;
 
 //  g_print("gst_element_set_state(\"%s\",%08lx)\n",
 //          element->name,state);
 
-  g_return_val_if_fail(element != NULL, FALSE);
-  g_return_val_if_fail(GST_IS_ELEMENT(element), FALSE);
+  g_return_val_if_fail(element != NULL, GST_STATE_FAILURE);
+  g_return_val_if_fail(GST_IS_ELEMENT(element), GST_STATE_FAILURE);
 
+  // first we set the pending state variable
+  // FIXME should probably check to see that we don't already have one
+  GST_STATE_PENDING(element) = state;
+
+  // now we call the state change function so it can set the state
   oclass = GST_ELEMENT_CLASS(GTK_OBJECT(element)->klass);
-
   if (oclass->change_state)
-    stateset = (oclass->change_state)(element,state);
+    return_val = (oclass->change_state)(element);
 
-  /* if a state *set* failed, unset it immediately */
-/*
-  if (!(state & GST_STATE_MAX) && !stateset) {
-    g_print("set state failed miserably, forcing unset\n");
-    if (oclass->change_state)
-      stateset = (oclass->change_state)(element,~state);
-    return FALSE;
-  }*/
-
-  return stateset;
+  return return_val;
 }
 
 /**
  * gst_element_change_state:
  * @element: element to change state of
- * @state: new element state
  *
  * Changes the state of the element, but more importantly fires off a signal
  * indicating the new state.  You can clear state by simply prefixing the
@@ -321,14 +317,14 @@ gboolean gst_element_set_state(GstElement *element,GstElementState state) {
  *
  * Returns: whether or not the state change was successfully set.
  */
-gboolean gst_element_change_state(GstElement *element,
-                                  GstElementState state) {
-  g_return_val_if_fail(element != NULL, FALSE);
-  g_return_val_if_fail(GST_IS_ELEMENT(element), FALSE);
+GstElementStateReturn gst_element_change_state(GstElement *element) {
+  g_return_val_if_fail(element != NULL, GST_STATE_FAILURE);
+  g_return_val_if_fail(GST_IS_ELEMENT(element), GST_STATE_FAILURE);
 
 //  g_print("gst_element_change_state(\"%s\",%d)\n",
 //          element->name,state);
 
+#ifdef OLDSTATE
   /* deal with the inverted state */
   //g_print("changing element state, was %08lx\n",GST_STATE(element));
   if (state & GST_STATE_MAX)
@@ -336,8 +332,12 @@ gboolean gst_element_change_state(GstElement *element,
   else
     GST_STATE_SET(element,state);
 //  g_print(", is now %08lx\n",GST_STATE(element));
+#else
+  GST_STATE(element) = GST_STATE_PENDING(element);
+  GST_STATE_PENDING(element) = GST_STATE_NONE_PENDING;
+#endif
   gtk_signal_emit(GTK_OBJECT(element),gst_element_signals[STATE_CHANGE],
-                  state);
+                  GST_STATE(element));
   return TRUE;
 }
 
@@ -541,6 +541,7 @@ GstElement *gst_element_get_manager(GstElement *element) {
 int gst_element_loopfunc_wrapper(int argc,char **argv) {
   GstElement *element = GST_ELEMENT(argv);
   element->loopfunc(element);
+  return 0;
 }
 
 /**
