@@ -1,5 +1,10 @@
 2004-10-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_push):
+	  We love it if files that start at zero work too...
+
+2004-10-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_iterate):
 	  Handle files with missing EOS headers.
 
