@@ -5,7 +5,7 @@ DIE=0
 package=GStreamer
 srcfile=gst/gstobject.h
 #DEBUG=defined
-if test "x$1" = "x-d"; then echo "DEBUG output wanted."; DEBUG=defined; fi
+if test "x$1" = "x-d"; then echo "+ debug output enabled"; DEBUG=defined; fi
 
 debug ()
 # print out a debug message if DEBUG is a defined variable
@@ -35,7 +35,7 @@ version_check ()
   if test ! -z "$MICRO"; then VERSION=$VERSION.$MICRO; else MICRO=0; fi
 
   debug "major $MAJOR minor $MINOR micro $MICRO"
-  echo "Checking for $1 > $VERSION ..."
+  echo -n "+ checking for $1 > $VERSION ... "
   ($PACKAGE --version) < /dev/null > /dev/null 2>&1 || 
   {
 	echo
@@ -72,10 +72,13 @@ version_check ()
   fi
 
   if test ! -z "$WRONG"; then
+    echo "- found $pkg_version, not ok !"
     echo
     echo "You must have $PACKAGE $VERSION or greater to compile $package."
     echo "Get the latest version from $URL"
     return 1
+  else
+    echo "- found $pkg_version, ok."
   fi
 }
 
@@ -83,6 +86,8 @@ version_check "autoconf" "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
 version_check "automake" "ftp://ftp.gnu.org/pub/gnu/automake/" 1 5 || DIE=1
 version_check "libtool" "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
 version_check "pkg-config" "http://www.freedesktop.org/software/pkgconfig" 0 7 0 || DIE=1
+
+echo
 
 if test "$DIE" -eq 1; then
 	exit 1
@@ -98,23 +103,29 @@ if test -z "$*"; then
         echo "to pass any to it, please specify them on the $0 command line."
 fi
 
-
+# FIXME : why does libtoolize keep complaining about aclocal ?
+echo "+ running libtoolize ..."
 libtoolize --copy --force
+
+echo "+ running aclocal ..."
 aclocal $ACLOCAL_FLAGS || {
 	echo
 	echo "aclocal failed - check that all needed development files are present on system"
 	exit 1
 }
+echo "+ running autoheader ... "
 autoheader || {
 	echo
 	echo "autoheader failed"
 	exit 1
 }
+echo "+ running autoconf ... "
 autoconf || {
 	echo
 	echo "autoconf failed"
 	#exit 1
 }
+echo "+ running automake ... "
 automake --add-missing || {
 	echo
 	echo "automake failed"
@@ -122,11 +133,12 @@ automake --add-missing || {
 }
 
 # now remove the cache, because it can be considered dangerous in this case
+echo "+ removing config.cache ... "
 rm -f config.cache
 
 CONFIGURE_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG'
 
-echo
+echo "+ running configure ... "
 echo "./configure default flags: $CONFIGURE_OPT"
 echo "using: $CONFIGURE_OPT $@"
 echo
