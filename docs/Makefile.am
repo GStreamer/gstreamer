@@ -19,7 +19,7 @@ EXTRA_DIST = \
 	image-png image-pdf image-eps version.entities.in
 
 upload:
-	for a in manual pwg faq; do cd $$a; make upload; cd ..; done
+	@for a in manual pwg faq; do cd $$a; make upload; cd ..; done
 
 dist-hook:
 	$(RM) -rf $(distdir)/random/CVS
