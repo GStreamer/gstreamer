@@ -1,3 +1,10 @@
+2005-02-25  tvainika+gnomebugs@cc.hut.fi
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* tools/gst-register.c: (plugin_added_func), (main):
+	  Use ngettext for plurals (#167701).
+
 2005-02-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	submitted by: Peter Astakhov

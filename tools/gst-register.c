@@ -46,9 +46,9 @@ static void
 plugin_added_func (GstRegistry * registry, GstPlugin * plugin,
     gpointer user_data)
 {
-  g_print (_("Added plugin %s with %d %s.\n"), plugin->desc.name,
-      plugin->numfeatures,
-      ngettext ("feature", "features", plugin->numfeatures));
+  g_print (ngettext ("Added plugin %s with %d feature.\n",
+          "Added plugin %s with %d features.\n",
+          plugin->numfeatures), plugin->desc.name, plugin->numfeatures);
 
   num_features += plugin->numfeatures;
   num_plugins++;
@@ -165,8 +165,9 @@ main (int argc, char *argv[])
     registries = g_list_next (registries);
   }
 
-  g_print (_("Loaded %d plugins with %d %s.\n"), num_plugins, num_features,
-      ngettext ("feature", "features", num_features));
+  g_print (ngettext ("Loaded %d plugins with %d feature.\n",
+          "Loaded %d plugins with %d features.\n",
+          num_features), num_plugins, num_features);
 
   return (0);
 }
