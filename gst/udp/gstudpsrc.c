@@ -29,15 +29,12 @@
 #define UDP_DEFAULT_MULTICAST_GROUP	"0.0.0.0"
 
 /* elementfactory information */
-GstElementDetails gst_udpsrc_details = {
+static GstElementDetails gst_udpsrc_details = GST_ELEMENT_DETAILS (
   "UDP packet receiver",
   "Source/Network",
-  "LGPL",
   "Receive data over the network via UDP",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 /* UDPSrc signals and args */
 enum {
@@ -69,6 +66,7 @@ gst_udpsrc_control_get_type(void) {
   return udpsrc_control_type;
 }
 
+static void		gst_udpsrc_base_init		(gpointer g_class);
 static void		gst_udpsrc_class_init		(GstUDPSrc *klass);
 static void		gst_udpsrc_init			(GstUDPSrc *udpsrc);
 
@@ -90,11 +88,10 @@ gst_udpsrc_get_type (void)
 {
   static GType udpsrc_type = 0;
 
-
   if (!udpsrc_type) {
     static const GTypeInfo udpsrc_info = {
       sizeof(GstUDPSrcClass),
-      NULL,
+      gst_udpsrc_base_init,
       NULL,
       (GClassInitFunc)gst_udpsrc_class_init,
       NULL,
@@ -107,6 +104,14 @@ gst_udpsrc_get_type (void)
     udpsrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstUDPSrc", &udpsrc_info, 0);
   }
   return udpsrc_type;
+}
+
+static void
+gst_udpsrc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_udpsrc_details);
 }
 
 static void

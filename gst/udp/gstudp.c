@@ -21,32 +21,27 @@
 #include "gstudpsrc.h"
 #include "gstudpsink.h"
 
-/* elementfactory information */
-extern GstElementDetails gst_udpsrc_details;
-extern GstElementDetails gst_udpsink_details;
-
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *src, *sink;
-
-  /* create an elementfactory for the udpsrc element */
-  sink = gst_element_factory_new ("udpsink",GST_TYPE_UDPSINK,
-                                   &gst_udpsink_details);
-  g_return_val_if_fail (sink != NULL, FALSE);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (sink));
-
-  src = gst_element_factory_new ("udpsrc",GST_TYPE_UDPSRC,
-                                   &gst_udpsrc_details);
-  g_return_val_if_fail (src != NULL, FALSE);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (src));
+  if (!gst_element_register (plugin, "udpsink", GST_RANK_NONE, GST_TYPE_UDPSINK))
+    return FALSE;
+  
+  if (!gst_element_register (plugin, "udpsrc", GST_RANK_NONE, GST_TYPE_UDPSRC))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "udp",
-  plugin_init
-};
+  "transfer data via UDP",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

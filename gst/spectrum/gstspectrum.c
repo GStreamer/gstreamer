@@ -25,15 +25,12 @@
 #include "gstspectrum.h"
 
 /* elementfactory information */
-static GstElementDetails gst_spectrum_details = {
+static GstElementDetails gst_spectrum_details = GST_ELEMENT_DETAILS (
   "Spectrum analyzer",
   "Filter/Audio/Analysis",
-  "LGPL",
   "Run an FFT on the audio signal, output spectrum data",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 /* Spectrum signals and args */
 enum {
@@ -47,6 +44,7 @@ enum {
 };
 
 
+static void	gst_spectrum_base_init	(gpointer g_class);
 static void	gst_spectrum_class_init	(GstSpectrumClass *klass);
 static void	gst_spectrum_init	(GstSpectrum *spectrum);
 
@@ -70,7 +68,8 @@ gst_spectrum_get_type (void)
 
   if (!spectrum_type) {
     static const GTypeInfo spectrum_info = {
-      sizeof(GstSpectrumClass),      NULL,
+      sizeof(GstSpectrumClass),
+      gst_spectrum_base_init,
       NULL,
       (GClassInitFunc)gst_spectrum_class_init,
       NULL,
@@ -84,6 +83,13 @@ gst_spectrum_get_type (void)
   return spectrum_type;
 }
 
+static void
+gst_spectrum_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_spectrum_details);
+}
 static void
 gst_spectrum_class_init (GstSpectrumClass *klass)
 {
@@ -193,23 +199,20 @@ gst_spectrum_chain (GstPad *pad, GstData *_data)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the spectrum element */
-  factory = gst_element_factory_new ("spectrum",GST_TYPE_SPECTRUM,
-                                    &gst_spectrum_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "spectrum", GST_RANK_NONE, GST_TYPE_SPECTRUM);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "spectrum",
-  plugin_init
-};
+  "Run an FFT on the audio signal, output spectrum data",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

@@ -28,15 +28,12 @@
 #define UDP_DEFAULT_CONTROL	1
 
 /* elementfactory information */
-GstElementDetails gst_udpsink_details = {
+GstElementDetails gst_udpsink_details = GST_ELEMENT_DETAILS (
   "UDP packet sender",
   "Sink/Network",
-  "LGPL",
   "Send data over the network via UDP",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 /* UDPSink signals and args */
 enum {
@@ -70,6 +67,7 @@ gst_udpsink_control_get_type(void) {
   return udpsink_control_type;
 }
 
+static void		gst_udpsink_base_init		(gpointer g_class);
 static void		gst_udpsink_class_init		(GstUDPSink *klass);
 static void		gst_udpsink_init		(GstUDPSink *udpsink);
 
@@ -92,11 +90,10 @@ gst_udpsink_get_type (void)
 {
   static GType udpsink_type = 0;
 
-
   if (!udpsink_type) {
     static const GTypeInfo udpsink_info = {
       sizeof(GstUDPSinkClass),
-      NULL,
+      gst_udpsink_base_init,
       NULL,
       (GClassInitFunc)gst_udpsink_class_init,
       NULL,
@@ -109,6 +106,14 @@ gst_udpsink_get_type (void)
     udpsink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstUDPSink", &udpsink_info, 0);
   }
   return udpsink_type;
+}
+
+static void
+gst_udpsink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_udpsink_details);
 }
 
 static void
