@@ -159,6 +159,36 @@ gst_init_check (int     *argc,
 
 	(*argv)[i] = NULL;
       }
+      else if (!strncmp ("--gst-mask=", (*argv)[i], 11)) {
+	guint32 val;
+
+        // handle either 0xHEX or dec
+        if (*((*argv)[i]+12) == 'x') {
+          sscanf ((*argv)[i]+13, "%08x", &val);
+        } else {
+          sscanf ((*argv)[i]+11, "%d", &val);
+        }
+
+	gst_debug_set_categories (val);
+	gst_info_set_categories (val);
+
+	(*argv)[i] = NULL;
+      }
+      else if (!strncmp ("--gst-mask=", (*argv)[i], 11)) {
+	guint32 val;
+
+        // handle either 0xHEX or dec
+        if (*((*argv)[i]+12) == 'x') {
+          sscanf ((*argv)[i]+13, "%08x", &val);
+        } else {
+          sscanf ((*argv)[i]+11, "%d", &val);
+        }
+
+	gst_debug_set_categories (val);
+	gst_info_set_categories (val);
+
+	(*argv)[i] = NULL;
+      }
       else if (!strncmp ("--gst-plugin-spew", (*argv)[i], 17)) {
         _gst_plugin_spew = TRUE;
 
@@ -208,6 +238,7 @@ gst_init_check (int     *argc,
     g_print ("\nGStreamer options\n");
     g_print ("  --gst-info-mask=FLAGS               GST info flags to set (current %08x)\n", gst_info_get_categories());
     g_print ("  --gst-debug-mask=FLAGS              GST debugging flags to set\n");
+    g_print ("  --gst-mask=FLAGS                    GST info *and* debug flags to set\n");
     g_print ("  --gst-plugin-spew                   Enable printout of errors while loading GST plugins\n");
     g_print ("  --gst-plugin-path=PATH              Add directories separated with '%s' to the plugin search path\n",
 		    G_SEARCHPATH_SEPARATOR_S);

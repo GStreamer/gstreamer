@@ -565,6 +565,15 @@ AC_ARG_ENABLE(info-system,
 esac], 
 [DISABLE_DEBUG_INFO=no]) dnl Default value
 
+AC_ARG_ENABLE(debug-color,
+[  --disable-debug-color        disables color output of DEBUG and INFO output],
+[case "${enableval}" in
+  yes) DISABLE_DEBUG_COLOR=no ;;
+  no)  DISABLE_DEBUG_COLOR=yes ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --disable-info) ;;
+esac], 
+[DISABLE_DEBUG_COLOR=no]) dnl Default value
+
 AC_ARG_ENABLE(profiling,
 [  --enable-profiling           adds -pg to compiler commandline, for profiling],
 [case "${enableval}" in
@@ -662,6 +671,10 @@ fi
 
 if test "x$DISABLE_DEBUG_INFO" = xyes; then
   AC_DEFINE(GST_INFO_FORCE_DISABLE)
+fi
+
+if test "x$DISABLE_DEBUG_COLOR" = xno; then
+  AC_DEFINE(GST_DEBUG_COLOR)
 fi
 
 if test "x$USE_PROFILING" = xyes; then

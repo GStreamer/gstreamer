@@ -34,6 +34,20 @@
 #include "cothreads.h"
 
 
+/* colorization stuff */
+#ifdef GST_DEBUG_COLOR
+  #ifdef __GST_PRIVATE_H__   /* FIXME this should be some libgst.la -specific thing */
+    #define GST_DEBUG_CHAR_MODE "00"
+  #else
+    #define GST_DEBUG_CHAR_MODE "01"
+  #endif
+#endif
+
+gint _gst_debug_stringhash_color(gchar *file);
+
+
+
+
 /**********************************************************************
  * DEBUG system
  **********************************************************************/
@@ -58,16 +72,30 @@ extern guint32 _gst_debug_categories;
 /* fallback, this should probably be a 'weak' symbol or something */
 G_GNUC_UNUSED static gchar *_debug_string = NULL;
 
-#define GST_DEBUG_PREFIX(format,args...) \
-"DEBUG(%d:%d)" __PRETTY_FUNCTION__ ":%d" format , getpid() , cothread_getcurrent() , __LINE__ , ## args
+#ifdef GST_DEBUG_COLOR
+  #ifdef _GST_COLOR_CODE
+#warning have a coded debug
+    #define GST_DEBUG_PREFIX(cat,format,args...) \
+"DEBUG(%d:%d)\033[" _GST_COLOR_CODE "m" __PRETTY_FUNCTION__ ":%d\033[00m" format , \
+getpid() , cothread_getcurrent() , __LINE__ , ## args
+  #else
+    #define GST_DEBUG_PREFIX(cat,format,args...) \
+"DEBUG(%d:%d)\033[" GST_DEBUG_CHAR_MODE ";%sm" __PRETTY_FUNCTION__ ":%d\033[00m" format , \
+getpid() , cothread_getcurrent() , _gst_category_colors[cat] , __LINE__ , ## args
+  #endif /* _GST_COLOR_CODE */
+#else
+  #define GST_DEBUG_PREFIX(cat,format,args...) \
+"DEBUG(%d:%d)" __PRETTY_FUNCTION__ ":%d" format , getpid() ,cothread_getcurrent() , __LINE__ , ## args
+#endif
+
 
 #ifdef GST_DEBUG_ENABLED
 #define GST_DEBUG(cat,format,args...) G_STMT_START{ \
   if (((1<<cat) & GST_DEBUG_ENABLE_CATEGORIES) && \
       ((1<<cat) & _gst_debug_categories)) \
     (_debug_string != NULL) ? \
-      fprintf(stderr,GST_DEBUG_PREFIX("%s: "format , _debug_string , ## args )) : \
-      fprintf(stderr,GST_DEBUG_PREFIX(": "format , ## args )); \
+      fprintf(stderr,GST_DEBUG_PREFIX(cat,"%s: "format , _debug_string , ## args )) : \
+      fprintf(stderr,GST_DEBUG_PREFIX(cat,": "format , ## args )); \
 }G_STMT_END
 
 #define GST_DEBUG_NOPREFIX(cat,format,args...) G_STMT_START{ \
@@ -79,7 +107,7 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
 #define GST_DEBUG_ENTER(format, args...) G_STMT_START{ \
   if (((1<<31) & GST_DEBUG_ENABLE_CATEGORIES) && \
       ((1<<31) & _gst_debug_categories)) \
-    fprintf(stderr,GST_DEBUG_PREFIX(format": entering\n" , ## args )); \
+    fprintf(stderr,GST_DEBUG_PREFIX(31,format": entering\n" , ## args )); \
 }G_STMT_END
 
 // FIXME FIXME FIXME this leaks like crazy
@@ -92,7 +120,7 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
   if (((1<<31) & GST_DEBUG_ENABLE_CATEGORIES) && \
       ((1<<31) & _gst_debug_categories)) \
     if (_debug_string != NULL) g_free(_debug_string),\
-      fprintf(stderr,GST_DEBUG_PREFIX(format": leaving\n" , ## args )); \
+      fprintf(stderr,GST_DEBUG_PREFIX(31,format": leaving\n" , ## args )); \
 }G_STMT_END
 
 #define GST_DEBUG_LEAVE_STRING GST_DEBUG_LEAVE("%s",_debug_string)
@@ -280,6 +308,9 @@ enum {
 
   GST_CAT_MAX_CATEGORY,
 };
+
+
+extern const gchar *_gst_category_colors[GST_CAT_MAX_CATEGORY];
 
 
 

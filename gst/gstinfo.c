@@ -68,6 +68,46 @@ static gchar *_gst_info_category_strings[] = {
   "NEGOTIATION",
 };
 
+const gchar *_gst_category_colors[] = {
+  [GST_CAT_GST_INIT] = "00;37",
+  [GST_CAT_COTHREADS] = "00;32",
+  [GST_CAT_COTHREAD_SWITCH] = "00;32",
+  [GST_CAT_AUTOPLUG] = "00;34",
+  [GST_CAT_AUTOPLUG_ATTEMPT] = "00;34",
+  [GST_CAT_PARENTAGE] = "",
+  [GST_CAT_STATES] = "00;31",
+  [GST_CAT_PLANNING] = "00;35",
+  [GST_CAT_SCHEDULING] = "00;35",
+  [GST_CAT_DATAFLOW] = "00;32",
+  [GST_CAT_BUFFER] = "00;32",
+  [GST_CAT_CAPS] = "",
+  [GST_CAT_CLOCK] = "",
+  [GST_CAT_ELEMENT_PADS] = "",
+  [GST_CAT_ELEMENTFACTORY] = "",
+  [GST_CAT_PADS] = "",
+  [GST_CAT_PIPELINE] = "",
+  [GST_CAT_PLUGIN_LOADING] = "00;36",
+  [GST_CAT_PLUGIN_ERRORS] = "05;31",
+  [GST_CAT_PLUGIN_INFO] = "00;36",
+  [GST_CAT_PROPERTIES] = "",
+  [GST_CAT_THREAD] = "00;31",
+  [GST_CAT_TYPES] = "",
+  [GST_CAT_XML] = "",
+  [GST_CAT_NEGOTIATION] = "",
+
+  [31] = "";
+};
+
+
+/* colorization hash */
+inline gint _gst_debug_stringhash_color(gchar *file) {
+  int filecolor;
+  while (file[0]) filecolor += *(char *)(file++);
+  filecolor = (filecolor % 6) + 31;
+  return filecolor;
+}
+
+
 /**
  * gst_default_info_handler:
  * @category: category of the INFO message
@@ -94,12 +134,24 @@ gst_default_info_handler (gint category, gchar *file, gchar *function,
   if (category != GST_CAT_GST_INIT)
     location = g_strdup_printf("%s:%d%s:",function,line,debug_string);
   if (element && GST_IS_ELEMENT (element))
-    elementname = g_strdup_printf (" [%s]", GST_OBJECT_NAME (element));
+    elementname = g_strdup_printf (" \033[04m[%s]\033[00m", GST_OBJECT_NAME (element));
 
 #ifdef GST_DEBUG_ENABLED
-  fprintf(stderr,"INFO(%d:%d):%s%s %s\n",getpid(),cothread_getcurrent(),location,elementname,string);
+  #ifdef GST_DEBUG_COLOR
+    fprintf(stderr,"INFO(%d:%d):\033[" GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
+            getpid(),cothread_getcurrent(),_gst_category_colors[category],location,elementname,string);
+  #else
+    fprintf(stderr,"INFO(%d:%d):%s%s %s\n",
+            getpid(),cothread_getcurrent(),location,elementname,string);
+  #endif /* GST_DEBUG_COLOR */
 #else
-  fprintf(stderr,"INFO:%s%s %s\n",location,elementname,string);
+  #ifdef GST_DEBUG_COLOR
+    fprintf(stderr,"INFO:\033[" GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
+            location,elementname,_gst_category_colors[category],string);
+  #else
+    fprintf(stderr,"INFO:%s%s %s\n",
+            location,elementname,string);
+  #endif /* GST_DEBUG_COLOR */
 #endif
 
   if (location != empty) g_free(location);
