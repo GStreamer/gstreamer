@@ -1,4 +1,4 @@
-testprogs = thread1 thread2 thread3 thread4 thread5
+testprogs = thread1 thread2 thread3 thread4 thread5 threadb
 
 TESTS = $(testprogs)
 
