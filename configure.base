@@ -1298,7 +1298,7 @@ tests/muxing/Makefile
 testsuite/Makefile
 testsuite/capsnego/Makefile
 testsuite/refcounting/Makefile
-dnl someone should fix this testsuite/plugin/Makefile
+testsuite/plugin/Makefile
 tests/nego/Makefile
 examples/Makefile
 examples/autoplug/Makefile
