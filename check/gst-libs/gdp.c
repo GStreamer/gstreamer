@@ -20,46 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <string.h>             /* memcmp */
+#include "../gstcheck.h"
 
-#include <check.h>
-
-#include <gst/gst.h>
 #include <gst/dataprotocol/dataprotocol.h>
-
 #include "libs/gst/dataprotocol/dp-private.h"   /* private header */
-
-
-/* FIXME: externalize */
-/* logging function for tests
- * a test uses g_message() to log a debug line
- * a gst unit test can be run with GST_TEST_DEBUG env var set to see the
- * messages
- */
-gboolean _gst_test_debug = FALSE;
-
-gboolean _gst_test_threads_running = FALSE;
-
-void gst_test_log_func
-    (const gchar * log_domain, GLogLevelFlags log_level,
-    const gchar * message, gpointer user_data)
-{
-  // g_print ("HANDLER CALLED\n");
-  if (_gst_test_debug) {
-    g_print (message);
-  }
-}
-
-/* initialize GStreamer testing */
-void
-gst_test_init (void)
-{
-  if (g_getenv ("GST_TEST_DEBUG"))
-    _gst_test_debug = TRUE;
-
-  g_log_set_handler (NULL, G_LOG_LEVEL_MESSAGE, gst_test_log_func, NULL);
-}
-
 
 /* test our method of reading and writing headers using TO/FROM_BE */
 START_TEST (test_conversion)
@@ -302,8 +266,8 @@ main (int argc, char **argv)
   SRunner *sr = srunner_create (s);
 
   gst_init (&argc, &argv);
-  gst_test_init ();
   gst_dp_init ();
+  gst_check_init ();
 
   srunner_run_all (sr, CK_NORMAL);
   nf = srunner_ntests_failed (sr);

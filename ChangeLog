@@ -1,6 +1,16 @@
 2004-12-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
+	* check/gst-libs/gdp.c:
+	* check/gst/gstobject.c:
+	* check/gstcheck.c:
+	* check/gstcheck.h:
+	* gst/gstelement.c:
+	  move common code to a lib
+
+2004-12-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
 	* check/gst-libs/.cvsignore:
 	* check/gst-libs/gdp.c:
 	* libs/gst/dataprotocol/Makefile.am:

@@ -26,15 +26,16 @@
 #include <gobject/gvaluecollector.h>
 
 #include "gstelement.h"
-#include "gstbin.h"
+
 #include "gstmarshal.h"
 #include "gsterror.h"
 #include "gstevent.h"
 #include "gstutils.h"
 #include "gstinfo.h"
 #include "gst-i18n-lib.h"
+
 #include "gstscheduler.h"
-#include "gstpipeline.h"
+#include "gstbus.h"
 
 /* Element signals and args */
 enum
@@ -191,7 +192,7 @@ gst_element_init (GstElement * element)
   element->state_cond = g_cond_new ();
 }
 
-/** 
+/**
  * gst_element_default_error:
  * @object: a #GObject that signalled the error.
  * @orig: the #GstObject that initiated the error.
@@ -246,7 +247,7 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
  * gst_element_requires_clock:
  * @element: a #GstElement to query
  *
- * Query if the element requiresd a clock
+ * Query if the element requires a clock.
  *
  * Returns: TRUE if the element requires a clock
  *
@@ -369,7 +370,7 @@ gst_element_is_indexable (GstElement * element)
  * @element: a #GstElement.
  * @index: a #GstIndex.
  *
- * Set the specified GstIndex on the element. 
+ * Set the specified GstIndex on the element.
  *
  * MT safe.
  */
@@ -420,7 +421,7 @@ gst_element_get_index (GstElement * element)
  * @pad: the #GstPad to add to the element.
  *
  * Adds a pad (link point) to @element. @pad's parent will be set to @element;
- * see gst_object_set_parent() for refcounting information. 
+ * see gst_object_set_parent() for refcounting information.
  *
  * Pads are automatically activated when the element is in state PLAYING.
  *
