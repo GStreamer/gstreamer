@@ -243,9 +243,6 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
   ffmpegenc->srcpad = gst_pad_new_from_template (oclass->srctempl, "src");
   gst_pad_use_explicit_caps (ffmpegenc->srcpad);
 
-  gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->srcpad);
-
   /* ffmpeg objects */
   ffmpegenc->context = avcodec_alloc_context ();
   ffmpegenc->picture = avcodec_alloc_frame ();
@@ -263,6 +260,9 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
 
     ffmpegenc->bitrate = 128000;
   }
+
+  gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->sinkpad);
+  gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->srcpad);
 }
 
 static void
@@ -404,8 +404,10 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
       GST_BUFFER_MAXSIZE (outbuf), ffmpegenc->picture);
 
   if (ret_size < 0) {
-    g_warning ("ffenc_%s: failed to encode buffer", oclass->in_plugin->name);
+    GST_ELEMENT_ERROR (ffmpegenc, LIBRARY, ENCODE, (NULL),
+        ("ffenc_%s: failed to encode buffer", oclass->in_plugin->name));
     gst_buffer_unref (inbuf);
+    gst_buffer_unref (outbuf);
     return;
   }
 

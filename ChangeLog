@@ -1,3 +1,11 @@
+2004-10-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_init),
+	(gst_ffmpegenc_chain_video):
+	  Set chain function before adding pad, fix memleak on error, error
+	  out on encode errors because none of subsequent frames will work
+	  any better (this is not input dependent).
+
 2004-10-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
