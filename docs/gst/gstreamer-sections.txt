@@ -21,7 +21,7 @@ gst_has_threads
 gst_main
 gst_main_quit
 <SUBSECTION Private>
-GstPoptOption
+#GstPoptOption
 </SECTION>
 
 <SECTION>
