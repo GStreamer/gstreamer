@@ -19,6 +19,8 @@
 
 <!ENTITY CVS SYSTEM "cvs.xml">
 <!ENTITY DEVELOPING SYSTEM "developing.xml">
+
+<!ENTITY LEGAL SYSTEM "legal.xml">
 ]>
 
 <article class="faq" id="index">
@@ -58,5 +60,7 @@
 
   &CVS;
   &DEVELOPING;
+
+  &LEGAL;
 
 </article>
