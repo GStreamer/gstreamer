@@ -1,3 +1,13 @@
-2004-Feb-14 Christian Schaller <Uraeus@gnome.org>
+2004-02-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-	* Add SPEC file
+	* gst-ffmpeg.spec.in: fix spec file
+
+2004-02-14 Christian Schaller <Uraeus@gnome.org>
+
+	* gst-ffmpeg.spec.in: add spec file
+
+2004-02-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* creation
+
+
