@@ -593,9 +593,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the mad element */
-  factory = gst_element_factory_new("mad",GST_TYPE_MAD,
-                                   &gst_mad_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
+  factory = gst_element_factory_new ("mad", GST_TYPE_MAD, &gst_mad_details);
+  g_return_val_if_fail (factory != NULL, FALSE);
 
   gst_element_factory_add_pad_template (factory, 
 		  GST_PAD_TEMPLATE_GET (mad_sink_template_factory));
