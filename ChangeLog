@@ -1,3 +1,12 @@
+2004-06-18  Wim Taymans  <wim@fluendo.com>
+
+	* ext/sidplay/gstsiddec.cc:
+	Fix negotiation and set correct end offset.
+
+2004-06-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: branch and prerelease
+
 2004-06-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_init),
