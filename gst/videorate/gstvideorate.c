@@ -24,6 +24,11 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
+GST_DEBUG_CATEGORY (videorate_debug);
+#define GST_CAT_DEFAULT videorate_debug
+
+
+
 #define GST_TYPE_VIDEORATE \
   (gst_videorate_get_type())
 #define GST_VIDEORATE(obj) \
@@ -340,16 +345,16 @@ gst_videorate_chain (GstPad * pad, GstData * data)
     intime = GST_BUFFER_TIMESTAMP (buf);
 
     GST_LOG_OBJECT (videorate,
-        "videorate: prev buf %" GST_TIME_FORMAT " new buf %" GST_TIME_FORMAT
-        " outgoing ts %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (prevtime),
+        "prev buf %" GST_TIME_FORMAT " new buf %" GST_TIME_FORMAT
+        " outgoing ts %" GST_TIME_FORMAT, GST_TIME_ARGS (prevtime),
         GST_TIME_ARGS (intime), GST_TIME_ARGS (videorate->next_ts));
 
     videorate->in++;
 
     /* got 2 buffers, see which one is the best */
     do {
-      diff1 = ABS (prevtime - videorate->next_ts);
-      diff2 = ABS (intime - videorate->next_ts);
+      diff1 = prevtime - videorate->next_ts;
+      diff2 = intime - videorate->next_ts;
 
       /* take absolute values, beware: abs and ABS don't work for gint64 */
       if (diff1 < 0)
@@ -358,8 +363,8 @@ gst_videorate_chain (GstPad * pad, GstData * data)
         diff2 = -diff2;
 
       GST_LOG_OBJECT (videorate,
-          "videorate: diff with prev %" GST_TIME_FORMAT " diff with new %"
-          GST_TIME_FORMAT " outgoing ts %" GST_TIME_FORMAT "\n",
+          "diff with prev %" GST_TIME_FORMAT " diff with new %"
+          GST_TIME_FORMAT " outgoing ts %" GST_TIME_FORMAT,
           GST_TIME_ARGS (diff1), GST_TIME_ARGS (diff2),
           GST_TIME_ARGS (videorate->next_ts));
 
@@ -379,7 +384,7 @@ gst_videorate_chain (GstPad * pad, GstData * data)
         gst_pad_push (videorate->srcpad, GST_DATA (outbuf));
 
         GST_LOG_OBJECT (videorate,
-            "videorate: old is best, dup, outgoing ts %" GST_TIME_FORMAT " \n",
+            "old is best, dup, outgoing ts %" GST_TIME_FORMAT,
             GST_TIME_ARGS (videorate->next_ts));
       }
       /* continue while the first one was the best */
@@ -398,13 +403,13 @@ gst_videorate_chain (GstPad * pad, GstData * data)
       if (!videorate->silent)
         g_object_notify (G_OBJECT (videorate), "drop");
       GST_LOG_OBJECT (videorate,
-          "videorate: new is best, old never used, drop, outgoing ts %"
-          GST_TIME_FORMAT " \n", GST_TIME_ARGS (videorate->next_ts));
+          "new is best, old never used, drop, outgoing ts %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (videorate->next_ts));
     }
     GST_LOG_OBJECT (videorate,
-        "videorate: left loop, putting new in old, diff1 %" GST_TIME_FORMAT
+        "left loop, putting new in old, diff1 %" GST_TIME_FORMAT
         ", diff2 %" GST_TIME_FORMAT
-        ", in %lld, out %lld, drop %lld, dup %lld\n", GST_TIME_ARGS (diff1),
+        ", in %lld, out %lld, drop %lld, dup %lld", GST_TIME_ARGS (diff1),
         GST_TIME_ARGS (diff2), videorate->in, videorate->out, videorate->drop,
         videorate->dup);
 
@@ -485,6 +490,9 @@ gst_videorate_change_state (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (videorate_debug, "videorate", 0,
+      "Videorate stream fixer");
+
   return gst_element_register (plugin, "videorate", GST_RANK_NONE,
       GST_TYPE_VIDEORATE);
 }
