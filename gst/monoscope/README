@@ -1,0 +1,11 @@
+This is a visualization based on on the monoscope output plugin from
+alsaplayer.
+
+The monoscope output plugin was written primarily by Ralph Loader.
+
+This implementation is taken from alsaplayer version 0.99.54, at
+http://www.alsaplayer.org/
+
+Note: only one instance of this plugin may be created at a time: it has a
+lot of static data.  This should be fixed (and it shouldn't be hard to do
+so, either).
