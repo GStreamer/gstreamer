@@ -1191,21 +1191,6 @@ GST_IS_FILESRC_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>gstdisksrc</FILE>
-<TITLE>GstDiskSrc</TITLE>
-GstDiskSrcFlags
-<SUBSECTION Standard>
-GstDiskSrc
-GstDiskSrcClass
-gst_disksrc_get_type
-GST_TYPE_DISKSRC
-GST_DISKSRC
-GST_DISKSRC_CLASS
-GST_IS_DISKSRC
-GST_IS_DISKSRC_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>gstfakesink</FILE>
 <TITLE>GstFakeSink</TITLE>
 <SUBSECTION Standard>
