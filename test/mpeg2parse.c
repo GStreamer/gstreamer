@@ -17,8 +17,8 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
 
   // connect to audio pad
-  //if (0) {
-  if (strncmp(gst_pad_get_name(pad), "private_stream_1.0", 18) == 0) {
+  if (0) {
+  //if (strncmp(gst_pad_get_name(pad), "private_stream_1.0", 18) == 0) {
     gst_plugin_load("ac3parse");
     gst_plugin_load("ac3dec");
     // construct internal pipeline elements
@@ -60,22 +60,22 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_RUNNING);
     g_print("setting to PLAYING state\n");
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_PLAYING);
-  //} else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
-  } else if (0) {
+  } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
+  //} else if (0) {
 
     gst_plugin_load("mp1videoparse");
-    gst_plugin_load("mpeg_play");
+    gst_plugin_load("mpeg2play");
     gst_plugin_load("videosink");
     // construct internal pipeline elements
     parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
     g_return_if_fail(parse_video != NULL);
-    decode_video = gst_elementfactory_make("mpeg_play","decode_video");
+    decode_video = gst_elementfactory_make("mpeg2play","decode_video");
     g_return_if_fail(decode_video != NULL);
     show = gst_elementfactory_make("videosink","show");
     g_return_if_fail(show != NULL);
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
 
-    appwindow = gnome_app_new("MPEG1 player","MPEG1 player");
+    appwindow = gnome_app_new("MPEG player","MPEG player");
     gnome_app_set_contents(GNOME_APP(appwindow),
       	        gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
 		gtk_widget_show_all(appwindow);

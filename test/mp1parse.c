@@ -68,11 +68,13 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 
     gst_plugin_load("mp1videoparse");
     gst_plugin_load("mpeg_play");
+    //gst_plugin_load("mpeg2play");
     gst_plugin_load("videosink");
     // construct internal pipeline elements
     parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
     g_return_if_fail(parse_video != NULL);
     decode_video = gst_elementfactory_make("mpeg_play","decode_video");
+    //decode_video = gst_elementfactory_make("mpeg2play","decode_video");
     g_return_if_fail(decode_video != NULL);
     show = gst_elementfactory_make("videosink","show");
     g_return_if_fail(show != NULL);

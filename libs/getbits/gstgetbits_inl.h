@@ -54,9 +54,9 @@
 
 #include <glib.h>
 
-//#define DEBUG_ENABLED
+//#define GETBITS_DEBUG_ENABLED
 
-#ifdef DEBUG_ENABLED
+#ifdef GETBITS_DEBUG_ENABLED
 #define debug2(format,args...) g_print(format,##args)
 #define debug(format,args...) g_print(format,##args),
 #else
