@@ -219,7 +219,15 @@ if test x$ARTSC_CONFIG = xno; then
 else
   ARTSC_LIBS=`artsc-config --libs`
   ARTSC_CFLAGS=`artsc-config --cflags`
-  HAVE_ARTSC=yes
+  dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
+  dnl Assume only suitable flags result from artsc-config --cflags
+  artsc_save_CPPFLAGS=$CPPFLAGS
+  CPPFLAGS="$CPPFLAGS $ARTSC_CFLAGS"
+  AC_CHECK_HEADER(artsc.h,
+		  HAVE_ARTSC=yes,
+		  HAVE_ARTSC=no
+  )
+  CPPFLAGS=$artsc_save_CPPFLAGS
 fi
 AC_SUBST(ARTSC_LIBS)
 AC_SUBST(ARTSC_CFLAGS)
