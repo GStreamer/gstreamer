@@ -49,6 +49,7 @@ struct _GstStreamInfo {
   GstStreamType	 type;
   gchar 	*decoder;
   gboolean	 mute;
+  GstCaps	*caps;
 };
 
 struct _GstStreamInfoClass {
@@ -60,7 +61,10 @@ struct _GstStreamInfoClass {
 
 GType gst_stream_info_get_type (void);
 
-GstStreamInfo* gst_stream_info_new (GstObject *object, GstStreamType type, gchar *decoder);
+GstStreamInfo* gst_stream_info_new (GstObject     *object,
+				    GstStreamType  type,
+				    const gchar   *decoder,
+				    const GstCaps *caps);
 
 G_END_DECLS
 

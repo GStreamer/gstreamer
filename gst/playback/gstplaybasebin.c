@@ -280,7 +280,8 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
   g_warning ("don't know how to handle %s", capsstr);
 
   /* add the stream to the list */
-  info = gst_stream_info_new (GST_OBJECT (pad), GST_STREAM_TYPE_UNKNOWN, NULL);
+  info = gst_stream_info_new (GST_OBJECT (pad), GST_STREAM_TYPE_UNKNOWN,
+      NULL, caps);
   play_base_bin->streaminfo = g_list_append (play_base_bin->streaminfo, info);
 
   g_free (capsstr);
@@ -298,7 +299,8 @@ add_element_stream (GstElement * element, GstPlayBaseBin * play_base_bin)
 
   /* add the stream to the list */
   info =
-      gst_stream_info_new (GST_OBJECT (element), GST_STREAM_TYPE_ELEMENT, NULL);
+      gst_stream_info_new (GST_OBJECT (element), GST_STREAM_TYPE_ELEMENT,
+      NULL, NULL);
   play_base_bin->streaminfo = g_list_append (play_base_bin->streaminfo, info);
 }
 
@@ -390,7 +392,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   }
 
   /* add the stream to the list */
-  info = gst_stream_info_new (GST_OBJECT (srcpad), type, NULL);
+  info = gst_stream_info_new (GST_OBJECT (srcpad), type, NULL, caps);
   play_base_bin->streaminfo = g_list_append (play_base_bin->streaminfo, info);
 
   /* signal the no more pads after adding the stream */
@@ -756,20 +758,17 @@ gst_play_base_bin_change_state (GstElement * element)
             /* We're no audio/video and the only stream... We could
              * be something not-media that's detected because then our
              * typefind doesn't mess up with mp3 (bz2, gz, elf, ...) */
-            if (GST_IS_PAD (info->object)) {
-              const GstCaps *caps = GST_PAD_CAPS (GST_PAD (info->object));
+            if (info->caps) {
+              const gchar *mime =
+                  gst_structure_get_name (gst_caps_get_structure (info->caps,
+                      0));
 
-              if (caps) {
-                const gchar *mime =
-                    gst_structure_get_name (gst_caps_get_structure (caps, 0));
-
-                if (!strcmp (mime, "application/x-executable") ||
-                    !strcmp (mime, "application/x-bzip") ||
-                    !strcmp (mime, "application/x-gzip") ||
-                    !strcmp (mime, "application/zip") ||
-                    !strcmp (mime, "application/x-compress")) {
-                  no_media = TRUE;
-                }
+              if (!strcmp (mime, "application/x-executable") ||
+                  !strcmp (mime, "application/x-bzip") ||
+                  !strcmp (mime, "application/x-gzip") ||
+                  !strcmp (mime, "application/zip") ||
+                  !strcmp (mime, "application/x-compress")) {
+                no_media = TRUE;
               }
             }
           }

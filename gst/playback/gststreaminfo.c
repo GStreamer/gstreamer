@@ -33,6 +33,7 @@ enum
   ARG_TYPE,
   ARG_DECODER,
   ARG_MUTE,
+  ARG_CAPS
 };
 
 /* signals */
@@ -55,7 +56,7 @@ gst_stream_type_get_type (void)
     {GST_STREAM_TYPE_VIDEO, "GST_STREAM_TYPE_VIDEO", "Video stream"},
     {GST_STREAM_TYPE_TEXT, "GST_STREAM_TYPE_TEXT", "Text stream"},
     {GST_STREAM_TYPE_ELEMENT, "GST_STREAM_TYPE_ELEMENT",
-          "Stream handled by element"},
+        "Stream handled by element"},
     {0, NULL, NULL},
   };
 
@@ -128,6 +129,10 @@ gst_stream_info_class_init (GstStreamInfoClass * klass)
   g_object_class_install_property (gobject_klass, ARG_MUTE,
       g_param_spec_boolean ("mute", "Mute", "Mute or unmute this stream", FALSE,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, ARG_CAPS,
+      g_param_spec_boxed ("caps", "Capabilities",
+          "Capabilities (or type) of this stream", GST_TYPE_CAPS,
+          G_PARAM_READABLE));
 
   gst_stream_info_signals[SIGNAL_MUTED] =
       g_signal_new ("muted", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -145,10 +150,12 @@ gst_stream_info_init (GstStreamInfo * stream_info)
   stream_info->type = GST_STREAM_TYPE_UNKNOWN;
   stream_info->decoder = NULL;
   stream_info->mute = FALSE;
+  stream_info->caps = NULL;
 }
 
 GstStreamInfo *
-gst_stream_info_new (GstObject * object, GstStreamType type, gchar * decoder)
+gst_stream_info_new (GstObject * object,
+    GstStreamType type, const gchar * decoder, const GstCaps * caps)
 {
   GstStreamInfo *info;
 
@@ -158,6 +165,9 @@ gst_stream_info_new (GstObject * object, GstStreamType type, gchar * decoder)
   info->object = object;
   info->type = type;
   info->decoder = g_strdup (decoder);
+  if (caps) {
+    info->caps = gst_caps_copy (caps);
+  }
 
   return info;
 }
@@ -173,6 +183,11 @@ gst_stream_info_dispose (GObject * object)
   stream_info->object = NULL;
   stream_info->type = GST_STREAM_TYPE_UNKNOWN;
   g_free (stream_info->decoder);
+  stream_info->decoder = NULL;
+  if (stream_info->caps) {
+    gst_caps_free (stream_info->caps);
+    stream_info->caps = NULL;
+  }
 
   if (G_OBJECT_CLASS (parent_class)->dispose) {
     G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -267,6 +282,9 @@ gst_stream_info_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_MUTE:
       g_value_set_boolean (value, stream_info->mute);
+      break;
+    case ARG_CAPS:
+      g_value_set_boxed (value, stream_info->caps);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
