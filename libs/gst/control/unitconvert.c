@@ -210,8 +210,8 @@ _gst_unitconv_initialize (void)
 	                     0, G_MAXFLOAT, 0, 0));
 
 	gst_unitconv_register_unit("frequency", FALSE, TRUE,
-	  g_param_spec_float("rate-proportion", "rate proportion", "Proportion of the sample rate",
-	                     0.0, 1.0, 0.0, 0));
+	  g_param_spec_float("hertz-rate-bound", "Hz", "Frequency in hertz, bound by the sample rate",
+	                     0.0, G_MAXFLOAT, 0.0, 0));
 
 	gst_unitconv_register_unit("frequency", FALSE, FALSE,
 	  g_param_spec_string("twelve-tone-scale", "note", "Name of the note from the western twelve tone scale",
