@@ -1,9 +1,10 @@
 *.gmo
 remove-potcdate.sed
+remove-potcdate.sin
 stamp-po
 POTFILES
 cat-id-tbl.c
-gstreamer-*.pot
+gst-plugins-*.pot
 Makefile.in.in
 Makevars.template
 Rules-quot
@@ -12,3 +13,4 @@ en@boldquot.header
 en@quot.header
 insert-header.sin
 quot.sed
+
