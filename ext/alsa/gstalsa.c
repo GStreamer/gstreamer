@@ -1235,7 +1235,7 @@ gst_alsa_query_func (GstElement *element, GstQueryType type, GstFormat *format, 
       break;
     }
     case GST_QUERY_POSITION:
-      res = gst_alsa_convert (this, GST_FORMAT_DEFAULT, this->transmitted, format, value);
+      res = gst_alsa_convert (this, GST_FORMAT_TIME, gst_element_get_time (GST_ELEMENT (this)), format, value);
       break;
     default:
       break;
