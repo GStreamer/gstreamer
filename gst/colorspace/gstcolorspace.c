@@ -263,7 +263,6 @@ gst_colorspace_caps_remove_format_info (GstCaps * caps, const char *media_type)
 {
   int i;
   GstStructure *structure;
-  GstCaps *rgbcaps;
 
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
@@ -278,10 +277,8 @@ gst_colorspace_caps_remove_format_info (GstCaps * caps, const char *media_type)
     gst_structure_remove_field (structure, "blue_mask");
   }
 
-  rgbcaps = gst_caps_simplify (caps);
-  gst_caps_free (caps);
-
-  return rgbcaps;
+  gst_caps_do_simplify (caps);
+  return caps;
 }
 
 static GstCaps *
