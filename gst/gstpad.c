@@ -989,6 +989,7 @@ gst_pad_link_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
     GST_INFO (GST_CAT_PADS, "*actually* linking %s:%s and %s:%s",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
   }
+  /* FIXME: shouldn't we convert this to g_return_val_if_fail? */
   if (GST_RPAD_PEER (realsrc) != NULL) {
     GST_INFO (GST_CAT_PADS, "Real source pad %s:%s has a peer, failed",
 	      GST_DEBUG_PAD_NAME (realsrc));
@@ -1005,10 +1006,13 @@ gst_pad_link_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
     return FALSE;
   }
   if (GST_PAD_PARENT (realsink) == NULL) {
-    GST_INFO (GST_CAT_PADS, "Real src pad %s:%s has no parent, failed",
+    GST_INFO (GST_CAT_PADS, "Real sink pad %s:%s has no parent, failed",
 	      GST_DEBUG_PAD_NAME (realsrc));
     return FALSE;
   }
+  g_return_val_if_fail (GST_STATE (GST_PAD_PARENT (realsrc)) != GST_STATE_PLAYING, FALSE);
+  g_return_val_if_fail (GST_STATE (GST_PAD_PARENT (realsink)) != GST_STATE_PLAYING, FALSE);
+
 
   if (!gst_pad_check_schedulers (realsrc, realsink)) {
     g_warning ("linking pads with different scheds requires "
