@@ -50,6 +50,7 @@ struct _GstMad {
   guchar	*tempbuffer;
   glong		tempsize;	/* used to keep track of partial buffers */
   gboolean	need_sync;
+  GstClockTime  last_ts;
   guint64       base_byte_offset;
   guint64       bytes_consumed;   /* since the base_byte_offset */
   guint64	total_samples;  /* the number of samples since the sync point */
@@ -1113,8 +1114,9 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
     /* if there is nothing queued (partial buffer), we prepare to set the
      * timestamp on the next buffer */
     if (mad->tempsize == 0) {
-      GstFormat format = GST_FORMAT_DEFAULT;
-      gst_pad_convert (pad, GST_FORMAT_TIME, timestamp, &format, &mad->total_samples);
+      /* we have to save the result here because we can't yet convert the timestamp
+       * to a sample offset yet, the samplerate might not be known yet */
+      mad->last_ts = timestamp;
       mad->base_byte_offset = GST_BUFFER_OFFSET (buffer);
       mad->bytes_consumed = 0;
     }
@@ -1258,6 +1260,12 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	time_duration = GST_CLOCK_TIME_NONE;
       }
       else {
+	/* if we have a pending timestamp, we can use it now to calculate the sample offset */
+	if (GST_CLOCK_TIME_IS_VALID (mad->last_ts)) {
+          GstFormat format = GST_FORMAT_DEFAULT;
+          gst_pad_convert (mad->srcpad, GST_FORMAT_TIME, mad->last_ts, &format, &mad->total_samples);
+	  mad->last_ts = GST_CLOCK_TIME_NONE;
+	}
 	time_offset = mad->total_samples * GST_SECOND
 					/ mad->frame.header.samplerate;
 	time_duration = ((mad->total_samples + nsamples) * GST_SECOND
@@ -1317,10 +1325,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       /* we have a queued timestamp on the incoming buffer that we should
        * use for the next frame */
       if (new_pts) {
-        GstFormat format = GST_FORMAT_DEFAULT;
-
+	mad->last_ts = timestamp;
 	new_pts = FALSE;
-        gst_pad_convert (pad, GST_FORMAT_TIME, timestamp, &format, &mad->total_samples);
 	mad->base_byte_offset = GST_BUFFER_OFFSET (buffer);
 	mad->bytes_consumed = 0;
       }
@@ -1373,6 +1379,7 @@ gst_mad_change_state (GstElement *element)
       mad->framecount = 0;
       mad->vbr_rate = 0;
       mad->frame.header.samplerate = 0;
+      mad->last_ts = GST_CLOCK_TIME_NONE;
       if (mad->ignore_crc) options |= MAD_OPTION_IGNORECRC;
       if (mad->half) options |= MAD_OPTION_HALFSAMPLERATE;
       mad_stream_options (&mad->stream, options);
