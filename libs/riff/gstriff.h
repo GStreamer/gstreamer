@@ -273,6 +273,7 @@ struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_WAVE_FORMAT_YAMAHA_ADPCM   (0x0020)
 #define GST_RIFF_WAVE_FORMAT_DSP_TRUESPEECH (0x0022)
 #define GST_RIFF_WAVE_FORMAT_GSM610         (0x0031)
+#define GST_RIFF_WAVE_FORMAT_MPEG           (0x0055)
 #define GST_RIFF_IBM_FORMAT_MULAW           (0x0101)
 #define GST_RIFF_IBM_FORMAT_ALAW            (0x0102)
 #define GST_RIFF_IBM_FORMAT_ADPCM           (0x0103)

@@ -63,8 +63,7 @@ void mpeg1_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
     gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
     g_print("setting to RUNNING state\n");
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_RUNNING);
-    //g_print("setting to PLAYING state\n");
-    //gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_PLAYING);
+
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
   //} else if (0) {
     mpeg1_setup_video_thread(pad, video_render_queue, pipeline);
@@ -113,7 +112,5 @@ void mpeg1_setup_video_thread(GstPad *pad, GstElement *video_render_queue, GstEl
   gtk_object_set(GTK_OBJECT(video_thread),"create_thread",TRUE,NULL);
   g_print("setting to RUNNING state\n");
   gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_RUNNING);
-  //g_print("setting to PLAYING state\n");
-  //gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_PLAYING);
 }
 

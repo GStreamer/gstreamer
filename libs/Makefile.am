@@ -1,3 +1,3 @@
-SUBDIRS = riff colorspace getbits putbits videoscale 
+SUBDIRS = riff colorspace getbits putbits videoscale winloader
 
-DIST_SUBDIRS = riff colorspace getbits putbits videoscale
+DIST_SUBDIRS = riff colorspace getbits putbits videoscale winloader

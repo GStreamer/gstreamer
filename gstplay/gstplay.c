@@ -41,6 +41,8 @@ static void frame_displayed(GstSrc *asrc)
   guint mux_rate;
   static int prev_time = -1;
 
+  if (!parse) return;
+  return;
   DEBUG("gstplay: frame displayed %s\n", MUTEX_STATUS());
 
   mux_rate = gst_util_get_int_arg(GTK_OBJECT(parse),"mux_rate");
@@ -188,7 +190,9 @@ static void have_type(GstSink *sink) {
                        GTK_SIGNAL_FUNC(avi_new_pad_created),pipeline);
   }
   else if (strstr(gsttype->mime, "mpeg1")) {
-    mpeg1_setup_video_thread(gst_element_get_pad(src,"src"), show, GST_ELEMENT(pipeline));
+    mpeg1_setup_video_thread(gst_element_get_pad(src,"src"), video_render_queue, GST_ELEMENT(pipeline));
+    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
+    gst_clock_reset(gst_clock_get_system());
   }
   else {
     g_print("unknown media type\n");
@@ -238,7 +242,7 @@ main (int argc, char *argv[])
   g_return_val_if_fail(video_render_thread != NULL, -1);
   show = gst_elementfactory_make("videosink","show");
   g_return_val_if_fail(show != NULL, -1);
-  //gtk_object_set(GTK_OBJECT(show),"xv_enabled",FALSE,NULL);
+  gtk_object_set(GTK_OBJECT(show),"xv_enabled",FALSE,NULL);
   window1 = create_window1 (gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
   gtk_widget_show (window1);
   gtk_signal_connect(GTK_OBJECT(window1),"delete_event",

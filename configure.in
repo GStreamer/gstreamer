@@ -340,6 +340,7 @@ libs/colorspace/Makefile
 libs/videoscale/Makefile
 libs/getbits/Makefile
 libs/putbits/Makefile
+libs/winloader/Makefile
 plugins/Makefile
 plugins/au/Makefile
 plugins/wav/Makefile
