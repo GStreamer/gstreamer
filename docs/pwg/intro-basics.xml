@@ -192,38 +192,57 @@
       url="../gstreamer/gstreamer-gstevent.html"><classname>GstEvent</classname></ulink>.
     </para>
 
-    <sect2 id="sect2-buffers-bufferpools" xreflabel="Buffer Allocation and
-    Buffer Pools">
-      <title>Buffer Allocation and Buffer Pools</title>
+    <sect2 id="sect2-buffer-allocation" xreflabel="Buffer Allocation">
+      <title>Buffer Allocation</title>
       <para>
-        Buffers can be allocated using various schemes, and they may either be
-        passed on by an element or unreferenced, thus freeing the memory used by
-        the buffer. Buffer allocation and unlinking are important concepts when
-        dealing with real time media processing, since memory allocation is
-        relatively slow on most systems.
+        Buffers are able to store chunks of memory of several different
+	types.  The most generic type of buffer contains memory allocated
+	by malloc().  Such buffers, although convenient, are not always
+	very fast, since data often needs to be specifically copied into
+	the buffer.
       </para>
       <para>
-        To improve the latency in a media pipeline, many &GStreamer; elements
-        use a <emphasis>buffer pool</emphasis> to handle buffer allocation and
-        releasing. A buffer pool is a virtual representation of one or more
-        buffers of which the data is not actually allocated by &GStreamer;
-        itself. Examples of these include hardware framebuffer memory in video
-        output elements or kernel-allocated DMA memory for video capture. The
-        huge advantage of using these buffers instead of creating our own is
-        that we do not have to copy memory from one place to another, thereby
-        saving a noticeable number of CPU cycles. Elements should not provide
-        a bufferpool to decrease the number of memory allocations: the kernel
-        will generally take care of that - and will probably do that much more
-        efficiently than we ever could. Using bufferpools in this way is highly
-        discouraged.
+	Many specialized elements create buffers that point to special
+	memory.  For example, the filesrc element usually
+	maps a file into the address space of the application (using mmap()),
+	and creates buffers that point into that address range.  These
+	buffers created by filesrc act exactly like generic buffers, except
+	that they are read-only.  The buffer freeing code automatically
+	determines the correct method of freeing the underlying memory.
+	Downstream elements that recieve these kinds of buffers do not
+	need to do anything special to handle or unreference it.
       </para>
       <para>
-        Normally in a media pipeline, most filter elements in &GStreamer; deal
-        with a buffer in place, meaning that they do not create or destroy
-        buffers. Sometimes, however, elements might need to alter the reference
-        count of a buffer, either by copying or destroying the buffer, or by
-        creating a new buffer. These topics are generally reserved for
-        non-filter elements, so they will be addressed at that point.
+        Another way an element might get specialized buffers is to
+	request them from a downstream peer.  These are called
+	downstream-allocated buffers.  Elements can ask a
+	peer connected to a source pad to create an empty buffer of
+	a given size.  If a downstream element is able to create a
+	special buffer of the correct size, it will do so.  Otherwise
+	&GStreamer; will automatically create a generic buffer instead.
+	The element that requested the buffer can then copy data into
+	the buffer, and push the buffer to the source pad it was
+	allocated from.
+      </para>
+      <para>
+        Many sink elements have accelerated methods for copying data
+	to hardware, or have direct access to hardware.  It is common
+	for these elements to be able to create downstream-allocated
+	buffers for their upstream peers.  One such example is
+	ximagesink.  It creates buffers that contain XImages.  Thus,
+	when an upstream peer copies data into the buffer, it is copying
+	directly into the XImage, enabling ximagesink to draw the
+	image directly to the screen instead of having to copy data
+	into an XImage first.
+      </para>
+      <para>
+        Filter elements often have the opportunity to either work on
+	a buffer in-place, or work while copying from a source buffer
+	to a destination buffer.  It is optimal to implement both
+	algorithms, since the &GStreamer; framework can choose the
+	fastest algorithm as appropriate.  Naturally, this only makes
+	sense for strict filters -- elements that have exactly the
+	same format on source and sink pads.
       </para>
     </sect2>
   </sect1>
