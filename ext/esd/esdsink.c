@@ -280,7 +280,7 @@ gst_esdsink_chain (GstPad *pad, GstBuffer *buf)
 	gst_audio_clock_set_active (GST_AUDIO_CLOCK (esdsink->provided_clock),
 	    FALSE);
 	gst_pad_event_default (pad, event);
-	break;
+	return;
       case GST_EVENT_DISCONTINUOUS:
       {
 	gint64 value;
@@ -297,7 +297,7 @@ gst_esdsink_chain (GstPad *pad, GstBuffer *buf)
       }
       default:
 	gst_pad_event_default(pad, event);
-	break;
+	return;
     }
     gst_event_unref(event);
     return;
