@@ -853,12 +853,12 @@ dvdnavsrc_get (GstPad *pad)
     GST_DEBUG ("dvdnavsrc sending discont");
     event = gst_event_new_discontinuous (FALSE, 0);
     src->need_flush = FALSE;
-    return GST_BUFFER (event);
+    return GST_DATA (event);
   }
   if (src->need_flush) {
     src->need_flush = FALSE;
     GST_DEBUG ("dvdnavsrc sending flush");
-    return GST_BUFFER (gst_event_new_flush());
+    return GST_DATA (gst_event_new_flush());
   }
 
   /* loop processing blocks until data is pushed */
@@ -927,7 +927,7 @@ dvdnavsrc_get (GstPad *pad)
         break;
     }
   }
-  return buf;
+  return GST_DATA(buf);
 }
 
 /* open the file, necessary to go to RUNNING state */

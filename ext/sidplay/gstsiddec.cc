@@ -401,13 +401,14 @@ gst_siddec_loop (GstElement *element)
   siddec = GST_SIDDEC (element);
 
   if (siddec->state == SID_STATE_NEED_TUNE) {
-    GstBuffer *buf = gst_pad_pull (siddec->sinkpad);
-    g_assert (buf != NULL);
-      
-    if (GST_IS_EVENT (buf)) {
-      GstEvent *event = GST_EVENT (buf);
+    GstData *data = gst_pad_pull (siddec->sinkpad);
 
-      switch (GST_EVENT_TYPE (buf)) {
+    g_assert (data != NULL);
+      
+    if (GST_IS_EVENT (data)) {
+      GstEvent *event = GST_EVENT (data);
+
+      switch (GST_EVENT_TYPE (event)) {
 	case GST_EVENT_EOS:
           siddec->state = SID_STATE_LOAD_TUNE;
 	  break;
@@ -423,6 +424,8 @@ gst_siddec_loop (GstElement *element)
       gst_event_unref (event);
     }
     else {
+      GstBuffer *buf = GST_BUFFER (data);
+
       memcpy (siddec->tune_buffer+siddec->tune_len, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
       siddec->tune_len += GST_BUFFER_SIZE (buf);
 
@@ -475,7 +478,7 @@ gst_siddec_loop (GstElement *element)
     gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &value2);
     GST_BUFFER_DURATION (out) = value2 - value;
 
-    gst_pad_push (siddec->srcpad, out);
+    gst_pad_push (siddec->srcpad, GST_DATA(out));
   }
 }
 
