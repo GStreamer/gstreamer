@@ -35,7 +35,9 @@
 
 GST_DEBUG_CATEGORY_STATIC (debug_dataflow);
 #define DEBUG_DATA(obj,data,notice) G_STMT_START{\
-  if (GST_IS_EVENT (data)) { \
+  if (!data) { \
+    GST_CAT_DEBUG_OBJECT (debug_dataflow, obj, "NULL data value"); \
+  } else if (GST_IS_EVENT (data)) { \
     GST_CAT_DEBUG_OBJECT (debug_dataflow, obj, "%s event %p (type %d, refcount %d)", notice, data, \
 	GST_EVENT_TYPE (data), GST_DATA_REFCOUNT_VALUE (data)); \
   } else { \

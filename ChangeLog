@@ -1,5 +1,10 @@
 2004-07-21  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstpad.c:
+	  check if data is NULL before outputting debug info. (fixes #145100)
+
+2004-07-21  Benjamin Otte  <otte@gnome.org>
+
 	* gst/schedulers/entryscheduler.c:
 	(gst_entry_scheduler_loop_wrapper),
 	(gst_entry_scheduler_chain_wrapper),
