@@ -206,6 +206,7 @@ gst_thread_init (GTypeInstance * instance, gpointer g_class)
 
   thread->lock = g_mutex_new ();
   thread->cond = g_cond_new ();
+  thread->iterate_lock = g_mutex_new ();
 
   thread->thread_id = (GThread *) NULL; /* set in NULL -> READY */
   thread->priority = G_THREAD_PRIORITY_NORMAL;
@@ -552,11 +553,13 @@ gst_thread_change_state (GstElement * element)
   GST_LOG_OBJECT (thread, "unlocking lock");
   g_mutex_unlock (thread->lock);
 
+  g_mutex_lock (thread->iterate_lock);
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
     ret = GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT (thread));
   } else {
     ret = GST_STATE_SUCCESS;
   }
+  g_mutex_unlock (thread->iterate_lock);
 
   return ret;
 
@@ -664,7 +667,9 @@ gst_thread_main_loop (void *arg)
         gboolean status;
 
         g_mutex_unlock (thread->lock);
+        g_mutex_lock (thread->iterate_lock);
         status = gst_bin_iterate (GST_BIN (thread));
+        g_mutex_unlock (thread->iterate_lock);
         g_mutex_lock (thread->lock);
 
         if (!status) {

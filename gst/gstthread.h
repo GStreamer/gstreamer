@@ -61,7 +61,9 @@ struct _GstThread {
   GMutex 	*lock;			/* thread lock/condititon pairs */
   GCond 	*cond;			/* used to control the thread */
 
-  gpointer _gst_reserved[GST_PADDING];
+  GMutex 	*iterate_lock;		/* lock iteration in state change  */
+
+  gpointer _gst_reserved[GST_PADDING-1];
 };
 
 struct _GstThreadClass {

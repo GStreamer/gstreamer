@@ -1,3 +1,11 @@
+2004-10-06  Wim Taymans  <wim at fluendo dot com>
+
+	* gst/gstthread.c: (gst_thread_init), (gst_thread_change_state),
+	(gst_thread_main_loop):
+	Lock the iteration and the state change so that automatic
+	negotiation and fixation does not happen at the same time
+	as the in stream negotiation.
+
 2004-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
