@@ -6,21 +6,16 @@
 #endif
 #include <gst/gst.h>
 #include "gsttextoverlay.h"
-//#include "gsttexttestsrc.h"
-//#include "gstsubparse.h"
-//#include "SDL_blit.h"
+/*#include "gsttexttestsrc.h"*/
+/*#include "gstsubparse.h"*/
+/*#include "SDL_blit.h"*/
 
 static GstElementDetails textoverlay_details = {
     "Text Overlay",
     "Filter/Video",
-    "LGPL",
     "Adds text strings on top of a video buffer",
-    VERSION, 
-    "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>",
-    "(C) 2003",
+    "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>"
 };
-
-
 
 enum {
     ARG_0,
@@ -74,6 +69,7 @@ GST_PAD_TEMPLATE_FACTORY(text_sink_template_factory,
 			     )
     )
 
+static void                  gst_textoverlay_base_init (gpointer g_class);
 static void                  gst_textoverlay_class_init(GstTextOverlayClass *klass);
 static void                  gst_textoverlay_init(GstTextOverlay      *overlay);
 static void                  gst_textoverlay_set_property(GObject             *object, 
@@ -100,7 +96,7 @@ gst_textoverlay_get_type(void)
     if (!textoverlay_type) {
 	static const GTypeInfo textoverlay_info = {
 	    sizeof(GstTextOverlayClass), 
-	    NULL,
+	    gst_textoverlay_base_init,
 	    NULL,
 	    (GClassInitFunc)gst_textoverlay_class_init,
 	    NULL,
@@ -115,6 +111,17 @@ gst_textoverlay_get_type(void)
     return textoverlay_type;
 }
 
+static void
+gst_textoverlay_base_init (gpointer g_class)
+{
+    GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+    gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (textoverlay_src_template_factory));
+    gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (video_sink_template_factory));
+    gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (text_sink_template_factory));
+
+    gst_element_class_set_details (element_class, &textoverlay_details);
+}
 
 static void
 gst_textoverlay_class_init(GstTextOverlayClass *klass)
@@ -625,33 +632,25 @@ gst_textoverlay_get_property(GObject *object, guint prop_id, GValue *value, GPar
 }
 
 static gboolean
-plugin_init(GModule *module, GstPlugin *plugin)
+plugin_init(GstPlugin *plugin)
 {
-    GstElementFactory *factory;
+    if (!gst_element_register (plugin, "textoverlay", GST_RANK_PRIMARY, GST_TYPE_TEXTOVERLAY))
+	return FALSE;
 
-    factory = gst_element_factory_new("textoverlay", GST_TYPE_TEXTOVERLAY,
-				      &textoverlay_details);
-    g_return_val_if_fail(factory != NULL, FALSE);
-    gst_element_factory_set_rank(factory, GST_ELEMENT_RANK_PRIMARY);
-
-    gst_element_factory_add_pad_template(factory, 
-					 GST_PAD_TEMPLATE_GET(textoverlay_src_template_factory));
-    gst_element_factory_add_pad_template(factory, 
-					 GST_PAD_TEMPLATE_GET(video_sink_template_factory));
-    gst_element_factory_add_pad_template(factory, 
-					 GST_PAD_TEMPLATE_GET(text_sink_template_factory));
-
-    gst_plugin_add_feature(plugin, GST_PLUGIN_FEATURE(factory));
-
-    //texttestsrc_plugin_init(module, plugin);
-    //subparse_plugin_init(module, plugin);
+    /*texttestsrc_plugin_init(module, plugin);*/
+    /*subparse_plugin_init(module, plugin);*/
     return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
     GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "textoverlay",
-    plugin_init
-};
+    "Text overlay",
+    plugin_init,
+    VERSION,
+    "GPL",
+    GST_COPYRIGHT,
+    GST_PACKAGE,
+    GST_ORIGIN)
 
