@@ -41,12 +41,9 @@
 /* ElementFactory information. */
 static GstElementDetails dxr3spusink_details = {
   "dxr3/Hollywood+ mpeg decoder board subpicture element",
-  "video/mpeg",
-  "GPL",
+  "Sink/Video",
   "Feeds subpicture information to Sigma Designs em8300 based boards",
-  VERSION,
-  "Martin Soto <martinsoto@users.sourceforge.net>",
-  "(C) 2003",
+  "Martin Soto <martinsoto@users.sourceforge.net>"
 };
 
 
@@ -80,6 +77,7 @@ GST_PAD_EVENT_MASK_FUNCTION (dxr3spusink_get_event_mask,
 
 
 static void	dxr3spusink_class_init   	(Dxr3SpuSinkClass *klass);
+static void	dxr3spusink_base_init   	(Dxr3SpuSinkClass *klass);
 static void	dxr3spusink_init		(Dxr3SpuSink *dxr3spusink);
 
 static void	dxr3spusink_set_property	(GObject *object,
@@ -128,7 +126,7 @@ dxr3spusink_get_type (void)
   if (!dxr3spusink_type) {
     static const GTypeInfo dxr3spusink_info = {
       sizeof (Dxr3SpuSinkClass),
-      NULL,
+      (GBaseInitFunc)dxr3spusink_base_init,
       NULL,
       (GClassInitFunc)dxr3spusink_class_init,
       NULL,
@@ -144,6 +142,17 @@ dxr3spusink_get_type (void)
   return dxr3spusink_type;
 }
 
+
+static void
+dxr3spusink_base_init (Dxr3SpuSinkClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (dxr3spusink_sink_factory));
+  gst_element_class_set_details (element_class,
+				 &dxr3spusink_details);
+}
 
 static void
 dxr3spusink_class_init (Dxr3SpuSinkClass *klass) 
@@ -538,22 +547,4 @@ static void
 dxr3spusink_flushed (Dxr3SpuSink *sink)
 {
   /* Do nothing. */
-}
-
-
-extern gboolean 
-dxr3spusink_factory_init (GstPlugin *plugin) 
-{ 
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("dxr3spusink",
-                                     GST_TYPE_DXR3SPUSINK,
-                                     &dxr3spusink_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_add_pad_template (factory,
-                     GST_PAD_TEMPLATE_GET (dxr3spusink_sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
 }

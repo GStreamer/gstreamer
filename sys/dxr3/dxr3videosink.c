@@ -41,12 +41,9 @@
 /* ElementFactory information. */
 static GstElementDetails dxr3videosink_details = {
   "dxr3/Hollywood+ mpeg decoder board video element",
-  "video/mpeg",
-  "GPL",
+  "Sink/Video",
   "Feeds MPEG2 video to Sigma Designs em8300 based boards",
-  VERSION,
-  "Martin Soto <martinsoto@users.sourceforge.net>",
-  "(C) 2003",
+  "Martin Soto <martinsoto@users.sourceforge.net>"
 };
 
 
@@ -108,6 +105,7 @@ GST_PAD_EVENT_MASK_FUNCTION (dxr3videosink_get_event_mask,
 
 
 static void	dxr3videosink_class_init	(Dxr3VideoSinkClass *klass);
+static void	dxr3videosink_base_init		(Dxr3VideoSinkClass *klass);
 static void	dxr3videosink_init		(Dxr3VideoSink *dxr3videosink);
 
 static void	dxr3videosink_set_property	(GObject *object,
@@ -156,7 +154,7 @@ dxr3videosink_get_type (void)
   if (!dxr3videosink_type) {
     static const GTypeInfo dxr3videosink_info = {
       sizeof (Dxr3VideoSinkClass),
-      NULL,
+      (GBaseInitFunc) dxr3videosink_base_init,
       NULL,
       (GClassInitFunc) dxr3videosink_class_init,
       NULL,
@@ -173,6 +171,17 @@ dxr3videosink_get_type (void)
   return dxr3videosink_type;
 }
 
+
+static void
+dxr3videosink_base_init (Dxr3VideoSinkClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (dxr3videosink_sink_factory));
+  gst_element_class_set_details (element_class,
+				 &dxr3videosink_details);
+}
 
 static void
 dxr3videosink_class_init (Dxr3VideoSinkClass *klass) 
@@ -746,22 +755,4 @@ static void
 dxr3videosink_flushed (Dxr3VideoSink *sink)
 {
   /* Do nothing. */
-}
-
-
-extern gboolean 
-dxr3videosink_factory_init (GstPlugin *plugin) 
-{ 
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("dxr3videosink",
-                                     GST_TYPE_DXR3VIDEOSINK,
-                                     &dxr3videosink_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_add_pad_template (factory,
-                     GST_PAD_TEMPLATE_GET (dxr3videosink_sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
 }

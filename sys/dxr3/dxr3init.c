@@ -19,33 +19,36 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "config.h"
+
 #include "dxr3videosink.h"
 #include "dxr3spusink.h"
 #include "dxr3audiosink.h"
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  gboolean ret;
-
-  ret = dxr3videosink_factory_init (plugin);
-  g_return_val_if_fail (ret == TRUE, FALSE);
-
-  ret = dxr3spusink_factory_init (plugin);
-  g_return_val_if_fail (ret == TRUE, FALSE);
-
-  ret = dxr3audiosink_factory_init (plugin);
-  g_return_val_if_fail (ret == TRUE, FALSE);
+  if (!gst_element_register (plugin, "dxr3videosink",
+			     GST_RANK_NONE, GST_TYPE_DXR3VIDEOSINK) ||
+      !gst_element_register (plugin, "dxr3audiosink",
+			     GST_RANK_NONE, GST_TYPE_DXR3AUDIOSINK) ||
+      !gst_element_register (plugin, "dxr3spusink",
+			     GST_RANK_NONE, GST_TYPE_DXR3SPUSINK))
+    return FALSE;
 
   return TRUE;
 }
 
-
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "dxr3",
-  plugin_init
-};
-
+  "dxr3 mpeg video board elements",
+  plugin_init,
+  VERSION,
+  "GPL",
+  "(c) 2003 Martin Soto <martinsoto@users.sourceforge.net>",
+  GST_PACKAGE,
+  GST_ORIGIN
+)

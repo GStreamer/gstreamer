@@ -48,12 +48,9 @@
 /* ElementFactory information. */
 static GstElementDetails dxr3audiosink_details = {
   "dxr3/Hollywood+ mpeg decoder board audio plugin",
-  "audio/raw|a52",
-  "GPL",
+  "Audio/Sink",
   "Feeds audio to Sigma Designs em8300 based boards",
-  VERSION,
-  "Martin Soto <martinsoto@users.sourceforge.net>",
-  "(C) 2003",
+  "Martin Soto <martinsoto@users.sourceforge.net>"
 };
 
 
@@ -111,6 +108,7 @@ GST_PAD_EVENT_MASK_FUNCTION(dxr3audiosink_get_event_mask,
 
 
 static void	dxr3audiosink_class_init   	(Dxr3AudioSinkClass *klass);
+static void	dxr3audiosink_base_init   	(Dxr3AudioSinkClass *klass);
 static void	dxr3audiosink_init		(Dxr3AudioSink *sink);
 
 static void	dxr3audiosink_set_property	(GObject *object,
@@ -160,7 +158,7 @@ dxr3audiosink_get_type (void)
   if (!dxr3audiosink_type) {
     static const GTypeInfo dxr3audiosink_info = {
       sizeof(Dxr3AudioSinkClass),
-      NULL,
+      (GBaseInitFunc) dxr3audiosink_base_init,
       NULL,
       (GClassInitFunc) dxr3audiosink_class_init,
       NULL,
@@ -177,6 +175,19 @@ dxr3audiosink_get_type (void)
   return dxr3audiosink_type;
 }
 
+
+static void
+dxr3audiosink_base_init (Dxr3AudioSinkClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (dxr3audiosink_pcm_sink_factory));
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (dxr3audiosink_ac3_sink_factory));
+  gst_element_class_set_details (element_class,
+				 &dxr3audiosink_details);
+}
 
 static void
 dxr3audiosink_class_init (Dxr3AudioSinkClass *klass) 
@@ -794,24 +805,4 @@ static void
 dxr3audiosink_flushed (Dxr3AudioSink *sink)
 {
   /* Do nothing. */
-}
-
-
-extern gboolean 
-dxr3audiosink_factory_init (GstPlugin *plugin) 
-{ 
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("dxr3audiosink",
-                                     GST_TYPE_DXR3AUDIOSINK,
-                                     &dxr3audiosink_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_add_pad_template (factory,
-                     GST_PAD_TEMPLATE_GET (dxr3audiosink_pcm_sink_factory));
-  gst_element_factory_add_pad_template (factory,
-                     GST_PAD_TEMPLATE_GET (dxr3audiosink_ac3_sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
 }
