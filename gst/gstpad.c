@@ -1337,12 +1337,14 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
  *
  * Tries to set the caps on the given pad.
  *
- * Returns: TRUE if the caps could be set, FALSE otherwise.
+ * Returns: A GstPadConnectReturn value indicating whether the caps
+ * 		could be set.
  */
-gboolean
+GstPadConnectReturn
 gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
 {
   GstRealPad *peer, *realpad;
+  GstPadConnectReturn set_retval;
 
   realpad = GST_PAD_REALIZE (pad);
   peer = GST_RPAD_PEER (realpad);
@@ -1360,30 +1362,30 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
     g_warning ("trying to set non fixed caps on pad %s:%s, not allowed",
                GST_DEBUG_PAD_NAME (realpad));
     gst_caps_debug (caps, "unfixed caps");
-    return FALSE;
+    return GST_PAD_CONNECT_DELAYED;
   }
 
   /* if we have a peer try to set the caps, notifying the peerpad
    * if it has a connect function */
-  if (peer && (gst_pad_try_set_caps_func (peer, caps, TRUE) != GST_PAD_CONNECT_OK))
+  if (peer && ((set_retval = gst_pad_try_set_caps_func (peer, caps, TRUE)) <= 0))
   {
-    GST_INFO (GST_CAT_CAPS, "tried to set caps on peerpad %s:%s but couldn't",
-	      GST_DEBUG_PAD_NAME (peer));
-    return FALSE;
+    GST_INFO (GST_CAT_CAPS, "tried to set caps on peerpad %s:%s but couldn't, return value %d",
+	      GST_DEBUG_PAD_NAME (peer), set_retval);
+    return set_retval;
   }
 
   /* then try to set our own caps, we don't need to be notified */
-  if (gst_pad_try_set_caps_func (realpad, caps, FALSE) != GST_PAD_CONNECT_OK)
+  if ((set_retval = gst_pad_try_set_caps_func (realpad, caps, FALSE)) <= 0)
   {
-    GST_INFO (GST_CAT_CAPS, "tried to set own caps on pad %s:%s but couldn't",
-	      GST_DEBUG_PAD_NAME (realpad));
-    return FALSE;
+    GST_INFO (GST_CAT_CAPS, "tried to set own caps on pad %s:%s but couldn't, return value %d",
+	      GST_DEBUG_PAD_NAME (realpad), set_retval);
+    return set_retval;
   }
-  GST_INFO (GST_CAT_CAPS, "succeeded setting caps %p on pad %s:%s",
-	    caps, GST_DEBUG_PAD_NAME (realpad));
+  GST_INFO (GST_CAT_CAPS, "succeeded setting caps %p on pad %s:%s, return value %d",
+	    caps, GST_DEBUG_PAD_NAME (realpad), set_retval);
   g_assert (GST_PAD_CAPS (pad));
 			  
-  return TRUE;
+  return set_retval;
 }
 
 /* this is a caps negotiation convenience routine, it:

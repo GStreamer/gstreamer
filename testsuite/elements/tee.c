@@ -109,7 +109,7 @@ main (int argc, char *argv[])
   g_assert (src_caps != NULL);
   g_print ("Setting caps on fakesrc's src pad\n");
   pad = gst_element_get_pad (src, "src");
-  if (! (gst_pad_try_set_caps (pad, src_caps)))
+  if ((gst_pad_try_set_caps (pad, src_caps)) <= 0)
   {
     g_print ("Could not set caps !\n");
   }

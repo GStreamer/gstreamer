@@ -163,10 +163,7 @@ gst_identity_connect (GstPad *pad, GstCaps *caps)
   otherpad = (pad == identity->srcpad ? identity->sinkpad : identity->srcpad);
 
   if (GST_CAPS_IS_FIXED (caps))
-    if (gst_pad_try_set_caps (otherpad, caps))
-      return GST_PAD_CONNECT_OK;
-    else
-      return GST_PAD_CONNECT_REFUSED;
+    return gst_pad_try_set_caps (otherpad, caps);
   else
     return GST_PAD_CONNECT_DELAYED;
 }

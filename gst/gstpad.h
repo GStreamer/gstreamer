@@ -430,7 +430,7 @@ GstPad*			gst_pad_get_peer			(GstPad *pad);
 /* capsnego functions */
 GstCaps*		gst_pad_get_caps			(GstPad *pad);
 GstCaps*		gst_pad_get_pad_template_caps		(GstPad *pad);
-gboolean		gst_pad_try_set_caps			(GstPad *pad, GstCaps *caps);
+GstPadConnectReturn	gst_pad_try_set_caps			(GstPad *pad, GstCaps *caps);
 gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);
 
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);

@@ -123,6 +123,7 @@ gst_tee_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstTee *tee;
   GList *pads;
+  GstPadConnectReturn set_retval;
   
   tee = GST_TEE (gst_pad_get_parent (pad));
 
@@ -140,8 +141,8 @@ gst_tee_sinkconnect (GstPad *pad, GstCaps *caps)
     if (GST_PAD_DIRECTION (outpad) != GST_PAD_SRC || !GST_PAD_IS_USABLE (outpad))
       continue;
 
-    if (!(gst_pad_try_set_caps (outpad, caps))) {
-      return GST_PAD_CONNECT_REFUSED;
+    if ((set_retval = gst_pad_try_set_caps (outpad, caps)) <= 0) {
+      return set_retval;
     }
   }
   return GST_PAD_CONNECT_OK;
