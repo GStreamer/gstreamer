@@ -1,3 +1,9 @@
+2004-06-08  Wim Taymans  <wim@fluendo.com>
+
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_class_init),
+	(gst_multipart_mux_loop):
+	Fix memory leak
+
 2004-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_get):
