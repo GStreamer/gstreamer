@@ -188,6 +188,7 @@ typedef enum {
 
 typedef struct _GstMatroskaTrackContext {
   GstPad       *pad;
+  GstCaps      *caps;
   guint 	index;
 
   /* some often-used info */

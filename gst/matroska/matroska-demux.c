@@ -302,6 +302,24 @@ gst_matroska_demux_stream_from_num (GstMatroskaDemux *demux,
   return -1;
 }
 
+static GstCaps *
+gst_matroska_demux_src_getcaps (GstPad *pad)
+{
+  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (gst_pad_get_parent (pad));
+  guint n;
+                                                                                
+  for (n = 0; n < demux->num_streams; n++) {
+    if (demux->src[n] != NULL && demux->src[n]->pad == pad) {
+      break;
+    }
+  }
+
+  if (n == demux->num_streams)
+    return gst_caps_new_empty();
+
+  return gst_caps_copy (demux->src[n]->caps);
+}
+
 static gboolean
 gst_matroska_demux_add_stream (GstMatroskaDemux *demux)
 {
@@ -867,6 +885,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux *demux)
 
   /* the pad in here */
   context->pad =  gst_pad_new_from_template (templ, padname);
+  context->caps = caps ? caps : gst_caps_new_empty ();
 
   g_free (padname);
 
@@ -881,11 +900,10 @@ gst_matroska_demux_add_stream (GstMatroskaDemux *demux)
 				   gst_matroska_demux_get_src_query_types);
   gst_pad_set_query_function (context->pad,
 			      gst_matroska_demux_handle_src_query);
-  gst_pad_use_explicit_caps (context->pad);
+  gst_pad_set_getcaps_function (context->pad,
+				gst_matroska_demux_src_getcaps);
 
   gst_element_add_pad (GST_ELEMENT (demux), context->pad);
-
-  gst_pad_set_explicit_caps (context->pad, caps);
 
   /* tadaah! */
   return TRUE;
@@ -2152,114 +2170,6 @@ gst_matroska_demux_loop (GstElement *element)
   gst_matroska_demux_loop_stream (demux);
 }
 
-#if 0
-static GstCaps *
-gst_matroska_demux_vfw_caps (guint32             codec_fcc,
-			     gst_riff_strf_vids *vids)
-{
-  GstCaps *caps = NULL;
-
-  switch (codec_fcc) {
-    case GST_MAKE_FOURCC('I','4','2','0'):
-    case GST_MAKE_FOURCC('Y','U','Y','2'):
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
-	  "format", GST_TYPE_FOURCC, codec_fcc, NULL);
-      break;
-
-    case GST_MAKE_FOURCC('M','J','P','G'): /* YUY2 MJPEG */
-    case GST_MAKE_FOURCC('J','P','E','G'): /* generic (mostly RGB) MJPEG */
-    case GST_MAKE_FOURCC('P','I','X','L'): /* Miro/Pinnacle fourccs */
-    case GST_MAKE_FOURCC('V','I','X','L'): /* Miro/Pinnacle fourccs */
-      caps = gst_caps_new_simple ("video/x-jpeg", NULL);
-      break;
-
-    case GST_MAKE_FOURCC('H','F','Y','U'):
-      caps = gst_caps_new_simple ("video/x-huffyuv", NULL);
-      break;
-
-    case GST_MAKE_FOURCC('M','P','E','G'):
-    case GST_MAKE_FOURCC('M','P','G','I'):
-      caps = gst_caps_new_simple ("video/mpeg",
-	  "systemstream", G_TYPE_BOOLEAN, FALSE,
-	  "mpegversion", G_TYPE_BOOLEAN, 1, NULL);
-      break;
-
-    case GST_MAKE_FOURCC('H','2','6','3'):
-    case GST_MAKE_FOURCC('i','2','6','3'):
-    case GST_MAKE_FOURCC('L','2','6','3'):
-    case GST_MAKE_FOURCC('M','2','6','3'):
-    case GST_MAKE_FOURCC('V','D','O','W'):
-    case GST_MAKE_FOURCC('V','I','V','O'):
-    case GST_MAKE_FOURCC('x','2','6','3'):
-      caps = gst_caps_new_simple ("video/x-h263", NULL);
-      break;
-
-    case GST_MAKE_FOURCC('D','I','V','3'):
-    case GST_MAKE_FOURCC('D','I','V','4'):
-    case GST_MAKE_FOURCC('D','I','V','5'):
-      caps = gst_caps_new_simple ("video/x-divx",
-	  "divxversion", G_TYPE_INT, 3, NULL);
-      break;
-
-    case GST_MAKE_FOURCC('d','i','v','x'):
-    case GST_MAKE_FOURCC('D','I','V','X'):
-    case GST_MAKE_FOURCC('D','X','5','0'):
-      caps = gst_caps_new_simple ("video/x-divx",
-	  "divxversion", G_TYPE_INT, 5, NULL);
-      break;
-
-    case GST_MAKE_FOURCC('X','V','I','D'):
-    case GST_MAKE_FOURCC('x','v','i','d'):
-      caps = gst_caps_new_simple ("video/x-xvid", NULL);
-      break;
-
-    case GST_MAKE_FOURCC('M','P','G','4'):
-      caps = gst_caps_new_simple ("video/x-msmpeg",
-	  "msmpegversion", G_TYPE_INT, 41, NULL);
-      break;
-
-    case GST_MAKE_FOURCC('M','P','4','2'):
-      caps = gst_caps_new_simple ("video/x-msmpeg",
-	  "msmpegversion", G_TYPE_INT, 42, NULL);
-      break;
-
-    case GST_MAKE_FOURCC('M','P','4','3'):
-      caps = gst_caps_new_simple ("video/x-msmpeg",
-	  "msmpegversion", G_TYPE_INT, 43, NULL);
-      break;
-
-    case GST_MAKE_FOURCC('3','I','V','1'):
-    case GST_MAKE_FOURCC('3','I','V','2'):
-      caps = gst_caps_new_simple ("video/x-3ivx", NULL);
-      break;
-
-    case GST_MAKE_FOURCC('D','V','S','D'):
-    case GST_MAKE_FOURCC('d','v','s','d'):
-      caps = gst_caps_new_simple ("video/x-dv",
-	  "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-      break;
-
-    case GST_MAKE_FOURCC('W','M','V','1'):
-      caps = gst_caps_new_simple ("video/x-wmv",
-	  "wmvversion", G_TYPE_INT, 1, NULL);
-      break;
-
-    case GST_MAKE_FOURCC('W','M','V','2'):
-      caps = gst_caps_new_simple ("video/x-wmv",
-	  "wmvversion", G_TYPE_INT, 2, NULL);
-      break;
-
-    default:
-      GST_WARNING ("matroskademux: unkown VFW video format " GST_FOURCC_FORMAT,
-		   GST_FOURCC_ARGS (codec_fcc));
-      return NULL;
-      break;
-  }
-
-  return caps;
-}
-#endif
-
 static GstCaps *
 gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *videocontext,
 			       const gchar                  *codec_id,
@@ -2425,86 +2335,6 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *videocontext,
 
   return caps;
 }
-
-#if 0
-static GstCaps *
-gst_matroskademux_acm_caps (guint16             codec_id,
-			     gst_riff_strf_auds *auds)
-{
-  GstCaps *caps = NULL;
-
-  switch (codec_id) {
-    case GST_RIFF_WAVE_FORMAT_MPEGL3: /* mp3 */
-      caps = gst_caps_new_simple ("audio/mpeg",
-	  "layer", G_TYPE_INT, 3, NULL);
-      break;
-
-    case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp1 or mp2 */
-      caps = gst_caps_new_simple ("audio/mpeg",
-	  "layer", G_TYPE_INT, 2, NULL);
-      break;
-
-    case GST_RIFF_WAVE_FORMAT_PCM: /* PCM/wav */ {
-      if (auds != NULL) {
-        gint ba = GUINT16_FROM_LE (auds->blockalign);
-        gint ch = GUINT16_FROM_LE (auds->channels);
-        gint ws = GUINT16_FROM_LE (auds->size);
-
-        caps = gst_caps_new_simple ("audio/x-raw-int",
-  	    "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-	    "width", G_TYPE_INT, ba * 8 / ch,
-	    "depth", G_TYPE_INT, ws,
-	    "signed", G_TYPE_BOOLEAN, ws != 8, NULL);
-      } else {
-	caps = gst_caps_from_string ("audio/x-raw-int, "
-	    "endianness = (int) LITTLE_ENDIAN, "
-	    "signed = (boolean) { TRUE, FALSE }, "
-	    "depth = (int) { 8, 16 }, "
-	    "width = (int) { 8, 16 }");
-      }
-
-    }
-      break;
-
-    case GST_RIFF_WAVE_FORMAT_MULAW:
-      if (auds != NULL && auds->size != 8) {
-        g_warning ("invalid depth (%d) of mulaw audio, overwriting.",
-		   auds->size);
-      }
-      caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
-      break;
-
-    case GST_RIFF_WAVE_FORMAT_ALAW:
-      if (auds != NULL && auds->size != 8) {
-        g_warning ("invalid depth (%d) of alaw audio, overwriting.",
-		   auds->size);
-      }
-      caps = gst_caps_new_simple ("audio/x-alaw", NULL);
-      break;
-
-    case GST_RIFF_WAVE_FORMAT_VORBIS1: /* ogg/vorbis mode 1 */
-    case GST_RIFF_WAVE_FORMAT_VORBIS2: /* ogg/vorbis mode 2 */
-    case GST_RIFF_WAVE_FORMAT_VORBIS3: /* ogg/vorbis mode 3 */
-    case GST_RIFF_WAVE_FORMAT_VORBIS1PLUS: /* ogg/vorbis mode 1+ */
-    case GST_RIFF_WAVE_FORMAT_VORBIS2PLUS: /* ogg/vorbis mode 2+ */
-    case GST_RIFF_WAVE_FORMAT_VORBIS3PLUS: /* ogg/vorbis mode 3+ */
-      caps = gst_caps_new_simple ("audio/x-vorbis", NULL);
-      break;
-
-    case GST_RIFF_WAVE_FORMAT_A52:
-      caps = gst_caps_new_simple ("audio/x-ac3", NULL);
-      break;
-
-    default:
-      GST_WARNING ("matroskademux: unkown ACM audio format 0x%04x",
-		   codec_id);
-      return NULL;
-      break;
-  }
-
-  return caps;
-}
-#endif
 
 static GstCaps *
 gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *audiocontext,
