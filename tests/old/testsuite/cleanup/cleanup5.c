@@ -2,19 +2,22 @@
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *bin, *decoder;
+  GstElement *bin, *element;
+  gint i=10000;
 
-  gst_init(&argc,&argv);
+  gst_init (&argc, &argv);
 
-  bin = gst_pipeline_new("pipeline");
+  bin = gst_pipeline_new ("pipeline");
 
-  while (TRUE)
+  while (i--)
   {
-    decoder = gst_elementfactory_make("mpeg2dec","mpeg2dec");
-    if (!decoder) 
+    element = gst_elementfactory_make ("tee", "tee");
+    if (!element) 
       break;
 
-    gst_bin_add(GST_BIN(bin), decoder);
-    gst_bin_remove(GST_BIN(bin), decoder);
+    gst_element_request_pad_by_name (element, "src%d");
+
+    gst_bin_add (GST_BIN (bin), element);
+    gst_bin_remove (GST_BIN (bin), element);
   }
 }
