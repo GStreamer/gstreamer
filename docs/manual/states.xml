@@ -132,7 +132,7 @@
   <sect1 id="section-states-playing">
     <title>The PLAYING state</title>
     <para> 
-      A Pipeline that is in the READY state can be started by setting it to the PLAYING state. At
+      A pipeline can be started by setting it to the PLAYING state. At
       that time data will start to flow all the way through the pipeline.
     </para>
   </sect1>
