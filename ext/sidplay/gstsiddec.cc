@@ -24,17 +24,6 @@
 
 #include "gstsiddec.h"
 
-/* elementfactory information */
-static GstElementDetails gst_siddec_details = {
-  "Sid decoder",
-  "Codec/Audio/Decoder",
-  "GPL",
-  "Use sidplay to decode SID audio tunes",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be> ",
-  "(C) 2001",
-};
-
 /* Sidec signals and args */
 enum {
   /* FILL ME */
@@ -132,6 +121,7 @@ gst_sid_memory_get_type (void)
   return sid_memory_type;
 }
 
+static void     gst_siddec_base_init            (gpointer g_class);
 static void 	gst_siddec_class_init		(GstSidDec *klass);
 static void 	gst_siddec_init			(GstSidDec *siddec);
 
@@ -158,7 +148,7 @@ gst_siddec_get_type (void)
   if (!siddec_type) {
     static const GTypeInfo siddec_info = {
       sizeof(GstSidDecClass),      
-      NULL,
+      gst_siddec_base_init,
       NULL,
       (GClassInitFunc) gst_siddec_class_init,
       NULL,
@@ -172,6 +162,26 @@ gst_siddec_get_type (void)
   }
 
   return siddec_type;
+}
+
+static void
+gst_siddec_base_init (gpointer g_class)
+{
+  static GstElementDetails gst_siddec_details = GST_ELEMENT_DETAILS (
+    "Sid decoder",
+    "Codec/Audio/Decoder",
+    "Use sidplay to decode SID audio tunes",
+    "Wim Taymans <wim.taymans@chello.be> "
+  );
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_siddec_details);
+
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_GET (src_templ));
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_GET (sink_templ));
+
 }
 
 static void
@@ -626,28 +636,22 @@ gst_siddec_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the avi_demux element */
-  factory = gst_element_factory_new ("siddec",GST_TYPE_SIDDEC,
-                                    &gst_siddec_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_templ));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "siddec", GST_RANK_PRIMARY,
+      GST_TYPE_SIDDEC);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "siddec",
-  plugin_init
-};
+  "Uses libsid to decode .sid files",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 
