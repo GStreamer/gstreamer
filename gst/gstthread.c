@@ -253,9 +253,10 @@ static gboolean gst_thread_change_state(GstElement *element,
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
       GST_FLAG_SET(thread,GST_THREAD_STATE_REAPING);
       gst_thread_signal_thread(thread);
-      pthread_join(thread->thread_id,0);
+      //pthread_join(thread->thread_id,0);
       /* tear down the internal state */
-      gst_info("gstthread: tearing down thread's iteration state\n");
+      gst_info("gstthread: tearing down thread's \"%s\" iteration state\n",
+		      gst_element_get_name(GST_ELEMENT(element)));
       /* FIXME do stuff */
       break;
     case GST_STATE_PLAYING:
@@ -303,6 +304,7 @@ void *gst_thread_main_loop(void *arg) {
   }
 
   GST_FLAG_UNSET(thread,GST_THREAD_STATE_REAPING);
+  //pthread_join(thread->thread_id,0);
 
   gst_info("gstthread: thread \"%s\" is stopped\n",
 		  gst_element_get_name(GST_ELEMENT(thread)));

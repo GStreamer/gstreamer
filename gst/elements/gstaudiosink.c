@@ -224,15 +224,16 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
     //g_print("audiosink: writing to soundcard\n");
     if (audiosink->fd > 2) {
       if (!audiosink->mute) {
-        if (gst_clock_current_diff(audiosink->clock, GST_BUFFER_TIMESTAMP(buf)) > 500000) {
-	}
-	else {
+        //if (gst_clock_current_diff(audiosink->clock, GST_BUFFER_TIMESTAMP(buf)) > 500000) {
+	//}
+	//else {
           gst_clock_wait(audiosink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(audiosink));
           ioctl(audiosink->fd,SNDCTL_DSP_GETOSPACE,&ospace);
           DEBUG("audiosink: (%d bytes buffer)\n", ospace.bytes);
           write(audiosink->fd,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
+	//}
           //gst_clock_set(audiosink->clock, GST_BUFFER_TIMESTAMP(buf));
-	}
+	//}
       }
     }
   }

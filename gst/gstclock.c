@@ -126,7 +126,8 @@ void gst_clock_wait(GstClock *clock, GstClockTime time, GstObject *obj) {
     if (!tfnow.tv_sec) {
       select(0, NULL, NULL, NULL, &tfnow);
     }
-    else fprintf(stderr, "gst_clock: waiting %u %llu %llu %llu seconds\n", (int)tfnow.tv_sec, now, diff, time);
+    else printf("gst_clock: %s waiting %u %llu %llu %llu seconds\n", gst_element_get_name(GST_ELEMENT(obj)), 
+		    (int)tfnow.tv_sec, now, diff, time);
     //DEBUG("gst_clock: 0x%p waiting for time %llu %llu %lld %llu\n", obj, time, target, diff, now);
     //DEBUG("waiting %d.%08d\n",tfnow.tv_sec, tfnow.tv_usec);
     //DEBUG("gst_clock: 0x%p waiting done time %llu \n", obj, time);

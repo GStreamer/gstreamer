@@ -95,6 +95,23 @@ void mute_audio(gboolean mute) {
   gtk_object_set(GTK_OBJECT(audio_play),"mute",mute,NULL);
 }
 
+gint delete_event(GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+  gdk_threads_leave();
+  g_print("setting to ~PLAYING state\n");
+  gst_element_set_state(GST_ELEMENT(pipeline),~GST_STATE_PLAYING);
+  g_print("setting to  ~RUNNING state\n");
+  gst_element_set_state(GST_ELEMENT(pipeline),~GST_STATE_RUNNING);
+  gdk_threads_enter();
+  return FALSE;
+}
+
+void destroy(GtkWidget *widget, gpointer data)
+{
+
+  gtk_main_quit();
+}
+
 void gstplay_parse_state_changed(GstElement *element, gint state, gpointer data) 
 {
   printf("gstplay: element \"%s\" state changed %d\n", gst_element_get_name(element), state); 
@@ -221,9 +238,14 @@ main (int argc, char *argv[])
   g_return_val_if_fail(video_render_thread != NULL, -1);
   show = gst_elementfactory_make("videosink","show");
   g_return_val_if_fail(show != NULL, -1);
-  gtk_object_set(GTK_OBJECT(show),"xv_enabled",FALSE,NULL);
+  //gtk_object_set(GTK_OBJECT(show),"xv_enabled",FALSE,NULL);
   window1 = create_window1 (gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
   gtk_widget_show (window1);
+  gtk_signal_connect(GTK_OBJECT(window1),"delete_event",
+                       GTK_SIGNAL_FUNC(delete_event),NULL);
+  gtk_signal_connect(GTK_OBJECT(window1),"destroy",
+                       GTK_SIGNAL_FUNC(destroy),pipeline);
+
   gtk_signal_connect(GTK_OBJECT(show),"frame_displayed",
                        GTK_SIGNAL_FUNC(frame_displayed),NULL);
   gst_bin_add(GST_BIN(video_render_thread),GST_ELEMENT(show));
