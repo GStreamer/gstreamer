@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdlib.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -37,12 +40,12 @@ make_spider_pipeline (const gchar * location, gboolean thread)
   decoder = gst_element_factory_make ("spider", "decoder");
   a_thread = gst_thread_new ("a_thread");
   a_queue = gst_element_factory_make ("queue", "a_queue");
-  audiosink = gst_element_factory_make ("osssink", "a_sink");
+  audiosink = gst_element_factory_make (DEFAULT_AUDIOSINK, "a_sink");
   //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
 
   v_thread = gst_thread_new ("v_thread");
   v_queue = gst_element_factory_make ("queue", "v_queue");
-  videosink = gst_element_factory_make ("xvimagesink", "v_sink");
+  videosink = gst_element_factory_make (DEFAULT_VIDEOSINK, "v_sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);

@@ -54,7 +54,7 @@ main (gint argc, gchar * argv[])
   g_return_val_if_fail (mpeg2dec, -1);
   colorspace = gst_element_factory_make ("ffmpegcolorspace", "colorspace");
   g_return_val_if_fail (colorspace, -1);
-  videosink = gst_element_factory_make ("ximagesink", "videosink");
+  videosink = gst_element_factory_make (DEFAULT_VIDEOSINK, "videosink");
   g_return_val_if_fail (videosink, -1);
 
   gst_bin_add (GST_BIN (pipeline), filesrc);
