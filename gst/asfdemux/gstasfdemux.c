@@ -778,8 +778,8 @@ gst_asf_demux_read_object_header (GstASFDemux *asf_demux, guint32 *obj_id, guint
   gst_bytestream_flush (bs, sizeof (guint64));
 
   if (*obj_id == ASF_OBJ_UNDEFINED) {
-    g_warning ("Could not identify object (0x%08x/0x%08x/0x%08x/0x%08x) with size=%llu",
-	       guid->v1, guid->v2, guid->v3, guid->v4, *obj_size);
+    GST_WARNING_OBJECT (asf_demux, "Could not identify object (0x%08x/0x%08x/0x%08x/0x%08x) with size=%llu",
+	guid->v1, guid->v2, guid->v3, guid->v4, *obj_size);
     return TRUE;
   }
   
@@ -1016,9 +1016,6 @@ gst_asf_demux_handle_sink_event (GstASFDemux *asf_demux,
       gst_element_set_eos (GST_ELEMENT (asf_demux));
       break;
     }
-    case GST_EVENT_FLUSH:
-      g_warning ("flush event");
-      break;
     case GST_EVENT_DISCONTINUOUS:
     {
       gint i;
@@ -1037,8 +1034,11 @@ gst_asf_demux_handle_sink_event (GstASFDemux *asf_demux,
       }
       break;
     }
+    case GST_EVENT_FLUSH:
+      GST_WARNING_OBJECT (asf_demux, "flush event");
+      break;
     default:
-      g_warning ("unhandled event %d", type);
+      GST_WARNING_OBJECT (asf_demux, "unhandled event %d", type);
       break;
   }
 
@@ -1352,7 +1352,7 @@ gst_asf_demux_audio_caps (guint16 codec_id,
       break;
 
     default:
-      g_warning ("asfdemux: unkown audio format 0x%04x",
+      GST_WARNING ("asfdemux: unkown audio format 0x%04x",
 		 codec_id);
       return GST_CAPS_ANY;
       break;
@@ -1396,7 +1396,7 @@ gst_asf_demux_add_audio_stream (GstASFDemux *asf_demux,
 
   /* Swallow up any left over data */
   if (size_left) {
-    g_warning ("asfdemux: Audio header contains %d bytes of surplus data", size_left);
+    GST_WARNING_OBJECT (asf_demux, "asfdemux: Audio header contains %d bytes of surplus data", size_left);
     gst_asf_demux_read_object_header_rest (asf_demux, &extradata, size_left);
 //    gst_bytestream_flush (asf_demux->bs, size_left);
   }
@@ -1524,8 +1524,8 @@ gst_asf_demux_video_caps (guint32 codec_fcc,
       break;
 
     default:
-      g_warning ("asfdemux: unkown video format " GST_FOURCC_FORMAT "(0x%08x)",
-		 GST_FOURCC_ARGS(codec_fcc), codec_fcc);
+      GST_WARNING ("asfdemux: unkown video format " GST_FOURCC_FORMAT "(0x%08x)",
+	  GST_FOURCC_ARGS(codec_fcc), codec_fcc);
       return NULL;
       break;
   }
@@ -1534,7 +1534,7 @@ gst_asf_demux_video_caps (guint32 codec_fcc,
     gst_caps_set_simple (caps,
 	"width", G_TYPE_INT, GUINT32_FROM_LE (video->width),
 	"height", G_TYPE_INT, GUINT32_FROM_LE (video->height),
-        "framerate", G_TYPE_DOUBLE, 0, NULL);
+        "framerate", G_TYPE_DOUBLE, (double) 0, NULL);
   } else {
     gst_caps_set_simple (caps,
 	"width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
