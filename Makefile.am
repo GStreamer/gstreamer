@@ -20,4 +20,8 @@ DIST_SUBDIRS=gst-libs gst sys ext examples tools gconf ## testsuite
 EXTRA_DIST=gst-plugins.spec depcomp \
            gstreamer-libs.pc.in gstreamer-libs-uninstalled.pc.in \
 	   AUTHORS COPYING README RELEASE \
-	   ChangeLog autogen.sh
+	   ChangeLog autogen.sh common m4
+
+dist-hook:
+	rm -rf `find $(distdir)/common -name CVS`
+	rm -rf `find $(distdir)/m4 -name CVS`
