@@ -8,14 +8,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-06-22 16:47+0200\n"
+"POT-Creation-Date: 2004-07-30 15:38+0200\n"
 "PO-Revision-Date: 2004-07-06 02:29+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
+"10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
 #, c-format
@@ -68,6 +69,20 @@ msgstr "Nemohu zapisovat do souboru \"%s\"."
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Žádný nebo neplatný vstup zvuku, proud AVI bude poškozen."
 
+#: gst-libs/gst/play/play.c:110
+#, c-format
+msgid ""
+"The %s element could not be found. This element is essential for playback. "
+"Please install the right plug-in and verify that it works by running 'gst-"
+"inspect %s'"
+msgstr ""
+
+#: gst-libs/gst/play/play.c:139
+msgid ""
+"No usable colorspace element could be found.\n"
+"Please install one and restart."
+msgstr ""
+
 #: sys/dxr3/dxr3audiosink.c:298
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
@@ -113,33 +128,34 @@ msgstr "Nemohu zavřít zařízení videa \"%s\"."
 msgid "Could not write to device \"%s\"."
 msgstr "Nemohu zapisovat do zařízení \"%s\"."
 
-#: sys/oss/gstosselement.c:723
+#: sys/oss/gstosselement.c:725
 #, c-format
 msgid "OSS device \"%s\" is already in use by another program."
 msgstr "Zařízení OSS \"%s\" již používá jiný program."
 
-#: sys/oss/gstosselement.c:730 sys/oss/gstosselement.c:734
+#: sys/oss/gstosselement.c:732 sys/oss/gstosselement.c:736
 #, c-format
 msgid "Could not access device \"%s\", check its permissions."
 msgstr "Nemohu přistupovat k zařízení \"%s\", zkontrolujte jeho oprávnění."
 
-#: sys/oss/gstosselement.c:741 sys/v4l/v4l_calls.c:167
+#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Zařízení \"%s\" neexistuje."
 
-#: sys/oss/gstosselement.c:748
+#: sys/oss/gstosselement.c:750
 #, c-format
 msgid "Could not open device \"%s\" for writing."
 msgstr "Nemohu otevřít zažízení \"%s\" pro zápis."
 
-#: sys/oss/gstosselement.c:752
+#: sys/oss/gstosselement.c:754
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "Nemohu otevřít zažízení \"%s\" pro čtení."
 
-#: sys/oss/gstosselement.c:1129
-msgid "Your oss device could not be probed correctly"
+#: sys/oss/gstosselement.c:1131
+#, fuzzy
+msgid "Your OSS device could not be probed correctly"
 msgstr "Vaše zařízení oss nebyl možné správně najít"
 
 #: sys/oss/gstossmixer.c:98
