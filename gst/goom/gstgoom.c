@@ -21,9 +21,16 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/bytestream/adapter.h>
 #include "goom_core.h"
+
+GST_DEBUG_CATEGORY_STATIC (goom_debug);
+#define GST_CAT_DEFAULT goom_debug
+
+#define GOOM_SAMPLES 512
 
 #define GST_TYPE_GOOM (gst_goom_get_type())
 #define GST_GOOM(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GOOM,GstGOOM))
@@ -40,10 +47,15 @@ struct _GstGOOM
 
   /* pads */
   GstPad *sinkpad, *srcpad;
+  GstAdapter *adapter;
 
+  /* input tracking */
+  gint sample_rate;
+
+  gint16 datain[2][GOOM_SAMPLES];
   /* the timestamp of the next frame */
-  guint64 next_time;
-  gint16 datain[2][512];
+  GstClockTime audio_basetime;
+  guint64 samples_consumed;
 
   /* video state */
   gdouble fps;
@@ -51,6 +63,8 @@ struct _GstGOOM
   gint height;
   gint channels;
   gboolean srcnegotiated;
+
+  gboolean disposed;
 };
 
 struct _GstGOOMClass
@@ -166,6 +180,8 @@ gst_goom_class_init (GstGOOMClass * klass)
   gobject_class->dispose = gst_goom_dispose;
 
   gstelement_class->change_state = gst_goom_change_state;
+
+  GST_DEBUG_CATEGORY_INIT (goom_debug, "goom", 0, "goom visualisation element");
 }
 
 static void
@@ -189,10 +205,17 @@ gst_goom_init (GstGOOM * goom)
   gst_pad_set_link_function (goom->srcpad, gst_goom_srcconnect);
   gst_pad_set_fixate_function (goom->srcpad, gst_goom_src_fixate);
 
+  goom->adapter = gst_adapter_new ();
+
   goom->width = 320;
   goom->height = 200;
   goom->fps = 25.;              /* desired frame rate */
   goom->channels = 0;
+  goom->sample_rate = 0;
+  goom->audio_basetime = GST_CLOCK_TIME_NONE;
+  goom->samples_consumed = 0;
+  goom->disposed = FALSE;
+
   /* set to something */
   goom_init (50, 50);
 }
@@ -200,7 +223,15 @@ gst_goom_init (GstGOOM * goom)
 static void
 gst_goom_dispose (GObject * object)
 {
-  goom_close ();
+  GstGOOM *goom = GST_GOOM (object);
+
+  if (!goom->disposed) {
+    goom_close ();
+    goom->disposed = TRUE;
+
+    g_object_unref (goom->adapter);
+    goom->adapter = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -216,7 +247,7 @@ gst_goom_sinkconnect (GstPad * pad, const GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_get_int (structure, "channels", &goom->channels);
-
+  gst_structure_get_int (structure, "rate", &goom->sample_rate);
   return GST_PAD_LINK_OK;
 }
 
@@ -273,15 +304,11 @@ gst_goom_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *bufin = GST_BUFFER (_data);
   GstGOOM *goom;
-  GstBuffer *bufout;
-  guint32 samples_in;
+  guint32 bytesperread;
   gint16 *data;
-  gint i;
+  gint samples_per_frame;
 
   goom = GST_GOOM (gst_pad_get_parent (pad));
-
-  GST_DEBUG ("GOOM: chainfunc called");
-
   if (GST_IS_EVENT (bufin)) {
     GstEvent *event = GST_EVENT (bufin);
 
@@ -291,8 +318,10 @@ gst_goom_chain (GstPad * pad, GstData * _data)
         gint64 value = 0;
 
         gst_event_discont_get_value (event, GST_FORMAT_TIME, &value);
-
-        goom->next_time = value;
+        gst_adapter_clear (goom->adapter);
+        goom->audio_basetime = value;
+        goom->samples_consumed = 0;
+        GST_DEBUG ("Got discont. Adjusting time to=%" G_GUINT64_FORMAT, value);
       }
       default:
         gst_pad_event_default (pad, event);
@@ -303,49 +332,73 @@ gst_goom_chain (GstPad * pad, GstData * _data)
 
   if (goom->channels == 0) {
     GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
-        ("format wasn't negotiated before chain function"));
-
-    goto done;
+        ("Format wasn't negotiated before chain function"));
+    gst_buffer_unref (bufin);
+    return;
   }
 
-  if (!GST_PAD_IS_USABLE (goom->srcpad))
-    goto done;
-
-  samples_in = GST_BUFFER_SIZE (bufin) / (sizeof (gint16) * goom->channels);
-
-  GST_DEBUG ("input buffer has %d samples", samples_in);
-
-  if (GST_BUFFER_TIMESTAMP (bufin) < goom->next_time || samples_in < 512) {
-    goto done;
+  if (!GST_PAD_IS_USABLE (goom->srcpad)) {
+    gst_buffer_unref (bufin);
+    return;
   }
 
+  if (goom->audio_basetime == GST_CLOCK_TIME_NONE)
+    goom->audio_basetime = GST_BUFFER_TIMESTAMP (bufin);
+
+  if (goom->audio_basetime == GST_CLOCK_TIME_NONE)
+    goom->audio_basetime = 0;
+
+  bytesperread = GOOM_SAMPLES * goom->channels * sizeof (gint16);
+  samples_per_frame = goom->sample_rate / goom->fps;
   data = (gint16 *) GST_BUFFER_DATA (bufin);
-  if (goom->channels == 2) {
-    for (i = 0; i < 512; i++) {
-      goom->datain[0][i] = *data++;
-      goom->datain[1][i] = *data++;
+
+  gst_adapter_push (goom->adapter, bufin);
+
+  GST_DEBUG ("Input buffer has %d samples, time=%" G_GUINT64_FORMAT,
+      GST_BUFFER_SIZE (bufin) * sizeof (gint16) * goom->channels,
+      GST_BUFFER_TIMESTAMP (bufin));
+
+  /* Collect samples until we have enough for an output frame */
+  while (gst_adapter_available (goom->adapter) > MAX (bytesperread,
+          samples_per_frame * goom->channels * sizeof (gint16))) {
+    const guint16 *data =
+        (const guint16 *) gst_adapter_peek (goom->adapter, bytesperread);
+    GstBuffer *bufout;
+    guchar *out_frame;
+    GstClockTimeDiff frame_duration = GST_SECOND / goom->fps;
+    gint i;
+
+    if (goom->channels == 2) {
+      for (i = 0; i < GOOM_SAMPLES; i++) {
+        goom->datain[0][i] = *data++;
+        goom->datain[1][i] = *data++;
+      }
+    } else {
+      for (i = 0; i < GOOM_SAMPLES; i++) {
+        goom->datain[0][i] = *data;
+        goom->datain[1][i] = *data++;
+      }
     }
-  } else {
-    for (i = 0; i < 512; i++) {
-      goom->datain[0][i] = *data;
-      goom->datain[1][i] = *data++;
-    }
+
+    bufout = gst_buffer_new_and_alloc (goom->width * goom->height * 4);
+    GST_BUFFER_TIMESTAMP (bufout) =
+        goom->audio_basetime +
+        (GST_SECOND * goom->samples_consumed / goom->sample_rate);
+    GST_BUFFER_DURATION (bufout) = frame_duration;
+    GST_BUFFER_SIZE (bufout) = goom->width * goom->height * 4;
+
+    out_frame = (guchar *) goom_update (goom->datain);
+    memcpy (GST_BUFFER_DATA (bufout), out_frame, GST_BUFFER_SIZE (bufout));
+
+    GST_DEBUG ("Pushing frame with time=%" G_GUINT64_FORMAT ", duration=%"
+        G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP (bufout),
+        GST_BUFFER_DURATION (bufout));
+    gst_pad_push (goom->srcpad, GST_DATA (bufout));
+
+    goom->samples_consumed += samples_per_frame;
+    gst_adapter_flush (goom->adapter,
+        samples_per_frame * goom->channels * sizeof (gint16));
   }
-
-  bufout = gst_buffer_new ();
-  GST_BUFFER_SIZE (bufout) = goom->width * goom->height * 4;
-  GST_BUFFER_DATA (bufout) = (guchar *) goom_update (goom->datain);
-  GST_BUFFER_TIMESTAMP (bufout) = goom->next_time;
-  GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_DONTFREE);
-
-  goom->next_time += GST_SECOND / goom->fps;
-
-  gst_pad_push (goom->srcpad, GST_DATA (bufout));
-
-done:
-  gst_buffer_unref (bufin);
-
-  GST_DEBUG ("GOOM: exiting chainfunc");
 }
 
 static GstElementStateReturn
@@ -359,8 +412,9 @@ gst_goom_change_state (GstElement * element)
     case GST_STATE_READY_TO_NULL:
       break;
     case GST_STATE_READY_TO_PAUSED:
-      goom->next_time = 0;
+      goom->audio_basetime = GST_CLOCK_TIME_NONE;
       goom->srcnegotiated = FALSE;
+      gst_adapter_clear (goom->adapter);
       break;
     case GST_STATE_PAUSED_TO_READY:
       goom->channels = 0;
@@ -378,6 +432,8 @@ gst_goom_change_state (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
   return gst_element_register (plugin, "goom", GST_RANK_NONE, GST_TYPE_GOOM);
 }
 
