@@ -373,7 +373,9 @@ gst_a52dec_reneg (GstPad * pad, int channels, int rate)
 				  "channels", 	GST_PROPS_INT (channels),
 				  "rate", 	GST_PROPS_INT (rate))
 		    ) <= 0) {
-    gst_element_error (GST_PAD_PARENT (pad), "could not set caps on source pad, aborting...");
+    gst_element_gerror(GST_PAD_PARENT (pad), GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf("could not set caps on source pad, aborting..."));
   }
 }
 
