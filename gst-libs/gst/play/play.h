@@ -16,7 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
 #ifndef __GST_PLAY_H__
 #define __GST_PLAY_H__
 
@@ -46,24 +46,24 @@ typedef enum
 typedef struct _GstPlay GstPlay;
 typedef struct _GstPlayClass GstPlayClass;
 typedef struct _GstPlayPrivate GstPlayPrivate;
-  
+
 struct _GstPlay
 {
   GstPipeline pipeline;
-  
+
   GstPlayPrivate *priv;
-  
+
   gpointer _gst_reserved[GST_PADDING];
 };
-  
+
 struct _GstPlayClass
 {
   GstPipelineClass parent_class;
-  
+
   void (*time_tick)       (GstPlay *play, gint64 time_nanos);
   void (*stream_length)   (GstPlay *play, gint64 length_nanos);
   void (*have_video_size) (GstPlay *play, gint width, gint height);
-  
+
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -92,6 +92,8 @@ gboolean              gst_play_seek_to_time          (GstPlay *play,
 GstElement *          gst_play_get_sink_element      (GstPlay *play,
                                                       GstElement *element,
                                                       GstPlaySinkType sink_type);
+GList *               gst_play_get_all_by_interface   (GstPlay *play,
+                                                      GType interface);
 
 gdouble               gst_play_get_framerate         (GstPlay *play);
 
