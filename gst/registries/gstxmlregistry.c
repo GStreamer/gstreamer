@@ -860,14 +860,11 @@ gst_xml_registry_parse_padtemplate (GMarkupParseContext *context, const gchar *t
 }
 
 static gboolean
-gst_xml_registry_parse_capscomp (GMarkupParseContext *context, const gchar *tag, const gchar *text,
+gst_xml_registry_parse_structure (GMarkupParseContext *context, const gchar *tag, const gchar *text,
                                  gsize text_len, GstXMLRegistry *registry, GError **error)
 {
   if (!strcmp (tag, "name")) {
-    registry->caps_name = g_strndup (text, text_len);
-  }
-  else if (!strcmp (tag, "type")) {
-    registry->caps_mime = g_strndup (text, text_len);
+    registry->structure_name = g_strndup (text, text_len);
   }
   return TRUE;
 }
@@ -977,9 +974,9 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
       }
       break;
     case GST_XML_REGISTRY_CAPS:
-      if (!strncmp (element_name, "capscomp", 8)) {
-	xmlregistry->state = GST_XML_REGISTRY_CAPSCOMP;
-	xmlregistry->parser = gst_xml_registry_parse_capscomp;
+      if (!strncmp (element_name, "structure", 9)) {
+	xmlregistry->state = GST_XML_REGISTRY_STRUCTURE;
+	xmlregistry->parser = gst_xml_registry_parse_structure;
       }
       break;
 #if 0
@@ -1153,6 +1150,7 @@ gst_xml_registry_end_element (GMarkupParseContext *context,
 	xmlregistry->parser = gst_xml_registry_parse_padtemplate;
       }
       break;
+#if 0
     case GST_XML_REGISTRY_CAPSCOMP:
       if (!strcmp (element_name, "capscomp")) {
 	GstCaps2 *caps;
@@ -1168,7 +1166,6 @@ gst_xml_registry_end_element (GMarkupParseContext *context,
 	xmlregistry->caps = caps;
       }
       break;
-#if 0
     case GST_XML_REGISTRY_PROPERTIES:
       if (!strncmp (element_name, "list", 4)) {
 	GstPropsEntry *entry;
@@ -1436,7 +1433,6 @@ gst_xml_registry_save_structure (GstXMLRegistry *xmlregistry, const GstStructure
 static gboolean
 gst_xml_registry_save_caps (GstXMLRegistry *xmlregistry, const GstCaps2 *caps)
 {
-  CLASS (xmlregistry)->save_func (xmlregistry, "<capscomp>\n");
   if(gst_caps2_is_any(caps)){
     PUT_ESCAPED ("flags", "any");
   } else {
@@ -1447,7 +1443,6 @@ gst_xml_registry_save_caps (GstXMLRegistry *xmlregistry, const GstCaps2 *caps)
       gst_xml_registry_save_structure (xmlregistry, structure);
     }
   }
-  CLASS (xmlregistry)->save_func (xmlregistry, "</capscomp>\n");
   return TRUE;
 }
 
@@ -1517,12 +1512,11 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
   else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
     GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
     gint i = 0;
-    /* FIXME 
     if (factory->caps) {
       CLASS (xmlregistry)->save_func (xmlregistry, "<caps>\n");
       gst_xml_registry_save_caps (xmlregistry, factory->caps);
       CLASS (xmlregistry)->save_func (xmlregistry, "</caps>\n");
-    } */
+    }
     if (factory->extensions) {
       while (factory->extensions[i]) {
         PUT_ESCAPED ("extension", factory->extensions[i]);
