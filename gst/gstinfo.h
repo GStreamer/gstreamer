@@ -116,18 +116,15 @@ struct _GstDebugCategory {
 /* You might want to define GST_FUNCTION in apps' configure script */
 
 #ifndef GST_FUNCTION
-#ifdef G_GNUC_PRETTY_FUNCTION
-#define GST_FUNCTION G_GNUC_PRETTY_FUNCTION
-#elif HAVE_FUNC
-#define GST_FUNCTION __func__
-#elif HAVE_PRETTY_FUNCTION
-#define GST_FUNCTION __PRETTY_FUNCTION__
-#elif HAVE_FUNCTION
-#define GST_FUNCTION __FUNCTION__
+#if defined (__GNUC__)
+#  define GST_FUNCTION     ((const char*) (__PRETTY_FUNCTION__))
+#elif defined (G_HAVE_ISO_VARARGS)
+#  define GST_FUNCTION     ((const char*) (__func__))
 #else
-#define GST_FUNCTION ""
+#  define GST_FUNCTION     ((const char*) ("???"))
 #endif
 #endif /* ifndef GST_FUNCTION */
+
 
 typedef struct _GstDebugMessage GstDebugMessage;
 typedef void (*GstLogFunction)	(GstDebugCategory *	category,
