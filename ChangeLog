@@ -1,3 +1,14 @@
+2004-05-20  David Schleef  <ds@schleef.org>
+
+	* sys/osxaudio/Makefile.am:  New OS X audio plugin by Zaheer Merali
+	* sys/osxaudio/gstosxaudio.c:
+	* sys/osxaudio/gstosxaudioelement.c:
+	* sys/osxaudio/gstosxaudioelement.h:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosink.h:
+	* sys/osxaudio/gstosxaudiosrc.c:
+	* sys/osxaudio/gstosxaudiosrc.h:
+
 2004-05-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_set_header_on_caps),
