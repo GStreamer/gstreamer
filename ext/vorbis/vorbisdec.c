@@ -25,6 +25,9 @@
 #include <string.h>
 #include <gst/tag/tag.h>
 
+GST_DEBUG_CATEGORY_EXTERN (vorbisdec_debug);
+#define GST_CAT_DEFAULT vorbisdec_debug
+
 static GstElementDetails vorbis_dec_details = {
   "VorbisDec",
   "Codec/Decoder/Audio",
@@ -78,6 +81,9 @@ static void		vorbis_dec_chain		(GstPad *		pad,
 							 GstData *		data);
 static GstElementStateReturn 
 			vorbis_dec_change_state		(GstElement *		element);
+static const GstFormat*
+                        vorbis_dec_get_formats          (GstPad *pad);
+
 static gboolean		vorbis_dec_src_event		(GstPad *		pad,
 							 GstEvent *		event);
 static gboolean		vorbis_dec_src_query		(GstPad *		pad, 
@@ -104,6 +110,23 @@ gst_vorbis_dec_class_init (GstVorbisDecClass *klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gstelement_class->change_state = vorbis_dec_change_state;
+}
+
+static const GstFormat *
+vorbis_dec_get_formats (GstPad *pad)
+{
+  static const GstFormat src_formats[] = {
+    GST_FORMAT_BYTES,
+    GST_FORMAT_DEFAULT,
+    GST_FORMAT_TIME,
+    0
+  };
+  static const GstFormat sink_formats[] = {
+    GST_FORMAT_BYTES,
+    GST_FORMAT_TIME,
+    0
+  };
+  return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
 
 static GstPadLinkReturn
@@ -143,6 +166,7 @@ gst_vorbis_dec_init (GstVorbisDec *dec)
   dec->sinkpad = gst_pad_new_from_template(
       gst_static_pad_template_get (&vorbis_dec_sink_factory), "sink");
   gst_pad_set_chain_function (dec->sinkpad, vorbis_dec_chain);
+  gst_pad_set_formats_function (dec->sinkpad, vorbis_dec_get_formats);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad = gst_pad_new_from_template(
@@ -151,6 +175,7 @@ gst_vorbis_dec_init (GstVorbisDec *dec)
   gst_pad_set_getcaps_function (dec->srcpad, vorbis_dec_getcaps);
   gst_pad_set_event_function (dec->srcpad, vorbis_dec_src_event);
   gst_pad_set_query_function (dec->srcpad, vorbis_dec_src_query);
+  gst_pad_set_formats_function (dec->srcpad, vorbis_dec_get_formats);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   GST_FLAG_SET (dec, GST_ELEMENT_EVENT_AWARE);
@@ -254,7 +279,7 @@ vorbis_dec_event (GstVorbisDec *dec, GstEvent *event)
     case GST_EVENT_DISCONTINUOUS:
       if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value)) {
 	dec->granulepos = value;
-	GST_DEBUG_OBJECT (dec, "setting granuleposition to %"G_GUINT64_FORMAT" after discont\n", value);
+	GST_DEBUG_OBJECT (dec, "setting granuleposition to %"G_GUINT64_FORMAT" after discont", value);
       } else {
 	GST_WARNING_OBJECT (dec, 
 	    "discont event didn't include offset, we might set it wrong now");

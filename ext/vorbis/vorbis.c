@@ -24,6 +24,8 @@
 #include "vorbisenc.h"
 #include "vorbisdec.h"
 
+GST_DEBUG_CATEGORY (vorbisdec_debug);
+
 extern GType vorbisfile_get_type(void);
 
 static gboolean
@@ -44,6 +46,7 @@ plugin_init (GstPlugin *plugin)
   if (!gst_element_register (plugin, "vorbisdec", GST_RANK_PRIMARY, gst_vorbis_dec_get_type ()))
     return FALSE;
 
+  GST_DEBUG_CATEGORY_INIT (vorbisdec_debug, "vorbisdec", 0, "vorbis decoding element");
   return TRUE;
 }
 
