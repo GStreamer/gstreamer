@@ -11,7 +11,6 @@
 typedef struct _GstPlayPrivate GstPlayPrivate;
 
 struct _GstPlayPrivate {
-  GstElement *thread;
   GstElement *bin;
   GstElement *video_element, *audio_element;
   GstElement *video_show;
