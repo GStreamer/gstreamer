@@ -203,6 +203,26 @@ gst_osssrc_get (GstPad *pad)
     gst_element_set_eos (GST_ELEMENT (src));
     return NULL;
   }
+  if (!GST_PAD_CAPS (pad)) {
+    /* set caps on src pad */
+    if (!gst_pad_try_set_caps (src->srcpad, 
+		    GST_CAPS_NEW (
+    		      "oss_src",
+		      "audio/raw",
+        		"format",       GST_PROPS_STRING ("int"),
+		          "law",        GST_PROPS_INT (0),              //FIXME
+		          "endianness", GST_PROPS_INT (G_BYTE_ORDER),   //FIXME
+		          "signed",     GST_PROPS_BOOLEAN (TRUE),	//FIXME
+		          "width",      GST_PROPS_INT (src->format),
+		          "depth",      GST_PROPS_INT (src->format),
+		          "rate",       GST_PROPS_INT (src->frequency),
+		          "channels",   GST_PROPS_INT (src->channels)
+        	   ))) 
+    {
+      gst_element_error (GST_ELEMENT (src), "could not set caps");
+      return NULL;
+    }
+  }
 
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_OFFSET (buf) = src->curoffset;
@@ -384,22 +404,6 @@ gst_osssrc_sync_parms (GstOssSrc *osssrc)
           osssrc->frequency, osssrc->format,
           (osssrc->channels == 2) ? "stereo" : "mono", ispace.bytes, frag);
 
-  /* set caps on src pad */
-  gst_pad_try_set_caps (osssrc->srcpad, gst_caps_new (
-    "oss_src",
-    "audio/raw",
-    gst_props_new (
-        "format",       GST_PROPS_STRING ("int"),
-          "law",        GST_PROPS_INT (0),              //FIXME
-          "endianness", GST_PROPS_INT (G_BYTE_ORDER),   //FIXME
-          "signed",     GST_PROPS_BOOLEAN (TRUE),	//FIXME
-          "width",      GST_PROPS_INT (osssrc->format),
-          "depth",      GST_PROPS_INT (osssrc->format),
-          "rate",       GST_PROPS_INT (osssrc->frequency),
-          "channels",   GST_PROPS_INT (osssrc->channels),
-          NULL
-        )
-      ));   
 }
 
 gboolean
