@@ -29,11 +29,8 @@
 GstElementDetails mikmod_details = {
   "MikMod",
   "Codec/Audio/Decoder",
-  "GPL",
   "Module decoder based on libmikmod",
-  VERSION,
   "Jeremy SIMON <jsimon13@yahoo.fr>",
-  "(C) 2001",
 };
 
 
@@ -100,7 +97,7 @@ mikmod_sink_factory (void)
   return template;
 }
 
-
+static void             gst_mikmod_base_init            (gpointer g_class);
 static void		gst_mikmod_class_init		(GstMikModClass *klass);
 static void		gst_mikmod_init			(GstMikMod *filter);
 static void		gst_mikmod_set_property 	(GObject *object, guint id, const GValue *value, GParamSpec *pspec );
@@ -121,7 +118,7 @@ gst_mikmod_get_type(void) {
   if (!mikmod_type) {
     static const GTypeInfo mikmod_info = {
       sizeof(GstMikModClass),
-      NULL,
+      gst_mikmod_base_init,
       NULL,
       (GClassInitFunc)gst_mikmod_class_init,
       NULL,
@@ -135,6 +132,15 @@ gst_mikmod_get_type(void) {
   return mikmod_type;
 }
 
+static void
+gst_mikmod_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, mikmod_src_factory ());
+  gst_element_class_add_pad_template (element_class, mikmod_sink_factory ());
+  gst_element_class_set_details (element_class, &mikmod_details);
+}
 
 static void
 gst_mikmod_class_init (GstMikModClass *klass)
@@ -540,26 +546,22 @@ gst_mikmod_get_property (GObject *object, guint id, GValue *value, GParamSpec *p
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-	
-  factory = gst_element_factory_new("mikmod",GST_TYPE_MIKMOD,
-                                   &mikmod_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_SECONDARY);
- 
-  gst_element_factory_add_pad_template (factory, mikmod_src_factory ());
-  gst_element_factory_add_pad_template (factory, mikmod_sink_factory ());
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));	
+  if (!gst_element_register (plugin, "mikmod", GST_RANK_NONE, GST_TYPE_MIKMOD))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "mikmod",
-  plugin_init
-};
+  "Mikmod plugin library",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
