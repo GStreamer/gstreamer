@@ -7,9 +7,7 @@ TESTS_ENVIRONMENT=\
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
-check_PROGRAMS = \
-	$(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ \
-	$(tests_pass) $(tests_fail)
+check_PROGRAMS = $(tests_pass) $(tests_fail)
 
 # make all tests depend on the versioned gst-register
 $(tests_pass) $(tests_fail): $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@
@@ -19,7 +17,8 @@ $(tests_pass) $(tests_fail): $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@
 $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@$(EXEEXT):
 	cd $(top_builddir)/tools && make
 
-TESTS = $(tests_pass) $(tests_fail)
+TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ \
+	$(tests_pass) $(tests_fail)
 XFAIL_TESTS = $(tests_fail)
 
 AM_CFLAGS = $(GST_CFLAGS)
