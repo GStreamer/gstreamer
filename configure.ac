@@ -368,7 +368,21 @@ GST_CHECK_FEATURE(AVIFILE, [avifile], windec winenc, [
 dnl *** CDParanoia ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDPARANOIA, true)
 GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
-  GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, cdda_open, -lm, cdda_interface.h, CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia")
+  GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
+                      cdda_open, -lm, 
+                      cdda_interface.h, 
+                      CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia"
+                      HEADER_DIR="no")
+  GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
+                      cdda_open, -lm, 
+                      cdda/cdda_interface.h, 
+                      CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia"
+                      HEADER_DIR="yes")
+  if test "x$HEADER_DIR" = "xyes";
+  then
+    AC_DEFINE_UNQUOTED(CDPARANOIA_HEADERS_IN_DIR, ,
+                       defined if cdda headers are in a cdda/ directory)
+  fi
   AC_SUBST(CDPARANOIA_LIBS)
 ])
 dnl FIXME : add second check somehow if that is necessary
