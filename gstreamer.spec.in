@@ -815,4 +815,4 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
 %postun
-/csbin/ldconfig
+/sbin/ldconfig
