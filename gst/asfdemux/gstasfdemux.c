@@ -1257,12 +1257,14 @@ gst_asf_demux_audio_caps (guint16 codec_id,
     case GST_RIFF_WAVE_FORMAT_MPEGL3: /* mp3 */
       caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_mp3",
 				   "audio/mpeg",
+				     "mpegversion", GST_PROPS_INT (1),
 				     "layer", GST_PROPS_INT (3));
       break;
 
     case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp1 or mp2 */
       caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_mp12",
 				   "audio/mpeg",
+				     "mpegversion", GST_PROPS_INT (1),
 				     "layer", GST_PROPS_INT (2));
       break;
 

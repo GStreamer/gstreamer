@@ -183,6 +183,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
   GST_CAPS_NEW (
     "asfmux_sink_audio_mpeg",
     "audio/mpeg",
+      "mpegversion",      GST_PROPS_INT (1),
       "layer",		  GST_PROPS_INT_RANGE (1, 3),
       "rate",             GST_PROPS_INT_RANGE (1000, 96000),
       "channels",         GST_PROPS_INT_RANGE (1, 2)
