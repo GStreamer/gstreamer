@@ -252,7 +252,7 @@ gst_tcpsink_chain (GstPad *pad, GstBuffer *buf)
   if (tcpsink->clock) {
     GstClockID id = gst_clock_new_single_shot_id (tcpsink->clock, GST_BUFFER_TIMESTAMP (buf));
 
-    GST_DEBUG (0, "tcpsink: clock wait: %" G_GUINT64_FORMAT "\n", GST_BUFFER_TIMESTAMP (buf));
+    GST_DEBUG ("tcpsink: clock wait: %" G_GUINT64_FORMAT "\n", GST_BUFFER_TIMESTAMP (buf));
     gst_element_clock_wait (GST_ELEMENT (tcpsink), id, NULL);
     gst_clock_id_free (id);
   }
