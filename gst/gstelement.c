@@ -791,10 +791,4 @@ gst_element_set_loop_function(GstElement *element,
 
   /* set the NEW_LOOPFUNC flag so everyone knows to go try again */
   GST_FLAG_SET(element,GST_ELEMENT_NEW_LOOPFUNC);
-  
-  /* if there's a threadstate, reset the function pointer */
-  if (element->threadstate != NULL)
-    // note that this casts a GstElement * to a char **.  Ick.
-    cothread_setfunc (element->threadstate, gst_element_loopfunc_wrapper,
-                      0, (char **)element);
 }
