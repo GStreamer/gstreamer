@@ -71,6 +71,7 @@ struct _GstAviMux {
   guint32 num_frames, numx_frames; /* num frames in the AVI/AVIX block */
   guint32 header_size;
   gboolean write_header;
+  gboolean restart;
   guint32 audio_size;
 
   /* video header */

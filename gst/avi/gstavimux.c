@@ -797,6 +797,7 @@ gst_avimux_start_file (GstAviMux *avimux)
   gst_pad_push(avimux->srcpad, header);
 
   avimux->write_header = FALSE;
+  avimux->restart = FALSE;
 }
 
 static void
@@ -843,7 +844,7 @@ gst_avimux_restart_file (GstAviMux *avimux)
   gst_avimux_stop_file(avimux);
 
   event = gst_event_new(GST_EVENT_NEW_MEDIA);
-  gst_pad_push(avimux->srcpad, GST_BUFFER(event));
+  gst_pad_send_event(avimux->srcpad, event);
 
   /*gst_avimux_start_file(avimux);*/
 }
@@ -861,7 +862,7 @@ gst_avimux_handle_event (GstPad *pad, GstEvent *event)
 
   switch (type) {
     case GST_EVENT_NEW_MEDIA:
-      gst_avimux_restart_file(avimux);
+      avimux->restart = TRUE;
       break;
     default:
       break;
@@ -914,6 +915,9 @@ gst_avimux_chain (GstPad *pad, GstBuffer *buf)
   }
   else if (strncmp(padname, "video_", 6) == 0)
   {
+    if (avimux->restart)
+      gst_avimux_restart_file(avimux);
+
     /* write a video header + index entry */
     GST_BUFFER_SIZE(buf) = (GST_BUFFER_SIZE(buf)+3)&~3;
 
