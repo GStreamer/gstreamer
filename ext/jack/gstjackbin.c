@@ -1,6 +1,6 @@
 /* -*- Mode: C; c-basic-offset: 4 -*- */
 /*
-    Copyright (C) 2002 Andy Wingo <wingo@pobox.com>
+    Copyright (C) 2002, 2003 Andy Wingo <wingo@pobox.com>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public
@@ -33,6 +33,7 @@ static GstElementStateReturn gst_jack_bin_change_state(GstElement *element);
 /* jack callbacks */
 static int process (jack_nframes_t nframes, void *arg);
 static int sample_rate (jack_nframes_t nframes, void *arg);
+static int buffer_size (jack_nframes_t nframes, void *arg);
 static void shutdown (void *arg);
 
 static void sighup_handler (int sig);
@@ -133,6 +134,8 @@ gst_jack_bin_change_state (GstElement *element)
 
           jack_set_process_callback (this->client, process, this);
           jack_set_sample_rate_callback (this->client, sample_rate, this);
+          jack_set_buffer_size_callback (this->client, buffer_size, this);
+          this->nframes = jack_get_buffer_size (this->client);
           jack_on_shutdown (this->client, shutdown, this);
         }
         
@@ -288,6 +291,15 @@ sample_rate (jack_nframes_t nframes, void *arg)
     GstJackBin *bin = (GstJackBin*) arg;
     JACK_DEBUG ("the sample rate is now %lu/sec\n", nframes);
     bin->rate = nframes;
+    return 0;
+}
+
+static int
+buffer_size (jack_nframes_t nframes, void *arg)
+{
+    GstJackBin *bin = (GstJackBin*) arg;
+    JACK_DEBUG ("the buffer size is now %lu\n", nframes);
+    bin->nframes = nframes;
     return 0;
 }
 

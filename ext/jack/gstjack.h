@@ -71,12 +71,13 @@ enum {
 };
 
 
+typedef jack_default_audio_sample_t sample_t;
+
 typedef struct {
     GstPad *pad;
     void *data;
     const gchar *name;
     const gchar *peer_name;
-    GstByteStream *bs;
     jack_port_t *port;
 } GstJackPad;
 
