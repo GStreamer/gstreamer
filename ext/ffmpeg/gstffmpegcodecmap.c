@@ -241,15 +241,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_MPEG4:
-      if (encode) {
+      if (encode && context != NULL) {
         /* I'm not exactly sure what ffmpeg outputs... ffmpeg itself uses
          * the AVI fourcc 'DIVX', but 'mp4v' for Quicktime... */
-        guint32 fourcc = 0;
-
-        if (context)
-          fourcc = context->codec_tag;
-
-        switch (fourcc) {
+        switch (context->codec_tag) {
           case GST_MAKE_FOURCC ('D', 'I', 'V', 'X'):
             caps = GST_FF_VID_CAPS_NEW ("video/x-divx",
 	        "divxversion", G_TYPE_INT, 5, NULL);
@@ -267,10 +262,15 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
             "mpegversion", G_TYPE_INT, 4,
             "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-        gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-divx",
-            "divxversion", GST_TYPE_INT_RANGE, 4, 5, NULL));
-        gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-xvid", NULL));
-        gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-3ivx", NULL));
+        if (encode) {
+          gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-divx",
+              "divxversion", G_TYPE_INT, 5, NULL));
+        } else {
+          gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-divx",
+              "divxversion", GST_TYPE_INT_RANGE, 4, 5, NULL));
+          gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-xvid", NULL));
+          gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-3ivx", NULL));
+        }
       }
       break;
 
@@ -901,7 +901,8 @@ gst_ffmpeg_codectype_to_caps (enum CodecType codec_type,
   switch (codec_type) {
     case CODEC_TYPE_VIDEO:
       if (context) {
-        caps = gst_ffmpeg_pixfmt_to_caps (context->pix_fmt, context);
+        caps = gst_ffmpeg_pixfmt_to_caps (context->pix_fmt,
+            context->width == -1 ? NULL : context);
       } else {
         GstCaps *temp;
         enum PixelFormat i;
@@ -1200,6 +1201,9 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     default:
       break;
   }
+
+  if (!gst_caps_is_fixed (caps))
+    return;
 
   /* common properties (width, height, fps) */
   switch (codec_type) {
