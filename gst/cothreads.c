@@ -380,7 +380,13 @@ cothread_getcurrent (void)
  * adds data to a cothread
  */
 void
-cothread_set_data (cothread_state * thread, gchar * key, gpointer data)
+cothread_set_private (cothread_state *thread, gpointer data)
+{
+  thread->priv = data;
+}
+
+void
+cothread_context_set_data (cothread_state *thread, gchar *key, gpointer data)
 {
   cothread_context *ctx = pthread_getspecific (_cothread_key);
 
@@ -397,7 +403,13 @@ cothread_set_data (cothread_state * thread, gchar * key, gpointer data)
  * Returns: the data assiciated with the key
  */
 gpointer
-cothread_get_data (cothread_state * thread, gchar * key)
+cothread_get_private (cothread_state *thread)
+{
+  return thread->priv;
+}
+
+gpointer
+cothread_context_get_data (cothread_state * thread, gchar * key)
 {
   cothread_context *ctx = pthread_getspecific (_cothread_key);
 

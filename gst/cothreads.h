@@ -47,6 +47,7 @@ typedef int (*cothread_func) (int argc,char **argv);
 struct _cothread_state {
   cothread_context *ctx;
   int threadnum;
+  gpointer priv;
 
   cothread_func func;
   int argc;
@@ -67,25 +68,29 @@ struct _cothread_state {
 };
 
 
-cothread_context*		cothread_context_init   (void);
-void				cothread_context_free	(cothread_context *ctx);
+cothread_context*		cothread_context_init   	(void);
+void				cothread_context_free		(cothread_context *ctx);
+void				cothread_context_set_data	(cothread_state *thread, 
+								 gchar *key, gpointer data);
+gpointer			cothread_context_get_data	(cothread_state *thread, gchar *key);
 
-cothread_state*			cothread_create		(cothread_context *ctx);
-void				cothread_free		(cothread_state *thread);
-void				cothread_setfunc	(cothread_state *thread, cothread_func func,
-						         int argc, char **argv);
-void				cothread_stop		(cothread_state *thread);
+cothread_state*			cothread_create			(cothread_context *ctx);
+void				cothread_free			(cothread_state *thread);
+void				cothread_setfunc		(cothread_state *thread, cothread_func func,
+						        	 int argc, char **argv);
+void				cothread_stop			(cothread_state *thread);
 
-void				cothread_switch		(cothread_state *thread);
-void				cothread_set_data	(cothread_state *thread, gchar *key, gpointer data);
-gpointer			cothread_get_data	(cothread_state *thread, gchar *key);
+void				cothread_switch			(cothread_state *thread);
+void				cothread_set_private		(cothread_state *thread, 
+								 gpointer data);
+gpointer			cothread_get_private		(cothread_state *thread);
 
-void				cothread_lock		(cothread_state *thread);
-gboolean			cothread_trylock	(cothread_state *thread);
-void				cothread_unlock		(cothread_state *thread);
+void				cothread_lock			(cothread_state *thread);
+gboolean			cothread_trylock		(cothread_state *thread);
+void				cothread_unlock			(cothread_state *thread);
 
-cothread_state*			cothread_main		(cothread_context *ctx);
-cothread_state*			cothread_current_main	(void);
-cothread_state*			cothread_current	(void);
+cothread_state*			cothread_main			(cothread_context *ctx);
+cothread_state*			cothread_current_main		(void);
+cothread_state*			cothread_current		(void);
 
 #endif /* __COTHREAD_H__ */
