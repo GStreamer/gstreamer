@@ -277,12 +277,13 @@ gst_event_new_discontinuous (gboolean new_media, GstFormat format1, ...)
 /**
  * gst_event_discont_get_value:
  * @event: The event to query
- * @format: The format of the discont value
+ * @format: The format of the discontinuous value
  * @value: A pointer to the value
  *
- * Get the value for the given format in the dicont event.
+ * Get the value for the given format in the discontinous event.
  *
- * Returns: TRUE if the discont event caries the specified format/value pair.
+ * Returns: TRUE if the discontinuous event carries the specified
+ * format/value pair.
  */
 gboolean
 gst_event_discont_get_value (GstEvent * event, GstFormat format, gint64 * value)
