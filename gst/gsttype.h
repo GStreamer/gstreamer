@@ -83,7 +83,7 @@ GType			gst_type_factory_get_type	(void);
 GstTypeFactory*		gst_type_factory_new		(GstTypeDefinition *definition);
 
 GstTypeFactory*		gst_type_factory_find		(const gchar *name);
-GList* 			gst_type_factory_get_list 	(void);
+const GList*		gst_type_factory_get_list 	(void);
 
 
 /* create a new type, or find/merge an existing one */
@@ -97,6 +97,6 @@ guint16			gst_type_find_by_ext		(const gchar *ext);
 GstType*		gst_type_find_by_id		(guint16 id);
 
 /* get the list of registered types (returns list of GstType!) */
-GList*			gst_type_get_list		(void);
+const GList*		gst_type_get_list		(void);
 
 #endif /* __GST_TYPE_H__ */

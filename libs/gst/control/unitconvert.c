@@ -381,19 +381,19 @@ gst_unitconv_time_nanoseconds_to_seconds(GstUnitConvert *unitconv, GValue *nanos
 static void
 gst_unitconv_time_seconds_to_samples(GstUnitConvert *unitconv, GValue *seconds_val, GValue *samples_val)
 {	
-	GValue *samplerate;
-	/* GValue *samplerate = g_hash_table_lookup(unitconv->currentToUnit->convert_properties, "samplerate"); */
+	/* GValue *samplerate;
+	GValue *samplerate = g_hash_table_lookup(unitconv->currentToUnit->convert_properties, "samplerate");
 	g_value_set_int64(samples_val,
-		(gint64)(g_value_get_float(seconds_val) * (gfloat)g_value_get_int(samplerate)));
+		(gint64)(g_value_get_float(seconds_val) * (gfloat)g_value_get_int(samplerate))); */
 }
 
 static void
 gst_unitconv_time_samples_to_seconds(GstUnitConvert *unitconv, GValue *samples_val, GValue *seconds_val)
 {	
-	GValue *samplerate;
-	/* GValue *samplerate = g_hash_table_lookup(unitconv->currentFromUnit->convert_properties, "samplerate"); */
+	/* GValue *samplerate;
+	GValue *samplerate = g_hash_table_lookup(unitconv->currentFromUnit->convert_properties, "samplerate"); 
 	g_value_set_float(seconds_val,
-		((gfloat)g_value_get_int64(samples_val)) / (gfloat)g_value_get_int(samplerate));
+		((gfloat)g_value_get_int64(samples_val)) / (gfloat)g_value_get_int(samplerate));*/
 }
 
 static void

@@ -168,7 +168,7 @@ gst_type_find_chain (GstPad *pad, GstBuffer *buf)
   GST_DEBUG (0,"got buffer of %d bytes in '%s'",
         GST_BUFFER_SIZE (buf), GST_OBJECT_NAME (typefind));
 
-  type_list = gst_type_get_list ();
+  type_list = (GList *) gst_type_get_list ();
 
   while (type_list) {
     GSList *factories;

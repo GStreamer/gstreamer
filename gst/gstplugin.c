@@ -777,10 +777,10 @@ gst_plugin_add_feature (GstPlugin *plugin, GstPluginFeature *feature)
  *
  * Returns; a GList of GstPlugin elements
  */
-GList*
+const GList*
 gst_plugin_get_list (void)
 {
-  return g_list_copy (_gst_plugins);
+  return _gst_plugins;
 }
 
 #ifndef GST_DISABLE_REGISTRY

@@ -108,7 +108,7 @@ gboolean 		gst_plugin_load_plugin		(GstPlugin *plugin);
 void			gst_plugin_add_feature		(GstPlugin *plugin, GstPluginFeature *feature);
 
 GstPlugin*		gst_plugin_find			(const gchar *name);
-GList*			gst_plugin_get_list		(void);
+const GList*		gst_plugin_get_list		(void);
 
 
 #ifndef GST_DISABLE_REGISTRY

@@ -284,7 +284,7 @@ gst_type_find_by_id (guint16 id)
  *
  * Returns: a list of GstTypes
  */
-GList*
+const GList*
 gst_type_get_list (void)
 {
   return _gst_types;
@@ -297,7 +297,7 @@ gst_type_get_list (void)
  *
  * Returns: a list of GstTypeFactories
  */
-GList*
+const GList*
 gst_type_factory_get_list (void)
 {
   return _gst_typefactories;

@@ -725,7 +725,7 @@ gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
  *
  * Returns: a GList of elements
  */
-GList *
+const GList *
 gst_bin_get_list (GstBin * bin)
 {
   g_return_val_if_fail (bin != NULL, NULL);

@@ -513,7 +513,7 @@ print_element_info (GstElementFactory *factory)
   /* for compound elements */
   if (GST_IS_BIN(element)) {
     printf("\nChildren:\n");
-    children = gst_bin_get_list(GST_BIN(element));
+    children = (GList *) gst_bin_get_list(GST_BIN(element));
     if (!children) 
       g_print ("  none\n");
     else {
@@ -534,7 +534,7 @@ print_element_list (void)
 {
   GList *plugins;
 
-  plugins = gst_plugin_get_list();
+  plugins = (GList *) gst_plugin_get_list();
   while (plugins) {
     GList *features;
     GstPlugin *plugin;

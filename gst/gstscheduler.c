@@ -723,7 +723,7 @@ gst_scheduler_factory_find (const gchar *name)
  *
  * Returns: GList of type #GstSchedulerFactory
  */
-GList*
+const GList*
 gst_scheduler_factory_get_list (void)
 {
   return _gst_schedulerfactories;

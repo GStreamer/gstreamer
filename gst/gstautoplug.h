@@ -114,7 +114,7 @@ GstAutoplugFactory*	gst_autoplug_factory_new			(const gchar *name, const gchar *
 void                    gst_autoplug_factory_destroy		(GstAutoplugFactory *factory);
 
 GstAutoplugFactory*	gst_autoplug_factory_find		(const gchar *name);
-GList*			gst_autoplug_factory_get_list		(void);
+const GList*		gst_autoplug_factory_get_list		(void);
 
 GstAutoplug*		gst_autoplug_factory_create		(GstAutoplugFactory *factory);
 GstAutoplug*		gst_autoplug_factory_make		(const gchar *name);

@@ -18,7 +18,7 @@ int main(int argc,char *argv[]) {
   doc = xmlNewDoc("1.0");
   doc->xmlRootNode = xmlNewDocNode(doc, NULL, "GST-CompletionRegistry", NULL);
 
-  plugins = gst_plugin_get_list();
+  plugins = (GList *) gst_plugin_get_list();
   while (plugins) {
     GstPlugin *plugin;
 

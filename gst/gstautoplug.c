@@ -313,7 +313,7 @@ gst_autoplug_factory_find (const gchar *name)
  *
  * Returns: GList of type #GstAutoplugFactory
  */
-GList*
+const GList*
 gst_autoplug_factory_get_list (void)
 {
   return _gst_autoplugfactories;

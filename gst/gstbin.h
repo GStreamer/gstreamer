@@ -106,7 +106,7 @@ void		gst_bin_remove			(GstBin *bin, GstElement *element);
 /* retrieve a single element or the list of children */
 GstElement*	gst_bin_get_by_name		(GstBin *bin, const gchar *name);
 GstElement*	gst_bin_get_by_name_recurse_up	(GstBin *bin, const gchar *name);
-GList*		gst_bin_get_list		(GstBin *bin);
+const GList*	gst_bin_get_list		(GstBin *bin);
 
 gboolean	gst_bin_set_state_type		(GstBin *bin, GstElementState state, GType type);
 
