@@ -1,3 +1,31 @@
+2004-01-15  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* gst/colorspace/Makefile.am:
+	* gst/colorspace/gstcolorspace.c:
+	* gst/colorspace/gstcolorspace.h:
+	* gst/colorspace/yuv2rgb.c:
+	* gst/colorspace/yuv2rgb.h:
+	Duplicate the ext/hermes colorspace plugin, and remove Hermes
+	code and GPL code.  Fix for new caps negotiation.  Rewrite
+	much of the format handling code, and some of the conversion
+	code.  Basically, rewrote almost everything.  This element
+	handles I420, YV12 to RGB conversions.
+	* ext/hermes/Makefile.am:
+	* ext/hermes/gsthermescolorspace.c:
+	Rename colorspace to hermescolorspace.  Fix negotiation issues.
+	Remove non-Hermes related code.  This element handles lots of
+	RGB to RGB conversions, but no YUV.
+	* ext/hermes/gstcolorspace.c:
+	* ext/hermes/gstcolorspace.h:
+	* ext/hermes/rgb2yuv.c:
+	* ext/hermes/yuv2rgb.c:
+	* ext/hermes/yuv2rgb.h:
+	* ext/hermes/yuv2rgb_mmx16.s:
+	* ext/hermes/yuv2yuv.c:
+	* ext/hermes/yuv2yuv.h:
+	Remove old code.
+
 2004-01-14  Colin Walters  <walters@verbum.org>
 
 	* ext/mad/gstid3tag.c (gst_id3_tag_chain): Don't nego caps if
