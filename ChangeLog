@@ -1,3 +1,9 @@
+2004-10-19  Wim Taymans  <wim at fluendo dot com>
+
+	* tools/gst-inspect.c: (print_pad_info), (print_plugin_features):
+	Use the realpad when printing the direction.
+	Add extra \n when printing extensions of typefind factories.
+
 2004-10-13  David Schleef  <ds@schleef.org>
 
 	* examples/manual/Makefile.am: $< isn't portable in Makefile
