@@ -54,8 +54,8 @@ GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  //GST_STATIC_CAPS (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24));
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB));
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_RGB_16 ";" GST_VIDEO_CAPS_RGB_15)
+);
 
 static void gst_cacasink_base_init (gpointer g_class);
 static void gst_cacasink_class_init (GstCACASinkClass *klass);
@@ -251,35 +251,42 @@ gst_cacasink_sinkconnect (GstPad *pad, const GstCaps *caps)
   gst_structure_get_int (structure, "green_mask", &cacasink->green_mask);
   gst_structure_get_int (structure, "blue_mask", &cacasink->blue_mask);
 
+  if (cacasink->bpp == 24) {
+    cacasink->red_mask   = GUINT32_FROM_BE (cacasink->red_mask) >> 8;
+    cacasink->green_mask = GUINT32_FROM_BE (cacasink->green_mask) >> 8;
+    cacasink->blue_mask  = GUINT32_FROM_BE (cacasink->blue_mask) >> 8;
+  }
+
+  else if (cacasink->bpp == 32) {
+    cacasink->red_mask   = GUINT32_FROM_BE (cacasink->red_mask);
+    cacasink->green_mask = GUINT32_FROM_BE (cacasink->green_mask);
+    cacasink->blue_mask  = GUINT32_FROM_BE (cacasink->blue_mask);
+  }
+
+  else if (cacasink->bpp == 16 || cacasink->bpp == 15) {
+    cacasink->red_mask   = GUINT16_FROM_BE (cacasink->red_mask);
+    cacasink->green_mask = GUINT16_FROM_BE (cacasink->green_mask);
+    cacasink->blue_mask  = GUINT16_FROM_BE (cacasink->blue_mask);
+  }
+
   if (cacasink->bitmap) {
     caca_free_bitmap (cacasink->bitmap);
   }
 
   cacasink->bitmap = caca_create_bitmap (
 			cacasink->bpp, 
-			//32, 
 			GST_VIDEOSINK_WIDTH (cacasink), 
 			GST_VIDEOSINK_HEIGHT (cacasink), 
-			//GST_VIDEOSINK_WIDTH (cacasink) * cacasink->bpp/8, 
-			((GST_VIDEOSINK_WIDTH (cacasink) + 15) & ~15) 
-			* cacasink->bpp/8, 
-			0x000000ff, 
-			0x0000ff00, 
-			0x00ff0000, 
-			//cacasink->red_mask, 
-			//cacasink->green_mask, 
-			//cacasink->blue_mask,
+			GST_VIDEOSINK_WIDTH (cacasink) * cacasink->bpp/8, 
+			cacasink->red_mask, 
+			cacasink->green_mask, 
+			cacasink->blue_mask,
 			0);
-
-  //g_print ("Bpp: %u, width: %u, height: %u\n", cacasink->bpp, GST_VIDEOSINK_WIDTH (cacasink), GST_VIDEOSINK_HEIGHT (cacasink));
-  g_print ("red: %x, green: %x, blue: %x\n", cacasink->red_mask, cacasink->green_mask, cacasink->blue_mask);
 
   if (!cacasink->bitmap) {
      return GST_PAD_LINK_DELAYED;
   }
      
-  //gst_video_sink_got_video_size (GST_VIDEOSINK (cacasink), GST_VIDEOSINK_WIDTH (cacasink), GST_VIDEOSINK_HEIGHT (cacasink));
-
   return GST_PAD_LINK_OK;
 }
 
