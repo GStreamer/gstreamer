@@ -1,3 +1,25 @@
+gst-plugins (0.3.4-1) unstable; urgency=low
+
+  * New upstream
+  * Fix mpeg2dec.m4 to use newer mpeg2dec libs
+
+ -- David I. Lehn <dlehn@vt.edu>  Mon, 15 Apr 2002 03:34:21 -0400
+
+gst-plugins (0.3.3-2) unstable; urgency=low
+
+  * Port a52dec plugin to 0.7.3 API (applied upstream)
+  * Use a52dec packages in Debian vs current external ones
+    * This switches a52dec plugin to static linking
+  * Remove LAME support
+    * No LAME packages in Debian to depend on
+    * Added explanation in README.Debian since this will likely
+      cause no end of "Why is there no LAME plugin?"
+  * Depend on and rebuild for mpeg2dec 0.2.1
+  * Depend on and rebuild for glib 2.0
+  * Remove gtk from Build-Depends: (not needed for the built plugins)
+
+ -- David I. Lehn <dlehn@vt.edu>  Sat, 23 Mar 2002 17:52:03 -0500
+
 gst-plugins (0.3.3-1) unstable; urgency=low
 
   * New upstream version

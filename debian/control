@@ -2,13 +2,13 @@ Source: gst-plugins
 Section: libs
 Priority: optional
 Maintainer: David I. Lehn <dlehn@vt.edu>
-Build-Depends: debhelper (>= 3.0.0), libgstreamer-dev (>= 0.3.3), gstreamer-lib-core-dev (>= 0.3.3), xlibs-dev (>= 4.1.0), xlibs-pic (>= 4.1.0), libxml2-dev (>= 2.4.16), zlib1g-dev (>= 1:1.1.4), libghttp-dev (>= 1.0.6), libglib1.3-dev (>= 1.3.15), libgtk1.3-dev (>= 1.3.15), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0rc3), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10) | libasound2-dev (>= 0.9), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b), aalib1-dev (>= 1.4p4), libmad0-dev (>= 0.14.1b), hermes1-dev (>= 1.3.1), libarts-dev (>= 2.1.2), libgsm1-dev (>= 1.0.10), libgnomevfs2-dev (>= 1.9.7), libsdl1.2-dev (>= 1.2.3), libaudiofile-dev (>= 0.2.1), libavifile0.6-dev (>= 0.6.0.20011207), festival-dev (>= 1.4.1p), libflac-dev (>= 1.0.2), libmpeg2-0-dev (>= 0.2.0), libmpeg2dec0-dev (>= 0.2.0), pkg-config (>= 0.10.0), libsidplay1-dev (>= 1.36.47), libmikmod2-dev (>= 3.1.9), liba52-0-dev (>= 0.7.2), libdvdread2 (>= 0.9.1), lame-dev (>= 3.91), liblame0 (>= 3.91), libid3tag0-dev (>= 0.14.2b)
+Build-Depends: debhelper (>= 3.0.0), libgstreamer-dev (>= 0.3.4), gstreamer-lib-core-dev (>= 0.3.4), xlibs-dev (>= 4.1.0), xlibs-pic (>= 4.1.0), libxml2-dev (>= 2.4.16), zlib1g-dev (>= 1:1.1.4), libghttp-dev (>= 1.0.6), libglib2.0-dev (>= 2.0.1), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0rc3), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10) | libasound2-dev (>= 0.9), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b), aalib1-dev (>= 1.4p4), libmad0-dev (>= 0.14.2b), hermes1-dev (>= 1.3.1), libarts-dev (>= 2.1.2), libgsm1-dev (>= 1.0.10), libgnomevfs2-dev (>= 1.9.7), libsdl1.2-dev (>= 1.2.3), libaudiofile-dev (>= 0.2.1), libavifile0.6-dev (>= 0.6.0.20011207), festival-dev (>= 1.4.1p), libflac-dev (>= 1.0.2), libmpeg2-1-dev (>= 0.2.1), libcpuaccel0-dev (>= 0.2.1), pkg-config (>= 0.11.0), libsidplay1-dev (>= 1.36.47), libmikmod2-dev (>= 3.1.9), a52dec-dev (>= 0.7.3), libdvdread2 (>= 0.9.2), libid3tag0-dev (>= 0.14.2b)
 Standards-Version: 3.5.6
 
 Package: gstreamer-all
 Architecture: any
 Section: libs
-Depends: gstreamer-a52dec, gstreamer-aa, gstreamer-alsa, gstreamer-arts, gstreamer-artsd, gstreamer-audiofile, gstreamer-avifile, gstreamer-cdparanoia, gstreamer-colorspace, gstreamer-core, gstreamer-misc, gstreamer-dvd, gstreamer-esd, gstreamer-festival, gstreamer-flac, gstreamer-gnomevfs, gstreamer-gsm, gstreamer-jpeg, gstreamer-lame, gstreamer-lib-misc, gstreamer-mad, gstreamer-mikmod, gstreamer-mpeg2dec, gstreamer-oss, gstreamer-sdl, gstreamer-sid, gstreamer-vorbis, gstreamer-x
+Depends: gstreamer-a52dec, gstreamer-aa, gstreamer-alsa, gstreamer-arts, gstreamer-artsd, gstreamer-audiofile, gstreamer-avifile, gstreamer-cdparanoia, gstreamer-colorspace, gstreamer-core, gstreamer-misc, gstreamer-dvd, gstreamer-esd, gstreamer-festival, gstreamer-flac, gstreamer-gnomevfs, gstreamer-gsm, gstreamer-jpeg, gstreamer-lib-misc, gstreamer-mad, gstreamer-mikmod, gstreamer-mpeg2dec, gstreamer-oss, gstreamer-sdl, gstreamer-sid, gstreamer-vorbis, gstreamer-x
 Description: Pseudo package for all GStreamer plugins
  Pseudo package which depends on all current GStreamer plugin packages.
  .
@@ -163,18 +163,6 @@ Section: libs
 Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
 Description: jpeg plugin for GStreamer
  jpeg plugin for GStreamer
-
-Package: gstreamer-lame
-Architecture: any
-Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (>= 0.3.3)
-Description: LAME plugin for GStreamer
- LAME plugin for GStreamer
- .
- http://www.mp3dev.org/
- .
- Debian packages can be found at:
- http://www.mayin.org/~gandalf/downloads/
 
 Package: gstreamer-mad
 Architecture: any
