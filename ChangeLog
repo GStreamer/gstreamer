@@ -1,5 +1,10 @@
 2004-12-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/musepack/gstmusepackdec.cpp:
+	  There's also floating point libmusepacks.
+
+2004-12-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/faad/gstfaad.c: (gst_faad_chanpos_from_gst),
 	(gst_faad_chanpos_to_gst), (gst_faad_chain):
 	  Set DURATION even if source buffer didn't. Also use increasing
