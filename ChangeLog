@@ -1,3 +1,14 @@
+2004-02-04  David Schleef  <ds@schleef.org>
+
+	Replace use of GST_PAD_FORMATS_FUNCTION() and similar macros
+	with the code that they would expand to.
+	* ext/flac/gstflacdec.c: (gst_flacdec_get_src_formats),
+	(gst_flacdec_get_src_query_types),
+	(gst_flacdec_get_src_event_masks):
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_get_formats),
+	(gst_gnomevfssrc_get_query_types),
+	(gst_gnomevfssrc_get_event_mask):
+
 2004-02-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/sine/gstsinesrc.c: (gst_sinesrc_class_init),
