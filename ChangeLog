@@ -1,5 +1,11 @@
 2004-08-04  Benjamin Otte  <otte@gnome.org>
 
+	* tests/mass_elements.c: (main):
+	  allow specifying src and sink element explicitly, so I can test
+	  videotestsrc instead of fakesrc
+
+2004-08-04  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gststructure.c: (gst_structure_id_empty_new_with_size),
 	(gst_structure_id_empty_new), (gst_structure_empty_new),
 	(gst_structure_copy):
