@@ -1,5 +1,10 @@
 2004-07-30  David Schleef  <ds@schleef.org>
 
+	* gst/multipart/Makefile.am: Fix things that should have been
+	fixed in the last checkin.
+
+2004-07-30  David Schleef  <ds@schleef.org>
+
 	* testsuite/multifilesink/Makefile.am: Fix unused variable.
 
 2004-07-30  Thomas Vander Stichele  <thomas at apestaart dot org>
