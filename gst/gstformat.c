@@ -27,16 +27,9 @@
 #include "gstformat.h"
 
 static GList *_gst_formats = NULL;
+static GHashTable *_nick_to_format = NULL;
+static GHashTable *_format_to_nick = NULL;
 static gint  _n_values = 1; /* we start from 1 because 0 reserved for UNDEFINED */
-
-typedef struct _GstFormatDefinition GstFormatDefinition;
-
-struct _GstFormatDefinition 
-{
-  GstFormat  value;
-  gchar     *nick;
-  gchar     *description;
-};
 
 static GstFormatDefinition standard_definitions[] = {
   { GST_FORMAT_DEFAULT, "default", "Default" },
@@ -53,8 +46,16 @@ _gst_format_initialize (void)
 {
   GstFormatDefinition *standards = standard_definitions;
 
+  if (_nick_to_format == NULL) {
+    _nick_to_format = g_hash_table_new (g_str_hash, g_str_equal);
+    _format_to_nick = g_hash_table_new (NULL, NULL);
+  }
+  
   while (standards->nick) {
-    _gst_formats = g_list_prepend (_gst_formats, standards);
+    g_hash_table_insert (_nick_to_format, standards->nick, standards);
+    g_hash_table_insert (_format_to_nick, GINT_TO_POINTER (standards->value), standards);
+
+    _gst_formats = g_list_append (_gst_formats, standards);
     standards++;
     _n_values++;
   }
@@ -89,8 +90,9 @@ gst_format_register (const gchar *nick, const gchar *description)
   format->nick = g_strdup (nick);
   format->description = g_strdup (description);
 
-  _gst_formats = g_list_prepend (_gst_formats, format);
-
+  g_hash_table_insert (_nick_to_format, format->nick, format);
+  g_hash_table_insert (_format_to_nick, GINT_TO_POINTER (format->value), format);
+  _gst_formats = g_list_append (_gst_formats, format);
   _n_values++;
   
   return format->value;
@@ -108,57 +110,41 @@ gst_format_register (const gchar *nick, const gchar *description)
 GstFormat
 gst_format_get_by_nick (const gchar *nick)
 {
-  GList *walk;
   GstFormatDefinition *format;
   
   g_return_val_if_fail (nick != NULL, 0);
 
-  walk = _gst_formats;
-
-  while (walk) {
-    format = (GstFormatDefinition *) walk->data;
-    
-    if (!strcmp (format->nick, nick))
-      return format->value;
-
-    walk = g_list_next (walk);
-  }
-
-  return GST_FORMAT_UNDEFINED;
+  format = g_hash_table_lookup (_nick_to_format, nick);
+  
+  if (format != NULL)
+    return format->value;
+  else
+    return GST_FORMAT_UNDEFINED;
 }
 
 /**
  * gst_format_get_details:
  * @format: The format to get details of
- * @nick: The nick of the format
- * @description: The description of the format
  *
  * Get details about the given format.
  *
- * Returns: TRUE if the format was registered, FALSE otherwise
+ * Returns: The #GstFormatDefinition for @format or NULL on failure.
  */
-gboolean
-gst_format_get_details (GstFormat format, const gchar **nick, const gchar **description)
+const GstFormatDefinition *
+gst_format_get_details (GstFormat format)
 {
-  GList *walk;
-  GstFormatDefinition *walk_format;
+  return g_hash_table_lookup (_format_to_nick, GINT_TO_POINTER (format));
+}
 
-  g_return_val_if_fail (nick != NULL, FALSE);
-  g_return_val_if_fail (description != NULL, FALSE);
-
-  walk = _gst_formats;
-
-  while (walk) {
-    walk_format = (GstFormatDefinition *) walk->data;
-    
-    if (walk_format->value == format) {
-      *nick = walk_format->nick;
-      *description = walk_format->description;
-
-      return TRUE;
-    }
-
-    walk = g_list_next (walk);
-  }
-  return FALSE;
+/**
+ * gst_format_get_definitions:
+ *
+ * Get a list of all the registered formats.
+ *
+ * Returns: A GList of #GstFormatDefinition.
+ */
+const GList *
+gst_format_get_definitions (void)
+{
+  return _gst_formats;
 }

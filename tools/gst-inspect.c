@@ -137,11 +137,12 @@ static void
 print_formats (const GstFormat *formats) 
 {
   while (formats && *formats) {
-    const gchar *nick;
-    const gchar *description;
-    
-    if (gst_format_get_details (*formats, &nick, &description))
-      g_print ("\t\t(%d):\t%s (%s)\n", *formats, nick, description);
+    const GstFormatDefinition *definition;
+
+    definition = gst_format_get_details (*formats);
+    if (definition)
+      g_print ("\t\t(%d):\t%s (%s)\n", *formats,
+	       definition->nick, definition->description);
     else
       g_print ("\t\t(%d):\tUnknown format\n", *formats);
 

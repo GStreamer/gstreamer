@@ -40,6 +40,14 @@ typedef enum {
   GST_FORMAT_UNITS 	=  6,
 } GstFormat;
 
+typedef struct _GstFormatDefinition GstFormatDefinition;
+struct _GstFormatDefinition 
+{
+  GstFormat  value;
+  gchar     *nick;
+  gchar     *description;
+};
+
 #define GST_FORMATS_FUNCTION(functionname, a...)     \
 static const GstFormat*                              \
 functionname (GstPad *pad)                           \
@@ -59,8 +67,8 @@ GstFormat	gst_format_register		(const gchar *nick, const gchar *description);
 GstFormat	gst_format_get_by_nick		(const gchar *nick);
 
 /* query for format details */
-gboolean	gst_format_get_details		(GstFormat format, const gchar **nick, const gchar **description);
-
+const GstFormatDefinition *	gst_format_get_details		(GstFormat format);
+const GList * gst_format_get_definitions (void);
 
 G_END_DECLS
 
