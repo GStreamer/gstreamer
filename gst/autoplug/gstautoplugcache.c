@@ -166,9 +166,7 @@ gst_autoplugcache_init (GstAutoplugCache *cache)
 //  gst_pad_set_negotiate_function (cache->srcpad, gst_autoplugcache_nego_src);
   gst_element_add_pad (GST_ELEMENT(cache), cache->srcpad);
 
-  cache->caps_proxy = TRUE;	// TESTING!
-        gst_pad_set_negotiate_function (cache->sinkpad, GST_DEBUG_FUNCPTR(gst_autoplugcache_nego_sink));
-        gst_pad_set_negotiate_function (cache->srcpad, GST_DEBUG_FUNCPTR(gst_autoplugcache_nego_src));
+  cache->caps_proxy = FALSE;
 
   // provide a zero basis for the cache
   cache->cache = g_list_prepend(NULL, NULL);

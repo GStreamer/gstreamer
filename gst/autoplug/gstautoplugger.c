@@ -162,6 +162,9 @@ gst_autoplugger_init (GstAutoplugger *autoplugger)
   autoplugger->cache = gst_elementfactory_make("autoplugcache", "unnamed_autoplugcache");
   g_return_if_fail (autoplugger->cache != NULL);
 
+  GST_DEBUG(GST_CAT_AUTOPLUG, "turning on caps nego proxying in cache\n");
+  gtk_object_set(GTK_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
+
   // attach signals to the cache
   gtk_signal_connect (GTK_OBJECT (autoplugger->cache), "first_buffer",
                       GTK_SIGNAL_FUNC (gst_autoplugger_cache_first_buffer), autoplugger);
@@ -213,8 +216,6 @@ gst_autoplugger_external_sink_connected(GstPad *pad, GstPad *peerpad, GstAutoplu
       if (peertemplatecaps) {
         GST_INFO(GST_CAT_AUTOPLUG, "there are some caps on this pad's peer's padtemplate %s",
                  gst_caps_get_mime(peertemplatecaps));
-        GST_DEBUG(GST_CAT_AUTOPLUG, "turning on caps nego proxying in cache\n");
-        gtk_object_set(GTK_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
       }
     }
   }
@@ -241,8 +242,8 @@ gst_autoplugger_external_src_connected(GstPad *pad, GstPad *peerpad, GstAutoplug
         GST_INFO(GST_CAT_AUTOPLUG, "there are some caps on this pad's peer's padtemplate %s",
                  gst_caps_get_mime(peertemplatecaps));
         autoplugger->sinktemplatecaps = peertemplatecaps;
-        GST_DEBUG(GST_CAT_AUTOPLUG, "turning on caps nego proxying in cache\n");
-        gtk_object_set(GTK_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
+//        GST_DEBUG(GST_CAT_AUTOPLUG, "turning on caps nego proxying in cache\n");
+//        gtk_object_set(GTK_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
       }
     }
   }
@@ -276,7 +277,7 @@ gst_autoplugger_autoplug(GstAutoplugger *autoplugger,GstPad *srcpad,GstCaps *src
   GST_DEBUG(GST_CAT_AUTOPLUG,"sinkpadcaps are of type %s\n",gst_caps_get_mime(sinkcaps));
 
 // try to PAUSE the whole thing
-gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
+//gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
 
   // disconnect the pads
   GST_DEBUG(GST_CAT_AUTOPLUG, "disconnecting the pads that will be joined by an autobin\n");
@@ -291,16 +292,22 @@ gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
   g_return_if_fail(autoplugger->autobin != NULL);
   gst_bin_add(GST_BIN(autoplugger),autoplugger->autobin);
 
+  // FIXME this is a hack
   GST_DEBUG(GST_CAT_AUTOPLUG, "copying failed caps to srcpad %s:%s to ensure renego\n",GST_DEBUG_PAD_NAME(autoplugger->cache_srcpad));
-//  gst_pad_set_caps(srcpad,srccaps);
+  gst_pad_set_caps(srcpad,srccaps);
 
   // attach the autoplugged bin
   GST_DEBUG(GST_CAT_AUTOPLUG, "attaching the autoplugged bin between the two pads\n");
   gst_pad_connect(srcpad,gst_element_get_pad(autoplugger->autobin,"sink"));
   gst_pad_connect(gst_element_get_pad(autoplugger->autobin,"src_00"),sinkpad);
 
+  // FIXME try to force the renego
+  GST_DEBUG(GST_CAT_AUTOPLUG, "trying to force everyone to nego\n");
+  gst_pad_renegotiate(gst_element_get_pad(autoplugger->autobin,"sink"));
+  gst_pad_renegotiate(sinkpad);
+
 // try to PLAY the whole thing
-gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
+//gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
 
 }
 
@@ -315,6 +322,9 @@ gst_autoplugger_external_sink_caps_nego_failed(GstPad *pad, GstAutoplugger *auto
 
   GST_INFO(GST_CAT_AUTOPLUG, "have caps nego failure on sinkpad %s:%s!!!",GST_DEBUG_PAD_NAME(pad));
 
+// try to PAUSE the whole thing
+gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
+
   srcpad_peer = GST_PAD(GST_PAD_PEER(autoplugger->cache_srcpad));
   g_return_if_fail(srcpad_peer != NULL);
   srcpad_peer_template = GST_PAD_PADTEMPLATE(srcpad_peer);
@@ -328,6 +338,9 @@ gst_autoplugger_external_sink_caps_nego_failed(GstPad *pad, GstAutoplugger *auto
   g_return_if_fail(sinkpad_peer_caps != NULL);
 
   gst_autoplugger_autoplug(autoplugger,autoplugger->cache_srcpad,sinkpad_peer_caps,srcpad_peer_caps);
+
+// try to PLAY the whole thing
+gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
 }
 
 static void
@@ -407,6 +420,10 @@ gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
   gst_pad_connect(gst_element_get_pad(autoplugger->autobin,"src_00"),autoplugger->srcpadpeer);
 */
 
+  // FIXME set the caps on the new connection
+  GST_DEBUG(GST_CAT_AUTOPLUG,"forcing caps on the typefound pad\n");
+  gst_pad_set_caps(autoplugger->cache_srcpad,caps);
+
   // reattach the original outside srcpad
   GST_DEBUG(GST_CAT_AUTOPLUG,"re-attaching downstream peer to autoplugcache\n");
   gst_pad_connect(autoplugger->cache_srcpad,autoplugger->srcpadpeer);
@@ -430,7 +447,6 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
 static void
 gst_autoplugger_cache_first_buffer(GstElement *element,GstBuffer *buf,GstAutoplugger *autoplugger)
 {
-return;
   GST_INFO(GST_CAT_AUTOPLUG, "have first buffer through cache");
   autoplugger->cache_first_buffer = TRUE;
 
