@@ -1,5 +1,15 @@
 2004-06-22  Wim Taymans  <wim@fluendo.com>
 
+	* ext/alsa/gstalsa.c: (gst_alsa_get_time), (gst_alsa_clock_update),
+	(gst_alsa_change_state), (gst_alsa_update_avail),
+	(gst_alsa_xrun_recovery):
+	* ext/alsa/gstalsa.h:
+	* ext/alsa/gstalsasrc.c: (gst_alsa_src_loop):
+	Cleanups, take queued samples into account when reporting
+	the time.
+
+2004-06-22  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videorate/gstvideorate.c: (gst_videorate_class_init),
 	(gst_videorate_init):
 	Initialize the property as well.
