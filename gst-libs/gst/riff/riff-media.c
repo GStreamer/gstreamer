@@ -194,6 +194,13 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
         *codec_name = g_strdup ("DivX MPEG-4 Version 4");
       break;
 
+    case GST_MAKE_FOURCC ('B', 'L', 'Z', '0'):
+      caps = gst_caps_new_simple ("video/x-divx",
+          "divxversion", G_TYPE_INT, 4, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Blizzard DivX");
+      break;
+
     case GST_MAKE_FOURCC ('D', 'X', '5', '0'):
       caps = gst_caps_new_simple ("video/x-divx",
           "divxversion", G_TYPE_INT, 5, NULL);
