@@ -252,7 +252,7 @@ dnl this one is for hadess, no qcam when no nasm found
 
 dnl *** Video 4 Linux ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_V4L, true)
-GST_CHECK_FEATURE(V4L, [Video 4 Linux], v4lsrc, [
+GST_CHECK_FEATURE(V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
   AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_V4L="yes", HAVE_V4L="no", [#include <linux/videodev.h>])
 ])
 
