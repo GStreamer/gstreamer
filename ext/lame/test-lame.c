@@ -47,6 +47,10 @@ main (int argc, char *argv[])
   gst_pad_connect (gst_element_get_pad (src, "src"),
                    gst_element_get_pad (tee, "sink"));
 
+  /* set up fakesrc */
+  g_object_set (G_OBJECT (src), "filltype", 3, NULL);
+  g_object_set (G_OBJECT (src), "sizetype", 3, NULL);
+
   /* set caps on fakesrc */
   caps = GST_CAPS_NEW (
       "input audio",
