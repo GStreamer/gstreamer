@@ -82,7 +82,6 @@ struct _GstSchedulerClass {
 
   /* virtual methods */
   void 			(*setup)		(GstScheduler *sched);
-  gboolean		(*get_preferred_stack)	(GstScheduler *sched, gpointer *stack, gulong *size);
   void 			(*reset)		(GstScheduler *sched);
   void 			(*add_element)		(GstScheduler *sched, GstElement *element);
   void 			(*remove_element)	(GstScheduler *sched, GstElement *element);
@@ -115,7 +114,6 @@ GType			gst_scheduler_get_type		(void);
 
 
 void			gst_scheduler_setup		(GstScheduler *sched);
-gboolean		gst_scheduler_get_preferred_stack(GstScheduler *sched, gpointer *stack, gulong *size);
 void			gst_scheduler_reset		(GstScheduler *sched);
 void			gst_scheduler_add_element	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_remove_element	(GstScheduler *sched, GstElement *element);

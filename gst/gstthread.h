@@ -64,7 +64,7 @@ struct _GstThread {
   GThread 	*thread_id;		/* id of the thread, if any */
   int 		 sched_policy;
   int 		 priority;
-  gpointer	*stack;			/* set with gst_scheduler_get_preferred_stack */
+  gpointer	*stack;
   guint 	 stack_size;		/* stack size */
   gint		 pid;			/* the pid of the thread */
   gint		 ppid;			/* the pid of the thread's parent process */

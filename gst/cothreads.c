@@ -577,57 +577,6 @@ cothread_context_get_data (cothread_state * thread, gchar * key)
 }
 
 /**
- * cothreads_stackquery:
- * @stack: Will be set to point to the allocated stack location
- * @stacksize: Will be set to the size of the allocated stack
- *
- *  Returns: #TRUE on success, #FALSE otherwise.
- */
-gboolean
-cothread_stackquery (void **stack, glong* stacksize)
-{
-  /* use either
-   * - posix_memalign to allocate a 2M-aligned, 2M stack 
-   * or
-   * - valloc 
-   *
-   * memory allocated by either of these two can be freed using free () 
-   * FIXME: define how the stack grows */
-
-#ifdef HAVE_POSIX_MEMALIGN
-  int retval = posix_memalign (stack, STACK_SIZE, STACK_SIZE);
-  if (retval != 0)
-  {
-    g_warning ("Could not posix_memalign stack !\n");
-    if (retval == EINVAL)
-      g_warning ("The alignment parameter %d was not a power of two !\n",
-	         STACK_SIZE);
-    if (retval == ENOMEM)
-      g_warning ("Insufficient memory to allocate the request of %d !\n",
-	         STACK_SIZE);
-    *stacksize = 0;
-    return FALSE;
-  }
-  GST_DEBUG (GST_CAT_THREAD, "have  posix_memalign at %p of size %d",
-             (void *) *stack, STACK_SIZE);
-#else
-  if ((*stack = valloc (STACK_SIZE)) == NULL)
-  {
-    g_warning ("Could not valloc stack !\n");
-    return FALSE;
-  }
-  GST_DEBUG (GST_CAT_THREAD, "have  valloc at %p of size %d",
-             (void *) *stack, STACK_SIZE);
-#endif
-
-  GST_DEBUG (GST_CAT_COTHREADS, 
-             "Got new cothread stack from %p to %p (size %ld)",
-             *stack, *stack + STACK_SIZE - 1, (long) STACK_SIZE);
-  *stacksize = STACK_SIZE;
-  return TRUE;
-}
-
-/**
  * cothread_switch:
  * @thread: cothread state to switch to
  *
