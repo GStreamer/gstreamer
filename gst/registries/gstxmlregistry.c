@@ -709,9 +709,14 @@ gst_type_type_find_dummy (GstBuffer *buffer, gpointer priv)
 
   if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
     if (factory->typefindfunc) {
-      GstCaps *res = factory->typefindfunc (buffer, factory);
-      if (res)
-        return res;
+      if (factory->typefindfunc == gst_type_type_find_dummy) {
+	GST_CAT_WARNING (GST_CAT_TYPES, "GstTypeFactory %s for mime %s exts %s does not install a valid typefindfunc",
+			 factory->feature.name, factory->mime, factory->exts);
+      } else {
+	GstCaps *res = factory->typefindfunc (buffer, factory);
+	if (res)
+	  return res;
+      }
     }
   }
   return NULL;
