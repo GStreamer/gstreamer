@@ -644,7 +644,7 @@ gst_queue_change_state (GstElement *element)
     gst_queue_locked_flush (queue);
   }
   else if (new_state == GST_STATE_PLAYING) {
-    if (!GST_PAD_IS_USABLE (queue->sinkpad)) {
+    if (!GST_PAD_IS_CONNECTED (queue->sinkpad)) {
       GST_DEBUG_ELEMENT (GST_CAT_STATES, queue, "queue %s is not connected", GST_ELEMENT_NAME (queue));
       /* FIXME can this be? */
       if (queue->reader)

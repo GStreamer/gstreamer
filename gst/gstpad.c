@@ -377,12 +377,12 @@ gst_pad_set_active (GstPad *pad, gboolean active)
 
   g_return_if_fail (GST_IS_PAD (pad));
 
-  if (GST_PAD_IS_ACTIVE (pad) == active)
+  old = GST_PAD_IS_ACTIVE (pad);
+
+  if (old == active)
     return;
 
   realpad = GST_PAD_REALIZE (pad);
-
-  old = GST_FLAG_IS_SET (realpad, GST_PAD_DISABLED);
 
   if (active) {
     GST_DEBUG (GST_CAT_PADS, "activating pad %s:%s", 
@@ -803,7 +803,8 @@ gst_pad_set_getcaps_function (GstPad *pad,
  * @pad: a #GstPad to set the bufferpool function for.
  * @bufpool: the #GstPadBufferPoolFunction to set.
  *
- * Sets the given bufferpool function for the pad.
+ * Sets the given bufferpool function for the pad. Note that the
+ * bufferpool function can only be set on sinkpads.
  */
 void
 gst_pad_set_bufferpool_function (GstPad *pad,
@@ -811,6 +812,7 @@ gst_pad_set_bufferpool_function (GstPad *pad,
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_PAD_IS_SINK (pad));
 
   GST_RPAD_BUFFERPOOLFUNC (pad) = bufpool;
   GST_DEBUG (GST_CAT_PADS, "bufferpoolfunc for %s:%s set to %s",
@@ -1926,7 +1928,8 @@ gst_pad_recalc_allowed_caps (GstPad *pad)
  * gst_pad_get_bufferpool:
  * @pad: a #GstPad to get the bufferpool from.
  *
- * Gets the bufferpool of the peer pad of the given pad.
+ * Gets the bufferpool of the peer pad of the given pad.Note that
+ * a bufferpool can only be obtained from a srcpad.
  *
  * Returns: the #GstBufferPool, or NULL in case of an error.
  */
@@ -1937,6 +1940,7 @@ gst_pad_get_bufferpool (GstPad *pad)
 
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+  g_return_val_if_fail (GST_PAD_IS_SRC (pad), NULL);
    
   peer = GST_RPAD_PEER (pad);
 
