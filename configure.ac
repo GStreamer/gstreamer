@@ -450,12 +450,13 @@ dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_in
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
 dnl *** libdv ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_DV, true)
-GST_CHECK_FEATURE(DV, [libdv DV/video decoder], dvdec, [
-  dnl use pkg-config when gtk deps are removed from its pkg-config .pc
-  AM_PATH_LIBDV(HAVE_DV="yes", HAVE_DV="no")
-  AC_SUBST(DV_CFLAGS)
-  AC_SUBST(DV_LIBS)
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
+GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
+  dnl use this when gtk deps are removed from its pkg-config .pc
+  dnl PKG_CHECK_MODULES(LIBDV, libdv, HAVE_LIBDV="yes", HAVE_LIBDV="no")
+  AM_PATH_LIBDV(HAVE_LIBDV="yes", HAVE_LIBDV="no")
+  AC_SUBST(LIBDV_CFLAGS)
+  AC_SUBST(LIBDV_LIBS)
 ])
 
 dnl *** dvdread ***
@@ -843,8 +844,6 @@ AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
-AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
-AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
