@@ -961,12 +961,12 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name)
                         );
   } else if (!strcmp (format_name, "asf")) {
     caps = GST_CAPS_NEW ("ffmpeg_asf",
-			 "video/x-asf",
+			 "video/x-ms-asf",
                            NULL
                         );
   } else if (!strcmp (format_name, "avi")) {
     caps = GST_CAPS_NEW ("ffmpeg_avi",
-			 "video/avi",
+			 "video/x-msvideo",
                            NULL
                         );
   } else if (!strcmp (format_name, "wav")) {
