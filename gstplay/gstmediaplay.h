@@ -18,6 +18,7 @@ struct _GstMediaPlay {
 	GtkObject parent;
 
 	GladeXML *xml;
+	GladeXML *playlist_xml;
 	GstPlay *play;
 	
 	GtkWidget *play_button;
@@ -30,6 +31,12 @@ struct _GstMediaPlay {
 	// the slider
 	GtkAdjustment *adjustment;
 	GtkWidget *slider;
+
+	// the playlist
+	GtkWidget *playlist_window;
+	GtkWidget *playlist_clist;
+
+	guint fullscreen_connection_id;
 	
 	gulong last_time;
 
@@ -47,6 +54,9 @@ GtkType 	gst_media_play_get_type		(void);
 GstMediaPlay*	gst_media_play_new		  (void);
 
 void 		gst_media_play_start_uri	  (GstMediaPlay *play, const guchar *uri);
+
+void            gst_media_play_show_playlist      (GstMediaPlay *mplay);
+void            gst_media_play_addto_playlist     (GstMediaPlay *mplay, char *uri);
 
 void            gst_media_play_set_original_size  (GstMediaPlay *mplay);
 void            gst_media_play_set_double_size    (GstMediaPlay *mplay);

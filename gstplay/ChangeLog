@@ -1,4 +1,39 @@
-2001-06-12  Arik Devens  <adevens@antioch-college.edu>
+2001-08-15  Arik Devens  <arik@gnome.org>
+
+	* main.c (main): Disabled the showing of the playlist till it
+	works. ;-)
+
+	* gstmediaplay.c (gst_media_play_play_item): New function to play
+	an item when selected in the playlist.
+	(gst_media_play_show_playlist): New function to show the
+	playlist. This is temporary till i do an interface overhaul on the
+	player.
+	(gst_media_play_addto_playlist): New function to add files to the
+	playlist.
+
+	* main.c (main): Added stuff for playlist and for handling
+	multiple files from the console.
+
+	* gstmediaplay.h: Added new items to the GstMediaPlay struct for
+	playlist stuff and for the fullscreen keypress connection.
+
+	* gstmediaplay.c (fullscreen_key_press_event): New function to
+	handle keypress stuff so that we leave fullscreen when the user
+	hits the escape key.
+	(gst_media_play_set_fullscreen): Added a signal connect/disconnect
+	for keypress handling.
+	(gst_media_play_set_original_size): Added checking to see if we
+	are still in fullscreen mode and if we are leaving it before
+	sizing to original size.
+	(gst_media_play_set_double_size): Ditto except for double size.
+
+2001-08-12  Arik Devens  <arik@gnome.org>
+
+	* gstmediaplay.c (gst_media_play_set_fullscreen): Added the hiding
+	and reshowing of the status area when entering and leaving
+	fullscreen.
+
+2001-06-12  Arik Devens  <arik@gnome.org>
 
 	* gstmediaplay.glade: Added a basic preferences dialog, not hooked
 	up yet.

@@ -208,7 +208,58 @@ gst_media_play_new ()
 }
 
 static void
-gst_media_play_update_status_area (GstMediaPlay *play,
+gst_media_play_play_item (GtkCList *clist,
+			  gint row,
+			  gint column,
+			  GdkEventButton *event,
+			  GstMediaPlay *mplay)
+{
+	gchar *text;
+	
+	gtk_clist_get_text (clist, row, column, &text);
+ 
+	gdk_threads_leave ();
+	gst_media_play_start_uri (mplay, text);
+	gdk_threads_enter ();
+}
+
+void
+gst_media_play_show_playlist (GstMediaPlay *mplay)
+{
+	struct stat statbuf;
+
+	/* load the interface */
+	if (stat (DATADIR"gstmediaplay.glade", &statbuf) == 0) {
+		mplay->playlist_xml = glade_xml_new (DATADIR"gstmediaplay.glade", "playlist_window");
+	}
+	else {
+		mplay->playlist_xml = glade_xml_new ("gstmediaplay.glade", "playlist_window");
+	}
+	g_assert (mplay->playlist_xml != NULL);
+
+	mplay->playlist_window = glade_xml_get_widget (mplay->playlist_xml, "playlist_window");
+	mplay->playlist_clist = glade_xml_get_widget (mplay->playlist_xml, "playlist_clist");
+
+	gtk_signal_connect (GTK_OBJECT (mplay->playlist_clist), "select_row",
+			    GTK_SIGNAL_FUNC (gst_media_play_play_item), mplay);
+
+	gtk_window_set_default_size (GTK_WINDOW (mplay->playlist_window), 215, 280);
+
+	gtk_widget_show (mplay->playlist_window);
+}
+
+void
+gst_media_play_addto_playlist (GstMediaPlay *mplay, char *uri)
+{
+	gchar *text[2];
+
+	text[0] = uri;
+
+	gtk_clist_append (GTK_CLIST (mplay->playlist_clist), text);
+}
+
+static void
+gst_media_play_update_status_area (GstMediaPlay *mplay,
 				   gulong current_time,
 				   gulong total_time)
 {
@@ -218,32 +269,32 @@ gst_media_play_update_status_area (GstMediaPlay *play,
 		 current_time / 60, current_time % 60,
 		 total_time / 60, total_time % 60);
 
-	gst_status_area_set_playtime (play->status, time);
+	gst_status_area_set_playtime (mplay->status, time);
 }
 
 void
-gst_media_play_start_uri (GstMediaPlay *play,
+gst_media_play_start_uri (GstMediaPlay *mplay,
 		          const guchar *uri)
 {
 	GstPlayReturn ret;
 
-	g_return_if_fail (play != NULL);
-	g_return_if_fail (GST_IS_MEDIA_PLAY (play));
+	g_return_if_fail (mplay != NULL);
+	g_return_if_fail (GST_IS_MEDIA_PLAY (mplay));
 
 	if (uri != NULL) {
-		ret = gst_play_set_uri (play->play, uri);
+		ret = gst_play_set_uri (mplay->play, uri);
 		
 		if (ret == GST_PLAY_CANNOT_PLAY) {
 			printf ("*** Cannot load file: %s ***\n", uri);
 		} else {
-			if (!gst_play_media_can_seek (play->play)) {
-				gtk_widget_set_sensitive (play->slider, FALSE);
+			if (!gst_play_media_can_seek (mplay->play)) {
+				gtk_widget_set_sensitive (mplay->slider, FALSE);
 			}
 
-			gtk_window_set_title (GTK_WINDOW (play->window),
+			gtk_window_set_title (GTK_WINDOW (mplay->window),
 					      g_strconcat ( "Gstplay - ", uri, NULL));
-			
-			gst_play_play (play->play);
+	
+			gst_play_play (mplay->play);
 		}
 	}
 }
@@ -265,6 +316,8 @@ on_load_file_selected (GtkWidget *button,
 	gst_media_play_start_uri (play, file_name);
 	gdk_threads_enter();
 
+	gst_media_play_addto_playlist (play, file_name);
+	
 	g_free (data);
 }
 
@@ -402,6 +455,9 @@ gst_media_play_set_original_size (GstMediaPlay *mplay)
 
 	play = mplay->play;
 
+	if (fullscreen_active)
+		gst_media_play_set_fullscreen (mplay);
+	
 	video_widget = gst_play_get_video_widget (play);
 	width = gst_play_get_source_width (play);
 	height = gst_play_get_source_height (play);
@@ -418,11 +474,28 @@ gst_media_play_set_double_size (GstMediaPlay *mplay)
 
 	play = mplay->play;
 
+	if (fullscreen_active)
+		gst_media_play_set_fullscreen (mplay);	
+
 	video_widget = gst_play_get_video_widget (play);
 	width = gst_play_get_source_width (play);
 	height = gst_play_get_source_height (play);
 
 	gtk_widget_set_usize (video_widget, width * 1.5, height * 1.5);
+}
+
+static int
+fullscreen_key_press_event (GtkWidget *widget,
+			    GdkEventKey *event,
+			    GstMediaPlay *mplay)
+{
+	switch (event->keyval) {
+	case GDK_Escape:
+		gst_media_play_set_fullscreen (mplay);
+		break;
+	}
+
+	return TRUE;
 }
 
 void
@@ -446,6 +519,7 @@ gst_media_play_set_fullscreen (GstMediaPlay *mplay)
 		gtk_widget_hide (glade_xml_get_widget (mplay->xml, "dockitem2"));
 		gtk_widget_hide (glade_xml_get_widget (mplay->xml, "dockitem3"));
 		gtk_widget_hide (glade_xml_get_widget (mplay->xml, "dockitem4"));
+		gtk_widget_hide (GTK_WIDGET (mplay->status));
 
 		gdk_window_get_origin (gdk_window, &root_x, &root_y);
 		gdk_window_get_geometry (gdk_window, &client_x, &client_y,
@@ -458,18 +532,24 @@ gst_media_play_set_fullscreen (GstMediaPlay *mplay)
 		mplay->y = root_y - client_y;
 		mplay->width = width;
 		mplay->height = height;
-		
+
 		fullscreen_active = TRUE;
+
+		mplay->fullscreen_connection_id = gtk_signal_connect (GTK_OBJECT (mplay->window), "key_press_event",
+								      (GtkSignalFunc) fullscreen_key_press_event, mplay);
 	} else {
 		gtk_widget_show (glade_xml_get_widget (mplay->xml, "dockitem1"));
 		gtk_widget_show (glade_xml_get_widget (mplay->xml, "dockitem2"));
 		gtk_widget_show (glade_xml_get_widget (mplay->xml, "dockitem3"));
 		gtk_widget_show (glade_xml_get_widget (mplay->xml, "dockitem4"));
+		gtk_widget_show (GTK_WIDGET (mplay->status));
 		gtk_widget_queue_resize (glade_xml_get_widget (mplay->xml, "dock1"));
 
 		gdk_window_move (gdk_window, mplay->x, mplay->y);
 		gtk_widget_set_usize (video_widget,  source_width,
 				      source_height);
+
+		gtk_signal_disconnect (GTK_OBJECT (mplay->window), mplay->fullscreen_connection_id);
 
 		fullscreen_active = FALSE;
 	}

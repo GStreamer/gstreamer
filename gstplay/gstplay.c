@@ -251,7 +251,7 @@ gst_play_object_introspect (GstObject *object, const gchar *property, GstElement
 	}
 	else {
 		*target = element;
-		GST_DEBUG(0, "gstplay: using element \"%s\" for %s property\n",
+		GST_DEBUG(0, "gstplay: using element \"%s\" for %s property\n", 
 			  gst_element_get_name(element), property);
 	}
 }
@@ -382,7 +382,7 @@ gst_play_set_uri (GstPlay *play, const guchar *uri)
 	g_return_val_if_fail (play != NULL, GST_PLAY_ERROR);
 	g_return_val_if_fail (GST_IS_PLAY (play), GST_PLAY_ERROR);
 	g_return_val_if_fail (uri != NULL, GST_PLAY_ERROR);
-
+	
 	priv = (GstPlayPrivate *)play->priv;
 
 	if (priv->uri)
@@ -412,7 +412,6 @@ gst_play_set_uri (GstPlay *play, const guchar *uri)
 	g_return_val_if_fail (priv->src != NULL, GST_PLAY_CANNOT_PLAY);
 
 	gtk_object_set (G_OBJECT (priv->src), "location", priv->uri, NULL);
-
 
 	priv->cache = gst_elementfactory_make ("autoplugcache", "cache");
 	g_return_val_if_fail (priv->cache != NULL, GST_PLAY_CANNOT_PLAY);
