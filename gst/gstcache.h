@@ -53,6 +53,12 @@ typedef enum {
   GST_CACHE_ENTRY_FORMAT,
 } GstCacheEntryType;
 
+typedef enum {
+  GST_CACHE_LOOKUP_EXACT,
+  GST_CACHE_LOOKUP_BEFORE,
+  GST_CACHE_LOOKUP_AFTER,
+} GstCacheLookupMethod;
+
 #define GST_CACHE_NASSOCS(entry)		((entry)->data.assoc.nassocs)
 #define GST_CACHE_ASSOC_FLAGS(entry)	((entry)->data.assoc.flags)
 #define GST_CACHE_ASSOC_FORMAT(entry,i)	((entry)->data.assoc.assocs[(i)].format)
@@ -149,8 +155,11 @@ struct _GstCacheClass {
   /* abstract methods */
   void		(*add_entry)		(GstCache *cache, GstCacheEntry *entry);
 
-  GstCacheEntry* (*get_entry)		(GstCache *cache); 
-
+  GstCacheEntry* (*get_assoc_entry)	(GstCache *cache, gint id, 
+		                         GstCacheLookupMethod method,
+		                         GstFormat format, gint64 value,
+					 GCompareDataFunc func,
+					 gpointer user_data); 
   /* signals */
   void		(*entry_added)		(GstCache *cache, GstCacheEntry *entry);
 };
@@ -181,6 +190,19 @@ GstCacheEntry*		gst_cache_add_object		(GstCache *cache, gint id, gchar *key,
 GstCacheEntry*		gst_cache_add_id		(GstCache *cache, gint id,
 							 gchar *description); 
 
+GstCacheEntry*		gst_cache_get_assoc_entry	(GstCache *cache, gint id, 
+		 					 GstCacheLookupMethod method,
+		                                         GstFormat format, gint64 value);
+GstCacheEntry*		gst_cache_get_assoc_entry_full	(GstCache *cache, gint id, 
+							 GstCacheLookupMethod method,
+		                                         GstFormat format, gint64 value,
+							 GCompareDataFunc func,
+							 gpointer user_data);
+
+/* working with cache entries */
+void			gst_cache_entry_free		(GstCacheEntry *entry);
+gboolean		gst_cache_entry_assoc_map	(GstCacheEntry *entry,
+		                                         GstFormat format, gint64 *value);
 /*
  * creating caches
  *

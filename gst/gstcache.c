@@ -246,6 +246,12 @@ gst_cache_set_resolver (GstCache *cache,
   cache->resolver_user_data = user_data;
 }
 
+void
+gst_cache_entry_free (GstCacheEntry *entry)
+{
+  g_free (entry);
+}
+
 /**
  * gst_cache_add_format:
  * @cache: the cache to add the entry to
@@ -370,12 +376,14 @@ gst_cache_get_writer_id (GstCache *cache, GstObject *writer, gint *id)
  * @...: other format/value pairs or 0 to end the list
  *
  * Associate given format/value pairs with eachother.
+ * Be sure to pass gint64 values to this functions varargs,
+ * you might want to use a gint64 cast to be sure.
  *
  * Returns: a pointer to the newly added entry in the cache.
  */
 GstCacheEntry*
 gst_cache_add_association (GstCache *cache, gint id, GstAssocFlags flags, 
-		                GstFormat format, gint64 value, ...)
+		           GstFormat format, gint64 value, ...)
 {
   va_list args;
   GstCacheAssociation *assoc;
@@ -383,7 +391,7 @@ gst_cache_add_association (GstCache *cache, gint id, GstAssocFlags flags,
   gulong size;
   gint nassocs = 0;
   GstFormat cur_format;
-  gint64 dummy;
+  volatile gint64 dummy;
 
   g_return_val_if_fail (GST_IS_CACHE (cache), NULL);
   g_return_val_if_fail (format != 0, NULL);
@@ -432,6 +440,59 @@ gst_cache_add_association (GstCache *cache, gint id, GstAssocFlags flags,
 
   return entry;
 }
+
+static gint
+gst_cache_compare_func (gconstpointer a,
+                        gconstpointer b,
+                        gpointer user_data)
+{
+  return a - b;  
+}
+
+GstCacheEntry*
+gst_cache_get_assoc_entry (GstCache *cache, gint id,
+		           GstCacheLookupMethod method,
+			   GstFormat format, gint64 value)
+{
+  g_return_val_if_fail (GST_IS_CACHE (cache), NULL);
+
+  return gst_cache_get_assoc_entry_full (cache, id, method, format, value, 
+		                  gst_cache_compare_func, NULL);
+}
+
+GstCacheEntry*
+gst_cache_get_assoc_entry_full (GstCache *cache, gint id,
+		                GstCacheLookupMethod method,
+			        GstFormat format, gint64 value,
+			        GCompareDataFunc func,
+			        gpointer user_data)
+{
+  g_return_val_if_fail (GST_IS_CACHE (cache), NULL);
+
+  if (CLASS(cache)->get_assoc_entry)
+    return CLASS (cache)->get_assoc_entry (cache, id, method, format, value, func, user_data);
+  
+  return NULL;
+}
+
+gboolean
+gst_cache_entry_assoc_map (GstCacheEntry *entry,
+		           GstFormat format, gint64 *value)
+{
+  gint i;
+
+  g_return_val_if_fail (entry != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  for (i = 0; i < GST_CACHE_NASSOCS (entry); i++) {
+     if (GST_CACHE_ASSOC_FORMAT (entry, i) == format) {
+       *value = GST_CACHE_ASSOC_VALUE (entry, i);
+       return TRUE;
+     }
+  }
+  return FALSE;
+}
+
 
 static void 		gst_cache_factory_class_init 		(GstCacheFactoryClass *klass);
 static void 		gst_cache_factory_init 		(GstCacheFactory *factory);

@@ -64,13 +64,13 @@
  * then do a lookup in the Tree to get the required value.
  */
 
-typedef struct _GstMemCacheFormatIndex {
+typedef struct {
   GstFormat 	 format;
   gint		 offset;
   GTree		*tree;
 } GstMemCacheFormatIndex;
 
-typedef struct _GstMemCacheId {
+typedef struct {
   gint 		 id;
   GHashTable	*format_index;
 } GstMemCacheId;
@@ -196,11 +196,14 @@ mem_cache_compare (gconstpointer a,
 {
   GstMemCacheFormatIndex *index = user_data;
   gint64 val1, val2;
+  gint64 diff;
 
   val1 = GST_CACHE_ASSOC_VALUE (((GstCacheEntry *)a), index->offset);
   val2 = GST_CACHE_ASSOC_VALUE (((GstCacheEntry *)b), index->offset);
 	  
-  return val1 - val2;
+  diff = (val2 - val1);
+
+  return (diff == 0 ? 0 : (diff > 0 ? 1 : -1));
 }
 
 static void
@@ -279,6 +282,54 @@ gst_mem_cache_add_entry (GstCache *cache, GstCacheEntry *entry)
   }
 }
 
+typedef struct {
+  gint64	 	  value;
+  GstMemCacheFormatIndex *index;
+  gboolean		  exact;
+  GstCacheEntry 	 *lower;
+  gint64		  low_diff;
+  GstCacheEntry 	 *higher;
+  gint64		  high_diff;
+} GstMemCacheSearchData;
+
+static gint
+mem_cache_search (gconstpointer a,
+		  gconstpointer b)
+{
+  GstMemCacheSearchData *data = (GstMemCacheSearchData *) b;
+  GstMemCacheFormatIndex *index = data->index;
+  gint64 val1, val2;
+  gint64 diff;
+
+  val1 = GST_CACHE_ASSOC_VALUE (((GstCacheEntry *)a), index->offset);
+  val2 = data->value;
+	  
+  diff = (val1 - val2);
+  if (diff == 0)
+    return 0;
+
+  /* exact matching, don't update low/high */
+  if (data->exact)
+    return (diff > 0 ? 1 : -1);
+
+  if (diff < 0) {
+    if (diff > data->low_diff) {
+      data->low_diff = diff;
+      data->lower = (GstCacheEntry *) a;
+    }
+    diff = -1;
+  }
+  else {
+    if (diff < data->high_diff) {
+      data->high_diff = diff;
+      data->higher = (GstCacheEntry *) a;
+    }
+    diff = 1;
+  }
+
+  return diff;
+}
+
 static GstCacheEntry*
 gst_mem_cache_get_assoc_entry (GstCache *cache, gint id,
                                GstCacheLookupMethod method,
@@ -287,45 +338,44 @@ gst_mem_cache_get_assoc_entry (GstCache *cache, gint id,
                                gpointer user_data)
 {
   GstMemCache *memcache = GST_MEM_CACHE (cache);
-  GList *walk = memcache->associations;
-  GList *next;
+  GstMemCacheId *id_index;
+  GstMemCacheFormatIndex *index;
+  GstCacheEntry *entry;
+  GstMemCacheSearchData data;
 
-  /* FIXME use GTree here */
-  while (walk) {
-    GstCacheEntry *entry = (GstCacheEntry *) walk->data;
+  id_index = g_hash_table_lookup (memcache->id_index, &id);
+  if (!id_index)
+    return NULL;
 
-    next = g_list_next (walk);
+  index = g_hash_table_lookup (id_index->format_index, &format);
+  if (!index)
+    return NULL;
 
-    if (entry->type == GST_CACHE_ENTRY_ASSOCIATION && entry->id == id) {
-      gint64 got;
+  data.value = value;
+  data.index = index;
+  data.exact = (method == GST_CACHE_LOOKUP_EXACT);
 
-      if (gst_cache_entry_assoc_map (entry, format, &got)) {
-	if (got == value && method == GST_CACHE_LOOKUP_EXACT)
-          return entry;
-	else {
-          gint64 got_next = G_MININT64;
-          GstCacheEntry *next_entry = NULL;
-
-	  if (next != NULL) {
-            next_entry = (GstCacheEntry *) next->data;
-
-	    gst_cache_entry_assoc_map (next_entry, format, &got_next);
-	  }
-
-          if ((got >= value) && (got_next <= value)) {
-	    if (method == GST_CACHE_LOOKUP_BEFORE) 
-	      return next_entry;
-	    else if (method == GST_CACHE_LOOKUP_AFTER) 
-	      return entry;
-	  }
-	}
-      }
-    }
-    
-    walk = next;
+  /* setup data for low/high checks if we are not looking 
+   * for an exact match */
+  if (!data.exact) {
+    data.low_diff = G_MININT64;
+    data.lower = NULL;
+    data.high_diff = G_MAXINT64;
+    data.higher = NULL;
   }
 
-  return NULL;
+  entry = g_tree_search (index->tree, mem_cache_search, &data);
+
+  /* get the low/high values if we're not exact */
+  if (entry == NULL && !data.exact) { 
+    if (method == GST_CACHE_LOOKUP_BEFORE)
+      entry = data.lower;
+    else if (method == GST_CACHE_LOOKUP_AFTER) {
+      entry = data.higher;
+    }
+  }
+
+  return entry;
 }
 
 static gboolean
