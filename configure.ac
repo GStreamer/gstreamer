@@ -66,7 +66,6 @@ if test "x$GST_WALL" = "xyes"; then
 
    if test "x$GST_CVS" = "xyes"; then
      AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
-     GST_ERROR="$GST_ERROR -DG_DISABLE_DEPRECATED"
    fi
 fi
 
