@@ -81,14 +81,14 @@ static GstElementDetails plugin_details = {
 enum
 {
   /* FILL ME */
-  LAST_SIGNAL
+  LAST_SIGNAL,
 };
 
 enum
 {
   ARG_0,
   ARG_DEVICE,
-  ARG_BUFFER_SIZE
+  ARG_BUFFER_SIZE,
 };
 
 static GstStaticPadTemplate gst_sunaudiosink_sink_factory =
@@ -420,16 +420,6 @@ gst_sunaudiosink_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-gboolean
-gst_sunaudiosink_plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "sunaudiosink", GST_RANK_NONE,
-          GST_TYPE_SUNAUDIOSINK))
-    return FALSE;
-
-  return TRUE;
 }
 
 static gboolean

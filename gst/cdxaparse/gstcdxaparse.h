@@ -19,8 +19,8 @@
  */
 
 
-#ifndef __GST_CDXA_PARSE_H__
-#define __GST_CDXA_PARSE_H__
+#ifndef __GST_CDXAPARSE_H__
+#define __GST_CDXAPARSE_H__
 
 #include <gst/gst.h>
 #include "gst/riff/riff-ids.h"
@@ -30,25 +30,26 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define GST_TYPE_CDXA_PARSE \
-  (gst_cdxa_parse_get_type())
-#define GST_CDXA_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CDXA_PARSE,GstCDXAParse))
-#define GST_CDXA_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CDXA_PARSE,GstCDXAParse))
-#define GST_IS_CDXA_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CDXA_PARSE))
-#define GST_IS_CDXA_PARSE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDXA_PARSE))
+#define GST_TYPE_CDXAPARSE \
+  (gst_cdxaparse_get_type())
+#define GST_CDXAPARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CDXAPARSE,GstCDXAParse))
+#define GST_CDXAPARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CDXAPARSE,GstCDXAParse))
+#define GST_IS_CDXAPARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CDXAPARSE))
+#define GST_IS_CDXAPARSE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDXAPARSE))
 
 #define GST_CDXA_SECTOR_SIZE  	2352
 #define GST_CDXA_DATA_SIZE  	2324
+#define GST_CDXA_HEADER_SIZE	24
 
 typedef enum {
-  GST_CDXA_PARSE_START,
-  GST_CDXA_PARSE_FMT,
-  GST_CDXA_PARSE_OTHER,
-  GST_CDXA_PARSE_DATA,
+  GST_CDXAPARSE_START,
+  GST_CDXAPARSE_FMT,
+  GST_CDXAPARSE_OTHER,
+  GST_CDXAPARSE_DATA,
 } GstCDXAParseState;
 
 typedef struct _GstCDXAParse GstCDXAParse;
@@ -63,23 +64,7 @@ struct _GstCDXAParse {
   /* CDXA decoding state */
   GstCDXAParseState state;
 
-  /* useful CDXA data 
-  guint32 riff_size;
-  guint32 data_size;
-  guint32 sectors;
-
-#define CDXA_SUB_MODE_EOF(c)    ((c&0x80)>>7)
-#define CDXA_SUB_MODE_RT(c)     ((c&0x40)>>6)
-#define CDXA_SUB_MODE_FORM(c)   ((c&0x20)>>5)
-#define CDXA_SUB_MODE_TRIGGER(c)((c&0x10)>>4)
-#define CDXA_SUB_MODE_DATA(c)   ((c&0x08)>>3)
-#define CDXA_SUB_MODE_VIDEO(c)  ((c&0x04)>>2)
-#define CDXA_SUB_MODE_AUDIO(c)  ((c&0x02)>>1)
-#define CDXA_SUB_MODE_EOR(c)    ((c&0x01)   )
-
-*/
-
-  guint64 dataleft;
+  guint64 dataleft, datasize, datastart;
   int byteoffset;
   
   gboolean seek_pending;
@@ -90,12 +75,12 @@ struct _GstCDXAParseClass {
   GstElementClass parent_class;
 };
 
-GType 		gst_cdxa_parse_get_type		(void);
+GType 		gst_cdxaparse_get_type		(void);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
 
-#endif /* __GST_CDXA_PARSE_H__ */
+#endif /* __GST_CDXAPARSE_H__ */
 
