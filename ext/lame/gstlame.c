@@ -482,7 +482,7 @@ add_one_tag (const GstTagList *list, const gchar *tag,
   switch (gst_tag_get_type (tag)) {
   case G_TYPE_UINT: {
     guint ivalue;
-    if (gst_tag_list_get_uint (list, tag, &ivalue)) {
+    if (!gst_tag_list_get_uint (list, tag, &ivalue)) {      
       GST_DEBUG ("Error reading \"%s\" tag value\n", tag);
       return;
     }
@@ -490,7 +490,7 @@ add_one_tag (const GstTagList *list, const gchar *tag,
     break;
   }
   case G_TYPE_STRING: 
-    if (gst_tag_list_get_string (list, tag, &value)) {
+    if (!gst_tag_list_get_string (list, tag, &value)) {
       GST_DEBUG ("Error reading \"%s\" tag value\n", tag);
       return;
     };
