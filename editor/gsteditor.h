@@ -119,26 +119,26 @@ struct _GstEditorElement {
   gboolean realized;
 
   /* toplevel group, must be !NULL */
-  GnomeCanvasGroup *group;			// parent group
+  GnomeCanvasGroup *group;			/* parent group */
 
   /* visual stuff */
-  gdouble x,y;					// center
-  gdouble width,height;				// size
-  GnomeCanvasItem *border,*title,*resizebox;	// easy ones
-  GnomeCanvasItem *statebox[4],*statetext[4];	// GST_STATE_*
+  gdouble x,y;					/* center */
+  gdouble width,height;				/* size   */
+  GnomeCanvasItem *border,*title,*resizebox;	/* easy ones */
+  GnomeCanvasItem *statebox[4],*statetext[4];	/* GST_STATE_* */
 
-  gdouble insidewidth,insideheight;		// minimum space inside
-  gdouble minwidth,minheight;			// minimum size
-  gdouble titlewidth,titleheight;		// size of title
-  gdouble statewidth,stateheight;		// size of state boxes
-  gdouble sinkwidth,sinkheight;			// size of sink pads
-  gdouble srcwidth,srcheight;			// size of src pads
-  gint sinks,srcs;				// how many pads?
+  gdouble insidewidth,insideheight;		/* minimum space inside */
+  gdouble minwidth,minheight;			/* minimum size */
+  gdouble titlewidth,titleheight;		/* size of title */
+  gdouble statewidth,stateheight;		/* size of state boxes */
+  gdouble sinkwidth,sinkheight;			/* size of sink pads */
+  gdouble srcwidth,srcheight;			/* size of src pads */
+  gint sinks,srcs;				/* how many pads? */
 
-  GnomeCanvasGroup *insidegroup;		// contents if any
+  GnomeCanvasGroup *insidegroup;		/* contents if any */
 
-  gboolean resize;				// does it need resizing?
-  gboolean active;				// is it active (currently selected)
+  gboolean resize;				/* does it need resizing? */
+  gboolean active;				/* is it active (currently selected) */
 
   /* list of pads */
   GList *srcpads,*sinkpads;
@@ -196,12 +196,12 @@ struct _GstEditorBin {
   GList *elements, *connections;
 
   /* connection state */
-  GstEditorPad *frompad;		// where the drawing started from
-  gboolean fromsrc;			// are we connecting *from* a source?
-  gboolean connecting;			// if we're trying to connect right now
-  GstEditorConnection *connection;	// the connection we're operating on
-  GstEditorPad *ghostpad;		// potential ghost pad
-  gboolean inpadregion;			// is cursor in pad region
+  GstEditorPad *frompad;	    /* where the drawing started from       */
+  gboolean fromsrc;		    /* are we connecting *from* a source?   */
+  gboolean connecting;		    /* if we're trying to connect right now */
+  GstEditorConnection *connection;  /* the connection we're operating on    */
+  GstEditorPad *ghostpad;           /* potential ghost pad 		    */
+  gboolean inpadregion;	  	    /* is cursor in pad region 		    */
 };
 
 struct _GstEditorBinClass {
@@ -286,19 +286,19 @@ struct _GstEditorPad {
   /* visual stuff */
   GnomeCanvasGroup *group;
   GnomeCanvasItem *border,*title,*padbox;
-  gboolean sinkpad;				// is this a sink pad?
-  gdouble x,y;					// location
-  gdouble width,height;				// actual size
-  gdouble boxwidth,boxheight;			// size of pad box
-  gboolean resize;				// does it need resizing?
+  gboolean sinkpad;				/* is this a sink pad?    */
+  gdouble x,y;					/* location		  */
+  gdouble width,height;				/* actual size 		  */	
+  gdouble boxwidth,boxheight;			/* size of pad box	  */
+  gboolean resize;				/* does it need resizing? */
 
   /* interaction state */
   gboolean dragging,resizing,moved;
   gdouble dragx,dragy;
 
   /* connection */
-//  GnomeCanvasItem *connection;		// can't use
-//GstEditorConnection
+/*  GnomeCanvasItem *connection;		// can't use	*/
+/*GstEditorConnection						*/
 };
 
 struct _GstEditorPadClass {
@@ -356,19 +356,19 @@ struct _GstEditorPadTemplate {
   /* visual stuff */
   GnomeCanvasGroup *group;
   GnomeCanvasItem *border,*title,*padtemplatebox;
-  gboolean sinkpadtemplate;				// is this a sink padtemplate?
-  gdouble x,y;					// location
-  gdouble width,height;				// actual size
-  gdouble boxwidth,boxheight;			// size of padtemplate box
-  gboolean resize;				// does it need resizing?
+  gboolean sinkpadtemplate;			/* is this a sink padtemplate?*/
+  gdouble x,y;					/* location	 	*/	
+  gdouble width,height;				/* actual size		*/
+  gdouble boxwidth,boxheight;			/* size of padtemplate box */
+  gboolean resize;				/* does it need resizing?  */
 
   /* interaction state */
   gboolean dragging,resizing,moved;
   gdouble dragx,dragy;
 
   /* connection */
-//  GnomeCanvasItem *connection;		// can't use
-//GstEditorConnection
+/*  GnomeCanvasItem *connection;		// can't use  */
+/*GstEditorConnection					      */
 };
 
 struct _GstEditorPadTemplateClass {
@@ -420,8 +420,8 @@ struct _GstEditorConnection {
   /* visual stuff */
   GnomeCanvasItem *line;
   GnomeCanvasPoints *points;
-  gdouble x,y;                                  // terminating point
-  gboolean resize;                             // does it need resizing?
+  gdouble x,y;                                  /* terminating point	*/
+  gboolean resize;                             /* does it need resizing?*/
 };
 
 struct _GstEditorConnectionClass {
