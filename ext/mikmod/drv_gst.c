@@ -34,8 +34,8 @@ static void mikmod_Exit( void )
 
 static void mikmod_Update( void )
 {
-gint length;
-GstBuffer *outdata;
+  gint length;
+  GstBuffer *outdata;
 
   length = VC_WriteBytes((SBYTE *) audiobuffer, buffer_size);
   	
