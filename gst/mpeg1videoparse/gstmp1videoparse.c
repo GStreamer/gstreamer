@@ -421,6 +421,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
     outbuf = gst_buffer_create_sub(mp1videoparse->partialbuf, 0, offset+4);
     g_assert(outbuf != NULL);
     GST_BUFFER_TIMESTAMP(outbuf) = mp1videoparse->last_pts;
+    GST_BUFFER_DURATION(outbuf) = GST_SECOND / mp1videoparse->fps;
 
     if (mp1videoparse->in_flush) {
       /* FIXME, send a flush event here */
