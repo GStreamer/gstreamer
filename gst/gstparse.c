@@ -170,8 +170,11 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
         if (srcpadname != NULL) {
           srcpad = gst_element_get_pad(previous,srcpadname);
           if (!srcpad) {
+            srcpad = gst_element_request_pad_by_name(previous,srcpadname);
+          }
+          if (!srcpad) {
             GST_DEBUG(0,"NO SUCH pad %s in element %s\n",srcpadname,GST_ELEMENT_NAME(previous));
-	  }
+          }
         }
 	else if (srcpad == NULL) {
           // check through the list to find the first sink pad
@@ -252,9 +255,14 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
 
         sinkpad = NULL;
 
-        if (sinkpadname != NULL)
-          sinkpad = gst_element_get_pad(previous,sinkpadname);
-
+        if (sinkpadname != NULL){
+          sinkpad = gst_element_get_pad(element,sinkpadname);
+          
+          if (!sinkpad) {
+            sinkpad = gst_element_request_pad_by_name(element,sinkpadname);
+          }
+        }
+        
         if (!sinkpad) {
           // check through the list to find the first sink pad
           pads = gst_element_get_pad_list(element);
