@@ -28,6 +28,43 @@
  */
 #include "gstdvdec.h"
 
+/* DV output has two modes, normal and wide. The resolution is the same in both
+ * cases: 720 pixels wide by 576 pixels tall in PAL format, and 720x480 for
+ * NTSC.
+ *
+ * Each of the modes has its own pixel aspect ratio, which is fixed in practice
+ * by ITU-R BT.601 (also known as "CCIR-601" or "Rec.601"). Or so claims a
+ * reference that I culled from the reliable "internet",
+ * http://www.mir.com/DMG/aspect.html. Normal PAL is 59/54 and normal NTSC is
+ * 10/11. Because the pixel resolution is the same for both cases, we can get
+ * the pixel aspect ratio for wide recordings by multiplying by the ratio of
+ * display aspect ratios, 16/9 (for wide) divided by 4/3 (for normal):
+ *
+ * Wide NTSC: 10/11 * (16/9)/(4/3) = 40/33
+ * Wide PAL: 59/54 * (16/9)/(4/3) = 118/81
+ *
+ * However, the pixel resolution coming out of a DV source does not combine with
+ * the standard pixel aspect ratios to give a proper display aspect ratio. An
+ * image 480 pixels tall, with a 4:3 display aspect ratio, will be 768 pixels
+ * wide. But, if we take the normal PAL aspect ratio of 59/54, and multiply it
+ * with the width of the DV image (720 pixels), we get 786.666..., which is
+ * nonintegral and too wide. The camera is not outputting a 4:3 image.
+ * 
+ * If the video sink for this stream has fixed dimensions (such as for
+ * fullscreen playback, or for a java applet in a web page), you then have two
+ * choices. Either you show the whole image, but pad the image with black
+ * borders on the top and bottom (like watching a widescreen video on a 4:3
+ * device), or you crop the video to the proper ratio. Apparently the latter is
+ * the standard practice.
+ *
+ * For its part, GStreamer is concerned with accuracy and preservation of
+ * information. This element outputs the 720x576 or 720x480 video that it
+ * recieves, noting the proper aspect ratio. This should not be a problem for
+ * windowed applications, which can change size to fit the video. Applications
+ * with fixed size requirements should decide whether to crop or pad. If you
+ * decide to crop, the videocrop element might be useful to you.
+ */
+
 #define NTSC_HEIGHT 480
 #define NTSC_BUFFER 120000
 #define NTSC_FRAMERATE 30000/1001.
@@ -36,15 +73,15 @@
 #define PAL_BUFFER 144000
 #define PAL_FRAMERATE 25.0
 
-#define PAL_NORMAL_PAR_X	16
-#define PAL_NORMAL_PAR_Y	15
-#define PAL_WIDE_PAR_X		64
-#define PAL_WIDE_PAR_Y		45
+#define PAL_NORMAL_PAR_X	59
+#define PAL_NORMAL_PAR_Y	54
+#define PAL_WIDE_PAR_X		118
+#define PAL_WIDE_PAR_Y		81
 
-#define NTSC_NORMAL_PAR_X	80
-#define NTSC_NORMAL_PAR_Y	89
-#define NTSC_WIDE_PAR_X		320
-#define NTSC_WIDE_PAR_Y		267
+#define NTSC_NORMAL_PAR_X	10
+#define NTSC_NORMAL_PAR_Y	11
+#define NTSC_WIDE_PAR_X		40
+#define NTSC_WIDE_PAR_Y		33
 
 /* The ElementDetails structure gives a human-readable description
  * of the plugin, as well as author and version data.
