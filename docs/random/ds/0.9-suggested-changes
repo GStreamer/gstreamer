@@ -22,8 +22,17 @@ API:
 
  - gst_pad_get_pad_template_caps -> gst_pad_get_template_caps()
 
+ - make templates mandatory for pads.
+ 
+ - force pads to use a pad template from the element they belong to.
+
+ - s/PadTemplate/PadFactory/ to describe better what it is and be more in line
+   with the rest of the API?
+ 
  - add ways for autopluggers to manage negotiation of their children.
    This would allow autopluggers to no longer need helper identities.
+   (Though the main reason for identities atm is to be able to connect without
+    plugging - Company)
 
  - remove float support from dparams
 

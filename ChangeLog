@@ -1,3 +1,8 @@
+2004-08-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* docs/random/ds/0.9-suggested-changes:
+	  add notes - mostly about pad templates
+
 2004-08-16  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/GStreamer.vcproj:
