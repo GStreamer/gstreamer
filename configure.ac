@@ -336,6 +336,16 @@ esac],
 [BUILD_EXAMPLES=yes]) dnl Default value
 AM_CONDITIONAL(BUILD_EXAMPLES,      test "x$BUILD_EXAMPLES" = "xyes")
 
+dnl poison destroyed objects
+AC_ARG_ENABLE(poisoning,
+AC_HELP_STRING([--enable-poisoning],[enable poisoning of deallocated objects]),
+[case "${enableval}" in
+  yes) USE_POISONING=yes ;;
+  no)  USE_POISONING=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-poisoning) ;;
+esac], 
+[USE_POISONING=no]) dnl Default value
+
 dnl Next, check for the optional components:
 dnl ========================================
 
@@ -392,6 +402,10 @@ fi
 
 if test "x$USE_FAST_STACK_TRASH" = xyes; then
   AC_DEFINE(USE_FAST_STACK_TRASH, 1, [Define if we should use i586 optimized stack functions])
+fi
+
+if test "x$USE_POISONING" = xyes; then
+  AC_DEFINE(USE_POISONING, 1, [Define if we should poison deallocated memory])
 fi
 
 dnl test if we have pthread_attr_setstack; if not use the older calls

@@ -19,7 +19,7 @@ then
 fi
 . common/gst-autogen.sh
 
-CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-failing-tests'
+CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-failing-tests --enable-poisoning'
 
 autogen_options $@
 
@@ -27,7 +27,7 @@ echo -n "+ check for build tools"
 if test ! -z "$NOCHECK"; then echo ": skipped version checks"; else  echo; fi
 version_check "autoconf" "$AUTOCONF autoconf autoconf-2.54 autoconf-2.53 autoconf-2.52" \
               "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
-version_check "automake" "$AUTOMAKE automake automake-1.7 automake-1.6" \
+version_check "automake" "$AUTOMAKE automake automake-1.7 automake17 automake-1.6" \
               "ftp://ftp.gnu.org/pub/gnu/automake/" 1 6 || DIE=1
 version_check "libtoolize" "libtoolize libtoolize14" \
               "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
