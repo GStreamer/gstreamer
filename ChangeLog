@@ -1,3 +1,8 @@
+2004-06-12  Christophe Fergeau  <teuf@gnome.org>
+
+	* gst/tags/gstvorbistag.c: replaced a g_warning which I added in my
+	  previous commit with GST_DEBUG
+
 2004-06-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
