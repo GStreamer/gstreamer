@@ -491,6 +491,7 @@ examples/queue4/Makefile
 examples/thread/Makefile
 examples/typefind/Makefile
 examples/xml/Makefile
+examples/indexing/Makefile
 tools/Makefile
 docs/Makefile
 docs/devhelp/Makefile
