@@ -5,14 +5,17 @@ gst\-inspect - print info about a GStreamer plugin or element
 .B  gst\-register [OPTION...] [PLUGIN|ELEMENT]
 .SH DESCRIPTION
 .PP
-\fIgst\-inspect\fP is a tool to print out information on the
-available \fIGStreamer\fP plugins, information on a plugin, or
-information on an element.  With no PLUGIN or ELEMENT option it
-will list all plugins and elements.
+\fIgst\-inspect\fP is a tool that prints out information on
+available \fIGStreamer\fP plugins, information about a particular
+plugin, or information about a particular element.  When executed
+with no PLUGIN or ELEMENT argument, \fIgst\-inspect\fP will print
+a list of all plugins and elements.  When executed with a PLUGIN
+or ELEMENT argument, \fIgst\-inspect\fP will print information
+about that plug-in or element.
 .
 .SH OPTIONS
 .l
-\fIgst\-inspect\fP accepts the following options:
+\fIgst\-inspect\fP accepts the following arguments and options:
 .TP 8
 .B  PLUGIN
 Name of a plugin

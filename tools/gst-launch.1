@@ -5,92 +5,141 @@ gst\-launch \- build and run a GStreamer pipeline
 \fBgst\-launch\fR \fI[OPTION...]\fR PIPELINE\-DESCRIPTION
 .SH "DESCRIPTION"
 .LP 
-\fIgst\-launch\fP is a tool that is used to build and run a basic \fIGStreamer\fP pipeline.
+\fIgst\-launch\fP is a tool that builds and runs basic
+\fIGStreamer\fP pipelines.
 
-A simple commandline looks like:
+In simple form, a PIPELINE\-DESCRIPTION is a list of
+elements separated by exclamation marks (!).  Options may be appended to
+elements, in the form "option=value".  A group of elements
+surrounded by curly braces {, } will be executed in a separate thread.
 
- gst\-launch filesrc location=music.mp3 ! mad ! osssink
+Connections between non-consecutive elements are created by specifying
+a element names and pad names immediately before and after the
+exclamation mark, in the form "element0.sinkpad!element1.srcpad".
+The default name given to an element is the name of its class followed by
+an index.  If the element names are omitted, the previous and next
+elements in the PIPELINE-DESCRIPTION will be used.  If the pad names
+are omitted, a default pad of the correct type (source or sink) is
+found on the given element, typically named "src" or "sink".
 
-This plays an mp3 music file music.mp3 using libmad, and:
+See the GStreamer documentation for a complete description of a
+a PIPELINE\-DESCRIPTION.
 
- gst\-launch filesrc location=music.mp3 ! mp3parse ! mpg123 ! osssink
+.SH "EXAMPLES"
 
-Plays and mp3 music file using mpg123
+The examples below assume that you have the correct plug-ins available.
+In general, "osssink" can be substituted with another audio output
+plug-in such as "esdsink", "alsasink", or "artsdsink".  Likewise,
+"xvideosink" can be substituted with "sdlvideosink" or "aasink".
 
-You can also stream files over http:
+.B Audio playback
 
- gst\-launch httpsrc location=http://domain.com/music.mp3 ! mad ! osssink
+Play the mp3 music file "music.mp3" using a libmad-based plug-in and
+output to an OSS device:
 
-And using gnome\-vfs you can do the same with:
+	gst\-launch filesrc location=music.mp3 ! mad ! osssink
 
- gst\-launch gnomevfssrc location=music.mp3 ! mad ! osssink
- gst\-launch gnomevfssrc location=http://domain.com/music.mp3 ! mad ! osssink
+Play an Ogg Vorbis format file:
 
-And too play the same song with gnome\-vfs via smb:
+	gst\-launch filesrc location=music.ogg ! vorbisfile ! osssink
 
- gst\-launch gnomevfssrc location=smb://computer/music.mp3 ! mad ! osssink
+Play an mp3 file or stream retrieved via http:
 
-You can also stream your mpeg 1 system streams from one machine to another using RTP by:
+	gst\-launch httpsrc location=http://domain.com/music.mp3 ! mad ! osssink
+
+Play an mp3 file or stream using GNOME\-VFS:
+
+	gst\-launch gnomevfssrc location=music.mp3 ! mad ! osssink
+
+	gst\-launch gnomevfssrc location=http://domain.com/music.mp3 ! mad ! osssink
+
+Use GNOME\-VFS to play an mp3 file located on an SMB server:
+
+	gst\-launch gnomevfssrc location=smb://computer/music.mp3 ! mad ! osssink
+
+.B Format conversion
+
+Convert an mp3 music file to an Ogg Vorbis file:
+
+	gst\-launch filesrc location=music.mp3 ! mad ! vorbisenc ! filesink location=music.ogg
+
+Alternatively, to convert to the FLAC format, use the command line:
+
+	gst\-launch filesrc location=claptrap.mp3 ! mad ! flacenc ! filesink location=test.flac
+
+.B Other
+
+Plays a .WAV file:
+
+	gst\-launch filesrc location=music.wav ! wavparse ! osssink
+
+Convert a .WAV file into Ogg Vorbis (or mp3) file:
+
+	gst\-launch filesrc location=music.wav ! wavparse ! vorbisenc ! filesink location=music.ogg
+
+	gst\-launch filesrc location=music.wav ! wavparse ! mpegaudio ! filesink location=music.mp3
+
+Alternatively, if you have lame installed (and have the lame plug-in),
+you can substitute lame for mpegaudio in the previous example.  It gives
+better results than mpegaudio.
+
+Rip all tracks from compact disc and convert them into a single mp3 file:
+
+	gst\-launch cdparanoia ! mpegaudio ! filesink location=cd.mp3
+
+Using gst\-inspect, it is possible to discover settings for cdparanoia
+that will tell it to rip individual tracks.
+
+Record sound from your audio input and encode it into an ogg file:
+
+	gst\-launch osssrc ! vorbisenc ! filesink location=input.ogg
+
+.B Video
+
+Display only the video portion of an MPEG-1 video file, outputting to
+an X display window (The "queue" element is necessary to buffer data
+between the threads):
+
+	gst\-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! mpegdemux video_%02d!src { queue ! mpeg2dec ! xvideosink }
+
+Display the video portion of a .vob file (used on DVDs), outputting to
+an SDL window:
+
+	gst\-launch filesrc location=/flflfj.vob ! mpegdemux video_%02d!src { queue ! mpeg2dec ! sdlvideosink }
+
+Play both video and audio portions of an MPEG movie:
+
+	gst\-launch filesrc location=movie.mpg ! mpegdemux video_%02d!src { queue ! mpeg2dec ! sdlvideosink } mpegdemux0.audio_%02d!src { queue ! mad ! osssink }
+
+Play an AVI movie:
+
+	gst\-launch filesrc location=movie.avi ! avidemux video_%02d!src { queue ! windec ! sdlvideosink }
+
+.B Network streaming
+
+An MPEG\-1 system stream can be streamed via RTP from one machine to
+another.  On the receiver, execute:
  
- gst\-launch rtprecv media_type=mpeg1_sys ! mpegdemux video_%02d! { queue ! mpeg2dec ! xvideosink } mpegdemux0.audio_%02d! { queue ! mad ! osssink }
+	gst\-launch rtprecv media_type=mpeg1_sys ! mpegdemux video_%02d!src { queue ! mpeg2dec ! xvideosink } mpegdemux0.audio_%02d!src { queue ! mad ! osssink }
 
-on the receiver end and:
+On the transmitter, execute:
 
- gst\-launch filesrc location=mpeg1system.mpeg ! mpegparse ! rtpsend ip=IPorHostname
+	gst\-launch filesrc location=mpeg1system.mpeg ! mpegparse ! rtpsend ip=IPorHostname
 
-on the transmitter end.
+.B Diagnostic
 
-Here we convert a Mp3 file into an Ogg Vorbis file:
+Generate a null stream and ignore it:
 
- gst\-launch filesrc location=music.mp3 ! mad ! vorbisenc ! disksink location=music.ogg
+	gst\-launch fakesrc ! fakesink
 
-Or converting from mp3 to Flac:
- gst\-launch filesrc location=claptrap.mp3 ! mad ! flacenc ! disksink location=test.flac
+Generate a pure tone to test the audio output:
 
-And then we can play that file with:
+	gst\-launch sinesrc ! osssink
 
- gst\-launch filesrc location=music.ogg ! vorbisdec ! osssink
+Generate a familiar test pattern to test the video output:
 
-Some other useful pipelines are..
-Plays wav files (currently there are no wav encoders):
+	gst\-launch videotestsrc ! xvideosink
 
- gst\-launch filesrc location=music.wav ! parsewav ! osssink
-
-Converts wav files into mp3 and ogg files:
-
- gst\-launch filesrc location=music.wav ! parsewav ! vorbisenc ! disksink location=music.ogg
- gst\-launch filesrc location=music.wav ! parsewav ! mpegaudio ! disksink location=music.mp3
-
-You can also use lame for mp3 encoding if you have it installed, it does a 
-much better job than mpegaudio.
-
-Rips all songs from cd and saves them into a mp3 file:
-
- gst\-launch cdparanoia ! mpegaudio ! disksink location=cd.mp3
-
-You can toy around with gst\-inspect to discover the settings for 
-cdparanoia to rip individual tracks
-
-Record sound from your sound input and encode it into an ogg file:
-
- gst\-launch osssrc ! vorbisenc ! disksink location=input.ogg
-
-gst\-launch not only handles audio but video as well:
-For mpeg video files (here outputing to aasink) :
-
- gst\-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! mpegdemux video_%02d! { queue ! mpeg2dec ! aasink }
-
-For vob files (here outputting image to sdlvideosink): 
- gst\-launch filesrc location=/flflfj.vob ! mpegdemux video_%02d! { queue ! mpeg2dec ! sdlvideosink }
-
-Play a mpeg movie with sound using the sdlvideosink:
- gst\-launch filesrc location=movie.mpg ! mpegdemux video_%02d! { queue ! mpeg2dec ! sdlvideosink } mpegdemux0.audio_%02d! { queue ! mad ! osssink }
-
-Playing a avi movie would be done with something like this:
-gst\-launch filesrc location=movie.avi ! avidemux video_%02d! { queue ! windec ! sdlvideosink }
-
-See other docs, examples, and the source for description on how to
-create a PIPELINE\-DESCRIPTION.
 .
 .SH "OPTIONS"
 .l
