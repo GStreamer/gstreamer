@@ -1,4 +1,5 @@
 #include <gst/gst.h>
+#include <gst/control/control.h>
 #include <string.h>
 
 static void 
@@ -367,14 +368,43 @@ print_element_info (GstElementFactory *factory)
 
     printf("  %-40.40s: ",param->name);
     switch (G_VALUE_TYPE (&value)) {
-      case G_TYPE_STRING: printf("String (Default \"%s\")", g_value_get_string (&value));break;
-      case G_TYPE_BOOLEAN: printf("Boolean (Default %s)", (g_value_get_boolean (&value)?"true":"false"));break;
-      case G_TYPE_ULONG: printf("Unsigned Long (Default %lu)", g_value_get_ulong (&value));break;
-      case G_TYPE_LONG: printf("Long (Default %ld)", g_value_get_long (&value));break;
-      case G_TYPE_UINT: printf("Unsigned Integer (Default %u)", g_value_get_uint (&value));break;
-      case G_TYPE_INT: printf("Integer (Default %d)", g_value_get_int (&value));break;
-      case G_TYPE_FLOAT: printf("Float (Default %f)", g_value_get_float (&value));break;
-      case G_TYPE_DOUBLE: printf("Double (Default %f)", g_value_get_double (&value));break;
+      case G_TYPE_STRING: 
+        printf("String (Default \"%s\")", g_value_get_string (&value));
+        break;
+      case G_TYPE_POINTER: 
+        printf("Pointer (Default \"%p\")", g_value_get_pointer (&value));
+        break;
+      case G_TYPE_BOOLEAN: 
+        printf("Boolean (Default %s)", (g_value_get_boolean (&value)?"true":"false"));
+        break;
+      case G_TYPE_ULONG: 
+        printf("Unsigned Long (Default %lu, Range %lu -> %lu)", g_value_get_ulong (&value), 
+        ((GParamSpecULong*)param)->minimum, ((GParamSpecULong*)param)->maximum);
+        break;
+      case G_TYPE_LONG: 
+        printf("Long (Default %ld, Range %ld -> %ld)", g_value_get_long (&value), 
+        ((GParamSpecLong*)param)->minimum, ((GParamSpecLong*)param)->maximum);
+        break;
+      case G_TYPE_UINT: 
+        printf("Unsigned Integer (Default %u, Range %u -> %u)", g_value_get_uint (&value), 
+        ((GParamSpecUInt*)param)->minimum, ((GParamSpecUInt*)param)->maximum);
+        break;
+      case G_TYPE_INT: 
+        printf("Integer (Default %d, Range %d -> %d)", g_value_get_int (&value), 
+        ((GParamSpecInt*)param)->minimum, ((GParamSpecInt*)param)->maximum);
+        break;
+      case G_TYPE_INT64: 
+        printf("64 Bit Integer (Default %lld, Range %lld -> %lld)", g_value_get_int64 (&value), 
+        ((GParamSpecInt64*)param)->minimum, ((GParamSpecInt64*)param)->maximum);
+        break;
+      case G_TYPE_FLOAT: 
+        printf("Float (Default %f, Range %f -> %f)", g_value_get_float (&value), 
+        ((GParamSpecFloat*)param)->minimum, ((GParamSpecFloat*)param)->maximum);
+        break;
+      case G_TYPE_DOUBLE: 
+        printf("Double (Default %f, Range %f -> %f)", g_value_get_double (&value), 
+        ((GParamSpecDouble*)param)->minimum, ((GParamSpecDouble*)param)->maximum);
+        break;
       default:
         if (param->value_type == GST_TYPE_FILENAME)
           printf("Filename");
@@ -403,6 +433,49 @@ print_element_info (GstElementFactory *factory)
   */
   if (num_properties == 0) g_print ("  none\n");
 
+  /* Dynamic Parameters block */
+  {
+    GstDParamManager* dpman;
+    GParamSpec** specs;
+    gint x;
+    
+    printf("\nDynamic Parameters:\n");
+    if((dpman = gst_dpman_get_manager (element))){
+      specs = gst_dpman_list_dparam_specs(dpman);
+      for (x=0; specs[x] != NULL; x++){
+        printf("  %-40.40s: ",g_param_spec_get_name(specs[x]));
+        
+        switch (G_PARAM_SPEC_VALUE_TYPE (specs[x])) {
+          case G_TYPE_INT64: 
+            printf("64 Bit Integer (Default %lld, Range %lld -> %lld)", 
+            ((GParamSpecInt64*)specs[x])->default_value,
+            ((GParamSpecInt64*)specs[x])->minimum, 
+            ((GParamSpecInt64*)specs[x])->maximum);
+            break;
+          case G_TYPE_INT: 
+            printf("Integer (Default %d, Range %d -> %d)", 
+            ((GParamSpecInt*)specs[x])->default_value,
+            ((GParamSpecInt*)specs[x])->minimum, 
+            ((GParamSpecInt*)specs[x])->maximum);
+            break;
+          case G_TYPE_FLOAT: 
+            printf("Float (Default %f, Range %f -> %f)", 
+            ((GParamSpecFloat*)specs[x])->default_value,
+            ((GParamSpecFloat*)specs[x])->minimum, 
+            ((GParamSpecFloat*)specs[x])->maximum);
+            break;
+          default: printf("unknown %ld", G_PARAM_SPEC_VALUE_TYPE (specs[x]));
+        }
+        printf("\n");
+      }
+      g_free(specs);
+    }
+    else {
+      g_print ("  none\n");
+    }
+  }
+
+  /* Signals Block */  
   {
     guint *signals;
     guint nsignals;
@@ -479,19 +552,19 @@ print_element_list (void)
         GstElementFactory *factory;
 
         factory = GST_ELEMENT_FACTORY (feature);
-        printf("%s:  %s: %s\n",plugin->name, GST_OBJECT_NAME (factory) ,factory->details->longname);
+        printf("%s element:  %s: %s\n",plugin->name, GST_OBJECT_NAME (factory) ,factory->details->longname);
       }
       else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
         GstAutoplugFactory *factory;
 
         factory = GST_AUTOPLUG_FACTORY (feature);
-        printf("%s:  %s: %s\n", plugin->name, GST_OBJECT_NAME (factory), factory->longdesc);
+        printf("%s autoplug:  %s: %s\n", plugin->name, GST_OBJECT_NAME (factory), factory->longdesc);
       }
       else if (GST_IS_TYPE_FACTORY (feature)) {
         GstTypeFactory *factory;
 
         factory = GST_TYPE_FACTORY (feature);
-        printf("%s:  %s: %s\n", plugin->name, factory->mime, factory->exts);
+        printf("%s type:  %s: %s\n", plugin->name, factory->mime, factory->exts);
 
         if (factory->typefindfunc)
           printf("      Has typefind function: %s\n",GST_DEBUG_FUNCPTR_NAME(factory->typefindfunc));
@@ -500,7 +573,7 @@ print_element_list (void)
         GstSchedulerFactory *factory;
 
         factory = GST_SCHEDULER_FACTORY (feature);
-        printf("%s:  %s: %s\n", plugin->name, GST_OBJECT_NAME (factory), factory->longdesc);
+        printf("%s scheduler:  %s: %s\n", plugin->name, GST_OBJECT_NAME (factory), factory->longdesc);
       }
       else {
         printf("%s:  %s (%s)\n", plugin->name, gst_object_get_name (GST_OBJECT (feature)), 
@@ -577,7 +650,8 @@ main (int argc, char *argv[])
   gchar *so;
 
   gst_init(&argc,&argv);
-
+  gst_control_init(&argc,&argv);
+  
   /* if no arguments, print out list of elements */
   if (argc == 1) {
     print_element_list();
