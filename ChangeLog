@@ -1,5 +1,10 @@
 2004-10-04  Wim Taymans  <wim@fluendo.com>
 
+	* configure.ac:
+	configure update for libmng.
+
+2004-10-04  Wim Taymans  <wim@fluendo.com>
+
 	* ext/libmng/Makefile.am:
 	* ext/libmng/gstmng.c: (plugin_init):
 	* ext/libmng/gstmng.h:
