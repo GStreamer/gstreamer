@@ -38,8 +38,9 @@ extern "C" {
 
 typedef struct _GstBufferPool GstBufferPool;
 
-typedef GstBuffer*	(*GstBufferPoolCreateFunction) 	(GstBufferPool *pool, gpointer user_data);
-typedef void 		(*GstBufferPoolDestroyFunction) (GstBufferPool *pool, GstBuffer *buffer, gpointer user_data);
+typedef GstBuffer*	(*GstBufferPoolBufferCreateFunction)  (GstBufferPool *pool, guint64 location, gint size, gpointer user_data);
+typedef void 		(*GstBufferPoolBufferDestroyFunction) (GstBufferPool *pool, GstBuffer *buffer, gpointer user_data);
+typedef void 		(*GstBufferPoolPoolDestroyHook)       (GstBufferPool *pool, gpointer user_data);
 
 struct _GstBufferPool {
   /* locking */
@@ -55,13 +56,17 @@ struct _GstBufferPool {
 #endif
 
   /* will be called when a new buffer is to be created */
-  GstBufferPoolCreateFunction new_buffer;
+  GstBufferPoolBufferCreateFunction new_buffer;
   /* user data to pass with the new_buffer function */
-  gpointer new_user_data;
+  gpointer new_buffer_user_data;
 
-  gpointer destroy_user_data;
-  GstBufferPoolDestroyFunction destroy_buffer;
+  GstBufferPoolBufferDestroyFunction destroy_buffer;
+  gpointer destroy_buffer_user_data;
 
+  GstBufferPoolPoolDestroyHook destroy_pool_hook;
+  gpointer destroy_pool_user_data;
+  
+  gpointer private_data;
 };
 
 void _gst_buffer_pool_initialize (void);
@@ -69,25 +74,24 @@ void _gst_buffer_pool_initialize (void);
 /* creating a new buffer pool from scratch */
 GstBufferPool*		gst_buffer_pool_new			(void);
 
-/* creating a buffer from the pool */
-GstBuffer*		gst_buffer_pool_new_buffer		(GstBufferPool *pool);
-void 			gst_buffer_pool_destroy_buffer		(GstBufferPool *pool, GstBuffer *buffer);
-
 /* refcounting */
 void 		gst_buffer_pool_ref			(GstBufferPool *pool);
 void 		gst_buffer_pool_ref_by_count		(GstBufferPool *pool, int count);
-void 		gst_buffer_pool_unref		(GstBufferPool *buffer);
+void 		gst_buffer_pool_unref			(GstBufferPool *buffer);
 
 /* setting create and destroy functions */
-void 			gst_buffer_pool_set_create_function	(GstBufferPool *pool, 
-								 GstBufferPoolCreateFunction create, 
-								 gpointer user_data);
-void 			gst_buffer_pool_set_destroy_function	(GstBufferPool *pool, 
-								 GstBufferPoolDestroyFunction destroy, 
-								 gpointer user_data);
+void 		gst_buffer_pool_set_buffer_create_function	(GstBufferPool *pool, 
+                                                                 GstBufferPoolBufferCreateFunction create, 
+                                                                 gpointer user_data);
+void 		gst_buffer_pool_set_buffer_destroy_function	(GstBufferPool *pool, 
+                                                                 GstBufferPoolBufferDestroyFunction destroy, 
+                                                                 gpointer user_data);
+void 		gst_buffer_pool_set_pool_destroy_hook		(GstBufferPool *pool, 
+                                                                 GstBufferPoolPoolDestroyHook destroy, 
+                                                                 gpointer user_data);
 
 /* destroying the buffer pool */
-void 			gst_buffer_pool_destroy			(GstBufferPool *pool);
+void 		gst_buffer_pool_destroy			(GstBufferPool *pool);
 
 /* a default buffer pool implementation */
 GstBufferPool* gst_buffer_pool_get_default (GstBufferPool *oldpool, guint buffer_size, guint pool_size);

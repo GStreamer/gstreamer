@@ -135,7 +135,7 @@ struct _GstBuffer {
 void 		_gst_buffer_initialize		(void);
 /* creating a new buffer from scratch */
 GstBuffer*	gst_buffer_new			(void);
-GstBuffer*	gst_buffer_new_from_pool	(GstBufferPool *pool);
+GstBuffer*	gst_buffer_new_from_pool 	(GstBufferPool *pool, guint64 location, gint size);
 
 /* creating a subbuffer */
 GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint32 offset, guint32 size);
