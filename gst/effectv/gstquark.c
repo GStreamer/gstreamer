@@ -244,8 +244,8 @@ gst_quarktv_chain (GstPad * pad, GstData * _data)
 
   outbuf = gst_buffer_new ();
   GST_BUFFER_SIZE (outbuf) = area * sizeof (guint32);
-  dest = (guint32 *) GST_BUFFER_DATA (outbuf) =
-      g_malloc (GST_BUFFER_SIZE (outbuf));
+  GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
+  dest = (guint32 *) GST_BUFFER_DATA (outbuf);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
 
   if (filter->planetable[filter->current_plane])
