@@ -174,7 +174,11 @@ gst_videotestsrc_set_clock (GstElement *element, GstClock *clock)
 
   v = GST_VIDEOTESTSRC (element);
 
+#if GST_VERSION_MINOR > 6
   gst_object_replace ((GstObject **)&v->clock, (GstObject *)clock);
+#else
+  gst_object_swap ((GstObject **)&v->clock, (GstObject *)clock);
+#endif
 }
 
 static GstPadLinkReturn
@@ -190,7 +194,7 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
     return GST_PAD_LINK_DELAYED;
   }
 
-  printf ("videotestsrc: using fourcc element %p %s\n",
+  GST_DEBUG (0,"videotestsrc: using fourcc element %p %s\n",
 	videotestsrc->fourcc, videotestsrc->fourcc->name);
 
   gst_caps_get_int (caps, "width", &videotestsrc->width);
@@ -320,8 +324,7 @@ gst_videotestsrc_get (GstPad * pad)
   if (videotestsrc->pool) {
     buf = gst_buffer_new_from_pool (videotestsrc->pool, 0, 0);
     /* if the buffer we get is too small, make our own */
-    if (GST_BUFFER_SIZE (buf) < newsize)
-    {
+    if (buf && GST_BUFFER_SIZE (buf) < newsize){
       gst_buffer_unref (buf);
       buf = NULL;
     }
@@ -358,7 +361,7 @@ gst_videotestsrc_set_pattern (GstVideotestsrc *src, int pattern_type)
 {
   src->type = pattern_type;
 
-  g_print("setting pattern to %d\n",pattern_type);
+  GST_DEBUG (0,"setting pattern to %d\n",pattern_type);
   switch(pattern_type){
     case GST_VIDEOTESTSRC_SMPTE:
       src->make_image = gst_videotestsrc_smpte;
@@ -379,6 +382,7 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * v
 			       GParamSpec * pspec)
 {
   GstVideotestsrc *src;
+  const char *format;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VIDEOTESTSRC (object));
@@ -393,8 +397,13 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * v
       src->height = g_value_get_int (value);
       break;
     case ARG_FOURCC:
-      src->forced_format = g_strdup(g_value_get_string (value));
-      printf ("forcing FOURCC to \"%s\"\n", src->forced_format);
+      format = g_value_get_string (value);
+      if(paintrect_find_name (format) != NULL){
+        src->forced_format = g_strdup(format);
+        GST_DEBUG (0,"forcing format to \"%s\"\n", format);
+      }else{
+        GST_DEBUG (0,"unknown format \"%s\"\n", format);
+      }
       break;
     case ARG_RATE:
       src->rate = g_value_get_int (value);
@@ -425,8 +434,7 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value, 
       g_value_set_int (value, src->height);
       break;
     case ARG_FOURCC:
-      /* FIXME */
-      /* g_value_set_int (value, src->forced_format); */
+      g_value_set_string (value, src->forced_format);
       break;
     case ARG_RATE:
       g_value_set_int (value, src->rate);

@@ -26,18 +26,14 @@
 #include <string.h>
 #include <stdlib.h>
 
-struct fourcc_list_struct * paintrect_find_fourcc (int find_fourcc);
-struct fourcc_list_struct * paintrect_find_name (char *name);
-struct fourcc_list_struct *paintinfo_find_by_caps(GstCaps *caps);
-GstCaps *paint_get_caps(struct fourcc_list_struct *format);
 
-
-
+#if 0
 static void
 gst_videotestsrc_setup (GstVideotestsrc * v)
 {
 
 }
+#endif
 
 static unsigned char
 random_char (void)
@@ -49,6 +45,7 @@ random_char (void)
   return (state >> 16);
 }
 
+#if 0
 static void
 random_chars (unsigned char *dest, int nbytes)
 {
@@ -61,6 +58,7 @@ random_chars (unsigned char *dest, int nbytes)
     dest[i] = (state >> 16);
   }
 }
+#endif
 
 static void
 memset_str2 (unsigned char *dest, unsigned char val, int n)
@@ -95,6 +93,7 @@ memset_str4 (unsigned char *dest, unsigned char val, int n)
   }
 }
 
+#if 0
 static void
 paint_rect_random (unsigned char *dest, int stride, int x, int y, int w, int h)
 {
@@ -106,6 +105,7 @@ paint_rect_random (unsigned char *dest, int stride, int x, int y, int w, int h)
     d += stride;
   }
 }
+#endif
 
 #if 0
 static void
@@ -121,6 +121,7 @@ paint_rect (unsigned char *dest, int stride, int x, int y, int w, int h, unsigne
 }
 #endif
 
+#if 0
 static void
 paint_rect_s2 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char col)
 {
@@ -137,7 +138,9 @@ paint_rect_s2 (unsigned char *dest, int stride, int x, int y, int w, int h, unsi
     d += stride;
   }
 }
+#endif
 
+#if 0
 static void
 paint_rect2 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char *col)
 {
@@ -154,6 +157,9 @@ paint_rect2 (unsigned char *dest, int stride, int x, int y, int w, int h, unsign
     d += stride;
   }
 }
+#endif
+
+#if 0
 static void
 paint_rect3 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char *col)
 {
@@ -171,6 +177,9 @@ paint_rect3 (unsigned char *dest, int stride, int x, int y, int w, int h, unsign
     d += stride;
   }
 }
+#endif
+
+#if 0
 static void
 paint_rect4 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char *col)
 {
@@ -189,7 +198,9 @@ paint_rect4 (unsigned char *dest, int stride, int x, int y, int w, int h, unsign
     d += stride;
   }
 }
+#endif
 
+#if 0
 static void
 paint_rect_s4 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char col)
 {
@@ -206,6 +217,7 @@ paint_rect_s4 (unsigned char *dest, int stride, int x, int y, int w, int h, unsi
     d += stride;
   }
 }
+#endif
 
 enum {
 	COLOR_WHITE = 0,
@@ -405,7 +417,7 @@ struct fourcc_list_struct * paintrect_find_fourcc (int find_fourcc)
   return NULL;
 }
 
-struct fourcc_list_struct * paintrect_find_name (char *name)
+struct fourcc_list_struct * paintrect_find_name (const char *name)
 {
   int i;
 
@@ -426,14 +438,55 @@ GstCaps *paint_get_caps(struct fourcc_list_struct *format)
   fourcc = GST_MAKE_FOURCC (format->fourcc[0], format->fourcc[1], format->fourcc[2], format->fourcc[3]);
 
   if(format->ext_caps){
+#if GST_VERSION_MINOR > 6
     caps = GST_CAPS_NEW ("videotestsrc_filter",
 			 "video/raw",
 			 "format", GST_PROPS_FOURCC (fourcc),
   			 "bpp", GST_PROPS_INT(format->bitspp),
+			 "endianness", GST_PROPS_INT(G_BIG_ENDIAN),
   			 "depth", GST_PROPS_INT(format->depth),
   			 "red_mask", GST_PROPS_INT(format->red_mask),
   			 "green_mask", GST_PROPS_INT(format->green_mask),
   			 "blue_mask", GST_PROPS_INT(format->blue_mask));
+#else
+    guint32 red_mask;
+    guint32 green_mask;
+    guint32 blue_mask;
+    guint32 endianness;
+
+    if(format->bitspp==16){
+	    endianness = G_BYTE_ORDER;
+	    red_mask = format->red_mask;
+	    green_mask = format->green_mask;
+	    blue_mask = format->blue_mask;
+    }else if(format->bitspp==24){
+	    endianness = G_BYTE_ORDER;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+	    red_mask = GUINT32_SWAP_LE_BE(format->red_mask)>>8;
+	    green_mask = GUINT32_SWAP_LE_BE(format->green_mask)>>8;
+	    blue_mask = GUINT32_SWAP_LE_BE(format->blue_mask)>>8;
+#else
+	    red_mask = format->red_mask;
+	    green_mask = format->green_mask;
+	    blue_mask = format->blue_mask;
+#endif
+    }else{
+	    endianness = G_BYTE_ORDER;
+	    red_mask = GUINT32_FROM_BE(format->red_mask);
+	    green_mask = GUINT32_FROM_BE(format->green_mask);
+	    blue_mask = GUINT32_FROM_BE(format->blue_mask);
+    }
+
+    caps = GST_CAPS_NEW ("videotestsrc_filter",
+			 "video/raw",
+			 "format", GST_PROPS_FOURCC (fourcc),
+  			 "bpp", GST_PROPS_INT(format->bitspp),
+			 "endianness", GST_PROPS_INT(endianness),
+  			 "depth", GST_PROPS_INT(format->depth),
+  			 "red_mask", GST_PROPS_INT(red_mask),
+  			 "green_mask", GST_PROPS_INT(green_mask),
+  			 "blue_mask", GST_PROPS_INT(blue_mask));
+#endif
   }else{
     caps = GST_CAPS_NEW ("videotestsrc_filter",
 			 "video/raw",
@@ -821,8 +874,13 @@ paint_hline_RGB565 (paintinfo * p, int x, int y, int w)
   a = (p->color->R&0xf8) | (p->color->G>>5);
   b = ((p->color->G<<3)&0xe0) | (p->color->B>>3);
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  memset_str2 (p->yp + offset + x * 2 + 0, b, w);
+  memset_str2 (p->yp + offset + x * 2 + 1, a, w);
+#else
   memset_str2 (p->yp + offset + x * 2 + 0, a, w);
   memset_str2 (p->yp + offset + x * 2 + 1, b, w);
+#endif
 }
 
 static void
@@ -841,8 +899,13 @@ paint_hline_xRGB1555 (paintinfo * p, int x, int y, int w)
   a = ((p->color->R>>1)&0x7c) | (p->color->G>>6);
   b = ((p->color->G<<2)&0xe0) | (p->color->B>>3);
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  memset_str2 (p->yp + offset + x * 2 + 0, b, w);
+  memset_str2 (p->yp + offset + x * 2 + 1, a, w);
+#else
   memset_str2 (p->yp + offset + x * 2 + 0, a, w);
   memset_str2 (p->yp + offset + x * 2 + 1, b, w);
+#endif
 }
 
 #if 0
