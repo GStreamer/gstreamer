@@ -219,6 +219,30 @@ gst_caps_ref (GstCaps *caps)
 }
 
 /**
+ * gst_caps_copy_1:
+ * @caps: the caps to copy
+ *
+ * Copies the caps, not copying any chained caps.
+ *
+ * Returns: a copy of the GstCaps structure.
+ */
+GstCaps*
+gst_caps_copy_1 (GstCaps *caps)
+{
+  GstCaps *newcaps;
+  
+  if (!caps)
+    return NULL;
+
+  newcaps = gst_caps_new_id (
+		  caps->name,
+		  caps->id,
+		  gst_props_copy (caps->properties));
+
+  return newcaps;
+}
+
+/**
  * gst_caps_copy:
  * @caps: the caps to copy
  *
@@ -234,10 +258,7 @@ gst_caps_copy (GstCaps *caps)
   while (caps) {
     GstCaps *newcaps;
 
-    newcaps = gst_caps_new_id (
-		  caps->name,
-		  caps->id,
-		  gst_props_copy (caps->properties));
+    newcaps = gst_caps_copy_1 (caps);
 
     if (new == NULL) {
       new = walk = newcaps;

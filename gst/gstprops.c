@@ -964,6 +964,8 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       switch (entry2->propstype) {
 	/* t   <--->   t */
         case GST_PROPS_STRING_ID:
+          GST_DEBUG(GST_CAT_PROPERTIES,"\"%s\" <--> \"%s\" ?\n",
+			  entry2->data.string_data.string, entry1->data.string_data.string);
           return (!strcmp (entry2->data.string_data.string, entry1->data.string_data.string));
       }
   }
@@ -1294,7 +1296,7 @@ end:
   else if (props2list)
     leftovers = props2list;
   else 
-    goto finish;
+    leftovers = NULL;
 
   while (leftovers) {
     GstPropsEntry *entry;
@@ -1307,7 +1309,6 @@ end:
     leftovers = g_list_next (leftovers);
   }
 
-finish:
   intersection->properties = g_list_reverse (intersection->properties);
 
   return intersection;

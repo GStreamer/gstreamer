@@ -390,8 +390,9 @@ gboolean                gst_pad_connect_filtered       		(GstPad *srcpad, GstPad
 void			gst_pad_disconnect			(GstPad *srcpad, GstPad *sinkpad);
 
 GstPadConnectReturn     gst_pad_proxy_connect          		(GstPad *pad, GstCaps *caps);
-gboolean		gst_pad_reconnect_filtered		(GstPad *pad, GstCaps *filtercaps);
-gboolean		gst_pad_try_reconnect_filtered		(GstPad *pad, GstCaps *filtercaps);
+gboolean		gst_pad_reconnect_filtered		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
+gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);
+gboolean		gst_pad_try_reconnect_filtered		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
 GstCaps*	     	gst_pad_get_allowed_caps       		(GstPad *pad);
 gboolean	     	gst_pad_recalc_allowed_caps    		(GstPad *pad);
 

@@ -88,6 +88,7 @@ void		gst_caps_destroy			(GstCaps *caps);
 void		gst_caps_debug				(GstCaps *caps);
 
 GstCaps*	gst_caps_copy				(GstCaps *caps);
+GstCaps*	gst_caps_copy_1				(GstCaps *caps);
 GstCaps*	gst_caps_copy_on_write			(GstCaps *caps);
 
 const gchar*	gst_caps_get_name			(GstCaps *caps);
@@ -109,7 +110,9 @@ GstProps*	gst_caps_get_props			(GstCaps *caps);
 #define		gst_caps_get_fourcc_int(caps, name)	gst_props_get_fourcc_int ((caps)->properties, name)
 #define		gst_caps_get_boolean(caps, name)	gst_props_get_boolean ((caps)->properties, name)
 #define		gst_caps_get_string(caps, name)		gst_props_get_string ((caps)->properties, name)
+
 #define		gst_caps_has_property(caps, name)	gst_props_has_property ((caps)->properties, name)
+#define		gst_caps_has_fixed_property(caps, name)	gst_props_has_fixed_property ((caps)->properties, name)
 
 GstCaps*	gst_caps_get_by_name			(GstCaps *caps, const gchar *name);
 

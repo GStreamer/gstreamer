@@ -387,7 +387,6 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
  * @pad: ghost pad to remove
  *
  * removes a ghost pad from an element
- *
  */
 void
 gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
@@ -1005,6 +1004,34 @@ gst_element_set_state (GstElement *element, GstElementState state)
   return return_val;
 }
 
+static gboolean
+gst_element_negotiate_pads (GstElement *element)
+{
+  GList *pads = GST_ELEMENT_PADS (element);
+
+  while (pads) {
+    GstRealPad *srcpad = GST_PAD_REALIZE (pads->data);
+
+    if (GST_PAD_IS_CONNECTED (srcpad) && !GST_PAD_CAPS (srcpad)) {
+      GstRealPad *sinkpad = GST_RPAD_PEER (GST_PAD_REALIZE (srcpad));
+
+      if (!GST_PAD_IS_SRC (srcpad)) {
+        GstRealPad *temp;
+
+	temp = srcpad;
+	srcpad = sinkpad;
+	sinkpad = temp;
+      }
+
+      if (!gst_pad_perform_negotiate (GST_PAD (srcpad), GST_PAD (sinkpad)))
+	return FALSE;
+    }
+    pads = g_list_next (pads);
+  }
+
+  return TRUE;
+}
+
 static GstElementStateReturn
 gst_element_change_state (GstElement *element)
 {
@@ -1025,6 +1052,12 @@ gst_element_change_state (GstElement *element)
                      gst_element_statename (GST_STATE_PENDING (element)),
 		     GST_STATE_TRANSITION (element));
 
+  /*"we get here after the plugin went to the ready state */
+  if (GST_STATE_TRANSITION (element) == GST_STATE_NULL_TO_READY) {
+    if (!gst_element_negotiate_pads (element)) 
+      return GST_STATE_FAILURE;
+  }
+
   /* tell the scheduler if we have one */
   if (element->sched) {
     if (gst_scheduler_state_transition (element->sched, element, GST_STATE_TRANSITION (element)) 
@@ -1035,6 +1068,9 @@ gst_element_change_state (GstElement *element)
 
   GST_STATE (element) = GST_STATE_PENDING (element);
   GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
+
+  g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
+		  0, old_state, GST_STATE (element));
 
   parent = GST_ELEMENT_PARENT (element);
 
