@@ -1,6 +1,13 @@
-maybe we should be doing releases on branches from the trunk so that the package
-version in CVS can always be date-generated and core hacking isn't discouraged
-during the release cycle.
+Release should be done on branches from the trunk so that the package version
+in CVS can always be date-generated and core hacking isn't discouraged during
+the release cycle.
+
+Note: commands used to make a new branch are as follows:
+(for example, for version 0.3.3)
+
+cvs tag BRANCH-RELEASE-0_3_3-ROOT
+cvs tag -b BRANCH-RELEASE-0_3_3
+cvs update -r BRANCH-RELEASE-0_3_3
 
 Release TODO
 ------------
