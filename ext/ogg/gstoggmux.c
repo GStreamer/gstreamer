@@ -673,6 +673,6 @@ gst_ogg_mux_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_ogg_mux_debug, "oggmux", 0, "ogg muxer");
 
-  return gst_element_register (plugin, "oggmux", GST_RANK_PRIMARY,
+  return gst_element_register (plugin, "oggmux", GST_RANK_NONE,
       GST_TYPE_OGG_MUX);
 }

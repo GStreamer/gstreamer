@@ -75,7 +75,12 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN "; "
-        GST_VIDEO_CAPS_BGR "; " GST_VIDEO_CAPS_RGB_16)
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+        GST_VIDEO_CAPS_RGB "; "
+#else
+        GST_VIDEO_CAPS_BGR "; "
+#endif
+        GST_VIDEO_CAPS_RGB_16)
     );
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -214,7 +219,11 @@ gst_visual_getcaps (GstPad * pad)
   }
   if (visual_actor_depth_is_supported (visual->actor,
           VISUAL_VIDEO_CONTEXT_24BIT) == 1) {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_RGB));
+#else
     gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_BGR));
+#endif
   }
   if (visual_actor_depth_is_supported (visual->actor,
           VISUAL_VIDEO_CONTEXT_16BIT) == 1) {
