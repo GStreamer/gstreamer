@@ -111,8 +111,6 @@ gst_dptest_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_set_details (element_class, &dptest_details);
-
-  g_print ("got here %d\n", __LINE__);
 }
 
 static void
@@ -177,7 +175,6 @@ gst_dptest_change_state (GstElement * element)
   GstDpTest *dptest;
 
   g_return_val_if_fail (GST_IS_DPTEST (element), GST_STATE_FAILURE);
-  g_print ("changing state\n");
 
   dptest = GST_DPTEST (element);
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
@@ -190,17 +187,21 @@ static void
 gst_dptest_chain (GstPad * pad, GstData * data)
 {
   GstDpTest *dptest;
-  gint frame_countdown;
+  gint frame_count;
 
   dptest = GST_DPTEST (gst_pad_get_parent (pad));
   g_assert (dptest);
+  g_print ("dp chain\n");
 
   /* we're using a made up buffer size of 64 and a timestamp of zero */
-  frame_countdown = GST_DPMAN_PREPROCESS (dptest->dpman, 64, 0LL);
+  g_print ("preprocess\n");
+  frame_count = 0;
+  GST_DPMAN_PREPROCESS (dptest->dpman, 64, 0LL);
 
-  while (GST_DPMAN_PROCESS (dptest->dpman, frame_countdown));
-
-  g_print ("dp chain\n");
+  while (GST_DPMAN_PROCESS (dptest->dpman, frame_count)) {
+    ++frame_count;
+  }
+  g_print ("dp chain done\n");
 }
 
 gboolean
@@ -235,8 +236,6 @@ main (int argc, char *argv[])
   GstDParam *dp_float1;
   GValue *dp_float1_value;
 
-  alarm (10);
-
   gst_init (&argc, &argv);
   gst_control_init (&argc, &argv);
 
@@ -261,10 +260,10 @@ main (int argc, char *argv[])
   gst_bin_add (GST_BIN (pipeline), testelement);
   gst_bin_add (GST_BIN (pipeline), sink);
 
-  g_print ("playing pipeline\n");
 
   g_object_set (G_OBJECT (src), "num_buffers", 1, NULL);
 
+  g_print ("setting pipeline to play\n");
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
   /* test that dparam manager is accessable */

@@ -1,5 +1,18 @@
 2004-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* libs/gst/control/control.c:
+	* libs/gst/control/dparam.c:
+	* libs/gst/control/dparam_smooth.c: (gst_dpsmooth_get_type):
+	* libs/gst/control/dparammanager.c:
+	* libs/gst/control/dparammanager.h:
+	* testsuite/dynparams/Makefile.am:
+	* testsuite/dynparams/dparamstest.c: (gst_dptest_base_init),
+	(gst_dptest_change_state), (gst_dptest_chain), (main):
+	  fix testcase for dparams
+	  add debugging category
+
+2004-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/Rules:
 	  change path
 

@@ -31,6 +31,7 @@
 #include "dparammanager.h"
 
 GST_DEBUG_CATEGORY_EXTERN (_gst_control_debug);
+#define GST_CAT_DEFAULT _gst_control_debug
 
 static void gst_dpsmooth_class_init (GstDParamSmoothClass * klass);
 static void gst_dpsmooth_init (GstDParamSmooth * dparam);

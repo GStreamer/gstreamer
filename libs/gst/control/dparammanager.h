@@ -73,14 +73,14 @@ struct _GstDParamManager {
         /* mode state */
 	GstDPMMode* mode;
 	gchar *mode_name;
-	
-	guint frames_to_process;  /* the number of frames in the current buffer */
-	guint next_update_frame;  /* the frame when the next update is required */
+
+	guint frames_to_process;  /* number of frames in the current buffer */
+	guint next_update_frame;  /* frame when the next update is required */
 
 	/* the following data is only used for async mode */
 	guint rate;               /* the frame/sample rate - */
-	guint rate_ratio;         /* number used to convert between samples and time */
-	guint num_frames;         /* the number of frames in the current buffer */
+	guint rate_ratio;         /* used to convert between samples and time */
+	guint num_frames;         /* number of frames in the current buffer */
 
 	gint64 time_buffer_ends;
 	gint64 time_buffer_starts;
@@ -106,11 +106,11 @@ struct _GstDParamWrapper {
 	GstDParam *dparam;
 
 	guint next_update_frame;
-	
+
 	GstDPMUpdateMethod update_method;
 	gpointer update_data;
 	GstDPMUpdateFunction update_func;
-	
+
 	gchar *unit_name;
 	GstDParamUpdateInfo update_info;
 };
@@ -131,7 +131,8 @@ struct _GstDParamAsyncToUpdate {
 
 #define GST_DPMAN_PROCESS(dpman, frame_count) \
                          (frame_count < dpman->next_update_frame || \
-                         (dpman->next_update_frame < dpman->num_frames && (GST_DPMAN_PROCESSFUNC(dpman)(dpman, frame_count))))
+                         (dpman->next_update_frame < dpman->num_frames \
+                          && (GST_DPMAN_PROCESSFUNC(dpman)(dpman, frame_count))))
 
 #define GST_DPMAN_CALLBACK_UPDATE(dpwrap, value) ((dpwrap->update_func)(value, dpwrap->update_data))
 

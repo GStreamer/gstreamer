@@ -24,6 +24,7 @@
 #include "control.h"
 
 GST_DEBUG_CATEGORY (_gst_control_debug);
+#define GST_CAT_DEFAULT _gst_control_debug
 
 void
 gst_control_init (int *argc, char **argv[])

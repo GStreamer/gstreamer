@@ -32,6 +32,7 @@
 #include <gst/gstmarshal.h>
 
 GST_DEBUG_CATEGORY_EXTERN (_gst_control_debug);
+#define GST_CAT_DEFAULT _gst_control_debug
 
 static void gst_dparam_class_init (GstDParamClass * klass);
 static void gst_dparam_init (GstDParam * dparam);

@@ -1,7 +1,7 @@
 include ../Rules
 
-tests_pass =
-tests_fail = dparamstest 
+tests_pass = dparamstest
+tests_fail =
 tests_ignore =
 
 dparamstest_CFLAGS = $(GST_OBJ_CFLAGS)

@@ -25,6 +25,7 @@
 #include <gst/gstinfo.h>
 
 GST_DEBUG_CATEGORY_EXTERN (_gst_control_debug);
+#define GST_CAT_DEFAULT _gst_control_debug
 
 static GHashTable *_element_registry = NULL;
 static gboolean _gst_dpman_init_done = FALSE;
@@ -145,10 +146,10 @@ gst_dpman_init (GstDParamManager * dpman)
 
 /**
  * gst_dpman_new:
- * @name: name of the GstDParamManager instance
- * @parent: element which created this instance
+ * @name: name of the new #GstDParamManager instance to create
+ * @parent: #GstElement which creates this instance
  *
- * Returns: a new instance of GstDParamManager
+ * Returns: a new instance of #GstDParamManager.
  */
 GstDParamManager *
 gst_dpman_new (gchar * name, GstElement * parent)
