@@ -39,8 +39,8 @@ extern "C" {
 #define GST_IS_PAD_CLASS(obj)        	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))
 
 // quick test to see if the pad is connected
-#define GST_PAD_CONNECTED(pad) 		(pad && (pad)->peer != NULL)
-#define GST_PAD_CAN_PULL(pad) 		(pad && (pad)->pullfunc != NULL)
+#define GST_PAD_CONNECTED(pad) 		((pad) && (pad)->peer != NULL)
+#define GST_PAD_CAN_PULL(pad) 		((pad) && (pad)->pullfunc != NULL)
 
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;
@@ -77,9 +77,9 @@ struct _GstPad {
   GstBuffer *bufpen;
 
   GstPadChainFunction chainfunc;
+  GstPadPushFunction pushfunc;
   GstPadPullFunction pullfunc;
   GstPadPullRegionFunction pullregionfunc;
-  GstPadPushFunction pushfunc;
   GstPadQoSFunction qosfunc;
 
   GstObject *parent;
@@ -102,6 +102,7 @@ GstPadDirection 	gst_pad_get_direction		(GstPad *pad);
 
 void 			gst_pad_set_chain_function	(GstPad *pad, GstPadChainFunction chain);
 void 			gst_pad_set_pull_function	(GstPad *pad, GstPadPullFunction pull);
+void			gst_pad_set_pullregion_function	(GstPad *pad, GstPadPullRegionFunction pullregion);
 void 			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
 
 // FIXME is here for backward compatibility until we have GstCaps working...

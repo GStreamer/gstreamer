@@ -62,7 +62,7 @@ static void gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 //static gboolean gst_sinesrc_open_audio(GstSineSrc *src);
 void gst_sinesrc_sync_parms(GstSineSrc *sinesrc);
 
-void gst_sinesrc_push(GstSrc *src);
+void gst_sinesrc_pull(GstPad *pad);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 };
@@ -112,12 +112,11 @@ gst_sinesrc_class_init(GstSineSrcClass *klass) {
   gtkobject_class->get_arg = gst_sinesrc_get_arg;
 
 //  gstelement_class->change_state = gst_sinesrc_change_state;
-
-  gstsrc_class->push = gst_sinesrc_push;
 }
 
 static void gst_sinesrc_init(GstSineSrc *sinesrc) {
   sinesrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
+  gst_pad_set_pull_function(sinesrc->srcpad,gst_sinesrc_pull);
   gst_element_add_pad(GST_ELEMENT(sinesrc),sinesrc->srcpad);
 
   sinesrc->volume = 1.0;
@@ -143,17 +142,16 @@ GstElement *gst_sinesrc_new_with_fd(gchar *name,gchar *filename) {
   return sinesrc;
 }
 
-void gst_sinesrc_push(GstSrc *src) {
-  GstSineSrc *sinesrc;
+void gst_sinesrc_pull(GstPad *pad) {
+  GstSineSrc *src;
   GstBuffer *buf;
   gint16 *samples;
   gint i;
   gint volume;
   gdouble val;
 
-  g_return_if_fail(src != NULL);
-  g_return_if_fail(GST_IS_SINESRC(src));
-  sinesrc = GST_SINESRC(src);
+  g_return_if_fail(pad != NULL);
+  src = GST_SINESRC(gst_pad_get_parent(pad));
 
   buf = gst_buffer_new();
   g_return_if_fail(buf);
@@ -161,21 +159,21 @@ void gst_sinesrc_push(GstSrc *src) {
   samples = (gint16*)GST_BUFFER_DATA(buf);
   GST_BUFFER_SIZE(buf) = 4096;
 
-  volume = 65535 * sinesrc->volume;
+  volume = 65535 * src->volume;
   for (i=0;i<1024;i++) {
-    val = sin((gdouble)i/sinesrc->frequency);
+    val = sin((gdouble)i/src->frequency);
     samples[i] = val * volume;
     samples[i+1] = samples[i];
   }
 
-  if (!sinesrc->sentmeta) {
+  if (!src->sentmeta) {
     MetaAudioRaw *newmeta = g_new(MetaAudioRaw,1);
-    memcpy(newmeta,&sinesrc->meta,sizeof(MetaAudioRaw));
+    memcpy(newmeta,&src->meta,sizeof(MetaAudioRaw));
     gst_buffer_add_meta(buf,GST_META(newmeta));
-    sinesrc->sentmeta = TRUE;
+    src->sentmeta = TRUE;
   }
 
-  gst_pad_push(sinesrc->srcpad,buf);
+  gst_pad_push(pad,buf);
   g_print(">");
 }
 

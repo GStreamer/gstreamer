@@ -64,7 +64,7 @@ static void 			gst_audiosrc_close_audio	(GstAudioSrc *src);
 static gboolean 		gst_audiosrc_open_audio		(GstAudioSrc *src);
 static void 			gst_audiosrc_sync_parms		(GstAudioSrc *audiosrc);
 
-static void 			gst_audiosrc_push		(GstSrc *src);
+static void 			gst_audiosrc_pull		(GstPad *pad);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_audiosrc_signals[LAST_SIGNAL] = { 0 };
@@ -118,14 +118,13 @@ gst_audiosrc_class_init (GstAudioSrcClass *klass)
   gtkobject_class->get_arg = gst_audiosrc_get_arg;
 
   gstelement_class->change_state = gst_audiosrc_change_state;
-
-  gstsrc_class->push = gst_audiosrc_push;
 }
 
 static void 
 gst_audiosrc_init (GstAudioSrc *audiosrc) 
 {
   audiosrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_pull_function(audiosrc->srcpad,gst_audiosrc_pull);
   gst_element_add_pad (GST_ELEMENT (audiosrc), audiosrc->srcpad);
 
   audiosrc->fd = -1;
@@ -141,40 +140,37 @@ gst_audiosrc_init (GstAudioSrc *audiosrc)
   audiosrc->seq = 0;
 }
 
-static void 
-gst_audiosrc_push (GstSrc *src) 
-{
-  GstAudioSrc *audiosrc;
+void gst_audiosrc_pull(GstPad *pad) {
+  GstAudioSrc *src;
   GstBuffer *buf;
   glong readbytes;
 
-  g_return_if_fail (src != NULL);
-  g_return_if_fail (GST_IS_AUDIOSRC (src));
-  audiosrc = GST_AUDIOSRC (src);
+  g_return_if_fail(pad != NULL);
+  src = GST_AUDIOSRC(gst_pad_get_parent(pad));
 
 //  g_print("attempting to read something from soundcard\n");
 
   buf = gst_buffer_new ();
   g_return_if_fail (buf);
   
-  GST_BUFFER_DATA (buf) = (gpointer)g_malloc (audiosrc->bytes_per_read);
+  GST_BUFFER_DATA (buf) = (gpointer)g_malloc (src->bytes_per_read);
   
-  readbytes = read (audiosrc->fd,GST_BUFFER_DATA (buf),
-                    audiosrc->bytes_per_read);
-  
+  readbytes = read (src->fd,GST_BUFFER_DATA (buf),
+                    src->bytes_per_read);
+
   if (readbytes == 0) {
-    gst_src_signal_eos (GST_SRC (audiosrc));
+    gst_src_signal_eos (GST_SRC (src));
     return;
   }
 
   GST_BUFFER_SIZE (buf) = readbytes;
-  GST_BUFFER_OFFSET (buf) = audiosrc->curoffset;
+  GST_BUFFER_OFFSET (buf) = src->curoffset;
   
-  audiosrc->curoffset += readbytes;
+  src->curoffset += readbytes;
 
 //  gst_buffer_add_meta(buf,GST_META(newmeta));
 
-  gst_pad_push (audiosrc->srcpad,buf);
+  gst_pad_push (pad,buf);
 //  g_print("pushed buffer from soundcard of %d bytes\n",readbytes);
 }
 

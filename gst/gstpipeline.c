@@ -161,9 +161,9 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
   gst_element_set_state (GST_ELEMENT (element), GST_STATE_PLAYING);
 
   // keep pushing buffers... the have_type signal handler will set the found flag
-  while (!found) {
-    gst_src_push (GST_SRC (element));
-  }
+//  while (!found) {
+//    gst_src_push(GST_SRC(element));
+//  }
 
   gst_element_set_state (GST_ELEMENT (element), GST_STATE_NULL);
 

@@ -60,7 +60,7 @@ static void 			gst_disksrc_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
 static void 			gst_disksrc_close_file		(GstDiskSrc *src);
 
-static void 			gst_disksrc_push		(GstSrc *src);
+static void 			gst_disksrc_pull		(GstPad *pad);
 
 static GstElementStateReturn 	gst_disksrc_change_state	(GstElement *element);
 
@@ -114,16 +114,13 @@ gst_disksrc_class_init (GstDiskSrcClass *klass)
   gtkobject_class->get_arg = gst_disksrc_get_arg;
 
   gstelement_class->change_state = gst_disksrc_change_state;
-
-  gstsrc_class->push = gst_disksrc_push;
-  /* we nominally can't (won't) do async */
-  gstsrc_class->push_region = NULL;
 }
 
 static void 
 gst_disksrc_init (GstDiskSrc *disksrc) 
 {
   disksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_pull_function(disksrc->srcpad,gst_disksrc_pull);
   gst_element_add_pad (GST_ELEMENT (disksrc), disksrc->srcpad);
 
   disksrc->filename = NULL;
@@ -205,18 +202,16 @@ gst_disksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 static void 
-gst_disksrc_push (GstSrc *src) 
+gst_disksrc_pull (GstPad *pad) 
 {
-  GstDiskSrc *disksrc;
+  GstDiskSrc *src;
   GstBuffer *buf;
   glong readbytes;
 
-  g_return_if_fail (src != NULL);
-  g_return_if_fail (GST_IS_DISKSRC (src));
+  g_return_if_fail (pad != NULL);
+  src = GST_DISKSRC(gst_pad_get_parent(pad));
   g_return_if_fail (GST_FLAG_IS_SET (src, GST_DISKSRC_OPEN));
   g_return_if_fail (GST_STATE (src) >= GST_STATE_READY);
-  
-  disksrc = GST_DISKSRC (src);
 
   /* create the buffer */
   // FIXME: should eventually use a bufferpool for this
@@ -224,39 +219,39 @@ gst_disksrc_push (GstSrc *src)
   g_return_if_fail (buf);
 
   /* allocate the space for the buffer data */
-  GST_BUFFER_DATA (buf) = g_malloc (disksrc->bytes_per_read);
+  GST_BUFFER_DATA (buf) = g_malloc (src->bytes_per_read);
   g_return_if_fail (GST_BUFFER_DATA (buf) != NULL);
 
   /* read it in from the file */
-  readbytes = read (disksrc->fd, GST_BUFFER_DATA (buf), disksrc->bytes_per_read);
+  readbytes = read (src->fd, GST_BUFFER_DATA (buf), src->bytes_per_read);
   if (readbytes == -1) {
     perror ("read()");
     gst_buffer_unref (buf);
     return;
   }
   else if (readbytes == 0) {
-    gst_src_signal_eos (GST_SRC (disksrc));
+    gst_src_signal_eos (GST_SRC (src));
     gst_buffer_unref (buf);
     return;
   }
 
   /* if we didn't get as many bytes as we asked for, we're at EOF */
-  if (readbytes < disksrc->bytes_per_read)
+  if (readbytes < src->bytes_per_read)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_EOS);
 
   /* if we have a new buffer froma seek, mark it */
-  if (disksrc->new_seek) {
+  if (src->new_seek) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
-    disksrc->new_seek = FALSE;
+    src->new_seek = FALSE;
   }
 
-  GST_BUFFER_OFFSET (buf) = disksrc->curoffset;
+  GST_BUFFER_OFFSET (buf) = src->curoffset;
   GST_BUFFER_SIZE (buf) = readbytes;
-  disksrc->curoffset += readbytes;
+  src->curoffset += readbytes;
 
   DEBUG("pushing with offset %d\n", GST_BUFFER_OFFSET (buf));
   /* we're done, push the buffer off now */
-  gst_pad_push (disksrc->srcpad, buf);
+  gst_pad_push (pad, buf);
   DEBUG("pushing with offset %d done\n", GST_BUFFER_OFFSET (buf));
 }
 

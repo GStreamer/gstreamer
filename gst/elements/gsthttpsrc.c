@@ -48,19 +48,18 @@ enum {
   ARG_OFFSET
 };
 
-
 static void 			gst_httpsrc_class_init	(GstHttpSrcClass *klass);
 static void 			gst_httpsrc_init	(GstHttpSrc *httpsrc);
 
 static void 			gst_httpsrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
 static void 			gst_httpsrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static GstElementStateReturn	gst_httpsrc_change_state	(GstElement *element);
 
-static void 			gst_httpsrc_push	(GstSrc *src);
+static void 			gst_httpsrc_pull	(GstPad *pad);
 
-static gboolean 		gst_httpsrc_open_url	(GstHttpSrc *src);
-static void 			gst_httpsrc_close_url	(GstHttpSrc *src);
+static gboolean			gst_httpsrc_open_url	(GstHttpSrc *src);
+static void			gst_httpsrc_close_url	(GstHttpSrc *src);
 
-static GstElementStateReturn 	gst_httpsrc_change_state(GstElement *element);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_httpsrc_signals[LAST_SIGNAL] = { 0 };
@@ -109,16 +108,12 @@ gst_httpsrc_class_init (GstHttpSrcClass *klass)
   gtkobject_class->get_arg = gst_httpsrc_get_arg;
 
   gstelement_class->change_state = gst_httpsrc_change_state;
-
-  gstsrc_class->push = gst_httpsrc_push;
-  gstsrc_class->push_region = NULL;
 }
 
-static void 
-gst_httpsrc_init (GstHttpSrc *httpsrc) 
-{
-  httpsrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_element_add_pad (GST_ELEMENT (httpsrc), httpsrc->srcpad);
+static void gst_httpsrc_init(GstHttpSrc *httpsrc) {
+  httpsrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
+  gst_pad_set_pull_function(httpsrc->srcpad,gst_httpsrc_pull);
+  gst_element_add_pad(GST_ELEMENT(httpsrc),httpsrc->srcpad);
 
   httpsrc->url = NULL;
   httpsrc->request = NULL;
@@ -127,37 +122,31 @@ gst_httpsrc_init (GstHttpSrc *httpsrc)
   httpsrc->bytes_per_read = 4096;
 }
 
-static void 
-gst_httpsrc_push (GstSrc *src) 
-{
-  GstHttpSrc *httpsrc;
+static void gst_httpsrc_push(GstPad *pad) {
+  GstHttpSrc *src;
   GstBuffer *buf;
   glong readbytes;
 
-  g_return_if_fail (src != NULL);
-  g_return_if_fail (GST_IS_HTTPSRC (src));
-//  g_return_if_fail(GST_FLAG_IS_SET(src,GST_));
-  httpsrc = GST_HTTPSRC (src);
+  g_return_if_fail(pad != NULL);
+  src = GST_HTTPSRC(gst_pad_get_parent(pad));
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = (gpointer)malloc (httpsrc->bytes_per_read);
-  
-  readbytes = read (httpsrc->fd, GST_BUFFER_DATA (buf), httpsrc->bytes_per_read);
-  
+  buf = gst_buffer_new();
+  GST_BUFFER_DATA(buf) = (gpointer)malloc(src->bytes_per_read);
+  readbytes = read(src->fd,GST_BUFFER_DATA(buf),src->bytes_per_read);
+
   if (readbytes == 0) {
-    gst_src_signal_eos (GST_SRC (httpsrc));
+    gst_src_signal_eos(GST_SRC(src));
     return;
   }
 
-  if (readbytes < httpsrc->bytes_per_read) {
+  if (readbytes < src->bytes_per_read) {
     // FIXME: set the buffer's EOF bit here
   }
-  GST_BUFFER_OFFSET (buf) = httpsrc->curoffset;
-  GST_BUFFER_SIZE (buf) = readbytes;
-  
-  httpsrc->curoffset += readbytes;
+  GST_BUFFER_OFFSET(buf) = src->curoffset;
+  GST_BUFFER_SIZE(buf) = readbytes;
+  src->curoffset += readbytes;
 
-  gst_pad_push (httpsrc->srcpad, buf);
+  gst_pad_push(pad,buf);
 }
 
 static gboolean 

@@ -46,7 +46,7 @@ enum {
 static void gst_fakesrc_class_init	(GstFakeSrcClass *klass);
 static void gst_fakesrc_init		(GstFakeSrc *fakesrc);
 
-static void gst_fakesrc_push		(GstSrc *src);
+static void gst_fakesrc_pull		(GstPad *pad);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
@@ -80,42 +80,49 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   gstsrc_class = (GstSrcClass*)klass;
 
   parent_class = gtk_type_class (GST_TYPE_SRC);
-
-  gstsrc_class->push = gst_fakesrc_push;
-  gstsrc_class->push_region = NULL;
 }
 
-static void 
-gst_fakesrc_init (GstFakeSrc *fakesrc) 
-{
-  fakesrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_element_add_pad (GST_ELEMENT (fakesrc), fakesrc->srcpad);
+static void gst_fakesrc_init(GstFakeSrc *fakesrc) {
+  // create our output pad
+  fakesrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
+  gst_pad_set_pull_function(fakesrc->srcpad,gst_fakesrc_pull);
+  gst_element_add_pad(GST_ELEMENT(fakesrc),fakesrc->srcpad);
 
   // we're ready right away, since we don't have any args...
 //  gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_READY);
 }
 
 /**
- * gst_fakesrc_push:
- * @src: the faksesrc to push
+ * gst_fakesrc_new:
+ * @name: then name of the fakse source
+ * 
+ * create a new fakesrc
+ *
+ * Returns: The new element.
+ */
+GstElement *gst_fakesrc_new(gchar *name) {
+  GstElement *fakesrc = GST_ELEMENT(gtk_type_new(GST_TYPE_FAKESRC));
+  gst_element_set_name(GST_ELEMENT(fakesrc),name);
+  return fakesrc;
+}
+
+/**
+ * gst_fakesrc_pull:
+ * @src: the faksesrc to pull
  * 
  * generate an empty buffer and push it to the next element.
  */
-static void 
-gst_fakesrc_push (GstSrc *src) 
-{
-  GstFakeSrc *fakesrc;
+void gst_fakesrc_pull(GstPad *pad) {
+  GstFakeSrc *src;
   GstBuffer *buf;
 
-  g_return_if_fail (src != NULL);
-  g_return_if_fail (GST_IS_FAKESRC (src));
-  
-  fakesrc = GST_FAKESRC (src);
+  g_return_if_fail(pad != NULL);
+  src = GST_FAKESRC(gst_pad_get_parent(pad));
+  g_return_if_fail(GST_IS_FAKESRC(src));
 
 //  g_print("gst_fakesrc_push(): pushing fake buffer from '%s'\n",
-//          gst_element_get_name(GST_ELEMENT(fakesrc)));
+//          gst_element_get_name(GST_ELEMENT(src)));
   g_print(">");
-  buf = gst_buffer_new ();
-  
-  gst_pad_push (fakesrc->srcpad, buf);
+  buf = gst_buffer_new();
+  gst_pad_push(pad,buf);
 }

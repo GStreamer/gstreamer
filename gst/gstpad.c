@@ -289,6 +289,10 @@ void
 gst_pad_push (GstPad *pad, 
 	      GstBuffer *buffer) 
 {
+  GstPad *peer;
+
+  DEBUG_ENTER("(pad:'%s',buffer:%p)",gst_pad_get_name(pad),buffer);
+
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(GST_PAD_CONNECTED(pad));
@@ -303,21 +307,23 @@ gst_pad_push (GstPad *pad,
 
   gst_trace_add_entry(NULL,0,buffer,"push buffer");
 
+  peer = pad->peer;
+  g_return_if_fail(peer != NULL);
+
   // first check to see if there's a push handler
   if (pad->pushfunc != NULL) {
     // put the buffer in peer's holding pen
-    pad->peer->bufpen = buffer;
+    peer->bufpen = buffer;
     // now inform the handler that the peer pad has something
-    (pad->pushfunc)(pad->peer);
+    (pad->pushfunc)(peer);
   // otherwise we assume we're chaining directly
-  } else if (pad->chainfunc != NULL) {
+  } else if (peer->chainfunc != NULL) {
     //g_print("-- gst_pad_push(): calling chain handler\n");
-    (pad->chainfunc)(pad->peer,buffer);
+    (peer->chainfunc)(peer,buffer);
   // else we squawk
   } else {
     g_print("-- gst_pad_push(): houston, we have a problem, no way of talking to peer\n");
   }
-
 }
 
 /**

@@ -57,8 +57,8 @@ static void 			gst_asyncdisksrc_init		(GstAsyncDiskSrc *asyncdisksrc);
 static void 			gst_asyncdisksrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
 static void 			gst_asyncdisksrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
-static void 			gst_asyncdisksrc_push		(GstSrc *src);
-static void 			gst_asyncdisksrc_push_region	(GstSrc *src, gulong offset, gulong size);
+static void 			gst_asyncdisksrc_pull		(GstPad *pad);
+static void 			gst_asyncdisksrc_pull_region	(GstPad *pad, gulong offset, gulong size);
 
 static GstElementStateReturn 	gst_asyncdisksrc_change_state	(GstElement *element);
 
@@ -113,9 +113,6 @@ gst_asyncdisksrc_class_init (GstAsyncDiskSrcClass *klass)
   gtkobject_class->get_arg = gst_asyncdisksrc_get_arg;
 
   gstelement_class->change_state = gst_asyncdisksrc_change_state;
-
-  gstsrc_class->push = 		gst_asyncdisksrc_push;
-  gstsrc_class->push_region = 	gst_asyncdisksrc_push_region;
 }
 
 static void 
@@ -124,6 +121,8 @@ gst_asyncdisksrc_init (GstAsyncDiskSrc *asyncdisksrc)
   GST_SRC_SET_FLAGS (asyncdisksrc, GST_SRC_ASYNC);
 
   asyncdisksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_pull_function (asyncdisksrc->srcpad,gst_asyncdisksrc_pull);
+  // FIXME must set pullregion
   gst_element_add_pad (GST_ELEMENT (asyncdisksrc), asyncdisksrc->srcpad);
 
   asyncdisksrc->filename = NULL;
@@ -204,26 +203,24 @@ gst_asyncdisksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 /**
- * gst_asyncdisksrc_push:
- * @src: #GstSrc to push a buffer from
+ * gst_asyncdisksrc_pull:
+ * @pad: #GstPad to push a buffer from
  *
  * Push a new buffer from the asyncdisksrc at the current offset.
  */
 static void 
-gst_asyncdisksrc_push (GstSrc *src) 
+gst_asyncdisksrc_pull (GstPad *pad) 
 {
-  GstAsyncDiskSrc *asyncdisksrc;
+  GstAsyncDiskSrc *src;
   GstBuffer *buf;
 
-  g_return_if_fail (src != NULL);
-  g_return_if_fail (GST_IS_ASYNCDISKSRC (src));
+  g_return_if_fail (pad != NULL);
+  src = GST_ASYNCDISKSRC (gst_pad_get_parent(pad));
   g_return_if_fail (GST_FLAG_IS_SET (src, GST_ASYNCDISKSRC_OPEN));
   
-  asyncdisksrc = GST_ASYNCDISKSRC (src);
-
   /* deal with EOF state */
-  if (asyncdisksrc->curoffset >= asyncdisksrc->size) {
-    gst_src_signal_eos (GST_SRC (asyncdisksrc));
+  if (src->curoffset >= src->size) {
+    gst_src_signal_eos (GST_SRC (src));
     return;
   }
 
@@ -234,30 +231,30 @@ gst_asyncdisksrc_push (GstSrc *src)
   g_return_if_fail (buf != NULL);
 
   /* simply set the buffer to point to the correct region of the file */
-  GST_BUFFER_DATA (buf) = asyncdisksrc->map + asyncdisksrc->curoffset;
-  GST_BUFFER_OFFSET (buf) = asyncdisksrc->curoffset;
+  GST_BUFFER_DATA (buf) = src->map + src->curoffset;
+  GST_BUFFER_OFFSET (buf) = src->curoffset;
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
-  if ((asyncdisksrc->curoffset + asyncdisksrc->bytes_per_read) >
-      asyncdisksrc->size) {
-    GST_BUFFER_SIZE (buf) = asyncdisksrc->size - asyncdisksrc->curoffset;
+  if ((src->curoffset + src->bytes_per_read) >
+      src->size) {
+    GST_BUFFER_SIZE (buf) = src->size - src->curoffset;
     // FIXME: set the buffer's EOF bit here
   } else
-    GST_BUFFER_SIZE (buf) = asyncdisksrc->bytes_per_read;
+    GST_BUFFER_SIZE (buf) = src->bytes_per_read;
 
-  asyncdisksrc->curoffset += GST_BUFFER_SIZE (buf);
+  src->curoffset += GST_BUFFER_SIZE (buf);
 
-  if (asyncdisksrc->new_seek) {
+  if (src->new_seek) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
-    asyncdisksrc->new_seek = FALSE;
+    src->new_seek = FALSE;
   }
 
   /* we're done, push the buffer off now */
-  gst_pad_push (asyncdisksrc->srcpad, buf);
+  gst_pad_push (pad, buf);
 }
 
 /**
- * gst_asyncdisksrc_push_region:
+ * gst_asyncdisksrc_pull_region:
  * @src: #GstSrc to push a buffer from
  * @offset: offset in file
  * @size: number of bytes
@@ -265,20 +262,21 @@ gst_asyncdisksrc_push (GstSrc *src)
  * Push a new buffer from the asyncdisksrc of given size at given offset.
  */
 static void 
-gst_asyncdisksrc_push_region (GstSrc *src, gulong offset, gulong size) 
+gst_asyncdisksrc_pull_region (GstPad *pad, gulong offset, gulong size) 
 {
-  GstAsyncDiskSrc *asyncdisksrc;
+  GstAsyncDiskSrc *src;
   GstBuffer *buf;
 
-  g_return_if_fail (src != NULL);
+  g_return_if_fail (pad != NULL);
+
+  src = GST_ASYNCDISKSRC (gst_pad_get_parent(pad));
+
   g_return_if_fail (GST_IS_ASYNCDISKSRC (src));
   g_return_if_fail (GST_FLAG_IS_SET (src, GST_ASYNCDISKSRC_OPEN));
   
-  asyncdisksrc = GST_ASYNCDISKSRC (src);
-
   /* deal with EOF state */
-  if (offset >= asyncdisksrc->size) {
-    gst_src_signal_eos (GST_SRC (asyncdisksrc));
+  if (offset >= src->size) {
+    gst_src_signal_eos (GST_SRC (src));
     return;
   }
 
@@ -288,18 +286,18 @@ gst_asyncdisksrc_push_region (GstSrc *src, gulong offset, gulong size)
   g_return_if_fail (buf);
 
   /* simply set the buffer to point to the correct region of the file */
-  GST_BUFFER_DATA (buf) = asyncdisksrc->map + offset;
+  GST_BUFFER_DATA (buf) = src->map + offset;
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
-  if ((offset + size) > asyncdisksrc->size) {
-    GST_BUFFER_SIZE (buf) = asyncdisksrc->size - offset;
+  if ((offset + size) > src->size) {
+    GST_BUFFER_SIZE (buf) = src->size - offset;
     // FIXME: set the buffer's EOF bit here
   } else
     GST_BUFFER_SIZE (buf) = size;
 
   /* we're done, push the buffer off now */
-  gst_pad_push (asyncdisksrc->srcpad,buf);
+  gst_pad_push (pad,buf);
 }
 
 

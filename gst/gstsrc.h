@@ -54,16 +54,12 @@ typedef struct _GstSrc 		GstSrc;
 typedef struct _GstSrcClass 	GstSrcClass;
 
 struct _GstSrc {
-  GstElement element;
-  gint32 flags;
+  GstElement			element;
+  gint32			flags;
 };
 
 struct _GstSrcClass {
   GstElementClass parent_class;
-
-  /* subclass functions */
-  void (*push) 		(GstSrc *src);
-  void (*push_region) 	(GstSrc *src, gulong offset, gulong size);
 
   /* signals */
   void (*eos) 		(GstSrc *src);
@@ -74,12 +70,9 @@ struct _GstSrcClass {
 #define GST_SRC_UNSET_FLAGS(src,flag) \
 	G_STMT_START{ (GST_SRC_FLAGS (src) &= ~(flag)); }G_STMT_END
 
-GtkType 	gst_src_get_type	(void);
+GtkType 	gst_src_get_type		(void);
 
-void 		gst_src_push		(GstSrc *src);
-void 		gst_src_push_region	(GstSrc *src, gulong offset, gulong size);
-
-void 		gst_src_signal_eos	(GstSrc *src);
+void 		gst_src_signal_eos		(GstSrc *src);
 
 #ifdef __cplusplus
 }

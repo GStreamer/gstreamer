@@ -57,8 +57,7 @@ static void gst_fdsrc_init		(GstFdSrc *fdsrc);
 static void gst_fdsrc_set_arg		(GtkObject *object, GtkArg *arg, guint id);
 static void gst_fdsrc_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
-static void gst_fdsrc_push		(GstSrc *src);
-//static void gst_fdsrc_push_region(GstSrc *src,gulong offset,gulong size);
+static void gst_fdsrc_pull		(GstPad *pad);
 
 
 static GstSrcClass *parent_class = NULL;
@@ -105,18 +104,12 @@ gst_fdsrc_class_init (GstFdSrcClass *klass)
 
   gtkobject_class->set_arg = gst_fdsrc_set_arg;
   gtkobject_class->get_arg = gst_fdsrc_get_arg;
-
-  gstsrc_class->push = gst_fdsrc_push;
-  
-  /* we nominally can't (won't) do async */
-  gstsrc_class->push_region = NULL;
 }
 
-static void 
-gst_fdsrc_init (GstFdSrc *fdsrc) 
-{
-  fdsrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_element_add_pad (GST_ELEMENT (fdsrc), fdsrc->srcpad);
+static void gst_fdsrc_init(GstFdSrc *fdsrc) {
+  fdsrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
+  gst_pad_set_pull_function(fdsrc->srcpad,gst_fdsrc_pull);
+  gst_element_add_pad(GST_ELEMENT(fdsrc),fdsrc->srcpad);
 
   fdsrc->fd = 0;
   fdsrc->curoffset = 0;
@@ -182,17 +175,13 @@ gst_fdsrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
   }
 }
 
-static void 
-gst_fdsrc_push (GstSrc *src) 
-{
-  GstFdSrc *fdsrc;
+void gst_fdsrc_pull(GstPad *pad) {
+  GstFdSrc *src;
   GstBuffer *buf;
   glong readbytes;
 
-  g_return_if_fail (src != NULL);
-  g_return_if_fail (GST_IS_FDSRC (src));
-  
-  fdsrc = GST_FDSRC (src);
+  g_return_if_fail(pad != NULL);
+  src = GST_FDSRC(gst_pad_get_parent(pad));
 
   /* create the buffer */
   // FIXME: should eventually use a bufferpool for this
@@ -200,26 +189,25 @@ gst_fdsrc_push (GstSrc *src)
   g_return_if_fail (buf);
 
   /* allocate the space for the buffer data */
-  GST_BUFFER_DATA (buf) = g_malloc (fdsrc->bytes_per_read);
-  g_return_if_fail (GST_BUFFER_DATA (buf) != NULL);
+  GST_BUFFER_DATA(buf) = g_malloc(src->bytes_per_read);
+  g_return_if_fail(GST_BUFFER_DATA(buf) != NULL);
 
   /* read it in from the file */
-  readbytes = read (fdsrc->fd, GST_BUFFER_DATA (buf), fdsrc->bytes_per_read);
+  readbytes = read(src->fd,GST_BUFFER_DATA(buf),src->bytes_per_read);
   if (readbytes == 0) {
-    gst_src_signal_eos (GST_SRC (fdsrc));
+    gst_src_signal_eos(GST_SRC(src));
     return;
   }
 
   /* if we didn't get as many bytes as we asked for, we're at EOF */
-  if (readbytes < fdsrc->bytes_per_read) {
+  if (readbytes < src->bytes_per_read) {
     // set the buffer's EOF bit here
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_EOS);
   }
-  GST_BUFFER_OFFSET (buf) = fdsrc->curoffset;
-  GST_BUFFER_SIZE (buf) = readbytes;
-  
-  fdsrc->curoffset += readbytes;
+  GST_BUFFER_OFFSET(buf) = src->curoffset;
+  GST_BUFFER_SIZE(buf) = readbytes;
+  src->curoffset += readbytes;
 
   /* we're done, push the buffer off now */
-  gst_pad_push (fdsrc->srcpad, buf);
+  gst_pad_push(pad,buf);
 }

@@ -17,7 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define DEBUG_ENABLED
 #include <gst/gst.h>
 
 #include "config.h"
@@ -123,7 +122,8 @@ gst_bin_init (GstBin *bin)
 {
   bin->numchildren = 0;
   bin->children = NULL;
-  bin->use_cothreads = TRUE;
+// FIXME temporary testing measure
+//  bin->use_cothreads = TRUE;
 }
 
 /**
@@ -213,7 +213,7 @@ gst_bin_change_state (GstElement *element)
   GstElement *child;
 
   g_return_val_if_fail (GST_IS_BIN (element), GST_STATE_FAILURE);
-  
+
   bin = GST_BIN (element);
 
   g_print("gst_bin_change_state(\"%s\"): currently %d(%s), %d(%s) pending\n",
@@ -479,12 +479,14 @@ gst_bin_iterate (GstBin *bin)
 {
   GstBinClass *oclass;
 
-  oclass = GST_BIN_CLASS (GTK_OBJECT (bin)->klass);
+  DEBUG_ENTER("('%s')",gst_element_get_name(GST_ELEMENT(bin)));
 
-  DEBUG("gst_bin_iterate()\n");
+  oclass = GST_BIN_CLASS (GTK_OBJECT (bin)->klass);
   
   if (oclass->iterate)
     (oclass->iterate) (bin);
+
+  DEBUG_LEAVE("('%s')",gst_element_get_name(GST_ELEMENT(bin)));
 }
 
 /**
@@ -518,90 +520,104 @@ gst_bin_loopfunc_wrapper (int argc,char *argv[])
   GstBuffer *buf;
   G_GNUC_UNUSED const gchar *name = gst_element_get_name (element);
 
-  DEBUG("** gst_bin_loopfunc_wrapper(%d,\"%s\")\n",
-          argc,gst_element_get_name (element));
+  DEBUG_ENTER("(%d,'%s')",argc,name);
+
+//  DEBUG("entering gst_bin_loopfunc_wrapper(%d,\"%s\")\n",
+//          argc,gst_element_get_name (element));
 
   if (element->loopfunc != NULL) {
-    while (1) {
-      DEBUG("** gst_bin_loopfunc_wrapper(): element %s has loop function, calling it\n", name);
-      (element->loopfunc) (element);
-      DEBUG("** gst_bin_loopfunc_wrapper(): element %s ended loop function\n", name);
-    }
+    DEBUG("element %s has loop function, calling it\n", name);
+    (element->loopfunc) (element);
+    DEBUG("element %s ended loop function\n", name);
   } else {
-    DEBUG("** gst_bin_loopfunc_wrapper(): element %s is chain-based, calling in infinite loop\n", name);
-    if (GST_IS_SRC (element)) {
-      region_struct *region = cothread_get_data (element->threadstate, "region");
-      if (region) {
-        gst_src_push_region (GST_SRC (element), region->offset, region->size);
-      }
-      else {
-        DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of source %s\n", name);
-        gst_src_push (GST_SRC (element));
-        DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of source %s done\n", name);
-      }
-    } else if (GST_IS_CONNECTION (element) && argc == 1) {
+    DEBUG("element %s is chain-based\n", name);
+    if (GST_IS_CONNECTION (element) && argc == 1) {
       while (1) {
-        DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of connection %s\n", name);
+        DEBUG("calling push function of connection %s\n", name);
         gst_connection_push (GST_CONNECTION (element));
-        DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of connection %s done\n", name);
+        DEBUG("calling push function of connection %s done\n", name);
       }
     } else {
-      while (1) {
+      DEBUG("stepping through pads\n");
+      do {
         pads = element->pads;
         while (pads) {
           pad = GST_PAD (pads->data);
           if (pad->direction == GST_PAD_SINK) {
-            DEBUG("** gst_bin_loopfunc_wrapper(): pulling a buffer from %s:%s\n", name, gst_pad_get_name (pad));
+            DEBUG("pulling a buffer from %s:%s\n", name, gst_pad_get_name (pad));
 	    buf = gst_pad_pull (pad);
-            DEBUG("** gst_bin_loopfunc_wrapper(): calling chain function of %s:%s\n", name, gst_pad_get_name (pad));
+            DEBUG("calling chain function of %s:%s\n", name, gst_pad_get_name (pad));
             (pad->chainfunc) (pad,buf);
-            DEBUG("** gst_bin_loopfunc_wrapper(): calling chain function of %s:%s done\n", name, gst_pad_get_name (pad));
+            DEBUG("calling chain function of %s:%s done\n", name, gst_pad_get_name (pad));
           }
           pads = g_list_next (pads);
         }
-      }
+      } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
     }
   }
+  GST_FLAG_UNSET(element,GST_ELEMENT_COTHREAD_STOPPING);
+
+  DEBUG_LEAVE("(%d,'%s')",argc,name);
+  return 0;
+}
+
+static int
+gst_bin_pullsrc_wrapper (int argc,char *argv[]) 
+{
+  GstElement *element = GST_ELEMENT (argv);
+  GList *pads;
+  GstPad *pad;
+  GstBuffer *buf;
+  G_GNUC_UNUSED const gchar *name = gst_element_get_name (element);
+
+  DEBUG("entering gst_bin_pullsrc_wrapper(%d,\"%s\")\n",argc,name);
+
+  do {
+    pads = element->pads;
+    while (pads) {
+      pad = GST_PAD (pads->data);
+      if (pad->direction == GST_PAD_SRC) {
+        if (pad->pullfunc == NULL) fprintf(stderr,"error, no pullfunc\n");
+        (pad->pullfunc)(pad);
+      }
+      pads = g_list_next(pads);
+    }
+  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
+  GST_FLAG_UNSET(element,GST_ELEMENT_COTHREAD_STOPPING);
+
+  DEBUG("leaving gst_bin_pullsrc_wrapper(%d,\"%s\")\n",argc,name);
   return 0;
 }
 
 static void 
-gst_bin_pullfunc_wrapper (GstPad *pad) 
+gst_bin_pullfunc_proxy (GstPad *pad) 
 {
-  DEBUG("** in gst_bin_pullfunc_wrapper()============================= %s\n",
-          gst_element_get_name (GST_ELEMENT (pad->parent)));
+  DEBUG_ENTER("(%s)",gst_element_get_name (GST_ELEMENT (pad->parent)));
   cothread_switch (GST_ELEMENT (pad->parent)->threadstate);
-  DEBUG("** out gst_bin_pullfunc_wrapper()============================= %s\n",
-          gst_element_get_name (GST_ELEMENT (pad->parent)));
 }
 
 static void 
-gst_bin_pullregionfunc_wrapper (GstPad *pad, 
+gst_bin_pullregionfunc_proxy (GstPad *pad, 
 				gulong offset, 
 				gulong size) 
 {
   region_struct region;
 
+  DEBUG_ENTER("%s",gst_element_get_name (GST_ELEMENT (pad->parent)));
+
   region.offset = offset;
   region.size = size;
 
-  DEBUG("** in gst_bin_pullregionfunc_wrapper()============================= %s\n",
-          gst_element_get_name (GST_ELEMENT (pad->parent)));
   cothread_set_data (GST_ELEMENT (pad->parent)->threadstate, "region", &region);
   cothread_switch (GST_ELEMENT (pad->parent)->threadstate);
   cothread_set_data (GST_ELEMENT (pad->parent)->threadstate, "region", NULL);
-  DEBUG("** out gst_bin_pullregionfunc_wrapper()============================= %s\n",
-          gst_element_get_name (GST_ELEMENT (pad->parent)));
 }
 
 static void 
-gst_bin_pushfunc_wrapper (GstPad *pad) 
+gst_bin_pushfunc_proxy (GstPad *pad) 
 {
-  DEBUG("** in gst_bin_pushfunc_wrapper()============================= %s\n",
-          gst_element_get_name (GST_ELEMENT (pad->parent)));
+  DEBUG_ENTER("%s",gst_element_get_name (GST_ELEMENT (pad->parent)));
   cothread_switch (GST_ELEMENT (pad->parent)->threadstate);
-  DEBUG("** out gst_bin_pushfunc_wrapper()============================= %s\n",
-          gst_element_get_name (GST_ELEMENT (pad->parent)));
 }
 
 static void 
@@ -665,7 +681,9 @@ gst_bin_create_plan_func (GstBin *bin)
   }
 
   // FIXME
-  bin->need_cothreads &= bin->use_cothreads;
+//  bin->need_cothreads &= bin->use_cothreads;
+  // FIXME temporary testing measure
+  if (bin->use_cothreads) bin->need_cothreads = TRUE;
 
   // clear previous plan state
   g_list_free (bin->entries);
@@ -693,14 +711,15 @@ gst_bin_create_plan_func (GstBin *bin)
                           0, (char **)element);
       }
       if (GST_IS_BIN (element)) {
-        gst_bin_create_plan (GST_BIN (element));	
+        gst_bin_create_plan (GST_BIN (element));
       }
-      
+
       if (GST_IS_SRC (element)) {
         g_print("gstbin: adding '%s' as entry point\n",gst_element_get_name (element));
         bin->entries = g_list_prepend (bin->entries,element);
         bin->numentries++;
-      } 
+        cothread_setfunc(element->threadstate,gst_bin_pullsrc_wrapper,0,(char **)element);
+      }
 
       pads = gst_element_get_pad_list (element);
       while (pads) {
@@ -710,10 +729,12 @@ gst_bin_create_plan_func (GstBin *bin)
 
 	// an internal connection will push outside this bin.
 	if (!GST_IS_CONNECTION (element)) {
-          pad->pushfunc = gst_bin_pushfunc_wrapper;
+          pad->pushfunc = gst_bin_pushfunc_proxy;
 	}
-        pad->pullfunc = gst_bin_pullfunc_wrapper;
-        pad->pullregionfunc = gst_bin_pullregionfunc_wrapper;
+        if (!pad->pullfunc)
+          pad->pullfunc = gst_bin_pullfunc_proxy;
+        if (!pad->pullfunc)
+          pad->pullregionfunc = gst_bin_pullregionfunc_proxy;
 
         /* we only worry about sink pads */
         if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
@@ -733,9 +754,9 @@ gst_bin_create_plan_func (GstBin *bin)
                 g_print("gstbin: setting push&pull handlers for %s:%s SRC connection %p %p\n",
          	 	gst_element_get_name (outside),gst_pad_get_name (opad), opad, opad->pullfunc);
 
-                opad->pushfunc = gst_bin_pushfunc_wrapper;
-                opad->pullfunc = gst_bin_pullfunc_wrapper;
-        	opad->pullregionfunc = gst_bin_pullregionfunc_wrapper;
+                opad->pushfunc = gst_bin_pushfunc_proxy;
+                opad->pullfunc = gst_bin_pullfunc_proxy;
+        	opad->pullregionfunc = gst_bin_pullregionfunc_proxy;
 
                 if (outside->threadstate == NULL) {
                   outside->threadstate = cothread_create (bin->threadcontext);
@@ -815,26 +836,22 @@ gst_bin_iterate_func (GstBin *bin)
 {
   GList *entries;
   GstElement *entry;
+  GList *pads;
+  GstPad *pad;
 
-  DEBUG("gst_bin_iterate_func() in \"%s\"\n", gst_element_get_name (GST_ELEMENT (bin)));
+  DEBUG_ENTER("(%s)",gst_element_get_name(GST_ELEMENT(bin)));
 
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
   g_return_if_fail (GST_STATE (bin) == GST_STATE_PLAYING);
 
-  DEBUG("GstBin: iterating\n");
-
   if (bin->need_cothreads) {
     // all we really have to do is switch to the first child
     // FIXME this should be lots more intelligent about where to start
-    DEBUG("** in gst_bin_iterate_func()==================================%s\n",
-          gst_element_get_name (GST_ELEMENT (bin->children->data)));
     
+    GST_FLAG_SET(GST_ELEMENT (bin->children->data),GST_ELEMENT_COTHREAD_STOPPING);
     cothread_switch (GST_ELEMENT (bin->children->data)->threadstate);
-    
-    DEBUG("** out gst_bin_iterate_func()==================================%s\n",
-          gst_element_get_name (GST_ELEMENT (bin->children->data)));
-    
+
   } else {
     if (bin->numentries <= 0) {
       //printf("gstbin: no entries in bin \"%s\" trying children...\n", gst_element_get_name(GST_ELEMENT(bin)));
@@ -849,9 +866,21 @@ gst_bin_iterate_func (GstBin *bin)
 
     while (entries) {
       entry = GST_ELEMENT (entries->data);
-      if (GST_IS_SRC (entry))
-        gst_src_push (GST_SRC (entry));
-      else if (GST_IS_CONNECTION (entry))
+      if (GST_IS_SRC (entry)) {
+//        if (GST_SRC_PUSH_FUNCTION(entry))
+//          gst_src_push (GST_SRC (entry));
+//        else {
+          pads = entry->pads;
+          while (pads) {
+            pad = GST_PAD(pads->data);
+            if (pad->direction == GST_PAD_SRC) {
+              if (pad->pullfunc == NULL) fprintf(stderr,"error, no pullfunc\n");
+              (pad->pullfunc)(pad);
+            }
+            pads = g_list_next(pads);
+          }
+//        }
+      } else if (GST_IS_CONNECTION (entry))
         gst_connection_push (GST_CONNECTION (entry));
       else if (GST_IS_BIN (entry))
         gst_bin_iterate (GST_BIN (entry));
@@ -860,4 +889,6 @@ gst_bin_iterate_func (GstBin *bin)
       entries = g_list_next (entries);
     }
   }
+
+  DEBUG_LEAVE("(%s)",gst_element_get_name(GST_ELEMENT(bin)));
 }
