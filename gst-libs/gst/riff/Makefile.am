@@ -1,10 +1,17 @@
-
 plugin_LTLIBRARIES = libgstriff.la
 
-libgstriff_la_SOURCES = riffparse.c riffencode.c riffutil.c riff.c
+libgstriff_la_SOURCES = \
+	riff.c \
+	riff-media.c \
+	riff-read.c \
+	riff-write.c
 
 libgstriffincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/riff
-libgstriffinclude_HEADERS = riff.h
+libgstriffinclude_HEADERS = \
+	riff-ids.h \
+	riff-media.h \
+	riff-read.h \
+	riff-write.h
 
 libgstriff_la_LIBADD =
 libgstriff_la_CFLAGS = $(GST_CFLAGS)

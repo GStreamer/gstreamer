@@ -1,5 +1,7 @@
-/* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer RIFF I/O
+ * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ *
+ * riff.c: plugin registering
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,22 +20,22 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
-#include <riff.h>
+#include <gst/gst.h>
 
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-  return TRUE;
+  return gst_library_load ("gstbytestream");
 }
 
 GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "gstriff",
-  "RIFF convenience routines",
+  "riff",
+  "RIFF I/O functions",
   plugin_init,
   VERSION,
   GST_LICENSE,
