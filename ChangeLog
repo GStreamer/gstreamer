@@ -1,3 +1,14 @@
+2004-01-16  David Schleef  <ds@schleef.org>
+
+	* gst/videofilter/gstvideobalance.c: Fix regression; changing a
+	property affects the video stream.
+	* sys/xvimage/xvimagesink.c: 
+	* sys/xvimage/xvimagesink.h:
+	Add synchronous property for debugging.  Should probably be
+	disabled in non-CVS builds.  Make sure that the Xv attribute
+	exists before we set it (crash!).  Fix a silly float bug that
+	caused colorbalance to just not work.
+
 2004-01-17  Christian Schaller <Uraeus@gnome.org>
 
 	* tools/gst-launch-ext.in - update for new plugins
