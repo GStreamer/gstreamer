@@ -651,6 +651,9 @@ add_to_group (GstOptSchedulerGroup *group, GstElement *element)
     group_element_set_enabled (group, element, TRUE);
   }
 
+  /* Ref the group... */
+  ref_group (group);
+  
   return group;
 }
 
