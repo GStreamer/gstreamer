@@ -284,7 +284,7 @@ gst_real_pad_get_property (GObject * object, guint prop_id,
 }
 
 /* FIXME-0.9: Replace these custom functions with proper inheritance via _init
-   functions and object properties */
+   functions and object properties. update: probably later in the cycle. */
 /**
  * gst_pad_custom_new:
  * @type: the #Gtype of the pad.
@@ -293,9 +293,12 @@ gst_real_pad_get_property (GObject * object, guint prop_id,
  *
  * Creates a new pad with the given name and type in the given direction.
  * If name is NULL, a guaranteed unique name (across all pads) 
- * will be assigned.
+ * will be assigned. 
+ * This function makes a copy of the name so you can safely free the name.
  *
  * Returns: a new #GstPad, or NULL in case of an error.
+ *
+ * MT safe.
  */
 GstPad *
 gst_pad_custom_new (GType type, const gchar * name, GstPadDirection direction)
@@ -306,7 +309,7 @@ gst_pad_custom_new (GType type, const gchar * name, GstPadDirection direction)
   gst_object_set_name (GST_OBJECT (pad), name);
   GST_RPAD_DIRECTION (pad) = direction;
 
-  return GST_PAD (pad);
+  return GST_PAD_CAST (pad);
 }
 
 /**
@@ -317,6 +320,7 @@ gst_pad_custom_new (GType type, const gchar * name, GstPadDirection direction)
  * Creates a new real pad with the given name in the given direction.
  * If name is NULL, a guaranteed unique name (across all pads) 
  * will be assigned.
+ * This function makes a copy of the name so you can safely free the name.
  *
  * Returns: a new #GstPad, or NULL in case of an error.
  */
@@ -335,6 +339,7 @@ gst_pad_new (const gchar * name, GstPadDirection direction)
  * Creates a new custom pad with the given name from the given template.
  * If name is NULL, a guaranteed unique name (across all pads) 
  * will be assigned.
+ * This function makes a copy of the name so you can safely free the name.
  *
  * Returns: a new #GstPad, or NULL in case of an error.
  */
@@ -360,6 +365,7 @@ gst_pad_custom_new_from_template (GType type, GstPadTemplate * templ,
  * Creates a new real pad with the given name from the given template.
  * If name is NULL, a guaranteed unique name (across all pads) 
  * will be assigned.
+ * This function makes a copy of the name so you can safely free the name.
  *
  * Returns: a new #GstPad, or NULL in case of an error.
  */
@@ -374,15 +380,21 @@ gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
  * gst_pad_get_direction:
  * @pad: a #GstPad to get the direction of.
  *
- * Gets the direction of the pad.
+ * Gets the direction of the pad. The direction of the pad is
+ * decided at construction time so this function does not take 
+ * the LOCK.
  *
  * Returns: the #GstPadDirection of the pad.
+ *
+ * MT safe.
  */
 GstPadDirection
 gst_pad_get_direction (GstPad * pad)
 {
   GstPadDirection result;
 
+  /* pad unkown is a little silly but we need some sort of
+   * error return value */
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_UNKNOWN);
 
   /* since the direction cannot change at runtime we can
@@ -400,6 +412,8 @@ gst_pad_get_direction (GstPad * pad)
  * Activates or deactivates the given pad.
  *
  * Returns: TRUE if the operation was successfull.
+ *
+ * MT safe.
  */
 gboolean
 gst_pad_set_active (GstPad * pad, gboolean active)
@@ -409,13 +423,13 @@ gst_pad_set_active (GstPad * pad, gboolean active)
   gboolean result = FALSE;
   GstPadActivateFunction activatefunc;
 
-  g_return_val_if_fail (GST_IS_PAD (pad), result);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_LOCK (pad);
   old = GST_PAD_IS_ACTIVE (pad);
 
-  if (old == active)
-    goto done;
+  if (G_UNLIKELY (old == active))
+    goto exit;
 
   realpad = GST_PAD_REALIZE (pad);
 
@@ -445,7 +459,8 @@ gst_pad_set_active (GstPad * pad, gboolean active)
         GST_DEBUG_PAD_NAME (realpad));
     GST_FLAG_UNSET (realpad, GST_PAD_DISABLED);
   }
-done:
+
+exit:
   GST_UNLOCK (pad);
 
   return result;
@@ -458,13 +473,15 @@ done:
  * Query if a pad is active
  *
  * Returns: TRUE if the pad is active.
+ *
+ * MT safe.
  */
 gboolean
 gst_pad_is_active (GstPad * pad)
 {
   gboolean result = FALSE;
 
-  g_return_val_if_fail (GST_IS_PAD (pad), result);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_LOCK (pad);
   result = !GST_FLAG_IS_SET (pad, GST_PAD_DISABLED);
@@ -493,31 +510,31 @@ gst_pad_is_active (GstPad * pad)
  * Returns: TRUE if the pad could be blocked. This function can fail
  *   wrong parameters were passed or the pad was already in the 
  *   requested state.
+ *
+ * MT safe.
  */
 gboolean
 gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
     GstPadBlockCallback callback, gpointer user_data)
 {
-  gboolean result = TRUE;
   gboolean was_blocked;
   GstRealPad *realpad;
 
-  /* only for real pads for now, need to transfer the lock
-   * to the realized pad */
   g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);
 
   GST_LOCK (pad);
   realpad = GST_PAD_REALIZE (pad);
+  if (GST_PAD_CAST (realpad) != pad) {
+    GST_LOCK (realpad);
+    GST_UNLOCK (pad);
+  }
 
   /* beware for turning flags into booleans */
   was_blocked = !!GST_RPAD_IS_BLOCKED (realpad);
 
-  if (was_blocked == blocked) {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pad %s:%s was in right state",
-        GST_DEBUG_PAD_NAME (pad));
-    result = FALSE;
-    goto done;
-  }
+  if (G_UNLIKELY (was_blocked == blocked))
+    goto had_right_state;
+
   if (blocked) {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocking pad %s:%s",
         GST_DEBUG_PAD_NAME (pad));
@@ -548,10 +565,15 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocked");
     }
   }
-done:
   GST_UNLOCK (pad);
 
-  return result;
+  return TRUE;
+
+had_right_state:
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pad %s:%s was in right state",
+      GST_DEBUG_PAD_NAME (pad));
+  GST_UNLOCK (pad);
+  return FALSE;
 }
 
 /**
@@ -566,6 +588,8 @@ done:
  * Returns: TRUE if the pad could be blocked. This function can fail
  *   wrong parameters were passed or the pad was already in the 
  *   requested state.
+ *
+ * MT safe.
  */
 gboolean
 gst_pad_set_blocked (GstPad * pad, gboolean blocked)
@@ -582,6 +606,8 @@ gst_pad_set_blocked (GstPad * pad, gboolean blocked)
  * is actually blocked at this point.
  *
  * Returns: TRUE if the pad is blocked.
+ *
+ * MT safe.
  */
 gboolean
 gst_pad_is_blocked (GstPad * pad)
@@ -1323,15 +1349,31 @@ gst_pad_get_pad_template (GstPad * pad)
  * Gets the real parent object of this pad. If the pad
  * is a ghost pad, the actual owner of the real pad is
  * returned, as opposed to #gst_pad_get_parent().
+ * Unref the object after use.
  *
  * Returns: the parent #GstElement.
+ *
+ * MT safe.
  */
 GstElement *
 gst_pad_get_real_parent (GstPad * pad)
 {
+  GstRealPad *realpad;
+  GstElement *element;
+
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  return GST_PAD_PARENT (GST_PAD (GST_PAD_REALIZE (pad)));
+  GST_LOCK (pad);
+  realpad = GST_PAD_REALIZE (pad);
+  if (pad != GST_PAD_CAST (realpad)) {
+    GST_LOCK (realpad);
+    GST_UNLOCK (pad);
+  }
+  element = GST_PAD_PARENT (realpad);
+  gst_object_ref (GST_OBJECT (element));
+  GST_UNLOCK (realpad);
+
+  return element;
 }
 
 /* FIXME not MT safe */
@@ -1640,7 +1682,10 @@ gst_pad_get_allowed_caps (GstPad * pad)
  * caps of the buffer after performing this function and renegotiate
  * to the format if needed.
  *
- * Returns: a new, empty #GstBuffer, or NULL if there is an error
+ * Returns: a new, empty #GstBuffer, or NULL if wrong parameters
+ * were provided.
+ *
+ * MT safe.
  */
 GstBuffer *
 gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size)
@@ -1648,32 +1693,42 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size)
   GstRealPad *peer;
   GstBuffer *result = NULL;
   GstPadBufferAllocFunction bufferallocfunc;
+  GstCaps *caps;
 
   g_return_val_if_fail (GST_IS_REAL_PAD (pad), NULL);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), NULL);
 
-  if ((peer = GST_RPAD_PEER (pad)) == NULL)
+  GST_LOCK (pad);
+  if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
     goto fallback;
 
-  if ((bufferallocfunc = peer->bufferallocfunc) == NULL)
+  if (G_LIKELY ((bufferallocfunc = peer->bufferallocfunc) == NULL))
     goto fallback;
 
   GST_CAT_DEBUG (GST_CAT_PADS,
       "calling bufferallocfunc &%s (@%p) of peer pad %s:%s",
       GST_DEBUG_FUNCPTR_NAME (bufferallocfunc),
-      &bufferallocfunc, GST_DEBUG_PAD_NAME (((GstPad *) peer)));
+      &bufferallocfunc, GST_DEBUG_PAD_NAME (peer));
+  GST_UNLOCK (pad);
 
   result = bufferallocfunc (GST_PAD (peer), offset, size, GST_PAD_CAPS (pad));
 
-  if (result == NULL)
+  if (result == NULL) {
+    GST_LOCK (pad);
     goto fallback;
+  }
 
   return result;
 
   /* fallback case */
 fallback:
+  caps = GST_PAD_CAPS (pad);
+  gst_caps_ref (caps);
+  GST_UNLOCK (pad);
+
   result = gst_buffer_new_and_alloc (size);
-  gst_buffer_set_caps (result, GST_PAD_CAPS (pad));
+  gst_buffer_set_caps (result, caps);
+  gst_caps_unref (caps);
 
   return result;
 }
@@ -1871,24 +1926,28 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
 }
 #endif /* GST_DISABLE_LOADSAVE */
 
-/* should be called with pad lock held */
+/* 
+ * should be called with pad lock held 
+ *
+ * MT safe.
+ */
 static void
-handle_pad_block (GstPad * pad)
+handle_pad_block (GstRealPad * pad)
 {
   GstPadBlockCallback callback;
   gpointer user_data;
-  GstRealPad *realpad;
-
-  realpad = GST_REAL_PAD (pad);
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
       "signal block taken on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  callback = realpad->block_callback;
+  /* need to grab extra ref for the callbacks */
+  gst_object_ref (GST_OBJECT (pad));
+
+  callback = pad->block_callback;
   if (callback) {
-    user_data = realpad->block_data;
+    user_data = pad->block_data;
     GST_UNLOCK (pad);
-    callback (pad, TRUE, user_data);
+    callback (GST_PAD_CAST (pad), TRUE, user_data);
     GST_LOCK (pad);
   } else {
     GST_PAD_BLOCK_SIGNAL (pad);
@@ -1899,15 +1958,17 @@ handle_pad_block (GstPad * pad)
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "got unblocked");
 
-  callback = realpad->block_callback;
+  callback = pad->block_callback;
   if (callback) {
-    user_data = realpad->block_data;
+    user_data = pad->block_data;
     GST_UNLOCK (pad);
-    callback (pad, FALSE, user_data);
+    callback (GST_PAD_CAST (pad), FALSE, user_data);
     GST_LOCK (pad);
   } else {
     GST_PAD_BLOCK_SIGNAL (pad);
   }
+
+  gst_object_unref (GST_OBJECT (pad));
 }
 
 /**
@@ -1919,6 +1980,8 @@ handle_pad_block (GstPad * pad)
  * only be called by @pad's parent.
  *
  * Returns: a #GstFlowReturn from the peer pad.
+ *
+ * MT safe.
  */
 GstFlowReturn
 gst_pad_push (GstPad * pad, GstBuffer * buffer)
@@ -1935,7 +1998,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   GST_LOCK (pad);
 
   while (G_UNLIKELY (GST_RPAD_IS_BLOCKED (pad)))
-    handle_pad_block (pad);
+    handle_pad_block (GST_REAL_PAD_CAST (pad));
 
   if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
     goto not_linked;
@@ -1943,16 +2006,27 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   if (G_UNLIKELY (!GST_RPAD_IS_ACTIVE (peer)))
     goto not_active;
 
+  gst_object_ref (GST_OBJECT (peer));
+  GST_UNLOCK (pad);
+
+  GST_LOCK (peer);
   if (G_UNLIKELY ((chainfunc = peer->chainfunc) == NULL))
     goto no_function;
 
-  GST_UNLOCK (pad);
+  /* NOTE: after this unlock the peer could change chainfunction, 
+   * we cannot hold the lock for the peer so we might send
+   * the data to the wrong function. This is not really a
+   * problem since functions are assigned at creation time
+   * and don't change that often... */
+  GST_UNLOCK (peer);
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
       "calling chainfunction &%s of peer pad %s:%s",
       GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_DEBUG_PAD_NAME (peer));
 
   ret = chainfunc (GST_PAD_CAST (peer), buffer);
+
+  gst_object_unref (GST_OBJECT (peer));
 
   return ret;
 
@@ -1970,7 +2044,7 @@ no_function:
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pushing, but not chainhandler");
   g_warning ("push on pad %s:%s but it has no chainhandler, file a bug.",
       GST_DEBUG_PAD_NAME (peer));
-  GST_UNLOCK_RETURN (pad, GST_FLOW_ERROR);
+  GST_UNLOCK_RETURN (peer, GST_FLOW_ERROR);
 }
 
 /**
@@ -1982,6 +2056,8 @@ no_function:
  * parent.
  *
  * Returns: a #GstFlowReturn from the peer pad.
+ *
+ * MT safe.
  */
 GstFlowReturn
 gst_pad_pull (GstPad * pad, GstBuffer ** buffer)
@@ -1998,21 +2074,28 @@ gst_pad_pull (GstPad * pad, GstBuffer ** buffer)
   GST_LOCK (pad);
 
   while (G_UNLIKELY (GST_RPAD_IS_BLOCKED (pad)))
-    handle_pad_block (pad);
+    handle_pad_block (GST_REAL_PAD_CAST (pad));
 
   if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
     goto not_connected;
 
+  gst_object_ref (GST_OBJECT (peer));
+  GST_UNLOCK (pad);
+
+  GST_LOCK (peer);
   if (G_UNLIKELY ((getfunc = peer->getfunc) == NULL))
     goto no_function;
 
-  GST_UNLOCK (pad);
+  /* see note in above function */
+  GST_UNLOCK (peer);
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
       "calling getfunc %s of peer pad %s:%s",
       GST_DEBUG_FUNCPTR_NAME (getfunc), GST_DEBUG_PAD_NAME (peer));
 
   ret = getfunc (GST_PAD_CAST (peer), buffer);
+
+  gst_object_unref (GST_OBJECT (peer));
 
   return ret;
 
@@ -2026,7 +2109,7 @@ no_function:
   GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
       ("pull on pad %s:%s but the peer pad %s:%s has no getfunc",
           GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
-  GST_UNLOCK_RETURN (pad, GST_FLOW_ERROR);
+  GST_UNLOCK_RETURN (peer, GST_FLOW_ERROR);
 }
 
 /**
@@ -2040,6 +2123,8 @@ no_function:
  * parent.
  *
  * Returns: a #GstFlowReturn from the peer pad.
+ *
+ * MT safe.
  */
 GstFlowReturn
 gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
@@ -2057,21 +2142,28 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   GST_LOCK (pad);
 
   while (G_UNLIKELY (GST_RPAD_IS_BLOCKED (pad)))
-    handle_pad_block (pad);
+    handle_pad_block (GST_REAL_PAD_CAST (pad));
 
   if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
     goto not_connected;
 
+  gst_object_ref (GST_OBJECT (peer));
+  GST_UNLOCK (pad);
+
+  GST_LOCK (peer);
   if (G_UNLIKELY ((getrangefunc = peer->getrangefunc) == NULL))
     goto no_function;
 
-  GST_UNLOCK (pad);
+  /* see note in above function */
+  GST_UNLOCK (peer);
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
       "calling getrangefunc %s of peer pad %s:%s",
       GST_DEBUG_FUNCPTR_NAME (getrangefunc), GST_DEBUG_PAD_NAME (peer));
 
   ret = getrangefunc (GST_PAD_CAST (peer), offset, size, buffer);
+
+  gst_object_unref (GST_OBJECT (peer));
 
   return ret;
 
@@ -2085,7 +2177,7 @@ no_function:
   GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
       ("pullrange on pad %s:%s but the peer pad %s:%s has no getrangefunction",
           GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
-  GST_UNLOCK_RETURN (pad, GST_FLOW_ERROR);
+  GST_UNLOCK_RETURN (peer, GST_FLOW_ERROR);
 }
 
 /************************************************************************
@@ -2641,6 +2733,8 @@ gst_pad_dispatcher (GstPad * pad, GstPadDispatcherFunction dispatch,
  * Sends the event to the peer of the given pad.
  *
  * Returns: TRUE if the event was handled.
+ *
+ * MT safe.
  */
 gboolean
 gst_pad_push_event (GstPad * pad, GstEvent * event)
@@ -2655,10 +2749,12 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   peerpad = GST_RPAD_PEER (pad);
   if (peerpad == NULL)
     goto not_linked;
-
+  gst_object_ref (GST_OBJECT_CAST (peerpad));
   GST_UNLOCK (pad);
 
   result = gst_pad_send_event (GST_PAD_CAST (peerpad), event);
+
+  gst_object_unref (GST_OBJECT_CAST (peerpad));
 
   return result;
 

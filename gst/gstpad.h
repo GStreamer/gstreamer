@@ -268,7 +268,7 @@ struct _GstGhostPadClass {
 /***** helper macros *****/
 /* GstPad */
 #define GST_PAD_NAME(pad)		(GST_OBJECT_NAME(pad))
-#define GST_PAD_PARENT(pad)		((GstElement *)(GST_OBJECT_PARENT(pad)))
+#define GST_PAD_PARENT(pad)		(GST_ELEMENT_CAST(GST_OBJECT_PARENT(pad)))
 #define GST_PAD_ELEMENT_PRIVATE(pad)	(GST_PAD_CAST(pad)->element_private)
 #define GST_PAD_PAD_TEMPLATE(pad)	(GST_PAD_CAST(pad)->padtemplate)
 

@@ -1,5 +1,16 @@
 2004-12-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_custom_new), (gst_pad_get_direction),
+	(gst_pad_set_active), (gst_pad_is_active),
+	(gst_pad_set_blocked_async), (gst_pad_unlink),
+	(gst_pad_get_real_parent), (gst_pad_relink_filtered),
+	(gst_pad_alloc_buffer), (handle_pad_block), (gst_pad_push),
+	(gst_pad_pull), (gst_pad_pull_range), (gst_pad_push_event):
+	* gst/gstpad.h:
+	More MT fixes.
+
+2004-12-09  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gst_private.h:
 	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_set_index),
 	(gst_bin_set_clock), (gst_bin_get_clock),
