@@ -42,7 +42,7 @@ DIST_SUBDIRS = include libs gst \
 EXTRA_DIST = gstreamer.spec.in gst-element-check.m4 \
 	     configure.ac autogen.sh depcomp \
 	     REQUIREMENTS ABOUT-NLS RELEASE DOCBUILDING DEVEL \
-	     idiottest.mak common
+	     idiottest.mak common po/Makefile.in.in po/POTFILES.in po/de.po
 
 dist-hook:
 	cp gstreamer.spec $(distdir)
