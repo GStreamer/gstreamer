@@ -117,7 +117,7 @@ gst_mixer_class_init (GstMixerClass * klass)
 }
 
 /**
- *agst_mixer_list_tracks:
+ * gst_mixer_list_tracks:
  * @mixer: the #GstMixer (a #GstElement) to get the tracks from.
  *
  * Returns a list of avialable tracks for this mixer/element. Note
