@@ -219,12 +219,12 @@ gst_flacdec_init (FlacDec *flacdec)
   flacdec->init = TRUE;
   flacdec->eos = FALSE;
   flacdec->seek_pending = FALSE;
-	flacdec->metadata = NULL;
+  flacdec->metadata = NULL;
 
   FLAC__seekable_stream_decoder_set_read_callback (flacdec->decoder, gst_flacdec_read);
   FLAC__seekable_stream_decoder_set_seek_callback (flacdec->decoder, gst_flacdec_seek);
   FLAC__seekable_stream_decoder_set_tell_callback (flacdec->decoder, gst_flacdec_tell);
-  FLAC__seekable_stream_decoder_set_length_callback (flacdec->decoder, gst_flacdec_length);
+  FLAC__seekable_stream_decoder_set_length_callback (flacdec->decoder, gst_flacdec_length);  
   FLAC__seekable_stream_decoder_set_eof_callback (flacdec->decoder, gst_flacdec_eof);
 #if FLAC_VERSION >= 0x010003
   FLAC__seekable_stream_decoder_set_write_callback (flacdec->decoder, gst_flacdec_write);
@@ -566,10 +566,15 @@ gst_flacdec_loop (GstElement *element)
   flacdec = GST_FLACDEC (element);
 
   GST_DEBUG ("flacdec: entering loop");
-  if (flacdec->init) {
-    GST_DEBUG ("flacdec: initializing decoder");
-    FLAC__seekable_stream_decoder_init (flacdec->decoder);
-    /* FLAC__seekable_stream_decoder_process_metadata (flacdec->decoder); */
+  if (flacdec->init) {    
+    FLAC__StreamDecoderState res;
+    GST_DEBUG ("flacdec: initializing decoder");    
+    res = FLAC__seekable_stream_decoder_init (flacdec->decoder);
+    if (res != FLAC__SEEKABLE_STREAM_DECODER_OK) {
+      gst_element_error (GST_ELEMENT (flacdec), FLAC__SeekableStreamDecoderStateString[res]);
+      return;
+    }
+    /*    FLAC__seekable_stream_decoder_process_metadata (flacdec->decoder);*/
     flacdec->init = FALSE;
   }
 
@@ -763,9 +768,10 @@ gst_flacdec_change_state (GstElement *element)
       flacdec->bs = gst_bytestream_new (flacdec->sinkpad);
       flacdec->seek_pending = FALSE;
       flacdec->total_samples = 0;
-      flacdec->init = TRUE;
       flacdec->eos = FALSE;
-      FLAC__seekable_stream_decoder_reset (flacdec->decoder);
+      if (flacdec->init == FALSE) {
+	FLAC__seekable_stream_decoder_reset (flacdec->decoder);
+      }
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       flacdec->eos = FALSE;
