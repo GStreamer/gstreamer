@@ -1,3 +1,16 @@
+2004-09-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/gnomevfs/gstgnomevfssink.c:
+	(gst_gnomevfssink_uri_get_protocols):
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	(gst_gnomevfssrc_uri_get_protocols):
+	* ext/gnomevfs/gstgnomevfsuri.c: (gst_gnomevfs_get_supported_uris):
+	* ext/gnomevfs/gstgnomevfsuri.h:
+	  Use _uri_new() instead of _open(), so it doesn't take as long and
+	  Christophe's computer won't hang.
+	* gst/playback/gstplaybasebin.c: (unknown_type):
+	  Throw error on unknown media type, so apps actually display it.
+
 2004-09-14  Brian Cameron  <brian.cameron@sun.com
 
 	* tools/gst-launch-ext-m.m:  Changed ~ to $ENV{HOME} to allow
