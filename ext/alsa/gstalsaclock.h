@@ -32,9 +32,6 @@ G_BEGIN_DECLS
 #define GST_IS_ALSA_CLOCK_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_CLOCK))
 #define GST_TYPE_ALSA_CLOCK		(gst_alsa_clock_get_type())
 
-typedef struct _GstAlsaClock GstAlsaClock;
-typedef struct _GstAlsaClockClass GstAlsaClockClass;
-
 typedef GstClockTime (*GstAlsaClockGetTimeFunc) (GstAlsa *);
 
 struct _GstAlsaClock {

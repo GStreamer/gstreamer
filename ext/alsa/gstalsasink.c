@@ -149,7 +149,7 @@ gst_alsa_sink_init (GstAlsaSink *sink)
   gst_pad_set_getcaps_function (this->pad[0], gst_alsa_get_caps);
   gst_element_add_pad (GST_ELEMENT (this), this->pad[0]);
   
-  this->clock = GST_SYSTEM_CLOCK (gst_alsa_clock_new ("alsasinkclock", gst_alsa_sink_get_time, this));
+  this->clock = gst_alsa_clock_new ("alsasinkclock", gst_alsa_sink_get_time, this);
   /* we hold a ref to our clock until we're disposed */
   gst_object_ref (GST_OBJECT (this->clock));
   gst_object_sink (GST_OBJECT (this->clock));
@@ -232,10 +232,10 @@ gst_alsa_sink_check_event (GstAlsaSink *sink, gint pad_nr)
           }
 
           /* if the clock is running */
-	  if (GST_CLOCK_TIME_IS_VALID (GST_ALSA_CLOCK (this->clock)->start_time)) {
+	  if (GST_CLOCK_TIME_IS_VALID (this->clock->start_time)) {
 	    g_assert (this->format);
             /* adjust the start time */
-	    GST_ALSA_CLOCK (this->clock)->start_time +=
+	    this->clock->start_time +=
 	      gst_alsa_samples_to_timestamp (this, this->transmitted) -
 	      gst_alsa_samples_to_timestamp (this, value);
 	  }

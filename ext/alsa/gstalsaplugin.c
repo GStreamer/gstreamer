@@ -27,6 +27,8 @@
 #include "gstalsasink.h"
 #include "gstalsasrc.h"
 
+GST_DEBUG_CATEGORY (alsa_debug);
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {

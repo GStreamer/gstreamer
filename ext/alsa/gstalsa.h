@@ -29,7 +29,7 @@
 #include <gst/gst.h>
 
 
-GST_DEBUG_CATEGORY_STATIC (alsa_debug);
+GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
 #define GST_CAT_DEFAULT alsa_debug
 
 
@@ -110,6 +110,9 @@ typedef enum {
   else     { (GST_ALSA (obj)->pcm_caps &= ~(1<<(flag))); } \
 }G_STMT_END
 
+typedef struct _GstAlsaClock GstAlsaClock;
+typedef struct _GstAlsaClockClass GstAlsaClockClass;
+
 typedef struct _GstAlsa GstAlsa;
 typedef struct _GstAlsaClass GstAlsaClass;
 
@@ -143,7 +146,7 @@ struct _GstAlsa {
   gboolean			autorecover;
 
   /* clocking */
-  GstSystemClock *		clock;		/* our provided clock */
+  GstAlsaClock *		clock;		/* our provided clock */
   snd_pcm_uframes_t		transmitted; 	/* samples transmitted since last sync 
 						   This thing actually is our master clock.
 						   We will event insert silent samples or

@@ -144,7 +144,7 @@ gst_alsa_src_init (GstAlsaSrc *src)
   gst_pad_set_getcaps_function (this->pad[0], gst_alsa_get_caps);
   gst_element_add_pad (GST_ELEMENT (this), this->pad[0]);
   
-  this->clock = GST_SYSTEM_CLOCK (gst_alsa_clock_new ("alsasrcclock", gst_alsa_src_get_time, this));
+  this->clock = gst_alsa_clock_new ("alsasrcclock", gst_alsa_src_get_time, this);
   /* we hold a ref to our clock until we're disposed */
   gst_object_ref (GST_OBJECT (this->clock));
   gst_object_sink (GST_OBJECT (this->clock));
