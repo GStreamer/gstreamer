@@ -236,7 +236,9 @@ gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
 
   GST_DEBUG (0, "input buffer has %d samples\n", samples_in);
 
+  /* FIXME: should really select the first 1024 samples after the timestamp. */
   if (GST_BUFFER_TIMESTAMP (bufin) < synaesthesia->next_time || samples_in < 1024) {
+    GST_DEBUG (0, "timestamp is %llu: want >= %llu\n", GST_BUFFER_TIMESTAMP (bufin), synaesthesia->next_time);
     gst_buffer_unref (bufin);
     return;
   }
