@@ -77,6 +77,11 @@ gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context, int codec_id)
 		           "video/x-mjpeg",
 			   NULL);
       break;
+    case CODEC_ID_MJPEGB:
+      return GST_CAPS_NEW ("ffmpeg_mjpeg",
+		           "video/x-mjpegb",
+			   NULL);
+      break;
     case CODEC_ID_MPEG4:
       if (context) {
         return GST_CAPS_NEW ("ffmpeg_mpeg4",
@@ -227,6 +232,11 @@ gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context, int codec_id)
     case CODEC_ID_MACE6:
       return GST_CAPS_NEW ("ffmpeg_mace6",
 		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_HUFFYUV:
+      return GST_CAPS_NEW ("ffmpeg_huffyuv",
+		           "video/x-huffyuv",
 			   NULL);
       break;
     /* various pcm "codecs" */
