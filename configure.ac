@@ -511,14 +511,24 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_DIVX, true)
 GST_CHECK_FEATURE(DIVX, [divx plugins], divx, [
   HAVE_DIVX=yes
   AC_CHECK_HEADER(encore2.h, ,
-                  [ AC_MSG_WARN([Divx4linux headers not found]) &&
+                  [ AC_MSG_WARN([Divx4linux encore headers not found]) &&
+                    HAVE_DIVX=no ] )
+  AC_CHECK_HEADER(decore.h, ,
+                  [ AC_MSG_WARN([Divx4linux decoder headers not found]) &&
                     HAVE_DIVX=no ] )
   LIBS="-lm"
   AC_CHECK_LIB(divxencore, encore, ,
-               [ AC_MSG_WARN([Divx4linux libs not found]) &&
+               [ AC_MSG_WARN([Divx4linux encore libs not found]) &&
                  HAVE_DIVX=no ] )
-  DIVX_LIBS="-lxvidcore -lm"
-  AC_SUBST(DIVX_LIBS)
+  AC_CHECK_LIB(divxdecore, decore, ,
+               [ AC_MSG_WARN([Divx4linux decore libs not found]) &&
+                 HAVE_DIVX=no ] )
+  if test x$HAVE_DIVX = xyes; then
+    DIVXENC_LIBS="-ldivxencore -lm"
+    DIVXDEC_LIBS="-ldivxdecore -lm"
+    AC_SUBST(DIVXENC_LIBS)
+    AC_SUBST(DIVXDEC_LIBS)
+  fi
 ])
 
 dnl *** dvdread ***
@@ -899,10 +909,15 @@ GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
                     HAVE_XVID=no ] )
   LIBS="-lm"
   AC_CHECK_LIB(xvidcore, xvid_encore, ,
-               [ AC_MSG_WARN([Xvid libs not found]) &&
+               [ AC_MSG_WARN([Xvid encore libs not found]) &&
                  HAVE_XVID=no ] )
-  XVID_LIBS="-lxvidcore -lm"
-  AC_SUBST(XVID_LIBS)
+  AC_CHECK_LIB(xvidcore, xvid_decore, ,
+               [ AC_MSG_WARN([Xvid decore libs not found]) &&
+                 HAVE_XVID=no ] )
+  if test x$HAVE_XVID = xyes; then
+    XVID_LIBS="-lxvidcore -lm"
+    AC_SUBST(XVID_LIBS)
+  fi
 ])
 
 
