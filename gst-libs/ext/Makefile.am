@@ -1,9 +1,2 @@
-if USE_FFMPEG
-FFMPEG_DIR=ffmpeg
-else
-FFMPEG_DIR=
-endif
-
-SUBDIRS = $(FFMPEG_DIR)
-
-DIST_SUBDIRS= ffmpeg
+SUBDIRS =
+DIST_SUBDIRS =
