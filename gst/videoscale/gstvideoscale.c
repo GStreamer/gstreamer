@@ -263,14 +263,20 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
   otherstructure = gst_caps_get_structure (othercaps, 0);
   otherpar = gst_structure_get_value (otherstructure, "pixel-aspect-ratio");
   if (par && otherpar) {
-    gint num = gst_value_get_fraction_numerator (par),
-        den = gst_value_get_fraction_denominator (par),
-        onum = gst_value_get_fraction_numerator (otherpar),
-        oden = gst_value_get_fraction_denominator (otherpar);
-    gboolean keep_h,
-        w_align = (width * num * oden % (den * onum) == 0),
-        h_align = (height * den * onum % (num * oden) == 0),
-        w_inc = (num * oden > den * onum);
+    gint num, den, onum, oden;
+    gboolean keep_h, w_align, h_align, w_inc;
+
+    /* otherpar can be a list */
+    if (G_VALUE_TYPE (otherpar) == GST_TYPE_LIST)
+      otherpar = gst_value_list_get_value (otherpar, 0);
+
+    num = gst_value_get_fraction_numerator (par);
+    den = gst_value_get_fraction_denominator (par);
+    onum = gst_value_get_fraction_numerator (otherpar);
+    oden = gst_value_get_fraction_denominator (otherpar);
+    w_align = (width * num * oden % (den * onum) == 0);
+    h_align = (height * den * onum % (num * oden) == 0);
+    w_inc = (num * oden > den * onum);
 
     /* decide whether to change width or height */
     if (w_align && w_inc)
