@@ -154,7 +154,9 @@ struct _GstOggDemux
   GstOggPad *seek_pad;
   gint64 seek_to;
   gint64 seek_skipped;
+  guint64 seek_offset;
   GstFormat seek_format;
+  gint seek_try;
 };
 
 struct _GstOggDemuxClass
@@ -486,7 +488,7 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      gint64 offset, position, total;
+      gint64 offset, position, total, seek_offset;
       GstFormat format, my_format;
       gboolean res;
 
@@ -550,19 +552,22 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
         position = 0;
       else if (position > total)
         position = total;
-      if (gst_file_pad_seek (ogg->sinkpad,
-              gst_file_pad_get_length (ogg->sinkpad) *
-              ((gdouble) position) / ((gdouble) total),
+      seek_offset = gst_file_pad_get_length (ogg->sinkpad) *
+          ((gdouble) position) / ((gdouble) total);
+      if (gst_file_pad_seek (ogg->sinkpad, seek_offset,
               GST_SEEK_METHOD_SET) != 0)
         goto error;
+      ogg->seek_try = 1;
       ogg_sync_clear (&ogg->sync);
 
-      GST_OGG_SET_STATE (ogg, GST_OGG_STATE_PLAY);
+      GST_OGG_SET_STATE (ogg, GST_OGG_STATE_SEEK);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
+          );
       if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
         FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-            pad->flags |= GST_OGG_PAD_NEEDS_FLUSH;);
+            pad->flags |= GST_OGG_PAD_NEEDS_FLUSH;
+            );
       }
       GST_DEBUG_OBJECT (ogg,
           "initiating seeking to format %d, offset %" G_GUINT64_FORMAT, format,
@@ -570,8 +575,9 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
 
       /* store format and position we seek to */
       ogg->seek_pad = cur;
-      ogg->seek_to = offset;
-      ogg->seek_format = format;
+      ogg->seek_to = position;
+      ogg->seek_format = GST_FORMAT_TIME;
+      ogg->seek_offset = seek_offset;
 
       gst_event_unref (event);
       return TRUE;
@@ -636,7 +642,8 @@ gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       GST_FLAG_UNSET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
+          );
       break;
     default:
       gst_pad_event_default (pad, event);
@@ -922,7 +929,8 @@ _find_chain_get_unknown_part (GstOggDemux * ogg, gint64 * start, gint64 * end)
   *end = G_MAXINT64;
 
   g_assert (ogg->current_chain >= 0);
-  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset););
+  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset);
+      );
 
   if (ogg->setup_state == SETUP_FIND_LAST_CHAIN) {
     *end = gst_file_pad_get_length (ogg->sinkpad);
@@ -1051,7 +1059,8 @@ _find_streams_check (GstOggDemux * ogg)
   } else {
     endpos = G_MAXINT64;
     FOR_PAD_IN_CHAIN (ogg, pad, ogg->chains->len - 1,
-        endpos = MIN (endpos, pad->start_offset););
+        endpos = MIN (endpos, pad->start_offset);
+        );
   }
   if (!ogg->seek_skipped || gst_ogg_demux_position (ogg) >= endpos) {
     /* have we found the endposition for all streams yet? */
@@ -1324,29 +1333,65 @@ gst_ogg_demux_push (GstOggDemux * ogg, ogg_page * page)
           "in seek - offset now: %" G_GUINT64_FORMAT
           " (pad %d) - desired offset %" G_GUINT64_FORMAT " (pad %d)",
           cur->known_offset, cur->serial, ogg->seek_to, ogg->seek_pad->serial);
-      if (cur == ogg->seek_pad) {
-        gint64 position;
+
+      if (cur != ogg->seek_pad) {
+        break;
+      } else {
+        gint64 position, diff, start;
+        gdouble ratio;
+
+        if (ogg->seek_try > 5) {
+          GST_DEBUG ("Seeking took too long, continuing with current page");
+          goto play;
+        }
 
         position = ogg_page_granulepos (page);
 
         /* see if we reached the destination position when seeking */
         if (ogg->seek_format != GST_FORMAT_DEFAULT) {
           if (GST_PAD_PEER (cur->pad)
-              && !gst_pad_convert (GST_PAD_PEER (cur->pad), GST_FORMAT_DEFAULT,
-                  position, &ogg->seek_format, &position)) {
+              && (!gst_pad_convert (GST_PAD_PEER (cur->pad),
+                      GST_FORMAT_DEFAULT,
+                      position, &ogg->seek_format, &position) ||
+                  !gst_pad_convert (GST_PAD_PEER (cur->pad),
+                      GST_FORMAT_DEFAULT,
+                      cur->start, &ogg->seek_format, &start))) {
             /* let's just stop then */
-            position = G_MAXINT64;
+            goto play;
           }
         }
 
-        if (position >= ogg->seek_to) {
-          GST_OGG_SET_STATE (ogg, GST_OGG_STATE_PLAY);
-          GST_DEBUG_OBJECT (ogg,
-              "ended seek at offset %" G_GUINT64_FORMAT " (requested  %"
-              G_GUINT64_FORMAT, cur->known_offset, ogg->seek_to);
-          ogg->seek_pad = NULL;
-          ogg->seek_to = 0;
+        /* fairly random treshold. */
+        position -= start;
+        if (ogg->seek_to > position)
+          diff = ogg->seek_to - position;
+        else
+          diff = position - ogg->seek_to;
+        if (diff < GST_SECOND) {
+          GST_DEBUG ("Close enough (%" GST_TIME_FORMAT " seconds off)",
+              GST_TIME_ARGS (diff));
+          goto play;
         }
+
+        /* seek again! yay */
+        ratio = (gdouble) ogg->seek_to / position;
+        ogg->seek_offset = ogg->seek_offset * ratio;
+        if (gst_file_pad_seek (ogg->sinkpad, ogg->seek_offset,
+                GST_SEEK_METHOD_SET) != 0) {
+          goto play;
+        }
+        ogg->seek_try++;
+        ogg_sync_clear (&ogg->sync);
+        return;
+
+      play:
+        GST_OGG_SET_STATE (ogg, GST_OGG_STATE_PLAY);
+        GST_DEBUG_OBJECT (ogg,
+            "ended seek at offset %" G_GUINT64_FORMAT " (requested  %"
+            G_GUINT64_FORMAT, cur->known_offset, ogg->seek_to);
+        ogg->seek_pad = NULL;
+        ogg->seek_to = 0;
+        ogg->seek_try = 0;
       }
       /* fallthrough */
     case GST_OGG_STATE_PLAY:
