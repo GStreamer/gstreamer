@@ -523,9 +523,10 @@ gst_audio_convert_fixate (GstPad * pad, const GstCaps * caps)
   }
 
   if (_fixate_caps_to_int (&copy, "channels", try.channels)) {
-    int n;
+    int n, c;
 
-    if (try.channels > 2) {
+    gst_structure_get_int (gst_caps_get_structure (copy, 0), "channels", &c);
+    if (c > 2) {
       /* make sure we have a channelpositions structure or array here */
       GstStructure *str;
 
@@ -533,7 +534,7 @@ gst_audio_convert_fixate (GstPad * pad, const GstCaps * caps)
         str = gst_caps_get_structure (copy, n);
         if (!gst_structure_get_value (str, "channel-positions")) {
           /* first try otherpad's positions, else anything */
-          if (ac_caps.pos != NULL) {
+          if (ac_caps.pos != NULL && c == ac_caps.channels) {
             gst_audio_set_channel_positions (str, ac_caps.pos);
           } else {
             gst_audio_set_structure_channel_positions_list (str,
