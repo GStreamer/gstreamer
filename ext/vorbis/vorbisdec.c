@@ -340,6 +340,13 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
   packet.bytes = GST_BUFFER_SIZE (buf);
   packet.granulepos = GST_BUFFER_OFFSET_END (buf);
   packet.packetno = vd->packetno++;
+
+  /* 
+   * FIXME. Is there anyway to know that this is the last packet and
+   * set e_o_s??
+   */
+  packet.e_o_s = 0;
+
   /* switch depending on packet type */
   if (packet.packet[0] & 1) {
     /* header packet */
@@ -351,6 +358,8 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
       gst_data_unref (data);
       return;
     }
+    /* Packetno = 0 if the first byte is exactly 0x01 */
+    packet.b_o_s = (packet.packet[0] == 0x1) ? 1 : 0;
     if (vorbis_synthesis_headerin (&vd->vi, &vd->vc, &packet)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
           (NULL), ("couldn't read header packet"));

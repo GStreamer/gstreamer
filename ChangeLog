@@ -1,3 +1,13 @@
+2004-05-31  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_chain):
+	  Initialise b_o_s and e_o_s variables
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data):
+	  Add some unusual fourcc's from mplayer avi's
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_plugin_init):
+	  Make the muxer have rank GST_RANK_NONE, so it doesn't mess up
+	  autoplugging.
+
 2004-05-28  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
