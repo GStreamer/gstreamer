@@ -10,7 +10,7 @@ Vendor:		GStreamer Backpackers Team <package@gstreamer.net>
 Source:		http://gstreamer.net/src/gst-ffmpeg/gst-ffmpeg-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-%define 	majorminor	@GST_MAJORMINOR@
+%define 	majorminor	07	
 
 Prereq:		%{_bindir}/gst-register-%{majorminor}
 Requires: 	gstreamer%{majorminor} >= 0.7.5
