@@ -249,12 +249,15 @@ gst_thread_change_state (GstElement *element)
         GST_INFO (GST_CAT_THREAD, "gstthread: starting thread \"%s\"",
                  GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
+        g_mutex_lock (thread->lock);
         // create the thread
         pthread_create (&thread->thread_id, NULL,
                         gst_thread_main_loop, thread);
 
         // wait for it to 'spin up'
         //gst_thread_wait_thread (thread);
+        g_cond_wait (thread->cond, thread->lock);
+        g_mutex_unlock (thread->lock);
       } else {
         GST_INFO (GST_CAT_THREAD, "gstthread: NOT starting thread \"%s\"",
                 GST_ELEMENT_NAME (GST_ELEMENT (element)));
