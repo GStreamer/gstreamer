@@ -1,5 +1,16 @@
 2004-07-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/videoscale/README:
+	  add testing examples
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_link),
+	(gst_videoscale_chain):
+	* gst/videoscale/videoscale.c: (gst_videoscale_setup),
+	(gst_videoscale_get_size):
+	  add get_size function that handles stride like videotestsrc.
+	  fixes conversion for YUV formats for as much as I can test them.
+
+2004-07-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_check_xshm_calls),
 	(gst_ximagesink_ximage_new), (gst_ximagesink_ximage_destroy):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls),
