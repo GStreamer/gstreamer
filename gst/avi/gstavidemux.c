@@ -439,8 +439,7 @@ gst_avi_demux_handle_src_query (GstPad * pad,
     case GST_QUERY_POSITION:
       switch (*format) {
         case GST_FORMAT_TIME:
-          if (stream->strh->samplesize &&
-              stream->strh->type == GST_RIFF_FCC_auds) {
+          if (stream->strh->rate && stream->strh->type == GST_RIFF_FCC_auds) {
             *value = ((gfloat) stream->current_byte) * GST_SECOND /
                 stream->strh->rate;
           } else {
