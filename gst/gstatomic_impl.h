@@ -206,7 +206,6 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 }
 
 /***** Sun SPARC *****/
-/* disabled for now */
 #elif defined(HAVE_CPU_SPARC) && defined(__GNUC__)
 
 GST_INLINE_FUNC void 	gst_atomic_int_destroy 	(GstAtomicInt *aint) { } 
@@ -245,21 +244,37 @@ GST_INLINE_FUNC void
 gst_atomic_int_add (GstAtomicInt *aint, gint val)
 {
   volatile int increment, *ptr;
-  char lock;
+  int lock = 1;
+  int ignore = 0;
 
   ptr = &(aint->counter);
 
+#if __GNUC__ > 3 || (__GNUC__ >=3 && __GNUC_MINOR__ >= 2)
  __asm__ __volatile__("1: ldstub [%[ptr] + 3], %[lock]\n"
-		      "\torcc %[lock], 0, %%g0\n"
+		      "\torcc %[lock], 0, %[ignore]\n"
 		      "\tbne 1b\n" /* go back until we have the lock */
 		      "\tld [%[ptr]], %[inc]\n"
 		      "\tsra %[inc], 8, %[inc]\n"
 		      "\tadd %[inc], %[val], %[inc]\n"
 		      "\tsll %[inc], 8, %[lock]\n"
 		      "\tst %[lock],[%[ptr]]\n" /* Release the lock */
-		      : [inc] "=&r" (increment), [lock] "=r" (lock)
+		      : [inc] "=&r" (increment), [lock] "=r" (lock),
+		        [ignore] "=&r" (ignore)
 		      : "0" (increment), [ptr] "r" (ptr), [val] "r" (val)
 		      );
+#else
+ __asm__ __volatile__("1: ldstub [%4 + 3], %1\n"
+		      "\torcc %1, 0, %2\n"
+		      "\tbne 1b\n" /* go back until we have the lock */
+		      "\tld [%4], %0\n"
+		      "\tsra %0, 8, %0\n"
+		      "\tadd %0, %5, %0\n"
+		      "\tsll %0, 8, %1\n"
+		      "\tst %1,[%4]\n" /* Release the lock */
+		      : "=&r" (increment), "=r" (lock), "=&r" (ignore)
+		      : "0" (increment), "r" (ptr), "r" (val)
+		      );
+#endif
 }
 
 GST_INLINE_FUNC void
@@ -272,21 +287,37 @@ GST_INLINE_FUNC gboolean
 gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 {
   volatile int increment, *ptr;
-  char lock;
+  int lock = 1;
+  int ignore = 0;
 
   ptr = &aint->counter;
 
+#if __GNUC__ > 3 || (__GNUC__ >=3 && __GNUC_MINOR__ >= 2)
   __asm__ __volatile__("1: ldstub [%[ptr] + 3], %[lock]\n"
-		       "\torcc %[lock], 0, %%g0\n"
+		       "\torcc %[lock], 0, %[ignore]\n"
 		       "\tbne 1b\n" /* go back until we have the lock */
 		       "\tld [%[ptr]], %[inc]\n"
 		       "\tsra %[inc], 8, %[inc]\n"
 		       "\tsub %[inc], 1, %[inc]\n"
 		       "\tsll %[inc], 8, %[lock]\n"
 		       "\tst %[lock],[%[ptr]]\n" /* Release the lock */
-		       : [inc] "=&r" (increment), [lock] "=r" (lock)
+		       : [inc] "=&r" (increment), [lock] "=r" (lock),
+		         [ignore] "=&r" (ignore)
 		       : "0" (increment), [ptr] "r" (ptr)
 		       );
+#else
+  __asm__ __volatile__("1: ldstub [%4 + 3], %1\n"
+		       "\torcc %1, 0, %2\n"
+		       "\tbne 1b\n" /* go back until we have the lock */
+		       "\tld [%4], %0\n"
+		       "\tsra %0, 8, %0\n"
+		       "\tsub %0, 1, %0\n"
+		       "\tsll %0, 8, %1\n"
+		       "\tst %1,[%4]\n" /* Release the lock */
+		       : "=&r" (increment), "=r" (lock), "=&r" (ignore)
+		       : "0" (increment), "r" (ptr)
+		       );
+#endif
 
   return increment == 0;
 }
