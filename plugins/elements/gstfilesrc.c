@@ -136,6 +136,8 @@ static gboolean 	gst_filesrc_srcpad_query 	(GstPad *pad, GstQueryType type,
 
 static GstElementStateReturn	gst_filesrc_change_state	(GstElement *element);
 
+static void		gst_filesrc_uri_handler_init	(gpointer g_iface, gpointer iface_data);
+
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_filesrc_signals[LAST_SIGNAL] = { 0 };*/
@@ -157,8 +159,15 @@ gst_filesrc_get_type(void)
       0,
       (GInstanceInitFunc)gst_filesrc_init,
     };
+    static const GInterfaceInfo urihandler_info = {
+      gst_filesrc_uri_handler_init,
+      NULL,
+      NULL
+    };
     filesrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFileSrc", &filesrc_info, 0);
-
+    
+    g_type_add_interface_static (filesrc_type, GST_TYPE_URI_HANDLER, &urihandler_info);
+    
     GST_DEBUG_CATEGORY_INIT (gst_filesrc_debug, "filesrc", 0, "filesrc element");
   }
   return filesrc_type;
@@ -263,8 +272,32 @@ gst_filesrc_dispose (GObject *object)
   g_mutex_free (src->map_regions_lock);
   if (src->filename)
     g_free (src->filename);
+  if (src->uri)
+    g_free (src->uri);
 }
 
+static gboolean
+gst_filesrc_set_location (GstFileSrc *src, const gchar *location)
+{
+  /* the element must be stopped in order to do this */
+  if (GST_STATE (src) == GST_STATE_PLAYING)
+    return FALSE;
+
+  if (src->filename) g_free (src->filename);
+  if (src->uri) g_free (src->uri);
+  /* clear the filename if we get a NULL (is that possible?) */
+  if (location == NULL) {
+    src->filename = NULL;
+    src->uri = NULL;
+  } else {
+    src->filename = g_strdup (location);
+    src->uri = gst_uri_construct ("file", src->filename);
+  }
+  g_object_notify (G_OBJECT (src), "location");
+  gst_uri_handler_new_uri (GST_URI_HANDLER (src), src->uri);
+
+  return TRUE;
+}
 
 static void
 gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -278,19 +311,7 @@ gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
 
   switch (prop_id) {
     case ARG_LOCATION:
-      /* the element must be stopped in order to do this */
-      g_return_if_fail (GST_STATE (src) < GST_STATE_PLAYING);
-
-      if (src->filename) g_free (src->filename);
-      /* clear the filename if we get a NULL (is that possible?) */
-      if (g_value_get_string (value) == NULL) {
-        gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
-        src->filename = NULL;
-      /* otherwise set the new filename */
-      } else {
-        src->filename = g_strdup (g_value_get_string (value));
-      }
-      g_object_notify (G_OBJECT (src), "location");
+      gst_filesrc_set_location (src, g_value_get_string (value));
       break;
     case ARG_BLOCKSIZE:
       src->block_size = g_value_get_ulong (value);
@@ -918,3 +939,55 @@ error:
   gst_event_unref (event);
   return FALSE;
 }
+
+/*** GSTURIHANDLER INTERFACE *************************************************/
+
+static guint
+gst_filesrc_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+static gchar **
+gst_filesrc_uri_get_protocols(void)
+{
+  static gchar *protocols[] = {"file", NULL};
+  return protocols;
+}
+static const gchar *
+gst_filesrc_uri_get_uri (GstURIHandler *handler)
+{
+  GstFileSrc *src = GST_FILESRC (handler);
+  
+  return src->uri;
+}
+static gboolean
+gst_filesrc_uri_set_uri (GstURIHandler *handler, const gchar *uri)
+{
+  gchar *protocol, *location;
+  gboolean ret;
+  GstFileSrc *src = GST_FILESRC (handler);
+
+  protocol = gst_uri_get_protocol (uri);
+  if (strcmp (protocol, "file") != 0) {
+    g_free (protocol);
+    return FALSE;
+  }
+  g_free (protocol);
+  location = gst_uri_get_location (uri);
+  ret = gst_filesrc_set_location (src, location);
+  g_free (location);
+
+  return ret;
+}
+
+static void
+gst_filesrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_filesrc_uri_get_type;
+  iface->get_protocols = gst_filesrc_uri_get_protocols;
+  iface->get_uri = gst_filesrc_uri_get_uri;
+  iface->set_uri = gst_filesrc_uri_set_uri;
+}
+

@@ -53,6 +53,7 @@ struct _GstFileSink {
   GstElement element;
 
   gchar *filename;
+  gchar *uri;
   FILE *file;
 
   guint64 data_written;

@@ -867,16 +867,6 @@ print_element_list (void)
         g_print ("%s:  %s: %s\n", plugin->desc.name,
                 GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       }
-#ifndef GST_DISABLE_URI
-      else if (GST_IS_URI_HANDLER (feature)) {
-        GstURIHandler *handler;
-
-        handler = GST_URI_HANDLER (feature);
-        g_print ("%s:  %s: \"%s\" (%s) element \"%s\" property \"%s\"\n",
-                 plugin->desc.name, GST_PLUGIN_FEATURE_NAME (handler), handler->uri,
-                 handler->longdesc, handler->element, handler->property);
-      }
-#endif
       else {
         g_print ("%s:  %s (%s)\n", plugin->desc.name,
                 GST_PLUGIN_FEATURE_NAME (feature),

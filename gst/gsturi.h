@@ -30,50 +30,76 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+  GST_URI_UNKNOWN,
+  GST_URI_SINK,
+  GST_URI_SRC
+} GstURIType;
+
+#define GST_URI_TYPE_IS_VALID(type) ((type) == GST_URI_SRC || (type) == GST_URI_SINK)
+
 /* uri handler functions */
 #define GST_TYPE_URI_HANDLER		(gst_uri_handler_get_type ())
 #define GST_URI_HANDLER(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_URI_HANDLER, GstURIHandler))
 #define GST_IS_URI_HANDLER(obj) 	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_URI_HANDLER))
-#define GST_URI_HANDLER_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_URI_HANDLER, GstURIHandlerClass))
-#define GST_IS_URI_HANDLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_URI_HANDLER))
-#define GST_URI_HANDLER_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_URI_HANDLER, GstURIHandlerClass))
+#define GST_URI_HANDLER_GET_INTERFACE(obj) 	(G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_URI_HANDLER, GstURIHandlerInterface))
+#define GST_URI_HANDLER_CLASS(obj)	(G_TYPE_CHECK_CLASS_CAST ((obj), GST_TYPE_URI_HANDLER, GstURIHandler))
 
 typedef struct _GstURIHandler GstURIHandler;
-typedef struct _GstURIHandlerClass GstURIHandlerClass;
+typedef struct _GstURIHandlerInterface GstURIHandlerInterface;
 
-struct _GstURIHandler {
-  GstPluginFeature feature;
+struct _GstURIHandlerInterface {
+  GTypeInterface	parent;
 
-  /* --- public ---- */
-  gchar *uri;              /* The uri that is described */
-  gchar *longdesc;         /* description of the uri */
-  gchar *element;          /* The element that can handle this uri */
-  gchar *property;         /* The property on the element to set the uri */
+  /* signals */
+  void			(* new_uri)				(GstURIHandler *	handler,
+								 const gchar *		uri);
+  /* idea for the future ?
+  gboolean		(* require_password)			(GstURIHandler *	handler,
+								 gchar **		username,
+								 gchar **		password);
+   */
 
-  GST_OBJECT_PADDING
-};
+  /* vtable */
 
-struct _GstURIHandlerClass {
-  GstPluginFeatureClass parent;
+  /* querying capabilities */
+  GstURIType		(* get_type)				(void);
+  gchar **		(* get_protocols)			(void);
+
+  /* using the interface */
+  G_CONST_RETURN gchar *(* get_uri)				(GstURIHandler *	handler);
+  gboolean		(* set_uri)				(GstURIHandler *	handler,
+								 const gchar *		uri);
+  
+  /* we might want to add functions here to query features, someone with gnome-vfs knowledge go ahead */
 
   GST_CLASS_PADDING
 };
 
-GType			gst_uri_handler_get_type	(void);
+/* general URI functions */
 
-GstURIHandler*		gst_uri_handler_new		(const gchar *name, 
-		          				 const gchar *uri, const gchar *longdesc, 
-							 const gchar *element, gchar *property);
+gboolean		gst_uri_protocol_is_valid		(const gchar *		protocol);
+gboolean		gst_uri_is_valid      			(const gchar *		uri);
+gchar *			gst_uri_get_protocol			(const gchar *		uri);
+gchar *			gst_uri_get_location			(const gchar *		uri);
+gchar *			gst_uri_construct			(const gchar *		protocol,
+								 const gchar *		location);
 
-GstURIHandler*		gst_uri_handler_find		(const gchar *name);
-GstURIHandler*		gst_uri_handler_find_by_uri	(const gchar *uri);
+GstElement *		gst_element_make_from_uri		(const GstURIType	type,
+								 const gchar *		uri,
+								 const gchar *		elementname);
 
-GstElement*		gst_uri_handler_create		(GstURIHandler *handler, const gchar *name);
-GstElement*		gst_uri_handler_make_by_uri	(const gchar *uri, const gchar *name);
+/* accessing the interface */
+GType			gst_uri_handler_get_type		(void);
 
-/* filters */
-gboolean	 	gst_uri_handler_uri_filter 	(GstPluginFeature *feature, const gchar *uri);
+guint			gst_uri_handler_get_uri_type		(GstURIHandler *	handler);
+gchar **		gst_uri_handler_get_protocols		(GstURIHandler *	handler);
+G_CONST_RETURN gchar * 	gst_uri_handler_get_uri			(GstURIHandler *	handler);
+gboolean      		gst_uri_handler_set_uri			(GstURIHandler *	handler,
+								 const gchar *		uri);
+void			gst_uri_handler_new_uri			(GstURIHandler *	handler,
+								 const gchar *		uri);
 
 G_END_DECLS
 
-#endif /* __GST_URI_H */
+#endif /* __GST_URI_H__ */

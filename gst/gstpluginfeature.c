@@ -147,7 +147,7 @@ gst_plugin_feature_type_name_filter (GstPluginFeature *feature,
  * the most appropriate feature.
  */
 void
-gst_plugin_feature_set_rank (GstPluginFeature *feature, guint16 rank)
+gst_plugin_feature_set_rank (GstPluginFeature *feature, guint rank)
 {
   g_return_if_fail (feature != NULL);
   g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
@@ -155,7 +155,7 @@ gst_plugin_feature_set_rank (GstPluginFeature *feature, guint16 rank)
   feature->rank = rank;
 }
 /**
- * gst_plugin_feature_set_rank:
+ * gst_plugin_feature_set_name:
  * @feature: a feature
  * @name: the name to set
  *
@@ -174,5 +174,35 @@ gst_plugin_feature_set_name (GstPluginFeature *feature, const gchar *name)
   } else {
     feature->name = g_strdup (name);
   }
+}
+/**
+ * gst_plugin_feature_get rank:
+ * @feature: a feature
+ *
+ * Gets the rank of a plugin feature.
+ *
+ * Returns: The rank of the feature
+ */
+guint
+gst_plugin_feature_get_rank (GstPluginFeature *feature)
+{
+  g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), GST_RANK_NONE);
+  
+  return feature->rank;
+}
+/**
+ * gst_plugin_feature_set_name:
+ * @feature: a feature
+ *
+ * Gets the name of a pluginfeature.
+ *
+ * Returns: the name
+ */
+G_CONST_RETURN gchar *
+gst_plugin_feature_get_name (GstPluginFeature *feature)
+{
+  g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), NULL);
+  
+  return feature->name;
 }
 

@@ -10248,12 +10248,58 @@ Destroy the scheduler
 @parent: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_uri_handler_create ##### -->
+<para>
+
+</para>
+
+@handler: 
+@name: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_uri_handler_destroy ##### -->
 <para>
 
 </para>
 
 @handler: 
+
+<!-- ##### FUNCTION gst_uri_handler_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_uri_handler_find_by_uri ##### -->
+<para>
+
+</para>
+
+@uri: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_uri_handler_make_by_uri ##### -->
+<para>
+
+</para>
+
+@uri: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_uri_handler_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@uri: 
+@longdesc: 
+@element: 
+@property: 
+@Returns: 
 
 <!-- ##### FUNCTION gst_util_get_bool_arg ##### -->
 <para>

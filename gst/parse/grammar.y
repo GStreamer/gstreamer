@@ -7,8 +7,10 @@
 
 #include "../gst_private.h"
 
+#include "../gstconfig.h"
 #include "../gstparse.h"
 #include "../gstinfo.h"
+#include "../gsturi.h"
 #include "types.h"
 
 #define YYERROR_VERBOSE 1
@@ -97,7 +99,7 @@ typedef struct {
   } \
 }G_STMT_END
 #define ERROR(type, ...) SET_ERROR (((graph_t *) graph)->error, (type), __VA_ARGS__ )
-#ifdef GST_DEBUG_ENABLED
+#ifndef GST_DISABLE_GST_DEBUG
 #  define YYDEBUG 1
    /* bison 1.35 calls this macro with side effects, we need to make sure the
       side effects work - crappy bison
@@ -122,7 +124,7 @@ typedef struct {
   } \
 }G_STMT_END
 #define ERROR(type, args...) SET_ERROR (((graph_t *) graph)->error, (type), ## args )
-#ifdef GST_DEBUG_ENABLED
+#ifndef GST_DISABLE_GST_DEBUG
 #  define YYDEBUG 1
    /* bison 1.35 calls this macro with side effects, we need to make sure the
       side effects work - crappy bison
@@ -147,7 +149,7 @@ typedef struct {
   } \
 }G_STMT_END
 #define ERROR(type, ...) SET_ERROR (((graph_t *) graph)->error, (type), "error while parsing")
-#ifdef GST_DEBUG_ENABLED
+#ifndef GST_DISABLE_GST_DEBUG
 #  define YYDEBUG 1
 #endif
 
@@ -210,23 +212,6 @@ typedef struct {
   MAKE_LINK (link, NULL, _src, pads, NULL, NULL, NULL); \
 }G_STMT_END
 
-static inline void gst_parse_unescape (gchar *str)
-{
-  gchar *walk;
-  
-  g_return_if_fail (str != NULL);
-  
-  walk = str;
-  
-  while (*walk) {
-    if (*walk == '\\')
-      walk++;
-    *str = *walk;
-    str++;
-    walk++;
-  }
-  *str = '\0';
-}
 static void
 gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
 {
@@ -532,6 +517,7 @@ static int yyerror (const char *s);
     graph_t *g;
 }
 
+%token <s> PARSE_URL
 %token <s> IDENTIFIER
 %left <s> REF PADREF BINREF
 %token <s> ASSIGNMENT
@@ -542,7 +528,7 @@ static int yyerror (const char *s);
 %type <l> reference
 %type <l> linkpart link
 %type <p> linklist
-%type <e> element
+%type <e> element 
 %type <p> padlist pads assignments
 
 %left '{' '}' '(' ')'
@@ -566,12 +552,11 @@ element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL);
 						$$ = $1;
 	                                      }
 	;
-	
 assignments:	/* NOP */		      { $$ = NULL; }
 	|	assignments ASSIGNMENT	      { $$ = g_slist_prepend ($1, $2); }
 	;		
-bin:	        '{' assignments chain '}'     { GST_BIN_MAKE ($$, "thread", $3, $2); }
-        |       '(' assignments chain ')'     { GST_BIN_MAKE ($$, "bin", $3, $2); }
+bin:	        '{' assignments chain '}' { GST_BIN_MAKE ($$, "thread", $3, $2); }
+        |       '(' assignments chain ')' { GST_BIN_MAKE ($$, "bin", $3, $2); }
         |       BINREF assignments chain ')'  { GST_BIN_MAKE ($$, $1, $3, $2); 
 						gst_parse_strfree ($1);
 					      }
@@ -670,21 +655,6 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						gst_parse_chain_free ($2);
 						$$ = $1;
 					      }
-	|	link chain		      { if ($2->front) {
-						  if (!$2->front->src_name) {
-						    ERROR (GST_PARSE_ERROR_LINK, "link without source element");
-						    gst_parse_free_link ($2->front);
-						  } else {
-						    ((graph_t *) graph)->links = g_slist_prepend (((graph_t *) graph)->links, $2->front);
-						  }
-						}
-						if (!$1->sink_name) {
-						  $1->sink = $2->first;
-						}
-						$2->front = $1;
-						$$ = $2;
-					      }
-					
 	|	chain linklist		      { GSList *walk;
 						if ($1->back) {
 						  $2 = g_slist_prepend ($2, $1->back);
@@ -716,8 +686,60 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						$$ = $1;
 					      }
 	|	chain error		      { $$ = $1; }
+	|	link chain		      { if ($2->front) {
+						  if (!$2->front->src_name) {
+						    ERROR (GST_PARSE_ERROR_LINK, "link without source element");
+						    gst_parse_free_link ($2->front);
+						  } else {
+						    ((graph_t *) graph)->links = g_slist_prepend (((graph_t *) graph)->links, $2->front);
+						  }
+						}
+						if (!$1->sink_name) {
+						  $1->sink = $2->first;
+						}
+						$2->front = $1;
+						$$ = $2;
+					      }
+	|	PARSE_URL chain		      { $$ = $2;
+						if ($$->front) {
+						  GstElement *element = 
+							  gst_element_make_from_uri (GST_URI_SRC, $1, NULL);
+						  if (!element) {
+						    ERROR (GST_PARSE_ERROR_NO_SUCH_ELEMENT, 
+							    "No source element for URI \"%s\"", $1);
+						  } else {
+						    $$->front->src = element;
+						    ((graph_t *) graph)->links = g_slist_prepend (
+							    ((graph_t *) graph)->links, $$->front);
+						    $$->front = NULL;
+						    $$->elements = g_slist_prepend ($$->elements, element);
+						  }
+						} else {
+						  ERROR (GST_PARSE_ERROR_LINK, 
+							  "No element to link URI \"%s\" to", $1);
+						}
+						g_free ($1);
+					      }
+	|	link PARSE_URL		      { GstElement *element =
+							  gst_element_make_from_uri (GST_URI_SINK, $2, NULL);
+						if (!element) {
+						  ERROR (GST_PARSE_ERROR_NO_SUCH_ELEMENT, 
+							  "No sink element for URI \"%s\"", $2);
+						  YYERROR;
+						} else if ($1->sink_name || $1->sink_pads) {
+						  ERROR (GST_PARSE_ERROR_LINK, 
+							  "could not link sink element for URI \"%s\"", $2);
+						  YYERROR;
+						} else {
+						  $$ = gst_parse_chain_new ();
+						  $$->first = $$->last = element;
+						  $$->front = $1;
+						  $$->front->sink = element;
+						  $$->elements = g_slist_prepend (NULL, element);
+						}
+						g_free ($2);
+					      }
 	;
-	
 graph:		/* NOP */		      { ERROR (GST_PARSE_ERROR_EMPTY, "Empty pipeline not allowed");
 						$$ = (graph_t *) graph;
 					      }
@@ -785,7 +807,7 @@ _gst_parse_launch (const gchar *str, GError **error)
   dstr = g_strdup (str);
   _gst_parse_yy_scan_string (dstr);
 
-#ifdef GST_DEBUG_ENABLED
+#ifndef GST_DISABLE_GST_DEBUG
   yydebug = 1;
 #endif
 

@@ -7,6 +7,7 @@
 
 #include "types.h"
 #include "../gstinfo.h"
+#include "../gsturi.h"
 #include "grammar.tab.h"
 
 #ifdef G_HAVE_ISO_VARARGS
@@ -28,6 +29,9 @@ _string {_char}+|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
 
 _comma [[:space:]]*","[[:space:]]*
 _assign [[:space:]]*"="[[:space:]]*
+
+_protocol [[:alpha:]][[:alnum:]+-\.]*
+_url {_protocol}"://"{_string}|["."{_identifier}]?"/"{_string}
 
 /* we must do this here, because nearly everything matches a {_string} */ 
 _assignment {_identifier}{_assign}{_string}
@@ -105,6 +109,17 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*";"[[:space:]]*{_caps})*[[:space:]]*"!
     }
     BEGIN (INITIAL);
     return LINK;
+}
+{_url} {
+  PRINT ("URL: %s\n", yytext);
+  if (gst_uri_is_valid (yytext)) {
+    lvalp->s = g_strdup (yytext);
+  } else {
+    lvalp->s = gst_uri_construct ("file", yytext);
+  }
+  gst_parse_unescape (lvalp->s);
+  BEGIN (INITIAL);
+  return PARSE_URL;
 }
 
 {_operator} { PRINT ("OPERATOR: [%s]\n", yytext); return *yytext; }
