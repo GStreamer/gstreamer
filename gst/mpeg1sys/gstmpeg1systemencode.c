@@ -503,9 +503,9 @@ gst_system_encode_multiplex (GstMPEG1SystemEncode * system_encode)
     GST_DEBUG ("system_encode::multiplex: writing %02x", mb->stream_id);
 
   }
-  gst_info ("system_encode::multiplex: data left in video buffer %lu\n",
+  GST_INFO ("system_encode::multiplex: data left in video buffer %lu\n",
       MPEG1MUX_BUFFER_SPACE (system_encode->video_buffer));
-  gst_info ("system_encode::multiplex: data left in audio buffer %lu\n",
+  GST_INFO ("system_encode::multiplex: data left in audio buffer %lu\n",
       MPEG1MUX_BUFFER_SPACE (system_encode->audio_buffer));
 
   g_mutex_unlock (system_encode->lock);

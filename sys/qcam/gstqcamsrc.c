@@ -395,9 +395,9 @@ gst_qcamsrc_change_state (GstElement * element)
     /* otherwise (READY or higher) we need to open the sound card */
   } else {
     if (!GST_FLAG_IS_SET (element, GST_QCAMSRC_OPEN)) {
-      gst_info ("qcamsrc: opening\n");
+      GST_DEBUG ("opening");
       if (!gst_qcamsrc_open (GST_QCAMSRC (element))) {
-        gst_info ("qcamsrc: open failed\n");
+        GST_DEBUG ("open failed");
         return GST_STATE_FAILURE;
       }
     }

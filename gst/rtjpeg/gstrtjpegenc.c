@@ -124,7 +124,7 @@ gst_rtjpegenc_chain (GstPad * pad, GstData * _data)
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
-  gst_info ("would be encoding frame here\n");
+  g_warning ("would be encoding frame here\n");
 
   gst_pad_push (rtjpegenc->srcpad, GST_DATA (buf));
 }

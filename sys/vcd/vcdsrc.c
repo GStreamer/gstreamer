@@ -267,7 +267,7 @@ read_sector:
   msf->cdmsf_sec0 = (offset / 75) % 60;
   msf->cdmsf_min0 = (offset / (75 * 60));
 
-  /*gst_info("msf is %d:%d:%d\n",msf->cdmsf_min0,msf->cdmsf_sec0, */
+  /*GST_INFO("msf is %d:%d:%d\n",msf->cdmsf_min0,msf->cdmsf_sec0, */
   /* msf->cdmsf_frame0); */
 
   if (ioctl (vcdsrc->fd, CDROMREADRAW, msf)) {

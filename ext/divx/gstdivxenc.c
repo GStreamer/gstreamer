@@ -177,7 +177,7 @@ gst_divxenc_class_init (GstDivxEncClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAXKEYINTERVAL,
       g_param_spec_int ("max_key_interval", "Max. Key Interval",
           "Maximum number of frames between two keyframes",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          -1, G_MAXINT, -1, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
       g_param_spec_ulong ("buffer_size", "Buffer Size",
