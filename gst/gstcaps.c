@@ -346,6 +346,10 @@ void
 gst_caps_debug (GstCaps *caps, const gchar *label)
 {
   GST_DEBUG_ENTER ("caps debug: %s", label);
+  if (caps && caps->refcount == 0) {
+    g_warning ("Warning: refcount of caps %s is 0", label);
+    return;
+  }
   while (caps) {
     GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s (%sfixed) (refcount %d) %s", 
 	       caps, caps->name, gst_caps_get_mime (caps), 
