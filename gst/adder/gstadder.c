@@ -248,127 +248,120 @@ gst_adder_loop (GstElement *element)
   
   adder = GST_ADDER (element);
 
-  do 
-  {
-
 #ifdef DEBUG
-    printf ("DEBUG : gst_adder_loop iteration\n");
+  printf ("DEBUG : gst_adder_loop iteration\n");
 #endif
 
-    /* first, request all buffers that have a zero bytes_waiting value */
+  /* first, request all buffers that have a zero bytes_waiting value */
 
 
 #ifdef DEBUG
-    printf ("\tDEBUG : gst_adder_loop : getting needed input buffers\n");
+  printf ("\tDEBUG : gst_adder_loop : getting needed input buffers\n");
 #endif
     
-    pad_number = 0;
-    p_input_channel_GSL = adder->input_channels;
-    smallest_pad_size = 0;
+  pad_number = 0;
+  p_input_channel_GSL = adder->input_channels;
+  smallest_pad_size = 0;
 
-    while (p_input_channel_GSL)
-    {
-      guint16 bw;
+  while (p_input_channel_GSL)
+  {
+    guint16 bw;
 
-      p_input_channel = (adder_input_channel_t *) p_input_channel_GSL->data;
+    p_input_channel = (adder_input_channel_t *) p_input_channel_GSL->data;
       
-      ++pad_number;
-	  bw = p_input_channel->bytes_waiting;
-	  sinkpad = p_input_channel->sinkpad;
+    ++pad_number;
+    bw = p_input_channel->bytes_waiting;
+    sinkpad = p_input_channel->sinkpad;
       
 #ifdef DEBUG
-      printf ("\tDEBUG : gst_adder_loop : input channel %d has %d bytes left\n",
+    printf ("\tDEBUG : gst_adder_loop : input channel %d has %d bytes left\n",
      		  pad_number, bw);
 #endif  
-      if (bw == 0)
-      {
-        /* QUESTION : maybe free previous buffer ? where do we do this ? */
+    if (bw == 0)
+    {
+      /* QUESTION : maybe free previous buffer ? where do we do this ? */
         
-        /* no more data left; get more */
-        buf_in = gst_pad_pull (sinkpad);
-        if (buf_in == NULL)
-          printf ("ERROR : could not get input buffer !\n");
-        bw = GST_BUFFER_SIZE (buf_in);
-        p_input_channel->bytes_waiting = bw;
-        p_input_channel->input_buffer = buf_in;
-        p_input_channel->p_input_data = (guint16 *) GST_BUFFER_DATA (buf_in);
+      /* no more data left; get more */
+      buf_in = gst_pad_pull (sinkpad);
+      if (buf_in == NULL)
+        printf ("ERROR : could not get input buffer !\n");
+      bw = GST_BUFFER_SIZE (buf_in);
+      p_input_channel->bytes_waiting = bw;
+      p_input_channel->input_buffer = buf_in;
+      p_input_channel->p_input_data = (guint16 *) GST_BUFFER_DATA (buf_in);
 
 #ifdef DEBUG
-        printf ("\tDEBUG : gst_adder_loop : input channel %d got %d new bytes\n",
+      printf ("\tDEBUG : gst_adder_loop : input channel %d got %d new bytes\n",
         		  pad_number, bw);
 #endif  
-      }
-      /* update smallest pad size */
-      if (smallest_pad_size == 0)
-      {
-        /* not set yet, set it ! */
-        smallest_pad_size = bw;
-      }
-      if (bw < smallest_pad_size) smallest_pad_size = bw;
-      
-      p_input_channel_GSL = g_slist_next (p_input_channel_GSL);
     }
+    /* update smallest pad size */
+    if (smallest_pad_size == 0)
+    {
+      /* not set yet, set it ! */
+      smallest_pad_size = bw;
+    }
+    if (bw < smallest_pad_size) smallest_pad_size = bw;
+      
+    p_input_channel_GSL = g_slist_next (p_input_channel_GSL);
+  }
 
 #ifdef DEBUG
-    printf ("\tDEBUG : gst_adder_loop : smallest pad size %d\n",
+  printf ("\tDEBUG : gst_adder_loop : smallest pad size %d\n",
 			smallest_pad_size);
 #endif  
 
-   /* get new output buffer */
+  /* get new output buffer */
 
-    buf_out = gst_buffer_new ();
-    if (buf_out == NULL)
-      printf ("ERROR : could not get new output buffer !\n");
+  buf_out = gst_buffer_new ();
+  if (buf_out == NULL)
+    printf ("ERROR : could not get new output buffer !\n");
 
-    GST_BUFFER_SIZE (buf_out) = smallest_pad_size;
-    GST_BUFFER_DATA (buf_out) = g_malloc0 (smallest_pad_size);
+  GST_BUFFER_SIZE (buf_out) = smallest_pad_size;
+  GST_BUFFER_DATA (buf_out) = g_malloc0 (smallest_pad_size);
 
-    data_out = (guint16 *) GST_BUFFER_DATA (buf_out);
-    if (data_out == NULL)
-      printf ("ERROR : could not allocate output buffer !\n");
+  data_out = (guint16 *) GST_BUFFER_DATA (buf_out);
+  if (data_out == NULL)
+    printf ("ERROR : could not allocate output buffer !\n");
 
-    /* get data from all of the sinks */
+  /* get data from all of the sinks */
 
-    pad_number = 0;
-    p_input_channel_GSL = adder->input_channels;
+  pad_number = 0;
+  p_input_channel_GSL = adder->input_channels;
 
-    while (p_input_channel_GSL)
+  while (p_input_channel_GSL)
+  {
+    ++pad_number;
+    p_input_channel = (adder_input_channel_t *) p_input_channel_GSL->data;
+    data_out = (gint16 *) GST_BUFFER_DATA (buf_out);
+
+    data_in = p_input_channel->p_input_data;
+
+    /* add to the output buffer */
+    for (i = 0; i < smallest_pad_size / 2; ++i, ++data_out, ++data_in)
     {
-      ++pad_number;
-      p_input_channel = (adder_input_channel_t *) p_input_channel_GSL->data;
-      data_out = (gint16 *) GST_BUFFER_DATA (buf_out);
-
-      data_in = p_input_channel->p_input_data;
-
-      /* add to the output buffer */
-      for (i = 0; i < smallest_pad_size / 2; ++i, ++data_out, ++data_in)
-      {
-        *data_out += *data_in;
-      }
-      /* adjust bytes_waiting and data pointer */
-      p_input_channel->bytes_waiting -= smallest_pad_size;
-      if (p_input_channel->bytes_waiting == 0)
-      {
-#ifdef DEBUG
-        printf ("\tDEBUG : gst_adder_loop : channel %d is empty, unref...\n",
-			pad_number);
-#endif 
-        gst_buffer_unref (p_input_channel->input_buffer);
-        p_input_channel->p_input_data = NULL;
-      }
-      p_input_channel->p_input_data = data_in;
-      
-      p_input_channel_GSL = g_slist_next (p_input_channel_GSL);
+      *data_out += *data_in;
     }
+    /* adjust bytes_waiting and data pointer */
+    p_input_channel->bytes_waiting -= smallest_pad_size;
+    if (p_input_channel->bytes_waiting == 0)
+    {
+#ifdef DEBUG
+      printf ("\tDEBUG : gst_adder_loop : channel %d is empty, unref...\n",
+		pad_number);
+#endif 
+      gst_buffer_unref (p_input_channel->input_buffer);
+      p_input_channel->p_input_data = NULL;
+    }
+    p_input_channel->p_input_data = data_in;
+      
+    p_input_channel_GSL = g_slist_next (p_input_channel_GSL);
+  }
 
-    /* send it out */
-    GST_DEBUG (0, "pushing buf_out\n");
-    gst_pad_push (adder->srcpad, buf_out);
-    GST_DEBUG (0, "pushed buf_out\n");
-
-/* thomas : quick fix try */
-//    GST_FLAG_SET (element, GST_ELEMENT_COTHREAD_STOPPING);
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+  /* send it out */
+  GST_DEBUG (0, "pushing buf_out\n");
+  gst_pad_push (adder->srcpad, buf_out);
+  GST_DEBUG (0, "pushed buf_out\n");
 }
 
 static gboolean
