@@ -452,8 +452,12 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
     }
   }
   /* if we completely merged the two buffers (appended), we can
-   * calculate the duration too */
-  if (offset == 0 && buf1->size + buf2->size == len) {
+   * calculate the duration too. Also make sure we's not messing with
+   * invalid DURATIONS */
+  if (offset == 0 && buf1->size + buf2->size == len &&
+      GST_BUFFER_DURATION_IS_VALID (buf1) &&
+      GST_BUFFER_DURATION_IS_VALID (buf2)) 
+  {
     /* add duration */
     GST_BUFFER_DURATION (newbuf) = GST_BUFFER_DURATION (buf1) + 
                                    GST_BUFFER_DURATION (buf2);
