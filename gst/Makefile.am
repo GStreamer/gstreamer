@@ -223,14 +223,14 @@ endif
 
 
 gstmarshal.h: gstmarshal.list
-	glib-genmarshal --header --prefix=gst_marshal gstmarshal.list > gstmarshal.h.tmp
+	glib-genmarshal --header --prefix=gst_marshal $(srcdir)/gstmarshal.list > gstmarshal.h.tmp
 	mv gstmarshal.h.tmp gstmarshal.h
 
 gstmarshal.c: gstmarshal.list gst_private.h
 	echo "#include \"gst_private.h\"" > gstmarshal.c.tmp
 	echo "#include \"glib-object.h\"" >> gstmarshal.c.tmp
 	echo "#include \"gstmarshal.h\"" >> gstmarshal.c.tmp
-	glib-genmarshal --body --prefix=gst_marshal gstmarshal.list >> gstmarshal.c.tmp
+	glib-genmarshal --body --prefix=gst_marshal $(srcdir)/gstmarshal.list >> gstmarshal.c.tmp
 	mv gstmarshal.c.tmp gstmarshal.c
 
 gstenumtypes.h: $(gst_headers)
