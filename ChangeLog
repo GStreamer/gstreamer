@@ -1,3 +1,8 @@
+2004-04-26  Benjamin Otte  <otte@gnome.org>
+
+	* configure.ac:
+	  detect faad correctly as non-working if it's indeed non-working
+
 2004-04-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
