@@ -1,3 +1,13 @@
+2004-03-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsa.h:
+	  Remove unused entry.
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	  Add cinepak.
+	* gst/videodrop/gstvideodrop.c: (gst_videodrop_getcaps),
+	(gst_videodrop_link), (gst_videodrop_chain):
+	  Fix, sort of. Was horribly broken with new capsnego. Bah...
+
 2004-03-23  Jeremy Simon  <jesimon@libertysurf.fr>
 
 	* gst/typefind/gsttypefindfunctions.c: (ape_type_find),
