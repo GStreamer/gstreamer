@@ -1,3 +1,12 @@
+2004-01-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* autogen.sh:
+          make autopoint force, and libtoolize not copy
+	* common/m4/as-docbook.m4:
+          added docbook xml catalog setup check
+	* common/m4/gst-doc.m4:
+          use docbook check
+
 2004-01-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gsttag.c: (_gst_tag_initialize), (gst_tag_register):

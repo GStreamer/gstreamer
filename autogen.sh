@@ -63,14 +63,14 @@ if test -f po/Makefile.in.in;
 then
   patch -p0 -R < common/gettext.patch
 fi
-tool_run "$autopoint"
+tool_run "$autopoint --force"
 patch -p0 < common/gettext.patch
 
 # aclocal
 if test -f acinclude.m4; then rm acinclude.m4; fi
 tool_run "$aclocal" "-I common/m4 $ACLOCAL_FLAGS"
 
-tool_run "$libtoolize" "--copy --force"
+tool_run "$libtoolize" "--force"
 tool_run "$autoheader"
 
 # touch the stamp-h.in build stamp so we don't re-run autoheader in maintainer mode -- wingo
