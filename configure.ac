@@ -868,6 +868,10 @@ GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
   AC_SUBST(MPEG2DEC_LIBS)
 ])
 
+dnl *** mplex ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MPLEX, true)
+GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [HAVE_MPLEX=$HAVE_CXX])
+
 dnl *** pango ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
 GST_CHECK_FEATURE(PANGO, [pango], pango, [
@@ -1296,6 +1300,7 @@ gst-libs/gst/riff/Makefile
 gst-libs/gst/video/Makefile
 gst-libs/ext/Makefile
 gst-libs/ext/ffmpeg/Makefile
+gst-libs/ext/mplex/Makefile
 examples/dynparams/Makefile
 examples/capsfilter/Makefile
 examples/seeking/Makefile
