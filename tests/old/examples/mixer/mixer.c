@@ -4,13 +4,13 @@
  * demonstrates the adder plugin and the volume envelope plugin 
  * work in progress but do try it out 
  * 
- * Latest change : 	28/04/2001
+ * Latest change : 	28/08/2001
  * 					trying to adapt to incsched
  * 					delayed start for channels > 1
  *					now works by quickhacking the
  *					adder plugin to set
  * 					GST_ELEMENT_COTHREAD_STOPPING		
- * Version :		0.5
+ * Version :		0.5.1
  */
 
 #include <stdlib.h>
@@ -341,8 +341,13 @@ create_input_channel (int id, char* location)
   new_element = gst_bin_new ("autoplug_bin");
 
   /* static plug, use mad plugin and assume mp3 input */
+  printf ("using static plugging for input channel\n");
   decoder =  gst_elementfactory_make ("mad", "mpg123");
-
+  if (!decoder)
+  {
+    fprintf (stderr, "Could not get a decoder element !\n");
+    exit (1);
+  }
   gst_bin_add (GST_BIN (new_element), decoder);
 
   gst_element_add_ghost_pad (new_element, 
