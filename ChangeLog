@@ -1,3 +1,13 @@
+2004-01-10  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstinfo.c: (gst_debug_log), (gst_debug_log_valist),
+	(gst_debug_message_get), (gst_debug_log_default):
+	* gst/gstinfo.h:
+	  Change gst_debug_log(_valist) to take a const format string.
+	  Change prototype of log function and functions using those to 
+	  take a GstDebugMessage instead of a string that requires using
+	  gst_debug_message_get.
+
 2004-01-08  David Schleef  <ds@schleef.org>
 
 	* Makefile.am:

@@ -71,6 +71,12 @@ static void	gst_debug_reset_threshold	(gpointer category,
 						 gpointer unused);
 static void	gst_debug_reset_all_thresholds	(void);
 
+struct _GstDebugMessage {
+  gchar *		message;
+  const gchar *		format;
+  va_list		arguments;
+};
+
 /* list of all name/level pairs from --gst-debug and GST_DEBUG */
 static GStaticMutex __level_name_mutex = G_STATIC_MUTEX_INIT;
 static GSList *__level_name = NULL;
@@ -253,7 +259,7 @@ void _gst_debug_init (void)
  */
 void gst_debug_log (GstDebugCategory *category, GstDebugLevel level,
 		    const gchar *file, const gchar *function, gint line,
-		    GObject *object, gchar *format, ...)
+		    GObject *object, const gchar *format, ...)
 {
   va_list var_args;
   
@@ -276,9 +282,9 @@ void gst_debug_log (GstDebugCategory *category, GstDebugLevel level,
  */
 void gst_debug_log_valist (GstDebugCategory *category, GstDebugLevel level,
 			   const gchar *file, const gchar *function, gint line,
-			   GObject *object, gchar *format, va_list args)
+			   GObject *object, const gchar *format, va_list args)
 {
-  gchar *message;
+  GstDebugMessage message;
   LogFuncEntry *entry;
   GSList *handler;
 
@@ -287,15 +293,34 @@ void gst_debug_log_valist (GstDebugCategory *category, GstDebugLevel level,
   g_return_if_fail (function != NULL);
   g_return_if_fail (format != NULL);
 
-  message = g_strdup_vprintf (format, args);
+  message.message = NULL;
+  message.format = format;
+  message.arguments = args;
+  
   handler = __log_functions;
   while (handler) {
     entry = handler->data;
     handler = g_slist_next (handler);
-    entry->func (category, level, file, function, line, object, message, entry->user_data);
+    entry->func (category, level, file, function, line, object, &message, entry->user_data);
   }
-  g_free (message);
+  g_free (message.message);
 }
+/**
+ * gst_debug_message_get:
+ * @message: a debug message
+ *
+ * Gets the string representation of a GstDebugMessage. This function is used
+ * in debug handlers to extract the message.
+ */
+const gchar *
+gst_debug_message_get (GstDebugMessage *message)
+{
+  if (message->message == NULL) {
+    message->message = g_strdup_vprintf (message->format, message->arguments);
+  }
+  return message->message;
+}
+
 /**
  * gst_debug_construct_term_color:
  * @colorinfo: the color info
@@ -353,7 +378,7 @@ gst_debug_construct_term_color (guint colorinfo)
 void
 gst_debug_log_default (GstDebugCategory *category, GstDebugLevel level,
 		       const gchar *file, const gchar *function, gint line,
-		       GObject *object, gchar *message, gpointer unused)
+		       GObject *object, GstDebugMessage *message, gpointer unused)
 {
   gchar *color;
   gchar *clear;
@@ -392,7 +417,7 @@ gst_debug_log_default (GstDebugCategory *category, GstDebugLevel level,
               color, gst_debug_category_get_name (category), clear,
               pidcolor, pid, clear,
   	      color, file, line, function, obj, clear,
-  	      message);
+	      gst_debug_message_get (message));
 
   g_free (color);
   g_free (pidcolor);

@@ -129,13 +129,14 @@ struct _GstDebugCategory {
 #endif
 #endif /* ifndef GST_FUNCTION */
 
+typedef struct _GstDebugMessage GstDebugMessage;
 typedef void (*GstLogFunction)	(GstDebugCategory *	category,
 				 GstDebugLevel		level,
 				 const gchar *		file,
 				 const gchar *		function,
 				 gint			line,
 				 GObject *		object,
-				 gchar *		message,
+				 GstDebugMessage *    	message,
 				 gpointer		data);
 
 /* Disable this subsystem if no varargs macro can be found. 
@@ -160,7 +161,7 @@ void		gst_debug_log			(GstDebugCategory *	category,
 						 const gchar *		function,
 						 gint			line,
 						 GObject *		object,
-						 gchar *		format,
+						 const gchar *		format,
 						 ...)  G_GNUC_PRINTF (7, 8) G_GNUC_NO_INSTRUMENT;
 void		gst_debug_log_valist  		(GstDebugCategory *	category,
 						 GstDebugLevel		level,
@@ -168,8 +169,10 @@ void		gst_debug_log_valist  		(GstDebugCategory *	category,
 						 const gchar *		function,
 						 gint			line,
 						 GObject *		object,
-						 gchar *		format,
+						 const gchar *		format,
 						 va_list		args) G_GNUC_NO_INSTRUMENT;
+
+const gchar *	gst_debug_message_get		(GstDebugMessage *	message);
 
 void		gst_debug_log_default		(GstDebugCategory *	category,
 						 GstDebugLevel		level,
@@ -177,7 +180,7 @@ void		gst_debug_log_default		(GstDebugCategory *	category,
 						 const gchar *		function,
 						 gint			line,
 						 GObject *		object,
-						 gchar *		message,
+						 GstDebugMessage *    	message,
 						 gpointer		unused) G_GNUC_NO_INSTRUMENT;
 
 G_CONST_RETURN gchar *
