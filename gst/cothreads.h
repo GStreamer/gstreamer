@@ -26,56 +26,56 @@
 #include <glib.h>
 #include <setjmp.h>
 
-typedef struct _cothread_state cothread_state;
-typedef struct _cothread_context cothread_context;
+typedef struct _cothread_state		cothread_state;
+typedef struct _cothread_context	cothread_context;
 
-typedef int (*cothread_func) (int argc, char **argv);
+typedef int (*cothread_func) (int argc,char **argv);
 
 #define COTHREAD_STARTED	0x01
 #define COTHREAD_DESTROYED	0x02
 
-struct _cothread_state
-{
-  cothread_context *ctx;
-  int cothreadnum;
-  gpointer priv;
+struct _cothread_state {
+  cothread_context 	*ctx;
+  int			 cothreadnum;
+  gpointer		 priv;
 
-  cothread_func func;
-  int argc;
-  char **argv;
+  cothread_func		 func;
+  int			 argc;
+  char		       **argv;
 
-  int flags;
-  void *sp;
-  jmp_buf jmp;
-  void *stack_base;
-  unsigned long stack_size;
+  int			 flags;
+  void			*sp;
+  jmp_buf		 jmp;
+  void			*stack_base;
+  unsigned long		 stack_size;
 
-  int magic_number;
+  int			 magic_number;
 };
 
 
-cothread_context *cothread_context_init (void);
-void cothread_context_free (cothread_context * ctx);
-void cothread_context_set_data (cothread_state * cothread,
-    gchar * key, gpointer data);
-gpointer cothread_context_get_data (cothread_state * cothread, gchar * key);
+cothread_context*		cothread_context_init   	(void);
+void				cothread_context_free		(cothread_context *ctx);
+void				cothread_context_set_data	(cothread_state *cothread, 
+								 gchar *key, gpointer data);
+gpointer			cothread_context_get_data	(cothread_state *cothread, gchar *key);
 
-cothread_state *cothread_create (cothread_context * ctx);
-void cothread_free (cothread_state * cothread);
-void cothread_setfunc (cothread_state * cothread, cothread_func func,
-    int argc, char **argv);
-void cothread_stop (cothread_state * cothread);
+cothread_state*			cothread_create			(cothread_context *ctx);
+void				cothread_free			(cothread_state *cothread);
+void				cothread_setfunc		(cothread_state *cothread, cothread_func func,
+						        	 int argc, char **argv);
+void				cothread_stop			(cothread_state *cothread);
 
-void cothread_switch (cothread_state * cothread);
-void cothread_set_private (cothread_state * cothread, gpointer data);
-gpointer cothread_get_private (cothread_state * cothread);
+void				cothread_switch			(cothread_state *cothread);
+void				cothread_set_private		(cothread_state *cothread, 
+								 gpointer data);
+gpointer			cothread_get_private		(cothread_state *cothread);
 
-void cothread_lock (cothread_state * cothread);
-gboolean cothread_trylock (cothread_state * cothread);
-void cothread_unlock (cothread_state * cothread);
+void				cothread_lock			(cothread_state *cothread);
+gboolean			cothread_trylock		(cothread_state *cothread);
+void				cothread_unlock			(cothread_state *cothread);
 
-cothread_state *cothread_main (cothread_context * ctx);
-cothread_state *cothread_current_main (void);
-cothread_state *cothread_current (void);
+cothread_state*			cothread_main			(cothread_context *ctx);
+cothread_state*			cothread_current_main		(void);
+cothread_state*			cothread_current		(void);
 
 #endif /* __COTHREAD_H__ */

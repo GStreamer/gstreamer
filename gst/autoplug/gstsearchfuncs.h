@@ -30,27 +30,21 @@
 
 /* struct for a node, in the search tree */
 typedef struct _GstAutoplugNode GstAutoplugNode;
-
-struct _GstAutoplugNode
-{
-  GstAutoplugNode *prev;	/* previous node */
-  GstElementFactory *fac;	/* factory of element to connect to */
-  GstPadTemplate *templ;	/* template which can connect */
-  guint cost;			/* total cost to get here */
-  GstPadTemplate *endpoint;	/* pad template that can connect to sink caps */
+	
+struct _GstAutoplugNode {
+	GstAutoplugNode    *prev;      /* previous node */
+	GstElementFactory  *fac;       /* factory of element to connect to */
+	GstPadTemplate     *templ;     /* template which can connect */
+	guint               cost;      /* total cost to get here */
+	GstPadTemplate     *endpoint;  /* pad template that can connect to sink caps */
 };
 
 /* helper functions */
-gboolean gst_autoplug_caps_intersect (const GstCaps * src,
-    const GstCaps * sink);
-GstPadTemplate *gst_autoplug_can_connect_src (GstElementFactory * fac,
-    const GstCaps * src);
-GstPadTemplate *gst_autoplug_can_connect_sink (GstElementFactory * fac,
-    const GstCaps * sink);
-GstPadTemplate *gst_autoplug_can_match (GstElementFactory * src,
-    GstElementFactory * dest);
-gboolean gst_autoplug_factory_has_direction (GstElementFactory * fac,
-    GstPadDirection dir);
+gboolean				gst_autoplug_caps_intersect		(const GstCaps *src, const GstCaps *sink);
+GstPadTemplate * 			gst_autoplug_can_connect_src            (GstElementFactory *fac, const GstCaps *src);
+GstPadTemplate * 			gst_autoplug_can_connect_sink           (GstElementFactory *fac, const GstCaps *sink);
+GstPadTemplate *                    	gst_autoplug_can_match                  (GstElementFactory *src, GstElementFactory *dest);
+gboolean                            	gst_autoplug_factory_has_direction      (GstElementFactory *fac, GstPadDirection dir);
 #define gst_autoplug_factory_has_sink(fac) gst_autoplug_factory_has_direction((fac), GST_PAD_SINK)
 #define gst_autoplug_factory_has_src(fac) gst_autoplug_factory_has_direction((fac), GST_PAD_SRC)
 
@@ -58,15 +52,13 @@ gboolean gst_autoplug_factory_has_direction (GstElementFactory * fac,
 #define gst_autoplug_get_cost(fac) 1
 
 /* factory selections */
-GList *gst_autoplug_factories_sinks (GList * factories);
-GList *gst_autoplug_factories_srcs (GList * factories);
-GList *gst_autoplug_factories_filters (GList * factories);
-GList *gst_autoplug_factories_filters_with_sink_caps (GList * factories);
-GList *gst_autoplug_factories_at_most_templates (GList * factories,
-    GstPadDirection dir, guint maxtemplates);
+GList *					gst_autoplug_factories_sinks            (GList *factories);
+GList *					gst_autoplug_factories_srcs             (GList *factories);
+GList *					gst_autoplug_factories_filters          (GList *factories);
+GList *					gst_autoplug_factories_filters_with_sink_caps(GList *factories);
+GList *                             	gst_autoplug_factories_at_most_templates(GList *factories, GstPadDirection dir, guint maxtemplates);
 
 /* shortest path algorithm */
-GList *gst_autoplug_sp (const GstCaps * src_caps, const GstCaps * sink_caps,
-    GList * factories);
+GList *                             	gst_autoplug_sp                         (const GstCaps *src_caps, const GstCaps *sink_caps, GList *factories);
 
 #endif /* __GST_SEARCHFUNCS_H__ */

@@ -28,6 +28,8 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
+
 #define GST_TYPE_IDENTITY \
   (gst_identity_get_type())
 #define GST_IDENTITY(obj) \
@@ -38,36 +40,36 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_IDENTITY))
 #define GST_IS_IDENTITY_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_IDENTITY))
+
 typedef struct _GstIdentity GstIdentity;
 typedef struct _GstIdentityClass GstIdentityClass;
 
-struct _GstIdentity
-{
-  GstElement element;
+struct _GstIdentity {
+  GstElement 	 element;
 
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstPad 	*sinkpad;
+  GstPad 	*srcpad;
 
-  gboolean loop_based;
-  guint duplicate;
-  gint error_after;
-  gfloat drop_probability;
-  guint sleep_time;
-  gboolean silent;
-  gboolean dump;
-  gchar *last_message;
-  GstCaps *srccaps;
+  gboolean 	 loop_based;
+  guint 	 duplicate;
+  gint 	 	 error_after;
+  gfloat 	 drop_probability;
+  guint 	 sleep_time;
+  gboolean 	 silent;
+  gboolean 	 dump;
+  gchar 	*last_message;
+  GstCaps	*srccaps;
 };
 
-struct _GstIdentityClass
-{
+struct _GstIdentityClass {
   GstElementClass parent_class;
 
   /* signals */
-  void (*handoff) (GstElement * element, GstBuffer * buf);
+  void (*handoff) (GstElement *element, GstBuffer *buf);
 };
 
-GType gst_identity_get_type (void);
+GType gst_identity_get_type(void);
 
 G_END_DECLS
+
 #endif /* __GST_IDENTITY_H__ */

@@ -28,6 +28,8 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
+
 #define GST_TYPE_SHAPER \
   (gst_shaper_get_type())
 #define GST_SHAPER(obj) \
@@ -38,37 +40,35 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SHAPER))
 #define GST_IS_SHAPER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SHAPER))
-    typedef enum
-{
+
+typedef enum {
   SHAPER_POLICY_TIMESTAMPS = 1,
   SHAPER_POLICY_BUFFERSIZE
-}
-GstShaperPolicyType;
+} GstShaperPolicyType;
 
 typedef struct _GstShaper GstShaper;
 typedef struct _GstShaperClass GstShaperClass;
 
-struct _GstShaper
-{
-  GstElement element;
+struct _GstShaper {
+  GstElement 	 element;
 
-  GSList *connections;
-  gint nconnections;
+  GSList 	*connections;
+  gint		 nconnections;
 
-  GstShaperPolicyType policy;
+  GstShaperPolicyType	policy;
 
-  gboolean silent;
-  gchar *last_message;
+  gboolean 	 silent;
+  gchar 	*last_message;
 };
 
-struct _GstShaperClass
-{
+struct _GstShaperClass {
   GstElementClass parent_class;
 };
 
-GType gst_shaper_get_type (void);
-gboolean gst_shaper_factory_init (GstElementFactory * factory);
+GType 		gst_shaper_get_type	(void);
+gboolean 	gst_shaper_factory_init (GstElementFactory *factory);
 
 
 G_END_DECLS
+
 #endif /* __GST_SHAPER_H__ */

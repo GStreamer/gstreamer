@@ -27,32 +27,34 @@
 #include <gst/gstbin.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_PIPELINE 		(gst_pipeline_get_type ())
 #define GST_PIPELINE(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PIPELINE, GstPipeline))
 #define GST_IS_PIPELINE(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PIPELINE))
 #define GST_PIPELINE_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PIPELINE, GstPipelineClass))
 #define GST_IS_PIPELINE_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PIPELINE))
 #define GST_PIPELINE_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PIPELINE, GstPipelineClass))
+
 typedef struct _GstPipeline GstPipeline;
 typedef struct _GstPipelineClass GstPipelineClass;
 
-struct _GstPipeline
-{
-  GstBin bin;
+struct _GstPipeline {
+  GstBin 	 bin;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
-struct _GstPipelineClass
-{
+struct _GstPipelineClass {
   GstBinClass parent_class;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_pipeline_get_type (void);
-GstElement *gst_pipeline_new (const gchar * name);
+GType		gst_pipeline_get_type		(void);
+GstElement*	gst_pipeline_new		(const gchar *name);
 
 
 G_END_DECLS
+
 #endif /* __GST_PIPELINE_H__ */
+

@@ -43,132 +43,188 @@
 	 by LL and unsigned long long values by ULL, lest
 	 they be truncated by the compiler)
 */
-typedef union
-{
-  float sf[4];			/* Single-precision (32-bit) value */
-}
-__attribute__ ((aligned (16))) sse_t;	/* On a 16 byte (128-bit) boundary */
+typedef	union {
+	float			sf[4];	/* Single-precision (32-bit) value */
+} __attribute__ ((aligned (16))) sse_t;	/* On a 16 byte (128-bit) boundary */
 
 
 #if 0
 /*	Function to test if multimedia instructions are supported...
 */
 inline extern int
-mm_support (void)
+mm_support(void)
 {
-  /* Returns 1 if MMX instructions are supported,
-     3 if Cyrix MMX and Extended MMX instructions are supported
-     5 if AMD MMX and 3DNow! instructions are supported
-     9 if MMX and SSE instructions are supported
-     0 if hardware does not support any of these
-   */
-  register int rval = 0;
+	/* Returns 1 if MMX instructions are supported,
+	   3 if Cyrix MMX and Extended MMX instructions are supported
+	   5 if AMD MMX and 3DNow! instructions are supported
+	   9 if MMX and SSE instructions are supported
+	   0 if hardware does not support any of these
+	*/
+	register int rval = 0;
 
-  __asm__ __volatile__ (
-      /* See if CPUID instruction is supported ... */
-      /* ... Get copies of EFLAGS into eax and ecx */
-      "pushf\n\t" "popl %%eax\n\t" "movl %%eax, %%ecx\n\t"
-      /* ... Toggle the ID bit in one copy and store */
-      /*     to the EFLAGS reg */
-      "xorl $0x200000, %%eax\n\t" "push %%eax\n\t" "popf\n\t"
-      /* ... Get the (hopefully modified) EFLAGS */
-      "pushf\n\t" "popl %%eax\n\t"
-      /* ... Compare and test result */
-      "xorl %%eax, %%ecx\n\t" "testl $0x200000, %%ecx\n\t" "jz NotSupported1\n\t"	/* CPUID not supported */
-      /* Get standard CPUID information, and
-         go to a specific vendor section */
-      "movl $0, %%eax\n\t" "cpuid\n\t"
-      /* Check for Intel */
-      "cmpl $0x756e6547, %%ebx\n\t"
-      "jne TryAMD\n\t"
-      "cmpl $0x49656e69, %%edx\n\t"
-      "jne TryAMD\n\t"
-      "cmpl $0x6c65746e, %%ecx\n" "jne TryAMD\n\t" "jmp Intel\n\t"
-      /* Check for AMD */
-      "\nTryAMD:\n\t"
-      "cmpl $0x68747541, %%ebx\n\t"
-      "jne TryCyrix\n\t"
-      "cmpl $0x69746e65, %%edx\n\t"
-      "jne TryCyrix\n\t"
-      "cmpl $0x444d4163, %%ecx\n" "jne TryCyrix\n\t" "jmp AMD\n\t"
-      /* Check for Cyrix */
-      "\nTryCyrix:\n\t"
-      "cmpl $0x69727943, %%ebx\n\t"
-      "jne NotSupported2\n\t"
-      "cmpl $0x736e4978, %%edx\n\t"
-      "jne NotSupported3\n\t"
-      "cmpl $0x64616574, %%ecx\n\t" "jne NotSupported4\n\t"
-      /* Drop through to Cyrix... */
-      /* Cyrix Section */
-      /* See if extended CPUID level 80000001 is supported */
-      /* The value of CPUID/80000001 for the 6x86MX is undefined
-         according to the Cyrix CPU Detection Guide (Preliminary
-         Rev. 1.01 table 1), so we'll check the value of eax for
-         CPUID/0 to see if standard CPUID level 2 is supported.
-         According to the table, the only CPU which supports level
-         2 is also the only one which supports extended CPUID levels.
-       */
-      "cmpl $0x2, %%eax\n\t" "jne MMXtest\n\t"	/* Use standard CPUID instead */
-      /* Extended CPUID supported (in theory), so get extended
-         features */
-      "movl $0x80000001, %%eax\n\t" "cpuid\n\t" "testl $0x00800000, %%eax\n\t"	/* Test for MMX */
-      "jz NotSupported5\n\t"	/* MMX not supported */
-      "testl $0x01000000, %%eax\n\t"	/* Test for Ext'd MMX */
-      "jnz EMMXSupported\n\t" "movl $1, %0:\n\n\t"	/* MMX Supported */
-      "jmp Return\n\n" "EMMXSupported:\n\t" "movl $3, %0:\n\n\t"	/* EMMX and MMX Supported */
-      "jmp Return\n\t"
-      /* AMD Section */
-      "AMD:\n\t"
-      /* See if extended CPUID is supported */
-      "movl $0x80000000, %%eax\n\t" "cpuid\n\t" "cmpl $0x80000000, %%eax\n\t" "jl MMXtest\n\t"	/* Use standard CPUID instead */
-      /* Extended CPUID supported, so get extended features */
-      "movl $0x80000001, %%eax\n\t" "cpuid\n\t" "testl $0x00800000, %%edx\n\t"	/* Test for MMX */
-      "jz NotSupported6\n\t"	/* MMX not supported */
-      "testl $0x80000000, %%edx\n\t"	/* Test for 3DNow! */
-      "jnz ThreeDNowSupported\n\t" "movl $1, %0:\n\n\t"	/* MMX Supported */
-      "jmp Return\n\n" "ThreeDNowSupported:\n\t" "movl $5, %0:\n\n\t"	/* 3DNow! and MMX Supported */
-      "jmp Return\n\t"
-      /* Intel Section */
-      "Intel:\n\t"
-      /* Check for SSE */
-      "SSEtest:\n\t" "movl $1, %%eax\n\t" "cpuid\n\t" "testl $0x02000000, %%edx\n\t"	/* Test for SSE */
-      "jz MMXtest\n\t"		/* SSE Not supported */
-      "movl $9, %0:\n\n\t"	/* SSE Supported */
-      "jmp Return\n\t"
-      /* Check for MMX */
-      "MMXtest:\n\t" "movl $1, %%eax\n\t" "cpuid\n\t" "testl $0x00800000, %%edx\n\t"	/* Test for MMX */
-      "jz NotSupported7\n\t"	/* MMX Not supported */
-      "movl $1, %0:\n\n\t"	/* MMX Supported */
-      "jmp Return\n\t"
-      /* Nothing supported */
-      "\nNotSupported1:\n\t"
-      "#movl $101, %0:\n\n\t"
-      "\nNotSupported2:\n\t"
-      "#movl $102, %0:\n\n\t"
-      "\nNotSupported3:\n\t"
-      "#movl $103, %0:\n\n\t"
-      "\nNotSupported4:\n\t"
-      "#movl $104, %0:\n\n\t"
-      "\nNotSupported5:\n\t"
-      "#movl $105, %0:\n\n\t"
-      "\nNotSupported6:\n\t"
-      "#movl $106, %0:\n\n\t"
-      "\nNotSupported7:\n\t"
-      "#movl $107, %0:\n\n\t" "movl $0, %0:\n\n\t" "Return:\n\t":"=a" (rval)
-      :				/* no input */
-      :"eax", "ebx", "ecx", "edx");
+	__asm__ __volatile__ (
+		/* See if CPUID instruction is supported ... */
+		/* ... Get copies of EFLAGS into eax and ecx */
+		"pushf\n\t"
+		"popl %%eax\n\t"
+		"movl %%eax, %%ecx\n\t"
 
-  /* Return */
-  return (rval);
+		/* ... Toggle the ID bit in one copy and store */
+		/*     to the EFLAGS reg */
+		"xorl $0x200000, %%eax\n\t"
+		"push %%eax\n\t"
+		"popf\n\t"
+
+		/* ... Get the (hopefully modified) EFLAGS */
+		"pushf\n\t"
+		"popl %%eax\n\t"
+
+		/* ... Compare and test result */
+		"xorl %%eax, %%ecx\n\t"
+		"testl $0x200000, %%ecx\n\t"
+		"jz NotSupported1\n\t"		/* CPUID not supported */
+
+
+		/* Get standard CPUID information, and
+		       go to a specific vendor section */
+		"movl $0, %%eax\n\t"
+		"cpuid\n\t"
+
+		/* Check for Intel */
+		"cmpl $0x756e6547, %%ebx\n\t"
+		"jne TryAMD\n\t"
+		"cmpl $0x49656e69, %%edx\n\t"
+		"jne TryAMD\n\t"
+		"cmpl $0x6c65746e, %%ecx\n"
+		"jne TryAMD\n\t"
+		"jmp Intel\n\t"
+
+		/* Check for AMD */
+		"\nTryAMD:\n\t"
+		"cmpl $0x68747541, %%ebx\n\t"
+		"jne TryCyrix\n\t"
+		"cmpl $0x69746e65, %%edx\n\t"
+		"jne TryCyrix\n\t"
+		"cmpl $0x444d4163, %%ecx\n"
+		"jne TryCyrix\n\t"
+		"jmp AMD\n\t"
+
+		/* Check for Cyrix */
+		"\nTryCyrix:\n\t"
+		"cmpl $0x69727943, %%ebx\n\t"
+		"jne NotSupported2\n\t"
+		"cmpl $0x736e4978, %%edx\n\t"
+		"jne NotSupported3\n\t"
+		"cmpl $0x64616574, %%ecx\n\t"
+		"jne NotSupported4\n\t"
+		/* Drop through to Cyrix... */
+
+
+		/* Cyrix Section */
+		/* See if extended CPUID level 80000001 is supported */
+		/* The value of CPUID/80000001 for the 6x86MX is undefined
+		   according to the Cyrix CPU Detection Guide (Preliminary
+		   Rev. 1.01 table 1), so we'll check the value of eax for
+		   CPUID/0 to see if standard CPUID level 2 is supported.
+		   According to the table, the only CPU which supports level
+		   2 is also the only one which supports extended CPUID levels.
+		*/
+		"cmpl $0x2, %%eax\n\t"
+		"jne MMXtest\n\t"	/* Use standard CPUID instead */
+
+		/* Extended CPUID supported (in theory), so get extended
+		   features */
+		"movl $0x80000001, %%eax\n\t"
+		"cpuid\n\t"
+		"testl $0x00800000, %%eax\n\t"	/* Test for MMX */
+		"jz NotSupported5\n\t"		/* MMX not supported */
+		"testl $0x01000000, %%eax\n\t"	/* Test for Ext'd MMX */
+		"jnz EMMXSupported\n\t"
+		"movl $1, %0:\n\n\t"		/* MMX Supported */
+		"jmp Return\n\n"
+		"EMMXSupported:\n\t"
+		"movl $3, %0:\n\n\t"		/* EMMX and MMX Supported */
+		"jmp Return\n\t"
+
+
+		/* AMD Section */
+		"AMD:\n\t"
+
+		/* See if extended CPUID is supported */
+		"movl $0x80000000, %%eax\n\t"
+		"cpuid\n\t"
+		"cmpl $0x80000000, %%eax\n\t"
+		"jl MMXtest\n\t"	/* Use standard CPUID instead */
+
+		/* Extended CPUID supported, so get extended features */
+		"movl $0x80000001, %%eax\n\t"
+		"cpuid\n\t"
+		"testl $0x00800000, %%edx\n\t"	/* Test for MMX */
+		"jz NotSupported6\n\t"		/* MMX not supported */
+		"testl $0x80000000, %%edx\n\t"	/* Test for 3DNow! */
+		"jnz ThreeDNowSupported\n\t"
+		"movl $1, %0:\n\n\t"		/* MMX Supported */
+		"jmp Return\n\n"
+		"ThreeDNowSupported:\n\t"
+		"movl $5, %0:\n\n\t"		/* 3DNow! and MMX Supported */
+		"jmp Return\n\t"
+
+
+		/* Intel Section */
+		"Intel:\n\t"
+
+		/* Check for SSE */
+		"SSEtest:\n\t"
+		"movl $1, %%eax\n\t"
+		"cpuid\n\t"
+		"testl $0x02000000, %%edx\n\t"	/* Test for SSE */
+		"jz MMXtest\n\t"		/* SSE Not supported */
+		"movl $9, %0:\n\n\t"		/* SSE Supported */
+		"jmp Return\n\t"
+
+		/* Check for MMX */
+		"MMXtest:\n\t"
+		"movl $1, %%eax\n\t"
+		"cpuid\n\t"
+		"testl $0x00800000, %%edx\n\t"	/* Test for MMX */
+		"jz NotSupported7\n\t"		/* MMX Not supported */
+		"movl $1, %0:\n\n\t"		/* MMX Supported */
+		"jmp Return\n\t"
+
+		/* Nothing supported */
+		"\nNotSupported1:\n\t"
+		"#movl $101, %0:\n\n\t"
+		"\nNotSupported2:\n\t"
+		"#movl $102, %0:\n\n\t"
+		"\nNotSupported3:\n\t"
+		"#movl $103, %0:\n\n\t"
+		"\nNotSupported4:\n\t"
+		"#movl $104, %0:\n\n\t"
+		"\nNotSupported5:\n\t"
+		"#movl $105, %0:\n\n\t"
+		"\nNotSupported6:\n\t"
+		"#movl $106, %0:\n\n\t"
+		"\nNotSupported7:\n\t"
+		"#movl $107, %0:\n\n\t"
+		"movl $0, %0:\n\n\t"
+
+		"Return:\n\t"
+		: "=a" (rval)
+		: /* no input */
+		: "eax", "ebx", "ecx", "edx"
+	);
+
+	/* Return */
+	return(rval);
 }
 
 /*	Function to test if sse instructions are supported...
 */
 inline extern int
-sse_ok (void)
+sse_ok(void)
 {
-  /* Returns 1 if SSE instructions are supported, 0 otherwise */
-  return ((mm_support () & 0x8) >> 3);
+	/* Returns 1 if SSE instructions are supported, 0 otherwise */
+	return ( (mm_support() & 0x8) >> 3  );
 }
 #endif
 
@@ -485,13 +541,13 @@ sse_ok (void)
 /*	MOVe MaSK from Packed Single-fp
 */
 #ifdef	SSE_TRACE
-#define	movmskps(xmmreg, reg) \
+	#define	movmskps(xmmreg, reg) \
 	{ \
 		fprintf(stderr, "movmskps()\n"); \
 		__asm__ __volatile__ ("movmskps %" #xmmreg ", %" #reg) \
 	}
 #else
-#define	movmskps(xmmreg, reg) \
+	#define	movmskps(xmmreg, reg) \
 	__asm__ __volatile__ ("movmskps %" #xmmreg ", %" #reg)
 #endif
 
@@ -499,13 +555,13 @@ sse_ok (void)
 /*	Parallel MOVe MaSK from mmx reg to 32-bit reg
 */
 #ifdef	SSE_TRACE
-#define	pmovmskb(mmreg, reg) \
+	#define	pmovmskb(mmreg, reg) \
 	{ \
 		fprintf(stderr, "movmskps()\n"); \
 		__asm__ __volatile__ ("movmskps %" #mmreg ", %" #reg) \
 	}
 #else
-#define	pmovmskb(mmreg, reg) \
+	#define	pmovmskb(mmreg, reg) \
 	__asm__ __volatile__ ("movmskps %" #mmreg ", %" #reg)
 #endif
 
@@ -828,7 +884,7 @@ sse_ok (void)
 /*	Fp and mmX ReSTORe state
 */
 #ifdef	SSE_TRACE
-#define	fxrstor(mem) \
+	#define	fxrstor(mem) \
 	{ \
 		fprintf(stderr, "fxrstor()\n"); \
 		__asm__ __volatile__ ("fxrstor %0" \
@@ -836,7 +892,7 @@ sse_ok (void)
 			      : "X" (mem)) \
 	}
 #else
-#define	fxrstor(mem) \
+	#define	fxrstor(mem) \
 	__asm__ __volatile__ ("fxrstor %0" \
 			      : /* nothing */ \
 			      : "X" (mem))
@@ -846,7 +902,7 @@ sse_ok (void)
 /*	Fp and mmX SAVE state
 */
 #ifdef	SSE_TRACE
-#define	fxsave(mem) \
+	#define	fxsave(mem) \
 	{ \
 		fprintf(stderr, "fxsave()\n"); \
 		__asm__ __volatile__ ("fxsave %0" \
@@ -854,7 +910,7 @@ sse_ok (void)
 			      : "X" (mem)) \
 	}
 #else
-#define	fxsave(mem) \
+	#define	fxsave(mem) \
 	__asm__ __volatile__ ("fxsave %0" \
 			      : /* nothing */ \
 			      : "X" (mem))
@@ -864,7 +920,7 @@ sse_ok (void)
 /*	STore streaMing simd eXtensions Control/Status Register
 */
 #ifdef	SSE_TRACE
-#define	stmxcsr(mem) \
+	#define	stmxcsr(mem) \
 	{ \
 		fprintf(stderr, "stmxcsr()\n"); \
 		__asm__ __volatile__ ("stmxcsr %0" \
@@ -872,7 +928,7 @@ sse_ok (void)
 			      : "X" (mem)) \
 	}
 #else
-#define	stmxcsr(mem) \
+	#define	stmxcsr(mem) \
 	__asm__ __volatile__ ("stmxcsr %0" \
 			      : /* nothing */ \
 			      : "X" (mem))
@@ -882,7 +938,7 @@ sse_ok (void)
 /*	LoaD streaMing simd eXtensions Control/Status Register
 */
 #ifdef	SSE_TRACE
-#define	ldmxcsr(mem) \
+	#define	ldmxcsr(mem) \
 	{ \
 		fprintf(stderr, "ldmxcsr()\n"); \
 		__asm__ __volatile__ ("ldmxcsr %0" \
@@ -890,7 +946,7 @@ sse_ok (void)
 			      : "X" (mem)) \
 	}
 #else
-#define	ldmxcsr(mem) \
+	#define	ldmxcsr(mem) \
 	__asm__ __volatile__ ("ldmxcsr %0" \
 			      : /* nothing */ \
 			      : "X" (mem))
@@ -901,13 +957,13 @@ sse_ok (void)
 	occuring after fence in source code.
 */
 #ifdef	SSE_TRACE
-#define	sfence() \
+	#define	sfence() \
 	{ \
 		fprintf(stderr, "sfence()\n"); \
 		__asm__ __volatile__ ("sfence\n\t") \
 	}
 #else
-#define	sfence() \
+	#define	sfence() \
 	__asm__ __volatile__ ("sfence\n\t")
 #endif
 
@@ -920,17 +976,18 @@ sse_ok (void)
 */
 #ifdef	SSE_TRACE
 #else
-#define	prefetch(mem, hint) \
+	#define	prefetch(mem, hint) \
 	__asm__ __volatile__ ("prefetch" #hint " %0" \
 			      : /* nothing */ \
 			      : "X" (mem))
 
-#define	prefetcht0(mem)		prefetch(mem, t0)
-#define	prefetcht1(mem)		prefetch(mem, t1)
-#define	prefetcht2(mem)		prefetch(mem, t2)
-#define	prefetchnta(mem)	prefetch(mem, nta)
+	#define	prefetcht0(mem)		prefetch(mem, t0)
+	#define	prefetcht1(mem)		prefetch(mem, t1)
+	#define	prefetcht2(mem)		prefetch(mem, t2)
+	#define	prefetchnta(mem)	prefetch(mem, nta)
 #endif
 
 
 
 #endif
+

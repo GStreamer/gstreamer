@@ -27,6 +27,8 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
+
 #define GST_TYPE_FDSINK \
   (gst_fdsink_get_type())
 #define GST_FDSINK(obj) \
@@ -37,11 +39,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FDSINK))
 #define GST_IS_FDSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSINK))
+
 typedef struct _GstFdSink GstFdSink;
 typedef struct _GstFdSinkClass GstFdSinkClass;
 
-struct _GstFdSink
-{
+struct _GstFdSink {
   GstElement element;
 
   GstPad *sinkpad;
@@ -49,12 +51,12 @@ struct _GstFdSink
   int fd;
 };
 
-struct _GstFdSinkClass
-{
+struct _GstFdSinkClass {
   GstElementClass parent_class;
 };
 
-GType gst_fdsink_get_type (void);
+GType gst_fdsink_get_type(void);
 
 G_END_DECLS
+
 #endif /* __GST_FDSINK_H__ */

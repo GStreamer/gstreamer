@@ -14,6 +14,17 @@ The registry holds the available plugins in the system.
 #GstPlugin, #GstPluginFeature
 </para>
 
+<!-- ##### ENUM GstRegistryReturn ##### -->
+<para>
+The return value of registry operations
+</para>
+
+@GST_REGISTRY_OK: The registry reported no error.
+@GST_REGISTRY_LOAD_ERROR: There was a load error
+@GST_REGISTRY_SAVE_ERROR: There was an error saving the registry
+@GST_REGISTRY_PLUGIN_LOAD_ERROR: There was an error loading a plugin
+@GST_REGISTRY_PLUGIN_SIGNATURE_ERROR: There was an error saving a plugin
+
 <!-- ##### ENUM GstRegistryFlags ##### -->
 <para>
 Flags for the registry

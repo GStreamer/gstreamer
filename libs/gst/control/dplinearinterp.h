@@ -27,29 +27,30 @@
 #include "dparam.h"
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_DP_LININT			(gst_dp_linint_get_type ())
 #define GST_DP_LININT(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DP_LININT,GstDParamLinInterp))
 #define GST_DP_LININT_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DP_LININT,GstDParamLinInterp))
 #define GST_IS_DP_LININT(obj)			(G_TYPE_CHECK_INSTANCE_TYPE	((obj), GST_TYPE_DP_LININT))
 #define GST_IS_DP_LININT_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DP_LININT))
+
 typedef struct _GstDParamLinInterp GstDParamLinInterp;
 typedef struct _GstDParamLinInterpClass GstDParamLinInterpClass;
 
-struct _GstDParamLinInterp
-{
-  GstDParam dparam;
+struct _GstDParamLinInterp {
+	GstDParam		dparam;
 
 };
 
-struct _GstDParamLinInterpClass
-{
-  GstDParamClass parent_class;
+struct _GstDParamLinInterpClass {
+	GstDParamClass parent_class;
 
-  /* signal callbacks */
+	/* signal callbacks */
 };
 
 GType gst_dp_linint_get_type (void);
-GstDParam *gst_dp_linint_new (GType type);
+GstDParam* gst_dp_linint_new (GType type);
 
 G_END_DECLS
+
 #endif /* __GST_DP_LININT_H__ */

@@ -47,18 +47,17 @@
 
 #define GST_ARCH_SET_SP(stackpointer) \
     __asm__("lwz r1,%0" : : "m"(stackpointer))
-
+  
 #define GST_ARCH_CALL(target) \
     __asm__( "mr r0,%0\n\t" \
              "mtlr r0\n\t" \
              "blrl" : : "r"(target) );
-
-struct minimal_ppc_stackframe
-{
-  unsigned long back_chain;
-  unsigned long LR_save;
-  unsigned long unused1;
-  unsigned long unused2;
+  
+struct minimal_ppc_stackframe {
+    unsigned long back_chain;
+    unsigned long LR_save;
+    unsigned long unused1;
+    unsigned long unused2;
 };
 
 #define GST_ARCH_SETUP_STACK(sp) \
@@ -80,12 +79,11 @@ struct minimal_ppc_stackframe
 /* Need to get more information about the stackframe format
  * and get the fields more correct.  Check GDB sources maybe?
  */
-struct minimal_stackframe
-{
-  unsigned long back_chain;
-  unsigned long LR_save;
-  unsigned long unused1;
-  unsigned long unused2;
+struct minimal_stackframe {
+    unsigned long back_chain;
+    unsigned long LR_save;
+    unsigned long unused1;
+    unsigned long unused2;
 };
 
 #define GST_ARCH_SETUP_STACK(sp) \
@@ -143,7 +141,7 @@ struct minimal_stackframe
 
 /* assuming the stackframe is 16 bytes */
 #define GST_ARCH_SETUP_STACK(sp) sp -= 4
-
+    
 
 
 /***** HP-PA *****/
@@ -169,12 +167,11 @@ struct minimal_stackframe
 #define GST_ARCH_CALL(target) \
     __asm__( "basr 14,%0" : : "a"(target) );
 
-struct minimal_s390_stackframe
-{
-  unsigned long back_chain;
-  unsigned long reserved;
-  unsigned long greg[14];
-  double freg[4];
+struct minimal_s390_stackframe {
+    unsigned long back_chain;
+    unsigned long reserved;
+    unsigned long greg[14];
+    double        freg[4];
 };
 
 #define GST_ARCH_SETUP_STACK(sp) \

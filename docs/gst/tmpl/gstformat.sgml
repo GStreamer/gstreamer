@@ -15,6 +15,18 @@ formats can be used to perform seeking or conversions/query operations.
 #GstPad, #GstElement
 </para>
 
+<!-- ##### ENUM GstFormat ##### -->
+<para>
+Standard predefined formats
+</para>
+
+@GST_FORMAT_UNDEFINED: undefined format
+@GST_FORMAT_DEFAULT: the default format of the pad/element
+@GST_FORMAT_BYTES: bytes
+@GST_FORMAT_TIME: time in nanoseconds
+@GST_FORMAT_BUFFERS: buffers
+@GST_FORMAT_PERCENT: percentage of stream
+
 <!-- ##### MACRO GST_FORMAT_PERCENT_MAX ##### -->
 <para>
 The PERCENT format is between 0 and this value

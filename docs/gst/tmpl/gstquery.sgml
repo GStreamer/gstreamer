@@ -15,6 +15,20 @@ Query types can be used to perform queries on pads and elements.
 #GstPad, #GstElement
 </para>
 
+<!-- ##### ENUM GstQueryType ##### -->
+<para>
+Standard predefined Query types
+</para>
+
+@GST_QUERY_NONE: invalid query type
+@GST_QUERY_TOTAL: total length of stream
+@GST_QUERY_POSITION: current position in stream
+@GST_QUERY_LATENCY: latency of stream
+@GST_QUERY_JITTER: current jitter of stream
+@GST_QUERY_START: start of configured segment
+@GST_QUERY_SEGMENT_END: end of configured segment
+@GST_QUERY_RATE: current rate of the stream
+
 <!-- ##### MACRO GST_QUERY_TYPE_RATE_DEN ##### -->
 <para>
 Rates are relative to this value
@@ -75,10 +89,10 @@ Convenience function to define a function that returns an array of query types.
 
 </para>
 
-@Param1: 
+@type: 
 @Returns: 
 <!-- # Unused Parameters # -->
-@type: 
+@Param1: 
 
 
 <!-- ##### FUNCTION gst_query_type_get_definitions ##### -->

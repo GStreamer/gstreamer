@@ -27,9 +27,11 @@
 #include <glib.h>
 
 G_BEGIN_DECLS
+
 /* a static type for making uri element properties */
 #define GST_TYPE_URI (gst_uri_get_uri_type())
-    GType gst_uri_get_uri_type (void);
+GType gst_uri_get_uri_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_URI_TYPE_H */

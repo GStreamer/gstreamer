@@ -29,6 +29,7 @@
 
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_QUEUE \
   (gst_queue_get_type())
 #define GST_QUEUE(obj) \
@@ -39,18 +40,17 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_QUEUE))
 #define GST_IS_QUEUE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE))
-    enum
-{
-  GST_QUEUE_NO_LEAK = 0,
-  GST_QUEUE_LEAK_UPSTREAM = 1,
-  GST_QUEUE_LEAK_DOWNSTREAM = 2
+
+enum {
+  GST_QUEUE_NO_LEAK		= 0,
+  GST_QUEUE_LEAK_UPSTREAM	= 1,
+  GST_QUEUE_LEAK_DOWNSTREAM	= 2
 };
 
 typedef struct _GstQueue GstQueue;
 typedef struct _GstQueueClass GstQueueClass;
 
-struct _GstQueue
-{
+struct _GstQueue {
   GstElement element;
 
   GstPad *sinkpad;
@@ -59,15 +59,13 @@ struct _GstQueue
   /* the queue of data we're keeping our grubby hands on */
   GQueue *queue;
 
-  struct
-  {
-    guint buffers;		/* no. of buffers */
-    guint bytes;		/* no. of bytes */
-    guint64 time;		/* amount of time */
-  }
-  cur_level,			/* currently in the queue */
-    max_size,			/* max. amount of data allowed in the queue */
-    min_threshold;		/* min. amount of data required to wake reader */
+  struct {
+    guint   buffers;	/* no. of buffers */
+    guint   bytes;	/* no. of bytes */
+    guint64 time;	/* amount of time */
+  } cur_level,		/* currently in the queue */
+    max_size,		/* max. amount of data allowed in the queue */
+    min_threshold;	/* min. amount of data required to wake reader */
 
   /* whether we leak data, and at which end */
   gint leaky;
@@ -82,28 +80,27 @@ struct _GstQueue
   gboolean interrupt;
   gboolean flush;
 
-  GMutex *qlock;		/* lock for queue (vs object lock) */
-  GCond *item_add;		/* signals buffers now available for reading */
-  GCond *item_del;		/* signals space now available for writing */
-  GCond *event_done;		/* upstream event signaller */
+  GMutex *qlock;	/* lock for queue (vs object lock) */
+  GCond *item_add;	/* signals buffers now available for reading */
+  GCond *item_del;	/* signals space now available for writing */
+  GCond *event_done;	/* upstream event signaller */
 
-  GTimeVal *timeval;		/* the timeout for the queue locking */
-  GQueue *events;		/* upstream events get decoupled here */
+  GTimeVal *timeval;	/* the timeout for the queue locking */
+  GQueue *events;	/* upstream events get decoupled here */
 
   GstCaps *negotiated_caps;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
-struct _GstQueueClass
-{
+struct _GstQueueClass {
   GstElementClass parent_class;
 
   /* signals - 'running' is called from both sides
    * which might make it sort of non-useful... */
-  void (*underrun) (GstQueue * queue);
-  void (*running) (GstQueue * queue);
-  void (*overrun) (GstQueue * queue);
+  void (*underrun)	(GstQueue *queue);
+  void (*running)	(GstQueue *queue);
+  void (*overrun)	(GstQueue *queue);
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -111,4 +108,6 @@ struct _GstQueueClass
 GType gst_queue_get_type (void);
 
 G_END_DECLS
+
+
 #endif /* __GST_QUEUE_H__ */

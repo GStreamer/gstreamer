@@ -31,15 +31,16 @@
 #include <gst/gstconfig.h>
 
 G_BEGIN_DECLS
+
 /*
  * GStreamer's debugging subsystem is an easy way to get information about what
  * the application is doing.
  * It is not meant for programming errors. Use GLibs methods (g_warning and so
  * on for that.
  */
+
 /* log levels */
-    typedef enum
-{
+typedef enum {
   GST_LEVEL_NONE = 0,
   GST_LEVEL_ERROR,
   GST_LEVEL_WARNING,
@@ -48,8 +49,7 @@ G_BEGIN_DECLS
   GST_LEVEL_LOG,
   /* add more */
   GST_LEVEL_COUNT
-}
-GstDebugLevel;
+} GstDebugLevel;
 
 /* we can now override this to be more general in maintainer builds or cvs checkouts */
 #ifndef GST_LEVEL_DEFAULT
@@ -64,45 +64,42 @@ GstDebugLevel;
  * Background color codes:
  * 40=black 41=red 42=green 43=yellow 44=blue 45=magenta 46=cyan 47=white
  */
-typedef enum
-{
+typedef enum {
   /* colors */
-  GST_DEBUG_FG_BLACK = 0x0000,
-  GST_DEBUG_FG_RED = 0x0001,
-  GST_DEBUG_FG_GREEN = 0x0002,
-  GST_DEBUG_FG_YELLOW = 0x0003,
-  GST_DEBUG_FG_BLUE = 0x0004,
-  GST_DEBUG_FG_MAGENTA = 0x0005,
-  GST_DEBUG_FG_CYAN = 0x0006,
-  GST_DEBUG_FG_WHITE = 0x0007,
+  GST_DEBUG_FG_BLACK		= 0x0000,
+  GST_DEBUG_FG_RED		= 0x0001,
+  GST_DEBUG_FG_GREEN		= 0x0002,
+  GST_DEBUG_FG_YELLOW		= 0x0003,
+  GST_DEBUG_FG_BLUE		= 0x0004,
+  GST_DEBUG_FG_MAGENTA		= 0x0005,
+  GST_DEBUG_FG_CYAN		= 0x0006,
+  GST_DEBUG_FG_WHITE		= 0x0007,
   /* background colors */
-  GST_DEBUG_BG_BLACK = 0x0000,
-  GST_DEBUG_BG_RED = 0x0010,
-  GST_DEBUG_BG_GREEN = 0x0020,
-  GST_DEBUG_BG_YELLOW = 0x0030,
-  GST_DEBUG_BG_BLUE = 0x0040,
-  GST_DEBUG_BG_MAGENTA = 0x0050,
-  GST_DEBUG_BG_CYAN = 0x0060,
-  GST_DEBUG_BG_WHITE = 0x0070,
+  GST_DEBUG_BG_BLACK		= 0x0000,
+  GST_DEBUG_BG_RED		= 0x0010,
+  GST_DEBUG_BG_GREEN		= 0x0020,
+  GST_DEBUG_BG_YELLOW		= 0x0030,
+  GST_DEBUG_BG_BLUE		= 0x0040,
+  GST_DEBUG_BG_MAGENTA		= 0x0050,
+  GST_DEBUG_BG_CYAN		= 0x0060,
+  GST_DEBUG_BG_WHITE		= 0x0070,
   /* other formats */
-  GST_DEBUG_BOLD = 0x0100,
-  GST_DEBUG_UNDERLINE = 0x0200
-}
-GstDebugColorFlags;
+  GST_DEBUG_BOLD		= 0x0100,
+  GST_DEBUG_UNDERLINE		= 0x0200
+} GstDebugColorFlags;
 
 #define GST_DEBUG_FG_MASK	(0x000F)
 #define GST_DEBUG_BG_MASK	(0x00F0)
 #define GST_DEBUG_FORMAT_MASK	(0xFF00)
 
 typedef struct _GstDebugCategory GstDebugCategory;
-struct _GstDebugCategory
-{
-  /*< private > */
-  GstAtomicInt *threshold;
-  guint color;			/* see defines above */
+struct _GstDebugCategory {
+  /*< private >*/
+  GstAtomicInt *	threshold;
+  guint			color;		/* see defines above */
 
-  const gchar *name;
-  const gchar *description;
+  const gchar *		name;
+  const gchar *		description;
 };
 
 /********** some convenience macros for debugging **********/
@@ -130,11 +127,14 @@ struct _GstDebugCategory
 
 
 typedef struct _GstDebugMessage GstDebugMessage;
-typedef void (*GstLogFunction) (GstDebugCategory * category,
-    GstDebugLevel level,
-    const gchar * file,
-    const gchar * function,
-    gint line, GObject * object, GstDebugMessage * message, gpointer data);
+typedef void (*GstLogFunction)	(GstDebugCategory *	category,
+				 GstDebugLevel		level,
+				 const gchar *		file,
+				 const gchar *		function,
+				 gint			line,
+				 GObject *		object,
+				 GstDebugMessage *    	message,
+				 gpointer		data);
 
 /* Disable this subsystem if no varargs macro can be found. 
    Use a trick so the core builds the functions nonetheless if it wasn't
@@ -150,51 +150,57 @@ typedef void (*GstLogFunction) (GstDebugCategory * category,
 
 #ifndef __GST_DISABLE_GST_DEBUG
 
-void _gst_debug_init (void);
+void		_gst_debug_init			(void);
 
 /* note we can't use G_GNUC_PRINTF (7, 8) because gcc chokes on %P, which
  * we use for GST_PTR_FORMAT. */
-void
-gst_debug_log (GstDebugCategory * category,
-    GstDebugLevel level,
-    const gchar * file,
-    const gchar * function,
-    gint line, GObject * object, const gchar * format, ...)
-    G_GNUC_NO_INSTRUMENT;
-     void gst_debug_log_valist (GstDebugCategory * category,
-    GstDebugLevel level,
-    const gchar * file,
-    const gchar * function,
-    gint line,
-    GObject * object, const gchar * format, va_list args) G_GNUC_NO_INSTRUMENT;
+void		gst_debug_log			(GstDebugCategory *	category,
+						 GstDebugLevel		level,
+						 const gchar *		file,
+						 const gchar *		function,
+						 gint			line,
+						 GObject *		object,
+						 const gchar *		format,
+						 ...) G_GNUC_NO_INSTRUMENT;
+void		gst_debug_log_valist  		(GstDebugCategory *	category,
+						 GstDebugLevel		level,
+						 const gchar *		file,
+						 const gchar *		function,
+						 gint			line,
+						 GObject *		object,
+						 const gchar *		format,
+						 va_list		args) G_GNUC_NO_INSTRUMENT;
 
-     const gchar *gst_debug_message_get (GstDebugMessage * message);
+const gchar *	gst_debug_message_get		(GstDebugMessage *	message);
 
-     void gst_debug_log_default (GstDebugCategory * category,
-    GstDebugLevel level,
-    const gchar * file,
-    const gchar * function,
-    gint line,
-    GObject * object,
-    GstDebugMessage * message, gpointer unused) G_GNUC_NO_INSTRUMENT;
+void		gst_debug_log_default		(GstDebugCategory *	category,
+						 GstDebugLevel		level,
+						 const gchar *		file,
+						 const gchar *		function,
+						 gint			line,
+						 GObject *		object,
+						 GstDebugMessage *    	message,
+						 gpointer		unused) G_GNUC_NO_INSTRUMENT;
 
-     G_CONST_RETURN gchar *gst_debug_level_get_name (GstDebugLevel level);
+G_CONST_RETURN gchar *
+		gst_debug_level_get_name	(GstDebugLevel		level);
 
-     void gst_debug_add_log_function (GstLogFunction func, gpointer data);
-     guint gst_debug_remove_log_function (GstLogFunction func);
-     guint gst_debug_remove_log_function_by_data (gpointer data);
+void		gst_debug_add_log_function	(GstLogFunction		func,
+						 gpointer data);
+guint		gst_debug_remove_log_function	(GstLogFunction		func);
+guint		gst_debug_remove_log_function_by_data (gpointer		data);
 
-     void gst_debug_set_active (gboolean active);
-     gboolean gst_debug_is_active (void);
+void		gst_debug_set_active		(gboolean active);
+gboolean	gst_debug_is_active		(void);
 
-     void gst_debug_set_colored (gboolean colored);
-     gboolean gst_debug_is_colored (void);
+void		gst_debug_set_colored		(gboolean colored);
+gboolean	gst_debug_is_colored		(void);
 
-     void gst_debug_set_default_threshold (GstDebugLevel level);
-     GstDebugLevel gst_debug_get_default_threshold (void);
-     void gst_debug_set_threshold_for_name (const gchar * name,
-    GstDebugLevel level);
-     void gst_debug_unset_threshold_for_name (const gchar * name);
+void		gst_debug_set_default_threshold	(GstDebugLevel		level);
+GstDebugLevel	gst_debug_get_default_threshold	(void);
+void		gst_debug_set_threshold_for_name (const gchar *		name,
+						 GstDebugLevel		level);
+void		gst_debug_unset_threshold_for_name (const gchar *	name);
 
 /**
  * GST_DEBUG_CATEGORY:
@@ -221,8 +227,9 @@ gst_debug_log (GstDebugCategory * category,
  */
 #define GST_DEBUG_CATEGORY_STATIC(cat) static GstDebugCategory *cat = NULL
 /* do not use this function, use the macros below */
-     GstDebugCategory *_gst_debug_category_new (gchar * name,
-    guint color, gchar * description);
+GstDebugCategory *_gst_debug_category_new	(gchar *		name,
+						 guint			color,
+						 gchar *		description);
 /**
  * GST_DEBUG_CATEGORY_INIT:
  * @cat: the category to initialize.
@@ -263,27 +270,24 @@ gst_debug_log (GstDebugCategory * category,
     cat = _gst_debug_category_new (name,color,description);			\
 }G_STMT_END
 
-     void gst_debug_category_free (GstDebugCategory * category);
-     void gst_debug_category_set_threshold (GstDebugCategory * category,
-    GstDebugLevel level);
-     void gst_debug_category_reset_threshold (GstDebugCategory * category);
-     GstDebugLevel gst_debug_category_get_threshold (GstDebugCategory *
-    category);
-     G_CONST_RETURN gchar *gst_debug_category_get_name (GstDebugCategory *
-    category);
-     guint gst_debug_category_get_color (GstDebugCategory * category);
-     G_CONST_RETURN gchar *gst_debug_category_get_description (GstDebugCategory
-    * category);
-     GSList *gst_debug_get_all_categories (void);
+void		gst_debug_category_free		(GstDebugCategory *	category);
+void		gst_debug_category_set_threshold (GstDebugCategory *	category,
+						 GstDebugLevel		level);
+void		gst_debug_category_reset_threshold (GstDebugCategory *	category);
+GstDebugLevel	gst_debug_category_get_threshold (GstDebugCategory *	category);
+G_CONST_RETURN gchar *
+		gst_debug_category_get_name	(GstDebugCategory *	category);
+guint		gst_debug_category_get_color	(GstDebugCategory *	category);
+G_CONST_RETURN gchar *
+		gst_debug_category_get_description (GstDebugCategory *	category);
+GSList *	gst_debug_get_all_categories	(void);
 
-     gchar *gst_debug_construct_term_color (guint colorinfo);
+gchar *		gst_debug_construct_term_color	(guint colorinfo);
 
 
-     extern GstDebugCategory *GST_CAT_DEFAULT;
-
+extern GstDebugCategory *	GST_CAT_DEFAULT;
 /* this symbol may not be used */
-     extern gboolean __gst_debug_enabled;
-
+extern gboolean			__gst_debug_enabled;
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{			\
   if (__gst_debug_enabled) {				\
@@ -382,8 +386,10 @@ gst_debug_log (GstDebugCategory * category,
 
 
 /********** function pointer stuff **********/
-     void *_gst_debug_register_funcptr (void *ptr, gchar * ptrname);
-     G_CONST_RETURN gchar *_gst_debug_nameof_funcptr (void *ptr);
+void* 		_gst_debug_register_funcptr	(void *			ptr,
+						 gchar *		ptrname);
+G_CONST_RETURN gchar*
+		_gst_debug_nameof_funcptr 	(void *			ptr);
 
 #define GST_DEBUG_FUNCPTR(ptr) (_gst_debug_register_funcptr((void *)(ptr), #ptr) , ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)
@@ -397,34 +403,34 @@ gst_debug_log (GstDebugCategory * category,
 #  pragma GCC poison _gst_debug_category_new
 #endif
 
-#define _gst_debug_init()	/* NOP */
+#define _gst_debug_init()				/* NOP */
 
-#define gst_debug_set_log_function(func,data)	/* NOP */
-#define gst_debug_reset_log_function(void)	/* NOP */
-#define gst_debug_set_default_threshold(level)	/* NOP */
+#define gst_debug_set_log_function(func,data)		/* NOP */
+#define gst_debug_reset_log_function(void)		/* NOP */
+#define gst_debug_set_default_threshold(level)		/* NOP */
 #define gst_debug_get_default_threshold()		(GST_LEVEL_NONE)
-#define gst_debug_category_set_threshold_for_name(name, level)	/* NOP */
-#define gst_debug_category_unset_threshold_for_name(name)	/* NOP */
+#define gst_debug_category_set_threshold_for_name(name, level) /* NOP */
+#define gst_debug_category_unset_threshold_for_name(name) /* NOP */
 
 #define gst_debug_level_get_name(level)			("NONE")
 #define gst_debug_add_log_function(func,data)		(FALSE)
 #define gst_debug_remove_log_function(func)		(0)
 #define gst_debug_remove_log_function_by_data(data)	(0)
-#define gst_debug_set_active(active)	/* NOP */
+#define gst_debug_set_active(active)			/* NOP */
 #define gst_debug_is_active()				(FALSE)
-#define gst_debug_set_colored(colored)	/* NOP */
+#define gst_debug_set_colored(colored)			/* NOP */
 #define gst_debug_is_colored()				(FALSE)
-#define gst_debug_set_default_threshold(level)	/* NOP */
+#define gst_debug_set_default_threshold(level)		/* NOP */
 #define gst_debug_get_default_threshold()		(GST_LEVEL_NONE)
 #define gst_debug_set_threshold_for_name(name,level)	/* NOP */
 #define gst_debug_unset_threshold_for_name(name)	/* NOP */
 
-#define GST_DEBUG_CATEGORY(var)	/* NOP */
-#define GST_DEBUG_CATEGORY_EXTERN(var)	/* NOP */
-#define GST_DEBUG_CATEGORY_STATIC(var)	/* NOP */
+#define GST_DEBUG_CATEGORY(var)				/* NOP */
+#define GST_DEBUG_CATEGORY_EXTERN(var)			/* NOP */
+#define GST_DEBUG_CATEGORY_STATIC(var)			/* NOP */
 #define GST_DEBUG_CATEGORY_INIT(var,name,color,desc)	/* NOP */
-#define gst_debug_category_free(category)	/* NOP */
-#define gst_debug_category_set_threshold(category,level)	/* NOP */
+#define gst_debug_category_free(category)		/* NOP */
+#define gst_debug_category_set_threshold(category,level) /* NOP */
 #define gst_debug_category_reset_threshold(category)	/* NOP */
 #define gst_debug_category_get_threshold(category)	(GST_LEVEL_NONE)
 #define gst_debug_category_get_name(cat)		("")
@@ -435,76 +441,76 @@ gst_debug_log (GstDebugCategory * category,
 
 #ifdef G_HAVE_ISO_VARARGS
 
-#define GST_CAT_LEVEL_LOG(cat,level,...)	/* NOP */
+#define GST_CAT_LEVEL_LOG(cat,level,...)		/* NOP */
 
-#define GST_CAT_ERROR_OBJECT(...)	/* NOP */
-#define GST_CAT_WARNING_OBJECT(...)	/* NOP */
-#define GST_CAT_INFO_OBJECT(...)	/* NOP */
-#define GST_CAT_DEBUG_OBJECT(...)	/* NOP */
-#define GST_CAT_LOG_OBJECT(...)	/* NOP */
+#define GST_CAT_ERROR_OBJECT(...)			/* NOP */
+#define GST_CAT_WARNING_OBJECT(...)			/* NOP */
+#define GST_CAT_INFO_OBJECT(...)			/* NOP */
+#define GST_CAT_DEBUG_OBJECT(...)			/* NOP */
+#define GST_CAT_LOG_OBJECT(...)				/* NOP */
 
-#define GST_CAT_ERROR(...)	/* NOP */
-#define GST_CAT_WARNING(...)	/* NOP */
-#define GST_CAT_INFO(...)	/* NOP */
-#define GST_CAT_DEBUG(...)	/* NOP */
-#define GST_CAT_LOG(...)	/* NOP */
+#define GST_CAT_ERROR(...)				/* NOP */
+#define GST_CAT_WARNING(...)				/* NOP */
+#define GST_CAT_INFO(...)				/* NOP */
+#define GST_CAT_DEBUG(...)				/* NOP */
+#define GST_CAT_LOG(...)				/* NOP */
 
-#define GST_ERROR_OBJECT(...)	/* NOP */
-#define GST_WARNING_OBJECT(...)	/* NOP */
-#define GST_INFO_OBJECT(...)	/* NOP */
-#define GST_DEBUG_OBJECT(...)	/* NOP */
-#define GST_LOG_OBJECT(...)	/* NOP */
+#define GST_ERROR_OBJECT(...)				/* NOP */
+#define GST_WARNING_OBJECT(...)				/* NOP */
+#define GST_INFO_OBJECT(...)				/* NOP */
+#define GST_DEBUG_OBJECT(...)				/* NOP */
+#define GST_LOG_OBJECT(...)				/* NOP */
 
-#define GST_ERROR(...)		/* NOP */
-#define GST_WARNING(...)	/* NOP */
-#define GST_INFO(...)		/* NOP */
-#define GST_DEBUG(...)		/* NOP */
-#define GST_LOG(...)		/* NOP */
+#define GST_ERROR(...)					/* NOP */
+#define GST_WARNING(...)				/* NOP */
+#define GST_INFO(...)					/* NOP */
+#define GST_DEBUG(...)					/* NOP */
+#define GST_LOG(...)					/* NOP */
 
 #ifdef GST_DEBUG_ENABLE_DEPRECATED
-#define GST_INFO_ELEMENT(cat,obj,...)	/* NOP */
-#define GST_DEBUG_ELEMENT(cat,obj,...)	/* NOP */
-#define GST_DEBUG_ENTER(...)	/* NOP */
-#define GST_DEBUG_LEAVE(...)	/* NOP */
-#define GST_INFO_ENTER(...)	/* NOP */
-#define GST_INFO_LEAVE(...)	/* NOP */
+#define GST_INFO_ELEMENT(cat,obj,...) /* NOP */
+#define GST_DEBUG_ELEMENT(cat,obj,...) /* NOP */
+#define GST_DEBUG_ENTER(...) /* NOP */
+#define GST_DEBUG_LEAVE(...) /* NOP */
+#define GST_INFO_ENTER(...) /* NOP */
+#define GST_INFO_LEAVE(...) /* NOP */
 #endif /* GST_DEBUG_ENABLE_DEPRECATED */
 
 #else /* !G_HAVE_ISO_VARARGS */
 
-#define GST_CAT_LEVEL_LOG(cat,level,args...)	/* NOP */
+#define GST_CAT_LEVEL_LOG(cat,level,args...)		/* NOP */
 
-#define GST_CAT_ERROR_OBJECT(args...)	/* NOP */
-#define GST_CAT_WARNING_OBJECT(args...)	/* NOP */
-#define GST_CAT_INFO_OBJECT(args...)	/* NOP */
-#define GST_CAT_DEBUG_OBJECT(args...)	/* NOP */
-#define GST_CAT_LOG_OBJECT(args...)	/* NOP */
+#define GST_CAT_ERROR_OBJECT(args...)			/* NOP */
+#define GST_CAT_WARNING_OBJECT(args...)			/* NOP */
+#define GST_CAT_INFO_OBJECT(args...)			/* NOP */
+#define GST_CAT_DEBUG_OBJECT(args...)			/* NOP */
+#define GST_CAT_LOG_OBJECT(args...)			/* NOP */
 
-#define GST_CAT_ERROR(args...)	/* NOP */
-#define GST_CAT_WARNING(args...)	/* NOP */
-#define GST_CAT_INFO(args...)	/* NOP */
-#define GST_CAT_DEBUG(args...)	/* NOP */
-#define GST_CAT_LOG(args...)	/* NOP */
+#define GST_CAT_ERROR(args...)				/* NOP */
+#define GST_CAT_WARNING(args...)			/* NOP */
+#define GST_CAT_INFO(args...)				/* NOP */
+#define GST_CAT_DEBUG(args...)				/* NOP */
+#define GST_CAT_LOG(args...)				/* NOP */
 
-#define GST_ERROR_OBJECT(args...)	/* NOP */
-#define GST_WARNING_OBJECT(args...)	/* NOP */
-#define GST_INFO_OBJECT(args...)	/* NOP */
-#define GST_DEBUG_OBJECT(args...)	/* NOP */
-#define GST_LOG_OBJECT(args...)	/* NOP */
+#define GST_ERROR_OBJECT(args...)			/* NOP */
+#define GST_WARNING_OBJECT(args...)			/* NOP */
+#define GST_INFO_OBJECT(args...)			/* NOP */
+#define GST_DEBUG_OBJECT(args...)			/* NOP */
+#define GST_LOG_OBJECT(args...)				/* NOP */
 
-#define GST_ERROR(args...)	/* NOP */
-#define GST_WARNING(args...)	/* NOP */
-#define GST_INFO(args...)	/* NOP */
-#define GST_DEBUG(args...)	/* NOP */
-#define GST_LOG(args...)	/* NOP */
+#define GST_ERROR(args...)				/* NOP */
+#define GST_WARNING(args...)				/* NOP */
+#define GST_INFO(args...)				/* NOP */
+#define GST_DEBUG(args...)				/* NOP */
+#define GST_LOG(args...)				/* NOP */
 
 #ifdef GST_DEBUG_ENABLE_DEPRECATED
-#define GST_INFO_ELEMENT(cat,obj,args...)	/* NOP */
-#define GST_DEBUG_ELEMENT(cat,obj,args...)	/* NOP */
-#define GST_DEBUG_ENTER(args...)	/* NOP */
-#define GST_DEBUG_LEAVE(args...)	/* NOP */
-#define GST_INFO_ENTER(args...)	/* NOP */
-#define GST_INFO_LEAVE(args...)	/* NOP */
+#define GST_INFO_ELEMENT(cat,obj,args...) /* NOP */
+#define GST_DEBUG_ELEMENT(cat,obj,args...) /* NOP */
+#define GST_DEBUG_ENTER(args...) /* NOP */
+#define GST_DEBUG_LEAVE(args...) /* NOP */
+#define GST_INFO_ENTER(args...) /* NOP */
+#define GST_INFO_LEAVE(args...) /* NOP */
 #endif /* GST_DEBUG_ENABLE_DEPRECATED */
 
 #endif /* G_HAVE_ISO_VARARGS */
@@ -517,4 +523,5 @@ gst_debug_log (GstDebugCategory * category,
 void gst_debug_print_stack_trace (void);
 
 G_END_DECLS
+
 #endif /* __GSTINFO_H__ */

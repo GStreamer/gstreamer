@@ -26,6 +26,7 @@
 #include <gst/gstelement.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_IMPLEMENTS_INTERFACE \
   (gst_implements_interface_get_type ())
 #define GST_IMPLEMENTS_INTERFACE(obj) \
@@ -41,35 +42,38 @@ G_BEGIN_DECLS
 #define GST_IMPLEMENTS_INTERFACE_GET_CLASS(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_IMPLEMENTS_INTERFACE, \
 				  GstImplementsInterfaceClass))
+
 typedef struct _GstImplementsInterface GstImplementsInterface;
 
 /* This small extra virtual function is here to provide an
  * interface functionality on a per-instance basis rather
  * than a per-class basis, which is the case for glib.
  */
-typedef struct _GstImplementsInterfaceClass
-{
+typedef struct _GstImplementsInterfaceClass {
   GTypeInterface parent;
 
   /* virtual functions */
-    gboolean (*supported) (GstImplementsInterface * iface, GType iface_type);
+  gboolean (* supported) (GstImplementsInterface *iface,
+			  GType                   iface_type);
 
   gpointer _gst_reserved[GST_PADDING];
-}
-GstImplementsInterfaceClass;
+} GstImplementsInterfaceClass;
 
 #define GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST(obj, type, cast_t) \
   ((cast_t *) gst_implements_interface_cast ((obj), (type)))
 #define GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE(obj, type) \
   (gst_implements_interface_check ((obj), (type)))
 
-GType gst_implements_interface_get_type (void);
+GType	 gst_implements_interface_get_type    (void);
 
 /* wrapper functions to check for functionality implementation */
-gboolean gst_element_implements_interface (GstElement * element,
-    GType iface_type);
-gpointer gst_implements_interface_cast (gpointer from, GType type);
-gboolean gst_implements_interface_check (gpointer from, GType type);
+gboolean gst_element_implements_interface     (GstElement *element,
+					       GType       iface_type);
+gpointer gst_implements_interface_cast	      (gpointer    from,
+					       GType       type);
+gboolean gst_implements_interface_check	      (gpointer    from,
+					       GType       type);
 
 G_END_DECLS
+
 #endif /* __GST_IMPLEMENTS_INTERFACE_H__ */

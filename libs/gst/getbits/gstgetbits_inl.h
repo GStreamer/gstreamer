@@ -97,7 +97,7 @@ extern unsigned long gst_getbits_nBitMask[];
 
 #define gst_getbits_bufferpos(gb)  ((gb)->longptr)
 
-#define gst_getbits_bytesleft(gb) ((gb)->endptr - (unsigned char*)(gb)->longptr)
+#define gst_getbits_bytesleft(gb) ((gb)->endptr - (unsigned char*)(gb)->longptr)	
 
 #define gst_getbits_bitsleft(gb) (((gb)->endptr - (unsigned char*)(gb)->longptr)*8  - (gb)->bits)
 

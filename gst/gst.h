@@ -69,26 +69,31 @@
 #include <gst/gstcompat.h>
 
 G_BEGIN_DECLS
+
 /* make our own type for poptOption because the struct poptOption
  * definition is iffy */
 typedef struct poptOption GstPoptOption;
 
 /* initialize GST */
-void gst_init (int *argc, char **argv[]);
-gboolean gst_init_check (int *argc, char **argv[]);
-void gst_init_with_popt_table (int *argc, char **argv[],
-    const GstPoptOption * popt_options);
-gboolean gst_init_check_with_popt_table (int *argc, char **argv[],
-    const GstPoptOption * popt_options);
+void		gst_init			(int *argc, char **argv[]);
+gboolean	gst_init_check			(int *argc, char **argv[]);
+void		gst_init_with_popt_table	(int *argc, char **argv[],
+						 const GstPoptOption
+						 *popt_options);
+gboolean	gst_init_check_with_popt_table	(int *argc, char **argv[],
+						 const GstPoptOption
+						 *popt_options);
 
-const GstPoptOption *gst_init_get_popt_table (void);
+const GstPoptOption *	gst_init_get_popt_table		(void);
 
-void gst_use_threads (gboolean use_threads);
-gboolean gst_has_threads (void);
+void		gst_use_threads			(gboolean use_threads);
+gboolean	gst_has_threads			(void);
 
-void gst_main (void);
-void gst_main_quit (void);
+void		gst_main			(void);
+void		gst_main_quit			(void);
 
 G_END_DECLS
+
 #include <gst/gstlog.h>
+
 #endif /* __GST_H__ */

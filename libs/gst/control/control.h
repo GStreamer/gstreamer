@@ -18,7 +18,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+ 
 #ifndef __GST_CONTROL_H__
 #define __GST_CONTROL_H__
 
@@ -28,7 +28,10 @@
 #include <gst/control/dplinearinterp.h>
 #include <gst/control/unitconvert.h>
 
-G_BEGIN_DECLS void gst_control_init (int *argc, char **argv[]);
+G_BEGIN_DECLS
+
+void gst_control_init (int *argc, char **argv[]);
 
 G_END_DECLS
+
 #endif /* __GST_CONTROL_H__ */

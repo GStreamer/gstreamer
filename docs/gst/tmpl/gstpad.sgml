@@ -1193,11 +1193,6 @@ The Ghostpad object
 </para>
 
 
-<!-- ##### ARG GstGhostPad:real-pad ##### -->
-<para>
-
-</para>
-
 <!-- ##### FUNCTION gst_ghost_pad_new ##### -->
 <para>
 

@@ -23,7 +23,7 @@
 #ifndef __GST_I18N_LIB_H__
 #define __GST_I18N_LIB_H__
 
-#include "gettext.h"		/* included with gettext distribution and copied */
+#include "gettext.h" /* included with gettext distribution and copied */
 
 #ifndef GETTEXT_PACKAGE
 #error You must define GETTEXT_PACKAGE before including this header.

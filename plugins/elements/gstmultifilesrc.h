@@ -27,6 +27,8 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
+
 #define GST_TYPE_MULTIFILESRC \
   (gst_multifilesrc_get_type())
 #define GST_MULTIFILESRC(obj) \
@@ -37,43 +39,41 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTIFILESRC))
 #define GST_IS_MULTIFILESRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTIFILESRC))
-    typedef enum
-{
-  GST_MULTIFILESRC_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  GST_MULTIFILESRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
-}
-GstMultiFileSrcFlags;
+typedef enum {
+  GST_MULTIFILESRC_OPEN		= GST_ELEMENT_FLAG_LAST,
+
+  GST_MULTIFILESRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST + 2
+} GstMultiFileSrcFlags;
 
 typedef struct _GstMultiFileSrc GstMultiFileSrc;
 typedef struct _GstMultiFileSrcClass GstMultiFileSrcClass;
 
-struct _GstMultiFileSrc
-{
+struct _GstMultiFileSrc {
   GstElement element;
   /* pads */
   GstPad *srcpad;
 
   /* current file details */
-  gchar *currentfilename;
+  gchar  *currentfilename;
   GSList *listptr;
 
   /* mapping parameters */
   gint fd;
-  gulong size;			/* how long is the file? */
-  guchar *map;			/* where the file is mapped to */
+  gulong size;    /* how long is the file? */
+  guchar *map;    /* where the file is mapped to */
 
   gboolean new_seek;
 };
 
-struct _GstMultiFileSrcClass
-{
+struct _GstMultiFileSrcClass {
   GstElementClass parent_class;
 
-  void (*new_file) (GstMultiFileSrc * multifilesrc, gchar * newfilename);
+  void (*new_file)  (GstMultiFileSrc *multifilesrc, gchar *newfilename);
 };
 
-GType gst_multifilesrc_get_type (void);
+GType gst_multifilesrc_get_type(void);
 
 G_END_DECLS
+
 #endif /* __GST_MULTIFILESRC_H__ */

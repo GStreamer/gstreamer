@@ -28,6 +28,8 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
+
 #define GST_TYPE_PIPEFILTER \
   (gst_pipefilter_get_type())
 #define GST_PIPEFILTER(obj) \
@@ -38,19 +40,17 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PIPEFILTER))
 #define GST_IS_PIPEFILTER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPEFILTER))
-    typedef enum
-{
-  GST_PIPEFILTER_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  GST_PIPEFILTER_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
-}
-GstPipeFilterFlags;
+typedef enum {
+  GST_PIPEFILTER_OPEN		= GST_ELEMENT_FLAG_LAST,
+
+  GST_PIPEFILTER_FLAG_LAST	= GST_ELEMENT_FLAG_LAST + 2
+} GstPipeFilterFlags;
 
 typedef struct _GstPipefilter GstPipefilter;
 typedef struct _GstPipefilterClass GstPipefilterClass;
 
-struct _GstPipefilter
-{
+struct _GstPipefilter {
   GstElement element;
 
   GstPad *sinkpad;
@@ -62,20 +62,20 @@ struct _GstPipefilter
   /* fd */
   gint fdout[2];
   gint fdin[2];
-  pid_t childpid;
+  pid_t   childpid;
 
-  gulong curoffset;		/* current offset in file */
-  gulong bytes_per_read;	/* bytes per read */
+  gulong curoffset;                     /* current offset in file */
+  gulong bytes_per_read;                /* bytes per read */
 
-  gulong seq;			/* buffer sequence number */
+  gulong seq;                           /* buffer sequence number */
 };
 
-struct _GstPipefilterClass
-{
+struct _GstPipefilterClass {
   GstElementClass parent_class;
 };
 
-GType gst_pipefilter_get_type (void);
+GType gst_pipefilter_get_type(void);
 
 G_END_DECLS
+
 #endif /* __GST_PIPEFILTER_H__ */

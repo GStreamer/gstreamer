@@ -27,6 +27,8 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
+
 #define GST_TYPE_FDSRC \
   (gst_fdsrc_get_type())
 #define GST_FDSRC(obj) \
@@ -37,11 +39,12 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FDSRC))
 #define GST_IS_FDSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSRC))
+
+
 typedef struct _GstFdSrc GstFdSrc;
 typedef struct _GstFdSrcClass GstFdSrcClass;
 
-struct _GstFdSrc
-{
+struct _GstFdSrc {
   GstElement element;
   /* pads */
   GstPad *srcpad;
@@ -49,22 +52,22 @@ struct _GstFdSrc
   /* fd */
   gint fd;
 
-  gulong curoffset;		/* current offset in file */
-  gulong blocksize;		/* bytes per read */
-  guint64 timeout;		/* read timeout, in nanoseconds */
-
-  gulong seq;			/* buffer sequence number */
+  gulong curoffset; /* current offset in file */
+  gulong blocksize; /* bytes per read */
+  guint64 timeout;  /* read timeout, in nanoseconds */
+  
+  gulong seq;       /* buffer sequence number */
 };
 
-struct _GstFdSrcClass
-{
+struct _GstFdSrcClass {
   GstElementClass parent_class;
 
   /* signals */
-  void (*timeout) (GstElement * element);
+  void (*timeout) (GstElement *element);
 };
 
-GType gst_fdsrc_get_type (void);
+GType gst_fdsrc_get_type(void);
 
 G_END_DECLS
+
 #endif /* __GST_FDSRC_H__ */

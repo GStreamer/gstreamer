@@ -8,8 +8,7 @@
 #  include "config.h"
 #endif
 
-typedef struct
-{
+typedef struct {
   GstElement *src;
   GstElement *sink;
   gchar *src_name;
@@ -17,23 +16,19 @@ typedef struct
   GSList *src_pads;
   GSList *sink_pads;
   GstCaps *caps;
-}
-link_t;
+} link_t;
 
-typedef struct
-{
+typedef struct {
   GSList *elements;
   GstElement *first;
   GstElement *last;
   link_t *front;
   link_t *back;
-}
-chain_t;
+} chain_t;
 
 typedef struct _graph_t graph_t;
-struct _graph_t
-{
-  chain_t *chain;		/* links are supposed to be done now */
+struct _graph_t {
+  chain_t *chain; /* links are supposed to be done now */
   GSList *links;
   GError **error;
 };
@@ -50,13 +45,12 @@ struct _graph_t
 #endif
 
 #ifdef __GST_PARSE_TRACE
-gchar *__gst_parse_strdup (gchar * org);
-void __gst_parse_strfree (gchar * str);
+gchar  *__gst_parse_strdup (gchar *org);
+void	__gst_parse_strfree (gchar *str);
 link_t *__gst_parse_link_new ();
-void __gst_parse_link_free (link_t * data);
+void	__gst_parse_link_free (link_t *data);
 chain_t *__gst_parse_chain_new ();
-void __gst_parse_chain_free (chain_t * data);
-
+void	__gst_parse_chain_free (chain_t *data);
 #  define gst_parse_strdup __gst_parse_strdup
 #  define gst_parse_strfree __gst_parse_strfree
 #  define gst_parse_link_new __gst_parse_link_new
@@ -73,14 +67,14 @@ void __gst_parse_chain_free (chain_t * data);
 #endif /* __GST_PARSE_TRACE */
 
 static inline void
-gst_parse_unescape (gchar * str)
+gst_parse_unescape (gchar *str)
 {
   gchar *walk;
-
+  
   g_return_if_fail (str != NULL);
-
+  
   walk = str;
-
+  
   while (*walk) {
     if (*walk == '\\')
       walk++;

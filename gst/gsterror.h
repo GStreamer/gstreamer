@@ -21,6 +21,7 @@
 #define __GST_ERROR_H__
 
 G_BEGIN_DECLS
+
 /*
  * we define FIXME error domains:
  * GST_CORE_ERROR
@@ -30,12 +31,12 @@ G_BEGIN_DECLS
  *
  * Check GError API docs for rationale for naming.
  */
+
 /* Core errors are anything that can go wrong in or using
  * the core GStreamer library */
 /* FIXME: should we divide in numerical blocks so we can easily add
           for example PAD errors later ? */
-    typedef enum
-{
+typedef enum {
   GST_CORE_ERROR_FAILED = 1,
   GST_CORE_ERROR_TOO_LAZY,
   GST_CORE_ERROR_NOT_IMPLEMENTED,
@@ -54,8 +55,7 @@ GstCoreError;
 
 /* Library errors are for errors from the library being used by elements
    initializing, closing, ... */
-typedef enum
-{
+typedef enum {
   GST_LIBRARY_ERROR_FAILED = 1,
   GST_LIBRARY_ERROR_TOO_LAZY,
   GST_LIBRARY_ERROR_INIT,
@@ -69,8 +69,7 @@ GstLibraryError;
 /* Resource errors are for anything external used by an element:
    memory, files, network connections, process space, ...
    They're typically used by source and sink elements */
-typedef enum
-{
+typedef enum {
   GST_RESOURCE_ERROR_FAILED = 1,
   GST_RESOURCE_ERROR_TOO_LAZY,
   GST_RESOURCE_ERROR_NOT_FOUND,
@@ -91,8 +90,7 @@ GstResourceError;
 /* Stream errors are for anything related to the stream being processed:
    format errors, media type errors, ...
    They're typically used by decoders, demuxers, converters, ... */
-typedef enum
-{
+typedef enum {
   GST_STREAM_ERROR_FAILED = 1,
   GST_STREAM_ERROR_TOO_LAZY,
   GST_STREAM_ERROR_NOT_IMPLEMENTED,
@@ -118,12 +116,15 @@ GstStreamError;
 
 #define GST_ERROR_SYSTEM    ("system error: %s", g_strerror (errno))
 
-GType gst_g_error_get_type (void);
-gchar *gst_error_get_message (GQuark domain, gint code);
-GQuark gst_stream_error_quark (void);
-GQuark gst_core_error_quark (void);
-GQuark gst_resource_error_quark (void);
-GQuark gst_library_error_quark (void);
+GType   gst_g_error_get_type     (void);
+gchar * gst_error_get_message    (GQuark domain, gint code);
+GQuark  gst_stream_error_quark   (void);
+GQuark  gst_core_error_quark     (void);
+GQuark  gst_resource_error_quark (void);
+GQuark  gst_library_error_quark  (void);
 
 G_END_DECLS
+
 #endif /* __GST_ERROR_H__ */
+
+

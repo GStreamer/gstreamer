@@ -22,16 +22,22 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS typedef struct _GstMemChunk GstMemChunk;
+G_BEGIN_DECLS
 
-GstMemChunk *gst_mem_chunk_new (gchar * name,
-    gint atom_size, gulong area_size, gint type);
+typedef struct _GstMemChunk GstMemChunk;
 
-void gst_mem_chunk_destroy (GstMemChunk * mem_chunk);
+GstMemChunk*	gst_mem_chunk_new 	(gchar *name,
+					 gint atom_size,
+					 gulong area_size,
+					 gint type);
 
-gpointer gst_mem_chunk_alloc (GstMemChunk * mem_chunk);
-gpointer gst_mem_chunk_alloc0 (GstMemChunk * mem_chunk);
-void gst_mem_chunk_free (GstMemChunk * mem_chunk, gpointer mem);
+void 		gst_mem_chunk_destroy 	(GstMemChunk *mem_chunk);
+
+gpointer 	gst_mem_chunk_alloc 	(GstMemChunk *mem_chunk);
+gpointer 	gst_mem_chunk_alloc0 	(GstMemChunk *mem_chunk);
+void	 	gst_mem_chunk_free 	(GstMemChunk *mem_chunk,
+					 gpointer mem);
 
 G_END_DECLS
+
 #endif /* __GST_MEM_CHUNK_H__ */

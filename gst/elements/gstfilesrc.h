@@ -29,42 +29,42 @@
 #include <sys/types.h>
 
 G_BEGIN_DECLS
+
+
 #define GST_TYPE_FILESRC \
   (gst_filesrc_get_type())
 #define GST_FILESRC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FILESRC,GstFileSrc))
 #define GST_FILESRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FILESRC,GstFileSrcClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FILESRC,GstFileSrcClass)) 
 #define GST_IS_FILESRC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FILESRC))
 #define GST_IS_FILESRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FILESRC))
-    typedef enum
-{
-  GST_FILESRC_OPEN = GST_ELEMENT_FLAG_LAST,
+
+typedef enum {
+  GST_FILESRC_OPEN              = GST_ELEMENT_FLAG_LAST,
 
   GST_FILESRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
-}
-GstFileSrcFlags;
+} GstFileSrcFlags;
 
 typedef struct _GstFileSrc GstFileSrc;
 typedef struct _GstFileSrcClass GstFileSrcClass;
 
-struct _GstFileSrc
-{
+struct _GstFileSrc {
   GstElement element;
   GstPad *srcpad;
 
-  guint pagesize;		/* system page size */
+  guint pagesize;			/* system page size*/
+ 
+  gchar *filename;			/* filename */
+  gchar *uri;				/* caching the URI */
+  gint fd;				/* open file descriptor*/
+  off_t filelen;			/* what's the file length?*/
 
-  gchar *filename;		/* filename */
-  gchar *uri;			/* caching the URI */
-  gint fd;			/* open file descriptor */
-  off_t filelen;		/* what's the file length? */
-
-  off_t curoffset;		/* current offset in file */
-  off_t block_size;		/* bytes per read */
-  gboolean touch;		/* whether to touch every page */
+  off_t curoffset;			/* current offset in file*/
+  off_t block_size;			/* bytes per read */
+  gboolean touch;			/* whether to touch every page */
   gboolean using_mmap;
 
   GstBuffer *mapbuf;
@@ -74,12 +74,12 @@ struct _GstFileSrc
   gboolean need_flush;
 };
 
-struct _GstFileSrcClass
-{
+struct _GstFileSrcClass {
   GstElementClass parent_class;
 };
 
-GType gst_filesrc_get_type (void);
+GType gst_filesrc_get_type(void);
 
 G_END_DECLS
+
 #endif /* __GST_FILESRC_H__ */

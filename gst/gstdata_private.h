@@ -35,3 +35,4 @@ G_STMT_START {							\
 G_STMT_START {							\
   gst_atomic_int_destroy (&(data)->refcount);			\
 } G_STMT_END;
+
