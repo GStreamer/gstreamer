@@ -849,7 +849,7 @@ gst_plugin_save_thyself (xmlNodePtr parent)
   xmlNodePtr tree, subtree;
   GList *plugins = NULL, *elements = NULL, *types = NULL, *autopluggers = NULL;
 
-  plugins = gst_plugin_get_list ();
+  plugins = g_list_copy (_gst_plugins);
   while (plugins) {
     GstPlugin *plugin = (GstPlugin *)plugins->data;
 
@@ -887,6 +887,7 @@ gst_plugin_save_thyself (xmlNodePtr parent)
     }
     plugins = g_list_next (plugins);
   }
+  g_list_free (plugins);
   return parent;
 }
 

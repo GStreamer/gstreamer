@@ -158,6 +158,7 @@ gst_elementfactory_create (GstElementFactory *factory,
   g_return_val_if_fail(factory != NULL, NULL);
   g_return_val_if_fail(factory->type != 0, NULL);
 
+  GST_DEBUG (GST_CAT_ELEMENTFACTORY,"factory->type is \"%d\"\n", factory->type);
   // create an instance of the element
   element = GST_ELEMENT(gtk_type_new(factory->type));
   g_assert(element != NULL);
