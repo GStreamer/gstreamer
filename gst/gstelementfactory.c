@@ -222,12 +222,8 @@ gst_element_factory_create (GstElementFactory *factory,
       return NULL;
   }
 
-  /* create an instance of the element */
-  element = GST_ELEMENT (g_object_new (factory->type, NULL));
-  g_assert (element != NULL);
-
-  /* attempt to set the elemenfactory class pointer if necessary */
-  oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
+  /* attempt to set the elementfactory class pointer if necessary */
+  oclass = GST_ELEMENT_CLASS (g_type_class_ref (factory->type));
   if (oclass->elementfactory == NULL) {
     GST_DEBUG (GST_CAT_ELEMENT_FACTORY, "class %s", GST_PLUGIN_FEATURE_NAME (factory));
     oclass->elementfactory = factory;
@@ -238,6 +234,12 @@ gst_element_factory_create (GstElementFactory *factory,
 		    g_list_copy (factory->padtemplates));
     oclass->numpadtemplates += factory->numpadtemplates;
   }
+
+  /* create an instance of the element */
+  element = GST_ELEMENT (g_object_new (factory->type, NULL));
+  g_assert (element != NULL);
+
+  g_type_class_unref (oclass);
 
   gst_object_set_name (GST_OBJECT (element), name);
 

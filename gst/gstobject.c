@@ -157,7 +157,7 @@ gst_object_class_init (GstObjectClass *klass)
 
   klass->signal_object = g_object_new (gst_signal_object_get_type (), NULL);
 
-  /* see the comments at gst_element_dispatch_properties_changed */
+  /* see the comments at gst_object_dispatch_properties_changed */
   gobject_class->dispatch_properties_changed
 	        = GST_DEBUG_FUNCPTR (gst_object_dispatch_properties_changed);
 
@@ -325,9 +325,9 @@ gst_object_finalize (GObject *object)
   parent_class->finalize (object);
 }
 
-/* Changing a GObject property of an element will result in "deep_notify"
- * signals being emitted by the element itself, as well as in each parent
- * element. This is so that an application can connect a listener to the
+/* Changing a GObject property of a GstObject will result in "deep_notify"
+ * signals being emitted by the object itself, as well as in each parent
+ * object. This is so that an application can connect a listener to the
  * top-level bin to catch property-change notifications for all contained
  * elements. */
 static void
