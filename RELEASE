@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Plugins 0.8.2 "Kristiansand"
+GStreamer: Release notes for GStreamer Plugins 0.8.3 "Water"
         
 
 The GStreamer team is happy to announce a new release
@@ -28,98 +28,47 @@ Features of this release
     
       * Parallel installability with 0.6.x series
       * Internationalization
-      * New translations in this release: Ukrainian, British
-      * Translations: af az en_GB nl sr sv uk
-      * id3 fixes
-      * asf fixes
-      * qt demux fixes
-      * dv fixes
-      * auparse fixes
-      * wavparse seeking/querying fixes
-      * alsa fixes for mixing and device releasing
-      * categorisation fixes
-      * v4lsrc fixes for webcams
-      * streamheader fixes
-      * Portability fixes
-      * new element: DTS decoder
-      * new element: libvisual
-      * new element: theoraenc
-      * new element: oggmuxer
-      * new element: rawvorbisenc
-      * new elements: audiorate and videorate
-      * new elements: TCP server/client src/sink
-      * new element: pixbufscale
-      * new element: osxaudiosink
-      * new element: sunaudiosink
-      * new element: videomixer
-      * new elements: multipartmux/multipartdemux
-      * new elements: smokeenc/smokedec
-      * new element: vorbisparse
+      * New translation in this release: Czech
+      * New translation in this release: Hungarian
+      * Translations: af az cs en_GB hu nl sr sv uk
+      * pixel aspect ratio conversion
+      * tcpserversink fixes and additions
+      * oggdemux fixes
+      * theoraenc and theoradec fixes
+      * ximagesink and xvimagesink fixes
+      * ladspa fixes
+      * videoscale and ffmpegcolorspace fixes for stride
+      * mpeg and dvd fixes
+      * win32 project file additions
+      * new elements: playbin and decodebin
+      * new element: multifdsink
+      * new element: pngdec
+      * new element: alpha
+      * new element: multifilesink
 
 Bugs fixed in this release
     
-      * 132440 : configure botches DVDNAV_CFLAGS
-      * 133002 : configure should check for dvdnav header
-      * 134007 : [alsasink] assertion failure in alsalib snd_pcm_plug_hw_p...
-      * 135145 : [asfdemux] Can't play randomfile.wma
-      * 135862 : [wavparse] add ADPCM support
-      * 135989 : v4l-conf called even when not present
-      * 136392 : [v4lsrc] buggy wit qc-usb driver
-      * 136572 : [esdsink] blocks other esd apps in PAUSED state
-      * 137711 : [oggdemux] jump or move depends on uninitialised value
-      * 137724 : [qtdemux/ffdec_mpeg4/faad] MPEG-4 video/audio esds atoms
-      * 137750 : Gst-player not able to seek in wav file
-      * 138251 : [mad] Can't play bad1.mp3, bad2.mp3
-      * 139524 : ogg muxer needed
-      * 139658 : [alsasrc] probes inexistant playback device on capture on...
-      * 140064 : [speed] can't negotiate
-      * 140138 : media file makes totem-gst go nuts
-      * 140265 : ffmpegcolorspace and gnomevfs fail to build buildable
-      * 140268 : ximagesink and xvimagesink do not build under FreeBSD
-      * 140384 : Incorrect library dependency in SDL plugin
-      * 140640 : [asfdemux] segfault
-      * 140668 : gst-plugins-0.8.1 does not compile
-      * 140844 : icecastsend (shout) doesnt even try to connect to server
-      * 140878 : ima adpcm encoded wavs are not supported
-      * 141176 : [mad] Can't play ...Faithfulness.mp3
-      * 141188 : monoscope plugin doesnt work as intended
-      * 141258 : mp3 file seek problem
-      * 141318 : ffmpegcolorspace doesn't compile on Solaris
-      * 141821 : kdemacros.h
-      * 142044 : m4a typefinds to x-m4a instead of quicktime
-      * 142084 : mad and level plugins dont like each other (caps related ...
-      * 142107 : build error under mdk 10.0
-      * 142127 : GstPlay's time_tick event does not return the right time ...
-      * 142193 : Patch for plugins Codecs klassifications
-      * 142205 : return type of gst_audio_clock_id_wait_async is wrong
-      * 142211 : alsasink broken due to mixer device
-      * 142262 : shout2send not compiling or working (fix attached)
-      * 142272 : qtdemux doesn't work with sources that cannot seek
-      * 142286 : The au plugin cannot play au files encoded with ulaw
-      * 142320 : [ffmpeg - ima-adpcm-ws/wsaud] scheduler issues
-      * 142493 : default fragment size in osssink is too small
-      * 142507 : [PATCH] id3tag plugin does not correctly set buffer offset
-      * 142555 : wavparse doesn't handle truncated files gracefully
-      * 142566 : Certain mp3s don't get played correctly
-      * 142585 : gstresample makes wrong assumption about buffer sizes (se...
-      * 142586 : alsasink resync is broken
-      * 142664 : v4l2_buffer redeclaration : won't compile with -Werror
-      * 142764 : ogg that caueses error
-      * 142797 : Mac OS X Audio Sink and Src
-      * 142851 : gstid3tag sends wrong offset on discont events
-      * 142954 : [patch] adding a connection problem signal to shout2send
-      * 142962 : Error converting wav file to ogg/vorbis
-      * 143032 : [adder] crash on certain errors
-      * 143130 : [mixmatrix] returns garbage pointer as request pad
-      * 143146 : [patch] gst/tcp plugin doesnt compile on OSX
-      * 143153 : [patch] osxaudio - fix warnings
-      * 143262 : rifflib does not know several fourccs
-      * 143283 : [PATCH] Property accessors for the mixer interface
-      * 143454 : [alsasink] outputs silence on sync problem
-      * 143749 : tcp plugin dosn't compile on FreeBSD
-      * 143861 : OSS elements portability on BSD (soundcard.h location)
-      * 144240 : [cdparanoia] sets wrong timestamps on buffers [patch]
-      * 144425 : Invalid read of size 4in riff-read.c [patch]
+      * 141906 : hang on removing ximagesink from a pipeline
+      * 142432 : Wrong sink MIME type in shout2send
+      * 143222 : [oggdemux] Optimize tag reading
+      * 143548 : Please update libtool to fix build on arm
+      * 143703 : duration always 0 for some (gst produced) .ogg files
+      * 144624 : wavenc doesn't close file properly
+      * 144753 : libgstinterfaces should be split, or: 'volume' should not...
+      * 144815 : [alsasink] gst_element_set_time_delay() assertion failure...
+      * 144866 : [flac] seeking broken, duration not set on buffers [PATCH]
+      * 144941 : alsasink assertion failure on ctrl+z and fg
+      * 145031 : totem CVS won't compile because of gst-play ...
+      * 145088 : gnome-volume-control has unlocalized volume names.
+      * 145118 : Compile error (gcc 2.95, alsa)
+      * 145336 : pipeline broke-stonecold
+      * 147969 : LADSPA plugin should sanitize the info from the .so's to ...
+      * 148021 : Bug in lib-riff
+      * 148023 : [ximagesink] doesn't work with Xnest
+      * 148043 : audioconvert
+      * 148289 : mad plugin crashes on Sun
+      * 148505 : [level] for silence peak is reported wrongly
+      * 148986 : [lame] bug in negotiation
 
 Download
 
@@ -154,25 +103,21 @@ as provided by gstreamer-gconf-0.8.pc, to access the default settings.
   
 Contributors to this release
     
-      * Andrew Turner
-      * Arwed v. Merkatz
+      * Andy Wingo
       * Benjamin Otte
-      * Christophe Fergeau
       * Colin Walters
-      * Daniel Gazard
+      * David I. Lehn
       * David Schleef
-      * Edward Hervey
-      * Gareth Owen
       * Iain Holmes
       * Jan Schmidt
-      * Jérémy Simon
       * Johan Dahlin
-      * Maxim V. Dziumanenko
-      * Owen Fraser-Green
+      * Julien Moutte
+      * Laszlo Dvornik
+      * Miloslave Trmac
       * Ronald Bultje
-      * Stephan Loeuillet
+      * Sebastien Cote
+      * Steve Lhomme
       * Thomas Vander Stichele
-      * Tim-Philipp Müller
       * Wim Taymans
       * Zaheer Abbas Merali
  
