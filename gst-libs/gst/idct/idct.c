@@ -136,6 +136,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 GstPluginDesc plugin_desc = {
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "gstidtc",
+  "gstidct",
   plugin_init
 };
