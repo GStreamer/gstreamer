@@ -1,0 +1,15 @@
+Makefile
+Makefile.in
+*.o
+*.lo
+*.la
+.deps
+.libs
+
+test1
+test2
+threadstate1
+threadstate2
+threadstate3
+threadstate4
+threadstate5

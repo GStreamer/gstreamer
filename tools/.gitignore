@@ -11,5 +11,6 @@ gst-compprep
 gst-inspect
 gst-launch
 gst-register
+gst-xmlinspect
 gst-xmllaunch
 gst-md5sum
