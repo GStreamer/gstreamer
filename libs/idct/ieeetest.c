@@ -39,20 +39,6 @@ char * meets (double val, double limit)
   return ((fabs(val) <= limit) ? "meets" : "FAILS");
 }
 
-#ifdef HAVE_RDTS
-__inline__ void read_tsc(guint64 *dst) {
-  __asm__ __volatile__
-    ("rdtsc"
-     : "=a" (*(guint32 *)dst), "=d" (*(((guint32 *)dst) + 1))
-     :
-     : "eax", "edx");
-}
-#else
-__inline__ void read_tsc(guint64 *dst) {
-}
-#endif
-
-
 int
 main(int argc, char **argv)
 {
@@ -128,9 +114,9 @@ main(int argc, char **argv)
       memcpy(testout, refcoefs, sizeof(DCTELEM)*DCTSIZE2);
 	 }
 
-	 read_tsc(&tscstart);
+	 gst_trace_read_tsc(&tscstart);
     gst_idct_convert(idct, testout);
-	 read_tsc(&tscstop);
+	 gst_trace_read_tsc(&tscstop);
 	 //printf("time %llu, %llu %lld\n", tscstart, tscstop, tscstop-tscstart);
 	 if (tscstop - tscstart < tscmin) tscmin = tscstop-tscstart;
 	 if (tscstop - tscstart > tscmax) tscmax = tscstop-tscstart;

@@ -52,6 +52,7 @@ GstTrace*	gst_trace_new			(guchar *filename, gint size);
 
 void 		gst_trace_destroy		(GstTrace *trace);
 void 		gst_trace_flush			(GstTrace *trace);
+void 		gst_trace_text_flush		(GstTrace *trace);
 #define 	gst_trace_get_size(trace) 	((trace)->bufsize)
 #define 	gst_trace_get_offset(trace) 	((trace)->bufoffset)
 #define 	gst_trace_get_remaining(trace) 	((trace)->bufsize - (trace)->bufoffset)

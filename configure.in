@@ -117,16 +117,22 @@ dnl ==============================================
 
 dnl Determine CPU
 case "x${target_cpu}" in
-  xi?86)     HAVE_CPU_I386=yes ;
-             AC_DEFINE(HAVE_CPU_I386) ;;
-  xpowerpc)  HAVE_CPU_PPC=yes ;
-             AC_DEFINE(HAVE_CPU_PPC) ;;
-  xalpha)    HAVE_CPU_ALPHA=yes ;
-             AC_DEFINE(HAVE_CPU_ALPHA) ;;
-  xarm*)     HAVE_CPU_ARM=yes ;
-             AC_DEFINE(HAVE_CPU_ARM) ;;
-  xsparc*)   HAVE_CPU_SPARC=yes ;
-             AC_DEFINE(HAVE_CPU_SPARC) ;;
+  xi?86 | k?) HAVE_CPU_I386=yes
+              AC_DEFINE(HAVE_CPU_I386)
+              dnl FIXME could use some better detection
+              dnl       (ie CPUID)
+              case "x${target_cpu}" in
+                xi386 | xi486) ;;
+                *)             AC_DEFINE(HAVE_RDTSC) ;;
+              esac ;;
+  xpowerpc)   HAVE_CPU_PPC=yes
+              AC_DEFINE(HAVE_CPU_PPC) ;;
+  xalpha)     HAVE_CPU_ALPHA=yes
+              AC_DEFINE(HAVE_CPU_ALPHA) ;;
+  xarm*)      HAVE_CPU_ARM=yes
+              AC_DEFINE(HAVE_CPU_ARM) ;;
+  xsparc*)    HAVE_CPU_SPARC=yes
+              AC_DEFINE(HAVE_CPU_SPARC) ;;
 esac
 
 dnl Determine endianness
@@ -718,6 +724,10 @@ fi
 
 if test "x$HAVE_LINUX_VIDEODEV" = xyes; then
   AC_DEFINE(HAVE_LINUX_VIDEODEV)
+fi
+
+if test "x$HAVE_MPEG2DEC" = xyes; then
+  AC_DEFINE(HAVE_MPEG2DEC)
 fi
 
 dnl #############################

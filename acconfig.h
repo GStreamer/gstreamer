@@ -21,6 +21,8 @@
 #undef HAVE_CPU_ARM
 #undef HAVE_CPU_SPARC
 
+#undef HAVE_RDTSC
+
 #undef HAVE_GDK_PIXBUF
 #undef HAVE_LIBGHTTP
 #undef HAVE_LIBMMX

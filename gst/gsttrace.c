@@ -33,18 +33,15 @@
 #include "gsttrace.h"
 
 
-#ifdef HAVE_RDTS
 __inline__ void read_tsc(guint64 *dst) {
-  __asm__ __volatile__
-    ("rdtsc"
-     : "=a" (*(guint32 *)dst), "=d" (*(((guint32 *)dst) + 1))
-     :
-     : "eax", "edx");
-}
+#ifdef HAVE_RDTSC
+  guint64 tsc;
+  __asm__ __volatile__ ("rdtsc" : "=A" (tsc));
+  *dst = tsc;
 #else
-__inline__ void read_tsc(guint64 *dst) {
-}
+  *dst = 0;
 #endif
+}
 
 void gst_trace_read_tsc(guint64 *dst) {
   read_tsc(dst);
@@ -88,6 +85,27 @@ void gst_trace_flush(GstTrace *trace) {
   }
 
   write(trace->fd,trace->buf,trace->bufoffset * sizeof(GstTraceEntry));
+  trace->bufoffset = 0;
+}
+
+void gst_trace_text_flush(GstTrace *trace) {
+  int i;
+  const int strsize = 20+1 + 10+1 + 10+1 + 112+1 + 1;
+  char str[strsize];
+
+  if (!trace) {
+    trace = _gst_trace_default;
+    if (!trace ) return;
+  }
+
+  for (i=0; i<trace->bufoffset; i++) {
+    snprintf(str, strsize, "%20lld %10d %10d %s\n",
+        trace->buf[i].timestamp,
+        trace->buf[i].sequence,
+        trace->buf[i].data,
+        trace->buf[i].message);
+    write(trace->fd,str,strlen(str));
+  }
   trace->bufoffset = 0;
 }
 

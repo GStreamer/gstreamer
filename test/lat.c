@@ -1,9 +1,6 @@
 #include <gst/gst.h>
 #include <stdlib.h>
 
-#define rdtscll(result) \
-        __asm__ __volatile__("rdtsc" : "=A" (result) : /* No inputs */ )
-
 static guint64 max = 0, min = -1, total = 0;
 static guint count = 0;
 static guint print_del = 1;
@@ -11,16 +8,14 @@ static guint iterations = 0;
 static guint mhz = 0;
 
 void handoff_src(GstElement *src, GstBuffer *buf, gpointer user_data) {
-  guint64 start;
-  rdtscll(start);
-  GST_BUFFER_TIMESTAMP(buf) = start;
+  gst_trace_read_tsc(&GST_BUFFER_TIMESTAMP(buf));
 }
 
 void handoff_sink(GstElement *sink, GstBuffer *buf, gpointer user_data) {
   guint64 end, d, avg;
   guint avg_ns;
 
-  rdtscll(end);
+  gst_trace_read_tsc(&end);
   d = end - GST_BUFFER_TIMESTAMP(buf);
   if (d > max) max = d;
   if (d < min) min = d;
