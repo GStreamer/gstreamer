@@ -125,8 +125,6 @@ GStreamer support libraries header files.
 %{_includedir}/gst-plugins-%{version}/gst/riff/riff.h
 %{_includedir}/gst-plugins-%{version}/gst/video/video.h
 %{_includedir}/gst-plugins-%{version}/gst/play/play.h
-%{_libdir}/libgstplay.so
-#%{_libdir}/libgstplay.a
 %{_datadir}/aclocal/gst-element-check.m4
 %{_libdir}/pkgconfig/gstreamer-libs.pc
 %{_libdir}/pkgconfig/gstreamer-play.pc
@@ -253,7 +251,7 @@ GStreamer support libraries header files.
 @USE_SWFDEC_TRUE@Summary:  GStreamer Flash redering plug-in.
 @USE_SWFDEC_TRUE@Group:    Libraries/Multimedia
 @USE_SWFDEC_TRUE@Requires: gstreamer-plugins = %{version}
-@USE_SWFDEC_TRUE@Requires: libswfdec => 0.1.1
+@USE_SWFDEC_TRUE@Requires: swfdec => 0.1.2
 @USE_SWFDEC_TRUE@
 @USE_SWFDEC_TRUE@%description -n gstreamer-swfdec
 @USE_SWFDEC_TRUE@Plug-in for rendering Flash animations using swfdec library
@@ -1495,7 +1493,7 @@ This package contains a basic audio and video playback library.
 %files -n gstreamer-play
 %defattr(-, root, root)
 %{_sysconfdir}/gconf/schemas/gstreamer.schemas
-%{_libdir}/libgstplay-%{version}.so.*
+%{_libdir}/libgstplay.so*
 
 %post -n gstreamer-play
 /sbin/ldconfig
