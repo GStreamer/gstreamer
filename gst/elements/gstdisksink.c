@@ -145,7 +145,7 @@ gst_disksink_getcurrentfilename (GstDiskSink *disksink)
 {
   g_return_val_if_fail(disksink != NULL, NULL);
   g_return_val_if_fail(GST_IS_DISKSINK(disksink), NULL);
-  g_return_val_if_fail(disksink->filename != NULL, NULL);
+  if (disksink->filename == NULL) return NULL;
   g_return_val_if_fail(disksink->filenum >= 0, NULL);
 
   if (!strstr(disksink->filename, "%"))
