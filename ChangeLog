@@ -1,3 +1,11 @@
+2005-01-17  Steve Baker  <steve@stevebaker.org>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/typefind/gsttypefindfunctions.c: (aiff_type_find),
+	(svx_type_find), (sds_type_find), (ircam_type_find), (plugin_init):
+	  Add libsndfile typefind functions (#163309).
+
 2005-01-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* tools/gst-launch-ext-m.m:
