@@ -57,7 +57,7 @@ struct _GstPipelineClass {
 };
 
 GtkType		gst_pipeline_get_type		(void);
-GstElement*	gst_pipeline_new		(guchar *name);
+GstElement*	gst_pipeline_new		(const guchar *name);
 #define		gst_pipeline_destroy(pipeline)	gst_object_destroy(GST_OBJECT(pipeline))
 
 void		gst_pipeline_iterate		(GstPipeline *pipeline);

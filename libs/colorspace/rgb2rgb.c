@@ -24,9 +24,12 @@
 
 static void gst_colorspace_rgb_to_rgb_identity(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest); 
 static void gst_colorspace_rgb24_to_bgr24(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
+static void gst_colorspace_rgb24_to_rgb32(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
 static void gst_colorspace_rgb32_to_bgr32(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest); 
 static void gst_colorspace_rgb555_to_rgb565(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest); 
 static void gst_colorspace_bgr565_to_rgb32(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest); 
+static void gst_colorspace_bgr24_to_bgr565(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest); 
+static void gst_colorspace_bgr32_to_bgr565(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest); 
 
 GstColorSpaceConvertFunction gst_colorspace_rgb2rgb_get_converter(GstColorSpaceConverter *space, GstColorSpaceType src, GstColorSpaceType dest) {
   switch(src) {
@@ -39,6 +42,9 @@ GstColorSpaceConvertFunction gst_colorspace_rgb2rgb_get_converter(GstColorSpaceC
         case GST_COLORSPACE_BGR24:
 	  space->outsize = space->width*space->height*3;
           return gst_colorspace_rgb24_to_bgr24;
+        case GST_COLORSPACE_RGB32:
+	  space->outsize = space->width*space->height*4;
+          return gst_colorspace_rgb24_to_rgb32;
 	default:
 	  break;
       }
@@ -52,6 +58,9 @@ GstColorSpaceConvertFunction gst_colorspace_rgb2rgb_get_converter(GstColorSpaceC
         case GST_COLORSPACE_BGR24:
 	  space->outsize = space->width*space->height*3;
           return gst_colorspace_rgb_to_rgb_identity;
+        case GST_COLORSPACE_BGR565:
+	  space->outsize = space->width*space->height*2;
+          return gst_colorspace_bgr24_to_bgr565;
 	default:
 	  break;
       }
@@ -78,6 +87,9 @@ GstColorSpaceConvertFunction gst_colorspace_rgb2rgb_get_converter(GstColorSpaceC
         case GST_COLORSPACE_BGR32:
 	  space->outsize = space->width*space->height*4;
           return gst_colorspace_rgb_to_rgb_identity;
+        case GST_COLORSPACE_BGR565:
+	  space->outsize = space->width*space->height*2;
+          return gst_colorspace_bgr32_to_bgr565;
 	default:
 	  break;
       }
@@ -122,7 +134,7 @@ static void gst_colorspace_rgb24_to_bgr24(GstColorSpaceConverter *space, unsigne
   gint size;
   gchar temp;
 
-  GST_DEBUG (0,"gst_colorspace_rgb24_to_bgr24 %p %p %d\n", src, dest, space->outsize);
+  GST_DEBUG (0,"gst_colorspace_rgb24_to_bgr24 %p %p %d %d %d\n", src, dest, space->outsize, space->width, space->height);
 
   size = space->outsize/3;
 
@@ -143,6 +155,54 @@ static void gst_colorspace_rgb24_to_bgr24(GstColorSpaceConverter *space, unsigne
     }
   }
   GST_DEBUG (0,"gst_colorspace_rgb24_to_bgr24 end\n");
+}
+
+static void gst_colorspace_bgr24_to_bgr565(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) 
+{
+  gint size;
+  guint16 *destptr = (guint16 *)dest;
+
+  GST_DEBUG (0,"gst_colorspace_bgr24_to_bgr565 %p %p %d %d %d\n", src, dest, space->outsize, space->width, space->height);
+
+  size = space->outsize/2;
+
+  while (size--) {
+    *destptr++ = ((src[2]&0xF8)<<8)|((src[1]&0xFC)<<3)|((src[0]&0xF8)>>3);
+    src+=3;
+  }
+  GST_DEBUG (0,"gst_colorspace_bgr24_to_bgr565 end\n");
+}
+
+static void gst_colorspace_bgr32_to_bgr565(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) 
+{
+  gint size;
+  guint16 *destptr = (guint16 *)dest;
+
+  GST_DEBUG (0,"gst_colorspace_bgr32_to_bgr565 %p %p %d %d %d\n", src, dest, space->outsize, space->width, space->height);
+
+  size = space->outsize/2;
+
+  while (size--) {
+    *destptr++ = ((src[2]&0xF8)<<8)|((src[1]&0xFC)<<3)|((src[0]&0xF8)>>3);
+    src+=4;
+  }
+  GST_DEBUG (0,"gst_colorspace_bgr32_to_bgr565 end\n");
+}
+
+static void gst_colorspace_rgb24_to_rgb32(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) 
+{
+  gint size;
+  guint32 *destptr = (guint32 *)dest;
+
+  GST_DEBUG (0,"gst_colorspace_rgb24_to_rgb32 %p %p %d\n", src, dest, space->outsize);
+
+  size = space->outsize/4;
+
+  while (size--) {
+    *destptr++ = (src[0]<<16)|(src[1]<<8)|src[2];
+    src+=3;
+  }
+  GST_DEBUG (0,"gst_colorspace_rgb24_to_rgb32 end\n");
 }
 
 static void gst_colorspace_rgb32_to_bgr32(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) 

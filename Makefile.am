@@ -14,11 +14,11 @@ else
 SUBDIRS_DOCS =
 endif
 
-SUBDIRS = include gst libs plugins tools test tests examples \
+SUBDIRS = include gst libs plugins tools test tests testsuite examples \
 $(SUBDIRS_LGG) $(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
-DIST_SUBDIRS = include gst libs plugins tools test tests examples gstplay editor docs debian
+DIST_SUBDIRS = include gst libs plugins tools test tests testsuite examples gstplay editor docs debian
 
 
 bin_SCRIPTS = gstreamer-config

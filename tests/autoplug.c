@@ -34,8 +34,8 @@ main (int argc, char *argv[])
   gtk_signal_connect (GTK_OBJECT (autoplugger), "new_object", new_object_added, NULL);
 
   element = gst_autoplug_to_caps (autoplugger, testcaps,
-		  g_list_append (NULL, gst_pad_get_caps (gst_element_get_pad (audiosink, "sink"))),
-		  g_list_append (NULL, gst_pad_get_caps (gst_element_get_pad (videosink, "sink"))),
+		  gst_pad_get_caps (gst_element_get_pad (audiosink, "sink")),
+		  gst_pad_get_caps (gst_element_get_pad (videosink, "sink")),
 		  NULL);
   g_assert (element != NULL);
 

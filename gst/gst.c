@@ -63,8 +63,6 @@ gst_init (int *argc, char **argv[])
 
   if (!g_thread_supported ()) g_thread_init (NULL);
 
-  _gst_progname = g_strdup(*argv[0]);
-
   gtk_init (argc,argv);
 
   if (!gst_init_check (argc,argv)) {
@@ -123,8 +121,12 @@ gst_init_check (int     *argc,
   gboolean ret = TRUE;
   gboolean showhelp = FALSE;
 
+  _gst_progname = NULL;
+  
   if (argc && argv) {
     gint i, j, k;
+
+    _gst_progname = g_strdup(*argv[0]);
 
     for (i=1; i< *argc; i++) {
       if (!strncmp ("--gst-info-mask=", (*argv)[i], 16)) {
@@ -182,6 +184,10 @@ gst_init_check (int     *argc,
         *argc -= k;
       }
     }
+  }
+
+  if (_gst_progname == NULL) {
+    _gst_progname = g_strdup("gstprog");
   }
 
 
