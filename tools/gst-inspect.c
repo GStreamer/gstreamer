@@ -252,7 +252,7 @@ print_element_properties (GstElement *element)
   GParamSpec **property_specs;
   gint num_properties,i;
   gboolean readable;
-
+  const char *string_val;
 
   property_specs = g_object_class_list_properties
                      (G_OBJECT_GET_CLASS (element), &num_properties);
@@ -274,8 +274,14 @@ print_element_properties (GstElement *element)
 
     switch (G_VALUE_TYPE (&value)) {
       case G_TYPE_STRING:
+        string_val = g_value_get_string (&value);
         g_print ("%-23.23s String. ", "");
-        if (readable) g_print ("(Default \"%s\")", g_value_get_string (&value));
+        if (readable) {
+          if (string_val == NULL)
+            g_print ("(Default \"\")");
+          else
+            g_print ("(Default \"%s\")", g_value_get_string (&value));
+        }
         break;
       case G_TYPE_BOOLEAN:
         g_print ("%-23.23s Boolean. ", "");
