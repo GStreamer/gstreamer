@@ -152,8 +152,9 @@ gst_play_set_property (	GObject *object,
 						const GValue *value,
 						GParamSpec *pspec)
 {
-	GstPlay *play = GST_PLAY (object);
-
+	GstPlay *play;
+	g_return_if_fail (object != NULL);
+	play = GST_PLAY (object);
 	g_return_if_fail (GST_IS_PLAY (play));
 	
 	switch (prop_id) {
@@ -178,8 +179,9 @@ gst_play_get_property (	GObject *object,
 						GValue *value,
 						GParamSpec *pspec)
 {
-	GstPlay *play = GST_PLAY (object);
-
+	GstPlay *play;
+	g_return_if_fail (object != NULL);
+	play = GST_PLAY (object);
 	g_return_if_fail (GST_IS_PLAY (play));
 
 	switch (prop_id) {
@@ -242,7 +244,8 @@ gst_play_tick_callback (GstPlay *play)
 {
 	gint secs;
 	
-	g_return_val_if_fail(GST_IS_PLAY(play), FALSE);
+	g_return_val_if_fail (play != NULL, FALSE); 
+	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	
 	play->clock = gst_bin_get_clock (GST_BIN (play->pipeline));
 	play->time_nanos = gst_clock_get_time(play->clock);
@@ -293,7 +296,8 @@ gst_play_default_idle_add (	GSourceFunc function,
 static gboolean
 gst_play_idle_callback (GstPlay *play)
 {
-	g_return_val_if_fail(GST_IS_PLAY(play), FALSE);
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	
 	return gst_bin_iterate (GST_BIN (play->pipeline));
 }
@@ -304,7 +308,8 @@ gst_play_idle_signal (GstPlay *play)
 	GstPlaySignal *signal;
 	gint queue_length;
 	
-	g_return_val_if_fail(GST_IS_PLAY(play), FALSE);
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	
 	signal = g_async_queue_try_pop(play->signal_queue);
 	if (signal == NULL){
@@ -457,6 +462,8 @@ callback_pipeline_state_change (	GstElement *element,
 {
 	GstPlaySignal *signal;
 
+	g_return_if_fail (play != NULL);
+	g_return_if_fail (element != NULL);
 	g_return_if_fail (GST_IS_ELEMENT (element));
 	g_return_if_fail (GST_IS_PLAY (play));
 	g_return_if_fail (element == play->pipeline);
@@ -689,6 +696,7 @@ gst_play_seek_to_time (	GstPlay *play,
 	gboolean video_seek_worked = FALSE;
 	gboolean visualisation_seek_worked = FALSE;
 
+	g_return_if_fail (play != NULL);
 	g_return_if_fail (GST_IS_PLAY (play));
 	if (time_nanos < 0LL){
 		play->seek_time = 0LL;
@@ -757,6 +765,7 @@ gst_play_set_idle_timeout_funcs (	GstPlay *play,
 									GstPlayTimeoutAdd timeout_add_func,
 									GstPlayIdleAdd idle_add_func)
 {
+	g_return_if_fail (play != NULL);
 	g_return_if_fail (GST_IS_PLAY (play));
 	play->timeout_add_func = timeout_add_func;
 	play->idle_add_func = idle_add_func;
@@ -782,6 +791,8 @@ gst_play_get_sink_element (	GstPlay *play,
 	const GList *pads = NULL;
 	gboolean has_src, has_correct_type;
 
+	g_return_val_if_fail (play != NULL, NULL);
+	g_return_val_if_fail (element != NULL, NULL);
 	g_return_val_if_fail (GST_IS_PLAY (play), NULL);
 	g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
@@ -885,9 +896,9 @@ GstElementStateReturn
 gst_play_set_state (	GstPlay *play,
 						GstElementState state)
 {
+	g_return_val_if_fail (play != NULL, GST_STATE_FAILURE);
 	g_return_val_if_fail (GST_IS_PLAY (play), GST_STATE_FAILURE);
 	g_return_val_if_fail (GST_IS_ELEMENT(play->pipeline), GST_STATE_FAILURE);
-	/*g_print("setting state to %d\n", state);*/
 
 	return gst_element_set_state(play->pipeline, state);
 }
@@ -903,6 +914,7 @@ gst_play_set_state (	GstPlay *play,
 GstElementState
 gst_play_get_state (GstPlay *play)
 {
+	g_return_val_if_fail (play != NULL, GST_STATE_FAILURE);
 	g_return_val_if_fail (GST_IS_PLAY (play), GST_STATE_FAILURE);
 	g_return_val_if_fail (play->pipeline, GST_STATE_FAILURE);
 
@@ -923,6 +935,7 @@ gst_play_set_location (	GstPlay *play,
 						const gchar *location)
 {
 	GstElementState current_state;
+	g_return_val_if_fail (play != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 	g_return_val_if_fail (location != NULL, FALSE);
 
@@ -964,6 +977,7 @@ gchar*
 gst_play_get_location (GstPlay *play)
 {
 	gchar* location;
+	g_return_val_if_fail (play != NULL, NULL);
 	g_return_val_if_fail (GST_IS_PLAY (play), NULL);
 	g_return_val_if_fail (GST_IS_ELEMENT(play->source), NULL);
 	g_object_get (G_OBJECT (play->source), "location", &location, NULL);
@@ -981,6 +995,7 @@ void
 gst_play_set_volume (	GstPlay *play,
 						gfloat volume)
 {
+	g_return_if_fail (play != NULL);
 	g_return_if_fail (GST_IS_PLAY (play));
 
 	g_object_set(G_OBJECT(play->vol_dparam), "value_float", volume, NULL);
@@ -999,6 +1014,7 @@ gst_play_get_volume (GstPlay *play)
 {
 	gfloat volume;
 
+	g_return_val_if_fail (play != NULL, 0);
 	g_return_val_if_fail (GST_IS_PLAY (play), 0);
 
 	g_object_get(G_OBJECT(play->vol_dparam), "value_float", &volume, NULL);
@@ -1017,6 +1033,7 @@ void
 gst_play_set_mute (	GstPlay *play,
 					gboolean mute)
 {
+	g_return_if_fail (play != NULL);
 	g_return_if_fail (GST_IS_PLAY (play));
 
 	g_object_set (G_OBJECT (play->volume), "mute", mute, NULL);
@@ -1035,6 +1052,7 @@ gst_play_get_mute (GstPlay *play)
 {
 	gboolean mute;
 
+	g_return_val_if_fail (play != NULL, 0);
 	g_return_val_if_fail (GST_IS_PLAY (play), 0);
 
 	g_object_get (G_OBJECT (play->volume), "mute", &mute, NULL);
@@ -1061,6 +1079,8 @@ gboolean
 gst_play_set_data_src (	GstPlay *play,
 						GstElement *data_src)
 {
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (data_src != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (data_src), FALSE);
 
@@ -1089,6 +1109,8 @@ gboolean
 gst_play_set_video_sink (	GstPlay *play,
 							GstElement *video_sink)
 {
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (video_sink != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (video_sink), FALSE);
 
@@ -1117,6 +1139,8 @@ gboolean
 gst_play_set_audio_sink (	GstPlay *play,
 							GstElement *audio_sink)
 {
+	g_return_val_if_fail (play != NULL, FALSE);
+	g_return_val_if_fail (audio_sink != NULL, FALSE);
 	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (audio_sink), FALSE);
 
@@ -1267,12 +1291,3 @@ gst_play_new (	GstPlayPipeType pipe_type,
 
 	return play;
 }
-
-
-
-
-
-
-
-
-
