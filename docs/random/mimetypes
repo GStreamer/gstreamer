@@ -292,7 +292,8 @@ framerate = 0 - MAXFLOAT (FLOAT)
      MIME type: video/x-theora
      Properties:
      Encoder:
-     Decoder: ffdec_vp3
+     Decoder:
+     This is the raw stream that comes out of an ogg file.
 
 15 - Huffyuv
      MIME type: video/x-huffyuv
