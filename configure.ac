@@ -73,15 +73,17 @@ dnl # Super Duper options for plugin building #
 dnl ###########################################
 
 dnl experimental plugins; stuff that hasn't had the dust settle yet
-
+dnl read 'builds, but might not work'
 GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
 [HAVE_EXPERIMENTAL=yes],disabled,
 [
   AC_MSG_WARN(building experimental plugins)
   USE_LIBMIKMOD="yes"
+  USE_SMOOTHWAVE="yes"
 ],[
   AC_MSG_NOTICE(not building experimental plugins)
   USE_LIBMIKMOD="no"
+  USE_SMOOTHWAVE="no"
 ])
 
 dnl broken plugins; stuff that doesn't seem to build at the moment
@@ -287,7 +289,7 @@ GST_PLUGINS_ALL="\
         median mpeg1enc mpeg1sys mpeg2enc mpeg2sub\
         mpegaudio mpegaudioparse mpegstream mpegtypes\
         passthrough playondemand rtjpeg silence sine\
-        smooth smoothwave spectrum speed stereo stereomono\
+        smooth spectrum speed stereo stereomono\
         synaesthesia udp videoscale volenv volume vumeter wavparse y4m"
 
 AC_SUBST(GST_PLUGINS_ALL)
@@ -594,6 +596,12 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT, true)
 GST_CHECK_FEATURE(SHOUT, [shout plugin], icecastsend, [
   GST_CHECK_LIBHEADER(SHOUT, shout, shout_init_connection,, shout/shout.h, SHOUT_LIBS="-lshout")
   AC_SUBST(SHOUT_LIBS)
+])
+
+dnl *** smoothwave ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SMOOTHWAVE, true)
+GST_CHECK_FEATURE(SMOOTHWAVE, [smoothwave plugin], smoothwave, [
+  if test $HAVE_GTK = "yes"; then HAVE_SMOOTHWAVE=yes; fi;
 ])
 
 dnl for sidplay
@@ -1020,7 +1028,6 @@ gst/rtjpeg/Makefile
 gst/silence/Makefile
 gst/sine/Makefile
 gst/smooth/Makefile
-gst/smoothwave/Makefile
 gst/spectrum/Makefile
 gst/speed/Makefile
 gst/stereo/Makefile
@@ -1070,6 +1077,7 @@ ext/rtp/Makefile
 ext/sdl/Makefile
 ext/shout/Makefile
 ext/sidplay/Makefile
+ext/smoothwave/Makefile
 ext/vorbis/Makefile
 ext/xmms/Makefile
 gst-libs/Makefile
