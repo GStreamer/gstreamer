@@ -244,7 +244,7 @@ GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
   # if we've gotten this far, the user has specifically asked that glib2 be
   # used. if we have no glib2, that is an error.
   if test "x$HAVE_GLIB2" = "xno"; then
-    AC_MSG_ERROR(no glib2 found, try --disable-glib2)
+    AC_MSG_ERROR([no glib2 found, try --disable-glib2])
   fi
 ], enabled, [
   AC_DEFINE(USE_GLIB2)

@@ -16,21 +16,9 @@
 /***** Deal with XML stuff, we have to handle both loadsave and registry *****/
 
 #if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) )
-#ifdef HAVE_LIBXML2
-  #include <libxml/parser.h>
-#else /* impossibly broken header namespacing */
-  #include <parser.h>
-#endif
- 
-  /* Include compatability defines: if libxml hasn't already defined these, */
-  /* we have an old version 1.x */
-  #ifndef xmlChildrenNode
-    #define xmlChildrenNode childs
-    #define xmlRootNode root
-  #endif
-  
+# include <libxml/parser.h>
 #else
-  #define GST_DISABLE_LOADSAVE_REGISTRY
+# define GST_DISABLE_LOADSAVE_REGISTRY
 #endif
 
 #endif /* __GST_CONFIG_H__ */

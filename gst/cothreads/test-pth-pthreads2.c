@@ -33,7 +33,7 @@ static _pthread_descr linuxthreads_self()
 pth_mctx_t main_context;
 int threadnum = 0;
 
-void cothread (void *unused)
+void cothread ()
 {
   printf ("1.%d: current stack frame: %p\n", threadnum, CURRENT_STACK_FRAME);
   printf ("1.%d: sleeping 2s...\n", threadnum);
