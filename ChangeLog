@@ -1,5 +1,10 @@
 2004-05-18  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/schedulers/entryscheduler.c: (gst_entry_scheduler_reset):
+	  make resetting scheduler work twice in a row
+
+2004-05-18  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/gstvalue.c: (gst_strtoll), (CREATE_SERIALIZATION),
 	(CREATE_USERIALIZATION), (_gst_value_initialize),
 	(gst_value_compare_float), (gst_value_serialize_float),

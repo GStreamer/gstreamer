@@ -756,8 +756,10 @@ gst_entry_scheduler_reset (GstScheduler * sched)
   }
 #endif
 
-  do_cothread_context_destroy (GST_ENTRY_SCHEDULER (sched)->context);
-  GST_ENTRY_SCHEDULER (sched)->context = NULL;
+  if (GST_ENTRY_SCHEDULER (sched)->context) {
+    do_cothread_context_destroy (GST_ENTRY_SCHEDULER (sched)->context);
+    GST_ENTRY_SCHEDULER (sched)->context = NULL;
+  }
 }
 
 static CothreadPrivate *
