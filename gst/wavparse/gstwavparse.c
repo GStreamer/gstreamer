@@ -45,7 +45,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "wavparse_wav",   
-    "audio/wav",  
+    "audio/x-wav",  
     NULL
   )
 )
@@ -78,8 +78,8 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
 static GstTypeDefinition 
 wavdefinition = 
 {
-  "wavparse_audio/wav",
-  "audio/wav",
+  "wavparse_audio/x-wav",
+  "audio/x-wav",
   ".wav",
   wav_type_find,
 };
@@ -157,7 +157,7 @@ wav_type_find (GstBuffer *buf, gpointer private)
   if (strncmp (&data[0], "RIFF", 4)) return NULL;
   if (strncmp (&data[8], "WAVE", 4)) return NULL;
 
-  return gst_caps_new ("wav_type_find", "audio/wav", NULL);
+  return gst_caps_new ("wav_type_find", "audio/x-wav", NULL);
 }
 
 
