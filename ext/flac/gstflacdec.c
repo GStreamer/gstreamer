@@ -275,7 +275,8 @@ gst_flacdec_update_metadata (FlacDec * flacdec,
       g_free (value);
     }
   }
-
+  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+      GST_TAG_AUDIO_CODEC, "FLAC", NULL);
 
   gst_element_found_tags (GST_ELEMENT (flacdec), list);
   if (GST_PAD_IS_USABLE (flacdec->srcpad)) {

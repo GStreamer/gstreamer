@@ -458,6 +458,8 @@ speex_dec_chain (GstPad * pad, GstData * data)
           GST_TAG_ENCODER, encoder, NULL);
       g_free (encoder);
     }
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_AUDIO_CODEC, "Speex", NULL);
     /*
        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
        GST_TAG_ENCODER_VERSION, dec->vi.version, NULL);
