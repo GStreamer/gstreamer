@@ -259,6 +259,9 @@ AC_PATH_XTRA
 if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
   AC_MSG_NOTICE([cannot find X11, the build system needs fixage])
 fi
+dnl AC_PATH_XTRA only defines the path needed to find the X libs, not the libs
+dnl therefore we add them here
+X_LIBS="$X_LIBS -lX11"
 AC_SUBST(X_CFLAGS)
 AC_SUBST(X_PRE_LIBS)
 AC_SUBST(X_EXTRA_LIBS)
