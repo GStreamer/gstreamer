@@ -31,8 +31,10 @@ Prereq:		/sbin/ldconfig
 ### documentation requirements
 BuildRequires:  openjade
 BuildRequires:  python2
-BuildRequires:  docbook-style-dsssl docbook-dtd31-sgml
-BuildRequires:	transfig xfig
+BuildRequires:  docbook-style-dsssl
+BuildRequires:  docbook-utils
+BuildRequires:	transfig
+BuildRequires:  xfig
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -139,15 +141,12 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
 %dir %{_localstatedir}/cache/gstreamer-%{majorminor}
-%{_libdir}/gstreamer-%{majorminor}/libgstautoplugcache*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstautoplugger*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstbasicomega*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstoptscheduler.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstoptomega*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstbasicgthreadscheduler*.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoptgthreadscheduler*.so
 %{_libdir}/gstreamer-%{majorminor}/libgstelements*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgststaticautoplug*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstspider*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so*
@@ -208,6 +207,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 
 %changelog
+* Mon Dec 01 2003 Thomas Vander Stichele <thomas at apestaart dot org>
+- changed documentation buildrequires
+
 * Sun Nov 09 2003 Christian Schaller <Uraeus@gnome.org>
 - Fix spec to handle new bytestream library 
 

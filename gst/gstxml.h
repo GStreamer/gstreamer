@@ -49,7 +49,7 @@ struct _GstXML {
 
   xmlNsPtr ns;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 typedef struct _GstXMLNs GstXMLNs;
@@ -61,7 +61,7 @@ struct _GstXMLClass {
   void (*object_loaded)         (GstXML *xml, GstObject *object, xmlNodePtr self);
   void (*object_saved)          (GstXML *xml, GstObject *object, xmlNodePtr self);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType		gst_xml_get_type	(void);

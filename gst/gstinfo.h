@@ -353,7 +353,7 @@ extern gboolean			__gst_debug_enabled;
 #endif /* G_HAVE_ISO_VARARGS */
 
 #else /* GST_DEBUG_ENABLE_DEPRECATED */
-/* This is a workaround so the old debugging stuff of Gstreamer 0.6 works.
+/* This is a workaround so the old debugging stuff of GStreamer 0.6 works.
    This is undocumented and will go when 0.8 comes out. */
 
 #ifdef G_HAVE_ISO_VARARGS

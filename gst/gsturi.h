@@ -73,7 +73,7 @@ struct _GstURIHandlerInterface {
   
   /* we might want to add functions here to query features, someone with gnome-vfs knowledge go ahead */
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* general URI functions */

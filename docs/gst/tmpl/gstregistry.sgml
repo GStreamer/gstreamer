@@ -49,6 +49,7 @@ The registry object
 @loaded: 
 @plugins: 
 @paths: 
+@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_registry_load ##### -->
 <para>

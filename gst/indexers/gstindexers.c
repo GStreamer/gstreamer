@@ -39,11 +39,10 @@ GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstindexers",
-  "Gstremaer core indexers",
+  "GStreamer core indexers",
   plugin_init,
   VERSION,
   GST_LICENSE,
-  GST_COPYRIGHT,
   GST_PACKAGE,
   GST_ORIGIN
 )

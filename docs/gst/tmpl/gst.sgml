@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-Gstreamer
+GStreamer
 
 <!-- ##### SECTION Short_Description ##### -->
 Media library supporting arbitrary formats and filter graphs.
@@ -109,14 +109,6 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 
 @argc: 
 @argv: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
-<para>
-
-</para>
-
 @Returns: 
 
 

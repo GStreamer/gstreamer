@@ -24,6 +24,8 @@ all-local: gst-element-check-@GST_MAJORMINOR@.m4
 gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
 	cp $(srcdir)/gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
 
+ACLOCAL_AMFLAGS = -I common/m4
+
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
 

@@ -67,7 +67,7 @@ struct _GstTypeFind {
   guint64		(* get_length)			(gpointer		data);
 
   /* <private> */
-  GST_STRUCT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstTypeFindFactory {
@@ -80,14 +80,14 @@ struct _GstTypeFindFactory {
   
   gpointer			user_data;
     
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
                                                                                                                                                                          
 struct _GstTypeFindFactoryClass {
   GstPluginFeatureClass		parent;
   /* <private> */
     
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* typefind function interface */

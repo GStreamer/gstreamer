@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "gst_private.h"
 
@@ -38,6 +39,11 @@
 
 static GModule *main_module = NULL;
 static GList *_gst_plugin_static = NULL;
+
+/* static variables for segfault handling of plugin loading */
+static char *_gst_plugin_fault_handler_filename = NULL;
+extern gboolean *_gst_disable_segtrap; /* see gst.c */
+static gboolean *_gst_plugin_fault_handler_is_setup = FALSE;
 
 /* list of valid licenses.
  * One of these must be specified or the plugin won't be loaded 
@@ -168,7 +174,7 @@ gst_plugin_register_func (GstPlugin *plugin, GModule *module, GstPluginDesc *des
   }
 
   if (!desc->license || !desc->description || !desc->package ||
-      !desc->copyright || !desc->origin) {
+      !desc->origin) {
     if (GST_CAT_DEFAULT) GST_INFO ("plugin \"%s\" has incorrect GstPluginDesc, not loading",
        plugin->filename);
     return FALSE;
@@ -195,13 +201,78 @@ gst_plugin_register_func (GstPlugin *plugin, GModule *module, GstPluginDesc *des
 }
 
 /**
+ * _gst_plugin_fault_handler_restore:
+ * segfault handler restorer
+ */
+static void
+_gst_plugin_fault_handler_restore (void)
+{
+  struct sigaction action;
+
+  memset (&action, 0, sizeof (action));
+  action.sa_handler = SIG_DFL;
+
+  sigaction (SIGSEGV, &action, NULL);
+}
+
+/**
+ * _gst_plugin_fault_handler_sighandler:
+ * segfault handler implementation
+ */
+static void
+_gst_plugin_fault_handler_sighandler (int signum)
+{
+  /* We need to restore the fault handler or we'll keep getting it */
+  _gst_plugin_fault_handler_restore ();
+
+  switch (signum)
+  {
+    case SIGSEGV:
+      g_print ("\nERROR: ");
+      g_print ("Caught a segmentation fault while loading plugin file:\n");
+      g_print ("%s\n\n", _gst_plugin_fault_handler_filename);
+      g_print ("Please either:\n");
+      g_print ("- remove it and restart.\n");
+      g_print ("- run with --gst-disable-segtrap and debug.\n");
+      exit (-1);
+      break;
+    default:
+      g_print ("Caught unhandled signal on plugin loading\n");
+      break;
+  }
+}
+
+/**
+ * _gst_plugin_fault_handler_setup:
+ * sets up the segfault handler
+ */
+static void
+_gst_plugin_fault_handler_setup (void)
+{
+  struct sigaction action;
+
+  /* if asked to leave segfaults alone, just return */
+  if (_gst_disable_segtrap) return;
+
+  if (_gst_plugin_fault_handler_is_setup) return;
+
+  memset (&action, 0, sizeof (action));
+  action.sa_handler = _gst_plugin_fault_handler_sighandler;
+
+  sigaction (SIGSEGV, &action, NULL);
+}
+
+static void
+_gst_plugin_fault_handler_setup ();
+
+/**
  * gst_plugin_load_file:
  * @plugin: The plugin to load
  * @error: Pointer to a NULL-valued GError.
  *
  * Load the given plugin.
  *
- * Returns: a new GstPlugin or NULL, if an error occured
+ * Returns: a new GstPlugin or NULL, if an error occurred.
  */
 GstPlugin *
 gst_plugin_load_file (const gchar *filename, GError **error)
@@ -229,8 +300,8 @@ gst_plugin_load_file (const gchar *filename, GError **error)
                  GST_PLUGIN_ERROR,
                  GST_PLUGIN_ERROR_MODULE,
                  "Problem opening file %s\n",
-                 filename); 
-    return FALSE;
+                 filename);
+    return NULL;
   }
 
   module = g_module_open (filename, G_MODULE_BIND_LAZY);
@@ -278,10 +349,19 @@ gst_plugin_load_file (const gchar *filename, GError **error)
                      desc->name);
       }
 
+      /* this is where we load the actual .so, so let's trap SIGSEGV */
+      _gst_plugin_fault_handler_setup ();
+      _gst_plugin_fault_handler_filename = plugin->filename;
+
       if (gst_plugin_register_func (plugin, module, desc)) {
+        /* remove signal handler */
+        _gst_plugin_fault_handler_restore ();
+        _gst_plugin_fault_handler_filename = NULL;
         GST_INFO ("plugin \"%s\" loaded", plugin->filename);
         return plugin;
       } else {
+        /* remove signal handler */
+        _gst_plugin_fault_handler_restore ();
         GST_DEBUG ("gst_plugin_register_func failed for plugin \"%s\"", filename);
 	/* plugin == NULL */
         g_set_error (error,
@@ -327,8 +407,6 @@ gst_plugin_desc_copy (GstPluginDesc *dest, const GstPluginDesc *src)
   dest->version = g_strdup (src->version);
   g_free (dest->license);
   dest->license = g_strdup (src->license);
-  g_free (dest->copyright);
-  dest->copyright = g_strdup (src->copyright);
   g_free (dest->package);
   dest->package = g_strdup (src->package);
   g_free (dest->origin);
@@ -343,7 +421,6 @@ gst_plugin_desc_free (GstPluginDesc *desc)
   g_free (desc->description);
   g_free (desc->version);
   g_free (desc->license);
-  g_free (desc->copyright);
   g_free (desc->package);
   g_free (desc->origin);
 
@@ -438,21 +515,6 @@ gst_plugin_get_license (GstPlugin *plugin)
   g_return_val_if_fail (plugin != NULL, NULL);
 
   return plugin->desc.license;
-}
-/**
- * gst_plugin_get_copyright:
- * @plugin: plugin to get the copyright of
- *
- * get the informal copyright notice of the plugin
- *
- * Returns: the copyright of the plugin
- */
-G_CONST_RETURN gchar*
-gst_plugin_get_copyright (GstPlugin *plugin)
-{
-  g_return_val_if_fail (plugin != NULL, NULL);
-
-  return plugin->desc.copyright;
 }
 /**
  * gst_plugin_get_package:

@@ -892,6 +892,77 @@ gst_bin_get_list (GstBin * bin)
 }
 
 /**
+ * gst_bin_get_by_interface:
+ * @bin: bin to find element in
+ * @interface: interface to be implemented by interface
+ *
+ * Looks for the first element inside the bin that implements the given 
+ * interface. If such an element is found, it returns the element. You can
+ * cast this element to the given interface afterwards.
+ * If you want all elements that implement the interface, use 
+ * gst_bin_get_all_by_interface(). The function recurses bins inside bins.
+ *
+ * Returns: An element inside the bin implementing the interface.
+ */
+GstElement *
+gst_bin_get_by_interface (GstBin *bin, const GType interface)
+{
+  GList *walk;
+  
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+  g_return_val_if_fail (G_TYPE_IS_INTERFACE (interface), NULL);
+
+  walk = bin->children;
+  while (walk) {
+    if (G_TYPE_CHECK_INSTANCE_TYPE (walk->data, interface))
+      return GST_ELEMENT (walk->data);
+    if (GST_IS_BIN (walk->data)) {
+      GstElement *ret;
+      ret = gst_bin_get_by_interface (GST_BIN (walk->data), interface);
+      if (ret)
+	return ret;
+    }
+    walk = g_list_next (walk);
+  }
+
+  return NULL;
+}
+
+/**
+ * gst_bin_get_all_by_interface:
+ * @bin: bin to find elements in
+ * @interface: interface to be implemented by interface
+ *
+ * Looks for all element inside the bin that implements the given 
+ * interface. You can safely cast all returned elements to the given interface.
+ * The function recurses bins inside bins. You need to free the list using 
+ * g_list_free() after use.
+ *
+ * Returns: An element inside the bin implementing the interface.
+ */
+GList *
+gst_bin_get_all_by_interface (GstBin *bin, const GType interface)
+{
+  GList *walk, *ret = NULL;
+    
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+  g_return_val_if_fail (G_TYPE_IS_INTERFACE (interface), NULL);
+
+  walk = bin->children;
+  while (walk) {
+    if (G_TYPE_CHECK_INSTANCE_TYPE (walk->data, interface))
+      ret = g_list_prepend (ret, walk->data);
+    if (GST_IS_BIN (walk->data)) {
+      ret = g_list_concat (ret, 
+	  gst_bin_get_all_by_interface (GST_BIN (walk->data), interface));
+    }
+    walk = g_list_next (walk);
+  }
+
+  return ret; 
+}
+
+/**
  * gst_bin_sync_children_state:
  * @bin: #Gstbin to sync state
  *

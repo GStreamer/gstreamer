@@ -45,10 +45,10 @@ struct _GstElementDetails {
   gchar *description;           /* insights of one form or another */
   gchar *author;                /* who wrote this thing? */
 
-  GST_STRUCT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 #define GST_ELEMENT_DETAILS(longname,klass,description,author)		\
-  { longname, klass, description, author, GST_STRUCT_PADDING_INIT }
+  { longname, klass, description, author, GST_PADDING_INIT }
 #define GST_IS_ELEMENT_DETAILS(details) (					\
   (details) && ((details)->longname != NULL) && ((details)->klass != NULL)	\
   && ((details)->description != NULL) && ((details)->author != NULL))
@@ -73,20 +73,11 @@ struct _GstElementDetails {
 extern GType _gst_element_type;
 
 #define GST_TYPE_ELEMENT		(_gst_element_type)
-
-#define GST_ELEMENT_CAST(obj)		((GstElement*)(obj))
-#define GST_ELEMENT_CLASS_CAST(klass)	((GstElementClass*)(klass))
 #define GST_IS_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_ELEMENT))
 #define GST_IS_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_ELEMENT))
 #define GST_ELEMENT_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_ELEMENT, GstElementClass))
-
-#ifdef GST_TYPE_PARANOID
-# define GST_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_ELEMENT, GstElement))
-# define GST_ELEMENT_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ELEMENT, GstElementClass))
-#else
-# define GST_ELEMENT                    GST_ELEMENT_CAST
-# define GST_ELEMENT_CLASS              GST_ELEMENT_CLASS_CAST
-#endif
+#define GST_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_ELEMENT, GstElement))
+#define GST_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ELEMENT, GstElementClass))
 
 /* convenience functions */
 #ifdef G_HAVE_ISO_VARARGS
@@ -184,7 +175,7 @@ struct _GstElement {
   GAsyncQueue		*prop_value_queue;
   GMutex		*property_mutex;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstElementClass {
@@ -241,7 +232,7 @@ struct _GstElementClass {
   GstIndex*		(*get_index)		(GstElement *element);
   void			(*set_index)		(GstElement *element, GstIndex *index);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);
@@ -408,13 +399,13 @@ struct _GstElementFactory {
   
   GList *		interfaces;		/* interfaces this element implements */
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstElementFactoryClass {
   GstPluginFeatureClass parent_class;
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType 			gst_element_factory_get_type 		(void);
@@ -431,8 +422,8 @@ G_CONST_RETURN gchar *	gst_element_factory_get_klass		(GstElementFactory *factor
 G_CONST_RETURN gchar *	gst_element_factory_get_description  	(GstElementFactory *factory);
 G_CONST_RETURN gchar *	gst_element_factory_get_version      	(GstElementFactory *factory);
 G_CONST_RETURN gchar *	gst_element_factory_get_author		(GstElementFactory *factory);
-guint			gst_element_factory_get_num_padtemplates (GstElementFactory *factory);
-G_CONST_RETURN GList *	gst_element_factory_get_padtemplates	(GstElementFactory *factory);
+guint			gst_element_factory_get_num_pad_templates (GstElementFactory *factory);
+G_CONST_RETURN GList *	gst_element_factory_get_pad_templates	(GstElementFactory *factory);
 guint			gst_element_factory_get_uri_type	(GstElementFactory *factory);		
 gchar **		gst_element_factory_get_uri_protocols	(GstElementFactory *factory);		
 

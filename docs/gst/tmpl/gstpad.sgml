@@ -785,8 +785,11 @@ Flags for the pad.
 
 </para>
 
-@padlist: 
+@pad: 
+@Varargs: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@padlist: 
 
 
 <!-- ##### FUNCTION gst_pad_selectv ##### -->
@@ -794,9 +797,11 @@ Flags for the pad.
 
 </para>
 
+@padlist: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @pad: 
 @Varargs: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_dispatcher ##### -->
@@ -1090,6 +1095,7 @@ The realpad object
 @intlinkfunc: 
 @bufferpoolfunc: 
 @probedisp: 
+@_gst_reserved: 
 
 <!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
 <para>

@@ -213,7 +213,7 @@ void gst_caps2_append (GstCaps2 *caps1, GstCaps2 *caps2)
   }
   g_ptr_array_free(caps2->structs, TRUE);
 #ifdef USE_POISONING
-  memset (caps, 0xff, sizeof(GstCaps2));
+  memset (caps2, 0xff, sizeof(GstCaps2));
 #endif
   g_free(caps2);
 }

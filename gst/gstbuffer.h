@@ -114,7 +114,7 @@ struct _GstBuffer {
   /* pointer to pool private data of parent buffer in case of a subbuffer */
   gpointer 		 pool_private;
 
-  GST_STRUCT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* bufferpools */
@@ -139,7 +139,7 @@ struct _GstBufferPool {
 
   gpointer				user_data;
 
-  GST_STRUCT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* allocation */

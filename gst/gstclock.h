@@ -137,7 +137,7 @@ struct _GstClock {
   GCond		*active_cond;
   gboolean	 stats;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstClockClass {
@@ -159,7 +159,7 @@ struct _GstClockClass {
   void                  (*unschedule)        	(GstClock *clock, GstClockEntry *entry);
   void                  (*unlock)            	(GstClock *clock, GstClockEntry *entry);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType           	gst_clock_get_type 		(void);

@@ -470,7 +470,6 @@ dnl ############################
 
 dnl set license and copyright notice
 AC_DEFINE(GST_LICENSE, "LGPL", [GStreamer license])
-AC_DEFINE(GST_COPYRIGHT, "(c) 1999-2003 The GStreamer Team", [copyright message in plugins])
 dnl package name in plugins
 AC_ARG_WITH(package-name,
 AC_HELP_STRING([--with-package-name],[specify package name to use in plugins]),
@@ -479,7 +478,7 @@ AC_HELP_STRING([--with-package-name],[specify package name to use in plugins]),
   no) AC_MSG_ERROR(bad value ${withval} for --with-package-name) ;;
   *) GST_PACKAGE="${withval}" ;;
 esac], 
-[GST_PACKAGE="Gstreamer"]) dnl Default value
+[GST_PACKAGE="GStreamer"]) dnl Default value
 AC_MSG_NOTICE(Using $GST_PACKAGE as package name)
 AC_DEFINE_UNQUOTED(GST_PACKAGE, "$GST_PACKAGE", [package name in plugins])
 dnl package origin URL
@@ -602,6 +601,7 @@ tests/seeking/Makefile
 tests/sched/Makefile
 tests/threadstate/Makefile
 testsuite/Makefile
+testsuite/bins/Makefile
 testsuite/bytestream/Makefile
 testsuite/caps/Makefile
 testsuite/caps2/Makefile
@@ -617,10 +617,8 @@ testsuite/refcounting/Makefile
 testsuite/tags/Makefile
 testsuite/threads/Makefile
 examples/Makefile
-examples/autoplug/Makefile
 examples/cutter/Makefile
 examples/helloworld/Makefile
-examples/helloworld2/Makefile
 examples/launch/Makefile
 examples/manual/Makefile
 examples/mixer/Makefile

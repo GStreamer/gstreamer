@@ -258,7 +258,7 @@ uninstall-local:
 	  echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/index.sgml' ; \
 	  rm -f $(DESTDIR)$(TARGET_DIR)/index.sgml; \
 	fi) 
-	rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(TARGET_DIR) 
+	if test -d $(DESTDIR)$(TARGET_DIR); then rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(TARGET_DIR); fi
 else
 install-data-local:
 uninstall-local:

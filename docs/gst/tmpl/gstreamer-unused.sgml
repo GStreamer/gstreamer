@@ -1992,6 +1992,12 @@ to the current function, i.e. "('element')"
 @format: printf-style format string
 @args...: printf arguments
 
+<!-- ##### MACRO GST_DISABLE_AUTOPLUG ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_DISABLE_TYPEFIND ##### -->
 <para>
 
@@ -8949,6 +8955,13 @@ of an element he doesn't need anymore.
 @...: 
 @format: 
 @args...: 
+
+<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_link_get_type ##### -->
 =======

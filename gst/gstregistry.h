@@ -86,7 +86,7 @@ struct _GstRegistry {
 
   GList 	*paths;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstRegistryClass {
@@ -105,7 +105,7 @@ struct _GstRegistryClass {
   /* signals */
   void 			(*plugin_added)		(GstRegistry *registry, GstPlugin *plugin);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 

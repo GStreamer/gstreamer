@@ -1,3 +1,23 @@
+2003-12-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+        * gst/gst.c:
+	* gst/gstplugin.c:
+          rename --enable-segfault to --disable-segtrap
+
+2003-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.c: (init_popt_callback):
+	* gst/gstplugin.c: (_gst_plugin_fault_handler_restore),
+	(_gst_plugin_fault_handler_sighandler),
+	(_gst_plugin_fault_handler_setup), (gst_plugin_load_file):
+	Implemented fault handlers for catching SIGSEGV while loading
+        plug-ins
+
+2003-12-02  Thomas Vander Stichele <thomas at apestaart dot org>
+
+        * fix documentation build using docbook2..., works on fc1 and rh9
+	* fix distcheck on fc1
+
 2003-11-14  Thomas Vander Stichele <thomas at apestaart dot org>
 
         * put GST_CACHE_DIR in config.h, as ordered by iain

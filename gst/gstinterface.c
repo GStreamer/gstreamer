@@ -28,19 +28,21 @@
 #include "gstinterface.h"
 #include "gstlog.h"
 
-static void 	gst_interface_class_init 	(GstInterfaceClass *ifklass);
-static gboolean	gst_interface_supported_default (GstInterface *iface,
-						 GType         iface_type);
+static void
+gst_implements_interface_class_init 	   (GstImplementsInterfaceClass *ifklass);
+static gboolean
+gst_implements_interface_supported_default (GstImplementsInterface *iface,
+					    GType                   iface_type);
 
 GType
-gst_interface_get_type (void)
+gst_implements_interface_get_type (void)
 {
   static GType gst_interface_type = 0;
 
   if (!gst_interface_type) {
     static const GTypeInfo gst_interface_info = {
-      sizeof (GstInterfaceClass),
-      (GBaseInitFunc) gst_interface_class_init,
+      sizeof (GstImplementsInterfaceClass),
+      (GBaseInitFunc) gst_implements_interface_class_init,
       NULL,
       NULL,
       NULL,
@@ -52,7 +54,7 @@ gst_interface_get_type (void)
     };
 
     gst_interface_type = g_type_register_static (G_TYPE_INTERFACE,
-						 "GstInterface",
+						 "GstImplementsInterface",
 						 &gst_interface_info, 0);
 
     g_type_interface_add_prerequisite (gst_interface_type,
@@ -63,14 +65,14 @@ gst_interface_get_type (void)
 }
 
 static void
-gst_interface_class_init (GstInterfaceClass *klass)
+gst_implements_interface_class_init (GstImplementsInterfaceClass *klass)
 {
-  klass->supported = gst_interface_supported_default;
+  klass->supported = gst_implements_interface_supported_default;
 }
 
 static gboolean
-gst_interface_supported_default (GstInterface *interface,
-				 GType         iface_type)
+gst_implements_interface_supported_default (GstImplementsInterface *interface,
+					    GType                iface_type)
 {
   /* Well, if someone didn't set the virtual function,
    * then something is clearly wrong. So big no-no here */
@@ -93,12 +95,12 @@ gst_element_implements_interface (GstElement *element,
 {
   if (G_TYPE_CHECK_INSTANCE_TYPE (G_OBJECT (element),
 				  iface_type)) {
-    GstInterface *iface;
-    GstInterfaceClass *ifclass;
+    GstImplementsInterface *iface;
+    GstImplementsInterfaceClass *ifclass;
 
     iface = G_TYPE_CHECK_INSTANCE_CAST (G_OBJECT (element),
-					iface_type, GstInterface);
-    ifclass = GST_INTERFACE_GET_CLASS (iface);
+					iface_type, GstImplementsInterface);
+    ifclass = GST_IMPLEMENTS_INTERFACE_GET_CLASS (iface);
 
     if (ifclass->supported != NULL &&
         ifclass->supported (iface, iface_type) == TRUE) {
@@ -110,7 +112,7 @@ gst_element_implements_interface (GstElement *element,
 }
 
 /**
- * gst_interface_cast:
+ * gst_implements_interface_cast:
  * @from: the object (any sort) from which to cast to the interface
  * @type: the interface type to cast to
  *
@@ -118,15 +120,15 @@ gst_element_implements_interface (GstElement *element,
  * interface is supported for this specific instance.
  */
 
-GstInterface *
-gst_interface_cast (gpointer from,
-		    GType    iface_type)
+gpointer
+gst_implements_interface_cast (gpointer from,
+			       GType    iface_type)
 {
-  GstInterface *iface;
+  GstImplementsInterface *iface;
 
   /* check cast, give warning+fail if it's invalid */
   if (!(iface = G_TYPE_CHECK_INSTANCE_CAST (from, iface_type,
-					    GstInterface))) {
+					    GstImplementsInterface))) {
     return NULL;
   }
 
@@ -142,7 +144,7 @@ gst_interface_cast (gpointer from,
 }
 
 /**
- * gst_interface_cast:
+ * gst_implements_interface_cast:
  * @from: the object (any sort) from which to check from for the interface
  * @type: the interface type to check for
  *
@@ -151,17 +153,17 @@ gst_interface_cast (gpointer from,
  */
 
 gboolean
-gst_interface_check (gpointer from,
-		     GType    type)
+gst_implements_interface_check (gpointer from,
+				GType    type)
 {
-  GstInterface *iface;
+  GstImplementsInterface *iface;
 
   /* check cast, return FALSE if it fails, don't give a warning... */
   if (!G_TYPE_CHECK_INSTANCE_TYPE (from, type)) {
     return FALSE;
   }
 
-  iface = G_TYPE_CHECK_INSTANCE_CAST (from, type, GstInterface);
+  iface = G_TYPE_CHECK_INSTANCE_CAST (from, type, GstImplementsInterface);
 
   /* now, if we're an element (or derivative), is this thing
    * actually implemented for real? */

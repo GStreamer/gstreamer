@@ -17,10 +17,9 @@
 
 <!ENTITY CVS SYSTEM "cvs.xml">
 <!ENTITY DEVELOPING SYSTEM "developing.xml">
-
 ]>
 
-<article class="faq">
+<article class="faq" id="index">
   <articleinfo>
     <title>GStreamer FAQ</title>
     <abstract>

@@ -194,7 +194,7 @@ gst_event_new_seek (GstSeekType type, gint64 offset)
 }
 
 /**
- * gst_event_new_discontinuousv:
+ * gst_event_new_discontinuous_valist:
  * @new_media: A flag indicating a new media type starts
  * @format1: The format of the discont value
  * @var_args: more discont values and formats
@@ -207,7 +207,7 @@ gst_event_new_seek (GstSeekType type, gint64 offset)
  * Returns: A new discontinuous event.
  */
 GstEvent*
-gst_event_new_discontinuousv (gboolean new_media, GstFormat format1, va_list var_args)
+gst_event_new_discontinuous_valist (gboolean new_media, GstFormat format1, va_list var_args)
 {
   GstEvent *event;
   gint count = 0;
@@ -251,7 +251,7 @@ gst_event_new_discontinuous (gboolean new_media, GstFormat format1, ...)
 
   va_start (var_args, format1);
 
-  event = gst_event_new_discontinuousv (new_media, format1, var_args);
+  event = gst_event_new_discontinuous_valist (new_media, format1, var_args);
 
   va_end (var_args);
 

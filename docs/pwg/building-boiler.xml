@@ -14,8 +14,8 @@
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-boiler-source" xreflabel="Getting the Gstreamer Plugin Templates">
-    <title>Getting the Gstreamer Plugin Templates</title>
+  <sect1 id="sect1-boiler-source" xreflabel="Getting the GStreamer Plugin Templates">
+    <title>Getting the GStreamer Plugin Templates</title>
     <para>
       There are currently two ways to develop a new plugin for &GStreamer;: You
       can write the entire plugin by hand, or you can copy an existing plugin

@@ -38,7 +38,7 @@
 <!ENTITY GstLibRef    "<emphasis>GStreamer Library Reference</emphasis>">
 ]>
 
-<book id="book-gst-plugin-writers-guide">
+<book id="index">
   &TITLEPAGE;
 
   <!-- ############# part ############### -->

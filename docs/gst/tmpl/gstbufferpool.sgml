@@ -92,6 +92,7 @@ The bufferpool structure
 @buffer_copy: 
 @buffer_free: 
 @user_data: 
+@_gst_reserved: 
 
 <!-- ##### USER_FUNCTION GstBufferPoolBufferNewFunction ##### -->
 <para>

@@ -40,65 +40,36 @@ extern GType _gst_pad_type;
 extern GType _gst_real_pad_type;
 extern GType _gst_ghost_pad_type;
 
-#define GST_TYPE_PARANOID 
-
 /* 
  * Pad base class
  */
 #define GST_TYPE_PAD			(_gst_pad_type) 
-
-#define GST_PAD_CAST(obj)		((GstPad*)(obj))
-#define GST_PAD_CLASS_CAST(klass)	((GstPadClass*)(klass))
 #define GST_IS_PAD(obj)			(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PAD))
 #define GST_IS_PAD_FAST(obj)		(G_OBJECT_TYPE(obj) == GST_TYPE_REAL_PAD || \
 					 G_OBJECT_TYPE(obj) == GST_TYPE_GHOST_PAD)
 #define GST_IS_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))
-
-#ifdef GST_TYPE_PARANOID
-# define GST_PAD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD, GstPad))
-# define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD, GstPadClass))
-#else
-# define GST_PAD			GST_PAD_CAST
-# define GST_PAD_CLASS			GST_PAD_CLASS_CAST
-#endif
+#define GST_PAD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD, GstPad))
+#define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD, GstPadClass))
 
 /* 
  * Real Pads
  */
 #define GST_TYPE_REAL_PAD		(_gst_real_pad_type)
-
-#define GST_REAL_PAD_CAST(obj)		((GstRealPad*)(obj))
-#define GST_REAL_PAD_CLASS_CAST(klass)	((GstRealPadClass*)(klass))
 #define GST_IS_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_REAL_PAD))
 #define GST_IS_REAL_PAD_FAST(obj)	(G_OBJECT_TYPE(obj) == GST_TYPE_REAL_PAD)
 #define GST_IS_REAL_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_REAL_PAD))
-
-#ifdef GST_TYPE_PARANOID
-# define GST_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REAL_PAD, GstRealPad))
-# define GST_REAL_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_REAL_PAD, GstRealPadClass))
-#else
-# define GST_REAL_PAD			GST_REAL_PAD_CAST
-# define GST_REAL_PAD_CLASS		GST_REAL_PAD_CLASS_CAST
-#endif
+#define GST_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REAL_PAD, GstRealPad))
+#define GST_REAL_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_REAL_PAD, GstRealPadClass))
 
 /* 
  * Ghost Pads
  */
 #define GST_TYPE_GHOST_PAD		(_gst_ghost_pad_type)
-
-#define GST_GHOST_PAD_CAST(obj)		((GstGhostPad*)(obj))
-#define GST_GHOST_PAD_CLASS_CAST(klass)	((GstGhostPadClass*)(klass))
 #define GST_IS_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GHOST_PAD))
 #define GST_IS_GHOST_PAD_FAST(obj)	(G_OBJECT_TYPE(obj) == GST_TYPE_GHOST_PAD)
 #define GST_IS_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GHOST_PAD))
-
-#ifdef GST_TYPE_PARANOID
-# define GST_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GHOST_PAD, GstGhostPad))
-# define GST_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD, GstGhostPadClass))
-#else
-# define GST_GHOST_PAD			GST_GHOST_PAD_CAST
-# define GST_GHOST_PAD_CLASS		GST_GHOST_PAD_CLASS_CAST
-#endif
+#define GST_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GHOST_PAD, GstGhostPad))
+#define GST_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD, GstGhostPadClass))
 
 
 /*typedef struct _GstPad GstPad; */
@@ -175,13 +146,13 @@ struct _GstPad {
 
   GstPadTemplate 	*padtemplate;	/* the template for this pad */
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstPadClass {
   GstObjectClass parent_class;
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstRealPad {
@@ -224,7 +195,7 @@ struct _GstRealPad {
 
   GstProbeDispatcher 		 probedisp;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstRealPadClass {
@@ -236,7 +207,7 @@ struct _GstRealPadClass {
   void 		(*linked)		(GstPad *pad, GstPad *peer);
   void 		(*unlinked)		(GstPad *pad, GstPad *peer);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstGhostPad {
@@ -244,13 +215,13 @@ struct _GstGhostPad {
 
   GstRealPad *realpad;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstGhostPadClass {
   GstPadClass parent_class;
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 
@@ -292,7 +263,7 @@ struct _GstGhostPadClass {
 #define GST_PAD_REALIZE(pad)		(GST_IS_REAL_PAD(pad) ? ((GstRealPad *)(pad)) : GST_GPAD_REALPAD(pad))
 #define GST_PAD_DIRECTION(pad)		GST_RPAD_DIRECTION(GST_PAD_REALIZE(pad))
 #define GST_PAD_CAPS(pad)		GST_RPAD_CAPS(GST_PAD_REALIZE(pad))
-#define GST_PAD_PEER(pad)		GST_PAD_CAST(GST_RPAD_PEER(GST_PAD_REALIZE(pad)))
+#define GST_PAD_PEER(pad)		GST_PAD(GST_RPAD_PEER(GST_PAD_REALIZE(pad)))
 
 /* Some check functions (unused?) */
 #define GST_PAD_IS_LINKED(pad)		(GST_PAD_PEER(pad) != NULL)
@@ -337,7 +308,7 @@ struct _GstPadTemplate {
   GstPadPresence   presence;
   GstCaps2	  *caps;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstPadTemplateClass {
@@ -346,7 +317,7 @@ struct _GstPadTemplateClass {
   /* signal callbacks */
   void (*pad_created)	(GstPadTemplate *templ, GstPad *pad);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstStaticPadTemplate {
@@ -445,8 +416,9 @@ void			gst_pad_push				(GstPad *pad, GstData *data);
 GstData*		gst_pad_pull				(GstPad *pad);
 gboolean		gst_pad_send_event			(GstPad *pad, GstEvent *event);
 gboolean		gst_pad_event_default			(GstPad *pad, GstEvent *event);
-GstPad*			gst_pad_select				(GList *padlist);
-GstPad*			gst_pad_selectv				(GstPad *pad, ...);
+GstPad*			gst_pad_selectv				(GList *padlist);
+GstPad*			gst_pad_select				(GstPad *pad, ...);
+GstPad*			gst_pad_select_valist			(GstPad *pad, va_list varargs);
 
 
 /* convert/query/format functions */

@@ -95,7 +95,7 @@ html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
 	@echo "*** Generating HTML output ***"
 	@-mkdir -p html
 	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
-	@cd $(BUILDDIR) && xmlto html -o ../html $(MAIN)
+	@cd $(BUILDDIR) && docbook2html -o ../html -V '%use-id-as-filename%' $(MAIN)
 	@test "x$(CSS)" != "x" && \
           echo "Copying .css files: $(CSS)" && \
           cp $(srcdir)/$(CSS) html
@@ -165,8 +165,9 @@ $(BUILDIMAGESDIR)/%.ps: %.png
 	@cat $< | pngtopnm | pnmtops -noturn > $@ 2> /dev/null
 
 # make sure xml validates properly
-#check-local:
-#	xmllint -noout -valid $(srcdir)/$(MAIN)
+check-local: $(BUILDDIR)/$(MAIN)
+	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
+	cd $(BUILDDIR) && xmllint -noout -valid $(MAIN)
 
 ### this is a website upload target
 

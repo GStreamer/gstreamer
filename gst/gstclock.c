@@ -600,6 +600,7 @@ gboolean
 gst_clock_handle_discont (GstClock *clock, guint64 time)
 {
   GstClockTime itime = G_GINT64_CONSTANT (0);
+  GstClockClass *cclass = GST_CLOCK_GET_CLASS (clock);;
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "clock discont %" G_GUINT64_FORMAT
 		            " %" G_GUINT64_FORMAT " %d",
@@ -609,21 +610,8 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
     return TRUE;
 
   GST_LOCK (clock);
-  if (clock->accept_discont) {
-    GstClockClass *cclass;
-
-    cclass = GST_CLOCK_GET_CLASS (clock);
-	  
-    if (cclass->get_internal_time) {
-      itime = cclass->get_internal_time (clock);
-    }
-  }
-  else {
-    GST_UNLOCK (clock);
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "clock discont refused %" G_GUINT64_FORMAT
-		              " %" G_GUINT64_FORMAT,
-			      time, clock->start_time);
-    return FALSE;
+  if (cclass->get_internal_time) {
+    itime = cclass->get_internal_time (clock);
   }
 
   clock->start_time = itime - time;
