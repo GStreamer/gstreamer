@@ -1,3 +1,9 @@
+2004-07-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* po/LINGUAS:
+	* po/hu.po:
+	  added Hungarian translation (Laszlo Dvornik)
+
 2004-07-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
