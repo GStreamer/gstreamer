@@ -4,7 +4,7 @@ import gst
 
 def decode(filename):
     output = filename + '.wav'
-    pipeline = ('filesrc location="%s" ! spider ! wavenc ! '
+    pipeline = ('filesrc location="%s" ! spider ! audio/x-raw-int,rate=44100,stereo=2 ! wavenc ! '
                 'filesink location="%s"') % (filename, output)
     
     bin = gst.parse_launch(pipeline)
