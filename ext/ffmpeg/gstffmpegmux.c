@@ -51,9 +51,7 @@ struct _GstFFMpegMux {
 
 typedef struct _GstFFMpegMuxClassParams {
   AVOutputFormat 	*in_plugin;
-  GstPadTemplate	*srctempl;
-  GstPadTemplate	*videosinktempl;
-  GstPadTemplate	*audiosinktempl;
+  GstCaps		*srccaps, *videosinkcaps, *audiosinkcaps;
 } GstFFMpegMuxClassParams;
 
 typedef struct _GstFFMpegMuxClass GstFFMpegMuxClass;
@@ -92,6 +90,7 @@ static GHashTable *global_plugins;
 
 /* A number of functon prototypes are given so we can refer to them later. */
 static void	gst_ffmpegmux_class_init	(GstFFMpegMuxClass *klass);
+static void	gst_ffmpegmux_base_init		(GstFFMpegMuxClass *klass);
 static void	gst_ffmpegmux_init		(GstFFMpegMux *ffmpegmux);
 static void	gst_ffmpegmux_dispose		(GObject *object);
 
@@ -111,24 +110,61 @@ static GstElementClass *parent_class = NULL;
 /*static guint gst_ffmpegmux_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
+gst_ffmpegmux_base_init (GstFFMpegMuxClass *klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstFFMpegMuxClassParams *params;
+  GstElementDetails *details;
+  GstPadTemplate *videosinktempl, *audiosinktempl, *srctempl;
+
+  params = g_hash_table_lookup (global_plugins,
+		GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
+
+  /* construct the element details struct */
+  details = g_new0 (GstElementDetails, 1);
+  details->longname = g_strdup_printf ("FFMPEG %s Muxer",
+				       params->in_plugin->name);
+  details->klass = g_strdup ("Codec/Muxer");
+  details->description = g_strdup_printf ("FFMPEG %s Muxer",
+					  params->in_plugin->name);
+  details->author = g_strdup ("Wim Taymans <wim.taymans@chello.be>\n"
+			      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+
+  /* pad templates */
+  srctempl = gst_pad_template_new ("sink", GST_PAD_SRC,
+				   GST_PAD_ALWAYS,
+				   params->srccaps, NULL);
+  audiosinktempl = gst_pad_template_new ("audio_%d",
+					 GST_PAD_SINK,
+					 GST_PAD_REQUEST,
+					 params->audiosinkcaps, NULL);
+  videosinktempl = gst_pad_template_new ("video_%d",
+					 GST_PAD_SINK,
+					 GST_PAD_REQUEST,
+					 params->videosinkcaps, NULL);
+
+  gst_element_class_add_pad_template (element_class, srctempl);
+  gst_element_class_add_pad_template (element_class, videosinktempl);
+  gst_element_class_add_pad_template (element_class, audiosinktempl);
+  gst_element_class_set_details (element_class, details);
+
+  klass->in_plugin = params->in_plugin;
+  klass->srctempl = srctempl;
+  klass->videosinktempl = videosinktempl;
+  klass->audiosinktempl = audiosinktempl;
+}
+
+static void
 gst_ffmpegmux_class_init (GstFFMpegMuxClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstFFMpegMuxClassParams *params;
 
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
-
-  params = g_hash_table_lookup (global_plugins,
-		GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
-
-  klass->in_plugin = params->in_plugin;
-  klass->videosinktempl = params->videosinktempl;
-  klass->audiosinktempl = params->audiosinktempl;
-  klass->srctempl = params->srctempl;
 
   gstelement_class->request_new_pad = gst_ffmpegmux_request_new_pad;
   gstelement_class->change_state = gst_ffmpegmux_change_state;
@@ -400,10 +436,9 @@ gst_ffmpegmux_change_state (GstElement *element)
 gboolean
 gst_ffmpegmux_register (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
   GTypeInfo typeinfo = {
     sizeof(GstFFMpegMuxClass),      
-    NULL,
+    (GBaseInitFunc)gst_ffmpegmux_base_init,
     NULL,
     (GClassInitFunc)gst_ffmpegmux_class_init,
     NULL,
@@ -413,7 +448,6 @@ gst_ffmpegmux_register (GstPlugin *plugin)
     (GInstanceInitFunc)gst_ffmpegmux_init,
   };
   GType type;
-  GstElementDetails *details;
   AVOutputFormat *in_plugin;
   GstFFMpegMuxClassParams *params;
   AVCodec *in_codec;
@@ -474,51 +508,19 @@ gst_ffmpegmux_register (GstPlugin *plugin)
 
     /* create the type now */
     type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
-
-    /* construct the element details struct */
-    details = g_new0 (GstElementDetails, 1);
-    details->longname = g_strdup (in_plugin->long_name);
-    details->klass = g_strdup ("Codec/Muxer");
-    details->license = g_strdup ("LGPL");
-    details->description = g_strdup_printf ("FFMPEG %s Muxer",
-					    in_plugin->name);
-    details->version = g_strdup (VERSION);
-    details->author = g_strdup ("The FFMPEG crew, "
-				"Wim Taymans <wim.taymans@chello.be>, "
-				"Ronald Bultje <rbultje@ronald.bitfreak.net>");
-    details->copyright = g_strdup ("(c) 2002-2003");
-
-    /* register the plugin with gstreamer */
-    factory = gst_element_factory_new(type_name,type,details);
-    g_return_val_if_fail(factory != NULL, FALSE);
+    if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type))
+      return FALSE;
 
     /* create a cache for these properties */
     params = g_new0 (GstFFMpegMuxClassParams, 1);
     params->in_plugin = in_plugin;
-    params->srctempl = gst_pad_template_new ("sink", GST_PAD_SRC,
-					     GST_PAD_ALWAYS,
-					     srccaps, NULL);
-    gst_element_factory_add_pad_template (factory,
-					  params->srctempl);
-    params->audiosinktempl = gst_pad_template_new ("audio_%d",
-						   GST_PAD_SINK,
-						   GST_PAD_REQUEST,
-						   audiosinkcaps, NULL);
-    gst_element_factory_add_pad_template (factory,
-					  params->audiosinktempl);
-    params->videosinktempl = gst_pad_template_new ("video_%d",
-						   GST_PAD_SINK,
-						   GST_PAD_REQUEST,
-						   videosinkcaps, NULL);
-    gst_element_factory_add_pad_template (factory,
-					  params->videosinktempl);
+    params->srccaps = srccaps;
+    params->videosinkcaps = videosinkcaps;
+    params->audiosinkcaps = audiosinkcaps;
 
     g_hash_table_insert (global_plugins, 
 		         GINT_TO_POINTER (type), 
 			 (gpointer) params);
-
-    /* The very last thing is to register the elementfactory with the plugin. */
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
 next:
     in_plugin = in_plugin->next;

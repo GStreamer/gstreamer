@@ -63,7 +63,7 @@ struct _GstFFMpegEncClass {
 
 typedef struct {
   AVCodec *in_plugin;
-  GstPadTemplate *srctempl, *sinktempl;
+  GstCaps *srccaps, *sinkcaps;
 } GstFFMpegEncClassParams;
 
 #define GST_TYPE_FFMPEGENC \
@@ -117,6 +117,7 @@ static GHashTable *enc_global_plugins;
 
 /* A number of functon prototypes are given so we can refer to them later. */
 static void	gst_ffmpegenc_class_init	(GstFFMpegEncClass *klass);
+static void	gst_ffmpegenc_base_init		(GstFFMpegEncClass *klass);
 static void	gst_ffmpegenc_init		(GstFFMpegEnc *ffmpegenc);
 static void	gst_ffmpegenc_dispose		(GObject *object);
 
@@ -141,23 +142,54 @@ static GstElementClass *parent_class = NULL;
 /*static guint gst_ffmpegenc_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
+gst_ffmpegenc_base_init (GstFFMpegEncClass *klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstFFMpegEncClassParams *params;
+  GstElementDetails *details;
+  GstPadTemplate *srctempl, *sinktempl;
+
+  params = g_hash_table_lookup (enc_global_plugins,
+		  GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
+
+  /* construct the element details struct */
+  details = g_new0 (GstElementDetails, 1);
+  details->longname = g_strdup_printf("FFMPEG %s encoder",
+				      params->in_plugin->name);
+  details->klass = g_strdup_printf("Codec/%s/Encoder",
+				   (params->in_plugin->type == CODEC_TYPE_VIDEO) ?
+				   "Video" : "Audio");
+  details->description = g_strdup_printf("FFMPEG %s encoder",
+					 params->in_plugin->name);
+  details->author = g_strdup("Wim Taymans <wim.taymans@chello.be>\n"
+			     "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+
+  /* pad templates */
+  sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
+				    GST_PAD_ALWAYS, params->sinkcaps, NULL);
+  srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
+				   GST_PAD_ALWAYS, params->srccaps, NULL);
+
+  gst_element_class_add_pad_template (element_class, srctempl);
+  gst_element_class_add_pad_template (element_class, sinktempl);
+  gst_element_class_set_details (element_class, details);
+
+  klass->in_plugin = params->in_plugin;
+  klass->srctempl = srctempl;
+  klass->sinktempl = sinktempl;
+}
+
+static void
 gst_ffmpegenc_class_init (GstFFMpegEncClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstFFMpegEncClassParams *params;
 
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
-
-  params = g_hash_table_lookup (enc_global_plugins,
-		  GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
-
-  klass->in_plugin = params->in_plugin;
-  klass->srctempl = params->srctempl;
-  klass->sinktempl = params->sinktempl;
 
   if (klass->in_plugin->type == CODEC_TYPE_VIDEO) {
     g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_BIT_RATE,
@@ -469,10 +501,9 @@ gst_ffmpegenc_change_state (GstElement *element)
 gboolean
 gst_ffmpegenc_register (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
   GTypeInfo typeinfo = {
     sizeof(GstFFMpegEncClass),      
-    NULL,
+    (GBaseInitFunc)gst_ffmpegenc_base_init,
     NULL,
     (GClassInitFunc)gst_ffmpegenc_class_init,
     NULL,
@@ -482,7 +513,6 @@ gst_ffmpegenc_register (GstPlugin *plugin)
     (GInstanceInitFunc)gst_ffmpegenc_init,
   };
   GType type;
-  GstElementDetails *details;
   AVCodec *in_plugin;
   
   in_plugin = first_avcodec;
@@ -492,7 +522,6 @@ gst_ffmpegenc_register (GstPlugin *plugin)
   while (in_plugin) {
     gchar *type_name;
     GstCaps *srccaps, *sinkcaps;
-    GstPadTemplate *srctempl, *sinktempl;
     GstFFMpegEncClassParams *params;
 
     /* no quasi codecs, please */
@@ -524,47 +553,17 @@ gst_ffmpegenc_register (GstPlugin *plugin)
 
     /* create the glib type now */
     type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
-    g_return_val_if_fail(type != 0, FALSE);
-
-    /* construct the element details struct */
-    details = g_new0 (GstElementDetails,1);
-    details->longname = g_strdup_printf("FFMPEG %s encoder",
-					in_plugin->name);
-    details->klass = g_strdup_printf("Codec/%s/Encoder",
-				     (in_plugin->type == CODEC_TYPE_VIDEO) ?
-				     "Video" : "Audio");
-    details->license = g_strdup("LGPL");
-    details->description = g_strdup_printf("FFMPEG %s encoder",
-					   in_plugin->name);
-    details->version = g_strdup(VERSION);
-    details->author = g_strdup("The FFMPEG crew, "
-				"Wim Taymans <wim.taymans@chello.be>, "
-				"Ronald Bultje <rbultje@ronald.bitfreak.net>");
-    details->copyright = g_strdup("(c) 2001-2003");
-
-    /* register the plugin with gstreamer */
-    factory = gst_element_factory_new(type_name,type,details);
-    g_return_val_if_fail(factory != NULL, FALSE);
-
-    sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
-				      GST_PAD_ALWAYS, sinkcaps, NULL);
-    gst_element_factory_add_pad_template (factory, sinktempl);
-
-    srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
-				     GST_PAD_ALWAYS, srccaps, NULL);
-    gst_element_factory_add_pad_template (factory, srctempl);
+    if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type))
+      return FALSE;
 
     params = g_new0 (GstFFMpegEncClassParams, 1);
     params->in_plugin = in_plugin;
-    params->sinktempl = sinktempl;
-    params->srctempl = srctempl;
+    params->srccaps = srccaps;
+    params->sinkcaps = sinkcaps;
 
     g_hash_table_insert (enc_global_plugins, 
 		         GINT_TO_POINTER (type), 
 			 (gpointer) params);
-
-    /* The very last thing is to register the elementfactory with the plugin. */
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
 next:
     in_plugin = in_plugin->next;

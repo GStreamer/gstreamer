@@ -40,7 +40,7 @@ extern gboolean gst_ffmpegcsp_register (GstPlugin *plugin);
 extern URLProtocol gstreamer_protocol;
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
@@ -61,9 +61,15 @@ plugin_init (GModule *module, GstPlugin *plugin)
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "ffmpeg",
-  plugin_init
-};
+  "All FFMPEG codecs",
+  plugin_init,
+  FFMPEG_VERSION,
+  "LGPL",
+  "(c) 2003 The FFMPEG team",
+  "FFMpeg",
+  "http://ffmpeg.sourceforge.net/"
+)

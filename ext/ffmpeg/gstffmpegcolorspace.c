@@ -71,12 +71,8 @@ struct _GstFFMpegCspClass {
 static GstElementDetails ffmpegcsp_details = {
   "FFMPEG Colorspace converter",
   "Filter/Effect",
-  "LGPL",
   "Converts video from one colorspace to another",
-  VERSION,
-  "The FFMPEG crew, "
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  "(C) 2003",
 };
 
 
@@ -92,6 +88,7 @@ enum {
 
 static GType	gst_ffmpegcsp_get_type 		(void);
 
+static void	gst_ffmpegcsp_base_init		(GstFFMpegCspClass *klass);
 static void	gst_ffmpegcsp_class_init	(GstFFMpegCspClass *klass);
 static void	gst_ffmpegcsp_init		(GstFFMpegCsp *space);
 
@@ -312,7 +309,7 @@ gst_ffmpegcsp_get_type (void)
   if (!ffmpegcsp_type) {
     static const GTypeInfo ffmpegcsp_info = {
       sizeof (GstFFMpegCspClass),
-      NULL,
+      (GBaseInitFunc) gst_ffmpegcsp_base_init,
       NULL,
       (GClassInitFunc) gst_ffmpegcsp_class_init,
       NULL,
@@ -328,6 +325,16 @@ gst_ffmpegcsp_get_type (void)
   }
 
   return ffmpegcsp_type;
+}
+
+static void
+gst_ffmpegcsp_base_init (GstFFMpegCspClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class, srctempl);
+  gst_element_class_add_pad_template (element_class, sinktempl);
+  gst_element_class_set_details (element_class, &ffmpegcsp_details);
 }
 
 static void
@@ -490,12 +497,8 @@ gst_ffmpegcsp_get_property (GObject    *object,
 gboolean
 gst_ffmpegcsp_register (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
   GstCaps *caps;
-
-  factory = gst_element_factory_new ("ffcolorspace", GST_TYPE_FFMPEGCSP,
-                                    &ffmpegcsp_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
+  GstPadTemplate *srctempl, *sinktempl;
 
   /* template caps */
   caps = gst_ffmpeg_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);
@@ -511,10 +514,6 @@ gst_ffmpegcsp_register (GstPlugin *plugin)
 				    GST_PAD_ALWAYS,
 				    caps, NULL);
 
-  gst_element_factory_add_pad_template (factory, srctempl);
-  gst_element_factory_add_pad_template (factory, sinktempl);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "ffcolorspace",
+			       GST_RANK_NONE, GST_TYPE_FFMPEGCSP);
 }

@@ -55,10 +55,12 @@ struct _GstFFMpegDecClass {
   GstPadTemplate *srctempl, *sinktempl;
 };
 
-typedef struct {
+typedef struct _GstFFMpegDecClassParams GstFFMpegDecClassParams;
+
+struct _GstFFMpegDecClassParams {
   AVCodec *in_plugin;
-  GstPadTemplate *srctempl, *sinktempl;
-} GstFFMpegDecClassParams;
+  GstCaps *srccaps, *sinkcaps;
+};
 
 #define GST_TYPE_FFMPEGDEC \
   (gst_ffmpegdec_get_type())
@@ -84,6 +86,7 @@ enum {
 static GHashTable *global_plugins;
 
 /* A number of functon prototypes are given so we can refer to them later. */
+static void	gst_ffmpegdec_base_init		(GstFFMpegDecClass *klass);
 static void	gst_ffmpegdec_class_init	(GstFFMpegDecClass *klass);
 static void	gst_ffmpegdec_init		(GstFFMpegDec *ffmpegdec);
 static void	gst_ffmpegdec_dispose		(GObject      *object);
@@ -109,23 +112,54 @@ static GstElementClass *parent_class = NULL;
 /*static guint gst_ffmpegdec_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
+gst_ffmpegdec_base_init (GstFFMpegDecClass *klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstFFMpegDecClassParams *params;
+  GstElementDetails *details;
+  GstPadTemplate *sinktempl, *srctempl;
+
+  params = g_hash_table_lookup (global_plugins,
+		GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
+
+  /* construct the element details struct */
+  details = g_new0 (GstElementDetails, 1);
+  details->longname = g_strdup_printf("FFMPEG %s decoder",
+				      params->in_plugin->name);
+  details->klass = g_strdup_printf("Codec/%s/Decoder",
+				   (params->in_plugin->type == CODEC_TYPE_VIDEO) ?
+				   "Video" : "Audio");
+  details->description = g_strdup_printf("FFMPEG %s decoder",
+					 params->in_plugin->name);
+  details->author = g_strdup("Wim Taymans <wim.taymans@chello.be>\n"
+			     "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+
+  /* pad templates */
+  sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
+				    GST_PAD_ALWAYS, params->sinkcaps, NULL);
+  srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
+				   GST_PAD_ALWAYS, params->srccaps, NULL);
+
+  gst_element_class_add_pad_template (element_class, srctempl);
+  gst_element_class_add_pad_template (element_class, sinktempl);
+  gst_element_class_set_details (element_class, details);
+
+  klass->in_plugin = params->in_plugin;
+  klass->srctempl = srctempl;
+  klass->sinktempl = sinktempl;
+}
+
+static void
 gst_ffmpegdec_class_init (GstFFMpegDecClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstFFMpegDecClassParams *params;
 
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
-
-  params = g_hash_table_lookup (global_plugins,
-		  GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
-
-  klass->in_plugin = params->in_plugin;
-  klass->srctempl = params->srctempl;
-  klass->sinktempl = params->sinktempl;
 
   gobject_class->dispose = gst_ffmpegdec_dispose;
   gstelement_class->change_state = gst_ffmpegdec_change_state;
@@ -411,10 +445,9 @@ gst_ffmpegdec_change_state (GstElement *element)
 gboolean
 gst_ffmpegdec_register (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
   GTypeInfo typeinfo = {
     sizeof(GstFFMpegDecClass),      
-    NULL,
+    (GBaseInitFunc)gst_ffmpegdec_base_init,
     NULL,
     (GClassInitFunc)gst_ffmpegdec_class_init,
     NULL,
@@ -424,7 +457,6 @@ gst_ffmpegdec_register (GstPlugin *plugin)
     (GInstanceInitFunc)gst_ffmpegdec_init,
   };
   GType type;
-  GstElementDetails *details;
   AVCodec *in_plugin;
   
   in_plugin = first_avcodec;
@@ -432,10 +464,9 @@ gst_ffmpegdec_register (GstPlugin *plugin)
   global_plugins = g_hash_table_new (NULL, NULL);
 
   while (in_plugin) {
-    gchar *type_name;
-    GstPadTemplate *sinktempl, *srctempl;
-    GstCaps *sinkcaps, *srccaps;
     GstFFMpegDecClassParams *params;
+    GstCaps *srccaps, *sinkcaps;
+    gchar *type_name;
 
     /* no quasi-codecs, please */
     if (in_plugin->id == CODEC_ID_RAWVIDEO ||
@@ -464,49 +495,18 @@ gst_ffmpegdec_register (GstPlugin *plugin)
       goto next;
     }
 
-    /* create the gtk type now */
+    /* create the gtype now */
     type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
-
-    /* construct the element details struct */
-    details = g_new0 (GstElementDetails, 1);
-    details->longname = g_strdup_printf("FFMPEG %s decoder", in_plugin->name);
-    details->klass = g_strdup_printf("Codec/%s/Decoder",
-				     (in_plugin->type == CODEC_TYPE_VIDEO) ?
-				     "Video" : "Audio");
-    details->license = g_strdup("LGPL");
-    details->description = g_strdup_printf("FFMPEG %s decoder",
-					   in_plugin->name);
-    details->version = g_strdup(VERSION);
-    details->author = g_strdup("The FFMPEG crew, "
-				"Wim Taymans <wim.taymans@chello.be>, "
-				"Ronald Bultje <rbultje@ronald.bitfreak.net>");
-    details->copyright = g_strdup("(c) 2001-2003");
-
-    /* register the plugin with gstreamer */
-    factory = gst_element_factory_new(type_name,type,details);
-    g_return_val_if_fail(factory != NULL, FALSE);
-
-    gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_MARGINAL);
-
-    sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
-				      GST_PAD_ALWAYS, sinkcaps, NULL);
-    gst_element_factory_add_pad_template (factory, sinktempl);
-
-    srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
-				     GST_PAD_ALWAYS, srccaps, NULL);
-    gst_element_factory_add_pad_template (factory, srctempl);
+    if (!gst_element_register (plugin, type_name, GST_RANK_MARGINAL, type))
+      return FALSE;
 
     params = g_new0 (GstFFMpegDecClassParams, 1);
     params->in_plugin = in_plugin;
-    params->sinktempl = sinktempl;
-    params->srctempl = srctempl;
-
+    params->srccaps = srccaps;
+    params->sinkcaps = sinkcaps;
     g_hash_table_insert (global_plugins, 
 		         GINT_TO_POINTER (type), 
 			 (gpointer) params);
-
-    /* The very last thing is to register the elementfactory with the plugin. */
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
 next:
     in_plugin = in_plugin->next;
