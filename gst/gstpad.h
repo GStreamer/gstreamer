@@ -199,8 +199,9 @@ struct _GstRealPad {
   GstProbeDispatcher 		 probedisp;
 
   GstPadLink                    *link;
+  GstCaps			*explicit_caps;
 
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING - 2];
 };
 
 struct _GstRealPadClass {
@@ -261,6 +262,7 @@ struct _GstGhostPadClass {
 #define GST_RPAD_FIXATEFUNC(pad)	(((GstRealPad *)(pad))->fixatefunc)
 #define GST_RPAD_BUFFERALLOCFUNC(pad)	(((GstRealPad *)(pad))->bufferallocfunc)
 #define GST_RPAD_LINK(pad)	        (((GstRealPad *)(pad))->link)
+#define GST_RPAD_EXPLICIT_CAPS(pad)	(((GstRealPad *)(pad))->explicit_caps)
 
 /* GstGhostPad */
 #define GST_GPAD_REALPAD(pad)		(((GstGhostPad *)(pad))->realpad)
@@ -416,6 +418,8 @@ GstCaps *               gst_pad_proxy_fixate                    (GstPad *pad, co
 #ifndef GST_DISABLE_DEPRECATED
 GstPadLinkReturn	gst_pad_proxy_link          		(GstPad *pad, const GstCaps *caps);
 #endif
+gboolean		gst_pad_set_explicit_caps		(GstPad *pad, GstCaps *caps);
+void			gst_pad_use_explicit_caps		(GstPad *pad);
 gboolean		gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
 #ifndef GST_DISABLE_DEPRECATED
 gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);

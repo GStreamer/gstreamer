@@ -1,3 +1,15 @@
+2004-01-01  David Schleef  <ds@schleef.org>
+
+	* gst/gstpad.c: (gst_pad_set_explicit_caps),
+	(gst_pad_explicit_getcaps), (gst_pad_explicit_link),
+	(gst_pad_use_explicit_caps):
+	* gst/gstpad.h:
+	Add new functions.  gst_pad_use_explicit_caps() sets up a pad
+	to use an internal getcaps and link fuction so that negotiation
+	always results in the explicitly set caps.
+	gst_pad_set_explicit_caps() sets the explicit caps.  These functions
+	are particularly useful for decoders.
+
 2003-12-31  David Schleef  <ds@schleef.org>
 
 	* gst/elements/gstidentity.c: (gst_identity_class_init),

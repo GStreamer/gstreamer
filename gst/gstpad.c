@@ -2099,6 +2099,95 @@ gst_pad_proxy_fixate (GstPad *pad, const GstCaps *caps, gpointer unused)
 }
 
 /**
+ * gst_pad_set_explicit_caps:
+ * @pad: a #GstPad to set the explicit caps of
+ * @caps: the #GstCaps to set
+ *
+ * If a pad has been told to use explicit caps, this function is used
+ * to set the explicit caps.  If @caps is NULL, the explicit caps are
+ * unset.
+ *
+ * This function calls gst_pad_try_set_caps() on the pad.  If that
+ * call fails, gst_element_error() is called to indicate a negotiation
+ * failure.
+ * 
+ * Returns: TRUE if the caps were set correctly, otherwise FALSE
+ */
+gboolean
+gst_pad_set_explicit_caps (GstPad *pad, GstCaps *caps)
+{
+  GstPadLinkReturn link_ret;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  if (caps == NULL) {
+    gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
+    return TRUE;
+  }
+
+  if (!GST_PAD_IS_LINKED (pad)) {
+    gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), caps);
+    return TRUE;
+  }
+  link_ret = gst_pad_try_set_caps (pad, caps);
+  if (GST_PAD_LINK_FAILED (link_ret)) {
+    gst_element_error (gst_pad_get_parent (pad), "negotiation failed");
+    return FALSE;
+  }
+
+  gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), caps);
+
+  return TRUE;
+}
+
+static GstCaps *
+gst_pad_explicit_getcaps (GstPad *pad)
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  if (GST_RPAD_EXPLICIT_CAPS (pad) == NULL) {
+    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
+  return gst_caps_copy (GST_RPAD_EXPLICIT_CAPS (pad));
+}
+
+static GstPadLinkReturn
+gst_pad_explicit_link (GstPad *pad, const GstCaps *caps)
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (caps != NULL, GST_PAD_LINK_REFUSED);
+
+  if (GST_RPAD_EXPLICIT_CAPS (pad) == NULL) {
+    return GST_PAD_LINK_DELAYED;
+  }
+
+  return GST_PAD_LINK_OK;
+}
+
+/**
+ * gst_pad_use_explicit_caps:
+ * @pad: a #GstPad to set to use explicit caps
+ *
+ * This function handles negotiation for pads that need to be set
+ * to particular caps under complete control of the element, based
+ * on some state in the element.  This is often the case with
+ * decoders and other elements whose caps is determined by the data
+ * stream.
+ *
+ * WARNING: This function is a hack and will be replaced with something
+ * better in gstreamer-0.9.
+ */
+void
+gst_pad_use_explicit_caps (GstPad *pad)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  gst_pad_set_getcaps_function (pad, gst_pad_explicit_getcaps);
+  gst_pad_set_link_function (pad, gst_pad_explicit_link);
+  gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
+}
+
+/**
  * gst_pad_proxy_link:
  * @pad: a #GstPad to proxy to.
  * @caps: the #GstCaps to use in proxying.
