@@ -24,7 +24,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
-// #include <gst/meta/audioraw.h>
+/* #include <gst/meta/audioraw.h> */
 
 
 #ifdef __cplusplus
