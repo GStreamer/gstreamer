@@ -205,7 +205,7 @@ dvdnavsrc_class_init (DVDNavSrcClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   dvdnavsrc_signals[BUTTON_PRESSED_SIGNAL] =
-    g_signal_new ("button_pressed",
+    g_signal_new ("button-pressed",
         G_TYPE_FROM_CLASS (klass),
         G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
         G_STRUCT_OFFSET (DVDNavSrcClass, button_pressed),
@@ -215,7 +215,7 @@ dvdnavsrc_class_init (DVDNavSrcClass *klass)
         G_TYPE_INT);
 
   dvdnavsrc_signals[POINTER_SELECT_SIGNAL] =
-    g_signal_new ("pointer_select",
+    g_signal_new ("pointer-select",
         G_TYPE_FROM_CLASS (klass),
         G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
         G_STRUCT_OFFSET (DVDNavSrcClass, pointer_select),
@@ -225,7 +225,7 @@ dvdnavsrc_class_init (DVDNavSrcClass *klass)
         G_TYPE_INT, G_TYPE_INT);
 
   dvdnavsrc_signals[POINTER_ACTIVATE_SIGNAL] =
-    g_signal_new ("pointer_activate",
+    g_signal_new ("pointer-activate",
         G_TYPE_FROM_CLASS (klass),
         G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
         G_STRUCT_OFFSET (DVDNavSrcClass, pointer_activate),
@@ -235,7 +235,7 @@ dvdnavsrc_class_init (DVDNavSrcClass *klass)
         G_TYPE_INT, G_TYPE_INT);
 
   dvdnavsrc_signals[USER_OP_SIGNAL] =
-    g_signal_new ("user_op",
+    g_signal_new ("user-op",
         G_TYPE_FROM_CLASS (klass),
         G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
         G_STRUCT_OFFSET (DVDNavSrcClass, user_op),

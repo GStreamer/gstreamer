@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-02-04 22:48+0100\n"
+"POT-Creation-Date: 2004-02-23 19:35+0100\n"
 "PO-Revision-Date: 2004-02-02 23:08+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -49,7 +49,7 @@ msgstr "Kon vfs-bestand \"%s\" niet sluiten."
 msgid "No filename specified."
 msgstr "Geen bestandsnaam gegeven."
 
-#: ext/sndfile/gstsf.c:793
+#: ext/sndfile/gstsf.c:805
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kon niet schrijven naar bestand \"%s\"."
