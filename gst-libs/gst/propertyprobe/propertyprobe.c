@@ -23,14 +23,16 @@
 #include "config.h"
 #endif
 
-#include <gst/propertyprobe/propertyprobe.h>
+#include <string.h>
 
-static void gst_property_probe_iface_init (GstPropertyProbeInterface *iface);
+#include "propertyprobe.h"
 
 enum {
-  NEED_PROBE,
+  SIGNAL_PROBE_NEEDED,
   LAST_SIGNAL
 };
+
+static void gst_property_probe_iface_init (GstPropertyProbeInterface *iface);
 
 static guint gst_property_probe_signals[LAST_SIGNAL] = { 0 };
 
@@ -52,11 +54,10 @@ gst_property_probe_get_type (void)
       NULL,
     };
 
-    gst_property_probe_type = g_type_register_static (G_TYPE_INTERFACE,
-					     "GstPropertyProbe",
-					     &gst_property_probe_info, 0);
-
-    g_type_interface_add_prerequisite (gst_property_probe_type, G_TYPE_OBJECT);
+    gst_property_probe_type =
+	g_type_register_static (G_TYPE_INTERFACE,
+				"GstPropertyProbe",
+				&gst_property_probe_info, 0);
   }
 
   return gst_property_probe_type;
@@ -68,109 +69,190 @@ gst_property_probe_iface_init (GstPropertyProbeInterface *iface)
   static gboolean initialized = FALSE;
 
   if (!initialized) {
-    gst_property_probe_signals[NEED_PROBE] =
-      g_signal_new ("need_probe",
-          GST_TYPE_PROPERTY_PROBE,
-          G_SIGNAL_RUN_LAST,
-          G_STRUCT_OFFSET (GstPropertyProbeInterface, need_probe),
-          NULL,
-          NULL,
-          gst_marshal_VOID__STRING,
-          G_TYPE_NONE, 1,
-          G_TYPE_STRING);
-
+    gst_property_probe_signals[SIGNAL_PROBE_NEEDED] =
+      g_signal_new ("probe_needed", G_TYPE_FROM_CLASS (iface), G_SIGNAL_RUN_LAST,
+		    G_STRUCT_OFFSET (GstPropertyProbeInterface, probe_needed),
+		    NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+		    G_TYPE_NONE, 1, G_TYPE_POINTER);
     initialized = TRUE;
   }
 
   /* default virtual functions */
-  iface->get_list = NULL;
-  iface->probe_property = NULL;
-  iface->get_property_info = NULL;
-  iface->is_probed = NULL;
+  iface->get_properties = NULL;
+  iface->get_values     = NULL;
 }
 
-char **
-gst_property_probe_get_list (GstElement *element)
+const GList *
+gst_property_probe_get_properties (GstPropertyProbe *probe)
 {
   GstPropertyProbeInterface *iface;
-  
-  g_return_val_if_fail (GST_IS_PROPERTY_PROBE (element), NULL);
 
-  iface = GST_PROPERTY_PROBE_GET_IFACE (element);
-  if (iface->get_list) {
-    return iface->get_list (element);
+  g_return_val_if_fail (probe != NULL, NULL);
+                                                                                
+  iface = GST_PROPERTY_PROBE_GET_IFACE (probe);
+                                                                                
+  if (iface->get_properties)
+    return iface->get_properties (probe);
+                                                                                
+  return NULL;
+}
+
+const GParamSpec *
+gst_property_probe_get_property (GstPropertyProbe *probe,
+				 const gchar      *name)
+{
+  const GList *pspecs = gst_property_probe_get_properties (probe);
+
+  g_return_val_if_fail (probe != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  while (pspecs) {
+    const GParamSpec *pspec = pspecs->data;
+
+    if (!strcmp (pspec->name, name))
+      return pspec;
+
+    pspecs = pspecs->next;
   }
 
   return NULL;
 }
 
 void
-gst_property_probe_probe_property (GstElement *element,
-    const char *property)
+gst_property_probe_probe_property (GstPropertyProbe *probe,
+				   const GParamSpec *pspec)
 {
   GstPropertyProbeInterface *iface;
-  GParamSpec *ps;
-  
-  g_return_if_fail (GST_IS_PROPERTY_PROBE (element));
-  g_return_if_fail (GST_STATE (element) == GST_STATE_NULL);
 
-  ps = g_object_class_find_property (G_OBJECT_CLASS (element), property);
-  if (ps == NULL) return;
-  
-  iface = GST_PROPERTY_PROBE_GET_IFACE (element);
-  if (iface->probe_property) {
-    iface->probe_property (element, ps);
-  }
+  g_return_if_fail (probe != NULL);
+  g_return_if_fail (pspec != NULL);
+
+  iface = GST_PROPERTY_PROBE_GET_IFACE (probe);
+
+  if (iface->probe_property)
+    iface->probe_property (probe, pspec->param_id, pspec);
 }
 
-gchar **
-gst_property_probe_get_property_info (GstElement *element,
-    const gchar *property)
+void
+gst_property_probe_probe_property_name (GstPropertyProbe *probe,
+					const gchar      *name)
 {
-  GstPropertyProbeInterface *iface;
-  GParamSpec *ps;
-  
-  g_return_val_if_fail (GST_IS_PROPERTY_PROBE (element), NULL);
+  const GParamSpec *pspec;
 
-  ps = g_object_class_find_property (G_OBJECT_CLASS (element), property);
-  if (ps == NULL) return NULL;
-  
-  iface = GST_PROPERTY_PROBE_GET_IFACE (element);
-  if (iface->get_property_info) {
-    return iface->get_property_info (element, ps);
+  g_return_if_fail (probe != NULL);
+  g_return_if_fail (name != NULL);
+
+  pspec = g_object_class_find_property (G_OBJECT_CLASS (probe), name);
+  if (!pspec) {
+    g_warning ("No such property %s", name);
+    return;
   }
-  return NULL;
+
+  gst_property_probe_probe_property (probe, pspec);
 }
 
 gboolean
-gst_property_probe_is_probed (GstElement *element,
-    const char *property)
+gst_property_probe_needs_probe (GstPropertyProbe *probe,
+				const GParamSpec *pspec)
 {
   GstPropertyProbeInterface *iface;
-  GParamSpec *ps;
-  
-  g_return_val_if_fail (GST_IS_PROPERTY_PROBE (element), FALSE);
 
-  ps = g_object_class_find_property (G_OBJECT_CLASS (element), property);
-  if (ps == NULL) return FALSE;
+  g_return_val_if_fail (probe != NULL, FALSE);
+  g_return_val_if_fail (pspec != NULL, FALSE);
 
-  iface = GST_PROPERTY_PROBE_GET_IFACE (element);
-  if (iface->is_probed) {
-    return iface->is_probed (element, ps);
-  }
+  iface = GST_PROPERTY_PROBE_GET_IFACE (probe);
+
+  if (iface->needs_probe)
+    return iface->needs_probe (probe, pspec->param_id, pspec);
+
   return FALSE;
 }
 
-gchar **
-gst_property_probe_get_possibilities (GstElement *element,
-    const char *property)
+gboolean
+gst_property_probe_needs_probe_name (GstPropertyProbe *probe,
+				     const gchar      *name)
 {
-  g_return_val_if_fail (GST_IS_PROPERTY_PROBE (element), NULL);
+  const GParamSpec *pspec;
 
-  if (!gst_property_probe_is_probed (element, property)){
-    gst_property_probe_probe_property (element, property);
+  g_return_val_if_fail (probe != NULL, FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  pspec = g_object_class_find_property (G_OBJECT_CLASS (probe), name);
+  if (!pspec) {
+    g_warning ("No such property %s", name);
+    return FALSE;
   }
 
-  return gst_property_probe_get_property_info (element, property);
+  return gst_property_probe_needs_probe (probe, pspec);
+}
+                                                                               
+GValueArray *
+gst_property_probe_get_values (GstPropertyProbe *probe,
+			       const GParamSpec *pspec)
+{
+  GstPropertyProbeInterface *iface;
+
+  g_return_val_if_fail (probe != NULL, NULL);
+  g_return_val_if_fail (pspec != NULL, NULL);
+
+  iface = GST_PROPERTY_PROBE_GET_IFACE (probe);
+
+  if (iface->get_values)
+    return iface->get_values (probe, pspec->param_id, pspec);
+
+  return NULL;
 }
 
+GValueArray *
+gst_property_probe_get_values_name (GstPropertyProbe *probe,
+				    const gchar      *name)
+{
+  const GParamSpec *pspec;
+
+  g_return_val_if_fail (probe != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  pspec = g_object_class_find_property (G_OBJECT_CLASS (probe), name);
+  if (!pspec) {
+    g_warning ("No such property %s", name);
+    return NULL;
+  }
+
+  return gst_property_probe_get_values (probe, pspec);
+}
+
+
+GValueArray *
+gst_property_probe_probe_and_get_values (GstPropertyProbe *probe,
+					 const GParamSpec *pspec)
+{
+  GstPropertyProbeInterface *iface;
+
+  g_return_val_if_fail (probe != NULL, NULL);
+  g_return_val_if_fail (pspec != NULL, NULL);
+
+  iface = GST_PROPERTY_PROBE_GET_IFACE (probe);
+
+  if (gst_property_probe_needs_probe (probe, pspec))
+    gst_property_probe_probe_property (probe, pspec);
+
+  return gst_property_probe_get_values (probe, pspec);
+}
+
+GValueArray *
+gst_property_probe_probe_and_get_values_name (GstPropertyProbe *probe,
+					      const gchar      *name)
+{
+  const GParamSpec *pspec;
+
+  g_return_val_if_fail (probe != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  pspec = g_object_class_find_property (G_OBJECT_CLASS (probe), name);
+  if (!pspec) {
+    g_warning ("No such property %s", name);
+    return NULL;
+  }
+
+  return gst_property_probe_probe_and_get_values (probe, pspec);
+}
