@@ -183,3 +183,20 @@ gst_x_overlay_got_desired_size (GstXOverlay *overlay, guint width, guint height)
   g_signal_emit (G_OBJECT (overlay),
                  gst_x_overlay_signals[DESIRED_SIZE], 0, width, height);
 }
+
+/**
+ * gst_x_overlay_expose:
+ * @overlay: a #GstXOverlay to expose.
+ *
+ * Tell an overlay that it has been exposed. This will redraw the current frame
+ * in the drawable even if the pipeline is PAUSED.
+ */
+void
+gst_x_overlay_expose (GstXOverlay *overlay)
+{
+  GstXOverlayClass *klass = GST_X_OVERLAY_GET_CLASS (overlay);
+
+  if (klass->expose) {
+    klass->expose (overlay);
+  }
+}

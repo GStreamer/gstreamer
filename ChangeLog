@@ -1,3 +1,19 @@
+2004-02-04  Julien MOUTTE  <julien@moutte.net>
+
+	* gst-libs/gst/xoverlay/xoverlay.c: (gst_x_overlay_expose):
+	* gst-libs/gst/xoverlay/xoverlay.h: Adding the _expose method to tell
+	an overlay to redraw the image because it has been exposed.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_destroy),
+	(gst_ximagesink_ximage_put), (gst_ximagesink_expose),
+	(gst_ximagesink_xoverlay_init), (gst_ximagesink_init):
+	* sys/ximage/ximagesink.h: Implement expose method from XOverlay
+	interface
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_destroy),
+	(gst_xvimagesink_xvimage_put), (gst_xvimagesink_expose),
+	(gst_xvimagesink_xoverlay_init), (gst_xvimagesink_init):
+	* sys/xvimage/xvimagesink.h: Implement expose method from XOverlay
+	interface 
+
 2004-02-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_type_find):
