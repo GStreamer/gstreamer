@@ -1216,7 +1216,7 @@ dvdnavsrc_get_formats (GstPad *pad)
     /*
     GST_FORMAT_TIME,
     GST_FORMAT_BYTES,
-    GST_FORMAT_UNITS,
+    GST_FORMAT_DEFAULT,
     */
     0,	/* filled later */
     0,	/* filled later */
@@ -1257,7 +1257,7 @@ dvdnavsrc_convert (GstPad *pad,
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
           src_value <<= 2;	/* 4 bytes per sample */
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	  *dest_value = src_value * 44100 / GST_SECOND;
 	  break;
 	default:
@@ -1278,7 +1278,7 @@ dvdnavsrc_convert (GstPad *pad,
       break;
     case GST_FORMAT_BYTES:
       src_value >>= 2;
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
           *dest_value = src_value * 4;
@@ -1325,7 +1325,7 @@ dvdnavsrc_convert (GstPad *pad,
 	  break;
         case GST_FORMAT_BYTES:
           sector <<= 2;
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
           *dest_value = (CD_FRAMESIZE_RAW >> 2) * sector;
 	  break;
 	default:
