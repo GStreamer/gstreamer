@@ -31,7 +31,7 @@ if test "x$automakevermin" != "x1 4"; then
 	DIE=1
 else
 if test "x$automakevergood" != "x1 4f"; then
-echo "Checking for patched automake"
+echo -n "Checking for patched automake..."
 # version is less than 1.4f, the version with the patch applied
 # check that patch is applied
 cat > autogen.patch.tmp <<EOF
@@ -49,15 +49,43 @@ cat > autogen.patch.tmp <<EOF
  	    \$dist_subdir_name = 'DIST_SUBDIRS';
  	    if (! &variable_defined ('DIST_SUBDIRS'))
 EOF
-	patch -s -f --dry-run `which automake` <autogen.patch.tmp || {
-		echo "Detected automake version 1.4 (or near) without patch."
-		echo "Your version of automake needs a patch applied in order to operate correctly."
-		echo "Read the README file for an explanation."
-		DIE=1
-	}
+  if patch -s -f --dry-run `which automake` <autogen.patch.tmp >/dev/null 2>&1;
+  then
+    # Patch succeeded: appropriately patched.
+    echo " found."
+  else
+    # Patch failed: either unpatched or incompatibly patched.
+    if patch -R -s -f --dry-run `which automake` <autogen.patch.tmp >/dev/null 2>&1;
+    then
+      # Reversed patch succeeded: not patched.
+      echo " not found."
+      echo
+      echo "Detected automake version 1.4 (or near) without patch."
+      echo "Your version of automake needs a patch applied in order to operate correctly."
+      echo
+      echo "***************************************************************************"
+      echo "You should abort the build now and read the README file for an explanation."
+      echo "***************************************************************************"
+      echo
+      # Give user time to respond
+      sleep 5;
+      echo "continuing anyway: I recommend keeping a check on the amount of memory used"
+      echo "while running automake - it is likely to grow extremely large."
+      echo
+    else
+      # Reversed patch failed: incompatibly patched.
+      echo
+      echo
+      echo "Unable to check whether automake is appropriately patched."
+      echo "Your version of automake may need to have a patch applied."
+      echo "Read the README file for more explanation."
+      echo
+    fi
+  fi
 rm autogen.patch.tmp
 fi
 fi
+
 
 
 (libtool --version) < /dev/null > /dev/null 2>&1 || {
@@ -123,12 +151,12 @@ autoheader || {
 autoconf || {
 	echo
 	echo "autoconf failed"
-	exit 1
+	#exit 1
 }
 automake --add-missing || {
 	echo
 	echo "automake failed"
-	exit 1
+	#exit 1
 }
 
 # now remove the cache, because it can be considered dangerous in this case
