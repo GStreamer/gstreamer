@@ -813,7 +813,7 @@ gst_lame_chain (GstPad *pad, GstData *_data)
   }
 
   if (eos) {
-    gst_pad_push (lame->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS))));
+    gst_pad_push (lame->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
     gst_element_set_eos (GST_ELEMENT (lame));
   }
 }
