@@ -439,7 +439,7 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 	    "systemstream",  G_TYPE_BOOLEAN, FALSE, NULL);
         }
       } else {
-	GST_DEBUG ("unkown stream id %d", stream_id);
+	GST_DEBUG ("unknown stream id %d", stream_id);
       }
 
       GST_DEBUG ("stream ID 0x%02X (%s)", stream_id, name);
@@ -828,7 +828,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       headerlen += 1;
       datalen -= 1;
     } else {
-      GST_DEBUG ("0x%02X: unkonwn id %x",
+      GST_DEBUG ("0x%02X: unknown id %x",
                  id, ps_id_code);
     }
   } else if (id == 0xBF) {
@@ -844,7 +844,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     GST_DEBUG ("we have a video packet");
     outstream = &mpeg_demux->video_stream[id - 0xE0];
   } else {
-    GST_DEBUG ("we have a unkown packet");
+    GST_DEBUG ("we have a unknown packet");
   }
 
   /* if we don't know what it is, bail */
@@ -902,7 +902,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       }
     } else {
-      /* unkown */
+      /* unknown */
       name = g_strdup_printf ("unknown");
     }
     

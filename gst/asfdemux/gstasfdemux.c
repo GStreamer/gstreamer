@@ -1413,7 +1413,7 @@ gst_asf_demux_audio_caps (guint16 codec_id,
       break;
 
     default:
-      GST_WARNING ("asfdemux: unkown audio format 0x%04x",
+      GST_WARNING ("asfdemux: unknown audio format 0x%04x",
 		 codec_id);
       return GST_CAPS_ANY;
       break;
@@ -1548,7 +1548,7 @@ gst_asf_demux_video_caps (guint32 codec_fcc,
       break;
 
     default:
-      GST_WARNING ("asfdemux: unkown video format " GST_FOURCC_FORMAT "(0x%08x)",
+      GST_WARNING ("asfdemux: unknown video format " GST_FOURCC_FORMAT "(0x%08x)",
 	  GST_FOURCC_ARGS(codec_fcc), codec_fcc);
       return NULL;
       break;
