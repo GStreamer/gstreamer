@@ -61,12 +61,6 @@ struct _GstMultipartMux
   GSList *sinkpads;
   gint numpads;
 
-  /* the pad we are currently pulling from to fill a page */
-  GstMultipartPad *pulling;
-
-  /* next timestamp for the page */
-  GstClockTime next_ts;
-
   /* offset in stream */
   guint64 offset;
 
@@ -222,7 +216,6 @@ gst_multipart_mux_init (GstMultipartMux * multipart_mux)
   GST_FLAG_SET (GST_ELEMENT (multipart_mux), GST_ELEMENT_EVENT_AWARE);
 
   multipart_mux->sinkpads = NULL;
-  multipart_mux->pulling = NULL;
   multipart_mux->boundary = g_strdup (DEFAULT_BOUNDARY);
   multipart_mux->negotiated = FALSE;
 
@@ -468,75 +461,70 @@ static void
 gst_multipart_mux_loop (GstElement * element)
 {
   GstMultipartMux *mux;
+  GstMultipartPad *pad;
+  GstBuffer *newbuf, *buf;
+  gchar *header;
+  gint headerlen;
+  gint newlen;
 
   mux = GST_MULTIPART_MUX (element);
 
-  /* if we don't know which pad to pull on, find one */
-  if (mux->pulling == NULL) {
-    mux->pulling = gst_multipart_mux_queue_pads (mux);
-    /* remember timestamp of first buffer for this new pad */
-    if (mux->pulling != NULL) {
-      mux->next_ts = GST_BUFFER_TIMESTAMP (mux->pulling->buffer);
-    } else {
-      /* no pad to pull on, send EOS */
-      if (GST_PAD_IS_USABLE (mux->srcpad))
-        gst_pad_push (mux->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
-      gst_element_set_eos (element);
+  /* we don't know which pad to pull on, find one */
+  pad = gst_multipart_mux_queue_pads (mux);
+  if (pad == NULL) {
+    /* no pad to pull on, send EOS */
+    if (GST_PAD_IS_USABLE (mux->srcpad))
+      gst_pad_push (mux->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
+    gst_element_set_eos (element);
+    return;
+  }
+
+  /* now see if we have a buffer */
+  buf = pad->buffer;
+  if (buf == NULL) {
+    /* no buffer, get one */
+    buf = gst_multipart_mux_next_buffer (pad);
+    if (buf == NULL) {
+      /* data exhausted on this pad (EOS) */
       return;
     }
   }
 
-  if (mux->pulling != NULL) {
-    GstMultipartPad *pad = mux->pulling;
-    GstBuffer *newbuf, *buf;
-    gchar *header;
-    gint headerlen;
+  /* FIXME, negotiated is not set to FALSE properly after
+   * reconnect */
+  if (!mux->negotiated) {
+    GstCaps *newcaps;
 
-    /* now see if we have a buffer */
-    buf = pad->buffer;
-    if (buf == NULL) {
-      /* no buffer, get one */
-      buf = gst_multipart_mux_next_buffer (pad);
-      /* data exhausted on this pad (EOS) */
-      if (buf == NULL) {
-        /* stop pulling from the pad */
-        mux->pulling = NULL;
-        return;
-      }
+    newcaps = gst_caps_new_simple ("multipart/x-mixed-replace",
+        "boundary", G_TYPE_STRING, mux->boundary, NULL);
+
+    if (GST_PAD_LINK_FAILED (gst_pad_try_set_caps (mux->srcpad, newcaps))) {
+      GST_ELEMENT_ERROR (mux, CORE, NEGOTIATION, (NULL), (NULL));
+      return;
     }
-
-    /* FIXME, negotiated is not set to FALSE properly after
-     * reconnect */
-    if (!mux->negotiated) {
-      GstCaps *newcaps;
-
-      newcaps = gst_caps_new_simple ("multipart/x-mixed-replace",
-          "boundary", G_TYPE_STRING, mux->boundary, NULL);
-
-      if (GST_PAD_LINK_FAILED (gst_pad_try_set_caps (mux->srcpad, newcaps))) {
-        GST_ELEMENT_ERROR (mux, CORE, NEGOTIATION, (NULL), (NULL));
-        return;
-      }
-      mux->negotiated = TRUE;
-    }
-
-    header = g_strdup_printf ("\n--%s\nContent-type: %s\n\n",
-        mux->boundary, pad->mimetype);
-    headerlen = strlen (header);
-    newbuf =
-        gst_pad_alloc_buffer (mux->srcpad, GST_BUFFER_OFFSET_NONE, headerlen);
-    GST_BUFFER_DATA (newbuf) = header;
-    GST_BUFFER_SIZE (newbuf) = headerlen;
-    GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (buf);
-    gst_pad_push (mux->srcpad, GST_DATA (newbuf));
-    gst_pad_push (mux->srcpad, GST_DATA (buf));
-
-    pad->buffer = NULL;
-
-    /* we're done pulling on this pad, make sure to choose a new 
-     * pad for pulling in the next iteration */
-    mux->pulling = NULL;
+    mux->negotiated = TRUE;
   }
+
+  header = g_strdup_printf ("\n--%s\nContent-type: %s\n\n",
+      mux->boundary, pad->mimetype);
+  headerlen = strlen (header);
+  newlen = headerlen + GST_BUFFER_SIZE (buf);
+  newbuf = gst_pad_alloc_buffer (mux->srcpad, GST_BUFFER_OFFSET_NONE, newlen);
+
+  memcpy (GST_BUFFER_DATA (newbuf), header, headerlen);
+  memcpy (GST_BUFFER_DATA (newbuf) + headerlen,
+      GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (buf);
+  GST_BUFFER_DURATION (newbuf) = GST_BUFFER_DURATION (buf);
+  GST_BUFFER_OFFSET (newbuf) = mux->offset;
+
+  g_free (header);
+
+  mux->offset += newlen;
+
+  gst_pad_push (mux->srcpad, GST_DATA (newbuf));
+
+  pad->buffer = NULL;
 }
 
 static void
@@ -589,9 +577,7 @@ gst_multipart_mux_change_state (GstElement * element)
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
     case GST_STATE_READY_TO_PAUSED:
-      multipart_mux->next_ts = 0;
       multipart_mux->offset = 0;
-      multipart_mux->pulling = NULL;
       multipart_mux->negotiated = FALSE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:

@@ -1,3 +1,13 @@
+2004-06-07  Wim Taymans  <wim@fluendo.com>
+
+	* gst/multipart/multipartdemux.c: (gst_multipart_demux_base_init),
+	(gst_multipart_find_pad_by_mime), (gst_multipart_demux_chain),
+	(gst_multipart_demux_plugin_init):
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_class_init),
+	(gst_multipart_mux_init), (gst_multipart_mux_loop),
+	(gst_multipart_mux_change_state):
+	Small updates, fix a memleak
+
 2004-06-07  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
 	* configure.ac: OSS portability

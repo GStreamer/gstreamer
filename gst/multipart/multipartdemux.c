@@ -40,7 +40,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_multipart_demux_debug);
 typedef struct _GstMultipartDemux GstMultipartDemux;
 typedef struct _GstMultipartDemuxClass GstMultipartDemuxClass;
 
-static gchar *toFind = "--ThisRandomString\nContent-type: ";    //image/jpeg\n\n";
+static gchar *toFind = "--ThisRandomString\nContent-type: ";
 static gint toFindLen;
 
 /* all information needed for one multipart stream */
@@ -272,7 +272,7 @@ gst_multipart_demux_chain (GstPad * pad, GstData * buffer)
   // find \n
   while (multipart->scanpos < multipart->bufsize) {
     if (multipart->buffer[multipart->scanpos] == '\n') {
-
+      break;
     }
     multipart->scanpos++;
   }
