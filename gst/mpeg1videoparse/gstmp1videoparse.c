@@ -32,14 +32,11 @@
 #define SEQ_END_CODE 0x000001b7
 
 /* elementfactory information */
-static GstElementDetails mp1videoparse_details = {
+static GstElementDetails mpeg1videoparse_details = {
   "MPEG 1 Video Parser",
   "Codec/Parser",
-  "LGPL",
-  "Parses and frames MPEG 1 video streams, provides seek",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
+  "Parses and frames MPEG 1 video streams, provides seek"
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 GST_PAD_TEMPLATE_FACTORY (src_factory,
@@ -83,6 +80,7 @@ enum {
 };
 
 static void	gst_mp1videoparse_class_init	(Mp1VideoParseClass *klass);
+static void	gst_mp1videoparse_base_init	(Mp1VideoParseClass *klass);
 static void	gst_mp1videoparse_init		(Mp1VideoParse *mp1videoparse);
 
 static void	gst_mp1videoparse_chain		(GstPad *pad, GstData *_data);
@@ -101,7 +99,8 @@ mp1videoparse_get_type (void)
 
   if (!mp1videoparse_type) {
     static const GTypeInfo mp1videoparse_info = {
-      sizeof(Mp1VideoParseClass),      NULL,
+      sizeof(Mp1VideoParseClass),
+      (GBaseInitFunc)gst_mp1videoparse_base_init,
       NULL,
       (GClassInitFunc)gst_mp1videoparse_class_init,
       NULL,
@@ -113,6 +112,18 @@ mp1videoparse_get_type (void)
     mp1videoparse_type = g_type_register_static(GST_TYPE_ELEMENT, "Mp1VideoParse", &mp1videoparse_info, 0);
   }
   return mp1videoparse_type;
+}
+
+static void
+gst_mp1videoparse_base_init (Mp1VideoParseClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_set_details (element_class, &mpeg1videoparse_details);
 }
 
 static void
@@ -481,28 +492,21 @@ gst_mp1videoparse_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the mp1videoparse element */
-  factory = gst_element_factory_new("mp1videoparse",GST_TYPE_MP1VIDEOPARSE,
-                                   &mp1videoparse_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory,
-	GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_factory_add_pad_template (factory,
-	GST_PAD_TEMPLATE_GET (sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "mpeg1videoparse",
+			       GST_RANK_NONE, GST_TYPE_MP1VIDEOPARSE);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "mp1videoparse",
-  plugin_init
-};
+  "mpeg1videoparse",
+  "MPEG-1 video parser",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
