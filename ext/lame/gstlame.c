@@ -807,13 +807,15 @@ gst_lame_chain (GstPad * pad, GstData * _data)
 
   lame = GST_LAME (gst_pad_get_parent (pad));
 
-  GST_DEBUG ("entered chain");
+  GST_LOG_OBJECT (lame, "entered chain");
 
   if (GST_IS_EVENT (buf)) {
     switch (GST_EVENT_TYPE (buf)) {
       case GST_EVENT_EOS:
+        GST_DEBUG_OBJECT (lame, "handling EOS event");
         eos = TRUE;
       case GST_EVENT_FLUSH:
+        GST_DEBUG_OBJECT (lame, "handling FLUSH event");
         mp3_buffer_size = 7200;
         mp3_data = g_malloc (mp3_buffer_size);
 
@@ -821,6 +823,7 @@ gst_lame_chain (GstPad * pad, GstData * _data)
         gst_event_unref (GST_EVENT (buf));
         break;
       case GST_EVENT_TAG:
+        GST_DEBUG_OBJECT (lame, "handling TAG event");
         if (lame->tags) {
           gst_tag_list_insert (lame->tags,
               gst_event_tag_get_list (GST_EVENT (buf)),
@@ -862,7 +865,7 @@ gst_lame_chain (GstPad * pad, GstData * _data)
           mp3_data, mp3_buffer_size);
     }
 
-    GST_DEBUG ("encoded %d bytes of audio to %d bytes of mp3",
+    GST_LOG_OBJECT (lame, "encoded %d bytes of audio to %d bytes of mp3",
         GST_BUFFER_SIZE (buf), mp3_size);
 
     duration = (GST_SECOND * GST_BUFFER_SIZE (buf) /
@@ -870,9 +873,10 @@ gst_lame_chain (GstPad * pad, GstData * _data)
 
     if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE &&
         GST_BUFFER_DURATION (buf) != duration)
-      GST_DEBUG ("mad: incoming buffer had incorrect duration %lld, "
-          "outgoing buffer will have correct duration %lld",
-          GST_BUFFER_DURATION (buf), duration);
+      GST_DEBUG_OBJECT (lame, "incoming buffer had incorrect duration "
+          GST_TIME_FORMAT "outgoing buffer will have correct duration "
+          GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_TIME_ARGS (duration));
 
     if (lame->last_ts == GST_CLOCK_TIME_NONE) {
       lame->last_ts = GST_BUFFER_TIMESTAMP (buf);
