@@ -68,6 +68,8 @@
 	:								\
 	GST_CAPS_NEW (name,						\
 		      mimetype,						\
+		      "rate",     GST_PROPS_INT_RANGE (8000, 96000),	\
+		      "channels", GST_PROPS_INT_RANGE (1, 2) ,		\
 		      ##props)
 
 /* Convert a FFMPEG codec ID and optional AVCodecContext
@@ -110,30 +112,30 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_MP2:
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_mp2",
-                           "audio/mpeg",
-			     "layer", GST_PROPS_INT (2)
-                          );
+                                  "audio/mpeg",
+                                    "layer", GST_PROPS_INT (2)
+                                 );
       break;
 
     case CODEC_ID_MP3LAME:
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_mp3",
-                           "audio/mpeg",
-			     "layer", GST_PROPS_INT (3)
-                          );
+                                  "audio/mpeg",
+                                    "layer", GST_PROPS_INT (3)
+                                 );
       break;
 
     case CODEC_ID_VORBIS: /* FIXME? vorbis or ogg? */
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_vorbis",
-			   "application/ogg",
-			     NULL
-			  );
+		                  "application/ogg",
+			            NULL
+			         );
       break;
       
     case CODEC_ID_AC3:
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_ac3",
-		           "audio/x-ac3",
-			     NULL
-			  );
+		                  "audio/x-ac3",
+			            NULL
+			         );
       break;
 
     case CODEC_ID_MJPEG:
@@ -231,8 +233,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_DVAUDIO:
         caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_dvaudio",
-                                    "audio/x-dv",
-				      NULL);
+                                    "audio/x-dv"
+                                   );
         break;
 
     case CODEC_ID_DVVIDEO:
@@ -403,14 +405,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_PCM_MULAW:
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_mulawaudio",
-                                  "audio/x-mulaw",
-				    NULL);
+                                  "audio/x-mulaw");
       break;
 
     case CODEC_ID_PCM_ALAW:
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_alawaudio",
-                                  "audio/x-alaw",
-				    NULL);
+                                  "audio/x-alaw");
       break;
 
     case CODEC_ID_ADPCM_IMA_QT:
@@ -687,6 +687,65 @@ gst_ffmpeg_codectype_to_caps (enum CodecType  codec_type,
   return caps;
 }
 
+
+/* Construct the context extradata from caps
+ * when needed.
+ */
+static void
+gst_ffmpeg_caps_to_extradata (GstCaps        *caps,
+                              AVCodecContext *context)
+{
+  const gchar *mimetype;
+
+  mimetype = gst_caps_get_mime(caps);
+
+  if (!strcmp(mimetype, "audio/x-wma")) {
+
+    if (!gst_caps_has_property (caps, "flags1")) {
+      g_warning ("Caps without flags1 property for %s", mimetype);
+      return;
+    }
+
+    if (!gst_caps_has_property (caps, "flags2")) {
+      g_warning ("Caps without flags2 property for %s", mimetype);
+      return;
+    }
+
+    if (gst_caps_has_property (caps, "wmaversion")) {
+      gint wmaversion = 0;
+      gint value;
+
+      /* 
+       * Rebuild context data from flags1 & flags2 
+       * see wmadec in ffmpeg/libavcodec/wmadec.c 
+       */
+      gst_caps_get_int (caps, "wmaversion", &wmaversion);
+      switch (wmaversion) {
+        case 1:
+          context->extradata = (guint8 *) g_malloc0 (4); 
+          gst_caps_get_int (caps, "flags1", &value);
+          ((guint8 *)context->extradata)[0] = value;
+          gst_caps_get_int (caps, "flags2", &value);
+          ((guint8 *)context->extradata)[2] = value;
+          context->extradata_size = 4;
+          break;
+        case 2:
+          context->extradata = (guint8 *) g_malloc0 (6);        
+          gst_caps_get_int (caps, "flags1", &value);
+          ((guint8 *) context->extradata)[0] = value;
+          gst_caps_get_int (caps, "flags2", &value);
+          ((guint8 *) context->extradata)[4] = value; 
+          context->extradata_size = 6;
+          break;
+        default:
+          g_warning ("Unknown wma version %d\n", wmaversion);
+          break;
+      }
+    }
+  }
+}
+
+
 /* Convert a GstCaps (audio/raw) to a FFMPEG SampleFmt
  * and other audio properties in a AVCodecContext.
  *
@@ -739,15 +798,7 @@ gst_ffmpeg_caps_to_smpfmt (GstCaps        *caps,
     gst_caps_get_int (caps, "bitrate", &context->bit_rate);
   }
 
-  if (gst_caps_has_property_typed (caps, "flags1",
-				   GST_PROPS_INT_TYPE)) {
-    gst_caps_get_int (caps, "flags1", &context->wma_flags1);
-  }
-
-  if (gst_caps_has_property_typed (caps, "flags2",
-				   GST_PROPS_INT_TYPE)) {
-    gst_caps_get_int (caps, "flags2", &context->wma_flags2);   
-  }
+  gst_ffmpeg_caps_to_extradata (caps, context);
 }
 
 
