@@ -1,46 +1,77 @@
-GStreamer 0.3.2 "Do-B-day" released
 
-Release Notes
+                   GStreamer "GUADEC By Foot" 0.3.3 released
+
+                           Preliminary release notes
 
    The  GStreamer  team  is  happy  to  announce  another  release of the
-   GStreamer  streaming-media  framework. GStreamer now contains close to
-   100  plugins for reading, writing and manipulating audio and video. We
-   are  rapidly  approaching  a  stable  set  of  libraries.  Our  sample
-   applications are, however, still under development.
+   GStreamer  streaming-media  framework. This is our first release using
+   GLib  2.0  and  libxml2  as  the  sole  compile platform. We have also
+   started  including  all  our  documentation  in our RPMS starting this
+   release.   People   wanting   to   build   GStreamer  themselves  with
+   documentation should look at the DOCBUILDING file for some information
+   on what packages are needed to build that successfully.
 
-   We  now have a gst-all module prepared that includes all of our source
-   modules in one easy-to-compile package.
+   Another new feature of this release is the gst-launch-ext command-line
+   application.  It  uses  predefined  pipelines to play back media files
+   based  on  their  file  extension.  This  means that you don't need to
+   construct your own pipelines using gst-launch if all you want to do is
+   play  a file. Just type gst-launch-ext [filename] and the audiofile or
+   movie  plays  for  you.  This  of course also being a work in progress
+   means  that  sometimes it might decide on the wrong pipeline, or cause
+   jitter, as well as random headaches.
 
-Future Plans
-
-   Our goal for the next release is stabilizing and improving the current
-   feature  set  of  GStreamer further, including introducing an improved
-   autoplugger  module for even better handling of media formats. We will
-   also  focus  more  attention at our media player sample application as
-   this is the application most users and developers probably will use to
-   get aquinted with the framework.
-
-   For help building GStreamer, take a look at our build help document.
+   For help building GStreamer, take a look at our [1]build help document
+   .
 
 Updates and Enhancements
 
-     * new capabilities negotiation system
-     * xml support bugfixes
-     * sdlvideosink enhancements
-     * gst-xmllaunch added
-     * fixes in avi plugin
-     * fli plugin now works again
-     * fixes to old gstmediaplayer making it work
-     * lots of fixes on the v4l plugin
-     * new cdxa plugin
-     * new mjpeg encoder and decoder plugins
-     * new example plugin using GOB
-     * partial update of documentation and examples
-     * miscellaneous bugfixes
+     * modplug  plugin, plays the same media as mikmod plugin but without
+       an external library dependency
+     * Ogg Tarkin encoding and decoding plugins
+     * New   gst-launch-ext   commandline   tool   for   more   failproof
+       mediaplayback
+     * Improvements on build system
+     * Audio/video masterclock system
+     * Problems with .vob playback with autoplugger fixed
+     * Fixes in avi and v4l plugins
+     * new gstrec plugin for improved video recording
+     * Consolidation of number of RPMS
+     * More portability work
+     * Documentation added to gstreamer RPM
+     * Devhelp   (http://devhelp.sourceforge.net)   books   of  GStreamer
+       documentation added
+     * new cothreads package
+          + portable  machine  context  switching code taken from GNU Pth
+            (thanks, Ralf!)
+          + new  stack  allocation  methods  allow  essentially  infinite
+            number of cothreads with run-time configurability
+          + stack  allocation  code  should  be able to run within kernel
+            threads  of all pthread implementations, unlike old cothreads
+            package
+     * new scheduler that uses the new cothreads package
+          + uses new cothreads package
+          + allows multiple managing bins (pipelines) within same pthread
+            (GThread actually)
+          + pass --gst-scheduler=standard to your app to use
+     * capsnego updates to many plugins
+     * complete switch to glib2 and libxml
+     * popt integration
+     * major update of dparams API
+     * many updates to the player application, finally
+     * Goom visualisation plugin now part of stable build
+     * Synaesthesia visualisation plugin now works
+     * Monoscope visualisation added
+     * ESD Monitor plugin added
+     * autogen.sh  allows  specification  of  different autoconf/automake
+       paths (beta)
 
-   More  details  on  these features can be found, along with the release
-   tarballs    and    some    RPMs,    on    the    project's    website,
-   http://gstreamer.net/.
+   More  details on these features can be found on the project's website,
+   [2]http://gstreamer.net/.   Source   tarballs  are  also  mirrored  at
+   [3]http://gstreamer.net/releases/current/src/.  If you use Red Hat (or
+   possibly  other  RPM-based  systems),  RPMs for both GStreamer itself,
+   external  libraries and development tools not included in the standard
+   reference    distribution    (RedHat    7.2)    can    be   found   in
+   [4]http://gstreamer.net/releases/current/redhat.
 
    GStreamer  is  hosted on SourceForge, so support requests and bugs may
    be filed as usual. Interested developers of the core library, plugins,
@@ -53,23 +84,36 @@ Updates and Enhancements
 
 Contributors to this release
 
-Core
+  Core
 
      * Erik Walthinsen <omega@temple-baptist.com>
      * Wim Taymans <wim.taymans@chello.be>
      * Thomas Vander Stichele <thomas@apestaart.org>
      * Andy Wingo <wingo@pobox.com>
+     * Benjamin Otte <n7y118@public.uni-hamburg.de>
+     * Michael Meeks <mmeeks@ximian.com>
+
+  Plugins and Sample Applications
+
+     * Richard Boulton <richard@tartarus.org>
      * David Lehn <dlehn@vt.edu>
-
-Plugins and Sample Applications
-
      * Ronald Bultje <rbultje@ronald.bitfreak.net>
      * Bastien Nocera <hadess@hadess.net>
      * Martin Enlund <martin@enlund.net>
-     * Benjamin Otte <bj>
+     * Leif Morgan Johnson <lmjohns3@eos.ncsu.edu>
+     * Arik Devens <arik@gnome.org>
+     * Jérémy SIMON <jsimon13@yahoo.fr>
+     * Zeeshan Ali Khattak <zak147@yahoo.com>
+     * Steve Baker <stevebaker_org@yahoo.co.uk>
 
-Misc
+  Misc
 
      * Christian Schaller <christian.schaller@linuxrising.org>
      * wrobell <wrobell@ite.pl>
 
+References
+
+   1. http://gstreamer.net/releases/current/buildhelp.php
+   2. http://gstreamer.net/
+   3. http://gstreamer.net/releases/current/src/
+   4. http://gstreamer.net/releases/current/redhat/

@@ -537,9 +537,12 @@ Destroy the pad.
 
 </para>
 
-@pad: 
+@srcpad: 
+@sinkpad: 
 @filtercaps: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@pad: 
 
 
 <!-- ##### FUNCTION gst_pad_try_reconnect_filtered ##### -->
@@ -547,9 +550,12 @@ Destroy the pad.
 
 </para>
 
-@pad: 
+@srcpad: 
+@sinkpad: 
 @filtercaps: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@pad: 
 
 
 <!-- ##### FUNCTION gst_pad_disconnect ##### -->

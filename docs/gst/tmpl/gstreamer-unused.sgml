@@ -2616,6 +2616,14 @@ Get the size of the file.
 @GST_DISKSRC_OPEN: 
 @GST_DISKSRC_FLAG_LAST: 
 
+<!-- ##### SIGNAL GstElement::event ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
+
 <!-- ##### SIGNAL GstElement::ghost-pad-removed ##### -->
 <para>
 
@@ -3237,6 +3245,15 @@ must be defined to activate the tracing functionality.
 </para>
 
 
+<!-- ##### FUNCTION cothread_get_data ##### -->
+<para>
+
+</para>
+
+@thread: 
+@key: 
+@Returns: 
+
 <!-- ##### FUNCTION cothread_getcurrent ##### -->
 <para>
 
@@ -3249,6 +3266,15 @@ must be defined to activate the tracing functionality.
 </para>
 
 @Returns: 
+
+<!-- ##### FUNCTION cothread_set_data ##### -->
+<para>
+
+</para>
+
+@thread: 
+@key: 
+@data: 
 
 <!-- ##### FUNCTION g2g_object_class_find_property ##### -->
 <para>
@@ -4305,6 +4331,46 @@ must be defined to activate the tracing functionality.
 @counter: 
 @Returns: 
 @count: 
+
+<!-- ##### FUNCTION gst_clock_current_diff ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_get_system ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_register ##### -->
+<para>
+
+</para>
+
+@clock: 
+@obj: 
+
+<!-- ##### FUNCTION gst_clock_set ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
 
 <!-- ##### FUNCTION gst_connection_get_type ##### -->
 <para>

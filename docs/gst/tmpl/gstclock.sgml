@@ -42,51 +42,12 @@ timestamp is less than the second timestamp.
 
 </para>
 
-@name: 
+@object: 
 @start_time: 
-@current_time: 
-@adjust: 
-@locking: 
-@sinkobjects: 
-@num: 
-@num_locked: 
-@sinkmutex: 
-@lock: 
-
-<!-- ##### FUNCTION gst_clock_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_get_system ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_register ##### -->
-<para>
-
-</para>
-
-@clock: 
-@obj: 
-
-
-<!-- ##### FUNCTION gst_clock_set ##### -->
-<para>
-
-</para>
-
-@clock: 
-@time: 
-
+@speed: 
+@active: 
+@active_mutex: 
+@active_cond: 
 
 <!-- ##### FUNCTION gst_clock_reset ##### -->
 <para>
@@ -103,16 +64,8 @@ timestamp is less than the second timestamp.
 
 @clock: 
 @time: 
-@obj: 
-
-
-<!-- ##### FUNCTION gst_clock_current_diff ##### -->
-<para>
-
-</para>
-
-@clock: 
-@time: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@obj: 
 
 

@@ -484,5 +484,6 @@ Get the value of the named property as a float.
 </para>
 
 @caps: 
+@label: 
 
 

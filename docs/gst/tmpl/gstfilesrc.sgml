@@ -14,6 +14,11 @@ GstFileSrc
 
 </para>
 
+<!-- ##### ARG GstFileSrc:offset ##### -->
+<para>
+
+</para>
+
 <!-- ##### ARG GstFileSrc:location ##### -->
 <para>
 
@@ -30,11 +35,6 @@ GstFileSrc
 </para>
 
 <!-- ##### ARG GstFileSrc:blocksize ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstFileSrc:offset ##### -->
 <para>
 
 </para>

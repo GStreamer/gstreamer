@@ -279,6 +279,15 @@ Check if the object has been destroyed.
 @Returns: 
 
 
+<!-- ##### SIGNAL GstObject::deep-notify ##### -->
+<para>
+
+</para>
+
+@gstobject: the object which received the signal.
+@arg1: 
+@arg2: 
+
 <!-- ##### SIGNAL GstObject::object-saved ##### -->
 <para>
 Is trigered whenever a new object is saved to XML. You can connect to

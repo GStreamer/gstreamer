@@ -377,6 +377,7 @@ instead.
 @element: 
 @pad: 
 @name: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_element_remove_ghost_pad ##### -->
@@ -570,14 +571,7 @@ Is trigered whenever an error occured
 
 @gstelement: the object which received the signal.
 @arg1: the error message
-
-<!-- ##### SIGNAL GstElement::event ##### -->
-<para>
-
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: 
+@arg2: 
 
 <!-- ##### SIGNAL GstElement::new-pad ##### -->
 <para>
