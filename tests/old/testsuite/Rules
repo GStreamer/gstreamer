@@ -21,8 +21,8 @@ TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ \
 	$(tests_pass) $(tests_fail)
 XFAIL_TESTS = $(tests_fail)
 
-AM_CFLAGS = $(GST_CFLAGS)
-LIBS = $(GST_LIBS)
+AM_CFLAGS = $(GST_OBJ_CFLAGS)
+LIBS = $(GST_OBJ_LIBS)
 
 # override to _not_ install the test plugins
 install-pluginLTLIBRARIES:

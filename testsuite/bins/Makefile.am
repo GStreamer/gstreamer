@@ -5,4 +5,3 @@ tests_fail =
 tests_ignore =
 
 interface_SOURCES = interface.c
-
