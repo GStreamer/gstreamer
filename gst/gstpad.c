@@ -2079,7 +2079,9 @@ gst_pad_template_new (gchar *name_template,
   if (!name_is_valid (name_template, presence))
     return NULL;
 
-  new = g_object_new(gst_pad_template_get_type () ,NULL);
+  new = g_object_new (gst_pad_template_get_type (),
+                      "name", name_template,
+                      NULL);
 
   GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = name_template;
   GST_PAD_TEMPLATE_DIRECTION (new) = direction;

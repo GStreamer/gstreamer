@@ -249,8 +249,8 @@ gst_element_factory_create (GstElementFactory *factory,
     oclass->padtemplates = g_list_concat (oclass->padtemplates, factory->padtemplates);
     oclass->numpadtemplates += factory->numpadtemplates;
   }
-  
-  gst_object_set_name (GST_OBJECT (element),name);
+
+  gst_object_set_name (GST_OBJECT (element), name);
 
   return element;
 }
@@ -283,7 +283,7 @@ gst_element_factory_make (const gchar *factoryname, const gchar *name)
     GST_INFO (GST_CAT_ELEMENT_FACTORY,"no such elementfactory \"%s\"!",factoryname);
     return NULL;
   }
-  element = gst_element_factory_create(factory,name);
+  element = gst_element_factory_create (factory, name);
   if (element == NULL) {
     GST_INFO (GST_CAT_ELEMENT_FACTORY,"couldn't create instance of elementfactory \"%s\"!",factoryname);
     return NULL;
