@@ -45,6 +45,7 @@ struct _GstBsTest
   GstByteStream *bs;
   
   gchar 	*accesspattern;
+  guint 	num_patterns;
   gchar		**patterns;
   guint 	sizemin;
   guint 	sizemax;
@@ -235,12 +236,11 @@ gst_bstest_loop (GstElement * element)
 
   bstest = GST_BSTEST (element);
 
-/* THIS IS THE BUFFER BASED ONE */
   do {
     guint size = 0;
     guint i = 0;
 
-    while (bstest->patterns[i]) {
+    while (i < bstest->num_patterns) {
       buf = NULL;
 
       if (bstest->patterns[i][0] == 'r') {
@@ -271,7 +271,6 @@ gst_bstest_loop (GstElement * element)
       
       i++;
     }
-    
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
 }
 
@@ -300,10 +299,14 @@ gst_bstest_set_property (GObject * object, guint prop_id, const GValue * value, 
       if (g_value_get_string (value) == NULL) {
         gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
         bstest->accesspattern = NULL;
-        /* otherwise set the new filename */
+        bstest->num_patterns = 0;
       } else {
+	guint i = 0;
+
         bstest->accesspattern = g_strdup (g_value_get_string (value));
         bstest->patterns = g_strsplit (bstest->accesspattern, ":", 0);
+        while (bstest->patterns[i++]);
+        bstest->num_patterns = i-1;
       }
       break;
     case ARG_COUNT:
