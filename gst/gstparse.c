@@ -44,6 +44,7 @@ static gchar *
 _gst_parse_escape (const gchar * str)
 {
   GString *gstr = NULL;
+  gchar *newstr = NULL;
 
   g_return_val_if_fail (str != NULL, NULL);
 
@@ -56,7 +57,10 @@ _gst_parse_escape (const gchar * str)
     str++;
   }
 
-  return gstr->str;
+  newstr = gstr->str;
+  g_string_free (gstr, FALSE);
+
+  return newstr;
 }
 
 /**

@@ -1,3 +1,10 @@
+2004-04-22  Sebastien Cote <sc5@hermes.usherb.ca>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstparse.c: (_gst_parse_escape):
+	  Free the GString used in _gst_parse_escape()
+
 2004-04-21  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstpad.c: (gst_pad_link_negotiate):
