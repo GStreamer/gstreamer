@@ -34,6 +34,18 @@
 GST_DEBUG_CATEGORY_STATIC (gst_debug_xvimagesink);
 #define GST_CAT_DEFAULT gst_debug_xvimagesink
 
+typedef struct
+{
+  unsigned long flags;
+  unsigned long functions;
+  unsigned long decorations;
+  long input_mode;
+  unsigned long status;
+}
+MotifWmHints, MwmHints;
+
+#define MWM_HINTS_DECORATIONS   (1L << 1)
+
 static void gst_xvimagesink_buffer_free (GstBuffer * buffer);
 
 /* ElementFactory information */
@@ -298,6 +310,38 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstXvImage * xvimage)
   g_mutex_unlock (xvimagesink->x_lock);
 }
 
+static gboolean
+gst_xvimagesink_xwindow_decorate (GstXvImageSink * xvimagesink,
+    GstXWindow * window)
+{
+  Atom hints_atom = None;
+  MotifWmHints *hints;
+
+  g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), FALSE);
+  g_return_val_if_fail (window != NULL, FALSE);
+
+  hints_atom = XInternAtom (xvimagesink->xcontext->disp, "_MOTIF_WM_HINTS", 1);
+
+  hints = g_malloc0 (sizeof (MotifWmHints));
+
+  if (!hints) {
+    return FALSE;
+  }
+
+  hints->flags |= MWM_HINTS_DECORATIONS;
+  hints->decorations = 1 << 0;
+
+  XChangeProperty (xvimagesink->xcontext->disp, window->win,
+      hints_atom, hints_atom, 32, PropModeReplace,
+      (guchar *) hints, sizeof (MotifWmHints) / sizeof (long));
+
+  XSync (xvimagesink->xcontext->disp, FALSE);
+
+  g_free (hints);
+
+  return TRUE;
+}
+
 /* This function handles a GstXWindow creation */
 static GstXWindow *
 gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
@@ -329,6 +373,8 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
       xwindow->win, 0, &values);
 
   XMapRaised (xvimagesink->xcontext->disp, xwindow->win);
+
+  gst_xvimagesink_xwindow_decorate (xvimagesink, xwindow);
 
   XSync (xvimagesink->xcontext->disp, FALSE);
 
