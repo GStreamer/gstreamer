@@ -19,9 +19,9 @@ eos_signal (GstElement *element)
 int
 main(int argc,char *argv[])
 {
-  GstBin *pipeline;
+  GstBin *pipeline, *pipeline2;
   GstElement *src,*identity,*sink;
-  GstElement *identity2,*sink2;
+  GstElement *src2,*identity2,*sink2;
 
   gst_init(&argc,&argv);
 
@@ -29,8 +29,7 @@ main(int argc,char *argv[])
   g_return_val_if_fail(pipeline != NULL, 1);
 
   src = gst_elementfactory_make("fakesrc","src");
-  gtk_object_set (GTK_OBJECT (src), "num_buffers", 2, NULL);
-  gtk_object_set (GTK_OBJECT (src), "num_sources", 2, NULL);
+  gtk_object_set (GTK_OBJECT (src), "num_buffers", 1, NULL);
   g_return_val_if_fail(src != NULL, 2);
 
   identity = gst_elementfactory_make("identity","identity");
@@ -39,12 +38,21 @@ main(int argc,char *argv[])
   sink = gst_elementfactory_make("fakesink","sink");
   g_return_val_if_fail(sink != NULL, 4);
 
-  gst_bin_add(pipeline,GST_ELEMENT(src));
-  gst_bin_add(pipeline,GST_ELEMENT(identity));
-  gst_bin_add(pipeline,GST_ELEMENT(sink));
+  pipeline2 = GST_BIN(gst_pipeline_new("pipeline2"));
+  g_return_val_if_fail(pipeline2 != NULL, 1);
+
+  gst_bin_add(pipeline2,GST_ELEMENT(src));
+  gst_bin_add(pipeline2,GST_ELEMENT(identity));
+  gst_bin_add(pipeline2,GST_ELEMENT(sink));
+
+  gst_bin_add(pipeline,GST_ELEMENT(pipeline2));
 
   gst_element_connect(src,"src",identity,"sink");
   gst_element_connect(identity,"src",sink,"sink");
+
+  src2 = gst_elementfactory_make("fakesrc","src2");
+  gtk_object_set (GTK_OBJECT (src2), "num_buffers", 3, NULL);
+  g_return_val_if_fail(src2 != NULL, 2);
 
   identity2 = gst_elementfactory_make("identity","identity2");
   g_return_val_if_fail(identity2 != NULL, 3);
@@ -52,10 +60,11 @@ main(int argc,char *argv[])
   sink2 = gst_elementfactory_make("fakesink","sink2");
   g_return_val_if_fail(sink2 != NULL, 4);
 
+  gst_bin_add(pipeline,GST_ELEMENT(src2));
   gst_bin_add(pipeline,GST_ELEMENT(identity2));
   gst_bin_add(pipeline,GST_ELEMENT(sink2));
 
-  gst_element_connect(src,"src1",identity2,"sink");
+  gst_element_connect(src2,"src",identity2,"sink");
   gst_element_connect(identity2,"src",sink2,"sink");
 
   gtk_signal_connect (GTK_OBJECT (src), "eos", eos_signal_element, NULL);

@@ -1,4 +1,4 @@
-noinst_PROGRAMS = case1 #case2 case3
+noinst_PROGRAMS = case1 case2 case3 case4 case5 case6
 
 # jsut apps here, this is safe
 LIBS += $(GST_LIBS)
