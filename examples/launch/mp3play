@@ -1,2 +1,2 @@
 #/usr/bin/sh
-echo gstreamer-launch disksrc "location=$1" ! mp3parse ! mpg123 ! fakesink
+gstreamer-launch disksrc "location=$1" ! mp3parse ! mpg123 ! fakesink
