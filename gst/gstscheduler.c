@@ -203,8 +203,11 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   /* if it's already in this scheduler, don't bother doing anything */
-  if (GST_ELEMENT_SCHED (element) == sched)
+  if (GST_ELEMENT_SCHED (element) == sched) {
+    GST_DEBUG (GST_CAT_SCHEDULING, "element %s already in scheduler %p", 
+		    GST_ELEMENT_NAME (element), sched);
     return;
+  }
 
   /* if it's not inside this scheduler, it has to be NULL */
   g_assert (GST_ELEMENT_SCHED (element) == NULL);
@@ -310,6 +313,27 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
     return CLASS (sched)->state_transition (sched, element, transition);
 
   return GST_STATE_SUCCESS;
+}
+
+/**
+ * gst_scheduler_state_transition:
+ * @sched: the scheduler
+ * @element: the element with the state transition
+ * @transition: the state transition
+ *
+ * Tell the scheduler that an element changed its state.
+ *
+ * Returns: a GstElementStateReturn indicating success or failure
+ * of the state transition.
+ */
+void
+gst_scheduler_scheduling_change (GstScheduler *sched, GstElement *element)
+{
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  if (CLASS (sched)->scheduling_change)
+    CLASS (sched)->scheduling_change (sched, element);
 }
 
 /**

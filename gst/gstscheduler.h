@@ -89,6 +89,7 @@ struct _GstSchedulerClass {
   void 			(*add_scheduler)	(GstScheduler *sched, GstScheduler *sched2);
   void 			(*remove_scheduler)	(GstScheduler *sched, GstScheduler *sched2);
   GstElementStateReturn (*state_transition)	(GstScheduler *sched, GstElement *element, gint transition);
+  void			(*scheduling_change)	(GstScheduler *sched, GstElement *element);
   void 			(*lock_element)		(GstScheduler *sched, GstElement *element);
   void 			(*unlock_element)	(GstScheduler *sched, GstElement *element);
   void 			(*yield)		(GstScheduler *sched, GstElement *element);
@@ -119,6 +120,7 @@ void			gst_scheduler_remove_element	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_add_scheduler	(GstScheduler *sched, GstScheduler *sched2);
 void			gst_scheduler_remove_scheduler	(GstScheduler *sched, GstScheduler *sched2);
 GstElementStateReturn	gst_scheduler_state_transition	(GstScheduler *sched, GstElement *element, gint transition);
+void			gst_scheduler_scheduling_change	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_lock_element	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_unlock_element	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_yield		(GstScheduler *sched, GstElement *element);
