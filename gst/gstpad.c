@@ -3219,16 +3219,13 @@ gst_pad_collect_valist (GstPad ** selected, GstPad * pad, va_list var_args)
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
+  element = gst_pad_get_parent (pad);
+  maxlength = element->numsinkpads;
+  /* can we make this list a bit smaller than this upper limit? */
+  padlist = g_alloca (sizeof (gpointer) * (maxlength + 1));
   while (pad) {
     g_return_val_if_fail (i < maxlength, NULL);
-    if (element) {
-      g_return_val_if_fail (element == gst_pad_get_parent (pad), NULL);
-    } else {
-      element = gst_pad_get_parent (pad);
-      maxlength = element->numsinkpads;
-      /* can we make this list a bit smaller than this upper limit? */
-      padlist = g_alloca (sizeof (gpointer) * (maxlength + 1));
-    }
+    g_return_val_if_fail (element == gst_pad_get_parent (pad), NULL);
     padlist[i++] = pad;
     pad = va_arg (var_args, GstPad *);
   }

@@ -626,7 +626,6 @@ schedule_forward (Entry * entry)
     return schedule_forward ((Entry *) ((LinkPrivate *) entry)->sink);
   } else if (ENTRY_IS_COTHREAD (entry)) {
     GList *list;
-    Entry *entry;
     GstElement *element = ((CothreadPrivate *) entry)->element;
 
     if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED))

@@ -1,5 +1,12 @@
 2004-04-04  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstpad.c: (gst_pad_collect_valist):
+	  fix uninitialized variable warning
+	* gst/schedulers/entryscheduler.c: (schedule_forward):
+	  fix shadowed variable
+
+2004-04-04  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstpad.c: (gst_pad_collect_array), (gst_pad_collectv),
 	(gst_pad_collect), (gst_pad_collect_valist), (gst_pad_selectv),
 	(gst_pad_select):
