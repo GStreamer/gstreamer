@@ -4,7 +4,7 @@
 static gboolean playing;
 
 /* eos will be called when the src element has an end of stream */
-void eos(GstElement *src) 
+void eos(GstElement *element) 
 {
   g_print("have eos, quitting\n");
 

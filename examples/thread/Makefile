@@ -1,8 +1,7 @@
-
-CC = gcc
+CC = libtool gcc
 
 thread: thread.c 
-	$(CC) -Wall `gstreamer-config --cflags --libs` thread.c -o thread 
+	$(CC) -Wall -I../../ ../../gst/libgst.la `gnome-config --cflags --libs gnomeui` thread.c -o thread 
 
 clean: 
 	rm -f *.o thread

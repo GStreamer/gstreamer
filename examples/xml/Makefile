@@ -1,15 +1,9 @@
-
 CC = libtool gcc
 
-all: createxml runxml
-
-createxml: createxml.c 
-	$(CC) -Wall `gstreamer-config --cflags --libs` createxml.c -o createxml 
-
-runxml: runxml.c 
-	$(CC) -Wall `gstreamer-config --cflags --libs` runxml.c -o runxml 
+xml: xml.c 
+	$(CC) -Wall -I../../ ../../gst/libgst.la `gnome-config --cflags --libs gnomeui` xml.c -o xml 
 
 clean: 
-	rm -f *.o createxml runxml
+	rm -f *.o xml
 	
 	
