@@ -54,7 +54,10 @@ if test -z "$*"; then
 fi
 
 libtoolize --copy --force
-aclocal $ACLOCAL_FLAGS
+aclocal $ACLOCAL_FLAGS || {
+	echo "aclocal failed - check that all needed development files are present on system"
+	exit 1
+}
 autoheader
 autoconf
 automake --add-missing
