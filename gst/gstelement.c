@@ -328,8 +328,15 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (GST_IS_PAD (pad));
 
   g_return_if_fail (GST_PAD_PARENT (pad) == element);
-
-  /* add it to the list */
+  /* check to see if the pad is still connected */
+  /* FIXME: what if someone calls _remove_pad instead of 
+     _remove_ghost_pad? */
+  if (GST_IS_REAL_PAD (pad))
+  {
+    g_return_if_fail (GST_RPAD_PEER (pad) == NULL);
+  }
+  
+  /* remove it from the list */
   element->pads = g_list_remove (element->pads, pad);
   element->numpads--;
   if (gst_pad_get_direction (pad) == GST_PAD_SRC)
@@ -1188,7 +1195,12 @@ gst_element_dispose (GObject *object)
     orig = pads = g_list_copy (element->pads);
     while (pads) {
       pad = GST_PAD (pads->data);
-      gst_object_destroy (GST_OBJECT (pad));
+      if (GST_PAD_PEER (pad))
+      {
+        GST_DEBUG (GST_CAT_REFCOUNTING, "disconnecting pad '%s'\n",GST_OBJECT_NAME(GST_OBJECT (GST_PAD (GST_PAD_PEER (pad)))));
+        gst_pad_disconnect (pad, GST_PAD (GST_PAD_PEER (pad)));
+      }
+      gst_element_remove_pad (element, pad);
       pads = g_list_next (pads);
     }
     g_list_free (orig);

@@ -1427,17 +1427,16 @@ gst_real_pad_dispose (GObject *object)
 {
   GstPad *pad = GST_PAD (object);
   
+  /* No connected pad can ever be disposed.
+   * It has to have a parent to be connected and a parent would hold a reference */
+  g_assert (GST_PAD_PEER (pad) == NULL);
+  
   GST_DEBUG (GST_CAT_REFCOUNTING, "dispose %s:%s\n", GST_DEBUG_PAD_NAME(pad));
 
   if (GST_PAD_PADTEMPLATE (pad)){
     GST_DEBUG (GST_CAT_REFCOUNTING, "unreffing padtemplate'%s'\n", GST_OBJECT_NAME (GST_PAD_PADTEMPLATE (pad)));
     gst_object_unref (GST_OBJECT (GST_PAD_PADTEMPLATE (pad)));
     GST_PAD_PADTEMPLATE (pad) = NULL;
-  }
-  
-  if (GST_PAD_PEER (pad)){
-    GST_DEBUG (GST_CAT_REFCOUNTING, "disconnecting pad '%s'\n", GST_OBJECT_NAME (GST_OBJECT (GST_PAD (GST_PAD_PEER (pad)))));
-    gst_pad_disconnect (pad, GST_PAD (GST_PAD_PEER (pad)));
   }
   
   /* we destroy the ghostpads, because they are nothing without the real pad  */
