@@ -1709,6 +1709,7 @@ testsuite/Makefile
 tools/Makefile
 tools/gst-launch-ext
 gconf/Makefile
+gconf/gstreamer.schemas
 pkgconfig/Makefile
 po/Makefile.in
 )
