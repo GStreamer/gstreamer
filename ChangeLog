@@ -1,3 +1,13 @@
+2004-11-29  Wim Taymans  <wim@fluendo.com>
+
+	* testsuite/threads/Makefile.am:
+	* testsuite/threads/signals.c: (gst_test_get_type),
+	(gst_test_class_init), (gst_test_init), (gst_test_dispose),
+	(gst_test_set_property), (gst_test_get_property),
+	(gst_test_do_signal1), (signal2_handler), (gst_test_do_signal2),
+	(gst_test_do_prop), (run_thread), (main):
+	Added a bunch of testcases that show threadsafety bugs in glib.
+
 2004-11-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/manual/programs.xml:
