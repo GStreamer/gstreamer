@@ -304,13 +304,7 @@ volume_chain_int16 (GstPad *pad, GstBuffer *buf)
   filter = GST_VOLUME(GST_OBJECT_PARENT (pad));
   g_return_if_fail(GST_IS_VOLUME(filter));
 
-  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_READONLY)){
-    out_buf = gst_buffer_copy (buf);
-    gst_buffer_unref(buf);
-  }
-  else {
-    out_buf = buf;
-  }
+  out_buf = gst_buffer_copy_on_write (buf);
 
   data = (gint16 *)GST_BUFFER_DATA(out_buf);
   num_samples = GST_BUFFER_SIZE(out_buf)/sizeof(gint16);
