@@ -66,6 +66,7 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
   g_return_if_fail(audio_thread != NULL);
   gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(parse_audio));
   gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(decode));
+  gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audio_render_queue));
 
   // set up pad connections
   gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
@@ -116,6 +117,7 @@ void mpeg2_setup_video_thread(GstPad *pad, GstElement *show, GstElement *pipelin
   gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(parse_video));
   gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(decode_video));
   gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(merge_subtitles));
+  gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(video_render_queue));
   gst_bin_use_cothreads(GST_BIN(video_thread), FALSE);
 
   // set up pad connections

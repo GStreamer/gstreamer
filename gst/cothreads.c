@@ -41,6 +41,7 @@ cothread_state *cothread_create(cothread_context *ctx) {
   s->threadnum = ctx->nthreads;
   s->flags = 0;
   s->sp = ((int *)s + COTHREAD_STACKSIZE);
+  s->top_sp = s->sp;
 
   ctx->threads[ctx->nthreads++] = s;
 
@@ -103,6 +104,7 @@ void cothread_stub() {
     thread->func(thread->argc,thread->argv);
   thread->flags &= ~COTHREAD_STARTED;
   thread->pc = 0;
+  thread->sp = thread->top_sp;
   DEBUG("cothread: cothread_stub() exit\n");
   //printf("uh, yeah, we shouldn't be here, but we should deal anyway\n");
 }
@@ -113,8 +115,10 @@ void cothread_switch(cothread_state *thread) {
   int enter;
 //  int i;
 
-  if (thread == NULL)
+  if (thread == NULL) {
+    g_print("cothread: there's no thread, strange...\n");
     return;
+  }
 
   ctx = thread->ctx;
 
@@ -124,12 +128,10 @@ void cothread_switch(cothread_state *thread) {
     exit(2);
   }
 
-  /*
   if (current == thread) {
     g_print("cothread: trying to switch to same thread, legal but not necessary\n");
-    //return;
+    return;
   }
-  */
 
   // find the number of the thread to switch to
   ctx->current = thread->threadnum;
@@ -137,11 +139,14 @@ void cothread_switch(cothread_state *thread) {
 
   /* save the current stack pointer, frame pointer, and pc */
   GET_SP(current->sp);
-  enter = setjmp(current->jmp);
-  DEBUG("cothread: after thread #%d %d\n",ctx->current, enter);
+  enter = sigsetjmp(current->jmp, 1);
   if (enter != 0) {
+    DEBUG("cothread: enter thread #%d %d %p<->%p (%d)\n",current->threadnum, enter, 
+		    current->sp, current->top_sp, current->top_sp-current->sp);
     return;
   }
+  DEBUG("cothread: exit thread #%d %d %p<->%p (%d)\n",current->threadnum, enter, 
+		    current->sp, current->top_sp, current->top_sp-current->sp);
   enter = 1;
 
   DEBUG("cothread: set stack to %p\n", thread->sp);
@@ -150,7 +155,7 @@ void cothread_switch(cothread_state *thread) {
     DEBUG("cothread: in thread \n");
     SET_SP(thread->sp);
     // switch to it
-    longjmp(thread->jmp,1);
+    siglongjmp(thread->jmp,1);
   } else {
     SETUP_STACK(thread->sp);
     SET_SP(thread->sp);
@@ -158,5 +163,6 @@ void cothread_switch(cothread_state *thread) {
     //JUMP(cothread_stub);
     cothread_stub();
     DEBUG("cothread: exit thread \n");
+    ctx->current = 0;
   }
 }

@@ -347,10 +347,27 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
 
   elements = pipeline->sinks;
 
-  // fase 2, find all the sinks.. 
+  // fase 2, loop over all the sinks.. 
   while (elements) {
+    GList *pads;
+    GstPad *pad;
+
     element = GST_ELEMENT(elements->data);
 
+    pads = gst_element_get_pad_list(element);
+
+    while (pads) {
+      pad = (GstPad *)pads->data;
+
+      if (pad->direction == GST_PAD_SINK) {
+	sink_type = gst_pad_get_type_id(pad);
+        sinkelement = element;
+	break;
+      }
+
+      pads = g_list_next(pads);
+    }
+    /*
     if (GST_IS_SINK(element)) {
       g_print("GstPipeline: found sink \"%s\"\n", gst_element_get_name(element));
 
@@ -369,6 +386,7 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
 			gst_element_get_name(element), sink_type);
       }
     }
+    */
 
     elements = g_list_next(elements);
   }

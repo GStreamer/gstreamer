@@ -29,8 +29,9 @@ struct _cothread_state {
 
   int flags;
   int *sp;
+  int *top_sp;
   int *pc;
-  jmp_buf jmp;
+  sigjmp_buf jmp;
 };
 
 struct _cothread_context {

@@ -27,7 +27,7 @@ gboolean idle_func(gpointer data);
 GstElement *show, *video_render_queue;
 GstElement *audio_play, *audio_render_queue;
 GstElement *src;
-GstPipeline *pipeline;
+GstElement *pipeline;
 GstElement *parse = NULL;
 GstElement *typefind;
 GstElement *video_render_thread;
@@ -254,6 +254,9 @@ static void have_type(GstSink *sink) {
   }
   gtk_object_set(GTK_OBJECT(src),"offset",0,NULL);
 
+  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_render_thread));
+  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_render_thread));
+
   g_print("setting to READY state\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
   g_print("setting to PLAYING state\n");
@@ -286,7 +289,6 @@ gint start_from_file(guchar *filename)
 
   g_print("setting to READY state\n");
 
-  gst_bin_create_plan(GST_BIN(pipeline));
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
 
   state = GSTPLAY_STOPPED;
@@ -363,17 +365,13 @@ main (int argc, char *argv[])
   gnome_dock_set_client_area(GNOME_DOCK(glade_xml_get_widget(xml, "dock1")),
 		  gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
   gst_bin_add(GST_BIN(video_render_thread),GST_ELEMENT(show));
-  gst_element_add_ghost_pad(GST_ELEMENT(video_render_thread),
-                               gst_element_get_pad(show,"sink"));
 
   glade_xml_signal_autoconnect(xml);
 
   video_render_queue = gst_elementfactory_make("queue","video_render_queue");
   gtk_object_set(GTK_OBJECT(video_render_queue),"max_level",BUFFER,NULL);
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_render_queue));
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_render_thread));
   gst_pad_connect(gst_element_get_pad(video_render_queue,"src"),
-                  gst_element_get_pad(video_render_thread,"sink"));
+                  gst_element_get_pad(show,"sink"));
   gtk_object_set(GTK_OBJECT(video_render_thread),"create_thread",TRUE,NULL);
 
 
@@ -381,15 +379,11 @@ main (int argc, char *argv[])
   g_return_val_if_fail(audio_render_thread != NULL, -1);
   audio_play = gst_elementfactory_make("audiosink","play_audio");
   gst_bin_add(GST_BIN(audio_render_thread),GST_ELEMENT(audio_play));
-  gst_element_add_ghost_pad(GST_ELEMENT(audio_render_thread),
-                               gst_element_get_pad(audio_play,"sink"));
 
   audio_render_queue = gst_elementfactory_make("queue","audio_render_queue");
   gtk_object_set(GTK_OBJECT(audio_render_queue),"max_level",BUFFER,NULL);
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_render_queue));
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_render_thread));
   gst_pad_connect(gst_element_get_pad(audio_render_queue,"src"),
-                  gst_element_get_pad(audio_render_thread,"sink"));
+                  gst_element_get_pad(audio_play,"sink"));
   gtk_object_set(GTK_OBJECT(audio_render_thread),"create_thread",TRUE,NULL);
 
   if (argc > 1) {

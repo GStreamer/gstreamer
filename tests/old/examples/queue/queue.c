@@ -3,7 +3,7 @@
 gboolean playing;
 
 /* eos will be called when the src element has an end of stream */
-void eos(GstSrc *src) 
+void eos(GstSrc *src, gpointer data) 
 {
   g_print("have eos, quitting\n");
 
@@ -12,7 +12,9 @@ void eos(GstSrc *src)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *bin, *disksrc, *parse, *decoder, *audiosink;
+  GstElement *disksrc, *audiosink, *parse, *decode, *queue;
+  GstElement *bin;
+  GstElement *thread;
 
   if (argc != 2) {
     g_print("usage: %s <filename>\n", argv[0]);
@@ -21,39 +23,53 @@ int main(int argc,char *argv[])
 
   gst_init(&argc,&argv);
 
+  /* create a new thread to hold the elements */
+  thread = gst_thread_new("thread");
+  g_assert(thread != NULL);
+
   /* create a new bin to hold the elements */
   bin = gst_bin_new("bin");
+  g_assert(bin != NULL);
 
   /* create a disk reader */
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
+  g_assert(disksrc != NULL);
   gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
   gtk_signal_connect(GTK_OBJECT(disksrc),"eos",
-                     GTK_SIGNAL_FUNC(eos),NULL);
+                     GTK_SIGNAL_FUNC(eos), thread);
 
-  /* now it's time to get the parser */
-  parse = gst_elementfactory_make("mp3parse","parse");
-  decoder = gst_elementfactory_make("mpg123","decoder");
+  parse = gst_elementfactory_make("mp3parse", "parse");
+  decode = gst_elementfactory_make("mpg123", "decode");
+
+  queue = gst_elementfactory_make("queue", "queue");
+
   /* and an audio sink */
   audiosink = gst_elementfactory_make("audiosink", "play_audio");
+  g_assert(audiosink != NULL);
 
   /* add objects to the main pipeline */
   gst_bin_add(GST_BIN(bin), disksrc);
   gst_bin_add(GST_BIN(bin), parse);
-  gst_bin_add(GST_BIN(bin), decoder);
-  gst_bin_add(GST_BIN(bin), audiosink);
+  gst_bin_add(GST_BIN(bin), decode);
+  gst_bin_add(GST_BIN(bin), queue);
 
-  /* connect src to sink */
+  gst_bin_add(GST_BIN(thread), audiosink);
+
+  gst_bin_add(GST_BIN(bin), thread);
+  
   gst_pad_connect(gst_element_get_pad(disksrc,"src"),
                   gst_element_get_pad(parse,"sink"));
   gst_pad_connect(gst_element_get_pad(parse,"src"),
-                  gst_element_get_pad(decoder,"sink"));
-  gst_pad_connect(gst_element_get_pad(decoder,"src"),
+                  gst_element_get_pad(decode,"sink"));
+  gst_pad_connect(gst_element_get_pad(decode,"src"),
+                  gst_element_get_pad(queue,"sink"));
+  gst_pad_connect(gst_element_get_pad(queue,"src"),
                   gst_element_get_pad(audiosink,"sink"));
 
   /* make it ready */
-  gst_element_set_state(bin, GST_STATE_READY);
+  gst_element_set_state(GST_ELEMENT(bin), GST_STATE_READY);
   /* start playing */
-  gst_element_set_state(bin, GST_STATE_PLAYING);
+  gst_element_set_state(GST_ELEMENT(bin), GST_STATE_PLAYING);
 
   playing = TRUE;
 
@@ -61,14 +77,7 @@ int main(int argc,char *argv[])
     gst_bin_iterate(GST_BIN(bin));
   }
 
-  /* stop the bin */
-  gst_element_set_state(bin, GST_STATE_NULL);
-
-  gst_object_destroy(GST_OBJECT(audiosink));
-  gst_object_destroy(GST_OBJECT(parse));
-  gst_object_destroy(GST_OBJECT(decoder));
-  gst_object_destroy(GST_OBJECT(disksrc));
-  gst_object_destroy(GST_OBJECT(bin));
+  gst_element_set_state(GST_ELEMENT(bin), GST_STATE_NULL);
 
   exit(0);
 }

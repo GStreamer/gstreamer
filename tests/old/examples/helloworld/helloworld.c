@@ -50,9 +50,6 @@ int main(int argc,char *argv[])
   gst_pad_connect(gst_element_get_pad(decoder,"src"),
                   gst_element_get_pad(audiosink,"sink"));
 
-  /* find out how to handle this bin */
-  gst_bin_create_plan(GST_BIN(bin));
-
   /* make it ready */
   gst_element_set_state(bin, GST_STATE_READY);
   /* start playing */

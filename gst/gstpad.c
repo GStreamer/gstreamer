@@ -183,15 +183,10 @@ void gst_pad_set_qos_function(GstPad *pad,GstPadQoSFunction qos) {
 void gst_pad_push(GstPad *pad,GstBuffer *buffer) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
-//  g_return_if_fail(GST_PAD_CONNECTED(pad));
+  g_return_if_fail(GST_PAD_CONNECTED(pad));
   g_return_if_fail(buffer != NULL);
 
   gst_trace_add_entry(NULL,0,buffer,"push buffer");
-
-  // FIXME we should probably make some noise here...
-  if (!GST_PAD_CONNECTED(pad)) return;
-
-//  g_return_if_fail(pad->pushfunc != NULL);
 
   // first check to see if there's a push handler
   if (pad->pushfunc != NULL) {
@@ -230,7 +225,7 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
 //      g_print("-- gst_pad_pull(): calling pull handler\n");
       (pad->pullfunc)(pad->peer);
     } else {
-//      g_print("-- gst_pad_pull(): no buffer in pen, and no handler to get one there!!!\n");
+      g_print("-- gst_pad_pull(): no buffer in pen, and no handler to get one there!!!\n");
     }
   }
 
@@ -242,7 +237,7 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
     return buf;
   // else we have a big problem...
   } else {
-//    g_print("-- gst_pad_pull(): uh, nothing in pen and no handler\n");
+    g_print("-- gst_pad_pull(): uh, nothing in pen and no handler\n");
     return NULL;
   }
 

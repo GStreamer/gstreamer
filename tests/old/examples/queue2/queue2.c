@@ -1,20 +1,18 @@
 #include <gst/gst.h>
 
+gboolean playing;
+
 /* eos will be called when the src element has an end of stream */
 void eos(GstSrc *src, gpointer data) 
 {
-  GstThread *thread = GST_THREAD(data);
   g_print("have eos, quitting\n");
 
-  /* stop the bin */
-  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_NULL);
-
-  gst_main_quit();
+  playing = FALSE;
 }
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *disksrc, *audiosink;
+  GstElement *disksrc, *audiosink, *queue;
   GstElement *pipeline;
   GstElement *thread;
 
@@ -40,32 +38,43 @@ int main(int argc,char *argv[])
   gtk_signal_connect(GTK_OBJECT(disksrc),"eos",
                      GTK_SIGNAL_FUNC(eos), thread);
 
+  queue = gst_elementfactory_make("queue", "queue");
+
   /* and an audio sink */
   audiosink = gst_elementfactory_make("audiosink", "play_audio");
   g_assert(audiosink != NULL);
 
   /* add objects to the main pipeline */
   gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
-  gst_pipeline_add_sink(GST_PIPELINE(pipeline), audiosink);
+  gst_pipeline_add_sink(GST_PIPELINE(pipeline), queue);
+
+  gst_bin_add(GST_BIN(thread), audiosink);
+  
+  gst_pad_connect(gst_element_get_pad(queue,"src"),
+                  gst_element_get_pad(audiosink,"sink"));
+
+  gst_pad_set_type_id(gst_element_get_pad(queue, "sink"),
+  	gst_pad_get_type_id(gst_element_get_pad(audiosink, "sink")));
 
   if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
-    g_print("unable to handle stream\n");
+    g_print("cannot autoplug pipeline\n");
     exit(-1);
   }
 
-  //gst_bin_remove(GST_BIN(pipeline), disksrc);
-
-  //gst_bin_add(GST_BIN(thread), disksrc);
-  gst_bin_add(GST_BIN(thread), GST_ELEMENT(pipeline));
+  gst_bin_add(GST_BIN(pipeline), thread);
 
   /* make it ready */
-  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_READY);
+  gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_READY);
   /* start playing */
-  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_PLAYING);
+  gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 
-  gst_main();
+  playing = TRUE;
 
-  gst_pipeline_destroy(thread);
+  while (playing) {
+    gst_bin_iterate(GST_BIN(pipeline));
+  }
+
+  gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
 
   exit(0);
 }

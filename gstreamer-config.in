@@ -47,14 +47,14 @@ while test $# -gt 0; do
       elif test @includedir@ != /usr/include ; then
         includes=-I@includedir@ 
       fi
-      echo $includes `gtk-config --cflags`
+      echo $includes `gtk-config --cflags gtk gthread`
       ;;
     --libs)
       if test $prefix -ef @builddir@ ; then
-        echo @builddir@/libgst.la `gtk-config --libs`
+        echo @builddir@/libgst.la `gtk-config --libs gtk gthread`
       else
         libdirs=-L@libdir@
-        echo $libdirs -lgst `gtk-config --libs`
+        echo $libdirs -lgst `gtk-config --libs gtk gthread` 
       fi
       ;;
     *)

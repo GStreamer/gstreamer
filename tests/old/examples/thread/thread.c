@@ -53,9 +53,9 @@ int main(int argc,char *argv[])
     exit(-1);
   }
 
-  gst_bin_remove(GST_BIN(pipeline), disksrc);
+  //gst_bin_remove(GST_BIN(pipeline), disksrc);
 
-  gst_bin_add(GST_BIN(thread), disksrc);
+  //gst_bin_add(GST_BIN(thread), disksrc);
   gst_bin_add(GST_BIN(thread), GST_ELEMENT(pipeline));
 
   /* make it ready */

@@ -56,6 +56,7 @@ void mpeg1_setup_audio_thread(GstPad *pad, GstElement *audio_render_queue, GstEl
   g_return_if_fail(audio_thread != NULL);
   gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(parse_audio));
   gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(decode));
+  gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audio_render_queue));
 
   // set up pad connections
   gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
@@ -100,6 +101,7 @@ void mpeg1_setup_video_thread(GstPad *pad, GstElement *video_render_queue, GstEl
   g_return_if_fail(video_thread != NULL);
   gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(parse_video));
   gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(decode_video));
+  gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(video_render_queue));
 
   // set up pad connections
   gst_element_add_ghost_pad(GST_ELEMENT(video_thread),

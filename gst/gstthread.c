@@ -105,9 +105,6 @@ gst_thread_class_init(GstThreadClass *klass) {
 static void gst_thread_init(GstThread *thread) {
   GST_FLAG_SET(thread,GST_THREAD_CREATE);
 
-//  thread->entries = NULL;
-//  thread->numentries = 0;
-
   thread->lock = g_mutex_new();
   thread->cond = g_cond_new();
 }
@@ -178,10 +175,13 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
 
   pending = GST_STATE_PENDING(element);
 
+  if (pending == GST_STATE(element)) return GST_STATE_SUCCESS;
+
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
     stateset = GST_ELEMENT_CLASS(parent_class)->change_state(element);
   
-  gst_info("gstthread: stateset %d %d\n", stateset, GST_STATE_PENDING(element));
+  gst_info("gstthread: stateset %d %d %d\n", GST_STATE(element), stateset, GST_STATE_PENDING(element));
+
 
   switch (pending) {
     case GST_STATE_READY:
@@ -189,13 +189,10 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
       // we want to prepare our internal state for doing the iterations
       gst_info("gstthread: preparing thread \"%s\" for iterations:\n",
                gst_element_get_name(GST_ELEMENT(element)));
-      //gst_thread_prepare(thread);
       
-      gst_bin_create_plan(GST_BIN(thread));
-//      if (thread->numentries == 0)
-//        return FALSE;
       // set the state to idle
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
+      GST_FLAG_UNSET(thread,GST_THREAD_STATE_REAPING);
       // create the thread if that's what we're supposed to do
       gst_info("gstthread: flags are 0x%08x\n",GST_FLAGS(thread));
       if (GST_FLAG_IS_SET(thread,GST_THREAD_CREATE)) {
@@ -214,12 +211,14 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
       gst_info("gstthread: starting thread \"%s\"\n",
               gst_element_get_name(GST_ELEMENT(element)));
       GST_FLAG_SET(thread,GST_THREAD_STATE_SPINNING);
+      GST_FLAG_UNSET(thread,GST_THREAD_STATE_REAPING);
       gst_thread_signal_thread(thread);
       break;  
     case GST_STATE_PAUSED:
       gst_info("gstthread: pausing thread \"%s\"\n",
               gst_element_get_name(GST_ELEMENT(element)));
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
+      GST_FLAG_UNSET(thread,GST_THREAD_STATE_REAPING);
       gst_thread_signal_thread(thread);
       break;
     case GST_STATE_NULL:

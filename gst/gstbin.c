@@ -202,6 +202,9 @@ static GstElementStateReturn gst_bin_change_state(GstElement *element) {
           _gst_print_statename(GST_STATE(element)),GST_STATE_PENDING(element),
           _gst_print_statename(GST_STATE_PENDING(element)));
 
+  if (GST_STATE_PENDING(element) == GST_STATE_READY) {
+    gst_bin_create_plan(bin);
+  }
 //  g_return_val_if_fail(bin->numchildren != 0, GST_STATE_FAILURE);
 
 //  g_print("-->\n");
@@ -226,18 +229,12 @@ static GstElementStateReturn gst_bin_change_state(GstElement *element) {
   }
 //  g_print("<-- \"%s\"\n",gst_object_get_name(GST_OBJECT(bin)));
 
-//  if (GST_STATE_PENDING(element),
 
   return gst_bin_change_state_norecurse(bin);
 }
 
 
 static GstElementStateReturn gst_bin_change_state_norecurse(GstBin *bin) {
-/*
-  if ((state == GST_STATE_READY) && (GST_STATE(bin) < GST_STATE_READY)) {
-//    gst_bin_create_plan(
-  }
-*/
 
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
     return GST_ELEMENT_CLASS(parent_class)->change_state(GST_ELEMENT(bin));
@@ -292,8 +289,8 @@ gboolean gst_bin_set_state_type(GstBin *bin,
                                 GtkType type) {
   GstBinClass *oclass;
 
-//  g_print("gst_bin_set_state_type(\"%s\",%d,%d)\n",
-//          gst_object_get_name(GST_OBJECT(bin)),state,type);
+  DEBUG("gst_bin_set_state_type(\"%s\",%d,%d)\n",
+          gst_element_get_name(GST_ELEMENT(bin)),state,type);
 
   g_return_val_if_fail(bin != NULL, FALSE);
   g_return_val_if_fail(GST_IS_BIN(bin), FALSE);
@@ -310,7 +307,7 @@ void gst_bin_real_destroy(GtkObject *object) {
   GList *children;
   GstElement *child;
 
-//  g_print("in gst_bin_real_destroy()\n");
+  DEBUG("in gst_bin_real_destroy()\n");
 
   children = bin->children;
   while (children) {
@@ -427,32 +424,38 @@ static int gst_bin_loopfunc_wrapper(int argc,char *argv[]) {
   GList *pads;
   GstPad *pad;
   GstBuffer *buf;
+  gchar *name = gst_element_get_name(element);
 
-//  g_print("** gst_bin_loopfunc_wrapper(%d,\"%s\")\n",
-//          argc,gst_element_get_name(element));
+  DEBUG("** gst_bin_loopfunc_wrapper(%d,\"%s\")\n",
+          argc,gst_element_get_name(element));
 
   if (element->loopfunc != NULL) {
     while (1) {
-      DEBUG("** gst_bin_loopfunc_wrapper(): element has loop function, calling it\n");
+      DEBUG("** gst_bin_loopfunc_wrapper(): element %s has loop function, calling it\n", name);
       (element->loopfunc)(element);
-      DEBUG("** gst_bin_loopfunc_wrapper(): element ended loop function\n");
+      DEBUG("** gst_bin_loopfunc_wrapper(): element %s ended loop function\n", name);
     }
   } else {
-    DEBUG("** gst_bin_loopfunc_wrapper(): element is chain-based, calling in infinite loop\n");
+    DEBUG("** gst_bin_loopfunc_wrapper(): element %s is chain-based, calling in infinite loop\n", name);
     if (GST_IS_SRC(element)) {
-      //while (1) {
-        DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of source\n");
-        gst_src_push(GST_SRC(element));
-      //}
+      DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of source %s\n", name);
+      gst_src_push(GST_SRC(element));
+      DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of source %s done\n", name);
+    } else if (GST_IS_CONNECTION(element) && argc == 1) {
+      while (1) {
+        DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of connection %s\n", name);
+        gst_connection_push(GST_CONNECTION(element));
+        DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of connection %s done\n", name);
+      }
     } else {
       while (1) {
         pads = element->pads;
         while (pads) {
           pad = GST_PAD(pads->data);
           if (pad->direction == GST_PAD_SINK) {
-            DEBUG("** gst_bin_loopfunc_wrapper(): pulling a buffer\n");
-            buf = gst_pad_pull(pad);
-            DEBUG("** gst_bin_loopfunc_wrapper(): calling chain function\n");
+            DEBUG("** gst_bin_loopfunc_wrapper(): pulling a buffer from %s:%s\n", name, gst_pad_get_name(pad));
+	    buf = gst_pad_pull(pad);
+            DEBUG("** gst_bin_loopfunc_wrapper(): calling chain function of %s:%s\n", name, gst_pad_get_name(pad));
             (pad->chainfunc)(pad,buf);
           }
           pads = g_list_next(pads);
@@ -484,7 +487,7 @@ static void gst_bin_create_plan_func(GstBin *bin) {
   GstElement *element;
   int sink_pads;
   GList *pads;
-  GstPad *pad, *peer;
+  GstPad *pad, *opad, *peer;
   GstElement *outside;
 
   g_print("gstbin: creating plan for bin \"%s\"\n", gst_element_get_name(GST_ELEMENT(bin)));
@@ -499,13 +502,11 @@ static void gst_bin_create_plan_func(GstBin *bin) {
     if (element->loopfunc != NULL) {
       g_print("gstbin: loop based element \"%s\" in bin \"%s\"\n", gst_element_get_name(element), gst_element_get_name(GST_ELEMENT(bin)));
       bin->need_cothreads = TRUE;
-      break;
     }
     // if it's a complex element, use cothreads
-    if (GST_ELEMENT_IS_MULTI_IN(element)) {
+    else if (GST_ELEMENT_IS_MULTI_IN(element)) {
       g_print("gstbin: complex element \"%s\" in bin \"%s\"\n", gst_element_get_name(element), gst_element_get_name(GST_ELEMENT(bin)));
       bin->need_cothreads = TRUE;
-      break;
     }
     // if it has more than one input pad, use cothreads
     sink_pads = 0;
@@ -526,6 +527,11 @@ static void gst_bin_create_plan_func(GstBin *bin) {
 
   // FIXME
   bin->need_cothreads &= bin->use_cothreads;
+
+  // clear previous plan state
+  g_list_free(bin->entries);
+  bin->entries = NULL;
+  bin->numentries = 0;
 
   if (bin->need_cothreads) {
     g_print("gstbin: need cothreads\n");
@@ -551,22 +557,56 @@ static void gst_bin_create_plan_func(GstBin *bin) {
       pads = gst_element_get_pad_list(element);
       while (pads) {
         pad = GST_PAD(pads->data);
-g_print("gstbin: setting push&pull handlers for %s:%s\n",
-gst_element_get_name(element),gst_pad_get_name(pad));
-//        if (pad->direction == GST_PAD_SRC)
+        g_print("gstbin: setting push&pull handlers for %s:%s\n",
+         	 gst_element_get_name(element),gst_pad_get_name(pad));
+
+	// an internal connection will push outside this bin.
+	if (!GST_IS_CONNECTION(element)) {
           pad->pushfunc = gst_bin_pushfunc_wrapper;
-//        else
-          pad->pullfunc = gst_bin_pullfunc_wrapper;
+	}
+        pad->pullfunc = gst_bin_pullfunc_wrapper;
+
+        /* we only worry about sink pads */
+        if (gst_pad_get_direction(pad) == GST_PAD_SINK) {
+          /* get the pad's peer */
+          peer = gst_pad_get_peer(pad);
+          if (!peer) break;
+          /* get the parent of the peer of the pad */
+          outside = GST_ELEMENT(gst_pad_get_parent(peer));
+          if (!outside) break;
+          /* if it's a connection and it's not ours... */
+          if (GST_IS_CONNECTION(outside) &&
+               (gst_object_get_parent(GST_OBJECT(outside)) != GST_OBJECT(bin))) {
+	    GList *connection_pads = gst_element_get_pad_list(outside);
+            while (connection_pads) {
+              opad = GST_PAD(connection_pads->data);
+              if (gst_pad_get_direction(opad) == GST_PAD_SRC) {
+                g_print("gstbin: setting push&pull handlers for %s:%s SRC connection\n",
+         	 	gst_element_get_name(outside),gst_pad_get_name(opad));
+                opad->pushfunc = gst_bin_pushfunc_wrapper;
+                opad->pullfunc = gst_bin_pullfunc_wrapper;
+                if (outside->threadstate == NULL) {
+                  outside->threadstate = cothread_create(bin->threadcontext);
+                  cothread_setfunc(outside->threadstate,gst_bin_loopfunc_wrapper,
+                         1,(char **)outside);
+                }
+	      }
+              connection_pads = g_list_next(connection_pads);
+	    }
+            gst_info("gstbin: element \"%s\" is the external source Connection "
+		    "for internal element \"%s\"\n",
+	                  gst_element_get_name(GST_ELEMENT(outside)),
+	                  gst_element_get_name(GST_ELEMENT(element)));
+	    bin->entries = g_list_prepend(bin->entries,outside);
+	    bin->numentries++;
+	  }
+	}
         pads = g_list_next(pads);
       }
       elements = g_list_next(elements);
    }
   } else {
     g_print("gstbin: don't need cothreads, looking for entry points\n");
-    // clear previous plan state
-    g_list_free(bin->entries);
-    bin->entries = NULL;
-    bin->numentries = 0;
     // we have to find which elements will drive an iteration
     elements = bin->children;
     while (elements) {
@@ -592,8 +632,8 @@ gst_element_get_name(element),gst_pad_get_name(pad));
             /* if it's a connection and it's not ours... */
             if (GST_IS_CONNECTION(outside) &&
                  (gst_object_get_parent(GST_OBJECT(outside)) != GST_OBJECT(bin))) {
-              gst_info("gstbin: element \"%s\" is the external source Connection \
-				    for internal element \"%s\"\n",
+              gst_info("gstbin: element \"%s\" is the external source Connection "
+				    "for internal element \"%s\"\n",
 	                    gst_element_get_name(GST_ELEMENT(outside)),
 	                    gst_element_get_name(GST_ELEMENT(element)));
 	      bin->entries = g_list_prepend(bin->entries,outside);
@@ -617,18 +657,23 @@ void gst_bin_iterate_func(GstBin *bin) {
   g_return_if_fail(bin != NULL);
   g_return_if_fail(GST_IS_BIN(bin));
   g_return_if_fail(GST_STATE(bin) == GST_STATE_PLAYING);
-  g_return_if_fail(bin->numentries > 0);
 
   DEBUG("GstBin: iterating\n");
 
   if (bin->need_cothreads) {
     // all we really have to do is switch to the first child
     // FIXME this should be lots more intelligent about where to start
-  DEBUG("** in gst_bin_iterate_func()==================================%s\n",
+    DEBUG("** in gst_bin_iterate_func()==================================%s\n",
           gst_element_get_name(GST_ELEMENT(bin->children->data)));
     cothread_switch(GST_ELEMENT(bin->children->data)->threadstate);
   } else {
-    entries = bin->entries;
+    if (bin->numentries <= 0) {
+      printf("gstbin: no elements in bin \"%s\"\n", gst_element_get_name(GST_ELEMENT(bin)));
+      entries = bin->children;
+    }
+    else {
+      entries = bin->entries;
+    }
 
     while (entries) {
       entry = GST_ELEMENT(entries->data);
@@ -636,6 +681,8 @@ void gst_bin_iterate_func(GstBin *bin) {
         gst_src_push(GST_SRC(entry));
       else if (GST_IS_CONNECTION(entry))
         gst_connection_push(GST_CONNECTION(entry));
+      else if (GST_IS_BIN(entry))
+        gst_bin_iterate(GST_BIN(entry));
       else
         g_assert_not_reached();
       entries = g_list_next(entries);
