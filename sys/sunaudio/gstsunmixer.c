@@ -52,6 +52,7 @@ static void gst_sunaudiomixer_set_record (GstMixer * sunaudiomixer,
     GstMixerTrack * track, gboolean record);
 
 #define MIXER_DEVICES 3
+#define SCALE_FACTOR 2.55       /* 255/100 */
 static gchar **labels = NULL;
 static GstMixerTrackClass *parent_class = NULL;
 
@@ -211,7 +212,8 @@ gst_sunaudiomixer_set_volume (GstMixer * mixer,
   GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIOMIXER_TRACK (track);
 
   g_return_if_fail (sunaudio->mixer_fd != -1);
-  volume = (volumes[0] * 255) / 100;
+
+  volume = volumes[0] * SCALE_FACTOR + 0.5;
 
   /* Set the volume */
   AUDIO_INITINFO (&audioinfo);
@@ -253,13 +255,16 @@ gst_sunaudiomixer_get_volume (GstMixer * mixer,
 
   switch (sunaudiotrack->track_num) {
     case 0:
-      sunaudiotrack->lvol = volumes[0] = (audioinfo.play.gain * 100) / 255;
+      sunaudiotrack->lvol = volumes[0] =
+          (audioinfo.play.gain / SCALE_FACTOR) + 0.5;
       break;
     case 1:
-      sunaudiotrack->lvol = volumes[0] = (audioinfo.record.gain * 100) / 255;
+      sunaudiotrack->lvol = volumes[0] =
+          (audioinfo.record.gain / SCALE_FACTOR) + 0.5;
       break;
     case 2:
-      sunaudiotrack->lvol = volumes[0] = (audioinfo.monitor_gain * 100) / 255;
+      sunaudiotrack->lvol = volumes[0] =
+          (audioinfo.monitor_gain / SCALE_FACTOR) + 0.5;
       break;
   }
 
