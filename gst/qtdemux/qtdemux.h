@@ -60,11 +60,14 @@ struct _GstQTDemux {
   GstByteStream *bs;
 
   GNode *moov_node;
+  GNode *moov_node_compressed;
 
   guint32 timescale;
   guint32 duration;
 
   int state;
+
+  int offset;
 
   /* track stuff */
 
