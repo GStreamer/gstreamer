@@ -35,11 +35,8 @@ plugins.
 %{prefix}/lib/lib*.so*
 %{prefix}/lib/gst/libadder*
 %{prefix}/lib/gst/libalaw*
-%{prefix}/lib/gst/libaudioscale*
-# %{prefix}/lib/gst/libcutter*
 %{prefix}/lib/gst/libgstaudio*
 %{prefix}/lib/gst/libcolorspace*
-# %{prefix}/lib/gst/libgstcolorspace*
 %{prefix}/lib/gst/libgstautoplug*
 %{prefix}/lib/gst/libgstelements*
 %{prefix}/lib/gst/libgstgetbits*
@@ -56,14 +53,17 @@ plugins.
 %{prefix}/lib/gst/libstereo*
 %{prefix}/lib/gst/libsystem_*
 %{prefix}/lib/gst/libgstputbits*
-# %{prefix}/lib/gst/libvideoscale*
-# %{prefix}/lib/gst/libgstvideoscale*
 %{prefix}/lib/gst/libvol*
 %{prefix}/lib/gst/libxvideosink*
 %{prefix}/lib/gst/libgstparsewav*
 %{prefix}/lib/gst/libgststaticautoplug*
 %{prefix}/lib/gst/libgsttypes*
 %{prefix}/lib/gst/liblavencode*
+%{prefix}/lib/gst/libgstbasicscheduler*
+%{prefix}/lib/gst/libgstbytestream*
+%{prefix}/lib/gst/libgstcontrol*
+%{prefix}/lib/gst/libplayondemand*
+%{prefix}/lib/gst/libspeed*
 %{prefix}/man/man1/*
 
 %package devel
@@ -204,21 +204,21 @@ Requires: festival >= 1.4.1
 %description -n gstreamer-festival
 Element for text-to-speech using the festival server.
 
-# %files -n gstreamer-festival
-# %defattr(-, root, root)
-# %{prefix}/lib/gst/libfestivalll*
+%files -n gstreamer-festival
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstfestival*
 
-# %package -n gstreamer-flac
-# Summary: Gstreamer plugin for FLAC lossless audio format
-# Group: Libraries/Multimedia
-# Requires: %{name} = %{ver}
+%package -n gstreamer-flac
+Summary: Gstreamer plugin for FLAC lossless audio format
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
 
-# %description -n gstreamer-flac
-# Plugin for the free FLAC lossless audioformat. 
+%description -n gstreamer-flac
+Plugin for the free FLAC lossless audioformat. 
 
-# %files -n gstreamer-flac
-# %defattr(-, root, root)
-# %{prefix}/lib/gst/libflacccc*
+%files -n gstreamer-flac
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstflac*
 
 %package -n gstreamer-flx
 Summary: Gstreamer plugin for FLI/FLX animation format
@@ -301,7 +301,6 @@ Plugins for playing mpeg level 2 encoded movies
 
 %files -n gstreamer-mpeg2
 %defattr(-, root, root)
-%{prefix}/lib/gst/libmpeg2parse*
 %{prefix}/lib/gst/libmpeg2play*
 %{prefix}/lib/gst/libmpeg2enc*
 %{prefix}/lib/gst/libmpeg2subt*
@@ -318,7 +317,7 @@ Plugins for playing mpeg level 2 encoded movies
 
 %files -n gstreamer-mpeg2dec
 %defattr(-, root, root)
-%{prefix}/lib/gst/libmpeg2dec*
+%{prefix}/lib/gst/libgstmpeg2dec*
 
 %package -n gstreamer-mp3
 Summary: GStreamer plugins for mp3 playback 
@@ -480,16 +479,27 @@ Video CD playback plugin
 %defattr(-, root, root)
 %{prefix}/lib/gst/libvcd*
 
-# %package -n gstreamer-alsa
-# Summary: GStreamer plugins for the ALSA sound architecture
-# Group: Libraries/Multimedia
+%package -n gstreamer-alsa
+Summary: GStreamer plugins for the ALSA sound architecture
+Group: Libraries/Multimedia
 
-# %description -n gstreamer-alsa
-# Input and output plugin for the ALSA soundcard driver architecture.
+%description -n gstreamer-alsa
+Input and output plugin for the ALSA soundcard driver architecture.
 
-# %files -n gstreamer-alsa
-# %defattr(-, root, root)
-# %{prefix}/lib/gst/libalsa*
+%files -n gstreamer-alsa
+%defattr(-, root, root)
+%{prefix}/lib/gst/libdvd*
+
+%package -n gstreamer-libdvd
+Summary: GStreamer plugins for DVD playback
+Group: Libraries/Multimedia
+
+%description -n gstreamer-libdvd
+Input and output plugin for the ALSA soundcard driver architecture.
+
+%files -n gstreamer-libdvd
+%defattr(-, root, root)
+%{prefix}/lib/gst/libdvd*
 
 %package -n gstreamer-au
 Summary: GStreamer au audiofile plugin
@@ -503,7 +513,118 @@ Plugin for playback of the SUN au audio format.
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstparseau*
 
+%package -n gstreamer-a52dec
+Summary: GStreamer VOB decoder plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-a52dec
+Plugin for decoding of VOB files
+
+%files -n gstreamer-a52dec
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgsta52dec*
+
+%package -n gstreamer-bstest
+Summary: GStreamer BS test package
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-bstest
+Plugin for ByteStream testing of GStreamer
+
+%files -n gstreamer-bstest
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstbstest*
+
+%package -n gstreamer-mikmod
+Summary: GStreamer Mikmod plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-mikmod
+Plugin for playback of mikmod files under GStreamer
+
+%files -n gstreamer-mikmod
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstmikmod*
+
+%package -n gstreamer-qcam
+Summary: GStreamer QuickCam plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-qcam
+Plugin for accessing a Quickcam source
+
+%files -n gstreamer-qcam
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstqcam*
+
+%package -n gstreamer-sid
+Summary: GStreamer Sid C64 music plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-sid
+Plugin for playback of C64 SID format music files
+
+%files -n gstreamer-sid
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstsid*
+
+%package -n gstreamer-silence
+Summary: GStreamer Silence plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-silence
+Plugin for generation of Silence
+
+%files -n gstreamer-silence
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstsilence*
+
+%package -n gstreamer-sine
+Summary: GStreamer Sine effect plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-sine
+Plugin for Sine effect
+
+%files -n gstreamer-sine
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstsine*
+
+%package -n gstreamer-lavencode
+Summary: GStreamer YUV to LAV converter
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-lavencode
+It takes YUV video frames and adds a header in front of it so it can be processed with the lavtools from mjpeg
+
+%files -n gstreamer-lavencode
+%defattr(-, root, root)
+%{prefix}/lib/gst/liblav*
+
+%package -n gstreamer-resample
+Summary: GStreamer resample plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-resample
+Library for resampling of sound
+
+%files -n gstreamer-resample
+%defattr(-, root, root)
+%{prefix}/lib/gst/libresample*
+
 %changelog
+* Wed Dec 05 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Updated in preparation for 0.3.0 release
+
 * Fri Jun 29 2001 Christian Schaller <Uraeus@linuxrising.org>
 - Updated for 0.2.1 release
 - Split out the GUI packages into their own RPM
@@ -545,16 +666,16 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 # Some hackish magic to build the udp and flac plugin since the 
 # build scripts didn't include these in 0.2.1
 
-cd $RPM_BUILD_DIR/%{name}-%{ver}/plugins/udp
-make install $RPM_BUILD_ROOT%{prefix}/lib/gst/
+# cd $RPM_BUILD_DIR/%{name}-%{ver}/plugins/udp
+# make install $RPM_BUILD_ROOT%{prefix}/lib/gst/
 
 # cd  $RPM_BUILD_DIR/%{name}-%{ver}/plugins/flac
 # make install $RPM_BUILD_ROOT%{prefix}/lib/gst/
 
-cd $RPM_BUILD_DIR/%{name}-%{ver}/plugins/avi
-make install $RPM_BUILD_ROOT%{prefix}/lib/gst/
-mv %{prefix}/lib/gst/*avi* $RPM_BUILD_ROOT%{prefix}/lib/gst/
-mv %{prefix}/lib/gst/*udp* $RPM_BUILD_ROOT%{prefix}/lib/gst/
+# cd $RPM_BUILD_DIR/%{name}-%{ver}/plugins/avi
+# make install $RPM_BUILD_ROOT%{prefix}/lib/gst/
+# mv %{prefix}/lib/gst/*avi* $RPM_BUILD_ROOT%{prefix}/lib/gst/
+# mv %{prefix}/lib/gst/*udp* $RPM_BUILD_ROOT%{prefix}/lib/gst/
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -648,6 +769,33 @@ mv %{prefix}/lib/gst/*udp* $RPM_BUILD_ROOT%{prefix}/lib/gst/
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n gstreamer-quicktime
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-libdvd
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-a52dec
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-bstest
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-mikmod
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-qcam
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-sid
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-silence
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-sine
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%post -n gstreamer-lavencode
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
 %postun
