@@ -148,7 +148,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     GstPad *sinkpad = (GstPad *)sinkpads->data;
 
     // if we have a match, connect the pads
-    if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK &&
+    if (gst_pad_get_direction(sinkpad) == GST_PAD_SINK &&
         !GST_PAD_CONNECTED (pad) && !GST_PAD_CONNECTED(sinkpad))
     {
       if ((connected = gst_pad_connect (pad, sinkpad))) {

@@ -205,7 +205,7 @@ struct _GstGhostPadClass {
 #define GST_PAD_PEER(pad)		GST_RPAD_PEER(GST_PAD_REALIZE(pad))
 
 /* Some check functions (unused?) */
-#define GST_PAD_CONNECTED(pad)		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->peer != NULL)
+#define GST_PAD_CONNECTED(pad)		(GST_PAD_PEER(pad) != NULL)
 #define GST_PAD_CAN_PULL(pad)		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->pullfunc != NULL)
 
 

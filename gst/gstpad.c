@@ -540,6 +540,9 @@ gst_pad_connect (GstPad *srcpad,
   g_return_val_if_fail(sinkpad != NULL, FALSE);
   g_return_val_if_fail(GST_IS_PAD(sinkpad), FALSE);
 
+  GST_INFO (GST_CAT_ELEMENT_PADS, "about to connect %s:%s and %s:%s",
+            GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
+
   // now we need to deal with the real/ghost stuff
   realsrc = GST_PAD_REALIZE(srcpad);
   realsink = GST_PAD_REALIZE(sinkpad);
@@ -918,7 +921,7 @@ gst_pad_renegotiate (GstPad *pad)
 
   peerpad = GST_PAD_PEER (pad);
 
-  currentpad = GST_REAL_PAD (pad);
+  currentpad = GST_PAD_REALIZE (pad);
 
   if (!peerpad) {
     GST_DEBUG (GST_CAT_ELEMENT_PADS, "no peer pad for pad %s:%s\n",
@@ -962,7 +965,7 @@ gst_pad_renegotiate (GstPad *pad)
     }
     /* we have a caps structure now */
 
-    /* check it the other pad wants to negotiate */
+    /* check if the other pad wants to negotiate */
     if (!otherpad->negotiatefunc) {
       /* the pad doesn't want to negotiate, so we check if the caps
        * we got from the current pad are compatible */
