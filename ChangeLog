@@ -1,3 +1,9 @@
+2004-09-22  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_destroy):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls): Fix 
+	mistakes from thaytan's patches.
+
 2004-09-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_destroy):
