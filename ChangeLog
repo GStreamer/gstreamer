@@ -1,3 +1,8 @@
+2005-01-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/faad/gstfaad.c: (gst_faad_srcgetcaps):
+	  Argh...
+
 2005-01-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/faad/gstfaad.c: (gst_faad_srcgetcaps):
