@@ -127,6 +127,8 @@ Create a new padtemplate.
 @padname: the nametemplate for the pads that will be created with this template
 @dir: the direction of the pads.
 @pres: the presence of the pads.
+@...: 
+<!-- # Unused Parameters # -->
 @a...: the capabilities of this padtemplate usually created with GST_CAPS_NEW()
 
 
@@ -140,6 +142,8 @@ of the padtemplate. Use GST_PAD_TEMPLATE_GET() to get the unique padtemplate.
 @padname: the nametemplate of the pads
 @dir: the direction of the pads.
 @pres: the presence of the pads.
+@...: 
+<!-- # Unused Parameters # -->
 @a...: the capabilities of this padtemplate, usually created with GST_CAPS_NEW()
 
 

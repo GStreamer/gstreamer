@@ -125,6 +125,8 @@ A convenience macro to create a new GstCaps structure.
 
 @name: the name of the caps structure
 @type: the mime type of the caps structure
+@...: 
+<!-- # Unused Parameters # -->
 @a...: the properties of this caps stucture.
 
 
@@ -134,6 +136,8 @@ A convenience macro to create a GstCaps factory.
 </para>
 
 @factoryname: the name of the factory
+@...: 
+<!-- # Unused Parameters # -->
 @a...: the caps to create with this factory, usualy specified
 with GST_CAPS_NEW()
 
@@ -405,6 +409,8 @@ Set a property of a caps structure.
 </para>
 
 @caps: the caps structure to modify
+@...: 
+<!-- # Unused Parameters # -->
 @name: the name of the property to change
 @args...: the new value of the property
 
@@ -415,6 +421,8 @@ Get key/value pairs from the given GstCaps.
 </para>
 
 @caps: the caps to get the values from
+@...: 
+<!-- # Unused Parameters # -->
 @name: the name of the first key
 @args...: a pointer to the variable that can hold the result followed by more key/value pairs.
 

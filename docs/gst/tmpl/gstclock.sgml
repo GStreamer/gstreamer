@@ -42,6 +42,7 @@ The function prototype of the callback.
 @time: The time it was triggered
 @id: The id that expired
 @user_data: user data passed in the async_wait call
+@Returns: 
 
 
 <!-- ##### TYPEDEF GstClockID ##### -->
@@ -59,6 +60,7 @@ The return value of a clock operation.
 @GST_CLOCK_TIMEOUT: The operation timed out.
 @GST_CLOCK_EARLY: The operation was scheduled too late.
 @GST_CLOCK_ERROR: An error occured
+@GST_CLOCK_UNSUPPORTED: 
 
 <!-- ##### MACRO GST_CLOCK_TIME_NONE ##### -->
 <para>
@@ -134,6 +136,7 @@ The opaque data structure of the clock.
 
 @clock: 
 @speed: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_clock_get_speed ##### -->
@@ -183,79 +186,6 @@ The opaque data structure of the clock.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_clock_async_supported ##### -->
-<para>
-
-</para>
-
-@clock: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_wait ##### -->
-<para>
-
-</para>
-
-@clock: 
-@time: 
-@jitter: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_wait_async ##### -->
-<para>
-
-</para>
-
-@clock: 
-@time: 
-@func: 
-@user_data: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_cancel_wait_async ##### -->
-<para>
-
-</para>
-
-@clock: 
-@id: 
-
-
-<!-- ##### FUNCTION gst_clock_notify_async ##### -->
-<para>
-
-</para>
-
-@clock: 
-@interval: 
-@func: 
-@user_data: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_remove_notify_async ##### -->
-<para>
-
-</para>
-
-@clock: 
-@id: 
-
-
-<!-- ##### FUNCTION gst_clock_wait_id ##### -->
-<para>
-
-</para>
-
-@clock: 
-@id: 
-@jitter: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_clock_get_next_id ##### -->
 <para>
 
@@ -263,15 +193,6 @@ The opaque data structure of the clock.
 
 @clock: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_unlock_id ##### -->
-<para>
-
-</para>
-
-@clock: 
-@id: 
 
 
 <!-- ##### FUNCTION gst_clock_get_time ##### -->
@@ -308,5 +229,11 @@ The opaque data structure of the clock.
 
 @clock: 
 @resolution: 
+@Returns: 
 
+
+<!-- ##### ARG GstClock:stats ##### -->
+<para>
+
+</para>
 

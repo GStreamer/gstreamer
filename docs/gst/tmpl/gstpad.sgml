@@ -922,6 +922,7 @@ Destroy the pad.
 @querytypefunc: 
 @intconnfunc: 
 @bufferpoolfunc: 
+@probedisp: 
 
 <!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
 <para>

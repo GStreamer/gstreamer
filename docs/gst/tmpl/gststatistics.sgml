@@ -15,3 +15,12 @@ the data stream, such as buffers/bytes/events etc.
 
 </para>
 
+<!-- ##### STRUCT stats ##### -->
+<para>
+
+</para>
+
+@buffers: 
+@bytes: 
+@events: 
+

@@ -39,14 +39,14 @@ static gint num_plugins = 0;
 static void
 plugin_added_func (GstRegistry *registry, GstPlugin *plugin, gpointer user_data)
 {
-  g_print ("added plugin %s with %d feature(s)\n", plugin->name, 
+  g_print ("added plugin %s with %d feature(s)\n", plugin->name,
            plugin->numfeatures);
 
   num_features += plugin->numfeatures;
   num_plugins++;
 }
 
-int main (int argc,char *argv[]) 
+int main (int argc,char *argv[])
 {
   GList *registries;
   GList *path_spill = NULL; /* used for path spill from failing registries */
@@ -77,8 +77,8 @@ int main (int argc,char *argv[])
       path_spill = NULL;
     }
 
-    g_signal_connect (G_OBJECT (registry), "plugin_added", 
-		    G_CALLBACK (plugin_added_func), NULL);
+    g_signal_connect (G_OBJECT (registry), "plugin_added",
+		      G_CALLBACK (plugin_added_func), NULL);
 
     if (registry->flags & GST_REGISTRY_WRITABLE) {
       g_print ("rebuilding %s\n", registry->name);
@@ -91,12 +91,11 @@ int main (int argc,char *argv[])
       {
 	g_print ("error loading %s\n", registry->name);
 	/* move over paths from this registry to the next one */
-	path_spill = g_list_concat (path_spill, 
+	path_spill = g_list_concat (path_spill,
 	                            gst_registry_get_path_list (registry));
 	g_assert (path_spill != NULL);
       }
     }
-    
     registries = g_list_next (registries);
   }
 

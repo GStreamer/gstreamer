@@ -12,7 +12,8 @@ DOC_SOURCE_DIR=$(top_srcdir)/libs
 EXTRA_DIST = $(DOC_MODULE)-docs.sgml $(DOC_MODULE)-sections.txt
 
 HTML_DIR=@HTML_DIR@
-TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
+# add major minor here for parallel installs
+TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)-@GST_MAJORMINOR@
 
 if HAVE_GTK_DOC
 html: html/book1.html

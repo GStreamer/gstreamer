@@ -15,13 +15,27 @@ methods to request buffers from its pads.
 
 </para>
 
+<!-- ##### VARIABLE gst_aggregator_details ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### ENUM GstAggregatorSchedType ##### -->
 <para>
 
 </para>
 
 @AGGREGATOR_LOOP: 
-@AGGREGATOR_LOOP_PEEK: 
 @AGGREGATOR_LOOP_SELECT: 
 @AGGREGATOR_CHAIN: 
+
+<!-- ##### FUNCTION gst_aggregator_factory_init ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
 

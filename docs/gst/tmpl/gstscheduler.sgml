@@ -64,17 +64,6 @@ Destroy the scheduler
 @sched: 
 
 
-<!-- ##### FUNCTION gst_scheduler_get_preferred_stack ##### -->
-<para>
-
-</para>
-
-@sched: 
-@stack: 
-@size: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_scheduler_reset ##### -->
 <para>
 

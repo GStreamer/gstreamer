@@ -1,9 +1,9 @@
 librarydir = $(libdir)
 
-library_LTLIBRARIES = libgstcontrol.la
+library_LTLIBRARIES = libgstcontrol-@GST_MAJORMINOR@.la
 
-libgstcontrolincludedir = $(includedir)/gstreamer-@VERSION@/gst/control
-libgstcontrolinclude_HEADERS = \
+libgstcontrol_@GST_MAJORMINOR@_includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/control
+libgstcontrol_@GST_MAJORMINOR@_include_HEADERS = \
     control.h \
     dparammanager.h \
     dparam.h \
@@ -12,7 +12,7 @@ libgstcontrolinclude_HEADERS = \
     dparamcommon.h \
     dplinearinterp.h
 
-libgstcontrol_la_SOURCES = \
+libgstcontrol_@GST_MAJORMINOR@_la_SOURCES = \
     control.c \
     dparammanager.c \
     dparam.c \
@@ -20,5 +20,6 @@ libgstcontrol_la_SOURCES = \
     unitconvert.c \
     dplinearinterp.c
 
-libgstcontrol_la_CFLAGS = $(GST_CFLAGS) -finline-functions -ffast-math
-libgstcontrol_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@
+libgstcontrol_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) -finline-functions -ffast-math
+libgstcontrol_@GST_MAJORMINOR@_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@
+

@@ -16,3 +16,12 @@ with the buffer. (fakesink)
 
 </para>
 
+<!-- ##### FUNCTION gst_fakesink_factory_init ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+

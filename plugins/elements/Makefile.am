@@ -1,8 +1,8 @@
-plugindir = $(libdir)/gst
+plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = libgstelements.la
 
-libgstelements_la_DEPENDENCIES = ../libgstreamer.la
+libgstelements_la_DEPENDENCIES = ../libgstreamer-@GST_MAJORMINOR@.la
 libgstelements_la_SOURCES =	\
 	gstelements.c		\
 	gstfakesrc.c		\

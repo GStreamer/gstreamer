@@ -1,9 +1,9 @@
-librarydir = $(libdir)/gst
+librarydir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 library_LTLIBRARIES = libgstbytestream.la
 noinst_LTLIBRARIES = libgstbstest.la
 
-libgstbytestreamincludedir = $(includedir)/gstreamer-@VERSION@/gst/bytestream
+libgstbytestreamincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/bytestream
 libgstbytestreaminclude_HEADERS = bytestream.h
 
 libgstbytestream_la_SOURCES = bytestream.c 

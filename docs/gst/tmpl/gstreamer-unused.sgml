@@ -38,6 +38,26 @@ Information about audio buffers.
 audioraw
 
 
+<!-- ##### SECTION ./tmpl/cothreads_compat.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/cothreads_compat.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/cothreads_compat.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/cothreads_compat.sgml:Title ##### -->
+cothreads_compat
+
+
 <!-- ##### SECTION ./tmpl/gobject2gtk.sgml:Long_Description ##### -->
 <para>
 
@@ -56,6 +76,46 @@ audioraw
 
 <!-- ##### SECTION ./tmpl/gobject2gtk.sgml:Title ##### -->
 GObject
+
+
+<!-- ##### SECTION ./tmpl/grammar.tab.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/grammar.tab.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/grammar.tab.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/grammar.tab.sgml:Title ##### -->
+grammar.tab
+
+
+<!-- ##### SECTION ./tmpl/gst_private.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gst_private.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gst_private.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gst_private.sgml:Title ##### -->
+gst_private
 
 
 <!-- ##### SECTION ./tmpl/gstaggregator.sgml:Long_Description ##### -->
@@ -94,6 +154,26 @@ the offset.
 
 <!-- ##### SECTION ./tmpl/gstasyncdisksrc.sgml:Title ##### -->
 GstAsyncDiskSrc
+
+
+<!-- ##### SECTION ./tmpl/gstatomic.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstatomic.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstatomic.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstatomic.sgml:Title ##### -->
+gstatomic
 
 
 <!-- ##### SECTION ./tmpl/gstaudiosink.sgml:Long_Description ##### -->
@@ -136,6 +216,46 @@ GstAudioSink
 GstAudioSrc
 
 
+<!-- ##### SECTION ./tmpl/gstbufferpool-default.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstbufferpool-default.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstbufferpool-default.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstbufferpool-default.sgml:Title ##### -->
+gstbufferpool-default
+
+
+<!-- ##### SECTION ./tmpl/gstcache.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstcache.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstcache.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstcache.sgml:Title ##### -->
+GstCacheFactory
+
+
 <!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Long_Description ##### -->
 <para>
 
@@ -154,6 +274,26 @@ GstAudioSrc
 
 <!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Title ##### -->
 GstColorSpace
+
+
+<!-- ##### SECTION ./tmpl/gstconfig.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstconfig.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstconfig.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstconfig.sgml:Title ##### -->
+gstconfig
 
 
 <!-- ##### SECTION ./tmpl/gstconnection.sgml:Long_Description ##### -->
@@ -176,6 +316,26 @@ Generic connection between elements.
 
 <!-- ##### SECTION ./tmpl/gstconnection.sgml:Title ##### -->
 GstConnection
+
+
+<!-- ##### SECTION ./tmpl/gstdata_private.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstdata_private.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstdata_private.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstdata_private.sgml:Title ##### -->
+gstdata_private
 
 
 <!-- ##### SECTION ./tmpl/gstdisksink.sgml:Long_Description ##### -->
@@ -237,6 +397,26 @@ GstDiskSrc
 
 <!-- ##### SECTION ./tmpl/gstelement_factory.sgml:Title ##### -->
 GstElementFactory
+
+
+<!-- ##### SECTION ./tmpl/gstenumtypes.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstenumtypes.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstenumtypes.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstenumtypes.sgml:Title ##### -->
+gstenumtypes
 
 
 <!-- ##### SECTION ./tmpl/gstesdsink.sgml:Long_Description ##### -->
@@ -361,6 +541,26 @@ Read buffers from a file descriptor. (fdsrc)
 GstFdSrc
 
 
+<!-- ##### SECTION ./tmpl/gstfilesink.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfilesink.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfilesink.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstfilesink.sgml:Title ##### -->
+GstFileSink
+
+
 <!-- ##### SECTION ./tmpl/gstfilesrc.sgml:Long_Description ##### -->
 <para>
 FileSrc is used to read buffers from a file. It efficiently uses mmap
@@ -403,6 +603,26 @@ Take data in and spit data out
 
 <!-- ##### SECTION ./tmpl/gstfilter.sgml:Title ##### -->
 GstFilter
+
+
+<!-- ##### SECTION ./tmpl/gstformat.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstformat.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstformat.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstformat.sgml:Title ##### -->
+gstformat
 
 
 <!-- ##### SECTION ./tmpl/gstgetbits.sgml:Long_Description ##### -->
@@ -465,6 +685,46 @@ Pass data without modification. (identity)
 GstIdentity
 
 
+<!-- ##### SECTION ./tmpl/gstmacros.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstmacros.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstmacros.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstmacros.sgml:Title ##### -->
+gstmacros
+
+
+<!-- ##### SECTION ./tmpl/gstmarshal.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstmarshal.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstmarshal.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstmarshal.sgml:Title ##### -->
+gstmarshal
+
+
 <!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Long_Description ##### -->
 <para>
 
@@ -483,6 +743,26 @@ GstIdentity
 
 <!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Title ##### -->
 GstMD5Sink
+
+
+<!-- ##### SECTION ./tmpl/gstmemchunk.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstmemchunk.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstmemchunk.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstmemchunk.sgml:Title ##### -->
+gstmemchunk
 
 
 <!-- ##### SECTION ./tmpl/gstmeta.sgml:Long_Description ##### -->
@@ -639,6 +919,26 @@ A wrapper around every stdin/stdout capable program
 GstPipefilter
 
 
+<!-- ##### SECTION ./tmpl/gstprobe.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstprobe.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstprobe.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstprobe.sgml:Title ##### -->
+gstprobe
+
+
 <!-- ##### SECTION ./tmpl/gstqueue.sgml:Long_Description ##### -->
 <para>
 Simple data queue. Data is queued till max_level buffers any subsequent buffers
@@ -668,6 +968,26 @@ Simple asynchronous data queue.
 
 <!-- ##### SECTION ./tmpl/gstqueue.sgml:Title ##### -->
 GstQueue
+
+
+<!-- ##### SECTION ./tmpl/gstsearchfuncs.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsearchfuncs.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsearchfuncs.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstsearchfuncs.sgml:Title ##### -->
+gstsearchfuncs
 
 
 <!-- ##### SECTION ./tmpl/gstsinesrc.sgml:Long_Description ##### -->
@@ -710,6 +1030,46 @@ The end point of a filter graph
 
 <!-- ##### SECTION ./tmpl/gstsink.sgml:Title ##### -->
 GstSink
+
+
+<!-- ##### SECTION ./tmpl/gstspider.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstspider.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstspider.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstspider.sgml:Title ##### -->
+GstSpider
+
+
+<!-- ##### SECTION ./tmpl/gstspideridentity.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstspideridentity.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstspideridentity.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstspideridentity.sgml:Title ##### -->
+GstSpiderIdentity
 
 
 <!-- ##### SECTION ./tmpl/gstsrc.sgml:Long_Description ##### -->
@@ -776,6 +1136,66 @@ Detect the mime type of a media stream
 GstTypeFind
 
 
+<!-- ##### SECTION ./tmpl/gsttypes.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gsttypes.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gsttypes.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gsttypes.sgml:Title ##### -->
+gsttypes
+
+
+<!-- ##### SECTION ./tmpl/gstversion.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstversion.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstversion.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstversion.sgml:Title ##### -->
+gstversion
+
+
+<!-- ##### SECTION ./tmpl/gstxmlregistry.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstxmlregistry.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstxmlregistry.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstxmlregistry.sgml:Title ##### -->
+GstXMLRegistry
+
+
 <!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
 <para>
 
@@ -817,6 +1237,26 @@ Frequencies of a spectrum analysis.
 spectrum
 
 
+<!-- ##### SECTION ./tmpl/types.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/types.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/types.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/types.sgml:Title ##### -->
+types
+
+
 <!-- ##### SECTION ./tmpl/videoraw.sgml:Long_Description ##### -->
 <para>
 Information about video buffers.
@@ -835,6 +1275,30 @@ Information about video buffers.
 
 <!-- ##### SECTION ./tmpl/videoraw.sgml:Title ##### -->
 videoraw
+
+
+<!-- ##### MACRO BCONNECTION ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO CONNECTION ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO COTHREADS_NAME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO COTHREADS_NAME_CAPITAL ##### -->
+<para>
+
+</para>
 
 
 <!-- ##### MACRO COTHREAD_MAXTHREADS ##### -->
@@ -923,6 +1387,18 @@ g_print messages.
 @format: 
 @args...: 
 
+<!-- ##### MACRO FCONNECTION ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO FUNCTION ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GBaseInitFunc ##### -->
 <para>
 
@@ -948,6 +1424,24 @@ g_print messages.
 
 
 <!-- ##### MACRO GInstanceInitFunc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GLOBAL_REGISTRY_DIR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GLOBAL_REGISTRY_FILE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GLOBAL_REGISTRY_FILE_TMP ##### -->
 <para>
 
 </para>
@@ -988,6 +1482,105 @@ g_print messages.
 
 @klass: 
 
+<!-- ##### MACRO GST_ATOMIC_INT_ADD ##### -->
+<para>
+
+</para>
+
+@ref: 
+@count: 
+
+<!-- ##### MACRO GST_ATOMIC_INT_DEC_AND_TEST ##### -->
+<para>
+
+</para>
+
+@ref: 
+@zero: 
+
+<!-- ##### MACRO GST_ATOMIC_INT_FREE ##### -->
+<para>
+
+</para>
+
+@ref: 
+
+<!-- ##### MACRO GST_ATOMIC_INT_INC ##### -->
+<para>
+
+</para>
+
+@ref: 
+
+<!-- ##### MACRO GST_ATOMIC_INT_INIT ##### -->
+<para>
+
+</para>
+
+@ref: 
+@val: 
+
+<!-- ##### MACRO GST_ATOMIC_INT_READ ##### -->
+<para>
+
+</para>
+
+@ref: 
+@res: 
+
+<!-- ##### MACRO GST_ATOMIC_INT_SET ##### -->
+<para>
+
+</para>
+
+@ref: 
+@val: 
+
+<!-- ##### MACRO GST_ATOMIC_INT_VALUE ##### -->
+<para>
+
+</para>
+
+@ref: 
+
+<!-- ##### MACRO GST_ATOMIC_LOCK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_ATOMIC_SWAP ##### -->
+<para>
+
+</para>
+
+@swap: 
+@val: 
+
+<!-- ##### MACRO GST_ATOMIC_SWAP_GET ##### -->
+<para>
+
+</para>
+
+@swap: 
+@val: 
+@res: 
+
+<!-- ##### MACRO GST_ATOMIC_SWAP_INIT ##### -->
+<para>
+
+</para>
+
+@swap: 
+@val: 
+
+<!-- ##### MACRO GST_ATOMIC_SWAP_VALUE ##### -->
+<para>
+
+</para>
+
+@swap: 
+
 <!-- ##### MACRO GST_AUDIOSINK ##### -->
 <para>
 
@@ -1016,6 +1609,26 @@ g_print messages.
 
 @klass: 
 
+<!-- ##### MACRO GST_AUTOPLUG_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_AUTOPLUG_FACTORY_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_AUTOPLUG_MAX_COST ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_BIN ##### -->
 <para>
 
@@ -1023,7 +1636,21 @@ g_print messages.
 
 @obj: 
 
+<!-- ##### MACRO GST_BIN_CAST ##### -->
+<para>
+
+</para>
+
+@obj: 
+
 <!-- ##### MACRO GST_BIN_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_BIN_CLASS_CAST ##### -->
 <para>
 
 </para>
@@ -1088,6 +1715,78 @@ Releases a lock on the buffer.
 
 @buf: a #GstBuffer to unlock
 
+<!-- ##### MACRO GST_CACHE_ASSOC_FLAGS ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+<!-- ##### MACRO GST_CACHE_ASSOC_FORMAT ##### -->
+<para>
+
+</para>
+
+@entry: 
+@i: 
+
+<!-- ##### MACRO GST_CACHE_ASSOC_VALUE ##### -->
+<para>
+
+</para>
+
+@entry: 
+@i: 
+
+<!-- ##### MACRO GST_CACHE_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_CACHE_FACTORY_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_CACHE_FORMAT_FORMAT ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+<!-- ##### MACRO GST_CACHE_FORMAT_KEY ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+<!-- ##### MACRO GST_CACHE_ID_DESCRIPTION ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+<!-- ##### MACRO GST_CACHE_NASSOCS ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+<!-- ##### MACRO GST_CAPS ##### -->
+<para>
+
+</para>
+
+@caps: 
+
 <!-- ##### MACRO GST_CAPS_LOCK ##### -->
 <para>
 Lock the caps structure
@@ -1108,6 +1807,55 @@ Unlock the caps structure
 </para>
 
 @caps: The caps structure to unlock
+
+<!-- ##### MACRO GST_CLOCK_ENTRY ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+<!-- ##### MACRO GST_CLOCK_ENTRY_CLOCK ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+<!-- ##### MACRO GST_CLOCK_ENTRY_INTERVAL ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+<!-- ##### MACRO GST_CLOCK_ENTRY_STATUS ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+<!-- ##### MACRO GST_CLOCK_ENTRY_TIME ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+<!-- ##### MACRO GST_CLOCK_ENTRY_TYPE ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+<!-- ##### MACRO GST_CLOCK_FLAGS ##### -->
+<para>
+
+</para>
+
+@clock: 
 
 <!-- ##### MACRO GST_CONNECTION ##### -->
 <para>
@@ -1192,6 +1940,12 @@ to the current function, i.e. "('element')"
 @format: printf-style format string
 @args...: printf arguments
 
+<!-- ##### MACRO GST_DISABLE_LOADSAVE_REGISTRY ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_DISKSRC ##### -->
 <para>
 
@@ -1213,7 +1967,35 @@ to the current function, i.e. "('element')"
 
 @obj: 
 
+<!-- ##### MACRO GST_ELEMENT_CAST ##### -->
+<para>
+
+</para>
+
+@obj: 
+
 <!-- ##### MACRO GST_ELEMENT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_ELEMENT_CLASS_CAST ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_ELEMENT_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_ELEMENT_FACTORY_CLASS ##### -->
 <para>
 
 </para>
@@ -1262,6 +2044,14 @@ The properties of the info event
 </para>
 
 @event: The event to query
+
+<!-- ##### MACRO GST_EVENT_MASK_FUNCTION ##### -->
+<para>
+
+</para>
+
+@functionname: 
+@...: 
 
 <!-- ##### MACRO GST_EVENT_SEEK_FLUSH ##### -->
 <para>
@@ -1346,6 +2136,48 @@ subclass use this to start their flag enumeration
 </para>
 
 
+<!-- ##### MACRO GST_FORMATS_FUNCTION ##### -->
+<para>
+
+</para>
+
+@functionname: 
+@...: 
+
+<!-- ##### MACRO GST_GHOST_PAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_GHOST_PAD_CAST ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_GHOST_PAD_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_GHOST_PAD_CLASS_CAST ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_GNUC_CONSTRUCTOR ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_HTTPSRC ##### -->
 >>>>>>> 1.23.2.3
 <para>
@@ -1417,6 +2249,20 @@ subclass use this to start their flag enumeration
 
 @obj: 
 
+<!-- ##### MACRO GST_IS_AUTOPLUG_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_AUTOPLUG_FACTORY_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
 <!-- ##### MACRO GST_IS_BIN ##### -->
 <para>
 
@@ -1425,6 +2271,20 @@ subclass use this to start their flag enumeration
 @obj: 
 
 <!-- ##### MACRO GST_IS_BIN_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_CACHE_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_CACHE_FACTORY_CLASS ##### -->
 <para>
 
 </para>
@@ -1472,6 +2332,20 @@ subclass use this to start their flag enumeration
 </para>
 
 @obj: 
+
+<!-- ##### MACRO GST_IS_ELEMENT_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_ELEMENT_FACTORY_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
 
 <!-- ##### MACRO GST_IS_ESDSINK ##### -->
 <para>
@@ -1557,6 +2431,27 @@ subclass use this to start their flag enumeration
 
 @obj: 
 
+<!-- ##### MACRO GST_IS_GHOST_PAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_GHOST_PAD_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_GHOST_PAD_FAST ##### -->
+<para>
+
+</para>
+
+@obj: 
+
 <!-- ##### MACRO GST_IS_HTTPSRC ##### -->
 <para>
 
@@ -1613,6 +2508,27 @@ subclass use this to start their flag enumeration
 
 @obj: 
 
+<!-- ##### MACRO GST_IS_PAD_FAST ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_PAD_TEMPLATE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_PAD_TEMPLATE_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
 <!-- ##### MACRO GST_IS_PIPELINE ##### -->
 <para>
 
@@ -1635,6 +2551,41 @@ subclass use this to start their flag enumeration
 @obj: 
 
 <!-- ##### MACRO GST_IS_QUEUE_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_REAL_PAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_REAL_PAD_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_REAL_PAD_FAST ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_SCHEDULER_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_SCHEDULER_FACTORY_CLASS ##### -->
 <para>
 
 </para>
@@ -1756,7 +2707,21 @@ Clear a flag in the meta data.
 
 @obj: 
 
+<!-- ##### MACRO GST_OBJECT_CAST ##### -->
+<para>
+
+</para>
+
+@obj: 
+
 <!-- ##### MACRO GST_OBJECT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_OBJECT_CLASS_CAST ##### -->
 <para>
 
 </para>
@@ -1776,7 +2741,21 @@ subclasses can use this value to start the enumeration of their flags
 
 @obj: 
 
+<!-- ##### MACRO GST_PAD_CAST ##### -->
+<para>
+
+</para>
+
+@obj: 
+
 <!-- ##### MACRO GST_PAD_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_PAD_CLASS_CAST ##### -->
 <para>
 
 </para>
@@ -1830,6 +2809,42 @@ Indicates a srcpad for the padfactory.
 </para>
 
 
+<!-- ##### MACRO GST_PAD_IS_ACTIVE ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+<!-- ##### MACRO GST_PAD_IS_USABLE ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+<!-- ##### MACRO GST_PAD_QUERY_TYPE_FUNCTION ##### -->
+<para>
+
+</para>
+
+@functionname: 
+@...: 
+
+<!-- ##### MACRO GST_PAD_TEMPLATE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_PAD_TEMPLATE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
 <!-- ##### MACRO GST_PIPELINE ##### -->
 <para>
 
@@ -1843,6 +2858,13 @@ Indicates a srcpad for the padfactory.
 </para>
 
 @klass: 
+
+<!-- ##### MACRO GST_PLUGIN ##### -->
+<para>
+
+</para>
+
+@plugin: 
 
 <!-- ##### MACRO GST_PROPS_BOOL_ID ##### -->
 <para>
@@ -1885,6 +2907,13 @@ Create a fourcc property out of an integer value.
 
 @a: the integer value
 
+<!-- ##### MACRO GST_PROPS_GLIST ##### -->
+<para>
+
+</para>
+
+@a: 
+
 <!-- ##### MACRO GST_PROPS_INT_ID ##### -->
 <para>
 
@@ -1917,12 +2946,61 @@ Create a fourcc property out of an integer value.
 
 @klass: 
 
+<!-- ##### MACRO GST_REAL_PAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_REAL_PAD_CAST ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_REAL_PAD_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_REAL_PAD_CLASS_CAST ##### -->
+<para>
+
+</para>
+
+@klass: 
+
 <!-- ##### MACRO GST_RPAD_EOSFUNC ##### -->
 <para>
 Get the EOS function of the real pad.
 </para>
 
 @pad: the real pad to query.
+
+<!-- ##### MACRO GST_RPAD_EVENTMASKFUNC ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+<!-- ##### MACRO GST_RPAD_EVENT_MASKS ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+<!-- ##### MACRO GST_RPAD_FORMATSFUNC ##### -->
+<para>
+
+</para>
+
+@pad: 
 
 <!-- ##### MACRO GST_RPAD_GETREGIONFUNC ##### -->
 <para>
@@ -1987,12 +3065,40 @@ Get the QoS function of the real pad.
 
 @pad: the real pad to query.
 
+<!-- ##### MACRO GST_RPAD_QUERYTYPEFUNC ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+<!-- ##### MACRO GST_RPAD_QUERY_TYPES ##### -->
+<para>
+
+</para>
+
+@pad: 
+
 <!-- ##### MACRO GST_RPAD_REGIONTYPE ##### -->
 <para>
 Get the type of the region that is being pulled.
 </para>
 
 @pad: the real pad to query.
+
+<!-- ##### MACRO GST_SCHEDULER_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_SCHEDULER_FACTORY_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
 
 <!-- ##### MACRO GST_SCHEDULE_ADD_ELEMENT ##### -->
 <para>
@@ -2240,6 +3346,12 @@ This macro unsets the given state on the element.
 
 @klass: 
 
+<!-- ##### MACRO GST_TYPE_ASSOC_FLAGS ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_TYPE_ASYNCDISKSRC ##### -->
 >>>>>>> 1.23.2.3
 <para>
@@ -2259,13 +3371,103 @@ This macro unsets the given state on the element.
 </para>
 
 
+<!-- ##### MACRO GST_TYPE_AUTOPLUG_FACTORY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_AUTOPLUG_FLAGS ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_TYPE_BIN ##### -->
 <para>
 
 </para>
 
 
+<!-- ##### MACRO GST_TYPE_BIN_FLAGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_BUFFER_FLAG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_BUFFER_POOL ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_CACHE_CERTAINTY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_CACHE_ENTRY_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_CACHE_FACTORY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_CACHE_LOOKUP_METHOD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_CLOCK_ENTRY_STATUS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_CLOCK_ENTRY_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_CLOCK_FLAGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_CLOCK_RETURN ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_TYPE_CONNECTION ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_CPU_FLAGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_DATA_FLAGS ##### -->
 <para>
 
 </para>
@@ -2283,7 +3485,43 @@ This macro unsets the given state on the element.
 </para>
 
 
+<!-- ##### MACRO GST_TYPE_ELEMENT_FACTORY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_ELEMENT_FLAGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_ELEMENT_STATE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_ELEMENT_STATE_RETURN ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_TYPE_ESDSINK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_EVENT_FLAG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_EVENT_TYPE ##### -->
 <para>
 
 </para>
@@ -2325,6 +3563,18 @@ A type that can be used to indicate a filename.
 </para>
 
 
+<!-- ##### MACRO GST_TYPE_FORMAT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_GHOST_PAD ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_TYPE_HTTPSRC ##### -->
 <para>
 
@@ -2343,7 +3593,61 @@ A type that can be used to indicate a filename.
 </para>
 
 
+<!-- ##### MACRO GST_TYPE_OBJECT_FLAGS ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_TYPE_PAD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PAD_CONNECT_RETURN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PAD_DIRECTION ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PAD_FLAGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PAD_PRESENCE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PAD_QUERY_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PAD_TEMPLATE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PARANOID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PARSE_ERROR ##### -->
 <para>
 
 </para>
@@ -2355,7 +3659,73 @@ A type that can be used to indicate a filename.
 </para>
 
 
+<!-- ##### MACRO GST_TYPE_PLUGIN_ERROR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PROPS_TYPE ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_TYPE_QUEUE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_REAL_PAD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_REGISTRY_FLAGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_REGISTRY_RETURN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_RESULT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_SCHEDULER_FACTORY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_SCHEDULER_FLAGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_SCHEDULER_STATE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_SEEK_ACCURACY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_SEEK_TYPE ##### -->
 <para>
 
 </para>
@@ -2386,6 +3756,12 @@ A type that can be used to indicate a filename.
 
 
 <!-- ##### MACRO GST_TYPE_THREAD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_THREAD_STATE ##### -->
 <para>
 
 </para>
@@ -2838,9 +4214,16 @@ A type that can be used to indicate a filename.
 </para>
 
 @AGGREGATOR_LOOP: 
-@AGGREGATOR_LOOP_PEEK: 
 @AGGREGATOR_LOOP_SELECT: 
 @AGGREGATOR_CHAIN: 
+
+<!-- ##### ENUM GstAssocFlags ##### -->
+<para>
+
+</para>
+
+@GST_ACCOCIATION_FLAG_NONE: 
+@GST_ACCOCIATION_FLAG_KEY_UNIT: 
 
 <!-- ##### STRUCT GstAsyncDiskSrc ##### -->
 <para>
@@ -2900,6 +4283,19 @@ Specify the current offset in the file.
 
 @GST_ASYNCDISKSRC_OPEN: 
 @GST_ASYNCDISKSRC_FLAG_LAST: 
+
+<!-- ##### STRUCT GstAtomicInt ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstAtomicSwap ##### -->
+<para>
+
+</para>
+
+@lock: 
 
 <!-- ##### STRUCT GstAudioSink ##### -->
 <para>
@@ -2987,6 +4383,17 @@ The frequency.
 </para>
 
 
+<!-- ##### STRUCT GstAutoplugNode ##### -->
+<para>
+
+</para>
+
+@prev: 
+@fac: 
+@templ: 
+@cost: 
+@endpoint: 
+
 <!-- ##### STRUCT GstBinClass ##### -->
 <para>
 
@@ -3041,6 +4448,81 @@ can perform necessary cleanup.
 @pool: The pool that is being destroyed
 @user_data: user data as set on th bufferpool
 
+<!-- ##### STRUCT GstCacheAssociation ##### -->
+<para>
+
+</para>
+
+@format: 
+@value: 
+
+<!-- ##### ENUM GstCacheCertainty ##### -->
+<para>
+
+</para>
+
+@GST_CACHE_UNKNOWN: 
+@GST_CACHE_CERTAIN: 
+@GST_CACHE_FUZZY: 
+
+<!-- ##### STRUCT GstCacheEntry ##### -->
+<para>
+
+</para>
+
+@type: 
+@id: 
+
+<!-- ##### ENUM GstCacheEntryType ##### -->
+<para>
+
+</para>
+
+@GST_CACHE_ENTRY_ID: 
+@GST_CACHE_ENTRY_ASSOCIATION: 
+@GST_CACHE_ENTRY_OBJECT: 
+@GST_CACHE_ENTRY_FORMAT: 
+
+<!-- ##### USER_FUNCTION GstCacheFilter ##### -->
+<para>
+
+</para>
+
+@cache: 
+@entry: 
+@Returns: 
+
+<!-- ##### STRUCT GstCacheGroup ##### -->
+<para>
+
+</para>
+
+@groupnum: 
+@entries: 
+@certainty: 
+@peergroup: 
+
+<!-- ##### ENUM GstCacheLookupMethod ##### -->
+<para>
+
+</para>
+
+@GST_CACHE_LOOKUP_EXACT: 
+@GST_CACHE_LOOKUP_BEFORE: 
+@GST_CACHE_LOOKUP_AFTER: 
+
+<!-- ##### USER_FUNCTION GstCacheResolver ##### -->
+<para>
+
+</para>
+
+@cache: 
+@writer: 
+@writer_id: 
+@writer_string: 
+@user_data: 
+@Returns: 
+
 <!-- ##### ENUM GstCapsDefinition ##### -->
 <para>
 
@@ -3066,6 +4548,41 @@ can perform necessary cleanup.
 
 </para>
 
+
+<!-- ##### STRUCT GstClockEntry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM GstClockEntryStatus ##### -->
+<para>
+
+</para>
+
+@GST_CLOCK_ENTRY_OK: 
+@GST_CLOCK_ENTRY_EARLY: 
+@GST_CLOCK_ENTRY_RESTART: 
+
+<!-- ##### ENUM GstClockEntryType ##### -->
+<para>
+
+</para>
+
+@GST_CLOCK_ENTRY_SINGLE: 
+@GST_CLOCK_ENTRY_PERIODIC: 
+
+<!-- ##### ENUM GstClockFlags ##### -->
+<para>
+
+</para>
+
+@GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC: 
+@GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC: 
+@GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC: 
+@GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC: 
+@GST_CLOCK_FLAG_CAN_SET_RESOLUTION: 
+@GST_CLOCK_FLAG_CAN_SET_SPEED: 
 
 <!-- ##### STRUCT GstConnection ##### -->
 <para>
@@ -3171,6 +4688,15 @@ Get the size of the file.
 @GST_DISKSRC_OPEN: 
 @GST_DISKSRC_FLAG_LAST: 
 
+<!-- ##### SIGNAL GstElement::deep-notify ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
+@arg2: 
+
 <!-- ##### SIGNAL GstElement::event ##### -->
 <para>
 
@@ -3210,6 +4736,22 @@ GstElementDetails struct for the element.
 </para>
 
 
+<!-- ##### USER_FUNCTION GstElementGetClockFunction ##### -->
+<para>
+The function to get the clock from a clock providing element
+</para>
+
+@element: The element to get the clock of
+@Returns: The clock provided by the element
+
+<!-- ##### USER_FUNCTION GstElementSetClockFunction ##### -->
+<para>
+The function to set the clock on a clock receiving element.
+</para>
+
+@element: The element to set the clock on
+@clock: The clock to set on the element
+
 <!-- ##### STRUCT GstEsdSink ##### -->
 <para>
 
@@ -3221,6 +4763,14 @@ GstElementDetails struct for the element.
 
 </para>
 
+
+<!-- ##### ENUM GstEventFlag ##### -->
+<para>
+
+</para>
+
+@GST_EVENT_FLAG_NONE: 
+@GST_RATE_FLAG_NEGATIVE: 
 
 <!-- ##### STRUCT GstFakeSink ##### -->
 <para>
@@ -3394,6 +4944,49 @@ Sync on the clock
 </para>
 
 
+<!-- ##### ENUM GstFakeSrcDataType ##### -->
+<para>
+
+</para>
+
+@FAKESRC_DATA_ALLOCATE: 
+@FAKESRC_DATA_SUBBUFFER: 
+@FAKESRC_DATA_BUFFERPOOL: 
+
+<!-- ##### ENUM GstFakeSrcFillType ##### -->
+<para>
+
+</para>
+
+@FAKESRC_FILLTYPE_NOTHING: 
+@FAKESRC_FILLTYPE_NULL: 
+@FAKESRC_FILLTYPE_RANDOM: 
+@FAKESRC_FILLTYPE_PATTERN: 
+@FAKESRC_FILLTYPE_PATTERN_CONT: 
+
+<!-- ##### ENUM GstFakeSrcOutputType ##### -->
+<para>
+
+</para>
+
+@FAKESRC_FIRST_LAST_LOOP: 
+@FAKESRC_LAST_FIRST_LOOP: 
+@FAKESRC_PING_PONG: 
+@FAKESRC_ORDERED_RANDOM: 
+@FAKESRC_RANDOM: 
+@FAKESRC_PATTERN_LOOP: 
+@FAKESRC_PING_PONG_PATTERN: 
+@FAKESRC_GET_ALWAYS_SUCEEDS: 
+
+<!-- ##### ENUM GstFakeSrcSizeType ##### -->
+<para>
+
+</para>
+
+@FAKESRC_SIZETYPE_NULL: 
+@FAKESRC_SIZETYPE_FIXED: 
+@FAKESRC_SIZETYPE_RANDOM: 
+
 <!-- ##### STRUCT GstFdSink ##### -->
 <para>
 
@@ -3442,6 +5035,14 @@ Get the current offset in the file.
 </para>
 
 
+<!-- ##### ENUM GstFileSinkFlags ##### -->
+<para>
+
+</para>
+
+@GST_FILESINK_OPEN: 
+@GST_FILESINK_FLAG_LAST: 
+
 <!-- ##### ARG GstFileSrc:blocksize ##### -->
 <para>
 The size of the buffers to pass to the peer element.
@@ -3484,6 +5085,14 @@ Indicates the mmapped area should be touched to bring it into memory.
 </para>
 
 
+<!-- ##### ENUM GstFileSrcFlags ##### -->
+<para>
+
+</para>
+
+@GST_FILESRC_OPEN: 
+@GST_FILESRC_FLAG_LAST: 
+
 <!-- ##### STRUCT GstFilter ##### -->
 <para>
 
@@ -3495,6 +5104,28 @@ Indicates the mmapped area should be touched to bring it into memory.
 
 </para>
 
+
+<!-- ##### ENUM GstFormat ##### -->
+<para>
+
+</para>
+
+@GST_FORMAT_UNDEFINED: 
+@GST_FORMAT_DEFAULT: 
+@GST_FORMAT_BYTES: 
+@GST_FORMAT_TIME: 
+@GST_FORMAT_BUFFERS: 
+@GST_FORMAT_PERCENT: 
+@GST_FORMAT_UNITS: 
+
+<!-- ##### STRUCT GstFormatDefinition ##### -->
+<para>
+
+</para>
+
+@value: 
+@nick: 
+@description: 
 
 <!-- ##### STRUCT GstHttpSrc ##### -->
 <para>
@@ -3601,6 +5232,27 @@ Specify the location of the file. The location must be a fully qualified URL.
 </para>
 
 
+<!-- ##### STRUCT GstMemChunk ##### -->
+<para>
+
+</para>
+
+@swap: 
+@name: 
+@area_size: 
+@chunk_size: 
+@atom_size: 
+@cleanup: 
+@lock: 
+
+<!-- ##### STRUCT GstMemChunkElement ##### -->
+<para>
+
+</para>
+
+@link: 
+@area: 
+
 <!-- ##### STRUCT GstMeta ##### -->
 <para>
 
@@ -3625,15 +5277,6 @@ Flags indicating properties about the meta data.
 
 @GST_MULTIDISKSRC_OPEN: 
 @GST_MULTIDISKSRC_FLAG_LAST: 
-
-<!-- ##### SIGNAL GstObject::deep-notify ##### -->
-<para>
-
-</para>
-
-@gstobject: the object which received the signal.
-@arg1: 
-@arg2: 
 
 <!-- ##### STRUCT GstObjectClass ##### -->
 <para>
@@ -3673,6 +5316,14 @@ The function that will be called in an EOS case.
 @pad: the pad that needs to be set to EOS state
 @Returns: TRUE if EOS was successful, FALSE otherwise
 
+<!-- ##### USER_FUNCTION GstPadEventMaskFunction ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
 <!-- ##### TYPEDEF GstPadFactoryEntry ##### -->
 <para>
 Defines an entry for a padfactory.
@@ -3684,6 +5335,14 @@ Defines an entry for a padfactory.
 The padfactory.
 </para>
 
+
+<!-- ##### USER_FUNCTION GstPadFormatsFunction ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
 
 <!-- ##### USER_FUNCTION GstPadGetRegionFunction ##### -->
 <para>
@@ -3764,6 +5423,20 @@ The function that will be called when a QoS message is sent.
 @pad: the pad that sent the QoS message
 @qos_message: the message
 
+<!-- ##### USER_FUNCTION GstPadQueryTypeFunction ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### STRUCT GstPadTemplateClass ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### ENUM GstParseErrors ##### -->
 <para>
 
@@ -3774,6 +5447,14 @@ The function that will be called when a QoS message is sent.
 @GST_PARSE_ERROR_NOSUCH_ELEMENT: 
 @GST_PARSE_ERROR_INTERNAL: 
 @GST_PARSE_ERROR_CONNECT: 
+
+<!-- ##### ENUM GstPipeFilterFlags ##### -->
+<para>
+
+</para>
+
+@GST_PIPEFILTER_OPEN: 
+@GST_PIPEFILTER_FLAG_LAST: 
 
 <!-- ##### ARG GstPipefilter:command ##### -->
 <para>
@@ -3792,6 +5473,33 @@ Sets the command to be executed.
 
 </para>
 
+
+<!-- ##### STRUCT GstProbe ##### -->
+<para>
+
+</para>
+
+@single_shot: 
+@callback: 
+@user_data: 
+
+<!-- ##### USER_FUNCTION GstProbeCallback ##### -->
+<para>
+
+</para>
+
+@probe: 
+@data: 
+@user_data: 
+@Returns: 
+
+<!-- ##### STRUCT GstProbeDispatcher ##### -->
+<para>
+
+</para>
+
+@active: 
+@probes: 
 
 <!-- ##### TYPEDEF GstPropsFactoryEntry ##### -->
 <para>
@@ -3898,6 +5606,15 @@ the region types for #gst_pad_pullregion.
 @file: 
 @tmp_file: 
 
+<!-- ##### ENUM GstResult ##### -->
+<para>
+
+</para>
+
+@GST_RESULT_OK: 
+@GST_RESULT_NOK: 
+@GST_RESULT_NOT_IMPL: 
+
 <!-- ##### STRUCT GstScheduleChain ##### -->
 <para>
 
@@ -3910,6 +5627,27 @@ the region types for #gst_pad_pullregion.
 @entry: 
 @cothreaded_elements: 
 @schedule: 
+
+<!-- ##### STRUCT GstScheduler ##### -->
+<para>
+
+</para>
+
+@object: 
+@parent: 
+@parent_sched: 
+@state: 
+@clock: 
+@current_clock: 
+@clock_providers: 
+@clock_receivers: 
+@schedulers: 
+
+<!-- ##### STRUCT GstSchedulerClass ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### STRUCT GstSineSrc ##### -->
 <para>
@@ -3978,6 +5716,12 @@ The volume as a double 0.0 is silent, 1.0 is loudest.
 
 
 <!-- ##### STRUCT GstSinkClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstSpiderConnection ##### -->
 <para>
 
 </para>
@@ -4123,6 +5867,39 @@ TRUE if the thread should be created.
 </para>
 
 
+<!-- ##### ENUM GstTimeCacheCertainty ##### -->
+<para>
+
+</para>
+
+@GST_TIME_CACHE_UNKNOWN: 
+@GST_TIME_CACHE_CERTAIN: 
+@GST_TIME_CACHE_FUZZY_LOCATION: 
+@GST_TIME_CACHE_FUZZY_TIMESTAMP: 
+@GST_TIME_CACHE_FUZZY: 
+
+<!-- ##### STRUCT GstTimeCacheEntry ##### -->
+<para>
+
+</para>
+
+@location: 
+@timestamp: 
+
+<!-- ##### STRUCT GstTimeCacheGroup ##### -->
+<para>
+
+</para>
+
+@groupnum: 
+@entries: 
+@certainty: 
+@peergroup: 
+@mintimestamp: 
+@maxtimestamp: 
+@minlocation: 
+@maxlocation: 
+
 <!-- ##### STRUCT GstTrace ##### -->
 <para>
 
@@ -4170,6 +5947,95 @@ Query the element for the current mime type
 </para>
 
 
+<!-- ##### USER_FUNCTION GstXMLRegistryAddPathList ##### -->
+<para>
+
+</para>
+
+@registry: 
+
+<!-- ##### USER_FUNCTION GstXMLRegistryClose ##### -->
+<para>
+
+</para>
+
+@registry: 
+@Returns: 
+
+<!-- ##### USER_FUNCTION GstXMLRegistryGetPerms ##### -->
+<para>
+
+</para>
+
+@registry: 
+
+<!-- ##### USER_FUNCTION GstXMLRegistryLoad ##### -->
+<para>
+
+</para>
+
+@registry: 
+@dest: 
+@size: 
+@Returns: 
+
+<!-- ##### ENUM GstXMLRegistryMode ##### -->
+<para>
+
+</para>
+
+@GST_XML_REGISTRY_READ: 
+@GST_XML_REGISTRY_WRITE: 
+
+<!-- ##### USER_FUNCTION GstXMLRegistryOpen ##### -->
+<para>
+
+</para>
+
+@registry: 
+@mode: 
+@Returns: 
+
+<!-- ##### USER_FUNCTION GstXMLRegistryParser ##### -->
+<para>
+
+</para>
+
+@context: 
+@tag: 
+@text: 
+@text_len: 
+@registry: 
+@error: 
+@Returns: 
+
+<!-- ##### USER_FUNCTION GstXMLRegistrySave ##### -->
+<para>
+
+</para>
+
+@registry: 
+@format: 
+@Varargs: 
+@Returns: 
+
+<!-- ##### ENUM GstXMLRegistryState ##### -->
+<para>
+
+</para>
+
+@GST_XML_REGISTRY_NONE: 
+@GST_XML_REGISTRY_TOP: 
+@GST_XML_REGISTRY_PATHS: 
+@GST_XML_REGISTRY_PATH: 
+@GST_XML_REGISTRY_PATHS_DONE: 
+@GST_XML_REGISTRY_PLUGIN: 
+@GST_XML_REGISTRY_FEATURE: 
+@GST_XML_REGISTRY_PADTEMPLATE: 
+@GST_XML_REGISTRY_CAPS: 
+@GST_XML_REGISTRY_CAPSCOMP: 
+@GST_XML_REGISTRY_PROPERTIES: 
+
 <!-- ##### SIGNAL GstXml::object-loaded ##### -->
 <para>
 
@@ -4178,6 +6044,12 @@ Query the element for the current mime type
 @gstxml: the object which received the signal.
 @arg1: 
 @arg2: 
+
+<!-- ##### MACRO IDENTIFIER ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### MACRO INFO ##### -->
 <para>
@@ -4197,6 +6069,24 @@ Query the element for the current mime type
 @element: 
 @format: 
 @args...: 
+
+<!-- ##### MACRO LOCAL_REGISTRY_DIR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO LOCAL_REGISTRY_FILE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO LOCAL_REGISTRY_FILE_TMP ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### STRUCT MetaAudioRaw ##### -->
 <para>
@@ -4260,6 +6150,13 @@ Query the element for the current mime type
 @overlay_info: 
 @dga_info: 
 
+<!-- ##### MACRO N_ ##### -->
+<para>
+
+</para>
+
+@String: 
+
 <!-- ##### STRUCT OverlayClip ##### -->
 <para>
 
@@ -4300,6 +6197,45 @@ must be defined to activate the tracing functionality.
 </para>
 
 
+<!-- ##### MACRO VALUE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO YYSTYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO _ ##### -->
+<para>
+
+</para>
+
+@String: 
+
+<!-- ##### MACRO bindtextdomain ##### -->
+<para>
+
+</para>
+
+@Domain: 
+@Directory: 
+
+<!-- ##### TYPEDEF connection_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF cothread ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION cothread_get_data ##### -->
 <para>
 
@@ -4330,6 +6266,120 @@ must be defined to activate the tracing functionality.
 @thread: 
 @key: 
 @data: 
+
+<!-- ##### MACRO dcgettext ##### -->
+<para>
+
+</para>
+
+@Domain: 
+@String: 
+@Type: 
+
+<!-- ##### MACRO dgettext ##### -->
+<para>
+
+</para>
+
+@Domain: 
+@String: 
+
+<!-- ##### MACRO do_cothread_context_destroy ##### -->
+<para>
+
+</para>
+
+@context: 
+
+<!-- ##### MACRO do_cothread_context_init ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO do_cothread_create ##### -->
+<para>
+
+</para>
+
+@new_cothread: 
+@context: 
+@func: 
+@argc: 
+@argv: 
+
+<!-- ##### MACRO do_cothread_destroy ##### -->
+<para>
+
+</para>
+
+@cothread: 
+
+<!-- ##### MACRO do_cothread_get_current ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO do_cothread_get_main ##### -->
+<para>
+
+</para>
+
+@context: 
+
+<!-- ##### MACRO do_cothread_lock ##### -->
+<para>
+
+</para>
+
+@cothread: 
+
+<!-- ##### MACRO do_cothread_setfunc ##### -->
+<para>
+
+</para>
+
+@cothread: 
+@context: 
+@func: 
+@argc: 
+@argv: 
+
+<!-- ##### MACRO do_cothread_switch ##### -->
+<para>
+
+</para>
+
+@to: 
+
+<!-- ##### MACRO do_cothread_unlock ##### -->
+<para>
+
+</para>
+
+@cothread: 
+
+<!-- ##### MACRO do_cothreads_init ##### -->
+<para>
+
+</para>
+
+@x: 
+
+<!-- ##### MACRO do_cothreads_stackquery ##### -->
+<para>
+
+</para>
+
+@stack: 
+@size: 
+
+<!-- ##### TYPEDEF element_t ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION g2g_object_class_find_property ##### -->
 <para>
@@ -5107,11 +7157,48 @@ must be defined to activate the tracing functionality.
 
 @val: 
 
+<!-- ##### MACRO gettext ##### -->
+<para>
+
+</para>
+
+@String: 
+
+<!-- ##### STRUCT graph_t ##### -->
+<para>
+
+</para>
+
+@first: 
+@current: 
+@parent: 
+@current_bin_type: 
+@elements: 
+@connections: 
+@connections_pending: 
+@bins: 
+@bin: 
+
 <!-- ##### VARIABLE gst_aggregator_details ##### -->
 <para>
 
 </para>
 
+
+<!-- ##### FUNCTION gst_aggregator_factory_init ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_assoc_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_asyncdisksrc_get_type ##### -->
 <para>
@@ -5196,6 +7283,42 @@ must be defined to activate the tracing functionality.
 
 @src: 
 
+<!-- ##### FUNCTION gst_autoplug_can_connect_sink ##### -->
+<para>
+
+</para>
+
+@fac: 
+@sink: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_can_connect_src ##### -->
+<para>
+
+</para>
+
+@fac: 
+@src: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_can_match ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_caps_intersect ##### -->
+<para>
+
+</para>
+
+@src: 
+@sink: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_autoplug_caps_list ##### -->
 <para>
 
@@ -5209,12 +7332,84 @@ must be defined to activate the tracing functionality.
 @srccaps: 
 @sinkcaps: 
 
+<!-- ##### FUNCTION gst_autoplug_factories_at_most_templates ##### -->
+<para>
+
+</para>
+
+@factories: 
+@dir: 
+@maxtemplates: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_factories_filters ##### -->
+<para>
+
+</para>
+
+@factories: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_factories_filters_with_sink_caps ##### -->
+<para>
+
+</para>
+
+@factories: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_factories_sinks ##### -->
+<para>
+
+</para>
+
+@factories: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_factories_srcs ##### -->
+<para>
+
+</para>
+
+@factories: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_autoplug_factory_get_list ##### -->
 <para>
 
 </para>
 
 @Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_factory_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_factory_has_direction ##### -->
+<para>
+
+</para>
+
+@fac: 
+@dir: 
+@Returns: 
+
+<!-- ##### MACRO gst_autoplug_factory_has_sink ##### -->
+<para>
+
+</para>
+
+@fac: 
+
+<!-- ##### MACRO gst_autoplug_factory_has_src ##### -->
+<para>
+
+</para>
+
+@fac: 
 
 <!-- ##### FUNCTION gst_autoplug_factory_load_thyself ##### -->
 <para>
@@ -5231,6 +7426,30 @@ must be defined to activate the tracing functionality.
 
 @factory: 
 @parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplug_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO gst_autoplug_get_cost ##### -->
+<para>
+
+</para>
+
+@fac: 
+
+<!-- ##### FUNCTION gst_autoplug_sp ##### -->
+<para>
+
+</para>
+
+@src_caps: 
+@sink_caps: 
+@factories: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_bin_add_managed_element ##### -->
@@ -5255,6 +7474,19 @@ must be defined to activate the tracing functionality.
 </para>
 
 @bin: 
+
+<!-- ##### VARIABLE gst_bin_details ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_bin_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_bin_get_type ##### -->
 <para>
@@ -5329,6 +7561,13 @@ must be defined to activate the tracing functionality.
 
 @buffer: 
 
+<!-- ##### FUNCTION gst_buffer_flag_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_buffer_get_first_meta ##### -->
 <para>
 
@@ -5345,6 +7584,20 @@ must be defined to activate the tracing functionality.
 @buffer: 
 @Returns: 
 
+<!-- ##### MACRO gst_buffer_needs_copy_on_write ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+<!-- ##### FUNCTION gst_buffer_pool_default_free ##### -->
+<para>
+
+</para>
+
+@pool: 
+
 <!-- ##### FUNCTION gst_buffer_pool_destroy ##### -->
 <para>
 
@@ -5359,6 +7612,13 @@ must be defined to activate the tracing functionality.
 
 @pool: 
 @buffer: 
+
+<!-- ##### MACRO gst_buffer_pool_needs_copy_on_write ##### -->
+<para>
+
+</para>
+
+@pool: 
 
 <!-- ##### FUNCTION gst_buffer_pool_new_buffer ##### -->
 <para>
@@ -5426,6 +7686,248 @@ must be defined to activate the tracing functionality.
 @buffer: 
 @meta: 
 
+<!-- ##### MACRO gst_buffer_set_data ##### -->
+<para>
+
+</para>
+
+@buf: 
+@data: 
+@size: 
+
+<!-- ##### FUNCTION gst_cache_add_association ##### -->
+<para>
+
+</para>
+
+@cache: 
+@id: 
+@flags: 
+@format: 
+@value: 
+@Varargs: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_add_format ##### -->
+<para>
+
+</para>
+
+@cache: 
+@id: 
+@format: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_add_id ##### -->
+<para>
+
+</para>
+
+@cache: 
+@id: 
+@description: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_add_object ##### -->
+<para>
+
+</para>
+
+@cache: 
+@id: 
+@key: 
+@type: 
+@object: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_certainty_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_entry_assoc_map ##### -->
+<para>
+
+</para>
+
+@entry: 
+@format: 
+@value: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_entry_free ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+<!-- ##### FUNCTION gst_cache_entry_type_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_factory_create ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_factory_destroy ##### -->
+<para>
+
+</para>
+
+@factory: 
+
+<!-- ##### FUNCTION gst_cache_factory_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_factory_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_factory_make ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_factory_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@longdesc: 
+@type: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_get_assoc_entry ##### -->
+<para>
+
+</para>
+
+@cache: 
+@id: 
+@method: 
+@format: 
+@value: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_get_assoc_entry_full ##### -->
+<para>
+
+</para>
+
+@cache: 
+@id: 
+@method: 
+@format: 
+@value: 
+@func: 
+@user_data: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_get_certainty ##### -->
+<para>
+
+</para>
+
+@cache: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_get_group ##### -->
+<para>
+
+</para>
+
+@cache: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_get_writer_id ##### -->
+<para>
+
+</para>
+
+@cache: 
+@writer: 
+@id: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_lookup_method_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_new_group ##### -->
+<para>
+
+</para>
+
+@cache: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_set_certainty ##### -->
+<para>
+
+</para>
+
+@cache: 
+@certainty: 
+
+<!-- ##### FUNCTION gst_cache_set_filter ##### -->
+<para>
+
+</para>
+
+@cache: 
+@filter: 
+@user_data: 
+
+<!-- ##### FUNCTION gst_cache_set_group ##### -->
+<para>
+
+</para>
+
+@cache: 
+@groupnum: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_cache_set_resolver ##### -->
+<para>
+
+</para>
+
+@cache: 
+@resolver: 
+@user_data: 
+
 <!-- ##### FUNCTION gst_caps_list_check_compatibility ##### -->
 <para>
 
@@ -5471,6 +7973,22 @@ must be defined to activate the tracing functionality.
 @clock: 
 @active: 
 
+<!-- ##### FUNCTION gst_clock_async_supported ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_cancel_wait_async ##### -->
+<para>
+
+</para>
+
+@clock: 
+@id: 
+
 <!-- ##### FUNCTION gst_clock_current_diff ##### -->
 <para>
 
@@ -5480,11 +7998,72 @@ must be defined to activate the tracing functionality.
 @time: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_clock_entry_status_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_entry_type_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_clock_get_system ##### -->
 <para>
 
 </para>
 
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_id_free ##### -->
+<para>
+
+</para>
+
+@id: 
+
+<!-- ##### FUNCTION gst_clock_id_unlock ##### -->
+<para>
+
+</para>
+
+@id: 
+
+<!-- ##### FUNCTION gst_clock_id_unschedule ##### -->
+<para>
+
+</para>
+
+@id: 
+
+<!-- ##### FUNCTION gst_clock_id_wait ##### -->
+<para>
+
+</para>
+
+@id: 
+@jitter: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_id_wait_async ##### -->
+<para>
+
+</para>
+
+@id: 
+@func: 
+@user_data: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_clock_new ##### -->
@@ -5495,6 +8074,36 @@ must be defined to activate the tracing functionality.
 @name: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_clock_new_periodic_id ##### -->
+<para>
+
+</para>
+
+@clock: 
+@start_time: 
+@interval: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_new_single_shot_id ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_notify_async ##### -->
+<para>
+
+</para>
+
+@clock: 
+@interval: 
+@func: 
+@user_data: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_clock_register ##### -->
 <para>
 
@@ -5503,6 +8112,21 @@ must be defined to activate the tracing functionality.
 @clock: 
 @obj: 
 
+<!-- ##### FUNCTION gst_clock_remove_notify_async ##### -->
+<para>
+
+</para>
+
+@clock: 
+@id: 
+
+<!-- ##### FUNCTION gst_clock_return_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_clock_set ##### -->
 <para>
 
@@ -5510,6 +8134,45 @@ must be defined to activate the tracing functionality.
 
 @clock: 
 @time: 
+
+<!-- ##### FUNCTION gst_clock_unlock_id ##### -->
+<para>
+
+</para>
+
+@clock: 
+@id: 
+
+<!-- ##### FUNCTION gst_clock_wait ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+@jitter: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_wait_async ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+@func: 
+@user_data: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_clock_wait_id ##### -->
+<para>
+
+</para>
+
+@clock: 
+@id: 
+@jitter: 
+@Returns: 
 
 <!-- ##### FUNCTION gst_connection_get_type ##### -->
 <para>
@@ -5533,6 +8196,13 @@ must be defined to activate the tracing functionality.
 
 @connection: 
 
+<!-- ##### FUNCTION gst_cpu_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_data_default_copy ##### -->
 <para>
 
@@ -5547,6 +8217,21 @@ must be defined to activate the tracing functionality.
 </para>
 
 @data: 
+
+<!-- ##### FUNCTION gst_data_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_data_needs_copy_on_write ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
 
 <!-- ##### FUNCTION gst_debug_print_stack_trace ##### -->
 <para>
@@ -5569,6 +8254,15 @@ must be defined to activate the tracing functionality.
 @element: 
 @state: 
 @Returns: 
+
+<!-- ##### FUNCTION gst_element_class_install_std_props ##### -->
+<para>
+
+</para>
+
+@klass: 
+@first_name: 
+@Varargs: 
 
 <!-- ##### FUNCTION gst_element_connect_elements ##### -->
 <para>
@@ -5598,6 +8292,21 @@ must be defined to activate the tracing functionality.
 @element_2: 
 @Varargs: 
 @Returns: 
+
+<!-- ##### MACRO gst_element_default_deep_notify ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_element_default_error ##### -->
+<para>
+
+</para>
+
+@object: 
+@orig: 
+@error: 
 
 <!-- ##### FUNCTION gst_element_disconnect_elements ##### -->
 <para>
@@ -5648,12 +8357,28 @@ must be defined to activate the tracing functionality.
 
 @elementfactory: 
 
+<!-- ##### FUNCTION gst_element_factory_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_element_factory_load_thyself ##### -->
 <para>
 
 </para>
 
 @parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_factory_make_or_warn ##### -->
+<para>
+
+</para>
+
+@factoryname: 
+@name: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_element_factory_register ##### -->
@@ -5670,6 +8395,21 @@ must be defined to activate the tracing functionality.
 
 @factory: 
 @parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_get_cache ##### -->
+<para>
+
+</para>
+
+@element: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_element_get_compatible_request_pad ##### -->
@@ -5724,6 +8464,14 @@ must be defined to activate the tracing functionality.
 @first_name: 
 @Varargs: 
 
+<!-- ##### FUNCTION gst_element_is_cachable ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_element_load_thyself ##### -->
 <para>
 
@@ -5747,6 +8495,14 @@ must be defined to activate the tracing functionality.
 
 </para>
 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_provides_clock ##### -->
+<para>
+
+</para>
+
+@element: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_element_request_compatible_pad ##### -->
@@ -5777,6 +8533,14 @@ must be defined to activate the tracing functionality.
 @name: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_element_requires_clock ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_element_restore_thyself ##### -->
 <para>
 
@@ -5795,12 +8559,34 @@ must be defined to activate the tracing functionality.
 @parent: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_element_set_cache ##### -->
+<para>
+
+</para>
+
+@element: 
+@cache: 
+
 <!-- ##### FUNCTION gst_element_signal_eos ##### -->
 <para>
 
 </para>
 
 @element: 
+
+<!-- ##### FUNCTION gst_element_state_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_state_return_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_esdsink_chain ##### -->
 <para>
@@ -5856,6 +8642,13 @@ must be defined to activate the tracing functionality.
 
 @esdsink: 
 
+<!-- ##### FUNCTION gst_event_flag_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_event_free ##### -->
 <para>
 
@@ -5870,6 +8663,13 @@ must be defined to activate the tracing functionality.
 
 @firstname: 
 @Varargs: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_event_type_get_type ##### -->
+<para>
+
+</para>
+
 @Returns: 
 
 <!-- ##### FUNCTION gst_extra_get_filename_type ##### -->
@@ -5887,6 +8687,14 @@ must be defined to activate the tracing functionality.
 @pad: 
 @buf: 
 
+<!-- ##### FUNCTION gst_fakesink_factory_init ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_fakesink_get_type ##### -->
 <para>
 
@@ -5900,6 +8708,14 @@ must be defined to activate the tracing functionality.
 </para>
 
 @name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_fakesrc_factory_init ##### -->
+<para>
+
+</para>
+
+@factory: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_fakesrc_get_type ##### -->
@@ -5978,6 +8794,61 @@ must be defined to activate the tracing functionality.
 @name: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_format_get_by_nick ##### -->
+<para>
+
+</para>
+
+@nick: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_format_get_definitions ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_format_get_details ##### -->
+<para>
+
+</para>
+
+@format: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_format_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_format_register ##### -->
+<para>
+
+</para>
+
+@nick: 
+@description: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_ghost_pad_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_ghost_pad_save_thyself ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_httpsrc_get_type ##### -->
 <para>
 
@@ -6013,8 +8884,25 @@ must be defined to activate the tracing functionality.
 
 </para>
 
+@...: 
 @format: 
 @args...: 
+
+<!-- ##### FUNCTION gst_init_check ##### -->
+<para>
+
+</para>
+
+@argc: 
+@argv: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### MACRO gst_marshal_VOID__BOOLEAN ##### -->
 <para>
@@ -6028,11 +8916,29 @@ must be defined to activate the tracing functionality.
 </para>
 
 
-<!-- ##### MACRO gst_marshal_VOID__INT_INT ##### -->
+<!-- ##### FUNCTION gst_marshal_VOID__INT64 ##### -->
 <para>
 
 </para>
 
+@closure: 
+@return_value: 
+@n_param_values: 
+@param_values: 
+@invocation_hint: 
+@marshal_data: 
+
+<!-- ##### FUNCTION gst_marshal_VOID__INT_INT ##### -->
+<para>
+
+</para>
+
+@closure: 
+@return_value: 
+@n_param_values: 
+@param_values: 
+@invocation_hint: 
+@marshal_data: 
 
 <!-- ##### MACRO gst_marshal_VOID__OBJECT ##### -->
 <para>
@@ -6040,11 +8946,41 @@ must be defined to activate the tracing functionality.
 </para>
 
 
-<!-- ##### MACRO gst_marshal_VOID__OBJECT_POINTER ##### -->
+<!-- ##### FUNCTION gst_marshal_VOID__OBJECT_PARAM ##### -->
 <para>
 
 </para>
 
+@closure: 
+@return_value: 
+@n_param_values: 
+@param_values: 
+@invocation_hint: 
+@marshal_data: 
+
+<!-- ##### FUNCTION gst_marshal_VOID__OBJECT_POINTER ##### -->
+<para>
+
+</para>
+
+@closure: 
+@return_value: 
+@n_param_values: 
+@param_values: 
+@invocation_hint: 
+@marshal_data: 
+
+<!-- ##### FUNCTION gst_marshal_VOID__OBJECT_STRING ##### -->
+<para>
+
+</para>
+
+@closure: 
+@return_value: 
+@n_param_values: 
+@param_values: 
+@invocation_hint: 
+@marshal_data: 
 
 <!-- ##### MACRO gst_marshal_VOID__POINTER ##### -->
 <para>
@@ -6063,6 +8999,56 @@ must be defined to activate the tracing functionality.
 
 </para>
 
+
+<!-- ##### FUNCTION gst_md5sink_factory_init ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_mem_chunk_alloc ##### -->
+<para>
+
+</para>
+
+@mem_chunk: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_mem_chunk_alloc0 ##### -->
+<para>
+
+</para>
+
+@mem_chunk: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_mem_chunk_destroy ##### -->
+<para>
+
+</para>
+
+@mem_chunk: 
+
+<!-- ##### FUNCTION gst_mem_chunk_free ##### -->
+<para>
+
+</para>
+
+@mem_chunk: 
+@mem: 
+
+<!-- ##### FUNCTION gst_mem_chunk_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@atom_size: 
+@area_size: 
+@type: 
+@Returns: 
 
 <!-- ##### MACRO gst_meta_new ##### -->
 <para>
@@ -6093,6 +9079,23 @@ Create new meta data.
 
 @meta: 
 
+<!-- ##### FUNCTION gst_object_default_deep_notify ##### -->
+<para>
+
+</para>
+
+@object: 
+@orig: 
+@pspec: 
+@excluded_props: 
+
+<!-- ##### FUNCTION gst_object_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_object_get_type ##### -->
 <para>
 
@@ -6114,6 +9117,28 @@ Create new meta data.
 
 @pad: 
 @parent: 
+
+<!-- ##### MACRO gst_pad_add_probe ##### -->
+<para>
+
+</para>
+
+@pad: 
+@probe: 
+
+<!-- ##### FUNCTION gst_pad_connect_return_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_direction_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### MACRO gst_pad_eos ##### -->
 <para>
@@ -6141,6 +9166,13 @@ Call the EOS function of the pad
 @data: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_pad_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_pad_get_caps_by_name ##### -->
 <para>
 
@@ -6166,7 +9198,55 @@ Call the EOS function of the pad
 @pad: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_pad_get_event_masks ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_event_masks_default ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_formats ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_formats_default ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_pad_get_ghost_parents ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_query_types ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_query_types_default ##### -->
 <para>
 
 </para>
@@ -6197,6 +9277,32 @@ Call the EOS function of the pad
 @pad: 
 @qos_message: 
 
+<!-- ##### FUNCTION gst_pad_handles_event ##### -->
+<para>
+
+</para>
+
+@pad: 
+@mask: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_handles_format ##### -->
+<para>
+
+</para>
+
+@pad: 
+@format: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_is_active ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_pad_negotiate_proxy ##### -->
 <para>
 
@@ -6208,6 +9314,39 @@ Call the EOS function of the pad
 @Returns: 
 @counter: 
 @count: 
+
+<!-- ##### FUNCTION gst_pad_presence_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_probe_destroy ##### -->
+<para>
+
+</para>
+
+@probe: 
+
+<!-- ##### FUNCTION gst_pad_probe_new ##### -->
+<para>
+
+</para>
+
+@single_shot: 
+@callback: 
+@user_data: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_probe_perform ##### -->
+<para>
+
+</para>
+
+@probe: 
+@data: 
+@Returns: 
 
 <!-- ##### FUNCTION gst_pad_pull_region ##### -->
 <para>
@@ -6231,6 +9370,13 @@ Call the EOS function of the pad
 @Returns: 
 @size: 
 
+<!-- ##### FUNCTION gst_pad_query_type_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_pad_remove_ghost_parent ##### -->
 <para>
 
@@ -6238,6 +9384,14 @@ Call the EOS function of the pad
 
 @pad: 
 @parent: 
+
+<!-- ##### MACRO gst_pad_remove_probe ##### -->
+<para>
+
+</para>
+
+@pad: 
+@probe: 
 
 <!-- ##### FUNCTION gst_pad_renegotiate ##### -->
 <para>
@@ -6255,6 +9409,14 @@ Call the EOS function of the pad
 @pad: 
 @parent: 
 @Returns: 
+
+<!-- ##### FUNCTION gst_pad_set_active ##### -->
+<para>
+
+</para>
+
+@pad: 
+@active: 
 
 <!-- ##### FUNCTION gst_pad_set_caps ##### -->
 <para>
@@ -6288,6 +9450,22 @@ Call the EOS function of the pad
 
 @pad: 
 @eos: 
+
+<!-- ##### FUNCTION gst_pad_set_event_mask_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@mask_func: 
+
+<!-- ##### FUNCTION gst_pad_set_formats_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@format: 
 
 <!-- ##### FUNCTION gst_pad_set_getregion_function ##### -->
 <para>
@@ -6329,6 +9507,14 @@ Call the EOS function of the pad
 @pad: 
 @qos: 
 
+<!-- ##### FUNCTION gst_pad_set_query_type_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@type_function: 
+
 <!-- ##### FUNCTION gst_pad_set_type_id ##### -->
 <para>
 
@@ -6346,6 +9532,13 @@ Call the EOS function of the pad
 @direction: 
 @presence: 
 @caps: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_template_get_type ##### -->
+<para>
+
+</para>
+
 @Returns: 
 
 <!-- ##### FUNCTION gst_pad_template_load_thyself ##### -->
@@ -6373,6 +9566,19 @@ Call the EOS function of the pad
 @srcpad: 
 @sinkpad: 
 @Returns: 
+
+<!-- ##### FUNCTION gst_parse_error_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### VARIABLE gst_pipeline_details ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION gst_pipeline_get_type ##### -->
 <para>
@@ -6418,6 +9624,13 @@ Call the EOS function of the pad
 
 @plugin: 
 @factory: 
+
+<!-- ##### FUNCTION gst_plugin_error_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_plugin_feature_get_type ##### -->
 <para>
@@ -6529,6 +9742,60 @@ Call the EOS function of the pad
 </para>
 
 
+<!-- ##### FUNCTION gst_probe_dispatcher_add_probe ##### -->
+<para>
+
+</para>
+
+@disp: 
+@probe: 
+
+<!-- ##### FUNCTION gst_probe_dispatcher_destroy ##### -->
+<para>
+
+</para>
+
+@disp: 
+
+<!-- ##### FUNCTION gst_probe_dispatcher_dispatch ##### -->
+<para>
+
+</para>
+
+@disp: 
+@data: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_probe_dispatcher_init ##### -->
+<para>
+
+</para>
+
+@disp: 
+
+<!-- ##### FUNCTION gst_probe_dispatcher_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_probe_dispatcher_remove_probe ##### -->
+<para>
+
+</para>
+
+@disp: 
+@probe: 
+
+<!-- ##### FUNCTION gst_probe_dispatcher_set_active ##### -->
+<para>
+
+</para>
+
+@disp: 
+@active: 
+
 <!-- ##### FUNCTION gst_props_get_boolean ##### -->
 <para>
 
@@ -6591,6 +9858,13 @@ Call the EOS function of the pad
 @counter: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_props_type_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_queue_chain ##### -->
 <para>
 
@@ -6598,6 +9872,12 @@ Call the EOS function of the pad
 
 @pad: 
 @buf: 
+
+<!-- ##### VARIABLE gst_queue_details ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION gst_queue_get_type ##### -->
 <para>
@@ -6621,6 +9901,20 @@ Call the EOS function of the pad
 
 @connection: 
 
+<!-- ##### FUNCTION gst_real_pad_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_registry_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_registry_option_set ##### -->
 <para>
 
@@ -6635,7 +9929,21 @@ Call the EOS function of the pad
 
 @Returns: 
 
+<!-- ##### FUNCTION gst_registry_return_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_registry_write_get ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_result_get_type ##### -->
 <para>
 
 </para>
@@ -6754,6 +10062,52 @@ Call the EOS function of the pad
 
 @Returns: 
 
+<!-- ##### FUNCTION gst_scheduler_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_scheduler_get_preferred_stack ##### -->
+<para>
+
+</para>
+
+@sched: 
+@stack: 
+@size: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_scheduler_scheduling_change ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+<!-- ##### FUNCTION gst_scheduler_state_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_seek_accuracy_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_seek_type_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_sinesrc_get_type ##### -->
 <para>
 
@@ -6790,6 +10144,52 @@ Call the EOS function of the pad
 
 @name: 
 @Returns: 
+
+<!-- ##### VARIABLE gst_spider_details ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_spider_identity_new_sink ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_spider_identity_new_src ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_spider_identity_plug ##### -->
+<para>
+
+</para>
+
+@ident: 
+
+<!-- ##### FUNCTION gst_spider_identity_request_new_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@templ: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_spider_identity_unplug ##### -->
+<para>
+
+</para>
+
+@ident: 
 
 <!-- ##### FUNCTION gst_src_get_type ##### -->
 <para>
@@ -6829,6 +10229,20 @@ Call the EOS function of the pad
 @pad: 
 @buf: 
 
+<!-- ##### VARIABLE gst_tee_details ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_tee_factory_init ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_tee_get_type ##### -->
 <para>
 
@@ -6852,6 +10266,12 @@ Call the EOS function of the pad
 @tee: 
 @Returns: 
 
+<!-- ##### VARIABLE gst_thread_details ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gst_thread_get_type ##### -->
 <para>
 
@@ -6872,6 +10292,90 @@ Call the EOS function of the pad
 </para>
 
 @arg: 
+
+<!-- ##### FUNCTION gst_thread_state_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_time_cache_add_entry ##### -->
+<para>
+
+</para>
+
+@tc: 
+@location: 
+@timestamp: 
+
+<!-- ##### FUNCTION gst_time_cache_find_location ##### -->
+<para>
+
+</para>
+
+@tc: 
+@location: 
+@timestamp: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_time_cache_find_timestamp ##### -->
+<para>
+
+</para>
+
+@tc: 
+@timestamp: 
+@location: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_time_cache_get_certainty ##### -->
+<para>
+
+</para>
+
+@tc: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_time_cache_get_group ##### -->
+<para>
+
+</para>
+
+@tc: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_time_cache_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_time_cache_new_group ##### -->
+<para>
+
+</para>
+
+@tc: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_time_cache_set_certainty ##### -->
+<para>
+
+</para>
+
+@tc: 
+@certainty: 
+
+<!-- ##### FUNCTION gst_time_cache_set_group ##### -->
+<para>
+
+</para>
+
+@tc: 
+@groupnum: 
+@Returns: 
 
 <!-- ##### MACRO gst_trace_add_entry ##### -->
 <para>
@@ -6994,6 +10498,12 @@ Call the EOS function of the pad
 @parent: 
 @Returns: 
 
+<!-- ##### VARIABLE gst_type_find_details ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gst_type_get_sink_to_src ##### -->
 <para>
 
@@ -7061,6 +10571,15 @@ Call the EOS function of the pad
 @root: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_xml_registry_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@location: 
+@Returns: 
+
 <!-- ##### FUNCTION plugin_initialize ##### -->
 <para>
 
@@ -7088,4 +10607,26 @@ Call the EOS function of the pad
 
 </para>
 
+
+<!-- ##### TYPEDEF property_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT stats ##### -->
+<para>
+
+</para>
+
+@buffers: 
+@bytes: 
+@events: 
+
+<!-- ##### MACRO textdomain ##### -->
+<para>
+
+</para>
+
+@String: 
 

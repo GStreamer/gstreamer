@@ -62,6 +62,7 @@ describes the element, mostly for the benefit of editors.
 
 @longname: 
 @klass: 
+@license: 
 @description: 
 @version: 
 @author: 

@@ -66,7 +66,8 @@ GTKDOC_LD=$(LIBTOOL) --mode=link $(CC)
 # Everything below here is generic and you shouldn't need to change it.
 ###########################################################################
 
-TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
+# added majorminor here because we want parallel installs
+TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)-@GST_MAJORMINOR@
 
 EXTRA_DIST = 				\
 	$(content_files)		\

@@ -10,12 +10,14 @@ Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
 Source: 	http://gstreamer.net/releases/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
+%define		majorminor	@GST_MAJORMINOR@
 %define 	_glib2		@GLIB2_REQ@
 %define 	_libxml2	@LIBXML2_REQ@
 
 Requires: 	glib2 >= %_glib2
 Requires: 	libxml2 >= %_libxml2
 Requires:	popt > 1.6
+Requires:	%{name}-tools >= %{version}
 BuildRequires: 	glib2-devel >= %_glib2
 BuildRequires: 	libxml2-devel >= %_libxml2
 BuildRequires: 	bison
@@ -59,6 +61,22 @@ plugins.
 This package contains the libraries and includes files necessary to develop
 applications and plugins for GStreamer.
 
+%package tools
+Summary: 	tools for GStreamer streaming media framework.
+Group: 		Libraries/Multimedia
+
+%description tools
+GStreamer is a streaming-media framework, based on graphs of filters which
+operate on media data. Applications using this library can do anything
+from real-time sound processing to playing videos, and just about anything
+else media-related.  Its plugin-based architecture means that new data
+types or processing capabilities can be added simply by installing new   
+plugins.
+
+This package contains the basic command-line tools used for GStreamer, like
+gst-register and gst-launch.  It is split off to allow parallel-installability
+in the future.
+
 %prep
 %setup
 
@@ -82,7 +100,7 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   --mandir=%{_mandir} \
   --infodir=%{_infodir} \
   --enable-debug \
-  --with-configdir=/etc/gstreamer \
+  --with-cachedir=%{_localstatedir}/cache/gstreamer \
   --disable-tests --disable-examples \
   --enable-docs-build --with-html-dir=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
 
@@ -102,8 +120,8 @@ cp $RPM_BUILD_DIR/%{name}-%{version}/docs/devhelp/*.devhelp $RPM_BUILD_ROOT/usr/
 %makeinstall
 # Clean out files that should not be part of the rpm. 
 # This is the recommended way of dealing with it for RH8
-rm -f $RPM_BUILD_ROOT%{_libdir}/gst/*.la
-rm -f $RPM_BUILD_ROOT%{_libdir}/gst/*.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/%{name}-%{majorminor}/*.la
+rm -f $RPM_BUILD_ROOT%{_libdir}/%{name}-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
@@ -126,6 +144,27 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %files
 %defattr(-, root, root)
 %doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING RELEASE 
+%{_libdir}/libgstreamer-%{majorminor}.so.*
+%{_libdir}/libgstcontrol-%{majorminor}.so.*
+%dir %{_libdir}/gstreamer-%{majorminor}
+%{_libdir}/gstreamer-%{majorminor}/libgstautoplugcache*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstautoplugger*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstbasicomega*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstfastomega*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstoptomega*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstbasicwingo*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstfastwingo*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstoptwingoscheduler*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstelements*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgsttypes*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgststaticautoplug*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstbytestream*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstputbits*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstspider*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstcaches.so
+
+%files tools
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
 %{_bindir}/gst-inspect
@@ -134,23 +173,6 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_bindir}/gst-register
 %{_bindir}/gst-feedback
 %{_bindir}/gst-xmllaunch
-%{_libdir}/libgstreamer-%{version}.so.*
-%{_libdir}/gst/libgstautoplugcache*.so*
-%{_libdir}/gst/libgstautoplugger*.so*
-%{_libdir}/gst/libgstbasicomega*.so*
-%{_libdir}/gst/libgstfastomega*.so*
-%{_libdir}/gst/libgstoptomega*.so*
-%{_libdir}/gst/libgstbasicwingo*.so*
-%{_libdir}/gst/libgstfastwingo*.so*
-%{_libdir}/gst/libgstoptwingoscheduler.so
-%{_libdir}/gst/libgstelements*.so*
-%{_libdir}/gst/libgsttypes*.so*
-%{_libdir}/gst/libgststaticautoplug*.so*
-%{_libdir}/gst/libgstbytestream*.so*
-%{_libdir}/gst/libgstgetbits*.so*
-%{_libdir}/gst/libgstputbits*.so*
-%{_libdir}/gst/libgstspider*.so*
-%{_libdir}/gst/libgstcaches.so
 %{_mandir}/man1/gst-feedback.*
 %{_mandir}/man1/gst-xmllaunch.*
 %{_mandir}/man1/gst-complete.*
@@ -160,69 +182,85 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_mandir}/man1/gst-md5sum.*
 %{_mandir}/man1/gst-register.*
 
-%{_libdir}/libgstcontrol*.so*
 
 %files devel
 %defattr(-, root, root)
-%{_includedir}/%{name}-%{version}/gst
+%dir %{_includedir}/%{name}-%{majorminor}
+%dir %{_includedir}/%{name}-%{majorminor}/gst
+%{_includedir}/%{name}-%{majorminor}/gst/*.h
+%dir %{_includedir}/%{name}-%{majorminor}/gst/control
+%{_includedir}/%{name}-%{majorminor}/gst/control/*.h
+%dir %{_includedir}/%{name}-%{majorminor}/gst/bytestream
+%{_includedir}/%{name}-%{majorminor}/gst/bytestream/bytestream.h
+%dir %{_includedir}/%{name}-%{majorminor}/gst/getbits
+%{_includedir}/%{name}-%{majorminor}/gst/getbits/getbits.h
+%dir %{_includedir}/%{name}-%{majorminor}/gst/putbits
+%{_includedir}/%{name}-%{majorminor}/gst/putbits/putbits.h
 # %{_libdir}/libgstreamer.a
-%{_libdir}/libgstreamer.so
-%{_libdir}/pkgconfig/gstreamer*.pc
+%{_libdir}/libgstreamer-%{majorminor}.so
+%{_libdir}/libgstcontrol-%{majorminor}.so
+%{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
 ## we specify the API docs as regular files since %docs doesn't fail when
 #  files aren't found anymore for RPM >= 4
 #  we list all of the files we really need to trap incomplete doc builds
 #  then we catch the rest with *, you can safely ignore the errors from this
 ## gstreamer API
-%{_datadir}/gtk-doc/html/gstreamer/autopluggers.html
-%{_datadir}/gtk-doc/html/gstreamer/book1.html
-%{_datadir}/gtk-doc/html/gstreamer/element-types.html
-%{_datadir}/gtk-doc/html/gstreamer/gstautoplugfactory.html
-%{_datadir}/gtk-doc/html/gstreamer/gstautoplug.html
-%{_datadir}/gtk-doc/html/gstreamer/gstbin.html
-%{_datadir}/gtk-doc/html/gstreamer/gstclock.html
-%{_datadir}/gtk-doc/html/gstreamer/gstelement.html
-%{_datadir}/gtk-doc/html/gstreamer/gst-index.html
-%{_datadir}/gtk-doc/html/gstreamer/gstobject.html
-%{_datadir}/gtk-doc/html/gstreamer/gstpad.html
-%{_datadir}/gtk-doc/html/gstreamer/gstpipeline.html
-%{_datadir}/gtk-doc/html/gstreamer/gstpluginfeature.html
-# %{_datadir}/gtk-doc/html/gstreamer/gstreamer-cothreads.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstbuffer.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstbufferpool.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstcaps.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstcpu.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstdata.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstevent.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gst.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstinfo.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstparse.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstplugin.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstprops.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gststaticautoplug.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gststaticautoplugrender.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gsttee.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gsttype.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer-gstutils.html
-%{_datadir}/gtk-doc/html/gstreamer/gstreamer.html
-%{_datadir}/gtk-doc/html/gstreamer/gstschedulerfactory.html
-%{_datadir}/gtk-doc/html/gstreamer/gstscheduler.html
-%{_datadir}/gtk-doc/html/gstreamer/gstthread.html
-%{_datadir}/gtk-doc/html/gstreamer/gsttypefactory.html
-%{_datadir}/gtk-doc/html/gstreamer/gstxml.html
-%{_datadir}/gtk-doc/html/gstreamer/index.sgml
+%dir %{_datadir}/gtk-doc/html/%{name}-%{majorminor}
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/autopluggers.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/book1.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/element-types.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstautoplugfactory.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstautoplug.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstbin.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstclock.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstelement.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gst-index.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstobject.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstpad.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstpipeline.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstpluginfeature.html
+# %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-cothreads.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstbuffer.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstbufferpool.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstcaps.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstcpu.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstdata.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstevent.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gst.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstinfo.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstparse.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstplugin.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstprops.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gststaticautoplug.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gststaticautoplugrender.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gsttee.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gsttype.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstutils.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstschedulerfactory.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstscheduler.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstthread.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gsttypefactory.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstxml.html
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/index.sgml
 ## gstreamer-libs API
-%{_datadir}/gtk-doc/html/gstreamer-libs/book1.html
-%{_datadir}/gtk-doc/html/gstreamer-libs/gstreamer-libs-gstcolorspace.html
-%{_datadir}/gtk-doc/html/gstreamer-libs/gstreamer-libs-gstgetbits.html
-%{_datadir}/gtk-doc/html/gstreamer-libs/gstreamer-libs.html
-%{_datadir}/gtk-doc/html/gstreamer-libs/index.sgml
+%dir %{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}
+%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/book1.html
+%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/%{name}-libs-gstcolorspace.html
+%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/%{name}-libs-gstgetbits.html
+%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/%{name}-libs.html
+%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/index.sgml
 ## this catches all of the rest of the docs we might have forgotten
 %{_datadir}/gtk-doc/html/*
-%{_datadir}/devhelp/specs/gstreamer.devhelp
-%{_datadir}/devhelp/specs/gstreamer-libs.devhelp
+%{_datadir}/devhelp/specs/%{name}-%{majorminor}.devhelp
+%{_datadir}/devhelp/specs/%{name}-libs-%{majorminor}.devhelp
 
 
 %changelog
+* Sat Dec 07 2002 Thomas Vander Stichele <thomas at apestaart dot org>
+- define majorminor and use it everywhere
+- full parallel installability
+
 * Tue Nov 05 2002 Christian Schaller <Uraeus@linuxrising.org>
 - Add optwingo scheduler
 * Sat Oct 12 2002 Christian Schaller <Uraeus@linuxrising.org>

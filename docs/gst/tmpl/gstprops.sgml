@@ -34,10 +34,11 @@ are usually used in conjunction with GstCaps.
 @GST_PROPS_INT_TYPE: 
 @GST_PROPS_FLOAT_TYPE: 
 @GST_PROPS_FOURCC_TYPE: 
-@GST_PROPS_BOOL_TYPE: 
+@GST_PROPS_BOOLEAN_TYPE: 
 @GST_PROPS_STRING_TYPE: 
 @GST_PROPS_VAR_TYPE: 
 @GST_PROPS_LIST_TYPE: 
+@GST_PROPS_GLIST_TYPE: 
 @GST_PROPS_FLOAT_RANGE_TYPE: 
 @GST_PROPS_INT_RANGE_TYPE: 
 @GST_PROPS_LAST_TYPE: 
@@ -84,6 +85,8 @@ Create a FOURCC value from a string. example:
 Create a list of properties.
 </para>
 
+@...: 
+<!-- # Unused Parameters # -->
 @a...: the list of GstProps
 
 

@@ -97,6 +97,7 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @argc: 
 @argv: 
 @popt_options: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_version ##### -->

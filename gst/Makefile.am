@@ -1,4 +1,4 @@
-lib_LTLIBRARIES = libgstreamer.la
+lib_LTLIBRARIES = libgstreamer-@GST_MAJORMINOR@.la
 noinst_LTLIBRARIES = libcothreads.la
 
 if HAVE_CPU_I386
@@ -41,13 +41,12 @@ else
 GST_TRACE_SRC = gsttrace.c
 endif
 
-EXTRA_libgstreamer_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
+EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
 
 SUBDIRS = parse registries . $(GST_AUTOPLUG_DIRS) elements schedulers types caches
 DIST_SUBDIRS = autoplug elements parse registries schedulers types caches
 
-libcothreads_la_SOURCES = cothreads.c
-libgstreamer_la_SOURCES =		\
+libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gst.c			\
 	gstmarshal.c		\
 	gstenumtypes.c		\
@@ -91,7 +90,17 @@ libgstreamer_la_SOURCES =		\
 
 BUILT_SOURCES = gstmarshal.h gstmarshal.c gstenumtypes.h gstenumtypes.c
 
-libgstreamerincludedir = $(includedir)/gstreamer-@VERSION@/gst
+libgstreamer_@GST_MAJORMINOR@_la_CFLAGS = -D_GNU_SOURCE \
+	$(LIBGST_CFLAGS) \
+	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
+	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
+	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
+libgstreamer_@GST_MAJORMINOR@_la_LIBADD = $(LIBGST_LIBS) parse/libgstparse.la registries/libgstxmlregistry.la
+libgstreamer_@GST_MAJORMINOR@_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@ 
+
+
+
+libgstreamer_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst
 
 gst_headers =			\
 	gst.h			\
@@ -139,13 +148,17 @@ built_headers =			\
 	gstmarshal.h		\
 	gstenumtypes.h
 
-libgstreamerinclude_HEADERS = $(gst_headers) $(built_headers)
+libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers) $(built_headers)
 
 noinst_HEADERS = 		\
 	gst_private.h		\
 	gstdata_private.h	\
 	gstarch.h		\
 	cothreads.h		
+
+# the compiler shoots cothreads.c in the head at -O6
+libcothreads_la_SOURCES = cothreads.c
+libcothreads_la_CFLAGS = $(libgstreamer_@GST_MAJORMINOR@_la_CFLAGS) 
 
 
 gstmarshal.h: gstmarshal.list
@@ -183,17 +196,5 @@ dist-hook:
 # Clean generated files
 distclean-local:
 	rm -f $(top_builddir)/gst/gstmarshal.c $(top_builddir)/gst/gstmarshal.h
-
-libgstreamer_la_CFLAGS = -D_GNU_SOURCE \
-	$(LIBGST_CFLAGS) \
-	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
-	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
-	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
-
-# the compiler shoots cothreads.c in the head at -O6
-libcothreads_la_CFLAGS = $(libgstreamer_la_CFLAGS) -O2 
-
-libgstreamer_la_LIBADD = $(LIBGST_LIBS) parse/libgstparse.la registries/libgstxmlregistry.la
-libgstreamer_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@ 
 
 EXTRA_DIST = ROADMAP

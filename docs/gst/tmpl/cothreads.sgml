@@ -34,7 +34,7 @@ Get the current stack frame.
 </para>
 
 @ctx: 
-@threadnum: 
+@cothreadnum: 
 @priv: 
 @func: 
 @argc: 
@@ -42,8 +42,8 @@ Get the current stack frame.
 @flags: 
 @sp: 
 @jmp: 
-@top_sp: 
-@pc: 
+@stack_base: 
+@stack_size: 
 @magic_number: 
 
 <!-- ##### STRUCT cothread_context ##### -->

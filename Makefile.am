@@ -25,8 +25,11 @@ SUBDIRS = include gst libs tools \
 # These are all the possible subdirs
 DIST_SUBDIRS = include libs gst tools tests testsuite examples docs
 
+gstreamer-@GST_MAJORMINOR@.pc: gstreamer.pc
+	cp gstreamer.pc gstreamer-@GST_MAJORMINOR@.pc
+
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = gstreamer.pc
+pkgconfig_DATA = gstreamer-@GST_MAJORMINOR@.pc
 
 EXTRA_DIST = gstreamer.spec.in \
 	     gstreamer.pc.in gstreamer-uninstalled.pc.in \

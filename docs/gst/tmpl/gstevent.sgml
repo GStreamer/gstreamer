@@ -45,6 +45,7 @@ The different major types of events.
 @GST_EVENT_SIZE: a size suggestion for a peer element
 @GST_EVENT_RATE: adjust the output rate of an element
 @GST_EVENT_FILLER: a dummy element that should be ignored by plugins
+@GST_EVENT_TS_OFFSET: 
 
 <!-- ##### MACRO GST_EVENT_TYPE ##### -->
 <para>
@@ -243,13 +244,13 @@ The value of the size event
 
 <!-- ##### STRUCT GstEvent ##### -->
 <para>
-The event data structure.
+
 </para>
 
-@data: The parent data type.
-@type: The event type.
-@timestamp: The event timestamp.
-@src: The object that generated the event
+@data: 
+@type: 
+@timestamp: 
+@src: 
 
 <!-- ##### FUNCTION gst_event_new ##### -->
 <para>

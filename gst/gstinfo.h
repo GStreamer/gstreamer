@@ -455,9 +455,7 @@ extern GstErrorHandler _gst_error_handler;
 extern GHashTable *__gst_function_pointers;
 
 
-#if GST_DEBUG_ENABLED
-#define GST_DEBUG_FUNCPTR(ptr) _gst_debug_register_funcptr((void *)(ptr), #ptr)
-#define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)
+#ifdef GST_DEBUG_ENABLED
 static inline void *
 _gst_debug_register_funcptr (void *ptr, gchar *ptrname)
 {
@@ -466,15 +464,15 @@ _gst_debug_register_funcptr (void *ptr, gchar *ptrname)
     g_hash_table_insert(__gst_function_pointers,ptr,ptrname);
   return ptr;
 }
+#define GST_DEBUG_FUNCPTR(ptr) _gst_debug_register_funcptr((void *)(ptr), #ptr)
+#define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)
 
-gchar *_gst_debug_nameof_funcptr (void *ptr);
+gchar * _gst_debug_nameof_funcptr (void *ptr);
 #else
 #define GST_DEBUG_FUNCPTR(ptr) (ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) ""
 #endif
 
 void gst_debug_print_stack_trace (void);
-
-
 
 #endif /* __GSTINFO_H__ */

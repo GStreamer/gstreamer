@@ -15,3 +15,9 @@ the detected mime type of the stream. It is used in autoplugging.
 
 </para>
 
+<!-- ##### VARIABLE gst_type_find_details ##### -->
+<para>
+
+</para>
+
+

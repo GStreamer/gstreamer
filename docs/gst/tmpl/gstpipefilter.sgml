@@ -15,3 +15,11 @@ buffers from its output.
 
 </para>
 
+<!-- ##### ENUM GstPipeFilterFlags ##### -->
+<para>
+
+</para>
+
+@GST_PIPEFILTER_OPEN: 
+@GST_PIPEFILTER_FLAG_LAST: 
+

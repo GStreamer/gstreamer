@@ -7,7 +7,17 @@ AS_VERSION(gstreamer, GST_VERSION, 0, 4, 2, 1, GST_ERROR="-Wall", GST_ERROR="-Wa
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
-AS_LIBTOOL(GST, 0, 0, 0, yes)
+
+dnl our libraries and install dirs use major.minor as a version
+GST_MAJORMINOR=$GST_VERSION_MAJOR.$GST_VERSION_MINOR
+AC_SUBST(GST_MAJORMINOR)
+
+dnl CURRENT, REVISION, AGE
+dnl - library source changed -> increment REVISION
+dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
+dnl - interfaces added -> increment AGE
+dnl - interfaces removed -> AGE = 0
+AS_LIBTOOL(GST, 1, 0, 0)
 
 AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
@@ -121,7 +131,7 @@ AC_SUBST(GST_PKG_DEPS)
   
 dnl === libxml 2 ===
 dnl Minimum required version of libxml2
-LIBXML2_REQ="2.4.0"
+LIBXML2_REQ="2.4.9"
 AC_SUBST(LIBXML2_REQ)
 
 dnl check for libxml2
@@ -218,28 +228,13 @@ AC_HELP_STRING([--enable-profiling],[adds -pg to compiler commandline, for profi
 esac], 
 [USE_PROFILING=no]) dnl Default value
 
-dnl set up a configuration dir
-GST_CONFIG_DIR=${sysconfdir}/gstreamer
-AC_ARG_WITH(configdir,
-AC_HELP_STRING([--with-configdir],[specify path to use for configuration files]),
-[case "${withval}" in
-  yes) AC_MSG_ERROR(bad value ${withval} for --with-configdir) ;;
-  no) AC_MSG_ERROR(bad value ${withval} for --with-configdir) ;;
-  *) GST_CONFIG_DIR="${withval}" ;;
-esac], 
-[:]) dnl Default value
-
-AS_AC_EXPAND(GST_CONFIG_DIR, $GST_CONFIG_DIR)
-AC_MSG_NOTICE(Using $GST_CONFIG_DIR as configuration dir)
-
-
 dnl use a cache dir for storing element registry info.
 dnl default to building registry in the source tree if we are enabling plugin build dir
 if test "x$PLUGINS_USE_BUILDDIR" = "xyes"; then
   GST_CACHE_DIR=`pwd`
 else
   dnl ${localstatedir} points to PREFIX/var
-  GST_CACHE_DIR=${localstatedir}/cache/gstreamer
+  GST_CACHE_DIR=${localstatedir}/cache/gstreamer-$GST_MAJORMINOR
 fi
 AC_ARG_WITH(cachedir,
 AC_HELP_STRING([--with-cachedir],[specify path to use for plugin and command completion registries]),
@@ -371,19 +366,15 @@ dnl ############################
 dnl # Set up some more defines #
 dnl ############################
 
-dnl Set location of configuration dir.
-AC_DEFINE_UNQUOTED(GST_CONFIG_DIR, "$GST_CONFIG_DIR", [Define the configuration directory])
-AC_SUBST(GST_CONFIG_DIR)
-
 dnl Set location of registry dir.
 AC_DEFINE_UNQUOTED(GST_CACHE_DIR, "$GST_CACHE_DIR", [Define the registry directory])
 AC_SUBST(GST_CACHE_DIR)
 
 dnl Set location of plugin directory
 if test "x${prefix}" = "xNONE"; then
-  PLUGINS_DIR=${ac_default_prefix}/lib/gst
+  PLUGINS_DIR=${ac_default_prefix}/lib/gstreamer-$GST_MAJORMINOR
 else
-  PLUGINS_DIR=${prefix}/lib/gst
+  PLUGINS_DIR=${prefix}/lib/gstreamer-$GST_MAJORMINOR
 fi
 AC_DEFINE_UNQUOTED(PLUGINS_DIR, "$PLUGINS_DIR", [Define the plugin directory])
 AC_SUBST(PLUGINS_DIR)
@@ -414,7 +405,7 @@ AC_SUBST(LIBGST_LIBS)
 AC_SUBST(LIBGST_CFLAGS)
 
 dnl Vars for everyone else
-GST_INT_LIBS="\$(top_builddir)/gst/libgstreamer.la"
+GST_INT_LIBS="\$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la"
 GST_INT_CFLAGS="$GST_INT_CFLAGS -I\$(top_srcdir)/libs -I\$(top_srcdir)/include"
 
 AC_SUBST(GST_CFLAGS, "$LIBGST_CFLAGS $GST_INT_CFLAGS")
