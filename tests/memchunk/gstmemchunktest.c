@@ -1,5 +1,6 @@
 #include <gst/gst.h>
 #include "gstmemchunk.h"
+#include <string.h>		/* strerror */
 
 #define MAX_THREADS  100
 

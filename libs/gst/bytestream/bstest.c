@@ -215,6 +215,8 @@ gst_identity_loop (GstElement *element)
     }
 
     exit(1);
+    /* implicit declaration of function `GST_ELEMENT_IS_COTHREAD_STOPPING' */
+    #define GST_ELEMENT_IS_COTHREAD_STOPPING(element) GST_FLAG_IS_SET((element), GST_ELEMENT_SCHEDULER_PRIVATE1)
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
 /**/
 }

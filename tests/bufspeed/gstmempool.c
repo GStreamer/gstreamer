@@ -1,4 +1,5 @@
 #include "gstmempool.h"
+#include <string.h>		/* memset */
 
 #ifdef __SMP__
 #define POOL_LOCK "lock ; "

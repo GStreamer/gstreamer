@@ -1,5 +1,6 @@
 #include <gst/gst.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* FIXME: WTF does this do? */
 

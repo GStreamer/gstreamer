@@ -423,6 +423,7 @@ gst_clock_notify_async (GstClock *clock, GstClockTime interval,
 		        GstClockCallback func, gpointer user_data) 
 {
   g_warning ("not supported");
+  return NULL;
 }
 
 /**

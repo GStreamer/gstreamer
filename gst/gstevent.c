@@ -23,6 +23,7 @@
 
 #include "gst/gstinfo.h"
 #include "gst/gstevent.h"
+#include <string.h>		/* memcpy */
 
 GType _gst_event_type;
 

@@ -114,9 +114,9 @@ static void     	gst_fast_scheduler_pad_disconnect 	(GstScheduler *sched, GstPad
 static GstPad*  	gst_fast_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
 static GstSchedulerState
 			gst_fast_scheduler_iterate    		(GstScheduler *sched);
-
+/* defined but not used
 static void     	gst_fast_scheduler_show  		(GstScheduler *sched);
-
+*/
 static GstSchedulerClass *parent_class = NULL;
 
 static GType
@@ -283,7 +283,6 @@ gst_fast_scheduler_getfunc_proxy (GstPad *pad)
 static gboolean
 gst_fast_scheduler_cothreaded_element (GstBin * bin, GstElement *element)
 {
-  GList *elements;
   cothread_func wrapper_function;
   GList *pads;
 
@@ -636,9 +635,7 @@ static void
 gst_fast_scheduler_reset (GstScheduler *sched)
 {
   cothread_context *ctx;
-  GstBin *bin = GST_BIN (GST_SCHEDULER_PARENT (sched));
   GList *elements = GST_FAST_SCHEDULER_CAST (sched)->elements;
-  GstFastScheduler *bsched = GST_FAST_SCHEDULER (sched);
 
   while (elements) {
     GST_ELEMENT_THREADSTATE (elements->data) = NULL;
@@ -858,7 +855,6 @@ gst_fast_scheduler_pad_connect (GstScheduler * sched, GstPad *srcpad, GstPad *si
 static void
 gst_fast_scheduler_pad_disconnect (GstScheduler * sched, GstPad * srcpad, GstPad * sinkpad)
 {
-  GstSchedulerChain *chain;
   GstElement *element1, *element2;
   GstSchedulerChain *chain1, *chain2;
   GstFastScheduler *bsched = GST_FAST_SCHEDULER (sched);
@@ -905,7 +901,6 @@ static GstPad *
 gst_fast_scheduler_pad_select (GstScheduler * sched, GList * padlist)
 {
   GstPad *pad = NULL;
-  GList *padlist2 = padlist;
 
   GST_INFO (GST_CAT_SCHEDULING, "imlement me!!");
 
@@ -918,8 +913,6 @@ gst_fast_scheduler_iterate (GstScheduler * sched)
   GstBin *bin = GST_BIN (sched->parent);
   GList *chains;
   GstSchedulerChain *chain;
-  GstElement *entry;
-  GList *elements;
   gint scheduled = 0;
   GstFastScheduler *bsched = GST_FAST_SCHEDULER (sched);
   GstSchedulerState state;
@@ -1039,7 +1032,7 @@ exit:
   return state;
 }
 
-
+/* defined but not used
 static void
 gst_fast_scheduler_show (GstScheduler * sched)
 {
@@ -1093,3 +1086,4 @@ gst_fast_scheduler_show (GstScheduler * sched)
     g_print ("\n");
   }
 }
+*/

@@ -127,7 +127,7 @@ int main(int argc,char *argv[])
     exit (-4);
   }
 
-  gst_bin_use_clock (GST_BIN (bin), gst_system_clock_obtain ());
+/*  gst_bin_use_clock (GST_BIN (bin), gst_system_clock_obtain ());*/
 
   /* start playing */
   gst_element_set_state(bin, GST_STATE_PLAYING);

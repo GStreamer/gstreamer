@@ -1,4 +1,5 @@
 #include "gstmemchunk.h"
+#include <string.h>		/* memset */
 
 #ifdef __SMP__
 #define CHUNK_LOCK "lock ; "

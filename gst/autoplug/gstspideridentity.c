@@ -126,17 +126,17 @@ gst_spider_identity_class_init (GstSpiderIdentityClass *klass)
   gstelement_class->change_state = GST_DEBUG_FUNCPTR(gst_spider_identity_change_state);
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_spider_identity_request_new_pad);
 }
-
+/* defined but not used
 static GstBufferPool*
 gst_spider_identity_get_bufferpool (GstPad *pad)
-{
+{*/
   /* fix me */
-  GstSpiderIdentity *spider_identity;
+/*  GstSpiderIdentity *spider_identity;
 
   spider_identity = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
 
   return gst_pad_get_bufferpool (spider_identity->src);
-}
+}*/
 
 static void 
 gst_spider_identity_init (GstSpiderIdentity *ident) 
@@ -188,7 +188,7 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
 	if (conn->sink == ident && (GstElement *) conn->src != conn->current)
 	{
 	  gst_element_set_eos (GST_ELEMENT (conn->src));
-          gst_pad_push (conn->src->src, gst_event_new (GST_EVENT_EOS));  
+          gst_pad_push (conn->src->src, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));  
 	}
       }
     }
