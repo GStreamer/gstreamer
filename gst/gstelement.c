@@ -2738,20 +2738,33 @@ gst_element_set_state (GstElement * element, GstElementState state)
   /* start with the current state */
   curpending = GST_STATE (element);
 
-  if (!GST_IS_BIN (element) && state == curpending) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-        "non-bin element is already in requested state %s, returning",
-        gst_element_state_get_name (state));
-    return (GST_STATE_SUCCESS);
+  if (state == curpending) {
+    if (GST_IS_BIN (element)) {
+      /* set current state on it again */
+      if (oclass->change_state)
+        return_val = (oclass->change_state) (element);
+      return return_val;
+    } else {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+          "non-bin element is already in requested state %s, returning",
+          gst_element_state_get_name (state));
+      return GST_STATE_SUCCESS;
+    }
   }
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "setting state from %s to %s",
       gst_element_state_get_name (curpending),
       gst_element_state_get_name (state));
 
-  /* loop until the final requested state is set;
-   * loop at least once, starting with the current state */
-  do {
+  /* loop until the final requested state is set */
+
+  while (GST_STATE (element) != state
+      && GST_STATE (element) != GST_STATE_VOID_PENDING) {
+    /* move the curpending state in the correct direction */
+    if (curpending < state)
+      curpending <<= 1;
+    else
+      curpending >>= 1;
 
     /* set the pending state variable */
     GST_STATE_PENDING (element) = curpending;
@@ -2800,13 +2813,7 @@ gst_element_set_state (GstElement * element, GstElementState state)
         /* somebody added a GST_STATE_ and forgot to do stuff here ! */
         g_assert_not_reached ();
     }
-    /* move the curpending state in the correct direction */
-    if (curpending < state)
-      curpending <<= 1;
-    else
-      curpending >>= 1;
-  } while (GST_STATE (element) != state
-      && GST_STATE (element) != GST_STATE_VOID_PENDING);
+  }
 
 exit:
 

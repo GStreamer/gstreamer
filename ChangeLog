@@ -1,10 +1,16 @@
+2004-07-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstelement.c: (gst_element_set_state):
+	  compatibility fix for latest plugins release.  Change loop back
+	  to while {}
+
 2004-07-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_remove), (gst_bin_dispose):
 	* gst/gstthread.c: (gst_thread_dispose), (gst_thread_catch),
 	(gst_thread_main_loop):
 	Since remove is virtual in GstBin we must not assume the 
-	elements GList to have anothing usefull.
+	elements GList to have anothing useful.
 	Add some more logging to GstThread and be a bit more paranoid
 	when resetting the scheduler.
 	Set the state of the bin to NULL before removing the children.
