@@ -51,7 +51,24 @@ struct _GstV4l2Src {
 	struct v4l2_buffer bufsettings;
 	struct v4l2_requestbuffers breq;
 	struct v4l2_format format;
-	guint64 first_timestamp;
+
+	/* A/V sync... frame counter and internal cache */
+	gulong handled;
+	gint last_frame;
+	gint need_writes;
+	gulong last_seq;
+
+	/* clock */
+	GstClock *clock;
+	
+	/* time to substract from clock time to get back to timestamp */
+	GstClockTime substract_time;
+
+	/* how often are we going to use each frame? */
+	gint *use_num_times;
+
+	/* how are we going to push buffers? */
+	gboolean use_fixed_fps;
 
 	/* bufferpool for the buffers we're gonna use */
 	GstBufferPool *bufferpool;
@@ -64,6 +81,12 @@ struct _GstV4l2Src {
 
 struct _GstV4l2SrcClass {
 	GstV4l2ElementClass parent_class;
+
+	void (*frame_capture) (GObject *object);
+	void (*frame_drop)    (GObject *object);
+	void (*frame_insert)  (GObject *object);
+	void (*frame_lost)    (GObject *object,
+                               gint     num_lost);
 };
 
 
