@@ -22,10 +22,10 @@ else
 ARTS_DIR=
 endif
 
-if USE_ARTSD
-ARTSD_DIR=artsd
+if USE_ARTSC
+ARTSC_DIR=artsd
 else
-ARTSD_DIR=
+ARTSC_DIR=
 endif
 
 if USE_AUDIOFILE
@@ -160,13 +160,15 @@ else
 XMMS_DIR=
 endif
 
-SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) $(AUDIOFILE_DIR) \
+SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) \
+        $(ARTS_DIR) $(ARTSD_DIR) $(AUDIOFILE_DIR) \
 	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DV_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
         $(FESTIVAL_DIR) $(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) $(HERMES_DIR) \
 	$(JPEG_DIR) $(LAME_DIR) $(MAD_DIR) $(MIKMOD_DIR) $(MPEG2DEC_DIR) \
 	$(OPENQUICKTIME_DIR) $(RTP_DIR) $(SDL_DIR) $(SHOUT_DIR) $(VORBIS_DIR) \
 	$(XMMS_DIR)
 
-DIST_SUBDIRS=a52 aalib alsa avifile audiofile cdparanoia dv dvdread esd \
+DIST_SUBDIRS=a52 aalib alsa arts artsd avifile audiofile cdparanoia \
+             dv dvdread esd \
 	     festival flac gnomevfs gsm hermes jpeg lame mad mikmod mpeg2dec \
 	     openquicktime rtp sdl shout vorbis xmms
