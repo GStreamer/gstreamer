@@ -285,7 +285,7 @@ if test x$USE_GLIB2 = xno; then
   GLIB_LIBS="$GLIB_LIBS $GTK_LIBS"
   GLIB_CFLAGS="$GLIB_CFLAGS $GTK_CFLAGS"
 else
-  GST_PKG_DEPS="glib-2.0 gobject-2.0 gmodule-2.0 gthread-2.0"
+  GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
   
   PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
 
@@ -311,7 +311,7 @@ AC_SUBST(GTK_CFLAGS)
 
 dnl Check for libxml
 if test x$USE_GLIB2 = xno; then
-  LIBXML_PKG='libxml >= 1.8.1'
+  LIBXML_PKG=', libxml >= 1.8.1'
   AC_PATH_PROG(XML_CONFIG, xml-config, no)
   if test x$XML_CONFIG = xno; then
     AC_MSG_ERROR(Couldn't find $LIBXML_PKG)
@@ -322,7 +322,7 @@ if test x$USE_GLIB2 = xno; then
     [ AC_MSG_ERROR(Need version 1.8.1 or better of libxml) ],
     $XML_LIBS)
 else
-  LIBXML_PKG='libxml-2.0'
+  LIBXML_PKG=', libxml-2.0'
   PKG_CHECK_MODULES(XML, $LIBXML_PKG, XML_CONFIG=yes, XML_CONFIG=no)
   AC_PATH_PROG(XML_CONFIG, xml-config, no)
   AC_DEFINE(HAVE_LIBXML2)
@@ -875,6 +875,9 @@ GST_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
 
 GST_CFLAGS="$GST_CFLAGS $GST_SUBSYSTEM_DISABLE_DEFINES"
 
+dnl for pkg-config
+GST_PKG_CFLAGS=$GST_CFLAGS
+AC_SUBST(GST_PKG_CFLAGS)
 
 dnl ################################################
 dnl # Set defines according to variables set above #
@@ -1124,7 +1127,7 @@ gst/autoplug/Makefile
 gst/schedulers/Makefile
 libs/Makefile
 libs/gst/Makefile
-libs/gst/bytestream/makefile
+libs/gst/bytestream/Makefile
 libs/riff/Makefile
 libs/getbits/Makefile
 libs/putbits/Makefile
