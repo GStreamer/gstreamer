@@ -38,13 +38,8 @@
 GstElementDetails modplug_details = {
   "ModPlug",
   "Codec/Audio/Decoder",
-  "LGPL",
   "Module decoder based on modplug engine",
-  VERSION,
-  "Jeremy SIMON <jsimon13@yahoo.fr>\n"
-  "Kenton Varda <temporal@gauge3d.org>\n"
-  "Olivier Lapicque <olivierl@jps.net>",
-  "(C) 2001"
+  "Jeremy SIMON <jsimon13@yahoo.fr>"
 };
 
 
@@ -100,7 +95,7 @@ enum {
   MODPLUG_STATE_PLAY_TUNE = 3,
 };
 
-
+static void	gst_modplug_base_init		(GstModPlugClass *klass);
 static void	gst_modplug_class_init		(GstModPlugClass *klass);
 static void	gst_modplug_init		(GstModPlug *filter);
 static void	gst_modplug_set_property 	(GObject *object,
@@ -136,7 +131,7 @@ gst_modplug_get_type(void) {
   if (!modplug_type) {
     static const GTypeInfo modplug_info = {
       sizeof(GstModPlugClass),
-      NULL,
+      (GBaseInitFunc)gst_modplug_base_init,
       NULL,
       (GClassInitFunc)gst_modplug_class_init,
       NULL,
@@ -151,6 +146,17 @@ gst_modplug_get_type(void) {
   return modplug_type;
 }
 
+static void
+gst_modplug_base_init (GstModPlugClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (modplug_sink_template_factory));
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (modplug_src_template_factory));
+  gst_element_class_set_details (element_class, &modplug_details);
+}
 
 static void
 gst_modplug_class_init (GstModPlugClass *klass)
@@ -812,37 +818,26 @@ gst_modplug_get_property (GObject *object, guint id, GValue *value, GParamSpec *
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-  guint i;
-  
   /* this filter needs the bytestream package */
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
   
-  factory = gst_element_factory_new ("modplug", GST_TYPE_MODPLUG, &modplug_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
- 
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (modplug_sink_template_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (modplug_src_template_factory));
-
-  i = 0;
-  
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));	
-
-  return TRUE;
+  return gst_element_register (plugin, "modplug",
+			       GST_RANK_PRIMARY, GST_TYPE_MODPLUG);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "modplug",
-  plugin_init
-};
-
- 
-  
-
+  "monoscope",
+  "Monoscope visualization",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  "(c) 2001 Kenton Varda <temporal@gauge3d.org>\n"
+  "(c) 2001 Olivier Lapicque <olivierl@jps.net>",
+  GST_PACKAGE,
+  GST_ORIGIN
+)
