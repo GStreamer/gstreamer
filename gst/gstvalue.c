@@ -906,77 +906,151 @@ gst_value_deserialize_boolean (GValue * dest, const char *s)
 }
 
 /*************************************/
-/* int */
+/* ints */
 
 static int
-gst_value_compare_int (const GValue * value1, const GValue * value2)
+gst_strtoll (const char *s, char **end, int base)
 {
-  if (value1->data[0].v_int > value2->data[0].v_int)
-    return GST_VALUE_GREATER_THAN;
-  if (value1->data[0].v_int < value2->data[0].v_int)
-    return GST_VALUE_LESS_THAN;
-  return GST_VALUE_EQUAL;
-}
-
-static char *
-gst_value_serialize_int (const GValue * value)
-{
-  return g_strdup_printf ("%d", value->data[0].v_int);
-}
-
-static int
-gst_strtoi (const char *s, char **end, int base)
-{
-  int i;
+  long long i;
 
   if (s[0] == '-') {
-    i = -(int) strtoul (s + 1, end, base);
+    i = -(long long) g_ascii_strtoull (s + 1, end, base);
   } else {
-    i = strtoul (s, end, base);
+    i = g_ascii_strtoull (s, end, base);
   }
 
   return i;
 }
 
-static gboolean
-gst_value_deserialize_int (GValue * dest, const char *s)
-{
-  int x;
-  char *end;
-  gboolean ret = FALSE;
+#define CREATE_SERIALIZATION_START(_type,_macro) \
+static gint \
+gst_value_compare_ ## _type (const GValue * value1, const GValue * value2) \
+{ \
+  g ## _type val1 = g_value_get_ ## _type (value1); \
+  g ## _type val2 = g_value_get_ ## _type (value2); \
+  if (val1 > val2) \
+    return GST_VALUE_GREATER_THAN; \
+  if (val1 < val2) \
+    return GST_VALUE_LESS_THAN; \
+  return GST_VALUE_EQUAL; \
+} \
+\
+static char * \
+gst_value_serialize_ ## _type (const GValue * value) \
+{ \
+  GValue val = { 0, }; \
+  g_value_init (&val, G_TYPE_STRING); \
+  if (!g_value_transform (value, &val)) \
+    g_assert_not_reached (); \
+  /* NO_COPY_MADNESS!!! */ \
+  return (char *) g_value_get_string (&val); \
+} \
 
-  x = gst_strtoi (s, &end, 0);
-  if (*end == 0) {
-    ret = TRUE;
-  } else {
-    if (g_ascii_strcasecmp (s, "little_endian") == 0) {
-      x = G_LITTLE_ENDIAN;
-      ret = TRUE;
-    } else if (g_ascii_strcasecmp (s, "big_endian") == 0) {
-      x = G_BIG_ENDIAN;
-      ret = TRUE;
-    } else if (g_ascii_strcasecmp (s, "byte_order") == 0) {
-      x = G_BYTE_ORDER;
-      ret = TRUE;
-    } else if (g_ascii_strcasecmp (s, "min") == 0) {
-      x = G_MININT;
-      ret = TRUE;
-    } else if (g_ascii_strcasecmp (s, "max") == 0) {
-      x = G_MAXINT;
-      ret = TRUE;
-    }
-  }
-  if (ret) {
-    g_value_set_int (dest, x);
-  }
-  return ret;
+#define CREATE_SERIALIZATION(_type,_macro) \
+CREATE_SERIALIZATION_START(_type,_macro) \
+\
+static gboolean \
+gst_value_deserialize_ ## _type (GValue * dest, const char *s) \
+{ \
+  long long x; \
+  char *end; \
+  gboolean ret = FALSE; \
+\
+  x = gst_strtoll (s, &end, 0); \
+  if (*end == 0) { \
+    ret = TRUE; \
+  } else { \
+    if (g_ascii_strcasecmp (s, "little_endian") == 0) { \
+      x = G_LITTLE_ENDIAN; \
+      ret = TRUE; \
+    } else if (g_ascii_strcasecmp (s, "big_endian") == 0) { \
+      x = G_BIG_ENDIAN; \
+      ret = TRUE; \
+    } else if (g_ascii_strcasecmp (s, "byte_order") == 0) { \
+      x = G_BYTE_ORDER; \
+      ret = TRUE; \
+    } else if (g_ascii_strcasecmp (s, "min") == 0) { \
+      x = G_MIN ## _macro; \
+      ret = TRUE; \
+    } else if (g_ascii_strcasecmp (s, "max") == 0) { \
+      x = G_MAX ## _macro; \
+      ret = TRUE; \
+    } \
+  } \
+  if (ret) { \
+    if (x > G_MAX ## _macro || \
+	x < G_MIN ## _macro) {\
+      ret = FALSE; \
+    } else { \
+      g_value_set_ ## _type (dest, x); \
+    } \
+  } \
+  return ret; \
 }
+
+#define CREATE_USERIALIZATION(_type,_macro) \
+CREATE_SERIALIZATION_START(_type,_macro) \
+\
+static gboolean \
+gst_value_deserialize_ ## _type (GValue * dest, const char *s) \
+{ \
+  unsigned long long x; \
+  char *end; \
+  gboolean ret = FALSE; \
+\
+  x = g_ascii_strtoull (s, &end, 0); \
+  if (*end == 0) { \
+    ret = TRUE; \
+  } else { \
+    if (g_ascii_strcasecmp (s, "little_endian") == 0) { \
+      x = G_LITTLE_ENDIAN; \
+      ret = TRUE; \
+    } else if (g_ascii_strcasecmp (s, "big_endian") == 0) { \
+      x = G_BIG_ENDIAN; \
+      ret = TRUE; \
+    } else if (g_ascii_strcasecmp (s, "byte_order") == 0) { \
+      x = G_BYTE_ORDER; \
+      ret = TRUE; \
+    } else if (g_ascii_strcasecmp (s, "min") == 0) { \
+      x = 0; \
+      ret = TRUE; \
+    } else if (g_ascii_strcasecmp (s, "max") == 0) { \
+      x = G_MAX ## _macro; \
+      ret = TRUE; \
+    } \
+  } \
+  if (ret) { \
+    if (x > G_MAX ## _macro) {\
+      ret = FALSE; \
+    } else { \
+      g_value_set_ ## _type (dest, x); \
+    } \
+  } \
+  return ret; \
+}
+
+#define REGISTER_SERIALIZATION(_gtype, _type) G_STMT_START{ \
+  static const GstValueTable gst_value = { \
+    _gtype, \
+    gst_value_compare_ ## _type, \
+    gst_value_serialize_ ## _type, \
+    gst_value_deserialize_ ## _type, \
+  }; \
+\
+  gst_value_register (&gst_value); \
+} G_STMT_END
+
+CREATE_SERIALIZATION (int, INT)
+    CREATE_SERIALIZATION (int64, INT64)
+    CREATE_SERIALIZATION (long, LONG)
+CREATE_USERIALIZATION (uint, UINT)
+CREATE_USERIALIZATION (uint64, UINT64)
+CREATE_USERIALIZATION (ulong, ULONG)
 
 /*************************************/
 /* double */
-
-static int
-gst_value_compare_double (const GValue * value1, const GValue * value2)
+     static int
+         gst_value_compare_double (const GValue * value1, const GValue * value2)
 {
   if (value1->data[0].v_double > value2->data[0].v_double)
     return GST_VALUE_GREATER_THAN;
@@ -1017,6 +1091,57 @@ gst_value_deserialize_double (GValue * dest, const char *s)
   }
   if (ret) {
     g_value_set_double (dest, x);
+  }
+  return ret;
+}
+
+/*************************************/
+/* float */
+
+static int
+gst_value_compare_float (const GValue * value1, const GValue * value2)
+{
+  if (value1->data[0].v_float > value2->data[0].v_float)
+    return GST_VALUE_GREATER_THAN;
+  if (value1->data[0].v_float < value2->data[0].v_float)
+    return GST_VALUE_LESS_THAN;
+  if (value1->data[0].v_float == value2->data[0].v_float)
+    return GST_VALUE_EQUAL;
+  return GST_VALUE_UNORDERED;
+}
+
+static char *
+gst_value_serialize_float (const GValue * value)
+{
+  char d[G_ASCII_DTOSTR_BUF_SIZE];
+
+  g_ascii_dtostr (d, G_ASCII_DTOSTR_BUF_SIZE, value->data[0].v_float);
+  return g_strdup (d);
+}
+
+static gboolean
+gst_value_deserialize_float (GValue * dest, const char *s)
+{
+  double x;
+  gboolean ret = FALSE;
+  char *end;
+
+  x = g_ascii_strtod (s, &end);
+  if (*end == 0) {
+    ret = TRUE;
+  } else {
+    if (g_ascii_strcasecmp (s, "min") == 0) {
+      x = -G_MAXFLOAT;
+      ret = TRUE;
+    } else if (g_ascii_strcasecmp (s, "max") == 0) {
+      x = G_MAXFLOAT;
+      ret = TRUE;
+    }
+  }
+  if (x > G_MAXFLOAT || x < -G_MAXFLOAT)
+    ret = FALSE;
+  if (ret) {
+    g_value_set_float (dest, x);
   }
   return ret;
 }
@@ -1100,6 +1225,64 @@ gst_value_deserialize_string (GValue * dest, const char *s)
 {
   g_value_set_string (dest, s);
 
+  return TRUE;
+}
+
+/*************************************/
+/* enums */
+
+static int
+gst_value_compare_enum (const GValue * value1, const GValue * value2)
+{
+  GEnumValue *en1, *en2;
+  GEnumClass *klass1 = (GEnumClass *) g_type_class_peek (G_VALUE_TYPE (value1));
+  GEnumClass *klass2 = (GEnumClass *) g_type_class_peek (G_VALUE_TYPE (value2));
+
+  g_return_val_if_fail (klass1, GST_VALUE_UNORDERED);
+  g_return_val_if_fail (klass2, GST_VALUE_UNORDERED);
+  en1 = g_enum_get_value (klass1, g_value_get_enum (value1));
+  en2 = g_enum_get_value (klass2, g_value_get_enum (value2));
+  g_return_val_if_fail (en1, GST_VALUE_UNORDERED);
+  g_return_val_if_fail (en2, GST_VALUE_UNORDERED);
+  if (en1->value < en2->value)
+    return GST_VALUE_LESS_THAN;
+  if (en1->value > en2->value)
+    return GST_VALUE_GREATER_THAN;
+
+  return GST_VALUE_EQUAL;
+}
+
+static char *
+gst_value_serialize_enum (const GValue * value)
+{
+  GEnumValue *en;
+  GEnumClass *klass = (GEnumClass *) g_type_class_peek (G_VALUE_TYPE (value));
+
+  g_return_val_if_fail (klass, NULL);
+  en = g_enum_get_value (klass, g_value_get_enum (value));
+  g_return_val_if_fail (en, NULL);
+  return g_strdup (en->value_name);
+}
+
+static gboolean
+gst_value_deserialize_enum (GValue * dest, const char *s)
+{
+  GEnumValue *en;
+  gchar *endptr = NULL;
+  GEnumClass *klass = (GEnumClass *) g_type_class_peek (G_VALUE_TYPE (dest));
+
+  g_return_val_if_fail (klass, FALSE);
+  if (!(en = g_enum_get_value_by_name (klass, s))) {
+    if (!(en = g_enum_get_value_by_nick (klass, s))) {
+      gint i = strtol (s, &endptr, 0);
+
+      if (endptr && *endptr == '\0') {
+        en = g_enum_get_value (klass, i);
+      }
+    }
+  }
+  g_return_val_if_fail (en, FALSE);
+  g_value_set_enum (dest, en->value);
   return TRUE;
 }
 
@@ -1917,29 +2100,45 @@ gst_value_init_and_copy (GValue * dest, const GValue * src)
 
 /*
  * gst_value_serialize:
- * @value:
+ * @value: a #GValue to serialize
  *
- * Returns:
+ * tries to transform the given @value into a string representation that allows
+ * getting back this string later on using gst_value_deserialize().
+ *
+ * Returns: the serialization for @value or NULL if none exists
  */
 gchar *
 gst_value_serialize (const GValue * value)
 {
   int i;
   GValue s_val = { 0 };
-  GstValueTable *table;
+  GstValueTable *table, *best = NULL;
   char *s;
+
+  g_return_val_if_fail (G_IS_VALUE (value), NULL);
 
   for (i = 0; i < gst_value_table->len; i++) {
     table = &g_array_index (gst_value_table, GstValueTable, i);
-    if (table->type != G_VALUE_TYPE (value) || table->serialize == NULL)
+    if (table->serialize == NULL)
       continue;
-
-    return table->serialize (value);
+    if (table->type == G_VALUE_TYPE (value)) {
+      best = table;
+      break;
+    }
+    if (g_type_is_a (G_VALUE_TYPE (value), table->type)) {
+      if (!best || g_type_is_a (table->type, best->type))
+        best = table;
+    }
   }
+  if (best)
+    return best->serialize (value);
 
   g_value_init (&s_val, G_TYPE_STRING);
-  g_value_transform (value, &s_val);
-  s = gst_string_wrap (g_value_get_string (&s_val));
+  if (g_value_transform (value, &s_val)) {
+    s = gst_string_wrap (g_value_get_string (&s_val));
+  } else {
+    s = NULL;
+  }
   g_value_unset (&s_val);
 
   return s;
@@ -1947,24 +2146,38 @@ gst_value_serialize (const GValue * value)
 
 /*
  * gst_value_deserialize:
- * @dest:
- * @src:
+ * @dest: #GValue to fill with contents of deserialization
+ * @src: string to deserialize
  *
- * Returns:
+ * Tries to deserialize a string into the type specified by the given GValue.
+ * If the operation succeeds, TRUE is returned, FALSE otherwise.
+ * 
+ * Returns: TRUE on success
  */
 gboolean
 gst_value_deserialize (GValue * dest, const gchar * src)
 {
-  GstValueTable *table;
+  GstValueTable *table, *best = NULL;
   int i;
+
+  g_return_val_if_fail (src != NULL, FALSE);
+  g_return_val_if_fail (G_IS_VALUE (dest), FALSE);
 
   for (i = 0; i < gst_value_table->len; i++) {
     table = &g_array_index (gst_value_table, GstValueTable, i);
-    if (table->type != G_VALUE_TYPE (dest) || table->deserialize == NULL)
+    if (table->serialize == NULL)
       continue;
-
-    return table->deserialize (dest, src);
+    if (table->type == G_VALUE_TYPE (dest)) {
+      best = table;
+      break;
+    }
+    if (g_type_is_a (G_VALUE_TYPE (dest), table->type)) {
+      if (!best || g_type_is_a (table->type, best->type))
+        best = table;
+    }
   }
+  if (best)
+    return best->deserialize (dest, src);
 
   return FALSE;
 }
@@ -2152,49 +2365,21 @@ _gst_value_initialize (void)
     gst_value_register (&gst_value);
   }
 
-  {
-    static const GstValueTable gst_value = {
-      G_TYPE_INT,
-      gst_value_compare_int,
-      gst_value_serialize_int,
-      gst_value_deserialize_int,
-    };
+  REGISTER_SERIALIZATION (G_TYPE_DOUBLE, double);
+  REGISTER_SERIALIZATION (G_TYPE_FLOAT, float);
 
-    gst_value_register (&gst_value);
-  }
+  REGISTER_SERIALIZATION (G_TYPE_STRING, string);
+  REGISTER_SERIALIZATION (G_TYPE_BOOLEAN, boolean);
+  REGISTER_SERIALIZATION (G_TYPE_ENUM, enum);
 
-  {
-    static const GstValueTable gst_value = {
-      G_TYPE_DOUBLE,
-      gst_value_compare_double,
-      gst_value_serialize_double,
-      gst_value_deserialize_double,
-    };
+  REGISTER_SERIALIZATION (G_TYPE_INT, int);
 
-    gst_value_register (&gst_value);
-  }
+  REGISTER_SERIALIZATION (G_TYPE_INT64, int64);
+  REGISTER_SERIALIZATION (G_TYPE_LONG, long);
 
-  {
-    static const GstValueTable gst_value = {
-      G_TYPE_STRING,
-      gst_value_compare_string,
-      gst_value_serialize_string,
-      gst_value_deserialize_string,
-    };
-
-    gst_value_register (&gst_value);
-  }
-
-  {
-    static const GstValueTable gst_value = {
-      G_TYPE_BOOLEAN,
-      gst_value_compare_boolean,
-      gst_value_serialize_boolean,
-      gst_value_deserialize_boolean,
-    };
-
-    gst_value_register (&gst_value);
-  }
+  REGISTER_SERIALIZATION (G_TYPE_UINT, uint);
+  REGISTER_SERIALIZATION (G_TYPE_UINT64, uint64);
+  REGISTER_SERIALIZATION (G_TYPE_ULONG, ulong);
 
   g_value_register_transform_func (GST_TYPE_FOURCC, G_TYPE_STRING,
       gst_value_transform_fourcc_string);

@@ -135,13 +135,13 @@ static char *video_file = NULL;
 }G_STMT_END
 
 #define PIPELINE1 "filesrc blocksize =8192  location=%s ! mad ! osssink"
-#define PIPELINE2 "filesrc location=%s ! mpegdemux ! mpeg2dec ! xvideosink"
-#define PIPELINE3 "filesrc location=%s ! mpegdemux name = demux ! mpeg2dec ! { queue ! xvideosink } demux.audio_00 ! mad ! osssink"
-#define PIPELINE4 "pipeline. ( { filesrc location=%s ! spider name=spider ! { queue ! volume ! ( tee name=tee ! { queue ! ( goom ) ! colorspace ! ( xvideosink ) } tee. ! { queue ! ( osssink ) } ) } spider. ! { queue ! colorspace ( xvideosink ) } } )"
-#define PIPELINE5 "pipeline. ( { filesrc location=%s ! spider name=spider ! ( tee name=tee ! { queue ! spider ! ( goom ) ! colorspace ! ( xvideosink ) } tee. ! { queue ! volume ! ( osssink ) } ) spider. ! { queue! colorspace ( xvideosink ) } } )"
+#define PIPELINE2 "filesrc location=%s ! mpegdemux ! mpeg2dec ! xvimagesink"
+#define PIPELINE3 "filesrc location=%s ! mpegdemux name = demux ! mpeg2dec ! { queue ! xvimagesink } demux.audio_00 ! mad ! osssink"
+#define PIPELINE4 "pipeline. ( { filesrc location=%s ! spider name=spider ! { queue ! volume ! ( tee name=tee ! { queue ! ( goom ) ! colorspace ! ( xvimagesink ) } tee. ! { queue ! ( osssink ) } ) } spider. ! { queue ! colorspace ( xvimagesink ) } } )"
+#define PIPELINE5 "pipeline. ( { filesrc location=%s ! spider name=spider ! ( tee name=tee ! { queue ! spider ! ( goom ) ! colorspace ! ( xvimagesink ) } tee. ! { queue ! volume ! ( osssink ) } ) spider. ! { queue! colorspace ( xvimagesink ) } } )"
 
 /* FIXME: Should this run, too?
-#define PIPELINE3 "filesrc location=%s ! mpegdemux name = demux ! mpeg2dec ! { queue ! xvideosink } demux.audio_%%02d ! mad ! osssink"
+#define PIPELINE3 "filesrc location=%s ! mpegdemux name = demux ! mpeg2dec ! { queue ! xvimagesink } demux.audio_%%02d ! mad ! osssink"
 */
 
 gint
@@ -176,7 +176,7 @@ here:
       "The following tests requires a valid mpeg file video.mpeg in your home directory.");
   TEST_REQUIRE_ELEMENT ("mpegdemux");
   TEST_REQUIRE_ELEMENT ("mpeg2dec");
-  TEST_REQUIRE_ELEMENT ("xvideosink");
+  TEST_REQUIRE_ELEMENT ("xvimagesink");
   TEST_START (PIPELINE2, video_file);
   TEST_RUN (50);
   TEST_OK;

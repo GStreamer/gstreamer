@@ -13,6 +13,7 @@
 #include "../gstinfo.h"
 #include "../gsterror.h"
 #include "../gsturi.h"
+#include "../gstvalue.h"
 #include "types.h"
 
 /* All error messages in this file are user-visible and need to be translated.
@@ -254,75 +255,8 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   gst_parse_unescape (pos); 
   if ((pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element), value))) { 
     g_value_init (&v, G_PARAM_SPEC_VALUE_TYPE(pspec)); 
-    switch (G_TYPE_FUNDAMENTAL (G_PARAM_SPEC_VALUE_TYPE (pspec))) {
-    case G_TYPE_STRING:
-      g_value_set_string (&v, pos);
-      break;      
-    case G_TYPE_BOOLEAN:
-      if (g_ascii_strcasecmp (pos, "true") && g_ascii_strcasecmp (pos, "yes") && g_ascii_strcasecmp (pos, "1")) {
-        g_value_set_boolean (&v, FALSE);
-      } else {
-        g_value_set_boolean (&v, TRUE);
-      }
-      break;
-    case G_TYPE_ENUM: {
-      GEnumValue *en;
-      gchar *endptr = NULL;
-      GEnumClass *klass = (GEnumClass *) g_type_class_peek (G_PARAM_SPEC_VALUE_TYPE (pspec));
-      if (klass == NULL) goto error;
-      if (!(en = g_enum_get_value_by_name (klass, pos))) {
-        if (!(en = g_enum_get_value_by_nick (klass, pos))) {
-          gint i = strtol (pos, &endptr, 0);
-	  if (endptr && *endptr == '\0') {
-	    en = g_enum_get_value (klass, i);
-	  }
-        }
-      }
-      if (!en)
-	goto error;
-      g_value_set_enum (&v, en->value);
-      break;
-    }
-    case G_TYPE_INT:
-    case G_TYPE_LONG:
-    case G_TYPE_INT64: {
-      gchar *endptr;
-      glong l;
-      g_value_init (&v2, G_TYPE_LONG); 
-      l = strtol (pos, &endptr, 0);
-      if (*endptr != '\0') goto error_conversion;
-      g_value_set_long (&v2, l);
-      if (!g_value_transform (&v2, &v)) goto error_conversion;
-      break;      
-    }
-    case G_TYPE_UINT:
-    case G_TYPE_ULONG:
-    case G_TYPE_UINT64: {
-      gchar *endptr;
-      gulong ul;
-      g_value_init (&v2, G_TYPE_ULONG); 
-      ul = strtoul (pos, &endptr, 0);
-      if (*endptr != '\0') goto error_conversion;
-      g_value_set_ulong (&v2, ul);
-      if (!g_value_transform (&v2, &v)) goto error_conversion;
-      break;      
-    }
-    case G_TYPE_FLOAT:
-    case G_TYPE_DOUBLE: {
-      gchar *endptr;
-      gdouble d;
-      g_value_init (&v2, G_TYPE_DOUBLE); 
-      d = g_ascii_strtod (pos, &endptr);
-      if (*endptr != '\0') goto error_conversion;
-      g_value_set_double (&v2, d);
-      if (!g_value_transform (&v2, &v)) goto error_conversion;
-      break;      
-    }
-    default:
-      /* add more */
-      g_warning ("property \"%s\" in element %s cannot be set", value, GST_ELEMENT_NAME (element)); 
+    if (!gst_value_deserialize (&v, pos))
       goto error;
-    }
     g_object_set_property (G_OBJECT (element), value, &v); 
   } else { 
     SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, _("no property \"%s\" in element \"%s\""), value, GST_ELEMENT_NAME (element)); 
@@ -340,11 +274,6 @@ error:
   SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
          _("could not set property \"%s\" in element \"%s\" to \"%s\""), 
 	 value, GST_ELEMENT_NAME (element), pos); 
-  goto out;
-error_conversion:
-  SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
-         _("could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""),
-         pos, value, GST_ELEMENT_NAME (element)); 
   goto out;
 }
 static inline void

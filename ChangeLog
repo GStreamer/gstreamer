@@ -1,3 +1,26 @@
+2004-05-18  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstvalue.c: (gst_strtoll), (CREATE_SERIALIZATION),
+	(CREATE_USERIALIZATION), (_gst_value_initialize),
+	(gst_value_compare_float), (gst_value_serialize_float),
+	(gst_value_deserialize_float), (gst_value_compare_enum),
+	(gst_value_serialize_enum), (gst_value_deserialize_enum):
+	  add serialization and comparison functions for long, int64, enum and
+	  float values
+	* gst/gstvalue.c: (gst_value_serialize), (gst_value_deserialize):
+	  use best serialization function in type hierarchy instead of only a
+	  matching one. This is required for enums to work.
+	* gst/parse/grammar.y:
+	  use gst_caps_deserialize
+	* testsuite/parse/Makefile.am:
+	  parse1 now works
+	* testsuite/parse/parse1.c: (main):
+	  remove aggregator check, aggregator is broken, this test works now
+	  but fails because of bug #138012
+	* testsuite/parse/parse2.c: (main):
+	  s/xvideosink/xvimagesink - this test looks a lot like we should
+	  disable it
+
 2004-05-13  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstelement.c: (gst_element_class_init):
