@@ -625,17 +625,6 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
   gst_bin_remove (GST_BIN (decode_bin), elem);
 }
 
-/* This function will be called when a pad is disconnected for some reason */
-static void
-unlinked (GstPad * pad, GstPad * peerpad, GstDecodeBin * decode_bin)
-{
-  /* inactivate pad */
-  gst_pad_set_active (pad, FALSE);
-
-  /* remove all elements linked to the peerpad */
-  remove_element_chain (decode_bin, peerpad);
-}
-
 /* This function will be called when a dynamic pad is created on an element.
  * We try to continue autoplugging on this new pad. */
 static void
@@ -680,6 +669,43 @@ no_more_pads (GstElement * element, GstDynamic * dynamic)
   } else {
     GST_DEBUG_OBJECT (decode_bin, "we have more dynamic elements");
   }
+}
+
+/* This function will be called when a pad is disconnected for some reason */
+static void
+unlinked (GstPad * pad, GstPad * peerpad, GstDecodeBin * decode_bin)
+{
+  GList *walk;
+  GstDynamic *dyn;
+  GstElement *element;
+
+  /* inactivate pad */
+  gst_pad_set_active (pad, FALSE);
+
+  /* remove all elements linked to the peerpad */
+  remove_element_chain (decode_bin, peerpad);
+
+  /* if an element removes two pads, then we don't want this twice */
+  element = gst_pad_get_parent (pad);
+  for (walk = decode_bin->dynamics; walk != NULL; walk = walk->next) {
+    dyn = walk->data;
+    if (dyn->element == element)
+      return;
+  }
+
+  GST_DEBUG_OBJECT (decode_bin, "pad removal while alive - chained?");
+
+  /* re-setup dynamic plugging */
+  dyn = g_new0 (GstDynamic, 1);
+  dyn->np_sig_id = g_signal_connect (G_OBJECT (element), "new-pad",
+      G_CALLBACK (new_pad), dyn);
+  dyn->nmp_sig_id = g_signal_connect (G_OBJECT (element), "no-more-pads",
+      G_CALLBACK (no_more_pads), dyn);
+  dyn->element = element;
+  dyn->decode_bin = decode_bin;
+
+  /* and add this element to the dynamic elements */
+  decode_bin->dynamics = g_list_prepend (decode_bin->dynamics, dyn);
 }
 
 /* this function inspects the given element and tries to connect something

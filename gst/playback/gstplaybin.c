@@ -85,6 +85,8 @@ static void gst_play_bin_class_init (GstPlayBinClass * klass);
 static void gst_play_bin_init (GstPlayBin * play_bin);
 static void gst_play_bin_dispose (GObject * object);
 
+static void setup_sinks (GstPlayBaseBin * play_base_bin);
+
 static void gst_play_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
 static void gst_play_bin_get_property (GObject * object, guint prop_id,
@@ -147,10 +149,12 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   GObjectClass *gobject_klass;
   GstElementClass *gstelement_klass;
   GstBinClass *gstbin_klass;
+  GstPlayBaseBinClass *playbasebin_klass;
 
   gobject_klass = (GObjectClass *) klass;
   gstelement_klass = (GstElementClass *) klass;
   gstbin_klass = (GstBinClass *) klass;
+  playbasebin_klass = (GstPlayBaseBinClass *) klass;
 
   parent_class = g_type_class_ref (gst_play_base_bin_get_type ());
 
@@ -191,6 +195,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gstelement_klass->get_query_types =
       GST_DEBUG_FUNCPTR (gst_play_bin_get_query_types);
   gstelement_klass->query = GST_DEBUG_FUNCPTR (gst_play_bin_query);
+
+  playbasebin_klass->setup_output_pads = setup_sinks;
 }
 
 static void
@@ -497,6 +503,7 @@ remove_sinks (GstPlayBin * play_bin)
   GstObject *parent;
   GstElement *element;
 
+  GST_DEBUG ("removesinks");
   element = g_hash_table_lookup (play_bin->cache, "abin");
   if (element != NULL) {
     parent = gst_element_get_parent (element);
@@ -536,14 +543,20 @@ remove_sinks (GstPlayBin * play_bin)
  * media file
  */
 static void
-setup_sinks (GstPlayBin * play_bin)
+setup_sinks (GstPlayBaseBin * play_base_bin)
 {
+  GstPlayBin *play_bin = GST_PLAY_BIN (play_base_bin);
   GList *streaminfo;
   GList *s;
   gint num_audio = 0;
   gint num_video = 0;
   gboolean need_vis = FALSE;
 
+  /* FIXME: do this nicer */
+  if (GST_STATE (play_base_bin) == GST_STATE_PLAYING) {
+    remove_sinks (play_bin);
+  }
+  GST_DEBUG ("setupsinks");
   /* get info about the stream */
   g_object_get (G_OBJECT (play_bin), "stream-info", &streaminfo, NULL);
 
@@ -631,7 +644,11 @@ setup_sinks (GstPlayBin * play_bin)
     }
 
     if (sink != NULL) {
+      gst_object_ref (GST_OBJECT (sink));
       gst_bin_add (GST_BIN (play_bin), sink);
+      GST_DEBUG ("Adding sink with state %d (parent: %d, peer: %d)\n",
+          GST_STATE (sink), GST_STATE (play_bin),
+          GST_STATE (gst_pad_get_parent (srcpad)));
       sinkpad = gst_element_get_pad (sink, "sink");
       res = gst_pad_link (srcpad, sinkpad);
       if (!res) {
@@ -672,7 +689,7 @@ gst_play_bin_change_state (GstElement * element)
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
-      setup_sinks (play_bin);
+      //setup_sinks (play_bin);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
     case GST_STATE_PLAYING_TO_PAUSED:

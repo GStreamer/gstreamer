@@ -35,14 +35,35 @@ G_BEGIN_DECLS
 typedef struct _GstPlayBaseBin GstPlayBaseBin;
 typedef struct _GstPlayBaseBinClass GstPlayBaseBinClass;
 
+/* a GstPlayBaseGroup is a group of pads and streaminfo that together 
+ * make up a playable stream. A new group is created from the current 
+ * set of pads that are alive when the preroll elements are filled or 
+ * when the no-more-pads signal is fired.
+ *
+ * We have to queue the groups as they can be created while the preroll
+ * queues are still playing the old group. We monitor the EOS signals
+ * on the preroll queues and when all the streams in the current group
+ * have EOSed, we switch to the next queued group.
+ */
+typedef struct
+{
+  GstPlayBaseBin *bin;	/* ref to the owner */
+
+  gint		 nstreams;
+  GList		*streaminfo;
+
+  gint		 naudiopads;
+  gint		 nvideopads;
+  gint		 nunknownpads;
+
+  GList		*preroll_elems;
+} GstPlayBaseGroup;
+
 struct _GstPlayBaseBin {
   GstBin 	 bin;
 	
   /* properties */
   gboolean	 threaded;
-  GMutex	*preroll_lock;
-  GCond		*preroll_cond;
-  GList		*preroll_elems;
   guint64	 queue_size;
 
   /* internal thread */
@@ -52,12 +73,11 @@ struct _GstPlayBaseBin {
   GstElement	*decoder;
   gboolean	 need_rebuild;
 
-  gint		 nstreams;
-  GList		*streaminfo;
-
-  gint		 naudiopads;
-  gint		 nvideopads;
-  gint		 nunknownpads;
+  /* group management */
+  GMutex	*group_lock;		/* lock and mutex to signal availability of new group */
+  GCond		*group_cond;
+  GstPlayBaseGroup *building_group; 	/* the group that we are constructing */
+  GList		*queued_groups;      	/* the constructed groups, head is the active one */
 
   /* list of usable factories */
   GList		*factories;
@@ -66,7 +86,13 @@ struct _GstPlayBaseBin {
 struct _GstPlayBaseBinClass {
   GstBinClass 	 parent_class;
 
-  void	(*link_stream)		(GstPlayBaseBin *play_base_bin, 
+  /* signals */
+  void (*setup_output_pads)	(GstPlayBaseBin *play_base_bin);
+  void (*removed_output_pad)	(GstPlayBaseBin *play_base_bin,
+				 GstStreamInfo *info);
+
+  /* action signals */
+  gboolean (*link_stream)	(GstPlayBaseBin *play_base_bin, 
 				 GstStreamInfo *info,
 				 GstPad *pad);
   void	(*unlink_stream)	(GstPlayBaseBin *play_base_bin, 
@@ -80,7 +106,7 @@ const GList*	gst_play_base_bin_get_streaminfo	(GstPlayBaseBin *play_base_bin);
 gint		gst_play_base_bin_get_nstreams_of_type	(GstPlayBaseBin *play_base_bin,
 							 GstStreamType type);
 
-void		gst_play_base_bin_link_stream		(GstPlayBaseBin *play_base_bin, 
+gboolean	gst_play_base_bin_link_stream		(GstPlayBaseBin *play_base_bin, 
 							 GstStreamInfo *info,
 							 GstPad *pad);
 void		gst_play_base_bin_unlink_stream		(GstPlayBaseBin *play_base_bin, 
