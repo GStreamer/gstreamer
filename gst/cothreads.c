@@ -41,6 +41,14 @@
 #define STACK_SIZE 0x200000
 
 
+struct _cothread_context {
+  cothread_state *threads[COTHREAD_MAXTHREADS];
+  int nthreads;
+  int current;
+  GHashTable *data;
+};
+
+
 pthread_key_t _cothread_key = -1;
 
 /* Disablig this define allows you to shut off a few checks in

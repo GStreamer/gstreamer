@@ -53,12 +53,6 @@ struct _cothread_state {
   jmp_buf jmp;
 };
 
-struct _cothread_context {
-  cothread_state *threads[COTHREAD_MAXTHREADS];
-  int nthreads;
-  int current;
-  GHashTable *data;
-};
 
 cothread_context*		cothread_init();
 cothread_state*			cothread_create		(cothread_context *ctx);
