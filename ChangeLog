@@ -1,5 +1,25 @@
 2004-10-15  Wim Taymans  <wim@fluendo.com>
 
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_get_type),
+	(gst_dv1394src_base_init), (gst_dv1394src_class_init),
+	(gst_dv1394src_init), (gst_dv1394src_dispose),
+	(gst_dv1394src_iso_receive), (gst_dv1394src_discover_avc_node),
+	(gst_dv1394src_change_state), (gst_dv1394src_get_event_mask),
+	(gst_dv1394src_event), (gst_dv1394src_get_formats),
+	(gst_dv1394src_convert), (gst_dv1394src_get_query_types),
+	(gst_dv1394src_query), (gst_dv1394src_uri_get_type),
+	(gst_dv1394src_uri_get_protocols), (gst_dv1394src_uri_get_uri),
+	(gst_dv1394src_uri_set_uri), (gst_dv1394src_uri_handler_init):
+	* ext/raw1394/gstdv1394src.h:
+	Added conversion/query functions.
+	Update buffer timestamps,
+	Added signals. 
+	Added uri dv:// so it might play from the firewire in playbin. 
+	Fix a possible leak. 
+	Added debugging.
+
+2004-10-15  Wim Taymans  <wim@fluendo.com>
+
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_class_init),
 	(gst_dv1394src_init), (gst_dv1394src_set_property),
 	(gst_dv1394src_get_property), (gst_dv1394src_iso_receive),
