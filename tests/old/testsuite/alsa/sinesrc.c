@@ -158,7 +158,7 @@ static gint8 IDENTITY(gint8 x) { return x; };
     default: \
       g_assert_not_reached ();\
   };\
-  format* p = data;\
+  format *p = data;\
   for (j = 0; j < src->channels; j++) {\
     *p = val;\
     p ++;\
