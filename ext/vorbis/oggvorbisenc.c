@@ -35,9 +35,9 @@ static GstPadTemplate *gst_oggvorbisenc_src_template,
 
 /* elementfactory information */
 GstElementDetails oggvorbisenc_details = {
-  "Ogg Vorbis encoder",
+  "Ogg Vorbis encoder (deprecated)",
   "Codec/Encoder/Audio",
-  "Encodes audio in OGG Vorbis format",
+  "Encodes audio in Vorbis format for Ogg containers",
   "Monty <monty@xiph.org>, " "Wim Taymans <wim.taymans@chello.be>",
 };
 
