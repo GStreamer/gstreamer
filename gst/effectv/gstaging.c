@@ -1,39 +1,56 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2003> David Schleef <ds@schleef.org>
  *
- * EffecTV:
+ * EffecTV - Realtime Digital Video Effector
  * Copyright (C) 2001 FUKUCHI Kentarou
  *
- * EffecTV is free software. * This library is free software;
- * you can redistribute it and/or
+ * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
- *          
+ *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * This file was (probably) generated from gstvideotemplate.c,
+ * gstvideotemplate.c,v 1.11 2004/01/07 08:56:45 ds Exp 
+ */
+
+/* From main.c of warp-1.1:
+ *
+ *      Simple DirectMedia Layer demo
+ *      Realtime picture 'gooing'
+ *      by sam lantinga slouken@devolution.com
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <string.h>
 
+#include <gst/gst.h>
+#include <gstvideofilter.h>
+#include <string.h>
+#include <math.h>
 #include "gsteffectv.h"
+
+
 
 #define GST_TYPE_AGINGTV \
   (gst_agingtv_get_type())
 #define GST_AGINGTV(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AGINGTV,GstAgingTV))
 #define GST_AGINGTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstAgingTV))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AGINGTV,GstAgingTVClass))
 #define GST_IS_AGINGTV(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AGINGTV))
 #define GST_IS_AGINGTV_CLASS(obj) \
@@ -51,19 +68,13 @@ typedef struct _scratch
 static int dx[8] = { 1, 1, 0, -1, -1, -1,  0, 1};
 static int dy[8] = { 0, -1, -1, -1, 0, 1, 1, 1};
 
-
 typedef struct _GstAgingTV GstAgingTV;
 typedef struct _GstAgingTVClass GstAgingTVClass;
 
-struct _GstAgingTV
-{
-  GstElement element;
-
-  GstPad *sinkpad, *srcpad;
+struct _GstAgingTV {
+  GstVideofilter videofilter;
 
   gint width, height;
-  gint video_size;
-  gint area_scale;
   gint aging_mode;
 
   scratch scratches[SCRATCH_MAX];
@@ -71,134 +82,138 @@ struct _GstAgingTV
 
   gint dust_interval;
   gint pits_interval;
+
 };
 
-struct _GstAgingTVClass
-{
-  GstElementClass parent_class;
+struct _GstAgingTVClass {
+  GstVideofilterClass parent_class;
 };
 
-/* elementfactory information */
-static GstElementDetails gst_agingtv_details = GST_ELEMENT_DETAILS (
-  "AgingTV",
-  "Filter/Effect/Video",
-  "Apply aging effect on video",
-  "Wim Taymans <wim.taymans@chello.be>"
-);
 
-
-/* Filter signals and args */
-enum
-{
+/* GstAgingTV signals and args */
+enum {
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum
-{
+enum {
   ARG_0,
+  /* FILL ME */
 };
 
-static void 	gst_agingtv_base_init 		(gpointer g_class);
-static void 	gst_agingtv_class_init 		(GstAgingTVClass * klass);
-static void 	gst_agingtv_init 		(GstAgingTV * filter);
+static void	gst_agingtv_base_init	(gpointer g_class);
+static void	gst_agingtv_class_init	(gpointer g_class, gpointer class_data);
+static void	gst_agingtv_init		(GTypeInstance *instance, gpointer g_class);
+static void     gst_agingtv_setup(GstVideofilter *videofilter);
 
-static void 	aging_mode_switch 		(GstAgingTV *filter);
+static void	gst_agingtv_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void	gst_agingtv_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void     gst_agingtv_rgb32 (GstVideofilter *videofilter, void *d, void *s);
 
-static void 	gst_agingtv_set_property 	(GObject * object, guint prop_id,
-					  	 const GValue * value, GParamSpec * pspec);
-static void 	gst_agingtv_get_property 	(GObject * object, guint prop_id,
-					  	 GValue * value, GParamSpec * pspec);
-
-static void 	gst_agingtv_chain 		(GstPad * pad, GstData *_data);
-
-static GstElementClass *parent_class = NULL;
-/*static guint gst_agingtv_signals[LAST_SIGNAL] = { 0 }; */
-
-GType gst_agingtv_get_type (void)
+GType
+gst_agingtv_get_type (void)
 {
   static GType agingtv_type = 0;
 
   if (!agingtv_type) {
     static const GTypeInfo agingtv_info = {
-      sizeof (GstAgingTVClass),
+      sizeof(GstAgingTVClass),
       gst_agingtv_base_init,
       NULL,
-      (GClassInitFunc) gst_agingtv_class_init,
+      gst_agingtv_class_init,
       NULL,
       NULL,
-      sizeof (GstAgingTV),
+      sizeof(GstAgingTV),
       0,
-      (GInstanceInitFunc) gst_agingtv_init,
+      gst_agingtv_init,
     };
-
-    agingtv_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAgingTV", &agingtv_info, 0);
+    agingtv_type = g_type_register_static(GST_TYPE_VIDEOFILTER,
+        "GstAgingTV", &agingtv_info, 0);
   }
   return agingtv_type;
 }
 
+static GstVideofilterFormat gst_agingtv_formats[] = {
+  { "RGB ", 32, gst_agingtv_rgb32, 24, G_BIG_ENDIAN, 0x00ff0000, 0x0000ff00, 0x000000ff },
+  { "RGB ", 32, gst_agingtv_rgb32, 24, G_BIG_ENDIAN, 0xff000000, 0x00ff0000, 0x0000ff00 },
+  { "RGB ", 32, gst_agingtv_rgb32, 24, G_BIG_ENDIAN, 0x000000ff, 0x0000ff00, 0x00ff0000 },
+  { "RGB ", 32, gst_agingtv_rgb32, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000, 0xff000000 },
+};
+
+  
 static void
 gst_agingtv_base_init (gpointer g_class)
 {
+  static GstElementDetails agingtv_details = GST_ELEMENT_DETAILS (
+    "AgingTV",
+    "Filter/Effect/Video",
+    "AgingTV does realtime goo'ing of the video input",
+    "Sam Lantinga <slouken@devolution.com>"
+  );
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
+  int i;
+  
+  gst_element_class_set_details (element_class, &agingtv_details);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get(&gst_effectv_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get(&gst_effectv_sink_template));
- 
-  gst_element_class_set_details (element_class, &gst_agingtv_details);
+  for(i=0;i<G_N_ELEMENTS(gst_agingtv_formats);i++){
+    gst_videofilter_class_add_format(videofilter_class,
+	gst_agingtv_formats + i);
+  }
+
+  gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
 }
 
 static void
-gst_agingtv_class_init (GstAgingTVClass * klass)
+gst_agingtv_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstVideofilterClass *videofilter_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  gobject_class = G_OBJECT_CLASS (g_class);
+  videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+#if 0
+  g_object_class_install_property(gobject_class, ARG_METHOD,
+      g_param_spec_enum("method","method","method",
+      GST_TYPE_AGINGTV_METHOD, GST_AGINGTV_METHOD_1,
+      G_PARAM_READWRITE));
+#endif
 
   gobject_class->set_property = gst_agingtv_set_property;
   gobject_class->get_property = gst_agingtv_get_property;
-}
 
-static GstPadLinkReturn
-gst_agingtv_sinkconnect (GstPad * pad, const GstCaps * caps)
-{
-  GstAgingTV *filter;
-  GstStructure *structure;
-
-  filter = GST_AGINGTV (gst_pad_get_parent (pad));
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  gst_structure_get_int (structure, "width", &filter->width);
-  gst_structure_get_int (structure, "height", &filter->height);
-
-  filter->video_size = filter->width * filter->height;
-  filter->aging_mode = 0;
-  aging_mode_switch (filter);
-
-  return gst_pad_try_set_caps (filter->srcpad, caps);
+  videofilter_class->setup = gst_agingtv_setup;
 }
 
 static void
-gst_agingtv_init (GstAgingTV * filter)
+gst_agingtv_init (GTypeInstance *instance, gpointer g_class)
 {
-  filter->sinkpad = gst_pad_new_from_template (
-      gst_static_pad_template_get(&gst_effectv_sink_template), "sink");
-  gst_pad_set_chain_function (filter->sinkpad, gst_agingtv_chain);
-  gst_pad_set_link_function (filter->sinkpad, gst_agingtv_sinkconnect);
-  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
+  GstAgingTV *agingtv = GST_AGINGTV (instance);
+  GstVideofilter *videofilter;
 
-  filter->srcpad = gst_pad_new_from_template (
-      gst_static_pad_template_get(&gst_effectv_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
+  GST_DEBUG("gst_agingtv_init");
+
+  videofilter = GST_VIDEOFILTER(agingtv);
+
+  /* do stuff */
 }
 
+static void gst_agingtv_setup(GstVideofilter *videofilter)
+{
+  GstAgingTV *agingtv;
+  int width = gst_videofilter_get_input_width(videofilter);
+  int height = gst_videofilter_get_input_height(videofilter);
+
+  g_return_if_fail(GST_IS_AGINGTV(videofilter));
+  agingtv = GST_AGINGTV(videofilter);
+
+  /* if any setup needs to be done, do it here */
+
+  agingtv->width = width;
+  agingtv->height = height;
+
+}
 
 static unsigned int 
 fastrand (void)
@@ -341,78 +356,68 @@ pits (guint32 *dest, gint width, gint height, gint area_scale, gint pits_interva
   }
 }
 
-static void 
-aging_mode_switch (GstAgingTV *filter)
+static void     
+gst_agingtv_rgb32 (GstVideofilter *videofilter, void *d, void *s)
 {
-  switch (filter->aging_mode) {
-    default:
-    case 0:
-      filter->scratch_lines = 7;
-	/* Most of the parameters are tuned for 640x480 mode */
-	/* area_scale is set to 10 when screen size is 640x480. */
-      filter->area_scale = filter->width * filter->height / 64 / 480;
-  }
-  if (filter->area_scale <= 0)
-    filter->area_scale = 1;
-}
+  GstAgingTV *agingtv;
+  int width = gst_videofilter_get_input_width(videofilter);
+  int height = gst_videofilter_get_input_height(videofilter);
+  int video_size = width * height;
+  guint32 *src = s;
+  guint32 *dest = d;
+  gint area_scale = width * height / 64 / 480;
+  if (area_scale <= 0) area_scale = 1;
 
-static void
-gst_agingtv_chain (GstPad * pad, GstData *_data)
-{
-  GstBuffer *buf = GST_BUFFER (_data);
-  GstAgingTV *filter;
-  guint32 *src, *dest;
-  GstBuffer *outbuf;
+  g_return_if_fail(GST_IS_AGINGTV(videofilter));
+  agingtv = GST_AGINGTV(videofilter);
 
-  filter = GST_AGINGTV (gst_pad_get_parent (pad));
-
-  src = (guint32 *) GST_BUFFER_DATA (buf);
-
-  outbuf = gst_buffer_new ();
-  GST_BUFFER_SIZE (outbuf) = (filter->video_size * sizeof (guint32));
-  dest = (guint32 *) GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-
-  coloraging (src, dest, filter->video_size);
-  scratching (filter->scratches, filter->scratch_lines, dest, filter->width, filter->height);
-  pits (dest, filter->width, filter->height, filter->area_scale, filter->pits_interval);
-  if(filter->area_scale > 1)
-    dusts (dest, filter->width, filter->height, filter->dust_interval, filter->area_scale);
+  coloraging (src, dest, video_size);
+  scratching (agingtv->scratches, agingtv->scratch_lines, dest, width, height);
+  pits (dest, width, height, area_scale, agingtv->pits_interval);
+  if(area_scale > 1)
+    dusts (dest, width, height, agingtv->dust_interval, area_scale);
   
-  gst_buffer_unref (buf);
-
-  gst_pad_push (filter->srcpad, GST_DATA (outbuf));
 }
 
 static void
-gst_agingtv_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec)
+gst_agingtv_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-  GstAgingTV *filter;
+  GstAgingTV *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_AGINGTV (object));
+  g_return_if_fail(GST_IS_AGINGTV(object));
+  src = GST_AGINGTV(object);
 
-  filter = GST_AGINGTV (object);
-
+  GST_DEBUG("gst_agingtv_set_property");
   switch (prop_id) {
+#if 0
+    case ARG_METHOD:
+      src->method = g_value_get_enum (value);
+      break;
+#endif
     default:
       break;
   }
 }
 
 static void
-gst_agingtv_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec)
+gst_agingtv_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-  GstAgingTV *filter;
+  GstAgingTV *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_AGINGTV (object));
-
-  filter = GST_AGINGTV (object);
+  g_return_if_fail(GST_IS_AGINGTV(object));
+  src = GST_AGINGTV(object);
 
   switch (prop_id) {
+#if 0
+    case ARG_METHOD:
+      g_value_set_enum (value, src->method);
+      break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
+
