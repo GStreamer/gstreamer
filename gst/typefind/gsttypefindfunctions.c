@@ -69,7 +69,7 @@ utf8_type_find (GstTypeFind *tf, gpointer unused)
 /*** text/uri-list ************************************************************/
 
 static GstStaticCaps uri_caps = GST_STATIC_CAPS ("text/uri-list");
-#define URI_CAPS gst_caps_copy(gst_static_caps_get(&uri_caps))
+#define URI_CAPS (gst_static_caps_get(&uri_caps))
 #define BUFFER_SIZE 16 /* If the string is < 16 bytes we're screwed */
 #define INC_BUFFER { 							\
   pos++;								\
