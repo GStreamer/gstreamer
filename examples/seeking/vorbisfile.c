@@ -316,8 +316,5 @@ main (int argc, char **argv)
   /* stop probe */
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  gst_buffer_print_stats();
-  gst_event_print_stats();
-
   return 0;
 }
