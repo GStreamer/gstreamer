@@ -1,0 +1,57 @@
+GStreamer Filter Writer's Guide
+===============================
+
+Outline:
+
+Basic concepts
+	Chain vs loop elements
+	Scheduling
+	Buffers
+	Typing and Properties
+	Metadata
+Building our first filter
+	Constructing the boilerplate
+		Doing it the easy way with FilterFactory
+		  (NOTE: FilterFactory doesn't exist yet)
+		Doing it the hard way with G[tk]Object
+	An identity filter
+		Building an object with pads
+		Attaching functions
+		The chain function
+	The plugin_init function
+		Registering the types
+		Registering the filter
+Building a simple test application
+	Initialization
+	Instantiating the plugins
+	  (NOTE: we really should have a debugging Sink)
+	Connecting them
+	Running the pipeline
+Loop-based Elements
+	How scheduling works, aka pushing and pulling
+	How a loopfunc works, aka pulling and pushing
+	Adding a second output
+		Identity is now a tee
+		Modifying the test application
+Types and Properties
+	Building a simple format for testing
+	A simple MIME type
+	Type properties
+	Typefind functions and autopluggin
+Buffers and Metadata
+	Anatomy of a Buffer
+	Refcounts and mutability
+	Metadata
+		How Properties work efficiently
+		Metadata mutability
+		  (FIXME: this is an unsolved problem)
+Sources and Sinks
+	Writing a source
+		Pull vs loop based
+		Region pulling
+		  (NOTE: somewhere explain how filters use this)
+	Writing a sink
+		Gee, that was easy
+State management
+	What are states?
+	Mangaging filter state
