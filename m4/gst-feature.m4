@@ -72,13 +72,19 @@ NOUSE=
 dnl *** If it's enabled
 
 if test x$USE_[$1] = xyes; then
+  dnl save compile variables before the test
+
   gst_check_save_LIBS=$LIBS
   gst_check_save_LDFLAGS=$LDFLAGS
   gst_check_save_CFLAGS=$CFLAGS
   gst_check_save_CPPFLAGS=$CPPFLAGS
   gst_check_save_CXXFLAGS=$CXXFLAGS
+
   HAVE_[$1]=no
+
+  dnl TEST_FOR_FEATURE
   $4
+
   LIBS=$gst_check_save_LIBS
   LDFLAGS=$gst_check_save_LDFLAGS
   CFLAGS=$gst_check_save_CFLAGS
@@ -94,6 +100,7 @@ dnl *** Warn if it's disabled or not found
 if test x$USE_[$1] = xyes; then
   ifelse([$6], , :, [$6])
   GST_PLUGINS_YES="$GST_PLUGINS_YES \n\t[$3]"
+  AC_DEFINE(HAVE_[$1], , [support for features: $3])
 else
   ifelse([$3], , :, [AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: [$3]
