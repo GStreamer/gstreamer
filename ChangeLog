@@ -1,3 +1,11 @@
+2004-03-25  Benjamin Otte  <otte@gnome.org>
+
+	* gst/debug/Makefile.am:
+	* gst/debug/breakmydata.c: 
+	  add element that quasi-randomly changes bytes in the stream.
+	  Intended use is robustness checking of demuxers and decoders in
+	  media tests.
+
 2004-03-24  Benjamin Otte  <otte@gnome.org>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_open_audio),
