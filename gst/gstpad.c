@@ -1196,9 +1196,41 @@ gst_pad_link_fixate (GstPadLink * link)
           break;
       }
       if (newcaps) {
-        gst_caps_free (caps);
-        caps = newcaps;
-        break;
+#ifndef G_DISABLE_CHECKS
+        /* some mad checking for correctly working fixation functions */
+        gboolean bad;
+
+        if (i == 4) {
+          /* we trust the default fixation function unconditionally */
+          bad = FALSE;
+        } else if (gst_caps_is_any (caps)) {
+          bad = gst_caps_is_any (newcaps);
+        } else {
+          GstCaps *test = gst_caps_subtract (caps, newcaps);
+
+          bad = gst_caps_is_empty (test);
+          gst_caps_free (test);
+          /* simplifying is ok, too */
+          if (bad)
+            bad = (gst_caps_get_size (newcaps) >= gst_caps_get_size (caps));
+        }
+        if (bad) {
+          gchar *newcaps_str = gst_caps_to_string (newcaps);
+          gchar *caps_str = gst_caps_to_string (caps);
+
+          g_warning
+              ("a fixation function did not fixate correctly, the returned caps %s are no true subset of %s.",
+              newcaps_str, caps_str);
+          g_free (newcaps_str);
+          g_free (caps_str);
+          gst_caps_free (newcaps);
+        } else
+#endif
+        {
+          gst_caps_free (caps);
+          caps = newcaps;
+          break;
+        }
       }
     }
   }

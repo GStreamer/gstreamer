@@ -1,5 +1,11 @@
 2004-04-21  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstpad.c: (gst_pad_link_fixate):
+	  add sophisticated error checking code to see if fixation functions
+	  did their fixation right
+
+2004-04-21  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstcaps.c: (gst_caps_append), (gst_caps_union):
 	  check for ANY caps before appending/unioning
 	* gst/gstcaps.c: (gst_caps_is_subset),
