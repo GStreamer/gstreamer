@@ -281,41 +281,25 @@ gst_osscommon_open_audio (GstOssCommon *common, GstOssOpenMode mode, gchar **err
   GST_INFO (GST_CAT_PLUGIN_INFO, "common: attempting to open sound device");
 
   /* first try to open the sound card */
-  /* FIXME: This code is dubious, why do we need to open and close this ?
-   *        For linux at least this causes the second open to never return
-   *        if the device was already in use .. */
-#ifndef __linux__
   if (mode == GST_OSSCOMMON_WRITE) {
-#endif
+    /* open non blocking first so that it returns immediatly with an error
+     * when we cannot get to the device */
     common->fd = open (common->device, O_WRONLY | O_NONBLOCK);
-#ifdef __linux__
-	if (common->fd >= 0) {
-	  /* remove the non-blocking flag */
-	  if(fcntl (common->fd, F_SETFL, 0) < 0) {
-		*error = g_strdup_printf ("osscommon: Can't make filedescriptor blocking for %s",
-				   common->device);
-		return FALSE;
-	  }
-	}
-#else
-    if (errno == EBUSY) {
-      g_warning ("osscommon: unable to open the sound device (in use ?)\n");
-    }
 
-    if (common->fd >= 0)
+    if (common->fd >= 0) {
       close (common->fd);
-  
-    /* re-open the sound device in blocking mode */
-    common->fd = open (common->device, O_WRONLY);
+			  
+      /* re-open the sound device in blocking mode */
+      common->fd = open (common->device, O_WRONLY);
+    }
   }
   else {
     common->fd = open (common->device, O_RDONLY);
   }
-#endif
 
   if (common->fd < 0) {
     switch (errno) {
-	  case EBUSY:
+      case EBUSY:
 	*error = g_strdup_printf ("osscommon: Unable to open %s (in use ?)",
 			   common->device);
 	break;
