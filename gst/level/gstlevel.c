@@ -165,8 +165,6 @@ gst_level_link (GstPad * pad, const GstCaps * caps)
         filter->MS[i] = filter->RMS_dB[i] = 0.0;
   }
 
-  filter->inited = TRUE;
-
   return GST_PAD_LINK_OK;
 }
 
@@ -195,6 +193,13 @@ gst_level_fast_16bit_chain (gint16 * in, guint num, gint channels,
   filter = GST_LEVEL (GST_OBJECT_PARENT (pad));
   g_return_if_fail (filter != NULL);
   g_return_if_fail (GST_IS_LEVEL (filter));
+
+  if (!gst_pad_is_negotiated (pad)) {
+    GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION, (NULL),
+        ("sinkpad not negotiated"));
+    gst_data_unref (_data);
+    return;
+  }
 
   for (i = 0; i < filter->channels; ++i)
     filter->CS[i] = filter->peak[i] = filter->MS[i] = filter->RMS_dB[i] = 0.0;
@@ -288,12 +293,8 @@ gst_level_fast_16bit_chain (gint16 * in, guint num, gint channels,
 static GstElementStateReturn
 gst_level_change_state (GstElement * element)
 {
-  GstLevel *filter = GST_LEVEL (element);
-
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_PLAYING:
-      if (!filter->inited)
-        return GST_STATE_FAILURE;
       break;
     default:
       break;
@@ -418,15 +419,14 @@ gst_level_init (GstLevel * filter)
       (&sink_template_factory), "sink");
   gst_pad_set_link_function (filter->sinkpad, gst_level_link);
   gst_pad_set_getcaps_function (filter->sinkpad, gst_pad_proxy_getcaps);
+  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
+  gst_pad_set_chain_function (filter->sinkpad, gst_level_chain);
+
   filter->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&src_template_factory), "src");
   gst_pad_set_link_function (filter->srcpad, gst_level_link);
   gst_pad_set_getcaps_function (filter->srcpad, gst_pad_proxy_getcaps);
-
-  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
-  gst_pad_set_chain_function (filter->sinkpad, gst_level_chain);
-  filter->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->CS = NULL;
