@@ -32,9 +32,6 @@ GST_REVISION=0
 GST_AGE=0
 GST_LIBVERSION=$GST_CURRENT:$GST_REVISION:$GST_AGE
 
-dnl check for gstreamer
-PKG_CHECK_MODULES(GST, gstreamer >= 0.3.0)
-
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
@@ -118,14 +115,18 @@ else
   HAVE_NASM="yes"
 fi
 
+dnl Check for pkgconfig
+AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, true, false)
+
 dnl fix pkg-config's broken default search path
 if test -z $PKG_CONFIG_PATH; then
   PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig
+  echo "Setting PKG_CONFIG_PATH to $PKG_CONFIG_PATH"
 fi
 export PKG_CONFIG_PATH
 
-dnl Check for pkgconfig
-AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, true, false)
+dnl check for gstreamer
+PKG_CHECK_MODULES(GST, gstreamer >= 0.3.0)
 
 dnl dnl check for gtk-doc
 dnl AC_ARG_WITH(html-dir, [  --with-html-dir=PATH path to installed docs ])
