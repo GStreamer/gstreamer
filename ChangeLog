@@ -1,3 +1,9 @@
+2004-05-13  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstpipeline.c: (gst_pipeline_dispose),
+	(gst_pipeline_change_state):
+	  call gst_scheduler_reset on dispose (fixes #141416)
+
 2004-05-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/elements/gstfilesrc.c: (gst_filesrc_get_mmap):
