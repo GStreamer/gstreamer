@@ -402,9 +402,10 @@
   <name>about</name>
   <modal>True</modal>
   <copyright>(C) 1999-2000 Erik Walthinsen</copyright>
-  <authors>Erik Walthinsen, main programmer
-Wim Taymans, plugin hacker
-Richard Boulton, makefile hacker
+  <authors>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;,
+Wim Taymans &lt;wim.taymans@tvd.be&gt;,
+Richard Boulton &lt;richard@tartarus.org&gt;,
+Chris Emerson (PPC port)
 </authors>
   <comments>A generic media player for the gstreamer streaming media framework.</comments>
 </widget>

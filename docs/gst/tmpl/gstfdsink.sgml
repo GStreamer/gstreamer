@@ -14,3 +14,8 @@ Write data to a file descriptor.
 
 </para>
 
+<!-- ##### ARG GstFdSink:fd ##### -->
+<para>
+The filedescriptor to write to.
+</para>
+

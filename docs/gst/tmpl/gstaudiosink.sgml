@@ -14,3 +14,32 @@ Output to a sound card via OSS.
 
 </para>
 
+<!-- ##### SIGNAL GstAudioSink::handoff ##### -->
+<para>
+The buffer is sent to the sound card.
+</para>
+
+@gstaudiosink: the object which received the signal.
+<!-- # Unused Parameters # -->
+@arg1: the audiosink.
+
+<!-- ##### ARG GstAudioSink:mute ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstAudioSink:format ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstAudioSink:channels ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstAudioSink:frequency ##### -->
+<para>
+
+</para>
+

@@ -43,3 +43,9 @@ Thread flags:
 @Returns: 
 
 
+<!-- ##### ARG GstThread:create_thread ##### -->
+<para>
+TRUE if the thread should be created.
+
+</para>
+

@@ -216,10 +216,13 @@ gst_media_play_update_status_area (GstMediaPlay *play,
 				   gulong current_time, 
 				   gulong total_time)
 {
-  gst_status_area_set_playtime (play->status, 
-		    		g_strdup_printf("%02lu:%02lu / %02lu:%02lu", 
-			    	          current_time/60, current_time%60,
-			    	          total_time/60, total_time%60));
+  gchar time[14];
+
+  sprintf(time, "%02lu:%02lu / %02lu:%02lu", 
+	 current_time/60, current_time%60,
+	 total_time/60, total_time%60);
+
+  gst_status_area_set_playtime (play->status, time);
 }
 
 void 

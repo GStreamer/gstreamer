@@ -14,3 +14,28 @@ Create buffers from an OSS sound card.
 
 </para>
 
+<!-- ##### ARG GstAudioSrc:bytes_per_read ##### -->
+<para>
+The number of bytes per read.
+</para>
+
+<!-- ##### ARG GstAudioSrc:curoffset ##### -->
+<para>
+Get the current number of bytes read.
+</para>
+
+<!-- ##### ARG GstAudioSrc:format ##### -->
+<para>
+The audio format as defined in soundcard.h
+</para>
+
+<!-- ##### ARG GstAudioSrc:channels ##### -->
+<para>
+The number of channels (mono, stereo, ...)
+</para>
+
+<!-- ##### ARG GstAudioSrc:frequency ##### -->
+<para>
+The frequency.
+</para>
+

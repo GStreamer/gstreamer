@@ -40,6 +40,7 @@ AM_DISABLE_STATIC
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 
+CFLAGS=""
 
 dnl ##############################
 dnl # Do automated configuration #
@@ -443,6 +444,7 @@ esac],
 dnl ################################################
 dnl # Set defines according to variables set above #
 dnl ################################################
+
 
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
