@@ -357,7 +357,7 @@ gst_props_entry_from_string_no_name (gchar *s, gchar **after, gboolean has_type)
   }
   if (type == GST_PROPS_INVALID_TYPE || type == GST_PROPS_FLOAT_TYPE) {
     gdouble d;
-    d = strtod (check, &end);
+    d = g_ascii_strtod (check, &end);
     while (g_ascii_isspace (*end)) end++;
     if (*end == '\0' || *end == ',' || *end == ';' || *end == ')' || *end == ']') {
       *after = end;
