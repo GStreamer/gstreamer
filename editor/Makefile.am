@@ -1,9 +1,6 @@
 # FIXME FIXME
 # actually this was copied from the one in gstplay so fix that one too ;-)
 
-LIBADD += $(GNOME_LIBS) $(GST_LIBS)
-CFLAGS += $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS) $(GST_CFLAGS) -DDATADIR=\""$(gladedir)/"\"
-
 lib_LTLIBRARIES = libgsteditor.la
 
 libgsteditor_la_SOURCES =	\
