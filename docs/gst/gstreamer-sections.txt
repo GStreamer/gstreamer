@@ -30,6 +30,37 @@ cothread_current
 </SECTION>
 
 <SECTION>
+<FILE>gstatomic</FILE>
+GstAtomicInt
+GST_ATOMIC_INT_INIT
+GST_ATOMIC_INT_FREE
+GST_ATOMIC_INT_SET
+GST_ATOMIC_INT_VALUE
+GST_ATOMIC_INT_READ
+GST_ATOMIC_INT_INC
+GST_ATOMIC_INT_DEC_AND_TEST
+GST_ATOMIC_INT_ADD
+GstAtomicSwap
+GST_ATOMIC_SWAP_VALUE
+GST_ATOMIC_SWAP_INIT
+GST_ATOMIC_SWAP
+GST_ATOMIC_SWAP_GET
+<SUBSECTION Standard>
+GST_ATOMIC_LOCK
+</SECTION>
+
+<SECTION>
+<FILE>gstmemchunk</FILE>
+GstMemChunk
+GstMemChunkElement
+gst_mem_chunk_new
+gst_mem_chunk_destroy
+gst_mem_chunk_alloc
+gst_mem_chunk_alloc0
+gst_mem_chunk_free
+</SECTION>
+
+<SECTION>
 <FILE>gst</FILE>
 <TITLE>Gst</TITLE>
 gst_init

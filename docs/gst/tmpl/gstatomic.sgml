@@ -1,0 +1,139 @@
+<!-- ##### SECTION Title ##### -->
+GstAtomic
+
+<!-- ##### SECTION Short_Description ##### -->
+Macros that implement atomic operations
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstAtomic contains a set of macros that can be used to implement
+atomic algorithms that are thread safe and don't use heavyweight
+locking mechanisms.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+#GstMemChunk
+</para>
+
+<!-- ##### STRUCT GstAtomicInt ##### -->
+<para>
+A structure that contains an integer that can be modified
+atomically.
+</para>
+
+
+<!-- ##### MACRO GST_ATOMIC_INT_INIT ##### -->
+<para>
+Initialize an atomic int
+</para>
+
+@ref: a reference to a #GstAtomicInt
+@val: The initial value for the integer
+
+
+<!-- ##### MACRO GST_ATOMIC_INT_FREE ##### -->
+<para>
+Free the memory allocated by #GST_ATOMIC_INT_INIT
+</para>
+
+@ref: A reference to a #GstAtomicInt
+
+
+<!-- ##### MACRO GST_ATOMIC_INT_SET ##### -->
+<para>
+Set the value of a #GstAtomicInt atomically
+</para>
+
+@ref: a reference to a #GstAtomicInt
+@val: The value for the integer
+
+
+<!-- ##### MACRO GST_ATOMIC_INT_VALUE ##### -->
+<para>
+Get the value of a #GstAtomicInt atomically
+</para>
+
+@ref: a reference to a #GstAtomicInt
+
+
+<!-- ##### MACRO GST_ATOMIC_INT_READ ##### -->
+<para>
+Get the value of a #GstAtomicInt atomically into a variable
+</para>
+
+@ref: a reference to a #GstAtomicInt
+@res: a pointer to a gint to hold the value
+
+
+<!-- ##### MACRO GST_ATOMIC_INT_INC ##### -->
+<para>
+Increment the value of a #GstAtomicInt atomically
+</para>
+
+@ref: a reference to a #GstAtomicInt
+
+
+<!-- ##### MACRO GST_ATOMIC_INT_DEC_AND_TEST ##### -->
+<para>
+Decrement the value of a #GstAtomicInt atomically and test
+for zero.
+</para>
+
+@ref: a reference to a #GstAtomicInt
+@zero: a gpointer to a gboolean to hold the value of the test
+
+
+<!-- ##### MACRO GST_ATOMIC_INT_ADD ##### -->
+<para>
+Atomically add a value to a #GstAtomicInt
+</para>
+
+@ref: a reference to a #GstAtomicInt
+@count: The value to add
+
+
+<!-- ##### STRUCT GstAtomicSwap ##### -->
+<para>
+The structure to handle values that can be swapped atomically
+</para>
+
+@lock: 
+
+<!-- ##### MACRO GST_ATOMIC_SWAP_VALUE ##### -->
+<para>
+Get the value of a #GstAtomicSwap
+</para>
+
+@swap: a reference to a #GstAtomicSwap
+
+
+<!-- ##### MACRO GST_ATOMIC_SWAP_INIT ##### -->
+<para>
+Initialize an atomic swap structure
+</para>
+
+@swap: a reference to a #GstAtomicSwap
+@val: the initial value
+
+
+<!-- ##### MACRO GST_ATOMIC_SWAP ##### -->
+<para>
+Atomically swap the value of the #GstAtomicSwap with a new value
+</para>
+
+@swap: a reference to a #GstAtomicSwap
+@val: the new value
+
+
+<!-- ##### MACRO GST_ATOMIC_SWAP_GET ##### -->
+<para>
+Atomically swap the value of the #GstAtomicSwap with a new value and
+get the old value.
+</para>
+
+@swap: a reference to a #GstAtomicSwap
+@val: the new value
+@res: the old value
+
+

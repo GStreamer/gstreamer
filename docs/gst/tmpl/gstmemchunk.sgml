@@ -1,0 +1,91 @@
+<!-- ##### SECTION Title ##### -->
+GstMemChunk
+
+<!-- ##### SECTION Short_Description ##### -->
+Atomic chunk allocator
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstMemChunk is an atomic chunk allocator. It uses atomic operations
+to allocate fixed size memory regions and is therefore thread safe
+without the overhead of mutexes or other heavyweight locking mechanisms.
+</para>
+
+<para>
+The GstMemChunk is used to allocate critical resources for #GstBuffer and
+#GstEvent.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+#GstAtomic, #GstBuffer, #GstEvent, #GstData
+</para>
+
+<!-- ##### STRUCT GstMemChunk ##### -->
+<para>
+The memchunk structure
+</para>
+
+@swap: 
+@name: 
+@area_size: 
+@chunk_size: 
+@atom_size: 
+@cleanup: 
+@lock: 
+
+<!-- ##### STRUCT GstMemChunkElement ##### -->
+<para>
+An entry in the memchunk area
+</para>
+
+@link: 
+@area: 
+
+<!-- ##### FUNCTION gst_mem_chunk_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@atom_size: 
+@area_size: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_mem_chunk_destroy ##### -->
+<para>
+
+</para>
+
+@mem_chunk: 
+
+
+<!-- ##### FUNCTION gst_mem_chunk_alloc ##### -->
+<para>
+
+</para>
+
+@mem_chunk: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_mem_chunk_alloc0 ##### -->
+<para>
+
+</para>
+
+@mem_chunk: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_mem_chunk_free ##### -->
+<para>
+
+</para>
+
+@mem_chunk: 
+@mem: 
+
+

@@ -12,13 +12,12 @@ subtasks.  They're based on setjmp()/longjmp() in their current form.
 
 <para>
 Cothreads are used for loop-based elements that pull data instead
-of being fed with data. They can also be used to pull a specific region
-of data out of their src element.
+of being fed with data. Cothreads are usually used by a #GstScheduler.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GstScheduler
 </para>
 
 <!-- ##### MACRO CURRENT_STACK_FRAME ##### -->
@@ -99,8 +98,10 @@ Indicates the cothread is destroyed.
 
 </para>
 
-@thread: 
+@cothread: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@thread: 
 
 
 <!-- ##### FUNCTION cothread_set_private ##### -->
@@ -108,8 +109,10 @@ Indicates the cothread is destroyed.
 
 </para>
 
-@thread: 
+@cothread: 
 @data: 
+<!-- # Unused Parameters # -->
+@thread: 
 
 
 <!-- ##### FUNCTION cothread_create ##### -->
@@ -126,6 +129,8 @@ Indicates the cothread is destroyed.
 
 </para>
 
+@cothread: 
+<!-- # Unused Parameters # -->
 @thread: 
 
 
@@ -134,10 +139,12 @@ Indicates the cothread is destroyed.
 
 </para>
 
-@thread: 
+@cothread: 
 @func: 
 @argc: 
 @argv: 
+<!-- # Unused Parameters # -->
+@thread: 
 
 
 <!-- ##### FUNCTION cothread_stop ##### -->
@@ -145,6 +152,8 @@ Indicates the cothread is destroyed.
 
 </para>
 
+@cothread: 
+<!-- # Unused Parameters # -->
 @thread: 
 
 
@@ -153,6 +162,8 @@ Indicates the cothread is destroyed.
 
 </para>
 
+@cothread: 
+<!-- # Unused Parameters # -->
 @thread: 
 
 
@@ -161,9 +172,11 @@ Indicates the cothread is destroyed.
 
 </para>
 
-@thread: 
+@cothread: 
 @key: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@thread: 
 
 
 <!-- ##### FUNCTION cothread_context_set_data ##### -->
@@ -171,9 +184,11 @@ Indicates the cothread is destroyed.
 
 </para>
 
-@thread: 
+@cothread: 
 @key: 
 @data: 
+<!-- # Unused Parameters # -->
+@thread: 
 
 
 <!-- ##### FUNCTION cothread_lock ##### -->
@@ -181,6 +196,8 @@ Indicates the cothread is destroyed.
 
 </para>
 
+@cothread: 
+<!-- # Unused Parameters # -->
 @thread: 
 
 
@@ -189,8 +206,10 @@ Indicates the cothread is destroyed.
 
 </para>
 
-@thread: 
+@cothread: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@thread: 
 
 
 <!-- ##### FUNCTION cothread_unlock ##### -->
@@ -198,6 +217,8 @@ Indicates the cothread is destroyed.
 
 </para>
 
+@cothread: 
+<!-- # Unused Parameters # -->
 @thread: 
 
 

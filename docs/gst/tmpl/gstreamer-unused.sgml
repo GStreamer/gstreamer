@@ -156,26 +156,6 @@ the offset.
 GstAsyncDiskSrc
 
 
-<!-- ##### SECTION ./tmpl/gstatomic.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstatomic.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstatomic.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstatomic.sgml:Title ##### -->
-gstatomic
-
-
 <!-- ##### SECTION ./tmpl/gstaudiosink.sgml:Long_Description ##### -->
 <para>
 
@@ -723,26 +703,6 @@ gstmarshal
 
 <!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Title ##### -->
 GstMD5Sink
-
-
-<!-- ##### SECTION ./tmpl/gstmemchunk.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstmemchunk.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstmemchunk.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstmemchunk.sgml:Title ##### -->
-gstmemchunk
 
 
 <!-- ##### SECTION ./tmpl/gstmeta.sgml:Long_Description ##### -->
@@ -1483,104 +1443,11 @@ g_print messages.
 
 @klass: 
 
-<!-- ##### MACRO GST_ATOMIC_INT_ADD ##### -->
-<para>
-
-</para>
-
-@ref: 
-@count: 
-
-<!-- ##### MACRO GST_ATOMIC_INT_DEC_AND_TEST ##### -->
-<para>
-
-</para>
-
-@ref: 
-@zero: 
-
-<!-- ##### MACRO GST_ATOMIC_INT_FREE ##### -->
-<para>
-
-</para>
-
-@ref: 
-
-<!-- ##### MACRO GST_ATOMIC_INT_INC ##### -->
-<para>
-
-</para>
-
-@ref: 
-
-<!-- ##### MACRO GST_ATOMIC_INT_INIT ##### -->
-<para>
-
-</para>
-
-@ref: 
-@val: 
-
-<!-- ##### MACRO GST_ATOMIC_INT_READ ##### -->
-<para>
-
-</para>
-
-@ref: 
-@res: 
-
-<!-- ##### MACRO GST_ATOMIC_INT_SET ##### -->
-<para>
-
-</para>
-
-@ref: 
-@val: 
-
-<!-- ##### MACRO GST_ATOMIC_INT_VALUE ##### -->
-<para>
-
-</para>
-
-@ref: 
-
 <!-- ##### MACRO GST_ATOMIC_LOCK ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### MACRO GST_ATOMIC_SWAP ##### -->
-<para>
-
-</para>
-
-@swap: 
-@val: 
-
-<!-- ##### MACRO GST_ATOMIC_SWAP_GET ##### -->
-<para>
-
-</para>
-
-@swap: 
-@val: 
-@res: 
-
-<!-- ##### MACRO GST_ATOMIC_SWAP_INIT ##### -->
-<para>
-
-</para>
-
-@swap: 
-@val: 
-
-<!-- ##### MACRO GST_ATOMIC_SWAP_VALUE ##### -->
-<para>
-
-</para>
-
-@swap: 
 
 <!-- ##### MACRO GST_AUDIOSINK ##### -->
 <para>
@@ -4160,19 +4027,6 @@ Specify the current offset in the file.
 @GST_ASYNCDISKSRC_OPEN: 
 @GST_ASYNCDISKSRC_FLAG_LAST: 
 
-<!-- ##### STRUCT GstAtomicInt ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GstAtomicSwap ##### -->
-<para>
-
-</para>
-
-@lock: 
-
 <!-- ##### STRUCT GstAudioSink ##### -->
 <para>
 
@@ -5045,27 +4899,6 @@ Specify the location of the file. The location must be a fully qualified URL.
 
 </para>
 
-
-<!-- ##### STRUCT GstMemChunk ##### -->
-<para>
-
-</para>
-
-@swap: 
-@name: 
-@area_size: 
-@chunk_size: 
-@atom_size: 
-@cleanup: 
-@lock: 
-
-<!-- ##### STRUCT GstMemChunkElement ##### -->
-<para>
-
-</para>
-
-@link: 
-@area: 
 
 <!-- ##### STRUCT GstMeta ##### -->
 <para>
@@ -8571,48 +8404,6 @@ must be defined to activate the tracing functionality.
 </para>
 
 @factory: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_mem_chunk_alloc ##### -->
-<para>
-
-</para>
-
-@mem_chunk: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_mem_chunk_alloc0 ##### -->
-<para>
-
-</para>
-
-@mem_chunk: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_mem_chunk_destroy ##### -->
-<para>
-
-</para>
-
-@mem_chunk: 
-
-<!-- ##### FUNCTION gst_mem_chunk_free ##### -->
-<para>
-
-</para>
-
-@mem_chunk: 
-@mem: 
-
-<!-- ##### FUNCTION gst_mem_chunk_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@atom_size: 
-@area_size: 
-@type: 
 @Returns: 
 
 <!-- ##### MACRO gst_meta_new ##### -->
