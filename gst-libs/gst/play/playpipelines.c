@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000,2001,2002 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000,2001,2002 Wim Taymans <wtay@chello.be>
  *                              2002 Steve Baker <steve@stevebaker.org>
- *								2003 Julien Moutte <julien@moutte.net>
+ *                              2003 Julien Moutte <julien@moutte.net>
  *
  * playpipelines.c: Set up pipelines for playback
  *
@@ -97,16 +97,6 @@ gst_play_audio_setup (	GstPlay *play,
 			play->audio_sink, NULL);
 	
 	gst_element_link (play->volume, play->audio_sink);
-	
-	gst_bin_set_pre_iterate_function(
-			GST_BIN (play->pipeline), 
-			(GstBinPrePostIterateFunction) callback_bin_pre_iterate,
-			play->audio_bin_mutex);
-			
-	gst_bin_set_post_iterate_function(
-			GST_BIN (play->pipeline), 
-			(GstBinPrePostIterateFunction) callback_bin_post_iterate,
-			play->audio_bin_mutex);
 
 	return TRUE;
 }
@@ -167,16 +157,6 @@ gst_play_audiot_setup (	GstPlay *play,
 	
 	gst_element_link (play->volume, play->audio_sink);
 	
-	gst_bin_set_pre_iterate_function(
-			GST_BIN (play->pipeline), 
-			(GstBinPrePostIterateFunction) callback_bin_pre_iterate,
-			play->audio_bin_mutex);
-			
-	gst_bin_set_post_iterate_function(
-			GST_BIN (play->pipeline), 
-			(GstBinPrePostIterateFunction) callback_bin_post_iterate,
-			play->audio_bin_mutex);
-
 	return TRUE;
 }
 
@@ -322,16 +302,6 @@ gst_play_audioht_setup (	GstPlay *play,
 			   "sink");
 
 	gst_bin_add (GST_BIN (play->pipeline), audio_thread);
-
-	gst_bin_set_pre_iterate_function(
-				GST_BIN (audio_thread), 
-				(GstBinPrePostIterateFunction) callback_bin_pre_iterate,
-				play->audio_bin_mutex);
-	
-	gst_bin_set_post_iterate_function(
-				GST_BIN (audio_thread), 
-				(GstBinPrePostIterateFunction) callback_bin_post_iterate,
-				play->audio_bin_mutex);
 
 	return TRUE;
 }
@@ -481,16 +451,6 @@ gst_play_video_setup (	GstPlay *play,
 	}
 	g_hash_table_insert (play->other_elements, "audio_bin", audio_bin);
 
-	/* setting up iterate functions */	
-	gst_bin_set_pre_iterate_function (
-		GST_BIN (audio_bin), 
-		(GstBinPrePostIterateFunction) callback_bin_pre_iterate, 
-		play->audio_bin_mutex);
-	gst_bin_set_post_iterate_function (
-		GST_BIN (audio_bin), 
-		(GstBinPrePostIterateFunction) callback_bin_post_iterate, 
-		play->audio_bin_mutex);
-
 	/* adding all that stuff to bin */
 	gst_bin_add_many (
 		GST_BIN (audio_bin), audio_queue, play->volume, 
@@ -544,16 +504,6 @@ gst_play_video_setup (	GstPlay *play,
 	
 	gst_element_link_many (video_queue, colorspace,
 			play->video_sink, NULL);
-	
-	/* setting up iterate functions */
-	gst_bin_set_pre_iterate_function (
-			GST_BIN (video_bin), 
-			(GstBinPrePostIterateFunction) callback_bin_pre_iterate, 
-			play->video_bin_mutex);
-	gst_bin_set_post_iterate_function (
-			GST_BIN (video_bin), 
-			(GstBinPrePostIterateFunction) callback_bin_post_iterate,
-			play->video_bin_mutex);
 	
 	gst_element_add_ghost_pad (
 			video_bin, gst_element_get_pad (video_queue, "sink"),
@@ -823,17 +773,7 @@ gst_play_video_vis_setup (	GstPlay *play,
 	gst_element_add_ghost_pad (	play->audio_sink,
 								gst_element_get_pad (audio_queue, "sink"),
 								"sink");
-	
-	/* setting up iterate functions */	
-	gst_bin_set_pre_iterate_function (
-		GST_BIN (play->audio_sink), 
-		(GstBinPrePostIterateFunction) callback_bin_pre_iterate, 
-		play->audio_bin_mutex);
-	gst_bin_set_post_iterate_function (
-		GST_BIN (play->audio_sink), 
-		(GstBinPrePostIterateFunction) callback_bin_post_iterate, 
-		play->audio_bin_mutex);
-	
+		
 	/* Creating video part of the visualisation bin
 		{ queue ! (visualisation) ! colorspace ! (videosink) }
 	*/
@@ -937,17 +877,7 @@ gst_play_video_vis_setup (	GstPlay *play,
 	
 	gst_element_link_many (video_queue, colorspace,
 			play->video_sink, NULL);
-	
-	/* setting up iterate functions */
-	gst_bin_set_pre_iterate_function (
-			GST_BIN (video_bin), 
-			(GstBinPrePostIterateFunction) callback_bin_pre_iterate, 
-			play->video_bin_mutex);
-	gst_bin_set_post_iterate_function (
-			GST_BIN (video_bin), 
-			(GstBinPrePostIterateFunction) callback_bin_post_iterate,
-			play->video_bin_mutex);
-	
+		
 	gst_element_add_ghost_pad (
 			video_bin, gst_element_get_pad (video_queue, "sink"),
 			"sink");

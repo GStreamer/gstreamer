@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000,2001,2002 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000,2001,2002 Wim Taymans <wtay@chello.be>
  *                              2002 Steve Baker <steve@stevebaker.org>
- *								2003 Julien Moutte <julien@moutte.net>
+ *                              2003 Julien Moutte <julien@moutte.net>
  *
  * play.c: GstPlay object code
  *
@@ -63,7 +63,7 @@ struct _GstPlaySignal
 		} info;
 		struct {
 			GstElement* element;
-			gchar* error;
+			char* error;
 		} error;
 	} signal_data;
 };
@@ -219,22 +219,15 @@ gst_play_get_length_callback (GstPlay *play)
 	GstFormat format = GST_FORMAT_TIME;
 	gboolean query_worked = FALSE;
 
-	g_print("trying to get length\n");
 	if (	(play->audio_sink_element != NULL) &&
 			(GST_IS_ELEMENT (play->audio_sink_element)) ) {
-		g_mutex_lock(play->audio_bin_mutex);
 		query_worked = gst_element_query (play->audio_sink_element, GST_QUERY_TOTAL, &format, &value);
-		g_mutex_unlock(play->audio_bin_mutex);
-		g_message ("getting length from audio sink");
 	}
 	else if (	(play->video_sink_element != NULL) &&
 				(GST_IS_ELEMENT (play->video_sink_element)) ) {
-		g_mutex_lock(play->video_bin_mutex);
 		query_worked = gst_element_query (play->video_sink_element, GST_QUERY_TOTAL, &format, &value);
-		g_mutex_unlock(play->video_bin_mutex);
 	}
 	if (query_worked){
-		g_print("got length %" G_GINT64_FORMAT "\n", value);
 		g_signal_emit (G_OBJECT (play), gst_play_signals [STREAM_LENGTH], 0, value);
 		play->length_nanos = value;
 		return FALSE;
@@ -352,6 +345,8 @@ gst_play_idle_signal (GstPlay *play)
 			gst_element_set_state(play->pipeline, GST_STATE_READY);
 		g_signal_emit (G_OBJECT (play), gst_play_signals[PIPELINE_ERROR], 0, 
 		               signal->signal_data.error.element, signal->signal_data.error.error);
+		if (signal->signal_data.error.error)
+			g_free (signal->signal_data.error.error);
 		gst_object_unref (GST_OBJECT(signal->signal_data.error.element));
 		break;
 	default:
@@ -428,24 +423,10 @@ callback_video_have_size (	GstElement *element,
 	play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
 }
 
-static void 
-callback_bin_pre_iterate (	GstBin *bin,
-							GMutex *mutex)
-{
-	g_mutex_lock(mutex);
-}
-
-static void 
-callback_bin_post_iterate (	GstBin *bin,
-							GMutex *mutex)
-{
-	g_mutex_unlock(mutex);
-}
-
 static void
 callback_pipeline_error (	GstElement *object,
 							GstElement *orig,
-							gchar *error,
+							char *error,
 							GstPlay* play)
 { 
 	GstPlaySignal *signal;
@@ -453,7 +434,7 @@ callback_pipeline_error (	GstElement *object,
 	signal = g_new0(GstPlaySignal, 1);
 	signal->signal_id = PIPELINE_ERROR;
 	signal->signal_data.error.element = orig;
-	signal->signal_data.error.error = error;
+	signal->signal_data.error.error = g_strdup(error);
 	
 	gst_object_ref (GST_OBJECT(orig));
 	
@@ -547,10 +528,8 @@ gst_play_dispose (GObject *object)
 
 	/* Removing all sources */
 	while (g_source_remove_by_user_data (play));
-		
+	
 	G_OBJECT_CLASS (parent_class)->dispose (object);
-	g_mutex_free(play->audio_bin_mutex);
-	g_mutex_free(play->video_bin_mutex);
 }
 
 static void
@@ -611,7 +590,7 @@ gst_play_class_init (GstPlayClass *klass)
 			      G_SIGNAL_RUN_FIRST,
 			      G_STRUCT_OFFSET (GstPlayClass, pipeline_error), 
 			      NULL, NULL,
-			      gst_marshal_VOID__OBJECT_PARAM, 
+			      gst_marshal_VOID__OBJECT_STRING, 
 			      G_TYPE_NONE, 2, 
 			      G_TYPE_OBJECT, G_TYPE_STRING);
 	
@@ -701,8 +680,6 @@ gst_play_init (GstPlay *play)
 	play->video_sink_element	= NULL;
 	play->volume				= NULL;
 	play->other_elements		= g_hash_table_new(g_str_hash, g_str_equal);
-	play->audio_bin_mutex		= g_mutex_new();
-	play->video_bin_mutex		= g_mutex_new();
 	
 	gst_play_set_idle_timeout_funcs(	play,
 										gst_play_default_timeout_add,
