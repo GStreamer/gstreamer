@@ -2,7 +2,7 @@ schemadir = @GCONF_SCHEMA_FILE_DIR@
 schema_DATA = gstreamer-@GST_MAJORMINOR@.schemas
 
 gstreamer-@GST_MAJORMINOR@.schemas: gstreamer.schemas
-	cp $< $@
+	cp gstreamer.schemas gstreamer-@GST_MAJORMINOR@.schemas
 
 install-data-local:
 	@GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) $(GCONFTOOL) \

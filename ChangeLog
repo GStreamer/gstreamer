@@ -1,3 +1,20 @@
+2004-04-19  David Schleef  <ds@schleef.org>
+
+	* gconf/Makefile.am: Fix for non-GNU make
+	* gst-libs/gst/Makefile.am: Change directory order to handle
+	GstPlay linking with gstinterfaces
+	* gst-libs/gst/audio/make_filter: make use of tr portable
+	* gst-libs/gst/play/Makefile.am: Add intended \
+	* gst-libs/gst/xwindowlistener/xwindowlistener.c:
+	(gst_xwin_set_clips): Switch to ISO variadic macro. Use a
+	function prototype instead of void *.
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c: Switch to ISO variadic
+	macro.
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcolorspace_chain): wrap NULL in GST_ELEMENT_ERROR call
+	* gst/videofilter/make_filter: make use of tr portable
+	* pkgconfig/Makefile.am: Remove GNU extension in Makefile target
+
 2004-04-19  Thomas Vander Stichele  <thomas at apestaart dot org>
                                                                                 
 	* po/LINGUAS:
