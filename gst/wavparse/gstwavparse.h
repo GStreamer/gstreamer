@@ -71,7 +71,11 @@ struct _GstWavParse {
 
   /* useful audio data */
   gint bps;
+  gint rate;
+  gint channels;
+  gint width;
 
+  gint64 offset;
 };
 
 struct _GstWavParseClass {

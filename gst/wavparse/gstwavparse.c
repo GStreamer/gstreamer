@@ -192,6 +192,10 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       /* I suppose we could signal an EOF at this point, but that may be
          premature.  We've stopped data flow, that's the main thing. */
     } 
+
+    GST_BUFFER_TIMESTAMP (buf) = wavparse->offset * GST_SECOND / wavparse->rate;
+    wavparse->offset += GST_BUFFER_SIZE (buf) * 8 / wavparse->width / wavparse->channels;
+
     gst_pad_push (wavparse->srcpad, buf);
     return;
   }
@@ -271,9 +275,16 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 			  "channels",	GST_PROPS_INT (format->wChannels)
 		      );
 
-      gst_pad_try_set_caps (wavparse->srcpad, caps);
+      if (!gst_pad_try_set_caps (wavparse->srcpad, caps)) {
+        gst_element_error (GST_ELEMENT (wavparse), "Could not set caps");
+        return;
+      }
 
       wavparse->bps = format->wBlockAlign;
+      wavparse->rate = format->dwSamplesPerSec;
+      wavparse->channels = format->wChannels;
+      wavparse->width = format->wBitsPerSample;
+      
       GST_DEBUG (0, "frequency %d, channels %d",
 		 format->dwSamplesPerSec, format->wChannels); 
 
@@ -316,6 +327,8 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       newbuf = gst_buffer_new ();
       GST_BUFFER_DATA (newbuf) = g_malloc (subsize);
       GST_BUFFER_SIZE (newbuf) = subsize;
+      GST_BUFFER_TIMESTAMP (newbuf) = wavparse->offset * GST_SECOND / wavparse->rate;
+      wavparse->offset += subsize * 8 / wavparse->width / wavparse->channels;
       
       memcpy (GST_BUFFER_DATA (newbuf), GST_BUFFER_DATA (buf) + datachunk->offset, subsize);
 
