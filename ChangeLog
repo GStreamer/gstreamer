@@ -1,3 +1,9 @@
+2004-07-20  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_audio_caps_with_data):
+	  Fix double end-to-native symbol conversion (#148021).
+
 2004-07-20  David Schleef  <ds@schleef.org>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_xwindow_decorate):
