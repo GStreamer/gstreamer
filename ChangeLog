@@ -1,3 +1,15 @@
+2005-02-10  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-events.txt:
+	Added event doc.
+
+2005-02-10  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	* docs/design/part-negotiation.txt:
+	* docs/design/part-states.txt:
+	Some docs updates.
+
 2005-02-10  Andy Wingo  <wingo@pobox.com>
 
 	* docs/design/part-MT-refcounting.txt (Refcounting): Some
