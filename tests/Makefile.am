@@ -1,7 +1,7 @@
-SUBDIRS = sched
+SUBDIRS = sched eos
 
 noinst_PROGRAMS = init loadall simplefake states caps queue registry \
-paranoia rip mp3encode autoplug props case4 markup load eos
+paranoia rip mp3encode autoplug props case4 markup load 
 
 LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la
 CFLAGS = -Wall
