@@ -7,9 +7,11 @@ The connection between Elements
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 A #GstElement is connected to other elements via "pads", which are extremely 
-light-weight generic connections. 
-After two pad are retrieved from an element with gst_element_get_pad(), 
-the pads can be connected with gst_pad_connect().
+light-weight generic connections points. 
+After two pads are retrieved from an element with gst_element_get_pad(), 
+the pads can be connected with gst_pad_connect().  (For quick connections,
+you can also use gst_element_connect(), which will make the obvious
+connection for you if it's straightforward).
 </para>
 <para>
 Pads are typically created from a #GstPadTemplate with 
@@ -18,10 +20,10 @@ gst_pad_new_from_template().
 <para>
 Pads have #GstCaps attached to it to describe the media type they
 are capable of dealing with. 
-gst_pad_get_caps() and gst_pad_set_caps() are used to
+gst_pad_get_caps() and gst_pad_try_set_caps() are used to
 manipulate the caps of the pads. 
 Pads created from a pad template cannot set capabilities that are 
-incompatible with the pad templates capabilities.
+incompatible with the pad template capabilities.
 </para>
 <para>
 Pads without pad templates can be created with gst_pad_new(),
@@ -258,6 +260,7 @@ The signature of a convert function.
 A dispatcher function is called for all internally connected pads, see 
 gst_pad_dispatcher().
 </para>
+
 @pad: the #GstPad that is dispatched.
 @data: the gpointer to optional user data.
 @Returns: TRUE if the dispatching procedure has to be stopped.
@@ -273,18 +276,19 @@ The signature of the internal pad connection function.
           the given pad on the inside of the parent element.  
           The caller must call g_list_free() on it after use.
 
+
 <!-- ##### ENUM GstPadQueryType ##### -->
 <para>
 The different supported query types.
 </para>
 
 @GST_PAD_QUERY_NONE: 
-@GST_PAD_QUERY_START: 
 @GST_PAD_QUERY_TOTAL: Query the total stream time.
 @GST_PAD_QUERY_POSITION: Query the current stream position.
 @GST_PAD_QUERY_LATENCY: Query the latency on the pad.
 @GST_PAD_QUERY_JITTER: Query the average jitter beteen optimal processing 
                        and current processing.
+@GST_PAD_QUERY_START: 
 @GST_PAD_QUERY_SEGMENT_END: Query the end position of the currently 
                             executing segment.
 @GST_PAD_QUERY_RATE: 
@@ -517,23 +521,6 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_set_scheduler ##### -->
-<para>
-
-</para>
-
-@pad: 
-@sched: 
-
-
-<!-- ##### FUNCTION gst_pad_unset_scheduler ##### -->
-<para>
-
-</para>
-
-@pad: 
-
-
 <!-- ##### FUNCTION gst_pad_get_real_parent ##### -->
 <para>
 
@@ -753,26 +740,6 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_ghost_save_thyself ##### -->
-<para>
-
-</para>
-
-@pad: 
-@bin: 
-@parent: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_peek ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_pad_select ##### -->
 <para>
 
@@ -938,11 +905,9 @@ Destroy the pad.
 @appfilter: 
 @getcapsfunc: 
 @direction: 
-@sched: 
-@sched_private: 
 @connectfunc: 
 @peer: 
-@bufpen: 
+@sched_private: 
 @chainfunc: 
 @chainhandler: 
 @getfunc: 
@@ -957,14 +922,6 @@ Destroy the pad.
 @querytypefunc: 
 @intconnfunc: 
 @bufferpoolfunc: 
-
-<!-- ##### MACRO GST_RPAD_SCHED ##### -->
-<para>
-Get the scheduler of this real pad.
-</para>
-
-@pad: the real pad to query.
-
 
 <!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
 <para>
@@ -985,14 +942,6 @@ Get the caps of the real pad.
 <!-- ##### MACRO GST_RPAD_PEER ##### -->
 <para>
 Get the peer element of the real pad.
-</para>
-
-@pad: the real pad to query.
-
-
-<!-- ##### MACRO GST_RPAD_BUFPEN ##### -->
-<para>
-Get the bufpen of the real pad.
 </para>
 
 @pad: the real pad to query.

@@ -12,7 +12,7 @@ The event classes are used to construct and query events.
 <para>
 Events are usually created with gst_event_new() which takes the event type as an argument.
 properties specific to the event can be set afterwards with the provided macros. 
-The event is freed with gst_event_free().
+The event should be unreferenced with gst_event_unref().
 </para>
 <para>
 gst_event_new_seek() is a usually used to create a seek event and it takes the 
