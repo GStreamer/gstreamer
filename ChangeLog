@@ -1,5 +1,12 @@
 2004-06-06  Benjamin Otte  <otte@gnome.org>
 
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_init):
+	  use explicit caps on the srcpad
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_chain):
+	  properly error out if caps couldn't be set (fixes #142764)
+
+2004-06-06  Benjamin Otte  <otte@gnome.org>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_probe_hw_params), 
 	(gst_alsa_set_hw_params), (gst_alsa_set_sw_params), 
 	(gst_alsa_start_audio):
