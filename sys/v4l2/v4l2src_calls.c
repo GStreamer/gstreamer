@@ -255,6 +255,14 @@ gst_v4l2src_capture_init (GstV4l2Src *v4l2src)
 	gst_info("Got %d buffers (%s) of size %d KB\n",
 		v4l2src->breq.count, desc, v4l2src->format.fmt.pix.sizeimage/1024);
 
+	v4l2src->use_num_times = (gint *) malloc(sizeof(gint) * v4l2src->breq.count);
+	if (!v4l2src->use_num_times) {
+		gst_element_error(GST_ELEMENT(v4l2src),
+			"Error creating sync-use-time tracker: %s",
+			g_strerror(errno));
+		return FALSE;
+	}
+
 	/* Map the buffers */
 	GST_V4L2ELEMENT(v4l2src)->buffer = (guint8 **) g_malloc(sizeof(guint8*) * v4l2src->breq.count);
 	for (n=0;n<v4l2src->breq.count;n++) {
@@ -400,6 +408,8 @@ gst_v4l2src_capture_deinit (GstV4l2Src *v4l2src)
 	}
 	g_free(GST_V4L2ELEMENT(v4l2src)->buffer);
 	GST_V4L2ELEMENT(v4l2src)->buffer = NULL;
+
+	free(v4l2src->use_num_times);
 
 	return TRUE;
 }
