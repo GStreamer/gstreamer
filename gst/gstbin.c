@@ -548,9 +548,17 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   gst_object_unparent (GST_OBJECT (element));
 
   /* if we're down to zero children, force state to NULL */
-  if (bin->numchildren == 0 && GST_ELEMENT_SCHED (bin) != NULL) {
-    GST_STATE_PENDING (bin) = GST_STATE_NULL;
+  while (bin->numchildren == 0 && GST_ELEMENT_SCHED (bin) != NULL &&
+      GST_STATE (bin) > GST_STATE_NULL) {
+    GstElementState next = GST_STATE (bin) >> 1;
+
+    GST_STATE_PENDING (bin) = next;
     gst_bin_change_state_norecurse (bin);
+    if (!GST_STATE (bin) == next) {
+      g_warning ("bin %s failed state change to %d", GST_ELEMENT_NAME (bin),
+          next);
+      break;
+    }
   }
   g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_REMOVED], 0, element);
 

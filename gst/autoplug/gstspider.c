@@ -307,6 +307,7 @@ gst_spider_link_sometimes (GstElement * src, GstPad * pad,
 {
   gulong signal_id = conn->signal_id;
 
+  GST_INFO ("plugging from new sometimes pad %s:%s", GST_DEBUG_PAD_NAME (pad));
   /* try to autoplug the elements */
   if (gst_spider_plug_from_srcpad (conn, pad) != GST_PAD_LINK_REFUSED) {
     GST_DEBUG ("%s:%s was autoplugged to %s:%s, removing callback",
@@ -430,7 +431,8 @@ gst_spider_identity_plug (GstSpiderIdentity * ident)
       while (factories) {
         if ((padtemp =
                 gst_autoplug_can_connect_src (factories->data, src_caps))) {
-          GST_DEBUG ("can connect src to pad template: %" GST_PTR_FORMAT,
+          GST_DEBUG ("can connect src to %s pad template: %" GST_PTR_FORMAT,
+              GST_PLUGIN_FEATURE_NAME (factories->data),
               gst_pad_template_get_caps (padtemp));
           found = TRUE;
         }

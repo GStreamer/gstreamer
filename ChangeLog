@@ -1,3 +1,12 @@
+2004-04-20  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/autoplug/gstspider.c: (gst_spider_link_sometimes),
+	(gst_spider_identity_plug):
+	  improve debugging messages
+	* gst/gstbin.c: (gst_bin_remove_func):
+	  make sure the state_change function is only called with simple state
+	  transitions
+
 2004-04-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
