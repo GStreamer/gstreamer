@@ -22,7 +22,7 @@
 #define __MPEG_PARSE_H__
 
 #include <gst/gst.h>
-#include <gst/gstbytestream.h>
+#include <gst/bytestream.h>
 #include "gstmpegpacketize.h"
 
 #ifdef __cplusplus

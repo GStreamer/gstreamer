@@ -35,44 +35,6 @@ static GstElementDetails gst_asf_demux_details = {
   "(C) 2002",
 };
 
-static GstCaps* asf_type_find (GstByteStream *bs, gpointer private);
-
-/* typefactory for 'asf' */
-static GstTypeDefinition asf_type_definition = {
-  "asfdemux_video/asf",
-  "video/x-ms-asf",
-  /* note: asx/wax/wmx are XML files, we don't handle them */
-  ".asf .wma .wmv .wm",
-  asf_type_find,
-};
-
-static GstCaps*
-asf_type_find (GstByteStream *bs, gpointer private)
-{
-  GstCaps *new = NULL;
-  GstBuffer *buf = NULL;
-
-  if (gst_bytestream_peek (bs, &buf, 16) == 16) {
-    guint32 uid1 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[0]),
-	    uid2 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[1]),
-	    uid3 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[2]),
-	    uid4 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[3]);
-
-    if (uid1 == 0x75B22630 && uid2 == 0x11CF668E &&
-        uid3 == 0xAA00D9A6 && uid4 == 0x6CCE6200) {
-      new = GST_CAPS_NEW ("asf_type_find",
-			  "video/x-ms-asf",
-			    NULL);
-    }
-  }
-
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
-
-  return new;
-}
-
 GST_PAD_TEMPLATE_FACTORY (sink_factory,
   "sink",
   GST_PAD_SINK,
@@ -1554,7 +1516,6 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
   gint i = 0;
   GstCaps *audcaps = NULL, *vidcaps = NULL, *temp;
   guint32 vid_list[] = {
@@ -1583,13 +1544,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
     -1 /* end */
   };
 
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
   /* create an elementfactory for the asf_demux element */
   factory = gst_element_factory_new ("asfdemux",GST_TYPE_ASF_DEMUX,
                                     &gst_asf_demux_details);
-
-  /* type finding */
-  type = gst_type_factory_new (&asf_type_definition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   g_return_val_if_fail (factory != NULL, FALSE);
   gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_NONE);

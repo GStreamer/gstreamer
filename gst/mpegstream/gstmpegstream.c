@@ -30,6 +30,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
    * stack again and the first _init will be called more than once
    * and wtay wants to use dlclose at some point in the future */
   
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
   if (!gst_mpeg_parse_plugin_init (module, plugin)) return FALSE;
   if (!gst_mpeg_demux_plugin_init (module, plugin)) return FALSE;
   if (!gst_rfc2250_enc_plugin_init (module, plugin)) return FALSE;

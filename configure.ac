@@ -264,10 +264,10 @@ GST_PLUGINS_ALL="\
 	cutter debug deinterlace effectv festival \
 	filter flx goom id3 intfloat law level median mixmatrix \
 	mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub \
-	mpegaudio mpegaudioparse mpegstream mpegtypes \
+	mpegaudio mpegaudioparse mpegstream \
         monoscope oneton overlay passthrough playondemand qtdemux \
 	realmedia rtp rtjpeg silence sine smooth smpte \
-	spectrum speed stereo synaesthesia tcp udp vbidec \
+	spectrum speed stereo synaesthesia tcp typefind udp vbidec \
 	videocrop videodrop videofilter videoflip videoscale \
 	videotestsrc volenv volume wavenc wavparse y4m"
 
@@ -1193,7 +1193,6 @@ gst/mpeg2sub/Makefile
 gst/mpegaudio/Makefile
 gst/mpegaudioparse/Makefile
 gst/mpegstream/Makefile
-gst/mpegtypes/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
 gst/monoscope/Makefile
@@ -1214,6 +1213,7 @@ gst/speed/Makefile
 gst/stereo/Makefile
 gst/synaesthesia/Makefile
 gst/tcp/Makefile
+gst/typefind/Makefile
 gst/udp/Makefile
 gst/vbidec/Makefile
 gst/videocrop/Makefile

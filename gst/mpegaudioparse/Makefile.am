@@ -6,4 +6,3 @@ libgstmpegaudioparse_la_LIBADD =
 libgstmpegaudioparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstmpegaudioparse.h
-EXTRA_DIST = README

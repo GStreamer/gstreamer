@@ -22,7 +22,7 @@
 #define __GST_RMDEMUX_H__
 
 #include <gst/gst.h>
-#include <gst/gstbytestream.h>
+#include <gst/bytestream.h>
 
 #ifdef __cplusplus
 extern "C" {

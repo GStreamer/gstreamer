@@ -619,6 +619,9 @@ plugin_init (GModule * module, GstPlugin * plugin)
 {
   GstElementFactory *factory;
 
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
   /* create an elementfactory for the a52dec element */
   factory = gst_element_factory_new ("a52dec", GST_TYPE_A52DEC, &gst_a52dec_details);
   g_return_val_if_fail (factory != NULL, FALSE);

@@ -78,22 +78,13 @@ enum GstRMDemuxStreamType {
 static GstElementDetails 
 gst_rmdemux_details = 
 {
-  "QuickTime Demuxer",
+  "RealMedia Demuxer",
   "Codec/Demuxer",
   "LGPL",
   "Demultiplex a RealMedia file into audio and video streams",
   VERSION,
   "David Schleef <ds@schleef.org>",
   "(C) 2003",
-};
-
-static GstCaps* realmedia_type_find (GstByteStream *bs, gpointer private);
-
-static GstTypeDefinition realmediadefinition = {
-  "rmdemux_video/realmedia",
-  "video/x-pn-realvideo", 
-  ".ram .rm .ra",
-  realmedia_type_find,
 };
 
 enum {
@@ -194,34 +185,13 @@ gst_rmdemux_init (GstRMDemux *rmdemux)
   gst_element_add_pad (GST_ELEMENT (rmdemux), rmdemux->sinkpad);
 }
 
-static GstCaps*
-realmedia_type_find (GstByteStream *bs, gpointer private)
-{
-  GstBuffer *buf = NULL;
-  GstCaps *new = NULL;
-
-  if (gst_bytestream_peek (bs, &buf, 4) == 4) {
-    gchar *data = GST_BUFFER_DATA (buf);
-
-    if (!strncmp (data, ".RMF", 4)) {
-      new = GST_CAPS_NEW ("realmedia_type_find",
-			  "application/vnd.rn-realmedia", 
-			    NULL);
-    }
-  }
-
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
-
-  return new;
-}
-
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
+
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
 
   factory = gst_element_factory_new ("rmdemux", GST_TYPE_RMDEMUX,
                                      &gst_rmdemux_details);
@@ -231,9 +201,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_video_templ));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_audio_templ));
-
-  type = gst_type_factory_new (&realmediadefinition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

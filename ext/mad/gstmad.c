@@ -820,14 +820,16 @@ gst_mad_get_streaminfo (GstMad *mad)
   klass = g_type_class_ref (GST_TYPE_MAD_MODE);
   value = g_enum_get_value (klass,
 		            mad->header.mode);
-  entry = gst_props_entry_new ("mode", GST_PROPS_STRING (value->value_nick));
+  if (value)
+    entry = gst_props_entry_new ("mode", GST_PROPS_STRING (value->value_nick));
   g_type_class_unref (klass);
   gst_props_add_entry (props, (GstPropsEntry *) entry);
 
   klass = g_type_class_ref (GST_TYPE_MAD_EMPHASIS);
   value = g_enum_get_value (klass,
 		            mad->header.emphasis);
-  entry = gst_props_entry_new ("emphasis", GST_PROPS_STRING (value->value_nick));
+  if (value)
+    entry = gst_props_entry_new ("emphasis", GST_PROPS_STRING (value->value_nick));
   g_type_class_unref (klass);
   gst_props_add_entry (props, (GstPropsEntry *) entry);
 

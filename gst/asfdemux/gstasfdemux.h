@@ -24,7 +24,7 @@
 #include <config.h>
 #include <gst/gst.h>
 #include <gst/riff/riff.h>
-#include <gst/gstbytestream.h>
+#include <gst/bytestream.h>
 #include "asfheaders.h"
 
 G_BEGIN_DECLS
