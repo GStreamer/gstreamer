@@ -1,3 +1,20 @@
+2005-01-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/mad/Makefile.am:
+	* ext/mad/gstid3demuxbin.c: (gst_id3demux_bin_get_type),
+	(gst_id3demux_bin_base_init), (gst_id3demux_bin_class_init),
+	(gst_id3demux_bin_init), (gst_id3demux_bin_remove_pad),
+	(found_type), (gst_id3demux_bin_change_state):
+	* ext/mad/gstid3tag.c: (gst_id3_tag_add_src_pad),
+	(gst_id3_tag_init), (gst_id3_tag_handle_event),
+	(gst_id3_tag_src_link), (gst_id3_tag_chain),
+	(gst_id3_tag_change_state), (plugin_init):
+	* ext/mad/gstmad.h:
+	  Add id3demuxbin (which is a simple bin consisting of id3demux
+	  and typefind), take over rank from id3demux, remove typefind
+	  code from id3demux. Makes all broken mp3s that I know of work,
+	  and thereby fixes #152688.
+
 2005-01-27  Edward Hervey  <bilboed@bilboed.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
