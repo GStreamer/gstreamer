@@ -109,7 +109,7 @@ GST_PAD_TEMPLATE_FACTORY (video_src_temp,
     "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN),
     "red_mask", 	GST_PROPS_INT(0x000000ff),
     "green_mask", 	GST_PROPS_INT(0x0000ff00),
-    "blue_mask", 	GST_PROPS_INT(0x00ff00),
+    "blue_mask", 	GST_PROPS_INT(0x00ff0000),
     "width",     	GST_PROPS_INT (720),
     "height",  		GST_PROPS_LIST (
 			  GST_PROPS_INT (NTSC_HEIGHT),
