@@ -305,10 +305,10 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                                           GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
                                                        "bpp",        GST_PROPS_INT (ximagesink->xcontext->bpp),
                                                        "depth",      GST_PROPS_INT (ximagesink->xcontext->depth),
-                                                       "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
-                                                       "red_mask",   GST_PROPS_INT (GINT_FROM_BE (ximagesink->xcontext->visual->red_mask)),
-                                                       "green_mask", GST_PROPS_INT (GINT_FROM_BE (ximagesink->xcontext->visual->green_mask)),
-                                                       "blue_mask",  GST_PROPS_INT (GINT_FROM_BE (ximagesink->xcontext->visual->blue_mask)),
+                                                       "endianness", GST_PROPS_INT (ximagesink->xcontext->endianness),
+                                                       "red_mask",   GST_PROPS_INT (ximagesink->xcontext->visual->red_mask),
+                                                       "green_mask", GST_PROPS_INT (ximagesink->xcontext->visual->green_mask),
+                                                       "blue_mask",  GST_PROPS_INT (ximagesink->xcontext->visual->blue_mask),
                                                        "width",      GST_PROPS_INT (e.xconfigure.width),
                                                        "height",     GST_PROPS_INT (e.xconfigure.height),
                                                        "framerate",  GST_PROPS_FLOAT (ximagesink->framerate)));
@@ -365,7 +365,7 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                                        e.xkey.keycode, 0);
             gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
                                            XKeysymToString (keysym));
-            /* What's that ? */
+            /* FIXME : What's that ? */
             gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
                                            "unknown");
             break;
@@ -433,7 +433,7 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
     
   XFree (px_formats);
     
-  xcontext->endianness = (ImageByteOrder (xcontext->disp) == LSBFirst) ? G_BIG_ENDIAN:G_BIG_ENDIAN;
+  xcontext->endianness = (ImageByteOrder (xcontext->disp) == LSBFirst) ? G_LITTLE_ENDIAN:G_BIG_ENDIAN;
   
 #ifdef HAVE_XSHM
   /* Search for XShm extension support */
@@ -452,10 +452,10 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
   xcontext->caps = GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
       "bpp",        GST_PROPS_INT (xcontext->bpp),
       "depth",      GST_PROPS_INT (xcontext->depth),
-      "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
-      "red_mask",   GST_PROPS_INT (GINT_FROM_BE (xcontext->visual->red_mask)),
-      "green_mask", GST_PROPS_INT (GINT_FROM_BE (xcontext->visual->green_mask)),
-      "blue_mask",  GST_PROPS_INT (GINT_FROM_BE (xcontext->visual->blue_mask)),
+      "endianness", GST_PROPS_INT (xcontext->endianness),
+      "red_mask",   GST_PROPS_INT (xcontext->visual->red_mask),
+      "green_mask", GST_PROPS_INT (xcontext->visual->green_mask),
+      "blue_mask",  GST_PROPS_INT (xcontext->visual->blue_mask),
       "width",      GST_PROPS_INT_RANGE (0, G_MAXINT),
       "height",     GST_PROPS_INT_RANGE (0, G_MAXINT),
       "framerate",  GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
