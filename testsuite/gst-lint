@@ -35,6 +35,7 @@ sub check_deprecated();
 sub check_config_h();
 sub check_varargs_functions();
 sub check_debugging();
+sub check_old_typefind();
 
 sub m_check_plugindir();
 
@@ -64,6 +65,7 @@ foreach $filename (<FIND>) {
 	check_varargs_functions();
 	check_debugging();
 	check_bad_includes();
+	check_old_typefind();
 }
 
 open FIND, "find . -name \"Makefile.am\" -print|";
@@ -326,6 +328,16 @@ sub m_check_plugindir()
 {
 	if (grep { /plugindir\s*=/; } @lines) {
 		print "E: plugindir= is no longer necessary\n"
+	}
+}
+
+#
+# check for old typefinding code
+#
+sub check_old_typefind()
+{
+	if (grep { /GstTypeDefinition/ || /GstTypeFactory/ } @lines) {
+		print "E: old typefind interface has been removed\n"
 	}
 }
 
