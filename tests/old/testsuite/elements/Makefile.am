@@ -1,5 +1,5 @@
 if BUILD_FAILING_TESTS
-tests_failing = fake 
+tests_failing = fake
 else
 tests_failing =
 endif
