@@ -22,15 +22,16 @@ main(int argc, char *argv[])
 
   templ = gst_element_get_padtemplate_by_name (mp3parse, "sink");
 
-  templ = gst_padtemplate_create ("src%d", GST_PAD_SRC, GST_PAD_REQUEST, templ->caps);
-  pad = gst_element_request_pad (element, templ);
+  pad = gst_element_request_compatible_pad (element, templ);
   g_print ("new pad %s\n", gst_pad_get_name (pad));
 
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Padtemplate", NULL);
+  if (pad != NULL) {
+      parent = xmlNewChild (doc->xmlRootNode, NULL, "Padtemplate", NULL);
 
-  gst_padtemplate_save_thyself (pad->padtemplate, parent);
+      gst_padtemplate_save_thyself (pad->padtemplate, parent);
 
-  xmlDocDump(stdout, doc);
+      xmlDocDump(stdout, doc);
+  }
 
   return 0;
 }

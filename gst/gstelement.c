@@ -345,18 +345,78 @@ gst_element_get_padtemplate_by_name (GstElement *element, const guchar *name)
 }
 
 /**
+ * gst_element_get_padtemplate_by_compatible:
+ * @element: element to get padtemplate of
+ * @templ: a template to find a compatible template for
+ *
+ * Generate a padtemplate for this element compatible with the given
+ * template, ie able to link to it.
+ *
+ * Returns: the padtemplate
+ */
+static GstPadTemplate*
+gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *compattempl)
+{
+  GstPadTemplate *newtempl = NULL;
+  GList *padlist;
+
+  GST_DEBUG(0,"gst_element_get_padtemplate_by_compatible()\n");
+
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (compattempl != NULL, NULL);
+
+  padlist = gst_element_get_padtemplate_list (element);
+
+  while (padlist) {
+    GstPadTemplate *padtempl = (GstPadTemplate*) padlist->data;
+    gboolean compat = FALSE;
+
+    // Ignore name
+    // Ignore presence
+    // Check direction (must be opposite)
+    // Check caps
+
+    GST_DEBUG(0,"checking direction and caps\n");
+    if (padtempl->direction == GST_PAD_SRC &&
+      compattempl->direction == GST_PAD_SINK) {
+      GST_DEBUG(0,"compatible direction: found src pad template\n");
+      compat = gst_caps_list_check_compatibility(padtempl->caps,
+						 compattempl->caps);
+      GST_DEBUG(0,"caps are %scompatible\n", (compat?"":"not "));
+    } else if (padtempl->direction == GST_PAD_SINK &&
+	       compattempl->direction == GST_PAD_SRC) {
+      GST_DEBUG(0,"compatible direction: found sink pad template\n");
+      compat = gst_caps_list_check_compatibility(compattempl->caps,
+						 padtempl->caps);
+      GST_DEBUG(0,"caps are %scompatible\n", (compat?"":"not "));
+    }
+
+    if (compat) {
+      newtempl = padtempl;
+      break;
+    }
+
+    padlist = g_list_next (padlist);
+  }
+
+  return newtempl;
+}
+
+/**
  * gst_element_request_pad:
  * @element: element to request a new pad from
- * @templ: the padtemplate specifuing the pad to get.
+ * @templ: the padtemplate specifying the pad to connect to.
  *
  * Request a new pad from the element. The template will
  * be used to decide what type of pad to create. This function
  * is typically used for elements with a padtemplate with presence
  * GST_PAD_REQUEST.
  *
- * Returns: the new pad that was created.
+ * Returns: the new pad that was created, NULL if no suitable pad can be
+ * created.
  */
-GstPad*
+static GstPad*
 gst_element_request_pad (GstElement *element, GstPadTemplate *templ)
 {
   GstPad *newpad = NULL;
@@ -372,6 +432,35 @@ gst_element_request_pad (GstElement *element, GstPadTemplate *templ)
     newpad = (oclass->request_new_pad)(element, templ);
 
   return newpad;
+}
+
+/**
+ * gst_element_request_compatible_pad:
+ * @element: element to request a new pad from
+ * @templ: a pad template to which the new pad should be able to connect
+ *
+ * Request a new pad from the element. The template will
+ * be used to decide what type of pad to create. This function
+ * is typically used for elements with a padtemplate with presence
+ * GST_PAD_REQUEST.
+ *
+ * Returns: the new pad that was created.
+ */
+GstPad*
+gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
+{
+  GstPadTemplate *templ_new;
+  GstPad *pad = NULL;
+
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (templ != NULL, NULL);
+
+  templ_new = gst_element_get_padtemplate_by_compatible (element, templ);
+  if (templ_new != NULL) 
+      pad = gst_element_request_pad (element, templ_new);
+
+  return pad;
 }
 
 /**

@@ -211,7 +211,7 @@ GstPadTemplate*		gst_element_get_padtemplate_by_name	(GstElement *element, const
 void 			gst_element_add_ghost_pad	(GstElement *element, GstPad *pad, gchar *name);
 void			gst_element_remove_ghost_pad	(GstElement *element, GstPad *pad);
 
-GstPad*			gst_element_request_pad		(GstElement *element, GstPadTemplate *templ);
+GstPad*			gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ);
 GstPad*			gst_element_request_pad_by_name	(GstElement *element, const gchar *name);
 
 void			gst_element_connect		(GstElement *src, const gchar *srcpadname,
