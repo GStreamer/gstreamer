@@ -1,0 +1,30 @@
+* media-info is a library to collect metadata and streaminfo from media
+  files
+
+* the current implementation is idler-based.
+
+* you create a new media_info object
+* you set the string name of a source element to use using g_object_set or
+  gst_media_info_set_source
+* you declare you'll read a given file by using gst_media_info_read_with_idler
+* you loop gst_media_info_read_idler (info, &stream) as long as it returns TRUE
+  and as long as stream is still NULL
+
+
+* INTERNALS:
+  - instance_init sets up the media info reader, its elements, and connects
+    the deep_notify callback
+  - read_with_idler resets the media info reader object,
+    and sets location and flags
+
+  - read_idler runs through a state machine:
+    NULL - TYPEFIND - STREAM - METADATA - STREAMINFO - FORMAT
+
+  - NULL: just returns find_type_pre, which moves state to TYPEFIND
+  - TYPEFIND:
+    - iterates as long as it can until it has priv->type 
+    - find_type_post
+    - call gmi_set_mime which creates a pipeline to decode stuff
+    - move to STREAM
+
+  - STREAM 
