@@ -1,3 +1,10 @@
+2004-11-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event),
+	  Fix bytes/samples confustion.
+	(gst_alsa_sink_mmap), (gst_alsa_sink_loop):
+	  Fix for underrun (#144389).
+
 2004-11-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find):
