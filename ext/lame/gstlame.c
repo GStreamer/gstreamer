@@ -177,7 +177,7 @@ enum {
   ARG_ATH_ONLY,
   ARG_ATH_SHORT,
   ARG_NO_ATH,
-  /*  ARG_ATH_TYPE,		/* note: CVS has this, 3.87 doesn't */ */
+  /*  ARG_ATH_TYPE,		note: CVS has this, 3.87 doesn't */
   ARG_ATH_LOWER,
   ARG_CWLIMIT,
   ARG_ALLOW_DIFF_SHORT,
