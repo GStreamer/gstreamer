@@ -1,3 +1,73 @@
+2004-12-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/advanced-autoplugging.xml:
+	* docs/manual/advanced-clocks.xml:
+	* docs/manual/advanced-dparams.xml:
+	* docs/manual/advanced-interfaces.xml:
+	* docs/manual/advanced-metadata.xml:
+	* docs/manual/advanced-position.xml:
+	* docs/manual/advanced-schedulers.xml:
+	* docs/manual/advanced-threads.xml:
+	* docs/manual/appendix-debugging.xml:
+	* docs/manual/appendix-gnome.xml:
+	* docs/manual/appendix-programs.xml:
+	* docs/manual/appendix-quotes.xml:
+	* docs/manual/appendix-win32.xml:
+	* docs/manual/autoplugging.xml:
+	* docs/manual/basics-bins.xml:
+	* docs/manual/basics-data.xml:
+	* docs/manual/basics-elements.xml:
+	* docs/manual/basics-helloworld.xml:
+	* docs/manual/basics-init.xml:
+	* docs/manual/basics-pads.xml:
+	* docs/manual/basics-plugins.xml:
+	* docs/manual/bins-api.xml:
+	* docs/manual/bins.xml:
+	* docs/manual/buffers-api.xml:
+	* docs/manual/buffers.xml:
+	* docs/manual/clocks.xml:
+	* docs/manual/components.xml:
+	* docs/manual/cothreads.xml:
+	* docs/manual/debugging.xml:
+	* docs/manual/dparams-app.xml:
+	* docs/manual/dynamic.xml:
+	* docs/manual/elements-api.xml:
+	* docs/manual/elements.xml:
+	* docs/manual/factories.xml:
+	* docs/manual/gnome.xml:
+	* docs/manual/goals.xml:
+	* docs/manual/helloworld.xml:
+	* docs/manual/helloworld2.xml:
+	* docs/manual/highlevel-components.xml:
+	* docs/manual/highlevel-xml.xml:
+	* docs/manual/init-api.xml:
+	* docs/manual/intro-motivation.xml:
+	* docs/manual/intro-preface.xml:
+	* docs/manual/intro.xml:
+	* docs/manual/links-api.xml:
+	* docs/manual/links.xml:
+	* docs/manual/manual.xml:
+	* docs/manual/motivation.xml:
+	* docs/manual/pads-api.xml:
+	* docs/manual/pads.xml:
+	* docs/manual/plugins-api.xml:
+	* docs/manual/plugins.xml:
+	* docs/manual/programs.xml:
+	* docs/manual/queues.xml:
+	* docs/manual/quotes.xml:
+	* docs/manual/schedulers.xml:
+	* docs/manual/states-api.xml:
+	* docs/manual/states.xml:
+	* docs/manual/threads.xml:
+	* docs/manual/typedetection.xml:
+	* docs/manual/win32.xml:
+	* docs/manual/xml.xml:
+	  First try at rewriting the ADM. Needs lotsamore work, but some
+	  parts might already be somewhat useful.
+	* docs/pwg/advanced-interfaces.xml:
+	  Remove properties interface, it never actually existed (except for
+	  on my HD...).
+
 2004-12-13  David Schleef  <ds@schleef.org>
 
 	* gst/gstpad.c: (gst_pad_set_explicit_caps): Allow caps to

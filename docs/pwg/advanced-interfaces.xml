@@ -611,13 +611,6 @@ gst_my_filter_probe_interface_init (GstPropertyProbeInterface *iface)
     </para>
   </sect1>
 
-  <sect1 id="section-iface-profile" xreflabel="Profile Interface">
-    <title>Profile Interface</title>
-    <para>
-      WRITEME
-    </para>
-  </sect1>
-                                                                                
   <sect1 id="section-iface-xoverlay" xreflabel="X Overlay Interface">
     <title>X Overlay Interface</title>
     <para>
