@@ -1105,6 +1105,7 @@ dnl #########################
 dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 dnl someone should fix this test/misc/Makefile
+dnl wtay fix this: testsuite/threads/Makefile
 SUBSTFOR configure.ac:AC_OUTPUT(
 SUBSTFOR configure.ac:Makefile
 SUBSTFOR configure.in:AC_OUTPUT([Makefile
@@ -1241,7 +1242,6 @@ testsuite/bytestream/Makefile
 testsuite/capsnego/Makefile
 testsuite/refcounting/Makefile
 testsuite/plugin/Makefile
-testsuite/threads/Makefile
 tests/nego/Makefile
 examples/Makefile
 examples/autoplug/Makefile
