@@ -99,7 +99,6 @@ def decoder_notified(sender, pspec):
                                      
 def main():
     "Basic example to play an Ogg Vorbis stream through OSS"
-    #gst_debug_set_categories(-1)
 
     if len(sys.argv) != 2:
         print 'usage: %s <Ogg Vorbis file>' % (sys.argv[0])

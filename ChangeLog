@@ -1,3 +1,13 @@
+2004-03-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* autogen.sh:
+	* configure.ac:
+	* gst/__init__.py:
+	* gst/gstmodule.c: (init_gst):
+          move gstreamer/ to gst/ by cvs surgery so we can work uninstalled
+          more changes to be able to run uninstalled
+
 2004-02-27  Johan Dahlin  <johan@gnome.org>
 
 	* gstreamer/: All over the place, more rename work (gstreamer -> gst)

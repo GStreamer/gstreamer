@@ -36,7 +36,6 @@ sys.setdlopenflags(dl.RTLD_LAZY | dl.RTLD_GLOBAL)
 del devloc, sys, os
 
 from _gst import *
-del _gst
 
 def threads_init():
     import gtk

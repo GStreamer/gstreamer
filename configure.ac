@@ -6,7 +6,7 @@ AC_CANONICAL_TARGET
 AS_VERSION(gst-python, GST_PYTHON_VERSION, 0, 1, 0, 1)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
-AC_CONFIG_SRCDIR([gstreamer/gstmodule.c])
+AC_CONFIG_SRCDIR([gst/gstmodule.c])
 AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
@@ -45,9 +45,9 @@ GST_MAJORMINOR=0.7
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
                   HAVE_GSTREAMER=yes,HAVE_GSTREAMER=no)
 
-dnl Give error and exit if we don't have gstreamer
+dnl Give error and exit if we don't have GStreamer
 if test "x$HAVE_GSTREAMER" = "xno"; then
-  AC_MSG_ERROR(you need gstreamer development packages installed !)
+  AC_MSG_ERROR(you need GStreamer development packages installed !)
 fi
 AC_SUBST(GST_MAJORMINOR)
 
@@ -144,7 +144,7 @@ changequote([,])dnl
 
 AC_OUTPUT([
   Makefile
-  gstreamer/Makefile
+  gst/Makefile
   gstinterfaces/Makefile
   gstplay/Makefile
   pkgconfig/Makefile

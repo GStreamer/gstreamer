@@ -3,7 +3,7 @@
 
 DIE=0
 package=gst-python
-srcfile=gstreamer/gstmodule.c
+srcfile=gst/gstmodule.c
                                                                                 
 # a quick cvs co if necessary to alleviate the pain - may remove this
 # when developers get a clue ;)

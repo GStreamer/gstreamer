@@ -144,7 +144,6 @@ tests = {
 
 def main():
    "A GStreamer latency tester"
-   #gst_debug_set_categories(-1)
    global iterations, print_del
 
    if len(sys.argv) < 3:

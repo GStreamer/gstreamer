@@ -7,7 +7,7 @@ endif
 INTERFACESDIR = gstinterfaces
 PLAYDIR = gstplay
 
-UNCONDDIRS = gstreamer pkgconfig examples testsuite
+UNCONDDIRS = gst pkgconfig examples testsuite
 SUBDIRS = \
 	$(UNCONDDIRS) \
 	$(INTERFACESDIR) \

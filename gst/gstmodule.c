@@ -70,7 +70,7 @@ init_gst (void)
             g_free (argv);
         }
 
-	m = Py_InitModule ("gst._gst", pygst_functions);
+	m = Py_InitModule ("_gst", pygst_functions);
 	d = PyModule_GetDict (m);
 
 	pygst_register_classes (d);
