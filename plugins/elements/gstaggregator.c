@@ -301,15 +301,22 @@ gst_aggregator_loop (GstElement *element)
   if (aggregator->sched == AGGREGATOR_LOOP) {
     GList *pads = aggregator->sinkpads;
 
+    /* we'll loop over all pads and try to pull from all
+     * active ones */
     while (pads) {
       GstPad *pad = GST_PAD (pads->data);
       pads = g_list_next (pads);
 
-      g_print ("inspecting pad %s:%s\n", GST_DEBUG_PAD_NAME (pad));
-      if (GST_PAD_IS_ACTIVE (pad)) {
+      /* we need to check is the pad is usable. IS_USABLE will check
+       * if the pad is linked, if it is enabled (the element is
+       * playing and the app didn't gst_pad_set_enabled (pad, FALSE))
+       * and that the peer pad is also enabled.
+       */
+      if (GST_PAD_IS_USABLE (pad)) {
         buf = gst_pad_pull (pad);
         debug = "loop";
 
+	/* then push it forward */
         gst_aggregator_push (aggregator, pad, buf, debug);
       }
     }
