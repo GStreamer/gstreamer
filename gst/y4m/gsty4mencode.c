@@ -19,7 +19,7 @@
 
 #include <string.h>
 #include <gst/gst.h>
-#include "gstlavencode.h"
+#include "gsty4mencode.h"
 
 static GstElementDetails lavencode_details = {
   "LavEncode",
