@@ -452,11 +452,11 @@ gst_pixbufscale_get_property (GObject * object, guint prop_id, GValue * value,
 gboolean
 pixbufscale_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "pixbufscale", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "gdkpixbufscale", GST_RANK_NONE,
           GST_TYPE_PIXBUFSCALE))
     return FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (pixbufscale_debug, "pixbufscale", 0,
+  GST_DEBUG_CATEGORY_INIT (pixbufscale_debug, "gdkpixbufscale", 0,
       "pixbufscale element");
 
   return TRUE;
