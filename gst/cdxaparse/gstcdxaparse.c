@@ -242,6 +242,7 @@ gst_cdxa_parse_loop (GstElement *element)
 {
   GstCDXAParse *cdxa_parse;
   CDXAParseHeader *header;
+  guint8 *headerdata;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_CDXA_PARSE (element));
@@ -253,7 +254,8 @@ gst_cdxa_parse_loop (GstElement *element)
     guint8 *buf;
     guint32 got_bytes;
 
-    got_bytes = gst_bytestream_peek_bytes (cdxa_parse->bs, (guint8**)&header, 20);
+    got_bytes = gst_bytestream_peek_bytes (cdxa_parse->bs, &headerdata, 20);
+    header = (CDXAParseHeader *) headerdata;
     if (got_bytes < 20)
       return;
 
