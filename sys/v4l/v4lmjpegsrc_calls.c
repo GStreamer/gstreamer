@@ -56,7 +56,7 @@ gst_v4lmjpegsrc_queue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
       "Error queueing a buffer (%d): %s",
-      num, sys_errlist[errno]);
+      num, strerror(errno));
     return FALSE;
   }
 
@@ -80,7 +80,7 @@ gst_v4lmjpegsrc_sync_next_frame (GstV4lMjpegSrc *v4lmjpegsrc,
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
       "Error syncing on a buffer (%ld): %s",
-      v4lmjpegsrc->bsync.frame, sys_errlist[errno]);
+      v4lmjpegsrc->bsync.frame, strerror(errno));
     return FALSE;
   }
 
@@ -124,7 +124,7 @@ gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
       {
         gst_element_error(GST_ELEMENT(v4lmjpegsrc),
           "Error getting device status: %s",
-          sys_errlist[errno]);
+          strerror(errno));
         return FALSE;
       }
 
@@ -159,7 +159,7 @@ gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
     {
       gst_element_error(GST_ELEMENT(v4lmjpegsrc),
         "Error getting device status: %s",
-        sys_errlist[errno]);
+        strerror(errno));
       return FALSE;
     }
 
@@ -232,7 +232,7 @@ gst_v4lmjpegsrc_set_capture (GstV4lMjpegSrc *v4lmjpegsrc,
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
       "Error getting video parameters: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -260,7 +260,7 @@ gst_v4lmjpegsrc_set_capture (GstV4lMjpegSrc *v4lmjpegsrc,
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
       "Error setting video parameters: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -306,7 +306,7 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
       "Error getting video parameters: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -389,7 +389,7 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
       "Error setting video parameters: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -415,7 +415,7 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
       "Error requesting video buffers: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -430,7 +430,7 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
       "Error mapping video buffers: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     GST_V4LELEMENT(v4lmjpegsrc)->buffer = NULL;
     return FALSE;
   }

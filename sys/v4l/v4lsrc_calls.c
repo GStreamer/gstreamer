@@ -87,7 +87,7 @@ gst_v4lsrc_queue_frame (GstV4lSrc *v4lsrc,
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Error queueing a buffer (%d): %s",
-      num, sys_errlist[errno]);
+      num, strerror(errno));
     return FALSE;
   }
 
@@ -153,7 +153,7 @@ retry:
         goto retry;
       gst_element_error(GST_ELEMENT(v4lsrc),
         "Error syncing on a buffer (%d): %s",
-        frame, sys_errlist[errno]);
+        frame, strerror(errno));
       pthread_mutex_lock(&(v4lsrc->mutex_soft_sync));
       v4lsrc->isready_soft_sync[frame] = -1;
       pthread_cond_broadcast(&(v4lsrc->cond_soft_sync[frame]));
@@ -261,7 +261,7 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Error getting buffer information: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -283,7 +283,7 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Error creating buffer tracker: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
   for (n=0;n<v4lsrc->mbuf.frames;n++)
@@ -296,7 +296,7 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Error creating software-sync buffer tracker: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
   for (n=0;n<v4lsrc->mbuf.frames;n++)
@@ -307,7 +307,7 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Error creating software-sync timestamp tracker: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
   v4lsrc->cond_soft_sync = (pthread_cond_t *)
@@ -316,7 +316,7 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Error creating software-sync condition tracker: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
   for (n=0;n<v4lsrc->mbuf.frames;n++)
@@ -332,7 +332,7 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Error mapping video buffers: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     GST_V4LELEMENT(v4lsrc)->buffer = NULL;
     return FALSE;
   }
@@ -371,7 +371,7 @@ gst_v4lsrc_capture_start (GstV4lSrc *v4lsrc)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Failed to create software sync thread: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -531,7 +531,7 @@ gst_v4lsrc_try_palette (GstV4lSrc *v4lsrc,
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Error getting buffer information: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
   /* Map the buffers */
@@ -541,7 +541,7 @@ gst_v4lsrc_try_palette (GstV4lSrc *v4lsrc,
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Error mapping our try-out buffer: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -555,7 +555,7 @@ gst_v4lsrc_try_palette (GstV4lSrc *v4lsrc,
     if (errno != EINVAL) /* our format failed! */
       gst_element_error(GST_ELEMENT(v4lsrc),
         "Error queueing our try-out buffer: %s",
-        sys_errlist[errno]);
+        strerror(errno));
     munmap(buffer, vmbuf.size);
     return FALSE;
   }
@@ -564,7 +564,7 @@ gst_v4lsrc_try_palette (GstV4lSrc *v4lsrc,
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Error syncing on a buffer (%d): %s",
-      frame, sys_errlist[errno]);
+      frame, strerror(errno));
     munmap(buffer, vmbuf.size);
     return FALSE;
   }

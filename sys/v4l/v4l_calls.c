@@ -54,7 +54,7 @@ gst_v4l_get_capabilities (GstV4lElement *v4lelement)
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Error getting \'%s\' capabilities: %s",
-      v4lelement->videodev, sys_errlist[errno]);
+      v4lelement->videodev, strerror(errno));
     return FALSE;
   }
 
@@ -85,7 +85,7 @@ gst_v4l_open (GstV4lElement *v4lelement)
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Failed to open device (\'%s\'): %s",
-      v4lelement->videodev, sys_errlist[errno]);
+      v4lelement->videodev, strerror(errno));
     return FALSE;
   }
 
@@ -216,7 +216,7 @@ gst_v4l_set_chan_norm (GstV4lElement *v4lelement,
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Error setting the channel/norm settings: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -224,7 +224,7 @@ gst_v4l_set_chan_norm (GstV4lElement *v4lelement,
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Error getting the channel/norm settings: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -268,7 +268,7 @@ gst_v4l_get_frequency (GstV4lElement *v4lelement,
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Error getting tuner frequency: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -297,7 +297,7 @@ gst_v4l_set_frequency (GstV4lElement *v4lelement,
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Error setting tuner frequency: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -326,7 +326,7 @@ gst_v4l_get_picture (GstV4lElement     *v4lelement,
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Error getting picture parameters: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -376,7 +376,7 @@ gst_v4l_set_picture (GstV4lElement     *v4lelement,
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Error getting picture parameters: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -405,7 +405,7 @@ gst_v4l_set_picture (GstV4lElement     *v4lelement,
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Error setting picture parameters: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -453,7 +453,7 @@ gst_v4l_get_audio (GstV4lElement   *v4lelement,
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Error getting audio parameters: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -503,7 +503,7 @@ gst_v4l_set_audio (GstV4lElement   *v4lelement,
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Error getting audio parameters: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
@@ -544,7 +544,7 @@ gst_v4l_set_audio (GstV4lElement   *v4lelement,
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Error setting audio parameters: %s",
-      sys_errlist[errno]);
+      strerror(errno));
     return FALSE;
   }
 
