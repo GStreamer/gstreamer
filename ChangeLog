@@ -1,3 +1,11 @@
+2004-02-02  David Schleef  <ds@schleef.org>
+
+	Change usage of isblah() to g_ascii_isblah() to be more locale
+	independent.  (#133076)
+	* gst/gsturi.c: (gst_uri_protocol_check_internal):
+	* gst/gstutils.c:
+	* gst/parse/parse.l:
+
 2004-02-02  Jon Trowbridge  <trow@gnu.org>
 
 	reviewed by: David Schleef  <ds@schleef.org>

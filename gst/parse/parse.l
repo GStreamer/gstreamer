@@ -1,6 +1,5 @@
 %{
 #include <math.h>
-#include <ctype.h>
 #include <string.h>
 
 #include "../gst_private.h"

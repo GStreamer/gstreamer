@@ -30,7 +30,6 @@
 #include "gstmarshal.h"
 
 #include <string.h>
-#include <ctype.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_uri_handler_debug);
 #define GST_CAT_DEFAULT gst_uri_handler_debug
@@ -84,9 +83,9 @@ gst_uri_protocol_check_internal (const gchar *uri, gchar **endptr)
   g_assert (uri != NULL);
   g_assert (endptr != NULL);
 
-  if (isalpha (*check)) {
+  if (g_ascii_isalpha (*check)) {
     check++;
-    while (isalnum (*check)) check++;
+    while (g_ascii_isalnum (*check)) check++;
   }
 
   *endptr = check;
