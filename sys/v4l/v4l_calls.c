@@ -73,6 +73,7 @@ static const char *norm_name[] = {
 /******************************************************
  * gst_v4l_get_capabilities():
  *   get the device's capturing capabilities
+ * sets v4lelement->vcap and v4lelement->vwin
  * return value: TRUE on success, FALSE on error
  ******************************************************/
 

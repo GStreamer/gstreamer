@@ -713,6 +713,7 @@ gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
 
   GST_DEBUG_OBJECT (v4lsrc, "trying to set_capture %dx%d, palette %d",
       w, h, palette);
+  /* this only fills in v4lsrc->mmap values */
   if (!gst_v4lsrc_set_capture (v4lsrc, w, h, palette)) {
     GST_WARNING_OBJECT (v4lsrc, "could not set_capture %dx%d, palette %d",
         w, h, palette);
@@ -721,29 +722,8 @@ gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
 
   /* first try the negotiated settings using try_capture */
   if (!gst_v4lsrc_try_capture (v4lsrc, w, h, palette)) {
-    GST_DEBUG_OBJECT (v4lsrc, "failed trying palette %d for w/h", palette);
-    return GST_PAD_LINK_REFUSED;
-  }
-  if (!gst_v4l_get_capabilities (GST_V4LELEMENT (v4lsrc)))
-    GST_DEBUG_OBJECT (v4lsrc, "failed getting capabilities");
-  GST_DEBUG_OBJECT (v4lsrc, "done checking, with w %d h %d palette %d\n",
-      vwin->width, vwin->height, palette);
-  if (vwin->width != v4lsrc->mmap.width) {
-    /* We consider this a device error since it was called with fixed
-     * caps that the device doesn't accept.  Still, there should be
-     * a way to handle this more gracefully, maybe provide a fixate
-     * function */
-    GST_ELEMENT_ERROR (v4lsrc, RESOURCE, SETTINGS, (NULL),
-        ("Tried setting %dx%d but got %dx%d back as suggestion",
-            v4lsrc->mmap.width, v4lsrc->mmap.height, vwin->width,
-            vwin->height));
-    return GST_PAD_LINK_REFUSED;
-  }
-  if (vwin->height != v4lsrc->mmap.height) {
-    GST_ELEMENT_ERROR (v4lsrc, RESOURCE, SETTINGS, (NULL),
-        ("Tried setting %dx%d but got %dx%d back as suggestion",
-            v4lsrc->mmap.width, v4lsrc->mmap.height, vwin->width,
-            vwin->height));
+    GST_DEBUG_OBJECT (v4lsrc, "failed trying palette %d for %dx%d", palette,
+        w, h);
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -763,28 +743,44 @@ gst_v4lsrc_fixate (GstPad * pad, const GstCaps * caps)
 {
   GstStructure *structure;
   GstCaps *newcaps;
+  int i;
+  int targetwidth, targetheight;
   GstV4lSrc *v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
   struct video_capability *vcap = &GST_V4LELEMENT (v4lsrc)->vcap;
+  struct video_window *vwin = &GST_V4LELEMENT (v4lsrc)->vwin;
 
-  if (gst_caps_get_size (caps) > 1)
-    return NULL;
-
-  if (!vcap) {
-    GST_DEBUG_OBJECT (v4lsrc, "don't have device caps, cannot fixate");
+  /* if device not yet open, no way to fixate */
+  if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lsrc))) {
+    GST_DEBUG_OBJECT (v4lsrc, "device closed, cannot fixate");
     return NULL;
   }
-  newcaps = gst_caps_copy (caps);
-  structure = gst_caps_get_structure (newcaps, 0);
+
   GST_DEBUG_OBJECT (v4lsrc, "device reported w: %d-%d, h: %d-%d",
       vcap->minwidth, vcap->maxwidth, vcap->minheight, vcap->maxheight);
+  targetwidth = vcap->minwidth;
+  targetheight = vcap->minheight;
 
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "width",
-          vcap->maxwidth)) {
-    return newcaps;
+  /* if we can get the current vwin settings, we use those to fixate */
+  if (!gst_v4l_get_capabilities (GST_V4LELEMENT (v4lsrc)))
+    GST_DEBUG_OBJECT (v4lsrc, "failed getting capabilities");
+  else {
+    targetwidth = vwin->width;
+    targetheight = vwin->height;
   }
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "height",
-          vcap->maxheight)) {
-    return newcaps;
+  GST_DEBUG_OBJECT (v4lsrc, "targetting %dx%d", targetwidth, targetheight);
+
+  newcaps = gst_caps_copy (caps);
+  for (i = 0; i < gst_caps_get_size (caps); ++i) {
+    structure = gst_caps_get_structure (newcaps, i);
+
+    if (gst_caps_structure_fixate_field_nearest_int (structure, "width",
+            targetwidth)) {
+      return newcaps;
+    }
+    if (gst_caps_structure_fixate_field_nearest_int (structure, "height",
+            targetheight)) {
+      return newcaps;
+    }
   }
   gst_caps_free (newcaps);
   return NULL;

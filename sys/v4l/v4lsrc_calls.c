@@ -154,11 +154,7 @@ gst_v4lsrc_set_capture (GstV4lSrc * v4lsrc,
     gint width, gint height, gint palette)
 {
   GST_DEBUG_OBJECT (v4lsrc,
-      "capture properties set to width = %d, height = %d, palette = %d",
-      width, height, palette);
-
-  /*GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc)); */
-  /*GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lsrc)); */
+      "capture properties set to %dx%d, palette %d", width, height, palette);
 
   v4lsrc->mmap.width = width;
   v4lsrc->mmap.height = height;
