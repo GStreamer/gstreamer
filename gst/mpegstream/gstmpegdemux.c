@@ -140,11 +140,12 @@ static void		gst_mpeg_demux_send_data 	(GstMPEGParse *mpeg_parse,
 static void		gst_mpeg_demux_handle_discont 	(GstMPEGParse *mpeg_parse);
 static gboolean 	gst_mpeg_demux_handle_src_event (GstPad *pad, GstEvent *event);
 
+const GstFormat* 	gst_mpeg_demux_get_src_formats 	(GstPad *pad);
 static void 		gst_mpeg_demux_set_index 	(GstElement *element, GstIndex *index);
 static GstIndex* 	gst_mpeg_demux_get_index 	(GstElement *element);
 
 static GstElementStateReturn
-		gst_mpeg_demux_change_state 	(GstElement *element);
+			gst_mpeg_demux_change_state 	(GstElement *element);
 
 static GstMPEGParseClass *parent_class = NULL;
 /*static guint gst_mpeg_demux_signals[LAST_SIGNAL] = { 0 };*/
@@ -421,7 +422,7 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 	*outpad = gst_pad_new_from_template (newtemp, name);
 	gst_pad_try_set_caps (*outpad, gst_pad_get_pad_template_caps (*outpad));
 
-	gst_pad_set_formats_function (*outpad, gst_mpeg_parse_get_src_formats);
+	gst_pad_set_formats_function (*outpad, gst_mpeg_demux_get_src_formats);
 	gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
 	gst_pad_set_event_mask_function (*outpad, gst_mpeg_parse_get_src_event_masks);
 	gst_pad_set_event_function (*outpad, gst_mpeg_demux_handle_src_event);
@@ -859,7 +860,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       *outpad = gst_pad_new_from_template (newtemp, name);
       gst_pad_try_set_caps (*outpad, gst_pad_get_pad_template_caps (*outpad));
 
-      gst_pad_set_formats_function (*outpad, gst_mpeg_parse_get_src_formats);
+      gst_pad_set_formats_function (*outpad, gst_mpeg_demux_get_src_formats);
       gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
       gst_pad_set_event_mask_function (*outpad, gst_mpeg_parse_get_src_event_masks);
       gst_pad_set_event_function (*outpad, gst_mpeg_demux_handle_src_event);
@@ -918,6 +919,17 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
   return TRUE;
 }
+
+const GstFormat*
+gst_mpeg_demux_get_src_formats (GstPad *pad)
+{ 
+  static const GstFormat formats[] = {
+    GST_FORMAT_TIME,		/* we prefer seeking on time */
+    GST_FORMAT_BYTES,
+    0 
+  };
+  return formats;
+}   
 
 static gboolean
 index_seek (GstPad *pad, GstEvent *event, gint64 *offset)
