@@ -1,3 +1,24 @@
+2004-10-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data),
+	(gst_riff_create_video_template_caps):
+	  Add DIB fourcc (raw, palettized 8-bit RGB).
+	* gst-libs/gst/riff/riff-read.c:
+	(gst_riff_read_strf_vids_with_data):
+	  Oops, fix strf_data reading bug.
+	* gst/avi/gstavidemux.c: (gst_avi_demux_add_stream):
+	  Use a non-NULL tag.
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
+	  Time for hacks. Sorry Dave. At least one quicktime movie (a
+	  trailer) that I've encountered contains multiple video tracks.
+	  One of those is the actual video track, the other are one-frame
+	  tracks (images). Unfortunately, the number of frames according
+	  to the trak header is 1 for each, so that doesn't help. So
+	  instead, I look at the duration and discard tracks with a
+	  duration shorter than 20% of the length of the stream. Better
+	  than nothing.
+
 2004-10-01  Christian Schaller <christian@fluendo.com>
 
 	* Patch fra Phil Blundell 

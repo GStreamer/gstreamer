@@ -832,10 +832,15 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
     {
       char *codec_name = NULL;
       GstTagList *list = gst_tag_list_new ();
+      guint32 tag;
 
       padname = g_strdup_printf ("video_%02d", avi->num_v_streams);
       templ = gst_element_class_get_pad_template (klass, "video_%02d");
-      caps = gst_riff_create_video_caps_with_data (strf.vids->compression,
+      if (strf.vids->compression)
+        tag = strf.vids->compression;
+      else
+        tag = strh->fcc_handler;
+      caps = gst_riff_create_video_caps_with_data (tag,
           strh, strf.vids, extradata, initdata, &codec_name);
       gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
           codec_name, NULL);
