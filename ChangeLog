@@ -1,5 +1,13 @@
 2004-03-30  David Schleef  <ds@schleef.org>
 
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_alloc_buffer),
+	(gst_mpeg2dec_negotiate_format):  Handle Y42B-format MPEG
+	video, patch from Matthew.Spencer@eu.sony.com (Matthew Spencer)
+	(bug #137504)
+	* ext/mpeg2dec/gstmpeg2dec.h:
+
+2004-03-30  David Schleef  <ds@schleef.org>
+
 	* ext/gdk_pixbuf/Makefile.am: Remove spurious rules. (bug #136527)
 
 2004-03-30  David Schleef  <ds@schleef.org>
