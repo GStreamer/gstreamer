@@ -31,12 +31,8 @@
 
 
 /* private functions */
-/* not used
 static void cd_fix_track_range(struct cd *cd,gint *start_track,gint *end_track);
-*/
 static gint cddb_sum(gint n);
-
-
 
 #ifdef HAVE_LINUX_CDROM_H
 #include <linux/cdrom.h>
@@ -61,7 +57,7 @@ irix cdaudio works quite a bit differently than ioctl(), so its not ready
 */	
 #ifdef HAVE_CDROM_SOLARIS
 #include "gstcdplayer_ioctl_solaris.h"
-#elif defined HAVE_CDROM_BSD
+#elif define HAVE_CDROM_BSD
 #include "gstcdplayer_ioctl_bsd.h"
 /*
 #elif define HAVE_CDROM_IRIX
@@ -69,8 +65,6 @@ irix cdaudio works quite a bit differently than ioctl(), so its not ready
 */
 #endif
 
-#ifdef NOTDEFINED
-/* this doesn't seem to get used, does it */
 static void cd_fix_track_range(struct cd *cd,gint *start_track,gint *end_track)
 {
 	if (*start_track <= 0) {
@@ -91,8 +85,6 @@ static void cd_fix_track_range(struct cd *cd,gint *start_track,gint *end_track)
 
 	return;
 }
-
-#endif
 
 /* this cddb info is from 
    http://www.freedb.org/modules.php?name=Sections&sop=viewarticle&artid=6
