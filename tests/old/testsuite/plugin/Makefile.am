@@ -1,4 +1,4 @@
-plugindir = $(builddir)/testsuite/plugin/
+plugindir = $(shell cd $(top_builddir)/testsuite/plugin/ && pwd)
 
 GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
 TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(GST_PLUGIN_PATH) GST_REGISTRY=$(GST_PLUGIN_PATH)/testsuite/test-registry.xml
