@@ -24,7 +24,7 @@
 #include "config.h"
 #endif
 #include <gst/gsttaginterface.h>
-#include <gst/tags/gsttagediting.h>
+#include <gst/tag/tag.h>
 #include <string.h>
 
 #define GST_TYPE_FLAC_TAG (gst_flac_tag_get_type())

@@ -25,7 +25,7 @@
 #include <string.h>
 
 #include <gstflacenc.h>
-#include <gst/tags/gsttagediting.h>
+#include <gst/tag/tag.h>
 #include <gst/gsttaginterface.h>
 #include "flac_compat.h"
 
