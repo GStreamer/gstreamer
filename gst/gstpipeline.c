@@ -110,9 +110,9 @@ gst_pipeline_init (GstPipeline *pipeline)
   if (scheduler == NULL) {
     const gchar *name = gst_scheduler_factory_get_default_name ();
 
-    g_error ("Critical error: could not get scheduler \"%s\"\n"
-	     "Are you sure you have a registry ?\n"
-	     "Run gst-register as root if you haven't done so yet.", name);
+    g_warning ("Critical error: could not get scheduler \"%s\"\n"
+	       "Are you sure you have a registry ?\n"
+	       "Run gst-register as root if you haven't done so yet.", name);
   }
 }
 
