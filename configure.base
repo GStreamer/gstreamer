@@ -1204,6 +1204,7 @@ plugins/visualization/spectrum/Makefile
 plugins/visualization/vumeter/Makefile
 plugins/visualization/synaesthesia/Makefile
 plugins/visualization/smoothwave/Makefile
+plugins/visualization/chart/Makefile
 plugins/videoscale/Makefile
 plugins/xvideosink/Makefile
 plugins/wav/Makefile
