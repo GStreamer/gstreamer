@@ -31,6 +31,7 @@
 
 G_BEGIN_DECLS
 
+extern GPrivate *gst_thread_current;
 extern GstElementDetails gst_thread_details;
 
 
@@ -58,15 +59,9 @@ struct _GstThread {
 
   GThread 	*thread_id;		/* id of the thread, if any */
   GThreadPriority priority;
-  gpointer	*stack;
-  guint 	 stack_size;		/* stack size */
-  gint		 pid;			/* the pid of the thread */
-  gint		 ppid;			/* the pid of the thread's parent process */
-  GMutex 	*lock;			/* thread lock/condititon pairs */
-  GCond 	*cond_t;		/* used to control the thread */
-  GCond 	*cond_m;		/* used to control main thread */
 
-  gint		 transition;		/* the current state transition */
+  GMutex 	*lock;			/* thread lock/condititon pairs */
+  GCond 	*cond;			/* used to control the thread */
 
   gpointer 	 dummy[8];
 };
@@ -85,9 +80,9 @@ GType 	gst_thread_get_type	(void);
 GstElement*	gst_thread_new		(const gchar *name);
 
 void		gst_thread_set_priority (GstThread *thread, GThreadPriority priority);
+GstThread *	gst_thread_get_current	(void);
 
 G_END_DECLS
 
 
-#endif /* __GST_THREAD_H__ */     
-
+#endif /* __GST_THREAD_H__ */
