@@ -1,5 +1,12 @@
 2004-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/level/gstlevel.c: (gst_level_link), (gst_level_chain),
+	(gst_level_set_property), (gst_level_get_property),
+	(gst_level_base_init), (gst_level_class_init):
+	  add debugging categories.  cleanups.
+
+2004-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/videoscale/videoscale.c: (gst_videoscale_setup),
 	(gst_videoscale_planar411), (gst_videoscale_planar400),
 	(gst_videoscale_packed422), (gst_videoscale_packed422rev),
