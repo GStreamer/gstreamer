@@ -288,6 +288,10 @@ gst_ximagesink_xwindow_new (GstXImageSink *ximagesink, gint width, gint height)
                                       0, 0, xwindow->width, xwindow->height, 
                                       0, 0, ximagesink->xcontext->black);
   
+  XSelectInput (ximagesink->xcontext->disp, xwindow->win, ExposureMask |
+                StructureNotifyMask | PointerMotionMask | KeyPressMask |
+                KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
+  
   xwindow->gc = XCreateGC (ximagesink->xcontext->disp,
                            xwindow->win, 0, &values);
   
@@ -456,9 +460,9 @@ gst_ximagesink_getcaps (GstPad *pad, GstCaps *caps)
     return gst_caps_copy (ximagesink->xcontext->caps);
 
   return GST_CAPS_NEW ("ximagesink_rgbsink", "video/x-raw-rgb",
-                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-                "width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                "height", GST_PROPS_INT_RANGE (0, G_MAXINT));
+                       "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+                       "width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                       "height", GST_PROPS_INT_RANGE (0, G_MAXINT));
 }
 
 static GstPadLinkReturn
@@ -548,13 +552,14 @@ gst_ximagesink_chain (GstPad *pad, GstData *_data)
   GstBuffer *buf = GST_BUFFER (_data);
   GstClockTime time = GST_BUFFER_TIMESTAMP (buf);
   GstXImageSink *ximagesink;
-
+  XEvent e;
+  
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
   ximagesink = GST_XIMAGESINK (gst_pad_get_parent (pad));
-  
+    
   if (GST_IS_EVENT (buf)) {
     GstEvent *event = GST_EVENT (buf);
     gint64 offset;
@@ -602,6 +607,60 @@ gst_ximagesink_chain (GstPad *pad, GstData *_data)
     }
   
   gst_buffer_unref (buf);
+    
+  /* We get all events on our window to throw them upstream */
+  g_mutex_lock (ximagesink->x_lock);
+  while (XCheckWindowEvent (ximagesink->xcontext->disp,
+                            ximagesink->xwindow->win,
+                            ExposureMask | StructureNotifyMask |
+                            PointerMotionMask | KeyPressMask |
+                            KeyReleaseMask | ButtonPressMask |
+                            ButtonReleaseMask, &e))
+    {
+      GstEvent *event = NULL;
+      
+      /* We lock only for the X function call */
+      g_mutex_unlock (ximagesink->x_lock);
+      
+      switch (e.type)
+        {
+          case ConfigureNotify:
+            /* Window got resized or moved. We do caps negotiation
+               again to get video scaler to fit that new size */
+            GST_DEBUG ("ximagesink window is at %d, %d with geometry : %d,%d",
+                       e.xconfigure.x, e.xconfigure.y,
+                       e.xconfigure.width, e.xconfigure.height);
+            event = gst_event_new (GST_EVENT_RENEGOTIATE);
+            event->src = GST_OBJECT (ximagesink);
+            event->event_data.caps.caps = GST_CAPS_NEW (
+                                             "ximagesink_videoscaling",
+                                             "video/x-raw-rgb",
+                                             "width", GST_PROPS_INT (e.xconfigure.width),
+                                             "height", GST_PROPS_INT (e.xconfigure.height));
+            break;
+          case MotionNotify:
+            /* Mouse pointer moved over our window. We send upstream
+               events for interactivity/navigation */
+            GST_DEBUG ("ximagesink pointer moved over window at %d,%d",
+                       e.xmotion.x, e.xmotion.y);
+            event = gst_event_new (GST_EVENT_NAVIGATION);
+            event->src = GST_OBJECT (ximagesink);
+            event->event_data.caps.caps = GST_CAPS_NEW (
+                                             "ximagesink_navigation",
+                                             "video/x-raw-rgb",
+                                             "pointer_x", GST_PROPS_INT (e.xmotion.x),
+                                             "pointer_y", GST_PROPS_INT (e.xmotion.y));
+            break;
+          default:
+            GST_DEBUG ("ximagesink unhandled X event (%d)", e.type);
+        }
+        
+      if (event)
+        gst_pad_send_event (gst_pad_get_peer (pad), event);
+      
+      g_mutex_lock (ximagesink->x_lock);
+    }
+  g_mutex_unlock (ximagesink->x_lock);
 }
 
 static void
