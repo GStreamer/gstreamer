@@ -168,7 +168,7 @@ dnl ====================================
 dnl === GLib 2 ===
 dnl Minimum required version of GLib2
 dnl required for compilation without warnings
-GLIB2_REQ="2.0.1"
+GLIB2_REQ="2.2"
 AC_SUBST(GLIB2_REQ)
 
 dnl Check for glib2
