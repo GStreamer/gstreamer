@@ -604,6 +604,32 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink *xvimagesink)
 
 /* Element stuff */
 
+static GstCaps *
+gst_xvimagesink_fixate (GstPad *pad, const GstCaps *caps, gpointer ignore)
+{
+  GstStructure *structure;
+  GstCaps *newcaps;
+
+  if (gst_caps_get_size (caps) > 1) return NULL;
+
+  newcaps = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (newcaps, 0);
+
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 320)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "height", 240)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
+        30.0)) {
+    return newcaps;
+  }
+
+  gst_caps_free (newcaps);
+  return NULL;
+}
+
 static gint
 gst_xvimagesink_get_fourcc_from_caps (GstXvImageSink *xvimagesink,
                                       GstCaps *caps)
@@ -677,10 +703,14 @@ gst_xvimagesink_sinkconnect (GstPad *pad, const GstCaps *caps)
   ret &= gst_structure_get_double (structure, "framerate", &xvimagesink->framerate);
   if (!ret) return GST_PAD_LINK_REFUSED;
   
+  xvimagesink->xcontext->im_format = 0;
   if (!gst_structure_get_fourcc (structure, "format",
 	&xvimagesink->xcontext->im_format)) {
     xvimagesink->xcontext->im_format = gst_xvimagesink_get_fourcc_from_caps (
 	xvimagesink, gst_caps_copy(caps));
+  }
+  if (xvimagesink->xcontext->im_format == 0) {
+    return GST_PAD_LINK_REFUSED;
   }
   
   xvimagesink->pixel_width = 1;
@@ -1084,6 +1114,8 @@ gst_xvimagesink_init (GstXvImageSink *xvimagesink)
                              gst_xvimagesink_sinkconnect);
   gst_pad_set_getcaps_function (GST_VIDEOSINK_PAD (xvimagesink),
                                 gst_xvimagesink_getcaps);
+  gst_pad_set_fixate_function (GST_VIDEOSINK_PAD (xvimagesink),
+                                gst_xvimagesink_fixate);
 
   xvimagesink->xcontext = NULL;
   xvimagesink->xwindow = NULL;
