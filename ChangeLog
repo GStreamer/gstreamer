@@ -1,5 +1,11 @@
 2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstconfig.sgml:
+	  add GST_PLUGIN_EXPORT definition
+
+2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* gst/gstplugin.h:
 	* gst/gstconfig.h.in:
 	* win32/gstconfig.h:
