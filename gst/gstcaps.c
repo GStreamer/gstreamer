@@ -1334,9 +1334,9 @@ gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
  * @caps: a #GstCaps
  *
  * Converts @caps to a string representation.  This string representation
- * can be converted back to a #GstCaps by #gst_caps_from_string().
+ * can be converted back to a #GstCaps by #gst_caps_from_string.
  *
- * Returns: a string representing @caps
+ * Returns: a newly allocated string representing @caps.
  */
 gchar *
 gst_caps_to_string (const GstCaps * caps)
@@ -1428,7 +1428,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
  *
  * Converts @caps from a string representation.
  *
- * Returns: a new #GstCaps
+ * Returns: a newly allocated #GstCaps
  */
 GstCaps *
 gst_caps_from_string (const gchar * string)

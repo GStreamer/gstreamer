@@ -11,7 +11,7 @@ gst/elements/gstfilesrc.c
 gst/elements/gstidentity.c
 gst/elements/gstmultifilesrc.c
 gst/elements/gstpipefilter.c
-gst/elements/gsttypefind.c
+gst/elements/gsttypefindelement.c
 gst/parse/grammar.y
 tools/gst-inspect.c
 tools/gst-launch.c

@@ -238,7 +238,7 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_BUFFERS,
       g_param_spec_int ("num-buffers", "num-buffers",
-          "Number of buffers to output before sending EOS", G_MININT, G_MAXINT,
+          "Number of buffers to output before sending EOS", -1, G_MAXINT,
           0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EOS,
       g_param_spec_boolean ("eos", "eos", "Send out the EOS event?", TRUE,
