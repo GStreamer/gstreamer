@@ -131,9 +131,8 @@ update_scale (gpointer data)
     GstElement *element = GST_ELEMENT (seekable_elements->data);
 
     gst_element_query (element, GST_QUERY_TOTAL, &format, &duration);
+    gst_element_query (element, GST_QUERY_POSITION, &format, &position);
   }
-  if (clock)
-    position = gst_clock_get_time (clock);
 
   if (stats) {
     if (clock)
