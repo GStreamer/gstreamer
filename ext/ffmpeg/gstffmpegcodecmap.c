@@ -628,8 +628,8 @@ gst_ffmpeg_caps_to_extradata (const GstCaps *caps,
   if (!strcmp(mimetype, "audio/x-wma")) {
     gint flags1, flags2, wmaversion = 0;
 
-    if (!gst_structure_get_int (structure, "flags1", &flags1) &&
-	!gst_structure_get_int (structure, "flags2", &flags2) &&
+    if (!gst_structure_get_int (structure, "flags1", &flags1) ||
+	!gst_structure_get_int (structure, "flags2", &flags2) ||
 	!gst_structure_get_int (structure, "wmaversion", &wmaversion)) {
       g_warning ("invalid caps for audio/x-wma");
       return;
