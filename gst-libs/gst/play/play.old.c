@@ -882,12 +882,15 @@ gst_play_get_sink_element (GstPlay * play,
 		    {
 		      gboolean has_video_cap = FALSE, has_audio_cap = FALSE;
 		      if (g_ascii_strcasecmp (gst_caps_get_mime (caps),
-					      "audio/raw") == 0)
+					      "audio/x-raw-int") == 0)
 			{
 			  has_audio_cap = TRUE;
 			}
-		      if (g_ascii_strcasecmp (gst_caps_get_mime (caps),
-					      "video/raw") == 0)
+		      if ((g_ascii_strcasecmp (gst_caps_get_mime (caps),
+					      "video/x-raw-yuv") == 0) ||
+			  (g_ascii_strcasecmp (gst_caps_get_mime (caps),
+					       "video/x-raw-rgb") == 0))
+									 
 			{
 			  has_video_cap = TRUE;
 			}
