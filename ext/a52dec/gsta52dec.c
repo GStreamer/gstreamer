@@ -54,11 +54,8 @@ typedef guint32 uint32_t;
 static GstElementDetails gst_a52dec_details = {
   "ATSC A/52 audio decoder",
   "Codec/Audio/Decoder",
-  "GPL",
   "Decodes ATSC A/52 encoded audio streams",
-  VERSION,
   "David I. Lehn <dlehn@users.sourceforge.net>",
-  "(C) 2001",
 };
 
 
@@ -107,6 +104,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
   )
 );
 
+static void		gst_a52dec_base_init	(gpointer g_class);
 static void 		gst_a52dec_class_init 	(GstA52DecClass * klass);
 static void 		gst_a52dec_init 	(GstA52Dec * a52dec);
 
@@ -129,7 +127,9 @@ gst_a52dec_get_type (void)
 
   if (!a52dec_type) {
     static const GTypeInfo a52dec_info = {
-      sizeof (GstA52DecClass), NULL, NULL, (GClassInitFunc) gst_a52dec_class_init,
+      sizeof (GstA52DecClass), 
+      gst_a52dec_base_init, 
+      NULL, (GClassInitFunc) gst_a52dec_class_init,
       NULL,
       NULL,
       sizeof (GstA52Dec),
@@ -140,6 +140,18 @@ gst_a52dec_get_type (void)
     a52dec_type = g_type_register_static (GST_TYPE_ELEMENT, "GstA52Dec", &a52dec_info, 0);
   }
   return a52dec_type;
+}
+
+static void
+gst_a52dec_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_set_details (element_class, &gst_a52dec_details);
 }
 
 static void
@@ -615,29 +627,27 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value, GParam
 }
 
 static gboolean
-plugin_init (GModule * module, GstPlugin * plugin)
+plugin_init (GstPlugin * plugin)
 {
-  GstElementFactory *factory;
 
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  /* create an elementfactory for the a52dec element */
-  factory = gst_element_factory_new ("a52dec", GST_TYPE_A52DEC, &gst_a52dec_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "a52dec", GST_RANK_PRIMARY, GST_TYPE_A52DEC))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "a52dec",
-  plugin_init
-};
+  "Decodes ATSC A/52 encoded audio streams",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+);
