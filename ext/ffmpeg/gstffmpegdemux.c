@@ -133,15 +133,15 @@ gst_ffmpegdemux_base_init (GstFFMpegDemuxClass *klass)
   sinktempl = gst_pad_template_new ("sink",
 				    GST_PAD_SINK,
 				    GST_PAD_ALWAYS,
-				    params->sinkcaps, NULL);
+				    params->sinkcaps);
   videosrctempl = gst_pad_template_new ("video_%02d",
 					GST_PAD_SRC,
 					GST_PAD_SOMETIMES,
-					params->videosrccaps, NULL);
+					params->videosrccaps);
   audiosrctempl = gst_pad_template_new ("audio_%02d",
 					GST_PAD_SRC,
 					GST_PAD_SOMETIMES,
-					params->audiosrccaps, NULL);
+					params->audiosrccaps);
 
   gst_element_class_add_pad_template (element_class, videosrctempl);
   gst_element_class_add_pad_template (element_class, audiosrctempl);
@@ -217,12 +217,8 @@ gst_ffmpegdemux_type_find (GstTypeFind *tf, gpointer priv)
 
     res = in_plugin->read_probe (&probe_data);
     res = res * GST_TYPE_FIND_MAXIMUM / AVPROBE_SCORE_MAX;
-    if (res > 0) {
-      GstCaps *caps = params->sinkcaps;
-      /* make sure we still hold a refcount to this caps */
-      gst_caps_ref (caps);
-      gst_type_find_suggest (tf, res, caps);
-    }
+    if (res > 0) 
+      gst_type_find_suggest (tf, res, params->sinkcaps);
   }
 }
 
@@ -386,6 +382,11 @@ gst_ffmpegdemux_change_state (GstElement *element)
 gboolean
 gst_ffmpegdemux_register (GstPlugin *plugin)
 {
+  GType type;
+  AVInputFormat *in_plugin;
+  GstFFMpegDemuxClassParams *params;
+  AVCodec *in_codec;
+  gchar **extensions;
   GTypeInfo typeinfo = {
     sizeof(GstFFMpegDemuxClass),      
     (GBaseInitFunc)gst_ffmpegdemux_base_init,
@@ -397,11 +398,7 @@ gst_ffmpegdemux_register (GstPlugin *plugin)
     0,
     (GInstanceInitFunc)gst_ffmpegdemux_init,
   };
-  GType type;
-  AVInputFormat *in_plugin;
-  GstFFMpegDemuxClassParams *params;
-  AVCodec *in_codec;
-  gchar **extensions;
+  GstCaps *any_caps = gst_caps_new_any ();
   
   in_plugin = first_iformat;
 
@@ -430,13 +427,13 @@ gst_ffmpegdemux_register (GstPlugin *plugin)
       }
       switch (in_codec->type) {
         case CODEC_TYPE_VIDEO:
-          videosrccaps = gst_caps_append (videosrccaps, temp);
+          gst_caps_append (videosrccaps, temp);
           break;
         case CODEC_TYPE_AUDIO:
-          audiosrccaps = gst_caps_append (audiosrccaps, temp);
+          gst_caps_append (audiosrccaps, temp);
           break;
         default:
-          gst_caps_unref (temp);
+          gst_caps_free (temp);
           break;
       }
     }
@@ -480,13 +477,14 @@ gst_ffmpegdemux_register (GstPlugin *plugin)
     if (!gst_element_register (plugin, type_name, GST_RANK_MARGINAL, type) ||
         !gst_type_find_register (plugin, typefind_name, GST_RANK_MARGINAL,
 				 gst_ffmpegdemux_type_find,
-				 extensions, GST_CAPS_ANY, params))
+				 extensions, any_caps, params))
       return FALSE;
     g_strfreev (extensions);
 
 next:
     in_plugin = in_plugin->next;
   }
+  gst_caps_free (any_caps);
   g_hash_table_remove (global_plugins, GINT_TO_POINTER (0));
 
   return TRUE;

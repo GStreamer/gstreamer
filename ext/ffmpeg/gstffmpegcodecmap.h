@@ -49,7 +49,7 @@ gst_ffmpeg_codectype_to_caps (enum CodecType  codec_type,
  */
 
 enum CodecID
-gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
+gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
                             AVCodecContext *context);
 
 /* caps_to_codectype () transforms a GstCaps that belongs to
@@ -58,7 +58,7 @@ gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
 
 void
 gst_ffmpeg_caps_to_codectype (enum CodecType  type,
-                              GstCaps        *caps,
+                              const GstCaps *caps,
                               AVCodecContext *context);
 
 /* _formatid_to_caps () is meant for muxers/demuxers, it

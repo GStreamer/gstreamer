@@ -96,7 +96,7 @@ static void	gst_ffmpegmux_dispose		(GObject *object);
 
 static GstPadLinkReturn
 		gst_ffmpegmux_connect		(GstPad  *pad,
-						 GstCaps *caps);
+						 const GstCaps *caps);
 static GstPad *	gst_ffmpegmux_request_new_pad	(GstElement *element,
 						 GstPadTemplate *templ,
 						 const gchar *name);
@@ -138,15 +138,15 @@ gst_ffmpegmux_base_init (GstFFMpegMuxClass *klass)
   /* pad templates */
   srctempl = gst_pad_template_new ("sink", GST_PAD_SRC,
 				   GST_PAD_ALWAYS,
-				   params->srccaps, NULL);
+				   params->srccaps);
   audiosinktempl = gst_pad_template_new ("audio_%d",
 					 GST_PAD_SINK,
 					 GST_PAD_REQUEST,
-					 params->audiosinkcaps, NULL);
+					 params->audiosinkcaps);
   videosinktempl = gst_pad_template_new ("video_%d",
 					 GST_PAD_SINK,
 					 GST_PAD_REQUEST,
-					 params->videosinkcaps, NULL);
+					 params->videosinkcaps);
 
   gst_element_class_add_pad_template (element_class, srctempl);
   gst_element_class_add_pad_template (element_class, videosinktempl);
@@ -272,7 +272,7 @@ gst_ffmpegmux_request_new_pad (GstElement *element,
 
 static GstPadLinkReturn
 gst_ffmpegmux_connect (GstPad  *pad,
-		       GstCaps *caps)
+		       const GstCaps *caps)
 {
   GstFFMpegMux *ffmpegmux = (GstFFMpegMux *)(gst_pad_get_parent (pad));
   gint i;
@@ -280,9 +280,6 @@ gst_ffmpegmux_connect (GstPad  *pad,
 
   g_return_val_if_fail (ffmpegmux->opened == FALSE,
 			GST_PAD_LINK_REFUSED);
-
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
 
   for (i = 0; i < ffmpegmux->context->nb_streams; i++) {
     if (pad == ffmpegmux->sinkpads[i]) {
@@ -297,12 +294,10 @@ gst_ffmpegmux_connect (GstPad  *pad,
 
   /* for the format-specific guesses, we'll go to
    * our famous codec mapper */
-  for ( ; caps != NULL; caps = caps->next) {
-    if (gst_ffmpeg_caps_to_codecid (caps,
-				    &st->codec) != CODEC_ID_NONE) {
-      ffmpegmux->eos[i] = FALSE;
-      return GST_PAD_LINK_OK;
-    }
+  if (gst_ffmpeg_caps_to_codecid (caps,
+				  &st->codec) != CODEC_ID_NONE) {
+    ffmpegmux->eos[i] = FALSE;
+    return GST_PAD_LINK_OK;
   } 
 
   return GST_PAD_LINK_REFUSED;
@@ -483,13 +478,13 @@ gst_ffmpegmux_register (GstPlugin *plugin)
       }
       switch (in_codec->type) {
         case CODEC_TYPE_VIDEO:
-          videosinkcaps = gst_caps_append (videosinkcaps, temp);
+          gst_caps_append (videosinkcaps, temp);
           break;
         case CODEC_TYPE_AUDIO:
-          audiosinkcaps = gst_caps_append (audiosinkcaps, temp);
+          gst_caps_append (audiosinkcaps, temp);
           break;
         default:
-          gst_caps_unref (temp);
+          gst_caps_free (temp);
           break;
       }
     }

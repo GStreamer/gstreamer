@@ -123,7 +123,7 @@ static void	gst_ffmpegenc_init		(GstFFMpegEnc *ffmpegenc);
 static void	gst_ffmpegenc_dispose		(GObject *object);
 
 static GstPadLinkReturn
-		gst_ffmpegenc_connect		(GstPad *pad, GstCaps *caps);
+		gst_ffmpegenc_connect		(GstPad *pad, const GstCaps *caps);
 static void	gst_ffmpegenc_chain_video	(GstPad *pad, GstData *_data);
 static void	gst_ffmpegenc_chain_audio	(GstPad *pad, GstData *_data);
 
@@ -175,9 +175,9 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass *klass)
 
   /* pad templates */
   sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
-				    GST_PAD_ALWAYS, params->sinkcaps, NULL);
+				    GST_PAD_ALWAYS, params->sinkcaps);
   srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
-				   GST_PAD_ALWAYS, params->srccaps, NULL);
+				   GST_PAD_ALWAYS, params->srccaps);
 
   gst_element_class_add_pad_template (element_class, srctempl);
   gst_element_class_add_pad_template (element_class, sinktempl);
@@ -282,15 +282,13 @@ gst_ffmpegenc_dispose (GObject *object)
 
 static GstPadLinkReturn
 gst_ffmpegenc_connect (GstPad  *pad,
-		       GstCaps *caps)
+		       const GstCaps *caps)
 {
-  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) gst_pad_get_parent (pad);
-  GstFFMpegEncClass *oclass = (GstFFMpegEncClass*)(G_OBJECT_GET_CLASS(ffmpegenc));
-  GstCaps *ret_caps;
+  GstCaps *other_caps;
   GstPadLinkReturn ret;
-
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
+  enum PixelFormat pix_fmt;
+  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) gst_pad_get_parent (pad);
+  GstFFMpegEncClass *oclass = (GstFFMpegEncClass *) G_OBJECT_GET_CLASS(ffmpegenc);
 
   /* close old session */
   if (ffmpegenc->opened) {
@@ -315,47 +313,37 @@ gst_ffmpegenc_connect (GstPad  *pad,
   /* no edges */
   ffmpegenc->context->flags |= CODEC_FLAG_EMU_EDGE;
 
-  for (ret_caps = caps; ret_caps != NULL; ret_caps = ret_caps->next) {
-    enum PixelFormat pix_fmt;
+  /* fetch pix_fmt and so on */
+  gst_ffmpeg_caps_to_codectype (oclass->in_plugin->type,
+				caps, ffmpegenc->context);
 
-    /* fetch pix_fmt and so on */
-    gst_ffmpeg_caps_to_codectype (oclass->in_plugin->type,
-				  caps, ffmpegenc->context);
+  pix_fmt = ffmpegenc->context->pix_fmt;
 
-    pix_fmt = ffmpegenc->context->pix_fmt;
-
-    /* open codec */
-    if (avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
-      GST_DEBUG ("ffenc_%s: Failed to open FFMPEG codec",
-		 oclass->in_plugin->name);
-      continue;
-    }
-
-    /* is the colourspace correct? */
-    if (pix_fmt != ffmpegenc->context->pix_fmt) {
-      avcodec_close (ffmpegenc->context);
-      GST_DEBUG ("ffenc_%s: AV wants different colourspace (%d given, %d wanted)",
-		 oclass->in_plugin->name, pix_fmt, ffmpegenc->context->pix_fmt);
-      continue;
-    }
-
-    break;
+  /* open codec */
+  if (avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
+    GST_DEBUG ("ffenc_%s: Failed to open FFMPEG codec",
+	       oclass->in_plugin->name);
+    return GST_PAD_LINK_REFUSED;
   }
 
-  if (ret_caps == NULL) {
+  /* is the colourspace correct? */
+  if (pix_fmt != ffmpegenc->context->pix_fmt) {
+    avcodec_close (ffmpegenc->context);
+    GST_DEBUG ("ffenc_%s: AV wants different colourspace (%d given, %d wanted)",
+	       oclass->in_plugin->name, pix_fmt, ffmpegenc->context->pix_fmt);
     return GST_PAD_LINK_REFUSED;
   }
 
   /* try to set this caps on the other side */
-  ret_caps = gst_ffmpeg_codecid_to_caps (oclass->in_plugin->id,
+  other_caps = gst_ffmpeg_codecid_to_caps (oclass->in_plugin->id,
 					 ffmpegenc->context);
-  if (!ret_caps) {
+  if (!other_caps) {
     avcodec_close (ffmpegenc->context);
     GST_DEBUG ("Unsupported codec - no caps found");
     return GST_PAD_LINK_REFUSED;
   }
 
-  if ((ret = gst_pad_try_set_caps (ffmpegenc->srcpad, ret_caps)) <= 0) {
+  if ((ret = gst_pad_try_set_caps (ffmpegenc->srcpad, other_caps)) <= 0) {
     avcodec_close (ffmpegenc->context);
     GST_DEBUG ("Failed to set caps on next element for ffmpeg encoder (%s)",
                oclass->in_plugin->name);

@@ -92,7 +92,7 @@ static void	gst_ffmpegdec_init		(GstFFMpegDec *ffmpegdec);
 static void	gst_ffmpegdec_dispose		(GObject      *object);
 
 static GstPadLinkReturn	gst_ffmpegdec_connect	(GstPad    *pad,
-						 GstCaps   *caps);
+						 const GstCaps  *caps);
 static void	gst_ffmpegdec_chain		(GstPad    *pad,
 						 GstData   *data);
 
@@ -141,9 +141,9 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass *klass)
 
   /* pad templates */
   sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
-				    GST_PAD_ALWAYS, params->sinkcaps, NULL);
+				    GST_PAD_ALWAYS, params->sinkcaps);
   srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
-				   GST_PAD_ALWAYS, params->srccaps, NULL);
+				   GST_PAD_ALWAYS, params->srccaps);
 
   gst_element_class_add_pad_template (element_class, srctempl);
   gst_element_class_add_pad_template (element_class, sinktempl);
@@ -206,14 +206,10 @@ gst_ffmpegdec_dispose (GObject *object)
 
 static GstPadLinkReturn
 gst_ffmpegdec_connect (GstPad  *pad,
-		       GstCaps *caps)
+		       const GstCaps *caps)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad));
   GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
-
-  /* we want fixed caps */
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
 
   /* close old session */
   if (ffmpegdec->opened) {
