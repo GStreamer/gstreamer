@@ -346,10 +346,11 @@ gst_thread_main_loop (void *arg)
   while (!GST_FLAG_IS_SET (thread, GST_THREAD_STATE_REAPING)) {
     if (GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING)) {
       if (!gst_bin_iterate (GST_BIN (thread))) {
-	g_mutex_lock(thread->lock);
+	/*g_mutex_lock(thread->lock);
 	GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 	GST_DEBUG(0,"sync: removed spinning state due to failed iteration\n");
-	g_mutex_unlock(thread->lock);
+	g_mutex_unlock(thread->lock);*/
+	gst_thread_wait_thread(thread,GST_THREAD_STATE_REAPING);
       }
     }
     else {
