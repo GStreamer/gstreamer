@@ -147,7 +147,7 @@ dnl popt checks
 GST_CHECK_LIBHEADER(POPT, popt, poptStrippedArgv,, popt.h, POPT_LIBS="-lpopt",
   AC_MSG_ERROR([popt 1.6.1 or newer is required to build gstreamer. You can
                 download the latest version from 
-                ftp://people.redhat.com/sopwith/popt/])
+                ftp://ftp.rpm.org/pub/rpm/dist/rpm-4.0.x/])
 )
 AC_MSG_NOTICE(Checking for POPT_TABLEEND)
 AC_TRY_RUN([
@@ -164,7 +164,7 @@ int main ()
   dnl it failed
   AC_MSG_ERROR([popt 1.6.1 or newer is required to build gstreamer. You can
                 download the latest version from 
-                ftp://people.redhat.com/sopwith/popt/])
+                ftp://ftp.rpm.org/pub/rpm/dist/rpm-4.0.x/])
 ])
 
 dnl Check for atomic.h
