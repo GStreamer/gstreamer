@@ -10,6 +10,9 @@
 	enable demuxing of TTA audio streams, fixes bug #148951.
 	* gst/typefind/gsttypefindfunctions.c: (tta_type_find), (plugin_init),
 	enable typefinding for TTA audio files, fixes bug #148711.
+	* ext/xvid/gstxviddec.c: (gst_xviddec_chain),
+	set XVID_LOWDELAY flag for decoding so xvid always returns an image,
+	fixes playback of packed bitstream and xvid with bframes, bug #135407.
 
 2004-08-24  Sebastien Cote  <sc5@hermes.usherb.ca>
  
