@@ -26,8 +26,8 @@ the defaults for audio and video output sinks.
 Here is an example .gst file that implements the same defaults as hard-coded
 in the script :
 
-$cfg{AUDIOSINK} = "osssink";
-$cfg{VIDEOSINK} = "colorspace ! xvideosink";
+AUDIOSINK = "osssink";
+VIDEOSINK = "colorspace ! xvideosink";
 
 You can change osssink to any of esdsink, alsasink, jacksink (if you have
 the plug-in), and you can change xvideosink to aasink or sdlvideosink.
