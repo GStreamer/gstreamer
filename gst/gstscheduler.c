@@ -69,7 +69,7 @@ gst_bin_chain_wrapper (int argc,char *argv[])
         GST_DEBUG (0,"pulling a buffer from %s:%s\n", name, gst_pad_get_name (pad));
         buf = gst_pad_pull (pad);
         GST_DEBUG (0,"calling chain function of %s:%s\n", name, gst_pad_get_name (pad));
-        GST_RPAD_CHAINFUNC(realpad) (pad,buf);
+        if (buf) GST_RPAD_CHAINFUNC(realpad) (pad,buf);
         GST_DEBUG (0,"calling chain function of %s:%s done\n", name, gst_pad_get_name (pad));
       }
     }
@@ -112,7 +112,7 @@ gst_bin_src_wrapper (int argc,char *argv[])
 //        }
 
         GST_DEBUG (0,"calling gst_pad_push on pad %s:%s\n",GST_DEBUG_PAD_NAME(realpad));
-        gst_pad_push ((GstPad*)realpad, buf);
+        if (buf) gst_pad_push ((GstPad*)realpad, buf);
       }
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));

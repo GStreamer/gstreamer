@@ -785,7 +785,7 @@ gst_bin_iterate_func (GstBin *bin)
                 fprintf(stderr, "error, no getfunc in \"%s\"\n", gst_element_get_name (entry));
               else
                 buf = (GST_REAL_PAD(pad)->getfunc)(pad);
-              gst_pad_push(pad,buf);
+              if (buf) gst_pad_push(pad,buf);
             }
             pads = g_list_next (pads);
           }
