@@ -184,7 +184,7 @@ gst_videoscale_bilinear (unsigned char *src, double x, double y, int sw, int sh)
   double dest;
   int color;
 
-  printf("videoscale: scaling bilinear %f %f %dx%d\n", x, y, sw, sh);
+  GST_DEBUG(0,"videoscale: scaling bilinear %f %f %dx%d\n", x, y, sw, sh);
 
   dest=(1-a)*(1-b)*RC(j,k)+
        a*(1-b)*RC(j+1,k);
