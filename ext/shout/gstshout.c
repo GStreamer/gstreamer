@@ -21,10 +21,10 @@
 
 /* elementfactory information */
 static GstElementDetails icecastsend_details = {
-  "An Icecast  plugin",
-  "IcecastSend",
+  "An Icecast plugin",
+  "shoutsend",
   "GPL",
-  "Sends data to an icecast server",
+  "Sends data to an icecast server using libshout",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
   "(C) 2000",
@@ -55,10 +55,8 @@ enum {
   ARG_NAME,        /* Name of the stream */
   ARG_DESCRIPTION, /* Description of the stream */
   ARG_GENRE,       /* Genre of the stream */
-
   ARG_MOUNT,       /* mountpoint of stream (icecast only) */
   ARG_DUMPFILE,    /* Dumpfile on the server for this stream (icecast only) */
-
   ARG_ICY,         /* use icy headers for login? (for use with shoutcast) */
   ARG_AIM,         /* AIM number (shoutcast only) */
   ARG_ICQ,         /* ICQ number (shoutcast only) */
@@ -85,34 +83,31 @@ sink_template_factory (void)
   return template;
 }
 
-static void			gst_icecastsend_class_init	(GstIcecastSendClass *klass);
-static void			gst_icecastsend_init		(GstIcecastSend *icecastsend);
+static void		gst_icecastsend_class_init	(GstIcecastSendClass *klass);
+static void		gst_icecastsend_init		(GstIcecastSend *icecastsend);
 
-static void			gst_icecastsend_chain		(GstPad *pad, GstBuffer *buf);
+static void		gst_icecastsend_chain		(GstPad *pad, GstBuffer *buf);
 
-static void			gst_icecastsend_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void			gst_icecastsend_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void		gst_icecastsend_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void		gst_icecastsend_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static GstElementStateReturn	gst_icecastsend_change_state	(GstElement *element);
+static 
+  GstElementStateReturn	gst_icecastsend_change_state	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_icecastsend_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-gst_icecastsend_get_type(void)
+gst_icecastsend_get_type (void)
 {
   static GType icecastsend_type = 0;
 
   if (!icecastsend_type) {
     static const GTypeInfo icecastsend_info = {
-      sizeof(GstIcecastSendClass),      NULL,
-      NULL,
-      (GClassInitFunc)gst_icecastsend_class_init,
-      NULL,
-      NULL,
-      sizeof(GstIcecastSend),
-      0,
-      (GInstanceInitFunc)gst_icecastsend_init,
+      sizeof (GstIcecastSendClass), NULL, NULL,
+      (GClassInitFunc) gst_icecastsend_class_init, NULL, NULL,
+      sizeof (GstIcecastSend), 0,
+      (GInstanceInitFunc) gst_icecastsend_init,
     };
     icecastsend_type = g_type_register_static(GST_TYPE_ELEMENT, "GstIcecastSend", &icecastsend_info, 0);
   }
@@ -244,7 +239,6 @@ gst_icecastsend_set_property (GObject *object, guint prop_id, const GValue *valu
 {
   GstIcecastSend *icecastsend;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail(GST_IS_ICECASTSEND(object));
   icecastsend = GST_ICECASTSEND(object);
 
@@ -429,7 +423,7 @@ gst_icecastsend_change_state (GstElement *element)
      }
      else {
        /* changed from g_warning, and included result code lookup. */
-       g_error ("couldn't connect to server... (%i: %s)\n", icecastsend->conn.error, SHOUT_ERRORS[icecastsend->conn.error]);
+       g_warning ("couldn't connect to server... (%i: %s)\n", icecastsend->conn.error, SHOUT_ERRORS[icecastsend->conn.error]);
        shout_disconnect (&icecastsend->conn);
        return GST_STATE_FAILURE;
      }
