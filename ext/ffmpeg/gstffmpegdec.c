@@ -679,6 +679,17 @@ gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
   GST_DEBUG ("Handling event of type %d", GST_EVENT_TYPE (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS: {
+      gint have_data, len;
+
+      do {
+        len = gst_ffmpegdec_frame (ffmpegdec, NULL, 0, &have_data,
+            &ffmpegdec->next_ts);
+        if (len < 0 || have_data == 0)
+          break;
+      } while (1);
+      goto forward;
+    }
     case GST_EVENT_FLUSH:
       if (ffmpegdec->opened) {
         avcodec_flush_buffers (ffmpegdec->context);
@@ -772,10 +783,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 
   do {
     /* parse, if at all possible */
-    if (bsize == 0) {
-      data = NULL;
-      size = 0;
-    } else if (ffmpegdec->pctx) {
+    if (ffmpegdec->pctx) {
       gint res;
 
       res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
@@ -806,7 +814,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     if (!have_data) {
       break;
     }
-  } while (1);
+  } while (bsize > 0);
 
   if ((ffmpegdec->pctx || oclass->in_plugin->id == CODEC_ID_MP3) &&
       bsize > 0) {

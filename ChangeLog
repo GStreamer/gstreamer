@@ -1,5 +1,11 @@
 2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_handle_event),
+	(gst_ffmpegdec_chain):
+	  Another fix for MPEG-4 movies...
+
+2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
 	(gst_ffmpegdec_connect), (gst_ffmpegdec_negotiate),
 	(gst_ffmpegdec_frame), (gst_ffmpegdec_handle_event):
