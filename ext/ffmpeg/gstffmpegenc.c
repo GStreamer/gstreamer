@@ -361,14 +361,14 @@ gst_ffmpegenc_connect (GstPad  *pad,
   if (gst_caps_get_size (icaps) > 1) {
     GstCaps *newcaps;
 
-    newcaps = gst_caps_new_full (gst_caps_get_structure (icaps, 0), NULL);
+    newcaps = gst_caps_new_full (gst_structure_copy (gst_caps_get_structure (icaps, 0)), NULL);
     gst_caps_free (icaps);
     icaps = newcaps;
   }
 
   /* FIXME set_explicit_caps is not supposed to be used in a pad link
    * function. */
-  if (!gst_pad_set_explicit_caps (ffmpegenc->srcpad, other_caps)) {
+  if (!gst_pad_set_explicit_caps (ffmpegenc->srcpad, icaps)) {
     avcodec_close (ffmpegenc->context);
     return GST_PAD_LINK_REFUSED;
   }
