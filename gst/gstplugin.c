@@ -200,8 +200,8 @@ gst_plugin_load_file (const gchar *filename, GError **error)
     g_set_error (error,
                  GST_PLUGIN_ERROR,
                  GST_PLUGIN_ERROR_MODULE,
-                 "Problem opening file %s (plugin %s)\n",
-                 filename, plugin->desc.name); 
+                 "Problem opening file %s\n",
+                 filename); 
     return FALSE;
   }
 
