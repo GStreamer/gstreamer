@@ -224,6 +224,15 @@ to get a list of plugins that match certain criteria.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_plugin_get_version ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_plugin_is_loaded ##### -->
 <para>
 

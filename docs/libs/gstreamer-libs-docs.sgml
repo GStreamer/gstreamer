@@ -16,9 +16,9 @@
 
 <!ENTITY hash "#">
 ]>
-<book>
+<book id="index">
   <bookinfo>
-    <title>GStreamer &GST_MAJORMINOR; Library API Reference</title>
+    <title>GStreamer &GST_MAJORMINOR; Library Reference Manual</title>
     <releaseinfo>for GStreamer Library &GST_MAJORMINOR; (&GST_VERSION;)</releaseinfo>
   </bookinfo>
   <chapter id="gstreamer-libs">

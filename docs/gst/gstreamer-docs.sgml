@@ -80,9 +80,9 @@
 
 <!ENTITY hash "#">
 ]>
-<book>
+<book id="index">
   <bookinfo>
-    <title>GStreamer &GST_MAJORMINOR; Core API Reference</title>
+    <title>GStreamer &GST_MAJORMINOR; Core Reference Manual</title>
     <releaseinfo>for GStreamer Core &GST_MAJORMINOR; (&GST_VERSION;)</releaseinfo>
   </bookinfo>
 

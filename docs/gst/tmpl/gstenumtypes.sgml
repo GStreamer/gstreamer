@@ -2,7 +2,7 @@
 GstEnumTypes
 
 <!-- ##### SECTION Short_Description ##### -->
-
+all gstreamer core related enumerations
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
