@@ -19,7 +19,7 @@ noinst_HEADERS = gstgetbits.h gstgetbits_inl.h
 bin_PROGRAMS = gbtest
 
 gbtest_SOURCES = gbtest.c
-gbtest_LDADD = libgstgetbits.la
+gbtest_LDADD = libgstgetbits.la $(top_srcdir)/gst/libgst.la
 
 CFLAGS += -Wall -O2 -fomit-frame-pointer -funroll-all-loops -finline-functions -ffast-math
 
