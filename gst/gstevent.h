@@ -99,7 +99,8 @@ struct _GstEvent {
 void 		_gst_event_initialize 	(void);
 	
 GstEvent*	gst_event_new	        (GstEventType type);
-void		gst_event_free 		(GstEvent* event);
+GstEvent*	gst_event_copy	        (GstEvent *event);
+void		gst_event_free 		(GstEvent *event);
 
 /* seek events */
 GstEvent*	gst_event_new_seek	(GstSeekType type, gint64 offset, gboolean flush);

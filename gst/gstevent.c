@@ -84,6 +84,30 @@ gst_event_new (GstEventType type)
 }
 
 /**
+ * gst_event_copy:
+ * @event: The event to copy
+ *
+ * Copy the event
+ *
+ * Returns: A copy of the event.
+ */
+GstEvent*
+gst_event_copy (GstEvent *event)
+{
+  GstEvent *copy;
+
+  g_mutex_lock (_gst_event_chunk_lock);
+  copy = g_mem_chunk_alloc (_gst_event_chunk);
+  g_mutex_unlock (_gst_event_chunk_lock);
+
+  memcpy (copy, event, sizeof (GstEvent));
+  
+  /* FIXME copy/ref additional fields */
+
+  return copy;
+}
+
+/**
  * gst_event_free:
  * @event: The event to free
  *
