@@ -31,11 +31,11 @@ G_BEGIN_DECLS
 #define GST_TYPE_TUNER \
   (gst_tuner_get_type ())
 #define GST_TUNER(obj) \
-  (GST_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TUNER, GstTuner))
+  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TUNER, GstTuner))
 #define GST_TUNER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TUNER, GstTunerClass))
 #define GST_IS_TUNER(obj) \
-  (GST_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TUNER))
+  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TUNER))
 #define GST_IS_TUNER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TUNER))
 #define GST_TUNER_GET_CLASS(inst) \
@@ -66,6 +66,20 @@ typedef struct _GstTunerClass {
 				     GstTunerChannel *channel);
   gint		(* signal_strength) (GstTuner        *tuner,
 				     GstTunerChannel *channel);
+
+  /* signals */
+  void (*channel_changed)   (GstTuner        *tuner,
+			     GstTunerChannel *channel);
+  void (*norm_changed)      (GstTuner        *tuner,
+			     GstTunerNorm    *norm);
+  void (*frequency_changed) (GstTuner        *tuner,
+			     GstTunerChannel *channel,
+			     gulong           frequency);
+  void (*signal_changed)    (GstTuner        *tuner,
+			     GstTunerChannel *channel,
+			     gint             signal);
+
+  GST_CLASS_PADDING
 } GstTunerClass;
 
 GType		gst_tuner_get_type		(void);
@@ -90,6 +104,18 @@ gulong		gst_tuner_get_frequency		(GstTuner        *tuner,
 						 GstTunerChannel *channel);
 gint		gst_tuner_signal_strength	(GstTuner        *tuner,
 						 GstTunerChannel *channel);
+
+/* trigger signals */
+void		gst_tuner_channel_changed	(GstTuner        *tuner,
+						 GstTunerChannel *channel);
+void		gst_tuner_norm_changed		(GstTuner        *tuner,
+						 GstTunerNorm    *norm);
+void		gst_tuner_frequency_changed	(GstTuner        *tuner,
+						 GstTunerChannel *channel,
+						 gulong           frequency);
+void		gst_tuner_signal_changed	(GstTuner        *tuner,
+						 GstTunerChannel *channel,
+						 gint             signal);
 
 G_END_DECLS
 

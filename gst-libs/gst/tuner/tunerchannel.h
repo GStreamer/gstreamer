@@ -64,10 +64,12 @@ typedef struct _GstTunerChannelClass {
   GObjectClass parent;
 
   /* signals */
-  void (*frequency_changed) (GstTunerChannel *tuner,
+  void (*frequency_changed) (GstTunerChannel *channel,
 			     gulong           frequency);
-  void (*signal_changed)    (GstTunerChannel *tuner,
+  void (*signal_changed)    (GstTunerChannel *channel,
 			     gint             signal);
+
+  GST_CLASS_PADDING
 } GstTunerChannelClass;
 
 GType		gst_tuner_channel_get_type	(void);

@@ -24,8 +24,18 @@
 #endif
 
 #include "mixer.h"
+#include "mixermarshal.h"
+
+enum {
+  MUTE_TOGGLED,
+  RECORD_TOGGLED,
+  VOLUME_CHANGED,
+  LAST_SIGNAL
+};
 
 static void 	gst_mixer_class_init	(GstMixerClass *klass);
+
+static guint gst_mixer_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_mixer_get_type (void)
@@ -49,7 +59,7 @@ gst_mixer_get_type (void)
 					     "GstMixer",
 					     &gst_mixer_info, 0);
     g_type_interface_add_prerequisite (gst_mixer_type,
-				       GST_TYPE_INTERFACE);
+				       GST_TYPE_IMPLEMENTS_INTERFACE);
   }
 
   return gst_mixer_type;
@@ -58,6 +68,34 @@ gst_mixer_get_type (void)
 static void
 gst_mixer_class_init (GstMixerClass *klass)
 {
+  static gboolean initialized = FALSE;
+  
+  if (!initialized) {
+    gst_mixer_signals[RECORD_TOGGLED] =
+      g_signal_new ("record_toggled",
+		    GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
+		    G_STRUCT_OFFSET (GstMixerClass, record_toggled),
+		    NULL, NULL,
+		    gst_mixer_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 1,
+		    GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
+    gst_mixer_signals[MUTE_TOGGLED] =
+      g_signal_new ("mute_toggled",
+		    GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
+		    G_STRUCT_OFFSET (GstMixerClass, mute_toggled),
+		    NULL, NULL,
+		    gst_mixer_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 1,
+		    GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
+    gst_mixer_signals[VOLUME_CHANGED] =
+      g_signal_new ("volume_changed",
+		    GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
+		    G_STRUCT_OFFSET (GstMixerClass, volume_changed),
+		    NULL, NULL,
+		    gst_mixer_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 1,
+		    GST_TYPE_MIXER_TRACK, G_TYPE_POINTER);
+      
+    initialized = TRUE;
+  }
+
   /* default virtual functions */
   klass->list_tracks = NULL;
   klass->set_volume = NULL;
@@ -130,4 +168,46 @@ gst_mixer_set_record (GstMixer      *mixer,
   if (klass->set_record) {
     klass->set_record (mixer, track, record);
   }
+}
+
+void
+gst_mixer_mute_toggled (GstMixer      *mixer,
+			GstMixerTrack *track,
+			gboolean       mute)
+{
+  g_signal_emit (G_OBJECT (mixer),
+		 gst_mixer_signals[MUTE_TOGGLED], 0,
+		 track, mute);
+
+  g_signal_emit_by_name (G_OBJECT (track),
+			 "mute_toggled",
+			 mute);
+}
+
+void
+gst_mixer_record_toggled (GstMixer      *mixer,
+			  GstMixerTrack *track,
+			  gboolean       record)
+{
+  g_signal_emit (G_OBJECT (mixer),
+		 gst_mixer_signals[RECORD_TOGGLED], 0,
+		 track, record);
+
+  g_signal_emit_by_name (G_OBJECT (track),
+			 "record_toggled",
+			 record);
+}
+
+void
+gst_mixer_volume_changed (GstMixer      *mixer,
+			  GstMixerTrack *track,
+			  gint          *volumes)
+{
+  g_signal_emit (G_OBJECT (mixer),
+		 gst_mixer_signals[VOLUME_CHANGED], 0,
+		 track, volumes);
+
+  g_signal_emit_by_name (G_OBJECT (track),
+			 "volume_changed",
+			 volumes);
 }
