@@ -1,5 +1,9 @@
 2005-02-24  Andy Wingo  <wingo@pobox.com>
 
+	* tests/bench-complexity.scm:
+	* tests/complexity.gnuplot: New files, good for running complexity
+	benchmarks.
+
 	* tests/Makefile.am:
 	* tests/complexity.c: New test, sets up N elements, at each level
 	teeing into M streams per element. Eeeenteresting.

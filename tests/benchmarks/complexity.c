@@ -58,6 +58,7 @@ main (gint argc, gchar * argv[])
 
   e = gst_element_factory_make ("fakesrc", NULL);
   g_object_set (e, "num-buffers", BUFFER_COUNT, NULL);
+  g_object_set (e, "silent", TRUE, NULL);
   gst_bin_add (GST_BIN (pipeline), e);
   src_list = saved_src_list = g_slist_append (NULL, e);
 
@@ -70,7 +71,7 @@ main (gint argc, gchar * argv[])
   for (i = 0, j = 0; i < n_elements; i++, j++) {
     if (j >= max_this_level) {
       g_slist_free (saved_src_list);
-      saved_src_list = new_src_list;
+      saved_src_list = g_slist_reverse (new_src_list);
       new_src_list = NULL;
       j = 0;
       all_srcs_linked = FALSE;
@@ -86,7 +87,11 @@ main (gint argc, gchar * argv[])
     src = (GstElement *) src_list->data;
     src_list = src_list->next;
 
-    e = gst_element_factory_make ("tee", NULL);
+    if (i + max_this_level < n_elements)
+      e = gst_element_factory_make ("tee", NULL);
+    else
+      e = gst_element_factory_make ("fakesink", NULL);
+    g_object_set (e, "silent", TRUE, NULL);
     new_src_list = g_slist_prepend (new_src_list, e);
 
     gst_bin_add (GST_BIN (pipeline), e);
@@ -94,26 +99,11 @@ main (gint argc, gchar * argv[])
       g_assert_not_reached ();
   }
 
-  if (all_srcs_linked)
-    src_list = new_src_list;
-  else
-    src_list = g_slist_concat (new_src_list, g_slist_copy (src_list));
-
   g_slist_free (saved_src_list);
-  saved_src_list = src_list;
-  while (src_list) {
-    src = (GstElement *) src_list->data;
-    src_list = src_list->next;
-
-    e = gst_element_factory_make ("fakesink", NULL);
-    gst_bin_add (GST_BIN (pipeline), e);
-    if (gst_element_link (src, e) != GST_PAD_LINK_OK)
-      g_assert_not_reached ();
-  }
-  g_slist_free (saved_src_list);
+  g_slist_free (new_src_list);
 
   end = gst_get_current_time ();
-  g_print ("%" GST_TIME_FORMAT " - creating and linking %d tee elements\n",
+  g_print ("%" GST_TIME_FORMAT " - creating and linking %d elements\n",
       GST_TIME_ARGS (end - start), i);
 
   start = gst_get_current_time ();
