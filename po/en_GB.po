@@ -4,110 +4,104 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.8.0\n"
+"Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-03-16 00:10+0100\n"
-"PO-Revision-Date: 2004-04-14 14:10-0400\n"
+"POT-Creation-Date: 2004-04-14 18:56+0200\n"
+"PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:121
+#: gst/gst.c:131
 msgid "Print the GStreamer version"
 msgstr "Print the GStreamer version"
 
-#: gst/gst.c:123
+#: gst/gst.c:133
 msgid "Make all warnings fatal"
 msgstr "Make all warnings fatal"
 
-#: gst/gst.c:127
+#: gst/gst.c:137
 msgid "Print available debug categories and exit"
 msgstr "Print available debug categories and exit"
 
-#: gst/gst.c:131
+#: gst/gst.c:140
 msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 
-#: gst/gst.c:132
+#: gst/gst.c:142
 msgid "LEVEL"
 msgstr "LEVEL"
 
-#: gst/gst.c:135
+#: gst/gst.c:144
 msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:136
+#: gst/gst.c:147
 msgid "LIST"
 msgstr "LIST"
 
-#: gst/gst.c:138
+#: gst/gst.c:149
 msgid "Disable colored debugging output"
 msgstr "Disable coloured debugging output"
 
-#: gst/gst.c:140
+#: gst/gst.c:151
 msgid "Disable debugging"
 msgstr "Disable debugging"
 
-#: gst/gst.c:144
+#: gst/gst.c:155
 msgid "Disable accelerated CPU instructions"
 msgstr "Disable accelerated CPU instructions"
 
-#: gst/gst.c:146
+#: gst/gst.c:157
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Enable verbose plugin loading diagnostics"
 
-#: gst/gst.c:149
-msgid "path list for loading plugins (separated by '"
-msgstr "path list for loading plugins (separated by '"
-
-#: gst/gst.c:150
-msgid "')"
-msgstr "')"
-
-#: gst/gst.c:150
+#: gst/gst.c:159
 msgid "PATHS"
 msgstr "PATHS"
 
-#: gst/gst.c:154
-msgid "Comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH"
-msgstr "Comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH"
+#: gst/gst.c:162
+msgid "Comma-separated list of plugins to preload in addition to the list stored in envronment variable GST_PLUGIN_PATH"
+msgstr "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
 
-#: gst/gst.c:155
+#: gst/gst.c:164
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:158
+#: gst/gst.c:167
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Disable trapping of segmentation faults during plugin loading"
 
-#: gst/gst.c:162
-msgid "Scheduler to use ('"
-msgstr "Scheduler to use ('"
-
-#: gst/gst.c:163
-msgid "' is the default)"
-msgstr "' is the default)"
-
-#: gst/gst.c:163
+#: gst/gst.c:170
 msgid "SCHEDULER"
 msgstr "SCHEDULER"
 
-#: gst/gst.c:165
+#: gst/gst.c:172
 msgid "Registry to use"
 msgstr "Registry to use"
 
-#: gst/gst.c:165
+#: gst/gst.c:172
 msgid "REGISTRY"
 msgstr "REGISTRY"
 
-#: gst/gstelement.c:252
+#: gst/gst.c:185
+#, c-format
+msgid "path list for loading plugins (separated by '%s')"
+msgstr "path list for loading plugins (separated by '%s')"
+
+#: gst/gst.c:189
+#, c-format
+msgid "Scheduler to use (default is '%s')"
+msgstr "Scheduler to use (default is '%s')"
+
+#: gst/gstelement.c:253
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ERROR: from element %s: %s\n"
 
-#: gst/gstelement.c:254
+#: gst/gstelement.c:255
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -266,279 +260,279 @@ msgstr "No error message for domain %s."
 msgid "No standard error message for domain %s and code %d."
 msgstr "No standard error message for domain %s and code %d."
 
-#: gst/gsttag.c:82
+#: gst/gsttag.c:83
 msgid "title"
 msgstr "title"
 
-#: gst/gsttag.c:82
+#: gst/gsttag.c:83
 msgid "commonly used title"
 msgstr "commonly used title"
 
-#: gst/gsttag.c:85
+#: gst/gsttag.c:86
 msgid "artist"
 msgstr "artist"
 
-#: gst/gsttag.c:86
+#: gst/gsttag.c:87
 msgid "person(s) responsible for the recording"
 msgstr "person(s) responsible for the recording"
 
-#: gst/gsttag.c:90
+#: gst/gsttag.c:91
 msgid "album"
 msgstr "album"
 
-#: gst/gsttag.c:91
+#: gst/gsttag.c:92
 msgid "album containing this data"
 msgstr "album containing this data"
 
-#: gst/gsttag.c:93
+#: gst/gsttag.c:94
 msgid "date"
 msgstr "date"
 
-#: gst/gsttag.c:94
+#: gst/gsttag.c:95
 msgid "date the data was created (in Julian calendar days)"
 msgstr "date the data was created (in Julian calendar days)"
 
-#: gst/gsttag.c:97
+#: gst/gsttag.c:98
 msgid "genre"
 msgstr "genre"
 
-#: gst/gsttag.c:98
+#: gst/gsttag.c:99
 msgid "genre this data belongs to"
 msgstr "genre this data belongs to"
 
-#: gst/gsttag.c:101
+#: gst/gsttag.c:102
 msgid "comment"
 msgstr "comment"
 
-#: gst/gsttag.c:102
+#: gst/gsttag.c:103
 msgid "free text commenting the data"
 msgstr "free text commenting the data"
 
-#: gst/gsttag.c:105
+#: gst/gsttag.c:106
 msgid "track number"
 msgstr "track number"
 
-#: gst/gsttag.c:106
+#: gst/gsttag.c:107
 msgid "track number inside a collection"
 msgstr "track number inside a collection"
 
-#: gst/gsttag.c:109
+#: gst/gsttag.c:110
 msgid "track count"
 msgstr "track count"
 
-#: gst/gsttag.c:110
+#: gst/gsttag.c:111
 msgid "count of tracks inside collection this track belongs to"
 msgstr "count of tracks inside collection this track belongs to"
 
-#: gst/gsttag.c:114
+#: gst/gsttag.c:115
 msgid "disc number"
 msgstr "disc number"
 
-#: gst/gsttag.c:115
+#: gst/gsttag.c:116
 msgid "disc number inside a collection"
 msgstr "disc number inside a collection"
 
-#: gst/gsttag.c:118
+#: gst/gsttag.c:119
 msgid "disc count"
 msgstr "disc count"
 
-#: gst/gsttag.c:119
+#: gst/gsttag.c:120
 msgid "count of discs inside collection this disc belongs to"
 msgstr "count of discs inside collection this disc belongs to"
 
-#: gst/gsttag.c:123
+#: gst/gsttag.c:124
 msgid "location"
 msgstr "location"
 
-#: gst/gsttag.c:124
+#: gst/gsttag.c:125
 msgid "original location of file as a URI"
 msgstr "original location of file as a URI"
 
-#: gst/gsttag.c:128
+#: gst/gsttag.c:129
 msgid "description"
 msgstr "description"
 
-#: gst/gsttag.c:129
+#: gst/gsttag.c:130
 msgid "short text describing the content of the data"
 msgstr "short text describing the content of the data"
 
-#: gst/gsttag.c:132
+#: gst/gsttag.c:133
 msgid "version"
 msgstr "version"
 
-#: gst/gsttag.c:132
+#: gst/gsttag.c:133
 msgid "version of this data"
 msgstr "version of this data"
 
-#: gst/gsttag.c:135
+#: gst/gsttag.c:136
 msgid "ISRC"
 msgstr "ISRC"
 
-#: gst/gsttag.c:137
+#: gst/gsttag.c:138
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 
-#: gst/gsttag.c:139
+#: gst/gsttag.c:140
 msgid "organization"
 msgstr "organisation"
 
-#: gst/gsttag.c:142
+#: gst/gsttag.c:143
 msgid "copyright"
 msgstr "copyright"
 
-#: gst/gsttag.c:142
+#: gst/gsttag.c:143
 msgid "copyright notice of the data"
 msgstr "copyright notice of the data"
 
-#: gst/gsttag.c:145
+#: gst/gsttag.c:146
 msgid "contact"
 msgstr "contact"
 
-#: gst/gsttag.c:145
+#: gst/gsttag.c:146
 msgid "contact information"
 msgstr "contact information"
 
-#: gst/gsttag.c:147
+#: gst/gsttag.c:148
 msgid "license"
 msgstr "licence"
 
-#: gst/gsttag.c:147
+#: gst/gsttag.c:148
 msgid "license of data"
 msgstr "licence of data"
 
-#: gst/gsttag.c:150
+#: gst/gsttag.c:151
 msgid "performer"
 msgstr "performer"
 
-#: gst/gsttag.c:151
+#: gst/gsttag.c:152
 msgid "person(s) performing"
 msgstr "person(s) performing"
 
-#: gst/gsttag.c:154
+#: gst/gsttag.c:155
 msgid "duration"
 msgstr "duration"
 
-#: gst/gsttag.c:154
+#: gst/gsttag.c:155
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "length in GStreamer time units (nanoseconds)"
 
-#: gst/gsttag.c:157
+#: gst/gsttag.c:158
 msgid "codec"
 msgstr "codec"
 
-#: gst/gsttag.c:158
+#: gst/gsttag.c:159
 msgid "codec the data is stored in"
 msgstr "codec the data is stored in"
 
-#: gst/gsttag.c:161
+#: gst/gsttag.c:162
 msgid "video codec"
 msgstr "video codec"
 
-#: gst/gsttag.c:161
+#: gst/gsttag.c:162
 msgid "codec the video data is stored in"
 msgstr "codec the video data is stored in"
 
-#: gst/gsttag.c:164
+#: gst/gsttag.c:165
 msgid "audio codec"
 msgstr "audio codec"
 
-#: gst/gsttag.c:164
+#: gst/gsttag.c:165
 msgid "codec the audio data is stored in"
 msgstr "codec the audio data is stored in"
 
-#: gst/gsttag.c:166
+#: gst/gsttag.c:167
 msgid "bitrate"
 msgstr "bitrate"
 
-#: gst/gsttag.c:166
+#: gst/gsttag.c:167
 msgid "exact or average bitrate in bits/s"
 msgstr "exact or average bitrate in bits/s"
 
-#: gst/gsttag.c:168
+#: gst/gsttag.c:169
 msgid "nominal bitrate"
 msgstr "nominal bitrate"
 
-#: gst/gsttag.c:168
+#: gst/gsttag.c:169
 msgid "nominal bitrate in bits/s"
 msgstr "nominal bitrate in bits/s"
 
-#: gst/gsttag.c:170
+#: gst/gsttag.c:171
 msgid "minimum bitrate"
 msgstr "minimum bitrate"
 
-#: gst/gsttag.c:170
+#: gst/gsttag.c:171
 msgid "minimum bitrate in bits/s"
 msgstr "minimum bitrate in bits/s"
 
-#: gst/gsttag.c:172
+#: gst/gsttag.c:173
 msgid "maximum bitrate"
 msgstr "maximum bitrate"
 
-#: gst/gsttag.c:172
+#: gst/gsttag.c:173
 msgid "maximum bitrate in bits/s"
 msgstr "maximum bitrate in bits/s"
 
-#: gst/gsttag.c:175
+#: gst/gsttag.c:176
 msgid "encoder"
 msgstr "encoder"
 
-#: gst/gsttag.c:175
+#: gst/gsttag.c:176
 msgid "encoder used to encode this stream"
 msgstr "encoder used to encode this stream"
 
-#: gst/gsttag.c:178
+#: gst/gsttag.c:179
 msgid "encoder version"
 msgstr "encoder version"
 
-#: gst/gsttag.c:179
+#: gst/gsttag.c:180
 msgid "version of the encoder used to encode this stream"
 msgstr "version of the encoder used to encode this stream"
 
-#: gst/gsttag.c:181
+#: gst/gsttag.c:182
 msgid "serial"
 msgstr "serial"
 
-#: gst/gsttag.c:181
+#: gst/gsttag.c:182
 msgid "serial number of track"
 msgstr "serial number of track"
 
-#: gst/gsttag.c:183
+#: gst/gsttag.c:184
 msgid "replaygain track gain"
 msgstr "replaygain track gain"
 
-#: gst/gsttag.c:183
+#: gst/gsttag.c:184
 msgid "track gain in db"
 msgstr "track gain in db"
 
-#: gst/gsttag.c:185
+#: gst/gsttag.c:186
 msgid "replaygain track peak"
 msgstr "replaygain track peak"
 
-#: gst/gsttag.c:185
+#: gst/gsttag.c:186
 msgid "peak of the track"
 msgstr "peak of the track"
 
-#: gst/gsttag.c:187
+#: gst/gsttag.c:188
 msgid "replaygain album gain"
 msgstr "replaygain album gain"
 
-#: gst/gsttag.c:187
+#: gst/gsttag.c:188
 msgid "album gain in db"
 msgstr "album gain in db"
 
-#: gst/gsttag.c:189
+#: gst/gsttag.c:190
 msgid "replaygain album peak"
 msgstr "replaygain album peak"
 
-#: gst/gsttag.c:189
+#: gst/gsttag.c:190
 msgid "peak of the album"
 msgstr "peak of the album"
 
-#: gst/gsttag.c:228
+#: gst/gsttag.c:229
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:443
+#: gst/autoplug/gstspider.c:447
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr "There is no element present to handle the stream's mime type %s."
@@ -557,27 +551,27 @@ msgstr "Could not open file \"%s\" for writing."
 msgid "Error closing file \"%s\"."
 msgstr "Error closing file \"%s\"."
 
-#: gst/elements/gstfilesink.c:344 gst/elements/gstfilesink.c:375
-#: gst/elements/gstfilesink.c:427
+#: gst/elements/gstfilesink.c:345 gst/elements/gstfilesink.c:376
+#: gst/elements/gstfilesink.c:428
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Error while writing to file \"%s\"."
 
-#: gst/elements/gstfilesrc.c:700 gst/elements/gstmultifilesrc.c:247
+#: gst/elements/gstfilesrc.c:721 gst/elements/gstmultifilesrc.c:247
 msgid "No file name specified for reading."
 msgstr "No file name specified for reading."
 
-#: gst/elements/gstfilesrc.c:714 gst/elements/gstmultifilesrc.c:255
+#: gst/elements/gstfilesrc.c:735 gst/elements/gstmultifilesrc.c:255
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Could not open file \"%s\" for reading."
 
-#: gst/elements/gstfilesrc.c:725
+#: gst/elements/gstfilesrc.c:746
 #, c-format
 msgid "File \"%s\" isn't a regular file."
 msgstr "File \"%s\" isn't a regular file."
 
-#: gst/elements/gstidentity.c:176
+#: gst/elements/gstidentity.c:191
 msgid "Failed after iterations as requested."
 msgstr "Failed after iterations as requested."
 
@@ -670,11 +664,11 @@ msgstr "could not link sink element for URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "empty pipeline not allowed"
 
-#: tools/gst-inspect.c:928
+#: tools/gst-inspect.c:929
 msgid "Show plugin details"
 msgstr "Show plugin details"
 
-#: tools/gst-inspect.c:931
+#: tools/gst-inspect.c:932
 msgid "Show scheduler details"
 msgstr "Show scheduler details"
 
@@ -800,3 +794,9 @@ msgstr "RUNNING pipeline ...\n"
 #: tools/gst-launch.c:485
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERROR: pipeline doesn't want to play.\n"
+
+#~ msgid "')"
+#~ msgstr "')"
+
+#~ msgid "' is the default)"
+#~ msgstr "' is the default)"

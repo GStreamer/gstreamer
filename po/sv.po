@@ -2,7 +2,7 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.8 2004/04/20 11:12:38 thomasvs Exp $
+# $Id: sv.po,v 1.68 2004/02/29 23:00:29 menthos Exp $
 #
 msgid ""
 msgstr ""

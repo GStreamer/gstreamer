@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2004-03-16 00:10+0100\n"
-"PO-Revision-Date: 2004-04-18 18:40+0200\n"
+"PO-Revision-Date: 2004-04-20 18:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -505,15 +505,15 @@ msgstr "послідовний номер доріжки"
 
 #: gst/gsttag.c:183
 msgid "replaygain track gain"
-msgstr "прибуток програвання доріжки"
+msgstr "рівень відтворення доріжки"
 
 #: gst/gsttag.c:183
 msgid "track gain in db"
-msgstr "прибуток доріжки у базі даних"
+msgstr "рівень доріжки у дБ"
 
 #: gst/gsttag.c:185
 msgid "replaygain track peak"
-msgstr "пік програвання доріжки"
+msgstr "пік відтворення доріжки"
 
 #: gst/gsttag.c:185
 msgid "peak of the track"
@@ -521,11 +521,11 @@ msgstr "пік доріжки"
 
 #: gst/gsttag.c:187
 msgid "replaygain album gain"
-msgstr "прибуток програвання альбому"
+msgstr "рівень відтворення альбому"
 
 #: gst/gsttag.c:187
 msgid "album gain in db"
-msgstr "прибуток альбому у базі даних"
+msgstr "рівень альбому у дБ"
 
 #: gst/gsttag.c:189
 msgid "replaygain album peak"

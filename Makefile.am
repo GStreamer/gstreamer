@@ -54,6 +54,7 @@ CLEANFILES = gst-element-check-@GST_MAJORMINOR@.m4
 
 include $(top_srcdir)/idiottest.mak
 include $(top_srcdir)/common/release.mak
+include $(top_srcdir)/common/po.mak
 
 
 if GST_GCOV_ENABLED
@@ -94,9 +95,4 @@ coverage-report.txt:
 
 check-coverage:
 	echo "Need to reconfigure with --enable-gcov"
-
 endif
-
-# a rule to redownload po files
-download-po:
-	cd po && for LI in `cat LINGUAS`; do echo Checking $$LI.po; wget -q -O $$LI.po.tmp http://www.iro.umontreal.ca/translation/maint/gstreamer/$$LI.po; if ! diff $$LI.po $$LI.po.tmp > /dev/null 2>&1; then echo "Updating $$LI.po"; mv $$LI.po.tmp $$LI.po; else rm $$LI.po.tmp; fi; done
