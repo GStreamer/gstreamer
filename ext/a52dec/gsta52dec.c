@@ -389,6 +389,7 @@ gst_a52dec_loop (GstElement *element)
   GstBuffer *buf;
   guint32 got_bytes;
   gboolean need_reneg;
+  GstClockTime timestamp;
 
   a52dec = GST_A52DEC (element);
 
@@ -430,6 +431,7 @@ gst_a52dec_loop (GstElement *element)
     return;
   }
   data = GST_BUFFER_DATA (buf);
+  timestamp = gst_bytestream_get_timestamp (a52dec->bs);
 
   /* process */
   flags = a52dec->request_channels | A52_ADJUST_LEVEL;
@@ -464,7 +466,7 @@ gst_a52dec_loop (GstElement *element)
       continue;
     }
     /* push on */
-    if (gst_a52dec_push (a52dec->srcpad, a52dec->using_channels, a52dec->samples, GST_BUFFER_TIMESTAMP (buf))) {
+    if (gst_a52dec_push (a52dec->srcpad, a52dec->using_channels, a52dec->samples, timestamp)) {
       g_warning ("a52dec push error\n");
     }
   }
