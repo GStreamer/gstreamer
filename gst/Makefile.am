@@ -56,6 +56,7 @@ libgstreamer_la_SOURCES =		\
 	gstbin.c		\
 	gstbuffer.c		\
 	gstbufferpool-default.c	\
+	gstcache.c		\
 	gstcaps.c		\
 	gstclock.c		\
 	gstcpu.c		\
@@ -83,7 +84,6 @@ libgstreamer_la_SOURCES =		\
 	$(GST_TYPEFIND_SRC)	\
 	gstutils.c		\
 	gstregistry.c		\
-	gsttimecache.c		\
 	$(GST_PARSE_SRC)	\
 	$(GSTARCH_SRCS)		\
 	$(GST_LOADSAVE_SRC)
@@ -103,6 +103,7 @@ gst_headers =			\
 	gstbin.h		\
 	gstbuffer.h		\
 	gstbufferpool-default.h \
+	gstcache.h		\
 	gstcaps.h		\
 	gstclock.h		\
 	gstcpu.h		\
@@ -129,7 +130,6 @@ gst_headers =			\
 	gsttypefind.h		\
 	gstutils.h		\
 	gstregistry.h		\
-	gsttimecache.h		\
 	gstparse.h		\
 	gstxml.h
 

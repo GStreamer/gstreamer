@@ -506,7 +506,7 @@ gst_print_props (GString *buf, gint indent, GList *props, gboolean showname)
 	g_string_append_printf (buf, "%f - %f (float)\n", min, max);
 	break;
       }
-      case GST_PROPS_BOOL_TYPE:
+      case GST_PROPS_BOOLEAN_TYPE:
       {
 	gboolean val;
 	gst_props_entry_get_boolean (prop, &val);

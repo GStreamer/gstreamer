@@ -92,6 +92,10 @@ transform_func (const GValue *src_value,
         case GST_PROPS_FOURCC_TYPE:
   	  g_string_append_printf (result, "%s=(fourcc) '%4.4s'", name, (gchar *)&entry->data.fourcc_data);
 	  break;
+        case GST_PROPS_BOOLEAN_TYPE:
+  	  g_string_append_printf (result, "%s=(boolean) %s", name, 
+			  (entry->data.bool_data ? "TRUE" : "FALSE"));
+	  break;
         default:
 	  break;
       }
@@ -147,7 +151,7 @@ gst_props_debug_entry (GstPropsEntry *entry)
 	(entry->data.fourcc_data>>16)&0xff,
 	(entry->data.fourcc_data>>24)&0xff);
       break;
-    case GST_PROPS_BOOL_TYPE:
+    case GST_PROPS_BOOLEAN_TYPE:
       GST_DEBUG (GST_CAT_PROPERTIES, "%s: bool %d", name, entry->data.bool_data);
       break;
     case GST_PROPS_STRING_TYPE:
@@ -223,7 +227,7 @@ G_STMT_START { 									\
     case GST_PROPS_FOURCC_TYPE:							\
       entry->data.fourcc_data = va_arg (var_args, gulong);			\
       break;									\
-    case GST_PROPS_BOOL_TYPE:							\
+    case GST_PROPS_BOOLEAN_TYPE:						\
       entry->data.bool_data = va_arg (var_args, gboolean);			\
       break;									\
     case GST_PROPS_STRING_TYPE:							\
@@ -269,7 +273,7 @@ G_STMT_START { 									\
       case GST_PROPS_FOURCC_TYPE:						\
         *(va_arg (var_args, guint32*)) = entry->data.fourcc_data;		\
         break;									\
-      case GST_PROPS_BOOL_TYPE:							\
+      case GST_PROPS_BOOLEAN_TYPE:						\
         *(va_arg (var_args, gboolean*)) = entry->data.bool_data;		\
         break;									\
       case GST_PROPS_STRING_TYPE:						\
@@ -606,7 +610,7 @@ gst_props_newv (const gchar *firstname, va_list var_args)
 	entry_type = GST_PROPS_LIST_T_FLOATS;
 	break;
       case GST_PROPS_FOURCC_TYPE:
-      case GST_PROPS_BOOL_TYPE:
+      case GST_PROPS_BOOLEAN_TYPE:
       case GST_PROPS_STRING_TYPE:
 	entry_type = GST_PROPS_LIST_T_MISC;
 	break;
@@ -1179,7 +1183,7 @@ gst_props_entry_get_fourcc_int (const GstPropsEntry *entry, guint32 *val)
 gboolean
 gst_props_entry_get_boolean (const GstPropsEntry *entry, gboolean *val)
 {
-  return gst_props_entry_get_safe (entry, GST_PROPS_BOOL_TYPE, val);
+  return gst_props_entry_get_safe (entry, GST_PROPS_BOOLEAN_TYPE, val);
 }
 
 /**
@@ -1391,10 +1395,10 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
 	  break;
       }
       break;
-    case GST_PROPS_BOOL_TYPE:
+    case GST_PROPS_BOOLEAN_TYPE:
       switch (entry2->propstype) {
 	/* t   <--->   t */
-        case GST_PROPS_BOOL_TYPE:
+        case GST_PROPS_BOOLEAN_TYPE:
           return (entry2->data.bool_data == entry1->data.bool_data);
         default:
 	  break;
@@ -1669,10 +1673,10 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 	  break;
       }
       break;
-    case GST_PROPS_BOOL_TYPE:
+    case GST_PROPS_BOOLEAN_TYPE:
       switch (entry2->propstype) {
 	/* t   <--->   t */
-        case GST_PROPS_BOOL_TYPE:
+        case GST_PROPS_BOOLEAN_TYPE:
           if (entry1->data.bool_data == entry2->data.bool_data)
 	    result = gst_props_entry_copy (entry1);
         default:
@@ -1928,7 +1932,7 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
       xmlNewProp (subtree, "hexvalue", str);
       g_free(str);
       break;
-    case GST_PROPS_BOOL_TYPE: 
+    case GST_PROPS_BOOLEAN_TYPE: 
       subtree = xmlNewChild (parent, NULL, "boolean", NULL);
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
       xmlNewProp (subtree, "value", (entry->data.bool_data ?  "true" : "false"));
@@ -2035,7 +2039,7 @@ gst_props_load_thyself_func (xmlNodePtr field)
     g_free (prop);
   }
   else if (!strcmp(field->name, "boolean")) {
-    entry->propstype = GST_PROPS_BOOL_TYPE;
+    entry->propstype = GST_PROPS_BOOLEAN_TYPE;
     prop = xmlGetProp(field, "name");
     entry->propid = g_quark_from_string (prop);
     g_free (prop);

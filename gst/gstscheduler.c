@@ -212,11 +212,11 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
   /* if it's not inside this scheduler, it has to be NULL */
   g_assert (GST_ELEMENT_SCHED (element) == NULL);
 
-  if (element->getclockfunc) {
+  if (gst_element_provides_clock (element)) {
     sched->clock_providers = g_list_prepend (sched->clock_providers, element);
     GST_DEBUG (GST_CAT_CLOCK, "added clock provider %s", GST_ELEMENT_NAME (element));
   }
-  if (element->setclockfunc) {
+  if (gst_element_requires_clock (element)) {
     sched->clock_receivers = g_list_prepend (sched->clock_receivers, element);
     GST_DEBUG (GST_CAT_CLOCK, "added clock receiver %s", GST_ELEMENT_NAME (element));
   }

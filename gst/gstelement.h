@@ -30,6 +30,7 @@
 #include <gst/gstpad.h>
 #include <gst/gstclock.h>
 #include <gst/gstpluginfeature.h>
+#include <gst/gstcache.h>
 
 G_BEGIN_DECLS
 
@@ -109,8 +110,6 @@ typedef struct _GstElementFactory GstElementFactory;
 typedef struct _GstElementFactoryClass GstElementFactoryClass;
 
 typedef void 		(*GstElementLoopFunction) 	(GstElement *element);
-typedef void 		(*GstElementSetClockFunction) 	(GstElement *element, GstClock *clock);
-typedef GstClock* 	(*GstElementGetClockFunction) 	(GstElement *element);
 typedef void 		(*GstElementPreRunFunction) 	(GstElement *element);
 typedef void 		(*GstElementPostRunFunction) 	(GstElement *element);
 
@@ -125,8 +124,6 @@ struct _GstElement {
 
   GstScheduler 		*sched;
   gpointer		sched_private;
-  GstElementSetClockFunction setclockfunc;
-  GstElementGetClockFunction getclockfunc;
   GstClock		*clock;
   GstClockTime		 base_time;
 
@@ -176,6 +173,12 @@ struct _GstElementClass {
   /* request a new pad */
   GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ, const gchar* name);
   void			(*release_pad)		(GstElement *element, GstPad *pad);
+  /* set/get clocks */
+  GstClock*		(*get_clock)		(GstElement *element);
+  void			(*set_clock)		(GstElement *element, GstClock *clock);
+  /* cache */
+  GstCache*		(*get_cache)		(GstElement *element);
+  void			(*set_cache)		(GstElement *element, GstCache *cache);
 };
 
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);
@@ -214,10 +217,18 @@ const gchar*            gst_element_get_name            (GstElement *element);
 void                    gst_element_set_parent          (GstElement *element, GstObject *parent);
 GstObject*              gst_element_get_parent          (GstElement *element);
 
+/* clocking */
+gboolean		gst_element_requires_clock	(GstElement *element);
+gboolean		gst_element_provides_clock	(GstElement *element);
 GstClock*		gst_element_get_clock 		(GstElement *element);
 void			gst_element_set_clock 		(GstElement *element, GstClock *clock);
 GstClockReturn		gst_element_clock_wait 		(GstElement *element, GstClock *clock, 
 							 GstClockTime time, GstClockTimeDiff *jitter);
+/* caches */
+gboolean		gst_element_is_cachable		(GstElement *element);
+void			gst_element_set_cache		(GstElement *element, GstCache *cache);
+GstCache*		gst_element_get_cache		(GstElement *element);
+
 
 gboolean		gst_element_release_locks	(GstElement *element);
 

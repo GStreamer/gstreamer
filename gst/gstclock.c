@@ -83,6 +83,8 @@ gst_clock_entry_new (GstClock *clock, GstClockTime time,
 GstClockID
 gst_clock_new_single_shot_id (GstClock *clock, GstClockTime time)
 {
+  g_return_val_if_fail (GST_IS_CLOCK (clock), NULL);
+
   return gst_clock_entry_new (clock, 
 		  	      time, 
 			      GST_CLOCK_TIME_NONE, 
@@ -105,6 +107,10 @@ GstClockID
 gst_clock_new_periodic_id (GstClock *clock, GstClockTime start_time,
                            GstClockTime interval)
 {
+  g_return_val_if_fail (GST_IS_CLOCK (clock), NULL);
+  g_return_val_if_fail (start_time != GST_CLOCK_TIME_NONE, NULL);
+  g_return_val_if_fail (interval != 0, NULL);
+
   return gst_clock_entry_new (clock, 
 		  	      start_time, 
 			      interval, 
@@ -149,8 +155,14 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff *jitter)
   g_return_val_if_fail (id != NULL, GST_CLOCK_ERROR);
 
   entry = (GstClockEntry *) id;
-  clock = GST_CLOCK_ENTRY_CLOCK (entry);
   requested = GST_CLOCK_ENTRY_TIME (entry);
+
+  if (requested == GST_CLOCK_TIME_NONE) {
+    res = GST_CLOCK_TIMEOUT;
+    goto done;
+  }
+  
+  clock = GST_CLOCK_ENTRY_CLOCK (entry);
   
   if (CLASS (clock)->wait) {
     GstClockTime now;
@@ -170,6 +182,7 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff *jitter)
     }
   }
 
+done:
   if (entry->type == GST_CLOCK_ENTRY_SINGLE) {
     gst_clock_id_free (id);
   }
@@ -188,7 +201,7 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff *jitter)
  * when the clock has reached the given time. A ClockID is returned
  * that can be used to cancel the request.
  *
- * Returns: the clock id or NULL when async notification is not supported.
+ * Returns: the result of the non blocking wait.
  */
 GstClockReturn
 gst_clock_id_wait_async (GstClockID id,
@@ -199,9 +212,15 @@ gst_clock_id_wait_async (GstClockID id,
   GstClockReturn res = GST_CLOCK_UNSUPPORTED;
   
   g_return_val_if_fail (id != NULL, GST_CLOCK_ERROR);
+  g_return_val_if_fail (func != NULL, GST_CLOCK_ERROR);
 
   entry = (GstClockEntry *) id;
   clock = entry->clock;
+
+  if (GST_CLOCK_ENTRY_TIME (entry) == GST_CLOCK_TIME_NONE) {
+    (func) (clock, GST_CLOCK_TIME_NONE, id, user_data);
+    return GST_CLOCK_TIMEOUT;
+  }
 
   if (CLASS (clock)->wait_async) {
     res = CLASS (clock)->wait_async (clock, entry, func, user_data);
@@ -243,6 +262,8 @@ gst_clock_id_unschedule (GstClockID id)
 void
 gst_clock_id_free (GstClockID id)
 {
+  g_return_if_fail (id != NULL);
+
   gst_mem_chunk_free (_gst_clock_entries_chunk, id);
 }
 
@@ -389,6 +410,7 @@ guint64
 gst_clock_set_resolution (GstClock *clock, guint64 resolution)
 {
   g_return_val_if_fail (GST_IS_CLOCK (clock), 0LL);
+  g_return_val_if_fail (resolution != 0, 0LL);
 
   if (CLASS (clock)->change_resolution)
     clock->resolution = CLASS (clock)->change_resolution (clock, clock->resolution, resolution);
@@ -510,6 +532,9 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
   
   GST_DEBUG (GST_CAT_CLOCK, "clock discont %llu %llu %d", time, clock->start_time, clock->accept_discont);
 
+  if (time == GST_CLOCK_TIME_NONE)
+    return TRUE;
+
   GST_LOCK (clock);
   if (clock->accept_discont) {
     if (CLASS (clock)->get_internal_time) {
@@ -584,6 +609,8 @@ GstClockID
 gst_clock_get_next_id (GstClock *clock)
 {
   GstClockEntry *entry = NULL;
+
+  g_return_val_if_fail (GST_IS_CLOCK (clock), NULL);
 
   GST_LOCK (clock);
   if (clock->entries)

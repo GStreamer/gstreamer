@@ -1233,7 +1233,7 @@ gst_xml_registry_save_props_func (GstPropsEntry *entry,
       CLASS (xmlregistry)->save_func (xmlregistry, "<fourcc name=\"%s\" hexvalue=\"%08x\"/>\n", name, fourcc);
       break;
     }
-    case GST_PROPS_BOOL_TYPE:
+    case GST_PROPS_BOOLEAN_TYPE:
     {
       gboolean value;
       gst_props_entry_get_boolean (entry, &value);

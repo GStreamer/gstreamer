@@ -35,6 +35,7 @@
 #include <gst/gstpad.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstbufferpool-default.h>
+#include <gst/gstcache.h>
 #include <gst/gstcpu.h>
 #include <gst/gstelement.h>
 #include <gst/gstbin.h>
@@ -49,7 +50,6 @@
 #include <gst/gsttrace.h>
 #include <gst/gstxml.h>
 #include <gst/gstscheduler.h>
-#include <gst/gsttimecache.h>
 #include <gst/gstevent.h>
 #include <gst/gstclock.h>
 #include <gst/gstsystemclock.h>

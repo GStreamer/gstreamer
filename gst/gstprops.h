@@ -43,7 +43,7 @@ typedef enum {
    GST_PROPS_INT_TYPE,
    GST_PROPS_FLOAT_TYPE,
    GST_PROPS_FOURCC_TYPE,
-   GST_PROPS_BOOL_TYPE,
+   GST_PROPS_BOOLEAN_TYPE,
    GST_PROPS_STRING_TYPE,
 
    GST_PROPS_VAR_TYPE,   /* after this marker start the variable properties */
@@ -66,7 +66,7 @@ typedef enum {
 #define GST_PROPS_FLOAT(a) 		GST_PROPS_FLOAT_TYPE,((float)(a))
 #define GST_PROPS_FLOAT_RANGE(a,b) 	GST_PROPS_FLOAT_RANGE_TYPE,((float)(a)),((float)(b))
 #define GST_PROPS_FOURCC(a) 		GST_PROPS_FOURCC_TYPE,(a)
-#define GST_PROPS_BOOLEAN(a) 		GST_PROPS_BOOL_TYPE,(a)
+#define GST_PROPS_BOOLEAN(a) 		GST_PROPS_BOOLEAN_TYPE,(a)
 #define GST_PROPS_STRING(a) 		GST_PROPS_STRING_TYPE,(a)
 
 #define GST_PROPS_INT_POSITIVE		GST_PROPS_INT_RANGE(0,G_MAXINT)

@@ -134,6 +134,7 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesink_get_property);
 
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR (gst_fakesink_request_new_pad);
+  gstelement_class->set_clock       = GST_DEBUG_FUNCPTR (gst_fakesink_set_clock);
 }
 
 static void 
@@ -149,8 +150,6 @@ gst_fakesink_init (GstFakeSink *fakesink)
   fakesink->dump = FALSE;
   fakesink->sync = FALSE;
   fakesink->last_message = NULL;
-
-  GST_ELEMENT (fakesink)->setclockfunc    = gst_fakesink_set_clock;
 
   GST_FLAG_SET (fakesink, GST_ELEMENT_EVENT_AWARE);
 }

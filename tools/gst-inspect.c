@@ -43,7 +43,7 @@ print_prop (GstPropsEntry *prop, gboolean showname, const gchar *pfx)
       g_print("Float range: %f - %f\n", min, max);
       break;
     }
-    case GST_PROPS_BOOL_TYPE:
+    case GST_PROPS_BOOLEAN_TYPE:
     {
       gboolean val;
       gst_props_entry_get_boolean (prop, &val);
@@ -571,22 +571,31 @@ print_element_info (GstElementFactory *factory)
   have_flags = FALSE;
 
   g_print ("\nClocking Interaction:\n");
-  if (element->setclockfunc) {
+  if (gst_element_requires_clock (element)) {
     g_print ("  element requires a clock\n");
     have_flags = TRUE;
   }
-  if (element->getclockfunc) {
+  if (gst_element_provides_clock (element)) {
     GstClock *clock;
 
     clock = gst_element_get_clock (element);
     if (clock)
       g_print ("  element provides a clock: %s\n", GST_OBJECT_NAME(clock));
+    else
+      g_print ("  element is supposed to provide a clock but returned NULL\n");
     have_flags = TRUE;
   }
   if (!have_flags) {
     g_print ("  none\n");
   }
 
+  g_print ("\nCaching capabilities:\n");
+  if (gst_element_is_cachable (element)) {
+    g_print ("  element can do caching\n");
+  }
+  else {
+    g_print ("  none\n");
+  }
 
   g_print ("\nPads:\n");
   if (element->numpads) {
@@ -841,6 +850,12 @@ static void
 print_plugin_info (GstPlugin *plugin)
 {
   GList *features;
+  gint num_features = 0;
+  gint num_elements = 0;
+  gint num_autoplug = 0;
+  gint num_types = 0;
+  gint num_schedulers = 0;
+  gint num_other = 0;
   
   g_print ("Plugin Details:\n");
   g_print ("  Name:\t\t%s\n",    plugin->name);
@@ -861,12 +876,14 @@ print_plugin_info (GstPlugin *plugin)
       factory = GST_ELEMENT_FACTORY (feature);
       g_print ("  %s: %s\n", GST_OBJECT_NAME (factory),
 	      factory->details->longname);
+      num_elements++;
     }
     else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
       GstAutoplugFactory *factory;
 
       factory = GST_AUTOPLUG_FACTORY (feature);
       g_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
+      num_autoplug++;
     }
     else if (GST_IS_TYPE_FACTORY (feature)) {
       GstTypeFactory *factory;
@@ -877,21 +894,35 @@ print_plugin_info (GstPlugin *plugin)
       if (factory->typefindfunc)
         g_print ("      Has typefind function: %s\n", 
 	        GST_DEBUG_FUNCPTR_NAME (factory->typefindfunc));
+      num_types++;
     }
     else if (GST_IS_SCHEDULER_FACTORY (feature)) {
       GstSchedulerFactory *factory;
 
       factory = GST_SCHEDULER_FACTORY (feature);
       g_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
+      num_schedulers++;
     }
     else {
       g_print ("  %s (%s)\n", gst_object_get_name (GST_OBJECT (feature)), 
 		             g_type_name (G_OBJECT_TYPE (feature)));
+      num_other++;
     }
-
-
+    num_features++;
     features = g_list_next (features);
   }
+  g_print ("\n  %d features:\n", num_features);
+  if (num_elements > 0)
+    g_print ("  +-- %d elements\n", num_elements);
+  if (num_autoplug > 0)
+    g_print ("  +-- %d autopluggers\n", num_autoplug);
+  if (num_types > 0)
+    g_print ("  +-- %d types\n", num_types);
+  if (num_schedulers > 0)
+    g_print ("  +-- %d schedulers\n", num_schedulers);
+  if (num_other > 0)
+    g_print ("  +-- %d other objects\n", num_other);
+  
   g_print ("\n");
 }
 

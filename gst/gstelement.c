@@ -742,6 +742,38 @@ gst_element_get_parent (GstElement *element)
 }
 
 /**
+ * gst_element_requires_clock:
+ * @element: a #GstElement to query
+ *
+ * Query if the element requiresd a clock
+ *
+ * Returns: TRUE if the element requires a clock
+ */
+gboolean
+gst_element_requires_clock (GstElement *element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+  return (CLASS (element)->set_clock != NULL);
+}
+
+/**
+ * gst_element_provides_clock:
+ * @element: a #GstElement to query
+ *
+ * Query if the element provides a clock
+ *
+ * Returns: TRUE if the element provides a clock
+ */
+gboolean
+gst_element_provides_clock (GstElement *element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+  return (CLASS (element)->get_clock != NULL);
+}
+
+/**
  * gst_element_set_clock:
  * @element: a #GstElement to set the clock for.
  * @clock: the #GstClock to set for the element.
@@ -751,11 +783,10 @@ gst_element_get_parent (GstElement *element)
 void
 gst_element_set_clock (GstElement *element, GstClock *clock)
 {
-  g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  if (element->setclockfunc)
-    element->setclockfunc (element, clock);
+  if (CLASS (element)->set_clock)
+    CLASS (element)->set_clock (element, clock);
 
   element->clock = clock;
 }
@@ -774,8 +805,8 @@ gst_element_get_clock (GstElement *element)
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   
-  if (element->getclockfunc)
-    return element->getclockfunc (element);
+  if (CLASS (element)->get_clock)
+    return CLASS (element)->get_clock (element);
 
   return NULL;
 }
@@ -796,7 +827,6 @@ gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time,
 {
   GstClockReturn res;
 
-  g_return_val_if_fail (element != NULL, GST_CLOCK_ERROR);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_ERROR);
 
   if (GST_ELEMENT_SCHED (element)) {
@@ -806,6 +836,35 @@ gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time,
     res = GST_CLOCK_TIMEOUT;
 
   return res;
+}
+
+gboolean
+gst_element_is_cachable (GstElement *element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+  return (CLASS (element)->set_cache != NULL);
+}
+
+void
+gst_element_set_cache (GstElement *element, GstCache *cache)
+{
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (GST_IS_CACHE (cache));
+
+  if (CLASS (element)->set_cache)
+    CLASS (element)->set_cache (element, cache);
+}
+
+GstCache*
+gst_element_get_cache (GstElement *element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+  if (CLASS (element)->get_cache)
+    return CLASS (element)->get_cache (element);
+
+  return NULL;
 }
 
 
