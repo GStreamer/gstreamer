@@ -36,6 +36,12 @@ typedef struct _GstSchedulerChain GstSchedulerChain;
 typedef struct _GstBasicScheduler GstBasicScheduler;
 typedef struct _GstBasicSchedulerClass GstBasicSchedulerClass;
 
+#ifdef _COTHREADS_STANDARD
+# define _SCHEDULER_NAME "standard"
+#else
+# define _SCHEDULER_NAME "basic"
+#endif
+
 struct _GstSchedulerChain {
   GstBasicScheduler *sched;
 
@@ -1282,7 +1288,8 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
 
     /* all we really have to do is switch to the first child		*/
     /* FIXME this should be lots more intelligent about where to start  */
-    GST_DEBUG (GST_CAT_DATAFLOW, "starting iteration via cothreads");
+    GST_DEBUG (GST_CAT_DATAFLOW, "starting iteration via cothreads using %s scheduler",
+	       _SCHEDULER_NAME);
 
     if (chain->elements) {
       entry = NULL;		/*MattH ADDED?*/
