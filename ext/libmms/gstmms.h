@@ -1,0 +1,48 @@
+/* 
+ * gstmms.h: header file for gst-mms plugin
+ */
+
+#ifndef __GST_MMS_H__
+#define __GST_MMS_H__
+
+#include <gst/gst.h>
+#include <libmms/mms.h>
+
+G_BEGIN_DECLS
+
+/* #define's don't like whitespacey bits */
+#define GST_TYPE_MMS \
+  (gst_mms_get_type())
+#define GST_MMS(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MMS,GstMMS))
+#define GST_MMS_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MMS,GstMMS))
+#define GST_IS_MMS(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MMS))
+#define GST_IS_MMS_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MMS))
+
+typedef struct _GstMMS      GstMMS;
+typedef struct _GstMMSClass GstMMSClass;
+
+struct _GstMMS
+{
+  GstElement element;
+
+  GstPad *srcpad;
+
+  gchar *uri_name;
+  gpointer connection;
+  gint blocksize;
+};
+
+struct _GstMMSClass 
+{
+  GstElementClass parent_class;
+};
+
+GType gst_mms_get_type (void);
+
+G_END_DECLS
+
+#endif /* __GST_MMS_H__ */
