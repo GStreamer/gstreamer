@@ -545,14 +545,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* this filter needs the getbits functions */
-  if (!gst_library_load("gstgetbits")) {
-    gst_info("system_encode:: could not load support library: 'gstgetbits'\n");
+  if (!gst_library_load ("gstgetbits"))
     return FALSE;
-  }
 
   /* create an elementfactory for the system_encode element */
-  factory = gst_element_factory_new("system_encode",GST_TYPE_SYSTEM_ENCODE,
-                                   &system_encode_details);
+  factory = gst_element_factory_new ("system_encode", GST_TYPE_SYSTEM_ENCODE,
+                                     &system_encode_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));

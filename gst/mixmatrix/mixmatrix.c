@@ -484,18 +484,17 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* this filter needs the bytestream package */
-  if (!gst_library_load("gstbytestream")) {
-    gst_info("mixmatrix:: could not load support library: 'gstbytestream'\n");
+  if (!gst_library_load ("gstbytestream"))
     return FALSE;
-  }
 
-  factory = gst_element_factory_new("mixmatrix", GST_TYPE_MIXMATRIX, &mixmatrix_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
+  factory = gst_element_factory_new ("mixmatrix", GST_TYPE_MIXMATRIX, 
+                                     &mixmatrix_details);
+  g_return_val_if_fail (factory != NULL, FALSE);
 
-  sinktempl = mixmatrix_sink_factory();
+  sinktempl = mixmatrix_sink_factory ();
   gst_element_factory_add_pad_template (factory, sinktempl);
 
-  srctempl = mixmatrix_src_factory();
+  srctempl = mixmatrix_src_factory ();
   gst_element_factory_add_pad_template (factory, srctempl);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));

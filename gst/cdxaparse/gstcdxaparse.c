@@ -335,10 +335,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstTypeFactory *type;
 
   /* this filter needs the riff parser */
-  if (!gst_library_load ("gstbytestream")) {
-    gst_info("cdxaparse: could not load support library: 'gstbytestream'\n");
+  if (!gst_library_load ("gstbytestream"))
     return FALSE;
-  }
 
   /* create an elementfactory for the cdxa_parse element */
   factory = gst_element_factory_new ("cdxaparse", GST_TYPE_CDXA_PARSE,

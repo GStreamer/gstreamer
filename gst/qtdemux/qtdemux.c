@@ -232,13 +232,11 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
   GstTypeFactory *type;
 
-  if (!gst_library_load("gstbytestream")) {
-    gst_info("qtdemux: could not load support library 'gstbytestream'\n");
+  if (!gst_library_load ("gstbytestream"))
     return FALSE;
-  }
 
-  factory = gst_element_factory_new("qtdemux",GST_TYPE_QTDEMUX,
-                                   &gst_qtdemux_details);
+  factory = gst_element_factory_new ("qtdemux", GST_TYPE_QTDEMUX,
+                                     &gst_qtdemux_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
 
