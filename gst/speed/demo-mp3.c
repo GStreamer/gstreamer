@@ -52,10 +52,10 @@ int main(int argc, char **argv)
     gst_bin_add(GST_BIN(pipeline), stereo2mono);
     gst_bin_add(GST_BIN(pipeline), speed);
     gst_bin_add(GST_BIN(pipeline), osssink);
-    gst_element_connect(filesrc, "src", mad, "sink");
-    gst_element_connect(mad, "src", stereo2mono, "sink");
-    gst_element_connect(stereo2mono, "src", speed, "sink");
-    gst_element_connect(speed, "src", osssink, "sink");
+    gst_element_connect(filesrc, mad);
+    gst_element_connect(mad, stereo2mono);
+    gst_element_connect(stereo2mono, speed);
+    gst_element_connect(speed, osssink);
     gtk_object_set(GTK_OBJECT(filesrc), "location", argv[1], NULL);
     
     gst_element_set_state(pipeline, GST_STATE_PLAYING);

@@ -42,9 +42,9 @@ int main(int argc, char **argv)
   gst_bin_add(GST_BIN(pipeline), pod);
   gst_bin_add(GST_BIN(pipeline), osssink);
 
-  gst_element_connect(src, "src", mad, "sink");
-  gst_element_connect(pod, "src", osssink, "sink");
-  gst_element_connect(mad, "src", pod, "sink");
+  gst_element_connect(src, mad);
+  gst_element_connect(pod, osssink);
+  gst_element_connect(mad, pod);
 
   gst_element_set_state(pipeline, GST_STATE_PLAYING);
 
