@@ -196,8 +196,8 @@ gst_sinesrc_init (GstSineSrc *src)
     &(src->volume)
   );
   
-  gst_dpman_set_rate_change_pad(src->dpman, src->srcpad);
-  
+  gst_dpman_set_rate(src->dpman, src->samplerate);
+
   gst_sinesrc_populate_sinetable(src);
   gst_sinesrc_update_table_inc(src);
 
@@ -210,7 +210,7 @@ gst_sinesrc_get(GstPad *pad)
   GstBuffer *buf;
   
   gint16 *samples;
-  gint i=0, frame_countdown;
+  gint i=0;
   
   g_return_val_if_fail (pad != NULL, NULL);
   src = GST_SINESRC(gst_pad_get_parent (pad));
@@ -224,12 +224,12 @@ gst_sinesrc_get(GstPad *pad)
 
   samples = (gint16*)GST_BUFFER_DATA(buf);
   GST_BUFFER_DATA(buf) = (gpointer) samples;
-  
-  frame_countdown = GST_DPMAN_PREPROCESS(src->dpman, src->samples_per_buffer, src->timestamp);
+
+  GST_DPMAN_PREPROCESS(src->dpman, src->samples_per_buffer, src->timestamp);
   
   src->timestamp += (gint64)src->samples_per_buffer * 1000000000LL / (gint64)src->samplerate;
    
-  while(GST_DPMAN_PROCESS_COUNTDOWN(src->dpman, frame_countdown, i)) {
+  while(GST_DPMAN_PROCESS(src->dpman, i)) {
 
     src->table_lookup = (gint)(src->table_pos);
     src->table_lookup_next = src->table_lookup + 1;
@@ -251,12 +251,13 @@ gst_sinesrc_get(GstPad *pad)
     /*               * src->volume * 32767.0; */
 
     /*linear interpolation */
-    samples[i++] = ((src->table_interp
+    samples[i] = ((src->table_interp
                    *(src->table_data[src->table_lookup_next]
                     -src->table_data[src->table_lookup]
                     )
                   )+src->table_data[src->table_lookup]
                  )* src->volume * 32767.0;
+    i++;
   }
 
   
@@ -282,6 +283,7 @@ gst_sinesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       break;
     case ARG_SAMPLERATE:
       src->samplerate = g_value_get_int (value);
+      gst_dpman_set_rate(src->dpman, src->samplerate);
       src->newcaps=TRUE;
       gst_sinesrc_update_table_inc(src);
       break;

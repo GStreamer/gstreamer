@@ -62,8 +62,9 @@ int main(int argc,char *argv[]) {
   gst_element_connect_many(sinesrc, volfilter, osssink, NULL);
   /* this breaks with current alsa oss compat lib */
   g_object_set(G_OBJECT(osssink),"fragment",0x00180008,NULL);
+  g_object_set(G_OBJECT(osssink),"sync",FALSE,NULL);
 
-  g_object_set(G_OBJECT(sinesrc),"samplesperbuffer",64,NULL);
+  g_object_set(G_OBJECT(sinesrc),"samplesperbuffer",1024,NULL);
   
   /***** set up the GUI *****/
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -87,7 +88,7 @@ int main(int argc,char *argv[]) {
   
   dpman = gst_dpman_get_manager (sinesrc);
   g_assert(gst_dpman_attach_dparam (dpman, "freq", freq));
-  gst_dpman_set_mode(dpman, "synchronous");
+  gst_dpman_set_mode(dpman, "asynchronous");
   
   spec = (GParamSpecFloat*)gst_dpman_get_param_spec (dpman, "freq");
   freq_adj = (GtkAdjustment*)gtk_adjustment_new((gfloat)log(spec->default_value), 
@@ -106,12 +107,12 @@ int main(int argc,char *argv[]) {
   /* this defines the maximum slope that this *
   * param can change.  This says that in 50ms *
   * the value can change from 0.0 to 1.0 */
-  g_object_set(G_OBJECT(volume), "slope_delta_float", 1.0F, NULL);
+  g_object_set(G_OBJECT(volume), "slope_delta_float", 0.1F, NULL);
   g_object_set(G_OBJECT(volume), "slope_time", 50000000LL, NULL); 
   
   dpman = gst_dpman_get_manager (volfilter);
   g_assert(gst_dpman_attach_dparam (dpman, "volume", volume));
-  gst_dpman_set_mode(dpman, "synchronous");
+  gst_dpman_set_mode(dpman, "asynchronous");
   
   g_object_set(G_OBJECT(volfilter), "mute", FALSE, NULL);
 
