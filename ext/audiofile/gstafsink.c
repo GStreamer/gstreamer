@@ -248,6 +248,12 @@ gst_afsink_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
     case ARG_LOCATION:
       g_value_set_string (value, sink->filename);
       break;
+    case ARG_TYPE:
+      g_value_set_enum (value, sink->type);
+      break;
+    case ARG_OUTPUT_ENDIANNESS:
+      g_value_set_int (value, sink->endianness_output);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
