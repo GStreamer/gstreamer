@@ -1,3 +1,26 @@
+2004-02-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_getcaps),
+	(gst_videoscale_init), (gst_videoscale_chain),
+	(gst_videoscale_set_property), (plugin_init):
+	* gst/videoscale/gstvideoscale.h:
+	* gst/videoscale/videoscale.c: (gst_videoscale_setup),
+	(gst_videoscale_scale_rgb), (gst_videoscale_planar411),
+	(gst_videoscale_planar400), (gst_videoscale_packed422),
+	(gst_videoscale_packed422rev), (gst_videoscale_32bit),
+	(gst_videoscale_24bit), (gst_videoscale_16bit),
+	(gst_videoscale_bilinear), (gst_videoscale_bicubic),
+	(gst_videoscale_scale_plane_slow),
+	(gst_videoscale_scale_point_sample),
+	(gst_videoscale_scale_nearest),
+	(gst_videoscale_scale_nearest_str2),
+	(gst_videoscale_scale_nearest_str4),
+	(gst_videoscale_scale_nearest_32bit),
+	(gst_videoscale_scale_nearest_24bit),
+	(gst_videoscale_scale_nearest_16bit):
+        add debugging category and use it properly
+        fix use of GST_PTR_FORMAT
+
 2004-02-25  Andy Wingo  <wingo@pobox.com>
 
 	* gst/interleave/interleave.c (interleave_buffered_loop): Always
