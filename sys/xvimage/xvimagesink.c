@@ -630,6 +630,22 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
     return NULL;
   }
 
+  /* Set XV_AUTOPAINT_COLORKEY */
+  {
+    int count;
+    const XvAttribute *const attr = XvQueryPortAttributes (xcontext->disp,
+        xcontext->xv_port_id, &count);
+    static const char autopaint[] = "XV_AUTOPAINT_COLORKEY";
+
+    for (i = 0; i < count; i++)
+      if (!strcmp (attr[i].name, autopaint)) {
+        const Atom atom = XInternAtom (xcontext->disp, autopaint, False);
+
+        XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom, 1);
+        break;
+      }
+  }
+
   /* We get all image formats supported by our port */
   formats = XvListImageFormats (xcontext->disp,
       xcontext->xv_port_id, &nb_formats);
