@@ -46,7 +46,6 @@ enum
   ARG_BUFFER_SIZE
 };
 
-/*Pending Bala check this template */
 static GstStaticPadTemplate gst_sunaudiosrc_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -76,9 +75,6 @@ static GstData *gst_sunaudiosrc_get (GstPad * pad);
 static GstCaps *gst_sunaudiosrc_getcaps (GstPad * pad);
 static GstPadLinkReturn gst_sunaudiosrc_pad_link (GstPad * pad,
     const GstCaps * caps);
-
-static gboolean gst_sunaudiosrc_open (GstSunAudioSrc * sunaudiosrc);
-static void gst_sunaudiosrc_close (GstSunAudioSrc * sunaudiosrc);
 
 static GstElementClass *parent_class = NULL;
 
@@ -147,8 +143,7 @@ gst_sunaudiosrc_init (GstSunAudioSrc * sunaudiosrc)
 {
   const char *audiodev;
 
-  sunaudiosrc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
+  sunaudiosrc->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_sunaudiosrc_src_factory), "src");
 
   gst_pad_set_get_function (sunaudiosrc->srcpad, gst_sunaudiosrc_get);
@@ -215,46 +210,6 @@ gst_sunaudiosrc_get_property (GObject * object, guint prop_id,
   }
 }
 
-static gboolean
-gst_sunaudiosrc_open (GstSunAudioSrc * sunaudiosrc)
-{
-  int fd, ret;
-
-  fd = open ("/dev/audio", O_RDONLY);
-  if (fd == -1) {
-    /* FIXME error */
-    return FALSE;
-  } else {
-    sunaudiosrc->fd = fd;
-  }
-
-  ret = ioctl (fd, AUDIO_GETDEV, &sunaudiosrc->dev);
-  if (ret == -1) {
-    GST_ELEMENT_ERROR (sunaudiosrc, RESOURCE, SETTINGS, (NULL), ("%s",
-            strerror (errno)));
-    return FALSE;
-  }
-
-  GST_INFO ("name %s", sunaudiosrc->dev.name);
-  GST_INFO ("version %s", sunaudiosrc->dev.version);
-  GST_INFO ("config %s", sunaudiosrc->dev.config);
-
-  ret = ioctl (fd, AUDIO_GETINFO, &sunaudiosrc->info);
-  if (ret == -1) {
-    GST_ELEMENT_ERROR (sunaudiosrc, RESOURCE, SETTINGS, (NULL), ("%s",
-            strerror (errno)));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static void
-gst_sunaudiosrc_close (GstSunAudioSrc * sunaudiosrc)
-{
-  close (sunaudiosrc->fd);
-}
-
 static GstElementStateReturn
 gst_sunaudiosrc_change_state (GstElement * element)
 {
@@ -262,9 +217,6 @@ gst_sunaudiosrc_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-      //if (!gst_sunaudiosrc_open (sunaudiosrc)) {
-      //return GST_STATE_FAILURE;
-      //}
       break;
     case GST_STATE_READY_TO_PAUSED:
       break;
@@ -275,7 +227,6 @@ gst_sunaudiosrc_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
-      gst_sunaudiosrc_close (sunaudiosrc);
       break;
   }
 
@@ -341,7 +292,7 @@ gst_sunaudiosrc_get (GstPad * pad)
     return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
   }
 
-  readsamples = readbytes * sunaudiosrc->rate / 1;      /* Pending bps */
+  readsamples = readbytes * sunaudiosrc->rate;
 
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_OFFSET (buf) = sunaudiosrc->curoffset;
@@ -406,7 +357,7 @@ gst_sunaudiosrc_setparams (GstSunAudioSrc * sunaudiosrc)
   ainfo.record.encoding = AUDIO_ENCODING_LINEAR;
   ainfo.record.port = AUDIO_MICROPHONE;
   ainfo.record.buffer_size = sunaudiosrc->buffer_size;
-  //ainfo.output_muted = 0;
+  /* ainfo.output_muted = 0; */
 
   ret = ioctl (GST_SUNAUDIOELEMENT (sunaudiosrc)->fd, AUDIO_SETINFO, &ainfo);
   if (ret == -1) {

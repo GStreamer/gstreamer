@@ -31,6 +31,7 @@
 #include <sys/audioio.h>
 #include "gstsunelement.h"
 #include "gstsunmixer.h"
+#include "gstsunaudiosrc.h"
 
 
 #define GST_TYPE_SUNAUDIOSINK \
@@ -441,7 +442,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "sunaudiosink", GST_RANK_NONE,
           GST_TYPE_SUNAUDIOSINK) ||
       !gst_element_register (plugin, "sunaudiomixer", GST_RANK_NONE,
-          GST_TYPE_SUNAUDIOELEMENT))
+          GST_TYPE_SUNAUDIOELEMENT) ||
+      !gst_element_register (plugin, "sunaudiosrc", GST_RANK_NONE,
+          GST_TYPE_SUNAUDIOSRC))
     return FALSE;
 
   return TRUE;

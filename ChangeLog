@@ -1,3 +1,14 @@
+2004-12-15  Balamurali Viswanathan  <balamurali.viswanathan@wipro.com>
+
+	Reviewed by:  David Schleef  <ds@schleef.org>
+
+	* sys/sunaudio/gstsunaudio.c: (plugin_init):  Apply patch from
+	Bala, registering sunaudiosrc (oops!), and cleaning up code a
+	bit.  Also ran indent-gst.
+	* sys/sunaudio/gstsunaudiosrc.c: (gst_sunaudiosrc_init),
+	(gst_sunaudiosrc_change_state), (gst_sunaudiosrc_get),
+	(gst_sunaudiosrc_setparams):
+
 2004-12-14  David Schleef  <ds@schleef.org>
 
 	* gst/festival/gstfestival.c: (gst_festival_chain): Set the
