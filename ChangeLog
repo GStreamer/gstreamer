@@ -1,5 +1,10 @@
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/ext/ffmpeg/patches/autotools.patch:
+          put in sdl.m4 and imlib.m4
+
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/ext/ffmpeg/.pc/autotools/.pc:
 	* gst-libs/ext/ffmpeg/.pc/no-imlib/configure.ac:
 	* gst-libs/ext/ffmpeg/.pc/noinst-programs/Makefile.am:
