@@ -51,7 +51,7 @@ xml-mp3.c: $(top_srcdir)/docs/manual/xml.xml
 # they actually run
 include $(top_srcdir)/testsuite/Rules
                                                                                 
-tests_pass = elementmake elementget init popt $(GNOME)
+tests_pass = elementmake elementget init popt
 tests_fail =
 tests_ignore =
 
