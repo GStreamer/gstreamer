@@ -172,6 +172,12 @@ else
 LIBPNG_DIR=
 endif
 
+if USE_LIBRFB
+LIBRFB_DIR=librfb
+else
+LIBRFB_DIR=
+endif
+
 if USE_MAD
 MAD_DIR=mad
 else
@@ -320,6 +326,7 @@ SUBDIRS=\
 	$(LIBDV_DIR) \
 	$(LIBFAME_DIR) \
 	$(LIBPNG_DIR) \
+	$(LIBRFB_DIR) \
 	$(MAD_DIR) \
 	$(MAS_DIR) \
 	$(MIKMOD_DIR) \
@@ -371,6 +378,7 @@ DIST_SUBDIRS=\
 	lcs \
 	libfame \
 	libpng \
+	librfb \
 	mad \
 	mikmod \
 	mpeg2dec \
