@@ -307,7 +307,7 @@ print_element_info (GstElementFactory *factory)
             printf("\n    (%d): \t%s", values[j].value, values[j].value_nick);
 	    j++; 
 	  }
-	  g_type_class_unref (ec);
+	  //g_type_class_unref (ec);
 	}
         else
           printf("unknown %d", param->value_type);
