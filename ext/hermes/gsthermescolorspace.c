@@ -307,7 +307,6 @@ gst_hermes_colorspace_caps_remove_format_info (GstCaps * caps)
 {
   int i;
   GstStructure *structure;
-  GstCaps *rgbcaps;
 
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
@@ -321,10 +320,9 @@ gst_hermes_colorspace_caps_remove_format_info (GstCaps * caps)
     gst_structure_remove_field (structure, "blue_mask");
   }
 
-  rgbcaps = gst_caps_simplify (caps);
-  gst_caps_free (caps);
+  gst_caps_do_simplify (caps);
 
-  return rgbcaps;
+  return caps;
 }
 
 static void

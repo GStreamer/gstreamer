@@ -1,5 +1,15 @@
 2004-04-22  Benjamin Otte  <otte@gnome.org>
 
+	* ext/hermes/gsthermescolorspace.c:
+	(gst_hermes_colorspace_caps_remove_format_info):
+	* gst/colorspace/gstcolorspace.c:
+	(gst_colorspace_caps_remove_format_info):
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcolorspace_caps_remove_format_info):
+	  s/gst_caps_simplify/gst_caps_do_simplify/
+
+2004-04-22  Benjamin Otte  <otte@gnome.org>
+
 	* gst-libs/gst/riff/riff-media.c:
 	(gst_riff_create_video_caps_with_data):
 	  mpegversion is an int
