@@ -1419,7 +1419,7 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
           entry2 = entry;
         else {
           entry2 = &entries[i - 1];
-          list = g_list_insert_before (list, one, entry2);
+          list = g_list_insert_before (list, one->next, entry2);
           entry = one->data;
           one = one->next;
         }
@@ -1455,7 +1455,7 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
   for (i = 0, one = list; one != NULL; one = one->next, i++) {
     entry = one->data;
     memcpy (&avi->index_entries[i], entry, sizeof (gst_avi_index_entry));
-    /*g_assert (i == entry->index_nr); */
+    avi->index_entries[i].index_nr = i;
   }
 
   GST_LOG ("Freeing original index list");
