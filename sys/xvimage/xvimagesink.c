@@ -398,6 +398,7 @@ gst_xvimagesink_get_xv_support (GstXContext *xcontext)
       gint nb_formats;
       XvImageFormatValues *formats = NULL;
       GstCaps *caps = NULL;
+      char *caps_str;
       
       /* We get all image formats supported by our port */
       formats = XvListImageFormats (xcontext->disp,
@@ -457,7 +458,13 @@ gst_xvimagesink_get_xv_support (GstXContext *xcontext)
       if (formats)
         XFree (formats);
       
-      GST_DEBUG ("Generated the following caps %s", gst_caps_to_string (caps));
+      caps_str = gst_caps_to_string (caps);
+      
+      GST_DEBUG ("Generated the following caps %s", caps_str);
+      
+      if (caps_str)
+        g_free (caps_str);
+      
       return caps;
     }
     
