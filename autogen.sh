@@ -119,7 +119,7 @@ fi
 	DIE=1
 }
 
-libtool_version=`libtool --version | sed 's/^.* \([0-9\.]*\) .*$/\1/'`
+libtool_version=`libtool --version | sed 's/^.* \([0-9a-z\.]*\) .*$/\1/'`
 libtool_major=`echo $libtool_version | cut -d. -f1`
 libtool_minor=`echo $libtool_version | cut -d. -f2`
 libtool_micro=`echo $libtool_version | cut -d. -f3`
