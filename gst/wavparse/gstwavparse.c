@@ -645,8 +645,7 @@ gst_wavparse_parse_fmt (GstWavParse *wavparse, guint size)
       gst_caps_free (caps);
     }
 
-    GST_DEBUG ("frequency %d, channels %d",
-							 wavparse->rate, wavparse->channels);
+    GST_DEBUG ("frequency %d, channels %d", wavparse->rate, wavparse->channels);
   }
 }
 
@@ -914,13 +913,16 @@ gst_wavparse_pad_convert (GstPad *pad,
   gint bytes_per_sample;
   glong byterate;
   GstWavParse *wavparse;
+  const GstFormat *formats;
+  gboolean src_format_ok = FALSE;
+  gboolean dest_format_ok = FALSE;
 
   wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
   
   bytes_per_sample = wavparse->channels * wavparse->width / 8;
   if (bytes_per_sample == 0) {
-    GST_DEBUG ("bytes_per_sample is 0, probably an mp3 - channels %d,  width %d\n",
-	          wavparse->channels, wavparse->width);
+    GST_DEBUG ("bytes_per_sample 0, probably an mp3 - channels %d, width %d",
+	       wavparse->channels, wavparse->width);
     return FALSE;
   }
   byterate = (glong) (bytes_per_sample * wavparse->rate);
@@ -928,7 +930,20 @@ gst_wavparse_pad_convert (GstPad *pad,
     g_warning ("byterate is 0, internal error\n");
     return FALSE;
   }
-  GST_DEBUG ("bytes per sample: %d\n", bytes_per_sample);
+  GST_DEBUG ("bytes per sample: %d", bytes_per_sample);
+  /* check if both src_format and sink_format are in the supported formats */
+  formats = gst_pad_get_formats (pad);
+
+  while (formats && *formats) {
+    if (src_format == *formats) { src_format_ok = TRUE; }
+    if (*dest_format == *formats) { dest_format_ok = TRUE; }
+    formats++;
+  }
+  if (!src_format_ok || !dest_format_ok) {
+    GST_DEBUG ("src or dest format not supported");
+    return FALSE;
+  }
+
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
@@ -936,30 +951,37 @@ gst_wavparse_pad_convert (GstPad *pad,
         *dest_value = src_value / bytes_per_sample;
       else if (*dest_format == GST_FORMAT_TIME)
         *dest_value = src_value * GST_SECOND / byterate;
-      else
-        return FALSE;
+      else {
+        GST_DEBUG ("can't convert from bytes to other than units/time");
+         return FALSE;
+      }
+
       break;
     case GST_FORMAT_DEFAULT:
       if (*dest_format == GST_FORMAT_BYTES)
         *dest_value = src_value * bytes_per_sample;
       else if (*dest_format == GST_FORMAT_TIME)
         *dest_value = src_value * GST_SECOND / wavparse->rate;
-      else
-        return FALSE;
+      else {
+        GST_DEBUG ("can't convert from units to other than bytes/time");
+         return FALSE;
+      }
       break;
     case GST_FORMAT_TIME:
       if (*dest_format == GST_FORMAT_BYTES)
 	*dest_value = src_value * byterate / GST_SECOND;
       else if (*dest_format == GST_FORMAT_DEFAULT)
 	*dest_value = src_value * wavparse->rate / GST_SECOND;
-      else
-        return FALSE;
+      else {
+        GST_DEBUG ("can't convert from time to other than bytes/units");
+         return FALSE;
+      }
 
       *dest_value = *dest_value & ~(bytes_per_sample - 1);
       break;
     default:
       g_warning ("unhandled format for wavparse\n");
-      break;
+      return FALSE;
   }
   return TRUE;
 }
@@ -987,15 +1009,17 @@ gst_wavparse_pad_query (GstPad *pad, GstQueryType type,
   /* probe sink's peer pad, convert value, and that's it :) */
   /* FIXME: ideally we'd loop over possible formats of peer instead
    * of only using BYTE */
+  
+  /* only support byte, time and unit queries */
   wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
   if (!gst_pad_query (GST_PAD_PEER (wavparse->sinkpad), type, 
 		      &peer_format, &peer_value)) {
-    g_warning ("Could not query sink pad's peer\n");
+    GST_DEBUG ("Could not query sink pad's peer");
     return FALSE;
   }
   if (!gst_pad_convert (wavparse->sinkpad, peer_format, peer_value,
 		        format, value)) {
-    g_warning ("Could not query sink pad's peer\n");
+    GST_DEBUG ("Could not convert sink pad's peer");
     return FALSE;
   }
   GST_DEBUG ("pad_query done, value %" G_GINT64_FORMAT "\n", *value);
