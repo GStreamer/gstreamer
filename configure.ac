@@ -2104,6 +2104,7 @@ examples/indexing/Makefile
 examples/gstplay/Makefile
 examples/switch/Makefile
 examples/Makefile
+testsuite/embed/Makefile
 testsuite/spider/Makefile
 testsuite/alsa/Makefile
 testsuite/multifilesink/Makefile

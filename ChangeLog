@@ -1,3 +1,23 @@
+2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	* examples/capsfilter/capsfilter1.c: (main):
+	* examples/seeking/spider_seek.c: (make_spider_pipeline):
+	* ext/dvdread/Makefile.am:
+	* ext/dvdread/demo-play:
+	* ext/dvdread/demo-play.c:
+	* gconf/gstreamer.schemas.in:
+	* gst-libs/gst/gconf/gconf.c:
+	* sys/v4l/TODO:
+	* testsuite/Makefile.am:
+	* testsuite/embed/Makefile.am:
+	* testsuite/embed/embed.c: (cb_expose), (main):
+	  Remove all references to xvideosink, fix examples (#140845).
+	* gst/playback/gstplaybasebin.c: (group_destroy):
+	  Apparently, disposal does not unlink - so do explicitely.
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
+	  Add debug.
+
 2005-01-09  Maciej Katafiasz <mathrick@freedesktop.org>
 
 	* README: fix PKG_CONFIG_PATH instructions, what was there

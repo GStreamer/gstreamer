@@ -218,7 +218,7 @@ gst_alsa_sink_check_event (GstAlsaSink * sink, gint pad_nr)
         break;
       case GST_EVENT_DISCONTINUOUS:
       {
-        GstClockTime value, delay;
+        GstClockTime value = GST_CLOCK_TIME_NONE, delay;
 
         /* only the first pad may seek */
         if (pad_nr != 0) {
@@ -244,6 +244,10 @@ gst_alsa_sink_check_event (GstAlsaSink * sink, gint pad_nr)
         } else {
           GST_WARNING_OBJECT (this,
               "couldn't extract time from discont event. Bad things might happen!");
+        }
+
+        if (GST_CLOCK_TIME_IS_VALID (value)) {
+          GST_DEBUG ("Set discont to %" GST_TIME_FORMAT, GST_TIME_ARGS (value));
         }
 
         break;

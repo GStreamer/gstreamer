@@ -328,6 +328,8 @@ group_destroy (GstPlayBaseGroup * group)
             gst_pad_get_name (pad),
             GST_ELEMENT_NAME (gst_pad_get_parent (pad)));
         gst_bin_remove (GST_BIN (play_base_bin->thread), fakesrc);
+      } else if (GST_PAD_PEER (pad)) {
+        gst_pad_unlink (GST_PAD_PEER (pad), pad);
       }
     }
 
@@ -344,6 +346,7 @@ group_destroy (GstPlayBaseGroup * group)
     }
 
     group->type[n].preroll = NULL;
+    group->type[n].selector = NULL;
   }
 
   /* free the streaminfo too */

@@ -1,95 +1,48 @@
+/*
+ * Sample app for element embedding.
+ */
+
 #include <gst/gst.h>
+#include <gst/xoverlay/xoverlay.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
-#include <gdk/gdkkeysyms.h>
 
-GtkWidget *window;
-GstElement *testsrc;
-GstElement *xvideosink;
-GstElement *filter;
-GdkWindow *wind;
-GstElement *pipeline;
-
-#if 0
-static int
-configure (GtkWidget * widget, GdkEventConfigure * evt, gpointer data)
+static void
+cb_expose (GtkWidget * w, GdkEventExpose * ev, GstElement * e)
 {
-  printf ("configure\n");
-  if (wind) {
-    gdk_window_resize (wind, evt->width, evt->height);
-    gdk_window_reparent (wind, window->window, 0, 0);
+  if (GST_IS_X_OVERLAY (e) &&
+      !GTK_WIDGET_NO_WINDOW (w) && GTK_WIDGET_REALIZED (w)) {
+    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (e),
+        GDK_WINDOW_XWINDOW (w->window));
   }
-
-  return FALSE;
-}
-
-static int
-map_event (GtkWidget * widget, GdkEventConfigure * evt, gpointer data)
-{
-  printf ("map\n");
-  return FALSE;
-}
-#endif
-
-static int
-have_xid (GstElement * xv, gint xid, gpointer data)
-{
-  printf ("have_xid\n");
-
-  wind = gdk_window_foreign_new (xid);
-  printf ("gdk_window_reparent() wind=%p window=%p xid=%d\n", wind,
-      window->window, xid);
-  gdk_window_reparent (wind, window->window, 0, 0);
-  gdk_window_show (wind);
-
-  return FALSE;
 }
 
 int
 main (int argc, char *argv[])
 {
-  //GValue value = { 0 };
+  GtkWidget *window, *content;
+  GstElement *testsrc, *csp, *videosink, *pipeline;
 
   gtk_init (&argc, &argv);
   gst_init (&argc, &argv);
 
+  pipeline = gst_element_factory_make ("pipeline", NULL);
+  testsrc = gst_element_factory_make ("videotestsrc", NULL);
+  csp = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  videosink = gst_element_factory_make ("xvimagesink", NULL);
+
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_default_size (GTK_WINDOW (window), 640, 480);
-#if 0
-  gtk_signal_connect (GTK_OBJECT (window), "configure_event",
-      GTK_SIGNAL_FUNC (configure), NULL);
-  gtk_signal_connect (GTK_OBJECT (window), "map",
-      GTK_SIGNAL_FUNC (map_event), NULL);
-#endif
+  gtk_window_set_title (GTK_WINDOW (window), "My application");
+  content = gtk_event_box_new ();
+  gtk_container_add (GTK_CONTAINER (window), content);
+  g_signal_connect (content, "expose-event", G_CALLBACK (cb_expose), videosink);
   gtk_widget_show_all (window);
 
-  pipeline = gst_element_factory_make ("pipeline", NULL);
-
-  testsrc = gst_element_factory_make ("videotestsrc", NULL);
-#if 0
-  g_value_init (&value, G_TYPE_INT);
-  g_value_set_int (&value, 640);
-  g_object_set_property (G_OBJECT (testsrc), "width", &value);
-  g_value_set_int (&value, 480);
-  g_object_set_property (G_OBJECT (testsrc), "height", &value);
-#endif
-
-  xvideosink = gst_element_factory_make ("xvideosink", NULL);
-  g_object_set (xvideosink, "toplevel", FALSE, NULL);
-  g_signal_connect (xvideosink, "have_xid", (GCallback) (have_xid), NULL);
-
-  gst_bin_add (GST_BIN (pipeline), testsrc);
-  gst_bin_add (GST_BIN (pipeline), xvideosink);
-
-  gst_element_connect (testsrc, xvideosink);
-
-  if (pipeline == NULL) {
-    g_warning ("Could not generate usable pipeline\n");
-    return 1;
-  }
+  gst_bin_add_many (GST_BIN (pipeline), testsrc, csp, videosink, NULL);
+  gst_element_link_many (testsrc, csp, videosink, NULL);
 
   g_idle_add ((GSourceFunc) gst_bin_iterate, pipeline);
-
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   gtk_main ();

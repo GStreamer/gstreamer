@@ -1,3 +1,4 @@
+#include <string.h>
 #include <gst/gst.h>
 
 /* This app uses a filter to connect colorspace and videosink
@@ -28,7 +29,7 @@ main (gint argc, gchar * argv[])
   GstElement *queue;
   GstElement *mpeg2dec;
   GstElement *colorspace;
-  GstElement *xvideosink;
+  GstElement *videosink;
   gboolean res;
 
   gst_init (&argc, &argv);
@@ -51,11 +52,10 @@ main (gint argc, gchar * argv[])
   queue = gst_element_factory_make ("queue", "queue");
   mpeg2dec = gst_element_factory_make ("mpeg2dec", "mpeg2dec");
   g_return_val_if_fail (mpeg2dec, -1);
-  colorspace = gst_element_factory_make ("colorspace", "colorspace");
+  colorspace = gst_element_factory_make ("ffmpegcolorspace", "colorspace");
   g_return_val_if_fail (colorspace, -1);
-  xvideosink = gst_element_factory_make ("xvideosink", "xvideosink");
-  g_return_val_if_fail (xvideosink, -1);
-  g_object_set (G_OBJECT (xvideosink), "toplevel", TRUE, NULL);
+  videosink = gst_element_factory_make ("ximagesink", "videosink");
+  g_return_val_if_fail (videosink, -1);
 
   gst_bin_add (GST_BIN (pipeline), filesrc);
   gst_bin_add (GST_BIN (pipeline), demux);
@@ -63,19 +63,17 @@ main (gint argc, gchar * argv[])
   gst_bin_add (GST_BIN (thread), queue);
   gst_bin_add (GST_BIN (thread), mpeg2dec);
   gst_bin_add (GST_BIN (thread), colorspace);
-  gst_bin_add (GST_BIN (thread), xvideosink);
+  gst_bin_add (GST_BIN (thread), videosink);
   gst_bin_add (GST_BIN (pipeline), thread);
 
-  gst_element_link (filesrc, "src", demux, "sink");
-  gst_element_link (queue, "src", mpeg2dec, "sink");
-  gst_element_link (mpeg2dec, "src", colorspace, "sink");
-  /* force RGB data passing between colorspace and xvideosink */
-  res = gst_element_link_filtered (colorspace, "src", xvideosink, "sink",
-      GST_CAPS_NEW ("filtercaps",
-          "video/raw", "format", GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB "))
-      ));
+  gst_element_link_pads (filesrc, "src", demux, "sink");
+  gst_element_link_pads (queue, "src", mpeg2dec, "sink");
+  gst_element_link_pads (mpeg2dec, "src", colorspace, "sink");
+  /* force RGB data passing between colorspace and videosink */
+  res = gst_element_link_pads_filtered (colorspace, "src", videosink, "sink",
+      gst_caps_new_simple ("video/x-raw-rgb", NULL));
   if (!res) {
-    g_print ("could not connect colorspace and xvideosink\n");
+    g_print ("could not connect colorspace and videosink\n");
     return -1;
   }
 
