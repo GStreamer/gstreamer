@@ -34,6 +34,7 @@ static void
 gst_alsa_error_wrapper (const char *file, int line, const char *function,
     int err, const char *fmt, ...)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   va_list args;
   gchar *str;
 
@@ -47,6 +48,7 @@ gst_alsa_error_wrapper (const char *file, int line, const char *function,
       "alsalib error: %s%s%s", str, err ? ": " : "",
       err ? snd_strerror (err) : "");
   g_free (str);
+#endif
 }
 
 static gboolean

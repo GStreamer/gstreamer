@@ -1,3 +1,8 @@
+2004-07-03  David Schleef  <ds@schleef.org>
+
+	* ext/alsa/gstalsaplugin.c: (gst_alsa_error_wrapper): Disable
+	call to gst_debug_log() if debugging is disabled (bug #145118)
+
 2004-07-03  Benjamin Otte  <otte@gnome.org>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_xrun_recovery):
