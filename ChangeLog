@@ -1,3 +1,14 @@
+2004-08-12  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/elements/gstfilesrc.c: (gst_filesrc_get_mmap):
+	  work with non-regular files that can be mmapped (like /dev/zero)
+	* gst/elements/gsttypefindelement.c: (gst_type_find_element_chain):
+	  get rid of typefinds that require a seek when we can't seek instead
+	  of trying them over and over again
+	* tools/gst-launch.c: (idle_func), (error_cb), (main):
+	  return non-zero failure value when the pipeline was interrupted or
+	  an error occurred
+
 2004-08-11  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/config.h:

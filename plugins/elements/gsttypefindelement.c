@@ -617,6 +617,7 @@ gst_type_find_element_chain (GstPad * pad, GstData * data)
       if (typefind->caps) {
         stop_typefinding (typefind);
       } else if (typefind->possibilities == NULL) {
+      error:
         GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
         stop_typefinding (typefind);
       } else {
@@ -633,6 +634,7 @@ gst_type_find_element_chain (GstPad * pad, GstData * data)
         }
         if (!walk) {
           /* find out if we should seek */
+        restart:
           for (walk = typefind->possibilities; walk; walk = g_list_next (walk)) {
             entry = (TypeFindEntry *) walk->data;
             if (entry->requested_size > 0) {
@@ -661,8 +663,19 @@ gst_type_find_element_chain (GstPad * pad, GstData * data)
                 GST_DEBUG_OBJECT (typefind,
                     "'%s' was reset - couldn't seek to %" G_GINT64_FORMAT,
                     GST_PLUGIN_FEATURE_NAME (entry->factory), seek_offset);
-                entry->requested_size = 0;
-                entry->requested_offset = 0;
+                if (entry->probability == 0) {
+                  free_entry (entry);
+                  typefind->possibilities =
+                      g_list_delete_link (typefind->possibilities, walk);
+                  /* FIXME: too many gotos */
+                  if (!typefind->possibilities)
+                    goto error;
+                  /* we modified the list, let's restart */
+                  goto restart;
+                } else {
+                  entry->requested_size = 0;
+                  entry->requested_offset = 0;
+                }
               }
             }
           }

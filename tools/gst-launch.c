@@ -66,6 +66,7 @@ static guint64 max = 0;
 static GstClock *s_clock;
 static GstElement *pipeline;
 gboolean caught_intr = FALSE;
+gboolean caught_error = FALSE;
 
 gboolean
 idle_func (gpointer data)
@@ -85,8 +86,8 @@ idle_func (gpointer data)
   min = MIN (min, diff);
   max = MAX (max, diff);
 
-  if (!busy || caught_intr || (max_iterations > 0
-          && iterations >= max_iterations)) {
+  if (!busy || caught_intr || caught_error ||
+      (max_iterations > 0 && iterations >= max_iterations)) {
     char *s_iterations;
     char *s_sum;
     char *s_ave;
@@ -308,12 +309,20 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
     g_free (str);
   }
 }
+
 static void
 found_tag (GObject * pipeline, GstElement * source, GstTagList * tags)
 {
   g_print (_("FOUND TAG      : found by element \"%s\".\n"),
       GST_STR_NULL (GST_ELEMENT_NAME (source)));
   gst_tag_list_foreach (tags, print_tag, NULL);
+}
+
+static void
+error_cb (GObject * object, GstObject * source, GError * error, gchar * debug)
+{
+  gst_element_default_error (object, source, error, debug);
+  caught_error = TRUE;
 }
 
 #ifndef DISABLE_FAULT_HANDLER
@@ -481,7 +490,7 @@ main (int argc, char *argv[])
     } else {
       fprintf (stderr, _("ERROR: pipeline could not be constructed.\n"));
     }
-    exit (1);
+    return 1;
   } else if (error) {
     fprintf (stderr, _("WARNING: erroneous pipeline: %s\n"), error->message);
     fprintf (stderr, _("         Trying to run anyway.\n"));
@@ -497,8 +506,7 @@ main (int argc, char *argv[])
   if (tags) {
     g_signal_connect (pipeline, "found-tag", G_CALLBACK (found_tag), NULL);
   }
-  g_signal_connect (pipeline, "error", G_CALLBACK (gst_element_default_error),
-      NULL);
+  g_signal_connect (pipeline, "error", G_CALLBACK (error_cb), NULL);
 
 #ifndef GST_DISABLE_LOADSAVE
   if (savefile) {
@@ -513,7 +521,7 @@ main (int argc, char *argv[])
 
       if (real_pipeline == NULL) {
         fprintf (stderr, _("ERROR: the 'pipeline' element wasn't found.\n"));
-        exit (1);
+        return 1;
       }
       gst_bin_add (GST_BIN (real_pipeline), pipeline);
       pipeline = real_pipeline;
@@ -537,6 +545,10 @@ main (int argc, char *argv[])
       gst_element_wait_state_change (pipeline);
       g_print ("got the state change.\n");
     }
+    if (caught_intr)
+      res = 2;
+    if (caught_error)
+      res = 3;
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }

@@ -508,10 +508,12 @@ gst_filesrc_get_mmap (GstFileSrc * src)
   mapend = mapstart + mapsize;  /* note this is the byte *after* the map */
 
   /* check to see if we're going to overflow the end of the file */
-  if (readend > src->filelen) {
-    if (!gst_filesrc_check_filesize (src) || readend > src->filelen) {
-      readsize = src->filelen - src->curoffset;
-      readend = src->curoffset + readsize;
+  if (src->is_regular) {
+    if (readend > src->filelen) {
+      if (!gst_filesrc_check_filesize (src) || readend > src->filelen) {
+        readsize = src->filelen - src->curoffset;
+        readend = src->curoffset + readsize;
+      }
     }
   }
 
