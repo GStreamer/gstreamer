@@ -23,6 +23,8 @@
 #ifndef __GST_LOG_H__
 #define __GST_LOG_H__
 
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 extern const char             *g_log_domain_gstreamer;
