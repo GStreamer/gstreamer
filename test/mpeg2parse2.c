@@ -1,4 +1,3 @@
-
 #include <gnome.h>
 #include <gst/gst.h>
 
@@ -64,22 +63,22 @@ int main(int argc,char *argv[]) {
   g_return_val_if_fail(parse != NULL, -1);
 
   queue = gst_elementfactory_make("queue","queue");
-  g_return_if_fail(queue != NULL);
+  g_return_val_if_fail(queue != NULL, -1);
   
   /****
    *  you can substitute mpeg2play with you own player here
-   *  optionally you can remove the pares2 element. make
+   *  optionally you can remove the parse2 element. make
    *  sure to remove the pad connections too and don't add the
    *  mp2videoparse element to the bin.
    **/
   //parse2 = gst_elementfactory_make("mp2videoparse","parse");
-  //g_return_if_fail(parse2 != NULL);
+  //g_return_val_if_fail(parse2 != NULL, -1);
   decode = gst_elementfactory_make("mpeg2dec","decode_video");
-  g_return_if_fail(decode != NULL);
+  g_return_val_if_fail(decode != NULL, -1);
 
   show = gst_elementfactory_make("videosink","show");
   //gtk_object_set(GTK_OBJECT(show),"xv_enabled",FALSE,NULL);
-  g_return_if_fail(show != NULL);
+  g_return_val_if_fail(show != NULL, -1);
 
   appwindow = gnome_app_new("MPEG player","MPEG player");
   gnome_app_set_contents(GNOME_APP(appwindow),
