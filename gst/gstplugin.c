@@ -20,10 +20,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_DIRENT_H
 #include <dirent.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <signal.h>
 
 #include "gst_private.h"
@@ -32,7 +39,6 @@
 #include "gstversion.h"
 #include "gstregistrypool.h"
 #include "gstinfo.h"
-#include "config.h"
 #include "gstfilter.h"
 
 

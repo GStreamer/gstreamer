@@ -36,9 +36,11 @@ G_BEGIN_DECLS
 					gst_element_link_pads(a,b,c,d)
 #ifdef G_HAVE_ISO_VARARGS
 #define	gst_element_connect_many(a,...)	gst_element_link_many(a,__VA_ARGS__)
-#else
+#elif defined(G_HAVE_GNUC_VARARGS)
 #define gst_element_connect_many(a,args...) \
 					gst_element_link_many(a, ## args)
+#else
+/* FIXME: need an inline function */
 #endif
 #define	gst_element_connect_filtered(a,b,c) \
 					gst_element_link_filtered(a,b,c)

@@ -49,7 +49,7 @@ G_BEGIN_DECLS
 typedef enum {
   GST_DPMAN_CALLBACK,
   GST_DPMAN_DIRECT,
-  GST_DPMAN_ARRAY,
+  GST_DPMAN_ARRAY
 } GstDPMUpdateMethod;
 
 typedef struct _GstDParamManagerClass GstDParamManagerClass;

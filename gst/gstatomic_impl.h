@@ -423,7 +423,11 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 }
 
 #else 
+
+/* no need warning about this if we can't do inline assembly */
+#ifdef __GNUC__
 #warning consider putting your architecture specific atomic implementations here
+#endif
 
 /*
  * generic implementation

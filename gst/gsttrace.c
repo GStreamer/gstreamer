@@ -21,9 +21,13 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdio.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#include <sys/types.h>
+#endif
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
@@ -67,6 +71,12 @@ gst_trace_new (gchar * filename, gint size)
   g_return_val_if_fail (trace != NULL, NULL);
   trace->filename = g_strdup (filename);
   g_print ("opening '%s'\n", trace->filename);
+#ifndef S_IWUSR
+#define S_IWUSR S_IWRITE
+#endif
+#ifndef S_IRUSR
+#define S_IDUSR S_IREAD
+#endif
   trace->fd =
       open (trace->filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
   perror ("opening trace file");
@@ -120,7 +130,7 @@ gst_trace_text_flush (GstTrace * trace)
   }
 
   for (i = 0; i < trace->bufoffset; i++) {
-    snprintf (str, STRSIZE, "%20" G_GINT64_FORMAT " %10d %10d %s\n",
+    g_snprintf (str, STRSIZE, "%20" G_GINT64_FORMAT " %10d %10d %s\n",
         trace->buf[i].timestamp,
         trace->buf[i].sequence, trace->buf[i].data, trace->buf[i].message);
     write (trace->fd, str, strlen (str));

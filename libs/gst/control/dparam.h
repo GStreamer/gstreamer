@@ -58,7 +58,7 @@ typedef struct _GstDParamClass GstDParamClass;
 
 typedef enum {
   GST_DPARAM_UPDATE_FIRST,
-  GST_DPARAM_UPDATE_NORMAL,
+  GST_DPARAM_UPDATE_NORMAL
 } GstDParamUpdateInfo;
 
 typedef void (*GstDParamDoUpdateFunction) (GstDParam *dparam, gint64 timestamp, GValue *value, GstDParamUpdateInfo update_info);

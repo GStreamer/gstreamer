@@ -34,6 +34,8 @@
 #define LOCAL_REGISTRY_FILE      LOCAL_REGISTRY_DIR"/registry.xml"
 #define LOCAL_REGISTRY_FILE_TMP  LOCAL_REGISTRY_DIR"/.registry.xml.tmp"
 
+/* compatibility for pre-POSIX defines */
+#ifdef S_IRUSR
 #define REGISTRY_DIR_PERMS (S_ISGID | \
                             S_IRUSR | S_IWUSR | S_IXUSR | \
 		            S_IRGRP | S_IXGRP | \
@@ -42,6 +44,12 @@
 #define REGISTRY_FILE_PERMS (S_IRUSR | S_IWUSR | \
                              S_IRGRP | S_IWGRP | \
 			     S_IROTH | S_IWOTH)
+#else
+#define REGISTRY_DIR_PERMS (S_ISGID | \
+                            S_IREAD | S_IWRITE | S_IEXEC)
+#define REGISTRY_TMPFILE_PERMS (S_IREAD | S_IWRITE)
+#define REGISTRY_FILE_PERMS (S_IREAD | S_IWRITE)
+#endif
 
 G_BEGIN_DECLS
 

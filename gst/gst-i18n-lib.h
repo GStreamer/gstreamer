@@ -23,15 +23,25 @@
 #ifndef __GST_I18N_LIB_H__
 #define __GST_I18N_LIB_H__
 
-#include "gettext.h" /* included with gettext distribution and copied */
-
-#ifndef GETTEXT_PACKAGE
-#error You must define GETTEXT_PACKAGE before including this header.
+#ifndef GST_VERSION
+#error You must include config.h before including this header.
 #endif
+
+#ifdef ENABLE_NLS
+
+#include "gettext.h" /* included with gettext distribution and copied */
 
 /* we want to use shorthand _() for translating and N_() for marking */
 #define _(String) dgettext (GETTEXT_PACKAGE, String)
 #define N_(String) gettext_noop (String)
 /* FIXME: if we need it, we can add Q_ as well, like in glib */
+
+#else
+
+#define GETTEXT_PACKAGE NULL
+#define _(String) String
+#define N_(String) String
+
+#endif
 
 #endif /* __GST_I18N_LIB_H__ */

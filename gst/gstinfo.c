@@ -34,7 +34,9 @@
 #include <printf.h>
 #endif
 #include <stdio.h>              /* fprintf */
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <string.h>             /* G_VA_COPY */
 #include "gstinfo.h"
 #include "gstlog.h"

@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <sys/time.h>
+#include <time.h>
 
 #include "gst_private.h"
 #include "gstinfo.h"

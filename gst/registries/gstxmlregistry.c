@@ -29,7 +29,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <fcntl.h>
 #include <utime.h>
 
@@ -757,9 +759,9 @@ gst_xml_registry_parse_element_factory (GMarkupParseContext * context,
       gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
     }
   } else if (!strcmp (tag, "uri_type")) {
-    if (strncasecmp (text, "sink", 4) == 0) {
+    if (g_ascii_strncasecmp (text, "sink", 4) == 0) {
       factory->uri_type = GST_URI_SINK;
-    } else if (strncasecmp (text, "source", 5) == 0) {
+    } else if (g_ascii_strncasecmp (text, "source", 5) == 0) {
       factory->uri_type = GST_URI_SRC;
     }
   } else if (!strcmp (tag, "uri_protocol")) {

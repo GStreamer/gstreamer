@@ -1,5 +1,27 @@
 2004-04-28  David Schleef  <ds@schleef.org>
 
+	A bunch of portability fixes, derived from Steve Lhomme's MSVC
+	patch (bug #141317):
+	* gst/gst-i18n-lib.h: Allow disabling gettext.
+	* gst/gstatomic_impl.h: disable warning when it's dumb.
+	* gst/gstclock.c: fix include
+	* gst/gstcompat.h: fix variadic macro
+	* gst/gstinfo.c: fix include
+	* gst/gstmacros.h: add defines for inlines on MSVC
+	* gst/gstplugin.c: fix includes
+	* gst/gstregistry.c: fix includes
+	* gst/gstregistry.h: use S_IREAD, etc., if S_IRUSR isn't defined
+	* gst/gstsystemclock.c: fix include
+	* gst/gsttrace.c: (gst_trace_new), (gst_trace_text_flush): use
+	S_IREAD if S_IRUSR isn't defined.  fix use of non-portable functions
+	* gst/registries/gstxmlregistry.c:
+	(gst_xml_registry_parse_element_factory): fix use of non-portable
+	functions
+	* libs/gst/control/dparam.h: Remove trailing comma in enum definition
+	* libs/gst/control/dparammanager.h: same
+
+2004-04-28  David Schleef  <ds@schleef.org>
+
 	Move a bunch of unused files to old/ with names that are
 	not case-insensitive-unique.  These files still contain some
 	useful information that needs to be merged into gstbin.sgml,

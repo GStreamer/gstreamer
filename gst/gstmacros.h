@@ -32,6 +32,9 @@ G_BEGIN_DECLS
 #if defined (__GNUC__) && !defined (GST_IMPLEMENT_INLINES)
 # define GST_INLINE_FUNC extern __inline__
 # define GST_CAN_INLINE 1
+#elif defined(_MSC_VER)
+# define GST_INLINE_FUNC extern __inline
+# define GST_CAN_INLINE 1
 #else
 # define GST_INLINE_FUNC extern 
 # undef GST_CAN_INLINE
