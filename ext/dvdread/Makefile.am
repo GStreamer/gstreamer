@@ -11,12 +11,6 @@ libgstdvdreadsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = dvdreadsrc.h
 
-# fix this
-
-#noinst_PROGRAMS = demo-play
-#
-#demo_play_SOURCES = demo-play.c
-#demo_play_CFLAGS  = $(GST_CFLAGS) $(GNOME_CFLAGS)
-#demo_play_LDFLAGS = $(GST_LIBS) $(GNOME_LIBS)
-
-EXTRA_DIST = demo-play.c README
+EXTRA_DIST = \
+	README \
+	demo-play
