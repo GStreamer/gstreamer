@@ -55,6 +55,7 @@ struct _GstPngEnc
   gint bpp;
 
   gboolean snapshot;
+  gboolean newmedia;
 };
 
 struct _GstPngEncClass

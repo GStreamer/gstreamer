@@ -47,7 +47,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_SNAPSHOT
+  ARG_SNAPSHOT,
+  ARG_NEWMEDIA
 };
 
 static void gst_pngenc_base_init (gpointer g_class);
@@ -151,7 +152,12 @@ gst_pngenc_class_init (GstPngEncClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_SNAPSHOT,
       g_param_spec_boolean ("snapshot", "Snapshot",
-          "Send EOS after encoding a frame, usefull for snapshots",
+          "Send EOS after encoding a frame, useful for snapshots",
+          DEFAULT_SNAPSHOT, (GParamFlags) G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_NEWMEDIA,
+      g_param_spec_boolean ("newmedia", "newmedia",
+          "Send new media discontinuity after encoding each frame",
           DEFAULT_SNAPSHOT, (GParamFlags) G_PARAM_READWRITE));
 
   gstelement_class->get_property = gst_pngenc_get_property;
@@ -198,6 +204,7 @@ gst_pngenc_init (GstPngEnc * pngenc)
   pngenc->png_info_ptr = NULL;
 
   pngenc->snapshot = DEFAULT_SNAPSHOT;
+  pngenc->newmedia = FALSE;
 }
 
 static void
@@ -308,6 +315,14 @@ gst_pngenc_chain (GstPad * pad, GstData * _data)
 
     gst_pad_push (pngenc->srcpad, GST_DATA (event));
     gst_element_set_eos (GST_ELEMENT (pngenc));
+  } else if (pngenc->newmedia) {
+    /* send new media discont */
+    GstEvent *newmedia_event;
+
+    newmedia_event =
+        gst_event_new_discontinuous (TRUE, GST_FORMAT_TIME, (gint64) 0,
+        GST_FORMAT_UNDEFINED);
+    gst_pad_push (pngenc->srcpad, GST_DATA (newmedia_event));
   }
 }
 
@@ -323,6 +338,9 @@ gst_pngenc_get_property (GObject * object,
   switch (prop_id) {
     case ARG_SNAPSHOT:
       g_value_set_boolean (value, pngenc->snapshot);
+      break;
+    case ARG_NEWMEDIA:
+      g_value_set_boolean (value, pngenc->newmedia);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -342,6 +360,9 @@ gst_pngenc_set_property (GObject * object,
   switch (prop_id) {
     case ARG_SNAPSHOT:
       pngenc->snapshot = g_value_get_boolean (value);
+      break;
+    case ARG_NEWMEDIA:
+      pngenc->newmedia = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
