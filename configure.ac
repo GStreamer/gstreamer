@@ -280,6 +280,12 @@ GST_CHECK_FEATURE(V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
   AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_V4L="yes", HAVE_V4L="no", [#include <linux/videodev.h>])
 ])
 
+dnl *** Video 4 Linux 2***
+translit(dnm, m, l) AM_CONDITIONAL(USE_V4L2, true)
+GST_CHECK_FEATURE(V4L2, [Video 4 Linux 2], v4l2src, [
+  AC_CHECK_HEADER(linux/videodev2.h, HAVE_V4L2="yes", HAVE_V4L2="no")
+])
+
 dnl *** Video CD ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VCD, true)
 GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
@@ -936,6 +942,7 @@ sys/dxr3/Makefile
 sys/oss/Makefile
 sys/qcam/Makefile
 sys/v4l/Makefile
+sys/v4l2/Makefile
 sys/vcd/Makefile
 sys/vga/Makefile
 sys/xvideo/Makefile
