@@ -21,6 +21,8 @@
 
 	* docs/notes/release: add release checklist
 
+	* docs/gst-python.ent.in: update pubdate
+
 2003-06-26  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* configure.ac, AUTHORS, NEWS, README, TODO, docs/Makefile.am,
