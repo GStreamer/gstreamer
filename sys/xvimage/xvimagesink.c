@@ -565,25 +565,33 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink, GstPad * pad)
 
 /* This function generates a caps with all supported format by the first
    Xv grabable port we find. We store each one of the supported formats in a
-   format list and append the format to a newly created caps that we return */
+   format list and append the format to a newly created caps that we return 
+   If this function does not return NULL because of an error, it also grabs
+   the port via XvGrabPort */
 static GstCaps *
-gst_xvimagesink_get_xv_support (GstXContext * xcontext)
+gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
+    GstXContext * xcontext)
 {
   gint i, nb_adaptors;
   XvAdaptorInfo *adaptors;
+  gint nb_formats;
+  XvImageFormatValues *formats = NULL;
+  GstCaps *caps = NULL;
 
   g_return_val_if_fail (xcontext != NULL, NULL);
 
   /* First let's check that XVideo extension is available */
   if (!XQueryExtension (xcontext->disp, "XVideo", &i, &i, &i)) {
-    GST_DEBUG ("XVideo extension is not available");
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, TOO_LAZY, (NULL),
+        ("XVideo extension is not available"));
     return NULL;
   }
 
   /* Then we get adaptors list */
   if (Success != XvQueryAdaptors (xcontext->disp, xcontext->root,
           &nb_adaptors, &adaptors)) {
-    GST_DEBUG ("Failed getting XV adaptors list");
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, TOO_LAZY, (NULL),
+        ("Failed getting XV adaptors list"));
     return NULL;
   }
 
@@ -611,79 +619,85 @@ gst_xvimagesink_get_xv_support (GstXContext * xcontext)
   }
   XvFreeAdaptorInfo (adaptors);
 
-  if (xcontext->xv_port_id) {
-    gint nb_formats;
-    XvImageFormatValues *formats = NULL;
-    GstCaps *caps = NULL;
-
-    /* We get all image formats supported by our port */
-    formats = XvListImageFormats (xcontext->disp,
-        xcontext->xv_port_id, &nb_formats);
-    caps = gst_caps_new_empty ();
-    for (i = 0; i < nb_formats; i++) {
-      GstCaps *format_caps = NULL;
-
-      /* We set the image format of the xcontext to an existing one. Sink
-         connect method will override that but we need to have at least a
-         valid image format so that we can make our xshm calls check before
-         caps negotiation really happens. */
-      xcontext->im_format = formats[i].id;
-
-      switch (formats[i].type) {
-        case XvRGB:
-        {
-          format_caps = gst_caps_new_simple ("video/x-raw-rgb",
-              "endianness", G_TYPE_INT, xcontext->endianness,
-              "depth", G_TYPE_INT, xcontext->depth,
-              "bpp", G_TYPE_INT, xcontext->bpp,
-              "blue_mask", G_TYPE_INT, formats[i].red_mask,
-              "green_mask", G_TYPE_INT, formats[i].green_mask,
-              "red_mask", G_TYPE_INT, formats[i].blue_mask,
-              "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
-              "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
-              "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0, NULL);
-
-          /* For RGB caps we store them and the image 
-             format so that we can get back the format
-             when sinkconnect will give us a caps without
-             format property */
-          if (format_caps) {
-            GstXvImageFormat *format = NULL;
-
-            format = g_new0 (GstXvImageFormat, 1);
-            if (format) {
-              format->format = formats[i].id;
-              format->caps = gst_caps_copy (format_caps);
-              xcontext->formats_list =
-                  g_list_append (xcontext->formats_list, format);
-            }
-          }
-          break;
-        }
-        case XvYUV:
-          format_caps = gst_caps_new_simple ("video/x-raw-yuv",
-              "format", GST_TYPE_FOURCC, formats[i].id,
-              "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
-              "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
-              "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0, NULL);
-          break;
-        default:
-          g_assert_not_reached ();
-          break;
-      }
-
-      gst_caps_append (caps, format_caps);
-    }
-
-    if (formats)
-      XFree (formats);
-
-    GST_DEBUG ("Generated the following caps: " GST_PTR_FORMAT, caps);
-
-    return caps;
+  if (!xcontext->xv_port_id) {
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, TOO_LAZY, (NULL),
+        ("No port available"));
+    return NULL;
   }
 
-  return NULL;
+  /* We get all image formats supported by our port */
+  formats = XvListImageFormats (xcontext->disp,
+      xcontext->xv_port_id, &nb_formats);
+  caps = gst_caps_new_empty ();
+  for (i = 0; i < nb_formats; i++) {
+    GstCaps *format_caps = NULL;
+
+    /* We set the image format of the xcontext to an existing one. Sink
+       connect method will override that but we need to have at least a
+       valid image format so that we can make our xshm calls check before
+       caps negotiation really happens. */
+    xcontext->im_format = formats[i].id;
+
+    switch (formats[i].type) {
+      case XvRGB:
+      {
+        format_caps = gst_caps_new_simple ("video/x-raw-rgb",
+            "endianness", G_TYPE_INT, xcontext->endianness,
+            "depth", G_TYPE_INT, xcontext->depth,
+            "bpp", G_TYPE_INT, xcontext->bpp,
+            "blue_mask", G_TYPE_INT, formats[i].red_mask,
+            "green_mask", G_TYPE_INT, formats[i].green_mask,
+            "red_mask", G_TYPE_INT, formats[i].blue_mask,
+            "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+            "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+            "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0, NULL);
+
+        /* For RGB caps we store them and the image 
+           format so that we can get back the format
+           when sinkconnect will give us a caps without
+           format property */
+        if (format_caps) {
+          GstXvImageFormat *format = NULL;
+
+          format = g_new0 (GstXvImageFormat, 1);
+          if (format) {
+            format->format = formats[i].id;
+            format->caps = gst_caps_copy (format_caps);
+            xcontext->formats_list =
+                g_list_append (xcontext->formats_list, format);
+          }
+        }
+        break;
+      }
+      case XvYUV:
+        format_caps = gst_caps_new_simple ("video/x-raw-yuv",
+            "format", GST_TYPE_FOURCC, formats[i].id,
+            "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+            "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+            "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0, NULL);
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    gst_caps_append (caps, format_caps);
+  }
+
+  if (formats)
+    XFree (formats);
+
+  GST_DEBUG ("Generated the following caps: %" GST_PTR_FORMAT, caps);
+
+  if (gst_caps_is_empty (caps)) {
+    gst_caps_free (caps);
+    XvUngrabPort (xcontext->disp, xcontext->xv_port_id, 0);
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, TOO_LAZY, (NULL),
+        ("No supported format found"));
+    return NULL;
+  }
+
+  return caps;
 }
 
 /* This function get the X Display and global infos about it. Everything is
@@ -732,6 +746,8 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
     XCloseDisplay (xcontext->disp);
     g_mutex_unlock (xvimagesink->x_lock);
     g_free (xcontext);
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, TOO_LAZY, (NULL),
+        ("Could not get pixel formats"));
     return NULL;
   }
 
@@ -761,12 +777,13 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
     }
   }
 
-  xcontext->caps = gst_xvimagesink_get_xv_support (xcontext);
+  xcontext->caps = gst_xvimagesink_get_xv_support (xvimagesink, xcontext);
 
   if (!xcontext->caps) {
     XCloseDisplay (xcontext->disp);
     g_mutex_unlock (xvimagesink->x_lock);
     g_free (xcontext);
+    /* GST_ELEMENT_ERROR is thrown by gst_xvimagesink_get_xv_support */
     return NULL;
   }
 #ifdef HAVE_XSHM
@@ -775,11 +792,12 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
       gst_xvimagesink_check_xshm_calls (xcontext)) {
     xcontext->use_xshm = TRUE;
     GST_DEBUG ("xvimagesink is using XShm extension");
-  } else {
+  } else
+#endif /* HAVE_XSHM */
+  {
     xcontext->use_xshm = FALSE;
     GST_DEBUG ("xvimagesink is not using XShm extension");
   }
-#endif /* HAVE_XSHM */
 
   xv_attr = XvQueryPortAttributes (xcontext->disp,
       xcontext->xv_port_id, &N_attr);
@@ -1058,12 +1076,10 @@ gst_xvimagesink_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       /* Initializing the XContext */
-      if (!xvimagesink->xcontext)
-        xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink);
-      if (!xvimagesink->xcontext)
+      if (!xvimagesink->xcontext &&
+          !(xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink)))
         return GST_STATE_FAILURE;
-      else                      /* If context initialized correctly let's commit our colorbalance */
-        gst_xvimagesink_update_colorbalance (xvimagesink);
+      gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case GST_STATE_READY_TO_PAUSED:
       if (xvimagesink->xwindow)
@@ -1305,14 +1321,12 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
     return;
 
   /* If the element has not initialized the X11 context try to do so */
-  if (!xvimagesink->xcontext)
-    xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink);
-
-  if (!xvimagesink->xcontext) {
-    g_warning ("xvimagesink was unable to obtain the X11 context.");
+  if (!xvimagesink->xcontext &&
+      !(xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink)))
+    /* we have thrown a GST_ELEMENT_ERROR now */
     return;
-  } else                        /* If context initialized correctly let's commit our colorbalance */
-    gst_xvimagesink_update_colorbalance (xvimagesink);
+
+  gst_xvimagesink_update_colorbalance (xvimagesink);
 
   /* Clear image pool as the images are unusable anyway */
   gst_xvimagesink_imagepool_clear (xvimagesink);
