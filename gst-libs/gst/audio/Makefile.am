@@ -4,7 +4,7 @@ library_LTLIBRARIES = libgstaudio.la
 
 libgstaudio_la_SOURCES = audio.c
 
-libgstaudioincludedir = $(includedir)/gst/audio
+libgstaudioincludedir = $(includedir)/@PACKAGE@-@VERSION@/gst/audio
 libgstaudioinclude_HEADERS = audio.h
 
 libgstaudio_la_LIBADD =

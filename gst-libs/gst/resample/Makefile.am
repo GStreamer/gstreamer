@@ -17,7 +17,7 @@ libgstresample_la_LIBADD =
 libgstresample_la_CFLAGS = $(GST_CFLAGS) -ffast-math $(ARCHCFLAGS)
 libgstresample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-libgstresampleincludedir = $(includedir)/gst/resample
+libgstresampleincludedir = $(includedir)/@PACKAGE@-@VERSION@/gst/resample
 libgstresampleinclude_HEADERS = resample.h
 
 noinst_HEADERS = private.h
