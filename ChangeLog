@@ -1,3 +1,9 @@
+2004-01-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced_tagging.xml:
+	  Half-assed commit so Thomas can re-arrange document IDs here to be
+	  consistent, too.
+
 2004-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/manual/autoplugging.xml:

@@ -1,6 +1,53 @@
 <chapter id="cha-advanced-tagging">
   <title>Tagging (Metadata and Streaminfo)</title>
   <para>
-    WRITEME
+    Tags are pieces of information stored in a stream that are not the content
+    itself, butthey rather <emphasis>describe</emphasis> the content. Most
+    media container formats support tagging in one way or another. Ogg uses
+    VorbisComment for this, MP3 uses ID3, AVI and WAV use RIFF's INFO list
+    chunk, etc. GStreamer provides a general way for elements to read tags from
+    the stream and expose this to the user. The tags (at least the metadata)
+    will be part of the stream inside the pipeline. The consequence of this is
+    that transcoding of files from one format to another will automatically
+    preserve tags, as long as the input and output format elements both support
+    tagging.
   </para>
+  <para>
+    Tags are separated in two categories in GStreamer, even though applications
+    won't notice anything of this. The first are called <emphasis>metadata</emphasis>,
+    the second are called <emphasis>streaminfo</emphasis>. Metadata are tags
+    that describe the non-technical parts of stream content. They can be
+    changed without needing to re-encode the stream completely. Examples are
+    <quote>author</quote>, <quote>title</quote> or <quote>album</quote>. The
+    container format might still need to be re-written for the tags to fit in,
+    though. Streaminfo, on the other hand, are tags that describe the stream
+    contents technically. To change them, the stream needs to be re-encoded.
+    Examples are <quote>codec</quote> or <quote>bitrate</quote>. Note that some
+    container formats (like ID3) store various streaminfo tags as metadata in
+    the file container, which means that they can be changed so that they don't
+    match the content in the file anymore. Still, they are called metadata
+    because <emphasis>technically</emphasis>, they can be changed without
+    re-encoding the whole stream, even though that makes them invalid. Files
+    with such metadata tags will have the same tag twice: once as metadata,
+    once as streaminfo.
+  </para>
+  <para>
+    A tag reading element is called <classname>TagGetter</classname> in
+    &GStreamer;. A tag writer is called <classname>TagSetter</classname>. An
+    element supporting both can be used in a tag editor for quick tag changing.
+  </para>
+
+  <sect1 id="sect-tagging-read" xreflabel="Reading Tags from Streams">
+    <title>Reading Tags from Streams</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
+
+  <sect1 id="sect-tagging-write" xreflabel="Writing Tags to Streams">
+    <title>Writing Tags to Streams</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
 </chapter>
