@@ -1,5 +1,17 @@
 2005-01-05  David Schleef  <ds@schleef.org>
 
+	* testsuite/registry/Makefile.am:
+	* testsuite/registry/gst-print-formats.c:
+	(print_pad_templates_info), (print_element_list),
+	(print_typefind_list), (list_sort_func), (get_typefind_mime_list),
+	(g_list_uniqify), (get_pad_templates_info),
+	(get_element_mime_list), (print_mime_list), (main): A little
+	program that looks through the registry to find elements of
+	a given type.  Not particularly interesting as a test, except
+	that there's no other test covering the same area.
+
+2005-01-05  David Schleef  <ds@schleef.org>
+
 	* tools/gst-launch.c: (idle_func), (fault_handler_sighandler),
 	(fault_handler_sigaction), (fault_spin),
 	(sigint_handler_sighandler), (play_handler), (main): Fix deadlocks
