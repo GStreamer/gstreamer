@@ -412,21 +412,31 @@ dnl        this is an error until XFree86 starts shipping one
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 
 GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink, [
-  dnl use X_CFLAGS for check
-  save_FLAGS=$CFLAGS
-  CFLAGS=$X_CFLAGS
-
-  dnl check for PIC static lib
-  GST_CHECK_LIBHEADER(XVIDEO, Xv_pic, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xv.h, XVIDEO_LIBS="-lXv_pic -lXext")
-  if test x$HAVE_XVIDEO = xno; then
-    dnl PIC lib not found, check for regular lib
-    GST_CHECK_LIBHEADER(XVIDEO, Xv, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xv.h, XVIDEO_LIBS="-lXv -lXext")
-  fi
-  AC_SUBST(XVIDEO_LIBS)
-
-  dnl restore CFLAGS
-  CFLAGS=$save_CFLAGS
+   if test -z $X_DISPLAY_MISSING; then
+     HAVE_XVIDEO=yes
+   else
+     HAVE_XVIDEO=no
+   fi
 ])
+   
+dnl Check for Xv extension
+
+if test x$HAVE_XVIDEO = xyes; then
+  AC_CHECK_LIB(Xv_pic, XvQueryExtension, HAVE_XV="yes", HAVE_XV="no", $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
+
+  if test x$HAVE_XV = xyes; then
+    AC_DEFINE(HAVE_XV, 1, [Define if Xv extension is available])
+    XVIDEO_LIBS="-lXv_pic -lXext"
+    AC_SUBST(XVIDEO_LIBS)
+  else
+    AC_CHECK_LIB(Xv, XvQueryExtension, HAVE_XVIDEO="yes", HAVE_XVIDEO="no", $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
+    if test x$HAVE_XV = xyes; then
+      AC_DEFINE(HAVE_XV, 1, [Define if Xv extension is available])
+      XVIDEO_LIBS="-lXv -lXext"
+      AC_SUBST(XVIDEO_LIBS)
+    fi
+  fi
+fi
 
 dnl Next, check for the optional libraries:
 dnl These are all libraries used in building plug-ins
