@@ -149,6 +149,7 @@ gboolean		gst_plugin_name_filter		(GstPlugin *plugin, const gchar *name);
 GList*			gst_plugin_get_feature_list	(GstPlugin *plugin);
 GstPluginFeature*	gst_plugin_find_feature		(GstPlugin *plugin, const gchar *name, GType type);
 
+gboolean 		gst_plugin_check_file		(const gchar *filename, GError** error);
 GstPlugin * 		gst_plugin_load_file		(const gchar *filename, GError** error);
 gboolean 		gst_plugin_unload_plugin	(GstPlugin *plugin);
 

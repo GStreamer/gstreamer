@@ -299,6 +299,7 @@ gst_xml_registry_get_property (GObject * object, guint prop_id,
  * mtime is updated through an actual write (data)
  * ctime is updated through changing inode information
  * so this function returns the last time *anything* changed to this path
+ * it also sets the given boolean to TRUE if the given path is a directory
  */
 static time_t
 get_time (const char *path, gboolean * is_dir)
@@ -430,52 +431,75 @@ finished:
   g_free (text);
 }
 
+/* return TRUE iff regtime is more recent than the times of all the .so files
+ * in the plugin dirs; ie return TRUE if this path does not need to trigger
+ * a rebuild of registry
+ *
+ * - if it's a directory, recurse on subdirs
+ * - if it's a file
+ *   - if entry is not newer, return TRUE.
+ *   - if it's newer
+ *     - and it's a plugin, return FALSE
+ *     - otherwise return TRUE
+ */
 static gboolean
 plugin_times_older_than_recurse (gchar * path, time_t regtime)
 {
   DIR *dir;
   struct dirent *dirent;
   gboolean is_dir;
-  gchar *pluginname;
+  gchar *new_path;
 
   time_t pathtime = get_time (path, &is_dir);
 
-  if (pathtime > regtime) {
-    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,
-        "time for %s was %ld; more recent than registry time of %ld\n",
-        path, (long) pathtime, (long) regtime);
-    return FALSE;
+  if (is_dir) {
+    dir = opendir (path);
+    if (dir) {
+      while ((dirent = readdir (dir))) {
+        /* don't want to recurse in place or backwards */
+        if (strcmp (dirent->d_name, ".") && strcmp (dirent->d_name, "..")) {
+          new_path = g_build_filename (path, dirent->d_name, NULL);
+          if (!plugin_times_older_than_recurse (new_path, regtime)) {
+            GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,
+                "path %s is more recent than registry time of %ld",
+                new_path, (long) regtime);
+            g_free (new_path);
+            closedir (dir);
+            return FALSE;
+          }
+          g_free (new_path);
+        }
+      }
+      closedir (dir);
+    }
+    return TRUE;
   }
 
-  if (!is_dir)
+  /* it's a file */
+  if (pathtime <= regtime) {
     return TRUE;
+  }
 
-  dir = opendir (path);
-  if (dir) {
-    while ((dirent = readdir (dir))) {
-      /* don't want to recurse in place or backwards */
-      if (strcmp (dirent->d_name, ".") && strcmp (dirent->d_name, "..")) {
-        pluginname = g_strjoin ("/", path, dirent->d_name, NULL);
-        if (!plugin_times_older_than_recurse (pluginname, regtime)) {
-          g_free (pluginname);
-          closedir (dir);
-          return FALSE;
-        }
-        g_free (pluginname);
-      }
-    }
-    closedir (dir);
+  /* it's a file, and it's more recent */
+  if (g_str_has_suffix (path, ".so") || g_str_has_suffix (path, ".dll")) {
+    if (!gst_plugin_check_file (path, NULL))
+      return TRUE;
+
+    /* it's a newer GStreamer plugin */
+    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,
+        "%s looks like a plugin and is more recent than registry time of %ld",
+        path, (long) regtime);
+    return FALSE;
   }
   return TRUE;
 }
 
+/* return TRUE iff regtime is more recent than the times of all the .so files
+ * in the plugin dirs; ie return TRUE if registry is up to date.
+ */
 static gboolean
 plugin_times_older_than (GList * paths, time_t regtime)
 {
-  /* return true iff regtime is more recent than the times of all the files
-   * in the plugin dirs.
-   */
-
   while (paths) {
     GST_CAT_LOG (GST_CAT_PLUGIN_LOADING,
         "comparing plugin times from %s with %ld",
@@ -484,6 +508,8 @@ plugin_times_older_than (GList * paths, time_t regtime)
       return FALSE;
     paths = g_list_next (paths);
   }
+  GST_CAT_LOG (GST_CAT_PLUGIN_LOADING,
+      "everything's fine, no registry rebuild needed.");
   return TRUE;
 }
 
@@ -880,7 +906,7 @@ gst_xml_registry_parse_padtemplate (GMarkupParseContext * context,
     g_assert (registry->caps == NULL);
     registry->caps = gst_caps_from_string (s);
     if (registry->caps == NULL) {
-      g_critical ("Could not parse caps: length %d, content: %*s\n",
+      g_critical ("Could not parse caps: length %d, content: %*s",
           (int) text_len, (int) text_len, text);
     }
     g_free (s);

@@ -1,5 +1,15 @@
 2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstplugin.c: (gst_plugin_check_file), (gst_plugin_load_file):
+	* gst/gstplugin.h:
+	* gst/registries/gstxmlregistry.c:
+	(plugin_times_older_than_recurse), (plugin_times_older_than),
+	(gst_xml_registry_parse_padtemplate):
+	  only rebuild registry when actual plugins have a newer time than
+	  the registry.  Fixes #145520
+
+2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/manual/manual.xml:
 	* docs/manual/win32.xml:
 	  add chapter on win32 building.  fixes #142422
