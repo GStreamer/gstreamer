@@ -52,7 +52,7 @@ enum
   ARG_VENDOR,
   ARG_VERSION,
   ARG_CHANNELS,
-  ARG_RATE,
+  ARG_SAMPLERATE,
   ARG_BITRATE_UPPER,
   ARG_BITRATE_NOMINAL,
   ARG_BITRATE_LOWER,
@@ -116,8 +116,8 @@ gst_vorbisdec_class_init (VorbisDecClass * klass)
   g_object_class_install_property (gobject_class, ARG_CHANNELS,
     g_param_spec_int ("channels", "Channels", "The number of channels",
                        0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_RATE,
-    g_param_spec_int ("rate", "Rate", "The samplerate",
+  g_object_class_install_property (gobject_class, ARG_SAMPLERATE,
+    g_param_spec_int ("samplerate", "Sample Rate", "The samplerate",
                        0, G_MAXINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, ARG_BITRATE_UPPER,
     g_param_spec_int ("bitrate_upper", "bitrate_upper", "bitrate_upper",
@@ -527,7 +527,7 @@ gst_vorbisdec_get_property (GObject *object, guint prop_id, GValue *value, GPara
     case ARG_CHANNELS:
       g_value_set_int (value, vorbisdec->vi.channels);
       break;
-    case ARG_RATE:
+    case ARG_SAMPLERATE:
       g_value_set_int (value, vorbisdec->vi.rate);
       break;
     case ARG_BITRATE_UPPER:
