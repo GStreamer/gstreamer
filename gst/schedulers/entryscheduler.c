@@ -132,8 +132,6 @@ struct _GstEntryScheduler
   GList *schedule_possible;     /* possible entry points */
   GList *waiting;               /* elements waiting for the clock */
   gboolean error;               /* if an element threw an error */
-
-  GList *decoupled_pads;        /* all pads we manage that belong to decoupled elements */
 };
 
 struct _GstEntrySchedulerClass
@@ -887,7 +885,8 @@ gst_entry_scheduler_state_transition (GstScheduler * scheduler,
           }
         }
       }
-      if (element->sched_private != NULL) {
+      if (element->sched_private != NULL
+          && ELEMENT_PRIVATE (element)->thread != NULL) {
         do_cothread_destroy (ELEMENT_PRIVATE (element)->thread);
         ELEMENT_PRIVATE (element)->thread = NULL;
       }
