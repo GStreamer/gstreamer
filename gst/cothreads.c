@@ -267,7 +267,7 @@ cothread_destroy (cothread_state *thread)
   else {
     /* this doesn't seem to work very well */
     /* munmap ((void *) thread, COTHREAD_STACKSIZE); */
-    int res;
+    int res = 0;  
 
     GST_DEBUG (GST_CAT_COTHREADS, 
                "unmap cothread slot stack from %p to %p (size %ld)", 
@@ -275,7 +275,7 @@ cothread_destroy (cothread_state *thread)
 	       (long) COTHREAD_STACKSIZE);
     GST_DEBUG (GST_CAT_COTHREADS, "doing an munmap at %p of size %d\n",
 	       thread, COTHREAD_STACKSIZE);
-    res = munmap ((void *) thread, COTHREAD_STACKSIZE);
+/*    res = munmap ((void *) thread, COTHREAD_STACKSIZE); */
     if (res != 0)
     {
       switch (res)
