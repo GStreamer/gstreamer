@@ -420,7 +420,7 @@ gst_video_crop_change_state (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "videocrop", GST_RANK_PRIMARY,
+  return gst_element_register (plugin, "videocrop", GST_RANK_NONE,
       GST_TYPE_VIDEO_CROP);
 }
 
