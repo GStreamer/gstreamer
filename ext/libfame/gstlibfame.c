@@ -296,7 +296,7 @@ gst_fameenc_class_init (GstFameEncClass *klass)
                       0, 1024*1024, FAMEENC_BUFFER_SIZE, G_PARAM_READWRITE)); 
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_fameenc_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   gint width, height;

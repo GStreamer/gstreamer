@@ -82,7 +82,7 @@ static GstPad* gst_jack_request_new_pad (GstElement *element, GstPadTemplate *te
 static void gst_jack_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_jack_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static GstElementStateReturn gst_jack_change_state(GstElement *element);
-static GstPadConnectReturn gst_jack_connect (GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn gst_jack_connect (GstPad *pad, GstCaps *caps);
 
 static void gst_jack_loop (GstElement *element);
 
@@ -395,7 +395,7 @@ gst_jack_change_state (GstElement *element)
     return GST_STATE_SUCCESS;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_jack_connect (GstPad *pad, GstCaps *caps)
 {
   GstJack *this;

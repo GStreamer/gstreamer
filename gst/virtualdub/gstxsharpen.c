@@ -131,7 +131,7 @@ gst_xsharpen_class_init (GstXsharpenClass * klass)
   gobject_class->get_property = gst_xsharpen_get_property;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_xsharpen_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   GstXsharpen *sharpen;

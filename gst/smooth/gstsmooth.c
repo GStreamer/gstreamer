@@ -128,7 +128,7 @@ gst_smooth_class_init (GstSmoothClass *klass)
 
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_smooth_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstSmooth *filter;

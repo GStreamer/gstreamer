@@ -111,7 +111,7 @@ static void play_on_demand_get_property (GObject *object,
                                          GValue *value,
                                          GParamSpec *pspec);
 
-static GstPadConnectReturn play_on_demand_pad_connect (GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn play_on_demand_pad_connect (GstPad *pad, GstCaps *caps);
 
 static void play_on_demand_loop         (GstElement *elem);
 
@@ -135,7 +135,7 @@ play_on_demand_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool(filter->srcpad);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 play_on_demand_pad_connect (GstPad *pad, GstCaps *caps)
 {
   const gchar *format;

@@ -138,7 +138,7 @@ gst_deinterlace_class_init (GstDeInterlaceClass *klass)
   gobject_class->get_property = gst_deinterlace_get_property;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_deinterlace_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstDeInterlace *filter;

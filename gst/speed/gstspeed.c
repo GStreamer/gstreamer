@@ -111,7 +111,7 @@ static void		speed_loop              (GstElement *element);
 static GstElementClass *parent_class = NULL;
 /*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 speed_connect (GstPad *pad, GstCaps *caps)
 {
   GstSpeed *filter;

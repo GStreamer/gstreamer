@@ -385,7 +385,7 @@ gst_swfdec_vo_destroy (GstSwfdec *swfdec)
 #endif
 
 #if 0
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_swfdec_connect(GstPad *pad, GstCaps *caps)
 {
 	return GST_PAD_LINK_DELAYED;

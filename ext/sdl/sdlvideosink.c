@@ -64,7 +64,7 @@ static void 		     gst_sdlvideosink_set_clock    (GstElement *element, GstClock 
 
 static gboolean              gst_sdlvideosink_create       (GstSDLVideoSink      *sdlvideosink,
                                                             gboolean              showlogo);
-static GstPadConnectReturn   gst_sdlvideosink_sinkconnect  (GstPad               *pad,
+static GstPadLinkReturn   gst_sdlvideosink_sinkconnect  (GstPad               *pad,
                                                             GstCaps              *caps);
 static void                  gst_sdlvideosink_chain        (GstPad               *pad,
                                                             GstBuffer            *buf);
@@ -356,7 +356,7 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
   return TRUE;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_sdlvideosink_sinkconnect (GstPad  *pad,
                               GstCaps *vscapslist)
 {

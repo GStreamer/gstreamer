@@ -116,7 +116,7 @@ gst_tarkinenc_class_init (TarkinEncClass *klass)
   gobject_class->get_property = gst_tarkinenc_get_property;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_tarkinenc_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   TarkinEnc *tarkinenc;

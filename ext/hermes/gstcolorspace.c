@@ -91,11 +91,11 @@ static void		gst_colorspace_set_property		(GObject *object, guint prop_id,
 static void		gst_colorspace_get_property		(GObject *object, guint prop_id, 
 								 GValue *value, GParamSpec *pspec);
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 			gst_colorspace_sinkconnect		(GstPad *pad, GstCaps *caps);
-static GstPadConnectReturn
+static GstPadLinkReturn
 			gst_colorspace_srcconnect 		(GstPad *pad, GstCaps *caps);
-static GstPadConnectReturn
+static GstPadLinkReturn
 			gst_colorspace_srcconnect_func 		(GstPad *pad, GstCaps *caps, gboolean newcaps);
 static void		gst_colorspace_chain			(GstPad *pad, GstBuffer *buf);
 static GstElementStateReturn
@@ -286,7 +286,7 @@ gst_colorspace_getcaps (GstPad *pad, GstCaps *caps)
   return result;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_colorspace_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstColorspace *space;
@@ -316,13 +316,13 @@ gst_colorspace_sinkconnect (GstPad *pad, GstCaps *caps)
   return GST_PAD_LINK_OK;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_colorspace_srcconnect (GstPad *pad, GstCaps *caps)
 {
   return gst_colorspace_srcconnect_func (pad, caps, TRUE);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
 {
   GstColorspace *space;

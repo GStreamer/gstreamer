@@ -90,7 +90,7 @@ static void		passthrough_init		(GstPassthrough *filter);
 static void		passthrough_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		passthrough_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static GstPadConnectReturn passthrough_connect_sink	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn passthrough_connect_sink	(GstPad *pad, GstCaps *caps);
 
 static void		passthrough_chain		(GstPad *pad, GstBuffer *buf);
 static void inline 	passthrough_fast_float_chain 	(gfloat* data, guint numsamples);
@@ -109,7 +109,7 @@ passthrough_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool (filter->srcpad);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 passthrough_connect_sink (GstPad *pad, GstCaps *caps)
 {
   const gchar *format;

@@ -72,8 +72,8 @@ static void			gst_ladspa_class_init		(GstLADSPAClass *klass);
 static void			gst_ladspa_init			(GstLADSPA *ladspa);
 
 static void			gst_ladspa_update_int(const GValue *value, gpointer data);
-static GstPadConnectReturn	gst_ladspa_connect		(GstPad *pad, GstCaps *caps);
-static GstPadConnectReturn	gst_ladspa_connect_get		(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn	gst_ladspa_connect		(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn	gst_ladspa_connect_get		(GstPad *pad, GstCaps *caps);
 static void			gst_ladspa_force_src_caps	(GstLADSPA *ladspa, GstPad *pad);
 
 static void			gst_ladspa_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -482,7 +482,7 @@ gst_ladspa_update_int(const GValue *value, gpointer data)
   *target = (gfloat)g_value_get_int(value);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_ladspa_connect (GstPad *pad, GstCaps *caps)
 {
   GstLADSPA *ladspa = (GstLADSPA *) GST_PAD_PARENT (pad);
@@ -516,7 +516,7 @@ gst_ladspa_connect (GstPad *pad, GstCaps *caps)
   return GST_PAD_LINK_OK;
 }
 
-static GstPadConnectReturn 
+static GstPadLinkReturn 
 gst_ladspa_connect_get (GstPad *pad, GstCaps *caps) 
 {
   GstLADSPA *ladspa = (GstLADSPA*)GST_OBJECT_PARENT (pad);

@@ -164,7 +164,7 @@ static void	gst_chart_get_property	(GObject *object, guint prop_id, GValue *valu
 
 static void	gst_chart_chain		(GstPad *pad, GstBuffer *buf);
 
-static GstPadConnectReturn 
+static GstPadLinkReturn 
 		gst_chart_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
@@ -231,7 +231,7 @@ gst_chart_init (GstChart *chart)
   chart->samples_since_last_frame = 0;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_chart_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstChart *chart;

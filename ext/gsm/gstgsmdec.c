@@ -50,7 +50,7 @@ static void			gst_gsmdec_class_init	(GstGSMDec *klass);
 static void			gst_gsmdec_init		(GstGSMDec *gsmdec);
 
 static void			gst_gsmdec_chain	(GstPad *pad, GstBuffer *buf);
-static GstPadConnectReturn	gst_gsmdec_sinkconnect 	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn	gst_gsmdec_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_gsmdec_signals[LAST_SIGNAL] = { 0 }; */
@@ -103,7 +103,7 @@ gst_gsmdec_init (GstGSMDec *gsmdec)
   gsmdec->bufsize = 0;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_gsmdec_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstGSMDec *gsmdec;

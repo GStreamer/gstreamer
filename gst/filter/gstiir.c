@@ -87,7 +87,7 @@ static void gst_iir_get_property	(GObject * object, guint prop_id,
                                          GValue * value, GParamSpec * pspec);
 
 static void gst_iir_chain		(GstPad * pad, GstBuffer * buf);
-static GstPadConnectReturn
+static GstPadLinkReturn
        gst_iir_sink_connect 		(GstPad * pad, GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
@@ -161,11 +161,11 @@ gst_iir_init (GstIIR * filter)
   filter->state = NULL;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_iir_sink_connect (GstPad * pad, GstCaps * caps)
 {
   GstIIR *filter;
-  GstPadConnectReturn set_retval;
+  GstPadLinkReturn set_retval;
   
   filter = GST_IIR (gst_pad_get_parent (pad));
   

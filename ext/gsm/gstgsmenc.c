@@ -51,7 +51,7 @@ static void			gst_gsmenc_class_init	(GstGSMEnc *klass);
 static void			gst_gsmenc_init		(GstGSMEnc *gsmenc);
 
 static void			gst_gsmenc_chain	(GstPad *pad,GstBuffer *buf);
-static GstPadConnectReturn	gst_gsmenc_sinkconnect 	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn	gst_gsmenc_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_gsmenc_signals[LAST_SIGNAL] = { 0 };
@@ -114,7 +114,7 @@ gst_gsmenc_init (GstGSMEnc *gsmenc)
   gsmenc->rate = 8000;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_gsmenc_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstGSMEnc *gsmenc;
