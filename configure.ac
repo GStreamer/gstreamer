@@ -329,7 +329,7 @@ dnl ===========================================================================
 plugindir="\$(libdir)/gstreamer-$GST_MAJORMINOR"
 AC_SUBST(plugindir)
 
-GST_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*'
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '[_]*(gst_|Gst|GST_).*' $GST_LIBS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
@@ -750,6 +750,14 @@ GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
 dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
+
+dnl *** dirac ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_DIRAC, true)
+GST_CHECK_FEATURE(DIRAC, [dirac plug-ins], dirac, [
+  PKG_CHECK_MODULES(DIRAC, dirac, HAVE_DIRAC="yes", HAVE_DIRAC="no")
+  AC_SUBST(DIRAC_CFLAGS)
+  AC_SUBST(DIRAC_LIBS)
+])
 
 dnl *** DIVX ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIVX, true)
@@ -1793,6 +1801,7 @@ ext/arts/Makefile
 ext/artsd/Makefile
 ext/audiofile/Makefile
 ext/cdparanoia/Makefile
+ext/dirac/Makefile
 ext/divx/Makefile
 ext/dts/Makefile
 ext/dv/Makefile
