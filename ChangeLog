@@ -1,3 +1,10 @@
+2003-12-27  Amaury Jacquot <sxpert@esitcom.org>
+
+	* ext/ivorbis/vorbis.c: 
+	* ext/ivorbis/vorbisenc.h:
+	* ext/ivorbis/vorbisfile.c:
+	  Modify so that it uses the new caps things
+
 2003-12-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* testsuite/spider/spider1.c: (main):
