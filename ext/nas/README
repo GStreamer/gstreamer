@@ -1,0 +1,8 @@
+The nassink plugin
+==================
+
+The nassink plugin is for outputting an audio stream to a Network Audio Server (NCD X/Terminal)
+
+nassink has arguments that it accepts:
+ - 'mute'      (boolean value)
+ - 'host'      (name of X/Terminal, default is $AUDIOSERVER or $DISPLAY)

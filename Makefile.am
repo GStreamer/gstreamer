@@ -25,8 +25,8 @@ SUBDIRS=gst-libs \
 	po \
 	pkgconfig
 
-DIST_SUBDIRS=gst-libs \
-	gst sys ext \
+DIST_SUBDIRS=ext gst-libs \
+	gst sys \
 	examples \
 	tools \
 	gconf \
