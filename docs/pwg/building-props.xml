@@ -3,7 +3,143 @@
 <chapter id="cha-building-args" xreflabel="Adding Arguments">
   <title>Adding Arguments</title>
   <para>
-    Define arguments in enum.
+    The primary and most important way of controlling how an element behaves,
+    is through GObject properties. GObject properties are defined in the
+    <function>_class_init ()</function> function. The element optionally
+    implements a <function>_get_property ()</function> and a
+    <function>_set_property ()</function> function. These functions will be
+    notified if an application changes or requests the value of a property,
+    and can then fill in the value or take action required for that property
+    to change value internally.
   </para>
-</chapter>
+  <programlisting>
+/* properties */
+enum {
+  ARG_0,
+  ARG_SILENT
+  /* FILL ME */
+};
 
+static void	gst_my_filter_set_property	(GObject      *object,
+						 guint         prop_id,
+						 const GValue *value,
+						 GParamSpec   *pspec);
+static void	gst_my_filter_get_property	(GObject      *object,
+						 guint         prop_id,
+						 GValue       *value,
+						 GParamSpec   *pspec);
+
+static void
+gst_my_filter_class_init (GstMyFilterClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  /* define properties */
+  g_object_class_install_property (object_class, ARG_SILENT,
+    g_param_spec_boolean ("silent", "Silent",
+			  "Whether to be very verbose or not",
+			  FALSE, G_PARAM_READWRITE));
+
+  /* define virtual function pointers */
+  object_class->set_property = gst_my_filter_set_property;
+  object_class->get_property = gst_my_filter_get_property;
+}
+
+static void
+gst_my_filter_set_property (GObject      *object,
+			    guint         prop_id,
+			    const GValue *value,
+			    GParamSpec   *pspec)
+{
+  GstMyFilter *filter = GST_MY_FILTER (object);
+
+  switch (prop_id) {
+    case ARG_SILENT:
+      filter->silent = g_value_get_boolean (value);
+      g_print ("Silent argument was changed to %s\n",
+	       filter->silent ? "true" : "false");
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_my_filter_get_property (GObject    *object,
+			    guint       prop_id,
+			    GValue     *value,
+			    GParamSpec *pspec)
+{
+  GstMyFilter *filter = GST_MY_FILTER (object);
+                                                                                
+  switch (prop_id) {
+    case ARG_SILENT:
+      g_value_set_boolean (value, filter->silent);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+  </programlisting>
+  <para>
+    The above is a very simple example of how arguments are used. Graphical
+    applications - for example GStreamer Editor - will use these properties
+    and will display a user-controlleable widget with which these properties
+    can be changed. This means that - for the property to be as user-friendly
+    as possible - you should be as exact as possible in the definition of the
+    property. Not only in defining ranges in between which valid properties
+    can be located (for integers, floats, etc.), but also in using very
+    descriptive (better yet: internationalized) strings in the definition of
+    the property, and if possible using enums and flags instead of integers.
+    The GObject documentation describes these in a very complete way, but
+    below, we'll give a short example of where this is useful. Note that using
+    integers here would probably completely confuse the user, because they
+    make no sense in this context. The example is stolen from videotestsrc.
+  </para>
+  <programlisting>
+typedef enum {
+  GST_VIDEOTESTSRC_SMPTE,
+  GST_VIDEOTESTSRC_SNOW,
+  GST_VIDEOTESTSRC_BLACK
+} GstVideotestsrcPattern;
+
+[..]
+
+#define GST_TYPE_VIDEOTESTSRC_PATTERN (gst_videotestsrc_pattern_get_type ())
+static GType
+gst_videotestsrc_pattern_get_type (void)
+{
+  static GType videotestsrc_pattern_type = 0;
+
+  if (!videotestsrc_pattern_type) {
+    static GEnumValue pattern_types[] = {
+      { GST_VIDEOTESTSRC_SMPTE, "smpte", "SMPTE 100% color bars" },
+      { GST_VIDEOTESTSRC_SNOW,  "snow",  "Random (television snow)" },
+      { GST_VIDEOTESTSRC_BLACK, "black", "0% Black" },
+      { 0, NULL, NULL },
+    };
+
+    videotestsrc_pattern_type =
+	g_enum_register_static ("GstVideotestsrcPattern",
+				pattern_types);
+  }
+
+  return videotestsrc_pattern_type;
+}
+
+[..]
+
+static void
+gst_videotestsrc_class_init (GstvideotestsrcClass *klass)
+{
+[..]
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE,
+    g_param_spec_enum ("pattern", "Pattern",
+		       "Type of test pattern to generate",
+		       GST_TYPE_VIDEOTESTSRC_PATTERN, 1, G_PARAM_READWRITE));
+[..]
+}
+  </programlisting>
+</chapter>

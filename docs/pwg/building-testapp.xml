@@ -1,25 +1,121 @@
-<chapter id="cha-testapp-init">
-  <title>Initialization</title>
-  <para>
-  </para>
-</chapter>
+<!-- ############ chapter ############# -->
 
-<chapter id="cha-testapp-inst">
-  <title>Instantiating the plugins</title>
+<chapter id="cha-building-testapp">
+  <title>Building a Test Application</title>
   <para>
-    (NOTE: we really should have a debugging Sink)
+    Often, you will want to test your newly written plugin in an as small
+    setting as possible. Ususally, <filename>gst-launch</filename> is a
+    good first step at testing a plugin. However, you will often need more
+    testing features than gst-launch can provide, such as seeking, events,
+    interactivity and more. Writing your own small testing program is the
+    easiest way to accomplish this. This section explains - in a few words
+    - how to do that. For a complete application development guide, see the
+    <ulink type="http" url="../manual/index.html">Application Development
+    Manual</ulink>.
   </para>
-</chapter>
 
-<chapter id="cha-testapp-link">
-  <title>Linking the plugins</title>
-  <para>
-  </para>
-</chapter>
+  <sect1 id="cha-testapp-init" xreflabel="Initialization">
+    <title>Initialization</title>
+    <para>
+      At the start, you need to initialize the &GStreamer; core library by
+      calling <function>gst_init ()</function>. You can alternatively call
+      <function>gst_init_with_popt_tables ()</function>, which will return
+      a pointer to popt tables. You can then use libpopt to handle the
+      given argument table, and this will finish the &GStreamer; intialization.
+    </para>
+  </sect1>
 
-<chapter id="cha-testapp-running">
-  <title>Running the pipeline</title>
-  <para>
-  </para>
-</chapter>
+  <sect1 id="cha-testapp-inst" xreflabel="Instantiating the plugins">
+    <title>Instantiating the plugins</title>
+    <para>
+      You can create elements using <function>gst_element_factory_make ()</function>,
+      where the first argument is the element type that you want to create,
+      and the second argument is a free-form name. The example at the end uses
+      a simple filesource - decoder - soundcard output pipeline, but you can
+      use specific debugging elements if that's necessary. For example, an
+      <classname>identity</classname> element can be used in the middle of
+      the pipeline to act as a data-to-application transmitter. This can be
+      used to check the data for misbehaviours or correctness in your test
+      application. Also, you can use a <classname>fakesink</classname>
+      element at the end of the pipeline to dump your data to the stdout
+      (in order to do this, set the <function>dump</function> property to
+      TRUE). Lastly, you can use the <classname>efence</classname> element
+      (indeed, an eletric fence memory debugger wrapper element) to check
+      for memory errors.
+    </para>
+  </sect1>
 
+  <sect1 id="cha-testapp-link" xreflabel="Linking the plugins">
+    <title>Linking the plugins</title>
+    <para>
+      During linking, your test application can use fixation or filtered caps
+      as a way to drive a specific type of data to or from your element. This
+      is a very simple and effective way of checking multiple types of input
+      and output in your element.
+    </para>
+  </sect1>
+
+  <sect1 id="cha-testapp-running" xreflabel="Running the pipeline">
+    <title>Running the pipeline</title>
+    <para>
+      Running the pipeline happens through the <function>gst_bin_iterate ()</function>
+      function. Note that during running, you should connect to at least the
+      <quote>error</quote> and <quote>eos</quote> signals on the pipeline
+      and/or your plugin/element to check for correct handling of this. Also,
+      you should add events into the pipeline and make sure your plugin handles
+      these correctly (with respect to clocking, internal caching, etc.).
+    </para>
+  </sect1>
+
+  <sect1 id="cha-testapp-cleanup" xreflabel="Cleaning up the memory">
+    <title>Cleaning up the memory</title>
+    <para>
+      Never forget to clean up memory in your plugin or your test application.
+      When going to the NULL state, your element should clean up allocated
+      memory and caches. Also, it should close down any references held to
+      possible support libraries. Your application should <function>unref ()</function>
+      the pipeline and make sure it doesn't crash.
+    </para>
+  </sect1>
+
+  <sect1 id="cha-testapp-all" xreflabel="Summary">
+    <title>Summary</title>
+    <programlisting>
+#include &lt;gst/gst.h&gt;
+
+gint
+main (gint   arcg,
+      gchar *argv[])
+{
+  GstElement *pipeline, *filesrc, *decoder, *filter, *sink;
+
+  /* initialization */
+  gst_init (&amp;argc, &amp;argv);
+
+  /* create elements */
+  pipeline = gst_pipeline_new ("my_pipeline");
+
+  filesrc  = gst_element_factory_make ("filesrc", "my_filesource");
+  decoder  = gst_element_factory_make ("mad", "my_decoder");
+  filter   = gst_element_factory_make ("my_filter", "my_filter");
+  sink     = gst_element_factory_make ("osssink", "audiosink");
+
+  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
+
+  /* link everything together */
+  gst_element_link_many (filesrc, decoder, filter, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), filesrc, decoder, filter, sink, NULL);
+
+  /* run */
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  while (gst_bin_iterate (GST_BIN (pipeline)));
+
+  /* clean up */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (GST_OBJECT (pipeline));
+
+  return 0;
+}
+    </programlisting>
+  </sect1>
+</chapter>

@@ -92,12 +92,32 @@
     <title>List of Defined Types</title>
       <para>
         Below is a list of all the defined types in &GStreamer;. They are split
-        up in separate tables for audio, video, container, text and other
+        up in separate tables for audio, video, container, subtitle and other
         types, for the sake of readability. Below each table might follow a
         list of notes that apply to that table. In the definition of each type,
         we try to follow the types and rules as defined by <ulink type="http"
         url="http://www.isi.edu/in-notes/iana/assignments/media-types/media-types">
         IANA</ulink> for as far as possible.
+      </para>
+      <para>
+        Jump directly to a specific table:
+	<itemizedlist>
+          <listitem>
+            <para><xref linkend="table-audio-types"/></para>
+          </listitem>
+          <listitem>
+            <para><xref linkend="table-video-types"/></para>
+          </listitem>
+          <listitem>
+            <para><xref linkend="table-container-types"/></para>
+          </listitem>
+          <listitem>
+            <para><xref linkend="table-subtitle-types"/></para>
+          </listitem>
+          <listitem>
+            <para><xref linkend="table-other-types"/></para>
+          </listitem>
+        </itemizedlist>
       </para>
       <para>
         Note that many of the properties are not <emphasis>required</emphasis>,
@@ -110,7 +130,9 @@
         content. Example: the AVI header provides samplerate of the contained
         audio stream in the header. MPEG system streams don't. This means that
         an AVI stream demuxer would provide samplerate as a property for MPEG
-        audio streams, whereas an MPEG demuxer would not.
+        audio streams, whereas an MPEG demuxer would not. A decoder needing
+        this data would require a stream parser in between two extract this
+        from the header or calculate it from the stream.
       </para>
 
       <table frame="all" id="table-audio-types" xreflabel="Table of Audio Types">
@@ -434,20 +456,6 @@
           <!-- ############ type ############# -->
 
           <row>
-            <entry>audio/x-pn-realaudio</entry>
-            <entry>Real Audio data.</entry>
-            <entry>raversion</entry>
-            <entry>integer</entry>
-            <entry>1 or 2</entry>
-            <entry>
-              The version of the Real Audio codec used to encode the stream.
-              1 stands for a 14k4 stream, 2 stands for a 28k8 stream.
-            </entry>
-          </row>
-
-          <!-- ############ type ############# -->
-
-          <row>
             <entry>audio/x-qdm2</entry>
             <entry>Data encoded by the QDM version 2 codec.</entry>
             <entry></entry>
@@ -456,6 +464,20 @@
             <entry>
               There are currently no specific properties defined or needed for
               this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-pn-realaudio</entry>
+            <entry>Realmedia Audio data.</entry>
+            <entry>raversion</entry>
+            <entry>integer</entry>
+            <entry>1 or 2</entry>
+            <entry>
+              The version of the Real Audio codec used to encode the stream.
+              1 stands for a 14k4 stream, 2 stands for a 28k8 stream.
             </entry>
           </row>
 
@@ -502,7 +524,7 @@
         </tbody>
         </tgroup>
       </table>
-      
+
       <table frame="all" id="table-video-types" xreflabel="Table of Video Types">
         <title>Table of Video Types</title>
         <tgroup cols="6" align="left" colsep="1" rowsep="1">
@@ -651,6 +673,20 @@
           <!-- ############ type ############# -->
 
           <row>
+            <entry>video/x-3ivx</entry>
+            <entry>3ivx video.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
             <entry>video/x-divx</entry>
             <entry>DivX video.</entry>
             <entry>divxversion</entry>
@@ -660,7 +696,503 @@
               Version of the DivX codec used to encode the stream.
             </entry>
           </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-dx</entry>
+            <entry>Digital Video.</entry>
+            <entry>systemstream</entry>
+            <entry>boolean</entry>
+            <entry>FALSE</entry>
+            <entry>
+              Indicates that this stream is <emphasis>not</emphasis> a system
+              container stream.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-ffv</entry>
+            <entry>FFMpeg video.</entry>
+            <entry>ffvversion</entry>
+            <entry>integer</entry>
+            <entry>1</entry>
+            <entry>
+              Version of the FFMpeg video codec used to encode the stream.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-h263</entry>
+            <entry>H-263 video.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-h264</entry>
+            <entry>H-264 video.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-huffyuv</entry>
+            <entry>Huffyuv video.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-indeo</entry>
+            <entry>Indeo video.</entry>
+            <entry>indeoversion</entry>
+            <entry>integer</entry>
+            <entry>3</entry>
+            <entry>
+              Version of the Indeo codec used to encode this stream.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-jpeg</entry>
+            <entry>Motion-JPEG video.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type. Note that video/x-jpeg only applies to Motion-JPEG
+              pictures (YUY2 colourspace). RGB colourspace JPEG images are
+              referred to as image/jpeg (JPEG image).
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry morerows="1">video/mpeg</entry>
+            <entry morerows="1">MPEG video.</entry>
+            <entry>mpegversion</entry>
+            <entry>integer</entry>
+            <entry>1, 2 or 4</entry>
+            <entry>
+              Version of the MPEG codec that this stream was encoded with.
+              Note that we have different mimetypes for 3ivx, XviD, DivX and
+              "standard" ISO MPEG-4. This is <emphasis>not</emphasis> a good
+              thing and we're fully aware of this. However, we do not have a
+              solution yet.
+            </entry>
+          </row>
+          <row>
+            <entry>systemstream</entry>
+            <entry>boolean</entry>
+            <entry>FALSE</entry>
+            <entry>
+              Indicates that this stream is <emphasis>not</emphasis> a system
+              container stream.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-msmpeg</entry>
+            <entry>Microsoft MPEG-4 video deviations.</entry>
+            <entry>msmpegversion</entry>
+            <entry>integer</entry>
+            <entry>41, 42 or 43</entry>
+            <entry>
+              Version of the MS-MPEG-4-like codec that was used to encode this
+              version. A value of 41 refers to MS MPEG 4.1, 42 to 4.2 and 43
+              to version 4.3.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-pn-realvideo</entry>
+            <entry>Realmedia video.</entry>
+            <entry>rmversion</entry>
+            <entry>integer</entry>
+            <entry>1, 2 or 3</entry>
+            <entry>
+              Version of the Real Video codec that this stream was encoded
+              with.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-svq</entry>
+            <entry>Sorensen Video.</entry>
+            <entry>svqversion</entry>
+            <entry>integer</entry>
+            <entry>1 or 3</entry>
+            <entry>
+              Version of the Sorensen codec that the stream was encoded with.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-tarkin</entry>
+            <entry>Tarkin video.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-theora</entry>
+            <entry>Theora video.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-vp3</entry>
+            <entry>VP-3 video.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type. Note that we have different mimetypes for VP-3 and
+              Theora, which is not necessarily a good idea. This could probably
+              be improved.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-wmv</entry>
+            <entry>Windows Media Video.</entry>
+            <entry>wmvversion</entry>
+            <entry>integer</entry>
+            <entry>1 or 2</entry>
+            <entry>
+              Version of the WMV codec that the stream was encoded with.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-xvid</entry>
+            <entry>XviD video.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ subtitle ############# -->
+                                                                                
+          <row>
+            <entry spanname="fullwidth">
+              <emphasis>All image types.</emphasis>
+            </entry>
+          </row>
+                                                                                
+          <!-- ############ type ############# -->
+                                                                                
+          <row>
+            <entry>image/jpeg</entry>
+            <entry>Joint Picture Expert Group Image.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type. Note that image/jpeg only applies to RGB-colourspace
+              JPEG images; YUY2-colourspace JPEG pictures are referred to as
+              video/x-jpeg ("Motion JPEG").
+            </entry>
+          </row>
+	  
+	  <!-- ############ type ############# -->
+                                                                                
+          <row>
+            <entry>image/png</entry>
+            <entry>Portable Network Graphics Image.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
         </tbody>
+        </tgroup>
+      </table>
+
+      <table frame="all" id="table-container-types" xreflabel="Table of Container Types">
+        <title>Table of Container Types</title>
+        <tgroup cols="6" align="left" colsep="1" rowsep="1">
+        <colspec colnum="1" colname="colc1" colwidth="1*"/>
+        <colspec colnum="6" colname="colc6" colwidth="6*"/>
+        <spanspec spanname="fullwidth" namest="colc1" nameend="colc6"/>
+
+        <thead>
+          <row>
+            <entry>Mime Type</entry>
+            <entry>Description</entry>
+            <entry>Property</entry>
+            <entry>Property Type</entry>
+            <entry>Property Values</entry>
+            <entry>Property Description</entry>
+          </row>
+        </thead>
+
+        <tbody valign="top">
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-ms-asf</entry>
+            <entry>Advanced Streaming Format (ASF).</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-msvideo</entry>
+            <entry>AVI.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-dv</entry>
+            <entry>Digital Video.</entry>
+            <entry>systemstream</entry>
+            <entry>boolean</entry>
+            <entry>TRUE</entry>
+            <entry>
+              Indicates that this is a container system stream rather than an
+              elementary video stream.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-matroska</entry>
+            <entry>Matroska.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/mpeg</entry>
+            <entry>Motion Pictures Expert Group System Stream.</entry>
+            <entry>systemstream</entry>
+            <entry>boolean</entry>
+            <entry>TRUE</entry>
+            <entry>
+              Indicates that this is a container system stream rather than an
+              elementary video stream.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>application/ogg</entry>
+            <entry>Ogg.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/quicktime</entry>
+            <entry>Quicktime.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-pn-realvideo</entry>
+            <entry>Digital Video.</entry>
+            <entry>systemstream</entry>
+            <entry>boolean</entry>
+            <entry>TRUE</entry>
+            <entry>
+              Indicates that this is a container system stream rather than an
+              elementary video stream.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-wav</entry>
+            <entry>WAV.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+	  </tbody>
+        </tgroup>
+      </table>
+
+      <table frame="all" id="table-subtitle-types" xreflabel="Table of Subtitle Types">
+        <title>Table of Subtitle Types</title>
+        <tgroup cols="6" align="left" colsep="1" rowsep="1">
+        <colspec colnum="1" colname="colt1" colwidth="1*"/>
+        <colspec colnum="6" colname="colt6" colwidth="6*"/>
+        <spanspec spanname="fullwidth" namest="colt1" nameend="colt6"/>
+
+        <thead>
+          <row>
+            <entry>Mime Type</entry>
+            <entry>Description</entry>
+            <entry>Property</entry>
+            <entry>Property Type</entry>
+            <entry>Property Values</entry>
+            <entry>Property Description</entry>
+          </row>
+        </thead>
+
+        <tbody valign="top">
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              None defined yet.
+            </entry>
+          </row>
+	  </tbody>
+        </tgroup>
+      </table>
+
+      <table frame="all" id="table-other-types" xreflabel="Table of Other Types">
+        <title>Table of Other Types</title>
+        <tgroup cols="6" align="left" colsep="1" rowsep="1">
+        <colspec colnum="1" colname="colo1" colwidth="1*"/>
+        <colspec colnum="6" colname="colo6" colwidth="6*"/>
+        <spanspec spanname="fullwidth" namest="colo1" nameend="colo6"/>
+
+        <thead>
+          <row>
+            <entry>Mime Type</entry>
+            <entry>Description</entry>
+            <entry>Property</entry>
+            <entry>Property Type</entry>
+            <entry>Property Values</entry>
+            <entry>Property Description</entry>
+          </row>
+        </thead>
+
+        <tbody valign="top">
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              None defined yet.
+            </entry>
+          </row>
+	  </tbody>
         </tgroup>
       </table>
   </sect1>

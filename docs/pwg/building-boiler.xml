@@ -33,10 +33,10 @@
     </para>
     <screen>
 <prompt>shell $ </prompt><userinput>cd .</userinput>
-<prompt>shell $ </prompt><userinput>cvs -d:pserver:anonymous@cvs.gstreamer.sourceforge.net:/cvsroot/gstreamer login</userinput>
-Logging in to :pserver:anonymous@cvs.gstreamer.sourceforge.net:2401/cvsroot/gstreamer
+<prompt>shell $ </prompt><userinput>cvs -d:pserver:anonymous@cvs.freedesktop.org:/home/cvs/gstreamer login</userinput>
+Logging in to :pserver:anonymous@cvs.freedesktop.org:2401/home/cvs/gstreamer
 CVS password:
-<prompt>shell $ </prompt><userinput>cvs -z3 -d:pserver:anonymous@cvs.gstreamer.sourceforge.net:/cvsroot/gstreamer co gst-template</userinput>
+<prompt>shell $ </prompt><userinput>cvs -z3 -d:pserver:anonymous@cvs.freedesktop.org:/home/cvs/gstreamer co gst-template</userinput>
 U gst-template/README
 U gst-template/gst-app/AUTHORS
 U gst-template/gst-app/ChangeLog
@@ -136,9 +136,9 @@ U gst-template/gst-app/src/Makefile.am
   struct _GstExample {
     GstElement element;
 
-    GstPad *sinkpad,*srcpad;
+    GstPad *sinkpad, *srcpad;
 
-    gint8 active;
+    gboolean silent;
   };
 
   /* Standard definition defining a class for this element. */
@@ -160,7 +160,7 @@ U gst-template/gst-app/src/Makefile.am
     (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EXAMPLE))
 
   /* Standard function returning type information. */
-  GtkType gst_example_get_type(void);
+  GType gst_example_get_type (void);
       </programlisting>
     </example>
   </sect1>
@@ -214,34 +214,104 @@ U gst-template/gst-app/src/Makefile.am
       </para></listitem><listitem><para>
         A brief description of the purpose of the element.
       </para></listitem><listitem><para>
-        The version number of the element. For elements in the main GStreamer
-        source code, this will often simply be VERSION, which is a macro defined
-        to be the version number of the current GStreamer version. The only
-        requirement, however, is that the version number should increase
-        monotonically.
-      </para>
-      <para>
-        Version numbers should be stored in major.minor.patch form: ie, 3
-        (decimal) numbers, separated by periods (.).
-      </para></listitem><listitem><para>
         The name of the author of the element, optionally followed by a contact
         email address in angle brackets.
-      </para></listitem><listitem><para>
-        The copyright details for the element.
       </para></listitem>
     </itemizedlist>
     <para>
       For example:
     </para>
     <programlisting>
-  static GstElementDetails example_details = {
-      "An example plugin",
-      "Example/FirstExample",
-      "Shows the basic structure of a plugin",
-      VERSION,
-      "your name &lt;your.name@your.isp&gt;",
-      "(C) 2001",
+static GstElementDetails example_details = {
+  "An example plugin",
+  "Example/FirstExample",
+  "Shows the basic structure of a plugin",
+  "your name &lt;your.name@your.isp&gt;"
+};
+    </programlisting>
+    <para>
+      The element details are registered with the plugin during
+      <function>_base_init ()</function>.
+    </para>
+    <programlisting>
+static void
+gst_my_filter_base_init (GstMyFilterClass *klass)
+{
+  static GstElementDetails my_filter_details = {
+[..]
   };
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+[..]
+  gst_element_class_set_details (element_class, &amp;my_filter_details);
+}
+    </programlisting>
+  </sect1>
+
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="sect1-boiler-padtemplates">
+    <title>GstStaticPadTemplate</title>
+    <para>
+      A GstStaticPadTemplate is a description of a pad that the element will
+      (or might) create and use. It contains:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>A short name for the pad.</para>
+      </listitem>
+      <listitem>
+        <para>Pad direction.</para>
+      </listitem>
+      <listitem>
+        <para>
+          Existence property. This indicates whether the pad exists always (an
+          <quote>always</quote> pad), only in some cases (a
+          <quote>sometimes</quote> pad) or only if the application requested
+          such a pad (a <quote>request</quote> pad).
+        </para>
+      </listitem>
+      <listitem>
+        <para>Supported types by this element (capabilities).</para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      For example:
+    </para>
+    <programlisting>
+static GstStaticPadTemplate sink_factory =
+GST_STATIC_PAD_TEMPLATE (
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS ("ANY")
+);
+      </programlisting>
+    <para>
+      Those pad templates are registered during the
+      <function>_base_init ()</function> function. Pads are created from these
+      templates in the element's <function>_init ()</function> function using
+      <function>gst_pad_new_from_template ()</function>. The template can be
+      retrieved from the element class using
+      <function>gst_element_class_get_pad_template ()</function>. See below
+      for more details on this.
+    </para>
+    <programlisting>
+static void
+gst_my_filter_base_init (GstMyFilterClass *klass)
+{
+  static GstStaticPadTemplate sink_factory =
+[..]
+  , src_factory =
+[..]
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+	gst_static_pad_template_get (&amp;src_factory));
+  gst_element_class_add_pad_template (element_class,
+	gst_static_pad_template_get (&amp;sink_factory));
+[..]
+}
     </programlisting>
   </sect1>
 
@@ -250,11 +320,14 @@ U gst-template/gst-app/src/Makefile.am
   <sect1 id="sect1-boiler-constructors">
     <title>Constructor Functions</title>
     <para>
-      Each element has two functions which are used for construction of an
-      element. These are the _class_init() function, which is used to initialise
-      the class (specifying what signals and arguments the class has and setting
-      up global state), and the _init() function, which is used to initialise a
-      specific instance of the class.
+      Each element has three functions which are used for construction of an
+      element. These are the <function>_base_init()</function> function which
+      is meant to initialize class and child class properties during each new
+      child class creation; the <function>_class_init()</function> function,
+      which is used to initialise the class only once (specifying what signals,
+      arguments and virtual functions the class has and setting up global
+      state); and the <function>_init()</function> function, which is used to
+      initialise a specific instance of this type.
     </para>
   </sect1>
 
@@ -265,36 +338,20 @@ U gst-template/gst-app/src/Makefile.am
     <para>
       Once we have written code defining all the parts of the plugin, we need to
       write the plugin_init() function. This is a special function, which is
-      called as soon as the plugin is loaded, and must return a pointer to a
-      newly allocated GstPlugin structure. This structure contains the details
-      of all the facilities provided by the plugin, and is the mechanism by 
-      which the definitions are made available to the rest of the &GStreamer;
-      system. Helper functions are provided to help fill the structure: for 
-      future compatability it is required that these functions are used, as
-      documented below, rather than attempting to access the structure directly.
+      called as soon as the plugin is loaded, and should return TRUE or FALSE
+      depending on whether it loaded initialized any dependencies correctly.
+      Also, in this function, any supported element type in the plugin should
+      be registered.
     </para>
     <para>
       Note that the information returned by the plugin_init() function will be
       cached in a central registry. For this reason, it is important that the
       same information is always returned by the function: for example, it 
-      must not make element factories available based on runtime conditions. If an element
-      can only work in certain conditions (for example, if the soundcard is not
-      being used by some other process) this must be reflected by the element
-      being unable to enter the READY state if unavailable, rather than the plugin
-      attempting to deny existence of the plugin.
+      must not make element factories available based on runtime conditions.
+      If an element can only work in certain conditions (for example, if the
+      soundcard is not being used by some other process) this must be reflected
+      by the element being unable to enter the READY state if unavailable,
+      rather than the plugin attempting to deny existence of the plugin.
     </para>
   </sect1>
 </chapter>
-
-
-
-
-
-
-
-
-
-
-
-
-

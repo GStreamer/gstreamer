@@ -4,5 +4,73 @@
 <chapter id="cha-building-chainfn">
   <title>The chain function</title>
   <para>
+    The chain function is the function in which all data processing takes
+    place. In the case of a simple filter, <function>_chain ()</function>
+    functions are mostly lineair functions - so for each incoming buffer,
+    one buffer will go out, too. Below is a very simple implementation of
+    a chain function:
+  </para>
+  <programlisting>
+static void
+gst_my_filter_chain (GstPad  *pad,
+		     GstData *data)
+{
+  GstMyFilter *filter = GST_MY_FILTER (gst_pad_get_parent (pad));
+  GstBuffer *buf = GST_BUFFER (data);
+
+  if (!filter->silent)
+    g_print ("Have data of size %u bytes!\n", GST_BUFFER_SIZE (buf));
+
+  gst_pad_push (filter->srcpad, GST_DATA (buf));
+}
+  </programlisting>
+  <para>
+    Obviously, the above doesn't do much useful. Instead of printing that the
+    data is in, you would normally process the data there. Remember, however,
+    that buffers are not always writable. In more advanced elements (the ones
+    that do event processing), the incoming data might not even be a buffer.
+  </para>
+  <programlisting>
+static void
+gst_my_filter_chain (GstPad  *pad,
+                     GstData *data)
+{
+  GstMyFilter *filter = GST_MY_FILTER (gst_pad_get_parent (pad));
+  GstBuffer *buf, *outbuf;
+
+  if (GST_IS_EVENT (data)) {
+    GstEvent *event = GST_EVENT (data);
+
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_EOS:
+        /* end-of-stream, we should close down all stream leftovers here */
+        gst_my_filter_stop_processing (filter);
+        /* fall-through to default event handling */
+      default:
+        gst_pad_event_default (pad, event);
+        break;
+    }
+    return;
+  }
+
+  buf = GST_BUFFER (data);
+  outbuf = gst_my_filter_process_data (buf);
+  gst_buffer_unref (buf);
+  if (!outbuf) {
+    /* something went wrong - signal an error */
+    gst_element_error (GST_ELEMENT (filter), STREAM, FAILED, (NULL), (NULL));
+    return;
+  }
+
+  gst_pad_push (filter->srcpad, GST_DATA (outbuf));
+}
+  </programlisting>
+  <para>
+    In some cases, it might be useful for an element to have control over the
+    input data rate, too. In that case, you probably want to write a so-called
+    <emphasis>loop-based</emphasis> element. Source elements (with only source
+    pads) can also be <emphasis>get-based</emphasis> elements. These concepts
+    will be explained in the advanced section of this guide, and in the section
+    that specifically discusses source pads.
   </para>
 </chapter>

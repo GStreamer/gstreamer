@@ -1,3 +1,18 @@
+2004-01-27  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced_types.xml:
+	  Finish documenting the current state of mimetypes.
+	* docs/pwg/building_boiler.xml:
+	* docs/pwg/building_chainfn.xml:
+	* docs/pwg/building_pads.xml:
+	* docs/pwg/building_props.xml:
+	* docs/pwg/building_testapp.xml:
+	  Start documenting the "how to build a simple audio filter" part
+	  of the PWG. Most stuff is ready by now. Stuff remaining: signals,
+	  states and (maybe?) a short introduction to capsnego in the chapter
+	  on pads (building_pads.xml). Capsnego should probably be explained
+	  fully in advanced_capsnego.xml or so.
+
 2004-01-26  David Schleef  <ds@schleef.org>
 
 	* gst/gstpad.c: (gst_pad_try_set_caps_nonfixed):
