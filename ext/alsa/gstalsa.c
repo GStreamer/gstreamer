@@ -850,6 +850,8 @@ static int
 gst_alsa_rates_probe (snd_pcm_t * device_handle,
     snd_pcm_hw_params_t * hw_params, GValue * supported_rates)
 {
+  int n;
+  gboolean min_found = FALSE, max_found = FALSE;
   unsigned int common_rates[] =
       { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 88200,
     96000, 192000, 0, 0, 0
@@ -873,8 +875,15 @@ gst_alsa_rates_probe (snd_pcm_t * device_handle,
       max_rate >
       GST_ALSA_MAX_RATE ? GST_ALSA_MAX_RATE : (max_rate +
       GST_ALSA_DIR_MAX (dir));
-  common_rates[12] = min_rate;
-  if (min_rate != max_rate)
+  for (n = 0; common_rates[n] != 0; n++) {
+    if (common_rates[n] == min_rate)
+      min_found = TRUE;
+    if (common_rates[n] == max_rate)
+      max_found = TRUE;
+  }
+  if (!min_found)
+    common_rates[12] = min_rate;
+  if (!max_found && min_rate != max_rate)
     common_rates[13] = max_rate;
 
   ret =
