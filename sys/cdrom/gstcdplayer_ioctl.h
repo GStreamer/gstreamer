@@ -66,5 +66,3 @@ gboolean cd_close(struct cd *cd);
 guint32 cd_cddb_discid(struct cd *cd);
 
 #endif
-
-

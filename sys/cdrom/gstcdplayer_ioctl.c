@@ -34,13 +34,13 @@
 static void cd_fix_track_range(struct cd *cd,gint *start_track,gint *end_track);
 static gint cddb_sum(gint n);
 
-#ifdef HAVE_LINUX_CDROM_H
+#if defined(HAVE_LINUX_CDROM_H)
 #include <linux/cdrom.h>
-#elif defined HAVE_SYS_CDIO_H
+#elif defined(HAVE_SYS_CDIO_H)
 #include <sys/cdio.h>
 /*
 irix cdaudio works quite a bit differently than ioctl(), so its not ready
-#elif define HAVE_DMEDIA_CDAUDIO_H
+#elif defined(HAVE_DMEDIA_CDAUDIO_H)
 #include <dmedia/cdaudio.h>
 */
 #endif
@@ -55,12 +55,12 @@ irix cdaudio works quite a bit differently than ioctl(), so its not ready
 	gint cd_current_track(struct cd *cd);
 	gboolean cd_close(struct cd *cd);
 */	
-#ifdef HAVE_CDROM_SOLARIS
+#if defined(HAVE_CDROM_SOLARIS)
 #include "gstcdplayer_ioctl_solaris.h"
-#elif define HAVE_CDROM_BSD
+#elif defined(HAVE_CDROM_BSD)
 #include "gstcdplayer_ioctl_bsd.h"
 /*
-#elif define HAVE_CDROM_IRIX
+#elif defined(HAVE_CDROM_IRIX)
 #include "gstcdplayer_ioctl_irix.h"
 */
 #endif
@@ -118,5 +118,3 @@ guint32 cd_cddb_discid(struct cd *cd)
 
 	return ((n % 0xff) << 24 | t << 8 | (cd->num_tracks));
 }
-
-
