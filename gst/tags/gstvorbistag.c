@@ -328,7 +328,7 @@ gst_tag_list_from_vorbiscomment_buffer (const GstBuffer *buffer, const guint8 *i
   cur_size = GUINT32_FROM_LE (*((guint32 *) data));				\
   data += 4;									\
   size -= 4;									\
-  if (cur_size >= size) goto error;						\
+  if (cur_size > size) goto error;						\
   cur = data;									\
 }G_STMT_END
   gchar *cur, *value;
