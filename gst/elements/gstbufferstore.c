@@ -215,10 +215,12 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
 	  /* we have data to insert */
 	  if (start_offset > GST_BUFFER_OFFSET (buffer) ||
 	      GST_BUFFER_OFFSET (buffer) + GST_BUFFER_SIZE (buffer) > GST_BUFFER_OFFSET (current)) {
+	    GstBuffer *sub;
+
 	    /* need a subbuffer */
 	    start_offset = GST_BUFFER_OFFSET (buffer) > start_offset ? 0 : 
 			   start_offset - GST_BUFFER_OFFSET (buffer);
-	    GstBuffer* sub = gst_buffer_create_sub (buffer, start_offset,
+	    sub = gst_buffer_create_sub (buffer, start_offset,
 		    MIN (GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (current) - start_offset - GST_BUFFER_OFFSET (buffer)));
 	    g_assert (sub);
 	    GST_BUFFER_OFFSET (sub) = start_offset + GST_BUFFER_OFFSET (buffer);
