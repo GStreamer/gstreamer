@@ -8,7 +8,7 @@ AM_CONFIG_HEADER(config.h)
 
 GST_VERSION_MAJOR=0
 GST_VERSION_MINOR=3
-GST_VERSION_MICRO=09
+GST_VERSION_MICRO=11
 GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
 PACKAGE=gstreamer
@@ -330,20 +330,20 @@ AC_MSG_NOTICE(Checking for plugin libraries)
 dnl *** a52dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_A52DEC, true)
 GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
-GST_CHECK_LIBHEADER(A52DEC, a52, a52_init, :, a52dec/a52.h, A52DEC_LIBS="-la52")
+GST_CHECK_LIBHEADER(A52DEC, a52, a52_init, , a52dec/a52.h, A52DEC_LIBS="-la52")
 ])
 
 dnl *** aalib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
 GST_CHECK_FEATURE(AALIB, [aasink plugin], aasink, [
   AM_PATH_AALIB(, HAVE_AALIB=yes, HAVE_AALIB=no)
-], enabled, :, :)
+])
 
 dnl *** alsa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
 GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
 AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
-], enabled, :, :)
+])
 
 dnl *** arts ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
