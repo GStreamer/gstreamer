@@ -1,3 +1,12 @@
+2004-02-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* gconf/Makefile.am:
+	* gconf/gstreamer.schemas:
+	* gst-libs/gst/gconf/Makefile.am:
+	* gst-libs/gst/gconf/gconf.c:
+          version gconf schemas and install locations
+
 2004-02-23  Benjamin Otte  <otte@gnome.org>
 
 	* ext/xine/xineinput.c: (gst_xine_input_dispose):
