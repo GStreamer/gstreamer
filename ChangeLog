@@ -1,3 +1,9 @@
+2004-02-02  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/elements/gstfilesrc.c: (gst_filesrc_map_region),
+	(gst_filesrc_get_read):
+	  set all the values on buffers that we can
+
 2004-02-02  David Schleef  <ds@schleef.org>
 
 	Change usage of isblah() to g_ascii_isblah() to be more locale

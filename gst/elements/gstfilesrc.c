@@ -420,6 +420,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   GST_BUFFER_SIZE (buf) = size;
   GST_BUFFER_MAXSIZE (buf) = size;
   GST_BUFFER_OFFSET (buf) = offset;
+  GST_BUFFER_OFFSET_END (buf) = offset + size;
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_PRIVATE (buf) = src;
   g_object_ref (src);
@@ -647,6 +648,10 @@ gst_filesrc_get_read (GstFileSrc *src)
     return NULL;
   }
 
+  GST_BUFFER_SIZE (buf) = readsize;
+  GST_BUFFER_MAXSIZE (buf) = readsize;
+  GST_BUFFER_OFFSET (buf) = src->curoffset;
+  GST_BUFFER_OFFSET_END (buf) = src->curoffset + readsize;
   src->curoffset += readsize;
 
   return buf;
