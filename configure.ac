@@ -241,7 +241,6 @@ HAVE_GTK=NO
 PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2.0, HAVE_GTK_22=yes, HAVE_GTK_22=no)
 if test "x$HAVE_GTK_22" = "xyes"; then
   HAVE_GTK=yes
-  AC_PATH_PROG(QUERYLOADERS, gdk-pixbuf-query-loaders, no)
   GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
   AC_SUBST(GTK_VERSION)
   GTK_PREFIX=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
@@ -259,50 +258,67 @@ GTK_LIBS=$GTK2_LIBS
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(HAVE_GTK)
-AM_CONDITIONAL(HAVE_GDK_LOADERS, test "x$HAVE_GTK_22" = "xyes")
+
+# gdk_pixbuf gstreamer loader is considered experimental, so disable
+# by default
+if test "x$HAVE_GTK_22" = "xyes"; then
+  HAVE_GDK_LOADERS=yes
+else
+  HAVE_GDK_LOADERS=no
+fi
+
+AC_ARG_ENABLE(gdk-pixbuf-loader,
+  AC_HELP_STRING([--enable-gdk-pixbuf-loader],
+              [whether to enable building of gdk_pixbuf loader]),
+              :, HAVE_GDK_LOADERS="no")
 
 # allow customization of pixbuf loader install location
 # when nothing specified, adhere to prefix settings
 # when called without any option with this argument, autodetect
 # when called with a path, set to the given path
-AC_ARG_WITH(gdk-pixbuf-loader-dir, 
-   AC_HELP_STRING([--with-gdk-pixbuf-loader-dir],
-   	[directory to install the gdk_pixbuf loader (none for pkg-config default)]),
-   [
-    if test "x${withval}" != xyes ; then
-   	GDK_PIXBUF_LOADER_DIR="${withval}"
-    else
-      GDK_PIXBUF_LOADER_DIR="$GDK_PIXBUF_LIBDIR/gtk-2.0/\$GTK_VERSION/loaders"
-    fi
-   ],
-   # nothing specified
-   GDK_PIXBUF_LOADER_DIR=${libdir}/gtk-2.0/\$GTK_VERSION/loaders
-)
-AS_AC_EXPAND(GDK_PIXBUF_LOADER_DIR, $GDK_PIXBUF_LOADER_DIR)
-AC_SUBST(GDK_PIXBUF_LOADER_DIR)
-AC_MSG_NOTICE([Putting GTK+-2 pixbuf loaders in $GDK_PIXBUF_LOADER_DIR])
 
-# allow customization of pixbuf loader configuration file
-# when nothing specified, adhere to prefix settings
-# when called without any option with this argument, autodetect
-# when called with a path, set to the given path
-AC_ARG_WITH(gdk-pixbuf-conf-dir, 
-   AC_HELP_STRING([--with-gdk-pixbuf-conf-dir],
-   	[directory to install the gdk_pixbuf config (none for pkg-config default)]),
-   [
-    if test "x${withval}" != xyes ; then
-      GDK_PIXBUF_CONF_DIR="${withval}"
-    else
-      GDK_PIXBUF_CONF_DIR="$GDK_PIXBUF_PREFIXDIR/etc/gtk-2.0/"
-    fi
-   ],
-   # nothing specified
-   GDK_PIXBUF_LOADER_DIR=${libdir}/gtk-2.0/\$GTK_VERSION/loaders
-   GDK_PIXBUF_CONF_DIR=${sysconfdir}/gtk-2.0
-)
-AS_AC_EXPAND(GDK_PIXBUF_CONF_DIR, $GDK_PIXBUF_CONF_DIR)
-AC_SUBST(GDK_PIXBUF_CONF_DIR)
-AC_MSG_NOTICE([Putting GTK+-2 pixbuf loader config in $GDK_PIXBUF_CONF_DIR])
+if test "x$HAVE_GDK_LOADERS" == "xyes"; then
+  AC_PATH_PROG(QUERYLOADERS, gdk-pixbuf-query-loaders, no)
+  AC_ARG_WITH(gdk-pixbuf-loader-dir, 
+     AC_HELP_STRING([--with-gdk-pixbuf-loader-dir],
+     	[directory to install the gdk_pixbuf loader (none for pkg-config default)]),
+     [
+      if test "x${withval}" != xyes ; then
+     	GDK_PIXBUF_LOADER_DIR="${withval}"
+      else
+        GDK_PIXBUF_LOADER_DIR="$GDK_PIXBUF_LIBDIR/gtk-2.0/\$GTK_VERSION/loaders"
+      fi
+     ],
+     # nothing specified
+     GDK_PIXBUF_LOADER_DIR=${libdir}/gtk-2.0/\$GTK_VERSION/loaders
+  )
+  AS_AC_EXPAND(GDK_PIXBUF_LOADER_DIR, $GDK_PIXBUF_LOADER_DIR)
+  AC_SUBST(GDK_PIXBUF_LOADER_DIR)
+  AC_MSG_NOTICE([Putting GTK+-2 pixbuf loaders in $GDK_PIXBUF_LOADER_DIR])
+  
+  # allow customization of pixbuf loader configuration file
+  # when nothing specified, adhere to prefix settings
+  # when called without any option with this argument, autodetect
+  # when called with a path, set to the given path
+  AC_ARG_WITH(gdk-pixbuf-conf-dir, 
+     AC_HELP_STRING([--with-gdk-pixbuf-conf-dir],
+     	[directory to install the gdk_pixbuf config (none for pkg-config default)]),
+     [
+      if test "x${withval}" != xyes ; then
+        GDK_PIXBUF_CONF_DIR="${withval}"
+      else
+        GDK_PIXBUF_CONF_DIR="$GDK_PIXBUF_PREFIXDIR/etc/gtk-2.0/"
+      fi
+     ],
+     # nothing specified
+     GDK_PIXBUF_LOADER_DIR=${libdir}/gtk-2.0/\$GTK_VERSION/loaders
+     GDK_PIXBUF_CONF_DIR=${sysconfdir}/gtk-2.0
+  )
+  AS_AC_EXPAND(GDK_PIXBUF_CONF_DIR, $GDK_PIXBUF_CONF_DIR)
+  AC_SUBST(GDK_PIXBUF_CONF_DIR)
+  AC_MSG_NOTICE([Putting GTK+-2 pixbuf loader config in $GDK_PIXBUF_CONF_DIR])
+fi
+AM_CONDITIONAL(HAVE_GDK_LOADERS, test "x$HAVE_GDK_LOADERS" = "xyes")
 
 dnl ===========================================================================
 dnl ============================= gst plug-ins ================================
