@@ -1,3 +1,9 @@
+2005-01-09  Maciej Katafiasz <mathrick@freedesktop.org>
+
+	* README: fix PKG_CONFIG_PATH instructions, what was there
+	previously was breaking default search path, not nice. 
+	Fixes #163358
+
 2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/audioscale/gstaudioscale.c: (gst_audioscale_init),
