@@ -400,7 +400,7 @@ gst_a52dec_loop (GstElement * element)
     a52dec->sample_rate = sample_rate;
   }
 
-  a52dec->stream_channels = flags & A52_CHANNEL_MASK;
+  a52dec->stream_channels = flags & (A52_CHANNEL_MASK | A52_LFE);
 
   if (bit_rate != a52dec->bit_rate) {
     a52dec->bit_rate = bit_rate;
@@ -432,7 +432,7 @@ gst_a52dec_loop (GstElement * element)
     goto end;
   }
 
-  channels = flags & A52_CHANNEL_MASK;
+  channels = flags & (A52_CHANNEL_MASK | A52_LFE);
 
   if (a52dec->using_channels != channels) {
     need_reneg = TRUE;
