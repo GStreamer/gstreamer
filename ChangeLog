@@ -1,3 +1,9 @@
+2004-01-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gsttag.c: (_gst_tag_initialize), (gst_tag_register):
+	* gst/gsttag.h:
+          add GstTagFlag
+
 2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:

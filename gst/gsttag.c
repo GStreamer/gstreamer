@@ -41,6 +41,7 @@ typedef struct {
   gchar *		blurb;		/* translated description of type */
 
   GstTagMergeFunc	merge_func;	/* functions to merge the values */
+  GstTagFlag            flag;           /* type of tag */
 } GstTagInfo;
 
 #define TAGLIST "taglist"
@@ -56,147 +57,147 @@ _gst_tag_initialize (void)
   gst_tag_list_quark = g_quark_from_static_string (TAGLIST);
   __tag_mutex = g_mutex_new ();
   __tags = g_hash_table_new (g_direct_hash, g_direct_equal);
-  gst_tag_register (GST_TAG_TITLE,	      
+  gst_tag_register (GST_TAG_TITLE, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("title"),
 		    _("commonly used title"),
 		    gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_ARTIST,
+  gst_tag_register (GST_TAG_ARTIST, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("artist"),
 		    _("person(s) responsible for the recording"),
 		    gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_ALBUM,
+  gst_tag_register (GST_TAG_ALBUM, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("album"),
 		    _("album containing this data"),
 		    gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_DATE,
+  gst_tag_register (GST_TAG_DATE, GST_TAG_FLAG_META,
 		    G_TYPE_UINT, /* FIXME: own data type for dates? */
 		    _("date"),
 		    _("date the data was created (in Julian calendar days)"),
 		    NULL);
-  gst_tag_register (GST_TAG_GENRE,
+  gst_tag_register (GST_TAG_GENRE, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("genre"), 
 		    _("genre this data belongs to"),
 		    gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_COMMENT,
+  gst_tag_register (GST_TAG_COMMENT, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("comment"),
 		    _("free text commenting the data"),
 		    gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_TRACK_NUMBER,
+  gst_tag_register (GST_TAG_TRACK_NUMBER, GST_TAG_FLAG_META,
 		    G_TYPE_UINT,
 		    _("track number"),
 		    _("track number inside a collection"),
 		    gst_tag_merge_use_first);
-  gst_tag_register (GST_TAG_TRACK_COUNT,
+  gst_tag_register (GST_TAG_TRACK_COUNT, GST_TAG_FLAG_META,
 		    G_TYPE_UINT,
 		    _("track count"),
 		    _("count of tracks inside collection this track belongs to"), 
 		    gst_tag_merge_use_first);
-  gst_tag_register (GST_TAG_LOCATION,
+  gst_tag_register (GST_TAG_LOCATION, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("location"),
 		    _("original location of file as a URI"),
 		    gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_DESCRIPTION,
+  gst_tag_register (GST_TAG_DESCRIPTION, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("description"),
 		    _("short text describing the content of the data"),
 		    gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_VERSION,
+  gst_tag_register (GST_TAG_VERSION, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("version"),
 		    _("version of this data"),
 		    NULL);
-  gst_tag_register (GST_TAG_ISRC,
+  gst_tag_register (GST_TAG_ISRC, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("ISRC"),
 		    _("International Standard Recording Code - see http://www.ifpi.org/isrc/"),
 		    NULL);
-  gst_tag_register (GST_TAG_ORGANIZATION,
+  gst_tag_register (GST_TAG_ORGANIZATION, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("organization"),
 		    _("organization"), /* FIXME */
 		    gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_COPYRIGHT,
+  gst_tag_register (GST_TAG_COPYRIGHT, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("copyright"),
 		    _("copyright notice of the data"),
 		    NULL);
-  gst_tag_register (GST_TAG_CONTACT,
+  gst_tag_register (GST_TAG_CONTACT, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("contact"),
 		    _("contact information"),
 		    gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_LICENSE,	
+  gst_tag_register (GST_TAG_LICENSE,	 GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("license"),
 		    _("license of data"),
 		    NULL);
-  gst_tag_register (GST_TAG_PERFORMER,
+  gst_tag_register (GST_TAG_PERFORMER, GST_TAG_FLAG_META,
 		    G_TYPE_STRING,
 		    _("performer"),
 		    _("person(s) performing"),
 		    gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_DURATION,
-		    G_TYPE_UINT64,
+		    G_TYPE_UINT64, GST_TAG_FLAG_DECODED,
 		    _("duration"),
 		    _("length in GStreamer time units (nanoseconds)"),
 		    NULL);
-  gst_tag_register (GST_TAG_CODEC,
+  gst_tag_register (GST_TAG_CODEC, GST_TAG_FLAG_ENCODED,
 		    G_TYPE_STRING,
 		    _("codec"),
 		    _("codec the data is stored in"),
 		    gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_BITRATE,
+  gst_tag_register (GST_TAG_BITRATE, GST_TAG_FLAG_ENCODED,
 		    G_TYPE_UINT,
 		    _("bitrate"),
 		    _("exact or average bitrate in bits/s"),
 		    NULL);
-  gst_tag_register (GST_TAG_NOMINAL_BITRATE,
+  gst_tag_register (GST_TAG_NOMINAL_BITRATE, GST_TAG_FLAG_ENCODED,
 		    G_TYPE_UINT,
 		    _("nominal bitrate"),
 		    _("nominal bitrate in bits/s"),
 		    NULL);
-  gst_tag_register (GST_TAG_MINIMUM_BITRATE,
+  gst_tag_register (GST_TAG_MINIMUM_BITRATE, GST_TAG_FLAG_ENCODED,
 		    G_TYPE_UINT,
 		    _("minimum bitrate"),
 		    _("minimum bitrate in bits/s"),
 		    NULL);
-  gst_tag_register (GST_TAG_MAXIMUM_BITRATE,
+  gst_tag_register (GST_TAG_MAXIMUM_BITRATE, GST_TAG_FLAG_ENCODED,
 		    G_TYPE_UINT,
 		    _("maximum bitrate"),
 		    _("maximum bitrate in bits/s"),
 		    NULL);
-  gst_tag_register (GST_TAG_ENCODER_VERSION,
+  gst_tag_register (GST_TAG_ENCODER_VERSION, GST_TAG_FLAG_ENCODED,
 		    G_TYPE_UINT,
 		    _("encoder version"),
 		    _("version of the encoder used to encode this stream"),
 		    NULL);
-  gst_tag_register (GST_TAG_SERIAL,
+  gst_tag_register (GST_TAG_SERIAL, GST_TAG_FLAG_ENCODED,
 		    G_TYPE_UINT,
 		    _("serial"),
 		    _("serial number of track"),
 		    NULL);
-  gst_tag_register (GST_TAG_TRACK_GAIN,
+  gst_tag_register (GST_TAG_TRACK_GAIN, GST_TAG_FLAG_META,
                     G_TYPE_DOUBLE,
 		    _("replaygain track gain"),
 		    _("track gain in db"),
 		    NULL);
-  gst_tag_register (GST_TAG_TRACK_PEAK,
+  gst_tag_register (GST_TAG_TRACK_PEAK, GST_TAG_FLAG_META,
                     G_TYPE_DOUBLE,
 		    _("replaygain track peak"),
 		    _("peak of the track"),
 		    NULL);
-  gst_tag_register (GST_TAG_ALBUM_GAIN,
+  gst_tag_register (GST_TAG_ALBUM_GAIN, GST_TAG_FLAG_META,
                     G_TYPE_DOUBLE,
 		    _("replaygain album gain"),
 		    _("album gain in db"),
 		    NULL);
-  gst_tag_register (GST_TAG_ALBUM_PEAK,
+  gst_tag_register (GST_TAG_ALBUM_PEAK, GST_TAG_FLAG_META,
                     G_TYPE_DOUBLE,
 		    _("replaygain album peak"),
 		    _("peak of the album"),
@@ -259,6 +260,7 @@ gst_tag_lookup (GQuark entry)
 /**
  * gst_tag_register:
  * @name: the name or identifier string
+ * @flag: a flag describing the type of tag info
  * @type: the type this data is in
  * @nick: human-readable name
  * @blurb: a human-readable description about this tag
@@ -267,13 +269,13 @@ gst_tag_lookup (GQuark entry)
  * Registers a new tag type for the use with GStreamer's type system. If a type
  * with that name is already registered, that one is used.
  * The old registration may have used a different type however. So don't rely
- * on youre supplied values.
+ * on your supplied values.
  * If you know the type is already registered, use gst_tag_lookup instead.
  * This function takes ownership of all supplied variables.
  */
 void
-gst_tag_register (gchar *name, GType type, gchar *nick, gchar *blurb,
-		  GstTagMergeFunc func)
+gst_tag_register (gchar *name, GstTagFlag flag, GType type,
+                  gchar *nick, gchar *blurb, GstTagMergeFunc func)
 {
   GQuark key;
   GstTagInfo *info;
@@ -288,6 +290,7 @@ gst_tag_register (gchar *name, GType type, gchar *nick, gchar *blurb,
   g_return_if_fail (info == NULL);
   
   info = g_new (GstTagInfo, 1);
+  info->flag = flag;
   info->type = type;
   info->nick = nick;
   info->blurb = blurb;

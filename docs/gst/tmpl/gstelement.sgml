@@ -987,6 +987,8 @@ Is triggered whenever an error occured.
 @gstelement: the object which received the signal.
 @arg1: the error message
 @arg2: 
+@:
+@:
 @: 
 
 <!-- ##### SIGNAL GstElement::found-tag ##### -->

@@ -41,6 +41,15 @@ typedef enum {
 } GstTagMergeMode;
 #define GST_TAG_MODE_IS_VALID(mode)     (((mode) > GST_TAG_MERGE_UNDEFINED) && ((mode) < GST_TAG_MERGE_COUNT))
 
+typedef enum {
+  GST_TAG_FLAG_UNDEFINED,
+  GST_TAG_FLAG_META,
+  GST_TAG_FLAG_ENCODED,
+  GST_TAG_FLAG_DECODED,
+  GST_TAG_FLAG_COUNT
+} GstTagFlag;
+#define GST_TAG_FLAG_IS_VALID(flag)     (((flag) > GST_TAG_FLAG_UNDEFINED) && ((flag) < GST_TAG_FLAG_COUNT))
+
 typedef GstStructure GstTagList;
 #define GST_TAG_LIST(x)		((GstTagList *) (x))
 #define GST_IS_TAG_LIST(x)	(gst_is_tag_list (GST_TAG_LIST (x)))
@@ -52,6 +61,7 @@ typedef void		(* GstTagMergeFunc)	(GValue *dest, const GValue *src);
 void		_gst_tag_initialize		(void);
 
 void		gst_tag_register		(gchar *		name,
+						 GstTagFlag		flag,
 						 GType			type,
 						 gchar *		nick,
 						 gchar *		blurb,
