@@ -58,10 +58,10 @@
 #define GST_PAD_CONNECT_DELAYED		GST_PAD_LINK_DELAYED
 #define GST_PAD_CONNECT_OK		GST_PAD_LINK_OK
 #define GST_PAD_CONNECT_DONE		GST_PAD_LINK_DONE
-typedef GstPadConnectReturn		GstPadLinkReturn;
+typedef GstPadLinkReturn		GstPadConnectReturn;
 
 /* pad function types */
-typedef GstPadConnectFunction		GstPadLinkFunction;
+typedef GstPadLinkFunction		GstPadConnectFunction;
 
 /* probably not used */
 /*
