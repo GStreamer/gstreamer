@@ -482,7 +482,7 @@ gst_videotestsrc_get (GstPad * pad)
 
   videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
 
-  if (videotestsrc->fourcc != NULL) {
+  if (!videotestsrc->fourcc) {
     gst_element_error (GST_ELEMENT (videotestsrc),
 		       "No color format set - aborting");
     return NULL;

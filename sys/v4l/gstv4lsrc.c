@@ -51,23 +51,33 @@ enum {
   ARG_USE_FIXED_FPS
 };
 
+GST_FORMATS_FUNCTION (GstPad *, gst_v4lsrc_get_formats,
+		      GST_FORMAT_TIME, GST_FORMAT_DEFAULT);
+GST_QUERY_TYPE_FUNCTION (GstPad *, gst_v4lsrc_get_query_types,
+			 GST_QUERY_POSITION);
 
 /* init functions */
 static void		     gst_v4lsrc_base_init    (gpointer g_class);
 static void                  gst_v4lsrc_class_init   (GstV4lSrcClass *klass);
 static void                  gst_v4lsrc_init         (GstV4lSrc      *v4lsrc);
 
-/* pad/buffer functions */
-static gboolean              gst_v4lsrc_srcconvert   (GstPad         *pad,
+/* pad/info functions */
+static gboolean              gst_v4lsrc_src_convert  (GstPad         *pad,
                                                       GstFormat      src_format,
                                                       gint64         src_value,
                                                       GstFormat      *dest_format,
                                                       gint64         *dest_value);
+static gboolean              gst_v4lsrc_src_query    (GstPad         *pad,
+                                                      GstQueryType   type, 
+                                                      GstFormat      *format,
+                                                      gint64         *value);
+
+/* buffer functions */
 static GstPadLinkReturn      gst_v4lsrc_srcconnect   (GstPad         *pad,
                                                       GstCaps        *caps);
 static GstCaps*	             gst_v4lsrc_getcaps      (GstPad         *pad,
                                                       GstCaps        *caps);
-static GstData*            gst_v4lsrc_get          (GstPad         *pad);
+static GstData*              gst_v4lsrc_get          (GstPad         *pad);
 
 /* get/set params */
 static void                  gst_v4lsrc_set_property (GObject        *object,
@@ -199,7 +209,10 @@ gst_v4lsrc_init (GstV4lSrc *v4lsrc)
   gst_pad_set_get_function (v4lsrc->srcpad, gst_v4lsrc_get);
   gst_pad_set_getcaps_function (v4lsrc->srcpad, gst_v4lsrc_getcaps);
   gst_pad_set_link_function (v4lsrc->srcpad, gst_v4lsrc_srcconnect);
-  gst_pad_set_convert_function (v4lsrc->srcpad, gst_v4lsrc_srcconvert);
+  gst_pad_set_convert_function (v4lsrc->srcpad, gst_v4lsrc_src_convert);
+  gst_pad_set_formats_function (v4lsrc->srcpad, gst_v4lsrc_get_formats);
+  gst_pad_set_query_function (v4lsrc->srcpad, gst_v4lsrc_src_query);
+  gst_pad_set_query_type_function (v4lsrc->srcpad, gst_v4lsrc_get_query_types);
 
   v4lsrc->bufferpool = gst_buffer_pool_new(
 		  NULL, 
@@ -249,13 +262,12 @@ gst_v4lsrc_get_fps (GstV4lSrc *v4lsrc)
   return fps;
 }
 
-
 static gboolean
-gst_v4lsrc_srcconvert (GstPad    *pad,
-                       GstFormat  src_format,
-                       gint64     src_value,
-                       GstFormat *dest_format,
-                       gint64    *dest_value)
+gst_v4lsrc_src_convert (GstPad    *pad,
+                        GstFormat  src_format,
+                        gint64     src_value,
+                        GstFormat *dest_format,
+                        gint64    *dest_value)
 {
   GstV4lSrc *v4lsrc;
   gdouble fps;
@@ -291,6 +303,41 @@ gst_v4lsrc_srcconvert (GstPad    *pad,
   }
 
   return TRUE;
+}
+
+static gboolean
+gst_v4lsrc_src_query (GstPad      *pad,
+                      GstQueryType type, 
+                      GstFormat   *format,
+                      gint64      *value)
+{
+  GstV4lSrc *v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
+  gboolean res = TRUE;
+  gdouble fps;
+
+  if ((fps = gst_v4lsrc_get_fps(v4lsrc)) == 0)
+    return FALSE;
+
+  switch (type) {
+    case GST_QUERY_POSITION:
+      switch (*format) {
+        case GST_FORMAT_TIME:
+          *value = v4lsrc->handled * GST_SECOND / fps;
+          break;
+        case GST_FORMAT_DEFAULT:
+          *value = v4lsrc->handled;
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+
+  return res;
 }
 
 static GstCaps *
@@ -568,7 +615,7 @@ gst_v4lsrc_getcaps (GstPad  *pad,
 }
 
 
-static GstData*
+static GstData *
 gst_v4lsrc_get (GstPad *pad)
 {
   GstV4lSrc *v4lsrc;

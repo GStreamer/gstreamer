@@ -58,21 +58,31 @@ enum {
   ARG_USE_FIXED_FPS
 };
 
+GST_FORMATS_FUNCTION (GstPad *, gst_v4lmjpegsrc_get_formats,
+		      GST_FORMAT_TIME, GST_FORMAT_DEFAULT);
+GST_QUERY_TYPE_FUNCTION (GstPad *, gst_v4lmjpegsrc_get_query_types,
+			 GST_QUERY_POSITION);
 
 /* init functions */
 static void                  gst_v4lmjpegsrc_base_init	  (gpointer g_class);
 static void                  gst_v4lmjpegsrc_class_init   (GstV4lMjpegSrcClass *klass);
 static void                  gst_v4lmjpegsrc_init         (GstV4lMjpegSrc *v4lmjpegsrc);
 
-/* pad/buffer functions */
-static gboolean              gst_v4lmjpegsrc_srcconvert   (GstPad         *pad,
+/* pad/info functions */
+static gboolean              gst_v4lmjpegsrc_src_convert  (GstPad         *pad,
                                                            GstFormat      src_format,
                                                            gint64         src_value,
                                                            GstFormat      *dest_format,
                                                            gint64         *dest_value);
+static gboolean              gst_v4lmjpegsrc_src_query    (GstPad         *pad,
+                                                           GstQueryType   type, 
+                                                           GstFormat      *format,
+                                                           gint64         *value);
+
+/* buffer functions */
 static GstPadLinkReturn      gst_v4lmjpegsrc_srcconnect   (GstPad         *pad,
                                                            GstCaps        *caps);
-static GstData*            gst_v4lmjpegsrc_get          (GstPad         *pad);
+static GstData*              gst_v4lmjpegsrc_get          (GstPad         *pad);
 static GstCaps*              gst_v4lmjpegsrc_getcaps      (GstPad         *pad,
                                                            GstCaps        *caps);
 
@@ -245,7 +255,10 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
   gst_pad_set_get_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_get);
   gst_pad_set_getcaps_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_getcaps);
   gst_pad_set_link_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_srcconnect);
-  gst_pad_set_convert_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_srcconvert);
+  gst_pad_set_convert_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_src_convert);
+  gst_pad_set_formats_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_get_formats);
+  gst_pad_set_query_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_src_query);
+  gst_pad_set_query_type_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_get_query_types);
 
   v4lmjpegsrc->bufferpool = gst_buffer_pool_new(
 		  			NULL,
@@ -304,13 +317,12 @@ gst_v4lmjpegsrc_get_fps (GstV4lMjpegSrc *v4lmjpegsrc)
   return fps;
 }
 
-
 static gboolean
-gst_v4lmjpegsrc_srcconvert (GstPad    *pad,
-                            GstFormat  src_format,
-                            gint64     src_value,
-                            GstFormat *dest_format,
-                            gint64    *dest_value)
+gst_v4lmjpegsrc_src_convert (GstPad    *pad,
+                             GstFormat  src_format,
+                             gint64     src_value,
+                             GstFormat *dest_format,
+                             gint64    *dest_value)
 {
   GstV4lMjpegSrc *v4lmjpegsrc;
   gdouble fps;
@@ -348,6 +360,40 @@ gst_v4lmjpegsrc_srcconvert (GstPad    *pad,
   return TRUE;
 }
 
+static gboolean
+gst_v4lmjpegsrc_src_query (GstPad      *pad,
+                           GstQueryType type, 
+                          GstFormat   *format,
+                           gint64      *value)
+{
+  GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
+  gboolean res = TRUE;
+  gdouble fps;
+
+  if ((fps = gst_v4lmjpegsrc_get_fps(v4lmjpegsrc)) == 0)
+    return FALSE;
+
+  switch (type) {
+    case GST_QUERY_POSITION:
+      switch (*format) {
+        case GST_FORMAT_TIME:
+          *value = v4lmjpegsrc->handled * GST_SECOND / fps;
+          break;
+        case GST_FORMAT_DEFAULT:
+          *value = v4lmjpegsrc->handled;
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+
+  return res;
+}
 
 static inline gulong
 calc_bufsize (int hor_dec,
