@@ -96,7 +96,7 @@ GST_STATIC_PAD_TEMPLATE
     	G_STRINGIFY(NTSC_HEIGHT) ", "
 	G_STRINGIFY(PAL_HEIGHT)
     " }, "
-    "framerate = (float) { "
+    "framerate = (double) { "
         G_STRINGIFY(PAL_FRAMERATE) ", "
 	G_STRINGIFY(NTSC_FRAMERATE) 
     " }; "
@@ -113,7 +113,7 @@ GST_STATIC_PAD_TEMPLATE
     	G_STRINGIFY(NTSC_HEIGHT) ", "
 	G_STRINGIFY(PAL_HEIGHT)
     " }, "
-    "framerate = (float) { "
+    "framerate = (double) { "
         G_STRINGIFY(PAL_FRAMERATE) ", "
 	G_STRINGIFY(NTSC_FRAMERATE) 
     " }; "
@@ -130,7 +130,7 @@ GST_STATIC_PAD_TEMPLATE
     	G_STRINGIFY(NTSC_HEIGHT) ", "
 	G_STRINGIFY(PAL_HEIGHT)
     " }, "
-    "framerate = (float) { "
+    "framerate = (double) { "
         G_STRINGIFY(PAL_FRAMERATE) ", "
 	G_STRINGIFY(NTSC_FRAMERATE) 
     " }"
