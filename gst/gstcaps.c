@@ -241,8 +241,10 @@ void gst_caps_append_structure (GstCaps *caps, GstStructure *structure)
   g_return_if_fail(caps != NULL);
 
   if (structure){
+#if 0 /* disable this, since too many plugins rely on undefined behavior */
 #ifdef USE_POISONING
     STRUCTURE_POISON (structure);
+#endif
 #endif
     g_ptr_array_add (caps->structs, structure);
   }
@@ -578,7 +580,9 @@ GstCaps *gst_caps_intersect (const GstCaps *caps1, const GstCaps *caps2)
   GstStructure *struct1;
   GstStructure *struct2;
   GstCaps *dest;
-  //GstCaps *caps;
+#if 0
+  GstCaps *caps;
+#endif
 
   g_return_val_if_fail (caps1 != NULL, NULL);
   g_return_val_if_fail (caps2 != NULL, NULL);
@@ -750,8 +754,10 @@ GstCaps *gst_caps_load_thyself (xmlNodePtr parent)
 /* utility */
 void gst_caps_replace (GstCaps **caps, GstCaps *newcaps)
 {
+#if 0 /* disable this, since too many plugins rely on undefined behavior */
 #ifdef USE_POISONING
-  if (newcaps) CAPS_POISON (newcaps);
+  //if (newcaps) CAPS_POISON (newcaps);
+#endif
 #endif
   if (*caps) gst_caps_free(*caps);
   *caps = newcaps;

@@ -104,6 +104,14 @@ struct _GstDebugCategory {
 
 /********** some convenience macros for debugging **********/
 
+#define GST_TEMP_STRING(str, statement) G_STMT_START { \
+  char * str = NULL; \
+  statement; \
+  g_free( str ); \
+} G_STMT_END
+
+
+
 /* This is needed in printf's if a char* might be NULL. Solaris crashes then */
 #define GST_STR_NULL(str) ((str) ? (str) : "(NULL)")
 
@@ -162,6 +170,16 @@ void		gst_debug_log			(GstDebugCategory *	category,
 						 GObject *		object,
 						 gchar *		format,
 						 ...)  G_GNUC_PRINTF (7, 8) G_GNUC_NO_INSTRUMENT;
+void		gst_debug_log_callback		(GstDebugCategory *	category,
+						 GstDebugLevel		level,
+						 const gchar *		file,
+						 const gchar *		function,
+						 gint			line,
+						 GObject *		object,
+                                                 char *                 (*callback)(gpointer callback_arg),
+                                                 gpointer               callback_arg,
+						 gchar *		format,
+						 ...)  G_GNUC_PRINTF (9, 10) G_GNUC_NO_INSTRUMENT;
 void		gst_debug_log_valist  		(GstDebugCategory *	category,
 						 GstDebugLevel		level,
 						 const gchar *		file,
