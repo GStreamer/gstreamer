@@ -10,7 +10,7 @@ extern gboolean _gst_plugin_spew;
 static gboolean playing = TRUE;
 
 void eof(GstElement *src) {
-  GST_DEBUG("have EOF\n");
+  GST_DEBUG(0,"have EOF\n");
   playing = FALSE;
 }
 
