@@ -1190,8 +1190,7 @@ dvdnavsrc_make_dvd_nav_packet_event (DVDNavSrc * src, const pci_t * pci)
 {
   GstEvent *event;
   GstStructure *structure;
-  GValue start_ptm = { 0 }, end_ptm =
-  {
+  GValue start_ptm = { 0 }, end_ptm = {
   0};
 
   /* Store the time values in GValues. */
@@ -1631,7 +1630,7 @@ dvdnav_handle_navigation_event (DVDNavSrc * src, GstEvent * event)
     const char *key = gst_structure_get_string (structure, "key");
 
     g_assert (key != NULL);
-    g_print ("dvdnavsrc got a keypress: %s", key);
+    GST_DEBUG ("dvdnavsrc got a keypress: %s", key);
   } else if (strcmp (event_type, "mouse-move") == 0) {
     double x, y;
 
