@@ -344,14 +344,17 @@ gst_sinesrc_get (GstPad *pad)
 
   if (!src->tags_pushed) {
     GstTagList *taglist;
+    GstEvent *event;
 
     taglist = gst_tag_list_new ();
 
     gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
         GST_TAG_DESCRIPTION, "sine wave", NULL);
 
-    gst_element_found_tags_for_pad (GST_ELEMENT (src), pad, 0, taglist);
+    gst_element_found_tags (GST_ELEMENT (src), taglist);
+    event = gst_event_new_tag (taglist);
     src->tags_pushed = TRUE;
+    return GST_DATA (event);
   }
 
   tdiff = src->samples_per_buffer * GST_SECOND / src->samplerate;
