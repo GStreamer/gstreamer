@@ -23,6 +23,8 @@
 #include "config.h"
 #endif
 
+#include <glib.h>
+
 #include "mixertrack.h"
 
 enum
