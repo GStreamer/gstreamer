@@ -566,6 +566,8 @@ else
   dnl Check for libgnome
   GST_CHECK_CONFIGPROG(GNOME, gnome-config, gnome gnomeui)
 fi
+AC_SUBST(GNOME_LIBS)
+AC_SUBST(GNOME_CFLAGS)
 AC_SUBST(HAVE_GNOME)
 
 dnl Check for libghttp
