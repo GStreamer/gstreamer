@@ -142,7 +142,7 @@ gst_play_init (GstPlay *play)
   gst_pipeline_add_sink (GST_PIPELINE (priv->pipeline), priv->audio_play);
   gst_pipeline_add_sink (GST_PIPELINE (priv->pipeline), priv->video_show);
 
-  gst_bin_add (GST_BIN (priv->thread), priv->pipeline);
+  //gst_bin_add (GST_BIN (priv->thread), priv->pipeline);
 
   play->state = GST_PLAY_STOPPED;
   play->flags = 0;
@@ -259,7 +259,8 @@ gst_play_set_uri (GstPlay *play,
 
   priv->uri = g_strdup (uri);
 
-  priv->src = gst_elementfactory_make ("asyncdisksrc", "disk_src");
+  priv->src = gst_elementfactory_make ("disksrc", "disk_src");
+  //priv->src = gst_elementfactory_make ("asyncdisksrc", "disk_src");
   //priv->src = gst_elementfactory_make ("dvdsrc", "disk_src");
   g_return_val_if_fail (priv->src != NULL, -1);
   gtk_object_set (GTK_OBJECT (priv->src),"location",uri,NULL);
@@ -279,6 +280,10 @@ gst_play_set_uri (GstPlay *play,
   if (GST_PAD_CONNECTED (gst_element_get_pad (priv->audio_play, "sink"))) {
     play->flags |= GST_PLAY_TYPE_AUDIO;
   }
+
+  GST_FLAG_UNSET (priv->pipeline, GST_BIN_FLAG_MANAGER);
+
+  gst_bin_add (GST_BIN (priv->thread), priv->pipeline);
 
   return GST_PLAY_OK;
 }
