@@ -89,8 +89,7 @@ struct _GstQueueClass {
   GstElementClass parent_class;
 
   /* signal callbacks */
-  void (*low_watermark)		(GstQueue *queue, gint level);
-  void (*high_watermark)	(GstQueue *queue, gint level);
+  void (*full)		(GstQueue *queue);
 };
 
 GType gst_queue_get_type (void);

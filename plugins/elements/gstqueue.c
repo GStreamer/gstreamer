@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2003 Colin Walters <cwalters@gnome.org>
  *
  * gstqueue.c:
  *
@@ -51,8 +52,7 @@ GstElementDetails gst_queue_details = {
 
 /* Queue signals and args */
 enum {
-  LOW_WATERMARK,
-  HIGH_WATERMARK,
+  FULL,
   LAST_SIGNAL
 };
 
@@ -111,7 +111,7 @@ queue_leaky_get_type(void) {
 }
 
 static GstElementClass *parent_class = NULL;
-/* static guint gst_queue_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_queue_get_type(void) 
@@ -147,6 +147,10 @@ gst_queue_class_init (GstQueueClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gst_queue_signals[FULL] =
+    g_signal_new ("full", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
+                  G_STRUCT_OFFSET (GstQueueClass, full), NULL, NULL,
+		  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LEAKY,
     g_param_spec_enum ("leaky", "Leaky", "Where the queue leaks, if at all.",
                        GST_TYPE_QUEUE_LEAKY, GST_QUEUE_NO_LEAK, G_PARAM_READWRITE));
@@ -348,6 +352,8 @@ restart:
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "adding buffer %p of size %d",buf,GST_BUFFER_SIZE(buf));
 
   if (queue->level_buffers == queue->size_buffers) {
+    g_signal_emit (G_OBJECT (queue), gst_queue_signals[FULL], 0);
+
     /* if this is a leaky queue... */
     if (queue->leaky) {
       /* FIXME don't want to leak events! */
