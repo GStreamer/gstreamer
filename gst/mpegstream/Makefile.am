@@ -2,7 +2,7 @@
 plugin_LTLIBRARIES = libgstmpegstream.la
 
 libgstmpegstream_la_SOURCES = gstmpegstream.c gstmpegparse.c gstmpegdemux.c gstmpegpacketize.c gstrfc2250enc.c gstmpegclock.c
-libgstmpegstream_la_CFLAGS = $(GST_CFLAGS) -O3 $(FOMIT_FRAME_POINTER) $(GST_FFASTMATH_CFLAGS)
+libgstmpegstream_la_CFLAGS = $(GST_CFLAGS)
 libgstmpegstream_la_LIBADD =
 libgstmpegstream_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
