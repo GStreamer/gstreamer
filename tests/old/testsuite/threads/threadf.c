@@ -20,6 +20,7 @@ construct_pipeline (GstElement *pipeline, gint identities)
   GstElement *from;
   int i;
 
+  identity = NULL;
   src      = gst_element_factory_make ("fakesrc",  NULL);
   sink     = gst_element_factory_make ("fakesink", NULL);
   g_assert (src);
