@@ -171,7 +171,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 static gboolean
 gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
 {
-  GList *sinkpads;
+  const GList *sinkpads;
   gboolean connected = FALSE;
   GstElementState state = GST_STATE (gst_element_get_parent (src));
 
@@ -212,7 +212,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
 static void
 gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
 {
-  GList *srcpads;
+  const GList *srcpads;
   gboolean connected = FALSE;
 
   srcpads = gst_element_get_pad_list(src);
@@ -406,7 +406,7 @@ next:
     }
     /* this is the first element, find a good ghostpad */
     else {
-      GList *pads;
+      const GList *pads;
 
       pads = gst_element_get_pad_list (element);
 

@@ -308,6 +308,7 @@ gst_fakesrc_request_new_pad (GstElement *element, GstPadTemplate *templ)
 
   srcpad = gst_pad_new_from_template (templ, name);
   gst_element_add_pad (GST_ELEMENT (fakesrc), srcpad);
+  gst_fakesrc_update_functions (fakesrc);
 
   g_free (name);
 
@@ -783,7 +784,7 @@ static void
 gst_fakesrc_loop(GstElement *element)
 {
   GstFakeSrc *src;
-  GList *pads;
+  const GList *pads;
 
   g_return_if_fail(element != NULL);
   g_return_if_fail(GST_IS_FAKESRC(element));

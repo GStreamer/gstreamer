@@ -61,7 +61,6 @@ gst_aggregator_sched_get_type (void)
   static GType aggregator_sched_type = 0;
   static GEnumValue aggregator_sched[] = {
     { AGGREGATOR_LOOP,   	"1", "Loop Based"},
-    { AGGREGATOR_LOOP_PEEK,    	"2", "Loop Based Peek"},
     { AGGREGATOR_LOOP_SELECT,   "3", "Loop Based Select"},
     { AGGREGATOR_CHAIN,      	"4", "Chain Based"},
     {0, NULL, NULL},
@@ -286,26 +285,16 @@ gst_aggregator_loop (GstElement *element)
 
   aggregator = GST_AGGREGATOR (element);
 
-  if (aggregator->sched == AGGREGATOR_LOOP ||
-      aggregator->sched == AGGREGATOR_LOOP_PEEK) {
+  if (aggregator->sched == AGGREGATOR_LOOP) {
     GList *pads = aggregator->sinkpads;
 
     while (pads) {
       GstPad *pad = GST_PAD (pads->data);
       pads = g_list_next (pads);
 
-      if (aggregator->sched == AGGREGATOR_LOOP_PEEK) {
-	buf = gst_pad_peek (pad);
-	if (buf == NULL)
-	  continue;
+      buf = gst_pad_pull (pad);
+      debug = "loop";
 
-	g_assert (buf == gst_pad_pull (pad));
-	debug = "loop_peek";
-      }
-      else {
-	buf = gst_pad_pull (pad);
-	debug = "loop";
-      }
       gst_aggregator_push (aggregator, pad, buf, debug);
     }
   }

@@ -236,7 +236,7 @@ GstPad*			gst_element_get_static_pad	(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_request_pad	(GstElement *element, const gchar *name);
 void			gst_element_release_request_pad	(GstElement *element, GstPad *pad);
 
-GList*			gst_element_get_pad_list	(GstElement *element);
+const GList*		gst_element_get_pad_list	(GstElement *element);
 GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
 							 GstCaps *filtercaps);

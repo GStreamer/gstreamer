@@ -27,8 +27,8 @@
 
 typedef struct _GstSchedulerChain GstSchedulerChain;
 
-#define GST_PAD_THREADSTATE(pad)		(cothread*) (GST_PAD_CAST (pad)->sched_private)
 #define GST_ELEMENT_THREADSTATE(elem)		(cothread*) (GST_ELEMENT_CAST (elem)->sched_private)
+#define GST_RPAD_BUFPEN(pad)            (GstBuffer*) (GST_REAL_PAD_CAST(pad)->sched_private)
 
 #define GST_ELEMENT_COTHREAD_STOPPING			GST_ELEMENT_SCHEDULER_PRIVATE1
 #define GST_ELEMENT_IS_COTHREAD_STOPPING(element)	GST_FLAG_IS_SET((element), GST_ELEMENT_COTHREAD_STOPPING)
@@ -287,7 +287,7 @@ static gboolean
 gst_fast_scheduler_cothreaded_element (GstBin * bin, GstElement *element)
 {
   cothread_func wrapper_function;
-  GList *pads;
+  const GList *pads;
   GstFastScheduler *sched;
   
   GST_DEBUG (GST_CAT_SCHEDULING, "element is using COTHREADS");
@@ -344,7 +344,7 @@ gst_fast_scheduler_event_proxy (GstPad *pad, GstBuffer *buf)
 
 static gboolean
 gst_fast_scheduler_chained_element (GstBin *bin, GstElement *element) {
-  GList *pads;
+  const GList *pads;
   GstPad *pad;
 
   GST_DEBUG (GST_CAT_SCHEDULING,"chain entered");
@@ -712,9 +712,6 @@ gst_fast_scheduler_add_element (GstScheduler * sched, GstElement * element)
     if (!GST_IS_REAL_PAD (pad))
       continue;
 
-    /* set the pad's sched pointer */
-    gst_pad_set_scheduler (pad, sched);
-
     /* if the peer element exists and is a candidate */
     if (GST_PAD_PEER (pad)) {
       peerelement = GST_PAD_PARENT (GST_PAD_PEER (pad));
@@ -993,7 +990,7 @@ gst_fast_scheduler_iterate (GstScheduler * sched)
     else {
       GstElement *entry = chain->entry;
       if (entry) {
-        GList *pads = gst_element_get_pad_list (entry);
+        const GList *pads = gst_element_get_pad_list (entry);
 
         GST_DEBUG (GST_CAT_DATAFLOW, "starting chained iteration");
 

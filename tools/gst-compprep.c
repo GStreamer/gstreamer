@@ -4,7 +4,8 @@
 int main(int argc,char *argv[]) {
   xmlDocPtr doc;
   xmlNodePtr factorynode, padnode, argnode, optionnode;
-  GList *plugins, *features, *padtemplates, *pads;
+  GList *plugins, *features, *padtemplates;
+  const GList *pads;
   GstElement *element;
   GstPad *pad;
   GstPadTemplate *padtemplate;

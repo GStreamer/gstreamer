@@ -207,9 +207,6 @@ gst_real_pad_init (GstRealPad *pad)
   pad->direction = GST_PAD_UNKNOWN;
   pad->peer = NULL;
 
-  pad->sched = NULL;
-  pad->sched_private = NULL;
-
   pad->chainfunc = NULL;
   pad->getfunc = NULL;
 
@@ -245,6 +242,7 @@ gst_real_pad_set_property (GObject *object, guint prop_id,
       gst_pad_set_active (GST_PAD (object), g_value_get_boolean (value));
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -253,7 +251,6 @@ static void
 gst_real_pad_get_property (GObject *object, guint prop_id, 
                            GValue *value, GParamSpec *pspec)
 {
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_PAD (object));
 
   switch (prop_id) {
@@ -261,6 +258,7 @@ gst_real_pad_get_property (GObject *object, guint prop_id,
       g_value_set_boolean (value, !GST_FLAG_IS_SET (object, GST_PAD_DISABLED));
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -784,6 +782,7 @@ gst_pad_disconnect (GstPad *srcpad,
 		    GstPad *sinkpad)
 {
   GstRealPad *realsrc, *realsink;
+  GstScheduler *src_sched, *sink_sched;
 
   /* generic checks */
   g_return_if_fail (srcpad != NULL);
@@ -813,6 +812,10 @@ gst_pad_disconnect (GstPad *srcpad,
   g_return_if_fail ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) &&
                     (GST_RPAD_DIRECTION (realsink) == GST_PAD_SINK));
 
+  /* get the schedulers before we disconnect */
+  src_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsrc));
+  sink_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsink));
+
   /* first clear peers */
   GST_RPAD_PEER (realsrc) = NULL;
   GST_RPAD_PEER (realsink) = NULL;
@@ -824,13 +827,11 @@ gst_pad_disconnect (GstPad *srcpad,
     GST_RPAD_FILTER (realsrc) = NULL;
   }
 
-  /* now tell the scheduler */
-  if (GST_PAD_PARENT (realsrc)->sched)
-    gst_scheduler_pad_disconnect (GST_PAD_PARENT (realsrc)->sched, 
-	                          (GstPad *) realsrc, (GstPad *) realsink);
-  else if (GST_PAD_PARENT (realsink)->sched)
-    gst_scheduler_pad_disconnect (GST_PAD_PARENT (realsink)->sched, 
-	                          (GstPad *) realsrc, (GstPad *) realsink);
+  /* now tell the scheduler, the schedulers on both paths are guaranteed to be the same,
+   * so we can just take one */
+  if (src_sched && src_sched == sink_sched)
+    gst_scheduler_pad_disconnect (src_sched, 
+	                          GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
 
   /* hold a reference, as they can go away in the signal handlers */
   gst_object_ref (GST_OBJECT (realsrc));
@@ -850,6 +851,28 @@ gst_pad_disconnect (GstPad *srcpad,
   gst_object_unref (GST_OBJECT (realsink));
 }
 
+static gboolean
+gst_pad_check_schedulers (GstRealPad *realsrc, GstRealPad *realsink)
+{
+  GstScheduler *src_sched, *sink_sched;
+  gint num_decoupled = 0;
+
+  src_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsrc));
+  sink_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsink));
+  
+  if (src_sched && sink_sched) {
+    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsrc), GST_ELEMENT_DECOUPLED))
+      num_decoupled++;
+    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsink), GST_ELEMENT_DECOUPLED))
+      num_decoupled++;
+
+    if (src_sched != sink_sched && num_decoupled != 1) {
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
 /**
  * gst_pad_can_connect_filtered:
  * @srcpad: the source #GstPad to connect.
@@ -865,7 +888,6 @@ gboolean
 gst_pad_can_connect_filtered (GstPad *srcpad, GstPad *sinkpad, 
                               GstCaps *filtercaps)
 {
-  gint num_decoupled = 0;
   GstRealPad *realsrc, *realsink;
 
   /* generic checks */
@@ -883,17 +905,10 @@ gst_pad_can_connect_filtered (GstPad *srcpad, GstPad *sinkpad,
   g_return_val_if_fail (GST_PAD_PARENT (realsrc) != NULL, FALSE);
   g_return_val_if_fail (GST_PAD_PARENT (realsink) != NULL, FALSE);
 
-  if (realsrc->sched && realsink->sched) {
-    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsrc), GST_ELEMENT_DECOUPLED))
-      num_decoupled++;
-    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsink), GST_ELEMENT_DECOUPLED))
-      num_decoupled++;
-
-    if (realsrc->sched != realsink->sched && num_decoupled != 1) {
-      g_warning ("connecting pads with different scheds requires "
-	         "exactly one decoupled element (queue)");
-      return FALSE;
-    }
+  if (!gst_pad_check_schedulers (realsrc, realsink)) {
+    g_warning ("connecting pads with different scheds requires "
+               "exactly one decoupled element (queue)");
+    return FALSE;
   }
   
   /* check if the directions are compatible */
@@ -935,7 +950,7 @@ gboolean
 gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
 {
   GstRealPad *realsrc, *realsink;
-  gint num_decoupled = 0;
+  GstScheduler *src_sched, *sink_sched;
 
   /* generic checks */
   g_return_val_if_fail (srcpad != NULL, FALSE);
@@ -960,19 +975,12 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
   g_return_val_if_fail (GST_PAD_PARENT (realsrc) != NULL, FALSE);
   g_return_val_if_fail (GST_PAD_PARENT (realsink) != NULL, FALSE);
 
-  if (realsrc->sched && realsink->sched) {
-    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsrc), GST_ELEMENT_DECOUPLED))
-      num_decoupled++;
-    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsink), GST_ELEMENT_DECOUPLED))
-      num_decoupled++;
-
-    if (realsrc->sched != realsink->sched && num_decoupled != 1) {
-      g_warning ("connecting pads with different scheds "
-	         "requires exactly one decoupled element (queue)\n");
-      return FALSE;
-    }
+  if (!gst_pad_check_schedulers (realsrc, realsink)) {
+    g_warning ("connecting pads with different scheds requires "
+               "exactly one decoupled element (such as queue)");
+    return FALSE;
   }
-
+  
   /* check for reversed directions and swap if necessary */
   if ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SINK) &&
       (GST_RPAD_DIRECTION (realsink) == GST_PAD_SRC)) {
@@ -1007,13 +1015,14 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
   g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_CONNECTED], 
                  0, realsrc);
 
-  /* now tell the scheduler(s) */
-  if (realsrc->sched)
-    gst_scheduler_pad_connect (realsrc->sched, 
-	                       (GstPad *) realsrc, (GstPad *) realsink);
-  else if (realsink->sched)
-    gst_scheduler_pad_connect (realsink->sched, 
-	                       (GstPad *) realsrc, (GstPad *) realsink);
+  src_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsrc));
+  sink_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsink));
+
+  /* now tell the scheduler, the schedulers on both paths have to be the same,
+   * so we can just take one */
+  if (src_sched && src_sched == sink_sched)
+    gst_scheduler_pad_connect (src_sched, 
+	                       GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
 
   GST_INFO (GST_CAT_PADS, "connected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
@@ -1094,22 +1103,6 @@ gst_pad_get_pad_template (GstPad *pad)
 
 
 /**
- * gst_pad_set_scheduler:
- * @pad: a #GstPad to set the scheduler of.
- * @sched: the #GstScheduler to set.
- *
- * Sets the scheduler on the pad.
- */
-void
-gst_pad_set_scheduler (GstPad *pad, GstScheduler *sched)
-{
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
- 
-  GST_RPAD_SCHED(pad) = sched;
-}
- 
-/**
  * gst_pad_get_scheduler:
  * @pad: a #GstPad to get the scheduler of.
  *
@@ -1120,27 +1113,29 @@ gst_pad_set_scheduler (GstPad *pad, GstScheduler *sched)
 GstScheduler*
 gst_pad_get_scheduler (GstPad *pad)
 {
+  GstScheduler *scheduler = NULL;
+  GstElement *parent;
+  
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+  
+  parent = gst_pad_get_parent (pad);
+  if (parent) {
+    if (GST_FLAG_IS_SET (parent, GST_ELEMENT_DECOUPLED)) {
+      GstRealPad *peer = GST_RPAD_PEER (pad);
+
+      if (peer) {
+        scheduler = gst_element_get_scheduler (gst_pad_get_parent (GST_PAD_CAST (peer)));
+      }
+    }
+    else {
+      scheduler = gst_element_get_scheduler (parent);
+    }
+  }
  
-  return GST_RPAD_SCHED (pad);
+  return scheduler;
 }
 
-/**
- * gst_pad_unset_scheduler:
- * @pad: a #GstPad to unset the scheduler for.
- *
- * Unsets the scheduler for the pad.
- */
-void
-gst_pad_unset_scheduler (GstPad *pad)
-{
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
- 
-  GST_RPAD_SCHED (pad) = NULL;
-}
- 
 /**
  * gst_pad_get_real_parent:
  * @pad: a #GstPad to get the real parent of.
@@ -2146,23 +2141,6 @@ gst_pad_pull (GstPad *pad)
     }
   }
   return NULL;
-}
-
-/**
- * gst_pad_peek:
- * @pad: the #GstPad to peek at.
- *
- * Peeks for the presence of a buffer on the peer pad.
- *
- * Returns: a #GstBuffer waiting on the the peer pad, 
- * or NULL if the peer has no waiting buffer.
- */
-GstBuffer*
-gst_pad_peek (GstPad *pad)
-{
-  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
-
-  return GST_RPAD_BUFPEN (GST_RPAD_PEER (pad));
 }
 
 /**

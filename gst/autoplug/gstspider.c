@@ -410,7 +410,7 @@ void
 gst_spider_identity_plug (GstSpiderIdentity *ident)
 {
   GstSpider *spider;
-  GList *padlist;
+  const GList *padlist;
   GstPadDirection dir;
   GstSpiderConnection *conn;
   

@@ -1199,7 +1199,7 @@ gst_element_get_request_pad (GstElement *element, const gchar *name)
  *
  * Returns: the #GList of pads.
  */
-GList*
+const GList*
 gst_element_get_pad_list (GstElement *element)
 {
   g_return_val_if_fail (element != NULL, NULL);
@@ -1391,7 +1391,7 @@ GstPad*
 gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
                                          GstCaps *filtercaps)
 {
-  GList *pads;
+  const GList *pads;
   GstPadTemplate *templ;
   GstCaps *templcaps;
   GstPad *foundpad = NULL;
@@ -1482,7 +1482,7 @@ gboolean
 gst_element_connect_filtered (GstElement *src, GstElement *dest, 
 			      GstCaps *filtercaps)
 {
-  GList *srcpads, *destpads, *srctempls, *desttempls, *l;
+  const GList *srcpads, *destpads, *srctempls, *desttempls, *l;
   GstPad *srcpad, *destpad;
   GstPadTemplate *srctempl, *desttempl;
 
@@ -1769,7 +1769,7 @@ gst_element_disconnect_many (GstElement *element_1, GstElement *element_2, ...)
 void
 gst_element_disconnect (GstElement *src, GstElement *dest)
 {
-  GList *srcpads;
+  const GList *srcpads;
   GstPad *pad;
 
   g_return_if_fail (GST_IS_ELEMENT (src));

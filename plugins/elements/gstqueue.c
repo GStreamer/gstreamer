@@ -394,7 +394,7 @@ restart:
       if (queue->interrupt) {
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!");
         g_mutex_unlock (queue->qlock);
-	if (gst_scheduler_interrupt (GST_RPAD_SCHED (queue->sinkpad), GST_ELEMENT (queue)))
+	if (gst_scheduler_interrupt (gst_pad_get_scheduler (queue->sinkpad), GST_ELEMENT (queue)))
           return;
 	/* if we got here bacause we were unlocked after a flush, we don't need
 	 * to add the buffer to the queue again */
@@ -487,7 +487,7 @@ restart:
     if (queue->interrupt) {
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!");
       g_mutex_unlock (queue->qlock);
-      if (gst_scheduler_interrupt (GST_RPAD_SCHED (queue->srcpad), GST_ELEMENT (queue)))
+      if (gst_scheduler_interrupt (gst_pad_get_scheduler (queue->srcpad), GST_ELEMENT (queue)))
         return NULL;
       goto restart;
     }

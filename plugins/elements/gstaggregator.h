@@ -35,7 +35,6 @@ extern GstElementDetails gst_aggregator_details;
 
 typedef enum {
   AGGREGATOR_LOOP 		= 1,
-  AGGREGATOR_LOOP_PEEK,
   AGGREGATOR_LOOP_SELECT,
   AGGREGATOR_CHAIN,
 } GstAggregatorSchedType;

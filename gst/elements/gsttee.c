@@ -122,7 +122,7 @@ static GstPadConnectReturn
 gst_tee_sinkconnect (GstPad *pad, GstCaps *caps) 
 {
   GstTee *tee;
-  GList *pads;
+  const GList *pads;
   GstPadConnectReturn set_retval;
   
   tee = GST_TEE (gst_pad_get_parent (pad));
@@ -177,8 +177,8 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
   gchar *name;
   GstPad *srcpad;
   GstTee *tee;
-  int i = 0;
-  GList *pads;
+  gint i = 0;
+  const GList *pads;
 
   g_return_val_if_fail (GST_IS_TEE (element), NULL);
   
@@ -196,7 +196,7 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
   while (!name)
   {
     name = g_strdup_printf ("src%d", i);
-    if (g_list_find_custom (pads, (gconstpointer) name, name_pad_compare) != NULL)
+    if (g_list_find_custom ((GList *)pads, (gconstpointer) name, name_pad_compare) != NULL)
     {
       /* this name is taken, use the next one */
       ++i;
@@ -279,7 +279,7 @@ static void
 gst_tee_chain (GstPad *pad, GstBuffer *buf) 
 {
   GstTee *tee;
-  GList *pads;
+  const GList *pads;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));

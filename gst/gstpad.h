@@ -197,13 +197,10 @@ struct _GstRealPad {
   
   GstPadDirection 		 direction;
 
-  GstScheduler			*sched;
-  gpointer			 sched_private;
-
   GstPadConnectFunction 	 connectfunc;
   GstRealPad 			*peer;
 
-  GstBuffer 			*bufpen;
+  gpointer 			 sched_private;
 
   /* data transport functions */
   GstPadChainFunction 		 chainfunc;
@@ -264,8 +261,6 @@ struct _GstGhostPadClass {
 #define GST_RPAD_FILTER(pad)		(((GstRealPad *)(pad))->filter)
 #define GST_RPAD_APPFILTER(pad)		(((GstRealPad *)(pad))->appfilter)
 #define GST_RPAD_PEER(pad)		(((GstRealPad *)(pad))->peer)
-#define GST_RPAD_BUFPEN(pad)		(((GstRealPad *)(pad))->bufpen)
-#define GST_RPAD_SCHED(pad)		(((GstRealPad *)(pad))->sched)
 #define GST_RPAD_CHAINFUNC(pad)		(((GstRealPad *)(pad))->chainfunc)
 #define GST_RPAD_CHAINHANDLER(pad)	(((GstRealPad *)(pad))->chainhandler)
 #define GST_RPAD_GETFUNC(pad)		(((GstRealPad *)(pad))->getfunc)
@@ -394,9 +389,7 @@ void			gst_pad_set_parent			(GstPad *pad, GstElement *parent);
 GstElement*		gst_pad_get_parent			(GstPad *pad);
 GstElement*		gst_pad_get_real_parent			(GstPad *pad);
 
-void			gst_pad_set_scheduler			(GstPad *pad, GstScheduler *sched);
 GstScheduler*		gst_pad_get_scheduler			(GstPad *pad);
-void			gst_pad_unset_scheduler			(GstPad *pad);
 
 void			gst_pad_add_ghost_pad			(GstPad *pad, GstPad *ghostpad);
 void			gst_pad_remove_ghost_pad		(GstPad *pad, GstPad *ghostpad);
@@ -446,7 +439,6 @@ void			gst_pad_push				(GstPad *pad, GstBuffer *buf);
 GstBuffer*		gst_pad_pull				(GstPad *pad);
 gboolean		gst_pad_send_event			(GstPad *pad, GstEvent *event);
 gboolean		gst_pad_event_default			(GstPad *pad, GstEvent *event);
-GstBuffer*		gst_pad_peek				(GstPad *pad);
 GstPad*			gst_pad_select				(GList *padlist);
 GstPad*			gst_pad_selectv				(GstPad *pad, ...);
 

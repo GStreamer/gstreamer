@@ -144,7 +144,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 static gboolean
 gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
 {
-  GList *sinkpads;
+  const GList *sinkpads;
   gboolean connected = FALSE;
 
   GST_DEBUG (0,"gstpipeline: autoplug pad connect function for \"%s\" to \"%s\"",
@@ -190,7 +190,7 @@ static void
 autoplug_dynamic_pad (GstElement *element, GstPad *pad, gpointer data)
 {
   dynamic_pad_struct *info = (dynamic_pad_struct *)data;
-  GList *pads = gst_element_get_pad_list (element);
+  const GList *pads = gst_element_get_pad_list (element);
 
   GST_DEBUG (0,"attempting to dynamically create a ghostpad for %s=%s", GST_ELEMENT_NAME (element),
 		  GST_PAD_NAME (pad));
@@ -216,7 +216,7 @@ autoplug_dynamic_pad (GstElement *element, GstPad *pad, gpointer data)
 static void
 gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
 {
-  GList *srcpads;
+  const GList *srcpads;
   gboolean connected = FALSE;
 
   srcpads = gst_element_get_pad_list(src);
@@ -391,7 +391,7 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
     }
     /* this is the first element, find a good ghostpad */
     else {
-      GList *pads;
+      const GList *pads;
 
       pads = gst_element_get_pad_list (element);
 
@@ -453,7 +453,7 @@ differ:
      */
     {
       GstCaps *endcap = (GstCaps *)(endcaps->data);
-      GList *pads = gst_element_get_pad_list (thesrcelement);
+      const GList *pads = gst_element_get_pad_list (thesrcelement);
       gboolean have_pad = FALSE;
       endcaps = g_list_next (endcaps);
 
