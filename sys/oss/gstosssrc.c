@@ -91,6 +91,7 @@ static void 			gst_osssrc_set_property	(GObject *object, guint prop_id, const GV
 static void 			gst_osssrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static GstElementStateReturn 	gst_osssrc_change_state	(GstElement *element);
 
+static GstPadConnectReturn      gst_osssrc_connect (GstPad *pad, GstCaps *caps);
 static void 			gst_osssrc_close_audio	(GstOssSrc *src);
 static gboolean 		gst_osssrc_open_audio	(GstOssSrc *src);
 static void 			gst_osssrc_sync_parms	(GstOssSrc *osssrc);
@@ -164,6 +165,7 @@ gst_osssrc_init (GstOssSrc *osssrc)
   osssrc->srcpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (osssrc_src_factory), "src");
   gst_pad_set_get_function(osssrc->srcpad,gst_osssrc_get);
+  gst_pad_set_connect_function (osssrc->srcpad, gst_osssrc_connect);
   gst_element_add_pad (GST_ELEMENT (osssrc), osssrc->srcpad);
 
   osssrc->device = g_strdup ("/dev/dsp");
@@ -322,34 +324,69 @@ gst_osssrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 static GstElementStateReturn 
 gst_osssrc_change_state (GstElement *element) 
 {
-  /* GstOssSrc *src = GST_OSSSRC (element); */
+  GstOssSrc *osssrc = GST_OSSSRC (element);
   
   g_return_val_if_fail (GST_IS_OSSSRC (element), FALSE);
   GST_DEBUG (GST_CAT_PLUGIN_INFO, "osssrc: state change");
-  /* if going down into NULL state, close the file if it's open */
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
+
+  switch (GST_STATE_TRANSITION (element)) {
+  case GST_STATE_READY_TO_NULL:
+    break;
+
+  case GST_STATE_NULL_TO_READY:
+    break;
+
+  case GST_STATE_READY_TO_PAUSED:
+    /* Paused state: open device */
+    if (!GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN)) {
+      if (!gst_osssrc_open_audio (GST_OSSSRC (element)))
+	return GST_STATE_FAILURE;
+    }
+
+    break;
+
+  case GST_STATE_PAUSED_TO_READY:
+    /* Going down to ready: close device */
     if (GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN))
       gst_osssrc_close_audio (GST_OSSSRC (element));
-  /* otherwise (READY or higher) we need to open the sound card */
-  } else {
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "DEBUG: osssrc: ready or higher");
+    
+    break;
 
-    if (!GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN)) { 
-      if (!gst_osssrc_open_audio (GST_OSSSRC (element)))
-        return GST_STATE_FAILURE;
-      else
-      {
-	GST_DEBUG (GST_CAT_PLUGIN_INFO, "osssrc: device opened successfully");
-	/* thomas: we can't set caps here because the element is
-	 * not actually ready yet */
-      }
+  case GST_STATE_PAUSED_TO_PLAYING:
+    if (osssrc->need_sync) {
+      gst_osssrc_sync_parms (GST_OSSSRC (element));
+      osssrc->need_sync = FALSE;
     }
+    
+    break;
+
+  case GST_STATE_PLAYING_TO_PAUSED:
+    break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
   
   return GST_STATE_SUCCESS;
+}
+
+static GstPadConnectReturn
+gst_osssrc_connect (GstPad *pad,
+		    GstCaps *caps)
+{
+  GstOssSrc *osssrc;
+
+  osssrc = GST_OSSSRC (GST_PAD_PARENT (pad));
+
+  if (!GST_CAPS_IS_FIXED (caps)) {
+    return GST_PAD_CONNECT_DELAYED;
+  }
+
+  gst_caps_get_int (caps, "rate", &osssrc->frequency);
+  gst_caps_get_int (caps, "channels", &osssrc->channels);
+
+  osssrc->need_sync = TRUE;
+  return GST_PAD_CONNECT_OK;
 }
 
 static gboolean 

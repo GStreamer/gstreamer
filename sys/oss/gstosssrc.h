@@ -70,12 +70,14 @@ struct _GstOssSrc {
   gint format;
   gint channels;
   gint frequency;
-
+  gboolean need_sync; /* Do the parameters need resynced? */
+	
   /* blocking */
   guint64 basetime;
   guint64 samples_since_basetime;
   gulong curoffset;
   gulong bytes_per_read;
+
 };
 
 struct _GstOssSrcClass {
