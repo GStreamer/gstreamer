@@ -2,7 +2,7 @@
 
 /* always defined to indicate that i18n is enabled */
 /*#define ENABLE_NLS 1*/
-#undef ENABLE_NLS
+#define ENABLE_NLS 1
 
 /* gettext package name */
 #define GETTEXT_PACKAGE "gstreamer-0.8"
@@ -29,7 +29,7 @@
 #define GST_PACKAGE "GStreamer"
 
 /* Define the version */
-#define GST_VERSION "0.8.4"
+#define GST_VERSION "0.8.5"
 
 /* Define the release version */
 #define GST_VERSION_RELEASE "20040129_103536"
@@ -190,7 +190,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.8.4.0"
+#define VERSION "0.8.5.0"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

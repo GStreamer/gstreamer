@@ -80,12 +80,12 @@ struct _GstValueTable {
   void *_gst_reserved [GST_PADDING];
 };
 
-extern GType gst_type_fourcc;
-extern GType gst_type_int_range;
-extern GType gst_type_double_range;
-extern GType gst_type_list;
-extern GType gst_type_fixed_list;
-extern GType gst_type_fraction;
+GST_EXPORT GType gst_type_fourcc;
+GST_EXPORT GType gst_type_int_range;
+GST_EXPORT GType gst_type_double_range;
+GST_EXPORT GType gst_type_list;
+GST_EXPORT GType gst_type_fixed_list;
+GST_EXPORT GType gst_type_fraction;
 
 void		gst_value_register		(const GstValueTable   *table);
 void		gst_value_init_and_copy		(GValue                *dest,

@@ -1,3 +1,14 @@
+2004-08-09  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/config.h:
+	* win32/gstversion.h:
+	  enable NLS again, push the version number for the coming 0.8.5 release
+
+2004-08-09  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* gst/gstvalue.h:
+	  export gst_type_XXX for windows DLLs
+
 2004-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/faq/gst-uninstalled:

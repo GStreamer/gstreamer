@@ -32,7 +32,7 @@
  */
 #define GST_VERSION_MAJOR 0
 #define GST_VERSION_MINOR 8
-#define GST_VERSION_MICRO 1
+#define GST_VERSION_MICRO 5
 
 void    gst_version     (guint *major, guint *minor, guint *micro);
 
