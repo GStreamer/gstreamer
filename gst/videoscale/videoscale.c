@@ -561,32 +561,31 @@ gst_videoscale_scale_nearest (GstVideoscale * scale,
 {
   int ypos, yinc, y;
   int xpos, xinc, x;
-  guchar *destp = dest;
-  guchar *srcp = src;
+  guchar *destp;
+  guchar *srcp;
 
   GST_DEBUG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
 
-  ypos = 0x10000;
+  ypos = 0;
   yinc = (sh << 16) / dh;
   xinc = (sw << 16) / dw;
 
   for (y = dh; y; y--) {
-
-    while (ypos > 0x10000) {
-      ypos -= 0x10000;
-      src += sw;
+    if (ypos >= 0x10000) {
+      src += (ypos >> 16) * sw;
+      ypos &= 0xffff;
     }
 
-    xpos = 0x10000;
+    xpos = 0;
 
     srcp = src;
     destp = dest;
 
     for (x = dw; x; x--) {
-      while (xpos >= 0x10000L) {
-        srcp++;
-        xpos -= 0x10000L;
+      if (xpos >= 0x10000) {
+        srcp += (xpos >> 16);
+        xpos &= 0xffff;
       }
       *destp++ = *srcp;
       xpos += xinc;
@@ -603,32 +602,32 @@ gst_videoscale_scale_nearest_str2 (GstVideoscale * scale,
 {
   int ypos, yinc, y;
   int xpos, xinc, x;
-  guchar *destp = dest;
-  guchar *srcp = src;
+  guchar *destp;
+  guchar *srcp;
 
   GST_DEBUG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
 
-  ypos = 0x10000;
+  ypos = 0;
   yinc = (sh << 16) / dh;
   xinc = (sw << 16) / dw;
 
   for (y = dh; y; y--) {
 
-    while (ypos > 0x10000) {
-      ypos -= 0x10000;
-      src += sw * 2;
+    if (ypos >= 0x10000) {
+      src += (ypos >> 16) * sw * 2;
+      ypos &= 0xffff;
     }
 
-    xpos = 0x10000;
+    xpos = 0;
 
     srcp = src;
     destp = dest;
 
     for (x = dw; x; x--) {
-      while (xpos >= 0x10000L) {
-        srcp += 2;
-        xpos -= 0x10000L;
+      if (xpos >= 0x10000) {
+        srcp += (xpos >> 16) * 2;
+        xpos &= 0xffff;
       }
       *destp = *srcp;
       destp += 2;
@@ -646,32 +645,32 @@ gst_videoscale_scale_nearest_str4 (GstVideoscale * scale,
 {
   int ypos, yinc, y;
   int xpos, xinc, x;
-  guchar *destp = dest;
-  guchar *srcp = src;
+  guchar *destp;
+  guchar *srcp;
 
   GST_DEBUG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
 
-  ypos = 0x10000;
+  ypos = 0;
   yinc = (sh << 16) / dh;
   xinc = (sw << 16) / dw;
 
   for (y = dh; y; y--) {
 
-    while (ypos > 0x10000) {
-      ypos -= 0x10000;
-      src += sw * 4;
+    if (ypos >= 0x10000) {
+      src += (ypos >> 16) * sw * 4;
+      ypos &= 0xffff;
     }
 
-    xpos = 0x10000;
+    xpos = 0;
 
     srcp = src;
     destp = dest;
 
     for (x = dw; x; x--) {
-      while (xpos >= 0x10000L) {
-        srcp += 4;
-        xpos -= 0x10000L;
+      if (xpos >= 0x10000) {
+        srcp += (xpos >> 16) * 4;
+        xpos &= 0xffff;
       }
       *destp = *srcp;
       destp += 4;
@@ -689,32 +688,32 @@ gst_videoscale_scale_nearest_32bit (GstVideoscale * scale,
 {
   int ypos, yinc, y;
   int xpos, xinc, x;
-  guchar *destp = dest;
-  guchar *srcp = src;
+  guchar *destp;
+  guchar *srcp;
 
   GST_DEBUG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
 
-  ypos = 0x10000;
+  ypos = 0;
   yinc = (sh << 16) / dh;
   xinc = (sw << 16) / dw;
 
   for (y = dh; y; y--) {
 
-    while (ypos > 0x10000) {
-      ypos -= 0x10000;
-      src += sw * 4;
+    if (ypos >= 0x10000) {
+      src += (ypos >> 16) * sw * 4;
+      ypos &= 0xffff;
     }
 
-    xpos = 0x10000;
+    xpos = 0;
 
     srcp = src;
     destp = dest;
 
     for (x = dw; x; x--) {
-      while (xpos >= 0x10000L) {
-        srcp += 4;
-        xpos -= 0x10000L;
+      if (xpos >= 0x10000) {
+        srcp += (xpos >> 16) * 4;
+        xpos &= 0xffff;
       }
       *(guint32 *) destp = *(guint32 *) srcp;
       destp += 4;
@@ -732,32 +731,32 @@ gst_videoscale_scale_nearest_24bit (GstVideoscale * scale,
 {
   int ypos, yinc, y;
   int xpos, xinc, x;
-  guchar *destp = dest;
-  guchar *srcp = src;
+  guchar *destp;
+  guchar *srcp;
 
   GST_DEBUG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
 
-  ypos = 0x10000;
+  ypos = 0;
   yinc = (sh << 16) / dh;
   xinc = (sw << 16) / dw;
 
   for (y = dh; y; y--) {
 
-    while (ypos > 0x10000) {
-      ypos -= 0x10000;
-      src += sw * 3;
+    if (ypos >= 0x10000) {
+      src += (ypos >> 16) * sw * 3;
+      ypos &= 0xffff;
     }
 
-    xpos = 0x10000;
+    xpos = 0;
 
     srcp = src;
     destp = dest;
 
     for (x = dw; x; x--) {
-      while (xpos >= 0x10000L) {
-        srcp += 3;
-        xpos -= 0x10000L;
+      if (xpos >= 0x10000) {
+        srcp += (xpos >> 16) * 3;
+        xpos &= 0xffff;
       }
       destp[0] = srcp[0];
       destp[1] = srcp[1];
@@ -777,32 +776,32 @@ gst_videoscale_scale_nearest_16bit (GstVideoscale * scale,
 {
   int ypos, yinc, y;
   int xpos, xinc, x;
-  guchar *destp = dest;
-  guchar *srcp = src;
+  guchar *destp;
+  guchar *srcp;
 
   GST_DEBUG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
 
-  ypos = 0x10000;
+  ypos = 0;
   yinc = (sh << 16) / dh;
   xinc = (sw << 16) / dw;
 
   for (y = dh; y; y--) {
 
-    while (ypos > 0x10000) {
-      ypos -= 0x10000;
-      src += sw * 2;
+    if (ypos >= 0x10000) {
+      src += (ypos >> 16) * sw * 2;
+      ypos &= 0xffff;
     }
 
-    xpos = 0x10000;
+    xpos = 0;
 
     srcp = src;
     destp = dest;
 
     for (x = dw; x; x--) {
-      while (xpos >= 0x10000L) {
-        srcp += 2;
-        xpos -= 0x10000L;
+      if (xpos >= 0x10000) {
+        srcp += (xpos >> 16) * 2;
+        xpos &= 0xffff;
       }
       destp[0] = srcp[0];
       destp[1] = srcp[1];
