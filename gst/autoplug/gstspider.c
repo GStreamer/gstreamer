@@ -703,6 +703,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   factory = gst_element_factory_new("spider", GST_TYPE_SPIDER,
                                    &gst_spider_details);
+  gst_plugin_set_longname (plugin, "Spider autoplugging elements");
   g_return_val_if_fail(factory != NULL, FALSE);
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (spider_src_factory));

@@ -2,7 +2,7 @@
  * Copyright (C) 2002 Erik Walthinsen <omega@cse.ogi.edu>
  *               2002 Wim Taymans <wtay@chello.be>
  *
- * gstspideridentity.c: IDentity element for the spider autoplugger
+ * gstspideridentity.c: identity element for the spider autoplugger
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
