@@ -28,7 +28,9 @@ main (int argc, gchar * argv[])
   g_print ("starting pad test\n");
   usage1 = vmsize ();
 
+  g_print ("DEBUG: creating new pad with name padname\n");
   pad = gst_pad_new ("padname", GST_PAD_SINK);
+  g_print ("DEBUG: unreffing new pad with name padname\n");
   gst_object_unref (GST_OBJECT (pad));
   g_print ("create/unref new pad %ld\n", vmsize () - usage1);
 
