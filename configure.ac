@@ -465,6 +465,7 @@ tests/Makefile
 tests/bufspeed/Makefile
 tests/memchunk/Makefile
 tests/muxing/Makefile
+tests/seeking/Makefile
 tests/sched/Makefile
 tests/threadstate/Makefile
 testsuite/Makefile

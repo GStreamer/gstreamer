@@ -10,13 +10,13 @@ before changes are accepted.
 target release ! description
                !
   0.4.1        ! expose and API to query the supported seek formats/flags on
-               ! pads, somthing like an extra arg to gst_pad_set_convert_function
+  (done)       ! pads, somthing like an extra arg to gst_pad_set_convert_function
                ! and gst_pad_set_event_function with some function to query the 
                ! flags and formats. more ideas in docs/random/wtay/query_events
 	       !  (API: medium dificulty)
 	       !
   0.4.1        ! add event for segment playback/looping and seeking (docs/random/wtay/segments)
-    	       !  (API: medium dificulty, plugins: HARD to very HARD)
+  (done)       !  (API: medium dificulty, plugins: HARD to very HARD)
 	       !
     ?          ! add event to adjust rate (reverse playback, slow motion, frame skipping)
                ! (docs/random/wtay/rate_event)
@@ -33,8 +33,8 @@ target release ! description
     ?	       ! implement a QoS event and a policy for handling the event.
                !  (API: kindof EASY, plugins MEDIUM to very HARD)
 	       !
-    ?	       ! implement user defined GstFormat values, make a format factory etc..
-               !  (API: MEDIUM, plugins MEDIUM)
+   0.4.1       ! implement user defined GstFormat values, make a format factory etc..
+   (done)      !  (API: MEDIUM, plugins MEDIUM)
 	       !
     ?	       ! strip the API to a bare bones minimal set of functions, leave the automatic
                ! stuff to the app instead of forcing a policy in the core.
