@@ -61,6 +61,13 @@ typedef enum {
 #define GST_MAKE_FOURCC(a,b,c,d) 	(guint32)((a)|(b)<<8|(c)<<16|(d)<<24)
 #define GST_STR_FOURCC(f)		(guint32)(((f)[0])|((f)[1]<<8)|((f)[2]<<16)|((f)[3]<<24))
 
+#define GST_FOURCC_FORMAT "%c%c%c%c"
+#define GST_FOURCC_ARGS(fourcc) \
+	((GUINT32_FROM_LE(fourcc)>>24)&0xff), \
+	((GUINT32_FROM_LE(fourcc)>>16)&0xff), \
+	((GUINT32_FROM_LE(fourcc)>>8)&0xff), \
+	(GUINT32_FROM_LE(fourcc)&0xff)
+
 #ifdef G_HAVE_ISO_VARARGS
 #  define GST_PROPS_LIST(...)	    GST_PROPS_LIST_TYPE,__VA_ARGS__,NULL
 #elif defined(G_HAVE_GNUC_VARARGS)
