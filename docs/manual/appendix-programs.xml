@@ -35,10 +35,10 @@ gst-launch filesrc location=redpill.vob ! mpegdemux name=demux \
 
     </para>
     <para>
-      You can also use the the parser in you own
+      You can also use the parser in you own
       code. <application>GStreamer</application> provides a function
-      gst_parse_launch () that you can use to construt a pipeline.
-      The following programs lets you create an mp3 pipeline using the
+      gst_parse_launch () that you can use to construct a pipeline.
+      The following program lets you create an MP3 pipeline using the
       gst_parse_launch () function:
     </para>
     <programlisting>
@@ -95,8 +95,8 @@ main (int argc, char *argv[])
         <para>
           A bare identifier (a string beginning with a letter and containing
           only letters, numbers, dashes, underscores, percent signs, or colons)
-          will create an element from a given elementfactory. In this example,
-          an instance of the "mad" mp3 decoding plugin will be created.
+          will create an element from a given element factory. In this example,
+          an instance of the "mad" MP3 decoding plugin will be created.
         </para>
       </sect3>          
       <sect3>

@@ -3,7 +3,7 @@
   <para> 
     Buffers contain the data that will flow through the pipeline you have
     created. A source element will typically create a new buffer and pass
-    it through the pad to the next element in the chain.  When using the
+    it through a pad to the next element in the chain.  When using the
     GStreamer infrastructure to create a media pipeline you will not have
     to deal with buffers yourself; the elements will do that for you.
   </para>
@@ -43,7 +43,7 @@
 
   <para> 
     The simple case is that a buffer is created, memory allocated, data put
-    in it, and passed to the next filter.  That filter reads the data, does
+    in it, and passed to the next element.  That element reads the data, does
     something (like creating a new buffer and decoding into it), and
     unreferences the buffer.  This causes the data to be freed and the buffer
     to be destroyed. A typical MPEG audio decoder works like this.

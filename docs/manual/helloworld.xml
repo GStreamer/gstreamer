@@ -4,7 +4,7 @@
     This chapter describes the most rudimentary aspects of a
     <application>GStreamer</application> application, including initializing
     the libraries, creating elements, packing them into a pipeline and playing,
-    pause and stop the pipeline.
+    pausing and stopping the pipeline.
   </para>
 
   <sect1>
@@ -12,7 +12,7 @@
     <para>
       We will create a simple first application, a complete MP3 player, using
       standard <application>GStreamer</application> components. The player
-      will read from a file that is given as the first argument of the program.
+      will read from a file that is given as the first argument to the program.
     </para>
 
     <programlisting>
@@ -91,9 +91,9 @@ main (int argc, char *argv[])
     </programlisting>
 
     <para>
-      We are going to create 3 elements and one pipeline. Since all elements
-      share the same base type, <classname>GstElement</classname>, we can
-      define them as:
+      We are going to create three elements and one pipeline. Since all
+      elements share the same base type, <classname>GstElement</classname>,
+      we can define them as:
     </para>
     <programlisting>
   ...
@@ -104,14 +104,14 @@ main (int argc, char *argv[])
     <para>
       Next, we are going to create an empty pipeline. As you have seen in
       the basic introduction, this pipeline will hold and manage all the
-      elements we are going to stuff into it.
+      elements we are going to pack into it.
     </para>
     <programlisting>
   /* create a new pipeline to hold the elements */
   pipeline = gst_pipeline_new ("pipeline");
     </programlisting>
     <para>
-      We use the standard constructor for a pipeline: gst_pipeline_new ("name").
+      We use the standard constructor for a pipeline: gst_pipeline_new ().
     </para>
 
     <para>
@@ -149,7 +149,7 @@ main (int argc, char *argv[])
 
     <para>
       Finally we create our audio sink element. This element will be able
-      to playback the audio using OSS.
+      to play back the audio using OSS.
     </para>
     <programlisting>
   /* and an audio sink */
@@ -203,7 +203,7 @@ main (int argc, char *argv[])
     </note>
 
     <para>
-      Since we do not use threads, nothing will happen yet. We manually have to
+      Since we do not use threads, nothing will happen yet. We have to
       call gst_bin_iterate() to execute one iteration of the pipeline. 
     </para>
     <programlisting>
@@ -211,7 +211,7 @@ main (int argc, char *argv[])
     </programlisting>
     <para>
       The gst_bin_iterate() function will return TRUE as long as something
-      interesting happended inside the pipeline. When the end-of-file has been
+      interesting happened inside the pipeline. When the end-of-file has been
       reached the _iterate function will return FALSE and we can end the loop.
     </para>
     <programlisting>
@@ -257,13 +257,14 @@ main (int argc, char *argv[])
     <title>Conclusion</title>
     <para>
       This concludes our first example. As you see, setting up a pipeline
-      is very lowlevel but powerful. You will later in this manual how
-      you can create a custom MP3 element with a more high level API.
+      is very low-level but powerful. You will see later in this manual how
+      you can create a custom MP3 element with a higher-level API.
     </para>
     <para>
       It should be clear from the example that we can very easily replace the
-      filesrc element with an httpsrc, giving you instant network streaming.
-      An element could be build to handle icecast connections, for example.
+      filesrc element with an httpsrc element, giving you instant network
+      streaming.  An element could be built to handle icecast connections,
+      for example.
     </para>
     <para>
       We can also choose to use another type of sink instead of the audiosink.

@@ -4,7 +4,7 @@
     The small application we created in the previous chapter used the
     concept of a factory to create the elements. In this chapter we will
     show you how to use the factory concepts to create elements based
-    on what they do instead of how they are called.
+    on what they do instead of what they are called.
   </para>
 
   <para> 
@@ -28,9 +28,9 @@
     <para>
       While this mechanism is quite effective it also has some big problems:
       The elements are created based on their name. Indeed, we create an
-      element mad by explicitly stating the mad element's name.  Our little
+      element, mad, by explicitly stating the mad element's name.  Our little
       program therefore always uses the mad decoder element to decode
-      the MP3 audio stream, even if there are 3 other MP3 decoders in the
+      the MP3 audio stream, even if there are three other MP3 decoders in the
       system. We will see how we can use a more general way to create an
       MP3 decoder element.
     </para>
@@ -43,14 +43,14 @@
   <sect1>
     <title>More on MIME Types</title>
     <para> 
-      GStreamer uses MIME types to indentify the different types of data
+      GStreamer uses MIME types to identify the different types of data
       that can be handled by the elements. They are the high level
       mechanisms to make sure that everyone is talking about the right
       kind of data. 
     </para> 
     <para> 
-      A MIME (Multipurpose Internet Mail Extension) types are a set of
-      string that denote a certain type of data. examples include:
+      A MIME (Multipurpose Internet Mail Extension) type is a pair of
+      strings that denote a certain type of data. Examples include:
       <itemizedlist>
         <listitem>
           <para>
@@ -59,12 +59,12 @@
         </listitem>
         <listitem>
           <para>
-	    audio/mpeg : mpeg audio
+	    audio/mpeg : MPEG audio
           </para>
         </listitem>
         <listitem>
           <para>
-	    video/mpeg : mpeg video
+	    video/mpeg : MPEG video
           </para>
         </listitem>
       </itemizedlist>
@@ -77,7 +77,7 @@
       will see.
     </para> 
     <para> 
-      As we have seen in the previous chapter, the MIME types are added
+      As we have seen in the previous chapter, MIME types are added
       to the Capability structure of a pad.
     </para> 
 
@@ -125,7 +125,7 @@
     </para>
     <para>
       There is also an association between a MIME type and a file extension,
-      but the use of typefind functions (similar to file(1)) is preferred..
+      but the use of typefind functions (similar to file(1)) is preferred.
     </para>
     <para> 
       The type information is maintained in a list of 
@@ -149,7 +149,7 @@ struct _GstType {
     <para> 
       All operations on <classname>GstType</classname> occur
       via their <classname>guint16 id</classname> numbers, with
-      <classname>GstType</classname> structure private to the GStreamer
+      the <classname>GstType</classname> structure private to the GStreamer
       library.
     </para> 
 
@@ -182,7 +182,7 @@ struct _GstType {
   type = gst_type_find_by_id (id);
       </programlisting>
       <para> 
-        This function will return NULL if the id was associated with
+        This function will return NULL if the id was not associated with
         any known <classname>GstType</classname>
       </para> 
     </sect2>
@@ -208,7 +208,7 @@ struct _GstType {
   </sect1>
 
   <sect1>
-    <title>creating elements with the factory</title>
+    <title>Creating elements with the factory</title>
     <para>
       In the previous section we described how you could obtain
       an element factory using MIME types. One the factory has been

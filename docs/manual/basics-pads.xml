@@ -24,7 +24,7 @@
       This function will get the pad named "src" from the given element. 
     </para>
     <para> 
-      Alternatively, you can also request a GList of pads from the element. The
+      Alternatively, you can request a GList of pads from the element. The
       following code example will print the names of all the pads of an
       element.
     </para>
@@ -49,8 +49,8 @@
       </para> 
       <para> 
         gst_pad_get_direction (GstPad *pad) can be used to query if the pad
-        is a sink or a src pad. Remember a src pad is a pad that can output
-        data and a sink pad is one that accepts data.
+        is a sink or a source pad. Remember that a source pad is a pad that
+        can output data and a sink pad is one that accepts data.
       </para> 
       <para> 
         You can get the parent of the pad, this is the element that this pad belongs to,
@@ -62,9 +62,9 @@
       <title>Dynamic pads</title>
       <para> 
         Some elements might not have their pads when they are created. This
-        can, for example, happen with an MPEG2 system demuxer. The demuxer will
-        create its pads at runtime when it detects the different elementary
-        streams in the MPEG2 system stream.
+        can happen, for example, with an MPEG2 system demultiplexer. The
+        demultiplexer will create its pads at runtime when it detects the
+        different elementary streams in the MPEG2 system stream.
       </para> 
       <para> 
         Running <application>gst-inspect mpegdemux</application> will show that
@@ -102,7 +102,7 @@ main(int argc, char *argv[])
   GstElement *pipeline;
   GstElement *mpeg2parser;
 
-  // create pipeline and do something usefull
+  // create pipeline and do something useful
   ...
   
   mpeg2parser = gst_element_factory_make ("mpegdemux", "mpegdemux");
@@ -124,8 +124,8 @@ main(int argc, char *argv[])
       <title>Request pads</title>
       <para> 
         An element can also have request pads. These pads are not created
-        automatically but are only created on demand. This is very usefull
-        for muxers, aggregators and tee elements.
+        automatically but are only created on demand. This is very useful
+        for multiplexers, aggregators and tee elements.
       </para> 
       <para> 
         The tee element, for example, has one input pad and a request padtemplate for the
@@ -152,10 +152,10 @@ main(int argc, char *argv[])
       </para> 
       <para> 
         It is also possible to request a pad that is compatible with another
-        padtemplate. This is very usefull if you want to connect an element to
-        a muxer element and you need to request a pad that is compatible. The
-        gst_element_get_compatible_pad is used to request a compatible pad,
-        as is shown in the next example.
+        pad template. This is very useful if you want to connect an element
+        to a multiplexer element and you need to request a pad that is
+        compatible. The gst_element_get_compatible_pad is used to request
+        a compatible pad, as is shown in the next example.
       </para> 
       <programlisting>
     ...
@@ -217,9 +217,9 @@ struct _GstCaps {
 	three properties: layer, bitrate and framed.
       </para>
       <para> 
-        The src pad (output pad) is called 'src' and outputs data of MIME
-        type 'audio/raw'. It also has four properties: format, depth, rate
-        and channels.
+        The source pad (output pad) is called 'src' and outputs data of
+        MIME type 'audio/raw'. It also has four properties: format, depth,
+        rate and channels.
       </para>
       <programlisting>
 Pads:
@@ -247,8 +247,8 @@ Pads:
     <sect2 id="sec-pads-props">
       <title>What are properties</title>
       <para> 
-        Properties are used to describe extra information for the
-        capabilities. The properties basically exist of a key (a string) and
+        Properties are used to describe extra information for 
+        capabilities. The properties basically consist of a key (a string) and
         a value. There are different possibile value types that can be used:
       </para> 
 
@@ -261,8 +261,8 @@ Pads:
         <listitem>
           <para>
             An integer range value. The property denotes a range of possible
-            values. In the case of the mad element: the src pad has a property
-            rate that can go from 11025 to 48000.
+            values. In the case of the mad element, the source pad has a
+            property rate that can go from 11025 to 48000.
           </para>
         </listitem>
         <listitem>
@@ -273,7 +273,7 @@ Pads:
         <listitem>
           <para>
 	    a fourcc value: this is a value that is commonly used to describe an encoding for video,
-	    as used be the AVI specification.
+	    as used by the AVI specification.
           </para>
         </listitem>
         <listitem>
@@ -300,7 +300,7 @@ Pads:
 
     </sect2>
     <sect2 id="sec-pads-caps-use">
-      <title>What are the capabilities used for?</title>
+      <title>What capabilities are used for</title>
       <para> 
         Capabilities describe in great detail the type of media that is handled by the pads.
 	They are mostly used for:
@@ -343,17 +343,17 @@ Pads:
     </programlisting>
     </sect2>
     <sect2 id="sec-pads-caps-create">
-      <title>Creating capabilities structures</title>
+      <title>Creating capability structures</title>
       <para> 
-        While the capabilities are mainly used inside the plugin to describe
-        the media type of the pads, the application programmer also has
-        to have basic understanding of caps in order to interface with the
+        While capabilities are mainly used inside a plugin to describe the
+        media type of the pads, the application programmer also has to have
+        basic understanding of capabilities in order to interface with the
         plugins, specially when using the autopluggers.
       </para>
       <para> 
         As we said, a capability has a name, a mime-type and some
         properties. The signature of the function to create a new
-        <classname>GstCaps</classname> structure is like:
+        <classname>GstCaps</classname> structure is:
 
     <programlisting>
 GstCaps*    gst_caps_new (const gchar *name, const gchar *mime, GstProps *props);
@@ -442,7 +442,7 @@ GstProps*     gst_props_new   (const gchar *firstname, ...);
 			    NULL
 			  );
         </programlisting>
-	Optionally the convenient shortcut macro can be used. The above complex 
+	Optionally, the convenient shortcut macro can be used. The above complex
 	capability can be created with:
         <programlisting>
   GstCaps *newcaps;

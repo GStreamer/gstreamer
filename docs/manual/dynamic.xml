@@ -2,14 +2,14 @@
   <title>Dynamic pipelines</title>
   <para> 
     In this chapter we will see how you can create a dynamic pipeline. A
-    dynamic pipeline is a pipeline that is updated or created while media
+    dynamic pipeline is a pipeline that is updated or created while data
     is flowing through it. We will create a partial pipeline first and add
     more elements while the pipeline is playing. Dynamic pipelines cause
     all sorts of scheduling issues and will remain a topic of research for
     a long time in GStreamer.
   </para>
   <para> 
-    We will show how to create an mpeg1 video player using dynamic pipelines.
+    We will show how to create an MPEG1 video player using dynamic pipelines.
     As you have seen in the pad section, we can attach a signal to an element
     when a pad is created. We will use this to create our MPEG1 player.
   </para>

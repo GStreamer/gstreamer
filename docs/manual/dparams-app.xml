@@ -4,10 +4,10 @@
   <sect1>
     <title>Getting Started</title>
     <para>
-      The dparams subsystem is contained within the
+      The Dynamic Parameters subsystem is contained within the
       <filename>gstcontrol</filename> library.
 
-      You need to include the header in your applications's source file:
+      You need to include the header in your application's source file:
     </para>
     <programlisting>
 ...
@@ -19,9 +19,9 @@
       Your application should link to the shared library <filename>gstcontrol</filename>.
     </para>
     <para>
-      The <filename>gstcontrol</filename> library needs to be initialised
+      The <filename>gstcontrol</filename> library needs to be initialized
       when your application is run.  This can be done after the the GStreamer
-      library has been initialised.
+      library has been initialized.
     </para>
     <programlisting>
   ...

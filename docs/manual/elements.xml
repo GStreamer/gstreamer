@@ -28,7 +28,7 @@
       </para>
       <para>
         Below you see how we will visualize the element.
-	We always draw a src pad to the right of the element.
+	We always draw a source pad to the right of the element.
       </para>
       <figure float="1" id="sec-element-srcimg">
         <title>Visualisation of a source element</title>
@@ -40,8 +40,8 @@
       </figure>
       <para>
         Source elements do not accept data, they only generate data. You can
-        see this in the figure because it only has a src pad. A src pad can
-        only generate data.
+        see this in the figure because it only has a source pad. A source
+        pad can only generate data.
       </para>
     </sect2>
 
@@ -49,7 +49,7 @@
       <title>Filters and codecs</title>
       <para>
         Filter elements both have input and output pads. They operate on
-        data they receive in their sink pads and produce data on their src
+        data they receive in their sink pads and produce data on their source
         pads. For example, MPEG decoders and volume filters would fall into
         this category.
       </para>
@@ -68,7 +68,7 @@
       </figure>
       <para>
         The above figure shows the visualisation of a filter element.
-        This element has one sink (input) pad and one src (output) pad. 
+        This element has one sink (input) pad and one source (output) pad.
         Sink pads are drawn on the left of the element.
       </para> 
       <figure float="1" id="sec-element-multifilterimg">

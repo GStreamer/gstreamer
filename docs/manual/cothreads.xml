@@ -31,7 +31,7 @@
   </para>
   <para> 
     Before proceding to the concept of loop-based elements we will first
-    explain the chain-based elements
+    explain the chain-based elements.
   </para>
 
   <sect1 id="sec-chain-based">
@@ -100,7 +100,7 @@ chain_function (GstPad *pad, GstBuffer *buffer)
       When the request for a buffer cannot immediatly satisfied, the control
       will be given to the source element of the loop-based element until it
       performs a push on its source pad. At that time the control is handed
-      back to the loop-based element, etc... The the execution trace can get
+      back to the loop-based element, etc... The execution trace can get
       fairly complex using cothreads when there are multiple input/output
       pads for the loop-based element. Cothread switches are performed within
       the call to gst_pad_pull and gst_pad_push; from the perspective of
@@ -110,10 +110,10 @@ chain_function (GstPad *pad, GstBuffer *buffer)
     <para>
       Loop based elements are mainly used for the more complex elements
       that need a specific amount of data before they can start to produce
-      output. An example of such an element is the mpeg video decoder. the
-      element will pull a buffer, performs some decoding on it and optionally
-      requests more buffers to decode, when a complete video frame has
-      been decoded, a buffer is send out. For example, any plugin using the
+      output. An example of such an element is the MPEG video decoder. The
+      element will pull a buffer, perform some decoding on it and optionally
+      request more buffers to decode, and when a complete video frame has
+      been decoded, a buffer is sent out. For example, any plugin using the
       bytestream library will need to be loop-based.
     </para>
     <para>

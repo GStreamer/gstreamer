@@ -15,16 +15,16 @@
   </figure>
   <para> 
     By connecting these three elements, we have created a very simple
-    pipeline. The effect of this will be that the output of the source element
+    chain. The effect of this will be that the output of the source element
     (element1) will be used as input for the filter element (element2). The
     filter element will do something with the data and send the result to
     the final sink element (element3).
   </para>
   <para> 
-    Imagine the above graph as a simple mpeg audio decoder. The source
-    element is a disk source, the filter element is the mpeg decoder and
+    Imagine the above graph as a simple MPEG audio decoder. The source
+    element is a disk source, the filter element is the MPEG decoder and
     the sink element is your audiocard. We will use this simple graph to
-    construct an mpeg player later in this manual.
+    construct an MPEG player later in this manual.
   </para>
 
   <sect1 id="sec-conn-basic">
@@ -88,8 +88,8 @@
      You can query if a pad is connected with GST_PAD_IS_CONNECTED (pad). 
    </para>
    <para> 
-     To query for the <classname>GstPad</classname> this srcpad is connected
-     to, use gst_pad_get_peer (srcpad).
+     To query for the <classname>GstPad</classname> a pad is connected to, use 
+     gst_pad_get_peer (pad).
    </para>
   </sect1>
 
