@@ -642,7 +642,7 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 					
 	|	chain linklist		      { GSList *walk;
 						if ($1->back) {
-						  g_slist_prepend ($2, $1->back);
+						  $2 = g_slist_prepend ($2, $1->back);
 						  $1->back = NULL;
 						} else {
 						  if (!((link_t *) $2->data)->src_name) {
