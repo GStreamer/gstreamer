@@ -1,8 +1,3 @@
-# rewritten by Thomas to be more simple and working
-
-# SF username
-USERNAME ?= thomasvs
-
 ### These are all generic; we set all the variables we need
 
 # intermediary build path
@@ -27,7 +22,6 @@ PNG_BUILT = $(foreach file, $(PNG), $(BUILDIMAGESDIR)/$(file))
 EPS_BUILT = $(foreach file, $(EPS), $(BUILDIMAGESDIR)/$(file))
 PDF_BUILT = $(foreach file, $(PDF), $(BUILDIMAGESDIR)/$(file))
 
-# everything considered source
 SRC = $(XML) $(PNG_SRC) $(FIG_SRC) $(CSS) $(EXTRA_SOURCES)
 
 # generate A4 docs

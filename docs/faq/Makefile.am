@@ -27,12 +27,12 @@ include $(srcdir)/../manuals.mak
 include $(srcdir)/../upload.mak
 
 ### this is standard automake stuff
-                                                                                
+
 # package up all the source
 EXTRA_DIST = $(SRC)
-                                                                                
+
 # install documentation
 docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)/$(DOC)
 doc_DATA = $(PDF_DAT) $(PS_DAT)
-                                                                                
+
 include $(srcdir)/../htmlinstall.mak
