@@ -30,15 +30,12 @@
 #include <gstauparse.h>
 
 /* elementfactory information */
-static GstElementDetails gst_auparse_details = {
+static GstElementDetails gst_auparse_details = GST_ELEMENT_DETAILS (
   ".au parser",
   "Codec/Parser",
-  "LGPL",
   "Parse an .au file into raw audio",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 GST_PAD_TEMPLATE_FACTORY (sink_factory_templ,
   "sink",
@@ -50,7 +47,6 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory_templ,
     NULL
   )
 )
-
 
 GST_PAD_TEMPLATE_FACTORY (src_factory_templ,
   "src",
@@ -94,6 +90,7 @@ enum {
   /* FILL ME */
 };
 
+static void 	gst_auparse_base_init		(gpointer g_class);
 static void 	gst_auparse_class_init		(GstAuParseClass *klass);
 static void 	gst_auparse_init		(GstAuParse *auparse);
 
@@ -109,7 +106,8 @@ gst_auparse_get_type (void)
 
   if (!auparse_type) {
     static const GTypeInfo auparse_info = {
-      sizeof(GstAuParseClass),      NULL,
+      sizeof(GstAuParseClass),
+      gst_auparse_base_init,
       NULL,
       (GClassInitFunc) gst_auparse_class_init,
       NULL,
@@ -121,6 +119,19 @@ gst_auparse_get_type (void)
     auparse_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAuParse", &auparse_info, 0);
   }
   return auparse_type;
+}
+
+static void
+gst_auparse_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_GET (sink_factory_templ));
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_GET (src_factory_templ));
+  gst_element_class_set_details (element_class, &gst_auparse_details);
+
 }
 
 static void
@@ -284,29 +295,26 @@ gst_auparse_chain (GstPad *pad, GstData *_data)
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create the plugin structure */
-  /* create an elementfactory for the auparse element and list it */
-  factory = gst_element_factory_new ("auparse", GST_TYPE_AUPARSE,
-                                    &gst_auparse_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_SECONDARY);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory_templ));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory_templ));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "auparse", GST_RANK_SECONDARY,
+        GST_TYPE_AUPARSE)) {
+    return FALSE;
+  }
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "auparse",
-  plugin_init
-};
+  "parses au streams",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 
