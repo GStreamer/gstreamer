@@ -1305,7 +1305,7 @@ static void
 get_group (GstElement *element, GstOptSchedulerGroup **group)
 {
   GstOptSchedulerCtx *ctx;
-  GList *pads;
+  /*GList *pads;*/
 
   ctx = GST_ELEMENT_SCHED_CONTEXT (element);
   if (ctx) 
@@ -1499,6 +1499,7 @@ gst_opt_scheduler_add_element (GstScheduler *sched, GstElement *element)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
   GstOptSchedulerCtx *ctx;
+  const GList *pads; 
 
   GST_INFO ( "adding element \"%s\" to scheduler", GST_ELEMENT_NAME (element));
 
