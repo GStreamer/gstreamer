@@ -460,7 +460,7 @@ print_element_info (GstElementFactory *factory)
   g_print ("Factory Details:\n");
   g_print ("  Long name:\t%s\n",   factory->details->longname);
   g_print ("  Class:\t%s\n",       factory->details->klass);
-  g_print ("  License:\t%s\n",	   factory->details->license);
+  g_print ("  License:\t%s\n",     factory->details->license);
   g_print ("  Description:\t%s\n", factory->details->description);
   g_print ("  Version:\t%s\n",     factory->details->version);
   g_print ("  Author(s):\t%s\n",   factory->details->author);
