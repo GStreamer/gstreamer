@@ -1,3 +1,3 @@
-SUBDIRS=sys ext
+SUBDIRS=gst sys ext gst-libs
 
-DIST_SUBDIRS=sys ext
+DIST_SUBDIRS=gst sys ext gst-libs

@@ -349,6 +349,16 @@ AC_SUBST(X_EXTRA_LIBS)
 AC_SUBST(X_LIBS)
 
 dnl ==========================================================================
+dnl ============================= gst plugins ================================
+dnl ==========================================================================
+
+dnl *** sine ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SINE, true)
+GST_CHECK_FEATURE(SINE, [sine plugin], sinesrc, [
+  HAVE_SINE="yes"
+])
+
+dnl ==========================================================================
 dnl ============================= sys plugins ================================
 dnl ==========================================================================
 
@@ -428,11 +438,11 @@ GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [
 
 dnl *** audiofile ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBAUDIOFILE, true)
-GST_CHECK_FEATURE(LIBAUDIOFILE, [audiofile], afsink afsrc, [
-  translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_LIBS)
-  translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_CFLAGS)
-  GST_CHECK_CONFIGPROG(LIBAUDIOFILE, audiofile-config)
+translit(dnm, m, l) AM_CONDITIONAL(USE_AUDIOFILE, true)
+GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
+  translit(dnm, m, l) AC_SUBST(AUDIOFILE_LIBS)
+  translit(dnm, m, l) AC_SUBST(AUDIOFILE_CFLAGS)
+  GST_CHECK_CONFIGPROG(AUDIOFILE, audiofile-config)
 ])
 
 dnl *** avifile ***
@@ -1071,10 +1081,11 @@ AC_SUBST(LIBGST_LIBS)
 AC_SUBST(LIBGST_CFLAGS)
 
 dnl Vars for everyone else
-GST_LIBS="\$(top_builddir)/gst/libgst.la $LIBGST_LIBS"
-GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include $LIBGST_CFLAGS"
-AC_SUBST(GST_LIBS)
-AC_SUBST(GST_CFLAGS)
+dnl FIXME: is there a reason to add this top_builddir stuff ? don't think so
+dnl GST_LIBS="\$(top_builddir)/gst/libgst.la $LIBGST_LIBS"
+dnl GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include $LIBGST_CFLAGS"
+dnl AC_SUBST(GST_LIBS)
+dnl AC_SUBST(GST_CFLAGS)
 
 dnl #############################
 dnl # Configure the subpackages #
@@ -1127,6 +1138,8 @@ dnl stamp.h
 dnl echo "$infomessages", infomessages="$infomessages"
 AC_OUTPUT(
 Makefile
+gst/Makefile
+gst/sine/Makefile
 sys/Makefile
 sys/oss/Makefile
 sys/qcam/Makefile
@@ -1135,11 +1148,14 @@ sys/vcd/Makefile
 sys/vga/Makefile
 sys/xvideo/Makefile
 ext/Makefile
+ext/audiofile/Makefile
 ext/esd/Makefile
 ext/lame/Makefile
 ext/mad/Makefile
 ext/sdl/Makefile
 ext/vorbis/Makefile
+gst-libs/Makefile
+gst-libs/audio/Makefile
 )
 
 echo -e "configure: *** Plugins that will be built : $GST_PLUGINS_YES"

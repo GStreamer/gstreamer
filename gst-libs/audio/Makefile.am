@@ -1,4 +1,4 @@
-libdir = $(libdir)/gst
+## libdir = $(libdir)/gst
 
 lib_LTLIBRARIES = libgstaudio.la
 
