@@ -80,7 +80,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     "audio/x-raw-int, " \
       "endianness = (int) BIG_ENDIAN, " \
       "signed = (boolean) TRUE, " \
-      "width = (int) { 16, 20, 24 }, " \
+      "width = (int) { 16, 24 }, " \
       "depth = (int) { 16, 20, 24 }, " \
       "rate = (int) { 48000, 96000 }, " \
       "channels = (int) [ 1, 8 ];" \
