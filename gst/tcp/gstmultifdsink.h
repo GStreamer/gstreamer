@@ -77,11 +77,18 @@ typedef enum
 
 typedef enum
 {
-  GST_CLIENT_STATUS_OK,
-  GST_CLIENT_STATUS_CLOSED,
-  GST_CLIENT_STATUS_REMOVED,
-  GST_CLIENT_STATUS_SLOW,
-  GST_CLIENT_STATUS_ERROR,
+  GST_UNIT_TYPE_BUFFERS,
+  GST_UNIT_TYPE_TIME,
+  GST_UNIT_TYPE_BYTES,
+} GstUnitType;
+
+typedef enum
+{
+  GST_CLIENT_STATUS_OK		= 0,
+  GST_CLIENT_STATUS_CLOSED	= 1,
+  GST_CLIENT_STATUS_REMOVED	= 2,
+  GST_CLIENT_STATUS_SLOW	= 3,
+  GST_CLIENT_STATUS_ERROR	= 4,
 } GstClientStatus;
 
 /* structure for a client
@@ -138,12 +145,16 @@ struct _GstMultiFdSink {
   gboolean running;	/* the thread state */
   GThread *thread;	/* the sender thread */
 
-  gint buffers_max;	/* max buffers to queue */
-  gint buffers_soft_max;	/* max buffers a client can lag before recovery starts */
+  GstUnitType unit_type;/* the type of the units */
+  gint units_max;	/* max units to queue */
+  gint units_soft_max;	/* max units a client can lag before recovery starts */
   GstRecoverPolicy recover_policy;
   GstClockTime timeout;	/* max amount of nanoseconds to remain idle */
+
   /* stats */
   gint buffers_queued;	/* number of queued buffers */
+  gint bytes_queued;	/* number of queued bytes */
+  gint time_queued;	/* number of queued time */
 };
 
 struct _GstMultiFdSinkClass {
