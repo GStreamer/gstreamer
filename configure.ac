@@ -47,6 +47,8 @@ else
     GST_ERROR="-Wall"
   fi
 fi
+dnl fix these error flags first, then reintroduce them
+GST_ERROR=
 
 dnl We disable static building for development, for time savings
 dnl *NOTE*: dnl this line before release, so release does static too
