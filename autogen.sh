@@ -72,13 +72,13 @@ version_check ()
   fi
 
   if test ! -z "$WRONG"; then
-    echo "- found $pkg_version, not ok !"
+    echo " found $pkg_version, not ok !"
     echo
     echo "You must have $PACKAGE $VERSION or greater to compile $package."
     echo "Get the latest version from $URL"
     return 1
   else
-    echo "- found $pkg_version, ok."
+    echo " found $pkg_version, ok."
   fi
 }
 
