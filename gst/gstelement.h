@@ -273,7 +273,7 @@ void			gst_element_set_eos		(GstElement *element);
 void 			gst_element_error 		(GstElement *element, const gchar *error, ...);
 
 GstElementState         gst_element_get_state           (GstElement *element);
-gint			gst_element_set_state		(GstElement *element, GstElementState state);
+GstElementStateReturn	gst_element_set_state		(GstElement *element, GstElementState state);
 
 void 			gst_element_wait_state_change 	(GstElement *element);
 	
