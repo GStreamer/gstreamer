@@ -57,7 +57,7 @@ gst_v4l2src_queue_frame (GstV4l2Src *v4l2src,
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_QBUF, &v4l2src->bufsettings) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
 			"Error queueing buffer %d on device %s: %s",
-			num, GST_V4L2ELEMENT(v4l2src)->device, sys_errlist[errno]);
+			num, GST_V4L2ELEMENT(v4l2src)->device, strerror(errno));
 		return FALSE;
 	}
 
@@ -78,7 +78,7 @@ gst_v4l2src_sync_next_frame (GstV4l2Src *v4l2src,
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_DQBUF, &v4l2src->bufsettings) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
 			"Error syncing on a buffer on device %s: %s",
-			GST_V4L2ELEMENT(v4l2src)->device, sys_errlist[errno]);
+			GST_V4L2ELEMENT(v4l2src)->device, strerror(errno));
 		return FALSE;
 	}
 	DEBUG("synced on frame %d", v4l2src->bufsettings.index);
@@ -104,7 +104,7 @@ gst_v4l2src_get_capture (GstV4l2Src *v4l2src)
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_G_FMT, &v4l2src->format) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
 			"Failed to get pixel format for device %s: %s",
-			GST_V4L2ELEMENT(v4l2src)->device, sys_errlist[errno]);
+			GST_V4L2ELEMENT(v4l2src)->device, strerror(errno));
 		return FALSE;
 	}
 
@@ -145,7 +145,7 @@ gst_v4l2src_set_capture (GstV4l2Src          *v4l2src,
 		gst_element_error(GST_ELEMENT(v4l2src),
 			"Failed to set pixel format to %s @ %dx%d for device %s: %s",
 			fmt->description, width, height,
-			GST_V4L2ELEMENT(v4l2src)->device, sys_errlist[errno]);
+			GST_V4L2ELEMENT(v4l2src)->device, strerror(errno));
 		return FALSE;
 	}
 
@@ -177,7 +177,7 @@ gst_v4l2src_capture_init (GstV4l2Src *v4l2src)
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_REQBUFS, &v4l2src->breq) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
 			"Error requesting buffers (%d) for %s: %s",
-			v4l2src->breq.count, GST_V4L2ELEMENT(v4l2src)->device, sys_errlist[errno]);
+			v4l2src->breq.count, GST_V4L2ELEMENT(v4l2src)->device, strerror(errno));
 		return FALSE;
 	}
 
@@ -207,7 +207,7 @@ gst_v4l2src_capture_init (GstV4l2Src *v4l2src)
 		if (GST_V4L2ELEMENT(v4l2src)->buffer[n] == MAP_FAILED) {
 			gst_element_error(GST_ELEMENT(v4l2src),
 				"Error mapping video buffer %d on device %s: %s",
-				n, GST_V4L2ELEMENT(v4l2src)->device, sys_errlist[errno]);
+				n, GST_V4L2ELEMENT(v4l2src)->device, strerror(errno));
 			GST_V4L2ELEMENT(v4l2src)->buffer[n] = NULL;
 			return FALSE;
 		}
@@ -240,7 +240,7 @@ gst_v4l2src_capture_start (GstV4l2Src *v4l2src)
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_STREAMON, &n) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
 			"Error starting streaming capture for %s: %s",
-			GST_V4L2ELEMENT(v4l2src)->device, sys_errlist[errno]);
+			GST_V4L2ELEMENT(v4l2src)->device, strerror(errno));
 		return FALSE;
 	}
 
@@ -312,7 +312,7 @@ gst_v4l2src_capture_stop (GstV4l2Src *v4l2src)
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_STREAMOFF, &n) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
 			"Error stopping streaming capture for %s: %s",
-			GST_V4L2ELEMENT(v4l2src)->device, sys_errlist[errno]);
+			GST_V4L2ELEMENT(v4l2src)->device, strerror(errno));
 		return FALSE;
 	}
 
