@@ -6,7 +6,7 @@ from types import ClassType
 loader = TestLoader()
 testRunner = TextTestRunner()
 
-for name in ('element', 'pipeline'):
+for name in ('element', 'interface', 'pipeline'):
     print 'Testing', name
     tests = loader.loadTestsFromName(name)
     testRunner.run(tests)

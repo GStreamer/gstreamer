@@ -45,6 +45,7 @@ initinterfaces (void)
 	pyinterfaces_add_constants (m, "GST_");
 	
 	if (PyErr_Occurred ()) {
-		Py_FatalError ("can't initialize module gst.interfaces");
+	    PyErr_Print ();
+	    Py_FatalError ("can't initialize module gst.interfaces");
 	}
 }

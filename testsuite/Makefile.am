@@ -1,10 +1,11 @@
 tests =  \
+	common.py \
 	element.py \
+	interface.py \
 	pipeline.py 
 
 check-local:
-	@$(PYTHON) runtests.py
+	@PYTHONPATH=$(top_builddir) $(PYTHON) $(srcdir)/runtests.py
 	@rm -fr *.pyc
 
 EXTRA_DIST = $(tests) runtests.py
-

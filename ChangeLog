@@ -1,5 +1,12 @@
 2004-03-17  Johan Dahlin  <johan@gnome.org>
 
+	* testsuite/Makefile.am (check-local): distcheck fixes
+
+	* testsuite/common.py: Put in a couple of hacks to make distcheck
+	pass make check
+
+	* testsuite/interface.py: New test
+
 	* gst/gst.defs: Remove unused functions.
 
 	* gst/gst.override: Ditto
