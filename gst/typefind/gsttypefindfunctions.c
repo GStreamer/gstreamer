@@ -860,6 +860,41 @@ dv_type_find (GstTypeFind *tf, gpointer private)
   }
 }
 
+/*** application/x-vorbis *****************************************************/
+
+#define VORBIS_CAPS GST_CAPS_NEW ("vorbis_type_find", "application/x-vorbis", NULL)
+static void
+vorbis_type_find (GstTypeFind *tf, gpointer private)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 30);
+
+  if (data) {
+    guint blocksize_0;
+    guint blocksize_1;
+    /* 1 byte packet type (identification=0x01)
+       6 byte string "vorbis"
+       4 byte vorbis version */
+    if (memcmp (data, "\001vorbis\000\000\000\000", 11) != 0) return;
+    data += 11;
+    /* 1 byte channels must be != 0 */
+    if (data[0] == 0) return;
+    data++;
+    /* 4 byte samplerate must be != 0 */
+    if (*((guint32 *) data) == 0) return;
+    data += 16;
+    /* blocksize checks */
+    blocksize_0 = data[0] & 0x0F;
+    blocksize_1 = (data[0] & 0xF0) >> 4;
+    if (blocksize_0 > blocksize_1) return;
+    if (blocksize_0 < 6 || blocksize_0 > 13) return;
+    if (blocksize_1 < 6 || blocksize_1 > 13) return;
+    data++;
+    /* framing bit */
+    if ((data[0] & 0x01) != 1) return;
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, VORBIS_CAPS);
+  } 
+}
+
 /*** generic typefind for streams that have some data at a specific position***/
 
 typedef struct {
@@ -1046,6 +1081,8 @@ plugin_init (GstPlugin *plugin)
 	  zip_exts, "PK\003\004", 4, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-compress", GST_RANK_SECONDARY,
 	  compress_exts, "\037\235", 2, GST_TYPE_FIND_LIKELY);
+  TYPE_FIND_REGISTER (plugin, "application/x-vorbis", GST_RANK_PRIMARY,
+	  vorbis_type_find, NULL, VORBIS_CAPS, NULL);
   
   return TRUE;
 }

@@ -2,9 +2,9 @@
 plugin_LTLIBRARIES = libgstvorbis.la
 
 libgstvorbis_la_SOURCES = vorbis.c vorbisenc.c vorbisfile.c
-libgstvorbis_la_CFLAGS = $(GST_CFLAGS) $(VORBIS_CFLAGS)
+libgstvorbis_la_CFLAGS = $(GST_CFLAGS) $(VORBIS_CFLAGS) 
 ## AM_PATH_VORBIS also sets VORBISENC_LIBS
-libgstvorbis_la_LIBADD = $(VORBIS_LIBS) $(VORBISENC_LIBS) $(VORBISFILE_LIBS)
+libgstvorbis_la_LIBADD = $(VORBIS_LIBS) $(VORBISENC_LIBS) $(VORBISFILE_LIBS) 
 libgstvorbis_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = vorbisenc.h

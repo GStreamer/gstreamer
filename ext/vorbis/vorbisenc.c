@@ -26,6 +26,7 @@
 #include <time.h>
 #include <vorbis/vorbisenc.h>
 
+#include <gst/gsttaginterface.h>
 #include "vorbisenc.h"
 
 static GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
@@ -116,8 +117,15 @@ vorbisenc_get_type (void)
       0,
       (GInstanceInitFunc) gst_vorbisenc_init,
     };
-
+    static const GInterfaceInfo tag_setter_info = {
+      NULL,
+      NULL,
+      NULL
+    };
+    
     vorbisenc_type = g_type_register_static (GST_TYPE_ELEMENT, "VorbisEnc", &vorbisenc_info, 0);
+    
+    g_type_add_interface_static (vorbisenc_type, GST_TYPE_TAG_SETTER, &tag_setter_info);
   }
   return vorbisenc_type;
 }
@@ -197,9 +205,6 @@ gst_vorbisenc_class_init (VorbisEncClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SERIAL, 
     g_param_spec_int ("serial", "Serial", "Specify a serial number for the stream. (-1 is random)",
 	    -1, G_MAXINT, -1, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METADATA, 
-    g_param_spec_boxed ("metadata", "Metadata", "Metadata to add to the stream,",
-	    GST_TYPE_CAPS, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MANAGED, 
     g_param_spec_boolean ("managed", "Managed", "Enable bitrate management engine",
 	    FALSE, G_PARAM_READWRITE));
@@ -458,52 +463,106 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
   
   vorbisenc->setup = FALSE;
   vorbisenc->eos = FALSE;
+  vorbisenc->header_sent = FALSE;
 
-  vorbisenc->metadata = GST_CAPS_NEW (
-		  "vorbisenc_metadata",
-                  "application/x-gst-metadata",
-                    "DESCRIPTION",	GST_PROPS_STRING ("Track encoded with GStreamer"),
-		    "DATE",     	GST_PROPS_STRING (""),
-		    "TRACKNUMBER", 	GST_PROPS_STRING (""),
-		    "TITLE",    	GST_PROPS_STRING (""),
-		    "ARTIST",   	GST_PROPS_STRING (""),
-		    "ALBUM",    	GST_PROPS_STRING (""),
-		    "GENRE",    	GST_PROPS_STRING ("")
-		  );
-
-
+  vorbisenc->tags = gst_tag_list_new ();
+  
   /* we're chained and we can deal with events */
   GST_FLAG_SET (vorbisenc, GST_ELEMENT_EVENT_AWARE);
 }
 
-static void 
-gst_vorbisenc_add_metadata (VorbisEnc *vorbisenc, GstCaps *caps)
+static void
+gst_vorbisenc_metadata_set1 (const GstTagList *list, const gchar *tag, gpointer vorbisenc)
 {
-  GList *props;
-  GstPropsEntry *prop;
+  gchar *vorbistag, *vorbisvalue;
+  guint i, count;
+  VorbisEnc *enc = GST_VORBISENC (vorbisenc);
 
-  if (caps == NULL)
-    return;
-
-  vorbis_comment_init (&vorbisenc->vc);
-
-  props = gst_caps_get_props (caps)->properties;
-  while (props) {
-    prop = (GstPropsEntry*)(props->data);
-    props = g_list_next(props);
-
-    if (gst_props_entry_get_props_type (prop) == GST_PROPS_STRING_TYPE) {
-      const gchar *name = gst_props_entry_get_name (prop);
-      const gchar *value;
-
-      gst_props_entry_get_string (prop, &value);
-
-      if (!value || strlen (value) == 0)
-	continue;
-
-      vorbis_comment_add_tag (&vorbisenc->vc, g_strdup (name), g_strdup (value));
+  count = gst_tag_list_get_tag_size (list, tag);
+  for (i = 0; i < count; i++) {
+    /* get tag name right */
+    if (strcmp (tag, GST_TAG_TITLE) == 0) {
+      vorbistag = g_strdup ("TITLE");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else if (strcmp (tag, GST_TAG_VERSION) == 0) {
+      vorbistag = g_strdup ("VERSION");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else if (strcmp (tag, GST_TAG_ALBUM) == 0) {
+      vorbistag = g_strdup ("ALBUM");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else if (strcmp (tag, GST_TAG_TRACK_NUMBER) == 0) {
+      vorbistag = g_strdup ("TRACKNUMBER");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else if (strcmp (tag, GST_TAG_ARTIST) == 0) {
+      vorbistag = g_strdup ("ARTIST");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else if (strcmp (tag, GST_TAG_PERFORMER) == 0) {
+      vorbistag = g_strdup ("PERFORMER");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else if (strcmp (tag, GST_TAG_COPYRIGHT) == 0) {
+      vorbistag = g_strdup ("COPYRIGHT");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else if (strcmp (tag, GST_TAG_LICENSE) == 0) {
+      vorbistag = g_strdup ("LICENSE");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else if (strcmp (tag, GST_TAG_ORGANIZATION) == 0) {
+      vorbistag = g_strdup ("ORGANIZATION");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else if (strcmp (tag, GST_TAG_DESCRIPTION) == 0) {
+      vorbistag = g_strdup ("DESCRIPTION");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else if (strcmp (tag, GST_TAG_GENRE) == 0) {
+      vorbistag = g_strdup ("GENRE");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else if (strcmp (tag, GST_TAG_DATE) == 0) {
+      /* FIXME: how are dates represented in vorbis files? */
+      GDate *date;
+      guint u;
+      
+      vorbistag = g_strdup ("DATE");
+      g_assert (gst_tag_list_get_uint_index (list, tag, i, &u));
+      date = g_date_new_julian (u);
+      vorbisvalue = g_strdup_printf ("%04d-%02d-%02d", (gint) g_date_get_year (date),
+				   (gint) g_date_get_month (date), (gint) g_date_get_day (date));
+      g_date_free (date);
+    /* NOTE: GST_TAG_LOCATION != vorbis' location
+    } else if (strcmp (tag, PLACE) == 0) {
+      vorbistag = g_strdup ("LOCATION");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    */
+    } else if (strcmp (tag, GST_TAG_CONTACT) == 0) {
+      vorbistag = g_strdup ("CONTACT");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else if (strcmp (tag, GST_TAG_ISRC) == 0) {
+      vorbistag = g_strdup ("ISRC");
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+    } else {
+      vorbistag = g_ascii_strup (tag, -1);
+      if (gst_tag_get_type (tag) == G_TYPE_STRING) {
+	g_assert (gst_tag_list_get_string_index (list, tag, i, &vorbisvalue));
+      } else {
+	const GValue *value = gst_tag_list_get_value_index (list, tag, i);
+        vorbisvalue = g_strdup_value_contents (value);
+      }
     }
   }
+
+  vorbis_comment_add_tag (&enc->vc, vorbistag, vorbisvalue);
+}
+static void 
+gst_vorbisenc_set_metadata (VorbisEnc *vorbisenc)
+{
+  GstTagList *copy; 
+  const GstTagList *user_tags;
+  
+  user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (vorbisenc));
+  if (!(vorbisenc->tags || user_tags))
+    return;
+
+  copy = gst_tag_list_merge (user_tags, vorbisenc->tags, gst_tag_setter_get_merge_mode (GST_TAG_SETTER (vorbisenc)));
+  vorbis_comment_init (&vorbisenc->vc);
+  gst_tag_list_foreach (copy, gst_vorbisenc_metadata_set1, vorbisenc);
+  gst_tag_list_free (copy);
 }
 
 static gchar*
@@ -635,8 +694,6 @@ gst_vorbisenc_setup (VorbisEnc *vorbisenc)
   }
   vorbis_encode_setup_init(&vorbisenc->vi);
 
-  gst_vorbisenc_add_metadata (vorbisenc, vorbisenc->metadata);
-
   /* set up the analysis state and auxiliary encoding storage */
   vorbis_analysis_init (&vorbisenc->vd, &vorbisenc->vi);
   vorbis_block_init (&vorbisenc->vd, &vorbisenc->vb);
@@ -653,28 +710,6 @@ gst_vorbisenc_setup (VorbisEnc *vorbisenc)
   }
 
   ogg_stream_init (&vorbisenc->os, serial);
-
-  /* Vorbis streams begin with three headers; the initial header (with
-     most of the codec setup parameters) which is mandated by the Ogg
-     bitstream spec.  The second header holds any comment fields.  The
-     third header holds the bitstream codebook.  We merely need to
-     make the headers, then pass them to libvorbis one at a time;
-     libvorbis handles the additional Ogg bitstream constraints */
-
-  {
-    ogg_packet header;
-    ogg_packet header_comm;
-    ogg_packet header_code;
-
-    vorbis_analysis_headerout (&vorbisenc->vd, &vorbisenc->vc, &header, &header_comm, &header_code);
-    ogg_stream_packetin (&vorbisenc->os, &header);	/* automatically placed in its own
-							   page */
-    ogg_stream_packetin (&vorbisenc->os, &header_comm);
-    ogg_stream_packetin (&vorbisenc->os, &header_code);
-
-    /* no need to write out here.  We'll get to that in the main loop */
-    vorbisenc->flush_header = TRUE;
-  }
 
   vorbisenc->setup = TRUE;
 
@@ -732,6 +767,15 @@ gst_vorbisenc_chain (GstPad * pad, GstData *_data)
         vorbis_analysis_wrote (&vorbisenc->vd, 0);
 	gst_event_unref (event);
 	break;
+      case GST_EVENT_TAG:
+	if (vorbisenc->tags) {
+	  gst_tag_list_merge (vorbisenc->tags, gst_event_tag_get_list (event), 
+		  gst_tag_setter_get_merge_mode (GST_TAG_SETTER (vorbisenc)));
+	} else {
+	  g_assert_not_reached ();
+	}
+	gst_pad_event_default (pad, event);
+	return;
       default:
 	gst_pad_event_default (pad, event);
         return;
@@ -749,16 +793,28 @@ gst_vorbisenc_chain (GstPad * pad, GstData *_data)
       return;
     }
 
-    if (vorbisenc->flush_header) {
+    if (!vorbisenc->header_sent) {
       gint result;
+      /* Vorbis streams begin with three headers; the initial header (with
+	 most of the codec setup parameters) which is mandated by the Ogg
+	 bitstream spec.  The second header holds any comment fields.  The
+	 third header holds the bitstream codebook.  We merely need to
+	 make the headers, then pass them to libvorbis one at a time;
+	 libvorbis handles the additional Ogg bitstream constraints */
+      ogg_packet header;
+      ogg_packet header_comm;
+      ogg_packet header_code;
+
+      gst_vorbisenc_set_metadata (vorbisenc);
+      vorbis_analysis_headerout (&vorbisenc->vd, &vorbisenc->vc, &header, &header_comm, &header_code);
+      ogg_stream_packetin (&vorbisenc->os, &header); /* automatically placed in its own page */
+      ogg_stream_packetin (&vorbisenc->os, &header_comm);
+      ogg_stream_packetin (&vorbisenc->os, &header_code);
 
       while ((result = ogg_stream_flush(&vorbisenc->os, &vorbisenc->og))) {
-        if (!result) 
-          break;
-
 	gst_vorbisenc_write_page (vorbisenc, &vorbisenc->og);
       }
-      vorbisenc->flush_header = FALSE;
+      vorbisenc->header_sent = TRUE;
     }
   
     /* data to encode */
@@ -852,9 +908,6 @@ gst_vorbisenc_get_property (GObject * object, guint prop_id, GValue * value, GPa
     case ARG_SERIAL:
       g_value_set_int (value, vorbisenc->serial);
       break;
-    case ARG_METADATA:
-      g_value_set_static_boxed (value, vorbisenc->metadata);
-      break;
     case ARG_MANAGED:
       g_value_set_boolean (value, vorbisenc->managed);
       break;
@@ -920,9 +973,6 @@ gst_vorbisenc_set_property (GObject * object, guint prop_id, const GValue * valu
     case ARG_SERIAL:
       vorbisenc->serial = g_value_get_int (value);
       break;
-    case ARG_METADATA:
-      vorbisenc->metadata = g_value_get_boxed (value);
-      break;
     case ARG_MANAGED:
       vorbisenc->managed = g_value_get_boolean (value);
       break;
@@ -947,6 +997,9 @@ gst_vorbisenc_change_state (GstElement *element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       vorbisenc->setup = FALSE;
+      vorbisenc->header_sent = FALSE;
+      gst_tag_list_free (vorbisenc->tags);
+      vorbisenc->tags = gst_tag_list_new ();
       break;
     case GST_STATE_READY_TO_NULL:
     default:

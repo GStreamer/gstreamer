@@ -78,10 +78,10 @@ struct _VorbisEnc {
   guint64	   samples_in;
   guint64	   bytes_out;
 
-  GstCaps         *metadata;
+  GstTagList *	   tags;
 
   gboolean         setup;
-  gboolean         flush_header;
+  gboolean         header_sent;
   gchar		  *last_message;
 };
 
