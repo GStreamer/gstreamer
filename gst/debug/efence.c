@@ -30,6 +30,10 @@
 
 #include "efence.h"
 
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+
 static GstElementDetails plugin_details = {
   "Electric Fence",
   "Testing/EFence",
