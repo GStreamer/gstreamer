@@ -52,7 +52,7 @@ typedef gpointer 	GstClockID;
 #define GST_TIME_TO_TIMEVAL(t,tv)			\
 G_STMT_START { 						\
   (tv).tv_sec  =  (t) / GST_SECOND;			\
-  (tv).tv_usec = ((t) / GST_USECOND) % GST_MSECOND;	\
+  (tv).tv_usec = ((t) - (tv).tv_sec * GST_SECOND) / GST_USECOND;	\
 } G_STMT_END
 
 #define GST_CLOCK_ENTRY_TRACE_NAME "GstClockEntry"

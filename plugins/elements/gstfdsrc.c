@@ -193,8 +193,7 @@ gst_fdsrc_get(GstPad *pad)
 
   if (src->timeout != 0)
   {
-    tp->tv_sec = src->timeout / 1000000000;
-    tp->tv_usec = src->timeout - t.tv_sec * 1000000000;
+    GST_TIME_TO_TIMEVAL (src->timeout, t);
   }
   else
     tp = NULL;

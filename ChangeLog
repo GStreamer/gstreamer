@@ -1,3 +1,8 @@
+2004-02-13  David Schleef  <ds@schleef.org>
+
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_get): Use GST_TIME_TO_TIMEVAL()
+	* gst/gstclock.h: Avoid using 64-bit % operator (slow!)
+
 2004-02-13  Mattias Wadman  <mattias@sudac.org>
 
 	reviewed by: David Schleef  <ds@schleef.org>
