@@ -167,7 +167,9 @@ struct _GstOptSchedulerGroup {
 /* some group operations */
 static GstOptSchedulerGroup* 	ref_group 		(GstOptSchedulerGroup *group);
 #ifndef USE_COTHREADS
+/*
 static GstOptSchedulerGroup* 	ref_group_by_count 	(GstOptSchedulerGroup *group, gint count);
+*/
 #endif
 static GstOptSchedulerGroup* 	unref_group 		(GstOptSchedulerGroup *group);
 static void 			destroy_group 		(GstOptSchedulerGroup *group);
@@ -611,6 +613,8 @@ ref_group (GstOptSchedulerGroup *group)
 }
 
 #ifndef USE_COTHREADS
+/* this function is not used anymore */
+/*
 static GstOptSchedulerGroup*
 ref_group_by_count (GstOptSchedulerGroup *group, gint count)
 {
@@ -621,6 +625,7 @@ ref_group_by_count (GstOptSchedulerGroup *group, gint count)
 
   return group;
 }
+*/
 #endif
 
 static GstOptSchedulerGroup*
@@ -915,9 +920,11 @@ schedule_chain (GstOptSchedulerChain *chain)
       schedule_group (group);
 #else
       osched->recursion = 0;
-      ref_group (group);
-      osched->runqueue = g_list_append (osched->runqueue, group);
-
+      if (!g_list_find (osched->runqueue, group))
+      {
+        ref_group (group);
+        osched->runqueue = g_list_append (osched->runqueue, group);
+      }
       GST_INFO (GST_CAT_SCHEDULING, "calling scheduler_run_queue on %p", osched);
       gst_opt_scheduler_schedule_run_queue (osched);
       GST_INFO (GST_CAT_SCHEDULING, "calling scheduler_run_queue on %p done", osched);
@@ -1043,8 +1050,11 @@ gst_opt_scheduler_loop_wrapper (GstPad *sinkpad, GstBuffer *buffer)
   GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)) = g_list_append (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)), buffer);
   if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
     GST_INFO (GST_CAT_SCHEDULING, "adding %p to runqueue", group);
-    ref_group (group);
-    osched->runqueue = g_list_append (osched->runqueue, group);
+    if (!g_list_find (osched->runqueue, group))
+    {
+      ref_group (group);
+      osched->runqueue = g_list_append (osched->runqueue, group);
+    }
   }
 #endif
   
@@ -1087,11 +1097,14 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
     schedule_group (group);
 #else
     if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
-      ref_group_by_count (group, 2);
+      ref_group (group);
 
       gst_opt_scheduler_debug (osched, "scheduler debug");
-      osched->runqueue = g_list_append (osched->runqueue, group);
-
+      if (!g_list_find (osched->runqueue, group))
+      {
+        ref_group (group);
+        osched->runqueue = g_list_append (osched->runqueue, group);
+      }
       GST_INFO (GST_CAT_SCHEDULING, "recursing into scheduler group %p", group);
       gst_opt_scheduler_schedule_run_queue (osched);
       GST_INFO (GST_CAT_SCHEDULING, "return from recurse group %p", group);
