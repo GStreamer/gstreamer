@@ -202,6 +202,10 @@ fi
 
 AM_CONDITIONAL(USE_GLIB2, test "x$USE_GLIB2" = "xyes")
 AC_SUBST(USE_GLIB2)
+AM_CONDITIONAL(USE_GTK2, test "x$USE_GTK2" = "xyes")
+AC_SUBST(USE_GTK2)
+AM_CONDITIONAL(USE_GNOME2, test "x$USE_GNOME2" = "xyes")
+AC_SUBST(USE_GNOME2)
 
 if test x$HAVE_OBJECT_MODEL = xno; then
   dnl Check for glib
@@ -389,19 +393,27 @@ AC_SUBST(GDK_PIXBUF_LIBS)
 AC_SUBST(GDK_PIXBUF_CFLAGS)
 
 
-dnl Check for libgnome
-AC_PATH_PROG(GNOME_CONFIG, gnome-config, no)
-if test x$GNOME_CONFIG = xno; then
-  AC_MSG_WARN(Couldn't find gnome-config: can't build editor or gstplay)
+if test x$USE_GLIB2 = xyes; then
+  dnl we don't support gnome/gtk with glib2.0 yet
   GNOME_LIBS=
   GNOME_CFLAGS=
   HAVE_GNOME=no
+  AC_MSG_WARN(gnome disabled for glib2.0)
 else
-  GNOME_LIBS=`gnome-config --libs gnome gnomeui`
-  GNOME_CFLAGS=`gnome-config --cflags gnome gnomeui`
-  GHTTP_LIBS=`gnome-config --libs gnome gnomeui`
-  GHTTP_CFLAGS=`gnome-config --cflags gnome gnomeui`
-  HAVE_GNOME=yes
+  dnl Check for libgnome
+  AC_PATH_PROG(GNOME_CONFIG, gnome-config, no)
+  if test x$GNOME_CONFIG = xno; then
+    AC_MSG_WARN(Couldn't find gnome-config: can't build editor or gstplay)
+    GNOME_LIBS=
+    GNOME_CFLAGS=
+    HAVE_GNOME=no
+  else
+    GNOME_LIBS=`gnome-config --libs gnome gnomeui`
+    GNOME_CFLAGS=`gnome-config --cflags gnome gnomeui`
+    GHTTP_LIBS=`gnome-config --libs gnome gnomeui`
+    GHTTP_CFLAGS=`gnome-config --cflags gnome gnomeui`
+    HAVE_GNOME=yes
+  fi
 fi
 AC_SUBST(GNOME_LIBS)
 AC_SUBST(GNOME_CFLAGS)
@@ -409,57 +421,77 @@ AC_SUBST(GHTTP_LIBS)
 
 dnl Check for libghttp
 dnl FIXME: need to check for header
-AC_CHECK_LIB(ghttp, ghttp_request_new,
-  [GHTTP_LIBS="-lghttp"
-   GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
-   HAVE_LIBGHTTP=yes
-  ],
-  [AC_MSG_WARN(Cannot find libghttp: can't build gsthttpsrc)
-   GHTTP_LIBS=
-   GST_HTTPSRC_GET_TYPE=
-   HAVE_LIBGHTTP=no
-  ],
-  $LIBS)
+if test x$USE_GLIB2 = xyes; then
+  GHTTP_LIBS=
+  GST_HTTPSRC_GET_TYPE=
+  HAVE_LIBGHTTP=no
+  AC_MSG_WARN(ghttp disabled for glib2.0)
+else
+  AC_CHECK_LIB(ghttp, ghttp_request_new,
+    [GHTTP_LIBS="-lghttp"
+     GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
+     HAVE_LIBGHTTP=yes
+    ],
+    [AC_MSG_WARN(Cannot find libghttp: can't build gsthttpsrc)
+     GHTTP_LIBS=
+     GST_HTTPSRC_GET_TYPE=
+     HAVE_LIBGHTTP=no
+    ],
+    $LIBS)
+fi
 AC_SUBST(GST_HTTPSRC_GET_TYPE)
 
 dnl Check for libglade
 HAVE_LIBGLADE_GNOME="no"
-AC_PATH_PROG(LIBGLADE_CONFIG_PATH, libglade-config, no)
-if test x$LIBGLADE_CONFIG_PATH = xno; then
-  AC_MSG_WARN(Couldn't find libglade-config - Can't build gstplay)
+if test x$USE_GLIB2 = xyes; then
+  dnl no glade for glib2.0
   LIBGLADE_GNOME_LIBS=
   LIBGLADE_GNOME_CFLAGS=
+  AC_MSG_WARN(libglade disabled for glib2.0)
 else
-  LIBGLADE_GNOME_LIBS=`libglade-config --libs gnome`
-  LIBGLADE_GNOME_CFLAGS=`libglade-config --cflags gnome`
-  libglade_save_CFLAGS="$CFLAGS"
-  libglade_save_LIBS="$LIBS"
-  CFLAGS="$CFLAGS $LIBGLADE_GNOME_CFLAGS $GTK_CFLAGS"
-  LIBS="$LIBS $LIBGLADE_GNOME_LIBS $GTK_LIBS"
-  AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
-	      HAVE_LIBGLADE_GNOME="yes",
-	      AC_MSG_WARN(
+  AC_PATH_PROG(LIBGLADE_CONFIG_PATH, libglade-config, no)
+  if test x$LIBGLADE_CONFIG_PATH = xno; then
+    AC_MSG_WARN(Couldn't find libglade-config - Can't build gstplay)
+    LIBGLADE_GNOME_LIBS=
+    LIBGLADE_GNOME_CFLAGS=
+  else
+    LIBGLADE_GNOME_LIBS=`libglade-config --libs gnome`
+    LIBGLADE_GNOME_CFLAGS=`libglade-config --cflags gnome`
+    libglade_save_CFLAGS="$CFLAGS"
+    libglade_save_LIBS="$LIBS"
+    CFLAGS="$CFLAGS $LIBGLADE_GNOME_CFLAGS $GTK_CFLAGS"
+    LIBS="$LIBS $LIBGLADE_GNOME_LIBS $GTK_LIBS"
+    AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
+  	        HAVE_LIBGLADE_GNOME="yes",
+	        AC_MSG_WARN(
       [Couldn't find gnome libraries for libglade - Can't build gstmediaplay and gsteditor])
 	     )
-  CFLAGS="$libglade_save_CFLAGS"
-  LIBS="$libglade_save_LIBS"
+    CFLAGS="$libglade_save_CFLAGS"
+    LIBS="$libglade_save_LIBS"
+  fi
 fi
 AC_SUBST(LIBGLADE_GNOME_LIBS)
 AC_SUBST(LIBGLADE_GNOME_CFLAGS)
 
 dnl Check for Gnome VFS
 HAVE_GNOME_VFS="no"
-AC_MSG_CHECKING(for Gnome VFS)
-if gnome-config --libs vfs > /dev/null 2>&1; then
+if test x$USE_GLIB2 = xyes; then
+  VFS_LIBS=
+  VFS_CFLAGS=
+  AC_MSG_WARN(Gnome-VFS disabled for glib2.0)
+else
+  AC_MSG_CHECKING(for Gnome VFS)
+  if gnome-config --libs vfs > /dev/null 2>&1; then
 	HAVE_GNOME_VFS="yes"
 	AC_MSG_RESULT(found)
-else
+        VFS_LIBS="`gnome-config --libs vfs`"
+        VFS_CFLAGS="`gnome-config --cflags vfs`"
+  else
 	AC_MSG_WARN(Did not find Gnome-VFS installed)
+        VFS_LIBS=
+        VFS_CFLAGS=
+  fi
 fi
-
-VFS_LIBS="`gnome-config --libs vfs`"
-VFS_CFLAGS="`gnome-config --cflags vfs`"
-
 AC_SUBST(VFS_LIBS)
 AC_SUBST(VFS_CFLAGS)
 
