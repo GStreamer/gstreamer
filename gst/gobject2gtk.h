@@ -78,13 +78,13 @@ G_STMT_START{ \
 #define GClassInitFunc				GtkClassInitFunc
 #define GBaseInitFunc				GtkClassInitFunc
 #define GInstanceInitFunc			GtkObjectInitFunc
-//#define g_type_register_static			gtk_type_unique
 #define g_type_class_ref			gtk_type_class
 #define g_type_class_unref(c)
 #define g_type_name(t)				gtk_type_name(t)
 #define g_type_from_name(t)			gtk_type_from_name(t)
 #define GEnumValue				GtkEnumValue
 #define g_enum_register_static			gtk_type_register_enum
+
 
 /*********************************
  * FIXME API NOT in glib2.0
@@ -117,13 +117,15 @@ struct _GTypeInfo
 
 #define G_TYPE_FLAG_ABSTRACT				0
 
-guint g_type_register_static (GtkType parent_type, gchar *type_name,
+#define g_type_register_static				g2g_type_register_static
+guint g2g_type_register_static (GtkType parent_type, gchar *type_name,
                               const GTypeInfo *info, guint flags);
 
 
 
 // object creation
-gpointer g_object_new(GtkType type,gpointer blah_varargs_stuff);
+#define g_object_new					g2g_object_new
+gpointer g2g_object_new(GtkType type,gpointer blah_varargs_stuff);
 
 
 // signals
@@ -133,8 +135,9 @@ gpointer g_object_new(GtkType type,gpointer blah_varargs_stuff);
 #define GCallback					gpointer	// FIXME?
 #define G_CALLBACK(f)					((gpointer)(f))
 
+#define g_signal_newc					g2g_signal_newc
 guint
-g_signal_newc (const gchar       *signal_name,
+g2g_signal_newc (const gchar       *signal_name,
                GtkType            object_type,
                GtkSignalRunType   signal_flags,
                guint              function_offset,
@@ -187,22 +190,35 @@ struct _GParamSpec {
 
 #define g_value_init(value,t)			((value)->type = (t))
 
-void g_object_class_install_property(GtkObjectClass *oclass,guint property_id,GParamSpec *pspec);
-GParamSpec *g_object_class_find_property(GtkObjectClass *oclass,gchar *name);
-GParamSpec **g_object_class_list_properties(GtkObjectClass *oclass,guint *n_properties);
+#define g_object_class_install_property		g2g_object_class_install_property
+void g2g_object_class_install_property(GtkObjectClass *oclass,guint property_id,GParamSpec *pspec);
+#define g_object_class_find_property		g2g_object_class_find_property
+GParamSpec *g2g_object_class_find_property(GtkObjectClass *oclass,gchar *name);
+#define g_object_class_list_properties		g2g_object_class_list_properties
+GParamSpec **g2g_object_class_list_properties(GtkObjectClass *oclass,guint *n_properties);
 
 #define G_IS_PARAM_SPEC_ENUM(pspec)		(GTK_FUNDAMENTAL_TYPE(pspec->value_type) == GTK_TYPE_ENUM)
 
-GParamSpec *g_param_spec_boolean(gchar *name,gchar *nick,gchar *blurb,gboolean def,gint flags);
-GParamSpec *g_param_spec_int(gchar *name,gchar *nick,gchar *blurb,gint min,gint max,gint def,gint flags);
-GParamSpec *g_param_spec_uint(gchar *name,gchar *nick,gchar *blurb,guint min,guint max,guint def,gint flags);
-GParamSpec *g_param_spec_long(gchar *name,gchar *nick,gchar *blurb,glong min,glong max,glong def,gint flags);
-GParamSpec *g_param_spec_ulong(gchar *name,gchar *nick,gchar *blurb,gulong min,gulong max,gulong def,gint flags);
-GParamSpec *g_param_spec_float(gchar *name,gchar *nick,gchar *blurb,float min,float max,float def,gint flags);
-GParamSpec *g_param_spec_double(gchar *name,gchar *nick,gchar *blurb,double min,double max,double def,gint flags);
-GParamSpec *g_param_spec_enum(gchar *name,gchar *nick,gchar *blurb,GtkType e,guint def,gint flags);
-GParamSpec *g_param_spec_pointer(gchar *name,gchar *nick,gchar *blurb,gint flags);
-GParamSpec *g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,gint flags);
+#define g_param_spec_boolean			g2g_param_spec_boolean
+GParamSpec *g2g_param_spec_boolean(gchar *name,gchar *nick,gchar *blurb,gboolean def,gint flags);
+#define g_param_spec_int			g2g_param_spec_int
+GParamSpec *g2g_param_spec_int(gchar *name,gchar *nick,gchar *blurb,gint min,gint max,gint def,gint flags);
+#define g_param_spec_uint			g2g_param_spec_uint
+GParamSpec *g2g_param_spec_uint(gchar *name,gchar *nick,gchar *blurb,guint min,guint max,guint def,gint flags);
+#define g_param_spec_long			g2g_param_spec_long
+GParamSpec *g2g_param_spec_long(gchar *name,gchar *nick,gchar *blurb,glong min,glong max,glong def,gint flags);
+#define g_param_spec_ulong			g2g_param_spec_ulong
+GParamSpec *g2g_param_spec_ulong(gchar *name,gchar *nick,gchar *blurb,gulong min,gulong max,gulong def,gint flags);
+#define g_param_spec_float			g2g_param_spec_float
+GParamSpec *g2g_param_spec_float(gchar *name,gchar *nick,gchar *blurb,float min,float max,float def,gint flags);
+#define g_param_spec_double			g2g_param_spec_double
+GParamSpec *g2g_param_spec_double(gchar *name,gchar *nick,gchar *blurb,double min,double max,double def,gint flags);
+#define g_param_spec_enum			g2g_param_spec_enum
+GParamSpec *g2g_param_spec_enum(gchar *name,gchar *nick,gchar *blurb,GtkType e,guint def,gint flags);
+#define g_param_spec_pointer			g2g_param_spec_pointer
+GParamSpec *g2g_param_spec_pointer(gchar *name,gchar *nick,gchar *blurb,gint flags);
+#define g_param_spec_string			g2g_param_spec_string
+GParamSpec *g2g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,gint flags);
 
 #define g_value_get_boolean(value)		GTK_VALUE_BOOL(*value)
 #define g_value_set_boolean(value,data)		(GTK_VALUE_BOOL(*value) = (data))
@@ -236,7 +252,7 @@ GParamSpec *g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,
 #define G_OBJECT_CLASS				GTK_OBJECT_CLASS
 
 #define G_TYPE_OBJECT \
-  (g_object_get_type())
+  (g2g_object_get_type())
 //#define G_OBJECT(obj) 
 //  (GTK_CHECK_CAST((obj),G_TYPE_OBJECT,GObject))
 //#define G_OBJECT_CLASS(klass) 

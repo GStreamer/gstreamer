@@ -28,7 +28,7 @@ g_object_base_class_init (GObjectClass *klass)
 }
 
 GType
-g_object_get_type (void)
+g2g_object_get_type (void)
 {
   static GType object_type = 0;
 
@@ -52,7 +52,7 @@ g_object_get_type (void)
 
 
 guint
-g_type_register_static (GtkType parent_type, gchar *type_name,
+g2g_type_register_static (GtkType parent_type, gchar *type_name,
                         const GTypeInfo *info, guint flags)
 {
   GtkTypeInfo gtkinfo = {
@@ -70,13 +70,13 @@ g_type_register_static (GtkType parent_type, gchar *type_name,
 
 
 gpointer
-g_object_new(GtkType type,gpointer blah_varargs_stuff) {
+g2g_object_new(GtkType type,gpointer blah_varargs_stuff) {
   return gtk_type_new(type);
 }
 
 
 void
-g_object_class_install_property(GtkObjectClass *oclass,guint property_id,GParamSpec *pspec)
+g2g_object_class_install_property(GtkObjectClass *oclass,guint property_id,GParamSpec *pspec)
 {
   gchar *arg_fullname;
  
@@ -87,7 +87,7 @@ g_object_class_install_property(GtkObjectClass *oclass,guint property_id,GParamS
 }
 
 GParamSpec *
-g_object_class_find_property(GtkObjectClass *class,gchar *name)
+g2g_object_class_find_property(GtkObjectClass *class,gchar *name)
 {
   GtkArgInfo *info;
   GParamSpec *spec;
@@ -109,7 +109,7 @@ g_object_class_find_property(GtkObjectClass *class,gchar *name)
 }
 
 GParamSpec **
-g_object_class_list_properties(GtkObjectClass *oclass,guint *n_properties) {
+g2g_object_class_list_properties(GtkObjectClass *oclass,guint *n_properties) {
   GType type = G_OBJECT_CLASS_TYPE (oclass);
   guint32 *flags;
   GtkArg *args;
@@ -131,7 +131,7 @@ g_object_class_list_properties(GtkObjectClass *oclass,guint *n_properties) {
 }
 
 GParamSpec *
-g_param_spec_boolean(gchar *name,gchar *nick,gchar *blurb,gboolean def,gint flags) {
+g2g_param_spec_boolean(gchar *name,gchar *nick,gchar *blurb,gboolean def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
   spec->name = name;
@@ -142,7 +142,7 @@ g_param_spec_boolean(gchar *name,gchar *nick,gchar *blurb,gboolean def,gint flag
 }
 
 GParamSpec *
-g_param_spec_enum(gchar *name,gchar *nick,gchar *blurb,GtkType e,guint def,gint flags) {
+g2g_param_spec_enum(gchar *name,gchar *nick,gchar *blurb,GtkType e,guint def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
   spec->name = name;
@@ -153,7 +153,7 @@ g_param_spec_enum(gchar *name,gchar *nick,gchar *blurb,GtkType e,guint def,gint 
 }
 
 GParamSpec *
-g_param_spec_int(gchar *name,gchar *nick,gchar *blurb,gint min,gint max,gint def,gint flags) {
+g2g_param_spec_int(gchar *name,gchar *nick,gchar *blurb,gint min,gint max,gint def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
   spec->name = name;
@@ -164,7 +164,7 @@ g_param_spec_int(gchar *name,gchar *nick,gchar *blurb,gint min,gint max,gint def
 }
 
 GParamSpec *
-g_param_spec_uint(gchar *name,gchar *nick,gchar *blurb,guint min,guint max,guint def,gint flags) {
+g2g_param_spec_uint(gchar *name,gchar *nick,gchar *blurb,guint min,guint max,guint def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
   spec->name = name;
@@ -175,7 +175,7 @@ g_param_spec_uint(gchar *name,gchar *nick,gchar *blurb,guint min,guint max,guint
 }
 
 GParamSpec *
-g_param_spec_long(gchar *name,gchar *nick,gchar *blurb,glong min,glong max,glong def,gint flags) {
+g2g_param_spec_long(gchar *name,gchar *nick,gchar *blurb,glong min,glong max,glong def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
   spec->name = name;
@@ -186,7 +186,7 @@ g_param_spec_long(gchar *name,gchar *nick,gchar *blurb,glong min,glong max,glong
 }
 
 GParamSpec *
-g_param_spec_ulong(gchar *name,gchar *nick,gchar *blurb,gulong min,gulong max,gulong def,gint flags) {
+g2g_param_spec_ulong(gchar *name,gchar *nick,gchar *blurb,gulong min,gulong max,gulong def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
   spec->name = name;
@@ -197,7 +197,7 @@ g_param_spec_ulong(gchar *name,gchar *nick,gchar *blurb,gulong min,gulong max,gu
 }
 
 GParamSpec *
-g_param_spec_float(gchar *name,gchar *nick,gchar *blurb,float min,float max,float def,gint flags) {
+g2g_param_spec_float(gchar *name,gchar *nick,gchar *blurb,float min,float max,float def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
   spec->name = name;
@@ -208,7 +208,7 @@ g_param_spec_float(gchar *name,gchar *nick,gchar *blurb,float min,float max,floa
 }
 
 GParamSpec *
-g_param_spec_double(gchar *name,gchar *nick,gchar *blurb,double min,double max,double def,gint flags) {
+g2g_param_spec_double(gchar *name,gchar *nick,gchar *blurb,double min,double max,double def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
   spec->name = name;
@@ -219,7 +219,7 @@ g_param_spec_double(gchar *name,gchar *nick,gchar *blurb,double min,double max,d
 }
 
 GParamSpec *
-g_param_spec_pointer(gchar *name,gchar *nick,gchar *blurb,gint flags) {
+g2g_param_spec_pointer(gchar *name,gchar *nick,gchar *blurb,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
   spec->name = name;
@@ -230,7 +230,7 @@ g_param_spec_pointer(gchar *name,gchar *nick,gchar *blurb,gint flags) {
 }
 
 GParamSpec *
-g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,gint flags) {
+g2g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);
 
   spec->name = name;
@@ -243,7 +243,7 @@ g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,gint flags) 
 
 
 guint
-g_signal_newc (const gchar       *name,
+g2g_signal_newc (const gchar       *name,
                GtkType            object_type,
                GtkSignalRunType   signal_flags,
                guint              function_offset,
