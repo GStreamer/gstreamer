@@ -25,7 +25,7 @@ extern GType vorbisfile_get_type(void);
 extern GstElementDetails vorbisfile_details;
 extern GstElementDetails vorbisenc_details;
 
-static GstCaps* 	vorbis_type_find 	(GstBuffer *buf, gpointer private);
+static GstCaps* 	vorbis_type_find 	(GstByteStream *bs, gpointer private);
 
 GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template; 
 GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
@@ -81,40 +81,26 @@ static GstTypeDefinition vorbisdefinition = {
 };
 
 static GstCaps*
-vorbis_type_find (GstBuffer *buf, gpointer private)
+vorbis_type_find (GstByteStream *bs, gpointer private)
 {
-  guint32 head;
-  gint offset;
-  guint8 *data;
-  gint size;
+  GstBuffer *buf = NULL;
+  GstCaps *new = NULL;
 
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  if (gst_bytestream_peek (bs, &buf, 4) == 4) {
+    guint32 head = GUINT32_FROM_BE (*((guint32 *) GST_BUFFER_DATA (buf)));
 
-  if (size < sizeof(guint32))
-    return NULL;
-
-  head = GUINT32_FROM_BE (*((guint32 *)data));
-
-  if (head  == 0x4F676753) {
-    return gst_caps_new ("vorbis_type_find", "application/ogg", NULL);
-  } else {
-    /* checks for existance of vorbis identification header in case
-     * there's an ID3 tag */
-    for (offset = 0; offset < size-7; offset++) {
-      if (data[offset] == 0x01 && 
-          data[offset+1] == 'v' && 
-          data[offset+2] == 'o' &&
-          data[offset+3] == 'r' && 
-          data[offset+4] == 'b' &&
-          data[offset+5] == 'i' && 
-          data[offset+6] == 's' ) {
-        return gst_caps_new ("vorbis_type_find", "application/ogg", NULL);
-      }
+    if (head == 0x4F676753) {
+      new = GST_CAPS_NEW ("vorbis_type_find",
+			  "application/ogg",
+			    NULL);
     }
   }
 
-  return NULL;
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
+
+  return new;
 }
 
 
@@ -171,10 +157,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (file, gst_vorbisdec_src_template);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (file));
-
-  /* this filter needs the bytestream package */
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
 
   type = gst_type_factory_new (&vorbisdefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));

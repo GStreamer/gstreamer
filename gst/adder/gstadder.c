@@ -606,9 +606,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   factory = gst_element_factory_new ("adder", GST_TYPE_ADDER, &adder_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  if (! gst_library_load ("gstbytestream"))
-    return FALSE;
-
   gst_element_factory_add_pad_template (factory,
     GST_PAD_TEMPLATE_GET (gst_adder_src_template_factory));
   gst_element_factory_add_pad_template (factory,

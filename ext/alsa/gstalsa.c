@@ -2351,9 +2351,6 @@ plugin_init (GModule * module, GstPlugin * plugin)
 {
   GstElementFactory *factory;
 
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
-
   factory = gst_element_factory_new ("alsasrc", GST_TYPE_ALSA_SRC, &gst_alsa_src_details);
   g_return_val_if_fail (factory != NULL, FALSE);
   gst_element_factory_add_pad_template (factory, gst_alsa_src_pad_factory ());
