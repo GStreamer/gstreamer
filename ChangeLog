@@ -1,3 +1,9 @@
+2004-03-26  Benjamin Otte  <otte@gnome.org>
+
+	* gst/typefind/gsttypefindfunctions.c: (theora_type_find):
+	  fix bug where typefinding would claim it's theora whenever less then
+	  7 bytes of data were available
+
 2004-03-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/law/alaw-decode.c: (alawdec_getcaps), (alawdec_link),
