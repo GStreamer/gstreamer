@@ -52,4 +52,13 @@ gst_ffmpeg_caps_to_codectype (enum CodecType  type,
                               GstCaps        *caps,
                               AVCodecContext *context);
 
+/* _formatid_to_caps () is meant for muxers/demuxers, it
+ * transforms a name (ffmpeg way of ID'ing these, why don't
+ * they have unique numerical IDs?) to the corresponding
+ * caps belonging to that mux-format
+ */
+
+GstCaps *
+gst_ffmpeg_formatid_to_caps (const gchar *format_name);
+
 #endif /* __GST_FFMPEG_CODECMAP_H__ */

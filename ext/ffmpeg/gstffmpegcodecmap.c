@@ -290,7 +290,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_MPEG4AAC:
       caps = GST_FF_VID_CAPS_NEW ("ffmpeg_mpeg4aac",
-                                  "video/mpeg",
+                                  "audio/mpeg",
                                     "systemstream", GST_PROPS_BOOLEAN (FALSE),
                                     "mpegversion",  GST_PROPS_INT (4)
                                  );
@@ -690,4 +690,81 @@ gst_ffmpeg_caps_to_codectype (enum CodecType  type,
       /* unknown */
       break;
   }
+}
+
+/* _formatid_to_caps () is meant for muxers/demuxers, it
+ * transforms a name (ffmpeg way of ID'ing these, why don't
+ * they have unique numerical IDs?) to the corresponding
+ * caps belonging to that mux-format
+ *
+ * Note: we don't need any additional info because the caps
+ * isn't supposed to contain any useful info besides the
+ * media type anyway
+ */
+
+GstCaps *
+gst_ffmpeg_formatid_to_caps (const gchar *format_name)
+{
+  GstCaps *caps = NULL;
+
+  if (!strcmp (format_name, "mpeg")) {
+    caps = GST_CAPS_NEW ("ffmpeg_mpeg",
+			 "video/mpeg",
+                           "systemstream", GST_PROPS_BOOLEAN (TRUE)
+                        );
+  } else if (!strcmp (format_name, "mpegts")) {
+    caps = GST_CAPS_NEW ("ffmpeg_mpegts",
+			 "video/mpegts",
+                           "systemstream", GST_PROPS_BOOLEAN (TRUE)
+                        );
+  } else if (!strcmp (format_name, "rm")) {
+    caps = GST_CAPS_NEW ("ffmpeg_rm",
+			 "audio/x-pn-realaudio",
+                           NULL
+                        );
+  } else if (!strcmp (format_name, "asf")) {
+    caps = GST_CAPS_NEW ("ffmpeg_asf",
+			 "video/x-ms-asf",
+                           NULL
+                        );
+  } else if (!strcmp (format_name, "avi")) {
+    caps = GST_CAPS_NEW ("ffmpeg_avi",
+			 "video/avi",
+                           NULL
+                        );
+  } else if (!strcmp (format_name, "wav")) {
+    caps = GST_CAPS_NEW ("ffmpeg_wav",
+			 "video/x-wav",
+                           NULL
+                        );
+  } else if (!strcmp (format_name, "swf")) {
+    caps = GST_CAPS_NEW ("ffmpeg_swf",
+			 "application/x-shockwave-flash",
+                           NULL
+                        );
+  } else if (!strcmp (format_name, "au")) {
+    caps = GST_CAPS_NEW ("ffmpeg_au",
+			 "audio/basic",
+                           NULL
+                        );
+  } else if (!strcmp (format_name, "mov")) {
+    caps = GST_CAPS_NEW ("ffmpeg_quicktime",
+			 "video/quicktime",
+                           NULL
+                        );
+  } else if (!strcmp (format_name, "dv")) {
+    caps = GST_CAPS_NEW ("ffmpeg_dv",
+			 "video/dv",
+                           "systemstream", GST_PROPS_BOOLEAN (TRUE)
+                        );
+  } else if (!strcmp (format_name, "4xm")) {
+    caps = GST_CAPS_NEW ("ffmpeg_4xm",
+			 "video/x-4xm",
+                           NULL
+                        );
+  } else {
+    /* unknown! */
+  }
+
+  return caps;
 }
