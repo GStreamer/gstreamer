@@ -1,13 +1,13 @@
 
 - property proxy in compount elements.
-- plugable schedulers.
-- implement events in plugins.
+- implement events in all plugins.
 - app must be able to catch events?
-- caps nego
-- propagation of errors in plugins.
 - deal with clocking issues
 - use real chaining where possible
 - factory aliases?
-- fix plugins :
-wtay : the proper fix is of course to fix the plugins and 
-implement the cleanup in the state change function..
+
+* gst_elementfactory_make ("factoryname", NULL) automatically uniquifies the name
+* a plugin test rig
+* parser and scheduler test system
+* clean up xml code - restore/save creates/save pipeline, gst_object_save/load_props 
+  with just the properties

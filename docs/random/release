@@ -1,17 +1,24 @@
+maybe we should be doing releases on branches from the trunk so that the package
+version in CVS can always be date-generated and core hacking isn't discouraged
+during the release cycle.
+
 Release TODO
 ------------
+
+* make distcheck should pass
+* rpms should build
+* debs should build
+
+Packaging issues will hopefully be less difficult in the future as the build
+system stabilizes.
 
 * after a release, we move in cvs mode and use a .1 nano version number
 
 * close to the next release, we make prereleases by upping the nano version
 
-* update release notes
-
-* add release notes to cvs
-
 * update web site release notes
 
-* make distcheck should pass
+* add release notes to cvs -- why?
 
 * test suite should pass
 
@@ -25,19 +32,35 @@ Release TODO
 
 * update package version
 
+* roll a preliminary distribution tarball, make sure that it installs fine,
+registers fine, runs the media tests fine, and uninstalls as well
+
 * tag tree
   http://gstreamer.net/dev/cvs.php
   add tag to above page
 
+* update web site release notes: added to cvs
+  - change the releases/current symbolic link
+  - text version of release announcement can be made from 
+    lynx -dump http://gstreamer.net/releases/current/notice.php?clean=1
+
+* update web site docs
+  - release-specific docs should go in CVS
+  - change docs/current symlink
+
+* update status table cvs status and then click on the release link
+  http://gstreamer.net/admin.php is the portal to all of this
 
 * update web site news items for release
+  again, the admin.php page
 
 * upload to sourceforge
+  - should we md5 the tarballs?
 
 * announce to:
   freshmeat
   gstreamer-{devel, announce}
-  linux-audio-dev (?)
+  linux-audio-dev (if it's a big release)
   gnome lists (?)
   lwn (if it's a big release)
 
