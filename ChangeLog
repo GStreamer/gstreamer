@@ -1,3 +1,16 @@
+2005-02-11  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_put),
+	(gst_xvimagesink_sink_link), (gst_xvimagesink_change_state),
+	(gst_xvimagesink_chain), (gst_xvimagesink_buffer_free),
+	(gst_xvimagesink_buffer_alloc), (gst_xvimagesink_set_xwindow_id),
+	(gst_xvimagesink_expose), (gst_xvimagesink_set_property),
+	(gst_xvimagesink_finalize), (gst_xvimagesink_init): Protect interface
+	methods from chain and negotiation and vice versa (Fixes #166142).
+	Fix a possible bug of images in the buffer pool being discarded because
+	we are looking at the wrong geometry.
+	* sys/xvimage/xvimagesink.h: Add stream_lock.
+
 2005-02-11  David Schleef  <ds@schleef.org>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (crop_buffer): Change uint to
