@@ -9,7 +9,7 @@ Source: http://gstreamer.net/ blah_blah_blah /gst-python-%{version}.tar.gz
 Copyright: LGPL
 Group: Development/Languages
 BuildRoot: /var/tmp/gst--python-root
-Packager: David I. Lehn <dlehn@vt.edu>
+Packager: David I. Lehn <dlehn@users.sourceforge.net>
 BuildRequires: pygtk2-devel = %{pygtk_ver}
 BuildRequires: python2-devel
 BuildRequires: gtk2-devel >= @GTK_VERSION@

@@ -88,9 +88,9 @@ $ACLOCAL $ACLOCAL_FLAGS
 (autoheader --version)  < /dev/null > /dev/null 2>&1 && autoheader
 
 # run libtoolize ...
-libtoolize --force
+libtoolize --force --copy
 
-$AUTOMAKE -a $am_opt
+$AUTOMAKE --add-missing --copy $am_opt
 autoheader
 autoconf
 cd $ORIGDIR

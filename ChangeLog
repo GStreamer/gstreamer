@@ -1,4 +1,14 @@
-2002-11-07  David I. Lehn <dlehn@vt.edu>
+2002-12-17  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* gstreamer/gstreamer.override: add wrapper for gst_element_set_state
+	to release GIT lock
+
+2002-12-14  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* configure.ac: bump gstreamer version to 0.5.0
+	* *: update to use sourceforge email address
+
+2002-11-07  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* configure.ac: bump gstreamer version to 0.4.2, bump pygtk version to
 	1.99.13
@@ -6,18 +16,18 @@
 	* examples/gstreamer/dvdplay.py: updated to maybe work with threads
 	* pygtk.diff: add work-in-progress PyGTK threading improvements diff 
 
-2002-10-23  David I. Lehn <dlehn@vt.edu>
+2002-10-23  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* gstreamer/gstreamer.override: override gst_bin_iterate() to unblock
 	threads since this call can cause exacution to re-enter the
 	interpreter.
 
-2002-10-04  David I. Lehn <dlehn@vt.edu>
+2002-10-04  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* gstreamer/gstreamer.override, gstreamer/gstreamer-fixes.h: add
 	temporary hack to fix 0.4.1 s/gst/get/ typo in GST_TYPE_CAPS/PROPS()
 
-2002-10-04  David I. Lehn <dlehn@vt.edu>
+2002-10-04  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* README: basic info.
 
@@ -35,7 +45,7 @@
 	adapt to newer generated code (Pipeline vs gst_pipeline_new()), adapt
 	to newer api.
 
-2002-05-09  David I. Lehn  <dlehn@vt.edu>
+2002-05-09  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* examples/gstreamer/dvdplay.py: adjust state changes,
 	use sdlvideosink (videosink segfaulting for me right now)
@@ -47,14 +57,14 @@
 	Makefile.am:
 	create gstreamer.defs from h2defs.py output and local hacks
 
-2002-04-15  David I. Lehn  <dlehn@vt.edu>
+2002-04-15  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* examples/gstreamer/*.py: use new element connect api
 
 	* gstreamer/__init__.py: use dl module flags
 	in particular, RTLD_GLOBAL flags is required
 
-2002-04-14  David I. Lehn  <dlehn@vt.edu>
+2002-04-14  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* configure.ac: depend on gstreamer 0.3.4
 
@@ -65,7 +75,7 @@
 
 	* gstreamer/gstreamer.defs: regen for 0.3.4
 
-2002-03-24  David I. Lehn  <dlehn@vt.edu>
+2002-03-24  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* examples/gstreamer/: add cp.py oggplay.py f2f.py dvdplay.py
 
@@ -73,7 +83,7 @@
 
 	* gstreamer/__init__.py: find libtool lib hack
 
-2002-03-23  David I. Lehn  <dlehn@vt.edu>
+2002-03-23  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* stole binding framework from gnome-python && gconf
 

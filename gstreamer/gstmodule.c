@@ -17,7 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  * 
- * Author: David I. Lehn <dlehn@vt.edu>
+ * Author: David I. Lehn <dlehn@users.sourceforge.net>
  */
 
 #ifdef HAVE_CONFIG_H
