@@ -358,7 +358,9 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
                 plugin->desc.name, filename);
             g_set_error (error, GST_PLUGIN_ERROR,
                 GST_PLUGIN_ERROR_NAME_MISMATCH,
-                "already a plugin with name \"%s\" loaded", desc->name);
+                "plugin %p from file \"%s\" with same name %s is already "
+                "loaded, aborting loading of \"%s\"", plugin, plugin->filename,
+                plugin->desc.name, filename);
             if (free_plugin)
               g_free (plugin);
             return NULL;
