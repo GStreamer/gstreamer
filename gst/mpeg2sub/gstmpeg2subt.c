@@ -68,6 +68,13 @@ static GstStaticPadTemplate video_template = GST_STATIC_PAD_TEMPLATE ("video",
         "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ]")
     );
 
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw-yuv, " "format = (fourcc) { I420 }, " /* YV12 later */
+        "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ]")
+    );
+
 static GstStaticPadTemplate subtitle_template =
 GST_STATIC_PAD_TEMPLATE ("subtitle",
     GST_PAD_SINK,
@@ -161,6 +168,8 @@ gst_mpeg2subt_base_init (GstMpeg2SubtClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&video_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&subtitle_template));
@@ -203,7 +212,9 @@ gst_mpeg2subt_init (GstMpeg2Subt * mpeg2subt)
       (&subtitle_template), "subtitle");
   gst_element_add_pad (GST_ELEMENT (mpeg2subt), mpeg2subt->subtitlepad);
 
-  mpeg2subt->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  mpeg2subt->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&src_template), "src");
   gst_element_add_pad (GST_ELEMENT (mpeg2subt), mpeg2subt->srcpad);
   gst_pad_set_getcaps_function (mpeg2subt->srcpad,
       GST_DEBUG_FUNCPTR (gst_mpeg2subt_getcaps_video));
