@@ -58,20 +58,20 @@ got_found_tag (GstPlay *play,GstElement *source, GstTagList *tag_list)
 static void
 got_time_tick (GstPlay *play, gint64 time_nanos)
 {
-  g_message ("time tick %llu", time_nanos);
+  g_print ("time tick %llu", time_nanos);
 }
 
 static void
 got_stream_length (GstPlay *play, gint64 length_nanos)
 {
-  g_message ("got length %llu", length_nanos);
+  g_print ("got length %llu", length_nanos);
   length = length_nanos;
 }
 
 static void
 got_video_size (GstPlay *play, gint width, gint height)
 {
-  g_message ("got video size %d, %d", width, height);
+  g_print ("got video size %d, %d", width, height);
 }
 
 static void
@@ -128,6 +128,7 @@ main (int argc, char *argv[])
   /* Setting location we want to play */
   gst_play_set_location (play, argv[1]);
 
+  /* Uncomment that line to get an XML dump of the pipeline */
   /* gst_xml_write_file (GST_ELEMENT (play), stdout); */
 
   g_signal_connect (G_OBJECT (play), "time_tick",
