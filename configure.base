@@ -1106,6 +1106,7 @@ libs/getbits/Makefile
 libs/putbits/Makefile
 libs/winloader/Makefile
 libs/idct/Makefile
+libs/audio/Makefile
 plugins/Makefile
 plugins/aasink/Makefile
 plugins/alsa/Makefile
