@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-10-06 18:35+0200\n"
+"POT-Creation-Date: 2004-12-17 16:11+0100\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -600,8 +600,8 @@ msgstr ""
 msgid "Error closing file \"%s\"."
 msgstr ""
 
-#: gst/elements/gstfilesink.c:366 gst/elements/gstfilesink.c:401
-#: gst/elements/gstfilesink.c:454
+#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:399
+#: gst/elements/gstfilesink.c:452
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr ""
@@ -626,23 +626,23 @@ msgstr ""
 msgid "File \"%s\" is a socket."
 msgstr ""
 
-#: gst/elements/gstidentity.c:303
+#: gst/elements/gstidentity.c:304
 msgid "Failed after iterations as requested."
 msgstr ""
 
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:157
 msgid "caps"
 msgstr "capacités"
 
-#: gst/elements/gsttypefindelement.c:156
+#: gst/elements/gsttypefindelement.c:158
 msgid "detected capabilities in stream"
 msgstr "capacités detectées dans le flux"
 
-#: gst/elements/gsttypefindelement.c:159
+#: gst/elements/gsttypefindelement.c:161
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:163
+#: gst/elements/gsttypefindelement.c:165
 msgid "maximum"
 msgstr "maximum"
 
@@ -715,7 +715,7 @@ msgstr "impossible de lier un element destination pour l'URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tube vide non autorisé"
 
-#: tools/gst-inspect.c:1123
+#: tools/gst-inspect.c:1130
 #, fuzzy
 msgid "Print all elements"
 msgstr "pas d'element \"%s\""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-10-06 18:35+0200\n"
+"POT-Creation-Date: 2004-12-17 16:11+0100\n"
 "PO-Revision-Date: 2004-08-05 15:52+0200\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -596,8 +596,8 @@ msgstr "No s'ha pogut obrir «%s» per a l'escriptura."
 msgid "Error closing file \"%s\"."
 msgstr "S'ha produït un error en tancar el fitxer «%s»."
 
-#: gst/elements/gstfilesink.c:366 gst/elements/gstfilesink.c:401
-#: gst/elements/gstfilesink.c:454
+#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:399
+#: gst/elements/gstfilesink.c:452
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "S'ha produït un error en escriure al fitxer «%s»."
@@ -621,23 +621,23 @@ msgstr "«%s» és un directori."
 msgid "File \"%s\" is a socket."
 msgstr "El fitxer «%s» és un sòcol."
 
-#: gst/elements/gstidentity.c:303
+#: gst/elements/gstidentity.c:304
 msgid "Failed after iterations as requested."
 msgstr "Ha fallat després de les iteracions com s'ha demanat."
 
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:157
 msgid "caps"
 msgstr "capacitats"
 
-#: gst/elements/gsttypefindelement.c:156
+#: gst/elements/gsttypefindelement.c:158
 msgid "detected capabilities in stream"
 msgstr "capacitats detectades al flux"
 
-#: gst/elements/gsttypefindelement.c:159
+#: gst/elements/gsttypefindelement.c:161
 msgid "minimum"
 msgstr "mínim"
 
-#: gst/elements/gsttypefindelement.c:163
+#: gst/elements/gsttypefindelement.c:165
 msgid "maximum"
 msgstr "màxim"
 
@@ -709,7 +709,7 @@ msgstr "No s'ha pogut enllaçar l'element de sortida per a l'URI «%s»"
 msgid "empty pipeline not allowed"
 msgstr "no es permet un conducte buit"
 
-#: tools/gst-inspect.c:1123
+#: tools/gst-inspect.c:1130
 msgid "Print all elements"
 msgstr "Imprimeix tots els elements"
 

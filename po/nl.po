@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-10-06 18:35+0200\n"
+"POT-Creation-Date: 2004-12-17 16:11+0100\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -575,8 +575,8 @@ msgstr "Kon bestand \"%s\" niet openen om te schrijven."
 msgid "Error closing file \"%s\"."
 msgstr "Fout bij het sluiten van bestand \"%s\"."
 
-#: gst/elements/gstfilesink.c:366 gst/elements/gstfilesink.c:401
-#: gst/elements/gstfilesink.c:454
+#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:399
+#: gst/elements/gstfilesink.c:452
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fout bij het schrijven naar bestand \"%s\"."
@@ -600,23 +600,23 @@ msgstr ""
 msgid "File \"%s\" is a socket."
 msgstr "Bestand \"%s\" is geen gewoon bestand."
 
-#: gst/elements/gstidentity.c:303
+#: gst/elements/gstidentity.c:304
 msgid "Failed after iterations as requested."
 msgstr "Fout na iteraties zoals gevraagd."
 
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:157
 msgid "caps"
 msgstr "mogelijkheden"
 
-#: gst/elements/gsttypefindelement.c:156
+#: gst/elements/gsttypefindelement.c:158
 msgid "detected capabilities in stream"
 msgstr "gedetecteerde mogelijkheden in stroom"
 
-#: gst/elements/gsttypefindelement.c:159
+#: gst/elements/gsttypefindelement.c:161
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:163
+#: gst/elements/gsttypefindelement.c:165
 msgid "maximum"
 msgstr "maximum"
 
@@ -688,7 +688,7 @@ msgstr "kon doelelement niet verbinden voor URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "lege pijplijn niet toegelaten"
 
-#: tools/gst-inspect.c:1123
+#: tools/gst-inspect.c:1130
 #, fuzzy
 msgid "Print all elements"
 msgstr "geen element \"%s\""

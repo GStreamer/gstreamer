@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-10-06 18:35+0200\n"
+"POT-Creation-Date: 2004-12-17 16:11+0100\n"
 "PO-Revision-Date: 2004-03-13 01:47+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -580,8 +580,8 @@ msgstr "Не могу да отворим датотеку „%s“ ради у�
 msgid "Error closing file \"%s\"."
 msgstr "Грешка при затварању датотеке „%s“."
 
-#: gst/elements/gstfilesink.c:366 gst/elements/gstfilesink.c:401
-#: gst/elements/gstfilesink.c:454
+#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:399
+#: gst/elements/gstfilesink.c:452
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Грешка при упису у датотеку „%s“."
@@ -605,24 +605,24 @@ msgstr ""
 msgid "File \"%s\" is a socket."
 msgstr "Датотека „%s“ није обична датотека."
 
-#: gst/elements/gstidentity.c:303
+#: gst/elements/gstidentity.c:304
 msgid "Failed after iterations as requested."
 msgstr "Неуспех након траженог броја покушаја."
 
 # bug: this should be full word
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:157
 msgid "caps"
 msgstr "могућности"
 
-#: gst/elements/gsttypefindelement.c:156
+#: gst/elements/gsttypefindelement.c:158
 msgid "detected capabilities in stream"
 msgstr "препознате могућности у току"
 
-#: gst/elements/gsttypefindelement.c:159
+#: gst/elements/gsttypefindelement.c:161
 msgid "minimum"
 msgstr "најмање"
 
-#: gst/elements/gsttypefindelement.c:163
+#: gst/elements/gsttypefindelement.c:165
 msgid "maximum"
 msgstr "највише"
 
@@ -694,7 +694,7 @@ msgstr "не могу да вежем завршни елемент за адр�
 msgid "empty pipeline not allowed"
 msgstr "није допуштен празан цевовод"
 
-#: tools/gst-inspect.c:1123
+#: tools/gst-inspect.c:1130
 #, fuzzy
 msgid "Print all elements"
 msgstr "нема елемента „%s“"

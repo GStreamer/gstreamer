@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-10-06 18:35+0200\n"
+"POT-Creation-Date: 2004-12-17 16:11+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -565,8 +565,8 @@ msgstr "Could not open file \"%s\" for writing."
 msgid "Error closing file \"%s\"."
 msgstr "Error closing file \"%s\"."
 
-#: gst/elements/gstfilesink.c:366 gst/elements/gstfilesink.c:401
-#: gst/elements/gstfilesink.c:454
+#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:399
+#: gst/elements/gstfilesink.c:452
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Error while writing to file \"%s\"."
@@ -590,23 +590,23 @@ msgstr ""
 msgid "File \"%s\" is a socket."
 msgstr "File \"%s\" isn't a regular file."
 
-#: gst/elements/gstidentity.c:303
+#: gst/elements/gstidentity.c:304
 msgid "Failed after iterations as requested."
 msgstr "Failed after iterations as requested."
 
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:157
 msgid "caps"
 msgstr "caps"
 
-#: gst/elements/gsttypefindelement.c:156
+#: gst/elements/gsttypefindelement.c:158
 msgid "detected capabilities in stream"
 msgstr "detected capabilities in stream"
 
-#: gst/elements/gsttypefindelement.c:159
+#: gst/elements/gsttypefindelement.c:161
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:163
+#: gst/elements/gsttypefindelement.c:165
 msgid "maximum"
 msgstr "maximum"
 
@@ -678,7 +678,7 @@ msgstr "could not link sink element for URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "empty pipeline not allowed"
 
-#: tools/gst-inspect.c:1123
+#: tools/gst-inspect.c:1130
 #, fuzzy
 msgid "Print all elements"
 msgstr "no element \"%s\""

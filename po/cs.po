@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-10-06 18:35+0200\n"
+"POT-Creation-Date: 2004-12-17 16:11+0100\n"
 "PO-Revision-Date: 2004-08-08 22:59+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -571,8 +571,8 @@ msgstr "Nemohu otevřít soubor \"%s\" pro zápis."
 msgid "Error closing file \"%s\"."
 msgstr "Chyba při zavírání souboru \"%s\"."
 
-#: gst/elements/gstfilesink.c:366 gst/elements/gstfilesink.c:401
-#: gst/elements/gstfilesink.c:454
+#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:399
+#: gst/elements/gstfilesink.c:452
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Chyba při zápisu do souboru \"%s\"."
@@ -596,23 +596,23 @@ msgstr "\"%s\" je adresář."
 msgid "File \"%s\" is a socket."
 msgstr "Soubor \"%s\" je socket."
 
-#: gst/elements/gstidentity.c:303
+#: gst/elements/gstidentity.c:304
 msgid "Failed after iterations as requested."
 msgstr "Selhání po iteracích podle požadavku."
 
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:157
 msgid "caps"
 msgstr "schopnosti"
 
-#: gst/elements/gsttypefindelement.c:156
+#: gst/elements/gsttypefindelement.c:158
 msgid "detected capabilities in stream"
 msgstr "detekované schopnosti v proudu"
 
-#: gst/elements/gsttypefindelement.c:159
+#: gst/elements/gsttypefindelement.c:161
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:163
+#: gst/elements/gsttypefindelement.c:165
 msgid "maximum"
 msgstr "maximum"
 
@@ -684,7 +684,7 @@ msgstr "nemohu připojit element spotřebiče pro URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "prázdná roura není povolena"
 
-#: tools/gst-inspect.c:1123
+#: tools/gst-inspect.c:1130
 msgid "Print all elements"
 msgstr "Vypsat všechny elementy"
 
