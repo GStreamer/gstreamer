@@ -40,7 +40,7 @@
 <!ENTITY THREADS SYSTEM "advanced-threads.xml">
 <!ENTITY SCHEDULERS SYSTEM "advanced-schedulers.xml">
 <!ENTITY AUTOPLUGGING SYSTEM "advanced-autoplugging.xml">
-<!ENTITY DATAACCESS SYSTEM "advanced-dataaccess.xml">
+<!--<!ENTITY DATAACCESS SYSTEM "advanced-dataaccess.xml">-->
 
 <!-- Part 4: Higher-level interfaces -->
 <!ENTITY XML SYSTEM "highlevel-xml.xml">
@@ -237,7 +237,7 @@ Idea:
     &THREADS;
     &SCHEDULERS;
     &AUTOPLUGGING;
-    &DATAACCESS;
+<!--    &DATAACCESS; -->
 
   </part>
 
