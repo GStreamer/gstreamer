@@ -616,7 +616,7 @@ gst_vorbis_tag_chain (GstPad * pad, GstData * data)
     }
     gst_element_found_tags_for_pad (GST_ELEMENT (tag), tag->srcpad, 0,
         gst_tag_list_copy (list));
-    gst_tag_list_merge (list, gst_tag_setter_get_list (GST_TAG_SETTER (tag)),
+    gst_tag_list_insert (list, gst_tag_setter_get_list (GST_TAG_SETTER (tag)),
         gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
     data =
         GST_DATA (gst_tag_list_to_vorbiscomment_buffer (list, "\003vorbis", 7,
