@@ -35,6 +35,7 @@ enum {
 
 enum {
   ARG_0,
+  ARG_NAME,
   /* FILL ME */
 };
 
@@ -56,6 +57,11 @@ static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
 
 static void		gst_object_class_init		(GstObjectClass *klass);
 static void		gst_object_init			(GstObject *object);
+
+static void 		gst_object_set_property 	(GObject * object, guint prop_id, const GValue * value,
+		                                    	 GParamSpec * pspec);
+static void 		gst_object_get_property 	(GObject * object, guint prop_id, GValue * value,
+		                                    	 GParamSpec * pspec);
 
 static void 		gst_object_dispose 		(GObject *object);
 static void 		gst_object_finalize 		(GObject *object);
@@ -93,6 +99,10 @@ gst_object_class_init (GstObjectClass *klass)
 
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NAME,
+    g_param_spec_string ("name", "Name", "The name of the object",
+                         NULL, G_PARAM_READWRITE));
+
   gst_object_signals[PARENT_SET] =
     g_signal_new("parent_set", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
@@ -109,6 +119,9 @@ gst_object_class_init (GstObjectClass *klass)
   klass->path_string_separator = "/";
 // FIXME!!!
 //  klass->signal_object = g_object_new(gst_signal_object_get_type (,NULL));
+
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_object_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_object_get_property);
 
   gobject_class->dispose = gst_object_dispose;
   gobject_class->finalize = gst_object_finalize;
@@ -502,6 +515,47 @@ gst_object_restore_thyself (GstObject *object, xmlNodePtr parent)
 }
 #endif /* GST_DISABLE_LOADSAVE_REGISTRY */
 
+static void
+gst_object_set_property (GObject* object, guint prop_id, 
+			 const GValue* value, GParamSpec* pspec)
+{
+  GstObject *gstobject;
+	    
+  /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail (GST_IS_OBJECT (object));
+	      
+  gstobject = GST_OBJECT (object);
+
+  switch (prop_id) {
+    case ARG_NAME:
+      gst_object_set_name (gstobject, g_value_get_string (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_object_get_property (GObject* object, guint prop_id, 
+			 GValue* value, GParamSpec* pspec)
+{
+  GstObject *gstobject;
+	    
+  /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail (GST_IS_OBJECT (object));
+	      
+  gstobject = GST_OBJECT (object);
+
+  switch (prop_id) {
+    case ARG_NAME:
+      g_value_set_string (value, (gchar*)GST_OBJECT_NAME (gstobject));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 /**
  * gst_object_get_path_string:
  * @object: GstObject to get the path from
