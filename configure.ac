@@ -5,10 +5,6 @@ dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
 AS_VERSION(gstreamer, GST_VERSION, 0, 7, 4, 1, GST_CVS="no", GST_CVS="yes")
 
-#if test x$program_suffix = xNONE ; then
-#  program_suffix=-$GST_VERSION_MAJOR.$GST_VERSION_MINOR
-#fi
-
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
