@@ -2,7 +2,7 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
-#include <libs/control/gstcontrol.h>
+#include <gst/control/control.h>
 
 static gint quit_live(GtkWidget *window, GdkEventAny *e, gpointer data) {
   gtk_main_quit();
