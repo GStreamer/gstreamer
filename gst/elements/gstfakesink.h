@@ -68,6 +68,9 @@ struct _GstFakeSink {
   GstFakeSinkStateError state_error;
   GstActivateMode	pad_mode;
   guint64	 offset;
+  gboolean       eos;
+  gboolean       need_preroll;
+  gboolean       have_preroll;
 
   gchar 	*last_message;
 };

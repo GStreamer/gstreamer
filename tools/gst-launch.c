@@ -567,8 +567,15 @@ main (int argc, char *argv[])
 
       g_print (_("Execution ended after %" G_GUINT64_FORMAT " ns.\n"), diff);
     }
-
+    fprintf (stderr, _("PAUSE pipeline ...\n"));
+    gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    gst_element_get_state (pipeline, &state, &pending, NULL);
+    fprintf (stderr, _("READY pipeline ...\n"));
+    gst_element_set_state (pipeline, GST_STATE_READY);
+    gst_element_get_state (pipeline, &state, &pending, NULL);
+    fprintf (stderr, _("NULL pipeline ...\n"));
     gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_element_get_state (pipeline, &state, &pending, NULL);
   }
 
 end:

@@ -1,3 +1,22 @@
+2005-02-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/gstfakesink.c: (gst_fakesink_init),
+	(gst_fakesink_finish_preroll), (gst_fakesink_event),
+	(gst_fakesink_chain_unlocked), (gst_fakesink_activate),
+	(gst_fakesink_change_state):
+	* gst/elements/gstfakesink.h:
+	* gst/gstpad.c: (gst_real_pad_class_init), (gst_real_pad_init),
+	(gst_real_pad_dispose), (gst_real_pad_finalize):
+	* gst/gstpad.h:
+	* tools/gst-launch.c: (main):
+	Add finalize method to RealPad.
+	Add new lock to correctly do the preroll, should probably not
+	be put here.
+	Make fakesink do preroll correctly. Emit a message when the
+	preroll sample is queued.
+	Add more info in gst-launch regarding state changes.
+	
+
 2005-02-21  Andy Wingo  <wingo@pobox.com>
 
 	* gst/elements/gstfakesink.c:

@@ -198,12 +198,10 @@ gst_fakesink_class_init (GstFakeSinkClass * klass)
 static void
 gst_fakesink_init (GstFakeSink * fakesink)
 {
-  GstPad *pad;
-
-  pad =
+  fakesink->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
       "sink");
-  gst_element_add_pad (GST_ELEMENT (fakesink), pad);
+  gst_element_add_pad (GST_ELEMENT (fakesink), fakesink->sinkpad);
 
   fakesink->silent = FALSE;
   fakesink->dump = FALSE;
@@ -212,7 +210,7 @@ gst_fakesink_init (GstFakeSink * fakesink)
   fakesink->state_error = FAKESINK_STATE_ERROR_NONE;
   fakesink->signal_handoffs = FALSE;
   fakesink->pad_mode = GST_ACTIVATE_NONE;
-  GST_RPAD_TASK (pad) = NULL;
+  GST_RPAD_TASK (fakesink->sinkpad) = NULL;
 }
 
 static void
@@ -357,54 +355,65 @@ gst_fakesink_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static gboolean
-gst_fakesink_activate (GstPad * pad, GstActivateMode mode)
+/* STREAM_LOCK should be held */
+GstFlowReturn
+gst_fakesink_finish_preroll (GstFakeSink * fakesink, GstPad * pad)
 {
-  gboolean result = FALSE;
-  GstFakeSink *fakesink;
+  /* lock order is important */
+  GST_STATE_LOCK (fakesink);
+  GST_PREROLL_LOCK (pad);
+  if (!fakesink->need_preroll)
+    goto no_preroll;
 
-  fakesink = GST_FAKESINK (GST_OBJECT_PARENT (pad));
+  if (!fakesink->silent) {
+    g_free (fakesink->last_message);
 
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-      g_return_val_if_fail (fakesink->has_chain, FALSE);
-      result = TRUE;
-      break;
-    case GST_ACTIVATE_PULL:
-      /* if we have a scheduler we can start the task */
-      g_return_val_if_fail (fakesink->has_loop, FALSE);
-      if (GST_ELEMENT_SCHEDULER (fakesink)) {
-        GST_STREAM_LOCK (pad);
-        GST_RPAD_TASK (pad) =
-            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (fakesink),
-            (GstTaskFunction) gst_fakesink_loop, pad);
+    fakesink->last_message =
+        g_strdup_printf ("preroll   ******* (%s:%s)", GST_DEBUG_PAD_NAME (pad));
 
-        gst_task_start (GST_RPAD_TASK (pad));
-        GST_STREAM_UNLOCK (pad);
-        result = TRUE;
-      }
-      break;
-    case GST_ACTIVATE_NONE:
-      /* step 1, unblock clock sync (if any) */
-
-      /* step 2, make sure streaming finishes */
-      GST_STREAM_LOCK (pad);
-      /* step 3, stop the task */
-      if (GST_RPAD_TASK (pad)) {
-        gst_task_stop (GST_RPAD_TASK (pad));
-        gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
-        GST_RPAD_TASK (pad) = NULL;
-      }
-      GST_STREAM_UNLOCK (pad);
-
-      result = TRUE;
-      break;
+    g_object_notify (G_OBJECT (fakesink), "last_message");
   }
 
-  fakesink->pad_mode = mode;
+  fakesink->need_preroll = FALSE;
+  fakesink->have_preroll = TRUE;
+  gst_element_commit_state (GST_ELEMENT (fakesink));
+  GST_STATE_UNLOCK (fakesink);
 
-  return result;
+  {
+    gboolean usable;
+
+    GST_DEBUG ("element %s waiting to finish preroll",
+        GST_ELEMENT_NAME (fakesink));
+    GST_PREROLL_WAIT (pad);
+    GST_DEBUG ("done preroll");
+
+    GST_LOCK (pad);
+    usable = !GST_RPAD_IS_FLUSHING (pad) && GST_RPAD_IS_ACTIVE (pad);
+    GST_UNLOCK (pad);
+    if (!usable)
+      goto unusable;
+
+    GST_DEBUG ("done preroll");
+  }
+  fakesink->have_preroll = FALSE;
+
+  GST_PREROLL_UNLOCK (pad);
+  return GST_FLOW_OK;
+
+no_preroll:
+  {
+    GST_PREROLL_UNLOCK (pad);
+    GST_STATE_UNLOCK (fakesink);
+    return GST_FLOW_OK;
+  }
+unusable:
+  {
+    GST_DEBUG ("pad is flushing");
+    GST_PREROLL_UNLOCK (pad);
+    return GST_FLOW_UNEXPECTED;
+  }
 }
+
 
 static gboolean
 gst_fakesink_event (GstPad * pad, GstEvent * event)
@@ -429,9 +438,15 @@ gst_fakesink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
-      gst_element_finish_preroll (GST_ELEMENT (fakesink), pad);
-      gst_element_post_message (GST_ELEMENT (fakesink),
-          gst_message_new_eos (GST_OBJECT (fakesink)));
+      GstFlowReturn ret;
+
+      ret = gst_fakesink_finish_preroll (fakesink, pad);
+      if (ret == GST_FLOW_OK) {
+        fakesink->eos = TRUE;
+        /* ok, we can post the message */
+        gst_element_post_message (GST_ELEMENT (fakesink),
+            gst_message_new_eos (GST_OBJECT (fakesink)));
+      }
       break;
     }
     case GST_EVENT_DISCONTINUOUS:
@@ -455,7 +470,7 @@ gst_fakesink_chain_unlocked (GstPad * pad, GstBuffer * buf)
 
   fakesink = GST_FAKESINK (GST_OBJECT_PARENT (pad));
 
-  result = gst_element_finish_preroll (GST_ELEMENT (fakesink), pad);
+  result = gst_fakesink_finish_preroll (fakesink, pad);
   if (result != GST_FLOW_OK)
     goto exit;
 
@@ -539,13 +554,67 @@ paused:
   goto exit;
 }
 
+static gboolean
+gst_fakesink_activate (GstPad * pad, GstActivateMode mode)
+{
+  gboolean result = FALSE;
+  GstFakeSink *fakesink;
+
+  fakesink = GST_FAKESINK (GST_OBJECT_PARENT (pad));
+
+  switch (mode) {
+    case GST_ACTIVATE_PUSH:
+      g_return_val_if_fail (fakesink->has_chain, FALSE);
+      result = TRUE;
+      break;
+    case GST_ACTIVATE_PULL:
+      /* if we have a scheduler we can start the task */
+      g_return_val_if_fail (fakesink->has_loop, FALSE);
+      if (GST_ELEMENT_SCHEDULER (fakesink)) {
+        GST_STREAM_LOCK (pad);
+        GST_RPAD_TASK (pad) =
+            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (fakesink),
+            (GstTaskFunction) gst_fakesink_loop, pad);
+
+        gst_task_start (GST_RPAD_TASK (pad));
+        GST_STREAM_UNLOCK (pad);
+        result = TRUE;
+      }
+      break;
+    case GST_ACTIVATE_NONE:
+      /* step 1, unblock clock sync (if any) or any other blocking thing */
+
+      /* unlock preroll */
+      GST_PREROLL_LOCK (pad);
+      GST_PREROLL_SIGNAL (pad);
+      GST_PREROLL_UNLOCK (pad);
+
+      /* step 2, make sure streaming finishes */
+      GST_STREAM_LOCK (pad);
+      /* step 3, stop the task */
+      if (GST_RPAD_TASK (pad)) {
+        gst_task_stop (GST_RPAD_TASK (pad));
+        gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
+        GST_RPAD_TASK (pad) = NULL;
+      }
+      GST_STREAM_UNLOCK (pad);
+
+      result = TRUE;
+      break;
+  }
+  fakesink->pad_mode = mode;
+
+  return result;
+}
+
 static GstElementStateReturn
 gst_fakesink_change_state (GstElement * element)
 {
   GstElementStateReturn ret = GST_STATE_SUCCESS;
   GstFakeSink *fakesink = GST_FAKESINK (element);
+  GstElementState transition = GST_STATE_TRANSITION (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_NULL_READY)
         goto error;
@@ -553,17 +622,42 @@ gst_fakesink_change_state (GstElement * element)
     case GST_STATE_READY_TO_PAUSED:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_READY_PAUSED)
         goto error;
-      /* need to complete preroll before this state change completes */
+      /* need to complete preroll before this state change completes, there
+       * is no data flow in READY so we cqn safely assume we need to preroll. */
       fakesink->offset = 0;
+      GST_PREROLL_LOCK (fakesink->sinkpad);
+      fakesink->need_preroll = TRUE;
+      fakesink->have_preroll = FALSE;
+      GST_PREROLL_UNLOCK (fakesink->sinkpad);
       ret = GST_STATE_ASYNC;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_PAUSED_PLAYING)
         goto error;
+      /* the state change completes when we are blocking on a preroll
+       * sample */
+      GST_PREROLL_LOCK (fakesink->sinkpad);
+      if (!fakesink->have_preroll) {
+        fakesink->need_preroll = TRUE;
+        ret = GST_STATE_ASYNC;
+      } else {
+        /* now let it play */
+        GST_PREROLL_SIGNAL (fakesink->sinkpad);
+      }
+      GST_PREROLL_UNLOCK (fakesink->sinkpad);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_PLAYING_PAUSED)
         goto error;
+
+      GST_PREROLL_LOCK (fakesink->sinkpad);
+      fakesink->need_preroll = TRUE;
+      /* if we don't have a preroll buffer and we have not received EOS,
+       * we need to wait for a preroll */
+      if (!fakesink->have_preroll && !fakesink->eos) {
+        ret = GST_STATE_ASYNC;
+      }
+      GST_PREROLL_UNLOCK (fakesink->sinkpad);
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_PAUSED_READY)
@@ -575,10 +669,11 @@ gst_fakesink_change_state (GstElement * element)
       g_free (fakesink->last_message);
       fakesink->last_message = NULL;
       break;
+    default:
+      break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return ret;
 

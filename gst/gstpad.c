@@ -159,6 +159,7 @@ enum
 static void gst_real_pad_class_init (GstRealPadClass * klass);
 static void gst_real_pad_init (GstRealPad * pad);
 static void gst_real_pad_dispose (GObject * object);
+static void gst_real_pad_finalize (GObject * object);
 
 static void gst_real_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -201,6 +202,7 @@ gst_real_pad_class_init (GstRealPadClass * klass)
   real_pad_parent_class = g_type_class_ref (GST_TYPE_PAD);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_real_pad_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_real_pad_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_real_pad_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_real_pad_get_property);
 
@@ -253,6 +255,9 @@ gst_real_pad_init (GstRealPad * pad)
   pad->querytypefunc = gst_pad_get_query_types_default;
 
   GST_FLAG_UNSET (pad, GST_PAD_ACTIVE);
+
+  pad->preroll_lock = g_mutex_new ();
+  pad->preroll_cond = g_cond_new ();
 
   pad->stream_rec_lock = g_new (GStaticRecMutex, 1);
   g_static_rec_mutex_init (pad->stream_rec_lock);
@@ -2539,11 +2544,6 @@ gst_real_pad_dispose (GObject * object)
     g_assert (rpad->ghostpads == NULL);
   }
 
-  if (rpad->stream_rec_lock) {
-    g_static_rec_mutex_free (rpad->stream_rec_lock);
-    rpad->stream_rec_lock = NULL;
-  }
-
   /* clear the caps */
   gst_caps_replace (&GST_RPAD_CAPS (pad), NULL);
   gst_caps_replace (&GST_RPAD_APPFILTER (pad), NULL);
@@ -2556,6 +2556,31 @@ gst_real_pad_dispose (GObject * object)
   }
 
   G_OBJECT_CLASS (real_pad_parent_class)->dispose (object);
+}
+
+static void
+gst_real_pad_finalize (GObject * object)
+{
+  GstRealPad *rpad;
+
+  rpad = GST_REAL_PAD (object);
+
+  if (rpad->stream_rec_lock) {
+    g_static_rec_mutex_free (rpad->stream_rec_lock);
+    rpad->stream_rec_lock = NULL;
+  }
+  if (rpad->preroll_lock) {
+    g_mutex_free (rpad->preroll_lock);
+    g_cond_free (rpad->preroll_cond);
+    rpad->preroll_lock = NULL;
+    rpad->preroll_cond = NULL;
+  }
+  if (rpad->block_cond) {
+    g_cond_free (rpad->block_cond);
+    rpad->block_cond = NULL;
+  }
+
+  G_OBJECT_CLASS (real_pad_parent_class)->finalize (object);
 }
 
 
