@@ -75,7 +75,7 @@ struct _GstV4l2Src {
 	struct v4l2_format format;
 
 	/* True if we want to stop */
-	gboolean quit;
+	gboolean quit, is_capturing;
 
 	/* A/V sync... frame counter and internal cache */
 	gulong handled;

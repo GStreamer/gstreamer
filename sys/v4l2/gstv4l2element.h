@@ -38,6 +38,7 @@
 #include <sys/types.h>
 #include <linux/types.h>
 #define _LINUX_TIME_H
+#define __user
 #include <linux/videodev2.h>
 
 /*

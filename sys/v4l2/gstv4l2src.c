@@ -255,6 +255,8 @@ gst_v4l2src_init (GTypeInstance * instance, gpointer g_class)
 
   /* fps */
   v4l2src->use_fixed_fps = TRUE;
+
+  v4l2src->is_capturing = FALSE;
 }
 
 
@@ -384,7 +386,7 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32 fourcc)
   switch (fourcc) {
     case V4L2_PIX_FMT_MJPEG:   /* Motion-JPEG */
     case V4L2_PIX_FMT_JPEG:    /* JFIF JPEG */
-      structure = gst_structure_new ("video/x-jpeg", NULL);
+      structure = gst_structure_new ("image/jpeg", NULL);
       break;
     case V4L2_PIX_FMT_RGB332:
     case V4L2_PIX_FMT_RGB555:
@@ -631,7 +633,7 @@ gst_v4l2_fourcc_from_structure (GstStructure * structure)
     }
   } else if (strcmp (mimetype, "video/x-dv") == 0) {
     fourcc = V4L2_PIX_FMT_DV;
-  } else if (strcmp (mimetype, "video/x-jpeg") == 0) {
+  } else if (strcmp (mimetype, "image/jpeg") == 0) {
     fourcc = V4L2_PIX_FMT_JPEG;
   }
 
@@ -714,6 +716,7 @@ gst_v4l2src_link (GstPad * pad, const GstCaps * caps)
   struct v4l2_fmtdesc *format;
   int w, h;
   GstStructure *structure;
+  gboolean was_capturing;
 
   v4l2src = GST_V4L2SRC (gst_pad_get_parent (pad));
   v4l2element = GST_V4L2ELEMENT (v4l2src);
@@ -722,6 +725,10 @@ gst_v4l2src_link (GstPad * pad, const GstCaps * caps)
 
   /* clean up if we still haven't cleaned up our previous
    * capture session */
+  if ((was_capturing = v4l2src->is_capturing)) {
+    if (!gst_v4l2src_capture_stop (v4l2src))
+      return GST_PAD_LINK_REFUSED;
+  }
   if (GST_V4L2_IS_ACTIVE (v4l2element)) {
     if (!gst_v4l2src_capture_deinit (v4l2src))
       return GST_PAD_LINK_REFUSED;
@@ -740,6 +747,10 @@ gst_v4l2src_link (GstPad * pad, const GstCaps * caps)
   /* we found the pixelformat! - try it out */
   if (gst_v4l2src_set_capture (v4l2src, format, w, h)) {
     if (gst_v4l2src_capture_init (v4l2src)) {
+      if (was_capturing || GST_STATE (v4l2src) == GST_STATE_PLAYING)
+        if (!gst_v4l2src_capture_start (v4l2src))
+          return GST_PAD_LINK_REFUSED;
+
       return GST_PAD_LINK_OK;
     }
   }
@@ -759,7 +770,7 @@ gst_v4l2src_getcaps (GstPad * pad)
   GstStructure *structure;
 
   if (!GST_V4L2_IS_OPEN (GST_V4L2ELEMENT (v4l2src))) {
-    return gst_caps_new_any ();
+    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
 
   /* build our own capslist */
@@ -1022,7 +1033,8 @@ gst_v4l2src_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* queue all buffer, start streaming capture */
-      if (!gst_v4l2src_capture_start (v4l2src))
+      if (GST_V4L2ELEMENT (v4l2src)->buffer &&
+          !gst_v4l2src_capture_start (v4l2src))
         return GST_STATE_FAILURE;
       g_get_current_time (&time);
       v4l2src->substract_time = GST_TIMEVAL_TO_TIME (time) -
@@ -1034,12 +1046,13 @@ gst_v4l2src_change_state (GstElement * element)
       v4l2src->substract_time = GST_TIMEVAL_TO_TIME (time) -
           v4l2src->substract_time;
       /* de-queue all queued buffers */
-      if (!gst_v4l2src_capture_stop (v4l2src))
+      if (v4l2src->is_capturing && !gst_v4l2src_capture_stop (v4l2src))
         return GST_STATE_FAILURE;
       break;
     case GST_STATE_PAUSED_TO_READY:
       /* stop capturing, unmap all buffers */
-      if (!gst_v4l2src_capture_deinit (v4l2src))
+      if (GST_V4L2ELEMENT (v4l2src)->buffer &&
+          !gst_v4l2src_capture_deinit (v4l2src))
         return GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_NULL:
