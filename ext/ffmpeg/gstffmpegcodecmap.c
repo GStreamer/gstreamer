@@ -524,9 +524,9 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat  pix_fmt,
       bpp = depth = 32;
       endianness = G_BIG_ENDIAN;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-      r_mask = 0xff000000; g_mask = 0x00ff0000; b_mask = 0x0000ff00;
+      r_mask = 0x0000ff00; g_mask = 0x00ff0000; b_mask = 0xff000000;
 #else 
-      r_mask = 0x000000ff; g_mask = 0x0000ff00; b_mask = 0x00ff0000;
+      r_mask = 0x00ff0000; g_mask = 0x0000ff00; b_mask = 0x000000ff;
 #endif
       break;
     case PIX_FMT_YUV410P:
@@ -835,73 +835,66 @@ gst_ffmpeg_caps_to_pixfmt (GstCaps        *caps,
     context->frame_rate_base = DEFAULT_FRAME_RATE_BASE;
   }
 
-  if (gst_caps_has_property_typed (caps, "format",
+  if (strcmp (gst_caps_get_mime (caps), "video/x-raw-yuv") == 0) {
+    if (gst_caps_has_property_typed (caps, "format",
 				   GST_PROPS_FOURCC_TYPE)) {
-    guint32 fourcc;
-    gst_caps_get_fourcc_int (caps, "format", &fourcc);
+      guint32 fourcc;
+      gst_caps_get_fourcc_int (caps, "format", &fourcc);
 
-    switch (fourcc) {
-      case GST_MAKE_FOURCC ('Y','U','Y','2'):
-        context->pix_fmt = PIX_FMT_YUV422;
-        break;
-      case GST_MAKE_FOURCC ('I','4','2','0'):
-        context->pix_fmt = PIX_FMT_YUV420P;
-        break;
-      case GST_MAKE_FOURCC ('Y','4','1','B'):
-        context->pix_fmt = PIX_FMT_YUV411P;
-        break;
-      case GST_MAKE_FOURCC ('Y','U','V','9'):
-        context->pix_fmt = PIX_FMT_YUV410P;
-        break;
+      switch (fourcc) {
+	case GST_MAKE_FOURCC ('Y','U','Y','2'):
+	  context->pix_fmt = PIX_FMT_YUV422;
+	  break;
+	case GST_MAKE_FOURCC ('I','4','2','0'):
+	  context->pix_fmt = PIX_FMT_YUV420P;
+	  break;
+	case GST_MAKE_FOURCC ('Y','4','1','B'):
+	  context->pix_fmt = PIX_FMT_YUV411P;
+	  break;
+	case GST_MAKE_FOURCC ('Y','U','V','9'):
+	  context->pix_fmt = PIX_FMT_YUV410P;
+	  break;
 #if 0
-      case FIXME:
-        context->pix_fmt = PIX_FMT_YUV444P;
-        break;
+	case FIXME:
+	  context->pix_fmt = PIX_FMT_YUV444P;
+	  break;
 #endif
-      case GST_MAKE_FOURCC ('R','G','B',' '):
-        if (gst_caps_has_property_typed (caps, "depth",
-					 GST_PROPS_INT_TYPE) &&
-	    gst_caps_has_property_typed (caps, "endianness",
-					 GST_PROPS_INT_TYPE)) {
-          gint depth = 0, endianness = 0;
-          gst_caps_get_int (caps, "depth", &depth);
-          gst_caps_get_int (caps, "endianness", &endianness);
+      }
+    }
+  } else if (strcmp (gst_caps_get_mime (caps), "video/x-raw-rgb") == 0) {
+    if (gst_caps_has_property_typed (caps, "bpp", GST_PROPS_INT_TYPE) &&
+	gst_caps_has_property_typed (caps, "red_mask", GST_PROPS_INT_TYPE)) {
+      gint bpp = 0, red_mask = 0;
+      gst_caps_get_int (caps, "bpp", &bpp);
+      gst_caps_get_int (caps, "red_mask", &red_mask);
 
-          switch (depth) {
-            case 32:
-              if (endianness == G_BYTE_ORDER)
-                context->pix_fmt = PIX_FMT_RGBA32;
+      switch (bpp) {
+        case 32:
+          context->pix_fmt = PIX_FMT_RGBA32;
+          break;
+        case 24:
+          switch (red_mask) {
+            case 0x0000FF:
+              context->pix_fmt = PIX_FMT_BGR24;
               break;
-            case 24:
-              switch (endianness) {
-                case G_LITTLE_ENDIAN:
-                  context->pix_fmt = PIX_FMT_BGR24;
-                  break;
-                case G_BIG_ENDIAN:
-                  context->pix_fmt = PIX_FMT_RGB24;
-                  break;
-                default:
-                  /* nothing */
-                  break;
-              }
-              break;
-            case 16:
-              if (endianness == G_BYTE_ORDER)
-                context->pix_fmt = PIX_FMT_RGB565;
-              break;
-            case 15:
-              if (endianness == G_BYTE_ORDER)
-                context->pix_fmt = PIX_FMT_RGB555;
-              break;
+            case 0xFF0000:
+              context->pix_fmt = PIX_FMT_RGB24;
+	      break;
             default:
               /* nothing */
               break;
           }
-        }
-        break;
-      default:
-        /* nothing */
-        break;
+	  break;
+        case 16:
+          context->pix_fmt = PIX_FMT_RGB565;
+	  break;
+        case 15:
+          context->pix_fmt = PIX_FMT_RGB555;
+	  break;
+        default:
+          /* nothing */
+	  break;
+      }
     }
   }
 }
