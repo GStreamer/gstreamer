@@ -26,7 +26,7 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
-AS_LIBTOOL(GST, 3, 0, 0)
+AS_LIBTOOL(GST, 4, 0, 0)
 
 AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
@@ -378,8 +378,6 @@ GST_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
 
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_LOADSAVE, true)
 GST_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_AUTOPLUG, true)
-GST_SUBSYSTEM_DISABLE(AUTOPLUG,[autoplugger subsystem])
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_PARSE, true)
 GST_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_TRACE, true)

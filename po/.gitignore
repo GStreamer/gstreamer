@@ -1,0 +1,6 @@
+*.gmo
+remove-potcdate.sed
+stamp-po
+POTFILES
+cat-id-tbl.c
+gstreamer-0.7.pot

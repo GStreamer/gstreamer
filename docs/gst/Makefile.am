@@ -214,14 +214,21 @@ distclean-local: clean
 if DOC_HTML
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR) 
-	(installfiles=`echo $(srcdir)/html/*.html $(srcdir)/html/*.png`; \
-	if test "$$installfiles" = '$(srcdir)/html/*.html'; \
+	(installfiles=`echo ./html/*.html`; \
+	if test "$$installfiles" = './html/*.html'; \
 	then echo '-- Nothing to install' ; \
 	else \
 	  for i in $$installfiles; do \
 	    echo '-- Installing '$$i ; \
 	    $(INSTALL_DATA) $$i $(DESTDIR)$(TARGET_DIR); \
 	  done; \
+	  pngfiles=`echo ./html/*.png`; \
+	  if test "$$pngfiles" != './html/*.png'; then \
+	    for i in $$pngfiles; do \
+	      echo '-- Installing '$$i ; \
+	      $(INSTALL_DATA) $$i $(DESTDIR)$(TARGET_DIR); \
+	    done; \
+	  fi; \
 	  echo '-- Installing $(srcdir)/html/$(DOC_MODULE).devhelp' ; \
 	  $(INSTALL_DATA) $(srcdir)/html/$(DOC_MODULE).devhelp \
 	    $(DESTDIR)$(TARGET_DIR)/$(DOC_MODULE)-@GST_MAJORMINOR@.devhelp; \
@@ -229,8 +236,8 @@ install-data-local:
 	  $(INSTALL_DATA) $(srcdir)/html/index.sgml $(DESTDIR)$(TARGET_DIR); \
 	fi) 
 uninstall-local:
-	(installfiles=`echo $(srcdir)/html/*.html $(srcdir)/html/*.png`; \
-	if test "$$installfiles" = '$(srcdir)/html/*.html'; \
+	(installfiles=`echo ./html/*.html`; \
+	if test "$$installfiles" = './html/*.html'; \
 	then echo '-- Nothing to uninstall' ; \
 	else \
 	  for i in $$installfiles; do \
@@ -238,6 +245,14 @@ uninstall-local:
 	    echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/'$$rmfile ; \
 	    rm -f $(DESTDIR)$(TARGET_DIR)/$$rmfile; \
 	  done; \
+	  pngfiles=`echo ./html/*.png`; \
+	  if test "$$pngfiles" != './html/*.png'; then \
+	    for i in $$pngfiles; do \
+	      rmfile=`basename $$i` ; \
+	      echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/'$$rmfile ; \
+	      rm -f $(DESTDIR)$(TARGET_DIR)/$$rmfile; \
+	    done; \
+	  fi; \
 	  echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/$(DOC_MODULE).devhelp' ; \
 	  rm -f $(DESTDIR)$(TARGET_DIR)/$(DOC_MODULE)-@GST_MAJORMINOR@.devhelp; \
 	  echo '-- Uninstalling $(DESTDIR)$(TARGET_DIR)/index.sgml' ; \

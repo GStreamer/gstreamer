@@ -86,9 +86,9 @@ GstQueryType    	gst_query_type_get_by_nick     (const gchar *nick);
 gboolean        	gst_query_types_contains       (const GstQueryType *types, GstQueryType type);
 
 /* query for query details */
-const GstQueryTypeDefinition*      
+G_CONST_RETURN GstQueryTypeDefinition*      
                 	gst_query_type_get_details     (GstQueryType type);
-const GList*    	gst_query_type_get_definitions (void);
+G_CONST_RETURN GList*   gst_query_type_get_definitions (void);
 
 G_END_DECLS
 

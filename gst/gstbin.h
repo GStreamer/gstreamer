@@ -110,7 +110,8 @@ void		gst_bin_remove_many		(GstBin *bin, GstElement *element_1, ...);
 /* retrieve a single element or the list of children */
 GstElement*	gst_bin_get_by_name		(GstBin *bin, const gchar *name);
 GstElement*	gst_bin_get_by_name_recurse_up	(GstBin *bin, const gchar *name);
-const GList*	gst_bin_get_list		(GstBin *bin);
+G_CONST_RETURN GList*
+		gst_bin_get_list		(GstBin *bin);
 
 gboolean	gst_bin_iterate			(GstBin *bin);
 
