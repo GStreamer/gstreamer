@@ -43,16 +43,16 @@ class DVDPlay(object):
       print '***** a new pad %s was created' % pad.get_name()
       if pad.get_name()[:6] == 'video_':
          pad.connect(self.v_queue.get_pad('sink'))
-         #self.pipeline.set_state(STATE_PAUSED)
+         self.pipeline.set_state(STATE_PAUSED)
          self.pipeline.add(self.v_thread)
-         self.v_thread.set_state(STATE_PLAYING)
-         #self.pipeline.set_state(STATE_PLAYING)
+         #self.v_thread.set_state(STATE_PLAYING)
+         self.pipeline.set_state(STATE_PLAYING)
       elif pad.get_name() == 'private_stream_1.0':
          pad.connect(self.a_queue.get_pad('sink'))
-         #self.pipeline.set_state(STATE_PAUSED)
+         self.pipeline.set_state(STATE_PAUSED)
          self.pipeline.add(self.a_thread)
-         self.a_thread.set_state(STATE_PLAYING);
-         #self.pipeline.set_state(STATE_PLAYING)
+         #self.a_thread.set_state(STATE_PLAYING);
+         self.pipeline.set_state(STATE_PLAYING)
       else:
          print 'unknown pad: %s' % pad.get_name()
 
@@ -94,7 +94,7 @@ class DVDPlay(object):
       self.color = gst_element_factory_make('colorspace','color')
       assert self.color
 
-      self.show = gst_element_factory_make('videosink','show')
+      self.show = gst_element_factory_make('sdlvideosink','show')
       assert self.show
 
       for e in (self.v_queue, self.v_decode, self.color, self.show):
@@ -185,6 +185,7 @@ class DVDPlay(object):
 
 if __name__ == '__main__':
    #gst_debug_set_categories(-1)
+   #gst_info_set_categories(-1)
    player = DVDPlay()
    ret = player.main()
    sys.exit(ret)

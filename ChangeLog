@@ -1,5 +1,8 @@
 2002-05-09  David I. Lehn  <dlehn@vt.edu>
 
+	* examples/gstreamer/dvdplay.py: adjust state changes,
+	use sdlvideosink (videosink segfaulting for me right now)
+
 	* gstreamer/gstreamer.defs: remove
 
 	* gstreamer/gstreamer-base.defs,
