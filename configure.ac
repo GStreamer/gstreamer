@@ -335,7 +335,7 @@ AC_HELP_STRING([--enable-profiling],[adds -pg to compiler commandline, for profi
 esac], 
 [USE_PROFILING=no]) dnl Default value
 
-dnl use a cache dir for storing element registry info.
+dnl use a cache dir for storing element registry info
 dnl default to building registry in the source tree if we are enabling plugin build dir
 if test "x$PLUGINS_USE_BUILDDIR" = "xyes"; then
   GST_CACHE_DIR=`pwd`
