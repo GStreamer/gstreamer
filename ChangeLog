@@ -1,5 +1,13 @@
 2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* testsuite/threads/Makefile.am:
+	* testsuite/threads/threadi.c: (cb_data), (cb_play), (main):
+	  On Wim's request, split the test in three separately-compiled
+	  tests that each test a very specific bug. Two of them still fail,
+	  will create bugs for those. threadi.c indicates why they fail.
+
+2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/schedulers/gstoptimalscheduler.c:
 	(get_group_schedule_function):
 	  Try to work with the threading mess that queue_link is.

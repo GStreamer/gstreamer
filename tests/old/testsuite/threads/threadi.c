@@ -1,19 +1,24 @@
 /*
- * Test two ways of going non-lineairly to PLAYING. Both tests have a thread
- * containing a fakesrc/sink and a containing thread.
+ * Test three ways of going non-lineairly to PLAYING. Both tests have a
+ * thread containing a fakesrc/sink.
  *
- * Test 1 tests by adding fakesrc, putting thread to PLAYING, adding
- * fakesink, syncing state and see if it iterates.
- *
- * Test2 tests by adding fakesrc/fakesink, setting fakesrc to PLAYING
+ * Test1 tests by adding fakesrc/fakesink, setting fakesrc to PLAYING
  * (which should increment the container state) and then synchronizing
- * state. This reflects bug #123775.
+ * state and see if the bin iterates. This reflects bug #123775.
+ *
+ * Test2 does the same, but emits EOS directly. This will (in case of
+ * race conditions) sometimes lead to a state-change before the previous
+ * one succeeded. This bug is not fixed yet (999998).
+ *
+ * Test3 tests by adding fakesrc, putting thread to PLAYING, adding
+ * fakesink, syncing state and see if it iterates. The group is sometimes
+ * activated before fakesink is added to the bin, which is a bug in opt
+ * and a race in core that is not fixed yet (999999).
  */
 
 #include <gst/gst.h>
 
 static GstElement *pipeline, *fakesrc, *fakesink;
-gboolean bug = FALSE;
 
 static gboolean
 cb_timeout (gpointer data)
@@ -34,6 +39,7 @@ cb_quit (gpointer data)
   return FALSE;
 }
 
+#if TESTNUM != 123775
 static void
 cb_eos (gpointer data)
 {
@@ -41,6 +47,15 @@ cb_eos (gpointer data)
 
   g_idle_add ((GSourceFunc) cb_quit, NULL);
 }
+#else
+static void
+cb_data (gpointer data)
+{
+  g_print ("Received data\n");
+
+  g_idle_add ((GSourceFunc) cb_quit, NULL);
+}
+#endif
 
 static void
 cb_state (GstElement * element, GstElementState old_state,
@@ -54,18 +69,20 @@ cb_play (gpointer data)
 {
   GstElementStateReturn res;
 
-  if (bug) {
-    g_print ("Setting state\n");
-    gst_element_set_state (fakesrc, GST_STATE_PLAYING);
-    g_print ("Done\n");
-  } else {
-    gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    gst_bin_add (GST_BIN (pipeline), fakesink);
-  }
-  g_print ("Syncing state\n");
+#if TESTNUM != 999999
+  g_print ("Setting state on fakesrc\n");
+  gst_element_set_state (fakesrc, GST_STATE_PLAYING);
+  g_print ("Done\n");
+#else
+  g_print ("Setting state on pipeline w/o fakesink\n");
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  g_print ("Adding fakesink\n");
+  gst_bin_add (GST_BIN (pipeline), fakesink);
+  g_print ("Done\n");
+#endif
+  g_print ("Syncing state in pipeline\n");
   res = gst_bin_sync_children_state (GST_BIN (data));
   g_assert (res == GST_STATE_SUCCESS);
-
   g_print ("Set to playing correctly: %d\n", GST_STATE (pipeline));
 
   /* once */
@@ -75,37 +92,43 @@ cb_play (gpointer data)
 gint
 main (gint argc, gchar * argv[])
 {
-  gint n, id;
+  gint id;
 
   gst_init (&argc, &argv);
 
-  for (n = 0; n < 2; n++) {
-    pipeline = gst_thread_new ("p");
-    g_signal_connect (pipeline, "state-change", G_CALLBACK (cb_state), NULL);
-    fakesrc = gst_element_factory_make ("fakesrc", "src");
-    g_object_set (G_OBJECT (fakesrc), "num-buffers", 1, NULL);
-    fakesink = gst_element_factory_make ("fakesink", "sink");
-    if (bug) {
-      gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
-    } else {
-      gst_bin_add (GST_BIN (pipeline), fakesrc);
-    }
-    gst_element_link (fakesrc, fakesink);
-    g_signal_connect (pipeline, "eos", G_CALLBACK (cb_eos), NULL);
-    g_idle_add ((GSourceFunc) cb_play, pipeline);
+  g_print ("Will do a test to see if bug %d is fixed\n", TESTNUM);
 
-    /* give 5 seconds */
-    id = g_timeout_add (5000, (GSourceFunc) cb_timeout, NULL);
-    g_print ("Enter mainloop\n");
-    gst_main ();
-    g_source_remove (id);
+  pipeline = gst_thread_new ("p");
+  g_signal_connect (pipeline, "state-change", G_CALLBACK (cb_state), NULL);
+  fakesrc = gst_element_factory_make ("fakesrc", "src");
+  fakesink = gst_element_factory_make ("fakesink", "sink");
+#if TESTNUM != 123775
+  g_object_set (G_OBJECT (fakesrc), "num-buffers", 0, NULL);
+  g_signal_connect (pipeline, "eos", G_CALLBACK (cb_eos), NULL);
+#else
+  g_object_set (G_OBJECT (fakesink), "signal-handoffs", TRUE, NULL);
+  g_signal_connect (fakesink, "handoff", G_CALLBACK (cb_data), NULL);
+#endif
 
-    gst_element_set_state (pipeline, GST_STATE_NULL);
-    gst_object_unref (GST_OBJECT (pipeline));
+#if TESTNUM != 999999
+  gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
+#else
+  gst_bin_add (GST_BIN (pipeline), fakesrc);
+#endif
 
-    g_print ("Done with reproduce-bug-123775=%s\n", bug ? "true" : "false");
-    bug = !bug;
-  }
+  gst_element_link (fakesrc, fakesink);
+  g_idle_add ((GSourceFunc) cb_play, pipeline);
+
+  /* give 5 seconds */
+  id = g_timeout_add (5000, (GSourceFunc) cb_timeout, NULL);
+  g_print ("Enter mainloop\n");
+  gst_main ();
+  g_source_remove (id);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (GST_OBJECT (pipeline));
+
+  g_print ("Done with test to show bug %d, fixed correctly\n", TESTNUM);
 
   return 0;
 }
