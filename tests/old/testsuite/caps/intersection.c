@@ -3,63 +3,63 @@
 /* these caps all have a non empty intersection */
 GstStaticCaps2 sinkcaps = GST_STATIC_CAPS (
   "video/mpeg, "
-    "mpegtype:int=1, "
-    "foo1:int=[20,40], "
-    "foo2:int=[20,40], "
-    "foo3:int=[10,20]"
+    "mpegtype=(int)1, "
+    "foo1=(int)[20,40], "
+    "foo2=(int)[20,40], "
+    "foo3=(int)[10,20]"
 );
 
 GstStaticCaps2 mp1parsecaps = GST_STATIC_CAPS (
   "video/mpeg, "
-    "mpegtype:int=1, "
-    "foo1:int=30, "
-    "foo2:int=[20,30], "
-    "foo3:int=[20,30]"
+    "mpegtype=(int)1, "
+    "foo1=(int)30, "
+    "foo2=(int)[20,30], "
+    "foo3=(int)[20,30]"
 );
 
 
 
 GstStaticCaps2 rawcaps = GST_STATIC_CAPS (
   "video/raw, "
-    "width:int=[16,4096], "
-    "height:int=[16,4096]"
+    "width=(int)[16,4096], "
+    "height=(int)[16,4096]"
 );
 
 GstStaticCaps2 rawcaps2 = GST_STATIC_CAPS (
   "video/raw, "
-    "height:int=[16,256], "
-    "depth:int=16"
+    "height=(int)[16,256], "
+    "depth=(int)16"
 );
 
 GstStaticCaps2 rawcaps3 = GST_STATIC_CAPS (
   "video/raw, "
-    "fourcc:fourcc=(\"YUY2\", \"YV12\" ), "
-    "height:int=[16,4096]"
+    "fourcc=(fourcc){\"YUY2\", \"YV12\" }, "
+    "height=(int)[16,4096]"
 );
 
 GstStaticCaps2 rawcaps4 = GST_STATIC_CAPS (
   "video/raw, "
-    "fourcc:fourcc=(\"YUY2\",\"YV12\",\"YUYV\" ), "
-    "height:int=[16,4096]"
+    "fourcc=(fourcc){\"YUY2\",\"YV12\",\"YUYV\" }, "
+    "height=(int)[16,4096]"
 );
 
 GstStaticCaps2 rawcaps5 = GST_STATIC_CAPS (
   "video/raw, "
-    "fourcc:fourcc=(\"YUYV\",\"YUY2\"), "
-    "height:int=[16,4096]"
+    "fourcc=(fourcc){\"YUYV\",\"YUY2\"}, "
+    "height=(int)[16,4096]"
 );
 
 GstStaticCaps2 rawcaps6 = GST_STATIC_CAPS (
   "video/raw, "
-    "fourcc:fourcc=\"YUYV\", "
-    "height:int=640, "
-    "width:int=480, "
-    "framerate:double=30.0; "
+    "fourcc=(fourcc)\"YUYV\", "
+    "height=(int)640, "
+    "width=(int)480, "
+    "framerate=(double)30.0; "
   "video/raw, "
-    "fourcc:fourcc=\"I420\", "
-    "height:int=640, "
-    "width:int=480, "
-    "framerate:double=30.0; "
+    "fourcc=(fourcc)\"I420\", "
+    "height=(int)640, "
+    "width=(int)480, "
+    "framerate=(double)30.0"
 );
 
 int 

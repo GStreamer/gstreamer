@@ -172,7 +172,7 @@ gst_bstest_class_init (GstBsTestClass * klass)
 }
 
 static GstCaps2 *
-gst_bstest_getcaps (GstPad *pad, const GstCaps2 *caps)
+gst_bstest_getcaps (GstPad *pad)
 {
   GstBsTest *bstest = GST_BSTEST (gst_pad_get_parent (pad));
   GstPad *otherpad;

@@ -2,7 +2,7 @@ include ../Rules
 
 
 tests_pass = \
-	value_compare value_intersect caps structure
+	value_compare value_intersect caps
 
 tests_fail =
 

@@ -112,8 +112,13 @@ main (int argc, char *argv[])
   /* now iterate and see if it proxies caps ok */
   gst_bin_iterate (GST_BIN (pipeline));
   sink_caps = gst_pad_get_caps (gst_element_get_pad (sink1, "sink"));
-  structure = gst_caps2_get_nth_cap (sink_caps, 0);
-  if (structure != NULL && ! (gst_structure_has_field (structure, "rate"))) {
+  if (sink_caps && gst_caps2_is_fixed (sink_caps)) {
+    structure = gst_caps2_get_nth_cap (sink_caps, 0);
+  }else {
+    structure = NULL;
+    g_print ("sink_caps is not fixed\n");
+  }
+  if (structure == NULL || !(gst_structure_has_field (structure, "rate"))) {
     g_print ("Hm, rate has not been propagated to sink1.\n"); 
     return 1;
   } else {

@@ -600,6 +600,9 @@ gchar *gst_caps2_to_string (const GstCaps2 *caps)
 
   /* FIXME does this leak? */
 
+  if (caps == NULL) {
+    return g_strdup("NULL");
+  }
   if(gst_caps2_is_any(caps)){
     return g_strdup("ANY");
   }
@@ -688,13 +691,17 @@ static void _gst_caps2_value_init (GValue *value)
 
 static void _gst_caps2_value_free (GValue *value)
 {
-  gst_caps2_free (value->data[0].v_pointer);
+  if (value->data[0].v_pointer) gst_caps2_free (value->data[0].v_pointer);
 }
 
 static void _gst_caps2_value_copy (const GValue *src, GValue *dest)
 {
-  gst_caps2_free (dest->data[0].v_pointer);
-  dest->data[0].v_pointer = gst_caps2_copy (src->data[0].v_pointer);
+  if (dest->data[0].v_pointer) {
+    gst_caps2_free (dest->data[0].v_pointer);
+    dest->data[0].v_pointer = gst_caps2_copy (src->data[0].v_pointer);
+  } else {
+    dest->data[0].v_pointer = NULL;
+  }
 }
 
 static gpointer _gst_caps2_value_peek_pointer (const GValue *value)

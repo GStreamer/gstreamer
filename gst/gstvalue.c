@@ -806,7 +806,8 @@ gst_value_intersect_list (GValue *dest, const GValue *value1, const GValue *valu
       } else {
 	GValue temp = {0, };
 
-	g_value_copy (&temp, dest);
+	g_value_init (&temp, G_VALUE_TYPE(dest));
+	g_value_copy (dest, &temp);
 	g_value_unset (dest);
 	gst_value_list_concat (dest, &temp, &intersection);
       }

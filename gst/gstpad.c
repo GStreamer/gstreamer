@@ -2689,7 +2689,9 @@ gst_pad_template_dispose (GObject *object)
   GstPadTemplate *templ = GST_PAD_TEMPLATE (object);
 
   g_free (GST_PAD_TEMPLATE_NAME_TEMPLATE (templ));
-  gst_caps2_free (GST_PAD_TEMPLATE_CAPS (templ));
+  if (GST_PAD_TEMPLATE_CAPS (templ)) {
+    gst_caps2_free (GST_PAD_TEMPLATE_CAPS (templ));
+  }
 
   G_OBJECT_CLASS (padtemplate_parent_class)->dispose (object);
 }
