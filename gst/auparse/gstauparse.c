@@ -282,7 +282,7 @@ Samples :
       case 17:                 /* AU_ENCODING_MULAW_SQUELCH */
 
       case 18:                 /* 16-bit linear with emphasis */
-      case 19:                 /* 16-bit linear compressed (NEXT) */
+      case 19:                 /* 16-bit linear compressed (NeXT) */
       case 20:                 /* 16-bit linear with emphasis and compression */
 
       case 21:                 /* Music kit DSP commands */
