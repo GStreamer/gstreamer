@@ -1,3 +1,11 @@
+2004-12-13  David Schleef  <ds@schleef.org>
+
+	* configure.ac: remove all mmx stuff, because it's not used.
+	* docs/random/ds/0.9-suggested-changes: additional notes
+	* include/Makefile.am: we don't use these anymore
+	* include/mmx.h: remove
+	* include/sse.h: remove
+
 2004-12-13  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
 	* docs/random/mimetypes:

@@ -91,6 +91,9 @@ API:
 
  - remove GstMemChunk
 
+ - remove GST_FORMATS_FUNCTION().  It doesn't work with non-c99 
+   compilers.
+
 caps:
 
   (Company:)

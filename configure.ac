@@ -319,15 +319,6 @@ dnl ######################################################################
 
 dnl FIXME: simplify all this down using a few m4 macros
 
-AC_ARG_ENABLE(libmmx,
-AC_HELP_STRING([--enable-libmmx],[use libmmx, if available]),
-[case "${enableval}" in
-  yes) USE_LIBMMX=$HAVE_LIBMMX ;;
-  no)  USE_LIBMMX=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-libmmx) ;;
-esac], 
-[USE_LIBMMX=$HAVE_LIBMMX]) dnl Default value
-
 AC_ARG_ENABLE(fast-stack-trash,
 AC_HELP_STRING([--enable-fast-stack-trash],[use fast memory allocator (i586 or above)]),
 [case "${enableval}" in
@@ -458,10 +449,6 @@ dnl ################################################
 
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
-if test "x$USE_LIBMMX" = xyes; then
-  AC_DEFINE(HAVE_LIBMMX, 1, [Define if libmmx is available])
-fi
-
 if test "x$USE_FAST_STACK_TRASH" = xyes; then
   AC_DEFINE(USE_FAST_STACK_TRASH, 1, [Define if we should use i586 optimized stack functions])
 fi
