@@ -532,6 +532,7 @@ gst_asf_demux_process_bitrate_props_object (GstASFDemux * asf_demux,
   return TRUE;
 }
 
+/* Content Description Object */
 static gboolean
 gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
 {
@@ -614,6 +615,156 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
 fail:
   for (i = 0; i < 5; i++)
     g_free (utf8_comments[i]);
+  return FALSE;
+}
+
+/* Extended Content Description Object */
+static gboolean
+gst_asf_demux_process_ext_content_desc (GstASFDemux * asf_demux,
+    guint64 * obj_size)
+{
+  GstByteStream *bs = asf_demux->bs;
+  guint16 blockcount, i;
+
+/* 
+
+Other known (and unused) 'text/unicode' metadata available :
+
+ WM/Lyrics =
+ WM/MediaPrimaryClassID = {D1607DBC-E323-4BE2-86A1-48A42A28441E}
+ WMFSDKVersion = 9.00.00.2980
+ WMFSDKNeeded = 0.0.0.0000
+ WM/Year = 1990
+ WM/UniqueFileIdentifier = AMGa_id=R    15334;AMGp_id=P     5149;AMGt_id=T  2324984
+ WM/Composer = Frank Black
+ WM/Publisher = 4AD
+ WM/Provider = AMG
+ WM/ProviderRating = 8
+ WM/ProviderStyle = Rock
+
+Other known (and unused) 'non-text' metadata available :
+
+WM/Track
+IsVBR
+WM/TrackNumber
+WM/EncodingTime
+WM/MCDI
+
+*/
+
+  const guchar *tags[] = { GST_TAG_GENRE, GST_TAG_ALBUM, GST_TAG_ARTIST, NULL };
+  const guchar *tags_label[] =
+      { "WM/Genre", "WM/AlbumTitle", "WM/AlbumArtist", NULL };
+
+  GstTagList *taglist;
+  GValue tag_value = { 0 };
+  gboolean have_tags = FALSE;
+
+  GST_INFO ("Object is an extended content description.");
+
+  taglist = gst_tag_list_new ();
+  g_value_init (&tag_value, G_TYPE_STRING);
+
+  /* Content Descriptors Count */
+  if (!_read_uint16 (asf_demux, &blockcount))
+    goto fail;
+
+  for (i = 1; i <= blockcount; i++) {
+    guint16 name_length;
+    guint16 datatype;
+    guint16 value_length;
+    guint8 *tmpname, *name;
+    guint8 *tmpvalue, *value;
+
+    /* Descriptor Name Length */
+    if (!_read_uint16 (asf_demux, &name_length))
+      goto fail;
+
+    /* Descriptor Name */
+    name = g_malloc (name_length);
+    if (gst_bytestream_peek_bytes (bs, &tmpname, name_length) != name_length)
+      goto fail;
+
+    name = g_memdup (tmpname, name_length);
+    gst_bytestream_flush_fast (bs, name_length);
+
+    /* Descriptor Value Data Type */
+    if (!_read_uint16 (asf_demux, &datatype))
+      goto fail;
+
+    /* Descriptor Value Length */
+    if (!_read_uint16 (asf_demux, &value_length))
+      goto fail;
+
+    /* Descriptor Value */
+    if (gst_bytestream_peek_bytes (bs, &tmpvalue, value_length) != value_length)
+      goto fail;
+
+    value = g_memdup (tmpvalue, value_length);
+    gst_bytestream_flush_fast (bs, value_length);
+
+    /* 0000 = Unicode String */
+    if (datatype == 0) {
+      gsize in, out;
+      guchar tag = 255;
+      guint16 j = 0;
+
+      /* convert to UTF-8 */
+      name =
+          g_convert (name, name_length, "UTF-8", "UTF-16LE", &in, &out, NULL);
+      name[out] = 0;
+
+      while (tags_label[j] != NULL) {
+        if (!strncmp (name, tags_label[j], strlen (tags_label[j]))) {
+          tag = j;
+        };
+        j++;
+      }
+
+      if (tag != 255) {
+        /* convert to UTF-8 */
+        value =
+            g_convert (value, value_length, "UTF-8", "UTF-16LE", &in, &out,
+            NULL);
+        value[out] = 0;
+
+        have_tags = TRUE;
+        g_value_set_string (&tag_value, value);
+        gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND, tags[tag],
+            &tag_value, NULL);
+      }
+    }
+
+    g_free (name);
+    g_free (value);
+  }
+
+  g_value_unset (&tag_value);
+
+  if (have_tags) {
+    GstElement *element = GST_ELEMENT (asf_demux);
+    GstEvent *event;
+    const GList *padlist;
+
+    gst_element_found_tags (element, taglist);
+    event = gst_event_new_tag (taglist);
+
+    for (padlist = gst_element_get_pad_list (element);
+        padlist != NULL; padlist = padlist->next) {
+      if (GST_PAD_IS_SRC (padlist->data) && GST_PAD_IS_USABLE (padlist->data)) {
+        gst_event_ref (event);
+        gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
+      }
+    }
+
+    gst_event_unref (event);
+  } else {
+    gst_tag_list_free (taglist);
+  }
+
+  return TRUE;
+
+fail:
   return FALSE;
 }
 
@@ -1092,13 +1243,14 @@ gst_asf_demux_process_object (GstASFDemux * asf_demux)
       return gst_asf_demux_process_header_ext (asf_demux, &obj_size);
     case ASF_OBJ_BITRATE_PROPS:
       return gst_asf_demux_process_bitrate_props_object (asf_demux, &obj_size);
+    case ASF_OBJ_EXT_CONTENT_DESC:
+      return gst_asf_demux_process_ext_content_desc (asf_demux, &obj_size);
     case ASF_OBJ_CONCEAL_NONE:
     case ASF_OBJ_HEAD2:
     case ASF_OBJ_UNDEFINED:
     case ASF_OBJ_CODEC_COMMENT:
     case ASF_OBJ_INDEX:
     case ASF_OBJ_PADDING:
-    case ASF_OBJ_EXT_CONTENT_DESC:
     case ASF_OBJ_BITRATE_MUTEX:
     case ASF_OBJ_LANGUAGE_LIST:
     case ASF_OBJ_METADATA_OBJECT:

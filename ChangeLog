@@ -1,3 +1,14 @@
+2005-01-05  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* gst-libs/gst/riff/riff-ids.h:
+	* gst/wavenc/riff.h:
+	 Add AMR (VBR and CBR) ids to riff.h audio codec list
+
+	* gst/asfdemux/gstasfdemux.c:
+	(gst_asf_demux_process_ext_content_desc),
+	(gst_asf_demux_process_object):
+	  Retrieve more tags from ASF files (Genre, AlbumTitle, Artist)
+
 2005-01-05  Martin Eikermann  <meiker@upb.de>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
