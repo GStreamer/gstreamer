@@ -1,6 +1,6 @@
 SUBDIRS=libmodplug .
 
-plugindir = $(libdir)/gst
+plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = libgstmodplug.la
 

@@ -3,10 +3,11 @@ Version: 	@VERSION@
 Release: 	@GST_PLUGINS_VERSION_RELEASE@
 Summary: 	GStreamer Streaming-media framework plug-ins.
 
-%define 	prefix  /usr
-%define 	sysconfdir /etc
-Docdir: 	%{prefix}/share/doc
-Prefix: 	%prefix
+%define 	majorminor	@GST_MAJORMINOR@
+#%define 	prefix  /usr
+#%define 	sysconfdir /etc
+#Docdir: 	%{prefix}/share/doc
+#Prefix: 	%prefix
 
 Group: 		Libraries/Multimedia
 License: 	LGPL
@@ -22,6 +23,7 @@ BuildRequires:  glib2-devel >= %_glib2
 Requires: 	gstreamer = %{version}
 BuildRequires: 	nasm => 0.90
 BuildRequires: 	gstreamer-devel = %{version} 
+BuildRequires:	gstreamer-tools >= %{version}
 Obsoletes:	gstreamer-plugin-libs
 
 %description
@@ -84,12 +86,12 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 
 # Clean out files that should not be part of the rpm.
 # This is the recommended way of dealing with it for RH8
-rm -f $RPM_BUILD_ROOT%{_libdir}/gst/*.la
-rm -f $RPM_BUILD_ROOT%{_libdir}/gst/*.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}reamer-%{majorminor}/*.la
+rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}reamer-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
-rm -f $RPM_BUILD_ROOT%{_includedir}/gst-plugins-%{version}/gst/media-info/media-info.h
-rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info.so.0.0.0
+rm -f $RPM_BUILD_ROOT%{_includedir}/gstreamer-%{majorminor}/gst/media-info/media-info.h
+rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 
 
 %clean
@@ -102,34 +104,35 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info.so.0.0.0
 %{_bindir}/gst-visualise
 %{_mandir}/man1/gst-launch-ext.*
 %{_mandir}/man1/gst-visualise.1.*
-%{_libdir}/gst/libgstaudioscale.so
-%{_libdir}/gst/libgstaudio.so
-%{_libdir}/gst/libgstidct.so
-%{_libdir}/gst/libgstresample.so
-%{_libdir}/gst/libgstriff.so
-%{_libdir}/gst/libgstvideo.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaudioscale.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaudio.so
+%{_libdir}/gstreamer-%{majorminor}/libgstidct.so
+%{_libdir}/gstreamer-%{majorminor}/libgstresample.so
+%{_libdir}/gstreamer-%{majorminor}/libgstriff.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideo.so
 
 %package -n gstreamer-plugins-devel
 Summary: 	GStreamer Plugin Library Headers.
 Group: 		Development/Libraries
 Requires: 	gstreamer-plugins = %{version}
+Provides:	gstreamer-play-devel = %{version}
 
 %description -n gstreamer-plugins-devel
 GStreamer support libraries header files.
 
 %files -n gstreamer-plugins-devel
 %defattr(-, root, root)
-%{_includedir}/gst-plugins-%{version}/gst/audio/audio.h
-%{_includedir}/gst-plugins-%{version}/gst/floatcast/floatcast.h
-%{_includedir}/gst-plugins-%{version}/gst/gconf/gconf.h
-%{_includedir}/gst-plugins-%{version}/gst/idct/idct.h
-%{_includedir}/gst-plugins-%{version}/gst/resample/resample.h
-%{_includedir}/gst-plugins-%{version}/gst/riff/riff.h
-%{_includedir}/gst-plugins-%{version}/gst/video/video.h
-%{_includedir}/gst-plugins-%{version}/gst/play/play.h
-%{_datadir}/aclocal/gst-element-check.m4
-%{_libdir}/pkgconfig/gstreamer-libs.pc
-%{_libdir}/pkgconfig/gstreamer-play.pc
+%{_includedir}/gstreamer-%{major_minor}/gst/audio/audio.h
+%{_includedir}/gstreamer-%{major_minor}/gst/floatcast/floatcast.h
+%{_includedir}/gstreamer-%{major_minor}/gst/gconf/gconf.h
+%{_includedir}/gstreamer-%{major_minor}/gst/idct/idct.h
+%{_includedir}/gstreamer-%{major_minor}/gst/resample/resample.h
+%{_includedir}/gstreamer-%{major_minor}/gst/riff/riff.h
+%{_includedir}/gstreamer-%{major_minor}/gst/video/video.h
+%{_includedir}/gstreamer-%{major_minor}/gst/play/play.h
+%{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
+%{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
 
 # Here are all the packages depending on external libs #
 
@@ -146,8 +149,8 @@ GStreamer support libraries header files.
 @USE_A52DEC_TRUE@
 @USE_A52DEC_TRUE@%files -n gstreamer-a52dec
 @USE_A52DEC_TRUE@%defattr(-, root, root)
-@USE_A52DEC_TRUE@%{_libdir}/gst/libgsta52dec.so
-@USE_A52DEC_TRUE@%{_libdir}/gst/libgstac3parse.so
+@USE_A52DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsta52dec.so
+@USE_A52DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstac3parse.so
 @USE_A52DEC_TRUE@
 @USE_A52DEC_TRUE@%post -n gstreamer-a52dec
 @USE_A52DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -170,7 +173,7 @@ GStreamer support libraries header files.
 @USE_AALIB_TRUE@
 @USE_AALIB_TRUE@%files -n gstreamer-aalib
 @USE_AALIB_TRUE@%defattr(-, root, root)
-@USE_AALIB_TRUE@%{_libdir}/gst/libgstaasink.so
+@USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaasink.so
 @USE_AALIB_TRUE@
 @USE_AALIB_TRUE@%post -n gstreamer-aalib
 @USE_AALIB_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -192,7 +195,7 @@ GStreamer support libraries header files.
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%files -n gstreamer-alsa
 @USE_ALSA_TRUE@%defattr(-, root, root)
-@USE_ALSA_TRUE@%{_libdir}/gst/libgstalsa.so
+@USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsa.so
 @USE_ALSA_TRUE@%{_mandir}/man1/gstalsa*
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%post -n gstreamer-alsa
@@ -217,7 +220,7 @@ GStreamer support libraries header files.
 @USE_ARTS_TRUE@
 @USE_ARTS_TRUE@%files -n gstreamer-arts
 @USE_ARTS_TRUE@%defattr(-, root, root)
-@USE_ARTS_TRUE@%{_libdir}/gst/libgstarts.so
+@USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
 @USE_ARTS_TRUE@
 @USE_ARTS_TRUE@%post -n gstreamer-arts
 @USE_ARTS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -238,7 +241,7 @@ GStreamer support libraries header files.
 @USE_ARTSC_TRUE@
 @USE_ARTSC_TRUE@%files -n gstreamer-artsd
 @USE_ARTSC_TRUE@%defattr(-, root, root)
-@USE_ARTSC_TRUE@%{_libdir}/gst/libgstartsdsink.so
+@USE_ARTSC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstartsdsink.so
 @USE_ARTSC_TRUE@
 @USE_ARTSC_TRUE@%post -n gstreamer-artsd
 @USE_ARTSC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -260,7 +263,7 @@ GStreamer support libraries header files.
 @USE_SWFDEC_TRUE@
 @USE_SWFDEC_TRUE@%files -n gstreamer-swfdec
 @USE_SWFDEC_TRUE@%defattr(-, root, root)
-@USE_SWFDEC_TRUE@%{_libdir}/gst/libgstswfdec.so
+@USE_SWFDEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstswfdec.so
 @USE_SWFDEC_TRUE@
 @USE_SWFDEC_TRUE@%post -n gstreamer-swfdec
 @USE_SWFDEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -284,7 +287,7 @@ GStreamer support libraries header files.
 @USE_AUDIOFILE_TRUE@
 @USE_AUDIOFILE_TRUE@%files -n gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@%defattr(-, root, root)
-@USE_AUDIOFILE_TRUE@%{_libdir}/gst/libgstaudiofile.so
+@USE_AUDIOFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaudiofile.so
 @USE_AUDIOFILE_TRUE@
 @USE_AUDIOFILE_TRUE@%post -n  gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -306,8 +309,8 @@ Plug-ins for playback of AVI format media files.
 
 %files -n gstreamer-avi
 %defattr(-, root, root)
-%{_libdir}/gst/libgstavidemux.so
-%{_libdir}/gst/libgstavimux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstavidemux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstavimux.so
 
 %post -n gstreamer-avi
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -331,7 +334,7 @@ Plug-ins for playback of AVI format media files.
 @USE_AVIFILE_TRUE@
 @USE_AVIFILE_TRUE@%files -n gstreamer-windec
 @USE_AVIFILE_TRUE@%defattr(-, root, root)
-@USE_AVIFILE_TRUE@%{_libdir}/gst/libgstwincodec.so
+@USE_AVIFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwincodec.so
 @USE_AVIFILE_TRUE@
 @USE_AVIFILE_TRUE@%post -n gstreamer-windec
 @USE_AVIFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -354,7 +357,7 @@ Plug-ins for playback of AVI format media files.
 @USE_CDPARANOIA_TRUE@
 @USE_CDPARANOIA_TRUE@%files -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@%defattr(-, root, root)
-@USE_CDPARANOIA_TRUE@%{_libdir}/gst/libgstcdparanoia.so
+@USE_CDPARANOIA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcdparanoia.so
 @USE_CDPARANOIA_TRUE@
 @USE_CDPARANOIA_TRUE@%post -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -378,7 +381,7 @@ Plug-ins for playback of AVI format media files.
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%files -n gstreamer-libdvdread
 @USE_DVDREAD_TRUE@%defattr(-, root, root)
-@USE_DVDREAD_TRUE@%{_libdir}/gst/libgstdvdreadsrc.so
+@USE_DVDREAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdreadsrc.so
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%post -n gstreamer-libdvdread
 @USE_DVDREAD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -402,7 +405,7 @@ Plug-ins for playback of AVI format media files.
 @USE_DVDNAV_TRUE@
 @USE_DVDNAV_TRUE@%files -n gstreamer-libdvdnav
 @USE_DVDNAV_TRUE@%defattr(-, root, root)
-@USE_DVDNAV_TRUE@%{_libdir}/gst/libgstdvdnavsrc.so
+@USE_DVDNAV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdnavsrc.so
 @USE_DVDNAV_TRUE@
 @USE_DVDNAV_TRUE@%post -n gstreamer-libdvdnav
 @USE_DVDNAV_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -427,7 +430,7 @@ Plug-ins for playback of AVI format media files.
 @USE_DXR3_TRUE@
 @USE_DXR3_TRUE@%files -n gstreamer-dxr3
 @USE_DXR3_TRUE@%defattr(-, root, root)
-@USE_DXR3_TRUE@%{_libdir}/gst/libgstdxr3.so
+@USE_DXR3_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdxr3.so
 @USE_DXR3_TRUE@
 @USE_DXR3_TRUE@%post -n gstreamer-dxr3
 @USE_DXR3_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -451,8 +454,8 @@ Plug-ins for playback of AVI format media files.
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@%files -n gstreamer-esound
 @USE_ESD_TRUE@%defattr(-, root, root)
-@USE_ESD_TRUE@%{_libdir}/gst/libgstesdmon.so
-@USE_ESD_TRUE@%{_libdir}/gst/libgstesdsink.so
+@USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesdmon.so
+@USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesdsink.so
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@%post -n gstreamer-esound
 @USE_ESD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -475,7 +478,7 @@ Plug-ins for playback of AVI format media files.
 @USE_FLAC_TRUE@
 @USE_FLAC_TRUE@%files -n gstreamer-flac
 @USE_FLAC_TRUE@%defattr(-, root, root)
-@USE_FLAC_TRUE@%{_libdir}/gst/libgstflac.so
+@USE_FLAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstflac.so
 @USE_FLAC_TRUE@
 @USE_FLAC_TRUE@%post -n gstreamer-flac
 @USE_FLAC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -498,8 +501,8 @@ Plug-ins for playback of AVI format media files.
 @USE_GNOME_VFS_TRUE@
 @USE_GNOME_VFS_TRUE@%files -n gstreamer-gnomevfs
 @USE_GNOME_VFS_TRUE@%defattr(-, root, root)
-@USE_GNOME_VFS_TRUE@%{_libdir}/gst/libgstgnomevfssrc.so
-@USE_GNOME_VFS_TRUE@%{_libdir}/gst/libgstgnomevfssink.so
+@USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfssrc.so
+@USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfssink.so
 @USE_GNOME_VFS_TRUE@
 @USE_GNOME_VFS_TRUE@%post -n gstreamer-gnomevfs
 @USE_GNOME_VFS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -522,7 +525,7 @@ Plug-ins for playback of AVI format media files.
 @USE_GSM_TRUE@
 @USE_GSM_TRUE@%files -n gstreamer-gsm
 @USE_GSM_TRUE@%defattr(-, root, root)
-@USE_GSM_TRUE@%{_libdir}/gst/libgstgsm.so
+@USE_GSM_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
 @USE_GSM_TRUE@
 @USE_GSM_TRUE@%post -n gstreamer-gsm
 @USE_GSM_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -544,7 +547,7 @@ Plug-ins for playback of AVI format media files.
 @USE_HERMES_TRUE@
 @USE_HERMES_TRUE@%files -n gstreamer-colorspace
 @USE_HERMES_TRUE@%defattr(-, root, root)
-@USE_HERMES_TRUE@%{_libdir}/gst/libgstcolorspace.so
+@USE_HERMES_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcolorspace.so
 @USE_HERMES_TRUE@
 @USE_HERMES_TRUE@%post -n gstreamer-colorspace
 @USE_HERMES_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -568,7 +571,7 @@ Plug-ins for playback of AVI format media files.
 @USE_HTTP_TRUE@
 @USE_HTTP_TRUE@%files -n gstreamer-httpsrc
 @USE_HTTP_TRUE@%defattr(-, root, root)
-@USE_HTTP_TRUE@%{_libdir}/gst/libgsthttpsrc.so
+@USE_HTTP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthttpsrc.so
 @USE_HTTP_TRUE@
 @USE_HTTP_TRUE@%post -n gstreamer-httpsrc
 @USE_HTTP_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -590,7 +593,7 @@ Plug-ins for playback of AVI format media files.
 @USE_JACK_TRUE@
 @USE_JACK_TRUE@%files -n gstreamer-jack
 @USE_JACK_TRUE@%defattr(-, root, root)
-@USE_JACK_TRUE@%{_libdir}/gst/libgstjack.so
+@USE_JACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjack.so
 @USE_JACK_TRUE@
 @USE_JACK_TRUE@%post -n gstreamer-jack
 @USE_JACK_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -613,7 +616,7 @@ Plug-ins for playback of AVI format media files.
 @USE_JPEG_TRUE@
 @USE_JPEG_TRUE@%files -n gstreamer-jpeg
 @USE_JPEG_TRUE@%defattr(-, root, root)
-@USE_JPEG_TRUE@%{_libdir}/gst/libgstjpeg.so
+@USE_JPEG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjpeg.so
 @USE_JPEG_TRUE@
 @USE_JPEG_TRUE@%post -n gstreamer-jpeg
 @USE_JPEG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -638,7 +641,7 @@ Plug-ins for playback of AVI format media files.
 @USE_LADSPA_TRUE@
 @USE_LADSPA_TRUE@%files -n gstreamer-ladspa
 @USE_LADSPA_TRUE@%defattr(-, root, root)
-@USE_LADSPA_TRUE@%{_libdir}/gst/libgstladspa.so
+@USE_LADSPA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
 @USE_LADSPA_TRUE@
 @USE_LADSPA_TRUE@%post -n gstreamer-ladspa
 @USE_LADSPA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -661,7 +664,7 @@ Plug-ins for playback of AVI format media files.
 @USE_LAME_TRUE@
 @USE_LAME_TRUE@%files -n gstreamer-lame
 @USE_LAME_TRUE@%defattr(-, root, root)
-@USE_LAME_TRUE@%{_libdir}/gst/libgstlame.so
+@USE_LAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlame.so
 @USE_LAME_TRUE@
 @USE_LAME_TRUE@%post -n gstreamer-lame
 @USE_LAME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -684,7 +687,7 @@ Plug-ins for playback of AVI format media files.
 @USE_LIBDV_TRUE@
 @USE_LIBDV_TRUE@%files -n gstreamer-dv
 @USE_LIBDV_TRUE@%defattr(-, root, root)
-@USE_LIBDV_TRUE@%{_libdir}/gst/libgstdvdec.so
+@USE_LIBDV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdec.so
 @USE_LIBDV_TRUE@
 @USE_LIBDV_TRUE@%post -n gstreamer-dv
 @USE_LIBDV_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -708,7 +711,7 @@ Plug-ins for playback of AVI format media files.
 @USE_LIBFAME_TRUE@
 @USE_LIBFAME_TRUE@%files -n gstreamer-libfame
 @USE_LIBFAME_TRUE@%defattr(-, root, root)
-@USE_LIBFAME_TRUE@%{_libdir}/gst/libgstlibfame.so
+@USE_LIBFAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlibfame.so
 @USE_LIBFAME_TRUE@
 @USE_LIBFAME_TRUE@%post -n gstreamer-libfame
 @USE_LIBFAME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -732,7 +735,7 @@ Plug-ins for playback of AVI format media files.
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%files -n gstreamer-mad
 @USE_MAD_TRUE@%defattr(-, root, root)  
-@USE_MAD_TRUE@%{_libdir}/gst/libgstmad.so
+@USE_MAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmad.so
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%post -n gstreamer-mad
 @USE_MAD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -755,7 +758,7 @@ Plug-ins for playback of AVI format media files.
 @USE_MIKMOD_TRUE@
 @USE_MIKMOD_TRUE@%files -n gstreamer-mikmod
 @USE_MIKMOD_TRUE@%defattr(-, root, root)
-@USE_MIKMOD_TRUE@%{_libdir}/gst/libgstmikmod.so
+@USE_MIKMOD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmikmod.so
 @USE_MIKMOD_TRUE@
 @USE_MIKMOD_TRUE@%post -n gstreamer-mikmod
 @USE_MIKMOD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -778,8 +781,8 @@ Plug-ins for playback of AVI format media files.
 @USE_MJPEGTOOLS_TRUE@
 @USE_MJPEGTOOLS_TRUE@%files -n gstreamer-jpegmmx
 @USE_MJPEGTOOLS_TRUE@%defattr(-, root, root)
-@USE_MJPEGTOOLS_TRUE@%{_libdir}/gst/libgstjpegmmxenc.so
-@USE_MJPEGTOOLS_TRUE@%{_libdir}/gst/libgstjpegmmxdec.so
+@USE_MJPEGTOOLS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjpegmmxenc.so
+@USE_MJPEGTOOLS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjpegmmxdec.so
 @USE_MJPEGTOOLS_TRUE@
 @USE_MJPEGTOOLS_TRUE@%post -n gstreamer-jpegmmx
 @USE_MJPEGTOOLS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -805,17 +808,17 @@ Plug-ins for playback of AVI format media files.
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%files -n gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%defattr(-, root, root)
-@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg1types.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg1encoder.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg1systemencode.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpegaudio.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpegaudioparse.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmp1videoparse.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpegstream.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2enc.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2dec.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2subt.so
-@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2types.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg1types.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg1encoder.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg1systemencode.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpegaudio.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpegaudioparse.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmp1videoparse.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpegstream.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2subt.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2types.so
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -840,9 +843,9 @@ Plug-ins for playback of AVI format media files.
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%files -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@%defattr(-, root, root)
-@USE_OPENQUICKTIME_TRUE@%{_libdir}/gst/libgstopenquicktimedemux.so
-@USE_OPENQUICKTIME_TRUE@%{_libdir}/gst/libgstopenquicktimetypes.so
-@USE_OPENQUICKTIME_TRUE@%{_libdir}/gst/libgstopenquicktimedecoder.so
+@USE_OPENQUICKTIME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstopenquicktimedemux.so
+@USE_OPENQUICKTIME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstopenquicktimetypes.so
+@USE_OPENQUICKTIME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstopenquicktimedecoder.so
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%post -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -866,8 +869,8 @@ Plug-ins for playback of AVI format media files.
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%files -n gstreamer-oss
 @USE_OSS_TRUE@%defattr(-, root, root)
-@USE_OSS_TRUE@%{_libdir}/gst/libgstossaudio.so
-# @USE_OSS_TRUE@%{_libdir}/gst/libgstosshelper*
+@USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstossaudio.so
+# @USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstosshelper*
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%post -n gstreamer-oss
 @USE_OSS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -890,7 +893,7 @@ Plug-ins for playback of AVI format media files.
 @USE_RAW1394_TRUE@
 @USE_RAW1394_TRUE@%files -n gstreamer-raw1394
 @USE_RAW1394_TRUE@%defattr(-, root, root)
-@USE_RAW1394_TRUE@%{_libdir}/gst/libgst1394.so
+@USE_RAW1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 @USE_RAW1394_TRUE@
 @USE_RAW1394_TRUE@%post -n gstreamer-raw1394
 @USE_RAW1394_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -912,7 +915,7 @@ Plug-ins for playback of AVI format media files.
 @USE_RTP_TRUE@
 @USE_RTP_TRUE@%files -n gstreamer-rtp
 @USE_RTP_TRUE@%defattr(-, root, root)
-@USE_RTP_TRUE@%{_libdir}/gst/libgstrtp.so
+@USE_RTP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstrtp.so
 @USE_RTP_TRUE@
 @USE_RTP_TRUE@%post -n gstreamer-rtp
 @USE_RTP_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -935,7 +938,7 @@ Plug-ins for playback of AVI format media files.
 @USE_SIDPLAY_TRUE@
 @USE_SIDPLAY_TRUE@%files -n gstreamer-sid
 @USE_SIDPLAY_TRUE@%defattr(-, root, root)
-@USE_SIDPLAY_TRUE@%{_libdir}/gst/libgstsid.so
+@USE_SIDPLAY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsid.so
 @USE_SIDPLAY_TRUE@
 @USE_SIDPLAY_TRUE@%post -n gstreamer-sid
 @USE_SIDPLAY_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -964,7 +967,7 @@ Plug-ins for playback of AVI format media files.
 @USE_SDL_TRUE@
 @USE_SDL_TRUE@%files -n gstreamer-SDL
 @USE_SDL_TRUE@%defattr(-, root, root)
-@USE_SDL_TRUE@%{_libdir}/gst/libgstsdlvideosink.so
+@USE_SDL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsdlvideosink.so
 @USE_SDL_TRUE@
 @USE_SDL_TRUE@%post -n gstreamer-SDL
 @USE_SDL_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -987,7 +990,7 @@ Plug-ins for playback of AVI format media files.
 @USE_SHOUT_TRUE@
 @USE_SHOUT_TRUE@%files -n gstreamer-icecast
 @USE_SHOUT_TRUE@%defattr(-, root, root)
-@USE_SHOUT_TRUE@%{_libdir}/gst/libgstshout.so
+@USE_SHOUT_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstshout.so
 @USE_SHOUT_TRUE@
 @USE_SHOUT_TRUE@%post -n gstreamer-icecast
 @USE_SHOUT_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1012,7 +1015,7 @@ Plug-ins for playback of AVI format media files.
 @USE_VORBIS_TRUE@
 @USE_VORBIS_TRUE@%files -n gstreamer-vorbis  
 @USE_VORBIS_TRUE@%defattr(-, root, root)
-@USE_VORBIS_TRUE@%{_libdir}/gst/libgstvorbis.so
+@USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvorbis.so
 @USE_VORBIS_TRUE@
 @USE_VORBIS_TRUE@%post -n gstreamer-vorbis
 @USE_VORBIS_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1034,10 +1037,10 @@ Plug-ins for playback of AVI format media files.
 @USE_V4L_TRUE@
 @USE_V4L_TRUE@%files -n gstreamer-v4l
 @USE_V4L_TRUE@%defattr(-, root, root)
-@USE_V4L_TRUE@%{_libdir}/gst/libgstv4lelement.so
-@USE_V4L_TRUE@%{_libdir}/gst/libgstv4lsrc.so
-@USE_V4L_TRUE@%{_libdir}/gst/libgstv4lmjpegsrc.so
-@USE_V4L_TRUE@%{_libdir}/gst/libgstv4lmjpegsink.so
+@USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstv4lelement.so
+@USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstv4lsrc.so
+@USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstv4lmjpegsrc.so
+@USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstv4lmjpegsink.so
 @USE_V4L_TRUE@
 @USE_V4L_TRUE@%post -n gstreamer-v4l
 @USE_V4L_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1059,8 +1062,8 @@ Plug-ins for playback of AVI format media files.
 @USE_V4L2_TRUE@
 @USE_V4L2_TRUE@%files -n gstreamer-v4l2
 @USE_V4L2_TRUE@%defattr(-, root, root)
-@USE_V4L2_TRUE@%{_libdir}/gst/libgstv4l2element.so
-@USE_V4L2_TRUE@%{_libdir}/gst/libgstv4l2src.so
+@USE_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstv4l2element.so
+@USE_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstv4l2src.so
 @USE_V4L2_TRUE@
 @USE_V4L2_TRUE@%post -n gstreamer-v4l2
 @USE_V4L2_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1082,7 +1085,7 @@ Plug-ins for playback of AVI format media files.
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%files -n gstreamer-xvideosink
 @USE_XVIDEO_TRUE@%defattr(-, root, root)
-@USE_XVIDEO_TRUE@%{_libdir}/gst/libgstxvideosink*
+@USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvideosink*
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%post -n gstreamer-xvideosink
 @USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1104,7 +1107,7 @@ Plug-ins for playback of AVI format media files.
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%files -n gstreamer-videosink
 @USE_XVIDEO_TRUE@%defattr(-, root, root)
-@USE_XVIDEO_TRUE@%{_libdir}/gst/libgstvideosink.so
+@USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideosink.so
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%post -n gstreamer-videosink
 @USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1131,28 +1134,28 @@ integer to float conversion, LAW conversion and level detection plug-ins.
 
 %files -n gstreamer-audio-effects
 %defattr(-, root, root)
-%{_libdir}/gst/libgstresample.so
-%{_libdir}/gst/libgstsinesrc.so
-%{_libdir}/gst/libgstsilence.so
-%{_libdir}/gst/libgststereo.so
-%{_libdir}/gst/libgststereo2mono.so
-%{_libdir}/gst/libgstvolume.so
-%{_libdir}/gst/libgstvolenv.so
-%{_libdir}/gst/libgstplayondemand.so
-%{_libdir}/gst/libgstspeed.so
-%{_libdir}/gst/libgststereosplit.so
-%{_libdir}/gst/libgstadder.so
-%{_libdir}/gst/libgstalaw.so
-%{_libdir}/gst/libgstintfloat.so
-%{_libdir}/gst/libgstlevel.so
-%{_libdir}/gst/libgstmono2stereo.so
-%{_libdir}/gst/libgstmulaw.so
-%{_libdir}/gst/libgstpassthrough.so
-# %{_libdir}/gst/libgstfloatcast.so
-%{_libdir}/gst/libgstcutter.so
-%{_libdir}/gst/libgstfilter.so
-%{_libdir}/gst/libmixmatrix.so
-@USE_LIBPNG_TRUE@%{_libdir}/gst/libgstpng.so
+%{_libdir}/gstreamer-%{majorminor}/libgstresample.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsinesrc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsilence.so
+%{_libdir}/gstreamer-%{majorminor}/libgststereo.so
+%{_libdir}/gstreamer-%{majorminor}/libgststereo2mono.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvolume.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvolenv.so
+%{_libdir}/gstreamer-%{majorminor}/libgstplayondemand.so
+%{_libdir}/gstreamer-%{majorminor}/libgstspeed.so
+%{_libdir}/gstreamer-%{majorminor}/libgststereosplit.so
+%{_libdir}/gstreamer-%{majorminor}/libgstadder.so
+%{_libdir}/gstreamer-%{majorminor}/libgstalaw.so
+%{_libdir}/gstreamer-%{majorminor}/libgstintfloat.so
+%{_libdir}/gstreamer-%{majorminor}/libgstlevel.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmono2stereo.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmulaw.so
+%{_libdir}/gstreamer-%{majorminor}/libgstpassthrough.so
+# %{_libdir}/gstreamer-%{majorminor}/libgstfloatcast.so
+%{_libdir}/gstreamer-%{majorminor}/libgstcutter.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfilter.so
+%{_libdir}/gstreamer-%{majorminor}/libmixmatrix.so
+@USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
 
 %post -n gstreamer-audio-effects
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1174,11 +1177,11 @@ Plug-in for playback of wav, au and mod audio files as well as mp3 type.
 
 %files -n gstreamer-audio-formats
 %defattr(-, root, root)
-%{_libdir}/gst/libgstwavparse.so
-%{_libdir}/gst/libgstauparse.so
-%{_libdir}/gst/libgstmp3types.so
-%{_libdir}/gst/libgstmodplug.so
-%{_libdir}/gst/libgstwavenc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstwavparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstauparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmp3types.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmodplug.so
+%{_libdir}/gstreamer-%{majorminor}/libgstwavenc.so
 
 %post -n gstreamer-audio-formats
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1199,7 +1202,7 @@ Plug-in for text-to-speech using the festival server.
 
 %files -n gstreamer-festival
 %defattr(-, root, root)
-%{_libdir}/gst/libgstfestival.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
 
 %post -n gstreamer-festival
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1220,7 +1223,7 @@ Plug-in for playing FLI/FLX animations under GStreamer.
 
 %files -n gstreamer-flx
 %defattr(-, root, root)
-%{_libdir}/gst/libgstflxdec.so
+%{_libdir}/gstreamer-%{majorminor}/libgstflxdec.so
 
 %post -n gstreamer-flx
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1241,7 +1244,7 @@ Plug-in for accessing a Quickcam video source.
 
 %files -n gstreamer-qcam
 %defattr(-, root, root)
-%{_libdir}/gst/libgstqcam.so
+%{_libdir}/gstreamer-%{majorminor}/libgstqcam.so
 
 %post -n gstreamer-qcam
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1262,7 +1265,7 @@ Plug-ins for UDP transport under GStreamer.
 
 %files -n gstreamer-udp
 %defattr(-, root, root)
-%{_libdir}/gst/libgstudp.so
+%{_libdir}/gstreamer-%{majorminor}/libgstudp.so
 
 %post -n gstreamer-udp
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1283,8 +1286,8 @@ Video CD parsing and playback plug-in for GStreamer.
 
 %files -n gstreamer-vcd
 %defattr(-, root, root)
-%{_libdir}/gst/libgstvcdsrc.so
-%{_libdir}/gst/libgstcdxaparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvcdsrc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstcdxaparse.so
 
 %post -n gstreamer-vcd
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1308,13 +1311,13 @@ plug-ins.
 
 %files -n gstreamer-video-effects
 %defattr(-, root, root)
-%{_libdir}/gst/libgsteffectv.so
-%{_libdir}/gst/libgstdeinterlace.so
-%{_libdir}/gst/libgstmedian.so
-%{_libdir}/gst/libgstrtjpeg.so
-%{_libdir}/gst/libgstvideocrop.so
-%{_libdir}/gst/libgstvideoscale.so
-%{_libdir}/gst/libgstsmpte.so
+%{_libdir}/gstreamer-%{majorminor}/libgsteffectv.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmedian.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrtjpeg.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideocrop.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideoscale.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsmpte.so
 
 %post -n gstreamer-video-effects
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1337,13 +1340,13 @@ and vumeter.
 
 %files -n gstreamer-visualisation
 %defattr(-, root, root)
-%{_libdir}/gst/libgstsmooth.so
-%{_libdir}/gst/libgstspectrum.so
-%{_libdir}/gst/libgstvumeter.so
-%{_libdir}/gst/libgstgoom.so
-%{_libdir}/gst/libgstchart.so
-%{_libdir}/gst/libgstmonoscope.so
-%{_libdir}/gst/libgstsynaesthesia.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsmooth.so
+%{_libdir}/gstreamer-%{majorminor}/libgstspectrum.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvumeter.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgoom.so
+%{_libdir}/gstreamer-%{majorminor}/libgstchart.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmonoscope.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsynaesthesia.so
 
 %post -n gstreamer-visualisation
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1366,7 +1369,7 @@ processed with the lavtools from mjpegtools.
 
 %files -n gstreamer-yuv4mjpeg
 %defattr(-, root, root)
-%{_libdir}/gst/libgsty4menc.so
+%{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
 
 %post -n gstreamer-yuv4mjpeg
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1387,7 +1390,7 @@ Lets you get sound from audio cd's using GStreamer
 
 %files -n gstreamer-cdplayer
 %defattr(-, root, root)
-%{_libdir}/gst/libgstcdplayer.so
+%{_libdir}/gstreamer-%{majorminor}/libgstcdplayer.so
 
 %post -n gstreamer-cdplayer
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1408,7 +1411,7 @@ This plugin provides a videotest plugin. This plugin can be used to generate a v
 
 %files -n gstreamer-videotest
 %defattr(-, root, root)
-%{_libdir}/gst/libgstvideotestsrc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideotestsrc.so
 
 %post -n gstreamer-videotest
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1432,7 +1435,7 @@ This plugin provides a videotest plugin. This plugin can be used to generate a v
 @USE_HERMES_TRUE@@USE_LIBPNG_TRUE@
 @USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%files -n gstreamer-snapshot
 @USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%defattr(-, root, root)
-@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%{_libdir}/gst/libgstsnapshot.so
+@USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsnapshot.so
 @USE_HERMES_TRUE@@USE_LIBPNG_TRUE@
 @USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%post -n gstreamer-snapshot
 @USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1453,7 +1456,7 @@ Plug-in for demuxing Quicktime movies
 
 %files -n gstreamer-quicktime
 %defattr(-, root, root)
-%{_libdir}/gst/libgstqtdemux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstqtdemux.so
 
 %post -n gstreamer-quicktime
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1497,7 +1500,7 @@ This package contains a basic audio and video playback library.
 %files -n gstreamer-play
 %defattr(-, root, root)
 %{_sysconfdir}/gconf/schemas/gstreamer.schemas
-%{_libdir}/libgstplay.so*
+%{_libdir}/libgstplay-%{majorminor}.so*
 
 %post -n gstreamer-play
 /sbin/ldconfig
@@ -1506,6 +1509,9 @@ This package contains a basic audio and video playback library.
 /sbin/ldconfig
 
 %changelog
+* Sun Dec 08 2002 Thomas Vander Stichele <thomas at apestaart dot org>
+- changes for parallel installability
+
 * Thu Nov 28 2002 Christian Schaller <Uraeus@linuxrising.org>
 - Put in libgstpng plugin
 - rm the libgstmedia-info stuff until thomas think they are ready
