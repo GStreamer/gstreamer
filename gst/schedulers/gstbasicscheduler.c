@@ -125,6 +125,10 @@ static void     	gst_basic_scheduler_show  		(GstScheduler *sched);
 
 static GstSchedulerClass *parent_class = NULL;
 
+/* for threaded bins, these pre- and post-run functions lock and unlock the
+ * elements. we have to avoid deadlocks, so we make these convenience macros
+ * that will avoid using do_cothread_switch from within the scheduler. */
+
 #define do_element_switch(element) G_STMT_START{		\
   GstElement *from = SCHED (element)->current;			\
   if (from->post_run_func)					\
@@ -133,6 +137,23 @@ static GstSchedulerClass *parent_class = NULL;
   if (element->pre_run_func)					\
     element->pre_run_func (element);				\
   do_cothread_switch (GST_ELEMENT_THREADSTATE (element));	\
+}G_STMT_END
+
+#define do_switch_to_main(sched) G_STMT_START{			\
+  GstElement *current = ((GstBasicScheduler*)sched)->current;	\
+  if (current->post_run_func)					\
+    current->post_run_func (current);				\
+  SCHED (current)->current = NULL;				\
+  do_cothread_switch						\
+    (do_cothread_get_main					\
+       (((GstBasicScheduler*)sched)->context));			\
+}G_STMT_END
+
+#define do_switch_from_main(entry) G_STMT_START{		\
+  if (entry->pre_run_func)					\
+    entry->pre_run_func (entry);				\
+  SCHED (entry)->current = entry;				\
+  do_cothread_switch (GST_ELEMENT_THREADSTATE (entry));		\
 }G_STMT_END
 
 static GType
@@ -301,9 +322,11 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
   GST_FLAG_UNSET (element, GST_ELEMENT_COTHREAD_STOPPING);
 
-  /* this will return to cothread 0, so we need to unlock the current element */
-  if (element->post_run_func)
-    element->post_run_func (element);
+  /* due to oddities in the cothreads code, when this function returns it will
+   * switch to the main cothread. thus, we need to unlock the current element. */
+  if (SCHED (element)->current->post_run_func)
+    SCHED (element)->current->post_run_func (SCHED (element)->current);
+  SCHED (element)->current = NULL;
 
   GST_DEBUG_LEAVE ("(%d,'%s')", argc, name);
   gst_object_unref (GST_OBJECT (element));
@@ -345,6 +368,12 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
 
   GST_FLAG_UNSET (element, GST_ELEMENT_COTHREAD_STOPPING);
+
+  /* due to oddities in the cothreads code, when this function returns it will
+   * switch to the main cothread. thus, we need to unlock the current element. */
+  if (SCHED (element)->current->post_run_func)
+    SCHED (element)->current->post_run_func (SCHED (element)->current);
+  SCHED (element)->current = NULL;
 
   GST_DEBUG_LEAVE ("");
   return 0;
@@ -1050,11 +1079,8 @@ static void
 gst_basic_scheduler_yield (GstScheduler *sched, GstElement *element)
 {
   if (GST_ELEMENT_IS_COTHREAD_STOPPING (element)) {
-    if (element->post_run_func)
-      element->post_run_func (element);
-    
-    SCHED (element)->current = NULL;
-    do_cothread_switch (do_cothread_get_main (((GstBasicScheduler *) sched)->context));
+
+    do_switch_to_main (sched);
     
     /* no need to do a pre_run, the cothread is stopping */
   }
@@ -1063,15 +1089,9 @@ gst_basic_scheduler_yield (GstScheduler *sched, GstElement *element)
 static gboolean
 gst_basic_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 {
-  GstElement *current = SCHED (element)->current;
-  
   GST_FLAG_SET (element, GST_ELEMENT_COTHREAD_STOPPING);
 
-  if (current->post_run_func)
-    current->post_run_func (current);
-
-  SCHED (element)->current = NULL;
-  do_cothread_switch (do_cothread_get_main (((GstBasicScheduler *) sched)->context));
+  do_switch_to_main (sched);
 
   return FALSE;
 }
@@ -1090,11 +1110,7 @@ gst_basic_scheduler_error (GstScheduler *sched, GstElement *element)
 
     GST_SCHEDULER_STATE (sched) = GST_SCHEDULER_STATE_ERROR;
 
-    if (element->post_run_func)
-      element->post_run_func (element);
-
-    SCHED (element)->current = NULL;
-    do_cothread_switch (do_cothread_get_main (((GstBasicScheduler *) sched)->context));
+    do_switch_to_main (sched);
   }
 }
 
@@ -1269,17 +1285,9 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
 	GST_DEBUG (GST_CAT_DATAFLOW, "set COTHREAD_STOPPING flag on \"%s\"(@%p)",
 		   GST_ELEMENT_NAME (entry), entry);
 	if (GST_ELEMENT_THREADSTATE (entry)) {
-          if (entry->pre_run_func)
-            entry->pre_run_func (entry);
 
-          bsched->current = entry;
+          do_switch_from_main (entry);
 
-	  do_cothread_switch (GST_ELEMENT_THREADSTATE (entry));
-
-          if (bsched->current && bsched->current->post_run_func) {
-            bsched->current->post_run_func (bsched->current);
-	  }
-          
 	  state = GST_SCHEDULER_STATE (sched);
 	  /* if something changed, return - go on else */
 	  if (GST_FLAG_IS_SET(bsched, GST_BASIC_SCHEDULER_CHANGE) &&
