@@ -61,6 +61,7 @@ MuxStream::BufferSizeCode ()
     return buffer_size / 128;
   else
     assert (false);
+  return 0;
 }
 
 
