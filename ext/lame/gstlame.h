@@ -92,6 +92,7 @@ struct _GstLame {
   gboolean no_short_blocks;
   gboolean emphasis;
   gboolean xingheader;
+  gint preset;
 
   lame_global_flags *lgf;
 
