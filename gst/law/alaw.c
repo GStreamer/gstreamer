@@ -7,7 +7,7 @@
 /* elementfactory information */
 static GstElementDetails alawenc_details = {
   "PCM to A Law conversion",
-  "Filter/Audio/Conversion",
+  "Codec/Audio/Encoder",
   "LGPL",
   "Convert 16bit PCM to 8bit A law",
   VERSION,
@@ -18,7 +18,7 @@ static GstElementDetails alawenc_details = {
 /* elementfactory information */
 static GstElementDetails alawdec_details = {
   "A Law to PCM conversion",
-  "Filter/Audio/Conversion",
+  "Codec/Audio/Decoder",
   "LGPL",
   "Convert 8bit A law to 16bit PCM",
   VERSION,

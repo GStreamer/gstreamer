@@ -7,7 +7,7 @@
 /* elementfactory information */
 static GstElementDetails mulawenc_details = {
   "PCM to Mu Law conversion",
-  "Filter/Audio/Conversion",
+  "Codec/Audio/Encoder",
   "LGPL",
   "Convert 16bit PCM to 8bit mu law",
   VERSION,
@@ -18,7 +18,7 @@ static GstElementDetails mulawenc_details = {
 /* elementfactory information */
 static GstElementDetails mulawdec_details = {
   "Mu Law to PCM conversion",
-  "Filter/Audio/Conversion",
+  "Codec/Audio/Decoder",
   "LGPL",
   "Convert 8bit mu law to 16bit PCM",
   VERSION,
