@@ -82,11 +82,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
   switch (codec_id) {
     case CODEC_ID_MPEG1VIDEO:
-      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_mpeg1video",
-                                  "video/mpeg",
-                                    "mpegversion",  GST_PROPS_INT (1),
-                                    "systemstream", GST_PROPS_BOOLEAN (FALSE)
-                                 );
+      /* this caps doesn't need width/height */
+      caps = GST_CAPS_NEW ("ffmpeg_mpeg1video",
+                           "video/mpeg",
+                             "mpegversion",  GST_PROPS_INT (1),
+                             "systemstream", GST_PROPS_BOOLEAN (FALSE)
+                          );
       break;
 
     case CODEC_ID_H263P:
@@ -154,6 +155,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
                                   "video/xvid"
                                  ));
       break;
+
+    /* weird quasi-codecs for the demuxers only */
+    case CODEC_ID_RAWVIDEO:
+      /* we use a shortcut to the raw-video pad function */
+      return gst_ffmpeg_codectype_to_caps (CODEC_TYPE_VIDEO, context);
 
     case CODEC_ID_MSMPEG4V1:
       caps = GST_FF_VID_CAPS_NEW ("ffmpeg_msmpeg4v1",
@@ -298,6 +304,87 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_ASV1:
       /* .. */
+      break;
+
+    case CODEC_ID_FFV1:
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_ffv1",
+				  "video/x-ffv1"
+				 );
+      break;
+
+    case CODEC_ID_4XM:
+      /* .. */
+      break;
+
+    /* weird quasi-codecs for the demuxers only */
+    case CODEC_ID_PCM_S16LE:
+    case CODEC_ID_PCM_S16BE:
+    case CODEC_ID_PCM_U16LE:
+    case CODEC_ID_PCM_U16BE:
+    case CODEC_ID_PCM_S8:
+    case CODEC_ID_PCM_U8:
+    case CODEC_ID_PCM_MULAW:
+    case CODEC_ID_PCM_ALAW:
+      do {
+        gint law = -1, width = 0, depth = 0, endianness = 0;
+	gboolean signedness = FALSE; /* blabla */
+
+        switch (codec_id) {
+          case CODEC_ID_PCM_S16LE:
+            law = 0; width = 16; depth = 16;
+            endianness = G_LITTLE_ENDIAN;
+            signedness = TRUE;
+            break;
+          case CODEC_ID_PCM_S16BE:
+            law = 0; width = 16; depth = 16;
+            endianness = G_BIG_ENDIAN;
+            signedness = TRUE;
+            break;
+          case CODEC_ID_PCM_U16LE:
+            law = 0; width = 16; depth = 16;
+            endianness = G_LITTLE_ENDIAN;
+            signedness = FALSE;
+            break;
+          case CODEC_ID_PCM_U16BE:
+            law = 0; width = 16; depth = 16;
+            endianness = G_BIG_ENDIAN;
+            signedness = FALSE;
+            break;
+          case CODEC_ID_PCM_S8:
+            law = 0; width = 8;  depth = 8;
+            endianness = G_BYTE_ORDER;
+            signedness = TRUE;
+            break;
+          case CODEC_ID_PCM_U8:
+            law = 0; width = 8;  depth = 8;
+            endianness = G_BYTE_ORDER;
+            signedness = FALSE;
+            break;
+          case CODEC_ID_PCM_MULAW:
+            law = 1; width = 8;  depth = 8;
+            endianness = G_BYTE_ORDER;
+            signedness = FALSE;
+            break;
+          case CODEC_ID_PCM_ALAW:
+            law = 2; width = 8;  depth = 8;
+            endianness = G_BYTE_ORDER;
+            signedness = FALSE;
+            break;
+          default:
+            g_assert(0); /* don't worry, we never get here */
+            break;
+        }
+
+        caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_pcmaudio",
+				    "audio/raw",
+				      "format",     GST_PROPS_STRING ("int"),
+				      "law",        GST_PROPS_INT (law),
+				      "width",      GST_PROPS_INT (width),
+				      "depth",      GST_PROPS_INT (depth),
+				      "endianness", GST_PROPS_INT (endianness),
+				      "signed",     GST_PROPS_BOOLEAN (signedness)
+				   );
+      } while (0);
       break;
 
     case CODEC_ID_ADPCM_IMA_QT:
@@ -768,11 +855,3 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name)
 
   return caps;
 }
-
-enum CodecID
-gst_ffmpeg_caps_to_codecid (GstCaps *caps, enum CodecID *id)
-{
-  /* FIXME */
-  return 0;
-}
-

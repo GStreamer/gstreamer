@@ -43,6 +43,15 @@ GstCaps *
 gst_ffmpeg_codectype_to_caps (enum CodecType  codec_type,
                               AVCodecContext *context);
 
+/* caps_to_codecid () transforms a GstCaps that belongs to
+ * a pad for compressed data to (optionally) a filled-in
+ * context and a codecID
+ */
+
+enum CodecID
+gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
+                            AVCodecContext *context);
+
 /* caps_to_codectype () transforms a GstCaps that belongs to
  * a pad for uncompressed data to a filled-in context
  */
@@ -60,9 +69,5 @@ gst_ffmpeg_caps_to_codectype (enum CodecType  type,
 
 GstCaps *
 gst_ffmpeg_formatid_to_caps (const gchar *format_name);
-
-enum CodecID
-gst_ffmpeg_caps_to_codecid   (GstCaps *caps,
-                              enum CodecID *id);
 
 #endif /* __GST_FFMPEG_CODECMAP_H__ */
