@@ -272,7 +272,7 @@ gst_audiorate_chain (GstPad * pad, GstData * data)
   in_offset_end = GST_BUFFER_OFFSET_END (buf);
 
   if (in_offset == GST_CLOCK_TIME_NONE || in_offset_end == GST_CLOCK_TIME_NONE) {
-    g_warning ("audiorate got buffer without offsets");
+    GST_WARNING_OBJECT (audiorate, "audiorate got buffer without offsets");
   }
 
   /* do we need to insert samples */
