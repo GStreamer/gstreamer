@@ -166,6 +166,7 @@ $(BUILDIMAGESDIR)/%.ps: %.png
 
 # make sure xml validates properly
 check-local: $(BUILDDIR)/$(MAIN)
+	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
 	cd $(BUILDDIR) && xmllint -noout -valid $(MAIN)
 
 ### this is a website upload target
