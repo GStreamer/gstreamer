@@ -373,7 +373,8 @@ gst_xml_registry_add_path_list_func (GstXMLRegistry *registry)
     return;
   }
 
-  text = g_malloc (BLOCK_SIZE);
+  /* slightly allocate more as gmarkup reads too much */
+  text = g_malloc0 (BLOCK_SIZE + 32);
 
   size = fread (text, 1, BLOCK_SIZE, reg);
 
@@ -548,7 +549,7 @@ gst_xml_registry_load (GstRegistry *registry)
     return FALSE;
   }
 
-  text = g_malloc (BLOCK_SIZE);
+  text = g_malloc0 (BLOCK_SIZE + 32);
 
   size = BLOCK_SIZE;
   CLASS (xmlregistry)->load_func (xmlregistry, text, &size);
