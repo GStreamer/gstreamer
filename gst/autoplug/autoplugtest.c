@@ -7,10 +7,13 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
+  // disconnect the typefind from the pipeline and remove it
   gst_element_disconnect(cache,"src",typefind,"sink");
   gst_bin_remove(GST_BIN(autobin),typefind);
 
-  if (!strstr(gst_caps_get_mime(caps),"mp3")) {
+  gst_schedule_show (GST_ELEMENT_SCHED(pipeline));
+
+  if (strstr(gst_caps_get_mime(caps),"mp3")) {
     decoder = gst_elementfactory_make ("mad","decoder");
     sink = gst_elementfactory_make ("esdsink","sink");
     gst_bin_add(GST_BIN(autobin),decoder);
@@ -19,8 +22,17 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
 
     gst_element_connect(cache,"src",decoder,"sink");
   }
+  else if (strstr(gst_caps_get_mime(caps),"x-ogg")) {
+    decoder = gst_elementfactory_make ("vorbisdec","decoder");
+    sink = gst_elementfactory_make ("osssink","sink");
+    gst_bin_add(GST_BIN(autobin),decoder);
+    gst_bin_add(GST_BIN(autobin),sink);
+    gst_element_connect(decoder,"src",sink,"sink");
 
-exit(0);
+    gst_element_connect(cache,"src",decoder,"sink");
+  }
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fprintf(stderr,"done with have_type signal\n");
 }
 
@@ -49,5 +61,6 @@ int main (int argc,char *argv[]) {
 
   gst_element_set_state(pipeline,GST_STATE_PLAYING);
 
-  gst_bin_iterate(GST_BIN(pipeline));
+  while (1)
+    gst_bin_iterate(GST_BIN(pipeline));
 }
