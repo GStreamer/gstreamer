@@ -1,5 +1,31 @@
 2005-03-07  Wim Taymans  <wim@fluendo.com>
 
+	* check/.cvsignore:
+	* check/Makefile.am:
+	* check/gst-libs/.cvsignore:
+	* check/gst-libs/gdp.c: (START_TEST), (gst_object_suite), (main):
+	* check/gst/.cvsignore:
+	* check/gst/gstbus.c: (pound_bus_with_messages), (pull_messages),
+	(START_TEST), (gstbus_suite), (main):
+	* check/gst/gstcaps.c: (START_TEST), (gst_caps_suite), (main):
+	* check/gst/gstdata.c: (START_TEST), (thread_ref), (thread_unref),
+	(gst_data_suite), (main):
+	* check/gst/gstiterator.c: (make_list_of_ints), (START_TEST),
+	(add_fold_func), (gstiterator_suite), (main):
+	* check/gst/gstobject.c: (gst_fake_object_get_type), (START_TEST),
+	(thread_name_object), (thread_name_object_default),
+	(gst_object_name_compare), (gst_object_suite), (main):
+	* check/gst/gstpad.c: (START_TEST), (thread_link_unlink),
+	(gst_pad_suite), (main):
+	* check/gstcheck.c: (gst_check_log_message_func),
+	(gst_check_log_critical_func), (gst_check_init):
+	* check/gstcheck.h:
+	* check/pipelines/simple_launch_lines.c: (setup_pipeline),
+	(run_pipeline), (START_TEST), (simple_launch_lines_suite), (main):
+	Added checks.
+
+2005-03-07  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstiterator.c: (gst_iterator_init), (gst_iterator_new),
 	(gst_list_iterator_next), (gst_list_iterator_resync),
 	(gst_list_iterator_free), (gst_iterator_new_list),
