@@ -635,10 +635,13 @@ examples/typefind/Makefile
 examples/xml/Makefile
 tools/Makefile
 docs/Makefile
+docs/faq/Makefile
 docs/gst/Makefile
 docs/libs/Makefile
+docs/manual/Makefile
 docs/plugins/Makefile
 docs/plugins/gstreamer-plugins.types
+docs/pwg/Makefile
 docs/xsl/Makefile
 docs/version.entities
 pkgconfig/Makefile
