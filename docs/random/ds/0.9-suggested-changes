@@ -147,6 +147,8 @@ object hierarchy:
 - object properties:
   - all bitrates should be bits per second, since they're specified
     as integers
+  - use device for nodes (not location; dvdreadsrc, dvdnavsrc, cdparanoia).
+    Also figure out if we want to continue separating uri/location.
 
 - categorization of plugins:
   - categories were intended from the start as a list of keywords, instead

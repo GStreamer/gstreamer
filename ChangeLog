@@ -1,5 +1,10 @@
 2004-12-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/random/ds/0.9-suggested-changes:
+	  Make note on device/location/uri property names.
+
+2004-12-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/manual/advanced-autoplugging.xml:
 	* docs/manual/advanced-clocks.xml:
 	* docs/manual/advanced-interfaces.xml:
