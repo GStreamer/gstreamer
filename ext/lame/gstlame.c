@@ -41,9 +41,7 @@ GST_PAD_TEMPLATE_FACTORY (gst_lame_sink_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "gstlame_sink",
-    "audio/raw",
-      "format",     GST_PROPS_STRING ("int"),
-      "law",        GST_PROPS_INT (0),
+    "audio/x-raw-int",
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),
       "signed",     GST_PROPS_BOOLEAN (TRUE),
       "width",      GST_PROPS_INT (16),
@@ -69,8 +67,20 @@ GST_PAD_TEMPLATE_FACTORY (gst_lame_src_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "gstlame_src",
-    "audio/x-mp3",
-    NULL
+    "audio/mpeg",
+      "layer",      GST_PROPS_INT (3),
+      "rate",       GST_PROPS_LIST (
+	              GST_PROPS_INT (8000), 
+	              GST_PROPS_INT (11025), 
+	              GST_PROPS_INT (12000), 
+	              GST_PROPS_INT (16000), 
+	              GST_PROPS_INT (22050),
+	              GST_PROPS_INT (24000),
+	              GST_PROPS_INT (32000),
+	              GST_PROPS_INT (44100),
+	              GST_PROPS_INT (48000)
+	            ),
+      "channels",   GST_PROPS_INT_RANGE (1, 2)
   )
 )
 
@@ -358,7 +368,13 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_LINK_REFUSED;
   }
 
-  return GST_PAD_LINK_OK;
+  caps = GST_CAPS_NEW ("lame_src_caps",
+		       "audio/mpeg",
+			 "layer",    GST_PROPS_INT (3),
+			 "channels", GST_PROPS_INT (lame->num_channels),
+			 "rate",     GST_PROPS_INT (lame->samplerate));
+
+  return gst_pad_try_set_caps (lame->srcpad, caps);
 }
 
 static void
@@ -446,7 +462,7 @@ gst_lame_add_metadata (GstLame *lame, GstCaps *caps)
     prop = (GstPropsEntry*)(props->data);
     props = g_list_next(props);
 
-    if (gst_props_entry_get_type (prop) == GST_PROPS_STRING_TYPE) {
+    if (gst_props_entry_get_props_type (prop) == GST_PROPS_STRING_TYPE) {
       const gchar *name = gst_props_entry_get_name (prop);
       const gchar *value;
 
