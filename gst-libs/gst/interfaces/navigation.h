@@ -34,18 +34,18 @@ G_BEGIN_DECLS
 #define GST_IS_NAVIGATION(obj) \
       (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_NAVIGATION))
 #define GST_NAVIGATION_GET_IFACE(obj) \
-    (G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_NAVIGATION, GstNavigationIface))
+    (G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_NAVIGATION, GstNavigationInterface))
 
 typedef struct _GstNavigation GstNavigation;
 
-typedef struct _GstNavigationIface {
+typedef struct _GstNavigationInterface {
   GTypeInterface g_iface;
 
   /* virtual functions */
   void (*send_event) (GstNavigation *navigation, GstCaps *caps);
   
   GST_CLASS_PADDING
-} GstNavigationIface;
+} GstNavigationInterface;
 
 GType		gst_navigation_get_type	(void);
 
