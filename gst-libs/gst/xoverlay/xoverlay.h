@@ -24,7 +24,6 @@
 #define __GST_X_OVERLAY_H__
 
 #include <gst/gst.h>
-#include <X11/Xlib.h>
 
 G_BEGIN_DECLS
 
@@ -49,7 +48,7 @@ typedef struct _GstXOverlayClass {
 
   /* virtual functions */
   void (* set_xwindow_id) (GstXOverlay *overlay,
-			   XID          xwindow_id);
+			   gulong	xwindow_id);
   /* optional virtual functions */
   void (* get_desired_size) (GstXOverlay *overlay,
 			     guint *width,
@@ -58,7 +57,7 @@ typedef struct _GstXOverlayClass {
   
   /* signals */
   void (*have_xwindow_id) (GstXOverlay *overlay,
-                           XID          xwindow_id);
+                           gulong	xwindow_id);
   void (* desired_size)	  (GstXOverlay *overlay,
 			   guint width,
 			   guint height);
@@ -69,12 +68,12 @@ typedef struct _GstXOverlayClass {
 GType	gst_x_overlay_get_type		(void);
 
 /* virtual class function wrappers */
-void gst_x_overlay_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id);
+void gst_x_overlay_set_xwindow_id (GstXOverlay *overlay, gulong xwindow_id);
 void gst_x_overlay_get_desired_size (GstXOverlay *overlay, guint *width, guint *height);
 void gst_x_overlay_expose (GstXOverlay *overlay);
 
 /* public methods to fire signals */
-void gst_x_overlay_got_xwindow_id (GstXOverlay *overlay, XID xwindow_id);
+void gst_x_overlay_got_xwindow_id (GstXOverlay *overlay, gulong xwindow_id);
 void gst_x_overlay_got_desired_size (GstXOverlay *overlay, guint width, guint height);
 
 G_END_DECLS
