@@ -1,3 +1,5 @@
+/* Written by Erik Walthinsen 06-2001 */
+/* Modified by Jamie Gennis 06-2001 */
 #include <stdio.h>
 #include "gobject2gtk.h"
 
@@ -25,6 +27,17 @@ g_object_base_class_init (GObjectClass *klass)
  
   gtkobject_class->set_arg = g_object_set_arg;
   gtkobject_class->get_arg = g_object_get_arg;
+}
+
+void
+g2g_object_run_dispose (GObject *object)
+{
+  g_return_if_fail (G_IS_OBJECT (object));
+  g_return_if_fail (object->ref_count > 0);
+
+  g_object_ref (object);
+  G_OBJECT_GET_CLASS (object)->dispose (object);
+  g_object_unref (object);
 }
 
 GType
@@ -76,7 +89,7 @@ g2g_object_new(GtkType type,gpointer blah_varargs_stuff) {
 
 
 void
-g2g_object_class_install_property(GtkObjectClass *oclass,guint property_id,GParamSpec *pspec)
+g2g_object_class_install_property(GObjectClass *oclass,guint property_id,GParamSpec *pspec)
 {
   gchar *arg_fullname;
  
@@ -87,21 +100,18 @@ g2g_object_class_install_property(GtkObjectClass *oclass,guint property_id,GPara
 }
 
 GParamSpec *
-g2g_object_class_find_property(GtkObjectClass *class,gchar *name)
+g2g_object_class_find_property(GObjectClass *class, const gchar *name)
 {
   GtkArgInfo *info;
   GParamSpec *spec;
+
   //fprintf(stderr,"class name is %s\n",gtk_type_name(class->type));
 
-  // return NULL if no info found
-  if (gtk_object_arg_get_info(class->type,name,&info)){
-    return NULL;
-  }
-  
+  gtk_object_arg_get_info(class->type,name,&info);
   spec = g_new0(GParamSpec,1);
 
   if (info) {
-    spec->name = name;
+    spec->name = (gchar *) name;
     spec->value_type = info->type;
     spec->flags = info->arg_flags;
   } else {
@@ -112,7 +122,7 @@ g2g_object_class_find_property(GtkObjectClass *class,gchar *name)
 }
 
 GParamSpec **
-g2g_object_class_list_properties(GtkObjectClass *oclass,guint *n_properties) {
+g2g_object_class_list_properties(GObjectClass *oclass,guint *n_properties) {
   GType type = G_OBJECT_CLASS_TYPE (oclass);
   guint32 *flags;
   GtkArg *args;
@@ -250,20 +260,23 @@ g2g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,gint flags
 
 guint
 g2g_signal_new (const gchar       *name,
-               GtkType            object_type,
-               GtkSignalRunType   signal_flags,
-               guint              function_offset,
-               gpointer           accumulator,  // GSignalAccumulator
-               gpointer           accu_data,
-               GtkSignalMarshaller  marshaller,
-               GType              return_val,
-               guint              nparams,
-               ...)
+		GtkType            object_type,
+		GtkSignalRunType   signal_flags,
+		guint              function_offset,
+		gpointer           accumulator,  // GSignalAccumulator
+		gpointer           accu_data,
+		GtkSignalMarshaller  marshaller,
+		GType              return_val,
+		guint              nparams,
+		...)
 {
   GtkType *params;
   guint i;
   va_list args;
   guint signal_id;
+
+  if (strcmp (name, "destroy") == 0)
+    name = "g2gdestroy";
 
 #define MAX_SIGNAL_PARAMS		(31)		// from gtksignal.c
   g_return_val_if_fail (nparams < MAX_SIGNAL_PARAMS, 0);
@@ -306,7 +319,7 @@ gint* g_signal_list_ids (GType type, guint *n_ids)
   class = gtk_type_class (type);
 
   *n_ids = class->nsignals;
-  
+
   return class->signals;
 }
 
