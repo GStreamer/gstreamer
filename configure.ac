@@ -469,7 +469,7 @@ GST_CHECK_FEATURE(HTTP, [http plugins], gsthttpsrc, [
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
 GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
-GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame.h, LAME_LIBS="-lmp3lame")
+GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h, LAME_LIBS="-lmp3lame")
 ])
 AC_SUBST(LAME_LIBS)
 
