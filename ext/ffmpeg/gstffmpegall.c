@@ -264,12 +264,14 @@ static void
 gst_ffmpegdecall_destroy (GObject *obj)
 {
   GstFFMpegDecAll *ffmpegdec = GST_FFMPEGDECALL(obj);
-  g_print ("ffmpeg: destroying codec\n");
+
   if (ffmpegdec->opened) {
     avcodec_close(ffmpegdec->context);
     ffmpegdec->opened = FALSE;
   }
   av_free(ffmpegdec->context);
+
+  G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
 static GstPadLinkReturn
