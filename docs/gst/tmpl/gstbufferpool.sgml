@@ -124,9 +124,9 @@ Unlock the given bufferpool.
 
 </para>
 
-@buffer: 
-<!-- # Unused Parameters # -->
 @pool: 
+<!-- # Unused Parameters # -->
+@buffer: 
 
 
 <!-- ##### FUNCTION gst_buffer_pool_destroy ##### -->
@@ -164,8 +164,9 @@ Unlock the given bufferpool.
 </para>
 
 @pool: 
-@user_data: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@user_data: 
 
 
 <!-- ##### FUNCTION gst_buffer_pool_set_buffer_copy_function ##### -->

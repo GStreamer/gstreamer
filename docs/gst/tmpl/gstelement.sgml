@@ -247,8 +247,10 @@ circumstances.
 
 </para>
 
-@element: 
+@klass: 
 @templ: 
+<!-- # Unused Parameters # -->
+@element: 
 
 
 <!-- ##### MACRO gst_element_destroy ##### -->
@@ -454,8 +456,10 @@ circumstances.
 
 </para>
 
-@elem: 
+@element: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@elem: 
 
 
 <!-- ##### FUNCTION gst_element_statename ##### -->

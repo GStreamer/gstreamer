@@ -274,8 +274,8 @@ GST_DEBUG_ENABLE_CATEGORIES
 <FILE>gstextratypes</FILE>
 <TITLE>GstExtraTypes</TITLE>
 GST_TYPE_FILENAME
-gst_extra_get_filename_type
 <SUBSECTION Standard>
+gst_extra_get_filename_type
 GST_DISABLE_LOADSAVE_REGISTRY
 </SECTION>
 
@@ -801,7 +801,6 @@ gst_padtemplate_get_type
 GstPipeline
 gst_pipeline_new
 gst_pipeline_destroy
-gst_pipeline_iterate
 <SUBSECTION Standard>
 GstPipelineClass
 gst_pipeline_get_type

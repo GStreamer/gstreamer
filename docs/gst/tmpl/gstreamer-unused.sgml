@@ -3928,14 +3928,6 @@ Is trigered whenever the state of an element changes
 @destroy: 
 @user_data: 
 
-<!-- ##### FUNCTION gst_buffer_ref_by_count ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@count: 
-
 <!-- ##### FUNCTION gst_buffer_remove_meta ##### -->
 <para>
 
@@ -4188,6 +4180,13 @@ Is trigered whenever the state of an element changes
 </para>
 
 @esdsink: 
+
+<!-- ##### FUNCTION gst_extra_get_filename_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_fakesink_chain ##### -->
 <para>
@@ -4580,6 +4579,13 @@ Call the EOS function of the pad
 </para>
 
 @Returns: 
+
+<!-- ##### FUNCTION gst_pipeline_iterate ##### -->
+<para>
+
+</para>
+
+@pipeline: 
 
 <!-- ##### FUNCTION gst_plugin_add_autoplugger ##### -->
 <para>

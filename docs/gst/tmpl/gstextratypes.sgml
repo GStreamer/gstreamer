@@ -21,11 +21,3 @@ A type that can be used to indicate a filename.
 
 
 
-<!-- ##### FUNCTION gst_extra_get_filename_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-

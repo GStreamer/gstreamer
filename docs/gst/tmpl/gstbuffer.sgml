@@ -324,12 +324,12 @@ used when data in a stream has been skipped
 
 </para>
 
-@buf: 
-@buf2: 
-@Returns: 
-<!-- # Unused Parameters # -->
 @buffer: 
 @append: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@buf: 
+@buf2: 
 
 
 <!-- ##### FUNCTION gst_buffer_ref ##### -->
@@ -338,6 +338,15 @@ used when data in a stream has been skipped
 </para>
 
 @buffer: 
+
+
+<!-- ##### FUNCTION gst_buffer_ref_by_count ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@count: 
 
 
 <!-- ##### FUNCTION gst_buffer_unref ##### -->

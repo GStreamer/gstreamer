@@ -40,11 +40,3 @@ Destroys the pipeline.
 @pipeline: #GstPipeline to destroy
 
 
-<!-- ##### FUNCTION gst_pipeline_iterate ##### -->
-<para>
-
-</para>
-
-@pipeline: 
-
-
