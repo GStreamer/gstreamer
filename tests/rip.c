@@ -26,7 +26,6 @@ int main(int argc,char *argv[]) {
 
   pipeline = gst_pipeline_new("ripper");
   g_return_val_if_fail(pipeline != NULL,1);
-  gst_bin_use_cothreads(GST_BIN(pipeline),TRUE);
 
   paranoia = gst_elementfactory_make("cdparanoia","paranoia");
   g_return_val_if_fail(paranoia != NULL,2);

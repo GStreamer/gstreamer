@@ -73,7 +73,6 @@ int main(int argc,char *argv[]) {
   gst_element_connect(src,"src",lame,"sink");
   gst_element_connect(lame,"src",sink,"sink");
 
-  gst_bin_use_cothreads(GST_BIN(pipeline),TRUE);
 
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
   if (GST_STATE(src) != GST_STATE_PLAYING) fprintf(stderr,"error: state not set\n");
