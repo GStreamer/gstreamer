@@ -23,10 +23,9 @@
 #include <tremor/ivorbisfile.h>
 #include <gst/bytestream/bytestream.h>
 
-extern GType vorbisfile_get_type(void);
+extern GType ivorbisfile_get_type(void);
 
-extern GstElementDetails vorbisfile_details;
-extern GstElementDetails vorbisenc_details;
+extern GstElementDetails ivorbisfile_details;
 
 static GstCaps* 	vorbis_type_find 	(GstBuffer *buf, gpointer private);
 
@@ -98,7 +97,7 @@ vorbis_type_find (GstBuffer *buf, gpointer private)
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
-  GstElementFactory *enc, *file;
+  GstElementFactory *file;
   GstTypeFactory *type;
   GstCaps *raw_caps, *vorbis_caps, *raw_caps2;
 
@@ -118,8 +117,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
 		                                     GST_PAD_ALWAYS, 
 					             raw_caps, NULL);
   /* create an elementfactory for the vorbisfile element */
-  file = gst_element_factory_new ("ivorbisfile", vorbisfile_get_type(),
-                                  &vorbisfile_details);
+  file = gst_element_factory_new ("tremor", ivorbisfile_get_type(),
+                                  &ivorbisfile_details);
   g_return_val_if_fail(file != NULL, FALSE);
   gst_element_factory_set_rank (file, GST_ELEMENT_RANK_PRIMARY);
  
