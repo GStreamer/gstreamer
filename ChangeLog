@@ -1,5 +1,13 @@
 2004-10-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_massage_index):
+	  OK, so the original code was too strict. It makes random AVI files
+	  hang for seconds upon opening, which is unacceptable and is far
+	  beyond the original goal of getting multiple chunks for one-chunk
+	  sounc stream files. So now do just that.
+
+2004-10-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstplaybasebin.c: (setup_source),
 	(gst_play_base_bin_change_state):
 	  Actually clean up streaminfo if output fails. This would trigger
