@@ -115,7 +115,7 @@ read_config ($0);
   "mp3", "mad ! $cfg{AUDIOSINK}",
   "mpeg", "mpegdemux name=demux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } { demux. ! queue ! mad ! $cfg{AUDIOSINK} }",
   "mpg", "mpegdemux name=demux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } { demux. ! queue ! mad ! $cfg{AUDIOSINK} }",
-  "ogg", "vorbisfile ! $cfg{AUDIOSINK}",
+  "ogg", "oggdemux ! vorbisdec ! audioconvert ! $cfg{AUDIOSINK}",
   "sid", "siddec ! $cfg{AUDIOSINK}",
   "swf", "swfdec name=swfdec ! { queue ! colorspace ! $cfg{VIDEOSINK} }  { swfdec. ! queue ! $cfg{AUDIOSINK} }",
   "vob", "mpegdemux name=demux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }  { demux. ! queue ! a52dec ! $cfg{AUDIOSINK} }",
