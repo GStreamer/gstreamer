@@ -328,8 +328,8 @@ gst_buffer_store_get_buffer (GstBufferStore *store, guint64 offset, guint size)
   GList *walk;
   guint8 *data;
   guint tmp;
-  guint64 cur_offset = 0;
   gboolean have_offset;
+  guint64 cur_offset = 0;
   GstBuffer *ret = NULL;
 
   g_return_val_if_fail (GST_IS_BUFFER_STORE (store), NULL);
@@ -341,7 +341,6 @@ gst_buffer_store_get_buffer (GstBufferStore *store, guint64 offset, guint size)
     have_offset = TRUE;
   } else {
     have_offset = FALSE;
-    cur_offset = 0;
   }
   while (walk) {
     current = GST_BUFFER (walk->data);
@@ -418,9 +417,9 @@ guint
 gst_buffer_store_get_size (GstBufferStore *store, guint64 offset)
 {
   GList *walk;
-  guint64 cur_offset = 0;
   gboolean have_offset;
   gboolean counting = FALSE;
+  guint64 cur_offset = 0;
   GstBuffer *current = NULL;
   guint ret = 0;
 
@@ -433,7 +432,6 @@ gst_buffer_store_get_size (GstBufferStore *store, guint64 offset)
     have_offset = TRUE;
   } else {
     have_offset = FALSE;
-    cur_offset = 0;
   }
   while (walk) {
     if (have_offset && counting && 
