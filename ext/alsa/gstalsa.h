@@ -26,6 +26,8 @@
 #define ALSA_PCM_NEW_SW_PARAMS_API
 
 #include <alsa/asoundlib.h>
+#include <alsa/control.h>
+#include <alsa/error.h>
 #include <gst/gst.h>
 
 

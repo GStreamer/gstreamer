@@ -312,6 +312,61 @@ gst_alsa_probe_get_properties (GstPropertyProbe * probe)
   return list;
 }
 
+static void
+device_list (snd_pcm_stream_t stream, GstAlsaClass * klass)
+{
+  snd_ctl_t *handle;
+  int card, err, dev;
+  snd_ctl_card_info_t *info;
+  snd_pcm_info_t *pcminfo;
+
+  snd_ctl_card_info_alloca (&info);
+  snd_pcm_info_alloca (&pcminfo);
+  card = -1;
+
+  if (snd_card_next (&card) < 0 || card < 0) {
+    /* no soundcard found */
+    return;
+  }
+  while (card >= 0) {
+    char name[32];
+
+    sprintf (name, "hw:%d", card);
+    if ((err = snd_ctl_open (&handle, name, 0)) < 0) {
+      goto next_card;
+    }
+    if ((err = snd_ctl_card_info (handle, info)) < 0) {
+      snd_ctl_close (handle);
+      goto next_card;
+    }
+
+    dev = -1;
+    while (1) {
+
+      gchar *gst_device;
+
+      snd_ctl_pcm_next_device (handle, &dev);
+
+      if (dev < 0)
+        break;
+      snd_pcm_info_set_device (pcminfo, dev);
+      snd_pcm_info_set_subdevice (pcminfo, 0);
+      snd_pcm_info_set_stream (pcminfo, stream);
+      if ((err = snd_ctl_pcm_info (handle, pcminfo)) < 0) {
+        continue;
+      }
+
+      gst_device = g_strdup_printf ("hw:%d,%d", card, dev);
+      klass->devices = g_list_append (klass->devices, gst_device);
+    }
+    snd_ctl_close (handle);
+  next_card:
+    if (snd_card_next (&card) < 0) {
+      break;
+    }
+  }
+}
+
 static gboolean
 gst_alsa_class_probe_devices (GstAlsaClass * klass, gboolean check)
 {
@@ -322,10 +377,6 @@ gst_alsa_class_probe_devices (GstAlsaClass * klass, gboolean check)
    * do function-wise look-ups. */
 
   if (!init && !check) {
-#define MAX_DEVICES 16          /* random number */
-    gint num, res;
-    gchar *dev;
-    snd_pcm_t *pcm;
     snd_pcm_stream_t mode = 0;
     const GList *templates;
 
@@ -339,19 +390,7 @@ gst_alsa_class_probe_devices (GstAlsaClass * klass, gboolean check)
         mode = SND_PCM_STREAM_PLAYBACK;
     }
 
-    for (num = 0; num < MAX_DEVICES; num++) {
-      dev = g_strdup_printf ("hw:%d", num);
-
-      if (!(res = snd_pcm_open (&pcm, dev, mode, SND_PCM_NONBLOCK)) ||
-          res == -EBUSY) {
-        klass->devices = g_list_append (klass->devices, dev);
-
-        if (res != -EBUSY)
-          snd_pcm_close (pcm);
-      } else {
-        g_free (dev);
-      }
-    }
+    device_list (mode, klass);
 
     init = TRUE;
   }
