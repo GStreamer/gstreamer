@@ -21,6 +21,7 @@ GstCaps
 </para>
 
 @refcount: 
+@lock: 
 @properties: the properties
 
 <!-- ##### TYPEDEF GstPropsFactoryEntry ##### -->

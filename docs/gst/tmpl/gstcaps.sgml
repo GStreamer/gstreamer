@@ -23,6 +23,7 @@ a mime-type and a set of properties.
 @name: the name of the capability, for the application
 @id: the typeid of the capability
 @refcount: 
+@lock: 
 @properties: the properties of the capability
 @next: 
 

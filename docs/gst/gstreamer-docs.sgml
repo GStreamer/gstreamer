@@ -34,15 +34,12 @@
 <!entity GstDiskSrc SYSTEM "sgml/gstdisksrc.sgml">
 <!entity GstHttpSrc SYSTEM "sgml/gsthttpsrc.sgml">
 <!entity GstFdSrc SYSTEM "sgml/gstfdsrc.sgml">
-<!entity GstAudioSrc SYSTEM "sgml/gstaudiosrc.sgml">
 <!entity GstSineSrc SYSTEM "sgml/gstsinesrc.sgml">
-<!entity GstAudioSink SYSTEM "sgml/gstaudiosink.sgml">
 <!entity GstFdSink SYSTEM "sgml/gstfdsink.sgml">
 <!entity GstIdentity SYSTEM "sgml/gstidentity.sgml">
 <!entity GstPipefilter SYSTEM "sgml/gstpipefilter.sgml">
 <!entity GstTee SYSTEM "sgml/gsttee.sgml">
 
-<!entity audioraw SYSTEM "sgml/audioraw.sgml">
 <!entity spectrum SYSTEM "sgml/spectrum.sgml">
 <!entity videoraw SYSTEM "sgml/videoraw.sgml">
 
@@ -128,9 +125,6 @@ with some more specialized elements.</para>
     &GstDiskSrc;
     &GstHttpSrc;
     
-    &GstAudioSrc;
-    &GstAudioSink;
-
     &GstSineSrc;
 
     &GstFdSrc;
@@ -148,7 +142,6 @@ with some more specialized elements.</para>
     <para>MetaData is used to specify the content of buffers. See <classname>GstMeta</classname>. </para>
 
     &spectrum;
-    &audioraw;
     &videoraw;
   </chapter>
 

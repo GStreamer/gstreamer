@@ -11,9 +11,7 @@ GtkObject
       GstDiskSrc
       GstHttpSrc
       GstFdSrc
-      GstAudioSrc
       GstSineSrc
-      GstAudioSink
       GstFdSink
       GstPipefilter
       GstIdentity
