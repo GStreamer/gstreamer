@@ -1,0 +1,21 @@
+#include "artsflow.idl"
+
+module Gst {
+
+interface ArtsMonoSink : Arts::SynthModule {
+	default out audio stream output;
+};
+
+interface ArtsStereoSink : Arts::SynthModule {
+	default out audio stream outleft,outright;
+};
+
+interface ArtsMonoSrc : Arts::SynthModule {
+	default in audio stream input;
+};
+
+interface ArtsStereoSrc : Arts::SynthModule {
+	default in audio stream inleft,inright;
+};
+
+};

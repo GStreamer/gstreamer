@@ -1,0 +1,4 @@
+
+
+To compile: artsc.h (On debian: libarts-dev)
+To use: libartsc (On debian: libarts)
