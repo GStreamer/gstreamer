@@ -1415,6 +1415,7 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
     break;
     
   case GST_RIFF_TAG_JUNK:
+  case GST_RIFF_ISFT:
     *chunksize = (*chunksize + 1) & ~1;
     break;
     
