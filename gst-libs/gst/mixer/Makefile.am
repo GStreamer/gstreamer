@@ -1,7 +1,6 @@
 # variables used for enum/marshal generation
 glib_enum_headers=$(mixer_headers)
 glib_enum_define=GST_MIXER
-glib_root=mixer
 glib_enum_prefix=gst_mixer
 
 
@@ -12,9 +11,13 @@ mixer_headers = \
 	mixer.h \
 	mixertrack.h
 
+built_sources = \
+	mixer-marshal.c \
+	mixer-enumtypes.c
+
 built_headers =	\
-	$(glib_root)-marshal.h \
-	$(glib_root)-enumtypes.h
+	mixer-marshal.h \
+	mixer-enumtypes.h
 
 libgstmixerinclude_HEADERS = $(mixer_headers) $(built_headers)
 
@@ -23,14 +26,12 @@ noinst_LTLIBRARIES = libgstmixer.la
 libgstmixer_la_SOURCES = \
 	mixer.c \
 	mixertrack.c \
-	$(glib_root)-marshal.c \
-	$(glib_root)-enumtypes.c
+	$(built_sources)
 
 libgstmixer_la_CFLAGS = $(GST_CFLAGS)
 
 BUILT_SOURCES = \
-	$(glib_root)-marshal.c \
-	$(glib_root)-enumtypes.c \
+	$(built_sources) \
         $(built_headers)
 
 EXTRA_DIST = mixer-marshal.list

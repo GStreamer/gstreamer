@@ -1,7 +1,6 @@
 # variables used for enum generation
 glib_enum_headers=$(play_headers)
 glib_enum_define=GST_PLAY
-glib_root=play
 glib_enum_prefix=gst_play
 
 librarydir = $(libdir)
@@ -10,7 +9,7 @@ play_headers = \
 	play.h
 
 built_headers = \
-	$(glib_root)-enumtypes.h
+	play-enumtypes.h
 
 library_LTLIBRARIES = libgstplay-@GST_MAJORMINOR@.la
 
@@ -28,7 +27,7 @@ libgstplay_@GST_MAJORMINOR@_la_LDFLAGS = \
 		-version-info @GST_PLUGINS_LIBVERSION@
 
 BUILT_SOURCES = \
-	$(glib_root)-enumtypes.c \
+	play-enumtypes.c \
 	$(built_headers)
 
 CLEANFILES = $(BUILT_SOURCES)
