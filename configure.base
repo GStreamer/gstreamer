@@ -348,20 +348,8 @@ if test x$USE_GLIB2 = xyes; then
   AC_MSG_WARN(gnome disabled for glib2.0)
 else
   dnl Check for libgnome
-  AC_PATH_PROG(GNOME_CONFIG, gnome-config, no)
-  if test x$GNOME_CONFIG = xno; then
-    AC_MSG_WARN(Couldn't find gnome-config: can't build editor or gstplay)
-    GNOME_LIBS=
-    GNOME_CFLAGS=
-    HAVE_GNOME=no
-  else
-    GNOME_LIBS=`gnome-config --libs gnome gnomeui`
-    GNOME_CFLAGS=`gnome-config --cflags gnome gnomeui`
-    HAVE_GNOME=yes
-  fi
+  GST_CHECK_CONFIGPROG(GNOME, gnome-config, gnome gnomeui)
 fi
-AC_SUBST(GNOME_LIBS)
-AC_SUBST(GNOME_CFLAGS)
 
 dnl Check for libghttp
 GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [

@@ -363,7 +363,7 @@ dnl Use a -config program which accepts --cflags and --libs parameters
 dnl to set *_CFLAGS and *_LIBS and check existence of a feature.
 dnl Richard Boulton <richard-alsa@tartarus.org>
 dnl Last modification: 26/06/2001
-dnl GST_CHECK_CONFIGPROG(FEATURE-NAME, CONFIG-PROG-FILENAME)
+dnl GST_CHECK_CONFIGPROG(FEATURE-NAME, CONFIG-PROG-FILENAME, MODULES)
 dnl
 dnl This check was written for GStreamer: it should be renamed and checked
 dnl for portability if you decide to use it elsewhere.
@@ -376,8 +376,8 @@ AC_DEFUN(GST_CHECK_CONFIGPROG,
     [$1]_CFLAGS=
     HAVE_[$1]=no
   else
-    [$1]_LIBS=`[$2] --libs`
-    [$1]_CFLAGS=`[$2] --cflags`
+    [$1]_LIBS=`[$2] --libs [$3]`
+    [$1]_CFLAGS=`[$2] --cflags [$3]`
     HAVE_[$1]=yes
   fi
   AC_SUBST([$1]_LIBS)
