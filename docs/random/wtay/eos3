@@ -155,5 +155,72 @@ case 4)
   it fires EOS.
   
   
+case 5) 
+
+(-----------------------------------------------------------------------)
+! bin                                                                   !
+!                                                     (---------------) !
+!                                                     !audiosink      ! !
+! (--------)       (----------)         (--------)    !               ! !
+! !disksrc1!       ! effect   !         ! mixer  !    !               ! !
+! !       src -- sink        src ---- sink     src -- sink            ! !
+! (--------)       (----------)         !        !    !               ! !
+!                                       !        !    (---------------) !
+! (--------)       (----------)         !        !                      !
+! !disksrc2!       ! effect   !         !        !                      !
+! !       src -- sink        src ---- sink       !                      !
+! (--------)       (----------)         (--------)                      !
+(-----------------------------------------------------------------------)
+
+  This is a simple audio mixer (mp3audio mixer).
+  We assume disksrc1 is going to be in EOS while disksrc2 is still in !EOS
+
+
+.scheduling.
+
+  two chains are detected: disksrc1-effect-mixer-audiosink, 
+  disksrc2-effect-mixer-audiosink
+
+.eos.
+
+  disksrc1 has passed the last buffer in the _get function. with its next 
+  call to _get, it will return a NULL buffer and set the src pad to EOS.
+
+  the EOS call travels up till the mixer element because it has overridden
+  the handler. The first chain is disabled from the scheduler.
+
+  finally disksrc2 run into EOS, same procedure as with disksrc1, except
+  now the mixer also sets EOS to its src pad, chain2 becomes inactive too
+  and the bin fires EOS because there are no more chains to schedule.
   
+  somebody sets the location of disksrc1 to a new mp3 file, the srcpad 
+  is set to !EOS, chain1 is scheduled again, mixer is activated again too
+  and audio is playing again...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
