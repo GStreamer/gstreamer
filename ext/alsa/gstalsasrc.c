@@ -322,25 +322,18 @@ gst_alsa_src_loop (GstElement * element)
       return;
     }
   }
+  if (this->clock_base == GST_CLOCK_TIME_NONE) {
+    GstClockTime now;
+
+    now = gst_element_get_time (element);
+    this->clock_base = gst_alsa_get_time (this);
+    this->transmitted = gst_alsa_timestamp_to_samples (this, now);
+  }
 
   /* the cast to long is explicitly needed;
    * with avail = -32 and period_size = 100, avail < period_size is false */
-  while ((avail = gst_alsa_update_avail (this)) < (long) this->period_size) {
-    if (avail == -EPIPE) {
-      GST_DEBUG_OBJECT (this, "got EPIPE when checking for available bytes");
-      continue;
-    }
-    if (avail < 0) {
-      GST_DEBUG_OBJECT (this,
-          "got error %s (%d) when checking for available bytes",
-          snd_strerror (avail));
-      return;
-    }
-    if (snd_pcm_state (this->handle) != SND_PCM_STATE_RUNNING) {
-      if (!gst_alsa_start (this))
-        return;
-      continue;
-    };
+  while ((long) (avail =
+          gst_alsa_update_avail (this)) < (long) this->period_size) {
     /* wait */
     if (gst_alsa_pcm_wait (this) == FALSE)
       return;
@@ -360,17 +353,31 @@ gst_alsa_src_loop (GstElement * element)
 
   {
     gint outsize;
-    GstClockTime outtime, outdur;
+    GstClockTime outtime, outdur, outreal, outideal;
+    gint64 diff;
+
+    /* duration of buffer is just the time of the samples */
+    outdur = gst_alsa_samples_to_timestamp (this, copied);
+
+    /* The real capture time is the time of the clock minus the duration and
+     * what is now in the buffer */
+    outreal = gst_element_get_time (GST_ELEMENT (this)) - outdur;
+    /* ideal time is counting samples */
+    outideal = gst_alsa_samples_to_timestamp (this, this->transmitted);
 
     outsize = gst_alsa_samples_to_bytes (this, copied);
-    outdur = gst_alsa_samples_to_timestamp (this, copied);
     outtime = GST_CLOCK_TIME_NONE;
 
     if (GST_ELEMENT_CLOCK (this)) {
       if (GST_CLOCK (GST_ALSA (this)->clock) == GST_ELEMENT_CLOCK (this)) {
-        outtime = gst_alsa_samples_to_timestamp (this, this->transmitted);
+        outtime = outideal;
+
+        diff = outideal - outreal;
+        GST_DEBUG_OBJECT (this, "ideal %lld, real %lld, diff %lld\n", outideal,
+            outreal, diff);
+        gst_alsa_clock_update (this, outideal);
       } else {
-        outtime = gst_element_get_time (GST_ELEMENT (this));
+        outtime = outreal;
       }
     }
 

@@ -323,27 +323,57 @@ gst_alsa_get_property (GObject * object, guint prop_id, GValue * value,
  * ask ALSA for current time using htstamp
  * FIXME: This is not very accurate, should use alsa timers instead.
  * htstamp seems to use the system clock instead of the hw clock.
+ * We also use an ugly hack for now to substract the number of queued
+ * samples in the device from the system time, this makes sure that other
+ * plugins timestamp their samples with the right time but makes the
+ * clock a little unstable. A good way to fix this is to get the exact amount
+ * of samples that were produced by ALSA but I can't find a way to get that
+ * information.. oh well.. ALSA has enough methods, there is bound to be at
+ * least 1 way of getting the info...
  */
 GstClockTime
 gst_alsa_get_time (GstAlsa * this)
 {
   int err;
   snd_htimestamp_t timestamp;
-  GstClockTime time;
+  GstClockTime time, ideal;
+  GstClockTime availtime;
+  snd_pcm_sframes_t avail;
 
   if ((err = snd_pcm_status (this->handle, this->status)) < 0) {
     GST_WARNING_OBJECT (this, "could not get snd_pcm_status");
   }
 
+  /* see how many samples are still in the buffer */
+  avail = snd_pcm_status_get_avail (this->status);
+  availtime = gst_alsa_samples_to_timestamp (this, avail);
+
+  /* get the clock time */
   snd_pcm_status_get_htstamp (this->status, &timestamp);
 
   /* time = GST_TIMESPEC_TO_TIME (timestamp); */
-  time = timestamp.tv_sec * GST_SECOND + timestamp.tv_nsec * GST_NSECOND;
+  /* we have to compensate the time for the number of queued samples 
+   * in the buffer */
+  time =
+      timestamp.tv_sec * GST_SECOND + timestamp.tv_nsec * GST_NSECOND -
+      availtime;
+  ideal =
+      this->clock_base + gst_alsa_samples_to_timestamp (this,
+      this->transmitted) - availtime;
+
+  GST_DEBUG_OBJECT (this, "clock time %lld, diff to ideal %lld\n", time,
+      time - ideal);
 
   GST_LOG_OBJECT (this, "ALSA reports time of %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time));
 
   return time;
+}
+
+void
+gst_alsa_clock_update (GstAlsa * this, GstClockTime ideal)
+{
+
 }
 
 static const GList *
@@ -1122,6 +1152,7 @@ gst_alsa_change_state (GstElement * element)
               gst_alsa_start_audio (this)))
         return GST_STATE_FAILURE;
       this->transmitted = 0;
+      this->clock_base = GST_CLOCK_TIME_NONE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       if (snd_pcm_state (this->handle) == SND_PCM_STATE_PAUSED) {
@@ -1191,14 +1222,22 @@ gst_alsa_set_clock (GstElement * element, GstClock * clock)
 inline snd_pcm_sframes_t
 gst_alsa_update_avail (GstAlsa * this)
 {
-  snd_pcm_sframes_t avail = snd_pcm_avail_update (this->handle);
+  snd_pcm_sframes_t avail = -1;
 
-  if (avail < 0) {
-    if (avail == -EPIPE) {
-      gst_alsa_xrun_recovery (this);
-    } else {
-      GST_WARNING_OBJECT (this, "unknown ALSA avail_update return value (%d)",
-          (int) avail);
+  while (avail < 0) {
+    avail = snd_pcm_avail_update (this->handle);
+    if (avail < 0) {
+      if (avail == -EPIPE) {
+        gst_alsa_xrun_recovery (this);
+      } else {
+        GST_WARNING_OBJECT (this, "unknown ALSA avail_update return value (%d)",
+            (int) avail);
+      }
+    }
+    if (snd_pcm_state (this->handle) != SND_PCM_STATE_RUNNING) {
+      if (!gst_alsa_start (this)) {
+        return 0;
+      }
     }
   }
   return avail;
@@ -1280,17 +1319,7 @@ gst_alsa_xrun_recovery (GstAlsa * this)
     GST_ERROR_OBJECT (this, "status error: %s", snd_strerror (err));
 
   if (snd_pcm_status_get_state (status) == SND_PCM_STATE_XRUN) {
-    struct timeval now, diff, tstamp;
-
-    gettimeofday (&now, 0);
-    snd_pcm_status_get_trigger_tstamp (status, &tstamp);
-    timersub (&now, &tstamp, &diff);
-    GST_INFO_OBJECT (this, "alsa: xrun of at least %.3f msecs",
-        diff.tv_sec * 1000 + diff.tv_usec / 1000.0);
-
-    /* start new timestamps from the current time */
-    this->transmitted = gst_alsa_timestamp_to_samples (this,
-        gst_element_get_time (GST_ELEMENT (this)));
+    GstClockTime elemnow;
 
     /* if we're allowed to recover, ... */
     if (this->autorecover) {
@@ -1304,12 +1333,27 @@ gst_alsa_xrun_recovery (GstAlsa * this)
         this->period_count *= 2;
       }
     }
-  }
 
-  if (!(gst_alsa_stop_audio (this) && gst_alsa_start_audio (this))) {
-    GST_ELEMENT_ERROR (this, RESOURCE, FAILED, (NULL),
-        ("Error restarting audio after xrun"));
-    return FALSE;
+    if ((err = snd_pcm_prepare (this->handle)) < 0) {
+      GST_ERROR_OBJECT (this, "prepare error: %s", snd_strerror (err));
+      return FALSE;
+    }
+    /* The strategy to recover the timestamps from the xrun is to take the 
+     * current element time and pretend we just sent all the samples up to 
+     * that time. This will result in an offset discontinuity in the next
+     * buffer along with the correct timestamp on that buffer */
+    elemnow = gst_element_get_time (GST_ELEMENT (this));
+    this->transmitted = gst_alsa_timestamp_to_samples (this, elemnow);
+    GST_DEBUG_OBJECT (this, "XRun!!!! pretending we transmitted %lld samples",
+        this->transmitted);
+
+  } else {
+    /* something else happened, reset the device */
+    if (!(gst_alsa_stop_audio (this) && gst_alsa_start_audio (this))) {
+      GST_ELEMENT_ERROR (this, RESOURCE, FAILED, (NULL),
+          ("Error restarting audio after xrun"));
+      return FALSE;
+    }
   }
 
   return TRUE;

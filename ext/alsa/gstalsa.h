@@ -156,6 +156,7 @@ struct _GstAlsa {
 
   /* clocking */
   GstAlsaClock *		clock;		/* our provided clock */
+  GstClockTime			clock_base;	/* adjusted clock base time */
   snd_pcm_uframes_t		transmitted; 	/* samples transmitted since last sync 
 						   This thing actually is our master clock.
 						   We will event insert silent samples or
@@ -193,6 +194,8 @@ GstCaps *		gst_alsa_caps		(snd_pcm_format_t	format,
 						 gint			channels);
 
 GstClockTime			gst_alsa_get_time	(GstAlsa * this);
+void 				gst_alsa_clock_update 	(GstAlsa * this, GstClockTime ideal);
+
 
 /* audio processing functions */
 inline snd_pcm_sframes_t	gst_alsa_update_avail	(GstAlsa * this);
