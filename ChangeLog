@@ -1,3 +1,10 @@
+2004-05-11  Jeremy Simon  <jesimon@libertysurf.fr>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_with_codecid):
+	 block_align and bitrate caps property were lost for wma
+	 use codec_data instead of flag1 and flag2
+
 2004-05-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_formatid_to_caps):

@@ -295,8 +295,19 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       do {
         gint version = (codec_id == CODEC_ID_WMV1) ? 1 : 2;
 
-        /* encode-FIXME: bitrate */
-        caps = GST_FF_VID_CAPS_NEW ("video/x-wmv",
+        if (context)
+        {
+          GstBuffer *buffer;
+
+          buffer = gst_buffer_new_and_alloc (context->extradata_size);
+          memcpy (GST_BUFFER_DATA (buffer), context->extradata, context->extradata_size);
+          
+          caps = GST_FF_VID_CAPS_NEW ("video/x-wmv",             
+            "wmvversion", G_TYPE_INT, version, 
+            "codec_data", GST_TYPE_BUFFER, buffer, NULL);
+        }
+        else
+          caps = GST_FF_VID_CAPS_NEW ("video/x-wmv",             
             "wmvversion", G_TYPE_INT, version, NULL);
       } while (0);
       break;
@@ -331,13 +342,27 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_WMAV2:
       do {
         gint version = (codec_id == CODEC_ID_WMAV1) ? 1 : 2;
+    
+        if (context)
+        {
+          GstBuffer *buffer;
 
-        caps = GST_FF_AUD_CAPS_NEW ("audio/x-wma",
-            "wmaversion", G_TYPE_INT, version,
-            "flags1", GST_TYPE_INT_RANGE, G_MININT, G_MAXINT,
-            "flags2", GST_TYPE_INT_RANGE, G_MININT, G_MAXINT,
-            "block_align", GST_TYPE_INT_RANGE, 0, G_MAXINT,
-            "bitrate", GST_TYPE_INT_RANGE, 0, G_MAXINT, NULL);
+          buffer = gst_buffer_new_and_alloc (context->extradata_size);
+          memcpy (GST_BUFFER_DATA (buffer), context->extradata, context->extradata_size);
+
+          caps = GST_FF_AUD_CAPS_NEW ("audio/x-wma",
+             "wmaversion", G_TYPE_INT, version,
+             "codec_data", GST_TYPE_BUFFER, buffer,
+             "block_align", G_TYPE_INT, context->block_align,
+             "bitrate", G_TYPE_INT, context->bit_rate, NULL);
+        }
+        else
+        {
+          caps = GST_FF_AUD_CAPS_NEW ("audio/x-wma",
+             "wmaversion", G_TYPE_INT, version,
+             "block_align", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+             "bitrate", GST_TYPE_INT_RANGE, 0, G_MAXINT, NULL);
+        }
       } while (0);
       break;
 
@@ -1121,32 +1146,18 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     case CODEC_ID_WMAV1:
     case CODEC_ID_WMAV2:
       do {
-	gint flags1, flags2;
+        const GValue *value;
+        const GstBuffer *buf;
 
-        if (gst_structure_get_int (str, "flags1", &flags1) ||
-            gst_structure_get_int (str, "flags2", &flags2)) {
-          /* 
-          * Rebuild context data from flags1 & flags2 
-          * see wmadec in ffmpeg/libavcodec/wmadec.c 
-          */
-          switch (codec_id) {
-            case CODEC_ID_WMAV1:
-              context->extradata = (guint8 *) av_mallocz (4);
-              ((guint8 *) context->extradata)[0] = flags1;
-              ((guint8 *) context->extradata)[2] = flags2;
-              context->extradata_size = 4;
-              break;
-            case CODEC_ID_WMAV2:
-              context->extradata = (guint8 *) av_mallocz (6);
-              ((guint8 *) context->extradata)[0] = flags1;
-              ((guint8 *) context->extradata)[1] = flags1 >> 8;
-              ((guint8 *) context->extradata)[2] = flags1 >> 16;
-              ((guint8 *) context->extradata)[3] = flags1 >> 24;
-              ((guint8 *) context->extradata)[4] = flags2;
-              ((guint8 *) context->extradata)[5] = flags2 >> 8;
-              context->extradata_size = 6;
-              break;
-	  }
+        if ((value = gst_structure_get_value (str, "codec_data"))) {
+          if (GST_BUFFER_SIZE (buf) != 0)
+          {            
+            buf = g_value_get_boxed (value);
+            context->extradata = av_mallocz (GST_BUFFER_SIZE (buf));
+            memcpy (context->extradata, GST_BUFFER_DATA (buf),
+	   	    GST_BUFFER_SIZE (buf));
+            context->extradata_size = GST_BUFFER_SIZE (buf);      
+          }
 	}
       } while (0);
       break;
