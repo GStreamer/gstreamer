@@ -137,7 +137,7 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
                           FALSE, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
     g_param_spec_boolean ("sync", "Sync", "Synchronize on the stream SCR",
-                          TRUE, G_PARAM_READWRITE));
+                          FALSE, G_PARAM_READWRITE));
 
   gobject_class->get_property = gst_mpeg_parse_get_property;
   gobject_class->set_property = gst_mpeg_parse_set_property;
@@ -171,7 +171,7 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
   mpeg_parse->packetize = NULL;
   mpeg_parse->current_scr = 0;
   mpeg_parse->previous_scr = 0;
-  mpeg_parse->sync = TRUE;
+  mpeg_parse->sync = FALSE;
 
   /* zero counters (should be done at RUNNING?) */
   mpeg_parse->bit_rate = 0;
@@ -394,6 +394,9 @@ gst_mpeg_parse_loop (GstElement *element)
     /* we're not sending data as long as no new SCR was found */
     if (mpeg_parse->discont_pending) {
       if (!mpeg_parse->scr_pending) {
+        if (mpeg_parse->clock && mpeg_parse->sync) {
+          gst_clock_handle_discont (mpeg_parse->clock, MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr));
+        }
 	if (CLASS (mpeg_parse)->handle_discont) {
 	  CLASS (mpeg_parse)->handle_discont (mpeg_parse);
 	}
@@ -409,7 +412,8 @@ gst_mpeg_parse_loop (GstElement *element)
     if (CLASS (mpeg_parse)->send_data)
       CLASS (mpeg_parse)->send_data (mpeg_parse, data, time);
 
-    if (mpeg_parse->clock && mpeg_parse->sync) {
+    if (mpeg_parse->clock && mpeg_parse->sync && !mpeg_parse->discont_pending) {
+      GST_DEBUG (GST_CAT_CLOCK, "syncing mpegparse");
       gst_element_clock_wait (GST_ELEMENT (mpeg_parse), mpeg_parse->clock, time, NULL);
     }
 
@@ -504,6 +508,8 @@ gst_mpeg_parse_handle_src_event (GstPad *pad, GstEvent *event)
       if (!gst_bytestream_seek (mpeg_parse->packetize->bs, desired_offset, GST_SEEK_METHOD_SET)) {
 	return FALSE;
       }
+      mpeg_parse->discont_pending = TRUE;
+      mpeg_parse->scr_pending = TRUE;
       break;
     }
     default:
