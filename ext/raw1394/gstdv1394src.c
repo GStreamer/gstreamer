@@ -60,14 +60,14 @@ gst_dv1394src_factory (void)
 
   if (!template) {
     template = gst_pad_template_new ("src",
-	GST_PAD_SRC,
-	GST_PAD_ALWAYS,
-	GST_STATIC_CAPS ("dv1394src",
-	    "video/dv",
-	    gst_props_new ("format", GST_PROPS_LIST (G_TYPE_STRING ("NTSC"),
-		    G_TYPE_STRING ("PAL")
-		), NULL)
-	), NULL);
+        GST_PAD_SRC,
+        GST_PAD_ALWAYS,
+        GST_STATIC_CAPS ("dv1394src",
+            "video/dv",
+            gst_props_new ("format", GST_PROPS_LIST (G_TYPE_STRING ("NTSC"),
+                    G_TYPE_STRING ("PAL")
+                ), NULL)
+        ), NULL);
   }
   return template;
 }
@@ -107,9 +107,10 @@ gst_dv1394src_get_type (void)
       0,
       (GInstanceInitFunc) gst_dv1394src_init,
     };
+
     gst_dv1394src_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "DV1394Src",
-	&gst_dv1394src_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "DV1394Src",
+        &gst_dv1394src_info, 0);
   }
   return gst_dv1394src_type;
 }
@@ -133,14 +134,14 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CONSECUTIVE,
       g_param_spec_int ("consecutive", "consecutive frames",
-	  "send n consecutive frames after skipping", 1, G_MAXINT, 1,
-	  G_PARAM_READWRITE));
+          "send n consecutive frames after skipping", 1, G_MAXINT, 1,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP,
       g_param_spec_int ("skip", "skip frames", "skip n frames", 0, G_MAXINT, 1,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DROP_INCOMPLETE,
       g_param_spec_boolean ("drop_incomplete", "drop_incomplete",
-	  "drop incomplete frames", TRUE, G_PARAM_READWRITE));
+          "drop incomplete frames", TRUE, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -235,58 +236,58 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
        the following code taken from kino-0.51 (Dan Dennedy/Charles Yates)
      */
     unsigned char *p = (unsigned char *) &data[3];
-    int section_type = p[0] >> 5;	/* section type is in bits 5 - 7 */
-    int dif_sequence = p[1] >> 4;	/* dif sequence number is in bits 4 - 7 */
+    int section_type = p[0] >> 5;       /* section type is in bits 5 - 7 */
+    int dif_sequence = p[1] >> 4;       /* dif sequence number is in bits 4 - 7 */
     int dif_block = p[2];
 
     /* if we are at the beginning of a frame, 
        we set buf=frame, and alloc a new buffer for frame
      */
 
-    if (section_type == 0 && dif_sequence == 0) {	// dif header
+    if (section_type == 0 && dif_sequence == 0) {       // dif header
 
       if (!dv1394src->negotiated) {
-	// figure format (NTSC/PAL)
-	if (p[3] & 0x80) {
-	  // PAL
-	  dv1394src->frameSize = PAL_FRAMESIZE;
-	  GST_DEBUG ("PAL data");
-	  if (gst_pad_try_set_caps (dv1394src->srcpad,
-		  gst_caps_new_simple ("video/dv",
-		      "format", G_TYPE_STRING, "PAL", NULL)) <= 0) {
-	    GST_ELEMENT_ERROR (dv1394src, CORE, NEGOTIATION, (NULL),
-		("Could not set source caps for PAL"));
-	    return 0;
-	  }
-	} else {
-	  // NTSC (untested)
-	  dv1394src->frameSize = NTSC_FRAMESIZE;
-	  GST_DEBUG
-	      ("NTSC data [untested] - please report success/failure to <dan@f3c.com>");
-	  if (gst_pad_try_set_caps (dv1394src->srcpad,
-		  gst_caps_new_simple ("video/dv", "format", G_TYPE_STRING,
-		      "NTSC", NULL)) <= 0) {
-	    GST_ELEMENT_ERROR (dv1394src, CORE, NEGOTIATION, (NULL),
-		("Could not set source caps for NTSC"));
-	    return 0;
-	  }
-	}
-	dv1394src->negotiated = TRUE;
+        // figure format (NTSC/PAL)
+        if (p[3] & 0x80) {
+          // PAL
+          dv1394src->frameSize = PAL_FRAMESIZE;
+          GST_DEBUG ("PAL data");
+          if (gst_pad_try_set_caps (dv1394src->srcpad,
+                  gst_caps_new_simple ("video/dv",
+                      "format", G_TYPE_STRING, "PAL", NULL)) <= 0) {
+            GST_ELEMENT_ERROR (dv1394src, CORE, NEGOTIATION, (NULL),
+                ("Could not set source caps for PAL"));
+            return 0;
+          }
+        } else {
+          // NTSC (untested)
+          dv1394src->frameSize = NTSC_FRAMESIZE;
+          GST_DEBUG
+              ("NTSC data [untested] - please report success/failure to <dan@f3c.com>");
+          if (gst_pad_try_set_caps (dv1394src->srcpad,
+                  gst_caps_new_simple ("video/dv", "format", G_TYPE_STRING,
+                      "NTSC", NULL)) <= 0) {
+            GST_ELEMENT_ERROR (dv1394src, CORE, NEGOTIATION, (NULL),
+                ("Could not set source caps for NTSC"));
+            return 0;
+          }
+        }
+        dv1394src->negotiated = TRUE;
       }
       // drop last frame when not complete
       if (!dv1394src->drop_incomplete
-	  || dv1394src->bytesInFrame == dv1394src->frameSize) {
-	dv1394src->buf = dv1394src->frame;
+          || dv1394src->bytesInFrame == dv1394src->frameSize) {
+        dv1394src->buf = dv1394src->frame;
       } else {
-	GST_INFO_OBJECT (GST_ELEMENT (dv1394src), "incomplete frame dropped");
+        GST_INFO_OBJECT (GST_ELEMENT (dv1394src), "incomplete frame dropped");
       }
       dv1394src->frame = NULL;
 
       dv1394src->frameSequence++;
 
       if (dv1394src->frameSequence % (dv1394src->skip +
-	      dv1394src->consecutive) < dv1394src->consecutive) {
-	dv1394src->frame = gst_buffer_new_and_alloc (dv1394src->frameSize);
+              dv1394src->consecutive) < dv1394src->consecutive) {
+        dv1394src->frame = gst_buffer_new_and_alloc (dv1394src->frameSize);
       }
       dv1394src->bytesInFrame = 0;
     }
@@ -296,33 +297,33 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
 
 
       switch (section_type) {
-	case 0:		/* 1 Header block */
-	  /* p[3] |= 0x80; // hack to force PAL data */
-	  memcpy (data + dif_sequence * 150 * 80, p, 480);
-	  break;
+        case 0:                /* 1 Header block */
+          /* p[3] |= 0x80; // hack to force PAL data */
+          memcpy (data + dif_sequence * 150 * 80, p, 480);
+          break;
 
-	case 1:		/* 2 Subcode blocks */
-	  memcpy (data + dif_sequence * 150 * 80 + (1 + dif_block) * 80, p,
-	      480);
-	  break;
+        case 1:                /* 2 Subcode blocks */
+          memcpy (data + dif_sequence * 150 * 80 + (1 + dif_block) * 80, p,
+              480);
+          break;
 
-	case 2:		/* 3 VAUX blocks */
-	  memcpy (data + dif_sequence * 150 * 80 + (3 + dif_block) * 80, p,
-	      480);
-	  break;
+        case 2:                /* 3 VAUX blocks */
+          memcpy (data + dif_sequence * 150 * 80 + (3 + dif_block) * 80, p,
+              480);
+          break;
 
-	case 3:		/* 9 Audio blocks interleaved with video */
-	  memcpy (data + dif_sequence * 150 * 80 + (6 + dif_block * 16) * 80, p,
-	      480);
-	  break;
+        case 3:                /* 9 Audio blocks interleaved with video */
+          memcpy (data + dif_sequence * 150 * 80 + (6 + dif_block * 16) * 80, p,
+              480);
+          break;
 
-	case 4:		/* 135 Video blocks interleaved with audio */
-	  memcpy (data + dif_sequence * 150 * 80 + (7 + (dif_block / 15) +
-		  dif_block) * 80, p, 480);
-	  break;
+        case 4:                /* 135 Video blocks interleaved with audio */
+          memcpy (data + dif_sequence * 150 * 80 + (7 + (dif_block / 15) +
+                  dif_block) * 80, p, 480);
+          break;
 
-	default:		/* we can´t handle any other data */
-	  break;
+        default:               /* we can´t handle any other data */
+          break;
       }
       dv1394src->bytesInFrame += 480;
     }
@@ -362,35 +363,35 @@ gst_dv1394src_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if ((dv1394src->handle = raw1394_new_handle ()) == NULL) {
-	GST_INFO_OBJECT (dv1394src, "can't get raw1394 handle");
-	return GST_STATE_FAILURE;
+        GST_INFO_OBJECT (dv1394src, "can't get raw1394 handle");
+        return GST_STATE_FAILURE;
       }
       raw1394_set_userdata (dv1394src->handle, dv1394src);
       dv1394src->numcards =
-	  raw1394_get_port_info (dv1394src->handle, dv1394src->pinfo, 16);
+          raw1394_get_port_info (dv1394src->handle, dv1394src->pinfo, 16);
       if (dv1394src->numcards == 0) {
-	GST_INFO_OBJECT (dv1394src, "no cards available for raw1394");
-	return GST_STATE_FAILURE;
+        GST_INFO_OBJECT (dv1394src, "no cards available for raw1394");
+        return GST_STATE_FAILURE;
       }
       if (dv1394src->pinfo[dv1394src->card].nodes <= 1) {
-	GST_INFO_OBJECT (dv1394src, "there are no nodes on the 1394 bus");
-	return GST_STATE_FAILURE;
+        GST_INFO_OBJECT (dv1394src, "there are no nodes on the 1394 bus");
+        return GST_STATE_FAILURE;
       }
       if (raw1394_set_port (dv1394src->handle, dv1394src->port) < 0) {
-	GST_INFO_OBJECT (dv1394src, "can't set 1394 port %d", dv1394src->port);
-	return GST_STATE_FAILURE;
+        GST_INFO_OBJECT (dv1394src, "can't set 1394 port %d", dv1394src->port);
+        return GST_STATE_FAILURE;
       }
       raw1394_set_iso_handler (dv1394src->handle, dv1394src->channel,
-	  gst_dv1394src_iso_receive);
+          gst_dv1394src_iso_receive);
       raw1394_set_bus_reset_handler (dv1394src->handle,
-	  gst_dv1394src_bus_reset);
+          gst_dv1394src_bus_reset);
       dv1394src->started = FALSE;
       GST_DEBUG ("successfully opened up 1394 connection");
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       if (raw1394_start_iso_rcv (dv1394src->handle, dv1394src->channel) < 0) {
-	GST_INFO_OBJECT (dv1394src, "can't start 1394 iso receive");
-	return GST_STATE_FAILURE;
+        GST_INFO_OBJECT (dv1394src, "can't start 1394 iso receive");
+        return GST_STATE_FAILURE;
       }
       break;
     case GST_STATE_PLAYING_TO_PAUSED:

@@ -29,21 +29,21 @@ entry_added (GstIndex * index, GstIndexEntry * entry)
   switch (entry->type) {
     case GST_INDEX_ENTRY_ID:
       g_print ("id %d describes writer %s\n", entry->id,
-	  GST_INDEX_ID_DESCRIPTION (entry));
+          GST_INDEX_ID_DESCRIPTION (entry));
       break;
     case GST_INDEX_ENTRY_FORMAT:
       g_print ("%d: registered format %d for %s\n", entry->id,
-	  GST_INDEX_FORMAT_FORMAT (entry), GST_INDEX_FORMAT_KEY (entry));
+          GST_INDEX_FORMAT_FORMAT (entry), GST_INDEX_FORMAT_KEY (entry));
       break;
     case GST_INDEX_ENTRY_ASSOCIATION:
     {
       gint i;
 
       g_print ("%p, %d: %08x ", entry, entry->id,
-	  GST_INDEX_ASSOC_FLAGS (entry));
+          GST_INDEX_ASSOC_FLAGS (entry));
       for (i = 0; i < GST_INDEX_NASSOCS (entry); i++) {
-	g_print ("%d %lld ", GST_INDEX_ASSOC_FORMAT (entry, i),
-	    GST_INDEX_ASSOC_VALUE (entry, i));
+        g_print ("%d %lld ", GST_INDEX_ASSOC_FORMAT (entry, i),
+            GST_INDEX_ASSOC_VALUE (entry, i));
       }
       g_print ("\n");
       break;
@@ -60,7 +60,8 @@ typedef struct
   GstElement *bin;
   GstElement *pipeline;
   GstIndex *index;
-} dyn_link;
+}
+dyn_link;
 
 static void
 dynamic_link (GstPadTemplate * templ, GstPad * newpad, gpointer data)
@@ -205,18 +206,18 @@ main (gint argc, gchar * argv[])
   GstElement *sink;
   struct poptOption options[] = {
     {"verbose", 'v', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &verbose, 0,
-	"Print index entries", NULL},
+        "Print index entries", NULL},
     {"quiet", 'q', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &quiet, 0,
-	"don't print progress bar", NULL},
+        "don't print progress bar", NULL},
     POPT_TABLEEND
   };
 
   if (!gst_init_check_with_popt_table (&argc, &argv, options) || argc < 3) {
     g_print ("usage: %s [-v] <type> <filename>  \n"
-	"  type can be: 0 mpeg_systems\n"
-	"               1 mpeg_decoder\n"
-	"  -v : report added index entries\n"
-	"  -q : don't print progress\n", argv[0]);
+        "  type can be: 0 mpeg_systems\n"
+        "               1 mpeg_decoder\n"
+        "  -v : report added index entries\n"
+        "  -q : don't print progress\n", argv[0]);
     return -1;
   }
 
@@ -225,7 +226,7 @@ main (gint argc, gchar * argv[])
   if (index) {
     if (verbose)
       g_signal_connect (G_OBJECT (index), "entry_added",
-	  G_CALLBACK (entry_added), NULL);
+          G_CALLBACK (entry_added), NULL);
 
     g_object_set (G_OBJECT (index), "resolver", 1, NULL);
   }
@@ -284,7 +285,7 @@ main (gint argc, gchar * argv[])
     gst_index_get_writer_id (index, GST_OBJECT (src), &id);
 
     entry = gst_index_get_assoc_entry (index, id, GST_INDEX_LOOKUP_BEFORE, 0,
-	GST_FORMAT_TIME, G_MAXINT64);
+        GST_FORMAT_TIME, G_MAXINT64);
     g_assert (entry);
     gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &result);
     total_tm = result * 60 / GST_SECOND;

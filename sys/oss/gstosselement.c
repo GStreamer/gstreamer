@@ -105,13 +105,13 @@ gst_osselement_get_type (void)
     };
 
     osselement_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstOssElement", &osselement_info, 0);
+        "GstOssElement", &osselement_info, 0);
     g_type_add_interface_static (osselement_type,
-	GST_TYPE_IMPLEMENTS_INTERFACE, &ossiface_info);
+        GST_TYPE_IMPLEMENTS_INTERFACE, &ossiface_info);
     g_type_add_interface_static (osselement_type,
-	GST_TYPE_MIXER, &ossmixer_info);
+        GST_TYPE_MIXER, &ossmixer_info);
     g_type_add_interface_static (osselement_type,
-	GST_TYPE_PROPERTY_PROBE, &ossprobe_info);
+        GST_TYPE_PROPERTY_PROBE, &ossprobe_info);
   }
 
   return osselement_type;
@@ -140,14 +140,14 @@ gst_osselement_class_init (GstOssElementClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE,
       g_param_spec_string ("device", "Device", "OSS device (/dev/dspN usually)",
-	  "default", G_PARAM_READWRITE));
+          "default", G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MIXERDEV,
       g_param_spec_string ("mixerdev", "Mixer device",
-	  "OSS mixer device (/dev/mixerN usually)",
-	  "default", G_PARAM_READWRITE));
+          "OSS mixer device (/dev/mixerN usually)",
+          "default", G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE_NAME,
       g_param_spec_string ("device_name", "Device name", "Name of the device",
-	  NULL, G_PARAM_READABLE));
+          NULL, G_PARAM_READABLE));
 
   gobject_class->set_property = gst_osselement_set_property;
   gobject_class->get_property = gst_osselement_get_property;
@@ -274,38 +274,38 @@ gst_osselement_class_probe_devices (GstOssElementClass * klass, gboolean check)
       gint fd;
 
       for (n = -1; n < MAX_OSS_DEVICES; n++) {
-	gchar *dsp = NULL;
-	gchar *mixer = NULL;
-	dev_t dsp_dev;
-	dev_t mixer_dev;
+        gchar *dsp = NULL;
+        gchar *mixer = NULL;
+        dev_t dsp_dev;
+        dev_t mixer_dev;
 
-	gst_osselement_probe (dev_base[base][DSP], n, &dsp, &dsp_dev);
-	if (dsp == NULL) {
-	  continue;
-	}
-	gst_osselement_probe (dev_base[base][MIXER], n, &mixer, &mixer_dev);
-	/* does the device exist (can we open them)? */
+        gst_osselement_probe (dev_base[base][DSP], n, &dsp, &dsp_dev);
+        if (dsp == NULL) {
+          continue;
+        }
+        gst_osselement_probe (dev_base[base][MIXER], n, &mixer, &mixer_dev);
+        /* does the device exist (can we open them)? */
 
-	/* we just check the dsp. we assume the mixer always works.
-	 * we don't need a mixer anyway (says OSS)... If we are a
-	 * mixer element, we use the mixer anyway. */
-	if ((fd = open (mixer ? mixer :
-		    dsp, openmode | O_NONBLOCK)) > 0 || errno == EBUSY) {
-	  GstOssDeviceCombination *combi;
+        /* we just check the dsp. we assume the mixer always works.
+         * we don't need a mixer anyway (says OSS)... If we are a
+         * mixer element, we use the mixer anyway. */
+        if ((fd = open (mixer ? mixer :
+                    dsp, openmode | O_NONBLOCK)) > 0 || errno == EBUSY) {
+          GstOssDeviceCombination *combi;
 
-	  if (fd > 0)
-	    close (fd);
+          if (fd > 0)
+            close (fd);
 
-	  /* yay! \o/ */
-	  combi = g_new0 (GstOssDeviceCombination, 1);
-	  combi->dsp = dsp;
-	  combi->mixer = mixer;
-	  device_combinations = device_combination_append (device_combinations,
-	      combi);
-	} else {
-	  g_free (dsp);
-	  g_free (mixer);
-	}
+          /* yay! \o/ */
+          combi = g_new0 (GstOssDeviceCombination, 1);
+          combi->dsp = dsp;
+          combi->mixer = mixer;
+          device_combinations = device_combination_append (device_combinations,
+              combi);
+        } else {
+          g_free (dsp);
+          g_free (mixer);
+        }
       }
     }
 
@@ -463,30 +463,30 @@ gst_ossformat_get (gint law, gint endianness, gboolean sign, gint width,
   if (law == 0) {
     if (width == 16) {
       if (sign == TRUE) {
-	if (endianness == G_LITTLE_ENDIAN) {
-	  *format = AFMT_S16_LE;
-	  GST_DEBUG ("16 bit signed LE, no law (%d)", *format);
-	} else if (endianness == G_BIG_ENDIAN) {
-	  *format = AFMT_S16_BE;
-	  GST_DEBUG ("16 bit signed BE, no law (%d)", *format);
-	}
+        if (endianness == G_LITTLE_ENDIAN) {
+          *format = AFMT_S16_LE;
+          GST_DEBUG ("16 bit signed LE, no law (%d)", *format);
+        } else if (endianness == G_BIG_ENDIAN) {
+          *format = AFMT_S16_BE;
+          GST_DEBUG ("16 bit signed BE, no law (%d)", *format);
+        }
       } else {
-	if (endianness == G_LITTLE_ENDIAN) {
-	  *format = AFMT_U16_LE;
-	  GST_DEBUG ("16 bit unsigned LE, no law (%d)", *format);
-	} else if (endianness == G_BIG_ENDIAN) {
-	  *format = AFMT_U16_BE;
-	  GST_DEBUG ("16 bit unsigned BE, no law (%d)", *format);
-	}
+        if (endianness == G_LITTLE_ENDIAN) {
+          *format = AFMT_U16_LE;
+          GST_DEBUG ("16 bit unsigned LE, no law (%d)", *format);
+        } else if (endianness == G_BIG_ENDIAN) {
+          *format = AFMT_U16_BE;
+          GST_DEBUG ("16 bit unsigned BE, no law (%d)", *format);
+        }
       }
       *bps = 2;
     } else if (width == 8) {
       if (sign == TRUE) {
-	*format = AFMT_S8;
-	GST_DEBUG ("8 bit signed, no law (%d)", *format);
+        *format = AFMT_S8;
+        GST_DEBUG ("8 bit signed, no law (%d)", *format);
       } else {
-	*format = AFMT_U8;
-	GST_DEBUG ("8 bit unsigned, no law (%d)", *format);
+        *format = AFMT_U8;
+        GST_DEBUG ("8 bit unsigned, no law (%d)", *format);
       }
       *bps = 1;
     }
@@ -523,7 +523,7 @@ gst_osselement_parse_caps (GstOssElement * oss, const GstCaps * caps)
   gst_structure_get_boolean (structure, "signed", &oss->sign);
 
   if (!gst_ossformat_get (oss->law, oss->endianness, oss->sign,
-	  oss->width, oss->depth, &format, &bps)) {
+          oss->width, oss->depth, &format, &bps)) {
     GST_DEBUG ("could not get format");
     return FALSE;
   }
@@ -564,7 +564,7 @@ gst_osselement_merge_fixed_caps (GstOssElement * oss, GstCaps * caps)
   gst_structure_get_int (structure, "depth", &oss->depth);
 
   if (!gst_ossformat_get (oss->law, oss->endianness, oss->sign,
-	  oss->width, oss->depth, &format, &bps)) {
+          oss->width, oss->depth, &format, &bps)) {
     return FALSE;
   }
 
@@ -640,12 +640,12 @@ gst_osselement_sync_parms (GstOssElement * oss)
       target_channels != oss->channels || target_rate != oss->rate) {
     if (target_channels != oss->channels)
       g_warning
-	  ("couldn't set the right number of channels (wanted %d, got %d), enjoy the tone difference",
-	  target_channels, oss->channels);
+          ("couldn't set the right number of channels (wanted %d, got %d), enjoy the tone difference",
+          target_channels, oss->channels);
     if (target_rate != oss->rate)
       g_warning
-	  ("couldn't set the right sample rate (wanted %d, got %d), enjoy the speed difference",
-	  target_rate, oss->rate);
+          ("couldn't set the right sample rate (wanted %d, got %d), enjoy the speed difference",
+          target_rate, oss->rate);
     if (target_format != oss->format)
       g_warning ("couldn't set requested OSS format, enjoy the noise :)");
     /* we could eventually return FALSE here, or just do some additional tests
@@ -696,39 +696,39 @@ gst_osselement_open_audio (GstOssElement * oss)
   if (oss->fd < 0) {
     switch (errno) {
       case EBUSY:
-	GST_ELEMENT_ERROR (oss, RESOURCE, BUSY,
-	    (_("OSS device \"%s\" is already in use by another program."),
-		oss->device), (NULL));
-	break;
+        GST_ELEMENT_ERROR (oss, RESOURCE, BUSY,
+            (_("OSS device \"%s\" is already in use by another program."),
+                oss->device), (NULL));
+        break;
       case EACCES:
       case ETXTBSY:
-	if (mode == GST_OSSELEMENT_WRITE)
-	  GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE,
-	      (_("Could not access device \"%s\", check its permissions."),
-		  oss->device), GST_ERROR_SYSTEM);
-	else
-	  GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
-	      (_("Could not access device \"%s\", check its permissions."),
-		  oss->device), GST_ERROR_SYSTEM);
-	break;
+        if (mode == GST_OSSELEMENT_WRITE)
+          GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE,
+              (_("Could not access device \"%s\", check its permissions."),
+                  oss->device), GST_ERROR_SYSTEM);
+        else
+          GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
+              (_("Could not access device \"%s\", check its permissions."),
+                  oss->device), GST_ERROR_SYSTEM);
+        break;
       case ENXIO:
       case ENODEV:
       case ENOENT:
-	GST_ELEMENT_ERROR (oss, RESOURCE, NOT_FOUND,
-	    (_("Device \"%s\" does not exist."), oss->device),
-	    GST_ERROR_SYSTEM);
-	break;
+        GST_ELEMENT_ERROR (oss, RESOURCE, NOT_FOUND,
+            (_("Device \"%s\" does not exist."), oss->device),
+            GST_ERROR_SYSTEM);
+        break;
       default:
-	/* FIXME: strerror is not threadsafe */
-	if (mode == GST_OSSELEMENT_WRITE)
-	  GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE,
-	      (_("Could not open device \"%s\" for writing."), oss->device),
-	      GST_ERROR_SYSTEM);
-	else
-	  GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
-	      (_("Could not open device \"%s\" for reading."), oss->device),
-	      GST_ERROR_SYSTEM);
-	break;
+        /* FIXME: strerror is not threadsafe */
+        if (mode == GST_OSSELEMENT_WRITE)
+          GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE,
+              (_("Could not open device \"%s\" for writing."), oss->device),
+              GST_ERROR_SYSTEM);
+        else
+          GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
+              (_("Could not open device \"%s\" for reading."), oss->device),
+              GST_ERROR_SYSTEM);
+        break;
     }
     return FALSE;
   }
@@ -832,38 +832,38 @@ gst_osselement_convert (GstOssElement * oss,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-	case GST_FORMAT_TIME:
-	  *dest_value = src_value * GST_SECOND / oss->bps;
-	  break;
-	case GST_FORMAT_DEFAULT:
-	  *dest_value = src_value / (oss->width * oss->channels / 8);
-	  break;
-	default:
-	  res = FALSE;
+        case GST_FORMAT_TIME:
+          *dest_value = src_value * GST_SECOND / oss->bps;
+          break;
+        case GST_FORMAT_DEFAULT:
+          *dest_value = src_value / (oss->width * oss->channels / 8);
+          break;
+        default:
+          res = FALSE;
       }
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-	case GST_FORMAT_BYTES:
-	  *dest_value = src_value * oss->bps / GST_SECOND;
-	  break;
-	case GST_FORMAT_DEFAULT:
-	  *dest_value = src_value * oss->rate / GST_SECOND;
-	  break;
-	default:
-	  res = FALSE;
+        case GST_FORMAT_BYTES:
+          *dest_value = src_value * oss->bps / GST_SECOND;
+          break;
+        case GST_FORMAT_DEFAULT:
+          *dest_value = src_value * oss->rate / GST_SECOND;
+          break;
+        default:
+          res = FALSE;
       }
       break;
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
-	case GST_FORMAT_TIME:
-	  *dest_value = src_value * GST_SECOND / oss->rate;
-	  break;
-	case GST_FORMAT_BYTES:
-	  *dest_value = src_value * oss->width * oss->channels / 8;
-	  break;
-	default:
-	  res = FALSE;
+        case GST_FORMAT_TIME:
+          *dest_value = src_value * GST_SECOND / oss->rate;
+          break;
+        case GST_FORMAT_BYTES:
+          *dest_value = src_value * oss->width * oss->channels / 8;
+          break;
+        default:
+          res = FALSE;
       }
       break;
     default:
@@ -884,34 +884,34 @@ gst_osselement_set_property (GObject * object,
       /* disallow changing the device while it is opened
          get_property("device") should return the right one */
       if (gst_element_get_state (GST_ELEMENT (oss)) == GST_STATE_NULL) {
-	g_free (oss->device);
-	oss->device = g_strdup (g_value_get_string (value));
+        g_free (oss->device);
+        oss->device = g_strdup (g_value_get_string (value));
 
-	/* let's assume that if we have a device map for the mixer,
-	 * we're allowed to do all that automagically here */
-	if (GST_OSSELEMENT_GET_CLASS (oss)->device_combinations != NULL) {
-	  GList *list = GST_OSSELEMENT_GET_CLASS (oss)->device_combinations;
+        /* let's assume that if we have a device map for the mixer,
+         * we're allowed to do all that automagically here */
+        if (GST_OSSELEMENT_GET_CLASS (oss)->device_combinations != NULL) {
+          GList *list = GST_OSSELEMENT_GET_CLASS (oss)->device_combinations;
 
-	  while (list) {
-	    GstOssDeviceCombination *combi = list->data;
+          while (list) {
+            GstOssDeviceCombination *combi = list->data;
 
-	    if (!strcmp (combi->dsp, oss->device)) {
-	      g_free (oss->mixer_dev);
-	      oss->mixer_dev = g_strdup (combi->mixer);
-	      break;
-	    }
+            if (!strcmp (combi->dsp, oss->device)) {
+              g_free (oss->mixer_dev);
+              oss->mixer_dev = g_strdup (combi->mixer);
+              break;
+            }
 
-	    list = list->next;
-	  }
-	}
+            list = list->next;
+          }
+        }
       }
       break;
     case ARG_MIXERDEV:
       /* disallow changing the device while it is opened
          get_property("mixerdev") should return the right one */
       if (gst_element_get_state (GST_ELEMENT (oss)) == GST_STATE_NULL) {
-	g_free (oss->mixer_dev);
-	oss->mixer_dev = g_strdup (g_value_get_string (value));
+        g_free (oss->mixer_dev);
+        oss->mixer_dev = g_strdup (g_value_get_string (value));
       }
       break;
     default:
@@ -949,7 +949,7 @@ gst_osselement_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if (!gst_osselement_open_audio (oss)) {
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       }
       GST_INFO ("osselement: opened sound device");
       break;

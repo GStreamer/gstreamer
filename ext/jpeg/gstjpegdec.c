@@ -76,9 +76,10 @@ gst_jpegdec_get_type (void)
       0,
       (GInstanceInitFunc) gst_jpegdec_init,
     };
+
     jpegdec_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstJpegDec", &jpegdec_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstJpegDec", &jpegdec_info,
+        0);
   }
   return jpegdec_type;
 }
@@ -95,8 +96,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/jpeg, "
-	"width = (int) [ 16, 4096 ], "
-	"height = (int) [ 16, 4096 ], " "framerate = (double) [ 1, MAX ]")
+        "width = (int) [ 16, 4096 ], "
+        "height = (int) [ 16, 4096 ], " "framerate = (double) [ 1, MAX ]")
     );
 
 static void
@@ -417,10 +418,10 @@ gst_jpegdec_chain (GstPad * pad, GstData * _data)
     jpegdec->height = height;
 
     caps = gst_caps_new_simple ("video/x-raw-yuv",
-	"format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
-	"width", G_TYPE_INT, width,
-	"height", G_TYPE_INT, height,
-	"framerate", G_TYPE_DOUBLE, jpegdec->fps, NULL);
+        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        "framerate", G_TYPE_DOUBLE, jpegdec->fps, NULL);
     gst_pad_set_explicit_caps (jpegdec->srcpad, caps);
     gst_caps_free (caps);
   }
@@ -439,14 +440,14 @@ gst_jpegdec_chain (GstPad * pad, GstData * _data)
       jpegdec->line[0][j] = base[0];
       base[0] += width;
       if (r_v == 2) {
-	jpegdec->line[0][j + 1] = base[0];
-	base[0] += width;
+        jpegdec->line[0][j + 1] = base[0];
+        base[0] += width;
       }
       jpegdec->line[1][k] = base[1];
       jpegdec->line[2][k] = base[2];
       if (r_v == 2 || k & 1) {
-	base[1] += width2;
-	base[2] += width2;
+        base[1] += width2;
+        base[2] += width2;
       }
     }
     /*g_print ("%d\n", jpegdec->cinfo.output_scanline); */

@@ -66,7 +66,7 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_CAPS_NEW ("avidecoder_sink",
-	"video/avi", "RIFF", GST_PROPS_STRING ("AVI")
+        "video/avi", "RIFF", GST_PROPS_STRING ("AVI")
     )
     )
 
@@ -75,12 +75,12 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_CAPS_NEW ("wincodec_src",
-	"video/raw",
-	"format", GST_PROPS_LIST (GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y', 'U', 'Y',
-		    '2')), GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I', '4', '2', '0')),
-	    GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R', 'G', 'B', ' '))
-	), "width", GST_PROPS_INT_RANGE (16, 4096), "height",
-	GST_PROPS_INT_RANGE (16, 4096)
+        "video/raw",
+        "format", GST_PROPS_LIST (GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y', 'U', 'Y',
+                    '2')), GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I', '4', '2', '0')),
+            GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R', 'G', 'B', ' '))
+        ), "width", GST_PROPS_INT_RANGE (16, 4096), "height",
+        GST_PROPS_INT_RANGE (16, 4096)
     )
     )
 
@@ -89,17 +89,17 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_CAPS_NEW ("src_audio",
-	"audio/raw",
-	"format", GST_PROPS_STRING ("int"),
-	"law", GST_PROPS_INT (0),
-	"endianness", GST_PROPS_INT (G_BYTE_ORDER),
-	"signed", GST_PROPS_LIST (GST_PROPS_BOOLEAN (TRUE),
-	    GST_PROPS_BOOLEAN (FALSE)
-	), "width", GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_INT (16)
-	), "depth", GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_INT (16)
-	),
-	"rate", GST_PROPS_INT_RANGE (11025, 48000),
-	"channels", GST_PROPS_INT_RANGE (1, 2)
+        "audio/raw",
+        "format", GST_PROPS_STRING ("int"),
+        "law", GST_PROPS_INT (0),
+        "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+        "signed", GST_PROPS_LIST (GST_PROPS_BOOLEAN (TRUE),
+            GST_PROPS_BOOLEAN (FALSE)
+        ), "width", GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_INT (16)
+        ), "depth", GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_INT (16)
+        ),
+        "rate", GST_PROPS_INT_RANGE (11025, 48000),
+        "channels", GST_PROPS_INT_RANGE (1, 2)
     )
     )
 
@@ -132,9 +132,10 @@ gst_avi_decoder_get_type (void)
       0,
       (GInstanceInitFunc) gst_avi_decoder_init,
     };
+
     avi_decoder_type =
-	g_type_register_static (GST_TYPE_BIN, "GstAviDecoder",
-	&avi_decoder_info, 0);
+        g_type_register_static (GST_TYPE_BIN, "GstAviDecoder",
+        &avi_decoder_info, 0);
   }
   return avi_decoder_type;
 }
@@ -148,9 +149,9 @@ gst_avi_decoder_class_init (GstAviDecoderClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE, g_param_spec_long ("bitrate", "bitrate", "bitrate", G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MEDIA_TIME, g_param_spec_long ("media_time", "media_time", "media_time", G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CURRENT_TIME, g_param_spec_long ("current_time", "current_time", "current_time", G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE, g_param_spec_long ("bitrate", "bitrate", "bitrate", G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE));        /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MEDIA_TIME, g_param_spec_long ("media_time", "media_time", "media_time", G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE));    /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CURRENT_TIME, g_param_spec_long ("current_time", "current_time", "current_time", G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE));    /* CHECKME */
 
   parent_class = g_type_class_ref (GST_TYPE_BIN);
 
@@ -182,17 +183,17 @@ gst_avi_decoder_new_pad (GstElement * element, GstPad * pad,
 
   if (!strcmp (format, "strf_vids")) {
     targetcaps =
-	gst_padtemplate_get_caps (GST_PADTEMPLATE_GET (src_video_templ));
+        gst_padtemplate_get_caps (GST_PADTEMPLATE_GET (src_video_templ));
     media_type = AVI_TYPE_VIDEO;
     gpadname = g_strdup_printf ("video_%02d", avi_decoder->video_count++);
   } else if (!strcmp (format, "strf_auds")) {
     targetcaps =
-	gst_padtemplate_get_caps (GST_PADTEMPLATE_GET (src_audio_templ));
+        gst_padtemplate_get_caps (GST_PADTEMPLATE_GET (src_audio_templ));
     media_type = AVI_TYPE_AUDIO;
     gpadname = g_strdup_printf ("audio_%02d", avi_decoder->audio_count++);
   } else if (!strcmp (format, "strf_iavs")) {
     targetcaps =
-	gst_padtemplate_get_caps (GST_PADTEMPLATE_GET (src_video_templ));
+        gst_padtemplate_get_caps (GST_PADTEMPLATE_GET (src_video_templ));
     media_type = AVI_TYPE_VIDEO;
     gpadname = g_strdup_printf ("video_%02d", avi_decoder->video_count++);
   } else {
@@ -219,7 +220,7 @@ gst_avi_decoder_new_pad (GstElement * element, GstPad * pad,
 
     if (gst_caps_is_always_compatible (caps, targetcaps)) {
       gst_element_add_ghost_pad (GST_ELEMENT (avi_decoder),
-	  gst_element_get_pad (type, "src"), gpadname);
+          gst_element_get_pad (type, "src"), gpadname);
 
       avi_decoder->count++;
       goto done;
@@ -247,11 +248,11 @@ gst_avi_decoder_new_pad (GstElement * element, GstPad * pad,
   if (new_element) {
     gst_pad_connect (pad, gst_element_get_pad (new_element, "sink"));
     gst_element_set_name (new_element, g_strdup_printf ("element%d",
-	    avi_decoder->count));
+            avi_decoder->count));
     gst_bin_add (GST_BIN (avi_decoder), new_element);
 
     gst_element_add_ghost_pad (GST_ELEMENT (avi_decoder),
-	gst_element_get_pad (new_element, padname), gpadname);
+        gst_element_get_pad (new_element, padname), gpadname);
 
     avi_decoder->count++;
   } else {
@@ -271,10 +272,10 @@ gst_avi_decoder_init (GstAviDecoder * avi_decoder)
     gst_bin_add (GST_BIN (avi_decoder), avi_decoder->demuxer);
 
     gst_element_add_ghost_pad (GST_ELEMENT (avi_decoder),
-	gst_element_get_pad (avi_decoder->demuxer, "sink"), "sink");
+        gst_element_get_pad (avi_decoder->demuxer, "sink"), "sink");
 
     g_signal_connect (G_OBJECT (avi_decoder->demuxer), "new_pad",
-	G_CALLBACK (gst_avi_decoder_new_pad), avi_decoder);
+        G_CALLBACK (gst_avi_decoder_new_pad), avi_decoder);
   } else {
     g_warning ("wow!, no avi demuxer found. help me\n");
   }
@@ -317,11 +318,11 @@ gst_avi_decoder_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_MEDIA_TIME:
       g_value_set_long (value, gst_util_get_long_arg (G_OBJECT (src->demuxer),
-	      "media_time"));
+              "media_time"));
       break;
     case ARG_CURRENT_TIME:
       g_value_set_long (value, gst_util_get_long_arg (G_OBJECT (src->demuxer),
-	      "current_time"));
+              "current_time"));
       break;
     default:
       break;

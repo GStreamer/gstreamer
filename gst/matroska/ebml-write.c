@@ -59,8 +59,8 @@ gst_ebml_write_get_type (void)
     };
 
     gst_ebml_write_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstEbmlWrite",
-	&gst_ebml_write_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstEbmlWrite",
+        &gst_ebml_write_info, 0);
   }
 
   return gst_ebml_write_type;
@@ -292,13 +292,13 @@ gst_ebml_write_seek (GstEbmlWrite * ebml, guint64 pos)
   if (ebml->cache) {
     /* within bounds? */
     if (pos >= GST_BUFFER_OFFSET (ebml->cache) &&
-	pos <
-	GST_BUFFER_OFFSET (ebml->cache) + GST_BUFFER_MAXSIZE (ebml->cache)) {
+        pos <
+        GST_BUFFER_OFFSET (ebml->cache) + GST_BUFFER_MAXSIZE (ebml->cache)) {
       GST_BUFFER_SIZE (ebml->cache) = pos - GST_BUFFER_OFFSET (ebml->cache);
       if (ebml->pos > pos)
-	ebml->handled -= ebml->pos - pos;
+        ebml->handled -= ebml->pos - pos;
       else
-	ebml->handled += pos - ebml->pos;
+        ebml->handled += pos - ebml->pos;
       ebml->pos = pos;
     } else {
       GST_LOG ("Seek outside cache range. Clearing...");
@@ -414,7 +414,7 @@ gst_ebml_write_float (GstEbmlWrite * ebml, guint32 id, gdouble num)
 void
 gst_ebml_write_ascii (GstEbmlWrite * ebml, guint32 id, const gchar * str)
 {
-  gint len = strlen (str) + 1;	/* add trailing '\0' */
+  gint len = strlen (str) + 1;  /* add trailing '\0' */
   GstBuffer *buf = gst_ebml_write_element_new (ebml, len);
 
   gst_ebml_write_element_id (buf, id);

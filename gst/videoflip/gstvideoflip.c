@@ -77,14 +77,15 @@ gst_videoflip_method_get_type (void)
     {GST_VIDEOFLIP_METHOD_HORIZ, "4", "Flip horizontally"},
     {GST_VIDEOFLIP_METHOD_VERT, "5", "Flip vertically"},
     {GST_VIDEOFLIP_METHOD_TRANS, "6",
-	"Flip across upper left/lower right diagonal"},
+        "Flip across upper left/lower right diagonal"},
     {GST_VIDEOFLIP_METHOD_OTHER, "7",
-	"Flip across upper right/lower left diagonal"},
+        "Flip across upper right/lower left diagonal"},
     {0, NULL, NULL},
   };
+
   if (!videoflip_method_type) {
     videoflip_method_type = g_enum_register_static ("GstVideoflipMethod",
-	videoflip_methods);
+        videoflip_methods);
   }
   return videoflip_method_type;
 }
@@ -131,9 +132,10 @@ gst_videoflip_get_type (void)
       0,
       (GInstanceInitFunc) gst_videoflip_init,
     };
+
     videoflip_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstVideoflip",
-	&videoflip_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstVideoflip",
+        &videoflip_info, 0);
   }
   return videoflip_type;
 }
@@ -161,8 +163,8 @@ gst_videoflip_class_init (GstVideoflipClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
-	  GST_TYPE_VIDEOFLIP_METHOD, GST_VIDEOFLIP_METHOD_90R,
-	  G_PARAM_READWRITE));
+          GST_TYPE_VIDEOFLIP_METHOD, GST_VIDEOFLIP_METHOD_90R,
+          G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -213,7 +215,7 @@ gst_videoflip_sink_getcaps (GstPad * pad)
    * the peer's formats.  Create a list of them. */
   for (i = 0; i < videoflip_n_formats; i++) {
     GstCaps *fromcaps =
-	gst_caps_new_full (videoflip_get_cap (videoflip_formats + i), NULL);
+        gst_caps_new_full (videoflip_get_cap (videoflip_formats + i), NULL);
     if (gst_caps_is_always_compatible (fromcaps, peercaps)) {
       gst_caps_append (capslist, fromcaps);
     }

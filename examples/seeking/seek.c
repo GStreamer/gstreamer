@@ -28,7 +28,8 @@ typedef struct
   const gchar *padname;
   GstPad *target;
   GstElement *bin;
-} dyn_link;
+}
+dyn_link;
 
 static GstElement *
 gst_element_factory_make_or_warn (gchar * type, gchar * name)
@@ -372,7 +373,7 @@ make_avi_pipeline (const gchar * location)
   gst_element_set_state (audio_bin, GST_STATE_PAUSED);
 
   setup_dynamic_link (demux, "audio_00", gst_element_get_pad (a_decoder,
-	  "sink"), audio_bin);
+          "sink"), audio_bin);
 
   seekable = gst_element_get_pad (a_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -400,7 +401,7 @@ make_avi_pipeline (const gchar * location)
   gst_element_set_state (video_bin, GST_STATE_PAUSED);
 
   setup_dynamic_link (demux, "video_00", gst_element_get_pad (v_decoder,
-	  "sink"), video_bin);
+          "sink"), video_bin);
 
   seekable = gst_element_get_pad (v_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -448,7 +449,7 @@ make_mpeg_pipeline (const gchar * location)
   gst_bin_add (GST_BIN (audio_thread), audiosink);
 
   setup_dynamic_link (demux, "audio_00", gst_element_get_pad (a_decoder,
-	  "sink"), audio_bin);
+          "sink"), audio_bin);
 
   seekable = gst_element_get_pad (a_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -470,7 +471,7 @@ make_mpeg_pipeline (const gchar * location)
   gst_bin_add_many (GST_BIN (video_thread), v_queue, v_filter, videosink, NULL);
 
   setup_dynamic_link (demux, "video_00", gst_element_get_pad (v_decoder,
-	  "sink"), video_bin);
+          "sink"), video_bin);
 
   seekable = gst_element_get_pad (v_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -519,7 +520,7 @@ make_mpegnt_pipeline (const gchar * location)
   gst_bin_add (GST_BIN (audio_thread), audiosink);
 
   setup_dynamic_link (demux, "audio_00", gst_element_get_pad (a_decoder,
-	  "sink"), audio_bin);
+          "sink"), audio_bin);
 
   seekable = gst_element_get_pad (a_queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -536,7 +537,7 @@ make_mpegnt_pipeline (const gchar * location)
   gst_bin_add_many (GST_BIN (video_bin), v_decoder, v_filter, videosink, NULL);
 
   setup_dynamic_link (demux, "video_00", gst_element_get_pad (v_decoder,
-	  "sink"), video_bin);
+          "sink"), video_bin);
 
   seekable = gst_element_get_pad (v_decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -572,7 +573,8 @@ typedef struct
 {
   const gchar *name;
   const GstFormat format;
-} seek_format;
+}
+seek_format;
 
 static seek_format seek_formats[] = {
   {"tim", GST_FORMAT_TIME},
@@ -599,9 +601,9 @@ query_rates (void)
       format = seek_formats[i].format;
 
       if (gst_pad_convert (pad, GST_FORMAT_TIME, GST_SECOND, &format, &value)) {
-	g_print ("%s %13lld | ", seek_formats[i].name, value);
+        g_print ("%s %13lld | ", seek_formats[i].name, value);
       } else {
-	g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
 
       i++;
@@ -630,9 +632,9 @@ query_durations ()
       format = seek_formats[i].format;
       res = gst_pad_query (pad, GST_QUERY_TOTAL, &format, &value);
       if (res) {
-	g_print ("%s %13lld | ", seek_formats[i].name, value);
+        g_print ("%s %13lld | ", seek_formats[i].name, value);
       } else {
-	g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
       i++;
     }
@@ -660,9 +662,9 @@ query_positions ()
       format = seek_formats[i].format;
       res = gst_pad_query (pad, GST_QUERY_POSITION, &format, &value);
       if (res) {
-	g_print ("%s %13lld | ", seek_formats[i].name, value);
+        g_print ("%s %13lld | ", seek_formats[i].name, value);
       } else {
-	g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
       i++;
     }
@@ -691,7 +693,7 @@ update_scale (gpointer data)
 
   if (stats) {
     g_print ("clock:                  %13llu  (%s)\n", position,
-	gst_object_get_name (GST_OBJECT (clock)));
+        gst_object_get_name (GST_OBJECT (clock)));
     query_durations ();
     query_positions ();
     query_rates ();
@@ -740,10 +742,10 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
     GstPad *seekable = GST_PAD (walk->data);
 
     g_print ("seek to %lld on pad %s:%s\n", real,
-	GST_DEBUG_PAD_NAME (seekable));
+        GST_DEBUG_PAD_NAME (seekable));
     s_event =
-	gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
-	GST_SEEK_FLAG_FLUSH, real);
+        gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
+        GST_SEEK_FLAG_FLUSH, real);
 
     res = gst_pad_send_event (seekable, s_event);
 
@@ -756,10 +758,10 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
     GstElement *seekable = GST_ELEMENT (walk->data);
 
     g_print ("seek to %lld on element %s\n", real,
-	gst_element_get_name (seekable));
+        gst_element_get_name (seekable));
     s_event =
-	gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
-	GST_SEEK_FLAG_FLUSH, real);
+        gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
+        GST_SEEK_FLAG_FLUSH, real);
 
     res = gst_element_send_event (seekable, s_event);
 
@@ -782,7 +784,7 @@ play_cb (GtkButton * button, gpointer data)
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     gtk_idle_add ((GtkFunction) iterate, pipeline);
     update_id =
-	gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+        gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
   }
 }
 
@@ -808,7 +810,8 @@ typedef struct
 {
   gchar *name;
   GstElement *(*func) (const gchar * location);
-} Pipeline;
+}
+Pipeline;
 
 static Pipeline pipelines[] = {
   {"mp3", make_mp3_pipeline},
@@ -848,7 +851,7 @@ main (int argc, char **argv)
       *play_button, *pause_button, *stop_button, *hscale;
   struct poptOption options[] = {
     {"stats", 's', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &stats, 0,
-	"Show pad stats", NULL},
+        "Show pad stats", NULL},
     POPT_TABLEEND
   };
   gint type;

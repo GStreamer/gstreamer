@@ -80,9 +80,10 @@ gst_smoothwave_get_type (void)
       0,
       (GInstanceInitFunc) gst_smoothwave_init,
     };
+
     smoothwave_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstSmoothWave",
-	&smoothwave_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstSmoothWave",
+        &smoothwave_info, 0);
   }
   return smoothwave_type;
 }
@@ -106,9 +107,9 @@ gst_smoothwave_class_init (GstSmoothWaveClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH, g_param_spec_int ("width", "width", "width", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT, g_param_spec_int ("height", "height", "height", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDGET, g_param_spec_object ("widget", "widget", "widget", GTK_TYPE_WIDGET, G_PARAM_READABLE));	/* CHECKME! */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH, g_param_spec_int ("width", "width", "width", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT, g_param_spec_int ("height", "height", "height", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDGET, g_param_spec_object ("widget", "widget", "widget", GTK_TYPE_WIDGET, G_PARAM_READABLE));  /* CHECKME! */
 
   gobject_class->set_property = gst_smoothwave_set_property;
   gobject_class->get_property = gst_smoothwave_get_property;
@@ -192,7 +193,7 @@ gst_smoothwave_chain (GstPad * pad, GstData * _data)
   for (i = 0; i < MAX (smoothwave->width, samplecount); i++) {
     gint16 y1 = (gint32) (samples[i * 2] * qheight) / 32768 + qheight;
     gint16 y2 = (gint32) (samples[(i * 2) + 1] * qheight) / 32768 +
-	(qheight * 3);
+        (qheight * 3);
     smoothwave->imagebuffer[y1 * smoothwave->width + i] = 0xff;
     smoothwave->imagebuffer[y2 * smoothwave->width + i] = 0xff;
 /*    smoothwave->imagebuffer[i+(smoothwave->width*5)] = i; */
@@ -246,16 +247,16 @@ gst_smoothwave_set_property (GObject * object, guint prop_id,
     case ARG_WIDTH:
       smoothwave->width = g_value_get_int (value);
       gtk_drawing_area_size (GTK_DRAWING_AREA (smoothwave->image),
-	  smoothwave->width, smoothwave->height);
+          smoothwave->width, smoothwave->height);
       gtk_widget_set_usize (GTK_WIDGET (smoothwave->image),
-	  smoothwave->width, smoothwave->height);
+          smoothwave->width, smoothwave->height);
       break;
     case ARG_HEIGHT:
       smoothwave->height = g_value_get_int (value);
       gtk_drawing_area_size (GTK_DRAWING_AREA (smoothwave->image),
-	  smoothwave->width, smoothwave->height);
+          smoothwave->width, smoothwave->height);
       gtk_widget_set_usize (GTK_WIDGET (smoothwave->image),
-	  smoothwave->width, smoothwave->height);
+          smoothwave->width, smoothwave->height);
       break;
     default:
       break;
@@ -297,7 +298,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "smoothwave", GST_RANK_NONE,
-	  GST_TYPE_SMOOTHWAVE))
+          GST_TYPE_SMOOTHWAVE))
     return FALSE;
 
   return TRUE;

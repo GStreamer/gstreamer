@@ -61,7 +61,7 @@ static void
     }
 
     pcFilename = malloc (lDirLength + strlen (psDirectoryEntry->d_name)
-	+ 1 + iNeedSlash);
+        + 1 + iNeedSlash);
     strcpy (pcFilename, pcDirectory);
     if (iNeedSlash)
       strcat (pcFilename, "/");
@@ -73,15 +73,15 @@ static void
 
       dlerror ();
       fDescriptorFunction
-	  = (LADSPA_Descriptor_Function) dlsym (pvPluginHandle,
-	  "ladspa_descriptor");
+          = (LADSPA_Descriptor_Function) dlsym (pvPluginHandle,
+          "ladspa_descriptor");
       if (dlerror () == NULL && fDescriptorFunction) {
-	/* We've successfully found a ladspa_descriptor function. Pass
-	   it to the callback function. */
-	fCallbackFunction (pcFilename, pvPluginHandle, fDescriptorFunction);
+        /* We've successfully found a ladspa_descriptor function. Pass
+           it to the callback function. */
+        fCallbackFunction (pcFilename, pvPluginHandle, fDescriptorFunction);
       } else {
-	/* It was a library, but not a LADSPA one. Unload it. */
-	dlclose (pcFilename);
+        /* It was a library, but not a LADSPA one. Unload it. */
+        dlclose (pcFilename);
       }
     }
     free (pcFilename);

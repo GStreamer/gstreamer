@@ -35,8 +35,8 @@
 #endif
 #include <gst/gst.h>
 #include "gstfilter.h"
-#include <math.h>		/* M_PI */
-#include <string.h>		/* memmove */
+#include <math.h>               /* M_PI */
+#include <string.h>             /* memmove */
 
 /* elementfactory information */
 static GstElementDetails gst_bpwsinc_details = GST_ELEMENT_DETAILS ("BPWSinc",
@@ -80,10 +80,10 @@ struct _GstBPWSinc
 
   double frequency;
   double lower_frequency, upper_frequency;
-  int wing_size;		/* length of a "wing" of the filter; 
-				   actual length is 2 * wing_size + 1 */
+  int wing_size;                /* length of a "wing" of the filter; 
+                                   actual length is 2 * wing_size + 1 */
 
-  gfloat *residue;		/* buffer for left-over samples from previous buffer */
+  gfloat *residue;              /* buffer for left-over samples from previous buffer */
   double *kernel;
 };
 
@@ -125,7 +125,7 @@ gst_bpwsinc_get_type (void)
     };
 
     bpwsinc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstBPWSinc",
-	&bpwsinc_info, 0);
+        &bpwsinc_info, 0);
   }
   return bpwsinc_type;
 }
@@ -157,16 +157,16 @@ gst_bpwsinc_class_init (GstBPWSincClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOWER_FREQUENCY,
       g_param_spec_double ("lower-frequency", "Lower Frequency",
-	  "Cut-off lower frequency (relative to sample rate)",
-	  0.0, 0.5, 0, G_PARAM_READWRITE));
+          "Cut-off lower frequency (relative to sample rate)",
+          0.0, 0.5, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_UPPER_FREQUENCY,
       g_param_spec_double ("upper-frequency", "Upper Frequency",
-	  "Cut-off upper frequency (relative to sample rate)",
-	  0.0, 0.5, 0, G_PARAM_READWRITE));
+          "Cut-off upper frequency (relative to sample rate)",
+          0.0, 0.5, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LENGTH,
       g_param_spec_int ("length", "Length",
-	  "N such that the filter length = 2N + 1",
-	  1, G_MAXINT, 1, G_PARAM_READWRITE));
+          "N such that the filter length = 2N + 1",
+          1, G_MAXINT, 1, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_bpwsinc_set_property;
   gobject_class->get_property = gst_bpwsinc_get_property;
@@ -213,17 +213,17 @@ gst_bpwsinc_sink_connect (GstPad * pad, const GstCaps * caps)
     len = filter->wing_size;
     /* fill the lp kernel */
     GST_DEBUG ("bpwsinc: initializing LP kernel of length %d with cut-off %f",
-	len * 2 + 1, filter->lower_frequency);
+        len * 2 + 1, filter->lower_frequency);
     kernel_lp = (double *) g_malloc (sizeof (double) * (2 * len + 1));
     for (i = 0; i <= len * 2; ++i) {
       if (i == len)
-	kernel_lp[i] = 2 * M_PI * filter->lower_frequency;
+        kernel_lp[i] = 2 * M_PI * filter->lower_frequency;
       else
-	kernel_lp[i] = sin (2 * M_PI * filter->lower_frequency * (i - len))
-	    / (i - len);
+        kernel_lp[i] = sin (2 * M_PI * filter->lower_frequency * (i - len))
+            / (i - len);
       /* Blackman windowing */
       kernel_lp[i] *= (0.42 - 0.5 * cos (M_PI * i / len)
-	  + 0.08 * cos (2 * M_PI * i / len));
+          + 0.08 * cos (2 * M_PI * i / len));
     }
 
     /* normalize for unity gain at DC
@@ -236,17 +236,17 @@ gst_bpwsinc_sink_connect (GstPad * pad, const GstCaps * caps)
 
     /* fill the hp kernel */
     GST_DEBUG ("bpwsinc: initializing HP kernel of length %d with cut-off %f",
-	len * 2 + 1, filter->upper_frequency);
+        len * 2 + 1, filter->upper_frequency);
     kernel_hp = (double *) g_malloc (sizeof (double) * (2 * len + 1));
     for (i = 0; i <= len * 2; ++i) {
       if (i == len)
-	kernel_hp[i] = 2 * M_PI * filter->upper_frequency;
+        kernel_hp[i] = 2 * M_PI * filter->upper_frequency;
       else
-	kernel_hp[i] = sin (2 * M_PI * filter->upper_frequency * (i - len))
-	    / (i - len);
+        kernel_hp[i] = sin (2 * M_PI * filter->upper_frequency * (i - len))
+            / (i - len);
       /* Blackman windowing */
       kernel_hp[i] *= (0.42 - 0.5 * cos (M_PI * i / len)
-	  + 0.08 * cos (2 * M_PI * i / len));
+          + 0.08 * cos (2 * M_PI * i / len));
     }
 
     /* normalize for unity gain at DC

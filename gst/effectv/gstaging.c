@@ -60,7 +60,8 @@ typedef struct _scratch
   gint x;
   gint dx;
   gint init;
-} scratch;
+}
+scratch;
 
 static int dx[8] = { 1, 1, 0, -1, -1, -1, 0, 1 };
 static int dy[8] = { 0, -1, -1, -1, 0, 1, 1, 1 };
@@ -129,8 +130,9 @@ gst_agingtv_get_type (void)
       0,
       gst_agingtv_init,
     };
+
     agingtv_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
-	"GstAgingTV", &agingtv_info, 0);
+        "GstAgingTV", &agingtv_info, 0);
   }
   return agingtv_type;
 }
@@ -155,7 +157,7 @@ gst_agingtv_base_init (gpointer g_class)
 
   for (i = 0; i < G_N_ELEMENTS (gst_agingtv_formats); i++) {
     gst_videofilter_class_add_format (videofilter_class,
-	gst_agingtv_formats + i);
+        gst_agingtv_formats + i);
   }
 
   gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
@@ -173,7 +175,7 @@ gst_agingtv_class_init (gpointer g_class, gpointer class_data)
 #if 0
   g_object_class_install_property (gobject_class, ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
-	  GST_TYPE_AGINGTV_METHOD, GST_AGINGTV_METHOD_1, G_PARAM_READWRITE));
+          GST_TYPE_AGINGTV_METHOD, GST_AGINGTV_METHOD_1, G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_agingtv_set_property;
@@ -249,35 +251,35 @@ scratching (scratch * scratches, gint scratch_lines, guint32 * dest, gint width,
       scratch->x = scratch->x + scratch->dx;
 
       if (scratch->x < 0 || scratch->x > width * 256) {
-	scratch->life = 0;
-	break;
+        scratch->life = 0;
+        break;
       }
       p = dest + (scratch->x >> 8);
       if (scratch->init) {
-	y1 = scratch->init;
-	scratch->init = 0;
+        y1 = scratch->init;
+        scratch->init = 0;
       } else {
-	y1 = 0;
+        y1 = 0;
       }
       scratch->life--;
       if (scratch->life) {
-	y2 = height;
+        y2 = height;
       } else {
-	y2 = fastrand () % height;
+        y2 = fastrand () % height;
       }
       for (y = y1; y < y2; y++) {
-	a = *p & 0xfefeff;
-	a += 0x202020;
-	b = a & 0x1010100;
-	*p = a | (b - (b >> 8));
-	p += width;
+        a = *p & 0xfefeff;
+        a += 0x202020;
+        b = a & 0x1010100;
+        *p = a | (b - (b >> 8));
+        p += width;
       }
     } else {
       if ((fastrand () & 0xf0000000) == 0) {
-	scratch->life = 2 + (fastrand () >> 27);
-	scratch->x = fastrand () % (width * 256);
-	scratch->dx = ((int) fastrand ()) >> 23;
-	scratch->init = (fastrand () % (height - 1)) + 1;
+        scratch->life = 2 + (fastrand () >> 27);
+        scratch->x = fastrand () % (width * 256);
+        scratch->dx = ((int) fastrand ()) >> 23;
+        scratch->init = (fastrand () % (height - 1)) + 1;
       }
     }
   }
@@ -311,7 +313,7 @@ dusts (guint32 * dest, gint width, gint height, gint dust_interval,
       x += dx[d];
 
       if (y >= height || x >= width)
-	break;
+        break;
 
       d = (d + fastrand () % 3 - 1) & 7;
     }
@@ -350,7 +352,7 @@ pits (guint32 * dest, gint width, gint height, gint area_scale,
       y = y + fastrand () % 3 - 1;
 
       if (y >= height || x >= width)
-	break;
+        break;
 
       dest[y * width + x] = 0xc0c0c0;
     }

@@ -49,11 +49,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) true, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) true, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 static GstStaticPadTemplate gst_rtpL16enc_src_template =
@@ -96,8 +96,8 @@ gst_rtpL16enc_get_type (void)
     };
 
     rtpL16enc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Enc",
-	&rtpL16enc_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Enc",
+        &rtpL16enc_info, 0);
   }
   return rtpL16enc_type;
 }
@@ -216,13 +216,13 @@ gst_rtpL16enc_chain (GstPad * pad, GstData * _data)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
-	GST_DEBUG ("discont");
-	rtpL16enc->next_time = 0;
-	gst_pad_event_default (pad, event);
-	return;
+        GST_DEBUG ("discont");
+        rtpL16enc->next_time = 0;
+        gst_pad_event_default (pad, event);
+        return;
       default:
-	gst_pad_event_default (pad, event);
-	return;
+        gst_pad_event_default (pad, event);
+        return;
     }
   }
 

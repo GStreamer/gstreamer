@@ -90,8 +90,8 @@ gst_rtpgsmparse_get_type (void)
     };
 
     rtpgsmparse_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstRtpGSMParse",
-	&rtpgsmparse_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpGSMParse",
+        &rtpgsmparse_info, 0);
   }
   return rtpgsmparse_type;
 }
@@ -121,7 +121,7 @@ gst_rtpgsmparse_class_init (GstRtpGSMParseClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY,
       g_param_spec_int ("frequency", "frequency", "frequency",
-	  G_MININT, G_MAXINT, 8000, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 8000, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_rtpgsmparse_set_property;
   gobject_class->get_property = gst_rtpgsmparse_get_property;

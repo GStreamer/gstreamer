@@ -62,9 +62,10 @@ gst_udpsrc_control_get_type (void)
     {CONTROL_TCP, "3", "tcp"},
     {CONTROL_ZERO, NULL, NULL},
   };
+
   if (!udpsrc_control_type) {
     udpsrc_control_type =
-	g_enum_register_static ("GstUDPSrcControl", udpsrc_control);
+        g_enum_register_static ("GstUDPSrcControl", udpsrc_control);
   }
   return udpsrc_control_type;
 }
@@ -104,8 +105,9 @@ gst_udpsrc_get_type (void)
       (GInstanceInitFunc) gst_udpsrc_init,
       NULL
     };
+
     udpsrc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstUDPSrc", &udpsrc_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstUDPSrc", &udpsrc_info, 0);
   }
   return udpsrc_type;
 }
@@ -131,14 +133,14 @@ gst_udpsrc_class_init (GstUDPSrc * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "port", "The port to receive the packets from",
-	  0, 32768, UDP_DEFAULT_PORT, G_PARAM_READWRITE));
+          0, 32768, UDP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_CONTROL,
       g_param_spec_enum ("control", "control", "The type of control",
-	  GST_TYPE_UDPSRC_CONTROL, CONTROL_UDP, G_PARAM_READWRITE));
+          GST_TYPE_UDPSRC_CONTROL, CONTROL_UDP, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MULTICAST_GROUP,
       g_param_spec_string ("multicast_group", "multicast_group",
-	  "The Address of multicast group to join",
-	  UDP_DEFAULT_MULTICAST_GROUP, G_PARAM_READWRITE));
+          "The Address of multicast group to join",
+          UDP_DEFAULT_MULTICAST_GROUP, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_udpsrc_set_property;
   gobject_class->get_property = gst_udpsrc_get_property;
@@ -200,7 +202,7 @@ gst_udpsrc_get (GstPad * pad)
 
   if (select (max_sock + 1, &read_fds, NULL, NULL, NULL) > 0) {
     if ((udpsrc->control_sock != -1) &&
-	FD_ISSET (udpsrc->control_sock, &read_fds)) {
+        FD_ISSET (udpsrc->control_sock, &read_fds)) {
 #ifndef GST_DISABLE_LOADSAVE
       guchar *buf;
       int ret;
@@ -212,45 +214,45 @@ gst_udpsrc_get (GstPad * pad)
       buf = g_malloc (1024 * 10);
 
       switch (udpsrc->control) {
-	case CONTROL_TCP:
-	  len = sizeof (struct sockaddr);
-	  fdread = accept (udpsrc->control_sock, &addr, &len);
-	  if (fdread < 0) {
-	    perror ("accept");
-	  }
+        case CONTROL_TCP:
+          len = sizeof (struct sockaddr);
+          fdread = accept (udpsrc->control_sock, &addr, &len);
+          if (fdread < 0) {
+            perror ("accept");
+          }
 
-	  ret = read (fdread, buf, 1024 * 10);
-	  break;
-	case CONTROL_UDP:
-	  len = sizeof (struct sockaddr);
-	  ret =
-	      recvfrom (udpsrc->control_sock, buf, 1024 * 10, 0,
-	      (struct sockaddr *) &tmpaddr, &len);
-	  if (ret < 0) {
-	    perror ("recvfrom");
-	  }
-	  break;
-	case CONTROL_NONE:
-	default:
-	  g_free (buf);
-	  return NULL;
-	  break;
+          ret = read (fdread, buf, 1024 * 10);
+          break;
+        case CONTROL_UDP:
+          len = sizeof (struct sockaddr);
+          ret =
+              recvfrom (udpsrc->control_sock, buf, 1024 * 10, 0,
+              (struct sockaddr *) &tmpaddr, &len);
+          if (ret < 0) {
+            perror ("recvfrom");
+          }
+          break;
+        case CONTROL_NONE:
+        default:
+          g_free (buf);
+          return NULL;
+          break;
       }
 
       buf[ret] = '\0';
       doc = xmlParseMemory (buf, ret);
       caps = gst_caps_load_thyself (doc->xmlRootNode);
       if (caps == NULL) {
-	return NULL;
+        return NULL;
       }
 
       /* foward the connect, we don't signal back the result here... */
       if (gst_caps_is_fixed (caps)) {
-	gst_pad_try_set_caps (udpsrc->srcpad, caps);
+        gst_pad_try_set_caps (udpsrc->srcpad, caps);
       } else {
-	GST_ERROR ("caps %" GST_PTR_FORMAT, caps);
-	GST_ELEMENT_ERROR (udpsrc, CORE, NEGOTIATION, (NULL),
-	    ("Got unfixed caps from peer"));
+        GST_ERROR ("caps %" GST_PTR_FORMAT, caps);
+        GST_ELEMENT_ERROR (udpsrc, CORE, NEGOTIATION, (NULL),
+            ("Got unfixed caps from peer"));
       }
 
 #endif
@@ -262,37 +264,37 @@ gst_udpsrc_get (GstPad * pad)
       GST_BUFFER_SIZE (outbuf) = 24000;
 
       if (udpsrc->first_buf) {
-	if (udpsrc->clock) {
-	  GstClockTime current_time;
-	  GstEvent *discont;
+        if (udpsrc->clock) {
+          GstClockTime current_time;
+          GstEvent *discont;
 
-	  current_time = gst_clock_get_time (udpsrc->clock);
+          current_time = gst_clock_get_time (udpsrc->clock);
 
-	  GST_BUFFER_TIMESTAMP (outbuf) = current_time;
+          GST_BUFFER_TIMESTAMP (outbuf) = current_time;
 
-	  discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-	      current_time, NULL);
+          discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
+              current_time, NULL);
 
-	  gst_pad_push (udpsrc->srcpad, GST_DATA (discont));
-	}
+          gst_pad_push (udpsrc->srcpad, GST_DATA (discont));
+        }
 
-	udpsrc->first_buf = FALSE;
+        udpsrc->first_buf = FALSE;
       }
 
       else {
-	GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
+        GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
       }
 
       len = sizeof (struct sockaddr);
       numbytes = recvfrom (udpsrc->sock, GST_BUFFER_DATA (outbuf),
-	  GST_BUFFER_SIZE (outbuf), 0, (struct sockaddr *) &tmpaddr, &len);
+          GST_BUFFER_SIZE (outbuf), 0, (struct sockaddr *) &tmpaddr, &len);
 
       if (numbytes != -1) {
-	GST_BUFFER_SIZE (outbuf) = numbytes;
+        GST_BUFFER_SIZE (outbuf) = numbytes;
       } else {
-	perror ("recvfrom");
-	gst_buffer_unref (outbuf);
-	outbuf = NULL;
+        perror ("recvfrom");
+        gst_buffer_unref (outbuf);
+        outbuf = NULL;
       }
 
     }
@@ -322,9 +324,9 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       g_free (udpsrc->multi_group);
 
       if (g_value_get_string (value) == NULL)
-	udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
+        udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
       else
-	udpsrc->multi_group = g_strdup (g_value_get_string (value));
+        udpsrc->multi_group = g_strdup (g_value_get_string (value));
 
       break;
     case ARG_CONTROL:
@@ -369,8 +371,8 @@ gst_udpsrc_init_receive (GstUDPSrc * src)
   gint reuse = 1;
 
   memset (&src->myaddr, 0, sizeof (src->myaddr));
-  src->myaddr.sin_family = AF_INET;	/* host byte order */
-  src->myaddr.sin_port = htons (src->port);	/* short, network byte order */
+  src->myaddr.sin_family = AF_INET;     /* host byte order */
+  src->myaddr.sin_port = htons (src->port);     /* short, network byte order */
   src->myaddr.sin_addr.s_addr = INADDR_ANY;
 
   if ((src->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1) {
@@ -379,13 +381,13 @@ gst_udpsrc_init_receive (GstUDPSrc * src)
   }
 
   if (setsockopt (src->sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
-	  sizeof (reuse)) == -1) {
+          sizeof (reuse)) == -1) {
     perror ("setsockopt");
     return FALSE;
   }
 
   if (bind (src->sock, (struct sockaddr *) &src->myaddr,
-	  sizeof (src->myaddr)) == -1) {
+          sizeof (src->myaddr)) == -1) {
     perror ("bind");
     return FALSE;
   }
@@ -394,7 +396,7 @@ gst_udpsrc_init_receive (GstUDPSrc * src)
     if (src->multi_addr.imr_multiaddr.s_addr) {
       src->multi_addr.imr_interface.s_addr = INADDR_ANY;
       setsockopt (src->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &src->multi_addr,
-	  sizeof (src->multi_addr));
+          sizeof (src->multi_addr));
     }
   }
 
@@ -405,19 +407,19 @@ gst_udpsrc_init_receive (GstUDPSrc * src)
   switch (src->control) {
     case CONTROL_TCP:
       if ((src->control_sock = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
-	perror ("control_socket");
-	return FALSE;
+        perror ("control_socket");
+        return FALSE;
       }
 
       if (bind (src->control_sock, (struct sockaddr *) &src->myaddr,
-	      sizeof (src->myaddr)) == -1) {
-	perror ("control_bind");
-	return FALSE;
+              sizeof (src->myaddr)) == -1) {
+        perror ("control_bind");
+        return FALSE;
       }
 
       if (listen (src->control_sock, 5) == -1) {
-	perror ("listen");
-	return FALSE;
+        perror ("listen");
+        return FALSE;
       }
 
       fcntl (src->control_sock, F_SETFL, O_NONBLOCK);
@@ -425,19 +427,19 @@ gst_udpsrc_init_receive (GstUDPSrc * src)
       break;
     case CONTROL_UDP:
       if ((src->control_sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1) {
-	perror ("socket");
-	return FALSE;
+        perror ("socket");
+        return FALSE;
       }
 
       if (bind (src->control_sock, (struct sockaddr *) &src->myaddr,
-	      sizeof (src->myaddr)) == -1) {
-	perror ("control_bind");
-	return FALSE;
+              sizeof (src->myaddr)) == -1) {
+        perror ("control_bind");
+        return FALSE;
       }
       /* We can only do broadcast in udp */
       bc_val = 1;
       setsockopt (src->control_sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
-	  sizeof (bc_val));
+          sizeof (bc_val));
       break;
     case CONTROL_NONE:
       GST_FLAG_SET (src, GST_UDPSRC_OPEN);
@@ -479,7 +481,7 @@ gst_udpsrc_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_UDPSRC_OPEN)) {
       if (!gst_udpsrc_init_receive (GST_UDPSRC (element)))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
     }
   }
 

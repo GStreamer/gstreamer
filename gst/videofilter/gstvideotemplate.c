@@ -103,8 +103,9 @@ gst_videotemplate_get_type (void)
       0,
       gst_videotemplate_init,
     };
+
     videotemplate_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
-	"GstVideotemplate", &videotemplate_info, 0);
+        "GstVideotemplate", &videotemplate_info, 0);
   }
   return videotemplate_type;
 }
@@ -130,7 +131,7 @@ gst_videotemplate_base_init (gpointer g_class)
 
   for (i = 0; i < G_N_ELEMENTS (gst_videotemplate_formats); i++) {
     gst_videofilter_class_add_format (videofilter_class,
-	gst_videotemplate_formats + i);
+        gst_videotemplate_formats + i);
   }
 
   gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
@@ -148,8 +149,8 @@ gst_videotemplate_class_init (gpointer g_class, gpointer class_data)
 #if 0
   g_object_class_install_property (gobject_class, ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
-	  GST_TYPE_VIDEOTEMPLATE_METHOD, GST_VIDEOTEMPLATE_METHOD_1,
-	  G_PARAM_READWRITE));
+          GST_TYPE_VIDEOTEMPLATE_METHOD, GST_VIDEOTEMPLATE_METHOD_1,
+          G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_videotemplate_set_property;

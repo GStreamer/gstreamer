@@ -46,11 +46,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) true, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) true, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 static GstStaticPadTemplate gst_rtpL16parse_sink_template =
@@ -94,8 +94,8 @@ gst_rtpL16parse_get_type (void)
     };
 
     rtpL16parse_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Parse",
-	&rtpL16parse_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Parse",
+        &rtpL16parse_info, 0);
   }
   return rtpL16parse_type;
 }
@@ -125,10 +125,10 @@ gst_rtpL16parse_class_init (GstRtpL16ParseClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PAYLOAD_TYPE,
       g_param_spec_int ("payload_type", "payload_type", "payload type",
-	  G_MININT, G_MAXINT, PAYLOAD_L16_STEREO, G_PARAM_READABLE));
+          G_MININT, G_MAXINT, PAYLOAD_L16_STEREO, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY,
       g_param_spec_int ("frequency", "frequency", "frequency",
-	  G_MININT, G_MAXINT, 44100, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 44100, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_rtpL16parse_set_property;
   gobject_class->get_property = gst_rtpL16parse_get_property;
@@ -176,7 +176,7 @@ gst_rtpL16_caps_nego (GstRtpL16Parse * rtpL16parse)
 
   caps =
       gst_caps_copy (gst_static_caps_get (&gst_rtpL16parse_src_template.
-	  static_caps));
+          static_caps));
 
   gst_caps_set_simple (caps,
       "rate", G_TYPE_INT, rtpL16parse->frequency,

@@ -111,8 +111,8 @@ gst_shagadelictv_get_type (void)
     };
 
     shagadelictv_type =
-	g_type_register_static (GST_TYPE_VIDEOFILTER, "GstShagadelicTV",
-	&shagadelictv_info, 0);
+        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstShagadelicTV",
+        &shagadelictv_info, 0);
   }
   return shagadelictv_type;
 }
@@ -140,7 +140,7 @@ gst_shagadelictv_base_init (gpointer g_class)
 
   for (i = 0; i < G_N_ELEMENTS (gst_shagadelictv_formats); i++) {
     gst_videofilter_class_add_format (videofilter_class,
-	gst_shagadelictv_formats + i);
+        gst_shagadelictv_formats + i);
   }
 
   gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
@@ -237,13 +237,13 @@ gst_shagadelic_initialize (GstShagadelicTV * filter)
       xx = x - filter->width / 2;
 #ifdef PS2
       filter->spiral[i++] = ((unsigned int)
-	  ((atan2f (xx,
-		      yy) / ((float) M_PI) * 256 * 9) + (sqrtf (xx * xx +
-		      yy * yy) * 5))) & 255;
+          ((atan2f (xx,
+                      yy) / ((float) M_PI) * 256 * 9) + (sqrtf (xx * xx +
+                      yy * yy) * 5))) & 255;
 #else
       filter->spiral[i++] = ((unsigned int)
-	  ((atan2 (xx, yy) / M_PI * 256 * 9) + (sqrt (xx * xx +
-		      yy * yy) * 5))) & 255;
+          ((atan2 (xx, yy) / M_PI * 256 * 9) + (sqrt (xx * xx +
+                      yy * yy) * 5))) & 255;
 #endif
 /* Here is another Swinger!
  * ((atan2(xx, yy)/M_PI*256) + (sqrt(xx*xx+yy*yy)*10))&255;
@@ -289,10 +289,10 @@ gst_shagadelictv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
  * *dest++ = v & ((r<<16)|(g<<8)|b);
  */
       r = (gchar) (filter->ripple[(filter->ry + y) * width * 2 + filter->rx +
-	      x] + filter->phase * 2) >> 7;
+              x] + filter->phase * 2) >> 7;
       g = (gchar) (filter->spiral[y * width + x] + filter->phase * 3) >> 7;
       b = (gchar) (filter->ripple[(filter->by + y) * width * 2 + filter->bx +
-	      x] - filter->phase) >> 7;
+              x] - filter->phase) >> 7;
       *dest++ = v & ((r << 16) | (g << 8) | b);
     }
   }

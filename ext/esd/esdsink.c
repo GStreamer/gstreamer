@@ -59,10 +59,10 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-	"signed = (boolean) TRUE, "
-	"width = (int) 16, "
-	"depth = (int) 16, " "rate = 44100, " "channels = 2")
+        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
+        "signed = (boolean) TRUE, "
+        "width = (int) 16, "
+        "depth = (int) 16, " "rate = 44100, " "channels = 2")
     );
 
 static void gst_esdsink_base_init (gpointer g_class);
@@ -104,9 +104,10 @@ gst_esdsink_get_type (void)
       0,
       gst_esdsink_init,
     };
+
     esdsink_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstEsdsink", &esdsink_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstEsdsink", &esdsink_info,
+        0);
   }
   return esdsink_type;
 }
@@ -129,17 +130,17 @@ gst_esdsink_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (g_class);
 
-  g_object_class_install_property (gobject_class, ARG_MUTE, g_param_spec_boolean ("mute", "mute", "mute", TRUE, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (gobject_class, ARG_HOST, g_param_spec_string ("host", "host", "host", NULL, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_MUTE, g_param_spec_boolean ("mute", "mute", "mute", TRUE, G_PARAM_READWRITE));    /* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_HOST, g_param_spec_string ("host", "host", "host", NULL, G_PARAM_READWRITE));     /* CHECKME */
   g_object_class_install_property (gobject_class, ARG_SYNC,
       g_param_spec_boolean ("sync", "sync", "Synchronize output to clock",
-	  TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE));
 #if 0
   /* This option is disabled because it is dumb in GStreamer's architecture. */
   g_object_class_install_property (gobject_class, ARG_FALLBACK,
       g_param_spec_boolean ("fallback", "fallback",
-	  "Fall back to using OSS if Esound daemon is not present", FALSE,
-	  G_PARAM_READWRITE));
+          "Fall back to using OSS if Esound daemon is not present", FALSE,
+          G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_esdsink_set_property;
@@ -255,7 +256,7 @@ gst_esdsink_chain (GstPad * pad, GstData * _data)
 
   if (!esdsink->negotiated) {
     GST_ELEMENT_ERROR (esdsink, CORE, NEGOTIATION, (NULL),
-	("element wasn't negotiated before chain function"));
+        ("element wasn't negotiated before chain function"));
     goto done;
   }
 
@@ -264,13 +265,13 @@ gst_esdsink_chain (GstPad * pad, GstData * _data)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
-	gst_audio_clock_set_active (GST_AUDIO_CLOCK (esdsink->provided_clock),
-	    FALSE);
-	gst_pad_event_default (pad, event);
-	return;
+        gst_audio_clock_set_active (GST_AUDIO_CLOCK (esdsink->provided_clock),
+            FALSE);
+        gst_pad_event_default (pad, event);
+        return;
       default:
-	gst_pad_event_default (pad, event);
-	return;
+        gst_pad_event_default (pad, event);
+        return;
     }
     gst_event_unref (event);
     return;
@@ -285,22 +286,22 @@ gst_esdsink_chain (GstPad * pad, GstData * _data)
       to_write = size;
 
       GST_LOG ("fd=%d data=%p size=%d",
-	  esdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+          esdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
       while (to_write > 0) {
-	int done;
+        int done;
 
-	done = write (esdsink->fd, data, to_write);
+        done = write (esdsink->fd, data, to_write);
 
-	if (done < 0) {
-	  if (errno == EINTR) {
-	    goto done;
-	  }
-	  g_assert_not_reached ();
-	}
+        if (done < 0) {
+          if (errno == EINTR) {
+            goto done;
+          }
+          g_assert_not_reached ();
+        }
 
-	to_write -= done;
-	data += done;
-	esdsink->handled += done / esdsink->bytes_per_sample;
+        to_write -= done;
+        data += done;
+        esdsink->handled += done / esdsink->bytes_per_sample;
       }
 
     }
@@ -330,9 +331,9 @@ gst_esdsink_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_HOST:
       g_free (esdsink->host);
       if (g_value_get_string (value) == NULL)
-	esdsink->host = NULL;
+        esdsink->host = NULL;
       else
-	esdsink->host = g_strdup (g_value_get_string (value));
+        esdsink->host = g_strdup (g_value_get_string (value));
       break;
     case ARG_SYNC:
       esdsink->sync = g_value_get_boolean (value);
@@ -376,7 +377,7 @@ gboolean
 gst_esdsink_factory_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "esdsink", GST_RANK_NONE,
-	  GST_TYPE_ESDSINK))
+          GST_TYPE_ESDSINK))
     return FALSE;
 
   return TRUE;
@@ -399,7 +400,7 @@ gst_esdsink_open_audio (GstEsdsink * sink)
     esdformat |= ESD_BITS8;
   else {
     GST_ELEMENT_ERROR (sink, STREAM, FORMAT, (NULL),
-	("invalid bit depth (%d)", sink->depth));
+        ("invalid bit depth (%d)", sink->depth));
     return FALSE;
   }
 
@@ -409,22 +410,22 @@ gst_esdsink_open_audio (GstEsdsink * sink)
     esdformat |= ESD_MONO;
   else {
     GST_ELEMENT_ERROR (sink, STREAM, FORMAT, (NULL),
-	("invalid number of channels (%d)", sink->channels));
+        ("invalid number of channels (%d)", sink->channels));
     return FALSE;
   }
 
   GST_INFO ("attempting to open connection to esound server");
   if (sink->fallback) {
     sink->fd =
-	esd_play_stream_fallback (esdformat, sink->frequency, sink->host,
-	connname);
+        esd_play_stream_fallback (esdformat, sink->frequency, sink->host,
+        connname);
   } else {
     sink->fd =
-	esd_play_stream (esdformat, sink->frequency, sink->host, connname);
+        esd_play_stream (esdformat, sink->frequency, sink->host, connname);
   }
   if (sink->fd < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
-	("can't open connection to esound server"));
+        ("can't open connection to esound server"));
     return FALSE;
   }
   GST_INFO ("successfully opened connection to esound server");
@@ -454,18 +455,18 @@ gst_esdsink_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if (!gst_esdsink_open_audio (GST_ESDSINK (element))) {
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       }
       break;
     case GST_STATE_READY_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (esdsink->provided_clock),
-	  TRUE);
+          TRUE);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (esdsink->provided_clock),
-	  FALSE);
+          FALSE);
       esdsink->resync = TRUE;
       break;
     case GST_STATE_PAUSED_TO_READY:

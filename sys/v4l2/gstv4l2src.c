@@ -58,34 +58,34 @@ enum
 
 guint32 gst_v4l2_formats[] = {
   /* from Linux 2.6.0 videodev2.h */
-  V4L2_PIX_FMT_RGB332,		/*  8  RGB-3-3-2     */
-  V4L2_PIX_FMT_RGB555,		/* 16  RGB-5-5-5     */
-  V4L2_PIX_FMT_RGB565,		/* 16  RGB-5-6-5     */
-  V4L2_PIX_FMT_RGB555X,		/* 16  RGB-5-5-5 BE  */
-  V4L2_PIX_FMT_RGB565X,		/* 16  RGB-5-6-5 BE  */
-  V4L2_PIX_FMT_BGR24,		/* 24  BGR-8-8-8     */
-  V4L2_PIX_FMT_RGB24,		/* 24  RGB-8-8-8     */
-  V4L2_PIX_FMT_BGR32,		/* 32  BGR-8-8-8-8   */
-  V4L2_PIX_FMT_RGB32,		/* 32  RGB-8-8-8-8   */
-  V4L2_PIX_FMT_GREY,		/*  8  Greyscale     */
-  V4L2_PIX_FMT_YVU410,		/*  9  YVU 4:1:0     */
-  V4L2_PIX_FMT_YVU420,		/* 12  YVU 4:2:0     */
-  V4L2_PIX_FMT_YUYV,		/* 16  YUV 4:2:2     */
-  V4L2_PIX_FMT_UYVY,		/* 16  YUV 4:2:2     */
-  V4L2_PIX_FMT_YUV422P,		/* 16  YVU422 planar */
-  V4L2_PIX_FMT_YUV411P,		/* 16  YVU411 planar */
-  V4L2_PIX_FMT_Y41P,		/* 12  YUV 4:1:1     */
-  V4L2_PIX_FMT_NV12,		/* 12  Y/CbCr 4:2:0  */
-  V4L2_PIX_FMT_NV21,		/* 12  Y/CrCb 4:2:0  */
-  V4L2_PIX_FMT_YUV410,		/*  9  YUV 4:1:0     */
-  V4L2_PIX_FMT_YUV420,		/* 12  YUV 4:2:0     */
-  V4L2_PIX_FMT_YYUV,		/* 16  YUV 4:2:2     */
-  V4L2_PIX_FMT_HI240,		/*  8  8-bit color   */
-  V4L2_PIX_FMT_MJPEG,		/* Motion-JPEG       */
-  V4L2_PIX_FMT_JPEG,		/* JFIF JPEG         */
-  V4L2_PIX_FMT_DV,		/* 1394              */
-  V4L2_PIX_FMT_MPEG,		/* MPEG              */
-  V4L2_PIX_FMT_WNVA		/* Winnov hw compres */
+  V4L2_PIX_FMT_RGB332,          /*  8  RGB-3-3-2     */
+  V4L2_PIX_FMT_RGB555,          /* 16  RGB-5-5-5     */
+  V4L2_PIX_FMT_RGB565,          /* 16  RGB-5-6-5     */
+  V4L2_PIX_FMT_RGB555X,         /* 16  RGB-5-5-5 BE  */
+  V4L2_PIX_FMT_RGB565X,         /* 16  RGB-5-6-5 BE  */
+  V4L2_PIX_FMT_BGR24,           /* 24  BGR-8-8-8     */
+  V4L2_PIX_FMT_RGB24,           /* 24  RGB-8-8-8     */
+  V4L2_PIX_FMT_BGR32,           /* 32  BGR-8-8-8-8   */
+  V4L2_PIX_FMT_RGB32,           /* 32  RGB-8-8-8-8   */
+  V4L2_PIX_FMT_GREY,            /*  8  Greyscale     */
+  V4L2_PIX_FMT_YVU410,          /*  9  YVU 4:1:0     */
+  V4L2_PIX_FMT_YVU420,          /* 12  YVU 4:2:0     */
+  V4L2_PIX_FMT_YUYV,            /* 16  YUV 4:2:2     */
+  V4L2_PIX_FMT_UYVY,            /* 16  YUV 4:2:2     */
+  V4L2_PIX_FMT_YUV422P,         /* 16  YVU422 planar */
+  V4L2_PIX_FMT_YUV411P,         /* 16  YVU411 planar */
+  V4L2_PIX_FMT_Y41P,            /* 12  YUV 4:1:1     */
+  V4L2_PIX_FMT_NV12,            /* 12  Y/CbCr 4:2:0  */
+  V4L2_PIX_FMT_NV21,            /* 12  Y/CrCb 4:2:0  */
+  V4L2_PIX_FMT_YUV410,          /*  9  YUV 4:1:0     */
+  V4L2_PIX_FMT_YUV420,          /* 12  YUV 4:2:0     */
+  V4L2_PIX_FMT_YYUV,            /* 16  YUV 4:2:2     */
+  V4L2_PIX_FMT_HI240,           /*  8  8-bit color   */
+  V4L2_PIX_FMT_MJPEG,           /* Motion-JPEG       */
+  V4L2_PIX_FMT_JPEG,            /* JFIF JPEG         */
+  V4L2_PIX_FMT_DV,              /* 1394              */
+  V4L2_PIX_FMT_MPEG,            /* MPEG              */
+  V4L2_PIX_FMT_WNVA             /* Winnov hw compres */
 };
 
 #define GST_V4L2_FORMAT_COUNT (G_N_ELEMENTS (gst_v4l2_formats))
@@ -150,8 +150,9 @@ gst_v4l2src_get_type (void)
       gst_v4l2src_init,
       NULL
     };
+
     v4l2src_type = g_type_register_static (GST_TYPE_V4L2ELEMENT,
-	"GstV4l2Src", &v4l2src_info, 0);
+        "GstV4l2Src", &v4l2src_info, 0);
     GST_DEBUG_CATEGORY_INIT (v4l2src_debug, "v4l2src", 0, "v4l2src element");
   }
   return v4l2src_type;
@@ -185,16 +186,16 @@ gst_v4l2src_class_init (gpointer g_class, gpointer class_data)
 
   g_object_class_install_property (gobject_class, ARG_NUMBUFS,
       g_param_spec_int ("num_buffers", "num_buffers", "num_buffers",
-	  G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BUFSIZE,
       g_param_spec_int ("buffer_size", "buffer_size", "buffer_size",
-	  G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+          G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
 
   g_object_class_install_property (gobject_class, ARG_USE_FIXED_FPS,
       g_param_spec_boolean ("use_fixed_fps", "Use Fixed FPS",
-	  "Drop/Insert frames to reach a certain FPS (TRUE) "
-	  "or adapt FPS to suit the number of frabbed frames",
-	  TRUE, G_PARAM_READWRITE));
+          "Drop/Insert frames to reach a certain FPS (TRUE) "
+          "or adapt FPS to suit the number of frabbed frames",
+          TRUE, G_PARAM_READWRITE));
 
   /* signals */
   gst_v4l2src_signals[SIGNAL_FRAME_CAPTURE] =
@@ -280,7 +281,7 @@ gst_v4l2src_get_fps (GstV4l2Src * v4l2src)
   if (!v4l2src->use_fixed_fps && v4l2src->clock != NULL && v4l2src->handled > 0) {
     /* try to get time from clock master and calculate fps */
     GstClockTime time = gst_clock_get_time (v4l2src->clock) -
-	v4l2src->substract_time;
+        v4l2src->substract_time;
     return v4l2src->handled * GST_SECOND / time;
   }
 
@@ -317,21 +318,21 @@ gst_v4l2src_src_convert (GstPad * pad,
   switch (src_format) {
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-	case GST_FORMAT_DEFAULT:
-	  *dest_value = src_value * fps / GST_SECOND;
-	  break;
-	default:
-	  return FALSE;
+        case GST_FORMAT_DEFAULT:
+          *dest_value = src_value * fps / GST_SECOND;
+          break;
+        default:
+          return FALSE;
       }
       break;
 
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
-	case GST_FORMAT_TIME:
-	  *dest_value = src_value * GST_SECOND / fps;
-	  break;
-	default:
-	  return FALSE;
+        case GST_FORMAT_TIME:
+          *dest_value = src_value * GST_SECOND / fps;
+          break;
+        default:
+          return FALSE;
       }
       break;
 
@@ -356,15 +357,15 @@ gst_v4l2src_src_query (GstPad * pad,
   switch (type) {
     case GST_QUERY_POSITION:
       switch (*format) {
-	case GST_FORMAT_TIME:
-	  *value = v4l2src->handled * GST_SECOND / fps;
-	  break;
-	case GST_FORMAT_DEFAULT:
-	  *value = v4l2src->handled;
-	  break;
-	default:
-	  res = FALSE;
-	  break;
+        case GST_FORMAT_TIME:
+          *value = v4l2src->handled * GST_SECOND / fps;
+          break;
+        case GST_FORMAT_DEFAULT:
+          *value = v4l2src->handled;
+          break;
+        default:
+          res = FALSE;
+          break;
       }
       break;
     default:
@@ -381,8 +382,8 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32 fourcc)
   GstStructure *structure = NULL;
 
   switch (fourcc) {
-    case V4L2_PIX_FMT_MJPEG:	/* Motion-JPEG */
-    case V4L2_PIX_FMT_JPEG:	/* JFIF JPEG */
+    case V4L2_PIX_FMT_MJPEG:   /* Motion-JPEG */
+    case V4L2_PIX_FMT_JPEG:    /* JFIF JPEG */
       structure = gst_structure_new ("video/x-jpeg", NULL);
       break;
     case V4L2_PIX_FMT_RGB332:
@@ -399,84 +400,84 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32 fourcc)
       guint32 r_mask = 0, b_mask = 0, g_mask = 0;
 
       switch (fourcc) {
-	case V4L2_PIX_FMT_RGB332:
-	  bpp = depth = 8;
-	  endianness = G_BYTE_ORDER;	/* 'like, whatever' */
-	  r_mask = 0xe0;
-	  g_mask = 0x1c;
-	  b_mask = 0x03;
-	  break;
-	case V4L2_PIX_FMT_RGB555:
-	case V4L2_PIX_FMT_RGB555X:
-	  bpp = 16;
-	  depth = 15;
-	  endianness =
-	      fourcc == V4L2_PIX_FMT_RGB555X ? G_BIG_ENDIAN : G_LITTLE_ENDIAN;
-	  r_mask = 0x7c00;
-	  g_mask = 0x03e0;
-	  b_mask = 0x001f;
-	  break;
-	case V4L2_PIX_FMT_RGB565:
-	case V4L2_PIX_FMT_RGB565X:
-	  bpp = depth = 16;
-	  endianness =
-	      fourcc == V4L2_PIX_FMT_RGB565X ? G_BIG_ENDIAN : G_LITTLE_ENDIAN;
-	  r_mask = 0xf800;
-	  g_mask = 0x07e0;
-	  b_mask = 0x001f;
-	case V4L2_PIX_FMT_RGB24:
-	  bpp = depth = 24;
-	  endianness = G_BIG_ENDIAN;
-	  r_mask = 0xff0000;
-	  g_mask = 0x00ff00;
-	  b_mask = 0x0000ff;
-	  break;
-	case V4L2_PIX_FMT_BGR24:
-	  bpp = depth = 24;
-	  endianness = G_BIG_ENDIAN;
-	  r_mask = 0x0000ff;
-	  g_mask = 0x00ff00;
-	  b_mask = 0xff0000;
-	  break;
-	case V4L2_PIX_FMT_RGB32:
-	  bpp = depth = 32;
-	  endianness = G_BIG_ENDIAN;
-	  r_mask = 0xff000000;
-	  g_mask = 0x00ff0000;
-	  b_mask = 0x0000ff00;
-	  break;
-	case V4L2_PIX_FMT_BGR32:
-	  bpp = depth = 32;
-	  endianness = G_BIG_ENDIAN;
-	  r_mask = 0x000000ff;
-	  g_mask = 0x0000ff00;
-	  b_mask = 0x00ff0000;
-	  break;
-	default:
-	  g_assert_not_reached ();
-	  break;
+        case V4L2_PIX_FMT_RGB332:
+          bpp = depth = 8;
+          endianness = G_BYTE_ORDER;    /* 'like, whatever' */
+          r_mask = 0xe0;
+          g_mask = 0x1c;
+          b_mask = 0x03;
+          break;
+        case V4L2_PIX_FMT_RGB555:
+        case V4L2_PIX_FMT_RGB555X:
+          bpp = 16;
+          depth = 15;
+          endianness =
+              fourcc == V4L2_PIX_FMT_RGB555X ? G_BIG_ENDIAN : G_LITTLE_ENDIAN;
+          r_mask = 0x7c00;
+          g_mask = 0x03e0;
+          b_mask = 0x001f;
+          break;
+        case V4L2_PIX_FMT_RGB565:
+        case V4L2_PIX_FMT_RGB565X:
+          bpp = depth = 16;
+          endianness =
+              fourcc == V4L2_PIX_FMT_RGB565X ? G_BIG_ENDIAN : G_LITTLE_ENDIAN;
+          r_mask = 0xf800;
+          g_mask = 0x07e0;
+          b_mask = 0x001f;
+        case V4L2_PIX_FMT_RGB24:
+          bpp = depth = 24;
+          endianness = G_BIG_ENDIAN;
+          r_mask = 0xff0000;
+          g_mask = 0x00ff00;
+          b_mask = 0x0000ff;
+          break;
+        case V4L2_PIX_FMT_BGR24:
+          bpp = depth = 24;
+          endianness = G_BIG_ENDIAN;
+          r_mask = 0x0000ff;
+          g_mask = 0x00ff00;
+          b_mask = 0xff0000;
+          break;
+        case V4L2_PIX_FMT_RGB32:
+          bpp = depth = 32;
+          endianness = G_BIG_ENDIAN;
+          r_mask = 0xff000000;
+          g_mask = 0x00ff0000;
+          b_mask = 0x0000ff00;
+          break;
+        case V4L2_PIX_FMT_BGR32:
+          bpp = depth = 32;
+          endianness = G_BIG_ENDIAN;
+          r_mask = 0x000000ff;
+          g_mask = 0x0000ff00;
+          b_mask = 0x00ff0000;
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
       }
       structure = gst_structure_new ("video/x-raw-rgb",
-	  "bpp", G_TYPE_INT, bpp,
-	  "depth", G_TYPE_INT, depth,
-	  "red_mask", G_TYPE_INT, r_mask,
-	  "green_mask", G_TYPE_INT, g_mask,
-	  "blue_mask", G_TYPE_INT, b_mask,
-	  "endianness", G_TYPE_INT, endianness, NULL);
+          "bpp", G_TYPE_INT, bpp,
+          "depth", G_TYPE_INT, depth,
+          "red_mask", G_TYPE_INT, r_mask,
+          "green_mask", G_TYPE_INT, g_mask,
+          "blue_mask", G_TYPE_INT, b_mask,
+          "endianness", G_TYPE_INT, endianness, NULL);
       break;
     }
-    case V4L2_PIX_FMT_GREY:	/*  8  Greyscale     */
-    case V4L2_PIX_FMT_YUV422P:	/* 16  YVU422 planar */
-    case V4L2_PIX_FMT_YUV411P:	/* 16  YVU411 planar */
-    case V4L2_PIX_FMT_NV12:	/* 12  Y/CbCr 4:2:0  */
-    case V4L2_PIX_FMT_NV21:	/* 12  Y/CrCb 4:2:0  */
-    case V4L2_PIX_FMT_YYUV:	/* 16  YUV 4:2:2     */
-    case V4L2_PIX_FMT_HI240:	/*  8  8-bit color   */
+    case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
+    case V4L2_PIX_FMT_YUV422P: /* 16  YVU422 planar */
+    case V4L2_PIX_FMT_YUV411P: /* 16  YVU411 planar */
+    case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
+    case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
+    case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
+    case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
       /* FIXME: get correct fourccs here */
       break;
     case V4L2_PIX_FMT_YVU410:
     case V4L2_PIX_FMT_YUV410:
-    case V4L2_PIX_FMT_YUV420:	/* I420/IYUV */
+    case V4L2_PIX_FMT_YUV420:  /* I420/IYUV */
     case V4L2_PIX_FMT_YUYV:
     case V4L2_PIX_FMT_YVU420:
     case V4L2_PIX_FMT_UYVY:
@@ -484,48 +485,48 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32 fourcc)
       guint32 fcc = 0;
 
       switch (fourcc) {
-	case V4L2_PIX_FMT_YVU410:
-	  fcc = GST_MAKE_FOURCC ('Y', 'V', 'U', '9');
-	  break;
-	case V4L2_PIX_FMT_YUV410:
-	  fcc = GST_MAKE_FOURCC ('Y', 'U', 'V', '9');
-	  break;
-	case V4L2_PIX_FMT_YUV420:
-	  fcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
-	  break;
-	case V4L2_PIX_FMT_YUYV:
-	  fcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
-	  break;
-	case V4L2_PIX_FMT_YVU420:
-	  fcc = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
-	  break;
-	case V4L2_PIX_FMT_UYVY:
-	  fcc = GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
-	  break;
-	case V4L2_PIX_FMT_Y41P:
-	  fcc = GST_MAKE_FOURCC ('Y', '4', '1', 'B');
-	  break;
-	default:
-	  g_assert_not_reached ();
-	  break;
+        case V4L2_PIX_FMT_YVU410:
+          fcc = GST_MAKE_FOURCC ('Y', 'V', 'U', '9');
+          break;
+        case V4L2_PIX_FMT_YUV410:
+          fcc = GST_MAKE_FOURCC ('Y', 'U', 'V', '9');
+          break;
+        case V4L2_PIX_FMT_YUV420:
+          fcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
+          break;
+        case V4L2_PIX_FMT_YUYV:
+          fcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
+          break;
+        case V4L2_PIX_FMT_YVU420:
+          fcc = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
+          break;
+        case V4L2_PIX_FMT_UYVY:
+          fcc = GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
+          break;
+        case V4L2_PIX_FMT_Y41P:
+          fcc = GST_MAKE_FOURCC ('Y', '4', '1', 'B');
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
       }
       structure = gst_structure_new ("video/x-raw-yuv",
-	  "format", GST_TYPE_FOURCC, fcc, NULL);
+          "format", GST_TYPE_FOURCC, fcc, NULL);
       break;
     }
     case V4L2_PIX_FMT_DV:
       structure =
-	  gst_structure_new ("video/x-dv", "systemstream", G_TYPE_BOOLEAN, TRUE,
-	  NULL);
+          gst_structure_new ("video/x-dv", "systemstream", G_TYPE_BOOLEAN, TRUE,
+          NULL);
       break;
-    case V4L2_PIX_FMT_MPEG:	/* MPEG          */
+    case V4L2_PIX_FMT_MPEG:    /* MPEG          */
       /* someone figure out the MPEG format used... */
       break;
-    case V4L2_PIX_FMT_WNVA:	/* Winnov hw compres */
+    case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
       break;
     default:
       GST_DEBUG ("Unknown fourcc 0x%08x " GST_FOURCC_FORMAT,
-	  fourcc, GST_FOURCC_ARGS (fourcc));
+          fourcc, GST_FOURCC_ARGS (fourcc));
       break;
   }
 #if 0
@@ -552,8 +553,8 @@ gst_v4l2src_get_format_from_fourcc (GstV4l2Src * v4l2src, guint32 fourcc)
       return fmt;
     /* special case for jpeg */
     if ((fmt->pixelformat == V4L2_PIX_FMT_MJPEG && fourcc == V4L2_PIX_FMT_JPEG)
-	|| (fmt->pixelformat == V4L2_PIX_FMT_JPEG
-	    && fourcc == V4L2_PIX_FMT_MJPEG)) {
+        || (fmt->pixelformat == V4L2_PIX_FMT_JPEG
+            && fourcc == V4L2_PIX_FMT_MJPEG)) {
       return fmt;
     }
     walk = g_slist_next (walk);
@@ -578,48 +579,48 @@ gst_v4l2_fourcc_from_structure (GstStructure * structure)
     switch (fourcc) {
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
       case GST_MAKE_FOURCC ('I', 'Y', 'U', 'V'):
-	fourcc = V4L2_PIX_FMT_YUV420;
-	break;
+        fourcc = V4L2_PIX_FMT_YUV420;
+        break;
       case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-	fourcc = V4L2_PIX_FMT_YUYV;
-	break;
+        fourcc = V4L2_PIX_FMT_YUYV;
+        break;
       case GST_MAKE_FOURCC ('Y', '4', '1', 'P'):
-	fourcc = V4L2_PIX_FMT_Y41P;
-	break;
+        fourcc = V4L2_PIX_FMT_Y41P;
+        break;
       case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
-	fourcc = V4L2_PIX_FMT_UYVY;
-	break;
+        fourcc = V4L2_PIX_FMT_UYVY;
+        break;
       case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-	fourcc = V4L2_PIX_FMT_YVU420;
-	break;
+        fourcc = V4L2_PIX_FMT_YVU420;
+        break;
       case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):{
-	gint depth, endianness, r_mask;
+        gint depth, endianness, r_mask;
 
-	gst_structure_get_int (structure, "depth", &depth);
-	gst_structure_get_int (structure, "endianness", &endianness);
-	gst_structure_get_int (structure, "red_mask", &r_mask);
+        gst_structure_get_int (structure, "depth", &depth);
+        gst_structure_get_int (structure, "endianness", &endianness);
+        gst_structure_get_int (structure, "red_mask", &r_mask);
 
-	switch (depth) {
-	  case 8:
-	    fourcc = V4L2_PIX_FMT_RGB332;
-	    break;
-	  case 15:
-	    fourcc = (endianness == G_LITTLE_ENDIAN) ?
-		V4L2_PIX_FMT_RGB555 : V4L2_PIX_FMT_RGB555X;
-	    break;
-	  case 16:
-	    fourcc = (endianness == G_LITTLE_ENDIAN) ?
-		V4L2_PIX_FMT_RGB565 : V4L2_PIX_FMT_RGB565X;
-	    break;
-	  case 24:
-	    fourcc = (r_mask == 0xFF) ? V4L2_PIX_FMT_BGR24 : V4L2_PIX_FMT_RGB24;
-	    break;
-	  case 32:
-	    fourcc = (r_mask == 0xFF) ? V4L2_PIX_FMT_BGR32 : V4L2_PIX_FMT_RGB32;
-	    break;
-	}
+        switch (depth) {
+          case 8:
+            fourcc = V4L2_PIX_FMT_RGB332;
+            break;
+          case 15:
+            fourcc = (endianness == G_LITTLE_ENDIAN) ?
+                V4L2_PIX_FMT_RGB555 : V4L2_PIX_FMT_RGB555X;
+            break;
+          case 16:
+            fourcc = (endianness == G_LITTLE_ENDIAN) ?
+                V4L2_PIX_FMT_RGB565 : V4L2_PIX_FMT_RGB565X;
+            break;
+          case 24:
+            fourcc = (r_mask == 0xFF) ? V4L2_PIX_FMT_BGR24 : V4L2_PIX_FMT_RGB24;
+            break;
+          case 32:
+            fourcc = (r_mask == 0xFF) ? V4L2_PIX_FMT_BGR32 : V4L2_PIX_FMT_RGB32;
+            break;
+        }
       default:
-	break;
+        break;
       }
     }
   } else if (strcmp (mimetype, "video/x-dv") == 0) {
@@ -651,12 +652,12 @@ gst_v4l2src_get_all_caps (void)
     for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
       structure = gst_v4l2src_v4l2fourcc_to_caps (gst_v4l2_formats[i]);
       if (structure) {
-	gst_structure_set (structure,
-	    "width", GST_TYPE_INT_RANGE, 1, 4096,
-	    "height", GST_TYPE_INT_RANGE, 1, 4096,
-	    "framerate", GST_TYPE_DOUBLE_RANGE, (double) 0, G_MAXDOUBLE, NULL);
+        gst_structure_set (structure,
+            "width", GST_TYPE_INT_RANGE, 1, 4096,
+            "height", GST_TYPE_INT_RANGE, 1, 4096,
+            "framerate", GST_TYPE_DOUBLE_RANGE, (double) 0, G_MAXDOUBLE, NULL);
 
-	gst_caps_append_structure (caps, structure);
+        gst_caps_append_structure (caps, structure);
       }
     }
   }
@@ -680,8 +681,8 @@ gst_v4l2src_fixate (GstPad * pad, const GstCaps * const_caps)
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
     changed |=
-	gst_caps_structure_fixate_field_nearest_int (structure, "width",
-	G_MAXINT);
+        gst_caps_structure_fixate_field_nearest_int (structure, "width",
+        G_MAXINT);
   }
   if (changed)
     return caps;
@@ -689,8 +690,8 @@ gst_v4l2src_fixate (GstPad * pad, const GstCaps * const_caps)
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
     changed |=
-	gst_caps_structure_fixate_field_nearest_int (structure, "height",
-	G_MAXINT);
+        gst_caps_structure_fixate_field_nearest_int (structure, "height",
+        G_MAXINT);
   }
   if (changed)
     return caps;
@@ -764,7 +765,7 @@ gst_v4l2src_getcaps (GstPad * pad)
 
     /* get size delimiters */
     if (!gst_v4l2src_get_size_limits (v4l2src, format,
-	    &min_w, &max_w, &min_h, &max_h)) {
+            &min_w, &max_w, &min_h, &max_h)) {
       continue;
     }
 
@@ -773,9 +774,9 @@ gst_v4l2src_getcaps (GstPad * pad)
 
     if (structure) {
       gst_structure_set (structure,
-	  "width", GST_TYPE_INT_RANGE, min_w, max_w,
-	  "height", GST_TYPE_INT_RANGE, min_h, max_h,
-	  "framerate", GST_TYPE_DOUBLE_RANGE, (double) 0, G_MAXDOUBLE, NULL);
+          "width", GST_TYPE_INT_RANGE, min_w, max_w,
+          "height", GST_TYPE_INT_RANGE, min_h, max_h,
+          "framerate", GST_TYPE_DOUBLE_RANGE, (double) 0, G_MAXDOUBLE, NULL);
 
       gst_caps_append_structure (caps, structure);
     }
@@ -796,7 +797,7 @@ gst_v4l2src_get (GstPad * pad)
 
   if (v4l2src->use_fixed_fps && (fps = gst_v4l2src_get_fps (v4l2src)) == 0) {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS, (NULL),
-	("could not get frame rate for element"));
+        ("could not get frame rate for element"));
     return NULL;
   }
 
@@ -818,69 +819,69 @@ gst_v4l2src_get (GstPad * pad)
       gboolean have_frame = FALSE;
 
       do {
-	/* FIXME: isn't this v4l2 timestamp its own clock?! */
-	/* by default, we use the frame once */
-	v4l2src->need_writes = 1;
+        /* FIXME: isn't this v4l2 timestamp its own clock?! */
+        /* by default, we use the frame once */
+        v4l2src->need_writes = 1;
 
-	g_assert (time >= v4l2src->substract_time);
-	time -= v4l2src->substract_time;
+        g_assert (time >= v4l2src->substract_time);
+        time -= v4l2src->substract_time;
 
-	/* first check whether we lost any frames according to the device */
-	if (v4l2src->last_seq != 0) {
-	  if (v4l2src->pool->buffers[num].buffer.sequence - v4l2src->last_seq >
-	      1) {
-	    v4l2src->need_writes =
-		v4l2src->pool->buffers[num].buffer.sequence - v4l2src->last_seq;
-	    g_signal_emit (G_OBJECT (v4l2src),
-		gst_v4l2src_signals[SIGNAL_FRAME_LOST], 0,
-		v4l2src->need_writes - 1);
-	  }
-	}
-	v4l2src->last_seq = v4l2src->pool->buffers[num].buffer.sequence;
+        /* first check whether we lost any frames according to the device */
+        if (v4l2src->last_seq != 0) {
+          if (v4l2src->pool->buffers[num].buffer.sequence - v4l2src->last_seq >
+              1) {
+            v4l2src->need_writes =
+                v4l2src->pool->buffers[num].buffer.sequence - v4l2src->last_seq;
+            g_signal_emit (G_OBJECT (v4l2src),
+                gst_v4l2src_signals[SIGNAL_FRAME_LOST], 0,
+                v4l2src->need_writes - 1);
+          }
+        }
+        v4l2src->last_seq = v4l2src->pool->buffers[num].buffer.sequence;
 
-	/* decide how often we're going to write the frame - set
-	 * v4lmjpegsrc->need_writes to (that-1) and have_frame to TRUE
-	 * if we're going to write it - else, just continue.
-	 * 
-	 * time is generally the system or audio clock. Let's
-	 * say that we've written one second of audio, then we want
-	 * to have written one second of video too, within the same
-	 * timeframe. This means that if time - begin_time = X sec,
-	 * we want to have written X*fps frames. If we've written
-	 * more - drop, if we've written less - dup... */
-	if (v4l2src->handled * (GST_SECOND / fps) - time >
-	    1.5 * (GST_SECOND / fps)) {
-	  /* yo dude, we've got too many frames here! Drop! DROP! */
-	  v4l2src->need_writes--;	/* -= (v4l2src->handled - (time / fps)); */
-	  g_signal_emit (G_OBJECT (v4l2src),
-	      gst_v4l2src_signals[SIGNAL_FRAME_DROP], 0);
-	} else if (v4l2src->handled * (GST_SECOND / fps) - time <
-	    -1.5 * (GST_SECOND / fps)) {
-	  /* this means we're lagging far behind */
-	  v4l2src->need_writes++;	/* += ((time / fps) - v4l2src->handled); */
-	  g_signal_emit (G_OBJECT (v4l2src),
-	      gst_v4l2src_signals[SIGNAL_FRAME_INSERT], 0);
-	}
+        /* decide how often we're going to write the frame - set
+         * v4lmjpegsrc->need_writes to (that-1) and have_frame to TRUE
+         * if we're going to write it - else, just continue.
+         * 
+         * time is generally the system or audio clock. Let's
+         * say that we've written one second of audio, then we want
+         * to have written one second of video too, within the same
+         * timeframe. This means that if time - begin_time = X sec,
+         * we want to have written X*fps frames. If we've written
+         * more - drop, if we've written less - dup... */
+        if (v4l2src->handled * (GST_SECOND / fps) - time >
+            1.5 * (GST_SECOND / fps)) {
+          /* yo dude, we've got too many frames here! Drop! DROP! */
+          v4l2src->need_writes--;       /* -= (v4l2src->handled - (time / fps)); */
+          g_signal_emit (G_OBJECT (v4l2src),
+              gst_v4l2src_signals[SIGNAL_FRAME_DROP], 0);
+        } else if (v4l2src->handled * (GST_SECOND / fps) - time <
+            -1.5 * (GST_SECOND / fps)) {
+          /* this means we're lagging far behind */
+          v4l2src->need_writes++;       /* += ((time / fps) - v4l2src->handled); */
+          g_signal_emit (G_OBJECT (v4l2src),
+              gst_v4l2src_signals[SIGNAL_FRAME_INSERT], 0);
+        }
 
-	if (v4l2src->need_writes > 0) {
-	  have_frame = TRUE;
-	  v4l2src->need_writes--;
-	} else {
-	  if (!gst_v4l2src_queue_frame (v4l2src, num))
-	    return NULL;
-	  num = gst_v4l2src_grab_frame (v4l2src);
-	  if (num == -1)
-	    return NULL;
-	}
+        if (v4l2src->need_writes > 0) {
+          have_frame = TRUE;
+          v4l2src->need_writes--;
+        } else {
+          if (!gst_v4l2src_queue_frame (v4l2src, num))
+            return NULL;
+          num = gst_v4l2src_grab_frame (v4l2src);
+          if (num == -1)
+            return NULL;
+        }
       } while (!have_frame);
     }
 
     g_assert (num != -1);
     GST_LOG_OBJECT (v4l2src, "buffer %d needs %d writes", num,
-	v4l2src->need_writes + 1);
+        v4l2src->need_writes + 1);
     i = v4l2src->pool->buffers[num].buffer.bytesused >
-	0 ? v4l2src->pool->buffers[num].buffer.bytesused : v4l2src->pool->
-	buffers[num].length;
+        0 ? v4l2src->pool->buffers[num].buffer.bytesused : v4l2src->pool->
+        buffers[num].length;
     /* check if this is the last buffer in the queue. If so do a memcpy to put it back asap
        to avoid framedrops and deadlocks because of stupid elements */
     if (gst_atomic_int_read (&v4l2src->pool->refcount) == v4l2src->breq.count) {
@@ -888,8 +889,8 @@ gst_v4l2src_get (GstPad * pad)
       buf = gst_buffer_new_and_alloc (i);
       memcpy (GST_BUFFER_DATA (buf), v4l2src->pool->buffers[num].start, i);
       if (!gst_v4l2src_queue_frame (v4l2src, num)) {
-	gst_data_unref (GST_DATA (buf));
-	return NULL;
+        gst_data_unref (GST_DATA (buf));
+        return NULL;
       }
     } else {
       GST_LOG_OBJECT (v4l2src, "using mmap'd buffer");
@@ -909,13 +910,13 @@ gst_v4l2src_get (GstPad * pad)
     } else {
       /* calculate time based on our own clock */
       GST_BUFFER_TIMESTAMP (buf) =
-	  GST_TIMEVAL_TO_TIME (v4l2src->pool->buffers[num].buffer.timestamp) -
-	  v4l2src->substract_time;
+          GST_TIMEVAL_TO_TIME (v4l2src->pool->buffers[num].buffer.timestamp) -
+          v4l2src->substract_time;
     }
     if (v4l2src->need_writes > 0) {
       v4l2src->cached_buffer = buf;
       for (i = 0; i < v4l2src->need_writes; i++) {
-	gst_data_ref (GST_DATA (buf));
+        gst_data_ref (GST_DATA (buf));
       }
     }
   }
@@ -939,13 +940,13 @@ gst_v4l2src_set_property (GObject * object,
   switch (prop_id) {
     case ARG_NUMBUFS:
       if (!GST_V4L2_IS_ACTIVE (GST_V4L2ELEMENT (v4l2src))) {
-	v4l2src->breq.count = g_value_get_int (value);
+        v4l2src->breq.count = g_value_get_int (value);
       }
       break;
 
     case ARG_USE_FIXED_FPS:
       if (!GST_V4L2_IS_ACTIVE (GST_V4L2ELEMENT (v4l2src))) {
-	v4l2src->use_fixed_fps = g_value_get_boolean (value);
+        v4l2src->use_fixed_fps = g_value_get_boolean (value);
       }
       break;
 
@@ -1005,7 +1006,7 @@ gst_v4l2src_change_state (GstElement * element)
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
       if (!gst_v4l2src_get_capture (v4l2src))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_PAUSED:
       v4l2src->handled = 0;
@@ -1016,24 +1017,24 @@ gst_v4l2src_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_PLAYING:
       /* queue all buffer, start streaming capture */
       if (!gst_v4l2src_capture_start (v4l2src))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       g_get_current_time (&time);
       v4l2src->substract_time = GST_TIMEVAL_TO_TIME (time) -
-	  v4l2src->substract_time;
+          v4l2src->substract_time;
       v4l2src->last_seq = 0;
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       g_get_current_time (&time);
       v4l2src->substract_time = GST_TIMEVAL_TO_TIME (time) -
-	  v4l2src->substract_time;
+          v4l2src->substract_time;
       /* de-queue all queued buffers */
       if (!gst_v4l2src_capture_stop (v4l2src))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       break;
     case GST_STATE_PAUSED_TO_READY:
       /* stop capturing, unmap all buffers */
       if (!gst_v4l2src_capture_deinit (v4l2src))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_NULL:
       break;

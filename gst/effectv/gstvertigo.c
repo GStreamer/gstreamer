@@ -116,8 +116,8 @@ gst_vertigotv_get_type (void)
     };
 
     vertigotv_type =
-	g_type_register_static (GST_TYPE_VIDEOFILTER, "GstVertigoTV",
-	&vertigotv_info, 0);
+        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstVertigoTV",
+        &vertigotv_info, 0);
   }
   return vertigotv_type;
 }
@@ -143,7 +143,7 @@ gst_vertigotv_base_init (gpointer g_class)
 
   for (i = 0; i < G_N_ELEMENTS (gst_vertigotv_formats); i++) {
     gst_videofilter_class_add_format (videofilter_class,
-	gst_vertigotv_formats + i);
+        gst_vertigotv_formats + i);
   }
 
   gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
@@ -171,10 +171,10 @@ gst_vertigotv_class_init (GstVertigoTVClass * klass, gpointer class_data)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SPEED,
       g_param_spec_float ("speed", "Speed", "Control the speed of movement",
-	  0.01, 100.0, 0.02, G_PARAM_READWRITE));
+          0.01, 100.0, 0.02, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ZOOM_SPEED,
       g_param_spec_float ("zoom_speed", "Zoom Speed",
-	  "Control the rate of zooming", 1.01, 1.1, 1.01, G_PARAM_READWRITE));
+          "Control the rate of zooming", 1.01, 1.1, 1.01, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_vertigotv_set_property;
   gobject_class->get_property = gst_vertigotv_get_property;
@@ -246,22 +246,22 @@ gst_vertigotv_set_parms (GstVertigoTV * filter)
   if (filter->width > filter->height) {
     if (dizz >= 0) {
       if (dizz > x)
-	dizz = x;
+        dizz = x;
       vx = (x * (x - dizz) + y * y) / t;
     } else {
       if (dizz < -x)
-	dizz = -x;
+        dizz = -x;
       vx = (x * (x + dizz) + y * y) / t;
     }
     vy = (dizz * y) / t;
   } else {
     if (dizz >= 0) {
       if (dizz > y)
-	dizz = y;
+        dizz = y;
       vx = (x * x + y * (y - dizz)) / t;
     } else {
       if (dizz < -y)
-	dizz = -y;
+        dizz = -y;
       vx = (x * x + y * (y + dizz)) / t;
     }
     vy = (dizz * x) / t;
@@ -307,9 +307,9 @@ gst_vertigotv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
     for (x = width; x > 0; x--) {
       i = (oy >> 16) * width + (ox >> 16);
       if (i < 0)
-	i = 0;
+        i = 0;
       if (i >= area)
-	i = area;
+        i = area;
 
       v = filter->current_buffer[i] & 0xfcfcff;
       v = (v * 3) + ((*src++) & 0xfcfcff);

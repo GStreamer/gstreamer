@@ -27,11 +27,11 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "jpegenc", GST_RANK_NONE,
-	  GST_TYPE_JPEGENC))
+          GST_TYPE_JPEGENC))
     return FALSE;
 
   if (!gst_element_register (plugin, "jpegdec", GST_RANK_PRIMARY,
-	  GST_TYPE_JPEGDEC))
+          GST_TYPE_JPEGDEC))
     return FALSE;
 
   return TRUE;

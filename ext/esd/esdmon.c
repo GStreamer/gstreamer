@@ -58,16 +58,16 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-	"signed = (boolean) TRUE, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = [ 8000, 96000 ], "
-	"channels = [ 1, 2 ]; "
-	"audio/x-raw-int, "
-	"signed = (boolean) FALSE, "
-	"width = (int) 8, "
-	"depth = (int) 8, " "rate = [ 8000, 96000 ], " "channels = [ 1, 2 ]")
+        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
+        "signed = (boolean) TRUE, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = [ 8000, 96000 ], "
+        "channels = [ 1, 2 ]; "
+        "audio/x-raw-int, "
+        "signed = (boolean) FALSE, "
+        "width = (int) 8, "
+        "depth = (int) 8, " "rate = [ 8000, 96000 ], " "channels = [ 1, 2 ]")
     );
 
 static void gst_esdmon_base_init (gpointer g_class);
@@ -96,9 +96,10 @@ gst_esdmon_depths_get_type (void)
     {16, "16", "16 Bits"},
     {0, NULL, NULL},
   };
+
   if (!esdmon_depths_type) {
     esdmon_depths_type =
-	g_enum_register_static ("GstEsdmonDepths", esdmon_depths);
+        g_enum_register_static ("GstEsdmonDepths", esdmon_depths);
   }
   return esdmon_depths_type;
 }
@@ -113,9 +114,10 @@ gst_esdmon_channels_get_type (void)
     {2, "2", "Stereo"},
     {0, NULL, NULL},
   };
+
   if (!esdmon_channels_type) {
     esdmon_channels_type =
-	g_enum_register_static ("GstEsdmonChannels", esdmon_channels);
+        g_enum_register_static ("GstEsdmonChannels", esdmon_channels);
   }
   return esdmon_channels_type;
 }
@@ -142,8 +144,9 @@ gst_esdmon_get_type (void)
       0,
       gst_esdmon_init,
     };
+
     esdmon_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstEsdmon", &esdmon_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstEsdmon", &esdmon_info, 0);
   }
   return esdmon_type;
 }
@@ -166,12 +169,12 @@ gst_esdmon_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (g_class);
 
-  g_object_class_install_property (gobject_class, ARG_BYTESPERREAD, g_param_spec_ulong ("bytes_per_read", "bytes_per_read", "bytes_per_read", 0, G_MAXULONG, 0, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (gobject_class, ARG_CUROFFSET, g_param_spec_ulong ("curoffset", "curoffset", "curoffset", 0, G_MAXULONG, 0, G_PARAM_READABLE));	/* CHECKME */
-  g_object_class_install_property (gobject_class, ARG_DEPTH, g_param_spec_enum ("depth", "depth", "depth", GST_TYPE_ESDMON_DEPTHS, 16, G_PARAM_READWRITE));	/* CHECKME! */
-  g_object_class_install_property (gobject_class, ARG_CHANNELS, g_param_spec_enum ("channels", "channels", "channels", GST_TYPE_ESDMON_CHANNELS, 2, G_PARAM_READWRITE));	/* CHECKME! */
-  g_object_class_install_property (gobject_class, ARG_RATE, g_param_spec_int ("frequency", "frequency", "frequency", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (gobject_class, ARG_HOST, g_param_spec_string ("host", "host", "host", NULL, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_BYTESPERREAD, g_param_spec_ulong ("bytes_per_read", "bytes_per_read", "bytes_per_read", 0, G_MAXULONG, 0, G_PARAM_READWRITE));    /* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_CUROFFSET, g_param_spec_ulong ("curoffset", "curoffset", "curoffset", 0, G_MAXULONG, 0, G_PARAM_READABLE));       /* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_DEPTH, g_param_spec_enum ("depth", "depth", "depth", GST_TYPE_ESDMON_DEPTHS, 16, G_PARAM_READWRITE));     /* CHECKME! */
+  g_object_class_install_property (gobject_class, ARG_CHANNELS, g_param_spec_enum ("channels", "channels", "channels", GST_TYPE_ESDMON_CHANNELS, 2, G_PARAM_READWRITE));        /* CHECKME! */
+  g_object_class_install_property (gobject_class, ARG_RATE, g_param_spec_int ("frequency", "frequency", "frequency", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));        /* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_HOST, g_param_spec_string ("host", "host", "host", NULL, G_PARAM_READWRITE));     /* CHECKME */
 
   gobject_class->set_property = gst_esdmon_set_property;
   gobject_class->get_property = gst_esdmon_get_property;
@@ -246,13 +249,13 @@ gst_esdmon_get (GstPad * pad)
 
     /* set caps on src pad */
     if (gst_pad_set_explicit_caps (esdmon->srcpad,
-	    gst_caps_new_simple ("audio/x-raw-int",
-		"endianness", G_TYPE_INT, G_BYTE_ORDER,
-		"signed", G_TYPE_BOOLEAN, sign,
-		"width", G_TYPE_INT, esdmon->depth,
-		"depth", G_TYPE_INT, esdmon->depth,
-		"rate", G_TYPE_INT, esdmon->frequency,
-		"channels", G_TYPE_INT, esdmon->channels)) <= 0) {
+            gst_caps_new_simple ("audio/x-raw-int",
+                "endianness", G_TYPE_INT, G_BYTE_ORDER,
+                "signed", G_TYPE_BOOLEAN, sign,
+                "width", G_TYPE_INT, esdmon->depth,
+                "depth", G_TYPE_INT, esdmon->depth,
+                "rate", G_TYPE_INT, esdmon->frequency,
+                "channels", G_TYPE_INT, esdmon->channels)) <= 0) {
       GST_ELEMENT_ERROR (esdmon, CORE, NEGOTIATION, (NULL), (NULL));
       return NULL;
     }
@@ -300,7 +303,7 @@ gst_esdmon_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_RATE:
       /* Preserve the timestamps */
       esdmon->basetime =
-	  esdmon->samples_since_basetime * GST_SECOND / esdmon->frequency;
+          esdmon->samples_since_basetime * GST_SECOND / esdmon->frequency;
       esdmon->samples_since_basetime = 0;
 
       /* Set the new frequency */
@@ -309,11 +312,11 @@ gst_esdmon_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case ARG_HOST:
       if (esdmon->host != NULL)
-	g_free (esdmon->host);
+        g_free (esdmon->host);
       if (g_value_get_string (value) == NULL)
-	esdmon->host = NULL;
+        esdmon->host = NULL;
       else
-	esdmon->host = g_strdup (g_value_get_string (value));
+        esdmon->host = g_strdup (g_value_get_string (value));
       break;
     default:
       break;
@@ -432,7 +435,7 @@ gst_esdmon_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_ESDMON_OPEN)) {
       if (!gst_esdmon_open_audio (GST_ESDMON (element)))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
     }
   }
 

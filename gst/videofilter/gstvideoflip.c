@@ -72,14 +72,15 @@ gst_videoflip_method_get_type (void)
     {GST_VIDEOFLIP_METHOD_HORIZ, "4", "Flip horizontally"},
     {GST_VIDEOFLIP_METHOD_VERT, "5", "Flip vertically"},
     {GST_VIDEOFLIP_METHOD_TRANS, "6",
-	"Flip across upper left/lower right diagonal"},
+        "Flip across upper left/lower right diagonal"},
     {GST_VIDEOFLIP_METHOD_OTHER, "7",
-	"Flip across upper right/lower left diagonal"},
+        "Flip across upper right/lower left diagonal"},
     {0, NULL, NULL},
   };
+
   if (!videoflip_method_type) {
     videoflip_method_type = g_enum_register_static ("GstVideoflipMethod",
-	videoflip_methods);
+        videoflip_methods);
   }
   return videoflip_method_type;
 }
@@ -101,8 +102,9 @@ gst_videoflip_get_type (void)
       0,
       gst_videoflip_init,
     };
+
     videoflip_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
-	"GstVideoflip", &videoflip_info, 0);
+        "GstVideoflip", &videoflip_info, 0);
   }
   return videoflip_type;
 }
@@ -130,7 +132,7 @@ gst_videoflip_base_init (gpointer g_class)
 
   for (i = 0; i < G_N_ELEMENTS (gst_videoflip_formats); i++) {
     gst_videofilter_class_add_format (videofilter_class,
-	gst_videoflip_formats + i);
+        gst_videoflip_formats + i);
   }
 
   gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
@@ -147,8 +149,8 @@ gst_videoflip_class_init (gpointer g_class, gpointer class_data)
 
   g_object_class_install_property (gobject_class, ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
-	  GST_TYPE_VIDEOFLIP_METHOD, GST_VIDEOFLIP_METHOD_90R,
-	  G_PARAM_READWRITE));
+          GST_TYPE_VIDEOFLIP_METHOD, GST_VIDEOFLIP_METHOD_90R,
+          G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_videoflip_set_property;
   gobject_class->get_property = gst_videoflip_get_property;
@@ -332,51 +334,51 @@ gst_videoflip_flip (GstVideoflip * videoflip, unsigned char *dest,
   switch (videoflip->method) {
     case GST_VIDEOFLIP_METHOD_90R:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[(sh - 1 - x) * sw + y];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[(sh - 1 - x) * sw + y];
+        }
       }
       break;
     case GST_VIDEOFLIP_METHOD_90L:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[x * sw + (sw - 1 - y)];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[x * sw + (sw - 1 - y)];
+        }
       }
       break;
     case GST_VIDEOFLIP_METHOD_180:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[(sh - 1 - y) * sw + (sw - 1 - x)];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[(sh - 1 - y) * sw + (sw - 1 - x)];
+        }
       }
       break;
     case GST_VIDEOFLIP_METHOD_HORIZ:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[y * sw + (sw - 1 - x)];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[y * sw + (sw - 1 - x)];
+        }
       }
       break;
     case GST_VIDEOFLIP_METHOD_VERT:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[(sh - 1 - y) * sw + x];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[(sh - 1 - y) * sw + x];
+        }
       }
       break;
     case GST_VIDEOFLIP_METHOD_TRANS:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[x * sw + y];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[x * sw + y];
+        }
       }
       break;
     case GST_VIDEOFLIP_METHOD_OTHER:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[(sh - 1 - x) * sw + (sw - 1 - y)];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[(sh - 1 - x) * sw + (sw - 1 - y)];
+        }
       }
       break;
     default:

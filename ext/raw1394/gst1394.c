@@ -30,7 +30,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "dv1394src", GST_RANK_NONE,
-	  GST_TYPE_DV1394SRC))
+          GST_TYPE_DV1394SRC))
     return FALSE;
 
   return TRUE;

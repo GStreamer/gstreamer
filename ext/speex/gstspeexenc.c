@@ -77,9 +77,10 @@ gst_speexenc_get_type (void)
       0,
       (GInstanceInitFunc) gst_speexenc_init,
     };
+
     speexenc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstSpeexEnc", &speexenc_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstSpeexEnc", &speexenc_info,
+        0);
   }
   return speexenc_type;
 }
@@ -89,18 +90,18 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) true, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) true, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
     );
 
 static GstStaticPadTemplate speex_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-speex, "
-	"rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
     );
 
 static void
@@ -165,15 +166,15 @@ gst_speexenc_sinkconnect (GstPad * pad, const GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "rate", &speexenc->rate);
   if (gst_pad_try_set_caps (speexenc->srcpad,
-	  gst_caps_new_simple ("audio/x-speex",
-	      "rate", G_TYPE_INT, speexenc->rate,
-	      "channels", G_TYPE_INT, 1, NULL))) {
+          gst_caps_new_simple ("audio/x-speex",
+              "rate", G_TYPE_INT, speexenc->rate,
+              "channels", G_TYPE_INT, 1, NULL))) {
     speex_init_header (&speexenc->header, speexenc->rate, 1, speexenc->mode);
     speexenc->header.frames_per_packet = speexenc->n_packets;
 
     speexenc->state = speex_encoder_init (speexenc->mode);
     speex_encoder_ctl (speexenc->state, SPEEX_GET_FRAME_SIZE,
-	&speexenc->frame_size);
+        &speexenc->frame_size);
 
     return GST_PAD_LINK_OK;
   }
@@ -203,9 +204,9 @@ gst_speexenc_chain (GstPad * pad, GstData * _data)
   if (!GST_PAD_CAPS (speexenc->srcpad)) {
 
     if (!gst_pad_try_set_caps (speexenc->srcpad,
-	    gst_caps_new_simple ("audio/x-speex",
-		"rate", G_TYPE_INT, speexenc->rate,
-		"channels", G_TYPE_INT, 1, NULL))) {
+            gst_caps_new_simple ("audio/x-speex",
+                "rate", G_TYPE_INT, speexenc->rate,
+                "channels", G_TYPE_INT, 1, NULL))) {
       GST_ELEMENT_ERROR (speexenc, CORE, NEGOTIATION, (NULL), (NULL));
       return;
     }
@@ -228,7 +229,7 @@ gst_speexenc_chain (GstPad * pad, GstData * _data)
 
   if (speexenc->bufsize && (speexenc->bufsize + size >= frame_size)) {
     memcpy (speexenc->buffer + speexenc->bufsize, data,
-	(frame_size - speexenc->bufsize) * sizeof (gint16));
+        (frame_size - speexenc->bufsize) * sizeof (gint16));
 
     for (i = 0; i < frame_size; i++)
       input[i] = speexenc->buffer[i];
@@ -241,7 +242,7 @@ gst_speexenc_chain (GstPad * pad, GstData * _data)
 
       outbuf = gst_buffer_new_and_alloc (frame_size * speexenc->n_packets);
       GST_BUFFER_SIZE (outbuf) = speex_bits_write (&speexenc->bits,
-	  GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
+          GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
       GST_BUFFER_TIMESTAMP (outbuf) = speexenc->next_ts;
       speex_bits_reset (&speexenc->bits);
 
@@ -267,7 +268,7 @@ gst_speexenc_chain (GstPad * pad, GstData * _data)
 
       outbuf = gst_buffer_new_and_alloc (frame_size * speexenc->n_packets);
       GST_BUFFER_SIZE (outbuf) = speex_bits_write (&speexenc->bits,
-	  GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
+          GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
       GST_BUFFER_TIMESTAMP (outbuf) = speexenc->next_ts;
       speex_bits_reset (&speexenc->bits);
 

@@ -106,9 +106,10 @@ gst_mulawdec_get_type (void)
       0,
       (GInstanceInitFunc) gst_mulawdec_init,
     };
+
     mulawdec_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstMuLawDec", &mulawdec_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstMuLawDec", &mulawdec_info,
+        0);
   }
   return mulawdec_type;
 }

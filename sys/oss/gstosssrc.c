@@ -62,11 +62,11 @@ static GstStaticPadTemplate osssrc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) { TRUE, FALSE }, "
-	"width = (int) { 8, 16 }, "
-	"depth = (int) { 8, 16 }, "
-	"rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) { TRUE, FALSE }, "
+        "width = (int) { 8, 16 }, "
+        "depth = (int) { 8, 16 }, "
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 static void gst_osssrc_base_init (gpointer g_class);
@@ -121,9 +121,10 @@ gst_osssrc_get_type (void)
       0,
       (GInstanceInitFunc) gst_osssrc_init,
     };
+
     osssrc_type =
-	g_type_register_static (GST_TYPE_OSSELEMENT, "GstOssSrc", &osssrc_info,
-	0);
+        g_type_register_static (GST_TYPE_OSSELEMENT, "GstOssSrc", &osssrc_info,
+        0);
   }
   return osssrc_type;
 }
@@ -150,12 +151,12 @@ gst_osssrc_class_init (GstOssSrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFERSIZE,
       g_param_spec_ulong ("buffersize", "Buffer Size",
-	  "The size of the buffers with samples", 0, G_MAXULONG, 0,
-	  G_PARAM_READWRITE));
+          "The size of the buffers with samples", 0, G_MAXULONG, 0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAGMENT,
       g_param_spec_int ("fragment", "Fragment",
-	  "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
-	  0, G_MAXINT, 6, G_PARAM_READWRITE));
+          "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
+          0, G_MAXINT, 6, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_osssrc_set_property;
   gobject_class->get_property = gst_osssrc_get_property;
@@ -241,14 +242,14 @@ gst_osssrc_negotiate (GstPad * pad)
 
   /* set caps on src pad */
   if (gst_pad_try_set_caps (src->srcpad,
-	  gst_caps_new_simple ("audio/x-raw-int",
-	      "endianness", G_TYPE_INT, GST_OSSELEMENT (src)->endianness,
-	      "signed", G_TYPE_BOOLEAN, GST_OSSELEMENT (src)->sign,
-	      "width", G_TYPE_INT, GST_OSSELEMENT (src)->width,
-	      "depth", G_TYPE_INT, GST_OSSELEMENT (src)->depth,
-	      "rate", G_TYPE_INT, GST_OSSELEMENT (src)->rate,
-	      "channels", G_TYPE_INT, GST_OSSELEMENT (src)->channels,
-	      NULL)) <= 0) {
+          gst_caps_new_simple ("audio/x-raw-int",
+              "endianness", G_TYPE_INT, GST_OSSELEMENT (src)->endianness,
+              "signed", G_TYPE_BOOLEAN, GST_OSSELEMENT (src)->sign,
+              "width", G_TYPE_INT, GST_OSSELEMENT (src)->width,
+              "depth", G_TYPE_INT, GST_OSSELEMENT (src)->depth,
+              "rate", G_TYPE_INT, GST_OSSELEMENT (src)->rate,
+              "channels", G_TYPE_INT, GST_OSSELEMENT (src)->channels,
+              NULL)) <= 0) {
     return FALSE;
   }
   return TRUE;
@@ -319,7 +320,7 @@ gst_osssrc_get (GstPad * pad)
   if (GST_OSSELEMENT (src)->bps == 0) {
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),
-	("format wasn't negotiated before chain function"));
+        ("format wasn't negotiated before chain function"));
     return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
   }
 
@@ -410,15 +411,15 @@ gst_osssrc_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssrc->provided_clock),
-	  TRUE);
+          TRUE);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssrc->provided_clock),
-	  FALSE);
+          FALSE);
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN))
-	ioctl (GST_OSSELEMENT (osssrc)->fd, SNDCTL_DSP_RESET, 0);
+        ioctl (GST_OSSELEMENT (osssrc)->fd, SNDCTL_DSP_RESET, 0);
       break;
     default:
       break;
@@ -439,6 +440,7 @@ gst_osssrc_get_formats (GstPad * pad)
     GST_FORMAT_BYTES,
     0
   };
+
   return formats;
 }
 
@@ -462,6 +464,7 @@ gst_osssrc_get_event_masks (GstPad * pad)
     {GST_EVENT_SIZE, 0},
     {0,}
   };
+
   return gst_osssrc_src_event_masks;
 }
 
@@ -487,11 +490,11 @@ gst_osssrc_src_event (GstPad * pad, GstEvent * event)
 
       /* convert to bytes */
       if (gst_osselement_convert (GST_OSSELEMENT (osssrc),
-	      GST_EVENT_SIZE_FORMAT (event),
-	      GST_EVENT_SIZE_VALUE (event), &format, &value)) {
-	osssrc->buffersize = GST_EVENT_SIZE_VALUE (event);
-	g_object_notify (G_OBJECT (osssrc), "buffersize");
-	retval = TRUE;
+              GST_EVENT_SIZE_FORMAT (event),
+              GST_EVENT_SIZE_VALUE (event), &format, &value)) {
+        osssrc->buffersize = GST_EVENT_SIZE_VALUE (event);
+        g_object_notify (G_OBJECT (osssrc), "buffersize");
+        retval = TRUE;
       }
     }
     default:
@@ -516,6 +519,7 @@ gst_osssrc_get_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     0,
   };
+
   return query_types;
 }
 
@@ -531,7 +535,7 @@ gst_osssrc_src_query (GstPad * pad, GstQueryType type, GstFormat * format,
   switch (type) {
     case GST_QUERY_POSITION:
       res = gst_osselement_convert (GST_OSSELEMENT (osssrc),
-	  GST_FORMAT_BYTES, osssrc->curoffset, format, value);
+          GST_FORMAT_BYTES, osssrc->curoffset, format, value);
       break;
     default:
       break;

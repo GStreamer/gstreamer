@@ -63,9 +63,10 @@ gst_udpsink_control_get_type (void)
     {CONTROL_TCP, "3", "tcp"},
     {CONTROL_ZERO, NULL, NULL},
   };
+
   if (!udpsink_control_type) {
     udpsink_control_type =
-	g_enum_register_static ("GstUDPSinkControl", udpsink_control);
+        g_enum_register_static ("GstUDPSinkControl", udpsink_control);
   }
   return udpsink_control_type;
 }
@@ -107,9 +108,10 @@ gst_udpsink_get_type (void)
       (GInstanceInitFunc) gst_udpsink_init,
       NULL
     };
+
     udpsink_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstUDPSink", &udpsink_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstUDPSink", &udpsink_info,
+        0);
   }
   return udpsink_type;
 }
@@ -135,15 +137,15 @@ gst_udpsink_class_init (GstUDPSink * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
       g_param_spec_string ("host", "host",
-	  "The host/IP/Multicast group to send the packets to",
-	  UDP_DEFAULT_HOST, G_PARAM_READWRITE));
+          "The host/IP/Multicast group to send the packets to",
+          UDP_DEFAULT_HOST, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "port", "The port to send the packets to",
-	  0, 32768, UDP_DEFAULT_PORT, G_PARAM_READWRITE));
+          0, 32768, UDP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_CONTROL,
       g_param_spec_enum ("control", "control", "The type of control",
-	  GST_TYPE_UDPSINK_CONTROL, CONTROL_UDP, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_MTU, g_param_spec_int ("mtu", "mtu", "maximun transmit unit", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+          GST_TYPE_UDPSINK_CONTROL, CONTROL_UDP, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_MTU, g_param_spec_int ("mtu", "mtu", "maximun transmit unit", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_udpsink_set_property;
   gobject_class->get_property = gst_udpsink_get_property;
@@ -192,8 +194,8 @@ gst_udpsink_sink_link (GstPad * pad, const GstCaps * caps)
   switch (udpsink->control) {
     case CONTROL_UDP:
       if ((fd = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
-	perror ("socket");
-	return GST_PAD_LINK_REFUSED;
+        perror ("socket");
+        return GST_PAD_LINK_REFUSED;
       }
 
       /* We can only do broadcast in udp */
@@ -203,22 +205,22 @@ gst_udpsink_sink_link (GstPad * pad, const GstCaps * caps)
       xmlDocDumpMemory (doc, &buf, &buf_size);
 
       if (sendto (fd, buf, buf_size, 0, (struct sockaddr *) &serv_addr,
-	      sizeof (serv_addr)) == -1) {
-	perror ("sending");
-	return GST_PAD_LINK_REFUSED;
+              sizeof (serv_addr)) == -1) {
+        perror ("sending");
+        return GST_PAD_LINK_REFUSED;
       }
       close (fd);
       break;
     case CONTROL_TCP:
       if ((fd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-	perror ("socket");
-	return GST_PAD_LINK_REFUSED;
+        perror ("socket");
+        return GST_PAD_LINK_REFUSED;
       }
 
       if (connect (fd, (struct sockaddr *) &serv_addr, sizeof (serv_addr)) != 0) {
-	g_printerr ("udpsink: connect to %s port %d failed: %s\n",
-	    udpsink->host, udpsink->port, g_strerror (errno));
-	return GST_PAD_LINK_REFUSED;
+        g_printerr ("udpsink: connect to %s port %d failed: %s\n",
+            udpsink->host, udpsink->port, g_strerror (errno));
+        return GST_PAD_LINK_REFUSED;
       }
 
       f = fdopen (dup (fd), "wb");
@@ -296,15 +298,15 @@ gst_udpsink_chain (GstPad * pad, GstData * _data)
   for (i = 0; i < GST_BUFFER_SIZE (buf); i += udpsink->mtu) {
     if (GST_BUFFER_SIZE (buf) - i > udpsink->mtu) {
       if (sendto (udpsink->sock, GST_BUFFER_DATA (buf) + i,
-	      udpsink->mtu, 0, (struct sockaddr *) &udpsink->theiraddr,
-	      tolen) == -1) {
-	perror ("sending");
+              udpsink->mtu, 0, (struct sockaddr *) &udpsink->theiraddr,
+              tolen) == -1) {
+        perror ("sending");
       }
     } else {
       if (sendto (udpsink->sock, GST_BUFFER_DATA (buf) + i,
-	      GST_BUFFER_SIZE (buf) - i, 0,
-	      (struct sockaddr *) &udpsink->theiraddr, tolen) == -1) {
-	perror ("sending");
+              GST_BUFFER_SIZE (buf) - i, 0,
+              (struct sockaddr *) &udpsink->theiraddr, tolen) == -1) {
+        perror ("sending");
       }
     }
   }
@@ -325,11 +327,11 @@ gst_udpsink_set_property (GObject * object, guint prop_id, const GValue * value,
   switch (prop_id) {
     case ARG_HOST:
       if (udpsink->host != NULL)
-	g_free (udpsink->host);
+        g_free (udpsink->host);
       if (g_value_get_string (value) == NULL)
-	udpsink->host = NULL;
+        udpsink->host = NULL;
       else
-	udpsink->host = g_strdup (g_value_get_string (value));
+        udpsink->host = g_strdup (g_value_get_string (value));
       break;
     case ARG_PORT:
       udpsink->port = g_value_get_int (value);
@@ -384,8 +386,8 @@ gst_udpsink_init_send (GstUDPSink * sink)
   guint bc_val;
 
   memset (&sink->theiraddr, 0, sizeof (sink->theiraddr));
-  sink->theiraddr.sin_family = AF_INET;	/* host byte order */
-  sink->theiraddr.sin_port = htons (sink->port);	/* short, network byte order */
+  sink->theiraddr.sin_family = AF_INET; /* host byte order */
+  sink->theiraddr.sin_port = htons (sink->port);        /* short, network byte order */
 
   /* if its an IP address */
   if (inet_aton (sink->host, &addr)) {
@@ -398,7 +400,7 @@ gst_udpsink_init_send (GstUDPSink * sink)
 
       /* Joining the multicast group */
       setsockopt (sink->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &sink->multi_addr,
-	  sizeof (sink->multi_addr));
+          sizeof (sink->multi_addr));
     }
 
     else {
@@ -454,7 +456,7 @@ gst_udpsink_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_UDPSINK_OPEN)) {
       if (!gst_udpsink_init_send (GST_UDPSINK (element)))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
     }
   }
 

@@ -98,8 +98,9 @@ gst_median_get_type (void)
       0,
       (GInstanceInitFunc) gst_median_init,
     };
+
     median_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstMedian", &median_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstMedian", &median_info, 0);
   }
   return median_type;
 }
@@ -127,9 +128,9 @@ gst_median_class_init (GstMedianClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_boolean ("active", "active", "active", TRUE, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERSIZE, g_param_spec_int ("filtersize", "filtersize", "filtersize", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LUM_ONLY, g_param_spec_boolean ("lum_only", "lum_only", "lum_only", TRUE, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_boolean ("active", "active", "active", TRUE, G_PARAM_READWRITE));   /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERSIZE, g_param_spec_int ("filtersize", "filtersize", "filtersize", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LUM_ONLY, g_param_spec_boolean ("lum_only", "lum_only", "lum_only", TRUE, G_PARAM_READWRITE));   /* CHECKME */
 
   gobject_class->set_property = gst_median_set_property;
   gobject_class->get_property = gst_median_get_property;
@@ -333,25 +334,25 @@ gst_median_chain (GstPad * pad, GstData * _data)
     median_5 (data, GST_BUFFER_DATA (outbuf), median->width, median->height);
     if (!median->lum_only) {
       median_5 (data + lumsize, GST_BUFFER_DATA (outbuf) + lumsize,
-	  median->width / 2, median->height / 2);
+          median->width / 2, median->height / 2);
       median_5 (data + lumsize + chromsize,
-	  GST_BUFFER_DATA (outbuf) + lumsize + chromsize, median->width / 2,
-	  median->height / 2);
+          GST_BUFFER_DATA (outbuf) + lumsize + chromsize, median->width / 2,
+          median->height / 2);
     } else {
       memcpy (GST_BUFFER_DATA (outbuf) + lumsize, data + lumsize,
-	  chromsize * 2);
+          chromsize * 2);
     }
   } else {
     median_9 (data, GST_BUFFER_DATA (outbuf), median->width, median->height);
     if (!median->lum_only) {
       median_9 (data + lumsize, GST_BUFFER_DATA (outbuf) + lumsize,
-	  median->width / 2, median->height / 2);
+          median->width / 2, median->height / 2);
       median_9 (data + lumsize + chromsize,
-	  GST_BUFFER_DATA (outbuf) + lumsize + chromsize, median->width / 2,
-	  median->height / 2);
+          GST_BUFFER_DATA (outbuf) + lumsize + chromsize, median->width / 2,
+          median->height / 2);
     } else {
       memcpy (GST_BUFFER_DATA (outbuf) + lumsize, data + lumsize,
-	  chromsize * 2);
+          chromsize * 2);
     }
   }
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
@@ -376,10 +377,10 @@ gst_median_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_FILTERSIZE:
       argvalue = g_value_get_int (value);
       if (argvalue != 5 && argvalue != 9) {
-	g_warning ("median: invalid filtersize (%d), must be 5 or 9\n",
-	    argvalue);
+        g_warning ("median: invalid filtersize (%d), must be 5 or 9\n",
+            argvalue);
       } else {
-	median->filtersize = argvalue;
+        median->filtersize = argvalue;
       }
       break;
     case ARG_ACTIVE:

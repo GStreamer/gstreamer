@@ -55,7 +55,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_RGBx ";"
-	GST_VIDEO_CAPS_RGB_16 ";" GST_VIDEO_CAPS_RGB_15)
+        GST_VIDEO_CAPS_RGB_16 ";" GST_VIDEO_CAPS_RGB_15)
     );
 
 static void gst_cacasink_base_init (gpointer g_class);
@@ -111,13 +111,13 @@ gst_cacasink_get_type (void)
     };
 
     cacasink_type =
-	g_type_register_static (GST_TYPE_VIDEOSINK, "GstCACASink",
-	&cacasink_info, 0);
+        g_type_register_static (GST_TYPE_VIDEOSINK, "GstCACASink",
+        &cacasink_info, 0);
 
     g_type_add_interface_static (cacasink_type, GST_TYPE_IMPLEMENTS_INTERFACE,
-	&iface_info);
+        &iface_info);
     g_type_add_interface_static (cacasink_type, GST_TYPE_NAVIGATION,
-	&navigation_info);
+        &navigation_info);
   }
   return cacasink_type;
 }
@@ -177,14 +177,14 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_WIDTH, g_param_spec_int ("screen_width", "screen_width", "screen_width", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_HEIGHT, g_param_spec_int ("screen_height", "screen_height", "screen_height", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_WIDTH, g_param_spec_int ("screen_width", "screen_width", "screen_width", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_HEIGHT, g_param_spec_int ("screen_height", "screen_height", "screen_height", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));   /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DITHER,
       g_param_spec_enum ("dither", "Dither Type", "Set type of Dither",
-	  GST_TYPE_CACADITHER, 0, G_PARAM_READWRITE));
+          GST_TYPE_CACADITHER, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ANTIALIASING,
       g_param_spec_boolean ("anti_aliasing", "Anti-Aliasing",
-	  "Enables Anti-Aliasing", TRUE, G_PARAM_READWRITE));
+          "Enables Anti-Aliasing", TRUE, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_cacasink_set_property;
   gobject_class->get_property = gst_cacasink_get_property;
@@ -333,8 +333,8 @@ gst_cacasink_chain (GstPad * pad, GstData * _data)
 
   if (cacasink->id && GST_CLOCK_TIME_IS_VALID (time)) {
     GST_DEBUG ("videosink: clock %s wait: %" G_GUINT64_FORMAT " %u",
-	GST_OBJECT_NAME (GST_VIDEOSINK_CLOCK (cacasink)),
-	time, GST_BUFFER_SIZE (buf));
+        GST_OBJECT_NAME (GST_VIDEOSINK_CLOCK (cacasink)),
+        time, GST_BUFFER_SIZE (buf));
     gst_element_wait (GST_ELEMENT (cacasink), GST_BUFFER_TIMESTAMP (buf));
   }
 
@@ -388,11 +388,11 @@ gst_cacasink_set_property (GObject * object, guint prop_id,
     case ARG_ANTIALIASING:{
       cacasink->antialiasing = g_value_get_boolean (value);
       if (cacasink->antialiasing) {
-	caca_set_feature (CACA_ANTIALIASING_MAX);
+        caca_set_feature (CACA_ANTIALIASING_MAX);
       }
 
       else {
-	caca_set_feature (CACA_ANTIALIASING_MIN);
+        caca_set_feature (CACA_ANTIALIASING_MIN);
       }
       break;
     }
@@ -463,7 +463,7 @@ gst_cacasink_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_CACASINK_OPEN)) {
       if (!gst_cacasink_open (GST_CACASINK (element)))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
     }
   }
 
@@ -481,7 +481,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "cacasink", GST_RANK_NONE,
-	  GST_TYPE_CACASINK))
+          GST_TYPE_CACASINK))
     return FALSE;
 
   return TRUE;

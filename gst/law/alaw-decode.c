@@ -129,9 +129,10 @@ gst_alawdec_get_type (void)
       0,
       (GInstanceInitFunc) gst_alawdec_init,
     };
+
     alawdec_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstALawDec", &alawdec_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstALawDec", &alawdec_info,
+        0);
   }
   return alawdec_type;
 }

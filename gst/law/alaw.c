@@ -46,9 +46,9 @@ plugin_init (GstPlugin * plugin)
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, alaw_caps);
 
   if (!gst_element_register (plugin, "alawenc",
-	  GST_RANK_NONE, GST_TYPE_ALAWENC) ||
+          GST_RANK_NONE, GST_TYPE_ALAWENC) ||
       !gst_element_register (plugin, "alawdec",
-	  GST_RANK_PRIMARY, GST_TYPE_ALAWENC))
+          GST_RANK_PRIMARY, GST_TYPE_ALAWENC))
     return FALSE;
 
   return TRUE;

@@ -55,8 +55,8 @@ unsigned int ppcsize4;
 #endif /* PowerPC */
 
 unsigned int *coeffs = 0, *freecoeffs = 0;
-guint32 *expix1 = 0;		/* pointeur exporte vers p1 */
-guint32 *expix2 = 0;		/* pointeur exporte vers p2 */
+guint32 *expix1 = 0;            /* pointeur exporte vers p1 */
+guint32 *expix2 = 0;            /* pointeur exporte vers p2 */
 guint32 zoom_width;
 
 #endif /* ASM */
@@ -141,33 +141,33 @@ calculatePXandPY (int x, int y, int *px, int *py)
 
     switch (theMode) {
       case WAVE_MODE:
-	dist =
-	    ShiftRight (vx, 9) * ShiftRight (vx, 9) + ShiftRight (vy,
-	    9) * ShiftRight (vy, 9);
-	fvitesse *=
-	    1024 +
-	    ShiftRight (sintable[(unsigned short) (0xffff * dist *
-		    EFFECT_DISTORS)], 6);
-	fvitesse /= 1024;
-	break;
+        dist =
+            ShiftRight (vx, 9) * ShiftRight (vx, 9) + ShiftRight (vy,
+            9) * ShiftRight (vy, 9);
+        fvitesse *=
+            1024 +
+            ShiftRight (sintable[(unsigned short) (0xffff * dist *
+                    EFFECT_DISTORS)], 6);
+        fvitesse /= 1024;
+        break;
       case CRYSTAL_BALL_MODE:
-	dist =
-	    ShiftRight (vx, 9) * ShiftRight (vx, 9) + ShiftRight (vy,
-	    9) * ShiftRight (vy, 9);
-	fvitesse += (dist * EFFECT_DISTORS >> 10);
-	break;
+        dist =
+            ShiftRight (vx, 9) * ShiftRight (vx, 9) + ShiftRight (vy,
+            9) * ShiftRight (vy, 9);
+        fvitesse += (dist * EFFECT_DISTORS >> 10);
+        break;
       case AMULETTE_MODE:
-	dist =
-	    ShiftRight (vx, 9) * ShiftRight (vx, 9) + ShiftRight (vy,
-	    9) * ShiftRight (vy, 9);
-	fvitesse -= (dist * EFFECT_DISTORS >> 4);
-	break;
+        dist =
+            ShiftRight (vx, 9) * ShiftRight (vx, 9) + ShiftRight (vy,
+            9) * ShiftRight (vy, 9);
+        fvitesse -= (dist * EFFECT_DISTORS >> 4);
+        break;
       case SCRUNCH_MODE:
-	dist =
-	    ShiftRight (vx, 9) * ShiftRight (vx, 9) + ShiftRight (vy,
-	    9) * ShiftRight (vy, 9);
-	fvitesse -= (dist * EFFECT_DISTORS >> 9);
-	break;
+        dist =
+            ShiftRight (vx, 9) * ShiftRight (vx, 9) + ShiftRight (vy,
+            9) * ShiftRight (vy, 9);
+        fvitesse -= (dist * EFFECT_DISTORS >> 9);
+        break;
     }
     if (vx < 0)
       *px = (middleX << 4) - (-(vx * fvitesse) >> 16);
@@ -285,7 +285,7 @@ zoomFilterFastRGB (Uint * pix1,
 {
   static guint32 prevX = 0, prevY = 0;
 
-  static char reverse = 0;	/*vitesse inversé..(zoom out) */
+  static char reverse = 0;      /*vitesse inversé..(zoom out) */
 
   /*    static int perte = 100; // 100 = normal */
   static unsigned char pertedec = 8;
@@ -361,7 +361,7 @@ zoomFilterFastRGB (Uint * pix1,
       firstTime = 0;
 #ifdef USE_ASM
       freecoeffs = (unsigned int *)
-	  malloc (resx * resy * 2 * sizeof (unsigned int) + 128);
+          malloc (resx * resy * 2 * sizeof (unsigned int) + 128);
       coeffs = (guint32 *) ((1 + ((unsigned int) (freecoeffs)) / 128) * 128);
 
 #else
@@ -372,49 +372,49 @@ zoomFilterFastRGB (Uint * pix1,
       c4 = (unsigned int *) malloc (resx * resy * sizeof (unsigned int));
 #endif
       for (us = 0; us < 0xffff; us++) {
-	sintable[us] = (int) (1024.0f * sin (us * 2 * 3.31415f / 0xffff));
+        sintable[us] = (int) (1024.0f * sin (us * 2 * 3.31415f / 0xffff));
       }
 
       {
-	int loopv;
-	firedec = (int *) malloc (prevY * sizeof (int));
-	for (loopv = prevY; loopv != 0;) {
-	  static int decc = 0;
-	  static int spdc = 0;
-	  static int accel = 0;
+        int loopv;
+        firedec = (int *) malloc (prevY * sizeof (int));
+        for (loopv = prevY; loopv != 0;) {
+          static int decc = 0;
+          static int spdc = 0;
+          static int accel = 0;
 
-	  loopv--;
-	  firedec[loopv] = decc;
-	  decc += spdc / 10;
-	  spdc += RAND () % 3;
-	  spdc -= RAND () % 3;
+          loopv--;
+          firedec[loopv] = decc;
+          decc += spdc / 10;
+          spdc += RAND () % 3;
+          spdc -= RAND () % 3;
 
-	  if (decc > 4)
-	    spdc -= 1;
-	  if (decc < -4)
-	    spdc += 1;
+          if (decc > 4)
+            spdc -= 1;
+          if (decc < -4)
+            spdc += 1;
 
-	  if (spdc > 30)
-	    spdc = spdc - RAND () % 3 + accel / 10;
-	  if (spdc < -30)
-	    spdc = spdc + RAND () % 3 + accel / 10;
+          if (spdc > 30)
+            spdc = spdc - RAND () % 3 + accel / 10;
+          if (spdc < -30)
+            spdc = spdc + RAND () % 3 + accel / 10;
 
-	  if (decc > 8 && spdc > 1)
-	    spdc -= RAND () % 3 - 2;
+          if (decc > 8 && spdc > 1)
+            spdc -= RAND () % 3 - 2;
 
-	  if (decc < -8 && spdc < -1)
-	    spdc += RAND () % 3 + 2;
+          if (decc < -8 && spdc < -1)
+            spdc += RAND () % 3 + 2;
 
-	  if (decc > 8 || decc < -8)
-	    decc = decc * 8 / 9;
+          if (decc > 8 || decc < -8)
+            decc = decc * 8 / 9;
 
-	  accel += RAND () % 2;
-	  accel -= RAND () % 2;
-	  if (accel > 20)
-	    accel -= 2;
-	  if (accel < -20)
-	    accel += 2;
-	}
+          accel += RAND () % 2;
+          accel -= RAND () % 2;
+          if (accel > 20)
+            accel -= 2;
+          if (accel < -20)
+            accel += 2;
+        }
       }
     }
 
@@ -422,67 +422,67 @@ zoomFilterFastRGB (Uint * pix1,
     /* generation du buffer */
     for (y = 0; y < prevY; y++)
       for (x = 0; x < prevX; x++) {
-	int px, py;
-	unsigned char coefv, coefh;
+        int px, py;
+        unsigned char coefv, coefh;
 
-	/* calculer px et py en fonction de */
-	/*   x,y,middleX,middleY et theMode */
-	calculatePXandPY (x, y, &px, &py);
-	if ((px == x << 4) && (py == y << 4))
-	  py += 8;
+        /* calculer px et py en fonction de */
+        /*   x,y,middleX,middleY et theMode */
+        calculatePXandPY (x, y, &px, &py);
+        if ((px == x << 4) && (py == y << 4))
+          py += 8;
 
-	if ((py < 0) || (px < 0) ||
-	    (py >= (prevY - 1) * sqrtperte) ||
-	    (px >= (prevX - 1) * sqrtperte)) {
+        if ((py < 0) || (px < 0) ||
+            (py >= (prevY - 1) * sqrtperte) ||
+            (px >= (prevX - 1) * sqrtperte)) {
 #ifdef USE_ASM
-	  coeffs[(y * prevX + x) * 2] = 0;
-	  coeffs[(y * prevX + x) * 2 + 1] = 0;
+          coeffs[(y * prevX + x) * 2] = 0;
+          coeffs[(y * prevX + x) * 2 + 1] = 0;
 #else
-	  pos10[y * prevX + x] = 0;
-	  c1[y * prevX + x] = 0;
-	  c2[y * prevX + x] = 0;
-	  c3[y * prevX + x] = 0;
-	  c4[y * prevX + x] = 0;
+          pos10[y * prevX + x] = 0;
+          c1[y * prevX + x] = 0;
+          c2[y * prevX + x] = 0;
+          c3[y * prevX + x] = 0;
+          c4[y * prevX + x] = 0;
 #endif
-	} else {
-	  int npx10;
-	  int npy10;
-	  int pos;
+        } else {
+          int npx10;
+          int npy10;
+          int pos;
 
-	  npx10 = (px / sqrtperte);
-	  npy10 = (py / sqrtperte);
+          npx10 = (px / sqrtperte);
+          npy10 = (py / sqrtperte);
 
 /*			  if (npx10 >= prevX) fprintf(stderr,"error npx:%d",npx10);
 			  if (npy10 >= prevY) fprintf(stderr,"error npy:%d",npy10);
 */
-	  coefh = px % sqrtperte;
-	  coefv = py % sqrtperte;
+          coefh = px % sqrtperte;
+          coefv = py % sqrtperte;
 #ifdef USE_ASM
-	  pos = (y * prevX + x) * 2;
-	  coeffs[pos] = (npx10 + prevX * npy10) * 4;
+          pos = (y * prevX + x) * 2;
+          coeffs[pos] = (npx10 + prevX * npy10) * 4;
 
-	  if (!(coefh || coefv))
-	    coeffs[pos + 1] = (sqrtperte * sqrtperte - 1);
-	  else
-	    coeffs[pos + 1] = ((sqrtperte - coefh) * (sqrtperte - coefv));
+          if (!(coefh || coefv))
+            coeffs[pos + 1] = (sqrtperte * sqrtperte - 1);
+          else
+            coeffs[pos + 1] = ((sqrtperte - coefh) * (sqrtperte - coefv));
 
-	  coeffs[pos + 1] |= (coefh * (sqrtperte - coefv)) << 8;
-	  coeffs[pos + 1] |= ((sqrtperte - coefh) * coefv) << 16;
-	  coeffs[pos + 1] |= (coefh * coefv) << 24;
+          coeffs[pos + 1] |= (coefh * (sqrtperte - coefv)) << 8;
+          coeffs[pos + 1] |= ((sqrtperte - coefh) * coefv) << 16;
+          coeffs[pos + 1] |= (coefh * coefv) << 24;
 #else
-	  pos = y * prevX + x;
-	  pos10[pos] = npx10 + prevX * npy10;
+          pos = y * prevX + x;
+          pos10[pos] = npx10 + prevX * npy10;
 
-	  if (!(coefh || coefv))
-	    c1[pos] = sqrtperte * sqrtperte - 1;
-	  else
-	    c1[pos] = (sqrtperte - coefh) * (sqrtperte - coefv);
+          if (!(coefh || coefv))
+            c1[pos] = sqrtperte * sqrtperte - 1;
+          else
+            c1[pos] = (sqrtperte - coefh) * (sqrtperte - coefv);
 
-	  c2[pos] = coefh * (sqrtperte - coefv);
-	  c3[pos] = (sqrtperte - coefh) * coefv;
-	  c4[pos] = coefh * coefv;
+          c2[pos] = coefh * (sqrtperte - coefv);
+          c3[pos] = (sqrtperte - coefh) * coefv;
+          c4[pos] = coefh * coefv;
 #endif
-	}
+        }
       }
   }
 #ifdef USE_ASM
@@ -511,21 +511,21 @@ zoomFilterFastRGB (Uint * pix1,
     getPixelRGB_ (pix1, pos10[position] + prevX + 1, &col4);
 
     couleur.r = col1.r * c1[position]
-	+ col2.r * c2[position]
-	+ col3.r * c3[position]
-	+ col4.r * c4[position];
+        + col2.r * c2[position]
+        + col3.r * c3[position]
+        + col4.r * c4[position];
     couleur.r >>= pertedec;
 
     couleur.v = col1.v * c1[position]
-	+ col2.v * c2[position]
-	+ col3.v * c3[position]
-	+ col4.v * c4[position];
+        + col2.v * c2[position]
+        + col3.v * c3[position]
+        + col4.v * c4[position];
     couleur.v >>= pertedec;
 
     couleur.b = col1.b * c1[position]
-	+ col2.b * c2[position]
-	+ col3.b * c3[position]
-	+ col4.b * c4[position];
+        + col2.b * c2[position]
+        + col3.b * c3[position]
+        + col4.b * c4[position];
     couleur.b >>= pertedec;
 
     setPixelRGB_ (pix2, position, couleur);

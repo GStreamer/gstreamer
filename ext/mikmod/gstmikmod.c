@@ -68,18 +68,18 @@ static GstStaticPadTemplate mikmod_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) TRUE, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) { 8000, 11025, 22050, 44100 }, "
-	"channels = (int) [ 1, 2 ]; "
-	"audio/x-raw-int, "
-	"signed = (boolean) FALSE, "
-	"width = (int) 8, "
-	"depth = (int) 8, "
-	"rate = (int) { 8000, 11025, 22050, 44100 }, "
-	"channels = (int) [ 1, 2 ]")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) TRUE, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) { 8000, 11025, 22050, 44100 }, "
+        "channels = (int) [ 1, 2 ]; "
+        "audio/x-raw-int, "
+        "signed = (boolean) FALSE, "
+        "width = (int) 8, "
+        "depth = (int) 8, "
+        "rate = (int) { 8000, 11025, 22050, 44100 }, "
+        "channels = (int) [ 1, 2 ]")
     );
 
 static GstStaticPadTemplate mikmod_sink_factory =
@@ -123,8 +123,9 @@ gst_mikmod_get_type (void)
       0,
       (GInstanceInitFunc) gst_mikmod_init,
     };
+
     mikmod_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstMikmod", &mikmod_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstMikmod", &mikmod_info, 0);
   }
   return mikmod_type;
 }
@@ -154,44 +155,44 @@ gst_mikmod_class_init (GstMikModClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SONGNAME,
       g_param_spec_string ("songname", "songname", "songname",
-	  NULL, G_PARAM_READABLE));
+          NULL, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODTYPE,
       g_param_spec_string ("modtype", "modtype", "modtype",
-	  NULL, G_PARAM_READABLE));
+          NULL, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUSICVOLUME,
       g_param_spec_int ("musicvolume", "musivolume", "musicvolume",
-	  0, 128, 128, G_PARAM_READWRITE));
+          0, 128, 128, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PANSEP,
       g_param_spec_int ("pansep", "pansep", "pansep",
-	  0, 128, 128, G_PARAM_READWRITE));
+          0, 128, 128, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERB,
       g_param_spec_int ("reverb", "reverb", "reverb",
-	  0, 15, 0, G_PARAM_READWRITE));
+          0, 15, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SNDFXVOLUME,
       g_param_spec_int ("sndfxvolume", "sndfxvolume", "sndfxvolume",
-	  0, 128, 128, G_PARAM_READWRITE));
+          0, 128, 128, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VOLUME,
       g_param_spec_int ("volume", "volume", "volume",
-	  0, 128, 96, G_PARAM_READWRITE));
+          0, 128, 96, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_INTERP,
       g_param_spec_boolean ("interp", "interp", "interp",
-	  FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERSE,
       g_param_spec_boolean ("reverse", "reverse", "reverse",
-	  FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SURROUND,
       g_param_spec_boolean ("surround", "surround", "surround",
-	  TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HQMIXER,
       g_param_spec_boolean ("hqmixer", "hqmixer", "hqmixer",
-	  FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SOFT_MUSIC,
       g_param_spec_boolean ("soft_music", "soft_music", "soft_music",
-	  TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SOFT_SNDFX,
       g_param_spec_boolean ("soft_sndfx", "soft_sndfx", "soft_sndfx",
-	  TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE));
 
 
   gobject_class->set_property = gst_mikmod_set_property;
@@ -296,28 +297,28 @@ gst_mikmod_loop (GstElement * element)
   if (!mikmod->initialized) {
     while ((buffer_in = GST_BUFFER (gst_pad_pull (mikmod->sinkpad)))) {
       if (GST_IS_EVENT (buffer_in)) {
-	GstEvent *event = GST_EVENT (buffer_in);
+        GstEvent *event = GST_EVENT (buffer_in);
 
-	if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
-	  break;
+        if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+          break;
       } else {
-	if (mikmod->Buffer) {
-	  GstBuffer *merge;
+        if (mikmod->Buffer) {
+          GstBuffer *merge;
 
-	  merge = gst_buffer_merge (mikmod->Buffer, buffer_in);
-	  gst_buffer_unref (buffer_in);
-	  gst_buffer_unref (mikmod->Buffer);
-	  mikmod->Buffer = merge;
-	} else {
-	  mikmod->Buffer = buffer_in;
-	}
+          merge = gst_buffer_merge (mikmod->Buffer, buffer_in);
+          gst_buffer_unref (buffer_in);
+          gst_buffer_unref (mikmod->Buffer);
+          mikmod->Buffer = merge;
+        } else {
+          mikmod->Buffer = buffer_in;
+        }
       }
     }
 
     if (!GST_PAD_CAPS (mikmod->srcpad)) {
       if (GST_PAD_LINK_SUCCESSFUL (gst_pad_renegotiate (mikmod->srcpad))) {
-	GST_ELEMENT_ERROR (mikmod, CORE, NEGOTIATION, (NULL), (NULL));
-	return;
+        GST_ELEMENT_ERROR (mikmod, CORE, NEGOTIATION, (NULL), (NULL));
+        return;
       }
     }
 
@@ -541,7 +542,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "mikmod", GST_RANK_SECONDARY,
-	  GST_TYPE_MIKMOD))
+          GST_TYPE_MIKMOD))
     return FALSE;
 
   return TRUE;

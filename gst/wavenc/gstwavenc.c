@@ -44,9 +44,9 @@ static void gst_wavenc_chain (GstPad * pad, GstData * _data);
 
 struct riff_struct
 {
-  guint8 id[4];			/* RIFF */
+  guint8 id[4];                 /* RIFF */
   guint32 len;
-  guint8 wav_id[4];		/* WAVE */
+  guint8 wav_id[4];             /* WAVE */
 };
 
 struct chunk_struct
@@ -62,7 +62,7 @@ struct common_struct
   guint32 dwSamplesPerSec;
   guint32 dwAvgBytesPerSec;
   guint16 wBlockAlign;
-  guint16 wBitsPerSample;	/* Only for PCM */
+  guint16 wBitsPerSample;       /* Only for PCM */
 };
 
 struct wave_header
@@ -83,11 +83,11 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"rate = (int) [ 1, MAX ], "
-	"channels = (int) [ 1, MAX ], "
-	"endianness = (int) LITTLE_ENDIAN, "
-	"width = (int) { 8, 16 }, "
-	"depth = (int) { 8, 16 }, " "signed = (boolean) true")
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) LITTLE_ENDIAN, "
+        "width = (int) { 8, 16 }, "
+        "depth = (int) { 8, 16 }, " "signed = (boolean) true")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -193,7 +193,7 @@ static gboolean
 gst_wavenc_setup (GstWavEnc * wavenc)
 {
   struct wave_header wave;
-  gint size = 0x7fffffff;	/* Use a bogus size initially */
+  gint size = 0x7fffffff;       /* Use a bogus size initially */
 
   wave.common.wChannels = wavenc->channels;
   wave.common.wBitsPerSample = wavenc->bits;
@@ -283,14 +283,14 @@ gst_wavenc_init (GstWavEnc * wavenc)
 
   wavenc->sinkpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-	  "sink"), "sink");
+          "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->sinkpad);
   gst_pad_set_chain_function (wavenc->sinkpad, gst_wavenc_chain);
   gst_pad_set_link_function (wavenc->sinkpad, gst_wavenc_sinkconnect);
 
   wavenc->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-	  "src"), "src");
+          "src"), "src");
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->srcpad);
 
   wavenc->setup = FALSE;
@@ -303,23 +303,39 @@ struct _maps
 {
   guint32 id;
   char *name;
-} maps[] = {
+}
+maps[] =
+{
   {
-  GST_RIFF_INFO_IARL, "Location"}, {
-  GST_RIFF_INFO_IART, "Artist"}, {
-  GST_RIFF_INFO_ICMS, "Commissioner"}, {
-  GST_RIFF_INFO_ICMT, "Comment"}, {
-  GST_RIFF_INFO_ICOP, "Copyright"}, {
-  GST_RIFF_INFO_ICRD, "Creation Date"}, {
-  GST_RIFF_INFO_IENG, "Engineer"}, {
-  GST_RIFF_INFO_IGNR, "Genre"}, {
-  GST_RIFF_INFO_IKEY, "Keywords"}, {
-  GST_RIFF_INFO_INAM, "Title"},	/* Name */
+  GST_RIFF_INFO_IARL, "Location"}
+  , {
+  GST_RIFF_INFO_IART, "Artist"}
+  , {
+  GST_RIFF_INFO_ICMS, "Commissioner"}
+  , {
+  GST_RIFF_INFO_ICMT, "Comment"}
+  , {
+  GST_RIFF_INFO_ICOP, "Copyright"}
+  , {
+  GST_RIFF_INFO_ICRD, "Creation Date"}
+  , {
+  GST_RIFF_INFO_IENG, "Engineer"}
+  , {
+  GST_RIFF_INFO_IGNR, "Genre"}
+  , {
+  GST_RIFF_INFO_IKEY, "Keywords"}
+  , {
+  GST_RIFF_INFO_INAM, "Title"}
+  ,                             /* Name */
   {
-  GST_RIFF_INFO_IPRD, "Product"}, {
-  GST_RIFF_INFO_ISBJ, "Subject"}, {
-  GST_RIFF_INFO_ISFT, "Software"}, {
-  GST_RIFF_INFO_ITCH, "Technician"}, {
+  GST_RIFF_INFO_IPRD, "Product"}
+  , {
+  GST_RIFF_INFO_ISBJ, "Subject"}
+  , {
+  GST_RIFF_INFO_ISFT, "Software"}
+  , {
+  GST_RIFF_INFO_ITCH, "Technician"}
+  , {
   0, NULL}
 };
 
@@ -361,20 +377,20 @@ write_metadata (GstWavEnc * wavenc)
       char *tmp;
       int len, req, i;
 
-      need_to_write = TRUE;	/* We've got at least one entry */
+      need_to_write = TRUE;     /* We've got at least one entry */
 
       gst_props_entry_get_string (entry, &text);
-      len = strlen (text) + 1;	/* The length in the file includes the \0 */
+      len = strlen (text) + 1;  /* The length in the file includes the \0 */
 
       tmp = g_strdup_printf (GST_FOURCC_FORMAT "%d%s", GST_FOURCC_ARGS (id),
-	  GUINT32_TO_LE (len), text);
+          GUINT32_TO_LE (len), text);
       g_string_append (info_str, tmp);
       g_free (tmp);
 
       /* Check that we end on an even boundary */
       req = ((len + 8) + 1) & ~1;
       for (i = 0; i < req - len; i++) {
-	g_string_append_printf (info_str, "%c", 0);
+        g_string_append_printf (info_str, "%c", 0);
       }
 
       total += req;
@@ -404,7 +420,7 @@ write_cues (GstWavEnc * wavenc)
   int num_cues, total = 4;
 
   if (gst_props_get (wavenc->metadata->properties,
-	  "cues", &cue_list, NULL) == FALSE) {
+          "cues", &cue_list, NULL) == FALSE) {
     /* No cues, move along please, nothing to see here */
     return;
   }
@@ -472,13 +488,13 @@ write_labels (GstWavEnc * wavenc)
 
 #define LTXT_SIZE 28
       ltxt = g_string_new ("ltxt                        ");
-      ltxt->str[8] = GUINT32_TO_LE (i);	/* Identifier */
-      ltxt->str[12] = GUINT32_TO_LE (0);	/* Sample Length */
-      ltxt->str[16] = GUINT32_TO_LE (0);	/* FIXME: Don't save the purpose yet */
-      ltxt->str[20] = GUINT16_TO_LE (0);	/* Country */
-      ltxt->str[22] = GUINT16_TO_LE (0);	/* Language */
-      ltxt->str[24] = GUINT16_TO_LE (0);	/* Dialect */
-      ltxt->str[26] = GUINT16_TO_LE (0);	/* Code Page */
+      ltxt->str[8] = GUINT32_TO_LE (i); /* Identifier */
+      ltxt->str[12] = GUINT32_TO_LE (0);        /* Sample Length */
+      ltxt->str[16] = GUINT32_TO_LE (0);        /* FIXME: Don't save the purpose yet */
+      ltxt->str[20] = GUINT16_TO_LE (0);        /* Country */
+      ltxt->str[22] = GUINT16_TO_LE (0);        /* Language */
+      ltxt->str[24] = GUINT16_TO_LE (0);        /* Dialect */
+      ltxt->str[26] = GUINT16_TO_LE (0);        /* Code Page */
       g_string_append (ltxt, label);
       g_free (label);
 
@@ -489,7 +505,7 @@ write_labels (GstWavEnc * wavenc)
       /* Check that we end on an even boundary */
       req = ((len + 8) + 1) & ~1;
       for (j = 0; j < req - len; j++) {
-	g_string_append_printf (ltxt, "%c", 0);
+        g_string_append_printf (ltxt, "%c", 0);
       }
 
       total += req;
@@ -525,7 +541,7 @@ write_labels (GstWavEnc * wavenc)
       /* Check our size */
       req = ((len + 8) + 1) & ~1;
       for (j = 0; j < req - len; j++) {
-	g_string_append_printf (labl, "%c", 0);
+        g_string_append_printf (labl, "%c", 0);
       }
 
       total += req;
@@ -561,7 +577,7 @@ write_labels (GstWavEnc * wavenc)
       /* Size check */
       req = ((len + 8) + 1) & ~1;
       for (j = 0; j < req - len; j++) {
-	g_string_append_printf (note, "%c", 0);
+        g_string_append_printf (note, "%c", 0);
       }
 
       total += req;
@@ -592,7 +608,7 @@ gst_wavenc_chain (GstPad * pad, GstData * _data)
   if (!wavenc->setup) {
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (wavenc, CORE, NEGOTIATION, (NULL),
-	("encoder not initialised (input is not audio?)"));
+        ("encoder not initialised (input is not audio?)"));
     return;
   }
 
@@ -603,9 +619,9 @@ gst_wavenc_chain (GstPad * pad, GstData * _data)
 #if 0
       /* Write our metadata if we have any */
       if (wavenc->metadata) {
-	write_metadata (wavenc);
-	write_cues (wavenc);
-	write_labels (wavenc);
+        write_metadata (wavenc);
+        write_cues (wavenc);
+        write_labels (wavenc);
       }
 #endif
 

@@ -75,7 +75,7 @@ spectrum_chain (GstPad * pad, GstData * _data)
       TRUE, 0, 0, GST_BUFFER_SIZE (buf), 25);
   for (i = 0; i < GST_BUFFER_SIZE (buf); i++) {
     gdk_draw_rectangle (drawingarea->window, drawingarea->style->white_gc,
-	TRUE, i, 32 - data[i], 1, data[i]);
+        TRUE, i, 32 - data[i], 1, data[i]);
   }
   gst_buffer_unref (buf);
 }

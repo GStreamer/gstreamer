@@ -58,19 +58,19 @@ static GstStaticPadTemplate videosink_templ =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpeg, "
-	"mpegversion = (int) { 1, 2, 4 }, "
-	"systemstream = (boolean) false, "
-	COMMON_VIDEO_CAPS "; "
-	"video/x-divx, "
-	COMMON_VIDEO_CAPS "; "
-	"video/x-xvid, "
-	COMMON_VIDEO_CAPS "; "
-	"video/x-msmpeg, "
-	COMMON_VIDEO_CAPS "; "
-	"video/x-jpeg, "
-	COMMON_VIDEO_CAPS "; "
-	"video/x-raw-yuv, "
-	"format = (fourcc) { YUY2, I420 }, " COMMON_VIDEO_CAPS)
+        "mpegversion = (int) { 1, 2, 4 }, "
+        "systemstream = (boolean) false, "
+        COMMON_VIDEO_CAPS "; "
+        "video/x-divx, "
+        COMMON_VIDEO_CAPS "; "
+        "video/x-xvid, "
+        COMMON_VIDEO_CAPS "; "
+        "video/x-msmpeg, "
+        COMMON_VIDEO_CAPS "; "
+        "video/x-jpeg, "
+        COMMON_VIDEO_CAPS "; "
+        "video/x-raw-yuv, "
+        "format = (fourcc) { YUY2, I420 }, " COMMON_VIDEO_CAPS)
     );
 
 #define COMMON_AUDIO_CAPS \
@@ -86,19 +86,19 @@ static GstStaticPadTemplate audiosink_templ =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("audio/mpeg, "
-	"mpegversion = (int) 1, "
-	"layer = (int) [ 1, 3 ], "
-	COMMON_AUDIO_CAPS "; "
-	"audio/mpeg, "
-	"mpegversion = (int) { 2, 4 }, "
-	COMMON_AUDIO_CAPS "; "
-	"audio/x-ac3, "
-	COMMON_AUDIO_CAPS "; "
-	"audio/x-raw-int, "
-	"width = (int) { 8, 16, 24 }, "
-	"depth = (int) { 8, 16, 24 }, "
-	"endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, "
-	"signed = (boolean) { true, false }, " COMMON_AUDIO_CAPS)
+        "mpegversion = (int) 1, "
+        "layer = (int) [ 1, 3 ], "
+        COMMON_AUDIO_CAPS "; "
+        "audio/mpeg, "
+        "mpegversion = (int) { 2, 4 }, "
+        COMMON_AUDIO_CAPS "; "
+        "audio/x-ac3, "
+        COMMON_AUDIO_CAPS "; "
+        "audio/x-raw-int, "
+        "width = (int) { 8, 16, 24 }, "
+        "depth = (int) { 8, 16, 24 }, "
+        "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, "
+        "signed = (boolean) { true, false }, " COMMON_AUDIO_CAPS)
     );
 
 static GstStaticPadTemplate subtitlesink_templ =
@@ -155,8 +155,8 @@ gst_matroska_mux_get_type (void)
     };
 
     gst_matroska_mux_type =
-	g_type_register_static (GST_TYPE_EBML_WRITE,
-	"GstMatroskaMmux", &gst_matroska_mux_info, 0);
+        g_type_register_static (GST_TYPE_EBML_WRITE,
+        "GstMatroskaMmux", &gst_matroska_mux_info, 0);
   }
 
   return gst_matroska_mux_type;
@@ -195,7 +195,7 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_METADATA,
       g_param_spec_boxed ("metadata", "Metadata", "Metadata",
-	  GST_TYPE_CAPS, G_PARAM_READWRITE));
+          GST_TYPE_CAPS, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_EBML_WRITE);
 
@@ -214,7 +214,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux)
 
   mux->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-	  "src"), "src");
+          "src"), "src");
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
   GST_EBML_WRITE (mux)->srcpad = mux->srcpad;
 
@@ -244,7 +244,7 @@ gst_matroska_mux_reset (GstElement * element)
   for (i = 0; i < GST_MATROSKA_MUX_MAX_STREAMS; i++) {
     if (mux->sink[i].track != NULL) {
       if (mux->sink[i].track->pad != NULL) {
-	gst_element_remove_pad (GST_ELEMENT (mux), mux->sink[i].track->pad);
+        gst_element_remove_pad (GST_ELEMENT (mux), mux->sink[i].track->pad);
       }
       g_free (mux->sink[i].track->codec_id);
       g_free (mux->sink[i].track->codec_name);
@@ -268,7 +268,7 @@ gst_matroska_mux_reset (GstElement * element)
   /* reset media info  (to default) */
   gst_caps_replace (&mux->metadata,
       gst_caps_new_simple ("application/x-gst-metadata",
-	  "application", G_TYPE_STRING, "", "date", G_TYPE_STRING, "", NULL));
+          "application", G_TYPE_STRING, "", "date", G_TYPE_STRING, "", NULL));
 
   /* reset indexes */
   mux->num_indexes = 0;
@@ -295,7 +295,7 @@ gst_matroska_mux_video_pad_link (GstPad * pad, const GstCaps * caps)
   /* find context */
   for (i = 0; i < mux->num_streams; i++) {
     if (mux->sink[i].track && mux->sink[i].track->pad &&
-	mux->sink[i].track->pad == pad) {
+        mux->sink[i].track->pad == pad) {
       context = mux->sink[i].track;
       break;
     }
@@ -356,14 +356,14 @@ gst_matroska_mux_video_pad_link (GstPad * pad, const GstCaps * caps)
     gst_structure_get_int (structure, "divxversion", &divxversion);
     switch (divxversion) {
       case 3:
-	context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MSMPEG4V3);
-	break;
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MSMPEG4V3);
+        break;
       case 4:
-	context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_SP);
-	break;
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_SP);
+        break;
       case 5:
-	context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP);
-	break;
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP);
+        break;
     }
 
     return GST_PAD_LINK_OK;
@@ -377,14 +377,14 @@ gst_matroska_mux_video_pad_link (GstPad * pad, const GstCaps * caps)
     gst_structure_get_int (structure, "mpegversion", &mpegversion);
     switch (mpegversion) {
       case 1:
-	context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG1);
-	break;
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG1);
+        break;
       case 2:
-	context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG2);
-	break;
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG2);
+        break;
       case 3:
-	context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP);
-	break;
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP);
+        break;
     }
 
     return GST_PAD_LINK_OK;
@@ -410,7 +410,7 @@ gst_matroska_mux_audio_pad_link (GstPad * pad, const GstCaps * caps)
   /* find context */
   for (i = 0; i < mux->num_streams; i++) {
     if (mux->sink[i].track && mux->sink[i].track->pad &&
-	mux->sink[i].track->pad == pad) {
+        mux->sink[i].track->pad == pad) {
       context = mux->sink[i].track;
       break;
     }
@@ -436,28 +436,28 @@ gst_matroska_mux_audio_pad_link (GstPad * pad, const GstCaps * caps)
     gst_structure_get_int (structure, "mpegversion", &mpegversion);
     switch (mpegversion) {
       case 1:{
-	gint layer;
+        gint layer;
 
-	gst_structure_get_int (structure, "layer", &layer);
-	switch (layer) {
-	  case 1:
-	    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1);
-	    break;
-	  case 2:
-	    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L2);
-	    break;
-	  case 3:
-	    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L3);
-	    break;
-	}
-	break;
+        gst_structure_get_int (structure, "layer", &layer);
+        switch (layer) {
+          case 1:
+            context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1);
+            break;
+          case 2:
+            context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L2);
+            break;
+          case 3:
+            context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L3);
+            break;
+        }
+        break;
       }
       case 2:
-	context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG2 "MAIN");
-	break;
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG2 "MAIN");
+        break;
       case 4:
-	context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG4 "MAIN");
-	break;
+        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG4 "MAIN");
+        break;
     }
 
     return GST_PAD_LINK_OK;
@@ -470,7 +470,7 @@ gst_matroska_mux_audio_pad_link (GstPad * pad, const GstCaps * caps)
     gst_structure_get_int (structure, "depth", &depth);
     gst_structure_get_int (structure, "signed", &signedness);
     if (width != depth ||
-	(width == 8 && signedness) || (width == 16 && !signedness))
+        (width == 8 && signedness) || (width == 16 && !signedness))
       return GST_PAD_LINK_REFUSED;
 
     audiocontext->bitdepth = depth;
@@ -518,21 +518,21 @@ gst_matroska_mux_request_new_pad (GstElement * element,
     name = g_strdup_printf ("audio_%d", mux->num_a_streams++);
     linkfunc = gst_matroska_mux_audio_pad_link;
     context = (GstMatroskaTrackContext *)
-	g_new0 (GstMatroskaTrackAudioContext, 1);
+        g_new0 (GstMatroskaTrackAudioContext, 1);
     context->type = GST_MATROSKA_TRACK_TYPE_AUDIO;
     context->name = g_strdup ("Audio");
   } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
     name = g_strdup_printf ("video_%d", mux->num_v_streams++);
     linkfunc = gst_matroska_mux_video_pad_link;
     context = (GstMatroskaTrackContext *)
-	g_new0 (GstMatroskaTrackVideoContext, 1);
+        g_new0 (GstMatroskaTrackVideoContext, 1);
     context->type = GST_MATROSKA_TRACK_TYPE_VIDEO;
     context->name = g_strdup ("Video");
   } else if (templ == gst_element_class_get_pad_template (klass, "subtitle_%d")) {
     name = g_strdup_printf ("subtitle_%d", mux->num_t_streams++);
     linkfunc = gst_matroska_mux_subtitle_pad_link;
     context = (GstMatroskaTrackContext *)
-	g_new0 (GstMatroskaTrackSubtitleContext, 1);
+        g_new0 (GstMatroskaTrackSubtitleContext, 1);
     context->type = GST_MATROSKA_TRACK_TYPE_SUBTITLE;
     context->name = g_strdup ("Subtitle");
   } else {
@@ -567,30 +567,30 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
   switch (context->type) {
     case GST_MATROSKA_TRACK_TYPE_VIDEO:{
       GstMatroskaTrackVideoContext *videocontext =
-	  (GstMatroskaTrackVideoContext *) context;
+          (GstMatroskaTrackVideoContext *) context;
 
       /* framerate, but not in the video part */
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKDEFAULTDURATION,
-	  context->default_duration);
+          context->default_duration);
 
       master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TRACKVIDEO);
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOPIXELWIDTH,
-	  videocontext->pixel_width);
+          videocontext->pixel_width);
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOPIXELHEIGHT,
-	  videocontext->pixel_height);
+          videocontext->pixel_height);
       if (videocontext->display_width && videocontext->display_height) {
-	gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEODISPLAYWIDTH,
-	    videocontext->display_width);
-	gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEODISPLAYHEIGHT,
-	    videocontext->display_height);
+        gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEODISPLAYWIDTH,
+            videocontext->display_width);
+        gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEODISPLAYHEIGHT,
+            videocontext->display_height);
       }
       if (context->flags & GST_MATROSKA_VIDEOTRACK_INTERLACED)
-	gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFLAGINTERLACED, 1);
+        gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFLAGINTERLACED, 1);
       if (videocontext->fourcc) {
-	guint32 fcc_le = GUINT32_TO_LE (videocontext->fourcc);
+        guint32 fcc_le = GUINT32_TO_LE (videocontext->fourcc);
 
-	gst_ebml_write_binary (ebml, GST_MATROSKA_ID_VIDEOCOLOURSPACE,
-	    (gpointer) & fcc_le, 4);
+        gst_ebml_write_binary (ebml, GST_MATROSKA_ID_VIDEOCOLOURSPACE,
+            (gpointer) & fcc_le, 4);
       }
       gst_ebml_write_master_finish (ebml, master);
 
@@ -599,18 +599,18 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
 
     case GST_MATROSKA_TRACK_TYPE_AUDIO:{
       GstMatroskaTrackAudioContext *audiocontext =
-	  (GstMatroskaTrackAudioContext *) context;
+          (GstMatroskaTrackAudioContext *) context;
 
       master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TRACKAUDIO);
       if (audiocontext->samplerate != 8000)
-	gst_ebml_write_float (ebml, GST_MATROSKA_ID_AUDIOSAMPLINGFREQ,
-	    audiocontext->samplerate);
+        gst_ebml_write_float (ebml, GST_MATROSKA_ID_AUDIOSAMPLINGFREQ,
+            audiocontext->samplerate);
       if (audiocontext->channels != 1)
-	gst_ebml_write_uint (ebml, GST_MATROSKA_ID_AUDIOCHANNELS,
-	    audiocontext->channels);
+        gst_ebml_write_uint (ebml, GST_MATROSKA_ID_AUDIOCHANNELS,
+            audiocontext->channels);
       if (audiocontext->bitdepth) {
-	gst_ebml_write_uint (ebml, GST_MATROSKA_ID_AUDIOBITDEPTH,
-	    audiocontext->bitdepth);
+        gst_ebml_write_uint (ebml, GST_MATROSKA_ID_AUDIOBITDEPTH,
+            audiocontext->bitdepth);
       }
       gst_ebml_write_master_finish (ebml, master);
 
@@ -625,7 +625,7 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
   gst_ebml_write_ascii (ebml, GST_MATROSKA_ID_CODECID, context->codec_id);
   if (context->codec_priv)
     gst_ebml_write_binary (ebml, GST_MATROSKA_ID_CODECPRIVATE,
-	context->codec_priv, context->codec_priv_size);
+        context->codec_priv, context->codec_priv_size);
   /* FIXME: until we have a nice way of getting the codecname
    * out of the caps, I'm not going to enable this. Too much
    * (useless, double, boring) work... */
@@ -681,11 +681,11 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_MUXINGAPP, "GStreamer");
   if (mux->metadata &&
       gst_structure_has_field (gst_caps_get_structure (mux->metadata, 0),
-	  "application")) {
+          "application")) {
     const gchar *app;
 
     app = gst_structure_get_string (gst_caps_get_structure (mux->metadata, 0),
-	"application");
+        "application");
     if (app && app[0]) {
       gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_WRITINGAPP, app);
     }
@@ -730,14 +730,14 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
       GstMatroskaIndex *idx = &mux->index[n];
 
       pointentry_master = gst_ebml_write_master_start (ebml,
-	  GST_MATROSKA_ID_POINTENTRY);
+          GST_MATROSKA_ID_POINTENTRY);
       gst_ebml_write_date (ebml, GST_MATROSKA_ID_CUETIME,
-	  idx->time / mux->time_scale);
+          idx->time / mux->time_scale);
       trackpos_master = gst_ebml_write_master_start (ebml,
-	  GST_MATROSKA_ID_CUETRACKPOSITION);
+          GST_MATROSKA_ID_CUETRACKPOSITION);
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CUETRACK, idx->track);
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CUECLUSTERPOSITION,
-	  idx->pos - mux->segment_master);
+          idx->pos - mux->segment_master);
       gst_ebml_write_master_finish (ebml, trackpos_master);
       gst_ebml_write_master_finish (ebml, pointentry_master);
     }
@@ -764,7 +764,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
       mux->tracks_pos - mux->segment_master);
   if (mux->index != NULL) {
     gst_ebml_replace_uint (ebml, mux->seekhead_pos + 88,
-	mux->cues_pos - mux->segment_master);
+        mux->cues_pos - mux->segment_master);
   } else {
     /* void'ify */
     guint64 my_pos = ebml->pos;
@@ -796,24 +796,24 @@ gst_matroska_mux_prepare_data (GstMatroskaMux * mux)
 
   for (i = 0; i < mux->num_streams; i++) {
     while (!mux->sink[i].eos && !mux->sink[i].buffer &&
-	mux->sink[i].track->num > 0 &&
-	GST_PAD_IS_USABLE (mux->sink[i].track->pad)) {
+        mux->sink[i].track->num > 0 &&
+        GST_PAD_IS_USABLE (mux->sink[i].track->pad)) {
       GstData *data;
 
       data = gst_pad_pull (mux->sink[i].track->pad);
       if (GST_IS_EVENT (data)) {
-	if (GST_EVENT_TYPE (GST_EVENT (data)) == GST_EVENT_EOS)
-	  mux->sink[i].eos = TRUE;
-	gst_event_unref (GST_EVENT (data));
+        if (GST_EVENT_TYPE (GST_EVENT (data)) == GST_EVENT_EOS)
+          mux->sink[i].eos = TRUE;
+        gst_event_unref (GST_EVENT (data));
       } else {
-	mux->sink[i].buffer = GST_BUFFER (data);
+        mux->sink[i].buffer = GST_BUFFER (data);
       }
     }
 
     if (mux->sink[i].buffer) {
       if (first < 0 || GST_BUFFER_TIMESTAMP (mux->sink[i].buffer) <
-	  GST_BUFFER_TIMESTAMP (mux->sink[first].buffer))
-	first = i;
+          GST_BUFFER_TIMESTAMP (mux->sink[first].buffer))
+        first = i;
     }
   }
 
@@ -854,7 +854,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
 
     if (mux->num_indexes % 32 == 0) {
       mux->index = g_renew (GstMatroskaIndex, mux->index,
-	  mux->num_indexes + 32);
+          mux->num_indexes + 32);
     }
     idx = &mux->index[mux->num_indexes++];
 

@@ -93,8 +93,8 @@ gst_rtpgsmenc_get_type (void)
     };
 
     rtpgsmenc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstRtpGSMEnc",
-	&rtpgsmenc_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpGSMEnc",
+        &rtpgsmenc_info, 0);
   }
   return rtpgsmenc_type;
 }
@@ -209,13 +209,13 @@ gst_rtpgsmenc_chain (GstPad * pad, GstData * _data)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
-	GST_DEBUG ("discont");
-	rtpgsmenc->next_time = 0;
-	gst_pad_event_default (pad, event);
-	return;
+        GST_DEBUG ("discont");
+        rtpgsmenc->next_time = 0;
+        gst_pad_event_default (pad, event);
+        return;
       default:
-	gst_pad_event_default (pad, event);
-	return;
+        gst_pad_event_default (pad, event);
+        return;
     }
   }
 

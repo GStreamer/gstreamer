@@ -87,8 +87,9 @@ gst_timeoverlay_get_type (void)
       0,
       gst_timeoverlay_init,
     };
+
     timeoverlay_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
-	"GstTimeoverlay", &timeoverlay_info, 0);
+        "GstTimeoverlay", &timeoverlay_info, 0);
   }
   return timeoverlay_type;
 }
@@ -114,7 +115,7 @@ gst_timeoverlay_base_init (gpointer g_class)
 
   for (i = 0; i < G_N_ELEMENTS (gst_timeoverlay_formats); i++) {
     gst_videofilter_class_add_format (videofilter_class,
-	gst_timeoverlay_formats + i);
+        gst_timeoverlay_formats + i);
   }
 
   gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
@@ -132,8 +133,8 @@ gst_timeoverlay_class_init (gpointer g_class, gpointer class_data)
 #if 0
   g_object_class_install_property (gobject_class, ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
-	  GST_TYPE_TIMEOVERLAY_METHOD, GST_TIMEOVERLAY_METHOD_1,
-	  G_PARAM_READWRITE));
+          GST_TYPE_TIMEOVERLAY_METHOD, GST_TIMEOVERLAY_METHOD_1,
+          G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_timeoverlay_set_property;
@@ -293,7 +294,7 @@ gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
   layout = pango_layout_new (timeoverlay->context);
   string =
       gst_timeoverlay_print_smpte_time (GST_BUFFER_TIMESTAMP (videofilter->
-	  in_buf));
+          in_buf));
   pango_layout_set_text (layout, string, strlen (string));
   g_free (string);
 
@@ -314,7 +315,7 @@ gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
   for (i = 0; i < b_height / 2; i++) {
     memset (dest + width * height + i * (width / 2), 128, b_width / 2);
     memset (dest + width * height + (width / 2) * (height / 2) +
-	i * (width / 2), 128, b_width / 2);
+        i * (width / 2), 128, b_width / 2);
   }
   bitmap.rows = b_height;
   bitmap.width = b_width;

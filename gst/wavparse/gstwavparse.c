@@ -65,22 +65,22 @@ static GstStaticPadTemplate src_template_factory =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) little_endian, "
-	"signed = (boolean) { true, false }, "
-	"width = (int) { 8, 16 }, "
-	"depth = (int) { 8, 16 }, "
-	"rate = (int) [ 8000, 48000 ], "
-	"channels = (int) [ 1, 2 ]; "
-	"audio/mpeg, "
-	"mpegversion = (int) 1, "
-	"layer = (int) [ 1, 3 ], "
-	"rate = (int) [ 8000, 48000 ], "
-	"channels = (int) [ 1, 2 ]; "
-	"audio/x-alaw, "
-	"rate = (int) [ 8000, 48000 ], "
-	"channels = (int) [ 1, 2 ]; "
-	"audio/x-mulaw, "
-	"rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
+        "endianness = (int) little_endian, "
+        "signed = (boolean) { true, false }, "
+        "width = (int) { 8, 16 }, "
+        "depth = (int) { 8, 16 }, "
+        "rate = (int) [ 8000, 48000 ], "
+        "channels = (int) [ 1, 2 ]; "
+        "audio/mpeg, "
+        "mpegversion = (int) 1, "
+        "layer = (int) [ 1, 3 ], "
+        "rate = (int) [ 8000, 48000 ], "
+        "channels = (int) [ 1, 2 ]; "
+        "audio/x-alaw, "
+        "rate = (int) [ 8000, 48000 ], "
+        "channels = (int) [ 1, 2 ]; "
+        "audio/x-mulaw, "
+        "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 /* WavParse signals and args */
@@ -116,9 +116,10 @@ gst_wavparse_get_type (void)
       0,
       (GInstanceInitFunc) gst_wavparse_init,
     };
+
     wavparse_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstWavParse", &wavparse_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstWavParse", &wavparse_info,
+        0);
   }
   return wavparse_type;
 }
@@ -225,7 +226,7 @@ gst_wavparse_parse_adtl (GstWavParse * wavparse, int len)
 
   while (len > 0) {
     got_bytes =
-	gst_bytestream_peek_bytes (bs, &tempdata, sizeof (gst_riff_chunk));
+        gst_bytestream_peek_bytes (bs, &tempdata, sizeof (gst_riff_chunk));
     if (got_bytes != sizeof (gst_riff_chunk)) {
       return;
     }
@@ -242,146 +243,146 @@ gst_wavparse_parse_adtl (GstWavParse * wavparse, int len)
 
     switch (chunk.id) {
       case GST_RIFF_adtl_labl:
-	got_bytes =
-	    gst_bytestream_peek_bytes (bs, &tempdata,
-	    sizeof (struct _gst_riff_labl));
-	if (got_bytes != sizeof (struct _gst_riff_labl)) {
-	  return;
-	}
+        got_bytes =
+            gst_bytestream_peek_bytes (bs, &tempdata,
+            sizeof (struct _gst_riff_labl));
+        if (got_bytes != sizeof (struct _gst_riff_labl)) {
+          return;
+        }
 
-	temp_labl = (struct _gst_riff_labl *) tempdata;
-	labl.id = GUINT32_FROM_LE (temp_labl->id);
-	labl.size = GUINT32_FROM_LE (temp_labl->size);
-	labl.identifier = GUINT32_FROM_LE (temp_labl->identifier);
+        temp_labl = (struct _gst_riff_labl *) tempdata;
+        labl.id = GUINT32_FROM_LE (temp_labl->id);
+        labl.size = GUINT32_FROM_LE (temp_labl->size);
+        labl.identifier = GUINT32_FROM_LE (temp_labl->identifier);
 
-	gst_bytestream_flush (bs, sizeof (struct _gst_riff_labl));
-	len -= sizeof (struct _gst_riff_labl);
+        gst_bytestream_flush (bs, sizeof (struct _gst_riff_labl));
+        len -= sizeof (struct _gst_riff_labl);
 
-	got_bytes = gst_bytestream_peek_bytes (bs, &tempdata, labl.size - 4);
-	if (got_bytes != labl.size - 4) {
-	  return;
-	}
+        got_bytes = gst_bytestream_peek_bytes (bs, &tempdata, labl.size - 4);
+        if (got_bytes != labl.size - 4) {
+          return;
+        }
 
-	label_name = (char *) tempdata;
+        label_name = (char *) tempdata;
 
-	gst_bytestream_flush (bs, ((labl.size - 4) + 1) & ~1);
-	len -= (((labl.size - 4) + 1) & ~1);
+        gst_bytestream_flush (bs, ((labl.size - 4) + 1) & ~1);
+        len -= (((labl.size - 4) + 1) & ~1);
 
-	new_caps = gst_caps_new ("label",
-	    "application/x-gst-metadata",
-	    gst_props_new ("identifier", G_TYPE_INT (labl.identifier),
-		"name", G_TYPE_STRING (label_name), NULL));
+        new_caps = gst_caps_new ("label",
+            "application/x-gst-metadata",
+            gst_props_new ("identifier", G_TYPE_INT (labl.identifier),
+                "name", G_TYPE_STRING (label_name), NULL));
 
-	if (gst_props_get (props, "labels", &caps, NULL)) {
-	  caps = g_list_append (caps, new_caps);
-	} else {
-	  caps = g_list_append (NULL, new_caps);
+        if (gst_props_get (props, "labels", &caps, NULL)) {
+          caps = g_list_append (caps, new_caps);
+        } else {
+          caps = g_list_append (NULL, new_caps);
 
-	  entry = gst_props_entry_new ("labels", GST_PROPS_GLIST (caps));
-	  gst_props_add_entry (props, entry);
-	}
+          entry = gst_props_entry_new ("labels", GST_PROPS_GLIST (caps));
+          gst_props_add_entry (props, entry);
+        }
 
-	break;
+        break;
 
       case GST_RIFF_adtl_ltxt:
-	got_bytes =
-	    gst_bytestream_peek_bytes (bs, &tempdata,
-	    sizeof (struct _gst_riff_ltxt));
-	if (got_bytes != sizeof (struct _gst_riff_ltxt)) {
-	  return;
-	}
+        got_bytes =
+            gst_bytestream_peek_bytes (bs, &tempdata,
+            sizeof (struct _gst_riff_ltxt));
+        if (got_bytes != sizeof (struct _gst_riff_ltxt)) {
+          return;
+        }
 
-	temp_ltxt = (struct _gst_riff_ltxt *) tempdata;
-	ltxt.id = GUINT32_FROM_LE (temp_ltxt->id);
-	ltxt.size = GUINT32_FROM_LE (temp_ltxt->size);
-	ltxt.identifier = GUINT32_FROM_LE (temp_ltxt->identifier);
-	ltxt.length = GUINT32_FROM_LE (temp_ltxt->length);
-	ltxt.purpose = GUINT32_FROM_LE (temp_ltxt->purpose);
-	ltxt.country = GUINT16_FROM_LE (temp_ltxt->country);
-	ltxt.language = GUINT16_FROM_LE (temp_ltxt->language);
-	ltxt.dialect = GUINT16_FROM_LE (temp_ltxt->dialect);
-	ltxt.codepage = GUINT16_FROM_LE (temp_ltxt->codepage);
+        temp_ltxt = (struct _gst_riff_ltxt *) tempdata;
+        ltxt.id = GUINT32_FROM_LE (temp_ltxt->id);
+        ltxt.size = GUINT32_FROM_LE (temp_ltxt->size);
+        ltxt.identifier = GUINT32_FROM_LE (temp_ltxt->identifier);
+        ltxt.length = GUINT32_FROM_LE (temp_ltxt->length);
+        ltxt.purpose = GUINT32_FROM_LE (temp_ltxt->purpose);
+        ltxt.country = GUINT16_FROM_LE (temp_ltxt->country);
+        ltxt.language = GUINT16_FROM_LE (temp_ltxt->language);
+        ltxt.dialect = GUINT16_FROM_LE (temp_ltxt->dialect);
+        ltxt.codepage = GUINT16_FROM_LE (temp_ltxt->codepage);
 
-	gst_bytestream_flush (bs, sizeof (struct _gst_riff_ltxt));
-	len -= sizeof (struct _gst_riff_ltxt);
+        gst_bytestream_flush (bs, sizeof (struct _gst_riff_ltxt));
+        len -= sizeof (struct _gst_riff_ltxt);
 
-	if (ltxt.size - 20 > 0) {
-	  got_bytes = gst_bytestream_peek_bytes (bs, &tempdata, ltxt.size - 20);
-	  if (got_bytes != ltxt.size - 20) {
-	    return;
-	  }
+        if (ltxt.size - 20 > 0) {
+          got_bytes = gst_bytestream_peek_bytes (bs, &tempdata, ltxt.size - 20);
+          if (got_bytes != ltxt.size - 20) {
+            return;
+          }
 
-	  gst_bytestream_flush (bs, ((ltxt.size - 20) + 1) & ~1);
-	  len -= (((ltxt.size - 20) + 1) & ~1);
+          gst_bytestream_flush (bs, ((ltxt.size - 20) + 1) & ~1);
+          len -= (((ltxt.size - 20) + 1) & ~1);
 
-	  label_name = (char *) tempdata;
-	} else {
-	  label_name = "";
-	}
+          label_name = (char *) tempdata;
+        } else {
+          label_name = "";
+        }
 
-	new_caps = gst_caps_new ("ltxt",
-	    "application/x-gst-metadata",
-	    gst_props_new ("identifier", G_TYPE_INT (ltxt.identifier),
-		"name", G_TYPE_STRING (label_name),
-		"length", G_TYPE_INT (ltxt.length), NULL));
+        new_caps = gst_caps_new ("ltxt",
+            "application/x-gst-metadata",
+            gst_props_new ("identifier", G_TYPE_INT (ltxt.identifier),
+                "name", G_TYPE_STRING (label_name),
+                "length", G_TYPE_INT (ltxt.length), NULL));
 
-	if (gst_props_get (props, "ltxts", &caps, NULL)) {
-	  caps = g_list_append (caps, new_caps);
-	} else {
-	  caps = g_list_append (NULL, new_caps);
+        if (gst_props_get (props, "ltxts", &caps, NULL)) {
+          caps = g_list_append (caps, new_caps);
+        } else {
+          caps = g_list_append (NULL, new_caps);
 
-	  entry = gst_props_entry_new ("ltxts", GST_PROPS_GLIST (caps));
-	  gst_props_add_entry (props, entry);
-	}
+          entry = gst_props_entry_new ("ltxts", GST_PROPS_GLIST (caps));
+          gst_props_add_entry (props, entry);
+        }
 
-	break;
+        break;
 
       case GST_RIFF_adtl_note:
-	got_bytes =
-	    gst_bytestream_peek_bytes (bs, &tempdata,
-	    sizeof (struct _gst_riff_note));
-	if (got_bytes != sizeof (struct _gst_riff_note)) {
-	  return;
-	}
+        got_bytes =
+            gst_bytestream_peek_bytes (bs, &tempdata,
+            sizeof (struct _gst_riff_note));
+        if (got_bytes != sizeof (struct _gst_riff_note)) {
+          return;
+        }
 
-	temp_note = (struct _gst_riff_note *) tempdata;
-	note.id = GUINT32_FROM_LE (temp_note->id);
-	note.size = GUINT32_FROM_LE (temp_note->size);
-	note.identifier = GUINT32_FROM_LE (temp_note->identifier);
+        temp_note = (struct _gst_riff_note *) tempdata;
+        note.id = GUINT32_FROM_LE (temp_note->id);
+        note.size = GUINT32_FROM_LE (temp_note->size);
+        note.identifier = GUINT32_FROM_LE (temp_note->identifier);
 
-	gst_bytestream_flush (bs, sizeof (struct _gst_riff_note));
-	len -= sizeof (struct _gst_riff_note);
+        gst_bytestream_flush (bs, sizeof (struct _gst_riff_note));
+        len -= sizeof (struct _gst_riff_note);
 
-	got_bytes = gst_bytestream_peek_bytes (bs, &tempdata, note.size - 4);
-	if (got_bytes != note.size - 4) {
-	  return;
-	}
+        got_bytes = gst_bytestream_peek_bytes (bs, &tempdata, note.size - 4);
+        if (got_bytes != note.size - 4) {
+          return;
+        }
 
-	gst_bytestream_flush (bs, ((note.size - 4) + 1) & ~1);
-	len -= (((note.size - 4) + 1) & ~1);
+        gst_bytestream_flush (bs, ((note.size - 4) + 1) & ~1);
+        len -= (((note.size - 4) + 1) & ~1);
 
-	label_name = (char *) tempdata;
+        label_name = (char *) tempdata;
 
-	new_caps = gst_caps_new ("note",
-	    "application/x-gst-metadata",
-	    gst_props_new ("identifier", G_TYPE_INT (note.identifier),
-		"name", G_TYPE_STRING (label_name), NULL));
+        new_caps = gst_caps_new ("note",
+            "application/x-gst-metadata",
+            gst_props_new ("identifier", G_TYPE_INT (note.identifier),
+                "name", G_TYPE_STRING (label_name), NULL));
 
-	if (gst_props_get (props, "notes", &caps, NULL)) {
-	  caps = g_list_append (caps, new_caps);
-	} else {
-	  caps = g_list_append (NULL, new_caps);
+        if (gst_props_get (props, "notes", &caps, NULL)) {
+          caps = g_list_append (caps, new_caps);
+        } else {
+          caps = g_list_append (NULL, new_caps);
 
-	  entry = gst_props_entry_new ("notes", GST_PROPS_GLIST (caps));
-	  gst_props_add_entry (props, entry);
-	}
+          entry = gst_props_entry_new ("notes", GST_PROPS_GLIST (caps));
+          gst_props_add_entry (props, entry);
+        }
 
-	break;
+        break;
 
       default:
-	g_print ("Unknown chunk: " GST_FOURCC_FORMAT "\n",
-	    GST_FOURCC_ARGS (chunk.id));
-	return;
+        g_print ("Unknown chunk: " GST_FOURCC_FORMAT "\n",
+            GST_FOURCC_ARGS (chunk.id));
+        return;
     }
   }
 
@@ -401,7 +402,7 @@ gst_wavparse_parse_info (GstWavParse * wavparse, int len)
 
   while (len > 0) {
     got_bytes =
-	gst_bytestream_peek_bytes (bs, &tempdata, sizeof (gst_riff_chunk));
+        gst_bytestream_peek_bytes (bs, &tempdata, sizeof (gst_riff_chunk));
     temp_chunk = (gst_riff_chunk *) tempdata;
 
     chunk.id = GUINT32_FROM_LE (temp_chunk->id);
@@ -433,65 +434,65 @@ gst_wavparse_parse_info (GstWavParse * wavparse, int len)
        - find type */
     switch (chunk.id) {
       case GST_RIFF_INFO_IARL:
-	type = "Location";
-	break;
+        type = "Location";
+        break;
 
       case GST_RIFF_INFO_IART:
-	type = "Artist";
-	break;
+        type = "Artist";
+        break;
 
       case GST_RIFF_INFO_ICMS:
-	type = "Commissioner";
-	break;
+        type = "Commissioner";
+        break;
 
       case GST_RIFF_INFO_ICMT:
-	type = "Comment";
-	break;
+        type = "Comment";
+        break;
 
       case GST_RIFF_INFO_ICOP:
-	type = "Copyright";
-	break;
+        type = "Copyright";
+        break;
 
       case GST_RIFF_INFO_ICRD:
-	type = "Creation Date";
-	break;
+        type = "Creation Date";
+        break;
 
       case GST_RIFF_INFO_IENG:
-	type = "Engineer";
-	break;
+        type = "Engineer";
+        break;
 
       case GST_RIFF_INFO_IGNR:
-	type = "Genre";
-	break;
+        type = "Genre";
+        break;
 
       case GST_RIFF_INFO_IKEY:
-	type = "Keywords";
-	break;
+        type = "Keywords";
+        break;
 
       case GST_RIFF_INFO_INAM:
-	type = "Title";		/* name */
-	break;
+        type = "Title";         /* name */
+        break;
 
       case GST_RIFF_INFO_IPRD:
-	type = "Product";
-	break;
+        type = "Product";
+        break;
 
       case GST_RIFF_INFO_ISBJ:
-	type = "Subject";
-	break;
+        type = "Subject";
+        break;
 
       case GST_RIFF_INFO_ISFT:
-	type = "Software";
-	break;
+        type = "Software";
+        break;
 
       case GST_RIFF_INFO_ITCH:
-	type = "Technician";
-	break;
+        type = "Technician";
+        break;
 
       default:
-	g_print ("Unknown: %4.4s\n", (char *) &chunk.id);
-	type = NULL;
-	break;
+        g_print ("Unknown: %4.4s\n", (char *) &chunk.id);
+        type = NULL;
+        break;
     }
 
     if (type) {
@@ -523,8 +524,8 @@ gst_wavparse_parse_cues (GstWavParse * wavparse, int len)
     int required;
 
     got_bytes =
-	gst_bytestream_peek_bytes (bs, &tempdata,
-	sizeof (struct _gst_riff_cue));
+        gst_bytestream_peek_bytes (bs, &tempdata,
+        sizeof (struct _gst_riff_cue));
     temp_cue = (struct _gst_riff_cue *) tempdata;
 
     /* fixup for our big endian friends */
@@ -557,9 +558,9 @@ gst_wavparse_parse_cues (GstWavParse * wavparse, int len)
       GstCaps *caps;
 
       caps = gst_caps_new ("cues",
-	  "application/x-gst-metadata",
-	  gst_props_new ("identifier", G_TYPE_INT (points[i].identifier),
-	      "position", G_TYPE_INT (points[i].offset), NULL));
+          "application/x-gst-metadata",
+          gst_props_new ("identifier", G_TYPE_INT (points[i].identifier),
+              "position", G_TYPE_INT (points[i].offset), NULL));
       cues = g_list_append (cues, caps);
     }
 
@@ -597,45 +598,45 @@ gst_wavparse_parse_fmt (GstWavParse * wavparse, guint size)
     switch (wavparse->format) {
       case GST_RIFF_WAVE_FORMAT_ALAW:
       case GST_RIFF_WAVE_FORMAT_MULAW:{
-	char *mime = (wavparse->format == GST_RIFF_WAVE_FORMAT_ALAW) ?
-	    "audio/x-alaw" : "audio/x-mulaw";
-	if (wavparse->width != 8) {
-	  g_warning ("Ignoring invalid width %d", wavparse->width);
-	  return;
-	}
+        char *mime = (wavparse->format == GST_RIFF_WAVE_FORMAT_ALAW) ?
+            "audio/x-alaw" : "audio/x-mulaw";
+        if (wavparse->width != 8) {
+          g_warning ("Ignoring invalid width %d", wavparse->width);
+          return;
+        }
 
-	caps = gst_caps_new_simple (mime,
-	    "rate", G_TYPE_INT, wavparse->rate,
-	    "channels", G_TYPE_INT, wavparse->channels, NULL);
+        caps = gst_caps_new_simple (mime,
+            "rate", G_TYPE_INT, wavparse->rate,
+            "channels", G_TYPE_INT, wavparse->channels, NULL);
       }
-	break;
+        break;
 
       case GST_RIFF_WAVE_FORMAT_PCM:
-	caps = gst_caps_new_simple ("audio/x-raw-int",
-	    "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-	    "signed", G_TYPE_BOOLEAN, (wavparse->width > 8) ? TRUE : FALSE,
-	    "width", G_TYPE_INT, wavparse->width,
-	    "depth", G_TYPE_INT, wavparse->width,
-	    "rate", G_TYPE_INT, wavparse->rate,
-	    "channels", G_TYPE_INT, wavparse->channels, NULL);
-	break;
+        caps = gst_caps_new_simple ("audio/x-raw-int",
+            "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+            "signed", G_TYPE_BOOLEAN, (wavparse->width > 8) ? TRUE : FALSE,
+            "width", G_TYPE_INT, wavparse->width,
+            "depth", G_TYPE_INT, wavparse->width,
+            "rate", G_TYPE_INT, wavparse->rate,
+            "channels", G_TYPE_INT, wavparse->channels, NULL);
+        break;
 
       case GST_RIFF_WAVE_FORMAT_MPEGL12:
       case GST_RIFF_WAVE_FORMAT_MPEGL3:{
-	int layer = (wavparse->format == GST_RIFF_WAVE_FORMAT_MPEGL12) ? 2 : 3;
+        int layer = (wavparse->format == GST_RIFF_WAVE_FORMAT_MPEGL12) ? 2 : 3;
 
-	caps = gst_caps_new_simple ("audio/mpeg",
-	    "mpegversion", G_TYPE_INT, 1,
-	    "layer", G_TYPE_INT, layer,
-	    "rate", G_TYPE_INT, wavparse->rate,
-	    "channels", G_TYPE_INT, wavparse->channels, NULL);
+        caps = gst_caps_new_simple ("audio/mpeg",
+            "mpegversion", G_TYPE_INT, 1,
+            "layer", G_TYPE_INT, layer,
+            "rate", G_TYPE_INT, wavparse->rate,
+            "channels", G_TYPE_INT, wavparse->channels, NULL);
       }
-	break;
+        break;
 
       default:
-	GST_ELEMENT_ERROR (wavparse, STREAM, NOT_IMPLEMENTED, (NULL),
-	    ("format %d not handled", wavparse->format));
-	return;
+        GST_ELEMENT_ERROR (wavparse, STREAM, NOT_IMPLEMENTED, (NULL),
+            ("format %d not handled", wavparse->format));
+        return;
     }
 
     if (caps) {
@@ -697,7 +698,7 @@ gst_wavparse_loop (GstElement * element)
 
   if (wavparse->seek_pending) {
     GST_DEBUG ("wavparse: seek pending to %" G_GINT64_FORMAT " %08llx",
-	wavparse->seek_offset, (unsigned long long) wavparse->seek_offset);
+        wavparse->seek_offset, (unsigned long long) wavparse->seek_offset);
 
     if (!gst_bytestream_seek (bs, wavparse->seek_offset, GST_SEEK_METHOD_SET)) {
       GST_INFO ("wavparse: Could not seek");
@@ -722,17 +723,17 @@ gst_wavparse_loop (GstElement * element)
       got_bytes = gst_bytestream_peek (bs, &buf, desired);
 
       if (got_bytes != desired) {
-	/* EOS? */
-	GstEvent *event;
-	guint32 remaining;
+        /* EOS? */
+        GstEvent *event;
+        guint32 remaining;
 
-	gst_bytestream_get_status (bs, &remaining, &event);
-	if (event && GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-	  gst_pad_event_default (wavparse->sinkpad, event);
-	} else {
-	  GST_ELEMENT_ERROR (element, RESOURCE, READ, (NULL), (NULL));
-	}
-	return;
+        gst_bytestream_get_status (bs, &remaining, &event);
+        if (event && GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+          gst_pad_event_default (wavparse->sinkpad, event);
+        } else {
+          GST_ELEMENT_ERROR (element, RESOURCE, READ, (NULL), (NULL));
+        }
+        return;
       }
 
       wavparse->dataleft -= got_bytes;
@@ -755,15 +756,15 @@ gst_wavparse_loop (GstElement * element)
     /* read first two dwords to get chunktype and size */
     while (TRUE) {
       got_bytes =
-	  gst_bytestream_peek_bytes (bs, &tempdata, sizeof (gst_riff_chunk));
+          gst_bytestream_peek_bytes (bs, &tempdata, sizeof (gst_riff_chunk));
       temp_chunk = (gst_riff_riff *) tempdata;
 
       if (got_bytes < sizeof (gst_riff_chunk)) {
-	if (!gst_wavparse_handle_sink_event (wavparse)) {
-	  return;
-	}
+        if (!gst_wavparse_handle_sink_event (wavparse)) {
+          return;
+        }
       } else {
-	break;
+        break;
       }
     }
 
@@ -773,31 +774,31 @@ gst_wavparse_loop (GstElement * element)
     switch (chunk.id) {
       case GST_RIFF_TAG_RIFF:
       case GST_RIFF_TAG_LIST:
-	/* Read complete list chunk */
-	while (TRUE) {
-	  got_bytes =
-	      gst_bytestream_peek_bytes (bs, &tempdata, sizeof (gst_riff_list));
-	  temp_chunk = (gst_riff_riff *) tempdata;
-	  if (got_bytes < sizeof (gst_riff_list)) {
-	    if (!gst_wavparse_handle_sink_event (wavparse)) {
-	      return;
-	    }
-	  } else {
-	    break;
-	  }
-	}
+        /* Read complete list chunk */
+        while (TRUE) {
+          got_bytes =
+              gst_bytestream_peek_bytes (bs, &tempdata, sizeof (gst_riff_list));
+          temp_chunk = (gst_riff_riff *) tempdata;
+          if (got_bytes < sizeof (gst_riff_list)) {
+            if (!gst_wavparse_handle_sink_event (wavparse)) {
+              return;
+            }
+          } else {
+            break;
+          }
+        }
 
-	chunk.type = GUINT32_FROM_LE (temp_chunk->type);
-	skipsize = sizeof (gst_riff_list);
-	break;
+        chunk.type = GUINT32_FROM_LE (temp_chunk->type);
+        skipsize = sizeof (gst_riff_list);
+        break;
 
       case GST_RIFF_TAG_cue:
-	skipsize = 0;
-	break;
+        skipsize = 0;
+        break;
 
       default:
-	skipsize = sizeof (gst_riff_chunk);
-	break;
+        skipsize = sizeof (gst_riff_chunk);
+        break;
     }
     gst_bytestream_flush (bs, skipsize);
   } while (FALSE);
@@ -808,9 +809,9 @@ gst_wavparse_loop (GstElement * element)
   switch (wavparse->state) {
     case GST_WAVPARSE_START:
       if (chunk.id != GST_RIFF_TAG_RIFF && chunk.type != GST_RIFF_RIFF_WAVE) {
-	GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
-	    ("chunk.id %08x chunk.type %08x", chunk.id, chunk.type));
-	return;
+        GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
+            ("chunk.id %08x chunk.type %08x", chunk.id, chunk.type));
+        return;
       }
 
       wavparse->state = GST_WAVPARSE_OTHER;
@@ -822,45 +823,45 @@ gst_wavparse_loop (GstElement * element)
       GST_DEBUG ("riff tag: %4.4s %08x", (char *) &chunk.id, chunk.size);
 
       switch (chunk.id) {
-	case GST_RIFF_TAG_data:
-	  wavparse->state = GST_WAVPARSE_DATA;
-	  wavparse->dataleft = chunk.size;
-	  wavparse->byteoffset = 0;
-	  flush = 0;
-	  break;
+        case GST_RIFF_TAG_data:
+          wavparse->state = GST_WAVPARSE_DATA;
+          wavparse->dataleft = chunk.size;
+          wavparse->byteoffset = 0;
+          flush = 0;
+          break;
 
-	case GST_RIFF_TAG_fmt:
-	  gst_wavparse_parse_fmt (wavparse, chunk.size);
-	  flush = 0;
-	  break;
+        case GST_RIFF_TAG_fmt:
+          gst_wavparse_parse_fmt (wavparse, chunk.size);
+          flush = 0;
+          break;
 
-	case GST_RIFF_TAG_cue:
-	  //gst_wavparse_parse_cues (wavparse, chunk.size);
-	  break;
+        case GST_RIFF_TAG_cue:
+          //gst_wavparse_parse_cues (wavparse, chunk.size);
+          break;
 
-	case GST_RIFF_TAG_LIST:
-	  GST_DEBUG ("list type: %4.4s", (char *) &chunk.type);
-	  switch (chunk.type) {
-	    case GST_RIFF_LIST_INFO:
-	      //gst_wavparse_parse_info (wavparse, chunk.size - 4);
-	      //flush = 0;
+        case GST_RIFF_TAG_LIST:
+          GST_DEBUG ("list type: %4.4s", (char *) &chunk.type);
+          switch (chunk.type) {
+            case GST_RIFF_LIST_INFO:
+              //gst_wavparse_parse_info (wavparse, chunk.size - 4);
+              //flush = 0;
 
-	      break;
+              break;
 
-	    case GST_RIFF_LIST_adtl:
-	      //gst_wavparse_parse_adtl (wavparse, chunk.size - 4);
-	      //flush = 0;
-	      break;
+            case GST_RIFF_LIST_adtl:
+              //gst_wavparse_parse_adtl (wavparse, chunk.size - 4);
+              //flush = 0;
+              break;
 
-	    default:
-	      //flush = 0;
-	      break;
-	  }
+            default:
+              //flush = 0;
+              break;
+          }
 
-	default:
-	  GST_DEBUG ("  *****  unknown chunkid %08x", chunk.id);
-	  //flush = 0;
-	  break;
+        default:
+          GST_DEBUG ("  *****  unknown chunkid %08x", chunk.id);
+          //flush = 0;
+          break;
       }
       break;
 
@@ -897,10 +898,11 @@ gst_wavparse_get_formats (GstPad * pad)
   static GstFormat formats[] = {
     GST_FORMAT_TIME,
     GST_FORMAT_BYTES,
-    GST_FORMAT_DEFAULT,		/* a "frame", ie a set of samples per Hz */
+    GST_FORMAT_DEFAULT,         /* a "frame", ie a set of samples per Hz */
     0,
     0
   };
+
   return formats;
 }
 
@@ -921,7 +923,7 @@ gst_wavparse_pad_convert (GstPad * pad,
   bytes_per_sample = wavparse->channels * wavparse->width / 8;
   if (bytes_per_sample == 0) {
     GST_DEBUG ("bytes_per_sample 0, probably an mp3 - channels %d, width %d",
-	wavparse->channels, wavparse->width);
+        wavparse->channels, wavparse->width);
     return FALSE;
   }
   byterate = (glong) (bytes_per_sample * wavparse->rate);
@@ -951,33 +953,33 @@ gst_wavparse_pad_convert (GstPad * pad,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       if (*dest_format == GST_FORMAT_DEFAULT)
-	*dest_value = src_value / bytes_per_sample;
+        *dest_value = src_value / bytes_per_sample;
       else if (*dest_format == GST_FORMAT_TIME)
-	*dest_value = src_value * GST_SECOND / byterate;
+        *dest_value = src_value * GST_SECOND / byterate;
       else {
-	GST_DEBUG ("can't convert from bytes to other than units/time");
-	return FALSE;
+        GST_DEBUG ("can't convert from bytes to other than units/time");
+        return FALSE;
       }
 
       break;
     case GST_FORMAT_DEFAULT:
       if (*dest_format == GST_FORMAT_BYTES)
-	*dest_value = src_value * bytes_per_sample;
+        *dest_value = src_value * bytes_per_sample;
       else if (*dest_format == GST_FORMAT_TIME)
-	*dest_value = src_value * GST_SECOND / wavparse->rate;
+        *dest_value = src_value * GST_SECOND / wavparse->rate;
       else {
-	GST_DEBUG ("can't convert from units to other than bytes/time");
-	return FALSE;
+        GST_DEBUG ("can't convert from units to other than bytes/time");
+        return FALSE;
       }
       break;
     case GST_FORMAT_TIME:
       if (*dest_format == GST_FORMAT_BYTES)
-	*dest_value = src_value * byterate / GST_SECOND;
+        *dest_value = src_value * byterate / GST_SECOND;
       else if (*dest_format == GST_FORMAT_DEFAULT)
-	*dest_value = src_value * wavparse->rate / GST_SECOND;
+        *dest_value = src_value * wavparse->rate / GST_SECOND;
       else {
-	GST_DEBUG ("can't convert from time to other than bytes/units");
-	return FALSE;
+        GST_DEBUG ("can't convert from time to other than bytes/units");
+        return FALSE;
       }
 
       *dest_value = *dest_value & ~(bytes_per_sample - 1);
@@ -997,6 +999,7 @@ gst_wavparse_get_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     0
   };
+
   return types;
 }
 
@@ -1016,12 +1019,12 @@ gst_wavparse_pad_query (GstPad * pad, GstQueryType type,
   /* only support byte, time and unit queries */
   wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
   if (!gst_pad_query (GST_PAD_PEER (wavparse->sinkpad), type,
-	  &peer_format, &peer_value)) {
+          &peer_format, &peer_value)) {
     GST_DEBUG ("Could not query sink pad's peer");
     return FALSE;
   }
   if (!gst_pad_convert (wavparse->sinkpad, peer_format, peer_value,
-	  format, value)) {
+          format, value)) {
     GST_DEBUG ("Could not convert sink pad's peer");
     return FALSE;
   }
@@ -1036,6 +1039,7 @@ gst_wavparse_get_event_masks (GstPad * pad)
     {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH},
     {0,}
   };
+
   return gst_wavparse_src_event_masks;
 }
 
@@ -1056,7 +1060,7 @@ gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event)
 
       /* we can only seek when in the DATA state */
       if (wavparse->state != GST_WAVPARSE_DATA) {
-	return FALSE;
+        return FALSE;
       }
 
       format = GST_FORMAT_BYTES;
@@ -1064,14 +1068,14 @@ gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event)
       /* bring format to bytes for the peer element, 
        * FIXME be smarter here */
       res = gst_pad_convert (pad,
-	  GST_EVENT_SEEK_FORMAT (event),
-	  GST_EVENT_SEEK_OFFSET (event), &format, &byteoffset);
+          GST_EVENT_SEEK_FORMAT (event),
+          GST_EVENT_SEEK_OFFSET (event), &format, &byteoffset);
 
       if (res) {
-	/* ok, seek worked, update our state */
-	wavparse->seek_offset = byteoffset;
-	wavparse->seek_pending = TRUE;
-	wavparse->need_discont = TRUE;
+        /* ok, seek worked, update our state */
+        wavparse->seek_offset = byteoffset;
+        wavparse->seek_pending = TRUE;
+        wavparse->need_discont = TRUE;
       }
       break;
     }

@@ -35,8 +35,8 @@
 #endif
 #include <gst/gst.h>
 #include "gstfilter.h"
-#include <math.h>		/* M_PI */
-#include <string.h>		/* memmove */
+#include <math.h>               /* M_PI */
+#include <string.h>             /* memmove */
 
 static GstElementDetails gst_lpwsinc_details = GST_ELEMENT_DETAILS ("LPWSinc",
     "Filter/Effect/Audio",
@@ -77,10 +77,10 @@ struct _GstLPWSinc
   GstPad *sinkpad, *srcpad;
 
   double frequency;
-  int wing_size;		/* length of a "wing" of the filter; 
-				   actual length is 2 * wing_size + 1 */
+  int wing_size;                /* length of a "wing" of the filter; 
+                                   actual length is 2 * wing_size + 1 */
 
-  gfloat *residue;		/* buffer for left-over samples from previous buffer */
+  gfloat *residue;              /* buffer for left-over samples from previous buffer */
   double *kernel;
 };
 
@@ -122,7 +122,7 @@ gst_lpwsinc_get_type (void)
     };
 
     lpwsinc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstLPWSinc",
-	&lpwsinc_info, 0);
+        &lpwsinc_info, 0);
   }
   return lpwsinc_type;
 }
@@ -154,12 +154,12 @@ gst_lpwsinc_class_init (GstLPWSincClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY,
       g_param_spec_double ("frequency", "Frequency",
-	  "Cut-off Frequency relative to sample rate)",
-	  0.0, 0.5, 0, G_PARAM_READWRITE));
+          "Cut-off Frequency relative to sample rate)",
+          0.0, 0.5, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LENGTH,
       g_param_spec_int ("length", "Length",
-	  "N such that the filter length = 2N + 1",
-	  1, G_MAXINT, 1, G_PARAM_READWRITE));
+          "N such that the filter length = 2N + 1",
+          1, G_MAXINT, 1, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_lpwsinc_set_property;
   gobject_class->get_property = gst_lpwsinc_get_property;
@@ -210,10 +210,10 @@ gst_lpwsinc_sink_connect (GstPad * pad, const GstCaps * caps)
 
     for (i = 0; i <= len * 2; ++i) {
       if (i == len)
-	filter->kernel[i] = 2 * M_PI * filter->frequency;
+        filter->kernel[i] = 2 * M_PI * filter->frequency;
       else
-	filter->kernel[i] = sin (2 * M_PI * filter->frequency * (i - len))
-	    / (i - len);
+        filter->kernel[i] = sin (2 * M_PI * filter->frequency * (i - len))
+            / (i - len);
       /* windowing */
       filter->kernel[i] *= (0.54 - 0.46 * cos (M_PI * i / len));
     }

@@ -171,9 +171,10 @@ gst_alawenc_get_type (void)
       0,
       (GInstanceInitFunc) gst_alawenc_init,
     };
+
     alawenc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstALawEnc", &alawenc_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstALawEnc", &alawenc_info,
+        0);
   }
   return alawenc_type;
 }

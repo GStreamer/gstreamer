@@ -23,8 +23,8 @@
 
 #include <gst/gst.h>
 #include "mikmod_types.h"
-#include <string.h>		/* memcmp */
-#include <ctype.h>		/* isdigit */
+#include <string.h>             /* memcmp */
+#include <ctype.h>              /* isdigit */
 
 #define MODULEHEADERSIZE 0x438
 

@@ -79,8 +79,9 @@ gst_navigationtest_get_type (void)
       0,
       gst_navigationtest_init,
     };
+
     navigationtest_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
-	"GstNavigationtest", &navigationtest_info, 0);
+        "GstNavigationtest", &navigationtest_info, 0);
   }
   return navigationtest_type;
 }
@@ -106,7 +107,7 @@ gst_navigationtest_base_init (gpointer g_class)
 
   for (i = 0; i < G_N_ELEMENTS (gst_navigationtest_formats); i++) {
     gst_videofilter_class_add_format (videofilter_class,
-	gst_navigationtest_formats + i);
+        gst_navigationtest_formats + i);
   }
 
   gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
@@ -124,8 +125,8 @@ gst_navigationtest_class_init (gpointer g_class, gpointer class_data)
 #if 0
   g_object_class_install_property (gobject_class, ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
-	  GST_TYPE_NAVIGATIONTEST_METHOD, GST_NAVIGATIONTEST_METHOD_1,
-	  G_PARAM_READWRITE));
+          GST_TYPE_NAVIGATIONTEST_METHOD, GST_NAVIGATIONTEST_METHOD_1,
+          G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_navigationtest_set_property;
@@ -161,9 +162,9 @@ gst_navigationtest_handle_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
       gst_structure_get_double (event->event_data.structure.structure,
-	  "pointer_x", &navigationtest->x);
+          "pointer_x", &navigationtest->x);
       gst_structure_get_double (event->event_data.structure.structure,
-	  "pointer_y", &navigationtest->y);
+          "pointer_y", &navigationtest->y);
       break;
     default:
       break;

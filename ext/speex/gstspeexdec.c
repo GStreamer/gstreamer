@@ -77,9 +77,10 @@ gst_speexdec_get_type (void)
       0,
       (GInstanceInitFunc) gst_speexdec_init,
     };
+
     speexdec_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstSpeexDec", &speexdec_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstSpeexDec", &speexdec_info,
+        0);
   }
   return speexdec_type;
 }
@@ -89,18 +90,18 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-speex, "
-	"rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
     );
 
 static GstStaticPadTemplate speex_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) true, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) true, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
     );
 
 static void
@@ -157,12 +158,12 @@ gst_speexdec_sinkconnect (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (structure, "rate", &rate);
 
   if (gst_pad_set_explicit_caps (speexdec->srcpad,
-	  gst_caps_new_simple ("audio/x-raw-int",
-	      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-	      "signed", G_TYPE_BOOLEAN, TRUE,
-	      "width", G_TYPE_INT, 16,
-	      "depth", G_TYPE_INT, 16,
-	      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, 1, NULL))) {
+          gst_caps_new_simple ("audio/x-raw-int",
+              "endianness", G_TYPE_INT, G_BYTE_ORDER,
+              "signed", G_TYPE_BOOLEAN, TRUE,
+              "width", G_TYPE_INT, 16,
+              "depth", G_TYPE_INT, 16,
+              "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, 1, NULL))) {
     return GST_PAD_LINK_OK;
   }
   return GST_PAD_LINK_REFUSED;

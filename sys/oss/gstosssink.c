@@ -92,11 +92,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) { TRUE, FALSE }, "
-	"width = (int) { 8, 16 }, "
-	"depth = (int) { 8, 16 }, "
-	"rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) { TRUE, FALSE }, "
+        "width = (int) { 8, 16 }, "
+        "depth = (int) { 8, 16 }, "
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 static GstElementClass *parent_class = NULL;
@@ -119,9 +119,10 @@ gst_osssink_get_type (void)
       0,
       (GInstanceInitFunc) gst_osssink_init,
     };
+
     osssink_type =
-	g_type_register_static (GST_TYPE_OSSELEMENT, "GstOssSink",
-	&osssink_info, 0);
+        g_type_register_static (GST_TYPE_OSSELEMENT, "GstOssSink",
+        &osssink_info, 0);
   }
 
   return osssink_type;
@@ -159,23 +160,23 @@ gst_osssink_class_init (GstOssSinkClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE,
       g_param_spec_boolean ("mute", "Mute", "Mute the audio",
-	  FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
       g_param_spec_boolean ("sync", "Sync",
-	  "If syncing on timestamps should be enabled", TRUE,
-	  G_PARAM_READWRITE));
+          "If syncing on timestamps should be enabled", TRUE,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAGMENT,
       g_param_spec_int ("fragment", "Fragment",
-	  "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
-	  0, G_MAXINT, 6, G_PARAM_READWRITE));
+          "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
+          0, G_MAXINT, 6, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFER_SIZE,
       g_param_spec_uint ("buffer_size", "Buffer size",
-	  "Size of buffers in osssink's bufferpool (bytes)", 0, G_MAXINT, 4096,
-	  G_PARAM_READWRITE));
+          "Size of buffers in osssink's bufferpool (bytes)", 0, G_MAXINT, 4096,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CHUNK_SIZE,
       g_param_spec_uint ("chunk_size", "Chunk size",
-	  "Write data in chunk sized buffers", 0, G_MAXUINT, 4096,
-	  G_PARAM_READWRITE));
+          "Write data in chunk sized buffers", 0, G_MAXUINT, 4096,
+          G_PARAM_READWRITE));
 
   gst_osssink_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -367,17 +368,17 @@ gst_osssink_chain (GstPad * pad, GstData * _data)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
-	ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_SYNC, 0);
-	gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssink->provided_clock),
-	    FALSE);
-	gst_pad_event_default (pad, event);
-	return;
+        ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_SYNC, 0);
+        gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssink->provided_clock),
+            FALSE);
+        gst_pad_event_default (pad, event);
+        return;
       case GST_EVENT_DISCONTINUOUS:
-	osssink->resync = TRUE;
-	/* pass-through */
+        osssink->resync = TRUE;
+        /* pass-through */
       default:
-	gst_pad_event_default (pad, event);
-	return;
+        gst_pad_event_default (pad, event);
+        return;
     }
     g_assert_not_reached ();
   }
@@ -385,7 +386,7 @@ gst_osssink_chain (GstPad * pad, GstData * _data)
   if (!GST_OSSELEMENT (osssink)->bps) {
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (osssink, CORE, NEGOTIATION, (NULL),
-	("format wasn't negotiated before chain function"));
+        ("format wasn't negotiated before chain function"));
     return;
   }
 
@@ -409,8 +410,8 @@ gst_osssink_chain (GstPad * pad, GstData * _data)
   if (MAX (buftime, soundtime) - MIN (buftime, soundtime) > (GST_SECOND / 10)) {
     /* we need to adjust to the buffers here */
     GST_INFO_OBJECT (osssink,
-	"need sync: real %" G_GUINT64_FORMAT ", buffer: %" G_GUINT64_FORMAT,
-	soundtime, buftime);
+        "need sync: real %" G_GUINT64_FORMAT ", buffer: %" G_GUINT64_FORMAT,
+        soundtime, buftime);
     if (soundtime > buftime) {
       /* do *not* throw frames out. It's useless. The next frame will come in
        * too late. And the next one. And so on. We don't want to lose sound.
@@ -418,34 +419,34 @@ gst_osssink_chain (GstPad * pad, GstData * _data)
        * sending events upstream to drop buffers. */
     } else {
       guint64 to_handle =
-	  (((buftime -
-		  soundtime) * GST_OSSELEMENT (osssink)->bps / GST_SECOND) /
-	  ((GST_OSSELEMENT (osssink)->width / 8) *
-	      GST_OSSELEMENT (osssink)->channels)) *
-	  (GST_OSSELEMENT (osssink)->width / 8) *
-	  GST_OSSELEMENT (osssink)->channels;
+          (((buftime -
+                  soundtime) * GST_OSSELEMENT (osssink)->bps / GST_SECOND) /
+          ((GST_OSSELEMENT (osssink)->width / 8) *
+              GST_OSSELEMENT (osssink)->channels)) *
+          (GST_OSSELEMENT (osssink)->width / 8) *
+          GST_OSSELEMENT (osssink)->channels;
 
       if (!osssink->resync) {
-	guint8 *buf = g_new (guint8, to_handle);
+        guint8 *buf = g_new (guint8, to_handle);
 
-	memset (buf, (GST_OSSELEMENT (osssink)->width == 8) ? 0 : 128,
-	    to_handle);
-	while (to_handle > 0) {
-	  gint done = write (GST_OSSELEMENT (osssink)->fd, buf,
-	      MIN (to_handle, osssink->chunk_size));
+        memset (buf, (GST_OSSELEMENT (osssink)->width == 8) ? 0 : 128,
+            to_handle);
+        while (to_handle > 0) {
+          gint done = write (GST_OSSELEMENT (osssink)->fd, buf,
+              MIN (to_handle, osssink->chunk_size));
 
-	  if (done == -1 && errno != EINTR) {
-	    break;
-	  } else {
-	    to_handle -= done;
-	    osssink->handled += done;
-	  }
-	}
-	g_free (buf);
+          if (done == -1 && errno != EINTR) {
+            break;
+          } else {
+            to_handle -= done;
+            osssink->handled += done;
+          }
+        }
+        g_free (buf);
       } else {
-	/* Timestamps at start-of-stream (MPEG) or after seek (hey,
-	 * again MPEG!) can be borken, therefore this hacklet. */
-	osssink->handled += to_handle;
+        /* Timestamps at start-of-stream (MPEG) or after seek (hey,
+         * again MPEG!) can be borken, therefore this hacklet. */
+        osssink->handled += to_handle;
       }
     }
   }
@@ -454,17 +455,17 @@ gst_osssink_chain (GstPad * pad, GstData * _data)
     if (!osssink->mute) {
 
       while (to_write > 0) {
-	gint done = write (GST_OSSELEMENT (osssink)->fd, data,
-	    MIN (to_write, osssink->chunk_size));
+        gint done = write (GST_OSSELEMENT (osssink)->fd, data,
+            MIN (to_write, osssink->chunk_size));
 
-	if (done == -1) {
-	  if (errno != EINTR)
-	    break;
-	} else {
-	  to_write -= done;
-	  data += done;
-	  osssink->handled += done;
-	}
+        if (done == -1) {
+          if (errno != EINTR)
+            break;
+        } else {
+          to_write -= done;
+          data += done;
+          osssink->handled += done;
+        }
       }
     } else {
       g_warning ("muting osssinks unimplemented wrt clocks!");
@@ -486,6 +487,7 @@ gst_osssink_get_formats (GstPad * pad)
     GST_FORMAT_BYTES,
     0
   };
+
   return formats;
 }
 
@@ -509,6 +511,7 @@ gst_osssink_get_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     0,
   };
+
   return query_types;
 }
 
@@ -524,22 +527,22 @@ gst_osssink_sink_query (GstPad * pad, GstQueryType type, GstFormat * format,
   switch (type) {
     case GST_QUERY_LATENCY:
       if (!gst_osssink_convert (pad,
-	      GST_FORMAT_BYTES, gst_osssink_get_delay (osssink),
-	      format, value)) {
-	res = FALSE;
+              GST_FORMAT_BYTES, gst_osssink_get_delay (osssink),
+              format, value)) {
+        res = FALSE;
       }
       break;
     case GST_QUERY_POSITION:
       if (!gst_osssink_convert (pad,
-	      GST_FORMAT_TIME, gst_element_get_time (GST_ELEMENT (osssink)),
-	      format, value)) {
-	res = FALSE;
+              GST_FORMAT_TIME, gst_element_get_time (GST_ELEMENT (osssink)),
+              format, value)) {
+        res = FALSE;
       }
       break;
     default:
       res =
-	  gst_pad_query (gst_pad_get_peer (osssink->sinkpad), type, format,
-	  value);
+          gst_pad_query (gst_pad_get_peer (osssink->sinkpad), type, format,
+          value);
       break;
   }
 
@@ -631,17 +634,17 @@ gst_osssink_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssink->provided_clock),
-	  TRUE);
+          TRUE);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN))
-	ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_RESET, 0);
+        ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_RESET, 0);
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssink->provided_clock),
-	  FALSE);
+          FALSE);
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN))
-	ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_RESET, 0);
+        ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_RESET, 0);
       gst_osselement_reset (GST_OSSELEMENT (osssink));
       osssink->handled = 0;
       osssink->resync = TRUE;

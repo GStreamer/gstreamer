@@ -46,9 +46,9 @@ plugin_init (GstPlugin * plugin)
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, mulaw_caps);
 
   if (!gst_element_register (plugin, "mulawenc",
-	  GST_RANK_NONE, GST_TYPE_MULAWENC) ||
+          GST_RANK_NONE, GST_TYPE_MULAWENC) ||
       !gst_element_register (plugin, "mulawdec",
-	  GST_RANK_PRIMARY, GST_TYPE_MULAWDEC))
+          GST_RANK_PRIMARY, GST_TYPE_MULAWDEC))
     return FALSE;
 
   return TRUE;

@@ -56,7 +56,8 @@ typedef enum
   GST_FLAC_TAG_STATE_VC_METADATA_BLOCK,
   GST_FLAC_TAG_STATE_ADD_VORBIS_COMMENT,
   GST_FLAC_TAG_STATE_AUDIO_DATA
-} GstFlacTagState;
+}
+GstFlacTagState;
 
 
 struct _GstFlacTag
@@ -157,11 +158,11 @@ gst_flac_tag_get_type (void)
     };
 
     flac_tag_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstFlacTag", &flac_tag_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstFlacTag", &flac_tag_info,
+        0);
 
     g_type_add_interface_static (flac_tag_type, GST_TYPE_TAG_SETTER,
-	&tag_setter_info);
+        &tag_setter_info);
 
   }
   return flac_tag_type;
@@ -189,8 +190,8 @@ send_eos (GstFlacTag * tag)
   gst_pad_push (tag->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
   /* Seek to end of sink stream */
   if (gst_pad_send_event (GST_PAD_PEER (tag->sinkpad),
-	  gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_END |
-	      GST_SEEK_FLAG_FLUSH, 0))) {
+          gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_END |
+              GST_SEEK_FLAG_FLUSH, 0))) {
   } else {
     g_warning ("Couldn't seek to eos on sinkpad\n");
   }
@@ -209,8 +210,8 @@ caps_nego (GstFlacTag * tag)
     GST_LOG_OBJECT (tag, "normal operation, using audio/x-flac output");
   } else {
     if (gst_pad_try_set_caps (tag->srcpad,
-	    gst_caps_new_simple ("application/x-gst-tags", NULL))
-	!= GST_PAD_LINK_REFUSED) {
+            gst_caps_new_simple ("application/x-gst-tags", NULL))
+        != GST_PAD_LINK_REFUSED) {
       tag->only_output_tags = TRUE;
       GST_LOG_OBJECT (tag, "fast operation, just outputting tags");
       printf ("output tags only\n");
@@ -295,7 +296,7 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
     }
 
     if (strncmp (GST_BUFFER_DATA (tag->buffer), FLAC_MAGIC,
-	    FLAC_MAGIC_SIZE) == 0) {
+            FLAC_MAGIC_SIZE) == 0) {
       GstBuffer *sub;
 
       tag->state = GST_FLAC_TAG_STATE_METADATA_BLOCKS;
@@ -303,8 +304,8 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
 
       gst_pad_push (tag->srcpad, GST_DATA (sub));
       sub =
-	  gst_buffer_create_sub (tag->buffer, FLAC_MAGIC_SIZE,
-	  GST_BUFFER_SIZE (tag->buffer) - FLAC_MAGIC_SIZE);
+          gst_buffer_create_sub (tag->buffer, FLAC_MAGIC_SIZE,
+          GST_BUFFER_SIZE (tag->buffer) - FLAC_MAGIC_SIZE);
       gst_buffer_unref (tag->buffer);
       /* We do a copy because we need a writable buffer, and _create_sub
        * sets the buffer it uses to read-only
@@ -347,8 +348,8 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
 
     type = (GST_BUFFER_DATA (tag->buffer)[0]) & 0x7F;
     size = ((GST_BUFFER_DATA (tag->buffer)[1]) << 16)
-	| ((GST_BUFFER_DATA (tag->buffer)[2]) << 8)
-	| (GST_BUFFER_DATA (tag->buffer)[3]);
+        | ((GST_BUFFER_DATA (tag->buffer)[2]) << 8)
+        | (GST_BUFFER_DATA (tag->buffer)[3]);
 
     /* The 4 bytes long header isn't included in the metadata size */
     tag->metadata_bytes_remaining = size + 4;
@@ -372,7 +373,7 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
     g_assert (tag->metadata_bytes_remaining != 0);
 
     bytes_to_push = min (tag->metadata_bytes_remaining,
-	GST_BUFFER_SIZE (tag->buffer));
+        GST_BUFFER_SIZE (tag->buffer));
 
     sub = gst_buffer_create_sub (tag->buffer, 0, bytes_to_push);
 
@@ -380,14 +381,14 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
       gst_pad_push (tag->srcpad, GST_DATA (sub));
     } else {
       if (tag->vorbiscomment == NULL) {
-	tag->vorbiscomment = sub;
+        tag->vorbiscomment = sub;
       } else {
-	GstBuffer *merge;
+        GstBuffer *merge;
 
-	merge = gst_buffer_merge (tag->vorbiscomment, sub);
-	gst_buffer_unref (tag->vorbiscomment);
-	gst_buffer_unref (sub);
-	tag->vorbiscomment = merge;
+        merge = gst_buffer_merge (tag->vorbiscomment, sub);
+        gst_buffer_unref (tag->vorbiscomment);
+        gst_buffer_unref (sub);
+        tag->vorbiscomment = merge;
       }
     }
 
@@ -397,7 +398,7 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
       GstBuffer *sub;
 
       sub = gst_buffer_create_sub (tag->buffer, bytes_to_push,
-	  GST_BUFFER_SIZE (tag->buffer) - bytes_to_push);
+          GST_BUFFER_SIZE (tag->buffer) - bytes_to_push);
       gst_buffer_unref (tag->buffer);
 
       /* We make a copy because we need a writable buffer, and _create_sub
@@ -431,17 +432,17 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
        * that we encoutered some tags
        */
       tag->tags = gst_tag_list_from_vorbiscomment_buffer (tag->vorbiscomment,
-	  GST_BUFFER_DATA (tag->vorbiscomment), 4, NULL);
+          GST_BUFFER_DATA (tag->vorbiscomment), 4, NULL);
       if (tag->tags != NULL) {
-	gst_element_found_tags (GST_ELEMENT (tag), tag->tags);
+        gst_element_found_tags (GST_ELEMENT (tag), tag->tags);
       }
 
       gst_buffer_unref (tag->vorbiscomment);
       tag->vorbiscomment = NULL;
 
       if (tag->only_output_tags) {
-	send_eos (tag);
-	return;
+        send_eos (tag);
+        return;
       }
     }
 
@@ -450,13 +451,13 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
       tag->state = GST_FLAC_TAG_STATE_METADATA_BLOCKS;
     } else {
       if (tag->only_output_tags) {
-	/* If we finished parsing the metadata blocks, we will never find any
-	 * metadata, so just stop now
-	 */
-	send_eos (tag);
-	return;
+        /* If we finished parsing the metadata blocks, we will never find any
+         * metadata, so just stop now
+         */
+        send_eos (tag);
+        return;
       } else {
-	tag->state = GST_FLAC_TAG_STATE_ADD_VORBIS_COMMENT;
+        tag->state = GST_FLAC_TAG_STATE_ADD_VORBIS_COMMENT;
       }
     }
   }
@@ -475,7 +476,7 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
 
     user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (tag));
     merged_tags = gst_tag_list_merge (tag->tags, user_tags,
-	gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
+        gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
 
     if (merged_tags == NULL) {
       /* If we get a NULL list of tags, we must generate a padding block
@@ -485,37 +486,37 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
       g_warning ("No tags found\n");
       buffer = gst_buffer_new_and_alloc (12);
       if (buffer == NULL) {
-	GST_ELEMENT_ERROR (tag, CORE, TOO_LAZY, (NULL),
-	    ("Error creating 12-byte buffer for padding block"));
+        GST_ELEMENT_ERROR (tag, CORE, TOO_LAZY, (NULL),
+            ("Error creating 12-byte buffer for padding block"));
       }
       memset (GST_BUFFER_DATA (buffer), 0, GST_BUFFER_SIZE (buffer));
-      GST_BUFFER_DATA (buffer)[0] = 0x81;	/* 0x80 = Last metadata block, 
-						 * 0x01 = padding block
-						 */
+      GST_BUFFER_DATA (buffer)[0] = 0x81;       /* 0x80 = Last metadata block, 
+                                                 * 0x01 = padding block
+                                                 */
     } else {
       guchar header[4];
 
       memset (header, 0, sizeof (header));
-      header[0] = 0x84;		/* 0x80 = Last metadata block, 
-				 * 0x04 = vorbiscomment block
-				 */
+      header[0] = 0x84;         /* 0x80 = Last metadata block, 
+                                 * 0x04 = vorbiscomment block
+                                 */
       buffer = gst_tag_list_to_vorbiscomment_buffer (merged_tags, header,
-	  sizeof (header), NULL);
+          sizeof (header), NULL);
       gst_tag_list_free (merged_tags);
       if (buffer == NULL) {
-	GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
-	    ("Error converting tag list to vorbiscomment buffer"));
-	return;
+        GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
+            ("Error converting tag list to vorbiscomment buffer"));
+        return;
       }
       size = GST_BUFFER_SIZE (buffer) - 4;
       if ((size > 0xFFFFFF) || (size < 0)) {
-	/* FLAC vorbis comment blocks are limited to 2^24 bytes, 
-	 * while the vorbis specs allow more than that. Shouldn't 
-	 * be a real world problem though
-	 */
-	GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
-	    ("Vorbis comment of size %d too long", size));
-	return;
+        /* FLAC vorbis comment blocks are limited to 2^24 bytes, 
+         * while the vorbis specs allow more than that. Shouldn't 
+         * be a real world problem though
+         */
+        GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
+            ("Vorbis comment of size %d too long", size));
+        return;
       }
     }
 
@@ -559,15 +560,15 @@ gst_flac_tag_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (tag->buffer) {
-	gst_buffer_unref (tag->buffer);
-	tag->buffer = NULL;
+        gst_buffer_unref (tag->buffer);
+        tag->buffer = NULL;
       }
       if (tag->vorbiscomment) {
-	gst_buffer_unref (tag->vorbiscomment);
-	tag->vorbiscomment = NULL;
+        gst_buffer_unref (tag->vorbiscomment);
+        tag->vorbiscomment = NULL;
       }
       if (tag->tags) {
-	gst_tag_list_free (tag->tags);
+        gst_tag_list_free (tag->tags);
       }
       tag->state = GST_FLAC_TAG_STATE_INIT;
       break;

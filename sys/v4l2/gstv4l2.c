@@ -37,9 +37,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "v4l2element",
-	  GST_RANK_NONE, GST_TYPE_V4L2ELEMENT) ||
+          GST_RANK_NONE, GST_TYPE_V4L2ELEMENT) ||
       !gst_element_register (plugin, "v4l2src",
-	  GST_RANK_NONE, GST_TYPE_V4L2SRC))
+          GST_RANK_NONE, GST_TYPE_V4L2SRC))
     return FALSE;
 
 #ifdef ENABLE_NLS

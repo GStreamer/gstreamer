@@ -25,8 +25,8 @@
 
 #include <glib.h>
 
-#define ZEROTRAP		/* turn on the trap as per the MIL-STD */
-#define BIAS 0x84		/* define the add-in bias for 16 bit samples */
+#define ZEROTRAP                /* turn on the trap as per the MIL-STD */
+#define BIAS 0x84               /* define the add-in bias for 16 bit samples */
 #define CLIP 32635
 
 void
@@ -56,11 +56,11 @@ mulaw_encode (gint16 * in, guint8 * out, gint numsamples)
   for (i = 0; i < numsamples; i++) {
     sample = in[i];
       /** get the sample into sign-magnitude **/
-    sign = (sample >> 8) & 0x80;	/* set aside the sign */
+    sign = (sample >> 8) & 0x80;        /* set aside the sign */
     if (sign != 0)
-      sample = -sample;		/* get magnitude */
+      sample = -sample;         /* get magnitude */
     if (sample > CLIP)
-      sample = CLIP;		/* clip the magnitude */
+      sample = CLIP;            /* clip the magnitude */
       /** convert from 16 bit linear to ulaw **/
     sample = sample + BIAS;
     exponent = exp_lut[(sample >> 7) & 0xFF];
@@ -68,7 +68,7 @@ mulaw_encode (gint16 * in, guint8 * out, gint numsamples)
     ulawbyte = ~(sign | (exponent << 4) | mantissa);
 #ifdef ZEROTRAP
     if (ulawbyte == 0)
-      ulawbyte = 0x02;		/* optional CCITT trap */
+      ulawbyte = 0x02;          /* optional CCITT trap */
 #endif
     out[i] = ulawbyte;
   }

@@ -84,9 +84,10 @@ gst_jpegenc_get_type (void)
       0,
       (GInstanceInitFunc) gst_jpegenc_init,
     };
+
     jpegenc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstJpegEnc", &jpegenc_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstJpegEnc", &jpegenc_info,
+        0);
   }
   return jpegenc_type;
 }
@@ -103,8 +104,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/jpeg, "
-	"width = (int) [ 16, 4096 ], "
-	"height = (int) [ 16, 4096 ], " "framerate = (double) [ 1, MAX ]")
+        "width = (int) [ 16, 4096 ], "
+        "height = (int) [ 16, 4096 ], " "framerate = (double) [ 1, MAX ]")
     );
 
 static void
@@ -137,12 +138,12 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
 
   g_object_class_install_property (gobject_class, ARG_QUALITY,
       g_param_spec_int ("quality", "Quality", "Quality of encoding",
-	  0, 100, 85, G_PARAM_READWRITE));
+          0, 100, 85, G_PARAM_READWRITE));
 #if 0
   /* disabled, since it doesn't seem to work */
   g_object_class_install_property (gobject_class, ARG_SMOOTHING,
       g_param_spec_int ("smoothing", "Smoothing", "Smoothing factor",
-	  0, 100, 0, G_PARAM_READWRITE));
+          0, 100, 0, G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_jpegenc_set_property;
@@ -314,12 +315,12 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
       jpegenc->cinfo.comp_info[2].v_samp_factor = 1;
 
       if (height != -1) {
-	jpegenc->line[0] =
-	    g_realloc (jpegenc->line[0], height * sizeof (char *));
-	jpegenc->line[1] =
-	    g_realloc (jpegenc->line[1], height * sizeof (char *) / 2);
-	jpegenc->line[2] =
-	    g_realloc (jpegenc->line[2], height * sizeof (char *) / 2);
+        jpegenc->line[0] =
+            g_realloc (jpegenc->line[0], height * sizeof (char *));
+        jpegenc->line[1] =
+            g_realloc (jpegenc->line[1], height * sizeof (char *) / 2);
+        jpegenc->line[2] =
+            g_realloc (jpegenc->line[2], height * sizeof (char *) / 2);
       }
 
       GST_DEBUG ("gst_jpegenc_resync: setting format done");

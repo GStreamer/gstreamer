@@ -88,15 +88,15 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN)
     );
 
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",	/* the name of the pads */
-    GST_PAD_SINK,		/* type of the pad */
-    GST_PAD_ALWAYS,		/* ALWAYS/SOMETIMES */
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",    /* the name of the pads */
+    GST_PAD_SINK,               /* type of the pad */
+    GST_PAD_ALWAYS,             /* ALWAYS/SOMETIMES */
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) TRUE, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 2 ]")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) TRUE, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 
@@ -134,6 +134,7 @@ gst_goom_get_type (void)
       0,
       (GInstanceInitFunc) gst_goom_init,
     };
+
     type = g_type_register_static (GST_TYPE_ELEMENT, "GstGOOM", &info, 0);
   }
   return type;
@@ -190,7 +191,7 @@ gst_goom_init (GstGOOM * goom)
 
   goom->width = 320;
   goom->height = 200;
-  goom->fps = 25.;		/* desired frame rate */
+  goom->fps = 25.;              /* desired frame rate */
   goom->channels = 0;
   /* set to something */
   goom_init (50, 50);
@@ -258,7 +259,7 @@ gst_goom_src_fixate (GstPad * pad, const GstCaps * caps)
     return newcaps;
   }
   if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
-	  30.0)) {
+          30.0)) {
     return newcaps;
   }
 
@@ -287,22 +288,22 @@ gst_goom_chain (GstPad * pad, GstData * _data)
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
       {
-	gint64 value = 0;
+        gint64 value = 0;
 
-	gst_event_discont_get_value (event, GST_FORMAT_TIME, &value);
+        gst_event_discont_get_value (event, GST_FORMAT_TIME, &value);
 
-	goom->next_time = value;
+        goom->next_time = value;
       }
       default:
-	gst_pad_event_default (pad, event);
-	break;
+        gst_pad_event_default (pad, event);
+        break;
     }
     return;
   }
 
   if (goom->channels == 0) {
     GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
-	("format wasn't negotiated before chain function"));
+        ("format wasn't negotiated before chain function"));
 
     goto done;
   }

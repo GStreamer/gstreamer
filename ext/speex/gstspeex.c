@@ -27,11 +27,11 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "speexenc", GST_RANK_NONE,
-	  GST_TYPE_SPEEXENC))
+          GST_TYPE_SPEEXENC))
     return FALSE;
 
   if (!gst_element_register (plugin, "speexdec", GST_RANK_PRIMARY,
-	  GST_TYPE_SPEEXDEC))
+          GST_TYPE_SPEEXDEC))
     return FALSE;
 
   return TRUE;

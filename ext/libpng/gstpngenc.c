@@ -90,7 +90,7 @@ gst_pngenc_get_type (void)
     };
 
     pngenc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstPngEnc",
-	&pngenc_info, 0);
+        &pngenc_info, 0);
   }
   return pngenc_type;
 }
@@ -245,7 +245,7 @@ gst_pngenc_chain (GstPad * pad, GstData * _data)
   pngenc->png_info_ptr = png_create_info_struct (pngenc->png_struct_ptr);
   if (!pngenc->png_info_ptr) {
     png_destroy_read_struct (&(pngenc->png_struct_ptr), (png_infopp) NULL,
-	(png_infopp) NULL);
+        (png_infopp) NULL);
   }
 
   /* non-0 return is from a longjmp inside of libpng */
@@ -273,7 +273,7 @@ gst_pngenc_chain (GstPad * pad, GstData * _data)
 
   for (row_index = 0; row_index < pngenc->height; row_index++)
     row_pointers[row_index] = GST_BUFFER_DATA (buf) +
-	(pngenc->width * row_index * pngenc->bpp / 8);
+        (pngenc->width * row_index * pngenc->bpp / 8);
 
   png_write_info (pngenc->png_struct_ptr, pngenc->png_info_ptr);
   png_write_image (pngenc->png_struct_ptr, row_pointers);

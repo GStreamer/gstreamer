@@ -41,7 +41,8 @@ typedef enum _dice_dir
   DICE_RIGHT = 1,
   DICE_DOWN = 2,
   DICE_LEFT = 3
-} DiceDir;
+}
+DiceDir;
 
 struct _GstDiceTV
 {
@@ -112,8 +113,8 @@ gst_dicetv_get_type (void)
     };
 
     dicetv_type =
-	g_type_register_static (GST_TYPE_VIDEOFILTER, "GstDiceTV", &dicetv_info,
-	0);
+        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstDiceTV", &dicetv_info,
+        0);
   }
   return dicetv_type;
 }
@@ -146,7 +147,7 @@ gst_dicetv_base_init (gpointer g_class)
 
   for (i = 0; i < G_N_ELEMENTS (gst_dicetv_formats); i++) {
     gst_videofilter_class_add_format (videofilter_class,
-	gst_dicetv_formats + i);
+        gst_dicetv_formats + i);
   }
 
   gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
@@ -174,7 +175,7 @@ gst_dicetv_class_init (gpointer g_class, gpointer class_data)
 
   g_object_class_install_property (gobject_class, ARG_CUBE_BITS,
       g_param_spec_int ("square_bits", "Square Bits", "The size of the Squares",
-	  MIN_CUBE_BITS, MAX_CUBE_BITS, DEFAULT_CUBE_BITS, G_PARAM_READWRITE));
+          MIN_CUBE_BITS, MAX_CUBE_BITS, DEFAULT_CUBE_BITS, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_dicetv_set_property;
   gobject_class->get_property = gst_dicetv_get_property;
@@ -255,50 +256,50 @@ gst_dicetv_draw (GstVideofilter * videofilter, void *d, void *s)
       base = (map_y << g_cube_bits) * video_width + (map_x << g_cube_bits);
 
       switch (filter->dicemap[map_i]) {
-	case DICE_UP:
-	  for (dy = 0; dy < g_cube_size; dy++) {
-	    i = base + dy * video_width;
-	    for (dx = 0; dx < g_cube_size; dx++) {
-	      dest[i] = src[i];
-	      i++;
-	    }
-	  }
-	  break;
-	case DICE_LEFT:
-	  for (dy = 0; dy < g_cube_size; dy++) {
-	    i = base + dy * video_width;
+        case DICE_UP:
+          for (dy = 0; dy < g_cube_size; dy++) {
+            i = base + dy * video_width;
+            for (dx = 0; dx < g_cube_size; dx++) {
+              dest[i] = src[i];
+              i++;
+            }
+          }
+          break;
+        case DICE_LEFT:
+          for (dy = 0; dy < g_cube_size; dy++) {
+            i = base + dy * video_width;
 
-	    for (dx = 0; dx < g_cube_size; dx++) {
-	      di = base + (dx * video_width) + (g_cube_size - dy - 1);
-	      dest[di] = src[i];
-	      i++;
-	    }
-	  }
-	  break;
-	case DICE_DOWN:
-	  for (dy = 0; dy < g_cube_size; dy++) {
-	    di = base + dy * video_width;
-	    i = base + (g_cube_size - dy - 1) * video_width + g_cube_size;
-	    for (dx = 0; dx < g_cube_size; dx++) {
-	      i--;
-	      dest[di] = src[i];
-	      di++;
-	    }
-	  }
-	  break;
-	case DICE_RIGHT:
-	  for (dy = 0; dy < g_cube_size; dy++) {
-	    i = base + (dy * video_width);
-	    for (dx = 0; dx < g_cube_size; dx++) {
-	      di = base + dy + (g_cube_size - dx - 1) * video_width;
-	      dest[di] = src[i];
-	      i++;
-	    }
-	  }
-	  break;
-	default:
-	  g_assert_not_reached ();
-	  break;
+            for (dx = 0; dx < g_cube_size; dx++) {
+              di = base + (dx * video_width) + (g_cube_size - dy - 1);
+              dest[di] = src[i];
+              i++;
+            }
+          }
+          break;
+        case DICE_DOWN:
+          for (dy = 0; dy < g_cube_size; dy++) {
+            di = base + dy * video_width;
+            i = base + (g_cube_size - dy - 1) * video_width + g_cube_size;
+            for (dx = 0; dx < g_cube_size; dx++) {
+              i--;
+              dest[di] = src[i];
+              di++;
+            }
+          }
+          break;
+        case DICE_RIGHT:
+          for (dy = 0; dy < g_cube_size; dy++) {
+            i = base + (dy * video_width);
+            for (dx = 0; dx < g_cube_size; dx++) {
+              di = base + dy + (g_cube_size - dx - 1) * video_width;
+              dest[di] = src[i];
+              i++;
+            }
+          }
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
       }
       map_i++;
     }

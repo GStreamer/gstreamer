@@ -68,13 +68,16 @@ typedef union stack_entry_s
   {
     const double *left, *right;
     double *out;
-  } v;
+  }
+  v;
   struct
   {
     double *main, *null;
-  } b;
+  }
+  b;
 
-} stack_entry;
+}
+stack_entry;
 
 #define STACK_SIZE (CONVOLVE_DEPTH * 3)
 
@@ -175,11 +178,11 @@ convolve_run (stack_entry * top, unsigned size, double *scratch)
 
       /* Create the intermediate factors. */
       for (i = 0; i < size; i++) {
-	double l = left[i] + left[i + size];
-	double r = right[i] + right[i + size];
+        double l = left[i] + left[i + size];
+        double r = right[i] + right[i + size];
 
-	s_left[i + size] = r;
-	s_left[i] = l;
+        s_left[i + size] = r;
+        s_left[i] = l;
       }
 
       /* Push the combine entry onto the stack. */
@@ -227,15 +230,15 @@ convolve_run (stack_entry * top, unsigned size, double *scratch)
       top++;
       out[size * 2 - 1] = 0;
       for (i = 0; i < size - 1; i++) {
-	double lo;
-	double hi;
+        double lo;
+        double hi;
 
-	lo = mid[0] - (out[0] + out[2 * size]) + out[size];
-	hi = mid[size] - (out[size] + out[3 * size]) + out[2 * size];
-	out[size] = lo;
-	out[2 * size] = hi;
-	out++;
-	mid++;
+        lo = mid[0] - (out[0] + out[2 * size]) + out[size];
+        hi = mid[size] - (out[size] + out[3 * size]) + out[2 * size];
+        out[size] = lo;
+        out[2 * size] = hi;
+        out++;
+        mid++;
       }
       size <<= 1;
     } while (top->b.null == NULL);
@@ -281,7 +284,7 @@ convolve_match (const int *lastchoice,
   for (i = 0; i < 256; i++)
     right[i] -= avg;
   /* End-of-stack marker. */
-#if 	0			/* The following line produces a CRASH, need to figure out why?!! */
+#if 	0                       /* The following line produces a CRASH, need to figure out why?!! */
   top[1].b.null = scratch;
 #endif
   top[1].b.main = NULL;
@@ -327,11 +330,11 @@ convolve_match (const int *lastchoice,
       unsigned int j;
 
       for (j = 0; j < 256; j++)
-	tot += ((double) input[i + j]) * ((double) lastchoice[j] - avg);
+        tot += ((double) input[i + j]) * ((double) lastchoice[j] - avg);
       if (tot > best)
-	printf ("(%i)", i);
+        printf ("(%i)", i);
       if (tot != left[i + 255])
-	printf ("!");
+        printf ("!");
     }
 
     printf ("%i\n", p);

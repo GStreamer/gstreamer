@@ -38,15 +38,15 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "flacenc", GST_RANK_NONE,
-	  GST_TYPE_FLACENC))
+          GST_TYPE_FLACENC))
     return FALSE;
 
   if (!gst_element_register (plugin, "flacdec", GST_RANK_PRIMARY,
-	  GST_TYPE_FLACDEC))
+          GST_TYPE_FLACDEC))
     return FALSE;
 
   if (!gst_element_register (plugin, "flactag", GST_RANK_PRIMARY,
-	  gst_flac_tag_get_type ()))
+          gst_flac_tag_get_type ()))
     return FALSE;
 
   return TRUE;

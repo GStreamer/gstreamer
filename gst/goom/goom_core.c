@@ -67,21 +67,21 @@ goom_set_resolution (guint32 resx, guint32 resy)
 guint32 *
 goom_update (gint16 data[2][512])
 {
-  static int lockvar = 0;	/* pour empecher de nouveaux changements */
-  static int goomvar = 0;	/* boucle des gooms */
-  static int totalgoom = 0;	/* nombre de gooms par seconds */
-  static int agoom = 0;		/* un goom a eu lieu..       */
-  static int loopvar = 0;	/* mouvement des points */
-  static int speedvar = 0;	/* vitesse des particules */
-  static int lineMode = 0;	/* l'effet lineaire a dessiner */
+  static int lockvar = 0;       /* pour empecher de nouveaux changements */
+  static int goomvar = 0;       /* boucle des gooms */
+  static int totalgoom = 0;     /* nombre de gooms par seconds */
+  static int agoom = 0;         /* un goom a eu lieu..       */
+  static int loopvar = 0;       /* mouvement des points */
+  static int speedvar = 0;      /* vitesse des particules */
+  static int lineMode = 0;      /* l'effet lineaire a dessiner */
   guint32 *return_val;
   guint32 pointWidth;
   guint32 pointHeight;
-  int incvar;			/* volume du son */
-  int accelvar;			/* acceleration des particules */
+  int incvar;                   /* volume du son */
+  int accelvar;                 /* acceleration des particules */
   int i;
-  float largfactor;		/* elargissement de l'intervalle d'évolution des points */
-  static char goomlimit = 2;	/* sensibilité du goom */
+  float largfactor;             /* elargissement de l'intervalle d'évolution des points */
+  static char goomlimit = 2;    /* sensibilité du goom */
   static ZoomFilterData zfd = {
     128, 8, 16,
     1, 1, 0, WAVE_MODE,
@@ -128,26 +128,26 @@ goom_update (gint16 data[2][512])
     loopvar += speedvar + 1;
 
     pointFilter (p1,
-	YELLOW,
-	((pointWidth - 6.0f) * largfactor + 5.0f),
-	((pointHeight - 6.0f) * largfactor + 5.0f),
-	i * 152.0f, 128.0f, loopvar + i * 2032);
+        YELLOW,
+        ((pointWidth - 6.0f) * largfactor + 5.0f),
+        ((pointHeight - 6.0f) * largfactor + 5.0f),
+        i * 152.0f, 128.0f, loopvar + i * 2032);
     pointFilter (p1, ORANGE,
-	((pointWidth / 2) * largfactor) / i + 10.0f * i,
-	((pointHeight / 2) * largfactor) / i + 10.0f * i,
-	96.0f, i * 80.0f, loopvar / i);
+        ((pointWidth / 2) * largfactor) / i + 10.0f * i,
+        ((pointHeight / 2) * largfactor) / i + 10.0f * i,
+        96.0f, i * 80.0f, loopvar / i);
     pointFilter (p1, VIOLET,
-	((pointHeight / 3 + 5.0f) * largfactor) / i + 10.0f * i,
-	((pointHeight / 3 + 5.0f) * largfactor) / i + 10.0f * i,
-	i + 122.0f, 134.0f, loopvar / i);
+        ((pointHeight / 3 + 5.0f) * largfactor) / i + 10.0f * i,
+        ((pointHeight / 3 + 5.0f) * largfactor) / i + 10.0f * i,
+        i + 122.0f, 134.0f, loopvar / i);
     pointFilter (p1, BLACK,
-	((pointHeight / 3) * largfactor + 20.0f),
-	((pointHeight / 3) * largfactor + 20.0f),
-	58.0f, i * 66.0f, loopvar / i);
+        ((pointHeight / 3) * largfactor + 20.0f),
+        ((pointHeight / 3) * largfactor + 20.0f),
+        58.0f, i * 66.0f, loopvar / i);
     pointFilter (p1, WHITE,
-	(pointHeight * largfactor + 10.0f * i) / i,
-	(pointHeight * largfactor + 10.0f * i) / i,
-	66.0f, 74.0f, loopvar + i * 500);
+        (pointHeight * largfactor + 10.0f * i) / i,
+        (pointHeight * largfactor + 10.0f * i) / i,
+        66.0f, 74.0f, loopvar + i * 500);
   }
 
   /* par défaut pas de changement de zoom */
@@ -167,33 +167,33 @@ goom_update (gint16 data[2][512])
   if ((accelvar > goomlimit) || (accelvar < -goomlimit)) {
     /* UN GOOM !!! YAHOO ! */
     totalgoom++;
-    agoom = 20;			/* mais pdt 20 cycles, il n'y en aura plus. */
-    lineMode = (lineMode + 1) % 20;	/* Tous les 10 gooms on change de mode lineaire */
+    agoom = 20;                 /* mais pdt 20 cycles, il n'y en aura plus. */
+    lineMode = (lineMode + 1) % 20;     /* Tous les 10 gooms on change de mode lineaire */
 
     /* changement eventuel de mode */
     switch (iRAND (10)) {
       case 0:
       case 1:
       case 2:
-	zfd.mode = WAVE_MODE;
-	zfd.vitesse = STOP_SPEED - 1;
-	zfd.reverse = 0;
-	break;
+        zfd.mode = WAVE_MODE;
+        zfd.vitesse = STOP_SPEED - 1;
+        zfd.reverse = 0;
+        break;
       case 3:
       case 4:
-	zfd.mode = CRYSTAL_BALL_MODE;
-	break;
+        zfd.mode = CRYSTAL_BALL_MODE;
+        break;
       case 5:
-	zfd.mode = AMULETTE_MODE;
-	break;
+        zfd.mode = AMULETTE_MODE;
+        break;
       case 6:
-	zfd.mode = WATER_MODE;
-	break;
+        zfd.mode = WATER_MODE;
+        break;
       case 7:
-	zfd.mode = SCRUNCH_MODE;
-	break;
+        zfd.mode = SCRUNCH_MODE;
+        break;
       default:
-	zfd.mode = NORMAL_MODE;
+        zfd.mode = NORMAL_MODE;
     }
   }
 
@@ -205,113 +205,113 @@ goom_update (gint16 data[2][512])
       goomvar++;
       /*if (goomvar % 1 == 0) */
       {
-	guint32 vtmp;
-	guint32 newvit;
+        guint32 vtmp;
+        guint32 newvit;
 
-	newvit = STOP_SPEED - speedvar / 2;
-	/* retablir le zoom avant.. */
-	if ((zfd.reverse) && (!(cycle % 12)) && (rand () % 3 == 0)) {
-	  zfd.reverse = 0;
-	  zfd.vitesse = STOP_SPEED - 2;
-	  lockvar = 50;
-	}
-	if (iRAND (10) == 0) {
-	  zfd.reverse = 1;
-	  lockvar = 100;
-	}
+        newvit = STOP_SPEED - speedvar / 2;
+        /* retablir le zoom avant.. */
+        if ((zfd.reverse) && (!(cycle % 12)) && (rand () % 3 == 0)) {
+          zfd.reverse = 0;
+          zfd.vitesse = STOP_SPEED - 2;
+          lockvar = 50;
+        }
+        if (iRAND (10) == 0) {
+          zfd.reverse = 1;
+          lockvar = 100;
+        }
 
-	/* changement de milieu.. */
-	switch (iRAND (20)) {
-	  case 0:
-	    zfd.middleY = resoly - 1;
-	    zfd.middleX = resolx / 2;
-	    break;
-	  case 1:
-	    zfd.middleX = resolx - 1;
-	    break;
-	  case 2:
-	    zfd.middleX = 1;
-	    break;
-	  default:
-	    zfd.middleY = resoly / 2;
-	    zfd.middleX = resolx / 2;
-	}
+        /* changement de milieu.. */
+        switch (iRAND (20)) {
+          case 0:
+            zfd.middleY = resoly - 1;
+            zfd.middleX = resolx / 2;
+            break;
+          case 1:
+            zfd.middleX = resolx - 1;
+            break;
+          case 2:
+            zfd.middleX = 1;
+            break;
+          default:
+            zfd.middleY = resoly / 2;
+            zfd.middleX = resolx / 2;
+        }
 
-	if (zfd.mode == WATER_MODE) {
-	  zfd.middleX = resolx / 2;
-	  zfd.middleY = resoly / 2;
-	}
+        if (zfd.mode == WATER_MODE) {
+          zfd.middleX = resolx / 2;
+          zfd.middleY = resoly / 2;
+        }
 
-	switch (vtmp = (iRAND (27))) {
-	  case 0:
-	    zfd.vPlaneEffect = iRAND (3);
-	    zfd.vPlaneEffect -= iRAND (3);
-	    zfd.hPlaneEffect = iRAND (3);
-	    zfd.hPlaneEffect -= iRAND (3);
-	    break;
-	  case 3:
-	    zfd.vPlaneEffect = 0;
-	    zfd.hPlaneEffect = iRAND (8);
-	    zfd.hPlaneEffect -= iRAND (8);
-	    break;
-	  case 4:
-	  case 5:
-	  case 6:
-	  case 7:
-	    zfd.vPlaneEffect = iRAND (5);
-	    zfd.vPlaneEffect -= iRAND (5);
-	    zfd.hPlaneEffect = -zfd.vPlaneEffect;
-	    break;
-	  case 8:
-	    zfd.hPlaneEffect = 5 + iRAND (8);
-	    zfd.vPlaneEffect = -zfd.hPlaneEffect;
-	    break;
-	  case 9:
-	    zfd.vPlaneEffect = 5 + iRAND (8);
-	    zfd.hPlaneEffect = -zfd.hPlaneEffect;
-	    break;
-	  case 13:
-	    zfd.hPlaneEffect = 0;
-	    zfd.vPlaneEffect = iRAND (10);
-	    zfd.vPlaneEffect -= iRAND (10);
-	    break;
-	  default:
-	    if (vtmp < 10) {
-	      zfd.vPlaneEffect = 0;
-	      zfd.hPlaneEffect = 0;
-	    }
-	}
+        switch (vtmp = (iRAND (27))) {
+          case 0:
+            zfd.vPlaneEffect = iRAND (3);
+            zfd.vPlaneEffect -= iRAND (3);
+            zfd.hPlaneEffect = iRAND (3);
+            zfd.hPlaneEffect -= iRAND (3);
+            break;
+          case 3:
+            zfd.vPlaneEffect = 0;
+            zfd.hPlaneEffect = iRAND (8);
+            zfd.hPlaneEffect -= iRAND (8);
+            break;
+          case 4:
+          case 5:
+          case 6:
+          case 7:
+            zfd.vPlaneEffect = iRAND (5);
+            zfd.vPlaneEffect -= iRAND (5);
+            zfd.hPlaneEffect = -zfd.vPlaneEffect;
+            break;
+          case 8:
+            zfd.hPlaneEffect = 5 + iRAND (8);
+            zfd.vPlaneEffect = -zfd.hPlaneEffect;
+            break;
+          case 9:
+            zfd.vPlaneEffect = 5 + iRAND (8);
+            zfd.hPlaneEffect = -zfd.hPlaneEffect;
+            break;
+          case 13:
+            zfd.hPlaneEffect = 0;
+            zfd.vPlaneEffect = iRAND (10);
+            zfd.vPlaneEffect -= iRAND (10);
+            break;
+          default:
+            if (vtmp < 10) {
+              zfd.vPlaneEffect = 0;
+              zfd.hPlaneEffect = 0;
+            }
+        }
 
-	if (iRAND (3) != 0)
-	  zfd.noisify = 0;
-	else {
-	  zfd.noisify = iRAND (3) + 2;
-	  lockvar *= 3;
-	}
+        if (iRAND (3) != 0)
+          zfd.noisify = 0;
+        else {
+          zfd.noisify = iRAND (3) + 2;
+          lockvar *= 3;
+        }
 
-	if (zfd.mode == AMULETTE_MODE) {
-	  zfd.vPlaneEffect = 0;
-	  zfd.hPlaneEffect = 0;
-	  zfd.noisify = 0;
-	}
+        if (zfd.mode == AMULETTE_MODE) {
+          zfd.vPlaneEffect = 0;
+          zfd.hPlaneEffect = 0;
+          zfd.noisify = 0;
+        }
 
-	if ((zfd.middleX == 1) || (zfd.middleX == resolx - 1)) {
-	  zfd.vPlaneEffect = 0;
-	  zfd.hPlaneEffect = iRAND (2) ? 0 : zfd.hPlaneEffect;
-	}
+        if ((zfd.middleX == 1) || (zfd.middleX == resolx - 1)) {
+          zfd.vPlaneEffect = 0;
+          zfd.hPlaneEffect = iRAND (2) ? 0 : zfd.hPlaneEffect;
+        }
 
-	if (newvit < zfd.vitesse) {	/* on accelere */
-	  pzfd = &zfd;
-	  if (((newvit < STOP_SPEED - 7) &&
-		  (zfd.vitesse < STOP_SPEED - 6) &&
-		  (cycle % 3 == 0)) || (iRAND (40) == 0)) {
-	    zfd.vitesse = STOP_SPEED - 1;
-	    zfd.reverse = !zfd.reverse;
-	  } else {
-	    zfd.vitesse = (newvit + zfd.vitesse * 4) / 5;
-	  }
-	  lockvar += 50;
-	}
+        if (newvit < zfd.vitesse) {     /* on accelere */
+          pzfd = &zfd;
+          if (((newvit < STOP_SPEED - 7) &&
+                  (zfd.vitesse < STOP_SPEED - 6) &&
+                  (cycle % 3 == 0)) || (iRAND (40) == 0)) {
+            zfd.vitesse = STOP_SPEED - 1;
+            zfd.reverse = !zfd.reverse;
+          } else {
+            zfd.vitesse = (newvit + zfd.vitesse * 4) / 5;
+          }
+          lockvar += 50;
+        }
       }
     }
     /* mode mega-lent */
@@ -370,9 +370,9 @@ goom_update (gint16 data[2][512])
   /* si on est dans un goom : afficher les lignes... */
   if (agoom > 15)
     goom_lines
-	(data, ((zfd.middleX == resolx / 2) && (zfd.middleY == resoly / 2)
-	    && (zfd.mode != WATER_MODE))
-	? (lineMode / 10) : 0, p2, agoom - 15);
+        (data, ((zfd.middleX == resolx / 2) && (zfd.middleY == resoly / 2)
+            && (zfd.mode != WATER_MODE))
+        ? (lineMode / 10) : 0, p2, agoom - 15);
 
   return_val = p2;
   tmp = p1;
@@ -390,7 +390,7 @@ goom_update (gint16 data[2][512])
       goomlimit++;
     } else {
       if ((totalgoom == 0) && (goomlimit > 1))
-	goomlimit--;
+        goomlimit--;
     }
     totalgoom = 0;
   }

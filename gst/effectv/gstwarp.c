@@ -125,8 +125,9 @@ gst_warptv_get_type (void)
       0,
       gst_warptv_init,
     };
+
     warptv_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
-	"GstWarpTV", &warptv_info, 0);
+        "GstWarpTV", &warptv_info, 0);
   }
   return warptv_type;
 }
@@ -157,7 +158,7 @@ gst_warptv_base_init (gpointer g_class)
 
   for (i = 0; i < G_N_ELEMENTS (gst_warptv_formats); i++) {
     gst_videofilter_class_add_format (videofilter_class,
-	gst_warptv_formats + i);
+        gst_warptv_formats + i);
   }
 
   gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
@@ -175,7 +176,7 @@ gst_warptv_class_init (gpointer g_class, gpointer class_data)
 #if 0
   g_object_class_install_property (gobject_class, ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
-	  GST_TYPE_WARPTV_METHOD, GST_WARPTV_METHOD_1, G_PARAM_READWRITE));
+          GST_TYPE_WARPTV_METHOD, GST_WARPTV_METHOD_1, G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_warptv_set_property;
@@ -351,7 +352,7 @@ gst_warptv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
   sintable = warptv->sintable;
   ctable = warptv->ctable;
 
-  skip = 0;			/* video_width*sizeof(RGB32)/4 - video_width;; */
+  skip = 0;                     /* video_width*sizeof(RGB32)/4 - video_width;; */
   c = 0;
 
   for (x = 0; x < 512; x++) {
@@ -370,14 +371,14 @@ gst_warptv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
       dy = ctable[i] + y;
 
       if (dx < 0)
-	dx = 0;
+        dx = 0;
       else if (dx > maxx)
-	dx = maxx;
+        dx = maxx;
 
       if (dy < 0)
-	dy = 0;
+        dy = 0;
       else if (dy > maxy)
-	dy = maxy;
+        dy = maxy;
       *dest++ = src[warptv->offstable[dy] + dx];
     }
     dest += skip;

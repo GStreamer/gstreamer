@@ -38,7 +38,7 @@ main (int argc, char *argv[])
   } else {
     src = gst_element_factory_make ("filesrc", "src");
     g_object_set (G_OBJECT (src), "location", argv[1], "bytesperread", 480,
-	NULL);
+        NULL);
   }
   dvdec = gst_element_factory_make ("dvdec", "decoder");
   if (!dvdec)

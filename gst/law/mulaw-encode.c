@@ -104,9 +104,10 @@ gst_mulawenc_get_type (void)
       0,
       (GInstanceInitFunc) gst_mulawenc_init,
     };
+
     mulawenc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstMuLawEnc", &mulawenc_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstMuLawEnc", &mulawenc_info,
+        0);
   }
   return mulawenc_type;
 }

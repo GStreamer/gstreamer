@@ -73,7 +73,7 @@ plugin_init (GstPlugin * plugin)
 
   while (_elements[i].name) {
     if (!gst_element_register (plugin, _elements[i].name,
-	    GST_RANK_NONE, (_elements[i].type) ()))
+            GST_RANK_NONE, (_elements[i].type) ()))
       return FALSE;
     i++;
   }

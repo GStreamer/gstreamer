@@ -128,8 +128,8 @@ gst_quarktv_get_type (void)
     };
 
     quarktv_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstQuarkTV", &quarktv_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstQuarkTV", &quarktv_info,
+        0);
   }
   return quarktv_type;
 }
@@ -160,7 +160,7 @@ gst_quarktv_class_init (GstQuarkTVClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PLANES,
       g_param_spec_int ("planes", "Planes", "Number of frames in the buffer",
-	  1, 32, PLANES, G_PARAM_READWRITE));
+          1, 32, PLANES, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_quarktv_set_property;
   gobject_class->get_property = gst_quarktv_get_property;
@@ -258,8 +258,8 @@ gst_quarktv_chain (GstPad * pad, GstData * _data)
 
     /* pick a random buffer */
     rand =
-	filter->planetable[(filter->current_plane +
-	    (fastrand () >> 24)) & (filter->planes - 1)];
+        filter->planetable[(filter->current_plane +
+            (fastrand () >> 24)) & (filter->planes - 1)];
 
     dest[area] = (rand ? ((guint32 *) GST_BUFFER_DATA (rand))[area] : 0);
   }
@@ -283,9 +283,9 @@ gst_quarktv_change_state (GstElement * element)
       gint i;
 
       for (i = 0; i < filter->planes; i++) {
-	if (filter->planetable[i])
-	  gst_buffer_unref (filter->planetable[i]);
-	filter->planetable[i] = NULL;
+        if (filter->planetable[i])
+          gst_buffer_unref (filter->planetable[i]);
+        filter->planetable[i] = NULL;
       }
       g_free (filter->planetable);
       filter->planetable = NULL;
@@ -319,20 +319,20 @@ gst_quarktv_set_property (GObject * object, guint prop_id, const GValue * value,
 
       /* If the number of planes changed, copy across any existing planes */
       if (new_n_planes != filter->planes) {
-	new_planetable =
-	    (GstBuffer **) g_malloc (new_n_planes * sizeof (GstBuffer *));
+        new_planetable =
+            (GstBuffer **) g_malloc (new_n_planes * sizeof (GstBuffer *));
 
-	for (i = 0; (i < new_n_planes) && (i < filter->planes); i++) {
-	  new_planetable[i] = filter->planetable[i];
-	}
-	for (; i < filter->planes; i++) {
-	  if (filter->planetable[i])
-	    gst_buffer_unref (filter->planetable[i]);
-	}
-	g_free (filter->planetable);
-	filter->planetable = new_planetable;
-	filter->current_plane = filter->planes - 1;
-	filter->planes = new_n_planes;
+        for (i = 0; (i < new_n_planes) && (i < filter->planes); i++) {
+          new_planetable[i] = filter->planetable[i];
+        }
+        for (; i < filter->planes; i++) {
+          if (filter->planetable[i])
+            gst_buffer_unref (filter->planetable[i]);
+        }
+        g_free (filter->planetable);
+        filter->planetable = new_planetable;
+        filter->current_plane = filter->planes - 1;
+        filter->planes = new_n_planes;
       }
     }
       break;

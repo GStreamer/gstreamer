@@ -60,15 +60,15 @@ videoflip_get_cap (struct videoflip_format_struct *format)
 
   if (format->bpp) {
     structure = gst_structure_new ("video/x-raw-rgb",
-	"depth", G_TYPE_INT, format->bpp,
-	"bpp", G_TYPE_INT, format->depth,
-	"endianness", G_TYPE_INT, format->endianness,
-	"red_mask", G_TYPE_INT, format->red_mask,
-	"green_mask", G_TYPE_INT, format->green_mask,
-	"blue_mask", G_TYPE_INT, format->blue_mask, NULL);
+        "depth", G_TYPE_INT, format->bpp,
+        "bpp", G_TYPE_INT, format->depth,
+        "endianness", G_TYPE_INT, format->endianness,
+        "red_mask", G_TYPE_INT, format->red_mask,
+        "green_mask", G_TYPE_INT, format->green_mask,
+        "blue_mask", G_TYPE_INT, format->blue_mask, NULL);
   } else {
     structure = gst_structure_new ("video/x-raw-yuv",
-	"format", GST_TYPE_FOURCC, fourcc, NULL);
+        "format", GST_TYPE_FOURCC, fourcc, NULL);
   }
 
   return structure;
@@ -89,8 +89,8 @@ videoflip_find_by_caps (const GstCaps * caps)
     c = gst_caps_new_full (videoflip_get_cap (videoflip_formats + i), NULL);
     if (c) {
       if (gst_caps_is_always_compatible (caps, c)) {
-	gst_caps_free (c);
-	return videoflip_formats + i;
+        gst_caps_free (c);
+        return videoflip_formats + i;
       }
       gst_caps_free (c);
     }
@@ -184,51 +184,51 @@ gst_videoflip_flip (GstVideoflip * videoflip, unsigned char *dest,
   switch (videoflip->method) {
     case GST_VIDEOFLIP_METHOD_90R:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[(sh - 1 - x) * sw + y];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[(sh - 1 - x) * sw + y];
+        }
       }
       break;
     case GST_VIDEOFLIP_METHOD_90L:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[x * sw + (sw - 1 - y)];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[x * sw + (sw - 1 - y)];
+        }
       }
       break;
     case GST_VIDEOFLIP_METHOD_180:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[(sh - 1 - y) * sw + (sw - 1 - x)];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[(sh - 1 - y) * sw + (sw - 1 - x)];
+        }
       }
       break;
     case GST_VIDEOFLIP_METHOD_HORIZ:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[y * sw + (sw - 1 - x)];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[y * sw + (sw - 1 - x)];
+        }
       }
       break;
     case GST_VIDEOFLIP_METHOD_VERT:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[(sh - 1 - y) * sw + x];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[(sh - 1 - y) * sw + x];
+        }
       }
       break;
     case GST_VIDEOFLIP_METHOD_TRANS:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[x * sw + y];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[x * sw + y];
+        }
       }
       break;
     case GST_VIDEOFLIP_METHOD_OTHER:
       for (y = 0; y < dh; y++) {
-	for (x = 0; x < dw; x++) {
-	  dest[y * dw + x] = src[(sh - 1 - x) * sw + (sw - 1 - y)];
-	}
+        for (x = 0; x < dw; x++) {
+          dest[y * dw + x] = src[(sh - 1 - x) * sw + (sw - 1 - y)];
+        }
       }
       break;
     default:

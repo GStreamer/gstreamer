@@ -50,8 +50,8 @@ static GstStaticPadTemplate gst_auparse_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-	"audio/x-alaw, "
-	"rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
+        "audio/x-alaw, "
+        "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 /* AuParse signals and args */
@@ -94,9 +94,10 @@ gst_auparse_get_type (void)
       0,
       (GInstanceInitFunc) gst_auparse_init,
     };
+
     auparse_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstAuParse", &auparse_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstAuParse", &auparse_info,
+        0);
   }
   return auparse_type;
 }
@@ -213,46 +214,46 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
     }
 
     g_print
-	("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld\n",
-	auparse->offset, auparse->size, auparse->encoding, auparse->frequency,
-	auparse->channels);
+        ("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld\n",
+        auparse->offset, auparse->size, auparse->encoding, auparse->frequency,
+        auparse->channels);
     GST_DEBUG
-	("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld",
-	auparse->offset, auparse->size, auparse->encoding, auparse->frequency,
-	auparse->channels);
+        ("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld",
+        auparse->offset, auparse->size, auparse->encoding, auparse->frequency,
+        auparse->channels);
 
     switch (auparse->encoding) {
       case 1:
-	law = 1;
-	depth = 8;
-	sign = FALSE;
-	break;
+        law = 1;
+        depth = 8;
+        sign = FALSE;
+        break;
       case 2:
-	law = 0;
-	depth = 8;
-	sign = FALSE;
-	break;
+        law = 0;
+        depth = 8;
+        sign = FALSE;
+        break;
       case 3:
-	law = 0;
-	depth = 16;
-	sign = TRUE;
-	break;
+        law = 0;
+        depth = 16;
+        sign = TRUE;
+        break;
       default:
-	g_warning ("help!, dont know how to deal with this format yet\n");
-	return;
+        g_warning ("help!, dont know how to deal with this format yet\n");
+        return;
     }
 
     if (law) {
       tempcaps = gst_caps_new_simple ("audio/x-alaw",
-	  "rate", G_TYPE_INT, auparse->frequency,
-	  "channels", G_TYPE_INT, auparse->channels, NULL);
+          "rate", G_TYPE_INT, auparse->frequency,
+          "channels", G_TYPE_INT, auparse->channels, NULL);
     } else {
       tempcaps = gst_caps_new_simple ("audio/x-raw-int",
-	  "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-	  "rate", G_TYPE_INT, auparse->frequency,
-	  "channels", G_TYPE_INT, auparse->channels,
-	  "depth", G_TYPE_INT, depth,
-	  "width", G_TYPE_INT, depth, "signed", G_TYPE_BOOLEAN, sign, NULL);
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+          "rate", G_TYPE_INT, auparse->frequency,
+          "channels", G_TYPE_INT, auparse->channels,
+          "depth", G_TYPE_INT, depth,
+          "width", G_TYPE_INT, depth, "signed", G_TYPE_BOOLEAN, sign, NULL);
     }
 
     if (!gst_pad_set_explicit_caps (auparse->srcpad, tempcaps)) {
@@ -279,7 +280,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "auparse", GST_RANK_SECONDARY,
-	  GST_TYPE_AUPARSE)) {
+          GST_TYPE_AUPARSE)) {
     return FALSE;
   }
 

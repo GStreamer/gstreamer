@@ -102,8 +102,8 @@ gst_edgetv_get_type (void)
     };
 
     edgetv_type =
-	g_type_register_static (GST_TYPE_VIDEOFILTER, "GstEdgeTV", &edgetv_info,
-	0);
+        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstEdgeTV", &edgetv_info,
+        0);
   }
   return edgetv_type;
 }
@@ -130,7 +130,7 @@ gst_edgetv_base_init (gpointer g_class)
 
   for (i = 0; i < G_N_ELEMENTS (gst_edgetv_formats); i++) {
     gst_videofilter_class_add_format (videofilter_class,
-	gst_edgetv_formats + i);
+        gst_edgetv_formats + i);
   }
 
   gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
@@ -214,15 +214,15 @@ gst_edgetv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
       r *= r;
       g *= g;
       b *= b;
-      r = r >> 5;		/* To lack the lower bit for saturated addition,  */
-      g = g >> 5;		/* devide the value with 32, instead of 16. It is */
-      b = b >> 4;		/* same as `v2 &= 0xfefeff' */
+      r = r >> 5;               /* To lack the lower bit for saturated addition,  */
+      g = g >> 5;               /* devide the value with 32, instead of 16. It is */
+      b = b >> 4;               /* same as `v2 &= 0xfefeff' */
       if (r > 127)
-	r = 127;
+        r = 127;
       if (g > 127)
-	g = 127;
+        g = 127;
       if (b > 255)
-	b = 255;
+        b = 255;
       v2 = (r << 17) | (g << 9) | b;
 
 /* difference between the current pixel and upper neighbor. */
@@ -237,11 +237,11 @@ gst_edgetv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
       g = g >> 5;
       b = b >> 4;
       if (r > 127)
-	r = 127;
+        r = 127;
       if (g > 127)
-	g = 127;
+        g = 127;
       if (b > 255)
-	b = 255;
+        b = 255;
       v3 = (r << 17) | (g << 9) | b;
 
       v0 = filter->map[(y - 1) * filter->map_width * 2 + x * 2];

@@ -58,22 +58,22 @@ static GstStaticPadTemplate gst_gdk_pixbuf_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/png; "
-	"image/jpeg; "
-	"image/gif; "
-	"image/x-icon; "
-	"application/x-navi-animation; "
-	"image/x-cmu-raster; "
-	"image/x-sun-raster; "
-	"image/x-pixmap; "
-	"image/tiff; "
-	"image/x-portable-anymap; "
-	"image/x-portable-bitmap; "
-	"image/x-portable-graymap; "
-	"image/x-portable-pixmap; "
-	"image/bmp; "
-	"image/x-bmp; "
-	"image/x-MS-bmp; "
-	"image/vnd.wap.wbmp; " "image/x-bitmap; " "image/x-tga")
+        "image/jpeg; "
+        "image/gif; "
+        "image/x-icon; "
+        "application/x-navi-animation; "
+        "image/x-cmu-raster; "
+        "image/x-sun-raster; "
+        "image/x-pixmap; "
+        "image/tiff; "
+        "image/x-portable-anymap; "
+        "image/x-portable-bitmap; "
+        "image/x-portable-graymap; "
+        "image/x-portable-pixmap; "
+        "image/bmp; "
+        "image/x-bmp; "
+        "image/x-MS-bmp; "
+        "image/vnd.wap.wbmp; " "image/x-bitmap; " "image/x-tga")
     );
 
 static GstStaticPadTemplate gst_gdk_pixbuf_src_template =
@@ -125,7 +125,7 @@ static GstCaps *
 gst_gdk_pixbuf_get_capslist (void)
 {
   return gst_caps_copy (gst_static_caps_get (&gst_gdk_pixbuf_sink_template.
-	  static_caps));
+          static_caps));
 }
 #else
 static GstCaps *
@@ -184,8 +184,9 @@ gst_gdk_pixbuf_get_type (void)
       0,
       (GInstanceInitFunc) gst_gdk_pixbuf_init,
     };
+
     plugin_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstGdkPixbuf", &plugin_info, 0);
+        "GstGdkPixbuf", &plugin_info, 0);
   }
   return plugin_type;
 }
@@ -216,7 +217,7 @@ gst_gdk_pixbuf_class_init (GstGdkPixbufClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_SILENT,
       g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
-	  FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_gdk_pixbuf_set_property;
   gobject_class->get_property = gst_gdk_pixbuf_get_property;
@@ -266,15 +267,15 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstData * _data)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
-	push_buffer = TRUE;
-	got_eos = TRUE;
-	break;
+        push_buffer = TRUE;
+        got_eos = TRUE;
+        break;
       case GST_EVENT_DISCONTINUOUS:
-	dump_buffer = TRUE;
-	break;
+        dump_buffer = TRUE;
+        break;
       default:
-	gst_pad_event_default (pad, event);
-	return;
+        gst_pad_event_default (pad, event);
+        return;
     }
   }
 
@@ -289,37 +290,37 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstData * _data)
       GError *error = NULL;
 
       if (!gdk_pixbuf_loader_close (filter->pixbuf_loader, &error)) {
-	GST_ELEMENT_ERROR (filter, LIBRARY, SHUTDOWN, (NULL), (error->message));
-	g_error_free (error);
-	return;
+        GST_ELEMENT_ERROR (filter, LIBRARY, SHUTDOWN, (NULL), (error->message));
+        g_error_free (error);
+        return;
       }
 
       pixbuf = gdk_pixbuf_loader_get_pixbuf (filter->pixbuf_loader);
 
       if (filter->image_size == 0) {
-	GstCaps *caps;
+        GstCaps *caps;
 
-	filter->width = gdk_pixbuf_get_width (pixbuf);
-	filter->height = gdk_pixbuf_get_height (pixbuf);
-	filter->rowstride = gdk_pixbuf_get_rowstride (pixbuf);
-	filter->image_size = filter->rowstride * filter->height;
+        filter->width = gdk_pixbuf_get_width (pixbuf);
+        filter->height = gdk_pixbuf_get_height (pixbuf);
+        filter->rowstride = gdk_pixbuf_get_rowstride (pixbuf);
+        filter->image_size = filter->rowstride * filter->height;
 
-	caps = gst_caps_copy (gst_pad_get_pad_template_caps (filter->srcpad));
-	gst_caps_set_simple (caps,
-	    "width", G_TYPE_INT, filter->width,
-	    "height", G_TYPE_INT, filter->height,
-	    "framerate", G_TYPE_DOUBLE, filter->framerate, NULL);
+        caps = gst_caps_copy (gst_pad_get_pad_template_caps (filter->srcpad));
+        gst_caps_set_simple (caps,
+            "width", G_TYPE_INT, filter->width,
+            "height", G_TYPE_INT, filter->height,
+            "framerate", G_TYPE_DOUBLE, filter->framerate, NULL);
 
-	gst_pad_set_explicit_caps (filter->srcpad, caps);
+        gst_pad_set_explicit_caps (filter->srcpad, caps);
       }
 
       outbuf = gst_pad_alloc_buffer (filter->srcpad, GST_BUFFER_OFFSET_NONE,
-	  filter->image_size);
+          filter->image_size);
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
       GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
 
       memcpy (GST_BUFFER_DATA (outbuf), gdk_pixbuf_get_pixels (pixbuf),
-	  filter->image_size);
+          filter->image_size);
 
       gst_pad_push (filter->srcpad, GST_DATA (outbuf));
 
@@ -344,7 +345,7 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstData * _data)
     }
 
     gdk_pixbuf_loader_write (filter->pixbuf_loader, GST_BUFFER_DATA (buf),
-	GST_BUFFER_SIZE (buf), &error);
+        GST_BUFFER_SIZE (buf), &error);
     gst_buffer_unref (buf);
   }
 
@@ -450,7 +451,7 @@ plugin_init (GstPlugin * plugin)
       "gdk pixbuf loader");
 
   if (!gst_element_register (plugin, "gdkpixbufdec", GST_RANK_NONE,
-	  GST_TYPE_GDK_PIXBUF))
+          GST_TYPE_GDK_PIXBUF))
     return FALSE;
 
 #ifdef enable_typefind

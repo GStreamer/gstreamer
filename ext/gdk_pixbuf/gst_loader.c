@@ -41,7 +41,8 @@ typedef struct
   /* our own stuff - we're much better at keeping fields small :p */
   GstGdkAnimation *ani;
   gboolean initialized;
-} GstLoaderContext;
+}
+GstLoaderContext;
 
 GST_DEBUG_CATEGORY_STATIC (gst_loader_debug);
 #define GST_CAT_DEFAULT gst_loader_debug
@@ -56,13 +57,13 @@ gst_loader_init (GError ** error)
 
   if (!g_thread_supported ()) {
     g_set_error (error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_FAILED,
-	"The GStreamer loader requires threading support.");
+        "The GStreamer loader requires threading support.");
     return FALSE;
   }
 
   if (!gst_init_check (0, NULL)) {
     g_set_error (error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_FAILED,
-	"GStreamer could not be initialized.");
+        "GStreamer could not be initialized.");
     return FALSE;
   }
 
@@ -119,15 +120,15 @@ gst_loader_load_increment (gpointer context_pointer, const guchar * buf,
   gst_gdk_animation_add_data (context->ani, buf, size);
   if (!context->initialized
       && (iter =
-	  gdk_pixbuf_animation_get_iter (GDK_PIXBUF_ANIMATION (context->ani),
-	      NULL)) != NULL) {
+          gdk_pixbuf_animation_get_iter (GDK_PIXBUF_ANIMATION (context->ani),
+              NULL)) != NULL) {
     int width =
-	gdk_pixbuf_animation_get_width (GDK_PIXBUF_ANIMATION (context->ani));
+        gdk_pixbuf_animation_get_width (GDK_PIXBUF_ANIMATION (context->ani));
     int height =
-	gdk_pixbuf_animation_get_height (GDK_PIXBUF_ANIMATION (context->ani));
+        gdk_pixbuf_animation_get_height (GDK_PIXBUF_ANIMATION (context->ani));
     GdkPixbuf *pixbuf =
-	gdk_pixbuf_animation_get_static_image (GDK_PIXBUF_ANIMATION (context->
-	    ani));
+        gdk_pixbuf_animation_get_static_image (GDK_PIXBUF_ANIMATION (context->
+            ani));
 
     g_object_unref (iter);
     GST_LOG_OBJECT (context->ani, "initializing loader");
@@ -138,9 +139,9 @@ gst_loader_load_increment (gpointer context_pointer, const guchar * buf,
 
     if (context->prepared_func) {
       GST_LOG_OBJECT (context->ani, "calling prepared_func %p",
-	  context->prepared_func);
+          context->prepared_func);
       context->prepared_func (pixbuf, GDK_PIXBUF_ANIMATION (context->ani),
-	  context->user_data);
+          context->user_data);
     }
 
     context->initialized = TRUE;
@@ -187,7 +188,7 @@ gst_loader_load_animation (FILE * f, GError ** error)
   g_free (filename);
   if (iter == NULL) {
     g_set_error (error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-	"could not create an image");
+        "could not create an image");
     g_object_unref (ani);
     GST_INFO ("could not create an image");
     return NULL;
@@ -211,7 +212,7 @@ gst_loader_load (FILE * f, GError ** error)
     GST_ERROR_OBJECT (ani, "Could not get an image in _pixbuf_load");
     g_object_unref (ani);
     g_set_error (error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-	"Could not get an image from file.");
+        "Could not get an image from file.");
     return NULL;
   }
 
@@ -250,7 +251,7 @@ fill_info (GdkPixbufFormat * info)
     {"    free", "xxxx    ", 80},
     /* ASF */
     {"\060\046\262\165\216\146\317\021\246\331 \252 \142\316\154",
-	"          z z   ", 100},
+        "          z z   ", 100},
     {NULL, NULL, 0}
   };
 

@@ -119,8 +119,9 @@ gst_gamma_get_type (void)
       0,
       gst_gamma_init,
     };
+
     gamma_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
-	"GstGamma", &gamma_info, 0);
+        "GstGamma", &gamma_info, 0);
   }
   return gamma_type;
 }
@@ -165,16 +166,16 @@ gst_gamma_class_init (gpointer g_class, gpointer class_data)
 
   g_object_class_install_property (gobject_class, ARG_GAMMA,
       g_param_spec_double ("gamma", "Gamma", "gamma",
-	  0.01, 10, 1, G_PARAM_READWRITE));
+          0.01, 10, 1, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_GAMMA_R,
       g_param_spec_double ("redgamma", "Gamma_r",
-	  "gamma value for the red channel", 0.01, 10, 1, G_PARAM_READWRITE));
+          "gamma value for the red channel", 0.01, 10, 1, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_GAMMA_G,
       g_param_spec_double ("greengamma", "Gamma_g",
-	  "gamma value for the green channel", 0.01, 10, 1, G_PARAM_READWRITE));
+          "gamma value for the green channel", 0.01, 10, 1, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_GAMMA_B,
       g_param_spec_double ("bluegamma", "Gamma_b",
-	  "gamma value for the blue channel", 0.01, 10, 1, G_PARAM_READWRITE));
+          "gamma value for the blue channel", 0.01, 10, 1, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_gamma_set_property;
   gobject_class->get_property = gst_gamma_get_property;
@@ -353,10 +354,10 @@ gst_gamma_planar411 (GstVideofilter * videofilter, void *dest, void *src)
       int x, y;
 
       for (y = 0; y < height; y++) {
-	for (x = 0; x < width; x++) {
-	  cdest[y * width + x] =
-	      gamma->gamma_table[(unsigned char) csrc[y * width + x]];
-	}
+        for (x = 0; x < width; x++) {
+          cdest[y * width + x] =
+              gamma->gamma_table[(unsigned char) csrc[y * width + x]];
+        }
       }
     }
   }
@@ -421,10 +422,10 @@ gst_gamma_rgb32 (GstVideofilter * videofilter, void *dest, void *src)
     i = 0;
     while (i < width * height * 4) {
       if ((i % 4) != 3)
-	*cdest++ = gamma->gamma_table[*csrc++];
+        *cdest++ = gamma->gamma_table[*csrc++];
       else {
-	cdest++;
-	csrc++;
+        cdest++;
+        csrc++;
       }
       i++;
     }

@@ -57,7 +57,7 @@ static GstStaticPadTemplate cutter_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-	GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
+        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
     );
 
 static GstStaticPadTemplate cutter_sink_factory =
@@ -65,7 +65,7 @@ static GstStaticPadTemplate cutter_sink_factory =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-	GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
+        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
     );
 
 static void gst_cutter_base_init (gpointer g_class);
@@ -101,8 +101,9 @@ gst_cutter_get_type (void)
       sizeof (GstCutter), 0,
       (GInstanceInitFunc) gst_cutter_init,
     };
+
     cutter_type = g_type_register_static (GST_TYPE_ELEMENT, "GstCutter",
-	&cutter_info, 0);
+        &cutter_info, 0);
   }
   return cutter_type;
 }
@@ -146,24 +147,24 @@ gst_cutter_class_init (GstCutterClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_THRESHOLD,
       g_param_spec_double ("threshold", "Threshold",
-	  "Volume threshold before trigger",
-	  -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
+          "Volume threshold before trigger",
+          -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_THRESHOLD_DB,
       g_param_spec_double ("threshold_dB", "Threshold (dB)",
-	  "Volume threshold before trigger (in dB)",
-	  -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
+          "Volume threshold before trigger (in dB)",
+          -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RUN_LENGTH,
       g_param_spec_double ("runlength", "Runlength",
-	  "Length of drop below threshold before cut_stop (seconds)",
-	  0.0, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
+          "Length of drop below threshold before cut_stop (seconds)",
+          0.0, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PRE_LENGTH,
       g_param_spec_double ("prelength", "prelength",
-	  "Length of pre-recording buffer (seconds)",
-	  0.0, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
+          "Length of pre-recording buffer (seconds)",
+          0.0, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LEAKY,
       g_param_spec_boolean ("leaky", "Leaky",
-	  "do we leak buffers when below threshold ?",
-	  FALSE, G_PARAM_READWRITE));
+          "do we leak buffers when below threshold ?",
+          FALSE, G_PARAM_READWRITE));
   gst_cutter_signals[CUT_START] =
       g_signal_new ("cut-start", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST,
@@ -214,10 +215,10 @@ gst_cutter_chain (GstPad * pad, GstData * _data)
   GstBuffer *buf = GST_BUFFER (_data);
   GstCutter *filter;
   gint16 *in_data;
-  double RMS = 0.0;		/* RMS of signal in buffer */
-  double ms = 0.0;		/* mean square value of buffer */
-  static gboolean silent_prev = FALSE;	/* previous value of silent */
-  GstBuffer *prebuf;		/* pointer to a prebuffer element */
+  double RMS = 0.0;             /* RMS of signal in buffer */
+  double ms = 0.0;              /* mean square value of buffer */
+  static gboolean silent_prev = FALSE;  /* previous value of silent */
+  GstBuffer *prebuf;            /* pointer to a prebuffer element */
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -247,7 +248,7 @@ gst_cutter_chain (GstPad * pad, GstData * _data)
     default:
       /* this shouldn't happen */
       g_print ("WARNING: no mean square function for width %d\n",
-	  filter->width);
+          filter->width);
       break;
   }
 
@@ -285,10 +286,10 @@ gst_cutter_chain (GstPad * pad, GstData * _data)
       g_signal_emit (G_OBJECT (filter), gst_cutter_signals[CUT_START], 0);
       GST_DEBUG ("flushing buffer of length %.3f", filter->pre_run_length);
       while (filter->pre_buffer) {
-	prebuf = (g_list_first (filter->pre_buffer))->data;
-	filter->pre_buffer = g_list_remove (filter->pre_buffer, prebuf);
-	gst_pad_push (filter->srcpad, GST_DATA (prebuf));
-	++count;
+        prebuf = (g_list_first (filter->pre_buffer))->data;
+        filter->pre_buffer = g_list_remove (filter->pre_buffer, prebuf);
+        gst_pad_push (filter->srcpad, GST_DATA (prebuf));
+        ++count;
       }
       GST_DEBUG ("flushed %d buffers", count);
       filter->pre_run_length = 0.0;
@@ -313,7 +314,7 @@ gst_cutter_chain (GstPad * pad, GstData * _data)
       filter->pre_run_length -= gst_audio_length (filter->srcpad, prebuf);
       /* only pass buffers if we don't leak */
       if (!filter->leaky)
-	gst_pad_push (filter->srcpad, GST_DATA (prebuf));
+        gst_pad_push (filter->srcpad, GST_DATA (prebuf));
       /* we unref it after getting it out of the pre_buffer */
       gst_buffer_unref (prebuf);
     }
@@ -327,7 +328,7 @@ gst_cutter_16bit_ms (gint16 * data, guint num_samples)
      static double inline gst_cutter_8bit_ms (gint8 * data, guint num_samples)
 #include "filter.func"
      static void
-	 gst_cutter_set_property (GObject * object, guint prop_id,
+         gst_cutter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstCutter *filter;

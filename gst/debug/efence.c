@@ -122,8 +122,9 @@ gst_gst_efence_get_type (void)
       0,
       (GInstanceInitFunc) gst_efence_init,
     };
+
     plugin_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstEFence", &plugin_info, 0);
+        "GstEFence", &plugin_info, 0);
   }
   return plugin_type;
 }
@@ -154,7 +155,7 @@ gst_efence_class_init (GstEFenceClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_FENCE_TOP,
       g_param_spec_boolean ("fence_top", "Fence Top",
-	  "Align buffers with top of fenced region", TRUE, G_PARAM_READWRITE));
+          "Align buffers with top of fenced region", TRUE, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_efence_set_property;
   gobject_class->get_property = gst_efence_get_property;
@@ -350,11 +351,11 @@ gst_fenced_buffer_default_free (GstData * data)
   if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE) &&
       GST_BUFFER_DATA (buffer)) {
     GST_DEBUG ("free region %p %d", fenced_buffer->region,
-	fenced_buffer->length);
+        fenced_buffer->length);
     munmap (fenced_buffer->region, fenced_buffer->length);
   } else {
     GST_DEBUG ("not freeing region %p %d %p", fenced_buffer->region,
-	GST_BUFFER_FLAGS (buffer), GST_BUFFER_DATA (buffer));
+        GST_BUFFER_FLAGS (buffer), GST_BUFFER_DATA (buffer));
   }
 
   /* set to safe values */

@@ -38,11 +38,11 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "ossmixer", GST_RANK_PRIMARY,
-	  GST_TYPE_OSSELEMENT) ||
+          GST_TYPE_OSSELEMENT) ||
       !gst_element_register (plugin, "osssrc", GST_RANK_PRIMARY,
-	  GST_TYPE_OSSSRC) ||
+          GST_TYPE_OSSSRC) ||
       !gst_element_register (plugin, "osssink", GST_RANK_PRIMARY,
-	  GST_TYPE_OSSSINK)) {
+          GST_TYPE_OSSSINK)) {
     return FALSE;
   }
 

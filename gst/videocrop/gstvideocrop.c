@@ -135,9 +135,10 @@ gst_video_crop_get_type (void)
       0,
       (GInstanceInitFunc) gst_video_crop_init,
     };
+
     video_crop_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstVideoCrop",
-	&video_crop_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstVideoCrop",
+        &video_crop_info, 0);
   }
   return video_crop_type;
 }
@@ -167,16 +168,16 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LEFT,
       g_param_spec_int ("left", "Left", "Pixels to crop at left",
-	  0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RIGHT,
       g_param_spec_int ("right", "Right", "Pixels to crop at right",
-	  0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TOP,
       g_param_spec_int ("top", "Top", "Pixels to crop at top",
-	  0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BOTTOM,
       g_param_spec_int ("bottom", "Bottom", "Pixels to crop at bottom",
-	  0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_video_crop_set_property;
   gobject_class->get_property = gst_video_crop_get_property;
@@ -369,8 +370,8 @@ gst_video_crop_chain (GstPad * pad, GstData * _data)
 
     switch (GST_EVENT_TYPE (event)) {
       default:
-	gst_pad_event_default (pad, event);
-	break;
+        gst_pad_event_default (pad, event);
+        break;
     }
     return;
   }

@@ -87,7 +87,7 @@ monoscope_update (struct monoscope_state * stateptr, gint16 data[512])
   }
   stateptr->avgMax += max - (stateptr->avgMax >> 8);
   if (stateptr->avgMax < max)
-    stateptr->avgMax = max;	/* Avoid overflow */
+    stateptr->avgMax = max;     /* Avoid overflow */
   factor = 0x7fffffff / stateptr->avgMax;
   /* Keep the scaling sensible. */
   if (factor > (1 << 18))
@@ -106,15 +106,15 @@ monoscope_update (struct monoscope_state * stateptr, gint16 data[512])
     if ((bar > 0) && (bar < (256 * 128))) {
       loc = stateptr->display + bar;
       if (foo < 0) {
-	for (h = 0; h <= (-foo); h++) {
-	  *loc = stateptr->colors[h];
-	  loc += 256;
-	}
+        for (h = 0; h <= (-foo); h++) {
+          *loc = stateptr->colors[h];
+          loc += 256;
+        }
       } else {
-	for (h = 0; h <= foo; h++) {
-	  *loc = stateptr->colors[h];
-	  loc -= 256;
-	}
+        for (h = 0; h <= foo; h++) {
+          *loc = stateptr->colors[h];
+          loc -= 256;
+        }
       }
     }
   }
@@ -124,7 +124,7 @@ monoscope_update (struct monoscope_state * stateptr, gint16 data[512])
     for (h = 0; h < 256; h += 2) {
       stateptr->display[(i << 8) + h] = stateptr->colors[63];
       if (i == 64)
-	stateptr->display[(i << 8) + h + 1] = stateptr->colors[63];
+        stateptr->display[(i << 8) + h + 1] = stateptr->colors[63];
     }
   }
   for (i = 16; i < 256; i += 16) {

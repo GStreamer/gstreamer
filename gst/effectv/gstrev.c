@@ -129,8 +129,8 @@ gst_revtv_get_type (void)
     };
 
     revtv_type =
-	g_type_register_static (GST_TYPE_VIDEOFILTER, "GstRevTV", &revtv_info,
-	0);
+        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstRevTV", &revtv_info,
+        0);
   }
   return revtv_type;
 }
@@ -173,13 +173,13 @@ gst_revtv_class_init (gpointer klass, gpointer class_data)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DELAY,
       g_param_spec_int ("delay", "Delay", "Delay in frames between updates",
-	  1, 100, 1, G_PARAM_READWRITE));
+          1, 100, 1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LINESPACE,
       g_param_spec_int ("linespace", "Linespace", "Control line spacing",
-	  1, 100, 6, G_PARAM_READWRITE));
+          1, 100, 6, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GAIN,
       g_param_spec_int ("gain", "Gain", "Control gain",
-	  1, 200, 50, G_PARAM_READWRITE));
+          1, 200, 50, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_revtv_set_property;
   gobject_class->get_property = gst_revtv_get_property;
@@ -243,7 +243,7 @@ gst_revtv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
       yval = y - ((short) (R + G + B) / filter->vscale);
 
       if (yval > 0) {
-	dest[x + (yval * width)] = THE_COLOR;
+        dest[x + (yval * width)] = THE_COLOR;
       }
     }
   }

@@ -28,10 +28,10 @@
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 
-gboolean got_channel[2] = { FALSE, FALSE };	/* to see if we got the signal for this one yet */
-gint channels = 0;		/* guess at how many channels there are */
-gdouble last_time = 0.0;	/* time of last signal */
-gdouble values[2][3];		/* array of levels from which to print */
+gboolean got_channel[2] = { FALSE, FALSE };     /* to see if we got the signal for this one yet */
+gint channels = 0;              /* guess at how many channels there are */
+gdouble last_time = 0.0;        /* time of last signal */
+gdouble values[2][3];           /* array of levels from which to print */
 
 static void
 level_callback (GstElement * element, gdouble time, gint channel,
@@ -66,7 +66,7 @@ level_callback (GstElement * element, gdouble time, gint channel,
     g_print ("%f ", time);
     for (i = 0; i < channels; ++i)
       for (j = 0; j < 3; ++j)
-	g_print ("%f ", values[i][j]);
+        g_print ("%f ", values[i][j]);
     g_print ("\n");
   }
 }

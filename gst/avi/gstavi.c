@@ -40,8 +40,8 @@ plugin_init (GstPlugin * plugin)
 #endif /* ENABLE_NLS */
 
   return (gst_element_register (plugin, "avidemux",
-	  GST_RANK_PRIMARY,
-	  GST_TYPE_AVI_DEMUX) &&
+          GST_RANK_PRIMARY,
+          GST_TYPE_AVI_DEMUX) &&
       gst_element_register (plugin, "avimux", GST_RANK_NONE, GST_TYPE_AVIMUX));
 }
 

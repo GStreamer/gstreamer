@@ -126,6 +126,7 @@ gst_monoscope_get_type (void)
       0,
       (GInstanceInitFunc) gst_monoscope_init,
     };
+
     type = g_type_register_static (GST_TYPE_ELEMENT, "GstMonoscope", &info, 0);
   }
   return type;
@@ -177,7 +178,7 @@ gst_monoscope_init (GstMonoscope * monoscope)
   monoscope->first_buffer = TRUE;
   monoscope->width = 256;
   monoscope->height = 128;
-  monoscope->fps = 25.;		/* desired frame rate */
+  monoscope->fps = 25.;         /* desired frame rate */
 }
 
 static GstPadLinkReturn
@@ -216,7 +217,7 @@ gst_monoscope_chain (GstPad * pad, GstData * _data)
   /* FIXME: should really select the first 1024 samples after the timestamp. */
   if (GST_BUFFER_TIMESTAMP (bufin) < monoscope->next_time || samples_in < 1024) {
     GST_DEBUG ("timestamp is %" G_GUINT64_FORMAT ": want >= %" G_GUINT64_FORMAT,
-	GST_BUFFER_TIMESTAMP (bufin), monoscope->next_time);
+        GST_BUFFER_TIMESTAMP (bufin), monoscope->next_time);
     gst_buffer_unref (bufin);
     return;
   }
@@ -233,8 +234,8 @@ gst_monoscope_chain (GstPad * pad, GstData * _data)
     GST_DEBUG ("making new pad");
     if (!gst_pad_is_negotiated (monoscope->srcpad)) {
       if (gst_pad_renegotiate (monoscope->srcpad) <= 0) {
-	GST_ELEMENT_ERROR (monoscope, CORE, NEGOTIATION, (NULL), (NULL));
-	return;
+        GST_ELEMENT_ERROR (monoscope, CORE, NEGOTIATION, (NULL), (NULL));
+        return;
       }
     }
     monoscope->first_buffer = FALSE;
