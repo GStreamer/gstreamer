@@ -1,3 +1,8 @@
+2004-03-10  David Schleef  <ds@schleef.org>
+
+	* tools/gst-run.c: (main):  Fix crash when no relevant tools
+	were found.  (bug #136793)
+
 2004-03-10  Johan Dahlin  <johan@gnome.org>
 
 	* gst/schedulers/gstoptimalscheduler.c

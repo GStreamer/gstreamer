@@ -341,15 +341,16 @@ int main
   }
   else
   {
+    highest = NULL;
+
     /* otherwise, just look up the highest version */
     g_hash_table_foreach (candidates, (GHFunc) find_highest_version,
                           &highest);
-    dir = g_hash_table_lookup (candidates, highest);
-    if (!dir)
-    {
+    if (highest == NULL) {
       g_print ("ERROR: No version of tool %s not found.\n", base);
       return 1;
     }
+    dir = g_hash_table_lookup (candidates, highest);
     binary = g_strdup_printf ("%s-%s", base, highest);
   }
 
