@@ -331,12 +331,20 @@ gst_ogg_demux_src_event (GstPad *pad, GstEvent *event)
 	  g_warning ("invalid seek method in seek event");
 	  break;
       }
+      g_print ("DEBUG: oggdemux: offset %lld, known %lld\n", offset, cur->known_offset);
       if (offset < cur->known_offset) {
-	GstEvent *restart = gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET, 0);
+	GstEvent *restart = gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, 0);
 	if (!gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad), restart))
 	  break;
       }
+      else {
+        GstEvent *flush = gst_event_new_flush ();
+	if (!gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad), flush))
+	  break;
+      }
+
       GST_OGG_SET_STATE (ogg, GST_OGG_STATE_SEEK);
+      GST_DEBUG_OBJECT (ogg, "initiating seeking to offset %"G_GUINT64_FORMAT, offset);
       ogg->seek_pad = cur; 
       ogg->seek_to = offset;
       gst_event_unref (event);
@@ -637,6 +645,7 @@ br:
       if (cur == ogg->seek_pad) {
 	if (ogg_page_granulepos (page) > ogg->seek_to) {
 	  GST_OGG_SET_STATE (ogg, GST_OGG_STATE_PLAY);
+          GST_DEBUG_OBJECT (ogg, "ended seek at offset %"G_GUINT64_FORMAT" (requested  %"G_GUINT64_FORMAT, cur->known_offset, ogg->seek_to);
 	  ogg->seek_pad = NULL;
 	  ogg->seek_to = 0;
 	  /* send discont everywhere */
