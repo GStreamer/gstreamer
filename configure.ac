@@ -1905,8 +1905,8 @@ ext/ivorbis/Makefile
 ext/lcs/Makefile
 ext/libcaca/Makefile
 ext/libfame/Makefile
-ext/libpng/Makefile
 ext/libmng/Makefile
+ext/libpng/Makefile
 ext/librfb/Makefile
 ext/libvisual/Makefile
 ext/mad/Makefile
