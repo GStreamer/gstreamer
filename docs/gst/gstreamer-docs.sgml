@@ -34,7 +34,6 @@
 <!entity GstAudioSrc SYSTEM "sgml/gstaudiosrc.sgml">
 <!entity GstSineSrc SYSTEM "sgml/gstsinesrc.sgml">
 <!entity GstAudioSink SYSTEM "sgml/gstaudiosink.sgml">
-<!entity GstEsdSink SYSTEM "sgml/gstesdsink.sgml">
 <!entity GstFdSink SYSTEM "sgml/gstfdsink.sgml">
 <!entity GstIdentity SYSTEM "sgml/gstidentity.sgml">
 <!entity GstPipefilter SYSTEM "sgml/gstpipefilter.sgml">
