@@ -1,3 +1,10 @@
+2004-03-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  fix --with-plugins, don't think it ever worked before
+	* gst-plugins.spec.in:
+          even more updates
+
 2004-03-01  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/sdl/sdlvideosink.h:
