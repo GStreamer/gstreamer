@@ -304,7 +304,7 @@ gst_mpeg_parse_change_state (GstElement *element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if (!mpeg_parse->packetize) {
-        mpeg_parse->packetize = gst_mpeg_packetize_new (mpeg_parse->sinkpad);
+        mpeg_parse->packetize = gst_mpeg_packetize_new (mpeg_parse->sinkpad, GST_MPEG_PACKETIZE_SYSTEM);
       }
       break;
     case GST_STATE_READY_TO_NULL:

@@ -22,7 +22,7 @@
 #include <gstmpegpacketize.h>
 
 GstMPEGPacketize*
-gst_mpeg_packetize_new (GstPad *pad)
+gst_mpeg_packetize_new (GstPad *pad, GstMPEGPacketizeType type)
 {
   GstMPEGPacketize *new;
 
@@ -36,6 +36,7 @@ gst_mpeg_packetize_new (GstPad *pad)
   new->pad = pad;
   new->bs = gst_bytestream_new (pad);
   new->MPEG2 = FALSE;
+  new->type = type;
 
   return new;
 }
@@ -108,6 +109,43 @@ parse_generic (GstMPEGPacketize *packetize)
   return GST_DATA (outbuf);
 }
 
+static inline GstData*
+parse_chunk (GstMPEGPacketize *packetize)
+{
+  GstByteStream *bs = packetize->bs;
+  guchar *buf;
+  gint offset;
+  guint32 code;
+  const gint chunksize = 4096;
+  GstBuffer *outbuf = NULL;
+
+  buf = gst_bytestream_peek_bytes (bs, chunksize);
+  if (!buf)
+    return FALSE;
+  offset = 4;
+
+  code = GUINT32_FROM_BE (*((guint32 *)(buf+offset)));
+
+  GST_DEBUG (0, "code = %08x\n", code);
+
+  while ((code & 0xffffff00) != 0x100L) {
+    code = (code << 8) | buf[offset++];
+    
+    GST_DEBUG (0, "  code = %08x\n", code);
+
+    if ((offset % chunksize) == 0) {
+      buf = gst_bytestream_peek_bytes (bs, offset + chunksize);
+      if (!buf)
+	return NULL;
+    }
+  }
+  if (offset > 4) {
+     outbuf = gst_bytestream_read (bs, offset-4);
+  }
+  return GST_DATA (outbuf);
+}
+
+
 /* FIXME mmx-ify me */
 static inline gboolean
 find_start_code (GstMPEGPacketize *packetize)
@@ -123,7 +161,7 @@ find_start_code (GstMPEGPacketize *packetize)
     return FALSE;
   offset = 4;
 
-  code = GUINT32_FROM_BE (*((guint32 *)buf));
+  code = GUINT32_FROM_BE (*((guint32 *)(buf)));
 
   GST_DEBUG (0, "code = %08x\n", code);
 
@@ -160,27 +198,35 @@ gst_mpeg_packetize_read (GstMPEGPacketize *packetize)
     if (!find_start_code (packetize))
       got_event = TRUE;
     else {
-      GST_DEBUG (0, "packetize: have chunk 0x%02X\n",packetize->id);
-      switch (packetize->id) {
-        case 0xBA:
-  	  outbuf = parse_packhead (packetize);
-	  if (!outbuf)
-	    got_event = TRUE;
-	  break;
-        case 0xBB:
-	  outbuf = parse_generic (packetize);
-	  if (!outbuf)
-	    got_event = TRUE;
-	  break;
-        default:
-	  if (packetize->MPEG2 && ((packetize->id < 0xBD) || (packetize->id > 0xFE))) {
-	    g_warning ("packetize: ******** unknown id 0x%02X",packetize->id);
-	  }
-	  else {
+      GST_DEBUG (0, "packetize: have chunk 0x%02X\n", packetize->id);
+      if (packetize->type == GST_MPEG_PACKETIZE_SYSTEM) {
+        switch (packetize->id) {
+          case PACK_START_CODE:
+    	    outbuf = parse_packhead (packetize);
+	    if (!outbuf)
+	      got_event = TRUE;
+	    break;
+          case SYS_HEADER_START_CODE:
 	    outbuf = parse_generic (packetize);
 	    if (!outbuf)
 	      got_event = TRUE;
-	  }
+	    break;
+          default:
+	    if (packetize->MPEG2 && ((packetize->id < 0xBD) || (packetize->id > 0xFE))) {
+	      g_warning ("packetize: ******** unknown id 0x%02X",packetize->id);
+	    }
+	    else {
+	      outbuf = parse_generic (packetize);
+	      if (!outbuf)
+	        got_event = TRUE;
+	    }
+        }
+      }
+      else if (packetize->type == GST_MPEG_PACKETIZE_VIDEO) {
+	outbuf = parse_chunk (packetize);
+      }
+      else {
+	g_assert_not_reached ();
       }
     }
 
