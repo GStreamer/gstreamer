@@ -62,7 +62,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_templ,
      "video/quicktime",
      NULL
   )
-);
+)
 
 /* 
  * so far i only support Photo Jpeg videos and no audio. 
@@ -78,7 +78,7 @@ GST_PAD_TEMPLATE_FACTORY (src_video_templ,
       "width", GST_PROPS_INT_RANGE (16, 4096),
       "height", GST_PROPS_INT_RANGE (16, 4096)
   )
-);
+)
 
 static GstElementClass *parent_class = NULL;
 /* 
