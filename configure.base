@@ -1207,6 +1207,7 @@ plugins/visualization/smoothwave/Makefile
 plugins/visualization/chart/Makefile
 plugins/videoscale/Makefile
 plugins/xvideosink/Makefile
+plugins/vgasink/Makefile
 plugins/wav/Makefile
 plugins/dvdsrc/Makefile
 plugins/vcdsrc/Makefile
