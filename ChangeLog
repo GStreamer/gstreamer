@@ -1,3 +1,9 @@
+2004-01-14  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  Don't issue a timestamp unless we tagged the frame
+	  with a PTS.
+
 2004-01-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst-libs/gst/play/gstplay.c: (gst_play_tick_callback):
