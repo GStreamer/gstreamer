@@ -1,3 +1,21 @@
+2004-10-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_get),
+	(gst_gnomevfssrc_srcpad_query), (gst_gnomevfssrc_srcpad_event):
+	  Some debug.
+	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
+	(gst_avi_demux_handle_src_event), (gst_avi_demux_read_superindex),
+	(gst_avi_demux_read_subindexes), (gst_avi_demux_add_stream),
+	(gst_avi_demux_stream_index), (gst_avi_demux_skip),
+	(gst_avi_demux_sync), (gst_avi_demux_stream_scan),
+	(gst_avi_demux_massage_index), (gst_avi_demux_stream_header):
+	* gst/avi/gstavidemux.h:
+	  Support for openDML-2.0 indx/ix## chunks. Support for broken index
+	  recovery (where, if part of the index is broken, we will still read
+	  the rest of the index and recover the broken part by stream
+	  scanning). More broken media support. EOS workarounds. General AVI
+	  braindamage headache recovery. Aspirin included.
+
 2004-10-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_open),

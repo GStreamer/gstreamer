@@ -78,6 +78,8 @@ typedef struct {
   guint32	 total_frames;
 
   guint32	 skip;
+
+  guint64	*indexes;
 } avi_stream_context;
 
 typedef enum {
