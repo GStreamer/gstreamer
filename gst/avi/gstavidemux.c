@@ -1065,6 +1065,9 @@ gst_avi_demux_stream_index (GstAviDemux * avi)
     entry.size = GUINT32_FROM_LE (_entry->size);
     target = &avi->index_entries[i];
 
+    if (entry.id == GST_RIFF_rec)
+      continue;
+
     stream_nr = CHUNKID_TO_STREAMNR (entry.id);
     if (stream_nr >= avi->num_streams || stream_nr < 0) {
       g_warning ("Index entry %d has invalid stream nr %d", i, stream_nr);
@@ -1388,6 +1391,20 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
   /* And then, we get the data */
   if (!(tag = gst_riff_peek_tag (riff, NULL)))
     return FALSE;
+
+  /* Support for rec-list files */
+  if (tag == GST_RIFF_TAG_LIST) {
+    if (!(tag = gst_riff_peek_list (riff)))
+      return FALSE;
+    if (tag == GST_RIFF_rec) {
+      /* Simply skip the list */
+      if (!gst_riff_read_list (riff, &tag))
+        return FALSE;
+      if (!(tag = gst_riff_peek_tag (riff, NULL)))
+        return FALSE;
+    }
+  }
+
   stream_nr = CHUNKID_TO_STREAMNR (tag);
   if (stream_nr < 0 || stream_nr >= avi->num_streams) {
     /* recoverable */
