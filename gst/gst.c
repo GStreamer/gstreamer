@@ -232,17 +232,19 @@ gst_init_check (int     *argc,
     g_print ("--------------------------------------------------------\n");
 
     for (i = 0; i<GST_CAT_MAX_CATEGORY; i++) {
+      if (gst_get_category_name(i)) {
 #if GST_DEBUG_COLOR
-      g_print ("   0x%08x     %s%s     \033[%sm%s\033[00m\n", 1<<i, 
-                  (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
-                  (gst_debug_get_categories() & (1<<i)?"/(enabled)":"/         "),
-		   _gst_category_colors[i], gst_get_category_name (i));
+        g_print ("   0x%08x     %s%s     \033[%sm%s\033[00m\n", 1<<i, 
+                 (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
+                 (gst_debug_get_categories() & (1<<i)?"/(enabled)":"/         "),
+                 _gst_category_colors[i], gst_get_category_name (i));
 #else
-      g_print ("   0x%08x     %s%s     %s\n", 1<<i, 
-                  (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
-                  (gst_debug_get_categories() & (1<<i)?"/(enabled)":"/         "),
-                   gst_get_category_name (i));
+        g_print ("   0x%08x     %s%s     %s\n", 1<<i, 
+                 (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
+                 (gst_debug_get_categories() & (1<<i)?"/(enabled)":"/         "),
+                 gst_get_category_name (i));
 #endif
+      }
     }
 
     ret = FALSE;

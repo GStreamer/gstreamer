@@ -471,12 +471,12 @@ gst_caps_get_by_name (GstCaps *caps, const gchar *name)
 
   return NULL;
 }
-                                                                                                                   
+
 static gboolean
 gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
 {
   if (fromcaps->id != tocaps->id) {
-    GST_DEBUG (0,"gstcaps: mime types differ (%s to %s)\n",
+    GST_DEBUG (GST_CAT_CAPS,"mime types differ (%s to %s)\n",
 	       gst_type_find_by_id (fromcaps->id)->mime, 
 	       gst_type_find_by_id (tocaps->id)->mime);
     return FALSE;
@@ -487,13 +487,13 @@ gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
       return gst_props_check_compatibility (fromcaps->properties, tocaps->properties);
     }
     else {
-      GST_DEBUG (0,"gstcaps: no source caps\n");
+      GST_DEBUG (GST_CAT_CAPS,"no source caps\n");
       return FALSE;
     }
   }
   else {
     // assume it accepts everything
-    GST_DEBUG (0,"gstcaps: no caps\n");
+    GST_DEBUG (GST_CAT_CAPS,"no caps\n");
     return TRUE;
   }
 }
@@ -512,17 +512,17 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
 {
   if (fromcaps == NULL) {
     if (tocaps == NULL) {
-      GST_DEBUG (0,"gstcaps: no caps\n");
+      GST_DEBUG (GST_CAT_CAPS,"no caps\n");
       return TRUE;
     }
     else {
-      GST_DEBUG (0,"gstcaps: no src but destination caps\n");
+      GST_DEBUG (GST_CAT_CAPS,"gstcaps: no src but destination caps\n");
       return FALSE;
     }
   }
   else {
     if (tocaps == NULL) {
-      GST_DEBUG (0,"gstcaps: src caps and no dest caps\n");
+      GST_DEBUG (GST_CAT_CAPS,"src caps and no dest caps\n");
       return TRUE;
     }
   }

@@ -378,21 +378,18 @@ gst_element_get_pad (GstElement *element, const gchar *name)
   if (!element->numpads)
     return NULL;
 
-  GST_DEBUG(GST_CAT_ELEMENT_PADS,"searching for pad '%s' in element %s\n",
-            name, GST_ELEMENT_NAME (element));
-
   // look through the list, matching by name
   walk = element->pads;
   while (walk) {
     GstPad *pad = GST_PAD(walk->data);
     if (!strcmp (GST_PAD_NAME(pad), name)) {
-      GST_DEBUG(GST_CAT_ELEMENT_PADS,"found pad '%s'\n",name);
+      GST_INFO(GST_CAT_ELEMENT_PADS,"found pad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
       return pad;
     }
     walk = g_list_next (walk);
   }
 
-  GST_DEBUG(GST_CAT_ELEMENT_PADS,"no such pad '%s'\n",name);
+  GST_INFO(GST_CAT_ELEMENT_PADS,"no such pad '%s' in element \"%s\"\n",name,GST_ELEMENT_NAME(element));
   return NULL;
 }
 

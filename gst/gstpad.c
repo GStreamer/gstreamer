@@ -343,7 +343,8 @@ void gst_pad_set_chain_function (GstPad *pad,
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_CHAINFUNC(pad) = chain;
-  GST_DEBUG (GST_CAT_PADS,"chainfunc for %s:%s is set to %p\n",GST_DEBUG_PAD_NAME(pad),chain);
+  GST_DEBUG (GST_CAT_PADS,"chainfunc for %s:%s set to %s\n",
+             GST_DEBUG_PAD_NAME(pad),GST_DEBUG_FUNCPTR_NAME(chain));
 }
 
 /**
@@ -361,8 +362,8 @@ gst_pad_set_get_function (GstPad *pad,
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_GETFUNC(pad) = get;
-  GST_DEBUG (GST_CAT_PADS,"getfunc for %s:%s(@%p) at %p is set to %p\n",
-             GST_DEBUG_PAD_NAME(pad),pad,&GST_RPAD_GETFUNC(pad),get);
+  GST_DEBUG (GST_CAT_PADS,"getfunc for %s:%s  set to %s\n",
+             GST_DEBUG_PAD_NAME(pad),GST_DEBUG_FUNCPTR_NAME(get));
 }
 
 /**
@@ -380,8 +381,8 @@ gst_pad_set_getregion_function (GstPad *pad,
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_GETREGIONFUNC(pad) = getregion;
-  GST_DEBUG (GST_CAT_PADS,"getregionfunc for %s:%s(@%p) at %p is set to %p\n",
-             GST_DEBUG_PAD_NAME(pad),pad,&GST_RPAD_GETREGIONFUNC(pad),getregion);
+  GST_DEBUG (GST_CAT_PADS,"getregionfunc for %s:%s set to %s\n",
+             GST_DEBUG_PAD_NAME(pad),GST_DEBUG_FUNCPTR_NAME(getregion));
 }
 
 /**
@@ -399,8 +400,8 @@ gst_pad_set_qos_function (GstPad *pad,
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_QOSFUNC(pad) = qos;
-  GST_DEBUG (GST_CAT_PADS,"qosfunc for %s:%s(@%p) at %p is set to %p\n",
-             GST_DEBUG_PAD_NAME(pad),pad,&GST_RPAD_QOSFUNC(pad),qos);
+  GST_DEBUG (GST_CAT_PADS,"qosfunc for %s:%s set to %s\n",
+             GST_DEBUG_PAD_NAME(pad),GST_DEBUG_FUNCPTR_NAME(qos));
 }
 
 /**
@@ -418,8 +419,8 @@ gst_pad_set_eos_function (GstPad *pad,
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_EOSFUNC(pad) = eos;
-  GST_DEBUG (GST_CAT_PADS,"eosfunc for %s:%s(@%p) at %p is set to %p\n",
-             GST_DEBUG_PAD_NAME(pad),pad,&GST_RPAD_EOSFUNC(pad),eos);
+  GST_DEBUG (GST_CAT_PADS,"eosfunc for %s:%s set to %s\n",
+             GST_DEBUG_PAD_NAME(pad),GST_DEBUG_FUNCPTR_NAME(eos));
 }
 
 /**
@@ -437,8 +438,8 @@ gst_pad_set_negotiate_function (GstPad *pad,
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_NEGOTIATEFUNC(pad) = nego;
-  GST_DEBUG (GST_CAT_PADS,"negotiatefunc for %s:%s(@%p) at %p is set to %p\n",
-             GST_DEBUG_PAD_NAME(pad),pad,&GST_RPAD_NEGOTIATEFUNC(pad),nego);
+  GST_DEBUG (GST_CAT_PADS,"negotiatefunc for %s:%s set to %s\n",
+             GST_DEBUG_PAD_NAME(pad),GST_DEBUG_FUNCPTR_NAME(nego));
 }
 
 
@@ -457,8 +458,8 @@ gst_pad_set_newcaps_function (GstPad *pad,
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_NEWCAPSFUNC (pad) = newcaps;
-  GST_DEBUG (GST_CAT_PADS,"newcapsfunc for %s:%s(@%p) at %p is set to %p\n",
-             GST_DEBUG_PAD_NAME(pad),pad,&GST_RPAD_NEWCAPSFUNC(pad),newcaps);
+  GST_DEBUG (GST_CAT_PADS,"newcapsfunc for %s:%s set to %s\n",
+             GST_DEBUG_PAD_NAME(pad),GST_DEBUG_FUNCPTR_NAME(newcaps));
 }
 
 /**
@@ -476,15 +477,15 @@ gst_pad_set_bufferpool_function (GstPad *pad,
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_BUFFERPOOLFUNC (pad) = bufpool;
-  GST_DEBUG (GST_CAT_PADS,"bufferpoolfunc for %s:%s(@%p) at %p is set to %p\n",
-             GST_DEBUG_PAD_NAME (pad), pad, &GST_RPAD_BUFFERPOOLFUNC (pad), bufpool);
+  GST_DEBUG (GST_CAT_PADS,"bufferpoolfunc for %s:%s set to %s\n",
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME(bufpool));
 }
 
 static void
 gst_pad_push_func(GstPad *pad, GstBuffer *buf)
 {
   if (GST_RPAD_CHAINFUNC(GST_RPAD_PEER(pad)) != NULL) {
-    GST_DEBUG (GST_CAT_DATAFLOW,"calling chain function\n");
+    GST_DEBUG (GST_CAT_DATAFLOW,"calling chain function %s\n");
     (GST_RPAD_CHAINFUNC(GST_RPAD_PEER(pad)))(pad,buf);
   } else {
     GST_DEBUG (GST_CAT_DATAFLOW,"got a problem here: default pad_push handler in place, no chain function\n");
@@ -595,9 +596,6 @@ gst_pad_connect (GstPad *srcpad,
   g_return_val_if_fail(sinkpad != NULL, FALSE);
   g_return_val_if_fail(GST_IS_PAD(sinkpad), FALSE);
 
-  GST_INFO (GST_CAT_ELEMENT_PADS, "about to connect %s:%s and %s:%s",
-            GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
-
   // now we need to deal with the real/ghost stuff
   realsrc = GST_PAD_REALIZE(srcpad);
   realsink = GST_PAD_REALIZE(sinkpad);
@@ -613,7 +611,7 @@ gst_pad_connect (GstPad *srcpad,
     realsink = temppad;
   }
   g_return_val_if_fail((GST_RPAD_DIRECTION(realsrc) == GST_PAD_SRC) &&
-                   (GST_RPAD_DIRECTION(realsink) == GST_PAD_SINK), FALSE);
+                       (GST_RPAD_DIRECTION(realsink) == GST_PAD_SINK), FALSE);
 
 
   /* first set peers */
@@ -632,9 +630,6 @@ gst_pad_connect (GstPad *srcpad,
   else if (realsink->sched)
     GST_SCHEDULE_PAD_CONNECT (realsink->sched, realsrc, realsink);
 
-  GST_INFO (GST_CAT_ELEMENT_PADS, "connected %s:%s and %s:%s",
-            GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
-
   if (GST_PAD_CAPS (srcpad)) {
     negotiated = gst_pad_renegotiate (srcpad);
   }
@@ -645,9 +640,14 @@ gst_pad_connect (GstPad *srcpad,
     negotiated = TRUE;
 
   if (!negotiated) {
+    GST_INFO(GST_CAT_ELEMENT_PADS, "pads %s:%s and %s:%s failed to negotiate, disconnecting",
+             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
     gst_pad_disconnect (GST_PAD (realsrc), GST_PAD (realsink));
     return FALSE;
   }
+
+  GST_INFO (GST_CAT_ELEMENT_PADS, "connected %s:%s and %s:%s",
+            GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
   return TRUE;
 }
 
