@@ -32,6 +32,31 @@ extern "C" {
 	
 extern GstElementDetails gst_spider_details;
 
+/**
+ * Theory of operation:
+ * When connecting a sink to a source, GstSpiderConnections are used to keep track
+ * of the current status of the connection. sink -> src is the path we intend to
+ * plug. current is how far we've come. If current equals
+ * - NULL, there is no possible path, 
+ * - src, the connection is established.
+ * - sink, it wasn't tried to establish a connection.
+ * - something else, we have come that far while plugging.
+ * signal_id is used to remember the signal_id when we are waiting for a "new_pad"
+ * callback during connection.
+ * When a path is established, the elements in the path (excluding sink and src)
+ * are refcounted once for every path.
+ * A GstSpider keeps a list of all GstSpiderConnections in it.
+ */
+typedef struct {
+  GstSpiderIdentity *sink;
+  GstSpiderIdentity *src;
+  /* dunno if the path should stay here or if its too much load.
+   * it's at least easier then always searching it */
+  GList *path;
+  GstElement *current;
+  gulong signal_id;
+} GstSpiderConnection;
+
 #define GST_TYPE_SPIDER \
   (gst_spider_get_type())
 #define GST_SPIDER(obj) \
@@ -49,7 +74,9 @@ typedef struct _GstSpiderClass GstSpiderClass;
 struct _GstSpider {
   GstBin        parent;
 	
-  GList *     	factories; /* factories to use for plugging */		
+  GList *     	factories; /* factories to use for plugging */
+
+  GList *	connections; /* GStSpiderConnection list of all connections */
 };
 	
 struct _GstSpiderClass {
@@ -59,8 +86,9 @@ struct _GstSpiderClass {
 /* default initialization stuff */
 GType         	gst_spider_get_type             (void);
 
-/* private functions to be called by GstSpiderIdentity */
-void		gst_spider_plug   		(GstSpiderIdentity *ident);
+/* private connection functions to be called by GstSpiderIdentity */
+void		gst_spider_identity_plug	(GstSpiderIdentity *ident);
+void		gst_spider_identity_unplug	(GstSpiderIdentity *ident);
 
 	
 #ifdef __cplusplus

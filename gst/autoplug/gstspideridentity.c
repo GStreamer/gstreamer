@@ -64,31 +64,30 @@ enum {
 };
 
 /* GObject stuff */
-static void                   gst_spider_identity_class_init            (GstSpiderIdentityClass *klass);
-static void                   gst_spider_identity_init                  (GstSpiderIdentity *spider_identity);
+static void			gst_spider_identity_class_init		(GstSpiderIdentityClass *klass);
+static void			gst_spider_identity_init		(GstSpiderIdentity *spider_identity);
 
 /* functions set in pads, elements and stuff */
-static void                   gst_spider_identity_chain                  (GstPad *pad, GstBuffer *buf);
-static GstElementStateReturn  gst_spider_identity_change_state          (GstElement *element);
-static GstPadConnectReturn    gst_spider_identity_connect                (GstPad *pad, GstCaps *caps);
-static GstCaps*                gst_spider_identity_getcaps                (GstPad *pad, GstCaps *caps);
+static void			gst_spider_identity_chain		(GstPad *pad, GstBuffer *buf);
+static GstElementStateReturn	gst_spider_identity_change_state	(GstElement *element);
+static GstPadConnectReturn	gst_spider_identity_connect		(GstPad *pad, GstCaps *caps);
+static GstCaps *		gst_spider_identity_getcaps		(GstPad *pad, GstCaps *caps);
 /* loop functions */
-static void                    gst_spider_identity_dumb_loop              (GstSpiderIdentity *ident);
-static void                    gst_spider_identity_src_loop              (GstSpiderIdentity *ident);
-static void                    gst_spider_identity_sink_loop_typefinding  (GstSpiderIdentity *ident);
-static void                    gst_spider_identity_sink_loop_emptycache  (GstSpiderIdentity *ident);
+static void			gst_spider_identity_dumb_loop		(GstSpiderIdentity *ident);
+static void                     gst_spider_identity_src_loop		(GstSpiderIdentity *ident);
+static void                     gst_spider_identity_sink_loop_typefinding (GstSpiderIdentity *ident);
+static void                     gst_spider_identity_sink_loop_emptycache (GstSpiderIdentity *ident);
 
 /* set/get functions */
-gboolean                      gst_spider_identity_is_plugged            (GstSpiderIdentity *identity);
-void                          gst_spider_identity_set_caps              (GstSpiderIdentity *identity, GstCaps *caps);
+static void			gst_spider_identity_set_caps		(GstSpiderIdentity *identity, GstCaps *caps);
 
 /* callback */
-static void                    callback_typefind_have_type                (GstElement *typefind, GstCaps *caps, GstSpiderIdentity *identity);
+static void			callback_typefind_have_type		(GstElement *typefind, GstCaps *caps, GstSpiderIdentity *identity);
 
 /* other functions */
-static void                    gst_spider_identity_start_typefinding      (GstSpiderIdentity *ident);
+static void			gst_spider_identity_start_typefinding	(GstSpiderIdentity *ident);
 
-static                        GstElementClass                           *parent_class = NULL;
+static GstElementClass *	parent_class				= NULL;
 /* no signals
 static guint gst_spider_identity_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -166,6 +165,7 @@ static void
 gst_spider_identity_chain (GstPad *pad, GstBuffer *buf) 
 {
   GstSpiderIdentity *ident;
+  GstPad *peerpad;
   
   /* g_print ("chaining on pad %s:%s with buffer %p\n", GST_DEBUG_PAD_NAME (pad), buf); */
 
@@ -176,6 +176,25 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
   ident = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
 
   if (GST_IS_EVENT (buf)) {
+    /* start hack for current event stuff here */
+    /* check for unconnected elements and send them the EOS event, too */
+    if (GST_EVENT_TYPE (GST_EVENT (buf)) == GST_EVENT_EOS)
+    {
+      GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (ident);
+      GList *list = spider->connections;
+      while (list)
+      {
+	GstSpiderConnection *conn = (GstSpiderConnection *) list->data;
+	list = g_list_next (list);
+	if (conn->sink == ident && (GstElement *) conn->src != conn->current)
+	{
+	  gst_element_set_eos (conn->src);
+          gst_pad_push (conn->src->src, gst_event_new (GST_EVENT_EOS));  
+	}
+      }
+    }
+    /* end hack for current event stuff here */
+
     gst_pad_event_default (ident->sink, GST_EVENT (buf));
     return;
   }
@@ -317,13 +336,13 @@ gst_spider_identity_change_state (GstElement *element)
           gst_spider_identity_start_typefinding (ident);
           break;
         } else {
-          gst_spider_plug (ident);
+          gst_spider_identity_plug (ident);
         }
       }
       /* autoplug on src */
       if ((GST_RPAD_PEER (ident->src) != NULL) && (GST_RPAD_PEER (ident->sink) == NULL))
       {
-        gst_spider_plug (ident);
+        gst_spider_identity_plug (ident);
       }
     default:
       break;
@@ -396,7 +415,7 @@ callback_typefind_have_type (GstElement *typefind, GstCaps *caps, GstSpiderIdent
   gst_element_set_loop_function (GST_ELEMENT (ident), (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_sink_loop_emptycache));
   
   /* autoplug this pad */
-  gst_spider_plug (ident);  
+  gst_spider_identity_plug (ident);  
   
   /* restart autoplugger */
   if (restart_spider)

@@ -309,6 +309,9 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
   guint curcost = GST_AUTOPLUG_MAX_COST; /* below this cost, there is no path */
   GstAutoplugNode *bestnode = NULL; /* best (unconnected) endpoint currently */
   
+  g_return_val_if_fail (srccaps != NULL, NULL);
+  g_return_val_if_fail (sinkcaps != NULL, NULL);
+  
   GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT, "attempting to autoplug via shortest path from %s to %s\n", gst_caps_get_mime (srccaps), gst_caps_get_mime (sinkcaps));
   /* wrap all factories as GstAutoplugNode 
    * initialize the cost */
