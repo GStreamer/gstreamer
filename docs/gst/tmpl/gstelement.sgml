@@ -76,12 +76,19 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 </para>
 
+@:
+
 @gstelement: the object which received the signal.
 
 <!-- ##### SIGNAL GstElement::error ##### -->
 <para>
 
 </para>
+
+@: 
+@: 
+@: 
+@:
 
 @gstelement: the object which received the signal.
 @arg1: 
@@ -93,6 +100,10 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 </para>
 
+@: 
+@: 
+@:
+
 @gstelement: the object which received the signal.
 @arg1: 
 @arg2: 
@@ -102,6 +113,9 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 </para>
 
+@: 
+@:
+
 @gstelement: the object which received the signal.
 @arg1: 
 
@@ -110,12 +124,17 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 </para>
 
+@:
+
 @gstelement: the object which received the signal.
 
 <!-- ##### SIGNAL GstElement::pad-removed ##### -->
 <para>
 
 </para>
+
+@: 
+@:
 
 @gstelement: the object which received the signal.
 @arg1: 
@@ -124,6 +143,10 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 <para>
 
 </para>
+
+@: 
+@: 
+@:
 
 @gstelement: the object which received the signal.
 @arg1: 
@@ -357,14 +380,6 @@ Gets the name of this element.  Used in the core.  Not ABI-compatible.
 <!-- ##### MACRO GST_ELEMENT_PARENT ##### -->
 <para>
 Get the parent object of this element.
-</para>
-
-@obj: a #GstElement to query
-
-
-<!-- ##### MACRO GST_ELEMENT_MANAGER ##### -->
-<para>
-Get the manager of this element.
 </para>
 
 @obj: a #GstElement to query

@@ -307,6 +307,16 @@ It will be called by the loader at statup.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_plugin_check_file ##### -->
+<para>
+
+</para>
+
+@filename: 
+@error: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_plugin_load_file ##### -->
 <para>
 

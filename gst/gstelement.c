@@ -2914,6 +2914,7 @@ gst_element_change_state (GstElement * element)
   old_pending = GST_STATE_PENDING (element);
   old_transition = GST_STATE_TRANSITION (element);
 
+  /* if the element already is in the given state, we just return success */
   if (old_pending == GST_STATE_VOID_PENDING ||
       old_state == GST_STATE_PENDING (element)) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
@@ -2968,7 +2969,16 @@ gst_element_change_state (GstElement * element)
       element->base_time = 0;
       gst_element_clear_pad_caps (element);
       break;
+    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_READY_TO_NULL:
+      break;
     default:
+      /* this will catch real but unhandled state changes;
+       * can only be caused by:
+       * - a new state was added
+       * - somehow the element was asked to jump across an intermediate state
+       */
+      g_assert_not_reached ();
       break;
   }
 

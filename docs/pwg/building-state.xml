@@ -64,6 +64,10 @@
     specific data needed by the element, and it can optionally fail to
     go from one state to another.
   </para>
+  <para>
+    Do not g_assert for unhandled state changes; this is taken care of by
+    the GstElement base class.
+  </para>
   <programlisting>
 static GstElementStateReturn
 		gst_my_filter_change_state	(GstElement *element);

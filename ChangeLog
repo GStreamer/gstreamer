@@ -1,5 +1,16 @@
 2004-07-09  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstplugin.sgml:
+	* docs/gst/tmpl/gsttypes.sgml:
+	* docs/pwg/building-state.xml:
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_change_state):
+	* gst/gstelement.c: (gst_element_change_state):
+	* gst/gstthread.c: (gst_thread_change_state):
+	  catch wrong state changes in element base class.
+
+2004-07-09  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* gst/gstinfo.h:
 	  clean up layout a little.
 
