@@ -20,3 +20,8 @@ Bastien Nocera <hadess@hadess.net>
   - gnomevfs sink and source
 Christian Fredrik Kalager Schaller <Uraeus@linuxrising.org>
   - Red Hat packaging and website work
+Thomas Vander Stichele <thomas@apestaart.org>
+  - build system cleaning
+  - some audio plugins
+  - release pushing
+
