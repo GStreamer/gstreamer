@@ -17,15 +17,19 @@ static guint update_id;
 
 #define UPDATE_INTERVAL 500
 
-#define THREAD
-
 static GstElement*
-make_spider_pipeline (const gchar *location) 
+make_spider_pipeline (const gchar *location, gboolean thread) 
 {
   GstElement *pipeline;
   GstElement *src, *decoder, *audiosink, *videosink, *a_thread, *v_thread, *a_queue, *v_queue;
   
-  pipeline = gst_pipeline_new ("app");
+  if (thread) {
+    pipeline = gst_thread_new ("app");
+  }
+  else {
+    pipeline = gst_pipeline_new ("app");
+  }
+  
 
   src = gst_element_factory_make (SOURCE, "src");
   decoder = gst_element_factory_make ("spider", "decoder");
@@ -210,7 +214,10 @@ update_scale (gpointer data)
 static gboolean
 iterate (gpointer data)
 {
-  gboolean res;
+  gboolean res = TRUE;
+
+  if (GST_FLAG_IS_SET (data, GST_BIN_SELF_SCHEDULABLE))
+    return TRUE;
 
   res = gst_bin_iterate (GST_BIN (data));
   if (!res) {
@@ -292,8 +299,14 @@ main (int argc, char **argv)
   GtkWidget *window, *hbox, *vbox, 
             *play_button, *pause_button, *stop_button, 
 	    *hscale;
+  gboolean threaded = FALSE;
+  struct poptOption options[] = {
+    {"threaded",  't',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &threaded,   0,
+         "Run the pipeline in a toplevel thread", NULL},
+     POPT_TABLEEND
+    };
 
-  gst_init (&argc, &argv);
+  gst_init_with_popt_table (&argc, &argv, options);
   gtk_init (&argc, &argv);
 
   if (argc != 2) {
@@ -301,7 +314,7 @@ main (int argc, char **argv)
     exit (-1);
   }
 
-  pipeline = make_spider_pipeline (argv[1]);
+  pipeline = make_spider_pipeline (argv[1], threaded);
 
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
