@@ -3242,6 +3242,7 @@ gst_pad_push (GstPad * pad, GstData * data)
 
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
+  g_return_if_fail (GST_RPAD_GETFUNC (pad) == NULL);
   g_return_if_fail (data != NULL);
 
   DEBUG_DATA (pad, data, "gst_pad_push");
