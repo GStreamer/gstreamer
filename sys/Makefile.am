@@ -70,9 +70,15 @@ else
 CDROM_DIR=
 endif
 
+if USE_OPENGL
+GL_DIR=glsink
+else
+GL_DIR=
+endif
+
 SUBDIRS=$(DXR3_DIR) $(OSS_DIR) $(OSX_AUDIO_DIR) $(OSX_VIDEO_DIR) $(QCAM_DIR) \
         $(SUNAUDIO_DIR) $(V4L_DIR) $(V4L2_DIR) $(VCD_DIR) $(CDROM_DIR) \
-        $(XI_DIR) $(XV_DIR)
+        $(XI_DIR) $(XV_DIR) $(GL_DIR)
 
 DIST_SUBDIRS=dxr3 oss osxaudio osxvideo qcam sunaudio v4l v4l2 vcd ximage \
         xvimage glsink cdrom
