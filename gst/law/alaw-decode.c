@@ -87,6 +87,7 @@ alawdec_getcaps (GstPad * pad)
     otherpad = alawdec->sinkpad;
     base_caps = gst_caps_new_simple ("audio/x-raw-int",
         "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16,
+        "signed", G_TYPE_BOOLEAN, TRUE,
         "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
   }
   othercaps = gst_pad_get_allowed_caps (otherpad);
