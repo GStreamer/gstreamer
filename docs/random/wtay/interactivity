@@ -1,0 +1,93 @@
+This document contains some ideas that can be used to implement
+interactivity in media content.
+
+Possible application: DVD navigation, flash,...
+
+Requirements
+------------
+
+- capture mouse clicks, mouse position, movement occuring on
+  a video display plugin
+- transport these events to the interested plugins
+- allow for automation (ie, the technique should work without
+  a video plugin too)
+- the core doesn't care
+
+Capturing events
+----------------
+
+- the videosink element captures mouse events
+  - event is encapsulated into a generic data structure
+    describing the event (need to define a caps?)
+  - event is signalled to the app?.
+  - event is sent upstream?
+
+  * videosink has to add something to the main_loop to
+    be able to grab events
+  * thread issues?
+  * does the app need to know about the events?
+  
+- app captures mouse events
+  - no idea if that's possible 
+  - app sends events upstream
+
+Sending events to plugins
+-------------------------
+
+- are sent upstream using the event methods
+  * more generic
+  * less app control
+
+- are sent to the appropriate plugin by the app
+  * app needs to know what plugins are interested,
+    less generic.
+  * more app control
+
+automation will always work, the app can construct navigation
+events and insert them into the pipeline.
+
+What about flushing to minimize latency?
+
+
+Defining an event
+-----------------
+
+some ideas:
+
+GST_CAPS_NEW (
+   "videosink_event",
+   "application/x-gst-navigation"
+     "type", "click",
+     "x_pos", 30,
+     "y_pos", 40
+   )
+     
+GST_CAPS_NEW (
+   "videosink_event",
+   "application/x-gst-navigation"
+     "type", "move",
+     "x_pos", 30,
+     "y_pos", 40
+   )
+     
+...
+
+do we need a library for this?
+
+do we use custom events and use the mime type to detect the 
+type? do we creat a GST_EVENT_NAVIGATION?
+
+can we encapsulate all events into a GstCaps? I would think so
+
+Random thoughts
+---------------
+
+- we're basically defining an event model, I don't think there is
+  anything wrong with that.
+- how is our coordinate system going to work? do
+  we use normalized values, 0-1000000 (or floats)
+  or real pixel values? real pixel values require scalers to adjust
+  the values (I don't think I like that)
+
+
+            
