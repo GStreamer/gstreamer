@@ -400,6 +400,7 @@ gst_v4lmjpegsrc_capture_start (GstV4lMjpegSrc * v4lmjpegsrc)
     }
   }
 
+  v4lmjpegsrc->is_capturing = TRUE;
   g_mutex_unlock (v4lmjpegsrc->mutex_queue_state);
 
   return TRUE;
@@ -541,6 +542,7 @@ gst_v4lmjpegsrc_capture_stop (GstV4lMjpegSrc * v4lmjpegsrc)
     gst_v4lmjpegsrc_sync_next_frame (v4lmjpegsrc, &n);
   }
 
+  v4lmjpegsrc->is_capturing = FALSE;
   g_mutex_unlock (v4lmjpegsrc->mutex_queue_state);
 
   return TRUE;

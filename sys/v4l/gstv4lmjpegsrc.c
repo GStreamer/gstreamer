@@ -142,7 +142,7 @@ gst_v4lmjpegsrc_base_init (gpointer g_class)
   static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("video/x-jpeg, "
+      GST_STATIC_CAPS ("image/jpeg, "
           "width = (int) [ 0, MAX ], "
           "height = (int) [ 0, MAX ], " "framerate = (double) [ 0, MAX ]")
       );
@@ -264,6 +264,8 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc * v4lmjpegsrc)
 
   /* fps */
   v4lmjpegsrc->use_fixed_fps = TRUE;
+
+  v4lmjpegsrc->is_capturing = FALSE;
 }
 
 
@@ -401,9 +403,14 @@ gst_v4lmjpegsrc_srcconnect (GstPad * pad, const GstCaps * caps)
       max_h = GST_V4LELEMENT (v4lmjpegsrc)->vcap.maxheight;
   gulong bufsize;
   GstStructure *structure;
+  gboolean was_capturing;
 
   /* in case the buffers are active (which means that we already
    * did capsnego before and didn't clean up), clean up anyways */
+  if ((was_capturing = v4lmjpegsrc->is_capturing)) {
+    if (!gst_v4lmjpegsrc_capture_stop (v4lmjpegsrc))
+      return GST_PAD_LINK_REFUSED;
+  }
   if (GST_V4L_IS_ACTIVE (GST_V4LELEMENT (v4lmjpegsrc))) {
     if (!gst_v4lmjpegsrc_capture_deinit (v4lmjpegsrc))
       return GST_PAD_LINK_REFUSED;
@@ -413,7 +420,7 @@ gst_v4lmjpegsrc_srcconnect (GstPad * pad, const GstCaps * caps)
 
   /* Note: basically, we don't give a damn about the opposite caps here.
    * that might seem odd, but it isn't. we know that the opposite caps is
-   * either NULL or has mime type video/x-jpeg, and in both cases, we'll set
+   * either NULL or has mime type image/jpeg, and in both cases, we'll set
    * our own mime type back and it'll work. Other properties are to be set
    * by the src, not by the opposite caps */
 
@@ -473,6 +480,13 @@ gst_v4lmjpegsrc_srcconnect (GstPad * pad, const GstCaps * caps)
       return GST_PAD_LINK_REFUSED;
   }
 #endif
+
+  if (!gst_v4lmjpegsrc_capture_init (v4lmjpegsrc))
+    return GST_PAD_LINK_REFUSED;
+
+  if (was_capturing || GST_STATE (v4lmjpegsrc) == GST_STATE_PLAYING)
+    if (!gst_v4lmjpegsrc_capture_start (v4lmjpegsrc))
+      return GST_PAD_LINK_REFUSED;
 
   return GST_PAD_LINK_OK;
 }
@@ -596,15 +610,17 @@ gst_v4lmjpegsrc_getcaps (GstPad * pad)
 {
   GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
   struct video_capability *vcap = &GST_V4LELEMENT (v4lmjpegsrc)->vcap;
+  gdouble fps;
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lmjpegsrc))) {
-    return NULL;
+    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
 
-  return gst_caps_new_simple ("video/x-jpeg",
+  fps = gst_v4lmjpegsrc_get_fps (v4lmjpegsrc);
+  return gst_caps_new_simple ("image/jpeg",
       "width", GST_TYPE_INT_RANGE, vcap->maxwidth / 4, vcap->maxwidth,
       "height", GST_TYPE_INT_RANGE, vcap->maxheight / 4, vcap->maxheight,
-      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+      "framerate", G_TYPE_DOUBLE, fps, NULL);
 }
 
 
@@ -717,7 +733,8 @@ gst_v4lmjpegsrc_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* queue all buffer, start streaming capture */
-      if (!gst_v4lmjpegsrc_capture_start (v4lmjpegsrc))
+      if (GST_V4LELEMENT (v4lmjpegsrc)->buffer &&
+          !gst_v4lmjpegsrc_capture_start (v4lmjpegsrc))
         return GST_STATE_FAILURE;
       g_get_current_time (&time);
       v4lmjpegsrc->substract_time = GST_TIMEVAL_TO_TIME (time) -
@@ -729,12 +746,14 @@ gst_v4lmjpegsrc_change_state (GstElement * element)
       v4lmjpegsrc->substract_time = GST_TIMEVAL_TO_TIME (time) -
           v4lmjpegsrc->substract_time;
       /* de-queue all queued buffers */
-      if (!gst_v4lmjpegsrc_capture_stop (v4lmjpegsrc))
+      if (v4lmjpegsrc->is_capturing &&
+          !gst_v4lmjpegsrc_capture_stop (v4lmjpegsrc))
         return GST_STATE_FAILURE;
       break;
     case GST_STATE_PAUSED_TO_READY:
       /* stop capturing, unmap all buffers */
-      if (!gst_v4lmjpegsrc_capture_deinit (v4lmjpegsrc))
+      if (GST_V4LELEMENT (v4lmjpegsrc)->buffer &&
+          !gst_v4lmjpegsrc_capture_deinit (v4lmjpegsrc))
         return GST_STATE_FAILURE;
       break;
   }

@@ -730,7 +730,7 @@ gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
   if (!gst_v4lsrc_capture_init (v4lsrc))
     return GST_PAD_LINK_REFUSED;
 
-  if (was_capturing) {
+  if (was_capturing || GST_STATE (v4lsrc) == GST_STATE_PLAYING) {
     if (!gst_v4lsrc_capture_start (v4lsrc))
       return GST_PAD_LINK_REFUSED;
   }
@@ -794,8 +794,7 @@ gst_v4lsrc_getcaps (GstPad * pad)
   struct video_capability *vcap = &GST_V4LELEMENT (v4lsrc)->vcap;
   gfloat fps = 0.0;
   GList *item;
-  static GValue *fps_list;      /* FIXME: this should be done in a hash table
-                                 * on device name instead */
+  GValue *fps_list;
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lsrc))) {
     return gst_caps_new_any ();
@@ -805,9 +804,9 @@ gst_v4lsrc_getcaps (GstPad * pad)
     return gst_caps_new_any ();
   }
 
-  /* if not cached from last run, get it */
-  if (!fps_list)
-    fps_list = gst_v4lsrc_get_fps_list (v4lsrc);
+  /* FIXME: cache this on gst_v4l_open() */
+  fps_list = gst_v4lsrc_get_fps_list (v4lsrc);
+  g_print ("FPS list: %p\n", fps_list);
   if (!fps_list)
     fps = gst_v4lsrc_get_fps (v4lsrc);
 
@@ -826,7 +825,7 @@ gst_v4lsrc_getcaps (GstPad * pad)
 
     if (vcap->minwidth < vcap->maxwidth) {
       gst_caps_set_simple (one, "width", GST_TYPE_INT_RANGE, vcap->minwidth,
-          NULL);
+          vcap->maxwidth, NULL);
     } else {
       gst_caps_set_simple (one, "width", G_TYPE_INT, vcap->minwidth, NULL);
     }
@@ -1154,7 +1153,8 @@ gst_v4lsrc_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* queue all buffer, start streaming capture */
-      if (!gst_v4lsrc_capture_start (v4lsrc))
+      if (GST_V4LELEMENT (v4lsrc)->buffer != NULL &&
+          !gst_v4lsrc_capture_start (v4lsrc))
         return GST_STATE_FAILURE;
       g_get_current_time (&time);
       v4lsrc->substract_time =
@@ -1162,15 +1162,17 @@ gst_v4lsrc_change_state (GstElement * element)
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       /* de-queue all queued buffers */
-      if (!gst_v4lsrc_capture_stop (v4lsrc))
+      if (v4lsrc->is_capturing && !gst_v4lsrc_capture_stop (v4lsrc))
         return GST_STATE_FAILURE;
+      gst_v4lsrc_capture_stop (v4lsrc);
       g_get_current_time (&time);
       v4lsrc->substract_time =
           GST_TIMEVAL_TO_TIME (time) - v4lsrc->substract_time;
       break;
     case GST_STATE_PAUSED_TO_READY:
       /* stop capturing, unmap all buffers */
-      if (!gst_v4lsrc_capture_deinit (v4lsrc))
+      if (GST_V4LELEMENT (v4lsrc)->buffer != NULL &&
+          !gst_v4lsrc_capture_deinit (v4lsrc))
         return GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_NULL:

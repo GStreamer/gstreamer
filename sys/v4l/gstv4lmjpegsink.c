@@ -112,7 +112,7 @@ gst_v4lmjpegsink_base_init (gpointer g_class)
   static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
-      GST_STATIC_CAPS ("video/x-jpeg, "
+      GST_STATIC_CAPS ("image/jpeg, "
           "width = (int) [ 1, MAX ], "
           "height = (int) [ 1, MAX ], " "framerate = (double) [ 0, MAX ]")
       );
