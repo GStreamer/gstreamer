@@ -1133,6 +1133,7 @@ examples/indexing/Makefile
 examples/Makefile
 testsuite/autoplug/Makefile
 testsuite/spider/Makefile
+testsuite/alsa/Makefile
 testsuite/Makefile
 tools/Makefile
 gconf/Makefile
