@@ -58,11 +58,9 @@ enum {
 static void                  gst_sdlvideosink_class_init   (GstSDLVideoSinkClass *klass);
 static void                  gst_sdlvideosink_init         (GstSDLVideoSink      *sdlvideosink);
 
-static void                  gst_sdlvideosink_newcaps      (GstPad               *pad,
+static gboolean              gst_sdlvideosink_create       (GstSDLVideoSink      *sdlvideosink);
+static GstPadConnectReturn   gst_sdlvideosink_sinkconnect  (GstPad               *pad,
                                                             GstCaps              *caps);
-static GstPadNegotiateReturn gst_sdlvideosink_negotiate    (GstPad               *pad,
-                                                            GstCaps             **caps,
-                                                            gpointer             *data);
 static void                  gst_sdlvideosink_chain        (GstPad               *pad,
                                                             GstBuffer            *buf);
 
@@ -79,6 +77,7 @@ static GstElementStateReturn gst_sdlvideosink_change_state (GstElement          
 
 static GstCaps *capslist = NULL;
 static GstPadTemplate *sink_template;
+
 static GstElementClass *parent_class = NULL;
 static guint gst_sdlvideosink_signals[LAST_SIGNAL] = { 0 };
 
@@ -158,9 +157,9 @@ gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
 {
   sdlvideosink->sinkpad = gst_pad_new_from_template (sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (sdlvideosink), sdlvideosink->sinkpad);
+
   gst_pad_set_chain_function (sdlvideosink->sinkpad, gst_sdlvideosink_chain);
-  gst_pad_set_negotiate_function (sdlvideosink->sinkpad, gst_sdlvideosink_negotiate);
-  gst_pad_set_newcaps_function (sdlvideosink->sinkpad, gst_sdlvideosink_newcaps);
+  gst_pad_set_connect_function (sdlvideosink->sinkpad, gst_sdlvideosink_sinkconnect);
 
   sdlvideosink->clock = gst_clock_get_system();
   gst_clock_register(sdlvideosink->clock, GST_OBJECT(sdlvideosink));
@@ -211,19 +210,10 @@ gst_sdlvideosink_get_sdl_from_fourcc (GstSDLVideoSink *sdlvideosink,
 }
 
 
-static void
-gst_sdlvideosink_newcaps (GstPad  *pad,
-                          GstCaps *caps)
+static gboolean
+gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink)
 {
-  GstSDLVideoSink *sdlvideosink;
   gulong print_format;
-  gulong format;
-
-  sdlvideosink = GST_SDLVIDEOSINK (gst_pad_get_parent (pad));
-
-  sdlvideosink->format = gst_caps_get_fourcc_int (caps, "format");
-  sdlvideosink->image_width = gst_caps_get_int (caps, "width");
-  sdlvideosink->image_height = gst_caps_get_int (caps, "height");
 
   if (sdlvideosink->window_height <= 0)
     sdlvideosink->window_height = sdlvideosink->image_height;
@@ -240,28 +230,28 @@ gst_sdlvideosink_newcaps (GstPad  *pad,
     gst_element_error(GST_ELEMENT(sdlvideosink),
       "SDL: Couldn't set %dx%d: %s", sdlvideosink->window_width,
       sdlvideosink->window_height, SDL_GetError());
-    return;
+    return FALSE;
   }
-  else
-  {
-    gst_element_info(GST_ELEMENT(sdlvideosink),
-      "SDL: Set %dx%d @ %d bpp",
-      sdlvideosink->window_width, sdlvideosink->window_height,
-      sdlvideosink->screen->format->BitsPerPixel);
-  }
-
-  /* get SDL code */
-  format = gst_sdlvideosink_get_sdl_from_fourcc(sdlvideosink, sdlvideosink->format);
 
   /* clean possible old YUV overlays (...) and create a new one */
-  if (sdlvideosink->yuv_overlay) SDL_FreeYUVOverlay(sdlvideosink->yuv_overlay);
+  if (sdlvideosink->yuv_overlay)
+    SDL_FreeYUVOverlay(sdlvideosink->yuv_overlay);
   sdlvideosink->yuv_overlay = SDL_CreateYUVOverlay(sdlvideosink->image_width,
-    sdlvideosink->image_height, format, sdlvideosink->screen);
+    sdlvideosink->image_height, sdlvideosink->format, sdlvideosink->screen);
   if ( sdlvideosink->yuv_overlay == NULL )
   {
     gst_element_error(GST_ELEMENT(sdlvideosink),
       "SDL: Couldn't create SDL_yuv_overlay: %s", SDL_GetError());
-    return;
+    return FALSE;
+  }
+  else
+  {
+    gst_element_info(GST_ELEMENT(sdlvideosink),
+      "Using a %dx%d %dbpp SDL screen with a %dx%d \'%4.4s\' YUV overlay",
+      sdlvideosink->window_width, sdlvideosink->window_height,
+      sdlvideosink->screen->format->BitsPerPixel,
+      sdlvideosink->image_width, sdlvideosink->image_height,
+      (gchar*)&print_format);
   }
 
   sdlvideosink->rect.x = 0;
@@ -278,37 +268,23 @@ gst_sdlvideosink_newcaps (GstPad  *pad,
   /* TODO: is this the width of the input image stream or of the widget? */
   g_signal_emit (G_OBJECT (sdlvideosink), gst_sdlvideosink_signals[SIGNAL_HAVE_SIZE], 0,
 		  sdlvideosink->window_width, sdlvideosink->window_height);
+
+  return TRUE;
 }
 
-
-static GstPadNegotiateReturn
-gst_sdlvideosink_negotiate (GstPad *pad, GstCaps **caps, gpointer *data)
+static GstPadConnectReturn
+gst_sdlvideosink_sinkconnect (GstPad  *pad,
+                              GstCaps *vscapslist)
 {
   GstSDLVideoSink *sdlvideosink;
-
-  GST_DEBUG (0, "sdlvideosink: negotiate %p %p\n", data, *data);
+  GstCaps *caps;
 
   sdlvideosink = GST_SDLVIDEOSINK (gst_pad_get_parent (pad));
 
-  if (*caps == NULL)
-  {
-    /* provide our own */
-    *caps = sdlvideosink->capslist;
-
-    if (*caps != NULL)
-    {
-      sdlvideosink->capslist = sdlvideosink->capslist->next;
-      return GST_PAD_NEGOTIATE_TRY;
-    }
-    else
-    {
-      GST_DEBUG(0, "Out of caps\n");
-    }
-  }
-  else
+  for (caps = vscapslist; caps != NULL; caps = vscapslist = vscapslist->next)
   {
     /* check whether it's in any way compatible */
-    switch (gst_caps_get_fourcc_int(*caps, "format"))
+    switch (gst_caps_get_fourcc_int(caps, "format"))
     {
       case GST_MAKE_FOURCC('I','4','2','0'):
       case GST_MAKE_FOURCC('I','Y','U','V'):
@@ -316,12 +292,18 @@ gst_sdlvideosink_negotiate (GstPad *pad, GstCaps **caps, gpointer *data)
       case GST_MAKE_FOURCC('Y','U','Y','2'):
       case GST_MAKE_FOURCC('Y','V','Y','U'):
       case GST_MAKE_FOURCC('U','Y','V','Y'):
-        return GST_PAD_NEGOTIATE_AGREE;
+        sdlvideosink->format = gst_sdlvideosink_get_sdl_from_fourcc(sdlvideosink,
+                                     gst_caps_get_fourcc_int(caps, "format"));
+        sdlvideosink->image_width = gst_caps_get_int(caps, "width");
+        sdlvideosink->image_height = gst_caps_get_int(caps, "height");
+        return GST_PAD_CONNECT_OK;
     }
   }
 
   /* if we got here - it's not good */
-  return GST_PAD_NEGOTIATE_FAIL;
+  gst_element_error(GST_ELEMENT(sdlvideosink),
+    "Failed to find acceptable caps");
+  return GST_PAD_CONNECT_REFUSED;
 }
 
 
@@ -482,9 +464,17 @@ gst_sdlvideosink_change_state (GstElement *element)
       }
       GST_FLAG_SET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
-    case GST_STATE_READY_TO_NULL:
-      if (sdlvideosink->yuv_overlay) SDL_FreeYUVOverlay(sdlvideosink->yuv_overlay);
+    case GST_STATE_READY_TO_PAUSED:
+      /* create a YUV overlay */
+      if (!gst_sdlvideosink_create(sdlvideosink))
+        return GST_STATE_FAILURE;
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      if (sdlvideosink->yuv_overlay)
+        SDL_FreeYUVOverlay(sdlvideosink->yuv_overlay);
       sdlvideosink->yuv_overlay = NULL;
+      break;
+    case GST_STATE_READY_TO_NULL:
       SDL_Quit();
       GST_FLAG_UNSET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
