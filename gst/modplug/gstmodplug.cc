@@ -270,6 +270,7 @@ gst_modplug_init (GstModPlug *modplug)
   modplug->buffer_in = NULL;
   
   modplug->state = MODPLUG_STATE_NEED_TUNE;
+  GST_FLAG_SET (modplug, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -484,6 +485,7 @@ gst_modplug_fixate (GstPad *pad, const GstCaps *caps)
 static void
 gst_modplug_handle_event (GstModPlug *modplug)
 {
+  gint64 value;
   guint32 remaining;
   GstEvent *event;
 
@@ -495,7 +497,16 @@ gst_modplug_handle_event (GstModPlug *modplug)
   }
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      gst_event_unref (event);
+      break;
     case GST_EVENT_DISCONTINUOUS:
+      if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value)) {
+	if (remaining == value) {
+	  gst_event_unref (event);
+	  break;
+	}
+      }
       gst_bytestream_flush_fast (modplug->bs, remaining);
     default:
       gst_pad_event_default (modplug->sinkpad, event);
