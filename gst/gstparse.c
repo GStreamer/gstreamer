@@ -68,7 +68,9 @@ dynamic_connect (GstElement * element, GstPad * newpad, gpointer data)
 
   if (!strcmp (gst_pad_get_name (newpad), connect->srcpadname)) {
     gst_element_set_state (connect->pipeline, GST_STATE_PAUSED);
-    gst_pad_connect (newpad, connect->target);
+    if (!gst_pad_connect (newpad, connect->target))
+      g_warning ("could not connect %s:%s to %s:%s", GST_DEBUG_PAD_NAME (newpad), 
+                 GST_DEBUG_PAD_NAME (connect->target));
     gst_element_set_state (connect->pipeline, GST_STATE_PLAYING);
   }
 }
@@ -422,8 +424,13 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
           GST_DEBUG (0, "CONNECTING %s:%s and %s:%s\n",
                      GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (g_slist_nth (srcpads, j))),
                      GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (g_slist_nth (sinkpads, j))));
-          gst_pad_connect (GST_PARSE_LISTPAD (g_slist_nth (srcpads, j)),
-                           GST_PARSE_LISTPAD (g_slist_nth (sinkpads, j)));
+          if (!gst_pad_connect (GST_PARSE_LISTPAD (g_slist_nth (srcpads, j)),
+                                GST_PARSE_LISTPAD (g_slist_nth (sinkpads, j)))) {
+            g_warning ("could not connect %s:%s to %s:%s",
+                       GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (g_slist_nth (srcpads, j))), 
+                       GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (g_slist_nth (sinkpads, j))));
+            return GST_PARSE_ERROR_CONNECT;
+          }
         }
       }
       

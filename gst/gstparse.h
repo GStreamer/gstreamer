@@ -35,7 +35,8 @@ typedef enum {
   GST_PARSE_ERROR_SYNTAX = -1, 
   GST_PARSE_ERROR_CREATING_ELEMENT = -2,
   GST_PARSE_ERROR_NOSUCH_ELEMENT = -3,
-  GST_PARSE_ERROR_INTERNAL = -4
+  GST_PARSE_ERROR_INTERNAL = -4,
+  GST_PARSE_ERROR_CONNECT = -5,
 } GstParseErrors;
   
 GstPipeline*	gst_parse_launch	(const gchar *pipeline_description);

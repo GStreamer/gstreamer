@@ -114,10 +114,8 @@ gst_bin_class_init (GstBinClass * klass)
 		  G_STRUCT_OFFSET (GstBinClass, object_added), NULL, NULL,
 		  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
 
-  klass->change_state_type =		GST_DEBUG_FUNCPTR (gst_bin_change_state_type);
-  klass->iterate =			GST_DEBUG_FUNCPTR (gst_bin_iterate_func);
-
   gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_bin_dispose);
+
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself 	= GST_DEBUG_FUNCPTR (gst_bin_save_thyself);
   gstobject_class->restore_thyself 	= GST_DEBUG_FUNCPTR (gst_bin_restore_thyself);
@@ -739,7 +737,8 @@ static gboolean
 gst_bin_iterate_func (GstBin * bin)
 {
   /* only iterate if this is the manager bin */
-  if (GST_ELEMENT_SCHED (bin)->parent == GST_ELEMENT (bin)) {
+  if (GST_ELEMENT_SCHED (bin) &&
+      GST_ELEMENT_SCHED (bin)->parent == GST_ELEMENT (bin)) {
     GstSchedulerState state;
 
     state = gst_scheduler_iterate (GST_ELEMENT_SCHED (bin));

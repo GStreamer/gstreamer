@@ -587,6 +587,7 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
 {
   GstRealPad *realsrc, *realsink;
   gboolean negotiated = FALSE;
+  gint num_decoupled = 0;
 
   /* generic checks */
   g_return_val_if_fail (srcpad != NULL, FALSE);
@@ -607,6 +608,25 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
 
   g_return_val_if_fail (GST_RPAD_PEER (realsrc) == NULL, FALSE);
   g_return_val_if_fail (GST_RPAD_PEER (realsink) == NULL, FALSE);
+  g_return_val_if_fail (GST_PAD_PARENT (realsrc) != NULL, FALSE);
+  g_return_val_if_fail (GST_PAD_PARENT (realsink) != NULL, FALSE);
+
+  if (realsrc->sched && realsink->sched) {
+    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsrc), GST_ELEMENT_DECOUPLED))
+      num_decoupled++;
+    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsink), GST_ELEMENT_DECOUPLED))
+      num_decoupled++;
+
+    if (realsrc->sched == realsink->sched && num_decoupled != 0) {
+      g_warning ("cannot connect pads from decoupled elements with the same sched\n");
+      return FALSE;
+    } else if (realsrc->sched != realsink->sched && num_decoupled != 1) {
+      g_warning ("connecting pads with different scheds requires one decoupled element (queue)\n");
+      return FALSE;
+    }
+  } else if (realsrc->sched || realsink->sched) {
+    g_warning ("you can't connect to a non-managed element");
+  }
 
   /* check for reversed directions and swap if necessary */
   if ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SINK) &&

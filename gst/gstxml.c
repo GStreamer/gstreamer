@@ -254,6 +254,9 @@ gst_xml_parse_doc (GstXML *xml, xmlDocPtr doc, const guchar *root)
  * if you only want to build a specific element from an XML file
  * but not the pipeline it is embedded in.
  *
+ * Pass "-" as fname to read from stdin. You can also pass a URI
+ * of any format that libxml supports, including http.
+ *
  * Returns: TRUE on success, FALSE otherwise
  */
 gboolean
