@@ -216,15 +216,19 @@ gst_ximagesink_xwindow_new (GstXImageSink *ximagesink, gint width, gint height)
   
   xwindow->width = width;
   xwindow->height = height;
-  xwindow->internal = TRUE;
   
   g_mutex_lock (ximagesink->x_lock);
   
-  xwindow->win = XCreateSimpleWindow (ximagesink->xcontext->disp,
-                                      ximagesink->xcontext->root, 
-                                      0, 0, xwindow->width, xwindow->height, 
-                                      0, 0, ximagesink->xcontext->black);
-  
+  if (ximagesink->embed_into == 0) {
+    xwindow->win = XCreateSimpleWindow (ximagesink->xcontext->disp,
+                                        ximagesink->xcontext->root, 
+	                                0, 0, xwindow->width, xwindow->height, 
+	                                0, 0, ximagesink->xcontext->black);
+    
+    XMapRaised (ximagesink->xcontext->disp, xwindow->win);
+  } else {
+    xwindow->win = ximagesink->embed_into;
+  }
   XSelectInput (ximagesink->xcontext->disp, xwindow->win, ExposureMask |
                 StructureNotifyMask | PointerMotionMask | KeyPressMask |
                 KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
@@ -232,7 +236,6 @@ gst_ximagesink_xwindow_new (GstXImageSink *ximagesink, gint width, gint height)
   xwindow->gc = XCreateGC (ximagesink->xcontext->disp,
                            xwindow->win, 0, NULL);
   
-  XMapRaised (ximagesink->xcontext->disp, xwindow->win);
   
   g_mutex_unlock (ximagesink->x_lock);
   
@@ -250,9 +253,12 @@ gst_ximagesink_xwindow_destroy (GstXImageSink *ximagesink, GstXWindow *xwindow)
   g_mutex_lock (ximagesink->x_lock);
   
   /* If we did not create that window we just free the GC and let it live */
-  if (xwindow->internal)
+  if (ximagesink->embed_into == 0) {
     XDestroyWindow (ximagesink->xcontext->disp, xwindow->win);
-  
+  } else {
+    XSelectInput (ximagesink->xcontext->disp, xwindow->win, 0);
+  }
+    
   XFreeGC (ximagesink->xcontext->disp, xwindow->gc);
   
   g_mutex_unlock (ximagesink->x_lock);
@@ -609,6 +615,9 @@ gst_ximagesink_sinkconnect (GstPad *pad, const GstCaps *caps)
                                              GST_VIDEOSINK_WIDTH (ximagesink),
                                              GST_VIDEOSINK_HEIGHT (ximagesink));
   
+  gst_x_overlay_got_desired_size (GST_X_OVERLAY (ximagesink),
+				  GST_VIDEOSINK_WIDTH (ximagesink),
+				  GST_VIDEOSINK_HEIGHT (ximagesink));
   gst_video_sink_got_video_size (GST_VIDEOSINK (ximagesink),
                                  GST_VIDEOSINK_WIDTH (ximagesink),
                                  GST_VIDEOSINK_HEIGHT (ximagesink));
@@ -638,6 +647,8 @@ gst_ximagesink_change_state (GstElement *element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      GST_VIDEOSINK_WIDTH (ximagesink) = 0;
+      GST_VIDEOSINK_HEIGHT (ximagesink) = 0;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -880,11 +891,12 @@ static void
 gst_ximagesink_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
 {
   GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
-  GstXWindow *xwindow = NULL;
-  XWindowAttributes attr;
   
   g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
+  
+  if (ximagesink->embed_into == xwindow_id)
+    return;
   
   if (!ximagesink->xcontext)
     {
@@ -899,31 +911,28 @@ gst_ximagesink_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
       gst_ximagesink_xwindow_destroy (ximagesink, ximagesink->xwindow);
     }
     
-  xwindow = g_new0 (GstXWindow, 1);
+  ximagesink->embed_into = xwindow_id;
   
-  xwindow->win = xwindow_id;
-  
-  /* We get window geometry, set the event we want to receive, and create a GC */
-  g_mutex_lock (ximagesink->x_lock);
-  XGetWindowAttributes (ximagesink->xcontext->disp, xwindow->win, &attr);
-  xwindow->width = attr.width;
-  xwindow->height = attr.height;
-  xwindow->internal = FALSE;
-  XSelectInput (ximagesink->xcontext->disp, xwindow->win, ExposureMask |
-                StructureNotifyMask | PointerMotionMask | KeyPressMask |
-                KeyReleaseMask);
-  
-  xwindow->gc = XCreateGC (ximagesink->xcontext->disp,
-                           xwindow->win, 0, NULL);
-  g_mutex_unlock (ximagesink->x_lock);
-    
-  ximagesink->xwindow = xwindow;
+  ximagesink->xwindow = gst_ximagesink_xwindow_new (ximagesink, GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
+  ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink, 
+      GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
+  gst_x_overlay_got_xwindow_id (overlay, xwindow_id);
+}
+
+static void
+gst_ximagesink_get_desired_size (GstXOverlay *overlay, guint *width, guint *height)
+{
+  GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
+
+  *width = GST_VIDEOSINK_WIDTH (ximagesink);
+  *height = GST_VIDEOSINK_HEIGHT (ximagesink);
 }
 
 static void
 gst_ximagesink_xoverlay_init (GstXOverlayClass *iface)
 {
   iface->set_xwindow_id = gst_ximagesink_set_xwindow_id;
+  iface->get_desired_size = gst_ximagesink_get_desired_size;
 }
 
 /* =========================================== */
