@@ -8,7 +8,7 @@ m4_define(gst_python_micro_version, 0)
 m4_define(gst_python_version, gst_python_major_version.gst_python_minor_version.gst_python_micro_version)
 
 dnl required versions of other packages
-m4_define(pygtk_required_version,             1.99.13)
+m4_define(pygtk_required_version,             1.99.14)
 
 m4_define(glib_required_version,              2.0.0)
 m4_define(gtk_required_version,               2.0.0)

@@ -1,3 +1,15 @@
+2002-12-31  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* configure.ac: require PyGTK 1.99.14
+
+	* pygtk.diff: integrated upstream, remove patch
+
+	* gstreamer/Makefile.am: filter out gstatomic_impl.h from includes
+	used to create defs
+
+	* examples/gstreamer/oggplay.py: s/vorbisdec/vorbisfile/ (Thanks to
+	Kenichi Sato <ksato@users.sourceforge.net>)
+
 2002-12-22  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* configure.ac: fix include dir check and fail if not found
@@ -7,6 +19,7 @@
 	* gstreamer/gstreamer.override (call_connect_function,
 	call_chain_function): block/unblock threads before entering Python
 	interpreter
+
 	* gstreamer/gstreamer.override: indent
 
 2002-12-17  David I. Lehn <dlehn@users.sourceforge.net>
@@ -17,14 +30,18 @@
 2002-12-14  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* configure.ac: bump gstreamer version to 0.5.0
+
 	* *: update to use sourceforge email address
 
 2002-11-07  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* configure.ac: bump gstreamer version to 0.4.2, bump pygtk version to
 	1.99.13
+
 	* gstreamer/__init__.py: add "import pygtk; pygtk.require('2.0')"
+
 	* examples/gstreamer/dvdplay.py: updated to maybe work with threads
+
 	* pygtk.diff: add work-in-progress PyGTK threading improvements diff 
 
 2002-10-23  David I. Lehn <dlehn@users.sourceforge.net>
