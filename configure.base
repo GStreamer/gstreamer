@@ -493,15 +493,23 @@ AC_CHECK_HEADER(Hermes/Hermes.h, :, HAVE_LIBHERMES=no)
 
 dnl Check for libgsm
 AC_MSG_CHECKING(GSM library)
-AC_CHECK_LIB(gsm, gsm_create,
-  HAVE_LIBGSM=yes
-  AC_DEFINE(HAVE_LIBGSM, 1, [Define if GSM library is available]),
+AC_CHECK_LIB(gsm, gsm_create, HAVE_LIBGSM=yes, HAVE_LIBGSM=no,)
+GSM_CFLAGS=
+GSM_LIBS=-lgsm
+AC_CHECK_HEADER(gsm.h, :, 
+  GSM_CFLAGS="$GSM_CFLAGS -DGSM_HEADER_IN_SUBDIR"
+  AC_CHECK_HEADER(gsm/gsm.h, :, HAVE_LIBGSM=no)
+)
+AC_SUBST(GSM_CFLAGS)
+AC_SUBST(GSM_LIBS)
+
+if test "x$HAVE_LIBGSM" == "xyes"; then
+  AC_DEFINE(HAVE_LIBGSM, 1, [Define if GSM library is available])
+else
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: gsmdec, gsmenc
 )
-  HAVE_LIBGSM=no,
-)
-AC_CHECK_HEADER(gsm/gsm.h, :, HAVE_LIBGSM=no)
+fi
 
 dnl Check for cdparanoia
 AC_MSG_CHECKING(CDparanoia library)
