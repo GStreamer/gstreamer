@@ -129,7 +129,7 @@ gst_v4lsrc_class_init (GstV4lSrcClass *klass)
     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PALETTE,
     g_param_spec_int("palette","palette","palette",
-    0,G_MAXUSHORT,0,G_PARAM_READWRITE));
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PALETTE_NAME,
     g_param_spec_string("palette_name","palette_name","palette_name",
     NULL, G_PARAM_READABLE));
