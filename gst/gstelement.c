@@ -1303,97 +1303,88 @@ gst_element_statename (GstElementState state)
 }
 
 static void
-gst_element_populate_std_props (GObjectClass *klass,
-				const char   *prop_name,
-				guint         arg_id,
-				GParamFlags   flags)
+gst_element_populate_std_props (GObjectClass * klass,
+				const char *prop_name, guint arg_id, GParamFlags flags)
 {
-	GQuark      prop_id = g_quark_from_string (prop_name);
-	GParamSpec *pspec;
+  GQuark prop_id = g_quark_from_string (prop_name);
+  GParamSpec *pspec = NULL;
 
-	static GQuark fd_id = 0;
-	static GQuark blocksize_id;
-	static GQuark bytesperread_id;
-	static GQuark dump_id;
-	static GQuark filesize_id;
-	static GQuark mmapsize_id;
-	static GQuark location_id;
-	static GQuark offset_id;
-	static GQuark silent_id;
-	static GQuark touch_id;
-	
-	if (!fd_id) {
-		fd_id           = g_quark_from_static_string ("fd");
-		blocksize_id    = g_quark_from_static_string ("blocksize");
-		bytesperread_id = g_quark_from_static_string ("bytesperread");
-		dump_id         = g_quark_from_static_string ("dump");
-		filesize_id     = g_quark_from_static_string ("filesize");
-		mmapsize_id     = g_quark_from_static_string ("mmapsize");
-		location_id     = g_quark_from_static_string ("location");
-		offset_id       = g_quark_from_static_string ("offset");
-		silent_id       = g_quark_from_static_string ("silent");
-		touch_id        = g_quark_from_static_string ("touch");
-	}
+  static GQuark fd_id = 0;
+  static GQuark blocksize_id;
+  static GQuark bytesperread_id;
+  static GQuark dump_id;
+  static GQuark filesize_id;
+  static GQuark mmapsize_id;
+  static GQuark location_id;
+  static GQuark offset_id;
+  static GQuark silent_id;
+  static GQuark touch_id;
 
-	if (prop_id == fd_id) {
-		g_param_spec_int (
-			"fd", "File-descriptor",
-			"File-descriptor for the file being read",
-			0, G_MAXINT, 0, flags);
+  if (!fd_id) {
+    fd_id = g_quark_from_static_string ("fd");
+    blocksize_id = g_quark_from_static_string ("blocksize");
+    bytesperread_id = g_quark_from_static_string ("bytesperread");
+    dump_id = g_quark_from_static_string ("dump");
+    filesize_id = g_quark_from_static_string ("filesize");
+    mmapsize_id = g_quark_from_static_string ("mmapsize");
+    location_id = g_quark_from_static_string ("location");
+    offset_id = g_quark_from_static_string ("offset");
+    silent_id = g_quark_from_static_string ("silent");
+    touch_id = g_quark_from_static_string ("touch");
+  }
 
-	} else if (prop_id == blocksize_id) {
-		pspec = g_param_spec_ulong (
-			"blocksize", "Block Size",
-			"Block size to read per buffer",
-			0, G_MAXULONG, 4096, flags);
-		
-	} else if (prop_id == bytesperread_id) {
-		pspec = g_param_spec_int (
-			"bytesperread", "bytesperread", "bytesperread",
-			G_MININT, G_MAXINT, 0, flags);
+  if (prop_id == fd_id) {
+    g_param_spec_int ("fd", "File-descriptor",
+		      "File-descriptor for the file being read", 0, G_MAXINT, 0, flags);
 
-	} else if (prop_id == dump_id) {
-		pspec = g_param_spec_boolean (
-			"dump", "dump", "dump",
-			FALSE, flags);
+  }
+  else if (prop_id == blocksize_id) {
+    pspec = g_param_spec_ulong ("blocksize", "Block Size",
+				"Block size to read per buffer", 0, G_MAXULONG, 4096, flags);
 
-	} else if (prop_id == filesize_id) {
-		pspec = g_param_spec_int64 (
-			"filesize", "File Size",
-			"Size of the file being read",
-			0, G_MAXINT64, 0, flags);
-		
-	} else if (prop_id == mmapsize_id) {
-		pspec = g_param_spec_ulong (
-			"mmapsize", "mmap() Block Size",
-			"Size in bytes of mmap()d regions",
-			0, G_MAXULONG, 4 * 1048576, flags);
-		
-	} else if (prop_id == location_id) {
-		pspec = g_param_spec_string (
-			"location", "File Location",
-			"Location of the file to read",
-			NULL, flags);
-		
-	} else if (prop_id == offset_id) {
-		pspec = g_param_spec_int64 (
-			"offset", "File Offset",
-			"Byte offset of current read pointer",
-			0, G_MAXINT64, 0, flags);
+  }
+  else if (prop_id == bytesperread_id) {
+    pspec = g_param_spec_int ("bytesperread", "bytesperread", "bytesperread",
+			      G_MININT, G_MAXINT, 0, flags);
 
-	} else if (prop_id == silent_id) {
-		pspec = g_param_spec_boolean (
-			"silent", "silent", "silent",
-			FALSE, flags);
+  }
+  else if (prop_id == dump_id) {
+    pspec = g_param_spec_boolean ("dump", "dump", "dump", FALSE, flags);
 
-	} else if (prop_id == touch_id) {
-		pspec = g_param_spec_boolean (
-			"touch", "Touch read data",
-			"Touch data to force disk read before push ()",
-			TRUE, flags);
-	}	
+  }
+  else if (prop_id == filesize_id) {
+    pspec = g_param_spec_int64 ("filesize", "File Size",
+				"Size of the file being read", 0, G_MAXINT64, 0, flags);
 
-	g_object_class_install_property (klass, arg_id, pspec);
+  }
+  else if (prop_id == mmapsize_id) {
+    pspec = g_param_spec_ulong ("mmapsize", "mmap() Block Size",
+				"Size in bytes of mmap()d regions",
+				0, G_MAXULONG, 4 * 1048576, flags);
+
+  }
+  else if (prop_id == location_id) {
+    pspec = g_param_spec_string ("location", "File Location",
+				 "Location of the file to read", NULL, flags);
+
+  }
+  else if (prop_id == offset_id) {
+    pspec = g_param_spec_int64 ("offset", "File Offset",
+				"Byte offset of current read pointer", 0, G_MAXINT64, 0, flags);
+
+  }
+  else if (prop_id == silent_id) {
+    pspec = g_param_spec_boolean ("silent", "silent", "silent", FALSE, flags);
+
+  }
+  else if (prop_id == touch_id) {
+    pspec = g_param_spec_boolean ("touch", "Touch read data",
+				  "Touch data to force disk read before push ()", TRUE, flags);
+  }
+
+  if (pspec) {
+    g_object_class_install_property (klass, arg_id, pspec);
+  }
 }
 
 /**
@@ -1407,30 +1398,26 @@ gst_element_populate_std_props (GObjectClass *klass,
  * the flags determine readability / writeability.
  **/
 void
-gst_element_install_std_props (GstElementClass *klass,
-			       const char      *first_name,
-			       ...)
+gst_element_install_std_props (GstElementClass * klass, const char *first_name, ...)
 {
-	const char *name;
+  const char *name;
 
-	va_list args;
+  va_list args;
 
-	g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
 
-	va_start (args, first_name);
+  va_start (args, first_name);
 
-	name = first_name;
+  name = first_name;
 
-	while (name) {
-		int arg_id = va_arg (args, int);
-		int flags  = va_arg (args, int);
+  while (name) {
+    int arg_id = va_arg (args, int);
+    int flags = va_arg (args, int);
 
-		gst_element_populate_std_props (
-			(GObjectClass *) klass, name, arg_id, flags);
-		
-		name = va_arg (args, char *);
-	}
+    gst_element_populate_std_props ((GObjectClass *) klass, name, arg_id, flags);
 
-	va_end (args);
+    name = va_arg (args, char *);
+  }
+
+  va_end (args);
 }
-
