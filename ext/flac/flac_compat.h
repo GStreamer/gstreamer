@@ -13,13 +13,23 @@
 /* FIXME when there's a autoconf symbol */
 #ifndef FLAC_VERSION
 
+#ifdef FLAC__STREAM_ENCODER_OK
+#define FLAC_VERSION 0x010004
+#else
 #ifdef FLAC__REFERENCE_CODEC_MAX_BITS_PER_SAMPLE
 #define FLAC_VERSION 0x010003
 #else
 #define FLAC_VERSION 0x010002
 #endif
+#endif
 
 #endif /* !defined(FLAC_VERSION) */
+
+#if FLAC_VERSION < 0x010004
+#define FLAC__STREAM_ENCODER_OK FLAC__STREAM_ENCODER_WRITE_OK
+#define FLAC__seekable_stream_decoder_process_single(a) \
+	FLAC__seekable_stream_decoder_process_one_frame(a)
+#endif /* FLAC_VERSION < 0x010004 */
 
 #if FLAC_VERSION < 0x010003
 
