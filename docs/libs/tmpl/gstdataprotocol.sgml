@@ -2,16 +2,29 @@
 gstdataprotocol
 
 <!-- ##### SECTION Short_Description ##### -->
-
+GStreamer Data Protocol, serializes buffers, caps and events.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+This helper library provides serialization of GstBuffer, GstCaps and
+GstEvent structures.
+</para>
 
+<para>
+This serialization can be useful when GStreamer needs to interface with
+the outside world to transport data between different GStreamer pipelines.
+The connections with the outside world generally don't have mechanisms
+to transport properties of these structures.
+</para>
+<para>
+For example, transporting buffers across named pipes doesn't keep the
+buffer size.  Network elements that transport GStreamer data across
+network connections also need a protocol to do this.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GstBuffer, #GstCaps, #GstEvent
 </para>
 
 <!-- ##### ENUM GstDPHeaderFlag ##### -->
