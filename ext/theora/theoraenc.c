@@ -372,8 +372,12 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
 
   /* the second most significant bit of the first data byte is cleared
    * for keyframes */
-  if ((packet->packet[0] & 40) == 0) {
+  if ((packet->packet[0] & 0x40) == 0) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_KEY_UNIT);
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_DELTA_UNIT);
+  } else {
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_KEY_UNIT);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DELTA_UNIT);
   }
 
   enc->packetno++;
@@ -463,16 +467,16 @@ theora_enc_chain (GstPad * pad, GstData * data)
   in_time = GST_BUFFER_TIMESTAMP (buf);
 
   /* no packets written yet, setup headers */
-  /* Theora streams begin with three headers; the initial header (with
-     most of the codec setup parameters) which is mandated by the Ogg
-     bitstream spec.  The second header holds any comment fields.  The
-     third header holds the bitstream codebook.  We merely need to
-     make the headers, then pass them to libtheora one at a time;
-     libtheora handles the additional Ogg bitstream constraints */
-
   if (enc->packetno == 0) {
     GstCaps *caps;
     GstBuffer *buf1, *buf2, *buf3;
+
+    /* Theora streams begin with three headers; the initial header (with
+       most of the codec setup parameters) which is mandated by the Ogg
+       bitstream spec.  The second header holds any comment fields.  The
+       third header holds the bitstream codebook.  We merely need to
+       make the headers, then pass them to libtheora one at a time;
+       libtheora handles the additional Ogg bitstream constraints */
 
     /* first packet will get its own page automatically */
     theora_encode_header (&enc->state, &op);
