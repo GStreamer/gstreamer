@@ -1238,29 +1238,3 @@ gst_mad_change_state (GstElement *element)
   return parent_class->change_state (element);
 }
 
-static gboolean
-plugin_init (GstPlugin *plugin)
-{
-  /* we need the gsttags plugin for metadata querying */
-  if (!gst_plugin_load ("gsttags"))
-    return FALSE;
-  
-  /* create an elementfactory for the mad element */
-  if (!gst_element_register (plugin, "mad", GST_RANK_PRIMARY, GST_TYPE_MAD) ||
-      !gst_element_register (plugin, "id3tag", GST_RANK_PRIMARY, gst_id3_tag_get_type ()))
-    return FALSE;
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "mad",
-  "mp3 decoding and tag editing based on the mad library",
-  plugin_init,
-  VERSION,
-  "GPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-)
