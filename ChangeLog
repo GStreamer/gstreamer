@@ -1,3 +1,8 @@
+2004-07-06  David Schleef  <ds@schleef.org>
+
+	* gst/playback/Makefile.am: 'test' in bin_PROGRAMS?  Are you
+	serious?  (Fixed, obviously.)
+
 2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/LINGUAS:
