@@ -20,6 +20,7 @@ static void fault_restore (void);
 static void fault_spin (void);
 static void sigint_restore (void);
 
+static gint max_iterations = 0;
 static guint64 iterations = 0;
 static guint64 sum = 0;
 static guint64 min = G_MAXINT64;
@@ -51,7 +52,7 @@ idle_func (gpointer data)
   min = MIN (min, diff);
   max = MAX (max, diff);
 
-  if (!busy || caught_intr) {
+  if (!busy || caught_intr || (max_iterations>0 && iterations>=max_iterations)) {
     gst_main_quit ();
     g_print ("execution ended after %" G_GUINT64_FORMAT " iterations (sum %" G_GUINT64_FORMAT " ns, average %" G_GUINT64_FORMAT " ns, min %" G_GUINT64_FORMAT " ns, max %" G_GUINT64_FORMAT " ns)\n", 
 		    iterations, sum, sum/iterations, min, max);
@@ -270,6 +271,8 @@ main(int argc, char *argv[])
      "Do not install a fault handler", NULL},
     {"trace",   't',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &trace,   0,
      "print alloc trace if enabled at compile time", NULL},
+    {"iterations",'i',POPT_ARG_INT|POPT_ARGFLAG_STRIP,    &max_iterations,   0,
+     "number of times to iterate pipeline", NULL},
     POPT_TABLEEND
   };
 
