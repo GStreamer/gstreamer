@@ -1,3 +1,10 @@
+2004-02-22 Ramon Garcia <ramon_garcia_f@yahoo.com>
+        * configure.ac: Export only gst_plugin_desc from plugins.
+         Note that this change only makes any effect with Linux using libtool 
+	 1.5.2 or higher. Otherwise it is silently ignored, but it would build
+         fine. And don't try to have several versions of libtool in different
+         directories.
+
 2004-02-20  Andy Wingo  <wingo@pobox.com>
 
 	* gst/intfloat/, gst/oneton: Removed, replaced by audioconvert and

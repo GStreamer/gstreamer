@@ -65,7 +65,7 @@ dnl decide on error flags
 AS_COMPILER_FLAG(-Wall, GST_WALL="yes", GST_WALL="no")
 
 if test "x$GST_WALL" = "xyes"; then
-   GST_ERROR="$GST_ERROR -Wall"
+   GST_ERROR="$GST_ERROR -Wall -Wno-sign-compare"
 
    if test "x$GST_CVS" = "xyes"; then
      AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
@@ -326,7 +326,7 @@ dnl ===========================================================================
 plugindir="\$(libdir)/gstreamer-$GST_MAJORMINOR"
 AC_SUBST(plugindir)
 
-GST_PLUGIN_LDFLAGS='-module -avoid-version'
+GST_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex gst_plugin_desc'
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
