@@ -6,10 +6,10 @@ tests_fail =
 noinst_HEADERS = property.h
 
 
-gst-inspect-check: $(srcdir)/gst-inspect-check.in
+gst-inspect-check$(EXEEXT): $(srcdir)/gst-inspect-check.in
 	sed s/@[G]ST_MAJORMINOR@/@GST_MAJORMINOR@/ \
-		$(srcdir)/gst-inspect-check.in >gst-inspect-check
-	chmod +x gst-inspect-check
+		$(srcdir)/gst-inspect-check.in >gst-inspect-check$(EXEEXT)
+	chmod +x gst-inspect-check$(EXEEXT)
 
 gst-compprep-check$(EXEEXT):
 	true	
