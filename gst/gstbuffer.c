@@ -149,7 +149,8 @@ gst_buffer_default_copy (GstBuffer * buffer)
 
   /* copy relevant flags */
   flags = GST_DATA_FLAG_SHIFT (GST_BUFFER_KEY_UNIT) |
-      GST_DATA_FLAG_SHIFT (GST_BUFFER_IN_CAPS);
+      GST_DATA_FLAG_SHIFT (GST_BUFFER_IN_CAPS) |
+      GST_DATA_FLAG_SHIFT (GST_BUFFER_DELTA_UNIT);
   flags = GST_BUFFER_FLAGS (buffer) & flags;
 
   _GST_DATA_INIT (GST_DATA (copy),

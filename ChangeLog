@@ -1,3 +1,12 @@
+2004-08-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Wim Taymans (wim@fluendo.com)
+
+	* gst/gstbuffer.c:
+	* gst/gstindex.h:
+	* libs/gst/dataprotocol/dataprotocol.c:
+	  copy KEY_UNIT and DELTA_UNIT flags correctly.  Fixes #150242
+
 2004-08-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

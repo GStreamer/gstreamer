@@ -78,6 +78,7 @@ struct _GstIndexAssociation {
 typedef enum {
   GST_ASSOCIATION_FLAG_NONE 	= 0,
   GST_ASSOCIATION_FLAG_KEY_UNIT = (1 << 0),
+  GST_ASSOCIATION_FLAG_DELTA_UNIT = (1 << 1),
 
   /* new flags should start here */
   GST_ASSOCIATION_FLAG_LAST	= (1 << 8)
