@@ -84,7 +84,7 @@ gst_dparam_class_init (GstDParamClass *klass)
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VALUE_FLOAT,
 		g_param_spec_float("value_float","Float Value",
 		             "The value that should be changed if gfloat is the type",
-                     (gfloat)G_MININT64, (gfloat)G_MAXINT64, 0.0F, G_PARAM_READWRITE));
+                     -G_MAXFLOAT, G_MAXFLOAT, 0.0F, G_PARAM_READWRITE));
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VALUE_INT,
 		g_param_spec_int("value_int","Integer Value",
 		             "The value that should be changed if gint is the type",
