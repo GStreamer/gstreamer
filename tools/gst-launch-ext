@@ -47,7 +47,7 @@ sub read_config
     print "No configuration file $config_file found.  You might want to create one.\n";
   }
   if (!defined $cfg{AUDIOSINK})  { $cfg{AUDIOSINK} = "osssink"; }
-  if (!defined $cfg{VIDEOSINK})  { $cfg{VIDEOSINK} = "xvideosink"; }
+  if (!defined $cfg{VIDEOSINK})  { $cfg{VIDEOSINK} = "colorspace ! xvideosink"; }
   if (!defined $cfg{CVS_PATH})   { $cfg{CVS_PATH} =  `echo -n ~`."/gst/cvs"; }
 }
 
