@@ -1006,6 +1006,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
   GstTypeFactory *type;
 
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
   /* We need to create an ElementFactory for each element we provide.
    * This consists of the name of the element, the GType identifier,
    * and a pointer to the details structure at the top of the file.

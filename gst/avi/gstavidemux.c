@@ -38,16 +38,6 @@ static GstElementDetails gst_avi_demux_details = {
   "(C) 1999",
 };
 
-static GstCaps* avi_type_find (GstByteStream *bs, gpointer private);
-
-/* typefactory for 'avi' */
-static GstTypeDefinition avidefinition = {
-  "avidemux_video/avi",
-  "video/avi",
-  ".avi",
-  avi_type_find,
-};
-
 /* AviDemux signals and args */
 enum {
   /* FILL ME */
@@ -170,33 +160,6 @@ gst_avi_demux_init (GstAviDemux *avi_demux)
   gst_element_add_pad (GST_ELEMENT (avi_demux), avi_demux->sinkpad);
 
   gst_element_set_loop_function (GST_ELEMENT (avi_demux), gst_avi_demux_loop);
-}
-
-static GstCaps*
-avi_type_find (GstByteStream *bs,
-               gpointer       private)
-{
-  GstBuffer *buf = NULL;
-  GstCaps *new = NULL;
-
-  GST_DEBUG ("avi_demux: typefind");
-
-  if (gst_bytestream_peek (bs, &buf, 12) == 12) {
-    guint32 head1 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[0]),
-	    head2 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[2]);
-
-    if (head1 == GST_RIFF_TAG_RIFF && head2 == GST_RIFF_RIFF_AVI) {
-      new = GST_CAPS_NEW ("avi_type_find",
-			  "video/avi", 
-			    NULL);
-    }
-  }
-
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
-
-  return new;
 }
 
 static gboolean
@@ -1932,7 +1895,6 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
   gint i = 0;
   GstCaps *audcaps = NULL, *vidcaps = NULL, *temp;
   guint32 vid_list[] = {
@@ -1965,6 +1927,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
     -1 /* end */
   };
 
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
   if (!gst_library_load ("gstriff"))
     return FALSE;
 
@@ -1996,9 +1960,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (factory, videosrctempl);
   gst_element_factory_add_pad_template (factory,
 	GST_PAD_TEMPLATE_GET (sink_templ));
-
-  type = gst_type_factory_new (&avidefinition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

@@ -31,9 +31,6 @@ static void		gst_wavparse_init		(GstWavParse *wavparse);
 static GstElementStateReturn
 			gst_wavparse_change_state 	(GstElement *element);
 
-static GstCaps*		wav_type_find			(GstByteStream *bs,
-							 gpointer private);
-
 static const GstFormat*	gst_wavparse_get_formats	(GstPad *pad);
 static const GstQueryType *
 			gst_wavparse_get_query_types	(GstPad *pad);
@@ -118,17 +115,6 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
       "channels",          GST_PROPS_INT_RANGE (1, 2)
   )
 )
-
-/* typefactory for 'wav' */
-static GstTypeDefinition
-wavdefinition =
-{
-  "wavparse_audio/x-wav",
-  "audio/x-wav",
-  ".wav",
-  wav_type_find,
-};
-
 
 /* WavParse signals and args */
 enum {
@@ -241,30 +227,6 @@ gst_wavparse_get_property (GObject *object,
   default:
     break;
   }
-}
-
-static GstCaps*
-wav_type_find (GstByteStream *bs, gpointer private)
-{
-  GstCaps *new = NULL;
-  GstBuffer *buf = NULL;
-
-  if (gst_bytestream_peek (bs, &buf, 12) == 12) {
-    gchar *data = GST_BUFFER_DATA (buf);
-
-    if (!strncmp (&data[0], "RIFF", 4) &&
-        !strncmp (&data[8], "WAVE", 4)) {
-      new = GST_CAPS_NEW ("wav_type_find",
-			  "audio/x-wav",
-			    NULL);
-    }
-  }
-
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
-
-  return new;
 }
 
 static void
@@ -880,7 +842,6 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
 
   if(!gst_library_load("gstriff")){
     return FALSE;
@@ -897,9 +858,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  type = gst_type_factory_new (&wavdefinition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;
 }

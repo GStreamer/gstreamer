@@ -29,7 +29,6 @@
 
 #include <gstauparse.h>
 
-
 /* elementfactory information */
 static GstElementDetails gst_auparse_details = {
   ".au parser",
@@ -39,36 +38,6 @@ static GstElementDetails gst_auparse_details = {
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
   "(C) 1999",
-};
-
-static GstCaps*
-au_type_find (GstByteStream *bs, gpointer private)
-{
-  GstBuffer *buf = NULL;
-  GstCaps *new = NULL;
-
-  if (gst_bytestream_peek (bs, &buf, 4) == 4) {
-    guint32 head = * (guint32 *) GST_BUFFER_DATA (buf);
-    if (head == 0x2e736e64 || head == 0x646e732e) {
-      new = gst_caps_new ("au_type_find",
-			  "audio/x-au",
-			    NULL);
-    }
-  }
-
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
-
-  return new;
-}
-
-/* typefactory for 'au' */
-static GstTypeDefinition audefinition = {
-  "auparse_audio/au",
-  "audio/x-au",
-  ".au",
-  au_type_find,
 };
 
 GST_PAD_TEMPLATE_FACTORY (sink_factory_templ,
@@ -318,7 +287,6 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
 
   /* create the plugin structure */
   /* create an elementfactory for the auparse element and list it */
@@ -330,10 +298,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory_templ));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory_templ));
 
-  type = gst_type_factory_new (&audefinition);
-
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;
 }

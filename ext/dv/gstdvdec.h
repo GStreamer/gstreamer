@@ -29,7 +29,7 @@ extern "C" {
 
 
 #include <libdv/dv.h>
-#include <gst/gstbytestream.h>
+#include <gst/bytestream.h>
 
 
 /* This is the definition of the element's object structure. */
