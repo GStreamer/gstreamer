@@ -6,7 +6,26 @@ Dynamic parameter functionality
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+This library provides a Manager that maintains a list of dynamically
+controlable parameters for a GstElement.
+Just think of a volume slider in a mixer.
+</para>
 
+<para>
+To use this library one needs to add some code to initialize it.
+<example>
+<title>Adding the control library to a project</title>
+<programlisting>
+...
+&hash;include &lt;gst/gst.h&gt;
+&hash;include &lt;gst/control/control.h&gt;
+...
+gst_init(&amp;argc,&amp;argv);
+gst_control_init(&amp;argc,&amp;argv);
+...
+</programlisting>
+</example>
+The next step is to get hold of the GstDParamManager instance of a GstElement.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -105,8 +124,10 @@ Dynamic parameter functionality
 </para>
 
 @dpman: 
-@name: 
+@dparam_name: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@name: 
 
 
 <!-- ##### FUNCTION gst_dpman_get_dparam_type ##### -->
@@ -115,8 +136,38 @@ Dynamic parameter functionality
 </para>
 
 @dpman: 
-@name: 
+@dparam_name: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@name: 
+
+
+<!-- ##### FUNCTION gst_dpman_list_dparam_specs ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_get_param_spec ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@dparam_name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_set_rate ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@rate: 
 
 
 <!-- ##### FUNCTION gst_dpman_register_mode ##### -->

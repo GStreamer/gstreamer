@@ -10,9 +10,8 @@
 <!ENTITY GstControl SYSTEM "xml/gstcontrol.xml">
 <!ENTITY GstDataProtocol SYSTEM "xml/gstdataprotocol.xml">
 
+<!ENTITY hash "#">
 ]>
-
-
 <book>
   <bookinfo>
     <title>GStreamer Library &GST_MAJORMINOR; API Reference (&GST_VERSION;)</title>

@@ -115,6 +115,9 @@ gst_dpman_attach_dparam
 gst_dpman_detach_dparam
 gst_dpman_get_dparam
 gst_dpman_get_dparam_type
+gst_dpman_list_dparam_specs
+gst_dpman_get_param_spec
+gst_dpman_set_rate
 gst_dpman_register_mode
 gst_dpman_set_mode
 gst_dpman_set_parent
