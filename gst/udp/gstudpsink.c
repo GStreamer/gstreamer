@@ -376,7 +376,7 @@ gst_udpsink_init_send (GstUDPSink *sink)
   struct in_addr addr;
   guint bc_val;
 
-  bzero (&sink->theiraddr, sizeof (sink->theiraddr));
+  memset (&sink->theiraddr, 0, sizeof (sink->theiraddr));
   sink->theiraddr.sin_family = AF_INET;         /* host byte order */
   sink->theiraddr.sin_port = htons (sink->port); /* short, network byte order */
 

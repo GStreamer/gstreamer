@@ -163,7 +163,7 @@ gst_edgetv_sinkconnect (GstPad * pad, const GstCaps * caps)
 
   g_free (filter->map);
   filter->map = (guint32 *)g_malloc (filter->map_width * filter->map_height * sizeof(guint32) * 2);
-  bzero(filter->map, filter->map_width * filter->map_height * sizeof(guint32) * 2);
+  memset(filter->map, 0, filter->map_width * filter->map_height * sizeof(guint32) * 2);
 
   return gst_pad_try_set_caps (filter->srcpad, caps);
 }

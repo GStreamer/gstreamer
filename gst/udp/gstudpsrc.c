@@ -353,7 +353,7 @@ gst_udpsrc_init_receive (GstUDPSrc *src)
 {
   guint bc_val;
   gint reuse=1;
-  bzero (&src->myaddr, sizeof (src->myaddr));
+  memset (&src->myaddr, 0, sizeof (src->myaddr));
   src->myaddr.sin_family = AF_INET;           /* host byte order */
   src->myaddr.sin_port = htons (src->port);   /* short, network byte order */
   src->myaddr.sin_addr.s_addr = INADDR_ANY;

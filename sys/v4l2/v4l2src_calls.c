@@ -213,7 +213,7 @@ gst_v4l2src_set_capture (GstV4l2Src          *v4l2src,
 	}
 
 	/* update internal info */
-	return gst_v4l2src_get_capture(v4l2src);;
+	return gst_v4l2src_get_capture(v4l2src);
 }
 
 

@@ -206,7 +206,7 @@ gst_vertigotv_sinkconnect (GstPad * pad, const GstCaps * caps)
   g_free (filter->buffer);
   filter->buffer = (guint32 *) g_malloc (area * 2 * sizeof(guint32));
 
-  bzero (filter->buffer, area * 2 * sizeof(guint32));
+  memset (filter->buffer, 0, area * 2 * sizeof(guint32));
   filter->current_buffer = filter->buffer;
   filter->alt_buffer = filter->buffer + area;
   filter->phase = 0;

@@ -467,13 +467,13 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
 	GST_ELEMENT_ERROR (tag, CORE, TOO_LAZY, (NULL),
 			   ("Error creating 12-byte buffer for padding block"));
       }
-      bzero (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
+      memset (GST_BUFFER_DATA (buffer), 0, GST_BUFFER_SIZE (buffer));
       GST_BUFFER_DATA (buffer)[0] = 0x81; /* 0x80 = Last metadata block, 
 					   * 0x01 = padding block
 					   */
     } else {
       guchar header[4];
-      bzero (header, sizeof (header));
+      memset (header, 0, sizeof (header));
       header[0] = 0x84; /* 0x80 = Last metadata block, 
 			 * 0x04 = vorbiscomment block
 			 */
