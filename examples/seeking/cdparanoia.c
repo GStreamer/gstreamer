@@ -24,7 +24,7 @@ get_position_info (GstElement *cdparanoia)
     definition = gst_format_get_details (*formats);
 
     format = *formats;
-    res = gst_pad_query (pad, GST_PAD_QUERY_POSITION,
+    res = gst_pad_query (pad, GST_QUERY_POSITION,
 		         &format, &position);
 
     if (format == GST_FORMAT_TIME) {
@@ -70,7 +70,7 @@ get_track_info (GstElement *cdparanoia)
     definition = gst_format_get_details (*formats);
 
     format = *formats;
-    res = gst_pad_query (pad, GST_PAD_QUERY_TOTAL,
+    res = gst_pad_query (pad, GST_QUERY_TOTAL,
 		         &format, &total);
     if (res) {
       if (format == GST_FORMAT_TIME) {

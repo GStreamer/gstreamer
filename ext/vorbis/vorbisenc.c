@@ -307,19 +307,19 @@ gst_vorbisenc_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
   return res;
 }
 
-static const GstPadQueryType*
+static const GstQueryType*
 gst_vorbisenc_get_query_types (GstPad *pad)
 {
-  static const GstPadQueryType gst_vorbisenc_src_query_types[] = {
-    GST_PAD_QUERY_TOTAL,
-    GST_PAD_QUERY_POSITION,
+  static const GstQueryType gst_vorbisenc_src_query_types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
     0
   };
   return gst_vorbisenc_src_query_types;
 }
 
 static gboolean
-gst_vorbisenc_src_query (GstPad *pad, GstPadQueryType type,
+gst_vorbisenc_src_query (GstPad *pad, GstQueryType type,
 		   GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
@@ -328,7 +328,7 @@ gst_vorbisenc_src_query (GstPad *pad, GstPadQueryType type,
   vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
     {
       switch (*format) {
 	case GST_FORMAT_DEFAULT:
@@ -349,7 +349,7 @@ gst_vorbisenc_src_query (GstPad *pad, GstPadQueryType type,
 	    GstFormat peer_format = *peer_formats;
 
 	    /* do the probe */
-            if (gst_pad_query (GST_PAD_PEER (vorbisenc->sinkpad), GST_PAD_QUERY_TOTAL,
+            if (gst_pad_query (GST_PAD_PEER (vorbisenc->sinkpad), GST_QUERY_TOTAL,
 			       &peer_format, &peer_value)) 
 	    {
               GstFormat conv_format;
@@ -373,7 +373,7 @@ gst_vorbisenc_src_query (GstPad *pad, GstPadQueryType type,
       }
       break;
     }
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
       switch (*format) {
 	case GST_FORMAT_DEFAULT:
           *format = GST_FORMAT_TIME;

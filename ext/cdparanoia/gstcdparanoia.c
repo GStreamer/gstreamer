@@ -155,9 +155,9 @@ static gboolean 	cdparanoia_convert 		(GstPad *pad,
 				    			 gint64 src_value, 
 							 GstFormat *dest_format, 
 							 gint64 *dest_value);
-static gboolean 	cdparanoia_query 		(GstPad *pad, GstPadQueryType type,
+static gboolean 	cdparanoia_query 		(GstPad *pad, GstQueryType type,
 		     					 GstFormat *format, gint64 *value);
-static const GstPadQueryType*
+static const GstQueryType*
 			cdparanoia_get_query_types 	(GstPad *pad);
 
 static GstElementStateReturn cdparanoia_change_state (GstElement *element);
@@ -963,21 +963,21 @@ cdparanoia_convert (GstPad *pad,
   return TRUE;
 }
 
-static const GstPadQueryType*
+static const GstQueryType*
 cdparanoia_get_query_types (GstPad *pad)
 {
-  static const GstPadQueryType src_query_types[] = {
-    GST_PAD_QUERY_TOTAL,
-    GST_PAD_QUERY_POSITION,
-    GST_PAD_QUERY_START,
-    GST_PAD_QUERY_SEGMENT_END,
+  static const GstQueryType src_query_types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
+    GST_QUERY_START,
+    GST_QUERY_SEGMENT_END,
     0
   };
   return src_query_types;
 }
 
 static gboolean
-cdparanoia_query (GstPad *pad, GstPadQueryType type,
+cdparanoia_query (GstPad *pad, GstQueryType type,
 		  GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
@@ -989,25 +989,25 @@ cdparanoia_query (GstPad *pad, GstPadQueryType type,
     return FALSE;
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
       /* we take the last sector + 1 so that we also have the full
        * size of that last sector */
       res = gst_pad_convert (src->srcpad, 
 		             sector_format, src->last_sector + 1,
 		             format, value);
       break;
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
       /* bring our current sector to the requested format */
       res = gst_pad_convert (src->srcpad, 
 		             sector_format, src->cur_sector,
 		             format, value);
       break;
-    case GST_PAD_QUERY_START:
+    case GST_QUERY_START:
       res = gst_pad_convert (src->srcpad, 
 		             sector_format, src->segment_start_sector,
 		             format, value);
       break;
-    case GST_PAD_QUERY_SEGMENT_END:
+    case GST_QUERY_SEGMENT_END:
       res = gst_pad_convert (src->srcpad, 
 		             sector_format, src->segment_end_sector,
 		             format, value);

@@ -137,16 +137,16 @@ GstElementDetails gst_gnomevfssrc_details = {
 	"(C) 2001",
 };
 
-GST_FORMATS_FUNCTION (gst_gnomevfssrc_get_formats,
+GST_PAD_FORMATS_FUNCTION (gst_gnomevfssrc_get_formats,
 	GST_FORMAT_BYTES
 )
 
 GST_PAD_QUERY_TYPE_FUNCTION (gst_gnomevfssrc_get_query_types,
-	GST_PAD_QUERY_TOTAL,
-	GST_PAD_QUERY_POSITION
+	GST_QUERY_TOTAL,
+	GST_QUERY_POSITION
 )
 
-GST_EVENT_MASK_FUNCTION (gst_gnomevfssrc_get_event_mask,
+GST_PAD_EVENT_MASK_FUNCTION (gst_gnomevfssrc_get_event_mask,
   { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR |
                     GST_SEEK_METHOD_SET |
                     GST_SEEK_METHOD_END |
@@ -190,7 +190,7 @@ static GstElementStateReturn
 static void 		gst_gnomevfssrc_close_file	(GstGnomeVFSSrc *src);
 static gboolean 	gst_gnomevfssrc_open_file	(GstGnomeVFSSrc *src);
 static gboolean 	gst_gnomevfssrc_srcpad_event 	(GstPad *pad, GstEvent *event);
-static gboolean 	gst_gnomevfssrc_srcpad_query 	(GstPad *pad, GstPadQueryType type,
+static gboolean 	gst_gnomevfssrc_srcpad_query 	(GstPad *pad, GstQueryType type,
 		              				 GstFormat *format, gint64 *value);
 
 static int audiocast_init(GstGnomeVFSSrc *src);
@@ -1155,19 +1155,19 @@ static gboolean plugin_init(GModule *module, GstPlugin *plugin)
 
 
 static gboolean
-gst_gnomevfssrc_srcpad_query (GstPad *pad, GstPadQueryType type,
+gst_gnomevfssrc_srcpad_query (GstPad *pad, GstQueryType type,
 		              GstFormat *format, gint64 *value)
 {
 	GstGnomeVFSSrc *src = GST_GNOMEVFSSRC (gst_pad_get_parent (pad));
 
 	switch (type) {
-	case GST_PAD_QUERY_TOTAL:
+	case GST_QUERY_TOTAL:
 		if (*format != GST_FORMAT_BYTES) {
 			return FALSE;
 		}
 		*value = src->size;
 		break;
-	case GST_PAD_QUERY_POSITION:
+	case GST_QUERY_POSITION:
 		if (*format != GST_FORMAT_BYTES) {
 			return FALSE;
 		}

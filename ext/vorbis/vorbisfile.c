@@ -116,11 +116,11 @@ static gboolean gst_vorbisfile_sink_convert 	(GstPad *pad,
 						 gint64 src_value,
 		            			 GstFormat *dest_format, 
 						 gint64 *dest_value);
-static const GstPadQueryType*
+static const GstQueryType*
 		gst_vorbisfile_get_query_types 	(GstPad *pad);
 
 static gboolean gst_vorbisfile_src_query 	(GstPad *pad, 
-		                                 GstPadQueryType type,
+		                                 GstQueryType type,
 		        	 		 GstFormat *format, 
 						 gint64 *value);
 static const 
@@ -816,12 +816,12 @@ gst_vorbisfile_sink_convert (GstPad *pad,
   return res;
 }
 
-static const GstPadQueryType*
+static const GstQueryType*
 gst_vorbisfile_get_query_types (GstPad *pad)
 {
-  static const GstPadQueryType types[] = {
-    GST_PAD_QUERY_TOTAL,
-    GST_PAD_QUERY_POSITION,
+  static const GstQueryType types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
     0
   };
   return types;
@@ -829,7 +829,7 @@ gst_vorbisfile_get_query_types (GstPad *pad)
 
 /* handles queries for location in the stream in the requested format */
 static gboolean
-gst_vorbisfile_src_query (GstPad *pad, GstPadQueryType type,
+gst_vorbisfile_src_query (GstPad *pad, GstQueryType type,
 		          GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
@@ -841,7 +841,7 @@ gst_vorbisfile_src_query (GstPad *pad, GstPadQueryType type,
   vi = ov_info (&vorbisfile->vf, -1);
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
     {
       switch (*format) {
         case GST_FORMAT_UNITS:
@@ -878,7 +878,7 @@ gst_vorbisfile_src_query (GstPad *pad, GstPadQueryType type,
       }
       break;
     }
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
       switch (*format) {
         case GST_FORMAT_DEFAULT:
           *format = GST_FORMAT_TIME;

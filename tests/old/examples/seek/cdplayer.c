@@ -13,31 +13,19 @@ static guint64 duration;
 
 static guint update_id;
 
-//#define SOURCE "gnomevfssrc"
-#define SOURCE "filesrc"
-
 #define UPDATE_INTERVAL 500
 
 static GstElement*
-make_cdaudio_pipeline (gboolean thread) 
+make_cdaudio_pipeline (void) 
 {
-  GstElement *pipeline;
   GstElement *cdaudio;
   
-  if (thread) {
-    pipeline = gst_thread_new ("app");
-  }
-  else {
-    pipeline = gst_pipeline_new ("app");
-  }
-  
   cdaudio = gst_element_factory_make ("cdaudio", "cdaudio");
-
-  gst_bin_add (GST_BIN (pipeline), cdaudio);
+  g_assert (cdaudio != NULL);
 
   seekable_elements = g_list_prepend (seekable_elements, cdaudio);
 
-  return pipeline;
+  return cdaudio;
 }
 
 static gchar*
@@ -91,7 +79,7 @@ query_durations ()
       GstFormat format;
 
       format = seek_formats[i].format;
-      res = gst_element_query (element, GST_PAD_QUERY_TOTAL, &format, &value);
+      res = gst_element_query (element, GST_QUERY_TOTAL, &format, &value);
       if (res) {
         g_print ("%s %13lld | ", seek_formats[i].name, value);
       }
@@ -121,7 +109,7 @@ query_positions ()
       GstFormat format;
 
       format = seek_formats[i].format;
-      res = gst_element_query (element, GST_PAD_QUERY_POSITION, &format, &value);
+      res = gst_element_query (element, GST_QUERY_POSITION, &format, &value);
       if (res) {
         g_print ("%s %13lld | ", seek_formats[i].name, value);
       }
@@ -139,7 +127,7 @@ static gboolean
 update_scale (gpointer data) 
 {
   GstClock *clock;
-  guint64 position;
+  guint64 position = 0;
   GstFormat format = GST_FORMAT_TIME;
 
   duration = 0;
@@ -147,12 +135,14 @@ update_scale (gpointer data)
 
   if (seekable_elements) {
     GstElement *element = GST_ELEMENT (seekable_elements->data);
-    gst_element_query (element, GST_PAD_QUERY_TOTAL, &format, &duration);
+    gst_element_query (element, GST_QUERY_TOTAL, &format, &duration);
   }
-  position = gst_clock_get_time (clock);
+  if (clock)
+    position = gst_clock_get_time (clock);
 
   if (stats) {
-    g_print ("clock:                  %13llu  (%s)\n", position, gst_object_get_name (GST_OBJECT (clock)));
+    if (clock)
+      g_print ("clock:                  %13llu  (%s)\n", position, gst_object_get_name (GST_OBJECT (clock)));
     query_durations ();
     query_positions ();
   }
@@ -168,6 +158,7 @@ iterate (gpointer data)
 {
   gboolean res = TRUE;
 
+  g_print ("iterate\n");
   res = gst_bin_iterate (GST_BIN (data));
   if (!res) {
     gtk_timeout_remove (update_id);
@@ -249,10 +240,7 @@ main (int argc, char **argv)
   GtkWidget *window, *hbox, *vbox, 
             *play_button, *pause_button, *stop_button, 
 	    *hscale;
-  gboolean threaded = FALSE;
   struct poptOption options[] = {
-    {"threaded",  't',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &threaded,   0,
-         "Run the pipeline in a toplevel thread", NULL},
     {"stats",  's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &stats,   0,
          "Show element stats", NULL},
      POPT_TABLEEND
@@ -261,7 +249,10 @@ main (int argc, char **argv)
   gst_init_with_popt_table (&argc, &argv, options);
   gtk_init (&argc, &argv);
 
-  pipeline = make_cdaudio_pipeline (threaded);
+  pipeline = make_cdaudio_pipeline ();
+
+  g_signal_connect (pipeline, "deep_notify", G_CALLBACK (gst_element_default_deep_notify), NULL);
+  g_signal_connect (pipeline, "error", G_CALLBACK (gst_element_default_error), NULL);
 
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -302,6 +293,8 @@ main (int argc, char **argv)
   gtk_widget_show_all (window);
 
   gtk_main ();
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
   gst_buffer_print_stats();
   gst_event_print_stats();
