@@ -892,10 +892,7 @@ G_STMT_START{							\
   mad->new_header = FALSE;
 
   if (changed) {
-    if (mad->streaminfo) {
-      gst_caps_unref (mad->streaminfo);
-    }
-    mad->streaminfo = gst_mad_get_streaminfo (mad);
+    gst_caps_replace_sink (&mad->streaminfo, gst_mad_get_streaminfo (mad));
     g_object_notify (G_OBJECT (mad), "streaminfo");
   }
 #undef CHECK_HEADER
@@ -1217,7 +1214,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 
 	    tag = id3_tag_parse (data, tagsize);
 	    if (tag) {
-	      mad->metadata = id3_to_caps (tag);
+              gst_caps_replace_sink (&mad->metadata, id3_to_caps (tag));
 	      id3_tag_delete (tag);
 	      g_object_notify (G_OBJECT (mad), "metadata");
 	    }
@@ -1407,8 +1404,8 @@ gst_mad_change_state (GstElement *element)
       mad_frame_finish (&mad->frame);
       mad_stream_finish (&mad->stream);
       mad->restart = TRUE;
-      mad->metadata = NULL;
-      mad->streaminfo = NULL;
+      gst_caps_replace (&mad->metadata, NULL);
+      gst_caps_replace (&mad->streaminfo, NULL);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
