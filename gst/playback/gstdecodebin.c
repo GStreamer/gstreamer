@@ -76,6 +76,8 @@ struct _GstDecodeBinClass
   void (*new_decoded_pad) (GstElement * element, GstPad * pad, gboolean last);
   /* signal fired when we found a pad that we cannot decode */
   void (*unknown_type) (GstElement * element, GstPad * pad, GstCaps * caps);
+  /* called on dynamic pad removal */
+  void (*removed_decoded_pad) (GstElement * element, GstPad * pad);
 };
 
 /* props */
@@ -90,6 +92,7 @@ enum
 {
   SIGNAL_NEW_DECODED_PAD,
   SIGNAL_UNKNOWN_TYPE,
+  SIGNAL_REMOVED_DECODED_PAD,
   LAST_SIGNAL
 };
 
@@ -191,6 +194,11 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, unknown_type),
       NULL, NULL, gst_marshal_VOID__OBJECT_BOXED, G_TYPE_NONE, 2,
       GST_TYPE_PAD, GST_TYPE_CAPS);
+  gst_decode_bin_signals[SIGNAL_REMOVED_DECODED_PAD] =
+      g_signal_new ("removed-decoded-pad", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstDecodeBinClass, removed_decoded_pad), NULL, NULL,
+      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_decode_bin_dispose);
 
@@ -550,6 +558,110 @@ no_more_pads (GstElement * element, GstDynamic * dynamic)
   }
 }
 
+/* get unconnected element (after unlink/pad-remove). */
+static GstElement *
+get_unconnected_element (GstDecodeBin * decode_bin)
+{
+  const GList *walk;
+
+  for (walk = gst_bin_get_list (GST_BIN (decode_bin));
+      walk != NULL; walk = walk->next) {
+    GstElement *element = walk->data;
+    const GList *pwalk;
+
+    for (pwalk = gst_element_get_pad_list (GST_ELEMENT (element));
+        pwalk != NULL; pwalk = pwalk->next) {
+      GstPad *pad = pwalk->data;
+
+      if (GST_PAD_IS_SINK (pad) && GST_PAD_PEER (pad) == NULL)
+        return element;
+    }
+  }
+
+  return NULL;
+}
+
+/* remove all elements linked forward from this element on from the bin */
+static void
+remove_starting_from (GstDecodeBin * decode_bin, GstElement * start)
+{
+  const GList *pwalk;
+
+  for (pwalk = gst_element_get_pad_list (start);
+      pwalk != NULL; pwalk = pwalk->next) {
+    GstPad *pad = pwalk->data;
+
+    if (GST_PAD_IS_SRC (pad)) {
+      GstPad *peer = GST_PAD_PEER (pad);
+      GstElement *peer_parent = NULL;
+
+      if (peer)
+        peer_parent = gst_pad_get_parent (peer);
+
+      /* be recursive */
+      if (peer_parent != NULL) {
+        if (gst_object_get_parent (GST_OBJECT (peer_parent))
+            == GST_OBJECT (decode_bin)) {
+          remove_starting_from (decode_bin, peer_parent);
+        } else {
+          /* linked outside us - signal pad removal */
+          g_signal_emit (decode_bin,
+              gst_decode_bin_signals[SIGNAL_REMOVED_DECODED_PAD], 0, pad);
+        }
+      }
+    }
+  }
+
+  /* now remove ourselves */
+  gst_bin_remove (GST_BIN (decode_bin), start);
+}
+
+/* This function will be called for elements with dynamic elements when
+ * they remove pads. This might just be because they're disposed, in
+ * which case we don't care. It might also be because they're changing
+ * chain, in which case we want to re-plug afterwards. */
+
+static void
+pad_removed (GstElement * element, GstPad * pad, GstDecodeBin * decode_bin)
+{
+  GList *walk;
+  GstElement *peer;
+  GstDynamic *dyn;
+
+  /* don't care about disposal - it's really only for replugging.
+   * We only need to check for pending is ready because if pending
+   * is NULL, then state is READY. */
+  if (GST_STATE (element) <= GST_STATE_READY ||
+      GST_STATE_PENDING (element) == GST_STATE_READY)
+    return;
+
+  /* clean up. FIXME: getting peer of removed pad is dirty. */
+  peer = get_unconnected_element (decode_bin);
+  g_assert (peer);
+  remove_starting_from (decode_bin, peer);
+
+  /* if an element removes two pads, then we don't want this twice */
+  for (walk = decode_bin->dynamics; walk != NULL; walk = walk->next) {
+    dyn = walk->data;
+    if (dyn->element == element)
+      return;
+  }
+
+  GST_DEBUG_OBJECT (decode_bin, "pad removal while alive - chained?");
+
+  /* re-setup dynamic plugging */
+  dyn = g_new0 (GstDynamic, 1);
+  dyn->np_sig_id = g_signal_connect (G_OBJECT (element), "new-pad",
+      G_CALLBACK (new_pad), dyn);
+  dyn->nmp_sig_id = g_signal_connect (G_OBJECT (element), "no-more-pads",
+      G_CALLBACK (no_more_pads), dyn);
+  dyn->element = element;
+  dyn->decode_bin = decode_bin;
+
+  /* and add this element to the dynamic elements */
+  decode_bin->dynamics = g_list_prepend (decode_bin->dynamics, dyn);
+}
+
 /* this function inspects the given element and tries to connect something
  * on the srcpads. If there are dynamic pads, it sets up a signal handler to
  * continue autoplugging when they become available */
@@ -639,6 +751,10 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
 
     /* and add this element to the dynamic elements */
     decode_bin->dynamics = g_list_prepend (decode_bin->dynamics, dyn);
+
+    /* let's keep this one around longer than the lifetime of dynamicity */
+    g_signal_connect (G_OBJECT (element), "pad-removed",
+        G_CALLBACK (pad_removed), decode_bin);
   }
 
   /* Check if this is an element with more than 1 pad. If this element
