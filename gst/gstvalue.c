@@ -283,8 +283,24 @@ gst_value_compare_list (const GValue *value1, const GValue *value2)
 static char *
 gst_value_serialize_list (const GValue *value)
 {
-  g_warning("unimplemented");
-  return NULL;
+  int i;
+  GArray *array = value->data[0].v_pointer;
+  GString *s;
+  GValue *v;
+  gchar *s_val;
+
+  s = g_string_new("{ ");
+  for(i=0;i<array->len;i++){
+    v = &g_array_index (array, GValue, i);
+    s_val = gst_value_serialize (v);
+    g_string_append (s, s_val);
+    g_free (s_val);
+    if (i<array->len - 1) {
+      g_string_append (s, ", ");
+    }
+  }
+  g_string_append (s, " }");
+  return g_string_free (s, FALSE);
 }
 
 static gboolean
@@ -384,8 +400,16 @@ gst_value_compare_fourcc (const GValue *value1, const GValue *value2)
 static char *
 gst_value_serialize_fourcc (const GValue *value)
 {
-  g_warning("unimplemented");
-  return NULL;
+  guint32 fourcc = value->data[0].v_int;
+
+  if (g_ascii_isalnum ((fourcc>>0) & 0xff) &&
+      g_ascii_isalnum ((fourcc>>8) & 0xff) &&
+      g_ascii_isalnum ((fourcc>>16) & 0xff) &&
+      g_ascii_isalnum ((fourcc>>24) & 0xff)){
+    return g_strdup_printf(GST_FOURCC_FORMAT, GST_FOURCC_ARGS(fourcc));
+  } else {
+    return g_strdup_printf("0x%08x", fourcc);
+  }
 }
 
 static gboolean
@@ -499,8 +523,8 @@ gst_value_compare_int_range (const GValue *value1, const GValue *value2)
 static char *
 gst_value_serialize_int_range (const GValue *value)
 {
-  g_warning("unimplemented");
-  return NULL;
+  return g_strdup_printf ("[ %d, %d ]", value->data[0].v_int,
+      value->data[1].v_int);
 }
 
 static gboolean
@@ -619,8 +643,11 @@ gst_value_compare_double_range (const GValue *value1, const GValue *value2)
 static char *
 gst_value_serialize_double_range (const GValue *value)
 {
-  g_warning("unimplemented");
-  return NULL;
+  char d1[G_ASCII_DTOSTR_BUF_SIZE];
+  char d2[G_ASCII_DTOSTR_BUF_SIZE];
+  g_ascii_dtostr(d1, G_ASCII_DTOSTR_BUF_SIZE, value->data[0].v_double);
+  g_ascii_dtostr(d2, G_ASCII_DTOSTR_BUF_SIZE, value->data[1].v_double);
+  return g_strdup_printf ("[ %s, %s ]", d1, d2);
 }
 
 static gboolean
@@ -671,8 +698,10 @@ gst_value_compare_boolean (const GValue *value1, const GValue *value2)
 static char *
 gst_value_serialize_boolean (const GValue *value)
 {
-  g_warning("unimplemented");
-  return NULL;
+  if (value->data[0].v_int) {
+    return g_strdup ("true");
+  }
+  return g_strdup ("false");
 }
 
 static gboolean
@@ -698,8 +727,7 @@ gst_value_compare_int (const GValue *value1, const GValue *value2)
 static char *
 gst_value_serialize_int (const GValue *value)
 {
-  g_warning("unimplemented");
-  return NULL;
+  return g_strdup_printf ("%d", value->data[0].v_int);
 }
 
 static gboolean
@@ -727,8 +755,9 @@ gst_value_compare_double (const GValue *value1, const GValue *value2)
 static char *
 gst_value_serialize_double (const GValue *value)
 {
-  g_warning("unimplemented");
-  return NULL;
+  char d[G_ASCII_DTOSTR_BUF_SIZE];
+  g_ascii_dtostr(d, G_ASCII_DTOSTR_BUF_SIZE, value->data[0].v_double);
+  return g_strdup (d);
 }
 
 static gboolean
@@ -750,11 +779,62 @@ gst_value_compare_string (const GValue *value1, const GValue *value2)
   return GST_VALUE_EQUAL;
 }
 
+#define GST_ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
+    ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
+    ((c) == '.'))
+
+static gchar *
+gst_string_wrap (const char *s)
+{
+  const gchar *t;
+  int len;
+  gchar *d, *e;
+  gboolean wrap = FALSE;
+
+  len = 0;
+  t = s;
+  while (*t) {
+    if(GST_ASCII_IS_STRING(*t)) {
+      len++;
+    } else if(*t < 0x20 || *t >= 0x7f) {
+      wrap = TRUE;
+      len += 4;
+    } else {
+      wrap = TRUE;
+      len += 2;
+    }
+    t++;
+  }
+
+  if (!wrap) return strdup (s);
+
+  e = d = g_malloc(len + 3);
+
+  *e++ = '\"';
+  t = s;
+  while (*t) {
+    if(GST_ASCII_IS_STRING(*t)) {
+      *e++ = *t++;
+    } else if(*t < 0x20 || *t >= 0x7f) {
+      *e++ = '\\';
+      *e++ = '0' + ((*t)>>6);
+      *e++ = '0' + (((*t)>>3)&0x7);
+      *e++ = '0' + ((*t++)&0x7);
+    } else {
+      *e++ = '\\';
+      *e++ = *t++;
+    }
+  }
+  *e++ = '\"';
+  *e = 0;
+
+  return d;
+}
+
 static char *
 gst_value_serialize_string (const GValue *value)
 {
-  g_warning("unimplemented");
-  return NULL;
+  return gst_string_wrap (value->data[0].v_pointer);
 }
 
 static gboolean
@@ -1100,6 +1180,45 @@ gst_value_init_and_copy (GValue *dest, const GValue *src)
 {
   g_value_init (dest, G_VALUE_TYPE(src));
   g_value_copy (src, dest);
+}
+
+/**
+ * gst_value_serialize:
+ *
+ */
+gchar *
+gst_value_serialize (const GValue *value)
+{
+  int i;
+  GValue s_val = { 0 };
+  GstValueTable *table;
+  char *s;
+
+  for(i=0;i<gst_value_table->len;i++){
+    table = &g_array_index(gst_value_table, GstValueTable, i);
+    if(table->type != G_VALUE_TYPE(value) ||
+        table->serialize == NULL) continue;
+
+    return table->serialize(value);
+  }
+
+  g_value_init (&s_val, G_TYPE_STRING);
+  g_value_transform (value, &s_val);
+  s = gst_string_wrap (g_value_get_string (&s_val));
+  g_value_unset (&s_val);
+
+  return s;
+}
+
+/**
+ * gst_value_deserialize:
+ *
+ */
+gboolean
+gst_value_deserialize (GValue *dest, const gchar *src)
+{
+  g_warning("unimplemented");
+  return FALSE;
 }
 
 void

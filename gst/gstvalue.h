@@ -129,6 +129,10 @@ void gst_value_register (const GstValueTable *table);
 void gst_value_init_and_copy (GValue *dest, const GValue *src);
 void _gst_value_initialize (void);
 
+gchar * gst_value_serialize (const GValue *value);
+gboolean gst_value_deserialize (GValue *dest, const gchar *src);
+
+
 G_END_DECLS
 
 #endif

@@ -955,55 +955,6 @@ static const char *_gst_structure_to_abbr(GType type)
       ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
       ((c) == '.'))
 
-static gchar *
-_gst_structure_wrap_string(gchar *s)
-{
-  gchar *t;
-  int len;
-  gchar *d, *e;
-  gboolean wrap = FALSE;
-
-  len = 0;
-  t = s;
-  while (*t) {
-    if(GST_ASCII_IS_STRING(*t)) {
-      len++;
-    } else if(*t < 0x20 || *t >= 0x7f) {
-      wrap = TRUE;
-      len += 4;
-    } else {
-      wrap = TRUE;
-      len += 2;
-    }
-    t++;
-  }
-
-  if (!wrap) return s;
-
-  e = d = g_malloc(len + 3);
-
-  *e++ = '\"';
-  t = s;
-  while (*t) {
-    if(GST_ASCII_IS_STRING(*t)) {
-      *e++ = *t++;
-    } else if(*t < 0x20 || *t >= 0x7f) {
-      *e++ = '\\';
-      *e++ = '0' + ((*t)>>6);
-      *e++ = '0' + (((*t)>>3)&0x7);
-      *e++ = '0' + ((*t++)&0x7);
-    } else {
-      *e++ = '\\';
-      *e++ = *t++;
-    }
-  }
-  *e++ = '\"';
-  *e = 0;
-
-  g_free(s);
-  return d;
-}
-
 /**
  * gst_structure_to_string:
  * @structure: a #GstStructure
@@ -1017,7 +968,6 @@ gst_structure_to_string(const GstStructure *structure)
 {
   GstStructureField *field;
   GString *s;
-  char *t;
   int i;
 
   g_return_val_if_fail(structure != NULL, NULL);
@@ -1026,14 +976,12 @@ gst_structure_to_string(const GstStructure *structure)
   /* FIXME this string may need to be escaped */
   g_string_append_printf(s, "%s", g_quark_to_string(structure->name));
   for(i=0;i<structure->fields->len;i++) {
-    GValue s_val = { 0 };
+    char *t;
     GType type;
 
     field = GST_STRUCTURE_FIELD(structure, i);
 
-    g_value_init(&s_val, G_TYPE_STRING);
-    g_value_transform (&field->value, &s_val);
-
+    t = gst_value_serialize (&field->value);
     type = G_VALUE_TYPE (&field->value);
 
     if (type == GST_TYPE_LIST) {
@@ -1045,21 +993,14 @@ gst_structure_to_string(const GstStructure *structure)
       } else {
 	type = G_TYPE_INT;
       }
-      t = g_strdup(g_value_get_string(&s_val));
     } else if (G_VALUE_TYPE(&field->value) == GST_TYPE_INT_RANGE) {
       type = G_TYPE_INT;
-      t = g_strdup(g_value_get_string(&s_val));
     } else if (G_VALUE_TYPE(&field->value) == GST_TYPE_DOUBLE_RANGE) {
       type = G_TYPE_DOUBLE;
-      t = g_strdup(g_value_get_string(&s_val));
-    } else {
-      t = _gst_structure_wrap_string(g_strdup(g_value_get_string(&s_val)));
     }
-
     g_string_append_printf(s, ", %s=(%s)%s", g_quark_to_string(field->name),
 	_gst_structure_to_abbr(type), t);
     g_free(t);
-    g_value_unset (&s_val);
   }
   return g_string_free(s, FALSE);
 }
