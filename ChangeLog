@@ -1,3 +1,8 @@
+2004-03-07  David Schleef  <ds@schleef.org>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	Add cinepak format.  (bug #136470)
+
 2004-03-05  David Schleef  <ds@schleef.org>
 
 	* configure.ac:  Call ffmpeg's configure with --disable-v4l,

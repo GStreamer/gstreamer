@@ -395,6 +395,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
           NULL);
       break;
 
+    case CODEC_ID_CINEPAK:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-cinepak", NULL);
+      break;
+
     default:
       /* .. */
       break;
