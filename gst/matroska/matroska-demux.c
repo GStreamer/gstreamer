@@ -2176,7 +2176,8 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux)
               break;
             }
             if (id != seek_id) {
-              g_warning ("We looked for ID=0x%x but got ID=0x%x (pos=%llu)",
+              g_warning ("We looked for ID=0x%x but got ID=0x%x (pos=%"
+                  G_GUINT64_FORMAT ")",
                   seek_id, id, seek_pos + demux->segment_start);
               goto finish;
             }

@@ -200,12 +200,13 @@ gst_progressreport_report (GstProgressReport * progressreport,
     }
 
     if (got_total == TRUE) {
-      g_print ("%s (%2d:%2d:%2d): %lld / %lld %s (%3.2g %%)\n",
+      g_print ("%s (%2d:%2d:%2d): %" G_GINT64_FORMAT " / %" G_GINT64_FORMAT
+          " %s (%3.2g %%)\n",
           gst_object_get_name (GST_OBJECT (progressreport)), hh, mm, ss,
           cur_progress, total_progress, format_name,
           ((gdouble) (cur_progress)) / total_progress * 100);
     } else {
-      g_print ("%s (%2d:%2d:%2d): %lld %s\n",
+      g_print ("%s (%2d:%2d:%2d): %" G_GINT64_FORMAT " %s\n",
           gst_object_get_name (GST_OBJECT (progressreport)), hh, mm, ss,
           cur_progress, format_name);
     }
