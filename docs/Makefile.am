@@ -15,11 +15,11 @@ SUBDIRS = $(SUBDIRS_DOCS) $(SUBDIRS_PLUGINS)
 DIST_SUBDIRS = gst faq manual pwg libs plugins xsl
 
 EXTRA_DIST = \
-	slides manuals.mak htmlinstall.mak \
+	slides manuals.mak htmlinstall.mak upload.mak \
 	image-png image-pdf image-eps version.entities.in
 
 upload:
-	@for a in manual faq pwg; do cd $$a; make upload; cd ..; done
+	@if test "x$(SUBDIRS_DOCS)" != x; then for a in $(SUBDIRS_DOCS); do cd $$a; make upload; cd ..; done; fi
 
 dist-hook:
 	$(RM) -rf $(distdir)/random/CVS

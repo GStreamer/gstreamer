@@ -168,20 +168,3 @@ $(BUILDIMAGESDIR)/%.ps: %.png
 check-local: $(BUILDDIR)/$(MAIN)
 	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
 	cd $(BUILDDIR) && xmllint -noout -valid $(MAIN)
-
-### this is a website upload target
-### if you want to use it, make sure your ..sh/config file contains the
-### correct User entry for the Host entry for the DOC_SERVER
-DOC_SERVER=freedesktop.org
-DOC_BASE=/home/projects/gstreamer/www/data/doc
-DOC_URL=$(DOC_SERVER):$(DOC_BASE)
-
-upload: html ps pdf
-	@if test "x$$GST_PLUGINS_VERSION_NANO" = x0; then \
-            export DOCVERSION=$(VERSION); \
-        else export DOCVERSION=head; \
-        fi; \
-        export DIR=$(DOC_BASE)/gstreamer/$$DOCVERSION/$(DOC); \
-	echo Uploading docs to $(DOC_SERVER):$$DIR; \
-	ssh $(DOC_SERVER) mkdir -p $$DIR; \
-	rsync -arv -e ssh $(DOC).ps $(DOC).pdf html $(DOC_SERVER):$$DIR

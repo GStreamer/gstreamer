@@ -989,6 +989,8 @@ Is triggered whenever an error occured.
 @arg2: 
 @:
 @:
+@:
+@:
 @: 
 
 <!-- ##### SIGNAL GstElement::found-tag ##### -->

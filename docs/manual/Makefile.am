@@ -2,6 +2,8 @@
 
 # base name of doc
 DOC = manual
+# formats defined for upload.mak
+FORMATS=html ps pdf
 
 # main xml file
 MAIN = $(DOC).xml
@@ -18,6 +20,8 @@ FIG_SRC = $(notdir $(wildcard $(srcdir)/*.fig))
 
 # get the generic docbuilding Makefile stuff
 include $(srcdir)/../manuals.mak
+# get the generic upload target
+include $(srcdir)/../upload.mak
 
 ### this is standard automake stuff
 

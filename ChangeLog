@@ -1,5 +1,22 @@
 2004-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/HACKING:
+	* docs/Makefile.am:
+	* docs/faq/Makefile.am:
+	* docs/gst/Makefile.am:
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstplugin.sgml:
+	* docs/gst/tmpl/gstreamer-unused.sgml:
+	* docs/libs/Makefile.am:
+	* docs/manual/Makefile.am:
+	* docs/manuals.mak:
+	* docs/pwg/Makefile.am:
+	* docs/upload.mak:
+          Separate out upload target and make it similar for
+          both docbook and gtk-doc docs
+
+2004-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/manuals.mak:
           Fix upload target to work with freedesktop
 

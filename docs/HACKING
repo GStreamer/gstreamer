@@ -1,3 +1,21 @@
+UPDATING ONLINE DOCS
+--------------------
+This is pretty simple.
+Make sure that you
+a) have a working freedesktop.org account
+b) $HOME/.ssh/config set up so that it has the right User for the Host
+   (for example, I have:
+Host freedesktop.org
+  User thomasvs
+c) verify this works by doing ssh freedesktop.org and being logged in without
+   a password prompt
+
+Then, after updating any of the docs, run "make upload" from that directory.
+Or, run "make upload" from this (docs) directory.
+
+DOCS NOTES
+----------
+
 OK, I've grown so tired of having to coax the docs to build every time I
 get round to it that I've decided to note down some of the things that
 are important to know.

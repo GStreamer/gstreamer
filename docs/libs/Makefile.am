@@ -4,6 +4,12 @@
 #DOC_MODULE=gstreamer-libs-@GST_MAJORMINOR@
 DOC_MODULE=gstreamer-libs
 
+# for upload.mak
+DOC=gstreamer-libs
+FORMATS=html
+html: html-build.stamp
+sinclude $(srcdir)/../upload.mak
+
 # generated basefiles
 #basefiles = \
 ##		$(DOC_MODULE).types \

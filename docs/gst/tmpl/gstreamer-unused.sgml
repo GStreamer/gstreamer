@@ -9634,6 +9634,14 @@ Destroys the pipeline.
 
 @Returns: 
 
+<!-- ##### FUNCTION gst_plugin_get_longname ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_plugin_get_type_list ##### -->
 <para>
 
@@ -9724,6 +9732,14 @@ Destroys the pipeline.
 
 @plugin: 
 @longname: 
+
+<!-- ##### FUNCTION gst_plugin_set_name ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@name: 
 
 <!-- ##### FUNCTION gst_plugin_unload_all ##### -->
 <para>
