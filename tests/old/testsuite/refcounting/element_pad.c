@@ -61,7 +61,21 @@ main (int argc, gchar *argv[])
     g_assert (!GST_PAD_CONNECTED (gst_element_get_pad (element2, "src")));
     gst_object_unref (GST_OBJECT (element2));
   }
-  g_print ("create/connect/unref %d elements %ld\n", iters, vmsize()-usage1);
+  g_print ("create/connect/unref %d elements %ld\n", iters/2, vmsize()-usage1);
+
+  for (i=0; i<iters/2; i++) {
+    element = create_element ("sink", GST_PAD_SINK);
+    element2 = create_element ("src", GST_PAD_SRC);
+    gst_element_connect (element, "sink", element2, "src");
+    g_assert (GST_PAD_CONNECTED (gst_element_get_pad (element2, "src")));
+    g_assert (GST_PAD_CONNECTED (gst_element_get_pad (element, "sink")));
+    gst_object_destroy (GST_OBJECT (element));
+    g_assert (GST_OBJECT_DESTROYED (element));
+    g_assert (!GST_PAD_CONNECTED (gst_element_get_pad (element2, "src")));
+    gst_object_unref (GST_OBJECT (element2));
+    gst_object_unref (GST_OBJECT (element));
+  }
+  g_print ("create/connect/destroy %d elements %ld\n", iters/2, vmsize()-usage1);
 
   element = create_element ("sink", GST_PAD_SINK);
   pad = gst_element_get_pad (element, "sink");
@@ -75,7 +89,7 @@ main (int argc, gchar *argv[])
     gst_element_remove_pad (element, pad);
     gst_object_unref (GST_OBJECT (element));
   }
-  g_print ("pad removal loop %d  %ld\n", iters, vmsize()-usage1);
+  g_print ("pad removal loop %d  %ld\n", iters/2, vmsize()-usage1);
 
   for (i=0; i<iters/2; i++) {
     element = create_element ("sink", GST_PAD_SINK);
@@ -86,7 +100,7 @@ main (int argc, gchar *argv[])
     gst_object_unref (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (element));
   }
-  g_print ("pad removal and test loop %d  %ld\n", iters, vmsize()-usage1);
+  g_print ("pad removal and test loop %d  %ld\n", iters/2, vmsize()-usage1);
 
   element = create_element ("sink", GST_PAD_SINK);
   pad = gst_element_get_pad (element, "sink");
@@ -103,7 +117,16 @@ main (int argc, gchar *argv[])
     gst_object_destroy (GST_OBJECT (element));
     gst_object_unref (GST_OBJECT (element));
   }
-  g_print ("pad destroy/removal loop %d %ld\n", iters, vmsize()-usage1);
+  g_print ("pad destroy/removal loop %d %ld\n", iters/2, vmsize()-usage1);
+
+  for (i=0; i<iters/2; i++) {
+    element = create_element ("sink", GST_PAD_SINK);
+    pad = gst_element_get_pad (element, "sink");
+    gst_object_destroy (GST_OBJECT (pad));
+    g_assert (gst_element_get_pad (element, "sink") == NULL);
+    gst_object_unref (GST_OBJECT (element));
+  }
+  g_print ("pad destroy loop %d %ld\n", iters/2, vmsize()-usage1);
 
   g_print ("leaked: %ld\n", vmsize()-usage1);
 
