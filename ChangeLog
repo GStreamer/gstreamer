@@ -1,3 +1,26 @@
+2004-05-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	  remove idct and putbits
+	* configure.ac:
+	* docs/libs/tmpl/gstdataprotocol.sgml:
+	* libs/gst/Makefile.am:
+	* libs/gst/dataprotocol/Makefile.am:
+	* libs/gst/dataprotocol/dataprotocol-test.c: (conversion_test),
+	(buffer_test), (caps_test), (event_test), (main):
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_crc),
+	(gst_dp_dump_byte_array), (gst_dp_init),
+	(gst_dp_header_payload_length), (gst_dp_header_payload_type),
+	(gst_dp_header_from_buffer), (gst_dp_packet_from_caps),
+	(gst_dp_packet_from_event), (gst_dp_buffer_from_header),
+	(gst_dp_caps_from_packet), (gst_dp_event_from_packet),
+	(gst_dp_validate_header), (gst_dp_validate_payload),
+	(gst_dp_validate_packet), (plugin_init):
+	* libs/gst/dataprotocol/dataprotocol.h:
+	* libs/gst/dataprotocol/dp-private.h:
+	  add dataprotocol
+
 2004-05-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstvalue.c: (gst_value_deserialize_int_helper):

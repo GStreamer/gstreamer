@@ -4,9 +4,8 @@
 <!ENTITY % version-entities SYSTEM "../version.entities">
 %version-entities;
 <!ENTITY GstGetbits SYSTEM "xml/gstgetbits.xml">
-<!ENTITY GstPutbits SYSTEM "xml/gstputbits.xml">
 <!ENTITY GstControl SYSTEM "xml/gstcontrol.xml">
-<!ENTITY GstIDCT SYSTEM "xml/gstidct.xml">
+<!ENTITY GstDataProtocol SYSTEM "xml/gstdataprotocol.xml">
 
 ]>
 
@@ -26,9 +25,8 @@
       GStreamer provides some standard libraries you can use to create plugins.
     </para>
       &GstGetbits;
-      &GstPutbits;
-      &GstIDCT;
       &GstControl;
+      &GstDataProtocol;
 
   </chapter>
 
