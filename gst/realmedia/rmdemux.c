@@ -515,7 +515,7 @@ void gst_rmdemux_add_stream(GstRMDemux *rmdemux, GstRMDemuxStream *stream)
     g_print("adding pad %p to rmdemux %p\n", stream->pad, rmdemux);
     gst_element_add_pad(GST_ELEMENT (rmdemux), stream->pad);
 
-    GST_DEBUG_CAPS("setting caps",stream->caps);
+    GST_DEBUG ("setting caps: " GST_PTR_FORMAT, stream->caps);
 
     gst_pad_set_explicit_caps(stream->pad, stream->caps);
   }
