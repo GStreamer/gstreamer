@@ -1,3 +1,8 @@
+2004-05-18  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):
+	  don't operate on undefined variables (fixes #135145)
+
 2004-05-16  Benjamin Otte  <otte@gnome.org>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
