@@ -29,6 +29,8 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/audioio.h>
+#include "gstsunelement.h"
+#include "gstsunmixer.h"
 
 
 #define GST_TYPE_SUNAUDIOSINK \
@@ -97,10 +99,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) { 8, 16 }, "
-        "depth = (int) { 8, 16 }, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
+        "signed = (boolean) TRUE, " "width = (int) 16, " "depth = (int) 16, "
+        /* [5510,48000] seems to be a Solaris limit */
+        "rate = (int) [ 5510, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 static void gst_sunaudiosink_base_init (gpointer g_class);
@@ -192,6 +193,8 @@ gst_sunaudiosink_class_init (GstSunAudioSinkClass * klass)
 static void
 gst_sunaudiosink_init (GstSunAudioSink * sunaudiosink)
 {
+  const char *audiodev;
+
   sunaudiosink->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_sunaudiosink_sink_factory), "sink");
@@ -203,7 +206,11 @@ gst_sunaudiosink_init (GstSunAudioSink * sunaudiosink)
   gst_pad_set_chain_function (sunaudiosink->sinkpad, gst_sunaudiosink_chain);
 
   sunaudiosink->buffer_size = 64;
-  sunaudiosink->device = g_strdup ("/dev/audio");
+
+  audiodev = g_getenv ("AUDIODEV");
+  if (audiodev == NULL)
+    audiodev = "/dev/audio";
+  sunaudiosink->device = g_strdup (audiodev);
 }
 
 static GstCaps *
@@ -212,12 +219,8 @@ gst_sunaudiosink_getcaps (GstPad * pad)
   GstSunAudioSink *sunaudiosink = GST_SUNAUDIOSINK (gst_pad_get_parent (pad));
   GstCaps *caps;
 
-  caps = gst_caps_from_string ("audio/x-raw-int, "
-      "endianness = (int) BYTE_ORDER, "
-      "signed = (boolean) TRUE, "
-      "width = (int) 16, "
-      "depth = (int) 16, " "rate = (int) 44100, " "channels = (int) 1");
-  GST_ERROR ("getcaps called on %" GST_PTR_FORMAT ", returning %"
+  caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  GST_DEBUG ("getcaps called on %" GST_PTR_FORMAT ", returning %"
       GST_PTR_FORMAT, pad, caps);
 
   return caps;
@@ -241,7 +244,7 @@ gst_sunaudiosink_pad_link (GstPad * pad, const GstCaps * caps)
   } else {
     ret = GST_PAD_LINK_REFUSED;
   }
-  GST_ERROR ("pad_link called on %" GST_PTR_FORMAT " with caps %"
+  GST_DEBUG ("pad_link called on %" GST_PTR_FORMAT " with caps %"
       GST_PTR_FORMAT ", returning %d", pad, caps, ret);
 
   return ret;
@@ -426,7 +429,9 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "sunaudiosink", GST_RANK_NONE,
-          GST_TYPE_SUNAUDIOSINK))
+          GST_TYPE_SUNAUDIOSINK) ||
+      !gst_element_register (plugin, "sunaudiomixer", GST_RANK_NONE,
+          GST_TYPE_SUNAUDIOELEMENT))
     return FALSE;
 
   return TRUE;

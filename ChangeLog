@@ -1,3 +1,16 @@
+2004-08-17  David Schleef  <ds@schleef.org>
+
+	* sys/sunaudio/Makefile.am:
+	* sys/sunaudio/gstsunaudio.c: Fix caps to handle full range
+	of rates and channels.  Make debugging less obnoxious.
+
+	Patch from Balamurali Viswanathan implementing a mixer for
+	Sun audio.  (bug #144091):
+	* sys/sunaudio/gstsunelement.c:
+	* sys/sunaudio/gstsunelement.h:
+	* sys/sunaudio/gstsunmixer.c:
+	* sys/sunaudio/gstsunmixer.h:
+
 2004-08-17  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/audioscale/gstaudioscale.c:
