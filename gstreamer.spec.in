@@ -121,6 +121,7 @@ Output plugin for GStreamer for use with the esound package
 Summary: Gstreamer plugin for Ascii-art output
 Group: Libraries/Multimedia
 Requires: aalib >= 1.3
+BuildRequires: aalib-devel >= 1.3
 Requires: %{name} = %{ver}
 
 %description -n gstreamer-aalib
@@ -162,6 +163,7 @@ Summary: Gstreamer plugin for CD audio input using CDParanoia IV
 Group: Libraries/Multimedia
 Requires: cdparanoia >= alpha9.7
 Requires: %{name} = %{ver}
+BuildRequires: cdparanoia-devel >= alpha9.7
 
 %description -n gstreamer-cdparanoia
 Plugin for ripping audio tracks using cdparanoia under GStreamer
@@ -254,6 +256,7 @@ Summary: GStreamer plugins for GNOME VFS input and output
 Group: Libraries/Multimedia
 Requires: gnome-vfs > 1.0
 Requires: %{name} = %{ver}
+BuildRequires: gnome-vfs-devel > 1.0
 
 %description -n gstreamer-gnomevfs
 Plugins for reading and writing through GNOME VFS.
@@ -365,6 +368,7 @@ Summary: Gstreamer plugin for outputing to SDL
 Group: Libraries/Multimedia
 Requires: SDL >= 1.2.0
 Requires: %{name} = %{ver}
+BuildRequires: SDL-devel >= 1.2.0
 
 %description -n gstreamer-sdl
 Plugin for sending output to the Simple Direct Media architecture.
