@@ -1,0 +1,63 @@
+CORBA and bonobo ramblings
+==========================
+
+This is about something I know nothing about, so I want
+your views on the subject :)
+
+statements in this doc might contain plain nonsense and 
+utter ignorance about the subject, so feel free to correct
+no matter how many brown paper bags I need to put over my
+head.
+
+
+CORBA
+-----
+
+The object request broker. It basically allows you to declare
+objects using a language called IDL. It has the nice benefit
+of allowing objects to live in other contexts, languages and 
+even on other machines over the network.
+
+Wrapping the GStreamer objects in CORBA objects doesn't look
+like a problem. It will immediatly allow us to create objects
+accros the network and use the framework in a distributed
+environment.
+
+You will end up with a lot of corba objects using this method.
+Is this the way to do it? do we only need to CORBA-ify some
+of the core objects instead?
+
+I see a CORBA wrapper as something that exposes the API of
+GStreamer. If I want to do distributed media processing I would
+build up an app with corba calls. The point is that you use
+the lowlevel CORBA API to create a distributed media app.
+
+
+Bonobo
+------
+
+A component model build with CORBA. Bonobo has provisions for
+creating embedable objects. As I understand it, this means that
+it has something visible to embed. I know you can also use 
+Bonobo without the GUI parts but why would we prefer Bonobo
+over CORBA to handle that? 
+
+Bonobo has a framework to create toolbars, menus and other 
+neat stuff. It also has a serialisation mechanism that allows
+you to, for example, merge a pipeline with a document in one
+single stream. 
+
+I see bonobo as a high level service provider, you create a
+mediaplayer component that can be embeded into a document and
+stuff like that.  The point here is that you use bonobo to 
+create services out of user apps build with GStreamer.
+
+
+Comments?
+
+Wim
+
+
+
+
+
