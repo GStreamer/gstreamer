@@ -7,6 +7,8 @@ else
 FFMPEG_DIR=
 endif
 
+MAKEFLAGS=-j1
+
 # patch it up before descending into dirs
 all-recursive: patches
 
