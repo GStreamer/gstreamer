@@ -9,6 +9,7 @@ SUFFIXES = .idl
 # mcopidl Extension Expansion Technology clean up
 CLEANFILES = gst_artsio.h gst_artsio.cc gst_artsio.mcopclass gst_artsio.mcoptype
 
+EXTRA_DIST = gst_artsio.idl
 BUILT_SOURCES = gst_artsio.cc
 
 libgstarts_la_SOURCES = gst_arts.c gst_artsio_impl.cc
