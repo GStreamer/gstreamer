@@ -399,10 +399,8 @@ static gint gst_editor_pad_event(GnomeCanvasItem *item,GdkEvent *event) {
 
   switch(event->type) {
     case GDK_ENTER_NOTIFY:
-/*      g_print("entered pad\n"); */
       break;
     case GDK_LEAVE_NOTIFY:
-/*      g_print("left pad\n"); */
       break;
     default:
       break;
