@@ -557,7 +557,7 @@ gst_alsa_get_caps (GstPad *pad)
   this = GST_ALSA (gst_pad_get_parent (pad));
 
   if (!GST_FLAG_IS_SET (this, GST_ALSA_OPEN))
-    return NULL;
+    return gst_caps_copy (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad)));
   
   snd_pcm_hw_params_alloca (&hw_params);
   ERROR_CHECK (snd_pcm_hw_params_any (this->handle, hw_params),
@@ -591,12 +591,24 @@ gst_alsa_get_caps (GstPad *pad)
       if (caps != NULL) {
 	g_assert (gst_caps_get_size (caps) == 1);
         add_channels (gst_caps_get_structure (caps, 0), min_rate, max_rate, min_channels, max_channels);
-	gst_caps_append (ret, caps);
+	if (ret) {
+	  gst_caps_append (ret, caps);
+	} else {
+	  ret = caps;
+	}
       }
     }
   }
 
-  return ret;
+  if (ret == NULL) {
+    GST_WARNING_OBJECT (this, "no supported caps found, returning empty caps");
+    return gst_caps_new_empty ();
+  } else {
+    G_GNUC_UNUSED gchar *str = gst_caps_to_string (ret);
+    GST_LOG_OBJECT (this, "get_caps returns %s", str);
+    g_free (str);
+    return ret;
+  }
 }
 
 /* Negotiates the caps */
@@ -658,17 +670,17 @@ gst_alsa_link (GstPad *pad, const GstCaps *caps)
 	  goto out;
         }
       }
+    }
 
-      GST_FLAG_UNSET (this, GST_ALSA_CAPS_NEGO);
+    GST_FLAG_UNSET (this, GST_ALSA_CAPS_NEGO);
 
-      /* sync the params */
-      if (GST_FLAG_IS_SET (this, GST_ALSA_RUNNING)) gst_alsa_stop_audio (this);
-      g_free (this->format);
-      this->format = format;
-      if (! gst_alsa_start_audio (this)) {
-        gst_element_error (GST_ELEMENT (this), "Probed format doesn't work");
-        return GST_PAD_LINK_REFUSED;
-      }
+    /* sync the params */
+    if (GST_FLAG_IS_SET (this, GST_ALSA_RUNNING)) gst_alsa_stop_audio (this);
+    g_free (this->format);
+    this->format = format;
+    if (! gst_alsa_start_audio (this)) {
+      gst_element_error (GST_ELEMENT (this), "Probed format doesn't work");
+      return GST_PAD_LINK_REFUSED;
     }
 
     return GST_PAD_LINK_OK;
