@@ -180,7 +180,7 @@ gst_pipefilter_get (GstPad *pad)
   }
   /* if we didn't get as many bytes as we asked for, we're at EOF */
   if (readbytes == 0) {
-    gst_pad_event (pad, (void*)GST_EVENT_EOS);
+    gst_pad_event (pad, GST_EVENT_EOS, 0LL, 0);
     return NULL;
   }
 

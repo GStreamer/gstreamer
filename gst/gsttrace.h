@@ -44,7 +44,7 @@ struct _GstTrace {
 };
 
 struct _GstTraceEntry {
-  guint64 timestamp;
+  gint64 timestamp;
   guint32 sequence;
   guint32 data;
   gchar message[112];

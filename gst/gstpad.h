@@ -46,20 +46,20 @@ extern "C" {
 
 
 #define GST_TYPE_PAD			(gst_pad_get_type ())
-#define GST_PAD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD,GstPad))
-#define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD,GstPadClass))
+#define GST_PAD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD, GstPad))
+#define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD, GstPadClass))
 #define GST_IS_PAD(obj)			(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PAD))
 #define GST_IS_PAD_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))
 
 #define GST_TYPE_REAL_PAD		(gst_real_pad_get_type ())
-#define GST_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REAL_PAD,GstRealPad))
-#define GST_REAL_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_REAL_PAD,GstRealPadClass))
+#define GST_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REAL_PAD, GstRealPad))
+#define GST_REAL_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_REAL_PAD, GstRealPadClass))
 #define GST_IS_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_REAL_PAD))
 #define GST_IS_REAL_PAD_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_REAL_PAD))
 
 #define GST_TYPE_GHOST_PAD		(gst_ghost_pad_get_type ())
-#define GST_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GHOST_PAD,GstGhostPad))
-#define GST_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD,GstGhostPadClass))
+#define GST_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GHOST_PAD, GstGhostPad))
+#define GST_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD, GstGhostPadClass))
 #define GST_IS_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GHOST_PAD))
 #define GST_IS_GHOST_PAD_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GHOST_PAD))
 
@@ -92,7 +92,7 @@ typedef enum {
  * buf is the buffer being passed */
 typedef void 		(*GstPadChainFunction) 		(GstPad *pad,GstBuffer *buf);
 typedef GstBuffer*	(*GstPadGetFunction) 		(GstPad *pad);
-typedef gboolean	(*GstPadEventFunction)		(GstPad *pad, void *event);
+typedef gboolean	(*GstPadEventFunction)		(GstPad *pad, GstEventType event, gint64 timestamp, guint32 data);
 
 typedef GstBuffer*	(*GstPadGetRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
 typedef GstBuffer*	(*GstPadPullRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
@@ -365,11 +365,11 @@ NULL )
 #endif
 
 #if 1
-gboolean		gst_pad_event			(GstPad *pad, void *event);
+gboolean		gst_pad_event			(GstPad *pad, GstEventType event, gint64 timestamp, guint32 data);
 #else
-#define gst_pad_event(pad,event) G_STMT_START{ \
+#define gst_pad_event(pad,event,timestamp,data) G_STMT_START{ \
   ( (((GstRealPad *)(pad))->peer->eventhandler) ? \
-    (((GstRealPad *)(pad))->peer->eventhandler)((GstPad *)(((GstRealPad *)(pad))->peer),(event)) : \
+    (((GstRealPad *)(pad))->peer->eventhandler)((GstPad *)(((GstRealPad *)(pad))->peer),(event),(timestamp),(data)) : \
 FALSE )
 }G_STMT_END
 #endif

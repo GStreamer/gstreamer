@@ -52,7 +52,7 @@ enum {
   ARG_LOCATION,
   ARG_BYTESPERREAD,
   ARG_OFFSET,
-  ARG_SIZE,
+  ARG_FILESIZE,
 };
 
 
@@ -117,8 +117,8 @@ gst_disksrc_class_init (GstDiskSrcClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OFFSET,
     g_param_spec_long("offset","offset","offset",
                      G_MINLONG,G_MAXLONG,0,G_PARAM_READWRITE)); // CHECKME
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SIZE,
-    g_param_spec_long("size","size","size",
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FILESIZE,
+    g_param_spec_long("filesize","filesize","filesize",
                      G_MINLONG,G_MAXLONG,0,G_PARAM_READABLE)); // CHECKME
 
   gobject_class->set_property = gst_disksrc_set_property;
@@ -211,7 +211,7 @@ gst_disksrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
     case ARG_OFFSET:
       g_value_set_long (value, src->curoffset);
       break;
-    case ARG_SIZE:
+    case ARG_FILESIZE:
       g_value_set_long (value, src->size);
       break;
     default:
@@ -240,7 +240,7 @@ gst_disksrc_get (GstPad *pad)
   /* deal with EOF state */
   if (src->curoffset >= src->size) {
     GST_DEBUG (0,"map offset %ld >= size %ld --> eos\n", src->curoffset, src->size);
-    gst_pad_event(pad,(void *)GST_EVENT_EOS);
+    gst_pad_event(pad, GST_EVENT_EOS, 0LL, 0);
     buf =  gst_buffer_new();
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_EOS);
     return buf;
@@ -263,7 +263,8 @@ gst_disksrc_get (GstPad *pad)
   } else
     GST_BUFFER_SIZE (buf) = src->bytes_per_read;
 
-  GST_DEBUG (0,"map %p, offset %ld, size %d\n", src->map, src->curoffset, GST_BUFFER_SIZE (buf));
+  GST_DEBUG (0,"map %p, offset %ld (%p), size %d\n", src->map, src->curoffset,
+             src->map + src->curoffset, GST_BUFFER_SIZE (buf));
 
   //gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
@@ -303,7 +304,7 @@ gst_disksrc_get_region (GstPad *pad, GstRegionType type,guint64 offset,guint64 l
 
   /* deal with EOF state */
   if (offset >= src->size) {
-    gst_pad_event (pad, (void*)GST_EVENT_EOS);
+    gst_pad_event (pad, GST_EVENT_EOS, 0LL, 0);
     GST_DEBUG (0,"map offset %lld >= size %ld --> eos\n", offset, src->size);
     //FIXME
     buf =  gst_buffer_new();
@@ -365,6 +366,7 @@ gst_disksrc_open_file (GstDiskSrc *src)
     src->new_seek = TRUE;
   }
   return TRUE;
+  GST_DEBUG(0, "opened file %s\n",src->filename);
 }
 
 /* unmap and close the file */
