@@ -199,14 +199,52 @@ gst_file_index_init (GstFileIndex *index)
 }
 
 static void
+_file_index_id_free (GstFileIndexId *index_id, gboolean is_mmapped)
+{
+  if (index_id->id_desc)
+    g_free (index_id->id_desc);
+  if (index_id->format)
+    g_free (index_id->format);
+  if (index_id->array) {
+    if (is_mmapped)
+      munmap (index_id->array->data,  ARRAY_TOTAL_SIZE (index_id));
+    g_array_free (index_id->array, !is_mmapped);
+  }
+  g_free (index_id);
+}
+
+static gboolean
+_id_index_free_helper (gpointer _key, GstFileIndexId *index_id,
+		       GstFileIndex *index)
+{
+  _file_index_id_free (index_id, index->is_loaded);
+  return TRUE;
+}
+
+static void
 gst_file_index_dispose (GObject *object)
 {
   GstFileIndex *index = GST_FILE_INDEX (object);
 
-  if (index->location)
+  if (index->location) {
     g_free (index->location);
+    index->location = NULL;
+  }
 
-  // need to take care when destroying garrays with mmap'd segments
+  {
+    GSList *elem;
+    for (elem = index->unresolved; elem; elem = g_slist_next (elem))
+      _file_index_id_free (elem->data, index->is_loaded);
+    g_slist_free (index->unresolved);
+    index->unresolved = NULL;
+  }
+  
+  g_hash_table_foreach_steal (index->id_index,
+			      (GHRFunc) _id_index_free_helper, index);
+  g_hash_table_destroy (index->id_index);
+  index->id_index = NULL;
+
+  gst_index_entry_free (index->ret_entry);  // hack
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
