@@ -22,33 +22,17 @@
  */
 %%
 headers
-#include <Python.h>
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#include "pygobject.h"
+#include "common.h"
+
 #include <gst/gst.h>
 #include <gst/gsterror.h>
 #include <gst/gstqueue.h>
 #include <gst/gsttypefind.h>
 #include <gst/gsttag.h>
-
-#if PY_VERSION_HEX < 0x02030000
-  typedef destructor freefunc;
-#endif
-typedef struct {
-     PyGObject *pad;
-     PyObject *link_function;
-     PyObject *event_function;
-     PyObject *chain_function;
-     PyObject *get_function; 
-} PyGstPadPrivate;
-
-typedef struct {
-     PyObject *func, *data;
-} PyGstCustomNotify;
 
 extern gboolean pygst_data_from_pyobject (PyObject *object, GstData **data);
 static PyObject *_wrap_gst_element_factory_make(PyObject *self, PyObject *args, PyObject *kwargs);
@@ -58,11 +42,10 @@ include
   gstpad-handlers.override
 %%
 init
-/* This is due to a bug in PyGTK 2.3.91, should be removed when we can require
- * a newer version.
- */
 PyGstPipeline_Type.tp_new = PyType_GenericNew;
 PyGstThread_Type.tp_new = PyType_GenericNew;
+PyGstQueue_Type.tp_new = PyType_GenericNew;
+PyGstBin_Type.tp_new = PyType_GenericNew; // Shouldn't this be enough?
 %%
 modulename gst
 %%
@@ -192,6 +175,24 @@ _wrap_gst_element_get_pad_list(PyGObject *self)
 	PyObject *list;
 	
 	pads = GST_ELEMENT_PADS(GST_ELEMENT(self->obj));
+
+	list = PyList_New(0);
+	for (l = pads; l; l = l->next) {
+		GstPad *pad = (GstPad*)l->data;
+		PyList_Append(list, pygobject_new(G_OBJECT(pad)));
+	}
+		
+	return list;
+}
+%%
+override gst_element_get_pad_template_list noargs
+static PyObject *
+_wrap_gst_element_get_pad_template_list(PyGObject *self)
+{
+	GList *l, *pads;
+	PyObject *list;
+	
+	pads = (GList*)gst_element_get_pad_template_list(GST_ELEMENT(self->obj));
 
 	list = PyList_New(0);
 	for (l = pads; l; l = l->next) {
@@ -1001,7 +1002,7 @@ _wrap_gst_pad_template_get_caps(PyGObject *self)
 	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
 }
 %%
-override gst_type_fidn_factory_get_caps noargs
+override gst_type_find_factory_get_caps noargs
 static PyObject *
 _wrap_gst_type_find_factory_get_caps(PyGObject *self)
 {
@@ -1009,18 +1010,19 @@ _wrap_gst_type_find_factory_get_caps(PyGObject *self)
 	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
 }
 %%
-override gst_pad_template_get_caps_ny_name kwargs
+override gst_pad_template_get_caps_by_name kwargs
 static PyObject *
 _wrap_gst_pad_template_get_caps_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
-	static char *kwlist[] = { "name", NULL };
-	char *name;
-	GstCaps *ret;
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+    GstCaps *ret;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:GstPadTemplate.get_caps_by_name", kwlist, &name))
-		return NULL;
-	ret = (GstCaps*)gst_pad_template_get_caps_by_name(GST_PAD_TEMPLATE(self->obj), name);
-	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:GstPadTemplate.get_caps_by_name", kwlist, &name))
+        return NULL;
+    ret = (GstCaps*)gst_pad_template_get_caps_by_name(GST_PAD_TEMPLATE(self->obj), name);
+    /* pyg_boxed_new handles NULL checking */
+    return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
 }
 %%
 override gst_type_find_factory_get_caps noargs
@@ -1076,3 +1078,57 @@ _wrap_gst_element_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
 	return _wrap_gst_element_factory_make(NULL, args, kwargs);
 }
+%%
+override-slot GstBuffer.tp_as_buffer
+static int
+gst_buffer_getreadbuffer(PyGObject *self, int index, const void **ptr)
+{
+	if ( index != 0 ) {
+		PyErr_SetString(PyExc_SystemError,
+				"accessing non-existent string segment");
+		return -1;
+	}
+	
+	*ptr = GST_BUFFER_DATA(self->obj);
+	return GST_BUFFER_SIZE(self->obj);
+}
+
+static int
+gst_buffer_getsegcount(PyGObject *self, int *lenp)
+{
+	if (lenp)
+		*lenp = GST_BUFFER_SIZE(self->obj);
+	return 1;
+}
+
+
+static int
+gst_buffer_getcharbuf(PyGObject *self, int index, const char **ptr)
+{
+	if ( index != 0 ) {
+		PyErr_SetString(PyExc_SystemError,
+				"accessing non-existent string segment");
+		return -1;
+	}
+	
+	*ptr = GST_BUFFER_DATA(self->obj);
+	return GST_BUFFER_SIZE(self->obj);
+}
+
+#if 0
+static int
+string_buffer_getwritebuf(PyStringObject *self, int index, const void **ptr)
+{
+	PyErr_SetString(PyExc_TypeError,
+			"Cannot use string as modifiable buffer");
+	return -1;
+}
+
+#endif
+
+static PyBufferProcs _wrap_gst_buffer_tp_as_buffer = {
+        (getreadbufferproc)gst_buffer_getreadbuffer,
+	(getwritebufferproc)NULL,
+	(getsegcountproc)gst_buffer_getsegcount,
+	(getcharbufferproc)gst_buffer_getcharbuf,
+};

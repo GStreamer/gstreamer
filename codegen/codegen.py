@@ -74,7 +74,7 @@ class Wrapper:
         '    (reprfunc)%(tp_str)s,		/* tp_str */\n' \
         '    (getattrofunc)0,			/* tp_getattro */\n' \
         '    (setattrofunc)0,			/* tp_setattro */\n' \
-        '    0,					/* tp_as_buffer */\n' \
+        '    (PyBufferProcs*)%(tp_as_buffer)s,	/* tp_as_buffer */\n' \
         '    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */\n' \
         '    NULL, 				/* Documentation string */\n' \
         '    (traverseproc)0,			/* tp_traverse */\n' \
@@ -100,7 +100,7 @@ class Wrapper:
 
     slots_list = ['tp_getattr', 'tp_setattr', 'tp_compare', 'tp_repr',
                   'tp_as_number', 'tp_as_sequence', 'tp_as_mapping', 'tp_hash',
-                  'tp_call', 'tp_str', 'tp_richcompare', 'tp_iter',
+                  'tp_call', 'tp_str', 'tp_as_buffer', 'tp_richcompare', 'tp_iter',
                   'tp_iternext', 'tp_descr_get', 'tp_descr_set', 'tp_init',
                   'tp_alloc', 'tp_new', 'tp_free', 'tp_is_gc']
 

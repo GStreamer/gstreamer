@@ -1,3 +1,11 @@
+2004-05-03  Johan Dahlin  <johan@gnome.org>
+
+	* codegen/codegen.py: Resync (add support for tp_as_buffer)
+
+	* gst/gst.override: Support buffer interface for GstBuffer. Move
+	stuff into common.h, fix wrapping for
+	gst_pad_template_get_caps_by_name
+
 2004-05-01  Johan Dahlin  <johan@gnome.org>
 
 	* testsuite/runtests.py (gettestnames): Cleanup
