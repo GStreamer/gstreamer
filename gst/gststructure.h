@@ -32,6 +32,7 @@ typedef void (*GstStructureForeachFunc) (GstStructure *structure,
     GQuark field_id, GValue *value, gpointer user_data);
 
 struct _GstStructure {
+  GType type;
   int len;
 
   GQuark name;

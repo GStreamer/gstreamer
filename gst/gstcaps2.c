@@ -265,6 +265,33 @@ GstCaps2 *gst_caps2_copy_1 (const GstCaps2 *caps)
   return newcaps;
 }
 
+void gst_caps2_set_simple (GstCaps2 *caps, char *field, ...)
+{
+  GstStructure *structure;
+  va_list var_args;
+
+  g_return_if_fail (caps != NULL);
+  g_return_if_fail (caps->structs->len != 1);
+
+  structure = gst_caps2_get_nth_cap (caps, 0);
+
+  va_start (var_args, field);
+  gst_structure_set_valist (structure, field, var_args);
+  va_end(var_args);
+}
+
+void gst_caps2_set_simple_valist (GstCaps2 *caps, char *field, va_list varargs)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (caps != NULL);
+  g_return_if_fail (caps->structs->len != 1);
+
+  structure = gst_caps2_get_nth_cap (caps, 0);
+
+  gst_structure_set_valist (structure, field, varargs);
+}
+
 /* tests */
 gboolean gst_caps2_is_any (const GstCaps2 *caps)
 {

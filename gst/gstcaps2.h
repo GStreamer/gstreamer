@@ -58,6 +58,14 @@ struct _GstStaticCaps2 {
 
 #define GST_TYPE_CAPS2 gst_caps2_get_type()
 
+/* FIXME Company should decide the best way to do this */
+#define GST_DEBUG_CAPS(string, caps) do {		\
+  char *s = gst_caps2_to_string(caps);			\
+  GST_DEBUG ( "%s: %s", (string), s);			\
+  g_free(s);						\
+}while(0)
+
+
 void _gst_caps2_initialize (void);
 GType gst_caps2_get_type (void);
 
@@ -78,6 +86,8 @@ GstCaps2 *gst_caps2_split_one (GstCaps2 *caps);
 int gst_caps2_get_n_structures (const GstCaps2 *caps);
 GstStructure *gst_caps2_get_nth_cap (const GstCaps2 *caps, int index);
 GstCaps2 *gst_caps2_copy_1 (const GstCaps2 *caps);
+void gst_caps2_set_simple (GstCaps2 *caps, char *field, ...);
+void gst_caps2_set_simple_valist (GstCaps2 *caps, char *field, va_list varargs);
 
 /* tests */
 gboolean gst_caps2_is_any (const GstCaps2 *caps);
