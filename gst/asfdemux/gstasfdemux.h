@@ -24,10 +24,7 @@
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-  
+G_BEGIN_DECLS
   
 #define GST_TYPE_ASF_DEMUX \
   (asf_demux_get_type())
@@ -113,10 +110,6 @@ gboolean 	gst_asf_demux_plugin_init 	(GModule *module, GstPlugin *plugin);
 
 
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __ASF_DEMUX_H__ */
