@@ -84,7 +84,7 @@ read_config ();
   "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
   "mpg", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
   "avi", "avidemux video_00! { queue ! windec ! $cfg{VIDEOSINK} } avidemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
-  "vob", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! a52dec ! $cfg{AUDIOSINK} }",
+  "vob", "mpegdemux video_00! { queue max_level=500 ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.private_stream_1.0! { queue max_level=500 ! a52dec ! $cfg{AUDIOSINK} }",
   "wav", "wavparse ! $cfg{AUDIOSINK}",
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}"
 );
