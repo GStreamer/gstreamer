@@ -126,7 +126,7 @@ main (int argc, char *argv[])
   else
   {
     int rate;
-    gst_props_get (props, "rate", &rate);
+    gst_props_get (props, "rate", &rate, NULL);
     g_print ("Rate of pad on sink1 : %d\n", rate);
   }
   sink_caps = gst_pad_get_caps (gst_element_get_pad (sink2, "sink"));
@@ -139,7 +139,7 @@ main (int argc, char *argv[])
   else
   {
     int rate;
-    gst_props_get (props, "rate", &rate);
+    gst_props_get (props, "rate", &rate, NULL);
     g_print ("Rate of pad on sink2 : %d\n", rate);
   }
    
@@ -161,6 +161,8 @@ main (int argc, char *argv[])
   /* in 0.3.2 the next statement gives an assert error */
   tee_src1 = gst_element_get_request_pad (tee, "src%d");
   
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
   g_print ("Done !\n");
   return 0;
 }
