@@ -49,13 +49,13 @@ static GstStaticPadTemplate gst_auparse_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,          /* FIXME: spider */
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "       /* does not support 24bit without patch */
-        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS "; "
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "       /* 24-bit PCM is barely supported by gstreamer actually */
+        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS "; "  /* 64-bit float is barely supported by gstreamer actually */
         "audio/x-alaw, "
-        "rate = (int) [ 8000, 48000 ], "
+        "rate = (int) [ 8000, 192000 ], "
         "channels = (int) [ 1, 2 ]; "
         "audio/x-mulaw, "
-        "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
+        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 /* AuParse signals and args */
@@ -185,12 +185,12 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
     guint32 *head = (guint32 *) data;
 
     /* normal format is big endian (au is a Sparc format) */
-    if (GUINT32_FROM_BE (*head) == 0x2e736e64) {
+    if (GUINT32_FROM_BE (*head) == 0x2e736e64) {        /* ".snd" */
       head++;
       auparse->le = 0;
       auparse->offset = GUINT32_FROM_BE (*head);
       head++;
-      auparse->size = GUINT32_FROM_BE (*head);
+      auparse->size = GUINT32_FROM_BE (*head);  /* Do not trust size, could be set to -1 : unknown */
       head++;
       auparse->encoding = GUINT32_FROM_BE (*head);
       head++;
@@ -201,12 +201,12 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
 
       /* and of course, someone had to invent a little endian
        * version.  Used by DEC systems. */
-    } else if (GUINT32_FROM_LE (*head) == 0x0064732E) {
+    } else if (GUINT32_FROM_LE (*head) == 0x0064732E) { /* other source say it is "dns." */
       head++;
       auparse->le = 1;
       auparse->offset = GUINT32_FROM_LE (*head);
       head++;
-      auparse->size = GUINT32_FROM_LE (*head);
+      auparse->size = GUINT32_FROM_LE (*head);  /* Do not trust size, could be set to -1 : unknown */
       head++;
       auparse->encoding = GUINT32_FROM_LE (*head);
       head++;
@@ -230,18 +230,24 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
 Docs :
 	http://www.opengroup.org/public/pubs/external/auformat.html
 	http://astronomy.swin.edu.au/~pbourke/dataformats/au/
+	Solaris headers : /usr/include/audio/au.h
+	libsndfile : src/au.c
 Samples :
 	http://www.tsp.ece.mcgill.ca/MMSP/Documents/AudioFormats/AU/Samples.html
 */
 
     switch (auparse->encoding) {
 
-      case 1:                  /* 8-bit ISDN mu-law */
+      case 1:                  /* 8-bit ISDN mu-law G.711 */
         law = 1;
         depth = 8;
         break;
+      case 27:                 /* 8-bit ISDN  A-law G.711 */
+        law = 2;
+        depth = 8;
+        break;
 
-      case 2:                  /* 8-bit linear PCM */
+      case 2:                  /*  8-bit linear PCM */
         depth = 8;
         break;
       case 3:                  /* 16-bit linear PCM */
@@ -254,24 +260,38 @@ Samples :
         depth = 32;
         break;
 
-      case 27:                 /* 8-bit ISDN a-law */
-        law = 2;
-        depth = 8;
-        break;
-
-      case 6:                  /* 32 bit IEEE floating point */
+      case 6:                  /* 32-bit IEEE floating point */
         ieee = 1;
         depth = 32;
         break;
-      case 7:                  /* 64 bit IEEE floating point */
+      case 7:                  /* 64-bit IEEE floating point */
         ieee = 1;
         depth = 64;
         break;
 
-      case 23:                 /* 4 bit CCITT G721 ADPCM */
-      case 24:                 /* CCITT G722 ADPCM */
-      case 25:                 /* CCITT G723 ADPCM */
-      case 26:                 /* 5 bit CCITT G723 ADPCM */
+      case 8:                  /* Fragmented sample data */
+      case 9:                  /* AU_ENCODING_NESTED */
+
+      case 10:                 /* DSP program */
+      case 11:                 /* DSP  8-bit fixed point */
+      case 12:                 /* DSP 16-bit fixed point */
+      case 13:                 /* DSP 24-bit fixed point */
+      case 14:                 /* DSP 32-bit fixed point */
+
+      case 16:                 /* AU_ENCODING_DISPLAY : non-audio display data */
+      case 17:                 /* AU_ENCODING_MULAW_SQUELCH */
+
+      case 18:                 /* 16-bit linear with emphasis */
+      case 19:                 /* 16-bit linear compressed (NEXT) */
+      case 20:                 /* 16-bit linear with emphasis and compression */
+
+      case 21:                 /* Music kit DSP commands */
+      case 22:                 /* Music kit DSP commands samples */
+
+      case 23:                 /* 4-bit CCITT G.721   ADPCM 32kbps -> modplug/libsndfile (compressed 8-bit mu-law) */
+      case 24:                 /* 8-bit CCITT G.722   ADPCM        -> rtp */
+      case 25:                 /* 3-bit CCITT G.723.3 ADPCM 24kbps -> rtp/xine/modplug/libsndfile */
+      case 26:                 /* 5-bit CCITT G.723.5 ADPCM 40kbps -> rtp/xine/modplug/libsndfile */
 
       default:
         GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL), (NULL));
@@ -314,7 +334,8 @@ Samples :
 
     newbuf = gst_buffer_new ();
     GST_BUFFER_DATA (newbuf) = (gpointer) malloc (size - (auparse->offset));
-    memcpy (GST_BUFFER_DATA (newbuf), data + 24, size - (auparse->offset));
+    memcpy (GST_BUFFER_DATA (newbuf), data + (auparse->offset),
+        size - (auparse->offset));
     GST_BUFFER_SIZE (newbuf) = size - (auparse->offset);
 
     gst_buffer_unref (buf);
