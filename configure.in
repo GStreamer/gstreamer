@@ -101,6 +101,19 @@ AC_CHECK_LIB(ghttp, ghttp_request_new,
 AC_SUBST(GHTTP_LIBS)
 AC_SUBST(GST_HTTPSRC_GET_TYPE)
 
+dnl Check for X11 extensions
+AC_PATH_XTRA
+if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
+  AC_MSG_ERROR(can not find X11)
+fi
+AC_SUBST(X_CFLAGS)
+AC_SUBST(X_PRE_LIBS)
+AC_SUBST(X_EXTRA_LIBS)
+AC_SUBST(X_LIBS)
+
+AC_CHECK_LIB(Xv, XvQueryExtension,,,
+    $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
+
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
 dnl defines the wrong default symbol as well (HAVE_ASM_ATOMIC_H)

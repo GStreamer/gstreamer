@@ -6,6 +6,9 @@
 /* Define if you have the ANSI C header files.  */
 #undef STDC_HEADERS
 
+/* Define if the X Window System is missing or not being used.  */
+#undef X_DISPLAY_MISSING
+
 #undef PLUGINS_DIR
 #undef PLUGINS_SRCDIR
 #undef PLUGINS_USE_SRCDIR
@@ -19,6 +22,9 @@
 #undef HAVE_ATOMIC_H
 
 #undef DEBUG_ENABLED
+
+/* Define if you have the Xv library (-lXv).  */
+#undef HAVE_LIBXV
 
 /* Name of package */
 #undef PACKAGE

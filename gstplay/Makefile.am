@@ -20,6 +20,7 @@ CFLAGS += -O2 -Wall
 gstplay_CFLAGS = $(shell gnome-config --cflags gnomeui)
 gstplay_LDFLAGS = $(shell gnome-config --libs gnomeui)
 
-LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la
+gstplay_LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la \
+          $(top_builddir)/plugins/videosink/gdkxvimage.lo -lXv -lXxf86vm
 
 
