@@ -77,8 +77,6 @@ struct _GstGnomeVFSSrc {
 
 	/* filename */
 	gchar *filename;
-	/* is it a local file ? */
-	gboolean is_local;
 	/* uri */
 	GnomeVFSURI *uri;
 
@@ -87,22 +85,16 @@ struct _GstGnomeVFSSrc {
 	/* Seek stuff */
 	gboolean need_flush;
 
-	/* local filename */
-	gchar *local_name;
-	/* fd for local file fallback */
-	gint fd;
-	/* mmap */
-	guchar *map;			/* where the file is mapped to */
-
 	/* details for fallback synchronous read */
 	GnomeVFSFileSize size;
 	GnomeVFSFileOffset curoffset;	/* current offset in file */
 	gulong bytes_per_read;		/* bytes per read */
 	gboolean new_seek;
+	gboolean in_first_get;
 
 	/* icecast/audiocast metadata extraction handling */
 	gboolean iradio_mode;
-	gboolean iradio_callbacks_pushed;
+	gboolean http_callbacks_pushed;
 
 	gint icy_metaint;
 	GnomeVFSFileSize icy_count;
@@ -303,19 +295,17 @@ static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
 			gst_gnomevfssrc_get_formats);
 	gst_element_add_pad(GST_ELEMENT(gnomevfssrc), gnomevfssrc->srcpad);
 
-	gnomevfssrc->filename = NULL;
-	gnomevfssrc->is_local = FALSE;
 	gnomevfssrc->uri = NULL;
 	gnomevfssrc->handle = NULL;
-	gnomevfssrc->fd = 0;
 	gnomevfssrc->curoffset = 0;
 	gnomevfssrc->bytes_per_read = 4096;
 	gnomevfssrc->new_seek = FALSE;
+	gnomevfssrc->in_first_get = TRUE;
 
 	gnomevfssrc->icy_metaint = 0;
 
 	gnomevfssrc->iradio_mode = FALSE;
-	gnomevfssrc->iradio_callbacks_pushed = FALSE;
+	gnomevfssrc->http_callbacks_pushed = FALSE;
 	gnomevfssrc->icy_count = 0;
 	gnomevfssrc->iradio_name = NULL;
 	gnomevfssrc->iradio_genre = NULL;
@@ -691,12 +681,13 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
         GnomeVFSModuleCallbackReceivedHeadersIn *in_args =
                 (GnomeVFSModuleCallbackReceivedHeadersIn *)in;
 
+	/* This is only used for internet radio stuff right now */
 	if (!src->iradio_mode)
 		return;
 
         for (i = in_args->headers; i; i = i->next) {
 		char *data = (char *) i->data;
-		char *key;
+		char *key = data;
 		char *value = strchr(data, ':');
 		if (!value)
 			continue;
@@ -711,7 +702,8 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
 		{ 
                         sscanf (data + 12, "%d", &icy_metaint);
 			src->icy_metaint = icy_metaint;
-			GST_DEBUG (0,"got icy-metaint, killing audiocast thread");
+			GST_DEBUG (0,"got icy-metaint %d, killing audiocast thread",
+				   src->icy_metaint);
 			audiocast_thread_kill(src);
 			continue;
 		}
@@ -746,7 +738,7 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
 static void
 gst_gnomevfssrc_push_callbacks (GstGnomeVFSSrc *gnomevfssrc)
 {
-	if (gnomevfssrc->iradio_callbacks_pushed)
+	if (gnomevfssrc->http_callbacks_pushed)
 		return;
 
 	GST_DEBUG (0,"pushing callbacks");
@@ -759,13 +751,13 @@ gst_gnomevfssrc_push_callbacks (GstGnomeVFSSrc *gnomevfssrc)
 					gnomevfssrc,
 					NULL);
 
-	gnomevfssrc->iradio_callbacks_pushed = TRUE;
+	gnomevfssrc->http_callbacks_pushed = TRUE;
 }
 
 static void
 gst_gnomevfssrc_pop_callbacks (GstGnomeVFSSrc *gnomevfssrc)
 {
-	if (!gnomevfssrc->iradio_callbacks_pushed)
+	if (!gnomevfssrc->http_callbacks_pushed)
 		return;
 
 	GST_DEBUG (0,"popping callbacks");
@@ -819,7 +811,7 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc *src)
 	
 	for (i = 0; tags[i]; i++)
 	{
-		if (!g_strncasecmp(tags[i], "StreamTitle=", 12))
+		if (!g_ascii_strncasecmp(tags[i], "StreamTitle=", 12))
 		{
 			if (src->iradio_title)
 				g_free (src->iradio_title);
@@ -827,7 +819,7 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc *src)
 			GST_DEBUG(0, "sending notification on icecast title");
 			g_object_notify (G_OBJECT (src), "iradio-title");
 		}
-		if (!g_strncasecmp(tags[i], "StreamUrl=", 10))
+		if (!g_ascii_strncasecmp(tags[i], "StreamUrl=", 10))
 		{
 			if (src->iradio_url)
 				g_free (src->iradio_url);
@@ -874,65 +866,40 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 
 	audiocast_do_notifications(src);
 
-	/* read it in from the file */
-	if (src->is_local)
-	{
-		/* simply set the buffer to point to the correct region of the
-		 * file */
-		GST_BUFFER_DATA (buf) = src->map + src->curoffset;
-		GST_BUFFER_OFFSET (buf) = src->curoffset;
-		GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
-		GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY);
-
-		if ((src->curoffset + src->bytes_per_read) > src->size)
-		{
-			GST_BUFFER_SIZE (buf) = src->size - src->curoffset;
-		} else {
-			GST_BUFFER_SIZE (buf) = src->bytes_per_read;
-		}
-
-		if (src->new_seek)
-		{
-			GstEvent *event;
-
-			gst_buffer_unref (buf);
-			GST_DEBUG (0,"new seek %" G_GINT64_FORMAT, src->curoffset);
-			src->new_seek = FALSE;
-
-			GST_DEBUG (GST_CAT_EVENT, "gnomevfssrc sending discont");
-			event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
-			src->need_flush = FALSE;
-			return GST_BUFFER (event);
-		}
-
-		src->curoffset += GST_BUFFER_SIZE (buf);
-
-	} else if (src->iradio_mode && src->icy_metaint > 0) {
+	if (src->iradio_mode && src->icy_metaint > 0) {
 		GST_BUFFER_DATA (buf) = g_malloc0 (src->icy_metaint);
 		g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
 
-		result = gnome_vfs_read (src->handle, GST_BUFFER_DATA (buf),
-					 src->icy_metaint - src->icy_count,
-					 &readbytes);
+		GST_BUFFER_SIZE (buf) = 0;
+		/* FIXME GROSS HACK: We try to read in at least 8000
+		 * bytes of data so that mp3 typefinding will work. */
+		do
+		{
+			GST_DEBUG (0,"doing read: icy_count: %" G_GINT64_FORMAT, src->icy_count);
+			result = gnome_vfs_read (src->handle, GST_BUFFER_DATA (buf),
+						 src->icy_metaint - src->icy_count,
+						 &readbytes);
 
-		/* EOS? */
-		if (readbytes == 0) {
-			gst_buffer_unref (buf);
-			gst_element_set_eos (GST_ELEMENT (src));
-
-			return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
-		}
-
-		src->icy_count += readbytes;
-		GST_BUFFER_OFFSET (buf) = src->curoffset;
-		GST_BUFFER_SIZE (buf) = readbytes;
-		src->curoffset += readbytes;
-
-		if (src->icy_count == src->icy_metaint) {
-			gst_gnomevfssrc_get_icy_metadata (src);
-			src->icy_count = 0;
-		}
-
+			/* EOS? */
+			if (readbytes == 0) {
+				gst_buffer_unref (buf);
+				gst_element_set_eos (GST_ELEMENT (src));
+				src->in_first_get = FALSE;
+				return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+			}
+			
+			src->icy_count += readbytes;
+			GST_BUFFER_OFFSET (buf) = src->curoffset;
+			GST_BUFFER_SIZE (buf) += readbytes;
+			src->curoffset += readbytes;
+			
+			if (src->icy_count == src->icy_metaint) {
+				gst_gnomevfssrc_get_icy_metadata (src);
+				src->icy_count = 0;
+			}
+		} while (src->in_first_get
+			 && GST_BUFFER_OFFSET (buf) < 8000 &&
+			 src->icy_metaint - src->icy_count >= 8000);
 	} else {
 		/* allocate the space for the buffer data */
 		GST_BUFFER_DATA(buf) = g_malloc(src->bytes_per_read);
@@ -974,15 +941,16 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 	}
 
 	GST_BUFFER_TIMESTAMP (buf) = -1;
-
+	src->in_first_get = FALSE;
 	/* we're done, return the buffer */
 	return buf;
 }
 
-/* open the file and mmap it, necessary to go to READY state */
+/* open the file, do stuff necessary to go to READY state */
 static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 {
 	GnomeVFSResult result;
+	GnomeVFSFileInfo *info;
 
 	g_return_val_if_fail(!GST_FLAG_IS_SET(src, GST_GNOMEVFSSRC_OPEN),
 			     FALSE);
@@ -990,98 +958,62 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 	/* create the uri */
 	src->uri = gnome_vfs_uri_new(src->filename);
 	if (!src->uri) {
-		gst_element_error(GST_ELEMENT(src),
-				  "creating uri \"%s\" (%s)",
-				  	src->filename, strerror (errno));
+		gst_element_error(GST_ELEMENT(src), "creating uri \"%s\" (%s)",
+				  src->filename, strerror (errno));
 		return FALSE;
 	}
 
-	/* open the file using open() if the file is local */
-	src->is_local = gnome_vfs_uri_is_local(src->uri);
-
-	if (src->is_local) {
-		src->local_name =
-			gnome_vfs_get_local_path_from_uri(src->filename);
-		src->fd = open(src->local_name, O_RDONLY);
-		if (src->fd < 0)
-		{
-			gst_element_error(GST_ELEMENT(src),
-					  "opening local file \"%s\" (%s)",
-						src->filename, strerror (errno));
-			return FALSE;
-		}
-
-		/* find the file length */
-		src->size = lseek (src->fd, 0, SEEK_END);
-		lseek (src->fd, 0, SEEK_SET);
-		src->map = mmap (NULL, src->size, PROT_READ, MAP_SHARED,
-				src->fd, 0);
-		madvise (src->map,src->size, 2);
-		/* collapse state if that failed */
-		if (src->map == NULL)
-		{
-			gst_gnomevfssrc_close_file(src);
-			gst_element_error (GST_ELEMENT (src),"mmapping file");
-			return FALSE;
-		}
-
-		src->new_seek = TRUE;
-	} else {
-
-		if (!audiocast_init(src))
-			return FALSE;
+	if (!audiocast_init(src))
+		return FALSE;
 			
-		gst_gnomevfssrc_push_callbacks (src);
-
-		result =
-		    gnome_vfs_open_uri(&(src->handle), src->uri,
-				       GNOME_VFS_OPEN_READ);
-		if (result != GNOME_VFS_OK)
-		{
-			gst_gnomevfssrc_pop_callbacks (src);
-			audiocast_thread_kill(src);
-			gst_element_error(GST_ELEMENT(src),
+	gst_gnomevfssrc_push_callbacks (src);
+	
+	result = gnome_vfs_open_uri(&(src->handle), src->uri,
+				    GNOME_VFS_OPEN_READ);
+	if (result != GNOME_VFS_OK)
+	{
+		gst_gnomevfssrc_pop_callbacks (src);
+		audiocast_thread_kill(src);
+		gst_element_error(GST_ELEMENT(src),
 				  "opening vfs file \"%s\" (%s)",
-				      src->filename, 
-				      gnome_vfs_result_to_string(result));
-			return FALSE;
-		}
-
-		/* find the file length (but skip it in iradio mode,
-		 * since it will require a separate request, and we
-		 * know the length is undefined anyways) */
-		if (!src->iradio_mode)
+				  src->filename, 
+				  gnome_vfs_result_to_string(result));
+		return FALSE;
+	}
+	
+	info = gnome_vfs_file_info_new ();
+	if (gnome_vfs_get_file_info_from_handle (src->handle, info,
+						 GNOME_VFS_FILE_INFO_DEFAULT | GNOME_VFS_FILE_INFO_GET_MIME_TYPE)
+	    == GNOME_VFS_OK)
+	{
+		if (info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_SIZE)
+			src->size = info->size;
+		if (info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE)
 		{
-			GnomeVFSResult size_result;
-			GnomeVFSFileInfo *info;
-
-			info = gnome_vfs_file_info_new ();
-			size_result = gnome_vfs_get_file_info_uri(src->uri,
-					info, GNOME_VFS_FILE_INFO_DEFAULT);
-
-			if (size_result != GNOME_VFS_OK)
-				src->size = 0;
-			else
-				src->size = info->size;
-
-			gnome_vfs_file_info_unref(info);
+			GST_DEBUG (0, "got MIME type \"%s\", setting caps",
+				   info->mime_type);
+			GstCaps *caps = gst_caps_new ("gnomevfssrc", info->mime_type, NULL);
+			gst_pad_try_set_caps (src->srcpad, caps);
 		}
 		else
-			src->size = 0;
-
-		GST_DEBUG(0, "size %" G_GINT64_FORMAT, src->size);
-
-		audiocast_do_notifications(src);
-	
-		GST_DEBUG(0, "open %s", gnome_vfs_result_to_string(result));
+			GST_DEBUG (0, "No mime type available");
 	}
+	else
+		GST_DEBUG (0, "getting info failed: %s", gnome_vfs_result_to_string (result));
+
+	gnome_vfs_file_info_unref(info);
+	
+	GST_DEBUG(0, "size %" G_GINT64_FORMAT, src->size);
+	
+	audiocast_do_notifications(src);
+	
+	GST_DEBUG(0, "open result: %s", gnome_vfs_result_to_string (result));
 
 	GST_FLAG_SET(src, GST_GNOMEVFSSRC_OPEN);
 
 	return TRUE;
 }
 
-/* unmap and close the file */
 static void gst_gnomevfssrc_close_file(GstGnomeVFSSrc *src)
 {
 	g_return_if_fail(GST_FLAG_IS_SET(src, GST_GNOMEVFSSRC_OPEN));
@@ -1089,22 +1021,9 @@ static void gst_gnomevfssrc_close_file(GstGnomeVFSSrc *src)
 	gst_gnomevfssrc_pop_callbacks (src);
 	audiocast_thread_kill(src);
 
-	/* close the file */
-	if (src->is_local)
-	{
-		/* unmap the file from memory */
-		munmap (src->map, src->size);
-		close(src->fd);
-	} else {
-		gnome_vfs_close(src->handle);
-	}
+	gnome_vfs_close(src->handle);
 
-	/* zero out a lot of our state */
-	src->is_local = FALSE;
 	gnome_vfs_uri_unref(src->uri);
-	g_free(src->local_name);
-	src->fd = 0;
-	src->map = NULL;
 	src->size = 0;
 	src->curoffset = 0;
 	src->new_seek = FALSE;
@@ -1214,18 +1133,16 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 			return FALSE;
 			break;
 		}
-		if (!src->is_local) {
-			GnomeVFSResult result;
-
-			result = gnome_vfs_seek(src->handle,
+		GnomeVFSResult result;
+		
+		result = gnome_vfs_seek(src->handle,
 					GNOME_VFS_SEEK_START, desired_offset);
-			GST_DEBUG(0, "new_seek: %s",
-					gnome_vfs_result_to_string(result));
-			
-			if (result != GNOME_VFS_OK) {
-				gst_event_unref (event);
-				return FALSE;
-			}
+		GST_DEBUG(0, "new_seek: %s",
+			  gnome_vfs_result_to_string(result));
+		
+		if (result != GNOME_VFS_OK) {
+			gst_event_unref (event);
+			return FALSE;
 		}
 		src->curoffset = desired_offset;
 		src->new_seek = TRUE;
