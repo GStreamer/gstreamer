@@ -85,8 +85,14 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
       "law",         GST_PROPS_INT (0),
       "endianness",  GST_PROPS_INT (G_LITTLE_ENDIAN),
       "signed",      GST_PROPS_BOOLEAN (TRUE),
-      "width",       GST_PROPS_INT (16),
-      "depth",       GST_PROPS_INT (16),
+      "width",       GST_PROPS_LIST (
+                       GST_PROPS_INT (8),
+                       GST_PROPS_INT (16)
+                     ),
+      "depth",       GST_PROPS_LIST (
+                       GST_PROPS_INT (8),
+                       GST_PROPS_INT (16)
+                     ),
       "rate",        GST_PROPS_INT_RANGE (8000, 48000),
       "channels",    GST_PROPS_INT_RANGE (1, 2)
   )
