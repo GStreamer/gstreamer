@@ -20,6 +20,18 @@
  */
 /* Element-Checklist-Version: 5 */
 
+/*
+ * design decisions:
+ * - audioconvert converts buffers in a set of supported caps. If it supports 
+ *   a caps, it supports conversion from these caps to any other caps it 
+ *   supports. (example: if it does A=>B and A=>C, it also does B=>C)
+ * - audioconvert does not save state between buffers. Every incoming buffer is
+ *   converted and the converted buffer is pushed out.
+ * conclusion:
+ * audioconvert is not supposed to be a one-element-does-anything solution for
+ * audio conversions.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
