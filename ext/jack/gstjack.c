@@ -259,7 +259,7 @@ gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
     
     if (this->client)
         *pad_list = g_list_append (*pad_list, pad);
-//    this->pads = g_list_append (this->pads, pad);
+/*    this->pads = g_list_append (this->pads, pad); */
     
     return pad->pad;
 }
@@ -555,7 +555,7 @@ shutdown (void *arg)
 {
     GstJackClient *client = (GstJackClient*) arg;
     printf ("shutdown\n");
-//    gst_element_set_state (GST_ELEMENT (client->manager), GST_STATE_READY);
+/*    gst_element_set_state (GST_ELEMENT (client->manager), GST_STATE_READY); */
 }
 
 static gboolean
