@@ -1,0 +1,39 @@
+This plugin wraps the SGI Audiofile 
+(http://oss.sgi.com/projects/audiofile/) library into a src and sink
+element.
+
+You can read from and write to the supported formats (WAVE, AIFF, AIFFC,
+NEXTSND).
+
+What is supported :
+* all the file formats
+* integer sample data, both 2's complement and unsigned
+* 8 or 16 bit width & depth (haven't tested others)
+* sample rate
+* some sort of endianness control
+
+What isn't supported yet :
+* float data
+
+What you can do :
+* src element only accepts location argument
+* sink element accepts location, endianness and type
+	- location : file on the system to output
+	- endianness : at this time endianness is still a bit shady
+	  	you can either set 1234 or 4321;
+		setting it to 4321 will byteswap the buffer data
+		you might want to keep it at 1234 for now
+	- type : one of the file types
+
+Use gstreamer-inspect on afsink and afsrc to see all of the supported
+options.
+
+Examples :
+
+* tools/gstreamer-launch afsrc location=/opt/media/wav/dark-480-16-m.wav ! afsink type=2 location=/opt/media/wav/dark-480-16-m.aiff
+
+Future plans :
+
+* add float support
+* wrap up afsink and afsrc with pipe and fork to act like data convertors,
+  allowing arbitrary choice of sink and src element
