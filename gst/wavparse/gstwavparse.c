@@ -533,8 +533,6 @@ gst_wavparse_fmt (GstWavParse * wav)
     return FALSE;
   }
 
-  gst_wavparse_create_sourcepad (wav);
-
   wav->format = header->format;
   wav->rate = header->rate;
   wav->channels = header->channels;
@@ -545,13 +543,17 @@ gst_wavparse_fmt (GstWavParse * wav)
   caps = gst_riff_create_audio_caps (header->format, NULL, header, NULL);
 
   if (caps) {
+    gst_wavparse_create_sourcepad (wav);
     gst_pad_set_explicit_caps (wav->srcpad, caps);
     gst_caps_free (caps);
+    gst_element_add_pad (GST_ELEMENT (wav), wav->srcpad);
+    GST_DEBUG ("frequency %d, channels %d", wav->rate, wav->channels);
+  } else {
+    GST_ELEMENT_ERROR (wav, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
+    return FALSE;
   }
 
-  gst_element_add_pad (GST_ELEMENT (wav), wav->srcpad);
 
-  GST_DEBUG ("frequency %d, channels %d", wav->rate, wav->channels);
 
   g_free (header);
 
