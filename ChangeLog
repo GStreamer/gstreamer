@@ -4,6 +4,7 @@
 	* gst/wavenc/riff.h
 	* gst-libs/gst/riff/riff-ids.h
 	* gst-libs/gst/riff/riff-media.c
+	* gst/qtdemux/qtdemux.c:
 	  add new 4CC codes for h263 related codecs
 	  fixes partially bug #155163
 
