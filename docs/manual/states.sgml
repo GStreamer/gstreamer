@@ -145,9 +145,9 @@
     </para>
     <note>
       <para> 
-        The PAUSED state is build for temporarily freezing the pipeline. Elements will typically
-	do not free their resources in the PAUSED state. Use the NULL state if you want to stop
-	the data flow permanantly.
+	The PAUSED state is available for temporarily freezing the pipeline.
+	Elements will typically not free their resources in the PAUSED state.
+	Use the NULL state if you want to stop the data flow permanantly.  
       </para> 
     </note>
     <para> 

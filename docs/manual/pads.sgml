@@ -41,7 +41,7 @@
     ...
     </programlisting>
     <sect2 id="sec-pads-functions">
-      <title>Usefull pad functions</title>
+      <title>Useful pad functions</title>
       <para> 
         You can get the name of a pad with gst_pad_get_name () and set its name with
 	get_pad_set_name();
