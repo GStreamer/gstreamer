@@ -85,6 +85,9 @@ gboolean gst_riff_read_header    (GstRiffRead *read,
 GstBuffer *gst_riff_read_element_data (GstRiffRead *riff,
 				       guint        length,
 				       guint       *got_bytes);
+GstBuffer *gst_riff_peek_element_data (GstRiffRead *riff,
+				       guint        length,
+				       guint       *got_bytes);
 /*
  * Utility functions (including byteswapping).
  */
