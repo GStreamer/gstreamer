@@ -705,7 +705,8 @@ gst_avi_demux_stream_avih (GstAviDemux *avi,
   GstRiffRead *riff = GST_RIFF_READ (avi);
   guint32 tag;
   GstBuffer *buf;
-  gst_riff_avih *avih;
+  gst_riff_avih avih;
+  guint32 *data;
 
   if (!gst_riff_read_data (riff, &tag, &buf))
     return FALSE;
@@ -722,46 +723,43 @@ gst_avi_demux_stream_avih (GstAviDemux *avi,
     return FALSE;
   }
 
-  avih = (gst_riff_avih *) GST_BUFFER_DATA (buf);
-
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-  avih->us_frame    = GUINT32_FROM_LE (avih->us_frame);
-  avih->max_bps     = GUINT32_FROM_LE (avih->max_bps);
-  avih->pad_gran    = GUINT32_FROM_LE (avih->pad_gran);
-  avih->flags       = GUINT32_FROM_LE (avih->flags);
-  avih->tot_frames  = GUINT32_FROM_LE (avih->tot_frames);
-  avih->init_frames = GUINT32_FROM_LE (avih->init_frames);
-  avih->streams     = GUINT32_FROM_LE (avih->streams);
-  avih->bufsize     = GUINT32_FROM_LE (avih->bufsize);
-  avih->width       = GUINT32_FROM_LE (avih->width);
-  avih->height      = GUINT32_FROM_LE (avih->height);
-  avih->scale       = GUINT32_FROM_LE (avih->scale);
-  avih->rate        = GUINT32_FROM_LE (avih->rate);
-  avih->start       = GUINT32_FROM_LE (avih->start);
-  avih->length      = GUINT32_FROM_LE (avih->length);
-#endif
+  data = (guint32 *) GST_BUFFER_DATA (buf);
+  avih.us_frame    = GUINT32_FROM_LE (*data); data++;
+  avih.max_bps     = GUINT32_FROM_LE (*data); data++;
+  avih.pad_gran    = GUINT32_FROM_LE (*data); data++;
+  avih.flags       = GUINT32_FROM_LE (*data); data++;
+  avih.tot_frames  = GUINT32_FROM_LE (*data); data++;
+  avih.init_frames = GUINT32_FROM_LE (*data); data++;
+  avih.streams     = GUINT32_FROM_LE (*data); data++;
+  avih.bufsize     = GUINT32_FROM_LE (*data); data++;
+  avih.width       = GUINT32_FROM_LE (*data); data++;
+  avih.height      = GUINT32_FROM_LE (*data); data++;
+  avih.scale       = GUINT32_FROM_LE (*data); data++;
+  avih.rate        = GUINT32_FROM_LE (*data); data++;
+  avih.start       = GUINT32_FROM_LE (*data); data++;
+  avih.length      = GUINT32_FROM_LE (*data); data++;
 
   /* debug stuff */
   GST_INFO ("avih tag found:");
-  GST_INFO (" us_frame    %u",     avih->us_frame);
-  GST_INFO (" max_bps     %u",     avih->max_bps);
-  GST_INFO (" pad_gran    %u",     avih->pad_gran);
-  GST_INFO (" flags       0x%08x", avih->flags);
-  GST_INFO (" tot_frames  %u",     avih->tot_frames);
-  GST_INFO (" init_frames %u",     avih->init_frames);
-  GST_INFO (" streams     %u",     avih->streams);
-  GST_INFO (" bufsize     %u",     avih->bufsize);
-  GST_INFO (" width       %u",     avih->width);
-  GST_INFO (" height      %u",     avih->height);
-  GST_INFO (" scale       %u",     avih->scale);
-  GST_INFO (" rate        %u",     avih->rate);
-  GST_INFO (" start       %u",     avih->start);
-  GST_INFO (" length      %u",     avih->length);
+  GST_INFO (" us_frame    %u",     avih.us_frame);
+  GST_INFO (" max_bps     %u",     avih.max_bps);
+  GST_INFO (" pad_gran    %u",     avih.pad_gran);
+  GST_INFO (" flags       0x%08x", avih.flags);
+  GST_INFO (" tot_frames  %u",     avih.tot_frames);
+  GST_INFO (" init_frames %u",     avih.init_frames);
+  GST_INFO (" streams     %u",     avih.streams);
+  GST_INFO (" bufsize     %u",     avih.bufsize);
+  GST_INFO (" width       %u",     avih.width);
+  GST_INFO (" height      %u",     avih.height);
+  GST_INFO (" scale       %u",     avih.scale);
+  GST_INFO (" rate        %u",     avih.rate);
+  GST_INFO (" start       %u",     avih.start);
+  GST_INFO (" length      %u",     avih.length);
 
-  avi->num_frames = avih->tot_frames;
-  avi->us_per_frame = avih->us_frame;
-  *streams = avih->streams;
-  *flags = avih->flags;
+  avi->num_frames = avih.tot_frames;
+  avi->us_per_frame = avih.us_frame;
+  *streams = avih.streams;
+  *flags = avih.flags;
 
   gst_buffer_unref (buf);
 
@@ -960,7 +958,7 @@ gst_avi_demux_stream_odml (GstAviDemux *avi)
 
     switch (tag) {
       case GST_RIFF_TAG_dmlh: {
-        gst_riff_dmlh *dmlh;
+        gst_riff_dmlh dmlh;
         GstBuffer *buf;
 
         if (!gst_riff_read_data (riff, &tag, &buf))
@@ -971,16 +969,12 @@ gst_avi_demux_stream_odml (GstAviDemux *avi)
           gst_buffer_unref (buf);
           break;
         }
-        dmlh = (gst_riff_dmlh *) GST_BUFFER_DATA (buf);
-
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-        dmlh->totalframes = GUINT32_FROM_LE (dmlh->totalframes);
-#endif
+        dmlh.totalframes = GUINT32_FROM_LE (*((guint32 *) GST_BUFFER_DATA (buf)));
 
         GST_INFO ("dmlh tag found:");
-        GST_INFO (" totalframes: %u", dmlh->totalframes);
+        GST_INFO (" totalframes: %u", dmlh.totalframes);
 
-        avi->num_frames = dmlh->totalframes;
+        avi->num_frames = dmlh.totalframes;
         gst_buffer_unref (buf);
         break;
       }
@@ -1054,20 +1048,21 @@ gst_avi_demux_stream_index (GstAviDemux *avi)
   GST_INFO ("%u index entries", avi->index_size);
 
   for (i = 0; i < avi->index_size; i++) {
-    gst_riff_index_entry *entry;
+    gst_riff_index_entry entry;
     avi_stream_context *stream;
     gint stream_nr;
     gst_avi_index_entry *target;
     GstFormat format;
+    guint32 *data;
 
-    entry = &((gst_riff_index_entry *) GST_BUFFER_DATA (buf))[i];
-    entry->id     = GUINT32_FROM_LE (entry->id);
-    entry->offset = GUINT32_FROM_LE (entry->offset);
-    entry->flags  = GUINT32_FROM_LE (entry->flags);
-    entry->size   = GUINT32_FROM_LE (entry->size);
+    data = &((guint32 *) GST_BUFFER_DATA (buf))[i * 4];
+    entry.id     = GUINT32_FROM_LE (data);
+    entry.offset = GUINT32_FROM_LE (data + 1);
+    entry.flags  = GUINT32_FROM_LE (data + 2);
+    entry.size   = GUINT32_FROM_LE (data + 3);
     target = &avi->index_entries[i];
 
-    stream_nr = CHUNKID_TO_STREAMNR (entry->id);
+    stream_nr = CHUNKID_TO_STREAMNR (entry.id);
     if (stream_nr >= avi->num_streams || stream_nr < 0) {
       g_warning ("Index entry %d has invalid stream nr %d",
 		 i, stream_nr);
@@ -1078,9 +1073,9 @@ gst_avi_demux_stream_index (GstAviDemux *avi)
     stream = &avi->stream[stream_nr];
 
     target->index_nr = i;
-    target->flags    = entry->flags;
-    target->size     = entry->size;
-    target->offset   = entry->offset;
+    target->flags    = entry.flags;
+    target->size     = entry.size;
+    target->offset   = entry.offset;
 
     /* figure out if the index is 0 based or relative to the MOVI start */
     if (i == 0) {

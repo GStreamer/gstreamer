@@ -1,3 +1,10 @@
+2004-01-23  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_avih),
+	(gst_avi_demux_stream_odml), (gst_avi_demux_stream_index):
+	  don't write to buffer. Extract data without the need of
+	  __attribute__ ((packed))
+
 2004-01-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/typefind/gsttypefindfunctions.c: (mpeg1_parse_header),
