@@ -43,11 +43,8 @@
 static GstElementDetails gst_cdxa_parse_details = {
   ".dat parser",
   "Codec/Parser",
-  "LGPL",
   "Parse a .dat file (VCD) into raw mpeg1",
-  VERSION,
   "Wim Taymans <wim.taymans@tvd.be>",
-  "(C) 2002",
 };
 
 /* CDXAParse signals and args */
@@ -83,6 +80,7 @@ GST_PAD_TEMPLATE_FACTORY (src_templ,
   )
 )
 
+static void     gst_cdxa_parse_base_init        (gpointer g_class);
 static void 	gst_cdxa_parse_class_init	(GstCDXAParseClass *klass);
 static void 	gst_cdxa_parse_init		(GstCDXAParse *cdxa_parse);
 
@@ -103,7 +101,7 @@ gst_cdxa_parse_get_type(void)
   if (!cdxa_parse_type) {
     static const GTypeInfo cdxa_parse_info = {
       sizeof(GstCDXAParseClass),      
-      NULL,
+      gst_cdxa_parse_base_init,
       NULL,
       (GClassInitFunc)gst_cdxa_parse_class_init,
       NULL,
@@ -115,6 +113,16 @@ gst_cdxa_parse_get_type(void)
     cdxa_parse_type = g_type_register_static(GST_TYPE_ELEMENT, "GstCDXAParse", &cdxa_parse_info, 0);
   }
   return cdxa_parse_type;
+}
+
+static void
+gst_cdxa_parse_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_templ));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_templ));
+  gst_element_class_set_details (element_class, &gst_cdxa_parse_details);
 }
 
 static void
@@ -303,30 +311,26 @@ gst_cdxa_parse_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  /* create an elementfactory for the cdxa_parse element */
-  factory = gst_element_factory_new ("cdxaparse", GST_TYPE_CDXA_PARSE,
-                                    &gst_cdxa_parse_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_templ));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
+  if (!gst_element_register (plugin, "cdxaparse", GST_RANK_NONE, GST_TYPE_CDXA_PARSE))
+    return FALSE;
+  
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "cdxaparse",
-  plugin_init
-};
+  "Parse a .dat file (VCD) into raw mpeg1",  
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
 

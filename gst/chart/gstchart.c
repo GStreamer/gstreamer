@@ -66,11 +66,8 @@ GType gst_chart_get_type(void);
 static GstElementDetails gst_chart_details = {
   "chart drawer",
   "Visualization",
-  "LGPL",
   "Takes frames of data and outputs video frames of a chart of data",
-  VERSION,
   "Richard Boulton <richard@tartarus.org>",
-  "(C) 2001",
 };
 
 /* signals and args */
@@ -109,7 +106,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
                )
 );
 
-
+static void     gst_chart_base_init     (gpointer g_class);
 static void	gst_chart_class_init	(GstChartClass *klass);
 static void	gst_chart_init		(GstChart *chart);
 
@@ -132,7 +129,10 @@ gst_chart_get_type (void)
 
   if (!type) {
     static const GTypeInfo info = {
-      sizeof(GstChartClass),      NULL,      NULL,      (GClassInitFunc)gst_chart_class_init,
+      sizeof(GstChartClass),
+      gst_chart_base_init,
+      NULL,
+      (GClassInitFunc)gst_chart_class_init,
       NULL,
       NULL,
       sizeof(GstChart),
@@ -142,6 +142,16 @@ gst_chart_get_type (void)
     type = g_type_register_static(GST_TYPE_ELEMENT, "GstChart", &info, 0);
   }
   return type;
+}
+
+static void
+gst_chart_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_set_details (element_class, &gst_chart_details);
 }
 
 static void
@@ -423,28 +433,22 @@ gst_chart_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the chart element */
-  factory = gst_element_factory_new("chart",GST_TYPE_CHART,
-                                   &gst_chart_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory,
-	GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_factory_add_pad_template (factory,
-	GST_PAD_TEMPLATE_GET (sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
+  if (!gst_element_register (plugin, "chart", GST_RANK_NONE, GST_TYPE_CHART))
+    return FALSE;
+  
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "chart",
-  plugin_init
-};
+  "Takes frames of data and outputs video frames of a chart of data",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
