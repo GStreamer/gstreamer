@@ -26,7 +26,7 @@ headers
 #include "pygobject.h"
 #include <gst/gst.h>
 
-#include "gstreamer-fixes.h"
+#include "common.h"
 
 typedef struct {
 	PyGObject *pad;
@@ -515,4 +515,16 @@ _wrap_gst_element_factory_make_element(PyGObject *self, PyObject *args, PyObject
     }
     pygobject_register_wrapper((PyObject *)self);
     return 0;
+}
+%%
+override gst_version
+
+static PyObject *
+_wrap_gst_version(PyGObject *self)
+{
+	guint major, minor, micro;
+
+	gst_version(&major, &minor, &micro);
+
+	return Py_BuildValue("(iii)", major, minor, micro);
 }

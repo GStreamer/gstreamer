@@ -39,16 +39,6 @@
 )
 
 ;;
-;; Override normal *_get_type handling via rename
-;;
-
-(define-method get_props_type
-  (of-object "GstPropsEntry")
-  (c-name "gst_props_entry_get_props_type")
-  (return-type "GstPropsType")
-)
-
-;;
 ;; Access GstProps properties list
 ;;
 
@@ -109,6 +99,7 @@
 ;; Element constructor override; uses a nonexistant make_element
 ;; which is defined in gstreamer.overrides
 ;;
+
 (define-function gst_element_factory_make_element
   (is-constructor-of "GstElement")
   (c-name "gst_element_factory_make_element")

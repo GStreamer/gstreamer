@@ -40,23 +40,18 @@ else
 fi
 AM_CHECK_PYTHON_HEADERS(,[AC_MSG_ERROR(could not find Python headers)])
 
-dnl Only support 0.6 in 0.1.0. Remove this and enable code below for 0.7.
-GST_MAJORMINOR=0.6
+dnl check for GStreamer
+dnl start with 0.7
+GST_MAJORMINOR=0.7
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
                   HAVE_GSTREAMER=yes,HAVE_GSTREAMER=no)
 
-dnl check for GStreamer
-dnl start with 0.7
-dnl GST_MAJORMINOR=0.7
-dnl PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
-dnl                   HAVE_GSTREAMER=yes,HAVE_GSTREAMER=no)
-dnl 
 dnl try 0.6
-dnl if test "x$HAVE_GSTREAMER" = "xno"; then
-dnl   GST_MAJORMINOR=0.6
-dnl   PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
-dnl                     HAVE_GSTREAMER=yes,HAVE_GSTREAMER=no)
-dnl fi
+if test "x$HAVE_GSTREAMER" = "xno"; then
+  GST_MAJORMINOR=0.6
+  PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
+                    HAVE_GSTREAMER=yes,HAVE_GSTREAMER=no)
+fi
 
 dnl Give error and exit if we don't have gstreamer
 if test "x$HAVE_GSTREAMER" = "xno"; then
@@ -66,6 +61,8 @@ fi
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_MAJORMINOR)
+AM_CONDITIONAL(GST_0_6, test $GST_MAJORMINOR = 0.6)
+AM_CONDITIONAL(GST_0_7, test $GST_MAJORMINOR = 0.7)
 
 dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
