@@ -1,3 +1,8 @@
+2004-05-07  David Schleef  <ds@schleef.org>
+
+	* ext/faad/gstfaad.c: (gst_faad_sinkconnect): HACK to correct
+	signed char assumption in faad.h.
+
 2004-05-07  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_v4l2fourcc_to_caps):
