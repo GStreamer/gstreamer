@@ -7,5 +7,9 @@ endif
 SUBDIRS = $(SUBDIRS_DOCS)
 DIST_SUBDIRS = libs
 
+EXTRA_DIST = \
+        upload.mak \
+        version.entities.in
+
 #upload:
 #	@if test "x$(SUBDIRS_DOCS)" != x; then for a in $(SUBDIRS_DOCS); do cd $$a; make upload; cd ..; done; fi
