@@ -324,3 +324,13 @@ gint* g_signal_list_ids (GType type, guint *n_ids)
   return class->signals;
 }
 
+GSList*
+g_slist_delete_link (GSList *list, GSList *link)
+{
+  list = g_slist_remove_link (list, link);
+  g_slist_free_1 (link);
+
+  return list;
+}
+
+

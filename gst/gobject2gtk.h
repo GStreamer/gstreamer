@@ -213,6 +213,10 @@ gtk_signal_handler_pending ((GtkObject *)object,name,may_block)
 
 gint* g_signal_list_ids (GType type, guint *n_ids);
 
+// lists
+GSList*		g_slist_delete_link	(GSList *list, GSList *link);
+
+
 // arguments/parameters
 
 // first define GValue and GParamSpec
