@@ -10,9 +10,14 @@ AM_DISABLE_STATIC
 dnl when going to/from release please set the nano (fourth number) right !
 dnl We disable static building for development, for time savings
 AM_DISABLE_STATIC
-AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 3, 1)
+AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 4, 0)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(GST_PLUGINS, 0, 0, 0, yes)
+
+dnl we'll move this to a configure option later on which will be turned on
+dnl by autogen
+dnl GST_ERROR="-Wall -Werror"
+GST_ERROR="-Werror"
 
 dnl FIXME take something else ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])

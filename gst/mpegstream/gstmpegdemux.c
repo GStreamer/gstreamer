@@ -94,7 +94,7 @@ GST_PAD_TEMPLATE_FACTORY (video_mpeg2_factory,
 
 
 GST_PAD_TEMPLATE_FACTORY (private1_factory,
-  "private_stream_1_%d",
+  "private_stream_1_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
