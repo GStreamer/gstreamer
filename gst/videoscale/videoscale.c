@@ -39,11 +39,11 @@ static void	gst_videoscale_scale_plane_slow		(GstVideoscale *scale, unsigned cha
 							 int sw, int sh, int dw, int dh);
 static void	gst_videoscale_scale_point_sample	(GstVideoscale *scale, unsigned char *src, unsigned char *dest,
 							 int sw, int sh, int dw, int dh);
-#endif
 
 /* filters */
 static unsigned char gst_videoscale_bilinear		(unsigned char *src, double x, double y, int sw, int sh);
 static unsigned char gst_videoscale_bicubic		(unsigned char *src, double x, double y, int sw, int sh);
+#endif
 
 static void gst_videoscale_planar411 (GstVideoscale *scale, unsigned char *dest, unsigned char *src);
 static void gst_videoscale_planar400 (GstVideoscale *scale, unsigned char *dest, unsigned char *src);
@@ -317,6 +317,7 @@ gst_videoscale_16bit (GstVideoscale *scale, unsigned char *dest, unsigned char *
 
 }
 
+#if 0
 #define RC(x,y) *(src+(int)(x)+(int)((y)*sw))
 
 static unsigned char
@@ -382,7 +383,6 @@ gst_videoscale_bicubic (unsigned char *src, double x, double y, int sw, int sh)
   return (unsigned char) color;
 }
 
-#if 0
 static void
 gst_videoscale_scale_plane_slow (GstVideoscale *scale, unsigned char *src, unsigned char *dest,
 		                 int sw, int sh, int dw, int dh)
