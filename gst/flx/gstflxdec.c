@@ -472,6 +472,11 @@ gst_flxdec_loop (GstElement *element)
   if (flxdec->state == GST_FLXDEC_READ_HEADER) {
     databuf = flx_get_data(flxdec, FlxHeaderSize);
 
+    if (!databuf) {
+      g_print ("empty buffer\n");
+      return;
+    }
+
     data = GST_BUFFER_DATA(databuf);
 
     memcpy((char *) &flxdec->hdr, data, sizeof(FlxHeader));
@@ -483,8 +488,10 @@ gst_flxdec_loop (GstElement *element)
     /* check header */
     if (flxh->type != FLX_MAGICHDR_FLI &&
       flxh->type != FLX_MAGICHDR_FLC &&
-      flxh->type != FLX_MAGICHDR_FLX) 
+      flxh->type != FLX_MAGICHDR_FLX) {
+      gst_element_error (element, "not a flx file (type %d)\n", flxh->type);
       return;
+    }
   
   
     g_print("GstFlxDec:       size      :  %d\n", flxh->size);
@@ -607,9 +614,9 @@ gst_flxdec_change_state (GstElement *element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-      flxdec->bs = gst_bytestream_new (flxdec->sinkpad);
       break;
     case GST_STATE_READY_TO_PAUSED:
+      flxdec->bs = gst_bytestream_new (flxdec->sinkpad);
       flxdec->state = GST_FLXDEC_READ_HEADER;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -621,9 +628,9 @@ gst_flxdec_change_state (GstElement *element)
       flxdec->frame = NULL;
       gst_buffer_unref (flxdec->delta);
       flxdec->delta = NULL;
+      gst_bytestream_destroy (flxdec->bs);
       break;
     case GST_STATE_READY_TO_NULL:
-      gst_bytestream_destroy (flxdec->bs);
       break;
   }
   
