@@ -677,7 +677,9 @@ gst_caps_intersect (GstCaps *caps1, GstCaps *caps2)
     GstCaps *othercaps = caps2;
 
     while (othercaps) {
-      GstCaps *intersection = gst_caps_intersect_func (caps1, othercaps);
+      GstCaps *intersection;
+      
+      intersection = gst_caps_intersect_func (caps1, othercaps);
 
       if (intersection) {
         if (!result) {

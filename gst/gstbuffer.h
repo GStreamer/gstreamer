@@ -159,7 +159,7 @@ GstBuffer*	gst_buffer_copy			(GstBuffer *buffer);
 
 /* merge, span, or append two buffers, intelligently */
 GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
-GstBuffer*	gst_buffer_span			(GstBuffer *buf1,guint32 offset,GstBuffer *buf2,guint32 len);
+GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
 GstBuffer*	gst_buffer_append		(GstBuffer *buffer, GstBuffer *append);
 
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
