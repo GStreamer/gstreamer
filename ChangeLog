@@ -1,3 +1,14 @@
+2004-08-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
+	(gst_multifdsink_add), (gst_multifdsink_get_stats),
+	(gst_multifdsink_client_remove),
+	(gst_multifdsink_handle_client_read),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_queue_buffer), (gst_multifdsink_handle_clients):
+	Make sure we don't try to read more from a client that what 
+	ioctl says us or we deadlock.
+
 2004-08-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_src_link),
