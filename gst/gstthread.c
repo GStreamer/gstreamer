@@ -265,9 +265,8 @@ gst_thread_change_state (GstElement *element)
         GST_DEBUG (GST_CAT_THREAD, "creating thread \"%s\"\n",
                    GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
-        g_mutex_lock(thread->lock);
-
         g_mutex_lock (thread->lock);
+
         // create the thread
         pthread_create (&thread->thread_id, NULL,
                         gst_thread_main_loop, thread);
