@@ -719,7 +719,7 @@ gst_filesrc_get (GstPad * pad, GstBuffer ** buffer)
   if (src->need_flush) {
     src->need_flush = FALSE;
     GST_DEBUG_OBJECT (src, "sending flush");
-    gst_pad_push_event (pad, gst_event_new_flush ());
+    gst_pad_push_event (pad, gst_event_new_flush (TRUE));
   }
   /* check for seek */
   if (src->need_discont) {

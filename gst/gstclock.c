@@ -403,18 +403,12 @@ gst_clock_init (GstClock * clock)
   clock->entries = NULL;
   clock->flags = 0;
   clock->stats = FALSE;
-
-  clock->active_mutex = g_mutex_new ();
-  clock->active_cond = g_cond_new ();
 }
 
 static void
 gst_clock_dispose (GObject * object)
 {
-  GstClock *clock = GST_CLOCK (object);
-
-  g_mutex_free (clock->active_mutex);
-  g_cond_free (clock->active_cond);
+  //GstClock *clock = GST_CLOCK (object);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

@@ -146,6 +146,8 @@ typedef struct
 #define GST_EVENT_DISCONT_OFFSET(event,i)	(GST_EVENT(event)->event_data.discont.offsets[i])
 #define GST_EVENT_DISCONT_OFFSET_LEN(event)	(GST_EVENT(event)->event_data.discont.noffsets)
 
+#define GST_EVENT_FLUSH_DONE(event)		(GST_EVENT(event)->event_data.flush.done)
+
 #define GST_EVENT_SIZE_FORMAT(event)		(GST_EVENT(event)->event_data.size.format)
 #define GST_EVENT_SIZE_VALUE(event)		(GST_EVENT(event)->event_data.size.value)
 
@@ -171,6 +173,9 @@ struct _GstEvent {
       gint		noffsets;
       gdouble		rate;
     } discont;
+    struct {
+      gboolean		done;
+    } flush;
     struct {
       GstFormat		format;
       gint64		value;
@@ -211,7 +216,7 @@ GstEvent*	gst_event_new_segment_seek	(GstSeekType type, gint64 start, gint64 sto
 GstEvent*	gst_event_new_size		(GstFormat format, gint64 value);
 
 /* discontinous event */
-GstEvent*	gst_event_new_discontinuous	(gboolean new_media,
+GstEvent*	gst_event_new_discontinuous	(gdouble rate,
 						 GstFormat format1, ...);
 GstEvent*	gst_event_new_discontinuous_valist	(gdouble rate,
 						 GstFormat format1,
@@ -222,7 +227,7 @@ gboolean	gst_event_discont_get_value	(GstEvent *event, GstFormat format,
 #define		gst_event_new_filler()		gst_event_new(GST_EVENT_FILLER)
 
 /* flush events */
-#define		gst_event_new_flush()		gst_event_new(GST_EVENT_FLUSH)
+GstEvent*	gst_event_new_flush 		(gboolean done);
 
 G_END_DECLS
 

@@ -114,7 +114,7 @@ struct _GstClockEntry {
 
 typedef enum
 {
-  GST_CLOCK_STOPPED 	= 0,
+  GST_CLOCK_UNSCHEDULED	= 0,
   GST_CLOCK_TIMEOUT 	= 1,
   GST_CLOCK_EARLY 	= 2,
   GST_CLOCK_ERROR 	= 3,
@@ -144,8 +144,6 @@ struct _GstClock {
   GstClockTime	 adjust;
   GstClockTime	 last_time;
   GList		*entries;
-  GMutex	*active_mutex;
-  GCond		*active_cond;
 
   /*< private >*/
   guint64	 resolution;

@@ -1,3 +1,37 @@
+2005-01-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/gstfilesrc.c: (gst_filesrc_getrange),
+	(gst_filesrc_get), (gst_filesrc_activate):
+	* gst/gstclock.c: (gst_clock_init), (gst_clock_dispose):
+	* gst/gstclock.h:
+	* gst/gstevent.c: (gst_event_new_discontinuous_valist),
+	(gst_event_new_discontinuous), (gst_event_discont_get_value),
+	(gst_event_new_flush):
+	* gst/gstevent.h:
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_set_blocked_async),
+	(gst_pad_set_acceptcaps_function),
+	(gst_pad_set_fixatecaps_function), (gst_pad_unlink),
+	(gst_pad_link_prepare_filtered), (gst_pad_link_filtered),
+	(gst_pad_relink_filtered), (gst_real_pad_get_caps_unlocked),
+	(gst_pad_peer_get_caps), (gst_pad_fixate_caps),
+	(gst_pad_accept_caps), (gst_pad_peer_accept_caps),
+	(gst_pad_set_caps), (gst_pad_configure_sink),
+	(gst_pad_configure_src), (gst_pad_realize), (gst_pad_alloc_buffer),
+	(gst_pad_push), (gst_pad_push_event), (gst_pad_send_event):
+	* gst/gstpad.h:
+	* gst/gsttask.c: (gst_task_pause):
+	* gst/gsttask.h:
+	* gst/schedulers/threadscheduler.c:
+	(gst_thread_scheduler_task_class_init),
+	(gst_thread_scheduler_task_init),
+	(gst_thread_scheduler_task_start),
+	(gst_thread_scheduler_task_stop),
+	(gst_thread_scheduler_task_pause), (gst_thread_scheduler_func):
+	Work on flushing.
+	Allow tasks to be paused.
+	Remove some old code in GstClock
+
+
 2004-12-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstevent.c: (gst_event_new_discontinuous_valist),

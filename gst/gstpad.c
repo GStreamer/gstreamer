@@ -2760,6 +2760,9 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   if (G_UNLIKELY (!GST_RPAD_IS_ACTIVE (peer)))
     goto not_active;
 
+  if (G_UNLIKELY (GST_RPAD_IS_FLUSHING (peer)))
+    goto flushing;
+
   gst_object_ref (GST_OBJECT_CAST (peer));
   GST_UNLOCK (pad);
 
@@ -2802,6 +2805,12 @@ not_active:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but it was inactive");
     GST_UNLOCK_RETURN (pad, GST_FLOW_WRONG_STATE);
+  }
+flushing:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pushing, but pad was flushing");
+    GST_UNLOCK_RETURN (pad, GST_FLOW_UNEXPECTED);
   }
 not_negotiated:
   {
@@ -3456,6 +3465,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   peerpad = GST_RPAD_PEER (pad);
   if (peerpad == NULL)
     goto not_linked;
+
   gst_object_ref (GST_OBJECT_CAST (peerpad));
   GST_UNLOCK (pad);
 
@@ -3503,6 +3513,21 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
 
   GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %d on pad %s:%s",
       GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (rpad));
+
+  if (GST_PAD_IS_SINK (pad)) {
+    if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH) {
+      GST_CAT_DEBUG (GST_CAT_EVENT, "have flush event");
+      GST_LOCK (pad);
+      if (GST_EVENT_FLUSH_DONE (event)) {
+        GST_CAT_DEBUG (GST_CAT_EVENT, "clear flush flag");
+        GST_FLAG_UNSET (pad, GST_PAD_FLUSHING);
+      } else {
+        GST_CAT_DEBUG (GST_CAT_EVENT, "set flush flag");
+        GST_FLAG_SET (pad, GST_PAD_FLUSHING);
+      }
+      GST_UNLOCK (pad);
+    }
+  }
 
   if ((eventfunc = GST_RPAD_EVENTFUNC (rpad)) == NULL)
     goto no_function;

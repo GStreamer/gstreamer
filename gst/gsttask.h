@@ -49,6 +49,7 @@ struct _GstTaskClass {
 
   gboolean (*start) (GstTask *task);
   gboolean (*stop)  (GstTask *task);
+  gboolean (*pause) (GstTask *task);
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -57,6 +58,7 @@ GType           gst_task_get_type       (void);
 
 gboolean	gst_task_start		(GstTask *task);
 gboolean	gst_task_stop		(GstTask *task);
+gboolean	gst_task_pause		(GstTask *task);
 
 G_END_DECLS
 

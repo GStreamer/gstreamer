@@ -116,3 +116,19 @@ gst_task_stop (GstTask * task)
 
   return result;
 }
+
+gboolean
+gst_task_pause (GstTask * task)
+{
+  GstTaskClass *tclass;
+  gboolean result = FALSE;
+
+  g_return_val_if_fail (GST_IS_TASK (task), result);
+
+  tclass = GST_TASK_GET_CLASS (task);
+
+  if (tclass->pause)
+    result = tclass->pause (task);
+
+  return result;
+}

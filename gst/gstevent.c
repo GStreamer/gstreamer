@@ -262,14 +262,14 @@ gst_event_new_discontinuous_valist (gdouble rate, GstFormat format1,
  * Returns: A new discontinuous event.
  */
 GstEvent *
-gst_event_new_discontinuous (gboolean new_media, GstFormat format1, ...)
+gst_event_new_discontinuous (gdouble rate, GstFormat format1, ...)
 {
   va_list var_args;
   GstEvent *event;
 
   va_start (var_args, format1);
 
-  event = gst_event_new_discontinuous_valist (new_media, format1, var_args);
+  event = gst_event_new_discontinuous_valist (rate, format1, var_args);
 
   va_end (var_args);
 
@@ -356,6 +356,25 @@ gst_event_new_segment_seek (GstSeekType type, gint64 start, gint64 stop)
   GST_EVENT_SEEK_TYPE (event) = type;
   GST_EVENT_SEEK_OFFSET (event) = start;
   GST_EVENT_SEEK_ENDOFFSET (event) = stop;
+
+  return event;
+}
+
+/**
+ * gst_event_new_flush:
+ * @done: Indicates the end of the flush
+ *
+ * Allocate a new flush event.
+ *
+ * Returns: A new flush event.
+ */
+GstEvent *
+gst_event_new_flush (gboolean done)
+{
+  GstEvent *event;
+
+  event = gst_event_new (GST_EVENT_FLUSH);
+  GST_EVENT_FLUSH_DONE (event) = done;
 
   return event;
 }
