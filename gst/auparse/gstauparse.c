@@ -49,10 +49,19 @@ static GstStaticPadTemplate gst_auparse_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,          /* FIXME: spider */
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "       /* 24-bit PCM is barely supported by gstreamer actually */
-        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS "; "  /* 64-bit float is barely supported by gstreamer actually */
-        "audio/x-alaw, " "rate = (int) [ 8000, 192000 ], "
-        "channels = (int) [ 1, 2 ]" "; " "audio/x-mulaw, "
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
+        /* we don't use GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS
+           because of min buffer-frames which is 1, not 0 */
+        "audio/x-raw-float, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) { LITTLE_ENDIAN , BIG_ENDIAN }, "
+        "width = (int) { 32, 64 }, "
+        "buffer-frames = (int) [ 0, MAX]" "; "
+        "audio/x-alaw, "
+        "rate = (int) [ 8000, 192000 ], "
+        "channels = (int) [ 1, 2 ]" "; "
+        "audio/x-mulaw, "
         "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]" "; "
         /* Nothing to decode those ADPCM streams for now */
         "audio/x-adpcm, " "layout = (string) { g721, g722, g723_3, g723_5 }")
@@ -320,23 +329,26 @@ Samples :
     if (law) {
       tempcaps =
           gst_caps_new_simple ((law == 1) ? "audio/x-mulaw" : "audio/x-alaw",
-          "rate", G_TYPE_INT, auparse->frequency, "channels", G_TYPE_INT,
-          auparse->channels, NULL);
+          "rate", G_TYPE_INT, auparse->frequency,
+          "channels", G_TYPE_INT, auparse->channels, NULL);
     } else if (ieee) {
       tempcaps = gst_caps_new_simple ("audio/x-raw-float",
-          "width", G_TYPE_INT, depth,
+          "rate", G_TYPE_INT, auparse->frequency,
+          "channels", G_TYPE_INT, auparse->channels,
           "endianness", G_TYPE_INT,
-          auparse->le ? G_LITTLE_ENDIAN : G_BIG_ENDIAN, NULL);
+          auparse->le ? G_LITTLE_ENDIAN : G_BIG_ENDIAN, "width", G_TYPE_INT,
+          depth, "buffer-frames", G_TYPE_INT, 0, NULL);
     } else if (layout[0]) {
       tempcaps = gst_caps_new_simple ("audio/x-adpcm",
           "layout", G_TYPE_STRING, layout, NULL);
     } else {
       tempcaps = gst_caps_new_simple ("audio/x-raw-int",
+          "rate", G_TYPE_INT, auparse->frequency,
+          "channels", G_TYPE_INT, auparse->channels,
           "endianness", G_TYPE_INT,
-          auparse->le ? G_LITTLE_ENDIAN : G_BIG_ENDIAN, "rate", G_TYPE_INT,
-          auparse->frequency, "channels", G_TYPE_INT, auparse->channels,
-          "depth", G_TYPE_INT, depth, "width", G_TYPE_INT, depth, "signed",
-          G_TYPE_BOOLEAN, TRUE, NULL);
+          auparse->le ? G_LITTLE_ENDIAN : G_BIG_ENDIAN, "depth", G_TYPE_INT,
+          depth, "width", G_TYPE_INT, depth, "signed", G_TYPE_BOOLEAN, TRUE,
+          NULL);
     }
 
     if (!gst_pad_set_explicit_caps (auparse->srcpad, tempcaps)) {
