@@ -120,6 +120,7 @@ gst_asyncdisksrc_init (GstAsyncDiskSrc *asyncdisksrc)
 {
   GST_SRC_SET_FLAGS (asyncdisksrc, GST_SRC_ASYNC);
 
+  g_print("init\n");
   asyncdisksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_pull_function (asyncdisksrc->srcpad,gst_asyncdisksrc_pull);
   // FIXME must set pullregion

@@ -505,8 +505,6 @@ gst_pad_disconnect (GstPad *srcpad,
   srcpad->peer = NULL;
   sinkpad->peer = NULL;
 
-  srcpad->chainfunc = NULL;
-  srcpad->pullfunc = NULL;
 }
 
 /**
@@ -688,7 +686,7 @@ gst_pad_add_type_id (GstPad *pad,
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (gst_type_find_by_id (id) != NULL);
 
-  g_list_append(pad->types, GINT_TO_POINTER((gint)id));
+  pad->types = g_list_append(pad->types, GINT_TO_POINTER((gint)id));
 }
 
 /**

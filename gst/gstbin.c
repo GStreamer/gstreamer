@@ -567,7 +567,6 @@ gst_bin_pullsrc_wrapper (int argc,char *argv[])
   GstElement *element = GST_ELEMENT (argv);
   GList *pads;
   GstPad *pad;
-  GstBuffer *buf;
   G_GNUC_UNUSED const gchar *name = gst_element_get_name (element);
 
   DEBUG("entering gst_bin_pullsrc_wrapper(%d,\"%s\")\n",argc,name);
@@ -577,7 +576,7 @@ gst_bin_pullsrc_wrapper (int argc,char *argv[])
     while (pads) {
       pad = GST_PAD (pads->data);
       if (pad->direction == GST_PAD_SRC) {
-        if (pad->pullfunc == NULL) fprintf(stderr,"error, no pullfunc\n");
+        if (pad->pullfunc == NULL) fprintf(stderr,"error, no pullfunc in \"%s\"\n", name);
         (pad->pullfunc)(pad);
       }
       pads = g_list_next(pads);
@@ -839,7 +838,7 @@ gst_bin_iterate_func (GstBin *bin)
   GList *pads;
   GstPad *pad;
 
-  DEBUG_ENTER("(%s)",gst_element_get_name(GST_ELEMENT(bin)));
+  DEBUG_ENTER("(%s)", gst_element_get_name (GST_ELEMENT (bin)));
 
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
@@ -849,7 +848,7 @@ gst_bin_iterate_func (GstBin *bin)
     // all we really have to do is switch to the first child
     // FIXME this should be lots more intelligent about where to start
     
-    GST_FLAG_SET(GST_ELEMENT (bin->children->data),GST_ELEMENT_COTHREAD_STOPPING);
+    GST_FLAG_SET (GST_ELEMENT (bin->children->data), GST_ELEMENT_COTHREAD_STOPPING);
     cothread_switch (GST_ELEMENT (bin->children->data)->threadstate);
 
   } else {
@@ -862,33 +861,33 @@ gst_bin_iterate_func (GstBin *bin)
       entries = bin->entries;
     }
 
-    g_assert(entries != NULL);
+    g_assert (entries != NULL);
 
     while (entries) {
       entry = GST_ELEMENT (entries->data);
       if (GST_IS_SRC (entry)) {
-//        if (GST_SRC_PUSH_FUNCTION(entry))
-//          gst_src_push (GST_SRC (entry));
-//        else {
-          pads = entry->pads;
-          while (pads) {
-            pad = GST_PAD(pads->data);
-            if (pad->direction == GST_PAD_SRC) {
-              if (pad->pullfunc == NULL) fprintf(stderr,"error, no pullfunc\n");
+        pads = entry->pads;
+        while (pads) {
+          pad = GST_PAD (pads->data);
+          if (pad->direction == GST_PAD_SRC) {
+            if (pad->pullfunc == NULL) 
+	      fprintf(stderr, "error, no pullfunc in \"%s\"\n", gst_element_get_name (entry));
+	    else
               (pad->pullfunc)(pad);
-            }
-            pads = g_list_next(pads);
           }
-//        }
+          pads = g_list_next (pads);
+        }
       } else if (GST_IS_CONNECTION (entry))
         gst_connection_push (GST_CONNECTION (entry));
       else if (GST_IS_BIN (entry))
         gst_bin_iterate (GST_BIN (entry));
-      else
+      else {
+	fprintf(stderr, "gstbin: entry \"%s\" cannot be handled\n", gst_element_get_name (entry));
         g_assert_not_reached ();
+      }
       entries = g_list_next (entries);
     }
   }
 
-  DEBUG_LEAVE("(%s)",gst_element_get_name(GST_ELEMENT(bin)));
+  DEBUG_LEAVE("(%s)", gst_element_get_name (GST_ELEMENT (bin)));
 }
