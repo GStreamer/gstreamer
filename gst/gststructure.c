@@ -1109,6 +1109,20 @@ _gst_structure_parse_string (gchar *s, gchar **end, gchar **next)
   return TRUE;
 }
 
+static int
+gst_strtoi (const char *s, char **end, int base)
+{
+  int i;
+
+  if (s[0] == '-') {
+    i = - (int) strtoul (s + 1, end, base);
+  } else {
+    i = strtoul (s, end, base);
+  }
+
+  return i;
+}
+
 static gboolean
 gst_value_from_string (GValue *value, const char *s)
 {
@@ -1122,7 +1136,7 @@ gst_value_from_string (GValue *value, const char *s)
     case G_TYPE_INT:
       {
 	int x;
-	x = strtol (s, &end, 0);
+	x = gst_strtoi (s, &end, 0);
 	if (*end == 0) {
 	  ret = TRUE;
 	} else {

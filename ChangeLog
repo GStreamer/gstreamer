@@ -1,3 +1,8 @@
+2004-01-11  David Schleef,,,  <set EMAIL_ADDRESS environment variable>
+
+	* gst/gststructure.c: (gst_strtoi), (gst_value_from_string): Add
+	a function to parse integers in ways that strto[u]l() does not.
+
 2004-01-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* tools/gst-inspect.c: (print_caps):
