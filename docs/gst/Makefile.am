@@ -51,9 +51,6 @@ extra_files =
 GTKDOC_CFLAGS = $(GST_CFLAGS)
 GTKDOC_LIBS = $(GST_LIBS) $(SCANOBJ_DEPS)
 
-#	$(shell echo $(top_builddir)/gst/autoplug/*.la) \
-#	$(top_builddir)/gst/types/libgsttypes.la \
-
 GTKDOC_CC=$(LIBTOOL) --mode=compile $(CC)
 GTKDOC_LD=$(LIBTOOL) --mode=link $(CC)
 
