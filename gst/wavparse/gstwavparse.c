@@ -412,7 +412,7 @@ gst_wavparse_pad_convert (GstPad *pad,
   bytes_per_sample = wavparse->channels * wavparse->width / 8;
   if (bytes_per_sample == 0) {
 	  g_warning ("bytes_per_sample is 0, internal error\n");
-	  g_warning ("channels %d,  width %d\n", 
+	  g_warning ("channels %d,  width %d\n",
 		     wavparse->channels, wavparse->width);
 	  return FALSE;
   }
