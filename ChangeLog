@@ -1,3 +1,9 @@
+2004-07-04  Benjamin Otte  <otte@gnome.org>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_xrun_recovery):
+	  only restart audio when we indeed have an xrun to fix repeated
+	  xruns. Fix suggested by Giuliano Pochini.
+
 2004-07-03  David Schleef  <ds@schleef.org>
 
 	* ext/alsa/gstalsaplugin.c: (gst_alsa_error_wrapper): Disable
