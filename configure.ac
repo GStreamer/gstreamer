@@ -183,6 +183,9 @@ main() { atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0
   ])
 fi
 
+dnl Check for a way to display the function name in debug output
+GST_CHECK_FUNCTION()
+
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
