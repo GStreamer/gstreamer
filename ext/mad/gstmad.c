@@ -461,15 +461,26 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       /* calculate beginning of next frame */
       pad_slot = (mad->frame.header.flags & MAD_FLAG_PADDING) ? 1 : 0;
 
-      if (mad->frame.header.layer == MAD_LAYER_I)
-        N = ((12 * mad->frame.header.bitrate / mad->frame.header.samplerate) + pad_slot) * 4;
-      else {
-        unsigned int slots_per_frame;
+      /* FIXME: we're experiencing division by zero errors, so warn if
+       * samplerate is 0 
+       * on the other hand, N is not used any further, so why not just
+       * remove this bit of code ? */
+      if (mad->frame.header.samplerate == 0)
+      {
+	g_warning ("mad->frame.header.samplerate is 0 !");
+      }
+      else
+      {
+        if (mad->frame.header.layer == MAD_LAYER_I)
+          N = ((12 * mad->frame.header.bitrate / mad->frame.header.samplerate) + pad_slot) * 4;
+        else {
+          unsigned int slots_per_frame;
 
-        slots_per_frame = (mad->frame.header.layer == MAD_LAYER_III &&
-                           (mad->frame.header.flags & MAD_FLAG_LSF_EXT)) ? 72 : 144;
+          slots_per_frame = (mad->frame.header.layer == MAD_LAYER_III &&
+                             (mad->frame.header.flags & MAD_FLAG_LSF_EXT)) ? 72 : 144;
 
-        N = (slots_per_frame * mad->frame.header.bitrate / mad->frame.header.samplerate) + pad_slot;
+          N = (slots_per_frame * mad->frame.header.bitrate / mad->frame.header.samplerate) + pad_slot;
+        }
       }
 
       mad_synth_frame (&mad->synth, &mad->frame);
@@ -489,7 +500,12 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       GST_BUFFER_SIZE (outbuffer) = nsamples * nchannels * 2;
 
 
-      GST_BUFFER_TIMESTAMP (outbuffer) = mad->sync_point + 
+      if (mad->frame.header.samplerate == 0)
+      {
+	g_warning ("mad->frame.header.samplerate is 0 !");
+      }
+      else
+        GST_BUFFER_TIMESTAMP (outbuffer) = mad->sync_point + 
 	      				 mad->total_samples * 1000000LL / mad->frame.header.samplerate;
 
       mad->total_samples += nsamples;

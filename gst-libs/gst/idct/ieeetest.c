@@ -86,7 +86,7 @@ main(int argc, char **argv)
 
     /* perform reference FDCT */
     memcpy(refcoefs, block, sizeof(DCTELEM)*DCTSIZE2);
-    ref_fdct(refcoefs);
+    ref_fdct((DCTELEM **) &refcoefs);
     /* clip */
     for (i = 0; i < DCTSIZE2; i++) {
       if (refcoefs[i] < -2048) refcoefs[i] = -2048;
