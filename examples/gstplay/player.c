@@ -58,7 +58,7 @@ got_found_tag (GstPlay *play,GstElement *source, GstTagList *tag_list)
 static void
 got_time_tick (GstPlay *play, gint64 time_nanos)
 {
-  g_print ("time tick %llu\n", time_nanos);
+  g_print ("time tick %f\n", time_nanos / (float) GST_SECOND);
 }
 
 static void
@@ -147,6 +147,8 @@ main (int argc, char *argv[])
                     G_CALLBACK (got_video_size), NULL);
   g_signal_connect (G_OBJECT (play), "found_tag",
                     G_CALLBACK (got_found_tag), NULL);
+  g_signal_connect (G_OBJECT (play), "error",
+                    G_CALLBACK (gst_element_default_error), NULL);
   g_signal_connect (G_OBJECT (play), "eos",
                     G_CALLBACK (got_eos), NULL);
 

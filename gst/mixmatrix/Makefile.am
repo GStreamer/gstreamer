@@ -1,5 +1,5 @@
 
-plugin_LTLIBRARIES = libmixmatrix.la
+plugin_LTLIBRARIES = libgstmixmatrix.la
 
 libmixmatrix_la_SOURCES = mixmatrix.c
 libmixmatrix_la_CFLAGS = $(GST_CFLAGS)
