@@ -427,19 +427,19 @@ GStreamer support libraries header files.
 @USE_LAME_TRUE@%{_libdir}/gst/libgstlame.so
 
 ### LIBDV ###
-@USE_DV_TRUE@%package -n gstreamer-dv
-@USE_DV_TRUE@Summary:       GStreamer DV plug-in.
-@USE_DV_TRUE@Group:         Libraries/Multimedia
-@USE_DV_TRUE@Requires:      gstreamer-plugins = %{version}
-@USE_DV_TRUE@Requires:      libdv >= 0.9.5
-@USE_DV_TRUE@BuildRequires: libdv-devel >= 0.9.5
-@USE_DV_TRUE@
-@USE_DV_TRUE@%description -n gstreamer-dv
-@USE_DV_TRUE@Plug-in for digital video support using libdv.
-@USE_DV_TRUE@
-@USE_DV_TRUE@%files -n gstreamer-dv
-@USE_DV_TRUE@%defattr(-, root, root)
-@USE_DV_TRUE@%{_libdir}/gst/libgstdvdec.so
+@USE_LIBDV_TRUE@%package -n gstreamer-dv
+@USE_LIBDV_TRUE@Summary:       GStreamer DV plug-in.
+@USE_LIBDV_TRUE@Group:         Libraries/Multimedia
+@USE_LIBDV_TRUE@Requires:      gstreamer-plugins = %{version}
+@USE_LIBDV_TRUE@Requires:      libdv >= 0.9.5
+@USE_LIBDV_TRUE@BuildRequires: libdv-devel >= 0.9.5
+@USE_LIBDV_TRUE@
+@USE_LIBDV_TRUE@%description -n gstreamer-dv
+@USE_LIBDV_TRUE@Plug-in for digital video support using libdv.
+@USE_LIBDV_TRUE@
+@USE_LIBDV_TRUE@%files -n gstreamer-dv
+@USE_LIBDV_TRUE@%defattr(-, root, root)
+@USE_LIBDV_TRUE@%{_libdir}/gst/libgstdvdec.so
 
 ### LIBFAME ###
 @USE_LIBFAME_TRUE@%package -n gstreamer-libfame
