@@ -35,7 +35,6 @@
 #include <gst/gstindex.h>
 #include <gst/gstiterator.h>
 #include <gst/gstmessage.h>
-#include <gst/gsttask.h>
 #include <gst/gsttag.h>
 
 G_BEGIN_DECLS typedef struct _GstElementDetails GstElementDetails;
@@ -315,8 +314,6 @@ void gst_element_set_bus (GstElement * element, GstBus * bus);
 GstBus *gst_element_get_bus (GstElement * element);
 void gst_element_set_scheduler (GstElement * element, GstScheduler * scheduler);
 GstScheduler *gst_element_get_scheduler (GstElement * element);
-GstTask *gst_element_create_task (GstElement * element, GstTaskFunction func,
-    gpointer data);
 
 /* pad management */
 gboolean gst_element_add_pad (GstElement * element, GstPad * pad);

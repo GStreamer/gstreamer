@@ -21,6 +21,8 @@
 
 #include <gst/gst.h>
 
+static GMainLoop *loop;
+
 static gboolean
 message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
@@ -28,7 +30,8 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 
   if (message->type == GST_MESSAGE_EOS) {
     g_print ("EOS!!\n");
-    gst_main_quit ();
+    if (g_main_loop_is_running (loop))
+      g_main_loop_quit (loop);
   }
   gst_message_unref (message);
 
@@ -47,8 +50,10 @@ main (gint argc, gchar * argv[])
 
   pipeline = gst_pipeline_new ("pipeline");
 
-  bus = GST_PIPELINE (pipeline)->bus;
+  loop = g_main_loop_new (NULL, FALSE);
+  bus = gst_element_get_bus (pipeline);
   gst_bus_add_watch (bus, (GstBusHandler) message_received, pipeline);
+  gst_object_unref (GST_OBJECT (bus));
 
   fakesrc1 = gst_element_factory_make ("fakesrc", "fakesrc1");
   g_object_set (G_OBJECT (fakesrc1), "num_buffers", 5, NULL);
@@ -77,7 +82,7 @@ main (gint argc, gchar * argv[])
   g_print ("play..\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  gst_main ();
+  g_main_loop_run (loop);
 
   g_object_set (G_OBJECT (fakesrc1), "num_buffers", 5, NULL);
 
@@ -89,7 +94,7 @@ main (gint argc, gchar * argv[])
   g_print ("play..\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  gst_main ();
+  g_main_loop_run (loop);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 

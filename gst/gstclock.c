@@ -490,6 +490,8 @@ gst_clock_set_resolution (GstClock * clock, guint64 resolution)
  * Get the accuracy of the clock.
  *
  * Returns: the resolution of the clock in microseconds.
+ *
+ * MT safe.
  */
 guint64
 gst_clock_get_resolution (GstClock * clock)

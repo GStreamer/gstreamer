@@ -6,6 +6,10 @@ Makefile.in
 .deps
 .libs
 
+test1
+test2
+test3
+test4
 bin
 locked
 parent

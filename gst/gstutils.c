@@ -773,7 +773,7 @@ gst_element_state_get_name (GstElementState state)
       return "PAUSED";
       break;
     default:
-      return "UNKNOWN!";
+      return g_strdup_printf ("UNKNOWN!(%d)", state);
 #endif
   }
   return "";

@@ -19,6 +19,8 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ *
+ * MT safe.
  */
 
 #include "gst_private.h"
@@ -581,15 +583,31 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
     GList *pads;
     gboolean connected_src = FALSE;
 
-    pads = child->srcpads;
-    while (pads) {
-      GstPad *pad = GST_PAD (pads->data);
+    for (pads = child->srcpads; pads; pads = g_list_next (pads)) {
+      GstPad *peer;
 
-      if (GST_PAD_IS_LINKED (pad)) {
-        connected_src = TRUE;
-        break;
+      peer = gst_pad_get_peer (GST_PAD_CAST (pads->data));
+      if (peer) {
+        GstElement *parent;
+
+        parent = gst_pad_get_parent (peer);
+        if (parent) {
+          GstObject *grandparent;
+
+          grandparent = gst_object_get_parent (GST_OBJECT_CAST (parent));
+          if (grandparent == GST_OBJECT_CAST (bin)) {
+            connected_src = TRUE;
+          }
+          if (grandparent) {
+            gst_object_unref (GST_OBJECT_CAST (grandparent));
+          }
+          gst_object_unref (GST_OBJECT_CAST (parent));
+        }
+        gst_object_unref (GST_OBJECT_CAST (peer));
+        if (connected_src) {
+          break;
+        }
       }
-      pads = g_list_next (pads);
     }
 
     if (connected_src) {
@@ -598,7 +616,7 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
           GST_OBJECT_NAME (child));
     } else {
       GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
-          "adding child %s as sink since it has unlinked source pads",
+          "adding child %s as sink since it has unlinked source pads in this bin",
           GST_OBJECT_NAME (child));
       ret = 0;
     }
@@ -640,8 +658,8 @@ gst_bin_iterate_sinks (GstBin * bin)
   return result;
 }
 
-/* this functions loops over all children, as soon as one is
- * still performing the state change, FALSE is returned.
+/* this functions loops over all children, as soon as one does
+ * not return SUCCESS, we return that value.
  *
  * MT safe
  */
@@ -718,7 +736,17 @@ done:
   return ret;
 }
 
-/* this function is called with the STATE_LOCK held.
+/* this function is called with the STATE_LOCK held. It works
+ * as follows:
+ *
+ * 1) put all sink elements on the queue.
+ * 2) change state of elements in queue, put linked elements to queue.
+ * 3) while queue not empty goto 2)
+ *
+ * This will effectively change the state of all elements in the bin
+ * from the sinks to the sources. We have to change the states this
+ * way so that when a source element pushes data, the downstream element
+ * is in the right state to receive the data.
  *
  * MT safe.
  */
@@ -735,6 +763,7 @@ gst_bin_change_state (GstElement * element)
 
   bin = GST_BIN (element);
 
+  /* we don't need to take the STATE_LOCK, it is already taken */
   old_state = GST_STATE (element);
   pending = GST_STATE_PENDING (element);
 
@@ -791,7 +820,7 @@ restart:
     GST_LOCK (qelement);
     pads = qelement->sinkpads;
     while (pads) {
-      GstPad *pad = GST_PAD (pads->data);
+      GstPad *pad = GST_PAD_CAST (pads->data);
       GstPad *peer;
 
       GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
@@ -799,20 +828,32 @@ restart:
 
       peer = gst_pad_get_peer (pad);
       if (peer) {
-        GstElement *peer_elem;
+        GstObject *peer_elem;
 
-        /* FIXME does not work for bins etc */
-        peer_elem = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (peer)));
+        peer_elem = gst_object_get_parent (GST_OBJECT_CAST (peer));
 
         if (peer_elem) {
-          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-              "adding element %s to queue", GST_ELEMENT_NAME (peer_elem));
+          GstObject *parent;
 
-          /* was reffed before pushing on the queue by the 
-           * gst_object_get_parent() call we used to get the element. */
-          g_queue_push_tail (elem_queue, peer_elem);
+          /* see if this element is in the bin we are currently handling */
+          parent = gst_object_get_parent (GST_OBJECT_CAST (peer_elem));
+          if (parent && parent == GST_OBJECT_CAST (bin)) {
+            GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+                "adding element %s to queue", GST_ELEMENT_NAME (peer_elem));
+
+            /* was reffed before pushing on the queue by the 
+             * gst_object_get_parent() call we used to get the element. */
+            g_queue_push_tail (elem_queue, peer_elem);
+          } else {
+            GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+                "not adding element %s to queue, it is in another bin",
+                GST_ELEMENT_NAME (peer_elem));
+          }
+          if (parent) {
+            gst_object_unref (GST_OBJECT_CAST (parent));
+          }
         }
-        gst_object_unref (GST_OBJECT (peer));
+        gst_object_unref (GST_OBJECT_CAST (peer));
       } else {
         GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
             "pad %s:%s does not have a peer", GST_DEBUG_PAD_NAME (pad));

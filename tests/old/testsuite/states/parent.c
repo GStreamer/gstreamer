@@ -67,7 +67,7 @@ main (gint argc, gchar * argv[])
 
   gst_bin_add (GST_BIN (pipeline), bin2);
   g_signal_connect (G_OBJECT (pipeline), "deep_notify",
-      G_CALLBACK (gst_element_default_deep_notify), NULL);
+      G_CALLBACK (gst_object_default_deep_notify), NULL);
 
   /* setting pipeline to READY should bring in all children to READY */
   gst_element_set_state (pipeline, GST_STATE_READY);
@@ -77,30 +77,34 @@ main (gint argc, gchar * argv[])
   g_assert (GST_STATE (identity) == GST_STATE_READY);
   g_assert (GST_STATE (fakesink) == GST_STATE_READY);
 
-  /* setting fakesink to PAUSED should set pipeline and bin2 to PAUSED */
+  /* setting fakesink to PAUSED should not affect pipeline and bin2 */
   gst_element_set_state (fakesink, GST_STATE_PAUSED);
   g_assert (GST_STATE (bin1) == GST_STATE_READY);
-  g_assert (GST_STATE (bin2) == GST_STATE_PAUSED);
+  g_assert (GST_STATE (bin2) == GST_STATE_READY);
   g_assert (GST_STATE (fakesrc) == GST_STATE_READY);
   g_assert (GST_STATE (identity) == GST_STATE_READY);
-  g_assert (GST_STATE (fakesink) == GST_STATE_PAUSED);
+  g_assert (GST_STATE (fakesink) == GST_STATE_READY);
 
-  /* setting fakesrc to PAUSED should set bin1 and fakesrc to PAUSED */
+  /* setting fakesrc to PAUSED should not affect bin1 */
   gst_element_set_state (fakesrc, GST_STATE_PAUSED);
-  g_assert (GST_STATE (bin1) == GST_STATE_PAUSED);
-  g_assert (GST_STATE (bin2) == GST_STATE_PAUSED);
+  g_assert (GST_STATE (bin1) == GST_STATE_READY);
+  g_assert (GST_STATE (bin2) == GST_STATE_READY);
   g_assert (GST_STATE (fakesrc) == GST_STATE_PAUSED);
   g_assert (GST_STATE (identity) == GST_STATE_READY);
-  g_assert (GST_STATE (fakesink) == GST_STATE_PAUSED);
+  g_assert (GST_STATE (fakesink) == GST_STATE_READY);
 
   /* setting bin1 to PAUSED, even though it is already, should set
    * identity to PAUSED as well */
   gst_element_set_state (bin1, GST_STATE_PAUSED);
+  gst_element_get_state (bin2, NULL, NULL, NULL);
   g_assert (GST_STATE (bin1) == GST_STATE_PAUSED);
-  g_assert (GST_STATE (bin2) == GST_STATE_PAUSED);
+  g_assert (GST_STATE (bin2) == GST_STATE_READY);
   g_assert (GST_STATE (fakesrc) == GST_STATE_PAUSED);
   g_assert (GST_STATE (identity) == GST_STATE_PAUSED);
   g_assert (GST_STATE (fakesink) == GST_STATE_PAUSED);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  g_usleep (1000000);
 
   g_print ("passed.\n");
   return 0;

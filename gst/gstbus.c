@@ -125,7 +125,10 @@ gst_bus_dispose (GObject * object)
   close (bus->control_socket[0]);
   close (bus->control_socket[1]);
 
-  g_async_queue_unref (bus->queue);
+  if (bus->queue) {
+    g_async_queue_unref (bus->queue);
+    bus->queue = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -160,6 +163,16 @@ gst_bus_get_property (GObject * object, guint prop_id,
   }
 }
 
+GstBus *
+gst_bus_new (void)
+{
+  GstBus *result;
+
+  result = g_object_new (gst_bus_get_type (), NULL);
+
+  return result;
+}
+
 /**
  * gst_bus_post:
  * @bus: a #GstBus to post on
@@ -167,20 +180,29 @@ gst_bus_get_property (GObject * object, guint prop_id,
  *
  * Post a message on the given bus.
  *
- * Returns: the new #GstBuffer.
+ * Returns: TRUE if the message could be posted.
+ *
+ * MT safe.
  */
 gboolean
 gst_bus_post (GstBus * bus, GstMessage * message)
 {
   gchar c;
   GstBusSyncReply reply = GST_BUS_PASS;
+  GstBusSyncHandler handler;
+  gpointer handler_data;
 
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
   g_return_val_if_fail (GST_IS_MESSAGE (message), FALSE);
 
+  GST_LOCK (bus);
+  handler = bus->sync_handler;
+  handler_data = bus->sync_handler_data;
+  GST_UNLOCK (bus);
+
   /* first call the sync handler if it is installed */
-  if (bus->sync_handler) {
-    reply = bus->sync_handler (bus, message, bus->sync_handler_data);
+  if (handler) {
+    reply = handler (bus, message, handler_data);
   }
 
   /* now see what we should do with the message */
@@ -236,6 +258,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
  * handled.
  *
  * Returns: TRUE if there are messages on the bus to be handled.
+ *
+ * MT safe.
  */
 gboolean
 gst_bus_have_pending (GstBus * bus)
@@ -257,6 +281,8 @@ gst_bus_have_pending (GstBus * bus)
  *
  * Returns: The #GstMessage that is on the bus or NULL when there are no
  * messages available.
+ *
+ * MT safe.
  */
 GstMessage *
 gst_bus_pop (GstBus * bus)
@@ -287,8 +313,10 @@ gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func, gpointer data)
 {
   g_return_if_fail (GST_IS_BUS (bus));
 
+  GST_LOCK (bus);
   bus->sync_handler = func;
   bus->sync_handler_data = data;
+  GST_UNLOCK (bus);
 }
 
 /**
@@ -306,6 +334,8 @@ gst_bus_create_watch (GstBus * bus)
 
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
 
+  /* FIXME, we need to ref the bus and unref it when the source
+   * is destroyed */
   source = g_io_create_watch (bus->io_channel, G_IO_IN);
 
   return source;
@@ -342,6 +372,7 @@ bus_destroy (GstBusWatch * watch)
   if (watch->notify) {
     watch->notify (watch->user_data);
   }
+  gst_object_unref (GST_OBJECT_CAST (watch->bus));
   g_free (watch);
 }
 
@@ -352,6 +383,8 @@ bus_destroy (GstBusWatch * watch)
  * Adds the bus to the mainloop with the given priority.
  *
  * Returns: The event source id.
+ *
+ * MT safe.
  */
 guint
 gst_bus_add_watch_full (GstBus * bus, gint priority,
@@ -364,6 +397,7 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
 
   watch = g_new (GstBusWatch, 1);
 
+  gst_object_ref (GST_OBJECT_CAST (bus));
   watch->source = gst_bus_create_watch (bus);
   watch->bus = bus;
   watch->priority = priority;
@@ -390,6 +424,8 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  * Adds the bus to the mainloop with the default priority.
  *
  * Returns: The event source id.
+ *
+ * MT safe.
  */
 guint
 gst_bus_add_watch (GstBus * bus, GstBusHandler handler, gpointer user_data)

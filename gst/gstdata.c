@@ -99,6 +99,8 @@ gst_data_dispose (GstData * data)
  * Returns: a copy of the data or NULL if the data cannot be copied.
  * The refcount of the original buffer is not changed so you should unref it
  * when you don't need it anymore.
+ *
+ * MT safe.
  */
 GstData *
 gst_data_copy (const GstData * data)
@@ -119,6 +121,8 @@ gst_data_copy (const GstData * data)
  *
  * Returns: FALSE if the given #GstData is potentially shared and needs to
  * be copied before it can be modified safely.
+ *
+ * MT safe.
  */
 gboolean
 gst_data_is_writable (GstData * data)
@@ -129,12 +133,12 @@ gst_data_is_writable (GstData * data)
 
   refcount = gst_atomic_int_read (&data->refcount);
 
-  if (refcount > 1)
-    return FALSE;
-  if (GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
-    return FALSE;
+  /* if we have the only ref and the data is not readonly, we can
+   * safely write */
+  if (refcount == 1 && !GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
+    return TRUE;
 
-  return TRUE;
+  return FALSE;
 }
 
 /**
@@ -150,6 +154,8 @@ gst_data_is_writable (GstData * data)
  *
  * The refcount of the passed @data is decreased when a copy is made, so
  * you are not supposed to use it anymore after a call to this function.
+ *
+ * MT safe.
  */
 GstData *
 gst_data_copy_on_write (GstData * data)
@@ -160,6 +166,8 @@ gst_data_copy_on_write (GstData * data)
 
   refcount = gst_atomic_int_read (&data->refcount);
 
+  /* if we have the only ref and the data is not readonly, we can
+   * safely write, so we return the input data */
   if (refcount == 1 && !GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
     return GST_DATA (data);
 
@@ -180,6 +188,8 @@ gst_data_copy_on_write (GstData * data)
  * Increments the reference count of this data.
  *
  * Returns: the data
+ *
+ * MT safe.
  */
 GstData *
 gst_data_ref (GstData * data)
@@ -203,6 +213,8 @@ gst_data_ref (GstData * data)
  * Increments the reference count of this data by the given number.
  *
  * Returns: the data
+ *
+ * MT safe.
  */
 GstData *
 gst_data_ref_by_count (GstData * data, gint count)
@@ -230,6 +242,8 @@ gst_data_ref_by_count (GstData * data, gint count)
  * the pipeline takes ownership of the
  * data.  When the data has been consumed by some element, it must unref() it.
  * Applications usually don't need to unref() @data.
+ *
+ * MT safe.
  */
 void
 gst_data_unref (GstData * data)

@@ -73,6 +73,8 @@ struct _GstBusClass
 
 GType 			gst_bus_get_type 		(void);
 
+GstBus*			gst_bus_new	 		(void);
+
 gboolean 		gst_bus_post 			(GstBus * bus, GstMessage * message);
 
 gboolean 		gst_bus_have_pending 		(GstBus * bus);

@@ -64,6 +64,7 @@ static void gst_element_base_class_init (gpointer g_class);
 static void gst_element_base_class_finalize (gpointer g_class);
 
 static void gst_element_dispose (GObject * object);
+static void gst_element_finalize (GObject * object);
 
 static GstElementStateReturn gst_element_change_state (GstElement * element);
 static GstElementStateReturn gst_element_get_state_func (GstElement * element,
@@ -137,6 +138,7 @@ gst_element_class_init (GstElementClass * klass)
       NULL, gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_element_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_element_finalize);
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_element_save_thyself);
@@ -457,6 +459,8 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
               GST_OBJECT_CAST (element))))
     goto had_parent;
 
+  g_free (pad_name);
+
   /* add it to the list */
   switch (gst_pad_get_direction (pad)) {
     case GST_PAD_SRC:
@@ -486,10 +490,9 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   /* emit the NEW_PAD signal */
   g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, pad);
 
-  g_free (pad_name);
-
   return TRUE;
 
+  /* ERROR cases */
 name_exists:
   {
     g_critical ("Padname %s is not unique in element %s, not adding",
@@ -575,6 +578,8 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
     goto not_our_pad;
   GST_UNLOCK (pad);
 
+  g_free (pad_name);
+
   /* FIXME, is this redundant with pad disposal? */
   if (GST_IS_REAL_PAD (pad)) {
     GstPad *peer = gst_pad_get_peer (pad);
@@ -619,12 +624,11 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
 
   gst_object_unparent (GST_OBJECT (pad));
 
-  g_free (pad_name);
-
   return TRUE;
 
 not_our_pad:
   {
+    /* FIXME, locking order? */
     GST_LOCK (element);
     g_critical ("Padname %s:%s does not belong to element %s when removing",
         GST_ELEMENT_NAME (GST_PAD_PARENT (pad)), GST_PAD_NAME (pad),
@@ -694,8 +698,8 @@ gst_element_get_static_pad (GstElement * element, const gchar * name)
   find =
       g_list_find_custom (element->pads, name, (GCompareFunc) pad_compare_name);
   if (find) {
-    result = GST_PAD (find->data);
-    gst_object_ref (GST_OBJECT (result));
+    result = GST_PAD_CAST (find->data);
+    gst_object_ref (GST_OBJECT_CAST (result));
   }
 
   if (result == NULL) {
@@ -1476,8 +1480,7 @@ gst_element_is_locked_state (GstElement * element)
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   GST_LOCK (element);
-  /* be careful with the flag tests */
-  result = !!GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
+  result = GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
   GST_UNLOCK (element);
 
   return result;
@@ -1569,15 +1572,15 @@ gst_element_get_state_func (GstElement * element,
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   GST_STATE_LOCK (element);
+  /* we got an error, report immediatly */
+  if (GST_STATE_ERROR (element))
+    goto done;
+
   old_pending = GST_STATE_PENDING (element);
   if (old_pending != GST_STATE_VOID_PENDING) {
     /* we have a pending state change, wait for it to complete */
     if (!GST_STATE_TIMED_WAIT (element, timeout)) {
       /* timeout triggered */
-      if (state)
-        *state = GST_STATE (element);
-      if (pending)
-        *pending = GST_STATE_PENDING (element);
       ret = GST_STATE_ASYNC;
     } else {
       /* could be success or failure */
@@ -1588,15 +1591,17 @@ gst_element_get_state_func (GstElement * element,
       }
     }
   }
-  /* if nothing is pending anymore we can return TRUE and
-   * set the values of the current and pending state */
+  /* if nothing is pending anymore we can return SUCCESS */
   if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING) {
-    if (state)
-      *state = GST_STATE (element);
-    if (pending)
-      *pending = GST_STATE_VOID_PENDING;
     ret = GST_STATE_SUCCESS;
   }
+
+done:
+  if (state)
+    *state = GST_STATE (element);
+  if (pending)
+    *pending = GST_STATE_PENDING (element);
+
   GST_STATE_UNLOCK (element);
 
   return ret;
@@ -1672,6 +1677,7 @@ gst_element_abort_state (GstElement * element)
         "aborting state from %s to %s", gst_element_state_get_name (old_state),
         gst_element_state_get_name (pending));
 
+    /* flag error */
     GST_STATE_ERROR (element) = TRUE;
 
     GST_STATE_BROADCAST (element);
@@ -1734,10 +1740,17 @@ gst_element_set_state (GstElement * element, GstElementState state)
   GstElementState current;
   GstElementStateReturn return_val = GST_STATE_SUCCESS;
 
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
   /* get the element state lock */
   GST_STATE_LOCK (element);
+
+#if 0
+  /* a state change is pending and we are not in error, the element is busy
+   * with a state change and we cannot proceed. 
+   * FIXME, does not work for a bin.*/
+  if (G_UNLIKELY (GST_STATE_PENDING (element) != GST_STATE_VOID_PENDING &&
+          !GST_STATE_ERROR (element)))
+    goto was_busy;
+#endif
 
   /* clear the error flag */
   GST_STATE_ERROR (element) = FALSE;
@@ -1747,6 +1760,8 @@ gst_element_set_state (GstElement * element, GstElementState state)
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "setting state from %s to %s",
       gst_element_state_get_name (current), gst_element_state_get_name (state));
+
+  oclass = GST_ELEMENT_GET_CLASS (element);
 
   /* We always perform at least one state change, even if the 
    * current state is equal to the required state. This is needed
@@ -1798,8 +1813,7 @@ gst_element_set_state (GstElement * element, GstElementState state)
         GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "commited state");
         break;
       default:
-        /* somebody added a GST_STATE_ and forgot to do stuff here ! */
-        g_assert_not_reached ();
+        goto invalid_return;
     }
     /* get the current state of the element and see if we need to do more
      * state changes */
@@ -1813,15 +1827,35 @@ exit:
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "exit state change");
 
   return return_val;
+
+  /* ERROR */
+#if 0
+was_busy:
+  {
+    GST_STATE_UNLOCK (element);
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "was busy with a state change");
+
+    return GST_STATE_BUSY;
+  }
+#endif
+invalid_return:
+  {
+    GST_STATE_UNLOCK (element);
+    /* somebody added a GST_STATE_ and forgot to do stuff here ! */
+    g_critical ("unkown return value from a state change function");
+    return GST_STATE_FAILURE;
+  }
 }
 
 /* is called with STATE_LOCK
  *
  * This function activates the pads of a given element. 
  *
- * TODO: activates pads from src to sinks?
- *
- * */
+ * TODO: activate pads from src to sinks?
+ *       move pad activate logic to GstPad because we also need this
+ *       when pads are added to elements?
+ */
 static gboolean
 gst_element_pads_activate (GstElement * element, gboolean active)
 {
@@ -1950,16 +1984,17 @@ gst_element_change_state (GstElement * element)
       GST_LOCK (element);
       if (GST_ELEMENT_MANAGER (element)) {
         element->base_time =
-            GST_ELEMENT (GST_ELEMENT_MANAGER (element))->base_time;
+            GST_ELEMENT_CAST (GST_ELEMENT_MANAGER (element))->base_time;
       }
       GST_UNLOCK (element);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
-      element->base_time = 0;
       if (!gst_element_pads_activate (element, FALSE)) {
         result = GST_STATE_FAILURE;
+      } else {
+        element->base_time = 0;
       }
       break;
     case GST_STATE_READY_TO_NULL:
@@ -2010,25 +2045,38 @@ gst_element_dispose (GObject * object)
   while (element->pads) {
     gst_element_remove_pad (element, GST_PAD (element->pads->data));
   }
-
-  g_assert (element->pads == 0);
+  if (G_UNLIKELY (element->pads != 0)) {
+    g_critical ("could not remove pads from element %s",
+        GST_STR_NULL (GST_OBJECT_NAME (object)));
+  }
 
   GST_LOCK (element);
   gst_object_replace ((GstObject **) & element->manager, NULL);
   gst_object_replace ((GstObject **) & element->clock, NULL);
   GST_UNLOCK (element);
 
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose parent");
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_element_finalize (GObject * object)
+{
+  GstElement *element = GST_ELEMENT (object);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "finalize");
+
   GST_STATE_LOCK (element);
   if (element->state_cond)
     g_cond_free (element->state_cond);
   element->state_cond = NULL;
   GST_STATE_UNLOCK (element);
-
   g_mutex_free (element->state_lock);
 
-  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose parent");
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "finalize parent");
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -2346,38 +2394,6 @@ gst_element_get_scheduler (GstElement * element)
   GST_LOCK (element);
   result = GST_ELEMENT_SCHEDULER (element);
   GST_UNLOCK (element);
-
-  return result;
-}
-
-/**
- * gst_element_create_task:
- * @element: a #GstElement to create the task for.
- * @func: the taskfunction to run
- * @data: user data passed to the taskfunction.
- *
- * Creates a new GstTask. This function uses the current manager of
- * the element to instantiate a new task.
- *
- * Returns: the newly created #GstTask.
- *
- * MT safe.
- */
-GstTask *
-gst_element_create_task (GstElement * element, GstTaskFunction func,
-    gpointer data)
-{
-  GstScheduler *sched;
-  GstTask *result = NULL;
-
-  GST_LOCK (element);
-  sched = GST_ELEMENT_SCHEDULER (element);
-  gst_object_ref (GST_OBJECT (sched));
-  GST_UNLOCK (element);
-  if (sched) {
-    result = gst_scheduler_create_task (sched, func, data);
-    gst_object_unref (GST_OBJECT (sched));
-  }
 
   return result;
 }

@@ -168,13 +168,13 @@ is_eos (GstPipeline * pipeline)
         GstElement *element = GST_ELEMENT (data);
         GList *eosed;
         GstElementState state, pending;
-        gboolean complete;
+        GstElementStateReturn complete;
         gchar *name;
 
         complete = gst_element_get_state (element, &state, &pending, NULL);
         name = gst_element_get_name (element);
 
-        if (!complete) {
+        if (complete == GST_STATE_ASYNC) {
           GST_DEBUG ("element %s still performing state change", name);
           result = FALSE;
           done = TRUE;
@@ -332,9 +332,8 @@ gst_pipeline_change_state (GstElement * element)
   /* we wait for async state changes ourselves */
   if (result == GST_STATE_ASYNC) {
     GST_STATE_UNLOCK (pipeline);
-    gst_element_get_state (element, NULL, NULL, NULL);
+    result = gst_element_get_state (element, NULL, NULL, NULL);
     GST_STATE_LOCK (pipeline);
-    result = GST_STATE_SUCCESS;
   }
 
   return result;

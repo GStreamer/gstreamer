@@ -59,7 +59,7 @@ The _set_state() function can return 3 possible values:
 
 In the case of an async state change, it is not possible to proceed to the next
 state until the current state change completed. After receiving an ASYNC return
-value, you can use _element_get_state() to poll the status of the plugin.
+value, you can use _element_get_state() to poll the status of the element.
 
 When setting the state of an element, the PENDING_STATE is set to the required 
 state and the STATE_ERROR flag is cleared. Then the state change function of the

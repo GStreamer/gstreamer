@@ -180,6 +180,7 @@ static gboolean gst_filesrc_srcpad_query (GstPad * pad, GstQueryType type,
 static gboolean gst_filesrc_activate (GstPad * pad, GstActivateMode mode);
 static GstElementStateReturn gst_filesrc_change_state (GstElement * element);
 
+static GstCaps *gst_filesrc_type_find (GstFileSrc * src);
 static void gst_filesrc_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
@@ -854,6 +855,22 @@ gst_filesrc_open_file (GstFileSrc * src)
     src->curoffset = 0;
 
     GST_FLAG_SET (src, GST_FILESRC_OPEN);
+
+    {
+      GstCaps *caps;
+      guint64 offset;
+      guint length;
+
+      offset = src->curoffset;
+      length = src->block_size;
+
+      caps = gst_filesrc_type_find (src);
+      gst_pad_set_caps (src->srcpad, caps);
+
+      src->curoffset = offset;
+      src->block_size = length;
+    }
+
   }
   return TRUE;
 }
@@ -1120,6 +1137,89 @@ gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event)
 error:
   gst_event_unref (event);
   return FALSE;
+}
+
+typedef struct
+{
+  GstFileSrc *src;
+  guint best_probability;
+  GstCaps *caps;
+
+  GstBuffer *buffer;
+}
+FileSrcTypeFind;
+
+static guint8 *
+filesrc_find_peek (gpointer data, gint64 offset, guint size)
+{
+  FileSrcTypeFind *find;
+  GstBuffer *buffer;
+  GstFileSrc *src;
+
+  if (size == 0)
+    return NULL;
+
+  find = (FileSrcTypeFind *) data;
+  src = find->src;
+
+  if (offset < 0) {
+    offset += src->filelen;
+  }
+
+  buffer = NULL;
+  gst_filesrc_getrange (src->srcpad, offset, size, &buffer);
+
+  if (find->buffer) {
+    gst_buffer_unref (find->buffer);
+  }
+  find->buffer = buffer;
+
+  return GST_BUFFER_DATA (buffer);
+}
+
+static void
+filesrc_find_suggest (gpointer data, guint probability, const GstCaps * caps)
+{
+  FileSrcTypeFind *find = (FileSrcTypeFind *) data;
+
+  if (probability > find->best_probability) {
+    gst_caps_replace (&find->caps, gst_caps_copy (caps));
+    find->best_probability = probability;
+  }
+}
+
+
+static GstCaps *
+gst_filesrc_type_find (GstFileSrc * src)
+{
+  GstTypeFind gst_find;
+  FileSrcTypeFind find;
+  GList *walk, *type_list = NULL;
+  GstCaps *result = NULL;
+
+  walk = type_list = gst_type_find_factory_get_list ();
+
+  find.src = src;
+  find.best_probability = 0;
+  find.caps = NULL;
+  gst_find.data = &find;
+  gst_find.peek = filesrc_find_peek;
+  gst_find.suggest = filesrc_find_suggest;
+  gst_find.get_length = NULL;
+
+  while (walk) {
+    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
+
+    gst_type_find_factory_call_function (factory, &gst_find);
+    if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)
+      break;
+    walk = g_list_next (walk);
+  }
+
+  if (find.best_probability > 0)
+    result = find.caps;
+
+  return result;
 }
 
 /*** GSTURIHANDLER INTERFACE *************************************************/

@@ -394,7 +394,7 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
 #endif
 #endif
 
-  if (G_UNLIKELY (*oldobj != newobj)) {
+  if (G_LIKELY (*oldobj != newobj)) {
     if (newobj)
       gst_object_ref (newobj);
     if (*oldobj)

@@ -1,3 +1,65 @@
+2005-01-18  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-states.txt:
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_loop),
+	(gst_fakesrc_activate):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_getrange),
+	(gst_filesrc_open_file), (gst_filesrc_activate),
+	(filesrc_find_peek), (filesrc_find_suggest),
+	(gst_filesrc_type_find):
+	* gst/gstbin.c: (gst_bin_set_index), (gst_bin_set_clock),
+	(gst_bin_set_bus), (gst_bin_set_scheduler), (gst_bin_add_func),
+	(gst_bin_iterate_elements), (bin_element_is_sink),
+	(gst_bin_get_state), (gst_bin_change_state),
+	(gst_bin_get_by_name_recurse_up):
+	* gst/gstbus.c: (gst_bus_dispose), (gst_bus_new), (gst_bus_post),
+	(gst_bus_set_sync_handler), (gst_bus_create_watch), (bus_destroy),
+	(gst_bus_add_watch_full):
+	* gst/gstbus.h:
+	* gst/gstclock.c: (gst_clock_id_ref), (gst_clock_id_unref),
+	(gst_clock_id_compare_func), (gst_clock_id_wait),
+	(gst_clock_id_wait_async), (gst_clock_init), (gst_clock_get_time):
+	* gst/gstcpu.c: (_gst_cpu_initialize_i386), (gst_cpu_get_flags):
+	* gst/gstdata.c: (gst_data_is_writable), (gst_data_copy_on_write):
+	* gst/gstelement.c: (gst_element_class_init),
+	(gst_element_add_pad), (gst_element_remove_pad),
+	(gst_element_get_static_pad), (gst_element_is_locked_state),
+	(gst_element_get_state_func), (gst_element_abort_state),
+	(gst_element_set_state), (gst_element_pads_activate),
+	(gst_element_change_state), (gst_element_dispose),
+	(gst_element_finalize), (gst_element_get_scheduler):
+	* gst/gstelement.h:
+	* gst/gstobject.c: (gst_object_class_init), (gst_object_ref),
+	(gst_object_unref), (gst_object_sink), (gst_object_replace),
+	(gst_object_dispose), (gst_object_dispatch_properties_changed),
+	(gst_object_set_name), (gst_object_set_parent),
+	(gst_object_unparent), (gst_object_check_uniqueness),
+	(gst_object_get_path_string):
+	* gst/gstpad.h:
+	* gst/gstpipeline.c: (is_eos), (pipeline_bus_handler),
+	(gst_pipeline_change_state):
+	* gst/gstplugin.c:
+	* gst/gsttypes.h:
+	* gst/gstutils.c: (gst_element_finish_preroll),
+	(gst_element_get_compatible_pad_filtered),
+	(gst_element_state_get_name), (gst_element_link_pads_filtered),
+	(gst_element_unlink):
+	* testsuite/states/.cvsignore:
+	* testsuite/states/Makefile.am:
+	* testsuite/states/locked.c: (message_received), (main):
+	* testsuite/states/parent.c: (main):
+	* testsuite/states/test1.c: (message_received), (set_state),
+	(get_state), (commit_callback), (abort_callback), (main):
+	* testsuite/states/test2.c: (message_received), (set_state),
+	(get_state), (main):
+	* testsuite/states/test3.c: (message_received), (set_state),
+	(get_state), (main):
+	* testsuite/states/test4.c: (message_received), (set_state),
+	(get_state), (commit_callback), (abort_callback), (main):
+	More state change fixes.
+	Added/fixed some testcases.
+	Threadsafety fixes.
+
 2005-01-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_set_index), (gst_bin_set_clock),
