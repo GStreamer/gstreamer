@@ -173,7 +173,6 @@ gst_divxdec_init (GstDivxDec *divxdec)
                        gst_static_pad_template_get (&sink_template),
                        "sink");
   gst_element_add_pad(GST_ELEMENT(divxdec), divxdec->sinkpad);
-
   gst_pad_set_chain_function(divxdec->sinkpad, gst_divxdec_chain);
   gst_pad_set_link_function(divxdec->sinkpad, gst_divxdec_connect);
 
@@ -182,6 +181,7 @@ gst_divxdec_init (GstDivxDec *divxdec)
                       gst_static_pad_template_get (&src_template),
                       "src");
   gst_element_add_pad(GST_ELEMENT(divxdec), divxdec->srcpad);
+  gst_pad_use_explicit_caps (divxdec->srcpad);
 
   /* bitrate, etc. */
   divxdec->width = divxdec->height = divxdec->csp = divxdec->bitcnt = -1;
@@ -324,7 +324,6 @@ gst_divxdec_chain (GstPad    *pad,
 static GstPadLinkReturn
 gst_divxdec_negotiate (GstDivxDec *divxdec)
 {
-  GstPadLinkReturn ret;
   GstCaps *caps;
   struct {
     guint32 fourcc;
@@ -414,14 +413,12 @@ gst_divxdec_negotiate (GstDivxDec *divxdec)
 				  NULL);
     /*}*/
 
-    if ((ret = gst_pad_try_set_caps(divxdec->srcpad, caps)) > 0) {
+    if (gst_divxdec_setup(divxdec) &&
+        gst_pad_set_explicit_caps(divxdec->srcpad, caps)) {
       divxdec->csp    = fmt_list[i].csp;
       divxdec->bpp    = fmt_list[i].bpp;
       divxdec->bitcnt = fmt_list[i].bitcnt;
-      if (gst_divxdec_setup(divxdec))
-        return GST_PAD_LINK_OK;
-    } else if (ret == GST_PAD_LINK_DELAYED) {
-      return ret; /* trying more is useless */
+      return GST_PAD_LINK_OK;
     }
   }
 
