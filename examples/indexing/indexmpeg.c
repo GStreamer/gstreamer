@@ -17,29 +17,30 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
 #include <gst/gst.h>
 
 static void
-entry_added (GstCache *tc, GstCacheEntry *entry)
+entry_added (GstIndex *index, GstIndexEntry *entry)
 {
   switch (entry->type) {
-    case GST_CACHE_ENTRY_ID:
+    case GST_INDEX_ENTRY_ID:
       g_print ("id %d describes writer %s\n", entry->id, 
-		      GST_CACHE_ID_DESCRIPTION (entry));
+		      GST_INDEX_ID_DESCRIPTION (entry));
       break;
-    case GST_CACHE_ENTRY_FORMAT:
+    case GST_INDEX_ENTRY_FORMAT:
       g_print ("%d: registered format %d for %s\n", entry->id, 
-		      GST_CACHE_FORMAT_FORMAT (entry),
-		      GST_CACHE_FORMAT_KEY (entry));
+		      GST_INDEX_FORMAT_FORMAT (entry),
+		      GST_INDEX_FORMAT_KEY (entry));
       break;
-    case GST_CACHE_ENTRY_ASSOCIATION:
+    case GST_INDEX_ENTRY_ASSOCIATION:
     {
       gint i;
 
-      g_print ("%d: %08x ", entry->id, GST_CACHE_ASSOC_FLAGS (entry));
-      for (i = 0; i < GST_CACHE_NASSOCS (entry); i++) {
-	g_print ("%d %lld ", GST_CACHE_ASSOC_FORMAT (entry, i), 
-			     GST_CACHE_ASSOC_VALUE (entry, i));
+      g_print ("%d: %08x ", entry->id, GST_INDEX_ASSOC_FLAGS (entry));
+      for (i = 0; i < GST_INDEX_NASSOCS (entry); i++) {
+	g_print ("%d %lld ", GST_INDEX_ASSOC_FORMAT (entry, i), 
+			     GST_INDEX_ASSOC_VALUE (entry, i));
       }
       g_print ("\n");
       break;
@@ -49,12 +50,51 @@ entry_added (GstCache *tc, GstCacheEntry *entry)
   }
 }
 
+typedef struct
+{
+  const gchar   *padname;
+  GstPad        *target;
+  GstElement    *bin;
+  GstElement    *pipeline;
+} dyn_connect;
+
+static void
+dynamic_connect (GstPadTemplate *templ, GstPad *newpad, gpointer data)
+{
+  dyn_connect *connect = (dyn_connect *) data;
+
+  if (!strcmp (gst_pad_get_name (newpad), connect->padname)) {
+    gst_element_set_state (connect->pipeline, GST_STATE_PAUSED);
+    gst_bin_add (GST_BIN (connect->pipeline), connect->bin);
+    gst_pad_connect (newpad, connect->target);
+    gst_element_set_state (connect->pipeline, GST_STATE_PLAYING);
+  }
+}
+
+static void
+setup_dynamic_connection (GstElement *pipeline, 
+		          GstElement *element, 
+			  const gchar *padname, 
+			  GstPad *target, 
+			  GstElement *bin)
+{
+  dyn_connect *connect;
+
+  connect = g_new0 (dyn_connect, 1);
+  connect->padname      = g_strdup (padname);
+  connect->target       = target;
+  connect->bin          = bin;
+  connect->pipeline     = pipeline;
+
+  g_signal_connect (G_OBJECT (element), "new_pad", G_CALLBACK (dynamic_connect), connect);
+}
+
 static GstElement*
-make_mpeg_pipeline (const gchar *path)
+make_mpeg_systems_pipeline (const gchar *path)
 {
   GstElement *pipeline;
   GstElement *src, *demux;
-  GstCache *cache;
+  GstIndex *index;
 
   pipeline = gst_pipeline_new ("pipeline");
 
@@ -66,11 +106,54 @@ make_mpeg_pipeline (const gchar *path)
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), demux);
 
-  cache = gst_cache_new ();
-  g_signal_connect (G_OBJECT (cache), "entry_added", G_CALLBACK (entry_added), NULL);
-  gst_element_set_cache (demux, cache);
+  index = gst_index_factory_make ("memindex");
+  g_signal_connect (G_OBJECT (index), "entry_added", G_CALLBACK (entry_added), NULL);
+  gst_element_set_index (demux, index);
 
   gst_element_connect_pads (src, "src", demux, "sink");
+  
+  return pipeline;
+}
+
+static GstElement*
+make_mpeg_decoder_pipeline (const gchar *path)
+{
+  GstElement *pipeline;
+  GstElement *src, *demux;
+  GstIndex *index;
+  GstElement *video_bin, *audio_bin;
+  GstElement *video_decoder, *audio_decoder;
+
+  pipeline = gst_pipeline_new ("pipeline");
+
+  src = gst_element_factory_make ("filesrc", "src");
+  g_object_set (G_OBJECT (src), "location", path, NULL);
+
+  demux = gst_element_factory_make ("mpegdemux", "demux");
+
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), demux);
+
+  gst_element_connect_pads (src, "src", demux, "sink");
+
+  video_bin = gst_bin_new ("video_bin");
+  video_decoder = gst_element_factory_make ("mpeg2dec", "video_decoder");
+
+  gst_bin_add (GST_BIN (video_bin), video_decoder);
+  
+  setup_dynamic_connection (pipeline, demux, "video_00", 
+		            gst_element_get_pad (video_decoder, "sink"),
+			    video_bin);
+
+  audio_bin = gst_bin_new ("audio_bin");
+  audio_decoder = gst_element_factory_make ("mad", "audio_decoder");
+
+  gst_bin_add (GST_BIN (audio_bin), audio_decoder);
+
+  index = gst_index_factory_make ("memindex");
+  g_signal_connect (G_OBJECT (index), "entry_added", G_CALLBACK (entry_added), NULL);
+  gst_element_set_index (demux, index);
+  gst_element_set_index (video_decoder, index);
   
   return pipeline;
 }
@@ -82,13 +165,29 @@ main (gint argc, gchar *argv[])
   
   gst_init (&argc, &argv);
 
-  if (argc < 2) {
-    g_print ("usage: %s <filename>\n", argv[0]);
+  if (argc < 3) {
+    g_print ("usage: %s <type> <filename>  \n" 
+	     "  type can be: 0 mpeg_systems\n"
+	     "               1 mpeg_decoder\n", argv[0]);
     return -1;
   }
-    
 
-  pipeline = make_mpeg_pipeline (argv[1]);
+  switch (atoi (argv[1])) {
+    case 0:
+      pipeline = make_mpeg_systems_pipeline (argv[2]);
+      break;
+    case 1:
+      pipeline = make_mpeg_decoder_pipeline (argv[2]);
+      break;
+    default:
+      g_print ("unkown type %d\n", atoi (argv[1]));
+      return -1;
+  }
+
+  g_signal_connect (G_OBJECT (pipeline), "deep_notify", 
+		    G_CALLBACK (gst_element_default_deep_notify), NULL);
+  g_signal_connect (G_OBJECT (pipeline), "error", 
+		    G_CALLBACK (gst_element_default_error), NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
