@@ -1,3 +1,8 @@
+2004-03-07  Christian Schaller <Uraeus@gnome.org>
+
+	* ext/nas/nassink.c:
+	A bunch of NAS fixes from Arwed von Merkatz
+
 2004-03-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream),
@@ -111,6 +116,7 @@
 	  make sure to handle the case where there's no current chain
 	  gracefully.
 
+>>>>>>> 1.392
 2004-03-05  David Schleef  <ds@schleef.org>
 
 	* ext/aalib/gstaasink.c: (gst_aasink_fixate), (gst_aasink_init):
