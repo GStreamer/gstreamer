@@ -3,30 +3,30 @@
 /* these caps all have a non empty intersection */
 GstStaticCaps2 sinkcaps = GST_STATIC_CAPS(
   "video/mpeg, "
-    "mpegtype:int={1,2}"
+    "mpegtype:int=(1,2)"
 );
 
 GstStaticCaps2 mp1parsecaps = GST_STATIC_CAPS(
   "video/mpeg, "
-    "mpegtype:int={1}"
+    "mpegtype:int=(1)"
 );
 
 GstStaticCaps2 rawcaps = GST_STATIC_CAPS(
   "video/raw, "
-    "fourcc:fourcc={\"YV12\", \"YUY2\"}, "
+    "fourcc:fourcc=(\"YV12\", \"YUY2\"), "
     "width:int=[16,4096], "
     "height:int=[16,4096]"
 );
 
 GstStaticCaps2 rawcaps2 = GST_STATIC_CAPS(
   "video/raw, "
-    "fourcc:fourcc={\"YUY2\"}, "
+    "fourcc:fourcc=(\"YUY2\"), "
     "height:int=[16,256]"
 );
 
 GstStaticCaps2 rawcaps3 = GST_STATIC_CAPS(
   "video/raw, "
-    "fourcc:fourcc={\"YV12\", \"YUY2\"}, "
+    "fourcc:fourcc=(\"YV12\", \"YUY2\"), "
     "height:int=[16,4096]"
 );
 
@@ -34,13 +34,13 @@ GstStaticCaps2 rawcaps3 = GST_STATIC_CAPS(
 /* these caps aren't used yet */
 GstStaticCaps2 rawcaps4 = GST_STATIC_CAPS(
   "video/raw, "
-    "fourcc:fourcc={\"YV12\", \"YUYV\"}, "
+    "fourcc:fourcc=(\"YV12\", \"YUYV\"), "
     "height:int=[16,4096]"
 );
 
 GstStaticCaps2 rawcaps4 = GST_STATIC_CAPS(
   "video/raw, "
-    "fourcc:fourcc={\"YUYV\", \"YUY2\"}, "
+    "fourcc:fourcc=(\"YUYV\", \"YUY2\"), "
     "height:int=[16,4096]"
 );
 #endif

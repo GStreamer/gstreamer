@@ -5,6 +5,10 @@
 
 #include <gst/gst.h>
 
+#ifdef GST_PLUGIN_STATIC
+#error ack
+#endif
+
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
@@ -23,3 +27,4 @@ GST_PLUGIN_DEFINE (
   GST_PACKAGE,
   GST_ORIGIN
 );
+

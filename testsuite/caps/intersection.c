@@ -33,19 +33,19 @@ GstStaticCaps2 rawcaps2 = GST_STATIC_CAPS (
 
 GstStaticCaps2 rawcaps3 = GST_STATIC_CAPS (
   "video/raw, "
-    "fourcc:fourcc={\"YUY2\", \"YV12\" }, "
+    "fourcc:fourcc=(\"YUY2\", \"YV12\" ), "
     "height:int=[16,4096]"
 );
 
 GstStaticCaps2 rawcaps4 = GST_STATIC_CAPS (
   "video/raw, "
-    "fourcc:fourcc={\"YUY2\",\"YV12\",\"YUYV\" }, "
+    "fourcc:fourcc=(\"YUY2\",\"YV12\",\"YUYV\" ), "
     "height:int=[16,4096]"
 );
 
 GstStaticCaps2 rawcaps5 = GST_STATIC_CAPS (
   "video/raw, "
-    "fourcc:fourcc={\"YUYV\",\"YUY2\"}, "
+    "fourcc:fourcc=(\"YUYV\",\"YUY2\"), "
     "height:int=[16,4096]"
 );
 
