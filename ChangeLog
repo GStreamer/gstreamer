@@ -1,5 +1,22 @@
 2004-02-11  David Schleef  <ds@schleef.org>
 
+	Convert a few inner loops to use liboil.  This is currently
+	optional, and is only enabled if liboil is present (duh!).
+	* configure.ac: Check for liboil-0.1
+	* gst/intfloat/Makefile.am:
+	* gst/intfloat/gstint2float.c: (conv_f32_s16), (scalarmult_f32),
+	(gst_int2float_chain_gint16):
+	* gst/videofilter/Makefile.am:
+	* gst/videofilter/gstvideobalance.c: (gst_videobalance_class_init),
+	(tablelookup_u8), (gst_videobalance_planar411):
+	* gst/videotestsrc/Makefile.am:
+	* gst/videotestsrc/gstvideotestsrc.c: (plugin_init):
+	* gst/videotestsrc/videotestsrc.c: (splat_u8), (paint_hline_YUY2),
+	(paint_hline_IYU2), (paint_hline_str4), (paint_hline_str3),
+	(paint_hline_RGB565), (paint_hline_xRGB1555):
+
+2004-02-11  David Schleef  <ds@schleef.org>
+
 	* ext/lcs/gstcolorspace.c: (colorspace_find_lcs_format),
 	(gst_colorspace_caps_get_fourcc), (colorspace_setup_converter),
 	(gst_colorspace_getcaps), (gst_colorspace_link),
