@@ -6,7 +6,8 @@ tests =  \
 	event.py \
         interface.py \
 	pad.py \
-        pipeline.py
+        pipeline.py \
+	test_xml.py
 
 check-local:
 	@PYTHONPATH=$(PYTHONPATH):$(top_builddir):$(top_builddir)/gst/.libs $(PYTHON) $(srcdir)/runtests.py
