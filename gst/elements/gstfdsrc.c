@@ -170,7 +170,7 @@ gst_fdsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
       g_value_set_int (value, src->bytes_per_read);
       break;
     case ARG_OFFSET:
-      g_value_set_int (value, src->curoffset);
+      g_value_set_int64 (value, src->curoffset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
