@@ -44,9 +44,10 @@ GstElementDetails gst_asyncdisksrc_details;
 #define GST_IS_ASYNCDISKSRC_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ASYNCDISKSRC))
 
-// NOTE: per-element flags start with 16 for now
 typedef enum {
-  GST_ASYNCDISKSRC_OPEN	= (1 << 16),
+  GST_ASYNCDISKSRC_OPEN		= GST_SRC_FLAG_LAST,
+
+  GST_ASYNCDISKSRC_FLAG_LAST	= GST_SRC_FLAG_LAST + 2,
 } GstAsyncDiskSrcFlags;
 
 typedef struct _GstAsyncDiskSrc GstAsyncDiskSrc;

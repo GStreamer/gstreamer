@@ -22,7 +22,7 @@
 #define __GST_CLOCK_H__
 
 
-#include <gst/gst.h>
+#include <gst/gstobject.h>
 
 #ifdef __cplusplus
 extern "C" {

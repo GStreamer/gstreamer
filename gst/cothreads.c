@@ -18,8 +18,6 @@
  */
 
 #include <pthread.h>
-#include <sys/time.h>
-#include <linux/linkage.h>
 #include <stdio.h>   
 #include <stdlib.h>
 #include <signal.h>   
@@ -30,9 +28,9 @@
 /* we make too much noise for normal debugging... */
 #define GST_DEBUG_FORCE_DISABLE
 
-#include <gst/gst.h>
-#include <gst/cothreads.h>
-#include <gst/gstarch.h>
+#include "gstdebug.h"
+#include "cothreads.h"
+#include "gstarch.h"
 
 pthread_key_t _cothread_key = -1;
 

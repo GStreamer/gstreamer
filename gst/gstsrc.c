@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gst.h>
+#include "gstsrc.h"
 
 
 /* Src signals and args */
@@ -79,7 +79,6 @@ gst_src_class_init (GstSrcClass *klass)
 static void 
 gst_src_init (GstSrc *src) 
 {
-  src->flags = 0;
 }
 
 /**

@@ -18,7 +18,7 @@
  */
 
 
-#include <gtk/gtk.h>
+#include "gstutils.h"
 
 /**
  * gst_util_get_int_arg:

@@ -17,10 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
-#include <gst/gstobject.h>
-#include <gst/gstbin.h>
-
+#include "gstobject.h"
 
 /* Object signals and args */
 enum {

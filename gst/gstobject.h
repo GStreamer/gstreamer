@@ -21,17 +21,16 @@
 #ifndef __GST_OBJECT_H__
 #define __GST_OBJECT_H__
 
-
 #include <gtk/gtk.h>
 #include <gst/gsttrace.h>
-//#include "config.h"
 
-#undef HAVE_ATOMIC_H
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #ifdef HAVE_ATOMIC_H
 #include <asm/atomic.h>
 #endif
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,6 +50,8 @@ extern "C" {
 
 typedef struct _GstObject GstObject;
 typedef struct _GstObjectClass GstObjectClass;
+
+#define GST_OBJECT_FLAG_LAST 4
 
 struct _GstObject {
   GtkObject object;
@@ -80,9 +81,9 @@ struct _GstObjectClass {
 
 
 #define GST_FLAGS(obj)			GTK_OBJECT_FLAGS(obj)
-#define GST_FLAG_IS_SET(obj,flag)	(GST_FLAGS (obj) & (flag))
-#define GST_FLAG_SET(obj,flag)		G_STMT_START{ (GST_FLAGS (obj) |= (flag)); }G_STMT_END
-#define GST_FLAG_UNSET(obj,flag)	G_STMT_START{ (GST_FLAGS (obj) &= ~(flag)); }G_STMT_END
+#define GST_FLAG_IS_SET(obj,flag)	(GST_FLAGS (obj) & (1<<(flag)))
+#define GST_FLAG_SET(obj,flag)		G_STMT_START{ (GST_FLAGS (obj) |= (1<<(flag))); }G_STMT_END
+#define GST_FLAG_UNSET(obj,flag)	G_STMT_START{ (GST_FLAGS (obj) &= ~(1<<(flag))); }G_STMT_END
 
 #define GST_LOCK(obj)		(g_mutex_lock(GST_OBJECT(obj)->lock))
 #define GST_TRYLOCK(obj)	(g_mutex_trylock(GST_OBJECT(obj)->lock))

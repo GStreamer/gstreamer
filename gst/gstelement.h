@@ -26,8 +26,6 @@
 #include <gst/gstlog.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
-#include <gst/gstbuffer.h>
-#include <gst/gstcaps.h>
 #include <gst/cothreads.h>
 
 
@@ -77,12 +75,15 @@ static inline char *_gst_print_statename(int state) {
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT))
 
 typedef enum {
-  GST_ELEMENT_MULTI_IN		= (1 << 4),
-  GST_ELEMENT_THREAD_SUGGESTED	= (1 << 5),
-  GST_ELEMENT_NO_SEEK		= (1 << 6),
+  GST_ELEMENT_MULTI_IN		= GST_OBJECT_FLAG_LAST,
+  GST_ELEMENT_THREAD_SUGGESTED,
+  GST_ELEMENT_NO_SEEK,
 
-  GST_ELEMENT_NEW_LOOPFUNC	= (1 << 16),
-  GST_ELEMENT_COTHREAD_STOPPING	= (1 << 17),
+  GST_ELEMENT_NEW_LOOPFUNC,
+  GST_ELEMENT_COTHREAD_STOPPING,
+
+  /* use some padding for future expansion */
+  GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 8,
 } GstElementFlags;
 
 #define GST_ELEMENT_IS_MULTI_IN(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_MULTI_IN))

@@ -17,10 +17,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gst.h>
-#include <gst/gstthread.h>
+#include <unistd.h>
 
-#include "config.h"
+#include "gstthread.h"
+#include "gstdebug.h"
 
 GstElementDetails gst_thread_details = {
   "Threaded container",

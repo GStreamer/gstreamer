@@ -21,8 +21,15 @@
 #ifndef __GST_BUFFER_H__
 #define __GST_BUFFER_H__
 
-#include <gst/gstmeta.h>
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
+#ifdef HAVE_ATOMIC_H
+#include <asm/atomic.h>
+#endif
+
+#include <gst/gstmeta.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,7 +73,7 @@ typedef enum {
 
 typedef struct _GstBuffer GstBuffer;
 
-#include "gstbufferpool.h"
+#include <gst/gstbufferpool.h>
 
 struct _GstBuffer {
   /* locking */

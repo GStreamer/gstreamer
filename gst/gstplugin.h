@@ -21,8 +21,8 @@
 #ifndef __GST_PLUGIN_H__
 #define __GST_PLUGIN_H__
 
-
 #include <gmodule.h>
+#include <gnome-xml/parser.h>
 
 #include <gst/gsttype.h>
 #include <gst/gstelement.h>

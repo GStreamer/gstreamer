@@ -21,8 +21,8 @@
 #ifndef __GST_XML_H__
 #define __GST_XML_H__
 
-#include <gst/gst.h>
 #include <gnome-xml/parser.h>
+#include <gst/gstelement.h>
 
 #ifdef __cplusplus
 extern "C" {

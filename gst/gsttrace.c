@@ -24,8 +24,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
-#include <glib.h>
-#include <gst/gsttrace.h>
+
+#include "gsttrace.h"
 
 #ifdef HAVE_RDTS
 __inline__ void read_tsc(guint64 *dst) {

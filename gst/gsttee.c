@@ -17,9 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gsttee.h>
-
-#include "config.h"
+#include "gsttee.h"
 
 GstElementDetails gst_tee_details = {
   "Tee pipe fitting",

@@ -21,7 +21,7 @@
 #ifndef __GST_BUFFER_POOL_H__
 #define __GST_BUFFER_POOL_H__
 
-#include "gstbuffer.h"
+#include <gst/gstbuffer.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -23,11 +23,11 @@
 
 
 #include <gnome-xml/parser.h>
+
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
 #include <gst/cothreads.h>
 #include <gst/gstcaps.h>
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,7 +63,9 @@ typedef enum {
 } GstPadDirection;
 
 typedef enum {
-  GST_PAD_DISABLED		= (1 << 4),
+  GST_PAD_DISABLED		= GST_OBJECT_FLAG_LAST,
+
+  GST_PAD_FLAG_LAST		= GST_OBJECT_FLAG_LAST+2,
 } GstPadFlags;
 
 struct _GstPad {
@@ -165,7 +167,7 @@ void 			gst_pad_load_and_connect	(xmlNodePtr parent, GstObject *element, GHashTa
 GstPadTemplate*		gst_padtemplate_new		(GstPadFactory *factory);
 GstPadTemplate*		gst_padtemplate_create		(gchar *name_template, 
 		                                         GstPadDirection direction, GstPadPresence presence,
-							 GstCaps *caps, ...);
+							 GstCaps *caps);
 
 xmlNodePtr 		gst_padtemplate_save_thyself	(GstPadTemplate *pad, xmlNodePtr parent);
 GstPadTemplate*		gst_padtemplate_load_thyself	(xmlNodePtr parent);

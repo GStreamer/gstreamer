@@ -7,7 +7,6 @@ int main(int argc,char *argv[])
   unlink("/etc/gstreamer/reg.xml");
 
   gst_init(&argc,&argv);
-  gst_plugin_load_all();
 
   doc = xmlNewDoc("1.0");
   doc->root = xmlNewDocNode(doc, NULL, "GST-PluginRegistry", NULL);

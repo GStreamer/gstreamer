@@ -19,10 +19,9 @@
 
 //#define DEBUG_ENABLED
 
-#include <gst/gst.h>
-
-#include <gst/gstelement.h>
-#include <gst/gstplugin.h>
+#include "gstdebug.h"
+#include "gstelement.h"
+#include "gstplugin.h"
 
 
 /* global list of registered elementfactories */

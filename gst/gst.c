@@ -17,7 +17,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gst.h>
+#include "gstdebug.h"
+#include "gstcpu.h"
+#include "gsttype.h"
+#include "gstplugin.h"
+#include "gstbuffer.h"
+#include "gstbin.h"
+#include "gstpipeline.h"
+#include "gstthread.h"
 
 extern gint _gst_trace_on;
 
@@ -50,9 +57,6 @@ gst_init (int *argc, char **argv[])
 			  gst_pipeline_get_type (), &gst_pipeline_details));
   gst_elementfactory_register (gst_elementfactory_new("thread",
 			  gst_thread_get_type (), &gst_thread_details));
-
-  //gst_plugin_load_elementfactory("gsttypes");
-  //gst_plugin_load("libgstelements.so");
 
   _gst_trace_on = 0;
   if (_gst_trace_on) {

@@ -21,9 +21,7 @@
 #ifndef __GST_FILTER_H__
 #define __GST_FILTER_H__
 
-
 #include <gst/gstelement.h>
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +41,8 @@ extern "C" {
 
 typedef struct _GstFilter GstFilter;
 typedef struct _GstFilterClass GstFilterClass;
+
+#define GST_FILTER_FLAG_LAST GST_ELEMENT_FLAG_LAST
 
 struct _GstFilter {
   GstElement element;

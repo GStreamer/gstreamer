@@ -20,7 +20,9 @@
 #ifndef GST_HGUARD_GSTARCH_H
 #define GST_HGUARD_GSTARCH_H
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #ifdef HAVE_CPU_I386
 #include "gsti386.h"

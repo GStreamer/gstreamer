@@ -19,7 +19,9 @@
 
 #include <sys/time.h>
 //#define DEBUG_ENABLED
-#include <gstclock.h>
+#include "gstclock.h"
+#include "gstdebug.h"
+#include "gstsink.h"
 
 static GstClock *the_system_clock = NULL;
 

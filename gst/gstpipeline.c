@@ -17,13 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gstpipeline.h>
-#include <gst/gstthread.h>
-#include <gst/gstsink.h>
-#include <gst/gstutils.h>
-#include <gst/gsttype.h>
-
-#include "config.h"
+#include "gstpipeline.h"
+#include "gstthread.h"
+#include "gstsink.h"
+#include "gstutils.h"
+#include "gsttype.h"
 
 GstElementDetails gst_pipeline_details = {
   "Pipeline object",

@@ -18,7 +18,7 @@
  */
 
 
-#include <gst/gstsink.h>
+#include "gstsink.h"
 
 
 /* Sink signals and args */

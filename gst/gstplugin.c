@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -24,9 +27,8 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <gst/gstplugin.h>
+#include "gstplugin.h"
 
-#include "config.h"
 
 //#undef PLUGINS_USE_SRCDIR
 
@@ -43,10 +45,12 @@ GList *_gst_libraries;
 gint _gst_libraries_seqno;
 
 /* whether or not to spew library load issues */
-gboolean _gst_plugin_spew = TRUE;
+gboolean _gst_plugin_spew = FALSE;
 
 
-void _gst_plugin_initialize() {
+void 
+_gst_plugin_initialize (void) 
+{
   xmlDocPtr doc;
   _gst_modules = NULL;
   _gst_modules_seqno = 0;
@@ -60,37 +64,39 @@ void _gst_plugin_initialize() {
   /* if this is set, we add build-directory paths to the list */
 #ifdef PLUGINS_USE_SRCDIR
   /* the catch-all plugins directory */
-  _gst_plugin_paths = g_list_append(_gst_plugin_paths,
-                                     PLUGINS_SRCDIR "/plugins");
+  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
+                                      PLUGINS_SRCDIR "/plugins");
   /* the libreary directory */
-  _gst_plugin_paths = g_list_append(_gst_plugin_paths,
-                                     PLUGINS_SRCDIR "/libs");
+  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
+                                      PLUGINS_SRCDIR "/libs");
   /* location libgstelements.so */
-  _gst_plugin_paths = g_list_append(_gst_plugin_paths,
-                                     PLUGINS_SRCDIR "/gst/elements");
-  _gst_plugin_paths = g_list_append(_gst_plugin_paths,
-                                     PLUGINS_SRCDIR "/gst/types");
+  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
+                                      PLUGINS_SRCDIR "/gst/elements");
+  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
+                                      PLUGINS_SRCDIR "/gst/types");
 #else
   /* add the main (installed) library path */
-  _gst_plugin_paths = g_list_append(_gst_plugin_paths,PLUGINS_DIR);
+  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths, PLUGINS_DIR);
 #endif /* PLUGINS_USE_SRCDIR */
 
-  doc = xmlParseFile("/etc/gstreamer/reg.xml");
+  doc = xmlParseFile ("/etc/gstreamer/reg.xml");
 
-  if (!doc || strcmp(doc->root->name, "GST-PluginRegistry")) {
-    g_print("gstplugin: registry needs rebuild\n");
-    gst_plugin_load_all();
+  if (!doc || strcmp (doc->root->name, "GST-PluginRegistry")) {
+    g_print ("gstplugin: registry needs rebuild\n");
+    gst_plugin_load_all ();
     return;
   }
-  gst_plugin_load_thyself(doc->root);
+  gst_plugin_load_thyself (doc->root);
 }
 
-static gboolean gst_plugin_load_recurse(gchar *directory,gchar *name) {
+static gboolean 
+gst_plugin_load_recurse (gchar *directory, gchar *name) 
+{
   DIR *dir;
   struct dirent *dirent;
   gboolean loaded = FALSE;
 
-	//g_print("recursive load of '%s' in '%s'\n", name, directory);
+  //g_print("recursive load of '%s' in '%s'\n", name, directory);
   dir = opendir(directory);
   if (dir) {
     while ((dirent = readdir(dir))) {
@@ -98,7 +104,7 @@ static gboolean gst_plugin_load_recurse(gchar *directory,gchar *name) {
       if (strcmp(dirent->d_name,".") && strcmp(dirent->d_name,"..")) {
         loaded = gst_plugin_load_recurse(g_strjoin("/",directory,dirent->d_name,
                                               NULL),name);
-				if (loaded && name) return TRUE;
+	if (loaded && name) return TRUE;
       }
     }
     closedir(dir);
@@ -109,12 +115,10 @@ static gboolean gst_plugin_load_recurse(gchar *directory,gchar *name) {
         if ((temp = strstr(directory,name)) && 
             (!strcmp(temp,name))) {
           loaded = gst_plugin_load_absolute(directory);
-          return loaded;
         }
       } else if ((temp = strstr(directory,".so")) &&
                  (!strcmp(temp,".so"))) {
         loaded = gst_plugin_load_absolute(directory);
-        //return loaded;
       }
     }
   }
@@ -126,7 +130,9 @@ static gboolean gst_plugin_load_recurse(gchar *directory,gchar *name) {
  *
  * Load all plugins in the path.
  */
-void gst_plugin_load_all() {
+void 
+gst_plugin_load_all(void) 
+{
   GList *path;
 
   path = _gst_plugin_paths;
@@ -145,7 +151,9 @@ void gst_plugin_load_all() {
  *
  * Returns: whether the library was loaded or not
  */
-gboolean gst_library_load(gchar *name) {
+gboolean 
+gst_library_load (gchar *name) 
+{
   gboolean res;
   GList *libraries = _gst_libraries;
 
@@ -166,7 +174,7 @@ gboolean gst_library_load(gchar *name) {
 }
 
 static void 
-gst_plugin_remove(GstPlugin *plugin) 
+gst_plugin_remove (GstPlugin *plugin) 
 {
   GList *factories;
 
@@ -188,11 +196,18 @@ gst_plugin_remove(GstPlugin *plugin)
  *
  * Returns: whether the plugin was loaded or not
  */
-gboolean gst_plugin_load(gchar *name) {
+gboolean 
+gst_plugin_load (gchar *name) 
+{
   GList *path;
   gchar *libspath;
+  GstPlugin *plugin;
 
   //g_print("attempting to load plugin '%s'\n",name);
+
+  plugin = gst_plugin_find (name);
+
+  if (plugin && plugin->loaded) return TRUE;
 
   path = _gst_plugin_paths;
   while (path != NULL) {
@@ -220,7 +235,9 @@ gboolean gst_plugin_load(gchar *name) {
  *
  * Returns: whether or not the plugin loaded
  */
-gboolean gst_plugin_load_absolute(gchar *name) {
+gboolean 
+gst_plugin_load_absolute (gchar *name) 
+{
   GModule *module;
   GstPluginInitFunc initfunc;
   GstPlugin *plugin;
@@ -243,7 +260,7 @@ gboolean gst_plugin_load_absolute(gchar *name) {
         g_print("gstplugin: plugin %s loaded\n", plugin->name);
         plugin->filename = g_strdup(name);
         plugin->loaded = TRUE;
-        _gst_modules = g_list_append(_gst_modules,module);
+        _gst_modules = g_list_prepend(_gst_modules,module);
         _gst_modules_seqno++;
         _gst_plugins = g_list_prepend(_gst_plugins,plugin);
         _gst_plugins_seqno++;
@@ -252,8 +269,7 @@ gboolean gst_plugin_load_absolute(gchar *name) {
     }
     return TRUE;
   } else if (_gst_plugin_spew) {
-//    if (strstr(g_module_error(),"No such") == NULL)
-      gst_info("error loading plugin: %s, reason: %s\n", name, g_module_error());
+    gst_info("error loading plugin: %s, reason: %s\n", name, g_module_error());
   }
 
   return FALSE;
@@ -267,10 +283,17 @@ gboolean gst_plugin_load_absolute(gchar *name) {
  *
  * Returns: new plugin
  */
-GstPlugin *gst_plugin_new(gchar *name) {
-  GstPlugin *plugin = (GstPlugin *)g_malloc(sizeof(GstPlugin));
+GstPlugin*
+gst_plugin_new (gchar *name) 
+{
+  GstPlugin *plugin;
 
-  // FIXME need to make sure the plugin hasn't already loaded
+  // return NULL if the plugin is allready loaded
+  plugin = gst_plugin_find (name);
+  if (plugin) return NULL;
+
+  plugin = (GstPlugin *)g_malloc(sizeof(GstPlugin));
+
   plugin->name = g_strdup(name);
   plugin->longname = NULL;
   plugin->types = NULL;
@@ -287,7 +310,9 @@ GstPlugin *gst_plugin_new(gchar *name) {
  *
  * Sets the long name (should be descriptive) of the plugin.
  */
-void gst_plugin_set_longname(GstPlugin *plugin,gchar *longname) {
+void 
+gst_plugin_set_longname (GstPlugin *plugin, gchar *longname) 
+{
   g_return_if_fail(plugin != NULL);
 
   if (plugin->longname) g_free(plugin->longname);
@@ -302,7 +327,9 @@ void gst_plugin_set_longname(GstPlugin *plugin,gchar *longname) {
  *
  * Returns: pointer to the #GstPlugin if found, NULL otherwise
  */
-GstPlugin *gst_plugin_find(const gchar *name) {
+GstPlugin*
+gst_plugin_find (const gchar *name) 
+{
   GList *plugins = _gst_plugins;
 
   g_return_val_if_fail(name != NULL, NULL);
@@ -328,7 +355,9 @@ GstPlugin *gst_plugin_find(const gchar *name) {
  *
  * Returns: @GstElementFactory if found, NULL if not
  */
-GstElementFactory *gst_plugin_find_elementfactory(gchar *name) {
+GstElementFactory*
+gst_plugin_find_elementfactory (gchar *name) 
+{
   GList *plugins, *factories;
   GstElementFactory *factory;
 
@@ -357,7 +386,9 @@ GstElementFactory *gst_plugin_find_elementfactory(gchar *name) {
  *
  * Returns: @GstElementFactory if loaded, NULL if not
  */
-GstElementFactory *gst_plugin_load_elementfactory(gchar *name) {
+GstElementFactory*
+gst_plugin_load_elementfactory (gchar *name) 
+{
   GList *plugins, *factories;
   GstElementFactory *factory = NULL;
   GstPlugin *plugin;
@@ -397,12 +428,14 @@ GstElementFactory *gst_plugin_load_elementfactory(gchar *name) {
  *
  * Load a registered typefactory by mime type.
  */
-void gst_plugin_load_typefactory(gchar *mime) {
+void 
+gst_plugin_load_typefactory (gchar *mime) 
+{
   GList *plugins, *factories;
   GstTypeFactory *factory;
   GstPlugin *plugin;
 
-  g_return_if_fail(mime != NULL);
+  g_return_if_fail (mime != NULL);
 
   plugins = _gst_plugins;
   while (plugins) {
@@ -437,12 +470,14 @@ void gst_plugin_load_typefactory(gchar *mime) {
  *
  * Add factory to the list of those provided by the plugin.
  */
-void gst_plugin_add_factory(GstPlugin *plugin,GstElementFactory *factory) {
-  g_return_if_fail(plugin != NULL);
-  g_return_if_fail(factory != NULL);
+void 
+gst_plugin_add_factory (GstPlugin *plugin, GstElementFactory *factory) 
+{
+  g_return_if_fail (plugin != NULL);
+  g_return_if_fail (factory != NULL);
 
 //  g_print("adding factory to plugin\n");
-  plugin->elements = g_list_append(plugin->elements,factory);
+  plugin->elements = g_list_prepend (plugin->elements, factory);
   gst_elementfactory_register (factory);
 }
 
@@ -453,12 +488,14 @@ void gst_plugin_add_factory(GstPlugin *plugin,GstElementFactory *factory) {
  *
  * Add a typefactory to the list of those provided by the plugin.
  */
-void gst_plugin_add_type(GstPlugin *plugin,GstTypeFactory *factory) {
-  g_return_if_fail(plugin != NULL);
-  g_return_if_fail(factory != NULL);
+void 
+gst_plugin_add_type (GstPlugin *plugin, GstTypeFactory *factory) 
+{
+  g_return_if_fail (plugin != NULL);
+  g_return_if_fail (factory != NULL);
 
 //  g_print("adding factory to plugin\n");
-  plugin->types = g_list_append(plugin->types,factory);
+  plugin->types = g_list_prepend (plugin->types, factory);
 }
 
 /**
@@ -468,7 +505,9 @@ void gst_plugin_add_type(GstPlugin *plugin,GstTypeFactory *factory) {
  *
  * Returns; a GList of GstPlugin elements
  */
-GList *gst_plugin_get_list() {
+GList*
+gst_plugin_get_list(void) 
+{
   return _gst_plugins;
 }
 
@@ -480,7 +519,9 @@ GList *gst_plugin_get_list() {
  *
  * Returns: the new XML node
  */
-xmlNodePtr gst_plugin_save_thyself(xmlNodePtr parent) {
+xmlNodePtr 
+gst_plugin_save_thyself (xmlNodePtr parent) 
+{
   xmlNodePtr tree, subtree;
   GList *plugins = NULL, *elements = NULL, *types = NULL;
 
@@ -520,7 +561,9 @@ xmlNodePtr gst_plugin_save_thyself(xmlNodePtr parent) {
  *
  * load the plugin from an XML representation
  */
-void gst_plugin_load_thyself(xmlNodePtr parent) {
+void 
+gst_plugin_load_thyself (xmlNodePtr parent) 
+{
   xmlNodePtr kinderen;   
   gint elementcount = 0;
   gint typecount = 0;

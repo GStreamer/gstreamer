@@ -118,7 +118,7 @@ gst_asyncdisksrc_class_init (GstAsyncDiskSrcClass *klass)
 static void 
 gst_asyncdisksrc_init (GstAsyncDiskSrc *asyncdisksrc) 
 {
-  GST_SRC_SET_FLAGS (asyncdisksrc, GST_SRC_ASYNC);
+  GST_FLAG_SET (asyncdisksrc, GST_SRC_ASYNC);
 
   g_print("init\n");
   asyncdisksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);

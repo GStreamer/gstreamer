@@ -24,7 +24,6 @@
 
 #include <config.h>
 #include <gst/gst.h>
-#include <gst/gstclock.h>
 
 
 #ifdef __cplusplus
@@ -46,9 +45,10 @@ GstElementDetails gst_audiosink_details;
 #define GST_IS_AUDIOSINK_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSINK))
 
-// NOTE: per-element flags start with 16 for now
 typedef enum {
-  GST_AUDIOSINK_OPEN		= (1 << 16),
+  GST_AUDIOSINK_OPEN		= GST_SINK_FLAG_LAST,
+
+  GST_AUDIOSINK_FLAG_LAST	= GST_SINK_FLAG_LAST+2,
 } GstAudioSinkFlags;
 
 typedef struct _GstAudioSink GstAudioSink;

@@ -21,6 +21,7 @@
 #ifndef __GST_TRACE_H__
 #define __GST_TRACE_H__
 
+#include <glib.h>
 
 typedef struct _GstTrace 	GstTrace;
 typedef struct _GstTraceEntry 	GstTraceEntry;

@@ -21,23 +21,13 @@
 #ifndef __GST_H__
 #define __GST_H__
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <unistd.h>
-
-#include <gtk/gtk.h>
-#include <gmodule.h>
-
 #include <gst/gstdebug.h>
-
 #include <gst/gstlog.h>
-
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstcpu.h>
+#include <gst/gstclock.h>
 #include <gst/gstelement.h>
 #include <gst/gstextratypes.h>
 #include <gst/gstbin.h>
@@ -55,7 +45,6 @@
 #include <gst/gsttrace.h>
 #include <gst/gstxml.h>
 #include <gst/gsttee.h>
-
 #include <gst/cothreads.h>
 
 /* initialize GST */

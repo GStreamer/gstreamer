@@ -22,9 +22,9 @@
 #define __GST_THREAD_H__
 
 
-#include <gst/gstbin.h>
 #include <pthread.h>
 
+#include <gst/gstbin.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,9 +34,12 @@ extern GstElementDetails gst_thread_details;
 
 
 typedef enum {
-  GST_THREAD_CREATE		= (1 << 16),
-  GST_THREAD_STATE_SPINNING	= (1 << 17),
-  GST_THREAD_STATE_REAPING	= (1 << 18),
+  GST_THREAD_CREATE		= GST_BIN_FLAG_LAST,
+  GST_THREAD_STATE_SPINNING,
+  GST_THREAD_STATE_REAPING,
+
+  /* padding */
+  GST_THREAD_FLAG_LAST 		= GST_BIN_FLAG_LAST + 4,
 } GstThreadState;
 
 

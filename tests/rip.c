@@ -2,9 +2,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 int main(int argc,char *argv[]) {
-  GstPipeline *pipeline;
+  GstElement *pipeline;
   GstElement *paranoia,*lame,*sink;
   int i;
   int outfile;
@@ -46,4 +48,6 @@ int main(int argc,char *argv[]) {
     fprintf(stderr,"\n");
     gst_bin_iterate(GST_BIN(pipeline));
   }
+
+  return 0;
 }

@@ -24,9 +24,10 @@
  * I'm not overly worried yet...
  */
 
-#include <gst/gst.h>
 #include <string.h>
 
+#include "gsttype.h"
+#include "gstplugin.h"
 
 /* global list of registered types */
 GList *_gst_types;

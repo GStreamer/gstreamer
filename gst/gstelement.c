@@ -17,9 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gstelement.h>
-#include <gst/gstextratypes.h>
-#include <gst/gstxml.h>
+#include "gstdebug.h"
+#include "gstelement.h"
+#include "gstextratypes.h"
 
 /* Element signals and args */
 enum {

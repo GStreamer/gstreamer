@@ -25,7 +25,8 @@
 #include <config.h>
 #endif
 
-#include <gst/gst.h>
+#include <gmodule.h>
+#include <gst/gsttrace.h>
 
 /* for include files that make too much noise normally */
 #ifdef GST_DEBUG_FORCE_DISABLE

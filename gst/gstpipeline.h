@@ -24,7 +24,6 @@
 
 #include <gst/gstbin.h>
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

@@ -19,11 +19,10 @@
 
 
 //#define DEBUG_ENABLED
-#include <gst/gst.h>
-#include <gst/gstpad.h>
-#include <gst/gstelement.h>
-#include <gst/gsttype.h>
-
+#include "gstdebug.h"
+#include "gstpad.h"
+#include "gstelement.h"
+#include "gsttype.h"
 
 /* Pad signals and args */
 enum {
@@ -910,7 +909,7 @@ gst_padtemplate_new (GstPadFactory *factory)
 GstPadTemplate*
 gst_padtemplate_create (gchar *name_template,
 		        GstPadDirection direction, GstPadPresence presence,
-		        GstCaps *caps, ...)
+		        GstCaps *caps)
 {
   GstPadTemplate *new;
   

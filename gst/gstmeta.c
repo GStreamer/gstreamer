@@ -18,8 +18,8 @@
  */
 
 
-#include <gst/gstmeta.h>
-#include <gst/gsttrace.h>
+#include "gstmeta.h"
+#include "gsttrace.h"
 
 
 /**
@@ -54,7 +54,11 @@ gst_meta_ref (GstMeta *meta)
 
   gst_trace_add_entry (NULL, 0, meta, "ref meta");
   
+#ifdef HAVE_ATOMIC_H
+  atomic_inc (&(meta->refcount));
+#else
   meta->refcount++;
+#endif
 }
 
 /**
@@ -67,12 +71,17 @@ gst_meta_ref (GstMeta *meta)
 void 
 gst_meta_unref (GstMeta *meta) 
 {
+  gint zero;
   g_return_if_fail (meta != NULL);
 
   gst_trace_add_entry (NULL, 0, meta, "unref meta");
+#ifdef HAVE_ATOMIC_H
+  zero = atomic_dec_and_test (&(meta->refcount));
+#else
   meta->refcount--;
-
-  if (meta->refcount == 0) {
+  zero = (meta->refcount == 0);
+#endif
+  if (zero) {
 //    gst_trace_add_entry(NULL,0,meta,"destroy meta");
     g_free (meta);
 //    g_print("freeing metadata\n");

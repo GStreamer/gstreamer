@@ -44,6 +44,8 @@ extern "C" {
 typedef struct _GstSink 	GstSink;
 typedef struct _GstSinkClass 	GstSinkClass;
 
+#define GST_SINK_FLAG_LAST GST_ELEMENT_FLAG_LAST
+
 struct _GstSink {
   GstElement element;
 };

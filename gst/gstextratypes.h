@@ -21,8 +21,7 @@
 #ifndef __GST_EXTRA_TYPES_H__
 #define __GST_EXTRA_TYPES_H__
 
-#include <gst/gst.h>
-#include <gnome-xml/parser.h>
+#include <gtk/gtk.h>
 
 #ifdef __cplusplus
 extern "C" {

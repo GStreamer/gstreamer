@@ -24,7 +24,6 @@
 
 #include <gst/gstelement.h>
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -42,20 +41,18 @@ extern "C" {
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SRC))
 
 typedef enum {
-  GST_SRC_ASYNC		= (1 << 0),
-} GstSrcFlags;
+  GST_SRC_ASYNC		= GST_ELEMENT_FLAG_LAST,
 
-#define GST_SRC_FLAGS(obj) \
-	(GST_SRC(obj)->flags)
-#define GST_SRC_ASYNC(obj) \
-  ((GST_SRC_FLAGS(obj) & GST_SRC_ASYNC))
+  GST_SRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST +2,
+} GstSrcFlags;
 
 typedef struct _GstSrc 		GstSrc;
 typedef struct _GstSrcClass 	GstSrcClass;
 
+#define GST_SRC_ASYNC(obj) (GST_FLAG_IS_SET(obj,GST_SRC_ASYNC))
+
 struct _GstSrc {
   GstElement			element;
-  gint32			flags;
 };
 
 struct _GstSrcClass {
@@ -64,11 +61,6 @@ struct _GstSrcClass {
   /* signals */
   void (*eos) 		(GstSrc *src);
 };
-
-#define GST_SRC_SET_FLAGS(src,flag) \
-  G_STMT_START{ (GST_SRC_FLAGS (src) |= (flag)); }G_STMT_END
-#define GST_SRC_UNSET_FLAGS(src,flag) \
-	G_STMT_START{ (GST_SRC_FLAGS (src) &= ~(flag)); }G_STMT_END
 
 GtkType 	gst_src_get_type		(void);
 

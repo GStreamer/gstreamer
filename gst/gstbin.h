@@ -21,12 +21,8 @@
 #ifndef __GST_BIN_H__
 #define __GST_BIN_H__
 
-
 #include <gst/gstelement.h>
-#include <gst/gstsrc.h>
-#include <gst/gstconnection.h>
 #include <gst/cothreads.h>
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,6 +40,8 @@ extern GstElementDetails gst_bin_details;
   (GTK_CHECK_TYPE((obj),GST_TYPE_BIN))
 #define GST_IS_BIN_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_BIN))
+
+#define GST_BIN_FLAG_LAST (GST_ELEMENT_FLAG_LAST + 2)
 
 typedef struct _GstBin GstBin;
 typedef struct _GstBinClass GstBinClass;

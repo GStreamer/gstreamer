@@ -18,9 +18,8 @@
  */
 
 
-#include <gst/gst.h>
-#include <gst/gstbufferpool.h>
-
+#include "gstdebug.h"
+#include "gstbuffer.h"
 
 
 /**

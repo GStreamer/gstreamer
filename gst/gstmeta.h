@@ -24,7 +24,14 @@
 
 #include <glib.h> 
  
- 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef HAVE_ATOMIC_H
+#include <asm/atomic.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -42,11 +49,9 @@ extern "C" {
 #define GST_META_FLAG_UNSET(meta,flag) \
   G_STMT_START{ (GST_META_FLAGS(meta) &= ~(flag)); }G_STMT_END
 
-
 typedef enum {
   GST_META_FREEABLE             = 1 << 0,
 } GstMetaFlags;
-
 
 typedef struct _GstMeta GstMeta;
 

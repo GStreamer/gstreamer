@@ -20,9 +20,9 @@
 
 /* this file makes too much noise for most debugging sessions */
 #define GST_DEBUG_FORCE_DISABLE
-#include <gst/gst.h>
-#include <gst/gstbuffer.h>
 
+#include "gstdebug.h"
+#include "gstbuffer.h"
 
 GMemChunk *_gst_buffer_chunk;
 
@@ -245,7 +245,7 @@ gst_buffer_ref (GstBuffer *buffer)
 
 #ifdef HAVE_ATOMIC_H
   //g_return_if_fail(atomic_read(&(buffer->refcount)) > 0);
-  atomic_inc (&(buffer->refcount))
+  atomic_inc (&(buffer->refcount));
 #else
   g_return_if_fail (buffer->refcount > 0);
   GST_BUFFER_LOCK (buffer);
@@ -269,7 +269,7 @@ gst_buffer_ref_by_count (GstBuffer *buffer, int count)
 
 #ifdef HAVE_ATOMIC_H
   g_return_if_fail (atomic_read (&(buffer->refcount)) > 0);
-  atomic_add (count, &(buffer->refcount))
+  atomic_add (count, &(buffer->refcount));
 #else
   g_return_if_fail (buffer->refcount > 0);
   GST_BUFFER_LOCK (buffer);
@@ -296,7 +296,7 @@ gst_buffer_unref (GstBuffer *buffer)
 
 #ifdef HAVE_ATOMIC_H
   g_return_if_fail (atomic_read (&(buffer->refcount)) > 0);
-  zero = atomic_dec_and_test (&(buffer->refcount))
+  zero = atomic_dec_and_test (&(buffer->refcount));
 #else
   g_return_if_fail (buffer->refcount > 0);
   GST_BUFFER_LOCK (buffer);

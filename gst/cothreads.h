@@ -22,7 +22,6 @@
 
 #include <glib.h>
 #include <setjmp.h>
-#include <pthread.h>
 
 #define COTHREAD_STACKSIZE 8192
 #define COTHREAD_MAXTHREADS 16

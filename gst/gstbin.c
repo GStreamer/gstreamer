@@ -19,10 +19,10 @@
 
 //#define GST_DEBUG_ENABLED
 
-#include <gst/gst.h>
-
-#include "config.h"
-
+#include "gstbin.h"
+#include "gstdebug.h"
+#include "gstsrc.h"
+#include "gstconnection.h"
 
 GstElementDetails gst_bin_details = { 
   "Generic bin",
@@ -587,73 +587,6 @@ gst_bin_src_wrapper (int argc,char *argv[])
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
   GST_FLAG_UNSET(element,GST_ELEMENT_COTHREAD_STOPPING);
-
-  DEBUG_LEAVE("");
-  return 0;
-}
-
-static int
-gst_bin_connection_wrapper (int argc,char *argv[]) 
-{
-  GstElement *element = GST_ELEMENT (argv);
-  GList *pads;
-  GstPad *pad;
-  G_GNUC_UNUSED const gchar *name = gst_element_get_name (element);
-
-  DEBUG_ENTER("(%d,\"%s\")",argc,name);
-
-  do {
-    DEBUG("Connection checking pads\n");
-    pads = element->pads;
-    while (pads) {
-      pad = GST_PAD (pads->data);
-      if (pad->direction == GST_PAD_SRC) {
-        DEBUG("pullfunc for %s:%s(%p) at %p is set to %p\n",GST_DEBUG_PAD_NAME(pad),pad,&pad->pullfunc,pad->pullfunc);
-        if (pad->pullfunc == NULL) fprintf(stderr,"error, no pullfunc in \"%s\"\n", name);
-        (pad->pullfunc)(pad);
-      }
-      pads = g_list_next(pads);
-    }
-    DEBUG("Connection done checking pads, checking COTHREAD_STOPPING on \"%s\"(%p)\n",
-          gst_element_get_name(element),element);
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
-  GST_FLAG_UNSET(element,GST_ELEMENT_COTHREAD_STOPPING);
-
-  DEBUG_LEAVE("");
-  return 0;
-}
-
-static int
-gst_bin_sched_wrapper (int argc, char *argv[])
-{
-  _GstBinOutsideSchedule *sched = (_GstBinOutsideSchedule *)argv;
-  GstElement *element = sched->element;
-  GSList *pads;
-  GstPad *pad;
-  region_struct *region;
-  G_GNUC_UNUSED const gchar *name = gst_element_get_name (element);
-
-  DEBUG_ENTER("(\"%s\")",name);
-
-  do {
-    pads = sched->padlist;
-    while (pads) {
-      pad = GST_PAD (pads->data);
-      region = cothread_get_data (pad->threadstate, "region");
-      if (region) {
-        //gst_src_push_region (GST_SRC (element), region->offset, region->size);
-        if (pad->pullregionfunc == NULL)
-          fprintf(stderr,"error, no pullregionfunc in \"%s\"\n", name);
-        (pad->pullregionfunc)(pad, region->offset, region->size);
-      }
-      else {
-        if (pad->pullfunc == NULL)
-          fprintf(stderr,"error, no pullfunc in \"%s\"\n", name);
-        (pad->pullfunc)(pad);
-      }
-    }
-  } while (!(sched->flags && GST_ELEMENT_COTHREAD_STOPPING));
-  sched->flags &= ~GST_ELEMENT_COTHREAD_STOPPING;
 
   DEBUG_LEAVE("");
   return 0;

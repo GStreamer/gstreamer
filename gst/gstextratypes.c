@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gstextratypes.h>
+#include "gstextratypes.h"
 
 GtkType 
 gst_extra_get_filename_type (void) 

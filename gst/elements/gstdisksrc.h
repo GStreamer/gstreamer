@@ -45,9 +45,10 @@ extern GstElementDetails gst_disksrc_details;
 #define GST_IS_DISKSRC_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_DISKSRC))
 
-// NOTE: per-element flags start with 16 for now
 typedef enum {
-  GST_DISKSRC_OPEN		= (1 << 16),
+  GST_DISKSRC_OPEN		= GST_SRC_FLAG_LAST,
+
+  GST_DISKSRC_FLAG_LAST		= GST_SRC_FLAG_LAST+2,
 } GstDiskSrcFlags;
 
 typedef struct _GstDiskSrc GstDiskSrc;

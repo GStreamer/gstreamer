@@ -44,9 +44,10 @@ GstElementDetails gst_pipefilter_details;
 #define GST_IS_PIPEFILTER_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPEFILTER))
 
-// NOTE: per-element flags start with 16 for now
 typedef enum {
-  GST_PIPEFILTER_OPEN		= (1 << 16 ),
+  GST_PIPEFILTER_OPEN		= GST_FILTER_FLAG_LAST,
+
+  GST_PIPEFILTER_FLAG_LAST	= GST_FILTER_FLAG_LAST,
 } GstPipeFilterFlags;
 
 typedef struct _GstPipefilter GstPipefilter;

@@ -17,8 +17,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <glib.h>
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+
 #include "gstcpu.h"
 
 static guint32 _gst_cpu_flags;

@@ -21,8 +21,6 @@
 #ifndef __GST_CPU_H__
 #define __GST_CPU_H__
 
-#include <glib.h>
-
 typedef enum {
   GST_CPU_FLAG_MMX      = (1<<0),
   GST_CPU_FLAG_SSE      = (1<<1),

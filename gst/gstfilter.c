@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gstfilter.h>
+#include "gstfilter.h"
 
 
 /* Filter signals and args */

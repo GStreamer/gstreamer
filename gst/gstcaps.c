@@ -19,8 +19,8 @@
 
 //#define DEBUG_ENABLED
 
-#include <stdarg.h>
-#include <gst/gst.h>
+#include "gstcaps.h"
+#include "gsttype.h"
 
 void 
 _gst_caps_initialize (void) 

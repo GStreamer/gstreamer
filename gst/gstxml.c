@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gstxml.h>
+#include "gstxml.h"
 
 static void gst_xml_class_init(GstXMLClass *klass);
 static void gst_xml_init(GstXML *xml);

@@ -19,9 +19,9 @@
 
 //#define DEBUG_ENABLED
 
-#include <stdarg.h>
-#include <gst/gst.h>
-#include <gst/gstpropsprivate.h>
+#include "gstdebug.h"
+#include "gstprops.h"
+#include "gstpropsprivate.h"
 
 static gboolean 	gst_props_entry_check_compatibility 	(GstPropsEntry *entry1, GstPropsEntry *entry2);
 	
