@@ -39,7 +39,7 @@ main (int argc, char **argv)
   const gchar **argvn;
 
   options[0].arg = (void *) gst_init_get_popt_table ();
-  if (! (program = gnome_program_init (PACKAGE, VERSION, LIBGNOMEUI_MODULE,
+  if (! (program = gnome_program_init ("my_package", "0.1", LIBGNOMEUI_MODULE,
                                        argc, argv,
                                        GNOME_PARAM_POPT_TABLE, options,
                                        NULL)))
