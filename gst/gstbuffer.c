@@ -42,17 +42,18 @@ void
 _gst_buffer_initialize (void)
 {
   _gst_buffer_type = g_boxed_type_register_static ("GstBuffer",
-		                                   (GBoxedCopyFunc) gst_data_ref,
-						   (GBoxedFreeFunc) gst_data_unref);
+		       (GBoxedCopyFunc) gst_data_ref,
+		       (GBoxedFreeFunc) gst_data_unref);
 
   _gst_buffer_pool_type = g_boxed_type_register_static ("GstBufferPool",
-		                                   (GBoxedCopyFunc) gst_data_ref,
-						   (GBoxedFreeFunc) gst_data_unref);
+		            (GBoxedCopyFunc) gst_data_ref,
+			    (GBoxedFreeFunc) gst_data_unref);
 
   _gst_buffer_live = 0;
   _gst_buffer_pool_live = 0;
 
-  chunk = gst_mem_chunk_new ("GstBufferChunk", sizeof (GstBuffer), sizeof (GstBuffer) * 200, 0);
+  chunk = gst_mem_chunk_new ("GstBufferChunk", sizeof (GstBuffer), 
+                             sizeof (GstBuffer) * 200, 0);
 
   GST_INFO (GST_CAT_BUFFER, "Buffers are initialized now");
 }
@@ -65,10 +66,10 @@ _gst_buffer_initialize (void)
 void
 gst_buffer_print_stats (void)
 {
-  g_log (g_log_domain_gstreamer, G_LOG_LEVEL_INFO,
-                  "%d live buffer(s)", _gst_buffer_live);
-  g_log (g_log_domain_gstreamer, G_LOG_LEVEL_INFO,
-                  "%d live bufferpool(s)", _gst_buffer_pool_live);
+  g_log (g_log_domain_gstreamer, G_LOG_LEVEL_INFO, "%d live buffer(s)", 
+                                 _gst_buffer_live);
+  g_log (g_log_domain_gstreamer, G_LOG_LEVEL_INFO, "%d live bufferpool(s)", 
+                                 _gst_buffer_pool_live);
 }
 
 static void
@@ -97,11 +98,11 @@ _gst_buffer_sub_free (GstBuffer *buffer)
 
 /**
  * gst_buffer_default_free:
- * @buffer: a #GstBuffer to free
+ * @buffer: a #GstBuffer to free.
  *
- * Free the memory associated with the buffer including the buffer data,
+ * Frees the memory associated with the buffer including the buffer data,
  * unless the GST_BUFFER_DONTFREE flags was set or the buffer data is NULL.
- * This function is used by bufferpools.
+ * This function is used by buffer pools.
  */
 void
 gst_buffer_default_free (GstBuffer *buffer)
@@ -128,12 +129,12 @@ _gst_buffer_copy_from_pool (GstBuffer *buffer)
 
 /**
  * gst_buffer_default_copy:
- * @buffer: a #GstBuffer to make a copy of
+ * @buffer: a #GstBuffer to make a copy of.
  *
  * Make a full newly allocated copy of the given buffer, data and all.
- * This function is used by bufferpools.
+ * This function is used by buffer pools.
  *
- * Returns: new #GstBuffer
+ * Returns: the new #GstBuffer.
  */
 GstBuffer*
 gst_buffer_default_copy (GstBuffer *buffer)
@@ -144,7 +145,8 @@ gst_buffer_default_copy (GstBuffer *buffer)
   copy = gst_buffer_new ();
 
   /* we simply copy everything from our parent */
-  GST_BUFFER_DATA (copy) 	= g_memdup (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
+  GST_BUFFER_DATA (copy) 	= g_memdup (GST_BUFFER_DATA (buffer), 
+                                            GST_BUFFER_SIZE (buffer));
   GST_BUFFER_SIZE (copy)  	= GST_BUFFER_SIZE (buffer);
   GST_BUFFER_MAXSIZE (copy) 	= GST_BUFFER_MAXSIZE (buffer);
   GST_BUFFER_TIMESTAMP (copy) 	= GST_BUFFER_TIMESTAMP (buffer);
@@ -158,7 +160,7 @@ gst_buffer_default_copy (GstBuffer *buffer)
  *
  * Creates a newly allocated buffer without any data.
  *
- * Returns: new #GstBuffer
+ * Returns: the new #GstBuffer.
  */
 GstBuffer*
 gst_buffer_new (void)
@@ -182,11 +184,11 @@ gst_buffer_new (void)
 
 /**
  * gst_buffer_new_and_alloc:
- * @size: the size of the buffer and the memory to allocate
+ * @size: the size of the new buffer's data.
  *
  * Creates a newly allocated buffer with data of the given size.
  *
- * Returns: new #GstBuffer
+ * Returns: the new #GstBuffer.
  */
 GstBuffer*
 gst_buffer_new_and_alloc (guint size)
@@ -203,13 +205,14 @@ gst_buffer_new_and_alloc (guint size)
 
 /**
  * gst_buffer_new_from_pool:
- * @pool: the buffer pool to use
- * @offset: the offset of the new buffer
- * @size: the size of the new buffer
+ * @pool: a #GstBufferPool to use.
+ * @offset: the offset of the new buffer.
+ * @size: the size of the new buffer.
  *
- * Creates a newly allocated buffer using the specified bufferpool, offset and size.
+ * Creates a newly allocated buffer using the specified buffer pool, 
+ * offset and size.
  *
- * Returns: new #GstBuffer
+ * Returns: the new #GstBuffer, or NULL if there was an error.
  */
 GstBuffer*
 gst_buffer_new_from_pool (GstBufferPool *pool, guint64 offset, guint size)
@@ -236,14 +239,14 @@ gst_buffer_new_from_pool (GstBufferPool *pool, guint64 offset, guint size)
 
 /**
  * gst_buffer_create_sub:
- * @parent: parent #GstBuffer
- * @offset: offset into parent #GstBuffer
- * @size: size of new sub-buffer
+ * @parent: a parent #GstBuffer to create a subbuffer from.
+ * @offset: the offset into parent #GstBuffer.
+ * @size: the size of the new #GstBuffer sub-buffer (with size > 0).
  *
  * Creates a sub-buffer from the parent at a given offset.
  * This sub-buffer uses the actual memory space of the parent buffer.
  *
- * Returns: a new #GstBuffer
+ * Returns: the new #GstBuffer, or NULL if there was an error.
  */
 GstBuffer*
 gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
@@ -274,7 +277,8 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
   buffer = gst_mem_chunk_alloc0 (chunk);
   _gst_buffer_live++;
 
-  /* make sure nobody overwrites data in the new buffer by setting the READONLY flag */
+  /* make sure nobody overwrites data in the new buffer 
+   * by setting the READONLY flag */
   _GST_DATA_INIT (GST_DATA (buffer), 
 		  _gst_buffer_type,
 		  GST_DATA_FLAG_SHIFT (GST_BUFFER_SUBBUFFER) |
@@ -297,8 +301,8 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
 
 /**
  * gst_buffer_merge:
- * @buf1: first source #GstBuffer to merge
- * @buf2: second source #GstBuffer to merge
+ * @buf1: a first source #GstBuffer to merge.
+ * @buf2: the second source #GstBuffer to merge.
  *
  * Create a new buffer that is the concatenation of the two source
  * buffers.  The original source buffers will not be modified or
@@ -307,7 +311,7 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
  * Internally is nothing more than a specialized gst_buffer_span(),
  * so the same optimizations can occur.
  *
- * Returns: a new #GstBuffer that's the concatenation of the source buffers
+ * Returns: the new #GstBuffer that's the concatenation of the source buffers.
  */
 GstBuffer*
 gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
@@ -321,13 +325,14 @@ gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
 
 /**
  * gst_buffer_is_span_fast:
- * @buf1: first source buffer
- * @buf2: second source buffer
+ * @buf1: a first source #GstBuffer.
+ * @buf2: the second source #GstBuffer.
  *
  * Determines whether a gst_buffer_span() is free (as in free beer), 
  * or requires a memcpy. 
  *
- * Returns: TRUE if the buffers are contiguous, FALSE if a copy would be required.
+ * Returns: TRUE if the buffers are contiguous, 
+ * FALSE if a copy would be required.
  */
 gboolean
 gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
@@ -344,10 +349,11 @@ gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
 
 /**
  * gst_buffer_span:
- * @buf1: first source #GstBuffer to merge
- * @offset: offset in first buffer to start new buffer
- * @buf2: second source #GstBuffer to merge
- * @len: length of new buffer
+ * @buf1: a first source #GstBuffer to merge.
+ * @offset: the offset in the first buffer from where the new
+ * buffer should start.
+ * @buf2: the second source #GstBuffer to merge.
+ * @len: the total length of the new buffer.
  *
  * Creates a new buffer that consists of part of buf1 and buf2.
  * Logically, buf1 and buf2 are concatenated into a single larger
@@ -359,7 +365,7 @@ gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
  * parent, and thus no copying is necessary. you can use 
  * gst_buffer_is_span_fast() to determine if a memcpy will be needed.
  *
- * Returns: a new #GstBuffer that spans the two source buffers
+ * Returns: the new #GstBuffer that spans the two source buffers.
  */
 GstBuffer*
 gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
@@ -374,10 +380,13 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   if (gst_buffer_is_span_fast (buf1, buf2)) {
     GstBuffer *parent = GST_BUFFER (buf1->pool_private);
     /* we simply create a subbuffer of the common parent */
-    newbuf = gst_buffer_create_sub (parent, buf1->data - parent->data + offset, len);
+    newbuf = gst_buffer_create_sub (parent, 
+	                            buf1->data - parent->data + offset, len);
   }
   else {
-    GST_DEBUG (GST_CAT_BUFFER,"slow path taken while spanning buffers %p and %p", buffer, append);
+    GST_DEBUG (GST_CAT_BUFFER,
+	       "slow path taken while spanning buffers %p and %p", 
+	       buffer, append);
     /* otherwise we simply have to brute-force copy the buffers */
     newbuf = gst_buffer_new_and_alloc (len);
 
@@ -387,7 +396,8 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
     /* copy the first buffer's data across */
     memcpy (newbuf->data, buf1->data + offset, buf1->size - offset);
     /* copy the second buffer's data across */
-    memcpy (newbuf->data + (buf1->size - offset), buf2->data, len - (buf1->size - offset));
+    memcpy (newbuf->data + (buf1->size - offset), buf2->data, 
+	    len - (buf1->size - offset));
   }
   /* if the offset is 0, the new buffer has the same timestamp as buf1 */
   if (offset == 0)
@@ -406,16 +416,19 @@ gst_buffer_pool_default_free (GstBufferPool *pool)
 
 /** 
  * gst_buffer_pool_new:
- * @free: The function to free the bufferpool
- * @copy: The function to copy the bufferpool
- * @buffer_new: the function to create a new buffer from this pool
- * @buffer_copy: the function to copy a buffer from this pool
- * @buffer_free: the function to free a buffer in this pool
- * @user_data: user data passed to buffer_* functions
+ * @free: the #GstDataFreeFunction to free the buffer pool.
+ * @copy: the #GstDataCopyFunction to copy the buffer pool.
+ * @buffer_new: the #GstBufferPoolBufferNewFunction to create a new buffer 
+ *              from this pool
+ * @buffer_copy: the #GstBufferPoolBufferCopyFunction to copy a buffer
+ *               from this pool
+ * @buffer_free: the #GstBufferPoolBufferFreeFunction to free a buffer 
+ *               in this pool
+ * @user_data: the user data gpointer passed to buffer_* functions.
  *
- * Create a new bufferpool with the given functions.
+ * Creates a new buffer pool with the given functions.
  *
- * Returns: a new GstBufferPool or NULL on error.
+ * Returns: a new #GstBufferPool, or NULL on error.
  */
 GstBufferPool*	
 gst_buffer_pool_new (GstDataFreeFunction free,
@@ -453,9 +466,9 @@ gst_buffer_pool_new (GstDataFreeFunction free,
 
 /**
  * gst_buffer_pool_is_active:
- * @pool: the pool to query
+ * @pool: the #GstBufferPool to query.
  *
- * Query if the geven bufferpool is active.
+ * Queries if the given buffer pool is active.
  *
  * Returns: TRUE if the pool is active.
  */
@@ -467,11 +480,11 @@ gst_buffer_pool_is_active (GstBufferPool *pool)
 
 /**
  * gst_buffer_pool_set_active:
- * @pool: the pool to activate
- * @active: new status of the pool
+ * @pool: a #GstBufferPool to set the activity status on.
+ * @active: the new status of the pool.
  *
- * Set the given pool to the active or inactive state depending on the
- * activate parameter
+ * Sets the given pool to the active or inactive state depending on the
+ * active parameter.
  */
 void
 gst_buffer_pool_set_active (GstBufferPool *pool, gboolean active)
@@ -481,10 +494,10 @@ gst_buffer_pool_set_active (GstBufferPool *pool, gboolean active)
 
 /**
  * gst_buffer_pool_set_user_data:
- * @pool: the pool set the user data for
- * @user_data: the user_data to set
+ * @pool: the #GstBufferPool to set the user data for.
+ * @user_data: the user_data to set on the buffer pool.
  *
- * Set the given user data to the bufferpool
+ * Sets the given user data on the buffer pool.
  */
 void
 gst_buffer_pool_set_user_data (GstBufferPool *pool, gpointer user_data)
@@ -494,11 +507,11 @@ gst_buffer_pool_set_user_data (GstBufferPool *pool, gpointer user_data)
 
 /**
  * gst_buffer_pool_get_user_data:
- * @pool: the pool get the user data for
+ * @pool: the #GstBufferPool to get the user data for.
  *
- * Get the user data of the bufferpool
+ * Gets the user data of the buffer pool.
  * 
- * Returns: the user data associated with this bufferpool
+ * Returns: the user data associated with this buffer pool.
  */
 gpointer
 gst_buffer_pool_get_user_data (GstBufferPool *pool)
