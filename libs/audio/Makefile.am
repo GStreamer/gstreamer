@@ -8,4 +8,4 @@ libgstaudioincludedir = $(includedir)/gst/libs/gstaudio
 libgstaudioinclude_HEADERS = gstaudio.h
 
 # FIXME is this needed?
-libgstaudio_la_CFLAGS = -O2 $(FOMIT_FRAME_POINTER) -finline-functions -ffast-math $(GLIB_CFLAGS) $(XML_CFLAGS) 
+libgstaudio_la_CFLAGS = -O2 $(FOMIT_FRAME_POINTER) -finline-functions -ffast-math $(GLIB_CFLAGS) $(XML_CFLAGS)  $(GST_CFLAGS)
