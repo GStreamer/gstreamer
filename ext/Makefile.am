@@ -95,6 +95,12 @@ else
 MPEG2DEC_DIR=
 endif
 
+if USE_OPENQUICKTIME
+OPENQUICKTIME_DIR=openquicktime
+else
+OPENQUICKTIME_DIR=
+endif
+
 if USE_SDL
 SDL_DIR=sdl
 else
@@ -117,7 +123,8 @@ SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) $(AUDIOFILE_DIR) \
 	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
         $(FESTIVAL_DIR) $(FLAC_DIR) $(GSM_DIR) $(HERMES_DIR) \
 	$(JPEG_DIR) $(LAME_DIR) $(MAD_DIR) $(MPEG2DEC_DIR) \
-	$(SDL_DIR) $(SHOUT_DIR) $(VORBIS_DIR)
+	$(OPENQUICKTIME_DIR) $(SDL_DIR) $(SHOUT_DIR) $(VORBIS_DIR)
 
 DIST_SUBDIRS=a52 aalib alsa avifile audiofile cdparanoia dvdread esd \
-	     festival flac gsm hermes jpeg lame mad mpeg2dec sdl shout vorbis
+	     festival flac gsm hermes jpeg lame mad mpeg2dec \
+	     openquicktime sdl shout vorbis
