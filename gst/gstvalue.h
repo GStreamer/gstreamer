@@ -158,7 +158,7 @@ gboolean		 gst_value_subtract		   (GValue		  *dest,
 gboolean		 gst_value_can_subtract		   (const GValue      	  *minuend,
 							    const GValue      	  *subtrahend);
 void                     gst_value_register_subtract_func  (GType                 minuend_type,
-							    GType                 dubtrahend_type,
+							    GType                 subtrahend_type,
 							    GstValueSubtractFunc  func);
 
 /* fixation */

@@ -1192,6 +1192,15 @@ gst_caps_structure_simplify (const GstStructure * simplify,
   return ret;
 }
 
+/**
+ * gst_caps_simplify:
+ * @caps: a #GstCaps to simplify
+ *
+ * Modifies the given @caps inplace into a representation that represents the 
+ * same set of formats, but in a simpler form.  Component structures that are 
+ * identical are merged.  Component structures that have values that can be 
+ * merged are also merged.
+ */
 void
 gst_caps_do_simplify (GstCaps * caps)
 {

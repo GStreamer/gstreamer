@@ -1,5 +1,14 @@
 2004-04-22  Benjamin Otte  <otte@gnome.org>
 
+	* docs/gst/gstreamer-sections.txt:
+	  add gst_caps_do_simplify
+	* gst/gstcaps.c:
+	  add documentation for gst_caps_do_simplify
+	* gst/gstvalue.h:
+	  fix typo in gst_value_register_subtract_func declaration for gst-doc
+
+2004-04-22  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstcaps.c: (gst_caps_from_string_inplace):
 	  fix bug when converting from empty string.
 	* gst/gstcaps.c: (gst_caps_new_any), (gst_caps_new_simple),

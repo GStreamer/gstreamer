@@ -123,6 +123,7 @@ gst_caps_intersect
 gst_caps_union
 gst_caps_normalize
 gst_caps_simplify
+gst_caps_do_simplify
 gst_caps_save_thyself
 gst_caps_load_thyself
 gst_caps_replace
