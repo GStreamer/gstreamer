@@ -1,3 +1,11 @@
+2004-03-23  Johan Dahlin  <johan@gnome.org>
+
+	* gst-libs/gst/play/play.c (gst_play_audio_fixate) 
+	(gst_play_video_fixate): Check so the structure has the field
+	before trying to fixate them, this makes it possible to have
+	fakesinks for video and audio output without printing errors on
+	the output console.
+
 2004-03-22  David Schleef  <ds@schleef.org>
 
 	* sys/oss/Makefile.am:
