@@ -25,7 +25,7 @@
 #include "ebml-ids.h"
 
 /*
- * EBML element IDs. max. 32-bit.
+ * Matroska element IDs. max. 32-bit.
  */
 
 /* toplevel segment */
@@ -141,7 +141,7 @@
 #define GST_MATROSKA_CODEC_ID_AUDIO_ACM          "A_MS/ACM"
 #define GST_MATROSKA_CODEC_ID_AUDIO_MPEG2        "A_AAC/MPEG2/"
 #define GST_MATROSKA_CODEC_ID_AUDIO_MPEG4        "A_AAC/MPEG4/"
-/* TODO: AC3-9/10, Real, Musepack, Quicktime */
+/* TODO: AC3-9/10 (?), Real, Musepack, Quicktime */
 
 /*
  * Enumerations for various types (mapping from binary

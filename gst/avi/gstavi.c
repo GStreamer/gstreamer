@@ -1,7 +1,7 @@
-/* GStreamer Matroska muxer/demuxer
- * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+/* GStreamer
+ * Copyright (C) <1999> Erik Walthinsen <omega@temple-baptist.com>
  *
- * matroska.c: plugin loader
+ * gstavi.c: plugin registering
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,21 +23,28 @@
 #include "config.h"
 #endif
 
-#include "matroska-demux.h"
-#include "matroska-mux.h"
+#include "gstavidemux.h"
+#include "gstavimux.h"
 
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-  return (gst_matroska_demux_plugin_init (plugin) &&
-	  gst_matroska_mux_plugin_init (plugin));
+  if (!gst_library_load ("riff"))
+    return FALSE;
+
+  return (gst_element_register (plugin, "avidemux",
+				GST_RANK_PRIMARY,
+				GST_TYPE_AVI_DEMUX) &&
+	  gst_element_register (plugin, "avimux",
+				GST_RANK_NONE,
+				GST_TYPE_AVIMUX));
 }
 
 GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "matroska",
-  "Matroska stream handling",
+  "avi",
+  "AVI stream handling",
   plugin_init,
   VERSION,
   "LGPL",

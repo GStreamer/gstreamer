@@ -17,30 +17,26 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_AVI_DEMUX_H__
 #define __GST_AVI_DEMUX_H__
 
-
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
-#include <gst/riff/riff.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include "gst/riff/riff-ids.h"
+#include "gst/riff/riff-read.h"
+
+G_BEGIN_DECLS
 
 #define GST_TYPE_AVI_DEMUX \
-  (gst_avi_demux_get_type())
+  (gst_avi_demux_get_type ())
 #define GST_AVI_DEMUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AVI_DEMUX,GstAviDemux))
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_AVI_DEMUX, GstAviDemux))
 #define GST_AVI_DEMUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AVI_DEMUX,GstAviDemux))
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_AVI_DEMUX, GstAviDemux))
 #define GST_IS_AVI_DEMUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AVI_DEMUX))
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_AVI_DEMUX))
 #define GST_IS_AVI_DEMUX_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVI_DEMUX))
-
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_AVI_DEMUX))
 
 #define GST_AVI_DEMUX_MAX_STREAMS	16	
 
@@ -48,85 +44,85 @@ extern "C" {
   ((((chunkid) & 0xff) - '0') * 10 + \
    (((chunkid) >> 8) & 0xff) - '0')
 
-typedef struct _GstAviDemux GstAviDemux;
-typedef struct _GstAviDemuxClass GstAviDemuxClass;
-
-typedef struct
-{
-  gint 		index_nr;
-  gint 		stream_nr;
-  guint64 	ts;
-  guint32	flags;
-  guint32	offset;
-  gint 		size;
-  guint64	bytes_before;
-  guint32	frames_before;
+typedef struct {
+  gint 		 index_nr;
+  gint 		 stream_nr;
+  guint64 	 ts;
+  guint32	 flags;
+  guint32	 offset;
+  gint 		 size;
+  guint64	 bytes_before;
+  guint32	 frames_before;
 } gst_avi_index_entry;
 
-typedef struct
-{
-  GstPad       *pad;
-  gint 		num;
-  gst_riff_strh strh;
-  guint32 	current_frame;
-  guint32 	current_byte;
-  guint64 	delay;
-  gboolean 	need_flush;
-  guint64	end_pos;
+typedef struct {
+  /* index of this streamcontext */
+  guint 	 num;
 
-  guint64	total_bytes;
-  guint32	total_frames;
+  /* pad, strh */
+  GstPad	*pad;
+  gst_riff_strh	*strh;
 
-  guint32	skip;
+  /* current position (byte, frame, time) */
+  guint 	 current_frame;
+  guint64 	 current_byte;
+  gint		 current_entry;
 
+  /* delay in time (init_frames) */
+  guint64 	 delay;
+
+  /* stream length */
+  guint64	 total_bytes;
+  guint32	 total_frames;
+
+  guint32	 skip;
 } avi_stream_context;
 
-typedef enum
-{
+typedef enum {
   GST_AVI_DEMUX_START,
   GST_AVI_DEMUX_HEADER,
   GST_AVI_DEMUX_MOVI,
 } GstAviDemuxState;
 
-struct _GstAviDemux {
-  GstElement 	 element;
+typedef struct _GstAviDemux {
+  GstRiffRead	 parent;
 
   /* pads */
-  GstPad 	*sinkpad, *srcpad;
+  GstPad 	*sinkpad;
 
   /* AVI decoding state */
-  guint32 	 fcc_type;
   GstAviDemuxState state;
+  guint          level_up;
 
-  GstByteStream	*bs;
-
+  /* index */
   gst_avi_index_entry *index_entries;
-  gulong 	 index_size;
-  gulong 	 index_offset;
+  guint 	 index_size;
+  guint64	 index_offset;
 
-  gst_riff_avih  avih;
-
+  /* streams */
   guint 	 num_streams;
   guint 	 num_v_streams;
   guint 	 num_a_streams;
   avi_stream_context stream[GST_AVI_DEMUX_MAX_STREAMS];
 
-  gboolean 	 seek_pending;
-  gint64 	 seek_offset;
-  guint64 	 last_seek;
+  /* some stream info for length */
+  guint32	 us_per_frame;
+  guint32	 num_frames;
 
-  GstCaps	*metadata, *streaminfo;
-};
+  /* seeking */
+  guint64 	 seek_offset;
+  guint64	 last_seek;
 
-struct _GstAviDemuxClass {
-  GstElementClass parent_class;
-};
+  /* info */
+  GstCaps	*streaminfo;
+} GstAviDemux;
+
+typedef struct _GstAviDemuxClass {
+  GstRiffReadClass parent_class;
+} GstAviDemuxClass;
 
 GType 		gst_avi_demux_get_type		(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_AVI_DEMUX_H__ */

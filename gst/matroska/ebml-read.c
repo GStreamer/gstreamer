@@ -157,7 +157,20 @@ gst_ebml_read_element_id (GstEbmlRead *ebml,
   guint32 total;
 
   if (gst_bytestream_peek_bytes (ebml->bs, &data, 1) != 1) {
-    /*gst_element_error (GST_ELEMENT (ebml), "Read error");*/
+    GstEvent *event = NULL;
+    guint32 remaining;
+
+    /* Here, we might encounter EOS */
+    gst_bytestream_get_status (ebml->bs, &remaining, &event);
+    if (event && GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+      gst_pad_event_default (ebml->sinkpad, event);
+    } else {
+      guint64 pos = gst_bytestream_tell (ebml->bs);
+      gst_event_unref (event);
+      gst_element_error (GST_ELEMENT (ebml),
+			 "Read error at position %llu (0x%llx)",
+			 pos, pos);
+    }
     return -1;
   }
   total = data[0];
@@ -166,13 +179,18 @@ gst_ebml_read_element_id (GstEbmlRead *ebml,
     len_mask >>= 1;
   }
   if (read > 4) {
+    guint64 pos = gst_bytestream_tell (ebml->bs);
     gst_element_error (GST_ELEMENT (ebml),
-		       "Invalid EBML ID size tag (0x%x)", data[0]);
+		       "Invalid EBML ID size tag (0x%x) at position %llu (0x%llx)",
+		       data[0], pos, pos);
     return -1;
   }
 
   if (gst_bytestream_peek_bytes (ebml->bs, &data, read) != read) {
-    /*gst_element_error (GST_ELEMENT (ebml), "Read error");*/
+    guint64 pos = gst_bytestream_tell (ebml->bs);
+    gst_element_error (GST_ELEMENT (ebml),
+		       "Read error at position %llu (0x%llx)",
+		       pos, pos);
     return -1;
   }
   while (n < read)
@@ -201,7 +219,10 @@ gst_ebml_read_element_length (GstEbmlRead *ebml,
   guint64 total;
                                                                                 
   if (gst_bytestream_peek_bytes (ebml->bs, &data, 1) != 1) {
-    /*gst_element_error (GST_ELEMENT (ebml), "Read error");*/
+    guint64 pos = gst_bytestream_tell (ebml->bs);
+    gst_element_error (GST_ELEMENT (ebml),
+		       "Read error at position %llu (0x%llx)",
+		       pos, pos);
     return -1;
   }
   total = data[0];
@@ -210,15 +231,20 @@ gst_ebml_read_element_length (GstEbmlRead *ebml,
     len_mask >>= 1;
   }
   if (read > 8) {
+    guint64 pos = gst_bytestream_tell (ebml->bs);
     gst_element_error (GST_ELEMENT (ebml),
-		       "Invalid EBML length size tag (0x%x)", data[0]);
+		       "Invalid EBML length size tag (0x%x) at position %llu (0x%llx)",
+		       data[0], pos, pos);
     return -1;
   }
 
   if ((total &= (len_mask - 1)) == len_mask - 1)
     num_ffs++;
   if (gst_bytestream_peek_bytes (ebml->bs, &data, read) != read) {
-    /*gst_element_error (GST_ELEMENT (ebml), "Read error");*/
+    guint64 pos = gst_bytestream_tell (ebml->bs);
+    gst_element_error (GST_ELEMENT (ebml),
+		       "Read error at position %llu (0x%llx)",
+		       pos, pos);
     return -1;
   }
   while (n < read) {
@@ -226,12 +252,6 @@ gst_ebml_read_element_length (GstEbmlRead *ebml,
       num_ffs++;
     total = (total << 8) | data[n];
     n++;
-  }
-
-  if (!total) {
-    gst_element_error (GST_ELEMENT (ebml),
-		       "Invalid length 0");
-    return -1;
   }
 
   if (read == num_ffs)
@@ -254,7 +274,10 @@ gst_ebml_read_element_data (GstEbmlRead *ebml,
   GstBuffer *buf = NULL;
 
   if (gst_bytestream_peek (ebml->bs, &buf, length) != length) {
-    /*gst_element_error (GST_ELEMENT (ebml), "Read error");*/
+    guint64 pos = gst_bytestream_tell (ebml->bs);
+    gst_element_error (GST_ELEMENT (ebml),
+		       "Read error at position %llu (0x%llx)",
+		       pos, pos);
     if (buf)
       gst_buffer_unref (buf);
     return NULL;
@@ -276,15 +299,11 @@ gst_ebml_peek_id (GstEbmlRead *ebml,
 		  guint       *level_up)
 {
   guint32 id;
-  guint my_level_up;
 
-  g_return_val_if_fail (level_up != NULL, 0);
+  g_assert (level_up);
 
-  if (gst_ebml_read_element_id (ebml, &id, &my_level_up) < 0)
+  if (gst_ebml_read_element_id (ebml, &id, level_up) < 0)
     return 0;
-
-  if (level_up)
-    *level_up = my_level_up;
 
   return id;
 }
@@ -293,11 +312,47 @@ gst_ebml_peek_id (GstEbmlRead *ebml,
  * Seek to a given offset.
  */
 
-void
+GstEvent *
 gst_ebml_read_seek (GstEbmlRead *ebml,
 		    guint64      offset)
 {
-  gst_bytestream_seek (ebml->bs, offset, GST_SEEK_METHOD_SET);
+  guint32 remaining;
+  GstEvent *event;
+  guchar *data;
+
+  /* first, flush remaining buffers */
+  gst_bytestream_get_status (ebml->bs, &remaining, &event);
+  if (event) {
+    g_warning ("Unexpected event before seek");
+    gst_event_unref (event);
+  }
+  if (remaining)
+    gst_bytestream_flush_fast (ebml->bs, remaining);
+
+  /* now seek */
+  if (!gst_bytestream_seek (ebml->bs, offset, GST_SEEK_METHOD_SET)) {
+    gst_element_error (GST_ELEMENT (ebml),
+		       "Seek to position %llu (0x%llx) failed",
+		       offset, offset);
+    return NULL;
+  }
+
+  /* and now, peek a new byte. This will fail because there's a
+   * pending event. Then, take the event and return it. */
+  if (gst_bytestream_peek_bytes (ebml->bs, &data, 1))
+    g_warning ("Unexpected data after seek");
+
+  /* get the discont event and return */
+  gst_bytestream_get_status (ebml->bs, &remaining, &event);
+  if (!event || GST_EVENT_TYPE (event) != GST_EVENT_DISCONTINUOUS) {
+    gst_element_error (GST_ELEMENT (ebml),
+		       "No discontinuity event after seek");
+    if (event)
+      gst_event_unref (event);
+    return NULL;
+  }
+
+  return event;
 }
 
 /*
@@ -308,8 +363,9 @@ gboolean
 gst_ebml_read_skip (GstEbmlRead *ebml)
 {
   gint bytes;
-  guint32 id;
+  guint32 id, remaining;
   guint64 length;
+  GstEvent *event;
 
   if ((bytes = gst_ebml_read_element_id (ebml, &id, NULL)) < 0)
     return FALSE;
@@ -319,7 +375,23 @@ gst_ebml_read_skip (GstEbmlRead *ebml)
     return FALSE;
   gst_bytestream_flush_fast (ebml->bs, bytes);
 
-  return gst_bytestream_flush (ebml->bs, length);
+  /* do we have enough bytes left to skip? */
+  gst_bytestream_get_status (ebml->bs, &remaining, &event);
+  if (event) {
+    g_warning ("Unexpected event before skip");
+    gst_event_unref (event);
+  }
+
+  if (remaining >= length)
+    return gst_bytestream_flush (ebml->bs, length);
+
+  if (!(event = gst_ebml_read_seek (ebml,
+			gst_bytestream_tell (ebml->bs) + length)))
+    return FALSE;
+
+  gst_event_unref (event);
+
+  return TRUE;
 }
 
 /*
@@ -365,7 +437,8 @@ gst_ebml_read_uint (GstEbmlRead *ebml,
   size = GST_BUFFER_SIZE (buf);
   if (size < 1 || size > 8) {
     gst_element_error (GST_ELEMENT (ebml),
-		       "Invalid integer element size %d", size);
+		       "Invalid integer element size %d at position %llu (0x%llu)",
+		       size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -400,7 +473,8 @@ gst_ebml_read_sint (GstEbmlRead *ebml,
   size = GST_BUFFER_SIZE (buf);
   if (size < 1 || size > 8) {
     gst_element_error (GST_ELEMENT (ebml),
-		       "Invalid integer element size %d", size);
+		       "Invalid integer element size %d at position %llu (0x%llx)",
+		       size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -439,7 +513,8 @@ gst_ebml_read_float (GstEbmlRead *ebml,
 
   if (size != 4 && size != 8 && size != 10) {
     gst_element_error (GST_ELEMENT (ebml),
-		       "Invalid float element size %d", size);
+		       "Invalid float element size %d at position %llu (0x%llx)",
+		       size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf));
     gst_buffer_unref (buf);
     return FALSE;
   }

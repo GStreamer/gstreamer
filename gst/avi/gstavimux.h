@@ -23,7 +23,8 @@
 
 
 #include <gst/gst.h>
-#include <gst/riff/riff.h>
+#include <gst/riff/riff-ids.h>
+#include "avi-ids.h"
 
 
 #ifdef __cplusplus

@@ -63,7 +63,7 @@ GType    gst_ebml_read_get_type (void);
 
 guint32  gst_ebml_peek_id       (GstEbmlRead *ebml,
 				 guint       *level_up);
-void     gst_ebml_read_seek     (GstEbmlRead *ebml,
+GstEvent *gst_ebml_read_seek    (GstEbmlRead *ebml,
 				 guint64      offset);
 gboolean gst_ebml_read_skip     (GstEbmlRead *ebml);
 gboolean gst_ebml_read_buffer   (GstEbmlRead *ebml,
@@ -91,7 +91,7 @@ gboolean gst_ebml_read_master   (GstEbmlRead *ebml,
 				 guint32     *id);
 gboolean gst_ebml_read_binary   (GstEbmlRead *ebml,
 				 guint32     *id,
-				 guchar     **binary,
+				 guint8     **binary,
 				 guint64     *length);
 gboolean gst_ebml_read_header   (GstEbmlRead *read,
 				 gchar      **doctype,
