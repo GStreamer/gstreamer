@@ -112,7 +112,6 @@ struct _GstXImageSink {
 
   char *display_name;
 
-  Drawable parent;
   GstXContext *xcontext;
   GstXWindow *xwindow;
   GstXImage *ximage;

@@ -128,7 +128,6 @@ struct _GstXvImageSink {
 
   char *display_name;
 
-  Drawable parent;
   GstXContext *xcontext;
   GstXWindow *xwindow;
   GstXvImage *xvimage;

@@ -49,9 +49,6 @@ static void gst_ximagesink_buffer_free (GstBuffer * buffer);
 static void gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink,
     GstXImage * ximage);
 
-static void gst_ximagesink_set_xwindow_id (GstXOverlay * overlay,
-    XID xwindow_id);
-
 /* ElementFactory information */
 static GstElementDetails gst_ximagesink_details =
 GST_ELEMENT_DETAILS ("Video sink",
@@ -991,8 +988,8 @@ gst_ximagesink_sink_link (GstPad * pad, const GstCaps * caps)
   g_assert (GST_VIDEOSINK_WIDTH (ximagesink) > 0);
   g_assert (GST_VIDEOSINK_HEIGHT (ximagesink) > 0);
   if (!ximagesink->xwindow) {
-    gst_ximagesink_set_xwindow_id (GST_X_OVERLAY (ximagesink),
-        ximagesink->parent);
+    ximagesink->xwindow = gst_ximagesink_xwindow_new (ximagesink,
+        GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
   } else {
     if (ximagesink->xwindow->internal) {
       gst_ximagesink_xwindow_resize (ximagesink, ximagesink->xwindow,
@@ -1383,8 +1380,6 @@ gst_ximagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 
   if (xwindow)
     ximagesink->xwindow = xwindow;
-
-  ximagesink->parent = xwindow_id;
 }
 
 static void
@@ -1539,7 +1534,6 @@ gst_ximagesink_init (GstXImageSink * ximagesink)
       gst_ximagesink_buffer_alloc);
 
   ximagesink->display_name = NULL;
-  ximagesink->parent = 0;
   ximagesink->xcontext = NULL;
   ximagesink->xwindow = NULL;
   ximagesink->ximage = NULL;
