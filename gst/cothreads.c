@@ -116,12 +116,14 @@ cothread_free (cothread_context *ctx)
     if (ctx->threads[i]->lock) {
       g_mutex_unlock(ctx->threads[i]->lock);
       g_mutex_free (ctx->threads[i]->lock);
+      ctx->threads[i]->lock = NULL;
     }
 #endif
-    if (i == 0)
+    if (i == 0) {
       g_free (ctx->threads[i]);
+      ctx->threads[i] = NULL;
+    }
   }
-
   g_hash_table_destroy (ctx->data);
   g_free (ctx);
 }

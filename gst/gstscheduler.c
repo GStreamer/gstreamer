@@ -68,6 +68,32 @@ gst_scheduler_init (GstScheduler *sched)
 }
 
 /**
+ * gst_scheduler_setup:
+ * @sched: the schedulerr
+ *
+ * Prepare the scheduler.
+ */
+void
+gst_scheduler_setup (GstScheduler *sched)
+{
+  if (CLASS (sched)->setup)
+    CLASS (sched)->setup (sched);
+}
+
+/**
+ * gst_scheduler_reset:
+ * @sched: the schedulerr
+ *
+ * Reset the scheduler
+ */
+void
+gst_scheduler_reset (GstScheduler *sched)
+{
+  if (CLASS (sched)->reset)
+    CLASS (sched)->reset (sched);
+}
+
+/**
  * gst_scheduler_pad_connect:
  * @sched: the schedulerr
  * @srcpad: the srcpad to connect

@@ -534,9 +534,11 @@ gst_pad_disconnect (GstPad *srcpad,
   GST_RPAD_PEER(realsrc) = NULL;
   GST_RPAD_PEER(realsink) = NULL;
 
-  // now tell the scheduler
-  if (realsrc->sched)
-    gst_scheduler_pad_disconnect (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
+  /* now tell the scheduler */
+  if (GST_PAD_PARENT (realsrc)->sched)
+    gst_scheduler_pad_disconnect (GST_PAD_PARENT (realsrc)->sched, (GstPad *)realsrc, (GstPad *)realsink);
+  else if (GST_PAD_PARENT (realsink)->sched)
+    gst_scheduler_pad_disconnect (GST_PAD_PARENT (realsink)->sched, (GstPad *)realsrc, (GstPad *)realsink);
 
   /* fire off a signal to each of the pads telling them that they've been disconnected */
   g_signal_emit(G_OBJECT(realsrc), gst_real_pad_signals[REAL_DISCONNECTED], 0, realsink);
@@ -714,7 +716,8 @@ gst_pad_get_padtemplate (GstPad *pad)
   return GST_PAD_PADTEMPLATE (pad); 
 }
 
-/**
+
+/*
  * gst_pad_set_sched:
  * @pad: the pad to set the scheduler for
  * @sched: The scheduler to set
@@ -726,10 +729,10 @@ gst_pad_set_sched (GstPad *pad, GstScheduler *sched)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-
+ 
   GST_RPAD_SCHED(pad) = sched;
 }
-
+ 
 /**
  * gst_pad_get_sched:
  * @pad: the pad to get the scheduler from
@@ -743,7 +746,7 @@ gst_pad_get_sched (GstPad *pad)
 {
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
+ 
   return GST_RPAD_SCHED(pad);
 }
 
@@ -1036,11 +1039,6 @@ gst_real_pad_dispose (GObject *object)
     gst_pad_disconnect (pad, GST_PAD (GST_PAD_PEER (pad)));
   }
   
-  if (GST_IS_ELEMENT (GST_OBJECT_PARENT (pad))){
-    GST_DEBUG (GST_CAT_REFCOUNTING, "removing pad from element '%s'\n",GST_OBJECT_NAME(GST_OBJECT (GST_ELEMENT (GST_OBJECT_PARENT (pad)))));
-    gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
-  }
-  
   /* FIXME we should destroy the ghostpads, because they are nothing without the real pad  */
   if (GST_REAL_PAD (pad)->ghostpads) {
     GList *orig, *ghostpads;
@@ -1052,7 +1050,7 @@ gst_real_pad_dispose (GObject *object)
 
       if (GST_IS_ELEMENT (GST_OBJECT_PARENT (ghostpad))){
         GST_DEBUG (GST_CAT_REFCOUNTING, "removing ghost pad from element '%s'\n", GST_OBJECT_NAME(GST_OBJECT_PARENT (ghostpad)));
-        gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (ghostpad)), ghostpad);
+        gst_element_remove_ghost_pad (GST_ELEMENT (GST_OBJECT_PARENT (ghostpad)), GST_PAD (ghostpad));
       }
       ghostpads = g_list_next (ghostpads);
     }
@@ -1060,6 +1058,11 @@ gst_real_pad_dispose (GObject *object)
     g_list_free (GST_REAL_PAD(pad)->ghostpads);
   }
 
+  if (GST_IS_ELEMENT (GST_OBJECT_PARENT (pad))){
+    GST_DEBUG (GST_CAT_REFCOUNTING, "removing pad from element '%s'\n",GST_OBJECT_NAME(GST_OBJECT (GST_ELEMENT (GST_OBJECT_PARENT (pad)))));
+    gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
+  }
+  
   G_OBJECT_CLASS (real_pad_parent_class)->dispose (object);
 }
 
@@ -1579,7 +1582,7 @@ gst_pad_select (GList *padlist)
 {
   GstPad *pad;
 
-  pad = gst_scheduler_pad_select (gst_pad_get_sched (GST_PAD (padlist->data)), padlist);
+  pad = gst_scheduler_pad_select (GST_PAD_PARENT (padlist->data)->sched, padlist);
 
   return pad;
 }

@@ -434,6 +434,7 @@ gst_thread_main_loop (void *arg)
 
   g_mutex_lock (thread->lock);
 
+  gst_scheduler_setup (GST_ELEMENT_SCHED (thread));
   GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
 
   thread->pid = getpid();
@@ -549,6 +550,10 @@ gst_thread_main_loop (void *arg)
         break;
     }
   }
+  /* we need to destroy the scheduler here bacause it has mapped it's
+   * stack into the threads stack space */
+  gst_scheduler_reset (GST_ELEMENT_SCHED (thread));
+
   /* since we don't unlock at the end of the while loop, do it here */
   g_mutex_unlock (thread->lock);
 

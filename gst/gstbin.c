@@ -215,6 +215,12 @@ gst_bin_unset_element_sched (GstElement * element)
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
 
+  if (GST_ELEMENT_SCHED (element) == NULL) {
+    GST_INFO (GST_CAT_SCHEDULING, "element \"%s\" has no scheduler",
+	      GST_ELEMENT_NAME (element));
+    return;
+  }
+  
   GST_INFO (GST_CAT_SCHEDULING, "removing element \"%s\" from it sched %p",
 	    GST_ELEMENT_NAME (element), GST_ELEMENT_SCHED (element));
 
@@ -335,11 +341,6 @@ gst_bin_remove (GstBin * bin, GstElement * element)
 	       GST_ELEMENT_NAME (bin));
     return;
   }
-#ifdef USE_GLIB2
-  g_signal_handlers_disconnect_matched (G_OBJECT (element),
-				      G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, 0, 0, NULL,
-				      gst_bin_child_state_change, bin);
-#endif
 
   /* remove this element from the list of managed elements */
   gst_bin_unset_element_sched (element);

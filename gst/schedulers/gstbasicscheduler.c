@@ -46,6 +46,8 @@ static void 	gst_basic_scheduler_init 		(GstScheduler * scheduler);
 
 static void 	gst_basic_scheduler_dispose 		(GObject *object);
 
+static void 	gst_basic_scheduler_setup 		(GstScheduler *sched);
+static void 	gst_basic_scheduler_reset 		(GstScheduler *sched);
 static void	gst_basic_scheduler_add_element		(GstScheduler *sched, GstElement *element);
 static void     gst_basic_scheduler_remove_element	(GstScheduler *sched, GstElement *element);
 static void     gst_basic_scheduler_enable_element	(GstScheduler *sched, GstElement *element);
@@ -96,6 +98,8 @@ gst_basic_scheduler_class_init (GstSchedulerClass * klass)
 
   gobject_class->dispose	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_dispose);
 
+  klass->setup 			= GST_DEBUG_FUNCPTR (gst_basic_scheduler_setup);
+  klass->reset	 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_reset);
   klass->add_element 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_add_element);
   klass->remove_element 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_remove_element);
   klass->enable_element 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_enable_element);
@@ -116,12 +120,6 @@ gst_basic_scheduler_init (GstScheduler *scheduler)
 static void
 gst_basic_scheduler_dispose (GObject *object)
 {
-  GstScheduler *sched = GST_SCHEDULER (object);
-  cothread_context *ctx;
-
-  ctx = GST_BIN (GST_SCHED_PARENT (sched))->threadcontext;
-
-  cothread_free (ctx);
   
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -407,11 +405,8 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 
   GST_DEBUG (GST_CAT_SCHEDULING, "chain is using COTHREADS\n");
 
-  /* first create thread context */
-  if (bin->threadcontext == NULL) {
-    GST_DEBUG (GST_CAT_SCHEDULING, "initializing cothread context\n");
-    bin->threadcontext = cothread_init ();
-  }
+  g_assert (bin->threadcontext != NULL);
+
 
   /* walk through all the chain's elements */
   elements = chain->elements;
@@ -785,6 +780,37 @@ gst_basic_scheduler_chain_recursive_add (GstSchedulerChain * chain, GstElement *
  * Entry points for this scheduler.
  */
 static void
+gst_basic_scheduler_setup (GstScheduler *sched)
+{
+  GstBin *bin = GST_BIN (sched->parent);
+
+  /* first create thread context */
+  if (bin->threadcontext == NULL) {
+    GST_DEBUG (GST_CAT_SCHEDULING, "initializing cothread context\n");
+    bin->threadcontext = cothread_init ();
+  }
+}
+
+static void
+gst_basic_scheduler_reset (GstScheduler *sched)
+{
+  cothread_context *ctx;
+  GstBin *bin = GST_BIN (GST_SCHED_PARENT (sched));
+  GList *elements = sched->elements;
+
+  while (elements) {
+    GST_ELEMENT (elements->data)->threadstate = NULL;
+    elements = g_list_next (elements);
+  }
+  
+  ctx = GST_BIN (GST_SCHED_PARENT (sched))->threadcontext;
+
+  cothread_free (ctx);
+  
+  GST_BIN (GST_SCHED_PARENT (sched))->threadcontext = NULL;
+}
+
+static void
 gst_basic_scheduler_add_element (GstScheduler * sched, GstElement * element)
 {
   GList *pads;
@@ -962,10 +988,17 @@ gst_basic_scheduler_pad_disconnect (GstScheduler * sched, GstPad * srcpad, GstPa
    * since they are guaranteed to be in the same chain
    * FIXME is it potentially better to make an attempt at splitting cleaner??
    */
-  chain = gst_basic_scheduler_find_chain (sched, element1);
-  if (chain) {
+  chain1 = gst_basic_scheduler_find_chain (sched, element1);
+  chain2 = gst_basic_scheduler_find_chain (sched, element2);
+
+  if (chain1 != chain2) {
+    GST_INFO (GST_CAT_SCHEDULING, "elements not in the same chain");
+    return;
+  }
+
+  if (chain1) {
     GST_INFO (GST_CAT_SCHEDULING, "destroying chain");
-    gst_basic_scheduler_chain_destroy (chain);
+    gst_basic_scheduler_chain_destroy (chain1);
 
     /* now create a new chain to hold element1 and build it from scratch */
     chain1 = gst_basic_scheduler_chain_new (sched);
@@ -973,7 +1006,10 @@ gst_basic_scheduler_pad_disconnect (GstScheduler * sched, GstPad * srcpad, GstPa
   }
 
   /* check the other element to see if it landed in the newly created chain */
-  if (gst_basic_scheduler_find_chain (sched, element2) == NULL) {
+  if (chain2) {
+    GST_INFO (GST_CAT_SCHEDULING, "destroying chain");
+    gst_basic_scheduler_chain_destroy (chain2);
+
     /* if not in chain, create chain and build from scratch */
     chain2 = gst_basic_scheduler_chain_new (sched);
     gst_basic_scheduler_chain_recursive_add (chain2, element2);

@@ -211,9 +211,9 @@ libgst_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
 	-Wcast-align -Wsign-compare \
 	-Wmissing-prototypes -Wmissing-declarations \
 	-Wnested-externs \
-	-Winline -Wno-unused
+	-Winline -Wno-unused 
 
-libgst_la_LIBADD = $(XML_LIBS) $(GLIB_LIBS)
+libgst_la_LIBADD = $(XML_LIBS) $(GLIB_LIBS) 
 
 libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
