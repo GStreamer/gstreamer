@@ -78,9 +78,9 @@ gst_paranoia_mode_get_type (void)
 {
   static GType paranoia_mode_type = 0;
   static GEnumValue paranoia_modes[] = {
-    { PARANOIA_MODE_DISABLE, "0", "Disable paranoid checking"},
-    { PARANOIA_MODE_OVERLAP, "1", "cdda2wav-style overlap checking"},
-    { PARANOIA_MODE_FULL,    "2", "Full paranoia"},
+    { PARANOIA_MODE_DISABLE, "0",   "Disable paranoid checking"},
+    { PARANOIA_MODE_OVERLAP, "4",   "cdda2wav-style overlap checking"},
+    { PARANOIA_MODE_FULL,    "255", "Full paranoia"},
     {0, NULL, NULL},
   };
 
@@ -157,6 +157,8 @@ static gboolean 	cdparanoia_convert 		(GstPad *pad,
 							 gint64 *dest_value);
 static gboolean 	cdparanoia_query 		(GstPad *pad, GstPadQueryType type,
 		     					 GstFormat *format, gint64 *value);
+static const GstPadQueryType*
+			cdparanoia_get_query_types 	(GstPad *pad);
 
 static GstElementStateReturn cdparanoia_change_state (GstElement *element);
 
@@ -280,6 +282,7 @@ cdparanoia_init (CDParanoia *cdparanoia)
   gst_pad_set_event_mask_function (cdparanoia->srcpad, cdparanoia_get_event_mask);
   gst_pad_set_convert_function (cdparanoia->srcpad, cdparanoia_convert);
   gst_pad_set_query_function (cdparanoia->srcpad, cdparanoia_query);
+  gst_pad_set_query_type_function (cdparanoia->srcpad, cdparanoia_get_query_types);
   gst_pad_set_formats_function (cdparanoia->srcpad, cdparanoia_get_formats);
 
   gst_element_add_pad (GST_ELEMENT (cdparanoia), cdparanoia->srcpad);
@@ -960,6 +963,19 @@ cdparanoia_convert (GstPad *pad,
   return TRUE;
 }
 
+static const GstPadQueryType*
+cdparanoia_get_query_types (GstPad *pad)
+{
+  static const GstPadQueryType src_query_types[] = {
+    GST_PAD_QUERY_TOTAL,
+    GST_PAD_QUERY_POSITION,
+    GST_PAD_QUERY_START,
+    GST_PAD_QUERY_SEGMENT_END,
+    0
+  };
+  return src_query_types;
+}
+
 static gboolean
 cdparanoia_query (GstPad *pad, GstPadQueryType type,
 		  GstFormat *format, gint64 *value)
@@ -984,6 +1000,16 @@ cdparanoia_query (GstPad *pad, GstPadQueryType type,
       /* bring our current sector to the requested format */
       res = gst_pad_convert (src->srcpad, 
 		             sector_format, src->cur_sector,
+		             format, value);
+      break;
+    case GST_PAD_QUERY_START:
+      res = gst_pad_convert (src->srcpad, 
+		             sector_format, src->segment_start_sector,
+		             format, value);
+      break;
+    case GST_PAD_QUERY_SEGMENT_END:
+      res = gst_pad_convert (src->srcpad, 
+		             sector_format, src->segment_end_sector,
 		             format, value);
       break;
     default:
