@@ -869,7 +869,6 @@ gst_dvdec_change_state (GstElement *element)
     case GST_STATE_READY_TO_NULL:
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 	      
