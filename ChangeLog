@@ -1,5 +1,18 @@
 2004-06-16  Wim Taymans  <wim@fluendo.com>
 
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_get):
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_sync_mode_get_type),
+	(gst_v4lsrc_class_init), (gst_v4lsrc_init), (gst_v4lsrc_get_fps),
+	(gst_v4lsrc_get), (gst_v4lsrc_set_property),
+	(gst_v4lsrc_get_property):
+	* sys/v4l/gstv4lsrc.h:
+	Added a copy mode to v4lsrc where it will output a copied version
+	of its internal hardware buffer.
+	Fix the wrong FLAG_SET usage. The flags are integers, not bits, you
+	can't | them.
+
+2004-06-16  Wim Taymans  <wim@fluendo.com>
+
 	* sys/oss/gstosssrc.c: (gst_osssrc_get):
 	Timestamp fixes.
 
