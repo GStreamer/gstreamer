@@ -287,12 +287,12 @@ dnl ==========================================================================
 
 GST_PLUGINS_ALL="\
         ac3parse adder audioscale auparse avi chart\
-        cutter deinterlace flx intfloat lav law level\
+        cutter deinterlace flx intfloat law level\
         median mpeg1enc mpeg1sys mpeg2enc mpeg2sub\
         mpegaudio mpegaudioparse mpegstream mpegtypes\
         passthrough playondemand rtjpeg silence sine\
         smooth smoothwave spectrum speed stereo stereomono\
-        synaesthesia udp videoscale volenv volume vumeter wavparse"
+        synaesthesia udp videoscale volenv volume vumeter wavparse y4m"
 
 GST_PLUGINS_ALL=""
 
@@ -1036,7 +1036,6 @@ gst/cutter/Makefile \
 gst/deinterlace/Makefile \
 gst/flx/Makefile \
 gst/intfloat/Makefile \
-gst/lav/Makefile \
 gst/law/Makefile \
 gst/level/Makefile \
 gst/median/Makefile \
@@ -1065,7 +1064,8 @@ gst/videoscale/Makefile \
 gst/volenv/Makefile \
 gst/volume/Makefile \
 gst/vumeter/Makefile \
-gst/wavparse/Makefile"
+gst/wavparse/Makefile \
+gst/y4m/Makefile"
 
 dnl $PLUGIN_GST_MAKEFILES
 AC_OUTPUT(
