@@ -15,6 +15,8 @@ cothread_create
 cothread_setfunc
 cothread_switch
 cothread_main
+cothread_set_data
+cothread_get_data
 <SUBSECTION Standard>
 GET_SP
 JUMP
@@ -272,6 +274,7 @@ GST_PAD_CAN_PULL
 GstPad
 GstPadChainFunction
 GstPadPullFunction
+GstPadPullRegionFunction
 GstPadPushFunction
 GstPadQoSFunction
 GstPadDirection
@@ -294,6 +297,7 @@ gst_pad_connect
 gst_pad_disconnect
 gst_pad_push
 gst_pad_pull
+gst_pad_pull_region
 gst_pad_set_qos_function
 gst_pad_handle_qos
 gst_pad_save_thyself

@@ -23,6 +23,7 @@
 <!entity GstType SYSTEM "sgml/gsttype.sgml">
 <!entity GstUtils SYSTEM "sgml/gstutils.sgml">
 <!entity GstXml SYSTEM "sgml/gstxml.sgml">
+<!entity cothreads SYSTEM "sgml/cothreads.sgml">
 
 <!entity GstFakeSrc SYSTEM "sgml/gstfakesrc.sgml">
 <!entity GstFakeSink SYSTEM "sgml/gstfakesink.sgml">
@@ -82,6 +83,8 @@ with some more specialized elements.</para>
     &GstCpu;
     &GstTrace;
     &GstXml;
+
+    &cothreads;
   </chapter>
 
   <chapter id="element-types">
