@@ -282,10 +282,19 @@ gst_play_pipeline_setup (GstPlay *play, GError **error)
   
   gst_bin_add_many (GST_BIN (video_thread), video_queue, video_switch, video_cs,
                     video_balance, balance_cs, video_scaler, video_sink, NULL);
-  if (!gst_element_link_many (video_queue, video_switch, video_cs,
-                              video_balance, balance_cs, video_scaler,
-                              video_sink, NULL))
-    GST_PLAY_ERROR_RETURN (error, "Could not link video output thread elements");
+  /* break down linking so we can figure out what might be failing */
+  if (!gst_element_link (video_queue, video_switch))
+    GST_PLAY_ERROR_RETURN (error, "Could not link video output thread (queue and switch)");
+  if (!gst_element_link (video_switch, video_cs))
+    GST_PLAY_ERROR_RETURN (error, "Could not link video output thread (switch and cs)");
+  if (!gst_element_link (video_cs, video_balance))
+    GST_PLAY_ERROR_RETURN (error, "Could not link video output thread (cs and balance)");
+  if (!gst_element_link (video_balance, balance_cs))
+    GST_PLAY_ERROR_RETURN (error, "Could not link video output thread (balance and balance_cs)");
+  if (!gst_element_link (balance_cs, video_scaler))
+    GST_PLAY_ERROR_RETURN (error, "Could not link video output thread (balance_cs and scaler)");
+  if (!gst_element_link (video_scaler, video_sink))
+    GST_PLAY_ERROR_RETURN (error, "Could not link video output thread (balance_cs and scaler)");
   gst_element_add_ghost_pad (video_thread,
                              gst_element_get_pad (video_queue, "sink"),
                              "sink");
