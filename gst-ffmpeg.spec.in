@@ -10,12 +10,13 @@ Vendor:		GStreamer Backpackers Team <package@gstreamer.net>
 Source:		http://gstreamer.net/src/gst-ffmpeg/gst-ffmpeg-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-%define 	majorminor	07	
+%define 	versioning	@GST_FFMPEG_VERSION_MAJOR@@GST_FFMPEG_VERSION_MINOR@	
+%define		gst_majorminor 	@GST_FFMPEG_VERSION_MAJOR@.@GST_FFMPEG_VERSION_MINOR@
 
-Prereq:		%{_bindir}/gst-register-%{majorminor}
-Requires: 	gstreamer%{majorminor} >= 0.7.5
+Prereq:		%{_bindir}/gst-register-%{gst_majorminor}
+Requires: 	gstreamer%{versioning} >= 0.7.5
 Requires:	gstreamer-tools >= 0.7.5
-BuildRequires: 	gstreamer%{majorminor}-devel >= 0.7.5
+BuildRequires: 	gstreamer%{versioning}-devel >= 0.7.5
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -40,21 +41,21 @@ make %{?_smp_mflags}
 rm -rf $RPM_BUILD_ROOT
 
 %makeinstall
-rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.la
+rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{gst_majorminor}/*.la
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %post
-%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+%{_bindir}/gst-register-%{gst_majorminor} > /dev/null 2> /dev/null
 
 %postun
-%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+%{_bindir}/gst-register-%{gst_majorminor} > /dev/null 2> /dev/null
 
 %files
 %defattr(-, root, root, -)
 %doc AUTHORS COPYING README
-%{_libdir}/gstreamer-%{majorminor}/libgstffmpeg.so
+%{_libdir}/gstreamer-%{gst_majorminor}/libgstffmpeg.so
 
 %changelog
 * Sat Feb 14 2004 Thomas Vander Stichele <thomas at apestaart dot org>
