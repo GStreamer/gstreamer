@@ -28,7 +28,6 @@ SUBDIRS =
 EXTRA_DIST = \
 	$(PATCHES) \
 	Tag \
-	ffmpeg/CVS \
 	ffmpeg/CREDITS \
 	ffmpeg/INSTALL \
 	ffmpeg/README \
@@ -66,7 +65,7 @@ EXTRA_DIST = \
 
 
 checkout:
-	cvs -d:pserver:anonymous@cvs.ffmpeg.sourceforge.net:/cvsroot/ffmpeg co ffmpeg
+	cvs -d:pserver:anonymous@mplayerhq.hu:/cvsroot/ffmpeg co ffmpeg
 
 # on running make install, make sure make has been run first
 install: all
@@ -119,38 +118,56 @@ defs = \
  -DCONFIG_RISKY=1
 
 libavformat_la_SOURCES = \
-	ffmpeg/libavformat/utils.c \
-	ffmpeg/libavformat/cutils.c \
+	ffmpeg/libavformat/4xm.c \
 	ffmpeg/libavformat/allformats.c \
+	ffmpeg/libavformat/amr.c \
+	ffmpeg/libavformat/asf.c \
+	ffmpeg/libavformat/au.c \
+	ffmpeg/libavformat/audio.c \
+	ffmpeg/libavformat/avidec.c \
+	ffmpeg/libavformat/avienc.c \
+	ffmpeg/libavformat/aviobuf.c \
+	ffmpeg/libavformat/avio.c \
+	ffmpeg/libavformat/crc.c \
+	ffmpeg/libavformat/cutils.c \
+	ffmpeg/libavformat/dv1394.c \
+	ffmpeg/libavformat/dv.c \
+	ffmpeg/libavformat/ffm.c \
+	ffmpeg/libavformat/file.c \
+	ffmpeg/libavformat/flvdec.c \
+	ffmpeg/libavformat/flvenc.c \
+	ffmpeg/libavformat/framehook.c \
+	ffmpeg/libavformat/gif.c \
+	ffmpeg/libavformat/gifdec.c \
+	ffmpeg/libavformat/grab.c \
+	ffmpeg/libavformat/idcin.c \
+	ffmpeg/libavformat/idroq.c \
+	ffmpeg/libavformat/img.c \
+	ffmpeg/libavformat/ipmovie.c \
+	ffmpeg/libavformat/jpeg.c \
+	ffmpeg/libavformat/mov.c \
+	ffmpeg/libavformat/movenc.c \
+	ffmpeg/libavformat/mp3.c \
 	ffmpeg/libavformat/mpeg.c \
 	ffmpeg/libavformat/mpegts.c \
 	ffmpeg/libavformat/mpegtsenc.c \
-	ffmpeg/libavformat/ffm.c \
-	ffmpeg/libavformat/crc.c \
-	ffmpeg/libavformat/img.c \
+	ffmpeg/libavformat/mpjpeg.c \
+	ffmpeg/libavformat/nut.c \
+	ffmpeg/libavformat/ogg.c \
+	ffmpeg/libavformat/os_support.c \
+	ffmpeg/libavformat/png.c \
+	ffmpeg/libavformat/pnm.c \
+	ffmpeg/libavformat/psxstr.c \
 	ffmpeg/libavformat/raw.c \
 	ffmpeg/libavformat/rm.c \
-	ffmpeg/libavformat/avienc.c \
-	ffmpeg/libavformat/avidec.c \
-	ffmpeg/libavformat/wav.c \
+	ffmpeg/libavformat/segafilm.c \
 	ffmpeg/libavformat/swf.c \
-	ffmpeg/libavformat/au.c \
-	ffmpeg/libavformat/gif.c \
-	ffmpeg/libavformat/mov.c \
-	ffmpeg/libavformat/mpjpeg.c \
-	ffmpeg/libavformat/dv.c \
+	ffmpeg/libavformat/utils.c \
+	ffmpeg/libavformat/wav.c \
+	ffmpeg/libavformat/wc3movie.c \
+	ffmpeg/libavformat/westwood.c \
 	ffmpeg/libavformat/yuv4mpeg.c \
-	ffmpeg/libavformat/4xm.c \
-	ffmpeg/libavformat/asf.c \
-	ffmpeg/libavformat/pnm.c \
-	ffmpeg/libavformat/yuv.c \
-	ffmpeg/libavformat/png.c \
-	ffmpeg/libavformat/jpeg.c \
-	ffmpeg/libavformat/gifdec.c \
-	ffmpeg/libavformat/avio.c \
-	ffmpeg/libavformat/aviobuf.c \
-	ffmpeg/libavformat/file.c  \
-	ffmpeg/libavformat/framehook.c 
+	ffmpeg/libavformat/yuv.c
 
 libavformat_la_LDFLAGS = -lm -lz
 libavformat_la_CFLAGS = $(defs) -Wall -I$(srcdir)/ffmpeg -I$(srcdir)/ffmpeg/libavformat \
@@ -160,21 +177,26 @@ libavformat_la_CFLAGS = $(defs) -Wall -I$(srcdir)/ffmpeg -I$(srcdir)/ffmpeg/liba
 
 if HAVE_CPU_I386
 sources_i386 = \
-	ffmpeg/libavcodec/i386/fdct_mmx.c \
 	ffmpeg/libavcodec/i386/cputest.c \
 	ffmpeg/libavcodec/i386/dsputil_mmx.c \
-	ffmpeg/libavcodec/i386/motion_est_mmx.c \
-	ffmpeg/libavcodec/i386/simple_idct_mmx.c \
+	ffmpeg/libavcodec/i386/fdct_mmx.c \
+	ffmpeg/libavcodec/i386/fft_sse.c \
 	ffmpeg/libavcodec/i386/idct_mmx.c \
+	ffmpeg/libavcodec/i386/motion_est_mmx.c \
 	ffmpeg/libavcodec/i386/mpegvideo_mmx.c \
-	ffmpeg/libavcodec/i386/fft_sse.c
+	ffmpeg/libavcodec/i386/simple_idct_mmx.c
 else
 sources_i386 = 
 endif
 
 if HAVE_CPU_PPC
 sources_powerpc = \
+	ffmpeg/libavcodec/ppc/dsputil_altivec.c \
 	ffmpeg/libavcodec/ppc/dsputil_ppc.c \
+	ffmpeg/libavcodec/ppc/fft_altivec.c \
+	ffmpeg/libavcodec/ppc/gmc_altivec.c \
+	ffmpeg/libavcodec/ppc/idct_altivec.c \
+	ffmpeg/libavcodec/ppc/mpegvideo_altivec.c \
 	ffmpeg/libavcodec/ppc/mpegvideo_ppc.c
 else
 sources_powerpc =
@@ -187,54 +209,75 @@ libavcodec_la_CFLAGS = $(defs) -Wall -I$(srcdir)/ffmpeg -I$(srcdir)/ffmpeg/libav
 	-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE
 libavcodec_la_LDFLAGS = -lm -lz
 libavcodec_la_SOURCES = \
-	ffmpeg/libavcodec/common.c \
-	ffmpeg/libavcodec/utils.c \
-	ffmpeg/libavcodec/mem.c \
-	ffmpeg/libavcodec/allcodecs.c \
-	ffmpeg/libavcodec/mpegvideo.c \
-	ffmpeg/libavcodec/jrevdct.c \
-	ffmpeg/libavcodec/jfdctfst.c \
-	ffmpeg/libavcodec/jfdctint.c \
-	ffmpeg/libavcodec/mpegaudio.c \
+	ffmpeg/libavcodec/4xm.c \
 	ffmpeg/libavcodec/ac3enc.c \
-	ffmpeg/libavcodec/mjpeg.c \
-	ffmpeg/libavcodec/resample.c \
-	ffmpeg/libavcodec/dsputil.c \
-	ffmpeg/libavcodec/motion_est.c \
-	ffmpeg/libavcodec/imgconvert.c \
-	ffmpeg/libavcodec/imgresample.c \
-	ffmpeg/libavcodec/mpeg12.c \
-	ffmpeg/libavcodec/mpegaudiodec.c \
-	ffmpeg/libavcodec/pcm.c \
-	ffmpeg/libavcodec/simple_idct.c \
-	ffmpeg/libavcodec/ratecontrol.c \
 	ffmpeg/libavcodec/adpcm.c \
-	ffmpeg/libavcodec/eval.c \
+	ffmpeg/libavcodec/adx.c \
+	ffmpeg/libavcodec/allcodecs.c \
+	ffmpeg/libavcodec/apiexample.c \
+	ffmpeg/libavcodec/asv1.c \
+	ffmpeg/libavcodec/avcodec.c \
+	ffmpeg/libavcodec/cabac.c \
+	ffmpeg/libavcodec/cinepak.c \
+	ffmpeg/libavcodec/cljr.c \
+	ffmpeg/libavcodec/common.c \
+	ffmpeg/libavcodec/cyuv.c \
+	ffmpeg/libavcodec/dpcm.c \
+	ffmpeg/libavcodec/dsputil.c \
 	ffmpeg/libavcodec/dv.c \
 	ffmpeg/libavcodec/error_resilience.c \
+	ffmpeg/libavcodec/eval.c \
+	ffmpeg/libavcodec/faandct.c \
+	ffmpeg/libavcodec/fdctref.c \
 	ffmpeg/libavcodec/fft.c \
-	ffmpeg/libavcodec/mdct.c \
-	ffmpeg/libavcodec/mace.c \
-	ffmpeg/libavcodec/huffyuv.c \
-	ffmpeg/libavcodec/cyuv.c \
-	ffmpeg/libavcodec/opts.c \
-	ffmpeg/libavcodec/raw.c \
-	ffmpeg/libavcodec/h264.c \
-	ffmpeg/libavcodec/golomb.c \
-	ffmpeg/libavcodec/vp3.c \
-	ffmpeg/libavcodec/asv1.c \
-	ffmpeg/libavcodec/4xm.c \
-	ffmpeg/libavcodec/cabac.c \
 	ffmpeg/libavcodec/ffv1.c \
+	ffmpeg/libavcodec/golomb.c \
+	ffmpeg/libavcodec/h263.c \
+	ffmpeg/libavcodec/h263dec.c \
+	ffmpeg/libavcodec/h264.c \
+	ffmpeg/libavcodec/huffyuv.c \
+	ffmpeg/libavcodec/idcinvideo.c \
+	ffmpeg/libavcodec/imgconvert.c \
+	ffmpeg/libavcodec/imgresample.c \
+	ffmpeg/libavcodec/indeo3.c \
+	ffmpeg/libavcodec/interplayvideo.c \
+	ffmpeg/libavcodec/jfdctfst.c \
+	ffmpeg/libavcodec/jfdctint.c \
+	ffmpeg/libavcodec/jrevdct.c \
+	ffmpeg/libavcodec/mace.c \
+	ffmpeg/libavcodec/mdct.c \
+	ffmpeg/libavcodec/mem.c \
+	ffmpeg/libavcodec/mjpeg.c \
+	ffmpeg/libavcodec/motion_est.c \
+	ffmpeg/libavcodec/mp3lameaudio.c \
+	ffmpeg/libavcodec/mpeg12.c \
+	ffmpeg/libavcodec/mpegaudio.c \
+	ffmpeg/libavcodec/mpegaudiodec.c \
+	ffmpeg/libavcodec/mpegvideo.c \
+	ffmpeg/libavcodec/msmpeg4.c \
+	ffmpeg/libavcodec/msrle.c \
+	ffmpeg/libavcodec/msvideo1.c \
+	ffmpeg/libavcodec/oggvorbis.c \
+	ffmpeg/libavcodec/opts.c \
+	ffmpeg/libavcodec/pcm.c \
 	ffmpeg/libavcodec/ra144.c \
 	ffmpeg/libavcodec/ra288.c \
-	ffmpeg/libavcodec/h263.c \
-	ffmpeg/libavcodec/msmpeg4.c \
-	ffmpeg/libavcodec/h263dec.c \
-	ffmpeg/libavcodec/svq1.c \
+	ffmpeg/libavcodec/ratecontrol.c \
+	ffmpeg/libavcodec/rational.c \
+	ffmpeg/libavcodec/raw.c \
+	ffmpeg/libavcodec/resample.c \
+	ffmpeg/libavcodec/roqvideo.c \
+	ffmpeg/libavcodec/rpza.c \
 	ffmpeg/libavcodec/rv10.c \
+	ffmpeg/libavcodec/simple_idct.c \
+	ffmpeg/libavcodec/svq1.c \
+	ffmpeg/libavcodec/utils.c \
+	ffmpeg/libavcodec/vcr1.c \
+	ffmpeg/libavcodec/vp3.c \
+	ffmpeg/libavcodec/vqavideo.c \
 	ffmpeg/libavcodec/wmadec.c \
-	ffmpeg/libavcodec/indeo3.c \
+	ffmpeg/libavcodec/xan.c \
+	ffmpeg/libavcodec/xvmcvideo.c \
 	$(sources_i386) \
 	$(sources_powerpc)
 

@@ -52,29 +52,6 @@ diff -u -u -r1.17 mpegvideo_mmx_template.c
                "r" (inv_zigzag_direct16+64), "r" (temp_block+64)
          );
          // note the asm is split cuz gcc doesnt like that many operands ...
-Index: ffmpeg/libavformat/allformats.c
-===================================================================
-RCS file: /cvsroot/ffmpeg/ffmpeg/libavformat/allformats.c,v
-retrieving revision 1.15
-diff -u -u -r1.15 allformats.c
---- ffmpeg/libavformat/allformats.c	5 Jun 2003 14:30:52 -0000	1.15
-+++ ffmpeg/libavformat/allformats.c	11 Sep 2003 19:34:47 -0000
-@@ -40,13 +40,13 @@
- #endif
-     avienc_init();
-     avidec_init();
--    wav_init();
-+    avf_wav_init();
-     swf_init();
-     au_init();
-     gif_init();
-     mov_init();
-     jpeg_init();
--    dv_init();
-+    avf_dv_init();
-     fourxm_init();
- 
- #ifdef AMR_NB
 Index: ffmpeg/libavformat/avformat.h
 ===================================================================
 RCS file: /cvsroot/ffmpeg/ffmpeg/libavformat/avformat.h,v
@@ -116,21 +93,6 @@ diff -u -u -r1.9 dv.c
  {
      av_register_input_format(&dv_iformat);
      av_register_output_format(&dv_oformat);
-Index: ffmpeg/libavformat/utils.c
-===================================================================
-RCS file: /cvsroot/ffmpeg/ffmpeg/libavformat/utils.c,v
-retrieving revision 1.52
-diff -u -u -r1.52 utils.c
---- ffmpeg/libavformat/utils.c	4 Jul 2003 23:08:16 -0000	1.52
-+++ ffmpeg/libavformat/utils.c	11 Sep 2003 19:34:52 -0000
-@@ -32,6 +32,7 @@
- #include <sys/time.h>
- #endif
- #include <time.h>
-+#include <stdio.h>
- 
- #ifndef HAVE_STRPTIME
- #include "strptime.h"
 Index: ffmpeg/libavformat/wav.c
 ===================================================================
 RCS file: /cvsroot/ffmpeg/ffmpeg/libavformat/wav.c,v
@@ -147,3 +109,23 @@ diff -u -u -r1.23 wav.c
  {
      av_register_input_format(&wav_iformat);
      av_register_output_format(&wav_oformat);
+--- ffmpeg/libavformat/allformats.c	2003-10-26 12:06:32.000000000 +0100
++++ ffmpeg/libavformat/allformats.c	2003-10-26 12:06:04.000000000 +0100
+@@ -45,7 +45,7 @@
+     avienc_init();
+ #endif //CONFIG_ENCODERS
+     avidec_init();
+-    wav_init();
++    avf_wav_init();
+     swf_init();
+     au_init();
+ #ifdef CONFIG_ENCODERS
+@@ -56,7 +56,7 @@
+     movenc_init();
+     jpeg_init();
+ #endif //CONFIG_ENCODERS
+-    dv_init();
++    avf_dv_init();
+     fourxm_init();
+ #ifdef CONFIG_ENCODERS
+     flvenc_init();
