@@ -1,5 +1,16 @@
 2004-03-24  Benjamin Otte  <otte@gnome.org>
 
+	* gst/schedulers/gstbasicscheduler.c:
+	(gst_basic_scheduler_src_wrapper):
+	* gst/schedulers/gstoptimalscheduler.c:
+	(gst_opt_scheduler_loop_wrapper), (gst_opt_scheduler_get_wrapper),
+	(pad_clear_queued), (gst_opt_scheduler_add_element),
+	(gst_opt_scheduler_remove_element):
+	  fix GStreamer to not have issues with lvalue casts anymore (fixes
+	  some bug, but bugzilla is down)
+
+2004-03-24  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstelement.c:
 	  add documentation about a gobject quirk where the object hasn't the
 	  correct class pointer set on initialization

@@ -38,7 +38,9 @@ GST_DEBUG_CATEGORY_STATIC (debug_scheduler);
 
 #define GST_ELEMENT_SCHED_CONTEXT(elem)		((GstOptSchedulerCtx*) (GST_ELEMENT (elem)->sched_private))
 #define GST_ELEMENT_SCHED_GROUP(elem)		(GST_ELEMENT_SCHED_CONTEXT (elem)->group)
-#define GST_PAD_BUFLIST(pad)            	((GList*) (GST_REAL_PAD(pad)->sched_private))
+/* need this first macro to not run into lvalue casts */
+#define GST_PAD_BUFPEN(pad)			(GST_REAL_PAD(pad)->sched_private)
+#define GST_PAD_BUFLIST(pad)            	((GList*) GST_PAD_BUFPEN(pad))
 
 #define GST_ELEMENT_COTHREAD_STOPPING			GST_ELEMENT_SCHEDULER_PRIVATE1
 #define GST_ELEMENT_IS_COTHREAD_STOPPING(element)	GST_FLAG_IS_SET((element), GST_ELEMENT_COTHREAD_STOPPING)
@@ -1208,13 +1210,13 @@ gst_opt_scheduler_loop_wrapper (GstPad * sinkpad, GstData * data)
   } else {
     GST_LOG ("queueing data %p on %s:%s's bufpen", data,
         GST_DEBUG_PAD_NAME (peer));
-    GST_PAD_BUFLIST (peer) = g_list_append (GST_PAD_BUFLIST (peer), data);
+    GST_PAD_BUFPEN (peer) = g_list_append (GST_PAD_BUFLIST (peer), data);
     schedule_group (group);
   }
 #else
   GST_LOG ("queueing data %p on %s:%s's bufpen", data,
       GST_DEBUG_PAD_NAME (peer));
-  GST_PAD_BUFLIST (peer) = g_list_append (GST_PAD_BUFLIST (peer), data);
+  GST_PAD_BUFPEN (peer) = g_list_append (GST_PAD_BUFLIST (peer), data);
   if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
     GST_LOG ("adding group %p to runqueue", group);
     if (!g_list_find (osched->runqueue, group)) {
@@ -1244,7 +1246,7 @@ gst_opt_scheduler_get_wrapper (GstPad * srcpad)
   /* first try to grab a queued buffer */
   if (GST_PAD_BUFLIST (srcpad)) {
     data = GST_PAD_BUFLIST (srcpad)->data;
-    GST_PAD_BUFLIST (srcpad) = g_list_remove (GST_PAD_BUFLIST (srcpad), data);
+    GST_PAD_BUFPEN (srcpad) = g_list_remove (GST_PAD_BUFLIST (srcpad), data);
 
     GST_LOG ("returning popped queued data %p", data);
 
@@ -1298,7 +1300,7 @@ gst_opt_scheduler_get_wrapper (GstPad * srcpad)
     } else {
       if (GST_PAD_BUFLIST (srcpad)) {
         data = GST_PAD_BUFLIST (srcpad)->data;
-        GST_PAD_BUFLIST (srcpad) =
+        GST_PAD_BUFPEN (srcpad) =
             g_list_remove (GST_PAD_BUFLIST (srcpad), data);
       } else if (disabled) {
         /* no buffer in queue and peer group was disabled */
@@ -1341,7 +1343,7 @@ pad_clear_queued (GstPad * srcpad, gpointer user_data)
     GST_LOG ("need to clear some buffers");
     g_list_foreach (buflist, (GFunc) clear_queued, NULL);
     g_list_free (buflist);
-    GST_PAD_BUFLIST (srcpad) = NULL;
+    GST_PAD_BUFPEN (srcpad) = NULL;
   }
 }
 
@@ -1660,7 +1662,7 @@ gst_opt_scheduler_add_element (GstScheduler * sched, GstElement * element)
     return;
 
   ctx = g_new0 (GstOptSchedulerCtx, 1);
-  GST_ELEMENT_SCHED_CONTEXT (element) = ctx;
+  GST_ELEMENT (element)->sched_private = ctx;
   ctx->flags = GST_OPT_SCHEDULER_CTX_DISABLED;
 
   /* set event handler on all pads here so events work unconnected too;
@@ -1713,8 +1715,8 @@ gst_opt_scheduler_remove_element (GstScheduler * sched, GstElement * element)
     remove_from_group (group, element);
   }
 
-  g_free (GST_ELEMENT_SCHED_CONTEXT (element));
-  GST_ELEMENT_SCHED_CONTEXT (element) = NULL;
+  g_free (GST_ELEMENT (element)->sched_private);
+  GST_ELEMENT (element)->sched_private = NULL;
 }
 
 static void

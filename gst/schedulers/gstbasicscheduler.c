@@ -34,8 +34,8 @@ GST_DEBUG_CATEGORY_STATIC (debug_scheduler);
 
 typedef struct _GstSchedulerChain GstSchedulerChain;
 
-#define GST_ELEMENT_THREADSTATE(elem)	(cothread*) (GST_ELEMENT (elem)->sched_private)
-#define GST_RPAD_BUFPEN(pad)		(GstData*)  (GST_REAL_PAD(pad)->sched_private)
+#define GST_ELEMENT_THREADSTATE(elem)	(GST_ELEMENT (elem)->sched_private)
+#define GST_RPAD_BUFPEN(pad)		(GST_REAL_PAD(pad)->sched_private)
 
 #define GST_ELEMENT_COTHREAD_STOPPING			GST_ELEMENT_SCHEDULER_PRIVATE1
 #define GST_ELEMENT_IS_COTHREAD_STOPPING(element)	GST_FLAG_IS_SET((element), GST_ELEMENT_COTHREAD_STOPPING)
