@@ -358,9 +358,9 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
 
     case GST_RIFF_WAVE_FORMAT_PCM:     /* PCM */
       if (strf != NULL) {
-        gint ba = GUINT16_FROM_LE (strf->blockalign);
-        gint ch = GUINT16_FROM_LE (strf->channels);
-        gint ws = GUINT16_FROM_LE (strf->size);
+        gint ba = strf->blockalign;
+        gint ch = strf->channels;
+        gint ws = strf->size;
 
         caps = gst_caps_new_simple ("audio/x-raw-int",
             "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
