@@ -75,11 +75,11 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     median = gst_elementfactory_make("median","median");
     g_return_if_fail(median != NULL);
     gtk_object_set(GTK_OBJECT(median),"filtersize",5,NULL);
-    gtk_object_set(GTK_OBJECT(median),"active",FALSE,NULL);
+    gtk_object_set(GTK_OBJECT(median),"active",TRUE,NULL);
 
     gtk_object_set(GTK_OBJECT(smooth),"filtersize",16,NULL);
     gtk_object_set(GTK_OBJECT(smooth),"tolerance",16,NULL);
-    gtk_object_set(GTK_OBJECT(smooth),"active",TRUE,NULL);
+    gtk_object_set(GTK_OBJECT(smooth),"active",FALSE,NULL);
 
     encode = gst_elementfactory_make("mpeg2enc","encode");
     g_return_if_fail(encode != NULL);

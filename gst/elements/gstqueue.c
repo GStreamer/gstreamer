@@ -57,8 +57,12 @@ static void gst_queue_init(GstQueue *queue);
 static void gst_queue_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_queue_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
-void gst_queue_push(GstConnection *connection);
-void gst_queue_chain(GstPad *pad,GstBuffer *buf);
+static void gst_queue_push(GstConnection *connection);
+static void gst_queue_chain(GstPad *pad,GstBuffer *buf);
+
+static void gst_queue_flush(GstQueue *queue);
+
+static GstElementStateReturn gst_queue_change_state(GstElement *element);
 
 static GstConnectionClass *parent_class = NULL;
 //static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
@@ -85,9 +89,11 @@ gst_queue_get_type(void) {
 
 static void gst_queue_class_init(GstQueueClass *klass) {
   GtkObjectClass *gtkobject_class;
+  GstElementClass *gstelement_class;
   GstConnectionClass *gstconnection_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
+  gstelement_class = (GstElementClass*)klass;
   gstconnection_class = (GstConnectionClass*)klass;
 
   parent_class = gtk_type_class(GST_TYPE_CONNECTION);
@@ -101,6 +107,8 @@ static void gst_queue_class_init(GstQueueClass *klass) {
 
   gtkobject_class->set_arg = gst_queue_set_arg;  
   gtkobject_class->get_arg = gst_queue_get_arg;
+
+  gstelement_class->change_state = gst_queue_change_state;
 }
 
 static void gst_queue_init(GstQueue *queue) {
@@ -137,7 +145,14 @@ static void gst_queue_cleanup_buffers(gpointer data, gpointer user_data)
   gst_buffer_unref(GST_BUFFER(data));
 }
 
-void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
+static void gst_queue_flush(GstQueue *queue) {
+  g_slist_foreach(queue->queue, gst_queue_cleanup_buffers, gst_element_get_name(GST_ELEMENT(queue))); 
+  g_slist_free(queue->queue);
+  queue->queue = NULL;
+  queue->level_buffers = 0;
+}
+
+static void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   GstQueue *queue;
   gboolean tosignal = FALSE;
   guchar *name;
@@ -157,12 +172,8 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   DEBUG("queue: have queue lock\n");
 
   if (GST_BUFFER_FLAG_IS_SET(buf, GST_BUFFER_FLUSH)) {
-    g_slist_foreach(queue->queue, gst_queue_cleanup_buffers, name); 
-    g_slist_free(queue->queue);
-    queue->queue = NULL;
-    queue->level_buffers = 0;
+    gst_queue_flush(queue);
   }
-
 
   DEBUG("queue: %s: chain %d %p\n", name, queue->level_buffers, buf);
 
@@ -199,7 +210,7 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   }
 }
 
-void gst_queue_push(GstConnection *connection) {
+static void gst_queue_push(GstConnection *connection) {
   GstQueue *queue = GST_QUEUE(connection);
   GstBuffer *buf = NULL;
   GSList *front;
@@ -246,6 +257,26 @@ void gst_queue_push(GstConnection *connection) {
   DEBUG("queue: %s pushing %d done \n", name, queue->level_buffers);
 
   /* unlock now */
+}
+
+static GstElementStateReturn gst_queue_change_state(GstElement *element) {
+  GstQueue *queue;
+  g_return_val_if_fail(GST_IS_QUEUE(element),GST_STATE_FAILURE);
+
+  queue = GST_QUEUE(element);
+  DEBUG("gstqueue: state pending %d\n", GST_STATE_PENDING(element));
+
+  /* if going down into NULL state, clear out buffers*/
+  if (GST_STATE_PENDING(element) == GST_STATE_READY) {
+    /* otherwise (READY or higher) we need to open the file */
+    gst_queue_flush(queue);
+  }
+
+  /* if we haven't failed already, give the parent class a chance to ;-) */
+  if (GST_ELEMENT_CLASS(parent_class)->change_state)
+    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+
+  return GST_STATE_SUCCESS;
 }
 
 

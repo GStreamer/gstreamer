@@ -170,6 +170,7 @@ GstElement *gst_thread_new(guchar *name) {
 
   thread = gtk_type_new(gst_thread_get_type());
   gst_element_set_name(GST_ELEMENT(thread),name);
+  GST_FLAG_UNSET(thread,GST_THREAD_STATE_REAPING);
   return GST_ELEMENT(thread);
 }
 
@@ -205,7 +206,6 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
       
       // set the state to idle
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
-      GST_FLAG_UNSET(thread,GST_THREAD_STATE_REAPING);
       // create the thread if that's what we're supposed to do
       gst_info("gstthread: flags are 0x%08x\n",GST_FLAGS(thread));
       if (GST_FLAG_IS_SET(thread,GST_THREAD_CREATE)) {
@@ -224,14 +224,12 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
       gst_info("gstthread: starting thread \"%s\"\n",
               gst_element_get_name(GST_ELEMENT(element)));
       GST_FLAG_SET(thread,GST_THREAD_STATE_SPINNING);
-      GST_FLAG_UNSET(thread,GST_THREAD_STATE_REAPING);
       gst_thread_signal_thread(thread);
       break;  
     case GST_STATE_PAUSED:
       gst_info("gstthread: pausing thread \"%s\"\n",
               gst_element_get_name(GST_ELEMENT(element)));
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
-      GST_FLAG_UNSET(thread,GST_THREAD_STATE_REAPING);
       gst_thread_signal_thread(thread);
       break;
     case GST_STATE_NULL:

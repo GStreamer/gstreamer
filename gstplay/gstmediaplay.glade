@@ -2,8 +2,8 @@
 <GTK-Interface>
 
 <project>
-  <name>Gstplay</name>
-  <program_name>gstplay</program_name>
+  <name>GstMediaPlay</name>
+  <program_name>gstmediaplay</program_name>
   <directory></directory>
   <source_directory>src</source_directory>
   <pixmaps_directory>pixmaps</pixmaps_directory>
@@ -369,14 +369,7 @@
       <shadow_type>GTK_SHADOW_OUT</shadow_type>
 
       <widget>
-	<class>GtkDrawingArea</class>
-	<name>status_area</name>
-	<height>21</height>
-	<signal>
-	  <name>configure_event</name>
-	  <handler>on_drawingarea1_configure_event</handler>
-	  <last_modification_time>Sun, 06 Aug 2000 11:27:09 GMT</last_modification_time>
-	</signal>
+	<class>Placeholder</class>
       </widget>
     </widget>
 

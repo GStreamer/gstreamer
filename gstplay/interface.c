@@ -22,7 +22,7 @@ extern GtkWidget *stop_button;
 extern guchar statusline[];
 extern guchar *statustext;
 
-void update_buttons(int active) 
+void update_buttons(GstPlayState state) 
 {
   gtk_signal_handler_block_by_func(GTK_OBJECT(play_button),
                          GTK_SIGNAL_FUNC (on_toggle_play_toggled),
@@ -38,13 +38,13 @@ void update_buttons(int active)
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(pause_button), FALSE);
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(stop_button), FALSE);
 
-  if (active == 0) {
+  if (state == GST_PLAY_PLAYING) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(play_button), TRUE);
   }
-  else if (active == 1) {
+  else if (state == GST_PLAY_PAUSED) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(pause_button), TRUE);
   }
-  else if (active == 2) {
+  else if (state == GST_PLAY_STOPPED) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(stop_button), TRUE);
   }
 
@@ -70,17 +70,3 @@ void update_slider(GtkAdjustment *adjustment, gfloat value)
 	                 NULL);
 }
 
-void update_status_area(GtkWidget *widget)
-{
-
-  gdk_draw_rectangle(widget->window,
-                     widget->style->black_gc,
-                     TRUE, 0,
-		     0,
-                     widget->allocation.width,
-                     widget->allocation.height);
-
-  gdk_draw_string(widget->window,widget->style->font,widget->style->white_gc, 8, 15, statustext);
-  gdk_draw_string(widget->window,widget->style->font,widget->style->white_gc, widget->allocation.width-100, 15, statusline);
-  
-}

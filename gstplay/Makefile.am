@@ -4,21 +4,24 @@ INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir) \
 	           $(shell gnome-config --cflags gnomeui) $(shell gstreamer-config --cflags)
 
 
-bin_PROGRAMS = gstplay
+bin_PROGRAMS = gstmediaplay
 
-gladedir = $(datadir)/gstplay
-glade_DATA = gstplay.glade play.xpm stop.xpm pause.xpm
+gladedir = $(datadir)/gstmediaplay
+glade_DATA = gstmediaplay.glade play.xpm stop.xpm pause.xpm
 
-gstplay_SOURCES = \
-	gstplay.c \
-	interface.c interface.h \
-	callbacks.c callbacks.h
+gstmediaplay_SOURCES = \
+	gstplay.c main.c \
+	gstmediaplay.c gstmediaplay.h \
+	gststatusarea.c gststatusarea.h \
+	callbacks.c callbacks.h 
+
+#	interface.c interface.h 
 
 CFLAGS += -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
 
-gstplay_CFLAGS = $(shell gnome-config --cflags gnomeui) $(shell libglade-config --cflags gnome) \
+gstmediaplay_CFLAGS = $(shell gnome-config --cflags gnomeui) $(shell libglade-config --cflags gnome) \
 		 $(shell gstreamer-config --cflags ) 
-gstplay_LDFLAGS = $(shell gnome-config --libs gnomeui) $(shell libglade-config --libs gnome) \
+gstmediaplay_LDFLAGS = $(shell gnome-config --libs gnomeui) $(shell libglade-config --libs gnome) \
 		 $(shell gstreamer-config --libs ) 
 
 if HAVE_LIBXV
@@ -27,7 +30,7 @@ else
 xvlibs=
 endif
 
-gstplay_LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la \
+gstmediaplay_LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la \
           $(top_builddir)/plugins/videosink/gdkxvimage.lo ${xvlibs} -lXxf86vm
 
 

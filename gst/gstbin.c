@@ -720,7 +720,7 @@ void gst_bin_iterate_func(GstBin *bin) {
           gst_element_get_name(GST_ELEMENT(bin->children->data)));
   } else {
     if (bin->numentries <= 0) {
-      printf("gstbin: no entries in bin \"%s\" trying children...\n", gst_element_get_name(GST_ELEMENT(bin)));
+      //printf("gstbin: no entries in bin \"%s\" trying children...\n", gst_element_get_name(GST_ELEMENT(bin)));
       // we will try loop over the elements then...
       entries = bin->children;
     }

@@ -40,14 +40,3 @@ void
 on_drawingarea1_configure_event        (GtkWidget *widget, GdkEventConfigure *event,
 		                                        gpointer         user_data);
 
-void
-on_toggle_play_toggled                 (GtkToggleButton *togglebutton,
-		                         gpointer         user_data);
-
-void
-on_toggle_pause_toggled                 (GtkToggleButton *togglebutton,
-		                         gpointer         user_data);
-
-void
-on_toggle_stop_toggled                 (GtkToggleButton *togglebutton,
-		                         gpointer         user_data);
