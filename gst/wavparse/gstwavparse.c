@@ -542,14 +542,14 @@ gst_wavparse_fmt (GstWavParse * wav)
   wav->depth = header->size;
   wav->bps = header->av_bps;
 
-  gst_element_add_pad (GST_ELEMENT (wav), wav->srcpad);
-
   caps = gst_riff_create_audio_caps (header->format, NULL, header, NULL);
 
   if (caps) {
     gst_pad_set_explicit_caps (wav->srcpad, caps);
     gst_caps_free (caps);
   }
+
+  gst_element_add_pad (GST_ELEMENT (wav), wav->srcpad);
 
   GST_DEBUG ("frequency %d, channels %d", wav->rate, wav->channels);
 
@@ -617,7 +617,6 @@ gst_wavparse_other (GstWavParse * wav)
 static gboolean
 gst_wavparse_handle_seek (GstWavParse * wav)
 {
-#if 1
   GstRiffRead *riff = GST_RIFF_READ (wav);
   GstEvent *event = NULL;
   guint32 remaining;
@@ -660,9 +659,6 @@ gst_wavparse_handle_seek (GstWavParse * wav)
   gst_pad_event_default (wav->sinkpad, event);
 
   return TRUE;
-#else
-  return FALSE;
-#endif
 }
 
 #define MAX_BUFFER_SIZE 4096
@@ -880,7 +876,6 @@ gst_wavparse_get_event_masks (GstPad * pad)
 static gboolean
 gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event)
 {
-#if 1
   GstWavParse *wavparse = GST_WAVPARSE (GST_PAD_PARENT (pad));
   gboolean res = FALSE;
 
@@ -913,9 +908,6 @@ gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event)
   gst_event_unref (event);
 
   return res;
-#else
-  return FALSE;
-#endif
 }
 
 static GstElementStateReturn

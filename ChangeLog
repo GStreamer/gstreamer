@@ -1,3 +1,10 @@
+2004-07-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_fmt),
+	(gst_wavparse_handle_seek), (gst_wavparse_srcpad_event):
+	Add the pad to the element after setting up the caps. This
+	makes it a lot easier to autoplug.
+
 2004-07-27  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* gst/median/gstmedian.c:
