@@ -154,7 +154,7 @@ static void qtdemux_parse(GstQTDemux *qtdemux, GNode *node, void *buffer, int le
 static QtNodeType *qtdemux_type_get(guint32 fourcc);
 static void qtdemux_node_dump(GstQTDemux *qtdemux, GNode *node);
 static void qtdemux_parse_tree(GstQTDemux *qtdemux);
-static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc);
+static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc, gint width, gint height);
 static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc);
 
 static GType gst_qtdemux_get_type (void) 
@@ -1305,7 +1305,9 @@ static void qtdemux_parse_trak(GstQTDemux *qtdemux, GNode *trak)
     g_print("frame count:   %u\n", QTDEMUX_GUINT16_GET(stsd->data+offset+48));
     
     stream->caps = qtdemux_video_caps(qtdemux,
-        QTDEMUX_FOURCC_GET(stsd->data+offset+4));
+        QTDEMUX_FOURCC_GET(stsd->data+offset+4),
+        QTDEMUX_GUINT16_GET(stsd->data+offset+32),
+        QTDEMUX_GUINT16_GET(stsd->data+offset+34));
     g_print("caps %s\n",gst_caps_to_string(stream->caps));
   }else if(stream->subtype == FOURCC_soun){
     int version;
@@ -1502,55 +1504,54 @@ done2:
   gst_qtdemux_add_stream(qtdemux,stream);
 }
 
+#define GST_QT_CAPS_NEW(name, mime, props...) \
+  GST_CAPS_NEW (name, mime, \
+                "width",  GST_PROPS_INT (width), \
+                "height", GST_PROPS_INT (height), \
+                props)
 
-static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc)
+static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc,
+                                   gint width, gint height)
 {
   switch(fourcc){
     case GST_MAKE_FOURCC('j','p','e','g'):
       /* JPEG */
-      return GST_CAPS_NEW("jpeg_caps","video/jpeg",NULL);
     case GST_MAKE_FOURCC('m','j','p','a'):
       /* Motion-JPEG (format A) */
-      return GST_CAPS_NEW("mjpa_caps","video/jpeg",NULL);
     case GST_MAKE_FOURCC('m','j','p','b'):
       /* Motion-JPEG (format B) */
-      return GST_CAPS_NEW("mjpa_caps","video/jpeg",NULL);
+      return GST_QT_CAPS_NEW("jpeg_caps","video/jpeg",NULL);
     case GST_MAKE_FOURCC('S','V','Q','3'):
-      return GST_CAPS_NEW("SVQ3_caps","video/x-svq",
+      return GST_QT_CAPS_NEW("SVQ3_caps","video/x-svq",
 	  "svqversion", GST_PROPS_INT(3),NULL);
     case GST_MAKE_FOURCC('s','v','q','i'):
     case GST_MAKE_FOURCC('S','V','Q','1'):
-      return GST_CAPS_NEW("SVQ1_caps","video/x-svq",
+      return GST_QT_CAPS_NEW("SVQ1_caps","video/x-svq",
 	  "svqversion", GST_PROPS_INT(1),NULL);
     case GST_MAKE_FOURCC('r','a','w',' '):
       /* uncompressed RGB */
-      return GST_CAPS_NEW("raw__caps","video/raw",
-	  "format",GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
-	  "width",GST_PROPS_INT_RANGE(1,G_MAXINT),
-	  "height",GST_PROPS_INT_RANGE(1,G_MAXINT));
+      return GST_QT_CAPS_NEW("raw__caps","video/raw",
+	  "format",GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')));
     case GST_MAKE_FOURCC('Y','u','v','2'):
       /* uncompressed YUV2 */
-      return GST_CAPS_NEW("Yuv2_caps","video/raw",
-	  "format",GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','V','2')),
-	  "width",GST_PROPS_INT_RANGE(1,G_MAXINT),
-	  "height",GST_PROPS_INT_RANGE(1,G_MAXINT));
+      return GST_QT_CAPS_NEW("Yuv2_caps","video/raw",
+	  "format",GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','V','2')));
     case GST_MAKE_FOURCC('m','p','e','g'):
       /* MPEG */
-      return GST_CAPS_NEW("mpeg_caps","video/mpeg",NULL);
+      return GST_QT_CAPS_NEW("mpeg_caps","video/mpeg",NULL);
     case GST_MAKE_FOURCC('g','i','f',' '):
-      return GST_CAPS_NEW("gif__caps","image/gif",NULL);
+      return GST_QT_CAPS_NEW("gif__caps","image/gif",NULL);
     case GST_MAKE_FOURCC('h','2','6','3'):
       /* H.263 */
       /* ffmpeg uses the height/width props, don't know why */
-      return GST_CAPS_NEW("h263_caps","video/h263",
-	  "width",GST_PROPS_INT_RANGE(1,G_MAXINT),
-	  "height",GST_PROPS_INT_RANGE(1,G_MAXINT));
+      return GST_QT_CAPS_NEW("h263_caps","video/h263", NULL);
     case GST_MAKE_FOURCC('m','p','4','v'):
       /* MPEG-4 */
-      return GST_CAPS_NEW("mp4v_caps", "video/mpeg",
-	  "mpegversion",GST_PROPS_INT(4));
+      return GST_QT_CAPS_NEW("mp4v_caps", "video/mpeg",
+	  "mpegversion", GST_PROPS_INT(4),
+          "systemstream", GST_PROPS_BOOLEAN(FALSE), NULL);
     case GST_MAKE_FOURCC('3','I','V','1'):
-      return GST_CAPS_NEW("3IV1_caps", "video/3ivx",NULL);
+      return GST_QT_CAPS_NEW("3IV1_caps", "video/3ivx",NULL);
     case GST_MAKE_FOURCC('r','p','z','a'):
     case GST_MAKE_FOURCC('c','v','i','d'):
       /* Cinepak */
