@@ -210,10 +210,10 @@ gst_props_newv (const gchar *firstname, va_list var_args)
         prop_name = va_arg (var_args, gchar*);
 	continue;
       default:
+	g_warning ("unknown property type found %d for '%s'\n", entry->propstype, prop_name);
         g_mutex_lock (_gst_props_entries_chunk_lock);
         g_mem_chunk_free (_gst_props_entries_chunk, entry);
         g_mutex_unlock (_gst_props_entries_chunk_lock);
-	g_assert_not_reached ();
 	break;
     }
 
