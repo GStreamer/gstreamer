@@ -39,6 +39,7 @@ typedef struct _ladspa_control_info {
   gchar *name;
   gchar *param_name;
   gfloat lowerbound, upperbound;
+  gfloat def;
   gboolean lower,upper,samplerate;
   gboolean toggled, logarithmic, integer, writable;
 } ladspa_control_info;
