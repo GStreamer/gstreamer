@@ -1169,10 +1169,18 @@ gst_gnomevfssrc_srcpad_query (GstPad *pad, GstQueryType type,
 		*value = src->size;
 		break;
 	case GST_QUERY_POSITION:
-		if (*format != GST_FORMAT_BYTES) {
-			return FALSE;
+		switch (*format) {
+			case GST_FORMAT_BYTES:
+				*value = src->curoffset;
+		                break;
+			case GST_FORMAT_PERCENT:
+				if (src->size == 0)
+					return FALSE;
+				*value = src->curoffset * GST_FORMAT_PERCENT_MAX / src->size;
+				break;
+			default:
+				return FALSE;
 		}
-		*value = src->curoffset;
 		break;
 	default:
 		return FALSE;
