@@ -1,6 +1,14 @@
 2005-01-08  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* ext/dv/gstdvdec.c:
+	  really fix bpp24/32 dvdec caps (classic rgba indeed)
+	* gst/asfdemux/gstasfdemux.c:
+	(gst_asf_demux_process_ext_content_desc):
+	  don't send text tags if they are empty (bis repetita)
+
+2005-01-08  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* ext/dv/gstdvdec.c:
 	 remove unneeded comment from dvdec
 	  (related to DV 4CC codes in AVI files)
 	  moved them in gstreamer/docs/random/mimetypes
