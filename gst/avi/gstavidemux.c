@@ -506,61 +506,60 @@ gst_avidemux_handle_event (GstAviDemux *avi_demux)
 }
 
 static gboolean
-gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 filepos,
+gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 			     guint32 desired_tag,
 			     gint rec_depth, guint32 *chunksize)
 {
   guint32 chunkid;	
-  guint64 datapos;
   GstByteStream *bs = avi_demux->bs;
 
   if (!gst_avidemux_read_chunk (bs, &chunkid, chunksize)) {
-    printf ("  *****  Error reading chunk at filepos 0x%08llx\n", filepos);
+    g_print ("  *****  Error reading chunk at filepos 0x%08llx\n", *filepos);
     return FALSE;
   }
   if (desired_tag) {		/* do we have to test identity? */
     if (desired_tag != chunkid) {
-      printf ("\n\n *** Error: Expected chunk '%08x', found '%08x'\n",
+      g_print ("\n\n *** Error: Expected chunk '%08x', found '%08x'\n",
 	      desired_tag, chunkid);
       return FALSE;
     }
   }
 
   GST_INFO (GST_CAT_PLUGIN_INFO, "chunkid %s, size %08x, filepos %08llx", 
-		  gst_riff_id_to_fourcc (chunkid), *chunksize, filepos);
+		  gst_riff_id_to_fourcc (chunkid), *chunksize, *filepos);
 
-  datapos = filepos + sizeof (guint32) + sizeof (guint32);
+  *filepos += (sizeof (guint32) + sizeof (guint32));
 
   switch (chunkid) {
     case GST_RIFF_TAG_RIFF:
     case GST_RIFF_TAG_LIST:
     {
       guint32 datashowed;
-      guint32 subchunksize;	/* size of a read subchunk             */
+      guint32 subchunksize = 0;	/* size of a read subchunk             */
 
       // flush the form type
       if (!gst_bytestream_flush (bs, sizeof (guint32)))
 	return FALSE;
 
       datashowed = sizeof (guint32);	/* we showed the form type      */
-      datapos += datashowed;	/* for the rest of the routine  */
+      *filepos += datashowed;	/* for the rest of the routine  */
 
       while (datashowed < *chunksize) {	/* while not showed all: */
 
-	guint32 subchunklen;	/* complete size of a subchunk  */
-
 	/* recurse for subchunks of RIFF and LIST chunks: */
-	if (!gst_avidemux_process_chunk (avi_demux, datapos, 0,
+	if (!gst_avidemux_process_chunk (avi_demux, filepos, 0,
 			   rec_depth + 1, &subchunksize))
 	  return FALSE;
 
-	subchunklen = sizeof (guint32) + sizeof (guint32) + ((subchunksize + 1) & ~1);
+	subchunksize = ((subchunksize + 1) & ~1);
 
-	datashowed += subchunklen;
-	datapos += subchunklen;
+	datashowed += (sizeof (guint32) + sizeof (guint32) + subchunksize);
+	*filepos += subchunksize;
       }
-      *chunksize -= datashowed;
-      break;
+      if (datashowed != *chunksize) {
+	g_warning ("error parsing AVI");
+      }
+      goto done;
     }
     case GST_RIFF_TAG_avih:
       gst_avi_demux_avih (avi_demux);
@@ -650,16 +649,18 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 filepos,
       break;
     }
     default:
-      printf ("  *****  unknown chunkid %08x (%s)\n", chunkid, gst_riff_id_to_fourcc (chunkid));
+      GST_DEBUG (0, "  *****  unknown chunkid %08x (%s)\n", chunkid, gst_riff_id_to_fourcc (chunkid));
+      *chunksize = (*chunksize + 1) & ~1;
       break;
   }
   GST_INFO (GST_CAT_PLUGIN_INFO, "chunkid %s, flush %08x, filepos %08llx", 
-		  gst_riff_id_to_fourcc (chunkid), *chunksize, filepos);
+		  gst_riff_id_to_fourcc (chunkid), *chunksize, *filepos);
 
   if (!gst_bytestream_flush (bs, *chunksize)) {
     return gst_avidemux_handle_event (avi_demux);
   }
 
+done:
   /* we are running in an infinite loop, we need to _yield 
    * from time to time */
   gst_element_yield (GST_ELEMENT (avi_demux));
@@ -672,6 +673,7 @@ gst_avi_demux_loop (GstElement *element)
 {
   GstAviDemux *avi_demux;
   guint32 chunksize;
+  guint64 filepos = 0;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_AVI_DEMUX (element));
@@ -679,7 +681,7 @@ gst_avi_demux_loop (GstElement *element)
   avi_demux = GST_AVI_DEMUX (element);
 
   /* this is basically an infinite loop */
-  if (!gst_avidemux_process_chunk (avi_demux, 0, GST_RIFF_TAG_RIFF, 0, &chunksize)) {
+  if (!gst_avidemux_process_chunk (avi_demux, &filepos, GST_RIFF_TAG_RIFF, 0, &chunksize)) {
     gst_element_error (element, "This doesn't appear to be an AVI file");
   }
 }
