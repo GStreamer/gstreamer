@@ -24,6 +24,7 @@
 #include "esdsink.h"
 #include "esdmon.h"
 
+GST_DEBUG_CATEGORY (esd_debug);
 
 static gboolean
 plugin_init (GstPlugin *plugin)
@@ -38,6 +39,7 @@ plugin_init (GstPlugin *plugin)
   ret = gst_esdmon_factory_init(plugin);
   if(ret == FALSE) return FALSE;
 
+  GST_DEBUG_CATEGORY_INIT (esd_debug, "esd", 0, "ESounD elements");
   return TRUE;
 }
 

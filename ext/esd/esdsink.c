@@ -28,6 +28,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+GST_DEBUG_CATEGORY_EXTERN (esd_debug);
+
 /* elementfactory information */
 static GstElementDetails esdsink_details = {
   "Esound audio sink",
@@ -428,14 +430,16 @@ gst_esdsink_open_audio (GstEsdsink *sink)
   if (sink->depth == 16) esdformat |= ESD_BITS16;
   else if (sink->depth == 8) esdformat |= ESD_BITS8;
   else {
-    GST_DEBUG ("esdsink: invalid bit depth (%d)", sink->depth);
+    gst_element_error (sink, STREAM, FORMAT, NULL,
+                       ("invalid bit depth (%d)", sink->depth));
     return FALSE;
   }
 
   if (sink->channels == 2) esdformat |= ESD_STEREO;
   else if (sink->channels == 1) esdformat |= ESD_MONO;
   else {
-    GST_DEBUG ("esdsink: invalid number of channels (%d)", sink->channels);
+    gst_element_error (sink, STREAM, FORMAT, NULL,
+                       ("invalid number of channels (%d)", sink->channels));
     return FALSE;
   }
 
@@ -446,7 +450,8 @@ gst_esdsink_open_audio (GstEsdsink *sink)
     sink->fd = esd_play_stream(esdformat, sink->frequency, sink->host, connname);
   }
   if ( sink->fd < 0 ) {
-    GST_DEBUG ("esdsink: can't open connection to esound server");
+    gst_element_error (sink, RESOURCE, OPEN_WRITE, NULL,
+                       ("can't open connection to esound server"));
     return FALSE;
   }
 
