@@ -287,6 +287,12 @@ struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_IBM_FORMAT_ADPCM           (0x0103)
 #define GST_RIFF_WAVE_FORMAT_DIVX           (0x0160)
 #define GST_RIFF_WAVE_FORMAT_divx           (0x0161)
+#define GST_RIFF_WAVE_FORMAT_VORBIS1        (0x674f)
+#define GST_RIFF_WAVE_FORMAT_VORBIS2        (0x6750)
+#define GST_RIFF_WAVE_FORMAT_VORBIS3        (0x6751)
+#define GST_RIFF_WAVE_FORMAT_VORBIS1PLUS    (0x676f)
+#define GST_RIFF_WAVE_FORMAT_VORBIS2PLUS    (0x6770)
+#define GST_RIFF_WAVE_FORMAT_VORBIS3PLUS    (0x6771)
   guint16 channels;
   guint32 rate;
   guint32 av_bps;
