@@ -1,3 +1,8 @@
+2004-04-29  David Schleef  <ds@schleef.org>
+
+	* sys/oss/gstosselement.c: (gst_osselement_rate_probe_check):
+	Add a check for a driver bug on FreeBSD.  (bug #140565)
+
 2004-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/jpeg/gstjpegdec.c: (gst_jpegdec_get_type):
