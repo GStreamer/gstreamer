@@ -182,7 +182,7 @@ gst_element_connect_caps (v4lsrc, "src", xvideosink, "sink",
 
 - when v4lsrc requests pads, the intersection with the filter is also made.
 
-- v4lsrc has no other choise but to use I420.
+- v4lsrc has no other choice but to use I420.
 
 use case 5
 ----------
@@ -198,7 +198,7 @@ in this case, mad can both send "int" audio samples and "float" samples.
   between osssink sinkpad template and sends this list to osssinks request_caps
   function. osssink can try this list (or whatever remains of it) and whatever
   works is sent back as the return value of the request_caps function.
-- mad receives the caps list, takes the top caps ans does a pad_set_caps
+- mad receives the caps list, takes the top caps and does a pad_set_caps
 - osssink recieves the final caps on its new_caps function and configures the
   oss driver.
 
@@ -208,7 +208,7 @@ use case 6
 
 gsm -> audioscaler -> osssink
 
-Somenody sets some crazy low rate on the gsm srcpad (1000Hz).
+Somebody sets some crazy low rate on the gsm srcpad (1000Hz).
 
 - audioscalers newcaps function is called.
 - audioscaler does a request_caps on its srcpad with the provided 
