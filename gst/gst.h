@@ -46,6 +46,7 @@
 #include <gst/gstcaps.h>
 #include <gst/gstprops.h>
 #include <gst/gstplugin.h>
+#include <gst/gsturi.h>
 #include <gst/gstutils.h>
 #include <gst/gsttrace.h>
 #include <gst/gstxml.h>

@@ -251,6 +251,7 @@ gst_spider_identity_getcaps (GstPad *pad, GstCaps *caps)
 
   if (otherpad != NULL)
     return gst_pad_get_allowed_caps (otherpad);
+  
   return NULL;
 }
 

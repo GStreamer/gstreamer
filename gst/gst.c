@@ -455,6 +455,7 @@ init_post (void)
   gst_autoplug_factory_get_type ();
 #endif
   gst_index_factory_get_type ();
+  gst_uri_handler_get_type ();
 
 
   plugin_path = g_getenv ("GST_PLUGIN_PATH");

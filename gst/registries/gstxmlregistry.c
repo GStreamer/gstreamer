@@ -34,6 +34,7 @@
 #include <gst/gsttype.h>
 #include <gst/gstscheduler.h>
 #include <gst/gstautoplug.h>
+#include <gst/gsturi.h>
 
 #include "gstxmlregistry.h"
 
@@ -770,6 +771,30 @@ gst_xml_registry_parse_index_factory (GMarkupParseContext *context, const gchar 
 }
 
 static gboolean
+gst_xml_registry_parse_uri_handler (GMarkupParseContext *context, const gchar *tag, const gchar *text,
+                                    gsize text_len, GstXMLRegistry *registry, GError **error)
+{
+  GstURIHandler *handler = GST_URI_HANDLER (registry->current_feature);
+
+  if (!strcmp (tag, "name")) {
+    registry->current_feature->name = g_strndup (text, text_len);
+  }
+  else if (!strcmp (tag, "uri")) {
+    handler->uri = g_strndup (text, text_len);
+  }
+  else if (!strcmp (tag, "longdesc")) {
+    handler->longdesc = g_strndup (text, text_len);
+  }
+  else if (!strcmp (tag, "element")) {
+    handler->element = g_strndup (text, text_len);
+  }
+  else if (!strcmp (tag, "property")) {
+    handler->property = g_strndup (text, text_len);
+  }
+  return TRUE;
+}
+
+static gboolean
 gst_xml_registry_parse_padtemplate (GMarkupParseContext *context, const gchar *tag, const gchar *text,
                                     gsize text_len, GstXMLRegistry *registry, GError **error)
 {
@@ -865,6 +890,7 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	}
 	if (feature) {
 	  xmlregistry->current_feature = feature;
+
 	  if (GST_IS_ELEMENT_FACTORY (feature)) {
 	    GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
 
@@ -873,17 +899,24 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	    factory->padtemplates = NULL;
 	    factory->rank = 0;
 	    xmlregistry->parser = gst_xml_registry_parse_element_factory;
+	    break;
 	  }
-	  else if (GST_IS_TYPE_FACTORY (feature))
+	  else if (GST_IS_TYPE_FACTORY (feature)) {
 	    xmlregistry->parser = gst_xml_registry_parse_type_factory;
+	  }
 	  else if (GST_IS_SCHEDULER_FACTORY (feature)) {
 	    xmlregistry->parser = gst_xml_registry_parse_scheduler_factory;
             GST_SCHEDULER_FACTORY (feature)->type = 0;
 	  }
-	  else if (GST_IS_AUTOPLUG_FACTORY (feature))
+	  else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
 	    xmlregistry->parser = gst_xml_registry_parse_autoplug_factory;
-	  else if (GST_IS_INDEX_FACTORY (feature))
+	  }
+	  else if (GST_IS_INDEX_FACTORY (feature)) {
 	    xmlregistry->parser = gst_xml_registry_parse_index_factory;
+	  }
+	  else if (GST_IS_URI_HANDLER (feature)) {
+	    xmlregistry->parser = gst_xml_registry_parse_uri_handler;
+	  }
 	  else {
             g_warning ("unkown feature type");
 	  }
@@ -1410,6 +1443,14 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
   }
   else if (GST_IS_INDEX_FACTORY (feature)) {
     PUT_ESCAPED ("longdesc", GST_INDEX_FACTORY (feature)->longdesc);
+  }
+  else if (GST_IS_URI_HANDLER (feature)) {
+    GstURIHandler *handler = GST_URI_HANDLER (feature);
+
+    PUT_ESCAPED ("uri", handler->uri);
+    PUT_ESCAPED ("longdesc", handler->longdesc);
+    PUT_ESCAPED ("element", handler->element);
+    PUT_ESCAPED ("property", handler->property);
   }
   return TRUE;
 }

@@ -1863,13 +1863,17 @@ gst_pad_get_peer (GstPad *pad)
 GstCaps*
 gst_pad_get_allowed_caps (GstPad *pad)
 {
+  GstCaps *caps;
+
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   GST_DEBUG (GST_CAT_PROPERTIES, "get allowed caps of %s:%s", 
              GST_DEBUG_PAD_NAME (pad));
 
-  return gst_caps_copy (GST_RPAD_FILTER (pad));
+  caps = gst_caps_copy (GST_RPAD_FILTER (pad));
+
+  return caps;
 }
 
 /**
