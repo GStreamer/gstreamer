@@ -1191,9 +1191,9 @@ cdparanoia_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   gchar *protocol, *location;
   gboolean ret;
 
-  ret = TRUE;
-
   CDParanoia *cdparanoia = CDPARANOIA (handler);
+
+  ret = TRUE;
 
   protocol = gst_uri_get_protocol (uri);
   if (strcmp (protocol, "cdda") != 0) {

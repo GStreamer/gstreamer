@@ -233,6 +233,7 @@ gst_stream_info_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstStreamInfo *stream_info;
+  gboolean new_mute;
 
   g_return_if_fail (GST_IS_STREAM_INFO (object));
 
@@ -245,7 +246,7 @@ gst_stream_info_set_property (GObject * object, guint prop_id,
         g_warning ("cannot mute element stream");
         break;
       }
-      gboolean new_mute = g_value_get_boolean (value);
+      new_mute = g_value_get_boolean (value);
 
       if (new_mute != stream_info->mute) {
         stream_info->mute = new_mute;
