@@ -112,7 +112,7 @@ void
 gst_info_set_categories (guint32 categories) {
   _gst_info_categories = categories;
   if (categories)
-    GST_INFO (0, "setting INFO categories to 0x%08X\n",categories);
+    GST_INFO (0, "setting INFO categories to 0x%08X",categories);
 }
 
 /**
@@ -136,7 +136,7 @@ void
 gst_info_enable_category (gint category) {
   _gst_info_categories |= (1 << category);
   if (_gst_info_categories)
-    GST_INFO (0, "setting INFO categories to 0x%08X\n",_gst_info_categories);
+    GST_INFO (0, "setting INFO categories to 0x%08X",_gst_info_categories);
 }
 
 /**
@@ -149,7 +149,7 @@ void
 gst_info_disable_category (gint category) {
   _gst_info_categories &= ~ (1 << category);
   if (_gst_info_categories)
-    GST_INFO (0, "setting INFO categories to 0x%08X\n",_gst_info_categories);
+    GST_INFO (0, "setting INFO categories to 0x%08X",_gst_info_categories);
 }
 
 
@@ -169,7 +169,7 @@ void
 gst_debug_set_categories (guint32 categories) {
   _gst_debug_categories = categories;
   if (categories)
-    GST_INFO (0, "setting DEBUG categories to 0x%08X\n",categories);
+    GST_INFO (0, "setting DEBUG categories to 0x%08X",categories);
 }
 
 /**
@@ -193,7 +193,7 @@ void
 gst_debug_enable_category (gint category) {
   _gst_debug_categories |= (1 << category);
   if (_gst_debug_categories)
-    GST_INFO (0, "setting DEBUG categories to 0x%08X\n",_gst_debug_categories);
+    GST_INFO (0, "setting DEBUG categories to 0x%08X",_gst_debug_categories);
 }
 
 /**
@@ -206,7 +206,7 @@ void
 gst_debug_disable_category (gint category) {
   _gst_debug_categories &= ~ (1 << category);
   if (_gst_debug_categories)
-    GST_INFO (0, "setting DEBUG categories to 0x%08X\n",_gst_debug_categories);
+    GST_INFO (0, "setting DEBUG categories to 0x%08X",_gst_debug_categories);
 }
 
 /**
