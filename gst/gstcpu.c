@@ -32,8 +32,6 @@ static guint32 _gst_cpu_flags = 0;
 
 #ifdef HAVE_CPU_I386
 #define _gst_cpu_initialize_arch _gst_cpu_initialize_i386
-void gst_cpuid_i386 (int, unsigned long *, unsigned long *, unsigned long *,
-    unsigned long *);
 gboolean _gst_cpu_initialize_i386 (gulong * flags, GString * featurelist);
 #else
 #define _gst_cpu_initialize_arch _gst_cpu_initialize_none
@@ -65,6 +63,24 @@ _gst_cpu_initialize_none (gulong * flags, GString * featurelist)
 }
 
 #ifdef HAVE_CPU_I386
+static void
+gst_cpuid_i386 (int x, unsigned long *eax, unsigned long *ebx,
+    unsigned long *ecx, unsigned long *edx)
+{
+  unsigned long regs[4];
+
+asm ("  cpuid\n" "  movl %%eax, %0\n" "  movl %%ebx, %1\n" "  movl %%ecx, %2\n" "  movl %%edx, %3\n":"=o" (regs[0]),
+      "=o" (regs[1]),
+      "=o" (regs[2]), "=o" (regs[3])
+:    "a" (x)
+:    "ebx", "ecx", "edx");
+
+  *eax = regs[0];
+  *ebx = regs[1];
+  *ecx = regs[2];
+  *edx = regs[3];
+}
+
 gboolean
 _gst_cpu_initialize_i386 (gulong * flags, GString * featurelist)
 {

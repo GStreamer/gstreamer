@@ -6,12 +6,6 @@ else
 noinst_LTLIBRARIES = libcothreads.la
 endif
 
-if HAVE_CPU_I386
-GSTARCH_SRCS = gstcpuid_i386.s
-else
-GSTARCH_SRCS = 
-endif
-
 #GST_INSTRUMENT_FLAGS = -finstrument-functions -DGST_ENABLE_FUNC_INSTRUMENTATION
 
 if GST_DISABLE_LOADSAVE
@@ -83,7 +77,7 @@ built_header_make = gstenumtypes.h gstmarshal.h
 built_source_make = $(GST_ENUMTYPES_SRC) gstmarshal.c
 
 EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
-	gstcpuid_i386.s gstmarshal.list gstxml.c gstparse.c gsttrace.c
+	gstmarshal.list gstxml.c gstparse.c gsttrace.c
 
 libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gst.c			\

@@ -1,5 +1,12 @@
 2004-04-13  David Schleef  <ds@schleef.org>
 
+	* gst/Makefile.am:
+	* gst/gstcpu.c: (gst_cpuid_i386): Convert asm source into inline
+	assembly.
+	* gst/gstcpuid_i386.s: remove
+
+2004-04-13  David Schleef  <ds@schleef.org>
+
 	* docs/gst/tmpl/gstaggregator.sgml: Random checkin because gtk-doc
 	seems to think it needs to be done.
 	* docs/gst/tmpl/gstfakesink.sgml:
