@@ -609,7 +609,6 @@ init_post (void)
   /* register core plugins */
   _gst_plugin_register_static (&plugin_desc);
 
-  _gst_cpu_initialize (_gst_enable_cpu_opt);
   gst_structure_get_type ();
   _gst_value_initialize ();
   gst_caps_get_type ();
