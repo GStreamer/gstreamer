@@ -27,6 +27,7 @@
 #include <gstwavenc.h>
 #include <riff.h>
 
+static void 	gst_wavenc_base_init 	(gpointer g_class);
 static void 	gst_wavenc_class_init 	(GstWavEncClass *klass);
 static void 	gst_wavenc_init 	(GstWavEnc *wavenc);
 static void 	gst_wavenc_chain 	(GstPad *pad, GstData *_data);
@@ -68,15 +69,12 @@ struct wave_header {
   struct chunk_struct 	data;
 };
 
-static GstElementDetails gst_wavenc_details = {
+static GstElementDetails gst_wavenc_details = GST_ELEMENT_DETAILS (
   "WAV encoder",
   "Codec/Audio/Encoder",
-  "LGPL",
   "Encode raw audio into WAV",
-  VERSION,
-  "Iain Holmes <iain@prettypeople.org>",
-  "(C) 2002",
-};
+  "Iain Holmes <iain@prettypeople.org>"
+);
 
 static GstPadTemplate *srctemplate, *sinktemplate;
 
@@ -128,7 +126,7 @@ gst_wavenc_get_type (void)
   if (type == 0) {
     static const GTypeInfo info = {
       sizeof (GstWavEncClass), 
-      NULL, 
+      gst_wavenc_base_init, 
       NULL,
       (GClassInitFunc) gst_wavenc_class_init, 
       NULL, 
@@ -185,6 +183,19 @@ set_property (GObject *object,
 	}
 }
 
+static void
+gst_wavenc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_wavenc_details);
+  
+  srctemplate = src_factory ();
+  gst_element_class_add_pad_template (element_class, srctemplate);
+
+  sinktemplate = sink_factory ();
+  gst_element_class_add_pad_template (element_class, sinktemplate);
+}
 static void
 gst_wavenc_class_init (GstWavEncClass *klass)
 {
@@ -642,29 +653,21 @@ gst_wavenc_chain (GstPad *pad,
 }
 
 static gboolean
-plugin_init (GModule *module,
-	     GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("wavenc", GST_TYPE_WAVENC,
-				     &gst_wavenc_details);
-  
-  srctemplate = src_factory ();
-  gst_element_factory_add_pad_template (factory, srctemplate);
-
-  sinktemplate = sink_factory ();
-  gst_element_factory_add_pad_template (factory, sinktemplate);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "wavenc", GST_RANK_NONE, GST_TYPE_WAVENC);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "wavenc",
-  plugin_init
-};
+  "Encode raw audio into WAV",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
     

@@ -26,6 +26,7 @@
 
 #include <gstwavparse.h>
 
+static void		gst_wavparse_base_init		(gpointer g_class);
 static void		gst_wavparse_class_init		(GstWavParseClass *klass);
 static void		gst_wavparse_init		(GstWavParse *wavparse);
 
@@ -52,15 +53,12 @@ static gboolean 	gst_wavparse_srcpad_event 	(GstPad *pad, GstEvent *event);
 static void             gst_wavparse_get_property       (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 /* elementfactory information */
-static GstElementDetails gst_wavparse_details = {
+static GstElementDetails gst_wavparse_details = GST_ELEMENT_DETAILS (
   ".wav parser",
   "Codec/Parser",
-  "LGPL",
   "Parse a .wav file into raw audio",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   "wavparse_sink",
@@ -138,7 +136,8 @@ gst_wavparse_get_type (void)
 
   if (!wavparse_type) {
     static const GTypeInfo wavparse_info = {
-      sizeof(GstWavParseClass),      NULL,
+      sizeof(GstWavParseClass),
+      gst_wavparse_base_init,
       NULL,
       (GClassInitFunc) gst_wavparse_class_init,
       NULL,
@@ -152,6 +151,18 @@ gst_wavparse_get_type (void)
   return wavparse_type;
 }
 
+
+static void
+gst_wavparse_base_init (gpointer g_class) 
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (element_class, &gst_wavparse_details);
+
+  /* register src pads */
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_template_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_template_factory));
+}
 static void
 gst_wavparse_class_init (GstWavParseClass *klass) 
 {
@@ -1100,32 +1111,24 @@ gst_wavparse_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   if (!gst_library_load ("gstbytestream")) {
     return FALSE;
   }
 
-  /* create an elementfactory for the wavparse element */
-  factory = gst_element_factory_new ("wavparse", GST_TYPE_WAVPARSE,
-                                    &gst_wavparse_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_SECONDARY);
-
-  /* register src pads */
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "wavparse", GST_RANK_SECONDARY, GST_TYPE_WAVPARSE);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "wavparse",
-  plugin_init
-};
+  "Parse a .wav file into raw audio",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
