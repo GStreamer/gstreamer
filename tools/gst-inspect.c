@@ -590,7 +590,7 @@ print_element_info (GstElementFactory *factory)
   }
 
   g_print ("\nCaching capabilities:\n");
-  if (gst_element_is_cachable (element)) {
+  if (gst_element_is_indexable (element)) {
     g_print ("  element can do caching\n");
   }
   else {
