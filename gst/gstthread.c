@@ -105,7 +105,6 @@ gst_thread_class_init (GstThreadClass *klass)
   gstelement_class->change_state = 	gst_thread_change_state;
   gstelement_class->save_thyself = 	gst_thread_save_thyself;
   gstelement_class->restore_thyself = 	gst_thread_restore_thyself;
-  gstelement_class->elementfactory = 	gst_elementfactory_find("thread");
 
   gstbin_class->create_plan = gst_thread_create_plan_dummy;
 

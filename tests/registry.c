@@ -98,6 +98,7 @@ print_some_providers (gchar *mime)
   GList *srcs, *sinks;
   type = gst_type_find_by_mime (mime);
 
+  /*
   srcs = gst_type_get_srcs (type);
 
   while (srcs) {
@@ -120,6 +121,7 @@ print_some_providers (gchar *mime)
 
     sinks = g_list_next (sinks);
   }
+  */
 }
 
 int main(int argc,char *argv[]) 
@@ -130,22 +132,18 @@ int main(int argc,char *argv[])
   dump_plugins ();
   dump_factories ();
   dump_types ();
-  gst_type_dump ();
 
   print_some_providers ("audio/mp3");
 
   load_something ("mpg123");
 
   print_some_providers ("audio/mp3");
-  gst_type_dump ();
 
   load_something ("mpg123");
 
   dump_plugins ();
   dump_factories ();
   dump_types ();
-
-  gst_type_dump ();
 
   dump_factory ("lame");
   dump_factory ("mpeg_play");

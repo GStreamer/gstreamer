@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define DEBUG_ENABLED
+#define DEBUG_ENABLED
 
 #include "gstdebug.h"
 #include "gstprops.h"
@@ -304,6 +304,12 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
 
     sourcelist = g_slist_next (sourcelist);
     sinklist = g_slist_next (sinklist);
+  }
+  if (sinklist) {
+    GstPropsEntry *entry2;
+    entry2 = (GstPropsEntry *)sinklist->data;
+    missing++;
+    DEBUG ("source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
   }
 end:
 

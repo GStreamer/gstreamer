@@ -191,25 +191,33 @@ xmlNodePtr 		gst_element_save_thyself	(GstElement *element, xmlNodePtr parent);
 GstElement*		gst_element_load_thyself	(xmlNodePtr parent, GHashTable *elements);
 
 
-GstElementFactory*	gst_elementfactory_new		(gchar *name,GtkType type,
-                                          		 GstElementDetails *details);
-
-void 			gst_elementfactory_register	(GstElementFactory *elementfactory);
-void 			gst_elementfactory_unregister	(GstElementFactory *elementfactory);
+/* 
+ *
+ * factories stuff
+ *
+ **/
+GstElementFactory*	gst_elementfactory_new			(gchar *name,GtkType type,
+                                          			 GstElementDetails *details);
+void 			gst_elementfactory_destroy		(GstElementFactory *elementfactory);
 
 void 			gst_elementfactory_add_padtemplate	(GstElementFactory *elementfactory, 
-							 	GstPadTemplate *pad);
+							 	 GstPadTemplate *pad);
 
-GstElementFactory*	gst_elementfactory_find		(gchar *name);
-GList*			gst_elementfactory_get_list	(void);
+GstElementFactory*	gst_elementfactory_find			(gchar *name);
+GList*			gst_elementfactory_get_list		(void);
 
-GstElement*		gst_elementfactory_create	(GstElementFactory *factory,
-                                      			 gchar *name);
+gboolean		gst_elementfactory_can_src_caps 	(GstElementFactory *factory,
+								 GstCaps *caps);
+gboolean		gst_elementfactory_can_sink_caps 	(GstElementFactory *factory,
+							 	 GstCaps *caps);
+
+GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
+                                      				 gchar *name);
 // FIXME this name is wrong, probably so is the one above it
-GstElement*		gst_elementfactory_make		(gchar *factoryname, gchar *name);
+GstElement*		gst_elementfactory_make			(gchar *factoryname, gchar *name);
 
-xmlNodePtr 		gst_elementfactory_save_thyself	(GstElementFactory *factory, xmlNodePtr parent); 
-GstElementFactory*	gst_elementfactory_load_thyself	(xmlNodePtr parent);
+xmlNodePtr 		gst_elementfactory_save_thyself		(GstElementFactory *factory, xmlNodePtr parent); 
+GstElementFactory*	gst_elementfactory_load_thyself		(xmlNodePtr parent);
 
 #ifdef __cplusplus
 }

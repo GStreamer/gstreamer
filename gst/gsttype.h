@@ -23,7 +23,7 @@
 
 
 #include <gst/gstbuffer.h>
-#include <gst/gstelement.h>
+#include <gst/gstcaps.h>
 
 
 /* type of function used to check a stream for equality with type */
@@ -40,12 +40,6 @@ struct _GstType {
 
   GSList *typefindfuncs;	/* typefind functions */
 
-  GList *srcs;			/* list of src objects for this type */
-  GList *sinks;			/* list of sink objects for type */
-
-  GHashTable *converters;       /* a hashtable of factories that can convert
-				   from this type to destination type. The
-				   factories are indexed by destination type */
 };
 
 struct _GstTypeFactory {
@@ -65,27 +59,11 @@ guint16 	gst_type_register		(GstTypeFactory *factory);
 guint16 	gst_type_find_by_mime		(gchar *mime);
 guint16 	gst_type_find_by_ext		(gchar *ext);
 
-/* add src or sink object */
-void	 	_gst_type_add_src		(guint16 id, GstElementFactory *src);
-void 		_gst_type_add_sink		(guint16 id, GstElementFactory *sink);
-void	 	_gst_type_remove_src		(guint16 id, GstElementFactory *src);
-void 		_gst_type_remove_sink		(guint16 id, GstElementFactory *sink);
-/* get list of src or sink objects */
-GList*		gst_type_get_srcs		(guint16 id);
-GList*		gst_type_get_sinks		(guint16 id);
-
 /* get GstType by id */
 GstType*	gst_type_find_by_id		(guint16 id);
 
-GList*		gst_type_get_sink_to_src	(guint16 sinkid, guint16 srcid);
-
 /* get the list of registered types (returns list of GstType!) */
 GList*		gst_type_get_list		(void);
-
-void 		gst_type_dump			(void);
-
-xmlNodePtr 	gst_type_save_thyself		(GstType *type, xmlNodePtr parent);
-guint16 	gst_type_load_thyself		(xmlNodePtr parent);
 
 xmlNodePtr 	gst_typefactory_save_thyself	(GstTypeFactory *factory, xmlNodePtr parent);
 GstTypeFactory*	gst_typefactory_load_thyself	(xmlNodePtr parent);

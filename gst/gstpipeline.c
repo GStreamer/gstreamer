@@ -22,6 +22,7 @@
 #include "gstsink.h"
 #include "gstutils.h"
 #include "gsttype.h"
+#include "gstautoplug.h"
 
 GstElementDetails gst_pipeline_details = {
   "Pipeline object",
@@ -88,7 +89,6 @@ gst_pipeline_class_init (GstPipelineClass *klass)
   parent_class = gtk_type_class(gst_bin_get_type());
 
   gstelement_class->change_state = gst_pipeline_change_state;
-  gstelement_class->elementfactory = gst_elementfactory_find ("pipeline");
 }
 
 static void 
@@ -133,13 +133,12 @@ gst_pipeline_have_type (GstSink *sink, GstSink *sink2, gpointer data)
   *(gboolean *)data = TRUE;
 }
 
-static guint16 
+static GstCaps* 
 gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element) 
 {
   gboolean found = FALSE;
   GstElement *typefind;
   GstCaps *caps = NULL;
-  guint type_id = 0;
 
   g_print("GstPipeline: typefind for element \"%s\" %p\n", 
 		  gst_element_get_name(element), &found);
@@ -169,8 +168,6 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
     caps = gst_util_get_pointer_arg (GTK_OBJECT (typefind), "caps");
     
     gst_pad_set_caps (gst_element_get_pad (element, "src"), caps);
-
-    type_id = caps->id;
   }
 
   gst_pad_disconnect (gst_element_get_pad (element, "src"),
@@ -178,7 +175,7 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
   gst_bin_remove (GST_BIN (pipeline), typefind);
   gst_object_unref (GST_OBJECT (typefind));
 
-  return type_id;
+  return caps;
 }
 
 static gboolean 
@@ -206,27 +203,6 @@ gst_pipeline_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
 		      gst_element_get_name(sink));
         connected = TRUE;
         break;
-      }
-      else {
-	GList *factories;
-        g_print("gstpipeline: not compatible, find intermediate element\n");
-
-	factories = gst_type_get_sink_to_src (pad->caps->id, sinkpad->caps->id);
-
-	while (factories) {
-          GstElementFactory *factory = (GstElementFactory *)factories->data;
-          GstElement *element = gst_elementfactory_create (factory, factory->name);
-
-	  g_print ("gstpipeline: trying element \"%s\"\n", element->name);
-
-	  if (gst_pipeline_pads_autoplug_func (src, pad, element)) {
-	    if (gst_pipeline_pads_autoplug_func (element, gst_element_get_pad (element, "src"), sink)) {
-	      gst_bin_add (gst_object_get_parent (GST_OBJECT(sink)), element);
-              return TRUE;
-	    }
-	  }
-	  factories = g_list_next (factories);
-	}
       }
     }
     sinkpads = g_list_next(sinkpads);
@@ -327,8 +303,8 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
   GList **factories;
   GList **base_factories;
   GstElementFactory *factory;
-  GList *src_types;
-  guint16 src_type = 0, sink_type = 0;
+  GList *src_pads;
+  GstCaps *src_caps = 0;
   guint i, numsinks;
   gboolean use_thread = FALSE, have_common = FALSE;
 
@@ -346,31 +322,18 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
     return FALSE;
   }
 
-  // FIXME check the factory???
-  factory = gst_element_get_factory(pipeline->src);
+  g_print("GstPipeline: source \"%s\" has no MIME type, running typefind...\n", 
+	gst_element_get_name(pipeline->src));
 
-  //src_types = factory->pads;
-  src_types = NULL; // FIXME
-  if (src_types == NULL) {
-    g_print("GstPipeline: source \"%s\" has no MIME type, running typefind...\n", 
-		gst_element_get_name(pipeline->src));
+  src_caps = gst_pipeline_typefind(pipeline, pipeline->src);
 
-    src_type = gst_pipeline_typefind(pipeline, pipeline->src);
-
-    if (src_type) {
-      g_print("GstPipeline: source \"%s\" type found %d\n", gst_element_get_name(pipeline->src), 
-		  src_type);
-    }
-    else {
-      g_print("GstPipeline: source \"%s\" has no type\n", gst_element_get_name(pipeline->src));
-      return FALSE;
-    }
+  if (src_caps) {
+    g_print("GstPipeline: source \"%s\" type found %d\n", gst_element_get_name(pipeline->src), 
+	  src_caps->id);
   }
   else {
-    while (src_types) {
-      // FIXME loop over types and find paths...
-      src_types = g_list_next(src_types);
-    }
+    g_print("GstPipeline: source \"%s\" has no type\n", gst_element_get_name(pipeline->src));
+    return FALSE;
   }
 
   srcelement = pipeline->src;
@@ -389,25 +352,9 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
 
     element = GST_ELEMENT(elements->data);
 
-    pads = gst_element_get_pad_list(element);
+    pad = (GstPad *)gst_element_get_pad_list (element)->data;
 
-    while (pads) {
-      pad = (GstPad *)pads->data;
-
-      if (pad->direction == GST_PAD_SINK) {
-        GstCaps *caps = gst_pad_get_caps (pad);
-        if (caps) {
-          sink_type = caps->id;
-	  break;
-        }
-	else
-	  sink_type = 0;
-      }
-
-      pads = g_list_next(pads);
-    }
-
-    base_factories[i] = factories[i] = gst_type_get_sink_to_src(src_type, sink_type);
+    base_factories[i] = factories[i] = gst_autoplug_caps (src_caps, pad->caps);
     i++;
 
     elements = g_list_next(elements);

@@ -34,53 +34,15 @@ _gst_elementfactory_initialize (void)
 }
 
 /**
- * gst_elementfactory_register:
- * @elementfactory: factory to register
- *
- * Adds the elementfactory to the global list, so it can be retrieved by
- * name.
- */
-void 
-gst_elementfactory_register (GstElementFactory *elementfactory) 
-{
-  g_return_if_fail(elementfactory != NULL);
-
-  _gst_elementfactories = g_list_prepend (_gst_elementfactories, elementfactory);
-}
-
-/**
  * gst_elementfactory_unregister:
  * @elementfactory: factory to register
  *
  * Removes the elementfactory from the global list.
  */
 void 
-gst_elementfactory_unregister (GstElementFactory *factory) 
+gst_elementfactory_destroy (GstElementFactory *factory) 
 {
-  GList *padtemplates;
-
   g_return_if_fail (factory != NULL);
-
-  padtemplates = factory->padtemplates;
-
-  while (padtemplates) {
-    GstPadTemplate *padfactory = (GstPadTemplate *)padtemplates->data;
-    GstCaps *caps = padfactory->caps;
-
-    if (caps) {
-      switch (padfactory->direction) {
-        case GST_PAD_SRC:
-          _gst_type_remove_src (caps->id, factory);
-	  break;
-        case GST_PAD_SINK:
-          _gst_type_remove_sink (caps->id, factory);
-	  break;
-        default:
-	  break;
-      }
-    }
-    padtemplates = g_list_next (padtemplates);
-  }
 
   _gst_elementfactories = g_list_remove (_gst_elementfactories, factory);
 
@@ -144,10 +106,18 @@ gst_elementfactory_new (gchar *name, GtkType type,
                         GstElementDetails *details) 
 {
   GstElementFactory *factory = g_new0(GstElementFactory, 1);
+  GstElementClass *gstelement_class;
+
   factory->name = g_strdup(name);
   factory->type = type;
   factory->details = details;
   factory->padtemplates = NULL;
+
+  gstelement_class = (GstElementClass*) gtk_type_class (GST_TYPE_ELEMENT);
+
+  gstelement_class->elementfactory = factory;
+
+  _gst_elementfactories = g_list_prepend (_gst_elementfactories, factory);
 
   return factory;
 }
@@ -233,28 +203,58 @@ void
 gst_elementfactory_add_padtemplate (GstElementFactory *factory, 
 			            GstPadTemplate *template) 
 {
-  GstCaps *caps;
-  
   g_return_if_fail(factory != NULL);
   g_return_if_fail(template != NULL);
 
   factory->padtemplates = g_list_append (factory->padtemplates, template); 
+}
 
-  caps = template->caps;
+gboolean
+gst_elementfactory_can_src_caps (GstElementFactory *factory,
+		                 GstCaps *caps)
+{
+  GList *templates;
 
-  if (caps) {
-    switch (template->direction) {
-      case GST_PAD_SRC:
-        _gst_type_add_src (caps->id, factory);
-	break;
-      case GST_PAD_SINK:
-        _gst_type_add_sink (caps->id, factory);
-	break;
-      default:
-	g_print ("gstelementfactory: uh? no pad direction\n");
-	break;
+  g_return_val_if_fail(factory != NULL, FALSE);
+  g_return_val_if_fail(caps != NULL, FALSE);
+
+  templates = factory->padtemplates;
+
+  while (templates) {
+    GstPadTemplate *template = (GstPadTemplate *)templates->data;
+
+    if (template->direction == GST_PAD_SRC) {
+      if (gst_caps_check_compatibility (template->caps, caps))
+	return TRUE;
     }
+    templates = g_list_next (templates);
   }
+
+  return FALSE;
+}
+
+gboolean
+gst_elementfactory_can_sink_caps (GstElementFactory *factory,
+		                  GstCaps *caps)
+{
+  GList *templates;
+
+  g_return_val_if_fail(factory != NULL, FALSE);
+  g_return_val_if_fail(caps != NULL, FALSE);
+
+  templates = factory->padtemplates;
+
+  while (templates) {
+    GstPadTemplate *template = (GstPadTemplate *)templates->data;
+
+    if (template->direction == GST_PAD_SINK) {
+      if (gst_caps_check_compatibility (caps, template->caps))
+	return TRUE;
+    }
+    templates = g_list_next (templates);
+  }
+
+  return FALSE;
 }
 
 /**
@@ -343,6 +343,8 @@ gst_elementfactory_load_thyself (xmlNodePtr parent)
 
     children = children->next;
   }
+
+  _gst_elementfactories = g_list_prepend (_gst_elementfactories, factory);
 
   return factory;
 }

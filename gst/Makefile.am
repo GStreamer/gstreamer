@@ -21,6 +21,7 @@ libgst_la_SOURCES =	\
 	gst.c		\
 	$(GSTOBJECT_SRCS)	\
 	gstpad.c	\
+	gstautoplug.c	\
 	gstbuffer.c	\
 	gstbufferpool.c	\
 	gstclock.c	\
@@ -53,6 +54,7 @@ libgstinclude_HEADERS =	\
 	gstlog.h	\
 	$(GSTOBJECT_INCLUDES)	\
 	gstpad.h	\
+	gstautoplug.h	\
 	gstbuffer.h	\
 	gstbufferpool.h	\
 	gstclock.h	\
@@ -83,7 +85,7 @@ noinst_HEADERS =	\
 	gsti386.h       \
 	gstppc.h        
 
-CFLAGS += -O6 -Wall 
+CFLAGS += -g -O6 -Wall 
 
 libgst_la_LIBADD = $(GLIB_LIBS) $(GTK_LIBS) $(XML_LIBS)
 libgst_la_LDFLAGS = -version-info $(STREAMER_CURRENT):$(STREAMER_REVISION):$(STREAMER_AGE)

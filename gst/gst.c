@@ -53,12 +53,9 @@ gst_init (int *argc, char **argv[])
   _gst_buffer_initialize ();
 
   /* register some standard builtin types */
-  gst_elementfactory_register (gst_elementfactory_new ("bin",
-			  gst_bin_get_type (), &gst_bin_details));
-  gst_elementfactory_register (gst_elementfactory_new ("pipeline",
-			  gst_pipeline_get_type (), &gst_pipeline_details));
-  gst_elementfactory_register (gst_elementfactory_new("thread",
-			  gst_thread_get_type (), &gst_thread_details));
+  gst_elementfactory_new ("bin", gst_bin_get_type (), &gst_bin_details);
+  gst_elementfactory_new ("pipeline", gst_pipeline_get_type (), &gst_pipeline_details);
+  gst_elementfactory_new("thread", gst_thread_get_type (), &gst_thread_details);
 
   _gst_trace_on = 0;
   if (_gst_trace_on) {

@@ -180,7 +180,7 @@ gst_plugin_remove (GstPlugin *plugin)
 
   factories = plugin->elements;
   while (factories) {
-    gst_elementfactory_unregister((GstElementFactory*)(factories->data));
+    gst_elementfactory_destroy ((GstElementFactory*)(factories->data));
     factories = g_list_next(factories);
   }
   _gst_plugins = g_list_remove(_gst_plugins, plugin);
@@ -478,7 +478,6 @@ gst_plugin_add_factory (GstPlugin *plugin, GstElementFactory *factory)
 
 //  g_print("adding factory to plugin\n");
   plugin->elements = g_list_prepend (plugin->elements, factory);
-  gst_elementfactory_register (factory);
 }
 
 /**
