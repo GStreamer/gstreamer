@@ -130,10 +130,10 @@ gst_lame_vbrmode_get_type (void)
 {
   static GType lame_vbrmode_type = 0;
   static GEnumValue lame_vbrmode[] = {
-    {vbr_off, "0", "CBR"},
-    {vbr_mt, "1", "VBR MT"},
-    {vbr_rh, "2", "VBR RH"},
-    {vbr_abr, "3", "VBR ABR"},
+    {vbr_off, "cbr", "No VBR (Constant Bitrate)"},
+    {vbr_rh, "old", "Lame's old VBR algorithm"},
+    {vbr_abr, "abr", "VBR Average Bitrate"},
+    {vbr_mtrh, "new", "Lame's new VBR algorithm"},
     {0, NULL, NULL}
   };
 
@@ -150,11 +150,11 @@ gst_lame_preset_get_type (void)
 {
   static GType gst_lame_preset = 0;
   static GEnumValue gst_lame_presets[] = {
-    {0, "0", "None"},
-    {MEDIUM, "1", "Medium"},
-    {STANDARD, "2", "Standard"},
-    {EXTREME, "3", "Extreme"},
-    {INSANE, "4", "Insane"},
+    {0, "none", "None"},
+    {MEDIUM, "medium", "Medium"},
+    {STANDARD, "standard", "Standard"},
+    {EXTREME, "extreme", "Extreme"},
+    {INSANE, "insane", "Insane"},
     {0, NULL, NULL}
   };
 
