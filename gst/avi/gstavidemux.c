@@ -779,7 +779,7 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
         return FALSE;
       break;
     case GST_RIFF_FCC_auds:
-      if (!gst_riff_read_strf_auds (riff, &strf.auds))
+      if (!gst_riff_read_strf_auds_with_data (riff, &strf.auds, &extradata))
         return FALSE;
       break;
     case GST_RIFF_FCC_iavs:
@@ -861,8 +861,9 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
 
       padname = g_strdup_printf ("audio_%02d", avi->num_a_streams);
       templ = gst_element_class_get_pad_template (klass, "audio_%02d");
-      caps = gst_riff_create_audio_caps (strf.auds->format, strh, strf.auds,
-          &codec_name);
+      caps =
+          gst_riff_create_audio_caps_with_data (strf.auds->format, strh,
+          strf.auds, extradata, initdata, &codec_name);
       gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
           codec_name, NULL);
       gst_element_found_tags (GST_ELEMENT (avi), list);
