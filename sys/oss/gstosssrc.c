@@ -382,7 +382,7 @@ gst_osssrc_get (GstPad * pad)
 
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_OFFSET (buf) = src->curoffset;
-  GST_BUFFER_OFFSET_END (buf) = src->curoffset + readsamples;
+  GST_BUFFER_OFFSET_END (buf) = src->curoffset + readbytes;
   GST_BUFFER_DURATION (buf) =
       readsamples * GST_SECOND / GST_OSSELEMENT (src)->rate;
 
@@ -391,7 +391,7 @@ gst_osssrc_get (GstPad * pad)
     if (src->clock == src->provided_clock) {
       /* if it's our own clock, we can be very accurate */
       GST_BUFFER_TIMESTAMP (buf) =
-          src->curoffset * GST_SECOND / GST_OSSELEMENT (src)->rate;
+          src->curoffset * GST_SECOND / GST_OSSELEMENT (src)->bps;
     } else {
       /* somebody elses clock, timestamp with that clock, no discontinuity in
        * the stream since the OFFSET is updated correctly. Elements can stretch
@@ -404,7 +404,7 @@ gst_osssrc_get (GstPad * pad)
     GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   }
 
-  src->curoffset += readsamples;
+  src->curoffset += readbytes;
 
   GST_DEBUG ("pushed buffer from soundcard of %ld bytes, timestamp %"
       G_GINT64_FORMAT, readbytes, GST_BUFFER_TIMESTAMP (buf));
