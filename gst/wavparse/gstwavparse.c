@@ -267,10 +267,18 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 		       &GST_BUFFER_TIMESTAMP (buf));
 
       if (wavparse->need_discont) {
-        gst_pad_push (wavparse->srcpad, 
-	              GST_BUFFER (gst_event_new_discontinuous (FALSE,
+        if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+          gst_pad_push (wavparse->srcpad, 
+	                GST_BUFFER (gst_event_new_discontinuous (FALSE,
+      			      GST_FORMAT_BYTES, wavparse->offset,
 			      GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf), 
 			      NULL)));
+	} else {
+          gst_pad_push (wavparse->srcpad, 
+	                GST_BUFFER (gst_event_new_discontinuous (FALSE,
+      			      GST_FORMAT_BYTES, wavparse->offset,
+			      NULL)));
+	}
         wavparse->need_discont = FALSE;
       }
       gst_pad_push (wavparse->srcpad, buf);
@@ -499,9 +507,8 @@ gst_wavparse_pad_convert (GstPad *pad,
   
   bytes_per_sample = wavparse->channels * wavparse->width / 8;
   if (bytes_per_sample == 0) {
-    g_warning ("bytes_per_sample is 0, internal error\n");
-    g_warning ("channels %d,  width %d\n",
-	     wavparse->channels, wavparse->width);
+    GST_DEBUG (0, "bytes_per_sample is 0, probably an mp3 - channels %d,  width %d\n",
+	          wavparse->channels, wavparse->width);
     return FALSE;
   }
   byterate = (glong) (bytes_per_sample * wavparse->rate);
@@ -630,7 +637,7 @@ gst_wavparse_srcpad_event (GstPad *pad, GstEvent *event)
 	 seek = gst_event_new_seek (
 			 GST_FORMAT_BYTES |
 			 (GST_EVENT_SEEK_TYPE (event) & ~GST_SEEK_FORMAT_MASK), 
-			 byteoffset + wavparse->datastart);
+			 byteoffset + (GST_EVENT_SEEK_METHOD (event) == GST_SEEK_METHOD_END ? 0 : wavparse->datastart));
 
 	 res = gst_pad_send_event (GST_PAD_PEER (wavparse->sinkpad), seek);
 
