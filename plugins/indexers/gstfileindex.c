@@ -37,6 +37,10 @@
 #define GST_IS_FILE_INDEX_CLASS(obj)	\
   (GST_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_FILE_INDEX))
 	
+#ifndef __FUNCTION__
+#define __FUNCTION__ "Unavailable"
+#endif
+
 /*
  * Object model:
  *
