@@ -26,9 +26,7 @@
 
 #include <gst/gst.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 GstElementDetails gst_multidisksrc_details;
 
@@ -77,8 +75,6 @@ struct _GstMultiDiskSrcClass {
 
 GType gst_multidisksrc_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_MULTIDISKSRC_H__ */

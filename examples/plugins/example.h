@@ -23,10 +23,7 @@
 
 #include <gst/gst.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 /* This is the definition of the element's object structure. */
 typedef struct _GstExample GstExample;
@@ -85,10 +82,6 @@ struct _GstExampleClass {
  */
 GType gst_example_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_EXAMPLE_H__ */

@@ -28,10 +28,7 @@
 #include <gst/gst.h>
 #include <sys/types.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_FILESRC \
   (gst_filesrc_get_type())
@@ -83,9 +80,6 @@ struct _GstFileSrcClass {
 
 GType gst_filesrc_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_FILESRC_H__ */

@@ -26,10 +26,7 @@
 
 #include <gst/gst.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 extern GstElementDetails gst_aggregator_details;
 
@@ -75,9 +72,6 @@ GType 	gst_aggregator_get_type	(void);
 
 gboolean 	gst_aggregator_factory_init 	(GstElementFactory *factory);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_AGGREGATOR_H__ */

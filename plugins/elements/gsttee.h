@@ -26,10 +26,7 @@
 
 #include <gst/gst.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 extern GstElementDetails gst_tee_details;
 
@@ -64,9 +61,6 @@ GType 	gst_tee_get_type	(void);
 
 gboolean 	gst_tee_factory_init 	(GstElementFactory *factory);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_TEE_H__ */

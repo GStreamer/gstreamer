@@ -28,11 +28,7 @@
 #include <config.h>
 #include <gst/gst.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 GstElementDetails gst_fdsrc_details;
 
@@ -72,9 +68,6 @@ struct _GstFdSrcClass {
 
 GType gst_fdsrc_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_FDSRC_H__ */

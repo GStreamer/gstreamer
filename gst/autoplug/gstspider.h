@@ -26,9 +26,7 @@
 #include <gst/gst.h>
 #include "gstspideridentity.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 	
 extern GstElementDetails gst_spider_details;
 
@@ -90,9 +88,6 @@ GType         	gst_spider_get_type             (void);
 void		gst_spider_identity_plug	(GstSpiderIdentity *ident);
 void		gst_spider_identity_unplug	(GstSpiderIdentity *ident);
 
-	
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_SPIDER_H__ */

@@ -22,20 +22,16 @@
 #ifndef __GST_CONTROL_H__
 #define __GST_CONTROL_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #include <gst/control/dparammanager.h>
 #include <gst/control/dparam.h>
 #include <gst/control/dparam_smooth.h>
 #include <gst/control/dplinearinterp.h>
 #include <gst/control/unitconvert.h>
 
+G_BEGIN_DECLS
+
 void gst_control_init (int *argc, char **argv[]);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_CONTROL_H__ */

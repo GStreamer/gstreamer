@@ -22,15 +22,11 @@
 #ifndef __GST_DPCOMMON_H__
 #define __GST_DPCOMMON_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef struct _GstDParam GstDParam;
 typedef struct _GstDParamManager GstDParamManager;
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_DPCOMMON_H__ */

@@ -24,9 +24,7 @@
 #ifndef __GST_XML_REGISTRY_H__
 #define __GST_XML_REGISTRY_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #include <gst/gstregistry.h>
 
@@ -126,10 +124,7 @@ GType		gst_xml_registry_get_type		(void);
 
 GstRegistry* 	gst_xml_registry_new 			(const gchar *name, const gchar *location);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_XML_REGISTRY_H__ */
 

@@ -45,10 +45,7 @@
 #include <asm/atomic.h>
 #endif
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 extern GType _gst_buffer_type;
 
@@ -162,9 +159,6 @@ GstBuffer*	gst_buffer_append		(GstBuffer *buf, GstBuffer *buf2);
 
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_BUFFER_H__ */

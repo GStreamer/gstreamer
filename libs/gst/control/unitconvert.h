@@ -24,9 +24,7 @@
 
 #include <gst/gstobject.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_UNIT_CONVERT			(gst_unitconv_get_type ())
 #define GST_UNIT_CONVERT(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_UNIT_CONVERT,GstUnitConvert))
@@ -74,8 +72,6 @@ gboolean gst_unitconv_register_unit(const gchar *domain_name,
 gboolean gst_unitconv_register_convert_func(gchar *from_unit_named, gchar *to_unit_named, GstUnitConvertFunc convert_func);
 gboolean gst_unitconv_register_convert_property(gchar *unit_name, GParamSpec *convert_prop_spec);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_UNITCONVERT_H__ */

@@ -28,11 +28,7 @@
 #include <config.h>
 #include <gst/gst.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 GstElementDetails gst_spider_identity_details;
 
@@ -81,10 +77,6 @@ GstSpiderIdentity* 		gst_spider_identity_new_sink			(gchar *name);
 GstSpiderIdentity* 		gst_spider_identity_new_src			(gchar *name);
 GstPad*				gst_spider_identity_request_new_pad		(GstElement *element, GstPadTemplate *templ, const gchar *name);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_SPIDER_IDENTITY_H__ */

@@ -28,11 +28,7 @@
 #include <config.h>
 #include <gst/gst.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 GstElementDetails gst_fakesink_details;
 
@@ -73,9 +69,6 @@ GType gst_fakesink_get_type(void);
 
 gboolean gst_fakesink_factory_init (GstElementFactory *factory);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_FAKESINK_H__ */

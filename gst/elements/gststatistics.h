@@ -27,11 +27,7 @@
 #include <config.h>
 #include <gst/gst.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 GstElementDetails gst_statistics_details;
 
@@ -86,10 +82,6 @@ struct _GstStatisticsClass {
 
 GType gst_statistics_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_STATISTICS_H__ */

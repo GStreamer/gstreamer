@@ -26,9 +26,7 @@
 #include <gst/gstprops.h>
 #include "dparamcommon.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_DPARAM			(gst_dparam_get_type ())
 #define GST_DPARAM(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DPARAM,GstDParam))
@@ -102,8 +100,6 @@ void gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GParamSpec
 void gst_dparam_detach (GstDParam *dparam);
 void gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value, GstDParamUpdateInfo update_info);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_DPARAM_H__ */

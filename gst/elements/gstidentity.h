@@ -28,11 +28,7 @@
 #include <config.h>
 #include <gst/gst.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 GstElementDetails gst_identity_details;
 
@@ -76,10 +72,6 @@ struct _GstIdentityClass {
 
 GType gst_identity_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_IDENTITY_H__ */

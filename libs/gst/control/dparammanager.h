@@ -28,9 +28,7 @@
 #include <gst/control/dparam.h>
 #include <gst/control/unitconvert.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_DPMAN			(gst_dpman_get_type ())
 #define GST_DPMAN(obj)			(G_TYPE_CHECK_INSTANCE_CAST	((obj), GST_TYPE_DPMAN,GstDParamManager))
@@ -180,8 +178,6 @@ void gst_dpman_register_mode (GstDParamManagerClass *klass,
                            GstDPMModeSetupFunction setupfunc,
                            GstDPMModeTeardownFunction teardownfunc);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_DPMAN_H__ */

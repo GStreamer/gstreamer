@@ -26,10 +26,7 @@
 #include <gst/gstobject.h>
 #include "dparam.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_DP_LININT			(gst_dp_linint_get_type ())
 #define GST_DP_LININT(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DP_LININT,GstDParamLinInterp))
@@ -54,8 +51,6 @@ struct _GstDParamLinInterpClass {
 GType gst_dp_linint_get_type (void);
 GstDParam* gst_dp_linint_new (GType type);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_DP_LININT_H__ */

@@ -24,9 +24,7 @@
 
 #include "dparam.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_DPSMOOTH			(gst_dpsmooth_get_type ())
 #define GST_DPSMOOTH(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DPSMOOTH,GstDParamSmooth))
@@ -63,8 +61,6 @@ struct _GstDParamSmoothClass {
 
 GstDParam* gst_dpsmooth_new (GType type);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_DPSMOOTH_H__ */

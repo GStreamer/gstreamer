@@ -26,9 +26,7 @@
 
 #include <gst/gstautoplug.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_STATIC_AUTOPLUG_RENDER \
   (gst_static_autoplug_render_get_type())
@@ -55,10 +53,7 @@ struct _GstStaticAutoplugRenderClass {
 
 GType			gst_static_autoplug_render_get_type		(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_STATIC_AUTOPLUG_H__ */
 

@@ -28,11 +28,7 @@
 #include <config.h>
 #include <gst/gst.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 GstElementDetails gst_md5sink_details;
 
@@ -78,9 +74,6 @@ GType				gst_md5sink_get_type		(void);
 
 gboolean 			gst_md5sink_factory_init 	(GstElementFactory *factory);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_MD5SINK_H__ */
