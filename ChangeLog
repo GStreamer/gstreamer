@@ -1,3 +1,11 @@
+2005-01-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_codecid):
+	  Set property incompatible with DV demuxer so that it won't
+	  infinitely plug demuxers to each other. Fixes playback of .dv
+	  streams in Totem.
+
 2004-12-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:

@@ -332,7 +332,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_DVVIDEO:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-dv", NULL);
+      caps = GST_FF_VID_CAPS_NEW ("video/x-dv",
+          "systemstream", G_TYPE_BOOLEAN, FALSE,
+          NULL);
       break;
 
     case CODEC_ID_WMAV1:
@@ -1376,8 +1378,13 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     id = CODEC_ID_PCM_ALAW;
     audio = TRUE;
   } else if (!strcmp (mimetype, "video/x-dv")) {
-    id = CODEC_ID_DVVIDEO;
-    video = TRUE;
+    gboolean sys_strm;
+
+    if (!gst_structure_get_boolean (structure, "systemstream", &sys_strm) &&
+        !sys_strm) {
+      id = CODEC_ID_DVVIDEO;
+      video = TRUE;
+    }
   } else if (!strcmp (mimetype, "audio/x-dv")) {        /* ??? */
     id = CODEC_ID_DVAUDIO;
     audio = TRUE;
