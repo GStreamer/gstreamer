@@ -246,7 +246,7 @@ cdparanoia_init (CDParanoia *cdparanoia)
   gst_pad_set_get_function (cdparanoia->srcpad, cdparanoia_get);
   gst_element_add_pad (GST_ELEMENT (cdparanoia), cdparanoia->srcpad);
 
-  cdparanoia->device = "/dev/cdrom";
+  cdparanoia->device = g_strdup ("/dev/cdrom");
   cdparanoia->generic_device = NULL;
   cdparanoia->start_sector = -1;
   cdparanoia->end_sector = -1;
