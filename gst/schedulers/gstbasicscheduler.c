@@ -1276,11 +1276,9 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
 
 	  do_cothread_switch (GST_ELEMENT_THREADSTATE (entry));
 
-	  /*
           if (bsched->current && bsched->current->post_run_func) {
             bsched->current->post_run_func (bsched->current);
 	  }
-	  */
           
 	  state = GST_SCHEDULER_STATE (sched);
 	  /* if something changed, return - go on else */
