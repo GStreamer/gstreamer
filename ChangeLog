@@ -1,3 +1,8 @@
+2004-06-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_get):
+	  better debug, don't override OFFSET and OFFSET_END
+
 2004-06-25  Iain <iain@prettypeople.org>
 
 	* gst-libs/gst/media-info/media-info-priv.c (gmi_set_mime): Add 
