@@ -192,6 +192,9 @@ gst_play_base_bin_dispose (GObject * object)
   }
 }
 
+/* this signal will be fired when one of the queues with raw
+ * data is filled. This means that the preroll stage is over and
+ * playback should start */
 static void
 queue_overrun (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
@@ -208,14 +211,16 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin, GstPad * pad)
 {
   GstElement *element;
   gchar *name;
+  guint sig;
 
   name = g_strdup_printf ("preroll_%s", gst_pad_get_name (pad));
   element = gst_element_factory_make ("queue", name);
   g_object_set (G_OBJECT (element), "max-size-buffers", 0, NULL);
   g_object_set (G_OBJECT (element), "max-size-bytes", 0, NULL);
   g_object_set (G_OBJECT (element), "max-size-time", 3 * GST_SECOND, NULL);
-  g_signal_connect (G_OBJECT (element), "overrun",
+  sig = g_signal_connect (G_OBJECT (element), "overrun",
       G_CALLBACK (queue_overrun), play_base_bin);
+  g_object_set_data (G_OBJECT (element), "signal_id", GINT_TO_POINTER (sig));
   g_free (name);
 
   return element;
@@ -376,14 +381,18 @@ static gboolean
 setup_source (GstPlayBaseBin * play_base_bin)
 {
   GstElement *old_src;
+  GstPad *srcpad = NULL;
 
   if (!play_base_bin->need_rebuild)
     return TRUE;
 
   old_src = play_base_bin->source;
 
+  /* create and configure an element that can handle the uri 
+   */
   play_base_bin->source =
       gst_element_make_from_uri (GST_URI_SRC, play_base_bin->uri, "source");
+
   if (!play_base_bin->source) {
     g_warning ("don't know how to read %s", play_base_bin->uri);
     play_base_bin->source = old_src;
@@ -394,6 +403,55 @@ setup_source (GstPlayBaseBin * play_base_bin)
       gst_bin_remove (GST_BIN (play_base_bin->thread), old_src);
     }
     gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->source);
+  }
+
+  /* now see if the source element emits raw audio/video all by itself,
+   * if so, we can create streams for the pads and be done with it 
+   */
+  {
+    const GList *pads;
+    gboolean is_raw = FALSE;
+
+    for (pads = gst_element_get_pad_list (play_base_bin->source);
+        pads; pads = g_list_next (pads)) {
+      GstPad *pad = GST_PAD (pads->data);
+      GstStructure *structure;
+      const gchar *mimetype;
+      GstCaps *caps;
+
+      if (GST_PAD_IS_SINK (pad))
+        continue;
+
+      srcpad = pad;
+      caps = gst_pad_get_caps (pad);
+
+      if (caps == NULL || gst_caps_is_empty (caps) ||
+          gst_caps_get_size (caps) == 0)
+        continue;
+
+      structure = gst_caps_get_structure (caps, 0);
+      mimetype = gst_structure_get_name (structure);
+
+      if (g_str_has_prefix (mimetype, "audio/x-raw") ||
+          g_str_has_prefix (mimetype, "video/x-raw")) {
+        new_decoded_pad (play_base_bin->source, pad, g_list_next (pad) == NULL,
+            play_base_bin);
+
+        is_raw = TRUE;
+      }
+    }
+    if (is_raw) {
+      return TRUE;
+    }
+  }
+
+  if (srcpad == NULL) {
+    /* FIXME we do not handle this yet, but we should just make sure that
+     * we don't error on this because there is no streaminfo. A possible element
+     * without any source pads could be cdaudio, which just plays an audio cd 
+     */
+    GST_DEBUG_OBJECT (play_base_bin, "have source element without source pad");
+    return FALSE;
   }
 
   {
@@ -419,11 +477,10 @@ setup_source (GstPlayBaseBin * play_base_bin)
 
     remove_prerolls (play_base_bin);
 
-    res =
-        gst_element_link_pads (play_base_bin->source, "src",
-        play_base_bin->decoder, "sink");
+    res = gst_pad_link (srcpad,
+        gst_element_get_pad (play_base_bin->decoder, "sink"));
     if (!res) {
-      g_warning ("can't link source to typefind element");
+      g_warning ("can't link source to decoder element");
       return FALSE;
     }
     sig1 = g_signal_connect (G_OBJECT (play_base_bin->decoder),
@@ -439,11 +496,27 @@ setup_source (GstPlayBaseBin * play_base_bin)
     g_mutex_lock (play_base_bin->preroll_lock);
     if (gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING) ==
         GST_STATE_SUCCESS) {
+      GList *prerolls;
+
       GST_DEBUG ("waiting for preroll...");
       sig4 = g_signal_connect (G_OBJECT (play_base_bin->thread),
           "state-change", G_CALLBACK (state_change), play_base_bin);
       g_cond_wait (play_base_bin->preroll_cond, play_base_bin->preroll_lock);
       GST_DEBUG ("preroll done !");
+
+      /* remove signals */
+      for (prerolls = play_base_bin->preroll_elems; prerolls;
+          prerolls = g_list_next (prerolls)) {
+        GstElement *element = GST_ELEMENT (prerolls->data);
+        guint sig_id;
+
+        sig_id =
+            GPOINTER_TO_INT (g_object_get_data (G_OBJECT (element),
+                "signal_id"));
+
+        GST_LOG ("removing preroll signal %s", gst_element_get_name (element));
+        g_signal_handler_disconnect (G_OBJECT (element), sig_id);
+      }
     } else {
       GST_DEBUG ("state change failed, media cannot be loaded");
       sig4 = 0;
