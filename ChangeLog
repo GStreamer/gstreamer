@@ -1,3 +1,10 @@
+2004-10-29  Sebastien Cote  <sc5@hermes.usherb.ca>
+
+	Reviewd by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_fmt):
+	  Fix memleak (#155223).
+
 2004-10-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/.cvsignore:
