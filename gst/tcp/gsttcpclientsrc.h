@@ -72,6 +72,7 @@ struct _GstTCPClientSrc {
 
   GstTCPProtocolType protocol; /* protocol used for reading data */
   gboolean caps_received;      /* if we have received caps yet */
+  GstCaps *caps;
   GstClock *clock;
 
   gboolean send_discont;       /* TRUE when we need to send a discont */

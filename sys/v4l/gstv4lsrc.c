@@ -583,7 +583,6 @@ gst_v4lsrc_palette_to_caps (int palette)
   return caps;
 }
 
-
 static GstPadLinkReturn
 gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
 {

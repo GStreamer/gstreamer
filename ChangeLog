@@ -1,5 +1,13 @@
 2004-06-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_init),
+	(gst_tcpclientsrc_getcaps), (gst_tcpclientsrc_get),
+	(gst_tcpclientsrc_init_receive):
+	* gst/tcp/gsttcpclientsrc.h:
+          read caps when connecting to server for GDP so we set them correctly
+
+2004-06-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/videorate/gstvideorate.c: (gst_videorate_chain):
 	  notify drops and duplicates
 	* gst/videoscale/videoscale.c: (videoscale_get_structure):

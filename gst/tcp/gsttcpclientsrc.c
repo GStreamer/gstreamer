@@ -70,6 +70,8 @@ static void gst_tcpclientsrc_base_init (gpointer g_class);
 static void gst_tcpclientsrc_class_init (GstTCPClientSrc * klass);
 static void gst_tcpclientsrc_init (GstTCPClientSrc * tcpclientsrc);
 
+static GstCaps *gst_tcpclientsrc_getcaps (GstPad * pad);
+
 static GstData *gst_tcpclientsrc_get (GstPad * pad);
 static GstElementStateReturn gst_tcpclientsrc_change_state (GstElement *
     element);
@@ -169,6 +171,7 @@ gst_tcpclientsrc_init (GstTCPClientSrc * this)
   this->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (this), this->srcpad);
   gst_pad_set_get_function (this->srcpad, gst_tcpclientsrc_get);
+  gst_pad_set_getcaps_function (this->srcpad, gst_tcpclientsrc_getcaps);
 
   this->port = TCP_DEFAULT_PORT;
   this->host = g_strdup (TCP_DEFAULT_HOST);
@@ -176,8 +179,25 @@ gst_tcpclientsrc_init (GstTCPClientSrc * this)
   this->sock_fd = -1;
   this->protocol = GST_TCP_PROTOCOL_TYPE_NONE;
   this->curoffset = 0;
+  this->caps = NULL;
 
   GST_FLAG_UNSET (this, GST_TCPCLIENTSRC_OPEN);
+}
+
+static GstCaps *
+gst_tcpclientsrc_getcaps (GstPad * pad)
+{
+  GstTCPClientSrc *src;
+
+  src = GST_TCPCLIENTSRC (GST_OBJECT_PARENT (pad));
+
+  if (!GST_FLAG_IS_SET (src, GST_TCPCLIENTSRC_OPEN))
+    return gst_caps_new_any ();
+
+  if (src->caps)
+    return src->caps;
+
+  return gst_caps_new_any ();
 }
 
 static GstData *
@@ -189,7 +209,6 @@ gst_tcpclientsrc_get (GstPad * pad)
 
   GstData *data = NULL;
   GstBuffer *buf = NULL;
-  GstCaps *caps;
 
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
@@ -235,27 +254,6 @@ gst_tcpclientsrc_get (GstPad * pad)
       buf = gst_buffer_new_and_alloc (readsize);
       break;
     case GST_TCP_PROTOCOL_TYPE_GDP:
-      /* if we haven't received caps yet, we should get them first */
-      if (!src->caps_received) {
-        gchar *string;
-
-        if (!(caps = gst_tcp_gdp_read_caps (GST_ELEMENT (src), src->sock_fd))) {
-          GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-              ("Could not read caps through GDP"));
-          return GST_DATA (gst_event_new (GST_EVENT_EOS));
-        }
-        src->caps_received = TRUE;
-        string = gst_caps_to_string (caps);
-        GST_DEBUG_OBJECT (src, "Received caps through GDP: %s", string);
-        g_free (string);
-
-        if (!gst_pad_try_set_caps (pad, caps)) {
-          g_warning ("Could not set caps");
-          return GST_DATA (gst_event_new (GST_EVENT_EOS));
-        }
-      }
-
-      /* now receive the buffer header */
       if (!(data = gst_tcp_gdp_read_header (GST_ELEMENT (src), src->sock_fd))) {
         GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
             ("Could not read data header through GDP"));
@@ -443,6 +441,26 @@ gst_tcpclientsrc_init_receive (GstTCPClientSrc * this)
   this->buffer_after_discont = NULL;
   GST_FLAG_SET (this, GST_TCPCLIENTSRC_OPEN);
 
+  /* get the caps if we're using GDP */
+  if (this->protocol == GST_TCP_PROTOCOL_TYPE_GDP) {
+    /* if we haven't received caps yet, we should get them first */
+    if (!this->caps_received) {
+      gchar *string;
+      GstCaps *caps;
+
+      GST_DEBUG_OBJECT (this, "getting caps through GDP");
+      if (!(caps = gst_tcp_gdp_read_caps (GST_ELEMENT (this), this->sock_fd))) {
+        GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+            ("Could not read caps through GDP"));
+        return FALSE;
+      }
+      this->caps_received = TRUE;
+      this->caps = caps;
+      string = gst_caps_to_string (caps);
+      GST_DEBUG_OBJECT (this, "Received caps through GDP: %s", string);
+      g_free (string);
+    }
+  }
   return TRUE;
 }
 
