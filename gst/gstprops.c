@@ -747,6 +747,8 @@ G_STMT_START { 									\
       entry->propstype = GST_PROPS_LIST_TYPE;					\
       entry->data.list_data.entries = g_list_copy (va_arg (var_args, GList*));	\
       break;									\
+    case GST_PROPS_END_TYPE:							\
+      break;									\
     default:									\
       g_warning("attempt to set invalid props type\n");				\
       break;									\
@@ -792,6 +794,8 @@ G_STMT_START { 									\
         break;									\
       case GST_PROPS_LIST_TYPE:							\
         *(va_arg (var_args, GList**)) = entry->data.list_data.entries;		\
+        break;									\
+      case GST_PROPS_END_TYPE:							\
         break;									\
       default:									\
         *result = FALSE;							\
