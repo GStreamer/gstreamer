@@ -608,7 +608,7 @@ GST_CHECK_FEATURE(V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
   fi
 ])
 
-dnl *** Video 4 Linux 2***
+dnl *** Video 4 Linux 2 ***
 dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
 translit(dnm, m, l) AM_CONDITIONAL(USE_V4L2, true)
 GST_CHECK_FEATURE(V4L2, [Video 4 Linux 2], v4l2src, [
@@ -630,7 +630,8 @@ return 0;
        [ HAVE_V4L2="no"  && AC_MSG_RESULT(no) &&
          AC_CHECK_HEADER(linux/videodev2.h,
                          [ AC_MSG_WARN([video4linux2 headers were found, but they're old. Please update v4l2 to compile the v4l2 plugins])],
-                         [ AC_MSG_WARN([video4linux2 was not found])])])
+                         [ AC_MSG_WARN([video4linux2 was not found])])
+       ])
   fi
 ])
 
@@ -1115,14 +1116,14 @@ main (int   argc,
       ])
       CPPFLAGS="$OLD_CPPFLAGS"
       AC_LANG_C
-    ])
+    ],
+    HAVE_MPEG2ENC="no")
   fi
 ])
 
 dnl *** mplex ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPLEX, true)
 GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [HAVE_MPLEX=$HAVE_CXX])
-])
 
 dnl *** pango ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
