@@ -6,6 +6,7 @@ Makefile.in
 .deps
 .libs
 *.xml
+
 init
 loadall
 simplefake
@@ -13,10 +14,11 @@ states
 caps
 queue
 registry
-rip
 paranoia
-props
-autoplug
+rip
 mp3encode
+autoplug
+props
 case4
-padfactory
+markup
+load
