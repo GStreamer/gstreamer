@@ -32,15 +32,16 @@ G_BEGIN_DECLS GST_EXPORT GType _gst_message_type;
 
 typedef enum
 {
-  GST_MESSAGE_UNKNOWN = 0,
-  GST_MESSAGE_EOS = 1,
-  GST_MESSAGE_ERROR = 2,
-  GST_MESSAGE_WARNING = 3,
-  GST_MESSAGE_INFO = 4,
-  GST_MESSAGE_TAG = 5,
-  GST_MESSAGE_BUFFERING = 6,
-  GST_MESSAGE_STATE_CHANGED = 7,
-  GST_MESSAGE_STEP_DONE = 8,
+  GST_MESSAGE_UNKNOWN       = 0,
+  GST_MESSAGE_EOS           = (1 << 0),
+  GST_MESSAGE_ERROR         = (1 << 1),
+  GST_MESSAGE_WARNING       = (1 << 2),
+  GST_MESSAGE_INFO          = (1 << 3),
+  GST_MESSAGE_TAG           = (1 << 4),
+  GST_MESSAGE_BUFFERING     = (1 << 5),
+  GST_MESSAGE_STATE_CHANGED = (1 << 6),
+  GST_MESSAGE_STEP_DONE     = (1 << 7),
+  GST_MESSAGE_ANY           = 0xffffffff
 } GstMessageType;
 
 #define GST_MESSAGE_TRACE_NAME	"GstMessage"
@@ -61,6 +62,12 @@ typedef enum
 #define GST_MESSAGE_SRC(message)	(GST_MESSAGE(message)->src)
 
 #define GST_MESSAGE_TAG_LIST(message)	(GST_MESSAGE(message)->message_data.tag.list)
+
+/* this is terribly nasty cause I'm going to make these all functions soon */
+#define GST_MESSAGE_PARSE_STATE_CHANGED(message, pold, pnew) G_STMT_START{	\
+  *pold = GST_MESSAGE(message)->message_data.state_changed.old;			\
+  *pnew = GST_MESSAGE(message)->message_data.state_changed.new;			\
+}G_STMT_END
 
 #define GST_MESSAGE_ERROR_GERROR(message)	(GST_MESSAGE(message)->message_data.error.gerror)
 #define GST_MESSAGE_ERROR_DEBUG(message)	(GST_MESSAGE(message)->message_data.error.debug)
@@ -95,6 +102,11 @@ struct _GstMessage
     {
       GstTagList *list;
     } tag;
+    struct
+    {
+      GstElementState old;
+      GstElementState new;
+    } state_changed;
   } message_data;
 
   /*< private > */
@@ -117,6 +129,8 @@ GstMessage *	gst_message_new_eos 		(GstObject * src);
 GstMessage *	gst_message_new_error 		(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
+GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstElementState old,
+                                                 GstElementState new);
 
 G_END_DECLS
 #endif /* __GST_MESSAGE_H__ */

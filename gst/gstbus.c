@@ -20,6 +20,7 @@
  */
 
 
+#include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -93,7 +94,8 @@ gst_bus_class_init (GstBusClass * klass)
 static void
 gst_bus_init (GstBus * bus)
 {
-  bus->queue = g_async_queue_new ();
+  bus->queue = g_queue_new ();
+  bus->queue_lock = g_mutex_new ();
 
   if (socketpair (PF_UNIX, SOCK_STREAM, 0, bus->control_socket) < 0)
     goto no_socketpair;
@@ -126,8 +128,12 @@ gst_bus_dispose (GObject * object)
   close (bus->control_socket[1]);
 
   if (bus->queue) {
-    g_async_queue_unref (bus->queue);
+    g_mutex_lock (bus->queue_lock);
+    g_queue_free (bus->queue);
     bus->queue = NULL;
+    g_mutex_unlock (bus->queue_lock);
+    g_mutex_free (bus->queue_lock);
+    bus->queue_lock = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -191,6 +197,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   GstBusSyncReply reply = GST_BUS_PASS;
   GstBusSyncHandler handler;
   gpointer handler_data;
+  ssize_t write_ret = -1;
 
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
   g_return_val_if_fail (GST_IS_MESSAGE (message), FALSE);
@@ -214,9 +221,22 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       break;
     case GST_BUS_PASS:
       /* pass the message to the async queue */
-      g_async_queue_push (bus->queue, message);
+      g_mutex_lock (bus->queue_lock);
+      g_queue_push_tail (bus->queue, message);
+      g_mutex_unlock (bus->queue_lock);
       c = 'p';
-      write (bus->control_socket[1], &c, 1);
+      errno = EAGAIN;
+      while (write_ret == -1) {
+        switch (errno) {
+          case EAGAIN:
+          case EINTR:
+            break;
+          default:
+            perror ("gst_bus_post: could not write to fd");
+            return FALSE;
+        }
+        write_ret = write (bus->control_socket[1], &c, 1);
+      }
       break;
     case GST_BUS_ASYNC:
     {
@@ -234,9 +254,22 @@ gst_bus_post (GstBus * bus, GstMessage * message)
        * queue. When the message is handled by the app and destroyed, 
        * the cond will be signalled and we can continue */
       g_mutex_lock (lock);
-      g_async_queue_push (bus->queue, message);
+      g_mutex_lock (bus->queue_lock);
+      g_queue_push_tail (bus->queue, message);
+      g_mutex_unlock (bus->queue_lock);
       c = 'p';
-      write (bus->control_socket[1], &c, 1);
+      errno = EAGAIN;
+      while (write_ret == -1) {
+        switch (errno) {
+          case EAGAIN:
+          case EINTR:
+            break;
+          default:
+            perror ("gst_bus_post: could not write to fd");
+            return FALSE;
+        }
+        write_ret = write (bus->control_socket[1], &c, 1);
+      }
       /* now block till the message is freed */
       g_cond_wait (cond, lock);
       g_mutex_unlock (lock);
@@ -270,7 +303,9 @@ gst_bus_have_pending (GstBus * bus)
 
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
 
-  length = g_async_queue_length (bus->queue);
+  g_mutex_lock (bus->queue_lock);
+  length = g_queue_get_length (bus->queue);
+  g_mutex_unlock (bus->queue_lock);
 
   return (length > 0);
 }
@@ -281,8 +316,7 @@ gst_bus_have_pending (GstBus * bus)
  *
  * Get a message from the bus.
  *
- * Returns: The #GstMessage that is on the bus or NULL when there are no
- * messages available.
+ * Returns: The #GstMessage that is on the bus, or NULL if the bus is empty.
  *
  * MT safe.
  */
@@ -290,12 +324,37 @@ GstMessage *
 gst_bus_pop (GstBus * bus)
 {
   GstMessage *message;
-  gchar c;
 
-  g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
+  g_return_val_if_fail (GST_IS_BUS (bus), NULL);
 
-  message = g_async_queue_pop (bus->queue);
-  read (bus->control_socket[0], &c, 1);
+  g_mutex_lock (bus->queue_lock);
+  message = g_queue_pop_head (bus->queue);
+  g_mutex_unlock (bus->queue_lock);
+
+  return message;
+}
+
+/**
+ * gst_bus_peek:
+ * @bus: a #GstBus
+ *
+ * Peek the message on the top of the bus' queue. The bus maintains ownership of
+ * the message, and the message will remain on the bus' message queue.
+ *
+ * Returns: The #GstMessage that is on the bus, or NULL if the bus is empty.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_bus_peek (GstBus * bus)
+{
+  GstMessage *message;
+
+  g_return_val_if_fail (GST_IS_BUS (bus), NULL);
+
+  g_mutex_lock (bus->queue_lock);
+  message = g_queue_peek_head (bus->queue);
+  g_mutex_unlock (bus->queue_lock);
 
   return message;
 }
@@ -357,13 +416,36 @@ static gboolean
 bus_callback (GIOChannel * channel, GIOCondition cond, GstBusWatch * watch)
 {
   GstMessage *message;
+  gboolean needs_pop = TRUE;
+  gchar c;
+  ssize_t read_ret = -1;
 
   g_return_val_if_fail (GST_IS_BUS (watch->bus), FALSE);
 
-  message = gst_bus_pop (watch->bus);
+  /* the char in the fd is essentially just a way to wake us up. read it off so
+     we're not woken up again. */
+  errno = EAGAIN;
+  while (read_ret == -1) {
+    switch (errno) {
+      case EAGAIN:
+      case EINTR:
+        break;
+      default:
+        perror ("gst_bus_pop: could not read from fd");
+        return TRUE;
+    }
+    read_ret = read (watch->bus->control_socket[0], &c, 1);
+  }
+
+  message = gst_bus_peek (watch->bus);
+
+  g_return_val_if_fail (message != NULL, TRUE);
 
   if (watch->handler)
-    watch->handler (watch->bus, message, watch->user_data);
+    needs_pop = watch->handler (watch->bus, message, watch->user_data);
+
+  if (needs_pop)
+    gst_message_unref (gst_bus_pop (watch->bus));
 
   return TRUE;
 }
@@ -381,8 +463,12 @@ bus_destroy (GstBusWatch * watch)
 /**
  * gst_bus_add_watch_full:
  * @bus: a #GstBus to create the watch for
+ * @handler: A function to call when a message is received.
  *
- * Adds the bus to the mainloop with the given priority.
+ * Adds the bus to the mainloop with the given priority. If the handler returns
+ * TRUE, the message will then be popped off the queue. When the handler is
+ * called, the message belongs to the caller; if you want to keep a copy of it,
+ * call gst_message_ref before leaving the handler.
  *
  * Returns: The event source id.
  *
@@ -434,4 +520,80 @@ gst_bus_add_watch (GstBus * bus, GstBusHandler handler, gpointer user_data)
 {
   return gst_bus_add_watch_full (bus, G_PRIORITY_DEFAULT, handler, user_data,
       NULL);
+}
+
+typedef struct
+{
+  GMainLoop *loop;
+  guint timeout_id;
+  GstMessageType events;
+  GstMessageType revent;
+} GstBusPollData;
+
+static gboolean
+poll_handler (GstBus * bus, GstMessage * message, GstBusPollData * poll_data)
+{
+  if (GST_MESSAGE_TYPE (message) & poll_data->events) {
+    poll_data->revent = GST_MESSAGE_TYPE (message);
+    if (g_main_loop_is_running (poll_data->loop))
+      g_main_loop_quit (poll_data->loop);
+    /* keep the message on the queue */
+    return FALSE;
+  } else {
+    /* pop and unref the message */
+    return TRUE;
+  }
+}
+
+static gboolean
+poll_timeout (GstBusPollData * poll_data)
+{
+  poll_data->timeout_id = 0;
+  g_main_loop_quit (poll_data->loop);
+  /* returning FALSE will remove the source id */
+  return FALSE;
+}
+
+/**
+ * gst_bus_poll:
+ * @bus: a #GstBus
+ * @events: a mask of #GstMessageType, representing the set of message types to
+ * poll for.
+ * @timeout: the poll timeout, as a #GstClockTimeDiff, or -1 to poll indefinitely.
+ *
+ * Poll the bus for events. Will block while waiting for events to come. You can
+ * specify a maximum time to poll with the @timeout parameter. If @timeout is
+ * negative, this function will block indefinitely.
+ *
+ * Returns: The type of the message that was received, or GST_MESSAGE_UNKNOWN if
+ * the poll timed out. The message will remain in the bus queue; you will need
+ * to gst_bus_pop() it off before entering gst_bus_poll() again.
+ */
+GstMessageType
+gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
+{
+  GstBusPollData *poll_data;
+  GstMessageType ret;
+  guint id;
+
+  poll_data = g_new0 (GstBusPollData, 1);
+  if (timeout >= 0)
+    poll_data->timeout_id = g_timeout_add (timeout / GST_MSECOND,
+        (GSourceFunc) poll_timeout, poll_data);
+  poll_data->loop = g_main_loop_new (NULL, FALSE);
+  poll_data->events = events;
+  poll_data->revent = GST_MESSAGE_UNKNOWN;
+
+  id = gst_bus_add_watch (bus, (GstBusHandler) poll_handler, poll_data);
+  g_main_loop_run (poll_data->loop);
+  g_source_remove (id);
+
+  ret = poll_data->revent;
+
+  if (poll_data->timeout_id)
+    g_source_remove (poll_data->timeout_id);
+  g_main_loop_unref (poll_data->loop);
+  g_free (poll_data);
+
+  return ret;
 }

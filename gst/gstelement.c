@@ -1717,6 +1717,7 @@ void
 gst_element_commit_state (GstElement * element)
 {
   GstElementState pending;
+  GstMessage *message;
 
   g_return_if_fail (GST_IS_ELEMENT (element));
 
@@ -1735,6 +1736,9 @@ gst_element_commit_state (GstElement * element)
 
     g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
         0, old_state, pending);
+    message = gst_message_new_state_changed (GST_OBJECT (element),
+        old_state, pending));
+    gst_element_post_message (element, message);
     GST_STATE_BROADCAST (element);
   }
 }
@@ -1753,8 +1757,7 @@ gst_element_commit_state (GstElement * element)
  * MT safe.
  */
 GstElementStateReturn
-gst_element_set_state (GstElement * element, GstElementState state)
-{
+    gst_element_set_state (GstElement * element, GstElementState state) {
   GstElementClass *oclass;
   GstElementState current;
   GstElementStateReturn return_val = GST_STATE_SUCCESS;
@@ -1876,7 +1879,7 @@ invalid_return:
  *       when pads are added to elements?
  */
 static gboolean
-gst_element_pads_activate (GstElement * element, gboolean active)
+    gst_element_pads_activate (GstElement * element, gboolean active)
 {
   GList *pads;
   gboolean result;
@@ -1967,8 +1970,7 @@ restart:
 }
 
 /* is called with STATE_LOCK */
-static GstElementStateReturn
-gst_element_change_state (GstElement * element)
+static GstElementStateReturn gst_element_change_state (GstElement * element)
 {
   GstElementState old_state;
   gint old_pending, old_transition;
@@ -2044,16 +2046,14 @@ gst_element_change_state (GstElement * element)
  *
  * Returns: the #GstElementFactory used for creating this element.
  */
-GstElementFactory *
-gst_element_get_factory (GstElement * element)
+GstElementFactory *gst_element_get_factory (GstElement * element)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
   return GST_ELEMENT_GET_CLASS (element)->elementfactory;
 }
 
-static void
-gst_element_dispose (GObject * object)
+static void gst_element_dispose (GObject * object)
 {
   GstElement *element = GST_ELEMENT (object);
 
@@ -2081,8 +2081,7 @@ gst_element_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static void
-gst_element_finalize (GObject * object)
+static void gst_element_finalize (GObject * object)
 {
   GstElement *element = GST_ELEMENT (object);
 
@@ -2111,13 +2110,14 @@ gst_element_finalize (GObject * object)
  * Returns: the new #xmlNodePtr.
  */
 static xmlNodePtr
-gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
+    gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
 {
   GList *pads;
   GstElementClass *oclass;
   GParamSpec **specs, *spec;
   gint nspecs, i;
-  GValue value = { 0, };
+  GValue value = {
+  0,};
   GstElement *element;
 
   g_return_val_if_fail (GST_IS_ELEMENT (object), parent);
@@ -2187,8 +2187,7 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
   return parent;
 }
 
-static void
-gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
+static void gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
 {
   xmlNodePtr children;
   GstElement *element;
@@ -2236,7 +2235,7 @@ gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
 #endif /* GST_DISABLE_LOADSAVE */
 
 static void
-gst_element_set_manager_func (GstElement * element, GstPipeline * manager)
+    gst_element_set_manager_func (GstElement * element, GstPipeline * manager)
 {
   g_return_if_fail (GST_IS_ELEMENT (element));
 
@@ -2249,8 +2248,7 @@ gst_element_set_manager_func (GstElement * element, GstPipeline * manager)
   GST_UNLOCK (element);
 }
 
-static void
-gst_element_set_bus_func (GstElement * element, GstBus * bus)
+static void gst_element_set_bus_func (GstElement * element, GstBus * bus)
 {
   g_return_if_fail (GST_IS_ELEMENT (element));
 
@@ -2263,7 +2261,8 @@ gst_element_set_bus_func (GstElement * element, GstBus * bus)
 }
 
 static void
-gst_element_set_scheduler_func (GstElement * element, GstScheduler * scheduler)
+    gst_element_set_scheduler_func (GstElement * element,
+    GstScheduler * scheduler)
 {
   g_return_if_fail (GST_IS_ELEMENT (element));
 
@@ -2286,8 +2285,7 @@ gst_element_set_scheduler_func (GstElement * element, GstScheduler * scheduler)
  *
  * MT safe.
  */
-void
-gst_element_set_manager (GstElement * element, GstPipeline * manager)
+void gst_element_set_manager (GstElement * element, GstPipeline * manager)
 {
   GstElementClass *oclass;
 
@@ -2310,8 +2308,7 @@ gst_element_set_manager (GstElement * element, GstPipeline * manager)
  *
  * MT safe.
  */
-GstPipeline *
-gst_element_get_manager (GstElement * element)
+GstPipeline *gst_element_get_manager (GstElement * element)
 {
   GstPipeline *result = NULL;
 
@@ -2335,8 +2332,7 @@ gst_element_get_manager (GstElement * element)
  *
  * MT safe.
  */
-void
-gst_element_set_bus (GstElement * element, GstBus * bus)
+void gst_element_set_bus (GstElement * element, GstBus * bus)
 {
   GstElementClass *oclass;
 
@@ -2358,8 +2354,7 @@ gst_element_set_bus (GstElement * element, GstBus * bus)
  *
  * MT safe.
  */
-GstBus *
-gst_element_get_bus (GstElement * element)
+GstBus *gst_element_get_bus (GstElement * element)
 {
   GstBus *result = NULL;
 
@@ -2382,8 +2377,7 @@ gst_element_get_bus (GstElement * element)
  *
  * MT safe.
  */
-void
-gst_element_set_scheduler (GstElement * element, GstScheduler * scheduler)
+void gst_element_set_scheduler (GstElement * element, GstScheduler * scheduler)
 {
   GstElementClass *oclass;
 
@@ -2405,8 +2399,7 @@ gst_element_set_scheduler (GstElement * element, GstScheduler * scheduler)
  *
  * MT safe.
  */
-GstScheduler *
-gst_element_get_scheduler (GstElement * element)
+GstScheduler *gst_element_get_scheduler (GstElement * element)
 {
   GstScheduler *result = NULL;
 

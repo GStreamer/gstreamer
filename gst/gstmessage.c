@@ -247,3 +247,25 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
 
   return message;
 }
+
+/**
+ * gst_message_new_state_change:
+ *
+ * Create a state change message.
+ *
+ * Returns: The new state change message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_state_changed (GstObject * src, GstElementState old,
+    GstElementState new)
+{
+  GstMessage *message;
+
+  message = gst_message_new (GST_MESSAGE_STATE_CHANGED, src);
+  message->message_data.state_changed.old = old;
+  message->message_data.state_changed.new = new;
+
+  return message;
+}

@@ -1,3 +1,42 @@
+2005-02-21  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstmessage.h (GstMessageType): Turned into flags. Added
+	GST_MESSAGE_ANY as an OR of all flags.
+	(GST_MESSAGE_PARSE_STATE_CHANGED): New terrible macro. Will be
+	made into a function soon.
+	(GstMessage): Add a state_changed structure to the union. The
+	union will die soon in favor of a single GstStructure tho.
+	(gst_message_new_state_changed): New API.
+
+	* gst/gstmessage.c (gst_message_new_state_changed): New API.
+
+	* tools/gst-launch.c (check_intr): Set the state of the pipeline
+	to PAUSED here; the poll will catch the state change.
+	(event_loop): New function, polls the pipeline bus for events. Can
+	block until eos/error/state change, or just handle the pending
+	events.
+	(main): Changed to use event_loop instead of running a main loop.
+
+	* gst/gstbus.h (gst_bus_poll): Added.
+	(gst_bus_peek): Return non-const; the message is refcounted
+	anyway.
+	
+	* gst/gstbus.c (gst_bus_init): Replace the GAsyncQueue with a
+	GQueue+mutex to allow for _peek. (The wake-up functionality
+	provided by GAsyncQueue is already done by our socketpair.) All
+	queue users changed to lock, operate, and unlock.
+	(gst_bus_post): Check the retval of write(2) and handle errno.
+	(gst_bus_peek): Implemented.
+	(gst_bus_pop, gst_bus_peek, bus_callback): Because the socketpair
+	is used to wake up the GSource, read off the character in the
+	GSource handler and not in pop/peek. This is because a peek will
+	require a pop in the future, and you can't read off the char
+	twice. Deal with errno in the read.
+	(bus_callback): Interpret the handler return value as whether or
+	not to pop the message from the bus.
+	(poll_handler, poll_timeout, gst_bus_poll): New API. gst_bus_poll
+	is meant to replace the while(gst_bin_iterate()) idiom.
+
 2005-02-18  Andy Wingo  <wingo@pobox.com>
 
 	* gst/elements/gstfakesrc.c (gst_fakesrc_class_init): Add HAS_LOOP

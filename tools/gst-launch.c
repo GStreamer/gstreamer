@@ -63,7 +63,6 @@ static GstElement *pipeline;
 gboolean caught_intr = FALSE;
 gboolean caught_error = FALSE;
 gboolean tags = FALSE;
-GMainLoop *loop;
 
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -159,7 +158,7 @@ fault_handler_sighandler (int signum)
   fault_spin ();
 }
 
-#else
+#else /* USE_SIGINFO */
 
 static void
 fault_handler_sigaction (int signum, siginfo_t * si, void *misc)
@@ -182,7 +181,7 @@ fault_handler_sigaction (int signum, siginfo_t * si, void *misc)
 
   fault_spin ();
 }
-#endif
+#endif /* USE_SIGINFO */
 
 static void
 fault_spin (void)
@@ -229,7 +228,7 @@ fault_setup (void)
   sigaction (SIGSEGV, &action, NULL);
   sigaction (SIGQUIT, &action, NULL);
 }
-#endif
+#endif /* DISABLE_FAULT_HANDLER */
 
 static void
 print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
@@ -272,15 +271,15 @@ sigint_handler_sighandler (int signum)
 }
 
 static gboolean
-check_intr (user_data)
+check_intr (GstElement * pipeline)
 {
   if (!caught_intr) {
     return TRUE;
   } else {
+    caught_intr = FALSE;
     g_print ("Pausing pipeline.\n");
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    g_print ("Paused pipeline.\n");
-    g_main_loop_quit (loop);
+
     return FALSE;
   }
 }
@@ -332,37 +331,67 @@ play_signal_setup (void)
   sigaction (SIGUSR1, &action, NULL);
   sigaction (SIGUSR2, &action, NULL);
 }
-#endif
+#endif /* DISABLE_FAULT_HANDLER */
 
 static gboolean
-message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+event_loop (GstElement * pipeline, gboolean blocking)
 {
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_EOS:
-      if (g_main_loop_is_running (loop))
-        g_main_loop_quit (loop);
-      break;
-    case GST_MESSAGE_TAG:
-      if (tags) {
-        g_print (_("FOUND TAG      : found by element \"%s\".\n"),
-            GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
-        gst_tag_list_foreach (GST_MESSAGE_TAG_LIST (message), print_tag, NULL);
-      }
-      break;
-    case GST_MESSAGE_ERROR:
-      gst_object_default_error (GST_MESSAGE_SRC (message),
-          GST_MESSAGE_ERROR_GERROR (message),
-          GST_MESSAGE_ERROR_DEBUG (message));
-      caught_error = TRUE;
-      gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-      if (g_main_loop_is_running (loop))
-        g_main_loop_quit (loop);
-      break;
-    default:
-      break;
-  }
-  gst_message_unref (message);
+  GstBus *bus;
+  GstMessageType revent;
+  GstMessage *message = NULL;
+  GstElementState old, new;
 
+  bus = gst_element_get_bus (GST_ELEMENT (pipeline));
+
+  g_timeout_add (50, (GSourceFunc) check_intr, pipeline);
+
+  while (TRUE) {
+    revent = gst_bus_poll (bus, GST_MESSAGE_ANY, blocking ? -1 : 0);
+
+    /* if the poll timed out, only when !blocking */
+    if (revent == GST_MESSAGE_UNKNOWN)
+      return FALSE;
+
+    message = gst_bus_pop (bus);
+    g_return_val_if_fail (message != NULL, TRUE);
+
+    switch (revent) {
+      case GST_MESSAGE_EOS:
+        gst_message_unref (message);
+        return FALSE;
+      case GST_MESSAGE_TAG:
+        if (tags) {
+          g_print (_("FOUND TAG      : found by element \"%s\".\n"),
+              GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
+          gst_tag_list_foreach (GST_MESSAGE_TAG_LIST (message), print_tag,
+              NULL);
+        }
+        gst_message_unref (message);
+        break;
+      case GST_MESSAGE_ERROR:
+        gst_object_default_error (GST_MESSAGE_SRC (message),
+            GST_MESSAGE_ERROR_GERROR (message),
+            GST_MESSAGE_ERROR_DEBUG (message));
+        gst_message_unref (message);
+        return TRUE;
+      case GST_MESSAGE_STATE_CHANGED:
+        GST_MESSAGE_PARSE_STATE_CHANGED (message, &old, &new);
+        gst_message_unref (message);
+        if (!(old == GST_STATE_PLAYING && new == GST_STATE_PAUSED))
+          break;
+        g_print (_
+            ("Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"),
+            GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
+        /* cut out of the event loop if check_intr set us to PAUSED */
+        return FALSE;
+      default:
+        /* just be quiet by default */
+        gst_message_unref (message);
+        break;
+    }
+  }
+
+  g_assert_not_reached ();
   return TRUE;
 }
 
@@ -483,12 +512,6 @@ main (int argc, char *argv[])
     g_signal_connect (pipeline, "deep_notify",
         G_CALLBACK (gst_object_default_deep_notify), exclude_list);
   }
-
-  loop = g_main_loop_new (NULL, FALSE);
-  gst_bus_add_watch (gst_element_get_bus (GST_ELEMENT (pipeline)),
-      (GstBusHandler) message_received, pipeline);
-
-
 #ifndef GST_DISABLE_LOADSAVE
   if (savefile) {
     gst_xml_write_file (GST_ELEMENT (pipeline), fopen (savefile, "w"));
@@ -515,7 +538,10 @@ main (int argc, char *argv[])
       res = -1;
       goto end;
     }
+
     gst_element_get_state (pipeline, &state, &pending, NULL);
+    caught_error = event_loop (pipeline, FALSE);
+
     /* see if we got any messages */
     while (g_main_context_iteration (NULL, FALSE));
 
@@ -533,10 +559,8 @@ main (int argc, char *argv[])
         goto end;
       }
 
-      g_timeout_add (50, check_intr, NULL);
-
       g_get_current_time (&tfthen);
-      g_main_loop_run (loop);
+      caught_error = event_loop (pipeline, TRUE);
       g_get_current_time (&tfnow);
 
       diff = GST_TIMEVAL_TO_TIME (tfnow) - GST_TIMEVAL_TO_TIME (tfthen);

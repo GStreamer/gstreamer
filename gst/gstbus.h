@@ -24,6 +24,7 @@
 
 #include <gst/gsttypes.h>
 #include <gst/gstmessage.h>
+#include <gst/gstclock.h>
 
 G_BEGIN_DECLS
 
@@ -51,7 +52,8 @@ struct _GstBus
   GstObject 	    object;
 
   /*< private > */
-  GAsyncQueue      *queue;
+  GQueue           *queue;
+  GMutex           *queue_lock;
 
   GstBusSyncHandler sync_handler;
   gpointer 	    sync_handler_data;
@@ -78,7 +80,7 @@ GstBus*			gst_bus_new	 		(void);
 gboolean 		gst_bus_post 			(GstBus * bus, GstMessage * message);
 
 gboolean 		gst_bus_have_pending 		(GstBus * bus);
-const GstMessage *	gst_bus_peek 			(GstBus * bus);
+GstMessage *		gst_bus_peek 			(GstBus * bus);
 GstMessage *		gst_bus_pop 			(GstBus * bus);
 
 void 			gst_bus_set_sync_handler 	(GstBus * bus, GstBusSyncHandler func,
@@ -93,6 +95,9 @@ guint 			gst_bus_add_watch_full 		(GstBus * bus,
 guint 			gst_bus_add_watch 		(GstBus * bus,
     							 GstBusHandler handler, 
 							 gpointer user_data);
+GstMessageType		gst_bus_poll			(GstBus *bus, GstMessageType events,
+                                                         GstClockTimeDiff timeout);
+
 
 G_END_DECLS
 #endif /* __GST_BUS_H__ */
