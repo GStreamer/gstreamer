@@ -1,5 +1,9 @@
 2004-03-30  David Schleef  <ds@schleef.org>
 
+	* ext/gdk_pixbuf/Makefile.am: Remove spurious rules. (bug #136527)
+
+2004-03-30  David Schleef  <ds@schleef.org>
+
 	* tools/gst-launch-ext-m.m:  Applied patch from gnome@flyn.org (W.
 	Michael Petullo) to handle .mov
 
