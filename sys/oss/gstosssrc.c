@@ -189,7 +189,7 @@ gst_osssrc_get (GstPad *pad)
   g_return_val_if_fail (pad != NULL, NULL);
   src = GST_OSSSRC(gst_pad_get_parent (pad));
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "attempting to read something from soundcard");
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "attempting to read something from the soundcard");
 
   buf = gst_buffer_new ();
   g_return_val_if_fail (buf, NULL);
