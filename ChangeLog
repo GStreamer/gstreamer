@@ -1,3 +1,8 @@
+2004-05-10  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_change_state):
+	Return the result of the parent state change call
+
 2004-05-10  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* gst/law/alaw.c : alawdec should be registered with type ALAWDEC, not ALAWENC
