@@ -746,13 +746,11 @@ get_next_cell_for (DVDReadSrcPrivate * priv, int cell)
         return cell + i + 1;
       }
     }
-  } else {
-    return cell + 1;
+
+    /* not reached */
   }
 
-  /* shut up compiler */
-  g_assert_not_reached ();
-  return -1;
+  return cell + 1;
 }
 
 /*
@@ -1107,7 +1105,7 @@ dvdreadsrc_change_state (GstElement * element)
  * URI interface.
  */
 
-static guint
+static GstURIType
 dvdreadsrc_uri_get_type (void)
 {
   return GST_URI_SRC;
