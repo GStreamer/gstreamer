@@ -1,5 +1,10 @@
 2005-03-29  Andy Wingo  <wingo@pobox.com>
 
+	* docs/libs/gstreamer-libs-overrides.txt: 
+	* docs/gst/gstreamer-overrides.txt: Add these files to CVS. Now I
+	really don't understand what's going on, but like whatever. I want
+	green buildbot!
+
 	* docs/gst/Makefile.am:
 	* docs/libs/Makefile.am: Dist the overrides files.
 
