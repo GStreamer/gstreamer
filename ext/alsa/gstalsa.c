@@ -1650,7 +1650,7 @@ gst_alsa_timestamp_to_samples (GstAlsa * this, GstClockTime time)
 inline GstClockTime
 gst_alsa_samples_to_timestamp (GstAlsa * this, snd_pcm_uframes_t samples)
 {
-  return (GstClockTime) (samples * GST_SECOND / this->format->rate);
+  return ((GstClockTime) samples) * GST_SECOND / this->format->rate;
 }
 
 inline snd_pcm_uframes_t
