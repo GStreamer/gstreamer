@@ -493,7 +493,12 @@ gst_ffmpegdemux_add (GstFFMpegDemux *demux,
   g_free (padname);
 
   gst_pad_use_explicit_caps (pad);
-  /* FIXME: srcevent(), convert() and query() functions for pad */
+  gst_pad_set_formats_function (pad, gst_ffmpegdemux_src_format_list);
+  gst_pad_set_event_mask_function (pad, gst_ffmpegdemux_src_event_mask);
+  gst_pad_set_event_function (pad, gst_ffmpegdemux_src_event);
+  gst_pad_set_query_type_function (pad, gst_ffmpegdemux_src_query_list);
+  gst_pad_set_query_function (pad, gst_ffmpegdemux_src_query);
+  gst_pad_set_convert_function (pad, gst_ffmpegdemux_src_convert);
 
   /* store pad internally */
   demux->srcpads[stream->index] = pad;

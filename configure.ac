@@ -84,7 +84,7 @@ GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
   if test "x$GST_PLUGINS_VERSION_NANO" = x1; then
     AC_MSG_NOTICE(slurping FFmpeg CVS source)
     dnl until someone fixes this... I guess this should be in ./autogen.sh
-    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2004-02-29 20:00 GMT,[
+    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2004-02-29 20:00 GMT,
       if ! test -f gst-libs/ext/ffmpeg/ffmpeg/configure.ac; then
         AC_MSG_NOTICE(setting up ffmpeg build system and applying patches)
         CURDIR=`pwd`
@@ -97,7 +97,7 @@ GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
         NOCONFIGURE=1 ./autogen.sh
         cd $CURDIR
       fi
-      HAVE_FFMPEG=yes ], HAVE_FFMPEG=no)
+      HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
   else
     AC_MSG_NOTICE(FFmpeg CVS code should be included already)
     HAVE_FFMPEG=yes

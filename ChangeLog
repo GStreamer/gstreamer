@@ -1,3 +1,10 @@
+2004-03-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	  Brackets cause autoconf errors. So remove them.
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_add):
+	  Actually use the event/convert/query functions. D'oh.
+
 2004-03-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
