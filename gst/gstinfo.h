@@ -302,11 +302,12 @@ extern GstErrorHandler _gst_error_handler;
 /********** function pointer stuff **********/
 extern GHashTable *__gst_function_pointers;
 
-#define GST_DEBUG_FUNCPTR(ptr) (ptr)
-#define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)
 
-#if 0
+#if GST_DEBUG_ENABLED
 #define GST_DEBUG_FUNCPTR(ptr) _gst_debug_register_funcptr((void *)(ptr), #ptr)
+#define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)
+#else
+#define GST_DEBUG_FUNCPTR(ptr) (ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) ""
 #endif
 
