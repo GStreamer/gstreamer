@@ -296,6 +296,15 @@ gst_tcpserversink_handle_client_write (GstTCPServerSink * sink, int fd,
     /* FIXME: there should be a better way to report problems, since we
        want to continue for other clients and just drop this particular one */
     g_warning ("Write failed: %d of %d written", wrote, GST_BUFFER_SIZE (buf));
+    /* write failed, so drop the client */
+    GST_DEBUG_OBJECT (sink, "removing client on fd %d", fd);
+    if (close (fd) != 0) {
+      GST_DEBUG_OBJECT (sink, "error closing fd %d after failed write: %s",
+          fd, g_strerror (errno));
+    }
+    FD_CLR (fd, &sink->clientfds);
+    FD_CLR (fd, &sink->caps_sent);
+    return FALSE;
   }
   return TRUE;
 }
@@ -383,8 +392,10 @@ gst_tcpserversink_chain (GstPad * pad, GstData * _data)
   /* Check the writes */
   for (fd = 0; fd < FD_SETSIZE; fd++) {
     if (FD_ISSET (fd, &testwritefds)) {
-      if (!gst_tcpserversink_handle_client_write (sink, fd, pad, buf))
+      if (!gst_tcpserversink_handle_client_write (sink, fd, pad, buf)) {
+        gst_buffer_unref (buf);
         return;
+      }
     }
   }
   sink->data_written += GST_BUFFER_SIZE (buf);
