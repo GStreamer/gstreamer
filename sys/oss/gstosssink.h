@@ -68,6 +68,7 @@ struct _GstOssSink {
 
   gboolean 	 mute;
   guint 	 bufsize;
+  guint 	 chunk_size;
 
 };
 

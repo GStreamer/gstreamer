@@ -77,7 +77,8 @@ enum {
   ARG_MUTE,
   ARG_FRAGMENT,
   ARG_BUFFER_SIZE,
-  ARG_SYNC
+  ARG_SYNC,
+  ARG_CHUNK_SIZE,
   /* FILL ME */
 };
 
@@ -193,8 +194,11 @@ gst_osssink_class_init (GstOssSinkClass *klass)
 	    	      "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
                       0, G_MAXINT, 6, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFER_SIZE,
-    g_param_spec_int ("buffer_size", "Buffer size", "The buffer size",
-                      0, G_MAXINT, 4096, G_PARAM_READWRITE));
+    g_param_spec_uint ("buffer_size", "Buffer size", "The buffer size",
+                       0, G_MAXINT, 4096, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CHUNK_SIZE,
+    g_param_spec_uint ("chunk_size", "Chunk size", "Write data in chunk sized buffers",
+                       0, G_MAXUINT, 4096, G_PARAM_READWRITE));
 
   gst_osssink_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -231,6 +235,7 @@ gst_osssink_init (GstOssSink *osssink)
   gst_osscommon_init (&osssink->common);
 
   osssink->bufsize = 4096;
+  osssink->chunk_size = 4096;
   osssink->resync = FALSE;
   osssink->sync = TRUE;
   osssink->sinkpool = NULL;
@@ -402,8 +407,15 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 	  }
 	}
 	else {
-	  write (osssink->common.fd, data, size);
-	  osssink->handled += size;
+	  gint to_write;
+          while (size > 0) {
+	    to_write = MIN (size, osssink->chunk_size);
+
+	    write (osssink->common.fd, data, to_write);
+	    size -= to_write;
+	    data += to_write;
+	    osssink->handled += to_write;
+	  }
         }
       }
       /* no clock, try to be as fast as possible */
@@ -426,7 +438,7 @@ gst_osssink_get_formats (GstPad *pad)
 {
   static const GstFormat formats[] = {
     GST_FORMAT_TIME,
-    GST_FORMAT_UNITS,
+    GST_FORMAT_DEFAULT,
     GST_FORMAT_BYTES,
     0
   };
@@ -525,13 +537,16 @@ gst_osssink_set_property (GObject *object, guint prop_id, const GValue *value, G
       break;
     case ARG_BUFFER_SIZE:
       if (osssink->bufsize == g_value_get_int (value)) break;
-      osssink->bufsize = g_value_get_int (value);
+      osssink->bufsize = g_value_get_uint (value);
       osssink->sinkpool = gst_buffer_pool_get_default (osssink->bufsize, 6);
       g_object_notify (object, "buffer_size");
       break;
     case ARG_SYNC:
       osssink->sync = g_value_get_boolean (value);
       g_object_notify (G_OBJECT (osssink), "sync");
+      break;
+    case ARG_CHUNK_SIZE:
+      osssink->chunk_size = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -557,10 +572,13 @@ gst_osssink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       g_value_set_int (value, osssink->common.fragment);
       break;
     case ARG_BUFFER_SIZE:
-      g_value_set_int (value, osssink->bufsize);
+      g_value_set_uint (value, osssink->bufsize);
       break;
     case ARG_SYNC:
       g_value_set_boolean (value, osssink->sync);
+      break;
+    case ARG_CHUNK_SIZE:
+      g_value_set_uint (value, osssink->chunk_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

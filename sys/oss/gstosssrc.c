@@ -473,7 +473,7 @@ gst_osssrc_get_formats (GstPad *pad)
 {
   static const GstFormat formats[] = {
     GST_FORMAT_TIME,
-    GST_FORMAT_UNITS,
+    GST_FORMAT_DEFAULT,
     GST_FORMAT_BYTES,
     0
   };

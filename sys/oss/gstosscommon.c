@@ -405,12 +405,10 @@ gst_osscommon_convert (GstOssCommon *common, GstFormat src_format, gint64 src_va
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
 	  *dest_value = src_value * GST_SECOND / common->bps;
           break;
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	  *dest_value = src_value / (common->channels * common->width);
           break;
         default:
@@ -419,22 +417,18 @@ gst_osscommon_convert (GstOssCommon *common, GstFormat src_format, gint64 src_va
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * common->bps / GST_SECOND;
           break;
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	  *dest_value = src_value * common->rate / GST_SECOND;
           break;
         default:
           res = FALSE;
       }
       break;
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
 	  *dest_value = src_value * GST_SECOND / common->rate;
           break;
