@@ -95,7 +95,7 @@ main (gint argc, gchar * argv[])
     new_src_list = g_slist_prepend (new_src_list, e);
 
     gst_bin_add (GST_BIN (pipeline), e);
-    if (gst_element_link (src, e) != GST_PAD_LINK_OK)
+    if (!gst_element_link (src, e))
       g_assert_not_reached ();
   }
 
@@ -114,7 +114,8 @@ main (gint argc, gchar * argv[])
       GST_TIME_ARGS (end - start));
 
   start = gst_get_current_time ();
-  while (gst_bin_iterate (GST_BIN (pipeline)));
+  gst_bus_poll (gst_element_get_bus (pipeline),
+      GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
   end = gst_get_current_time ();
   g_print ("%" GST_TIME_FORMAT " - putting %u buffers through\n",
       GST_TIME_ARGS (end - start), BUFFER_COUNT);

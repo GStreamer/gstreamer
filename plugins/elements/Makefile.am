@@ -29,19 +29,19 @@ libgstelements_la_SOURCES =	\
 	gstfilesrc.c		\
 	gstidentity.c		\
 	gstelements.c		\
-	#gstaggregator.c		\
-	gstbufferstore.c	\
-	gstfakesink.c		\
-	gstfilesink.c		\
-	gstfdsink.c		\
-	gstfdsrc.c		\
-	gstmd5sink.c		\
-	$(multifilesrc)		\
-	$(pipefilter)		\
-	gstshaper.c		\
-	gststatistics.c		\
-	gsttee.c		\
-	gsttypefindelement.c
+	gsttee.c
+
+# 	gstaggregator.c		\
+# 	gstbufferstore.c	\
+# 	gstfilesink.c		\
+# 	gstfdsink.c		\
+# 	gstfdsrc.c		\
+# 	gstmd5sink.c		\
+# 	$(multifilesrc)		\
+# 	$(pipefilter)		\
+# 	gstshaper.c		\
+# 	gststatistics.c		\
+# 	gsttypefindelement.c
 
 libgstelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstelements_la_LIBADD = $(GST_OBJ_LIBS)

@@ -394,39 +394,6 @@ Sets the parent of an element.
 @clock: 
 
 
-<!-- ##### FUNCTION gst_element_clock_wait ##### -->
-<para>
-
-</para>
-
-@element: 
-@id: 
-@jitter: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@clock: 
-@time: 
-
-
-<!-- ##### FUNCTION gst_element_get_time ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_wait ##### -->
-<para>
-
-</para>
-
-@element: 
-@timestamp: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_element_is_indexable ##### -->
 <para>
 

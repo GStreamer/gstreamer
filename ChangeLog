@@ -1,3 +1,75 @@
+2005-03-01  Andy Wingo  <wingo@pobox.com>
+
+	* tests/complexity.c: Adjust to lack of gst_bin_iterate, boolean
+	link return values.
+
+	* gst/elements/gsttee.c, gst/elements/gsttee.h: I am the master of
+	do-nothing plugins! Fear the dev-zero!
+
+	* gst/elements/gstelements.c
+	* gst/elements/Makefile.am: Add tee back to gstelements.
+
+	* gst/gstutils.h
+	* gst/gstutils.c (gst_pad_proxy_getcaps, gst_pad_proxy_setcaps):
+	Resurrect from the dead. Use gst_iterator_fold to be threadsafe.
+
+	* gst/gstiterator.h (GstIteratorFoldFunction): Return a bool.
+
+	* gst/gstiterator.c (gst_iterator_fold): Only continue folding as
+	long as the fold function returns TRUE. Add a bunch o docs.
+	(gst_iterator_foreach): Add docs about when the iterator will be
+	freed.
+	(gst_iterator_find_custom): Make more efficient because of the
+	bool-return-value thing.
+
+	* check/gst/gstiterator.c (add_fold_func): Adapt to new
+	fold-funcs-returning-bool policy.
+
+	* gst/gstutils.h:
+	* gst/gstutils.c (gst_element_link, gst_element_link_many)
+	(gst_element_link_filtered, gst_element_link_pads)
+	(gst_element_link_pads_filtered): It seems Wim changed the return
+	type to booleans internally. Assume he knows what he's doing and
+	change the prototypes as well.
+
+	* tests/Makefile.am, tests/complexity.c:
+	* tests/complexity.gnuplot, tests/bench-complexity.scm: Merge in
+	complexity tests from HEAD.
+
+	* gst/gstpipeline.c: Fix element details.
+	(gst_pipeline_set_property, gst_pipeline_get_property): Lock
+	around the whole get/set properties.
+
+	* gst/gstpad.c (gst_real_pad_set_property): Add a FIXME, the
+	::active property doesn't make sense any more.
+	(gst_pad_set_active): Check to see if the pad has the right
+	functions to be activated in this mode.
+	(gst_pad_event_default): Handle EOS specially, pausing the task on
+	the pad if necessary.
+
+	* gst/gstbin.c: Adapt callers of gst_iterator_foreach and
+	gst_iterator_filter to new argument order.
+
+	* gst/gstiterator.c (gst_iterator_find_custom)
+	(gst_iterator_foreach): Implement on top of gst_iterator_fold
+	instead of using the filter_next internals. A bit cleaner this
+	way.
+
+	* gst/gstiterator.h:
+	(gst_iterator_filter, gst_iterator_find_custom): Switch the
+	argument order so user_data is last.
+	(gst_iterator_foreach): Return the GstIteratorResult so the caller
+	knows if all elements were called, or if an error or resync
+	happened.
+	(gst_iterator_fold): New procedure.
+	
+	* check/Makefile.am (TESTS):
+	* check/gst/gstiterator.c: New test suite for GstIterator. Checks
+	that iterating through a list hits all members in order, that
+	resync works correctly, and that fold works.
+
+	* gst/base/gstbasesink.c (gst_basesink_event): Fix Waymans bug.
+
 2005-02-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/README:

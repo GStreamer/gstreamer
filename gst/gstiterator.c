@@ -416,8 +416,15 @@ gst_iterator_filter (GstIterator * it, GCompareFunc func, gpointer user_data)
  * This procedure can be used (and is used internally) to implement the foreach
  * and find_custom operations.
  *
- * Returns: the result of the last call to gst_iterator_next(). This function
- * stops on a resync.
+ * The fold will proceed as long as @func returns TRUE. When the iterator has no
+ * more arguments, GST_ITERATOR_DONE will be returned. If @func returns FALSE,
+ * the fold will stop, and GST_ITERATOR_OK will be returned. Errors or resyncs
+ * will cause fold to return GST_ITERATOR_ERROR or GST_ITERATOR_RESYNC as
+ * appropriate.
+ *
+ * The iterator will only be freed if fold returns GST_ITERATOR_DONE.
+ *
+ * Returns: A #GstIteratorResult, as described above.
  * 
  * MT safe.
  */
@@ -432,9 +439,11 @@ gst_iterator_fold (GstIterator * iter, GstIteratorFoldFunction func,
     result = gst_iterator_next (iter, &item);
     switch (result) {
       case GST_ITERATOR_OK:
-        func (item, ret, user_data);
         /* fixme: is there a way to ref/unref items? */
-        break;
+        if (!func (item, ret, user_data))
+          goto fold_interrupted;
+        else
+          break;
       case GST_ITERATOR_RESYNC:
       case GST_ITERATOR_ERROR:
         goto fold_interrupted;
@@ -457,10 +466,11 @@ typedef struct
   gpointer user_data;
 } ForeachFoldData;
 
-static void
+static gboolean
 foreach_fold_func (gpointer item, GValue * unused, ForeachFoldData * data)
 {
   data->func (item, data->user_data);
+  return TRUE;
 }
 
 /**
@@ -472,8 +482,8 @@ foreach_fold_func (gpointer item, GValue * unused, ForeachFoldData * data)
  * Iterate over all element of @it and call the given function for
  * each element.
  *
- * Returns: the result of the last call to gst_iterator_next(). This function
- * stops on a resync.
+ * Returns: the result call to gst_iterator_fold(). If the result is not
+ * GST_ITERATOR_DONE, the iterator is not freed.
  *
  * MT safe.
  */
@@ -495,12 +505,15 @@ typedef struct
   gpointer user_data;
 } FindCustomFoldData;
 
-static void
+static gboolean
 find_custom_fold_func (gpointer item, GValue * ret, FindCustomFoldData * data)
 {
-  if (!g_value_get_pointer (ret))
-    if (data->func (item, data->user_data))
-      g_value_set_pointer (ret, item);
+  if (data->func (item, data->user_data)) {
+    g_value_set_pointer (ret, item);
+    return FALSE;
+  } else {
+    return TRUE;
+  }
 }
 
 /**
@@ -512,6 +525,9 @@ find_custom_fold_func (gpointer item, GValue * ret, FindCustomFoldData * data)
  * Find the first element in @it that matches the compare function.
  * The compare function should return 0 when the element is found.
  *
+ * Will free the iterator when finished, regardless of whether an item is found
+ * or not.
+ *
  * Returns: The element in the iterator that matches the compare
  * function or NULL when no element matched.
  *
@@ -522,14 +538,19 @@ gst_iterator_find_custom (GstIterator * iter, GCompareFunc func,
     gpointer user_data)
 {
   GValue ret = { 0, };
+  GstIteratorResult res;
   FindCustomFoldData data;
 
   g_value_init (&ret, G_TYPE_POINTER);
   data.func = func;
   data.user_data = user_data;
 
-  gst_iterator_fold (iter, (GstIteratorFoldFunction) find_custom_fold_func,
+  res =
+      gst_iterator_fold (iter, (GstIteratorFoldFunction) find_custom_fold_func,
       &ret, &data);
+
+  if (res != GST_ITERATOR_DONE)
+    gst_iterator_free (iter);
 
   /* no need to unset, it's just a pointer */
   return g_value_get_pointer (&ret);

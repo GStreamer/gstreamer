@@ -48,7 +48,7 @@ typedef GstIteratorItem	  (*GstIteratorItemFunction)	(GstIterator *it, gpointer 
 typedef void		  (*GstIteratorResyncFunction)	(GstIterator *it);
 typedef void		  (*GstIteratorFreeFunction)	(GstIterator *it);
 
-typedef void		  (*GstIteratorFoldFunction)    (gpointer item, GValue *ret, gpointer user_data);
+typedef gboolean	  (*GstIteratorFoldFunction)    (gpointer item, GValue *ret, gpointer user_data);
 
 #define GST_ITERATOR(it)  		((GstIterator*)(it))
 #define GST_ITERATOR_LOCK(it)  		(GST_ITERATOR(it)->lock)

@@ -115,10 +115,11 @@ START_TEST (test_resync)
 
   gst_iterator_free (iter);
 }
-END_TEST static void
+END_TEST static gboolean
 add_fold_func (gpointer item, GValue * ret, gpointer user_data)
 {
   g_value_set_int (ret, g_value_get_int (ret) + GPOINTER_TO_INT (item));
+  return TRUE;
 }
 
 START_TEST (test_fold)

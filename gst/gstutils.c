@@ -796,7 +796,7 @@ gst_element_state_get_name (GstElementState state)
  *
  * Returns: TRUE if the pads could be linked, FALSE otherwise.
  */
-GstPadLinkReturn
+gboolean
 gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
     GstElement * dest, const gchar * destpadname, const GstCaps * filtercaps)
 {
@@ -1040,7 +1040,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
  *
  * Returns: TRUE if the elements could be linked, FALSE otherwise.
  */
-GstPadLinkReturn
+gboolean
 gst_element_link_filtered (GstElement * src, GstElement * dest,
     const GstCaps * filtercaps)
 {
@@ -1057,7 +1057,7 @@ gst_element_link_filtered (GstElement * src, GstElement * dest,
  *
  * Returns: TRUE on success, FALSE otherwise.
  */
-GstPadLinkReturn
+gboolean
 gst_element_link_many (GstElement * element_1, GstElement * element_2, ...)
 {
   va_list args;
@@ -1090,7 +1090,7 @@ gst_element_link_many (GstElement * element_1, GstElement * element_2, ...)
  *
  * Returns: TRUE if the elements could be linked, FALSE otherwise.
  */
-GstPadLinkReturn
+gboolean
 gst_element_link (GstElement * src, GstElement * dest)
 {
   return gst_element_link_pads_filtered (src, NULL, dest, NULL, NULL);
@@ -1110,7 +1110,7 @@ gst_element_link (GstElement * src, GstElement * dest)
  *
  * Returns: TRUE if the pads could be linked, FALSE otherwise.
  */
-GstPadLinkReturn
+gboolean
 gst_element_link_pads (GstElement * src, const gchar * srcpadname,
     GstElement * dest, const gchar * destpadname)
 {
@@ -1645,4 +1645,136 @@ gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)
   GST_BUFFER_DURATION (dest) = GST_BUFFER_DURATION (src);
   GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET (src);
   GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_END (src);
+}
+
+static gboolean
+intersect_caps_func (GstPad * pad, GValue * ret, GstPad * orig)
+{
+  if (pad != orig) {
+    GstCaps *peercaps, *existing;
+
+    existing = g_value_get_pointer (ret);
+    peercaps = gst_pad_peer_get_caps (pad);
+    g_value_set_pointer (ret, gst_caps_intersect (existing, peercaps));
+    gst_caps_unref (existing);
+    gst_caps_unref (peercaps);
+  }
+  return TRUE;
+}
+
+/**
+ * gst_pad_proxy_getcaps:
+ * @pad: a #GstPad to proxy.
+ *
+ * Calls gst_pad_get_allowed_caps() for every other pad belonging to the
+ * same element as @pad, and returns the intersection of the results.
+ *
+ * This function is useful as a default getcaps function for an element
+ * that can handle any stream format, but requires all its pads to have
+ * the same caps.  Two such elements are tee and aggregator.
+ *
+ * Returns: the intersection of the other pads' allowed caps.
+ */
+GstCaps *
+gst_pad_proxy_getcaps (GstPad * pad)
+{
+  GstElement *element;
+  GstCaps *caps, *intersected;
+  GstIterator *iter;
+  GstIteratorResult res;
+  GValue ret = { 0, };
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  GST_DEBUG ("proxying getcaps for %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  element = gst_pad_get_parent (pad);
+
+  iter = gst_element_iterate_pads (element);
+
+  g_value_init (&ret, G_TYPE_POINTER);
+  g_value_set_pointer (&ret, gst_caps_new_any ());
+
+  res = gst_iterator_fold (iter, (GstIteratorFoldFunction) intersect_caps_func,
+      &ret, pad);
+  if (res != GST_ITERATOR_DONE) {
+    g_warning ("Pad list changed during capsnego for element %s",
+        GST_ELEMENT_NAME (element));
+    gst_iterator_free (iter);
+    return NULL;
+  }
+
+  caps = g_value_get_pointer (&ret);
+  g_value_unset (&ret);
+
+  intersected = gst_caps_intersect (caps, gst_pad_get_pad_template_caps (pad));
+  gst_caps_unref (caps);
+
+  return intersected;
+}
+
+typedef struct
+{
+  GstPad *orig;
+  GstCaps *caps;
+} LinkData;
+
+static gboolean
+link_fold_func (GstPad * pad, GValue * ret, LinkData * data)
+{
+  gboolean success = TRUE;
+
+  if (pad != data->orig) {
+    success = gst_pad_set_caps (pad, data->caps);
+    g_value_set_boolean (ret, success);
+  }
+
+  return success;
+}
+
+/**
+ * gst_pad_proxy_setcaps
+ * @pad: a #GstPad to proxy from
+ * @caps: the #GstCaps to link with
+ *
+ * Calls gst_pad_set_caps() for every other pad belonging to the
+ * same element as @pad.  If gst_pad_set_caps() fails on any pad,
+ * the proxy setcaps fails. May be used only during negotiation.
+ *
+ * Returns: TRUE if sucessful
+ */
+gboolean
+gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstElement *element;
+  GstIterator *iter;
+  GstIteratorResult res;
+  GValue ret = { 0, };
+  LinkData data;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (caps != NULL, FALSE);
+
+  GST_DEBUG ("proxying pad link for %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  element = gst_pad_get_parent (pad);
+
+  iter = gst_element_iterate_pads (element);
+
+  g_value_init (&ret, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&ret, TRUE);
+  data.orig = pad;
+  data.caps = caps;
+
+  res = gst_iterator_fold (iter, (GstIteratorFoldFunction) link_fold_func,
+      &ret, &data);
+  if (res != GST_ITERATOR_DONE) {
+    g_warning ("Pad list changed during proxy_pad_link for element %s",
+        GST_ELEMENT_NAME (element));
+    gst_iterator_free (iter);
+    return FALSE;
+  }
+
+  /* ok not to unset the gvalue */
+  return g_value_get_boolean (&ret);
 }
