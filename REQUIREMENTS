@@ -1,0 +1,28 @@
+GStreamer use a *large* array of tools and libraries, most of which are
+optional.  We have attempted to make sure that any code that depends on
+optional libraries doesn't get built unless you have those libraries.  If
+you find this not to be the case, please, let us know by filing a bug
+report at http://sourceforge.net/bugs/?group_id=1936.
+
+
+Required libraries:
+===================
+glib v1.2.0 or better
+gtk+ v1.2.0 or better
+libxml
+
+Optional libraries:
+===================
+gdk_pixbuf	(for videosink)
+libghttp	(for httpsrc)
+libgnomeui	(for gstplay, gsteditor, autoplug example, several tests)
+libglade	(for gstplay, gsteditor)
+
+
+
+An extra set of tools is required if you wish to build GStreamer out of
+CVS (using autogen.sh):
+
+autoconf
+automake v1.4 or better
+libtool v1.3.5 or better
