@@ -1,5 +1,16 @@
 2004-07-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	patch by: Wim Taymans
+
+	* gst/schedulers/gstoptimalscheduler.c: (group_has_element),
+	(gst_opt_scheduler_schedule_run_queue),
+	(gst_opt_scheduler_get_wrapper), (get_group),
+	(group_migrate_connected):
+	* testsuite/schedulers/Makefile.am:
+	  fix for #147819 (Add some checks in the opt scheduler)
+
+2004-07-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	patch by: Benjamin Otte
 
 	* gst/gstelementfactory.c: (__gst_element_details_set):

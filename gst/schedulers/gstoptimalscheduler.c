@@ -234,6 +234,7 @@ static void group_error_handler (GstOptSchedulerGroup * group);
 static void group_element_set_enabled (GstOptSchedulerGroup * group,
     GstElement * element, gboolean enabled);
 static gboolean schedule_group (GstOptSchedulerGroup * group);
+static void get_group (GstElement * element, GstOptSchedulerGroup ** group);
 
 
 /* 
@@ -1203,7 +1204,13 @@ gst_opt_scheduler_schedule_run_queue (GstOptScheduler * osched)
 
     GST_LOG_OBJECT (osched, "scheduling group %p", group);
 
-    res = schedule_group (group);
+    if (GST_OPT_SCHEDULER_GROUP_IS_ENABLED (group)) {
+      res = schedule_group (group);
+    } else {
+      GST_INFO_OBJECT (osched,
+          "group was disabled while it was on the queue, not scheduling");
+      res = TRUE;
+    }
     if (!res) {
       g_warning ("error scheduling group %p", group);
       group_error_handler (group);
@@ -1419,10 +1426,10 @@ gst_opt_scheduler_get_wrapper (GstPad * srcpad)
   GST_LOG ("need to schedule the peer element");
 
   /* else we need to schedule the peer element */
-  group = GST_ELEMENT_SCHED_GROUP (GST_PAD_PARENT (srcpad));
+  get_group (GST_PAD_PARENT (srcpad), &group);
   if (group == NULL) {
     /* wow, peer has no group */
-    g_warning ("peer without group detected");
+    GST_LOG ("peer without group detected");
     //group_error_handler (group);
     return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
   }
@@ -1609,8 +1616,6 @@ static void
 get_group (GstElement * element, GstOptSchedulerGroup ** group)
 {
   GstOptSchedulerCtx *ctx;
-
-  /*GList *pads; */
 
   ctx = GST_ELEMENT_SCHED_CONTEXT (element);
   if (ctx)
