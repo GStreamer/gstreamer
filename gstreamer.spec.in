@@ -157,7 +157,7 @@ Plugins for playback of AVI format media files.
 %files -n gstreamer-avi
 %defattr(-, root, root)
 %{prefix}/lib/gst/libavi*
-# %{prefix}/lib/gst/libwin*
+%{prefix}/lib/gst/libwin*
 
 %package -n gstreamer-cdparanoia
 Summary: Gstreamer plugin for CD audio input using CDParanoia IV
