@@ -1,3 +1,14 @@
+2004-01-09  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/divx/gstdivxenc.c: (gst_divxenc_init):
+	  Use explicit caps - fix capsnego.
+	* ext/xvid/gstxviddec.c:
+	* ext/xvid/gstxvidenc.c:
+	  Remove macro-inside-macro which caused compile errors.
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_header):
+	  Error out if it's not a RIFF file. Else we error out without
+	  gst_element_error() which is not good...
+
 2004-01-08  David Schleef  <ds@schleef.org>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_connect):
