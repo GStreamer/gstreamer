@@ -1,5 +1,12 @@
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/ext/ffmpeg/m4/ogg.m4:
+	* gst-libs/ext/ffmpeg/patches/autotools.patch:
+	* gst-libs/ext/ffmpeg/patches/no-imlib.patch:
+          adding ogg.m4
+
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/ext/ffmpeg/patches/autotools.patch:
 	* gst-libs/ext/ffmpeg/.pc/no-imlib/configure.ac:
 	* gst-libs/ext/ffmpeg/autogen.sh:
