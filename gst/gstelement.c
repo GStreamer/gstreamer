@@ -939,7 +939,7 @@ gst_element_adjust_time (GstElement *element, GstClockTimeDiff diff)
       break;
     case GST_STATE_PLAYING:
       time = gst_clock_get_time (element->clock);
-      if (time < element->base_time - diff) {
+      if (time < (GstClockTime) (element->base_time - diff) ) {
 	g_warning ("attempted to set the current time of element %s below 0",
 	    GST_OBJECT_NAME (element));
 	element->base_time = time;
@@ -1292,7 +1292,7 @@ gst_element_get_request_pad (GstElement *element, const gchar *name)
         GST_CAT_DEBUG (GST_CAT_PADS, "comparing %s to %s", name, templ->name_template);
         if ((str = strchr (templ->name_template, '%')) &&
             strncmp (templ->name_template, name, str - templ->name_template) == 0 &&
-            strlen (name) > str - templ->name_template) {
+            (int) strlen (name) > str - templ->name_template ) {
           data = name + (str - templ->name_template);
           if (*(str+1) == 'd') {
             /* it's an int */
@@ -2814,7 +2814,7 @@ gst_element_change_state (GstElement *element)
     case GST_STATE_PLAYING_TO_PAUSED:
       if (element->clock) {
 	GstClockTime time = gst_clock_get_event_time (element->clock);
-	g_assert (time >= element->base_time);
+	g_assert (time >= (GstClockTime) element->base_time);
 	element->base_time = time - element->base_time;
 	GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element, "setting base time to %"
 	    G_GINT64_FORMAT, element->base_time);

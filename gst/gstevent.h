@@ -173,7 +173,7 @@ struct _GstEvent {
     } seek;
     struct {
       GstFormatValue 	offsets[8];
-      gint      	noffsets;
+      guint      	noffsets;
       gboolean		new_media;
     } discont;
     struct {

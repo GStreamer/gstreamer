@@ -62,7 +62,7 @@ static gboolean
 populate (GstMemChunk *mem_chunk) 
 {
   guint8 *area;
-  gint i;
+  guint i;
 
   if (mem_chunk->cleanup)
     return FALSE;
@@ -96,7 +96,7 @@ gst_mem_chunk_new (gchar* name, gint atom_size, gulong area_size, gint type)
   GstMemChunk *mem_chunk;
 
   g_return_val_if_fail (atom_size > 0, NULL);
-  g_return_val_if_fail (area_size >= atom_size, NULL);
+  g_return_val_if_fail (area_size >= (guint) atom_size, NULL);
 
   mem_chunk = g_malloc (sizeof (GstMemChunk));
 

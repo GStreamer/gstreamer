@@ -62,7 +62,7 @@ static GArray *
 gst_value_list_array_copy (const GArray *src)
 {
   GArray *dest;
-  gint i;
+  guint i;
   
   dest = g_array_sized_new (FALSE, TRUE, sizeof(GValue), src->len);
   g_array_set_size (dest, src->len);
@@ -83,7 +83,7 @@ gst_value_copy_list (const GValue *src_value, GValue *dest_value)
 static void
 gst_value_free_list (GValue *value)
 {
-  gint i;
+  guint i;
   GArray *src = (GArray *) value->data[0].v_pointer;
   
   if ((value->data[1].v_uint & G_VALUE_NOCOPY_CONTENTS) == 0) {
@@ -234,7 +234,7 @@ gst_value_transform_list_string (const GValue *src_value,
   GValue *list_value;
   GArray *array;
   GString *s;
-  int i;
+  unsigned int i;
   char *list_s;
 
   array = src_value->data[0].v_pointer;
@@ -258,7 +258,7 @@ gst_value_transform_list_string (const GValue *src_value,
 static int
 gst_value_compare_list (const GValue *value1, const GValue *value2)
 {
-  int i,j;
+  unsigned int i,j;
   GArray *array1 = value1->data[0].v_pointer;
   GArray *array2 = value2->data[0].v_pointer;
   GValue *v1;
@@ -283,7 +283,7 @@ gst_value_compare_list (const GValue *value1, const GValue *value2)
 static char *
 gst_value_serialize_list (const GValue *value)
 {
-  int i;
+  unsigned int i;
   GArray *array = value->data[0].v_pointer;
   GString *s;
   GValue *v;
@@ -1070,7 +1070,7 @@ gboolean
 gst_value_can_compare (const GValue *value1, const GValue *value2)
 {
   GstValueTable *table;
-  int i;
+  unsigned int i;
 
   if(G_VALUE_TYPE(value1) != G_VALUE_TYPE(value2))return FALSE;
   for(i=0;i<gst_value_table->len;i++){
@@ -1090,7 +1090,7 @@ int
 gst_value_compare (const GValue *value1, const GValue *value2)
 {
   GstValueTable *table;
-  int i;
+  unsigned int i;
 
   if (G_VALUE_TYPE(value1) != G_VALUE_TYPE(value2)) return GST_VALUE_UNORDERED;
 
@@ -1117,7 +1117,7 @@ gboolean
 gst_value_can_union (const GValue *value1, const GValue *value2)
 {
   GstValueUnionInfo *union_info;
-  int i;
+  unsigned int i;
 
   for(i=0;i<gst_value_union_funcs->len;i++){
     union_info = &g_array_index(gst_value_union_funcs, GstValueUnionInfo, i);
@@ -1136,7 +1136,7 @@ gboolean
 gst_value_union (GValue *dest, const GValue *value1, const GValue *value2)
 {
   GstValueUnionInfo *union_info;
-  int i;
+  unsigned int i;
 
   for(i=0;i<gst_value_union_funcs->len;i++){
     union_info = &g_array_index(gst_value_union_funcs, GstValueUnionInfo, i);
@@ -1176,7 +1176,7 @@ gboolean
 gst_value_can_intersect (const GValue *value1, const GValue *value2)
 {
   GstValueIntersectInfo *intersect_info;
-  int i;
+  unsigned int i;
 
   /* special cases */
   if (GST_VALUE_HOLDS_LIST (value1) || 
@@ -1201,7 +1201,7 @@ gboolean
 gst_value_intersect (GValue *dest, const GValue *value1, const GValue *value2)
 {
   GstValueIntersectInfo *intersect_info;
-  int i;
+  unsigned int i;
   int ret = FALSE;
 
   /* special cases first */
@@ -1278,7 +1278,7 @@ gst_value_init_and_copy (GValue *dest, const GValue *src)
 gchar *
 gst_value_serialize (const GValue *value)
 {
-  int i;
+  unsigned int i;
   GValue s_val = { 0 };
   GstValueTable *table;
   char *s;
@@ -1307,7 +1307,7 @@ gboolean
 gst_value_deserialize (GValue *dest, const gchar *src)
 {
   GstValueTable *table;
-  int i;
+  unsigned int i;
 
   for(i=0;i<gst_value_table->len;i++){
     table = &g_array_index(gst_value_table, GstValueTable, i);

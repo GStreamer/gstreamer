@@ -206,7 +206,7 @@ GstStructure *gst_structure_copy(GstStructure *structure)
 {
   GstStructure *new_structure;
   GstStructureField *field;
-  int i;
+  unsigned int i;
 
   g_return_val_if_fail(structure != NULL, NULL);
 
@@ -235,7 +235,7 @@ GstStructure *gst_structure_copy(GstStructure *structure)
 void gst_structure_free(GstStructure *structure)
 {
   GstStructureField *field;
-  int i;
+  unsigned int i;
 
   g_return_if_fail(structure != NULL);
 
@@ -442,7 +442,7 @@ void gst_structure_set_valist(GstStructure *structure, const gchar *fieldname,
 static void gst_structure_set_field(GstStructure *structure, GstStructureField *field)
 {
   GstStructureField *f;
-  int i;
+  unsigned int i;
 
   for(i=0;i<structure->fields->len;i++){
     f = GST_STRUCTURE_FIELD(structure, i);
@@ -471,7 +471,7 @@ static GstStructureField *gst_structure_id_get_field(const GstStructure *structu
     GQuark field_id)
 {
   GstStructureField *field;
-  int i;
+  unsigned int i;
 
   g_return_val_if_fail(structure != NULL, NULL);
 
@@ -563,7 +563,7 @@ gst_structure_remove_field(GstStructure *structure, const gchar *fieldname)
 {
   GstStructureField *field;
   GQuark id;
-  int i;
+  unsigned int i;
 
   g_return_if_fail(structure != NULL);
   g_return_if_fail(fieldname != NULL);
@@ -710,7 +710,7 @@ gboolean
 gst_structure_foreach (GstStructure *structure,
     GstStructureForeachFunc func, gpointer user_data)
 {
-  int i;
+  unsigned int i;
   GstStructureField *field;
   gboolean ret;
 
@@ -953,7 +953,7 @@ static GstStructureAbbreviation _gst_structure_abbrs[] = {
 
 static GType _gst_structure_from_abbr(const char *type_name)
 {
-  int i;
+  unsigned int i;
 
   g_return_val_if_fail(type_name != NULL, G_TYPE_INVALID);
 
@@ -973,7 +973,7 @@ static GType _gst_structure_from_abbr(const char *type_name)
 
 static const char *_gst_structure_to_abbr(GType type)
 {
-  int i;
+  unsigned int i;
 
   g_return_val_if_fail(type != G_TYPE_INVALID, NULL);
 
@@ -1008,7 +1008,7 @@ gst_structure_to_string(const GstStructure *structure)
 {
   GstStructureField *field;
   GString *s;
-  int i;
+  unsigned int i;
   
   /* NOTE:  This function is potentially called by the debug system,
    * so any calls to gst_log() (and GST_DEBUG(), GST_LOG(), etc.)

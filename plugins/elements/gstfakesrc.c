@@ -737,7 +737,7 @@ gst_fakesrc_get(GstPad *pad)
     return GST_DATA(gst_event_new (GST_EVENT_FLUSH));
   }
 
-  if (src->buffer_count == src->segment_end) {
+  if (src->buffer_count == (guint64) src->segment_end) {
     if (src->segment_loop) {
       return GST_DATA(gst_event_new (GST_EVENT_SEGMENT_DONE));
     }
