@@ -66,7 +66,7 @@ GType gst_diracdec_get_type (void);
 /* elementfactory information */
 GstElementDetails gst_diracdec_details = {
   "Dirac stream decoder",
-  "Codec/Decoder",
+  "Codec/Decoder/Video",
   "Decode DIRAC streams",
   "David Schleef <ds@schleef.org>",
 };
