@@ -10,7 +10,7 @@ make_and_check_element (gchar *type, gchar *name)
   GstElement *element = gst_element_factory_make (type, name);
 
   if (element == NULL) {
-    g_warning ("Could not run test, because element type \"%s\" is not installed. Please retry when it is. Asysuming it works for now...", type);
+    g_warning ("Could not run test, because element type \"%s\" is not installed. Please retry when it is. Assuming it works for now...", type);
     exit (0);
   }
 
