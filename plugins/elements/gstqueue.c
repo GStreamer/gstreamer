@@ -161,6 +161,7 @@ gst_queue_init (GstQueue *queue)
 {
   // scheduling on this kind of element is, well, interesting
   GST_FLAG_SET (queue, GST_ELEMENT_DECOUPLED);
+  GST_FLAG_SET (queue, GST_ELEMENT_EVENT_AWARE);
 
   queue->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_pad_set_chain_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_chain));
@@ -223,7 +224,10 @@ static void
 gst_queue_cleanup_buffers (gpointer data, const gpointer user_data)
 {
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, user_data, "cleaning buffer %p\n", data);
-  gst_buffer_unref (GST_BUFFER (data));
+
+  if (GST_IS_BUFFER (data)) {
+    gst_buffer_unref (GST_BUFFER (data));
+  }
 }
 
 static void
@@ -246,6 +250,7 @@ gst_queue_flush (GstQueue *queue)
   g_mutex_unlock (queue->qlock);
 }
 
+
 static void
 gst_queue_chain (GstPad *pad, GstBuffer *buf)
 {
@@ -261,20 +266,21 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
   reader = FALSE;
 
   /* we have to lock the queue since we span threads */
-
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld\n", pthread_self ());
   g_mutex_lock (queue->qlock);
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locked t:%ld\n", pthread_self ());
 
-  if (GST_IS_EVENT(buf)) {
-    GstEvent *event = GST_EVENT(buf);
-    switch (GST_EVENT_TYPE(event)) {
+  if (GST_IS_EVENT (buf)) {
+    switch (GST_EVENT_TYPE (buf)) {
       case GST_EVENT_FLUSH:
-        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "flushing queue\n");
+        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "FLUSH event, flushing queue\n");
         gst_queue_locked_flush (queue);
-        break;
+	break;
+      case GST_EVENT_EOS:
+	break;
       default:
-        break;
+	gst_pad_event_default (pad, GST_EVENT (buf));
+	break;
     }
   }
 
