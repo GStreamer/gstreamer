@@ -119,7 +119,7 @@ case "x${target_cpu}" in
              AC_DEFINE(HAVE_CPU_PPC) ;;
   xalpha)    HAVE_CPU_ALPHA=yes ;
              AC_DEFINE(HAVE_CPU_ALPHA) ;;
-  xarm)      HAVE_CPU_ARM=yes ;
+  xarm*)     HAVE_CPU_ARM=yes ;
              AC_DEFINE(HAVE_CPU_ARM) ;;
 esac
 
@@ -549,6 +549,8 @@ dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
 AM_CONDITIONAL(HAVE_CPU_I386,       test "x$HAVE_CPU_I386" = "xyes")
 AM_CONDITIONAL(HAVE_CPU_PPC,        test "x$HAVE_CPU_PPC" = "xyes")
+AM_CONDITIONAL(HAVE_CPU_ALPHA,      test "x$HAVE_CPU_ALPHA" = "xyes")
+AM_CONDITIONAL(HAVE_CPU_ARM,        test "x$HAVE_CPU_ARM" = "xyes")
 AM_CONDITIONAL(HAVE_GDK_PIXBUF,     test "x$USE_GDK_PIXBUF" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGHTTP,       test "x$USE_LIBGHTTP" = "xyes")
 AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")
