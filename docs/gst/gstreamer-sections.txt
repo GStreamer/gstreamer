@@ -46,7 +46,6 @@ GST_BUFFER_SIZE
 GST_BUFFER_MAXSIZE
 GST_BUFFER_TIMESTAMP
 GST_BUFFER_DURATION
-GST_BUFFER_FORMAT
 GST_BUFFER_OFFSET
 GST_BUFFER_OFFSET_END
 GST_BUFFER_FREE_DATA_FUNC
@@ -2072,8 +2071,6 @@ do_cothread_setfunc
 do_cothread_destroy
 do_cothread_context_init
 do_cothread_context_destroy
-do_cothread_lock
-do_cothread_unlock
 do_cothread_get_current
 do_cothread_get_main
 </SECTION>
@@ -2087,8 +2084,6 @@ cothread_func
 cothread
 cothread_context
 do_cothread_create
-do_cothread_lock
-do_cothread_unlock
 do_cothread_get_current
 do_cothread_get_main
 do_cothread_setfunc

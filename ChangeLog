@@ -1,3 +1,8 @@
+2004-04-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-sections.txt:
+          remove defines deprecated by Benjamin
+
 2004-04-07  Benjamin Otte  <otte@gnome.org>
 
 	* gst/elements/gstbufferstore.c: (gst_buffer_store_get_buffer):
