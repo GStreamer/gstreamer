@@ -413,7 +413,7 @@ gst_vorbisfile_loop (GstElement *element)
   time = (GstClockTime) (ov_time_tell (&vorbisfile->vf) * GST_SECOND);
 
   ret = ov_read (&vorbisfile->vf, GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), 
-		  0, 2, 1, &vorbisfile->current_section);
+		  (G_BYTE_ORDER == G_LITTLE_ENDIAN ? 0 : 1), sizeof (gint16), 1, &vorbisfile->current_section);
 
   if (vorbisfile->need_discont) {
     GstEvent *discont;
