@@ -28,12 +28,15 @@
 
 
 GMemChunk *_gst_buffer_chunk;
+GMutex *chunck_lock;
 
 void 
 _gst_buffer_initialize (void) 
 {
   _gst_buffer_chunk = g_mem_chunk_new ("GstBuffer", sizeof(GstBuffer),
     sizeof(GstBuffer) * 16, G_ALLOC_AND_FREE);
+
+  chunck_lock = g_mutex_new ();
 }
 
 /**
@@ -48,7 +51,9 @@ gst_buffer_new(void)
 {
   GstBuffer *buffer;
 
+  g_mutex_lock (chunck_lock);
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
+  g_mutex_unlock (chunck_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new buffer %p",buffer);
 
 //  g_print("allocating new mutex\n");
@@ -107,7 +112,9 @@ gst_buffer_create_sub (GstBuffer *parent,
   g_return_val_if_fail (size > 0, NULL);
   g_return_val_if_fail ((offset+size) <= parent->size, NULL);
 
+  g_mutex_lock (chunck_lock);
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
+  g_mutex_unlock (chunck_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new subbuffer %p from parent %p", buffer, parent);
 
   buffer->lock = g_mutex_new ();
@@ -228,7 +235,9 @@ void gst_buffer_destroy (GstBuffer *buffer)
   //g_print("freed mutex\n");
 
   // remove it entirely from memory
+  g_mutex_lock (chunck_lock);
   g_mem_chunk_free (_gst_buffer_chunk,buffer);
+  g_mutex_unlock (chunck_lock);
 }
 
 /**
