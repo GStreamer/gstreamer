@@ -45,6 +45,7 @@ enum {
   ARG_0,
   ARG_NUM_SINKS,
   ARG_SILENT,
+  ARG_DUMP,
 };
 
 GST_PADTEMPLATE_FACTORY (fakesink_sink_factory,
@@ -109,6 +110,9 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
     g_param_spec_boolean ("silent", "silent", "silent",
                           FALSE, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
+    g_param_spec_boolean ("dump", "dump", "dump",
+                          FALSE, G_PARAM_READWRITE)); 
 
   gst_fakesink_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
@@ -133,6 +137,7 @@ gst_fakesink_init (GstFakeSink *fakesink)
   fakesink->sinkpads = g_slist_prepend (NULL, pad);
   fakesink->numsinkpads = 1;
   fakesink->silent = FALSE;
+  fakesink->dump = FALSE;
 }
 
 static GstPad*
@@ -174,6 +179,9 @@ gst_fakesink_set_property (GObject *object, guint prop_id, const GValue *value, 
     case ARG_SILENT:
       sink->silent = g_value_get_boolean (value);
       break;
+    case ARG_DUMP:
+      sink->dump = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -195,6 +203,9 @@ gst_fakesink_get_property (GObject *object, guint prop_id, GValue *value, GParam
       break;
     case ARG_SILENT:
       g_value_set_boolean (value, sink->silent);
+      break;
+    case ARG_DUMP:
+      g_value_set_boolean (value, sink->dump);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -238,10 +249,15 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
   }
 
   if (!fakesink->silent)
-    g_print("fakesink: chain   ******* (%s:%s)< (%d bytes, %lld) \n",
-		GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+    g_print("fakesink: chain   ******* (%s:%s)< (%d bytes, %lld) %p\n",
+		GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
 
-  g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0, buf);
+  g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0, buf, pad);
+
+  if (fakesink->dump)
+  {
+    gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  }
 
   gst_buffer_unref (buf);
 }

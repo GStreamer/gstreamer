@@ -22,6 +22,8 @@
 
 
 #include <stdlib.h>
+#include <string.h>
+
 #include <gstfakesrc.h>
 
 
@@ -147,8 +149,12 @@ static void		gst_fakesrc_init		(GstFakeSrc *fakesrc);
 
 static GstPad* 		gst_fakesrc_request_new_pad 	(GstElement *element, GstPadTemplate *templ);
 static void 		gst_fakesrc_update_functions 	(GstFakeSrc *src);
-static void		gst_fakesrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		gst_fakesrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void		gst_fakesrc_set_property	(GObject *object, guint prop_id, 
+							 const GValue *value, GParamSpec *pspec);
+static void		gst_fakesrc_get_property	(GObject *object, guint prop_id, 
+							 GValue *value, GParamSpec *pspec);
+
+static GstElementStateReturn gst_fakesrc_change_state 	(GstElement *element);
 
 static GstBuffer*	gst_fakesrc_get			(GstPad *pad);
 static void 		gst_fakesrc_loop		(GstElement *element);
@@ -241,7 +247,8 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesrc_get_property);
 
-  gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR (gst_fakesrc_request_new_pad);
+  gstelement_class->request_new_pad = 	GST_DEBUG_FUNCPTR (gst_fakesrc_request_new_pad);
+  gstelement_class->change_state = 	GST_DEBUG_FUNCPTR (gst_fakesrc_change_state);
 }
 
 static void 
@@ -390,8 +397,10 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       src->data = g_value_get_int (value);
       switch (src->data) {
 	case FAKESRC_DATA_ALLOCATE:
-          gst_buffer_unref (src->parent);
-          src->parent = NULL;
+          if (src->parent) {
+            gst_buffer_unref (src->parent);
+            src->parent = NULL;
+	  }
           break;
 	case FAKESRC_DATA_SUBBUFFER:
 	  if (!src->parent)
@@ -671,7 +680,7 @@ gst_fakesrc_get(GstPad *pad)
                GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
   g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
-                   buf);
+                   buf, pad);
 
   return buf;
 }
@@ -723,12 +732,40 @@ gst_fakesrc_loop(GstElement *element)
                GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
       g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
-                       buf);
+                       buf, pad);
       gst_pad_push (pad, buf);
 
       pads = g_slist_next (pads);
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+}
+
+static GstElementStateReturn
+gst_fakesrc_change_state (GstElement *element)
+{
+  GstFakeSrc *fakesrc;
+
+  g_return_val_if_fail (GST_IS_FAKESRC (element), GST_STATE_FAILURE);
+
+  fakesrc = GST_FAKESRC (element);
+
+  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
+    if (fakesrc->parent) {
+      gst_buffer_unref (fakesrc->parent);
+      fakesrc->parent = NULL;
+    }
+  }
+  else if (GST_STATE_PENDING (element) == GST_STATE_READY) {
+    fakesrc->buffer_count = 0;
+    fakesrc->pattern_byte = 0x00;
+    fakesrc->need_flush = FALSE;
+    fakesrc->parent = NULL;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
 }
 
 gboolean
