@@ -347,7 +347,7 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
 
   if (!GST_CAPS_IS_FIXED (caps))
   {
-    GST_DEBUG (GST_CAT_CAPS, "caps on lame pad %s:%s not fixed, delayed\n",
+    GST_DEBUG (GST_CAT_CAPS, "caps on lame pad %s:%s not fixed, delayed",
 	       GST_DEBUG_PAD_NAME (pad));
     return GST_PAD_CONNECT_DELAYED;
   }
@@ -360,7 +360,7 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
   /* check if the supplied caps of the peer element are compatible with our own      use gst_pad_get_caps because if caps aren't set yet we need the template */
   if (!gst_caps_check_compatibility (caps, gst_pad_get_caps (pad)))
   {
-    GST_DEBUG (GST_CAT_CAPS, "peer caps (%p) not compatible with caps of pad %s:%s!\n",
+    GST_DEBUG (GST_CAT_CAPS, "peer caps (%p) not compatible with caps of pad %s:%s!",
 	       caps, GST_DEBUG_PAD_NAME (pad));
     return GST_PAD_CONNECT_REFUSED;
   }
@@ -401,7 +401,7 @@ gst_lame_init (GstLame *lame)
 
   GST_FLAG_SET (lame, GST_ELEMENT_EVENT_AWARE);
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "setting up lame encoder\n");
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "setting up lame encoder");
   lame->lgf = lame_init ();
 
   lame->samplerate = 44100;
@@ -440,7 +440,7 @@ gst_lame_init (GstLame *lame)
   lame->no_short_blocks = lame_get_no_short_blocks (lame->lgf);
   lame->emphasis = lame_get_emphasis (lame->lgf);
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "done initializing lame element\n");
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "done initializing lame element");
 }
 
 
@@ -681,7 +681,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 
   lame = GST_LAME (gst_pad_get_parent (pad));
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "entered chain\n");
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "entered chain");
 
   if (!lame->initialized) {
     gst_element_error (GST_ELEMENT (lame), "encoder not initialized (input is not audio?)");
@@ -729,7 +729,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 		    mp3_data, mp3_buffer_size);
     }
 
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "encoded %d bytes of audio to %d bytes of mp3\n", GST_BUFFER_SIZE (buf), mp3_size);
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, "encoded %d bytes of audio to %d bytes of mp3", GST_BUFFER_SIZE (buf), mp3_size);
     gst_buffer_unref (buf);
   }
   
@@ -822,7 +822,7 @@ gst_lame_change_state (GstElement *element)
 
   lame = GST_LAME (element);
 
-  GST_DEBUG (0,"state pending %d\n", GST_STATE_PENDING (element));
+  GST_DEBUG (0,"state pending %d", GST_STATE_PENDING (element));
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_READY_TO_NULL:
