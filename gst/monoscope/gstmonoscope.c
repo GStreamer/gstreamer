@@ -66,11 +66,8 @@ GType gst_monoscope_get_type(void);
 static GstElementDetails gst_monoscope_details = {
   "Monoscope",
   "Visualization",
-  "GPL",
   "Displays a highly stabilised waveform of audio input",
-  VERSION,
-  "Richard Boulton <richard@tartarus.org>",
-  "(C) 2002",
+  "Richard Boulton <richard@tartarus.org>"
 };
 
 /* signals and args */
@@ -122,6 +119,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_template,
 
 
 static void	gst_monoscope_class_init	(GstMonoscopeClass *klass);
+static void	gst_monoscope_base_init		(GstMonoscopeClass *klass);
 static void	gst_monoscope_init		(GstMonoscope *monoscope);
 
 static void	gst_monoscope_chain		(GstPad *pad, GstData *_data);
@@ -141,7 +139,7 @@ gst_monoscope_get_type (void)
   if (!type) {
     static const GTypeInfo info = {
       sizeof (GstMonoscopeClass),      
-      NULL,      
+      (GBaseInitFunc) gst_monoscope_base_init,      
       NULL,      
       (GClassInitFunc) gst_monoscope_class_init,
       NULL,
@@ -153,6 +151,18 @@ gst_monoscope_get_type (void)
     type = g_type_register_static (GST_TYPE_ELEMENT, "GstMonoscope", &info, 0);
   }
   return type;
+}
+
+static void
+gst_monoscope_base_init (GstMonoscopeClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_template));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_template));
+  gst_element_class_set_details (element_class, &gst_monoscope_details);
 }
 
 static void
@@ -310,26 +320,21 @@ gst_monoscope_chain (GstPad *pad, GstData *_data)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the monoscope element */
-  factory = gst_element_factory_new("monoscope",GST_TYPE_MONOSCOPE,
-                                   &gst_monoscope_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register(plugin, "monoscope",
+			      GST_RANK_NONE, GST_TYPE_MONOSCOPE);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "monoscope",
-  plugin_init
-};
+  "Monoscope visualization",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
