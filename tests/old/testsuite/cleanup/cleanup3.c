@@ -15,10 +15,10 @@ create_pipeline (void)
   queue = gst_element_factory_make ("queue", "queue");
   gst_bin_add (GST_BIN (thread), fakesink);
   gst_bin_add (GST_BIN (thread), queue);
-  gst_element_connect (queue, "src", fakesink, "sink");
+  gst_element_connect (queue, fakesink); 
   gst_element_add_ghost_pad (thread, gst_element_get_pad (queue, "sink"), "sink");
 
-  gst_element_connect (fakesrc, "src", thread, "sink");
+  gst_element_connect (fakesrc, thread);
 
   gst_bin_add (GST_BIN (pipeline), fakesrc);
   gst_bin_add (GST_BIN (pipeline), thread);
@@ -32,17 +32,18 @@ gint
 main (gint argc, gchar *argv[])
 {
   GstElement *pipeline;
-  gint i;
+  gint i = 10000;
+  gint step = 100;
 
   free (malloc(8)); /* -lefence */
 
   gst_init (&argc, &argv);
 
-  i = 10000;
 
   g_mem_chunk_info ();
   while (i--) {
-    fprintf (stderr, "+");
+    if (i % step == 0)
+      fprintf (stderr, "%10d\r", i);
     pipeline = create_pipeline ();
 	  
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -57,7 +58,6 @@ main (gint argc, gchar *argv[])
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
 
-    fprintf (stderr, "-");
     gst_object_unref (GST_OBJECT (pipeline));
   }
   fprintf (stderr, "\n");

@@ -1,10 +1,5 @@
 #include <gst/gst.h>
 
-static GstElement *
-create_pipeline (void)
-{
-}
-
 gint
 main (gint argc, gchar *argv[])
 {
@@ -35,7 +30,7 @@ main (gint argc, gchar *argv[])
 
     fakesink = gst_element_factory_make ("fakesink", "fakesink");
 
-    gst_element_connect (fakesrc, "src", fakesink, "sink");
+    gst_element_connect (fakesrc, fakesink);
 
     gst_bin_add (GST_BIN (bin), fakesink);
     gst_bin_add (GST_BIN (pipeline), bin);

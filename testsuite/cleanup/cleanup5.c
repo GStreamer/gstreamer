@@ -3,7 +3,9 @@
 int main(int argc,char *argv[]) 
 {
   GstElement *bin, *element;
-  gint i=1000000;
+  gint i = 100000;
+  gint step = 100;
+  
 
   free (malloc(8)); /* -lefence */
 
@@ -17,13 +19,14 @@ int main(int argc,char *argv[])
   {
     GstPad *pad;
 
-    fprintf (stderr, "+");
+    if (i % step == 0)
+      fprintf (stderr, "\r%10d", i);
 
     element = gst_element_factory_make ("tee", "tee");
     if (!element) 
       break;
 
-    pad = gst_element_request_pad_by_name (element, "src%d");
+    pad = gst_element_get_request_pad (element, "src%d");
 
     gst_bin_add (GST_BIN (bin), element);
     gst_bin_remove (GST_BIN (bin), element);
@@ -34,4 +37,5 @@ int main(int argc,char *argv[])
   gst_object_unref (GST_OBJECT (bin));
 
   g_mem_chunk_info ();
+  return 0;
 }
