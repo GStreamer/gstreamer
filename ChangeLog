@@ -1,5 +1,11 @@
 2004-11-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_channels),
+	(gst_a52dec_change_state):
+	  Advertise that we can do surround sound.
+
+2004-11-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_reneg):
 	  Add buffer-frames=0.
 	* ext/dvdread/dvdreadsrc.c: (dvdreadsrc_get_type),

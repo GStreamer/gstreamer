@@ -178,62 +178,66 @@ gst_a52dec_init (GstA52Dec * a52dec)
 }
 
 static int
-gst_a52dec_channels (int flags, GstAudioChannelPosition ** pos)
+gst_a52dec_channels (int flags, GstAudioChannelPosition ** _pos)
 {
   int chans = 0;
+  GstAudioChannelPosition *pos = NULL;
 
   /* allocated just for safety. Number makes no sense */
-  if (pos) {
-    *pos = g_new (GstAudioChannelPosition, 6);
+  if (_pos) {
+    pos = g_new (GstAudioChannelPosition, 6);
+    *_pos = pos;
   }
 
   if (flags & A52_LFE) {
     chans += 1;
-    *pos[0] = GST_AUDIO_CHANNEL_POSITION_LFE;
+    if (pos) {
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_LFE;
+    }
   }
   flags &= A52_CHANNEL_MASK;
   switch (flags) {
     case A52_3F2R:
       if (pos) {
-        *pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-        *pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-        *pos[3 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-        *pos[4 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+        pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        pos[3 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+        pos[4 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
       }
       chans += 5;
       break;
     case A52_2F2R:
       if (pos) {
-        *pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-        *pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-        *pos[3 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+        pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+        pos[3 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
       }
       chans += 4;
       break;
     case A52_3F1R:
       if (pos) {
-        *pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-        *pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-        *pos[3 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+        pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        pos[3 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
       }
       chans += 4;
       break;
     case A52_2F1R:
       if (pos) {
-        *pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-        *pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+        pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
       }
       chans += 3;
       break;
     case A52_3F:
       if (pos) {
-        *pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-        *pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
       }
       chans += 3;
       break;
@@ -241,8 +245,8 @@ gst_a52dec_channels (int flags, GstAudioChannelPosition ** pos)
     case A52_STEREO:
     case A52_DOLBY:
       if (pos) {
-        *pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        *pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
       }
       chans += 2;
       break;
@@ -494,8 +498,7 @@ gst_a52dec_change_state (GstElement * element)
       a52dec->bit_rate = -1;
       a52dec->sample_rate = -1;
       a52dec->stream_channels = A52_CHANNEL;
-      /* FIXME force stereo for now */
-      a52dec->request_channels = A52_STEREO;
+      a52dec->request_channels = A52_3F2R | A52_LFE;
       a52dec->using_channels = A52_CHANNEL;
       a52dec->level = 1;
       a52dec->bias = 384;
