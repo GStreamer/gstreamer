@@ -29,6 +29,7 @@
 #include <errno.h>
 
 GST_DEBUG_CATEGORY_EXTERN (esd_debug);
+#define GST_CAT_DEFAULT esd_debug
 
 /* elementfactory information */
 static GstElementDetails esdsink_details = {
