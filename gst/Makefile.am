@@ -7,6 +7,7 @@ pygstreamer_PYTHON = __init__.py
 pygstreamerexecdir = $(pyexecdir)/gstreamer
 
 # gstreamer binding
+OVERRIDES = gstreamer.override
 
 pyexec_LTLIBRARIES = _gstreamermodule.la
 _gstreamermodule_la_SOURCES = gstreamermodule.c gstreamer-fixes.c gstreamer-fixes.h
@@ -15,8 +16,8 @@ _gstreamermodule_la_LIBADD = $(GST_LIBS)
 _gstreamermodule_la_LDFLAGS = -module -avoid-version -export-symbols-regex initgstreamer
 nodist__gstreamermodule_la_SOURCES = gstreamer.c
 CLEANFILES = gstreamer.c gstreamer-base.defs gstreamer.defs
-EXTRA_DIST = gstreamer-extra.defs gstreamer.override gstreamer-arg-types.py
-gstreamer.c: gstreamer.defs gstreamer.override
+EXTRA_DIST = gstreamer-extra.defs $(OVERRIDES) gstreamer-arg-types.py
+gstreamer.c: gstreamer.defs $(OVERRIDES)
 
 GST_EXCLUDE_INCLUDES=\
 	$(GST_INCLUDEDIR)/gst/gstatomic_impl.h \

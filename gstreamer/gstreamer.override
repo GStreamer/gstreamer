@@ -437,6 +437,8 @@ _wrap_gst_props_entry_get_float_range(PyObject *self)
 %%
 override gst_props_entry_get_list
 
+
+
 static PyObject *
 _wrap_gst_props_entry_get_list(PyObject *self)
 {
@@ -490,4 +492,27 @@ _wrap_gst_props_get_list(PyObject *self)
 		Py_INCREF(tuple);
 	}
 	return Py_BuildValue("(bO)", ret, tuple);
+}
+
+
+%%
+override gst_element_factory_make_element
+
+/* we create this function to serve as a constructor for Element */
+static int
+_wrap_gst_element_factory_make_element(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "factoryname", "name", NULL };
+    char *factoryname, *name;
+                                                                                
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ss:GstElement.__init__", kwlist, &factoryname, &name))
+        return -1;
+    self->obj = (GObject *)gst_element_factory_make(factoryname, name);
+                                                                                
+    if (!self->obj) {
+        PyErr_SetString(PyExc_RuntimeError, "could not create GstElement object");
+        return -1;
+    }
+    pygobject_register_wrapper((PyObject *)self);
+    return 0;
 }
