@@ -284,6 +284,7 @@ gst_alsa_class_init (GstAlsaClass *klass)
 static void
 gst_alsa_init (GstAlsa *this)
 {
+  GST_FLAG_SET (this, GST_ELEMENT_EVENT_AWARE);
   GST_FLAG_SET (this, GST_ELEMENT_THREAD_SUGGESTED);
 }
 static void
@@ -292,7 +293,7 @@ gst_alsa_dispose (GObject *object)
   GstAlsa *this = GST_ALSA (object);
 
   if (this->clock)
-    gst_object_unref (GST_OBJECT (this->clock));
+    gst_object_unparent (GST_OBJECT (this->clock));
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1998,7 +1999,7 @@ gst_alsa_clock_init (GstAlsaClock *clock)
 
   clock->start_time = GST_CLOCK_TIME_NONE;
 }
-GstAlsaClock*
+static GstAlsaClock*
 gst_alsa_clock_new (gchar *name, GstAlsaClockGetTimeFunc get_time, GstAlsa *owner)
 {
   GstAlsaClock *alsa_clock = GST_ALSA_CLOCK (g_object_new (GST_TYPE_ALSA_CLOCK, NULL));
@@ -2010,6 +2011,7 @@ gst_alsa_clock_new (gchar *name, GstAlsaClockGetTimeFunc get_time, GstAlsa *owne
   alsa_clock->adjust = 0;
 
   gst_object_set_name (GST_OBJECT (alsa_clock), name);
+  gst_object_set_parent (GST_OBJECT (alsa_clock), GST_OBJECT (owner));
 
   return alsa_clock;
 }
@@ -2089,7 +2091,8 @@ gst_alsa_clock_wait (GstClock *clock, GstClockEntry *entry)
 			    " now %" G_GUINT64_FORMAT,
                             target, GST_CLOCK_ENTRY_TIME (entry), entry_time);
 
-  while (gst_alsa_clock_get_internal_time (clock) < target && this->last_unlock < entry_time) {
+  while (gst_alsa_clock_get_internal_time (clock) < target && 
+         this->last_unlock < entry_time) {
     g_usleep (gst_alsa_clock_get_resolution (clock) * G_USEC_PER_SEC / GST_SECOND);
   }
 
