@@ -183,8 +183,8 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   gst_real_pad_signals[REAL_CAPS_NEGO_FAILED] =
     g_signal_new ("caps_nego_failed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, caps_nego_failed), NULL, NULL,
-                  gst_marshal_VOID__BOXED, G_TYPE_NONE, 1,
-                  GST_TYPE_CAPS);
+                  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                  G_TYPE_POINTER);
   gst_real_pad_signals[REAL_LINKED] =
     g_signal_new ("linked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, linked), NULL, NULL,
@@ -199,9 +199,11 @@ gst_real_pad_class_init (GstRealPadClass *klass)
     g_signal_new ("fixate", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, appfixatefunc), 
 		  _gst_real_pad_fixate_accumulator, NULL,
-		  gst_marshal_BOXED__BOXED, GST_TYPE_CAPS, 1,
-                  GST_TYPE_CAPS);
+		  gst_marshal_POINTER__POINTER, G_TYPE_POINTER, 1,
+                  G_TYPE_POINTER);
 
+/*  gtk_object_add_arg_type ("GstRealPad::active", G_TYPE_BOOLEAN, */
+/*                           GTK_ARG_READWRITE, REAL_ARG_ACTIVE); */
   g_object_class_install_property (G_OBJECT_CLASS (klass), REAL_ARG_ACTIVE,
     g_param_spec_boolean ("active", "Active", "Whether the pad is active.",
                           TRUE, G_PARAM_READWRITE));
@@ -219,7 +221,7 @@ static gboolean
 _gst_real_pad_fixate_accumulator (GSignalInvocationHint *ihint,
     GValue *return_accu, const GValue *handler_return, gpointer dummy)
 {
-  if (g_value_get_boxed (handler_return)) {
+  if (g_value_get_pointer (handler_return)) {
     g_value_copy (handler_return, return_accu);
     /* stop emission if something was returned */
     return FALSE;

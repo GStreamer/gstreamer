@@ -1,3 +1,10 @@
+2004-02-05  David Schleef  <ds@schleef.org>
+
+	* gst/gstmarshal.list:
+	* gst/gstpad.c: (gst_real_pad_class_init),
+	(_gst_real_pad_fixate_accumulator):
+	Revert POINTER->BOXED change in signal marshaller.
+
 2004-02-05  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* gstreamer.spec.in:
