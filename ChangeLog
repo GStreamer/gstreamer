@@ -1,3 +1,11 @@
+2004-11-02  David Schleef  <ds@schleef.org>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(gst_qtdemux_add_stream), (qtdemux_parse), (qtdemux_parse_tree),
+	(qtdemux_parse_udta), (qtdemux_tag_add), (gst_qtdemux_handle_esds):
+	Change all g_print()s to debugging.  Add a bunch of consistency
+	checks.
+
 2004-11-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init),
