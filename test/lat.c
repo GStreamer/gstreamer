@@ -86,6 +86,10 @@ GstPipeline *simple(int argc, int argi, char *argv[]) {
     return NULL;
   }
   idents = atoi(argv[argi]);
+  if ((argc - argi) == 2) {
+    gst_schedulerfactory_set_default_name (argv[argi+1]);
+  }
+
   pipeline = GST_PIPELINE(gst_pipeline_new("pipeline"));
   g_return_val_if_fail(pipeline != NULL,NULL);
 
@@ -110,6 +114,10 @@ GstPipeline *queue(int argc, int argi, char *argv[]) {
     return NULL;
   }
   idents = atoi(argv[argi]);
+
+  if ((argc - argi) == 2) {
+    gst_schedulerfactory_set_default_name (argv[argi+1]);
+  }
 
   pipeline = GST_PIPELINE(gst_pipeline_new("pipeline"));
   g_return_val_if_fail(pipeline != NULL,NULL);
@@ -159,8 +167,8 @@ struct test {
 };
 
 static struct test tests[] = {
-  {"simple", "ident_count", simple},
-  {"queue", "ident_count", queue},
+  {"simple", "ident_count [scheduler_name]", simple},
+  {"queue", "ident_count [scheduler_name]", queue},
   {NULL, NULL, NULL}
 };
 

@@ -36,7 +36,7 @@ int main(int argc, char **argv)
     gtk_signal_connect(GTK_OBJECT(button), "clicked", gtk_main_quit, NULL);
     gtk_widget_show(button);
     
-    disksrc = gst_elementfactory_make("disksrc", "disksrc");
+    disksrc = gst_elementfactory_make("filesrc", "filesrc");
     mad = gst_elementfactory_make("mad", "mad");
     stereo2mono = gst_elementfactory_make("stereo2mono", "stereo2mono");
     speed = gst_elementfactory_make("speed", "speed");
