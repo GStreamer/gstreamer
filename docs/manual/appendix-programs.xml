@@ -29,8 +29,8 @@ gst-launch filesrc location=hello.mp3 ! mad ! osssink
 
     <screen>
 gst-launch filesrc location=redpill.vob ! mpegdemux name=demux \
- demux.audio_00! { ac3parse ! a52dec ! osssink } \
- demux.video_00! { mpeg2dec ! xvideosink }
+ { demux.audio_00 ! queue ! a52dec ! audioconvert ! audioscale ! osssink } \
+ { demux.video_00 ! queue !  mpeg2dec ! ffmpegcolorspace ! xvmagesink }
     </screen>
 
     </para>

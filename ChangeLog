@@ -1,3 +1,11 @@
+2004-12-16  Christian Fredrik Kalager Schaller  <uraeus@gnome.org>
+
+	* docs/manual/appendix-programs.xml: fix pipeline to actually work
+
+2004-12-16  Christian Fredrik Kalager Schaller  <christian@fluendo.com>
+
+	* docs/faq/general.xml: fix pipeline to actually work
+
 2004-12-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstvalue.c: (gst_value_deserialize_string):
