@@ -1,0 +1,2 @@
+The release documentation is generated from XML DocBook sources in docs/.
+This currently includes README, NEWS, TODO, and AUTHORS.

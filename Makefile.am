@@ -9,7 +9,7 @@ SUBDIRS = gstreamer pkgconfig examples $(SUBDIRS_DOCS)
 DIST_SUBDIRS = gstreamer pkgconfig examples docs
 
 EXTRA_DIST = \
-  gst-python.spec.in gst-python.spec
+  gst-python.spec.in gst-python.spec README.docs
 
 CLEANFILES = README NEWS TODO AUTHORS
 
