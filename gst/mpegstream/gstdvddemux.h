@@ -25,11 +25,7 @@
 #include <gst/gst.h>
 #include "gstmpegdemux.h"
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_DVD_DEMUX \
   (gst_dvd_demux_get_type())
@@ -139,10 +135,6 @@ GType		gst_dvd_demux_get_type		(void);
 
 gboolean 	gst_dvd_demux_plugin_init 	(GstPlugin *plugin);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __DVD_DEMUX_H__ */

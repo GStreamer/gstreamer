@@ -26,11 +26,7 @@
 #include <gst/bytestream/bytestream.h>
 #include "gstmpegpacketize.h"
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_RFC2250_ENC \
   (gst_rfc2250_enc_get_type())
@@ -79,10 +75,6 @@ GType gst_rfc2250_enc_get_type(void);
 
 gboolean gst_rfc2250_enc_plugin_init 	(GstPlugin *plugin);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __RFC2250_ENC_H__ */

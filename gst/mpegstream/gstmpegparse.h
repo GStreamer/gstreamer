@@ -25,10 +25,7 @@
 #include <gst/bytestream/bytestream.h>
 #include "gstmpegpacketize.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_MPEG_PARSE \
   (gst_mpeg_parse_get_type())
@@ -49,80 +46,93 @@ extern "C" {
 #define MPEGTIME_TO_GSTTIME(time) (((time) * (GST_MSECOND/10)) / CLOCK_BASE)
 #define GSTTIME_TO_MPEGTIME(time) (((time) * CLOCK_BASE) / (GST_MSECOND/10))
 
-typedef struct _GstMPEGParse GstMPEGParse;
-typedef struct _GstMPEGParseClass GstMPEGParseClass;
+  typedef struct _GstMPEGParse GstMPEGParse;
+  typedef struct _GstMPEGParseClass GstMPEGParseClass;
 
-struct _GstMPEGParse {
-  GstElement element;
+  struct _GstMPEGParse
+  {
+    GstElement element;
 
-  GstPad 	*sinkpad, *srcpad;
+    GstPad *sinkpad, *srcpad;
 
-  GstMPEGPacketize *packetize;
+    GstMPEGPacketize *packetize;
 
-  /* pack header values */
-  guint32	 mux_rate;
-  guint64	 current_scr;		/* Current SCR from the stream. */
-  guint64	 next_scr;		/* Expected next SCR. */
-  guint64	 bytes_since_scr;
+    /*
+     * Keep track of total rate using SCR
+     * and use hysteresis.
+     */
+    guint64 first_scr;		/* Earliest SCR value for reference */
+    guint64 first_scr_pos;	/* Byte position of reference SCR */
+    guint64 last_scr;		/* Latest SCR value for reference */
+    guint64 last_scr_pos;	/* Byte position of reference SCR */
+    guint64 scr_rate;		/* Remember the last rate for hysteresis */
 
-  gboolean	do_adjust;		/* If false, send discont events on SCR
-					 * jumps
-				 	*/
-  gboolean	 use_adjust;		/* Collect SCR jumps into 'adjust' in
-					 * order to adjust timestamps to smooth
-                                         * discontinuities. */
-  gint64	 adjust;		/* Current timestamp adjust value. */
+    /*
+     * Compute a rolling average for SCR interpolation (for MPEG1)
+     */
+    guint64 avg_bitrate_time;   /* Time total for local average bitrate */
+    guint64 avg_bitrate_bytes;  /* bytes total for local average bitrate */
 
-  gboolean	 discont_pending;
-  gboolean	 scr_pending;
-  gint		 max_discont;
+    /* pack header values */
+    guint32 mux_rate;           /* mux rate in bytes/sec derived from Pack 
+                                 * header */
+    guint64 current_scr;        /* Current SCR from the stream. */
+    guint64 next_scr;           /* Expected next SCR. */
+    guint64 bytes_since_scr;    /* Bytes since current_scr */
 
-  GstClock 	*clock;
-  gboolean	 sync;
-  GstClockID	 id;
+    gboolean do_adjust;         /* If false, send discont events on SCR
+                                 * jumps
+                                 */
+    gboolean use_adjust;        /* Collect SCR jumps into 'adjust' in
+                                 * order to adjust timestamps to smooth
+                                 * discontinuities. */
+    gint64 adjust;              /* Current timestamp adjust value. */
 
-  GstIndex	*index;
-  gint		 index_id;
-};
+    gboolean discont_pending;
+    gboolean scr_pending;
+    gint max_discont;
 
-struct _GstMPEGParseClass {
-  GstElementClass parent_class;
+    GstClock *clock;
+    gboolean sync;
+    GstClockID id;
 
-  /* process packet types */
-  gboolean 	(*parse_packhead)	(GstMPEGParse *parse, GstBuffer *buffer);
-  gboolean 	(*parse_syshead)	(GstMPEGParse *parse, GstBuffer *buffer);
-  gboolean 	(*parse_packet)		(GstMPEGParse *parse, GstBuffer *buffer);
-  gboolean 	(*parse_pes)		(GstMPEGParse *parse, GstBuffer *buffer);
+    GstIndex *index;
+    gint index_id;
+  };
 
-  /* process events */
-  void		(*handle_discont)	(GstMPEGParse *parse, GstEvent *event);
+  struct _GstMPEGParseClass
+  {
+    GstElementClass parent_class;
 
-  /* optional method to send out the data */
-  void	 	(*send_data)		(GstMPEGParse *parse, GstData *data, GstClockTime time);
-  void	 	(*send_discont)		(GstMPEGParse *parse, GstClockTime time);
-};
+    /* process packet types */
+      gboolean (*parse_packhead) (GstMPEGParse * parse, GstBuffer * buffer);
+      gboolean (*parse_syshead) (GstMPEGParse * parse, GstBuffer * buffer);
+      gboolean (*parse_packet) (GstMPEGParse * parse, GstBuffer * buffer);
+      gboolean (*parse_pes) (GstMPEGParse * parse, GstBuffer * buffer);
 
-GType gst_mpeg_parse_get_type(void);
+    /* process events */
+    void (*handle_discont) (GstMPEGParse * parse, GstEvent * event);
 
-gboolean 	gst_mpeg_parse_plugin_init 		(GstPlugin *plugin);
+    /* optional method to send out the data */
+    void (*send_data) (GstMPEGParse * parse, GstData * data, GstClockTime time);
+    void (*send_discont) (GstMPEGParse * parse, GstClockTime time);
+  };
 
-const GstFormat*
-		gst_mpeg_parse_get_src_formats 		(GstPad *pad);
-	
-gboolean 	gst_mpeg_parse_convert_src 		(GstPad *pad, GstFormat src_format, gint64 src_value,
-		            				 GstFormat *dest_format, gint64 *dest_value);
-const GstEventMask*
-		gst_mpeg_parse_get_src_event_masks 	(GstPad *pad);
-gboolean 	gst_mpeg_parse_handle_src_event 	(GstPad *pad, GstEvent *event);
+  GType gst_mpeg_parse_get_type (void);
 
-const GstQueryType*
-		gst_mpeg_parse_get_src_query_types 	(GstPad *pad);
-gboolean 	gst_mpeg_parse_handle_src_query		(GstPad *pad, GstQueryType type,
-		                         		 GstFormat *format, gint64 *value);
+  gboolean gst_mpeg_parse_plugin_init (GstPlugin * plugin);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+  const GstFormat *gst_mpeg_parse_get_src_formats (GstPad * pad);
 
+  gboolean gst_mpeg_parse_convert_src (GstPad * pad, GstFormat src_format,
+      gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
+  const GstEventMask *gst_mpeg_parse_get_src_event_masks (GstPad * pad);
+  gboolean gst_mpeg_parse_handle_src_event (GstPad * pad, GstEvent * event);
 
-#endif /* __MPEG_PARSE_H__ */
+  const GstQueryType *gst_mpeg_parse_get_src_query_types (GstPad * pad);
+  gboolean gst_mpeg_parse_handle_src_query (GstPad * pad, GstQueryType type,
+      GstFormat * format, gint64 * value);
+
+G_END_DECLS
+
+#endif                          /* __MPEG_PARSE_H__ */

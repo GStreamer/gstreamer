@@ -551,6 +551,9 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
     gint stream_count = (header_length - 6) / 3;
     gint i, j = 0;
 
+    /* Reset the total_size_bound before counting it up */
+    mpeg_demux->total_size_bound = 0;
+
     GST_DEBUG_OBJECT (mpeg_demux, "number of streams: %d ", stream_count);
 
     for (i = 0; i < stream_count; i++) {
@@ -617,19 +620,6 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
         if (mpeg_demux->index) {
           outstream->index_id =
               _demux_get_writer_id (mpeg_demux->index, outstream->pad);
-        }
-
-        if (GST_PAD_IS_USABLE (outstream->pad)) {
-          GstEvent *event;
-          GstClockTime time;
-
-          time = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr
-              + mpeg_parse->adjust) + mpeg_demux->adjust;
-
-          event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-              time, NULL);
-
-          gst_pad_push (outstream->pad, GST_DATA (event));
         }
       }
 
@@ -1024,7 +1014,7 @@ normal_seek (GstPad * pad, GstEvent * event, gint64 * offset)
   if (res) {
     *offset = MAX (GST_EVENT_SEEK_OFFSET (event) - adjust, 0);
 
-    GST_CAT_DEBUG (GST_CAT_SEEK, "%s:%s guestimate %" G_GINT64_FORMAT
+    GST_CAT_DEBUG (GST_CAT_SEEK, "%s:%s guesstimate %" G_GINT64_FORMAT
         " %s -> %" G_GINT64_FORMAT
         " (total_size_bound = %" G_GINT64_FORMAT ")",
         GST_DEBUG_PAD_NAME (pad),
@@ -1063,9 +1053,12 @@ gst_mpeg_demux_handle_src_event (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_NAVIGATION:
-      return gst_pad_send_event (GST_PAD_PEER (GST_MPEG_PARSE (mpeg_demux)->
-              sinkpad), event);
-      break;
+    {
+      GstPad *out = GST_PAD_PEER (GST_MPEG_PARSE (mpeg_demux)->sinkpad);
+
+      if (out && GST_PAD_IS_USABLE (out))
+        return gst_pad_send_event (out, event);
+    }
     default:
       gst_event_unref (event);
       break;

@@ -25,11 +25,7 @@
 #include <gst/gst.h>
 #include "gstmpegparse.h"
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_MPEG_DEMUX \
   (gst_mpeg_demux_get_type())
@@ -188,9 +184,6 @@ GType		gst_mpeg_demux_get_type		(void);
 
 gboolean	gst_mpeg_demux_plugin_init 	(GstPlugin *plugin);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __MPEG_DEMUX_H__ */

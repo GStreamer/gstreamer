@@ -26,10 +26,7 @@
 
 #include <gst/gstsystemclock.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_MPEG_CLOCK \
   (gst_mpeg_clock_get_type())
@@ -63,9 +60,6 @@ GType                   gst_mpeg_clock_get_type 	(void);
 GstClock*		gst_mpeg_clock_new		(gchar *name, GstMPEGClockGetTimeFunc func,
 							 gpointer user_data);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_MPEG_CLOCK_H__ */

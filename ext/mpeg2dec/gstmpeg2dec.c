@@ -1062,7 +1062,7 @@ gst_mpeg2dec_src_query (GstPad * pad, GstQueryType type,
 {
   gboolean res = TRUE;
   GstMpeg2dec *mpeg2dec;
-  static const GstFormat *formats;
+  static const GstFormat *formats = NULL;
 
   mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
 
@@ -1077,10 +1077,11 @@ gst_mpeg2dec_src_query (GstPad * pad, GstQueryType type,
           res = FALSE;
 
           /* get our peer formats */
-          formats = gst_pad_get_formats (GST_PAD_PEER (mpeg2dec->sinkpad));
+          if (GST_PAD_PEER (mpeg2dec->sinkpad))
+            formats = gst_pad_get_formats (GST_PAD_PEER (mpeg2dec->sinkpad));
 
           /* while we did not exhaust our seek formats without result */
-          while (formats && *formats) {
+          while (formats && *formats && !res) {
             GstFormat peer_format;
             gint64 peer_value;
 
@@ -1152,7 +1153,7 @@ index_seek (GstPad * pad, GstEvent * event)
       GST_INDEX_LOOKUP_BEFORE, GST_ASSOCIATION_FLAG_KEY_UNIT,
       GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event));
 
-  if (entry) {
+  if ((entry) && GST_PAD_PEER (mpeg2dec->sinkpad)) {
     const GstFormat *peer_formats, *try_formats;
 
     /* since we know the exact byteoffset of the frame, make sure to seek on bytes first */
@@ -1202,7 +1203,7 @@ normal_seek (GstPad * pad, GstEvent * event)
   gint64 src_offset;
   gboolean flush;
   GstFormat format;
-  const GstFormat *peer_formats;
+  const GstFormat *peer_formats = NULL;
   gboolean res = FALSE;
   GstMpeg2dec *mpeg2dec;
 
@@ -1222,7 +1223,8 @@ normal_seek (GstPad * pad, GstEvent * event)
   flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
 
   /* get our peer formats */
-  peer_formats = gst_pad_get_formats (GST_PAD_PEER (mpeg2dec->sinkpad));
+  if (GST_PAD_PEER (mpeg2dec->sinkpad))
+    peer_formats = gst_pad_get_formats (GST_PAD_PEER (mpeg2dec->sinkpad));
 
   /* while we did not exhaust our seek formats without result */
   while (peer_formats && *peer_formats) {
@@ -1288,7 +1290,11 @@ gst_mpeg2dec_src_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_NAVIGATION:
       /* Forward a navigation event unchanged */
-      return gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), event);
+      if (GST_PAD_PEER (mpeg2dec->sinkpad))
+        return gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), event);
+
+      res = FALSE;
+      break;
     default:
       res = FALSE;
       break;

@@ -25,10 +25,7 @@
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define PICTURE_START_CODE		0x00
 #define SLICE_MIN_START_CODE		0x01
@@ -71,9 +68,6 @@ void		 	gst_mpeg_packetize_destroy 	(GstMPEGPacketize *packetize);
 
 GstData* 		gst_mpeg_packetize_read 	(GstMPEGPacketize *packetize);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __MPEGPACKETIZE_H__ */
