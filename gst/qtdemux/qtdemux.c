@@ -117,6 +117,11 @@ GST_PAD_TEMPLATE_FACTORY (sink_templ,
     "qtdemux_sink",
     "video/quicktime",
       NULL
+  ),
+  GST_CAPS_NEW (
+    "qtdemux_sink",
+    "audio/x-m4a",
+    NULL
   )
 )
 
