@@ -55,6 +55,7 @@ void			gst_bytestream_destroy		(GstByteStream *bs);
 guint32			gst_bytestream_read		(GstByteStream *bs, GstBuffer** buf, guint32 len);
 guint64			gst_bytestream_tell		(GstByteStream *bs);
 guint64			gst_bytestream_length		(GstByteStream *bs);
+gboolean		gst_bytestream_size_hint	(GstByteStream *bs, guint32 size);
 gboolean		gst_bytestream_seek		(GstByteStream *bs, gint64 offset, GstSeekType type);
 guint32			gst_bytestream_peek		(GstByteStream *bs, GstBuffer** buf, guint32 len);
 guint32			gst_bytestream_peek_bytes	(GstByteStream *bs, guint8** data, guint32 len);

@@ -496,6 +496,8 @@ guint32
 gst_bytestream_read (GstByteStream * bs, GstBuffer** buf, guint32 len)
 {
   guint32 len_peeked;
+
+  g_return_val_if_fail (bs != NULL, -1);
   
   len_peeked = gst_bytestream_peek (bs, buf, len);
   if (len_peeked == 0)
@@ -506,6 +508,26 @@ gst_bytestream_read (GstByteStream * bs, GstBuffer** buf, guint32 len)
   return len_peeked;
 }
 
+/**
+ * gst_bytestream_size_hint
+ * @bs: a bytestream
+ * @size: the size to hint
+ *
+ * Give a hint that we are going to read chunks of the given size
+ *
+ * Returns: TRUE if the hint was accepted
+ */
+gboolean
+gst_bytestream_size_hint (GstByteStream *bs, guint32 size)
+{
+  GstEvent *event;
+
+  g_return_val_if_fail (bs != NULL, FALSE);
+
+  event = gst_event_new_size (GST_FORMAT_BYTES, size);
+
+  return gst_pad_send_event (GST_PAD_PEER (bs->pad), event);
+}
 
 /**
  * gst_bytestream_get_status
