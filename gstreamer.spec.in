@@ -196,14 +196,13 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 #  we list all of the files we really need to trap incomplete doc builds
 #  then we catch the rest with *, you can safely ignore the errors from this
 ## gstreamer API
-# %dir %{_datadir}/gtk-doc/html/%{name}-%{majorminor}
 # %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/%{name}-%{majorminor}.devhelp
 # %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/element-types.html
 # %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer.html
-# %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/index.sgml
+%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/*
 ## gstreamer-libs API
 # %dir %{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}
-# %{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/index.sgml
+%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/*
 ## this catches all of the rest of the docs we might have forgotten
 # %{_datadir}/gtk-doc/html/*
 

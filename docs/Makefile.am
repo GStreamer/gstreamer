@@ -6,20 +6,20 @@ SUBDIRS_PLUGINS =
 endif
 
 if BUILD_DOCS
-SUBDIRS_DOCS = faq manual pwg gst libs
+SUBDIRS_DOCS = gst libs
 else
 SUBDIRS_DOCS =
 endif
 
 SUBDIRS = $(SUBDIRS_DOCS) $(SUBDIRS_PLUGINS)
-DIST_SUBDIRS = faq manual pwg gst libs plugins xsl
+DIST_SUBDIRS = gst libs plugins xsl
 
 EXTRA_DIST = \
 	slides manuals.mak htmlinstall.mak \
 	image-png image-pdf image-eps version.entities.in
 
 upload:
-	@for a in manual pwg faq; do cd $$a; make upload; cd ..; done
+	@for a in pwg; do cd $$a; make upload; cd ..; done
 
 dist-hook:
 	$(RM) -rf $(distdir)/random/CVS
