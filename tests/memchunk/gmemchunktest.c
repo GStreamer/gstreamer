@@ -1,5 +1,6 @@
-#include <gst/gst.h>
 #include <string.h>		/* strerror */
+#include <stdlib.h>		/* strerror */
+#include <gst/gst.h>
 
 #define MAX_THREADS  100
 
