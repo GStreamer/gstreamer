@@ -322,7 +322,7 @@ static GstPadLinkReturn
 gst_audio_convert_link (GstPad *pad, GstCaps *caps)
 {
   GstAudioConvert *this;
-  gint nr;
+  gint nr = 0;
   gint rate, endianness, depth, width, channels;
   gboolean sign;
 
@@ -505,7 +505,7 @@ static GstBuffer*
 gst_audio_convert_get_buffer (GstBuffer *buf, guint size)
 {
   GstBuffer *ret;
-  if (buf->maxsize >= size && !gst_buffer_is_readonly (buf)) {
+  if (buf->maxsize >= size && !(GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_READONLY))) {
     gst_buffer_ref (buf);
     buf->size = size;
     return buf;
@@ -537,7 +537,7 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert *this, GstBuffer *bu
 {
   GstBuffer *ret;
   gint i, count;
-  gint64 cur;
+  gint64 cur = 0;
   gint32 write;
   guint8 *src, *dest;
 
