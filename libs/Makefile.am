@@ -4,6 +4,6 @@ else
 GSTARCH_SUBDS =
 endif
 
-SUBDIRS = riff colorspace getbits putbits idct $(GSTARCH_SUBDS)
+SUBDIRS = riff colorspace getbits putbits idct videoscale $(GSTARCH_SUBDS)
 
 DIST_SUBDIRS = riff colorspace getbits putbits videoscale winloader idct
