@@ -193,6 +193,7 @@ GstPad*			gst_element_get_pad		(GstElement *element, gchar *name);
 GList*			gst_element_get_pad_list	(GstElement *element);
 GList*			gst_element_get_padtemplate_list	(GstElement *element);
 void 			gst_element_add_ghost_pad	(GstElement *element, GstPad *pad);
+void			gst_element_remove_ghost_pad	(GstElement *element, GstPad *pad);
 
 void 			gst_element_connect		(GstElement *src, gchar *srcpadname,
                          				 GstElement *dest, gchar *destpadname);

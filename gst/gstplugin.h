@@ -40,7 +40,9 @@ struct _GstPlugin {
   gchar *filename;		/* filename it came from */
 
   GList *types;			/* list of types provided */
+  gint numtypes;
   GList *elements;		/* list of elements provided */
+  gint numelements;
 
   gboolean loaded;              /* if the plugin is in memory */
 };

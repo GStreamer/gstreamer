@@ -52,6 +52,7 @@ static void 	gst_pad_get_arg			(GtkObject *object,GtkArg *arg,guint id);
 static void 	gst_pad_real_destroy		(GtkObject *object);
 
 static void 	gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
+static gboolean	gst_pad_eos_func		(GstPad *pad);
 
 static GstObject *pad_parent_class = NULL;
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
@@ -114,6 +115,7 @@ gst_pad_init (GstPad *pad)
   pad->getfunc = NULL;
   pad->getregionfunc = NULL;
   pad->qosfunc = NULL;
+  pad->eosfunc = gst_pad_eos_func;
 
   pad->pushfunc = GST_DEBUG_FUNCPTR(gst_pad_push_func);
   pad->pullfunc = NULL;
@@ -341,6 +343,25 @@ gst_pad_set_qos_function (GstPad *pad,
   
   pad->qosfunc = qos;
 }
+
+/**
+ * gst_pad_set_eos_function:
+ * @pad: the pad to set the eos function for
+ * @qos: the eos function
+ *
+ * Set the given EOS function for the pad
+ */
+void 
+gst_pad_set_eos_function (GstPad *pad,
+		          GstPadEOSFunction eos) 
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+  
+  pad->eosfunc = eos;
+}
+
+
 
 static void
 gst_pad_push_func(GstPad *pad, GstBuffer *buf) 
@@ -1017,3 +1038,56 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
   return factory;
 }
 
+
+static gboolean
+gst_pad_eos_func(GstPad *pad)
+{
+  GstElement *element;
+  GList *pads;
+  GstPad *srcpad;
+  gboolean result, success = TRUE;
+
+  g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PAD(pad), FALSE);
+
+  INFO(GST_INFO_PADS,"attempting to set EOS on sink pad %s:%s",GST_DEBUG_PAD_NAME(pad));
+
+  element = GST_ELEMENT(gst_pad_get_parent (pad));
+//  g_return_val_if_fail (element != NULL, FALSE);
+//  g_return_val_if_fail (GST_IS_ELEMENT(element), FALSE);
+
+  pads = gst_element_get_pad_list(element);
+  while (pads) {
+    srcpad = GST_PAD(pads->data);
+    pads = g_list_next(pads);
+
+    if (gst_pad_get_direction(srcpad) == GST_PAD_SRC) {
+      result = gst_pad_eos(srcpad);
+      if (result == FALSE) success = FALSE;
+    }
+  }
+
+  if (result == FALSE) return FALSE;
+
+  INFO(GST_INFO_PADS,"set EOS on sink pad %s:%s",GST_DEBUG_PAD_NAME(pad));
+  GST_FLAG_SET (pad, GST_PAD_EOS);
+
+  return TRUE;
+}
+
+gboolean
+gst_pad_set_eos(GstPad *pad) 
+{
+  g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PAD(pad), FALSE);
+  g_return_val_if_fail (GST_PAD_CONNECTED(pad), FALSE);
+
+  INFO(GST_INFO_PADS,"attempting to set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
+
+  if (!gst_pad_eos(pad)) return FALSE;
+
+  INFO(GST_INFO_PADS,"set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
+  GST_FLAG_SET (pad, GST_PAD_EOS);
+
+  return TRUE;
+}

@@ -39,6 +39,8 @@ gint _gst_modules_seqno;
 /* global list of plugins and its sequence number */
 GList *_gst_plugins;
 gint _gst_plugins_seqno;
+gint _gst_plugin_elementfactories = 0;
+gint _gst_plugin_types = 0;
 /* list of paths to check for plugins */
 GList *_gst_plugin_paths;
 
@@ -141,6 +143,8 @@ gst_plugin_load_all(void)
     gst_plugin_load_recurse(path->data,NULL);
     path = g_list_next(path);
   }
+  INFO(GST_INFO_PLUGIN_LOADING,"loaded %d plugins with %d elements and %d types",
+       _gst_plugins_seqno,_gst_plugin_elementfactories,_gst_plugin_types);
 }
 
 /**
@@ -260,13 +264,16 @@ gst_plugin_load_absolute (gchar *name)
   if (module != NULL) {
     if (g_module_symbol(module,"plugin_init",(gpointer *)&initfunc)) {
       if ((plugin = (initfunc)(module))) {
-        INFO(GST_INFO_PLUGIN_LOADING,"plugin %s loaded", plugin->name);
+        INFO(GST_INFO_PLUGIN_LOADING,"plugin \"%s\" loaded: %d elements, %d types",
+             plugin->name,plugin->numelements,plugin->numtypes);
         plugin->filename = g_strdup(name);
         plugin->loaded = TRUE;
         _gst_modules = g_list_prepend(_gst_modules,module);
         _gst_modules_seqno++;
         _gst_plugins = g_list_prepend(_gst_plugins,plugin);
         _gst_plugins_seqno++;
+        _gst_plugin_elementfactories += plugin->numelements;
+        _gst_plugin_types += plugin->numtypes;
         return TRUE;
       }
     }
@@ -299,8 +306,10 @@ gst_plugin_new (gchar *name)
 
   plugin->name = g_strdup(name);
   plugin->longname = NULL;
-  plugin->types = NULL;
   plugin->elements = NULL;
+  plugin->numelements = 0;
+  plugin->types = NULL;
+  plugin->numtypes = 0;
   plugin->loaded = TRUE;
 
   return plugin;
@@ -495,6 +504,7 @@ gst_plugin_add_factory (GstPlugin *plugin, GstElementFactory *factory)
 
 //  g_print("adding factory to plugin\n");
   plugin->elements = g_list_prepend (plugin->elements, factory);
+  plugin->numelements++;
 }
 
 /**
@@ -512,6 +522,7 @@ gst_plugin_add_type (GstPlugin *plugin, GstTypeFactory *factory)
 
 //  g_print("adding factory to plugin\n");
   plugin->types = g_list_prepend (plugin->types, factory);
+  plugin->numtypes++;
   gst_type_register (factory);
 }
 

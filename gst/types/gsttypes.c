@@ -44,7 +44,7 @@ plugin_init (GModule *module)
     i++;
   }
 
-  gst_info ("gsttypes: loaded %d standard types\n",i);
+//  gst_info ("gsttypes: loaded %d standard types\n",i);
 
   return plugin;
 }

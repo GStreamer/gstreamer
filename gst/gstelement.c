@@ -197,9 +197,21 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad)
   element->pads = g_list_append (element->pads, pad);
   element->numpads++;
 
-  /* emit the NEW_PAD signal */
+  /* emit the NEW_GHOST_PAD signal */
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[NEW_GHOST_PAD], pad);
 }
+
+void
+gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
+{
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  // FIXME
+}
+
 
 /**
  * gst_element_get_pad:

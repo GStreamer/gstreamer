@@ -68,7 +68,7 @@ gst_type_register (GstTypeFactory *factory)
 
   g_return_val_if_fail (factory != NULL, 0);
 
-  DEBUG("type register %s\n", factory->mime);
+//  INFO(GST_INFO_TYPES,"type register %s", factory->mime);
   id = gst_type_find_by_mime (factory->mime);
   
   if (!id) {

@@ -182,7 +182,7 @@ gst_default_error_handler (gchar *file, gchar *function,
 
   // if there's an element, print out the pertinent information
   if (element) {
-    if (GST_IS_ELEMENT(element)) {
+    if (GST_IS_OBJECT(element)) {
       path = gst_object_get_path_string(element);
       fprintf(stderr,"Element: %s",path);
       chars = 9 + strlen(path);

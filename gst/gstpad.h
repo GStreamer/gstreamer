@@ -65,6 +65,8 @@ typedef void (*GstPadPushFunction) (GstPad *pad, GstBuffer *buf);
 typedef GstBuffer *(*GstPadPullFunction) (GstPad *pad);
 typedef GstBuffer *(*GstPadPullRegionFunction) (GstPad *pad, gulong offset, gulong size);
 
+typedef gboolean (*GstPadEOSFunction) (GstPad *pad);
+
 typedef enum {
   GST_PAD_UNKNOWN,
   GST_PAD_SRC,
@@ -100,6 +102,8 @@ struct _GstPad {
   GstPadPushFunction pushfunc;
   GstPadPullFunction pullfunc;
   GstPadPullRegionFunction pullregionfunc;
+
+  GstPadEOSFunction eosfunc;
 
   GstObject *parent;
   GList *ghostparents;
@@ -169,6 +173,7 @@ void 			gst_pad_set_chain_function	(GstPad *pad, GstPadChainFunction chain);
 void 			gst_pad_set_get_function	(GstPad *pad, GstPadGetFunction get);
 void			gst_pad_set_getregion_function	(GstPad *pad, GstPadGetRegionFunction getregion);
 void 			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
+void			gst_pad_set_eos_function	(GstPad *pad, GstPadEOSFunction eos);
 
 void	 		gst_pad_set_caps_list		(GstPad *pad, GList *caps);
 GList* 			gst_pad_get_caps_list		(GstPad *pad);
@@ -205,6 +210,9 @@ GstBuffer*		gst_pad_pull_region		(GstPad *pad, gulong offset, gulong size);
 #define gst_pad_pullregion(pad,offset,size) \
   (((pad)->peer->pullregionfunc) ? ((pad)->peer->pullregionfunc)((pad)->peer,(offset),(size)) : NULL)
 #endif
+
+#define			gst_pad_eos(pad)		((pad)->peer->eosfunc((pad)->peer))
+gboolean		gst_pad_set_eos			(GstPad *pad);
 
 void 			gst_pad_handle_qos		(GstPad *pad, glong qos_message);
 

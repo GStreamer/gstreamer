@@ -193,7 +193,6 @@ extern guint32 _gst_info_categories;
 }G_STMT_END
 
 
-//#define GST_INFO_PLUGIN_LOAD 0
 enum {
   GST_INFO_GST_INIT = 0,	// Library initialization
   GST_INFO_COTHREADS,		// Cothread creation, etc.
