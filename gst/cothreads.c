@@ -110,10 +110,7 @@ cothread_context_init (void)
   /* FIXME this should be done in cothread_init() */
   if (_cothread_ctx_key == NULL) {
     _cothread_ctx_key = g_private_new (NULL);
-    if (_cothread_ctx_key == NULL) {
-      perror ("g_private_new");
-      return NULL;
-    }
+    g_assert (_cothread_ctx_key);
   }
 
   /* set this thread's context pointer */
@@ -147,6 +144,7 @@ cothread_context_init (void)
   ctx->cothreads[0]->priv = NULL;
   ctx->cothreads[0]->flags = COTHREAD_STARTED;
   ctx->cothreads[0]->sp = (void *) CURRENT_STACK_FRAME;
+  ctx->cothreads[0]->top_sp = ctx->cothreads[0]->sp;
   ctx->cothreads[0]->pc = 0;
 
   GST_INFO (GST_CAT_COTHREADS, "0th cothread is %p at sp:%p", 
@@ -619,6 +617,7 @@ void
 cothread_switch (cothread_state * thread)
 {
   cothread_context *ctx;
+  cothread_context *current_ctx;
   cothread_state *current;
   int enter;
 
@@ -627,6 +626,11 @@ cothread_switch (cothread_state * thread)
     goto nothread;
 #endif
   ctx = thread->ctx;
+
+  /* paranoia check to make sure we're in the right thread */
+  current_ctx = g_private_get(_cothread_ctx_key);
+  g_assert (ctx == current_ctx);
+
 #ifdef COTHREAD_PARANOID
   if (ctx == NULL)
     goto nocontext;
