@@ -942,6 +942,37 @@ remove_from_group (GstOptSchedulerGroup * group, GstElement * element)
   return group;
 }
 
+/* count number of elements in the group. Have to be careful because
+ * decoupled elements are added as entry point but are not added to
+ * the elements list */
+static gint
+group_num_elements (GstOptSchedulerGroup * group)
+{
+  gint num;
+
+  num = group->num_elements;
+  /* decoupled elements are not added to the group but are
+   * added as an entry */
+  if (group->entry) {
+    if (GST_ELEMENT_IS_DECOUPLED (group->entry)) {
+      num++;
+    }
+  }
+  return num;
+}
+
+/* check if an element is part of the given group. We have to be carefull
+ * as decoupled elements are added as entry but are not added to the elements 
+ * list */
+static gboolean
+group_has_element (GstOptSchedulerGroup * group, GstElement * element)
+{
+  if (group->entry == element)
+    return TRUE;
+
+  return (g_slist_find (group->elements, element) != NULL);
+}
+
 /* FIXME need to check if the groups are of the same type -- otherwise need to
    setup the scheduler again, if it is setup */
 static GstOptSchedulerGroup *
@@ -2121,7 +2152,7 @@ element_get_reachables_func (GstElement * element, GstOptSchedulerGroup * group,
   const GList *pads;
 
   /* if no element or element not in group or been there, return NULL */
-  if (element == NULL || g_slist_find (group->elements, element) == NULL ||
+  if (element == NULL || !group_has_element (group, element) ||
       GST_ELEMENT_IS_VISITED (element))
     return NULL;
 
@@ -2337,6 +2368,7 @@ group_migrate_connected (GstOptScheduler * osched, GstElement * element,
   gint len;
 
   if (GST_ELEMENT_IS_DECOUPLED (element)) {
+    GST_LOG ("element is decoupled and thus not in the group");
     /* the element is decoupled and is therefore not in the group */
     return NULL;
   }
@@ -2359,7 +2391,7 @@ group_migrate_connected (GstOptScheduler * osched, GstElement * element,
         gst_element_get_name (element));
     return NULL;
   } else if (len == 1) {
-    remove_from_group (group, GST_ELEMENT (connected->data));
+    group = remove_from_group (group, GST_ELEMENT (connected->data));
     GST_LOG
         ("not migrating to new group as the group would only contain 1 element");
     g_list_free (connected);
@@ -2385,7 +2417,7 @@ group_migrate_connected (GstOptScheduler * osched, GstElement * element,
     /* remove last element from the group if any. Make sure not to remove
      * the loop based entry point of a group as this always needs one group */
     if (group != NULL) {
-      if (g_slist_length (group->elements) == 1 &&
+      if (group_num_elements (group) == 1 &&
           group->type != GST_OPT_SCHEDULER_GROUP_LOOP) {
         GST_LOG ("removing last element from old group");
         group = remove_from_group (group, GST_ELEMENT (group->elements->data));
@@ -2393,18 +2425,21 @@ group_migrate_connected (GstOptScheduler * osched, GstElement * element,
     }
   }
 
-  if (g_slist_length (new_group->elements) == 1 &&
-      new_group->type != GST_OPT_SCHEDULER_GROUP_LOOP) {
-    GST_LOG ("removing last element from new group");
-    new_group =
-        remove_from_group (new_group, GST_ELEMENT (new_group->elements->data));
-    return NULL;
+  if (new_group != NULL) {
+    if (group_num_elements (new_group) == 1 &&
+        new_group->type != GST_OPT_SCHEDULER_GROUP_LOOP) {
+      GST_LOG ("removing last element from new group");
+      new_group =
+          remove_from_group (new_group,
+          GST_ELEMENT (new_group->elements->data));
+      return NULL;
+    }
+    /* at this point the new group lives in its own chain but might
+     * have to be merged with another chain, this happens when the new
+     * group has a link with another group in another chain */
+    rechain_group (new_group);
   }
 
-  /* at this point the new group lives in its own chain but might
-   * have to be merged with another chain, this happens when the new
-   * group has a link with another group in another chain */
-  rechain_group (new_group);
 
   return new_group;
 }

@@ -1,3 +1,14 @@
+2004-07-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Wim Taymans
+
+	* gst/schedulers/gstoptimalscheduler.c: (group_num_elements),
+	(group_has_element), (element_get_reachables_func),
+	(group_migrate_connected):
+	  fix for #147894 (opt scheduler decoupled elements mismanagement)
+	* testsuite/schedulers/Makefile.am:
+	  testsuite app now passes
+
 2004-07-19  Wim Taymans  <wim@fluendo.com>
 
 	* testsuite/schedulers/147819.c: (handoff_identity1),
