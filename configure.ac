@@ -1154,6 +1154,7 @@ dnl #########################
 dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 dnl someone should fix this test/misc/Makefile
+dnl this needs fixing testsuite/refcounting/Makefile
 AC_OUTPUT(
 Makefile
 include/Makefile
@@ -1287,7 +1288,6 @@ tests/muxing/Makefile
 testsuite/Makefile
 testsuite/bytestream/Makefile
 testsuite/capsnego/Makefile
-testsuite/refcounting/Makefile
 testsuite/plugin/Makefile
 testsuite/threads/Makefile
 tests/nego/Makefile
