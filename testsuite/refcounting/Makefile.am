@@ -5,6 +5,8 @@ tests_pass = bin element mainloop
 tests_fail = sched
 # element_pad
 
+noinst_PROGRAMS = pad element_pad
+
 element_SOURCES = element.c mem.c
 pad_SOURCES = pad.c mem.c
 element_pad_SOURCES = element_pad.c mem.c
