@@ -36,10 +36,12 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_fakesink_debug);
 #define GST_CAT_DEFAULT gst_fakesink_debug
 
+#define DEFAULT_SIZE 1024
+
 GstElementDetails gst_fakesink_details = GST_ELEMENT_DETAILS ("Fake Sink",
     "Sink",
     "Black hole for data",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
+    "Erik Walthinsen <omega@cse.ogi.edu>, Tim Waymans <tway@fluendo.com>");
 
 
 /* FakeSink signals and args */
@@ -113,7 +115,11 @@ static void gst_fakesink_get_property (GObject * object, guint prop_id,
 
 static GstElementStateReturn gst_fakesink_change_state (GstElement * element);
 
+static GstFlowReturn gst_fakesink_chain_unlocked (GstPad * pad,
+    GstBuffer * buffer);
+static void gst_fakesink_loop (GstPad * pad);
 static GstFlowReturn gst_fakesink_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_fakesink_activate (GstPad * pad, GstActivateMode mode);
 static gboolean gst_fakesink_event (GstPad * pad, GstEvent * event);
 
 static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
@@ -188,7 +194,10 @@ gst_fakesink_init (GstFakeSink * fakesink)
       gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
       "sink");
   gst_element_add_pad (GST_ELEMENT (fakesink), pad);
+  gst_pad_set_activate_function (pad,
+      GST_DEBUG_FUNCPTR (gst_fakesink_activate));
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
+  gst_pad_set_loop_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_loop));
   gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_event));
 
   fakesink->silent = FALSE;
@@ -197,6 +206,8 @@ gst_fakesink_init (GstFakeSink * fakesink)
   fakesink->last_message = NULL;
   fakesink->state_error = FAKESINK_STATE_ERROR_NONE;
   fakesink->signal_handoffs = FALSE;
+  fakesink->pad_mode = GST_ACTIVATE_NONE;
+  GST_RPAD_TASK (pad) = NULL;
 }
 
 static void
@@ -308,6 +319,46 @@ gst_fakesink_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
+gst_fakesink_activate (GstPad * pad, GstActivateMode mode)
+{
+  gboolean result = FALSE;
+  GstFakeSink *fakesink;
+
+  fakesink = GST_FAKESINK (GST_OBJECT_PARENT (pad));
+
+  switch (mode) {
+    case GST_ACTIVATE_PUSH:
+      /* if we have a scheduler we can start the task */
+      if (GST_ELEMENT_SCHEDULER (fakesink)) {
+        GST_STREAM_LOCK (pad);
+        GST_RPAD_TASK (pad) =
+            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (fakesink),
+            (GstTaskFunction) gst_fakesink_loop, pad);
+
+        gst_task_start (GST_RPAD_TASK (pad));
+        GST_STREAM_UNLOCK (pad);
+        result = TRUE;
+      }
+      break;
+    case GST_ACTIVATE_PULL:
+      break;
+    case GST_ACTIVATE_NONE:
+      /* step 1, unblock clock sync (if any) */
+
+      /* step 2, make sure streaming finishes */
+      GST_STREAM_LOCK (pad);
+      /* step 3, stop the task */
+      gst_task_stop (GST_RPAD_TASK (pad));
+      gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
+      GST_STREAM_UNLOCK (pad);
+
+      result = TRUE;
+      break;
+  }
+  return result;
+}
+
+static gboolean
 gst_fakesink_event (GstPad * pad, GstEvent * event)
 {
   GstFakeSink *fakesink;
@@ -349,22 +400,12 @@ gst_fakesink_event (GstPad * pad, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_fakesink_chain (GstPad * pad, GstBuffer * buffer)
+gst_fakesink_chain_unlocked (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (buffer);
   GstFakeSink *fakesink;
   GstFlowReturn result = GST_FLOW_OK;
-  GstCaps *caps;
 
   fakesink = GST_FAKESINK (GST_OBJECT_PARENT (pad));
-
-  caps = gst_buffer_get_caps (buffer);
-  if (caps && caps != GST_PAD_CAPS (pad)) {
-    gst_pad_set_caps (pad, caps);
-  }
-
-  /* grab streaming lock to synchronize with event method */
-  GST_STREAM_LOCK (pad);
 
   result = gst_element_finish_preroll (GST_ELEMENT (fakesink), pad);
   if (result != GST_FLOW_OK)
@@ -398,10 +439,56 @@ gst_fakesink_chain (GstPad * pad, GstBuffer * buffer)
   }
 
 exit:
-  GST_STREAM_UNLOCK (pad);
   gst_buffer_unref (buf);
 
   return result;
+}
+
+static GstFlowReturn
+gst_fakesink_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstFlowReturn result;
+
+  GST_STREAM_LOCK (pad);
+
+  result = gst_fakesink_chain_unlocked (pad, buf);
+
+  GST_STREAM_UNLOCK (pad);
+
+  return result;
+}
+
+static void
+gst_fakesink_loop (GstPad * pad)
+{
+  GstFakeSink *fakesink;
+  GstBuffer *buf = NULL;
+  GstFlowReturn result;
+
+  fakesink = GST_FAKESINK (GST_OBJECT_PARENT (pad));
+
+  GST_STREAM_LOCK (pad);
+
+  result = gst_pad_pull_range (pad, fakesink->offset, DEFAULT_SIZE, &buf);
+
+  if (result != GST_FLOW_OK)
+    goto paused;
+
+  result = gst_fakesink_chain_unlocked (pad, buf);
+
+  if (result != GST_FLOW_OK)
+    goto paused;
+
+
+exit:
+  GST_STREAM_UNLOCK (pad);
+  if (buf)
+    gst_buffer_unref (buf);
+  return;
+
+paused:
+  gst_task_pause (GST_RPAD_TASK (pad));
+  goto exit;
 }
 
 static GstElementStateReturn
@@ -419,6 +506,7 @@ gst_fakesink_change_state (GstElement * element)
       if (fakesink->state_error == FAKESINK_STATE_ERROR_READY_PAUSED)
         goto error;
       /* need to complete preroll before this state change completes */
+      fakesink->offset = 0;
       ret = GST_STATE_ASYNC;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:

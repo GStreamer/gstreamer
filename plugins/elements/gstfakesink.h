@@ -64,6 +64,8 @@ struct _GstFakeSink {
   gboolean 	 signal_handoffs;
   GstClock 	*clock;
   GstFakeSinkStateError state_error;
+  GstActivateMode	pad_mode;
+  guint64	 offset;
 
   gchar 	*last_message;
 };
