@@ -73,7 +73,7 @@ int main(int argc,char *argv[])
   }
 
   /* create a new bin to hold the elements */
-  bin = gst_bin_new("bin");
+  bin = gst_pipeline_new("pipeline");
   g_assert(bin != NULL);
 
   /* create a disk reader */
