@@ -12,4 +12,5 @@ gst/elements/gstmultidisksrc.c
 gst/elements/gstpipefilter.c
 gst/elements/gsttypefind.c
 gst/parse/grammar.y
+tools/gst-inspect.c
 tools/gst-launch.c

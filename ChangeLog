@@ -1,5 +1,19 @@
 2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gsterror.c: (_gst_stream_errors_init):
+	* gst/gsterror.h:
+          adding error type for no codec
+	* po/POTFILES.in:
+          add gst-inspect
+	* po/nl.po:
+          update dutch translation
+	* tools/gst-inspect.c: (print_element_list), (main):
+          do proper internationalization
+	* tools/gst-launch.c: (idle_func):
+          remove commented out function call
+
+2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/README:
           add some error fixing notes
 	* docs/gst/gstreamer-sections.txt:

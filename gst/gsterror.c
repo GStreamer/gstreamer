@@ -148,6 +148,8 @@ static gchar ** _gst_stream_errors_init ()
          N_("Could not determine type of stream."));
   TABLE (t, STREAM, WRONG_TYPE,
          N_("The stream is of a different type than handled by this element."));
+  TABLE (t, STREAM, CODEC_NOT_FOUND,
+         N_("There is no codec present that can handle the stream's type."));
   TABLE (t, STREAM, DECODE,
          N_("Could not decode stream."));
   TABLE (t, STREAM, ENCODE,

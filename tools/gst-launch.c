@@ -62,10 +62,6 @@ idle_func (gpointer data)
   GTimeVal tfthen, tfnow;
   GstClockTimeDiff diff;
 
-  if (s_clock) {
-    //g_print ("%" G_GINT64_FORMAT "\n", gst_clock_get_time (s_clock));
-  }
-
   g_get_current_time (&tfthen);
   busy = gst_bin_iterate (GST_BIN (data));
   iterations++;

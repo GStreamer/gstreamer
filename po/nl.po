@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-01-31 23:31+0100\n"
+"POT-Creation-Date: 2004-02-03 12:17+0100\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -117,12 +117,11 @@ msgstr "Register om te gebruiken"
 msgid "REGISTRY"
 msgstr "REGISTER"
 
-#: gst/gstelement.c:239
-#, c-format
-msgid "ERROR: from element %s: %s.\n"
-msgstr "FOUT: van element %s: %s.\n"
+#: gst/gstelement.c:240
+msgid "ERROR: from element %s: %s\n"
+msgstr "FOUT: van element %s: %s\n"
 
-#: gst/gstelement.c:241
+#: gst/gstelement.c:242
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -252,34 +251,38 @@ msgstr "Kon het type van de stroom niet herkennen."
 
 #: gst/gsterror.c:150
 msgid "The stream is of a different type than handled by this element."
-msgstr "De stroom is van een ander type dan dit element kan behandelen."
+msgstr "De stroom is van een ander type dan dit element kan verwerken."
 
 #: gst/gsterror.c:152
+msgid "There is no codec present that can handle the stream's type."
+msgstr "Er is geen codec aanwezig die dit type stream kan verwerken."
+
+#: gst/gsterror.c:154
 msgid "Could not decode stream."
 msgstr "Kon de stroom niet decoderen."
 
-#: gst/gsterror.c:154
+#: gst/gsterror.c:156
 msgid "Could not encode stream."
 msgstr "Kon de stroom niet coderen."
 
-#: gst/gsterror.c:156
+#: gst/gsterror.c:158
 msgid "Could not demultiplex stream."
 msgstr "Kon de stroom niet demultiplexen."
 
-#: gst/gsterror.c:158
+#: gst/gsterror.c:160
 msgid "Could not multiplex stream."
 msgstr "Kon de stroom niet multiplexen."
 
-#: gst/gsterror.c:160
+#: gst/gsterror.c:162
 msgid "Stream is of the wrong format."
 msgstr "Stroom is van het verkeerde formaat."
 
-#: gst/gsterror.c:207
+#: gst/gsterror.c:209
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Geen foutboodschap voor domein %s."
 
-#: gst/gsterror.c:212
+#: gst/gsterror.c:214
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Geen standaard foutboodschap voor domein %s en code %d."
@@ -533,7 +536,7 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/elements/gstfilesink.c:237 gst/elements/gstfilesrc.c:723
+#: gst/elements/gstfilesink.c:237 gst/elements/gstfilesrc.c:656
 msgid "No filename specified."
 msgstr "Geen bestandsnaam gegeven."
 
@@ -553,21 +556,21 @@ msgstr "Fout bij het sluiten van bestand \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fout bij het schrijven naar bestand \"%s\"."
 
-#: gst/elements/gstfilesrc.c:730
+#: gst/elements/gstfilesrc.c:663
 msgid "No file specified for reading."
 msgstr "Geen bestandsnaam gegeven om te lezen."
 
-#: gst/elements/gstfilesrc.c:745 gst/elements/gstmultidisksrc.c:244
+#: gst/elements/gstfilesrc.c:678 gst/elements/gstmultidisksrc.c:244
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon bestand \"%s\" niet openen om te lezen."
 
-#: gst/elements/gstfilesrc.c:756
+#: gst/elements/gstfilesrc.c:689
 #, c-format
 msgid "File \"%s\" isn't a regular file."
 msgstr "Bestand \"%s\" is geen gewoon bestand."
 
-#: gst/elements/gstidentity.c:170
+#: gst/elements/gstidentity.c:171
 msgid "Failed after iterations as requested."
 msgstr "Fout na iteraties zoals gevraagd."
 
@@ -663,134 +666,136 @@ msgstr "kon doelelement niet verbinden voor URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "lege pijplijn niet toegelaten"
 
-#: tools/gst-launch.c:83
+#: tools/gst-inspect.c:909
+msgid "Show plugin details"
+msgstr "Toon details van plugins"
+
+#: tools/gst-inspect.c:911
+msgid "Show scheduler details"
+msgstr "Toon details van planner"
+
+#: tools/gst-launch.c:79
 msgid "Execution ended after %"
 msgstr "Uitvoering beëindigd na %"
 
-#: tools/gst-launch.c:83
+#: tools/gst-launch.c:79
 msgid " iterations (sum %"
 msgstr "iteraties (som %"
 
-#: tools/gst-launch.c:83
+#: tools/gst-launch.c:79
 msgid " ns, average %"
 msgstr "ns, gemiddeld %"
 
-#: tools/gst-launch.c:83
+#: tools/gst-launch.c:79
 msgid " ns, min %"
 msgstr "ns, min %"
 
-#: tools/gst-launch.c:83
+#: tools/gst-launch.c:79
 msgid " ns, max %"
 msgstr "ns, max %"
 
-#: tools/gst-launch.c:83
+#: tools/gst-launch.c:79
 msgid " ns).\n"
 msgstr "ns).\n"
 
-#: tools/gst-launch.c:103
+#: tools/gst-launch.c:99
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr ""
 "Gebruik: gst-xmllaunch <bestand.xml> [ element.eigenschap=waarde ... ]\n"
 
-#: tools/gst-launch.c:111
+#: tools/gst-launch.c:107
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "FOUT: verwerken van xml-bestand '%s' mislukt.\n"
 
-#: tools/gst-launch.c:117
+#: tools/gst-launch.c:113
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FOUT: geen bovenste pijplijn-element gevonden in file '%s'.\n"
 
-#: tools/gst-launch.c:122
+#: tools/gst-launch.c:118
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr ""
 "WAARSCHUWING: slechts één element op het hoogste niveau ondersteund op dit "
 "moment."
 
-#: tools/gst-launch.c:132
+#: tools/gst-launch.c:128
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr "FOUT: versta argument %d op commandoregel niet: %s.\n"
 
-#: tools/gst-launch.c:142
+#: tools/gst-launch.c:138
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
 
-#: tools/gst-launch.c:277
+#: tools/gst-launch.c:273
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "TAG GEVONDEN   : gevonden door element \"%s\".\n"
 
-#: tools/gst-launch.c:354
+#: tools/gst-launch.c:350
 msgid "Output tags (also known as metadata)"
 msgstr "Druk tags (ofte metadata) af"
 
-#: tools/gst-launch.c:356
+#: tools/gst-launch.c:352
 msgid "Output status information and property notifications"
 msgstr "Druk statusinformatie en eigenschapsnotificatie af"
 
-#: tools/gst-launch.c:358
+#: tools/gst-launch.c:354
 msgid "Do not output status information of TYPE"
 msgstr "Druk statusinformatie van type TYPE niet af"
 
-#: tools/gst-launch.c:358
+#: tools/gst-launch.c:354
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
-#: tools/gst-launch.c:361
+#: tools/gst-launch.c:357
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Bewaar xml-representatie van pijplijn in BESTAND en stop"
 
-#: tools/gst-launch.c:361
+#: tools/gst-launch.c:357
 msgid "FILE"
 msgstr "BESTAND"
 
-#: tools/gst-launch.c:364
+#: tools/gst-launch.c:360
 msgid "Do not install a fault handler"
 msgstr "Installeer geen foutafhandelaar"
 
-#: tools/gst-launch.c:366
+#: tools/gst-launch.c:362
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Druk allocatiespoor af indien aangezet tijdens compileren"
 
-#: tools/gst-launch.c:368
+#: tools/gst-launch.c:364
 msgid "Number of times to iterate pipeline"
 msgstr "Aantal keren om de pijplijn te herhalen"
 
-#: tools/gst-launch.c:433
+#: tools/gst-launch.c:429
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FOUT: pijplijn kon niet gemaakt worden: %s.\n"
 
-#: tools/gst-launch.c:437
+#: tools/gst-launch.c:433
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FOUT: pijplijn kon niet gemaakt worden.\n"
 
-#: tools/gst-launch.c:441
+#: tools/gst-launch.c:437
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WAARSCHUWING: foutieve pijplijn: %s\n"
 
-#: tools/gst-launch.c:442
+#: tools/gst-launch.c:438
 msgid "         Trying to run anyway.\n"
 msgstr "              Probeer toch uit te voeren.\n"
 
-#: tools/gst-launch.c:466
+#: tools/gst-launch.c:462
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FOUT: het 'pijplijn' element werd niet gevonden.\n"
 
-#: tools/gst-launch.c:473
+#: tools/gst-launch.c:469
 msgid "RUNNING pipeline ...\n"
 msgstr "BEZIG met pijplijn ...\n"
 
-#: tools/gst-launch.c:475
+#: tools/gst-launch.c:471
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pijplijn wil niet spelen.\n"
-
-#~ msgid "Failed to change state"
-#~ msgstr "Kon de toestand niet veranderen"
-
-#~ msgid "File \"%s\" does not exist"
-#~ msgstr "Bestand \"%s\" bestaat niet"

@@ -25,11 +25,13 @@
 #  include "config.h"
 #endif
 
-#include "gst/gst-i18n-app.h"
-
 #include <gst/gst.h>
 #include <gst/control/control.h>
+
+#include "gst/gst-i18n-app.h"
+
 #include <string.h>
+#include <locale.h>
 
 static void
 print_caps (const GstCaps *caps, const gchar *pfx)
@@ -784,7 +786,7 @@ print_element_list (void)
 	  }
           g_print ("\n");
 	} else {
-          g_print (_("no extensions\n"));
+          g_print ("no extensions\n");
         }
       }
       else if (GST_IS_SCHEDULER_FACTORY (feature)) {
@@ -904,11 +906,15 @@ main (int argc, char *argv[])
   gchar *so;
   struct poptOption options[] = {
     {"gst-inspect-plugin", 'p', POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, 0,
-                   "Show plugin details", NULL},
+                   N_("Show plugin details"), NULL},
     {"gst-inspect-scheduler", 's', POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, 0,
-                   "Show scheduler details", NULL},
+                   N_("Show scheduler details"), NULL},
     POPT_TABLEEND
   };
+
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain (GETTEXT_PACKAGE);
 
   gst_init_with_popt_table (&argc, &argv, options);
   gst_control_init (&argc, &argv);
