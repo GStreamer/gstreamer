@@ -2219,7 +2219,7 @@ gst_pad_proxy_getcaps (GstPad *pad)
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  GST_DEBUG ("proxying getcaps for %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+  GST_DEBUG ("proxying getcaps for %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   element = gst_pad_get_parent (pad);
 
