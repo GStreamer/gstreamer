@@ -1,3 +1,12 @@
+2004-01-26  Jeremy Simon  <jesimon@libertysurf.fr>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_extradata), (gst_ffmpeg_caps_to_pixfmt):
+	* gst/qtdemux/qtdemux.c: (plugin_init), (qtdemux_parse_trak),
+	(qtdemux_video_caps):
+	* gst/qtdemux/qtdemux.h:
+	Add SVQ3 specific flags to qtdemux and ffmpeg
+
 2004-01-26  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst-libs/gst/audio/audio.h:
