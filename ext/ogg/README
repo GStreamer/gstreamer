@@ -1,0 +1,85 @@
+ogg and the granulepos
+----------------------
+
+an ogg streams contains pages with a serial number and a granule pos. The granulepos
+is a number that is codec specific and denotes the 'position' of the last packet
+in that page.
+
+ogg has therefore no notion about time, it only knows about bytes and granule positions.
+
+The granule position is just a number, it can contain gaps or can just be any random
+number.
+
+
+theora and the granulepos
+-------------------------
+
+the granulepos in theora consists of the framenumber of the last keyframe shifted some
+amount of bits plus the number of p/b-frames.
+
+This means that given a framenumber or a timestamp one cannot generate the granulepos
+for that frame. eg frame 10 could have several valid granulepos values depending on if
+the last keyframe was on frame 5 or 0. Given a granulepos we can, however, create a
+unique correct timestamp and a framenumber.
+
+in a raw theroa stream we use the granulepos as the offset field.
+
+
+vorbis and granulepos
+---------------------
+
+the granulepos in vorbis happens to be the same as the sample counter. conversion to and
+from granulepos is therefore easy.
+
+in a raw vorbis stream we use the granulepos as the offset field.
+
+
+What can ogg do?
+----------------
+
+An ogg demuxer can read pages and get the granuleposition from it. It can ask the decoder
+elements to convert a granulepos to time.
+
+An ogg demuxer can also get the granulepos of the first and the last page of a stream to
+get the start and end timestamp of that stream. It can also get the length in bytes of
+the stream (when the peer is seekable, that is).
+
+An ogg demuxer is therefore basically able to seek to any byte position and timestamp.
+When asked to seek to a given granulepos, the ogg demuxer should always convert the 
+value to a timestamp using the peer decoder element conversion function. It can then
+binary search the file to eventually end up on the page with the given granule pos or
+a granulepos with the same timestamp.
+
+Seeking in ogg currently
+------------------------
+
+When seeking in an ogg, the decoders can choose to forward the seek event as a 
+granulepos or a timestamp to the ogg demuxer.
+
+In the case of a granulepos, the ogg demuxer will seek back to the beginning of
+the stream and skip pages until it finds one with the requested timestamp.
+
+In the case of a timestamp, the ogg demuxer also seeks back to the beginning of
+the stream. For each page it reads, it asks the decoder element to convert the 
+granulepos back to a timestamp. The ogg demuxer keeps on skipping pages until the
+page has a timestamp bigger or equal to the requested one.
+
+It is therefore important that the decoder elements in vorbis can convert a granulepos
+into a timestamp or never seek on timestamp on the oggdemuxer.
+
+The default format on the oggdemuxer source pads is currently defined as a the 
+granulepos of the packets, it is also the value of the OFFSET field in the GstBuffer.
+
+
+Oggmux
+------
+
+The oggmuxer uses the offset fields to fill in the granulepos in the pages.
+
+
+TODO
+----
+
+- use the OFFSET field in the GstBuffer to store/read the granulepos as 
+  opposed to the OFFSET_END field.
+- Seeking should be implemented with a binary search.
