@@ -76,6 +76,7 @@ struct _DVDReadSrcPrivate
 
   int title, chapter, angle;
   int pgc_id, start_cell, cur_cell, cur_pack;
+  int last_cell;
   int ttn, pgn, next_cell;
   dvd_reader_t *dvd;
   dvd_file_t *dvd_title;
@@ -430,6 +431,14 @@ _seek (DVDReadSrcPrivate * priv, int title, int chapter, int angle)
   priv->cur_pgc = priv->vts_file->vts_pgcit->pgci_srp[priv->pgc_id - 1].pgc;
   priv->start_cell = priv->cur_pgc->program_map[priv->pgn - 1] - 1;
 
+  if (chapter + 1 == priv->tt_srpt->title[title].nr_of_ptts) {
+    priv->last_cell = priv->cur_pgc->nr_of_cells;
+  } else {
+    priv->last_cell =
+        priv->cur_pgc->program_map[(priv->vts_ptt_srpt->title[priv->ttn -
+                1].ptt[chapter + 1].pgn) - 1] - 1;
+  }
+
     /**
      * We've got enough info, time to open the title set data.
      */
@@ -468,7 +477,7 @@ _read (DVDReadSrcPrivate * priv, int angle, int new_seek, GstBuffer * buf)
     priv->cur_cell = priv->start_cell;
   }
 
-  if (priv->cur_cell < priv->cur_pgc->nr_of_cells) {
+  if (priv->cur_cell < priv->last_cell) {
     if (priv->new_cell)
       priv->cur_cell = priv->next_cell;
 
@@ -508,12 +517,18 @@ _read (DVDReadSrcPrivate * priv, int angle, int new_seek, GstBuffer * buf)
             /**
              * Read NAV packet.
              */
+    nav_retry:
+
       len = DVDReadBlocks (priv->dvd_title, priv->cur_pack, 1, data);
       if (len == 0) {
         GST_ERROR ("Read failed for block %d", priv->cur_pack);
         return -1;
       }
-      assert (is_nav_pack (data));
+
+      if (!is_nav_pack (data)) {
+        priv->cur_pack++;
+        goto nav_retry;
+      }
 
 
             /**

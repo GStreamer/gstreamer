@@ -1,5 +1,10 @@
 2004-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/dvdread/dvdreadsrc.c:
+	  Fixes invalid reads (#158462)
+
+2004-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* sys/v4l/gstv4lsrc.c:
 	* sys/v4l/gstv4lsrc.h:
 	* sys/v4l/v4lsrc_calls.c:
