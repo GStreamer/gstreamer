@@ -1,5 +1,12 @@
 2003-12-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* ext/alsa/gstalsa.c: (gst_alsa_open_audio):
+	  Don't send ALSA debugging to stderr.
+	* ext/alsa/gstalsa.h:
+	  Use GST_WARNING instead of g_warning when ALSA functions fail.
+
+2003-12-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support):
 	  Free XVAdapterInfo correctly.
 
