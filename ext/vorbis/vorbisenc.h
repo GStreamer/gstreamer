@@ -46,9 +46,10 @@ typedef struct _VorbisEnc VorbisEnc;
 typedef struct _VorbisEncClass VorbisEncClass;
 
 struct _VorbisEnc {
-  GstElement element;
+  GstElement 	   element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPad          *sinkpad,
+                  *srcpad;
 
   ogg_stream_state os; /* take physical pages, weld into a logical
 			                              stream of packets */
@@ -62,13 +63,23 @@ struct _VorbisEnc {
   vorbis_dsp_state vd; /* central working state for the packet->PCM decoder */
   vorbis_block     vb; /* local working space for packet->PCM decode */
 
-  gboolean eos;
+  gboolean         eos;
 
-  gint bitrate;
-  gint channels;
-  gint frequency;
+  gboolean         managed;
+  gint             bitrate;
+  gint             min_bitrate;
+  gint             max_bitrate;
+  gfloat           quality;
+  gboolean	   quality_set;
+  gint             serial;
 
-  gboolean setup;
+  gint             channels;
+  gint             frequency;
+
+  GstCaps         *metadata;
+
+  gboolean         setup;
+  gchar		  *last_message;
 };
 
 struct _VorbisEncClass {

@@ -20,12 +20,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-
 #include <vorbis/vorbisenc.h>
 
 #include "vorbisenc.h"
-
-
 
 extern GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
 
@@ -51,21 +48,33 @@ enum
 enum
 {
   ARG_0,
+  ARG_MAX_BITRATE,
   ARG_BITRATE,
+  ARG_MIN_BITRATE,
+  ARG_QUALITY,
+  ARG_SERIAL,
+  ARG_METADATA,
+  ARG_MANAGED,
+  ARG_LAST_MESSAGE,
 };
 
-static void 	gst_vorbisenc_class_init 	(VorbisEncClass * klass);
-static void 	gst_vorbisenc_init 		(VorbisEnc * vorbisenc);
+#define MAX_BITRATE_DEFAULT 	-1
+#define BITRATE_DEFAULT 	-1
+#define MIN_BITRATE_DEFAULT 	-1
+#define QUALITY_DEFAULT 	0.3
 
-static void 	gst_vorbisenc_chain 		(GstPad * pad, GstBuffer * buf);
-static void 	gst_vorbisenc_setup 		(VorbisEnc * vorbisenc);
+static void 		gst_vorbisenc_class_init 	(VorbisEncClass *klass);
+static void 		gst_vorbisenc_init 		(VorbisEnc *vorbisenc);
 
-static void 	gst_vorbisenc_get_property 	(GObject * object, guint prop_id, GValue * value,
-						 GParamSpec * pspec);
-static void 	gst_vorbisenc_set_property 	(GObject * object, guint prop_id, const GValue * value,
-						 GParamSpec * pspec);
+static void 		gst_vorbisenc_chain 		(GstPad *pad, GstBuffer *buf);
+static gboolean 	gst_vorbisenc_setup 		(VorbisEnc *vorbisenc);
+
+static void 		gst_vorbisenc_get_property 	(GObject *object, guint prop_id, 
+		        	                         GValue *value, GParamSpec *pspec);
+static void 		gst_vorbisenc_set_property 	(GObject *object, guint prop_id, 
+			                                 const GValue *value, GParamSpec *pspec);
 static GstElementStateReturn
-		gst_vorbisenc_change_state 	(GstElement *element);
+			gst_vorbisenc_change_state 	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_vorbisenc_signals[LAST_SIGNAL] = { 0 }; */
@@ -102,9 +111,34 @@ gst_vorbisenc_class_init (VorbisEncClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_BITRATE, 
+    g_param_spec_int ("max_bitrate", "Max bitrate", 
+	    " Specify a minimum bitrate (in bps). Useful for encoding for a fixed-size channel", 
+	    -1, G_MAXINT, MAX_BITRATE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE, 
-    g_param_spec_int ("bitrate", "bitrate", "bitrate", 
-	    G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+    g_param_spec_int ("bitrate", "Bitrate", "Choose a bitrate to encode at. "
+	    "Attempt to encode at a bitrate averaging this. Takes an argument in kbps.", 
+	    -1, G_MAXINT, BITRATE_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MIN_BITRATE, 
+    g_param_spec_int ("min_bitrate", "Min bitrate", 
+	    "Specify a maximum bitrate in bps. Useful for streaming applications.",
+	    -1, G_MAXINT, MIN_BITRATE_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY, 
+    g_param_spec_float ("quality", "Quality", 
+	    "Specify quality instead of specifying a particular bitrate.",
+	    -1.0, 10.0, QUALITY_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SERIAL, 
+    g_param_spec_int ("serial", "Serial", "Specify a serial number for the stream. (-1 is random)",
+	    -1, G_MAXINT, -1, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METADATA, 
+    g_param_spec_boxed ("metadata", "Metadata", "Metadata to add to the stream,",
+	    GST_TYPE_CAPS, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MANAGED, 
+    g_param_spec_boolean ("managed", "Managed", "Enable bitrate management engine",
+	    FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
+    g_param_spec_string ("last-message", "last-message", "The last status message",
+            NULL, G_PARAM_READABLE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -148,33 +182,200 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
 
   vorbisenc->channels = -1;
   vorbisenc->frequency = -1;
-  vorbisenc->bitrate = 128000;
+
+  vorbisenc->managed = FALSE;
+  vorbisenc->max_bitrate = MAX_BITRATE_DEFAULT;
+  vorbisenc->bitrate = BITRATE_DEFAULT;
+  vorbisenc->min_bitrate = MIN_BITRATE_DEFAULT;
+  vorbisenc->quality = QUALITY_DEFAULT;
+  vorbisenc->quality_set = FALSE;
+  vorbisenc->serial = -1;
+  vorbisenc->last_message = NULL;
+  
   vorbisenc->setup = FALSE;
   vorbisenc->eos = FALSE;
+
+  vorbisenc->metadata = GST_CAPS_NEW (
+		  "vorbisenc_metadata",
+                  "application/x-gst-metadata",
+                    "comment",  GST_PROPS_STRING ("Track encoded with GStreamer"),
+		    "date",     GST_PROPS_STRING (""),
+		    "tracknum", GST_PROPS_STRING (""),
+		    "title",    GST_PROPS_STRING (""),
+		    "artist",   GST_PROPS_STRING (""),
+		    "album",    GST_PROPS_STRING (""),
+		    "genre",    GST_PROPS_STRING ("")
+		  );
+
 
   /* we're chained and we can deal with events */
   GST_FLAG_SET (vorbisenc, GST_ELEMENT_EVENT_AWARE);
 }
 
-static void
-gst_vorbisenc_setup (VorbisEnc * vorbisenc)
+static void 
+gst_vorbisenc_add_metadata (VorbisEnc *vorbisenc, GstCaps *caps)
 {
-  static const gchar *comment = "Track encoded with GStreamer";
-  /********** Encode setup ************/
+  GList *props;
+  GstPropsEntry *prop;
 
+  if (caps == NULL)
+    return;
+
+  vorbis_comment_init (&vorbisenc->vc);
+
+  props = gst_caps_get_props (caps)->properties;
+  while (props) {
+    prop = (GstPropsEntry*)(props->data);
+    props = g_list_next(props);
+
+    if (gst_props_entry_get_type (prop) == GST_PROPS_STRING_TYPE) {
+      const gchar *name = gst_props_entry_get_name (prop);
+      const gchar *value;
+
+      gst_props_entry_get_string (prop, &value);
+
+      if (!value || strlen (value) == 0)
+	continue;
+
+      if (!strcmp (name, "comment")) {
+        vorbis_comment_add (&vorbisenc->vc, g_strdup (value));
+      }
+      else {
+        vorbis_comment_add_tag (&vorbisenc->vc, g_strdup (name), g_strdup (value));
+      }
+    }
+  }
+}
+
+static gchar*
+get_constraints_string (VorbisEnc *vorbisenc)
+{
+  gint min = vorbisenc->min_bitrate;
+  gint max = vorbisenc->max_bitrate;
+  gchar *result;
+
+  if (min > 0 && max > 0)
+    result = g_strdup_printf ("(min %d bps, max %d bps)", min,max);
+  else if (min > 0)
+    result = g_strdup_printf ("(min %d bps, no max)", min);
+  else if (max > 0)
+    result = g_strdup_printf ("(no min, max %d bps)", max);
+  else
+    result = g_strdup_printf ("(no min or max)");
+
+  return result;
+}
+
+static void
+update_start_message (VorbisEnc *vorbisenc) 
+{
+  gchar *constraints;
+
+  g_free (vorbisenc->last_message);
+
+  if (vorbisenc->bitrate > 0) {
+    if (vorbisenc->managed) {
+      constraints = get_constraints_string (vorbisenc);
+      vorbisenc->last_message = 
+	      g_strdup_printf ("encoding at average bitrate %d bps %s", 
+			       vorbisenc->bitrate, constraints);
+      g_free (constraints);
+    }
+    else {
+      vorbisenc->last_message = 
+	      g_strdup_printf ("encoding at approximate bitrate %d bps (VBR encoding enabled)", 
+			       vorbisenc->bitrate);
+    }
+  }
+  else {
+    if (vorbisenc->quality_set) {
+      if (vorbisenc->managed) {
+        constraints = get_constraints_string (vorbisenc);
+        vorbisenc->last_message = 
+	      g_strdup_printf ("encoding at quality level %2.2f using constrained VBR %s", 
+			       vorbisenc->quality, constraints);
+        g_free (constraints);
+      }
+      else {
+        vorbisenc->last_message = 
+	      g_strdup_printf ("encoding at quality level %2.2f", 
+			       vorbisenc->quality);
+      }
+    }
+    else {
+      constraints = get_constraints_string (vorbisenc);
+      vorbisenc->last_message = 
+	      g_strdup_printf ("encoding using bitrate management %s", 
+			       constraints);
+      g_free (constraints);
+    }
+  }
+
+  g_object_notify (G_OBJECT (vorbisenc), "last_message");
+}
+
+static gboolean
+gst_vorbisenc_setup (VorbisEnc *vorbisenc)
+{
+  gint serial;
+
+  if (vorbisenc->bitrate < 0 && vorbisenc->min_bitrate < 0 && vorbisenc->max_bitrate < 0) {
+    vorbisenc->quality_set = TRUE;
+  }
+
+  update_start_message (vorbisenc);
+  
   /* choose an encoding mode */
   /* (mode 0: 44kHz stereo uncoupled, roughly 128kbps VBR) */
   vorbis_info_init (&vorbisenc->vi);
-  vorbis_encode_init (&vorbisenc->vi, vorbisenc->channels, vorbisenc->frequency,
-		      -1, vorbisenc->bitrate, -1);
 
-  /* add a comment */
-  vorbis_comment_init (&vorbisenc->vc);
-  vorbis_comment_add (&vorbisenc->vc, (gchar *)comment);
-  /*
-  gst_element_send_event (GST_ELEMENT (vorbisenc),
-             gst_event_new_info ("comment", GST_PROPS_STRING (comment), NULL));
-	     */
+  if(vorbisenc->quality_set){
+    if (vorbis_encode_setup_vbr (&vorbisenc->vi, 
+			         vorbisenc->channels, 
+				 vorbisenc->frequency, 
+				 vorbisenc->quality)) 
+    {
+       g_warning ("vorbisenc: initialisation failed: invalid parameters for quality");
+       vorbis_info_clear(&vorbisenc->vi);
+       return FALSE;
+    }
+
+    /* do we have optional hard quality restrictions? */
+    if(vorbisenc->max_bitrate > 0 || vorbisenc->min_bitrate > 0){
+      struct ovectl_ratemanage_arg ai;
+      vorbis_encode_ctl (&vorbisenc->vi, OV_ECTL_RATEMANAGE_GET, &ai);
+
+      ai.bitrate_hard_min = vorbisenc->min_bitrate / 1000;
+      ai.bitrate_hard_max = vorbisenc->max_bitrate / 1000;
+      ai.management_active = 1;
+
+      vorbis_encode_ctl (&vorbisenc->vi, OV_ECTL_RATEMANAGE_SET, &ai);
+    }
+  } 
+  else {
+    if (vorbis_encode_setup_managed (&vorbisenc->vi, 
+			             vorbisenc->channels, 
+				     vorbisenc->frequency,
+                                     vorbisenc->max_bitrate > 0 ? vorbisenc->max_bitrate : -1,
+                                     vorbisenc->bitrate,
+                                     vorbisenc->min_bitrate > 0 ? vorbisenc->min_bitrate : -1))
+    {
+      g_warning("vorbisenc: initialisation failed: invalid parameters for bitrate\n");
+      vorbis_info_clear(&vorbisenc->vi);
+      return FALSE;
+    }
+  }
+
+  if(vorbisenc->managed && vorbisenc->bitrate < 0) {
+    vorbis_encode_ctl(&vorbisenc->vi, OV_ECTL_RATEMANAGE_AVG, NULL);
+  }
+  else if(!vorbisenc->managed) {
+    /* Turn off management entirely (if it was turned on). */
+    vorbis_encode_ctl(&vorbisenc->vi, OV_ECTL_RATEMANAGE_SET, NULL);
+  }
+  vorbis_encode_setup_init(&vorbisenc->vi);
+
+  gst_vorbisenc_add_metadata (vorbisenc, vorbisenc->metadata);
 
   /* set up the analysis state and auxiliary encoding storage */
   vorbis_analysis_init (&vorbisenc->vd, &vorbisenc->vi);
@@ -183,8 +384,15 @@ gst_vorbisenc_setup (VorbisEnc * vorbisenc)
   /* set up our packet->stream encoder */
   /* pick a random serial number; that way we can more likely build
      chained streams just by concatenation */
-  srand (time (NULL));
-  ogg_stream_init (&vorbisenc->os, rand ());
+  if (vorbisenc->serial < 0) {
+    srand (time (NULL));
+    serial = rand ();
+  }
+  else {
+    serial = vorbisenc->serial;
+  }
+
+  ogg_stream_init (&vorbisenc->os, serial);
 
   /* Vorbis streams begin with three headers; the initial header (with
      most of the codec setup parameters) which is mandated by the Ogg
@@ -208,6 +416,8 @@ gst_vorbisenc_setup (VorbisEnc * vorbisenc)
   }
 
   vorbisenc->setup = TRUE;
+
+  return TRUE;
 }
 
 static void
@@ -317,7 +527,6 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
 
   if (vorbisenc->eos) {
     /* clean up and exit.  vorbis_info_clear() must be called last */
-
     ogg_stream_clear (&vorbisenc->os);
     vorbis_block_clear (&vorbisenc->vb);
     vorbis_dsp_clear (&vorbisenc->vd);
@@ -338,8 +547,29 @@ gst_vorbisenc_get_property (GObject * object, guint prop_id, GValue * value, GPa
   vorbisenc = GST_VORBISENC (object);
 
   switch (prop_id) {
+    case ARG_MAX_BITRATE:
+      g_value_set_int (value, vorbisenc->max_bitrate);
+      break;
     case ARG_BITRATE:
       g_value_set_int (value, vorbisenc->bitrate);
+      break;
+    case ARG_MIN_BITRATE:
+      g_value_set_int (value, vorbisenc->min_bitrate);
+      break;
+    case ARG_QUALITY:
+      g_value_set_float (value, vorbisenc->quality);
+      break;
+    case ARG_SERIAL:
+      g_value_set_int (value, vorbisenc->serial);
+      break;
+    case ARG_METADATA:
+      g_value_set_static_boxed (value, vorbisenc->metadata);
+      break;
+    case ARG_MANAGED:
+      g_value_set_boolean (value, vorbisenc->managed);
+      break;
+    case ARG_LAST_MESSAGE:
+      g_value_set_string (value, vorbisenc->last_message);
       break;
     default:
       break;
@@ -358,8 +588,52 @@ gst_vorbisenc_set_property (GObject * object, guint prop_id, const GValue * valu
   vorbisenc = GST_VORBISENC (object);
 
   switch (prop_id) {
+    case ARG_MAX_BITRATE:
+    {
+      gboolean old_value = vorbisenc->managed;
+
+      vorbisenc->max_bitrate = g_value_get_int (value);
+      if (vorbisenc->min_bitrate > 0 && vorbisenc->max_bitrate > 0)
+        vorbisenc->managed = TRUE;
+      else
+        vorbisenc->managed = FALSE;
+
+      if (old_value != vorbisenc->managed)
+	g_object_notify (object, "managed");
+      break;
+    }
     case ARG_BITRATE:
       vorbisenc->bitrate = g_value_get_int (value);
+      break;
+    case ARG_MIN_BITRATE:
+    {
+      gboolean old_value = vorbisenc->managed;
+
+      vorbisenc->min_bitrate = g_value_get_int (value);
+      if (vorbisenc->min_bitrate > 0 && vorbisenc->max_bitrate > 0)
+        vorbisenc->managed = TRUE;
+      else
+        vorbisenc->managed = FALSE;
+
+      if (old_value != vorbisenc->managed)
+	g_object_notify (object, "managed");
+      break;
+    }
+    case ARG_QUALITY:
+      vorbisenc->quality = g_value_get_float (value);
+      if (vorbisenc->quality >= 0.0)
+        vorbisenc->quality_set = TRUE;
+      else
+        vorbisenc->quality_set = FALSE;
+      break;
+    case ARG_SERIAL:
+      vorbisenc->serial = g_value_get_int (value);
+      break;
+    case ARG_METADATA:
+      vorbisenc->metadata = g_value_get_boxed (value);
+      break;
+    case ARG_MANAGED:
+      vorbisenc->managed = g_value_get_boolean (value);
       break;
     default:
       break;
