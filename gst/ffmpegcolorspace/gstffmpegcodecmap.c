@@ -482,7 +482,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
     }
   } else if (strcmp (gst_structure_get_name (structure),
           "video/x-raw-rgb") == 0) {
-    gint bpp = 0, rmask = 0, endianness = 0, amask = 0;
+    gint bpp = 0, rmask = 0, endianness = 0, amask = 0, depth = 0;
 
     if (gst_structure_get_int (structure, "bpp", &bpp) &&
         gst_structure_get_int (structure, "endianness", &endianness)) {
@@ -514,8 +514,13 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
               context->pix_fmt = PIX_FMT_RGB24;
             break;
           case 16:
-            if (endianness == G_BYTE_ORDER)
+            if (endianness == G_BYTE_ORDER) {
               context->pix_fmt = PIX_FMT_RGB565;
+              if (gst_structure_get_int (structure, "depth", &depth)) {
+                if (depth == 15)
+                  context->pix_fmt = PIX_FMT_RGB555;
+              }
+            }
             break;
           case 15:
             if (endianness == G_BYTE_ORDER)
