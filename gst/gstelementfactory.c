@@ -190,12 +190,12 @@ gst_element_factory_create (GstElementFactory *factory,
 
   g_return_val_if_fail (factory != NULL, NULL);
 
+  if (!gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory)))
+    return NULL;
+
   GST_DEBUG (GST_CAT_ELEMENT_FACTORY,
              "creating element from factory \"%s\" (name \"%s\", type %d)", 
              GST_OBJECT_NAME (factory), name, (gint) factory->type);
-
-  if (!gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory)))
-    return NULL;
 
   if (factory->type == 0) {
       g_critical ("Factory for `%s' has no type",
