@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+version=0.4.0.2
+
 #export DH_VERBOSE=1
 export DH_COMPAT=3
 export DH_OPTIONS
@@ -12,6 +14,11 @@ ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
 else
 	confflags += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
 endif
+
+debian/control: debian/control.in
+	sed 's/@VERSION@/$(version)/g' debian/control.in >debian/control
+	rm -f debian/libgstreamer$(version).files
+	ln -s libgstreamerVERSION.files debian/libgstreamer$(version).files
 
 configure: configure-stamp
 configure-stamp:
@@ -127,7 +134,7 @@ binary-arch: build install
 	dh_fixperms
 	dh_makeshlibs
 	dh_installdeb
-	dh_shlibdeps -l`pwd`/debian/libgstreamer0.4.0/usr/lib
+	dh_shlibdeps -l`pwd`/debian/libgstreamer$(version)/usr/lib
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb

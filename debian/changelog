@@ -1,3 +1,14 @@
+gstreamer (0.4.0.2-cvs20020919-1) unstable; urgency=low
+
+  * CVS snapshot, release branch
+  * gstreamer-code.files: change to libgst*scheduler, since the
+    scheduler names have changed.
+  * gstreamer-core-libs.files: libgstcontrol.so moved
+  * add debian/control.in, and create debian/control rule in debian/rules
+    to change the version number automatically
+
+ -- David Schleef <ds@schleef.org>  Thu, 19 Sep 2002 15:07:36 -0700
+
 gstreamer (0.4.0-1) unstable; urgency=low
 
   * New upstream
