@@ -74,7 +74,7 @@ enum
 {
   PARSE_STATE_WAITING,          /* Waiting for the start of a sequence. */
   PARSE_STATE_START,            /* Start of sequence seen. */
-  PARSE_STATE_PICTURE,          /* Picture start seen. */
+  PARSE_STATE_PICTURE           /* Picture start seen. */
 };
 
 

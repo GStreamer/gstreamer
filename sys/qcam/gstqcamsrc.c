@@ -101,7 +101,7 @@ enum
   ARG_TRANSFER_SCALE,
   ARG_DEPTH,
   ARG_PORT,
-  ARG_AUTOEXP,
+  ARG_AUTOEXP
 };
 
 static void gst_qcamsrc_base_init (gpointer g_class);

@@ -31,14 +31,14 @@ enum
   ARG_START_TRACK,
   ARG_END_TRACK,
   ARG_CURRENT_TRACK,
-  ARG_CDDB_DISCID,
+  ARG_CDDB_DISCID
 };
 
 /* signals */
 enum
 {
   TRACK_CHANGE,
-  LAST_SIGNAL,
+  LAST_SIGNAL
 };
 
 static void cdplayer_base_init (gpointer g_class);

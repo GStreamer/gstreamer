@@ -57,7 +57,7 @@ enum
   ARG_TRACK,
   ARG_BYTESPERREAD,
   ARG_OFFSET,
-  ARG_MAX_ERRORS,
+  ARG_MAX_ERRORS
 };
 
 static void vcdsrc_base_init (gpointer g_class);

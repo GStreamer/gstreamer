@@ -81,14 +81,14 @@ static GstElementDetails plugin_details = {
 enum
 {
   /* FILL ME */
-  LAST_SIGNAL,
+  LAST_SIGNAL
 };
 
 enum
 {
   ARG_0,
   ARG_DEVICE,
-  ARG_BUFFER_SIZE,
+  ARG_BUFFER_SIZE
 };
 
 static GstStaticPadTemplate gst_sunaudiosink_sink_factory =
