@@ -100,7 +100,15 @@ typedef struct {
 #define ERROR(type, ...) SET_ERROR (((graph_t *) graph)->error, (type), __VA_ARGS__ )
 #ifdef GST_DEBUG_ENABLED
 #  define YYDEBUG 1
+   /* bison 1.35 calls this macro with side effects, we need to make sure the
+      side effects work - crappy bison
 #  define YYFPRINTF(a, ...) GST_DEBUG (GST_CAT_PIPELINE, __VA_ARGS__)
+ */
+#  define YYFPRINTF(a, ...) G_STMT_START{ \
+     gchar *temp = g_strdup_printf (__VA_ARGS__); \
+     GST_DEBUG (GST_CAT_PIPELINE, temp); \
+     g_free (temp); \
+   }G_STMT_END
 #endif
 
 #elif defined(G_HAVE_GNUC_VARARGS)
@@ -117,7 +125,15 @@ typedef struct {
 #define ERROR(type, args...) SET_ERROR (((graph_t *) graph)->error, (type), ## args )
 #ifdef GST_DEBUG_ENABLED
 #  define YYDEBUG 1
+   /* bison 1.35 calls this macro with side effects, we need to make sure the
+      side effects work - crappy bison
 #  define YYFPRINTF(a, args...) GST_DEBUG (GST_CAT_PIPELINE, ## args )
+ */
+#  define YYFPRINTF(a, args...) G_STMT_START{ \
+     gchar *temp = g_strdup_printf ( ## args ); \
+     GST_DEBUG (GST_CAT_PIPELINE, temp); \
+     g_free (temp); \
+   }G_STMT_END
 #endif
 
 #else
