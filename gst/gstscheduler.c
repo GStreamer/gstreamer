@@ -149,11 +149,13 @@ gst_scheduler_pad_disconnect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
 GstPad *
 gst_scheduler_pad_select (GstScheduler *sched, GList *padlist)
 {
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
-  g_return_if_fail (padlist != NULL);
+  g_return_val_if_fail (GST_IS_SCHEDULER (sched), NULL);
+  g_return_val_if_fail (padlist != NULL, NULL);
 
   if (CLASS (sched)->pad_select)
     CLASS (sched)->pad_select (sched, padlist);
+
+  return NULL;
 }
 
 /**
@@ -206,7 +208,7 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
 void
 gst_scheduler_remove_element (GstScheduler *sched, GstElement *element)
 {
-  GList *l;
+  GList *pads;
   
   g_return_if_fail (GST_IS_SCHEDULER (sched));
   g_return_if_fail (GST_IS_ELEMENT (element));
@@ -214,8 +216,13 @@ gst_scheduler_remove_element (GstScheduler *sched, GstElement *element)
   if (CLASS (sched)->remove_element)
     CLASS (sched)->remove_element (sched, element);
   
-  for (l=element->pads; l; l=l->next)
-    gst_pad_unset_sched ((GstPad*) l->data);
+  for (pads = element->pads; pads; pads = pads->next) {
+    GstPad *pad = GST_PAD (pads->data);
+    
+    if (GST_IS_REAL_PAD (pad)) {
+      gst_pad_unset_sched (GST_PAD (pads->data));
+    }
+  }
 }
 
 /**
@@ -319,10 +326,12 @@ gst_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 gboolean
 gst_scheduler_iterate (GstScheduler *sched)
 {
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_val_if_fail (GST_IS_SCHEDULER (sched), FALSE);
 
   if (CLASS (sched)->iterate)
-    CLASS (sched)->iterate (sched);
+    return CLASS (sched)->iterate (sched);
+
+  return FALSE;
 }
 
 
