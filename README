@@ -71,6 +71,7 @@ ATM, most of us have at least these versions :
 
 * autoconf      2.52    (NOT 2.52d)
 * automake      1.5     
+* gettext	0.11.5
 * libtool       1.4     (NOT Gentoo's genetic failure 1.4.2)
 * pkg-config    0.8.0
 
