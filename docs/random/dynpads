@@ -1,0 +1,50 @@
+Dynamic pads are pads that are created while the element is playing.
+This means that the element will create a new pas depending on the 
+media type it is handling. For example, the mpeg1pdemuxer element will
+create one or more video pads and one or more audio pads depending
+on the number of elementtary streams found in the media stream.
+
+The element will present its dynamic pads with the padtemplate list
+attached to the elementfactory. both the MIME type, direction, presence
+and properties of a pad can be obtained from the elementfactory using 
+the padtemplates. 
+
+Dynamic pad usually have the presence indicator set to 
+GST_PAD_FACTORY_SOMETIMES. This indicated that the pad might become
+available at runtime. When the pad is actually created in the 
+element, the element will signal the new_pad signal. This signal can
+then be used to attach a desired (compatible) element to the 
+pad.
+
+For certain elements, like a tee and a muxer, we need another pad 
+presence flag: GST_PAD_FACTORY_REQUEST. With this flag, the 
+elementfactory will announce that some of the pads are available on
+request. For the tee element, for example, one might obtain a new output
+pad by looking up a suitable padtemplate (temp) and performing:
+gst_element_request_new_pad (element, temp). The element will then
+create a new pad from the template (sink or source) and will return
+a handle to it. You can then connect elements to this new pad.
+
+The muxer element (an avi encoder, for example) might expose several
+padtemplates for audio and video. The typical usage pattern for the
+muxer would then be: create a compressor element (JPEG). Get the
+src pad of the compressor, Request a new pad from the element using the
+padtemplate provided by the compressor src pad and connect the 
+compressor element to this pad.
+
+An element that can be requested for a new pad has to implement the
+gst_element_request_new_pad method and perform the nessesary steps 
+to create a pad from that template. 
+
+This interesting behaviour can be extended to ghostpads too. A 
+compound element (a bin with internal elements) will also expose some
+padtemplates, either from the internal elements or from itself. Along
+with a new GstGhostPad class, this  also solves the naming conflicts 
+we might have with the ghostpads. The compound element will override
+the request_new_pad function and figure out which element it needs
+to get a pad from.
+
+Related to this solution: we will move the tee element to the
+gst/elements/ directory because there is no point in having the 
+header files anymore. The new pad request API will become a feature 
+of gstelement so gsttee becomes a real element too.
