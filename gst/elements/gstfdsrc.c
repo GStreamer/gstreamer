@@ -203,7 +203,7 @@ gst_fdsrc_get (GstPad * pad)
     tp = NULL;
 
   do {
-    retval = select (1, &readfds, NULL, NULL, tp);
+    retval = select (src->fd + 1, &readfds, NULL, NULL, tp);
   } while (retval == -1 && errno == EINTR);     /* retry if interrupted */
 
   if (retval == -1) {
