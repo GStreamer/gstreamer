@@ -1,3 +1,28 @@
+2004-04-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_get_palette),
+	(gst_ffmpeg_set_palette), (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_to_smpfmt),
+	(gst_ffmpeg_caps_to_pixfmt), (gst_ffmpeg_caps_with_codectype),
+	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_caps_to_codecid):
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	  Change some function names to reflect that they don't really
+	  _return_ something, but rather _use_ something to fill a
+	  AVCodecContext. s/to/with/. Restructure the extradata handling,
+	  it's now not picking up the type from the caps but rather
+	  using the type as provided in the function. This is a lot
+	  cleaner. Implement MS RLE palette pickup.
+	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_pad_link):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_connect):
+	  Sync with the above function name changes.
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_close),
+	(gst_ffmpegdec_open), (gst_ffmpegdec_connect),
+	(gst_ffmpegdec_chain), (gst_ffmpegdec_change_state):
+	  Add some hacks to convert palette-based raw image formats to
+	  RGBA32. Ugly, but I don't know how else to handle palette-based
+	  RGB, since img_convert() (and thus ffcolorspace) doesn't accept
+	  a palette as argument.
+
 2004-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* everything: updated upstream source to 2004-04-11 23:00 GMT

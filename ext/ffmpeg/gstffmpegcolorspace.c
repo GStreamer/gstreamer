@@ -195,7 +195,7 @@ gst_ffmpegcsp_pad_link (GstPad * pad, const GstCaps * caps)
   ctx->width = width;
   ctx->height = height;
   ctx->pix_fmt = PIX_FMT_NB;
-  gst_ffmpeg_caps_to_codectype (CODEC_TYPE_VIDEO, caps, ctx);
+  gst_ffmpeg_caps_with_codectype (CODEC_TYPE_VIDEO, caps, ctx);
   if (ctx->pix_fmt == PIX_FMT_NB) {
     av_free (ctx);
 

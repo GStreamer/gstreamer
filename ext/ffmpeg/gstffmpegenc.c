@@ -316,7 +316,7 @@ gst_ffmpegenc_connect (GstPad * pad, const GstCaps * caps)
   ffmpegenc->context->flags |= CODEC_FLAG_EMU_EDGE;
 
   /* fetch pix_fmt and so on */
-  gst_ffmpeg_caps_to_codectype (oclass->in_plugin->type,
+  gst_ffmpeg_caps_with_codectype (oclass->in_plugin->type,
       caps, ffmpegenc->context);
 
   pix_fmt = ffmpegenc->context->pix_fmt;

@@ -211,6 +211,43 @@ gst_ffmpegdec_dispose (GObject * object)
   av_free (ffmpegdec->picture);
 }
 
+static void
+gst_ffmpegdec_close (GstFFMpegDec *ffmpegdec)
+{
+  if (!ffmpegdec->opened)
+    return;
+
+  avcodec_close (ffmpegdec->context);
+  ffmpegdec->opened = FALSE;
+
+  if (ffmpegdec->context->palctrl) {
+    av_free (ffmpegdec->context->palctrl);
+    ffmpegdec->context->palctrl = NULL;
+  }
+
+  if (ffmpegdec->context->extradata) {
+    av_free (ffmpegdec->context->extradata);
+    ffmpegdec->context->extradata = NULL;
+  }
+}
+
+static gboolean
+gst_ffmpegdec_open (GstFFMpegDec *ffmpegdec)
+{
+  GstFFMpegDecClass *oclass =
+      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
+  ffmpegdec->opened = TRUE;
+  if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0) {
+    gst_ffmpegdec_close (ffmpegdec);
+    GST_DEBUG ("ffdec_%s: Failed to open FFMPEG codec",
+        oclass->in_plugin->name);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static GstPadLinkReturn
 gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
 {
@@ -219,10 +256,7 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   /* close old session */
-  if (ffmpegdec->opened) {
-    avcodec_close (ffmpegdec->context);
-    ffmpegdec->opened = FALSE;
-  }
+  gst_ffmpegdec_close (ffmpegdec);
 
   /* set defaults */
   avcodec_get_context_defaults (ffmpegdec->context);
@@ -234,8 +268,8 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
 #endif
 
   /* get size and so */
-  gst_ffmpeg_caps_to_codectype (oclass->in_plugin->type,
-      caps, ffmpegdec->context);
+  gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
+      oclass->in_plugin->type, caps, ffmpegdec->context);
 
   /* we dont send complete frames - FIXME: we need a 'framed' property
    * in caps */
@@ -250,17 +284,8 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
    * during playback... */
-  if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0) {
-    avcodec_close (ffmpegdec->context);
-    GST_DEBUG ("ffdec_%s: Failed to open FFMPEG codec",
-        oclass->in_plugin->name);
-    return GST_PAD_LINK_REFUSED;
-  }
-
-  /* done! */
-  ffmpegdec->opened = TRUE;
-
-  return GST_PAD_LINK_OK;
+  return gst_ffmpegdec_open (ffmpegdec) ?
+      GST_PAD_LINK_OK : GST_PAD_LINK_REFUSED;
 }
 
 #if 0
@@ -364,18 +389,40 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
            * errors inside. This drives me crazy, so we let it allocate
            * it's own buffers and copy to our own buffer afterwards... */
           AVPicture pic;
-          gint size = avpicture_get_size (ffmpegdec->context->pix_fmt,
+          enum PixelFormat to_fmt =
+	      (ffmpegdec->context->pix_fmt == PIX_FMT_PAL8) ?
+	      PIX_FMT_RGBA32 : ffmpegdec->context->pix_fmt;
+          gint size = avpicture_get_size (to_fmt,
               ffmpegdec->context->width,
               ffmpegdec->context->height);
 
           outbuf = gst_buffer_new_and_alloc (size);
-          avpicture_fill (&pic, GST_BUFFER_DATA (outbuf),
-              ffmpegdec->context->pix_fmt,
+          avpicture_fill (&pic, GST_BUFFER_DATA (outbuf), to_fmt,
               ffmpegdec->context->width, ffmpegdec->context->height);
-          img_convert (&pic, ffmpegdec->context->pix_fmt,
-              (AVPicture *) ffmpegdec->picture,
-              ffmpegdec->context->pix_fmt,
-              ffmpegdec->context->width, ffmpegdec->context->height);
+          if (to_fmt == ffmpegdec->context->pix_fmt) {
+            img_convert (&pic, ffmpegdec->context->pix_fmt,
+                (AVPicture *) ffmpegdec->picture,
+                ffmpegdec->context->pix_fmt,
+                ffmpegdec->context->width, ffmpegdec->context->height);
+          } else {
+            /* manual conversion from palette to RGBA32 */
+            gint x, y, pix, ws = ffmpegdec->picture->linesize[0],
+		wd = ffmpegdec->context->width;
+            guint8 *dest = GST_BUFFER_DATA (outbuf);
+            guint32 conv;
+            AVPaletteControl *pal = ffmpegdec->context->palctrl;
+
+            for (y = 0; y < ffmpegdec->context->height; y++) {
+              for (x = 0; x < ffmpegdec->context->width; x++) {
+                pix = ffmpegdec->picture->data[0][y * ws + x];
+                conv = pal->palette[pix];
+                dest[(y * wd + x) * 4]     = ((guint8 *) &conv)[0];
+                dest[(y * wd + x) * 4 + 1] = ((guint8 *) &conv)[1];
+                dest[(y * wd + x) * 4 + 2] = ((guint8 *) &conv)[2];
+                dest[(y * wd + x) * 4 + 3] = ((guint8 *) &conv)[3];
+              }
+            }
+          }
 
           /* this isn't necessarily true, but it's better than nothing */
           GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
@@ -409,9 +456,13 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     if (have_data) {
       if (!GST_PAD_CAPS (ffmpegdec->srcpad)) {
         GstCaps *caps;
+        enum PixelFormat orig_fmt = ffmpegdec->context->pix_fmt;
 
+        ffmpegdec->context->pix_fmt = (orig_fmt == PIX_FMT_PAL8) ?
+	    PIX_FMT_RGBA32 : orig_fmt;
         caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
             ffmpegdec->context);
+        ffmpegdec->context->pix_fmt = orig_fmt;
         if (caps == NULL ||
             !gst_pad_set_explicit_caps (ffmpegdec->srcpad, caps)) {
           GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
@@ -441,10 +492,7 @@ gst_ffmpegdec_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_PAUSED_TO_READY:
-      if (ffmpegdec->opened) {
-        avcodec_close (ffmpegdec->context);
-        ffmpegdec->opened = FALSE;
-      }
+      gst_ffmpegdec_close (ffmpegdec);
       break;
   }
 
