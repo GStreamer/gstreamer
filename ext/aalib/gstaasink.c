@@ -22,7 +22,7 @@
 #include <string.h>
 #include <sys/time.h>
 
-#include "aasink.h"
+#include "gstaasink.h"
 
 static GstElementDetails gst_aasink_details = {
   "Video sink",
