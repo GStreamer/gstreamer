@@ -378,7 +378,6 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 
 			GST_DEBUG (GST_CAT_EVENT, "gnomevfssrc sending discont");
 			event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
-			GST_EVENT_DISCONT_FLUSH (event) = src->need_flush;
 			src->need_flush = FALSE;
 			return GST_BUFFER (event);
 		}
@@ -402,7 +401,6 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 
 			GST_DEBUG (GST_CAT_EVENT, "gnomevfssrc sending discont");
 			event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
-			GST_EVENT_DISCONT_FLUSH (event) = src->need_flush;
 			src->need_flush = FALSE;
 
 			return GST_BUFFER (event);
