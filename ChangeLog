@@ -1,3 +1,8 @@
+2004-01-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gsterror.h: reinstate GST_LIBRARY_ERROR_ENCODE until
+          policy is set
+
 2004-01-26  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstelement.h:
