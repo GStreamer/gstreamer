@@ -5,7 +5,7 @@ GCONF_DIR=
 endif
 
 if USE_X
-X_DIR=xwindowlistener
+X_DIR=xwindowlistener xoverlay
 else
 X_DIR=
 endif
@@ -14,7 +14,7 @@ SUBDIRS = audio colorbalance floatcast \
 		$(GCONF_DIR) idct media-info \
 		mixer navigation play propertyprobe \
 		resample riff tuner video \
-		xoverlay $(X_DIR)
+		$(X_DIR)
 
 DIST_SUBDIRS = audio colorbalance floatcast \
 		gconf idct media-info \
