@@ -46,13 +46,6 @@ pound_bus_with_messages (gpointer data)
   return NULL;
 }
 
-/* temporary hack until all messages are backed by structures */
-static const GstStructure *
-gst_message_get_structure (GstMessage * m)
-{
-  return m->message_data.structure.structure;
-}
-
 static void
 pull_messages ()
 {

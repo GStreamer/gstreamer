@@ -422,7 +422,7 @@ gst_iterator_filter (GstIterator * it, GCompareFunc func, gpointer user_data)
  * will cause fold to return GST_ITERATOR_ERROR or GST_ITERATOR_RESYNC as
  * appropriate.
  *
- * The iterator will only be freed if fold returns GST_ITERATOR_DONE.
+ * The iterator will not be freed.
  *
  * Returns: A #GstIteratorResult, as described above.
  * 
@@ -441,22 +441,18 @@ gst_iterator_fold (GstIterator * iter, GstIteratorFoldFunction func,
       case GST_ITERATOR_OK:
         /* fixme: is there a way to ref/unref items? */
         if (!func (item, ret, user_data))
-          goto fold_interrupted;
+          goto fold_done;
         else
           break;
       case GST_ITERATOR_RESYNC:
       case GST_ITERATOR_ERROR:
-        goto fold_interrupted;
+        goto fold_done;
       case GST_ITERATOR_DONE:
         goto fold_done;
     }
   }
 
-fold_interrupted:
-  return result;
-
 fold_done:
-  gst_iterator_free (iter);
   return result;
 }
 
@@ -482,8 +478,8 @@ foreach_fold_func (gpointer item, GValue * unused, ForeachFoldData * data)
  * Iterate over all element of @it and call the given function for
  * each element.
  *
- * Returns: the result call to gst_iterator_fold(). If the result is not
- * GST_ITERATOR_DONE, the iterator is not freed.
+ * Returns: the result call to gst_iterator_fold(). The iterator will not be
+ * freed.
  *
  * MT safe.
  */
@@ -525,8 +521,7 @@ find_custom_fold_func (gpointer item, GValue * ret, FindCustomFoldData * data)
  * Find the first element in @it that matches the compare function.
  * The compare function should return 0 when the element is found.
  *
- * Will free the iterator when finished, regardless of whether an item is found
- * or not.
+ * The iterator will not be freed.
  *
  * Returns: The element in the iterator that matches the compare
  * function or NULL when no element matched.
@@ -548,9 +543,6 @@ gst_iterator_find_custom (GstIterator * iter, GCompareFunc func,
   res =
       gst_iterator_fold (iter, (GstIteratorFoldFunction) find_custom_fold_func,
       &ret, &data);
-
-  if (res != GST_ITERATOR_DONE)
-    gst_iterator_free (iter);
 
   /* no need to unset, it's just a pointer */
   return g_value_get_pointer (&ret);

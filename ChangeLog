@@ -1,5 +1,16 @@
 2005-03-03  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstiterator.c (gst_iterator_find_custom) 
+	(gst_iterator_foreach, gst_iterator_fold): Never free the
+	iterator.
+
+	* gst/elements/gsttee.c (gst_tee_handle_buffer): 
+	* gst/gstutils.c (gst_pad_proxy_setcaps, gst_pad_proxy_getcaps):
+	Always free the iterator.
+
+	* check/gst/gstbus.c (pull_messages): Use public
+	gst_message_get_structure().
+
 	* tools/gst-launch.c: Update to use the new message-parsing API.
 
 	* tools/gst-md5sum.c: Update to new spiffy poll API. Not that

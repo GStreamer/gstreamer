@@ -1697,10 +1697,11 @@ gst_pad_proxy_getcaps (GstPad * pad)
 
   res = gst_iterator_fold (iter, (GstIteratorFoldFunction) intersect_caps_func,
       &ret, pad);
+  gst_iterator_free (iter);
+
   if (res != GST_ITERATOR_DONE) {
     g_warning ("Pad list changed during capsnego for element %s",
         GST_ELEMENT_NAME (element));
-    gst_iterator_free (iter);
     return NULL;
   }
 
@@ -1768,10 +1769,11 @@ gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
 
   res = gst_iterator_fold (iter, (GstIteratorFoldFunction) link_fold_func,
       &ret, &data);
+  gst_iterator_free (iter);
+
   if (res != GST_ITERATOR_DONE) {
     g_warning ("Pad list changed during proxy_pad_link for element %s",
         GST_ELEMENT_NAME (element));
-    gst_iterator_free (iter);
     return FALSE;
   }
 

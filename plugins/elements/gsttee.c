@@ -298,8 +298,8 @@ gst_tee_handle_buffer (GstTee * tee, GstBuffer * buffer)
 
   res = gst_iterator_fold (iter, (GstIteratorFoldFunction) gst_tee_do_push,
       &ret, &data);
-  if (res != GST_ITERATOR_DONE)
-    gst_iterator_free (iter);
+  gst_iterator_free (iter);
+
   gst_buffer_unref (buffer);
 
   /* no need to unset gvalue */
