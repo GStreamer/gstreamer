@@ -1,5 +1,13 @@
 2004-02-18  David Schleef  <ds@schleef.org>
 
+	* configure.ac:  Move massink to gst-rotten
+	* ext/Makefile.am:
+	* ext/mas/Makefile.am:
+	* ext/mas/massink.c:
+	* ext/mas/massink.h:
+
+2004-02-18  David Schleef  <ds@schleef.org>
+
 	* ext/gdk_pixbuf/gstgdkpixbuf.c: (plugin_init): Disable gdk_pixbuf
 	typefinding, since it seems to be worse than nothing.
 	* gst/typefind/gsttypefindfunctions.c: (qt_type_find):  Add ftyp
