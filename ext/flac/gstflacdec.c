@@ -433,9 +433,11 @@ gst_flacdec_loop (GstElement *element)
 
   flacdec = GST_FLACDEC (element);
 
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: entering loop");
   if (flacdec->init) {
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: initializing decoder");
     FLAC__seekable_stream_decoder_init (flacdec->decoder);
-    //FLAC__seekable_stream_decoder_process_metadata (flacdec->decoder);
+    /* FLAC__seekable_stream_decoder_process_metadata (flacdec->decoder); */
     flacdec->init = FALSE;
   }
 
@@ -455,19 +457,23 @@ gst_flacdec_loop (GstElement *element)
     flacdec->seek_pending = FALSE;
   }
 
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: processing single");
   res = FLAC__seekable_stream_decoder_process_single (flacdec->decoder);
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: checking for EOS");
   if (FLAC__seekable_stream_decoder_get_state (flacdec->decoder) == 
 		  FLAC__SEEKABLE_STREAM_DECODER_END_OF_STREAM) 
   {
     GstEvent *event;
 
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: sending EOS event");
     FLAC__seekable_stream_decoder_finish(flacdec->decoder);
     flacdec->init = TRUE;
 
-    event = gst_event_new(GST_EVENT_EOS);
+    event = gst_event_new (GST_EVENT_EOS);
     gst_pad_push (flacdec->srcpad, GST_BUFFER (event));
     gst_element_set_eos (element);
   }
+   GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: _loop end");
 }
 
 GST_FORMATS_FUNCTION (gst_flacdec_get_src_formats,
