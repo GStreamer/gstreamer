@@ -1,8 +1,10 @@
 2004-01-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/oss/gstossaudio.c: (plugin_init):
+	* sys/oss/gstosselement.c: (gst_osselement_sync_parms):
 	* sys/oss/gstosselement.h:
           make an oss debugging category
+          make failure more descriptive
 
 2004-01-11  David Schleef  <ds@schleef.org>
 

@@ -625,7 +625,12 @@ gst_osselement_sync_parms (GstOssElement *oss)
       target_channels != oss->channels ||
       target_rate     != oss->rate) 
   {
-    g_warning ("couldn't set requested OSS parameters, enjoy the noise :)");
+    if (target_channels != oss->channels)
+      g_warning ("couldn't set the right number of channels, enjoy the tone difference");
+    if (target_rate != oss->rate)
+      g_warning ("couldn't set the right number of channels, enjoy the speed difference");
+    if (target_format != oss->format)
+      g_warning ("couldn't set requested OSS parameters, enjoy the noise :)");
     /* we could eventually return FALSE here, or just do some additional tests
      * to see that the frequencies don't differ too much etc.. */
   }
