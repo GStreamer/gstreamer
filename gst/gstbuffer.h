@@ -162,6 +162,7 @@ G_STMT_START { 					     	\
 #define		gst_buffer_ref_by_count(buf,c)	GST_BUFFER (gst_data_ref_by_count (GST_DATA (buf), c))
 #define		gst_buffer_unref(buf)		gst_data_unref (GST_DATA (buf))
 /* copy buffer */
+void		gst_buffer_stamp		(GstBuffer *dest, const GstBuffer *src);
 #define		gst_buffer_copy(buf)		GST_BUFFER (gst_data_copy (GST_DATA (buf)))
 #define		gst_buffer_is_writable(buf)	gst_data_is_writable (GST_DATA (buf))
 #define		gst_buffer_copy_on_write(buf)   GST_BUFFER (gst_data_copy_on_write (GST_DATA (buf)))

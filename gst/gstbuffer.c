@@ -132,6 +132,25 @@ _gst_buffer_copy_from_pool (GstBuffer *buffer)
 }
 
 /**
+ * gst_buffer_stamp:
+ * @dest: buffer to stamp
+ * @src: buffer to stamp from
+ *
+ * Copies additional information (timestamps and offsets) from one buffer to
+ * the other.
+ */
+void
+gst_buffer_stamp (GstBuffer *dest, const GstBuffer *src)
+{
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (src != NULL);
+  
+  GST_BUFFER_TIMESTAMP (dest) 	 = GST_BUFFER_TIMESTAMP (src);
+  GST_BUFFER_DURATION (dest) 	 = GST_BUFFER_DURATION (src);
+  GST_BUFFER_OFFSET (dest) 	 = GST_BUFFER_OFFSET (src);
+  GST_BUFFER_OFFSET_END (dest) 	 = GST_BUFFER_OFFSET_END (src);
+}
+/**
  * gst_buffer_default_copy:
  * @buffer: a #GstBuffer to make a copy of.
  *
@@ -164,10 +183,8 @@ gst_buffer_default_copy (GstBuffer *buffer)
                                              GST_BUFFER_SIZE (buffer));
   GST_BUFFER_SIZE (copy)  	 = GST_BUFFER_SIZE (buffer);
   GST_BUFFER_MAXSIZE (copy) 	 = GST_BUFFER_SIZE (buffer);
-  GST_BUFFER_TIMESTAMP (copy) 	 = GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_DURATION (copy) 	 = GST_BUFFER_DURATION (buffer);
-  GST_BUFFER_OFFSET (copy) 	 = GST_BUFFER_OFFSET (buffer);
-  GST_BUFFER_OFFSET_END (copy) 	 = GST_BUFFER_OFFSET_END (buffer);
+
+  gst_buffer_stamp (copy, buffer);
   GST_BUFFER_BUFFERPOOL (copy)   = NULL;
   GST_BUFFER_POOL_PRIVATE (copy) = NULL;
 
