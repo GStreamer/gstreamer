@@ -1,3 +1,7 @@
+2004-02-12  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/vbidec/vbiscreen.c: Fixing thomasvs fixes. Missing header.
+
 2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ladspa/gstladspa.c: (gst_ladspa_base_init):
