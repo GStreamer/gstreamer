@@ -284,6 +284,8 @@ gst_ffmpegenc_dispose (GObject * object)
   /* clean up remaining allocated data */
   av_free (ffmpegenc->context);
   av_free (ffmpegenc->picture);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static GstCaps *
