@@ -394,7 +394,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
 
   g_return_val_if_fail (offset >= 0, NULL);
 
-  fs_print  ("mapping region %08llx+%08x from file into memory\n",offset,size);
+  fs_print  ("mapping region %08llx+%08lx from file into memory\n",offset,(unsigned long)size);
   mmapregion = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
 
   if (mmapregion == NULL) {
@@ -402,8 +402,8 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
     return NULL;
   }
   else if (mmapregion == MAP_FAILED) {
-    GST_DEBUG ("mmap (0x%x, %d, 0x%llx) : %s",
- 	     size, src->fd, offset, strerror (errno));
+    GST_DEBUG ("mmap (0x%08lx, %d, 0x%llx) : %s",
+ 	     (unsigned long)size, src->fd, offset, strerror (errno));
     return NULL;
   }
   GST_DEBUG ( "mapped region %08lx+%08lx from file into memory at %p", 
