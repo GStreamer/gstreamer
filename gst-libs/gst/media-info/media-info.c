@@ -22,8 +22,19 @@
 #include "media-info.h"
 
 static gboolean _gst_media_info_debug = TRUE;
+
+#ifdef G_HAVE_ISO_VARARGS
+
+#define GMI_DEBUG(...) \
+  { if (_gst_media_info_debug) { g_print ( __VA_ARGS__ ); }}
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #define GMI_DEBUG(format, args...) \
   { if (_gst_media_info_debug) { g_print ( format , ## args ); }}
+
+#endif
+
 
 struct GstMediaInfoPriv
 {

@@ -41,17 +41,21 @@ AM_PROG_AS
 AS="${CC}"
 
 dnl decide on error flags
-AS_COMPILER_FLAG(-Wall,GST_ERROR="$GST_ERROR -Wall",GST_ERROR="$GST_ERROR")
-if test "x$GST_CVS"="xyes"; then
-  AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
+AS_COMPILER_FLAG(-Wall, GST_WALL="yes", GST_WALL="no")
 
-  # Only set these optimization flags if gcc is being used.
-  #
-  GST_FUNROLL_CFLAGS="$GST_FUNROLL_CFLAGS -funroll-all-loops"
-  GST_FINLINE_CFLAGS="$GST_FINLINE_CFLAGS -finline-functions"
-  GST_FFASTMATH_CFLAGS="$GST_FFASTMATH_CFLAGS -ffast-math"
-  GST_FSCHEDULE_CFLAGS="$GST_FSCHEDULE_CFLAGS -fschedule-insns2"
-  GST_FNOEXCEPTIONS_CFLAGS="$GST_FNOEXCEPTIONS_CFLAGS -fno-exceptions"
+if test "x$GST_WALL" = "xyes"; then
+   GST_ERROR="$GST_ERROR -Wall"
+
+   if test "x$GST_CVS" = "xyes"; then
+     AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
+   fi
+
+   dnl set gcc-style optimization flags if using the gnu compiler.
+   GST_FUNROLL_CFLAGS="$GST_FUNROLL_CFLAGS -funroll-all-loops"
+   GST_FINLINE_CFLAGS="$GST_FINLINE_CFLAGS -finline-functions"
+   GST_FFASTMATH_CFLAGS="$GST_FFASTMATH_CFLAGS -ffast-math"
+   GST_FSCHEDULE_CFLAGS="$GST_FSCHEDULE_CFLAGS -fschedule-insns2"
+   GST_FNOEXCEPTIONS_CFLAGS="$GST_FNOEXCEPTIONS_CFLAGS -fno-exceptions"
 fi
 
 dnl determine c++ compiler
