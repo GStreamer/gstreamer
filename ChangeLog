@@ -1,8 +1,16 @@
+2004-07-07  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* ext/ffmpeg/gstffmpeg.c: (gst_ffmpeg_log_callback), (plugin_init):
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	  hook up our debug handler to FFmpeg's.
+	  warn about getting negative have_data
+
 2004-07-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_base_init):
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_base_init):
-          bring category order in line with others
+	  bring category order in line with others
 
 2004-06-13  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 

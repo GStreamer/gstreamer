@@ -33,6 +33,9 @@
 #include <ffmpeg/avformat.h>
 #endif
 
+GST_DEBUG_CATEGORY_STATIC (ffmpeg_debug);
+#define GST_CAT_DEFAULT ffmpeg_debug
+
 extern gboolean gst_ffmpegdemux_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegdec_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegenc_register (GstPlugin * plugin);
@@ -41,12 +44,40 @@ extern gboolean gst_ffmpegcsp_register (GstPlugin * plugin);
 
 extern URLProtocol gstreamer_protocol;
 
+static void
+gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)
+{
+  GstDebugLevel gst_level;
+
+  switch (level) {
+    case AV_LOG_QUIET:
+      gst_level = GST_LEVEL_NONE;
+      break;
+    case AV_LOG_ERROR:
+      gst_level = GST_LEVEL_ERROR;
+      break;
+    case AV_LOG_INFO:
+      gst_level = GST_LEVEL_INFO;
+      break;
+    case AV_LOG_DEBUG:
+      gst_level = GST_LEVEL_DEBUG;
+      break;
+    default:
+      gst_level = GST_LEVEL_INFO;
+      break;
+  }
+
+  gst_debug_log_valist (ffmpeg_debug, gst_level, "", "", 0, NULL, fmt, vl);
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
+  GST_DEBUG_CATEGORY_INIT (ffmpeg_debug, "ffmpeg", 0, "FFmpeg elements");
+  av_log_set_callback (gst_ffmpeg_log_callback);
   av_register_all ();
 
   gst_ffmpegenc_register (plugin);
@@ -67,3 +98,5 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "All FFMPEG codecs",
     plugin_init,
     FFMPEG_VERSION, "LGPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
+
+
