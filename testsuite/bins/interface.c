@@ -19,7 +19,7 @@
 
 #include <gst/gst.h>
 
-/* tests if gst_bin_get_(all_)by_interface works */
+/* tests if gst_bin_iterate_(all_)by_interface works */
 
 gint
 main (gint argc, gchar * argv[])

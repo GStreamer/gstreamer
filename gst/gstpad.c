@@ -454,16 +454,23 @@ GstPadDirection
 gst_pad_get_direction (GstPad * pad)
 {
   GstPadDirection result;
+  GstRealPad *realpad;
 
-  /* pad unkown is a little silly but we need some sort of
+  /* PAD_UNKNOWN is a little silly but we need some sort of
    * error return value */
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_UNKNOWN);
 
-  /* since the direction cannot change at runtime we can
-   * safely read without locking. */
-  result = GST_PAD_DIRECTION (pad);
+  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+  result = GST_RPAD_DIRECTION (realpad);
+  GST_UNLOCK (realpad);
 
   return result;
+
+  /* errors */
+lost_ghostpad:
+  {
+    return GST_PAD_UNKNOWN;
+  }
 }
 
 /**

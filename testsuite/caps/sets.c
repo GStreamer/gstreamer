@@ -42,7 +42,7 @@ check_caps (const gchar * eins, const gchar * zwei)
     test3 = gst_caps_intersect (test2, two);
     g_print ("  empty  =  %s\n", gst_caps_to_string (test3));
     g_assert (gst_caps_is_empty (test3));
-    gst_caps_free (test3);
+    gst_caps_unref (test3);
     test3 = gst_caps_union (test2, two);
     g_print ("  A + B  =  %u\n", strlen (gst_caps_to_string (test3)));
     /* test3 = one - two + two = one + two */
@@ -52,15 +52,15 @@ check_caps (const gchar * eins, const gchar * zwei)
     test4 = gst_caps_union (one, two);
     g_assert (gst_caps_is_equal (test3, test4));
     g_print ("         NOT EQUAL\n\n");
-    gst_caps_free (test2);
-    gst_caps_free (test3);
-    gst_caps_free (test4);
+    gst_caps_unref (test2);
+    gst_caps_unref (test3);
+    gst_caps_unref (test4);
   } else {
     g_print ("         ANY CAPS\n\n");
   }
-  gst_caps_free (test);
-  gst_caps_free (two);
-  gst_caps_free (one);
+  gst_caps_unref (test);
+  gst_caps_unref (two);
+  gst_caps_unref (one);
 }
 
 gint

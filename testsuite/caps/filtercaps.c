@@ -39,9 +39,11 @@ main (gint argc, gchar ** argv)
   caps = gst_pad_get_caps (gst_element_get_pad (identity, "sink"));
   g_print ("caps:         %s\n", gst_caps_to_string (caps));
   g_assert (!gst_caps_is_any (caps));
+
   caps = gst_pad_get_allowed_caps (gst_element_get_pad (identity, "sink"));
   g_print ("allowed caps: %s\n", gst_caps_to_string (caps));
-  g_assert (gst_caps_is_any (caps));
+  /* get_allowed_caps doesn't mean anything if you aren't connected */
+  g_assert (!caps);
 
   return 0;
 }

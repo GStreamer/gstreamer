@@ -75,8 +75,8 @@ main (int argc, char *argv[])
   g_print ("caps %s\n", gst_caps_to_string (caps));
   if (gst_caps_is_empty (caps))
     return 1;
-  gst_caps_free (caps1);
-  gst_caps_free (caps2);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
 
   caps1 = gst_caps_copy (gst_static_caps_get (&rawcaps2));
   caps2 = gst_caps_copy (gst_static_caps_get (&rawcaps3));
@@ -84,8 +84,8 @@ main (int argc, char *argv[])
   g_print ("caps %s\n", gst_caps_to_string (caps));
   if (gst_caps_is_empty (caps))
     return 1;
-  gst_caps_free (caps1);
-  gst_caps_free (caps2);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
 
   caps1 = gst_caps_copy (gst_static_caps_get (&rawcaps4));
   caps2 = gst_caps_copy (gst_static_caps_get (&rawcaps5));
@@ -94,10 +94,10 @@ main (int argc, char *argv[])
   caps = gst_caps_intersect (caps3, caps4);
   g_print ("caps4 %s\n", gst_caps_to_string (caps4));
   g_print ("caps %s\n", gst_caps_to_string (caps));
-  gst_caps_free (caps1);
-  gst_caps_free (caps2);
-  gst_caps_free (caps3);
-  gst_caps_free (caps4);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+  gst_caps_unref (caps3);
+  gst_caps_unref (caps4);
 
   caps1 = gst_caps_copy (gst_static_caps_get (&rawcaps7));
   caps2 = gst_caps_copy (gst_static_caps_get (&rawcaps8));
@@ -105,8 +105,8 @@ main (int argc, char *argv[])
   g_print ("caps %s\n", gst_caps_to_string (caps));
   if (gst_caps_is_empty (caps))
     return 1;
-  gst_caps_free (caps1);
-  gst_caps_free (caps2);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
 
   caps1 = gst_caps_copy (gst_static_caps_get (&rawcaps9));
   caps2 = gst_caps_copy (gst_static_caps_get (&rawcaps10));
@@ -114,8 +114,8 @@ main (int argc, char *argv[])
   g_print ("caps %s\n", gst_caps_to_string (caps));
   if (gst_caps_is_empty (caps))
     return 1;
-  gst_caps_free (caps1);
-  gst_caps_free (caps2);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
 
   return 0;
 }

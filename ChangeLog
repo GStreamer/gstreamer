@@ -1,5 +1,25 @@
 2005-03-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_get_direction),
+	(_gst_pad_default_fixate_foreach), (gst_pad_collectv),
+	(gst_pad_collect_valist):
+	* testsuite/bins/interface.c: (main):
+	* testsuite/caps/audioscale.c: (test_caps):
+	* testsuite/caps/caps.c: (test1), (test2), (test3):
+	* testsuite/caps/deserialize.c: (main):
+	* testsuite/caps/enumcaps.c: (main):
+	* testsuite/caps/filtercaps.c: (main):
+	* testsuite/caps/intersect2.c: (main):
+	* testsuite/caps/random.c: (main):
+	* testsuite/caps/renegotiate.c: (my_fixate), (main):
+	* testsuite/caps/sets.c: (check_caps):
+	* testsuite/caps/simplify.c: (check_caps), (main):
+	* testsuite/caps/subtract.c: (check_caps):
+	Fix _pad_get_direction wrt ghostpads.
+	Fix caps testsuite.
+
+2005-03-09  Wim Taymans  <wim@fluendo.com>
+
 	* check/Makefile.am:
 	* check/gst/gstbin.c: (START_TEST), (gst_bin_suite), (main):
 	* check/gst/gstsystemclock.c: (START_TEST), (gst_clock_debug),

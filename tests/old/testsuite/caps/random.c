@@ -46,7 +46,7 @@ main (gint argc, gchar * argv[])
     gst_debug_add_log_function (assert_on_error, NULL);
     gst_caps_do_simplify (caps);
     gst_debug_remove_log_function (assert_on_error);
-    gst_caps_free (caps);
+    gst_caps_unref (caps);
   }
 
   /* TEST 2:

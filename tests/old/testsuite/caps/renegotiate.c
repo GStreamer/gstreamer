@@ -1,6 +1,8 @@
 
 #include <gst/gst.h>
 #include <string.h>
+#include <unistd.h>
+
 
 static GstPad *sinesrcpad;
 
@@ -42,11 +44,11 @@ my_fixate (GstPad * pad, GstCaps * caps, gpointer user_data)
     }
     icaps = gst_caps_intersect (caps, mycaps);
     if (!gst_caps_is_empty (icaps)) {
-      gst_caps_free (icaps);
+      gst_caps_unref (icaps);
       g_print ("returning %d\n", rate);
       return gst_caps_copy (mycaps);
     }
-    gst_caps_free (icaps);
+    gst_caps_unref (icaps);
   }
 
   return NULL;
@@ -56,11 +58,10 @@ int
 main (int argc, char *argv[])
 {
   GstElement *pipeline;
-  const GList *list;
-  const GList *l2;
-  int i;
-  int ret;
   GError *error = NULL;
+  GstIterator *iter1, *iter2;
+  gint done1 = FALSE, done2 = FALSE;
+  gpointer element;
 
   gst_init (&argc, &argv);
 
@@ -77,42 +78,73 @@ main (int argc, char *argv[])
     exit (0);
   }
 
-  list = gst_bin_get_list (GST_BIN (pipeline));
-  while (list) {
-    GstElement *element = GST_ELEMENT (list->data);
+  iter1 = gst_bin_iterate_elements (GST_BIN (pipeline));
+  while (!done1) {
+    switch (gst_iterator_next (iter1, &element)) {
+      case GST_ITERATOR_OK:
+      {
+        gpointer pad;
 
-    l2 = gst_element_get_pad_list (element);
-    while (l2) {
-      GstPad *pad = GST_PAD (l2->data);
+        iter2 = gst_element_iterate_pads (element);
+        while (!done2) {
+          switch (gst_iterator_next (iter2, &pad)) {
+            case GST_ITERATOR_OK:
+              if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
+                g_signal_connect (G_OBJECT (pad), "fixate",
+                    G_CALLBACK (my_fixate), NULL);
+              }
+              gst_object_unref (pad);
+              break;
+            case GST_ITERATOR_DONE:
+              done2 = TRUE;
+              break;
+            case GST_ITERATOR_RESYNC:
+            case GST_ITERATOR_ERROR:
+              exit (1);
+              break;
+          }
+        }
+        gst_iterator_free (iter2);
 
-      if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
-        g_signal_connect (G_OBJECT (pad), "fixate", G_CALLBACK (my_fixate),
-            NULL);
+        gst_object_unref (element);
+        break;
       }
-      l2 = g_list_next (l2);
+      case GST_ITERATOR_DONE:
+        done1 = TRUE;
+        break;
+      case GST_ITERATOR_RESYNC:
+      case GST_ITERATOR_ERROR:
+        exit (1);
+        break;
     }
-    list = g_list_next (list);
   }
+  gst_iterator_free (iter1);
 
-  g_signal_connect (pipeline, "deep_notify",
-      G_CALLBACK (gst_element_default_deep_notify), NULL);
+  /*g_signal_connect (pipeline, "deep_notify",
+     G_CALLBACK (gst_element_default_deep_notify), NULL); */
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  i = 0;
-  while (1) {
-    gst_bin_iterate (GST_BIN (pipeline));
-    i++;
-    if (i == 10) {
-      stage = 1;
-      g_print ("10 iterations\n");
-      ret = gst_pad_renegotiate (sinesrcpad);
-      g_print ("negotiation returned %d\n", ret);
-    }
-    if (i == 20) {
-      g_print ("20 iterations\n");
-      exit (0);
-    }
-  }
+
+  /*
+     i = 0;
+     while (1) {
+     gst_bin_iterate (GST_BIN (pipeline));
+     i++;
+     if (i == 10) {
+     stage = 1;
+     g_print ("10 iterations\n");
+     ret = gst_pad_renegotiate (sinesrcpad);
+     g_print ("negotiation returned %d\n", ret);
+     }
+     if (i == 20) {
+     g_print ("20 iterations\n");
+     exit (0);
+     }
+     }
+   */
+  /* Like totally not sure how to do this in THREADED. Punting for now! */
+
+  sleep (5);
 
   return 0;
 }

@@ -12,11 +12,11 @@ test1 (void)
 
   caps = gst_caps_new_empty ();
   g_assert (caps != NULL);
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 
   caps = gst_caps_new_any ();
   g_assert (caps != NULL);
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 
   caps = gst_caps_new_simple ("audio/raw", "_int", G_TYPE_INT, 100, NULL);
   g_assert (caps != NULL);
@@ -25,7 +25,7 @@ test1 (void)
   g_assert (GST_CAPS_IS_SIMPLE (caps) == TRUE);
   g_assert (gst_caps_is_fixed (caps) == TRUE);
   g_print ("%s\n", gst_caps_to_string (caps));
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 
   caps = gst_caps_new_simple ("audio/raw",
       "_double", G_TYPE_DOUBLE, 100.0, NULL);
@@ -35,7 +35,7 @@ test1 (void)
   g_assert (GST_CAPS_IS_SIMPLE (caps) == TRUE);
   g_assert (gst_caps_is_fixed (caps) == TRUE);
   g_print ("%s\n", gst_caps_to_string (caps));
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 
   caps = gst_caps_new_simple ("audio/raw",
       "_fourcc", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('a', 'b', 'c', 'd'), NULL);
@@ -45,7 +45,7 @@ test1 (void)
   g_assert (GST_CAPS_IS_SIMPLE (caps) == TRUE);
   g_assert (gst_caps_is_fixed (caps) == TRUE);
   g_print ("%s\n", gst_caps_to_string (caps));
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 
   caps = gst_caps_new_simple ("audio/raw",
       "_boolean", G_TYPE_BOOLEAN, TRUE, NULL);
@@ -55,7 +55,7 @@ test1 (void)
   g_assert (GST_CAPS_IS_SIMPLE (caps) == TRUE);
   g_assert (gst_caps_is_fixed (caps) == TRUE);
   g_print ("%s\n", gst_caps_to_string (caps));
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 
   caps =
       gst_caps_new_full (gst_structure_new ("audio/raw", "_int", G_TYPE_INT,
@@ -67,7 +67,7 @@ test1 (void)
   g_assert (GST_CAPS_IS_SIMPLE (caps) == FALSE);
   g_assert (gst_caps_is_fixed (caps) == FALSE);
   g_print ("%s\n", gst_caps_to_string (caps));
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 
   caps = gst_caps_new_simple ("audio/raw", "_int", G_TYPE_INT, 100, NULL);
   g_assert (caps != NULL);
@@ -79,8 +79,8 @@ test1 (void)
   g_assert (gst_caps_is_fixed (caps2) == TRUE);
   g_print ("%s\n", gst_caps_to_string (caps));
   g_print ("%s\n", gst_caps_to_string (caps2));
-  gst_caps_free (caps);
-  gst_caps_free (caps2);
+  gst_caps_unref (caps);
+  gst_caps_unref (caps2);
 
   caps = gst_caps_new_simple ("audio/raw", "_int", G_TYPE_INT, 100, NULL);
   gst_caps_append (caps,
@@ -91,7 +91,7 @@ test1 (void)
   g_assert (GST_CAPS_IS_SIMPLE (caps) == FALSE);
   g_assert (gst_caps_is_fixed (caps) == FALSE);
   g_print ("%s\n", gst_caps_to_string (caps));
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 
   caps = gst_caps_new_simple ("audio/raw", "_int", G_TYPE_INT, 100, NULL);
   g_assert (caps != NULL);
@@ -102,7 +102,7 @@ test1 (void)
   g_assert (GST_CAPS_IS_SIMPLE (caps) == FALSE);
   g_assert (gst_caps_is_fixed (caps) == FALSE);
   g_print ("%s\n", gst_caps_to_string (caps));
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 }
 
 void
@@ -122,9 +122,9 @@ test2 (void)
           NULL), NULL);
   caps = gst_caps_intersect (caps1, caps2);
   g_print ("%s\n", gst_caps_to_string (caps));
-  gst_caps_free (caps);
-  gst_caps_free (caps1);
-  gst_caps_free (caps2);
+  gst_caps_unref (caps);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
 
 }
 
@@ -143,7 +143,7 @@ test3 (void)
   g_assert (gst_caps_is_any (caps1));
   g_assert (gst_caps_get_size (caps1) == 0);
 
-  gst_caps_free (caps1);
+  gst_caps_unref (caps1);
 }
 
 int
