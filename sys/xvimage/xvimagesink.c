@@ -307,6 +307,80 @@ gst_xvimagesink_xwindow_resize (GstXvImageSink *xvimagesink,
   g_mutex_unlock (xvimagesink->x_lock);
 }
 
+/* This function commits our internal colorbalance settings to our grabbed Xv
+   port. If the xcontext is not initialized yet it simply returns */
+static void
+gst_xvimagesink_update_colorbalance (GstXvImageSink *xvimagesink)
+{
+  GList *channels = NULL;
+  
+  g_return_if_fail (xvimagesink != NULL);
+  g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
+  
+  /* If we haven't initialized the X context we can't update anything */
+  if (xvimagesink->xcontext == NULL)
+    return;
+  
+  /* For each channel of the colorbalance we calculate the correct value
+     doing range conversion and then set the Xv port attribute to match our
+     values. */
+  channels = xvimagesink->xcontext->channels_list;
+  
+  while (channels)
+    {
+      if (channels->data && GST_IS_COLOR_BALANCE_CHANNEL (channels->data))
+        {
+          GstColorBalanceChannel *channel = NULL;
+          gint value = 0;
+          gdouble convert_coef;
+          
+          channel = GST_COLOR_BALANCE_CHANNEL (channels->data);
+          g_object_ref (channel);
+          
+          /* Our range conversion coef */
+          convert_coef = (channel->max_value - channel->min_value) / 2000;
+          
+          if (g_ascii_strcasecmp (channel->label, "XV_HUE") == 0)
+            {
+              value = (xvimagesink->hue + 1000) * convert_coef +
+                      channel->min_value;
+            }
+          else if (g_ascii_strcasecmp (channel->label, "XV_SATURATION") == 0)
+            {
+              value = (xvimagesink->saturation + 1000) * convert_coef +
+                      channel->min_value;
+            }
+          else if (g_ascii_strcasecmp (channel->label, "XV_CONTRAST") == 0)
+            {
+              value = (xvimagesink->contrast + 1000) * convert_coef +
+                      channel->min_value;
+            }
+          else if (g_ascii_strcasecmp (channel->label, "XV_BRIGHTNESS") == 0)
+            {
+              value = (xvimagesink->brightness + 1000) * convert_coef +
+                      channel->min_value;
+            }
+          else
+            {
+              g_warning ("got an unknown channel %s", channel->label);
+              g_object_unref (channel);
+              return;
+            }
+          
+          /* Committing to Xv port */
+          g_mutex_lock (xvimagesink->x_lock);
+          XvSetPortAttribute (xvimagesink->xcontext->disp,
+                              xvimagesink->xcontext->xv_port_id,
+                              XInternAtom (xvimagesink->xcontext->disp,
+                                           channel->label, 1), value);
+          g_mutex_unlock (xvimagesink->x_lock);
+          
+          g_object_unref (channel);
+        }
+      channels = g_list_next (channels);
+    }
+}
+
 /* This function handles XEvents that might be in the queue. It generates
    GstEvent that will be sent upstream in the pipeline to handle interactivity
    and navigation. It will also listen for configure events on the window to
@@ -662,7 +736,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
     XFree (xv_attr);
 
   g_mutex_unlock (xvimagesink->x_lock);
-    
+
   return xcontext;
 }
 
@@ -887,6 +961,8 @@ gst_xvimagesink_change_state (GstElement *element)
         xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink);
       if (!xvimagesink->xcontext)
         return GST_STATE_FAILURE;
+      else /* If context initialized correctly let's commit our colorbalance */
+        gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case GST_STATE_READY_TO_PAUSED:
       xvimagesink->time = 0;
@@ -1151,6 +1227,8 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
       g_warning ("xvimagesink was unable to obtain the X11 context.");
       return;
     }
+  else /* If context initialized correctly let's commit our colorbalance */
+    gst_xvimagesink_update_colorbalance (xvimagesink);
     
   /* Clear image pool as the images are unusable anyway */
   gst_xvimagesink_imagepool_clear (xvimagesink);
@@ -1261,14 +1339,29 @@ gst_xvimagesink_colorbalance_set_value (GstColorBalance        *balance,
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   g_return_if_fail (channel->label != NULL);
   
-  g_mutex_lock (xvimagesink->x_lock);
-  
-  XvSetPortAttribute (xvimagesink->xcontext->disp,
-                      xvimagesink->xcontext->xv_port_id,
-                      XInternAtom (xvimagesink->xcontext->disp,
-                                   channel->label, 1), value);
-  
-  g_mutex_unlock (xvimagesink->x_lock);
+  if (g_ascii_strcasecmp (channel->label, "XV_HUE") == 0)
+    {
+      xvimagesink->hue = value;
+    }
+  else if (g_ascii_strcasecmp (channel->label, "XV_SATURATION") == 0)
+    {
+      xvimagesink->saturation = value;
+    }
+  else if (g_ascii_strcasecmp (channel->label, "XV_CONTRAST") == 0)
+    {
+      xvimagesink->contrast = value;
+    }
+  else if (g_ascii_strcasecmp (channel->label, "XV_BRIGHTNESS") == 0)
+    {
+      xvimagesink->brightness = value;
+    }
+  else
+    {
+      g_warning ("got an unknown channel %s", channel->label);
+      return;
+    }
+    
+  gst_xvimagesink_update_colorbalance (xvimagesink);
 }
 
 static gint
@@ -1276,20 +1369,32 @@ gst_xvimagesink_colorbalance_get_value (GstColorBalance        *balance,
                                         GstColorBalanceChannel *channel)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (balance);
-  gint value;
+  gint value = 0;
   
   g_return_val_if_fail (xvimagesink != NULL, 0);
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), 0);
   g_return_val_if_fail (channel->label != NULL, 0);
   
-  g_mutex_lock (xvimagesink->x_lock);
-  
-  XvGetPortAttribute (xvimagesink->xcontext->disp,
-                      xvimagesink->xcontext->xv_port_id,
-                      XInternAtom (xvimagesink->xcontext->disp,
-                                   channel->label, 1), &value);
-  
-  g_mutex_unlock (xvimagesink->x_lock);
+  if (g_ascii_strcasecmp (channel->label, "XV_HUE") == 0)
+    {
+      value = xvimagesink->hue;
+    }
+  else if (g_ascii_strcasecmp (channel->label, "XV_SATURATION") == 0)
+    {
+      value = xvimagesink->saturation;
+    }
+  else if (g_ascii_strcasecmp (channel->label, "XV_CONTRAST") == 0)
+    {
+      value = xvimagesink->contrast;
+    }
+  else if (g_ascii_strcasecmp (channel->label, "XV_BRIGHTNESS") == 0)
+    {
+      value = xvimagesink->brightness;
+    }
+  else
+    {
+      g_warning ("got an unknown channel %s", channel->label);
+    }
   
   return value;
 }
@@ -1322,40 +1427,20 @@ gst_xvimagesink_set_property (GObject *object, guint prop_id,
   switch (prop_id)
     {
       case ARG_HUE:
-        g_mutex_lock (xvimagesink->x_lock);
-        XvSetPortAttribute (xvimagesink->xcontext->disp,
-                            xvimagesink->xcontext->xv_port_id,
-                            XInternAtom (xvimagesink->xcontext->disp,
-                                         "XV_HUE", 1),
-                            g_value_get_int (value));
-        g_mutex_unlock (xvimagesink->x_lock);
+        xvimagesink->hue = g_value_get_int (value);
+        gst_xvimagesink_update_colorbalance (xvimagesink);
         break;
       case ARG_CONTRAST:
-        g_mutex_lock (xvimagesink->x_lock);
-        XvSetPortAttribute (xvimagesink->xcontext->disp,
-                            xvimagesink->xcontext->xv_port_id,
-                            XInternAtom (xvimagesink->xcontext->disp,
-                                         "XV_CONTRAST", 1),
-                            g_value_get_int (value));
-        g_mutex_unlock (xvimagesink->x_lock);
+        xvimagesink->contrast = g_value_get_int (value);
+        gst_xvimagesink_update_colorbalance (xvimagesink);
         break;
       case ARG_BRIGHTNESS:
-        g_mutex_lock (xvimagesink->x_lock);
-        XvSetPortAttribute (xvimagesink->xcontext->disp,
-                            xvimagesink->xcontext->xv_port_id,
-                            XInternAtom (xvimagesink->xcontext->disp,
-                                         "XV_BRIGHTNESS", 1),
-                            g_value_get_int (value));
-        g_mutex_unlock (xvimagesink->x_lock);
+        xvimagesink->brightness = g_value_get_int (value);
+        gst_xvimagesink_update_colorbalance (xvimagesink);
         break;
       case ARG_SATURATION:
-        g_mutex_lock (xvimagesink->x_lock);
-        XvSetPortAttribute (xvimagesink->xcontext->disp,
-                            xvimagesink->xcontext->xv_port_id,
-                            XInternAtom (xvimagesink->xcontext->disp,
-                                         "XV_SATURATION", 1),
-                            g_value_get_int (value));
-        g_mutex_unlock (xvimagesink->x_lock);
+        xvimagesink->saturation = g_value_get_int (value);
+        gst_xvimagesink_update_colorbalance (xvimagesink);
         break;
       case ARG_DISPLAY:
         xvimagesink->display_name = g_strdup (g_value_get_string (value));
@@ -1379,56 +1464,16 @@ gst_xvimagesink_get_property (GObject *object, guint prop_id,
   switch (prop_id)
     {
       case ARG_HUE:
-        {
-          gint l_value;
-          g_mutex_lock (xvimagesink->x_lock);
-          XvGetPortAttribute (xvimagesink->xcontext->disp,
-                              xvimagesink->xcontext->xv_port_id,
-                              XInternAtom (xvimagesink->xcontext->disp,
-                                           "XV_HUE", 1),
-                              &l_value);
-          g_mutex_unlock (xvimagesink->x_lock);
-          g_value_set_int (value, l_value);
-        }
+        g_value_set_int (value, xvimagesink->hue);
         break;
       case ARG_CONTRAST:
-        {
-          gint l_value;
-          g_mutex_lock (xvimagesink->x_lock);
-          XvGetPortAttribute (xvimagesink->xcontext->disp,
-                              xvimagesink->xcontext->xv_port_id,
-                              XInternAtom (xvimagesink->xcontext->disp,
-                                           "XV_CONTRAST", 1),
-                              &l_value);
-          g_mutex_unlock (xvimagesink->x_lock);
-          g_value_set_int (value, l_value);
-        }
+        g_value_set_int (value, xvimagesink->contrast);
         break;
       case ARG_BRIGHTNESS:
-        {
-          gint l_value;
-          g_mutex_lock (xvimagesink->x_lock);
-          XvGetPortAttribute (xvimagesink->xcontext->disp,
-                              xvimagesink->xcontext->xv_port_id,
-                              XInternAtom (xvimagesink->xcontext->disp,
-                                           "XV_BRIGHTNESS", 1),
-                              &l_value);
-          g_mutex_unlock (xvimagesink->x_lock);
-          g_value_set_int (value, l_value);
-        }
+        g_value_set_int (value, xvimagesink->brightness);
         break;
       case ARG_SATURATION:
-        {
-          gint l_value;
-          g_mutex_lock (xvimagesink->x_lock);
-          XvGetPortAttribute (xvimagesink->xcontext->disp,
-                              xvimagesink->xcontext->xv_port_id,
-                              XInternAtom (xvimagesink->xcontext->disp,
-                                           "XV_SATURATION", 1),
-                              &l_value);
-          g_mutex_unlock (xvimagesink->x_lock);
-          g_value_set_int (value, l_value);
-        }
+        g_value_set_int (value, xvimagesink->saturation);
         break;
       case ARG_DISPLAY:
         g_value_set_string (value, g_strdup (xvimagesink->display_name));
@@ -1502,6 +1547,9 @@ gst_xvimagesink_init (GstXvImageSink *xvimagesink)
   xvimagesink->xwindow = NULL;
   xvimagesink->xvimage = NULL;
   
+  xvimagesink->hue = xvimagesink->saturation = 0;
+  xvimagesink->contrast = xvimagesink->brightness = 0;
+  
   xvimagesink->framerate = 0;
   
   xvimagesink->x_lock = g_mutex_new ();
@@ -1538,17 +1586,17 @@ gst_xvimagesink_class_init (GstXvImageSinkClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_VIDEOSINK);
 
   g_object_class_install_property (gobject_class, ARG_CONTRAST,
-    g_param_spec_double ("contrast", "Contrast", "contrast",
-                           -1000, 2, 1, G_PARAM_READWRITE));
+    g_param_spec_int ("contrast", "Contrast", "The contrast of the video",
+                      -1000, 1000, 0, G_PARAM_READWRITE));
   g_object_class_install_property(gobject_class, ARG_BRIGHTNESS,
-    g_param_spec_double ("brightness", "Brightness", "brightness",
-                         -1, 1, 0, G_PARAM_READWRITE));
+    g_param_spec_int ("brightness", "Brightness", "The brightness of the video",
+                      -1000, 1000, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_HUE,
-    g_param_spec_double ("hue", "Hue", "hue",
-                         -1, 1, 0, G_PARAM_READWRITE));
+    g_param_spec_int ("hue", "Hue", "The hue of the video",
+                      -1000, 1000, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_SATURATION,
-    g_param_spec_double ("saturation", "Saturation", "saturation",
-                         0, 2, 1, G_PARAM_READWRITE));
+    g_param_spec_int ("saturation", "Saturation", "The saturation of the video",
+                      -1000, 1000, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_DISPLAY,
     g_param_spec_string ("display", "Display", "X Display name",
                          NULL, G_PARAM_READWRITE));

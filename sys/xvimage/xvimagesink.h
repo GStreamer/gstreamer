@@ -129,6 +129,12 @@ struct _GstXvImageSink {
   GstXvImage *xvimage;
   
   gdouble framerate;
+  
+  gint brightness;
+  gint contrast;
+  gint hue;
+  gint saturation;
+  
   GMutex *x_lock;
   
   /* Unused */

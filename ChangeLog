@@ -1,3 +1,18 @@
+2004-01-16  Julien MOUTTE <julien@moutte.net>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_update_colorbalance),
+	(gst_xvimagesink_xcontext_get), (gst_xvimagesink_change_state),
+	(gst_xvimagesink_set_xwindow_id),
+	(gst_xvimagesink_colorbalance_set_value),
+	(gst_xvimagesink_colorbalance_get_value),
+	(gst_xvimagesink_set_property), (gst_xvimagesink_get_property),
+	(gst_xvimagesink_init), (gst_xvimagesink_class_init): Implementing
+	correct colorbalance properties. They can now be set when the element
+	is still in NULL state. The values will be committed to the Xv Port
+	when xcontext is initialized.
+	* sys/xvimage/xvimagesink.h: Added hue, saturation, contrast,
+	brightness int values in the GstXvImagesink structure.
+
 2004-01-16  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/Makefile.am:
