@@ -44,7 +44,7 @@ _binref {_identifier}[[:space:]]*"."[[:space:]]*"("
 /* links */
 _mimechar ([[:alnum:]-])
 _mimetype ({_mimechar}+"/"{_mimechar}+)|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
-_capschar ("\\".)|([^[:space:]\;!\,\(\)\]\[])
+_capschar ("\\".)|([^\;!])
 _capsstring {_capschar}+|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
 _caps {_mimetype}(","[^!]|{_capsstring})*
 _link ("!"[[:space:]]*{_caps}([[:space:]]*";"[[:space:]]*{_caps})*[[:space:]]*"!")|("!")
