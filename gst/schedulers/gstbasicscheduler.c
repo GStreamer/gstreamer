@@ -983,8 +983,11 @@ gst_basic_scheduler_reset (GstScheduler *sched)
   GList *elements = GST_BASIC_SCHEDULER_CAST (sched)->elements;
 
   while (elements) {
-    /* FIXME: wingo, do we need to destroy the cothreads here? */
-    GST_ELEMENT_THREADSTATE (elements->data) = NULL;
+    GstElement *element = GST_ELEMENT (elements->data);
+    if (GST_ELEMENT_THREADSTATE (element)) {
+      do_cothread_destroy (GST_ELEMENT_THREADSTATE (element));
+      GST_ELEMENT_THREADSTATE (element) = NULL;
+    }
     elements = g_list_next (elements);
   }
   
