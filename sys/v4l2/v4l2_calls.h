@@ -125,8 +125,7 @@ gboolean	gst_v4l2_set_display		(GstV4l2Element *v4l2element,
 						 const gchar    *display);
 gboolean	gst_v4l2_set_window		(GstV4l2Element *v4l2element,
 						 gint x,         gint y,
-						 gint w,         gint h);
-gboolean	gst_v4l2_set_clips		(GstV4l2Element *v4l2element,
+						 gint w,         gint h,
 						 struct v4l2_clip *clips,
 						 gint            num_clips);
 gboolean	gst_v4l2_enable_overlay		(GstV4l2Element *v4l2element,

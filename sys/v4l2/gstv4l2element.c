@@ -61,7 +61,6 @@ enum {
 	ARG_DEVICE_HAS_CODEC,
 	ARG_DISPLAY,
 	ARG_VIDEOWINDOW,
-	ARG_CLIPPING,
 	ARG_DO_OVERLAY,
 };
 
@@ -185,9 +184,6 @@ gst_v4l2element_class_init (GstV4l2ElementClass *klass)
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VIDEOWINDOW,
 		g_param_spec_pointer("videowindow","videowindow","videowindow",
 		G_PARAM_WRITABLE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CLIPPING,
-		g_param_spec_pointer("videowindowclip","videowindowclip","videowindowclip",
-		G_PARAM_WRITABLE));
 
 	gobject_class->set_property = gst_v4l2element_set_property;
 	gobject_class->get_property = gst_v4l2element_get_property;
@@ -278,28 +274,11 @@ gst_v4l2element_set_property (GObject      *object,
 			break;
 		case ARG_VIDEOWINDOW:
 			if (GST_V4L2_IS_OPEN(v4l2element)) {
+				GByteArray *array = (GByteArray *) g_value_get_pointer(value);
+				struct v4l2_clip *clips = (struct v4l2_clip *) array->data;
 				gst_v4l2_set_window(v4l2element,
-					((GstV4l2Rect*)g_value_get_pointer(value))->x,
-					((GstV4l2Rect*)g_value_get_pointer(value))->y,
-					((GstV4l2Rect*)g_value_get_pointer(value))->w,
-					((GstV4l2Rect*)g_value_get_pointer(value))->h);
-			}
-			break;
-		case ARG_CLIPPING:
-			if (GST_V4L2_IS_OPEN(v4l2element)) {
-				gint i;
-				struct v4l2_clip *clips;
-				GList *list = (GList*)g_value_get_pointer(value);
-				clips = g_malloc(sizeof(struct v4l2_clip) * g_list_length(list));
-				for (i=0;i<g_list_length(list);i++)
-				{
-					clips[i].x = ((GstV4l2Rect*)g_list_nth_data(list, i))->x;
-					clips[i].y = ((GstV4l2Rect*)g_list_nth_data(list, i))->y;
-					clips[i].width = ((GstV4l2Rect*)g_list_nth_data(list, i))->w;
-					clips[i].height = ((GstV4l2Rect*)g_list_nth_data(list, i))->h;
-				}
-				gst_v4l2_set_clips(v4l2element, clips, g_list_length(list));
-        			g_free(clips);
+					clips->x, clips->y, clips->width, clips->height,
+					&clips[1], array->len/sizeof(struct v4l2_clip)-1);
 			}
 			break;
 		case ARG_DO_OVERLAY:
