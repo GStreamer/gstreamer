@@ -10,7 +10,7 @@ libgstvideo4linux_la_SOURCES = \
 	gstv4ltuner.c \
 	gstv4lxoverlay.c \
 	gstv4lcolorbalance.c
-libgstvideo4linux_la_CFLAGS = $(GST_CFLAGS)
+libgstvideo4linux_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS)
 libgstvideo4linux_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/libgstinterfaces-@GST_MAJORMINOR@.la
 libgstvideo4linux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
