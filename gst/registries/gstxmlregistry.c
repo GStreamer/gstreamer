@@ -479,13 +479,19 @@ gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
   if (mode == GST_XML_REGISTRY_READ) {
     if (!(gst_registry->flags & GST_REGISTRY_EXISTS))
     {
+      /* if it's not writable, then don't bother */
+      if (!(gst_registry->flags & GST_REGISTRY_WRITABLE))
+      {
+        GST_INFO (GST_CAT_GST_INIT, "Registry isn't writable");
+	return FALSE;
+      }
       GST_INFO (GST_CAT_GST_INIT, "Registry doesn't exist, trying to build...");
       gst_registry_rebuild (gst_registry);
       gst_registry_save (gst_registry);
       /* FIXME: verify that the flags actually get updated ! */
       if (!(gst_registry->flags & GST_REGISTRY_EXISTS))
       {
-	return (FALSE);
+	return FALSE;
       }
     }
     /* at this point we know it exists */

@@ -140,7 +140,8 @@ gst_init (int *argc, char **argv[])
  * @argv: pointer to application's argv
  * @popt_options: pointer to a popt table to append
  *
- * Initializes the GStreamer library, parsing the options, setting up internal path lists,
+ * Initializes the GStreamer library, parsing the options, 
+ * setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
  */
 void
@@ -165,7 +166,7 @@ gst_init_with_popt_table (int *argc, char **argv[], const struct poptOption *pop
 
   if (!argc || !argv) {
     if (argc || argv)
-      g_warning ("gst_init: Only one of arg or argv was NULL");
+      g_warning ("gst_init: Only one of argc or argv was NULL");
     
     init_pre();
     init_post();
@@ -277,7 +278,7 @@ init_pre (void)
   const gchar *homedir;
   gchar *user_reg;
 
-  g_type_init();
+  g_type_init ();
 
   _global_registry = gst_xml_registry_new ("global_registry", GLOBAL_REGISTRY_FILE);
 
@@ -297,6 +298,22 @@ init_pre (void)
   user_reg = g_strjoin ("/", homedir, LOCAL_REGISTRY_FILE, NULL);
   _user_registry = gst_xml_registry_new ("user_registry", user_reg);
 
+#ifndef GST_DISABLE_REGISTRY
+  /* this test is a hack; gst-register sets this to false
+   * so this is a test for the current instance being gst-register */
+  if (_gst_registry_auto_load == TRUE)
+  {
+    /* do a sanity check here; either one of the two registries should exist */
+    if (!g_file_test (user_reg, G_FILE_TEST_IS_REGULAR))
+      if (!g_file_test (GLOBAL_REGISTRY_FILE, G_FILE_TEST_IS_REGULAR))
+      {
+        g_print ("Couldn't find user registry %s or global registry %s\n",
+	         user_reg, GLOBAL_REGISTRY_FILE);
+        g_error ("Please run gst-register either as root or user");
+      }
+  }
+#endif
+	  
   g_free (user_reg);
 }
 
@@ -329,6 +346,14 @@ static GstPluginDesc plugin_desc = {
   gst_register_core_elements
 };                         
 
+/*
+ * this bit handles:
+ * - initalization of threads if we use them
+ * - log handler
+ * - initial output
+ * - initializes gst_format
+ * - registers a bunch of types for gst_objects
+ */
 static void
 init_post (void)
 {
@@ -346,9 +371,10 @@ init_post (void)
   }
   
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
-  g_log_set_handler(g_log_domain_gstreamer, llf, debug_log_handler, NULL);
+  g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
   
-  GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library version %s %s",
+  GST_INFO (GST_CAT_GST_INIT, 
+            "Initializing GStreamer Core Library version %s %s",
             GST_VERSION, _gst_use_threads?"":"(no threads)");
   
   _gst_format_initialize ();
@@ -366,7 +392,7 @@ init_post (void)
 #endif
 
 
-  plugin_path = g_getenv("GST_PLUGIN_PATH");
+  plugin_path = g_getenv ("GST_PLUGIN_PATH");
   split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func, _user_registry);
 
   /* register core plugins */
