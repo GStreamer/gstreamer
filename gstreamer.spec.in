@@ -130,8 +130,11 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_libdir}/libgstreamer-%{version}.so.*
 %{_libdir}/gst/libgstautoplugcache*.so*
 %{_libdir}/gst/libgstautoplugger*.so*
-%{_libdir}/gst/libgstbasicscheduler*.so*
-%{_libdir}/gst/libgststandardscheduler*.so*
+%{_libdir}/gst/libgstbasicomega*.so*
+%{_libdir}/gst/libgstfastomega*.so*
+{_libdir}/gst/libgstoptomega*.so*
+%{_libdir}/gst/libgstbasicwingo*.so*
+%{_libdir}/gst/libgstfastwingo*.so*
 %{_libdir}/gst/libgstelements*.so*
 %{_libdir}/gst/libgsttypes*.so*
 %{_libdir}/gst/libgststaticautoplug*.so*
@@ -209,6 +212,8 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 
 %changelog
+* Fri Sep 13 2002 Christian F.K. Schaller <Uraeus@linuxrising.org>
+- Fixed the schedulers after the renaming
 * Sun Sep 08 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - added transfig to the BuildRequires:
 
