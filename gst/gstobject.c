@@ -58,7 +58,9 @@ static GType		gst_signal_object_get_type	(void);
 static void		gst_signal_object_class_init	(GstSignalObjectClass *klass);
 static void		gst_signal_object_init		(GstSignalObject *object);
 
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
 static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
+#endif
 
 static void		gst_object_class_init		(GstObjectClass *klass);
 static void		gst_object_init			(GstObject *object);
