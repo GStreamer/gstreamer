@@ -1313,9 +1313,11 @@ pkgconfig/Makefile
 )
 AC_OUTPUT
 
-echo -e "configure: *** Plug-ins that will be built : $GST_PLUGINS_YES"
+echo -n "configure: *** Plug-ins that will be built :"
+echo -e "$GST_PLUGINS_YES" | sort
 echo
-echo -e "configure: *** Plug-ins that will not be built : $GST_PLUGINS_NO"
+echo -n "configure: *** Plug-ins that will not be built :"
+echo -e "$GST_PLUGINS_NO" | sort
 echo
 if test "x$BUILD_EXTERNAL" = "xno"; then
   echo "configure: *** No external plug-ins will be built"
