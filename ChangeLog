@@ -1,5 +1,16 @@
 2004-01-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/snapshot/Makefile.am:
+	* ext/snapshot/gstsnapshot.c: (gst_snapshot_sinkconnect),
+	(gst_snapshot_chain):
+	* ext/snapshot/gstsnapshot.h:
+	  This has to be a joke... Snapshot should be connected to a tee,
+	  colorspace element before it and EOS after that, where the other
+	  src of the tee receives normal data.
+	  The current way is *wrong*.
+
+2004-01-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/hermes/gsthermescolorspace.c:
 	  Fix another compile error. Same as below.
 
