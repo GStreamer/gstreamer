@@ -1,3 +1,7 @@
+2004-01-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/modplug/gstmodplug.cc: fix element description
+
 2004-01-07  Julien MOUTTE,,,  <julien@moutte.net>
 
 	* examples/gstplay/player.c: (got_time_tick), (got_stream_length),
