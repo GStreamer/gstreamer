@@ -368,6 +368,8 @@ gst_gnomevfssrc_init (GstGnomeVFSSrc * gnomevfssrc)
 static void
 gst_gnomevfssrc_dispose (GObject * object)
 {
+  GstGnomeVFSSrc *src = GST_GNOMEVFSSRC (object);
+
   g_static_mutex_lock (&count_lock);
   ref_count--;
   if (ref_count == 0 && vfs_owner) {
@@ -376,6 +378,9 @@ gst_gnomevfssrc_dispose (GObject * object)
     }
   }
   g_static_mutex_unlock (&count_lock);
+
+  g_free (src->filename);
+  src->filename = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
