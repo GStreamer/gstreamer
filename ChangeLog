@@ -1,5 +1,11 @@
 2004-07-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps),
+	(gst_riff_create_video_template_caps):
+	Fix the template caps to include some more media types.
+
+2004-07-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_get_type),
 	(gst_decode_bin_class_init), (gst_decode_bin_factory_filter),
 	(compare_ranks), (print_feature), (gst_decode_bin_init),

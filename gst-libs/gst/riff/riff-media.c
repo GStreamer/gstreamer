@@ -335,6 +335,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
 {
   gboolean block_align = FALSE;
   GstCaps *caps = NULL;
+  gint rate_min = 8000, rate_max = 96000;
+  gint channels_max = 2;
 
   switch (codec_id) {
     case GST_RIFF_WAVE_FORMAT_MPEGL3:  /* mp3 */
@@ -419,6 +421,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
       break;
 
     case GST_RIFF_WAVE_FORMAT_A52:
+      channels_max = 6;
       caps = gst_caps_new_simple ("audio/x-ac3", NULL);
       if (codec_name)
         *codec_name = g_strdup ("AC3");
@@ -438,8 +441,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
           "block_align", G_TYPE_INT, strf->blockalign, NULL);
   } else {
     gst_caps_set_simple (caps,
-        "rate", GST_TYPE_INT_RANGE, 8000, 96000,
-        "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+        "rate", GST_TYPE_INT_RANGE, rate_min, rate_max,
+        "channels", GST_TYPE_INT_RANGE, 1, channels_max, NULL);
     if (block_align)
       gst_caps_set_simple (caps,
           "block_align", GST_TYPE_INT_RANGE, 1, 8192, NULL);
@@ -495,6 +498,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('M', 'P', 'E', 'G'),
     GST_MAKE_FOURCC ('H', '2', '6', '3'),
     GST_MAKE_FOURCC ('D', 'I', 'V', 'X'),
+    GST_MAKE_FOURCC ('D', 'X', '5', '0'),
     GST_MAKE_FOURCC ('X', 'V', 'I', 'D'),
     GST_MAKE_FOURCC ('3', 'I', 'V', '1'),
     GST_MAKE_FOURCC ('c', 'v', 'i', 'd'),
