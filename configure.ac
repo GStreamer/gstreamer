@@ -79,11 +79,9 @@ esac],
 
 if test "x$EXPERIMENTAL" = "$xyes"; then
   AC_MSG_WARN(building experimental plugins)
-  USE_FLACLIB="yes"
   USE_LIBMIKMOD="yes"
 else
   AC_MSG_NOTICE(not building experimental plugins)
-  USE_FLACLIB="no"
   USE_LIBMIKMOD="no"
 fi
 
