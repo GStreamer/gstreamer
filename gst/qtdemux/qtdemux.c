@@ -2525,10 +2525,12 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data,
           "mpegversion", G_TYPE_INT, 4, NULL);
     case GST_MAKE_FOURCC ('Q', 'D', 'M', '2'):
       /* FIXME: QDesign music version 2 (no constant) */
-      return gst_caps_new_simple ("audio/x-qdm2",
-          "framesize", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 52),
-          "bitrate", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 40),
-          "blocksize", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 44), NULL);
+      if (data)
+        return gst_caps_new_simple ("audio/x-qdm2",
+            "framesize", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 52),
+            "bitrate", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 40),
+            "blocksize", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 44), NULL);
+      return gst_caps_new_simple ("audio/x-qdm2", NULL);
     case GST_MAKE_FOURCC ('a', 'g', 's', 'm'):
       /* GSM */
       return gst_caps_new_simple ("audio/x-gsm", NULL);
