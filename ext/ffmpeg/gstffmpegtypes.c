@@ -77,8 +77,8 @@ register_standard_formats (void)
   global_types = g_hash_table_new (g_str_hash, g_str_equal);
 
   ADD_TYPE ("avi",    	GST_CAPS_NEW ("ffmpeg_type_avi",  "video/avi", NULL));
-  ADD_TYPE ("mpeg",   	GST_CAPS_NEW ("ffmpeg_type_mpeg", "video/mpeg", 
-			  		"systemstream", GST_PROPS_BOOLEAN (TRUE)));
+/*  ADD_TYPE ("mpeg",   	GST_CAPS_NEW ("ffmpeg_type_mpeg", "video/mpeg", 
+			  		"systemstream", GST_PROPS_BOOLEAN (TRUE)));*/
   ADD_TYPE ("mpegts", 	GST_CAPS_NEW ("ffmpeg_type_mpegts", "video/x-mpegts", 
 			  		"systemstream", GST_PROPS_BOOLEAN (TRUE)));
   ADD_TYPE ("rm",    	GST_CAPS_NEW ("ffmpeg_type_rm",  "audio/x-pn-realaudio", NULL));
