@@ -214,8 +214,8 @@ MPAStream::FillAUbuffer (unsigned int frames_to_buffer)
 	AU_start = bs.bitcount () - 11;
 	syncword = syncword | next;
 	if (syncword != AUDIO_SYNCWORD) {
-	  mjpeg_warn ("Failed to find start of next stream at %lld prev %lld !", AU_start / 8,
-		      prev_offset / 8);
+	  mjpeg_warn ("Failed to find start of next stream at %d prev %d !", (int) AU_start / 8,
+		      (int)prev_offset / 8);
 	  break;
 	}
       } else
@@ -267,7 +267,7 @@ MPAStream::Close ()
 {
   stream_length = AU_start >> 3;
   mjpeg_info ("AUDIO_STATISTICS: %02x", stream_id);
-  mjpeg_info ("Audio stream length %lld bytes.", stream_length);
+  mjpeg_info ("Audio stream length %d bytes.", (int)stream_length);
   mjpeg_info ("Syncwords      : %8u", num_syncword);
   mjpeg_info ("Frames         : %8u padded", num_frames[0]);
   mjpeg_info ("Frames         : %8u unpadded", num_frames[1]);

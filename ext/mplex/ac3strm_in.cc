@@ -250,7 +250,7 @@ AC3Stream::Close ()
 {
   stream_length = AU_start >> 3;
   mjpeg_info ("AUDIO_STATISTICS: %02x", stream_id);
-  mjpeg_info ("Audio stream length %lld bytes.", stream_length);
+  mjpeg_info ("Audio stream length %d bytes.", (int)stream_length);
   mjpeg_info ("Syncwords      : %8u", num_syncword);
   mjpeg_info ("Frames         : %8u padded", num_frames[0]);
   mjpeg_info ("Frames         : %8u unpadded", num_frames[1]);

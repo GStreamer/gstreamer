@@ -165,7 +165,7 @@ LPCMStream::Close ()
 {
   stream_length = AU_start / 8;
   mjpeg_info ("AUDIO_STATISTICS: %02x", stream_id);
-  mjpeg_info ("Audio stream length %lld bytes.", stream_length);
+  mjpeg_info ("Audio stream length %d bytes.", (int)stream_length);
   mjpeg_info ("Frames         : %8u ", num_frames[0]);
   bs.close ();
 }

@@ -32,8 +32,8 @@ static void
 marker_bit (IBitStream & bs, unsigned int what)
 {
   if (what != bs.get1bit ()) {
-    mjpeg_error ("Illegal MPEG stream at offset (bits) %lld: supposed marker bit not found.",
-		 bs.bitcount ());
+    mjpeg_error ("Illegal MPEG stream at offset (bits) %d: supposed marker bit not found.",
+		 (int)bs.bitcount ());
     exit (1);
   }
 }
@@ -312,7 +312,7 @@ VideoStream::Close ()
   /* Peak bit rate in 50B/sec units... */
   peak_bit_rate = ((max_bits_persec / 8) / 50);
   mjpeg_info ("VIDEO_STATISTICS: %02x", stream_id);
-  mjpeg_info ("Video Stream length: %11llu bytes", stream_length / 8);
+  mjpeg_info ("Video Stream length: %11u bytes", (int)stream_length / 8);
   mjpeg_info ("Sequence headers: %8u", num_sequence);
   mjpeg_info ("Sequence ends   : %8u", num_seq_end);
   mjpeg_info ("No. Pictures    : %8u", num_pictures);

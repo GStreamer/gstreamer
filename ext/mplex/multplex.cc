@@ -445,8 +445,8 @@ OutputStream::Init (vector < ElementaryStream * >*strms, PS_Stream *strm)
 
   video_delay = delay + static_cast < clockticks > (opt_video_offset * CLOCKS / 1000);
   audio_delay = delay + static_cast < clockticks > (opt_audio_offset * CLOCKS / 1000);
-  mjpeg_info ("Sectors = %d Video delay = %lld Audio delay = %lld",
-	      sectors_delay, video_delay / 300, audio_delay / 300);
+  mjpeg_info ("Sectors = %d Video delay = %d Audio delay = %d",
+	      sectors_delay, (int)video_delay / 300, (int)audio_delay / 300);
 
 
   //
@@ -804,8 +804,8 @@ OutputStream::OutputMultiplex ()
 	    if (master->NextAUType () == IFRAME) {
 	      seg_state = runout_segment;
 	      runout_PTS = master->NextRequiredPTS ();
-	      mjpeg_debug ("Running out to (raw) PTS %lld SCR=%lld",
-			   runout_PTS / 300, current_SCR / 300);
+	      mjpeg_debug ("Running out to (raw) PTS %d SCR=%d",
+			   (int)runout_PTS / 300, (int)current_SCR / 300);
 	      running_out = true;
 	      seg_state = runout_segment;
 	    }
@@ -818,7 +818,7 @@ OutputStream::OutputMultiplex ()
 	    }
 
 	    runout_PTS = master->NextRequiredPTS ();
-	    mjpeg_debug ("Running out to %lld SCR=%lld", runout_PTS / 300, current_SCR / 300);
+	    mjpeg_debug ("Running out to %d SCR=%d", (int)runout_PTS / 300, (int)current_SCR / 300);
 	    MuxStatus (LOG_INFO);
 	    running_out = true;
 	    seg_state = runout_segment;
@@ -869,8 +869,8 @@ OutputStream::OutputMultiplex ()
       despatch->OutputSector ();
       video_first = false;
       if (current_SCR >= earliest && underrun_ignore == 0) {
-	mjpeg_warn ("Stream %02x: data will arrive too late sent(SCR)=%lld required(DTS)=%d",
-		    despatch->stream_id, current_SCR / 300, (int) earliest / 300);
+	mjpeg_warn ("Stream %02x: data will arrive too late sent(SCR)=%d required(DTS)=%d",
+		    despatch->stream_id, (int) current_SCR / 300, (int) earliest / 300);
 	MuxStatus (LOG_WARN);
 	// Give the stream a chance to recover
 	underrun_ignore = 300;
@@ -955,7 +955,7 @@ OutputStream::Close ()
   // Tidy up
   OutputSuffix ();
   psstrm->Close ();
-  mjpeg_info ("Multiplex completion at SCR=%lld.", current_SCR / 300);
+  mjpeg_info ("Multiplex completion at SCR=%d.", (int) current_SCR / 300);
   MuxStatus (LOG_INFO);
   for (str = estreams->begin (); str < estreams->end (); ++str) {
     (*str)->Close ();
