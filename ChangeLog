@@ -1,5 +1,32 @@
 2005-01-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/amrnb/Makefile.am:
+	* ext/amrnb/amrnb.c: (plugin_init):
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_get_type),
+	(gst_amrnbdec_base_init), (gst_amrnbdec_class_init),
+	(gst_amrnbdec_init), (gst_amrnbdec_link), (gst_amrnbdec_chain),
+	(gst_amrnbdec_state_change):
+	* ext/amrnb/amrnbdec.h:
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_get_type),
+	(gst_amrnbparse_base_init), (gst_amrnbparse_class_init),
+	(gst_amrnbparse_init), (gst_amrnbparse_formats),
+	(gst_amrnbparse_querytypes), (gst_amrnbparse_query),
+	(gst_amrnbparse_handle_event), (gst_amrnbparse_reserve),
+	(gst_amrnbparse_loop), (gst_amrnbparse_state_change):
+	* ext/amrnb/amrnbparse.h:
+	  Add support for AMR-NB (mobile phone audio format; #155163, #163286).
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	  Add AMR-NB/-WB raw formats.
+	* ext/alsa/gstalsa.c: (gst_alsa_link):
+	  Keep valid time when changing format.
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(qtdemux_parse_trak):
+	  Add some more format-specific options (#140141, #143555, #155163).
+
+2005-01-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/matroska/matroska-demux.c:
 	(gst_matroska_demux_parse_blockgroup):
 	  Fix logic error in timing of subtitle stream synchronization.

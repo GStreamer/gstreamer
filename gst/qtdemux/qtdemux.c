@@ -78,6 +78,7 @@ struct _QtDemuxStream
 {
   guint32 subtype;
   GstCaps *caps;
+  guint32 fourcc;
   GstPad *pad;
   int n_samples;
   QtDemuxSample *samples;
@@ -770,11 +771,14 @@ gst_qtdemux_loop_header (GstElement * element)
            */
         }
 
-        GST_BUFFER_TIMESTAMP (buf) =
-            stream->samples[stream->sample_index].timestamp;
-        qtdemux->last_ts = GST_BUFFER_TIMESTAMP (buf);
-        GST_BUFFER_DURATION (buf) =
-            stream->samples[stream->sample_index].duration;
+        /* timestamps of AMR aren't known... */
+        if (stream->fourcc != GST_MAKE_FOURCC ('s', 'a', 'm', 'r')) {
+          GST_BUFFER_TIMESTAMP (buf) =
+              stream->samples[stream->sample_index].timestamp;
+          qtdemux->last_ts = GST_BUFFER_TIMESTAMP (buf);
+          GST_BUFFER_DURATION (buf) =
+              stream->samples[stream->sample_index].duration;
+        }
         if (qtdemux->need_flush) {
           gst_pad_event_default (qtdemux->sinkpad,
               gst_event_new (GST_EVENT_FLUSH));
@@ -2022,7 +2026,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     GST_LOG ("frame count:   %u",
         QTDEMUX_GUINT16_GET (stsd->data + offset + 48));
 
-    fourcc = QTDEMUX_FOURCC_GET (stsd->data + offset + 4);
+    stream->fourcc = fourcc = QTDEMUX_FOURCC_GET (stsd->data + offset + 4);
     stream->caps = qtdemux_video_caps (qtdemux, fourcc, stsd->data);
 
     esds = NULL;
@@ -2050,9 +2054,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     GST_LOG ("st type:          " GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4)));
 
-    fourcc = QTDEMUX_FOURCC_GET (stsd->data + 16 + 4);
-
+    stream->fourcc = fourcc = QTDEMUX_FOURCC_GET (stsd->data + 16 + 4);
     offset = 32;
+
     GST_LOG ("version/rev:      %08x",
         QTDEMUX_GUINT32_GET (stsd->data + offset));
     version = QTDEMUX_GUINT32_GET (stsd->data + offset);
@@ -2098,6 +2102,17 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         stream->compression = 3;
       if (fourcc == GST_MAKE_FOURCC ('i', 'm', 'a', '4'))
         stream->compression = 4;
+      if (fourcc == GST_MAKE_FOURCC ('s', 'a', 'm', 'r')) {
+        stream->n_channels = 1;
+        stream->rate = 8000;
+        stream->bytes_per_frame <<= 3;
+      }
+      if (fourcc == GST_MAKE_FOURCC ('u', 'l', 'a', 'w'))
+        stream->compression = 2;
+      if (fourcc == GST_MAKE_FOURCC ('a', 'g', 's', 'm')) {
+        stream->bytes_per_frame *= 33;
+        stream->compression = 320;
+      }
     } else {
       GST_ERROR ("unknown version %08x", version);
     }
