@@ -4,6 +4,164 @@
 <chapter id="chapter-other-sink" xreflabel="Writing a Sink">
   <title>Writing a Sink</title>
   <para>
-    FIXME: write.
+    Sinks are output elements that, opposite to sources, have no source
+    pads and one or more (usually one) sink pad. They can be sound card
+    outputs, disk writers, etc. This chapter will discuss the basic
+    implementation of sink elements.
   </para>
+
+  <sect1 id="other-sink-processing" xreflabel="Data processing, events, synchronization and clocks">
+    <title>Data processing, events, synchronization and clocks</title>
+    <para>
+      Except for corner cases, sink elements will be <function>_chain
+      ()</function>-based elements. The concept of such elements has
+      been discussed before in detail, so that will be skipped here. What
+      is very important in sink elements, specifically in real-time audio
+      and video sources (such as <classname>osssink</classname> or
+      <classname>ximagesink</classname>), is event handling in the
+      <function>_chain ()</function>-function, because most elements rely
+      on EOS-handling of the sink element, and because A/V synchronization
+      can only be perfect if the element takes this into account.
+    </para>
+    <para>
+      How to achieve synchronization between streams depends on whether
+      you're a clock-providing or a clock-receiving element. If you're
+      the clock provider, you can do with time whatever you want. Correct
+      handling would mean that you check whether the end of the previous
+      buffer (if any) and the start of the current buffer are the same.
+      If so, there's no gap between the two and you can continue playing
+      right away. If there is a gap, then you'll need to wait for your
+      clock to reach that time. How to do that depends on the element
+      type. In the case of audio output elements, you would output silence
+      for a while. In the case of video, you would show background color.
+      In case of subtitles, show no subtitles at all.
+    </para>
+    <para>
+      In the case that the provided clock and the received clock are not
+      the same (or in the case where your element provides no clock, which
+      is the same), you simply wait for the clock to reach the timestamp of
+      the current buffer and then you handle the data in it.
+    </para>
+    <para>
+      A simple data handling function would look like this:
+    </para>
+    <programlisting>
+static void
+gst_my_sink_chain (GstPad  *pad,
+		   GstData *data)
+{
+  GstMySink *sink = GST_MY_SINK (gst_pad_get_parent (pad));
+  GstBuffer *buf;
+  GstClockTime time;
+
+  /* only needed if the element is GST_EVENT_AWARE */
+  if (GST_IS_EVENT (data)) {
+    GstEvent *event = GST_EVENT (data);
+
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_EOS:
+        [ if your element provides a clock, disable (inactivate) it here ]
+        /* pass-through */
+
+      default:
+        /* the default handler handles discontinuities, even if your
+         * element provides a clock! */
+        gst_pad_event_default (pad, event);
+        break;
+    }
+
+    return;
+  }
+
+  buf = GST_BUFFER (data);
+  if (GST_BUFFER_TIME_IS_VALID (buf))
+    time = GST_BUFFER_TIMESTAMP (buf);
+  else
+    time = sink->expected_next_time;
+
+  /* Synchronization - the property is only useful in case the
+   * element has the option of not syncing. So it is not useful
+   * for hardware-sync (clock-providing) elements. */
+  if (sink->sync) {
+    /* This check is only needed if you provide a clock. Else,
+     * you can always execute the 'else' clause. */
+    if (sink->provided_clock == sink->received_clock) {
+      /* GST_SECOND / 10 is 0,1 sec, it's an arbitrary value. The
+       * casts are needed because else it'll be unsigned and we
+       * won't detect negative values. */
+      if (llabs ((gint64) sink->expected_next_time - (gint64) time) >
+            (GST_SECOND / 10)) {
+        /* so are we ahead or behind? */
+        if (time > sink->expected_time) {
+          /* we need to wait a while... In case of audio, output
+           * silence. In case of video, output background color.
+           * In case of subtitles, display nothing. */
+          [..]
+        } else {
+          /* Drop data. */
+          [..]
+        }
+      }
+    } else {
+      /* You could do more sophisticated things here, but we'll
+       * keep it simple for the purpose of the example. */
+      gst_element_wait (GST_ELEMENT (sink), time);
+    }
+  }
+
+  /* And now handle the data. */
+[..]
+}
+    </programlisting>
+  </sect1>
+
+  <sect1 id="other-sink-buffers" xreflabel="Special memory">
+    <title>Special memory</title>
+    <para>
+      Like source elements, sink elements can sometimes provide externally
+      allocated (such as X-provided or DMA'able) memory to elements earlier
+      in the pipeline, and thereby prevent the need for
+      <function>memcpy ()</function> for incoming data. We do this by
+      providing a pad-allocate-buffer function.
+    </para>
+    <programlisting>
+static GstBuffer *	gst_my_sink_buffer_allocate	(GstPad *pad,
+							 guint64 offset,
+							 guint   size);
+
+static void
+gst_my_sink_init (GstMySink *sink)
+{
+[..]
+  gst_pad_set_bufferalloc_function (sink->sinkpad,
+                                    gst_my_sink_buffer_allocate);
+}
+
+static void
+gst_my_sink_buffer_free (GstBuffer *buf)
+{
+  GstMySink *sink = GST_MY_SINK (GST_BUFFER_PRIVATE (buf));
+
+  /* Do whatever is needed here. */
+[..]
+}
+
+static GstBuffer *
+gst_my_sink_buffer_allocate (GstPad *pad,
+			     guint64 offset,
+			     guint   size)
+{
+  GstBuffer *buf = gst_buffer_new ();
+
+  /* So here it's up to you to wrap your private buffers and
+   * return that. */
+  GST_BUFFER_FREE_DATA_FUNC (buf) = gst_my_sink_buffer_free;
+  GST_BUFFER_PRIVATE (buf) = sink;
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
+[..]
+
+  return buf;
+}
+    </programlisting>
+  </sect1>
 </chapter>

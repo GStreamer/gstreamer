@@ -1,3 +1,11 @@
+2004-03-24  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/other-sink.xml:
+	* docs/pwg/other-source.xml:
+	  Documentation on how to write source and sink elements. Other
+	  stuff in chapter 4 (1-to-n/demuxer, n-to-1/muxer, n-to-n,
+	  manager, autoplugger) are all still pending.
+
 2004-03-25  Benjamin Otte  <otte@gnome.org>
 
 	* testsuite/elements/Makefile.am:
