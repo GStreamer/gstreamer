@@ -356,7 +356,7 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                                                             GST_VIDEOSINK_HEIGHT (ximagesink));
                       }
                       
-                    gst_video_sink_got_video_size (GST_VIDEOSINK (ximagesink),
+                    gst_x_overlay_got_desired_size (GST_X_OVERLAY (ximagesink),
                                              GST_VIDEOSINK_WIDTH (ximagesink),
                                              GST_VIDEOSINK_HEIGHT (ximagesink));
                   }
@@ -653,9 +653,6 @@ gst_ximagesink_sinkconnect (GstPad *pad, const GstCaps *caps)
   gst_x_overlay_got_desired_size (GST_X_OVERLAY (ximagesink),
                                   GST_VIDEOSINK_WIDTH (ximagesink),
                                   GST_VIDEOSINK_HEIGHT (ximagesink));
-  gst_video_sink_got_video_size (GST_VIDEOSINK (ximagesink),
-                                 GST_VIDEOSINK_WIDTH (ximagesink),
-                                 GST_VIDEOSINK_HEIGHT (ximagesink));
   
   return GST_PAD_LINK_OK;
 }

@@ -61,18 +61,11 @@ struct _GstVideoSink {
 
 struct _GstVideoSinkClass {
   GstElementClass parent_class;
-    
-  /* signals */
-  void (*have_video_size)       (GstVideoSink *element, gint width, gint height);
-  
+      
   gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_videosink_get_type (void);
-
-/* public methods to fire signals */
-void gst_video_sink_got_video_size (GstVideoSink *videosink,
-                                    gint width, gint height);
 
 #ifdef __cplusplus
 }

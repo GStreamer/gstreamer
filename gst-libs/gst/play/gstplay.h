@@ -21,6 +21,7 @@
 #define __GST_PLAY_H__
 
 #include <gst/gst.h>
+#include <gst/xoverlay/xoverlay.h>
 
 #define GST_TYPE_PLAY            (gst_play_get_type())
 #define GST_PLAY(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PLAY, GstPlay))
