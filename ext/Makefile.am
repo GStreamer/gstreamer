@@ -94,6 +94,12 @@ else
 HERMES_DIR=
 endif
 
+if USE_HTTP
+HTTP_DIR=gnomevfs
+else
+HTTP_DIR=
+endif
+
 if USE_LAME
 LAME_DIR=lame
 else
@@ -164,12 +170,11 @@ SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) \
         $(ARTS_DIR) $(ARTSC_DIR) $(AUDIOFILE_DIR) \
 	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DV_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
         $(FESTIVAL_DIR) $(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) $(HERMES_DIR) \
-	$(JPEG_DIR) $(LAME_DIR) $(MAD_DIR) $(MIKMOD_DIR) $(MPEG2DEC_DIR) \
+	$(HTTP_DIR) $(JPEG_DIR) $(LAME_DIR) $(MAD_DIR) $(MIKMOD_DIR) $(MPEG2DEC_DIR) \
 	$(OPENQUICKTIME_DIR) $(RTP_DIR) $(SDL_DIR) $(SHOUT_DIR) $(VORBIS_DIR) \
 	$(XMMS_DIR)
 
-# fixme : add arts and artsd
-DIST_SUBDIRS=a52 aalib alsa avifile audiofile cdparanoia \
+DIST_SUBDIRS=a52 aalib alsa arts artsd avifile audiofile cdparanoia \
              dv dvdread esd \
-	     festival flac gnomevfs gsm hermes jpeg lame mad mikmod mpeg2dec \
+	     festival flac gnomevfs gsm hermes http jpeg lame mad mikmod mpeg2dec \
 	     openquicktime rtp sdl shout vorbis xmms
