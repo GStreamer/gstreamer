@@ -1,0 +1,5 @@
+I ripped the core out of GNU pth to provide cothreading for GStreamer. That's
+what this package is. It was written by Ralf Engelschall. Plaudits to him, bug
+reports to gstreamer-devel@lists.sourceforge.net.
+
+wingo <wingo@pobox.com>, 20 Jan 2002

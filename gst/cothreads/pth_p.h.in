@@ -1,0 +1,109 @@
+/*
+**  GNU Pth - The GNU Portable Threads
+**  Copyright (c) 1999-2001 Ralf S. Engelschall <rse@engelschall.com>
+**
+**  This file is part of GNU Pth, a non-preemptive thread scheduling
+**  library which can be found at http://www.gnu.org/software/pth/.
+**
+**  This library is free software; you can redistribute it and/or
+**  modify it under the terms of the GNU Lesser General Public
+**  License as published by the Free Software Foundation; either
+**  version 2.1 of the License, or (at your option) any later version.
+**
+**  This library is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+**  Lesser General Public License for more details.
+**
+**  You should have received a copy of the GNU Lesser General Public
+**  License along with this library; if not, write to the Free Software
+**  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+**  USA, or contact Ralf S. Engelschall <rse@engelschall.com>.
+**
+**  pth_p.h: Pth private API definitions
+*/
+
+#ifndef _PTH_P_H_
+#define _PTH_P_H_
+
+/* mandatory system headers */
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <setjmp.h>
+#include <signal.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <ctype.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+
+/* library version */
+#define _PTH_VERS_C_AS_HEADER_
+#include "pth_vers.c"
+#undef  _PTH_VERS_C_AS_HEADER_
+
+/* public API headers */
+#define _PTH_PRIVATE
+#include "pth.h"
+#undef _PTH_PRIVATE
+
+/* autoconf defines and macros */
+#include "pth_acdef.h"
+#include "pth_acmac.h"
+
+/* optional system headers */
+#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
+#ifdef HAVE_NET_ERRNO_H
+#include <net/errno.h>
+#endif
+
+/* dmalloc support */
+#ifdef PTH_DMALLOC
+#include <dmalloc.h>
+#endif
+
+/* paths */
+#ifdef HAVE_PATHS_H
+#include <paths.h>
+#endif
+#ifdef _PATH_BSHELL
+#define PTH_PATH_BINSH _PATH_BSHELL
+#else
+#define PTH_PATH_BINSH "/bin/sh"
+#endif
+
+/* non-blocking flags */
+#ifdef  O_NONBLOCK
+#define O_NONBLOCKING O_NONBLOCK
+#else
+#ifdef  O_NDELAY
+#define O_NONBLOCKING O_NDELAY
+#else
+#ifdef  FNDELAY
+#define O_NONBLOCKING FNDELAY
+#else
+#error "No O_NONBLOCK, O_NDELAY or FNDELAY flag available!"
+#endif
+#endif
+#endif
+
+/* compiler happyness: avoid ``empty compilation unit'' problem */
+#define COMPILER_HAPPYNESS(name) \
+    int __##name##_unit = 0;
+
+/* generated contents */
+BEGIN_DECLARATION
+==#==
+END_DECLARATION
+
+#endif /* _PTH_P_H_ */
+
