@@ -1,3 +1,54 @@
+2004-03-04  David I. Lehn  <dlehn@users.sourceforge.net>
+
+	* debian/README.Debian:
+	* debian/build-deps:
+	* debian/changelog:
+	* debian/control:
+	* debian/control.in:
+	* debian/copyright:
+	* debian/gstreamer-a52dec.files:
+	* debian/gstreamer-aa.files:
+	* debian/gstreamer-alsa.files:
+	* debian/gstreamer-alsa.manpages:
+	* debian/gstreamer-arts.files:
+	* debian/gstreamer-artsd.files:
+	* debian/gstreamer-audiofile.files:
+	* debian/gstreamer-avifile.files:
+	* debian/gstreamer-cdparanoia.files:
+	* debian/gstreamer-colorspace.files:
+	* debian/gstreamer-doc.files:
+	* debian/gstreamer-dv.files:
+	* debian/gstreamer-dvd.files:
+	* debian/gstreamer-esd.files:
+	* debian/gstreamer-festival.files:
+	* debian/gstreamer-flac.files:
+	* debian/gstreamer-gconf.conffiles:
+	* debian/gstreamer-gconf.files:
+	* debian/gstreamer-gconf.postinst:
+	* debian/gstreamer-gnomevfs.files:
+	* debian/gstreamer-gsm.files:
+	* debian/gstreamer-http.files:
+	* debian/gstreamer-jack.files:
+	* debian/gstreamer-jpeg.files:
+	* debian/gstreamer-mad.files:
+	* debian/gstreamer-mikmod.files:
+	* debian/gstreamer-misc.files:
+	* debian/gstreamer-mpeg2dec.files:
+	* debian/gstreamer-oss.files:
+	* debian/gstreamer-plugin-apps.files:
+	* debian/gstreamer-plugin-apps.manpages:
+	* debian/gstreamer-plugin-libs-dev.files:
+	* debian/gstreamer-plugin-libs.files:
+	* debian/gstreamer-plugin-template.postinst:
+	* debian/gstreamer-plugin-template.postrm:
+	* debian/gstreamer-sdl.files:
+	* debian/gstreamer-sid.files:
+	* debian/gstreamer-vorbis.files:
+	* debian/gstreamer-x.files:
+	* debian/mk.control:
+	* debian/rules:
+	Debian package info not maintained here.
+
 2004-03-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/aalib/gstaasink.c: (gst_aasink_class_init):
