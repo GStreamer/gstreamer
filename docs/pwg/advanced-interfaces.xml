@@ -143,6 +143,11 @@ gst_my_filter_some_interface_init (GstSomeInterface *iface)
       interface documents the goal of each function, so we will limit ourselves
       to the implementation here.
     </para>
+    <para>
+      The following example shows a mixer implementation for a software N-to-1
+      element. It does not show the actual process of stream mixing, that is
+      far too complicated for this guide.
+    </para>
     <programlisting>
 #include &lt;gst/mixer/mixer.h&gt;
 
@@ -267,12 +272,159 @@ gst_my_filter_mixer_interface_init (GstMixerClass *iface)
   iface->get_volume  = gst_my_filter_mixer_get_volume;
 }
     </programlisting>
+    <para>
+      The mixer interface is very audio-centric. However, with the software
+      flag set, the mixer can be used to mix any kind of stream in a N-to-1
+      element to join (not aggregate!) streams together into one output stream.
+      Conceptually, that's called mixing too. You can always use the element
+      factory's <quote>category</quote> to indicate type of your element. In
+      a software element that mixes random streams, you would not be required
+      to implement the <function>_get_volume ()</function> or
+      <function>_set_volume ()</function> functions. Rather, you would only
+      implement the <function>_set_record ()</function> to enable or disable
+      tracks in the output stream. to make sure that a mixer-implementing
+      element is of a certain type, check the element factory's category.
+    </para>
   </sect1>
 
   <sect1 id="section-iface-tuner" xreflabel="Tuner Interface">
     <title>Tuner Interface</title>
     <para>
-      WRITEME
+      As opposed to the mixer interface, that's used to join together N streams
+      into one output stream by mixing all streams together, the tuner
+      interface is used in N-to-1 elements too, but instead of mixing the input
+      streams, it will select one stream and push the data of that stream to
+      the output stream. It will discard the data of all other streams. There
+      is a flag that indicates whether this is a software-tuner (in which case
+      it is a pure software implementation, with N sink pads and 1 source pad)
+      or a hardware-tuner, in which case it only has one source pad, and the
+      whole stream selection process is done in hardware. The software case can
+      be used in elements such as <emphasis>switch</emphasis>. The hardware
+      case can be used in elements with channel selection, such as video source
+      elements (v4lsrc, v4l2src, etc.). If you need a specific element type,
+      use the element factory's <quote>category</quote> to make sure that the
+      element is of the type that you need. Note that the interface itself is
+      highly analog-video-centric.
+    </para>
+    <para>
+      This interface requires the <classname>GstImplemensInterface</classname>
+      interface to work correctly.
+    </para>
+    <para>
+      The following example shows how to implement the tuner interface in an
+      element. It does not show the actual process of stream selection, that
+      is irrelevant for this section.
+    </para>
+    <programlisting>
+#include &lt;gst/tuner/tuner.h&gt;
+
+typedef struct _GstMyFilter {
+[..]
+  gint active_input;
+  GList *channels;
+} GstMyFilter;
+
+static void	gst_my_filter_implements_interface_init	(GstImplementsInterfaceClass *iface);
+static void	gst_my_filter_tuner_interface_init	(GstTunerClass *iface);
+
+GType
+gst_my_filter_get_type (void)
+{
+[..]
+    static const GInterfaceInfo implements_interface_info = {
+      (GInterfaceInitFunc) gst_my_filter_implements_interface_init,
+      NULL,
+      NULL
+    };
+    static const GInterfaceInfo tuner_interface_info = {
+      (GInterfaceInitFunc) gst_my_filter_tuner_interface_init,
+      NULL,
+      NULL
+    };
+[..]
+    g_type_add_interface_static (my_filter_type,
+				 GST_TYPE_IMPLEMENTS_INTERFACE,
+				 &amp;implements_interface_info);
+    g_type_add_interface_static (my_filter_type,
+				 GST_TYPE_TUNER,
+				 &amp;tunerr_interface_info);
+[..]
+}
+
+static void
+gst_my_filter_init (GstMyFilter *filter)
+{
+  GstTunerChannel *channel = NULL;
+[..]
+  filter->active_input = 0;
+  filter->channels = NULL;
+  channel = g_object_new (GST_TYPE_TUNER_CHANNEL, NULL);
+  channel->label = g_strdup ("MyChannel");
+  channel->flags = GST_TUNER_CHANNEL_INPUT;
+  filter->channels = g_list_append (filter->channels, channel);
+}
+
+static gboolean
+gst_my_filter_interface_supported (GstImplementsInterface *iface,
+				   GType                   iface_type)
+{
+  g_return_val_if_fail (iface_type == GST_TYPE_TUNER, FALSE);
+
+  /* for the sake of this example, we'll always support it. However, normally,
+   * you would check whether the device you've opened supports tuning. */
+  return TRUE;
+}
+
+static void
+gst_my_filter_implements_interface_init (GstImplementsInterfaceClass *iface)
+{
+  iface->supported = gst_my_filter_interface_supported;
+}
+
+static const GList *
+gst_my_filter_tuner_list_channels (GstTuner *tuner)
+{
+  GstMyFilter *filter = GST_MY_FILTER (tuner);
+
+  return filter->channels;
+}
+
+static GstTunerChannel *
+gst_my_filter_tuner_get_channel (GstTuner *tuner)
+{
+  GstMyFilter *filter = GST_MY_FILTER (tuner);
+
+  return g_list_nth_data (filter->channels,
+			  filter->active_input);
+}
+
+static void
+gst_my_filter_tuner_set_channel (GstTuner        *tuner,
+				 GstTunerChannel *channel)
+{
+  GstMyFilter *filter = GST_MY_FILTER (tuner);
+
+  filter->active_input = g_list_index (filter->channels, channel);
+  g_assert (filter->active_input >= 0);
+}
+
+static void
+gst_my_filter_tuner_interface_init (GstTunerClass *iface)
+{
+  iface->list_channels = gst_my_filter_tuner_list_channels;
+  iface->get_channel   = gst_my_filter_tuner_get_channel;
+  iface->set_channel   = gst_my_filter_tuner_set_channel;
+}
+    </programlisting>
+    <para>
+      As said, the tuner interface is very analog video-centric. It features
+      functions for selecting an input or output, and on inputs, it features
+      selection of a tuning frequency if the channel supports frequency-tuning
+      on that input. Likewise, it allows signal-strength-acquiring if the input
+      supports that. Frequency tuning can be used for radio or cable-TV tuning.
+      Signal-strength is an indication of the signal and can be used for
+      visual feedback to the user or for autodetection. Next to that, it also
+      features norm selection, which is only useful for analog video elements.
     </para>
   </sect1>
 

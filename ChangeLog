@@ -1,3 +1,8 @@
+2004-01-30  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced-interfaces.xml:
+	  Added tuner interface docs.
+
 2004-01-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* docs/random/mimetypes:
