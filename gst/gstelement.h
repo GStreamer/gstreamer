@@ -139,6 +139,8 @@ typedef enum {
 #define GST_ELEMENT_CLOCK(obj)			(((GstElement*)(obj))->clock)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
+gchar * _gst_element_error_printf (const gchar *format, ...);
+
 #define gst_element_error(el, domain, code, message, debug) G_STMT_START { \
   gst_element_error_extended (GST_ELEMENT(el), \
   GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code, \
