@@ -46,6 +46,7 @@ void 		gst_util_dump_mem		(guchar *mem, guint size);
 
 
 void gst_print_pad_caps (GString *buf, gint indent, GstPad *pad);
+void gst_print_element_args (GString *buf, gint indent, GstElement *element);
 
 #ifdef __cplusplus
 }

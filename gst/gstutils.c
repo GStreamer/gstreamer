@@ -348,14 +348,30 @@ gst_print_props (GString *buf, gint indent,
 		 GList *props, gboolean showname)
 {
   GList *elem;
+  guint width = 0;
 	    
+  if (showname)
+    for (elem = props; elem; elem = g_list_next (elem))
+      {
+	GstPropsEntry *prop = elem->data;
+	const gchar *name = g_quark_to_string (prop->propid);
+
+	if (width < strlen (name))
+	  width = strlen (name);
+      }
+
   for (elem = props; elem; elem = g_list_next (elem))
     {
       GstPropsEntry *prop = elem->data;
 
       string_append_indent (buf, indent);
       if (showname)
-	g_string_append (buf, g_quark_to_string (prop->propid));
+	{
+	  const gchar *name = g_quark_to_string (prop->propid);
+	  
+	  g_string_append (buf, name);
+	  string_append_indent (buf, 2 + width - strlen (name));
+	}
 
       switch (prop->propstype) {
       case GST_PROPS_INT_ID:
@@ -428,10 +444,97 @@ void gst_print_pad_caps (GString *buf, gint indent, GstPad *pad)
 			  type->mime? type->mime : "unknown/unknown");
 
 	if (caps->properties)
-	  gst_print_props (buf, indent + 2,
+	  gst_print_props (buf, indent + 4,
 			   caps->properties->properties, TRUE);
 
 	caps = caps->next;
       }
     }
+}
+
+void gst_print_element_args (GString *buf, gint indent, GstElement *element)
+{
+  gint num_properties;
+  gint px;
+  guint width;
+
+  GParamSpec **property_specs =
+    g_object_class_list_properties (G_OBJECT_GET_CLASS (element),
+				    &num_properties);
+  
+  width=0;
+  for (px=0; px < num_properties; px++) {
+    GParamSpec *param = property_specs[px];
+    if (width < strlen (param->name))
+      width = strlen (param->name);
+  }
+
+  for (px=0; px < num_properties; px++) {
+    GParamSpec *param = property_specs[px];
+    GValue value;
+
+    ZERO (value);
+
+    g_value_init (&value, param->value_type);
+    g_object_get_property (G_OBJECT (element), param->name, &value);
+
+    string_append_indent (buf, indent);
+    g_string_append (buf, param->name);
+    string_append_indent (buf, 2 + width - strlen (param->name));
+
+    if (G_IS_PARAM_SPEC_ENUM (param)) {
+      GEnumValue *values;
+
+#ifdef USE_GLIB2
+      values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
+#else
+      values = gtk_type_enum_get_values (param->value_type);
+#endif
+
+      g_string_printfa (buf, "%s (%s)",
+			values [g_value_get_enum (&value)].value_nick,
+			g_type_name (G_VALUE_TYPE (&value)));
+    }
+    else
+      switch (G_VALUE_TYPE (&value)) {
+      case G_TYPE_STRING:
+	g_string_printfa (buf, "\"%s\"", g_value_get_string (&value));
+	break;
+      case G_TYPE_BOOLEAN:
+	g_string_append (buf, g_value_get_boolean (&value)? "TRUE":"FALSE");
+	break;
+      case G_TYPE_ULONG:{
+	gulong val = g_value_get_ulong (&value);
+	g_string_printfa (buf, "%lu (0x%lx)", val, val);
+	break;}
+      case G_TYPE_LONG:{
+	glong val = g_value_get_long (&value);
+	g_string_printfa (buf, "%ld (0x%lx)", val, val);
+	break;}
+      case G_TYPE_UINT:{
+	guint val = g_value_get_uint (&value);
+	g_string_printfa (buf, "%u (0x%x)", val, val);
+	break;}
+      case G_TYPE_INT:{
+	gint val = g_value_get_int (&value);
+	g_string_printfa (buf, "%d (0x%x)", val, val);
+	break;}
+      case G_TYPE_FLOAT:
+	g_string_printfa (buf, "%f", g_value_get_float (&value));
+	break;
+      case G_TYPE_DOUBLE:
+	g_string_printfa (buf, "%f", g_value_get_double (&value));
+	break;
+      default:
+	g_string_printfa (buf, "unknown value_type %d", G_VALUE_TYPE (&value));
+	break;
+      }
+
+    g_string_append_c (buf, '\n');
+
+    if (G_VALUE_TYPE (&value))
+      g_value_unset (&value);
+  }
+
+  g_free (property_specs);
 }

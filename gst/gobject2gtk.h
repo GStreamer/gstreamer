@@ -17,6 +17,9 @@
 typedef struct _GObject GObject;
 typedef struct _GObjectClass GObjectClass;
 
+#define g_string_printf   g_string_sprintf
+#define g_string_printfa  g_string_sprintfa
+
 #define g_object_ref(obj)			gtk_object_ref((GtkObject *)(obj))
 #define g_object_unref(obj)			gtk_object_unref((GtkObject *)(obj))
 
