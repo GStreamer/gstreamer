@@ -120,13 +120,13 @@ print_element_info (GstElementFactory *factory)
         printf("  UNKNOWN!!! template: '%s'\n",padtemplate->name_template);
 
       if (padtemplate->presence == GST_PAD_ALWAYS)
-        printf("    Exists: Always\n");
+        printf("    Availability: Always\n");
       else if (padtemplate->presence == GST_PAD_SOMETIMES)
-        printf("    Exists: Sometimes\n");
+        printf("    Availability: Sometimes\n");
       else if (padtemplate->presence == GST_PAD_REQUEST)
-        printf("    Exists: Request\n");
+        printf("    Availability: On request\n");
       else
-        printf("    Exists: UNKNOWN!!!\n");
+        printf("    Availability: UNKNOWN!!!\n");
 
       if (padtemplate->caps) {
         printf("    Capabilities:\n");
@@ -255,10 +255,12 @@ print_element_info (GstElementFactory *factory)
     printf("  none\n");
 
   // FIXME accessing private data of GObjectClass !!!
-
-  printf("\nElement Arguments:\n");
   num_properties = G_OBJECT_GET_CLASS (element)->n_property_specs;
   property_specs = G_OBJECT_GET_CLASS (element)->property_specs;
+  if (num_properties)
+    printf("\nElement Arguments:\n");
+  else
+    printf("\nNo Element Arguments.\n");
 
   for (i=0;i<num_properties;i++) {
     GParamSpec *param = property_specs[i];
@@ -268,7 +270,7 @@ print_element_info (GstElementFactory *factory)
     g_object_get_property (G_OBJECT (element), param->name, &value);
 
     printf("  %-40.40s: ",param->name);
-    switch (param->value_type) {
+    switch (G_VALUE_TYPE (&value)) {
       case G_TYPE_STRING: printf("String (Default \"%s\")", g_value_get_string (&value));break;
       case G_TYPE_BOOLEAN: printf("Boolean (Default %s)", (g_value_get_boolean (&value)?"true":"false"));break;
       case G_TYPE_ULONG: printf("Unsigned Long (Default %lu)", g_value_get_ulong (&value));break;
@@ -280,18 +282,20 @@ print_element_info (GstElementFactory *factory)
       default:
         if (param->value_type == GST_TYPE_FILENAME)
           printf("Filename");
-        else if (G_TYPE_FUNDAMENTAL (param->value_type) == G_TYPE_ENUM) {
+        else if (G_TYPE_IS_ENUM (param->value_type)) {
           GEnumValue *values;
+	  GEnumClass *ec = G_ENUM_CLASS (g_type_class_ref (param->value_type));
 	  guint j = 0;
 
-          printf("Enum (default %d)", g_value_get_enum (&value));
-	  /*
-	  values = g_type_enum_get_values (args[i].type);
+          printf("Enum \"%s\" (default %d)", g_type_name (G_VALUE_TYPE (&value)),
+				  g_value_get_enum (&value));
+
+	  values = ec->values;
 	  while (values[j].value_name) {
             printf("\n    (%d): \t%s", values[j].value, values[j].value_nick);
 	    j++; 
 	  }
-	  */
+	  g_type_class_unref (ec);
 	}
         else
           printf("unknown %d", param->value_type);
