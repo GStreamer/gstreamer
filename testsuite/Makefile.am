@@ -1,5 +1,5 @@
 # thomas : removed refcounting for now until it is fixed
-SUBDIRS = capsnego plugin bytestream
+SUBDIRS = capsnego plugin bytestream threads
 
 testprogs = test_gst_init
 
@@ -12,4 +12,4 @@ LIBS = $(GST_LIBS)
 CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
 
 
-DIST_SUBDIRS = refcounting capsnego plugin bytestream
+DIST_SUBDIRS = capsnego plugin bytestream threads
