@@ -2276,12 +2276,13 @@ void
 gst_pad_push (GstPad *pad, GstBuffer *buf) 
 {
   GstRealPad *peer;
+  GstData *data = GST_DATA(buf);
 
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
 
   g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
 
-  if (!gst_probe_dispatcher_dispatch (&(GST_REAL_PAD (pad)->probedisp), (GstData **) &buf))
+  if (!gst_probe_dispatcher_dispatch (&(GST_REAL_PAD (pad)->probedisp), &data))
     return;
 
   peer = GST_RPAD_PEER (pad);
@@ -2291,22 +2292,22 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
 	       GST_DEBUG_PAD_NAME (pad));
   }
   else {
-    if (!GST_IS_EVENT (buf) && !GST_PAD_IS_ACTIVE (pad)) {
+    if (!GST_IS_EVENT (data) && !GST_PAD_IS_ACTIVE (pad)) {
       g_warning ("push on pad %s:%s but it is not active", 
 	         GST_DEBUG_PAD_NAME (pad));
       return;
     }
 
     if (peer->chainhandler) {
-      if (buf) {
+      if (data) {
         GST_DEBUG (GST_CAT_DATAFLOW, 
 	           "calling chainhandler &%s of peer pad %s:%s",
                    GST_DEBUG_FUNCPTR_NAME (peer->chainhandler), 
 		   GST_DEBUG_PAD_NAME (GST_PAD (peer)));
-        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, (GstData **) &buf))
+        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
           return;
 
-        (peer->chainhandler) (GST_PAD_CAST (peer), buf);
+        (peer->chainhandler) (GST_PAD_CAST (peer), (GstBuffer *)data);
 	return;
       }
       else {
@@ -2321,7 +2322,7 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
     }
   }
   /* clean up the mess here */
-  if (buf != NULL) gst_data_unref (GST_DATA (buf));
+  if (data != NULL) gst_data_unref (data);
 }
 
 /**
@@ -2353,18 +2354,18 @@ gst_pad_pull (GstPad *pad)
   else {
 restart:
     if (peer->gethandler) {
-      GstBuffer *buf;
+      GstData *data;
 
       GST_DEBUG (GST_CAT_DATAFLOW, "calling gethandler %s of peer pad %s:%s",
                  GST_DEBUG_FUNCPTR_NAME (peer->gethandler), 
 		 GST_DEBUG_PAD_NAME (peer));
 
-      buf = (peer->gethandler) (GST_PAD_CAST (peer));
+      data = GST_DATA((peer->gethandler) (GST_PAD_CAST (peer)));
 
-      if (buf) {
-        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, (GstData **) &buf))
+      if (data) {
+        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
           goto restart;
-        return buf;
+        return GST_BUFFER(data);
       }
 
       /* no null buffers allowed */
