@@ -20,9 +20,9 @@ BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
 Requires:       glib2 >= %_glib2
 BuildRequires:  glib2-devel >= %_glib2
-Requires: 	gstreamer >= 0.6.1
-BuildRequires: 	gstreamer-devel >= 0.6.1
-BuildRequires:	gstreamer-tools >= 0.6.1
+Requires: 	gstreamer07 >= 0.7.4
+BuildRequires: 	gstreamer07-devel >= 0.7.4
+BuildRequires:	gstreamer-tools >= 0.7.4
 
 @USE_ARTS_TRUE@Requires:      arts >= 1.1.4
 @USE_ARTS_TRUE@BuildRequires: arts-devel >= 1.1.4
