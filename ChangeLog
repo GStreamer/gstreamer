@@ -1,3 +1,9 @@
+2005-01-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_audio_caps_with_data):
+	  Audio can be <8000Hz.
+
 2005-01-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_change_state):

@@ -396,7 +396,7 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
 {
   gboolean block_align = FALSE, rate_chan = TRUE;
   GstCaps *caps = NULL;
-  gint rate_min = 8000, rate_max = 96000;
+  gint rate_min = 1000, rate_max = 96000;
   gint channels_max = 2;
 
   switch (codec_id) {
