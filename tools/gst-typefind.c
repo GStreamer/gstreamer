@@ -18,13 +18,14 @@ int max_iterations = 100;
 void
 gst_caps_print (GstCaps *caps)
 {
-  g_print ("%s\n", gst_caps_to_string (caps));
+  gchar *caps_str = gst_caps_to_string (caps);
+  g_print ("%s\n", caps_str);
+  g_free (caps_str);
 }
 
 void
-have_type_handler (GstElement *typefind, gpointer data)
+have_type_handler (GstElement *typefind, guint probability, GstCaps *caps, gpointer unused)
 {
-  GstCaps *caps = (GstCaps *) data;
   gst_caps_print (caps);
   FOUND = TRUE;
 }
