@@ -57,8 +57,8 @@ int main(int argc,char *argv[]) {
   comp_argument *argument;
   enum_value *option;
 
-  gchar *prev_word = argv[3];
-  gchar *partial_word = argv[2];
+  gchar *prev_word;
+  gchar *partial_word;
   int partial_len;
   GList *elements;
   GSList *pads;
@@ -69,6 +69,14 @@ int main(int argc,char *argv[]) {
 
   struct stat stat_buf;
   
+  if(argc<4){
+    fprintf(stderr,"gst-complete called with invalid arguments\n");
+    exit(1);
+  }
+
+  prev_word = argv[3];
+  partial_word = argv[2];
+
   partial_len = strlen(partial_word);
 
   /***** Loading the completion information from the registry *****/
