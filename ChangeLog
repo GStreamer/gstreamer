@@ -1,5 +1,10 @@
 2004-05-16  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/mad/gstmad.c: (gst_mad_class_init), (gst_mad_init):
+	  Ignore CRCs by default (fixes #142566).
+
+2004-05-16  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_open),
 	(gst_alsa_mixer_close), (gst_alsa_mixer_supported),
 	(gst_alsa_mixer_build_list), (gst_alsa_mixer_free_list),
