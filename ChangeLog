@@ -1,5 +1,10 @@
 2004-12-13  David Schleef  <ds@schleef.org>
 
+	* gst/gstpad.c: (gst_pad_set_explicit_caps): Allow caps to
+	be NULL (bug #160220).
+
+2004-12-13  David Schleef  <ds@schleef.org>
+
 	* configure.ac: remove all mmx stuff, because it's not used.
 	* docs/random/ds/0.9-suggested-changes: additional notes
 	* include/Makefile.am: we don't use these anymore

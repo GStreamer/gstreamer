@@ -2490,7 +2490,7 @@ gst_pad_set_explicit_caps (GstPad * pad, const GstCaps * caps)
   GstPadLinkReturn link_ret;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
+  g_return_val_if_fail (caps == NULL || gst_caps_is_fixed (caps), FALSE);
 
   GST_CAT_DEBUG (GST_CAT_PADS,
       "setting explicit caps on %s:%s to %" GST_PTR_FORMAT,
