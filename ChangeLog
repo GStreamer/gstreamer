@@ -1,5 +1,20 @@
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+          don't set ACLOCAL_FLAGS !
+	* gst-libs/ext/ffmpeg/.cvsignore:
+	* gst-libs/ext/ffmpeg/patches/cvsignore.patch:
+          trying to add configure to be ignored
+
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	reviewed by: <delete if not using a buddy>
+
+	* gst-libs/ext/ffmpeg/.cvsignore:
+	* gst-libs/ext/ffmpeg/patches/cvsignore.patch:
+
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/ext/ffmpeg/m4/vorbis.m4:
 	* gst-libs/ext/ffmpeg/patches/autotools.patch:
           adding vorbis.m4
