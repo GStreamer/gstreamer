@@ -56,6 +56,7 @@ struct _GstAutoplugCache {
   gint buffer_count;
   GList *current_playout;
   gboolean fire_empty;
+  gboolean fire_first;
 };
 
 struct _GstAutoplugCacheClass {
@@ -165,7 +166,9 @@ gst_autoplugcache_init (GstAutoplugCache *cache)
 //  gst_pad_set_negotiate_function (cache->srcpad, gst_autoplugcache_nego_src);
   gst_element_add_pad (GST_ELEMENT(cache), cache->srcpad);
 
-  cache->caps_proxy = FALSE;
+  cache->caps_proxy = TRUE;	// TESTING!
+        gst_pad_set_negotiate_function (cache->sinkpad, GST_DEBUG_FUNCPTR(gst_autoplugcache_nego_sink));
+        gst_pad_set_negotiate_function (cache->srcpad, GST_DEBUG_FUNCPTR(gst_autoplugcache_nego_src));
 
   // provide a zero basis for the cache
   cache->cache = g_list_prepend(NULL, NULL);
@@ -173,13 +176,14 @@ gst_autoplugcache_init (GstAutoplugCache *cache)
   cache->buffer_count = 0;
   cache->current_playout = 0;
   cache->fire_empty = FALSE;
+  cache->fire_first = FALSE;
 }
 
 static void
 gst_autoplugcache_loop (GstElement *element)
 {
   GstAutoplugCache *cache;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
 
   cache = GST_AUTOPLUGCACHE (element);
 
@@ -253,6 +257,11 @@ gst_autoplugcache_loop (GstElement *element)
       // move the current_playout pointer
       cache->current_playout = g_list_previous (cache->current_playout);
 
+      if (cache->fire_first) {
+        gtk_signal_emit (GTK_OBJECT(cache), gst_autoplugcache_signals[FIRST_BUFFER], buf);
+        cache->fire_first = FALSE;
+      }
+
       // push that buffer
       gst_pad_push (cache->srcpad, GST_BUFFER(cache->current_playout->data));
     }
@@ -313,6 +322,8 @@ GST_DEBUG(0,"caps_proxy is %d\n",cache->caps_proxy);
         cache->current_playout = cache->cache_start;
         // now we can fire a signal when the cache runs dry
         cache->fire_empty = TRUE;
+        // also set it up to fire the first_buffer signal again
+        cache->fire_first = TRUE;
       }
       break;
     default:
