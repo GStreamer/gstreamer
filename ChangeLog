@@ -1,3 +1,11 @@
+2004-04-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	reviewed by David Schleef <ds@schleef.org>
+
+	* gst/gstinfo.h:
+	  *_FORMAT modifiers should require putting a % in front of them for
+	  consistency reasons.
+
 2004-04-05  Colin Walters  <walters@redhat.com>
 
 	* configure.ac (VALGRIND_CFLAGS, VALGRIND_LIBS): Remove spurious
