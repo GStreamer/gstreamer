@@ -298,7 +298,6 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
       structure = gst_caps_get_structure (caps2, i);
       gst_caps_append_structure (caps1, structure);
     }
-    gst_caps_do_simplify (caps1);
   }
   g_ptr_array_free (caps2->structs, TRUE);
 #ifdef USE_POISONING
@@ -869,10 +868,6 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
   GstStructure *struct2;
   GstCaps *dest;
 
-#if 0
-  GstCaps *caps;
-#endif
-
   g_return_val_if_fail (caps1 != NULL, NULL);
   g_return_val_if_fail (caps2 != NULL, NULL);
 
@@ -897,14 +892,8 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
     }
   }
 
-#if 0
-  caps = gst_caps_simplify (dest);
-  gst_caps_free (dest);
-
-  return caps;
-#else
+  gst_caps_do_simplify (dest);
   return dest;
-#endif
 }
 
 typedef struct
@@ -1019,8 +1008,7 @@ gst_caps_union (const GstCaps * caps1, const GstCaps * caps2)
   dest2 = gst_caps_copy (caps2);
   gst_caps_append (dest1, dest2);
 
-  /* FIXME: need a simplify function */
-
+  gst_caps_do_simplify (dest1);
   return dest1;
 }
 

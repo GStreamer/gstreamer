@@ -1,5 +1,12 @@
 2004-04-22  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstcaps.c: (gst_caps_append), (gst_caps_intersect),
+	(gst_caps_union):
+	  only simplify in functions that create new caps. Simplifying in
+	  gst_caps_append breaks tests.
+
+2004-04-22  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstcaps.c: (gst_caps_structure_simplify):
 	  unset GValue after use
 	* gst/gstcaps.c: (gst_caps_append), 
