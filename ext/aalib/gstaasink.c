@@ -256,6 +256,14 @@ gst_aasink_sinkconnect (GstPad *pad, GstCaps *caps)
 }
 
 static void
+gst_aasink_set_clock (GstElement *element, GstClock *clock)
+{
+  GstAASink *aasink = GST_AASINK (element);
+
+  aasink->clock = clock;
+}
+
+static void
 gst_aasink_init (GstAASink *aasink)
 {
   aasink->sinkpad = gst_pad_new_from_template (
@@ -263,9 +271,6 @@ gst_aasink_init (GstAASink *aasink)
   gst_element_add_pad (GST_ELEMENT (aasink), aasink->sinkpad);
   gst_pad_set_chain_function (aasink->sinkpad, gst_aasink_chain);
   gst_pad_set_connect_function (aasink->sinkpad, gst_aasink_sinkconnect);
-
-  aasink->clock = gst_clock_get_system();
-  gst_clock_register(aasink->clock, GST_OBJECT(aasink));
 
   memcpy(&aasink->ascii_surf, &aa_defparams, sizeof (struct aa_hardware_params));
   aasink->ascii_parms.bright = 0;
@@ -278,6 +283,9 @@ gst_aasink_init (GstAASink *aasink)
 
   aasink->width = -1;
   aasink->height = -1;
+
+  aasink->clock = NULL;
+  GST_ELEMENT (aasink)->setclockfunc    = gst_aasink_set_clock;
 
   GST_FLAG_SET(aasink, GST_ELEMENT_THREAD_SUGGESTED);
 }
@@ -324,7 +332,6 @@ static void
 gst_aasink_chain (GstPad *pad, GstBuffer *buf)
 {
   GstAASink *aasink;
-  GstClockTimeDiff jitter;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -342,15 +349,8 @@ gst_aasink_chain (GstPad *pad, GstBuffer *buf)
 
   GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
 
-  jitter = gst_clock_current_diff(aasink->clock, GST_BUFFER_TIMESTAMP (buf));
-
-  if (jitter > 500000 || jitter < -500000)
-  {
-    GST_DEBUG (0, "jitter: %lld\n", jitter);
-    gst_clock_set (aasink->clock, GST_BUFFER_TIMESTAMP (buf));
-  }
-  else {
-    gst_clock_wait(aasink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(aasink));
+  if (aasink->clock) {
+    gst_element_clock_wait (GST_ELEMENT (aasink), aasink->clock, GST_BUFFER_TIMESTAMP(buf));
   }
 
   aa_render (aasink->context, &aasink->ascii_parms, 

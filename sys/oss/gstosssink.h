@@ -28,6 +28,7 @@
 #include <config.h>
 #include <gst/gst.h>
 
+#include "gstossclock.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,7 +61,7 @@ struct _GstOssSink {
   GstPad *sinkpad;
   GstBufferPool *sinkpool;
 
-  //GstClockTime clocktime;
+  GstClock *provided_clock;
   GstClock *clock;
 
   /* device */
@@ -75,6 +76,10 @@ struct _GstOssSink {
   gint fragment;
   gboolean mute;
   guint bufsize;
+  guint bps;
+  guint64 offset;
+
+  guint64 fragment_time;
 };
 
 struct _GstOssSinkClass {

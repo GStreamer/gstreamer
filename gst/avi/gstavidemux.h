@@ -82,6 +82,8 @@ struct _GstAviDemux {
   gulong current_frame;
 
   guint32 flags;
+  guint32 init_audio;
+  guint32 audio_rate;
 
   guint num_audio_pads;
   guint num_video_pads;
