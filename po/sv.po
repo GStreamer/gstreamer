@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.10 2004/07/30 17:27:46 thomasvs Exp $
+# $Id: sv.po,v 1.11 2004/08/02 11:39:17 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-07-30 15:38+0200\n"
+"POT-Creation-Date: 2004-08-02 13:00+0200\n"
 "PO-Revision-Date: 2004-07-02 23:59+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
