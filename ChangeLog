@@ -1,3 +1,10 @@
+2003-12-23  David Schleef  <ds@schleef.org>
+
+	* gst/gstelement.c, gst/gstpad.c, gst/parse/grammar.y,
+	  gst/gstcaps.c, gst/autoplug/gstspideridentity.c:
+	  Many little fixes and additions of debug statements to
+	  get rhythmbox working.
+
 2003-12-23  Colin Walters  <walters@verbum.org>
 
 	* gst/autoplug/gstspideridentity.c (gst_spider_identity_sink_loop_type_finding):
