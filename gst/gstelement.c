@@ -59,7 +59,7 @@ static void			gst_element_real_get_property	(GObject *object, guint prop_id, GVa
 static void 			gst_element_dispose 		(GObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
-static void			gst_element_error_func		(GstElement* element, GstElement *source, gchar *errormsg);
+static void			gst_element_error_func		(GstElement* element, GstElement *source, GError *error, gchar *errormsg);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr		gst_element_save_thyself	(GstObject *object, xmlNodePtr parent);
@@ -70,6 +70,7 @@ GType _gst_element_type = 0;
 
 static GstObjectClass *parent_class = NULL;
 static guint gst_element_signals[LAST_SIGNAL] = { 0 };
+static GQuark gst_element_error_quark;
 
 GType gst_element_get_type (void) 
 {
@@ -121,8 +122,8 @@ gst_element_class_init (GstElementClass *klass)
   gst_element_signals[ERROR] =
     g_signal_new ("error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, error), NULL, NULL,
-                  gst_marshal_VOID__OBJECT_STRING, G_TYPE_NONE, 2,
-                  G_TYPE_OBJECT, G_TYPE_STRING);
+                  gst_marshal_VOID__OBJECT_POINTER_STRING, G_TYPE_NONE, 3,
+                  G_TYPE_OBJECT, G_TYPE_POINTER, G_TYPE_STRING);
   gst_element_signals[EOS] =
     g_signal_new ("eos", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass,eos), NULL, NULL,
@@ -143,6 +144,8 @@ gst_element_class_init (GstElementClass *klass)
   klass->elementfactory 		= NULL;
   klass->padtemplates 			= NULL;
   klass->numpadtemplates 		= 0;
+
+  gst_element_error_quark = g_quark_from_static_string ("GstError");
 }
 
 static void
@@ -1788,17 +1791,17 @@ gst_element_unlink (GstElement *src, GstElement *dest)
 
 static void
 gst_element_error_func (GstElement* element, GstElement *source, 
-                        gchar *errormsg)
+                        GError *error, gchar *errormsg)
 {
   /* tell the parent */
   if (GST_OBJECT_PARENT (element)) {
-    GST_CAT_DEBUG (GST_CAT_EVENT, "forwarding error \"%s\" from %s to %s", 
+    GST_CAT_LOG (GST_CAT_EVENT, "forwarding error \"%s\" from %s to %s", 
 	       errormsg, GST_ELEMENT_NAME (element), 
 	       GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
 
     gst_object_ref (GST_OBJECT (element));
     g_signal_emit (G_OBJECT (GST_OBJECT_PARENT (element)), 
-	           gst_element_signals[ERROR], 0, source, errormsg);
+	           gst_element_signals[ERROR], 0, source, error, errormsg);
     gst_object_unref (GST_OBJECT (element));
   }
 }
@@ -2079,33 +2082,36 @@ gst_element_convert (GstElement *element,
  * It results in the "error" signal.
  */
 void
-gst_element_error (GstElement *element, const gchar *error, ...)
+gst_element_error_detailed (GstElement *element, const gchar *file, const gchar *function,
+			    gint line, GstErrorType type, 
+			    const gchar *error_message, const gchar *detailed)
 {
-  va_list var_args;
-  gchar *string;
+  gchar *really_detailed;
+  GError *error;
   
   /* checks */
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (error != NULL);
 
-  /* create error message */
-  va_start (var_args, error);
-  string = g_strdup_vprintf (error, var_args);
-  va_end (var_args);
-  GST_CAT_INFO (GST_CAT_EVENT, "ERROR in %s: %s", GST_ELEMENT_NAME (element), string);
-
   /* if the element was already in error, stop now */
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_ERROR)) {
-    GST_CAT_INFO (GST_CAT_EVENT, "recursive ERROR detected in %s", GST_ELEMENT_NAME (element));
-    g_free (string);
+    GST_CAT_INFO_OBJECT (GST_CAT_EVENT, element, "recursive ERROR detected, skipping");
     return;
   }
-    
   GST_FLAG_SET (element, GST_ELEMENT_ERROR);
+    
+  /* create detailed error message */
+  if (!function || function[0] == '\0') {
+    really_detailed = g_strdup_printf ("Error in line %d in file %s: %s", line, file, detailed);
+  } else {
+    really_detailed = g_strdup_printf ("Error in line %d in file %s: %s", line, file, detailed);
+  }
+  /* create the GError */
+  error = g_error_new_literal (gst_element_error_quark, type, error_message);
 
   /* emit the signal, make sure the element stays available */
   gst_object_ref (GST_OBJECT (element));
-  g_signal_emit (G_OBJECT (element), gst_element_signals[ERROR], 0, element, string);
+  g_signal_emit (G_OBJECT (element), gst_element_signals[ERROR], 0, element, error, really_detailed);
   
  /* tell the scheduler */
   if (element->sched) {
@@ -2125,7 +2131,7 @@ gst_element_error (GstElement *element, const gchar *error, ...)
 
   /* cleanup */
   gst_object_unref (GST_OBJECT (element));
-  g_free (string);
+  g_free (really_detailed);
 }
 
 /**

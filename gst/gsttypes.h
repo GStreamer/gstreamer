@@ -58,6 +58,25 @@ typedef enum {
   GST_RESULT_NOT_IMPL
 } GstResult;
 
+typedef enum {
+  /* undefined error */
+  GST_ERROR_UNDEFINED,
+  /* something that does not fit into the other categories */
+  GST_ERROR_UNKNOWN,
+  /* no error (used ie for debugging purposes) */
+  GST_ERROR_NO_ERROR,
+  /* error with device or file */
+  GST_ERROR_DEVICE,
+  /* invalid data inside the stream */
+  GST_ERROR_INVALID_DATA,
+  /* pipeline is not setup correctly */
+  GST_ERROR_PIPELINE,
+  /* no way to do caps negotiation */
+  GST_ERROR_CAPS_NEGOTIATION,
+  /* internal error - used by schedulers */
+  GST_ERROR_INTERNAL
+} GstErrorType;
+
 G_END_DECLS
 
 #endif /* __GST_TYPES_H__ */

@@ -182,7 +182,7 @@ struct _GstElementClass {
   void (*state_change)	(GstElement *element, GstElementState old, GstElementState state);
   void (*new_pad)	(GstElement *element, GstPad *pad);
   void (*pad_removed)	(GstElement *element, GstPad *pad);
-  void (*error)		(GstElement *element, GstElement *source, gchar *error);
+  void (*error)		(GstElement *element, GstElement *source, GError *error, gchar *detailed_description);
   void (*eos)		(GstElement *element);
 
   /* local pointers for get/set */
@@ -327,7 +327,31 @@ gboolean		gst_element_convert		(GstElement *element,
 
 void			gst_element_set_eos		(GstElement *element);
 
-void 			gst_element_error 		(GstElement *element, const gchar *error, ...);
+#define gst_element_error(element,type,translated,detailed) G_STMT_START{\
+  gchar *translated_str = translated; \
+  gchar *detailed_str = detailed; \
+  GST_ERROR_OBJECT (element, detailed_str); \
+  gst_element_error_detailed (element,  __FILE__, GST_FUNCTION, __LINE__, type, translated_str, detailed_str); \
+  g_free (translated_str); \
+  g_free (detailed_str); \
+}G_STMT_END
+/* FIXME: remove the next define before releasing 0.8 */
+#if GST_VERSION_MINOR < 8
+#define gst_element_gerror gst_element_error
+#else
+#define gst_element_gerror(element,type,translated,detailed) G_STMT_START{\
+  g_warning ("gst_element_gerror should be replaced by gst_element_error"); \
+  gst_element_error (element,type,translated,detailed); \
+}G_STMT_END
+#endif
+
+void 			gst_element_error_detailed 	(GstElement *element, 
+							 const gchar *file,
+							 const gchar *function,
+							 gint line,
+							 GstErrorType type,
+							 const gchar *error_message,
+							 const gchar *detailed_error);
 
 gboolean		gst_element_is_locked_state	(GstElement *element);
 void			gst_element_set_locked_state	(GstElement *element, gboolean locked_state);

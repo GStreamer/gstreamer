@@ -26,6 +26,7 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
+#include "gst/gst_private.h"
 
 #include "gstidentity.h"
 
@@ -249,7 +250,9 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
     identity->error_after--;
     if (identity->error_after == 0) {
       gst_buffer_unref (buf);
-      gst_element_error (GST_ELEMENT (identity), "errored after iterations as requested");
+      gst_element_error (GST_ELEMENT (identity), GST_ERROR_NO_ERROR,
+			 g_strdup (_("user selected error")),
+			 g_strdup ("errored after iterations as requested"));
       return;
     }
   }

@@ -413,7 +413,9 @@ restart:
 	if (!queue->may_deadlock) {
           g_mutex_unlock (queue->qlock);
           gst_data_unref (GST_DATA (buf));
-          gst_element_error (GST_ELEMENT (queue), "deadlock found, source pad elements are shut down");
+          gst_element_error (GST_ELEMENT (queue), GST_ERROR_UNKNOWN,
+			     g_strdup (_("Cannot go on decoding")), /* FIXME: Better ideas? */
+			     g_strdup ("deadlock found, source pad elements are shut down"));
 	  /* we don't want to goto out_unref here, since we want to clean up before calling gst_element_error */
 	  return;
 	}
@@ -493,7 +495,9 @@ restart:
       /* this means the other end is shut down */
       if (!queue->may_deadlock) {
         g_mutex_unlock (queue->qlock);
-        gst_element_error (GST_ELEMENT (queue), "deadlock found, sink pad elements are shut down");
+        gst_element_error (GST_ELEMENT (queue), GST_ERROR_UNKNOWN,
+			   g_strdup (_("Cannot go on decoding")), /* FIXME: Better ideas? */
+			   g_strdup ("deadlock found, sink pad elements are shut down"));
         goto restart;
       }
       else {

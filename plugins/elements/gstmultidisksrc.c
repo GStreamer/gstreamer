@@ -26,10 +26,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <errno.h>
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
+#include "gst/gst_private.h"
 
 #include "gstmultidisksrc.h"
 
@@ -253,7 +255,9 @@ gboolean gst_multidisksrc_open_file (GstMultiDiskSrc *src, GstPad *srcpad)
 
   if (src->fd < 0) {
     perror ("open");
-    gst_element_error (GST_ELEMENT (src), g_strconcat("opening file \"", src->currentfilename, "\"", NULL));
+    gst_element_gerror (GST_ELEMENT (src), GST_ERROR_DEVICE,
+		       g_strdup_printf (_("Could not open file \"%s\""), src->currentfilename),
+		       g_strdup_printf ("error opening file \"%s\": %s", src->currentfilename, strerror (errno)));
     return FALSE;
   } else {
     /* find the file length */
@@ -261,13 +265,16 @@ gboolean gst_multidisksrc_open_file (GstMultiDiskSrc *src, GstPad *srcpad)
     lseek (src->fd, 0, SEEK_SET);
     /* map the file into memory */
     src->map = mmap (NULL, src->size, PROT_READ, MAP_SHARED, src->fd, 0);
-    madvise (src->map,src->size, 2);
     /* collapse state if that failed */
     if (src->map == NULL) {
       close (src->fd);
-      gst_element_error (GST_ELEMENT (src),"mmapping file");
+      gst_element_gerror (GST_ELEMENT (src), GST_ERROR_DEVICE,
+			  g_strdup_printf (_("Could not open file \"%s\""), src->currentfilename),
+			  g_strdup_printf ("error mmapping file \"%s\": %s", 
+					   src->currentfilename, strerror (errno)));
       return FALSE;
     }
+    madvise (src->map, src->size, 2);
     GST_FLAG_SET (src, GST_MULTIDISKSRC_OPEN);
     src->new_seek = TRUE;
   }

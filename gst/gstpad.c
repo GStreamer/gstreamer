@@ -864,11 +864,11 @@ gst_pad_unlink (GstPad *srcpad,
   g_return_if_fail ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) &&
                     (GST_RPAD_DIRECTION (realsink) == GST_PAD_SINK));
 
-  if (GST_RPAD_UNLINKFUNC (srcpad)) {
-    GST_RPAD_UNLINKFUNC (srcpad) (srcpad);
+  if (GST_RPAD_UNLINKFUNC (realsrc)) {
+    GST_RPAD_UNLINKFUNC (realsrc) (GST_PAD_CAST (realsrc));
   }
-  if (GST_RPAD_UNLINKFUNC (sinkpad)) {
-    GST_RPAD_UNLINKFUNC (sinkpad) (sinkpad);
+  if (GST_RPAD_UNLINKFUNC (realsink)) {
+    GST_RPAD_UNLINKFUNC (realsink) (GST_PAD_CAST (realsink));
   }
 
   /* get the schedulers before we unlink */
@@ -2077,8 +2077,8 @@ gst_pad_recover_caps_error (GstPad *pad, GstCaps *allowed)
 
   /* report error */
   parent = gst_pad_get_parent (pad);
-  gst_element_error (parent, "negotiation failed on pad %s:%s",
-		  GST_DEBUG_PAD_NAME (pad));
+  gst_element_gerror (parent, GST_ERROR_CAPS_NEGOTIATION, g_strdup (_("Cannot decode the given data type")),
+		     g_strdup_printf ("negotiation failed on pad %s:%s", GST_DEBUG_PAD_NAME (pad)));
 
   return FALSE;
 }
@@ -2381,10 +2381,9 @@ gst_pad_pull (GstPad *pad)
   peer = GST_RPAD_PEER (pad);
 
   if (!peer) {
-    gst_element_error (GST_PAD_PARENT (pad), 
-		       "pull on pad %s:%s but it was unlinked", 
-		       GST_ELEMENT_NAME (GST_PAD_PARENT (pad)), 
-		       GST_PAD_NAME (pad), NULL);
+    gst_element_gerror (GST_PAD_PARENT (pad), GST_ERROR_PIPELINE,
+		       g_strdup (_("application error: GStreamer was used wrong")),
+		       g_strdup_printf ("pull on pad %s:%s but it was unlinked", GST_DEBUG_PAD_NAME (pad)));
   }
   else {
 restart:
@@ -2405,15 +2404,16 @@ restart:
       }
 
       /* no null buffers allowed */
-      gst_element_error (GST_PAD_PARENT (pad), 
-	                 "NULL buffer during pull on %s:%s", 
-			 GST_DEBUG_PAD_NAME (pad));
+      gst_element_gerror (GST_PAD_PARENT (pad), GST_ERROR_PIPELINE,
+			 g_strdup (_("application error: GStreamer was used wrong")),
+	                 g_strdup_printf ("NULL buffer during pull on %s:%s", GST_DEBUG_PAD_NAME (pad)));
 	  
     } else {
-      gst_element_error (GST_PAD_PARENT (pad), 
-		         "internal error: pull on pad %s:%s "
+      gst_element_gerror (GST_PAD_PARENT (pad), GST_ERROR_PIPELINE,
+			 g_strdup (_("application error: GStreamer was used wrong")),
+		         g_strdup_printf ("internal error: pull on pad %s:%s "
 			 "but the peer pad %s:%s has no gethandler", 
-		         GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer));
+		         GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
     }
   }
   return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));

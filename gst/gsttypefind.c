@@ -236,8 +236,9 @@ end:
   gst_buffer_unref (buf);
 
   if (typefind->max_buffers && typefind->num_buffer >= typefind->max_buffers) {
-    gst_element_error (GST_ELEMENT (typefind), 
-		    "typefind could not determine type after %d buffers", typefind->num_buffer);
+    gst_element_gerror (GST_ELEMENT (typefind), GST_ERROR_INVALID_DATA,
+	    g_strdup (_("The data cannot be identified")),
+	    g_strdup_printf ("typefind could not determine type after %d buffers", typefind->num_buffer));
   }
 }
 
