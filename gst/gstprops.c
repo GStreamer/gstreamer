@@ -517,6 +517,11 @@ gst_props_new (const gchar *firstname, ...)
 void
 gst_props_debug (GstProps *props)
 {
+  if (!props) {
+    GST_DEBUG (GST_CAT_PROPERTIES, "props (null)");
+    return;
+  }
+	  
   GST_DEBUG (GST_CAT_PROPERTIES, "props %p, refcount %d, flags %d", props, props->refcount, props->flags);
 
   g_list_foreach (props->properties, (GFunc) gst_props_debug_entry, NULL);
@@ -1967,14 +1972,20 @@ gst_props_normalize (GstProps *props)
 {
   GList *entries;
   GList *result = NULL;
+  gboolean fixed = TRUE;
 
   if (!props)
     return NULL;
 
+  /* warning: the property here could have a wrong FIXED flag
+   * but it'll be fixed at the end of the loop */
   entries = props->properties;
 
   while (entries) {
     GstPropsEntry *entry = (GstPropsEntry *) entries->data;
+
+    /* be carefull with the bitmasks */
+    fixed &= (GST_PROPS_ENTRY_IS_VARIABLE (entry) ? FALSE : TRUE);
 
     if (entry->propstype == GST_PROPS_LIST_TYPE) {
       GList *list_entries = entry->data.list_data.entries;
@@ -1985,7 +1996,6 @@ gst_props_normalize (GstProps *props)
 	GstProps *newprops;
 	GList *lentry;
 
-	/* FIXME fixed flags is probably messed up here */
 	newprops = gst_props_copy (props);
         lentry = g_list_find_custom (newprops->properties, GINT_TO_POINTER (list_entry->propid), props_find_func);
 	if (lentry) {
@@ -1993,7 +2003,9 @@ gst_props_normalize (GstProps *props)
 
           new_entry = (GstPropsEntry *) lentry->data;
 	  memcpy (new_entry, list_entry, sizeof (GstPropsEntry));
-
+	  /* it's possible that this property now became fixed, since we
+	   * removed the list, we'll update the flag when everything is
+	   * unreolled at the end of this function */
 	  new_list = gst_props_normalize (newprops);
           result = g_list_concat (new_list, result);
 	}
@@ -2011,6 +2023,13 @@ gst_props_normalize (GstProps *props)
     entries = g_list_next (entries);
   }
   if (!result) {
+    /* at this point, the props did not need any unrolling, we have scanned
+     * all entries and the fixed flag will hold the correct value */
+    if (fixed)
+      GST_PROPS_FLAG_SET (props, GST_PROPS_FIXED);
+    else
+      GST_PROPS_FLAG_UNSET (props, GST_PROPS_FIXED);
+
     /* no result, create list with input props */
     result = g_list_prepend (result, props);
   }
