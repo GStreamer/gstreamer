@@ -425,10 +425,10 @@ GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink, [
   CFLAGS=$X_CFLAGS
 
   dnl check for PIC static lib
-  GST_CHECK_LIBHEADER(XVIDEO, Xv_pic, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h, XVIDEO_LIBS="-lXv_pic -lXext")
+  GST_CHECK_LIBHEADER(XVIDEO, Xv_pic, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xv.h, XVIDEO_LIBS="-lXv_pic -lXext")
   if test x$HAVE_XVIDEO = xno; then
     dnl PIC lib not found, check for regular lib
-    GST_CHECK_LIBHEADER(XVIDEO, Xv, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h, XVIDEO_LIBS="-lXv -lXext")
+    GST_CHECK_LIBHEADER(XVIDEO, Xv, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xv.h, XVIDEO_LIBS="-lXv -lXext")
   fi
   AC_SUBST(XVIDEO_LIBS)
 
@@ -495,8 +495,7 @@ GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
     GST_CHECK_CONFIGPROG(AUDIOFILE, audiofile-config)
     dnl we need this function
     AC_CHECK_LIB(audiofile, afOpenVirtualFile, , HAVE_AUDIOFILE="no")
-  fi
-])
+  fi])
 
 dnl *** CDParanoia ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDPARANOIA, true)
@@ -928,6 +927,14 @@ GST_CHECK_FEATURE(LIBPNG, [snapshot plug-in], snapshot, [
   AC_SUBST(LIBPNG_LIBS)
 ])
 
+dnl *** sndfile ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SNDFILE, true)
+GST_CHECK_FEATURE(SNDFILE, [sndfile plug-in], sfsrc sfsink, [
+  PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0, HAVE_SNDFILE="yes", HAVE_SNDFILE="no")
+  AC_SUBST(SNDFILE_CFLAGS)
+  AC_SUBST(SNDFILE_LIBS)
+])
+
 dnl *** swfdec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SWFDEC, true)
 GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
@@ -1270,6 +1277,7 @@ ext/shout2/Makefile
 ext/sidplay/Makefile
 ext/smoothwave/Makefile
 ext/snapshot/Makefile
+ext/sndfile/Makefile
 ext/swfdec/Makefile
 ext/vorbis/Makefile
 ext/tarkin/Makefile
