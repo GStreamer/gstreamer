@@ -270,10 +270,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvorbis.so
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
 @USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstossaudio.so
-@USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstv4lelement.so
-@USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstv4lsrc.so
-@USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstv4lmjpegsrc.so
-@USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstv4lmjpegsink.so
+@USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
 @USE_RAW1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvideosink.so
 @USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer.schemas
@@ -794,8 +791,7 @@ Plug-ins for playback of AVI format media files.
 @USE_V4L2_TRUE@
 @USE_V4L2_TRUE@%files -n gstreamer-v4l2
 @USE_V4L2_TRUE@%defattr(-, root, root)
-@USE_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstv4l2element.so
-@USE_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstv4l2src.so
+@USE_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
 @USE_V4L2_TRUE@
 @USE_V4L2_TRUE@%post -n gstreamer-v4l2
 @USE_V4L2_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
