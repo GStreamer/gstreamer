@@ -430,13 +430,13 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
   vorbisenc->metadata = GST_CAPS_NEW (
 		  "vorbisenc_metadata",
                   "application/x-gst-metadata",
-                    "comment",  GST_PROPS_STRING ("Track encoded with GStreamer"),
-		    "date",     GST_PROPS_STRING (""),
-		    "tracknum", GST_PROPS_STRING (""),
-		    "title",    GST_PROPS_STRING (""),
-		    "artist",   GST_PROPS_STRING (""),
-		    "album",    GST_PROPS_STRING (""),
-		    "genre",    GST_PROPS_STRING ("")
+                    "DESCRIPTION",	GST_PROPS_STRING ("Track encoded with GStreamer"),
+		    "DATE",     	GST_PROPS_STRING (""),
+		    "TRACKNUMBER", 	GST_PROPS_STRING (""),
+		    "TITLE",    	GST_PROPS_STRING (""),
+		    "ARTIST",   	GST_PROPS_STRING (""),
+		    "ALBUM",    	GST_PROPS_STRING (""),
+		    "GENRE",    	GST_PROPS_STRING ("")
 		  );
 
 
