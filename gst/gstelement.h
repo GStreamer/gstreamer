@@ -45,10 +45,10 @@ struct _GstElementDetails {
   gchar *description;           /* insights of one form or another */
   gchar *author;                /* who wrote this thing? */
 
-  GST_STRUCT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 #define GST_ELEMENT_DETAILS(longname,klass,description,author)		\
-  { longname, klass, description, author, GST_STRUCT_PADDING_INIT }
+  { longname, klass, description, author, GST_PADDING_INIT }
 #define GST_IS_ELEMENT_DETAILS(details) (					\
   (details) && ((details)->longname != NULL) && ((details)->klass != NULL)	\
   && ((details)->description != NULL) && ((details)->author != NULL))
@@ -184,7 +184,7 @@ struct _GstElement {
   GAsyncQueue		*prop_value_queue;
   GMutex		*property_mutex;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstElementClass {
@@ -241,7 +241,7 @@ struct _GstElementClass {
   GstIndex*		(*get_index)		(GstElement *element);
   void			(*set_index)		(GstElement *element, GstIndex *index);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);
@@ -408,13 +408,13 @@ struct _GstElementFactory {
   
   GList *		interfaces;		/* interfaces this element implements */
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstElementFactoryClass {
   GstPluginFeatureClass parent_class;
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType 			gst_element_factory_get_type 		(void);

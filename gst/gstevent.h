@@ -186,7 +186,7 @@ struct _GstEvent {
     } structure;
   } event_data;
 
-  GST_STRUCT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 void 		_gst_event_initialize 		(void);

@@ -72,7 +72,7 @@ struct _GstScheduler {
 
   GList			*schedulers;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstSchedulerClass {
@@ -105,7 +105,7 @@ struct _GstSchedulerClass {
   void                  (*object_sync)          (GstScheduler *sched, GstClock *clock, GstObject *object,
 			                         GstClockID id);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType			gst_scheduler_get_type		(void);
@@ -161,13 +161,13 @@ struct _GstSchedulerFactory {
   gchar *longdesc;              /* long description of the scheduler (well, don't overdo it..) */
   GType type;                 	/* unique GType of the scheduler */
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstSchedulerFactoryClass {
   GstPluginFeatureClass parent;
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType			gst_scheduler_factory_get_type		(void);

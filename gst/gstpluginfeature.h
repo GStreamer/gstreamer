@@ -50,7 +50,7 @@ struct _GstPluginFeature {
 
   gpointer 	 manager;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstPluginFeatureClass {
@@ -58,7 +58,7 @@ struct _GstPluginFeatureClass {
 
   void          (*unload_thyself)      (GstPluginFeature *feature);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 typedef struct {

@@ -76,7 +76,7 @@ struct _GstBin {
 
   GstElementState child_states[GST_NUM_STATES];
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstBinClass {
@@ -95,7 +95,7 @@ struct _GstBinClass {
   void		(*element_added)	(GstBin *bin, GstElement *child);
   void		(*element_removed)	(GstBin *bin, GstElement *child);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType		gst_bin_get_type		(void);

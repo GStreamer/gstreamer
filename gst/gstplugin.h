@@ -64,7 +64,7 @@ struct _GstPluginDesc {
   gchar *package;			/* package plugin belongs to */
   gchar *origin;			/* URL to provider of plugin */
   
-  GST_STRUCT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstPlugin {
@@ -77,7 +77,7 @@ struct _GstPlugin {
   gpointer 	manager;		/* managing registry */
   GModule *	module;			/* contains the module if the plugin is loaded */
 
-  GST_STRUCT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 #ifndef GST_PLUGIN_STATIC				
@@ -93,7 +93,7 @@ GstPluginDesc gst_plugin_desc = {		      	\
   license,					      	\
   package,						\
   origin,						\
-  GST_STRUCT_PADDING_INIT				\
+  GST_PADDING_INIT                                      \
 };							
 #define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,package,origin)
 #else
@@ -113,7 +113,7 @@ _gst_plugin_static_init__ ##init (void)			\
     license,					      	\
     package,						\
     origin,						\
-    GST_STRUCT_PADDING_INIT				\
+    GST_PADDING_INIT				        \
   };							\
   _gst_plugin_register_static (&plugin_desc_);		\
 }			

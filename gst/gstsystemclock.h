@@ -45,13 +45,13 @@ struct _GstSystemClock {
   GMutex *	 mutex;
   GCond *	 cond;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstSystemClockClass {
   GstClockClass  parent_class;
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType 			gst_system_clock_get_type 	(void);

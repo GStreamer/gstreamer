@@ -75,7 +75,7 @@ struct _GstData {
   GstDataFreeFunction 	 free;		/* free the data */
   GstDataCopyFunction 	 copy;		/* copy the data */
 
-  GST_STRUCT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* function used by subclasses only */

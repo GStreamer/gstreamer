@@ -470,7 +470,7 @@ static GstPluginDesc plugin_desc = {
   GST_PACKAGE,
   GST_ORIGIN,
 
-  GST_STRUCT_PADDING_INIT
+  GST_PADDING_INIT
 };                         
 
 /*
