@@ -52,112 +52,8 @@ else AC_DEFINE(HAVE_NASM, 1, [Define if NASM, the netwide assembler, is availabl
   HAVE_NASM="yes"
 fi
 
-dnl check for gtk-doc
-AC_ARG_WITH(html-dir, AC_HELP_STRING([--with-html-dir=PATH], [path to installed docs]))
-
-if test "x$with_html_dir" = "x" ; then
-  HTML_DIR='${datadir}/gst/html'
-else
-  HTML_DIR=$with_html_dir
-fi
-
-AC_SUBST(HTML_DIR)
-
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scangobj, true, false)
-gtk_doc_min_version=0.6
-if $HAVE_GTK_DOC ; then 
-    gtk_doc_version=`gtkdoc-mkdb --version`
-    AC_MSG_CHECKING([gtk-doc version ($gtk_doc_version) >= $gtk_doc_min_version])
-    if perl <<EOF ; then
-      exit (("$gtk_doc_version" =~ /^[[0-9]]+\.[[0-9]]+$/) &&
-            ("$gtk_doc_version" >= "$gtk_doc_min_version") ? 0 : 1);
-EOF
-      AC_MSG_RESULT(yes)
-   else
-      AC_MSG_RESULT(no)
-      HAVE_GTK_DOC=false
-   fi
-fi
-# don't you love undocumented command line options?
-GTK_DOC_SCANOBJ="gtkdoc-scangobj --nogtkinit"
-AC_SUBST(HAVE_GTK_DOC)
-AC_SUBST(GTK_DOC_SCANOBJ)
-
-dnl check for docbook tools
-AC_CHECK_PROG(HAVE_XSLTPROC, xsltproc, true, false)
-AC_CHECK_PROG(HAVE_PDFTOPS, pdftops, true, false)
-dnl this does not yet work properly, at least on debian -- wingo
-HAVE_PDFXMLTEX=false
-
-dnl check for image conversion tool
-AC_CHECK_PROG(HAVE_FIG2DEV, fig2dev, true, false)
-
-dnl The following is a hack: if fig2dev doesn't display an error message
-dnl for the desired type, we assume it supports it.
-HAVE_FIG2DEV_PNG=false
-if test "x$HAVE_FIG2DEV" = "xtrue" ; then
-  fig2dev_quiet=`fig2dev -L png </dev/null 2>&1 >/dev/null`
-  if test "x$fig2dev_quiet" = "x" ; then
-    HAVE_FIG2DEV_PNG=true
-  fi
-fi
-HAVE_FIG2DEV_PDF=false
-if test "x$HAVE_FIG2DEV" = "xtrue" ; then
-  fig2dev_quiet=`fig2dev -L pdf </dev/null 2>&1 >/dev/null`
-  if test "x$fig2dev_quiet" = "x" ; then
-    HAVE_FIG2DEV_PDF=true
-  fi
-fi
-
-
-dnl Set up conditionals for (target) architecture:
-dnl ==============================================
-
-dnl Determine CPU
-case "x${target_cpu}" in
-  xi?86 | k?) HAVE_CPU_I386=yes
-              AC_DEFINE(HAVE_CPU_I386, 1, [Define if the target CPU is an x86])
-              dnl FIXME could use some better detection
-              dnl       (ie CPUID)
-              case "x${target_cpu}" in
-                xi386 | xi486) ;;
-                *)             AC_DEFINE(HAVE_RDTSC) ;;
-              esac ;;
-  xpowerpc)   HAVE_CPU_PPC=yes
-              AC_DEFINE(HAVE_CPU_PPC, 1, [Define if the target CPU is a PPC]) ;;
-  xalpha)     HAVE_CPU_ALPHA=yes
-              AC_DEFINE(HAVE_CPU_ALPHA, 1, [Define if the target CPU is an Alpha]) ;;
-  xarm*)      HAVE_CPU_ARM=yes
-              AC_DEFINE(HAVE_CPU_ARM, 1, [Define if the target CPU is an ARM]) ;;
-  xsparc*)    HAVE_CPU_SPARC=yes
-              AC_DEFINE(HAVE_CPU_SPARC, 1, [Define if the target CPU is a PPC]) ;;
-  xmips*)     HAVE_CPU_MIPS=yes
-              AC_DEFINE(HAVE_CPU_MIPS, 1, [Define if the target CPU is a MIPS]) ;;
-  xhppa*)     HAVE_CPU_HPPA=yes
-              AC_DEFINE(HAVE_CPU_HPPA, 1, [Define if the target CPU is a HPPA]) ;;
-esac
-
-dnl Determine endianness
-AC_C_BIGENDIAN
-
-dnl Check for MMX-capable compiler
-AC_MSG_CHECKING(for MMX-capable compiler)
-AC_TRY_RUN([
-#include "include/mmx.h"
-
-main()
-{ movq_r2r(mm0, mm1); return 0; }
-],
-[
-HAVE_LIBMMX="yes"
-AC_MSG_RESULT(yes)
-],
-HAVE_LIBMMX="no"
-AC_MSG_RESULT(no)
-,
-HAVE_LIBMMX="no"
-AC_MSG_RESULT(no)
-)
+GST_DOC()
+GST_ARCH()
 
 dnl
 dnl We should really use AC_SYS_LARGEFILE, but the problem is
@@ -352,26 +248,6 @@ AC_HELP_STRING([--with-configdir][specify path to use for plugin and command com
 esac], 
 [:]) dnl Default value
 
-AC_ARG_ENABLE(docs-build,
-AC_HELP_STRING([--enable-docs-build][enable building of documentation]),
-[case "${enableval}" in
-  yes) if $HAVE_GTK_DOC; then BUILD_DOCS=yes; else AC_MSG_ERROR([you don't have gtk-doc, so don't use --docs-build]); fi; ;;
-  no)  BUILD_DOCS=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-docs-build) ;;
-esac], 
-[BUILD_DOCS=no]) dnl Default value
-
-dnl AC_ARG_ENABLE(plugin-docs,
-dnl [  --enable-plugin-docs         enable the building of plugin documentation
-dnl                                (this is currently broken, so off by default)],
-dnl [case "${enableval}" in
-dnl   yes) BUILD_PLUGIN_DOCS=yes ;;
-dnl   no)  BUILD_PLUGIN_DOCS=no ;;
-dnl   *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-docs) ;;
-dnl esac], 
-dnl [BUILD_PLUGIN_DOCS=no]) dnl Default value
-BUILD_PLUGIN_DOCS=no
-
 AC_ARG_ENABLE(tests,
 AC_HELP_STRING([--disable-tests][disable building test apps]),
 [case "${enableval}" in
@@ -448,29 +324,14 @@ dnl #############################
 
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
-AM_CONDITIONAL(HAVE_CPU_I386,       test "x$HAVE_CPU_I386" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_PPC,        test "x$HAVE_CPU_PPC" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_ALPHA,      test "x$HAVE_CPU_ALPHA" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_ARM,        test "x$HAVE_CPU_ARM" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_SPARC,      test "x$HAVE_CPU_SPARC" = "xyes")
-AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")
-
 AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
 
 AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
-AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
-AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
 AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
 AM_CONDITIONAL(BUILD_EXAMPLES,      test "x$BUILD_EXAMPLES" = "xyes")
-AM_CONDITIONAL(BUILD_PLUGIN_DOCS,   test "x$BUILD_PLUGIN_DOCS" = "xyes")
-AM_CONDITIONAL(HAVE_PDFXMLTEX,      $HAVE_PDFXMLTEX)
-AM_CONDITIONAL(HAVE_PDFTOPS,        $HAVE_PDFTOPS)
-AM_CONDITIONAL(HAVE_XSLTPROC,       $HAVE_XSLTPROC)
-AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
-AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
 
 
