@@ -915,6 +915,10 @@ remove_from_group (GstOptSchedulerGroup * group, GstElement * element)
    * this element */
   group_dec_links_for_element (group, element);
 
+  if (gst_element_get_state (element) == GST_STATE_PLAYING) {
+    group_element_set_enabled (group, element, FALSE);
+  }
+
   group->elements = g_slist_remove (group->elements, element);
   group->num_elements--;
 
@@ -2117,7 +2121,7 @@ gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
       if (!group1) {
         /* create a new group for src_element as it cannot be merged into another group
          * here. we create the group in the same chain as the loop-based element. note
-         * that creating a new group will also increment the links with other groups */
+         * that creating a new group will not increment the links with other groups */
         GST_DEBUG ("creating new group for element %s",
             GST_ELEMENT_NAME (src_element));
         group1 =
@@ -2127,9 +2131,9 @@ gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
         /* both elements are already in a group, make sure they are added to
          * the same chain */
         merge_chains (group1->chain, group2->chain);
-        /* increment the group link counters */
-        group_inc_link (group1, group2);
       }
+      /* increment the group link counters */
+      group_inc_link (group1, group2);
       break;
     }
     case GST_OPT_INVALID:
