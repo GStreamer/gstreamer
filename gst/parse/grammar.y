@@ -793,7 +793,8 @@ yyerror (const char *s)
   return -1;
 }
 
-int _gst_parse_yy_scan_string (char*);
+struct yy_buffer_state * _gst_parse_yy_scan_string (char*);
+void _gst_parse_yy_delete_buffer (struct yy_buffer_state *);
 GstElement *
 _gst_parse_launch (const gchar *str, GError **error)
 {
@@ -802,6 +803,7 @@ _gst_parse_launch (const gchar *str, GError **error)
   GSList *walk;
   GstBin *bin = NULL;
   GstElement *ret;
+  struct yy_buffer_state *buf;
   
   g_return_val_if_fail (str != NULL, NULL);
 
@@ -815,7 +817,7 @@ _gst_parse_launch (const gchar *str, GError **error)
 #endif /* __GST_PARSE_TRACE */
 
   dstr = g_strdup (str);
-  _gst_parse_yy_scan_string (dstr);
+  buf = _gst_parse_yy_scan_string (dstr);
 
 #ifndef GST_DISABLE_GST_DEBUG
   yydebug = 1;
@@ -827,6 +829,7 @@ _gst_parse_launch (const gchar *str, GError **error)
     goto error1;
   }
   g_free (dstr);
+  _gst_parse_yy_delete_buffer (buf);
   
   GST_CAT_DEBUG (GST_CAT_PIPELINE, "got %u elements and %u links", g.chain ? g_slist_length (g.chain->elements) : 0, g_slist_length (g.links));
   
