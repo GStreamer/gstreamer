@@ -313,7 +313,7 @@ static seek_format seek_formats[] =
 {
   { "tim",  GST_FORMAT_TIME    },
   { "byt",  GST_FORMAT_BYTES   },
-  { "unt",  GST_FORMAT_UNIT    },
+  { "unt",  GST_FORMAT_UNITS   },
   { "buf",  GST_FORMAT_BUFFERS },
   { "def",  GST_FORMAT_DEFAULT },
   { NULL, 0 }, 
