@@ -314,9 +314,9 @@ gst_dpman_attach_dparam (GstDParamManager *dpman, gchar *dparam_name, GstDParam 
 
 	dpwrap = gst_dpman_get_wrapper(dpman, dparam_name);
 
-	g_return_val_if_fail(dpwrap != NULL, FALSE);
-	g_return_val_if_fail(dpwrap->value != NULL, FALSE);
-	g_return_val_if_fail (G_PARAM_SPEC_VALUE_TYPE (dpwrap->param_spec) == dparam->type, FALSE); 
+	g_return_val_if_fail (dpwrap != NULL, FALSE);
+	g_return_val_if_fail (dpwrap->value != NULL, FALSE);
+	g_return_val_if_fail (G_PARAM_SPEC_VALUE_TYPE (dpwrap->param_spec) == GST_DPARAM_TYPE(dparam), FALSE); 
 
 	dpwrap->dparam = dparam;
 	gst_dparam_attach(dparam, dpman, dpwrap->param_spec, dpwrap->unit_name);

@@ -293,7 +293,7 @@ gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GParamSpec *par
 	g_return_if_fail (param_spec != NULL);
 	g_return_if_fail (unit_name != NULL);
 	g_return_if_fail (G_IS_PARAM_SPEC (param_spec));
-	g_return_if_fail (G_PARAM_SPEC_VALUE_TYPE (param_spec) == dparam->type); 
+	g_return_if_fail (G_PARAM_SPEC_VALUE_TYPE (param_spec) == GST_DPARAM_TYPE(dparam)); 
 
 	GST_DPARAM_NAME(dparam) = g_param_spec_get_name(param_spec);
 	GST_DPARAM_PARAM_SPEC(dparam) = param_spec;
