@@ -5,7 +5,13 @@
 #include <glib.h>
 #include <grammar.tab.h>
 
-#define CHAR(x) printf ("char: %c\n", *yytext); return *yytext;
+#ifdef DEBUG
+# define PRINT(a...) printf(##a)
+#else
+#define PRINT(a...)
+#endif
+
+#define CHAR(x) PRINT ("char: %c\n", *yytext); return *yytext;
 %}
 
 _integer [[:digit:]]+
@@ -21,20 +27,20 @@ _string ([^[:space:]\"]|"\\\"")+|("\""([^\"]|"\\\"")*"\"")
 
 <value>{
     {_integer} {
-        printf ("An integer: %s (%d)\n", yytext,
+        PRINT ("An integer: %s (%d)\n", yytext,
                 atoi (yytext));
         BEGIN (INITIAL);
         return INTEGER;
     }
     
     {_float}	{
-        printf ("A float: %s (%g)\n", yytext, atof (yytext));
+        PRINT ("A float: %s (%g)\n", yytext, atof (yytext));
         BEGIN (INITIAL);
         return FLOAT;
     }
     
     {_boolean} {
-        printf ("A boolean: %s (%d)\n", yytext, tolower (*yytext) == 't' ? 1 : 0);
+        PRINT ("A boolean: %s (%d)\n", yytext, tolower (*yytext) == 't' ? 1 : 0);
         BEGIN (INITIAL);
         return BOOLEAN;
     }
@@ -44,20 +50,21 @@ _string ([^[:space:]\"]|"\\\"")+|("\""([^\"]|"\\\"")*"\"")
             yytext++;
             *(yytext + strlen (yytext) - 1) = '\0';
         }
-        printf ("A string: %s\n", yytext);
+        PRINT ("A string: %s\n", yytext);
         BEGIN (INITIAL);
         return STRING;
     }
     
-    [[:space:]]+ { /* printf ("space: [%s]\n", yytext); */ }
+    [[:space:]]+ { /* PRINT ("space: [%s]\n", yytext); */ }
     
     . {
-        printf ("unknown: %s\n", yytext);
+        PRINT ("unknown: %s\n", yytext);
     }
 }
 
 {_identifier} {
-    printf ("An identifier: %s\n", yytext);
+    PRINT ("An identifier: %s\n", yytext);
+    return IDENTIFIER;
 }
 
 "=" { BEGIN (value); CHAR ('='); }
@@ -73,10 +80,11 @@ _string ([^[:space:]\"]|"\\\"")+|("\""([^\"]|"\\\"")*"\"")
 "!" { CHAR ('!'); }
 "+" { CHAR ('+'); }
 
-[[:space:]]+ { /* printf ("space: [%s]\n", yytext); */ }
+[[:space:]]+ { PRINT ("space: [%s]\n", yytext); }
 
 . {
     printf ("unknown: %s\n", yytext);
+    return *yytext;
 }
 
 %%

@@ -1,6 +1,8 @@
 %{
 #include <glib.h>
 #include <stdio.h>
+#define YYDEBUG 1
+#define YYERROR_VERBOSE 1
 %}
 
 %union {
@@ -15,35 +17,42 @@
 %token <i> INTEGER
 %token <b> BOOLEAN
 
+%left '{' '}' '(' ')'
+%left '!' '='
+%left '+'
+%left '.'
+
+%start graph
 %%
 
-graph:          connection                { printf ("primary graph: connection\n"); }
-        |       property_value            { printf ("primary graph: prop_value\n"); }
-        |       element                   { printf ("primary graph: element\n"); }
-        |       graph connection          { printf ("adding a connection to the graph\n"); }
-        |       graph property_value      { printf ("adding a property=value pair to the graph\n"); }
-        |       graph element             { printf ("adding on another element...\n"); }
+id:     IDENTIFIER {}
         ;
 
-property_value: property '=' value        { printf ("got property=value\n"); }
+qid:            id
+        |       id '.' id
         ;
 
-property:       identifier                { printf ("got unadorned property name\n"); }
-        |       identifier '.' identifier { printf ("got qualified property name\n"); }
+value:          STRING {}
+        |       FLOAT {}
+        |       INTEGER {}
+        |       BOOLEAN {}
         ;
 
-value:          STRING                    { printf ("got string\n"); }
-        |       FLOAT                     { printf ("got float\n"); }
-        |       INTEGER                   { printf ("got integer\n"); }
-        |       BOOLEAN                   { printf ("got boolean\n"); }
+property_value: qid '=' value
         ;
 
-element:        identifier                { printf ("got element\n"); }
-        |       bin                       { printf ("new element, it's a bin\n"); }
+element:        id
+        |       bin
         ;
 
-bin:            '{' graph '}'             { printf ("new thread\n"); }
-        |       identifier '.' '(' graph ')' { printf ("new named bin\n"); }
+graph:          /* empty */
+        |       graph element
+        |       graph connection
+        |       graph property_value
+        ;
+
+bin:            '{' graph '}'
+        |       id '.' '(' graph ')'
         ;
 
 connection:     lconnection
@@ -51,22 +60,14 @@ connection:     lconnection
         |       bconnection
         ;
 
-lconnection:    pad_name '+' '!'          { printf ("got lconnection\n"); }
+lconnection:    qid '+' '!'
         ;
 
-rconnection:    '!' '+' pad_name          { printf ("got rconnection\n"); }
+rconnection:    '!' '+' qid
         ;
 
-bconnection:    '!'                       { printf ("got base bconnection\n"); }
-        |       pad_name '+' '!' '+' pad_name { printf ("got bconnection with pads\n"); }
-        |       pad_name ',' bconnection ',' pad_name { printf ("got multiple-pad bconnection\n"); }
-        ;
-
-pad_name:       identifier                { printf ("got pad\n"); }
-        |       identifier '.' identifier { printf ("got named pad\n"); }
-        ;
-
-identifier:     IDENTIFIER                { printf ("matching on identifier\n");}
+bconnection:    '!'
+        |       qid '+' bconnection '+' qid
         ;
 
 %%
