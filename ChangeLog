@@ -1,3 +1,10 @@
+2004-10-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),
+	(gst_play_bin_init), (gst_play_bin_get_property), (handoff),
+	(gen_video_element), (remove_sinks):
+	  Add small bits of code for screenshot handling.
+
 2004-10-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybin.c: (gst_play_bin_set_property),
