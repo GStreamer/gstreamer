@@ -899,7 +899,6 @@ gst_wavparse_get_formats (GstPad * pad)
     GST_FORMAT_TIME,
     GST_FORMAT_BYTES,
     GST_FORMAT_DEFAULT,         /* a "frame", ie a set of samples per Hz */
-    0,
     0
   };
 
