@@ -19,6 +19,7 @@
 
 #include "gstshout2.h"
 #include <stdlib.h>
+#include <string.h>
 
 /* elementfactory information */
 static GstElementDetails shout2send_details = {
@@ -489,14 +490,13 @@ gst_shout2send_change_state (GstElement *element)
       g_print ("connected to server...\n");
     }
     else {
-      /* changed from g_warning, and included result code lookup. */
-      g_error ("couldn't connect to server...");
+      g_warning ("Couldn't connect to server: %s", shout_get_error(shout2send->conn));
       shout_close (shout2send->conn);
       shout_free (shout2send->conn);
       return GST_STATE_FAILURE;
     }
     break;
-  case GST_STATE_READY_TO_NULL:
+  case GST_STATE_PAUSED_TO_READY:
     shout_close (shout2send->conn);
     shout_free (shout2send->conn);
     break;
