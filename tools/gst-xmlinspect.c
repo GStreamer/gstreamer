@@ -69,7 +69,7 @@ print_formats (const GstFormat *formats, gint pfx)
       PUT_STRING (pfx, "<format id=\"%d\" nick=\"%s\">%s</format>",
                   *formats, definition->nick, definition->description);
     else
-      PUT_STRING (pfx, "<format id=\"%d\">unkown</format>",
+      PUT_STRING (pfx, "<format id=\"%d\">unknown</format>",
                   *formats);
 
     formats++;
