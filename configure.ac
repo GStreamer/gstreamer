@@ -471,7 +471,7 @@ GST_CHECK_FEATURE(QCAM, [QuickCam], qcamsrc, [
 
 dnl *** Sun Audio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SUNAUDIO, true)
-GST_CHECK_FEATURE(SUNAUDIO, [Sun Audio], sunaudiosrc, [
+GST_CHECK_FEATURE(SUNAUDIO, [Sun Audio], sunaudiosink, [
   AC_CHECK_HEADER(sys/audioio.h, HAVE_SUNAUDIO="yes", HAVE_SUNAUDIO="no")
 ])
 
