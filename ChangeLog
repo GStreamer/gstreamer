@@ -1,3 +1,23 @@
+2004-11-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* ext/libvisual/visual.c: (gst_visual_get_type),
+	(libvisual_log_handler), (gst_visual_getcaps),
+	(gst_visual_srclink), (gst_visual_change_state), (make_valid_name),
+	(plugin_init):
+	  Update libvisual to 0.1.7. Link in the debug handling to gstreamer
+	* ext/smoothwave/Makefile.am:
+	* ext/smoothwave/demo-osssrc.c: (main):
+	* ext/smoothwave/gstsmoothwave.c: (gst_smoothwave_class_init),
+	(gst_smoothwave_init), (gst_smoothwave_dispose), (gst_sw_sinklink),
+	(gst_sw_srclink), (gst_smoothwave_chain), (gst_sw_change_state),
+	(plugin_init):
+	* ext/smoothwave/gstsmoothwave.h:
+	  Make gstsmoothwave a working element in the 20th century.
+
+	* gst/chart/gstchart.c: (gst_chart_init), (gst_chart_srcconnect):
+	  Fix incorrect link function
+
 2004-11-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/volume/gstvolume.c:

@@ -37,6 +37,9 @@
 typedef struct _GstVisual GstVisual;
 typedef struct _GstVisualClass GstVisualClass;
 
+GST_DEBUG_CATEGORY_STATIC (libvisual_debug);
+#define GST_CAT_DEFAULT (libvisual_debug)
+
 struct _GstVisual
 {
   GstElement element;
@@ -106,6 +109,8 @@ static GstPadLinkReturn gst_visual_sinklink (GstPad * pad,
     const GstCaps * caps);
 static GstPadLinkReturn gst_visual_srclink (GstPad * pad, const GstCaps * caps);
 static GstCaps *gst_visual_getcaps (GstPad * pad);
+static void libvisual_log_handler (const char *message, const char *funcname,
+    void *priv);
 
 static GstElementClass *parent_class = NULL;
 
@@ -128,8 +133,27 @@ gst_visual_get_type (void)
     };
 
     type = g_type_register_static (GST_TYPE_ELEMENT, "GstVisual", &info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (libvisual_debug, "libvisual", 0,
+        "libvisual audio visualisations");
+    visual_log_set_verboseness (VISUAL_LOG_VERBOSENESS_MEDIUM);
+    visual_log_set_info_handler (libvisual_log_handler,
+        (void *) GST_LEVEL_INFO);
+    visual_log_set_warning_handler (libvisual_log_handler,
+        (void *) GST_LEVEL_WARNING);
+    visual_log_set_critical_handler (libvisual_log_handler,
+        (void *) GST_LEVEL_ERROR);
+    visual_log_set_error_handler (libvisual_log_handler,
+        (void *) GST_LEVEL_ERROR);
   }
   return type;
+}
+
+static void
+libvisual_log_handler (const char *message, const char *funcname, void *priv)
+{
+  GST_CAT_LEVEL_LOG (libvisual_debug, (GstDebugLevel) (priv), NULL, "%s - %s",
+      funcname, message);
 }
 
 static void
@@ -207,28 +231,35 @@ gst_visual_getcaps (GstPad * pad)
 {
   GstCaps *ret;
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
+  int depths;
 
   if (!visual->actor)
     return gst_caps_copy (gst_pad_get_pad_template_caps (visual->srcpad));
 
   ret = gst_caps_new_empty ();
-  if (visual_actor_depth_is_supported (visual->actor,
-          VISUAL_VIDEO_CONTEXT_32BIT) == 1) {
-    gst_caps_append (ret,
-        gst_caps_from_string (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN));
+  depths = visual_actor_get_supported_depth (visual->actor);
+  if (depths < 0) {
+    /* FIXME: set an error */
+    return ret;
   }
-  if (visual_actor_depth_is_supported (visual->actor,
-          VISUAL_VIDEO_CONTEXT_24BIT) == 1) {
+  if (depths == VISUAL_VIDEO_DEPTH_GL) {
+    /* We can't handle GL only plugins */
+    return ret;
+  }
+
+  gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN));
+
+  if (depths & VISUAL_VIDEO_DEPTH_24BIT) {
 #if G_BYTE_ORDER == G_BIG_ENDIAN
     gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_RGB));
 #else
     gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_BGR));
 #endif
   }
-  if (visual_actor_depth_is_supported (visual->actor,
-          VISUAL_VIDEO_CONTEXT_16BIT) == 1) {
+  if (depths & VISUAL_VIDEO_DEPTH_16BIT) {
     gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_RGB_16));
   }
+
   return ret;
 }
 
@@ -254,10 +285,10 @@ gst_visual_srclink (GstPad * pad, const GstCaps * caps)
     visual_video_free (visual->video);
   visual->video = visual_video_new ();
   visual_actor_set_video (visual->actor, visual->video);
-  visual_video_set_opts (visual->video, "depth",
+  visual_video_set_depth (visual->video,
       visual_video_depth_enum_from_value (depth));
   visual_video_set_dimension (visual->video, visual->width, visual->height);
-  visual_actor_video_negotiate (visual->actor);
+  visual_actor_video_negotiate (visual->actor, 0, FALSE, FALSE);
 
   return GST_PAD_LINK_OK;
 }
@@ -315,9 +346,11 @@ gst_visual_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       visual->actor =
-          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->name);
+          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
+          plugname);
       if (!visual->actor)
         return GST_STATE_FAILURE;
+
       if (visual_actor_realize (visual->actor) != 0) {
         visual_actor_free (visual->actor);
         visual->actor = NULL;
@@ -335,7 +368,7 @@ gst_visual_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
-      visual_actor_destroy (visual->actor);
+      visual_actor_free (visual->actor);
       visual->actor = NULL;
       break;
     default:
@@ -348,6 +381,24 @@ gst_visual_change_state (GstElement * element)
   return GST_STATE_SUCCESS;
 }
 
+static void
+make_valid_name (char *name)
+{
+  /*
+   * Replace invalid chars with _ in the type name
+   */
+  static const gchar *extra_chars = "-_+";
+  gchar *p = name;
+
+  for (; *p; p++) {
+    int valid = ((p[0] >= 'A' && p[0] <= 'Z') ||
+        (p[0] >= 'a' && p[0] <= 'z') ||
+        (p[0] >= '0' && p[0] <= '9') || strchr (extra_chars, p[0]));
+    if (!valid)
+      *p = '_';
+  }
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -357,8 +408,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  if (visual_init (NULL, NULL) != 0)
-    return FALSE;
+  if (!visual_is_initialized ())
+    if (visual_init (NULL, NULL) != 0)
+      return FALSE;
 
   list = visual_actor_get_list ();
   for (i = 0; i < visual_list_count (list); i++) {
@@ -377,12 +429,16 @@ plugin_init (GstPlugin * plugin)
       NULL
     };
 
-    if (ref->name == NULL)
+    if (ref->info->plugname == NULL)
       continue;
-    name = g_strdup_printf ("GstVisual%s", ref->name);
+
+    name = g_strdup_printf ("GstVisual%s", ref->info->plugname);
+    make_valid_name (name);
     type = g_type_register_static (GST_TYPE_VISUAL, name, &info, 0);
     g_free (name);
-    name = g_strdup_printf ("libvisual_%s", ref->name);
+
+    name = g_strdup_printf ("libvisual_%s", ref->info->plugname);
+    make_valid_name (name);
     if (!gst_element_register (plugin, name, GST_RANK_NONE, type)) {
       g_free (name);
       return FALSE;
