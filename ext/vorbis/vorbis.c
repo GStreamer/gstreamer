@@ -24,8 +24,10 @@
 #include "vorbisenc.h"
 #include "oggvorbisenc.h"
 #include "vorbisdec.h"
+#include "vorbisparse.h"
 
 GST_DEBUG_CATEGORY (vorbisdec_debug);
+GST_DEBUG_CATEGORY (vorbisparse_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -48,8 +50,14 @@ plugin_init (GstPlugin * plugin)
           gst_vorbis_dec_get_type ()))
     return FALSE;
 
+  if (!gst_element_register (plugin, "vorbisparse", GST_RANK_NONE,
+          gst_vorbis_parse_get_type ()))
+    return FALSE;
+
   GST_DEBUG_CATEGORY_INIT (vorbisdec_debug, "vorbisdec", 0,
       "vorbis decoding element");
+  GST_DEBUG_CATEGORY_INIT (vorbisparse_debug, "vorbisparse", 0,
+      "vorbis parsing element");
   return TRUE;
 }
 
