@@ -25,7 +25,7 @@ gst_videoscale_scale_nearest_x86:
 	testl %eax,%eax
 	jle .L92
 	jmp .L100
-	.p2align 4,,7
+	.align 16
 .L97:
 	addl 36(%esp),%ebp
 	addl $-65536,12(%esp)
