@@ -1,7 +1,5 @@
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
-man_MANS = gstalsa.1
-
 plugin_LTLIBRARIES = libgstalsa.la
 
 libgstalsa_la_SOURCES = gstalsa.c

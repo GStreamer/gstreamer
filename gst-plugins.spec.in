@@ -822,8 +822,8 @@ Plug-ins for playback of AVI format media files.
 @USE_MPEG2DEC_TRUE@Summary:GStreamer plug-ins for MPEG video playback and encoding.
 @USE_MPEG2DEC_TRUE@Group:         Libraries/Multimedia
 @USE_MPEG2DEC_TRUE@Requires:      gstreamer-plugins = %{version}
-@USE_MPEG2DEC_TRUE@Requires:      mpeg2dec => 0.2.1
-@USE_MPEG2DEC_TRUE@BuildRequires: mpeg2dec-devel => 0.2.1
+@USE_MPEG2DEC_TRUE@Requires:      mpeg2dec => 0.3.1
+@USE_MPEG2DEC_TRUE@BuildRequires: mpeg2dec-devel => 0.3.1
 @USE_MPEG2DEC_TRUE@Obsoletes:     gstreamer-mpeg1
 @USE_MPEG2DEC_TRUE@Obsoletes:     gstreamer-mpeg2
 @USE_MPEG2DEC_TRUE@Obsoletes:     gstreamer-mpeg2dec
@@ -1530,6 +1530,8 @@ This package contains a basic audio and video playback library.
 /sbin/ldconfig
 
 %changelog
+* Sun Dec 15 2002 Christian Schaller <Uraeus@linuxrising.org>
+- Update mpeg2dec REQ to be 0.3.1
 * Tue Dec 10 2002 Thomas Vander Stichele <thomas at apestaart dot org>
 - only install schema once
 - move out devel lib stuff to -devel package

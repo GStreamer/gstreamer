@@ -33,7 +33,7 @@ libHermes	(for colorspace conversions; you need this for any video work)
 			http://www.clanlib.org/hermes/
 libghttp	(for httpsrc)
 			http://ftp.gnome.org/pub/GNOME/stable/sources/libghttp/
-libaudiofile    (for afsrc/afsink)
+libaudiofile    (for afsrc/afsink
 			http://oss.sgi.com/projects/audiofile/
 libmad          (for the mad mp3 decoder plugin)
 			http://www.mars.org/home/rob/proj/mpeg/
@@ -54,7 +54,7 @@ libshout	(for the shoutcast plugin)
 			http://www.icecast.org
 libasound	(for the alsa src/sink plugin)
 			http://alsa-project.org/
-ortp		(for the rtp sink plugin)
+librtp		(for the rtp sink plugin)
 			http://www.linphone.org/ortp/
 aalib		(for the aa sink plugin)
 			http://aa-project.sourceforge.net/aalib/
@@ -78,12 +78,6 @@ mpeg2dec/a52dec	(for mpeg2 related plugins and dvd playback)
 			http://libmpeg2.sourceforge.net/
 			and http://liba52.sourceforge.net/
 		>=	v0.3.0/v0.7.2
-avifile		(for the avi windows decoder plugins)
-                        http://avifile.sourceforge.net/
-			you might want to get the windows libraries 
-			from http://divx.euro.ru/ and put the .dll files 
-			in /usr/lib/win32/
-		>= 	0.6.0 (cvs)
 libswfdec	(for the swfdec plugin)
 			ftp://ftp.comedi.org/pub/libswfdec/
 		>=	0.1.1
