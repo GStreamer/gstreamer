@@ -127,7 +127,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 %post
 /sbin/ldconfig
-%{_bindir}/gst-register > /dev/null 2> /dev/null
+%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 
 %postun
 /sbin/ldconfig
@@ -149,7 +149,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/gstreamer-%{majorminor}/libgstelements*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgsttypes*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgststaticautoplug*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstbytestream*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstspider*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
@@ -183,8 +182,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_includedir}/%{name}-%{majorminor}/gst/*.h
 %dir %{_includedir}/%{name}-%{majorminor}/gst/control
 %{_includedir}/%{name}-%{majorminor}/gst/control/*.h
-%dir %{_includedir}/%{name}-%{majorminor}/gst/bytestream
-%{_includedir}/%{name}-%{majorminor}/gst/bytestream/bytestream.h
 %dir %{_includedir}/%{name}-%{majorminor}/gst/getbits
 %{_includedir}/%{name}-%{majorminor}/gst/getbits/getbits.h
 # %{_libdir}/libgstreamer.a
