@@ -152,7 +152,10 @@ main(int argc, char *argv[])
     exit(1);
   }
 
-  gst_parse_launch (cmdline, GST_BIN (pipeline));
+  if (gst_parse_launch (cmdline, GST_BIN (pipeline)) < 0){
+    fprintf(stderr,"ERROR: pipeline description could not be parsed\n");
+    exit(1);
+  }
 
 #ifndef GST_DISABLE_LOADSAVE
   if (save_pipeline) {

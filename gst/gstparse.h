@@ -31,6 +31,12 @@ extern "C" {
 
 #ifndef GST_DISABLE_PARSE
 
+typedef enum {
+  GST_PARSE_ERROR_SYNTAX = -1, 
+  GST_PARSE_ERROR_CREATING_ELEMENT = -2,
+  GST_PARSE_ERROR_NOSUCH_ELEMENT = -3,
+} GstParseErrors;
+  
 gint	gst_parse_launch	(const gchar *cmdline, GstBin *parent);
 
 #else // GST_DISABLE_PARSE

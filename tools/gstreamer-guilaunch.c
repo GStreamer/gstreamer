@@ -516,7 +516,8 @@ parse_callback( GtkWidget *widget,
 	GtkWidget *tree_item = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(widget), "tree_item");
 	gchar *last_pipe = (gchar*)gtk_object_get_data(GTK_OBJECT(widget), "last_pipe");
 	gchar *try_pipe = gtk_entry_get_text(GTK_ENTRY(GTK_COMBO(pipe_combo)->entry));
-	
+	gint parse_result;
+		
 	if (pipeline){
 		g_print("unreffing\n");
 		gst_object_unref (GST_OBJECT (pipeline));
@@ -524,7 +525,25 @@ parse_callback( GtkWidget *widget,
 	g_print ("trying pipeline: %s\n", try_pipe);
 	
 	pipeline = gst_pipeline_new ("launch");
-	gst_parse_launch (try_pipe, GST_BIN (pipeline));
+	parse_result = gst_parse_launch (try_pipe, GST_BIN (pipeline));
+	if (parse_result < 0){
+		switch(parse_result){
+			case GST_PARSE_ERROR_SYNTAX:
+				gtk_label_set_text(GTK_LABEL(status), "error parsing syntax of pipeline");
+				break;
+			case GST_PARSE_ERROR_CREATING_ELEMENT:
+				gtk_label_set_text(GTK_LABEL(status), "error creating a core element");
+				break;
+			case GST_PARSE_ERROR_NOSUCH_ELEMENT:
+				gtk_label_set_text(GTK_LABEL(status), "error finding an element which was requested");
+				break;
+			default:
+				gtk_label_set_text(GTK_LABEL(status), "unknown error parsing pipeline");
+				break;
+		}
+		gst_object_unref (GST_OBJECT (pipeline));
+		return;
+	}			
 	gtk_widget_set_sensitive(GTK_WIDGET(start_but), TRUE);
 
 	build_tree(tree_item, GST_BIN(pipeline));

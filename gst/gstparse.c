@@ -246,23 +246,23 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
       // we have the start of a name of the preceding element.
       // rename previous element to next arg.
       if (arg[1] != '\0') {
-	fprintf(stderr,"error, unexpected junk after [\n");
-	exit(-1);
+        fprintf(stderr,"error, unexpected junk after [\n");
+        return GST_PARSE_ERROR_SYNTAX;
       }
       i++;
       if (i < argc) {
-	gst_element_set_name(previous, argv[i]);
+        gst_element_set_name(previous, argv[i]);
       } else {
-	fprintf(stderr,"error, expected element name, found end of arguments\n");
-	exit(-1);
+        fprintf(stderr,"error, expected element name, found end of arguments\n");
+        return GST_PARSE_ERROR_SYNTAX;
       }
       i++;
       if (i >= argc) {
-	fprintf(stderr,"error, expected ], found end of arguments\n");
-	exit(-1);
+        fprintf(stderr,"error, expected ], found end of arguments\n");
+        return GST_PARSE_ERROR_SYNTAX;
       } else if (strcmp(argv[i], "]") != 0) {
-	fprintf(stderr,"error, expected ], found '%s'\n", argv[i]);
-	exit(-1);
+        fprintf(stderr,"error, expected ], found '%s'\n", argv[i]);
+        return GST_PARSE_ERROR_SYNTAX;
       }
     } else {
       DEBUG("have element or bin/thread\n");
@@ -273,7 +273,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
           element = gst_bin_new(g_strdup_printf("bin%d",priv->bincount++));
           if (!element) {
             fprintf(stderr,"Couldn't create a bin!\n");
-//            exit(-1);
+            return GST_PARSE_ERROR_CREATING_ELEMENT;
           }
           GST_DEBUG(0,"CREATED bin %s\n",GST_ELEMENT_NAME(element));
         } else if (arg[0] == '{') {
@@ -281,7 +281,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
           element = gst_thread_new(g_strdup_printf("thread%d",priv->threadcount++));
           if (!element) {
             fprintf(stderr,"Couldn't create a thread!\n");
-//            exit(-1);
+            return GST_PARSE_ERROR_CREATING_ELEMENT;
           }
           GST_DEBUG(0,"CREATED thread %s\n",GST_ELEMENT_NAME(element));
 	} else {
@@ -290,7 +290,10 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
 	  continue;
 	}
 
-        i += gst_parse_launch_cmdline(argc - i, argv + i + 1, GST_BIN (element), priv);
+        j = gst_parse_launch_cmdline(argc - i, argv + i + 1, GST_BIN (element), priv);
+        //check for parse error
+        if (j < 0) return j;
+        i += j;
 
       } else {
         // we have an element
@@ -304,7 +307,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
 #else
           fprintf(stderr,"Couldn't create a '%s', no such element or need to load pluginn?\n",arg);
 #endif
-          exit(-1);
+          return GST_PARSE_ERROR_NOSUCH_ELEMENT;
         }
         GST_DEBUG(0,"CREATED element %s\n",GST_ELEMENT_NAME(element));
       }
