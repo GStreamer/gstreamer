@@ -1,3 +1,14 @@
+2003-06-25  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* gstreamer/Makefile.am: fix up line continuations
+
+2003-06-11  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* gst-python.spec.in: fix
+
+	* Makefile.am, autogen.sh, configure.ac: convert to same style as
+	other GStreamer modules
+
 2003-02-10  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* TODO: add TODO list

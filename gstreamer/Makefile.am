@@ -37,8 +37,8 @@ gstreamer.defs: gstreamer-base.defs gstreamer-extra.defs $(top_srcdir)/gstreamer
 	&& cp gen-$*.c $*.c \
 	&& rm -f gen-$*.c
 
-#	    --register $(PYGTK_DEFSDIR)/pango-types.defs \
-#	    --register $(PYGTK_DEFSDIR)/gdk-types.defs \
-#	    --register $(PYGTK_DEFSDIR)/gtk-types.defs \
-#	    --register $(top_srcdir)/bonobo/bonobo-types.defs \
-#	    --register $(top_srcdir)/bonobo/bonoboui-types.defs \
+#	    --register $(PYGTK_DEFSDIR)/pango-types.defs
+#	    --register $(PYGTK_DEFSDIR)/gdk-types.defs
+#	    --register $(PYGTK_DEFSDIR)/gtk-types.defs
+#	    --register $(top_srcdir)/bonobo/bonobo-types.defs
+#	    --register $(top_srcdir)/bonobo/bonoboui-types.defs
