@@ -74,6 +74,9 @@ GstElementDetails gst_filesrc_details = {
   "(C) 1999",
 };
 
+//#define fs_print(format,args...) g_print(format, ## args)
+#define fs_print(format,args...)
+
 
 #define GST_TYPE_FILESRC \
   (gst_filesrc_get_type())
@@ -331,7 +334,7 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
 {
   GstFileSrc *src = GST_FILESRC(GST_BUFFER_POOL_PRIVATE(buf));
 
-  fprintf(stderr,"freeing mmap()d buffer at %d+%d\n",GST_BUFFER_OFFSET(buf),GST_BUFFER_SIZE(buf));
+  fs_print ("freeing mmap()d buffer at %d+%d\n",GST_BUFFER_OFFSET(buf),GST_BUFFER_SIZE(buf));
 
   // remove the buffer from the list of available mmap'd regions
   g_mutex_lock(src->map_regions_lock);
@@ -352,14 +355,14 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, off_t size)
   GstBuffer *buf;
   gint retval;
 
-//  fprintf(stderr,"mapping region %d+%d from file into memory\n",offset,size);
+  fs_print  ("mapping region %08lx+%08lx from file into memory\n",offset,size);
 
   // time to allocate a new mapbuf
   buf = gst_buffer_new();
   // mmap() the data into this new buffer
   GST_BUFFER_DATA(buf) = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
   if (GST_BUFFER_DATA(buf) == NULL) {
-    fprintf(stderr, "ERROR: gstfilesrc couldn't map file!\n");
+    fprintf (stderr, "ERROR: gstfilesrc couldn't map file!\n");
   } else if (GST_BUFFER_DATA(buf) == (void *)-1) {
     perror("gstfilesrc:mmap()");
   }
@@ -458,15 +461,15 @@ gst_filesrc_get (GstPad *pad)
     // if the end is before the mapend, the buffer is in current mmap region...
     // ('cause by definition if readend is in the buffer, so's readstart)
     if (readend <= mapend) {
-//      printf("read buf %d+%d lives in current mapbuf %d+%d, creating subbuffer of mapbuf\n",
-//             src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
+      fs_print ("read buf %d+%d lives in current mapbuf %d+%d, creating subbuffer of mapbuf\n",
+             src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
       buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - GST_BUFFER_OFFSET(src->mapbuf),
                                    readsize);
 
     // if the start actually is within the current mmap region, map an overlap buffer
     } else if (src->curoffset < mapend) {
-//      printf("read buf %d+%d starts in mapbuf %d+%d but ends outside, creating new mmap\n",
-//             src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
+      fs_print ("read buf %d+%d starts in mapbuf %d+%d but ends outside, creating new mmap\n",
+             src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
       buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
     }
 
@@ -478,37 +481,37 @@ gst_filesrc_get (GstPad *pad)
     // either the read buffer overlaps the start of the mmap region
     // or the read buffer fully contains the current mmap region
     // either way, it's really not relevant, we just create a new region anyway
-//    printf("read buf %d+%d starts before mapbuf %d+%d, but overlaps it\n",
-//             src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
+    fs_print ("read buf %d+%d starts before mapbuf %d+%d, but overlaps it\n",
+             src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
     buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
   }
 
   // then deal with the case where the read buffer is totally outside
   if (buf == NULL) {
     // first check to see if there's a map that covers the right region already
-//    printf("searching for mapbuf to cover %d+%d\n",src->curoffset,readsize);
+    fs_print ("searching for mapbuf to cover %d+%d\n",src->curoffset,readsize);
     region.offset = src->curoffset;
     region.size = readsize;
     map = g_tree_search(src->map_regions,gst_filesrc_search_region_match,&region);
 
     // if we found an exact match, subbuffer it
     if (map != NULL) {
-//      printf("found mapbuf at %d+%d, creating subbuffer\n",GST_BUFFER_OFFSET(map),GST_BUFFER_SIZE(map));
+      fs_print ("found mapbuf at %d+%d, creating subbuffer\n",GST_BUFFER_OFFSET(map),GST_BUFFER_SIZE(map));
       buf = gst_buffer_create_sub (map, src->curoffset - GST_BUFFER_OFFSET(map), readsize);
 
     // otherwise we need to create something out of thin air
     } else {
       // if the read buffer crosses a mmap region boundary, create a one-off region
       if ((src->curoffset / src->mapsize) != (readend / src->mapsize)) {
-//        printf("read buf %d+%d crosses a %d-byte boundary, creating a one-off\n",
-//               src->curoffset,readsize,src->mapsize);
+        fs_print ("read buf %d+%d crosses a %d-byte boundary, creating a one-off\n",
+               src->curoffset,readsize,src->mapsize);
         buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
 
       // otherwise we will create a new mmap region and set it to the default
       } else {
         off_t nextmap = src->curoffset - (src->curoffset % src->mapsize);
-//        printf("read buf %d+%d in new mapbuf at %d+%d, mapping and subbuffering\n",
-//               src->curoffset,readsize,nextmap,src->mapsize);
+        fs_print ("read buf %d+%d in new mapbuf at %d+%d, mapping and subbuffering\n",
+               src->curoffset,readsize,nextmap,src->mapsize);
         // first, we're done with the old mapbuf
         gst_buffer_unref(src->mapbuf);
         // create a new one
