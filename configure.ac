@@ -7,17 +7,14 @@ dnl this goes before AS_LIBTOOL to appease autoconf
 dnl *NOTE*: dnl this line before release, so release does static too
 AM_DISABLE_STATIC
 
+dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
+AM_MAINTAINER_MODE
+
 dnl when going to/from release please set the nano (fourth number) right !
-dnl We disable static building for development, for time savings
-AM_DISABLE_STATIC
-AS_VERSION(gst-plugins, GST_PLUGINS, 0, 4, 0, 1)
+dnl releases only do Wall, cvs and prerelease does Werror too
+AS_VERSION(gst-plugins, GST_PLUGINS, 0, 4, 0, 1, GST_ERROR="-Wall", GST_ERROR="-Wall -Werror")
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(GST_PLUGINS, 0, 0, 0, yes)
-
-dnl we'll move this to a configure option later on which will be turned on
-dnl by autogen
-dnl GST_ERROR="-Wall -Werror"
-GST_ERROR="-Werror"
 
 dnl FIXME take something else ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])
@@ -422,20 +419,6 @@ GST_CHECK_FEATURE(AVIFILE, [avifile], winenc windec, [
                [AC_MSG_WARN([no libstdc++ found, avifile test will fail])]
               )
   AS_AVIFILE(0.7.0)
-
-dnl   if test "x$HAVE_CXX" != "xyes"; then
-dnl     HAVE_AVIFILE="no"
-dnl   else
-dnl     dnl check for libstdc++
-dnl     AC_CHECK_LIB(stdc++, cout,
-dnl       dnl check for X LIBS
-dnl       [AS_AVIFILE(0.7.0)],
-dnl       [
-dnl         AC_MSG_WARN(You need libstdc++ to compile with avifile)
-dnl         HAVE_AVIFILE="no"
-dnl       ]
-dnl     )
-dnl   fi
 ])
 
 dnl *** CDParanoia ***
